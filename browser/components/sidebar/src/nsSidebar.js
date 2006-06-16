@@ -61,6 +61,7 @@ const SIDEBAR_CID               = Components.ID("{22117140-9c6e-11d3-aaf1-00805f
 const nsISupports               = Components.interfaces.nsISupports;
 const nsIFactory                = Components.interfaces.nsIFactory;
 const nsISidebar                = Components.interfaces.nsISidebar;
+const nsISidebarExternal        = Components.interfaces.nsISidebarExternal;
 const nsIClassInfo              = Components.interfaces.nsIClassInfo;
 
 function nsSidebar()
@@ -126,44 +127,94 @@ function (aTitle, aContentURL, aCustomizeURL, aPersist)
 }
 
 /* decorate prototype to provide ``class'' methods and property accessors */
+nsSidebar.prototype.confirmSearchEngine =
+function (engineURL, suggestedTitle)
+{
+  var stringBundle = srGetStrBundle("chrome://browser/locale/sidebar/sidebar.properties");
+  var titleMessage = stringBundle.GetStringFromName("addEngineConfirmTitle");
+  var dialogMessage = stringBundle.formatStringFromName("addEngineConfirmText",
+                                                        [suggestedTitle, engineURL], 2);
+  
+  return this.promptService.confirm(null, titleMessage, dialogMessage);
+}
+
+// The expected suffix for the engine URL should be bare, i.e. without the
+// leading dot.  "src" (for Sherlock files) and "xml" (for OpenSearch files)
+// are common choices.
+nsSidebar.prototype.validateSearchEngine =
+function (engineURL, expectedSuffix, iconURL)
+{
+  try
+  {
+    // make sure using HTTP or HTTPS and refering to the expected kind of file
+    // for the engine.
+    const engineRegexp = new RegExp("^https?:\/\/.+\." + expectedSuffix + "$", "i");
+    if (! engineRegexp.test(engineURL))
+      throw "Unsupported search engine URL";
+  
+    // make sure using HTTP or HTTPS and refering to a
+    // .gif/.jpg/.jpeg/.png/.ico file for the icon.
+    if (iconURL &&
+        ! /^https?:\/\/.+\.(gif|jpg|jpeg|png|ico)$/i.test(iconURL))
+      throw "Unsupported search icon URL.";
+  }
+  catch(ex)
+  {
+    debug(ex);
+    Components.utils.reportError("Invalid argument passed to window.sidebar.addSearchEngine: " + ex);
+    return false;
+  }
+  
+  return true;
+}
+
 nsSidebar.prototype.addSearchEngine =
 function (engineURL, iconURL, suggestedTitle, suggestedCategory)
 {
-    debug("addSearchEngine(" + engineURL + ", " + iconURL + ", " +
-          suggestedCategory + ", " + suggestedTitle + ")");
+  debug("addSearchEngine(" + engineURL + ", " + iconURL + ", " +
+        suggestedCategory + ", " + suggestedTitle + ")");
 
-    try
-    {
-        // make sure using HTTP or HTTPS and refering to a .src file
-        // for the engine.
-        if (! /^https?:\/\/.+\.src$/i.test(engineURL))
-            throw "Unsupported search engine URL.";
+  if (!this.validateSearchEngine(engineURL, "src", iconURL))
+    return;
+  
+  if (!this.confirmSearchEngine(engineURL, suggestedTitle))
+    return;
+  
+  var searchService = Components.classes["@mozilla.org/browser/search-service;1"]
+                                .getService(Components.interfaces.nsIBrowserSearchService);
+  const typeText = Components.interfaces.nsISearchEngine.DATA_TEXT;
+  if (searchService)
+    searchService.addEngine(engineURL, typeText, iconURL);
+}
 
-        // make sure using HTTP or HTTPS and refering to a
-        // .gif/.jpg/.jpeg/.png file for the icon.
-        if (! /^https?:\/\/.+\.(gif|jpg|jpeg|png)$/i.test(iconURL))
-            throw "Unsupported search icon URL.";
-    }
-    catch(ex)
-    {
-        debug(ex);
-        Components.utils.reportError("Invalid argument passed to window.sidebar.addSearchEngine: " + ex);
-        return;
-    }
-
-    var stringBundle = srGetStrBundle("chrome://browser/locale/sidebar/sidebar.properties");
-    var titleMessage = stringBundle.GetStringFromName("addEngineConfirmTitle");
-    var dialogMessage = stringBundle.formatStringFromName("addEngineConfirmText",
-                                                          [suggestedTitle, engineURL], 2);
-
-    if (!this.promptService.confirm(null, titleMessage, dialogMessage))
-        return;
-
-    var searchService = Components.classes["@mozilla.org/browser/search-service;1"]
-                                  .getService(Components.interfaces.nsIBrowserSearchService);
-    const typeText = Components.interfaces.nsISearchEngine.DATA_TEXT;
-    if (searchService)
-      searchService.addEngine(engineURL, typeText, iconURL);
+// This function exists largely to implement window.external.AddSearchProvider(),
+// to match other browsers' APIs.  The capitalization, although nonstandard here,
+// is therefore important.
+nsSidebar.prototype.AddSearchProvider =
+function (aDescriptionURL)
+{
+  // Get the favicon URL for the current page, or our best guess at the current
+  // page since we don't have easy access to the active document.  Most search
+  // engines will override this with an icon specified in the OpenSearch
+  // description anyway.
+  var WINMEDSVC = Components.classes['@mozilla.org/appshell/window-mediator;1']
+                            .getService(Components.interfaces.nsIWindowMediator);
+  var win = WINMEDSVC.getMostRecentWindow("navigator:browser");
+  var browser = win.document.getElementById("content");
+  var iconURL = "";
+  if (browser.shouldLoadFavIcon(browser.selectedBrowser.currentURI))
+    iconURL = win.gProxyFavIcon.getAttribute("src");
+  
+  if (!this.validateSearchEngine(aDescriptionURL, "xml", iconURL))
+    return;
+  
+  if (!this.confirmSearchEngine(aDescriptionURL, ""))
+    return;
+  
+  var searchService = Components.classes["@mozilla.org/browser/search-service;1"]
+                                .getService(Components.interfaces.nsIBrowserSearchService);
+  const typeXML = Components.interfaces.nsISearchEngine.DATA_XML;
+  searchService.addEngine(aDescriptionURL, typeXML, iconURL);
 }
 
 nsSidebar.prototype.addMicrosummaryGenerator =
@@ -196,7 +247,7 @@ nsSidebar.prototype.classDescription = "Sidebar";
 
 // method of nsIClassInfo
 nsSidebar.prototype.getInterfaces = function(count) {
-    var interfaceList = [nsISidebar, nsIClassInfo];
+    var interfaceList = [nsISidebar, nsISidebarExternal, nsIClassInfo];
     count.value = interfaceList.length;
     return interfaceList;
 }
@@ -206,7 +257,8 @@ nsSidebar.prototype.getHelperForLanguage = function(count) {return null;}
 
 nsSidebar.prototype.QueryInterface =
 function (iid) {
-    if (!iid.equals(nsISidebar) && 
+    if (!iid.equals(nsISidebar) &&
+				!iid.equals(nsISidebarExternal) &&
         !iid.equals(nsIClassInfo) &&
         !iid.equals(nsISupports))
         throw Components.results.NS_ERROR_NO_INTERFACE;
@@ -235,6 +287,12 @@ function (compMgr, fileSpec, location, type)
     const JAVASCRIPT_GLOBAL_PROPERTY_CATEGORY = "JavaScript global property";
     catman.addCategoryEntry(JAVASCRIPT_GLOBAL_PROPERTY_CATEGORY,
                             "sidebar",
+                            SIDEBAR_CONTRACTID,
+                            true,
+                            true);
+                            
+    catman.addCategoryEntry(JAVASCRIPT_GLOBAL_PROPERTY_CATEGORY,
+                            "external",
                             SIDEBAR_CONTRACTID,
                             true,
                             true);

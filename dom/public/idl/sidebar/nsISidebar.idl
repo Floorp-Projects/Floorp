@@ -44,7 +44,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(577CB745-8CAF-11d3-AAEF-00805F8A4905)]
+[scriptable, uuid(577cb745-8caf-11d3-aaef-00805f8a4905)]
 interface nsISidebar : nsISupports
 {
     void addPanel(in wstring aTitle, in string aContentURL,
@@ -54,6 +54,12 @@ interface nsISidebar : nsISupports
     void addSearchEngine(in string engineURL, in string iconURL,
                          in wstring suggestedTitle, in wstring suggestedCategory);
     void addMicrosummaryGenerator(in string generatorURL);
+};
+
+[scriptable, uuid(edd70275-c131-4558-8f6c-9c4716b554a6)]
+interface nsISidebarExternal : nsISupports
+{
+    void AddSearchProvider(in string aDescriptionURL);
 };
 
 %{ C++
