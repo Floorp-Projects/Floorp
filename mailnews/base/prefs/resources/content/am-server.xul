@@ -26,6 +26,7 @@
  Contributor(s):
    Håkan Waara <hwaara@chello.se>
    bienvenu@nventure.com
+   Matthew Willis <mattwillis@gmail.com>
 
  Alternatively, the contents of this file may be used under the terms of
  either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -43,6 +44,8 @@
 
 <?xml-stylesheet href="chrome://messenger/skin/accountManage.css" type="text/css"?>
 
+<?xul-overlay href="chrome://messenger/content/msgFolderPickerOverlay.xul"?>
+
 <!DOCTYPE page SYSTEM "chrome://messenger/locale/am-server-top.dtd" >
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -52,6 +55,7 @@
   <script type="application/x-javascript" src="chrome://messenger/content/am-server.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/am-prefs.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/amUtils.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
 
   <broadcaster id="broadcaster_doBiff"/>
@@ -215,20 +219,49 @@
   </hbox>
   </vbox>
   <!-- IMAP -->
+  <label hidden="true" wsm_persist="true" id="imap.trashFolderName" 
+                prefattribute="value"
+                prefstring="mail.server.%serverkey%.trash_folder_name"/>
+
+  <hbox align="center" hidefor="pop3,nntp,movemail">
+    <label value="&deleteMessagePrefix.label;" align="left"
+           control="imap.deleteModel.box"/>
+  </hbox>
   <hbox align="center" id="imap.deleteModel.box" hidefor="pop3,nntp,movemail">
-    <label value="&deleteMessagePrefix.label;"
-           accesskey="&deleteMessagePrefix.accesskey;"
-           control="imap.deleteModel"/>/>
-    <menulist wsm_persist="true" id="imap.deleteModel" prefstring="mail.server.%serverkey%.delete_model">
-      <menupopup>
-        <menuitem value="1" label="&modelMoveToTrash.label;"/>
-        <menuitem value="0" label="&modelMarkDeleted.label;"/>
-        <menuitem value="2" label="&modelDeleteImmediately.label;"/>
-      </menupopup>
-    </menulist>
-    <spacer flex="1"/>
+    <radiogroup wsm_persist="true" id="imap.deleteModel"
+                prefstring="mail.server.%serverkey%.delete_model">
+      <grid class="specialFolderPickerGrid">
+        <columns>
+          <column/>
+          <column flex="1"/>
+        </columns>
+        <rows>
+          <row align="center">
+            <radio id="modelMoveToTrash"
+                   value="1" label="&modelMoveToTrash.label;"
+                   oncommand="selectImapDeleteModel(value)"
+                   accesskey="&modelMoveToTrash.accesskey;"/>
+            <menulist id="msgTrashFolderPicker"
+                      oncommand="folderPickerChange('msgTrashFolderPicker')"/>
+          </row>
+          <row align="center">
+            <radio id="modelMarkDeleted"
+                   value="0" label="&modelMarkDeleted.label;"
+                   oncommand="selectImapDeleteModel(value)"
+                   accesskey="&modelMarkDeleted.accesskey;"/>
+          </row>
+          <row align="center">
+            <radio id="modelDeleteImmediately"
+                   value="2" label="&modelDeleteImmediately.label;"
+                   oncommand="selectImapDeleteModel(value)"
+                   accesskey="&modelDeleteImmediately.accesskey;"/>
+          </row>
+        </rows>
+      </grid>
+    </radiogroup>
   </hbox>
 
+  <!-- Advanced IMAP settings -->
   <hbox flex="1" hidefor="pop3,nntp,movemail" hidden="true">
     <checkbox hidden="true" wsm_persist="true" id="imap.dualUseFolders"
               prefattribute="value"

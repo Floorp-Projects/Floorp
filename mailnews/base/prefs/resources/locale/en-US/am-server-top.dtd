@@ -24,7 +24,7 @@
                 biffEnd.label   "minutes for new messages Check"
 -->
 <!ENTITY biffStart.label "Check for new messages every ">
-<!ENTITY biffStart.accesskey "k">
+<!ENTITY biffStart.accesskey "y">
 <!ENTITY biffEnd.label "minutes">
 <!ENTITY isSecure.label "Use secure connection (SSL)">
 <!ENTITY isSecure.accesskey "U">
@@ -55,10 +55,12 @@
 <!-- LOCALIZATION NOTE (popServerTitle.label) : do not translate "POP" in below line -->
 <!ENTITY popServerTitle.label "POP Server Information">
 <!ENTITY deleteMessagePrefix.label "When I delete a message:">
-<!ENTITY deleteMessagePrefix.accesskey "W">
-<!ENTITY modelMoveToTrash.label "Move it to the Trash folder">
-<!ENTITY modelMarkDeleted.label "Mark it as deleted">
+<!ENTITY modelMoveToTrash.label "Move it to this folder:">
+<!ENTITY modelMoveToTrash.accesskey "o">
+<!ENTITY modelMarkDeleted.label "Just mark it as deleted">
+<!ENTITY modelMarkDeleted.accesskey "k">
 <!ENTITY modelDeleteImmediately.label "Remove it immediately">
+<!ENTITY modelDeleteImmediately.accesskey "d">
 <!-- LOCALIZATION NOTE (expungeOnExit.label) : do not translate two of "&quot;" in below line -->
 <!ENTITY expungeOnExit.label "Clean up (&quot;Expunge&quot;) Inbox on Exit">
 <!ENTITY expungeOnExit.accesskey "E">

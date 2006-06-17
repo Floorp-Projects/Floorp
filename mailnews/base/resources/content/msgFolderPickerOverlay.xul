@@ -634,4 +634,58 @@
     </template>
     <menupopup />
   </menulist>
+
+  <menulist id="msgTrashFolderPicker"
+            containment="http://home.netscape.com/NC-rdf#child"
+            sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"
+            sortDirection="ascending"
+            datasources="rdf:msgaccountmanager rdf:mailnewsfolders">
+    <template>
+      <rule nc:NoSelect="false" iscontainer="true" isempty="false">
+        <menupopup>
+          <menu uri="..." class="folderMenuItem menu-iconic"
+                label="rdf:http://home.netscape.com/NC-rdf#Name" 
+                oncommand="PickedMsgFolder(event.target,'msgTrashFolderPicker')"
+                SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
+                ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+            <menupopup class="menulist-menupopup">
+              <menuitem label="&filemessageschoosethis.label;"
+                        oncommand="PickedMsgFolder(event.target.parentNode.parentNode,'msgTrashFolderPicker')"/>
+              <menuseparator/>
+            </menupopup>
+          </menu>
+        </menupopup>
+      </rule>
+      <rule nc:NoSelect="true" iscontainer="true" isempty="false" >
+        <menupopup>
+          <menu uri="..." class="folderMenuItem menu-iconic"
+                label="rdf:http://home.netscape.com/NC-rdf#Name"
+                oncommand="PickedMsgFolder(event.target,'msgTrashFolderPicker')"
+                SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
+                ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+            <menupopup class="menulist-menupopup"/>
+          </menu>
+        </menupopup>
+      </rule>
+      <rule nc:NoSelect="false">
+        <menupopup>
+          <menuitem uri="..." class="folderMenuItem menuitem-iconic"
+                    label="rdf:http://home.netscape.com/NC-rdf#Name" 
+                    oncommand="PickedMsgFolder(event.target,'msgTrashFolderPicker')"
+                    SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                    BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                    IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                    IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
+                    ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
+        </menupopup>
+      </rule>
+    </template>
+    <menupopup />
+  </menulist>
 </overlay>

@@ -104,14 +104,20 @@ function SetFolderPickerElement(uri, picker)
      dump("Can't find server for " + uri + "\n");
      serverName = "???";
     }
- 
-    if (picker.id == "runFiltersFolder") 
+
+  switch (picker) {
+    case "runFiltersFolder":
       selectedValue = msgfolder.name;
-    else {
+      break;
+    case "msgTrashFolderPicker":
+      selectedValue = msgfolder.name;
+      break;
+    default:
       if (!gMessengerBundle)
         gMessengerBundle = document.getElementById("bundle_messenger");
       selectedValue = gMessengerBundle.getFormattedString("verboseFolderFormat",
         [msgfolder.name, serverName]);
+      break;
     }
   }
 
