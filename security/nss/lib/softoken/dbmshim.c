@@ -37,7 +37,7 @@
 /*
  * Berkeley DB 1.85 Shim code to handle blobs.
  *
- * $Id: dbmshim.c,v 1.12 2006/05/12 23:37:58 nelson%bolyard.com Exp $
+ * $Id: dbmshim.c,v 1.13 2006/06/17 00:09:59 wtchang%redhat.com Exp $
  */
 #include "mcom_db.h"
 #include "secitem.h"
@@ -646,10 +646,10 @@ loser:
     if (db) {
 	(*db->close)(db);
     }
-    if (dbsp && dbsp->blobdir) {
-	PORT_Free(dbsp->blobdir);
-    }
     if (dbsp) {
+	if (dbsp->blobdir) {
+	    PORT_Free(dbsp->blobdir);
+	}
 	PORT_Free(dbsp);
     }
     return NULL;
