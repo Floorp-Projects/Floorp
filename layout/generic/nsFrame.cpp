@@ -311,47 +311,33 @@ SelectionImageService::~SelectionImageService()
 NS_IMETHODIMP
 SelectionImageService::GetImage(PRInt16 aSelectionValue, imgIContainer **aContainer)
 {
-  nsresult result;
-  if (aSelectionValue != nsISelectionController::SELECTION_ON)
-  {
-    if (!mDisabledContainer)
-    {
-        mDisabledContainer = do_CreateInstance("@mozilla.org/image/container;1",&result);
-        if (NS_FAILED(result))
-          return result;
-        if (mDisabledContainer)
-        {
-          nscolor disabledTextColor = NS_RGB(255, 255, 255);
-          nsCOMPtr<nsILookAndFeel> look;
-          look = do_GetService(kLookAndFeelCID,&result);
-          if (NS_SUCCEEDED(result) && look)
-            look->GetColor(nsILookAndFeel::eColor_TextSelectBackgroundDisabled, disabledTextColor);
-          CreateImage(disabledTextColor, mDisabledContainer);
-        }
-    }
-    *aContainer = mDisabledContainer; 
+  *aContainer = nsnull;
+
+  nsCOMPtr<imgIContainer>* container = &mContainer;
+  nsILookAndFeel::nsColorID colorID;
+  if (aSelectionValue == nsISelectionController::SELECTION_ON) {
+    colorID = nsILookAndFeel::eColor_TextSelectBackground;
+  } else if (aSelectionValue == nsISelectionController::SELECTION_ATTENTION) {
+    colorID = nsILookAndFeel::eColor_TextSelectBackgroundAttention;
+  } else {
+    container = &mDisabledContainer;
+    colorID = nsILookAndFeel::eColor_TextSelectBackgroundDisabled;
   }
-  else
-  {
-    if (!mContainer)
-    {
-        mContainer = do_CreateInstance("@mozilla.org/image/container;1",&result);
-        if (NS_FAILED(result))
-          return result;
-        if (mContainer)
-        {
-          nscolor selectionTextColor = NS_RGB(255, 255, 255);
-          nsCOMPtr<nsILookAndFeel> look;
-          look = do_GetService(kLookAndFeelCID,&result);
-          if (NS_SUCCEEDED(result) && look)
-            look->GetColor(nsILookAndFeel::eColor_TextSelectBackground, selectionTextColor);
-          CreateImage(selectionTextColor, mContainer);
-        }
-    }
-    *aContainer = mContainer; 
+
+  if (!*container) {
+    nsresult result;
+    *container = do_CreateInstance("@mozilla.org/image/container;1", &result);
+    if (NS_FAILED(result))
+      return result;
+
+    nscolor color = NS_RGB(255, 255, 255);
+    nsCOMPtr<nsILookAndFeel> look = do_GetService(kLookAndFeelCID);
+    if (look)
+      look->GetColor(colorID, color);
+    CreateImage(color, *container);
   }
-  if (!*aContainer)
-    return NS_ERROR_OUT_OF_MEMORY;
+
+  *aContainer = *container; 
   NS_ADDREF(*aContainer);
   return NS_OK;
 }
@@ -807,17 +793,20 @@ void nsDisplaySelectionOverlay::Paint(nsDisplayListBuilder* aBuilder,
 #else
   nscolor color = NS_RGB(255, 255, 255);
   
-  nsILookAndFeel::nsColorID lookandFeel;
+  nsILookAndFeel::nsColorID colorID;
   nsresult result;
-  if (mSelectionValue != nsISelectionController::SELECTION_ON)
-    lookandFeel = nsILookAndFeel::eColor_TextSelectBackgroundDisabled;
-  else
-    lookandFeel = nsILookAndFeel::eColor_TextSelectBackground;
+  if (mSelectionValue == nsISelectionController::SELECTION_ON) {
+    colorID = nsILookAndFeel::eColor_TextSelectBackground;
+  } else if (mSelectionValue == nsISelectionController::SELECTION_ATTENTION) {
+    colorID = nsILookAndFeel::eColor_TextSelectBackgroundAttention;
+  } else {
+    colorID = nsILookAndFeel::eColor_TextSelectBackgroundDisabled;
+  }
 
   nsCOMPtr<nsILookAndFeel> look;
-  look = do_GetService(kLookAndFeelCID,&result);
+  look = do_GetService(kLookAndFeelCID, &result);
   if (NS_SUCCEEDED(result) && look)
-    look->GetColor(lookandFeel, color);
+    look->GetColor(colorID, color);
 
   gfxRGBA c(color);
   c.a = .5;

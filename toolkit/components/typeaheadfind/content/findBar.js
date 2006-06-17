@@ -613,9 +613,9 @@ var gFindBar = {
     }
 
     findToolbar.hidden = true;
+    this.changeSelectionColor(false);
     this.setFoundLink(null);
     this.mCurrentWindow = null;
-    this.changeSelectionColor(false);
     if (this.mQuickFindTimeout) {
       clearTimeout(this.mQuickFindTimeout);
       this.mQuickFindTimeout = null;    
@@ -860,12 +860,11 @@ var gFindBar = {
     if (highlightBtn.checked)
       this.setHighlightTimeout();
 
-    this.changeSelectionColor(true);
-
     var fastFind = getBrowser().fastFind;
     fastFind.caseSensitive = this.shouldBeCaseSensitive(val);
     this.setCaseSensitiveStr(val);
     var res = fastFind.find(val, this.mFindMode == FIND_LINKS);
+    this.changeSelectionColor(true);
     this.updateFoundLink(res);
     this.updateStatus(res, true);
 
@@ -980,10 +979,9 @@ var gFindBar = {
 
   findNext: function ()
   {
-    this.changeSelectionColor(true);
-
     var fastFind = getBrowser().fastFind; 
     var res = fastFind.findNext();  
+    this.changeSelectionColor(true);
     this.updateFoundLink(res);
     this.updateStatus(res, true);
 
@@ -995,10 +993,9 @@ var gFindBar = {
 
   findPrevious: function ()
   {
-    this.changeSelectionColor(true);
-
     var fastFind = getBrowser().fastFind;
     var res = fastFind.findPrevious();
+    this.changeSelectionColor(true);
     this.updateFoundLink(res);
     this.updateStatus(res, false);
 
