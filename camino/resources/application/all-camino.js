@@ -121,3 +121,8 @@ pref("browser.backspace_action", 0);
 
 // bring download window to the front when each download starts
 pref("browser.download.progressDnldDialog.bringToFront", true);
+
+// 0 = spellcheck nothing, 1 = check multi-line controls, 2 = check 
+//  multi/single line controls
+pref("layout.spellcheckDefault", 1);
+
