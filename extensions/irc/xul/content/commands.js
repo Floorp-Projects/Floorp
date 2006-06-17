@@ -2498,7 +2498,7 @@ function cmdWho(e)
 {
     e.network.pendingWhoReply = true;
     e.server.LIGHTWEIGHT_WHO = false;
-    e.server.who(e.pattern);
+    e.server.who(e.rest);
 }
 
 function cmdWhoIs(e)
