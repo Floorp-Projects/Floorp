@@ -1,3 +1,63 @@
+<!ENTITY  history.label "History">
+
+<!ENTITY  rememberBefore.label          "Remember visited pages for the last">
+<!ENTITY  rememberBefore.accesskey      "v">
+<!ENTITY  rememberAfter.label           "days.">
+
+<!ENTITY  rememberForms.label           "Remember what I enter in forms and the search bar">
+<!ENTITY  rememberForms.accesskey       "f">
+
+<!ENTITY  rememberDownloads.label       "Remember what I've downloaded">
+<!ENTITY  rememberDownloads.accesskey   "d">
+
+
+<!ENTITY  cookies.label                 "Cookies">
+
+<!ENTITY  acceptCookies.label           "Accept cookies from sites">
+<!ENTITY  acceptCookies.accesskey       "c">
+<!ENTITY  alwaysAsk.label               "Always ask before accepting a cookie">
+<!ENTITY  alwaysAsk.accesskey           "A">
+<!ENTITY  keepUntilClose.label          "Only keep the cookies until I close &brandShortName;">
+<!ENTITY  keepUntilClose.accesskey      "O">
+
+<!ENTITY  cookieExceptions.label        "Exceptions...">
+<!ENTITY  cookieExceptions.accesskey    "E">
+
+<!ENTITY  showCookies.label             "Show Cookies...">
+<!ENTITY  showCookies.accesskey         "S">
+
+
+<!ENTITY  passwords.label               "Passwords">
+
+<!ENTITY  rememberPasswords.label       "Remember passwords for sites">
+<!ENTITY  rememberPasswords.accesskey   "R">
+<!ENTITY  useMasterPassword.label       "Use a master password">
+<!ENTITY  useMasterPassword.accesskey   "U">
+
+<!ENTITY  passwordExceptions.label      "Exceptions...">
+<!ENTITY  passwordExceptions.accesskey  "x">
+
+<!ENTITY  masterPassword.label          "Set Master Password...">
+<!ENTITY  masterPassword.accesskey       "M">
+
+<!ENTITY  showPasswords.label            "Show Saved Passwords...">
+<!ENTITY  showPasswords.accesskey        "P">
+
+
+<!ENTITY  clearPrivateData.label         "Clear Private Data">
+
+<!ENTITY  alwaysClear.label              "Always clear my private data when I close &brandShortName;">
+<!ENTITY  alwaysClear.accesskey          "w">
+
+<!ENTITY  clearDataSettings.label        "Settings...">
+<!ENTITY  clearDataSettings.accesskey    "t">
+
+
+<!-- LOCALIZATION NOTE:
+     The entities below are old entities which probably will not be in v2.0.
+     Spend your time on other entities before localizing these, because they
+     are unlikely to be used and may even be removed.
+-->
 
 <!ENTITY  privacy.intro               "As you browse the web, &brandShortName; keeps information about where you have been, what you have done etc. in the following areas:">
 <!ENTITY  clear.label                 "Clear">
@@ -56,7 +116,6 @@
 <!ENTITY  enableCookies.label         "Allow sites to set Cookies">
 <!ENTITY  enableCookies.accesskey     "l">
 <!ENTITY  exceptions.label            "Exceptions">
-<!ENTITY  cookieExceptions.accesskey  "x">
 <!ENTITY  enableCookiesForOriginating.label 
                                       "for the originating site only">
 <!ENTITY  enableCookiesForOriginating.accesskey

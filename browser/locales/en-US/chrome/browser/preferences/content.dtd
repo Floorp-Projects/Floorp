@@ -1,11 +1,60 @@
+<!ENTITY  blockPopups.label           "Block pop-up windows">
+<!ENTITY  blockPopups.accesskey       "B">
+<!ENTITY  popupExceptions.label       "Exceptions...">
+<!ENTITY  popupExceptions.accesskey   "E">
+
+<!ENTITY  loadImages.label            "Load images automatically">
+<!ENTITY  loadImages.accesskey        "I">
+<!ENTITY  imageExceptions.label       "Exceptions">
+<!ENTITY  imageExceptions.accesskey   "x">
+
+<!ENTITY  enableJavaScript.label      "Enable JavaScript">
+<!ENTITY  enableJavaScript.accesskey  "J">
+<!ENTITY  advancedJS.label            "Advanced...">
+<!ENTITY  advancedJS.accesskey        "v">
+
+<!ENTITY  font.label                  "Default font:">
+<!ENTITY  font.accesskey              "u">
+<!ENTITY  advancedFonts.label         "Advanced...">
+<!ENTITY  advancedFonts.accesskey     "d">
+
+<!ENTITY  defaultSize.label           "Default size:">
+<!ENTITY  defaultSize.accesskey       "s">
+<!ENTITY  colors.label                "Colors...">
+<!ENTITY  colors.accesskey            "C">
+
+
+<!ENTITY  feeds.label                 "Feeds">
+
+<!ENTITY  feedReader.label            "Feed Reader:">
+<!ENTITY  feedReader.accesskey        "F">
+
+<!ENTITY  feedClick.label             "When I click on a web feed:">
+<!ENTITY  ask.label                   "Ask me what to use">
+<!ENTITY  ask.accesskey               "A">
+<!ENTITY  subLiveBookmark.label       "Always subscribe with a Live Bookmark">
+<!ENTITY  subLiveBookmark.accesskey   "L">
+<!ENTITY  subReader.label             "Always subscribe using the Feed Reader">
+<!ENTITY  subReader.accesskey         "R">
+
+
+<!ENTITY fileTypes.label              "File Types">
+
+<!ENTITY configureFileTypes.label     "Configure how &brandShortName; handles certain types of files">
+<!ENTITY manage.label                 "Manage...">
+<!ENTITY manage.accesskey             "M">
+
+
+<!-- LOCALIZATION NOTE:
+     The entities below are old entities which probably will not be in v2.0.
+     Spend your time on other entities before localizing these, because they
+     are unlikely to be used and may even be removed.
+-->
+
 <!ENTITY  lHeader                           "Web Features">
 
 <!ENTITY  enbJavaCheck.label                "Enable Java">
 <!ENTITY  enbJavaCheck.accesskey            "J">
-<!ENTITY  enableJavaScript.label            "Enable JavaScript">
-<!ENTITY  enableJavaScript.accesskey        "S">
-<!ENTITY  advancedJS.label                  "Advanced...">
-<!ENTITY  advancedJS.accesskey              "v">
 
 <!ENTITY  enableImages.label                "Load Images">
 <!ENTITY  enableImages.accesskey            "I">
@@ -22,10 +71,6 @@
 <!ENTITY  exceptions.accesskey              "E">
 
 <!ENTITY  fonts.caption                     "Fonts &amp; Colors">
-<!ENTITY  advancedFonts.label               "Advanced...">
-<!ENTITY  advancedFonts.accesskey           "d">
-<!ENTITY  colors.label                      "Colors...">
-<!ENTITY  colors.accesskey                  "C">
 <!ENTITY  defaultFontSize.label             "Size:">
 <!ENTITY  defaultFontSize.accesskey         "z">
 <!ENTITY  defaultFont.label                 "Default Font:">

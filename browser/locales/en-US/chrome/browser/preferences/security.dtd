@@ -1,0 +1,20 @@
+<!ENTITY  warnAddonInstall.label        "Warn me when sites try to install add-ons">
+<!ENTITY  warnAddonInstall.accesskey    "W">
+<!ENTITY  checkPhish.label              "Check to see if the site I'm loading is a forgery">
+<!ENTITY  checkPhish.accesskey          "C">
+<!ENTITY  useCachedPhishList.label      "Use a list of known forgeries provided by">
+<!ENTITY  useCachedPhishList.accesskey  "U">
+<!ENTITY  checkPhishOnLoad.label        "Ask">
+<!ENTITY  checkPhishOnLoad.accesskey    "A">
+<!ENTITY  checkPhishOnLoadAfter.label   "to check every site I visit">
+
+<!ENTITY  addonExceptions.label         "Exceptions...">
+<!ENTITY  addonExceptions.accesskey     "E">
+
+
+<!ENTITY  warnings.label                "Warning Messages">
+
+<!ENTITY  chooseWarnings.label          "Choose which warning messages you want to see while browsing the web">
+
+<!ENTITY  warningSettings.label         "Settings...">
+<!ENTITY  warningSettings.accesskey     "S">

@@ -1,3 +1,27 @@
+<!ENTITY linksOpenIn.label            "When a link opens a new window, open it in:">
+<!ENTITY inNewWindow.label            "a new window">
+<!ENTITY inNewWindow.accesskey        "w">
+<!ENTITY inNewTab.label               "a new tab">
+<!ENTITY inNewTab.accesskey           "t">
+
+<!ENTITY warnCloseMultiple.label      "Warn me when I close a window with multiple tabs">
+<!ENTITY warnCloseMultiple.accesskey  "m">
+
+<!ENTITY warnOpenMany.label           "Warn me when I open lots of tabs at once">
+<!ENTITY warnOpenMany.accesskey       "o">
+
+<!ENTITY showTabBar.label             "Always show the tab bar">
+<!ENTITY showTabBar.accesskey         "b">
+
+<!ENTITY switchToNewTabs.label        "When I open a link in a new tab, switch to it immediately">
+<!ENTITY switchToNewTabs.accesskey    "s">
+
+
+<!-- LOCALIZATION NOTE:
+     The entities below are old entities which probably will not be in v2.0.
+     Spend your time on other entities before localizing these, because they
+     are unlikely to be used and may even be removed.
+-->
 
 <!ENTITY tabsTab.label                       "Tabs">
 <!ENTITY linkTargeting.label                 "Open links that would open new windows in:">
