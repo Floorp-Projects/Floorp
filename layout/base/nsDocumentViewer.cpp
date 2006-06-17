@@ -3402,8 +3402,7 @@ nsDocViewerFocusListener::Focus(nsIDOMEvent* aEvent)
   PRInt16 selectionStatus;
   selCon->GetDisplaySelection(&selectionStatus);
 
-  //if selection was nsISelectionController::SELECTION_OFF, do nothing
-  //otherwise re-enable it.
+  // If selection was disabled, re-enable it.
   if(selectionStatus == nsISelectionController::SELECTION_DISABLED ||
      selectionStatus == nsISelectionController::SELECTION_HIDDEN)
   {
@@ -3428,9 +3427,9 @@ nsDocViewerFocusListener::Blur(nsIDOMEvent* aEvent)
   PRInt16 selectionStatus;
   selCon->GetDisplaySelection(&selectionStatus);
 
-  //if selection was nsISelectionController::SELECTION_OFF, do nothing
-  //otherwise re-enable it.
-  if(selectionStatus == nsISelectionController::SELECTION_ON)
+  // If selection was on, disable it.
+  if(selectionStatus == nsISelectionController::SELECTION_ON ||
+     selectionStatus == nsISelectionController::SELECTION_ATTENTION)
   {
     selCon->SetDisplaySelection(nsISelectionController::SELECTION_DISABLED);
     selCon->RepaintSelection(nsISelectionController::SELECTION_NORMAL);

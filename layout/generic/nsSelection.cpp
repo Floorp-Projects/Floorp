@@ -5151,6 +5151,12 @@ nsTypedSelection::RemoveAllRanges()
   // Turn off signal for table selection
   mFrameSelection->ClearTableCellSelection();
 
+  // If this was an ATTENTION selection, change it back to normal now
+  if (mFrameSelection->GetDisplaySelection() ==
+      nsISelectionController::SELECTION_ATTENTION) {
+    mFrameSelection->SetDisplaySelection(nsISelectionController::SELECTION_ON);
+  }
+
   return mFrameSelection->NotifySelectionListeners(GetType());
   // Also need to notify the frames!
   // PresShell::CharacterDataChanged should do that on DocumentChanged
