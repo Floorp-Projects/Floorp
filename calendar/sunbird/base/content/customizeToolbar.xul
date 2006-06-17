@@ -86,7 +86,7 @@
 
   <box align="center">
     <label value="&show.label;"/>
-    <menulist id="modelist" value="icons" oncommand="updateToolbarMode(this.value);">
+    <menulist id="modelist" value="full" oncommand="updateToolbarMode(this.value);">
       <menupopup>
         <menuitem value="full" label="&iconsAndText.label;"/>
         <menuitem value="icons" label="&icons.label;"/>
