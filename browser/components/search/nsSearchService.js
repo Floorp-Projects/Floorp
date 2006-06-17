@@ -143,6 +143,8 @@ function isUsefulLine(aLine) {
  */
 const kIsUserInput = /(\s|["'=])user(\s|[>="'\/\\+]|$)/i;
 
+var MozStorageStatementWrapper = null;
+
 /**
  * Prefixed to all search debug output.
  */
@@ -565,19 +567,6 @@ function setLocalizedPref(aPrefName, aValue) {
 }
 
 /**
- * Wrapper for nsIPrefBranch::setBoolPref.
- * @param aPrefName
- *        The name of the pref to set.
- * @param aValue
- *        The value of the pref.
- */
-function setBoolPref(aName, aVal) {
-  var prefB = Cc["@mozilla.org/preferences-service;1"].
-              getService(Ci.nsIPrefBranch);
-  prefB.setBoolPref(aName, aVal);
-}
-
-/**
  * Wrapper for nsIPrefBranch::getBoolPref.
  * @param aPrefName
  *        The name of the pref to get.
@@ -668,6 +657,21 @@ function QueryParameter(aName, aValue) {
 
   this.name = aName;
   this.value = aValue;
+}
+
+/**
+ * Creates a mozStorage statement that can be used to access the database we
+ * use to hold metadata.
+ *
+ * @param dbconn  the database that the statement applies to
+ * @param sql     a string specifying the sql statement that should be created
+ */
+function createStatement (dbconn, sql) {
+  var stmt = dbconn.createStatement(sql);
+  var wrapper = new MozStorageStatementWrapper();
+
+  wrapper.initialize(stmt);
+  return wrapper;
 }
 
 /**
@@ -1142,11 +1146,6 @@ Engine.prototype = {
     // passed in URL), get one now
     if (!this._file)
       this._file = getSanitizedFile(this.name);
-
-    // Generate a unique ID for this engine. Use the name of the engine, URI
-    // encoded because pref names can only contain certain characters
-    this._pref = BROWSER_SEARCH_PREF + "engine." +
-                 encodeURIComponent(this.name) + ".";
   },
 
   /**
@@ -1671,13 +1670,13 @@ Engine.prototype = {
   // nsISearchEngine
   get alias() {
     if (this._alias === null)
-      this._alias = getLocalizedPref(this._pref + "alias", "");
+      this._alias = engineMetadataService.getAttr(this, "alias");
 
     return this._alias;
   },
   set alias(val) {
     this._alias = val;
-    setLocalizedPref(this._pref + "alias", val);
+    engineMetadataService.setAttr(this, "alias", val);
     notifyAction(this, SEARCH_ENGINE_CHANGED);
   },
 
@@ -1686,17 +1685,15 @@ Engine.prototype = {
   },
 
   get hidden() {
-    if (this._hidden === null) {
-      // Initialize the hidden property from a pref
-      this._hidden = getBoolPref(this._pref + "hidden", false);
-    }
+    if (this._hidden === null)
+      this._hidden = engineMetadataService.getAttr(this, "hidden");
     return this._hidden;
   },
   set hidden(val) {
     var value = !!val;
     if (value != this._hidden) {
-      setBoolPref(this._pref + "hidden", value);
       this._hidden = value;
+      engineMetadataService.setAttr(this, "hidden", value);
       notifyAction(this, SEARCH_ENGINE_CHANGED);
     }
   },
@@ -1722,6 +1719,13 @@ Engine.prototype = {
       return this._uri.spec;
 
     return "";
+  },
+
+  // The file that the plugin is loaded from is a unique identifier for it.  We
+  // use this as the identifier to store data in the sqlite database
+  get _id() {
+    ENSURE_WARN(this._file, "No _file for id!", Cr.NS_ERROR_FAILURE);
+    return this._file.path;
   },
 
   get name() {
@@ -1845,6 +1849,7 @@ SearchService.prototype = {
   _sortedEngines: [],
 
   _init: function() {
+    engineMetadataService.init();
     this._addObservers();
 
     var fileLocator = Cc["@mozilla.org/file/directory_service;1"].
@@ -1856,6 +1861,8 @@ SearchService.prototype = {
       var location = locations.getNext().QueryInterface(Ci.nsIFile);
       this._loadEngines(location);
     }
+
+    this._convertOldPrefs();
 
     // Now that all engines are loaded, build the sorted engine list
     this._buildSortedEngineList();
@@ -1955,54 +1962,30 @@ SearchService.prototype = {
   },
 
   _saveSortedEngineList: function SRCH_SVC_saveSortedEngineList() {
-    var preferences = Cc["@mozilla.org/preferences-service;1"].
-                      getService(Ci.nsIPrefService);
-    var orderBranch = preferences.getBranch(BROWSER_SEARCH_PREF + "order.");
-
-    // First, reset the old branch
-    for (var i = 1; orderBranch.prefHasUserValue(i); ++i)
-      orderBranch.clearUserPref(i);
-
-    // Now, create the new branch
-    var pls = Cc["@mozilla.org/pref-localizedstring;1"].
-              createInstance(Ci.nsIPrefLocalizedString);
     var engines = this._getSortedEngines(false);
-    for (var i = 0; i < engines.length; ++i) {
-      pls.data = engines[i].name;
-      orderBranch.setComplexValue(i+1, Ci.nsIPrefLocalizedString, pls);
-    }
-
-    // Save the pref file explicitly, since we're called at XPCOM shutdown
-    preferences.savePrefFile(null);
+    for (var i = 0; i < engines.length; ++i)
+      engineMetadataService.setAttr(engines[i], "order", i+1);
   },
 
   _buildSortedEngineList: function SRCH_SVC_buildSortedEngineList() {
     var addedEngines = { };
-    this._sortedEngines = [];
-    var engineName, engine;
-    var i = 0;
+    this._sortedEngines = new Array(this._engines.length);
+    var engine;
 
-    // Get sorted engines first
-    while (true) {
-      engineName = getLocalizedPref(BROWSER_SEARCH_PREF + "order." + (++i));
-      if (!engineName)
-        break;
-
-      engine = this._engines[engineName];
-      if (!engine || (engineName in addedEngines))
-        continue;
-
-      this._sortedEngines.push(engine);
-      addedEngines[engineName] = engine;
+    for each (engine in this._engines) {
+      var orderNumber = engineMetadataService.getAttr(engine, "order");
+      if (orderNumber) {
+        this._sortedEngines[orderNumber-1] = engine;
+        addedEngines[engine.name] = engine;
+      }
     }
 
     // Array for the remaining engines, alphabetically sorted
     var alphaEngines = [];
 
-    for (engineName in this._engines) {
-      engine = this._engines[engineName];
-      if (!(engineName in addedEngines))
-        alphaEngines.push(this._engines[engineName]);
+    for each (engine in this._engines) {
+      if (!(engine.name in addedEngines))
+        alphaEngines.push(this._engines[engine.name]);
     }
     alphaEngines = alphaEngines.sort(function (a, b) {
                                        if (a.name < b.name)
@@ -2013,6 +1996,45 @@ SearchService.prototype = {
                                      });
     this._sortedEngines = this._sortedEngines.concat(alphaEngines);
   },
+
+  /**
+   *  On first startup, there are some default prefs that we need to migrate 
+   *  into our sqlite database.  This function moves those values, along with
+   *  any values users may have set from builds prior to the introduction of
+   *  the database.
+   */
+  _convertOldPrefs: function SRCH_SVC_convertOrder() {
+    if (!engineMetadataService.newTable)
+      return;
+    var i = 0;
+    var engineName, engine;
+    while (true) {
+      engineName = getLocalizedPref(BROWSER_SEARCH_PREF + "order." + (++i));
+      if (!engineName)
+        break;
+
+      engine = this._engines[engineName];
+      if (!engine)
+        continue;
+      engineMetadataService.setAttr(engine, "order", i);
+    }
+
+    var prefService = Cc["@mozilla.org/preferences-service;1"].
+                        getService(Ci.nsIPrefService);
+    for each (engine in this._engines) {
+      var basePref = BROWSER_SEARCH_PREF + "engine." + 
+                     encodeURIComponent(engine.name) + ".";
+
+      var alias = getLocalizedPref(basePref + "alias", "");
+      if (alias != "")
+        engineMetadataService.setAttr(engine, "alias", alias);
+
+      var hidden = getBoolPref(basePref + "hidden", false);
+      engineMetadataService.setAttr(engine, "hidden", hidden);
+      var engineBranch = prefService.getBranch(basePref);
+      engineBranch.deleteBranch("");
+    }
+},
 
   /**
    * Converts a Sherlock file and its icon into the custom XML format used by
@@ -2313,6 +2335,90 @@ SearchService.prototype = {
     throw Cr.NS_ERROR_NO_INTERFACE;
   }
 };
+
+var engineMetadataService = {
+  // Keeps track of whether init() actually created a new table, or the table
+  // already existed.
+  newTable: false,
+
+  init: function epsInit() {
+    MozStorageStatementWrapper = 
+      new Components.Constructor("@mozilla.org/storage/statement-wrapper;1",
+                                 Ci.mozIStorageStatementWrapper);
+    var engineDataTable = "id INTEGER PRIMARY KEY, engineid STRING, name STRING, value STRING";
+    var dbService = Cc["@mozilla.org/storage/service;1"].
+                      getService(Ci.mozIStorageService);
+    this.mDB = dbService.openSpecialDatabase("profile");
+
+    try {
+      this.mDB.createTable("engine_data", engineDataTable);
+      this.newTable = true;
+    } catch (ex) {
+      this.newTable = false;
+      // Fails if the table already exists, which is fine
+    }
+
+    this.mGetData = createStatement (
+      this.mDB,
+      "SELECT value FROM engine_data WHERE engineid = :engineid AND name = :name");
+    this.mDeleteData = createStatement (
+      this.mDB,
+      "DELETE FROM engine_data WHERE engineid = :engineid AND name = :name");
+    this.mInsertData = createStatement (
+      this.mDB,
+      "INSERT INTO engine_data (engineid, name, value) " +
+      "VALUES (:engineid, :name, :value)");
+  },
+  getAttr: function epsGetAttr(engine, name) {
+     // attr names must be lower case
+     name = name.toLowerCase();
+
+    var stmt = this.mGetData;
+    stmt.reset();
+    var pp = stmt.params;
+    pp.engineid = engine._id;
+    pp.name = name;
+
+    var value = null;
+    if (stmt.step())
+      value = stmt.row.value;
+    stmt.reset();
+    return value;
+  },
+
+  setAttr: function epsSetAttr(engine, name, value) {
+    // attr names must be lower case
+    name = name.toLowerCase();
+
+    this.mDB.beginTransaction();
+
+    var pp = this.mDeleteData.params;
+    pp.engineid = engine._id;
+    pp.name = name;
+    this.mDeleteData.step();
+    this.mDeleteData.reset();
+
+    pp = this.mInsertData.params;
+    pp.engineid = engine._id;
+    pp.name = name;
+    pp.value = value;
+    this.mInsertData.step();
+    this.mInsertData.reset();
+
+    this.mDB.commitTransaction();
+  },
+
+  deleteEngineData: function epsDelData(engine, name) {
+    // attr names must be lower case
+    name = name.toLowerCase();
+
+    var pp = this.mDeleteData.params;
+    pp.engineid = engine._id;
+    pp.name = name;
+    this.mDeleteData.step();
+    this.mDeleteData.reset();
+  }
+}
 
 const kClassID    = Components.ID("{7319788a-fe93-4db3-9f39-818cf08f4256}");
 const kClassName  = "Browser Search Service";
