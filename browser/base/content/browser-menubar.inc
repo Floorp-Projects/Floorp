@@ -426,6 +426,25 @@
                 <menuitem key="addBookmarkAsKb"
                           label="&addCurPageAsCmd.label;"
                           command="Browser:AddBookmarkAs"/>
+                <menuitem id="subscribeToPageMenuitem"
+#ifdef MOZ_FEEDS
+                          label="&subscribeToPageMenuitem.label;"
+#else
+                          label="&addLiveBookmarkMenuitem.label;"
+#endif
+                          oncommand="return FeedHandler.buildFeedList(event);"
+                          disabled="true"/>
+                <menu id="subscribeToPageMenupopup"
+#ifdef MOZ_FEEDS
+                      label="&subscribeToPageMenupopup.label;"
+#else
+                      label="&addLiveBookmarkMenupopup.label;"
+#endif
+                      hidden="true">
+                  <menupopup id="subscribeToPageSubmenuMenupopup" 
+                             onpopupshowing="return FeedHandler.buildFeedList(event);" 
+                             oncommand="return FeedHandler.subscribeToFeed(event.target.getAttribute('feed'));"/>
+                </menu>
                 <menuitem id="bookmarkAllCmd"
 # Accel+Shift+A-F are reserved on GTK2
 #ifndef MOZ_WIDGET_GTK2
@@ -456,6 +475,25 @@
                onpopupshowing="BookmarksEventHandler.onPopupShowing(event);">
       <menuitem label="&addCurPageAsCmd.label;" 
                 command="Browser:AddBookmarkAs" key="addBookmarkAsKb"/>
+      <menuitem id="subscribeToPageMenuitem"
+#ifdef MOZ_FEEDS
+                label="&subscribeToPageMenuitem.label;"
+#else
+                label="&addLiveBookmarkMenuitem.label;"
+#endif
+                oncommand="return FeedHandler.buildFeedList(event);"
+                disabled="true"/>
+      <menu id="subscribeToPageMenupopup"
+#ifdef MOZ_FEEDS
+            label="&subscribeToPageMenupopup.label;"
+#else
+            label="&addLiveBookmarkMenupopup.label;"
+#endif
+            hidden="true">
+        <menupopup id="subscribeToPageSubmenuMenupopup" 
+                   onpopupshowing="return FeedHandler.buildFeedList(event);" 
+                   oncommand="return FeedHandler.subscribeToFeed(event.target.getAttribute('feed'));"/>
+      </menu>
       <menuitem label="&addCurPagesCmd.label;" 
                 command="Browser:BookmarkAllTabs" key="bookmarkAllTabsKb"/>
       <menuitem label="&searchBookmarksCmd.label;" 
