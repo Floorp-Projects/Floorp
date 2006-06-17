@@ -977,6 +977,24 @@ function dfile_geturl()
            this.port + "/" + encodeURIComponent(this.filename);
 }
 
+CIRCDCCFileTransfer.prototype.dispose =
+function dfile_dispose()
+{
+    if (this.connection)
+    {
+        // close is for the server socket, disconnect for the client socket.
+        this.connection.close();
+        this.connection.disconnect();
+    }
+
+    if (this.localFile)
+        this.localFile.close();
+
+    this.connection = null;
+    this.localFile = null;
+    this.filestream = null;
+}
+
 // Call to make this end offer DCC File to targeted user.
 CIRCDCCFileTransfer.prototype.request =
 function dfile_request(localFile)
@@ -1001,6 +1019,7 @@ function dfile_request(localFile)
     if (!this.connection.listen(this.port, this))
     {
         this.state.failed();
+        this.dispose();
         return false;
     }
 
@@ -1055,6 +1074,7 @@ function dfile_accept(localFile)
     else
     {
         this.state.failed();
+        this.dispose();
     }
 
     return (this.state == DCC_STATE_ACCEPTED);
@@ -1076,11 +1096,7 @@ function dfile_decline()
 CIRCDCCFileTransfer.prototype.disconnect =
 function dfile_disconnect()
 {
-    this.connection.disconnect();
-    if (this.localFile)
-        this.localFile.close();
-    this.localFile = null;
-    this.filestream = null;
+    this.dispose();
 
     return true;
 }
@@ -1096,9 +1112,7 @@ function dfile_abort()
     }
 
     this.state.sendAbort();
-
-    if (this.connection)
-        this.connection.close();
+    this.dispose();
 }
 
 // Event to handle a request from the target user.
@@ -1208,6 +1222,7 @@ function dfile_sockdiscon(status)
         this.state.failed();
     else
         this.state.socketDisconnected();
+    this.dispose();
 }
 
 CIRCDCCFileTransfer.prototype.onDataAvailable =
@@ -1243,7 +1258,10 @@ function dfile_dataavailable(e)
                 this.connection.sendData(d);
 
                 if (this.position >= this.size)
+                {
+                    this.dispose();
                     break;
+                }
             }
         }
         else if (this.state.dir == DCC_DIR_GETTING)
