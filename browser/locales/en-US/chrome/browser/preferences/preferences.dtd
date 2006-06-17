@@ -5,9 +5,19 @@
 <!ENTITY  prefWindow.styleMac     "width: 47em;">
 <!ENTITY  prefWindow.styleGNOME   "width: 42em; height: 38.5em;">
 
-<!ENTITY  paneGeneral.title       "General">
-<!ENTITY  panePrivacy.title       "Privacy">
-<!ENTITY  paneDownloads.title     "Downloads">
-<!ENTITY  paneAdvanced.title      "Advanced">
-<!ENTITY  paneContent.title       "Content">
+<!ENTITY  paneMain.title          "Main">
 <!ENTITY  paneTabs.title          "Tabs">
+<!ENTITY  paneContent.title       "Content">
+<!ENTITY  panePrivacy.title       "Privacy">
+<!ENTITY  paneSecurity.title      "Security">
+<!ENTITY  paneAdvanced.title      "Advanced">
+
+
+<!-- LOCALIZATION NOTE:
+     The entities below are old entities which probably will not be in v2.0.
+     Spend your time on other entities before localizing these, because they
+     are unlikely to be used and may even be removed.
+-->
+
+<!ENTITY  paneGeneral.title       "General">
+<!ENTITY  paneDownloads.title     "Downloads">
