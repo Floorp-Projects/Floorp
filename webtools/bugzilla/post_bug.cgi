@@ -22,12 +22,14 @@
 #                 Dan Mosedale <dmose@mozilla.org>
 #                 Joe Robins <jmrobins@tgix.com>
 #                 Gervase Markham <gerv@gerv.net>
+#                 Marc Schumann <wurblzap@gmail.com>
 
 use strict;
 use lib qw(.);
 
 require "globals.pl";
 use Bugzilla;
+use Bugzilla::Attachment;
 use Bugzilla::Constants;
 use Bugzilla::Util;
 use Bugzilla::Bug;
@@ -545,6 +547,21 @@ $dbh->do("UPDATE bugs SET creation_ts = ? WHERE bug_id = ?",
           undef, ($timestamp, $id));
 
 $dbh->bz_unlock_tables();
+
+# Add an attachment if requested.
+if (defined($cgi->upload('data')) || $cgi->param('attachurl')) {
+    $cgi->param('isprivate', $cgi->param('commentprivacy'));
+    Bugzilla::Attachment->insert_attachment_for_bug(!THROW_ERROR,
+                                                    $id, $user, $timestamp,
+                                                    \$vars)
+        || ($vars->{'message'} = 'attachment_creation_failed');
+
+    # Determine if Patch Viewer is installed, for Diff link
+    eval {
+        require PatchReader;
+        $vars->{'patchviewerinstalled'} = 1;
+    };
+}
 
 # Email everyone the details of the new bug 
 $vars->{'mailrecipients'} = {'changer' => $user->login};

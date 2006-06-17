@@ -19,6 +19,7 @@
   # Contributor(s): Myk Melez <myk@mozilla.org>
   #                 Joel Peshkin <bugreport@peshkin.net>
   #                 Erik Stambaugh <erik@dasbistro.com>
+  #                 Marc Schumann <wurblzap@gmail.com>
   #%]
 
 [% PROCESS global/variables.none.tmpl %]
@@ -33,180 +34,19 @@
   title = title
   h1 = h1
   h2 = h2
-  style = "
-    table.attachment_entry th {
-      text-align: right;
-      vertical-align: baseline;
-      white-space: nowrap;
-    }
-
-    table.attachment_entry td {
-      text-align: left;
-      vertical-align: baseline;
-      padding-bottom: 5px;
-    }
-    
-    table#flags th, table#flags td {
-      text-align: left;
-      vertical-align: baseline;
-      font-size: small;
-    }
-  "
-  onload="setContentTypeDisabledState();"
+  onload="setContentTypeDisabledState(document.entryform);"
+  style_urls = [ 'skins/standard/create_attachment.css' ]
+  javascript_urls = [ "js/attachment.js" ]
 %]
-
-[% IF Param("allow_attach_url") %]
-    <script type="text/javascript">
-
-        function URLFieldHandler() {
-            var field_attachurl = document.getElementById("attachurl");
-            var greyfields = new Array("data", "ispatch", "autodetect",
-                                       "list", "manual", "bigfile",
-                                       "contenttypeselection",
-                                       "contenttypeentry");
-            var i;
-            if (field_attachurl.value.match(/^\s*$/)) {
-                for (i = 0; i < greyfields.length; i++) {
-                    thisfield = document.getElementById(greyfields[i]);
-                    if (thisfield) {
-                        thisfield.removeAttribute("disabled");
-                    }
-                }
-            } else {
-                for (i = 0; i < greyfields.length; i++) {
-                    thisfield = document.getElementById(greyfields[i]);
-                    if (thisfield) {
-                        thisfield.setAttribute("disabled", "disabled");
-                    }
-                }
-            }
-        }
-
-        function DataFieldHandler() {
-            var field_data = document.getElementById("data");
-            var greyfields = new Array("attachurl");
-            if (field_data.value.match(/^\s*$/)) {
-                var i;
-                for (i = 0; i < greyfields.length; i++) {
-                    thisfield = document.getElementById(greyfields[i]);
-                    if (thisfield) {
-                        thisfield.removeAttribute("disabled");
-                    }
-                }
-            } else {
-                for (i = 0; i < greyfields.length; i++) {
-                    thisfield = document.getElementById(greyfields[i]);
-                    if (thisfield) {
-                        thisfield.setAttribute("disabled", "disabled");
-                    }
-                }
-            }
-        }
-
-    </script>
-[% END %]
-<script type="text/javascript">
-    function updateCommentPrivacy(checkbox) {
-        var text_elem = document.getElementById('comment');
-        if (checkbox.checked) {
-            text_elem.className='bz_private';
-        } else {
-            text_elem.className='';
-        }
-    }
-
-</script>
-
 
 <form name="entryform" method="post" action="attachment.cgi" enctype="multipart/form-data">
   <input type="hidden" name="bugid" value="[% bugid %]">
   <input type="hidden" name="action" value="insert">
 
   <table class="attachment_entry">
-    <tr>
-      <th><label for="data">File:</label></th>
-      <td>
-        <em>Enter the path to the file on your computer.</em><br>
-        <input type="file" id="data" name="data" size="50"
-          [% IF Param("allow_attach_url") %]
-            onchange="DataFieldHandler()" 
-          [% END %]
-        >
-      </td>
-    </tr>
-    [% IF Param("maxlocalattachment") %]
-    <tr>
-      <th>BigFile:</th>
-      <td>
-        <input type="checkbox" id="bigfile"
-               name="bigfile" value="bigfile">
-        <label for="bigfile">
-          Big File - Stored locally and may be purged
-        </label>
-      </td>
-    </tr>
-    [% END %]
-    [% IF Param("allow_attach_url") %]
-    <tr>
-      <th><label for="attachurl">AttachURL:</label></th>
-      <td>
-        <em>URL to be attached instead.</em><br>
-        <input type="text" id="attachurl" name="attachurl" size="60" 
-               maxlength="2000"
-               onkeyup="URLFieldHandler()" onblur="URLFieldHandler()">
-      </td>
-    </tr>
-    [% END %]
-    <tr>
-      <th><label for="description">Description:</label></th>
-      <td>
-        <em>Describe the attachment briefly.</em><br>
-        <input type="text" id="description" name="description" size="60" maxlength="200">
-      </td>
-    </tr>
-    <tr>
-      <th></th>
-      <td>
-      </td>
-    </tr>
-    <tr>
-      <th>Content Type:</th>
-      <td>
-        <em>If the attachment is a patch, check the box below.</em><br>
-        <input type="checkbox" id="ispatch" name="ispatch" value="1"
-               onchange="setContentTypeDisabledState();">
-        <label for="ispatch">patch</label><br><br>
+    [% PROCESS attachment/createformcontents.html.tmpl %]
 
-        <em>Otherwise, choose a method for determining the content type.</em><br>
-        <input type="radio" id="autodetect"
-               name="contenttypemethod" value="autodetect" checked="checked">
-          <label for="autodetect">auto-detect</label><br>
-        <input type="radio" id="list"
-               name="contenttypemethod" value="list">
-          <label for="list">select from list:</label>
-          <select name="contenttypeselection" id="contenttypeselection"
-                  onchange="this.form.contenttypemethod[1].checked = true;">
-            [% PROCESS "attachment/content-types.html.tmpl" %]
-          </select><br>
-        <input type="radio" id="manual"
-                     name="contenttypemethod" value="manual">
-          <label for="manual">enter manually:</label>
-          <input type="text" name="contenttypeentry" id="contenttypeentry"
-                 size="30" maxlength="200"
-                 onchange="if (this.value) this.form.contenttypemethod[2].checked = true;">
-      </td>
-    </tr>
-    [% IF (Param("insidergroup") && UserInGroup(Param("insidergroup"))) %]
-      <tr>
-        <th>Privacy:</th>
-        <td>
-          <em>If the attachment is private, check the box below.</em><br>
-          <input type="checkbox" name="isprivate" id="isprivate"
-          value="1" onClick="updateCommentPrivacy(this)">
-        <label for="isprivate">Private</label>
-        </td>
-      </tr>
-    [% END %]
+    [%# Additional fields for attachments on existing bugs: %]
     <tr>
       <th>Obsoletes:</th>
       <td>
@@ -238,14 +78,6 @@
       </tr>
     [% END %]
     <tr>
-      <td> </td>
-      <td>
-        [% IF flag_types.size > 0 %]
-          [% PROCESS "flag/list.html.tmpl" bug_id=bugid attach_id=attachid %]<br>
-        [% END %]
-      </td>
-    </tr>
-    <tr>
       <th><label for="comment">Comment:</label></th>
       <td>
         <em>(optional) Add a comment about this attachment to the [% terms.bug %].</em><br>
@@ -259,6 +91,17 @@
         %]
       </td>
     </tr>
+    [% IF (Param("insidergroup") && UserInGroup(Param("insidergroup"))) %]
+      <tr>
+        <th>Privacy:</th>
+        <td>
+          <em>If the attachment is private, check the box below.</em><br>
+          <input type="checkbox" name="isprivate" id="isprivate"
+          value="1" onClick="updateCommentPrivacy(this)">
+        <label for="isprivate">Private</label>
+        </td>
+      </tr>
+    [% END %]
     <tr>
       <th>&nbsp;</th>
       <td><input type="submit" value="Submit"></td>
@@ -266,24 +109,5 @@
   </table>
 
 </form>
-
-<script type="text/javascript">
-  <!--
-  function setContentTypeDisabledState()
-  {
-    var entryform = document.entryform;
-
-    var isdisabled = false;
-    if (entryform.ispatch.checked)
-      isdisabled = true;
-
-    for (var i=0 ; i<entryform.contenttypemethod.length ; i++)
-      entryform.contenttypemethod[i].disabled = isdisabled;
-
-    entryform.contenttypeselection.disabled = isdisabled;
-    entryform.contenttypeentry.disabled = isdisabled;
-  }
-  //-->
-</script>
 
 [% PROCESS global/footer.html.tmpl %]

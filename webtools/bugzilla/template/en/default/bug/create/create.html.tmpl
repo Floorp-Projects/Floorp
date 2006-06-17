@@ -19,12 +19,15 @@
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #                 Ville Skyttä <ville.skytta@iki.fi>
   #                 Shane H. W. Travis <travis@sedsystems.ca>
+  #                 Marc Schumann <wurblzap@gmail.com>
   #%]
 
 [% PROCESS "global/field-descs.none.tmpl" %]
 
 [% PROCESS global/header.html.tmpl
   title = "Enter $terms.Bug: $product.name"
+  style_urls = [ 'skins/standard/create_attachment.css' ]
+  javascript_urls = [ "js/attachment.js" ]
   onload="set_assign_to();"
 %]
 
@@ -86,10 +89,24 @@ function set_assign_to() {
         [% END %]
     }
 }
+
+function handleWantsAttachment(wants_attachment) {
+    if (wants_attachment) {
+        document.getElementById('attachment_false').style.display = 'none';
+        document.getElementById('attachment_true').style.display = 'block';
+    }
+    else {
+        document.getElementById('attachment_false').style.display = 'block';
+        document.getElementById('attachment_true').style.display = 'none';
+        clearAttachmentFields();
+    }
+}
+
 -->
 </script>
 
-<form name="Create" id="Create" method="post" action="post_bug.cgi">
+<form name="Create" id="Create" method="post" action="post_bug.cgi"
+      enctype="multipart/form-data">
 <input type="hidden" name="product" value="[% product.name FILTER html %]">
 <input type="hidden" name="token" value="[% token FILTER html %]">
 
@@ -316,6 +333,7 @@ function set_assign_to() {
       [%- END %]
       [% INCLUDE global/textarea.html.tmpl
          name           = 'comment'
+         id             = 'comment'
          minrows        = 10
          maxrows        = 25
          cols           = constants.COMMENT_COLS
@@ -340,6 +358,38 @@ function set_assign_to() {
   [% ELSE %]
     <input type="hidden" name="commentprivacy" value="0">
   [% END %]
+
+  <tr>
+    <th align="right" valign="top">Attachment:</th>
+    <td colspan="3">
+      <script type="text/javascript">
+        <!--
+        document.write( '<div id="attachment_false">'
+                      +   '<input type="button" value="Add an attachment" '
+                      +          'onClick="handleWantsAttachment(true)"> '
+                      +   '<em style="display: none">This button has no '
+                      +   'functionality for you because your browser does '
+                      +   'not support CSS or does not use it.</em>'
+                      + '</div>'
+                      + '<div id="attachment_true" style="display: none">'
+                      +   '<input type="button" '
+                      +          'value="Don\'t add an attachment " '
+                      +          'onClick="handleWantsAttachment(false)">');
+        //-->
+      </script>
+        <fieldset>
+          <legend>Add an attachment</legend>
+          <table class="attachment_entry">
+            [% PROCESS attachment/createformcontents.html.tmpl %]
+          </table>
+        </fieldset>
+      <script type="text/javascript">
+        <!--
+        document.write('</div>');
+        //-->
+      </script>
+    </td>
+  </tr>
 
   [% IF UserInGroup('editbugs') %]
     [% IF use_keywords %]

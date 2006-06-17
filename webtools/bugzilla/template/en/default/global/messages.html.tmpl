@@ -100,6 +100,12 @@
     The user account [% otheruser.login FILTER html %] has been deleted
     successfully.
 
+  [% ELSIF message_tag == "attachment_creation_failed" %]
+    The [% terms.bug %] was created successfully, but attachment creation
+    failed.
+    Please add your attachment by clicking the "Create a New Attachment" link
+    below.
+
   [% ELSIF message_tag == "buglist_adding_field" %]
     [% title = "Adding field to search page..." %]
     [% link  = "Click here if the page does not redisplay automatically." %]
