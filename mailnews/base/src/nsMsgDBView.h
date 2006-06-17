@@ -173,6 +173,7 @@ protected:
   nsresult FetchPriority(nsIMsgDBHdr *aHdr, PRUnichar ** aPriorityString);
   nsresult FetchLabel(nsIMsgDBHdr *aHdr, PRUnichar ** aLabelString);
   nsresult FetchTags(nsIMsgDBHdr *aHdr, PRUnichar ** aTagString);
+  nsresult FetchKeywords(nsIMsgDBHdr *aHdr, char ** keywordString);
   nsresult FetchAccount(nsIMsgDBHdr * aHdr, PRUnichar ** aAccount);
   nsresult CycleThreadedColumn(nsIDOMElement * aElement);
 
@@ -306,13 +307,10 @@ protected:
   PRBool OfflineMsgSelected(nsMsgViewIndex * indices, PRInt32 numIndices);
   PRBool NonDummyMsgSelected(nsMsgViewIndex * indices, PRInt32 numIndices);
   PRUnichar * GetString(const PRUnichar *aStringName);
-  nsresult AddLabelPrefObservers();
-  nsresult RemoveLabelPrefObservers();
   nsresult GetPrefLocalizedString(const char *aPrefName, nsString& aResult);
   nsresult GetLabelPrefStringAndAtom(const char *aPrefName, nsString& aColor, nsIAtom** aColorAtom);
-  nsresult AppendLabelProperties(nsMsgLabelValue label, nsISupportsArray *aProperties);
-  nsresult AppendSelectedTextColorProperties(nsMsgLabelValue label, nsISupportsArray *aProperties);
-  nsresult InitLabelPrefs(void);
+  nsresult AppendKeywordProperties(const char *keywords, nsISupportsArray *properties, PRBool addSelectedTextProperty);
+  nsresult InitLabelStrings(void);
   nsresult CopyDBView(nsMsgDBView *aNewMsgDBView, nsIMessenger *aMessengerInstance, nsIMsgWindow *aMsgWindow, nsIMsgDBViewCommandUpdater *aCmdUpdater);
   void InitializeAtomsAndLiterals();
   virtual PRInt32 FindLevelInThread(nsIMsgDBHdr *msgHdr, nsMsgViewIndex startOfThread, nsMsgViewIndex viewIndex);

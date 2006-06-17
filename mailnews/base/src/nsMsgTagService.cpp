@@ -152,8 +152,9 @@ NS_IMETHODIMP nsMsgTagService::GetColorForKey(const nsACString &key, nsACString 
   prefName.Append(key);
   prefName.AppendLiteral(".color");
   nsXPIDLCString color;
-  return m_prefBranch->GetCharPref(prefName.get(), getter_Copies(color));
+  nsresult rv = m_prefBranch->GetCharPref(prefName.get(), getter_Copies(color));
   _retval = color;
+  return rv;
 }
 
 /* void deleteTag (in wstring tag); */
