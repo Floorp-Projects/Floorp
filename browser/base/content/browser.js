@@ -6266,75 +6266,11 @@ var FeedHandler = {
     while (menuPopup.firstChild)
       menuPopup.removeChild(menuPopup.firstChild);
     
-    /**
-     * Attempt to generate a list of unique feeds from the list of feeds
-     * supplied by the web page. It is fairly common for a site to supply
-     * feeds in multiple formats but with divergent |title| attributes so
-     * we need to make a rough pass at trying to not show a menu when there
-     * is in fact only one feed. If this is the case, by default select
-     * the ATOM feed if one is supplied, otherwise pick the first one. 
-     * @param   feeds
-     *          An array of Feed info JS Objects representing the list of
-     *          feeds advertised by the web page
-     * @returns An array of what should be mostly unique feeds. 
-     */
-    function harvestFeeds(feeds) {
-      var feedHash = { };
-      for (var i = 0; i < feeds.length; ++i) {
-        var feed = feeds[i];
-        if (!(feed.type in feedHash))
-          feedHash[feed.type] = [];
-        feedHash[feed.type].push(feed);
-      }
-      var mismatch = false;
-      var count = 0;
-      var defaultType = null;
-      for (var type in feedHash) {
-        // The default type is whichever is listed first on the web page.
-        // Nothing fancy, just something that works.
-        if (!defaultType) {
-          defaultType = type;
-          count = feedHash[type].length;
-        }
-        if (feedHash[type].length != count) {
-          mismatch = true;
-          break;
-        }
-        count = feedHash[type].length;
-      }
-      // There are more feeds of one type than another - this implies the
-      // content developer is supplying multiple channels, let's not do 
-      // anything fancier than this and just return the full set. 
-      if (mismatch)
-        return feeds;
-        
-      // Look for an atom feed by default, fall back to whichever was listed
-      // first if there is no atom feed supplied. 
-      const ATOMTYPE = "application/atom+xml";
-      return ATOMTYPE in feedHash ? feedHash[ATOMTYPE] : feedHash[defaultType];
-    }
-    
     // Get the list of unique feeds, and if there's only one unique entry, 
     // show the feed in the browser rather than displaying a menu. 
-    var feeds = harvestFeeds(feeds);
+    var feeds = this.harvestFeeds(feeds);
     if (feeds.length == 1) {
-#ifdef MOZ_PLACES
-#ifdef MOZ_FEEDS
-      // Just load the feed in the content area to either subscribe or show the
-      // preview UI
-      loadURI(feeds[0].href, null, null, false);
-#else
-      PlacesCommandHook.addLiveBookmark(feeds[0].href);
-#endif
-#else
-#ifdef MOZ_FEEDS
-      // Just load the feed in the content area to either subscribe or show the
-      // preview UI
-      loadURI(feeds[0].href, null, null, false);
-#else
-      this.addLiveBookmark(feeds[0].href);
-#endif
-#endif
+      this.subscribeToFeed(feeds[0].href);
       return false;
     }
 
@@ -6356,6 +6292,83 @@ var FeedHandler = {
     return true;
   },
   
+  /**
+   * Subscribe to a given feed.  Called when
+   *   1. Page has a single feed and user clicks feed icon in location bar
+   *   2. Page has a single feed and user selects Subscribe menu item
+   *   3. Page has multiple feeds and user selects from feed icon popup
+   *   4. Page has multiple feeds and user selects from Subscribe submenu
+   * @param   href
+   *          The feed to subscribe to
+   */
+  subscribeToFeed: function(href) {
+#ifdef MOZ_PLACES
+#ifdef MOZ_FEEDS
+      // Just load the feed in the content area to either subscribe or show the
+      // preview UI
+      loadURI(href, null, null, false);
+#else
+      PlacesCommandHook.addLiveBookmark(feeds[0].href);
+#endif
+#else
+#ifdef MOZ_FEEDS
+      // Just load the feed in the content area to either subscribe or show the
+      // preview UI
+      loadURI(href, null, null, false);
+#else
+      this.addLiveBookmark(feeds[0].href);
+#endif
+#endif
+  },
+
+  /**
+   * Attempt to generate a list of unique feeds from the list of feeds
+   * supplied by the web page. It is fairly common for a site to supply
+   * feeds in multiple formats but with divergent |title| attributes so
+   * we need to make a rough pass at trying to not show a menu when there
+   * is in fact only one feed. If this is the case, by default select
+   * the ATOM feed if one is supplied, otherwise pick the first one. 
+   * @param   feeds
+   *          An array of Feed info JS Objects representing the list of
+   *          feeds advertised by the web page
+   * @returns An array of what should be mostly unique feeds. 
+   */
+  harvestFeeds: function(feeds) {
+    var feedHash = { };
+    for (var i = 0; i < feeds.length; ++i) {
+      var feed = feeds[i];
+      if (!(feed.type in feedHash))
+        feedHash[feed.type] = [];
+      feedHash[feed.type].push(feed);
+    }
+    var mismatch = false;
+    var count = 0;
+    var defaultType = null;
+    for (var type in feedHash) {
+      // The default type is whichever is listed first on the web page.
+      // Nothing fancy, just something that works.
+      if (!defaultType) {
+        defaultType = type;
+        count = feedHash[type].length;
+      }
+      if (feedHash[type].length != count) {
+        mismatch = true;
+        break;
+      }
+      count = feedHash[type].length;
+    }
+    // There are more feeds of one type than another - this implies the
+    // content developer is supplying multiple channels, let's not do 
+    // anything fancier than this and just return the full set. 
+    if (mismatch)
+      return feeds;
+      
+    // Look for an atom feed by default, fall back to whichever was listed
+    // first if there is no atom feed supplied. 
+    const ATOMTYPE = "application/atom+xml";
+    return ATOMTYPE in feedHash ? feedHash[ATOMTYPE] : feedHash[defaultType];
+  },
+    
   /**
    * Locate the shell that has a specified document loaded in it. 
    * @param   doc
@@ -6394,6 +6407,10 @@ var FeedHandler = {
     var feedButton = document.getElementById("feed-button");
     if (!feedButton)
       return;
+    if (!this._feedMenuitem)
+      this._feedMenuitem = document.getElementById("subscribeToPageMenuitem");
+    if (!this._feedMenupopup)
+      this._feedMenupopup = document.getElementById("subscribeToPageMenupopup");
 
     var feeds = gBrowser.mCurrentBrowser.feeds;
     if (!feeds || feeds.length == 0) {
@@ -6401,6 +6418,9 @@ var FeedHandler = {
         feedButton.removeAttribute("feeds");
       feedButton.setAttribute("tooltiptext", 
                               gNavigatorBundle.getString("feedNoFeeds"));
+      this._feedMenuitem.setAttribute("disabled", "true");
+      this._feedMenupopup.setAttribute("hidden", "true");
+      this._feedMenuitem.removeAttribute("hidden");
     } else {
       feedButton.setAttribute("feeds", "true");
       feedButton.setAttribute("tooltiptext", 
@@ -6409,6 +6429,17 @@ var FeedHandler = {
 #else
                               gNavigatorBundle.getString("feedHasFeeds"));
 #endif
+      // check for dupes before we pick which UI to expose
+      feeds = this.harvestFeeds(feeds);
+      
+      if (feeds.length > 1) {
+        this._feedMenuitem.setAttribute("hidden", "true");
+        this._feedMenupopup.removeAttribute("hidden");
+      } else {
+        this._feedMenuitem.removeAttribute("disabled");
+        this._feedMenuitem.removeAttribute("hidden");
+        this._feedMenupopup.setAttribute("hidden", "true");
+      }
     }
   }, 
   

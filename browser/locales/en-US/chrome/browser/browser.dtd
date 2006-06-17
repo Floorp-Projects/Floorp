@@ -60,6 +60,10 @@
 <!ENTITY bookmarksMenu.accesskey "B">
 <!ENTITY addCurPageAsCmd.label "Bookmark This Page...">
 <!ENTITY addCurPageAsCmd.commandkey "d">
+<!ENTITY subscribeToPageMenupopup.label "Subscribe to This Page">
+<!ENTITY subscribeToPageMenuitem.label "Subscribe to This Page...">
+<!ENTITY addLiveBookmarkMenupopup.label "Add Live Bookmark">
+<!ENTITY addLiveBookmarkMenuitem.label "Add Live Bookmark...">
 <!ENTITY addCurPagesCmd.label "Bookmark All Tabs...">
 <!ENTITY addCurPagesCmd.accesskey "T">
 <!ENTITY manBookmarksCmd.label "Organize Bookmarks...">
