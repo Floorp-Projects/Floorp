@@ -471,45 +471,46 @@ nsXPInstallManager::OpenProgressDialog(const PRUnichar **aPackageList, PRUint32 
 
     // --- open the window
     nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv));
-    if (wwatch) {
-        char *statusDialogURL, *statusDialogType;
-        nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID));
-        if (pref) {
-          const char* statusDlg = mChromeType == CHROME_SKIN ? PREF_XPINSTALL_STATUS_DLG_SKIN
-                                                             : PREF_XPINSTALL_STATUS_DLG_CHROME;
-          rv = pref->GetCharPref(statusDlg, &statusDialogURL);
-          NS_ASSERTION(NS_SUCCEEDED(rv), "Can't invoke XPInstall FE without a FE URL! Set xpinstall.dialog.status");
-          if (NS_FAILED(rv))
-            return rv;
+    if (!wwatch)
+        return rv;
+    
+    char *statusDialogURL, *statusDialogType;
+    nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+    if (!pref)
+        return rv;
+	const char* statusDlg = mChromeType == CHROME_SKIN ? PREF_XPINSTALL_STATUS_DLG_SKIN
+                                                         : PREF_XPINSTALL_STATUS_DLG_CHROME;
+	rv = pref->GetCharPref(statusDlg, &statusDialogURL);
+	NS_ASSERTION(NS_SUCCEEDED(rv), "Can't invoke XPInstall FE without a FE URL! Set xpinstall.dialog.status");
+	if (NS_FAILED(rv))
+		return rv;
 
-          const char* statusType = mChromeType == CHROME_SKIN ? PREF_XPINSTALL_STATUS_DLG_TYPE_SKIN
-                                                              : PREF_XPINSTALL_STATUS_DLG_TYPE_CHROME;
-          rv = pref->GetCharPref(statusType, &statusDialogType);
-          nsAutoString type; 
-          type.AssignWithConversion(statusDialogType);
-          if (NS_SUCCEEDED(rv) && !type.IsEmpty()) {
-            nsCOMPtr<nsIWindowMediator> wm = do_GetService(NS_WINDOWMEDIATOR_CONTRACTID);
-          
-            nsCOMPtr<nsIDOMWindowInternal> recentWindow;
-            wm->GetMostRecentWindow(type.get(), getter_AddRefs(recentWindow));
-            if (recentWindow) {
-              nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
-              os->NotifyObservers(params, "xpinstall-download-started", nsnull);
+    const char* statusType = mChromeType == CHROME_SKIN ? PREF_XPINSTALL_STATUS_DLG_TYPE_SKIN
+                                                        : PREF_XPINSTALL_STATUS_DLG_TYPE_CHROME;
+    rv = pref->GetCharPref(statusType, &statusDialogType);
+    nsAutoString type; 
+    type.AssignWithConversion(statusDialogType);
+    if (NS_SUCCEEDED(rv) && !type.IsEmpty()) {
+        nsCOMPtr<nsIWindowMediator> wm = do_GetService(NS_WINDOWMEDIATOR_CONTRACTID);
+      
+        nsCOMPtr<nsIDOMWindowInternal> recentWindow;
+        wm->GetMostRecentWindow(type.get(), getter_AddRefs(recentWindow));
+        if (recentWindow) {
+            nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
+            os->NotifyObservers(params, "xpinstall-download-started", nsnull);
 
-              recentWindow->Focus();
-              return NS_OK;
-            }
-          }
+            recentWindow->Focus();
+            return NS_OK;
         }
-
-        nsCOMPtr<nsIDOMWindow> newWindow;
-        rv = wwatch->OpenWindow(0, 
-                                statusDialogURL,
-                                "_blank", 
-                                "chrome,centerscreen,titlebar,dialog=no,resizable",
-                                params, 
-                                getter_AddRefs(newWindow));
     }
+
+    nsCOMPtr<nsIDOMWindow> newWindow;
+    rv = wwatch->OpenWindow(0, 
+                            statusDialogURL,
+                            "_blank", 
+                            "chrome,centerscreen,titlebar,dialog=no,resizable",
+                            params, 
+                            getter_AddRefs(newWindow));
 
     return rv;
 }
