@@ -581,6 +581,7 @@ XPCNativeScriptableSharedMap::~XPCNativeScriptableSharedMap()
 JSBool
 XPCNativeScriptableSharedMap::GetNewOrUsed(JSUint32 flags,
                                            char* name,
+                                           JSBool isGlobal,
                                            XPCNativeScriptableInfo* si)
 {
     NS_PRECONDITION(name,"bad param");
@@ -601,7 +602,7 @@ XPCNativeScriptableSharedMap::GetNewOrUsed(JSUint32 flags,
             new XPCNativeScriptableShared(flags, key.TransferNameOwnership());
         if(!shared)
             return JS_FALSE;
-        shared->PopulateJSClass();
+        shared->PopulateJSClass(isGlobal);
     }
     si->SetScriptableShared(shared);
     return JS_TRUE;

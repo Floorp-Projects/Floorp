@@ -1286,6 +1286,7 @@ JSBool xpc_InitWrappedNativeJSOps()
 // static
 XPCNativeScriptableInfo*
 XPCNativeScriptableInfo::Construct(XPCCallContext& ccx,
+                                   JSBool isGlobal,
                                    const XPCNativeScriptableCreateInfo* sci)
 {
     NS_ASSERTION(sci->GetCallback(), "bad param");
@@ -1309,7 +1310,7 @@ XPCNativeScriptableInfo::Construct(XPCCallContext& ccx,
     XPCNativeScriptableSharedMap* map = rt->GetNativeScriptableSharedMap();
     {   // scoped lock
         XPCAutoLock lock(rt->GetMapLock());
-        success = map->GetNewOrUsed(sci->GetFlags(), name, newObj);
+        success = map->GetNewOrUsed(sci->GetFlags(), name, isGlobal, newObj);
     }
 
     if(!success)
@@ -1322,7 +1323,7 @@ XPCNativeScriptableInfo::Construct(XPCCallContext& ccx,
 }
 
 void
-XPCNativeScriptableShared::PopulateJSClass()
+XPCNativeScriptableShared::PopulateJSClass(JSBool isGlobal)
 {
     NS_ASSERTION(mJSClass.base.name, "bad state!");
 
@@ -1330,6 +1331,9 @@ XPCNativeScriptableShared::PopulateJSClass()
                           JSCLASS_PRIVATE_IS_NSISUPPORTS |
                           JSCLASS_NEW_RESOLVE |
                           JSCLASS_IS_EXTENDED;
+
+    if(isGlobal)
+        mJSClass.base.flags |= JSCLASS_GLOBAL_FLAGS;
 
     if(mFlags.WantAddProperty())
         mJSClass.base.addProperty = XPC_WN_Helper_AddProperty;

@@ -88,12 +88,13 @@ XPCWrappedNativeProto::~XPCWrappedNativeProto()
 JSBool
 XPCWrappedNativeProto::Init(
                 XPCCallContext& ccx,
+                JSBool isGlobal,
                 const XPCNativeScriptableCreateInfo* scriptableCreateInfo)
 {
     if(scriptableCreateInfo && scriptableCreateInfo->GetCallback())
     {
         mScriptableInfo =
-            XPCNativeScriptableInfo::Construct(ccx, scriptableCreateInfo);
+            XPCNativeScriptableInfo::Construct(ccx, isGlobal, scriptableCreateInfo);
         if(!mScriptableInfo)
             return JS_FALSE;
     }
@@ -172,7 +173,8 @@ XPCWrappedNativeProto::GetNewOrUsed(XPCCallContext& ccx,
                                     XPCWrappedNativeScope* Scope,
                                     nsIClassInfo* ClassInfo,
                                     const XPCNativeScriptableCreateInfo* ScriptableCreateInfo,
-                                    JSBool ForceNoSharing)
+                                    JSBool ForceNoSharing,
+                                    JSBool isGlobal)
 {
     NS_ASSERTION(Scope, "bad param");
     NS_ASSERTION(ClassInfo, "bad param");
@@ -223,7 +225,7 @@ XPCWrappedNativeProto::GetNewOrUsed(XPCCallContext& ccx,
 
     proto = new XPCWrappedNativeProto(Scope, ClassInfo, ciFlags, set);
 
-    if(!proto || !proto->Init(ccx, ScriptableCreateInfo))
+    if(!proto || !proto->Init(ccx, isGlobal, ScriptableCreateInfo))
     {
         delete proto.get();
         return nsnull;

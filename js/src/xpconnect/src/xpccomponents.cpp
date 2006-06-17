@@ -2801,7 +2801,7 @@ nsXPCComponents::AttachNewComponentsObject(XPCCallContext& ccx,
 
     nsCOMPtr<XPCWrappedNative> wrapper;
     XPCWrappedNative::GetNewOrUsed(ccx, cholder, aScope, iface,
-                                   getter_AddRefs(wrapper));
+                                   OBJ_IS_NOT_GLOBAL, getter_AddRefs(wrapper));
     if(!wrapper)
         return JS_FALSE;
 
