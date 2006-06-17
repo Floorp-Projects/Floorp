@@ -51,7 +51,7 @@
 [%# This script displays the descriptions for selected components. %]
 <script type="text/javascript">
 var descriptions = [
-[% FOREACH c = component_ %]
+[% FOREACH c = product.components %]
   '[% c.description FILTER js %]',
 [% END %]
 ];
@@ -112,12 +112,12 @@ function PutDescription() {
 </p>
 
 [%# Include other products if sensible %]
-[% IF product == "Firefox" %]
+[% IF product.name == "Firefox" %]
   [% productstring = "product=Mozilla%20Application%20Suite&amp;product=Firefox" %]
-[% ELSIF product == "Thunderbird" %]
+[% ELSIF product.name == "Thunderbird" %]
   [% productstring = "product=Mozilla%20Application%20Suite&amp;product=Thunderbird" %]
 [% ELSE %]
-  [% productstring = BLOCK %]product=[% product FILTER url_quote %][% END %]
+  [% productstring = BLOCK %]product=[% product.name FILTER url_quote %][% END %]
 [% END %]
 
 <p>
@@ -142,11 +142,11 @@ function PutDescription() {
     <input type="hidden" name="format" value="simple">
     <input type="hidden" name="order" value="relevance desc">
     <input type="hidden" name="bug_status" value="__all__">
-    <input type="hidden" name="product" value="[% product FILTER html %]">
-    [% IF product == "Firefox" OR 
-          product == "Thunderbird" OR 
-          product == "Mozilla Application Suite" OR
-          product == "Camino" %]
+    <input type="hidden" name="product" value="[% product.name FILTER html %]">
+    [% IF product.name == "Firefox" OR 
+          product.name == "Thunderbird" OR 
+          product.name == "Mozilla Application Suite" OR
+          product.name == "Camino" %]
       <input type="hidden" name="product" value="Core">
       <input type="hidden" name="product" value="Toolkit">
       <input type="hidden" name="product" value="PSM">
@@ -194,8 +194,8 @@ function PutDescription() {
       <b>Product</b>
     </td>
     <td valign="top">
-      <input type="hidden" name="product" value="[% product FILTER html %]">
-      [% product FILTER html %]
+      <input type="hidden" name="product" value="[% product.name FILTER html %]">
+      [% product.name FILTER html %]
     </td>
   </tr>
 
@@ -209,7 +209,7 @@ function PutDescription() {
           <td valign="top">
             <select name="component" id="component"
                     size="5" onchange="PutDescription()">
-              [% FOREACH c = component_ %]
+              [% FOREACH c = product.components %]
                 <option value="[% c.name FILTER html %]"
                   [% " selected=\"selected\"" IF c == default.component_ %]>
                   [% c.name FILTER html %]
@@ -236,7 +236,7 @@ function PutDescription() {
         To pick the right component, you could use the same one as
         similar [% terms.bugs %] you found in your search, or read the full list of
         <a target="_blank" href="describecomponents.cgi?product=
-            [% product FILTER url_quote %]">component
+            [% product.name FILTER url_quote %]">component
         descriptions</a> (opens in new window) if you need more help.
       </p>
     </td>

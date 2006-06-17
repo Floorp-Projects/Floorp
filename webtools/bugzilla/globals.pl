@@ -160,26 +160,6 @@ sub DBID_to_name {
     return $::cachedNameArray{$id};
 }
 
-sub get_product_id {
-    my ($prod) = @_;
-    PushGlobalSQLState();
-    SendSQL("SELECT id FROM products WHERE name = " . SqlQuote($prod));
-    my ($prod_id) = FetchSQLData();
-    PopGlobalSQLState();
-    return $prod_id;
-}
-
-sub get_product_name {
-    my ($prod_id) = @_;
-    die "non-numeric prod_id '$prod_id' passed to get_product_name"
-      unless ($prod_id =~ /^\d+$/);
-    PushGlobalSQLState();
-    SendSQL("SELECT name FROM products WHERE id = $prod_id");
-    my ($prod) = FetchSQLData();
-    PopGlobalSQLState();
-    return $prod;
-}
-
 # Returns a list of all the legal values for a field that has a
 # list of legal values, like rep_platform or resolution.
 sub get_legal_field_values {

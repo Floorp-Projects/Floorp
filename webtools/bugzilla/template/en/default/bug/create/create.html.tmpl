@@ -21,32 +21,29 @@
   #                 Shane H. W. Travis <travis@sedsystems.ca>
   #%]
 
-[% PROCESS global/variables.none.tmpl %]
 [% PROCESS "global/field-descs.none.tmpl" %]
 
-[% product_name = product FILTER html %]
 [% PROCESS global/header.html.tmpl
-  title = "Enter $terms.Bug: $product_name"
+  title = "Enter $terms.Bug: $product.name"
   onload="set_assign_to();"
 %]
-[% USE Bugzilla %]
 
 <script type="text/javascript">
 <!--
 
-var initialowners = new Array([% component_.size %]);
+var initialowners = new Array([% product.components.size %]);
 var last_initialowner;
-var components = new Array([% component_.size %]);
+var components = new Array([% product.components.size %]);
 [% IF Param("useqacontact") %]
-    var initialqacontacts = new Array([% component_.size %]);
+    var initialqacontacts = new Array([% product.components.size %]);
     var last_initialqacontact;
 [% END %]
 [% count = 0 %]
-[%- FOREACH c = component_ %]
+[%- FOREACH c = product.components %]
     components[[% count %]] = "[% c.name FILTER js %]";
-    initialowners[[% count %]] = "[% c.initialowner FILTER js %]";
+    initialowners[[% count %]] = "[% c.default_assignee.login FILTER js %]";
     [% IF Param("useqacontact") %]
-        initialqacontacts[[% count %]] = "[% c.initialqacontact FILTER js %]";
+        initialqacontacts[[% count %]] = "[% c.default_qa_contact.login FILTER js %]";
     [% END %]
     [% count = count + 1 %]
 [%- END %]
@@ -93,7 +90,7 @@ function set_assign_to() {
 </script>
 
 <form name="Create" id="Create" method="post" action="post_bug.cgi">
-<input type="hidden" name="product" value="[% product FILTER html %]">
+<input type="hidden" name="product" value="[% product.name FILTER html %]">
 <input type="hidden" name="token" value="[% token FILTER html %]">
 
 <table cellspacing="2" cellpadding="0" border="0">
@@ -118,10 +115,10 @@ function set_assign_to() {
 
   <tr>
     <td align="right" valign="top"><strong>Reporter:</strong></td>
-    <td valign="top">[% Bugzilla.user.login FILTER html %]</td>
+    <td valign="top">[% user.login FILTER html %]</td>
 
     <td align="right" valign="top"><strong>Product:</strong></td>
-    <td valign="top">[% product FILTER html %]</td>
+    <td valign="top">[% product.name FILTER html %]</td>
   </tr>
 
   [%# We can't use the select block in these two cases for various reasons. %]
@@ -141,13 +138,13 @@ function set_assign_to() {
 
     <td align="right" valign="top">
       <strong>
-        <a href="describecomponents.cgi?product=[% product FILTER url_quote %]">
+        <a href="describecomponents.cgi?product=[% product.name FILTER url_quote %]">
           Component</a>:
       </strong>
     </td>
     <td>
       <select name="component" onchange="set_assign_to();" size="5">
-        [%- FOREACH c = component_ %]
+        [%- FOREACH c = product.components %]
           <option value="[% c.name FILTER html %]"
             [% " selected=\"selected\"" IF c.name == default.component_ %]>
             [% c.name FILTER html -%]

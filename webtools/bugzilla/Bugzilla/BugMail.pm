@@ -38,6 +38,7 @@ use Bugzilla::Constants;
 use Bugzilla::Config qw(:DEFAULT $datadir);
 use Bugzilla::Util;
 use Bugzilla::Bug;
+use Bugzilla::Product;
 use Bugzilla::Component;
 use Bugzilla::Mailer;
 
@@ -135,8 +136,9 @@ sub ProcessOneBug {
                 lastdiffed AS start, LOCALTIMESTAMP(0) AS end
            FROM bugs WHERE bug_id = ?',
         undef, $id)};
-    
-    $values{product} = &::get_product_name($values{product_id});
+
+    my $product = new Bugzilla::Product($values{product_id});
+    $values{product} = $product->name;
     my $component = new Bugzilla::Component($values{component_id});
     $values{component} = $component->name;
 

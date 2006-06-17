@@ -61,12 +61,15 @@ my $cloned_bug;
 my $cloned_bug_id;
 
 my $cgi = Bugzilla->cgi;
+my $dbh = Bugzilla->dbh;
 my $template = Bugzilla->template;
 my $vars = {};
 
-my $product = trim($cgi->param('product') || '');
+my $product_name = trim($cgi->param('product') || '');
+# Will contain the product object the bug is created in.
+my $product;
 
-if ($product eq '') {
+if ($product_name eq '') {
     # If the user cannot enter bugs in any product, stop here.
     my @enterable_products = @{$user->get_enterable_products};
     ThrowUserError('no_products') unless scalar(@enterable_products);
@@ -77,7 +80,7 @@ if ($product eq '') {
     unless ($classification) {
         my $class;
         # Get all classifications with at least one enterable product.
-        foreach $product (@enterable_products) {
+        foreach my $product (@enterable_products) {
             $class->{$product->classification_id} ||=
                 new Bugzilla::Classification($product->classification_id);
         }
@@ -129,9 +132,18 @@ if ($product eq '') {
         exit;
     } else {
         # Only one product exists.
-        $product = $enterable_products[0]->name;
+        $product = $enterable_products[0];
     }
 }
+else {
+    # Do not use Bugzilla::Product::check_product() here, else the user
+    # could know whether the product doesn't exist or is not accessible.
+    $product = new Bugzilla::Product({'name' => $product_name});
+}
+
+# We need to check and make sure that the user has permission
+# to enter a bug against this product.
+$user->can_enter_product($product ? $product->name : $product_name, THROW_ERROR);
 
 ##############################################################################
 # Useful Subroutines
@@ -300,48 +312,16 @@ if ($cloned_bug_id) {
     $cloned_bug = new Bugzilla::Bug($cloned_bug_id, $user->id);
 }
 
-# We need to check and make sure
-# that the user has permission to enter a bug against this product.
-my $prod_obj = new Bugzilla::Product({name => $product});
-# Update the product name to get the correct case.
-$product = $prod_obj->name if defined $prod_obj;
-$user->can_enter_product($product, 1);
-
 GetVersionTable();
 
-my $product_id = get_product_id($product);
-
-if (scalar(@{$prod_obj->components}) == 1) {
+if (scalar(@{$product->components}) == 1) {
     # Only one component; just pick it.
-    $cgi->param('component', $prod_obj->components->[0]->name);
-}
-
-my @components;
-
-my $dbh = Bugzilla->dbh;
-my $sth = $dbh->prepare(
-       q{SELECT name, description, p1.login_name, p2.login_name 
-           FROM components 
-      LEFT JOIN profiles p1 ON components.initialowner = p1.userid
-      LEFT JOIN profiles p2 ON components.initialqacontact = p2.userid
-          WHERE product_id = ?
-          ORDER BY name});
-
-$sth->execute($product_id);
-while (my ($name, $description, $owner, $qacontact)
-       = $sth->fetchrow_array()) {
-    push @components, {
-        name => $name,
-        description => $description,
-        initialowner => $owner,
-        initialqacontact => $qacontact || '',
-    };
+    $cgi->param('component', $product->components->[0]->name);
 }
 
 my %default;
 
 $vars->{'product'}               = $product;
-$vars->{'component_'}            = \@components;
 
 $vars->{'priority'}              = \@legal_priority;
 $vars->{'bug_severity'}          = \@legal_severity;
@@ -441,32 +421,27 @@ else {
 #
 # Eventually maybe each product should have a "current version"
 # parameter.
-$vars->{'version'} = [map($_->name, @{$prod_obj->versions})];
+$vars->{'version'} = [map($_->name, @{$product->versions})];
 
 if ( ($cloned_bug_id) &&
-     ("$product" eq "$cloned_bug->{'product'}" ) ) {
+     ($product->name eq $cloned_bug->{'product'} ) ) {
     $default{'version'} = $cloned_bug->{'version'};
 } elsif (formvalue('version')) {
     $default{'version'} = formvalue('version');
-} elsif (defined $cgi->cookie("VERSION-$product") &&
-    lsearch($vars->{'version'}, $cgi->cookie("VERSION-$product")) != -1) {
-    $default{'version'} = $cgi->cookie("VERSION-$product");
+} elsif (defined $cgi->cookie("VERSION-" . $product->name) &&
+    lsearch($vars->{'version'}, $cgi->cookie("VERSION-" . $product->name)) != -1) {
+    $default{'version'} = $cgi->cookie("VERSION-" . $product->name);
 } else {
     $default{'version'} = $vars->{'version'}->[$#{$vars->{'version'}}];
 }
 
-# Only used with placeholders below
-trick_taint($product);
-
 # Get list of milestones.
 if ( Param('usetargetmilestone') ) {
-    $vars->{'target_milestone'} = [map($_->name, @{$prod_obj->milestones})];
+    $vars->{'target_milestone'} = [map($_->name, @{$product->milestones})];
     if (formvalue('target_milestone')) {
        $default{'target_milestone'} = formvalue('target_milestone');
     } else {
-       $default{'target_milestone'} =
-                $dbh->selectrow_array('SELECT defaultmilestone FROM products
-                                       WHERE name = ?', undef, $product);
+       $default{'target_milestone'} = $product->default_milestone;
     }
 }
 
@@ -481,9 +456,7 @@ my @status;
 #  confirmation, user cannot confirm    UNCONFIRMED
 #  confirmation, user can confirm       NEW, UNCONFIRMED.
 
-my $votestoconfirm = $dbh->selectrow_array('SELECT votestoconfirm FROM products
-                                            WHERE name = ?', undef, $product);
-if ($votestoconfirm) {
+if ($product->votes_to_confirm) {
     if (UserInGroup("editbugs") || UserInGroup("canconfirm")) {
         push(@status, "NEW");
     }
@@ -510,7 +483,7 @@ my $grouplist = $dbh->selectall_arrayref(
                  LEFT JOIN group_control_map
                         ON group_id = id AND product_id = ?
                      WHERE isbuggroup != 0 AND isactive != 0
-                  ORDER BY description}, undef, $product_id);
+                  ORDER BY description}, undef, $product->id);
 
 my @groups;
 
@@ -535,7 +508,7 @@ foreach my $row (@$grouplist) {
     #   set a groups's checkbox based on the group control map
     #
     if ( ($cloned_bug_id) &&
-         ("$product" eq "$cloned_bug->{'product'}" ) ) {
+         ($product->name eq $cloned_bug->{'product'} ) ) {
         foreach my $i (0..(@{$cloned_bug->{'groups'}}-1) ) {
             if ($cloned_bug->{'groups'}->[$i]->{'bit'} == $id) {
                 $check = $cloned_bug->{'groups'}->[$i]->{'ison'};

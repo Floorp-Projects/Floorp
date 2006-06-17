@@ -54,6 +54,8 @@ if (chdir("graphs")) {
 
 GetVersionTable();
 
+# Let Throw*Error() work correctly outside a web browser.
+Bugzilla->batch(1);
 Bugzilla->switch_to_shadow_db();
 
 # To recreate the daily statistics,  run "collectstats.pl --regenerate" .
@@ -125,10 +127,13 @@ sub collect_stats {
     my $dir = shift;
     my $product = shift;
     my $when = localtime (time);
-    my $product_id = get_product_id($product) unless $product eq '-All-';
     my $dbh = Bugzilla->dbh;
 
-    die "Unknown product $product" unless ($product_id or $product eq '-All-');
+    my $product_id;
+    if ($product ne '-All-') {
+        my $prod = Bugzilla::Product::check_product($product);
+        $product_id = $prod->id;
+    }
 
     # NB: Need to mangle the product for the filename, but use the real
     # product name in the query

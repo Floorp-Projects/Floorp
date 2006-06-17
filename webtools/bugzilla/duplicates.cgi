@@ -35,6 +35,7 @@ use Bugzilla;
 use Bugzilla::Search;
 use Bugzilla::Config qw(:DEFAULT $datadir);
 use Bugzilla::Constants;
+use Bugzilla::Product;
 
 my $cgi = Bugzilla->cgi;
 
@@ -86,13 +87,9 @@ my @query_products = $cgi->param('product');
 my $sortvisible = formvalue("sortvisible");
 my @buglist = (split(/[:,]/, formvalue("bug_id")));
 
-my $product_id;
+# Make sure all products are valid.
 foreach my $p (@query_products) {
-    $product_id = get_product_id($p);
-    if (!$product_id) {
-        ThrowUserError("invalid_product_name",
-                       { product => $p });
-    }
+    Bugzilla::Product::check_product($p);
 }
 
 # Small backwards-compatibility hack, dated 2002-04-10.

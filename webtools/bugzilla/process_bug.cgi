@@ -1127,7 +1127,7 @@ if (defined $cgi->param('qa_contact')
                 my $qa_user = $usercache{$qacontact};
                 foreach my $product_id (@newprod_ids) {
                     if (!$qa_user->can_edit_product($product_id)) {
-                        my $product_name = get_product_name($product_id);
+                        my $product_name = Bugzilla::Product->new($product_id)->name;
                         ThrowUserError('invalid_user_group',
                                           {'users'   => $qa_user->login,
                                            'product' => $product_name,
@@ -1212,7 +1212,7 @@ SWITCH: for ($cgi->param('knob')) {
                 my $assign_user = $usercache{$assignee};
                 foreach my $product_id (@newprod_ids) {
                     if (!$assign_user->can_edit_product($product_id)) {
-                        my $product_name = get_product_name($product_id);
+                        my $product_name = Bugzilla::Product->new($product_id)->name;
                         ThrowUserError('invalid_user_group',
                                           {'users'   => $assign_user->login,
                                            'product' => $product_name,
@@ -1618,7 +1618,7 @@ foreach my $id (@idlist) {
         ThrowUserError("illegal_change", $vars);
     }
 
-    $oldhash{'product'} = get_product_name($oldhash{'product_id'});
+    $oldhash{'product'} = $old_bug_obj->product;
     if (!Bugzilla->user->can_edit_product($oldhash{'product_id'})) {
         ThrowUserError("product_edit_denied",
                       { product => $oldhash{'product'} });
@@ -1754,11 +1754,6 @@ foreach my $id (@idlist) {
         $dbh->do(q{DELETE FROM duplicates WHERE dupe = ?}, undef, $id);
     }
 
-    my $newproduct_id = $oldhash{'product_id'};
-    if ($cgi->param('product') ne $cgi->param('dontchange')) {
-        my $newproduct_id = get_product_id($cgi->param('product'));
-    }
-
     my %groupsrequired = ();
     my %groupsforbidden = ();
     my $group_controls =
@@ -1768,7 +1763,7 @@ foreach my $id (@idlist) {
                                        ON id = group_id
                                       AND product_id = ?
                                     WHERE isactive != 0},
-        undef, $newproduct_id);
+        undef, $oldhash{'product_id'});
     foreach my $group_control (@$group_controls) {
         my ($group, $control) = @$group_control;
         $control ||= 0;
@@ -1925,9 +1920,8 @@ foreach my $id (@idlist) {
     # about which can be found in comments within the conditionals below.
     # Check if the user has changed the product to which the bug belongs;
     if ($cgi->param('product') ne $cgi->param('dontchange')
-        && $cgi->param('product') ne $oldhash{'product'}
-    ) {
-        $newproduct_id = get_product_id($cgi->param('product'));
+        && $cgi->param('product') ne $oldhash{'product'})
+    {
         # Depending on the "addtonewgroup" variable, groups with
         # defaults will change.
         #
@@ -1954,7 +1948,7 @@ foreach my $id (@idlist) {
             LEFT JOIN bug_group_map
                    ON bug_group_map.group_id = groups.id
                   AND bug_group_map.bug_id = ?},
-            undef, $oldhash{'product_id'}, $newproduct_id, $id);
+            undef, $oldhash{'product_id'}, $product->id, $id);
         my @groupstoremove = ();
         my @groupstoadd = ();
         my @defaultstoremove = ();
@@ -2077,8 +2071,8 @@ foreach my $id (@idlist) {
             # Products and components are now stored in the DB using ID's
             # We need to translate this to English before logging it
             if ($col eq 'product_id') {
-                $old = get_product_name($old);
-                $new = get_product_name($new);
+                $old = $old_bug_obj->product;
+                $new = $new_bug_obj->product;
                 $col = 'product';
             }
             if ($col eq 'component_id') {

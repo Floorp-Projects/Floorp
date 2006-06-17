@@ -278,15 +278,20 @@ sub processCategoryChange {
 sub clusion_array_to_hash {
     my $array = shift;
     my %hash;
+    my %products;
     my %components;
     foreach my $ids (@$array) {
         trick_taint($ids);
         my ($product_id, $component_id) = split(":", $ids);
-        my $product_name = get_product_name($product_id) || "__Any__";
+        my $product_name = "__Any__";
+        if ($product_id) {
+            $products{$product_id} ||= new Bugzilla::Product($product_id);
+            $product_name = $products{$product_id}->name if $products{$product_id};
+        }
         my $component_name = "__Any__";
         if ($component_id) {
             $components{$component_id} ||= new Bugzilla::Component($component_id);
-            $component_name = $components{$component_id}->name;
+            $component_name = $components{$component_id}->name if $components{$component_id};
         }
         $hash{"$product_name:$component_name"} = $ids;
     }
@@ -656,6 +661,8 @@ sub validateAndSubmit {
     my ($id) = @_;
     my $dbh = Bugzilla->dbh;
 
+    # Cache product objects.
+    my %products;
     foreach my $category_type ("inclusions", "exclusions") {
         # Will be used several times below.
         my $sth = $dbh->prepare("INSERT INTO flag$category_type " .
@@ -666,15 +673,18 @@ sub validateAndSubmit {
         foreach my $category ($cgi->param($category_type)) {
             trick_taint($category);
             my ($product_id, $component_id) = split(":", $category);
-            # The product does not exist.
-            next if ($product_id && !get_product_name($product_id));
+            # Does the product exist?
+            if ($product_id) {
+                $products{$product_id} ||= new Bugzilla::Product($product_id);
+                next unless defined $products{$product_id};
+            }
             # A component was selected without a product being selected.
             next if (!$product_id && $component_id);
-            # The component does not belong to this product.
-            next if ($component_id
-                     && !$dbh->selectrow_array("SELECT id FROM components
-                                                WHERE id = ? AND product_id = ?",
-                                                undef, ($component_id, $product_id)));
+            # Does the component belong to this product?
+            if ($component_id) {
+                my @match = grep {$_->id == $component_id} @{$products{$product_id}->components};
+                next unless scalar(@match);
+            }
             $product_id ||= undef;
             $component_id ||= undef;
             $sth->execute($id, $product_id, $component_id);
