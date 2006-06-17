@@ -104,6 +104,7 @@ var gEngineManagerDialog = {
     gEngineView.rowCountChanged(index, -1);
     gEngineView.invalidate();
     gEngineView.selection.select(Math.min(index, gEngineView.lastIndex));
+    gEngineView.ensureRowIsVisible(index);
     document.getElementById("engineList").focus();
   },
 
@@ -120,6 +121,7 @@ var gEngineManagerDialog = {
 
     gEngineView.invalidate();
     gEngineView.selection.select(newIndex);
+    gEngineView.ensureRowIsVisible(index);
     document.getElementById("engineList").focus();
   },
 
