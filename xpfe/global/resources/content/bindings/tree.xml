@@ -846,7 +846,7 @@
          b.getCellAt(event.clientX, event.clientY, {}, col, obj);
 
          // Cyclers and twisties respond to single clicks, not double clicks
-         if (!col.value.cycler && obj.value != "twisty")
+         if (col.value && !col.value.cycler && obj.value != "twisty")
            this.parentNode.changeOpenState(row);
       ]]>
       </handler>
