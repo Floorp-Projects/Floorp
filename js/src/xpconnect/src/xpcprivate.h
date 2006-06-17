@@ -428,6 +428,9 @@ private:
 // returned as function call result values they are not addref'd. Exceptions
 // to this rule are noted explicitly.
 
+const PRBool OBJ_IS_GLOBAL = PR_TRUE;
+const PRBool OBJ_IS_NOT_GLOBAL = PR_FALSE;
+
 class nsXPConnect : public nsIXPConnect,
                     public nsSupportsWeakReference
 {
@@ -1542,7 +1545,7 @@ public:
         {char* name=(char*)mJSClass.base.name; mJSClass.base.name = nsnull;
         return name;}
 
-    void PopulateJSClass();
+    void PopulateJSClass(JSBool isGlobal);
 
     void Mark()       {mFlags.Mark();}
     void Unmark()     {mFlags.Unmark();}
@@ -1561,7 +1564,8 @@ class XPCNativeScriptableInfo
 {
 public:
     static XPCNativeScriptableInfo*
-    Construct(XPCCallContext& ccx, const XPCNativeScriptableCreateInfo* sci);
+    Construct(XPCCallContext& ccx, JSBool isGlobal,
+              const XPCNativeScriptableCreateInfo* sci);
 
     nsIXPCScriptable*
     GetCallback() const {return mCallback;}
@@ -1646,7 +1650,8 @@ public:
                  XPCWrappedNativeScope* Scope,
                  nsIClassInfo* ClassInfo,
                  const XPCNativeScriptableCreateInfo* ScriptableCreateInfo,
-                 JSBool ForceNoSharing);
+                 JSBool ForceNoSharing,
+                 JSBool isGlobal);
 
     XPCWrappedNativeScope*
     GetScope()   const {return mScope;}
@@ -1735,7 +1740,7 @@ protected:
                           PRUint32 ClassInfoFlags,
                           XPCNativeSet* Set);
 
-    JSBool Init(XPCCallContext& ccx,
+    JSBool Init(XPCCallContext& ccx, JSBool isGlobal,
                 const XPCNativeScriptableCreateInfo* scriptableCreateInfo);
 
 private:
@@ -1925,6 +1930,7 @@ public:
                  nsISupports* Object,
                  XPCWrappedNativeScope* Scope,
                  XPCNativeInterface* Interface,
+                 JSBool isGlobal,
                  XPCWrappedNative** wrapper);
 
 public:
@@ -2069,7 +2075,7 @@ protected:
     virtual ~XPCWrappedNative();
 
 private:
-    JSBool Init(XPCCallContext& ccx, JSObject* parent,
+    JSBool Init(XPCCallContext& ccx, JSObject* parent, JSBool isGlobal,
                 const XPCNativeScriptableCreateInfo* sci);
 
     JSBool ExtendSet(XPCCallContext& ccx, XPCNativeInterface* aInterface);
@@ -2420,6 +2426,7 @@ public:
                                            const nsID* iid,
                                            JSObject* scope,
                                            PRBool allowNativeWrapper,
+                                           PRBool isGlobal,
                                            nsresult* pErr);
 
     static JSBool GetNativeInterfaceFromJSObject(XPCCallContext& ccx,

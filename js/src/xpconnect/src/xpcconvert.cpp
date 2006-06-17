@@ -462,10 +462,15 @@ XPCConvert::NativeData2JS(XPCCallContext& ccx, jsval* d, const void* s,
                     }
                     // else...
                     
+                    // XXX The OBJ_IS_NOT_GLOBAL here is not really right. In
+                    // fact, this code is depending on the fact that the
+                    // global object will not have been collected, and
+                    // therefore this NativeInterface2JSObject will not end up
+                    // creating a new XPCNativeScriptableShared.
                     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
                     if(!NativeInterface2JSObject(ccx, getter_AddRefs(holder),
                                                  iface, iid, scope, PR_TRUE,
-                                                 pErr))
+                                                 OBJ_IS_NOT_GLOBAL, pErr))
                         return JS_FALSE;
 
                     if(holder)
@@ -473,6 +478,11 @@ XPCConvert::NativeData2JS(XPCCallContext& ccx, jsval* d, const void* s,
                         JSObject* jsobj;
                         if(NS_FAILED(holder->GetJSObject(&jsobj)))
                             return JS_FALSE;
+#ifdef DEBUG
+                        if(!JS_GetParent(ccx, jsobj))
+                            NS_ASSERTION(JS_GET_CLASS(ccx, jsobj)->flags & JSCLASS_IS_GLOBAL,
+                                         "Why did we recreate this wrapper?");
+#endif
                         *d = OBJECT_TO_JSVAL(jsobj);
                     }
                 }
@@ -1012,6 +1022,7 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
                                      const nsID* iid,
                                      JSObject* scope,
                                      PRBool allowNativeWrapper,
+                                     PRBool isGlobal,
                                      nsresult* pErr)
 {
     NS_ASSERTION(dest, "bad param");
@@ -1038,6 +1049,8 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
     // is this a wrapped JS object?
     if(nsXPCWrappedJSClass::IsWrappedJS(src))
     {
+        NS_ASSERTION(!isGlobal, "The global object must be native");
+
         // verify that this wrapper is for the right interface
         nsCOMPtr<nsISupports> wrapper;
         if(NS_FAILED(src->QueryInterface(*iid,(void**)getter_AddRefs(wrapper))))
@@ -1061,7 +1074,8 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
 
         XPCWrappedNative* wrapper;
         nsresult rv = XPCWrappedNative::GetNewOrUsed(ccx, src, xpcscope,
-                                                     iface, &wrapper);
+                                                     iface, isGlobal,
+                                                     &wrapper);
         if(pErr)
             *pErr = rv;
         if(NS_SUCCEEDED(rv) && wrapper)

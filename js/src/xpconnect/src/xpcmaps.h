@@ -598,7 +598,7 @@ public:
 
     static XPCNativeScriptableSharedMap* newMap(int size);
 
-    JSBool GetNewOrUsed(JSUint32 flags, char* name,
+    JSBool GetNewOrUsed(JSUint32 flags, char* name, PRBool isGlobal,
                         XPCNativeScriptableInfo* si);
 
     inline uint32 Count() {return mTable->entryCount;}
