@@ -555,7 +555,16 @@ nsresult nsMsgSearchOfflineMail::ProcessSearchTerm(nsIMsgDBHdr *msgToMatch,
       case nsMsgSearchAttrib::Keywords:
       {
           nsXPIDLCString keywords;
+          nsMsgLabelValue label;
           msgToMatch->GetStringProperty("keywords", getter_Copies(keywords));
+          msgToMatch->GetLabel(&label);
+          if (label >= 1)
+          {
+            if (!keywords.IsEmpty())
+              keywords.Append(' ');
+            keywords.Append("$label");
+            keywords.Append(label + '0');
+          }
           err = aTerm->MatchKeyword(keywords.get(), &result);
           break;
       }
