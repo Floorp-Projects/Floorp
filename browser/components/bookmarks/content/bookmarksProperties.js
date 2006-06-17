@@ -179,9 +179,12 @@ function Commit()
     if (oldValue)
       oldValue = oldValue.QueryInterface(Components.interfaces.nsIRDFLiteral);
 
-    if (newValue && gFields[i] == "shortcut")
+    if (newValue && gFields[i] == "shortcut") {
       // shortcuts are always lowercased internally
       newValue = newValue.toLowerCase();
+      // strip trailing and leading whitespace
+      newValue = newValue.replace(/(^\s+|\s+$)/g, '');
+    }
     else if (newValue && gFields[i] == "url") {
       if (newValue.indexOf(":") < 0)
         // we're dealing with the URL attribute;
