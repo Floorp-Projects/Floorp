@@ -750,8 +750,7 @@ function BrowserStartup()
 
   gIsLoadingBlank = uriToLoad == "about:blank";
 
-  if (!gIsLoadingBlank)
-    prepareForStartup();
+  prepareForStartup();
 
 #ifdef ENABLE_PAGE_CYCLER
   appCore.startPageCycler();
@@ -953,9 +952,6 @@ function delayedStartup()
     gURLBar.setAttribute("readonly", "true");
     gURLBar.setAttribute("enablehistory", "false");
   }
-
-  if (gIsLoadingBlank)
-    prepareForStartup();
 
   if (gURLBar)
     gURLBar.addEventListener("dragdrop", URLBarOnDrop, true);
