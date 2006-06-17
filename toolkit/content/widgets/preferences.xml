@@ -256,6 +256,18 @@
       
       <field name="batching">false</field>
       
+      <method name="_reportUnknownType">
+        <body>
+        <![CDATA[
+          var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
+                                         .getService(Components.interfaces.nsIConsoleService);
+          var msg = "<preference> with id='" + this.id + "' and name='" + 
+                    this.name + "' has unknown type '" + this.type + "'.";
+          consoleService.logStringMessage(msg);
+        ]]>
+        </body>
+      </method>
+      
       <property name="valueFromPreferences">
         <getter>
         <![CDATA[
@@ -274,13 +286,15 @@
                          .getComplexValue(this.name, Components.interfaces.nsIPrefLocalizedString)
                          .data;
             case "unichar":
-              var pref = Components.classes["@mozilla.org/preferences;1"] 
-                                   .getService(Components.interfaces.nsIPref);
-              return pref.CopyUnicharPref(this.name);
+              return this._branch
+                         .getComplexValue(this.name, Components.interfaces.nsISupportsString)
+                         .data;
             case "file":
               var f = this._branch
                           .getComplexValue(this.name, Components.interfaces.nsILocalFile);
               return f;
+            default:
+              this._reportUnknownType();
             }
           }
           catch (e) { }
@@ -311,9 +325,11 @@
                 .setComplexValue(this.name, Components.interfaces.nsIPrefLocalizedString, pls);
             break;
           case "unichar":
-            var pref = Components.classes["@mozilla.org/preferences;1"] 
-                                 .getService(Components.interfaces.nsIPref);
-            pref.SetUnicharPref(this.name, val);
+            var iss = Components.classes["@mozilla.org/supports-string;1"]
+                                .createInstance(Components.interfaces.nsISupportsString);
+            iss.data = val;
+            this.preferences.rootBranch
+                .setComplexValue(this.name, Components.interfaces.nsISupportsString, iss);
             break;
           case "file":
             var lf;
@@ -329,6 +345,8 @@
             this.preferences.rootBranch
                 .setComplexValue(this.name, Components.interfaces.nsILocalFile, lf);
             break;
+          default:
+            this._reportUnknownType();
           }
           if (!this.batching)
             this.preferences.service.savePrefFile(null);
