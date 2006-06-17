@@ -1361,7 +1361,7 @@ nsresult nsMsgSearchTerm::MatchKeyword(const char *keyword, PRBool *pResult)
     {
       const char *keywordLoc = PL_strstr(keyword, m_value.string);
       const char *startOfKeyword = keyword;
-      PRUint32 keywordLen = strlen(keyword);
+      PRUint32 keywordLen = strlen(m_value.string);
       while (keywordLoc)
       {
         // if the keyword is at the beginning of the string, then it's a match if 
