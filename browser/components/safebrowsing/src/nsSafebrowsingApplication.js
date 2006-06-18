@@ -34,6 +34,7 @@ function Init() {
   modScope.G_Assert = jslib.G_Assert;
   modScope.G_Alarm = jslib.G_Alarm;
   modScope.G_ConditionalAlarm = jslib.G_ConditionalAlarm;
+  modScope.G_ObserverWrapper = jslib.G_ObserverWrapper;
   modScope.G_Preferences = jslib.G_Preferences;
   modScope.PROT_XMLFetcher = jslib.PROT_XMLFetcher;
   modScope.BindToObject = jslib.BindToObject;

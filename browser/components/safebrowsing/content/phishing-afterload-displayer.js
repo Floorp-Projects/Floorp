@@ -91,7 +91,7 @@ function PROT_PhishMsgDisplayer(msgDesc, browser, doc, url) {
  * @constructor
  */
 function PROT_PhishMsgDisplayerBase(msgDesc, browser, doc, url) {
-  this.debugZone = "phisdisplayer";
+  this.debugZone = "phishdisplayer";
   this.msgDesc_ = msgDesc;                                // currently unused
   this.browser_ = browser;
   this.doc_ = doc;
@@ -184,13 +184,9 @@ PROT_PhishMsgDisplayerBase.prototype.getMeOutOfHereUrl_ = function() {
 PROT_PhishMsgDisplayerBase.prototype.onBrowserResized_ = function(event) {
   G_Debug(this, "Got resize for " + event.target);
 
-  if (event.target == this.doc_.defaultView) {
-    G_Debug(this, "User resized browser.");
-
-    if (this.messageShowing_) {
-      this.hideMessage_(); 
-      this.showMessage_();
-    }
+  if (this.messageShowing_) {
+    this.hideMessage_(); 
+    this.showMessage_();
   }
 }
 
@@ -257,19 +253,13 @@ PROT_PhishMsgDisplayerBase.prototype.start = function() {
 
   this.commandController_ = new PROT_CommandController(this.commandHandlers_);
   this.doc_.defaultView.controllers.appendController(this.commandController_);
-  
-  // Load the overlay if we haven't already.
-  var stack = this.doc_.getElementById('safebrowsing-content-stack');
-  if (!stack) {
-    this.doc_.loadOverlay(
-        "chrome://browser/content/safebrowsing/warning-overlay.xul",
-        null);
-  }
 
+  // Add an event listener for when the browser resizes (e.g., user
+  // shows/hides the sidebar).
   this.resizeHandler_ = BindToObject(this.onBrowserResized_, this);
-  this.doc_.defaultView.addEventListener("resize", 
-                                         this.resizeHandler_, 
-                                         true);
+  this.browser_.addEventListener("resize",
+                                 this.resizeHandler_, 
+                                 false);
 }
 
 /**
@@ -303,9 +293,9 @@ PROT_PhishMsgDisplayerBase.prototype.done = function() {
       this.hideMessage_();
 
     if (this.resizeHandler_) {
-      this.doc_.defaultView.removeEventListener("resize", 
-                                                this.resizeHandler_, 
-                                                true);
+      this.browser_.removeEventListener("resize", 
+                                        this.resizeHandler_, 
+                                        false);
       this.resizeHandler_ = null;
     }
     
@@ -520,7 +510,6 @@ function PROT_PhishMsgDisplayerCanvas(msgDesc, browser, doc, url) {
   PROT_PhishMsgDisplayerBase.call(this, msgDesc, browser, doc, url);
 
   this.dimAreaId_ = "safebrowsing-dim-area-canvas";
-  this.contentStackId_ = "safebrowsing-content-stack";
   this.pageCanvasId_ = "safebrowsing-page-canvas";
   this.xhtmlNS_ = "http://www.w3.org/1999/xhtml";     // we create html:canvas
 }
@@ -528,55 +517,82 @@ function PROT_PhishMsgDisplayerCanvas(msgDesc, browser, doc, url) {
 PROT_PhishMsgDisplayerCanvas.inherits(PROT_PhishMsgDisplayerBase);
 
 /**
- * Displays the warning message.
+ * Displays the warning message.  First we make sure the overlay is loaded
+ * then call showMessageAfterOverlay_.
  */
 PROT_PhishMsgDisplayerCanvas.prototype.showMessage_ = function() {
-
   G_Debug(this, "Showing message.");
+
+  // Load the overlay if we haven't already.
+  var dimmer = this.doc_.getElementById('safebrowsing-dim-area-canvas');
+  if (!dimmer) {
+    var onOverlayMerged = BindToObject(this.showMessageAfterOverlay_,
+                                       this);
+    var observer = new G_ObserverWrapper("xul-overlay-merged",
+                                         onOverlayMerged);
+
+    this.doc_.loadOverlay(
+        "chrome://browser/content/safebrowsing/warning-overlay.xul",
+        observer);
+  } else {
+    // The overlay is already loaded so we go ahead and call
+    // showMessageAfterOverlay_.
+    this.showMessageAfterOverlay_();
+  }
+}
+
+/**
+ * This does the actual work of showing the warning message.
+ */
+PROT_PhishMsgDisplayerCanvas.prototype.showMessageAfterOverlay_ = function() {
   this.messageShowing_ = true;
 
-  // Unhide our stack. Order here is significant, but don't ask me why
-  // for some of these. You need to:
-  // 1. add canvas to the stack in a hidden state
-  // 2. unhide the stack 
-  // 3. get browser dimensions
-  // 4. unhide stack contents
-  // 5. display to the canvas
-  // 6. unhide the warning message
-  // 7. update link targets in warning message
-  // 8. focus the warning message
+  // Position the canvas overlay. Order here is significant, but don't ask me
+  // why for some of these. You need to:
+  // 1. get browser dimensions
+  // 2. add canvas to the document
+  // 3. unhide the dimmer (gray out overlay)
+  // 4. display to the canvas
+  // 5. unhide the warning message
+  // 6. update link targets in warning message
+  // 7. focus the warning message
 
   // (1)
-  // We add the canvas dynamically and remove it when we're done because
-  // leaving it hanging around consumes a lot of memory.
-  var pageCanvas = this.doc_.createElementNS(this.xhtmlNS_, "html:canvas");
-  pageCanvas.id = this.pageCanvasId_;
-  pageCanvas.hidden = "true";
-  var contentStack = this.doc_.getElementById(this.contentStackId_);
-  contentStack.insertBefore(pageCanvas, contentStack.firstChild);
-
-  // (2)
-  contentStack.hidden = false;
-
-  // (3)
-  var w = this.browser_.boxObject.width;     
+  var w = this.browser_.boxObject.width;
   G_Debug(this, "browser w=" + w);
   var h = this.browser_.boxObject.height;
   G_Debug(this, "browser h=" + h);
-  
+  var x = this.browser_.boxObject.x;
+  G_Debug(this, "browser x=" + w);
+  var y = this.browser_.boxObject.y;
+  G_Debug(this, "browser y=" + h);
+
   var win = this.browser_.contentWindow;
   var scrollX = win.scrollX;
   G_Debug(this, "win scrollx=" + scrollX);
   var scrollY = win.scrollY;
   G_Debug(this, "win scrolly=" + scrollY);
 
-  // (4) 
+  // (2)
+  // We add the canvas dynamically and remove it when we're done because
+  // leaving it hanging around consumes a lot of memory.
+  var pageCanvas = this.doc_.createElementNS(this.xhtmlNS_, "html:canvas");
+  pageCanvas.id = this.pageCanvasId_;
+  pageCanvas.style.left = x + 'px';
+  pageCanvas.style.top = y + 'px';
+
   var dimarea = this.doc_.getElementById(this.dimAreaId_);
+  this.doc_.getElementById('main-window').insertBefore(pageCanvas,
+                                                       dimarea);
+
+  // (3)
+  dimarea.style.left = x + 'px';
+  dimarea.style.top = y + 'px';
+  dimarea.style.width = w + 'px';
+  dimarea.style.height = h + 'px';
   dimarea.hidden = false;
-
-  this.browser_.parentNode.collapsed = true;   // And now hide the browser
-
-  // (5) 
+  
+  // (4)
   pageCanvas.setAttribute("width", w);
   pageCanvas.setAttribute("height", h);
 
@@ -585,7 +601,7 @@ PROT_PhishMsgDisplayerCanvas.prototype.showMessage_ = function() {
   var cx = pageCanvas.getContext("2d");
   cx.drawWindow(win, scrollX, scrollY, w, h, bgcolor);
 
-  // Now repaint the window every so often in case the content hasn't fully 
+  // Now repaint the window every so often in case the content hasn't fully
   // loaded at this point.
   var debZone = this.debugZone;
   function repaint() {
@@ -594,7 +610,7 @@ PROT_PhishMsgDisplayerCanvas.prototype.showMessage_ = function() {
   };
   this.repainter_ = new PROT_PhishMsgCanvasRepainter(repaint);
 
-  // (6)
+  // (5)
   var refElement = this.doc_.getElementById(this.refElementId_);
   var message = this.doc_.getElementById(this.messageId_);
   var tail = this.doc_.getElementById(this.messageTailId_);
@@ -604,13 +620,13 @@ PROT_PhishMsgDisplayerCanvas.prototype.showMessage_ = function() {
   tail.style.display = "block";
   this.adjustLocation_(message, tail, refElement);
 
-  // (7)
+  // (6)
   var link = this.doc_.getElementById('safebrowsing-palm-falsepositive-link');
   link.href = this.getReportErrorURL_();
   link = this.doc_.getElementById('safebrowsing-palm-report-link');
   link.href = this.getReportGenericURL_();
 
-  // (8)
+  // (7)
   this.doc_.getElementById(this.messageContentId_).focus();
 }
 
@@ -625,6 +641,7 @@ PROT_PhishMsgDisplayerCanvas.prototype.hideMessage_ = function() {
   this.repainter_.cancel();
   this.repainter_ = null;
 
+  // Hide the warning popup.
   var message = this.doc_.getElementById(this.messageId_);
   message.hidden = true;
   message.style.display = "none";
@@ -632,16 +649,14 @@ PROT_PhishMsgDisplayerCanvas.prototype.hideMessage_ = function() {
   var tail = this.doc_.getElementById(this.messageTailId_);
   tail.hidden = true;
   tail.style.display = "none";
-  this.browser_.parentNode.collapsed = false;
 
-  var contentStack = this.doc_.getElementById(this.contentStackId_);
-  contentStack.hidden = true;
+  // Remove the canvas element from the chrome document.
+  var pageCanvas = this.doc_.getElementById(this.pageCanvasId_);
+  pageCanvas.parentNode.removeChild(pageCanvas);
 
+  // Hide the dimmer.
   var dimarea = this.doc_.getElementById(this.dimAreaId_);
   dimarea.hidden = true;
-
-  var pageCanvas = this.doc_.getElementById(this.pageCanvasId_);
-  contentStack.removeChild(pageCanvas);
 }
 
 
