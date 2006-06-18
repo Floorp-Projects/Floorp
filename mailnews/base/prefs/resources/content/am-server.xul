@@ -229,6 +229,7 @@
   </hbox>
   <hbox align="center" id="imap.deleteModel.box" hidefor="pop3,nntp,movemail">
     <radiogroup wsm_persist="true" id="imap.deleteModel"
+                oncommand="selectImapDeleteModel(this.value)"
                 prefstring="mail.server.%serverkey%.delete_model">
       <grid class="specialFolderPickerGrid">
         <columns>
@@ -239,7 +240,6 @@
           <row align="center">
             <radio id="modelMoveToTrash"
                    value="1" label="&modelMoveToTrash.label;"
-                   oncommand="selectImapDeleteModel(value)"
                    accesskey="&modelMoveToTrash.accesskey;"/>
             <menulist id="msgTrashFolderPicker"
                       oncommand="folderPickerChange('msgTrashFolderPicker')"/>
@@ -247,13 +247,11 @@
           <row align="center">
             <radio id="modelMarkDeleted"
                    value="0" label="&modelMarkDeleted.label;"
-                   oncommand="selectImapDeleteModel(value)"
                    accesskey="&modelMarkDeleted.accesskey;"/>
           </row>
           <row align="center">
             <radio id="modelDeleteImmediately"
                    value="2" label="&modelDeleteImmediately.label;"
-                   oncommand="selectImapDeleteModel(value)"
                    accesskey="&modelDeleteImmediately.accesskey;"/>
           </row>
         </rows>
