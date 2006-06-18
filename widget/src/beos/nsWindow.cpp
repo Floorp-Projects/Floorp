@@ -2805,7 +2805,12 @@ bool nsWindowBeOS::QuitRequested( void )
 
 void nsWindowBeOS::MessageReceived(BMessage *msg)
 {
-	//Placeholder for possible improvements, e.g. DND and quitting
+	// Temp replacement for real DnD. Supports file drop onto window.
+	if (msg->what == B_SIMPLE_DATA)
+	{
+		printf("BWindow::SIMPLE_DATA\n");
+		be_app_messenger.SendMessage(msg);
+	}
 	BWindow::MessageReceived(msg);
 }
 
@@ -3151,6 +3156,7 @@ void nsViewBeOS::MessageReceived(BMessage *msg)
 
 		MethodInfo *info = new MethodInfo(w, w, nsSwitchToUIThread::ONDROP, 4, args);
 		t->CallMethodAsync(info);
+		BView::MessageReceived(msg);
 		return;
 	}
 
