@@ -304,8 +304,7 @@ NS_IMETHODIMP nsDeviceContextMac :: GetSystemFont(nsSystemFontID aID, nsFont *aF
       aFont->decorations = NS_FONT_DECORATION_NONE;
 
       if (aID == eSystemFont_Window ||
-          aID == eSystemFont_Document ||
-          aID == eSystemFont_PullDownMenu) {
+          aID == eSystemFont_Document) {
             aFont->name.AssignLiteral("sans-serif");
             aFont->size = NSToCoordRound(aFont->size * 0.875f); // quick hack
       }
@@ -328,10 +327,10 @@ NS_IMETHODIMP nsDeviceContextMac :: GetSystemFont(nsSystemFontID aID, nsFont *aF
           case eSystemFont_Desktop:       fontID = kThemeViewsFont;          break;
           case eSystemFont_Info:          fontID = kThemeViewsFont;          break;
           case eSystemFont_Dialog:        fontID = kThemeSystemFont;         break;
-        case eSystemFont_Button:      fontID = kThemePushButtonFont; break;
-          //case eSystemFont_PullDownMenu:= 'sans-serif'  ("fontID = kThemeSystemFont" in MacIE5)
-        case eSystemFont_List:        fontID = kThemeSystemFont; break;
-        case eSystemFont_Field:         fontID = kThemeApplicationFont; break;
+          case eSystemFont_Button:        fontID = kThemePushButtonFont;     break;
+          case eSystemFont_PullDownMenu:  fontID = kThemeMenuItemFont;       break;
+          case eSystemFont_List:          fontID = kThemeSystemFont;         break;
+          case eSystemFont_Field:         fontID = kThemeApplicationFont;    break;
               // moz
           case eSystemFont_Tooltips:      fontID = kThemeSmallSystemFont;    break;
           case eSystemFont_Widget:        fontID = kThemeSmallSystemFont;    break;
