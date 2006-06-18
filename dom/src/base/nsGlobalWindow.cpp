@@ -292,7 +292,6 @@ PRInt32 gTimeoutCnt                                    = 0;
 #ifdef OJI
 static NS_DEFINE_CID(kJVMServiceCID, NS_JVMMANAGER_CID);
 #endif
-static NS_DEFINE_CID(kHTTPHandlerCID, NS_HTTPPROTOCOLHANDLER_CID);
 static NS_DEFINE_CID(kXULControllersCID, NS_XULCONTROLLERS_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID,
                      NS_ICHARSETCONVERTERMANAGER_CID);
@@ -7552,7 +7551,7 @@ nsNavigator::GetUserAgent(nsAString& aUserAgent)
 {
   nsresult rv;
   nsCOMPtr<nsIHttpProtocolHandler>
-    service(do_GetService(kHTTPHandlerCID, &rv));
+    service(do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &rv));
   if (NS_SUCCEEDED(rv)) {
     nsCAutoString ua;
     rv = service->GetUserAgent(ua);
@@ -7567,7 +7566,7 @@ nsNavigator::GetAppCodeName(nsAString& aAppCodeName)
 {
   nsresult rv;
   nsCOMPtr<nsIHttpProtocolHandler>
-    service(do_GetService(kHTTPHandlerCID, &rv));
+    service(do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &rv));
   if (NS_SUCCEEDED(rv)) {
     nsCAutoString appName;
     rv = service->GetAppName(appName);
@@ -7592,7 +7591,7 @@ nsNavigator::GetAppVersion(nsAString& aAppVersion)
 
   nsresult rv;
   nsCOMPtr<nsIHttpProtocolHandler>
-    service(do_GetService(kHTTPHandlerCID, &rv));
+    service(do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &rv));
   if (NS_SUCCEEDED(rv)) {
     nsCAutoString str;
     rv = service->GetAppVersion(str);
@@ -7643,7 +7642,7 @@ nsNavigator::GetLanguage(nsAString& aLanguage)
 {
   nsresult rv;
   nsCOMPtr<nsIHttpProtocolHandler>
-    service(do_GetService(kHTTPHandlerCID, &rv));
+    service(do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &rv));
   if (NS_SUCCEEDED(rv)) {
     nsCAutoString lang;
     rv = service->GetLanguage(lang);
@@ -7668,7 +7667,7 @@ nsNavigator::GetPlatform(nsAString& aPlatform)
 
   nsresult rv;
   nsCOMPtr<nsIHttpProtocolHandler>
-    service(do_GetService(kHTTPHandlerCID, &rv));
+    service(do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &rv));
   if (NS_SUCCEEDED(rv)) {
     // sorry for the #if platform ugliness, but Communicator is
     // likewise hardcoded and we're seeking backward compatibility
@@ -7699,7 +7698,7 @@ nsNavigator::GetOscpu(nsAString& aOSCPU)
 {
   nsresult rv;
   nsCOMPtr<nsIHttpProtocolHandler>
-    service(do_GetService(kHTTPHandlerCID, &rv));
+    service(do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &rv));
   if (NS_SUCCEEDED(rv)) {
     nsCAutoString oscpu;
     rv = service->GetOscpu(oscpu);
@@ -7714,7 +7713,7 @@ nsNavigator::GetVendor(nsAString& aVendor)
 {
   nsresult rv;
   nsCOMPtr<nsIHttpProtocolHandler>
-    service(do_GetService(kHTTPHandlerCID, &rv));
+    service(do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &rv));
   if (NS_SUCCEEDED(rv)) {
     nsCAutoString vendor;
     rv = service->GetVendor(vendor);
@@ -7730,7 +7729,7 @@ nsNavigator::GetVendorSub(nsAString& aVendorSub)
 {
   nsresult rv;
   nsCOMPtr<nsIHttpProtocolHandler>
-    service(do_GetService(kHTTPHandlerCID, &rv));
+    service(do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &rv));
   if (NS_SUCCEEDED(rv)) {
     nsCAutoString vendor;
     rv = service->GetVendorSub(vendor);
@@ -7745,7 +7744,7 @@ nsNavigator::GetProduct(nsAString& aProduct)
 {
   nsresult rv;
   nsCOMPtr<nsIHttpProtocolHandler>
-    service(do_GetService(kHTTPHandlerCID, &rv));
+    service(do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &rv));
   if (NS_SUCCEEDED(rv)) {
     nsCAutoString product;
     rv = service->GetProduct(product);
@@ -7760,7 +7759,7 @@ nsNavigator::GetProductSub(nsAString& aProductSub)
 {
   nsresult rv;
   nsCOMPtr<nsIHttpProtocolHandler>
-    service(do_GetService(kHTTPHandlerCID, &rv));
+    service(do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &rv));
   if (NS_SUCCEEDED(rv)) {
     nsCAutoString productSub;
     rv = service->GetProductSub(productSub);

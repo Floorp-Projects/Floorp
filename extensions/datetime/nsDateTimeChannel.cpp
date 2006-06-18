@@ -55,9 +55,6 @@
 #include "nsNetUtil.h"
 #include "nsCRT.h"
 
-static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
-static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
-
 // nsDateTimeChannel methods
 nsDateTimeChannel::nsDateTimeChannel()
     : mLoadFlags(LOAD_NORMAL)
@@ -199,7 +196,7 @@ nsDateTimeChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
     // create transport
     //
     nsCOMPtr<nsISocketTransportService> sts = 
-             do_GetService(kSocketTransportServiceCID, &rv);
+             do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     rv = sts->CreateTransport(nsnull, 0, mHost, mPort, mProxyInfo,
@@ -213,7 +210,7 @@ nsDateTimeChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
     // create TXT to HTML stream converter
     //
     nsCOMPtr<nsIStreamConverterService> scs = 
-             do_GetService(kStreamConverterServiceCID, &rv);
+             do_GetService(NS_STREAMCONVERTERSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIStreamListener> convListener;

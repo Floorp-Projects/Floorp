@@ -57,8 +57,6 @@
 #include "nsIFileSpec.h"
 #include <time.h>
 
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-
 nsMsgMailNewsUrl::nsMsgMailNewsUrl()
 {
   // nsIURI specific state
@@ -575,7 +573,7 @@ NS_IMETHODIMP nsMsgMailNewsUrl::Clone(nsIURI **_retval)
 {
   nsresult rv;
   nsCAutoString urlSpec;
-  nsCOMPtr<nsIIOService> ioService = do_GetService(kIOServiceCID, &rv);
+  nsCOMPtr<nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
   rv = GetSpec(urlSpec);
   if (NS_FAILED(rv)) return rv;

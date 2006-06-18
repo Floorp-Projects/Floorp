@@ -63,9 +63,6 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 
-static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
-static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
-
 NS_IMPL_THREADSAFE_ADDREF(nsMsgProtocol)
 NS_IMPL_THREADSAFE_RELEASE(nsMsgProtocol)
 
@@ -126,7 +123,7 @@ nsMsgProtocol::OpenNetworkSocketWithInfo(const char * aHostName,
   NS_ENSURE_ARG(aHostName);
 
   nsresult rv = NS_OK;
-  nsCOMPtr<nsISocketTransportService> socketService (do_GetService(kSocketTransportServiceCID));
+  nsCOMPtr<nsISocketTransportService> socketService (do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID));
   NS_ENSURE_TRUE(socketService, NS_ERROR_FAILURE);
   
   // with socket connections we want to read as much data as arrives
@@ -264,7 +261,7 @@ nsresult nsMsgProtocol::OpenFileSocket(nsIURI * aURL, PRUint32 aStartPosition, P
 
   // create input stream transport
   nsCOMPtr<nsIStreamTransportService> sts =
-      do_GetService(kStreamTransportServiceCID, &rv);
+      do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   rv = sts->CreateInputTransport(stream, nsInt64(aStartPosition),

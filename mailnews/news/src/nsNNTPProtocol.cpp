@@ -137,8 +137,6 @@
 // and "pushed" authentication (if necessary),
 //#define HAVE_NNTP_EXTENSIONS
 
-static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
-
 typedef struct _cancelInfoEntry {
     char *from;
     char *old_from;
@@ -889,7 +887,7 @@ nsNNTPProtocol::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry, nsCacheAcc
     {
       // use a stream listener Tee to force data into the cache and to our current channel listener...
       nsCOMPtr<nsIStreamListener> newListener;
-      nsCOMPtr<nsIStreamListenerTee> tee = do_CreateInstance(kStreamListenerTeeCID, &rv);
+      nsCOMPtr<nsIStreamListenerTee> tee = do_CreateInstance(NS_STREAMLISTENERTEE_CONTRACTID, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
 
       nsCOMPtr<nsIOutputStream> out;

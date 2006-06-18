@@ -111,8 +111,6 @@ PRLogModuleInfo *IMAP;
 
 #define ONE_SECOND ((PRUint32)1000)    // one second
 
-static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
-static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
 
 #define OUTPUT_BUFFER_SIZE (4096*2) // mscott - i should be able to remove this if I can use nsMsgLineBuffer???
 
@@ -761,7 +759,7 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
       nsXPIDLCString hostName;
             
       nsCOMPtr<nsISocketTransportService> socketService = 
-               do_GetService(kSocketTransportServiceCID, &rv);
+               do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
       if (NS_SUCCEEDED(rv) && aURL)
       {
         aURL->GetPort(&port);
@@ -8164,7 +8162,7 @@ nsImapMockChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry, nsCache
     {
       // use a stream listener Tee to force data into the cache and to our current channel listener...
       nsCOMPtr<nsIStreamListener> newListener;
-      nsCOMPtr<nsIStreamListenerTee> tee = do_CreateInstance(kStreamListenerTeeCID, &rv);
+      nsCOMPtr<nsIStreamListenerTee> tee = do_CreateInstance(NS_STREAMLISTENERTEE_CONTRACTID, &rv);
       if (NS_SUCCEEDED(rv))
       {
         nsCOMPtr<nsIOutputStream> out;

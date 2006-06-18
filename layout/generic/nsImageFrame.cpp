@@ -1827,8 +1827,7 @@ nsImageFrame::LoadIcon(const nsAString& aSpec,
   NS_PRECONDITION(!aSpec.IsEmpty(), "What happened??");
 
   if (!sIOService) {
-    static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-    rv = CallGetService(kIOServiceCID, &sIOService);
+    rv = CallGetService(NS_IOSERVICE_CONTRACTID, &sIOService);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

@@ -100,8 +100,6 @@
 #include "mozISanitizingSerializer.h"
 // </for>
 
-
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 // <for functions="HTML2Plaintext,HTMLSantinize">
 static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 // </for>
@@ -671,7 +669,7 @@ nsMimeNewURI(nsIURI** aInstancePtrResult, const char *aSpec, nsIURI *aBase)
   if (nsnull == aInstancePtrResult) 
     return NS_ERROR_NULL_POINTER;
   
-  nsCOMPtr<nsIIOService> pService(do_GetService(kIOServiceCID, &res));
+  nsCOMPtr<nsIIOService> pService(do_GetService(NS_IOSERVICE_CONTRACTID, &res));
   if (NS_FAILED(res)) 
     return NS_ERROR_FACTORY_NOT_REGISTERED;
 

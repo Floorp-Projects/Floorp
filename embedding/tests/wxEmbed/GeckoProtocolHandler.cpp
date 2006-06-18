@@ -181,8 +181,6 @@ GeckoProtocolChannel::~GeckoProtocolChannel()
 //        nsMemory::Free(mData);
 }
 
-static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
-
 NS_METHOD GeckoProtocolHandlerImpl::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     GeckoProtocolHandlerImpl *impl = new GeckoProtocolHandlerImpl();
@@ -229,7 +227,7 @@ NS_IMETHODIMP GeckoProtocolHandlerImpl::NewURI(const nsACString & aSpec, const c
 {
     nsresult rv;
     nsIURI* url;
-    rv = CallCreateInstance(kSimpleURICID, &url);
+    rv = CallCreateInstance(NS_SIMPLEURI_CONTRACTID, &url);
     if (NS_FAILED(rv))
         return rv;
     rv = url->SetSpec(aSpec);

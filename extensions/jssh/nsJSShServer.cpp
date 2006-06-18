@@ -45,8 +45,6 @@
 #include "nsThreadUtils.h"
 #include "nsJSSh.h"
 
-static NS_DEFINE_CID(kServerSocketCID, NS_SERVERSOCKET_CID);
-
 //**********************************************************************
 // ConnectionListener helper class
 
@@ -168,7 +166,7 @@ nsJSShServer::StartServerSocket(PRUint32 port, const nsACString & startupURI,
     return NS_ERROR_FAILURE;
   }
   
-  mServerSocket = do_CreateInstance(kServerSocketCID);
+  mServerSocket = do_CreateInstance(NS_SERVERSOCKET_CONTRACTID);
   if (!mServerSocket) {
     NS_ERROR("could not create server socket");
     return NS_ERROR_FAILURE;

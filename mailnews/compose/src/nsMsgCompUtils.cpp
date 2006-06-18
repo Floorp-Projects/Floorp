@@ -69,9 +69,6 @@
 #include "nsXULAppAPI.h"
 #endif
 
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-static NS_DEFINE_CID(kHTTPHandlerCID, NS_HTTPPROTOCOLHANDLER_CID);
-
 NS_IMPL_ISUPPORTS1(nsMsgCompUtils, nsIMsgCompUtils)
 
 nsMsgCompUtils::nsMsgCompUtils()
@@ -472,7 +469,7 @@ RRT_HEADER:
   }
 
 
-  nsCOMPtr<nsIHttpProtocolHandler> pHTTPHandler = do_GetService(kHTTPHandlerCID, &rv); 
+  nsCOMPtr<nsIHttpProtocolHandler> pHTTPHandler = do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &rv); 
   if (NS_SUCCEEDED(rv) && pHTTPHandler)
   {
     nsCAutoString userAgentString;
@@ -1753,7 +1750,7 @@ nsMsgNewURL(nsIURI** aInstancePtrResult, const char * aSpec)
   nsresult rv = NS_OK;
   if (nsnull == aInstancePtrResult) 
     return NS_ERROR_NULL_POINTER;
-  nsCOMPtr<nsIIOService> pNetService(do_GetService(kIOServiceCID, &rv)); 
+  nsCOMPtr<nsIIOService> pNetService(do_GetService(NS_IOSERVICE_CONTRACTID, &rv)); 
   if (NS_SUCCEEDED(rv) && pNetService)
   {
     if (PL_strstr(aSpec, "://") == nsnull && strncmp(aSpec, "data:", 5))

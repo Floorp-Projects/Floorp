@@ -57,10 +57,6 @@
 #include "nsCExternalHandlerService.h"
 #include "nsIExternalProtocolService.h"
 
-static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
-
-
-
 ////////////////////////////////////////////////////////////////////////
 // a stub channel implemenation which will map calls to AsyncRead and OpenInputStream
 // to calls in the OS for loading the url.
@@ -369,7 +365,7 @@ NS_IMETHODIMP nsExternalProtocolHandler::NewURI(const nsACString &aSpec,
                                                 nsIURI **_retval)
 {
   nsresult rv;
-  nsCOMPtr<nsIURI> uri = do_CreateInstance(kSimpleURICID, &rv);
+  nsCOMPtr<nsIURI> uri = do_CreateInstance(NS_SIMPLEURI_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   
   rv = uri->SetSpec(aSpec);

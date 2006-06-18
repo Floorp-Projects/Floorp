@@ -89,7 +89,6 @@
 #include "nsICryptoHash.h"
 
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
-static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 /* the following macros actually implement addref, release and query interface for our component. */
@@ -118,7 +117,7 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartRequest(nsIRequest *request, nsISupport
     // we have an error.
     nsresult rv = NS_OK;
 
-    nsCOMPtr<nsIIOService> ioServ(do_GetService(kIOServiceCID, &rv));
+    nsCOMPtr<nsIIOService> ioServ(do_GetService(NS_IOSERVICE_CONTRACTID, &rv));
 
     nsCOMPtr<nsIMailboxUrl> runningUrl = do_QueryInterface(ctxt, &rv);
 

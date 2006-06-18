@@ -74,8 +74,6 @@
 
 static NS_DEFINE_CID( kMsgSendCID, NS_MSGSEND_CID);
 static NS_DEFINE_CID( kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID); 
-static NS_DEFINE_CID( kIOServiceCID, NS_IOSERVICE_CID);
-
 
 // We need to do some calculations to set these numbers to something reasonable!
 // Unless of course, CreateAndSendMessage will NEVER EVER leave us in the lurch
@@ -251,7 +249,7 @@ nsresult nsOutlookCompose::CreateComponents( void)
 	if (!m_pIOService) {
 		IMPORT_LOG0( "Creating nsIOService\n");
 
-		NS_WITH_PROXIED_SERVICE(nsIIOService, service, kIOServiceCID, NS_PROXY_TO_MAIN_THREAD, &rv);
+		NS_WITH_PROXIED_SERVICE(nsIIOService, service, NS_IOSERVICE_CONTRACTID, NS_PROXY_TO_MAIN_THREAD, &rv);
 		if (NS_FAILED(rv)) 
 			return( rv);
 		m_pIOService = service;

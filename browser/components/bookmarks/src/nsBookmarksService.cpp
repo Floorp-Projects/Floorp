@@ -186,8 +186,6 @@ static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,   NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFContainerCID,            NS_RDFCONTAINER_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,       NS_RDFCONTAINERUTILS_CID);
-static NS_DEFINE_CID(kIOServiceCID,               NS_IOSERVICE_CID);
-static NS_DEFINE_CID(kCacheServiceCID,            NS_CACHESERVICE_CID);
 
 static const char kURINC_BookmarksTopRoot[]           = "NC:BookmarksTopRoot"; 
 static const char kURINC_BookmarksRoot[]              = "NC:BookmarksRoot"; 
@@ -1687,11 +1685,11 @@ nsBookmarksService::Init()
     rv = bm_AddRefGlobals();
     if (NS_FAILED(rv))  return rv;
 
-    mNetService = do_GetService(kIOServiceCID, &rv);
+    mNetService = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv))  return rv;
 
     // create cache service/session, ignoring errors
-    mCacheService = do_GetService(kCacheServiceCID, &rv);
+    mCacheService = do_GetService(NS_CACHESERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
     {
         rv = mCacheService->CreateSession("HTTP", nsICache::STORE_ANYWHERE,

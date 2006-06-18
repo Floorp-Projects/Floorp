@@ -46,7 +46,6 @@
 #include "nsIIOService.h"
 #include "nsIChannel.h"
 #include "nsILocalFile.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 #include "nsStringAPI.h"
 #include "nsCRT.h"
@@ -237,7 +236,7 @@ PageGrabber::Grab(const nsCString& aURL)
   // Create the URL object...
   nsCOMPtr<nsIURI> url;
 
-  nsCOMPtr<nsIIOService> ioService(do_GetService(kIOServiceCID, &rv));
+  nsCOMPtr<nsIIOService> ioService(do_GetService(NS_IOSERVICE_CONTRACTID, &rv));
   if (NS_FAILED(rv)) return rv;
 
   rv = ioService->NewURI(aURL, nsnull, nsnull, getter_AddRefs(url));

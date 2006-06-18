@@ -66,8 +66,6 @@
 #include "mozXMLTermUtils.h"
 #include "mozXMLTermStream.h"
 
-static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
-
 /////////////////////////////////////////////////////////////////////////
 // mozXMLTermStream implementation
 /////////////////////////////////////////////////////////////////////////
@@ -205,7 +203,7 @@ NS_IMETHODIMP mozXMLTermStream::Open(nsIDOMWindowInternal* aDOMWindow,
   nsCOMPtr<nsIInputStream> inputStream = this;
 
   // Create a simple URI
-  nsCOMPtr<nsIURI> uri = do_CreateInstance(kSimpleURICID, &result);
+  nsCOMPtr<nsIURI> uri = do_CreateInstance(NS_SIMPLEURI_CONTRACTID, &result);
   if (NS_FAILED(result))
     return result;
 

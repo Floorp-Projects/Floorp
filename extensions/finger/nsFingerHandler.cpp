@@ -49,8 +49,6 @@
 #include "nsIProgressEventSink.h"
 #include "nsNetCID.h"
 
-static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 nsFingerHandler::nsFingerHandler() {
@@ -104,7 +102,7 @@ nsFingerHandler::NewURI(const nsACString &aSpec,
     nsresult rv;
 
     nsIURI* url;
-    rv = CallCreateInstance(kSimpleURICID, &url);
+    rv = CallCreateInstance(NS_SIMPLEURI_CONTRACTID, &url);
     if (NS_FAILED(rv)) return rv;
 
     rv = url->SetSpec(aSpec);

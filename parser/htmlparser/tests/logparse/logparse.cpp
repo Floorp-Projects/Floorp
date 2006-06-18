@@ -50,7 +50,6 @@
 // Class IID's
 static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 static NS_DEFINE_IID(kLoggingSinkCID, NS_LOGGING_SINK_CID);
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 // Interface IID's
 
@@ -86,7 +85,7 @@ nsresult GenerateBaselineFile(const char* aSourceFilename,const char* aBaselineF
   localfile->InitWithNativePath(nsDependentCString(aSourceFilename));
   nsCOMPtr<nsIURI> inputURI;
   {
-    nsCOMPtr<nsIIOService> ioService(do_GetService(kIOServiceCID, &rv));
+    nsCOMPtr<nsIIOService> ioService(do_GetService(NS_IOSERVICE_CONTRACTID, &rv));
     if (NS_FAILED(rv))
       return rv;
     rv = ioService->NewFileURI(localfile, getter_AddRefs(inputURI));

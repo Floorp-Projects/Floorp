@@ -70,7 +70,6 @@
 #include "nsIDocShell.h"
 #include "nsIContentViewer.h"
 
-static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 
 class nsJSThunk : public nsIInputStream
 {
@@ -811,7 +810,7 @@ nsJSProtocolHandler::NewURI(const nsACString &aSpec,
     // CreateInstance.
 
     nsIURI* url;
-    rv = CallCreateInstance(kSimpleURICID, &url);
+    rv = CallCreateInstance(NS_SIMPLEURI_CONTRACTID, &url);
 
     if (NS_FAILED(rv))
         return rv;

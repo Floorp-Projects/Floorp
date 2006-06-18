@@ -128,9 +128,8 @@ nsresult nsMailboxProtocol::OpenMultipleMsgTransport(PRUint32 offset, PRInt32 si
 {
   nsresult rv;
 
-  NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
   nsCOMPtr<nsIStreamTransportService> serv =
-      do_GetService(kStreamTransportServiceCID, &rv);
+      do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // XXX 64-bit

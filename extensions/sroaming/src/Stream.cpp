@@ -49,9 +49,6 @@
 #include "nsIWindowWatcher.h"
 #include "plstr.h"
 
-// IID and CIDs of all the services needed
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-
 #define kRegTreeStream (NS_LITERAL_STRING("Stream"))
 #define kRegKeyURL (NS_LITERAL_STRING("BaseURL"))
 #define kRegKeyUsername (NS_LITERAL_STRING("Username"))
@@ -111,7 +108,7 @@ nsresult Stream::Init(Core* aController)
     /* failure is non-fatal, because username might be in the URL, and
        even if it isn't, the transfer will pull up a prompt. */
   {
-    nsCOMPtr<nsIIOService> ioserv = do_GetService(kIOServiceCID, &rv);
+    nsCOMPtr<nsIIOService> ioserv = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
     {
       nsCOMPtr<nsIURI> uri;
@@ -153,7 +150,7 @@ nsresult Stream::Init(Core* aController)
   rv = mController->GetProfileDir(getter_AddRefs(profiledir));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIIOService> ioserv = do_GetService(kIOServiceCID, &rv);
+  nsCOMPtr<nsIIOService> ioserv = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = NS_NewFileURI(getter_AddRefs(mProfileDir), profiledir);

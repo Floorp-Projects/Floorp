@@ -54,8 +54,6 @@
 #define NS_COMPILER_GNUC3 defined(__GXX_ABI_VERSION) && \
                           (__GXX_ABI_VERSION >= 102) /* G++ V3 ABI */
 
-static NS_DEFINE_CID(kHttpHandlerCID, NS_HTTPPROTOCOLHANDLER_CID);
-
 // Implementation of nsJVMConfigManagerUnix
 NS_IMPL_ISUPPORTS1(nsJVMConfigManagerUnix, nsIJVMConfigManager)
 
@@ -394,7 +392,7 @@ nsJVMConfigManagerUnix::GetAgentVersion(nsCAutoString& _retval)
 {
     nsresult rv = NS_OK;
 
-    nsCOMPtr<nsIHttpProtocolHandler> http = do_GetService(kHttpHandlerCID, &rv);
+    nsCOMPtr<nsIHttpProtocolHandler> http = do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCAutoString userAgent;

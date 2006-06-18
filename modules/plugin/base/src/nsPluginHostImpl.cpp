@@ -211,12 +211,7 @@ static NS_DEFINE_IID(kIPluginInstancePeerIID, NS_IPLUGININSTANCEPEER_IID);
 static NS_DEFINE_IID(kIPluginStreamInfoIID, NS_IPLUGINSTREAMINFO_IID);
 static NS_DEFINE_CID(kPluginCID, NS_PLUGIN_CID);
 static NS_DEFINE_IID(kIPluginTagInfo2IID, NS_IPLUGINTAGINFO2_IID);
-static NS_DEFINE_CID(kProtocolProxyServiceCID, NS_PROTOCOLPROXYSERVICE_CID);
-static NS_DEFINE_CID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-static NS_DEFINE_CID(kHttpHandlerCID, NS_HTTPPROTOCOLHANDLER_CID);
-static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static const char kDirectoryServiceContractID[] = "@mozilla.org/file/directory_service;1";
 // for the dialog
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
@@ -2729,7 +2724,7 @@ nsresult nsPluginHostImpl::UserAgent(const char **retstring)
   static char resultString[NS_RETURN_UASTRING_SIZE];
   nsresult res;
 
-  nsCOMPtr<nsIHttpProtocolHandler> http = do_GetService(kHttpHandlerCID, &res);
+  nsCOMPtr<nsIHttpProtocolHandler> http = do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &res);
   if (NS_FAILED(res))
     return res;
 
@@ -3020,12 +3015,12 @@ NS_IMETHODIMP nsPluginHostImpl::FindProxyForURL(const char* url, char* *result)
   nsCOMPtr<nsIProtocolProxyService> proxyService;
   nsCOMPtr<nsIIOService> ioService;
 
-  proxyService = do_GetService(kProtocolProxyServiceCID, &res);
+  proxyService = do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID, &res);
   if (NS_FAILED(res) || !proxyService) {
     return res;
   }
 
-  ioService = do_GetService(kIOServiceCID, &res);
+  ioService = do_GetService(NS_IOSERVICE_CONTRACTID, &res);
   if (NS_FAILED(res) || !ioService) {
     return res;
   }
@@ -6080,14 +6075,14 @@ NS_IMETHODIMP nsPluginHostImpl::GetCookie(const char* inCookieURL, void* inOutCo
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsCOMPtr<nsIIOService> ioService(do_GetService(kIOServiceCID, &rv));
+  nsCOMPtr<nsIIOService> ioService(do_GetService(NS_IOSERVICE_CONTRACTID, &rv));
 
   if (NS_FAILED(rv) || (nsnull == ioService)) {
     return rv;
   }
 
   nsCOMPtr<nsICookieService> cookieService =
-           do_GetService(kCookieServiceCID, &rv);
+           do_GetService(NS_COOKIESERVICE_CONTRACTID, &rv);
 
   if (NS_FAILED(rv) || (nsnull == cookieService)) {
     return NS_ERROR_INVALID_ARG;
@@ -6125,14 +6120,14 @@ NS_IMETHODIMP nsPluginHostImpl::SetCookie(const char* inCookieURL, const void* i
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsCOMPtr<nsIIOService> ioService(do_GetService(kIOServiceCID, &rv));
+  nsCOMPtr<nsIIOService> ioService(do_GetService(NS_IOSERVICE_CONTRACTID, &rv));
 
   if (NS_FAILED(rv) || (nsnull == ioService)) {
     return rv;
   }
 
   nsCOMPtr<nsICookieService> cookieService =
-           do_GetService(kCookieServiceCID, &rv);
+           do_GetService(NS_COOKIESERVICE_CONTRACTID, &rv);
 
   if (NS_FAILED(rv) || (nsnull == cookieService)) {
     return NS_ERROR_FAILURE;
@@ -6763,7 +6758,7 @@ nsPluginByteRangeStreamListener::OnStartRequest(nsIRequest *request, nsISupports
   if (!finalStreamListener)
      return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIStreamConverterService> serv = do_GetService(kStreamConverterServiceCID, &rv);
+  nsCOMPtr<nsIStreamConverterService> serv = do_GetService(NS_STREAMCONVERTERSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
     rv = serv->AsyncConvertData(MULTIPART_BYTERANGES,
                                 "*/*",

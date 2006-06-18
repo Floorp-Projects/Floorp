@@ -176,7 +176,6 @@
 #include "nsPluginError.h"
 
 static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
-static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
                      NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
@@ -855,7 +854,7 @@ nsDocShell::LoadStream(nsIInputStream *aStream, nsIURI * aURI,
     if (!uri) {
         // HACK ALERT
         nsresult rv = NS_OK;
-        uri = do_CreateInstance(kSimpleURICID, &rv);
+        uri = do_CreateInstance(NS_SIMPLEURI_CONTRACTID, &rv);
         if (NS_FAILED(rv))
             return rv;
         // Make sure that the URI spec "looks" like a protocol and path...

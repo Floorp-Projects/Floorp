@@ -56,7 +56,6 @@
 #include "nsXPIDLString.h"
 
 static NS_DEFINE_CID(kMsgSendLaterCID, NS_MSGSENDLATER_CID); 
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 NS_IMPL_THREADSAFE_ISUPPORTS5(nsMsgOfflineManager,
                               nsIMsgOfflineManager,
@@ -357,7 +356,7 @@ NS_IMETHODIMP nsMsgOfflineManager::SynchronizeForOffline(PRBool downloadNews, PR
 nsresult nsMsgOfflineManager::SetOnlineState(PRBool online)
 {
   nsresult rv;
-  nsCOMPtr<nsIIOService> netService(do_GetService(kIOServiceCID, &rv));
+  nsCOMPtr<nsIIOService> netService(do_GetService(NS_IOSERVICE_CONTRACTID, &rv));
   if (NS_SUCCEEDED(rv) && netService)
   {
     rv = netService->SetOffline(!online);

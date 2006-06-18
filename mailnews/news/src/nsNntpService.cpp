@@ -99,8 +99,6 @@
 #define PREF_MAIL_ROOT_NNTP_REL 	"mail.root.nntp-rel"
 
 static NS_DEFINE_CID(kMessengerMigratorCID, NS_MESSENGERMIGRATOR_CID);
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-static NS_DEFINE_CID(kCacheServiceCID, NS_CACHESERVICE_CID);
                     
 nsNntpService::nsNntpService()
 {
@@ -1245,7 +1243,7 @@ PRBool nsNntpService::WeAreOffline()
 	nsresult rv = NS_OK;
   PRBool offline = PR_FALSE;
 
-  nsCOMPtr<nsIIOService> netService(do_GetService(kIOServiceCID, &rv));
+  nsCOMPtr<nsIIOService> netService(do_GetService(NS_IOSERVICE_CONTRACTID, &rv));
   if (NS_SUCCEEDED(rv) && netService)
     netService->GetOffline(&offline);
 
@@ -1840,7 +1838,7 @@ NS_IMETHODIMP nsNntpService::GetCacheSession(nsICacheSession **result)
   nsresult rv = NS_OK;
   if (!mCacheSession)
   {
-    nsCOMPtr<nsICacheService> serv = do_GetService(kCacheServiceCID, &rv);
+    nsCOMPtr<nsICacheService> serv = do_GetService(NS_CACHESERVICE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
     
     rv = serv->CreateSession("NNTP-memory-only", nsICache::STORE_IN_MEMORY, nsICache::STREAM_BASED, getter_AddRefs(mCacheSession));

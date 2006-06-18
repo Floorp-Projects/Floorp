@@ -48,9 +48,6 @@
 #include "nsIChannel.h"
 #include "nsThreadUtils.h"
 
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-
-
 //**********************************************************************
 // Javascript Environment
 
@@ -735,7 +732,7 @@ nsJSSh::NewResolve(nsIXPConnectWrappedNative *wrapper,
 
 PRBool nsJSSh::LoadURL(const char *url, jsval* retval)
 {
-  nsCOMPtr<nsIIOService> ioserv = do_GetService(kIOServiceCID);
+  nsCOMPtr<nsIIOService> ioserv = do_GetService(NS_IOSERVICE_CONTRACTID);
   if (!ioserv) {
     NS_ERROR("could not get io service");
     return PR_FALSE;
