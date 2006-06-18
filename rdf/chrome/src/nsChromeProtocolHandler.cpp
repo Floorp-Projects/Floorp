@@ -76,8 +76,6 @@
 
 //----------------------------------------------------------------------
 
-static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
-static NS_DEFINE_CID(kStandardURLCID,            NS_STANDARDURL_CID);
 #ifdef MOZ_XUL
 static NS_DEFINE_CID(kXULPrototypeCacheCID,      NS_XULPROTOTYPECACHE_CID);
 #endif
@@ -540,7 +538,7 @@ nsChromeProtocolHandler::NewURI(const nsACString &aSpec,
     // Chrome: URLs (currently) have no additional structure beyond that provided
     // by standard URLs, so there is no "outer" given to CreateInstance
 
-    nsCOMPtr<nsIStandardURL> url(do_CreateInstance(kStandardURLCID, &rv));
+    nsCOMPtr<nsIStandardURL> url(do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv));
     if (NS_FAILED(rv))
         return rv;
 

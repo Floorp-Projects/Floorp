@@ -55,8 +55,6 @@
 
 #include "jsapi.h"
 
-static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
-
 /* load() error msgs, XXX localize? */
 #define LOAD_ERROR_NOSERVICE "Error creating IO Service."
 #define LOAD_ERROR_NOCHANNEL "Error creating channel (invalid URL scheme?)"
@@ -218,7 +216,7 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * /*url*/
     nsCOMPtr<nsIChannel>     chan;
     nsCOMPtr<nsIInputStream> instream;
 
-    nsCOMPtr<nsIIOService> serv = do_GetService(kIOServiceCID);
+    nsCOMPtr<nsIIOService> serv = do_GetService(NS_IOSERVICE_CONTRACTID);
     if (!serv)
     {
         errmsg = JS_NewStringCopyZ (cx, LOAD_ERROR_NOSERVICE);

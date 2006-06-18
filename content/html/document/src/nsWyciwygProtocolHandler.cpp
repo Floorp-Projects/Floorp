@@ -43,8 +43,6 @@
 #include "nsIComponentManager.h"
 #include "nsNetCID.h"
 
-static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 nsWyciwygProtocolHandler::nsWyciwygProtocolHandler() 
@@ -94,7 +92,7 @@ nsWyciwygProtocolHandler::NewURI(const nsACString &aSpec,
 {
   nsresult rv;
 
-  nsCOMPtr<nsIURI> url = do_CreateInstance(kSimpleURICID, &rv);
+  nsCOMPtr<nsIURI> url = do_CreateInstance(NS_SIMPLEURI_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = url->SetSpec(aSpec);

@@ -56,8 +56,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-
 class RobotSinkObserver : public nsIRobotSinkObserver {
 public:
   RobotSinkObserver() {
@@ -253,7 +251,7 @@ extern "C" NS_EXPORT int DebugRobot(
     // Create url
     nsIURI* url;
     nsresult rv;
-    nsCOMPtr<nsIIOService> service(do_GetService(kIOServiceCID, &rv));
+    nsCOMPtr<nsIIOService> service(do_GetService(NS_IOSERVICE_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return rv;
 
     nsIURI *uri = nsnull;

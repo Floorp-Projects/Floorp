@@ -59,7 +59,6 @@ class nsIDocument;
 //      - IMG SRC
 //      - LAYER SRC
 
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
 static NS_DEFINE_IID(kIRobotSinkIID, NS_IROBOTSINK_IID);
@@ -289,7 +288,7 @@ void RobotSink::ProcessLink(const nsString& aLink)
   if (nsnull != docURL) {
     nsIURI* absurl;
     nsresult rv;
-    nsCOMPtr<nsIIOService> service(do_GetService(kIOServiceCID, &rv));
+    nsCOMPtr<nsIIOService> service(do_GetService(NS_IOSERVICE_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return;
 
     nsIURI *uri = nsnull, *baseUri = nsnull;

@@ -79,7 +79,6 @@
 
 #include "nsDocLoader.h"
 
-static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 #ifdef PR_LOGGING
 PRLogModuleInfo* nsURILoader::mLog = nsnull;
 #endif
@@ -676,7 +675,7 @@ nsDocumentOpenInfo::ConvertData(nsIRequest *request,
   nsresult rv = NS_OK;
 
   nsCOMPtr<nsIStreamConverterService> StreamConvService = 
-    do_GetService(kStreamConverterServiceCID, &rv);
+    do_GetService(NS_STREAMCONVERTERSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   LOG(("  Got converter service"));

@@ -153,7 +153,6 @@ const PRInt32 kBackward = 1;
 #define ID_NOT_IN_DOCUMENT ((nsIContent *)2)
 #define NAME_NOT_VALID ((nsBaseContentList*)1)
 
-static NS_DEFINE_CID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 // Returns the name atom of aContent, if the content is a named item
@@ -1852,7 +1851,7 @@ nsHTMLDocument::GetCookie(nsAString& aCookie)
                       // no cookie isn't an error condition.
 
   // not having a cookie service isn't an error
-  nsCOMPtr<nsICookieService> service = do_GetService(kCookieServiceCID);
+  nsCOMPtr<nsICookieService> service = do_GetService(NS_COOKIESERVICE_CONTRACTID);
   if (service) {
     // Get a URI from the document principal. We use the original
     // codebase in case the codebase was changed by SetDomain
@@ -1878,7 +1877,7 @@ NS_IMETHODIMP
 nsHTMLDocument::SetCookie(const nsAString& aCookie)
 {
   // not having a cookie service isn't an error
-  nsCOMPtr<nsICookieService> service = do_GetService(kCookieServiceCID);
+  nsCOMPtr<nsICookieService> service = do_GetService(NS_COOKIESERVICE_CONTRACTID);
   if (service && mDocumentURI) {
     nsCOMPtr<nsIPrompt> prompt;
     nsCOMPtr<nsPIDOMWindow> window = GetWindow();

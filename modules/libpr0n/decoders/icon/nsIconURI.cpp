@@ -47,7 +47,6 @@
 #include "plstr.h"
 #include <stdlib.h>
 
-static NS_DEFINE_CID(kIOServiceCID,     NS_IOSERVICE_CID);
 #define DEFAULT_IMAGE_SIZE          16
 
 // helper function for parsing out attributes like size, and contentType
@@ -214,7 +213,7 @@ NS_IMETHODIMP
 nsMozIconURI::SetSpec(const nsACString &aSpec)
 {
   nsresult rv;
-  nsCOMPtr<nsIIOService> ioService (do_GetService(kIOServiceCID, &rv));
+  nsCOMPtr<nsIIOService> ioService (do_GetService(NS_IOSERVICE_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCAutoString scheme;
