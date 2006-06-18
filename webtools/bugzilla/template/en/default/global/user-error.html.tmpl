@@ -446,7 +446,7 @@
     You asked [% requestee.identity FILTER html %]
     for <code>[% flag_type.name FILTER html %]</code> on [% terms.bug %] 
     [%+ bug_id FILTER html -%]
-    [% IF attachment %], attachment [% attachment.id FILTER html %][% END %], 
+    [% IF attach_id > 0 %], attachment [% attach_id FILTER html %][% END %],
     but that [% terms.bug %] has been restricted to users in certain groups, 
     and the user you asked isn't in all the groups to which 
     the [% terms.bug %] has been restricted.
@@ -463,7 +463,7 @@
     You asked [% requestee.identity FILTER html %]
     for <code>[% flag_type.name FILTER html %]</code> on 
     [%+ terms.bug %] [%+ bug_id FILTER html %],
-    attachment [% attachment.id FILTER html %], but that attachment
+    attachment [% attach_id FILTER html %], but that attachment
     is restricted to users in the [% Param("insidergroup") FILTER html %] group,
     and the user you asked isn't in that group.  Please choose someone else
     to ask, or ask an administrator to add the user to the group.

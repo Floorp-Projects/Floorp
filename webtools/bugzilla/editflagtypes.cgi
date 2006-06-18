@@ -41,6 +41,8 @@ use Bugzilla::Group;
 use Bugzilla::Util;
 use Bugzilla::Product;
 use Bugzilla::Component;
+use Bugzilla::Bug;
+use Bugzilla::Attachment;
 
 use List::Util qw(reduce);
 
@@ -384,10 +386,10 @@ sub update {
     validateAndSubmit($id);
 
     $dbh->bz_unlock_tables();
-    
+
     # Clear existing flags for bugs/attachments in categories no longer on 
     # the list of inclusions or that have been added to the list of exclusions.
-    my $flag_ids = $dbh->selectcol_arrayref('SELECT flags.id
+    my $flags =    $dbh->selectall_arrayref('SELECT flags.id, flags.bug_id, flags.attach_id
                                                FROM flags
                                          INNER JOIN bugs
                                                  ON flags.bug_id = bugs.bug_id
@@ -400,11 +402,14 @@ sub update {
                                               WHERE flags.type_id = ?
                                                 AND i.type_id IS NULL',
                                              undef, $id);
-    foreach my $flag_id (@$flag_ids) {
-        Bugzilla::Flag::clear($flag_id);
+    foreach my $flag (@$flags) {
+        my ($flag_id, $bug_id, $attach_id) = @$flag;
+        my $bug = new Bugzilla::Bug($bug_id, $user->id);
+        my $attachment = $attach_id ? Bugzilla::Attachment->get($attach_id) : undef;
+        Bugzilla::Flag::clear($flag_id, $bug, $attachment);
     }
-    
-    $flag_ids = $dbh->selectcol_arrayref('SELECT flags.id 
+
+    $flags =    $dbh->selectall_arrayref('SELECT flags.id, flags.bug_id, flags.attach_id
                                             FROM flags
                                       INNER JOIN bugs 
                                               ON flags.bug_id = bugs.bug_id
@@ -416,10 +421,13 @@ sub update {
                                              AND (bugs.component_id = e.component_id
                                                   OR e.component_id IS NULL)',
                                           undef, $id);
-    foreach my $flag_id (@$flag_ids) {
-        Bugzilla::Flag::clear($flag_id);
+    foreach my $flag (@$flags) {
+        my ($flag_id, $bug_id, $attach_id) = @$flag;
+        my $bug = new Bugzilla::Bug($bug_id, $user->id);
+        my $attachment = $attach_id ? Bugzilla::Attachment->get($attach_id) : undef;
+        Bugzilla::Flag::clear($flag_id, $bug, $attachment);
     }
-    
+
     $vars->{'name'} = $cgi->param('name');
     $vars->{'message'} = "flag_type_changes_saved";
 

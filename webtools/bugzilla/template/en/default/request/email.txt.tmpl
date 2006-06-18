@@ -23,9 +23,8 @@
 
 [% PROCESS global/variables.none.tmpl %]
 
-[% bugidsummary = flag.target.bug.id _ ': ' _ flag.target.bug.summary %]
-[% attidsummary = flag.target.attachment.id _ ': ' _
-                  flag.target.attachment.summary %]
+[% bugidsummary = bug.bug_id _ ': ' _ bug.short_desc %]
+[% attidsummary = attachment.id _ ': ' _ attachment.description %]
 [% statuses = { '+' => "granted" , '-' => 'denied' , 'X' => "cancelled" ,
                 '?' => "asked" } %]
 [% IF flag.status == '?' %]
@@ -39,9 +38,9 @@
 [% END %]
 From: bugzilla-request-daemon
 To: [% to %]
-Subject: [% flag.type.name %] [%+ subject_status %]: [[% terms.Bug %] [%+ flag.target.bug.id %]] [% flag.target.bug.summary %]
-[%- IF flag.target.attachment.exists %] :
-  [Attachment [% flag.target.attachment.id %]] [% flag.target.attachment.summary %][% END %]
+Subject: [% flag.type.name %] [%+ subject_status %]: [[% terms.Bug %] [%+ bug.bug_id %]] [% bug.short_desc %]
+[%- IF attachment %] :
+  [Attachment [% attachment.id %]] [% attachment.description %][% END %]
 
 [%+ USE wrap -%]
 [%- FILTER bullet = wrap(80) -%]
@@ -50,13 +49,13 @@ Subject: [% flag.type.name %] [%+ subject_status %]: [[% terms.Bug %] [%+ flag.t
 
 [% terms.Bug %] [%+ bugidsummary %]
 [% END %]
-[%+ Param('urlbase') %]show_bug.cgi?id=[% flag.target.bug.id %]
-[% IF flag.target.attachment.exists %]
+[%+ Param('urlbase') %]show_bug.cgi?id=[% bug.bug_id %]
+[% IF attachment %]
 
 [% FILTER bullet = wrap(80) %]
 Attachment [% attidsummary %]
 [%- END %]
-[%+ Param('urlbase') %]attachment.cgi?id=[% flag.target.attachment.id %]&action=edit
+[%+ Param('urlbase') %]attachment.cgi?id=[% attachment.id %]&action=edit
 [%- END %]
 [%- FILTER bullet = wrap(80) %]
 

@@ -64,7 +64,6 @@ use Bugzilla::User;
 use Bugzilla::Config;
 use Bugzilla::Util;
 use Bugzilla::Error;
-use Bugzilla::Attachment;
 use Bugzilla::Mailer;
 use Bugzilla::Constants;
 use Bugzilla::Field;
@@ -298,13 +297,13 @@ sub validate {
                                    { flag_type  => $flag->{'type'},
                                      requestee  => $requestee,
                                      bug_id     => $bug_id,
-                                     attachment => $flag->{target}->{attachment}
+                                     attach_id  => $attach_id
                                    });
                 }
     
                 # Throw an error if the target is a private attachment and
                 # the requestee isn't in the group of insiders who can see it.
-                if ($flag->{target}->{attachment}
+                if ($attach_id
                     && $cgi->param('isprivate')
                     && Param("insidergroup")
                     && !$requestee->in_group(Param("insidergroup")))
@@ -313,7 +312,7 @@ sub validate {
                                    { flag_type  => $flag->{'type'},
                                      requestee  => $requestee,
                                      bug_id     => $bug_id,
-                                     attachment => $flag->{target}->{attachment}
+                                     attach_id  => $attach_id
                                    });
                 }
             }
@@ -361,26 +360,30 @@ sub snapshot {
 
 =over
 
-=item C<process($target, $timestamp, $cgi)>
+=item C<process($bug, $attachment, $timestamp, $cgi)>
 
 Processes changes to flags.
 
-The target is the bug or attachment this flag is about, the timestamp
-is the date/time the bug was last touched (so that changes to the flag
-can be stamped with the same date/time), the cgi is the CGI object
-used to obtain the flag fields that the user submitted.
+The bug and/or the attachment objects are the ones this flag is about,
+the timestamp is the date/time the bug was last touched (so that changes
+to the flag can be stamped with the same date/time), the cgi is the CGI
+object used to obtain the flag fields that the user submitted.
 
 =back
 
 =cut
 
 sub process {
-    my ($bug_id, $attach_id, $timestamp, $cgi) = @_;
-
+    my ($bug, $attachment, $timestamp, $cgi) = @_;
     my $dbh = Bugzilla->dbh;
-    my $target = get_target($bug_id, $attach_id);
-    # Make sure the target exists.
-    return unless $target->{'exists'};
+
+    # Make sure the bug (and attachment, if given) exists and is accessible
+    # to the current user. Moreover, if an attachment object is passed,
+    # make sure it belongs to the given bug.
+    return if ($bug->error || ($attachment && $bug->bug_id != $attachment->bug_id));
+
+    my $bug_id = $bug->bug_id;
+    my $attach_id = $attachment ? $attachment->id : undef;
 
     # Use the date/time we were given if possible (allowing calling code
     # to synchronize the comment's timestamp with those of other records).
@@ -390,14 +393,14 @@ sub process {
     my @old_summaries = snapshot($bug_id, $attach_id);
 
     # Cancel pending requests if we are obsoleting an attachment.
-    if ($attach_id && $cgi->param('isobsolete')) {
-        CancelRequests($bug_id, $attach_id);
+    if ($attachment && $cgi->param('isobsolete')) {
+        CancelRequests($bug, $attachment);
     }
 
     # Create new flags and update existing flags.
-    my $new_flags = FormToNewFlags($target, $cgi);
-    foreach my $flag (@$new_flags) { create($flag, $timestamp) }
-    modify($cgi, $timestamp);
+    my $new_flags = FormToNewFlags($bug, $attachment, $cgi);
+    foreach my $flag (@$new_flags) { create($flag, $bug, $attachment, $timestamp) }
+    modify($bug, $attachment, $cgi, $timestamp);
 
     # In case the bug's product/component has changed, clear flags that are
     # no longer valid.
@@ -414,7 +417,7 @@ sub process {
             AND i.type_id IS NULL",
         undef, $bug_id);
 
-    foreach my $flag_id (@$flag_ids) { clear($flag_id) }
+    foreach my $flag_id (@$flag_ids) { clear($flag_id, $bug, $attachment) }
 
     $flag_ids = $dbh->selectcol_arrayref(
         "SELECT flags.id 
@@ -426,7 +429,7 @@ sub process {
         AND (bugs.component_id = e.component_id OR e.component_id IS NULL)",
         undef, $bug_id);
 
-    foreach my $flag_id (@$flag_ids) { clear($flag_id) }
+    foreach my $flag_id (@$flag_ids) { clear($flag_id, $bug, $attachment) }
 
     # Take a snapshot of flags after changes.
     my @new_summaries = snapshot($bug_id, $attach_id);
@@ -458,7 +461,7 @@ sub update_activity {
 
 =over
 
-=item C<create($flag, $timestamp)>
+=item C<create($flag, $bug, $attachment, $timestamp)>
 
 Creates a flag record in the database.
 
@@ -467,18 +470,17 @@ Creates a flag record in the database.
 =cut
 
 sub create {
-    my ($flag, $timestamp) = @_;
+    my ($flag, $bug, $attachment, $timestamp) = @_;
     my $dbh = Bugzilla->dbh;
 
-    my $attach_id;
-    $attach_id = $flag->{target}->{attachment}->{id} if $flag->{target}->{attachment};
+    my $attach_id = $attachment ? $attachment->id : undef;
     my $requestee_id;
     $requestee_id = $flag->{'requestee'}->id if $flag->{'requestee'};
 
     $dbh->do('INSERT INTO flags (type_id, bug_id, attach_id, requestee_id,
                                  setter_id, status, creation_date, modification_date)
               VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-              undef, ($flag->{'type'}->{'id'}, $flag->{'target'}->{'bug'}->{'id'},
+              undef, ($flag->{'type'}->{'id'}, $bug->bug_id,
                       $attach_id, $requestee_id, $flag->{'setter'}->id,
                       $flag->{'status'}, $timestamp, $timestamp));
 
@@ -489,14 +491,14 @@ sub create {
         $flag->{'addressee'} = $flag->{'requestee'};
     }
 
-    notify($flag, "request/email.txt.tmpl");
+    notify($flag, $bug, $attachment);
 }
 
 =pod
 
 =over
 
-=item C<modify($cgi, $timestamp)>
+=item C<modify($bug, $attachment, $cgi, $timestamp)>
 
 Modifies flags in the database when a user changes them.
 
@@ -505,7 +507,7 @@ Modifies flags in the database when a user changes them.
 =cut
 
 sub modify {
-    my ($cgi, $timestamp) = @_;
+    my ($bug, $attachment, $cgi, $timestamp) = @_;
     my $setter = Bugzilla->user;
     my $dbh = Bugzilla->dbh;
 
@@ -538,11 +540,10 @@ sub modify {
             # Create new flags like the existing one for each additional person.
             foreach my $login (@requestees) {
                 create({ type      => $flag->{type} ,
-                         target    => $flag->{target} , 
                          setter    => $setter, 
                          status    => "?",
                          requestee => new Bugzilla::User(login_to_id($login)) },
-                       $timestamp);
+                       $bug, $attachment, $timestamp);
             }
         }
         else {
@@ -599,7 +600,7 @@ sub modify {
                 $flag->{'addressee'} = $requester;
             }
 
-            notify($flag, "request/email.txt.tmpl");
+            notify($flag, $bug, $attachment);
         }
         elsif ($status eq '?') {
             # Get the requestee, if any.
@@ -633,10 +634,10 @@ sub modify {
                 $flag->{'addressee'} = $flag->{'requestee'};
             }
 
-            notify($flag, "request/email.txt.tmpl");
+            notify($flag, $bug, $attachment);
         }
         elsif ($status eq 'X') {
-            clear($flag->{'id'});
+            clear($flag->{'id'}, $bug, $attachment);
         }
 
         push(@flags, $flag);
@@ -649,7 +650,7 @@ sub modify {
 
 =over
 
-=item C<clear($id)>
+=item C<clear($id, $bug, $attachment)>
 
 Remove a flag from the DB.
 
@@ -658,7 +659,7 @@ Remove a flag from the DB.
 =cut
 
 sub clear {
-    my ($id) = @_;
+    my ($id, $bug, $attachment) = @_;
     my $dbh = Bugzilla->dbh;
 
     my $flag = get($id);
@@ -681,7 +682,7 @@ sub clear {
         $flag->{'addressee'} = $requester;
     }
 
-    notify($flag, "request/email.txt.tmpl");
+    notify($flag, $bug, $attachment);
 }
 
 
@@ -693,7 +694,7 @@ sub clear {
 
 =over
 
-=item C<FormToNewFlags($target, $cgi)>
+=item C<FormToNewFlags($bug, $attachment, $cgi)>
 
 Checks whether or not there are new flags to create and returns an
 array of flag objects. This array is then passed to Flag::create().
@@ -703,7 +704,7 @@ array of flag objects. This array is then passed to Flag::create().
 =cut
 
 sub FormToNewFlags {
-    my ($target, $cgi) = @_;
+    my ($bug, $attachment, $cgi) = @_;
     my $dbh = Bugzilla->dbh;
     my $setter = Bugzilla->user;
     
@@ -715,9 +716,9 @@ sub FormToNewFlags {
 
     # Get a list of active flag types available for this target.
     my $flag_types = Bugzilla::FlagType::match(
-        { 'target_type'  => $target->{'type'},
-          'product_id'   => $target->{'bug'}->{'product_id'},
-          'component_id' => $target->{'bug'}->{'component_id'},
+        { 'target_type'  => $attachment ? 'attachment' : 'bug',
+          'product_id'   => $bug->{'product_id'},
+          'component_id' => $bug->{'component_id'},
           'is_active'    => 1 });
 
     my @flags;
@@ -730,10 +731,9 @@ sub FormToNewFlags {
         # Get the number of flags of this type already set for this target.
         my $has_flags = count(
             { 'type_id'     => $type_id,
-              'target_type' => $target->{'type'},
-              'bug_id'      => $target->{'bug'}->{'id'},
-              'attach_id'   => $target->{'attachment'} ?
-                                 $target->{'attachment'}->{'id'} : undef });
+              'target_type' => $attachment ? 'attachment' : 'bug',
+              'bug_id'      => $bug->bug_id,
+              'attach_id'   => $attachment ? $attachment->id : undef });
 
         # Do not create a new flag of this type if this flag type is
         # not multiplicable and already has a flag set.
@@ -747,7 +747,6 @@ sub FormToNewFlags {
             foreach my $login (@logins) {
                 my $requestee = new Bugzilla::User(login_to_id($login));
                 push (@flags, { type      => $flag_type ,
-                                target    => $target , 
                                 setter    => $setter , 
                                 status    => $status ,
                                 requestee => $requestee });
@@ -756,7 +755,6 @@ sub FormToNewFlags {
         }
         else {
             push (@flags, { type   => $flag_type ,
-                            target => $target , 
                             setter => $setter , 
                             status => $status });
         }
@@ -770,85 +768,7 @@ sub FormToNewFlags {
 
 =over
 
-=item C<GetBug($id)>
-
-Returns a hash of information about a target bug.
-
-=back
-
-=cut
-
-# Ideally, we'd use Bug.pm, but it's way too heavyweight, and it can't be
-# made lighter without totally rewriting it, so we'll use this function
-# until that one gets rewritten.
-sub GetBug {
-    my ($id) = @_;
-    my $dbh = Bugzilla->dbh;
-
-    my $bug = $dbh->selectrow_hashref('SELECT 1 AS existence, bugs.bug_id AS id,
-                                               short_desc AS summary,
-                                               product_id, component_id,
-                                               COUNT(bug_group_map.group_id) AS restricted
-                                          FROM bugs
-                                     LEFT JOIN bug_group_map
-                                            ON bugs.bug_id = bug_group_map.bug_id
-                                         WHERE bugs.bug_id = ? ' .
-                                        $dbh->sql_group_by('bugs.bug_id',
-                                              'short_desc, product_id, component_id'),
-                                        undef, $id);
-
-    # 'exists' is a reserved word in MySQL.
-    $bug->{'exists'} = $bug->{'existence'};
-    return $bug;
-}
-
-=pod
-
-=over
-
-=item C<get_target($bug_id, $attach_id)>
-
-Someone please document this function.
-
-=back
-
-=cut
-
-sub get_target {
-    my ($bug_id, $attach_id) = @_;
-    
-    # Create an object representing the target bug/attachment.
-    my $target = { 'exists' => 0 };
-
-    if ($attach_id) {
-        $target->{'attachment'} = Bugzilla::Attachment->get($attach_id);
-        if ($bug_id) {
-            # Make sure the bug and attachment IDs correspond to each other
-            # (i.e. this is the bug to which this attachment is attached).
-            if (!$target->{'attachment'}
-                || $target->{'attachment'}->{'bug_id'} != $bug_id)
-            {
-              return { 'exists' => 0 };
-            }
-        }
-        $target->{'bug'} = GetBug($bug_id);
-        $target->{'exists'} = 1;
-        $target->{'type'} = "attachment";
-    }
-    elsif ($bug_id) {
-        $target->{'bug'} = GetBug($bug_id);
-        $target->{'exists'} = $target->{'bug'}->{'exists'};
-        $target->{'type'} = "bug";
-    }
-
-    return $target;
-}
-
-=pod
-
-=over
-
-=item C<notify($flag, $template_file)>
+=item C<notify($flag, $bug, $attachment)>
 
 Sends an email notification about a flag being created, fulfilled
 or deleted.
@@ -858,27 +778,25 @@ or deleted.
 =cut
 
 sub notify {
-    my ($flag, $template_file) = @_;
+    my ($flag, $bug, $attachment) = @_;
 
     my $template = Bugzilla->template;
 
     # There is nobody to notify.
     return unless ($flag->{'addressee'} || $flag->{'type'}->{'cc_list'});
 
-    my $attachment_is_private = $flag->{'target'}->{'attachment'} ?
-      $flag->{'target'}->{'attachment'}->{'isprivate'} : undef;
+    my $attachment_is_private = $attachment ? $attachment->isprivate : undef;
 
     # If the target bug is restricted to one or more groups, then we need
     # to make sure we don't send email about it to unauthorized users
     # on the request type's CC: list, so we have to trawl the list for users
     # not in those groups or email addresses that don't have an account.
-    if ($flag->{'target'}->{'bug'}->{'restricted'} || $attachment_is_private) {
+    if ($bug->groups || $attachment_is_private) {
         my @new_cc_list;
         foreach my $cc (split(/[, ]+/, $flag->{'type'}->{'cc_list'})) {
             my $ccuser = Bugzilla::User->new_from_login($cc) || next;
 
-            next if $flag->{'target'}->{'bug'}->{'restricted'}
-              && !$ccuser->can_see_bug($flag->{'target'}->{'bug'}->{'id'});
+            next if ($bug->groups && !$ccuser->can_see_bug($bug->bug_id));
             next if $attachment_is_private
               && Param("insidergroup")
               && !$ccuser->in_group(Param("insidergroup"));
@@ -895,9 +813,12 @@ sub notify {
                     split(/[, ]+/, $flag->{'type'}->{'cc_list'}))
     {
         next unless $to;
-        my $vars = { 'flag' => $flag, 'to' => $to };
+        my $vars = { 'flag'       => $flag,
+                     'to'         => $to,
+                     'bug'        => $bug,
+                     'attachment' => $attachment};
         my $message;
-        my $rv = $template->process($template_file, $vars, \$message);
+        my $rv = $template->process("request/email.txt.tmpl", $vars, \$message);
         if (!$rv) {
             Bugzilla->cgi->header();
             ThrowTemplateError($template->error());
@@ -909,7 +830,7 @@ sub notify {
 
 # Cancel all request flags from the attachment being obsoleted.
 sub CancelRequests {
-    my ($bug_id, $attach_id, $timestamp) = @_;
+    my ($bug, $attachment, $timestamp) = @_;
     my $dbh = Bugzilla->dbh;
 
     my $request_ids =
@@ -919,20 +840,21 @@ sub CancelRequests {
                                   WHERE flags.attach_id = ?
                                   AND flags.status = '?'
                                   AND attachments.isobsolete = 0",
-                                  undef, $attach_id);
+                                  undef, $attachment->id);
 
     return if (!scalar(@$request_ids));
 
     # Take a snapshot of flags before any changes.
-    my @old_summaries = snapshot($bug_id, $attach_id) if ($timestamp);
-    foreach my $flag (@$request_ids) { clear($flag) }
+    my @old_summaries = snapshot($bug->bug_id, $attachment->id) if ($timestamp);
+    foreach my $flag (@$request_ids) { clear($flag, $bug, $attachment) }
 
     # If $timestamp is undefined, do not update the activity table
     return unless ($timestamp);
 
     # Take a snapshot of flags after any changes.
-    my @new_summaries = snapshot($bug_id, $attach_id);
-    update_activity($bug_id, $attach_id, $timestamp, \@old_summaries, \@new_summaries);
+    my @new_summaries = snapshot($bug->bug_id, $attachment->id);
+    update_activity($bug->bug_id, $attachment->id, $timestamp,
+                    \@old_summaries, \@new_summaries);
 }
 
 ######################################################################
@@ -988,7 +910,7 @@ sub sqlify_criteria {
 
 =over
 
-=item C<perlify_record($exists, $id, $type_id, $bug_id, $attach_id, $requestee_id, $setter_id, $status)>
+=item C<perlify_record($id, $type_id, $bug_id, $attach_id, $requestee_id, $setter_id, $status)>
 
 Converts a row from the database into a Perl record.
 
@@ -999,21 +921,20 @@ Converts a row from the database into a Perl record.
 =cut
 
 sub perlify_record {
-    my ($id, $type_id, $bug_id, $attach_id, 
+    my ($id, $type_id, $bug_id, $attach_id,
         $requestee_id, $setter_id, $status) = @_;
-    
+
     return undef unless $id;
-    
+
     my $flag =
       {
         id        => $id ,
         type      => Bugzilla::FlagType::get($type_id) ,
-        target    => get_target($bug_id, $attach_id) , 
         requestee => $requestee_id ? new Bugzilla::User($requestee_id) : undef,
         setter    => new Bugzilla::User($setter_id) ,
         status    => $status , 
       };
-    
+
     return $flag;
 }
 

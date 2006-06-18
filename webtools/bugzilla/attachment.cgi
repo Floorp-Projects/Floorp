@@ -268,49 +268,39 @@ sub validatePrivate
     $cgi->param('isprivate', $cgi->param('isprivate') ? 1 : 0);
 }
 
-sub validateObsolete
-{
-  my @obsolete_ids = ();
-  my $dbh = Bugzilla->dbh;
-  
+sub validateObsolete {
   # Make sure the attachment id is valid and the user has permissions to view
   # the bug to which it is attached.
+  my @obsolete_attachments;
   foreach my $attachid ($cgi->param('obsolete')) {
     my $vars = {};
     $vars->{'attach_id'} = $attachid;
-    
+
     detaint_natural($attachid)
       || ThrowCodeError("invalid_attach_id_to_obsolete", $vars);
-  
-    my ($bugid, $isobsolete, $description) = $dbh->selectrow_array(
-            "SELECT bug_id, isobsolete, description 
-             FROM attachments WHERE attach_id = ?", undef, $attachid);
+
+    my $attachment = Bugzilla::Attachment->get($attachid);
 
     # Make sure the attachment exists in the database.
-    ThrowUserError("invalid_attach_id", $vars) unless $bugid;
+    ThrowUserError("invalid_attach_id", $vars) unless $attachment;
 
+    $vars->{'description'} = $attachment->description;
 
-
-    $vars->{'description'} = $description;
-    
-    if ($bugid != $cgi->param('bugid'))
-    {
+    if ($attachment->bug_id != $cgi->param('bugid')) {
       $vars->{'my_bug_id'} = $cgi->param('bugid');
-      $vars->{'attach_bug_id'} = $bugid;
+      $vars->{'attach_bug_id'} = $attachment->bug_id;
       ThrowCodeError("mismatched_bug_ids_on_obsolete", $vars);
     }
 
-    if ( $isobsolete )
-    {
+    if ($attachment->isobsolete) {
       ThrowCodeError("attachment_already_obsolete", $vars);
     }
 
     # Check that the user can modify this attachment
     validateCanEdit($attachid);
-    push(@obsolete_ids, $attachid);
+    push(@obsolete_attachments, $attachment);
   }
-
-  return @obsolete_ids;
+  return @obsolete_attachments;
 }
 
 # Returns 1 if the parameter is a content-type viewable in this browser
@@ -797,8 +787,8 @@ sub insert
                                                         $bugid, $user,
                                                         $timestamp, \$vars);
     my $isprivate = $cgi->param('isprivate') ? 1 : 0;
-    my @obsolete_ids = ();
-    @obsolete_ids = validateObsolete() if $cgi->param('obsolete');
+    my @obsolete_attachments;
+    @obsolete_attachments = validateObsolete() if $cgi->param('obsolete');
 
   # Insert a comment about the new attachment into the database.
   my $comment = "Created an attachment (id=$attachid)\n" .
@@ -809,17 +799,19 @@ sub insert
 
   # Make existing attachments obsolete.
   my $fieldid = get_field_id('attachments.isobsolete');
-  foreach my $obsolete_id (@obsolete_ids) {
+  my $bug = new Bugzilla::Bug($bugid, $user->id);
+
+  foreach my $obsolete_attachment (@obsolete_attachments) {
       # If the obsolete attachment has request flags, cancel them.
       # This call must be done before updating the 'attachments' table.
-      Bugzilla::Flag::CancelRequests($bugid, $obsolete_id, $timestamp);
+      Bugzilla::Flag::CancelRequests($bug, $obsolete_attachment, $timestamp);
 
       $dbh->do("UPDATE attachments SET isobsolete = 1 " . 
-              "WHERE attach_id = ?", undef, $obsolete_id);
+              "WHERE attach_id = ?", undef, $obsolete_attachment->id);
       $dbh->do("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when,
                                           fieldid, removed, added) 
               VALUES (?,?,?,?,?,?,?)", undef, 
-              $bugid, $obsolete_id, $user->id, $timestamp, $fieldid, 0, 1);
+              $bugid, $obsolete_attachment->id, $user->id, $timestamp, $fieldid, 0, 1);
   }
 
   # Assign the bug to the user, if they are allowed to take it
@@ -865,7 +857,10 @@ sub insert
   }   
   
   # Create flags.
-  Bugzilla::Flag::process($bugid, $attachid, $timestamp, $cgi);
+  # Update the bug object with updated data.
+  $bug = new Bugzilla::Bug($bugid, $user->id);
+  my $attachment = Bugzilla::Attachment->get($attachid);
+  Bugzilla::Flag::process($bug, $attachment, $timestamp, $cgi);
    
   # Define the variables and functions that will be passed to the UI template.
   $vars->{'mailrecipients'} =  { 'changer' => $user->login,
@@ -963,8 +958,9 @@ sub update
     Bugzilla::Flag::validate($cgi, $bugid, $attach_id);
     Bugzilla::FlagType::validate($cgi, $bugid, $attach_id);
 
-  # Lock database tables in preparation for updating the attachment.
-  $dbh->bz_lock_tables('attachments WRITE', 'flags WRITE' ,
+    my $bug = new Bugzilla::Bug($bugid, $userid);
+    # Lock database tables in preparation for updating the attachment.
+    $dbh->bz_lock_tables('attachments WRITE', 'flags WRITE' ,
           'flagtypes READ', 'fielddefs READ', 'bugs_activity WRITE',
           'flaginclusions AS i READ', 'flagexclusions AS e READ',
           # cc, bug_group_map, user_group_map, and groups are in here so we
@@ -974,7 +970,7 @@ sub update
           # Bugzilla::User can flatten groups.
           'bugs WRITE', 'profiles READ', 'email_setting READ',
           'cc READ', 'bug_group_map READ', 'user_group_map READ',
-          'group_group_map READ', 'groups READ');
+          'group_group_map READ', 'groups READ', 'group_control_map READ');
 
   # Get a copy of the attachment record before we make changes
   # so we can record those changes in the activity table.
@@ -999,7 +995,8 @@ sub update
   # to attachments so that we can delete pending requests if the user
   # is obsoleting this attachment without deleting any requests
   # the user submits at the same time.
-  Bugzilla::Flag::process($bugid, $attach_id, $timestamp, $cgi);
+  my $attachment = Bugzilla::Attachment->get($attach_id);
+  Bugzilla::Flag::process($bug, $attachment, $timestamp, $cgi);
 
   # Update the attachment record in the database.
   $dbh->do("UPDATE  attachments 
