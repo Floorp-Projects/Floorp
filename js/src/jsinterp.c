@@ -3306,12 +3306,16 @@ interrupt:
                     if (cond) {
                         str = JSVAL_TO_STRING(lval);
                         ok = (str2 = js_ValueToString(cx, rval)) != NULL;
+                        if (!ok)
+                            goto out;
+                        sp[-1] = STRING_TO_JSVAL(str2);
                     } else {
                         str2 = JSVAL_TO_STRING(rval);
                         ok = (str = js_ValueToString(cx, lval)) != NULL;
+                        if (!ok)
+                            goto out;
+                        sp[-2] = STRING_TO_JSVAL(str);
                     }
-                    if (!ok)
-                        goto out;
                     str = js_ConcatStrings(cx, str, str2);
                     if (!str) {
                         ok = JS_FALSE;
