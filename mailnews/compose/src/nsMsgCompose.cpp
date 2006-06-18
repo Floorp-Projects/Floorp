@@ -1014,11 +1014,10 @@ NS_IMETHODIMP nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity 
                 CopyUTF16toUTF8(msgBody.get(), outCString);
                 m_compFields->SetCharacterSet("UTF-8");
                 break; 
-              case 1 : // send anyway 
-                break;
-              case 2 : // return to the editor
-              default :
+              case 1 : // return to the editor 
                 return NS_ERROR_MSG_MULTILINGUAL_SEND;
+              case 2 : // send anyway
+                break;
             }
           }
         }
