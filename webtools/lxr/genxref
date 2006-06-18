@@ -1,5 +1,5 @@
 #!/usr/bonsaitools/bin/perl
-# $Id: genxref,v 1.5 1999/07/22 19:58:11 terry%mozilla.org Exp $
+# $Id: genxref,v 1.6 2006/06/18 23:05:10 timeless%mozdev.org Exp $
 
 # genxref.pl --	Finds identifiers in a set of C files using an
 #		extremely fuzzy algorithm.  It sort of works.
@@ -29,9 +29,11 @@
 use lib 'lib/';
 use integer;
 use DB_File;
+use strict;
 
+my %fileidx;
 
-%itype = (('macro',	'M'),
+my %itype = (('macro',	'M'),
 	  ('typedef',	'T'),
 	  ('struct',	'S'),
 	  ('enum',	'E'),
@@ -41,10 +43,11 @@ use DB_File;
 	  ('class',	'C'),	# (C++)
 	  ('classforw',	'c'),	# (C++)
 	  ('var',	'V'),
-	  ('interface', 'I'));
-#         ('reference', 'R')
+	  ('interface', 'I'),
+	  ('reference', 'R'),
+	 );
 
-@reserved = ('auto', 'break', 'case', 'char', 'const', 'continue',
+my @reserved = ('auto', 'break', 'case', 'char', 'const', 'continue',
 	     'default', 'do', 'double', 'else', 'enum', 'extern',
 	     'float', 'for', 'goto', 'if', 'int', 'long', 'register',
 	     'return', 'short', 'signed', 'sizeof', 'static',
@@ -56,13 +59,27 @@ use DB_File;
 	     '__asm__','__inline__');
 
 
-$ident = '\~?_*[a-zA-Z][a-zA-Z0-9_]*';
+my @reservedJS = ( 'abstract',   'as',   'break',   'case',   'catch',   'class',   'const',   'continue',  'default',   'delete',   'do',   'else',   'export',   'extends',   'false',   'final',   'finally',   'for',   'function',   'if',   'import',   'in',   'instanceof',   'is',   'namespace',   'new',   'null',   'package',   'private',   'public',   'return',   'static',   'super',   'switch',   'this ',  'throw',   'true',   'try',   'typeof',   'use',   'var',   'void',   'while',   'with');
 
+my @reservedXUL = (''); #nothing yet
 
-$realpath = $ARGV[0];
+my @ft;
+
+my %xref;
+
+my @f;
+my @jsfiles;
+
+my $ident = '\~?_*[a-zA-Z][a-zA-Z0-9_]*';
+my $fnum = 1;
+
+my $realpath = $ARGV[0];
 $realpath ||= '.';
 $realpath .= '/';
 
+
+my $totaldefs = 0;
+my $totalrefs = 0;
 
 sub wash {
     my $towash = $_[0];
@@ -88,10 +105,143 @@ sub classes {
     }
 }
 
+sub findidentJS {
+    print(STDERR "Starting pass 1 for Javascript: Collect identifier definitions.\n");
+
+    my $start = time;
+    my $defs = 0;
+    my $f = "";
+    my $contents = "";
+    my @contents;
+
+    foreach $f (@jsfiles) {
+        $f =~ s/^$realpath//o;
+        $fileidx{++$fnum} = $f;
+
+        open(SRCFILE, $realpath.$f);
+        {
+            local $/ = undef;
+            $contents = <SRCFILE>;
+        }
+        close(SRCFILE);
+
+        print(STDERR 
+              "(Pass 1 JS) $f (",length($contents),
+              "), file $fnum of ",$#f+1,"...\n");
+
+        # Remove comments.
+        $contents =~ s/\/\*(.*?)\*\//&wash($1)/ges;
+        $contents =~ s/\/\/[^\n]*//g; # C++
+
+        # Unwrap continuation lines.
+        $contents =~ s/\\\s*\n/$1\05/gs;
+        while ($contents =~ s/\05([^\n\05]+)\05/$1\05\05/gs) {}
+        $contents =~ s/(\05+)([^\n]*)/"$2"."\n" x length($1)/gse;
+
+        # Remove nested parentheses.
+        while ($contents =~ s/\(([^\)]*)\(/\($1\05/g ||
+               $contents =~ s/\05([^\(\)]*)\)/ $1 /g) {}
+
+        # Some heuristics here: Try to recognize "code" and delete
+        # everything up to the next block delimiter.
+        # $contents =~ s/([\;\}\{])(\s*$ident\s*\([^\)]*\)[^\{\}]*)/
+        #       "$1".&wash($2)/goes;
+        # $contents =~ s/([\;\{])(\s*\**$ident\s*\=[^\{\}]*)/
+        #       "$1".&wash($2)/goes;
+
+        # Parentheses containing commas are probably not interesting.
+        $contents =~ s/\(([^\)]*\,[^\)]*)\)/
+            "()".&wash($1)/ges;
+
+        # This operator-stuff messes things up. (C++)
+        $contents =~ s/operator[\<\>\=\!\+\-\*\%\/]{1,2}/operator/g;
+
+        # Ranges are uninteresting (and confusing).
+        $contents =~ s/\[.*?\]//gs;
+
+        # From here on, \01 and \02 are used to encapsulate found
+        # identifiers,
+
+=pod
+        # Find class definitions. (C++)
+        $contents =~ s/((class)\s+($ident)\s*(:[^;\{]*|)({}|(;)))/
+            "$2 "."\01".$itype{$2.($6 ? 'forw' : '')}.
+                &classes($4).$3."\02 ".$6.&wash($1)/goes;
+=cut
+
+        my $ct = $contents;
+        my $ct2 = ($ct =~ s/\n//g) || 0;
+        my ($ids, $junk);
+        @contents = split(/[;}]/, $contents);
+        $contents = '';
+        my $l = 1;
+        foreach (@contents) {
+            my $line = $ct = $_;
+            $ct2 = ($ct =~ s/\n//g) || 0;
+            my $bl = $l;
+            if ($line =~ /^(\s*(?:var|const)\s+)($ident(?:\s*,\s*$ident)*)(.*?)$/m) {
+                ($ct, $ids, $junk) = ($1, $2, $3);
+                $l += ($ct =~ s/\n//g) || 0;
+                my @idds = split /\b/, $ids;
+                while (@idds) {
+                    my $lid = shift @idds;
+                    $lid =~ /($ident)/;
+                    $contents .= "\04$l\01".$itype{'var'}."$1\02";
+                    my $spc;
+                    do {
+                        $spc = shift @idds;
+                        $l += $spc =~ s/[\r\n]//g;
+                    } while ($spc =~ /[,=]/);
+                }
+            }
+            $l = $bl;
+            if ($line =~ /^(.*?\s*)((?:$ident\s*[:=]*\s*)*)function(\s+)($ident|)(\s*.*)$/sm) {
+                my ($decl, $impl, $ws1, $ws2, $ws3) = ($2, $4, $1, $3, $5);
+                $l += $ws1 =~ s/\n//g;
+                if ($decl) {
+                    my @idds = split /\b/, $decl;
+                    while (@idds) {
+                        my $lid = shift @idds;
+                        if ($lid =~ /($ident)/) {
+                            $contents .= "\04$l\01".$itype{'function'}."$1\02";
+                        } else {
+                            $l += $lid =~ s/\n//g;
+                        }
+                    }
+                }
+                $l += $ws2 =~ s/\n//g;
+                $contents .= "\04$l\01".$itype{'function'}."$impl\02" if $impl;
+                $l += $ws3 =~ s/\n//g;
+            }
+            $l = $bl;
+            $l += $ct2;
+        }
+
+        foreach ($contents =~ /^(.*)/gm) {
+            while (/\04(\d+)\01(.)($ident)\02/go) {
+                $xref{$3} .= "$2$fnum:$1\t";
+                $defs++;
+            }
+        }
+    }
+
+    # Cleanup.
+    foreach (@reservedJS) {
+        delete($xref{$_});
+    }
+
+    $totaldefs = $totaldefs + $defs;
+
+    print(STDERR 
+	  "Completed pass 1 Javascript (",(time-$start),"s):",
+	  " $defs definitions found (total found so far: $totaldefs).\n\n");
+}	
+
 sub c_clean {
     my $contents = $_[0];
     # Find macro (un)definitions.
-    $l = 0;
+    my $l = 0;
+    my $defs;
     foreach ($contents =~ /^(.*)/gm) {
 	$l++;
 	if (/^[ \t]*\#\s*(define|undef)\s+($ident)/o) {
@@ -190,15 +340,29 @@ sub java_classes {
     return $contents;
 }
 
-sub findident {
-    print(STDERR "Starting pass 1: Collect identifier definitions.\n");
+sub idl_interfaces {
+    my $contents = $_[0];
+    # Find IDL interfaces
 
-    $start = time;
-    $fnum = 0; $defs = 0;
+    $contents =~ s/((interface)\s+($ident)\s*(:[^;\{]*|)({}|(;)))/
+	"$2 "."\01".$itype{$2.($6 ? 'forw' : '')}.
+	    &classes($4).$3."\02 ".$6.&wash($1)/goes;
+
+    return $contents;
+}
+
+sub findident {
+    print(STDERR "Starting pass 1 for C/C++: Collect identifier definitions.\n");
+
+    my $start = time;
+    my $defs = 0;
+    my $f = "";
+    my $contents = "";
+    my @contents;
 
     foreach $f (@f) {
 	$f =~ s/^$realpath//o;
-	$java = $ft[$fnum];
+	my ($java, $idl) = ($ft[$fnum] == 1, $ft[$fnum] == 2);
 	$fileidx{++$fnum} = $f;
 
 	open(SRCFILE, $realpath.$f);
@@ -206,14 +370,14 @@ sub findident {
 	close(SRCFILE);
 
 	print(STDERR 
-	      "(Pass 1) $f (",length($contents),
+	      "(Pass 1 C/C++) $f (",length($contents),
 	      "), file $fnum of ",$#f+1,"...\n");
 
 	# Remove comments.
 	$contents =~ s/\/\*(.*?)\*\//&wash($1)/ges;
 	$contents =~ s/\/\/[^\n]*//g; # C++
 
-	# Unwrap continunation lines.
+	# Unwrap continuation lines.
 	$contents =~ s/\\\s*\n/$1\05/gs;
 	while ($contents =~ s/\05([^\n\05]+)\05/$1\05\05/gs) {}
 	$contents =~ s/(\05+)([^\n]*)/"$2"."\n" x length($1)/gse;
@@ -244,6 +408,8 @@ sub findident {
 
 	if ($java) {
 	    $contents = java_classes($contents);
+	} elsif ($idl) {
+	    $contents = idl_interfaces($contents);
 	} else {
 	    $contents = c_classes($contents);
 	}
@@ -257,7 +423,7 @@ sub findident {
 		
 		if (/$ident[^a-zA-Z0-9_]+$ident/) { # It takes two, baby.
 		    
-		    $t = /^\s*typedef/s;	# Is this a type definition?
+		    my $t = /^\s*typedef/s;	# Is this a type definition?
 		    
 		    s/($ident(?:\s*::\s*$ident|))	# ($1) Match the identifier
 			([\s\)]*		# ($2) Tokens allowed after identifier
@@ -286,7 +452,7 @@ sub findident {
 	    $contents .= $_;
 	}
 
-	$l = 0; 
+	my $l = 0; 
 	foreach ($contents =~ /^(.*)/gm) {
 	    $l++;
 	    while (/\01(.)(?:(.+?)\s*::\s*|)($ident)\02/go) {
@@ -296,47 +462,48 @@ sub findident {
 	}
     }
 
-    # Så juksar me litt.
+    # Remove reserved from xref
     foreach (@reserved) {
 	delete($xref{$_});
     }
 
+    $totaldefs = $totaldefs + $defs;
     print(STDERR 
-	  "Completed pass 1 (",(time-$start),"s):",
-	  " $defs definitions found.\n\n");
+	  "Completed pass 1 C/C++ (",(time-$start),"s):",
+	  " $defs definitions found (total found so far: $totaldefs).\n\n");
 }	
 
 
-sub findusage {
-    print(STDERR "Starting pass 2: Generate reference statistics.\n");
+sub findusageJS {
+    print(STDERR "Starting pass 2 Javascript: Generate reference statistics.\n");
 
-    $start = time;
-    $fnum = 0; $refs = 0;
+    my $start = time;
+    my $refs = 0;
+    my $f;
 
-    foreach $f (@f) {
+    foreach $f (@jsfiles) {
 	$f =~ s/^$realpath//o;
 	$fnum++;
-	$lcount = 0;
-	%tref = ();
+	my $lcount = 0;
+	my %tref = ();
 
 	open(SRCFILE, $realpath.$f);
-	$_ = $/; undef($/); $contents = <SRCFILE>; $/ = $_;
+	$_ = $/; undef($/); my $contents = <SRCFILE>; $/ = $_;
 	close(SRCFILE);
 
 	print(STDERR 
-	      "(Pass 2) $f (",length($contents),
+	      "(Pass 2 JS) $f (",length($contents),
 	      "), file $fnum of ",$#f+1,"...\n");
 
 	# Remove comments
 	$contents =~ s/\/\*(.*?)\*\//&wash($1)/ges; 
 	$contents =~ s/\/\/[^\n]*//g;
 
-	# Remove include statements
-	$contents =~ s/^[ \t]*\#include[ \t]+[^\n]*//gm;
 
 	# FIXME: "var"
 
-	@lines = split(/\n/, $contents);
+	my @lines = split(/\n/, $contents);
+	my $line;
 
 	foreach $line (@lines) {
 	    $lcount++;
@@ -351,26 +518,84 @@ sub findusage {
 	    $refs++;
 	}
     }
+    $totalrefs = $totalrefs + $refs;
     print(STDERR 
 	  "Completed pass 2 (",(time-$start),"s):",
-	  "$refs references to known identifiers found.\n\n");
+	  "$refs references to known identifiers found (total: $totalrefs).\n\n");
+}
+
+
+sub findusage {
+    print(STDERR "Starting pass 2 C/C++: Generate reference statistics.\n");
+
+    my $start = time;
+    my $refs = 0;
+    my $f;
+
+    foreach $f (@f) {
+	$f =~ s/^$realpath//o;
+	$fnum++;
+	my $lcount = 0;
+	my %tref = ();
+
+	open(SRCFILE, $realpath.$f);
+	$_ = $/; undef($/); my $contents = <SRCFILE>; $/ = $_;
+	close(SRCFILE);
+
+	print(STDERR 
+	      "(Pass 2 C/C++) $f (",length($contents),
+	      "), file $fnum of ",$#f+1,"...\n");
+
+	# Remove comments
+	$contents =~ s/\/\*(.*?)\*\//&wash($1)/ges; 
+	$contents =~ s/\/\/[^\n]*//g;
+
+	# Remove include statements
+	$contents =~ s/^[ \t]*\#include[ \t]+[^\n]*//gm;
+
+	# FIXME: "var"
+
+	my @lines = split(/\n/, $contents);
+	my $line;
+
+	foreach $line (@lines) {
+	    $lcount++;
+	    foreach ($line =~ /(?:^|[^a-zA-Z_\#])($ident)\b/og) {
+		$tref{$_} .= "$lcount," if $xref{$_};
+	    }
+	}
+
+	while (($a, $b) = each(%tref)) {
+	    chop($b);
+	    $xref{$a} .= "R$fnum:$b\t";
+	    $refs++;
+	}
+    }
+    $totalrefs = $totalrefs + $refs;
+    print(STDERR 
+	  "Completed pass 2 C/C++ (",(time-$start),"s):",
+	  "$refs references to known identifiers found (total: $totalrefs).\n\n");
 }
 
 
 sub dumpdb {
     print(STDERR "Starting pass 3: Dump database to disk.\n");
 
-    $start = time;
+    my $start = time;
+    my %xrefdb;
+
     tie (%xrefdb, "DB_File" , "xref.out.$$", O_RDWR|O_CREAT, 0664, $DB_HASH)
 	|| die("Could not open \"xref\" for writing");
 
-    $i = 0;
+    my $i = 0;
+    my $k;
+    my $v;
     while (($k, $v) = each(%xref)) {
 	$i++;
 	delete($xref{$k});
 	$xrefdb{$k} = $v;
 	unless ($i % 100) {
-	    print(STDERR "(Pass 3) identifier $i of maximum $defs...\n");
+	    print(STDERR "(Pass 3) identifier $i of maximum $totaldefs...\n");
 	}
     }
 
@@ -387,22 +612,40 @@ tie (%fileidx, "DB_File", "fileidx.out.$$", O_RDWR|O_CREAT, 0660, $DB_HASH)
 
 
 open(FILES, "find $realpath -print |");
+print(STDERR "Starting pass 0: Checking for files to index.\n");
+print(STDERR "looking in $realpath.\n");
+
+
 while (<FILES>) {
     chop;
-    if (/\.([ch]|cpp?|idl|cc)$/i) {
+    if (/\.([ch]|cpp?|idl|cc|java)$/i) {
+	push(@ft, ($1 eq 'java')?1:(($1 eq 'idl')?2:0));
 	push(@f, $_);
-	push(@t, 0);
     }
-    if (/\.(java)$/i) {
-	push(@f, $_);
-	push(@ft, 1);
+    if (/\.(js)$/i) {
+        push(@jsfiles, $_)
     }
 #    push(@f, $_) if /\.([ch]|cpp?|idl|cc|java)$/i; # Duplicated in lib/LXR/Common.pm
 }
 close(FILES);
 
+print "Stage 0 C/C++ file count is : " . scalar(@f) . "\n";
+print "Stage 0 JS file count is : " . scalar(@jsfiles) . "\n";
+
+
+$fnum = 0;
+
 &findident;
+print "Stage 1 C/C++ XREF keycount is : " . scalar(keys %xref) . "\n";
+&findidentJS;
+print "Stage 1 C/C++/JS XREF keycount is : " . scalar(keys %xref) . "\n";
+
+$fnum = 0;
+
 &findusage;
+print "Stage 2 C/C++ XREF keycount is : " . scalar(keys %xref) . "\n";
+&findusageJS;
+print "Stage 2 C/C++/JS XREF keycount is : " . scalar(keys %xref) . "\n";
 &dumpdb;
 
 dbmclose(%fileidx);
