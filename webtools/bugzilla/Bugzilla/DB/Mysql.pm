@@ -264,7 +264,7 @@ sub bz_setup_database {
     # http://bugs.mysql.com/bug.php?id=13535
     # This is a workaround, a dummy SELECT to reset the LAST_INSERT_ID.
     my @tables = $self->bz_table_list_real();
-    if (lsearch(\@tables, 'bugs') != -1
+    if (grep($_ eq 'bugs', @tables)
         && $self->bz_column_info_real("bugs", "bug_id"))
     {
         $self->do('SELECT 1 FROM bugs WHERE bug_id IS NULL');
@@ -285,9 +285,9 @@ sub bz_setup_database {
     # has existed at least since Bugzilla 2.8, and probably earlier.
     # For fixing the inconsistent naming of Schema indexes,
     # we also check for one of those inconsistently-named indexes.
-    if ( scalar(@tables) && 
-         ($self->bz_index_info_real('bugs', 'assigned_to') ||
-          $self->bz_index_info_real('flags', 'flags_bidattid_idx')) )
+    if (grep($_ eq 'bugs', @tables)
+        && ($self->bz_index_info_real('bugs', 'assigned_to')
+            || $self->bz_index_info_real('flags', 'flags_bidattid_idx')) )
     {
 
         # This is a check unrelated to the indexes, to see if people are
