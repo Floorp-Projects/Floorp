@@ -1539,26 +1539,26 @@
               </template>
             </menu>
 
-            <menu id="messagePaneContext-tags" label="&tagMenu.label;" accesskey="&tagMenu.accesskey;">
-              <menupopup id="messagePaneContext-tagpopup" onpopupshowing="InitMessageTags('messagePaneContext')">
+            <menu id="tagMenu" label="&tagMenu.label;" accesskey="&tagMenu.accesskey;">
+              <menupopup id="tagMenu-tagpopup" onpopupshowing="InitMessageTags('tagMenu')">
               </menupopup>
             </menu>
             <menu id="markMenu" label="&markMenu.label;" accesskey="&markMenu.accesskey;">
               <menupopup onpopupshowing="InitMessageMark()">
                 <menuitem type="checkbox" id="markReadMenuItem" label="&markAsReadCmd.label;" accesskey="&markAsReadCmd.accesskey;" observes="cmd_markAsRead"
-     ifndef="" XP_MACOSX=""
+     ifndef XP_MACOSX
                       key="key_toggleRead"
-     endif=""
+     endif
               />
                 <menuitem label="&markThreadAsReadCmd.label;" accesskey="&markThreadAsReadCmd.accesskey;" observes="cmd_markThreadAsRead"
-     ifndef="" XP_MACOSX=""
+     ifndef XP_MACOSX
                       key="key_markThreadAsRead"
-     endif=""
+     endif
               />
                 <menuitem label="&markReadByDateCmd.label;" accesskey="&markReadByDateCmd.accesskey;" command="cmd_markReadByDate"
-     ifndef="" XP_MACOSX=""
+     ifndef XP_MACOSX
                       key="key_markReadByDate"
-     endif=""
+     endif
               />
                 <menuitem label="&markAllReadCmd.label;" key="key_markAllRead" accesskey="&markAllReadCmd.accesskey;" observes="cmd_markAllRead"/>
                 <menuseparator/>
@@ -1567,17 +1567,17 @@
                           label="&markFlaggedCmd.label;" 
                           accesskey="&markFlaggedCmd.accesskey;" 
                           observes="cmd_markAsFlagged"
-     ifndef="" XP_MACOSX=""
+     ifndef XP_MACOSX
                       key="key_toggleFlagged"
-     endif=""
+     endif
               />
                 <menuseparator/>
                 <menuitem label="&markAsJunkCmd.label;" 
                           accesskey="&markAsJunkCmd.accesskey;" 
                           observes="cmd_markAsJunk"
-     ifndef="" XP_MACOSX=""
+     ifndef XP_MACOSX
                       key="key_markJunk"
-     endif=""
+     endif
               />
                 <menuitem label="&markAsNotJunkCmd.label;"
                           key="key_markNotJunk" 
