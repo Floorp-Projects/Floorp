@@ -1100,6 +1100,27 @@ function delayedStartup()
   // Initialize the microsummary service by retrieving it, prompting its factory
   // to create its singleton, whose constructor initializes the service.
   Cc["@mozilla.org/microsummary/service;1"].getService(Ci.nsIMicrosummaryService);
+
+  // initialize the session-restore service
+  var ssEnabled = true;
+  var prefBranch = Cc["@mozilla.org/preferences-service;1"].
+                   getService(Ci.nsIPrefBranch);
+  try {
+    ssEnabled = prefBranch.getBoolPref("browser.sessionstore.enabled");
+  } catch (ex) {}
+
+  if (ssEnabled) {
+    var wType = window.document.documentElement.getAttribute("windowtype");
+    if (wType == "navigator:browser") {
+      try {
+        var ss = Cc["@mozilla.org/browser/sessionstore;1"].
+                 getService(Ci.nsISessionStore);
+        ss.init(window);
+      } catch(ex) {
+        dump("nsSessionStore could not be initialized: " + ex + "\n");
+      }
+    }
+  }
 }
 
 function BrowserShutdown()

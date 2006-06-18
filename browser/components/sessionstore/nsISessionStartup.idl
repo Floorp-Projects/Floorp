@@ -38,19 +38,20 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMWindow;
-
 /**
  * nsISessionStore keeps track of the current browsing state - i.e.
  * tab history, cookies, scroll state, form data, POSTDATA and window features
  * - and allows to restore everything into one window.
  */
 
-[scriptable, uuid(ca4e1d40-ec1b-11da-8ad9-0800200c9a66)]
-interface nsISessionStore : nsISupports
+[scriptable, uuid(41cfaf30-f0ce-11da-8ad9-0800200c9a66)]
+interface nsISessionStartup: nsISupports
 {
+  // Get session state as string
+  readonly attribute string state;
+
   /**
-   * Initialize the service
+   * Determine if session should be restored 
    */
-  void init(in nsIDOMWindow aWindow);
+  boolean doRestore();
 };
