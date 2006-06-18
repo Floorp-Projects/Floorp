@@ -12,12 +12,6 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <window id="main-window">
-    <!-- This dims out the browser content -->
-
-    <vbox id="safebrowsing-dim-area-transp" hidden="true">
-      <spacer flex="1" />
-    </vbox>
-
     <!-- This is the spike aka tail on top of the warning -->
 
     <hbox id="safebrowsing-palm-message-tail-container" hidden="true" 
@@ -145,20 +139,11 @@
       </vbox>
     </vbox>
 
-    <!-- We position things over a canvas; to do so, we need a stack -->
+    <!-- The canvas goes here, but since it takes up so much memory and is
+         rarely used, we add and remove it dynamically -->
 
-    <stack id="safebrowsing-content-stack" insertbefore="status-bar" 
-     hidden="true">
-
-      <!-- The canvas goes here as the first child, but since it takes
-           up so much memory and is rarely used, we add and remove it 
-           dynamically -->
-
-      <!-- This dims out the browser content -->
- 
-      <vbox id="safebrowsing-dim-area-canvas" hidden="true" flex="1">
-      </vbox>
-
-    </stack>
+    <!-- This dims out the browser content -->
+    <vbox id="safebrowsing-dim-area-canvas" hidden="true">
+    </vbox>
   </window>
 </overlay>
