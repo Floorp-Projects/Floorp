@@ -3793,6 +3793,22 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         JS_free(cx, state);
         *statep = JSVAL_NULL;
         break;
+
+      case JSENUMERATE_MARK:
+        state = (JSNativeIteratorState *) JSVAL_TO_PRIVATE(*statep);
+        ida = state->ida;
+        length = ida->length;
+        for (i = 0; i < length; i++) {
+            jsid id;
+
+            id = ida->vector[i];
+            if (JSID_IS_ATOM(id)) {
+                GC_MARK_ATOM(cx, JSID_TO_ATOM(id));
+            } else if (JSID_IS_OBJECT(id)) {
+                GC_MARK(cx, JSID_TO_OBJECT(id), "ida->vector[i]");
+            }
+        }
+        break;
     }
     return JS_TRUE;
 }
