@@ -45,3 +45,8 @@ h1 {
 .bugfields table.timetracking th, .bugfields table.timetracking td {
   width: 10em;
 }
+
+.error {
+  color: red;
+  font-weight: bold;
+}

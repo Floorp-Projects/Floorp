@@ -59,6 +59,22 @@
   </h1>
 
   <table class="bugfields">
+  [% IF bug.error %]
+    <tr>
+      <td class="error">
+        [% IF bug.error == "InvalidBugId" %]
+          '[%+ bug.bug_id FILTER html %]' is not a valid [% terms.bug %] number
+          [%- IF Param("usebugaliases") %] nor a known [% terms.bug %] alias[% END %].
+        [% ELSIF bug.error == "NotPermitted" %]
+          You are not allowed to view this [% terms.bug %].
+        [% ELSIF bug.error == "NotFound" %]
+          This [% terms.bug %] cannot be found.
+        [% ELSE %]
+          [%+ bug.error FILTER html %]
+        [% END %]
+      </td>
+    </tr>
+  [% ELSE %]
     [%# The rightcell block (also called by the row block) automatically shows
       # the fields from rightcells %]
     [% rightcells = ['reporter', 'assigned_to'] %]
@@ -237,6 +253,7 @@
         </td>
       </tr>
     [% END %]
+  [% END %]
   </table>
 
 
