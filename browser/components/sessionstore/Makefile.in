@@ -43,7 +43,10 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = sessionstore
 XPIDL_MODULE = sessionstore
 
-XPIDLSRCS = nsISessionStore.idl
+XPIDLSRCS = \
+	nsISessionStartup.idl \
+	nsISessionStore.idl \
+  $(NULL)
 
 DIRS = src
 

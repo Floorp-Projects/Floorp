@@ -43,26 +43,8 @@
  * This service keeps track of a user's session, storing the various bits
  * required to return the browser to it's current state. The relevant data is 
  * stored in memory, and is periodically saved to disk in an ini file in the 
- * profile directory. The service starts when the browser starts, and will restore
- * the session from the information contained in the ini file under circumstances
- * described below.
- * 
- * Crash Detection
- * The initial segment of the INI file is has a single field, "state", that 
- * indicates whether the browser is currently running. When the browser shuts 
- * down, the field is changed to "stopped". At startup, this field is read, and if
- * it's value is "running", then it's assumed that the browser had previously
- * crashed, or at the very least that something bad happened, and that we should
- * restore the session.
- * 
- * Forced Restarts
- * In the event that a restart is required due to application update or extension
- * installation, set the browser.sessionstore.resume_session_once pref to true,
- * and the session will be restored the next time the browser starts.
- * 
- * Always Resume
- * This service will always resume the session if the boolean pref 
- * browser.sessionstore.resume_session is set to true.
+ * profile directory. The service is started at first window load, in delayedStartup, and will restore
+ * the session from the data received from the nsSessionStartup service.
  */
 
 /* :::::::: Constants and Helpers ::::::::::::::: */
@@ -149,8 +131,8 @@ const CAPABILITIES = [
 
 function debug(aMsg) {
   aMsg = ("SessionStore: " + aMsg).replace(/\S{80}/g, "$&\n");
-  Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).
-                                      logStringMessage(aMsg);
+  Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService)
+                                     .logStringMessage(aMsg);
 }
 
 /* :::::::: The Service ::::::::::::::: */
@@ -192,18 +174,24 @@ SessionStoreService.prototype = {
   /**
    * Initialize the component
    */
-  init: function sss_init() {
-    this._prefBranch =
-      Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).
-                                               getBranch("browser.");
+  init: function sss_init(aWindow) {
+    debug("store init");
+    if (!aWindow || aWindow == null)
+      return;
+
+    if (this._loadState == STATE_RUNNING)
+      return;
+
+    this._prefBranch = Cc["@mozilla.org/preferences-service;1"].
+                       getService(Ci.nsIPrefService).getBranch("browser.");
     this._prefBranch.QueryInterface(Ci.nsIPrefBranch2);
 
     // if the service is disabled, do not init 
-    if(!this._getPref("sessionstore.enabled", DEFAULT_ENABLED))
+    if (!this._getPref("sessionstore.enabled", DEFAULT_ENABLED))
       return;
 
-    var observerService = 
-      Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+    var observerService = Cc["@mozilla.org/observer-service;1"].
+                          getService(Ci.nsIObserverService);
 
     OBSERVING.forEach(function(aTopic) {
       observerService.addObserver(this, aTopic, true);
@@ -218,16 +206,23 @@ SessionStoreService.prototype = {
     this._prefBranch.addObserver("sessionstore.max_tabs_undo", this, true);
 
     // get file references
-    this._sessionFile =
-      Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties)
-                                                 .get("ProfD", Ci.nsILocalFile);
+    var dirService = Cc["@mozilla.org/file/directory_service;1"].
+                     getService(Ci.nsIProperties);
+    this._sessionFile = dirService.get("ProfD", Ci.nsILocalFile);
     this._sessionFileBackup = this._sessionFile.clone();
     this._sessionFile.append("sessionstore.ini");
     this._sessionFileBackup.append("sessionstore.bak");
    
-    // for the recover prompt:
     // get string containing session state
-    var iniString = this._readFile(this._getSessionFile());
+    var iniString;
+    try {
+      var ss = Cc["@mozilla.org/browser/sessionstartup;1"].
+               getService(Ci.nsISessionStartup);
+      if (ss.doRestore())
+        iniString = ss.state;
+    }
+    catch(ex) { dump(ex + "\n"); } // no state to restore, which is ok
+
     if (iniString) {
       try {
         // parse the session state into JS objects
@@ -247,13 +242,18 @@ SessionStoreService.prototype = {
     }
     
     // if last session crashed, backup the session
-    // and try to restore the disk cache
     if (this._lastSessionCrashed) {
       try {
         this._writeFile(this._getSessionFile(true), iniString);
       }
       catch (ex) { } // nothing else we can do here
     }
+
+    // As this is called at delayedStartup, restoration must be initiated here
+    var windowLoad = function(self) {
+      self.onLoad(this);
+    }
+    aWindow.setTimeout(windowLoad, 0, this);
   },
 
   /**
@@ -278,20 +278,13 @@ SessionStoreService.prototype = {
    * Handle notifications
    */
   observe: function sss_observe(aSubject, aTopic, aData) {
-    var observerService = 
-      Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+    var observerService = Cc["@mozilla.org/observer-service;1"].
+                          getService(Ci.nsIObserverService);
 
     // for event listeners
     var _this = this;
 
     switch (aTopic) {
-    case "app-startup": 
-      observerService.addObserver(this, "final-ui-startup", true);
-      break;
-    case "final-ui-startup": 
-      observerService.removeObserver(this, "final-ui-startup");
-      this.init();
-      break;
     case "domwindowopened": // catch new windows
       aSubject.addEventListener("load", function(aEvent) {
         aEvent.currentTarget.removeEventListener("load", arguments.callee, false);
@@ -392,23 +385,13 @@ SessionStoreService.prototype = {
     
     // perform additional initialization when the first window is loading
     if (this._loadState == STATE_STOPPED) {
-      // delete the initial state if the user doesn't want to restore it
-      // (since this might delay startup notably, don't set _loadState before
-      //  this or we might get a corrupted session if Firefox crashes on
-      //  startup)
-      if (this._initialState && !(this._lastSessionCrashed ? this._doRecoverSession() : this._doResumeSession())) {
-        delete this._initialState;
-      }
-      if (this._getPref("sessionstore.resume_session_once", DEFAULT_RESUME_SESSION_ONCE)) {
-        this._prefBranch.setBoolPref("sessionstore.resume_session_once", false);
-      }
       this._loadState = STATE_RUNNING;
       this._lastSaveTime = Date.now();
       
       // don't save during the first five seconds
       // (until most of the pages have been restored)
       this.saveStateDelayed(aWindow, 10000);
-      
+
       // restore a crashed session resp. resume the last session if requested
       if (this._initialState) {
         // make sure that the restored tabs are first in the window
@@ -871,7 +854,7 @@ SessionStoreService.prototype = {
         aEntry.postData.QueryInterface(Ci.nsISeekableStream).
                         seek(Ci.nsISeekableStream.NS_SEEK_SET, 0);
         var stream = Cc["@mozilla.org/scriptableinputstream;1"].
-                       createInstance(Ci.nsIScriptableInputStream);
+                     createInstance(Ci.nsIScriptableInputStream);
         stream.init(aEntry.postData);
         // Warning: LiveHTTPHeaders crashes around here!
         var postdata = stream.read(stream.available());
@@ -1015,7 +998,7 @@ SessionStoreService.prototype = {
    */
   _updateCookies: function sss_updateCookies(aWindows) {
     var cookiesEnum = Cc["@mozilla.org/cookiemanager;1"].
-                        getService(Ci.nsICookieManager).enumerator;
+                      getService(Ci.nsICookieManager).enumerator;
     // collect the cookies per window
     for (var i = 0; i < aWindows.length; i++) {
       aWindows[i].Cookies = { count: 0 };
@@ -1367,10 +1350,10 @@ SessionStoreService.prototype = {
    */
   _deserializeHistoryEntry: function sss_deserializeHistoryEntry(aEntry, aIdMap) {
     var shEntry = Cc["@mozilla.org/browser/session-history-entry;1"].
-                    createInstance(Ci.nsISHEntry);
+                  createInstance(Ci.nsISHEntry);
     
-    var ioService =
-      Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+    var ioService = Cc["@mozilla.org/network/io-service;1"].
+                    getService(Ci.nsIIOService);
     shEntry.setURI(ioService.newURI(aEntry.url, null, null));
     shEntry.setTitle(aEntry.title || aEntry.url);
     shEntry.setIsSubFrame(aEntry.subframe || false);
@@ -1378,7 +1361,7 @@ SessionStoreService.prototype = {
     
     if (aEntry.cacheKey) {
       var cacheKey = Cc["@mozilla.org/supports-PRUint32;1"].
-                       createInstance(Ci.nsISupportsPRUint32);
+                     createInstance(Ci.nsISupportsPRUint32);
       cacheKey.data = aEntry.cacheKey;
       shEntry.cacheKey = cacheKey;
     }
@@ -1400,7 +1383,7 @@ SessionStoreService.prototype = {
     
     if (aEntry.postdata) {
       var stream = Cc["@mozilla.org/io/string-input-stream;1"].
-                     createInstance(Ci.nsIStringInputStream);
+                   createInstance(Ci.nsIStringInputStream);
       stream.setData(aEntry.postdata, -1);
       shEntry.postData = stream;
     }
@@ -1549,10 +1532,10 @@ SessionStoreService.prototype = {
    *        Array of cookie data
    */
   restoreCookies: function sss_restoreCookies(aCookies) {
-    var cookieService =
-      Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
-    var ioService =
-      Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+    var cookieService = Cc["@mozilla.org/cookieService;1"].
+                        getService(Ci.nsICookieService);
+    var ioService = Cc["@mozilla.org/network/io-service;1"].
+                    getService(Ci.nsIIOService);
     
     for (var i = 1; i <= aCookies.count; i++) {
       try {
@@ -1568,15 +1551,15 @@ SessionStoreService.prototype = {
    *        Window reference
    */
   retryDownloads: function sss_retryDownloads(aWindow) {
-    var downloadManager =
-      Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
-    var rdfService =
-      Cc["@mozilla.org/rdf/rdf-service;1"].getService(Ci.nsIRDFService);
-    var ioService =
-      Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+    var downloadManager = Cc["@mozilla.org/download-manager;1"].
+                          getService(Ci.nsIDownloadManager);
+    var rdfService = Cc["@mozilla.org/rdf/rdf-service;1"].
+                     getService(Ci.nsIRDFService);
+    var ioService = Cc["@mozilla.org/network/io-service;1"].
+                    getService(Ci.nsIIOService);
     
-    var rdfContainer =
-      Cc["@mozilla.org/rdf/container;1"].createInstance(Ci.nsIRDFContainer);
+    var rdfContainer = Cc["@mozilla.org/rdf/container;1"].
+                       createInstance(Ci.nsIRDFContainer);
     var datasource = downloadManager.datasource;
     
     try {
@@ -1609,8 +1592,8 @@ SessionStoreService.prototype = {
       node = datasource.GetTarget(rdfService.GetResource(download.Value), rdfService.GetResource("http://home.netscape.com/NC-rdf#File"), true);
       node.QueryInterface(Ci.nsIRDFResource);
       
-      var linkChecker =
-        Cc["@mozilla.org/network/urichecker;1"].createInstance(Ci.nsIURIChecker);
+      var linkChecker = Cc["@mozilla.org/network/urichecker;1"].
+                        createInstance(Ci.nsIURIChecker);
       
       linkChecker.init(ioService.newURI(url, null, null));
       linkChecker.loadFlags = Ci.nsIRequest.LOAD_BACKGROUND;
@@ -1725,7 +1708,7 @@ SessionStoreService.prototype = {
    */
   _getMostRecentBrowserWindow: function sss_getMostRecentBrowserWindow() {
     var windowMediator = Cc["@mozilla.org/appshell/window-mediator;1"].
-      getService(Ci.nsIWindowMediator);
+                         getService(Ci.nsIWindowMediator);
     return windowMediator.getMostRecentWindow("navigator:browser");
   },
 
@@ -1739,8 +1722,8 @@ SessionStoreService.prototype = {
     
     //zeniko: why isn't it possible to set the window's dimensions here (as feature)?
     var window = Cc["@mozilla.org/embedcomp/window-watcher;1"].
-                   getService(Ci.nsIWindowWatcher).
-                   openWindow(null, this._getPref("chromeURL", null), "_blank", "chrome,dialog=no,all", null);
+                 getService(Ci.nsIWindowWatcher).
+                 openWindow(null, this._getPref("chromeURL", null), "_blank", "chrome,dialog=no,all", null);
     
     window.__SS_state = aState;
     var _this = this;
@@ -1763,60 +1746,6 @@ SessionStoreService.prototype = {
     return this._getPref("sessionstore.resume_session", DEFAULT_RESUME_SESSION)
       || this._getPref("sessionstore.resume_session_once", DEFAULT_RESUME_SESSION_ONCE)
       || this._getPref("startup.page", 1) == 2;
-  },
-
-  /**
-   * prompt user whether or not to restore the previous session,
-   * if the browser crashed
-   * @returns bool
-   */
-  _doRecoverSession: function sss_doRecoverSession() {
-    // do not prompt or resume, post-crash
-    if (!this._getPref("sessionstore.resume_from_crash", DEFAULT_RESUME_FROM_CRASH))
-      return false;
-
-    // if the prompt fails, recover anyway
-    var recover = true;
-    // allow extensions to hook in a more elaborate restore prompt
-    //zeniko: drop this when we're using our own dialog instead of a standard prompt
-    var dialogURI = this._getPref("sessionstore.restore_prompt_uri");
-    
-    try {
-      if (dialogURI) { // extension provided dialog 
-        var params = Cc["@mozilla.org/embedcomp/dialogparam;1"].
-                       createInstance(Ci.nsIDialogParamBlock);
-        // default to recovering
-        params.SetInt(0, 0);
-        Cc["@mozilla.org/embedcomp/window-watcher;1"].
-          getService(Ci.nsIWindowWatcher).
-          openWindow(null, dialogURI, "_blank", "chrome,modal,centerscreen,titlebar", params);
-        recover = params.GetInt(0) == 0;
-      }
-      else { // basic prompt with no options
-        // get app name from branding properties
-        var brandStringBundle = this._getStringBundle("chrome://branding/locale/brand.properties");
-        var brandShortName = brandStringBundle.GetStringFromName("brandShortName");
-
-        // create prompt strings
-        var ssStringBundle = this._getStringBundle("chrome://browser/locale/sessionstore.properties");
-        var restoreTitle = ssStringBundle.formatStringFromName("restoreTitle", [brandShortName], 1);
-        var restoreText = ssStringBundle.formatStringFromName("restoreText", [brandShortName], 1);
-        var buttonTitle = ssStringBundle.GetStringFromName("buttonTitle");
-
-        var promptService = Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(Ci.nsIPromptService);
-
-        // set the buttons that will appear on the dialog
-        var flags = promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_1 +
-                    promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_0;
-        
-        var buttonChoice = promptService.confirmEx(null, restoreTitle, restoreText, 
-                                          flags, null, buttonTitle, null, 
-                                          null, {});
-        recover = (buttonChoice == 1);
-      }
-    }
-    catch (ex) { dump(ex); } // if the prompt fails for some reason, recover anyway
-    return recover;
   },
 
   /**
@@ -1844,7 +1773,7 @@ SessionStoreService.prototype = {
       break;
     case 2:
       homepage = Cc["@mozilla.org/browser/global-history;2"].
-                   getService(Ci.nsIBrowserHistory).lastPageVisited;
+                 getService(Ci.nsIBrowserHistory).lastPageVisited;
       break;
     }
     
@@ -1918,9 +1847,9 @@ SessionStoreService.prototype = {
    */
   _getStringBundle: function sss_getStringBundle(aURI) {
      var bundleService = Cc["@mozilla.org/intl/stringbundle;1"].
-                           getService(Ci.nsIStringBundleService);
+                         getService(Ci.nsIStringBundleService);
      var appLocale = Cc["@mozilla.org/intl/nslocaleservice;1"].
-                       getService(Ci.nsILocaleService).getApplicationLocale();
+                     getService(Ci.nsILocaleService).getApplicationLocale();
      return bundleService.createBundle(aURI, appLocale);
   },
 
@@ -1931,7 +1860,7 @@ SessionStoreService.prototype = {
    */
    _getURIFromString: function sss_getURIFromString(aString) {
      var ioService = Cc["@mozilla.org/network/io-service;1"].
-                       getService(Ci.nsIIOService);
+                     getService(Ci.nsIIOService);
      return ioService.newURI(aString, null, null);
    },
 
@@ -1971,10 +1900,10 @@ SessionStoreService.prototype = {
   _readFile: function sss_readFile(aFile) {
     try {
       var stream = Cc["@mozilla.org/network/file-input-stream;1"].
-                     createInstance(Ci.nsIFileInputStream);
+                   createInstance(Ci.nsIFileInputStream);
       stream.init(aFile, 0x01, 0, 0);
       var cvstream = Cc["@mozilla.org/intl/converter-input-stream;1"].
-                       createInstance(Ci.nsIConverterInputStream);
+                     createInstance(Ci.nsIConverterInputStream);
       cvstream.init(stream, "UTF-8", 1024, Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
       
       var content = "";
@@ -2008,9 +1937,9 @@ SessionStoreService.prototype = {
 /* ........ QueryInterface .............. */
 
   QueryInterface: function(aIID) {
-    if (!aIID.equals(Ci.nsISupports) && !aIID.equals(Ci.nsIObserver)
-       && !aIID.equals(Ci.nsISupportsWeakReference)
-       && !aIID.equals(Ci.nsISessionStore)) {
+    if (!aIID.equals(Ci.nsISupports) && !aIID.equals(Ci.nsIObserver) && 
+      !aIID.equals(Ci.nsISupportsWeakReference) && 
+      !aIID.equals(Ci.nsISessionStore)) {
       Components.returnCode = Cr.NS_ERROR_NO_INTERFACE;
       return null;
     }
@@ -2031,12 +1960,12 @@ FileWriter.prototype = {
   run: function FileWriter_run() {
     // init stream
     var stream = Cc["@mozilla.org/network/safe-file-output-stream;1"].
-                   createInstance(Ci.nsIFileOutputStream);
+                 createInstance(Ci.nsIFileOutputStream);
     stream.init(this._file, 0x02 | 0x08 | 0x20, 0600, 0);
 
     // convert to UTF-8
     var converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
-                      createInstance(Ci.nsIScriptableUnicodeConverter);
+                    createInstance(Ci.nsIScriptableUnicodeConverter);
     converter.charset = "UTF-8";
     var convertedData = converter.ConvertFromUnicode(this._data);
     convertedData += converter.Finish();
@@ -2239,7 +2168,8 @@ const SessionStoreModule = {
     aCompMgr.QueryInterface(Ci.nsIComponentRegistrar);
     aCompMgr.registerFactoryLocation(CID, CLASS_NAME, CONTRACT_ID, aFileSpec, aLocation, aType);
 
-    var catMan = Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
+    var catMan = Cc["@mozilla.org/categorymanager;1"].
+                 getService(Ci.nsICategoryManager);
     catMan.addCategoryEntry("app-startup", CLASS_NAME, "service," + CONTRACT_ID, true, true);
   },
 
@@ -2247,7 +2177,8 @@ const SessionStoreModule = {
     aCompMgr.QueryInterface(Ci.nsIComponentRegistrar);
     aCompMgr.unregisterFactoryLocation(CID, aLocation);
 
-    var catMan = Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
+    var catMan = Cc["@mozilla.org/categorymanager;1"].
+                 getService(Ci.nsICategoryManager);
     catMan.deleteCategoryEntry( "app-startup", "service," + CONTRACT_ID, true);
   },
 
