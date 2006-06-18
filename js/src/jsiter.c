@@ -76,6 +76,33 @@ extern const char js_throw_str[]; /* from jsscan.h */
 #error JS_INITIAL_NSLOTS must be greater than JSSLOT_ITER_FLAGS.
 #endif
 
+static uint32
+iterator_mark(JSContext *cx, JSObject *obj, void *arg)
+{
+    jsval state, parent;
+    JSObject *iterable;
+
+    /* Avoid double work if js_CloseNativeIterator was called on obj. */
+    state = obj->slots[JSSLOT_ITER_STATE];
+    if (JSVAL_IS_VOID(state))
+        return 0;
+
+    parent = obj->slots[JSSLOT_PARENT];
+    if (!JSVAL_IS_NULL(state) && !JSVAL_IS_PRIMITIVE(parent)) {
+        iterable = JSVAL_TO_OBJECT(parent);
+#if JS_HAS_XML_SUPPORT
+        if ((JSVAL_TO_INT(obj->slots[JSSLOT_ITER_FLAGS]) & JSITER_FOREACH) &&
+            OBJECT_IS_XML(cx, iterable)) {
+            ((JSXMLObjectOps *) iterable->map->ops)->
+                enumerateValues(cx, iterable, JSENUMERATE_MARK, &state,
+                                NULL, NULL);
+        } else
+#endif
+            OBJ_ENUMERATE(cx, iterable, JSENUMERATE_MARK, &state, NULL);
+    }
+    return 0;
+}
+
 static void
 iterator_close(JSContext *cx, JSObject *obj)
 {
@@ -110,7 +137,8 @@ JSExtendedClass js_IteratorClass = {
     JSCLASS_HAS_CACHED_PROTO(JSProto_Iterator),
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub,
-    JSCLASS_NO_OPTIONAL_MEMBERS },
+    NULL,             NULL,             NULL,             NULL,
+    NULL,             NULL,             iterator_mark,    NULL },
     NULL,             NULL,             NULL,             iterator_close,
     JSCLASS_NO_RESERVED_MEMBERS
 };

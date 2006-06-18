@@ -119,7 +119,8 @@ typedef enum JSAccessMode {
 typedef enum JSIterateOp {
     JSENUMERATE_INIT,       /* Create new iterator state */
     JSENUMERATE_NEXT,       /* Iterate once */
-    JSENUMERATE_DESTROY     /* Destroy iterator state */
+    JSENUMERATE_DESTROY,    /* Destroy iterator state */
+    JSENUMERATE_MARK        /* mark opaque iterator state */
 } JSIterateOp;
 
 /* Struct typedefs. */
