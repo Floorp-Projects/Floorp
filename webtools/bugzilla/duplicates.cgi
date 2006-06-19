@@ -99,7 +99,7 @@ $sortby = "count" if $sortby eq "dup_count";
 my $today = days_ago(0);
 my $yesterday = days_ago(1);
 
-# We don't know the exact file name, because the extention depends on the
+# We don't know the exact file name, because the extension depends on the
 # underlying dbm library, which could be anything. We can't glob, because
 # perl < 5.6 considers if (<*>) { ... } to be tainted
 # Instead, just check the return value for today's data and yesterday's,
