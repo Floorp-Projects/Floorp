@@ -665,7 +665,7 @@ var gFindBar = {
     if (this.mTypeAheadCaseSensitive == 1)
       return true;
 
-    return (str != str.toLowerCase());
+    return (str != str.toLowerCase() && str != str.toUpperCase());
   },
 
   onFindBarBlur: function ()
