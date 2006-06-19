@@ -369,16 +369,20 @@ NS_IMETHODIMP nsDOMStorage::RemoveItem(const nsAString& aKey)
     NS_ENSURE_SUCCESS(rv, rv);
 
     mItemsCached = PR_FALSE;
+
+    BroadcastChangeNotification();
 #endif
   }
   else if (entry) {
     // clear string as StorageItems may be referencing this item
     entry->mItem->ClearValue();
+
+    BroadcastChangeNotification();
   }
 
-  mItems.RawRemoveEntry(entry);
-
-  BroadcastChangeNotification();
+  if (entry) {
+    mItems.RawRemoveEntry(entry);
+  }
 
   return NS_OK;
 }
