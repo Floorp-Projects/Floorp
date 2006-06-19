@@ -75,7 +75,7 @@ sub coverage() {
   my $community_only = shift;
   my $user = shift;
 
-  my $sql = "SELECT COUNT(t.testcase_id) FROM testcase_subgroups tsg, testcases t WHERE tsg.subgroup_id=? AND tsg.testcase_id=t.testcase_id";
+  my $sql = "SELECT COUNT(t.testcase_id) FROM testcase_subgroups tsg, testcases t WHERE tsg.subgroup_id=? AND tsg.testcase_id=t.testcase_id AND t.enabled=1";
   if ($community_only) {
     $sql .= " AND t.community_enabled=1";
   }
