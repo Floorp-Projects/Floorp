@@ -63,7 +63,7 @@ our %specialorder = (
 
 # When we add certain fields to the ORDER BY, we need to then add a
 # table join to the FROM statement. This hash maps input fields to 
-# the join statements that ned to be added.
+# the join statements that need to be added.
 our %specialorderjoin = (
     'bugs.target_milestone' => 'LEFT JOIN milestones AS ms_order ON ms_order.value = bugs.target_milestone AND ms_order.product_id = bugs.product_id',
     'bugs.bug_status' => 'LEFT JOIN bug_status ON bug_status.value = bugs.bug_status',
