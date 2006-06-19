@@ -966,6 +966,19 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   return rv;
 }
 
+void
+nsHTMLDocument::StopDocumentLoad()
+{
+  // If we're writing (i.e., there's been a document.open call), then
+  // nsDocument::StopDocumentLoad will do the wrong thing and simply terminate
+  // our parser.
+  if (mWriteState != eNotWriting) {
+    Close();
+  } else {
+    nsDocument::StopDocumentLoad();
+  }
+}
+
 // static
 void
 nsHTMLDocument::DocumentWriteTerminationFunc(nsISupports *aRef)
@@ -2191,6 +2204,12 @@ nsHTMLDocument::Close()
   nsresult rv = NS_OK;
 
   if (mParser && mWriteState == eDocumentOpened) {
+    mPendingScripts.RemoveElement(GenerateParserKey());
+
+    mWriteState = mPendingScripts.Count() == 0
+                  ? eDocumentClosed
+                  : ePendingClose;
+
     ++mWriteLevel;
     if (mContentType.EqualsLiteral("text/html")) {
       rv = mParser->Parse(NS_LITERAL_STRING("</HTML>"),
@@ -2201,12 +2220,6 @@ nsHTMLDocument::Close()
                           mContentType, PR_TRUE);
     }
     --mWriteLevel;
-
-    mPendingScripts.RemoveElement(GenerateParserKey());
-
-    mWriteState = mPendingScripts.Count() == 0
-                  ? eDocumentClosed
-                  : ePendingClose;
 
     // XXX Make sure that all the document.written content is
     // reflowed.  We should remove this call once we change
