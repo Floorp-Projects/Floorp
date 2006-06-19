@@ -74,7 +74,7 @@ sub get_login_info {
     # Either the he cookie is invalid, or we got no cookie. We don't want 
     # to ever return AUTH_LOGINFAILED, because we don't want Bugzilla to 
     # actually throw an error when it gets a bad cookie. It should just 
-    # look like there was no cokie to begin with.
+    # look like there was no cookie to begin with.
     return { failure => AUTH_NODATA };
 }
 
