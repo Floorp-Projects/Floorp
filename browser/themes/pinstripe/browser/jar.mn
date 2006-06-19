@@ -7,7 +7,7 @@ classic.jar:
   skin/classic/browser/bookmark-open-left.png
   skin/classic/browser/bookmark-open-mid.png
   skin/classic/browser/bookmark-open-right.png
-* skin/classic/browser/browser.css
+* skin/classic/browser/browser.css                          (browser.css)
   skin/classic/browser/browser.xml
   skin/classic/browser/find.png
   skin/classic/browser/find-bar-background.png
