@@ -50,7 +50,7 @@ use Date::Parse;
 use Date::Format;
 use Text::Wrap;
 
-# This is from the perlsec page, slightly modifed to remove a warning
+# This is from the perlsec page, slightly modified to remove a warning
 # From that page:
 #      This function makes use of the fact that the presence of
 #      tainted data anywhere within an expression renders the
