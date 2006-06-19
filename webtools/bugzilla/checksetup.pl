@@ -4595,7 +4595,7 @@ if ($sth->rows == 0) {
     my $mailcheck    = ""; 
 
     # Here we look to see what the emailregexp is set to so we can 
-    # check the email addy they enter. Bug 96675. If they have no 
+    # check the email address they enter. Bug 96675. If they have no 
     # params (likely but not always the case), we use the default.
     if (-e "$datadir/params") { 
         require "$datadir/params"; # if they have a params file, use that
