@@ -259,7 +259,7 @@ if (defined $cgi->param('id')) {
     }
 }
 
-# Set up the vars for nagiavtional <link> elements
+# Set up the vars for navigational <link> elements
 my @bug_list;
 if ($cgi->cookie("BUGLIST") && defined $cgi->param('id')) {
     @bug_list = split(/:/, $cgi->cookie("BUGLIST"));
