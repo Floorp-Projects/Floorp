@@ -622,6 +622,13 @@ nsMetricsService::NewChannel(nsIURI *uri, nsIChannel **result)
 }
 
 NS_IMETHODIMP
+nsMetricsService::GetURIFlags(nsIURI *aURI, PRUint32 *result)
+{
+    *result = 0;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMetricsService::OnStartRequest(nsIRequest *request, nsISupports *context)
 {
   NS_ENSURE_STATE(!mConfigOutputStream);

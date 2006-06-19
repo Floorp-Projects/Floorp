@@ -40,7 +40,7 @@
 interface nsIURI;
 interface nsIChannel;
 
-[scriptable, uuid(692303c0-2f83-11d3-8cd0-0060b0fc14a3)]
+[scriptable, uuid(9575693c-60d9-4332-b6b8-6c29289339cb)]
 interface nsIAboutModule : nsISupports 
 {
     /**
@@ -49,6 +49,21 @@ interface nsIAboutModule : nsISupports
      * @param aURI the uri of the new channel
      */
     nsIChannel newChannel(in nsIURI aURI);
+
+    /**
+     * A flag that indicates whether a URI is safe for untrusted
+     * content.  If it is, web pages and so forth will be allowed to
+     * link to this about: URI.  Otherwise, only chrome will be able
+     * to link to it.
+     */
+    const unsigned long URI_SAFE_FOR_UNTRUSTED_CONTENT = (1 << 0);
+
+    /**
+     * A method to get the flags that apply to a given about: URI.  The URI
+     * passed in is guaranteed to be one of the URIs that this module
+     * registered to deal with.
+     */
+    unsigned long getURIFlags(in nsIURI aURI);
 };
 
 %{C++

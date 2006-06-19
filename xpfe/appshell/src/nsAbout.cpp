@@ -77,6 +77,13 @@ nsAbout::NewChannel(nsIURI *aURI, nsIChannel **result)
     return rv;
 }
 
+NS_IMETHODIMP
+nsAbout::GetURIFlags(nsIURI *aURI, PRUint32 *result)
+{
+    *result = 0;
+    return NS_OK;
+}
+
 NS_METHOD
 nsAbout::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {

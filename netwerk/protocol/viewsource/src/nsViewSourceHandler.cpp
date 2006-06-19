@@ -41,9 +41,7 @@
 #include "nsViewSourceHandler.h"
 #include "nsViewSourceChannel.h"
 #include "nsNetUtil.h"
-#include "nsIObjectInputStream.h"
-#include "nsIObjectOutputStream.h"
-#include "nsIProgrammingLanguage.h"
+#include "nsSimpleNestedURI.h"
 
 #define VIEW_SOURCE "view-source"
 
@@ -96,8 +94,6 @@ nsViewSourceHandler::NewURI(const nsACString &aSpec,
     if (NS_FAILED(rv))
         return rv;
 
-    NS_TryToSetImmutable(innerURI);
-
     nsCAutoString asciiSpec;
     rv = innerURI->GetAsciiSpec(asciiSpec);
     if (NS_FAILED(rv))
@@ -107,8 +103,9 @@ nsViewSourceHandler::NewURI(const nsACString &aSpec,
 
     asciiSpec.Insert(VIEW_SOURCE ":", 0);
 
-    // We can't swap() from an nsRefPtr<nsViewSourceURI> to an nsIURI**, sadly.
-    nsViewSourceURI* ourURI = new nsViewSourceURI(innerURI);
+    // We can't swap() from an nsRefPtr<nsSimpleNestedURI> to an nsIURI**,
+    // sadly.
+    nsSimpleNestedURI* ourURI = new nsSimpleNestedURI(innerURI);
     nsCOMPtr<nsIURI> uri = ourURI;
     if (!uri)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -118,7 +115,7 @@ nsViewSourceHandler::NewURI(const nsACString &aSpec,
         return rv;
 
     // Make the URI immutable so it's impossible to get it out of sync
-    // with mInnerURI.
+    // with its inner URI.
     ourURI->SetMutable(PR_FALSE);
 
     uri.swap(*aResult);
@@ -149,100 +146,5 @@ nsViewSourceHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval
 {
     // don't override anything.  
     *_retval = PR_FALSE;
-    return NS_OK;
-}
-
-///////////////////////////////////////////////////////////////
-// nsViewSourceURI implementation
-
-static NS_DEFINE_CID(kViewSourceURICID, NS_VIEWSOURCEURI_CID);
-
-NS_IMPL_ISUPPORTS_INHERITED1(nsViewSourceURI, nsSimpleURI, nsINestedURI)
-
-// nsISerializable
-
-NS_IMETHODIMP
-nsViewSourceURI::Read(nsIObjectInputStream* aStream)
-{
-    nsresult rv = nsSimpleURI::Read(aStream);
-    if (NS_FAILED(rv)) return rv;
-
-    NS_ASSERTION(!mMutable, "How did that happen?");
-
-    // Our mPath is going to be ASCII; see nsViewSourceHandler::NewURI.  So
-    // just using NS_NewURI with no charset is ok.
-    rv = NS_NewURI(getter_AddRefs(mInnerURI), mPath);
-    if (NS_FAILED(rv)) return rv;
-
-    NS_TryToSetImmutable(mInnerURI);
-
-    return rv;
-}
-
-// nsINestedURI
-
-NS_IMETHODIMP
-nsViewSourceURI::GetInnerURI(nsIURI** uri)
-{
-    return NS_EnsureSafeToReturn(mInnerURI, uri);
-}
-
-NS_IMETHODIMP
-nsViewSourceURI::GetInnermostURI(nsIURI** uri)
-{
-    return NS_ImplGetInnermostURI(this, uri);
-}
-
-// nsIURI overrides
-
-NS_IMETHODIMP
-nsViewSourceURI::Equals(nsIURI* other, PRBool *result)
-{
-    if (other) {
-        PRBool correctScheme;
-        nsresult rv = other->SchemeIs(VIEW_SOURCE, &correctScheme);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        if (correctScheme) {
-            nsCOMPtr<nsINestedURI> nest = do_QueryInterface(other);
-            if (nest) {
-                nsCOMPtr<nsIURI> otherInner;
-                rv = nest->GetInnerURI(getter_AddRefs(otherInner));
-                NS_ENSURE_SUCCESS(rv, rv);
-
-                return otherInner->Equals(mInnerURI, result);
-            }
-        }
-    }
-
-    *result = PR_FALSE;
-    return NS_OK;
-}
-
-/* virtual */ nsSimpleURI*
-nsViewSourceURI::StartClone()
-{
-    nsCOMPtr<nsIURI> innerClone;
-    nsresult rv = mInnerURI->Clone(getter_AddRefs(innerClone));
-    if (NS_FAILED(rv)) {
-        return nsnull;
-    }
-
-    NS_TryToSetImmutable(innerClone);
-    
-    nsViewSourceURI* url = new nsViewSourceURI(innerClone);
-    if (url) {
-        url->SetMutable(PR_FALSE);
-    }
-
-    return url;
-}
-
-// nsIClassInfo overrides
-
-NS_IMETHODIMP 
-nsViewSourceURI::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
-{
-    *aClassIDNoAlloc = kViewSourceURICID;
     return NS_OK;
 }

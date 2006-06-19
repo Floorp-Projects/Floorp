@@ -66,6 +66,13 @@ nsAboutBlank::NewChannel(nsIURI *aURI, nsIChannel **result)
     return rv;
 }
 
+NS_IMETHODIMP
+nsAboutBlank::GetURIFlags(nsIURI *aURI, PRUint32 *result)
+{
+    *result = nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT;
+    return NS_OK;
+}
+
 NS_METHOD
 nsAboutBlank::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {

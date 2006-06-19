@@ -157,6 +157,13 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
     return rv;
 }
 
+NS_IMETHODIMP
+nsAboutBloat::GetURIFlags(nsIURI *aURI, PRUint32 *result)
+{
+    *result = 0;
+    return NS_OK;
+}
+
 NS_METHOD
 nsAboutBloat::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {

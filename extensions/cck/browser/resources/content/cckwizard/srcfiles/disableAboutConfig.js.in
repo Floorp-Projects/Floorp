@@ -61,6 +61,10 @@ AboutHandler.prototype =
     var ext_channel = ioService.newChannelFromURI(ext_uri);
     return ext_channel;
   }
+
+  getURIFlags : function safeForUntrustedContent(aURI) {
+    return 0;
+  }
 };
 
 
