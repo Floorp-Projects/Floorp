@@ -194,7 +194,7 @@ our @_abstract_methods = qw(REQUIRED_VERSION PROGRAM_NAME DBD_VERSION
                             sql_date_format sql_interval
                             bz_lock_tables bz_unlock_tables);
 
-# This overriden import method will check implementation of inherited classes
+# This overridden import method will check implementation of inherited classes
 # for missing implementation of abstract methods
 # See http://perlmonks.thepen.com/44265.html
 sub import {
@@ -1051,7 +1051,7 @@ should not be called from anywhere else.
 =head1 ABSTRACT METHODS
 
 Note: Methods which can be implemented generically for all DBs are implemented in
-this module. If needed, they can be overriden with DB specific code.
+this module. If needed, they can be overridden with DB specific code.
 Methods which do not have standard implementation are abstract and must
 be implemented for all supported databases separately.
 To avoid confusion with standard DBI methods, all methods returning string with
@@ -1062,7 +1062,7 @@ formatted SQL command have prefix C<sql_>. All other methods have prefix C<bz_>.
 =item C<new>
 
  Description: Constructor
-              Abstract method, should be overriden by database specific code.
+              Abstract method, should be overridden by database specific code.
  Params:      $user = username used to log in to the database
               $pass = password used to log in to the database
               $host = host running the database we are connecting to
@@ -1081,7 +1081,7 @@ formatted SQL command have prefix C<sql_>. All other methods have prefix C<bz_>.
  Description: Outputs SQL regular expression operator for POSIX regex
               searches (case insensitive) in format suitable for a given
               database.
-              Abstract method, should be overriden by database specific code.
+              Abstract method, should be overridden by database specific code.
  Params:      $expr = SQL expression for the text to be searched (scalar)
               $pattern = the regular expression to search for (scalar)
  Returns:     formatted SQL for regular expression search (e.g. REGEXP)
@@ -1092,7 +1092,7 @@ formatted SQL command have prefix C<sql_>. All other methods have prefix C<bz_>.
  Description: Outputs SQL regular expression operator for negative POSIX
               regex searches (case insensitive) in format suitable for a given
               database.
-              Abstract method, should be overriden by database specific code.
+              Abstract method, should be overridden by database specific code.
  Params:      $expr = SQL expression for the text to be searched (scalar)
               $pattern = the regular expression to search for (scalar)
  Returns:     formatted SQL for negative regular expression search
@@ -1102,7 +1102,7 @@ formatted SQL command have prefix C<sql_>. All other methods have prefix C<bz_>.
 
  Description: Returns SQL syntax for limiting results to some number of rows
               with optional offset if not starting from the begining.
-              Abstract method, should be overriden by database specific code.
+              Abstract method, should be overridden by database specific code.
  Params:      $limit = number of rows to return from query (scalar)
               $offset = number of rows to skip prior counting (scalar)
  Returns:     formatted SQL for limiting number of rows returned from query
@@ -1111,21 +1111,21 @@ formatted SQL command have prefix C<sql_>. All other methods have prefix C<bz_>.
 =item C<sql_from_days>
 
  Description: Outputs SQL syntax for converting Julian days to date.
-              Abstract method, should be overriden by database specific code.
+              Abstract method, should be overridden by database specific code.
  Params:      $days = days to convert to date
  Returns:     formatted SQL for returning Julian days in dates. (scalar)
 
 =item C<sql_to_days>
 
  Description: Outputs SQL syntax for converting date to Julian days.
-              Abstract method, should be overriden by database specific code.
+              Abstract method, should be overridden by database specific code.
  Params:      $date = date to convert to days
  Returns:     formatted SQL for returning date fields in Julian days. (scalar)
 
 =item C<sql_date_format>
 
  Description: Outputs SQL syntax for formatting dates.
-              Abstract method, should be overriden by database specific code.
+              Abstract method, should be overridden by database specific code.
  Params:      $date = date or name of date type column (scalar)
               $format = format string for date output (scalar)
               (%Y = year, four digits, %y = year, two digits, %m = month,
@@ -1136,7 +1136,7 @@ formatted SQL command have prefix C<sql_>. All other methods have prefix C<bz_>.
 =item C<sql_interval>
 
  Description: Outputs proper SQL syntax for a time interval function.
-              Abstract method, should be overriden by database specific code.
+              Abstract method, should be overridden by database specific code.
  Params:      $interval - the time interval requested (e.g. '30') (integer)
               $units    - the units the interval is in (e.g. 'MINUTE') (string)
  Returns:     formatted SQL for interval function (scalar)
@@ -1218,7 +1218,7 @@ formatted SQL command have prefix C<sql_>. All other methods have prefix C<bz_>.
  Description: Performs a table lock operation on specified tables.
               If the underlying database supports transactions, it should also
               implicitly start a new transaction.
-              Abstract method, should be overriden by database specific code.
+              Abstract method, should be overridden by database specific code.
  Params:      @tables = list of names of tables to lock in MySQL
               notation (ex. 'bugs AS bugs2 READ', 'logincookies WRITE')
  Returns:     none
@@ -1231,7 +1231,7 @@ formatted SQL command have prefix C<sql_>. All other methods have prefix C<bz_>.
               Also, this function should allow to be called with the abort flag
               set even without locking tables first without raising an error
               to simplify error handling.
-              Abstract method, should be overriden by database specific code.
+              Abstract method, should be overridden by database specific code.
  Params:      $abort = UNLOCK_ABORT (true, 1) if the operation on locked tables
               failed (if transactions are supported, the action will be rolled
               back). False (0) or no param if the operation succeeded.
