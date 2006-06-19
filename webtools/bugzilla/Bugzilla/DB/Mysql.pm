@@ -205,7 +205,7 @@ sub bz_unlock_tables {
     }
 }
 
-# As Bugzilla currently runs on MyISAM storage, which does not supprt
+# As Bugzilla currently runs on MyISAM storage, which does not support
 # transactions, these functions die when called.
 # Maybe we should just ignore these calls for now, but as we are not
 # using transactions in MySQL yet, this just hints the developers.
