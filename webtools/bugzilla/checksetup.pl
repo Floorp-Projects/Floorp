@@ -88,7 +88,7 @@
 #     add more database-related checks                 --DATABASE--
 #     change table definitions                         --TABLE--
 #     add more groups                                  --GROUPS--
-#     add user-adjustable sttings                      --SETTINGS--
+#     add user-adjustable settings                     --SETTINGS--
 #     create initial administrator account             --ADMIN--
 #
 # Note: sometimes those special comments occur more than once. For
