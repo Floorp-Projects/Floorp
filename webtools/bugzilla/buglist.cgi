@@ -666,7 +666,7 @@ if (Param("useclassification")) {
     push (@selectcolumns,"product");
 }
 
-# remaining and actual_time are required for precentage_complete calculation:
+# remaining and actual_time are required for percentage_complete calculation:
 if (lsearch(\@displaycolumns, "percentage_complete") >= 0) {
     push (@selectcolumns, "remaining_time");
     push (@selectcolumns, "actual_time");
