@@ -875,20 +875,14 @@ nsFloatCacheList::nsFloatCacheList() :
 
 nsFloatCacheList::~nsFloatCacheList()
 {
-  DeleteAll();
-  MOZ_COUNT_DTOR(nsFloatCacheList);
-}
-
-void
-nsFloatCacheList::DeleteAll()
-{
-  nsFloatCache* c = mHead;
-  while (c) {
-    nsFloatCache* next = c->Next();
-    delete c;
-    c = next;
+  nsFloatCache* fc = mHead;
+  while (fc) {
+    nsFloatCache* next = fc->mNext;
+    delete fc;
+    fc = next;
   }
   mHead = nsnull;
+  MOZ_COUNT_DTOR(nsFloatCacheList);
 }
 
 nsFloatCache*
@@ -935,24 +929,17 @@ nsFloatCacheList::Find(nsIFrame* aOutOfFlowFrame)
   return fc;
 }
 
-nsFloatCache*
-nsFloatCacheList::RemoveAndReturnPrev(nsFloatCache* aElement)
+void
+nsFloatCacheList::Remove(nsFloatCache* aElement)
 {
-  NS_ASSERTION(!aElement->mNext, "Can only remove a singleton element");
-
-  nsFloatCache* fc = mHead;
-  nsFloatCache* prev = nsnull;
-  while (fc) {
+  nsFloatCache** fcp = &mHead;
+  nsFloatCache* fc;
+  while (nsnull != (fc = *fcp)) {
     if (fc == aElement) {
-      if (prev) {
-        prev->mNext = fc->mNext;
-      } else {
-        mHead = fc->mNext;
-      }
-      return prev;
+      *fcp = fc->mNext;
+      break;
     }
-    prev = fc;
-    fc = fc->mNext;
+    fcp = &fc->mNext;
   }
 }
 
@@ -986,22 +973,6 @@ nsFloatCacheFreeList::Append(nsFloatCacheList& aList)
   }
   mTail = aList.Tail();
   aList.mHead = nsnull;
-}
-
-void
-nsFloatCacheFreeList::Remove(nsFloatCache* aElement)
-{
-  nsFloatCache* prev = nsFloatCacheList::RemoveAndReturnPrev(aElement);
-  if (mTail == aElement) {
-    mTail = prev;
-  }
-}
-
-void
-nsFloatCacheFreeList::DeleteAll()
-{
-  nsFloatCacheList::DeleteAll();
-  mTail = nsnull;
 }
 
 nsFloatCache*
