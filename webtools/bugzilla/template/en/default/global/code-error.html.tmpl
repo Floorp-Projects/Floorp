@@ -124,7 +124,7 @@
     [% END %]
 
   [% ELSIF error == "extension_invalid" %]
-    An error occured processing hook [% name FILTER html %] in
+    An error occurred processing hook [% name FILTER html %] in
     extension [% extension FILTER html %].
 
   [% ELSIF error == "extern_id_conflict" %]
@@ -378,7 +378,7 @@
 
   [% ELSE %]
     [% title = "Internal error" %]
-    An internal error has occured, but [% terms.Bugzilla %] doesn't know
+    An internal error has occurred, but [% terms.Bugzilla %] doesn't know
     what <code>[% error FILTER html %]</code> means.
 
     If you are a [% terms.Bugzilla %] end-user seeing this message, please save
