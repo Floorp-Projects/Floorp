@@ -50,9 +50,9 @@ endif
 endif
 
 CPPSRCS =  \
+	PlugletEngine.cpp \
 	List.cpp \
 	Pluglet.cpp \
-	PlugletEngine.cpp \
 	PlugletFactory.cpp \
 	PlugletInputStream.cpp \
 	PlugletLoader.cpp \
@@ -79,6 +79,11 @@ ifeq ($(OS_ARCH),Darwin)
 endif
 endif
 endif
+
+XPIDLSRCS 	= \
+	iPlugletEngine.idl \
+	iPlugletManager.idl \
+		$(NULL)
 
 CXXFLAGS := $(MOZ_TOOLKIT_REGISTRY_CFLAGS) -DMOZILLA_INTERNAL_API -D_REENTRANT  -DOJI_DISABLE $(CXXFLAGS) 
 

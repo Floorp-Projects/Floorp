@@ -18,13 +18,17 @@
  *
  * Contributor(s): 
  */
+#include "nsIServiceManager.h"
+
 #include "Pluglet.h"
-#include "PlugletEngine.h"
+#include "iPlugletEngine.h"
 #include "PlugletStreamListener.h"
 #include "PlugletPeer.h"
 #include "Registry.h"
 #include "PlugletViewFactory.h"
 #include "PlugletLog.h"
+
+
 
 jmethodID Pluglet::initializeMID = NULL;
 jmethodID Pluglet::startMID = NULL;
@@ -38,8 +42,29 @@ static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID);
 
 NS_IMPL_ISUPPORTS1(Pluglet,nsIPluginInstance);
 
-Pluglet::Pluglet(jobject object) {
-    jthis = PlugletEngine::GetJNIEnv()->NewGlobalRef(object);
+Pluglet::Pluglet(jobject object) : plugletEngine(nsnull) {
+    nsIServiceManager *servman = nsnull;
+    NS_GetServiceManager(&servman);
+    nsresult rv;
+    rv = servman->GetServiceByContractID(PLUGLETENGINE_ContractID,
+					 NS_GET_IID(iPlugletEngine),
+					 getter_AddRefs(plugletEngine));
+    if (NS_FAILED(rv)) {
+	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	       ("Pluglet::Pluglet: Cannot access iPlugletEngine service\n"));
+	return;
+    }
+
+    JNIEnv *jniEnv = nsnull;
+    rv = plugletEngine->GetJNIEnv(&jniEnv);
+    if (NS_FAILED(rv)) {
+	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	       ("Pluglet::Pluglet: plugletEngine->GetJNIEnv failed\n"));
+	return;
+    }
+	
+    
+    jthis = jniEnv->NewGlobalRef(object);
     //nb check for null
     peer = NULL;
     view = PlugletViewFactory::GetPlugletView();
@@ -48,7 +73,16 @@ Pluglet::Pluglet(jobject object) {
 
 Pluglet::~Pluglet() {
     Registry::Remove(jthis);
-    PlugletEngine::GetJNIEnv()->DeleteGlobalRef(jthis);
+    JNIEnv *jniEnv = nsnull;
+    nsresult rv;
+    rv = plugletEngine->GetJNIEnv(&jniEnv);
+    if (NS_FAILED(rv)) {
+	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	       ("Pluglet::~Pluglet: plugletEngine->GetJNIEnv failed\n"));
+	return;
+    }
+
+    jniEnv->DeleteGlobalRef(jthis);
     NS_RELEASE(peer);
 }
 
@@ -62,7 +96,15 @@ NS_METHOD Pluglet::HandleEvent(nsPluginEvent* event, PRBool* handled) {
 NS_METHOD Pluglet::Initialize(nsIPluginInstancePeer* _peer) {
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	    ("Pluglet::Initialize\n"));
-    JNIEnv *env = PlugletEngine::GetJNIEnv();
+    JNIEnv *env = nsnull;
+    nsresult rv;
+    rv = plugletEngine->GetJNIEnv(&env);
+
+    if (NS_FAILED(rv)) {
+	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	       ("Pluglet::Initialize: plugletEngine->GetJNIEnv failed\n"));
+	return rv;
+    }
     if (!printMID) {
 	jclass clazz = env->FindClass("org/mozilla/pluglet/Pluglet");
 	if (env->ExceptionOccurred()) {
@@ -126,7 +168,14 @@ NS_METHOD Pluglet::GetPeer(nsIPluginInstancePeer* *result) {
 NS_METHOD Pluglet::Start(void) {
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	    ("Pluglet::Start\n"));
-    JNIEnv * env = PlugletEngine::GetJNIEnv();
+    JNIEnv *env = nsnull;
+    nsresult rv;
+    rv = plugletEngine->GetJNIEnv(&env);
+    if (NS_FAILED(rv)) {
+	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	       ("Pluglet::Start: plugletEngine->GetJNIEnv failed\n"));
+	return rv;
+    }
     env->CallVoidMethod(jthis,startMID);
     if (env->ExceptionOccurred()) {
             env->ExceptionDescribe();
@@ -137,7 +186,14 @@ NS_METHOD Pluglet::Start(void) {
 NS_METHOD Pluglet::Stop(void) {
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	    ("Pluglet::Stop\n"));
-    JNIEnv * env = PlugletEngine::GetJNIEnv();
+    JNIEnv *env = nsnull;
+    nsresult rv;
+    rv = plugletEngine->GetJNIEnv(&env);
+    if (NS_FAILED(rv)) {
+	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	       ("Pluglet::Stop: plugletEngine->GetJNIEnv failed\n"));
+	return rv;
+    }
     env->CallVoidMethod(jthis,stopMID);
     if (env->ExceptionOccurred()) {
             env->ExceptionDescribe();
@@ -148,7 +204,15 @@ NS_METHOD Pluglet::Stop(void) {
 NS_METHOD Pluglet::Destroy(void) {
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	    ("Pluglet::Destroy\n"));
-    JNIEnv * env = PlugletEngine::GetJNIEnv();
+    JNIEnv *env = nsnull;
+    nsresult rv;
+    rv = plugletEngine->GetJNIEnv(&env);
+    if (NS_FAILED(rv)) {
+	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	       ("Pluglet::Destroy: plugletEngine->GetJNIEnv failed\n"));
+	return rv;
+    }
+
     env->CallVoidMethod(jthis,destroyMID);
     if (env->ExceptionOccurred()) {
             env->ExceptionDescribe();
@@ -163,7 +227,15 @@ NS_METHOD Pluglet::NewStream(nsIPluginStreamListener** listener) {
     if(!listener) {
 	return NS_ERROR_FAILURE;
     }
-    JNIEnv * env = PlugletEngine::GetJNIEnv();
+    nsresult rv;
+    JNIEnv *env;
+    rv = plugletEngine->GetJNIEnv(&env);
+    if (NS_FAILED(rv)) {
+	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	       ("Pluglet::Destroy: plugletEngine->GetJNIEnv failed\n"));
+	return rv;
+    }
+
     jobject obj = env->CallObjectMethod(jthis,newStreamMID);
     if (env->ExceptionOccurred()) {
             env->ExceptionDescribe();
@@ -186,7 +258,15 @@ NS_METHOD Pluglet::SetWindow(nsPluginWindow* window) {
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	    ("Pluglet::SetWindow\n"));
     if (view->SetWindow(window) == PR_TRUE) {
-	JNIEnv *env = PlugletEngine::GetJNIEnv();
+	nsresult rv;
+	JNIEnv *env;
+	rv = plugletEngine->GetJNIEnv(&env);
+	if (NS_FAILED(rv)) {
+	    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+		   ("Pluglet::Destroy: plugletEngine->GetJNIEnv failed\n"));
+	    return rv;
+	}
+
 	env->CallVoidMethod(jthis,setWindowMID,view->GetJObject());
 	if (env->ExceptionOccurred()) {
             env->ExceptionDescribe();

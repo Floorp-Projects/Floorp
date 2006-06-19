@@ -19,10 +19,11 @@
  * Contributor(s): 
  */
 #include "PlugletStreamListener.h"
-#include "PlugletEngine.h"
+#include "iPlugletEngine.h"
 #include "PlugletStreamInfo.h"
 #include "PlugletInputStream.h"
 #include "PlugletLog.h"
+#include "nsCOMPtr.h"
 
 jmethodID PlugletStreamListener::onStartBindingMID = NULL;
 jmethodID PlugletStreamListener::onDataAvailableMID = NULL;
@@ -33,7 +34,16 @@ jmethodID PlugletStreamListener::getStreamTypeMID = NULL;
 void PlugletStreamListener::Initialize(void) {
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	    ("PlugletStreamListener::Initialize\n"));
-    JNIEnv * env =  PlugletEngine::GetJNIEnv();
+    nsCOMPtr<iPlugletEngine> plugletEngine;
+    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    if (NS_FAILED(rv)) {
+	return;
+    }
+    JNIEnv *env = nsnull;
+    rv = plugletEngine->GetJNIEnv(&env);
+    if (NS_FAILED(rv)) {
+	return;
+    }
     jclass clazz = env->FindClass("org/mozilla/pluglet/PlugletStreamListener");
     onStartBindingMID = env->GetMethodID(clazz, "onStartBinding","(Lorg/mozilla/pluglet/mozilla/PlugletStreamInfo;)V");
     onDataAvailableMID = env->GetMethodID(clazz,"onDataAvailable","(Lorg/mozilla/pluglet/mozilla/PlugletStreamInfo;Ljava/io/InputStream;I)V");
@@ -43,20 +53,51 @@ void PlugletStreamListener::Initialize(void) {
 }
 
 PlugletStreamListener::PlugletStreamListener(jobject object) {
-    jthis = PlugletEngine::GetJNIEnv()->NewGlobalRef(object);
+    nsCOMPtr<iPlugletEngine> plugletEngine;
+    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    if (NS_FAILED(rv)) {
+	return;
+    }
+    JNIEnv *env = nsnull;
+    rv = plugletEngine->GetJNIEnv(&env);
+    if (NS_FAILED(rv)) {
+	return;
+    }
+
+    jthis = env->NewGlobalRef(object);
     if (!onStopBindingMID) {
 	Initialize();
     }
 }
 
 PlugletStreamListener::~PlugletStreamListener(void) {
-    PlugletEngine::GetJNIEnv()->DeleteGlobalRef(jthis);
+    nsCOMPtr<iPlugletEngine> plugletEngine;
+    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    if (NS_FAILED(rv)) {
+	return;
+    }
+    JNIEnv *env = nsnull;
+    rv = plugletEngine->GetJNIEnv(&env);
+    if (NS_FAILED(rv)) {
+	return;
+    }
+
+    env->DeleteGlobalRef(jthis);
 }
 
 NS_METHOD  PlugletStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo) {
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	    ("PlugletStreamListener::OnStartBinding\n"));
-    JNIEnv * env = PlugletEngine::GetJNIEnv();
+    nsCOMPtr<iPlugletEngine> plugletEngine;
+    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    if (NS_FAILED(rv)) {
+	return rv;
+    }
+    JNIEnv *env = nsnull;
+    rv = plugletEngine->GetJNIEnv(&env);
+    if (NS_FAILED(rv)) {
+	return rv;
+    }
     env->CallVoidMethod(jthis,onStartBindingMID,PlugletStreamInfo::GetJObject(pluginInfo));
     if (env->ExceptionOccurred()) {
 	env->ExceptionDescribe();
@@ -68,7 +109,17 @@ NS_METHOD  PlugletStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo
 NS_METHOD PlugletStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo, nsIInputStream* input, PRUint32 length) {
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	    ("PlugletStreamListener::OnDataAvailable\n"));
-    JNIEnv * env = PlugletEngine::GetJNIEnv();   
+    nsCOMPtr<iPlugletEngine> plugletEngine;
+    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    if (NS_FAILED(rv)) {
+	return rv;
+    }
+    JNIEnv *env = nsnull;
+    rv = plugletEngine->GetJNIEnv(&env);
+    if (NS_FAILED(rv)) {
+	return rv;
+    }
+
     env->CallVoidMethod(jthis,onDataAvailableMID,PlugletStreamInfo::GetJObject(pluginInfo), 
 			PlugletInputStream::GetJObject(input),(jint)length);
     if (env->ExceptionOccurred()) {
@@ -81,7 +132,17 @@ NS_METHOD PlugletStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo
 NS_METHOD PlugletStreamListener::OnFileAvailable(nsIPluginStreamInfo* pluginInfo, const char* fileName) {
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	    ("PlugletStreamListener::OnFileAvailable\n"));
-    JNIEnv * env = PlugletEngine::GetJNIEnv();
+    nsCOMPtr<iPlugletEngine> plugletEngine;
+    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    if (NS_FAILED(rv)) {
+	return rv;
+    }
+    JNIEnv *env = nsnull;
+    rv = plugletEngine->GetJNIEnv(&env);
+    if (NS_FAILED(rv)) {
+	return rv;
+    }
+
     env->CallVoidMethod(jthis,onFileAvailableMID,PlugletStreamInfo::GetJObject(pluginInfo),
 	env->NewStringUTF(fileName));
     if (env->ExceptionOccurred()) {
@@ -94,7 +155,16 @@ NS_METHOD PlugletStreamListener::OnFileAvailable(nsIPluginStreamInfo* pluginInfo
 NS_METHOD PlugletStreamListener::OnStopBinding(nsIPluginStreamInfo* pluginInfo, nsresult status) {
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	    ("PlugletStreamListener::OnStopBinding\n"));
-    JNIEnv * env = PlugletEngine::GetJNIEnv();
+    nsCOMPtr<iPlugletEngine> plugletEngine;
+    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    if (NS_FAILED(rv)) {
+	return rv;
+    }
+    JNIEnv *env = nsnull;
+    rv = plugletEngine->GetJNIEnv(&env);
+    if (NS_FAILED(rv)) {
+	return rv;
+    }
     env->CallVoidMethod(jthis,onStopBindingMID,PlugletStreamInfo::GetJObject(pluginInfo),status);
     if (env->ExceptionOccurred()) {
 	env->ExceptionDescribe();
@@ -106,7 +176,16 @@ NS_METHOD PlugletStreamListener::OnStopBinding(nsIPluginStreamInfo* pluginInfo, 
 NS_METHOD PlugletStreamListener::GetStreamType(nsPluginStreamType *result) {
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	    ("PlugletStreamListener::GetStreamType\n"));
-    JNIEnv * env = PlugletEngine::GetJNIEnv();
+    nsCOMPtr<iPlugletEngine> plugletEngine;
+    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    if (NS_FAILED(rv)) {
+	return rv;
+    }
+    JNIEnv *env = nsnull;
+    rv = plugletEngine->GetJNIEnv(&env);
+    if (NS_FAILED(rv)) {
+	return rv;
+    }
     *result = (nsPluginStreamType)env->CallIntMethod(jthis,getStreamTypeMID);
     if (env->ExceptionOccurred()) {
 	env->ExceptionDescribe();

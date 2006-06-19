@@ -24,6 +24,8 @@
 #include "jni.h"
 #include "PlugletView.h"
 
+class iPlugletEngine;
+
 class Pluglet : public nsIPluginInstance {
  public:
     NS_IMETHOD HandleEvent(nsPluginEvent* event, PRBool* handled);
@@ -52,5 +54,6 @@ class Pluglet : public nsIPluginInstance {
     static  jmethodID getValueMID;
     nsIPluginInstancePeer *peer;
     PlugletView *view;
+    nsCOMPtr<iPlugletEngine> plugletEngine;
 };
 #endif /* __Pluglet_h__ */

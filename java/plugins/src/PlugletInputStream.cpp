@@ -18,15 +18,25 @@
  *
  * Contributor(s): 
  */
-#include "nsISupports.h"
 #include "PlugletInputStream.h"
-#include "PlugletEngine.h"
+#include "nsCOMPtr.h"
+#include "iPlugletEngine.h"
 
 jclass    PlugletInputStream::clazz = NULL;
 jmethodID PlugletInputStream::initMID = NULL;
 
 void PlugletInputStream::Initialize(void) {
-    JNIEnv * env = PlugletEngine::GetJNIEnv();
+    nsCOMPtr<iPlugletEngine> plugletEngine;
+    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    if (NS_FAILED(rv)) {
+	return;
+    }
+    JNIEnv *env = nsnull;
+    rv = plugletEngine->GetJNIEnv(&env);
+    if (NS_FAILED(rv)) {
+	return;
+    }
+
     clazz = env->FindClass("org/mozilla/pluglet/mozilla/PlugletInputStream");
     if (env->ExceptionOccurred()) {
 	env->ExceptionDescribe();
@@ -45,25 +55,45 @@ void PlugletInputStream::Initialize(void) {
 
 void PlugletInputStream::Destroy(void) {
     //nb  who gonna cal it?
-    JNIEnv * env = PlugletEngine::GetJNIEnv();
+    nsCOMPtr<iPlugletEngine> plugletEngine;
+    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    if (NS_FAILED(rv)) {
+	return;
+    }
+    JNIEnv *env = nsnull;
+    rv = plugletEngine->GetJNIEnv(&env);
+    if (NS_FAILED(rv)) {
+	return;
+    }
+
     if(clazz) {
 	env->DeleteGlobalRef(clazz);
     }
 }
 
 jobject PlugletInputStream::GetJObject(const nsIInputStream *stream) {
-    jobject res = NULL;
-    JNIEnv *env = PlugletEngine::GetJNIEnv();
+    jobject res = nsnull;
+    nsCOMPtr<iPlugletEngine> plugletEngine;
+    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    if (NS_FAILED(rv)) {
+	return res;
+    }
+    JNIEnv *env = nsnull;
+    rv = plugletEngine->GetJNIEnv(&env);
+    if (NS_FAILED(rv)) {
+	return res;
+    }
+
     if(!clazz) {
 	Initialize();
 	if (! clazz) {
-	    return NULL;
+	    return nsnull;
 	}
     }
     res = env->NewObject(clazz,initMID,(jlong)stream);
     if (env->ExceptionOccurred()) {
 	env->ExceptionDescribe();
-	res = NULL;
+	res = nsnull;
     }
     return res;
 }

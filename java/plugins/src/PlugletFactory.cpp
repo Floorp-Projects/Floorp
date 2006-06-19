@@ -18,8 +18,10 @@
  *
  * Contributor(s): 
  */
+#include "nsIServiceManager.h"
+
 #include "PlugletFactory.h"
-#include "PlugletEngine.h"
+#include "iPlugletEngine.h"
 #include "PlugletLoader.h"
 #include "Pluglet.h"
 #include "plstr.h"
@@ -37,9 +39,14 @@ nsresult PlugletFactory::CreatePluginInstance(const char* aPluginMIMEType, void 
        || Initialize() != NS_OK) {
 	return NS_ERROR_FAILURE;
     }
-    JNIEnv *env = PlugletEngine::GetJNIEnv();
-    if(!env) {
-	return NS_ERROR_FAILURE;
+    JNIEnv *env = nsnull;
+    nsresult rv;
+    rv = plugletEngine->GetJNIEnv(&env);
+
+    if (NS_FAILED(rv)) {
+	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	       ("Pluglet::Initialize: plugletEngine->GetJNIEnv failed\n"));
+	return rv;
     }
     jstring jstr = env->NewStringUTF(aPluginMIMEType);
     jobject obj = env->CallObjectMethod(jthis,createPlugletMID, jstr);
@@ -59,10 +66,16 @@ nsresult PlugletFactory::CreatePluginInstance(const char* aPluginMIMEType, void 
 nsresult PlugletFactory::Initialize(void) {
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	    ("PlugletFactory::Initialize\n"));
-    JNIEnv *env = PlugletEngine::GetJNIEnv();
-    if(!env) {
-        return NS_ERROR_FAILURE;
+    JNIEnv *env = nsnull;
+    nsresult rv;
+    rv = plugletEngine->GetJNIEnv(&env);
+
+    if (NS_FAILED(rv)) {
+	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	       ("Pluglet::Initialize: plugletEngine->GetJNIEnv failed\n"));
+	return rv;
     }
+
     if (!initializeMID) { 
 	jclass clazz = env->FindClass("org/mozilla/pluglet/PlugletFactory");
 	if(!clazz) {
@@ -91,7 +104,12 @@ nsresult PlugletFactory::Initialize(void) {
 	if (!jthis) {
 	    return NS_ERROR_FAILURE;
 	}
-	env->CallVoidMethod(jthis,initializeMID,PlugletEngine::GetPlugletManager());
+	jobject plugletEngineObj = nsnull;
+	rv = plugletEngine->GetPlugletManager((void **) &plugletEngineObj);
+	if (NS_FAILED(rv)) {
+	    return rv;
+	}
+	env->CallVoidMethod(jthis,initializeMID,plugletEngineObj);
 	if (env->ExceptionOccurred()) {
 	    env->ExceptionDescribe();
 	    return NS_ERROR_FAILURE;
@@ -107,9 +125,14 @@ nsresult PlugletFactory::Shutdown(void) {
     if(!jthis) {
 	return NS_ERROR_FAILURE;
     }
-    JNIEnv *env = PlugletEngine::GetJNIEnv();
-    if(!env) {
-	return NS_ERROR_FAILURE;
+    JNIEnv *env = nsnull;
+    nsresult rv;
+    rv = plugletEngine->GetJNIEnv(&env);
+
+    if (NS_FAILED(rv)) {
+	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	       ("Pluglet::Initialize: plugletEngine->GetJNIEnv failed\n"));
+	return rv;
     }
     env->CallVoidMethod(jthis,shutdownMID);
     if (env->ExceptionOccurred()) {
@@ -129,12 +152,24 @@ nsresult PlugletFactory::GetMIMEDescription(const char* *result) {
     return (*result) ? NS_OK : NS_ERROR_FAILURE;
 }
 
-PlugletFactory::PlugletFactory(const char *mimeDescription, const char *path) {
+PlugletFactory::PlugletFactory(const char *mimeDescription, const char *path) : plugletEngine(nsnull) {
     jthis = NULL;
     this->path = new char[strlen(path)+1];
     strcpy(this->path,path);
     this->mimeDescription = new char[strlen(mimeDescription)+1];
     strcpy(this->mimeDescription,mimeDescription);
+
+    nsIServiceManager *servman = nsnull;
+    NS_GetServiceManager(&servman);
+    nsresult rv;
+    rv = servman->GetServiceByContractID(PLUGLETENGINE_ContractID,
+					 NS_GET_IID(iPlugletEngine),
+					 getter_AddRefs(plugletEngine));
+    if (NS_FAILED(rv)) {
+	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	       ("Pluglet::PlugletFactory: Cannot access iPlugletEngine service\n"));
+	return;
+    }
     
 }
  
@@ -145,7 +180,16 @@ PlugletFactory::~PlugletFactory(void) {
     if (mimeDescription != NULL) {
         delete[] mimeDescription;
     }
-    JNIEnv *env = PlugletEngine::GetJNIEnv();
+    JNIEnv *env = nsnull;
+    nsresult rv;
+    rv = plugletEngine->GetJNIEnv(&env);
+
+    if (NS_FAILED(rv)) {
+	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	       ("PlugletFactory::~PlugletFactory: plugletEngine->GetJNIEnv failed\n"));
+	return;
+    }
+
     if (env != NULL) {
         env->DeleteGlobalRef(jthis);
     }

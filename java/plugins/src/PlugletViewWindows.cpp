@@ -20,7 +20,8 @@
  */
 #include <windows.h>
 #include "PlugletViewWindows.h"
-#include "PlugletEngine.h"
+#include "iPlugletEngine.h"
+#include "nsCOMPtr.h"
 
 
 jclass   PlugletViewWindows::clazz = NULL;
@@ -32,7 +33,17 @@ PlugletViewWindows::PlugletViewWindows() {
     isCreated = FALSE;
 }
 void PlugletViewWindows::Initialize() {
-    JNIEnv *env = PlugletEngine::GetJNIEnv();
+    nsCOMPtr<iPlugletEngine> plugletEngine;
+    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    if (NS_FAILED(rv)) {
+	return;
+    }
+    JNIEnv *env = nsnull;
+    rv = plugletEngine->GetJNIEnv(&env);
+    if (NS_FAILED(rv)) {
+	return;
+    }
+
     clazz = env->FindClass("sun/awt/windows/WEmbeddedFrame");
     if (!clazz) {
         env->ExceptionDescribe(); 
@@ -68,7 +79,17 @@ PRBool  PlugletViewWindows::SetWindow(nsPluginWindow* window) {
             return PR_FALSE;
         }
     }
-    JNIEnv *env = PlugletEngine::GetJNIEnv();
+    nsCOMPtr<iPlugletEngine> plugletEngine;
+    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    if (NS_FAILED(rv)) {
+	return PR_FALSE;
+    }
+    JNIEnv *env = nsnull;
+    rv = plugletEngine->GetJNIEnv(&env);
+    if (NS_FAILED(rv)) {
+	return PR_FALSE;
+    }
+
     frame = env->NewObject(clazz,initMID,(jint)window->window);
     if (!frame) {
         env->ExceptionDescribe();

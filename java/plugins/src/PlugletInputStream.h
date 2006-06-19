@@ -25,6 +25,7 @@
 
 class PlugletInputStream {
  public:
+
     static jobject GetJObject(const nsIInputStream *stream);
  private:
     static void Initialize(void);

@@ -19,8 +19,9 @@
  * Contributor(s): 
  */
 
-#include "PlugletEngine.h"
+#include "iPlugletEngine.h"
 #include "Registry.h"
+#include "nsCOMPtr.h"
 
 jclass Registry::clazz = NULL;
 jmethodID Registry::setPeerMID = NULL;
@@ -33,7 +34,17 @@ void Registry::SetPeer(jobject key, jlong peer) {
             return;
         }
     }
-    JNIEnv *env = PlugletEngine::GetJNIEnv();
+    nsCOMPtr<iPlugletEngine> plugletEngine;
+    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    if (NS_FAILED(rv)) {
+	return;
+    }
+    JNIEnv *env = nsnull;
+    rv = plugletEngine->GetJNIEnv(&env);
+    if (NS_FAILED(rv)) {
+	return;
+    }
+
     env->CallStaticVoidMethod(clazz,setPeerMID,key,peer);
     if (env->ExceptionOccurred()) {
         env->ExceptionDescribe();
@@ -48,7 +59,17 @@ void Registry::Remove(jobject key) {
             return;
         }
     }
-    JNIEnv *env = PlugletEngine::GetJNIEnv();
+    nsCOMPtr<iPlugletEngine> plugletEngine;
+    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    if (NS_FAILED(rv)) {
+	return;
+    }
+    JNIEnv *env = nsnull;
+    rv = plugletEngine->GetJNIEnv(&env);
+    if (NS_FAILED(rv)) {
+	return;
+    }
+
     env->CallStaticVoidMethod(clazz,removeMID,key);
     if (env->ExceptionOccurred()) {
         env->ExceptionDescribe();
@@ -57,7 +78,17 @@ void Registry::Remove(jobject key) {
 }
 
 void Registry::Initialize() {
-    JNIEnv *env = PlugletEngine::GetJNIEnv();
+    nsCOMPtr<iPlugletEngine> plugletEngine;
+    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    if (NS_FAILED(rv)) {
+	return;
+    }
+    JNIEnv *env = nsnull;
+    rv = plugletEngine->GetJNIEnv(&env);
+    if (NS_FAILED(rv)) {
+	return;
+    }
+
     if(!env) {
         return;
     }

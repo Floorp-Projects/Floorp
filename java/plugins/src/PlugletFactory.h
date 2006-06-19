@@ -21,7 +21,8 @@
 #ifndef __PlugletFactory_h__
 #define __PlugletFactory_h__
 #include "nsplugin.h"
-#include "jni.h"
+
+#include "iPlugletEngine.h"
 
 class PlugletFactory {
  public:
@@ -42,6 +43,7 @@ class PlugletFactory {
     char *mimeDescription;
     char *path;
     PlugletFactory(const char *mimeDescription,const char * path);
+    nsCOMPtr<iPlugletEngine> plugletEngine;
 };    
 
 #endif /* __PlugletFactory_h__ */

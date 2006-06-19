@@ -18,14 +18,17 @@
  *
  * Contributor(s): 
  */
+#include "nsIGenericFactory.h"
+#include "nsICategoryManager.h"
+#include "nsIObserver.h"
+#include "nsMemory.h"
+
 #include "PlugletEngine.h"
 #include "Pluglet.h"
 #include "nsIServiceManager.h"
 #include "nsServiceManagerUtils.h"
 #include "prenv.h"
 #include "PlugletManager.h"
-#include "nsIGenericFactory.h"
-#include "nsIModule.h"
 #include "PlugletLog.h"
 
 #ifndef OJI_DISABLE
@@ -44,94 +47,6 @@ static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 
 PRLogModuleInfo* PlugletLog::log = NULL;
 
-#define PLUGLETENGINE_ContractID \
- "@mozilla.org/blackwood/pluglet-engine;1"
-
-#define  PLUGLETENGINE_CID  \
-{ /* C1E694F3-9BE1-11d3-837C-0004AC56C49E */ \
-  0xc1e694f3, 0x9be1, 0x11d3, { 0x83, 0x7c, 0x0, 0x4, 0xac, 0x56, 0xc4, 0x9e } \
-} 
-
-
-
-
-#ifdef XP_PC
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(PlugletEngine)
-
-#else  //XP_PC
-
-#include <dlfcn.h>
-
-/* 
- * CheckForXTSymbol
- * return value
- * 1 - AWT will not complain
- * 0 - AWT will not work
- *
- */
-
-int
-CheckForXTSymbol(void) 
-{
-    Dl_info dlinfo;
-    void *v;
-    v = dlsym(RTLD_DEFAULT, "vendorShellWidgetClass");
-    if (v != NULL && dladdr(v, &dlinfo)) {
-        if (strstr(dlinfo.dli_fname, "libXt.so") != NULL) {
-            fprintf(stderr, "\nRuntime link error - it appears that "
-                    "libXt got loaded before libXm,\n"
-                    "which is not allowed for pluglets\n");
-            return 0;
-        }
-    }
-    return 1;
-    
-}
-
-static NS_IMETHODIMP                                                            
-PlugletEngineConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{                                                                               
-    nsresult rv;                                                                
-    PlugletEngine * inst;
-    if ( !CheckForXTSymbol() ) {
-        rv = NS_ERROR_FAILURE;
-        return rv;
-    }
-    if (NULL == aResult) {                                                      
-        rv = NS_ERROR_NULL_POINTER;                                             
-        return rv;                                                              
-    }                                                                           
-    *aResult = NULL;                                                            
-    if (NULL != aOuter) {                                                       
-        rv = NS_ERROR_NO_AGGREGATION;                                           
-        return rv;                                                              
-    }                                                                           
-    NS_NEWXPCOM(inst, PlugletEngine);                                          
-    if (NULL == inst) {                                                         
-      rv = NS_ERROR_OUT_OF_MEMORY;                                            
-      return rv;                                                              
-    }                                                                           
-    NS_ADDREF(inst);                                                            
-    rv = inst->QueryInterface(aIID, aResult);                                   
-    NS_RELEASE(inst);                                                           
-    return rv;                                                                  
-}                                                                               
-
-#endif //XP_PC
-
-
-static  nsModuleComponentInfo components[] = 
-{
-    {
-        "Pluglet Engine",
-        PLUGLETENGINE_CID,
-        PLUGLETENGINE_ContractID,
-        PlugletEngineConstructor
-    }
-};
-
-NS_IMPL_NSGETMODULE("PlugletEngineModule",components);
 
 
 int PlugletEngine::objectCount = 0;
@@ -143,26 +58,66 @@ jobject PlugletEngine::plugletManager = NULL;
 
 #define PLUGIN_MIME_DESCRIPTION "*:*:Pluglet Engine"
 
-NS_IMPL_ISUPPORTS1(PlugletEngine,nsIPlugin);
-NS_METHOD PlugletEngine::Initialize(void) {
+PlugletEngine::PlugletEngine() {
+    NS_INIT_ISUPPORTS();
+    PlugletLog::log = PR_NewLogModule("pluglets");
+    dir = new PlugletsDir();
+    engine = this;
+    objectCount++;
+}
+
+PlugletEngine::~PlugletEngine(void) {
+    delete dir;
+    objectCount--;
+}
+
+NS_IMPL_ISUPPORTS3(PlugletEngine, nsIObserver, iPlugletEngine, nsIPlugin);
+NS_IMETHODIMP
+PlugletEngine::Observe(nsISupports *aSubject, const char *aTopic, 
+                       const PRUnichar *aData)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+PlugletEngine::Initialize(void) 
+{
     //nb ???
     return NS_OK;
 }
 
-NS_METHOD PlugletEngine::Shutdown(void) {
+NS_IMETHODIMP 
+PlugletEngine::Shutdown(void) 
+{
     //nb ???
     return NS_OK;
 }
 
-NS_METHOD PlugletEngine::CreateInstance(nsISupports *aOuter,
-			 REFNSIID aIID,	void **aResult) {
+NS_IMETHODIMP 
+PlugletEngine::CreateInstance(nsISupports *aOuter, REFNSIID aIID,
+                              void **aResult) 
+{
     return NS_ERROR_FAILURE; //nb to do
 }
- 
-NS_METHOD PlugletEngine::CreatePluginInstance(nsISupports *aOuter, REFNSIID aIID, 
-				const char* aPluginMIMEType, void **aResult) {
+
+NS_IMETHODIMP 
+PlugletEngine::LockFactory(PRBool aLock) 
+{
+    if(aLock) {
+        PR_AtomicIncrement(&lockCount); 
+    } else {
+        PR_AtomicDecrement(&lockCount);
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+PlugletEngine::CreatePluginInstance(nsISupports *aOuter, REFNSIID aIID, 
+                                    const char* aPluginMIMEType, 
+                                    void **aResult) 
+{
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
-	    ("PlugletEngine::CreatePluginInstance\n"));
+           ("PlugletEngine::CreatePluginInstance\n"));
     if (!aResult) {
 	return NS_ERROR_FAILURE; 
     }
@@ -176,29 +131,20 @@ NS_METHOD PlugletEngine::CreatePluginInstance(nsISupports *aOuter, REFNSIID aIID
     return plugletFactory->CreatePluginInstance(aPluginMIMEType,aResult);
 }
 
-NS_METHOD PlugletEngine::GetMIMEDescription(const char* *result) {
+NS_IMETHODIMP PlugletEngine::GetMIMEDescription(const char* *result) {
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	    ("PlugletEngine::GetMimeDescription\n"));
     if (!result) {
 	return NS_ERROR_FAILURE;
     }
-    *result = PLUGIN_MIME_DESCRIPTION;
+    *result = strdup(PLUGIN_MIME_DESCRIPTION);
     return NS_OK;
 }
 
-NS_METHOD PlugletEngine::GetValue(nsPluginVariable variable, void *value) {
+NS_IMETHODIMP PlugletEngine::GetValue(nsPluginVariable variable, void *value) {
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	    ("PlugletEngine::GetValue; stub\n"));
     //nb ????
-    return NS_OK;
-}
-
-NS_METHOD PlugletEngine::LockFactory(PRBool aLock) {
-    if(aLock) {
-        PR_AtomicIncrement(&lockCount); 
-    } else {
-        PR_AtomicDecrement(&lockCount);
-    }
     return NS_OK;
 }
 
@@ -215,18 +161,6 @@ char *ToString(jobject obj,JNIEnv *env) {
 	strcpy(res,str);
 	env->ReleaseStringUTFChars(jstr,str);
 	return res;
-}
-
-PlugletEngine::PlugletEngine() {
-    PlugletLog::log = PR_NewLogModule("pluglets");
-    dir = new PlugletsDir();
-    engine = this;
-    objectCount++;
-}
-
-PlugletEngine::~PlugletEngine(void) {
-    delete dir;
-    objectCount--;
 }
 
 
@@ -274,8 +208,12 @@ void PlugletEngine::StartJVM() {
 
 #endif /* OJI_DISABLE */
 
-JNIEnv * PlugletEngine::GetJNIEnv(void) {
+NS_IMETHODIMP PlugletEngine::GetJNIEnv(JNIEnv * *jniEnv) 
+{
    JNIEnv * res = NULL;
+   if (nsnull == jniEnv) {
+       return NS_ERROR_NULL_POINTER;
+   }
 #ifndef OJI_DISABLE
    nsresult result;
    if (!jvmManager) {
@@ -285,10 +223,10 @@ JNIEnv * PlugletEngine::GetJNIEnv(void) {
        }
    }
    if (!jvmManager) {
-       return NULL;
+       return result;
    }
-   if (NS_FAILED(jvmManager->CreateProxyJNI(NULL,&res))) {
-       return NULL;
+   if (NS_FAILED(result = jvmManager->CreateProxyJNI(NULL,&res))) {
+       return result;
    }
    if (!securityContext) {
        securityContext = new PlugletSecurityContext();
@@ -304,10 +242,16 @@ JNIEnv * PlugletEngine::GetJNIEnv(void) {
        jvm->AttachCurrentThread((void**)&res,NULL);
    }
 #endif /* OJI_DISABLE */
-   return res;
+   *jniEnv = res;
+   return NS_OK;
 }
 
-jobject PlugletEngine::GetPlugletManager(void) {
+NS_IMETHODIMP PlugletEngine::GetPlugletManager(void * *jobj)
+{
+    if (nsnull == jobj) {
+        return NS_ERROR_NULL_POINTER;
+    }
+
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
            ("PlugletEngine::GetPlugletManager\n"));
     //Changed by John Sublet NS_WITH_SERVICE deprecated currently is
@@ -318,33 +262,141 @@ jobject PlugletEngine::GetPlugletManager(void) {
     //NS_WITH_SERVICE(nsIPluginManager,_pluginManager,kPluginManagerCID,&res);
     nsCOMPtr<nsIPluginManager> _pluginManager (do_GetService(kPluginManagerCID));
     
-    
     // Changed by John Sublet : FIXME this assumes _pluginManager will be properly set to NULL
     if (_pluginManager) {
         pluginManager = _pluginManager;
     }
     if (!pluginManager) {
-        return NULL;
+        return NS_ERROR_NULL_POINTER;
     }
     if (!plugletManager) {
         plugletManager = PlugletManager::GetJObject(pluginManager.get());
     }
-    return plugletManager;
+    *jobj = pluginManager;
+    return NS_OK;
 }
 
-PlugletEngine * PlugletEngine::GetEngine(void) {
-    return engine;
+NS_IMETHODIMP PlugletEngine::GetEngine(iPlugletEngine **outEngine)
+{
+    if (nsnull == outEngine) {
+        return NS_ERROR_NULL_POINTER;
+    }
+    *outEngine = engine;
+    return NS_OK;
 }
-void PlugletEngine::IncObjectCount(void) {
+
+NS_IMETHODIMP PlugletEngine::IncObjectCount()
+{
     objectCount++;
+    return NS_OK;
 }
 
-void PlugletEngine::DecObjectCount(void) {
+NS_IMETHODIMP PlugletEngine::DecObjectCount()
+{
     objectCount--;
+    return NS_OK;
 }
 
-PRBool PlugletEngine::IsUnloadable(void) {
-  return (lockCount == 0 
-	  && objectCount == 0);
+NS_IMETHODIMP PlugletEngine::GetUnloadable(PRBool *aUnloadable) 
+{
+    if (nsnull == aUnloadable) {
+        return NS_ERROR_NULL_POINTER;
+    }
+    *aUnloadable = (PRBool) (lockCount == 0 
+                             && objectCount == 0);
+    return NS_OK;
 }
 
+
+static NS_METHOD PlugletEngineRegistration(nsIComponentManager *aCompMgr,
+				     nsIFile *aPath,
+				     const char *registryLocation,
+				     const char *componentType,
+				     const nsModuleComponentInfo *info)
+{
+    nsresult rv;
+    nsCOMPtr<nsIServiceManager> servman =
+	do_QueryInterface((nsISupports*)aCompMgr, &rv);
+    if (NS_FAILED(rv))
+	return rv;
+    nsCOMPtr<nsICategoryManager> catman;
+    servman->GetServiceByContractID(NS_CATEGORYMANAGER_CONTRACTID,
+				    NS_GET_IID(nsICategoryManager),
+				    getter_AddRefs(catman));
+    if (NS_FAILED(rv))
+	return rv;
+    char* previous = nsnull;
+    rv = catman->AddCategoryEntry("xpcom-startup",
+				  "PlugletEngine",
+				  PLUGLETENGINE_ContractID,
+				  PR_TRUE,
+				  PR_TRUE,
+				  &previous);
+    if (previous) {
+        nsMemory::Free(previous);
+    }
+
+    return rv;
+}
+static NS_METHOD PlugletEngineUnregistration(nsIComponentManager *aCompMgr,
+				       nsIFile *aPath,
+				       const char *registryLocation,
+				       const nsModuleComponentInfo *info)
+{
+    nsresult rv;
+    nsCOMPtr<nsIServiceManager> servman =
+	do_QueryInterface((nsISupports*)aCompMgr, &rv);
+    if (NS_FAILED(rv))
+	return rv;
+    nsCOMPtr<nsICategoryManager> catman;
+    servman->GetServiceByContractID(NS_CATEGORYMANAGER_CONTRACTID,
+				    NS_GET_IID(nsICategoryManager),
+				    getter_AddRefs(catman));
+    if (NS_FAILED(rv))
+	return rv;
+    rv = catman->DeleteCategoryEntry("xpcom-startup",
+				     "PlugletEngine",
+				     PR_TRUE);
+    return rv;
+}
+
+NS_EXPORT
+nsresult
+iPlugletEngine::GetInstance(iPlugletEngine* *result)
+{
+    nsIServiceManager *servman = nsnull;
+    NS_GetServiceManager(&servman);
+    nsresult rv;
+    rv = servman->GetServiceByContractID(PLUGLETENGINE_ContractID,
+                                         NS_GET_IID(iPlugletEngine),
+                                         (void **) &result);
+    if (NS_FAILED(rv)) {
+        PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+               ("Pluglet::PlugletFactory: Cannot access iPlugletEngine service\n"));
+        return rv;
+    }
+
+
+    return NS_OK;
+}
+
+PlugletEngine *PlugletEngine::_NewInstance()
+{
+    PlugletEngine *result = new PlugletEngine();
+    return result;
+}
+
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(PlugletEngine, 
+                                         PlugletEngine::_NewInstance)
+
+static const nsModuleComponentInfo components[] =
+{
+    { "PlugletEngine",
+      PLUGLETENGINE_CID,
+      PLUGLETENGINE_ContractID,
+      PlugletEngineConstructor,
+      PlugletEngineRegistration,
+      PlugletEngineUnregistration
+    }
+};
+NS_IMPL_NSGETMODULE(PlugletEngineModule, components)

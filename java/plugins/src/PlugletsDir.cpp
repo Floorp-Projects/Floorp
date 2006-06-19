@@ -42,7 +42,6 @@ void PlugletsDir::LoadPluglets() {
     if (!list) {
 	list = new List();
 	char * path = PR_GetEnv("PLUGLET");
-	char defpath[2000];
 	if (!path) {
 	    nsSpecialSystemDirectory sysdir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory); 
 	    sysdir += "plugins"; 

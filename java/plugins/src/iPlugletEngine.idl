@@ -1,0 +1,43 @@
+#include "nsISupports.idl"
+
+%{C++
+#ifndef JNI_H
+#include "jni.h"
+#endif
+
+#define  PLUGLETENGINE_CID  \
+{ /* C1E694F3-9BE1-11d3-837C-0004AC56C49E */ \
+  0xc1e694f3,                                \
+  0x9be1,                                    \
+  0x11d3,                                    \
+  { 0x83, 0x7c, 0x0, 0x4, 0xac, 0x56, 0xc4, 0x9e } \
+} 
+
+#define PLUGLETENGINE_ContractID \
+ "@mozilla.org/blackwood/pluglet-engine;1"
+
+%}
+
+native JNIEnv(JNIEnv *);
+
+[scriptable, uuid(89fc201d-c83e-45bb-ab88-0d3776869373)]
+interface iPlugletEngine : nsISupports
+{
+
+%{C++
+      //	NS_DEFINE_STATIC_IID_ACCESSOR(NS_IJVMMANAGER_IID)
+	NS_DEFINE_STATIC_CID_ACCESSOR(PLUGLETENGINE_CID)
+%}
+
+    [noscript] void getJNIEnv(out JNIEnv outEnv);
+    [noscript] void getPlugletManager(out voidPtr jobj);
+    void getEngine(out iPlugletEngine engine);
+    void incObjectCount();
+    void decObjectCount();
+    readonly attribute boolean unloadable;
+%{C++
+
+     static NS_EXPORT nsresult GetInstance(iPlugletEngine* *result);
+
+%}
+};

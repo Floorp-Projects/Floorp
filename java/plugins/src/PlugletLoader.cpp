@@ -19,24 +19,25 @@
  * Contributor(s): 
  */
 #include "string.h"
-#include "PlugletEngine.h"
+#include "iPlugletEngine.h"
 #include "PlugletLoader.h"
 #include "PlugletLog.h"
+#include "nsCOMPtr.h"
 
-jclass PlugletLoader::clazz = NULL;
-jmethodID PlugletLoader::getMIMEDescriptionMID = NULL;
-jmethodID PlugletLoader::getPlugletMID = NULL;
+jclass PlugletLoader::clazz = nsnull;
+jmethodID PlugletLoader::getMIMEDescriptionMID = nsnull;
+jmethodID PlugletLoader::getPlugletMID = nsnull;
 
 //nb for debug only
 static char *ToString(jobject obj,JNIEnv *env) {
-	static jmethodID toStringID = NULL;
+	static jmethodID toStringID = nsnull;
 	if (!toStringID) {
 	    jclass clazz = env->FindClass("java/lang/Object");
 	    toStringID = env->GetMethodID(clazz,"toString","()Ljava/lang/String;");
 	}
 	jstring jstr = (jstring) env->CallObjectMethod(obj,toStringID);
 	//nb check for jni exception
-	const char * str = env->GetStringUTFChars(jstr,NULL);
+	const char * str = env->GetStringUTFChars(jstr,nsnull);
 	//nb check for jni exception
 	char * res = new char[strlen(str)];
 	strcpy(res,str);
@@ -48,14 +49,24 @@ void PlugletLoader::Initialize(void) {
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	    ("PlugletLoader::Initialize\n"));
     //nb errors handling
-    JNIEnv * env = PlugletEngine::GetJNIEnv();
+    nsCOMPtr<iPlugletEngine> plugletEngine;
+    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    if (NS_FAILED(rv)) {
+	return;
+    }
+    JNIEnv *env = nsnull;
+    rv = plugletEngine->GetJNIEnv(&env);
+    if (NS_FAILED(rv)) {
+	return;
+    }
+
     if (!env) {
       return;
     }
     clazz = env->FindClass("org/mozilla/pluglet/PlugletLoader");
     if (env->ExceptionOccurred()) {
 	env->ExceptionDescribe();
-        clazz = NULL;
+        clazz = nsnull;
 	return;
     }
     clazz = (jclass) env->NewGlobalRef(clazz);
@@ -63,13 +74,13 @@ void PlugletLoader::Initialize(void) {
     getMIMEDescriptionMID = env->GetStaticMethodID(clazz,"getMIMEDescription","(Ljava/lang/String;)Ljava/lang/String;");
     if (env->ExceptionOccurred()) {
 	env->ExceptionDescribe();
-        clazz = NULL;
+        clazz = nsnull;
 	return;
     }
     getPlugletMID = env->GetStaticMethodID(clazz,"getPluglet","(Ljava/lang/String;)Lorg/mozilla/pluglet/PlugletFactory;");
     if (env->ExceptionOccurred()) {
 	env->ExceptionDescribe();
-        clazz = NULL;
+        clazz = nsnull;
 	return;
     }
 }
@@ -77,7 +88,16 @@ void PlugletLoader::Initialize(void) {
 void PlugletLoader::Destroy(void) {
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	    ("PlugletLoader::destroy\n"));
-    JNIEnv * env = PlugletEngine::GetJNIEnv();
+    nsCOMPtr<iPlugletEngine> plugletEngine;
+    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    if (NS_FAILED(rv)) {
+	return;
+    }
+    JNIEnv *env = nsnull;
+    rv = plugletEngine->GetJNIEnv(&env);
+    if (NS_FAILED(rv)) {
+	return;
+    }
     if (env) {
       env->DeleteGlobalRef(clazz);
     }
@@ -89,23 +109,32 @@ char * PlugletLoader::GetMIMEDescription(const char * path) {
     if (!clazz) {
 	Initialize();
 	if (!clazz) {
-	    return NULL;
+	    return nsnull;
 	}
     }
-    JNIEnv * env = PlugletEngine::GetJNIEnv();
+    nsCOMPtr<iPlugletEngine> plugletEngine;
+    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    if (NS_FAILED(rv)) {
+	return nsnull;
+    }
+    JNIEnv *env = nsnull;
+    rv = plugletEngine->GetJNIEnv(&env);
+    if (NS_FAILED(rv)) {
+	return nsnull;
+    }
     jstring jpath =  env->NewStringUTF(path);
     //nb check for null
     jstring mimeDescription = (jstring)env->CallStaticObjectMethod(clazz,getMIMEDescriptionMID,jpath);
     if (env->ExceptionOccurred()) {
         env->ExceptionDescribe();
-	return NULL;
+	return nsnull;
     }
     if (!mimeDescription) {
-	return NULL;
+	return nsnull;
     }
     
-    const char* str = env->GetStringUTFChars(mimeDescription,NULL);
-    char *res = NULL;
+    const char* str = env->GetStringUTFChars(mimeDescription,nsnull);
+    char *res = nsnull;
     if(str) {
 	res = new char[strlen(str)+1];
 	strcpy(res,str);
@@ -121,10 +150,20 @@ jobject PlugletLoader::GetPluglet(const char * path) {
     if (!clazz) {
 	Initialize();
 	if (!clazz) {
-	    return NULL;
+	    return nsnull;
 	}
     }    
-    JNIEnv * env = PlugletEngine::GetJNIEnv();
+    nsCOMPtr<iPlugletEngine> plugletEngine;
+    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    if (NS_FAILED(rv)) {
+	return nsnull;
+    }
+    JNIEnv *env = nsnull;
+    rv = plugletEngine->GetJNIEnv(&env);
+    if (NS_FAILED(rv)) {
+	return nsnull;
+    }
+
     jstring jpath =  env->NewStringUTF(path);
     jobject jpluglet = env->CallStaticObjectMethod(clazz,getPlugletMID,jpath);
     //nb check for jni exc

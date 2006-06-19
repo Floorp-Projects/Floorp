@@ -20,17 +20,28 @@
  */
 #include "nsISupports.h"
 #include "PlugletPeer.h"
-#include "PlugletEngine.h"
+#include "iPlugletEngine.h"
+#include "nsCOMPtr.h"
 
-jclass    PlugletPeer::clazz = NULL;
-jmethodID PlugletPeer::initMID = NULL;
+jclass    PlugletPeer::clazz = nsnull;
+jmethodID PlugletPeer::initMID = nsnull;
 
 void PlugletPeer::Initialize(void) {
-    JNIEnv * env = PlugletEngine::GetJNIEnv();
+    nsCOMPtr<iPlugletEngine> plugletEngine;
+    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    if (NS_FAILED(rv)) {
+	return;
+    }
+    JNIEnv *env = nsnull;
+    rv = plugletEngine->GetJNIEnv(&env);
+    if (NS_FAILED(rv)) {
+	return;
+    }
+
     clazz = env->FindClass("org/mozilla/pluglet/mozilla/PlugletPeerImpl");
     if (env->ExceptionOccurred()) {
 	env->ExceptionDescribe();
-        clazz = NULL;
+        clazz = nsnull;
 	return;
     }
     clazz = (jclass) env->NewGlobalRef(clazz);
@@ -38,32 +49,50 @@ void PlugletPeer::Initialize(void) {
     if (env->ExceptionOccurred()
 	|| !initMID) {
 	env->ExceptionDescribe();
-        clazz = NULL;
+        clazz = nsnull;
 	return;
     }
 }
 
 void PlugletPeer::Destroy(void) {
     //nb  who gonna cal it?
-    JNIEnv * env = PlugletEngine::GetJNIEnv();
+    nsCOMPtr<iPlugletEngine> plugletEngine;
+    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    if (NS_FAILED(rv)) {
+	return;
+    }
+    JNIEnv *env = nsnull;
+    rv = plugletEngine->GetJNIEnv(&env);
+    if (NS_FAILED(rv)) {
+	return;
+    }
     if(clazz) {
 	env->DeleteGlobalRef(clazz);
     }
 }
 
 jobject PlugletPeer::GetJObject(const nsIPluginInstancePeer *peer) {
-    jobject res = NULL;
-    JNIEnv *env = PlugletEngine::GetJNIEnv();
+    jobject res = nsnull;
+    nsCOMPtr<iPlugletEngine> plugletEngine;
+    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    if (NS_FAILED(rv)) {
+	return res;
+    }
+    JNIEnv *env = nsnull;
+    rv = plugletEngine->GetJNIEnv(&env);
+    if (NS_FAILED(rv)) {
+	return res;
+    }
     if(!clazz) {
 	Initialize();
 	if (! clazz) {
-	    return NULL;
+	    return nsnull;
 	}
     }
     res = env->NewObject(clazz,initMID,(jlong)peer);
     if (env->ExceptionOccurred()) {
 	env->ExceptionDescribe();
-	res = NULL;
+	res = nsnull;
     }
     return res;
 }

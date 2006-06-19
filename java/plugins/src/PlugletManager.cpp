@@ -19,13 +19,24 @@
  * Contributor(s): 
  */
 #include "PlugletManager.h"
-#include "PlugletEngine.h"
+#include "iPlugletEngine.h"
+#include "nsCOMPtr.h"
 
 jclass    PlugletManager::clazz = NULL;
 jmethodID PlugletManager::initMID = NULL;
 
 void PlugletManager::Initialize(void) {
-    JNIEnv * env = PlugletEngine::GetJNIEnv();
+    nsCOMPtr<iPlugletEngine> plugletEngine;
+    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    if (NS_FAILED(rv)) {
+	return;
+    }
+    JNIEnv *env = nsnull;
+    rv = plugletEngine->GetJNIEnv(&env);
+    if (NS_FAILED(rv)) {
+	return;
+    }
+
     clazz = env->FindClass("org/mozilla/pluglet/mozilla/PlugletManagerImpl");
     if (env->ExceptionOccurred()) {
 	env->ExceptionDescribe();
@@ -44,7 +55,17 @@ void PlugletManager::Initialize(void) {
 
 void PlugletManager::Destroy(void) {
     //nb  who gonna cal it?
-    JNIEnv * env = PlugletEngine::GetJNIEnv();
+    nsCOMPtr<iPlugletEngine> plugletEngine;
+    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    if (NS_FAILED(rv)) {
+	return;
+    }
+    JNIEnv *env = nsnull;
+    rv = plugletEngine->GetJNIEnv(&env);
+    if (NS_FAILED(rv)) {
+	return;
+    }
+
     if(clazz) {
 	env->DeleteGlobalRef(clazz);
     }
@@ -52,7 +73,17 @@ void PlugletManager::Destroy(void) {
 
 jobject PlugletManager::GetJObject(const nsIPluginManager *stream) {
     jobject res = NULL;
-    JNIEnv *env = PlugletEngine::GetJNIEnv();
+    nsCOMPtr<iPlugletEngine> plugletEngine;
+    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    if (NS_FAILED(rv)) {
+	return nsnull;
+    }
+    JNIEnv *env = nsnull;
+    rv = plugletEngine->GetJNIEnv(&env);
+    if (NS_FAILED(rv)) {
+	return nsnull;
+    }
+
     if(!clazz) {
 	Initialize();
 	if (! clazz) {

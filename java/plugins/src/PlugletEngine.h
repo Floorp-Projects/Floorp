@@ -21,9 +21,10 @@
 #ifndef __PlugletEngine_h__
 #define __PlugletEngine_h__
 #include "nsplugin.h"
-#include "jni.h"
 #include "nsIPluginManager.h"
+#include "nsIObserver.h"
 #include "PlugletsDir.h"
+#include "iPlugletEngine.h"
 #include "nsCOMPtr.h"
 
 #ifndef OJI_DISABLE
@@ -31,26 +32,18 @@
 #include "PlugletSecurityContext.h"
 #endif /* OJI_DISABLE */
 
-class PlugletEngine : public nsIPlugin {
+class PlugletEngine : public nsIObserver, public iPlugletEngine, public nsIPlugin {
  public:
-    NS_IMETHOD CreatePluginInstance(nsISupports *aOuter, REFNSIID aIID, 
-				    const char* aPluginMIMEType,
-				    void **aResult);
-    NS_IMETHOD CreateInstance(nsISupports *aOuter, const nsIID & iid, void * *_retval);
-    NS_IMETHOD LockFactory(PRBool aLock);
-    NS_IMETHOD Initialize(void);
-    NS_IMETHOD Shutdown(void); 
-    NS_IMETHOD GetMIMEDescription(const char* *result);
-    NS_IMETHOD GetValue(nsPluginVariable variable, void *value);
-    NS_DECL_ISUPPORTS
     PlugletEngine();
     virtual ~PlugletEngine(void);
-    static JNIEnv * GetJNIEnv(void);
-    static jobject GetPlugletManager(void);
-    static void IncObjectCount(void);
-    static void DecObjectCount(void);
-    static PRBool IsUnloadable(void);
-    static PlugletEngine * GetEngine(void);
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIOBSERVER
+    NS_DECL_IPLUGLETENGINE
+    NS_DECL_NSIPLUGIN
+    NS_DECL_NSIFACTORY
+
+    static PlugletEngine *_NewInstance();
+
  private:
     static int objectCount;
     static PRInt32 lockCount;

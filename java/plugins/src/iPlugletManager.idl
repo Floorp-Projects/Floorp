@@ -1,0 +1,17 @@
+#include "nsISupports.idl"
+
+%{C++
+#ifndef JNI_H
+#include "jni.h"
+#endif
+
+%}
+
+interface nsIPluginManager;
+
+[scriptable, uuid(b57bffe6-d9b5-4756-b698-4ea170ec4333)]
+interface iPlugletManager : nsISupports
+{
+    [noscript] void getJObject(in nsIPluginManager instancePeer,
+			       out voidPtr outEnv);
+};
