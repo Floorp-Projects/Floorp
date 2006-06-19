@@ -99,7 +99,7 @@ public:
                            PRBool*         aIsLeftFloat,
                            nsReflowStatus& aReflowStatus,
                            PRBool          aForceFit);
-  PRBool PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aFloats, PRBool aForceFit);
+  PRBool PlaceBelowCurrentLineFloats(nsFloatCacheList& aFloats, PRBool aForceFit);
 
   // Returns the first coordinate >= aY that clears the
   // indicated floats.
