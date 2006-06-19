@@ -52,6 +52,24 @@
 #include "nsCSSPseudoElements.h"
 #include "nsStyleSet.h"
 
+enum LineReflowStatus {
+  // The line was completely reflowed and fit in available width, and we should
+  // try to pull up content from the next line if possible.
+  LINE_REFLOW_OK,
+  // The line was completely reflowed and fit in available width, but we should
+  // not try to pull up content from the next line.
+  LINE_REFLOW_STOP,
+  // We need to reflow the line again at its current vertical position. The
+  // new reflow should not try to pull up any frames from the next line.
+  LINE_REFLOW_REDO_NO_PULL,
+  // We need to reflow the line again at a lower vertical postion where there
+  // may be more horizontal space due to different float configuration.
+  LINE_REFLOW_REDO_NEXT_BAND,
+  // The line did not fit in the available vertical space. Try pushing it to
+  // the next page or column if it's not the first line on the current page/column.
+  LINE_REFLOW_TRUNCATED
+};
+
 class nsBlockReflowState;
 class nsBulletFrame;
 class nsLineBox;
@@ -466,15 +484,16 @@ protected:
                                 nsLineLayout& aLineLayout,
                                 line_iterator aLine,
                                 PRBool* aKeepReflowGoing,
-                                PRUint8* aLineReflowStatus,
+                                LineReflowStatus* aLineReflowStatus,
                                 PRBool aUpdateMaximumWidth,
-                                PRBool aDamageDirtyArea);
+                                PRBool aDamageDirtyArea,
+                                PRBool aAllowPullUp);
 
   nsresult ReflowInlineFrame(nsBlockReflowState& aState,
                              nsLineLayout& aLineLayout,
                              line_iterator aLine,
                              nsIFrame* aFrame,
-                             PRUint8* aLineReflowStatus);
+                             LineReflowStatus* aLineReflowStatus);
 
   // An incomplete aReflowStatus indicates the float should be split
   // but only if the available height is constrained.
@@ -501,7 +520,8 @@ protected:
   nsresult SplitLine(nsBlockReflowState& aState,
                      nsLineLayout& aLineLayout,
                      line_iterator aLine,
-                     nsIFrame* aFrame);
+                     nsIFrame* aFrame,
+                     LineReflowStatus* aLineReflowStatus);
 
   nsresult PullFrame(nsBlockReflowState& aState,
                      line_iterator aLine,
