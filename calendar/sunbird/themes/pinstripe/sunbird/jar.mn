@@ -4,13 +4,12 @@ calendar.jar:
    skin/classic/calendar/toolbar-small.png
    skin/classic/calendar/prevnextarrow.png
 +  skin/classic/calendar/synch_animated.gif
-   skin/classic/calendar/pref/Options.png                           (pref/Options.png)
-   skin/classic/calendar/pref/pref.css                              (pref/pref.css)
    skin/classic/calendar/datetimepickers/left-arrow.png             (datetimepickers/left-arrow.png)
    skin/classic/calendar/datetimepickers/left-arrow-hover.png       (datetimepickers/left-arrow-hover.png)
    skin/classic/calendar/datetimepickers/right-arrow.png            (datetimepickers/right-arrow.png)
    skin/classic/calendar/datetimepickers/right-arrow-hover.png      (datetimepickers/right-arrow.png)
 +  skin/classic/calendar/datetimepickers/minimonth.css              (datetimepickers/minimonth.css)
+
 classic.jar:
    icon.png
    preview.png

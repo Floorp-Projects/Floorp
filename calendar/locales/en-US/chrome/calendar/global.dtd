@@ -109,3 +109,19 @@
 <!ENTITY add.label     "Add">
 <!ENTITY edit.label    "Edit">
 <!ENTITY remove.label  "Remove">
+
+<!-- Units -->
+<!ENTITY calendar.global.units.second   "second">
+<!ENTITY calendar.global.units.seconds  "seconds">
+<!ENTITY calendar.global.units.minute   "minute">
+<!ENTITY calendar.global.units.minutes  "minutes">
+<!ENTITY calendar.global.units.hour     "hour">
+<!ENTITY calendar.global.units.hours    "hours">
+<!ENTITY calendar.global.units.day      "day">
+<!ENTITY calendar.global.units.days     "days">
+<!ENTITY calendar.global.units.week     "week">
+<!ENTITY calendar.global.units.weeks    "weeks">
+<!ENTITY calendar.global.units.month    "month">
+<!ENTITY calendar.global.units.months   "months">
+<!ENTITY calendar.global.units.year     "year">
+<!ENTITY calendar.global.units.years    "years">

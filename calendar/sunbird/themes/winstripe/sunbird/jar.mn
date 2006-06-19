@@ -5,8 +5,6 @@ calendar.jar:
         skin/classic/calendar/prevnextarrow.png
         skin/classic/calendar/Throbber.png
         skin/classic/calendar/Throbber.gif
-        skin/classic/calendar/pref/Options.png                      (pref/Options.png)
-        skin/classic/calendar/pref/pref.css                         (pref/pref.css)
 +       skin/classic/calendar/datetimepickers/minimonth.css         (datetimepickers/minimonth.css)
         skin/classic/calendar/calendartoolbar.png
         skin/classic/calendar/calendartoolbar_small.png

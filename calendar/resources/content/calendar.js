@@ -483,10 +483,20 @@ function openAboutDialog()
   window.openDialog("chrome://calendar/content/aboutDialog.xul", "About", "modal,centerscreen,chrome,resizable=no");
 }
 
-function openPreferences()
-{
-  openDialog("chrome://calendar/content/pref/pref.xul","PrefWindow",
-             "chrome,titlebar,resizable,modal");
+function openPreferences() {
+    // Check to see if the prefwindow is already open
+    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                       .getService(Components.interfaces.nsIWindowMediator);
+
+    var win = wm.getMostRecentWindow("Calendar:Preferences");
+    var url = "chrome://calendar/content/preferences/preferences.xul";
+    var features = "chrome,titlebar,toolbar,centerscreen,dialog=no";
+
+    if (win) {
+        win.focus();
+    } else {
+        openDialog(url, "Preferences", features);
+    }
 }
 
 /**
