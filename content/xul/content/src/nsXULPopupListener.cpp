@@ -282,7 +282,7 @@ XULPopupListenerImpl::PreLaunchPopup(nsIDOMEvent* aMouseEvent)
   // Store clicked-on node in xul document for context menus and menu popups.
   // CLEAR THE POPUP EVENT BEFORE THIS FUNCTION EXITS
   xulDocument->SetPopupNode( targetNode );
-  xulDocument->SetPopupEvent( aMouseEvent );
+  xulDocument->SetTrustedPopupEvent( aMouseEvent );
 
   nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aMouseEvent));
 
@@ -310,7 +310,7 @@ XULPopupListenerImpl::PreLaunchPopup(nsIDOMEvent* aMouseEvent)
       aMouseEvent->PreventDefault();
       break;
   }
-  xulDocument->SetPopupEvent(nsnull);
+  xulDocument->SetTrustedPopupEvent(nsnull);
   return NS_OK;
 }
 
