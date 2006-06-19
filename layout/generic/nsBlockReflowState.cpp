@@ -1102,7 +1102,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache*   aFloatCache,
  * Place below-current-line floats.
  */
 PRBool
-nsBlockReflowState::PlaceBelowCurrentLineFloats(nsFloatCacheList& aList, PRBool aForceFit)
+nsBlockReflowState::PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aList, PRBool aForceFit)
 {
   nsFloatCache* fc = aList.Head();
   while (fc) {
