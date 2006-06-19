@@ -14,7 +14,7 @@
 # Contributor(s): Joel Peshkin <bugreport@peshkin.net>
 #                 Byron Jones <byron@glob.com.au>
 
-# testserver.pl is involked with the baseurl of the Bugzilla installation
+# testserver.pl is invoked with the baseurl of the Bugzilla installation
 # as its only argument.  It attempts to troubleshoot as many installation
 # issues as possible.
 
