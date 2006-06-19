@@ -80,7 +80,7 @@ public:
         return mWeights[aWeight - 1];
     }
     void SetWeight(PRUint8 aWeight, PRBool aValue) {
-        mWeights[aWeight - 1] = aValue;
+        mWeights[aWeight - 1] = (aValue == PR_TRUE);
         mWeights[aWeight - 1 + 10] = PR_TRUE;
     }
 
@@ -289,7 +289,7 @@ public:
         if (aLangGroup.IsEmpty())
             return PR_TRUE;
 
-        PRUint8 bit = 0;
+        PRInt16 bit = -1;
 
         /* map our langgroup names in to Windows charset bits */
         if (aLangGroup.EqualsLiteral("x-western")) {
@@ -324,8 +324,10 @@ public:
             bit = SYMBOL_CHARSET;
         }
 
-        if (mCharset[bit])
-            return PR_TRUE;
+        if (bit != -1)
+            return mCharset[bit];
+
+        return PR_FALSE;
     }
 
     PRBool SupportsRange(PRUint8 range) {

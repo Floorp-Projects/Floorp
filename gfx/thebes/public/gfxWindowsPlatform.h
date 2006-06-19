@@ -68,7 +68,7 @@ public:
 
     /* local methods */
     void GetPrefFonts(const char *aLangGroup, nsString& array);
-    void FindOtherFonts(const PRUnichar *aString, PRUint32 aLength, const char *aGeneric, nsString& array);
+    void FindOtherFonts(const PRUnichar *aString, PRUint32 aLength, const char *aLangGroup, const char *aGeneric, nsString& array);
 
     WeightTable *GetFontWeightTable(const nsAString& aName);
     void PutFontWeightTable(const nsAString& aName, WeightTable *aWeightTable);
