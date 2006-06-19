@@ -77,12 +77,11 @@ var InlineSpellCheckerUI = {
 
   // for each UI event, you must call this function, it will compute the
   // word the cursor is over
-  initFromEvent: function(event)
+  initFromEvent: function(rangeParent, rangeOffset)
   {
     this.mOverMisspelling = false;
-    this.mEvent = event;
 
-    if (! this.mInlineSpellChecker || ! (event instanceof UIEvent))
+    if (! this.mInlineSpellChecker)
       return;
 
     var selcon = this.mEditor.selectionController;
@@ -90,15 +89,15 @@ var InlineSpellCheckerUI = {
     if (spellsel.rangeCount == 0)
       return; // easy case - no misspellings
 
-    var range = this.mInlineSpellChecker.getMispelledWord(event.rangeParent,
-                                                          event.rangeOffset);
+    var range = this.mInlineSpellChecker.getMispelledWord(rangeParent,
+                                                          rangeOffset);
     if (! range)
       return; // not over a misspelled word
 
     this.mMisspelling = range.toString();
     this.mOverMisspelling = true;
-    this.mWordNode = event.rangeParent;
-    this.mWordOffset = event.rangeOffset;
+    this.mWordNode = rangeParent;
+    this.mWordOffset = rangeOffset;
   },
 
   // returns false if there should be no spellchecking UI enabled at all, true

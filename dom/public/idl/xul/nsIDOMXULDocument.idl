@@ -42,18 +42,21 @@
 interface nsIDOMXULCommandDispatcher;
 interface nsIObserver;
 
-[scriptable, uuid(741d56f3-f347-4559-aa27-b8f684854baf)]
+[scriptable, uuid(a521baa9-0745-453a-9049-03c1a2241378)]
 interface nsIDOMXULDocument : nsISupports
 {
-           attribute nsIDOMNode                 popupNode;
+  attribute nsIDOMNode                          popupNode;
 
-           /**
-            * The event that triggered the popup. This is only valid during
-            * the popup showing event.
-            */
-           attribute nsIDOMEvent                popupEvent;
+  /**
+   * These attributes correspond to trustedGetPopupNode().rangeOffset and
+   * rangeParent. They will help you find where in the DOM the popup is
+   * happening. Can be accessed from chrome only, and only during a popup
+   * event. Accessing any other time will be an error.
+   */
+  readonly attribute nsIDOMNode                 popupRangeParent;
+  readonly attribute long                       popupRangeOffset;
 
-           attribute nsIDOMNode                 tooltipNode;
+  attribute nsIDOMNode                          tooltipNode;
 
   readonly attribute nsIDOMXULCommandDispatcher commandDispatcher;
 
@@ -103,4 +106,9 @@ interface nsIDOMXULDocument : nsISupports
    * Like trustedGetPopupNode, but gets the tooltip node instead.
    */
   [noscript] nsIDOMNode     trustedGetTooltipNode();
+
+  /**
+   * Like trustedGetPopupNode, but gets the 
+   */
+  [noscript] attribute nsIDOMEvent trustedPopupEvent;
 };

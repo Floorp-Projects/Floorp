@@ -339,7 +339,8 @@
               return;
             }
 
-            spellui.initFromEvent(document.popupEvent);
+            spellui.initFromEvent(document.popupRangeParent,
+                                  document.popupRangeOffset);
 
             var enabled = spellui.enabled;
             document.getAnonymousElementByAttribute(this, "anonid",
