@@ -1813,6 +1813,8 @@ HTMLContentSink::~HTMLContentSink()
   NS_IF_RELEASE(mRoot);
 
   if (mDocument) {
+    // Remove ourselves just to be safe, though we really should have
+    // been removed in DidBuildModel if everything worked right.
     mDocument->RemoveObserver(this);
   }
   NS_IF_RELEASE(mHTMLDocument);
@@ -2171,6 +2173,13 @@ HTMLContentSink::DidBuildModel(void)
     loader->RemoveObserver(this);
   }
 
+  // Make sure we no longer respond to document mutations.  We've flushed all
+  // our notifications out, so there's no need to do anything else here.
+
+  // XXXbz I wonder whether we could End() our contexts here too, or something,
+  // just to make sure we no longer notify...
+  mDocument->RemoveObserver(this);
+  
   mDocument->EndLoad();
 
   // Ref. Bug 49115
