@@ -133,6 +133,10 @@ function initServices()
   kIOIID            = Components.interfaces.nsIIOService;
   IOSVC             = Components.classes[kIOContractID].getService(kIOIID);
   
+  kMICSUMContractID = "@mozilla.org/microsummary/service;1";
+  kMICSUMIID        = Components.interfaces.nsIMicrosummaryService;
+  MICSUMSVC         = Components.classes[kMICSUMContractID].getService(kMICSUMIID);
+  
   gBmProperties     = [RDF.GetResource(gNC_NS+"Name"),
                        RDF.GetResource(gNC_NS+"URL"),
                        RDF.GetResource(gNC_NS+"ShortcutURL"),
@@ -308,6 +312,7 @@ var BookmarksCommand = {
     // delete
     // ---------------------
     // bm_refreshlivemark
+    // bm_refreshmicrosummary
     // bm_sortbyname
     // ---------------------
     // bm_properties
@@ -326,6 +331,10 @@ var BookmarksCommand = {
                   "delete", "bm_separator",
                   "bm_sortbyname", "bm_separator",
                   "bm_properties"];
+      // If this bookmark has a microsummary, add a command for refreshing it
+      // right before the "sort by name" (bm_sortbyname) command.
+      if (MICSUMSVC.hasMicrosummary(aNodeID))
+        commands.splice(14, 0, "bm_refreshmicrosummary");
       break;
     case "Folder":
     case "PersonalToolbarFolder":
@@ -965,6 +974,14 @@ var BookmarksCommand = {
     }
   },
 
+  refreshMicrosummary: function (aSelection)
+  {
+    for (var i = 0; i < aSelection.length; i++) {
+      rsrc = RDF.GetResource(aSelection.item[i].Value);
+      MICSUMSVC.refreshMicrosummary(rsrc);
+    }
+  },
+
   sortByName: function (aSelection)
   {
     // do the real sorting in a timeout, to make sure that
@@ -1090,6 +1107,7 @@ var BookmarksController = {
     case "cmd_bm_export":
     case "cmd_bm_movebookmark":
     case "cmd_bm_refreshlivemark":
+    case "cmd_bm_refreshmicrosummary":
     case "cmd_bm_sortbyname":
       isCommandSupported = true;
       break;
@@ -1199,6 +1217,12 @@ var BookmarksController = {
           return false;
       }
       return length > 0;
+    case "cmd_bm_refreshmicrosummary":
+      for (i=0; i<length; ++i) {
+        if (!MICSUMSVC.hasMicrosummary(aSelection.item[i]))
+          return false;
+      }
+      return length > 0;
     case "cmd_bm_sortbyname":
       if (length == 1 && (aSelection.type[0] == "Folder" ||
                           aSelection.type[0] == "Bookmark" ||
@@ -1293,6 +1317,9 @@ var BookmarksController = {
     case "cmd_bm_refreshlivemark":
       BookmarksCommand.refreshLivemark(aSelection);
       break;
+    case "cmd_bm_refreshmicrosummary":
+      BookmarksCommand.refreshMicrosummary(aSelection);
+      break;
     case "cmd_bm_sortbyname":
       BookmarksCommand.sortByName(aSelection);
       break;
@@ -1308,7 +1335,8 @@ var BookmarksController = {
                     "cmd_undo", "cmd_redo", "cmd_bm_properties", "cmd_bm_rename", 
                     "cmd_copy", "cmd_paste", "cmd_cut", "cmd_delete",
                     "cmd_bm_setpersonaltoolbarfolder", "cmd_bm_movebookmark",
-                    "cmd_bm_openfolder", "cmd_bm_managefolder", "cmd_bm_refreshlivemark", "cmd_bm_sortbyname"];
+                    "cmd_bm_openfolder", "cmd_bm_managefolder", "cmd_bm_refreshlivemark",
+                    "cmd_bm_refreshmicrosummary", "cmd_bm_sortbyname"];
     for (var i = 0; i < commands.length; ++i) {
       var enabled = this.isCommandEnabled(commands[i], aSelection, aTarget);
       var commandNode = document.getElementById(commands[i]);
