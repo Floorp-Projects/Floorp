@@ -63,6 +63,8 @@ CPPSRCS		= \
 		nsAboutRedirector.cpp \
 		$(NULL)
 
+LOCAL_INCLUDES=-I$(srcdir)/../../../base/src
+
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.
 FORCE_STATIC_LIB = 1

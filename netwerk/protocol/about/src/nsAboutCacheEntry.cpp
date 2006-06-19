@@ -129,6 +129,13 @@ nsAboutCacheEntry::NewChannel(nsIURI *uri, nsIChannel **result)
                                     NS_LITERAL_CSTRING("utf-8"));
 }
 
+NS_IMETHODIMP
+nsAboutCacheEntry::GetURIFlags(nsIURI *aURI, PRUint32 *result)
+{
+    *result = 0;
+    return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 // nsAboutCacheEntry
 

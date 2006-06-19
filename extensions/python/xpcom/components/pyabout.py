@@ -63,3 +63,6 @@ class AboutPython:
         #channel.contentType = "text/html"
         channel.contentStream = istream
         return channel
+
+    def getURIFlags(self, aURI):
+        return 0;

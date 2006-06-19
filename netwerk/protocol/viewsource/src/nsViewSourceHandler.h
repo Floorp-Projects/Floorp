@@ -40,9 +40,6 @@
 #define nsViewSourceHandler_h___
 
 #include "nsIProtocolHandler.h"
-#include "nsCOMPtr.h"
-#include "nsSimpleURI.h"
-#include "nsINestedURI.h"
 
 class nsViewSourceHandler : public nsIProtocolHandler
 {
@@ -50,51 +47,5 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPROTOCOLHANDLER
 };
-
-#define NS_VIEWSOURCEURI_CID                             \
-{ /* 2545766f-3a27-4fd1-8e88-b0886d346242 */             \
-     0x2545766f,                                         \
-     0x3a27,                                             \
-     0x4fd1,                                             \
-     { 0x8e, 0x88, 0xb0, 0x88, 0x6d, 0x34, 0x62, 0x42 }  \
-}
-
-class nsViewSourceURI : public nsSimpleURI,
-                        public nsINestedURI
-{
-public:
-  nsViewSourceURI(nsIURI* innerURI)
-    : nsSimpleURI(nsnull),
-      mInnerURI(innerURI)
-  {
-    NS_ASSERTION(innerURI, "Must have inner URI");
-  }
-
-  // To be used by deserialization only
-  nsViewSourceURI()
-    : nsSimpleURI(nsnull)
-  {
-  }
-
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSINESTEDURI
-
-  // Overrides for various methods nsSimpleURI implements follow.
-  
-  // nsIURI overrides
-  NS_IMETHOD Equals(nsIURI* other, PRBool *result);
-  virtual nsSimpleURI* StartClone();
-
-  // nsISerializable overrides -- we can use the same Write(), but we
-  // need a different Read().
-  NS_IMETHOD Read(nsIObjectInputStream* aStream);
-
-  // Override the nsIClassInfo method GetClassIDNoAlloc to make sure our
-  // nsISerializable impl works right.
-  NS_IMETHOD GetClassIDNoAlloc(nsCID *aClassIDNoAlloc);  
-
-protected:
-  nsCOMPtr<nsIURI> mInnerURI;  
-};                        
 
 #endif /* !defined( nsViewSourceHandler_h___ ) */

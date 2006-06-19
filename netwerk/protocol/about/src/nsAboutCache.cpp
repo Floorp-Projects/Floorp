@@ -139,6 +139,12 @@ nsAboutCache::NewChannel(nsIURI *aURI, nsIChannel **result)
     return rv;
 }
 
+NS_IMETHODIMP
+nsAboutCache::GetURIFlags(nsIURI *aURI, PRUint32 *result)
+{
+    *result = 0;
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 nsAboutCache::VisitDevice(const char *deviceID,

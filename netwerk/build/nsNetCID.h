@@ -113,6 +113,16 @@
      {0x8c, 0xd0, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }
 
+// component inheriting from the simple URI component and also
+// implementing nsINestedURI.
+#define NS_SIMPLENESTEDURI_CID                           \
+{ /* 56388dad-287b-4240-a785-85c394012503 */             \
+     0x56388dad,                                         \
+     0x287b,                                             \
+     0x4240,                                             \
+     { 0xa7, 0x85, 0x85, 0xc3, 0x94, 0x01, 0x25, 0x03 }  \
+}
+
 // component implementing nsIStandardURL, nsIURI, nsIURL, nsISerializable,
 // and nsIClassInfo.
 #define NS_STANDARDURL_CLASSNAME \
@@ -599,6 +609,30 @@
     0x23f9,                                          \
     0x11d5,                                          \
     {0xae, 0xa8, 0x8f, 0xcc, 0x07, 0x93, 0xe9, 0x7f} \
+}
+
+/******************************************************************************
+ * netwerk/protocol/about/ classes
+ */
+
+#define NS_ABOUTPROTOCOLHANDLER_CLASSNAME \
+    "About Protocol Handler"
+#define NS_ABOUTPROTOCOLHANDLER_CID                  \
+{ /* 9e3b6c90-2f75-11d3-8cd0-0060b0fc14a3 */         \
+    0x9e3b6c90,                                      \
+    0x2f75,                                          \
+    0x11d3,                                          \
+    {0x8c, 0xd0, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
+}
+
+#define NS_SAFEABOUTPROTOCOLHANDLER_CLASSNAME \
+    "Safe About Protocol Handler"
+#define NS_SAFEABOUTPROTOCOLHANDLER_CID              \
+{ /* 1423e739-782c-4081-b5d8-fe6fba68c0ef */         \
+    0x1423e739,                                      \
+    0x782c,                                          \
+    0x4081,                                          \
+    {0xb5, 0xd8, 0xfe, 0x6f, 0xba, 0x68, 0xc0, 0xef} \
 }
 
 /******************************************************************************

@@ -1201,25 +1201,6 @@ nsScriptSecurityManager::GetBaseURIScheme(nsIURI* aURI,
     rv = uri->GetScheme(aScheme);
     if (NS_FAILED(rv)) return rv;
 
-    //-- if aURI is an about uri, distinguish 'safe' and 'unsafe' about URIs
-    if(aScheme.EqualsLiteral("about"))
-    {
-        nsCAutoString path;
-        rv = NS_GetAboutModuleName(uri, path);
-        NS_ENSURE_SUCCESS(rv, rv);
-        if (path.EqualsLiteral("blank")   ||
-            path.EqualsLiteral("mozilla") ||
-            path.EqualsLiteral("logo")    ||
-            path.EqualsLiteral("license") ||
-            path.EqualsLiteral("licence") ||
-            path.EqualsLiteral("credits") ||
-            path.EqualsLiteral("neterror"))
-        {
-            aScheme = NS_LITERAL_CSTRING("about safe");
-            return NS_OK;
-        }
-    }
-
     return NS_OK;
 }
 
@@ -1334,8 +1315,8 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
         { "news",            AllowProtocol  },
         { "javascript",      AllowProtocol  },
         { "ftp",             AllowProtocol  },
-        { "about safe",      AllowProtocol  },
-        { "about",           ChromeProtocol },
+        { "moz-safe-about",  AllowProtocol  },
+        { "about",           DenyProtocol   },
         { "mailto",          AllowProtocol  },
         { "aim",             AllowProtocol  },
         { "data",            AllowProtocol  },
@@ -1365,6 +1346,8 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
             case PrefControlled:
                 {
                     // resource: and chrome: are equivalent, securitywise
+                    // That's bogus!!  Fix this.  But watch out for
+                    // the view-source stylesheet?
                     if (sourceScheme.EqualsLiteral("chrome") ||
                         sourceScheme.EqualsLiteral("resource"))
                         return NS_OK;
@@ -1390,6 +1373,8 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
                 if (aFlags & nsIScriptSecurityManager::ALLOW_CHROME)
                     return NS_OK;
                 // resource: and chrome: are equivalent, securitywise
+                // That's bogus!!  Fix this.  But watch out for
+                // the view-source stylesheet?
                 if (sourceScheme.EqualsLiteral("chrome") ||
                     sourceScheme.EqualsLiteral("resource"))
                     return NS_OK;
