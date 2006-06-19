@@ -245,7 +245,7 @@ sub column_info_to_column {
     if (defined $column_info->{COLUMN_DEF}) {
         # The defaults that MySQL inputs automatically are usually
         # something that would be considered "false" by perl, either
-        # a 0 or an empty string. (Except for ddatetime and decimal
+        # a 0 or an empty string. (Except for datetime and decimal
         # fields, which have their own special auto-defaults.)
         #
         # Here's how we handle this: If it exists in the schema
