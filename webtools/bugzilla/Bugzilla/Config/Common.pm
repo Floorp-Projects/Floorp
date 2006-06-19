@@ -236,7 +236,7 @@ sub check_netmask {
     # Note that if we changed the netmask from anything apart from 32, then
     # existing logincookies which aren't for a single IP won't work
     # any more. We can't know which ones they are, though, so they'll just
-    # take space until they're preiodically cleared, later.
+    # take space until they're periodically cleared, later.
 
     return "";
 }
