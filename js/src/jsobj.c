@@ -3673,10 +3673,12 @@ js_SetIdArrayLength(JSContext *cx, JSIdArray *ida, jsint length)
 }
 
 /* Private type used to iterate over all properties of a native JS object */
-typedef struct JSNativeIteratorState {
-    jsint next_index;   /* index into jsid array */
-    JSIdArray *ida;     /* all property ids in enumeration */
-} JSNativeIteratorState;
+struct JSNativeIteratorState {
+    jsint                   next_index; /* index into jsid array */
+    JSIdArray               *ida;       /* all property ids in enumeration */
+    JSNativeIteratorState   *next;      /* double-linked list support */
+    JSNativeIteratorState   **prevp;
+};
 
 /*
  * This function is used to enumerate the properties of native JSObjects
@@ -3772,6 +3774,13 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         }
         state->ida = ida;
         state->next_index = 0;
+
+        state->next = cx->nativeIteratorStates;
+        if (state->next)
+            state->next->prevp = &state->next;
+        state->prevp = &cx->nativeIteratorStates;
+        *state->prevp = state;
+
         *statep = PRIVATE_TO_JSVAL(state);
         if (idp)
             *idp = INT_TO_JSVAL(length);
@@ -3789,28 +3798,43 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 
       case JSENUMERATE_DESTROY:
         state = (JSNativeIteratorState *) JSVAL_TO_PRIVATE(*statep);
+
+        JS_ASSERT(cx->nativeIteratorStates);
+        JS_ASSERT(*state->prevp == state);
+        if (state->next) {
+            JS_ASSERT(state->next->prevp == &state->next);
+            state->next->prevp = state->prevp;
+        }
+        *state->prevp = state->next;
+
         JS_DestroyIdArray(cx, state->ida);
         JS_free(cx, state);
         *statep = JSVAL_NULL;
         break;
+    }
+    return JS_TRUE;
+}
 
-      case JSENUMERATE_MARK:
-        state = (JSNativeIteratorState *) JSVAL_TO_PRIVATE(*statep);
-        ida = state->ida;
-        length = ida->length;
-        for (i = 0; i < length; i++) {
-            jsid id;
+void
+js_MarkNativeIteratorStates(JSContext *cx, JSNativeIteratorState *state)
+{
+    jsid *cursor, *end, id;
 
-            id = ida->vector[i];
+    JS_ASSERT(state);
+
+    do {
+        JS_ASSERT(*state->prevp == state);
+        cursor = state->ida->vector;
+        end = cursor + state->ida->length;
+        for (; cursor != end; ++cursor) {
+            id = *cursor;
             if (JSID_IS_ATOM(id)) {
                 GC_MARK_ATOM(cx, JSID_TO_ATOM(id));
             } else if (JSID_IS_OBJECT(id)) {
                 GC_MARK(cx, JSID_TO_OBJECT(id), "ida->vector[i]");
             }
         }
-        break;
-    }
-    return JS_TRUE;
+    } while ((state = state->next) != NULL);
 }
 
 JSBool

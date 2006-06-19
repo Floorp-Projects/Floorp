@@ -498,6 +498,14 @@ extern JSBool
 js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
              jsval *statep, jsid *idp);
 
+/*
+ * js_Enumerate uses this opaque structure to hold its state.
+ */
+typedef struct JSNativeIteratorState JSNativeIteratorState;
+
+extern void
+js_MarkNativeIteratorStates(JSContext *cx, JSNativeIteratorState *state);
+
 extern JSBool
 js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
                jsval *vp, uintN *attrsp);
