@@ -38,7 +38,7 @@
 #
 # You need to work with bug_email.pl the MIME::Parser installed.
 # 
-# $Id: bug_email.pl,v 1.35 2006/05/29 17:24:54 lpsolit%gmail.com Exp $
+# $Id: bug_email.pl,v 1.36 2006/06/19 16:02:18 vladd%bugzilla.org Exp $
 ###############################################################
 
 # 02/12/2000 (SML)
@@ -248,7 +248,7 @@ sub Reply( $$$$ ) {
 ###############################################################
 # getEnumList
 # Queries the Database for the table description and figures the
-# enum-settings out - usefull for checking fields for enums like
+# enum-settings out - useful for checking fields for enums like
 # prios 
 sub getEnumList( $ )
 {
