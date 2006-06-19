@@ -681,8 +681,21 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
   if (frame.mPreviousFeed)
     return;
 
-  // create the bookmarks
-  mBookmarksService->InsertItem(frame.mContainerID, frame.mPreviousLink, -1);
+  // create the bookmark, but only if it is not in the folder already. If it
+  // is already in the folder, we'll override the titles and favicons, but we
+  // won't want to put it at the end again
+  nsTArray<PRInt64> currentFolders;
+  mBookmarksService->GetBookmarkFoldersTArray(frame.mPreviousLink,
+                                              &currentFolders);
+  PRBool hasBookmark = PR_FALSE;
+  for (PRUint32 curFolder = 0; curFolder < currentFolders.Length(); curFolder ++) {
+    if (currentFolders[curFolder] == frame.mContainerID) {
+      hasBookmark = PR_TRUE;
+      break;
+    }
+  }
+  if (! hasBookmark)
+    mBookmarksService->InsertItem(frame.mContainerID, frame.mPreviousLink, -1);
 
   // save the favicon, ignore errors
   if (! icon.IsEmpty() || ! iconUri.IsEmpty()) {
@@ -794,11 +807,10 @@ BookmarkContentSink::NewFrame()
       }
       break;
     case BookmarkImportFrame::Container_Places:
-      // places root
+      // places root, never reparent here, when we're building the initial
+      // hierarchy, it will only be defined at the top level
       rv = mBookmarksService->GetPlacesRoot(&ourID);
       NS_ENSURE_SUCCESS(rv, rv);
-      if (mAllowRootChanges)
-        updateFolder = PR_TRUE;
       break;
     case BookmarkImportFrame::Container_Menu:
       // menu root
