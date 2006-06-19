@@ -98,6 +98,7 @@ public:
                                      nsIStreamListener **aDocListener,
                                      PRBool aReset = PR_TRUE,
                                      nsIContentSink* aSink = nsnull);
+  virtual void StopDocumentLoad();
 
   virtual void EndLoad();
 
