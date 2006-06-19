@@ -98,7 +98,7 @@ if ($cgi->param('t')) {
 
 # If the user is requesting a password change, make sure they submitted
 # their login name and it exists in the database, and that the DB module is in
-# the list of allowed verification methids.
+# the list of allowed verification methods.
 if ( $::action eq 'reqpw' ) {
     defined $cgi->param('loginname')
       || ThrowUserError("login_needed_for_password_change");
