@@ -1758,11 +1758,11 @@ nsParser::OnStartRequest(nsIRequest *request, nsISupports* aContext)
   nsresult rv;
   nsCAutoString contentType;
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-  NS_ASSERTION(channel, "parser needs a channel to find a dtd");
-
-  rv = channel->GetContentType(contentType);
-  if (NS_SUCCEEDED(rv)) {
-    mParserContext->SetMimeType(contentType);
+  if (channel) {
+    rv = channel->GetContentType(contentType);
+    if (NS_SUCCEEDED(rv)) {
+      mParserContext->SetMimeType(contentType);
+    }
   }
 
   rv = NS_OK;
