@@ -345,7 +345,7 @@ foreach my $field ("dependson", "blocked") {
         foreach my $id (split(/[\s,]+/, $cgi->param($field))) {
             next unless $id;
             # $field is not passed to ValidateBugID to prevent adding new 
-            # dependencies on inacessible bugs.
+            # dependencies on inaccessible bugs.
             ValidateBugID($id);
             push(@validvalues, $id);
         }
