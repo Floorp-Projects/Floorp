@@ -334,7 +334,7 @@ sub bz_setup_database {
     }
 }
 
-# The defauly implementation just returns what you passed-in. This function
+# The default implementation just returns what you passed-in. This function
 # really exists just to be overridden in Bugzilla::DB::Mysql.
 sub bz_enum_initial_values {
     my ($self, $enum_defaults) = @_;
