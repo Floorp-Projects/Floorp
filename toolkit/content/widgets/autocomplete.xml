@@ -516,7 +516,10 @@
 
       <handler event="blur" phase="capturing"
                action="if (!this._dontBlur) this.detachController();"/>
-               
+
+      <handler event="contextmenu" phase="capturing"
+               action="this.closePopup();"/>
+
     </handlers>
   </binding> 
 

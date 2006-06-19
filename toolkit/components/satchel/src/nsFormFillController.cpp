@@ -86,6 +86,7 @@ NS_INTERFACE_MAP_BEGIN(nsFormFillController)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMLoadListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCompositionListener)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMContextMenuListener)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIFormFillController)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMFocusListener)
 NS_INTERFACE_MAP_END
@@ -220,7 +221,7 @@ nsFormFillController::SetPopupOpen(PRBool aPopupOpen)
     } else
       mFocusedPopup->ClosePopup();
   }
-    
+
   return NS_OK;
 }
 
@@ -875,6 +876,14 @@ nsFormFillController::Error(nsIDOMEvent *aLoadEvent)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFormFillController::ContextMenu(nsIDOMEvent* aContextMenuEvent)
+{
+  if (mFocusedPopup)
+    mFocusedPopup->ClosePopup();
+  return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////
 //// nsFormFillController
 
@@ -894,9 +903,9 @@ nsFormFillController::AddWindowListeners(nsIDOMWindow *aWindow)
   if (!target)
     return;
 
-    target->AddEventListener(NS_LITERAL_STRING("focus"),
-                             NS_STATIC_CAST(nsIDOMFocusListener *, this),
-                             PR_TRUE);
+  target->AddEventListener(NS_LITERAL_STRING("focus"),
+                           NS_STATIC_CAST(nsIDOMFocusListener *, this),
+                           PR_TRUE);
 
   target->AddEventListener(NS_LITERAL_STRING("blur"),
                            NS_STATIC_CAST(nsIDOMFocusListener *, this),
@@ -925,6 +934,10 @@ nsFormFillController::AddWindowListeners(nsIDOMWindow *aWindow)
   target->AddEventListener(NS_LITERAL_STRING("compositionend"),
                            NS_STATIC_CAST(nsIDOMCompositionListener *, this),
                            PR_TRUE);
+
+  target->AddEventListener(NS_LITERAL_STRING("contextmenu"),
+                           NS_STATIC_CAST(nsIDOMContextMenuListener *, this),
+                           PR_TRUE);
 }
 
 void
@@ -946,8 +959,8 @@ nsFormFillController::RemoveWindowListeners(nsIDOMWindow *aWindow)
     return;
 
   target->RemoveEventListener(NS_LITERAL_STRING("focus"),
-                            NS_STATIC_CAST(nsIDOMFocusListener *, this),
-                            PR_TRUE);
+                              NS_STATIC_CAST(nsIDOMFocusListener *, this),
+                              PR_TRUE);
 
   target->RemoveEventListener(NS_LITERAL_STRING("blur"),
                               NS_STATIC_CAST(nsIDOMFocusListener *, this),
@@ -976,6 +989,10 @@ nsFormFillController::RemoveWindowListeners(nsIDOMWindow *aWindow)
   target->RemoveEventListener(NS_LITERAL_STRING("compositionend"),
                               NS_STATIC_CAST(nsIDOMCompositionListener *, this),
                               PR_TRUE);
+
+  target->RemoveEventListener(NS_LITERAL_STRING("contextmenu"),
+                              NS_STATIC_CAST(nsIDOMContextMenuListener *, this),
+                              PR_TRUE);
 }
 
 void
@@ -983,7 +1000,7 @@ nsFormFillController::AddKeyListener(nsIDOMHTMLInputElement *aInput)
 {
   if (!aInput)
     return;
-    
+
     nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(aInput);
 
     target->AddEventListener(NS_LITERAL_STRING("keypress"),

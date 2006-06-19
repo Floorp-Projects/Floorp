@@ -51,6 +51,7 @@
 #include "nsIDOMFormListener.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMLoadListener.h"
+#include "nsIDOMContextMenuListener.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
 #include "nsIDocShell.h"
@@ -67,7 +68,8 @@ class nsFormFillController : public nsIFormFillController,
                              public nsIDOMCompositionListener,
                              public nsIDOMFormListener,
                              public nsIDOMMouseListener,
-                             public nsIDOMLoadListener
+                             public nsIDOMLoadListener,
+                             public nsIDOMContextMenuListener
 {
 public:
   NS_DECL_ISUPPORTS
@@ -113,6 +115,9 @@ public:
   NS_IMETHOD Unload(nsIDOMEvent *aLoadEvent);
   NS_IMETHOD Abort(nsIDOMEvent *aLoadEvent);
   NS_IMETHOD Error(nsIDOMEvent *aLoadEvent);
+
+  // nsIDOMContextMenuListener
+  NS_IMETHOD ContextMenu(nsIDOMEvent* aContextMenuEvent);
 
   nsFormFillController();
   virtual ~nsFormFillController();
