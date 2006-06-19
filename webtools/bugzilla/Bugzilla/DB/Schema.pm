@@ -1160,7 +1160,7 @@ sub _adjust_schema {
     # Loop over each table in the abstract database schema.
     foreach my $table (keys %{ $self->{schema} }) {
         my %fields = (@{ $self->{schema}{$table}{FIELDS} });
-        # Loop over the field defintions in each table.
+        # Loop over the field definitions in each table.
         foreach my $field_def (values %fields) {
             # If the field type is an abstract data type defined in the
             # $db_specific hash, replace it with the DBMS-specific data type
