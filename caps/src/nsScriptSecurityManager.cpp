@@ -1254,14 +1254,6 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
     nsresult rv = GetBaseURIScheme(sourceURI, sourceScheme);
     if (NS_FAILED(rv)) return rv;
 
-    NS_NAMED_LITERAL_STRING(errorTag, "CheckLoadURIError");
-
-    // Don't allow null principals to load anything
-    if (sourceScheme.LowerCaseEqualsLiteral(NS_NULLPRINCIPAL_SCHEME)) {
-        ReportError(nsnull, errorTag, sourceURI, aTargetURI);
-        return NS_ERROR_DOM_BAD_URI;
-    }
-
     // Some loads are not allowed from mail/news messages
     if ((aFlags & nsIScriptSecurityManager::DISALLOW_FROM_MAIL) &&
         (sourceScheme.LowerCaseEqualsLiteral("mailbox") ||
@@ -1287,9 +1279,11 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
     }
 
     if (targetScheme.Equals(sourceScheme,
-                            nsCaseInsensitiveCStringComparator()))
+                            nsCaseInsensitiveCStringComparator()) &&
+        !sourceScheme.LowerCaseEqualsLiteral(NS_NULLPRINCIPAL_SCHEME))
     {
-        // every scheme can access another URI from the same scheme
+        // every scheme can access another URI from the same scheme,
+        // as long as they don't represent null principals.
         return NS_OK;
     }
 
@@ -1334,6 +1328,7 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
         { NS_NULLPRINCIPAL_SCHEME, DenyProtocol }
     };
 
+    NS_NAMED_LITERAL_STRING(errorTag, "CheckLoadURIError");
     for (unsigned i=0; i < sizeof(protocolList)/sizeof(protocolList[0]); i++)
     {
         if (targetScheme.LowerCaseEqualsASCII(protocolList[i].name))

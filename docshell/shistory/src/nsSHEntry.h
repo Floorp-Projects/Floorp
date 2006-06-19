@@ -104,6 +104,7 @@ private:
   nsRect                          mViewerBounds;
   nsVoidArray                     mChildShells;
   nsCOMPtr<nsISupportsArray>      mRefreshURIList;
+  nsCOMPtr<nsISupports>           mOwner;
 };
 
 #endif /* nsSHEntry_h */

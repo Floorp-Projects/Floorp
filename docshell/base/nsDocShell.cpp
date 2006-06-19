@@ -7582,6 +7582,7 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
     nsCOMPtr<nsIURI> referrerURI;
     nsCOMPtr<nsISupports> cacheKey;
     nsCOMPtr<nsISupports> cacheToken;
+    nsCOMPtr<nsISupports> owner;
     PRBool expired = PR_FALSE;
     PRBool discardLayoutState = PR_FALSE;
     if (aChannel) {
@@ -7609,6 +7610,7 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
 
             discardLayoutState = ShouldDiscardLayoutState(httpChannel);
         }
+        aChannel->GetOwner(getter_AddRefs(owner));
     }
 
     //Title is set in nsDocShell::SetTitle()
@@ -7617,7 +7619,8 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
                   inputStream,       // Post data stream
                   nsnull,            // LayoutHistory state
                   cacheKey,          // CacheKey
-                  mContentTypeHint); // Content-type
+                  mContentTypeHint,  // Content-type
+                  owner);            // Channel owner
     entry->SetReferrerURI(referrerURI);
     /* If cache got a 'no-store', ask SH not to store
      * HistoryLayoutState. By default, SH will set this
@@ -7694,6 +7697,7 @@ nsDocShell::LoadHistoryEntry(nsISHEntry * aEntry, PRUint32 aLoadType)
     nsCOMPtr<nsIInputStream> postData;
     nsCOMPtr<nsIURI> referrerURI;
     nsCAutoString contentType;
+    nsCOMPtr<nsISupports> owner;
 
     NS_ENSURE_TRUE(aEntry, NS_ERROR_FAILURE);
 
@@ -7703,19 +7707,21 @@ nsDocShell::LoadHistoryEntry(nsISHEntry * aEntry, PRUint32 aLoadType)
     NS_ENSURE_SUCCESS(aEntry->GetPostData(getter_AddRefs(postData)),
                       NS_ERROR_FAILURE);
     NS_ENSURE_SUCCESS(aEntry->GetContentType(contentType), NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(aEntry->GetOwner(getter_AddRefs(owner)),
+                      NS_ERROR_FAILURE);
 
     // Calling CreateAboutBlankContentViewer can set mOSHE to null, and if
     // that's the only thing holding a ref to aEntry that will cause aEntry to
     // die while we're loading it.  So hold a strong ref to aEntry here, just
     // in case.
     nsCOMPtr<nsISHEntry> kungFuDeathGrip(aEntry);
-    PRBool inherit;
-    nsresult rv = URIInheritsSecurityContext(uri, &inherit);
-    if (NS_FAILED(rv) || inherit) {
-        // We're loading a URL that inherits a security context from session
-        // history. Replace the current document with about:blank to
-        // prevent anything from the current document from leaking
-        // into any JavaScript code in the URL.
+    PRBool isJS;
+    nsresult rv = uri->SchemeIs("javascript", &isJS);
+    if (NS_FAILED(rv) || isJS) {
+        // We're loading a URL that will execute script from inside asyncOpen.
+        // Replace the current document with about:blank now to prevent
+        // anything from the current document from leaking into any JavaScript
+        // code in the URL.
         rv = CreateAboutBlankContentViewer();
 
         if (NS_FAILED(rv)) {
@@ -7723,6 +7729,14 @@ nsDocShell::LoadHistoryEntry(nsISHEntry * aEntry, PRUint32 aLoadType)
             // viewer failed for some reason (potentially because the
             // user prevented it). Interrupt the history load.
             return NS_OK;
+        }
+
+        if (!owner) {
+            // Ensure that we have an owner.  Otherwise javascript: URIs will
+            // pick it up from the about:blank page we just loaded, and we
+            // don't really want even that in this case.
+            owner = do_CreateInstance("@mozilla.org/nullprincipal;1");
+            NS_ENSURE_TRUE(owner, NS_ERROR_OUT_OF_MEMORY);
         }
     }
 
@@ -7756,7 +7770,7 @@ nsDocShell::LoadHistoryEntry(nsISHEntry * aEntry, PRUint32 aLoadType)
 
     rv = InternalLoad(uri,
                       referrerURI,
-                      nsnull,            // No owner
+                      owner,
                       INTERNAL_LOAD_FLAGS_NONE, // Do not inherit owner from document (security-critical!)
                       nsnull,            // No window target
                       contentType.get(), // Type hint
