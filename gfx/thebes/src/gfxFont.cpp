@@ -206,10 +206,10 @@ gfxFontStyle::gfxFontStyle(PRUint8 aStyle, PRUint8 aVariant,
 }
 
 void
-gfxFontStyle::ComputeWeightAndOffset(PRInt16 *outBaseWeight, PRInt16 *outOffset) const
+gfxFontStyle::ComputeWeightAndOffset(PRInt8 *outBaseWeight, PRInt8 *outOffset) const
 {
-    PRInt16 baseWeight = (weight + 50) / 100;
-    PRInt16 offset = weight - baseWeight * 100;
+    PRInt8 baseWeight = (weight + 50) / 100;
+    PRInt8 offset = weight - baseWeight * 100;
 
     if (baseWeight < 0)
         baseWeight = 0;

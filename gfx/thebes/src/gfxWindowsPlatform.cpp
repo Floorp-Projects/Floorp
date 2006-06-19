@@ -184,10 +184,14 @@ struct FontMatch {
 };
 
 struct FontSearch {
-    FontSearch(PRUnichar aCh, PRUint8 aRange, const char *aFamily) :
-        ch(aCh), family(aFamily), range(aRange), highestRank(0), fontMatches(25) {
+    FontSearch(PRUnichar aCh, PRUint8 aRange, const char *aLangGroup, const char *aFamily) :
+        ch(aCh), langGroup(aLangGroup), family(aFamily), range(aRange), highestRank(0), fontMatches(25) {
+    }
+    PRBool RankIsOK(PRUint32 rank) {
+        return (rank >= (highestRank / 2) + 1);
     }
     const PRUint32 ch;
+    const char *langGroup;
     const char *family;
     const PRUint8 range;
     PRInt8 highestRank;
@@ -208,9 +212,11 @@ gfxWindowsPlatform::FindFontForChar(nsStringHashKey::KeyType aKey,
     if (aFontEntry->SupportsRange(data->range))
         fm.rank += 20;
 
-    if (data->family && aFontEntry->MatchesGenericFamily(nsDependentCString(data->family)))
+    if (aFontEntry->SupportsLangGroup(nsDependentCString(data->langGroup)))
         fm.rank += 10;
 
+    if (data->family && aFontEntry->MatchesGenericFamily(nsDependentCString(data->family)))
+        fm.rank += 5;
 
     // XXX this code doesn't really work like I would hope
     // we really just want to avoid non-unicode fonts.. i.e. wingdings, etc
@@ -221,10 +227,13 @@ gfxWindowsPlatform::FindFontForChar(nsStringHashKey::KeyType aKey,
     //    if (aFontEntry->SupportsLangGroup(NS_LITERAL_CSTRING("x-symbol")))
     //        fm.rank -= 5;
 
-    /* Only take the top ranked items */
+    /* This will allow us to cut out some of the fonts, but not all
+     * since some might get in early before we find the real highest rank.
+     */
     if (fm.rank > data->highestRank)
         data->highestRank = fm.rank;
-    if (fm.rank < (data->highestRank / 2) + 1)
+
+    if (!data->RankIsOK(fm.rank))
         return PL_DHASH_NEXT;
 
     if (fm.rank > 0) {
@@ -290,7 +299,7 @@ gfxWindowsPlatform::GetPrefFonts(const char *aLangGroup, nsString& aFonts)
 }
 
 void
-gfxWindowsPlatform::FindOtherFonts(const PRUnichar* aString, PRUint32 aLength, const char *aGeneric, nsString& fonts)
+gfxWindowsPlatform::FindOtherFonts(const PRUnichar* aString, PRUint32 aLength, const char *aLangGroup, const char *aGeneric, nsString& fonts)
 {
     fonts.Truncate();
 
@@ -301,9 +310,6 @@ gfxWindowsPlatform::FindOtherFonts(const PRUnichar* aString, PRUint32 aLength, c
     for (PRUint32 z = 0; z < aLength; ++z) {
         PRUint32 ch = aString[z];
 
-        /* don't actually increment i again here -- that way we'll also append
-         * fonts that only have the surrogate flag set
-         */
         if ((z+1 < aLength) && IS_HIGH_SURROGATE(ch) && IS_LOW_SURROGATE(aString[z+1])) {
             z++;
             ch = SURROGATE_TO_UCS4(ch, aString[z]);
@@ -312,7 +318,7 @@ gfxWindowsPlatform::FindOtherFonts(const PRUnichar* aString, PRUint32 aLength, c
 
         PRUint8 range = CharRangeBit(ch);
         if (!ranges[range]) {
-            FontSearch data(ch, CharRangeBit(ch), aGeneric);
+            FontSearch data(ch, CharRangeBit(ch), aLangGroup, aGeneric);
 
             mFonts.Enumerate(gfxWindowsPlatform::FindFontForChar, &data);
             
@@ -323,9 +329,11 @@ gfxWindowsPlatform::FindOtherFonts(const PRUnichar* aString, PRUint32 aLength, c
                 //printf("%d matches for 0x%04x\n", nmatches, ch);
                 for (PRUint32 i = nmatches - 1; i > 0; i--) {
                     const FontMatch& fm = data.fontMatches[i];
-                    if (!fonts.IsEmpty())
-                        fonts.AppendLiteral(", ");
-                    fonts.Append(fm.fontEntry->mName);
+                    if (data.RankIsOK(fm.rank)) {
+                        if (!fonts.IsEmpty())
+                            fonts.AppendLiteral(", ");
+                        fonts.Append(fm.fontEntry->mName);
+                    }
                 }
             }
             ranges[range] = PR_TRUE;
@@ -335,7 +343,7 @@ gfxWindowsPlatform::FindOtherFonts(const PRUnichar* aString, PRUint32 aLength, c
 
     if (surrogates) {
         // append fonts that support surrogates on to the list
-        FontSearch data(0xd801, 57, aGeneric);
+        FontSearch data(0xd801, 57, aLangGroup, aGeneric);
 
         mFonts.Enumerate(gfxWindowsPlatform::FindFontForChar, &data);
 
@@ -345,9 +353,11 @@ gfxWindowsPlatform::FindOtherFonts(const PRUnichar* aString, PRUint32 aLength, c
         if (nmatches > 0) {
             for (PRUint32 i = nmatches - 1; i > 0; i--) {
                 const FontMatch& fm = data.fontMatches[i];
-                if (!fonts.IsEmpty())
-                    fonts.AppendLiteral(", ");
-                fonts.Append(fm.fontEntry->mName);
+                if (data.RankIsOK(fm.rank)) {
+                    if (!fonts.IsEmpty())
+                        fonts.AppendLiteral(", ");
+                    fonts.Append(fm.fontEntry->mName);
+                }
             }
         }
     }

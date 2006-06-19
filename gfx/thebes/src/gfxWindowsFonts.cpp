@@ -175,7 +175,7 @@ gfxWindowsFont::MakeCairoFontFace()
         }
     }
 
-    PRInt16 baseWeight, weightDistance;
+    PRInt8 baseWeight, weightDistance;
     mStyle->ComputeWeightAndOffset(&baseWeight, &weightDistance);
 
     HDC dc = nsnull;
@@ -184,7 +184,7 @@ gfxWindowsFont::MakeCairoFontFace()
 
     if (weightDistance >= 0) {
 
-        for (PRUint16 i = baseWeight, k = 0; i < 10; i++) {
+        for (PRUint8 i = baseWeight, k = 0; i < 10; i++) {
             if (mWeightTable->HasWeight(i)) {
                 k++;
                 chosenWeight = i * 100;
@@ -505,10 +505,6 @@ gfxWindowsTextRun::MeasureOrDrawFast(gfxContext *aContext,
         return -1;
     }
 
-    nsRefPtr<gfxASurface> surf = aContext->CurrentSurface();
-    HDC aDC = GetDCFromSurface(surf);
-    NS_ASSERTION(aDC, "No DC");
-
     const char *aCString;
     const PRUnichar *aWString;
     PRUint32 aLength;
@@ -522,6 +518,10 @@ gfxWindowsTextRun::MeasureOrDrawFast(gfxContext *aContext,
         if (ScriptIsComplex(aWString, aLength, SIC_COMPLEX) == S_OK)
             return -1;
     }
+
+    nsRefPtr<gfxASurface> surf = aContext->CurrentSurface();
+    HDC aDC = GetDCFromSurface(surf);
+    NS_ASSERTION(aDC, "No DC");
 
     // cairo munges it underneath us
     XFORM savedxform;
@@ -753,19 +753,19 @@ static const struct ScriptPropertyEntry gScriptToText[] =
     { "LANG_DIVEHI",     "div" }
 };
 
-
 class UniscribeItem
 {
 public:
-    UniscribeItem(HDC aDC,
+    UniscribeItem(gfxContext *aContext, HDC aDC,
                   const PRUnichar *aString, PRUint32 aLength,
                   SCRIPT_ITEM *aItem,
                   gfxWindowsFontGroup *aGroup) :
-        mDC(aDC), mString(aString), mLength(aLength), mScriptItem(aItem), mGroup(aGroup),
+        mContext(aContext), mDC(aDC),
+        mString(aString), mLength(aLength), mScriptItem(aItem), mGroup(aGroup),
         mGlyphs(nsnull), mClusters(nsnull), mAttr(nsnull),
         mNumGlyphs(0), mMaxGlyphs((1.5 * aLength) + 16),
         mOffsets(nsnull), mAdvances(nsnull),
-        mFontIndex(0), mTriedPrefFonts(0), mTriedOtherFonts(0)
+        mFontIndex(0), mTriedPrefFonts(0), mTriedOtherFonts(0), mFontSelected(PR_FALSE)
     {
         mGlyphs = (WORD *)malloc(mMaxGlyphs * sizeof(WORD));
         mClusters = (WORD *)malloc((mLength + 1) * sizeof(WORD));
@@ -774,6 +774,8 @@ public:
         /* copy in the fonts from the group in to the item */
         for (PRUint32 i = 0; i < mGroup->FontListLength(); ++i)
             mFonts.AppendElement(mGroup->GetFontAt(i));
+
+        memset(&mABC, 0, sizeof(ABC));
     }
 
     ~UniscribeItem() {
@@ -841,10 +843,16 @@ public:
             }
 
             if (rv == E_PENDING) {
+                SelectFont();
+
                 shapeDC = mDC;
                 continue;
             }
 
+#if 0 // debugging only
+            if (rv != USP_E_SCRIPT_NOT_IN_FONT && !shapeDC)
+                printf("skipped select-shape %d\n", rv);
+#endif
             return rv;
         }
     }
@@ -874,18 +882,20 @@ public:
         HDC placeDC = nsnull;
 
         while (PR_TRUE) {
-            rv = ScriptPlace(mDC, mCurrentFont->ScriptCache(),
+            rv = ScriptPlace(placeDC, mCurrentFont->ScriptCache(),
                              mGlyphs, mNumGlyphs,
                              mAttr, &mScriptItem->a,
                              mAdvances, mOffsets, &mABC);
 
             if (rv == E_PENDING) {
+                SelectFont();
                 placeDC = mDC;
                 continue;
             }
 
             break;
         }
+
         return rv;
     }
 
@@ -964,7 +974,8 @@ TRY_AGAIN_HOPE_FOR_THE_BEST_2:
             if (!sp->fAmbiguousCharSet) {
                 const char *langGroup = gScriptToText[primaryId].langCode;
                 if (langGroup) {
-                    PR_LOG(gFontLog, PR_LOG_DEBUG, ("Trying to find fonts for: %s (%s)", langGroup, gScriptToText[primaryId].value));
+                    if (PR_LOG_TEST(gFontLog, PR_LOG_DEBUG))
+                        PR_LOG(gFontLog, PR_LOG_DEBUG, ("Trying to find fonts for: %s (%s)", langGroup, gScriptToText[primaryId].value));
 
                     platform->GetPrefFonts(langGroup, fonts);
                     if (!fonts.IsEmpty()) {
@@ -981,13 +992,43 @@ TRY_AGAIN_HOPE_FOR_THE_BEST_2:
                     const PRUnichar ch = mString[i];
                     const char *langGroup = LangGroupFromUnicodeRange(FindCharUnicodeRange(ch));
                     if (langGroup) {
-                        PR_LOG(gFontLog, PR_LOG_DEBUG, ("Trying to find fonts for: %s", langGroup));
+                        if (PR_LOG_TEST(gFontLog, PR_LOG_DEBUG))
+                            PR_LOG(gFontLog, PR_LOG_DEBUG, ("Trying to find fonts for: %s", langGroup));
                         platform->GetPrefFonts(langGroup, fonts);
                         if (!fonts.IsEmpty()) {
                             const nsACString& lg = (langGroup) ? nsDependentCString(langGroup) : EmptyCString();
                             gfxFontGroup::ForEachFont(fonts, lg, UniscribeItem::AddFontCallback, this);
                         }
                     }
+#if 0 // the old code does this -- i think it is sort of a hack
+                    else {
+                        platform->GetPrefFonts("ja", fonts);
+                        if (!fonts.IsEmpty()) {
+                            const nsACString& lg = (langGroup) ? nsDependentCString(langGroup) : EmptyCString();
+                            gfxFontGroup::ForEachFont(fonts, lg, UniscribeItem::AddFontCallback, this);
+                        }
+                        platform->GetPrefFonts("zh-CN", fonts);
+                        if (!fonts.IsEmpty()) {
+                            const nsACString& lg = (langGroup) ? nsDependentCString(langGroup) : EmptyCString();
+                            gfxFontGroup::ForEachFont(fonts, lg, UniscribeItem::AddFontCallback, this);
+                        }
+                        platform->GetPrefFonts("zh-TW", fonts);
+                        if (!fonts.IsEmpty()) {
+                            const nsACString& lg = (langGroup) ? nsDependentCString(langGroup) : EmptyCString();
+                            gfxFontGroup::ForEachFont(fonts, lg, UniscribeItem::AddFontCallback, this);
+                        }
+                        platform->GetPrefFonts("zh-HK", fonts);
+                        if (!fonts.IsEmpty()) {
+                            const nsACString& lg = (langGroup) ? nsDependentCString(langGroup) : EmptyCString();
+                            gfxFontGroup::ForEachFont(fonts, lg, UniscribeItem::AddFontCallback, this);
+                        }
+                        platform->GetPrefFonts("ko", fonts);
+                        if (!fonts.IsEmpty()) {
+                            const nsACString& lg = (langGroup) ? nsDependentCString(langGroup) : EmptyCString();
+                            gfxFontGroup::ForEachFont(fonts, lg, UniscribeItem::AddFontCallback, this);
+                        }
+                    }
+#endif
                 }
             }
             goto TRY_AGAIN_HOPE_FOR_THE_BEST_2;
@@ -996,15 +1037,19 @@ TRY_AGAIN_HOPE_FOR_THE_BEST_2:
             nsString fonts;
             gfxWindowsPlatform *platform = gfxWindowsPlatform::GetPlatform();
 
-            PR_LOG(gFontLog, PR_LOG_DEBUG, ("Looking for other fonts to support the string:"));
-            for (PRUint32 la = 0; la < mLength; la++)
-                PR_LOG(gFontLog, PR_LOG_DEBUG, (" - 0x%04x", mString[la]));
+            if (PR_LOG_TEST(gFontLog, PR_LOG_DEBUG)) {
+                PR_LOG(gFontLog, PR_LOG_DEBUG, ("Looking for other fonts to support the string:"));
+                for (PRUint32 la = 0; la < mLength; la++)
+                    PR_LOG(gFontLog, PR_LOG_DEBUG, (" - 0x%04x", mString[la]));
+            }
             
             platform->FindOtherFonts(mString, mLength,
+                                     nsPromiseFlatCString(mGroup->GetStyle()->langGroup).get(),
                                      nsPromiseFlatCString(mGroup->GetGenericFamily()).get(),
                                      fonts);
             if (!fonts.IsEmpty()) {
-                PR_LOG(gFontLog, PR_LOG_DEBUG, ("Got back: %s", NS_LossyConvertUTF16toASCII(fonts).get()));
+                if (PR_LOG_TEST(gFontLog, PR_LOG_DEBUG))
+                    PR_LOG(gFontLog, PR_LOG_DEBUG, ("Got back: %s", NS_LossyConvertUTF16toASCII(fonts).get()));
                 gfxFontGroup::ForEachFont(fonts, EmptyCString(), UniscribeItem::AddFontCallback, this);
             }
             goto TRY_AGAIN_HOPE_FOR_THE_BEST_2;
@@ -1023,10 +1068,29 @@ TRY_AGAIN_HOPE_FOR_THE_BEST_2:
     }
 
     void SetCurrentFont(gfxWindowsFont *aFont) {
-        mCurrentFont = aFont;
+        if (mCurrentFont != aFont) {
+            mCurrentFont = aFont;
+            cairo_win32_scaled_font_done_font(mCurrentFont->CairoScaledFont());
+            mFontSelected = PR_FALSE;
+        }
+    }
+
+    void SelectFont() {
+        if (mFontSelected)
+            return;
+
+        cairo_t *cr = mContext->GetCairo();
+
+        cairo_set_font_face(cr, mCurrentFont->CairoFontFace());
+        cairo_set_font_size(cr, mCurrentFont->GetStyle()->size);
+
+        cairo_win32_scaled_font_select_font(mCurrentFont->CairoScaledFont(), mDC);
+
+        mFontSelected = PR_TRUE;
     }
 
 private:
+    nsRefPtr<gfxContext> mContext;
     HDC mDC;
 
     SCRIPT_ITEM *mScriptItem;
@@ -1056,6 +1120,7 @@ private:
     PRPackedBool mTriedOtherFonts;
 
     nsRefPtr<gfxWindowsFont> mCurrentFont;
+    PRBool mFontSelected;
 };
 
 class Uniscribe
@@ -1076,17 +1141,6 @@ public:
             mControl->fNeutralOverride = 1;
             mState->uBidiLevel = 1;
         }
-    }
-
-    void SelectFont(gfxWindowsFont *aFont) {
-        aFont->UpdateCTM(mContext->CurrentMatrix());
-
-        cairo_t *cr = mContext->GetCairo();
-
-        cairo_set_font_face(cr, aFont->CairoFontFace());
-        cairo_set_font_size(cr, aFont->GetStyle()->size);
-
-        cairo_win32_scaled_font_select_font(aFont->CairoScaledFont(), mDC);
     }
 
     int Itemize() {
@@ -1111,7 +1165,7 @@ public:
     UniscribeItem *GetItem(PRUint32 i, gfxWindowsFontGroup *aGroup) {
         NS_ASSERTION(i < mNumItems, "Trying to get out of bounds item");
 
-        UniscribeItem *item = new UniscribeItem(mDC,
+        UniscribeItem *item = new UniscribeItem(mContext, mDC,
                                                 mString + mItems[i].iCharPos,
                                                 mItems[i+1].iCharPos - mItems[i].iCharPos,
                                                 &mItems[i],
@@ -1183,15 +1237,21 @@ gfxWindowsTextRun::MeasureOrDrawUniscribe(gfxContext *aContext,
             nsRefPtr<gfxWindowsFont> font = item->GetNextFont();
 
             if (font) {
-                us.SelectFont(font);
+                /* make sure the font is set for the current matrix */
+                font->UpdateCTM(aContext->CurrentMatrix());
+
+                /* set the curret font on the item */
                 item->SetCurrentFont(font);
 
-                PR_LOG(gFontLog, PR_LOG_DEBUG, ("trying: %s", NS_LossyConvertUTF16toASCII(font->GetName()).get()));
+                if (PR_LOG_TEST(gFontLog, PR_LOG_DEBUG))
+                    PR_LOG(gFontLog, PR_LOG_DEBUG, ("trying: %s", NS_LossyConvertUTF16toASCII(font->GetName()).get()));
+
                 rv = item->Shape();
 
                 if (giveUp) {
-                    PR_LOG(gFontLog, PR_LOG_DEBUG, ("%s - gave up", NS_LossyConvertUTF16toASCII(font->GetName()).get()));
-                    break;
+                    if (PR_LOG_TEST(gFontLog, PR_LOG_DEBUG))
+                        PR_LOG(gFontLog, PR_LOG_DEBUG, ("%s - gave up", NS_LossyConvertUTF16toASCII(font->GetName()).get()));
+                    goto SCRIPT_PLACE;
                 }
                 if (FAILED(rv) || item->IsMissingGlyphs())
                     continue;
@@ -1210,46 +1270,55 @@ gfxWindowsTextRun::MeasureOrDrawUniscribe(gfxContext *aContext,
                 item->ResetFontIndex();
                 continue;
             }
-            PR_LOG(gFontLog, PR_LOG_DEBUG, ("%s - worked", NS_LossyConvertUTF16toASCII(font->GetName()).get()));
+
+            if (PR_LOG_TEST(gFontLog, PR_LOG_DEBUG))
+                PR_LOG(gFontLog, PR_LOG_DEBUG, ("%s - worked", NS_LossyConvertUTF16toASCII(font->GetName()).get()));
+
+SCRIPT_PLACE:
+            NS_ASSERTION(SUCCEEDED(rv), "Failed to shape -- we should never hit this");
+
+            rv = item->Place();
+            if (FAILED(rv)) {
+                if (PR_LOG_TEST(gFontLog, PR_LOG_WARNING))
+                    PR_LOG(gFontLog, PR_LOG_WARNING, ("Failed to place with %s", NS_LossyConvertUTF16toASCII(font->GetName()).get()));
+                continue;
+            }
+
             break;
         }
 
-        NS_ASSERTION(SUCCEEDED(rv), "Failed to shape -- we should never hit this");
 
-        if (SUCCEEDED(rv)) {
-            rv = item->Place();
+        if (!aDraw) {
+            length += item->ABCLength();
+        } else {
+            /* we have to select the font when we draw */
+            item->SelectFont();
 
-            NS_ASSERTION(SUCCEEDED(rv), "Failed to place -- we should never hit this");
+            item->SetSpacing(&mSpacing);
+            gfxFloat offset = 0;
+            PRUint32 nglyphs = 0;
+            cairo_glyph_t *cglyphs = item->GetCairoGlyphs(pt, offset, &nglyphs);
 
-            if (!aDraw) {
-                length += item->ABCLength() * 1.0; //cairoToPixels;
-            } else {
-                item->SetSpacing(&mSpacing);
-                gfxFloat offset = 0;
-                PRUint32 nglyphs = 0;
-                cairo_glyph_t *cglyphs = item->GetCairoGlyphs(pt, offset, &nglyphs);
+            /* Draw using cairo */
 
-                /* Draw using cairo */
+            /* XXX cairo sets a world transform in order to get subpixel accuracy in some cases;
+             * this breaks it there's a surface fallback that happens with clipping, because
+             * the clip gets applied with the world transform and the world breaks.
+             * We restore the transform to the start of this function while we're drawing.
+             * Need to investigate this further.
+             */
 
-                /* XXX cairo sets a world transform in order to get subpixel accuracy in some cases;
-                 * this breaks it there's a surface fallback that happens with clipping, because
-                 * the clip gets applied with the world transform and the world breaks.
-                 * We restore the transform to the start of this function while we're drawing.
-                 * Need to investigate this further.
-                 */
+            XFORM currentxform;
+            GetWorldTransform(aDC, &currentxform);
+            SetWorldTransform(aDC, &savedxform);
 
-                XFORM currentxform;
-                GetWorldTransform(aDC, &currentxform);
-                SetWorldTransform(aDC, &savedxform);
+            cairo_show_glyphs(cr, cglyphs, nglyphs);
 
-                cairo_show_glyphs(cr, cglyphs, nglyphs);
+            SetWorldTransform(aDC, &currentxform);
 
-                SetWorldTransform(aDC, &currentxform);
+            free(cglyphs);
 
-                free(cglyphs);
-
-                pt.x += offset;
-            }
+            pt.x += offset;
         }
 
         delete item;

@@ -109,8 +109,8 @@ struct THEBES_API gfxFontStyle {
     // needs to be done.
     float sizeAdjust;
 
-    void ComputeWeightAndOffset(PRInt16 *outBaseWeight,
-                                PRInt16 *outOffset) const;
+    void ComputeWeightAndOffset(PRInt8 *outBaseWeight,
+                                PRInt8 *outOffset) const;
 };
 
 

@@ -224,7 +224,7 @@ gfxQuartzFontCache::FindATSUFontIDForFamilyAndStyle (const nsAString& aFamily,
     NSString *desiredFamily = [NSString stringWithCharacters:aFamily.BeginReading() length:aFamily.Length()];
     NSFontTraitMask desiredTraits = 0;
     int desiredWeight;
-    PRInt16 baseCSSWeight, weightOffset;
+    PRInt8 baseCSSWeight, weightOffset;
 
     //printf ("FindATSUFontIDForFamilyAndStyle: %s\n", [desiredFamily cString]);
 
