@@ -97,7 +97,7 @@ if (!$^C
     $vars->{'message'} = 'shutdown';
     $vars->{'userid'} = $userid;
     # Generate and return a message about the downtime, appropriately
-    # for if we're a command-line script or a CGI sript.
+    # for if we're a command-line script or a CGI script.
     my $extension;
     if (i_am_cgi() && (!Bugzilla->cgi->param('ctype')
                        || Bugzilla->cgi->param('ctype') eq 'html')) {
