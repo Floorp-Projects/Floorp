@@ -173,13 +173,13 @@ sub SetParam {
 sub UpdateParams {
     # --- PARAM CONVERSION CODE ---
 
-    # Note that this isn't particuarly 'clean' in terms of separating
+    # Note that this isn't particularly 'clean' in terms of separating
     # the backend code (ie this) from the actual params.
     # We don't care about that, though
 
     my $param = Bugzilla->params;
 
-    # Old bugzilla versions stored the version number in the params file
+    # Old Bugzilla versions stored the version number in the params file
     # We don't want it, so get rid of it
     delete $param->{'version'};
 
