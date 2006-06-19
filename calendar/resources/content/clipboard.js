@@ -269,6 +269,9 @@ function pasteFromClipboard()
                 date.second = oldDate.second;
                 date.timezone = oldDate.timezone;
                 date.normalize();
+                if (oldDate.isDate) {
+                    date.isDate = true;
+                }
                 return date;
             }
 
