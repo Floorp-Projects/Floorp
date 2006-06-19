@@ -22,6 +22,7 @@
 # Contributor(s):
 #   Ben Goodger <ben@netscape.com> (Original Author)
 #   David Hyatt <hyatt@mozilla.org>
+#   Myk Melez <myk@mozilla.org>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -174,10 +175,6 @@ function Startup()
 
   if (MicrosummaryPicker.enabled)
     MicrosummaryPicker.init();
-  else {
-    var microsummaryRow = document.getElementById("microsummaryRow");
-    microsummaryRow.setAttribute("hidden", "true");
-  }
 } 
 
 function initTitle()
@@ -221,7 +218,19 @@ function onOK()
                                     gArg.description);
   } else {
     url = getNormalizedURL(gArg.url);
-    gResource = BMDS.createBookmark(gName.value, url, gKeyword.value, 
+
+    var name = gName.value;
+
+    // If the microsummary picker is enabled, the value of the name field
+    // won't necessarily contain the user-entered name for the bookmark.
+    // But the first item in the microsummary drop-down menu will always
+    // contain the user-entered name, so get the name from there instead.
+    if (MicrosummaryPicker.enabled) {
+      var menuPopup = document.getElementById("microsummaryMenuPopup");
+      name = menuPopup.childNodes[0].getAttribute("label");
+    }
+
+    gResource = BMDS.createBookmark(name, url, gKeyword.value, 
                                     gArg.description, gArg.charset, 
                                     gPostData);
   }

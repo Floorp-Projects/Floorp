@@ -57,6 +57,7 @@ classic.jar:
   skin/classic/browser/places/bookmarkProperties.css        (places/bookmarkProperties.css)
 #else
   skin/classic/browser/bookmarks/addBookmark.css            (bookmarks/addBookmark.css)
+  skin/classic/browser/bookmarks/bookmarksProperties.css    (bookmarks/bookmarksProperties.css)
   skin/classic/browser/bookmarks/bookmark-folder.png        (bookmarks/bookmark-folder.png)
   skin/classic/browser/bookmarks/bookmark-item.png          (bookmarks/bookmark-item.png)
   skin/classic/browser/bookmarks/Bookmarks-toolbar.png      (bookmarks/Bookmarks-toolbar.png)

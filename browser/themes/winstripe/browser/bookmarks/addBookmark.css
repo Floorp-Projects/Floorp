@@ -12,3 +12,52 @@
   list-style-image: url("chrome://global/skin/icons/folder-item.png") !important;
   -moz-image-region: rect(0px, 32px, 16px, 16px) !important;
 }
+
+/* Hide the drop marker if no microsummaries are available. */
+menulist#name[droppable="false"] > .menulist-dropmarker {
+  display: none;
+}
+
+/*
+ * Editable menulists look almost like regular textboxes, but not quite,
+ * which makes it look like something is off a bit when you place a menulist
+ * next to a textbox, f.e. the microsummary picker above the Location field
+ * and other fields in the Bookmarks Properties dialog box.
+ *
+ * Of course, there aren't any text fields here in the Add Bookmark dialog box,
+ * but for consistency with the Bookmark Properties dialog box, we correct
+ * the appearance of the picker here as well.
+ * 
+ */
+
+menulist#name > .menulist-editable-box {
+  /* Normal editable menulists set this to "menulist-textfield". */
+  -moz-appearance: none;
+}
+
+menulist#name {
+  /* These rules come from the textbox element in textbox.css. */
+
+  /* Normal editable menulists set this to "none". */
+  -moz-appearance: textfield;
+
+  /* Follow the rule for normal editable menulists (cursor: auto;) instead of
+   * textboxes (cursor: text;) so the cursor is a pointer over the dropmarker.
+   */
+  /* cursor: text; */
+
+  /* Follow the rule for normal editable menulists (margin: 2px 2px;) instead of
+   * textboxes (margin: 2px 4px;) so the list lines up with the "Create in:"
+   * drop-down menu below it.
+   */
+  /* margin: 2px 4px; */
+
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
+  -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
+  padding: 2px 2px 3px 4px;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+}

@@ -23,6 +23,7 @@
 #
 # Contributor(s):
 #   Ben Goodger <ben@netscape.com> (Original Author)
+#   Myk Melez <myk@mozilla.org>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -87,20 +88,20 @@
     <rows>
       <row align="center">
         <label value="&name.label;" accesskey="&name.accesskey;" control="name"/>
-        <textbox id="name" oninput="onFieldInput();"/>
+        <menulist id="name" editable="true" droppable="false"
+                  oninput="onFieldInput(); MicrosummaryPicker.onInput(event);">
+          <menupopup id="microsummaryMenuPopup">
+            <menuitem id="userEnteredNameItem"/>
+            <menuitem disabled="true">
+              <menuseparator flex="1"/>
+              <label value="&microsummary.label;"/>
+            </menuitem>
+          </menupopup>
+        </menulist>
       </row>
       <row align="center" id="keywordRow">
         <label value="&keyword.label;" accesskey="&keyword.accesskey;" control="keyword"/>
         <textbox id="keyword" oninput="onFieldInput();"/>
-      </row>
-      <row id="microsummaryRow">
-        <label value="&microsummary.label;" accesskey="&microsummary.accesskey;"
-               control="microsummaryMenuList"/>
-        <menulist id="microsummaryMenuList">
-          <menupopup id="microsummaryMenuPopup">
-            <menuitem label="&microsummary.none.label;" selected="true"/>
-          </menupopup>
-        </menulist>
       </row>
       <row align="center">
         <label id="createinlabel" value="&createin.label;" accesskey="&createin.accesskey;" control="select-menu"/>
