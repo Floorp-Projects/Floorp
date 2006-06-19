@@ -630,7 +630,7 @@ sub _bz_schema {
 #
 # Description: A protected method, intended for use only by Bugzilla::DB
 #              and subclasses. Used to get the initial Schema that will
-#              be wirtten to disk for _bz_init_schema_storage. You probably
+#              be written to disk for _bz_init_schema_storage. You probably
 #              want to use _bz_schema or _bz_real_schema instead of this
 #              method.
 # Params:      none
