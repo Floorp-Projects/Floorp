@@ -30,7 +30,7 @@
 
   <property name="Name" value="pluglets"/>
   <property name="name" value="pluglets"/>
-  <property name="version" value="20030906"/>
+  <property name="version" value="20060619"/>
 
 <!-- ************ Per user local properties ******************************* -->
 
