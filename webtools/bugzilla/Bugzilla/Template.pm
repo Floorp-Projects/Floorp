@@ -264,7 +264,7 @@ sub quoteUrls {
     # In particular, attachment matches go before bug titles, so that titles
     # with 'attachment 1' don't double match.
     # Dupe checks go afterwards, because that uses ^ and \Z, which won't occur
-    # if it was subsituted as a bug title (since that always involve leading
+    # if it was substituted as a bug title (since that always involve leading
     # and trailing text)
 
     # Because of entities, its easier (and quicker) to do this before escaping
