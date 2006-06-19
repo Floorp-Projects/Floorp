@@ -237,6 +237,8 @@
 
         validate("-INF", "double-test-3", true);
         validate("NaN", "double-test-3", true);
+        validate("a3a", "double-test-3", false);
+        validate("3a", "double-test-3", false);
 
         validate("-INF", "double-test-4", true);
         validate("INF", "double-test-4", false);

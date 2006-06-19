@@ -123,9 +123,9 @@ nsSchemaValidatorUtils::IsValidSchemaDouble(const char* aString,
   char * pEnd;
   double value = PR_strtod(aString, &pEnd);
 
-  // If end pointer hasn't moved, then the string wasn't a
-  // true double (could be INF, -INF or NaN though)
-  if (pEnd == aString) {
+  // If the end pointer desn't point at the end, it wasn't a true double (could
+  // be INF, -INF or NaN though)
+  if (*pEnd != '\0') {
     nsCAutoString temp(aString);
 
     // doubles may be INF, -INF or NaN
@@ -137,6 +137,7 @@ nsSchemaValidatorUtils::IsValidSchemaDouble(const char* aString,
       isValid = PR_FALSE;
     }
   }
+
   if (aResult)
     *aResult = value;
 
