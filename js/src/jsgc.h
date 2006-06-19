@@ -228,17 +228,21 @@ js_MarkStackFrame(JSContext *cx, JSStackFrame *fp);
  *   GC_LAST_CONTEXT    Called from js_DestroyContext for last JSContext in a
  *                      JSRuntime, when it is imperative that rt->gcPoke gets
  *                      cleared early in js_GC, if it is set.
- *   GC_ALREADY_LOCKED  rt->gcLock is already held on entry to js_GC, and kept
- *                      on return to its caller.
+ *   GC_LAST_DITCH      Called from js_NewGCThing as a last-ditch GC attempt.
+ *                      See comments before js_GC definition for details.
  */
 #define GC_KEEP_ATOMS       0x1
 #define GC_LAST_CONTEXT     0x2
-#define GC_ALREADY_LOCKED   0x4
+#define GC_LAST_DITCH       0x4
 
 extern void
 js_ForceGC(JSContext *cx, uintN gcflags);
 
-extern void
+/*
+ * Return false when GC was canceled or true when the full GC cycle was
+ * performed which may or may not free things.
+ */
+extern JSBool
 js_GC(JSContext *cx, uintN gcflags);
 
 /* Call this after succesful malloc of memory for GC-related things. */
