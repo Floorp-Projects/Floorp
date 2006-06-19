@@ -256,6 +256,9 @@ function pasteFromClipboard()
             }
             var destCal = getDefaultCalendar();
             var firstDate = document.getElementById("view-deck").selectedPanel.selectedDay;
+            if (!firstDate.isMutable) {
+                firstDate = firstDate.clone();
+            }
             firstDate.isDate = false;
 
             function makeNewStartingDate(oldDate) {
