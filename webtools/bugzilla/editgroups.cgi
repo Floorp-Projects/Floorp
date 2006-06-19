@@ -490,7 +490,7 @@ if ($action eq 'delete') {
 #
 
 if ($action eq 'postchanges') {
-    # ZLL: Bug 181589: we need to have something to remove explictly listed users from
+    # ZLL: Bug 181589: we need to have something to remove explicitly listed users from
     # groups in order for the conversion to 2.18 groups to work
     my $action;
 
