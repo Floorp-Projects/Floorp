@@ -2613,7 +2613,7 @@ $dbh->bz_drop_column("profiles", "emailnotification");
 $dbh->bz_drop_column("profiles", "newemailtech");
 
 
-# 2003-11-19; chicks@chicks.net; bug 225973: fix field size to accomodate
+# 2003-11-19; chicks@chicks.net; bug 225973: fix field size to accommodate
 # wider algorithms such as Blowfish. Note that this needs to be run
 # before recrypting passwords in the following block.
 $dbh->bz_alter_column('profiles', 'cryptpassword', {TYPE => 'varchar(128)'});
