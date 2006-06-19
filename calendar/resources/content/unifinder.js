@@ -833,3 +833,16 @@ function focusFirstItemIfNoSelection()
    }
 }
 
+function unifinderKeyPress(aEvent) {
+    const kKE = Components.interfaces.nsIDOMKeyEvent;
+    switch (aEvent.keyCode) {
+        case 13:
+            // Enter, edit the event
+            editEvent();
+            break;
+        case kKE.DOM_VK_BACK_SPACE:
+        case kKE.DOM_VK_DELETE:
+            deleteEventCommand(true);
+            break;
+    }
+}

@@ -165,7 +165,6 @@
   <key id="key_cut"              key="&calendar.cut.key;"                observes="cut_command"                 modifiers="accel"/>
   <key id="key_copy"             key="&calendar.copy.key;"               observes="copy_command"                modifiers="accel"/>
   <key id="key_paste"            key="&calendar.paste.key;"              observes="paste_command"               modifiers="accel"/>
-  <key id="delete_key"           keycode="VK_DELETE"                     observes="delete_command_no_confirm"/>
   <key id="key_selectAll"        key="&calendar.selectall.key;"          observes="select_all_command"          modifiers="accel"/>
 
 # calendar.xpi adds shift as an accelerator to these 4 keys so we don't conflict with Seamonkey
@@ -675,6 +674,7 @@
         </hbox>
         <tree id="unifinder-search-results-listbox" flex="1" 
               onselect="unifinderOnSelect( event )"
+              onkeypress="unifinderKeyPress(event)"
               enableColumnDrag="true">
           <treecols id="unifinder-search-results-tree-cols">
             <treecol id="unifinder-search-results-tree-col-title"

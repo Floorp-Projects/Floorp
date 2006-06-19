@@ -601,6 +601,7 @@
         </hbox>
         <tree id="unifinder-search-results-listbox" flex="1" 
               onselect="unifinderOnSelect( event )"
+              onkeypress="unifinderKeyPress(event)"
               enableColumnDrag="true">
           <treecols id="unifinder-search-results-tree-cols">
             <treecol id="unifinder-search-results-tree-col-title"

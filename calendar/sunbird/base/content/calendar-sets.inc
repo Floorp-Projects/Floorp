@@ -141,7 +141,6 @@
   <key id="key_cut"              key="&calendar.cut.key;"                observes="cut_command"                 modifiers="accel"/>
   <key id="key_copy"             key="&calendar.copy.key;"               observes="copy_command"                modifiers="accel"/>
   <key id="key_paste"            key="&calendar.paste.key;"              observes="paste_command"               modifiers="accel"/>
-  <key id="delete_key"           keycode="VK_DELETE"                     observes="delete_command_no_confirm"/>
   <key id="key_selectAll"        key="&calendar.selectall.key;"          observes="select_all_command"          modifiers="accel"/>
 
   <key id="view_day_key"         key="&calendar.dayView.key;"            observes="day_view_command"            modifiers="accel"/>
