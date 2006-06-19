@@ -126,18 +126,20 @@ var gEngineManagerDialog = {
   },
 
   onSelect: function engineManager_onSelect() {
-    var noEngineSelected = (gEngineView.selectedIndex == -1);
+    // buttons only work if an engine is selected and it's not the last engine
+    var disableButtons = (gEngineView.selectedIndex == -1) ||
+                         (gEngineView.lastIndex == 0);
     var lastSelected = (gEngineView.selectedIndex == gEngineView.lastIndex);
     var firstSelected = (gEngineView.selectedIndex == 0);
 
     document.getElementById("cmd_remove").setAttribute("disabled",
-                                                       noEngineSelected);
+                                                       disableButtons);
 
     document.getElementById("cmd_moveup").setAttribute("disabled",
-                                            noEngineSelected || firstSelected);
+                                            disableButtons || firstSelected);
 
     document.getElementById("cmd_movedown").setAttribute("disabled",
-                                             noEngineSelected || lastSelected);
+                                             disableButtons || lastSelected);
   },
 
   startDrag: function engineManager_startDrag(aEvent) {
