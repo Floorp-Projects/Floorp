@@ -4323,7 +4323,7 @@ if ($dbh->bz_column_info('flags', 'id')->{'TYPE'} eq 'INT3') {
 
 # short_desc should not be a mediumtext, fix anything longer than 255 chars.
 if($dbh->bz_column_info('bugs', 'short_desc')->{TYPE} eq 'MEDIUMTEXT') {
-    # Move extremely long summarries into a comment ("from" the Reporter),
+    # Move extremely long summaries into a comment ("from" the Reporter),
     # and then truncate the summary.
     my $long_summary_bugs = $dbh->selectall_arrayref(
         'SELECT bug_id, short_desc, reporter
