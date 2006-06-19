@@ -251,7 +251,7 @@ sub quoteUrls {
     # bug refs out, so we have to do replacements.
     # mailto can't contain space or #, so we don't have to bother for that
     # Do this by escaping \0 to \1\0, and replacing matches with \0\0$count\0\0
-    # \0 is used because its unliklely to occur in the text, so the cost of
+    # \0 is used because its unlikely to occur in the text, so the cost of
     # doing this should be very small
     # Also, \0 won't appear in the value_quote'd bug title, so we don't have
     # to worry about bogus substitutions from there
