@@ -1693,32 +1693,63 @@ nsWindow* nsWindow::GetParent(PRBool aStopOnFirstTopLevel)
 // Hide or show this component
 //
 //-------------------------------------------------------------------------
+#ifndef WINCE
+bool gWindowsVisible;
+
+BOOL CALLBACK gEnumWindowsProc(HWND hwnd, LPARAM lParam)
+{
+  DWORD pid;
+  ::GetWindowThreadProcessId(hwnd, &pid);
+  if (pid == _getpid() && ::IsWindowVisible(hwnd))
+  {
+    gWindowsVisible = true;
+    return FALSE;
+  }
+  return TRUE;
+}
+#endif
+
 NS_METHOD nsWindow::Show(PRBool bState)
 {
   if (mWnd) {
     if (bState) {
       if (!mIsVisible && mWindowType == eWindowType_toplevel) {
-        int mode;
         switch (mSizeMode) {
           case nsSizeMode_Maximized :
-            mode = SW_SHOWMAXIMIZED;
+            ::ShowWindow(mWnd, SW_SHOWMAXIMIZED);
             break;
           case nsSizeMode_Minimized :
 #ifndef WINCE
-            mode = SW_SHOWMINIMIZED;
+            ::ShowWindow(mWnd, SW_SHOWMINIMIZED);
 #endif
             break;
           default :
-            mode = SW_SHOWNORMAL;
 #ifndef WINCE
-            // Don't take focus if the active window is not one of ours (e.g. bug 259816)
-            if (!GetNSWindowPtr(::GetForegroundWindow()))
-              mode = SW_SHOWNOACTIVATE;
+            // If none of our windows is visible, allow taking of focus
+            gWindowsVisible = false;
+            EnumWindows(gEnumWindowsProc, 0);
+            if (!gWindowsVisible)
+            {
+              ::ShowWindow(mWnd, SW_SHOWNORMAL);
+            }
+            else
+            {
+              // Don't take focus if the active window is not one of ours (e.g. bug 259816)
+              HWND fgWnd = ::GetForegroundWindow();
+              DWORD pid;
+              GetWindowThreadProcessId(fgWnd, &pid);
+              if (fgWnd && pid != _getpid())
+              {
+                ::ShowWindow(mWnd, SW_SHOWNOACTIVATE);
+                GetAttention(2);
+              }
+              else
 #endif
+              {
+                ::ShowWindow(mWnd, SW_SHOWNORMAL);
+              }
+            }
         }
-        ::ShowWindow(mWnd, mode);
-        if (mode == SW_SHOWNOACTIVATE)
-          GetAttention(2);
       } else {
         DWORD flags = SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW;
         if (mIsVisible)
