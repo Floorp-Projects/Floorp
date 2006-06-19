@@ -1110,7 +1110,7 @@ END
     print "Creating $datadir/.htaccess...\n";
     open HTACCESS, '>', "$datadir/.htaccess";
     print HTACCESS <<'END';
-# nothing in this directory is retrievable unless overriden by an .htaccess
+# nothing in this directory is retrievable unless overridden by an .htaccess
 # in a subdirectory; the only exception is duplicates.rdf, which is used by
 # duplicates.xul and must be loadable over the web
 deny from all
@@ -1126,7 +1126,7 @@ END
     print "Creating $templatedir/.htaccess...\n";
     open HTACCESS, '>', "$templatedir/.htaccess";
     print HTACCESS <<'END';
-# nothing in this directory is retrievable unless overriden by an .htaccess
+# nothing in this directory is retrievable unless overridden by an .htaccess
 # in a subdirectory
 deny from all
 END
