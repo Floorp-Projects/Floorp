@@ -1,0 +1,136 @@
+/*
+# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Mozilla.org Code.
+#
+# The Initial Developer of the Original Code is
+# Doron Rosenberg.
+# Portions created by the Initial Developer are Copyright (C) 2001
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s): Ben Goodger <ben@netscape.com> (Original Author)
+#                 Kevin Gerich <webmail@kmgerich.com>
+#                 Matthew Willis <mattwillis@gmail.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+*/
+
+/* Global Styles */
+#CalendarPreferences radio[pane] {
+    list-style-image: url("chrome://calendar/skin/preferences/Options.png"); 
+}
+
+radio[pane=paneGeneral] {
+    -moz-image-region: rect(0px, 32px,  32px, 0px)
+}
+radio[pane=paneGeneral]:hover, radio[pane=paneGeneral][selected="true"]  {
+    -moz-image-region: rect(32px, 32px,  64px, 0px)
+}
+
+radio[pane=paneAlarms] {
+    -moz-image-region: rect(0px, 64px,  32px, 32px)
+}
+radio[pane=paneAlarms]:hover, radio[pane=paneAlarms][selected="true"]  {
+    -moz-image-region: rect(32px, 64px,  64px, 32px)
+}
+
+radio[pane=paneCategories] {
+    -moz-image-region: rect(0px, 128px, 32px, 96px)
+}
+radio[pane=paneCategories]:hover, radio[pane=paneCategories][selected="true"] {
+    -moz-image-region: rect(32px, 128px, 64px, 96px)
+}
+
+radio[pane=paneViews] {
+    -moz-image-region: rect(0px, 192px, 32px, 160px)
+}
+radio[pane=paneViews]:hover, radio[pane=paneViews][selected="true"] {
+    -moz-image-region: rect(32px, 192px, 64px, 160px)
+}
+
+radio[pane=paneTimezones] {
+    -moz-image-region: rect(0px, 224px, 32px, 192px)
+}
+radio[pane=paneTimezones]:hover, radio[pane=paneTimezones][selected="true"] {
+    -moz-image-region: rect(32px, 224px, 64px, 192px)
+}
+
+radio[pane=paneAdvanced] {
+    -moz-image-region: rect(0px, 160px, 32px, 128px)
+}
+radio[pane=paneAdvanced]:hover, radio[pane=paneAdvanced][selected="true"] {
+    -moz-image-region: rect(32px, 160px, 64px, 128px)
+}
+
+/* File Field Widget */
+filefield {
+    margin: 2px 4px;
+    -moz-appearance: textfield;
+}
+
+.fileFieldContentBox {
+    background-color: -moz-Dialog;
+    color: -moz-DialogText;
+    margin: 1px;
+}
+
+filefield[disabled="true"] .fileFieldContentBox {
+    -moz-opacity: 0.5;
+}
+
+filefield[disabled="true"] .fileFieldIcon {
+    -moz-opacity: 0.2;
+}
+
+.fileFieldIcon {
+    width: 16px;
+    height: 16px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+    -moz-margin-start: 2px;
+    -moz-margin-end: 4px;
+}
+
+.fileFieldLabel {
+    -moz-appearance: none;
+    background-color: transparent;
+    border: none;
+    padding: 1px 0px 0px 0px;
+    margin: 0px;
+}
+
+description {
+    font: small-caption;
+    font-weight: normal;
+    line-height: 1.3em;
+    margin-bottom: 4px !important;
+}
+
+caption {
+    border-bottom: 1px solid #ececec;
+    padding: 4px 4px 0px 0px !important;
+}
