@@ -47,7 +47,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE          = pyxultest
 
-ifdef MOZ_XUL_APP
+ifdef MOZ_XULRUNNER
 XPI_NAME               = pyxultest
 # Do I really want these?
 #USE_EXTENSION_MANIFEST = 1
@@ -60,7 +60,3 @@ endif
 PREF_JS_EXPORTS = $(srcdir)/pyxultest-prefs.js
 
 include $(topsrcdir)/config/rules.mk
-
-#xpi:
-#	zip -j $(DIST)/$(XPI_FILE)
-#	cd $(DIST); zip -r $(XPI_FILE) bin/chrome/pyxultest.jar
