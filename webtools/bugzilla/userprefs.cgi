@@ -433,8 +433,6 @@ Bugzilla->login(LOGIN_REQUIRED);
 $cgi->param('Bugzilla_login', $bugzilla_login);
 $cgi->param('Bugzilla_password', $bugzilla_password);
 
-GetVersionTable();
-
 $vars->{'changes_saved'} = $cgi->param('dosave');
 
 my $current_tab_name = $cgi->param('tab') || "account";

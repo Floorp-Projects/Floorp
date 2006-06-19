@@ -45,10 +45,7 @@ use Bugzilla::Classification;
 use Bugzilla::Milestone;
 use Bugzilla::Group;
 use Bugzilla::User;
-
-# Shut up misguided -w warnings about "used only once".  "use vars" just
-# doesn't work for me.
-use vars qw(@legal_bug_status @legal_resolution);
+use Bugzilla::Field;
 
 #
 # Preliminary checks:
@@ -273,8 +270,7 @@ if ($action eq 'new') {
     if ($cgi->param('createseries')) {
         # Insert default charting queries for this product.
         # If they aren't using charting, this won't do any harm.
-        GetVersionTable();
-
+        #
         # $open_name and $product are sqlquoted by the series code 
         # and never used again here, so we can trick_taint them.
         my $open_name = $cgi->param('open_name');
@@ -283,12 +279,12 @@ if ($action eq 'new') {
         my @series;
     
         # We do every status, every resolution, and an "opened" one as well.
-        foreach my $bug_status (@::legal_bug_status) {
+        foreach my $bug_status (@{get_legal_field_values('bug_status')}) {
             push(@series, [$bug_status, 
                            "bug_status=" . url_quote($bug_status)]);
         }
 
-        foreach my $resolution (@::legal_resolution) {
+        foreach my $resolution (@{get_legal_field_values('resolution')}) {
             next if !$resolution;
             push(@series, [$resolution, "resolution=" .url_quote($resolution)]);
         }
@@ -309,11 +305,8 @@ if ($action eq 'new') {
             $series->writeToDatabase();
         }
     }
-    # Make versioncache flush
-    unlink "$datadir/versioncache";
-
     $vars->{'product'} = $product;
-    
+
     $template->process("admin/products/created.html.tmpl", $vars)
         || ThrowTemplateError($template->error());
     exit;
@@ -416,8 +409,6 @@ if ($action eq 'delete') {
              undef, $product->id);
 
     $dbh->bz_unlock_tables();
-
-    unlink "$datadir/versioncache";
 
     $template->process("admin/products/deleted.html.tmpl", $vars)
         || ThrowTemplateError($template->error());
@@ -878,7 +869,6 @@ if ($action eq 'update') {
     }
 
     $dbh->bz_unlock_tables();
-    unlink "$datadir/versioncache";
 
     my $product = new Bugzilla::Product({name => $product_name});
 

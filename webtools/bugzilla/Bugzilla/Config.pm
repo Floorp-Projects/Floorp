@@ -112,19 +112,20 @@ use vars qw(@param_list);
 do $localconfig;
 my %params;
 # Load in the param definitions
-foreach my $item ((glob "$libpath/Bugzilla/Config/*.pm")) {
-    $item =~ m#/([^/]+)\.pm$#;
-    my $module = $1;
-    next if ($module eq 'Common');
-    require "Bugzilla/Config/$module.pm";
-    my @new_param_list = "Bugzilla::Config::$module"->get_param_list();
-    foreach my $item (@new_param_list) {
-        $params{$item->{'name'}} = $item;
+sub _load_params {
+    foreach my $item ((glob "$libpath/Bugzilla/Config/*.pm")) {
+        $item =~ m#/([^/]+)\.pm$#;
+        my $module = $1;
+        next if ($module eq 'Common');
+        require "Bugzilla/Config/$module.pm";
+        my @new_param_list = "Bugzilla::Config::$module"->get_param_list();
+        foreach my $item (@new_param_list) {
+            $params{$item->{'name'}} = $item;
+        }
+        push(@parampanels, $module);
+        push(@param_list, @new_param_list);
     }
-    push(@parampanels, $module);
-    push(@param_list, @new_param_list);
 }
-
 # END INIT CODE
 
 # Subroutines go here
@@ -132,6 +133,7 @@ foreach my $item ((glob "$libpath/Bugzilla/Config/*.pm")) {
 sub Param {
     my ($param) = @_;
 
+    _load_params unless %params;
     my %param_values = %{Bugzilla->params};
 
     # By this stage, the param must be in the hash
@@ -153,6 +155,7 @@ sub Param {
 sub SetParam {
     my ($name, $value) = @_;
 
+    _load_params unless %params;
     die "Unknown param $name" unless (exists $params{$name});
 
     my $entry = $params{$name};
@@ -176,7 +179,6 @@ sub UpdateParams {
     # Note that this isn't particularly 'clean' in terms of separating
     # the backend code (ie this) from the actual params.
     # We don't care about that, though
-
     my $param = Bugzilla->params;
 
     # Old Bugzilla versions stored the version number in the params file
@@ -239,6 +241,7 @@ sub UpdateParams {
 
     # --- DEFAULTS FOR NEW PARAMS ---
 
+    _load_params unless %params;
     foreach my $item (@param_list) {
         my $name = $item->{'name'};
         $param->{$name} = $item->{'default'} unless exists $param->{$name};

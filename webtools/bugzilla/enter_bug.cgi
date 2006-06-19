@@ -46,14 +46,8 @@ use Bugzilla::Product;
 use Bugzilla::Classification;
 use Bugzilla::Keyword;
 use Bugzilla::Token;
+use Bugzilla::Field;
 require "globals.pl";
-
-use vars qw(
-  @legal_opsys
-  @legal_platform
-  @legal_priority
-  @legal_severity
-);
 
 my $user = Bugzilla->login(LOGIN_REQUIRED);
 
@@ -312,8 +306,6 @@ if ($cloned_bug_id) {
     $cloned_bug = new Bugzilla::Bug($cloned_bug_id, $user->id);
 }
 
-GetVersionTable();
-
 if (scalar(@{$product->components}) == 1) {
     # Only one component; just pick it.
     $cgi->param('component', $product->components->[0]->name);
@@ -323,10 +315,10 @@ my %default;
 
 $vars->{'product'}               = $product;
 
-$vars->{'priority'}              = \@legal_priority;
-$vars->{'bug_severity'}          = \@legal_severity;
-$vars->{'rep_platform'}          = \@legal_platform;
-$vars->{'op_sys'}                = \@legal_opsys; 
+$vars->{'priority'}              = get_legal_field_values('priority');
+$vars->{'bug_severity'}          = get_legal_field_values('bug_severity');
+$vars->{'rep_platform'}          = get_legal_field_values('rep_platform');
+$vars->{'op_sys'}                = get_legal_field_values('op_sys');
 
 $vars->{'use_keywords'}          = 1 if Bugzilla::Keyword::keyword_count();
 

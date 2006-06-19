@@ -26,10 +26,9 @@ use lib ".";
 
 require "globals.pl";
 
-use vars qw(@legal_opsys @legal_platform @legal_severity);
-
 use Bugzilla;
 use Bugzilla::Constants;
+use Bugzilla::Field;
 
 my $cgi = Bugzilla->cgi;
 my $template = Bugzilla->template;
@@ -47,8 +46,6 @@ if (grep(/^cmd-/, $cgi->param())) {
 }
 
 use Bugzilla::Search;
-
-GetVersionTable();
 
 Bugzilla->login();
 
@@ -329,12 +326,12 @@ sub get_names {
     my ($names, $isnumeric, $field) = @_;
   
     # These are all the fields we want to preserve the order of in reports.
-    my %fields = ('priority'     => \@::legal_priority,
-                  'bug_severity' => \@::legal_severity,
-                  'rep_platform' => \@::legal_platform,
-                  'op_sys'       => \@::legal_opsys,
-                  'bug_status'   => \@::legal_bug_status,
-                  'resolution'   => [' ', @::legal_resolution]);
+    my %fields = ('priority'     => get_legal_field_values('priority'),
+                  'bug_severity' => get_legal_field_values('bug_severity'),
+                  'rep_platform' => get_legal_field_values('rep_platform'),
+                  'op_sys'       => get_legal_field_values('op_sys'),
+                  'bug_status'   => get_legal_field_values('bug_status'),
+                  'resolution'   => [' ', @{get_legal_field_values('resolution')}]);
     
     my $field_list = $fields{$field};
     my @sorted;

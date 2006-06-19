@@ -54,8 +54,6 @@ if (defined $cgi->param('ctype') && $cgi->param('ctype') eq "xul") {
 my $template = Bugzilla->template;
 my $vars = {};
 
-GetVersionTable();
-
 # collectstats.pl uses duplicates.cgi to generate the RDF duplicates stats.
 # However, this conflicts with requirelogin if it's enabled; so we make
 # logging-in optional if we are running from the command line.

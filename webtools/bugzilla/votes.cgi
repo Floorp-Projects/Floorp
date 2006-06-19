@@ -112,8 +112,6 @@ sub show_bug {
 # Display all the votes for a particular user. If it's the user
 # doing the viewing, give them the option to edit them too.
 sub show_user {
-    GetVersionTable();
-
     my $cgi = Bugzilla->cgi;
     my $dbh = Bugzilla->dbh;
     my $user = Bugzilla->user;
@@ -253,9 +251,6 @@ sub record_votes {
     ############################################################################
     # End Data/Security Validation
     ############################################################################
-
-    GetVersionTable();
-
     my $who = Bugzilla->user->id;
 
     # If the user is voting for bugs, make sure they aren't overstuffing

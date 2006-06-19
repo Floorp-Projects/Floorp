@@ -144,9 +144,6 @@ if ($action eq 'new') {
               VALUES ( ?, ?, ? )',
              undef, $milestone_name, $product->id, $sortkey);
 
-    # Make versioncache flush
-    unlink "$datadir/versioncache";
-
     $milestone = new Bugzilla::Milestone($product->id,
                                          $milestone_name);
     $vars->{'milestone'} = $milestone;
@@ -227,8 +224,6 @@ if ($action eq 'delete') {
     $dbh->do("DELETE FROM milestones WHERE product_id = ? AND value = ?",
              undef, ($product->id, $milestone->name));
 
-    unlink "$datadir/versioncache";
-
     $template->process("admin/milestones/deleted.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
     exit;
@@ -292,7 +287,6 @@ if ($action eq 'update') {
                  $product->id,
                  $milestone_old->name);
 
-        unlink "$datadir/versioncache";
         $vars->{'updated_sortkey'} = 1;
     }
 
@@ -336,8 +330,6 @@ if ($action eq 'update') {
                  $milestone_name,
                  $product->id,
                  $milestone_old->name);
-
-        unlink "$datadir/versioncache";
 
         $vars->{'updated_name'} = 1;
     }

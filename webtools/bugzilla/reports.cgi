@@ -55,8 +55,6 @@ use Bugzilla;
 # to viewing reports, as well.  Time to check the login in that case.
 my $user = Bugzilla->login();
 
-GetVersionTable();
-
 Bugzilla->switch_to_shadow_db();
 
 my $cgi = Bugzilla->cgi;

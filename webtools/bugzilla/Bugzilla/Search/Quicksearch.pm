@@ -28,6 +28,7 @@ use Bugzilla::Error;
 use Bugzilla::Constants;
 use Bugzilla::Keyword;
 use Bugzilla::Bug;
+use Bugzilla::Field;
 
 use base qw(Exporter);
 @Bugzilla::Search::Quicksearch::EXPORT = qw(quicksearch);
@@ -144,8 +145,8 @@ sub quicksearch {
         }
 
         # It's no alias either, so it's a more complex query.
-
-        &::GetVersionTable();
+        my $legal_statuses = get_legal_field_values('bug_status');
+        my $legal_resolutions = get_legal_field_values('resolution');
 
         # Globally translate " AND ", " OR ", " NOT " to space, pipe, dash.
         $searchstring =~ s/\s+AND\s+/ /g;
@@ -158,12 +159,12 @@ sub quicksearch {
         my @closedStates;
         my (%states, %resolutions);
 
-        foreach (@::legal_bug_status) {
+        foreach (@$legal_statuses) {
             push(@closedStates, $_) unless is_open_state($_);
         }
         foreach (@openStates) { $states{$_} = 1 }
         if ($words[0] eq 'ALL') {
-            foreach (@::legal_bug_status) { $states{$_} = 1 }
+            foreach (@$legal_statuses) { $states{$_} = 1 }
             shift @words;
         }
         elsif ($words[0] eq 'OPEN') {
@@ -175,7 +176,7 @@ sub quicksearch {
                               \%resolutions,
                               [split(/,/, substr($words[0], 1))],
                               \@closedStates,
-                              \@::legal_resolution)) {
+                              $legal_resolutions)) {
                 shift @words;
                 # Allowing additional resolutions means we need to keep
                 # the "no resolution" resolution.
@@ -191,8 +192,8 @@ sub quicksearch {
             if (matchPrefixes(\%states,
                               \%resolutions,
                               [split(/,/, $words[0])],
-                              \@::legal_bug_status,
-                              \@::legal_resolution)) {
+                              $legal_statuses,
+                              $legal_resolutions)) {
                 shift @words;
             }
             else {
@@ -292,7 +293,7 @@ sub quicksearch {
                             }
                             # Severity
                             elsif (grep({lc($word) eq substr($_, 0, 3)}
-                                        @::legal_severity)) {
+                                        @{get_legal_field_values('bug_severity')})) {
                                 addChart('bug_severity', 'substring',
                                          $word, $negate);
                             }

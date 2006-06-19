@@ -35,19 +35,7 @@ use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Keyword;
 use Bugzilla::Bug;
-
-# Suppress "used only once" warnings.
-use vars 
-  qw(
-    @legal_priority 
-    @legal_severity 
-    @legal_platform 
-    @legal_opsys 
-    @legal_resolution 
-  );
-
-# Use the global template variables defined in globals.pl 
-# to generate the output.
+use Bugzilla::Field;
 
 my $user = Bugzilla->login(LOGIN_OPTIONAL);
 
@@ -57,18 +45,15 @@ if (Param('requirelogin') && !$user->id) {
     display_data();
 }
 
-# Retrieve this installation's configuration.
-GetVersionTable();
-
 # Pass a bunch of Bugzilla configuration to the templates.
 my $vars = {};
-$vars->{'priority'}  = \@::legal_priority;
-$vars->{'severity'}  = \@::legal_severity;
-$vars->{'platform'}   = \@::legal_platform;
-$vars->{'op_sys'}    = \@::legal_opsys;
+$vars->{'priority'}  = get_legal_field_values('priority');
+$vars->{'severity'}  = get_legal_field_values('bug_severity');
+$vars->{'platform'}  = get_legal_field_values('rep_platform');
+$vars->{'op_sys'}    = get_legal_field_values('op_sys');
 $vars->{'keyword'}    = [map($_->name, Bugzilla::Keyword->get_all)];
-$vars->{'resolution'} = \@::legal_resolution;
-$vars->{'status'}    = \@::legal_bug_status;
+$vars->{'resolution'} = get_legal_field_values('resolution');
+$vars->{'status'}    = get_legal_field_values('bug_status');
 
 # Include a list of product objects.
 $vars->{'products'} = $user->get_selectable_products;
@@ -77,7 +62,7 @@ $vars->{'products'} = $user->get_selectable_products;
 # be made part of the configuration.
 my @open_status;
 my @closed_status;
-foreach my $status (@::legal_bug_status) {
+foreach my $status (@{$vars->{'status'}}) {
     is_open_state($status) ? push(@open_status, $status) 
                            : push(@closed_status, $status);
 }

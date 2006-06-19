@@ -144,9 +144,6 @@ if ($action eq 'new') {
     $dbh->do("INSERT INTO versions (value, product_id)
               VALUES (?, ?)", undef, ($version_name, $product->id));
 
-    # Make versioncache flush
-    unlink "$datadir/versioncache";
-
     $version = new Bugzilla::Version($product->id, $version_name);
     $vars->{'version'} = $version;
     $vars->{'product'} = $product;
@@ -200,8 +197,6 @@ if ($action eq 'delete') {
 
     $dbh->do("DELETE FROM versions WHERE product_id = ? AND value = ?",
               undef, ($product->id, $version->name));
-
-    unlink "$datadir/versioncache";
 
     $vars->{'version'} = $version;
     $vars->{'product'} = $product;
@@ -278,8 +273,6 @@ if ($action eq 'update') {
                   SET value = ?
                   WHERE product_id = ? AND value = ?", undef,
                   ($version_name, $product->id, $version_old->name));
-
-        unlink "$datadir/versioncache";
 
         $vars->{'updated_name'} = 1;
     }

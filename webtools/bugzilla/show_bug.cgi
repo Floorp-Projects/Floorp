@@ -54,8 +54,6 @@ if (!$cgi->param('id') && $single) {
 my $format = $template->get_format("bug/show", scalar $cgi->param('format'), 
                                    scalar $cgi->param('ctype'));
 
-GetVersionTable();
-
 my @bugs = ();
 my %marks;
 

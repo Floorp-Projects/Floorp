@@ -49,14 +49,12 @@ my $current_panel = $cgi->param('section') || 'core';
 $current_panel =~ /^([A-Za-z0-9_-]+)$/;
 $current_panel = $1;
 
-GetVersionTable();
-
 my $current_module;
 my @panels = ();
 foreach my $panel (@parampanels) {
     next if ($panel eq 'Common');
     require "Bugzilla/Config/$panel.pm";
-    my @module_param_list = "Bugzilla::Config::${panel}"->get_param_list();
+    my @module_param_list = "Bugzilla::Config::${panel}"->get_param_list(1);
     my $item = { name => lc($panel),
                  current => ($current_panel eq lc($panel)) ? 1 : 0,
                  param_list => \@module_param_list,
@@ -70,7 +68,7 @@ $vars->{panels} = \@panels;
 
 if ($action eq 'save' && $current_module) {
     my @changes = ();
-    my @module_param_list = "Bugzilla::Config::${current_module}"->get_param_list();
+    my @module_param_list = "Bugzilla::Config::${current_module}"->get_param_list(1);
 
     foreach my $i (@module_param_list) {
         my $name = $i->{'name'};
@@ -128,7 +126,6 @@ if ($action eq 'save' && $current_module) {
     $vars->{'param_changed'} = \@changes;
 
     WriteParams();
-    unlink "$datadir/versioncache";
 }
 
 $template->process("admin/params/editparams.html.tmpl", $vars)

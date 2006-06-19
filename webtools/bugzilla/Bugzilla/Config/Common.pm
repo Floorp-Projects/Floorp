@@ -29,34 +29,15 @@
 #                 Frédéric Buclin <LpSolit@gmail.com>
 #
 
-# This file defines all the parameters that we have a GUI to edit within
-# Bugzilla.
-
-# ATTENTION!!!!   THIS FILE ONLY CONTAINS THE DEFAULTS.
-# You cannot change your live settings by editing this file.
-# Only adding new parameters is done here.  Once the parameter exists, you
-# must use %baseurl%/editparams.cgi from the web to edit the settings.
-
-# This file is included via |do|, mainly because of circular dependency issues
-# (such as globals.pl -> Bugzilla::Config -> this -> Bugzilla::Config)
-# which preclude compile time loading.
-
-# Those issues may go away at some point, and the contents of this file
-# moved somewhere else. Please try to avoid more dependencies from here
-# to other code
-
-# (Note that these aren't just added directly to Bugzilla::Config, because
-# the backend prefs code is separate to this...)
-
 package Bugzilla::Config::Common;
 
 use strict;
 
 use Socket;
 
-use Bugzilla::Config qw(:DEFAULT $templatedir $webdotdir);
 use Bugzilla::Util;
 use Bugzilla::Constants;
+use Bugzilla::Field;
 
 use base qw(Exporter);
 @Bugzilla::Config::Common::EXPORT =
@@ -132,40 +113,40 @@ sub check_sslbase {
 
 sub check_priority {
     my ($value) = (@_);
-    &::GetVersionTable();
-    if (lsearch(\@::legal_priority, $value) < 0) {
+    my $legal_priorities = get_legal_field_values('priority');
+    if (lsearch($legal_priorities, $value) < 0) {
         return "Must be a legal priority value: one of " .
-            join(", ", @::legal_priority);
+            join(", ", @$legal_priorities);
     }
     return "";
 }
 
 sub check_severity {
     my ($value) = (@_);
-    &::GetVersionTable();
-    if (lsearch(\@::legal_severity, $value) < 0) {
+    my $legal_severities = get_legal_field_values('bug_severity');
+    if (lsearch($legal_severities, $value) < 0) {
         return "Must be a legal severity value: one of " .
-            join(", ", @::legal_severity);
+            join(", ", @$legal_severities);
     }
     return "";
 }
 
 sub check_platform {
     my ($value) = (@_);
-    &::GetVersionTable();
-    if (lsearch(['', @::legal_platform], $value) < 0) {
+    my $legal_platforms = get_legal_field_values('rep_platform');
+    if (lsearch(['', @$legal_platforms], $value) < 0) {
         return "Must be empty or a legal platform value: one of " .
-            join(", ", @::legal_platform);
+            join(", ", @$legal_platforms);
     }
     return "";
 }
 
 sub check_opsys {
     my ($value) = (@_);
-    &::GetVersionTable();
-    if (lsearch(['', @::legal_opsys], $value) < 0) {
+    my $legal_OS = get_legal_field_values('op_sys');
+    if (lsearch(['', @$legal_OS], $value) < 0) {
         return "Must be empty or a legal operating system value: one of " .
-            join(", ", @::legal_opsys);
+            join(", ", @$legal_OS);
     }
     return "";
 }
@@ -177,7 +158,7 @@ sub check_shadowdb {
         return "";
     }
 
-    if (!Param('shadowdbhost')) {
+    if (!Bugzilla->params->{'shadowdbhost'}) {
         return "You need to specify a host when using a shadow database";
     }
 
@@ -215,6 +196,7 @@ sub check_webdotbase {
             return "The file path \"$value\" is not a valid executable.  Please specify the complete file path to 'dot' if you intend to generate graphs locally.";
         }
         # Check .htaccess allows access to generated images
+        my $webdotdir = bz_locations()->{'webdotdir'};
         if(-e "$webdotdir/.htaccess") {
             open HTACCESS, "$webdotdir/.htaccess";
             if(! grep(/ \\\.png\$/,<HTACCESS>)) {
@@ -259,8 +241,8 @@ sub check_user_verify_class {
         } elsif ($class eq 'LDAP') {
             eval "require Net::LDAP";
             return "Error requiring Net::LDAP: '$@'" if $@;
-            return "LDAP servername is missing" unless Param("LDAPserver");
-            return "LDAPBaseDN is empty" unless Param("LDAPBaseDN");
+            return "LDAP servername is missing" unless Bugzilla->params->{"LDAPserver"};
+            return "LDAPBaseDN is empty" unless Bugzilla->params->{"LDAPBaseDN"};
         } else {
                 return "Unknown user_verify_class '$class' in check_user_verify_class";
         }
@@ -282,6 +264,7 @@ sub check_languages {
     if(!scalar(@languages)) {
        return "You need to specify a language tag."
     }
+    my $templatedir = bz_locations()->{'templatedir'};
     foreach my $language (@languages) {
        if(   ! -d "$templatedir/$language/custom" 
           && ! -d "$templatedir/$language/default") {

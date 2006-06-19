@@ -102,11 +102,6 @@ END
 # This hash usually comes from the "mailrecipients" var in a template call.
 sub Send {
     my ($id, $forced) = (@_);
-
-    # This only works in a sub. Probably something to do with the
-    # require abuse we do.
-    &::GetVersionTable();
-
     return ProcessOneBug($id, $forced);
 }
 

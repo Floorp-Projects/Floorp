@@ -115,9 +115,6 @@ if ($action eq 'new') {
     $dbh->do("INSERT INTO classifications (name, description)
               VALUES (?, ?)", undef, ($class_name, $description));
 
-    # Make versioncache flush
-    unlink "$datadir/versioncache";
-
     $vars->{'classification'} = $class_name;
 
     LoadTemplate($action);
@@ -173,8 +170,6 @@ if ($action eq 'delete') {
 
     $dbh->bz_unlock_tables();
 
-    unlink "$datadir/versioncache";
-
     $vars->{'classification'} = $classification;
 
     LoadTemplate($action);
@@ -222,10 +217,8 @@ if ($action eq 'update') {
         trick_taint($class_name);
         $dbh->do("UPDATE classifications SET name = ? WHERE id = ?",
                  undef, ($class_name, $class_old->id));
-        
-        $vars->{'updated_classification'} = 1;
 
-        unlink "$datadir/versioncache";
+        $vars->{'updated_classification'} = 1;
     }
 
     if ($description ne $class_old->description) {
@@ -235,8 +228,6 @@ if ($action eq 'update') {
                  ($description, $class_old->id));
 
         $vars->{'updated_description'} = 1;
-
-        unlink "$datadir/versioncache";
     }
 
     $dbh->bz_unlock_tables();

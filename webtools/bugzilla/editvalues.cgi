@@ -217,8 +217,6 @@ if ($action eq 'new') {
                              VALUES ( ?, ? )");
     $sth->execute($value, $sortkey);
 
-    unlink "$datadir/versioncache";
-
     $vars->{'value'} = $value;
     $vars->{'field'} = $field;
     $template->process("admin/fieldvalues/created.html.tmpl",
@@ -287,8 +285,6 @@ if ($action eq 'delete') {
 
     $dbh->bz_unlock_tables();
 
-    unlink "$datadir/versioncache";
-
     $vars->{'value'} = $value;
     $vars->{'field'} = $field;
     $template->process("admin/fieldvalues/deleted.html.tmpl",
@@ -354,7 +350,6 @@ if ($action eq 'update') {
         $dbh->do("UPDATE $field SET sortkey = ? WHERE value = ?",
                  undef, $sortkey, $valueold);
 
-        unlink "$datadir/versioncache";
         $vars->{'updated_sortkey'} = 1;
         $vars->{'sortkey'} = $sortkey;
     }
@@ -377,8 +372,6 @@ if ($action eq 'update') {
         $dbh->do("UPDATE $field SET value = ? WHERE value = ?",
                  undef, $value, $valueold);
 
-        unlink "$datadir/versioncache";
-
         $vars->{'updated_value'} = 1;
     }
 
@@ -387,13 +380,12 @@ if ($action eq 'update') {
     # If the old value was the default value for the field,
     # update data/params accordingly.
     # This update is done while tables are unlocked due to the
-    # annoying call to GetVersionTable in Bugzilla/Config/Common.pm.
+    # annoying calls in Bugzilla/Config/Common.pm.
     if ($value ne $valueold
         && $valueold eq Param($defaults{$field}))
     {
         SetParam($defaults{$field}, $value);
         WriteParams();
-        unlink "$datadir/versioncache";
         $vars->{'default_value_updated'} = 1;
     }
 

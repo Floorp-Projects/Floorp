@@ -33,8 +33,6 @@ require "globals.pl";
 my $template = Bugzilla->template;
 my $vars = {};
 
-GetVersionTable();
-
 #
 # Date handling
 #

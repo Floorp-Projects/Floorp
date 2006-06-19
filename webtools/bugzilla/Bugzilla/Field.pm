@@ -70,7 +70,7 @@ package Bugzilla::Field;
 use strict;
 
 use base qw(Exporter);
-@Bugzilla::Field::EXPORT = qw(check_field get_field_id);
+@Bugzilla::Field::EXPORT = qw(check_field get_field_id get_legal_field_values);
 
 use Bugzilla::Util;
 use Bugzilla::Constants;
@@ -280,6 +280,36 @@ sub match {
 
 =pod
 
+=over
+
+=item C<get_legal_field_values($field)>
+
+Description: returns all the legal values for a field that has a
+             list of legal values, like rep_platform or resolution.
+             The table where these values are stored must at least have
+             the following columns: value, isactive, sortkey.
+
+Params:    C<$field> - Name of the table where valid values are.
+
+Returns:   a reference to a list of valid values.
+
+=back
+
+=cut
+
+sub get_legal_field_values {
+    my ($field) = @_;
+    my $dbh = Bugzilla->dbh;
+    my $result_ref = $dbh->selectcol_arrayref(
+         "SELECT value FROM $field
+           WHERE isactive = ?
+        ORDER BY sortkey, value", undef, (1));
+    return $result_ref;
+}
+
+
+=pod
+
 =head2 Data Validation
 
 =over
@@ -288,15 +318,17 @@ sub match {
 
 Description: Makes sure the field $name is defined and its $value
              is non empty. If @legal_values is defined, this routine
-             also checks whether its value is one of the legal values
-             associated with this field. If the test is successful,
+             checks whether its value is one of the legal values
+             associated with this field, else it checks against
+             the default valid values for this field obtained by
+             C<get_legal_field_values($name)>. If the test is successful,
              the function returns 1. If the test fails, an error
              is thrown (by default), unless $no_warn is true, in which
              case the function returns 0.
 
 Params:      $name         - the field name
              $value        - the field value
-             @legal_values - (optional) ref to a list of legal values
+             @legal_values - (optional) list of legal values
              $no_warn      - (optional) do not throw an error if true
 
 Returns:     1 on success; 0 on failure if $no_warn is true (else an
@@ -310,17 +342,21 @@ sub check_field {
     my ($name, $value, $legalsRef, $no_warn) = @_;
     my $dbh = Bugzilla->dbh;
 
+    # If $legalsRef is undefined, we use the default valid values.
+    unless (defined $legalsRef) {
+        $legalsRef = get_legal_field_values($name);
+    }
+
     if (!defined($value)
         || trim($value) eq ""
-        || (defined($legalsRef) && lsearch($legalsRef, $value) < 0))
+        || lsearch($legalsRef, $value) < 0)
     {
         return 0 if $no_warn; # We don't want an error to be thrown; return.
         trick_taint($name);
-        my ($result) = $dbh->selectrow_array('SELECT description FROM fielddefs
-                                              WHERE name = ?', undef, $name);
 
-        my $field = $result || $name;
-        ThrowCodeError('illegal_field', { field => $field });
+        my $field = new Bugzilla::Field($name);
+        my $field_desc = $field ? $field->description : $name;
+        ThrowCodeError('illegal_field', { field => $field_desc });
     }
     return 1;
 }

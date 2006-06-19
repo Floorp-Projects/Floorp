@@ -34,11 +34,18 @@ package Bugzilla::Config::BugFields;
 use strict;
 
 use Bugzilla::Config::Common;
+use Bugzilla::Field;
 
 $Bugzilla::Config::BugFields::sortkey = "04";
 
 sub get_param_list {
   my $class = shift;
+
+  my @legal_priorities = @{get_legal_field_values('priority')};
+  my @legal_severities = @{get_legal_field_values('bug_severity')};
+  my @legal_platforms  = @{get_legal_field_values('rep_platform')};
+  my @legal_OS         = @{get_legal_field_values('op_sys')};
+
   my @param_list = (
   {
    name => 'useclassification',
@@ -85,23 +92,23 @@ sub get_param_list {
   {
    name => 'defaultpriority',
    type => 's',
-   choices => \@::legal_priority,
-   default => $::legal_priority[-1],
+   choices => \@legal_priorities,
+   default => $legal_priorities[-1],
    checker => \&check_priority
   },
 
   {
    name => 'defaultseverity',
    type => 's',
-   choices => \@::legal_severity,
-   default => $::legal_severity[-1],
+   choices => \@legal_severities,
+   default => $legal_severities[-1],
    checker => \&check_severity
   },
 
   {
    name => 'defaultplatform',
    type => 's',
-   choices => ['', @::legal_platform],
+   choices => ['', @legal_platforms],
    default => '',
    checker => \&check_platform
   },
@@ -109,7 +116,7 @@ sub get_param_list {
   {
    name => 'defaultopsys',
    type => 's',
-   choices => ['', @::legal_opsys],
+   choices => ['', @legal_OS],
    default => '',
    checker => \&check_opsys
   } );

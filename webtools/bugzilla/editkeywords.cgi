@@ -152,9 +152,6 @@ if ($action eq 'new') {
               (id, name, description) VALUES (?, ?, ?)',
               undef, ($newid, $name, $description));
 
-    # Make versioncache flush
-    unlink "$datadir/versioncache";
-
     print $cgi->header();
 
     $vars->{'name'} = $name;
@@ -226,9 +223,6 @@ if ($action eq 'update') {
     $dbh->do('UPDATE keyworddefs SET name = ?, description = ?
               WHERE id = ?', undef, ($name, $description, $id));
 
-    # Make versioncache flush
-    unlink "$datadir/versioncache";
-
     print $cgi->header();
 
     $vars->{'name'} = $name;
@@ -266,9 +260,6 @@ if ($action eq 'delete') {
 
     $dbh->do('DELETE FROM keywords WHERE keywordid = ?', undef, $id);
     $dbh->do('DELETE FROM keyworddefs WHERE id = ?', undef, $id);
-
-    # Make versioncache flush
-    unlink "$datadir/versioncache";
 
     print $cgi->header();
 

@@ -52,8 +52,6 @@ if (chdir("graphs")) {
     chdir("..");
 }
 
-GetVersionTable();
-
 # Let Throw*Error() work correctly outside a web browser.
 Bugzilla->batch(1);
 Bugzilla->switch_to_shadow_db();

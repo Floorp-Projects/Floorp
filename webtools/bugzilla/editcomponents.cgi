@@ -175,8 +175,6 @@ if ($action eq 'new') {
 
     # Insert default charting queries for this product.
     # If they aren't using charting, this won't do any harm.
-    GetVersionTable();
-
     my @series;
 
     my $prodcomp = "&product="   . url_quote($product->name) .
@@ -207,9 +205,6 @@ if ($action eq 'new') {
                                           $whoid, 1, $sdata->[1], 1);
         $series->writeToDatabase();
     }
-
-    # Make versioncache flush
-    unlink "$datadir/versioncache";
 
     $component =
         new Bugzilla::Component({product_id => $product->id,
@@ -279,8 +274,6 @@ if ($action eq 'delete') {
              undef, $component->id);
 
     $dbh->bz_unlock_tables();
-
-    unlink "$datadir/versioncache";
 
     $vars->{'comp'} = $component;
     $vars->{'product'} = $product;
@@ -367,7 +360,6 @@ if ($action eq 'update') {
         $dbh->do("UPDATE components SET name = ? WHERE id = ?",
                  undef, ($comp_name, $component_old->id));
 
-        unlink "$datadir/versioncache";
         $vars->{'updated_name'} = 1;
 
     }

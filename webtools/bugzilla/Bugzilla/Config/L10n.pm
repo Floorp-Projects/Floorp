@@ -35,7 +35,7 @@ use strict;
 
 use File::Spec; # for find_languages
 
-use Bugzilla::Config qw($templatedir);
+use Bugzilla::Constants;
 use Bugzilla::Config::Common;
 
 $Bugzilla::Config::L10n::sortkey = "08";
@@ -62,7 +62,8 @@ sub get_param_list {
 
 sub find_languages {
     my @languages = ();
-    opendir(DIR, $templatedir) || return "Can't open 'template' directory: $!";
+    opendir(DIR, bz_locations()->{'templatedir'})
+      || return "Can't open 'template' directory: $!";
     foreach my $dir (readdir(DIR)) {
         next unless $dir =~ /^([a-z-]+)$/i;
         my $lang = $1;

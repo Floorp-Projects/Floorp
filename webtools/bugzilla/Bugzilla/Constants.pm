@@ -33,6 +33,7 @@ use strict;
 use base qw(Exporter);
 
 @Bugzilla::Constants::EXPORT = qw(
+    bz_locations
     CONTROLMAPNA
     CONTROLMAPSHOWN
     CONTROLMAPDEFAULT
@@ -278,8 +279,6 @@ use constant FIELD_TYPE_FREETEXT  => 1;
 use constant BUG_STATE_OPEN => ('NEW', 'REOPENED', 'ASSIGNED', 
                                 'UNCONFIRMED');
 
-1;
-
 # Data about what we require for different databases.
 use constant DB_MODULE => {
     'mysql' => {db => 'Bugzilla::DB::Mysql', db_version => '4.0.14',
@@ -289,3 +288,48 @@ use constant DB_MODULE => {
                 dbd => 'DBD::Pg', dbd_version => '1.45',
                 name => 'PostgreSQL'},
 };
+
+# Under mod_perl, get this from a .htaccess config variable,
+# and/or default from the current 'real' dir.
+# At some stage after this, it may be possible for these dir locations
+# to go into localconfig. localconfig can't be specified in a config file,
+# except possibly with mod_perl. If you move localconfig, you need to change
+# the define here.
+# $libpath is really only for mod_perl; its not yet possible to move the
+# .pms elsewhere.
+# $webdotdir must be in the webtree somewhere. Even if you use a local dot,
+# we output images to there. Also, if $webdot dir is not relative to the
+# bugzilla root directory, you'll need to change showdependencygraph.cgi to
+# set image_url to the correct location.
+# The script should really generate these graphs directly...
+# Note that if $libpath is changed, some stuff will break, notably dependency
+# graphs (since the path will be wrong in the HTML). This will be fixed at
+# some point.
+sub bz_locations {
+    my $libpath = '.';
+    my $project;
+    my $localconfig;
+    my $datadir;
+    if ($ENV{'PROJECT'} && $ENV{'PROJECT'} =~ /^(\w+)$/) {
+        $project = $1;
+        $localconfig = "$libpath/localconfig.$project";
+        $datadir = "$libpath/data/$project";
+    } else {
+        $localconfig = "$libpath/localconfig";
+        $datadir = "$libpath/data";
+    }
+
+    # Returns a hash of paths.
+    return {
+        'libpath'     => $libpath,
+        'templatedir' => "$libpath/template",
+        'project'     => $project,
+        'localconfig' => $localconfig,
+        'datadir'     => $datadir,
+        'attachdir'   => "$datadir/attachments",
+        'webdotdir'   => "$datadir/webdot",
+        'extensionsdir' => "$libpath/extensions"
+    };
+}
+
+1;

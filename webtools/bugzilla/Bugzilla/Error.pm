@@ -26,7 +26,6 @@ use base qw(Exporter);
 
 @Bugzilla::Error::EXPORT = qw(ThrowCodeError ThrowTemplateError ThrowUserError);
 
-use Bugzilla::Config qw($datadir);
 use Bugzilla::Constants;
 use Bugzilla::Util;
 use Date::Format;
@@ -42,6 +41,7 @@ sub _throw_error {
     # and the transaction is rolled back (if supported)
     Bugzilla->dbh->bz_unlock_tables(UNLOCK_ABORT);
 
+    my $datadir = bz_locations()->{'datadir'};
     # If a writable $datadir/errorlog exists, log error details there.
     if (-w "$datadir/errorlog") {
         require Data::Dumper;
@@ -115,9 +115,9 @@ sub ThrowTemplateError {
     # Try a template first; but if this one fails too, fall back
     # on plain old print statements.
     if (!$template->process("global/code-error.html.tmpl", $vars)) {
-        my $maintainer = Bugzilla::Config::Param('maintainer');
-        my $error = Bugzilla::Util::html_quote($vars->{'template_error_msg'});
-        my $error2 = Bugzilla::Util::html_quote($template->error());
+        my $maintainer = Bugzilla->params->{'maintainer'};
+        my $error = html_quote($vars->{'template_error_msg'});
+        my $error2 = html_quote($template->error());
         print <<END;
         <tt>
           <p>

@@ -39,16 +39,6 @@ use Bugzilla::Product;
 use Bugzilla::Keyword;
 use Bugzilla::Token;
 
-# Shut up misguided -w warnings about "used only once". For some reason,
-# "use vars" chokes on me when I try it here.
-sub sillyness {
-    my $zz;
-    $zz = @::legal_opsys;
-    $zz = @::legal_platform;
-    $zz = @::legal_priority;
-    $zz = @::legal_severity;
-}
-
 my $user = Bugzilla->login(LOGIN_REQUIRED);
 
 my $cgi = Bugzilla->cgi;
@@ -248,14 +238,12 @@ if (!Param('letsubmitterchoosepriority')) {
     $cgi->param(-name => 'priority', -value => Param('defaultpriority'));
 }
 
-GetVersionTable();
-
 # Some more sanity checking
-check_field('rep_platform', scalar $cgi->param('rep_platform'), \@::legal_platform);
-check_field('bug_severity', scalar $cgi->param('bug_severity'), \@::legal_severity);
-check_field('priority',     scalar $cgi->param('priority'),     \@::legal_priority);
-check_field('op_sys',       scalar $cgi->param('op_sys'),       \@::legal_opsys);
-check_field('bug_status',   scalar $cgi->param('bug_status'),   ['UNCONFIRMED', 'NEW']);
+check_field('rep_platform', scalar $cgi->param('rep_platform'));
+check_field('bug_severity', scalar $cgi->param('bug_severity'));
+check_field('priority',     scalar $cgi->param('priority'));
+check_field('op_sys',       scalar $cgi->param('op_sys'));
+check_field('bug_status',   scalar $cgi->param('bug_status'), ['UNCONFIRMED', 'NEW']);
 check_field('version',      scalar $cgi->param('version'),
             [map($_->name, @{$product->versions})]);
 check_field('target_milestone', scalar $cgi->param('target_milestone'),

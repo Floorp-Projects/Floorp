@@ -42,14 +42,10 @@ use Bugzilla::User;
 use Bugzilla::Bug;
 use Bugzilla::Product;
 use Bugzilla::Keyword;
+use Bugzilla::Field;
 
 # Include the Bugzilla CGI and general utility library.
 require "globals.pl";
-
-use vars qw(@legal_platform
-            @legal_priority
-            @legal_severity
-            @settable_resolution);
 
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
@@ -90,7 +86,6 @@ if ($dotweak) {
       || ThrowUserError("auth_failure", {group  => "editbugs",
                                          action => "modify",
                                          object => "multiple_bugs"});
-    GetVersionTable();
 }
 
 # Hack to support legacy applications that think the RDF ctype is at format=rdf.
@@ -1042,11 +1037,11 @@ if ($dotweak) {
     $vars->{'use_keywords'} = 1 if Bugzilla::Keyword::keyword_count();
 
     $vars->{'products'} = Bugzilla->user->get_enterable_products;
-    $vars->{'platforms'} = \@::legal_platform;
-    $vars->{'op_sys'} = \@::legal_opsys;
-    $vars->{'priorities'} = \@::legal_priority;
-    $vars->{'severities'} = \@::legal_severity;
-    $vars->{'resolutions'} = \@::settable_resolution;
+    $vars->{'platforms'} = get_legal_field_values('rep_platform');
+    $vars->{'op_sys'} = get_legal_field_values('op_sys');
+    $vars->{'priorities'} = get_legal_field_values('priority');
+    $vars->{'severities'} = get_legal_field_values('bug_severity');
+    $vars->{'resolutions'} = Bugzilla::Bug->settable_resolutions;
 
     $vars->{'unconfirmedstate'} = 'UNCONFIRMED';
 

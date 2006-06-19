@@ -64,15 +64,6 @@ use Bugzilla::Keyword;
 use Bugzilla::Flag;
 use Bugzilla::FlagType;
 
-# Shut up misguided -w warnings about "used only once":
-
-use vars qw(%legal_opsys
-          %legal_platform
-          %legal_priority
-          %settable_resolution
-          %legal_severity
-           );
-
 my $user = Bugzilla->login(LOGIN_REQUIRED);
 my $whoid = $user->id;
 my $grouplist = $user->groups_as_string;
@@ -265,8 +256,6 @@ if ($cgi->cookie("BUGLIST") && defined $cgi->param('id')) {
     @bug_list = split(/:/, $cgi->cookie("BUGLIST"));
     $vars->{'bug_list'} = \@bug_list;
 }
-
-GetVersionTable();
 
 foreach my $field_name ('product', 'component', 'version') {
     defined($cgi->param($field_name))
@@ -639,10 +628,10 @@ if (defined $cgi->param('id')) {
         check_field('target_milestone', scalar $cgi->param('target_milestone'), 
                     [map($_->name, @{$prod_obj->milestones})]);
     }
-    check_field('rep_platform', scalar $cgi->param('rep_platform'), \@::legal_platform);
-    check_field('op_sys',       scalar $cgi->param('op_sys'),       \@::legal_opsys);
-    check_field('priority',     scalar $cgi->param('priority'),     \@::legal_priority);
-    check_field('bug_severity', scalar $cgi->param('bug_severity'), \@::legal_severity);
+    check_field('rep_platform', scalar $cgi->param('rep_platform'));
+    check_field('op_sys',       scalar $cgi->param('op_sys'));
+    check_field('priority',     scalar $cgi->param('priority'));
+    check_field('bug_severity', scalar $cgi->param('bug_severity'));
 
     # Those fields only have to exist. We don't validate their value here.
     foreach my $field_name ('bug_file_loc', 'short_desc', 'longdesclength') {
@@ -1173,7 +1162,7 @@ SWITCH: for ($cgi->param('knob')) {
     /^(resolve|change_resolution)$/ && CheckonComment( "resolve" ) && do {
         # Check here, because its the only place we require the resolution
         check_field('resolution', scalar $cgi->param('resolution'),
-                    \@::settable_resolution);
+                    Bugzilla::Bug->settable_resolutions);
 
         # don't resolve as fixed while still unresolved blocking bugs
         if (Param("noresolveonopenblockers")

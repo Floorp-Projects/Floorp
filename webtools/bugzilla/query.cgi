@@ -37,15 +37,7 @@ use Bugzilla::User;
 use Bugzilla::Util;
 use Bugzilla::Product;
 use Bugzilla::Keyword;
-
-use vars qw(
-    @legal_resolution
-    @legal_bug_status
-    @legal_opsys
-    @legal_platform
-    @legal_priority
-    @legal_severity
-);
+use Bugzilla::Field;
 
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
@@ -240,12 +232,10 @@ if (Param('usetargetmilestone')) {
 
 $vars->{'have_keywords'} = Bugzilla::Keyword::keyword_count();
 
-GetVersionTable();
-
-push @::legal_resolution, "---"; # Oy, what a hack.
-shift @::legal_resolution; 
-      # Another hack - this array contains "" for some reason. See bug 106589.
-$vars->{'resolution'} = \@::legal_resolution;
+my $legal_resolutions = get_legal_field_values('resolution');
+push(@$legal_resolutions, "---"); # Oy, what a hack.
+# Another hack - this array contains "" for some reason. See bug 106589.
+$vars->{'resolution'} = [grep ($_, @$legal_resolutions)];
 
 my @chfields;
 
@@ -272,11 +262,11 @@ if (UserInGroup(Param('timetrackinggroup'))) {
 }
 @chfields = (sort(@chfields));
 $vars->{'chfield'} = \@chfields;
-$vars->{'bug_status'} = \@::legal_bug_status;
-$vars->{'rep_platform'} = \@::legal_platform;
-$vars->{'op_sys'} = \@::legal_opsys;
-$vars->{'priority'} = \@::legal_priority;
-$vars->{'bug_severity'} = \@::legal_severity;
+$vars->{'bug_status'} = get_legal_field_values('bug_status');
+$vars->{'rep_platform'} = get_legal_field_values('rep_platform');
+$vars->{'op_sys'} = get_legal_field_values('op_sys');
+$vars->{'priority'} = get_legal_field_values('priority');
+$vars->{'bug_severity'} = get_legal_field_values('bug_severity');
 
 # Boolean charts
 my @fields;

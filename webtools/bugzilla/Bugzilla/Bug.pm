@@ -30,10 +30,6 @@ package Bugzilla::Bug;
 
 use strict;
 
-use vars qw(@legal_platform
-            @legal_priority @legal_severity @legal_opsys @legal_bug_status
-            @settable_resolution);
-
 use CGI::Carp qw(fatalsToBrowser);
 
 use Bugzilla::Attachment;
@@ -651,8 +647,6 @@ sub choices {
     return $self->{'choices'} if exists $self->{'choices'};
     return {} if $self->{'error'};
 
-    &::GetVersionTable();
-
     $self->{'choices'} = {};
     $self->{prod_obj} ||= new Bugzilla::Product({name => $self->{product}});
 
@@ -665,23 +659,39 @@ sub choices {
     }
 
     # Hack - this array contains "". See bug 106589.
-    my @res = grep ($_, @::settable_resolution);
+    my @res = grep ($_, @{settable_resolutions()});
 
     $self->{'choices'} =
       {
        'product' => \@prodlist,
-       'rep_platform' => \@::legal_platform,
-       'priority' => \@::legal_priority,
-       'bug_severity' => \@::legal_severity,
-       'op_sys' => \@::legal_opsys,
-       'bug_status' => \@::legal_bug_status,
-       'resolution' => \@res,
-       'component' => [map($_->name, @{$self->{prod_obj}->components})],
-       'version' => [map($_->name, @{$self->{prod_obj}->versions})],
+       'rep_platform' => get_legal_field_values('rep_platform'),
+       'priority'     => get_legal_field_values('priority'),
+       'bug_severity' => get_legal_field_values('bug_severity'),
+       'op_sys'       => get_legal_field_values('op_sys'),
+       'bug_status'   => get_legal_field_values('bug_status'),
+       'resolution'   => \@res,
+       'component'    => [map($_->name, @{$self->{prod_obj}->components})],
+       'version'      => [map($_->name, @{$self->{prod_obj}->versions})],
        'target_milestone' => [map($_->name, @{$self->{prod_obj}->milestones})],
       };
 
     return $self->{'choices'};
+}
+
+# List of resolutions that may be set directly by hand in the bug form.
+# 'MOVED' and 'DUPLICATE' are excluded from the list because setting
+# bugs to those resolutions requires a special process.
+sub settable_resolutions {
+    my $resolutions = get_legal_field_values('resolution');
+    my $pos = lsearch($resolutions, 'DUPLICATE');
+    if ($pos >= 0) {
+        splice(@$resolutions, $pos, 1);
+    }
+    $pos = lsearch($resolutions, 'MOVED');
+    if ($pos >= 0) {
+        splice(@$resolutions, $pos, 1);
+    }
+    return $resolutions;
 }
 
 # Convenience Function. If you need speed, use this. If you need

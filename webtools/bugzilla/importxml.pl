@@ -86,6 +86,7 @@ use Bugzilla::User;
 use Bugzilla::Util;
 use Bugzilla::Constants;
 use Bugzilla::Keyword;
+use Bugzilla::Field;
 
 use MIME::Base64;
 use MIME::Parser;
@@ -116,7 +117,6 @@ use constant OK_LEVEL    => 3;
 use constant DEBUG_LEVEL => 2;
 use constant ERR_LEVEL   => 1;
 
-GetVersionTable();
 our @logs;
 our @attachments;
 our $bugtotal;
@@ -127,19 +127,6 @@ my ($timestamp) = $dbh->selectrow_array("SELECT NOW()");
 ###############################################################################
 # Helper sub routines                                                         #
 ###############################################################################
-
-# This can go away as soon as data/versioncache is removed. Since we still
-# have to use GetVersionTable() though, it stays for now.
-
-sub sillyness {
-    my $zz;
-    $zz = @::legal_bug_status;
-    $zz = @::legal_opsys;
-    $zz = @::legal_platform;
-    $zz = @::legal_priority;
-    $zz = @::legal_severity;
-    $zz = @::legal_resolution;
-}
 
 sub MailMessage {
     return unless ($mail);
@@ -178,27 +165,6 @@ sub Error {
     Debug( $message, ERR_LEVEL );
     MailMessage( $subject, $message, @to );
     exit;
-}
-
-# This will be implemented in Bugzilla::Field as soon as bug 31506 lands
-sub check_field {
-    my ($name, $value, $legalsRef, $no_warn) = @_;
-    my $dbh = Bugzilla->dbh;
-
-    if (!defined($value)
-        || trim($value) eq ""
-        || (defined($legalsRef) && lsearch($legalsRef, $value) < 0))
-    {
-        return 0 if $no_warn; # We don't want an error to be thrown; return.
-
-        trick_taint($name);
-        my ($result) = $dbh->selectrow_array("SELECT description FROM fielddefs
-                                              WHERE name = ?", undef, $name);
-        
-        my $field = $result || $name;
-        ThrowCodeError('illegal_field', { field => $field });
-    }
-    return 1;
 }
 
 # This subroutine handles flags for process_bug. It is generic in that
@@ -741,7 +707,7 @@ sub process_bug {
     # imported is valid. If it is not we use the defaults set in the parameters.
     if (defined( $bug_fields{'bug_severity'} )
         && check_field('bug_severity', scalar $bug_fields{'bug_severity'},
-            \@::legal_severity, ERR_LEVEL) )
+                       undef, ERR_LEVEL) )
     {
         push( @values, $bug_fields{'bug_severity'} );
     }
@@ -758,7 +724,7 @@ sub process_bug {
 
     if (defined( $bug_fields{'priority'} )
         && check_field('priority', scalar $bug_fields{'priority'},
-            \@::legal_priority, ERR_LEVEL ) )
+                       undef, ERR_LEVEL ) )
     {
         push( @values, $bug_fields{'priority'} );
     }
@@ -775,7 +741,7 @@ sub process_bug {
 
     if (defined( $bug_fields{'rep_platform'} )
         && check_field('rep_platform', scalar $bug_fields{'rep_platform'},
-            \@::legal_platform, ERR_LEVEL ) )
+                       undef, ERR_LEVEL ) )
     {
         push( @values, $bug_fields{'rep_platform'} );
     }
@@ -792,7 +758,7 @@ sub process_bug {
 
     if (defined( $bug_fields{'op_sys'} )
         && check_field('op_sys',  scalar $bug_fields{'op_sys'},
-            \@::legal_opsys, ERR_LEVEL ) )
+                       undef, ERR_LEVEL ) )
     {
         push( @values, $bug_fields{'op_sys'} );
     }
@@ -898,10 +864,10 @@ sub process_bug {
     my $has_status = defined($bug_fields{'bug_status'});
     my $valid_res = check_field('resolution',  
                                   scalar $bug_fields{'resolution'}, 
-                                  \@::legal_resolution, ERR_LEVEL );
+                                  undef, ERR_LEVEL );
     my $valid_status = check_field('bug_status',  
                                   scalar $bug_fields{'bug_status'}, 
-                                  \@::legal_bug_status, ERR_LEVEL );
+                                  undef, ERR_LEVEL );
     my $is_open = is_open_state($bug_fields{'bug_status'}); 
     my $status = $bug_fields{'bug_status'} || undef;
     my $resolution = $bug_fields{'resolution'} || undef;

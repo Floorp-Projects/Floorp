@@ -40,7 +40,6 @@ use CGI::Carp qw(fatalsToBrowser);
 
 use Bugzilla::Error;
 use Bugzilla::Util;
-use Bugzilla::Config;
 
 # We need to disable output buffering - see bug 179174
 $| = 1;
@@ -79,11 +78,14 @@ sub new {
     $self->{Bugzilla_cookie_list} = [];
 
     # Send appropriate charset
-    $self->charset(Param('utf8') ? 'UTF-8' : '');
+    $self->charset(Bugzilla->params->{'utf8'} ? 'UTF-8' : '');
 
     # Redirect to SSL if required
-    if (Param('sslbase') ne '' and Param('ssl') eq 'always' and i_am_cgi()) {
-        $self->require_https(Param('sslbase'));
+    if (Bugzilla->params->{'sslbase'} ne ''
+        && Bugzilla->params->{'ssl'} eq 'always'
+        && i_am_cgi())
+    {
+        $self->require_https(Bugzilla->params->{'sslbase'});
     }
 
     # Check for errors
@@ -221,8 +223,9 @@ sub send_cookie {
     }
 
     # Add the default path and the domain in.
-    $paramhash{'-path'} = Param('cookiepath');
-    $paramhash{'-domain'} = Param('cookiedomain') if Param('cookiedomain');
+    $paramhash{'-path'} = Bugzilla->params->{'cookiepath'};
+    $paramhash{'-domain'} = Bugzilla->params->{'cookiedomain'}
+        if Bugzilla->params->{'cookiedomain'};
 
     # Move the param list back into an array for the call to cookie().
     foreach (keys(%paramhash)) {

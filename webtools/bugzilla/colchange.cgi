@@ -33,8 +33,6 @@ require "globals.pl";
 
 Bugzilla->login();
 
-GetVersionTable();
-
 my $cgi = Bugzilla->cgi;
 my $template = Bugzilla->template;
 my $vars = {};
