@@ -618,7 +618,8 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
   // See if this is the child's initial reflow and we are supposed to
   // compute our maximum width
   if (mComputeMaximumWidth && (eReflowReason_Initial == aFrameRS.reason)) {
-    mOuterReflowState.mSpaceManager->PushState();
+    nsSpaceManager::SavedState spaceManagerState;
+    mOuterReflowState.mSpaceManager->PushState(&spaceManagerState);
 
     nscoord oldAvailableWidth = aFrameRS.availableWidth;
     nscoord oldComputedWidth = aFrameRS.mComputedWidth;
@@ -642,7 +643,7 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
     aFrameRS.mComputedWidth = oldComputedWidth;
     aFrameRS.reason         = eReflowReason_Resize;
 
-    mOuterReflowState.mSpaceManager->PopState();
+    mOuterReflowState.mSpaceManager->PopState(&spaceManagerState);
   }
 
   rv = mFrame->Reflow(mPresContext, mMetrics, aFrameRS, aFrameReflowStatus);
