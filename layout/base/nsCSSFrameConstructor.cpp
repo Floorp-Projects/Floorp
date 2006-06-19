@@ -7855,6 +7855,9 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
       rv = ConstructBlock(aState, disp, aContent,
                           newFrame, newFrame, innerPseudoStyle,
                           &blockFrame, childItems, PR_TRUE);
+      // Give the blockFrame a view so that GetOffsetTo works for descendants
+      // of blockFrame with views...
+      nsHTMLContainerFrame::CreateViewForFrame(blockFrame, nsnull, PR_TRUE);
     } else
 #endif  // MOZ_SVG_FOREIGNOBJECT
     {
