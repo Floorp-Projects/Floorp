@@ -126,7 +126,7 @@ if ($action eq 'add') {
 
 if ($action eq 'new') {
 
-    # Cleanups and valididy checks
+    # Cleanups and validity checks
     $version_name || ThrowUserError('version_blank_name');
 
     # Remove unprintable characters
