@@ -534,8 +534,8 @@ sub process_bug {
             $data = decode_base64($data);
         }
 
-        # If we leave the attachemnt ID in the comment it will be made a link
-        # to the wrong attachment. Since the new attachment ID is unkown yet
+        # If we leave the attachment ID in the comment it will be made a link
+        # to the wrong attachment. Since the new attachment ID is unknown yet
         # let's strip it out for now. We will make a comment with the right ID
         # later
         $data =~ s/Created an attachment \(id=\d+\)/Created an attachment/g;
