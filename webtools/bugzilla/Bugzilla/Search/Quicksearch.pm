@@ -32,8 +32,6 @@ use Bugzilla::Bug;
 use base qw(Exporter);
 @Bugzilla::Search::Quicksearch::EXPORT = qw(quicksearch);
 
-my $cgi = Bugzilla->cgi;
-
 # Word renamings
 my %mappings = (# Status, Resolution, Platform, OS, Priority, Severity
                 "status" => "bug_status",
@@ -105,6 +103,7 @@ my $or = 0;
 
 sub quicksearch {
     my ($searchstring) = (@_);
+    my $cgi = Bugzilla->cgi;
 
     # Remove leading and trailing commas and whitespace.
     $searchstring =~ s/(^[\s,]+|[\s,]+$)//g;
@@ -493,6 +492,7 @@ sub addChart {
 sub makeChart {
     my ($expr, $field, $type, $value) = @_;
 
+    my $cgi = Bugzilla->cgi;
     $cgi->param("field$expr", $field);
     $cgi->param("type$expr",  $type);
     $cgi->param("value$expr", $value);
