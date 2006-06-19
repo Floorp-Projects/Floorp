@@ -161,6 +161,9 @@ SessionStartup.prototype = {
       delete this._iniString; // delete state string
       delete this._initialState; // delete state
     }
+    if (this._getPref("sessionstore.resume_session_once", DEFAULT_RESUME_SESSION_ONCE)) {
+      this._prefBranch.setBoolPref("sessionstore.resume_session_once", false);
+    }
   },
 
   /**
