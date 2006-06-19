@@ -130,7 +130,7 @@ struct JSXMLArrayCursor {
 /*
  * NB: don't reorder this enum without changing all array initializers that
  * depend on it in jsxml.c.
- */ 
+ */
 typedef enum JSXMLClass {
     JSXML_CLASS_LIST,
     JSXML_CLASS_ELEMENT,

@@ -67,7 +67,7 @@ typedef enum JSStmtType {
     STMT_ELSE         = 3,      /* else clause of if statement */
     STMT_SWITCH       = 4,      /* switch statement */
     STMT_WITH         = 5,      /* with statement */
-    STMT_BLOCK_SCOPE  = 6,      /* let block/expr or array comprehension */ 
+    STMT_BLOCK_SCOPE  = 6,      /* let block/expr or array comprehension */
     STMT_CATCH        = 7,      /* catch block */
     STMT_TRY          = 8,      /* try block */
     STMT_FINALLY      = 9,      /* finally block */

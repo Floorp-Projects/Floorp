@@ -283,7 +283,7 @@ JSBool
 js_IsArrayLike(JSContext *cx, JSObject *obj, JSBool *answerp, jsuint *lengthp)
 {
     JSClass *clasp;
-    
+
     clasp = OBJ_GET_CLASS(cx, obj);
     *answerp = (clasp == &js_ArgumentsClass || clasp == &js_ArrayClass);
     if (!*answerp) {

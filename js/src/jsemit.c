@@ -1924,7 +1924,7 @@ BindNameToSlot(JSContext *cx, JSTreeContext *tc, JSParseNode *pn)
     clasp = OBJ_GET_CLASS(cx, obj);
     if (clasp != &js_FunctionClass && clasp != &js_CallClass) {
         /* Check for an eval or debugger frame. */
-        if (fp->flags & JSFRAME_SPECIAL) 
+        if (fp->flags & JSFRAME_SPECIAL)
             return JS_TRUE;
 
         /*

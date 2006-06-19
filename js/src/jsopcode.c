@@ -1467,7 +1467,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
               case JSOP_LEAVEBLOCK:
               {
                 uintN top, depth;
-                
+
                 sn = js_GetSrcNote(jp->script, pc);
                 todo = -2;
                 if (sn && SN_TYPE(sn) == SRC_HIDDEN)

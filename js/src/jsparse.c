@@ -4084,7 +4084,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
                     /*
                      * Create a name node with op JSOP_NAME.  We can't set op
-                     * JSOP_GETLOCAL here, because we don't yet know the block 
+                     * JSOP_GETLOCAL here, because we don't yet know the block
                      * depth in the operand stack frame.  The code generator
                      * computes that, and it tries to bind all names to slots,
                      * so we must let it do this optimization.
@@ -4187,7 +4187,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                                 return NULL;
                             pn3->pn_atom = CURRENT_TOKEN(ts).t_atom;
                             pn3->pn_expr = NULL;
-                            
+
                             /* We have to fake a 'function' token here. */
                             CURRENT_TOKEN(ts).t_op = JSOP_NOP;
                             CURRENT_TOKEN(ts).type = TOK_FUNCTION;

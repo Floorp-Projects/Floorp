@@ -402,9 +402,9 @@ static int cvt_ws(SprintfState *ss, const jschar *ws, int width, int prec,
                   int flags)
 {
     int result;
-    /* 
-     * Supply NULL as the JSContext; errors are not reported, 
-     * and malloc() is used to allocate the buffer buffer. 
+    /*
+     * Supply NULL as the JSContext; errors are not reported,
+     * and malloc() is used to allocate the buffer buffer.
      */
     if (ws) {
         int slen = js_strlen(ws);
@@ -997,9 +997,9 @@ static int dosprintf(SprintfState *ss, const char *fmt, va_list ap)
 
           case 's':
             if(type == TYPE_INT16) {
-                /* 
-                 * This would do a simple string/byte conversion 
-                 * if JS_C_STRINGS_ARE_UTF8 is not defined. 
+                /*
+                 * This would do a simple string/byte conversion
+                 * if JS_C_STRINGS_ARE_UTF8 is not defined.
                  */
                 u.ws = va_arg(ap, const jschar*);
                 rv = cvt_ws(ss, u.ws, width, prec, flags);
