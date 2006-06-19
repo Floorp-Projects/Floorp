@@ -65,7 +65,7 @@ use constant BLOB_TYPE => DBI::SQL_BLOB;
 
 # All this code is backwards compat fu. As such, its a bit ugly. Note the
 # circular dependencies on Bugzilla.pm
-# This is old cruft which will be removed, so theres not much use in
+# This is old cruft which will be removed, so there's not much use in
 # having a separate package for it, or otherwise trying to avoid the circular
 # dependency
 
