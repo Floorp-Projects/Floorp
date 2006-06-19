@@ -3406,7 +3406,7 @@ if ($dbh->bz_table_info("flagtypes")) {
 
 # 2002-11-24 - bugreport@peshkin.net - bug 147275 
 #
-# If group_control_map is empty, backward-compatbility 
+# If group_control_map is empty, backward-compatibility 
 # usebuggroups-equivalent records should be created.
 my $entry = Param('useentrygroupdefault');
 $sth = $dbh->prepare("SELECT COUNT(*) FROM group_control_map");
