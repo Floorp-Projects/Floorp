@@ -139,12 +139,6 @@ var gViewController = new calViewController();
 
 function CalendarWindow( )
 {
-   //setup the preferences
-   this.calendarPreferences = new calendarPreferences( this );
-
-   // miniMonth used by preferences
-   this.miniMonth = document.getElementById( "lefthandcalendar" );
-   
    //setup the calendar event selection
    this.EventSelection = new CalendarEventSelection( this );
    gViewController.selectionManager = this.EventSelection;

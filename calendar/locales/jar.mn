@@ -18,7 +18,6 @@ calendar-@AB_CD@.jar:
     locale/@AB_CD@/calendar/calendar.dtd         (%chrome/calendar/calendar.dtd)
     locale/@AB_CD@/calendar/calendarCreation.dtd (%chrome/calendar/calendarCreation.dtd)
     locale/@AB_CD@/calendar/calendar.properties  (%chrome/calendar/calendar.properties)
-    locale/@AB_CD@/calendar/categories.properties  (%chrome/calendar/categories.properties)
     locale/@AB_CD@/calendar/dateFormat.properties  (%chrome/calendar/dateFormat.properties)
     locale/@AB_CD@/calendar/email.properties     (%chrome/calendar/email.properties)
     locale/@AB_CD@/calendar/global.dtd           (%chrome/calendar/global.dtd)

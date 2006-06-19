@@ -278,6 +278,12 @@ function initCalendarManager()
     initColors();
     var calendarList = document.getElementById("list-calendars-listbox");
     calendarList.addEventListener("select", onCalendarListSelect, true);
+ 
+     // Set up a pref listener so the proper UI bits can be refreshed when prefs
+     // are changed.
+     var pb2 = prefService.getBranch("").QueryInterface(
+         Components.interfaces.nsIPrefBranch2);
+     pb2.addObserver("calendar.", calPrefObserver, false);
 }
 
 function finishCalendarManager() {
@@ -285,6 +291,7 @@ function finishCalendarManager() {
     var pbi = prefService.getBranch("");
     pbi = pbi.QueryInterface(Components.interfaces.nsIPrefBranch2);
     pbi.removeObserver("calendar.category.color.", categoryPrefObserver);
+    pbi.removeObserver("calendar.", calPrefObserver);
 
     var calendarList = document.getElementById("list-calendars-listbox");
     calendarList.removeEventListener("select", onCalendarListSelect, true);
@@ -402,5 +409,37 @@ var categoryPrefObserver =
        // leading 'calendar.category.color.' term
        name = name.substr(24, aPrefName.length - 24);
        updateStyleSheetForObject(name);
+   }
+}
+
+var calPrefObserver =
+{
+   observe: function(aSubject, aTopic, aPrefName)
+   {
+       subject = aSubject.QueryInterface(Components.interfaces.nsIPrefBranch2);
+
+       switch (aPrefName) {
+            case "calendar.week.start":
+                document.getElementById("lefthandcalendar").refreshDisplay(true);
+                break;
+            case "calendar.date.format":
+                var currentView = document.getElementById("view-deck").selectedPanel;
+                currentView.goToDay(currentView.selectedDay);
+                refreshEventTree();
+                toDoUnifinderRefresh();
+                break;
+
+            case "calendar.timezone.local":
+                gDefaultTimezone = subject.getCharPref(aPrefName);
+
+                var currentView = document.getElementById("view-deck").selectedPanel;
+                currentView.goToDay(currentView.selectedDay);
+                refreshEventTree();
+                toDoUnifinderRefresh();
+                break;
+
+            default :
+                break;
+       }
    }
 }

@@ -40,6 +40,26 @@
 // SYNTAX HINTS:  dashes are delimiters.  Use underscores instead.
 //  The first character after a period must be alphabetic.
 
+pref("calendar.alarms.show", true);
+pref("calendar.alarms.showmissed", true);
+pref("calendar.alarms.playsound", true);
+pref("calendar.alarms.soundURL", "chrome://calendar/content/sound.wav");
+pref("calendar.alarms.onforevents", 0); //XXX this should be a bool
+pref("calendar.alarms.onfortodos", 0); //XXX this should be a bool
+pref("calendar.alarms.eventalarmlen", 15);
+pref("calendar.alarms.todoalarmlen", 15);
+pref("calendar.alarms.eventalarmunit", "minutes");
+pref("calendar.alarms.todoalarmunit", "minutes");
+pref("calendar.alarms.defaultsnoozelength", 60);
+pref("calendar.date.format", 0);
+pref("calendar.event.defaultlength", 60);
+// Do NOT set this.  If it is unset, we guess the timezone from the system
+//pref("calendar.timezone.local", "America/New_York);
+pref("calendar.view.defaultstarthour", 8);
+pref("calendar.view.defaultendhour", 17);
+pref("calendar.weeks.inview", 4);
+pref("calendar.previousweeks.inview", 0);
+
 // pref("startup.homepage_override_url","chrome://browser-region/locale/region.properties");
 pref("general.startup.calendar", true);
 

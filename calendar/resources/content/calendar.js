@@ -58,22 +58,8 @@
 **********
 */
 
-
-
-
-
-
-/*-----------------------------------------------------------------
-*  G L O B A L     V A R I A B L E S
-*/
-
 // single global instance of CalendarWindow
 var gCalendarWindow;
-
-var prefService = Components.classes["@mozilla.org/preferences-service;1"]
-                            .getService(Components.interfaces.nsIPrefService);
-var rootPrefNode = prefService.getBranch(null); // preferences root node
-
 
 /*-----------------------------------------------------------------
 *  G L O B A L     C A L E N D A R      F U N C T I O N S
@@ -278,7 +264,9 @@ function newEvent(startDate, endDate, allDay)
    calendarEvent.startDate.jsDate = startDate;
 
    if (!endDate) {
-       var MinutesToAddOn = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, "event.defaultlength", gCalendarBundle.getString("defaultEventLength" ) );
+       var pb2 = Components.classes["@mozilla.org/preferences-service;1"]
+                           .getService(Components.interfaces.nsIPrefBranch2);
+       var MinutesToAddOn = pb2.getIntPref("calendar.event.defaultlength");
        
        endDate = new Date(startDate);
        endDate.setMinutes(endDate.getMinutes() + MinutesToAddOn);
@@ -443,62 +431,6 @@ function print()
 {
     window.openDialog("chrome://calendar/content/printDialog.xul",
                       "printdialog","chrome");
-}
-
-function getCharPref (prefObj, prefName, defaultValue)
-{
-    try {
-        return prefObj.getCharPref (prefName);
-    } catch (e) {
-        prefObj.setCharPref( prefName, defaultValue );  
-        return defaultValue;
-    }
-}
-
-function getIntPref(prefObj, prefName, defaultValue)
-{
-    try {
-        return prefObj.getIntPref(prefName);
-    } catch (e) {
-        prefObj.setIntPref(prefName, defaultValue);  
-        return defaultValue;
-    }
-}
-
-function getBoolPref (prefObj, prefName, defaultValue)
-{
-    try
-    {
-        return prefObj.getBoolPref (prefName);
-    }
-    catch (e)
-    {
-       prefObj.setBoolPref( prefName, defaultValue );  
-       return defaultValue;
-    }
-}
-
-function GetUnicharPref(prefObj, prefName, defaultValue)
-{
-    try {
-      return prefObj.getComplexValue(prefName, Components.interfaces.nsISupportsString).data;
-    }
-    catch(e)
-    {
-      SetUnicharPref(prefObj, prefName, defaultValue);
-        return defaultValue;
-    }
-}
-
-function SetUnicharPref(aPrefObj, aPrefName, aPrefValue)
-{
-    try {
-      var str = Components.classes["@mozilla.org/supports-string;1"]
-                          .createInstance(Components.interfaces.nsISupportsString);
-      str.data = aPrefValue;
-      aPrefObj.setComplexValue(aPrefName, Components.interfaces.nsISupportsString, str);
-    }
-    catch(e) {}
 }
 
 /* Change the only-workday checkbox */

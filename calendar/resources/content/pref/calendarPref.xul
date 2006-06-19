@@ -296,15 +296,13 @@
       ** When you add a pref to this page, you have to add its ID to the following list.
       */
       var _elementIDs = [
-      "dateformat", "defaultlength", "defaultsnoozelength",
-      "reloadonlaunch", "categories", "storeingmt"
+      "dateformat", "defaultlength", "defaultsnoozelength", "categories"
        ];
      ]]>
    </script>
 
    <groupbox align="start" orient="vertical">
       <caption label="&pref.mainbox.label;"/>
-      <checkbox id="storeingmt" preftype="bool" prefstring="calendar.dateformat.storeingmt" label="&pref.dateformat.storeingmt;" />
       <hbox>
          <description>&pref.dateformat.label;</description>
          <menulist id="dateformat" crop="none" prefstring="calendar.date.format">
@@ -326,7 +324,6 @@
          <label value="&pref.minutes.label;"/>
       </hbox>
       
-      <checkbox id="reloadonlaunch" preftype="bool" prefstring="calendar.servers.reloadonlaunch" label="&pref.reloadonlaunch;" />
    </groupbox>
 #ifdef MOZ_SUNBIRD
    <groupbox>
