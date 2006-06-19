@@ -95,6 +95,11 @@ sub AUTOLOAD {
     
     return $self->$col(@args);
 }
-                                         
+        
+sub _croak {
+	my ($self, $message, %info) = @_;
+	internalError($message);
+	return;
+}
 1;
 
