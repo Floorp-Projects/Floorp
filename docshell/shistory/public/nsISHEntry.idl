@@ -55,7 +55,7 @@ struct nsRect;
 %}
 [ref] native nsRect(nsRect);
 
-[scriptable, uuid(542a98b9-2889-4922-aaf4-02b6056f4136)]
+[scriptable, uuid(9b4c7bf5-5e68-4406-9bb4-a4408c8e8bb5)]
 interface nsISHEntry : nsIHistoryEntry
 {
     /** URI for the document */
@@ -171,7 +171,8 @@ interface nsISHEntry : nsIHistoryEntry
     void create(in nsIURI URI, in AString title,
                 in nsIInputStream inputStream,
                 in nsILayoutHistoryState layoutHistoryState,
-                in nsISupports cacheKey, in ACString contentType);
+                in nsISupports cacheKey, in ACString contentType,
+                in nsISupports owner);
 
     nsISHEntry clone();
 
@@ -182,6 +183,13 @@ interface nsISHEntry : nsIHistoryEntry
         nsSHEntry tree.  This will differ from contentViewer in the case
         where a child nsSHEntry has the content viewer for this tree. */
     nsIContentViewer getAnyContentViewer(out nsISHEntry ownerEntry);
+
+    /**
+     * Get the owner, if any, that was associated with the channel
+     * that the document that was loaded to create this history entry
+     * came from.
+     */
+    readonly attribute nsISupports owner;
 };
 
 

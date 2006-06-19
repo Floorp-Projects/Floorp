@@ -94,6 +94,7 @@ nsSHEntry::nsSHEntry(const nsSHEntry &other)
   , mCacheKey(other.mCacheKey)
   , mParent(other.mParent)
   , mViewerBounds(0, 0, 0, 0)
+  , mOwner(other.mOwner)
 {
 }
 
@@ -405,13 +406,15 @@ NS_IMETHODIMP
 nsSHEntry::Create(nsIURI * aURI, const nsAString &aTitle,
                   nsIInputStream * aInputStream,
                   nsILayoutHistoryState * aLayoutHistoryState,
-                  nsISupports * aCacheKey, const nsACString& aContentType)
+                  nsISupports * aCacheKey, const nsACString& aContentType,
+                  nsISupports* aOwner)
 {
   mURI = aURI;
   mTitle = aTitle;
   mPostData = aInputStream;
   mCacheKey = aCacheKey;
   mContentType = aContentType;
+  mOwner = aOwner;
     
   // Set the LoadType by default to loadHistory during creation
   mLoadType = (PRUint32) nsIDocShellLoadInfo::loadHistory;
@@ -487,6 +490,13 @@ NS_IMETHODIMP
 nsSHEntry::GetViewerBounds(nsRect &aBounds)
 {
   aBounds = mViewerBounds;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHEntry::GetOwner(nsISupports **aOwner)
+{
+  NS_IF_ADDREF(*aOwner = mOwner);
   return NS_OK;
 }
 
