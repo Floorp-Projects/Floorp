@@ -357,7 +357,7 @@ class Bugzillabug(object):
         for piece in pieces:
             result = changedfromtore.search(piece)
             # See what things we actually have inside this entry, and
-            # handle them approriately
+            # handle them appropriately
             if result is not None:
                 type = result.group(1)
                 changedfromto = result.group(2)
