@@ -1104,8 +1104,8 @@ END
     chmod $fileperm, "Bugzilla/.htaccess";
   }
   # Even though $datadir may not (and should not) be in the webtree,
-  # we can't know for sure, so create the .htaccess anyeay. Its harmless
-  # if its not accessible...
+  # we can't know for sure, so create the .htaccess anyway. It's harmless
+  # if it's not accessible...
   if (!-e "$datadir/.htaccess") {
     print "Creating $datadir/.htaccess...\n";
     open HTACCESS, '>', "$datadir/.htaccess";
