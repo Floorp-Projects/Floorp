@@ -38,7 +38,7 @@
 #
 # You need to work with bug_email.pl the MIME::Parser installed.
 # 
-# $Id: bug_email.pl,v 1.36 2006/06/19 16:02:18 vladd%bugzilla.org Exp $
+# $Id: bug_email.pl,v 1.37 2006/06/19 16:18:42 vladd%bugzilla.org Exp $
 ###############################################################
 
 # 02/12/2000 (SML)
@@ -468,7 +468,7 @@ END
 ###############################################################
 # generateTemplate
 # 
-# This functiuon generates a mail-Template with the 
+# This function generates a mail-Template with the 
 sub generateTemplate()
 {
     my $w;
