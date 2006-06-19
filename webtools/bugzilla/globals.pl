@@ -138,28 +138,6 @@ sub GetVersionTable {
     $::VersionTableLoaded = 1;
 }
 
-sub DBID_to_name {
-    my ($id) = (@_);
-    return "__UNKNOWN__" if !defined $id;
-    # $id should always be a positive integer
-    if ($id =~ m/^([1-9][0-9]*)$/) {
-        $id = $1;
-    } else {
-        $::cachedNameArray{$id} = "__UNKNOWN__";
-    }
-    if (!defined $::cachedNameArray{$id}) {
-        PushGlobalSQLState();
-        SendSQL("SELECT login_name FROM profiles WHERE userid = $id");
-        my $r = FetchOneColumn();
-        PopGlobalSQLState();
-        if (!defined $r || $r eq "") {
-            $r = "__UNKNOWN__";
-        }
-        $::cachedNameArray{$id} = $r;
-    }
-    return $::cachedNameArray{$id};
-}
-
 # Returns a list of all the legal values for a field that has a
 # list of legal values, like rep_platform or resolution.
 sub get_legal_field_values {

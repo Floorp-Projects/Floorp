@@ -1587,8 +1587,8 @@ foreach my $id (@idlist) {
                 $vars->{'field'} = 'component';
             } elsif ($col eq 'assigned_to' || $col eq 'qa_contact') {
                 # Display the assignee or QA contact email address
-                $vars->{'oldvalue'} = DBID_to_name($oldhash{$col});
-                $vars->{'newvalue'} = DBID_to_name($formhash{$col});
+                $vars->{'oldvalue'} = user_id_to_login($oldhash{$col});
+                $vars->{'newvalue'} = user_id_to_login($formhash{$col});
                 $vars->{'field'} = $col;
             } else {
                 $vars->{'oldvalue'} = $oldhash{$col};
@@ -2085,16 +2085,16 @@ foreach my $id (@idlist) {
             # the old assignee can be notified
             #
             if ($col eq 'assigned_to') {
-                $old = ($old) ? DBID_to_name($old) : "";
-                $new = ($new) ? DBID_to_name($new) : "";
+                $old = ($old) ? user_id_to_login($old) : "";
+                $new = ($new) ? user_id_to_login($new) : "";
                 $origOwner = $old;
             }
 
             # ditto for the old qa contact
             #
             if ($col eq 'qa_contact') {
-                $old = ($old) ? DBID_to_name($old) : "";
-                $new = ($new) ? DBID_to_name($new) : "";
+                $old = ($old) ? user_id_to_login($old) : "";
+                $new = ($new) ? user_id_to_login($new) : "";
                 $origQaContact = $old;
             }
 
@@ -2154,7 +2154,7 @@ foreach my $id (@idlist) {
                 || !$cgi->param('confirm_add_duplicate')) {
             # The reporter is oblivious to the existence of the new bug and is permitted access
             # ... add 'em to the cc (and record activity)
-            LogActivityEntry($duplicate,"cc","",DBID_to_name($reporter),
+            LogActivityEntry($duplicate,"cc","",user_id_to_login($reporter),
                              $whoid,$timestamp);
             $dbh->do(q{INSERT INTO cc (who, bug_id) VALUES (?, ?)},
                      undef, $reporter, $duplicate);

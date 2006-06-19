@@ -38,7 +38,7 @@
 #
 # You need to work with bug_email.pl the MIME::Parser installed.
 # 
-# $Id: bug_email.pl,v 1.40 2006/06/19 16:25:02 vladd%bugzilla.org Exp $
+# $Id: bug_email.pl,v 1.41 2006/06/19 17:30:24 lpsolit%gmail.com Exp $
 ###############################################################
 
 # 02/12/2000 (SML)
@@ -1081,7 +1081,7 @@ END
         
         $val = $Control{ $field };
       
-        $val = DBID_to_name( $val ) if( $field =~ /reporter|assigned_to|qa_contact/ );
+        $val = user_id_to_login( $val ) if( $field =~ /reporter|assigned_to|qa_contact/ );
       
         $tmp_reply .= sprintf( "     \@%-15s = %-15s\n", $field, $val );
 

@@ -44,6 +44,7 @@ use Bugzilla::Product;
 use Bugzilla::Classification;
 use Bugzilla::Milestone;
 use Bugzilla::Group;
+use Bugzilla::User;
 
 # Shut up misguided -w warnings about "used only once".  "use vars" just
 # doesn't work for me.
@@ -907,7 +908,7 @@ if ($action eq 'update') {
                 foreach my $msg (@$msgs) {
                     MessageToMTA($msg);
                 }
-                my $name = DBID_to_name($who);
+                my $name = user_id_to_login($who);
 
                 push(@toomanyvotes_list,
                      {id => $id, name => $name});
@@ -960,7 +961,7 @@ if ($action eq 'update') {
                     foreach my $msg (@$msgs) {
                         MessageToMTA($msg);
                     }
-                    my $name = DBID_to_name($who);
+                    my $name = user_id_to_login($who);
 
                     push(@toomanytotalvotes_list,
                          {id => $bug_id, name => $name});

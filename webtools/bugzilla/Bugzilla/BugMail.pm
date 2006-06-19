@@ -186,10 +186,10 @@ sub ProcessOneBug {
     # Convert to names, for later display
     $values{'changer'} = $changer;
     $values{'changername'} = Bugzilla::User->new_from_login($changer)->name;
-    $values{'assigned_to'} = &::DBID_to_name($values{'assigned_to'});
-    $values{'reporter'} = &::DBID_to_name($values{'reporter'});
+    $values{'assigned_to'} = user_id_to_login($values{'assigned_to'});
+    $values{'reporter'} = user_id_to_login($values{'reporter'});
     if ($values{'qa_contact'}) {
-        $values{'qa_contact'} = &::DBID_to_name($values{'qa_contact'});
+        $values{'qa_contact'} = user_id_to_login($values{'qa_contact'});
     }
     $values{'cc'} = join(', ', @cc_login_names);
     $values{'estimated_time'} = format_time_decimal($values{'estimated_time'});
@@ -635,7 +635,7 @@ sub sendMail {
     }
     push @headerrel, 'None' if !scalar(@headerrel);
     push @watchingrel, 'None' if !scalar(@watchingrel);
-    push @watchingrel, map { &::DBID_to_name($_) } @$watchingRef;
+    push @watchingrel, map { user_id_to_login($_) } @$watchingRef;
     $substs{"reasonsheader"} = join(" ", @headerrel);
     $substs{"reasonswatchheader"} = join(" ", @watchingrel);
 
