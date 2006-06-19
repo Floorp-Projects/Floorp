@@ -44,10 +44,9 @@
 
 <!ENTITY bookmarks.information.label  "Information:">
 <!ENTITY bookmarks.name.label         "Name:">
+<!ENTITY bookmarks.micsum.label       "Live Titles">
 <!ENTITY bookmarks.location.label     "Location:">
 <!ENTITY bookmarks.feedurl.label      "Feed Location:">
 <!ENTITY bookmarks.shortcut.label     "Keyword:">
-<!ENTITY bookmarks.micsum.label       "Summary:">
-<!ENTITY bookmarks.micsum.none.label  "Don't Display a Summary">
 <!ENTITY bookmarks.description.label  "Description:">
 <!ENTITY bookmarks.webpanels.label    "Load this bookmark in the sidebar">

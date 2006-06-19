@@ -149,6 +149,9 @@ var MicrosummaryPicker = {
   },
 
   init: function MSP_init() {
+    // Set the label of the menu item representing the user-entered name.
+    this._updateUserEnteredNameItem();
+
     if (this._pageURI) {
       this._microsummaries = this._mss.getMicrosummaries(this._pageURI, this._bookmarkID);
       this._microsummaries.addObserver(this._observer);
@@ -162,15 +165,26 @@ var MicrosummaryPicker = {
   },
 
   rebuild: function MSP_rebuild() {
-    var microsummaryMenuList = document.getElementById("microsummaryMenuList");
+    var microsummaryMenuList = document.getElementById("name");
     var microsummaryMenuPopup = document.getElementById("microsummaryMenuPopup");
   
-    // Remove old items from the menu, except the first item, which represents
-    // "don't show a microsummary; show the page title instead".
-    while (microsummaryMenuPopup.childNodes.length > 1)
+    // Remove old items from the menu, except for the first item, which holds
+    // the user-entered name, and the second item, which separates and labels
+    // the microsummaries below it.
+    while (microsummaryMenuPopup.childNodes.length > 2)
       microsummaryMenuPopup.removeChild(microsummaryMenuPopup.lastChild);
   
     var enumerator = this._microsummaries.Enumerate();
+
+    // Show the drop marker if there are microsummaries; otherwise hide it.
+    // We do this via a microsummary picker-specific "droppable" attribute
+    // that, when set to "false", activates a "display: none" CSS rule
+    // on the drop marker.
+    if (enumerator.hasMoreElements())
+      microsummaryMenuList.setAttribute("droppable", "true");
+    else
+      microsummaryMenuList.setAttribute("droppable", "false");
+
     while (enumerator.hasMoreElements()) {
       var microsummary = enumerator.getNext().QueryInterface(Ci.nsIMicrosummary);
   
@@ -226,9 +240,31 @@ var MicrosummaryPicker = {
     }
   },
 
+  /**
+   * Called when the user types in the microsummary picker's text box.
+   * 
+   * @param   event
+   *          the event object representing the input event
+   *
+   */
+  onInput: function MSP_onInput(event) {
+    this._updateUserEnteredNameItem();
+  },
+
+  /**
+   * Update the menu item representing the user-entered name when the user
+   * changes the name by typing in the text box.
+   *
+   */
+  _updateUserEnteredNameItem: function MSP__updateUserEnteredNameItem() {
+    var nameField = document.getElementById("name");
+    var nameItem = document.getElementById("userEnteredNameItem");
+    nameItem.label = nameField.value;
+  },
+
   commit: function MSP_commit() {
     var changed = false;
-    var menuList = document.getElementById("microsummaryMenuList");
+    var menuList = document.getElementById("name");
 
     // Something should always be selected in the microsummary menu,
     // but if nothing is selected, then conservatively assume we should

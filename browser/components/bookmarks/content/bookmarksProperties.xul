@@ -36,6 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/bookmarks/bookmarksProperties.css" type="text/css"?>
 
 <!DOCTYPE dialog [
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
@@ -73,7 +74,16 @@
       <rows>
         <row align="center">
           <label value="&bookmarks.name.label;" control="name"/>
-          <textbox id="name"/>
+          <menulist id="name" editable="true" droppable="false"
+                    oninput="MicrosummaryPicker.onInput(event)">
+            <menupopup id="microsummaryMenuPopup">
+              <menuitem id="userEnteredNameItem"/>
+              <menuitem disabled="true">
+                <menuseparator flex="1"/>
+                <label value="&bookmarks.micsum.label;"/>
+              </menuitem>
+            </menupopup>
+          </menulist>
         </row>
         <row id="locationrow" align="center">
           <label value="&bookmarks.location.label;" control="url"/>
@@ -86,14 +96,6 @@
         <row id="shortcutrow" align="center">
           <label value="&bookmarks.shortcut.label;" control="shortcut"/>
               <textbox id="shortcut" />
-        </row>
-        <row id="microsummaryRow">
-          <label value="&bookmarks.micsum.label;" control="microsummaryMenuList"/>
-          <menulist id="microsummaryMenuList">
-            <menupopup id="microsummaryMenuPopup">
-              <menuitem label="&bookmarks.micsum.none.label;" selected="true"/>
-            </menupopup>
-          </menulist>
         </row>
         <row id="descriptionrow">
           <label value="&bookmarks.description.label;" control="description"/>
