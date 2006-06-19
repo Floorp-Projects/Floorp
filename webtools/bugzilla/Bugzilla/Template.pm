@@ -131,7 +131,7 @@ sub getTemplateIncludePath {
     foreach my $lang (@accept_language) {
         # Per RFC 1766 and RFC 2616 any language tag matches also its 
         # primary tag. That is 'en' (accept language)  matches 'en-us',
-        # 'en-uk' etc. but not the otherway round. (This is unfortunally
+        # 'en-uk' etc. but not the otherway round. (This is unfortunately
         # not very clearly stated in those RFC; see comment just over 14.5
         # in http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.4)
         if(my @found = grep /^\Q$lang\E(-.+)?$/i, @languages) {
