@@ -377,7 +377,7 @@ sub init() {
 # This subroutine is called once for each attachment in the xml file.
 # It is called as soon as the closing </attachment> tag is parsed.
 # Since attachments have the potential to be very large, and
-# since each attachement will be inside <bug>..</bug> tags we shove
+# since each attachment will be inside <bug>..</bug> tags we shove
 # the attachment onto an array which will be processed by process_bug
 # and then disposed of. The attachment array will then contain only
 # one bugs' attachments at a time.
