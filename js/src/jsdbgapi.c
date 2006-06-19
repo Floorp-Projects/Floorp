@@ -1300,7 +1300,7 @@ JS_GetScriptFilenameFlags(JSScript *script)
     JS_ASSERT(script);
     if (!script->filename)
         return JSFILENAME_NULL;
-    return js_GetScriptFilenameFlags(script->filename);    
+    return js_GetScriptFilenameFlags(script->filename);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -1321,7 +1321,7 @@ JS_PUBLIC_API(void)
 JS_FlagSystemObject(JSContext *cx, JSObject *obj)
 {
     uint8 *flagp;
-    
+
     flagp = js_GetGCThingFlags(obj);
     *flagp |= GCF_SYSTEM;
 }

@@ -374,9 +374,9 @@ struct JSRuntime {
  * referenced by cx->fp->rval, or set to a jsid (ITERKEY) result of a native
  * iterator's it.next() call (where the return value of it.next() is the next
  * value in the iteration).
- * 
+ *
  * The ITERKEY case is just an optimization for native iterators, as general
- * iterators can return an array of length 2 to return a [key, value] pair. 
+ * iterators can return an array of length 2 to return a [key, value] pair.
  */
 enum { JS_RVAL2_CLEAR, JS_RVAL2_VALUE, JS_RVAL2_ITERKEY };
 #endif

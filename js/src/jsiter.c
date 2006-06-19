@@ -141,7 +141,7 @@ NewKeyValuePair(JSContext *cx, jsid key, jsval val, jsval *rval)
 {
     jsval vec[2];
     JSObject *aobj;
-    
+
     vec[0] = ID_TO_VALUE(key);
     vec[1] = val;
     aobj = js_NewArrayObject(cx, 2, vec);

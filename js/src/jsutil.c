@@ -172,7 +172,7 @@ JS_Backtrace(int skip)
     void **bp, **bpdown;
 
     /* Stack walking code adapted from Kipp's "leaky". */
-#if defined(__i386) 
+#if defined(__i386)
     __asm__( "movl %%ebp, %0" : "=g"(bp));
 #elif defined(__x86_64__)
     __asm__( "movq %%rbp, %0" : "=g"(bp));
