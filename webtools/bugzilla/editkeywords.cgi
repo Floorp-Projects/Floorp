@@ -114,7 +114,7 @@ if ($action eq 'add') {
 #
 
 if ($action eq 'new') {
-    # Cleanups and valididy checks
+    # Cleanups and validity checks
 
     my $name = trim($cgi->param('name') || '');
     my $description  = trim($cgi->param('description')  || '');
