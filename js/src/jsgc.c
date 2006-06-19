@@ -2449,6 +2449,9 @@ restart:
         if (acx->sharpObjectMap.depth > 0)
             js_GCMarkSharpMap(cx, &acx->sharpObjectMap);
 
+        if (acx->nativeIteratorStates)
+            js_MarkNativeIteratorStates(cx, acx->nativeIteratorStates);
+
         acx->cachedIterObj = NULL;
     }
 
