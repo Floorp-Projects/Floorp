@@ -1543,93 +1543,106 @@ nsPlaintextEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
 NS_IMETHODIMP
 nsPlaintextEditor::SetCompositionString(const nsAString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList,nsTextEventReply* aReply)
 {
-  NS_ASSERTION(aTextRangeList, "null ptr");
-  if (!aTextRangeList)
-    return NS_ERROR_NULL_POINTER;
-
-  // workaround for windows ime bug 23558: we get every ime event twice. 
-  // for escape keypress, this causes an empty string to be passed
-  // twice, which freaks out the editor.  This is to detect and avoid that
-  // situation:
-  if (aCompositionString.IsEmpty() && !mIMETextNode) 
+  if (!aTextRangeList && !aCompositionString.IsEmpty())
   {
-    return NS_OK;
+    NS_ERROR("aTextRangeList is null but the composition string is not null");
+    return NS_ERROR_NULL_POINTER;
   }
-  
-  mIMETextRangeList = aTextRangeList;
 
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) 
     return NS_ERROR_NOT_INITIALIZED;
-
-  // XXX_kin: BEGIN HACK! HACK! HACK!
-  // XXX_kin:
-  // XXX_kin: This is lame! The IME stuff needs caret coordinates
-  // XXX_kin: synchronously, but the editor could be using async
-  // XXX_kin: updates (reflows and paints) for performance reasons.
-  // XXX_kin: In order to give IME what it needs, we have to temporarily
-  // XXX_kin: switch to sync updating during this call so that the
-  // XXX_kin: nsAutoPlaceHolderBatch can force sync reflows, paints,
-  // XXX_kin: and selection scrolling, so that we get back accurate
-  // XXX_kin: caret coordinates.
-
-  PRUint32 flags = 0;
-  PRBool restoreFlags = PR_FALSE;
-
-  if (NS_SUCCEEDED(GetFlags(&flags)) &&
-     (flags & nsIPlaintextEditor::eEditorUseAsyncUpdatesMask))
-  {
-    if (NS_SUCCEEDED(SetFlags(flags & (~nsIPlaintextEditor::eEditorUseAsyncUpdatesMask))))
-       restoreFlags = PR_TRUE;
-  }
-
-  // XXX_kin: END HACK! HACK! HACK!
 
   nsCOMPtr<nsISelection> selection;
   nsresult result = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(result)) return result;
 
   nsCOMPtr<nsICaret>  caretP;
-  
-  // we need the nsAutoPlaceHolderBatch destructor called before hitting
-  // GetCaretCoordinates so the states in Frame system sync with content
-  // therefore, we put the nsAutoPlaceHolderBatch into a inner block
+  ps->GetCaret(getter_AddRefs(caretP));
+
+  // We should return caret position if it is possible. Because this event
+  // dispatcher always expects to be returned the correct caret position.
+  // But in following cases, we don't need to process the composition string,
+  // so, we only need to return the caret position.
+
+  // aCompositionString.IsEmpty() && !mIMETextNode:
+  //   Workaround for Windows IME bug 23558: We get every IME event twice.
+  //   For escape keypress, this causes an empty string to be passed
+  //   twice, which freaks out the editor.
+
+  // aCompositionString.IsEmpty() && !aTextRangeList:
+  //   Some Chinese IMEs for Linux are always composition string and text range
+  //   list are empty when listing the Chinese characters. In this case,
+  //   we don't need to process composition string too. See bug 271815.
+
+  if (!aCompositionString.IsEmpty() || (mIMETextNode && aTextRangeList))
   {
-    nsAutoPlaceHolderBatch batch(this, gIMETxnName);
+    mIMETextRangeList = aTextRangeList;
 
-    SetIsIMEComposing(); // We set mIsIMEComposing properly.
+    // XXX_kin: BEGIN HACK! HACK! HACK!
+    // XXX_kin:
+    // XXX_kin: This is lame! The IME stuff needs caret coordinates
+    // XXX_kin: synchronously, but the editor could be using async
+    // XXX_kin: updates (reflows and paints) for performance reasons.
+    // XXX_kin: In order to give IME what it needs, we have to temporarily
+    // XXX_kin: switch to sync updating during this call so that the
+    // XXX_kin: nsAutoPlaceHolderBatch can force sync reflows, paints,
+    // XXX_kin: and selection scrolling, so that we get back accurate
+    // XXX_kin: caret coordinates.
 
-    result = InsertText(aCompositionString);
+    PRUint32 flags = 0;
+    PRBool restoreFlags = PR_FALSE;
 
-    mIMEBufferLength = aCompositionString.Length();
-
-    ps->GetCaret(getter_AddRefs(caretP));
-    if (caretP)
-      caretP->SetCaretDOMSelection(selection);
-
-    // second part of 23558 fix:
-    if (aCompositionString.IsEmpty()) 
+    if (NS_SUCCEEDED(GetFlags(&flags)) &&
+        (flags & nsIPlaintextEditor::eEditorUseAsyncUpdatesMask))
     {
-      mIMETextNode = nsnull;
+      if (NS_SUCCEEDED(SetFlags(
+          flags & (~nsIPlaintextEditor::eEditorUseAsyncUpdatesMask))))
+        restoreFlags = PR_TRUE;
     }
+
+    // XXX_kin: END HACK! HACK! HACK!
+
+    // we need the nsAutoPlaceHolderBatch destructor called before hitting
+    // GetCaretCoordinates so the states in Frame system sync with content
+    // therefore, we put the nsAutoPlaceHolderBatch into a inner block
+    {
+      nsAutoPlaceHolderBatch batch(this, gIMETxnName);
+
+      SetIsIMEComposing(); // We set mIsIMEComposing properly.
+
+      result = InsertText(aCompositionString);
+
+      mIMEBufferLength = aCompositionString.Length();
+
+      if (caretP)
+        caretP->SetCaretDOMSelection(selection);
+
+      // second part of 23558 fix:
+      if (aCompositionString.IsEmpty())
+        mIMETextNode = nsnull;
+    }
+
+    // XXX_kin: BEGIN HACK! HACK! HACK!
+    // XXX_kin:
+    // XXX_kin: Restore the previous set of flags!
+
+    if (restoreFlags)
+      SetFlags(flags);
+
+    // XXX_kin: END HACK! HACK! HACK!
   }
-
-  // XXX_kin: BEGIN HACK! HACK! HACK!
-  // XXX_kin:
-  // XXX_kin: Restore the previous set of flags!
-
-  if (restoreFlags)
-    SetFlags(flags);
-
-  // XXX_kin: END HACK! HACK! HACK!
 
   if (caretP)
   {
-    result = caretP->GetCaretCoordinates(nsICaret::eIMECoordinates, selection,
-              &(aReply->mCursorPosition), &(aReply->mCursorIsCollapsed), nsnull);
+    result = caretP->GetCaretCoordinates(nsICaret::eIMECoordinates,
+                                         selection,
+                                         &(aReply->mCursorPosition),
+                                         &(aReply->mCursorIsCollapsed),
+                                         nsnull);
     NS_ASSERTION(NS_SUCCEEDED(result), "cannot get caret position");
   }
-  
+
   return result;
 }
 
