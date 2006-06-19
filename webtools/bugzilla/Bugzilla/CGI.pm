@@ -166,7 +166,7 @@ sub multipart_init {
     # Note: CGI.pm::multipart_init up to v3.04 explicitly set nph to 0
     # CGI.pm::multipart_init v3.05 explicitly sets nph to 1
     # CGI.pm's header() sets nph according to a param or $CGI::NPH, which
-    # is the desired behavour.
+    # is the desired behaviour.
 
     # Allow multiple calls to $cgi->header()
     $CGI::HEADERS_ONCE = 0;
