@@ -248,7 +248,7 @@ if ($action eq 'new') {
 
         my $gid = $dbh->bz_last_key('groups', 'id');
 
-        # If we created a new group, give the "admin" group priviledges
+        # If we created a new group, give the "admin" group privileges
         # initially.
         my $admin = Bugzilla::Group->new({name => 'admin'})->id();
         
