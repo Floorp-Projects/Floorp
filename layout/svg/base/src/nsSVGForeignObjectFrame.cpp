@@ -255,11 +255,16 @@ nsSVGForeignObjectFrame::TransformPointFromOuterPx(float aX, float aY, nsPoint* 
 NS_IMETHODIMP
 nsSVGForeignObjectFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
 {
+  nsIFrame* kid = GetFirstChild(nsnull);
+  if (!kid) {
+    *hit = nsnull;
+    return NS_OK;
+  }
   nsPoint pt;
   nsresult rv = TransformPointFromOuterPx(x, y, &pt);
   if (NS_FAILED(rv))
     return rv;
-  *hit = nsLayoutUtils::GetFrameForPoint(this, pt);
+  *hit = nsLayoutUtils::GetFrameForPoint(kid, pt);
   return NS_OK;
 }
 

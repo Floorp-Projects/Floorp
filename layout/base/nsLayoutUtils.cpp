@@ -503,12 +503,12 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(nsEvent* aEvent, nsIFrame* aFrame)
   nsIFrame* rootFrame = aFrame;
   for (nsIFrame* f = aFrame; f; f = GetCrossDocParentFrame(f)) {
 #ifdef MOZ_SVG_FOREIGNOBJECT
-    if (f->IsFrameOfType(nsIFrame::eSVGForeignObject)) {
+    if (f->IsFrameOfType(nsIFrame::eSVGForeignObject) && f->GetFirstChild(nsnull)) {
       nsSVGForeignObjectFrame* fo = NS_STATIC_CAST(nsSVGForeignObjectFrame*, f);
       nsIFrame* outer = nsSVGUtils::GetOuterSVGFrame(fo);
       return fo->TransformPointFromOuter(
           GetEventCoordinatesRelativeTo(aEvent, outer)) -
-        aFrame->GetOffsetTo(fo);
+        aFrame->GetOffsetTo(fo->GetFirstChild(nsnull));
     }
 #endif
     rootFrame = f;
