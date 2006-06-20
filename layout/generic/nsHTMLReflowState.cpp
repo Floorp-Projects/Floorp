@@ -1007,13 +1007,10 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
     // everything is scrolled to (0,0).
     cbOffset.MoveTo(0, 0);
     do {
-      nsPoint curOffset = aContainingBlock->GetPosition();
-      aContainingBlock = aContainingBlock->GetParent();
       NS_ASSERTION(aContainingBlock,
                    "Should hit cbrs->frame before we run off the frame tree!");
-      if (aContainingBlock->GetType() != nsLayoutAtoms::scrollFrame) {
-        cbOffset += curOffset;
-      }
+      cbOffset += aContainingBlock->GetPositionIgnoringScrolling();
+      aContainingBlock = aContainingBlock->GetParent();
     } while (aContainingBlock != cbrs->frame);
   } else {
     cbOffset = aContainingBlock->GetOffsetTo(cbrs->frame);
