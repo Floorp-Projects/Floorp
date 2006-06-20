@@ -83,9 +83,9 @@
 #
 #     add/delete local configuration variables         --LOCAL--
 #     check for more required modules                  --MODULES--
-#     change the defaults for local configuration vars --LOCAL--
-#     update the assigned file permissions             --CHMOD--
 #     add more database-related checks                 --DATABASE--
+#     change the defaults for local configuration vars --DATA--
+#     update the assigned file permissions             --CHMOD--
 #     change table definitions                         --TABLE--
 #     add more groups                                  --GROUPS--
 #     add user-adjustable settings                     --SETTINGS--
@@ -506,7 +506,10 @@ if ($^O =~ /MSWin/i) {
 # we've already checked all of the pre-requisites above in the previous 
 # BEGIN block.
 BEGIN {
+    # We need $::ENV{'PATH'} to remain defined.
+    my $env = $::ENV{'PATH'};
     require Bugzilla;
+    $::ENV{'PATH'} = $env;
 
     require Bugzilla::Config;
     import Bugzilla::Config qw(:DEFAULT :admin :locations);
@@ -879,6 +882,164 @@ You really, really, really need to change this setting.
 
 EOF
     }
+}
+
+###########################################################################
+# Check Database setup
+###########################################################################
+
+#
+# Check if we have access to the --DATABASE--
+#
+# At this point, localconfig is defined and is readable. So we know
+# everything we need to create the DB. We have to create it early,
+# because some data required to populate data/params are stored in the DB.
+
+if ($my_db_check) {
+    # Only certain values are allowed for $db_driver.
+    if (!exists DB_MODULE->{lc($my_db_driver)}) {
+        die "$my_db_driver is not a valid choice for \$db_driver in",
+            " localconfig";
+    }
+
+    # Check the existence and version of the DBD that we need.
+    my $actual_dbd     = DB_MODULE->{lc($my_db_driver)}->{dbd};
+    my $actual_dbd_ver = DB_MODULE->{lc($my_db_driver)}->{dbd_version};
+    my $sql_server     = DB_MODULE->{lc($my_db_driver)}->{name};
+    my $sql_want       = DB_MODULE->{lc($my_db_driver)}->{db_version};
+    unless (have_vers($actual_dbd, $actual_dbd_ver)) {
+        print "For $sql_server, Bugzilla requires that perl's"
+              . " $actual_dbd be installed.\nTo install this module,"
+              . " you can do:\n   " . install_command($actual_dbd) . "\n";
+        exit;
+    }
+
+    # And now check the version of the database server itself.
+    my $dbh = Bugzilla::DB::connect_main("no database connection");
+    printf("Checking for %15s %-9s ", $sql_server, "(v$sql_want)") unless $silent;
+    my $sql_vers = $dbh->bz_server_version;
+
+    # Check what version of the database server is installed and let
+    # the user know if the version is too old to be used with Bugzilla.
+    if ( vers_cmp($sql_vers,$sql_want) > -1 ) {
+        print "ok: found v$sql_vers\n" unless $silent;
+    } else {
+        die "\nYour $sql_server v$sql_vers is too old.\n" . 
+            "   Bugzilla requires version $sql_want or later of $sql_server.\n" . 
+            "   Please download and install a newer version.\n";
+    }
+
+    # See if we can connect to the database.
+    my $conn_success = eval { 
+        my $check_dbh = Bugzilla::DB::connect_main(); 
+        $check_dbh->disconnect;
+    };
+    if (!$conn_success) {
+       print "Creating database $my_db_name ...\n";
+       # Try to create the DB, and if we fail print an error.
+       if (!eval { $dbh->do("CREATE DATABASE $my_db_name") }) {
+            my $error = $dbh->errstr;
+            die <<"EOF"
+
+The '$my_db_name' database could not be created.  The error returned was:
+
+$error
+
+This might have several reasons:
+
+* $sql_server is not running.
+* $sql_server is running, but there is a problem either in the
+  server configuration or the database access rights. Read the Bugzilla
+  Guide in the doc directory. The section about database configuration
+  should help.
+* There is a subtle problem with Perl, DBI, or $sql_server. Make
+  sure all settings in '$localconfig' are correct. If all else fails, set
+  '\$db_check' to zero.\n
+EOF
+        }
+    }
+    $dbh->disconnect if $dbh;
+}
+
+# now get a handle to the database:
+my $dbh = Bugzilla::DB::connect_main();
+
+END { $dbh->disconnect if $dbh }
+
+###########################################################################
+# Create tables
+###########################################################################
+
+# Note: table definitions are now in Bugzilla::DB::Schema.
+$dbh->bz_setup_database();
+
+###########################################################################
+# Detect changed local settings
+###########################################################################
+
+# Nick Barnes nb+bz@ravenbrook.com 2005-10-05
+# 
+# PopulateEnumTable($table, @values): if the table $table has no
+# entries, fill it with the entries in the list @values, in the same
+# order as that list.
+
+sub PopulateEnumTable {
+    my ($table, @valuelist) = @_;
+
+    # If we encounter any of the keys in this hash, they are 
+    # automatically set to isactive=0
+    my %defaultinactive = ('---' => 1);
+
+    # Check if there are any table entries
+    my $query = "SELECT COUNT(id) FROM $table";
+    my $sth = $dbh->prepare($query);
+    $sth->execute();
+
+    # If the table is empty...
+    if ( !$sth->fetchrow_array() ) {
+        my $insert = $dbh->prepare("INSERT INTO $table"
+            . " (value,sortkey,isactive) VALUES (?,?,?)");
+        my $sortorder = 0;
+        foreach my $value (@valuelist) {
+            $sortorder = $sortorder + 100;
+            # Not active if the value exists in $defaultinactive
+            my $isactive = exists($defaultinactive{$value}) ? 0 : 1;
+            print "Inserting value '$value' in table $table" 
+                . " with sortkey $sortorder...\n";
+            $insert->execute($value, $sortorder, $isactive);
+        }
+    }
+}
+
+# Set default values for what used to be the enum types.  These values
+# are no longer stored in localconfig.  If we are upgrading from a
+# Bugzilla with enums to a Bugzilla without enums, we use the
+# enum values.
+#
+# The values that you see here are ONLY DEFAULTS. They are only used
+# the FIRST time you run checksetup, IF you are NOT upgrading from a
+# Bugzilla with enums. After that, they are either controlled through
+# the Bugzilla UI or through the DB.
+
+my $enum_defaults = {
+    bug_severity  => ['blocker', 'critical', 'major', 'normal',
+                      'minor', 'trivial', 'enhancement'],
+    priority     => ["P1","P2","P3","P4","P5"],
+    op_sys       => ["All","Windows","Mac OS","Linux","Other"],
+    rep_platform => ["All","PC","Macintosh","Other"],
+    bug_status   => ["UNCONFIRMED","NEW","ASSIGNED","REOPENED","RESOLVED",
+                     "VERIFIED","CLOSED"],
+    resolution   => ["","FIXED","INVALID","WONTFIX","LATER","REMIND",
+                     "DUPLICATE","WORKSFORME","MOVED"],
+};
+
+# Get all the enum column values for the existing database, or the
+# defaults if the columns are not enums.
+my $enum_values = $dbh->bz_enum_initial_values($enum_defaults);
+
+# Populate the enum tables.
+while (my ($table, $values) = each %$enum_values) {
+    PopulateEnumTable($table, @$values);
 }
 
 ###########################################################################
@@ -1507,85 +1668,6 @@ import Bugzilla::Bug qw(is_open_state);
 require "globals.pl";
 
 ###########################################################################
-# Check Database setup
-###########################################################################
-
-#
-# Check if we have access to the --DATABASE--
-#
-
-if ($my_db_check) {
-    # Only certain values are allowed for $db_driver.
-    if (!exists DB_MODULE->{lc($my_db_driver)}) {
-        die "$my_db_driver is not a valid choice for \$db_driver in",
-            " localconfig";
-    }
-
-    # Check the existence and version of the DBD that we need.
-    my $actual_dbd     = DB_MODULE->{lc($my_db_driver)}->{dbd};
-    my $actual_dbd_ver = DB_MODULE->{lc($my_db_driver)}->{dbd_version};
-    my $sql_server     = DB_MODULE->{lc($my_db_driver)}->{name};
-    my $sql_want       = DB_MODULE->{lc($my_db_driver)}->{db_version};
-    unless (have_vers($actual_dbd, $actual_dbd_ver)) {
-        print "For $sql_server, Bugzilla requires that perl's"
-              . " $actual_dbd be installed.\nTo install this module,"
-              . " you can do:\n   " . install_command($actual_dbd) . "\n";
-        exit;
-    }
-
-    # And now check the version of the database server itself.
-    my $dbh = Bugzilla::DB::connect_main("no database connection");
-    printf("Checking for %15s %-9s ", $sql_server, "(v$sql_want)") unless $silent;
-    my $sql_vers = $dbh->bz_server_version;
-
-    # Check what version of the database server is installed and let
-    # the user know if the version is too old to be used with Bugzilla.
-    if ( vers_cmp($sql_vers,$sql_want) > -1 ) {
-        print "ok: found v$sql_vers\n" unless $silent;
-    } else {
-        die "\nYour $sql_server v$sql_vers is too old.\n" . 
-            "   Bugzilla requires version $sql_want or later of $sql_server.\n" . 
-            "   Please download and install a newer version.\n";
-    }
-
-    # See if we can connect to the database.
-    my $conn_success = eval { 
-        my $check_dbh = Bugzilla::DB::connect_main(); 
-        $check_dbh->disconnect;
-    };
-    if (!$conn_success) {
-       print "Creating database $my_db_name ...\n";
-       # Try to create the DB, and if we fail print an error.
-       if (!eval { $dbh->do("CREATE DATABASE $my_db_name") }) {
-            my $error = $dbh->errstr;
-            die <<"EOF"
-
-The '$my_db_name' database could not be created.  The error returned was:
-
-$error
-
-This might have several reasons:
-
-* $sql_server is not running.
-* $sql_server is running, but there is a problem either in the
-  server configuration or the database access rights. Read the Bugzilla
-  Guide in the doc directory. The section about database configuration
-  should help.
-* There is a subtle problem with Perl, DBI, or $sql_server. Make
-  sure all settings in '$localconfig' are correct. If all else fails, set
-  '\$db_check' to zero.\n
-EOF
-        }
-    }
-    $dbh->disconnect if $dbh;
-}
-
-# now get a handle to the database:
-my $dbh = Bugzilla::DB::connect_main();
-
-END { $dbh->disconnect if $dbh }
-
-###########################################################################
 # Check for LDAP
 ###########################################################################
 
@@ -1627,13 +1709,6 @@ if( Param('webdotbase') && Param('webdotbase') !~ /^https?:/ ) {
 }
 
 print "\n" unless $silent;
-
-###########################################################################
-# Create tables
-###########################################################################
-
-# Note: --TABLE-- definitions are now in Bugzilla::DB::Schema.
-$dbh->bz_setup_database();
 
 ###########################################################################
 # Populate groups table
@@ -1827,75 +1902,6 @@ if ($old_field_id && ($old_field_name ne $new_field_name)) {
 AddFDef($new_field_name, $field_description, 0);
 
 ###########################################################################
-# Detect changed local settings
-###########################################################################
-
-# Nick Barnes nb+bz@ravenbrook.com 2005-10-05
-# 
-# PopulateEnumTable($table, @values): if the table $table has no
-# entries, fill it with the entries in the list @values, in the same
-# order as that list.
-
-sub PopulateEnumTable {
-    my ($table, @valuelist) = @_;
-
-    # If we encounter any of the keys in this hash, they are 
-    # automatically set to isactive=0
-    my %defaultinactive = ('---' => 1);
-
-    # Check if there are any table entries
-    my $query = "SELECT COUNT(id) FROM $table";
-    my $sth = $dbh->prepare($query);
-    $sth->execute();
-
-    # If the table is empty...
-    if ( !$sth->fetchrow_array() ) {
-        my $insert = $dbh->prepare("INSERT INTO $table"
-            . " (value,sortkey,isactive) VALUES (?,?,?)");
-        my $sortorder = 0;
-        foreach my $value (@valuelist) {
-            $sortorder = $sortorder + 100;
-            # Not active if the value exists in $defaultinactive
-            my $isactive = exists($defaultinactive{$value}) ? 0 : 1;
-            print "Inserting value '$value' in table $table" 
-                . " with sortkey $sortorder...\n";
-            $insert->execute($value, $sortorder, $isactive);
-        }
-    }
-}
-
-# Set default values for what used to be the enum types.  These values
-# are no longer stored in localconfig.  If we are upgrading from a
-# Bugzilla with enums to a Bugzilla without enums, we use the
-# enum values.
-#
-# The values that you see here are ONLY DEFAULTS. They are only used
-# the FIRST time you run checksetup, IF you are NOT upgrading from a
-# Bugzilla with enums. After that, they are either controlled through
-# the Bugzilla UI or through the DB.
-
-my $enum_defaults = {
-    bug_severity  => ['blocker', 'critical', 'major', 'normal',
-                      'minor', 'trivial', 'enhancement'],
-    priority     => ["P1","P2","P3","P4","P5"],
-    op_sys       => ["All","Windows","Mac OS","Linux","Other"],
-    rep_platform => ["All","PC","Macintosh","Other"],
-    bug_status   => ["UNCONFIRMED","NEW","ASSIGNED","REOPENED","RESOLVED",
-                     "VERIFIED","CLOSED"],
-    resolution   => ["","FIXED","INVALID","WONTFIX","LATER","REMIND",
-                     "DUPLICATE","WORKSFORME","MOVED"],
-};
-
-# Get all the enum column values for the existing database, or the
-# defaults if the columns are not enums.
-my $enum_values = $dbh->bz_enum_initial_values($enum_defaults);
-
-# Populate the enum tables.
-while (my ($table, $values) = each %$enum_values) {
-    PopulateEnumTable($table, @$values);
-}
-
-###########################################################################
 # Create initial test product if there are no products present.
 ###########################################################################
 my $sth = $dbh->prepare("SELECT description FROM products");
@@ -1943,7 +1949,7 @@ if (!$class_count) {
 }
 
 ###########################################################################
-# Update the tables to the current definition
+# Update the tables to the current definition  --TABLE--
 ###########################################################################
 
 # Both legacy code and modern code need this variable.
