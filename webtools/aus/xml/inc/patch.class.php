@@ -184,7 +184,7 @@ class Patch extends AUS_Object {
             // Get the latest build for this branch.
             $latestbuild = $this->getLatestBuild($product,$branchVersion,$platform);
 
-            if ($this->setPath($product,$platform,$locale,$branchVersion,$latestbuild,2,$channel) && file_exists($this->path) && filesize($this->path) > 0) {
+            if ($latestbuild && $this->setPath($product,$platform,$locale,$branchVersion,$latestbuild,2,$channel) && file_exists($this->path) && filesize($this->path) > 0) {
                 $this->setSnippet($this->path); 
                 $this->setVar('isPatch',true,true);
                 return true;
@@ -312,20 +312,30 @@ class Patch extends AUS_Object {
      * @param string $product
      * @param string $branchVersion
      * @param string $platform
+     * @param return string|false false if there is no matching build
      */
     function getLatestBuild($product,$branchVersion,$platform) {
         $files = array();
-        $fp = opendir(SOURCE_DIR.'/2/'.$product.'/'.$branchVersion.'/'.$platform);
-        while (false !== ($filename = readdir($fp))) {
-            if ($filename!='.' && $filename!='..') {
-                $files[] = $filename;
-            }       
-        }
-        closedir($fp);
-        
-        rsort($files,SORT_NUMERIC); 
 
-        return $files[1];
+        $dir = SOURCE_DIR.'/2/'.$product.'/'.$branchVersion.'/'.$platform;
+
+        if (is_dir($dir)) {
+            $fp = opendir($dir);
+            while (false !== ($filename = readdir($fp))) {
+                if ($filename!='.' && $filename!='..') {
+                    $files[] = $filename;
+                }       
+            }
+            closedir($fp);
+            
+            if (is_array($files)) {
+                rsort($files,SORT_NUMERIC); 
+            }
+
+            return $files[1];
+        }
+
+        return false;
     }
 }
 ?>
