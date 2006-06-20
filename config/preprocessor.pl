@@ -195,7 +195,7 @@ sub new {
         'filters' => {
             # filters
         },
-        'values' => [], # the value of the last condition evaluated at the nth lewel
+        'values' => [], # the value of the last condition evaluated at the nth level
         'lastPrinting' => [], # whether we were printing at the n-1th level
         'printing' => 1, # whether we are currently printing at the Nth level
         'dependencies' => 0, # whether we are showing dependencies
@@ -211,28 +211,28 @@ sub newline {
 sub define {
     my $self = shift;
     my($variable, $value) = @_;
-    die "not a valid variable name: '$variable'\n" if $variable =~ m/\W/;
+    die "not a valid variable name: '$variable'\n" if $variable =~ m/[^\w\.]/;
     $self->{'variables'}->{$variable} = $value;
 }
 
 sub defined {
     my $self = shift;
     my($variable) = @_;
-    die "not a valid variable name: '$variable'\n" if $variable =~ m/\W/;
+    die "not a valid variable name: '$variable'\n" if $variable =~ m/[^\w\.]/;
     return defined($self->{'variables'}->{$variable});
 }
 
 sub undefine {
     my $self = shift;
     my($variable) = @_;
-    die "not a valid variable name: '$variable'\n" if $variable =~ m/\W/;
+    die "not a valid variable name: '$variable'\n" if $variable =~ m/[^\w\.]/;
     delete($self->{'variables'}->{$variable});
 }
 
 sub get {
     my $self = shift;
     my($variable, $required) = @_;
-    die "not a valid variable name: '$variable'\n" if $variable =~ m/\W/;
+    die "not a valid variable name: '$variable'\n" if $variable =~ m/[^\w\.]/;
     my $value = $self->{'variables'}->{$variable};
     if (defined($value)) {
         return $value;
