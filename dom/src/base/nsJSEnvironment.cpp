@@ -1546,8 +1546,11 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
   if (!mScriptsEnabled) {
     return NS_OK;
   }
-  JSObject* target;
-  nsresult rv = JSObjectFromInterface(aTarget, aScope, &target);
+  nsresult rv;
+  JSObject* target = nsnull;
+  nsAutoGCRoot root(&target, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = JSObjectFromInterface(aTarget, aScope, &target);
   NS_ENSURE_SUCCESS(rv, rv);
 
   jsval rval = JSVAL_VOID;
@@ -1627,7 +1630,9 @@ nsJSContext::BindCompiledEventHandler(nsISupports* aTarget, void *aScope,
   nsresult rv;
 
   // Get the jsobject associated with this target
-  JSObject *target;
+  JSObject *target = nsnull;
+  nsAutoGCRoot root(&target, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
   rv = JSObjectFromInterface(aTarget, aScope, &target);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1676,7 +1681,9 @@ nsJSContext::GetBoundEventHandler(nsISupports* aTarget, void *aScope,
                                   nsScriptObjectHolder &aHandler)
 {
     nsresult rv;
-    JSObject *obj;
+    JSObject *obj = nsnull;
+    nsAutoGCRoot root(&obj, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
     JSAutoRequest ar(mContext);
     rv = JSObjectFromInterface(aTarget, aScope, &obj);
     NS_ENSURE_SUCCESS(rv, rv);
