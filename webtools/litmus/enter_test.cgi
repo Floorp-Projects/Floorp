@@ -31,6 +31,7 @@ use Litmus::Utils;
 
 use CGI;
 use Time::Piece::MySQL;
+use Date::Manip;
 
 my $c = Litmus->cgi(); 
 
@@ -60,6 +61,9 @@ if (! $c->param('enteringTestcase')) {
 		steps => $c->param('steps') ? $c->param('steps') : '',
 		expected_results => $c->param('expectedResults') ? 
 			$c->param('expectedResults') : '',
+		author  => Litmus::Auth::getCurrentUser(),
+		creation_date => &Date::Manip::UnixDate("now","%q"),
+		version => 1,
 	});
 	
 	my $newtsg = Litmus::DB::TestcaseSubgroup->create({
