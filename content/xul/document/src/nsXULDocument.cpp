@@ -3281,8 +3281,8 @@ nsXULDocument::ExecuteScript(nsXULPrototypeScript *aScript)
     rv = mScriptGlobalObject->EnsureScriptEnvironment(stid);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsIScriptContext *context;
-    context = mScriptGlobalObject->GetScriptContext(stid);
+    nsCOMPtr<nsIScriptContext> context =
+      mScriptGlobalObject->GetScriptContext(stid);
     // failure getting a script context is fatal.
     NS_ENSURE_TRUE(context != nsnull, NS_ERROR_UNEXPECTED);
 
