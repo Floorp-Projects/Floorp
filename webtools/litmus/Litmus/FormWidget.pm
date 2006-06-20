@@ -308,6 +308,7 @@ sub _getValues($)
     push @rows, $data;
     }
     return \@rows;
+    $sth->finish();
 }
 
 1; 
