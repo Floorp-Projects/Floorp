@@ -104,13 +104,15 @@ public:
      * Data accessors
      */
     nsISupports *Data()                           { return mData; }
-    void         SetData( nsISupports * data);
+    void         SetData( nsISupports *  data)    { mData = data; }
 
     PRUint32 DataSize()                           { return mDataSize; }
     void     SetDataSize( PRUint32  size)         { mDataSize = size; }
 
     void     TouchData();
     
+    void     SetThread();
+
     /**
      * Meta data accessors
      */
@@ -239,7 +241,7 @@ private:
     PRUint32                mDataSize;       // 4
     nsCacheDevice *         mCacheDevice;    // 4
     nsCOMPtr<nsISupports>   mSecurityInfo;   // 
-    nsISupports *           mData;           // strong ref
+    nsCOMPtr<nsISupports>   mData;           // 
     nsCOMPtr<nsIThread>     mThread;
     nsCacheMetaData         mMetaData;       // 4
     PRCList                 mRequestQ;       // 8

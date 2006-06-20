@@ -44,6 +44,8 @@
 #include "nsDiskCacheStreams.h"
 #include "nsCacheService.h"
 
+#include "nsAutoLock.h"
+
 
 
 // Assumptions:
@@ -441,7 +443,7 @@ nsDiskCacheStreamIO::ClearBinding()
 nsresult
 nsDiskCacheStreamIO::CloseOutputStream(nsDiskCacheOutputStream *  outputStream)
 {
-    nsCacheServiceAutoLock lock; // grab service lock
+    nsAutoLock lock(nsCacheService::ServiceLock()); // grab service lock
     nsresult   rv;
 
     if (outputStream != mOutStream) {
@@ -558,7 +560,7 @@ nsDiskCacheStreamIO::Write( const char * buffer,
                             PRUint32 *   bytesWritten)
 {
     nsresult    rv = NS_OK;
-    nsCacheServiceAutoLock lock; // grab service lock
+    nsAutoLock lock(nsCacheService::ServiceLock()); // grab service lock
     if (!mBinding)  return NS_ERROR_NOT_AVAILABLE;
 
     if (mInStreamCount) {
