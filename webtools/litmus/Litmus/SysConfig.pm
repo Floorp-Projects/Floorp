@@ -79,13 +79,40 @@ sub setCookie {
     return $cookie;
 }
 
-sub getCookie() {
+sub getCookie {
     my $self = shift;
     my $c = Litmus->cgi();
     my $product = shift;
     
-    my $cookie = $c->cookie($configcookiename.'_'.$product->product_id());
-    if (! $cookie) {
+    return Litmus::Sysconfig->
+    	realGetCookie($configcookiename.'_'.$product->product_id());
+    
+}
+
+# returns sysconfig objects corresponding to all sysconfig cookies the user 
+# has set
+sub getAllCookies {
+	my $self = shift;
+	my $c = Litmus->cgi();
+	
+	my @cookies = ();
+	my @names = $c->cookie();
+	foreach my $cur (@names) {
+		if ($cur =~ /^\Q$configcookiename\E_/) {
+			push(@cookies, Litmus::SysConfig->realGetCookie($cur));
+		}
+	}
+	if (@cookies == 0) { push(@cookies, undef) }
+	return @cookies;
+}
+
+sub realGetCookie {
+	my $self = shift;
+	my $cookiename = shift;
+	
+	my $c = Litmus->cgi();
+	my $cookie = $c->cookie($cookiename);
+	if (! $cookie) {
         return;
     }
     
@@ -182,6 +209,10 @@ sub displayForm {
         $vars->{"defaultbranch"} = $sysconfig->branch();
         $vars->{"defaultlocale"} = $sysconfig->locale();
     }
+    
+    # send a default build id if we have one:
+    my @cookies = Litmus::SysConfig->getAllCookies();
+    if ($cookies[0]) { $vars->{"defaultbuildid"} = $cookies[0]->build_id() }
     
     my $cookie =  Litmus::Auth::getCurrentUser();
     $vars->{"defaultemail"} = $cookie;

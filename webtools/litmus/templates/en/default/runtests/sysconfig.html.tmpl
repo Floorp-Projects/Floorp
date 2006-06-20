@@ -54,7 +54,11 @@ function checkFormContents(f) {
           );
 }
 
-var appBuildID = "0000000000";
+var appBuildID = [% IF defaultbuildid %] 
+ "[% defaultbuildid | js | html %]"; 
+[% ELSE %]
+  "0000000000";
+[% END %]
 try {
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   var appInfo = Components.classes["@mozilla.org/xre/app-info;1"]
