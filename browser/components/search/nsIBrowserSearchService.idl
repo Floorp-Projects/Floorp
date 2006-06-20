@@ -15,13 +15,14 @@
  *
  * The Initial Developer of the Original Code is
  * Google Inc.
- * Portions created by the Initial Developer are Copyright (C) 2005
+ * Portions created by the Initial Developer are Copyright (C) 2005-2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *   Ben Goodger <beng@google.com> (Original author)
  *   Gavin Sharp <gavin@gavinsharp.com>
  *   Joe Hughes  <joe@retrovirus.com>
+ *   Pamela Greene <pamg.bugs@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -161,11 +162,12 @@ interface nsISearchEngine : nsISupports
 
 };
 
-[scriptable, uuid(5bcbc35a-8514-4583-9ef1-5bf5d10327f4)]
+[scriptable, uuid(89a503ac-ea67-4bad-89f9-aa2b06140702)]
 interface nsIBrowserSearchService : nsISupports
 {
   /**
-   * Adds a new search engine from the file at the supplied URI.
+   * Adds a new search engine from the file at the supplied URI and optionally
+   * selects it as the current engine.
    *
    * @param engineURL
    *        The URL to the search engine's description file.
@@ -179,10 +181,15 @@ interface nsIBrowserSearchService : nsISupports
    *        icon. This value may be overridden by an icon specified in the
    *        engine description file.
    *
+   * @param select
+   *        A boolean value indicating whether the newly added engine should
+   *        be selected as the current engine after it finishes loading.
+   *
    * @throws NS_ERROR_FAILURE if the type is invalid, or if the description
    *         file cannot be successfully loaded.
    */
-  void addEngine(in AString engineURL, in long type, in AString iconURL);
+  void addEngine(in AString engineURL, in long type, in AString iconURL,
+                 in boolean select);
 
   /**
    * Adds a new search engine.

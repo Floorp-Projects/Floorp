@@ -15,13 +15,14 @@
 #
 # The Initial Developer of the Original Code is
 # Google Inc.
-# Portions created by the Initial Developer are Copyright (C) 2005
+# Portions created by the Initial Developer are Copyright (C) 2005-2006
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
 #   Ben Goodger <beng@google.com> (Original author)
 #   Gavin Sharp <gavin@gavinsharp.com>
 #   Joe Hughes  <joe@retrovirus.com
+#   Pamela Greene <pamg.bugs@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -886,8 +887,8 @@ Engine.prototype = {
   // A URL string pointing to the engine's search form.
   _searchForm: null,
   // The URI object from which the engine was retrieved.
-  // This is null for local plugins, and is only used for error messages and
-  // logging.
+  // This is null for local plugins, and is used for error messages, logging,
+  // and determining whether to start using a newly added engine right away.
   _uri: null,
 
   /**
@@ -1752,6 +1753,12 @@ Engine.prototype = {
     return this._type;
   },
 
+  // This getter is used in SearchService.observer.  It is not intended to be
+  // used (or needed) by callers outside this file.
+  get uri() {
+    return this._uri;
+  },
+
   get searchForm() {
     if (!this._searchForm) {
       // No searchForm specified in the engine definition file, use the prePath
@@ -1863,6 +1870,14 @@ function SearchService() {
 SearchService.prototype = {
   _engines: { },
   _sortedEngines: [],
+
+  // If this is set to the URI of the description of a search engine being added
+  // to the list (typically by calling addEngine()), that engine will be
+  // selected as the current engine when it finishes loading.  If another
+  // engine is added with "start using this one now" before the first selected
+  // engine finishes loading, the second choice will override the first one.
+  // If the selected engine fails to load, this marker will be cleared.
+  _selectNewEngineURI: null,
 
   _init: function() {
     engineMetadataService.init();
@@ -2220,11 +2235,17 @@ SearchService.prototype = {
     this._addEngineToStore(engine);
   },
 
-  addEngine: function SRCH_SVC_addEngine(aEngineURL, aType, aIconURL) {
+  // If aSelect is true, the newly added engine will be selected as the current
+  // engine when it finishes loading.
+  addEngine: function SRCH_SVC_addEngine(aEngineURL, aType, aIconURL, aSelect) {
     LOG("addEngine: Adding \"" + aEngineURL + "\".");
     try {
-      var engine = new Engine(makeURI(aEngineURL), aType, false);
+      var uri = makeURI(aEngineURL);
+      var engine = new Engine(uri, aType, false);
       engine._initFromURI();
+
+      if (aSelect)
+        this._selectNewEngineURI = uri;
     } catch (ex) {
       LOG("addEngine: Error adding engine:\n" + ex);
       throw Cr.NS_ERROR_FAILURE;
@@ -2323,6 +2344,12 @@ SearchService.prototype = {
           LOG("nsISearchEngine::observe: Done installation of " + engine.name
               + ".");
           this._addEngineToStore(engine.wrappedJSObject);
+          // Optionally start using this engine now.
+          if (this._selectNewEngineURI &&
+              this._selectNewEngineURI == engine.wrappedJSObject.uri) {
+            this.currentEngine = aEngine;
+            this._selectNewEngineURI = null;
+          }
         }
         break;
       case XPCOM_SHUTDOWN_TOPIC:
