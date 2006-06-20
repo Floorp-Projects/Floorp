@@ -989,6 +989,33 @@ const long NSFindPanelActionSetFindString = 7;
   return (isEnabled) ? YES : NO;
 }
 
+- (BOOL)isTextBasedContent
+{
+  nsCOMPtr<nsIDOMWindow> domWindow = [self getContentWindow];
+  
+  nsCOMPtr<nsIDOMDocument> domDocument;
+  domWindow->GetDocument(getter_AddRefs(domDocument));
+  if (!domDocument)
+    return NO;
+  
+  nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(domDocument));
+  if (!nsDoc)
+    return NO;
+  
+  nsAutoString contentType;
+  nsDoc->GetContentType(contentType);
+  
+  NSString* mimeType = [NSString stringWith_nsAString:contentType];
+  if ([mimeType hasPrefix:@"text/"] ||
+      [mimeType hasSuffix:@"+xml"] ||
+      [mimeType isEqualToString:@"application/x-javascript"] ||
+      [mimeType isEqualToString:@"application/xml"])
+  {
+    return YES;
+  }
+  
+  return NO;
+}
 
 -(IBAction)cut:(id)aSender
 {

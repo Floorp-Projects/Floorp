@@ -205,6 +205,7 @@ typedef enum {
 - (NSString*)pageLocationHost;
 - (NSString*)pageTitle;
 - (NSDate*)pageLastModifiedDate;
+- (BOOL)isTextBasedContent;
 
 // nsIWebBrowserSetup methods
 - (void)setProperty:(unsigned int)property toValue:(unsigned int)value;

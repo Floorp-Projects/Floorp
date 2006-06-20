@@ -1455,10 +1455,15 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
     return (browserController &&
             ![[browserController getBrowserWrapper] isEmpty] &&
             [[[browserController getBrowserWrapper] getBrowserView] canMakeTextSmaller]);
-  
-  if (action == @selector(viewSource:))
+
+  // don't allow View Source on the bookmark manager or on non-text content
+  if (action == @selector(viewSource:)) {
+    NSString* curURL = [[browserController getBrowserWrapper] getCurrentURI];
     return (browserController &&
-            ![browserController bookmarkManagerIsVisible]);
+            ![browserController bookmarkManagerIsVisible] &&
+            [[[browserController getBrowserWrapper] getBrowserView] isTextBasedContent]);
+  }
+
 
   if (action == @selector(doStop:))
     return (browserController && [[browserController getBrowserWrapper] isBusy]);
