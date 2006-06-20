@@ -2,6 +2,7 @@ classic.jar:
 % skin browser classic/1.0 %skin/classic/browser/
 *       skin/classic/browser/browser.css                        (browser.css)
         skin/classic/browser/browser.xml
+*       skin/classic/browser/engineManager.css                  (engineManager.css)
         skin/classic/browser/Go.png
         skin/classic/browser/Go-rtl.png
         skin/classic/browser/Info.png

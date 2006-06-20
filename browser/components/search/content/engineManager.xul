@@ -38,6 +38,7 @@
 # ***** END LICENSE BLOCK *****
 
 <?xml-stylesheet href="chrome://global/skin/"?>
+<?xml-stylesheet href="chrome://browser/skin/engineManager.css"?>
 
 <!DOCTYPE dialog SYSTEM "chrome://browser/locale/engineManager.dtd">
 
