@@ -382,7 +382,7 @@
             var fn = new Function("eventType", "param", handler);
             cancel = fn.apply(this, arguments);
           }
-          
+
           return cancel;
         ]]></body>
       </method>
@@ -398,19 +398,12 @@
 
           var cancel = false;
           const IController = Components.interfaces.nsIAutoCompleteController;
-          
-          if (!this.disableKeyNavigation && !aEvent.ctrlKey && !aEvent.altKey) {
+
+          // Catch any keys that could potentially move the caret. Ctrl can be
+          // used in combination with these keys, so only make sure that Alt
+          // isn't used.
+          if (!this.disableKeyNavigation && !aEvent.altKey) {
             switch (aEvent.keyCode) {
-              case KeyEvent.DOM_VK_TAB:
-                if (this.tabScrolling && this.popup.mPopupOpen)
-                  cancel = this.mController.handleKeyNavigation(aEvent.shiftKey ? IController.KEY_UP : IController.KEY_DOWN);
-                break;
-              case KeyEvent.DOM_VK_UP:
-                cancel = this.mController.handleKeyNavigation(IController.KEY_UP);
-                break;
-              case KeyEvent.DOM_VK_DOWN:
-                cancel = this.mController.handleKeyNavigation(IController.KEY_DOWN);
-                break;
               case KeyEvent.DOM_VK_LEFT:
                 cancel = this.mController.handleKeyNavigation(IController.KEY_LEFT);
                 break;
@@ -420,6 +413,24 @@
               case KeyEvent.DOM_VK_HOME:
                 cancel = this.mController.handleKeyNavigation(IController.KEY_HOME);
                 break;
+            }
+          }
+
+          // Handle keys that are not part of a keyboard shortcut (no Ctrl or Alt)
+          if (!this.disableKeyNavigation && !aEvent.ctrlKey && !aEvent.altKey) {
+            switch (aEvent.keyCode) {
+              case KeyEvent.DOM_VK_TAB:
+                if (this.tabScrolling && this.popup.mPopupOpen)
+                  cancel = this.mController.handleKeyNavigation(aEvent.shiftKey ?
+                                                                IController.KEY_UP :
+                                                                IController.KEY_DOWN);
+                break;
+              case KeyEvent.DOM_VK_UP:
+                cancel = this.mController.handleKeyNavigation(IController.KEY_UP);
+                break;
+              case KeyEvent.DOM_VK_DOWN:
+                cancel = this.mController.handleKeyNavigation(IController.KEY_DOWN);
+                break;
               case KeyEvent.DOM_VK_PAGE_UP:
                 cancel = this.mController.handleKeyNavigation(IController.KEY_PAGE_UP);
                 break;
@@ -428,7 +439,9 @@
                 break;
             }
           }
-          
+
+          // Handle keys we know aren't part of a shortcut, even with Alt or
+          // Ctrl.
           switch (aEvent.keyCode) {
             case KeyEvent.DOM_VK_ESCAPE:
               cancel = this.mController.handleEscape();
