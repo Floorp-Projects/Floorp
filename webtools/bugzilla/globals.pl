@@ -31,7 +31,6 @@
 
 use strict;
 
-use Bugzilla::DB qw(:DEFAULT :deprecated);
 use Bugzilla::Constants;
 use Bugzilla::Util;
 # Bring ChmodDataFile in until this is all moved to the module

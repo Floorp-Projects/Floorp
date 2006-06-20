@@ -32,20 +32,8 @@ use strict;
 
 use DBI;
 
-# Inherit the DB class from DBI::db and Exporter
-# Note that we inherit from Exporter just to allow the old, deprecated
-# interface to work. If it gets removed, the Exporter class can be removed
-# from this list.
-use base qw(Exporter DBI::db);
-
-%Bugzilla::DB::EXPORT_TAGS =
-  (
-   deprecated => [qw(SendSQL SqlQuote
-                     MoreSQLData FetchSQLData FetchOneColumn
-                     PushGlobalSQLState PopGlobalSQLState)
-                 ],
-);
-Exporter::export_ok_tags('deprecated');
+# Inherit the DB class from DBI::db.
+use base qw(DBI::db);
 
 use Bugzilla::Config qw(:DEFAULT :db);
 use Bugzilla::Constants;
@@ -58,89 +46,6 @@ use Bugzilla::DB::Schema;
 #####################################################################
 
 use constant BLOB_TYPE => DBI::SQL_BLOB;
-
-#####################################################################
-# Deprecated Functions
-#####################################################################
-
-# All this code is backwards compat fu. As such, its a bit ugly. Note the
-# circular dependencies on Bugzilla.pm
-# This is old cruft which will be removed, so there's not much use in
-# having a separate package for it, or otherwise trying to avoid the circular
-# dependency
-
-# XXX - mod_perl
-# These use |our| instead of |my| because they need to be cleared from
-# Bugzilla.pm. See bug 192531 for details.
-our $_current_sth;
-our @SQLStateStack = ();
-
-my $_fetchahead;
-
-sub SendSQL {
-    my ($str) = @_;
-
-    $_current_sth = Bugzilla->dbh->prepare($str);
-
-    $_current_sth->execute;
-
-    # This is really really ugly, but its what we get for not doing
-    # error checking for 5 years. See bug 189446 and bug 192531
-    $_current_sth->{RaiseError} = 0;
-
-    undef $_fetchahead;
-}
-
-# Its much much better to use bound params instead of this
-sub SqlQuote {
-    my ($str) = @_;
-
-    # Backwards compat code
-    return "''" if not defined $str;
-
-    my $res = Bugzilla->dbh->quote($str);
-
-    trick_taint($res);
-
-    return $res;
-}
-
-sub MoreSQLData {
-    return 1 if defined $_fetchahead;
-
-    if ($_fetchahead = $_current_sth->fetchrow_arrayref()) {
-        return 1;
-    }
-    return 0;
-}
-
-sub FetchSQLData {
-    if (defined $_fetchahead) {
-        my @result = @$_fetchahead;
-        undef $_fetchahead;
-        return @result;
-    }
-
-    return $_current_sth->fetchrow_array;
-}
-
-sub FetchOneColumn {
-    my @row = FetchSQLData();
-    return $row[0];
-}
-
-sub PushGlobalSQLState {
-    push @SQLStateStack, $_current_sth;
-    push @SQLStateStack, $_fetchahead;
-}
-
-sub PopGlobalSQLState {
-    die ("PopGlobalSQLState: stack underflow") if ( scalar(@SQLStateStack) < 1 );
-    $_fetchahead = pop @SQLStateStack;
-    $_current_sth = pop @SQLStateStack;
-}
-
-# MODERN CODE BELOW
 
 #####################################################################
 # Connection Methods
@@ -972,10 +877,6 @@ functionality which is different between databases allowing for easy
 customization for particular database via inheritance. These methods
 should be always preffered over hard-coding SQL commands.
 
-Access to the old SendSQL-based database routines are also provided by
-importing the C<:deprecated> tag. These routines should not be used in new
-code.
-
 =head1 CONSTANTS
 
 Subclasses of Bugzilla::DB are required to define certain constants. These
@@ -1490,44 +1391,6 @@ with their functions.
  Returns:     new instance of the DB class
  Note:        the name of this constructor is not new, as that would make
               our check for implementation of new() by derived class useles.
-
-=back
-
-
-=head1 DEPRECATED ROUTINES
-
-Several database routines are deprecated. They should not be used in new code,
-and so are not documented.
-
-=over 4
-
-=item *
-
-SendSQL
-
-=item *
-
-SqlQuote
-
-=item *
-
-MoreSQLData
-
-=item *
-
-FetchSQLData
-
-=item *
-
-FetchOneColumn
-
-=item *
-
-PushGlobalSQLState
-
-=item *
-
-PopGlobalSQLState
 
 =back
 

@@ -315,17 +315,6 @@ sub _cleanup {
     undef $_cgi;
     undef $_user;
 
-    # See bug 192531. If we don't clear the possibly active statement handles,
-    # then when this is called from the END block, it happens _before_ the
-    # destructors in Bugzilla::DB have happened.
-    # See http://rt.perl.org/rt2/Ticket/Display.html?id=17450#38810
-    # Without disconnecting explicitly here, noone notices, because DBI::END
-    # ends up calling DBD::mysql's $drh->disconnect_all, which is a noop.
-    # This code is evil, but it needs to be done, at least until SendSQL and
-    # friends can be removed
-    @Bugzilla::DB::SQLStateStack = ();
-    undef $Bugzilla::DB::_current_sth;
-
     # When we support transactions, need to ->rollback here
     $_dbh_main->disconnect if $_dbh_main;
     $_dbh_shadow->disconnect if $_dbh_shadow && Bugzilla->params->{"shadowdb"};
