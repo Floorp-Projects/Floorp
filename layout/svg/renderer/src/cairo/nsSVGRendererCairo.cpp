@@ -41,14 +41,11 @@
 
 #include "nsCOMPtr.h"
 #include "nsISVGRenderer.h"
-#include "nsSVGCairoPathGeometry.h"
 #include "nsSVGCairoGlyphGeometry.h"
 #include "nsSVGCairoGlyphMetrics.h"
 #include "nsSVGCairoCanvas.h"
 #include "nsSVGCairoSurface.h"
 #include <cairo.h>
-
-cairo_surface_t *gSVGCairoDummySurface = nsnull;
 
 /**
  * \addtogroup cairo_renderer Cairo Rendering Engine
@@ -64,8 +61,6 @@ protected:
   friend nsresult NS_NewSVGRendererCairo(nsISVGRenderer** aResult);
   
 public:
-  nsSVGRendererCairo();
-
   // nsISupports interface
   NS_DECL_ISUPPORTS
 
@@ -79,13 +74,6 @@ private:
 
 //----------------------------------------------------------------------
 // implementation:
-
-nsSVGRendererCairo::nsSVGRendererCairo()
-{
-  if (!gSVGCairoDummySurface)
-    gSVGCairoDummySurface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32,
-                                                       1, 1);
-}
 
 nsresult
 NS_NewSVGRendererCairo(nsISVGRenderer** aResult)
@@ -110,13 +98,6 @@ NS_IMPL_ISUPPORTS1(nsSVGRendererCairo, nsISVGRenderer)
 
 //----------------------------------------------------------------------
 // nsISVGRenderer methods
-
-/** Implements nsISVGRendererPathGeometry createPathGeometry(); */
-NS_IMETHODIMP
-nsSVGRendererCairo::CreatePathGeometry(nsISVGRendererPathGeometry **_retval)
-{
-  return NS_NewSVGCairoPathGeometry(_retval);
-}
 
 /** Implements nsISVGRendererGlyphMetrics createGlyphMetrics(in nsISVGGlyphMetricsSource src); */
 NS_IMETHODIMP

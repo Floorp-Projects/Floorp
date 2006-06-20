@@ -69,8 +69,8 @@ public:
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
 
-  // nsISVGPathGeometrySource interface:
-  NS_IMETHOD ConstructPath(cairo_t *aCtx);
+  // nsSVGPathGeometryFrame methods:
+  virtual void ConstructPath(cairo_t *aCtx);
 };
 
 //----------------------------------------------------------------------
@@ -118,9 +118,10 @@ nsSVGCircleFrame::AttributeChanged(PRInt32         aNameSpaceID,
 
 
 //----------------------------------------------------------------------
-// nsISVGPathGeometrySource methods:
+// nsSVGPathGeometryFrame methods:
 
-NS_IMETHODIMP nsSVGCircleFrame::ConstructPath(cairo_t *aCtx)
+void
+nsSVGCircleFrame::ConstructPath(cairo_t *aCtx)
 {
   float x, y, r;
 
@@ -128,6 +129,4 @@ NS_IMETHODIMP nsSVGCircleFrame::ConstructPath(cairo_t *aCtx)
   element->GetAnimatedLengthValues(&x, &y, &r, nsnull);
 
   cairo_arc(aCtx, x, y, r, 0, 2*M_PI);
-  
-  return NS_OK;
 }

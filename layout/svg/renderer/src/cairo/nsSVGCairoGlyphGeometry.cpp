@@ -59,8 +59,6 @@
 #include "nsSVGMatrix.h"
 #include "nsSVGUtils.h"
 
-extern cairo_surface_t *gSVGCairoDummySurface;
-
 /**
  * \addtogroup cairo_renderer cairo Rendering Engine
  * @{
@@ -275,7 +273,7 @@ nsSVGCairoGlyphGeometry::GetCoveredRegion(nsSVGGlyphFrame *aSource,
   nsresult rv = aSource->GetCharacterPosition(getter_Transfers(cp));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  cairo_t *ctx = cairo_create(gSVGCairoDummySurface);
+  cairo_t *ctx = cairo_create(nsSVGUtils::GetCairoComputationalSurface());
 
   rv = GetGlobalTransform(aSource, ctx, nsnull);
   if (NS_FAILED(rv)) {
@@ -381,7 +379,7 @@ nsSVGCairoGlyphGeometry::ContainsPoint(nsSVGGlyphFrame *aSource,
   nsresult rv = aSource->GetCharacterPosition(getter_Transfers(cp));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  cairo_t *ctx = cairo_create(gSVGCairoDummySurface);
+  cairo_t *ctx = cairo_create(nsSVGUtils::GetCairoComputationalSurface());
 
   rv = GetGlobalTransform(aSource, ctx, nsnull);
   if (NS_FAILED(rv)) {
@@ -493,7 +491,7 @@ nsSVGCairoGlyphGeometry::GetBoundingBox(nsSVGGlyphFrame *aSource,
   nsresult rv = aSource->GetCharacterPosition(getter_Transfers(cp));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  cairo_t *ctx = cairo_create(gSVGCairoDummySurface);
+  cairo_t *ctx = cairo_create(nsSVGUtils::GetCairoComputationalSurface());
 
   rv = GetGlobalTransform(aSource, ctx, nsnull);
   if (NS_FAILED(rv)) {

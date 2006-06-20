@@ -76,14 +76,12 @@ public:
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
 
-  // nsISVGPathGeometrySource interface:
-  NS_IMETHOD ConstructPath(cairo_t *aCtx);
-
   nsCOMPtr<nsIDOMSVGPointList> mPoints;
 
-  // nsSVGPathGeometry methods
+  // nsSVGPathGeometryFrame methods
   virtual PRBool IsMarkable() { return PR_TRUE; }
   virtual void GetMarkPoints(nsVoidArray *aMarks);
+  virtual void ConstructPath(cairo_t *aCtx);
 };
 
 //----------------------------------------------------------------------
@@ -145,14 +143,17 @@ nsSVGPolylineFrame::AttributeChanged(PRInt32         aNameSpaceID,
 //----------------------------------------------------------------------
 // nsISVGPathGeometrySource methods:
 
-NS_IMETHODIMP nsSVGPolylineFrame::ConstructPath(cairo_t *aCtx)
+void
+nsSVGPolylineFrame::ConstructPath(cairo_t *aCtx)
 {
-  if (!mPoints) return NS_OK;
+  if (!mPoints)
+    return;
 
   PRUint32 count;
   mPoints->GetNumberOfItems(&count);
-  if (count == 0) return NS_OK;
-  
+  if (count == 0)
+    return;
+
   PRUint32 i;
   for (i = 0; i < count; ++i) {
     nsCOMPtr<nsIDOMSVGPoint> point;
@@ -166,8 +167,6 @@ NS_IMETHODIMP nsSVGPolylineFrame::ConstructPath(cairo_t *aCtx)
     else
       cairo_line_to(aCtx, x, y);
   }
-
-  return NS_OK;
 }
 
 //----------------------------------------------------------------------

@@ -68,8 +68,8 @@ class nsSVGEllipseFrame : public nsSVGPathGeometryFrame
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
 
-  // nsISVGPathGeometrySource interface:
-  NS_IMETHOD ConstructPath(cairo_t *aCtx);
+  // nsSVGPathGeometryFrame methods:
+  virtual void ConstructPath(cairo_t *aCtx);
 };
 
 //----------------------------------------------------------------------
@@ -119,7 +119,8 @@ nsSVGEllipseFrame::AttributeChanged(PRInt32         aNameSpaceID,
 //----------------------------------------------------------------------
 // nsISVGPathGeometrySource methods:
 
-NS_IMETHODIMP nsSVGEllipseFrame::ConstructPath(cairo_t *aCtx)
+void
+nsSVGEllipseFrame::ConstructPath(cairo_t *aCtx)
 {
   float x, y, rx, ry;
 
@@ -131,6 +132,4 @@ NS_IMETHODIMP nsSVGEllipseFrame::ConstructPath(cairo_t *aCtx)
   cairo_scale(aCtx, rx, ry);
   cairo_arc(aCtx, 0, 0, 1, 0, 2 * M_PI);
   cairo_restore(aCtx);
-
-  return NS_OK;
 }
