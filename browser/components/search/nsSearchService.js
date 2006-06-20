@@ -707,8 +707,24 @@ function EngineURL(aType, aMethod, aTemplate) {
 
   this.type     = type;
   this.method   = method;
-  this.template = aTemplate;
   this.params   = [];
+
+  var templateURI = makeURI(aTemplate);
+  ENSURE(templateURI, "new EngineURL: template is not a valid URI!",
+         Cr.NS_ERROR_FAILURE);
+
+  switch (templateURI.scheme) {
+    case "http":
+    case "https":
+    // Disable these for now, see bug 295018
+    // case "file":
+    // case "resource":
+      this.template = templateURI.spec;
+      break;
+    default:
+      ENSURE(false, "new EngineURL: template uses invalid scheme!",
+             Cr.NS_ERROR_FAILURE);
+  }
 }
 EngineURL.prototype = {
 
