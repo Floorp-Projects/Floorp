@@ -6359,7 +6359,7 @@ nsWindowSH::NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, PRUint32 enum_op, jsval *statep,
                          jsid *idp, PRBool *_retval)
 {
-  switch (enum_op) {
+  switch ((JSIterateOp)enum_op) {
     case JSENUMERATE_INIT:
     {
       // First, do the security check that nsDOMClassInfo does to see
@@ -6411,10 +6411,6 @@ nsWindowSH::NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       // Let GC at our iterator object.
       *statep = JSVAL_NULL;
       break;
-
-    default:
-      NS_NOTREACHED("Bad call from the JS engine");
-      return NS_ERROR_FAILURE;
   }
 
   return NS_OK;
