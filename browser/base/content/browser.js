@@ -2957,7 +2957,7 @@ const BrowserSearch = {
     var etitle = target.title;
     var ehref = target.href;
     const searchRelRegex = /(^|\s)search($|\s)/i;
-    const searchHrefRegex = /^https?:\/\//i;
+    const searchHrefRegex = /^(https?|ftp):\/\//i;
 
     if (!etype)
       return;
