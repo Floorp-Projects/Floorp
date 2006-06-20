@@ -46,11 +46,19 @@ interface nsIDOMWindow;
  * - and allows to restore everything into one window.
  */
 
-[scriptable, uuid(ca4e1d40-ec1b-11da-8ad9-0800200c9a66)]
+[scriptable, uuid(38bad250-0021-11db-92e3-0800200c9a66)]
 interface nsISessionStore : nsISupports
 {
   /**
    * Initialize the service
    */
   void init(in nsIDOMWindow aWindow);
+
+  /**
+   * @param aWindow
+   *          The window to reopen a closed tab in.
+   * @param aIndex
+   *          Indicates the window to be restored (FIFO ordered).
+   */
+  void undoCloseTab(in nsIDOMWindow aWindow, in unsigned long aIndex);
 };

@@ -1121,6 +1121,9 @@ function delayedStartup()
       }
     }
   }
+
+  // browser-specific tab augmentation
+  AugmentTabs.init();
 }
 
 function BrowserShutdown()
@@ -6599,3 +6602,57 @@ window.controllers.appendController(BrowserController);
 #include ../../../toolkit/content/debug.js
 
 #endif
+
+/**
+ * This object is for augmenting tabs
+ */
+var AugmentTabs = {
+  /**
+   * Called in delayedStartup
+   */
+  init: function at_init() {
+    // add the tab context menu for undo-close-tab (bz254021)
+    var ssEnabled = true;
+    var prefBranch = Cc["@mozilla.org/preferences-service;1"].
+                     getService(Ci.nsIPrefBranch);
+    try {
+      ssEnabled = prefBranch.getBoolPref("browser.sessionstore.enabled");
+    } catch (ex) {}
+
+    if (ssEnabled)
+      this._addUndoCloseTabContextMenu();
+  },
+
+  /**
+   * Add undo-close-tab to tab context menu
+   */
+  _addUndoCloseTabContextMenu: function at_addUndoCloseTabContextMenu() {
+    // get tab context menu
+    var tabbrowser = getBrowser();
+    var tabMenu = document.getAnonymousElementByAttribute(tabbrowser,"anonid","tabContextMenu");
+
+    // get strings 
+    var menuLabel = gNavigatorBundle.getString("tabContext.undoCloseTab");
+    var menuAccessKey = gNavigatorBundle.getString("tabContext.undoCloseTabAccessKey");
+
+    // create new menu item
+    var undoCloseTabItem = document.createElement("menuitem");
+    undoCloseTabItem.setAttribute("label", menuLabel);
+    undoCloseTabItem.setAttribute("accesskey", menuAccessKey);
+    undoCloseTabItem.addEventListener("command", this.undoCloseTab, false);
+
+    // add to tab context menu
+    var insertPos = tabMenu.lastChild.previousSibling;
+    tabMenu.insertBefore(undoCloseTabItem, insertPos);
+  },
+
+  /**
+   * Re-open the most-recently-closed tab
+   */
+  undoCloseTab: function at_undoCloseTab() {
+    // get session-store service
+    var ss = Cc["@mozilla.org/browser/sessionstore;1"].
+             getService(Ci.nsISessionStore);
+    ss.undoCloseTab(window, 0);
+  }
+};
