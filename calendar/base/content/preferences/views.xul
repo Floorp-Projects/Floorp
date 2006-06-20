@@ -225,7 +225,7 @@
 
         <groupbox>
             <caption label="&pref.calendar.view.multiweekview.caption;"/>
-            <hbox>
+            <hbox align="center">
                 <caption label="&pref.numberofweeks.label;"/>
                 <menulist id="viewsMultiweekTotalWeeks"
                           preference="calendar.weeks.inview">
@@ -239,7 +239,7 @@
                     </menupopup>
                 </menulist>
             </hbox>
-            <hbox id="previousWeeksBox">
+            <hbox align="center" id="previousWeeksBox">
                 <caption label="&pref.numberofpreviousweeks.label;"/>
                 <menulist id="viewsMultiweekPreviousWeeks"
                           preference="calendar.previousweeks.inview">
