@@ -810,11 +810,21 @@ Graph.prototype = {
         this.dataSetMinMinVal = Number.MAX_VALUE;
         this.dataSetMaxMaxVal = Number.MIN_VALUE;
 
+
         for each (var dsvals in this.dataSetMinMaxes) {
-            if (this.dataSetMinMinVal > dsvals[0])
-                this.dataSetMinMinVal = dsvals[0];
-            if (this.dataSetMaxMaxVal < dsvals[1])
-                this.dataSetMaxMaxVal = dsvals[1];
+            if (dsvals[0] != Infinity && dsvals[1] != -Infinity) {
+                if (this.dataSetMinMinVal > dsvals[0])
+                    this.dataSetMinMinVal = dsvals[0];
+                if (this.dataSetMaxMaxVal < dsvals[1])
+                    this.dataSetMaxMaxVal = dsvals[1];
+            }
+        }
+
+        if (this.dataSetMinMinVal == Number.MAX_VALUE &&
+            this.dataSetMaxMaxVal == Number.MIN_VALUE)
+        {
+            this.dataSetMinMinVal = 0;
+            this.dataSetMaxMaxVal = 100;
         }
 
         log ("minmin:", this.dataSetMinMinVal, "maxmax:", this.dataSetMaxMaxVal);
@@ -864,6 +874,7 @@ Graph.prototype = {
             this.yScale = this.frontBuffer.height / (this.dataSetMaxMaxVal - this.dataSetMinMinVal);
         }
 
+        log ("autoScale: yscale:", this.yScale, "yoff:", this.yOffset);
         // we have to dirty again, due to the labels
         this.dirty = true;
     },
@@ -1326,6 +1337,7 @@ Graph.prototype = {
         this.selectionSweeping = false;
         this.selectionStartTime = null;
         this.selectionEndTime = null;
+
         this.redrawOverlayOnly();
     },
 
@@ -1363,6 +1375,16 @@ Graph.prototype = {
             return;
 
         this.selectionSweeping = false;
+
+        var pos = YAHOO.util.Dom.getX(this.frontBuffer) + this.borderLeft;
+        if (this.dragState.startX == event.pageX - pos) {
+            // mouse didn't move
+            this.selectionStartTime = null;
+            this.selectionEndTime = null;
+
+            this.redrawOverlayOnly();
+        }
+
         this.onSelectionChanged.fire("range", this.selectionStartTime, this.selectionEndTime);
     },
 
@@ -1645,8 +1667,12 @@ function loadingDone() {
 
     SmallPerfGraph.onSelectionChanged.subscribe (function (type, args, obj) {
                                                      log ("selchanged");
+
                                                      if (args[0] == "range") {
-                                                         BigPerfGraph.setTimeRange (args[1], args[2]);
+                                                         if (args[1] && args[2])
+                                                             BigPerfGraph.setTimeRange (args[1], args[2]);
+                                                         else
+                                                             BigPerfGraph.setTimeRange (SmallPerfGraph.startTime, SmallPerfGraph.endTime);
                                                          BigPerfGraph.autoScale();
                                                          BigPerfGraph.redraw();
                                                      }
