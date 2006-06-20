@@ -57,8 +57,6 @@
 #include "nsIFrame.h"
 #include <cairo.h>
 
-extern cairo_surface_t *gSVGCairoDummySurface;
-
 /**
  * \addtogroup gdiplus_renderer Cairo Rendering Engine
  * @{
@@ -103,7 +101,7 @@ nsSVGCairoGlyphMetrics::nsSVGCairoGlyphMetrics(nsISVGGlyphMetricsSource *src)
   : mSource(src)
 {
   memset(&mExtents, 0, sizeof(cairo_text_extents_t));
-  mCT = cairo_create(gSVGCairoDummySurface);
+  mCT = cairo_create(nsSVGUtils::GetCairoComputationalSurface());
 }
 
 nsSVGCairoGlyphMetrics::~nsSVGCairoGlyphMetrics()

@@ -62,14 +62,12 @@ public:
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
 
-  // nsISVGPathGeometrySource interface:
-  NS_IMETHOD ConstructPath(cairo_t *aCtx);
-  
   nsCOMPtr<nsIDOMSVGPointList> mPoints;
 
   // nsSVGPathGeometry methods
   virtual PRBool IsMarkable() { return PR_TRUE; }
   virtual void GetMarkPoints(nsVoidArray *aMarks);
+  virtual void ConstructPath(cairo_t *aCtx);
 
   /**
    * Get the "type" of the frame
@@ -139,14 +137,17 @@ nsSVGPolygonFrame::AttributeChanged(PRInt32         aNameSpaceID,
 //----------------------------------------------------------------------
 // nsISVGPathGeometrySource methods:
 
-NS_IMETHODIMP nsSVGPolygonFrame::ConstructPath(cairo_t *aCtx)
+void
+nsSVGPolygonFrame::ConstructPath(cairo_t *aCtx)
 {
-  if (!mPoints) return NS_OK;
+  if (!mPoints)
+    return;
 
   PRUint32 count;
   mPoints->GetNumberOfItems(&count);
-  if (count == 0) return NS_OK;
-  
+  if (count == 0)
+    return;
+
   PRUint32 i;
   for (i = 0; i < count; ++i) {
     nsCOMPtr<nsIDOMSVGPoint> point;
@@ -163,8 +164,6 @@ NS_IMETHODIMP nsSVGPolygonFrame::ConstructPath(cairo_t *aCtx)
   // the difference between a polyline and a polygon is that the
   // polygon is closed:
   cairo_close_path(aCtx);
-
-  return NS_OK;
 }
 
 //----------------------------------------------------------------------

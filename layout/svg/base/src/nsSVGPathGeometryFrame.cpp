@@ -61,6 +61,8 @@
 #include "nsINameSpaceManager.h"
 #include "nsSVGGraphicElement.h"
 #include "nsSVGOuterSVGFrame.h"
+#include "nsSVGRect.h"
+#include "nsISVGCairoCanvas.h"
 
 struct nsSVGMarkerProperty {
   nsSVGMarkerFrame *mMarkerStart;
@@ -101,13 +103,12 @@ nsSVGPathGeometryFrame::~nsSVGPathGeometryFrame()
 // nsISupports methods
 
 NS_INTERFACE_MAP_BEGIN(nsSVGPathGeometryFrame)
-  NS_INTERFACE_MAP_ENTRY(nsISVGPathGeometrySource)
   NS_INTERFACE_MAP_ENTRY(nsISVGChildFrame)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGPathGeometryFrameBase)
 
 //----------------------------------------------------------------------
 // nsIFrame methods
-  
+
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::Init(nsIContent*      aContent,
                              nsIFrame*        aParent,
@@ -120,7 +121,7 @@ nsSVGPathGeometryFrame::Init(nsIContent*      aContent,
   if (mContent) {
     mContent->SetMayHaveFrame(PR_TRUE);
   }
-  
+
   InitSVG();
   DidSetStyleContext();
     
@@ -268,7 +269,7 @@ nsSVGPathGeometryFrame::PaintSVG(nsISVGRendererCanvas* canvas)
     return NS_OK;
 
   /* render */
-  GetGeometry()->Render(this, canvas);
+  Render(canvas);
 
   if (IsMarkable()) {
     // Marker Property is added lazily and may have been removed by a restyle
@@ -307,22 +308,38 @@ nsSVGPathGeometryFrame::PaintSVG(nsISVGRendererCanvas* canvas)
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
 {
-#ifdef DEBUG
-  //printf("nsSVGPathGeometryFrame(%p)::GetFrameForPoint\n", this);
-#endif
-
-  // test for hit:
   *hit = nsnull;
 
-  if (!mRect.Contains(x, y))
+  PRUint16 mask = GetHittestMask();
+  if (!mask || !mRect.Contains(x, y))
     return NS_OK;
 
-  PRBool isHit;
-  GetGeometry()->ContainsPoint(this, x, y, &isHit);
+  PRBool isHit = PR_FALSE;
+
+  cairo_t *ctx = cairo_create(nsSVGUtils::GetCairoComputationalSurface());
+  cairo_set_tolerance(ctx, 1.0);
+
+  GeneratePath(ctx, nsnull);
+  double xx = x, yy = y;
+  cairo_device_to_user(ctx, &xx, &yy);
+
+  if (IsClipChild()) {
+    if (GetClipRule() == NS_STYLE_FILL_RULE_EVENODD)
+      cairo_set_fill_rule(ctx, CAIRO_FILL_RULE_EVEN_ODD);
+    else
+      cairo_set_fill_rule(ctx, CAIRO_FILL_RULE_WINDING);
+  }
+
+  if (mask & HITTEST_MASK_FILL)
+    isHit = cairo_in_fill(ctx, xx, yy);
+  if (!isHit && (mask & HITTEST_MASK_STROKE))
+    isHit = cairo_in_stroke(ctx, xx, yy);
+
+  cairo_destroy(ctx);
 
   if (isHit && nsSVGUtils::HitTestClip(this, x, y))
     *hit = this;
-  
+
   return NS_OK;
 }
 
@@ -382,7 +399,33 @@ nsSVGPathGeometryFrame::GetCoveredRegion()
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::UpdateCoveredRegion()
 {
-  GetGeometry()->GetCoveredRegion(this, &mRect);
+  mRect.Empty();
+
+  PRBool hasFill = HasFill();
+  PRBool hasStroke = HasStroke();
+
+  if (hasFill || hasStroke) {
+    cairo_t *ctx = cairo_create(nsSVGUtils::GetCairoComputationalSurface());
+
+    GeneratePath(ctx, nsnull);
+
+    double xmin, ymin, xmax, ymax;
+
+    if (hasStroke) {
+      SetupCairoStrokeGeometry(ctx);
+      cairo_stroke_extents(ctx, &xmin, &ymin, &xmax, &ymax);
+    } else
+      cairo_fill_extents(ctx, &xmin, &ymin, &xmax, &ymax);
+
+    cairo_user_to_device(ctx, &xmin, &ymin);
+    cairo_user_to_device(ctx, &xmax, &ymax);
+
+    cairo_destroy(ctx);
+
+    mRect = nsSVGUtils::ToBoundingPixelRect(xmin, ymin, xmax, ymax);
+  }
+
+  // Add in markers
   mRect = GetCoveredRegion();
 
   return NS_OK;
@@ -437,9 +480,29 @@ nsSVGPathGeometryFrame::SetOverrideCTM(nsIDOMSVGMatrix *aCTM)
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetBBox(nsIDOMSVGRect **_retval)
 {
-  if (GetGeometry())
-    return GetGeometry()->GetBoundingBox(this, _retval);
-  return NS_ERROR_FAILURE;
+  double xmin, ymin, xmax, ymax;
+
+  cairo_t *ctx = cairo_create(nsSVGUtils::GetCairoComputationalSurface());
+  GeneratePath(ctx, nsnull);
+
+  cairo_fill_extents(ctx, &xmin, &ymin, &xmax, &ymax);
+
+  /* cairo_fill_extents doesn't work on degenerate paths */
+  if (xmin ==  32767 &&
+      ymin ==  32767 &&
+      xmax == -32768 &&
+      ymax == -32768) {
+    /* cairo_stroke_extents doesn't work with stroke width zero, fudge */
+    cairo_set_line_width(ctx, 0.0001);
+    cairo_stroke_extents(ctx, &xmin, &ymin, &xmax, &ymax);
+  }
+
+  cairo_user_to_device(ctx, &xmin, &ymin);
+  cairo_user_to_device(ctx, &xmax, &ymax);
+
+  cairo_destroy(ctx);
+
+  return NS_NewSVGRect(_retval, xmin, ymin, xmax - xmin, ymax - ymin);
 }
 
 //----------------------------------------------------------------------
@@ -519,12 +582,98 @@ nsSVGPathGeometryFrame::GetCanvasTM(nsIDOMSVGMatrix * *aCTM)
 }
 
 //----------------------------------------------------------------------
-// nsISVGPathGeometrySource methods:
+// nsSVGPathGeometryFrame methods:
 
-NS_IMETHODIMP
-nsSVGPathGeometryFrame::GetHittestMask(PRUint16 *aHittestMask)
+void
+nsSVGPathGeometryFrame::Render(nsISVGRendererCanvas *aCanvas)
 {
-  *aHittestMask=0;
+  nsCOMPtr<nsISVGCairoCanvas> cairoCanvas = do_QueryInterface(aCanvas);
+  NS_ASSERTION(cairoCanvas, "wrong svg render context for geometry!");
+  if (!cairoCanvas)
+    return;
+
+  cairo_t *ctx = cairoCanvas->GetContext();
+
+  PRUint16 renderMode;
+  aCanvas->GetRenderMode(&renderMode);
+
+  /* save/pop the state so we don't screw up the xform */
+  cairo_save(ctx);
+
+  GeneratePath(ctx, cairoCanvas);
+
+  if (renderMode != nsISVGRendererCanvas::SVG_RENDER_MODE_NORMAL) {
+    cairo_restore(ctx);
+
+    if (GetClipRule() == NS_STYLE_FILL_RULE_EVENODD)
+      cairo_set_fill_rule(ctx, CAIRO_FILL_RULE_EVEN_ODD);
+    else
+      cairo_set_fill_rule(ctx, CAIRO_FILL_RULE_WINDING);
+
+    if (renderMode == nsISVGRendererCanvas::SVG_RENDER_MODE_CLIP_MASK) {
+      cairo_set_antialias(ctx, CAIRO_ANTIALIAS_NONE);
+      cairo_set_source_rgba(ctx, 1.0f, 1.0f, 1.0f, 1.0f);
+      cairo_fill(ctx);
+    }
+
+    return;
+  }
+
+  switch (GetStyleSVG()->mShapeRendering) {
+  case NS_STYLE_SHAPE_RENDERING_OPTIMIZESPEED:
+  case NS_STYLE_SHAPE_RENDERING_CRISPEDGES:
+    cairo_set_antialias(ctx, CAIRO_ANTIALIAS_NONE);
+    break;
+  default:
+    cairo_set_antialias(ctx, CAIRO_ANTIALIAS_DEFAULT);
+    break;
+  }
+
+  void *closure;
+  if (HasFill() && NS_SUCCEEDED(SetupCairoFill(aCanvas, ctx, &closure))) {
+    cairo_fill_preserve(ctx);
+    CleanupCairoFill(ctx, closure);
+  }
+
+  if (HasStroke() && NS_SUCCEEDED(SetupCairoStroke(aCanvas, ctx, &closure))) {
+    cairo_stroke(ctx);
+    CleanupCairoStroke(ctx, closure);
+  }
+
+  cairo_new_path(ctx);
+
+  cairo_restore(ctx);
+}
+
+void
+nsSVGPathGeometryFrame::GeneratePath(cairo_t *ctx, nsISVGCairoCanvas* aCanvas)
+{
+  nsCOMPtr<nsIDOMSVGMatrix> ctm;
+  GetCanvasTM(getter_AddRefs(ctm));
+  NS_ASSERTION(ctm, "graphic source didn't specify a ctm");
+
+  cairo_matrix_t matrix = NS_ConvertSVGMatrixToCairo(ctm);
+  if (aCanvas) {
+    aCanvas->AdjustMatrixForInitialTransform(&matrix);
+  }
+
+  cairo_matrix_t inverse = matrix;
+  if (cairo_matrix_invert(&inverse)) {
+    cairo_identity_matrix(ctx);
+    cairo_new_path(ctx);
+    return;
+  }
+  cairo_set_matrix(ctx, &matrix);
+
+  cairo_new_path(ctx);
+  ConstructPath(ctx);
+}
+
+
+PRUint16
+nsSVGPathGeometryFrame::GetHittestMask()
+{
+  PRUint16 mask = 0;
 
   switch(GetStyleSVG()->mPointerEvents) {
     case NS_STYLE_POINTER_EVENTS_NONE:
@@ -532,91 +681,52 @@ nsSVGPathGeometryFrame::GetHittestMask(PRUint16 *aHittestMask)
     case NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED:
       if (GetStyleVisibility()->IsVisible()) {
         if (GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None)
-          *aHittestMask |= HITTEST_MASK_FILL;
+          mask |= HITTEST_MASK_FILL;
         if (GetStyleSVG()->mStroke.mType != eStyleSVGPaintType_None)
-          *aHittestMask |= HITTEST_MASK_STROKE;
+          mask |= HITTEST_MASK_STROKE;
       }
       break;
     case NS_STYLE_POINTER_EVENTS_VISIBLEFILL:
       if (GetStyleVisibility()->IsVisible()) {
-        *aHittestMask |= HITTEST_MASK_FILL;
+        mask |= HITTEST_MASK_FILL;
       }
       break;
     case NS_STYLE_POINTER_EVENTS_VISIBLESTROKE:
       if (GetStyleVisibility()->IsVisible()) {
-        *aHittestMask |= HITTEST_MASK_STROKE;
+        mask |= HITTEST_MASK_STROKE;
       }
       break;
     case NS_STYLE_POINTER_EVENTS_VISIBLE:
       if (GetStyleVisibility()->IsVisible()) {
-        *aHittestMask |= HITTEST_MASK_FILL;
-        *aHittestMask |= HITTEST_MASK_STROKE;
+        mask |= HITTEST_MASK_FILL;
+        mask |= HITTEST_MASK_STROKE;
       }
       break;
     case NS_STYLE_POINTER_EVENTS_PAINTED:
       if (GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None)
-        *aHittestMask |= HITTEST_MASK_FILL;
+        mask |= HITTEST_MASK_FILL;
       if (GetStyleSVG()->mStroke.mType != eStyleSVGPaintType_None)
-        *aHittestMask |= HITTEST_MASK_STROKE;
+        mask |= HITTEST_MASK_STROKE;
       break;
     case NS_STYLE_POINTER_EVENTS_FILL:
-      *aHittestMask |= HITTEST_MASK_FILL;
+      mask |= HITTEST_MASK_FILL;
       break;
     case NS_STYLE_POINTER_EVENTS_STROKE:
-      *aHittestMask |= HITTEST_MASK_STROKE;
+      mask |= HITTEST_MASK_STROKE;
       break;
     case NS_STYLE_POINTER_EVENTS_ALL:
-      *aHittestMask |= HITTEST_MASK_FILL;
-      *aHittestMask |= HITTEST_MASK_STROKE;
+      mask |= HITTEST_MASK_FILL;
+      mask |= HITTEST_MASK_STROKE;
       break;
     default:
       NS_ERROR("not reached");
       break;
   }
-  
-  return NS_OK;
-}
 
-/* readonly attribute unsigned short shapeRendering; */
-NS_IMETHODIMP
-nsSVGPathGeometryFrame::GetShapeRendering(PRUint16 *aShapeRendering)
-{
-  *aShapeRendering = GetStyleSVG()->mShapeRendering;
-  return NS_OK;
+  return mask;
 }
 
 //---------------------------------------------------------------------- 
-
-NS_IMETHODIMP
-nsSVGPathGeometryFrame::InitSVG()
-{
-  nsSVGPathGeometryFrameBase::InitSVG();
-
-  // construct a pathgeometry object:
-  nsSVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
-  if (!outerSVGFrame) {
-    NS_ERROR("Null outerSVGFrame");
-    return NS_ERROR_FAILURE;
-  }
-  nsCOMPtr<nsISVGRenderer> renderer;
-  outerSVGFrame->GetRenderer(getter_AddRefs(renderer));
-  if (!renderer) return NS_ERROR_FAILURE;
-
-  renderer->CreatePathGeometry(getter_AddRefs(mGeometry));
-  
-  if (!mGeometry) return NS_ERROR_FAILURE;
-
-  return NS_OK;
-}
-
-nsISVGRendererPathGeometry *
-nsSVGPathGeometryFrame::GetGeometry()
-{
-#ifdef DEBUG
-  NS_ASSERTION(mGeometry, "invalid geometry object");
-#endif
-  return mGeometry;
-}
 
 nsresult
 nsSVGPathGeometryFrame::UpdateGraphic(PRBool suppressInvalidation)
@@ -641,8 +751,7 @@ nsSVGPathGeometryFrame::UpdateGraphic(PRBool suppressInvalidation)
       return NS_OK;
 
     outerSVGFrame->InvalidateRect(mRect);
-    GetGeometry()->GetCoveredRegion(this, &mRect);
-    mRect = GetCoveredRegion();
+    UpdateCoveredRegion();
 
     nsRect filterRect;
     filterRect = nsSVGUtils::FindFilterInvalidation(this);

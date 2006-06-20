@@ -41,8 +41,6 @@
 
 #include "nsFrame.h"
 #include "nsISVGChildFrame.h"
-#include "nsISVGPathGeometrySource.h"
-#include "nsISVGRendererPathGeometry.h"
 #include "nsWeakReference.h"
 #include "nsISVGValue.h"
 #include "nsISVGValueObserver.h"
@@ -54,11 +52,14 @@ class nsIDOMSVGMatrix;
 class nsSVGMarkerFrame;
 class nsISVGFilterFrame;
 struct nsSVGMarkerProperty;
+class nsISVGCairoCanvas;
 
 typedef nsSVGGeometryFrame nsSVGPathGeometryFrameBase;
 
+#define HITTEST_MASK_FILL 1
+#define HITTEST_MASK_STROKE 2
+
 class nsSVGPathGeometryFrame : public nsSVGPathGeometryFrameBase,
-                               public nsISVGPathGeometrySource,
                                public nsISVGChildFrame
 {
 protected:
@@ -98,10 +99,6 @@ public:
   }
 #endif
 
-  // nsISVGPathGeometrySource interface:
-  NS_IMETHOD GetHittestMask(PRUint16 *aHittestMask);
-  NS_IMETHOD GetShapeRendering(PRUint16 *aShapeRendering);
-
   // nsISVGGeometrySource interface:
   NS_IMETHOD GetCanvasTM(nsIDOMSVGMatrix * *aCTM);
 
@@ -129,11 +126,13 @@ protected:
   virtual nsresult UpdateGraphic(PRBool suppressInvalidation = PR_FALSE);
   
 protected:
-  NS_IMETHOD InitSVG();
-  nsISVGRendererPathGeometry *GetGeometry();
-
   virtual PRBool IsMarkable() { return PR_FALSE; }
   virtual void GetMarkPoints(nsVoidArray *aMarks) {}
+  virtual void ConstructPath(cairo_t *aCtx) = 0;
+  virtual PRUint16 GetHittestMask();
+
+  void Render(nsISVGRendererCanvas *aCanvas);
+  void GeneratePath(cairo_t *ctx, nsISVGCairoCanvas* aCanvas);
 
 private:
   nsSVGMarkerProperty *GetMarkerProperty();
@@ -142,7 +141,6 @@ private:
                           nsIURI              *aURI);
   void UpdateMarkerProperty();
 
-  nsCOMPtr<nsISVGRendererPathGeometry> mGeometry;
   nsCOMPtr<nsIDOMSVGMatrix> mOverrideCTM;
   PRPackedBool mPropagateTransform;
 };

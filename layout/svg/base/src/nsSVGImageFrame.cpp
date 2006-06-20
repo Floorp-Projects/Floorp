@@ -87,14 +87,6 @@ protected:
 public:
   nsSVGImageFrame(nsStyleContext* aContext) : nsSVGPathGeometryFrame(aContext) {}
 
-  // nsIFrame interface:
-  NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
-                               nsIAtom*        aAttribute,
-                               PRInt32         aModType);
-
-  // nsISVGPathGeometrySource interface:
-  NS_IMETHOD ConstructPath(cairo_t *aCtx);
-
   // nsISVGChildFrame interface:
   NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas);
 
@@ -103,9 +95,15 @@ public:
   virtual nsresult GetStrokePaintType() { return eStyleSVGPaintType_None; }
   virtual nsresult GetFillPaintType() { return eStyleSVGPaintType_Color; }
 
-  // nsISVGPathGeometrySource mthods:
-  NS_IMETHOD GetHittestMask(PRUint16 *aHittestMask);
-  
+  // nsSVGPathGeometryFrame methods:
+  virtual void ConstructPath(cairo_t *aCtx);
+  virtual PRUint16 GetHittestMask();
+
+  // nsIFrame interface:
+  NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
+                               nsIAtom*        aAttribute,
+                               PRInt32         aModType);
+
   /**
    * Get the "type" of the frame
    *
@@ -218,7 +216,8 @@ nsSVGImageFrame::AttributeChanged(PRInt32         aNameSpaceID,
 
 /* For the purposes of the update/invalidation logic pretend to
    be a rectangle. */
-NS_IMETHODIMP nsSVGImageFrame::ConstructPath(cairo_t *aCtx)
+void
+nsSVGImageFrame::ConstructPath(cairo_t *aCtx)
 {
   float x, y, width, height;
 
@@ -228,11 +227,9 @@ NS_IMETHODIMP nsSVGImageFrame::ConstructPath(cairo_t *aCtx)
   /* In a perfect world, this would be handled by the DOM, and 
      return a DOM exception. */
   if (width == 0 || height == 0)
-    return NS_OK;
+    return;
 
   cairo_rectangle(aCtx, x, y, width, height);
-
-  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -487,10 +484,10 @@ nsSVGImageFrame::ConvertFrame(gfxIImageFrame *aNewFrame)
 
 // Lie about our fill/stroke so that hit detection works properly
 
-NS_IMETHODIMP
-nsSVGImageFrame::GetHittestMask(PRUint16 *aHittestMask)
+PRUint16
+nsSVGImageFrame::GetHittestMask()
 {
-  *aHittestMask=0;
+  PRUint16 mask = 0;
 
   switch(GetStyleSVG()->mPointerEvents) {
     case NS_STYLE_POINTER_EVENTS_NONE:
@@ -498,31 +495,31 @@ nsSVGImageFrame::GetHittestMask(PRUint16 *aHittestMask)
     case NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED:
       if (GetStyleVisibility()->IsVisible()) {
         /* XXX: should check pixel transparency */
-        *aHittestMask |= HITTEST_MASK_FILL;
+        mask |= HITTEST_MASK_FILL;
       }
       break;
     case NS_STYLE_POINTER_EVENTS_VISIBLEFILL:
     case NS_STYLE_POINTER_EVENTS_VISIBLESTROKE:
     case NS_STYLE_POINTER_EVENTS_VISIBLE:
       if (GetStyleVisibility()->IsVisible()) {
-        *aHittestMask |= HITTEST_MASK_FILL;
+        mask |= HITTEST_MASK_FILL;
       }
       break;
     case NS_STYLE_POINTER_EVENTS_PAINTED:
       /* XXX: should check pixel transparency */
-      *aHittestMask |= HITTEST_MASK_FILL;
+      mask |= HITTEST_MASK_FILL;
       break;
     case NS_STYLE_POINTER_EVENTS_FILL:
     case NS_STYLE_POINTER_EVENTS_STROKE:
     case NS_STYLE_POINTER_EVENTS_ALL:
-      *aHittestMask |= HITTEST_MASK_FILL;
+      mask |= HITTEST_MASK_FILL;
       break;
     default:
       NS_ERROR("not reached");
       break;
   }
-  
-  return NS_OK;
+
+  return mask;
 }
 
 //----------------------------------------------------------------------

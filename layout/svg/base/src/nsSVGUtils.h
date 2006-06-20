@@ -71,6 +71,8 @@ class nsSVGElement;
 class nsSVGCoordCtxProvider;
 class nsAttrValue;
 
+typedef struct _cairo_surface cairo_surface_t;
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
@@ -314,6 +316,13 @@ public:
   static nsRect
   ToBoundingPixelRect(double xmin, double ymin, double xmax, double ymax);
 
+  /*
+   * Get a pointer to a surface that can be used to create cairo
+   * contexts for various measurement purposes.
+   */
+  static cairo_surface_t *
+  GetCairoComputationalSurface();
+
 private:
   /*
    * Returns the glyph fragment containing a particular character
@@ -322,6 +331,9 @@ private:
   GetGlyphFragmentAtCharNum(nsISVGGlyphFragmentNode* node,
                             PRUint32 charnum,
                             PRUint32 *offset);
+
+  /* Cairo computational (nil) surface */
+  static cairo_surface_t *mCairoComputationalSurface;
 };
 
 #endif

@@ -68,12 +68,10 @@ class nsSVGLineFrame : public nsSVGPathGeometryFrame
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
 
-  // nsISVGPathGeometrySource interface:
-  NS_IMETHOD ConstructPath(cairo_t *aCtx);
-
-  // nsSVGPathGeometry methods
+  // nsSVGPathGeometryFrame methods
   virtual PRBool IsMarkable() { return PR_TRUE; }
   virtual void GetMarkPoints(nsVoidArray *aMarks);
+  virtual void ConstructPath(cairo_t *aCtx);
 };
 
 //----------------------------------------------------------------------
@@ -123,7 +121,8 @@ nsSVGLineFrame::AttributeChanged(PRInt32         aNameSpaceID,
 //----------------------------------------------------------------------
 // nsISVGPathGeometrySource methods:
 
-NS_IMETHODIMP nsSVGLineFrame::ConstructPath(cairo_t *aCtx)
+void
+nsSVGLineFrame::ConstructPath(cairo_t *aCtx)
 {
   float x1, y1, x2, y2;
 
@@ -133,8 +132,6 @@ NS_IMETHODIMP nsSVGLineFrame::ConstructPath(cairo_t *aCtx)
   // move to start coordinates then draw line to end coordinates
   cairo_move_to(aCtx, x1, y1);
   cairo_line_to(aCtx, x2, y2);
-
-  return NS_OK;
 }
 
 //----------------------------------------------------------------------

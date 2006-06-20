@@ -78,11 +78,14 @@
 #include "nsGenericElement.h"
 #include "nsAttrValue.h"
 #include "nsSVGGeometryFrame.h"
+#include "cairo.h"
 
 struct nsSVGFilterProperty {
   nsRect mFilterRect;
   nsISVGFilterFrame *mFilter;
 };
+
+cairo_surface_t *nsSVGUtils::mCairoComputationalSurface = nsnull;
 
 static PRBool gSVGEnabled;
 static PRBool gSVGRendererAvailable = PR_FALSE;
@@ -1166,4 +1169,14 @@ nsSVGUtils::ToBoundingPixelRect(double xmin, double ymin,
                 nscoord(floor(ymin)),
                 nscoord(ceil(xmax) - floor(xmin)),
                 nscoord(ceil(ymax) - floor(ymin)));
+}
+
+cairo_surface_t *
+nsSVGUtils::GetCairoComputationalSurface()
+{
+  if (!mCairoComputationalSurface)
+    mCairoComputationalSurface =
+      cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 1, 1);
+
+  return mCairoComputationalSurface;
 }

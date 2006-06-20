@@ -70,8 +70,8 @@ public:
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
 
-  // nsISVGPathGeometrySource interface:
-  NS_IMETHOD ConstructPath(cairo_t *aCtx);
+  // nsSVGPathGeometryFrame interface:
+  virtual void ConstructPath(cairo_t *aCtx);
 };
 
 //----------------------------------------------------------------------
@@ -115,7 +115,7 @@ nsSVGRectFrame::AttributeChanged(PRInt32         aNameSpaceID,
 //----------------------------------------------------------------------
 // nsISVGPathGeometrySource methods:
 
-NS_IMETHODIMP
+void
 nsSVGRectFrame::ConstructPath(cairo_t *aCtx)
 {
   float x, y, width, height, rx, ry;
@@ -126,7 +126,7 @@ nsSVGRectFrame::ConstructPath(cairo_t *aCtx)
   /* In a perfect world, this would be handled by the DOM, and 
      return a DOM exception. */
   if (width <= 0 || height <= 0 || ry < 0 || rx < 0)
-    return NS_OK;
+    return;
 
   /* Clamp rx and ry to half the rect's width and height respectively. */
   float halfWidth  = width/2;
@@ -185,8 +185,6 @@ nsSVGRectFrame::ConstructPath(cairo_t *aCtx)
                    x+rx, y);
     cairo_close_path(aCtx);
   }
-
-  return NS_OK;
 }
 
 nsIAtom *

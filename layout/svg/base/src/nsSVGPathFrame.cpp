@@ -64,12 +64,10 @@ public:
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
 
-  // nsISVGPathGeometrySource interface:
-  NS_IMETHOD ConstructPath(cairo_t *aCtx);
-
-  // nsSVGPathGeometry methods
+  // nsSVGPathGeometryFrame methods
   virtual PRBool IsMarkable() { return PR_TRUE; }
   virtual void GetMarkPoints(nsVoidArray *aMarks);
+  virtual void ConstructPath(cairo_t *aCtx);
 
   /**
    * Get the "type" of the frame
@@ -134,12 +132,11 @@ CalcVectorAngle(double ux, double uy, double vx, double vy)
   return 2 * M_PI - (ta-tb);
 }
 
-NS_IMETHODIMP nsSVGPathFrame::ConstructPath(cairo_t *aCtx)
+void
+nsSVGPathFrame::ConstructPath(cairo_t *aCtx)
 {
   nsSVGPathElement *element = NS_STATIC_CAST(nsSVGPathElement*, mContent);
   element->mPathData.Playback(aCtx);
-  
-  return NS_OK;  
 }
 
 //----------------------------------------------------------------------

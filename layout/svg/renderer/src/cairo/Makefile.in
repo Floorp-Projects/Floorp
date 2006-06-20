@@ -74,7 +74,6 @@ REQUIRES = \
 CPPSRCS = \
 	nsSVGRendererCairo.cpp \
 	nsSVGCairoCanvas.cpp \
-	nsSVGCairoPathGeometry.cpp \
 	nsSVGCairoGlyphMetrics.cpp \
 	nsSVGCairoGlyphGeometry.cpp \
 	nsSVGCairoSurface.cpp \
