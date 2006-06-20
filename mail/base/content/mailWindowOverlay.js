@@ -608,7 +608,9 @@ function InitMessageTags(menuType)
   var newMenuItem; 
 
   var curMsgHdrKeyArray = curKeys.split(" ");
-
+  if (msgHdr.label != 0)
+    curMsgHdrKeyArray.push("$label" + msgHdr.label);
+    
   while (allTags.hasMore())
   {
     var tag = allTags.getNext();
