@@ -5151,6 +5151,9 @@ xml_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         }
         *statep = JSVAL_NULL;
         break;
+
+      case JSENUMERATE_MARK:
+        break;
     }
     return JS_TRUE;
 }
@@ -5309,6 +5312,9 @@ xml_enumerateValues(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
             JS_free(cx, cursor);
         }
         *statep = JSVAL_NULL;
+        break;
+
+      case JSENUMERATE_MARK:
         break;
     }
     return JS_TRUE;
