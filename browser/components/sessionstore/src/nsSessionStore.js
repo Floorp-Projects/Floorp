@@ -423,7 +423,7 @@ SessionStoreService.prototype = {
     tabpanels.addEventListener("select", function(aEvent) {
       _this.onTabSelect(aEvent.currentTarget.ownerDocument.defaultView, aEvent.currentTarget);
       }, false);
-    tabbrowser.addEventListener("TabClose", function(aEvent) {
+    tabbrowser.addEventListener("DOMNodeRemoved", function(aEvent) {
       _this.onTabClose(aEvent.currentTarget.ownerDocument.defaultView, aEvent.originalTarget);
       }, false);
   },
@@ -540,12 +540,17 @@ SessionStoreService.prototype = {
     this._saveWindowHistory(aWindow);
     this._updateTextAndScrollData(aWindow);
     
-    this._windows[aWindow.__SSi]._closedTabs.unshift({
-      state: this._windows[aWindow.__SSi].Tab[aTab._tPos],
-      title: aTab.getAttribute("label"),
-      pos: aTab._tPos
-    });
-    this._windows[aWindow.__SSi]._closedTabs.splice(this._getPref("sessionstore.max_tabs_undo", DEFAULT_MAX_TABS_UNDO));
+    // DOMNodeRemoved is received *twice* after closing a tab, only take the first
+    var tabState = this._windows[aWindow.__SSi].Tab[aTab._tPos];
+    if (tabState) {
+      this._windows[aWindow.__SSi]._closedTabs.unshift({
+        state: tabState,
+        title: aTab.getAttribute("label"),
+        pos: aTab._tPos
+      });
+      var maxTabsUndo = this._getPref("sessionstore.max_tabs_undo", DEFAULT_MAX_TABS_UNDO);
+      this._windows[aWindow.__SSi]._closedTabs.splice(maxTabsUndo);
+    }
   },
 
   /**
@@ -686,22 +691,30 @@ SessionStoreService.prototype = {
     this._windows[aWindow.__SSi]._closedTabs = IniObjectSerializer.decode(aData);
   },
 
-  undoCloseTab: function sss_undoCloseWindow(aWindow, aIx) {
-    var tabs = this._windows[aWindow.__SSi]._closedTabs;
-    
-    if (aIx in tabs) {
-      var browser = aWindow.getBrowser();
-      var tabData = tabs.splice(aIx, 1);
-      tabData._tab = browser.addTab();
-      
-      // restore the tab's position
-      browser.moveTabTo(tabData._tab, tabData[0].pos);
+  undoCloseTab: function sss_undoCloseTab(aWindow, aIndex) {
+    var closedTabs = this._windows[aWindow.__SSi]._closedTabs;
 
-      // restore the tab's state
-      aWindow.setTimeout(this.restoreHistory_proxy, 0, tabData, 1, 0, 0);
+    // default to the most-recently closed tab
+    aIndex = aIndex || 0;
+      
+    if (aIndex in closedTabs) {
+      var browser = aWindow.getBrowser();
+
+      // fetch the data of closed tab, while removing it from the array
+      var closedTab = closedTabs.splice(aIndex, 1).shift();
+      var closedTabState = closedTab.state;
+
+      // create a new tab
+      closedTabState._tab = browser.addTab();
+        
+      // restore the tab's position
+      browser.moveTabTo(closedTabState._tab, closedTab.pos);
+  
+      // restore tab content
+      this.restoreHistoryPrecursor(aWindow, [closedTabState], 1, 0, 0);
     }
     else {
-      Components.returnCode = -1; //zeniko: or should we rather fail silently?
+      Components.returnCode = Cr.NS_ERROR_INVALID_ARG;
     }
   },
 
@@ -1196,11 +1209,8 @@ SessionStoreService.prototype = {
       }
     }
     
-    var restoreHistoryFunc = function(self) {
-      self.restoreHistory_proxy(aWindow, winData.Tab, (aOverwriteTabs ?
+    this.restoreHistoryPrecursor(aWindow, winData.Tab, (aOverwriteTabs ?
       (parseInt(winData.selected) || 1) : 0), 0, 0);
-    };
-    aWindow.setTimeout(restoreHistoryFunc, 0, this);
   },
 
   /**
@@ -1214,7 +1224,7 @@ SessionStoreService.prototype = {
    * @param aCount
    *        Counter for number of times delaying b/c browser or history aren't ready
    */
-  restoreHistory_proxy: function sss_restoreHistory_proxy(aWindow, aTabs, aSelectTab, aIx, aCount) {
+  restoreHistoryPrecursor: function sss_restoreHistoryPrecursor(aWindow, aTabs, aSelectTab, aIx, aCount) {
     var tabbrowser = aWindow.getBrowser();
     
     // make sure that all browsers and their histories are available
@@ -1228,7 +1238,7 @@ SessionStoreService.prototype = {
       catch (ex) { // in case browser or history aren't ready yet 
         if (aCount < 10) {
           var restoreHistoryFunc = function(self) {
-            self.restoreHistory_proxy(aWindow, aTabs, aSelectTab, aIx, aCount + 1);
+            self.restoreHistoryPrecursor(aWindow, aTabs, aSelectTab, aIx, aCount + 1);
           }
           aWindow.setTimeout(restoreHistoryFunc, 100, this);
           return;
