@@ -1207,6 +1207,9 @@ js_MarkScriptFilenames(JSRuntime *rt, uintN gcflags)
     JSCList *head, *link;
     ScriptFilenamePrefix *sfp;
 
+    if (!rt->scriptFilenameTable)
+        return;
+
     if (gcflags & GC_KEEP_ATOMS) {
         JS_HashTableEnumerateEntries(rt->scriptFilenameTable,
                                      js_script_filename_marker,
