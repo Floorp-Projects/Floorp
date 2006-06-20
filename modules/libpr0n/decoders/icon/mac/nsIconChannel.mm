@@ -259,8 +259,10 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
     NS_ENSURE_SUCCESS(rv, rv);
     
     CFURLRef macURL;
-    if (NS_SUCCEEDED(localFileMac->GetCFURL(&macURL)))
+    if (NS_SUCCEEDED(localFileMac->GetCFURL(&macURL))) {
       iconImage = [[NSWorkspace sharedWorkspace] iconForFile:[(NSURL*)macURL path]];
+      ::CFRelease(macURL);
+    }
   }
 
   // try by HFS type if we don't have an icon yet
