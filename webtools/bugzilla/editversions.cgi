@@ -33,6 +33,7 @@ use lib ".";
 
 require "globals.pl";
 
+use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Config qw(:DEFAULT $datadir);
 use Bugzilla::Product;

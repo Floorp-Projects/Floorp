@@ -28,6 +28,8 @@ use strict;
 use lib qw(.);
 
 require "globals.pl";
+
+use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Util;
 use Bugzilla::User;

@@ -18,16 +18,22 @@
 # as its only argument.  It attempts to troubleshoot as many installation
 # issues as possible.
 
+use strict;
+
+BEGIN {
+    my $envpath = $ENV{'PATH'};
+    require Bugzilla;
+    $ENV{'PATH'} = $envpath;
+}
+
+use lib ".";
+
 use Socket;
 use Bugzilla::Config qw($datadir);
-my $envpath = $ENV{'PATH'};
-use lib ".";
-use strict;
+
 require "globals.pl";
 eval "require LWP; require LWP::UserAgent;";
 my $lwp = $@ ? 0 : 1;
-
-$ENV{'PATH'}= $envpath;
 
 if ((@ARGV != 1) || ($ARGV[0] !~ /^https?:/))
 {

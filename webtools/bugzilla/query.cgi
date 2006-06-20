@@ -30,6 +30,7 @@ use lib ".";
 
 require "globals.pl";
 
+use Bugzilla;
 use Bugzilla::Bug;
 use Bugzilla::Constants;
 use Bugzilla::Search;

@@ -25,6 +25,7 @@
 use strict;
 use lib ".";
 
+use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Config qw(:DEFAULT :admin :params $datadir);
 use Bugzilla::Config::Common;

@@ -36,6 +36,7 @@ use Bugzilla::Util;
 use Bugzilla::Series;
 
 use Date::Format;
+use Date::Parse;
 
 sub new {
     my $invocant = shift;
@@ -99,7 +100,7 @@ sub init {
     # Make sure the dates are ones we are able to interpret
     foreach my $date ('datefrom', 'dateto') {
         if ($self->{$date}) {
-            $self->{$date} = &::str2time($self->{$date}) 
+            $self->{$date} = str2time($self->{$date}) 
               || &::ThrowUserError("illegal_date", { date => $self->{$date}});
         }
     }
@@ -223,7 +224,7 @@ sub readData {
     my $datefrom = $dbh->selectrow_array("SELECT MIN(series_date) " . 
                                          "FROM series_data " .
                                          "WHERE series_id IN ($series_ids)");
-    $datefrom = &::str2time($datefrom);
+    $datefrom = str2time($datefrom);
 
     if ($self->{'datefrom'} && $self->{'datefrom'} > $datefrom) {
         $datefrom = $self->{'datefrom'};
@@ -232,7 +233,7 @@ sub readData {
     my $dateto = $dbh->selectrow_array("SELECT MAX(series_date) " . 
                                        "FROM series_data " .
                                        "WHERE series_id IN ($series_ids)");
-    $dateto = &::str2time($dateto); 
+    $dateto = str2time($dateto); 
 
     if ($self->{'dateto'} && $self->{'dateto'} < $dateto) {
         $dateto = $self->{'dateto'};
@@ -420,7 +421,7 @@ sub generateDateProgression {
     $dateto += (2 * $oneday) / 3;
 
     while ($datefrom < $dateto) {
-        push (@progression, &::time2str("%Y-%m-%d", $datefrom));
+        push (@progression, time2str("%Y-%m-%d", $datefrom));
         $datefrom += $oneday;
     }
 

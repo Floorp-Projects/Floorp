@@ -29,6 +29,7 @@ use lib qw(.);
 
 require "globals.pl";
 
+use Bugzilla;
 use Bugzilla::Constants;
 
 my $user = Bugzilla->login(LOGIN_REQUIRED);

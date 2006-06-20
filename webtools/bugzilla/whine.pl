@@ -29,6 +29,7 @@ use strict;
 use lib ".";
 require "globals.pl";
 
+use Bugzilla;
 use Bugzilla::Config qw(:DEFAULT $datadir);
 use Bugzilla::Constants;
 use Bugzilla::Search;

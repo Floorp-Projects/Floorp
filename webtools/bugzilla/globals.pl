@@ -42,16 +42,4 @@ use Bugzilla::Error;
 # of globals.pl
 do $localconfig;
 
-use DBI;
-
-use Date::Format;               # For time2str().
-use Date::Parse;               # For str2time().
-
-# Use standard Perl libraries for cross-platform file/directory manipulation.
-use File::Spec;
-
-############# Live code below here (that is, not subroutine defs) #############
-
-use Bugzilla;
-
 1;

@@ -44,6 +44,8 @@ use Bugzilla::Product;
 use Bugzilla::Keyword;
 use Bugzilla::Field;
 
+use Date::Parse;
+
 # Include the Bugzilla CGI and general utility library.
 require "globals.pl";
 

@@ -20,8 +20,9 @@ use strict;
 use lib ".";
 require "globals.pl";
 
-Bugzilla->login();
+use Bugzilla;
 
+Bugzilla->login();
 my $cgi = Bugzilla->cgi;
 my $template = Bugzilla->template;
 
