@@ -2088,6 +2088,9 @@ SearchService.prototype = {
     // Write the converted engine to disk
     aEngine._serializeToFile();
 
+    // Update the engine's _type.
+    aEngine._type = SEARCH_TYPE_MOZSEARCH;
+
     // See if it has a corresponding icon
     try {
       var icon = this._findSherlockIcon(aEngine._file, aBaseName);
