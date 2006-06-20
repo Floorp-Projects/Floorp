@@ -2599,6 +2599,9 @@ jsdService::GetPauseDepth(PRUint32 *_rval)
 NS_IMETHODIMP
 jsdService::Pause(PRUint32 *_rval)
 {
+    if (!mCx)
+        return NS_ERROR_NOT_INITIALIZED;
+
     if (++mPauseLevel == 1) {
         JSD_SetErrorReporter (mCx, NULL, NULL);
         JSD_ClearThrowHook (mCx);
@@ -2618,6 +2621,9 @@ jsdService::Pause(PRUint32 *_rval)
 NS_IMETHODIMP
 jsdService::UnPause(PRUint32 *_rval)
 {
+    if (!mCx)
+        return NS_ERROR_NOT_INITIALIZED;
+
     if (mPauseLevel == 0)
         return NS_ERROR_NOT_AVAILABLE;
 
