@@ -10,12 +10,6 @@ if (document.body && document.body.addEventListener) {
 }
 setTimeout('location.reload()',900000);
 
-function nodewrite(n,t) {
-  var r = document.createRange();
-  r.setStart(n,0);
-  n.appendChild(r.createContextualFragment(t));
-}
-
 function closepopup() {
   var p = document.getElementById("popup");
   if (p && p.parentNode) {
@@ -90,7 +84,7 @@ function comment(d,commentid,logfile) {
     }
     closepopup()
     l = document.createElement("div");
-    nodewrite(l,comments[commentid]);
+    l.innerHTML = comments[commentid];
     l.setAttribute("id", "popup");
     l.style.position = "absolute";
     l.className = "comment";
@@ -132,10 +126,10 @@ function log(e,buildindex,logfile) {
     }
     closepopup();
     var l = document.createElement("div");
-    nodewrite(l,"<B>" + builds[buildindex] + "</B><BR>"
+    l.innerHTML = "<B>" + builds[buildindex] + "</B><BR>"
       + "<A HREF=" + logurl + ">View Brief Log</A><BR>"
       + "<A HREF=" + logurl + "&fulltext=1"+">View Full Log</A><BR>"
-      + "<A HREF=" + commenturl + ">Add a Comment</A><BR>");
+      + "<A HREF=" + commenturl + ">Add a Comment</A><BR>";
     l.setAttribute("id", "popup");
     l.className = "log";
     t.parentNode.appendChild(l);

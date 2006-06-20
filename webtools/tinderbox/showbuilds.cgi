@@ -720,11 +720,6 @@ sub print_javascript {
     if (document.body && document.body.addEventListener) {
       document.body.addEventListener("click",maybeclosepopup,false);
     }
-    function nodewrite(n,t) {
-      var r = document.createRange();
-      r.setStart(n,0);
-      n.appendChild(r.createContextualFragment(t));
-    }
     function closepopup() {
       var p = document.getElementById("popup");
       if (p && p.parentNode) {
@@ -828,7 +823,7 @@ sub print_javascript {
         }
         closepopup()
         l = document.createElement("div");
-        nodewrite(l,notes[noteid]);
+        l.innerHTML = notes[noteid];
         l.setAttribute("id", "popup");
         l.style.position = "absolute";
         l.className = "note";
@@ -884,7 +879,7 @@ sub print_javascript {
         }
         closepopup();
         var l = document.createElement("div");
-        nodewrite(l,blurb + "<BR>");
+        l.innerHTML = blurb + "<BR>";
         l.setAttribute("id", "popup");
         l.className = "log";
         t.parentNode.appendChild(l);
