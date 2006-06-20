@@ -37,6 +37,7 @@ package Litmus::DB::Testcase;
 use strict;
 use base 'Litmus::DBI';
 
+use Date::Manip;
 use Litmus::DB::Testresult;
 use Memoize;
 use Litmus::Error;
@@ -47,8 +48,7 @@ our $default_match_limit = 25;
 Litmus::DB::Testcase->table('testcases');
 
 Litmus::DB::Testcase->columns(Primary => qw/testcase_id/);
-Litmus::DB::Testcase->columns(Essential => qw/summary details enabled community_enabled format_id regression_bug_id product_id/); 
-Litmus::DB::Testcase->columns(All => qw/steps expected_results author_id creation_date last_updated version testrunner_case_id testrunner_case_version/);
+Litmus::DB::Testcase->columns(Essential => qw/summary details enabled community_enabled format_id regression_bug_id product_id steps expected_results author_id creation_date last_updated version testrunner_case_id testrunner_case_version/);
 
 Litmus::DB::Testcase->column_alias("testcase_id", "testid");
 Litmus::DB::Testcase->column_alias("testcase_id", "test_id");
@@ -150,6 +150,102 @@ sub getDefaultMatchLimit() {
 #########################################################################
 sub getDefaultRelevanceThreshold() {
   return $default_relevance_threshold;
+}
+
+#########################################################################
+sub clone() {
+  my $self = shift;
+
+  my $new_testcase = $self->copy;
+  if (!$new_testcase) { 
+    return undef;
+  }
+
+  # Update dates to now.
+  my $now = &UnixDate("today","%q");
+  $new_testcase->creation_date($now);
+  $new_testcase->last_updated($now);
+  $new_testcase->update();
+
+  # Propagate subgroup membership;
+  my $dbh = __PACKAGE__->db_Main();  
+  my $sql = "INSERT INTO testcase_subgroups (testcase_id,subgroup_id,sort_order) SELECT ?,subgroup_id,sort_order FROM testcase_subgroups WHERE testcase_id=?";
+  
+  my $rows = $dbh->do($sql, 
+		      undef,
+		      $new_testcase->testcase_id,
+		      $self->testcase_id
+		     );
+  if (! $rows) {
+    # XXX: Do we need to throw a warning here?
+    # What happens when we clone a testcase that doesn't clong to  
+    # any subgroups?
+  }  
+
+  $sql = "INSERT INTO related_testcases (testcase_id, related_testcase_id) VALUES (?,?)";
+  $rows = $dbh->do($sql, 
+		      undef,
+		      $self->testcase_id,
+		      $new_testcase->testcase_id
+		     );
+  if (! $rows) {
+    # XXX: Do we need to throw a warning here?
+  }    
+
+  return $new_testcase;
+}
+
+#########################################################################
+sub delete_from_subgroups() {
+  my $self = shift;
+  
+  my $dbh = __PACKAGE__->db_Main();  
+  my $sql = "DELETE from testcase_subgroups WHERE testcase_id=?";
+  my $rows = $dbh->do($sql,
+                      undef,
+                      $self->testcase_id
+                     );
+}
+
+#########################################################################
+sub delete_from_related() {
+  my $self = shift;
+
+  my $dbh = __PACKAGE__->db_Main();  
+  my $sql = "DELETE from related_testcases WHERE testcase_id=? OR related_testcase_id=?";
+  my $rows = $dbh->do($sql,
+                      undef,
+                      $self->testcase_id,
+                      $self->testcase_id
+                     );
+}
+
+#########################################################################
+sub delete_with_refs() {
+  my $self = shift;
+  $self->delete_from_subgroups();
+  $self->delete_from_related();
+  return $self->delete;
+}
+
+#########################################################################
+sub update_subgroups() {
+  my $self = shift;
+  my $new_subgroup_ids = shift;
+  
+  if (scalar @$new_subgroup_ids) {
+    # Failing to delete subgroups is _not_ fatal when adding a new testcase.
+    my $rv = $self->delete_from_subgroups();
+    my $dbh = __PACKAGE__->db_Main();  
+    my $sql = "INSERT INTO testcase_subgroups (testcase_id,subgroup_id,sort_order) VALUES (?,?,1)";
+    foreach my $new_subgroup_id (@$new_subgroup_ids) {
+      my $rows = $dbh->do($sql, 
+			  undef,
+			  $self->testcase_id,
+			  $new_subgroup_id
+			 );
+    }
+  }
 }
 
 1;

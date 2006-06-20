@@ -53,6 +53,13 @@ __PACKAGE__->set_sql(EnabledByTestgroup => qq{
                                               ORDER BY sgtg.sort_order ASC
 });
 
+__PACKAGE__->set_sql(ByTestgroup => qq{
+                                       SELECT sg.* 
+                                       FROM subgroups sg, subgroup_testgroups sgtg 
+                                       WHERE sgtg.testgroup_id=? AND sgtg.subgroup_id=sg.subgroup_id
+                                       ORDER BY sgtg.sort_order ASC
+});
+
 __PACKAGE__->set_sql(NumEnabledTestcases => qq{
                                                SELECT count(tc.testcase_id) as num_testcases
                                                FROM testcases tc, testcase_subgroups tcsg
@@ -64,6 +71,13 @@ __PACKAGE__->set_sql(EnabledByTestcase => qq{
                                              FROM subgroups sg, testcase_subgroups tcsg
                                              WHERE tcsg.testcase_id=? AND tcsg.subgroup_id=sg.subgroup_id AND sg.enabled=1 
                                              ORDER by sg.name ASC
+});
+
+__PACKAGE__->set_sql(ByTestcase => qq{
+                                      SELECT sg.* 
+                                      FROM subgroups sg, testcase_subgroups tcsg
+                                      WHERE tcsg.testcase_id=? AND tcsg.subgroup_id=sg.subgroup_id 
+                                      ORDER by sg.name ASC
 });
 
 #########################################################################

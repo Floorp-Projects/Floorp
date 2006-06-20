@@ -27,35 +27,21 @@
 
 [%# INTERFACE:
   # $testcase   - the testcase object to show
-  # 
-  # $showedit (optional) - include UI to edit the testcase?
-  #                        for this to work, you must include the 
-  #                        required scripts in the head
   # $show_config  - display the config options (testgroup, subgroup, etc.)
   #                 for a given testcase
 #%]
 
 [% PROCESS global/selects.none.tmpl %]
 
-[% IF showedit %]
-  <script language="JavaScript" type="text/Javascript" src="js/Help.js"></script>
-  [% INCLUDE test/formattingHelp.js.tmpl %]
-[% END %]
-
 [% IF show_config %]
 <table cellspacing="0" cellpadding="0" class="tcm">
   <tr>
   <td width="20%"><b>Product:</b></td>
   <td>
-    [% IF showedit %]<div id="product_edit_[% testcase.testcase_id | html %]" style="display: none;">[% INCLUDE productbox testcase=testcase selected=testcase.product %]<input type="hidden" name="product_initial_[% testcase.testcase_id | html %]" value="[% testcase.product.product_id | html %]"></div>[% END %]
     <div id="product_text_[% testcase.testcase_id | html %]">[% testcase.product.name | html %]</div>
     </td>
-    [% IF showedit %]
-    <td align="right" valign="top" colspan="5">
-        <a id="editlink_[%testcase.testcase_id | html %]" href="#editing" onclick="showEdit('[% testcase.testcase_id | js %]')"> Edit Testcase</a>
-        <a id="canceleditlink_[%testcase.testcase_id | html%]" style="display: none;" href="#editing" onclick="cancelEdit('[% testcase.testcase_id | js %]')"> Cancel Edit</a>
+    <td align="right" valign="top" colspan="5"><a href="manage_testcases.cgi?testcase_id=[%testcase.testcase_id | html%]"> Edit Testcase</a>
     </td>
-    [% END %]
   </tr>
   <tr>
     <td><b>Test Group(s):</b></td>
@@ -75,12 +61,7 @@
   </tr>
   <tr>
     <td><b>Summary:</b></td>
-    <td><div id="summary_edit_[%testcase.testcase_id | html%]" style="display: none;"><input name="summary_edit_[%testcase.testcase_id | html%]"               
-               id="summary_edit_[%testcase.testcase_id | html%]" 
-               value="[% testcase.summary | html %]" 
-               size="35"/></div>
-          <div id="summary_text_[%testcase.testcase_id | html%]">[% testcase.summary | html %]</div>
-    </td>
+    <td><div id="summary_text_[%testcase.testcase_id | html%]">[% testcase.summary | html %]</div></td>
   </tr>
 </table>
 
@@ -91,31 +72,11 @@
   <tr>
    <td width="50%" class="content"><div class="dh">Steps to Perform:</div>
      <div class="dv" id="steps_text_[%testcase.testcase_id | html%]">[% testcase.steps | markdown | testdata %]</div>
-     [% IF showedit %]
-     <div class="dv" id="steps_edit_[%testcase.testcase_id | html%]" style="display: none;">
-       <textarea name="steps_edit_[%testcase.testcase_id | html%]"
-                 id="steps_edit_[%testcase.testcase_id | html%]"
-                 rows="15" cols="40">[% testcase.steps | testdata %]</textarea></div>
-     [% END %]
     </td>
     <td width="50%" class="content"><div class="dh">Expected Results:</div>
       <div class="dv" id="results_text_[%testcase.testcase_id | html%]">[% testcase.expected_results | markdown | testdata %]</div>
-        [% IF showedit %]
-        <div class="dv" id="results_edit_[%testcase.testcase_id | html%]" style="display: none;">
-        <textarea name="results_edit_[%testcase.testcase_id | html%]"
-                  id="results_edit_[%testcase.testcase_id | html%]"
-                  rows="15" cols="40">[% testcase.expected_results | testdata %]</textarea></div>
-        [% END %]
     </td>
   </tr>
-  [% IF showedit %]
-    <tr><td class="content" colspan="2"><div id="formatting_edit_[% testcase.testcase_id | html %]" 
-  										class="dv" style="display: none;">
-      <u><a name="showFormattingHelp" 
-         onclick="toggleHelp(formattingHelpTitle,formattingHelpText);">
-       Formatting Help</a></u>
-    </div></td></tr>
-  [% END %]
 
   [% IF defaultemail OR sysconfig %]
   <!-- Only allow the user to submit a single result if they are already 
@@ -149,69 +110,6 @@
     </table>
 
     </div>
-
-    [% IF showedit %]
-    <div id="admin_edit_[%testcase.testcase_id | html%]" style="display: none;">
-      <table cellspacing="0" cellpadding="0" border="0">    
-        <tr>
-          <td><b>Enabled?</b></td>
-          <td>[% IF testcase.enabled %][% checked = "checked" %][% END %]
-            <input name="enabled_[%testcase.testcase_id | html%]" 
-                   type="checkbox"
-                   id="enabled_[%testcase.testcase_id | html%]"
-                   value="1" [% checked %]>
-          </td>
-          <td>Uncheck this to completely disable this testcase.</td>
-        </tr>
-        <tr>
-          <td><b>Community Enabled?</b></td>
-          <td>[% IF testcase.communityenabled %][% checked = "checked" %][% END %]
-            <input name="communityenabled_[%testcase.testcase_id | html%]" 
-                   type="checkbox"
-                   id="communityenabled_[%testcase.testcase_id | html%]"
-                   value="1" [% checked %]>
-          </td>
-          <td>Uncheck this to disable this testcase for the community-at-large.<br/>Note: trusted testers will stlil be able to see and run this testcase.</td>
-        </tr>
-        <tr>
-          <td><b>Regression Bug ID#</b>:</td>
-          <td><input name="regression_bug_id_[%testcase.testcase_id | html%]" 
-                     type="text"
-                     id="regression_bug_id_[%testcase.testcase_id | html%]"
-                     value="[%testcase.regression_bug_id | html%]">
-          </td>
-        </tr>
-        <tr>
-          <td><b>Author</b>:</td>
-          <td>[% testcase.author.getDisplayName %]</td>
-        </tr>
-        <tr>
-          <td><b>Creation Date</b>:</td>
-          <td>[% testcase.creation_date %]</td>
-        </tr>
-        <tr>
-          <td><b>Last Updated</b>:</td>
-          <td>[% testcase.last_updated %]</td>
-        </tr>
-        <tr>
-          <td><b>Litmus Version</b>:</td>
-          <td>[% testcase.version %]</td>
-        </tr>
-        <tr>
-          <td><b>Testrunner Case ID#</b>:</td>
-          <td>[% testcase.testrunner_case_id %]</td>
-        </tr>
-        <tr>
-          <td><b>Testrunner Case Version</b>:</td>
-          <td>[% testcase.testrunner_case_version %]</td>
-        </tr>
-        <tr>
-          <td colspan="2"><input class="button" type="submit" id="submit_edit_testcase" name="submit_edit_testcase" onClick="findEdited()" value="Submit These Edits"/></div> 
-          </td>
-        </tr>	
-      </table>
-    </div>
-    [% END %]
 
    </td>
   </tr>

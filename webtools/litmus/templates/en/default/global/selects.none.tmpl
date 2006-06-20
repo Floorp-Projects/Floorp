@@ -178,6 +178,6 @@
     [% END %]
     <select name="product[%testidflag FILTER html%]" id="product[%testidflag FILTER html%]" 
         onchange="changeProduct([%testcase.testcase_id FILTER js%])"
-        class="select_product">
+        class="select_product"[% IF disabled %] disabled[% END %]>
     </select>
 [% END %]

@@ -115,14 +115,14 @@ See Also   :
 #########################################################################
 sub getProducts()
 {
-    my $sql = "SELECT DISTINCT(name) FROM products ORDER BY name";
+    my $sql = "SELECT name, product_id FROM products ORDER BY name";
     return _getValues($sql);
 }
 
 #########################################################################
 sub getUniquePlatforms()
 {
-    my $sql = "SELECT DISTINCT(name) FROM platforms ORDER BY name";
+    my $sql = "SELECT DISTINCT(name), platform_id FROM platforms ORDER BY name";
     return _getValues($sql);
 }
 
@@ -184,6 +184,13 @@ sub getTestcaseIDs()
 }
 
 #########################################################################
+sub getTestcases()
+{
+    my $sql = "SELECT testcase_id, summary FROM testcases ORDER BY testcase_id";
+    return _getValues($sql);
+}
+
+#########################################################################
 sub getLocales()
 {
   my @locales = Litmus::DB::Locale->retrieve_all();
@@ -196,6 +203,15 @@ sub getUsers()
   my @users = Litmus::DB::User->retrieve_all();
   return \@users;
 }
+
+#########################################################################
+sub getAuthors()
+{
+  my $sql = "SELECT user_id, email FROM users WHERE is_admin=1 ORDER BY email";
+  return _getValues($sql);
+}
+
+
 
 #########################################################################
 sub getFields()

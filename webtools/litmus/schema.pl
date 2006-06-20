@@ -100,6 +100,12 @@ $table{products} =
          index(iconpath),
 	 index(enabled)';
 
+$table{related_testcases} = 
+        'testcase_id int(11) not null,
+         related_testcase_id int(11) not null, 
+
+         primary key (testcase_id, related_testcase_id)';
+
 $table{sessions} =
 	'session_id int(11) not null primary key auto_increment,
 	 user_id int(11) not null,

@@ -456,6 +456,11 @@ td.header, td.headerleft, th {
 
 td.headerleft {
     text-align: left;
+    color: #000000;
+}
+
+.edit-testcase td.headerleft {
+    border: 0;
 }
 
 .run-tests td.header {
@@ -561,17 +566,13 @@ table.radio-testresults tr {
     width: 100%;
 }
 
-.advanced-search td.heading {
+.advanced-search td.heading, .test-config td.header {
     font-weight: bold;
 }
 
 .advanced-search td.instructions {
     text-align: center;
     padding: 0px 5px 10px 5px;
-}
-
-.test-config td.header {
-    font-weight: bold;
 }
 
 /* 11 Run Test ****************************************************************************** */
@@ -908,6 +909,23 @@ div.closeLink {
 
 div.closeLink a:hover {
     text-decoration: none;
+}
+
+/* 16 Admin ********************************************************** */
+
+input.manage {
+    width: 15em;
+    font-size: 1em;
+}
+
+table.edit-testcase {
+    border: 0;
+    padding: 5px;
+    margin: 0;
+}    
+
+table.edit-testcase td {
+    padding-bottom: 5px;
 }
 
 /* Misc ************************************************************** */

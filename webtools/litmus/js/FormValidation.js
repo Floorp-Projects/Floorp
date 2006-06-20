@@ -61,10 +61,12 @@ function warnEmpty (theField, s)
 // Put select theField, put focus in it, and return false.
 function warnInvalid (theField, s)
 {
-    theField.focus();
+  theField.focus();
+  if (!/select/.test(theField.type)) {
     theField.select();
-    toggleMessage('failure',s);
-    return false;
+  }
+  toggleMessage('failure',s);
+  return false;
 }
 
 // isEmail (STRING s [, BOOLEAN emptyOK])
@@ -341,6 +343,16 @@ function isPositiveInteger (s)
 
     return (isSignedInteger(s, secondArg)
          && ( (isEmpty(s) && secondArg)  || (parseInt (s) > 0) ) );
+}
+
+function verifySelected(theField, fieldName) {
+  if (theField.selectedIndex >= 0 && 
+      theField.options[theField.selectedIndex].value != '' && 
+      theField.options[theField.selectedIndex].value != '---') {
+    return true;
+  } else {
+    return warnInvalid (theField, 'You must select an option for ' + fieldName + '. Please make a selection now.');
+  }
 }
 
 function toggleMessage(msgType,msg) {

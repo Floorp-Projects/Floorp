@@ -41,9 +41,13 @@ Litmus::DB::Product->columns(All => qw/product_id name iconpath enabled/);
 
 Litmus::DB::Product->column_alias("product_id", "productid");
 
-Litmus::DB::Product->has_many(testcases => "Litmus::DB::Testcase");
-Litmus::DB::Product->has_many(subgroups => "Litmus::DB::Subgroup");
-Litmus::DB::Product->has_many(testgroups => "Litmus::DB::Testgroup");
-Litmus::DB::Product->has_many(branches => "Litmus::DB::Branch");
+Litmus::DB::Product->has_many(testcases => "Litmus::DB::Testcase", 
+                              { order_by => 'testcase_id' });
+Litmus::DB::Product->has_many(subgroups => "Litmus::DB::Subgroup",
+                              { order_by => 'name' });
+Litmus::DB::Product->has_many(testgroups => "Litmus::DB::Testgroup",
+                              { order_by => 'name' });
+Litmus::DB::Product->has_many(branches => "Litmus::DB::Branch",
+                              { order_by => 'name' });
 
 1;

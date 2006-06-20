@@ -93,6 +93,7 @@ sub rebuildCache {
            my $grouparray = \@{$prodrow->{"testgroups"}};
            my $groupcount = 0;
            foreach my $curgroup ($curproduct->testgroups()) {
+               next if (!$curgroup->enabled);
                my $grouprow = \%{$grouparray->[$groupcount]};
                $grouprow->{"name"} = $curgroup->name();
                $grouprow->{"id"} = $curgroup->testgroup_id();
@@ -101,6 +102,7 @@ sub rebuildCache {
                my $subgrouparray = \@{$grouprow->{"subgroups"}};
                my $subgroupcount = 0;
                foreach my $cursubgroup (Litmus::DB::Subgroup->search_EnabledByTestgroup($curgroup->testgroup_id())) {
+                 next if (!$cursubgroup->enabled);
                    my $subgrouprow = \%{$subgrouparray->[$subgroupcount]};
                    $subgrouprow->{"name"} = $cursubgroup->name();
                    $subgrouprow->{"id"} = $cursubgroup->subgroup_id();

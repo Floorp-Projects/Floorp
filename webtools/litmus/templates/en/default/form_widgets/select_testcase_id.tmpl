@@ -1,10 +1,10 @@
-<select name="[% name %]"[% IF size %] size="[% size %]"[% END %][% IF disabled %] disabled[% END %]>
-    [% IF placeholder %]<option value="">-Testcase ID#-</option>[% END %]
+<select id="[% name %]" name="[% name %]"[% IF size %] size="[% size %]"[% END %][% IF onchange %] onChange="[% onchange %]"[% END %][% IF disabled %] disabled[% END %]>
+    [% IF placeholder %]<option value="">-Testcase ID#[% IF show_summary %]: Summary[% END %]-</option>[% END %]
 [% IF testcases %]
 [% FOREACH testcase=testcases %]
     <option[% IF defaults.testcase_id==testcase.testcase_id %] selected[% END %] 
         value="[% testcase.testcase_id | html %]">
-            [% testcase.testcase_id | html%]</option>
+            [% testcase.testcase_id | html%][% IF show_summary %]: [% testcase.summary %][% END %]</option>
 [% END %]
 [% END %]
 </select>

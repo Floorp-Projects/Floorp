@@ -75,14 +75,8 @@ if ($c->param("id")) {
       
       $edittest->summary($c->param("summary_edit_$editid"));
       my $product = Litmus::DB::Product->retrieve($c->param("product_$editid"));
-#      my $group = Litmus::DB::Testgroup->retrieve($c->param("testgroup_$editid"));
-#      my $subgroup = Litmus::DB::Subgroup->retrieve($c->param("subgroup_$editid"));
       requireField("product", $product);
-#      requireField("group", $group);
-#      requireField("subgroup", $subgroup);
       $edittest->product($product);
-#      $edittest->testgroup($group);
-#      $edittest->subgroup($subgroup);
       
       $edittest->steps($c->param("steps_edit_$editid"));
       $edittest->expected_results($c->param("results_edit_$editid"));

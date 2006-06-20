@@ -1,4 +1,4 @@
-<select name="[% name %]"[% IF size %] size="[% size %]"[% END %][% IF disabled %] disabled[% END %]>
+<select id="[% name %]" name="[% name %]"[% IF size %] size="[% size %]"[% END %][% IF disabled %] disabled[% END %]>
     [% IF placeholder %]<option value="">-Test Group-</option>[% END %]
 [% IF test_groups %]
 [% FOREACH test_group=test_groups %]
