@@ -253,7 +253,7 @@ Java_org_mozilla_jss_pkcs11_ModuleProxy_releaseNativeResources
 {
     SECMODModule *module;
 
-    if( JSS_PK11_getModulePtr(env, this, &module) != PR_SUCCESS) {
+    if (JSS_getPtrFromProxy(env, this, &module) != PR_SUCCESS) {
         ASSERT_OUTOFMEM(env);
         goto finish;
     }
