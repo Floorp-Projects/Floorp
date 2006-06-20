@@ -262,6 +262,94 @@ private:
   ~nsOnloadBlocker() {}
 };
 
+/**
+ * nsDocumentObserverList is the list of nsIDocumentObservers for a document.
+ * It doesn't allow direct reading of the list; all access must take place
+ * through stack-allocated nsDocumentObserverList::ForwardIterator or
+ * nsDocumentObserverList::ReverseIterator objects.
+ */
+class nsDocumentObserverList
+{
+public:
+  nsDocumentObserverList() :
+    mIterators(nsnull)
+  {}
+
+  class Iterator;
+  friend class Iterator;
+
+  class Iterator
+  {
+  public:
+    nsIDocumentObserver* GetNext();
+
+  protected:
+    Iterator(PRInt32 aStep, nsDocumentObserverList& aList) :
+      mPosition(aStep > 0 ? 0 : aList.mObservers.Count() - 1),
+      mStep(aStep),
+      mList(aList),
+      mNext(aList.mIterators)
+    {
+      NS_ASSERTION(mStep == 1 || mStep == -1, "Invalid step size");
+      aList.mIterators = this;
+    }
+
+    ~Iterator() {
+      NS_ASSERTION(mList.mIterators == this, "Destroyed out of order?");
+      mList.mIterators = mNext;
+    }
+
+    friend class nsDocumentObserverList;
+
+    // Our current position in mObservers
+    PRInt32 mPosition;
+    
+  private:
+    // Which direction to move in
+    PRInt32 mStep;
+
+    // The observer array to work with
+    nsDocumentObserverList& mList;
+
+    // Our next iterator.
+    Iterator* mNext;
+  };
+
+  class ForwardIterator : public Iterator
+  {
+  public:
+    ForwardIterator(nsDocumentObserverList& aList) :
+      Iterator(1, aList)
+    {}
+  };
+
+  class ReverseIterator : public Iterator
+  {
+  public:
+    ReverseIterator(nsDocumentObserverList& aList) :
+      Iterator(-1, aList)
+    {}
+  };
+
+  PRBool PrependElement(nsIDocumentObserver* aObserver);
+
+  PRInt32 Contains(nsIDocumentObserver* aPossibleObserver) const {
+    return mObservers.IndexOf(aPossibleObserver) != -1;
+  }
+
+  PRBool AppendElement(nsIDocumentObserver* aElement) {
+    return mObservers.AppendElement(aElement);
+  }
+
+  PRBool RemoveElement(nsIDocumentObserver* aElement);
+
+  void Clear();
+
+private:
+  nsAutoVoidArray mObservers;
+  Iterator* mIterators;
+};
+
 // Base class for our document implementations.
 //
 // Note that this class *implements* nsIDOMXMLDocument, but it's not
@@ -682,19 +770,26 @@ protected:
   // Dispatch an event to the ScriptGlobalObject for this document
   void DispatchEventToWindow(nsEvent *aEvent);
 
-  // Copy |mObservers| to an nsCOMArray in preparation so we can notify
-  // the list of observers set up at one point in time.
-  void CopyObserversTo(nsCOMArray<nsIDocumentObserver>& aDestination);
-
+  // NS_DOCUMENT_NOTIFY_OBSERVERS goes backwards for now for backwards compat.
+  // If you change this, update ContentAppended/Inserted/Removed accordingly.
 #define NS_DOCUMENT_NOTIFY_OBSERVERS(func_, params_)                          \
   do {                                                                        \
-    nsCOMArray<nsIDocumentObserver> observers_;                               \
-    CopyObserversTo(observers_);                                              \
-    for (PRInt32 i_ = observers_.Count() - 1; i_ >= 0; --i_) {                \
-      observers_[i_] -> func_ params_ ;                                       \
+    nsDocumentObserverList::ReverseIterator iter_(mObservers);                \
+    nsCOMPtr<nsIDocumentObserver> obs_;                                       \
+    while ((obs_ = iter_.GetNext())) {                                        \
+      obs_ -> func_ params_ ;                                                 \
     }                                                                         \
   } while (0)
 
+#define NS_DOCUMENT_FORWARD_NOTIFY_OBSERVERS(func_, params_)                  \
+  do {                                                                        \
+    nsDocumentObserverList::ForwardIterator iter_(mObservers);                \
+    nsCOMPtr<nsIDocumentObserver> obs_;                                       \
+    while ((obs_ = iter_.GetNext())) {                                        \
+      obs_ -> func_ params_ ;                                                 \
+    }                                                                         \
+  } while (0)
+ 
 #ifdef DEBUG
   void VerifyRootContentState();
 #endif
@@ -720,7 +815,7 @@ protected:
   nsCOMArray<nsIStyleSheet> mCatalogSheets;
 
   // Basically always has at least 1 entry
-  nsAutoVoidArray mObservers;
+  nsDocumentObserverList mObservers;
 
   // The document's script global object, the object from which the
   // document can get its script context and scope. This is the

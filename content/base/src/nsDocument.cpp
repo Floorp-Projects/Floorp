@@ -631,6 +631,73 @@ nsDOMImplementation::Init(nsIURI* aDocumentURI, nsIURI* aBaseURI,
   return NS_OK;
 }
 
+PRBool
+nsDocumentObserverList::PrependElement(nsIDocumentObserver* aObserver)
+{
+  PRBool prepended = mObservers.InsertElementAt(aObserver, 0);
+
+  // This introduces an inconsistency -- forward iterators will not see the new
+  // element, while backwards ones will.  That's kinda inherent in the
+  // different iteration orders, though.
+  if (prepended) {
+    for (Iterator* iter = mIterators; iter; iter = iter->mNext) {
+      iter->mPosition++;
+    }
+  }
+
+  return prepended;
+}
+
+PRBool
+nsDocumentObserverList::RemoveElement(nsIDocumentObserver* aElement)
+{
+  PRInt32 index = mObservers.IndexOf(aElement);
+  if (index == -1) {
+    return PR_FALSE;
+  }
+
+#ifdef DEBUG
+  PRBool removed =
+#endif
+    mObservers.RemoveElementAt(index);
+  NS_ASSERTION(removed, "How could we fail to remove by index?");
+
+  for (Iterator* iter = mIterators; iter; iter = iter->mNext) {
+    // If iter->mPosition == index then forward iterators are safe, since in
+    // that case the position is not affected by the removal; all that's
+    // affected is what element is at that position.  Backward iterators,
+    // however, need to decrement mPosition in that case.
+    if (iter->mPosition > index ||
+        (iter->mPosition == index && iter->mStep < 0)) {
+      iter->mPosition--;
+    }
+  }
+  
+  return PR_TRUE;
+}
+
+void
+nsDocumentObserverList::Clear()
+{
+  mObservers.Clear(); 
+
+  // Reset all iterators to a bogus position so they don't return
+  // anything next time they're called.
+  for (Iterator* iter = mIterators; iter; iter = iter->mNext) {
+    iter->mPosition = -1;
+  }
+}
+
+nsIDocumentObserver*
+nsDocumentObserverList::Iterator::GetNext()
+{
+  nsIDocumentObserver* ret =
+    NS_STATIC_CAST(nsIDocumentObserver*,
+                   mList.mObservers.SafeElementAt(mPosition));
+  mPosition += mStep;
+  return ret;
+}
+
 // ==================================================================
 // =
 // ==================================================================
@@ -826,8 +893,7 @@ nsDocument::Init()
   mBindingManager = bindingManager;
 
   // The binding manager must always be the first observer of the document.
-  // (static cast to the correct interface pointer)
-  mObservers.InsertElementAt(NS_STATIC_CAST(nsIDocumentObserver*, bindingManager), 0);
+  mObservers.PrependElement(bindingManager);
 
   mOnloadBlocker = new nsOnloadBlocker();
   NS_ENSURE_TRUE(mOnloadBlocker, NS_ERROR_OUT_OF_MEMORY);
@@ -2113,7 +2179,7 @@ void
 nsDocument::AddObserver(nsIDocumentObserver* aObserver)
 {
   // XXX Make sure the observer isn't already in the list
-  if (mObservers.IndexOf(aObserver) == -1) {
+  if (!mObservers.Contains(aObserver)) {
     mObservers.AppendElement(aObserver);
   }
 }
@@ -2129,21 +2195,8 @@ nsDocument::RemoveObserver(nsIDocumentObserver* aObserver)
     return mObservers.RemoveElement(aObserver);
   }
 
-  return (mObservers.IndexOf(aObserver) != -1);
+  return mObservers.Contains(aObserver);
 }
-
-void
-nsDocument::CopyObserversTo(nsCOMArray<nsIDocumentObserver>& aDestination)
-{
-  PRInt32 count = mObservers.Count();
-  aDestination.SetCapacity(count);
-  // If we run out of memory, we just won't notify some of the observers.
-  for (PRInt32 i = 0; i < count; ++i) {
-    aDestination.AppendObject(
-      NS_STATIC_CAST(nsIDocumentObserver*,mObservers[i]));
-  }
-}
-
 
 void
 nsDocument::BeginUpdate(nsUpdateType aUpdateType)
@@ -2325,11 +2378,9 @@ nsDocument::ContentAppended(nsIContent* aContainer,
   // observer list in a forward order
   // XXXldb So one should notify the other rather than both being
   // registered.
-  nsCOMArray<nsIDocumentObserver> observers;
-  CopyObserversTo(observers);
-  for (PRInt32 i = 0, i_end = observers.Count(); i < i_end; ++i) {
-    observers[i]->ContentAppended(this, aContainer, aNewIndexInContainer);
-  }
+  NS_DOCUMENT_FORWARD_NOTIFY_OBSERVERS(ContentAppended,
+                                       (this, aContainer,
+                                        aNewIndexInContainer));
 }
 
 void
@@ -2343,11 +2394,9 @@ nsDocument::ContentInserted(nsIContent* aContainer, nsIContent* aChild,
   // in a forward order
   // XXXldb So one should notify the other rather than both being
   // registered.
-  nsCOMArray<nsIDocumentObserver> observers;
-  CopyObserversTo(observers);
-  for (PRInt32 i = 0, i_end = observers.Count(); i < i_end; ++i) {
-    observers[i]->ContentInserted(this, aContainer, aChild, aIndexInContainer);
-  }
+  NS_DOCUMENT_FORWARD_NOTIFY_OBSERVERS(ContentInserted,
+                                       (this, aContainer, aChild,
+                                        aIndexInContainer));
 }
 
 void
@@ -2361,11 +2410,8 @@ nsDocument::ContentRemoved(nsIContent* aContainer, nsIContent* aChild,
   // observer list in a reverse order
   // XXXldb So one should notify the other rather than both being
   // registered.
-  nsCOMArray<nsIDocumentObserver> observers;
-  CopyObserversTo(observers);
-  for (PRInt32 i = observers.Count() - 1; i >= 0; --i) {
-    observers[i]->ContentRemoved(this, aContainer, aChild, aIndexInContainer);
-  }
+  NS_DOCUMENT_NOTIFY_OBSERVERS(ContentRemoved,
+                               (this, aContainer, aChild, aIndexInContainer));
 }
 
 void
