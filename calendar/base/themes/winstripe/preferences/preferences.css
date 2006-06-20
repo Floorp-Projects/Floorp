@@ -123,14 +123,3 @@ filefield[disabled="true"] .fileFieldIcon {
     margin: 0px;
 }
 
-description {
-    font: small-caption;
-    font-weight: normal;
-    line-height: 1.3em;
-    margin-bottom: 4px !important;
-}
-
-caption {
-    border-bottom: 1px solid #ececec;
-    padding: 4px 4px 0px 0px !important;
-}
