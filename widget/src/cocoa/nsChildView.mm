@@ -2617,6 +2617,13 @@ nsChildView::GetThebesSurface()
     [view mouseMoved: theEvent];
     return;
   }
+  
+  // If we're passing handling this mouse moved event, we should be the last
+  // view entered. If that isn't the case, the mouse probably started over our
+  // view and thus we need to send a mouse entered event.
+  if (sLastViewEntered != self)
+    [self mouseEntered:nil];
+  
   // check if we are in a hand scroll or if the user
   // has command and alt held down; if so,  we do not want
   // gecko messing with the cursor.
