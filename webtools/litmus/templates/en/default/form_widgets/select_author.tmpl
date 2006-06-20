@@ -1,0 +1,9 @@
+<select id="[% name %]" name="[% name %]"[% IF size %] size="[% size %]"[% END %][% IF disabled %] disabled[% END %][% IF onChange %] onChange="[% onChange %]"[% END %]>
+    [% IF placeholder %]<option value="">-Author-</option>[% END %]
+[% IF authors %]
+[% FOREACH author=authors %]
+    <option[% IF defaults.author==author.email %] selected[% END %] 
+        value="[% author.user_id | html %]">[% author.email | html %]</option>
+[% END %]
+[% END %]
+</select>

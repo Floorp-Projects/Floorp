@@ -1,0 +1,159 @@
+[%# ***** BEGIN LICENSE BLOCK *****
+  # Version: MPL 1.1
+  #
+  # The contents of this file are subject to the Mozilla Public License Version
+  # 1.1 (the "License"); you may not use this file except in compliance with
+  # the License. You may obtain a copy of the License at
+  # http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS IS" basis,
+  # WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+  # for the specific language governing rights and limitations under the
+  # License.
+  #
+  # The Original Code is Litmus.
+  #
+  # The Initial Developer of the Original Code is
+  # The Mozilla Corporation.
+  # Portions created by the Initial Developer are Copyright (C) 2006
+  # the Initial Developer. All Rights Reserved.
+  #
+  # Contributor(s):
+  #   Chris Cooper <ccooper@deadsquid.com>
+  #   Zach Lipton <zach@zachlipton.com>
+  #
+  # ***** END LICENSE BLOCK *****
+#%]
+
+[%# INTERFACE:
+  # $testcase   - the testcase object to show
+#%]
+
+[% INCLUDE test/formattingHelp.js.tmpl %]
+
+<script type="text/javascript">
+function checkFormContents(f) {
+  return (
+          checkString(f.editform_summary, 'Summary') &&
+          verifySelected(f.product, 'Product') &&
+          verifySelected(f.subgroup, 'Subgroup') &&
+          verifySelected(f.editform_author_id, 'Author')
+         );
+}
+</script>
+
+      <form id="edit_testcase_form" name="edit_testcase_form" method="post" action="manage_testcases.cgi" onSubmit="return checkFormContents(this);">
+      <input id="editform_mode" name="editform_mode" type="hidden" value="edit">
+      <input id="editform_testcase_id" name="editform_testcase_id" type="hidden" value="">
+
+      <table class="edit-testcase">
+	<tr>
+	<td class="headerleft">Testcase ID#:</td>
+	<td name="editform_testcase_id_display" id="editform_testcase_id_display"></td>
+	</tr>
+	<tr>
+	<td class="headerleft">Summary:</td>
+	<td><input name="editform_summary"
+                   id="editform_summary"
+                   value=""
+                   size="35"/ disabled></td>
+	</tr>
+        <tr>
+        <td colspan="3">
+
+	  <table border="0" cellspacing="0" cellpadding="0">
+            <tr>
+            <td width="50%" class="headerleft">Steps to Perform:<br/>
+              <textarea name="editform_steps"
+                        id="editform_steps"
+                        rows="10" cols="40" disabled></textarea>
+            </td>
+            <td width="50%" class="headerleft">Expected Results:<br/>
+              <textarea name="editform_results"
+                        id="editform_results"
+                        rows="10" cols="40" disabled></textarea>
+            </td>
+            </tr>
+	    <tr>
+            <td align="right">&uArr;&nbsp;<a name="showFormattingHelp" onclick="toggleHelp(formattingHelpTitle,formattingHelpText);">Formatting Help</a>&nbsp;|&nbsp;&uArr;&nbsp;<a name="stepsPreview" onClick="var newwin = window.open('preview.cgi?preview=' + escape(document.getElementById('editform_steps').value),'preview_window','height=400,width=400,resizeable=yes,scrollable=yes');newwin.focus();">Preview</a></td>
+            <td align="right">&uArr;&nbsp;<a name="showFormattingHelp" onclick="toggleHelp(formattingHelpTitle,formattingHelpText);">Formatting Help</a>&nbsp;|&nbsp;&uArr;&nbsp;<a name="resultsPreview" onClick="var newwin = window.open('preview.cgi?preview=' + escape(document.getElementById('editform_results').value),'preview_window','height=400,width=400,resizeable=yes,scrollable=yes');newwin.focus();">Preview</a></td>
+            </tr>
+          </table>
+
+        </td>
+        </tr>
+
+	<tr>
+	<td class="headerleft">Product:</td>
+	<td>[% INCLUDE productbox %]</td>
+	</tr>
+	<tr>
+	<td class="headerleft">Test Group(s):</td>
+	<td>[% INCLUDE testgroupbox %]</td>
+        </tr>
+	<tr>
+	<td class="headerleft">Subgroup(s):</td>
+	<td>[% INCLUDE subgroupbox %]</td>
+	</tr>
+	</tr>
+        <tr>
+          <td class="headerleft">Enabled?</td>
+          <td>
+            <input name="editform_enabled" 
+                   type="checkbox"
+                   id="editform_enabled"
+                   value="1" disabled
+		   onChange="if (this.checked == false) {document.getElementById('editform_communityenabled').checked =false;}">
+          </td>
+          <td>&lArr;&nbsp;Uncheck this to completely disable this testcase.</td>
+        </tr>
+        <tr>
+          <td class="headerleft">Community Enabled?</td>
+          <td>
+            <input name="editform_communityenabled" 
+                   type="checkbox"
+                   id="editform_communityenabled"
+                   value="1" disabled
+		   onChange="if (this.checked == true) {document.getElementById('editform_enabled').checked =true;}">
+          </td>
+          <td>&lArr;&nbsp;Uncheck this to disable this testcase for the community-at-large.<br/>Note: trusted testers will stlil be able to see and run this testcase.</td>
+        </tr>
+        <tr>
+          <td class="headerleft">Regression Bug ID#:</td>
+          <td><input name="editform_regression_bug_id" 
+                     type="text"
+                     id="editform_regression_bug_id"
+                     value="" disabled>
+          </td>
+        </tr>
+        <tr>
+          <td class="headerleft">Author:</td>
+	<td>[% INCLUDE form_widgets/select_author.tmpl name="editform_author_id" disabled=1 placeholder=1 %]
+        </tr>
+        <tr>
+          <td class="headerleft">Creation Date:</td>
+          <td name="editform_creation_date" id="editform_creation_date"></td>
+        </tr>
+        <tr>
+          <td class="headerleft">Last Updated:</td>
+          <td name="editform_last_updated" id="editform_last_updated"></td>
+        </tr>
+        <tr>
+          <td class="headerleft">Litmus Version:</td>
+          <td name="editform_litmus_version" id="editform_litmus_version"></td>
+        </tr>
+        <tr>
+          <td class="headerleft">Testrunner Case ID#:</td>
+          <td name="editform_testrunner_case_id" id="editform_testrunner_case_id"></td>
+        </tr>
+        <tr>
+          <td class="headerleft">Testrunner Case Version:</td>
+          <td name="editform_testrunner_case_version" id="editform_testrunner_case_version"></td>
+        </tr>
+        <tr>
+          <td colspan="3" align="right"><input id="editform_reset" class="button" type="button" value="Reset" disabled />&nbsp;<input class="button" type="submit" id="editform_submit" name="editform_submit" value="Submit Edits" disabled /></div> 
+          </td>
+        </tr>	
+      </table>
+
+      </form>

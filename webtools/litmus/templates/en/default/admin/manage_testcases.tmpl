@@ -1,0 +1,322 @@
+[%# ***** BEGIN LICENSE BLOCK *****
+  # Version: MPL 1.1
+  #
+  # The contents of this file are subject to the Mozilla Public License Version
+  # 1.1 (the "License"); you may not use this file except in compliance with
+  # the License. You may obtain a copy of the License at
+  # http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS IS" basis,
+  # WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+  # for the specific language governing rights and limitations under the
+  # License.
+  #
+  # The Original Code is Litmus.
+  #
+  # The Initial Developer of the Original Code is
+  # The Mozilla Corporation.
+  # Portions created by the Initial Developer are Copyright (C) 2006
+  # the Initial Developer. All Rights Reserved.
+  #
+  # Contributor(s):
+  #   Chris Cooper <ccooper@deadsquid.com>
+  #   Zach Lipton <zach@zachlipton.com>
+  #
+  # ***** END LICENSE BLOCK *****
+#%]
+
+[% PROCESS global/selects.none.tmpl %]
+
+[% includeselects=1 %]  
+[% INCLUDE global/html_header.tmpl js_files=['js/prototype.lite.js','js/moo.fx.js','js/moo.fx.pack.js','js/FormValidation.js','js/Mochikit/Mochikit.js','js/json.js','js/Help.js','js/SelectBoxes.js'] %]
+[% INCLUDE global/litmus_header.tmpl %]
+
+<script type="text/javascript">
+var d;
+var testcase;
+
+function changeSelectedValue(selectid, optionvalue) {
+  var em = document.getElementById(selectid)
+  var options = em.getElementsByTagName('option');  
+  var found = 0;
+  for (var i=0; i<options.length; i++) {
+    if (options[i].value == optionvalue) {
+      options[i].selected = true;
+      found=1;
+    } else {
+      options[i].selected = false;
+    }      
+  }
+  if (found == 0) {
+    options[0].selected = true;
+  } 
+}
+
+function setAuthor(user_id) {
+  changeSelectedValue('editform_author_id',user_id);;
+}
+
+function enableForm(formid) {
+  var f = document.getElementById(formid);
+  var ems = f.getElementsByTagName('input');
+  for (var i in ems) {
+    ems[i].disabled=false;
+  }
+  ems = f.getElementsByTagName('select');
+  for (var i in ems) {
+    ems[i].disabled=false;
+  }
+  ems = f.getElementsByTagName('textarea');
+  for (var i in ems) {
+    ems[i].disabled=false;
+  }
+}
+
+function disableForm(formid) {
+  var f = document.getElementById(formid);
+  var ems = f.getElementsByTagName('input');
+  for (var i in ems) {
+    ems[i].disabled=true;
+  }
+  ems = f.getElementsByTagName('select');
+  for (var i in ems) {
+    ems[i].disabled=true;
+  }
+  ems = f.getElementsByTagName('textarea');
+  for (var i in ems) {
+    ems[i].disabled=true;
+  }
+}
+
+function enableModeButtons() {
+  document.getElementById("edit_testcase_button").disabled=false;
+  document.getElementById("clone_testcase_button").disabled=false;
+  document.getElementById("delete_testcase_button").disabled=false;
+}
+
+function disableModeButtons() {
+  document.getElementById("edit_testcase_button").disabled=true;
+  document.getElementById("clone_testcase_button").disabled=true;
+  document.getElementById("delete_testcase_button").disabled=true;
+}
+
+function loadTestcase() {
+  var testcase_select = document.getElementById("testcase_id");
+
+  if (! testcase_select ||
+      testcase_select.options[testcase_select.selectedIndex].value=="") {
+    disableModeButtons();
+    disableForm('edit_testcase_form');
+    blankForm('edit_testcase_form');
+    return false;
+  } 
+
+  var testcase_id = testcase_select.options[testcase_select.selectedIndex].value;
+
+  disableForm('edit_testcase_form');
+  var url = 'json.cgi?testcase_id=' + testcase_id;
+  var d = loadJSONDoc(url);
+  d.addBoth(function (res) { 
+    d.deferred = null;  
+    return res; 
+  }); 
+  d.addCallback(populateTestcase); 
+  // if anything goes wrong, except for a simple cancellation, 
+  // then log the error and show the logger 
+  d.addErrback(function (err) { 
+    if (err instanceof CancelledError) { 
+      return; 
+    }
+    logError(err); 
+    logger.debuggingBookmarklet(); 
+  });
+}
+
+function populateTestcase(data) {
+  testcase=data;
+  document.getElementById('editform_testcase_id').value = testcase.testcase_id;
+  document.getElementById('editform_testcase_id_display').innerHTML = testcase.testcase_id;
+  document.getElementById('editform_summary').value = testcase.summary;
+  document.getElementById('editform_steps').value = testcase.steps;
+  document.getElementById('editform_results').value = testcase.expected_results;
+  var product_box = document.getElementById('product');
+  var options = product_box.getElementsByTagName('option');  
+  var found_product = 0;
+  for (var i=0; i<options.length; i++) {
+    if (options[i].value == testcase.product_id.product_id) {
+      options[i].selected = true;
+      found_product=1;
+    } else {
+      options[i].selected = false;
+    }      
+  }
+  if (found_product == 0) {
+    options[0].selected = true;
+  }
+  changeProduct();
+  var found_testgroup = 0;
+  if (testcase.testgroups[0]) {
+    var testgroup_box = document.getElementById('testgroup');
+    options = testgroup_box.getElementsByTagName('option');  
+    for (var i=0; i<options.length; i++) {
+      if (options[i].value == testcase.testgroups[0].testgroup_id) {
+        options[i].selected = true;
+        found_testgroup=1;
+      } else {
+        options[i].selected = false;
+      }      
+    }
+  }
+  if (found_testgroup == 0) {
+    options[0].selected = true;
+  }
+  changeTestgroup();
+  var found_subgroup = 0;
+  if (testcase.subgroups[0]) {
+    var subgroup_box = document.getElementById('subgroup');
+    options = subgroup_box.getElementsByTagName('option');  
+    for (var i=0; i<options.length; i++) {
+      if (options[i].value == testcase.subgroups[0].subgroup_id) {
+        options[i].selected = true;
+        found_subgroup=1;
+      } else {
+        options[i].selected = false;
+      }      
+    }
+  }
+  if (found_subgroup == 0) {
+    options[0].selected = true;
+  }
+  var enabled_em = document.getElementById('editform_enabled')
+  if (testcase.enabled == 1) {
+    enabled_em.checked = true;
+  } else {
+    enabled_em.checked = false;
+ } 
+ var communityenabled_em = document.getElementById('editform_communityenabled')
+ if (testcase.community_enabled == 1) {
+    communityenabled_em.checked = true;
+  } else {
+    communityenabled_em.checked = false;
+  }
+  if (testcase.regression_bug_id) {
+    document.getElementById('editform_regression_bug_id').value = testcase.regression_bug_id;
+  }
+  setAuthor(testcase.author_id.user_id);
+  document.getElementById('editform_creation_date').innerHTML = testcase.creation_date;
+  document.getElementById('editform_last_updated').innerHTML = testcase.last_updated;
+  document.getElementById('editform_litmus_version').innerHTML = testcase.version;
+  document.getElementById('editform_testrunner_case_id').innerHTML = testcase.testrunner_case_id;
+  document.getElementById('editform_testrunner_case_version').innerHTML = testcase.testrunner_case_version;
+
+  enableModeButtons();
+}
+
+function blankForm(formid) {
+  var f = document.getElementById(formid);
+  var ems = f.getElementsByTagName('input');
+  for (var i in ems) {
+    if (ems[i].type == 'submit' || 
+	ems[i].value == 'Reset' ||
+	ems[i].type == 'radio' ||
+	ems[i].type == 'checkbox') {
+      continue;
+    }
+    ems[i].value='';
+    ems[i].checked=false;
+  }
+  ems = f.getElementsByTagName('select');
+  for (var i in ems) {
+    ems[i].selectedIndex=0;
+  }
+  ems = f.getElementsByTagName('textarea');
+  for (var i in ems) {
+    ems[i].value='';
+  }
+  document.getElementById('editform_testcase_id_display').innerHTML = '';
+  document.getElementById('editform_creation_date').innerHTML = '';
+  document.getElementById('editform_last_updated').innerHTML = '';
+  document.getElementById('editform_litmus_version').innerHTML = '';
+  document.getElementById('editform_testrunner_case_id').innerHTML = '';
+  document.getElementById('editform_testrunner_case_version').innerHTML = '';
+  changeProduct();
+  changeTestgroup();
+}
+
+function switchToAdd() {
+  disableModeButtons();
+  blankForm('edit_testcase_form');
+  setAuthor([% user.user_id %]);
+  document.getElementById('editform_submit').value = 'Add Testcase';
+  document.getElementById('editform_mode').value = 'add';
+  enableForm('edit_testcase_form');
+}
+
+function switchToEdit() {
+  document.getElementById('editform_submit').value = 'Submit Edits';
+  document.getElementById('editform_mode').value = 'edit';
+  enableForm('edit_testcase_form');
+}
+
+</script>
+
+<div id="page">
+
+[% INCLUDE sidebar/sidebar.tmpl %]
+
+  <div id="content">
+
+    <h1 class="firstHeading">[% title %]</h1>
+
+    <div class="section-full">
+      <div class="section-header">Existing Testcases</div>
+
+      <div class="section-content">
+
+        <form id="select_testcase_and_mode_form" name="select_testcase_and_mode_form" method="post" action="manage_testcases.cgi">
+	<table border="0" cellspacing="0" cellpadding="5">
+	<tr>
+        <td>
+	[% INCLUDE form_widgets/select_testcase_id.tmpl name="testcase_id" placeholder=1 size=10 show_summary=1 onchange="loadTestcase();" %]
+        </td>
+        <td>
+	<input id="add_testcase_button" name="add_testcase_button" class="manage" type="button" onClick="switchToAdd();" value="Add testcase"><br/><br/>
+	<input id="edit_testcase_button" name="edit_testcase_button" class="manage" type="button" onClick="switchToEdit();" value="Edit testcase" disabled><br/><br/>
+	<input id="clone_testcase_button" name="clone_testcase_button" class="manage" type="submit" onClick="confirm('Really clone this testcase?');" value="Clone testcase" disabled><br/><br/>
+	<input id="delete_testcase_button" name="delete_testcase_button" class="manage" type="submit" onClick="confirm('Really delete this testcase?');" value="Delete testcase" disabled>
+        </td>
+	</table>
+	</form>
+
+      </div> <!--end section-content-->
+    </div> <!--end section-full-->
+
+    <div class="section-full">
+      <div id="testcase-title" class="section-header">Testcase info</div>
+
+      <div class="section-content">
+
+      [% INCLUDE admin/edit_testcase.tmpl %]
+
+      </div> <!--end section-content-->
+    </div> <!--end section-full-->
+
+  </div> <!--END content-->
+
+</div> <!--END page-->
+
+<script type="text/javascript">
+var em = document.getElementById('testcase_id'); 
+if (em.selectedIndex >= 0) {
+  loadTestcase();
+  enableForm('edit_testcase_form');
+} else {
+  disableForm('edit_testcase_form');
+}
+</script>
+
+[% INCLUDE global/litmus_footer.tmpl %]
+[% INCLUDE global/html_footer.tmpl %]
+
+
+
