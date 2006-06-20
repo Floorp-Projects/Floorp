@@ -94,6 +94,8 @@ def doSendResults(fo, tbox, test, starttime, endtime, raw):
     cur = db.cursor()
     cur.execute(stmt)
     for row in cur:
+        if row[1] == 'nan':
+            continue
         if raw:
             fo.write ("%s,%s,'%s'," % (row[0], row[1], row[2]))
         else:

@@ -16,7 +16,7 @@
     <script type="text/javascript" src="js/yui/container.js"></script>
 
     <!-- Core -->
-    <script type="text/javascript" src="js/graph.js"></script>
+    <script type="text/javascript; e4x=1" src="js/graph.js"></script>
   </head>
 
   <body onload="loadingDone()">
@@ -32,6 +32,11 @@
             <input id="load-days-radio" type="radio" name="dataload" onclick="onDataLoadChanged()" checked>
             <label>previous</label> <input type="text" value="120" id="load-days-entry" size="3" onchange="onDataLoadChanged()"> <label>days</label>
           </td>
+	  <td width="200px">
+	  </td>
+	  <td>
+	      <input id="bonsaibutton" type="button" onclick="onUpdateBonsai()" value="Refresh Bonsai Data">
+	  </td>
         </tr>
       </table>
 
@@ -43,7 +48,7 @@
       </div>
 
       <div id="formend">
-	<img src="js/plus.png" class="plusminus" onclick="addGraphForm()">
+	<img src="js/img/plus.png" class="plusminus" onclick="addGraphForm()">
         <input type="submit" onclick="onGraph()" value="Graph It!">
 
 <!--        <label for="baseline">No baseline</label><input type="radio" name="baseline" checked onclick="onNoBaseLineClick()"> -->

@@ -48,8 +48,15 @@ const MONTH_ABBREV = [ "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "
 //const getdatacgi = "http://localhost:9050/getdata.cgi?";
 const getdatacgi = "getdata.cgi?";
 
+const bonsaicgi = "bonsaibouncer.cgi";
+
+// more days than this and we'll force user confirmation for the bonsai query
+const bonsaiNoForceDays = 90;
+
 // the default average interval
 var gAverageInterval = 6*ONE_HOUR_SECONDS;
+var gCurrentLoadRange = null;
+var gForceBonsai = false;
 
 function checkErrorReturn(obj) {
     if (!obj || obj.resultcode != 0) {
@@ -147,6 +154,8 @@ TinderboxData.prototype = {
         }
     },
 
+    // arg1 = startTime, arg2 = endTime, arg3 = callback
+    // arg1 = callback, arg2/arg3 == null
     requestValueDataSetFor: function (tbox, testname, arg1, arg2, arg3) {
         var self = this;
 
@@ -227,7 +236,7 @@ TinderboxData.prototype = {
 
                 self.onDataSetAvailable.fire(tbox, testname, ds, startTime, endTime);
             },
-            function () {alert ("Error talking to getdata.cgi"); });
+            function (obj) {alert ("Error talking to getdata.cgi (" + obj + ")"); log (obj.stack); });
     },
 
     clearValueDataSets: function () {
@@ -471,6 +480,80 @@ TimeStringDataSet.prototype = {
     },
 };
 
+function BonsaiService() {
+}
+
+BonsaiService.prototype = {
+    // this could cache stuff, so that we only have to request the bookend data
+    // if we want a wider range, but it's probably not worth it for now.
+    //
+    // The callback is called with an object argument which contains:
+    // {
+    //   times: [ t1, t2, t3, .. ],
+    //   who:   [ w1, w2, w3, .. ],
+    //   log:   [ l1, l2, l3, .. ],
+    //   files: [ [ r11, f11, r12, f12, r13, f13, .. ], [ r21, f21, r22, f22, r23, f23, .. ], .. ]
+    // }
+    //
+    // r = revision number, as a string, e.g. "1.15"
+    // f = file, e.g. "mozilla/widget/foo.cpp"
+    //
+    // arg1 = callback, arg2 = null
+    // arg1 = includeFiles, arg2 = callback
+    requestCheckinsBetween: function (startDate, endDate, arg1, arg2) {
+        var includeFiles = arg1;
+        var callback = arg2;
+
+        if (arg2 == null) {
+            callback = arg1;
+            includeFiles = null;
+        }
+
+        var queryargs = {
+            treeid: "default",
+            module: "SeaMonkeyAll",
+            branch: "HEAD",
+            mindate: startDate,
+            maxdate: endDate
+        };
+
+        if (!includeFiles)
+            queryargs.xml_nofiles = "1";
+
+        log ("bonsai request: ", queryString(queryargs));
+
+        doSimpleXMLHttpRequest (bonsaicgi, queryargs)
+            .addCallbacks(
+                function (obj) {
+                    var result = { times: [], who: [], comment: [], files: null };
+                    if (includeFiles)
+                        result.files = [];
+
+                    // strip out the xml declaration
+                    var s = obj.responseText.replace(/<\?xml version="1.0"\?>/, "");
+                    var bq = new XML(s);
+                    for (var i = 0; i < bq.ci.length(); i++) {
+                        var ci = bq.ci[i];
+                        result.times.push(ci.@date);
+                        result.who.push(ci.@who);
+                        result.comment.push(ci.log.text().toString());
+                        if (includeFiles) {
+                            var files = [];
+                            for (var j = 0; j < ci.files.f.length(); j++) {
+                                var f = ci.files.f[j];
+                                files.push(f.@rev);
+                                files.push(f.text().toString());
+                            }
+                            result.files.push(files);
+                        }
+                    }
+
+                    callback.call (window, result);
+                },
+                function () { alert ("Error talking to bonsai"); });
+    },
+};
+
 function Graph() {
 }
 
@@ -518,6 +601,10 @@ Graph.prototype = {
     cursorTime: null,
     cursorValue: null,
 
+    markerColor: "rgba(200,0,0,0.4)",
+    markersVisible: true,
+    markers: null,
+
     dirty: true,
     valid: false,
 
@@ -537,6 +624,8 @@ Graph.prototype = {
         this.dataSets = new Array();
         this.dataSetMinMaxes = new Array();
         this.dataSetIndices = new Array();
+
+        this.markers = new Array();
 
         this.onSelectionChanged = new YAHOO.util.CustomEvent("graphselectionchanged");
         this.onCursorMoved = new YAHOO.util.CustomEvent("graphcursormoved");
@@ -804,6 +893,7 @@ Graph.prototype = {
             // yScale = pixels-per-value
             with (ctx) {
                 clearRect (0, 0, cw, ch);
+                lineWidth = 1.0;
 
                 // draw gridlines
                 var yLabelValues = this.getTimeAxisLabels();
@@ -827,7 +917,25 @@ Graph.prototype = {
                     lineTo(this.frontBuffer.width + 0.5, p);
                     stroke();
                 }
-            
+
+                // draw markers
+                strokeStyle = this.markerColor;
+                for (var i = 0; i < this.markers.length/2; i++) {
+                    var mtime = this.markers[i*2];
+                    //var mlabel = this.markers[i*2+1];
+
+                    if (mtime < this.startTime || mtime > this.endTime)
+                        continue;
+
+                    var p = Math.round((mtime - xoffs) * xscale) + 0.5;
+                    beginPath();
+                    moveTo(p, Math.round(this.frontBuffer.height*0.8)-0.5);
+                    lineTo(p, this.frontBuffer.height+0.5);
+                    stroke();
+                }
+
+                // draw actual graph lines
+
                 for (var i = 0; i < this.dataSets.length; i++) {
                     if (this.dataSetIndices[i] == null) {
                         // there isn't anything in the data set in the given time range
@@ -875,8 +983,6 @@ Graph.prototype = {
 
                     strokeStyle = colorToRgbString(this.dataSets[i].color);
                     stroke();
-                    
-                    lineWidth = 1.0;
                 }
             }
         }
@@ -1308,6 +1414,19 @@ Graph.prototype = {
 
         this.redrawOverlayOnly();
     },
+
+    /*
+     * marker stuff
+     */
+    deleteAllMarkers: function () {
+        this.markers = new Array();
+    },
+
+    addMarker: function (mtime, mlabel) {
+        this.markers.push (mtime);
+        this.markers.push (mlabel);
+    },
+
 };
 
 function BigGraph(canvasId) {
@@ -1461,6 +1580,7 @@ GraphFormModule.prototype = {
 
         this.tinderbox = this.tinderboxSelect.value;
 
+        this.testSelect.disabled = true;
         Tinderbox.requestTestListFor(this.tinderbox,
                                      function (tbox, tests) {
                                          var opts = [];
@@ -1475,6 +1595,8 @@ GraphFormModule.prototype = {
                                              self.testname = forceTestname;
                                              self.testSelect.value = forceTestname;
                                          }
+
+                                         self.testSelect.disabled = false;
                                      });
     },
 
@@ -1503,12 +1625,15 @@ GraphFormModule.prototype = {
 var Tinderbox;
 var BigPerfGraph;
 var SmallPerfGraph;
+var Bonsai;
 
 function loadingDone() {
     //createLoggingPane(true);
 
     Tinderbox = new TinderboxData();
     Tinderbox.init();
+
+    Bonsai = new BonsaiService();
 
     SmallPerfGraph = new SmallGraph("smallgraph");
     SmallPerfGraph.setSelectionType("range");
@@ -1557,12 +1682,39 @@ function onNoBaseLineClick() {
     GraphFormModules.forEach (function (g) { g.baseline = false; });
 }
 
+// whether the bonsai data query should redraw the graph or not
+var gReadyForRedraw = true;
+
+function onUpdateBonsai() {
+    BigPerfGraph.deleteAllMarkers();
+
+    getElement("bonsaibutton").disabled = true;
+
+    if (gCurrentLoadRange) {
+        if ((gCurrentLoadRange[1] - gCurrentLoadRange[0]) < (bonsaiNoForceDays * ONE_DAY_SECONDS) || gForceBonsai) {
+            Bonsai.requestCheckinsBetween (gCurrentLoadRange[0], gCurrentLoadRange[1],
+                                           function (bdata) {
+                                               for (var i = 0; i < bdata.times.length; i++) {
+                                                   BigPerfGraph.addMarker (bdata.times[i], bdata.who[i] + ": " + bdata.comment[i]);
+                                               }
+                                               if (gReadyForRedraw)
+                                                   BigPerfGraph.redraw();
+
+                                               getElement("bonsaibutton").disabled = false;
+                                           });
+        }
+    }
+}
+
 function onGraph() {
     for each (var g in [BigPerfGraph, SmallPerfGraph]) {
         g.clearDataSets();
         g.setTimeRange(null, null);
     }
-    
+
+    gReadyForRedraw = false;
+
+    // do the actual graph data request
     var baselineModule = null;
     GraphFormModules.forEach (function (g) { if (g.baseline) baselineModule = g; });
     if (baselineModule) {
@@ -1623,7 +1775,9 @@ function onGraphLoadRemainder(baselineDataSet) {
                                                  if (g == SmallPerfGraph || autoExpand)
                                                      g.expandTimeRange(ds.firstTime, ds.lastTime);
                                                  g.autoScale();
+
                                                  g.redraw();
+                                                 gReadyForRedraw = true;
                                              }
 
                                              updateLinkToThis();
@@ -1651,8 +1805,10 @@ function onDataLoadChanged() {
         log ("drange", d1, d2);
 
         Tinderbox.defaultLoadRange = [d1, d2];
+        gCurrentLoadRange = [d1, d2];
     } else {
         Tinderbox.defaultLoadRange = null;
+        gCurrentLoadRange = null;
     }
 
     Tinderbox.clearValueDataSets();
