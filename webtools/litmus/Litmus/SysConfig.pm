@@ -84,7 +84,7 @@ sub getCookie {
     my $c = Litmus->cgi();
     my $product = shift;
     
-    return Litmus::Sysconfig->
+    return Litmus::SysConfig->
     	realGetCookie($configcookiename.'_'.$product->product_id());
     
 }
