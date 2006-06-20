@@ -85,3 +85,11 @@
   <!ENTITY findNodesDirectionDown.label "Down">
   <!ENTITY findNodesFind.label "Find">
   <!ENTITY findNodesCancel.label "Cancel">
+
+  <!ENTITY mnEditPasteMenu.label "Paste">
+  <!ENTITY mnEditPasteBefore.label "Before">
+  <!ENTITY mnEditPasteAfter.label "After">
+  <!ENTITY mnEditPasteReplace.label "In place of (Replace)">
+  <!ENTITY mnEditPasteFirstChild.label "As first child">
+  <!ENTITY mnEditPasteLastChild.label "As last child">
+  <!ENTITY mnEditPasteAsParent.label "As parent">

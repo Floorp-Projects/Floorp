@@ -50,6 +50,7 @@ var viewer;
 const kDOMViewCID          = "@mozilla.org/inspector/dom-view;1";
 const kClipboardHelperCID  = "@mozilla.org/widget/clipboardhelper;1";
 const kPromptServiceCID    = "@mozilla.org/embedcomp/prompt-service;1";
+const nsIDOMNode           = Components.interfaces.nsIDOMNode;
 
 //////////////////////////////////////////////////
 
@@ -144,14 +145,30 @@ DOMViewer.prototype =
 
   isCommandEnabled: function(aCommand)
   {
+    var clipboardNode = null;
+    var selectedNode = null;
+    var parentNode = null;
+    if (/^cmdEditPaste/.test(aCommand)) {
+      if (this.mPanel.panelset.clipboardFlavor != "inspector/dom-node")
+        return false;
+      clipboardNode = this.mPanel.panelset.getClipboardData();
+      selectedNode = new XPCNativeWrapper(viewer.selectedNode, "nodeType",
+                                          "parentNode", "childNodes");
+      if (selectedNode.parentNode)
+        parentNode = new XPCNativeWrapper(selectedNode.parentNode, "nodeType");
+    }
     switch (aCommand) {
       case "cmdEditPaste":
-        var canPaste = this.mPanel.panelset.clipboardFlavor == "inspector/dom-node";
-        if (canPaste) {
-          var node = this.mPanel.panelset.getClipboardData();
-          canPaste = node ? node.nodeType != Node.ATTRIBUTE_NODE : false;
-        }
-        return canPaste;
+      case "cmdEditPasteBefore":
+        return this.isValidChild(parentNode, clipboardNode);
+      case "cmdEditPasteReplace":
+        return this.isValidChild(parentNode, clipboardNode, selectedNode);
+      case "cmdEditPasteFirstChild":
+      case "cmdEditPasteLastChild":
+        return this.isValidChild(selectedNode, clipboardNode);
+      case "cmdEditPasteAsParent":
+        return this.isValidChild(clipboardNode, selectedNode) &&
+               this.isValidChild(parentNode, clipboardNode, selectedNode);
       case "cmdEditInsert":
         return false;
       case "cmdEditCut":
@@ -160,6 +177,52 @@ DOMViewer.prototype =
         return this.selectedNode != null;
     }
     return false;
+  },
+
+ /**
+  * Determines whether the passed parent/child combination is valid.
+  * @param the parent
+  * @param the child
+  * @param the node the child is replacing (optional)
+  * @return true if the passed parent can have the passed child as a child,
+  *   false otherwise
+  */
+  isValidChild: function isValidChild(parent, child, replaced)
+  {
+    // the document (fragment) node must be an only child and can't be replaced
+    if (parent == null)
+      return false;
+    // the only types that can ever have children
+    if (parent.nodeType != nsIDOMNode.ELEMENT_NODE &&
+        parent.nodeType != nsIDOMNode.DOCUMENT_NODE &&
+        parent.nodeType != nsIDOMNode.DOCUMENT_FRAGMENT_NODE)
+      return false;
+    // the only types that can't ever be children
+    if (child.nodeType == nsIDOMNode.DOCUMENT_NODE ||
+        child.nodeType == nsIDOMNode.DOCUMENT_FRAGMENT_NODE ||
+        child.nodeType == nsIDOMNode.ATTRIBUTE_NODE)
+      return false;
+    // doctypes can only be the children of documents
+    if (child.nodeType == nsIDOMNode.DOCUMENT_TYPE_NODE &&
+        parent.nodeType != nsIDOMNode.DOCUMENT_NODE)
+      return false;
+    // only elements and fragments can have text, cdata, and entities as
+    // children
+    if (parent.nodeType != nsIDOMNode.ELEMENT_NODE &&
+        parent.nodeType != nsIDOMNode.DOCUMENT_FRAGMENT_NODE && 
+       (child.nodeType == nsIDOMNode.TEXT_NODE ||
+        child.nodeType == nsIDOMNode.CDATA_NODE ||
+        child.nodeType == nsIDOMNode.ENTITY_NODE))
+      return false;
+    // documents can only have one document element or doctype
+    if (parent.nodeType == nsIDOMNode.DOCUMENT_NODE &&
+       (child.nodeType == nsIDOMNode.ELEMENT_NODE ||
+        child.nodeType == nsIDOMNode.DOCUMENT_TYPE_NODE) &&
+       (!replaced || child.nodeType != replaced.nodeType))
+      for (var i = 0; i < parent.childNodes.length; i++)
+        if (parent.childNodes[i].nodeType == child.nodeType)
+          return false;
+    return true;
   },
   
   getCommand: function(aCommand)
@@ -171,6 +234,16 @@ DOMViewer.prototype =
         return new cmdEditCopy();
       case "cmdEditPaste":
         return new cmdEditPaste();
+      case "cmdEditPasteBefore":
+        return new cmdEditPasteBefore();
+      case "cmdEditPasteReplace":
+        return new cmdEditPasteReplace();
+      case "cmdEditPasteFirstChild":
+        return new cmdEditPasteFirstChild();
+      case "cmdEditPasteLastChild":
+        return new cmdEditPasteLastChild();
+      case "cmdEditPasteAsParent":
+        return new cmdEditPasteAsParent();
       case "cmdEditDelete":
         return new cmdEditDelete();
     }
@@ -265,7 +338,7 @@ DOMViewer.prototype =
   
   cmdBlinkIsValid: function()
   {
-    return this.selectedNode ? (this.selectedNode.nodeType == Node.ELEMENT_NODE) : false;
+    return this.selectedNode ? (this.selectedNode.nodeType == nsIDOMNode.ELEMENT_NODE) : false;
   },
     
   onItemSelected: function()
@@ -278,6 +351,7 @@ DOMViewer.prototype =
       if (this.mFlashSelected)
         this.flashElement(this.mSelection);
     }
+    viewer.pane.panelset.updateAllCommands();
   },
   
   setInitialSelection: function(aObject)
@@ -312,11 +386,21 @@ DOMViewer.prototype =
       }
     }
   },
+
+  onPastePopupShowing: function onPastePopupShowing(menupopup) {
+    for (var i = 0; i < menupopup.childNodes.length; i++) {
+      var commandId = menupopup.childNodes[i].getAttribute("command");
+      if (viewer.isCommandEnabled(commandId))
+        document.getElementById(commandId).setAttribute("disabled", "false");
+      else
+        document.getElementById(commandId).setAttribute("disabled", "true");
+    }
+  },
   
   cmdInspectBrowserIsValid: function()
   {
     var node = viewer.selectedNode;
-    if (!node || node.nodeType != Node.ELEMENT_NODE) return false;
+    if (!node || node.nodeType != nsIDOMNode.ELEMENT_NODE) return false;
     
     var n = node.localName.toLowerCase();
     return n == "tabbrowser" || n == "browser" || n == "iframe" || n == "frame" || n == "editor";
@@ -385,7 +469,7 @@ DOMViewer.prototype =
       indent += "  ";
     var line = indent;        
       
-    if (aNode.nodeType == Node.ELEMENT_NODE) {
+    if (aNode.nodeType == nsIDOMNode.ELEMENT_NODE) {
       line += "<" + aNode.localName;
 
       var attrIndent = "";
@@ -412,11 +496,11 @@ DOMViewer.prototype =
           s += this._toXML(aNode.childNodes[i], aLevel+1);
         s += indent + "</" + aNode.localName + ">\n";
       }
-    } else if (aNode.nodeType == Node.TEXT_NODE) {
+    } else if (aNode.nodeType == nsIDOMNode.TEXT_NODE) {
       s += InsUtil.unicodeToEntity(aNode.data);
-    } else if (aNode.nodeType == Node.COMMENT_NODE) {
+    } else if (aNode.nodeType == nsIDOMNode.COMMENT_NODE) {
       s += line + "<!--" + InsUtil.unicodeToEntity(aNode.data) + "-->\n";
-    } else if (aNode.nodeType == Node.DOCUMENT_NODE) {
+    } else if (aNode.nodeType == nsIDOMNode.DOCUMENT_NODE) {
       s += this._toXML(aNode.documentElement);
     }
     
@@ -467,7 +551,7 @@ DOMViewer.prototype =
   
   doSelectByClick: function(aTarget)
   {
-    if (aTarget.nodeType == Node.TEXT_NODE)
+    if (aTarget.nodeType == nsIDOMNode.TEXT_NODE)
       aTarget = aTarget.parentNode;
       
     this.stopSelectByClick();
@@ -575,7 +659,7 @@ DOMViewer.prototype =
     var re = new RegExp(this.mFindParams[0], "i");
 
     return aWalker.currentNode
-           && aWalker.currentNode.nodeType == Node.ELEMENT_NODE
+           && aWalker.currentNode.nodeType == nsIDOMNode.ELEMENT_NODE
            && re.test(aWalker.currentNode.localName);
   },
 
@@ -584,7 +668,7 @@ DOMViewer.prototype =
     var re = new RegExp(this.mFindParams[1], "i");
 
     return aWalker.currentNode
-           && aWalker.currentNode.nodeType == Node.ELEMENT_NODE
+           && aWalker.currentNode.nodeType == nsIDOMNode.ELEMENT_NODE
            && (this.mFindParams[1] == ""
               ? aWalker.currentNode.hasAttribute(this.mFindParams[0])
               : re.test(aWalker.currentNode.getAttribute(this.mFindParams[0])));
@@ -717,7 +801,7 @@ DOMViewer.prototype =
   {
     // make sure we only try to flash element nodes, and don't 
     // flash the documentElement (it's too darn big!)
-    if (aElement.nodeType == Node.ELEMENT_NODE &&
+    if (aElement.nodeType == nsIDOMNode.ELEMENT_NODE &&
         aElement != aElement.ownerDocument.documentElement) {
       var flasher = this.flasher;
       
@@ -825,11 +909,6 @@ DOMViewer.prototype =
     } catch (ex) {
       return -1;
     }
-  },
-  
-  canPaste: function(aFlavour)
-  {
-    return aFlavour == "Inspector-DOM-Node";
   }
   
 };
@@ -870,12 +949,8 @@ cmdEditDelete.prototype =
   
   undoTransaction: function()
   {
-    if (this.node) {
-      if (this.nextSibling)
-        this.parentNode.insertBefore(this.node, this.nextSibling);
-      else
-        this.parentNode.appendChild(this.node);        
-    }
+    if (this.node)
+      this.parentNode.insertBefore(this.node, this.nextSibling);
     viewer.selectElementInTree(this.node);
   }
 };
@@ -929,7 +1004,7 @@ cmdEditCopy.prototype =
   {
     var copiedNode = null;
     if (!this.copiedNode) {
-      copiedNode = viewer.selectedNode;
+      copiedNode = viewer.selectedNode.cloneNode(true);
       if (copiedNode) {
         this.copiedNode = copiedNode;
       }
@@ -940,6 +1015,9 @@ cmdEditCopy.prototype =
   }
 };
 
+/**
+ * Pastes the node on the clipboard as the next sibling of the selected node.
+ */
 function cmdEditPaste() {}
 cmdEditPaste.prototype =
 {
@@ -955,28 +1033,222 @@ cmdEditPaste.prototype =
   isTransient: false,
   redoTransaction: txnRedoTransaction,
   
-  doTransaction: function()
+  doTransaction: function doTransaction()
   {
     var node = this.pastedNode ? this.pastedNode : viewer.pane.panelset.getClipboardData();
     var selected = this.pastedBefore ? this.pastedBefore : viewer.selectedNode;
     if (selected) {
       this.pastedNode = node.cloneNode(true);
       this.pastedBefore = selected;
-      if (selected.nextSibling)
-        selected.parentNode.insertBefore(this.pastedNode, selected.nextSibling);
-      else
-        selected.parentNode.appendChild(this.pastedNode);
+      selected.parentNode.insertBefore(this.pastedNode, selected.nextSibling);
       return false;
     }
     return true;
   },
   
-  undoTransaction: function()
+  undoTransaction: function undoTransaction()
   {
     if (this.pastedNode)
       this.pastedNode.parentNode.removeChild(this.pastedNode);
   }
 };
+
+/**
+ * Pastes the node on the clipboard as the previous sibling of the selected 
+ * node.
+ */
+function cmdEditPasteBefore() {}
+cmdEditPasteBefore.prototype =
+{
+  pastedNode: null,
+  pastedBefore: null,
+  
+  // remove this line for bug 179621, Phase Three
+  txnType: "standard",
+  
+  // required for nsITransaction
+  QueryInterface: txnQueryInterface,
+  merge: txnMerge,
+  isTransient: false,
+  redoTransaction: txnRedoTransaction,
+  
+  doTransaction: function doTransaction()
+  {
+    var node = this.pastedNode ? this.pastedNode : viewer.pane.panelset.getClipboardData();
+    var selected = this.pastedBefore ? this.pastedBefore : viewer.selectedNode;
+    if (selected) {
+      this.pastedNode = node.cloneNode(true);
+      this.pastedBefore = selected;
+      selected.parentNode.insertBefore(this.pastedNode, selected);
+      return false;
+    }
+    return true;
+  },
+  
+  undoTransaction: function undoTransaction()
+  {
+    if (this.pastedNode)
+      this.pastedNode.parentNode.removeChild(this.pastedNode);
+  }
+};
+
+/**
+ * Pastes the node on the clipboard in the place of the selected node, 
+ * overwriting it.
+ */
+function cmdEditPasteReplace() {}
+cmdEditPasteReplace.prototype =
+{
+  pastedNode: null,
+  originalNode: null,
+  
+  // remove this line for bug 179621, Phase Three
+  txnType: "standard",
+  
+  // required for nsITransaction
+  QueryInterface: txnQueryInterface,
+  merge: txnMerge,
+  isTransient: false,
+  redoTransaction: txnRedoTransaction,
+  
+  doTransaction: function doTransaction()
+  {
+    var node = this.pastedNode ? this.pastedNode : viewer.pane.panelset.getClipboardData();
+    var selected = this.originalNode ? this.originalNode : viewer.selectedNode;
+    if (selected) {
+      this.pastedNode = node.cloneNode(true);
+      this.originalNode = selected;
+      selected.parentNode.replaceChild(this.pastedNode, selected);
+      return false;
+    }
+    return true;
+  },
+  
+  undoTransaction: function undoTransaction()
+  {
+    if (this.pastedNode)
+      this.pastedNode.parentNode.replaceChild(this.originalNode, this.pastedNode);
+  }
+};
+
+/**
+ * Pastes the node on the clipboard as the first child of the selected node.
+ */
+function cmdEditPasteFirstChild() {}
+cmdEditPasteFirstChild.prototype =
+{
+  pastedNode: null,
+  pastedBefore: null,
+  
+  // remove this line for bug 179621, Phase Three
+  txnType: "standard",
+  
+  // required for nsITransaction
+  QueryInterface: txnQueryInterface,
+  merge: txnMerge,
+  isTransient: false,
+  redoTransaction: txnRedoTransaction,
+  
+  doTransaction: function doTransaction()
+  {
+    var node = this.pastedNode ? this.pastedNode : viewer.pane.panelset.getClipboardData();
+    var selected = this.pastedBefore ? this.pastedBefore : viewer.selectedNode;
+    if (selected) {
+      this.pastedNode = node.cloneNode(true);
+      this.pastedBefore = selected.firstChild;
+      selected.insertBefore(this.pastedNode, this.pastedBefore);
+      return false;
+    }
+    return true;
+  },
+  
+  undoTransaction: function undoTransaction()
+  {
+    if (this.pastedNode)
+      this.pastedNode.parentNode.removeChild(this.pastedNode);
+  }
+};
+/**
+ * Pastes the node on the clipboard as the last child of the selected node.
+ */
+function cmdEditPasteLastChild() {}
+cmdEditPasteLastChild.prototype =
+{
+  pastedNode: null,
+  selectedNode: null,
+  
+  // remove this line for bug 179621, Phase Three
+  txnType: "standard",
+  
+  // required for nsITransaction
+  QueryInterface: txnQueryInterface,
+  merge: txnMerge,
+  isTransient: false,
+  redoTransaction: txnRedoTransaction,
+  
+  doTransaction: function doTransaction()
+  {
+    var node = this.pastedNode ? this.pastedNode : viewer.pane.panelset.getClipboardData();
+    var selected = this.selectedNode ? this.selectedNode : viewer.selectedNode;
+    if (selected) {
+      this.pastedNode = node.cloneNode(true);
+      this.selectedNode = selected;
+      selected.appendChild(this.pastedNode);
+      return false;
+    }
+    return true;
+  },
+  
+  undoTransaction: function undoTransaction()
+  {
+    if (this.selectedNode)
+      this.selectedNode.removeChild(this.pastedNode);
+  }
+};
+
+/**
+ * Pastes the node on the clipboard in the place of the selected node, making
+ * the selected node its child.
+ */
+function cmdEditPasteAsParent() {}
+cmdEditPasteAsParent.prototype =
+{
+  pastedNode: null,
+  originalNode: null,
+  originalParentNode: null,
+  
+  // remove this line for bug 179621, Phase Three
+  txnType: "standard",
+  
+  // required for nsITransaction
+  QueryInterface: txnQueryInterface,
+  merge: txnMerge,
+  isTransient: false,
+  redoTransaction: txnRedoTransaction,
+  
+  doTransaction: function doTransaction()
+  {
+    var node = this.pastedNode ? this.pastedNode : viewer.pane.panelset.getClipboardData();
+    var selected = this.originalNode ? this.originalNode : viewer.selectedNode;
+    var parent = this.originalParentNode ? this.originalParentNode : selected.parentNode;
+    if (selected) {
+      this.pastedNode = node.cloneNode(true);
+      this.originalNode = selected;
+      this.originalParentNode = parent;
+      parent.replaceChild(this.pastedNode, selected);
+      this.pastedNode.appendChild(selected);
+      return false;
+    }
+    return true;
+  },
+  
+  undoTransaction: function undoTransaction()
+  {
+    if (this.pastedNode)
+      this.originalParentNode.replaceChild(this.originalNode, this.pastedNode);
+  }
+};
+
 
 ////////////////////////////////////////////////////////////////////////////
 //// Listener Objects

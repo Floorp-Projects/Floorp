@@ -45,19 +45,7 @@ VPATH=@srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 ALL_LOCALES = \
-	ca \
-	cs-CZ \
-	da \
-	de \
-	el \
 	en-US \
-	ga-IE \
-	hu \
-	nb-NO \
-	pl \
-	ru \
-	sv-SE \
-	zh-CN \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
