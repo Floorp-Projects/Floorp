@@ -400,6 +400,7 @@ nsContentList::~nsContentList()
 // QueryInterface implementation for nsContentList
 NS_INTERFACE_MAP_BEGIN(nsContentList)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLCollection)
+  NS_INTERFACE_MAP_ENTRY(nsIDocumentObserver)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(ContentList)
 NS_INTERFACE_MAP_END_INHERITING(nsBaseContentList)
 
