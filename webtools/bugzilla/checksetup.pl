@@ -136,13 +136,10 @@ BEGIN {
 }
 
 use lib ".";
-
-use vars qw( $db_name %answer );
 use Bugzilla::Constants;
 
-my $silent;
+my (%answer, $silent, %switch);
 
-my %switch;
 $switch{'no_templates'} = grep(/^--no-templates$/, @ARGV) 
     || grep(/^-t$/, @ARGV);
 
@@ -815,8 +812,9 @@ if ($newstuff ne "") {
 # This is a hack to read in the values defined in localconfig without getting
 # them defined at compile time if they're missing from localconfig.
 # Ideas swiped from pp. 281-282, O'Reilly's "Programming Perl 2nd Edition"
-# Note that we won't need to do this in globals.pl because globals.pl couldn't
-# care less whether they were defined ahead of time or not. 
+# Note that we won't need to do this in Bugzilla::Config because 
+# Bugzilla::Config couldn't care less whether they were defined ahead 
+# of time or not. 
 my $my_db_check = ${*{$main::{'db_check'}}{SCALAR}};
 my $my_db_driver = ${*{$main::{'db_driver'}}{SCALAR}};
 my $my_db_name = ${*{$main::{'db_name'}}{SCALAR}};
@@ -1653,19 +1651,14 @@ require Bugzilla::User::Setting;
 import Bugzilla::User::Setting qw(add_setting);
 
 require Bugzilla::Util;
-import Bugzilla::Util qw(bz_crypt trim html_quote is_7bit_clean);
+import Bugzilla::Util qw(bz_crypt trim html_quote is_7bit_clean
+                         clean_text url_quote);
 
 require Bugzilla::User;
 import Bugzilla::User qw(insert_new_user);
 
 require Bugzilla::Bug;
 import Bugzilla::Bug qw(is_open_state);
-
-# Use the Bugzilla utility library for various functions.  We do this
-# here rather than at the top of the file so globals.pl doesn't define
-# localconfig variables for us before we get a chance to check for
-# their existence and create them if they don't exist.
-require "globals.pl";
 
 ###########################################################################
 # Check for LDAP
@@ -4084,8 +4077,6 @@ if (!exists $dbh->bz_column_info('whine_queries', 'title')->{DEFAULT}) {
 
     # Old Bugzillas have "other" as an OS choice, new ones have "Other"
     # (capital O).
-    # XXX - This should be moved inside of a later schema change, once
-    #       we have one to move it to the inside of.
     print "Setting any 'other' op_sys to 'Other'...\n";
     $dbh->do('UPDATE op_sys SET value = ? WHERE value = ?',
              undef, "Other", "other");
