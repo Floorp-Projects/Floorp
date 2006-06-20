@@ -6078,6 +6078,20 @@ RDFItemUpdater.prototype = {
     this._versionUpdateOnly = aVersionUpdateOnly;
     this._item = aItem;
   
+    var itemStatus;
+    if (emDS.getItemProperty(aItem.id, "userDisabled") == "true" ||
+        emDS.getItemProperty(aItem.id, "userDisabled") == OP_NEEDS_ENABLE)
+      itemStatus = "userDisabled";
+    else
+      itemStatus = "userEnabled";
+    
+    if (emDS.getItemProperty(aItem.id, "compatible") == "false")
+      itemStatus += ",incompatible";
+    if (emDS.getItemProperty(aItem.id, "blocklisted") == "true")
+      itemStatus += ",blocklisted";
+    if (emDS.getItemProperty(aItem.id, "satisfiesDependencies") == "false")
+      itemStatus += ",needsDependencies";
+
     // Look for a custom update URI: 1) supplied by a pref, 2) supplied by the
     // install manifest, 3) the default configuration
     try {
@@ -6094,6 +6108,7 @@ RDFItemUpdater.prototype = {
     dsURI = dsURI.replace(/%ITEM_ID%/g, aItem.id);
     dsURI = dsURI.replace(/%ITEM_VERSION%/g, aItem.version);
     dsURI = dsURI.replace(/%ITEM_MAXAPPVERSION%/g, aItem.maxAppVersion);
+    dsURI = dsURI.replace(/%ITEM_STATUS%/g, itemStatus);
     dsURI = dsURI.replace(/%APP_ID%/g, this._updater._appID);
     dsURI = dsURI.replace(/%APP_VERSION%/g, this._updater._appVersion);
     dsURI = dsURI.replace(/%REQ_VERSION%/g, 1);
