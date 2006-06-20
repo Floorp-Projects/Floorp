@@ -226,7 +226,7 @@
   </tr>
 </table>
 
-[% IF cgi.param('product').size == 1 %]
+[% IF cgi.param('product').size == 1 && cgi.param('product') != "" %]
   <p>
     <a href="enter_bug.cgi?product=[% cgi.param('product') FILTER url_quote %]">Fill
       a new [% terms.bug %] in the "[% cgi.param('product') FILTER html %]" product</a>
