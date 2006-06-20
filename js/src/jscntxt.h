@@ -649,9 +649,6 @@ struct JSContext {
     /* Top of the GC mark stack. */
     void                *gcCurrentMarkNode;
 #endif
-
-    /* List of native iterator states, needed for marking id arrays. */
-    JSNativeIteratorState *nativeIteratorStates;
 };
 
 #define JS_THREAD_ID(cx)            ((cx)->thread ? (cx)->thread->id : 0)
