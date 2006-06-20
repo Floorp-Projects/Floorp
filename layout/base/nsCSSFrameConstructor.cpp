@@ -1270,20 +1270,12 @@ nsFrameConstructorState::~nsFrameConstructorState()
   ProcessFrameInsertions(mFloatedItems, nsLayoutAtoms::floatList);
 }
 
-// Use the first-in-flow of a positioned inline frame in galley mode as the 
-// containing block. We don't need to do this for a block, since blocks aren't 
-// continued in galley mode.
 static nsIFrame*
 AdjustAbsoluteContainingBlock(nsPresContext* aPresContext,
                               nsIFrame*       aContainingBlockIn)
 {
-  nsIFrame* containingBlock = aContainingBlockIn;
-  if (!aPresContext->IsPaginated()) {
-    if (nsLayoutAtoms::positionedInlineFrame == containingBlock->GetType()) {
-      containingBlock = ((nsPositionedInlineFrame*)containingBlock)->GetFirstInFlow();
-    }
-  }
-  return containingBlock;
+  // Always use the container's first in flow.
+  return aContainingBlockIn->GetFirstInFlow();
 }
 
 void
@@ -8307,8 +8299,8 @@ nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIFrame* aFrame)
     }
   }
 
-  // If we found an absolutely positioned containing block, then use the first-in-flow if 
-  // it is a positioned inline. If we didn't find it, then use the initial containing block. 
+  // If we found an absolutely positioned containing block, then use the first-in-flow.
+  // If we didn't find it, then use the initial containing block. 
   return (containingBlock) ?
     AdjustAbsoluteContainingBlock(mPresShell->GetPresContext(),
                                   containingBlock) :
