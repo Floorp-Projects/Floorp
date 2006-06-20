@@ -191,16 +191,16 @@ function (engineURL, expectedSuffix, iconURL)
 {
   try
   {
-    // make sure using HTTP or HTTPS and refering to the expected kind of file
+    // make sure using HTTP, HTTPS, or FTP and refering to the expected kind of file
     // for the engine.
-    const engineRegexp = new RegExp("^https?:\/\/.+\." + expectedSuffix + "$", "i");
+    const engineRegexp = new RegExp("^(https?|ftp):\/\/.+\." + expectedSuffix + "$", "i");
     if (! engineRegexp.test(engineURL))
       throw "Unsupported search engine URL";
   
-    // make sure using HTTP or HTTPS and refering to a
+    // make sure using HTTP, HTTPS, or FTP and refering to a
     // .gif/.jpg/.jpeg/.png/.ico file for the icon.
     if (iconURL &&
-        ! /^https?:\/\/.+\.(gif|jpg|jpeg|png|ico)$/i.test(iconURL))
+        ! /^(https?|ftp):\/\/.+\.(gif|jpg|jpeg|png|ico)$/i.test(iconURL))
       throw "Unsupported search icon URL.";
   }
   catch(ex)
