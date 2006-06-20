@@ -5239,7 +5239,7 @@ ExtensionManager.prototype = {
     for (var i = 0; i < dependentItems.length; ++i) {
       var dependentID = dependentItems[i].id;
       ds.updateProperty(dependentID, "satisfiesDependencies");
-      if (this._isUsableItem(dependantID))
+      if (this._isUsableItem(dependentID))
         this._appEnableItem(dependentID);
       else
         this._appDisableItem(dependentID);
