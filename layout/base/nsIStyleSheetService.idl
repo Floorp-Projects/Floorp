@@ -47,7 +47,7 @@ interface nsIURI;
  * built-in list of user or agent style sheets.
  */
 
-[scriptable, uuid(41d979dc-ea03-4235-86ff-1e3c090c5630)]
+[scriptable, uuid(1f42a6a2-ab0a-45d4-8a96-396f58ea6c6d)]
 interface nsIStyleSheetService : nsISupports
 {
   const unsigned long AGENT_SHEET = 0;
