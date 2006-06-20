@@ -63,6 +63,23 @@ margin-top: -12px;
   -moz-image-region: rect(21px, 42px, 42px, 21px);
 }
 
+/* these skip/continue icons don't make sense. it's just a placeholder. */
+#skipDialogButton {
+  -moz-image-region: rect(0px, 42px, 21px, 21px);
+}
+
+#skipDialogButton[disabled="true"] {
+  -moz-image-region: rect(21px, 42px, 42px, 21px);
+}
+
+#continueDialogButton {
+  -moz-image-region: rect(0px, 42px, 21px, 21px);
+}
+
+#continueDialogButton[disabled="true"] {
+  -moz-image-region: rect(21px, 42px, 42px, 21px);
+}
+
 /* List Items */
 richlistitem {
   padding-top: 6px;

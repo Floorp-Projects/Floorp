@@ -77,6 +77,7 @@ const PREF_BLOCKLIST_URL              = "extensions.blocklist.url";
 const PREF_BLOCKLIST_DETAILS_URL      = "extensions.blocklist.detailsURL";
 const PREF_BLOCKLIST_ENABLED          = "extensions.blocklist.enabled";
 const PREF_BLOCKLIST_INTERVAL         = "extensions.blocklist.interval";
+const PREF_UPDATE_NOTIFYUSER          = "extensions.update.notifyUser";
 
 const DIR_EXTENSIONS                  = "extensions";
 const DIR_CHROME                      = "chrome";
@@ -2709,6 +2710,7 @@ ExtensionManager.prototype = {
       break;
     case "profile-after-change":
       this._profileSelected();
+      this._showUpdatesWindow();
       break;
     case "quit-application-requested":
       this._confirmCancelDownloadsOnQuit(subject);
@@ -2777,12 +2779,33 @@ ExtensionManager.prototype = {
     catch (e) {
     }
   },
-  
+
+  /**
+   * Notify user that there are new addons updates
+   */
+  _showUpdatesWindow: function() {
+    if (!getPref("getBoolPref", PREF_UPDATE_NOTIFYUSER, false))
+      return;
+
+    const EMURL = "chrome://mozapps/content/extensions/extensions.xul";
+    const EMFEATURES = "chrome,centerscreen,extra-chrome,dialog,resizable,modal";
+
+    var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                       .getService(Components.interfaces.nsIWindowWatcher);
+    var param = Components.classes["@mozilla.org/supports-array;1"]
+                          .createInstance(Components.interfaces.nsISupportsArray);
+    var arg = Components.classes["@mozilla.org/supports-string;1"]
+                        .createInstance(Components.interfaces.nsISupportsString);
+    arg.data = "updates-only";
+    param.AppendElement(arg);
+    ww.openWindow(null, EMURL, null, EMFEATURES, param);
+  },
+
   /**
    * Clean up on application shutdown to avoid leaks.
    */
   _shutdown: function() {
-    gOS.removeObserver(this, "xpcom-shutdown");    
+    gOS.removeObserver(this, "xpcom-shutdown");
 
     // Release strongly held services.
     gOS = null;
@@ -2896,8 +2919,14 @@ ExtensionManager.prototype = {
    *          The timer that fired
    */
   notify: function(timer) {
-    if (getPref("getBoolPref", PREF_EM_UPDATE_ENABLED, true))
-      this.update([], 0, false, null);
+    if (!getPref("getBoolPref", PREF_EM_UPDATE_ENABLED, true))
+      return;
+
+    var items = this.getItemList(nsIUpdateItem.TYPE_ADDON, { });
+
+    var updater = new ExtensionItemUpdater(gApp.ID, gApp.version, this);
+    updater._background = true;
+    updater.checkForUpdates(items, items.length, false, null);
   },
   
   /**
@@ -3619,7 +3648,7 @@ ExtensionManager.prototype = {
         var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
                            .getService(Components.interfaces.nsIChromeRegistry);
         cr.checkForNewChrome();
-      }      
+      }
 
       // If no additional restart is required, it implies that there are
       // no new components that need registering so we can inform the app
@@ -3703,6 +3732,9 @@ ExtensionManager.prototype = {
       }
       else if (!ds.getItemProperty(id, "appDisabled"))
         ds.setItemProperty(id, EM_R("appDisabled"), EM_L("true"));
+
+      ds.setItemProperty(id, EM_R("availableUpdateURL"), null);
+      ds.setItemProperty(id, EM_R("availableUpdateVersion"), null);
     }
     // Update the manifests to reflect the items that were disabled / enabled.
     this._updateManifests(true);
@@ -3720,6 +3752,8 @@ ExtensionManager.prototype = {
     // Update the last app version so we don't do this again with this version.
     gPref.setCharPref(PREF_EM_LAST_APP_VERSION, currAppVersion);
 
+    // Prevent extension update dialog from showing
+    gPref.setBoolPref(PREF_UPDATE_NOTIFYUSER, false);
     return true;
   },
 
@@ -5893,6 +5927,7 @@ ExtensionItemUpdater.prototype = {
   _versionUpdateOnly  : 0,
   _items              : [],
   _listener           : null,
+  _background         : false,
   
   /////////////////////////////////////////////////////////////////////////////
   // ExtensionItemUpdater
@@ -6000,6 +6035,12 @@ ExtensionItemUpdater.prototype = {
   },
   
   checkForDone: function(item, status) {
+    if (this._background &&
+        status == nsIAddonUpdateCheckListener.STATUS_UPDATE) {
+      var lastupdate = this._emDS.getItemProperty(item.id, "availableUpdateVersion");
+      if (lastupdate != item.version)
+        gPref.setBoolPref(PREF_UPDATE_NOTIFYUSER, true);
+    }
     if (this._listener) {
       try {
         this._listener.onAddonUpdateEnded(item, status);
@@ -6078,20 +6119,6 @@ RDFItemUpdater.prototype = {
     this._versionUpdateOnly = aVersionUpdateOnly;
     this._item = aItem;
   
-    var itemStatus;
-    if (emDS.getItemProperty(aItem.id, "userDisabled") == "true" ||
-        emDS.getItemProperty(aItem.id, "userDisabled") == OP_NEEDS_ENABLE)
-      itemStatus = "userDisabled";
-    else
-      itemStatus = "userEnabled";
-    
-    if (emDS.getItemProperty(aItem.id, "compatible") == "false")
-      itemStatus += ",incompatible";
-    if (emDS.getItemProperty(aItem.id, "blocklisted") == "true")
-      itemStatus += ",blocklisted";
-    if (emDS.getItemProperty(aItem.id, "satisfiesDependencies") == "false")
-      itemStatus += ",needsDependencies";
-
     // Look for a custom update URI: 1) supplied by a pref, 2) supplied by the
     // install manifest, 3) the default configuration
     try {
@@ -6108,7 +6135,6 @@ RDFItemUpdater.prototype = {
     dsURI = dsURI.replace(/%ITEM_ID%/g, aItem.id);
     dsURI = dsURI.replace(/%ITEM_VERSION%/g, aItem.version);
     dsURI = dsURI.replace(/%ITEM_MAXAPPVERSION%/g, aItem.maxAppVersion);
-    dsURI = dsURI.replace(/%ITEM_STATUS%/g, itemStatus);
     dsURI = dsURI.replace(/%APP_ID%/g, this._updater._appID);
     dsURI = dsURI.replace(/%APP_VERSION%/g, this._updater._appVersion);
     dsURI = dsURI.replace(/%REQ_VERSION%/g, 1);

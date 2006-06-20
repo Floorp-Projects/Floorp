@@ -210,6 +210,14 @@
               accesskey="&cmd.restartApp.accesskey;"
               tooltiptext="&cmd.restartApp.tooltip;"
               command="cmd_restartApp"/>
+      <button id="skipDialogButton" label="&cmd.skip.label;"
+              accesskey="&cmd.skip.accesskey;"
+              tooltiptext="&cmd.skip.tooltip;"
+              command="cmd_close"/>
+      <button id="continueDialogButton" label="&cmd.continue.label;"
+              accesskey="&cmd.continue.accesskey;"
+              tooltiptext="&cmd.continue.tooltip;"
+              command="cmd_restartApp"/>
       <label id="getMore" class="text-link"
              valuethemes="&getMoreThemes.label;"
              valueextensions="&getMoreExtensions.label;"

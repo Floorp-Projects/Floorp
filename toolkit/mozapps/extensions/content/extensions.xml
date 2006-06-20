@@ -464,6 +464,12 @@
     </content>
   </binding>
 
+  <binding id="addon-install-updated">
+    <content>
+      <xul:label value="&updateSuccess.label;" flex="1" crop="end"/>
+    </content>
+  </binding>
+
   <binding id="install-downloading" extends="chrome://mozapps/content/extensions/extensions.xml#addon-base">
     <content>
       <xul:hbox flex="1">

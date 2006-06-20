@@ -31,6 +31,12 @@
 <!ENTITY cmd.restartApp.label             "Restart &brandShortName;">
 <!ENTITY cmd.restartApp.accesskey         "R">
 <!ENTITY cmd.restartApp.tooltip           "Restarts &brandShortName; to finish the installation">
+<!ENTITY cmd.skip.label                   "Skip">
+<!ENTITY cmd.skip.accesskey               "S">
+<!ENTITY cmd.skip.tooltip                 "Skip these updates">
+<!ENTITY cmd.continue.label               "Continue">
+<!ENTITY cmd.continue.accesskey           "C">
+<!ENTITY cmd.continue.tooltip             "Continue loading &brandShortName;">
 
 <!ENTITY cmd.enableAll.label              "Enable All">
 <!ENTITY cmd.enableAll.accesskey          "a">
@@ -100,6 +106,7 @@
 <!ENTITY moreInfo.label                   "More Information">
 <!ENTITY closeMessage.tooltip             "Close this message">
 
+<!ENTITY updateSuccess.label              "Update completed successfully.">
 <!ENTITY installSuccess.label             "Install completed successfully.">
 <!ENTITY installSuccessRestart.label      "Restart to complete the installation.">
 <!ENTITY installWaiting.label             "Waiting...">

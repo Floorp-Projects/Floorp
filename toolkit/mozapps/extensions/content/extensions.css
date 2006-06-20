@@ -46,6 +46,10 @@ richlistitem[state="success"][opType="none"] hbox.addon-install-status {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-install-success");
 }
 
+richlistbox[norestart] richlistitem[state="success"] hbox.addon-install-status {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-install-updated");
+}
+
 richlistitem[state="failure"] hbox.addon-install-status {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-install-fail");
 }

@@ -54,6 +54,7 @@ var gDownloadManager  = null;
 var gObserverIndex    = -1;
 var gInSafeMode       = false;
 var gCheckCompat      = true;
+var gUpdatesOnly      = false;
 var gAppID            = "";
 var gPref             = null;
 
@@ -64,6 +65,7 @@ const PREF_EXTENSIONS_DSS_ENABLED           = "extensions.dss.enabled";
 const PREF_EXTENSIONS_DSS_SWITCHPENDING     = "extensions.dss.switchPending";
 const PREF_EM_LAST_SELECTED_SKIN            = "extensions.lastSelectedSkin";
 const PREF_GENERAL_SKINS_SELECTEDSKIN       = "general.skins.selectedSkin";
+const PREF_UPDATE_NOTIFYUSER                = "extensions.update.notifyUser";
 
 const RDFURI_ITEM_ROOT  = "urn:mozilla:item:root";
 const PREFIX_ITEM_URI   = "urn:mozilla:item:";
@@ -229,6 +231,8 @@ function showView(aView) {
   var showCheckUpdatesAll = true;
   var showInstallUpdatesAll = false;
   var showRestartApp = false;
+  var showSkip = false;
+  var showContinue = false;
   switch (aView) {
     case "extensions":
       var types = [ [ ["type", nsIUpdateItem.TYPE_EXTENSION, "Integer" ] ] ];
@@ -247,6 +251,8 @@ function showView(aView) {
       showInstallFile = false;
       showCheckUpdatesAll = false;
       showInstallUpdatesAll = true;
+      if (gUpdatesOnly)
+        showSkip = true;
       bindingList = [ ["aboutURL", "?aboutURL"],
                       ["availableUpdateURL", "?availableUpdateURL"],
                       ["availableUpdateVersion", "?availableUpdateVersion"],
@@ -270,7 +276,10 @@ function showView(aView) {
       showInstallFile = false;
       showCheckUpdatesAll = false;
       showInstallUpdatesAll = false;
-      showRestartApp = true;
+      if (gUpdatesOnly)
+        showContinue = true;
+      else
+        showRestartApp = true;
       bindingList = [ ["aboutURL", "?aboutURL"],
                       ["addonID", "?addonID"],
                       ["availableUpdateURL", "?availableUpdateURL"],
@@ -342,8 +351,23 @@ function showView(aView) {
   document.getElementById("checkUpdatesAllButton").hidden = !showCheckUpdatesAll;
   document.getElementById("installUpdatesAllButton").hidden = !showInstallUpdatesAll;
   document.getElementById("restartAppButton").hidden = !showRestartApp;
+  document.getElementById("skipDialogButton").hidden = !showSkip;
+  document.getElementById("continueDialogButton").hidden = !showContinue;
   document.getElementById("themePreviewArea").hidden = !isThemes;
   document.getElementById("themeSplitter").hidden = !isThemes;
+
+  if (showSkip) {
+    var button = document.getElementById("installUpdatesAllButton");
+    button.setAttribute("default", "true");
+    window.setTimeout(function () { button.focus(); }, 0);
+  } else
+    document.getElementById("installUpdatesAllButton").removeAttribute("default");
+
+  if (showContinue)
+    document.getElementById("continueDialogButton").setAttribute("default", "true");
+  else
+    document.getElementById("continueDialogButton").removeAttribute("default");
+
   if (isThemes)
     onAddonSelect();
   updateGlobalCommands();
@@ -502,20 +526,6 @@ function Startup()
 
   gObserverIndex = gExtensionManager.addUpdateListener(gDownloadManager);
   
-  if ("arguments" in window) {
-    try {
-      var params = window.arguments[0].QueryInterface(Components.interfaces.nsIDialogParamBlock);
-      gDownloadManager.addDownloads(params);
-    }
-    catch (e) {
-      if (window.arguments[0] == "updatecheck")
-        checkUpdatesAll();
-    }
-  }
-
-  if (gExtensionsView.selectedItem)
-    gExtensionsView.scrollBoxObject.scrollToElement(gExtensionsView.selectedItem);
-
   if (!gCheckCompat) {
     var msgText = getExtensionString("disabledCompatMsg");
     var buttonLabel = getExtensionString("enableButtonLabel");
@@ -532,6 +542,33 @@ function Startup()
                           getExtensionString("safeModeMsg"),
                           null, null, true, null);
   }
+
+  if ("arguments" in window) {
+    try {
+      var params = window.arguments[0].QueryInterface(Components.interfaces.nsIDialogParamBlock);
+      gDownloadManager.addDownloads(params);
+    }
+    catch (e) {
+      if (window.arguments[0] == "updatecheck")
+        checkUpdatesAll();
+      else if (window.arguments[0] == "updates-only") {
+        gUpdatesOnly = true;
+        document.getElementById("viewGroup").hidden = true;
+        document.getElementById("extensionsView").setAttribute("norestart", "");
+        showView('updates');
+        var addonsMsg = document.getElementById("addonsMsg");
+        addonsMsg.showMessage("chrome://mozapps/skin/extensions/question.png",
+                              getExtensionString("newUpdatesAvailableMsg"),
+                              null, null, true, null);
+        document.title = getExtensionString("newUpdateWindowTitle", [getBrandShortName()]);
+      }
+    }
+  }
+
+  if (gExtensionsView.selectedItem)
+    gExtensionsView.scrollBoxObject.scrollToElement(gExtensionsView.selectedItem);
+
+  gPref.setBoolPref(PREF_UPDATE_NOTIFYUSER, false);
 }
 
 function Shutdown() 
@@ -1298,6 +1335,10 @@ function updateGlobalCommands() {
   setElementDisabledByID("cmd_installUpdatesAll", disableInstallUpdate);
   setElementDisabledByID("cmd_restartApp", disableAppRestart);
   setElementDisabledByID("cmd_installFile", disableInstallFile);
+
+  var button = document.getElementById("continueDialogButton");
+  if (!button.hidden && !disableAppRestart)
+    button.focus();
 }
 
 function checkUpdatesAll() {
@@ -1320,6 +1361,8 @@ function checkUpdatesAll() {
   }
   if (gExtensionsView.selectedItem)
     gExtensionsView.selectedItem.focus();
+
+  gPref.setBoolPref(PREF_UPDATE_NOTIFYUSER, false);
 }
 
 function installUpdatesAll() {
@@ -1328,6 +1371,11 @@ function installUpdatesAll() {
 
   if (!isXPInstallEnabled())
     return;
+
+  if (gUpdatesOnly) {
+    var addonsMsg = document.getElementById("addonsMsg");
+    addonsMsg.hideMessage();
+  }
 
   var items = [];
   var children = gExtensionsView.children;
