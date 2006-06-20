@@ -4,6 +4,7 @@
   <!ENTITY % dtd1 SYSTEM "chrome://inspector/locale/inspector.dtd"> %dtd1;
   <!ENTITY % dtd2 SYSTEM "chrome://inspector/content/util.dtd"> %dtd2;
   <!ENTITY % dtd3 SYSTEM "chrome://inspector/locale/viewers/dom.dtd"> %dtd3;
+  <!ENTITY % dtd4 SYSTEM "chrome://inspector/locale/editing.dtd"> %dtd4;
 ]>
 
 <?xul-overlay href="chrome://inspector/content/editingOverlay.xul"?>
@@ -20,6 +21,7 @@
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/system/PrefUtils.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/events/ObserverManager.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/XPCNativeWrapper.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/viewers/dom/dom.js"/>
 
   <!--============================= COMMANDS ============================== -->
@@ -43,6 +45,13 @@
 
     <command id="cmdShowPseudoClasses"
       oncommand="viewer.cmdShowPseudoClasses()"/>
+
+    <command id="cmdEditPasteBefore" oncommand="viewer.pane.panelset.execCommand('cmdEditPasteBefore');"/>
+    <command id="cmdEditPasteReplace" oncommand="viewer.pane.panelset.execCommand('cmdEditPasteReplace');"/>
+    <command id="cmdEditPasteFirstChild" oncommand="viewer.pane.panelset.execCommand('cmdEditPasteFirstChild');"/>
+    <command id="cmdEditPasteLastChild" oncommand="viewer.pane.panelset.execCommand('cmdEditPasteLastChild');"/>
+    <command id="cmdEditPasteAsParent" oncommand="viewer.pane.panelset.execCommand('cmdEditPasteAsParent');"/>
+
   </commandset>
   
   <!--============================= POPUPS ============================== -->
@@ -54,7 +63,19 @@
       <menuseparator/>
       <menuitem id="mnEditCut"/>
       <menuitem id="mnEditCopy"/>
-      <menuitem id="mnEditPaste"/>
+      <menu id="mnEditPasteMenu" label="&mnEditPasteMenu.label;">
+        <menupopup onpopupshowing="viewer.onPastePopupShowing(this)">
+          <!-- keep older functionality of paste command for paste menu in DOM Nodes viewer -->
+          <menuitem id="mnEditPasteAfter" label="&mnEditPasteAfter.label;" command="cmdEditPaste"
+                    accesskey="&mnEditPaste.accesskey;" key="keyEditPaste"/>
+          <!-- other paste commands -->            
+          <menuitem id="mnEditPasteBefore" label="&mnEditPasteBefore.label;" command="cmdEditPasteBefore"/>
+          <menuitem id="mnEditPasteReplace" label="&mnEditPasteReplace.label;" command="cmdEditPasteReplace"/>
+          <menuitem id="mnEditPasteFirstChild" label="&mnEditPasteFirstChild.label;" command="cmdEditPasteFirstChild"/>
+          <menuitem id="mnEditPasteLastChild" label="&mnEditPasteLastChild.label;" command="cmdEditPasteLastChild"/>
+          <menuitem id="mnEditPasteAsParent" label="&mnEditPasteAsParent.label;" command="cmdEditPasteAsParent"/>
+        </menupopup>
+      </menu>
       <menuseparator/>
       <!--<menuitem id="mnEditInsert"/>-->
       <menuitem id="mnEditDelete"/>
