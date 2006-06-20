@@ -135,7 +135,11 @@ pref("accessibility.accesskeycausesactivation", true);
 // Type Ahead Find
 pref("accessibility.typeaheadfind", true);
 pref("accessibility.typeaheadfind.autostart", true);
-pref("accessibility.typeaheadfind.casesensitive", -1);
+// casesensitive: controls the find bar's case-sensitivity
+//     0 - "never"  (case-insensitive)
+//     1 - "always" (case-sensitive)
+// other - "auto"   (case-sensitive for mixed-case input, insensitive otherwise)
+pref("accessibility.typeaheadfind.casesensitive", 0);
 pref("accessibility.typeaheadfind.linksonly", true);
 pref("accessibility.typeaheadfind.startlinksonly", false);
 pref("accessibility.typeaheadfind.timeout", 4000);
