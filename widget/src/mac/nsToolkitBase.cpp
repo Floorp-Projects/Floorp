@@ -61,7 +61,7 @@
 #include "nsIObserver.h"
 
 
-static io_connect_t gRootPort = nsnull;
+static io_connect_t gRootPort = MACH_PORT_NULL;
 
 static const char kQuartzRenderingPref[] = "browser.quartz.enable";
 static const char kAllFontSizesPref[] = "browser.quartz.enable.all_font_sizes";
@@ -215,7 +215,7 @@ nsToolkitBase::RegisterForSleepWakeNotifcations()
   NS_ASSERTION(!mSleepWakeNotificationRLS, "Already registered for sleep/wake");
 
   gRootPort = ::IORegisterForSystemPower(0, &notifyPortRef, ToolkitSleepWakeCallback, &mPowerNotifier);
-  if (gRootPort == NULL)
+  if (gRootPort == MACH_PORT_NULL)
   {
     NS_ASSERTION(0, "IORegisterForSystemPower failed");
     return NS_ERROR_FAILURE;
