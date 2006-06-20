@@ -359,7 +359,7 @@
             // We only detect OpenSearch files
             var type = Components.interfaces.nsISearchEngine.DATA_XML;
             searchService.addEngine(aTarget.getAttribute("uri"), type,
-                                    aTarget.getAttribute("src"));
+                                    aTarget.getAttribute("src"), false);
             // Remove this engine from the list and refresh the search button.
             // XXX This will need to be changed when engines are identified
             // by URL; see bug 335102.

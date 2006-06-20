@@ -25,6 +25,7 @@
  *   David Hyatt             <hyatt@mozilla.org>
  *   Christopher A. Aillon   <christopher@aillon.com>
  *   Myk Melez               <myk@mozilla.org>
+ *   Pamela Greene           <pamg.bugs@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -70,6 +71,11 @@ function nsSidebar()
     const nsIPromptService = Components.interfaces.nsIPromptService;
     this.promptService =
         Components.classes[PROMPTSERVICE_CONTRACTID].getService(nsIPromptService);
+
+    const SEARCHSERVICE_CONTRACTID = "@mozilla.org/browser/search-service;1";
+    const nsIBrowserSearchService = Components.interfaces.nsIBrowserSearchService;
+    this.searchService =
+      Components.classes[SEARCHSERVICE_CONTRACTID].getService(nsIBrowserSearchService);
 }
 
 nsSidebar.prototype.nc = "http://home.netscape.com/NC-rdf#";
@@ -126,16 +132,55 @@ function (aTitle, aContentURL, aCustomizeURL, aPersist)
                    features, dialogArgs);
 }
 
-/* decorate prototype to provide ``class'' methods and property accessors */
 nsSidebar.prototype.confirmSearchEngine =
 function (engineURL, suggestedTitle)
 {
   var stringBundle = srGetStrBundle("chrome://browser/locale/sidebar/sidebar.properties");
   var titleMessage = stringBundle.GetStringFromName("addEngineConfirmTitle");
+
+  // With tentative title: Add "Somebody's Search" to the list...
+  // With no title:        Add a new search engine to the list...
+  var engineName;
+  if (suggestedTitle)
+    engineName = stringBundle.formatStringFromName("addEngineQuotedEngineName",
+                                                   [suggestedTitle], 1);
+  else
+    engineName = stringBundle.GetStringFromName("addEngineDefaultEngineName");
+
+  // Display only the hostname portion of the URL.
+  try {
+    var ios = Components.classes["@mozilla.org/network/io-service;1"]
+                        .getService(Components.interfaces.nsIIOService);
+    var uri = ios.newURI(engineURL, null, null);
+    engineURL = uri.host;
+  }
+  catch (e) {
+    // If newURI fails, fall back to the full URL.
+  }
+
   var dialogMessage = stringBundle.formatStringFromName("addEngineConfirmText",
-                                                        [suggestedTitle, engineURL], 2);
-  
-  return this.promptService.confirm(null, titleMessage, dialogMessage);
+                                                        [engineName, engineURL], 2);
+  var checkboxMessage = stringBundle.GetStringFromName("addEngineUseNowText");
+  var addButtonLabel = stringBundle.GetStringFromName("addEngineAddButtonLabel");
+
+  const ps = this.promptService;
+  var buttonFlags = (ps.BUTTON_TITLE_IS_STRING * ps.BUTTON_POS_0) +
+                    (ps.BUTTON_TITLE_CANCEL    * ps.BUTTON_POS_1) +
+                     ps.BUTTON_POS_0_DEFAULT;
+
+  var checked = {value: false};
+  // confirmEx returns the index of the button that was pressed.  Since "Add" is
+  // button 0, we want to return the negation of that value.
+  var confirm = !this.promptService.confirmEx(null,
+                                         titleMessage,
+                                         dialogMessage,
+                                         buttonFlags,
+                                         addButtonLabel,
+                                         "", "", // button 1 & 2 names not used
+                                         checkboxMessage,
+                                         checked);
+
+  return {confirmed: confirm, useNow: checked.value};
 }
 
 // The expected suffix for the engine URL should be bare, i.e. without the
@@ -176,15 +221,14 @@ function (engineURL, iconURL, suggestedTitle, suggestedCategory)
 
   if (!this.validateSearchEngine(engineURL, "src", iconURL))
     return;
-  
-  if (!this.confirmSearchEngine(engineURL, suggestedTitle))
+
+  var confirmation = this.confirmSearchEngine(engineURL, suggestedTitle);
+  if (!confirmation.confirmed)
     return;
-  
-  var searchService = Components.classes["@mozilla.org/browser/search-service;1"]
-                                .getService(Components.interfaces.nsIBrowserSearchService);
+
   const typeText = Components.interfaces.nsISearchEngine.DATA_TEXT;
-  if (searchService)
-    searchService.addEngine(engineURL, typeText, iconURL);
+  this.searchService.addEngine(engineURL, typeText, iconURL,
+                               confirmation.useNow);
 }
 
 // This function exists largely to implement window.external.AddSearchProvider(),
@@ -207,14 +251,14 @@ function (aDescriptionURL)
   
   if (!this.validateSearchEngine(aDescriptionURL, "xml", iconURL))
     return;
-  
-  if (!this.confirmSearchEngine(aDescriptionURL, ""))
+
+  var confirmation = this.confirmSearchEngine(aDescriptionURL, "");
+  if (!confirmation.confirmed)
     return;
-  
-  var searchService = Components.classes["@mozilla.org/browser/search-service;1"]
-                                .getService(Components.interfaces.nsIBrowserSearchService);
+
   const typeXML = Components.interfaces.nsISearchEngine.DATA_XML;
-  searchService.addEngine(aDescriptionURL, typeXML, iconURL);
+  this.searchService.addEngine(aDescriptionURL, typeXML, iconURL,
+                               confirmation.useNow);
 }
 
 nsSidebar.prototype.addMicrosummaryGenerator =
