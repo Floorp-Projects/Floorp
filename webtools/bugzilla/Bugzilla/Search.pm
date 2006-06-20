@@ -294,9 +294,10 @@ sub init {
     }
 
     if ($chfieldfrom ne '' || $chfieldto ne '') {
-        my $sql_chfrom = $chfieldfrom ? &::SqlQuote(SqlifyDate($chfieldfrom)):'';
-        my $sql_chto   = $chfieldto   ? &::SqlQuote(SqlifyDate($chfieldto))  :'';
-        my $sql_chvalue = $chvalue ne '' ? &::SqlQuote($chvalue) : '';
+        my $sql_chfrom = $chfieldfrom ? $dbh->quote(SqlifyDate($chfieldfrom)):'';
+        my $sql_chto   = $chfieldto   ? $dbh->quote(SqlifyDate($chfieldto))  :'';
+        my $sql_chvalue = $chvalue ne '' ? $dbh->quote($chvalue) : '';
+        trick_taint($sql_chvalue);
         if(!@chfield) {
             push(@wherepart, "bugs.delta_ts >= $sql_chfrom") if ($sql_chfrom);
             push(@wherepart, "bugs.delta_ts <= $sql_chto") if ($sql_chto);
@@ -354,7 +355,8 @@ sub init {
         validate_date($deadlinefrom)
           || ThrowUserError('illegal_date', {date => $deadlinefrom,
                                              format => 'YYYY-MM-DD'});
-        $sql_deadlinefrom = &::SqlQuote($deadlinefrom);
+        $sql_deadlinefrom = $dbh->quote($deadlinefrom);
+        trick_taint($sql_deadlinefrom);
         push(@wherepart, "bugs.deadline >= $sql_deadlinefrom");
       }
       
@@ -363,7 +365,8 @@ sub init {
         validate_date($deadlineto)
           || ThrowUserError('illegal_date', {date => $deadlineto,
                                              format => 'YYYY-MM-DD'});
-        $sql_deadlineto = &::SqlQuote($deadlineto);
+        $sql_deadlineto = $dbh->quote($deadlineto);
+        trick_taint($sql_deadlineto);
         push(@wherepart, "bugs.deadline <= $sql_deadlineto");
       }
     }  
@@ -374,7 +377,8 @@ sub init {
             my $s = trim($params->param($f));
             if ($s ne "") {
                 my $n = $f;
-                my $q = &::SqlQuote($s);
+                my $q = $dbh->quote($s);
+                trick_taint($q);
                 my $type = $params->param($f . "_type");
                 push(@specialchart, [$f, $type, $s]);
             }
@@ -556,13 +560,13 @@ sub init {
              my $table = "longdescs_$chartid";
              push(@supptables, "INNER JOIN longdescs AS $table " .
                                "ON $table.bug_id = bugs.bug_id");
-             $term = "$table.bug_when < " . &::SqlQuote(SqlifyDate($v));
+             $term = "$table.bug_when < " . $dbh->quote(SqlifyDate($v));
          },
          "^long_?desc,changedafter" => sub {
              my $table = "longdescs_$chartid";
              push(@supptables, "INNER JOIN longdescs AS $table " .
                                "ON $table.bug_id = bugs.bug_id");
-             $term = "$table.bug_when > " . &::SqlQuote(SqlifyDate($v));
+             $term = "$table.bug_when > " . $dbh->quote(SqlifyDate($v));
          },
          "^content,matches" => sub {
              # "content" is an alias for columns containing text for which we
@@ -629,7 +633,7 @@ sub init {
          },
          "^deadline,(?:lessthan|greaterthan|equals|notequals),(-|\\+)?(\\d+)([dDwWmMyY])\$" => sub {
              $v = SqlifyDate($v);
-             $q = &::SqlQuote($v);
+             $q = $dbh->quote($v);
         },
          "^commenter,(?:equals|anyexact),(%\\w+%)" => sub {
              my $match = pronoun($1, $user);
@@ -698,14 +702,14 @@ sub init {
              my $table = "longdescs_$chartid";
              push(@supptables, "INNER JOIN longdescs AS $table " .
                                "ON $table.bug_id = bugs.bug_id");
-             $term = "(($table.bug_when < " . &::SqlQuote(SqlifyDate($v));
+             $term = "(($table.bug_when < " . $dbh->quote(SqlifyDate($v));
              $term .= ") AND ($table.work_time <> 0))";
          },
          "^work_time,changedafter" => sub {
              my $table = "longdescs_$chartid";
              push(@supptables, "INNER JOIN longdescs AS $table " .
                                "ON $table.bug_id = bugs.bug_id");
-             $term = "(($table.bug_when > " . &::SqlQuote(SqlifyDate($v));
+             $term = "(($table.bug_when > " . $dbh->quote(SqlifyDate($v));
              $term .= ") AND ($table.work_time <> 0))";
          },
          "^work_time," => sub {
@@ -751,12 +755,14 @@ sub init {
                                               COUNT(DISTINCT $table.bug_when) /
                                               COUNT(bugs.bug_id)) +
                                              bugs.remaining_time)))";
+                 $q = $dbh->quote($v);
+                 trick_taint($q);
                  if ($t eq "regexp") {
-                     push(@having, $dbh->sql_regexp($expression, &::SqlQuote($v)));
+                     push(@having, $dbh->sql_regexp($expression, $q));
                  } elsif ($t eq "notregexp") {
-                     push(@having, $dbh->sql_not_regexp($expression, &::SqlQuote($v)));
+                     push(@having, $dbh->sql_not_regexp($expression, $q));
                  } else {
-                     push(@having, "$expression $oper " . &::SqlQuote($v));
+                     push(@having, "$expression $oper " . $q);
                  }
                  push(@groupby, "bugs.remaining_time");
              }
@@ -805,17 +811,17 @@ sub init {
              my $field = $1;
              if ($t eq "changedby") {
                  $v = login_to_id($v, THROW_ERROR);
-                 $q = &::SqlQuote($v);
+                 $q = $dbh->quote($v);
                  $field = "submitter_id";
                  $t = "equals";
              } elsif ($t eq "changedbefore") {
                  $v = SqlifyDate($v);
-                 $q = &::SqlQuote($v);
+                 $q = $dbh->quote($v);
                  $field = "creation_ts";
                  $t = "lessthan";
              } elsif ($t eq "changedafter") {
                  $v = SqlifyDate($v);
-                 $q = &::SqlQuote($v);
+                 $q = $dbh->quote($v);
                  $field = "creation_ts";
                  $t = "greaterthan";
              }
@@ -1061,7 +1067,9 @@ sub init {
                  if ($w eq "---" && $f !~ /milestone/) {
                      $w = "";
                  }
-                 push(@list, &::SqlQuote($w));
+                 $q = $dbh->quote($w);
+                 trick_taint($q);
+                 push(@list, $q);
              }
              if (@list) {
                  $term = "$ff IN (" . join (',', @list) . ")";
@@ -1102,7 +1110,7 @@ sub init {
                                "ON $table.bug_id = bugs.bug_id " .
                                "AND $table.fieldid = $fieldid " .
                                "AND $table.bug_when $operator " . 
-                               &::SqlQuote(SqlifyDate($v)) );
+                               $dbh->quote(SqlifyDate($v)) );
              $term = "($table.bug_when IS NOT NULL)";
          },
          ",(changedfrom|changedto)" => sub {
@@ -1249,7 +1257,7 @@ sub init {
 #       e.g. bugs_activity.bug_id
 # $t  = type of query. e.g. "equal to", "changed after", case sensitive substr"
 # $v  = value - value the user typed in to the form
-# $q  = sanitized version of user input (SqlQuote($v))
+# $q  = sanitized version of user input trick_taint(($dbh->quote($v)))
 # @supptables = Tables and/or table aliases used in query
 # %suppseen   = A hash used to store all the tables in supptables to weed
 #               out duplicates.
@@ -1258,11 +1266,8 @@ sub init {
 # $suppstring = String which is pasted into query containing all table names
 
     # get a list of field names to verify the user-submitted chart fields against
-    &::SendSQL("SELECT name, fieldid FROM fielddefs");
-    while (&::MoreSQLData()) {
-        my ($name, $id) = &::FetchSQLData();
-        $chartfields{$name} = $id;
-    }
+    %chartfields = @{$dbh->selectcol_arrayref(
+        q{SELECT name, fieldid FROM fielddefs}, { Columns=>[1,2] })};
 
     $row = 0;
     for ($chart=-1 ;
@@ -1295,7 +1300,8 @@ sub init {
                 # already know about it), or it was in %chartfields, so it is
                 # a valid field name, which means that it's ok.
                 trick_taint($f);
-                $q = &::SqlQuote($v);
+                $q = $dbh->quote($v);
+                trick_taint($q);
                 my $rhs = $v;
                 $rhs =~ tr/,//;
                 my $func;
@@ -1523,24 +1529,24 @@ sub ListIDsForEmail {
         }
         $list = join(',', @list);
     } elsif ($type eq 'substring') {
-        &::SendSQL("SELECT userid FROM profiles WHERE " .
-            $dbh->sql_position(lc(::SqlQuote($email)), "LOWER(login_name)") .
-            " > 0 " . $dbh->sql_limit(51));
-        while (&::MoreSQLData()) {
-            my ($id) = &::FetchSQLData();
-            push(@list, $id);
-        }
+        my $sql_email = $dbh->quote($email);
+        trick_taint($sql_email);
+        my $result = $dbh->selectcol_arrayref(
+                    q{SELECT userid FROM profiles WHERE } .
+                    $dbh->sql_position(lc($sql_email), q{LOWER(login_name)}) .
+                    q{ > 0 } . $dbh->sql_limit(51));
+        @list = @{$result};
         if (scalar(@list) < 50) {
             $list = join(',', @list);
         }
     } elsif ($type eq 'regexp') {
-        &::SendSQL("SELECT userid FROM profiles WHERE " .
-            $dbh->sql_regexp("login_name", ::SqlQuote($email)) .
-            " " . $dbh->sql_limit(51));
-        while (&::MoreSQLData()) {
-            my ($id) = &::FetchSQLData();
-            push(@list, $id);
-        }
+        my $sql_email = $dbh->quote($email);
+        trick_taint($sql_email);
+        my $result = $dbh->selectcol_arrayref(
+                        qq{SELECT userid FROM profiles WHERE } .
+                        $dbh->sql_regexp("login_name", $sql_email) .
+                        q{ } . $dbh->sql_limit(51));
+        @list = @{$result};
         if (scalar(@list) < 50) {
             $list = join(',', @list);
         }
@@ -1554,13 +1560,10 @@ sub build_subselect {
     my ($outer, $inner, $table, $cond) = @_;
     my $q = "SELECT $inner FROM $table WHERE $cond";
     #return "$outer IN ($q)";
-    &::SendSQL($q);
-    my @list;
-    while (&::MoreSQLData()) {
-        push (@list, &::FetchOneColumn());
-    }
-    return "1=2" unless @list; # Could use boolean type on dbs which support it
-    return "$outer IN (" . join(',', @list) . ")";
+    my $dbh = Bugzilla->dbh;
+    my $list = $dbh->selectcol_arrayref($q);
+    return "1=2" unless @$list; # Could use boolean type on dbs which support it
+    return "$outer IN (" . join(',', @$list) . ")";
 }
 
 sub GetByWordList {
@@ -1572,7 +1575,8 @@ sub GetByWordList {
         my $word = $w;
         if ($word ne "") {
             $word =~ tr/A-Z/a-z/;
-            $word = &::SqlQuote(quotemeta($word));
+            $word = $dbh->quote(quotemeta($word));
+            trick_taint($word);
             $word =~ s/^'//;
             $word =~ s/'$//;
             $word = '(^|[^a-z0-9])' . $word . '($|[^a-z0-9])';
@@ -1588,10 +1592,13 @@ sub GetByWordListSubstr {
     my ($field, $strs) = (@_);
     my @list;
     my $dbh = Bugzilla->dbh;
+    my $sql_word;
 
     foreach my $word (split(/[\s,]+/, $strs)) {
         if ($word ne "") {
-            push(@list, $dbh->sql_position(lc(::SqlQuote($word)),
+            $sql_word = $dbh->quote($word);
+            trick_taint($word);
+            push(@list, $dbh->sql_position(lc($sql_word),
                                            "LOWER($field)") . " > 0");
         }
     }
