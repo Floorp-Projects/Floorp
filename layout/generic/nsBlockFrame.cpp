@@ -1336,11 +1336,20 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     // blocks are correctly sized and positioned. Any lines that need
     // final adjustment will have been marked as dirty
     if (aState.GetFlag(BRS_SHRINKWRAPWIDTH) && aState.GetFlag(BRS_NEEDRESIZEREFLOW)) {
-      // If the parent reflow state is also shrink wrap width, then
-      // we don't need to do this, because it will reflow us after it
-      // calculates the final width
-      const nsHTMLReflowState *prs = aReflowState.parentReflowState;
-      if (!prs || NS_SHRINKWRAPWIDTH != prs->mComputedWidth) {
+      // If the closest block ancestor (and anything in between) is also
+      // shrink wrap width, then we don't need to do this, because it
+      // will reflow us after it calculates the final width
+      PRBool rewrap = PR_TRUE;
+      for (const nsHTMLReflowState *prs = aReflowState.parentReflowState;
+           prs && prs->mComputedWidth == NS_SHRINKWRAPWIDTH;
+           prs = prs->parentReflowState) {
+        if (prs->frame->GetType() == nsLayoutAtoms::blockFrame ||
+            prs->frame->GetType() == nsLayoutAtoms::areaFrame) {
+          rewrap = PR_FALSE;
+          break;
+        }
+      }
+      if (rewrap) {
         // XXX Is this only used on things that are already NS_BLOCK_SPACE_MGR
         // and NS_BLOCK_MARGIN_ROOT?
         nsHTMLReflowState reflowState(aReflowState);
