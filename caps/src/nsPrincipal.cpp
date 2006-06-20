@@ -527,15 +527,18 @@ nsPrincipal::GetHasCertificate(PRBool* aResult)
 NS_IMETHODIMP
 nsPrincipal::GetURI(nsIURI** aURI)
 {
-  NS_IF_ADDREF(*aURI = mCodebase);
+  if (!mCodebase) {
+    *aURI = nsnull;
+    return NS_OK;
+  }
 
-  return NS_OK;
+  return NS_EnsureSafeToReturn(mCodebase, aURI);
 }
 
 void
 nsPrincipal::SetURI(nsIURI* aURI)
 {
-  mCodebase = aURI;
+  mCodebase = NS_TryToMakeImmutable(aURI);
 
   // Invalidate our cached origin
   mOrigin = nsnull;
@@ -625,15 +628,18 @@ nsPrincipal::GetHashValue(PRUint32* aValue)
 NS_IMETHODIMP
 nsPrincipal::GetDomain(nsIURI** aDomain)
 {
-  NS_IF_ADDREF(*aDomain = mDomain);
+  if (!mDomain) {
+    *aDomain = nsnull;
+    return NS_OK;
+  }
 
-  return NS_OK;
+  return NS_EnsureSafeToReturn(mDomain, aDomain);
 }
 
 NS_IMETHODIMP
 nsPrincipal::SetDomain(nsIURI* aDomain)
 {
-  mDomain = aDomain;
+  mDomain = NS_TryToMakeImmutable(aDomain);
   // Domain has changed, forget cached security policy
   SetSecurityPolicy(nsnull);
 

@@ -248,15 +248,13 @@ nsNullPrincipal::DisableCapability(const char *aCapability, void **aAnnotation)
 NS_IMETHODIMP 
 nsNullPrincipal::GetURI(nsIURI** aURI)
 {
-  NS_ADDREF(*aURI = mURI);
-  return NS_OK;
+  return NS_EnsureSafeToReturn(mURI, aURI);
 }
 
 NS_IMETHODIMP
 nsNullPrincipal::GetDomain(nsIURI** aDomain)
 {
-  NS_ADDREF(*aDomain = mURI);
-  return NS_OK;
+  return NS_EnsureSafeToReturn(mURI, aDomain);
 }
 
 NS_IMETHODIMP
