@@ -148,6 +148,8 @@ public:
 #endif
 
   static PRBool IsCorrectFrameType(nsIFrame* aFrame, nsIAtom* aAtom);
+  static PRUint32 State(nsIAccessible *aAcc) { PRUint32 state; aAcc->GetFinalState(&state); return state; }
+  static PRUint32 Role(nsIAccessible *aAcc) { PRUint32 role; aAcc->GetRole(&role); return role; }
 
 protected:
   PRBool MappedAttrState(nsIContent *aContent, PRUint32 *aStateInOut, nsStateMapEntry *aStateMapEntry);
@@ -192,7 +194,6 @@ protected:
 
   // Hyperlink helpers
   virtual nsresult GetLinkOffset(PRInt32* aStartOffset, PRInt32* aEndOffset);
-  static PRUint32 Role(nsIAccessible *aAcc) { PRUint32 role; aAcc->GetRole(&role); return role; }
 
   // For accessibles that have actions
   static void DoCommandCallback(nsITimer *aTimer, void *aClosure);

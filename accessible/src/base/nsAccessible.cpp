@@ -2200,9 +2200,11 @@ NS_IMETHODIMP nsAccessible::ExtendSelection()
 NS_IMETHODIMP nsAccessible::GetExtState(PRUint32 *aExtState)
 {
   if (!mDOMNode) {
-    return NS_ERROR_FAILURE; // Node shut down
+    *aExtState = EXT_STATE_DEFUNCT;
+    return NS_OK; // Node shut down
   }
-  *aExtState = 0;
+  *aExtState = (State(this) & STATE_INVISIBLE) ? EXT_STATE_SHOWING : 0;
+
   // XXX We can remove this hack once we support RDF-based role & state maps
   if (mRoleMapEntry && (mRoleMapEntry->role == ROLE_ENTRY || mRoleMapEntry->role == ROLE_PASSWORD_TEXT)) {
     *aExtState = NS_LITERAL_CSTRING("textarea").Equals(mRoleMapEntry->roleString) ? 
