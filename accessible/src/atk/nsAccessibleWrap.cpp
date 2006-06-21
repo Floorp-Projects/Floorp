@@ -261,15 +261,6 @@ nsAccessibleWrap::~nsAccessibleWrap()
     }
 }
 
-NS_IMETHODIMP nsAccessibleWrap::GetExtState(PRUint32 *aState)
-{
-    PRUint32 state;
-    nsAccessible::GetState(&state);
-    if (!(state & STATE_INVISIBLE))
-      *aState |= EXT_STATE_SHOWING;
-    return NS_OK;
-}
-
 NS_IMETHODIMP nsAccessibleWrap::GetNativeInterface(void **aOutAccessible)
 {
     *aOutAccessible = nsnull;
@@ -596,6 +587,10 @@ nsAccessibleWrap::TranslateStates(PRUint32 aState, PRUint32 aExtState, void *aAt
 
     if (aExtState & nsIAccessible::EXT_STATE_EDITABLE)
         atk_state_set_add_state (state_set, ATK_STATE_EDITABLE);
+
+    if (aExtState & nsIAccessible::EXT_STATE_DEFUNCT)
+        atk_state_set_add_state (state_set, ATK_STATE_DEFUNCT);
+
 }
 
 PRBool nsAccessibleWrap::IsValidObject()

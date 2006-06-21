@@ -116,7 +116,6 @@ public:
 public:
     // return the atk object for this nsAccessibleWrap
     NS_IMETHOD GetNativeInterface(void **aOutAccessible);
-    NS_IMETHOD GetExtState(PRUint32 *aState);
 
     AtkObject * GetAtkObject(void);
 
