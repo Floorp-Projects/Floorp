@@ -953,11 +953,12 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 #endif
 
 #define SAFE_ADD(n)                                                          \
-            JS_BEGIN_MACRO                                                   \
-                curlen += (n);                                               \
-                if (curlen < (n))                                            \
-                    goto overflow;                                           \
-            JS_END_MACRO
+    JS_BEGIN_MACRO                                                           \
+        size_t n_ = (n);                                                     \
+        curlen += n_;                                                        \
+        if (curlen < n_)                                                     \
+            goto overflow;                                                   \
+    JS_END_MACRO
 
             curlen = nchars;
             if (comma)
