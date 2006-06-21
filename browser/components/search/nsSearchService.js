@@ -54,6 +54,7 @@ const MODE_TRUNCATE = 0x20;
 // Directory service keys
 const NS_APP_SEARCH_DIR_LIST  = "SrchPluginsDL";
 const NS_APP_USER_SEARCH_DIR  = "UsrSrchPlugns";
+const NS_APP_SEARCH_DIR       = "SrchPlugns";
 
 // See documentation in nsIBrowserSearchService.idl.
 const SEARCH_ENGINE_TOPIC        = "browser-search-engine-modified";
@@ -1744,6 +1745,15 @@ Engine.prototype = {
   // use this as the identifier to store data in the sqlite database
   get _id() {
     ENSURE_WARN(this._file, "No _file for id!", Cr.NS_ERROR_FAILURE);
+
+    if (this._file.parent.equals(getDir(NS_APP_USER_SEARCH_DIR)))
+      return "[profile]/" + this._file.leafName;
+
+    if (this._file.parent.equals(getDir(NS_APP_SEARCH_DIR)))
+      return "[app]/" + this._file.leafName;
+
+    // We're not in the profile or appdir, so this must be an extension-shipped
+    // plugin. Use the full path.
     return this._file.path;
   },
 
