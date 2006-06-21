@@ -2211,14 +2211,8 @@ nsHTMLDocument::Close()
                   : ePendingClose;
 
     ++mWriteLevel;
-    if (mContentType.EqualsLiteral("text/html")) {
-      rv = mParser->Parse(NS_LITERAL_STRING("</HTML>"),
-                          mParser->GetRootContextKey(),
-                          mContentType, PR_TRUE);
-    } else {
-      rv = mParser->Parse(EmptyString(), mParser->GetRootContextKey(),
-                          mContentType, PR_TRUE);
-    }
+    rv = mParser->Parse(EmptyString(), mParser->GetRootContextKey(),
+                        mContentType, PR_TRUE);
     --mWriteLevel;
 
     // XXX Make sure that all the document.written content is
