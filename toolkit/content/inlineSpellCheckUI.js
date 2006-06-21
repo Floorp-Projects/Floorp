@@ -48,11 +48,11 @@ var InlineSpellCheckerUI = {
   mLanguageBundle: null, // language names
   mRegionBundle: null, // region names
 
-  // Call this function to initialize for a given edit element
-  init: function(inputElt)
+  // Call this function to initialize for a given editor
+  init: function(aEditor)
   {
     this.uninit();
-    this.mEditor = inputElt.QueryInterface(Components.interfaces.nsIDOMNSEditableElement).editor;
+    this.mEditor = aEditor;
     try {
       this.mInlineSpellChecker = this.mEditor.getInlineSpellChecker(true);
       // note: this might have been NULL if there is no chance we can spellcheck
