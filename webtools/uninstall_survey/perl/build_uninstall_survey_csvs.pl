@@ -1,4 +1,4 @@
-#!/usr/bin/perl -wT
+#!/usr/bin/perl -w
 
 # This script is designed to be used with the Mozilla Uninstall Survey
 # It will connect to the database and pull results into a .csv for each product
