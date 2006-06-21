@@ -2381,6 +2381,7 @@ restart:
     js_MarkAtomState(&rt->atomState, gcflags, gc_mark_atom_key_thing, cx);
     js_MarkWatchPoints(rt);
     js_MarkScriptFilenames(rt, gcflags);
+    js_MarkNativeIteratorStates(cx);
 
     iter = NULL;
     while ((acx = js_ContextIterator(rt, JS_TRUE, &iter)) != NULL) {

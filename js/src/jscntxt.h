@@ -108,6 +108,11 @@ typedef struct JSPropertyTreeEntry {
     JSScopeProperty     *child;
 } JSPropertyTreeEntry;
 
+/*
+ * Forward declaration for opaque JSRuntime.nativeIteratorStates.
+ */
+typedef struct JSNativeIteratorState JSNativeIteratorState;
+
 struct JSRuntime {
     /* Runtime state, synchronized by the stateChange/gcLock condvar/lock. */
     JSRuntimeState      state;
@@ -319,6 +324,12 @@ struct JSRuntime {
      */
     JSObject            *anynameObject;
     JSObject            *functionNamespaceObject;
+
+    /*
+     * A helper list for the GC, so it can mark native iterator states. See
+     * js_MarkNativeIteratorStates for details.
+     */
+    JSNativeIteratorState *nativeIteratorStates;
 
 #ifdef DEBUG
     /* Function invocation metering. */
