@@ -81,9 +81,9 @@ XPInstallConfirm.init = function ()
     installItem.signed = cert ? "true" : "false";
   }
   
-  var introString = bundle.getString("itemWarningIntroSingle");
+  var introString = bundle.getString("itemWarnIntroSingle");
   if (numItemsToInstall > 4)
-    introString = bundle.getFormattedString("itemWarningIntroMultiple", [numItemsToInstall / 4]);
+    introString = bundle.getFormattedString("itemWarnIntroMultiple", [numItemsToInstall / 4]);
   if (this._param.objects && this._param.objects.length)
     introString = this._param.objects.queryElementAt(0, Components.interfaces.nsISupportsString).data;
   var textNode = document.createTextNode(introString);
