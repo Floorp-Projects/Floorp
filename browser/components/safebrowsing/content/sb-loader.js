@@ -44,6 +44,20 @@ var safebrowsing = {
   controller: null,
   phishWarden: null,
 
+  // We set up the web progress listener immediately so we don't miss any
+  // phishing urls.  Since the phishing infrastructure isn't loaded yet, we
+  // just store the urls in a list.
+  progressListener: null,
+  progressListenerCallback: {
+    requests: [],
+    onDocNavStart: function(request, url) {
+      this.requests.push({
+        'request': request,
+        'url': url
+      });
+    }
+  },
+
   startup: function() {
     setTimeout(safebrowsing.deferredStartup, 2000);
 
@@ -60,7 +74,8 @@ var safebrowsing = {
 
     var contentArea = document.getElementById("content");
 
-    var phishWarden = new appContext.PROT_PhishingWarden();
+    var phishWarden = new appContext.PROT_PhishingWarden(
+          safebrowsing.progressListener);
     safebrowsing.phishWarden = phishWarden;
 
     // Register tables
@@ -83,8 +98,25 @@ var safebrowsing = {
     
     // The initial pages may be a phishing site (e.g., user clicks on a link
     // in an email message and it opens a new window with a phishing site),
-    // so we need to check all open tabs.
-    safebrowsing.controller.checkAllBrowsers();
+    // so we need to check all requests that fired before deferredStartup.
+    if (!phishWarden.phishWardenEnabled_) {
+      safebrowsing.progressListenerCallback.requests = null;
+      safebrowsing.progressListenerCallback = null;
+      safebrowsing.progressListener = null;
+      return;
+    }
+
+    var pendingRequests = safebrowsing.progressListenerCallback.requests;
+    for (var i = 0; i < pendingRequests.length; ++i) {
+      var request = pendingRequests[i].request;
+      var url = pendingRequests[i].url;
+
+      phishWarden.onDocNavStart(request, url);
+    }
+    // Cleanup
+    safebrowsing.progressListenerCallback.requests = null;
+    safebrowsing.progressListenerCallback = null;
+    safebrowsing.progressListener = null;
   },
 
   /**
@@ -102,6 +134,17 @@ var safebrowsing = {
     window.removeEventListener("unload", safebrowsing.shutdown, false);
   }
 }
+
+// Set up our request listener immediately so we don't miss
+// any url loads.  We do the actually checking in the deferredStartup
+// method.
+safebrowsing.progressListener =
+  Cc["@mozilla.org/browser/safebrowsing/navstartlistener;1"]
+  .createInstance(Ci.nsIDocNavStartProgressListener);
+safebrowsing.progressListener.callback =
+  safebrowsing.progressListenerCallback;
+safebrowsing.progressListener.enabled = true;
+safebrowsing.progressListener.delay = 0;
 
 window.addEventListener("load", safebrowsing.startup, false);
 window.addEventListener("unload", safebrowsing.shutdown, false);
