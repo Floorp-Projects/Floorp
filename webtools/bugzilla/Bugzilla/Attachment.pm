@@ -47,9 +47,6 @@ that users upload to the Bugzilla server.
 
 =cut
 
-# This module requires that its caller have said "require globals.pl"
-# to import relevant functions from that script.
-
 use Bugzilla::Error;
 use Bugzilla::Flag;
 use Bugzilla::Config qw(:locations Param);

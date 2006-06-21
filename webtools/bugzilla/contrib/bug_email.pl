@@ -38,7 +38,7 @@
 #
 # You need to work with bug_email.pl the MIME::Parser installed.
 # 
-# $Id: bug_email.pl,v 1.41 2006/06/19 17:30:24 lpsolit%gmail.com Exp $
+# $Id: bug_email.pl,v 1.42 2006/06/21 00:44:48 lpsolit%gmail.com Exp $
 ###############################################################
 
 # 02/12/2000 (SML)
@@ -73,7 +73,7 @@
 # - querying a bug over email
 # - appending a bug over email
 # - keywords over email
-# - use the globals.pl parameters functionality to edit and save this script's parameters
+# - use the Bugzilla parameters functionality to edit and save this script's parameters
 # - integrate some setup in the checksetup.pl script
 # - gpg signatures for security
 
@@ -86,14 +86,14 @@ BEGIN {
     push @INC, ".";
 }
 
-require "globals.pl";
-use Bugzilla;
-use BugzillaEmail;
-use Bugzilla::Config qw(:DEFAULT $datadir);
-
 use lib ".";
 use lib "../";
+
+use Bugzilla;
+use BugzillaEmail;
+use Bugzilla::Config qw(:DEFAULT);
 use Bugzilla::Constants;
+use Bugzilla::Util;
 use Bugzilla::BugMail;
 use Bugzilla::User;
 use Bugzilla::Product;
@@ -228,7 +228,7 @@ sub Reply( $$$$ ) {
     die "Cannot find sender-email-address" unless defined( $Sender );
     
     if( $test ) {
-        open( MAIL, '>>', "$datadir/bug_email_test.log" );
+        open( MAIL, '>>', bz_locations()->{'datadir'} . "/bug_email_test.log" );
     }
     else {
         open( MAIL, "| /usr/sbin/sendmail -t" );
@@ -669,6 +669,7 @@ my $parser = new MIME::Parser;
 
 # Create and set the output directory:
 # FIXME: There should be a $BUGZILLA_HOME variable (SML)
+my $datadir = bz_locations()->{'datadir'};
 (-d "$datadir/mimedump-tmp") or mkdir "$datadir/mimedump-tmp",0755 or die "mkdir: $!";
 (-w "$datadir/mimedump-tmp") or die "can't write to directory";
 

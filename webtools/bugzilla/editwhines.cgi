@@ -28,12 +28,15 @@
 use strict;
 
 use lib ".";
-require "globals.pl";
 
 use Bugzilla;
 use Bugzilla::Constants;
+use Bugzilla::Config qw(:DEFAULT);
+use Bugzilla::Util;
+use Bugzilla::Error;
 use Bugzilla::User;
 use Bugzilla::Group;
+
 # require the user to have logged in
 my $user = Bugzilla->login(LOGIN_REQUIRED);
 

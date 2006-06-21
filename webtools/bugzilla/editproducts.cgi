@@ -33,12 +33,14 @@
 
 use strict;
 use lib ".";
+
 use Bugzilla;
 use Bugzilla::Constants;
-require "globals.pl";
+use Bugzilla::Config qw(:DEFAULT);
+use Bugzilla::Util;
+use Bugzilla::Error;
 use Bugzilla::Bug;
 use Bugzilla::Series;
-use Bugzilla::Config qw(:DEFAULT $datadir);
 use Bugzilla::Mailer;
 use Bugzilla::Product;
 use Bugzilla::Classification;

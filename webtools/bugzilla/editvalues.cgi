@@ -21,12 +21,11 @@
 use strict;
 use lib ".";
 
-require "globals.pl";
 use Bugzilla;
 use Bugzilla::Util;
 use Bugzilla::Error;
 use Bugzilla::Constants;
-use Bugzilla::Config qw(:DEFAULT :admin :locations);
+use Bugzilla::Config qw(:DEFAULT :admin);
 
 # List of different tables that contain the changeable field values
 # (the old "enums.") Keep them in alphabetical order by their 

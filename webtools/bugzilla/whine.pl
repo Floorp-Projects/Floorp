@@ -27,10 +27,9 @@
 use strict;
 
 use lib ".";
-require "globals.pl";
 
 use Bugzilla;
-use Bugzilla::Config qw(:DEFAULT $datadir);
+use Bugzilla::Config qw(:DEFAULT);
 use Bugzilla::Constants;
 use Bugzilla::Search;
 use Bugzilla::User;
@@ -106,7 +105,7 @@ if ($fromaddress !~ Param('emailregexp')) {
 
 # Check the nomail file for users who should not receive mail
 my %nomail;
-if (open(NOMAIL, '<', "$datadir/nomail")) {
+if (open(NOMAIL, '<', bz_locations()->{'datadir'} . "/nomail")) {
     while (<NOMAIL>) {
         $nomail{trim($_)} = 1;
     }

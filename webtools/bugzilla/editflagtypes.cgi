@@ -29,9 +29,6 @@
 use strict;
 use lib ".";
 
-# Include the Bugzilla CGI and general utility library.
-require "globals.pl";
-
 # Use Bugzilla's flag modules for handling flag types.
 use Bugzilla;
 use Bugzilla::Constants;
@@ -39,6 +36,7 @@ use Bugzilla::Flag;
 use Bugzilla::FlagType;
 use Bugzilla::Group;
 use Bugzilla::Util;
+use Bugzilla::Error;
 use Bugzilla::Product;
 use Bugzilla::Component;
 use Bugzilla::Bug;

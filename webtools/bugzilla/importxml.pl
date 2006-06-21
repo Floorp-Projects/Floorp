@@ -79,7 +79,7 @@ use Bugzilla::Version;
 use Bugzilla::Component;
 use Bugzilla::Milestone;
 use Bugzilla::FlagType;
-use Bugzilla::Config qw(:DEFAULT $datadir);
+use Bugzilla::Config qw(:DEFAULT);
 use Bugzilla::BugMail;
 use Bugzilla::Mailer;
 use Bugzilla::User;
@@ -94,8 +94,6 @@ use Date::Format;
 use Getopt::Long;
 use Pod::Usage;
 use XML::Twig;
-
-require "globals.pl";
 
 # We want to capture errors and handle them here rather than have the Template
 # code barf all over the place.

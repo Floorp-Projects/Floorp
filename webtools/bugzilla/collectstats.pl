@@ -34,9 +34,11 @@ use strict;
 use IO::Handle;
 
 use lib ".";
-require "globals.pl";
+
 use Bugzilla;
-use Bugzilla::Config qw(:DEFAULT $datadir);
+use Bugzilla::Constants;
+use Bugzilla::Config qw(:DEFAULT);
+use Bugzilla::Util;
 use Bugzilla::Search;
 use Bugzilla::User;
 use Bugzilla::Product;
@@ -63,6 +65,8 @@ if ($#ARGV >= 0 && $ARGV[0] eq "--regenerate") {
     $regenerate = 1;
 }
 
+my $datadir = bz_locations()->{'datadir'};
+
 my @myproducts = map {$_->name} Bugzilla::Product::get_all_products();
 unshift(@myproducts, "-All-");
 
@@ -71,7 +75,7 @@ foreach (@myproducts) {
     my $dir = "$datadir/mining";
 
     &check_data_dir ($dir);
-    
+
     if ($regenerate) {
         &regenerate_stats($dir, $_);
     } else {
@@ -206,6 +210,8 @@ sub calculate_dupes {
     # Save % count here in a date-named file
     # so we can read it back in to do changed counters
     # First, delete it if it exists, so we don't add to the contents of an old file
+    my $datadir = bz_locations()->{'datadir'};
+
     if (my @files = <$datadir/duplicates/dupes$today*>) {
         map { trick_taint($_) } @files;
         unlink @files;

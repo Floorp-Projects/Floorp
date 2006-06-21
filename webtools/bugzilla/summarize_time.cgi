@@ -24,11 +24,12 @@ use Date::Parse;         # strptime
 use Date::Format;        # strftime
 
 use Bugzilla;
+use Bugzilla::Constants; # LOGIN_*
+use Bugzilla::Config qw(:DEFAULT);
 use Bugzilla::Bug;       # EmitDependList
 use Bugzilla::Util;      # trim
-use Bugzilla::Constants; # LOGIN_*
+use Bugzilla::Error;
 use Bugzilla::User;      # UserInGroup
-require "globals.pl";
 
 my $template = Bugzilla->template;
 my $vars = {};

@@ -32,22 +32,16 @@ use lib qw(.);
 use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Util;
+use Bugzilla::Error;
+use Bugzilla::Token;
+use Bugzilla::User;
 
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
 my $template = Bugzilla->template;
 my $vars = {};
 
-# Include the Bugzilla CGI and general utility library.
-require "globals.pl";
-
 Bugzilla->login(LOGIN_OPTIONAL);
-
-# Use the "Bugzilla::Token" module that contains functions for doing various
-# token-related tasks.
-use Bugzilla::Token;
-
-use Bugzilla::User;
 
 ################################################################################
 # Data Validation / Security Authorization

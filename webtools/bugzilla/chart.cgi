@@ -45,9 +45,11 @@
 use strict;
 use lib qw(.);
 
-require "globals.pl";
 use Bugzilla;
 use Bugzilla::Constants;
+use Bugzilla::Config qw(:DEFAULT);
+use Bugzilla::Error;
+use Bugzilla::Util;
 use Bugzilla::Chart;
 use Bugzilla::Series;
 use Bugzilla::User;

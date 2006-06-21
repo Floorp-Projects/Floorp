@@ -35,9 +35,12 @@ use strict;
 use lib qw(.);
 
 use Bugzilla;
+use Bugzilla::Constants;
+use Bugzilla::Error;
+use Bugzilla::Util;
+use Bugzilla::Config qw(:DEFAULT);
 use Bugzilla::Search;
 use Bugzilla::Search::Quicksearch;
-use Bugzilla::Constants;
 use Bugzilla::User;
 use Bugzilla::Bug;
 use Bugzilla::Product;
@@ -45,9 +48,6 @@ use Bugzilla::Keyword;
 use Bugzilla::Field;
 
 use Date::Parse;
-
-# Include the Bugzilla CGI and general utility library.
-require "globals.pl";
 
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
@@ -894,7 +894,7 @@ if ($serverpush) {
 # query performance.
 $dbh = Bugzilla->switch_to_shadow_db();
 
-# Normally, we ignore SIGTERM and SIGPIPE (see globals.pl) but we need to
+# Normally, we ignore SIGTERM and SIGPIPE, but we need to
 # respond to them here to prevent someone DOSing us by reloading a query
 # a large number of times.
 $::SIG{TERM} = 'DEFAULT';

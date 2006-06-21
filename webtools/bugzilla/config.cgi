@@ -28,11 +28,12 @@
 # Make it harder for us to do dangerous things in Perl.
 use strict;
 
-# Include the Bugzilla CGI and general utility library.
 use lib qw(.);
-require "globals.pl";
+
 use Bugzilla;
 use Bugzilla::Constants;
+use Bugzilla::Config qw(:DEFAULT);
+use Bugzilla::Error;
 use Bugzilla::Keyword;
 use Bugzilla::Bug;
 use Bugzilla::Field;

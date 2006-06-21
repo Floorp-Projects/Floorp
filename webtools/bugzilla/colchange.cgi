@@ -27,9 +27,10 @@ use lib qw(.);
 
 use Bugzilla;
 use Bugzilla::Constants;
+use Bugzilla::Config qw(:DEFAULT);
+use Bugzilla::Error;
 use Bugzilla::User;
 use Bugzilla::Keyword;
-require "globals.pl";
 
 Bugzilla->login();
 

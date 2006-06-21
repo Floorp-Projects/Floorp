@@ -23,15 +23,14 @@
 use strict;
 use lib ".";
 
-require "globals.pl";
-
 use Bugzilla;
+use Bugzilla::Constants;
+use Bugzilla::Config qw(:DEFAULT);
+use Bugzilla::Util;
+use Bugzilla::Error;
 use Bugzilla::User;
 use Bugzilla::Bug;
 use Bugzilla::Flag;
-use Bugzilla::Config;
-use Bugzilla::Constants;
-use Bugzilla::Util;
 use Bugzilla::Field;
 use Bugzilla::Group;
 

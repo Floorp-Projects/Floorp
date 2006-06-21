@@ -13,22 +13,20 @@
 #
 # The Original Code is the LDAP to Bugzilla User Sync Tool.
 #
-# The Initial Developer of the Original Code is Andreas Höfler.
-# Portions created by Andreas Höfler are Copyright (C) 2003
-# Andreas Höfler. All
-# Rights Reserved.
+# The Initial Developer of the Original Code is Andreas HÃ¶fler.
+# Portions created by Andreas HÃ¶fler are Copyright (C) 2003
+# Andreas HÃ¶fler. All Rights Reserved.
 #
-# Contributor(s): Andreas Höfler <andreas.hoefler@bearingpoint.com>
+# Contributor(s): Andreas HÃ¶fler <andreas.hoefler@bearingpoint.com>
 #
 
 use strict;
-
-require "globals.pl";
 
 use lib qw(.);
 
 use Net::LDAP;
 use Bugzilla;
+use Bugzilla::Config qw(:DEFAULT);
 use Bugzilla::User;
 
 my $cgi = Bugzilla->cgi;

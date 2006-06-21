@@ -79,19 +79,16 @@ our @parampanels = ();
 # Don't export localvars by default - people should have to explicitly
 # ask for it, as a (probably futile) attempt to stop code using it
 # when it shouldn't
-# ChmodDataFile is here until that stuff all moves out of globals.pl
-# into this file
-@Bugzilla::Config::EXPORT_OK = qw(ChmodDataFile);
-
 %Bugzilla::Config::EXPORT_TAGS =
   (
    admin => [qw(UpdateParams SetParam WriteParams)],
    db => [qw($db_driver $db_host $db_port $db_name $db_user $db_pass $db_sock)],
+   localconfig => [qw($cvsbin $interdiffbin $diffpath $webservergroup)],
    locations => [qw($libpath $localconfig $attachdir $datadir $templatedir
                     $webdotdir $project $extensionsdir)],
    params => [qw(@parampanels)],
   );
-Exporter::export_ok_tags('admin', 'db', 'locations', 'params');
+Exporter::export_ok_tags('admin', 'db', 'localconfig', 'locations', 'params');
 
 # Bugzilla version
 $Bugzilla::Config::VERSION = "2.23.1+";

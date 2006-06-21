@@ -23,11 +23,10 @@
 use strict;
 use lib ".";
 
-require "globals.pl";
-
 use Bugzilla;
 use Bugzilla::Constants;
-use Bugzilla::Config qw(:DEFAULT $datadir);
+use Bugzilla::Util;
+use Bugzilla::Error;
 
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;

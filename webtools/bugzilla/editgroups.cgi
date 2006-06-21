@@ -24,18 +24,17 @@
 #                 Vlad Dascalu <jocuri@softhome.net>
 #                 Frédéric Buclin <LpSolit@gmail.com>
 
-# Code derived from editowners.cgi and editusers.cgi
-
 use strict;
 use lib ".";
 
 use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Config qw(:DEFAULT :admin);
+use Bugzilla::Util;
+use Bugzilla::Error;
 use Bugzilla::Group;
 use Bugzilla::Product;
 use Bugzilla::User;
-require "globals.pl";
 
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;

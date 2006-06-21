@@ -18,9 +18,9 @@
 use strict;
 
 use lib ".";
-require "globals.pl";
 
 use Bugzilla;
+use Bugzilla::Error;
 
 Bugzilla->login();
 my $cgi = Bugzilla->cgi;

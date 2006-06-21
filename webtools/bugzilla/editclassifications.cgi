@@ -27,10 +27,8 @@ use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Util;
 use Bugzilla::Error;
-use Bugzilla::Config qw($datadir);
+use Bugzilla::Config qw(:DEFAULT);
 use Bugzilla::Classification;
-
-require "globals.pl";
 
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;

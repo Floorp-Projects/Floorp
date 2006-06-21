@@ -29,13 +29,12 @@
 use strict;
 use lib ".";
 
-require "globals.pl";
-
 use Bugzilla;
 use Bugzilla::Constants;
-use Bugzilla::Config qw(:DEFAULT $datadir);
+use Bugzilla::Config qw(:DEFAULT);
 use Bugzilla::Series;
 use Bugzilla::Util;
+use Bugzilla::Error;
 use Bugzilla::User;
 use Bugzilla::Product;
 use Bugzilla::Component;

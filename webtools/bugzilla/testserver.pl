@@ -19,6 +19,7 @@
 # issues as possible.
 
 use strict;
+use lib ".";
 
 BEGIN {
     my $envpath = $ENV{'PATH'};
@@ -26,12 +27,13 @@ BEGIN {
     $ENV{'PATH'} = $envpath;
 }
 
-use lib ".";
+use Bugzilla::Constants;
+use Bugzilla::Config qw(:localconfig);
 
 use Socket;
-use Bugzilla::Config qw($datadir);
 
-require "globals.pl";
+my $datadir = bz_locations()->{'datadir'};
+
 eval "require LWP; require LWP::UserAgent;";
 my $lwp = $@ ? 0 : 1;
 
@@ -60,15 +62,15 @@ if ($^O !~ /MSWin32/i) {
 
 # Determine the numeric GID of $webservergroup
 my $webgroupnum = 0;
-if ($::webservergroup =~ /^(\d+)$/) {
+if ($webservergroup =~ /^(\d+)$/) {
     $webgroupnum = $1;
 } else {
-    eval { $webgroupnum = (getgrnam $::webservergroup) || 0; };
+    eval { $webgroupnum = (getgrnam $webservergroup) || 0; };
 }
 
 # Check $webservergroup against the server's GID
 if ($sgid > 0) {
-    if ($::webservergroup eq "") {
+    if ($webservergroup eq "") {
         print 
 "WARNING \$webservergroup is set to an empty string.
 That is a very insecure practice. Please refer to the
@@ -116,8 +118,9 @@ Check the AddHandler statement in your httpd.conf file.\n";
 }
 
 # Make sure that webserver is honoring .htaccess files
-$::localconfig =~ s~^\./~~;
-$url = $ARGV[0] . "/$::localconfig";
+my $localconfig = bz_locations()->{'localconfig'};
+$localconfig =~ s~^\./~~;
+$url = $ARGV[0] . "/$localconfig";
 $response = fetch($url);
 if ($response) {
     print 

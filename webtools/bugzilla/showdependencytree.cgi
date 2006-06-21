@@ -27,8 +27,9 @@
 use strict;
 
 use lib qw(.);
-require "globals.pl";
+
 use Bugzilla;
+use Bugzilla::Error;
 use Bugzilla::Bug;
 
 my $user = Bugzilla->login();

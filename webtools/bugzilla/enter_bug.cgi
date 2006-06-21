@@ -39,6 +39,9 @@ use lib qw(.);
 
 use Bugzilla;
 use Bugzilla::Constants;
+use Bugzilla::Config qw(:DEFAULT);
+use Bugzilla::Util;
+use Bugzilla::Error;
 use Bugzilla::Bug;
 use Bugzilla::User;
 use Bugzilla::Hook;
@@ -47,7 +50,6 @@ use Bugzilla::Classification;
 use Bugzilla::Keyword;
 use Bugzilla::Token;
 use Bugzilla::Field;
-require "globals.pl";
 
 my $user = Bugzilla->login(LOGIN_REQUIRED);
 

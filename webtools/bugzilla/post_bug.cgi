@@ -27,11 +27,12 @@
 use strict;
 use lib qw(.);
 
-require "globals.pl";
 use Bugzilla;
 use Bugzilla::Attachment;
 use Bugzilla::Constants;
+use Bugzilla::Config qw(:DEFAULT);
 use Bugzilla::Util;
+use Bugzilla::Error;
 use Bugzilla::Bug;
 use Bugzilla::User;
 use Bugzilla::Field;

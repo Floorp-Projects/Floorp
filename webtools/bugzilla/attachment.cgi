@@ -37,12 +37,10 @@ use strict;
 
 use lib qw(.);
 
-# Include the Bugzilla CGI and general utility library.
-require "globals.pl";
-
 use Bugzilla;
-use Bugzilla::Config qw(:locations);
+use Bugzilla::Config qw(:DEFAULT :localconfig);
 use Bugzilla::Constants;
+use Bugzilla::Error;
 use Bugzilla::Flag; 
 use Bugzilla::FlagType; 
 use Bugzilla::User;
@@ -371,7 +369,7 @@ sub view
     {
         my $hash = ($attach_id % 100) + 100;
         $hash =~ s/.*(\d\d)$/group.$1/;
-        if (open(AH, "$attachdir/$hash/attachment.$attach_id")) {
+        if (open(AH, bz_locations()->{'attachdir'} . "/$hash/attachment.$attach_id")) {
             binmode AH;
             $filesize = (stat(AH))[7];
         }
@@ -424,8 +422,8 @@ sub interdiff
   #
   # Must hack path so that interdiff will work.
   #
-  $ENV{'PATH'} = $::diffpath;
-  open my $interdiff_fh, "$::interdiffbin $old_filename $new_filename|";
+  $ENV{'PATH'} = $diffpath;
+  open my $interdiff_fh, "$interdiffbin $old_filename $new_filename|";
   binmode $interdiff_fh;
     my ($reader, $last_reader) = setup_patch_readers("", $context);
     if ($format eq 'raw')
@@ -558,7 +556,7 @@ sub setup_patch_readers {
     $last_reader = $last_reader->sends_data_to;
   }
   # Add in cvs context if we have the necessary info to do it
-  if ($context ne "patch" && $::cvsbin && Param('cvsroot_get'))
+  if ($context ne "patch" && $cvsbin && Param('cvsroot_get'))
   {
     require PatchReader::AddCVSContext;
     $last_reader->sends_data_to(
@@ -583,7 +581,7 @@ sub setup_template_patch_reader
   }
   $vars->{collapsed} = $cgi->param('collapsed');
   $vars->{context} = $context;
-  $vars->{do_context} = $::cvsbin && Param('cvsroot_get') && !$vars->{'newid'};
+  $vars->{do_context} = $cvsbin && Param('cvsroot_get') && !$vars->{'newid'};
 
   # Print everything out
   print $cgi->header(-type => 'text/html',
@@ -634,7 +632,7 @@ sub diff
   else
   {
     $vars->{other_patches} = [];
-    if ($::interdiffbin && $::diffpath) {
+    if ($interdiffbin && $diffpath) {
       # Get list of attachments on this bug.
       # Ignore the current patch, but select the one right before it
       # chronologically.

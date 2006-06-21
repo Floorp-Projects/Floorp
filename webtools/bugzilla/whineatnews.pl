@@ -30,9 +30,8 @@
 use strict;
 use lib '.';
 
-require "globals.pl";
-
 use Bugzilla;
+use Bugzilla::Config qw(:DEFAULT);
 use Bugzilla::Mailer;
 use Bugzilla::Util;
 

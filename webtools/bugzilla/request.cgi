@@ -29,8 +29,11 @@
 use strict;
 
 use lib qw(.);
-require "globals.pl";
+
 use Bugzilla;
+use Bugzilla::Config qw(:DEFAULT);
+use Bugzilla::Util;
+use Bugzilla::Error;
 use Bugzilla::Flag;
 use Bugzilla::FlagType;
 use Bugzilla::User;

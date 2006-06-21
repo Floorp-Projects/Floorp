@@ -25,9 +25,8 @@ use strict;
 use lib ".";
 
 use Bugzilla;
+use Bugzilla::Error;
 use Bugzilla::User;
-
-require "globals.pl";
 
 Bugzilla->login();
 

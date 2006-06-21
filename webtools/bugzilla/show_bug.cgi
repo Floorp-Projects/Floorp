@@ -26,11 +26,10 @@ use lib qw(.);
 
 use Bugzilla;
 use Bugzilla::Constants;
+use Bugzilla::Config qw(:DEFAULT);
+use Bugzilla::Error;
 use Bugzilla::User;
 use Bugzilla::Keyword;
-
-require "globals.pl";
-
 use Bugzilla::Bug;
 
 my $cgi = Bugzilla->cgi;

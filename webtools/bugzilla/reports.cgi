@@ -37,19 +37,19 @@ use strict;
 
 use lib qw(.);
 
-use Bugzilla::Config qw(:DEFAULT $datadir);
-
-require "globals.pl";
+use Bugzilla;
+use Bugzilla::Constants;
+use Bugzilla::Config qw(:DEFAULT);
+use Bugzilla::Util;
+use Bugzilla::Error;
 
 eval "use GD";
 $@ && ThrowCodeError("gd_not_installed");
 eval "use Chart::Lines";
 $@ && ThrowCodeError("chart_lines_not_installed");
 
-my $dir = "$datadir/mining";
+my $dir = bz_locations()->{'datadir'} . "/mining";
 my $graph_dir = "graphs";
-
-use Bugzilla;
 
 # If we're using bug groups for products, we should apply those restrictions
 # to viewing reports, as well.  Time to check the login in that case.

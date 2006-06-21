@@ -30,10 +30,11 @@ use strict;
 
 # Include the Bugzilla CGI and general utility library.
 use lib ".";
-require "globals.pl";
 
 use Bugzilla;
 use Bugzilla::Constants;
+use Bugzilla::Config qw(:DEFAULT);
+use Bugzilla::Error;
 use Bugzilla::Update;
 
 # Check whether or not the user is logged in

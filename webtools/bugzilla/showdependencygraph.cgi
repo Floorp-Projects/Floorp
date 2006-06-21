@@ -26,12 +26,13 @@ use strict;
 use lib qw(.);
 
 use File::Temp;
-use Bugzilla;
-use Bugzilla::Config qw(:DEFAULT $webdotdir);
-use Bugzilla::Util;
-use Bugzilla::Bug;
 
-require "globals.pl";
+use Bugzilla;
+use Bugzilla::Constants;
+use Bugzilla::Config qw(:DEFAULT);
+use Bugzilla::Util;
+use Bugzilla::Error;
+use Bugzilla::Bug;
 
 Bugzilla->login();
 
@@ -100,6 +101,7 @@ sub AddLink {
 }
 
 my $rankdir = $cgi->param('rankdir') || "LR";
+my $webdotdir = bz_locations()->{'webdotdir'};
 
 if (!defined $cgi->param('id') && !defined $cgi->param('doall')) {
     ThrowCodeError("missing_bug_id");

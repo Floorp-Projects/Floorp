@@ -27,10 +27,11 @@ use lib ".";
 
 use Bugzilla;
 use Bugzilla::Constants;
-use Bugzilla::Config qw(:DEFAULT :admin :params $datadir);
+use Bugzilla::Config qw(:DEFAULT :admin :params);
 use Bugzilla::Config::Common;
+use Bugzilla::Util;
+use Bugzilla::Error;
 
-require "globals.pl";
 use vars qw(@parampanels);
 
 my $user = Bugzilla->login(LOGIN_REQUIRED);

@@ -28,14 +28,14 @@
 use strict;
 use lib ".";
 
-require "globals.pl";
-
 use Bugzilla;
 use Bugzilla::Bug;
 use Bugzilla::Constants;
+use Bugzilla::Config qw(:DEFAULT);
 use Bugzilla::Search;
 use Bugzilla::User;
 use Bugzilla::Util;
+use Bugzilla::Error;
 use Bugzilla::Product;
 use Bugzilla::Keyword;
 use Bugzilla::Field;

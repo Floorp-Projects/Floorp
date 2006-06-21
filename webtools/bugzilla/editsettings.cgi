@@ -21,9 +21,9 @@ use lib qw(.);
 
 use Bugzilla;
 use Bugzilla::Constants;
+use Bugzilla::Util;
+use Bugzilla::Error;
 use Bugzilla::User::Setting;
-
-require "globals.pl";
 
 my $template = Bugzilla->template;
 my $vars = {};

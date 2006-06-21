@@ -37,10 +37,10 @@ BEGIN {
   push @INC, "."; # this script lives in contrib
 }
 
-require "globals.pl";
 use Bugzilla;
+use Bugzilla::Constants;
 use BugzillaEmail;
-use Bugzilla::Config qw(:DEFAULT $datadir);
+use Bugzilla::Config qw(:DEFAULT);
 use Bugzilla::BugMail;
 
 my $dbh = Bugzilla->dbh;
@@ -52,6 +52,7 @@ my $Comment = "";
 
 # Create and set the output directory:
 # FIXME: There should be a $BUGZILLA_HOME variable (SML)
+my $datadir = bz_locations()->{'datadir'};
 (-d "$datadir/mimedump-tmp") or mkdir "$datadir/mimedump-tmp",0755 or die "mkdir: $!";
 (-w "$datadir/mimedump-tmp") or die "can't write to directory";
 
@@ -153,45 +154,45 @@ sub dump_entity {
     # Output the body:
     my @parts = $entity->parts;
     if (@parts) {                     # multipart...
-	my $i;
-	foreach $i (0 .. $#parts) {       # dump each part...
-	    dump_entity($parts[$i], ("$name, part ".(1+$i)));
-	}
-    } else {                            # single part...	
+        my $i;
+        foreach $i (0 .. $#parts) {       # dump each part...
+            dump_entity($parts[$i], ("$name, part ".(1+$i)));
+        }
+    } else {                            # single part...        
 
-	# Get MIME type, and display accordingly...
-	my $msg_part = $entity->head->get( 'Content-Disposition' );
-	
-	$msg_part ||= ""; 
+        # Get MIME type, and display accordingly...
+        my $msg_part = $entity->head->get( 'Content-Disposition' );
+        
+        $msg_part ||= ""; 
 
-	my ($type, $subtype) = split('/', $entity->head->mime_type);
-	my $body = $entity->bodyhandle;
-	my ($data, $on_disk );
+        my ($type, $subtype) = split('/', $entity->head->mime_type);
+        my $body = $entity->bodyhandle;
+        my ($data, $on_disk );
 
-	if(  $msg_part =~ /^attachment/ ) {
-	    # Attached File
-	    my $des = $entity->head->get('Content-Description');
-	    $des ||= "";
+        if(  $msg_part =~ /^attachment/ ) {
+            # Attached File
+            my $des = $entity->head->get('Content-Description');
+            $des ||= "";
 
-	    if( defined( $body->path )) { # Data is on disk
-		$on_disk = 1;
-		$data = $body->path;
-		
-	    } else {                      # Data is in core
-		$on_disk = 0;
-		$data = $body->as_string;
-	    }
-#	    push ( @attachments, [ $data, $entity->head->mime_type, $on_disk, $des ] );
-	} else {
-	    # Real Message
-	    if ($type =~ /^(text|message)$/) {     # text: display it...
-		if ($IO = $body->open("r")) {
-		    $Comment .=  $_ while (defined($_ = $IO->getline));
-		    $IO->close;
-		} else {       # d'oh!
-		    print "$0: couldn't find/open '$name': $!";
-		}
-	    } else { print "Oooops - no Body !\n"; }
-	}
+            if( defined( $body->path )) { # Data is on disk
+                $on_disk = 1;
+                $data = $body->path;
+                
+            } else {                      # Data is in core
+                $on_disk = 0;
+                $data = $body->as_string;
+            }
+#           push ( @attachments, [ $data, $entity->head->mime_type, $on_disk, $des ] );
+        } else {
+            # Real Message
+            if ($type =~ /^(text|message)$/) {     # text: display it...
+                if ($IO = $body->open("r")) {
+                    $Comment .=  $_ while (defined($_ = $IO->getline));
+                    $IO->close;
+                } else {       # d'oh!
+                    print "$0: couldn't find/open '$name': $!";
+                }
+            } else { print "Oooops - no Body !\n"; }
+        }
     }
 }

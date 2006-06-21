@@ -861,8 +861,6 @@ sub map_username_to_realname() {
     return("");
 }
 
-# This routine was copied from globals.pl which was largely copied
-# from Mysql.pm.
 sub detaint_string {
     my ($str) = @_;
     $str =~ m/^(.*)$/s;

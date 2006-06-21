@@ -48,13 +48,14 @@ my $lastbugid = 0;
 
 use lib qw(.);
 
-require "globals.pl";
 use Bugzilla;
 use Bugzilla::Constants;
+use Bugzilla::Config qw(:DEFAULT);
 use Bugzilla::Bug;
 use Bugzilla::Mailer;
 use Bugzilla::User;
 use Bugzilla::Util;
+use Bugzilla::Error;
 use Bugzilla::Field;
 use Bugzilla::Product;
 use Bugzilla::Component;

@@ -24,10 +24,10 @@
 use strict;
 use lib ".";
 
-require "globals.pl";
-
 use Bugzilla;
 use Bugzilla::Constants;
+use Bugzilla::Util;
+use Bugzilla::Error;
 use Bugzilla::Field;
 
 my $cgi = Bugzilla->cgi;

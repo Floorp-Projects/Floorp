@@ -29,12 +29,12 @@ use AnyDBM_File;
 
 use lib qw(.);
 
-require "globals.pl";
-
 use Bugzilla;
-use Bugzilla::Search;
-use Bugzilla::Config qw(:DEFAULT $datadir);
 use Bugzilla::Constants;
+use Bugzilla::Config qw(:DEFAULT);
+use Bugzilla::Util;
+use Bugzilla::Error;
+use Bugzilla::Search;
 use Bugzilla::Product;
 
 my $cgi = Bugzilla->cgi;
@@ -105,6 +105,8 @@ my $yesterday = days_ago(1);
 
 use Errno;
 use Fcntl;
+
+my $datadir = bz_locations()->{'datadir'};
 
 if (!tie(%dbmcount, 'AnyDBM_File', "$datadir/duplicates/dupes$today",
          O_RDONLY, 0644)) {

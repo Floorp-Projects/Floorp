@@ -1048,11 +1048,6 @@ while (my ($table, $values) = each %$enum_values) {
 # Create initial --DATA-- directory and make the initial empty files there:
 #
 
-# The |require "globals.pl"| above ends up creating a template object with
-# a COMPILE_DIR of "$datadir". This means that TT creates the directory for us,
-# so this code wouldn't run if we just checked for the existence of the
-# directory. Instead, check for the existence of '$datadir/nomail', which is
-# created in this block
 unless (-d $datadir && -e "$datadir/nomail") {
     print "Creating data directory ($datadir) ...\n";
     # permissions for non-webservergroup are fixed later on
@@ -1596,8 +1591,7 @@ if ($^O !~ /MSWin32/i) {
         fixPerms('css', $<, $webservergid, 027, 1);
         fixPerms('skins', $<, $webservergid, 027, 1);
         fixPerms('js', $<, $webservergid, 027, 1);
-        chmod 0644, 'globals.pl';
-        
+
         # Don't use fixPerms here, because it won't change perms 
         # on the directory unless it's using recursion
         chown $<, $webservergid, $datadir;

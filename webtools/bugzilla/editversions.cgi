@@ -21,7 +21,7 @@
 # Contributor(s): Holger Schurig <holgerschurig@nikocity.de>
 #                 Terry Weissman <terry@mozilla.org>
 #                 Gavin Shelley <bugzilla@chimpychompy.org>
-#                 Frédéric Buclin <LpSolit@gmail.com>
+#                 FrÃ©dÃ©ric Buclin <LpSolit@gmail.com>
 #
 #
 # Direct any questions on this source code to
@@ -31,11 +31,10 @@
 use strict;
 use lib ".";
 
-require "globals.pl";
-
 use Bugzilla;
 use Bugzilla::Constants;
-use Bugzilla::Config qw(:DEFAULT $datadir);
+use Bugzilla::Util;
+use Bugzilla::Error;
 use Bugzilla::Product;
 use Bugzilla::Version;
 

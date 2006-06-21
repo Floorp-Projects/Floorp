@@ -28,10 +28,9 @@
 
 push @INC, "../."; # this script now lives in contrib
 
-require "globals.pl";
-
 use strict;
 
+use Bugzilla;
 
 my $EMAIL_TRANSFORM_NONE = "email_transform_none";
 my $EMAIL_TRANSFORM_BASE_DOMAIN = "email_transform_base_domain";
