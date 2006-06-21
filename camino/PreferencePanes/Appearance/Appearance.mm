@@ -54,8 +54,11 @@
 - (NSString*)defaultProportionalFontTypeForCurrentRegion;
 
 - (void)saveFontNamePrefsForRegion:(NSDictionary*)regionDict forFontType:(NSString*)fontType;
-- (void)saveDefaultFontTypePrefForRegion:(NSDictionary*)entryDict;
 - (void)saveFontSizePrefsForRegion:(NSDictionary*)entryDict;
+- (void)saveDefaultFontTypePrefForRegion:(NSDictionary*)entryDict;
+
+- (BOOL)useMyFontsPref;
+- (void)setUseMyFontsPref:(BOOL)checkboxState;
 
 - (void)setupFontSamplesFromDict:(NSDictionary*)regionDict;
 - (void)setupFontSampleOfType:(NSString*)fontType fromDict:(NSDictionary*)regionDict;
@@ -148,6 +151,8 @@
   [mTextColorWell           setColor:[self getColorPref:"browser.display.foreground_color"  withSuccess:&gotPref]];
   [mUnvisitedLinksColorWell setColor:[self getColorPref:"browser.anchor_color"              withSuccess:&gotPref]];
   [mVisitedLinksColorWell   setColor:[self getColorPref:"browser.visited_color"             withSuccess:&gotPref]];
+  
+  [mUseMyFontsCheckbox setState:[self useMyFontsPref]];
 
   [self setupFontRegionPopup];
   [self updateFontPreviews];
@@ -225,6 +230,11 @@
   mFontButtonForEditor = mChooseMonospaceFontButton;
   [fontManager setSelectedFont:newFont isMultiple:NO];
   [[fontManager fontPanel:YES] makeKeyAndOrderFront:self];
+}
+
+- (IBAction)useMyFontsButtonClicked:(id)sender
+{
+  [self setUseMyFontsPref:[sender state]];
 }
 
 - (IBAction)fontRegionPopupClicked:(id)sender
@@ -456,6 +466,21 @@
     [self setPref:[prefName cString] toString:value];
   else
     [self clearPref:[prefName cString]];
+}
+
+// The exposed "Use My Fonts" pref has reverse logic from the internal pref 
+// (when mUseMyFontsCheckbox == 1, use_document_fonts == 0).  These private accessor methods allow code
+// elsewhere to use the exposed pref's logic
+- (BOOL)useMyFontsPref
+{
+  BOOL gotPref;
+  return [self getIntPref:"browser.display.use_document_fonts" withSuccess:&gotPref] == 0;
+}
+
+- (void)setUseMyFontsPref:(BOOL)checkboxState
+{
+  int useDocumentFonts = checkboxState ? 0 : 1;
+  [self setPref:"browser.display.use_document_fonts" toInt:useDocumentFonts];
 }
 
 #pragma mark -
@@ -731,6 +756,8 @@ const int kDefaultFontSansSerifTag = 1;
     [regionDict setObject:[NSMutableDictionary dictionary] forKey:@"fontsize"];
     [regionDict setObject:[NSMutableDictionary dictionary] forKey:@"defaultFontType"];
   }
+  
+  [self clearPref:"browser.display.use_document_fonts"];
 
   // commit the changes
   // first, we clear the preferences by saving them. This clears the values that are returned by
@@ -743,6 +770,7 @@ const int kDefaultFontSansSerifTag = 1;
   // Update the UI of the Appearance pane
   // order is important here -- syncing the font panel depends on the font previews being correct.
   [self updateFontPreviews];
+  [mUseMyFontsCheckbox setState:[self useMyFontsPref]];
 }
 
 - (void)advancedFontsSheetDidEnd:(NSWindow *)sheet returnCode:(int)returnCode contextInfo:(void  *)contextInfo

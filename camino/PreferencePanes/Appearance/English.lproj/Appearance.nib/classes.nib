@@ -30,6 +30,7 @@
                 resetColorsToDefaults = id; 
                 resetFontsToDefaults = id; 
                 showAdvancedFontsDialog = id; 
+                useMyFontsButtonClicked = id; 
             }; 
             CLASS = OrgMozillaChimeraPreferenceAppearance; 
             LANGUAGE = ObjC; 
@@ -57,6 +58,7 @@
                 mUnderlineLinksCheckbox = NSButton; 
                 mUnvisitedLinksColorWell = NSColorWell; 
                 mUseMyColorsCheckbox = NSButton; 
+                mUseMyFontsCheckbox = NSButton; 
                 mVisitedLinksColorWell = NSColorWell; 
             }; 
             SUPERCLASS = PreferencePaneBase; 

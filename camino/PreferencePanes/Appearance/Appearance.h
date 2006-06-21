@@ -65,6 +65,8 @@
   IBOutlet NSTextField*   mProportionalSampleLabel;
   IBOutlet NSTextField*   mProportionalSubLabel;
 
+  IBOutlet NSButton*      mUseMyFontsCheckbox;
+
   IBOutlet NSButton*      mFontsResetButton;
 
   // advanced panel stuff
@@ -95,6 +97,7 @@
 - (IBAction)colorChanged:(id)sender;
 
 - (IBAction)proportionalFontChoiceButtonClicked:(id)sender;
+- (IBAction)useMyFontsButtonClicked:(id)sender;
 - (IBAction)monospaceFontChoiceButtonClicked:(id)sender;
 - (IBAction)fontRegionPopupClicked:(id)sender;
 
