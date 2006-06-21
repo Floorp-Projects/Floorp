@@ -38,10 +38,11 @@ use Socket;
 use Bugzilla::Util;
 use Bugzilla::Constants;
 use Bugzilla::Field;
+use Bugzilla::Group;
 
 use base qw(Exporter);
 @Bugzilla::Config::Common::EXPORT =
-    qw(check_multi check_numeric check_regexp check_url
+    qw(check_multi check_numeric check_regexp check_url check_group
        check_sslbase check_priority check_severity check_platform
        check_opsys check_shadowdb check_urlbase check_webdotbase
        check_netmask check_user_verify_class check_image_converter
@@ -147,6 +148,15 @@ sub check_opsys {
     if (lsearch(['', @$legal_OS], $value) < 0) {
         return "Must be empty or a legal operating system value: one of " .
             join(", ", @$legal_OS);
+    }
+    return "";
+}
+
+sub check_group {
+    my $group_name = shift;
+    my $group = new Bugzilla::Group({'name' => $group_name});
+    unless (defined $group) {
+        return "Must be an existing group name";
     }
     return "";
 }

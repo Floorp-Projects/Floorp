@@ -25,7 +25,6 @@ use strict;
 
 package Bugzilla::Group;
 
-use Bugzilla::Config;
 use Bugzilla::Util;
 use Bugzilla::Error;
 
@@ -113,7 +112,7 @@ sub ValidateGroupName {
     my $dbh = Bugzilla->dbh;
     my $query = "SELECT id FROM groups " .
                 "WHERE name = ?";
-    if (Param('usevisibilitygroups')) {
+    if (Bugzilla->params->{'usevisibilitygroups'}) {
         my @visible = (-1);
         foreach my $user (@users) {
             $user && push @visible, @{$user->visible_groups_direct};
