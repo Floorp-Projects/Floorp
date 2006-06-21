@@ -367,9 +367,14 @@ nsThebesFontMetrics::DrawString(const char *aString, PRUint32 aLength,
     textrun->SetRightToLeft(mIsRTL);
 
     if (aSpacing) {
+        gfxFloat offset = aX * app2dev;
         nsTArray<gfxFloat> spacing(aLength);
-        for (PRUint32 i = 0; i < aLength; ++i)
-            spacing.AppendElement(aSpacing[i] * app2dev);
+        for (PRUint32 i = 0; i < aLength; ++i) {
+            gfxFloat nextOffset = offset + aSpacing[i] * app2dev;
+            spacing.AppendElement(NSToIntRound(nextOffset) -
+                                  NSToIntRound(offset));
+            offset = nextOffset;
+        }
         textrun->SetSpacing(spacing);
     }
 
@@ -397,9 +402,14 @@ nsThebesFontMetrics::DrawString(const PRUnichar* aString, PRUint32 aLength,
     textrun->SetRightToLeft(mIsRTL);
 
     if (aSpacing) {
+        gfxFloat offset = aX * app2dev;
         nsTArray<gfxFloat> spacing(aLength);
-        for (PRUint32 i = 0; i < aLength; ++i)
-            spacing.AppendElement(aSpacing[i] * app2dev);
+        for (PRUint32 i = 0; i < aLength; ++i) {
+            gfxFloat nextOffset = offset + aSpacing[i] * app2dev;
+            spacing.AppendElement(NSToIntRound(nextOffset) - 
+                                  NSToIntRound(offset));
+            offset = nextOffset;
+        }
         textrun->SetSpacing(spacing);
     }
 
