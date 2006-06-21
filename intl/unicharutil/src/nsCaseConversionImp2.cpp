@@ -173,12 +173,14 @@ PRUnichar nsCompressedMap::Lookup(
   }
 }
 
-nsrefcnt nsCaseConversionImp2::gInit      = 0;
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsCaseConversionImp2, nsICaseConversion)
 
-NS_IMPL_ISUPPORTS1(nsCaseConversionImp2, nsICaseConversion)
-
-static nsCompressedMap *gUpperMap = nsnull;
-static nsCompressedMap *gLowerMap = nsnull;
+static nsCompressedMap
+  gUpperMap(NS_REINTERPRET_CAST(const PRUnichar*, &gToUpper[0]),
+                                gToUpperItems);
+static nsCompressedMap
+  gLowerMap(NS_REINTERPRET_CAST(const PRUnichar*, &gToLower[0]),
+                                gToLowerItems);
 
 nsresult nsCaseConversionImp2::ToUpper(
   PRUnichar aChar, PRUnichar* aReturn
@@ -197,7 +199,7 @@ nsresult nsCaseConversionImp2::ToUpper(
   } 
   else 
   {
-    *aReturn = gUpperMap->Map(aChar);
+    *aReturn = gUpperMap.Map(aChar);
   }
   return NS_OK;
 }
@@ -220,7 +222,7 @@ static PRUnichar FastToLower(
   } 
   else
   {
-    return gLowerMap->Map(aChar);
+    return gLowerMap.Map(aChar);
   } 
   return NS_OK;
 }
@@ -259,7 +261,7 @@ nsresult nsCaseConversionImp2::ToTitle(
     }
 
     PRUnichar upper;
-    upper = gUpperMap->Map(aChar);
+    upper = gUpperMap.Map(aChar);
     
     if( 0x01C0 == ( upper & 0xFFC0)) // 0x01Cx - 0x01Fx
     {
@@ -296,7 +298,7 @@ nsresult nsCaseConversionImp2::ToUpper(
     } 
     else 
     {
-      aReturn[i] = gUpperMap->Map(aChar);
+      aReturn[i] = gUpperMap.Map(aChar);
     }
   }
   return NS_OK;
@@ -389,30 +391,10 @@ nsCaseConversionImp2::CaseInsensitiveCompare(const PRUnichar *aLeft,
   return NS_OK;
 }
 
-nsCaseConversionImp2::nsCaseConversionImp2()
+nsresult NS_NewCaseConversion(nsICaseConversion** oResult)
 {
-  if (gInit++ == 0) {
-    gUpperMap = new nsCompressedMap(NS_REINTERPRET_CAST(const PRUnichar*, &gToUpper[0]), gToUpperItems);
-    gLowerMap = new nsCompressedMap(NS_REINTERPRET_CAST(const PRUnichar*, &gToLower[0]), gToLowerItems);
-  }
-}
-
-nsCaseConversionImp2::~nsCaseConversionImp2()
-{
-  if (--gInit == 0) {
-    delete gUpperMap;
-    gUpperMap = nsnull;
-    delete gLowerMap;
-    gLowerMap = nsnull;
-  }
-}
-
-nsresult NS_NewCaseConversion(nsISupports** oResult)
-{
-  if(!oResult)
-    return NS_ERROR_NULL_POINTER;
-  *oResult = new nsCaseConversionImp2();
-  if(*oResult)
-    NS_ADDREF(*oResult);
-  return (*oResult) ? NS_OK : NS_ERROR_OUT_OF_MEMORY; 
+  NS_ENSURE_ARG_POINTER(oResult);
+  NS_NEWXPCOM(*oResult, nsCaseConversionImp2);
+  NS_IF_ADDREF(*oResult);
+  return *oResult ? NS_OK :NS_ERROR_OUT_OF_MEMORY; 
 }
