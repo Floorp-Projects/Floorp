@@ -2,7 +2,8 @@
 
 # This script is designed to be used with the Mozilla Uninstall Survey
 # It will connect to the database and pull results into a .csv for each product
-# ("Mozilla Firefox 1.5", etc.).  The .csv's are saved to the specified directory.
+# ("Mozilla Firefox 1.5", etc.).  The .csv's are saved to the specified directory
+# and, once created, updated incrementally (only new rows are pushed).
 # There is no output if everything goes well (this will probably be a cron script)
 #   
 # @author Wil Clouser <wclouser@mozilla.com>
@@ -61,11 +62,13 @@ use DBI;
             `applications`.`name` LIKE ?
         AND 
             `applications`.`version` LIKE ?
+        AND
+            `results`.`id` > ?
         ORDER BY 
             `results`.`created` ASC");
 
-    # table name is unimportant
-    my $csv = $csvh->prepare("INSERT INTO testo VALUES(?,?,?,?,?)");
+    # table name is arbitrary
+    my $csv = $csvh->prepare("INSERT INTO csv VALUES(?,?,?,?,?)");
 
 # Main Loop
     foreach my $apps ( @$applications ) {
@@ -78,17 +81,25 @@ use DBI;
 
         my $filename = "export-$application_name-$application_version.csv";
 
-        # If the file doesn't exist, this will create it.  If it does exist, it will
-        # be truncated to zero length (we've already checked the directory is
-        # writable)
+        # Used for incremental additions.  Default to adding rows starting at zero
+        my $maxid = 0;
+
+        $csvh->{'csv_tables'}->{'csv'} = { 'file' => $filename, 'col_names' => ['id','created','intention','intention_other','comments']};
+
+        # If the file doesn't exist, this will create it.
+        if (! -f $filename) {
             open CSVFILE, ">$output_dir/$filename" or
                 die "ERROR: Could not open file: $output_dir/$filename!";
-            truncate CSVFILE,0;
             close CSVFILE;
+        } else {
+            # Pull out the max ID for an incremental update
+            ($maxid) = $csvh->selectrow_array("SELECT MAX(id) FROM csv");
 
-        $csvh->{'csv_tables'}->{'testo'} = { 'file' => $filename, 'col_names' => ['id','created','intention','intention_other','comments']};
+            # If the CSV is empty (but exists), this will be undefined.  In this case, start from zero
+            $maxid = (defined $maxid) ? $maxid : 0;
+        }
 
-        $results_query->execute($apps->{name},$apps->{version});
+        $results_query->execute($apps->{name},$apps->{version}, $maxid);
 
         # grab results from the db and send to the csv
         while ( my @row = $results_query->fetchrow_array ) {
@@ -121,4 +132,9 @@ use DBI;
 sub get_current_applications {
     # Pulling only visible rows is purely a speed consideration - feel free to remove it
     return $dbh->selectall_arrayref("SELECT * FROM applications WHERE visible=1 ORDER BY id", { Slice => {} });
+}
+
+sub get_max_id {
+    # Pulling only visible rows is purely a speed consideration - feel free to remove it
+    return $dbh->selectall_arrayref("SELECT MAX(id) FROM applications WHERE visible=1 ORDER BY id", { Slice => {} });
 }
