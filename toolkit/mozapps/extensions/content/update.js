@@ -53,9 +53,9 @@ const nsIAUCL = Components.interfaces.nsIAddonUpdateCheckListener;
 
 const PREF_UPDATE_EXTENSIONS_ENABLED            = "extensions.update.enabled";
 const PREF_UPDATE_EXTENSIONS_AUTOUPDATEENABLED  = "extensions.update.autoUpdateEnabled";
+const PREF_XPINSTALL_ENABLED                    = "xpinstall.enabled";
 
 var gShowMismatch = null;
-var gUpdateTypes  = null;
 
 var gUpdateWizard = {
   // The items to check for updates for (e.g. an extension, some subset of extensions, 
@@ -67,10 +67,9 @@ var gUpdateWizard = {
   updatedCount: 0,
   shouldSuggestAutoChecking: false,
   shouldAutoCheck: false,
-  
+  xpinstallEnabled: false,
+  xpinstallLocked: false,
   remainingExtensionUpdateCount: 0,
-  
-  succeeded: true,
   
   init: function ()
   {
@@ -85,6 +84,8 @@ var gUpdateWizard = {
       gShowMismatch && 
       !pref.getBoolPref(PREF_UPDATE_EXTENSIONS_AUTOUPDATEENABLED);
 
+    this.xpinstallEnabled = pref.getBoolPref(PREF_XPINSTALL_ENABLED);
+    this.xpinstallLocked = pref.prefIsLocked(PREF_XPINSTALL_ENABLED);
     document.documentElement.currentPage = 
       document.getElementById("versioninfo");
   },
@@ -252,6 +253,11 @@ var gUpdatePage = {
   _completeCount: 0,
   onPageShow: function ()
   {
+    if (!gUpdateWizard.xpinstallEnabled && gUpdateWizard.xpinstallLocked) {
+      document.documentElement.currentPage = document.getElementById("finished");
+      return;
+    }
+
     gUpdateWizard.setButtonLabels(null, true, 
                                   "nextButtonText", true, 
                                   "cancelButtonText", false);
@@ -338,7 +344,7 @@ var gFoundPage = {
     if (hasExtensions) {
       var addonsHeader = document.getElementById("addons");
       var strings = document.getElementById("updateStrings");
-      addonsHeader.label = strings.getFormattedString("updateTypeExtensions", [itemCount]);
+      addonsHeader.label = strings.getFormattedString("updateTypeAddons", [itemCount]);
       addonsHeader.collapsed = false;
     }
   },
@@ -349,7 +355,13 @@ var gFoundPage = {
     gUpdateWizard.setButtonLabels(null, true, 
                                   "installButtonText", false, 
                                   null, false);
-    document.documentElement.getButton("next").focus();
+    if (!gUpdateWizard.xpinstallEnabled) {
+      document.documentElement.getButton("next").disabled = true;
+      document.getElementById("xpinstallDisabledAlert").hidden = false;
+      document.getElementById("enableXPInstall").focus();
+    }
+    else
+      document.documentElement.getButton("next").focus();
     
     var updates = document.getElementById("found.updates");
     if (!this._initialized) {
@@ -367,8 +379,21 @@ var gFoundPage = {
     }
   },
     
+  toggleXPInstallEnable: function(aEvent)
+  {
+    var enabled = aEvent.target.checked;
+    gUpdateWizard.xpinstallEnabled = enabled;
+    var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefBranch);
+    pref.setBoolPref(PREF_XPINSTALL_ENABLED, enabled);
+    document.documentElement.getButton("next").disabled = !enabled;
+  },
+
   onSelect: function (aEvent)
   {
+    if (!gUpdateWizard.xpinstallEnabled)
+      return;
+
     var updates = document.getElementById("found.updates");
     var oneChecked = false;
     var items = updates.selectedItem.getElementsByTagName("checkbox");
@@ -483,7 +508,6 @@ var gErrorsPage = {
   onPageShow: function ()
   {
     document.documentElement.getButton("finish").focus();
-    gUpdateWizard.succeeded = false;
   },
   
   onShowErrors: function ()
@@ -498,23 +522,21 @@ var gFinishedPage = {
     gUpdateWizard.setButtonLabels(null, true, null, true, null, true);
     document.documentElement.getButton("finish").focus();
     
-    var iR = document.getElementById("incompatibleRemaining");
-    var iR2 = document.getElementById("incompatibleRemaining2");
-    var fEC = document.getElementById("finishedEnableChecking");
-
-    if (gUpdateWizard.shouldSuggestAutoChecking) {
-      iR.hidden = true;
-      iR2.hidden = false;
-      fEC.hidden = false;
-      fEC.click();
+    if (gUpdateWizard.xpinstallLocked)
+    {
+      document.getElementById("adminDisabled").hidden = false;
+      document.getElementById("incompatibleRemainingLocked").hidden = false;
     }
     else {
-      iR.hidden = false;
-      iR2.hidden = true;
-      fEC.hidden = true;
+      document.getElementById("updated").hidden = false;
+      document.getElementById("incompatibleRemaining").hidden = false;
+      if (gUpdateWizard.shouldSuggestAutoChecking) {
+        document.getElementById("finishedEnableChecking").hidden = false;
+        document.getElementById("finishedEnableChecking").click();
+      }
     }
     
-    if (gShowMismatch) {
+    if (gShowMismatch || gUpdateWizard.xpinstallLocked) {
       document.getElementById("finishedMismatch").hidden = false;
       document.getElementById("incompatibleAlert").hidden = false;
     }
@@ -538,7 +560,6 @@ var gNoUpdatesPage = {
       }
     }
 
-    gUpdateWizard.succeeded = false;
     gUpdateWizard.checkForErrors("updateCheckErrorNotFound");
   }
 };

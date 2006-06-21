@@ -68,21 +68,21 @@
   <wizardpage id="dummy" pageid="dummy"/>
   
   <wizardpage id="versioninfo" pageid="versioninfo" next="mismatch"
-              label="&versioninfo.title;"
+              label="&compatCheck.title;"
               onpageshow="gVersionInfoPage.onPageShow();">
     <progressmeter id="versioninfo.progress" mode="undetermined"/>
     <hbox align="center">
       <image id="versioninfo.throbber" class="throbber"/>
-      <label flex="1" crop="right">&versioninfo.intro;</label>
+      <label flex="1" crop="right">&compatCheck.intro;</label>
     </hbox>
     <separator/>
   </wizardpage>
 
   <wizardpage id="mismatch" pageid="mismatch" next="checking"
-              label="&mismatch.title;"
+              label="&mismatch.win.title;"
               onpageshow="gMismatchPage.onPageShow();">
 
-    <label>&mismatch.intro1.label;</label>
+    <label>&mismatch.intro-1.label;</label>
     
     <separator class="thin"/>
     
@@ -93,7 +93,7 @@
     <label style="font-weight: bold;">&mismatch.intro2.label;</label>
     <separator class="thin"/>
     
-    <label>&mismatch.intro3.label;</label>
+    <label>&mismatch.intro-3.label;</label>
 
   </wizardpage>
   
@@ -152,14 +152,22 @@
     <separator class="thin"/>
     <radiogroup type="update-types" id="found.updates" flex="1" _uninitialized="true"
                 onselect="gFoundPage.onSelect(event);">
-      <radio type="update-type" id="addons" accesskey="&found.updatetype.addons.accesskey;" collapsed="true">
-        <description>&found.addons.label;</description>
+      <radio type="update-type" id="addons" accesskey="&updateFound.addons.accesskey;" collapsed="true">
+        <description>&updateFound.addons.label;</description>
         <separator class="thin"/>        
         <vbox id="found.addons.list"/>
         <label>.</label>
       </radio>
     </radiogroup>
     <separator class="thin"/>
+    <vbox align="left" id="xpinstallDisabledAlert">
+      <description flex="1">&found.xpinstallDisabled.label;</description>
+      <checkbox label="&found.enableXPInstall.label;"
+                id="enableXPInstall"
+                accesskey="&found.enableXPInstall.accesskey;"
+                oncommand="gFoundPage.toggleXPInstallEnable(event);"/>
+      <separator class="thin"/>
+    </vbox>
     <label id="foundInstructions"/>
   </wizardpage>
 
@@ -179,7 +187,7 @@
               label="&errors.title;"
               align="right"
               onpageshow="gErrorsPage.onPageShow();">
-    <label>&errors.intro.label;</label>
+    <label>&errors.introduction.label;</label>
     <separator/>
     <button label="&errors.details.label;" accesskey="&errors.details.accesskey;"
             oncommand="gErrorsPage.onShowErrors();"/>
@@ -190,16 +198,19 @@
               label="&finished.title;"
               onpageshow="gFinishedPage.onPageShow();">
 
-    <label id="updated">&finished.updated.label;</label>
+    <label id="updated" hidden="true">&finished.updated.label;</label>
+    <label id="adminDisabled" hidden="true">&finished.adminDisabled.label;</label>
     <separator/>
     <hbox id="incompatibleAlert" align="top" hidden="true">
       <image id="alert"/>
-      <description id="incompatibleRemaining" flex="1">&finished.remaining.label;</description>
-      <description id="incompatibleRemaining2" flex="1">&finished.remaining2.label;</description>
+      <description id="incompatibleRemaining" hidden="true"
+                   flex="1">&finished.remain.label;</description>
+      <description id="incompatibleRemainingLocked" hidden="true"
+                   flex="1">&finished.xpinstallLocked.label;</description>
     </hbox>
     <vbox align="left">
       <checkbox class="indent" label="&finished.enableChecking.label;" id="finishedEnableChecking"
-                oncommand="gUpdateWizard.shouldAutoCheck = this.checked;"/>
+                oncommand="gUpdateWizard.shouldAutoCheck = this.checked;" hidden="true"/>
     </vbox>
     <separator flex="1"/>
     <label id="finishedMismatch" hidden="true">&finished.mismatch.label;</label>

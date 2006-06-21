@@ -1,40 +1,30 @@
 <!ENTITY  updateWizard.title              "&brandShortName; Update">
 
-<!ENTITY  mismatch.title                  "Incompatible Components">
-<!ENTITY  mismatch.intro1.label           "The following components are not compatible with the new version
+<!ENTITY  mismatch.win.title              "Incompatible Add-ons">
+<!ENTITY  mismatch.intro-1.label          "The following add-ons are not compatible with the new version
                                            of &brandShortName; you have just installed:">
 <!ENTITY  mismatch.intro2.label           "They have been disabled until compatible versions are 
                                            installed.">
-<!ENTITY  mismatch.intro3.label           "&brandShortName; can check for and install newer, compatible 
-                                           versions of these components.">
+<!ENTITY  mismatch.intro-3.label          "&brandShortName; can check for and install newer, compatible 
+                                           versions of these add-ons.">
 
 <!ENTITY  checking.title                  "Checking for Updates">
 <!ENTITY  checking.intro.label            "&brandShortName; is now checking for available updates...">
 <!ENTITY  checking.status                 "This may take a few minutes...">
 
-<!ENTITY  version.title                   "Checking for Compatibility Updates">
-<!ENTITY  version.intro.label             "&brandShortName; is now checking for compatibility updates to your Extensions and Themes...">
-<!ENTITY  version.status                  "This may take a few minutes...">
-
 <!ENTITY  found.title                     "Updates Found">
 <!ENTITY  found.intro.label               "&brandShortName; found the following available updates:">
 <!ENTITY  from.label                      "from: ">
 
-<!ENTITY  found.updatetype.patches.accesskey    "C">
-<!ENTITY  found.updatetype.components.accesskey "O">
-<!ENTITY  found.updatetype.addons.accesskey     "E">
-<!ENTITY  found.updatetype.languages.accesskey  "L">
-<!ENTITY  found.criticalUpdates.label           "The following Critical Updates are available for &brandShortName;:">
-<!ENTITY  found.criticalUpdates.info            "You should install these updates immediately to protect your computer from attack.">
-<!ENTITY  found.app.infoLink                    "More Information...">
-<!ENTITY  found.components.label                "The following components and plugins are available to install:">
-<!ENTITY  found.components.info                 "Installing these components may improve your browsing experience.">
-<!ENTITY  found.addons.label                    "The following updates are available to Extensions and Themes that you already have installed">
-<!ENTITY  found.languages.label                 "The following language packs are available: ">
+<!ENTITY  updateFound.addons.accesskey    "A">
+<!ENTITY  updateFound.addons.label        "The following updates are available to add-ons that you already have installed">
+<!ENTITY  found.xpinstallDisabled.label   "Updates can not be installed because software installation is currently
+                                           disabled. You can change this setting below.">
+<!ENTITY  found.enableXPInstall.label     "Allow web sites to install software">
+<!ENTITY  found.enableXPInstall.accesskey "A">
 
 <!ENTITY  installing.title                "Installing Updates">
 <!ENTITY  installing.intro.label          "Now downloading and installing updates...">
-<!ENTITY  installing.disclaimer.label     "XXXben - this will not work until we have a scriptable API to XPInstall.">
 
 <!ENTITY  noupdates.title                 "No Updates Found">
 <!ENTITY  noupdates.intro.user.label      "&brandShortName; was not able to find any available updates.">
@@ -49,25 +39,20 @@
 
 <!ENTITY  finished.title                  "Update Complete">
 <!ENTITY  finished.updated.label          "&brandShortName; has installed the available updates. You will have to restart &brandShortName; for some updates to take effect.">
-<!ENTITY  finished.remaining.label        "Some incompatible components could not be updated, perhaps
+<!ENTITY  finished.adminDisabled.label    "&brandShortName; is unable to install updates.">
+<!ENTITY  finished.remain.label           "Some incompatible add-ons could not be updated, perhaps
                                            because compatible versions are not available at this time.
                                            &brandShortName; will check periodically and inform you
                                            when updated versions become available.">
-<!ENTITY  finished.remaining2.label       "Some incompatible components could not be updated, perhaps
-                                           because compatible versions are not available at this time.
-                                           &brandShortName; can check periodically and inform you
-                                           when updated versions become available.">
-<!ENTITY  finished.error.label            "&brandShortName; did not succeed in downloading and 
-                                           installing some updates.">
+<!ENTITY  finished.xpinstallLocked.label  "It is not possible to update the incompatible add-ons because
+                                           software installation for &brandShortName; has been disabled.
+                                           Please contact your System Administrator for assistance.">
 <!ENTITY  finished.enableChecking.label   "Allow &brandShortName; to check for updates.">
 <!ENTITY  finished.mismatch.label         "Click Finish to continue starting &brandShortName;.">
 
-<!ENTITY  optional.title                  "Optional Components">
-<!ENTITY  optional.intro.label            "Choose additional components you want to install, then click Install Now.">
-
 <!ENTITY  errors.title                    "Problems During Update">
-<!ENTITY  errors.intro.label              "&brandShortName; encountered problems when updating your
-                                           software, and as a result not all components could be updated.">
+<!ENTITY  errors.introduction.label       "&brandShortName; encountered problems when updating your
+                                           software, and as a result not all add-ons could be updated.">
 <!ENTITY  errors.details.label            "Details">
 <!ENTITY  errors.details.accesskey        "D">
 
@@ -76,8 +61,5 @@
 <!ENTITY  updateCheckError.label          "Details">
 <!ENTITY  updateCheckError.accesskey      "D">
 
-<!ENTITY  resolveMaxVersion.title         "Checking for Compatible Extensions and Themes...">
-<!ENTITY  resolveMaxVersion.intro1.label  "&brandShortName; is checking for compatibility updates to your Extensions and Themes...">
-
-<!ENTITY  versioninfo.title               "Compatibility Updates">
-<!ENTITY  versioninfo.intro               "Checking for compatibility updates to your Extensions...">
+<!ENTITY  compatCheck.title               "Compatibility Updates">
+<!ENTITY  compatCheck.intro               "Checking for compatibility updates to your Add-ons...">
