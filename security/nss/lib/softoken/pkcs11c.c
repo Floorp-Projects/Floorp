@@ -4790,15 +4790,16 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
 
         if (isTLS) {
 	    SECStatus status;
- 	    SECItem crsr   = { siBuffer, crsrdata, sizeof crsrdata };
- 	    SECItem master = { siBuffer, key_block, SSL3_MASTER_SECRET_LENGTH};
- 	    SECItem pms    = { siBuffer };
+ 	    SECItem crsr   = { siBuffer, NULL, 0 };
+ 	    SECItem master = { siBuffer, NULL, 0 };
+ 	    SECItem pms    = { siBuffer, NULL, 0 };
 
-	    /* HPUX won't let a structure member be initialized with the 
-	     * value of a variable, but the address of a local variable. :-/
-	     */
- 	    pms.data = (unsigned char*)att->attrib.pValue;
-	    pms.len  =                 att->attrib.ulValueLen;
+ 	    crsr.data   = crsrdata;
+	    crsr.len    = sizeof crsrdata;
+ 	    master.data = key_block;
+	    master.len  = SSL3_MASTER_SECRET_LENGTH;
+ 	    pms.data    = (unsigned char*)att->attrib.pValue;
+	    pms.len     =                 att->attrib.ulValueLen;
 
 	    status = TLS_PRF(&pms, "master secret", &crsr, &master, isFIPS);
 	    if (status != SECSuccess) {
@@ -4939,10 +4940,13 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
 	 */
 	if (isTLS) {
 	    SECStatus     status;
-	    SECItem       srcr   = { siBuffer, srcrdata, sizeof srcrdata };
-	    SECItem       keyblk = { siBuffer, key_block };
-	    SECItem       master = { siBuffer }; 
+	    SECItem       srcr   = { siBuffer, NULL, 0 };
+	    SECItem       keyblk = { siBuffer, NULL, 0 };
+	    SECItem       master = { siBuffer, NULL, 0 }; 
 
+	    srcr.data   = srcrdata;
+	    srcr.len    = sizeof srcrdata;
+	    keyblk.data = key_block;
 	    keyblk.len  = block_needed;
 	    master.data = (unsigned char*)att->attrib.pValue;
 	    master.len  =                 att->attrib.ulValueLen;
@@ -5109,7 +5113,7 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
 		*/
 		SECStatus     status;
 		SECItem       secret = { siBuffer, NULL, 0 };
-		SECItem       crsr   = { siBuffer, crsrdata, sizeof crsrdata };
+		SECItem       crsr   = { siBuffer, NULL, 0 };
 		SECItem       keyblk = { siBuffer, NULL, 0 };
 
 		/*
@@ -5121,6 +5125,8 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
 		secret.data = &key_block[i];
 		secret.len  = effKeySize;
 		i          += effKeySize;
+		crsr.data   = crsrdata;
+		crsr.len    = sizeof crsrdata;
 		keyblk.data = key_block2;
 		keyblk.len  = sizeof key_block2;
 		status = TLS_PRF(&secret, "client write key", &crsr, &keyblk,
