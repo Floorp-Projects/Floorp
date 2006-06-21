@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -2160,8 +2161,9 @@ nsJSContext::ConvertSupportsTojsvals(nsISupports *aArgs,
     NS_ENSURE_SUCCESS(rv, rv);
     if (argCount == 0)
       return NS_OK;
-  } else
+  } else {
     argCount = 1; // the nsISupports which is not an array
+  }
 
   jsval *argv = js_AllocStack(mContext, argCount, aMarkp);
   NS_ENSURE_TRUE(argv, NS_ERROR_OUT_OF_MEMORY);
@@ -2170,9 +2172,12 @@ nsJSContext::ConvertSupportsTojsvals(nsISupports *aArgs,
     for (argCtr = 0; argCtr < argCount && NS_SUCCEEDED(rv); argCtr++) {
       nsCOMPtr<nsISupports> arg;
       jsval *thisval = argv + argCtr;
-      rv = argsArray->QueryElementAt(argCtr, NS_GET_IID(nsISupports),
-                                     getter_AddRefs(arg));
-      NS_ASSERTION(NS_SUCCEEDED(rv), "Array elt doesn't have nsISupports?");
+      argsArray->QueryElementAt(argCtr, NS_GET_IID(nsISupports),
+                                getter_AddRefs(arg));
+      if (!arg) {
+        *thisval = JSVAL_NULL;
+        continue;
+      }
       nsCOMPtr<nsIVariant> variant(do_QueryInterface(arg));
       if (variant != nsnull) {
         rv = xpc->VariantToJS(mContext, (JSObject *)aScope, variant, 
