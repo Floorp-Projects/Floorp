@@ -55,6 +55,7 @@ const MODE_TRUNCATE = 0x20;
 const NS_APP_SEARCH_DIR_LIST  = "SrchPluginsDL";
 const NS_APP_USER_SEARCH_DIR  = "UsrSrchPlugns";
 const NS_APP_SEARCH_DIR       = "SrchPlugns";
+const NS_APP_USER_PROFILE_50_DIR = "ProfD";
 
 // See documentation in nsIBrowserSearchService.idl.
 const SEARCH_ENGINE_TOPIC        = "browser-search-engine-modified";
@@ -2404,9 +2405,11 @@ var engineMetadataService = {
       new Components.Constructor("@mozilla.org/storage/statement-wrapper;1",
                                  Ci.mozIStorageStatementWrapper);
     var engineDataTable = "id INTEGER PRIMARY KEY, engineid STRING, name STRING, value STRING";
+    var file = getDir(NS_APP_USER_PROFILE_50_DIR);
     var dbService = Cc["@mozilla.org/storage/service;1"].
-                      getService(Ci.mozIStorageService);
-    this.mDB = dbService.openSpecialDatabase("profile");
+                    getService(Ci.mozIStorageService);
+    file.append("search.sqlite");
+    this.mDB = dbService.openDatabase(file);
 
     try {
       this.mDB.createTable("engine_data", engineDataTable);
