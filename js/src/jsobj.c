@@ -696,7 +696,7 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSIdArray *ida;
     jschar *chars, *ochars, *vsharp;
     const jschar *idstrchars, *vchars;
-    size_t nchars, idstrlength, gsoplength, vlength, vsharplength;
+    size_t nchars, idstrlength, gsoplength, vlength, vsharplength, curlen;
     char *comma;
     jsint i, j, length, valcnt;
     jsid id;
@@ -952,14 +952,31 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             }
 #endif
 
+#define SAFE_ADD(n)                                                          \
+            JS_BEGIN_MACRO                                                   \
+                curlen += (n);                                               \
+                if (curlen < (n))                                            \
+                    goto overflow;                                           \
+            JS_END_MACRO
+
+            curlen = nchars;
+            if (comma)
+                SAFE_ADD(2);
+            SAFE_ADD(idstrlength + 1);
+            if (gsop[j])
+                SAFE_ADD(JSSTRING_LENGTH(gsop[j]) + 1);
+            SAFE_ADD(vsharplength);
+            SAFE_ADD(vlength);
+            /* Account for the trailing null. */
+            SAFE_ADD((outermost ? 2 : 1) + 1);
+#undef SAFE_ADD
+
+            if (curlen > (size_t)-1 / sizeof(jschar))
+                goto overflow;
+
             /* Allocate 1 + 1 at end for closing brace and terminating 0. */
             chars = (jschar *)
-                realloc((ochars = chars),
-                        (nchars + (comma ? 2 : 0) +
-                         idstrlength + 1 +
-                         (gsop[j] ? 1 + JSSTRING_LENGTH(gsop[j]) : 0) +
-                         vsharplength + vlength +
-                         (outermost ? 2 : 1) + 1) * sizeof(jschar));
+                realloc((ochars = chars), curlen * sizeof(jschar));
             if (!chars) {
                 /* Save code space on error: let JS_free ignore null vsharp. */
                 JS_free(cx, vsharp);
@@ -1037,6 +1054,12 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
     *rval = STRING_TO_JSVAL(str);
     return JS_TRUE;
+
+  overflow:
+    JS_free(cx, vsharp);
+    free(chars);
+    chars = NULL;
+    goto error;
 }
 #endif /* JS_HAS_TOSOURCE */
 
