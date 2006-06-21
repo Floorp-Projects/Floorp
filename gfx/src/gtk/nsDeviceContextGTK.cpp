@@ -301,22 +301,18 @@ NS_IMETHODIMP nsDeviceContextGTK::CreateRenderingContext(nsIRenderingContext *&a
   }
 #endif
 
-  nsIRenderingContext *pContext;
   nsresult             rv;
-  nsDrawingSurfaceGTK  *surf;
-  GtkWidget *w;
-
-  w = (GtkWidget*)mWidget;
+  GtkWidget *w = (GtkWidget*)mWidget;
 
   // to call init for this, we need to have a valid nsDrawingSurfaceGTK created
-  pContext = new nsRenderingContextGTK();
+  nsIRenderingContext* pContext = new nsRenderingContextGTK();
 
   if (nsnull != pContext)
   {
     NS_ADDREF(pContext);
 
     // create the nsDrawingSurfaceGTK
-    surf = new nsDrawingSurfaceGTK();
+    nsDrawingSurfaceGTK* surf = new nsDrawingSurfaceGTK();
 
     if (surf && w)
       {

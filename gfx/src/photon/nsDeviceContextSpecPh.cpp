@@ -321,7 +321,7 @@ nsPrinterEnumeratorPh::DoEnumeratePrinters(PRBool aDoExtended, PRUint32* aCount,
 
 		if( count < pcount-1 )
 			newName.AssignWithConversion(plist[count]);
-		else newName.AssignWithConversion( "<Preview>" );
+		else newName.AssignLiteral( "<Preview>" );
 
 		PRUnichar *str = ToNewUnicode(newName);
 		if (!str) 
