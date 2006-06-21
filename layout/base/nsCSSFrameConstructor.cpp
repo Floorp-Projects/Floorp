@@ -181,17 +181,7 @@ NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleCo
 nsIFrame*
 NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 nsIFrame*
-NS_NewSVGPolylineFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
-nsIFrame*
-NS_NewSVGPolygonFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
-nsIFrame*
-NS_NewSVGCircleFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
-nsIFrame*
-NS_NewSVGEllipseFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
-nsIFrame*
-NS_NewSVGLineFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
-nsIFrame*
-NS_NewSVGRectFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
+NS_NewSVGPathGeometryFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 nsIFrame*
 NS_NewSVGGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 nsIFrame*
@@ -200,8 +190,6 @@ NS_NewSVGGenericContainerFrame(nsIPresShell* aPresShell, nsIContent* aContent, n
 nsIFrame*
 NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 #endif
-nsIFrame*
-NS_NewSVGPathFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 nsIFrame*
 NS_NewSVGGlyphFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* parent, nsStyleContext* aContext);
 nsIFrame*
@@ -7707,28 +7695,22 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
   else if (aTag == nsSVGAtoms::g) {
     newFrame = NS_NewSVGGFrame(mPresShell, aContent, aStyleContext);
   }
-  else if (aTag == nsSVGAtoms::polygon)
-    newFrame = NS_NewSVGPolygonFrame(mPresShell, aContent, aStyleContext);
-  else if (aTag == nsSVGAtoms::polyline)
-    newFrame = NS_NewSVGPolylineFrame(mPresShell, aContent, aStyleContext);
-  else if (aTag == nsSVGAtoms::circle)
-    newFrame = NS_NewSVGCircleFrame(mPresShell, aContent, aStyleContext);
+  else if (aTag == nsSVGAtoms::polygon ||
+           aTag == nsSVGAtoms::polyline ||
+           aTag == nsSVGAtoms::circle ||
+           aTag == nsSVGAtoms::ellipse ||
+           aTag == nsSVGAtoms::line ||
+           aTag == nsSVGAtoms::rect ||
+           aTag == nsSVGAtoms::path)
+    newFrame = NS_NewSVGPathGeometryFrame(mPresShell, aContent, aStyleContext);
   else if (aTag == nsSVGAtoms::defs) {
     newFrame = NS_NewSVGContainerFrame(mPresShell, aContent, aStyleContext);
   }
-  else if (aTag == nsSVGAtoms::ellipse)
-    newFrame = NS_NewSVGEllipseFrame(mPresShell, aContent, aStyleContext);
-  else if (aTag == nsSVGAtoms::line)
-    newFrame = NS_NewSVGLineFrame(mPresShell, aContent, aStyleContext);
-  else if (aTag == nsSVGAtoms::rect)
-    newFrame = NS_NewSVGRectFrame(mPresShell, aContent, aStyleContext);
 #ifdef MOZ_SVG_FOREIGNOBJECT
   else if (aTag == nsSVGAtoms::foreignObject) {
     newFrame = NS_NewSVGForeignObjectFrame(mPresShell, aContent, aStyleContext);
   }
 #endif
-  else if (aTag == nsSVGAtoms::path)
-    newFrame = NS_NewSVGPathFrame(mPresShell, aContent, aStyleContext);
   else if (aTag == nsSVGAtoms::text) {
     newFrame = NS_NewSVGTextFrame(mPresShell, aContent, aStyleContext);
   }

@@ -37,12 +37,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsSVGGraphicElement.h"
+#include "nsSVGPathGeometryElement.h"
 #include "nsIDOMSVGEllipseElement.h"
 #include "nsSVGLength2.h"
 #include "nsGkAtoms.h"
+#include "nsSVGUtils.h"
 
-typedef nsSVGGraphicElement nsSVGEllipseElementBase;
+typedef nsSVGPathGeometryElement nsSVGEllipseElementBase;
 
 class nsSVGEllipseElement : public nsSVGEllipseElementBase,
                             public nsIDOMSVGEllipseElement
@@ -61,6 +62,9 @@ public:
   NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGEllipseElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGEllipseElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGEllipseElementBase::)
+
+  // nsSVGPathGeometryElement methods:
+  virtual void ConstructPath(cairo_t *aCtx);
 
 protected:
 
@@ -143,4 +147,21 @@ nsSVGEllipseElement::GetLengthInfo()
 {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               NS_ARRAY_LENGTH(sLengthInfo));
+}
+
+//----------------------------------------------------------------------
+// nsSVGPathGeometryElement methods
+
+void
+nsSVGEllipseElement::ConstructPath(cairo_t *aCtx)
+{
+  float x, y, rx, ry;
+
+  GetAnimatedLengthValues(&x, &y, &rx, &ry, nsnull);
+
+  cairo_save(aCtx);
+  cairo_translate(aCtx, x, y);
+  cairo_scale(aCtx, rx, ry);
+  cairo_arc(aCtx, 0, 0, 1, 0, 2 * M_PI);
+  cairo_restore(aCtx);
 }

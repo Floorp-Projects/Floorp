@@ -62,11 +62,10 @@ typedef nsSVGGeometryFrame nsSVGPathGeometryFrameBase;
 class nsSVGPathGeometryFrame : public nsSVGPathGeometryFrameBase,
                                public nsISVGChildFrame
 {
-protected:
+public:
   nsSVGPathGeometryFrame(nsStyleContext* aContext);
   virtual ~nsSVGPathGeometryFrame();
-  
-public:
+
    // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   NS_IMETHOD_(nsrefcnt) AddRef() { return 1; }
@@ -126,15 +125,12 @@ protected:
   virtual nsresult UpdateGraphic(PRBool suppressInvalidation = PR_FALSE);
   
 protected:
-  virtual PRBool IsMarkable() { return PR_FALSE; }
-  virtual void GetMarkPoints(nsVoidArray *aMarks) {}
-  virtual void ConstructPath(cairo_t *aCtx) = 0;
   virtual PRUint16 GetHittestMask();
 
+private:
   void Render(nsISVGRendererCanvas *aCanvas);
   void GeneratePath(cairo_t *ctx, nsISVGCairoCanvas* aCanvas);
 
-private:
   nsSVGMarkerProperty *GetMarkerProperty();
   void GetMarkerFromStyle(nsSVGMarkerFrame   **aResult,
                           nsSVGMarkerProperty *property,

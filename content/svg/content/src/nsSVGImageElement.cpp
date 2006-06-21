@@ -48,7 +48,7 @@
 #include "nsSVGPreserveAspectRatio.h"
 #include "imgIContainer.h"
 #include "imgIDecoderObserver.h"
-#include "nsSVGGraphicElement.h"
+#include "nsSVGPathGeometryElement.h"
 #include "nsIDOMSVGImageElement.h"
 #include "nsIDOMSVGURIReference.h"
 #include "nsImageLoadingContent.h"
@@ -57,7 +57,7 @@
 class nsIDOMSVGAnimatedString;
 class nsIDOMSVGAnimatedPreserveAspectRatio;
 
-typedef nsSVGGraphicElement nsSVGImageElementBase;
+typedef nsSVGPathGeometryElement nsSVGImageElementBase;
 
 class nsSVGImageElement : public nsSVGImageElementBase,
                           public nsIDOMSVGImageElement,
@@ -91,6 +91,9 @@ public:
   virtual PRInt32 IntrinsicState() const;
 
   NS_IMETHODIMP_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
+
+  // nsSVGPathGeometryElement methods:
+  virtual void ConstructPath(cairo_t *aCtx);
 
 protected:
 
@@ -315,4 +318,22 @@ nsSVGImageElement::IsAttributeMapped(const nsIAtom* name) const
   
   return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
     nsSVGImageElementBase::IsAttributeMapped(name);
+}
+
+//----------------------------------------------------------------------
+// nsSVGPathGeometryElement methods
+
+/* For the purposes of the update/invalidation logic pretend to
+   be a rectangle. */
+void
+nsSVGImageElement::ConstructPath(cairo_t *aCtx)
+{
+  float x, y, width, height;
+
+  GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
+
+  if (width == 0 || height == 0)
+    return;
+
+  cairo_rectangle(aCtx, x, y, width, height);
 }

@@ -41,6 +41,7 @@
 #include "nsISVGRendererCanvas.h"
 #include "nsSVGMatrix.h"
 #include "nsSVGMarkerElement.h"
+#include "nsSVGPathGeometryElement.h"
 
 NS_INTERFACE_MAP_BEGIN(nsSVGMarkerFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGValue)

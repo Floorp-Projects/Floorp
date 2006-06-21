@@ -37,12 +37,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsSVGGraphicElement.h"
+#include "nsSVGPathGeometryElement.h"
 #include "nsIDOMSVGLineElement.h"
 #include "nsSVGLength2.h"
 #include "nsGkAtoms.h"
 
-typedef nsSVGGraphicElement nsSVGLineElementBase;
+typedef nsSVGPathGeometryElement nsSVGLineElementBase;
 
 class nsSVGLineElement : public nsSVGLineElementBase,
                          public nsIDOMSVGLineElement
@@ -64,6 +64,11 @@ public:
 
   // nsIContent interface
   NS_IMETHODIMP_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
+
+  // nsSVGPathGeometryElement methods:
+  virtual PRBool IsMarkable() { return PR_TRUE; }
+  virtual void GetMarkPoints(nsVoidArray *aMarks);
+  virtual void ConstructPath(cairo_t *aCtx);
 
 protected:
 
@@ -160,4 +165,38 @@ nsSVGLineElement::GetLengthInfo()
 {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               NS_ARRAY_LENGTH(sLengthInfo));
+}
+
+//----------------------------------------------------------------------
+// nsSVGPathGeometryElement methods
+
+void
+nsSVGLineElement::GetMarkPoints(nsVoidArray *aMarks) {
+  float x1, y1, x2, y2;
+
+  GetAnimatedLengthValues(&x1, &y1, &x2, &y2, nsnull);
+
+  nsSVGMark *m1, *m2;
+  m1 = new nsSVGMark();
+  m2 = new nsSVGMark();
+
+  m1->x = x1;
+  m1->y = y1;
+  m2->x = x2;
+  m2->y = y2;
+  m1->angle = m2->angle = atan2(y2 - y1, x2 - x1);
+
+  aMarks->AppendElement(m1);
+  aMarks->AppendElement(m2);
+}
+
+void
+nsSVGLineElement::ConstructPath(cairo_t *aCtx)
+{
+  float x1, y1, x2, y2;
+
+  GetAnimatedLengthValues(&x1, &y1, &x2, &y2, nsnull);
+
+  cairo_move_to(aCtx, x1, y1);
+  cairo_line_to(aCtx, x2, y2);
 }
