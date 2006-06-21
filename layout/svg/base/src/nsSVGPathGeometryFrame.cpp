@@ -296,24 +296,24 @@ nsSVGPathGeometryFrame::PaintSVG(nsISVGRendererCanvas* canvas)
          property->mMarkerStart)) {
       float strokeWidth = GetStrokeWidth();
         
-      nsVoidArray marks;
+      nsTArray<nsSVGMark> marks;
       NS_STATIC_CAST(nsSVGPathGeometryElement*,
                      mContent)->GetMarkPoints(&marks);
         
-      PRUint32 num = marks.Count();
+      PRUint32 num = marks.Length();
         
       if (num && property->mMarkerStart)
         property->mMarkerStart->PaintMark(canvas, this,
-                                          (nsSVGMark *)marks[0], strokeWidth);
+                                          &marks[0], strokeWidth);
         
       if (num && property->mMarkerMid)
         for (PRUint32 i = 1; i < num - 1; i++)
           property->mMarkerMid->PaintMark(canvas, this,
-                                          (nsSVGMark *)marks[i], strokeWidth);
+                                          &marks[i], strokeWidth);
         
       if (num && property->mMarkerEnd)
         property->mMarkerEnd->PaintMark(canvas, this,
-                                        (nsSVGMark *)marks[num-1], strokeWidth);
+                                        &marks[num-1], strokeWidth);
     }
   }
 
@@ -374,15 +374,15 @@ nsSVGPathGeometryFrame::GetCoveredRegion()
 
     float strokeWidth = GetStrokeWidth();
 
-    nsVoidArray marks;
+    nsTArray<nsSVGMark> marks;
     NS_STATIC_CAST(nsSVGPathGeometryElement*, mContent)->GetMarkPoints(&marks);
 
-    PRUint32 num = marks.Count();
+    PRUint32 num = marks.Length();
 
     if (num && property->mMarkerStart) {
       nsRect mark;
       mark = property->mMarkerStart->RegionMark(this,
-                                                (nsSVGMark *)marks[0],
+                                                &marks[0],
                                                 strokeWidth);
       rect.UnionRect(rect, mark);
     }
@@ -391,7 +391,7 @@ nsSVGPathGeometryFrame::GetCoveredRegion()
       for (PRUint32 i = 1; i < num - 1; i++) {
         nsRect mark;
         mark = property->mMarkerMid->RegionMark(this,
-                                                (nsSVGMark *)marks[i],
+                                                &marks[i],
                                                 strokeWidth);
         rect.UnionRect(rect, mark);
       }
@@ -399,7 +399,7 @@ nsSVGPathGeometryFrame::GetCoveredRegion()
     if (num && property->mMarkerEnd) {
       nsRect mark;
       mark = property->mMarkerEnd->RegionMark(this,
-                                              (nsSVGMark *)marks[num-1],
+                                              &marks[num-1],
                                               strokeWidth);
 
       rect.UnionRect(rect, mark);

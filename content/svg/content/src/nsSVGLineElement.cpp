@@ -67,7 +67,7 @@ public:
 
   // nsSVGPathGeometryElement methods:
   virtual PRBool IsMarkable() { return PR_TRUE; }
-  virtual void GetMarkPoints(nsVoidArray *aMarks);
+  virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks);
   virtual void ConstructPath(cairo_t *aCtx);
 
 protected:
@@ -171,23 +171,15 @@ nsSVGLineElement::GetLengthInfo()
 // nsSVGPathGeometryElement methods
 
 void
-nsSVGLineElement::GetMarkPoints(nsVoidArray *aMarks) {
+nsSVGLineElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks) {
   float x1, y1, x2, y2;
 
   GetAnimatedLengthValues(&x1, &y1, &x2, &y2, nsnull);
 
-  nsSVGMark *m1, *m2;
-  m1 = new nsSVGMark();
-  m2 = new nsSVGMark();
+  float angle = atan2(y2 - y1, x2 - x1);
 
-  m1->x = x1;
-  m1->y = y1;
-  m2->x = x2;
-  m2->y = y2;
-  m1->angle = m2->angle = atan2(y2 - y1, x2 - x1);
-
-  aMarks->AppendElement(m1);
-  aMarks->AppendElement(m2);
+  aMarks->AppendElement(nsSVGMark(x1, y1, angle));
+  aMarks->AppendElement(nsSVGMark(x2, y2, angle));
 }
 
 void

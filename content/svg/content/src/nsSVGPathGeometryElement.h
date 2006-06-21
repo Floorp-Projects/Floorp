@@ -38,10 +38,13 @@
 #define __NS_SVGPATHGEOMETRYELEMENT_H__
 
 #include "nsSVGGraphicElement.h"
+#include "nsTArray.h"
 #include "cairo.h"
 
 struct nsSVGMark {
-    float x, y, angle;
+  float x, y, angle;
+  nsSVGMark(float aX, float aY, float aAngle) :
+    x(aX), y(aY), angle(aAngle) {}
 };
 
 typedef nsSVGGraphicElement nsSVGPathGeometryElementBase;
@@ -53,7 +56,7 @@ public:
 
   virtual PRBool IsDependentAttribute(nsIAtom *aName);
   virtual PRBool IsMarkable();
-  virtual void GetMarkPoints(nsVoidArray *aMarks);
+  virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks);
   virtual void ConstructPath(cairo_t *aCtx) = 0;
 };
 

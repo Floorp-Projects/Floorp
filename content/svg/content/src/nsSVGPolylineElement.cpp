@@ -75,7 +75,7 @@ public:
   // nsSVGPathGeometryElement methods:
   virtual PRBool IsDependentAttribute(nsIAtom *aName);
   virtual PRBool IsMarkable() { return PR_TRUE; }
-  virtual void GetMarkPoints(nsVoidArray *aMarks);
+  virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks);
   virtual void ConstructPath(cairo_t *aCtx);
 
 protected:
@@ -181,7 +181,7 @@ nsSVGPolylineElement::IsDependentAttribute(nsIAtom *aName)
 }
 
 void
-nsSVGPolylineElement::GetMarkPoints(nsVoidArray *aMarks)
+nsSVGPolylineElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
 {
   if (!mPoints)
     return;
@@ -203,23 +203,19 @@ nsSVGPolylineElement::GetMarkPoints(nsVoidArray *aMarks)
 
     float angle = atan2(y-py, x-px);
     if (i == 1)
-      ((nsSVGMark *)aMarks->ElementAt(aMarks->Count()-1))->angle = angle;
+      aMarks->ElementAt(aMarks->Length() - 1).angle = angle;
     else if (i > 1)
-      ((nsSVGMark *)aMarks->ElementAt(aMarks->Count()-1))->angle =
+      aMarks->ElementAt(aMarks->Length() - 1).angle =
         nsSVGUtils::AngleBisect(prevAngle, angle);
 
-    nsSVGMark *mark;
-    mark = new nsSVGMark;
-    mark->x = x;
-    mark->y = y;
-    aMarks->AppendElement(mark);
+    aMarks->AppendElement(nsSVGMark(x, y, 0));
 
     prevAngle = angle;
     px = x;
     py = y;
   }
 
-  ((nsSVGMark *)aMarks->ElementAt(aMarks->Count()-1))->angle = prevAngle;
+  aMarks->ElementAt(aMarks->Length() - 1).angle = prevAngle;
 }
 
 void

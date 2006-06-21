@@ -433,7 +433,7 @@ CalcVectorAngle(double ux, double uy, double vx, double vy)
 }
 
 void
-nsSVGPathElement::GetMarkPoints(nsVoidArray *aMarks) {
+nsSVGPathElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks) {
   if (NS_FAILED(CreatePathSegList()))
     return;
 
@@ -841,37 +841,34 @@ nsSVGPathElement::GetMarkPoints(nsVoidArray *aMarks) {
     if (newSegment &&
         type != nsIDOMSVGPathSeg::PATHSEG_MOVETO_ABS &&
         type != nsIDOMSVGPathSeg::PATHSEG_MOVETO_REL) {
-      pathIndex = aMarks->Count() - 1;
+      pathIndex = aMarks->Length() - 1;
       pathAngle = startAngle;
-      ((nsSVGMark *)aMarks->ElementAt(aMarks->Count()-1))->angle = pathAngle;
+      aMarks->ElementAt(pathIndex).angle = pathAngle;
       newSegment = PR_FALSE;
       prevAngle = endAngle;
     } else if (type == nsIDOMSVGPathSeg::PATHSEG_MOVETO_ABS ||
                type == nsIDOMSVGPathSeg::PATHSEG_MOVETO_REL) {
-      if (aMarks->Count())
-        ((nsSVGMark *)aMarks->ElementAt(aMarks->Count()-1))->angle = prevAngle;
+      if (aMarks->Length())
+        aMarks->ElementAt(aMarks->Length() - 1).angle = prevAngle;
     } else {
-      ((nsSVGMark *)aMarks->ElementAt(aMarks->Count()-1))->angle =
+      aMarks->ElementAt(aMarks->Length() - 1).angle =
         nsSVGUtils::AngleBisect(prevAngle, startAngle);
       prevAngle = endAngle;
     }
 
-    nsSVGMark *mark = new nsSVGMark;
-    mark->x = x;
-    mark->y = y;
-    aMarks->AppendElement(mark);
+    aMarks->AppendElement(nsSVGMark(x, y, 0));
 
     if (type == nsIDOMSVGPathSeg::PATHSEG_CLOSEPATH) {
       prevAngle = nsSVGUtils::AngleBisect(endAngle, pathAngle);
-      ((nsSVGMark *)aMarks->ElementAt(pathIndex))->angle = prevAngle;
+      aMarks->ElementAt(pathIndex).angle = prevAngle;
     }
 
     cx = x;
     cy = y;
   }
 
-  if (aMarks->Count())
-    ((nsSVGMark *)aMarks->ElementAt(aMarks->Count()-1))->angle = prevAngle;
+  if (aMarks->Length())
+    aMarks->ElementAt(aMarks->Length() - 1).angle = prevAngle;
 }
 
 
