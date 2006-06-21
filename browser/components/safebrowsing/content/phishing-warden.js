@@ -79,9 +79,10 @@ const kTestUrls = {
  * Abtracts the checking of user/browser actions for signs of
  * phishing. 
  *
+ * @param progressListener nsIDocNavStartProgressListener
  * @constructor
  */
-function PROT_PhishingWarden() {
+function PROT_PhishingWarden(progressListener) {
   PROT_ListWarden.call(this);
 
   this.debugZone = "phishwarden";
@@ -119,8 +120,7 @@ function PROT_PhishingWarden() {
   this.prefs_.addObserver(kPhishWardenEnabledPref, phishWardenPrefObserver);
 
   // hook up our browser listener
-  this.progressListener_ = Cc["@mozilla.org/browser/safebrowsing/navstartlistener;1"]
-      .createInstance(Ci.nsIDocNavStartProgressListener);
+  this.progressListener_ = progressListener;
   this.progressListener_.callback = this;
   this.progressListener_.enabled = this.phishWardenEnabled_;
   // ms to wait after a request has started before firing JS callback
