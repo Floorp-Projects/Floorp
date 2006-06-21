@@ -102,7 +102,7 @@
             loader.loadSubScript("chrome://global/content/inlineSpellCheckUI.js", this);
             // watch out - that could have failed
             if (this.InlineSpellCheckerUI)
-              this.InlineSpellCheckerUI.init(this.inputField);
+              this.InlineSpellCheckerUI.init(this.inputField.QueryInterface(Components.interfaces.nsIDOMNSEditableElement).editor);
           }
           return this.InlineSpellCheckerUI;
         ]]></getter>
