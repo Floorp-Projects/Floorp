@@ -271,7 +271,7 @@ function switchToEdit() {
     <div class="section-full">
       <div class="section-header">Existing Testcases</div>
 
-      <div class="section-content">
+      <div class="section-content" style="overflow:hidden;">
 
         <form id="select_testcase_and_mode_form" name="select_testcase_and_mode_form" method="post" action="manage_testcases.cgi">
 	<table border="0" cellspacing="0" cellpadding="5">
@@ -279,12 +279,15 @@ function switchToEdit() {
         <td>
 	[% INCLUDE form_widgets/select_testcase_id.tmpl name="testcase_id" placeholder=1 size=10 show_summary=1 onchange="loadTestcase();" %]
         </td>
-        <td>
-	<input id="add_testcase_button" name="add_testcase_button" class="manage" type="button" onClick="switchToAdd();" value="Add testcase"><br/><br/>
-	<input id="edit_testcase_button" name="edit_testcase_button" class="manage" type="button" onClick="switchToEdit();" value="Edit testcase" disabled><br/><br/>
-	<input id="clone_testcase_button" name="clone_testcase_button" class="manage" type="submit" onClick="confirm('Really clone this testcase?');" value="Clone testcase" disabled><br/><br/>
-	<input id="delete_testcase_button" name="delete_testcase_button" class="manage" type="submit" onClick="confirm('Really delete this testcase?');" value="Delete testcase" disabled>
-        </td>
+     </tr>
+     <tr>
+      <td>
+	   <input id="add_testcase_button" name="add_testcase_button" class="manage" type="button" onClick="switchToAdd();" value="Add new testcase">&nbsp;
+	   <input id="edit_testcase_button" name="edit_testcase_button" class="manage" type="button" onClick="switchToEdit();" value="Edit testcase" disabled>&nbsp;
+	   <input id="clone_testcase_button" name="clone_testcase_button" class="manage" type="submit" onClick="confirm('Really clone this testcase?');" value="Clone testcase" disabled>&nbsp;
+	   <input id="delete_testcase_button" name="delete_testcase_button" class="manage" type="submit" onClick="confirm('Really delete this testcase?');" value="Delete testcase" disabled>&nbsp;
+      </td>
+     </tr>
 	</table>
 	</form>
 
