@@ -75,7 +75,7 @@ public:
   // nsSVGPathGeometryElement methods:
   virtual PRBool IsDependentAttribute(nsIAtom *aName);
   virtual PRBool IsMarkable() { return PR_TRUE; }
-  virtual void GetMarkPoints(nsVoidArray *aMarks);
+  virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks);
   virtual void ConstructPath(cairo_t *aCtx);
 
 protected:
@@ -181,7 +181,7 @@ nsSVGPolygonElement::IsDependentAttribute(nsIAtom *aName)
 }
 
 void
-nsSVGPolygonElement::GetMarkPoints(nsVoidArray *aMarks)
+nsSVGPolygonElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
 {
   if (!mPoints)
     return;
@@ -205,14 +205,10 @@ nsSVGPolygonElement::GetMarkPoints(nsVoidArray *aMarks)
     if (i == 1)
       startAngle = angle;
     else if (i > 1)
-      ((nsSVGMark *)aMarks->ElementAt(aMarks->Count()-1))->angle =
+      aMarks->ElementAt(aMarks->Length() - 1).angle =
         nsSVGUtils::AngleBisect(prevAngle, angle);
 
-    nsSVGMark *mark;
-    mark = new nsSVGMark;
-    mark->x = x;
-    mark->y = y;
-    aMarks->AppendElement(mark);
+    aMarks->AppendElement(nsSVGMark(x, y, 0));
 
     prevAngle = angle;
     px = x;
@@ -225,9 +221,9 @@ nsSVGPolygonElement::GetMarkPoints(nsVoidArray *aMarks)
   point->GetY(&ny);
   angle = atan2(ny - py, nx - px);
 
-  ((nsSVGMark *)aMarks->ElementAt(aMarks->Count()-1))->angle =
+  aMarks->ElementAt(aMarks->Length() - 1).angle =
     nsSVGUtils::AngleBisect(prevAngle, angle);
-  ((nsSVGMark *)aMarks->ElementAt(0))->angle =
+  aMarks->ElementAt(0).angle =
     nsSVGUtils::AngleBisect(angle, startAngle);
 }
 

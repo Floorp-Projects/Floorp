@@ -116,7 +116,7 @@ public:
   // nsSVGPathGeometryElement methods:
   virtual PRBool IsDependentAttribute(nsIAtom *aName);
   virtual PRBool IsMarkable();
-  virtual void GetMarkPoints(nsVoidArray *aMarks);
+  virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks);
   virtual void ConstructPath(cairo_t *aCtx);
 
   nsSVGFlattenedPath *GetFlattenedPath();

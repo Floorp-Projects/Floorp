@@ -62,6 +62,6 @@ nsSVGPathGeometryElement::IsMarkable()
 }
 
 void
-nsSVGPathGeometryElement::GetMarkPoints(nsVoidArray *aMarks)
+nsSVGPathGeometryElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
 {
 }
