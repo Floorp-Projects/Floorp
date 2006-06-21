@@ -178,6 +178,7 @@ sub TableExists {
          $exists = 1;
       } 
    } 
+   $sth->finish;
    return $exists;
 } 
 
@@ -189,6 +190,7 @@ sub GetFieldDef {
 
     while (my $ref = $sth->fetchrow_arrayref) {
         next if $$ref[0] ne $field;
+        $sth->finish;
         return $ref;
    }
 }
@@ -201,6 +203,7 @@ sub GetIndexDef {
 
     while (my $ref = $sth->fetchrow_arrayref) {
         next if $$ref[2] ne $field;
+        $sth->finish;
         return $ref;
    }
 }
@@ -213,11 +216,14 @@ sub CountIndexes {
     $sth->execute;
 
     if ( $sth->rows == -1 ) {
+      $sth->finish;
       die ("Unexpected response while counting indexes in $table:" .
            " \$sth->rows == -1");
     }
     
-    return ($sth->rows);
+    my $rows = $sth->rows;
+    $sth->finish;
+    return ($rows);
 }
 
 #########################################################################
@@ -263,6 +269,7 @@ sub DropIndexes {
       $SEEN{$$ref[2]} = 1;
 
     }
+    $sth->finish;
 }
 
 1;
