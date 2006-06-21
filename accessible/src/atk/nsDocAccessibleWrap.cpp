@@ -76,7 +76,7 @@ NS_IMPL_ISUPPORTS_INHERITED2(nsDocAccessibleWrap, nsDocAccessible, nsIAccessible
 
 nsDocAccessibleWrap::nsDocAccessibleWrap(nsIDOMNode *aDOMNode,
                                          nsIWeakReference *aShell): 
-  nsDocAccessible(aDOMNode, aShell), nsAccessibleEditableText(aDOMNode)
+  nsDocAccessible(aDOMNode, aShell)
 {
 }
 
@@ -511,32 +511,6 @@ TranslateAState(PRUint32 aState, PRUint32 aExtState)
         return ATK_STATE_VERTICAL;
     }
     return ATK_STATE_INVALID;
-}
-
-NS_IMETHODIMP nsDocAccessibleWrap::Shutdown()
-{
-    nsAccessibleEditableText::ShutdownEditor();
-    return nsDocAccessible::Shutdown();
-}
-
-NS_IMETHODIMP nsDocAccessibleWrap::GetRole(PRUint32 *_retval)
-{
-    PRBool isEditable;
-    GetIsEditable(&isEditable);
-
-    if (isEditable)
-        *_retval = ROLE_TEXT;
-    else
-        *_retval = ROLE_HTML_CONTAINER;
-
-    return NS_OK;
-}
-
-void nsDocAccessibleWrap::CheckForEditor()
-{
-    nsDocAccessible::CheckForEditor();
-    if (mEditor)
-        SetEditor(mEditor); // set editor for nsAccessibleEditableText
 }
 
 NS_IMETHODIMP nsDocAccessibleWrap::FireDocLoadingEvent(PRBool aIsFinished)

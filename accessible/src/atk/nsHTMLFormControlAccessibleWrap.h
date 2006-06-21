@@ -36,22 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _nsHTMLFormControlAccessibleWrap_H_
-#define _nsHTMLFormControlAccessibleWrap_H_
+#ifndef __nsHTMLFormControlAccessibleWrap_h__
+#define __nsHTMLFormControlAccessibleWrap_h__
 
 #include "nsHTMLFormControlAccessible.h"
-#include "nsAccessibleText.h"
 
 typedef class nsHTMLRadioButtonAccessible nsHTMLRadioButtonAccessibleWrap;
-
-class nsHTMLTextFieldAccessibleWrap : public nsHTMLTextFieldAccessible,
-                                      public nsAccessibleEditableText
-{
-public:
-  NS_DECL_ISUPPORTS_INHERITED
-
-  nsHTMLTextFieldAccessibleWrap(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD Shutdown();
-};
 
 #endif

@@ -40,6 +40,7 @@
 #define _nsBaseWidgetAccessible_H_
 
 #include "nsAccessibleWrap.h"
+#include "nsHyperTextAccessible.h"
 #include "nsIContent.h"
 
 class nsIDOMNode;
@@ -49,18 +50,6 @@ class nsIDOMNode;
   *  classes for the different accessibility implementations of
   *  the HTML and XUL widget sets.  --jgaunt
   */
-
-/**
-  * Special Accessible that knows how to handle hit detection for flowing text
-  */
-class nsBlockAccessible : public nsAccessibleWrap
-{
-public:
-  nsBlockAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_IMETHOD GetChildAtPoint(PRInt32 x, PRInt32 y, nsIAccessible **_retval);
-};
-
 /** 
   * Leaf version of DOM Accessible -- has no children
   */
@@ -79,7 +68,7 @@ public:
   *  It knows how to report the state of the link ( traveled or not )
   *  and can activate ( click ) the link programmatically.
   */
-class nsLinkableAccessible : public nsAccessibleWrap
+class nsLinkableAccessible : public nsHyperTextAccessible
 {
 public:
   nsLinkableAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
@@ -91,6 +80,7 @@ public:
   NS_IMETHOD GetValue(nsAString& _retval);
   NS_IMETHOD TakeFocus();
   NS_IMETHOD GetKeyboardShortcut(nsAString& _retval);
+  NS_IMETHOD GetURI(PRInt32 i, nsIURI **aURI);
   NS_IMETHOD Init();
   NS_IMETHOD Shutdown();
 

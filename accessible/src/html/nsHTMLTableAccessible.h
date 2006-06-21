@@ -41,7 +41,7 @@
 
 #include "nsBaseWidgetAccessible.h"
 
-class nsHTMLTableCellAccessible : public nsBlockAccessible
+class nsHTMLTableCellAccessible : public nsHyperTextAccessible
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -51,15 +51,7 @@ public:
   NS_IMETHOD GetState(PRUint32 *aResult); 
 };
 
-class nsHTMLTableCaptionAccessible : public nsAccessibleWrap
-{
-public:
-  nsHTMLTableCaptionAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetState(PRUint32 *aResult);
-  NS_IMETHOD GetValue(nsAString& aResult);
-};
-
-class nsHTMLTableAccessible : public nsBlockAccessible
+class nsHTMLTableAccessible : public nsHyperTextAccessible
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED

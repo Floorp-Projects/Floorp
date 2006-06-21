@@ -43,6 +43,7 @@
 #include "nsAccessibilityAtoms.h"
 #include "nsIAccessible.h"
 #include "nsPIAccessible.h"
+#include "nsIAccessibleHyperLink.h"
 #include "nsIAccessibleSelectable.h"
 #include "nsIAccessibleValue.h"
 #include "nsIDOMNodeList.h"
@@ -115,6 +116,7 @@ struct nsRoleMapEntry
 class nsAccessible : public nsAccessNodeWrap, 
                      public nsIAccessible, 
                      public nsPIAccessible,
+                     public nsIAccessibleHyperLink,
                      public nsIAccessibleSelectable,
                      public nsIAccessibleValue
 {
@@ -130,6 +132,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLE
   NS_DECL_NSPIACCESSIBLE
+  NS_DECL_NSIACCESSIBLEHYPERLINK
   NS_DECL_NSIACCESSIBLESELECTABLE
   NS_DECL_NSIACCESSIBLEVALUE
 
@@ -140,8 +143,6 @@ public:
   NS_IMETHOD GetState(PRUint32 *aState);  // Must support GetFinalState()
 
 #ifdef MOZ_ACCESSIBILITY_ATK
-  static nsresult GetParentBlockNode(nsIPresShell *aPresShell, nsIDOMNode *aCurrentNode, nsIDOMNode **aBlockNode);
-  static nsIFrame* GetParentBlockFrame(nsIFrame *aFrame);
   static PRBool FindTextFrame(PRInt32 &index, nsPresContext *aPresContext, nsIFrame *aCurFrame, 
                                    nsIFrame **aFirstTextFrame, const nsIFrame *aTextFrame);
 #endif
@@ -180,11 +181,18 @@ protected:
   static nsresult GetFullKeyName(const nsAString& aModifierName, const nsAString& aKeyName, nsAString& aStringOut);
   static nsresult GetTranslatedString(const nsAString& aKey, nsAString& aStringOut);
   nsresult AppendFlatStringFromSubtreeRecurse(nsIContent *aContent, nsAString *aFlatString);
+
+  // Helpers for dealing with children
   virtual void CacheChildren(PRBool aWalkAnonContent);
+  nsIAccessible *NextChild(nsCOMPtr<nsIAccessible>& aAccessible);
+  already_AddRefed<nsIAccessible> GetNextWithState(nsIAccessible *aStart, PRUint32 matchState);
 
   // Selection helpers
-  already_AddRefed<nsIAccessible> GetNextWithState(nsIAccessible *aStart, PRUint32 matchState);
   static already_AddRefed<nsIAccessible> GetMultiSelectFor(nsIDOMNode *aNode);
+
+  // Hyperlink helpers
+  virtual nsresult GetLinkOffset(PRInt32* aStartOffset, PRInt32* aEndOffset);
+  static PRUint32 Role(nsIAccessible *aAcc) { PRUint32 role; aAcc->GetRole(&role); return role; }
 
   // For accessibles that have actions
   static void DoCommandCallback(nsITimer *aTimer, void *aClosure);

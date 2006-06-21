@@ -101,13 +101,14 @@ NS_IMETHODIMP nsHTMLTextAccessible::GetState(PRUint32 *aState)
 {
   nsTextAccessible::GetState(aState);
 
-  nsCOMPtr<nsIAccessibleDocument> docAccessible(GetDocAccessible());
+  nsCOMPtr<nsIAccessible> docAccessible = 
+    do_QueryInterface(nsCOMPtr<nsIAccessibleDocument>(GetDocAccessible()));
   if (docAccessible) {
-    PRBool isEditable;
-    docAccessible->GetIsEditable(&isEditable);
-    if (!isEditable) {
-      *aState |= STATE_READONLY;
-    }
+     PRUint32 extState;
+     docAccessible->GetExtState(&extState);
+     if (0 == (extState & EXT_STATE_EDITABLE)) {
+       *aState |= STATE_READONLY; // Links not focusable in editor
+     }
   }
 
   return NS_OK;
@@ -156,7 +157,7 @@ NS_IMETHODIMP nsHTMLLabelAccessible::GetName(nsAString& aReturn)
 
 NS_IMETHODIMP nsHTMLLabelAccessible::GetRole(PRUint32 *aRole)
 {
-  *aRole = ROLE_STATICTEXT;
+  *aRole = ROLE_LABEL;
   return NS_OK;
 }
 
@@ -189,7 +190,7 @@ NS_IMETHODIMP nsHTMLLabelAccessible::GetChildCount(PRInt32 *aAccChildCount)
 
 nsHTMLLIAccessible::nsHTMLLIAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell, 
                    nsIFrame *aBulletFrame, const nsAString& aBulletText):
-  nsBlockAccessible(aDOMNode, aShell)
+  nsHyperTextAccessible(aDOMNode, aShell)
 {
   if (!aBulletText.IsEmpty()) {
     mBulletAccessible = new nsHTMLListBulletAccessible(mDOMNode, mWeakShell, 

@@ -45,25 +45,11 @@
 #include "nsIAccessibleHyperLink.h"
 #include "nsIMutableArray.h"
 
-class nsHTMLLinkAccessibleWrap : public nsHTMLLinkAccessible,
-                                 public nsIAccessibleHyperLink
+// XXX Remove this and make image maps work similar to how they are done in MSAA
+class nsHTMLImageMapAccessible : public nsHTMLImageAccessible
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIACCESSIBLEHYPERLINK
-
-  nsHTMLLinkAccessibleWrap(nsIDOMNode* aDomNode, nsIArray* aTextNodes, nsIWeakReference* aShell, nsIFrame *aFrame);
-private:
-  nsresult GetLinkOffset(PRInt32* aStartOffset, PRInt32* aEndOffset);
-  nsCOMPtr<nsIArray> mTextNodes;
-};
-
-class nsHTMLImageMapAccessible : public nsHTMLImageAccessible,
-                                 public nsIAccessibleHyperLink
-{
-public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIACCESSIBLEHYPERLINK
 
   nsHTMLImageMapAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
 };

@@ -49,7 +49,7 @@
   * For XUL descriptions and labels
   */
 nsXULTextAccessible::nsXULTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
-nsTextAccessibleWrap(aDomNode, aShell)
+nsHyperTextAccessible(aDomNode, aShell)
 { 
 }
 

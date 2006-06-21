@@ -41,10 +41,10 @@
 #include "nsIDOMElement.h"
 #include "nsINameSpaceManager.h"
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLTableCellAccessible, nsBlockAccessible)
+NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLTableCellAccessible, nsHyperTextAccessible)
 
 nsHTMLTableCellAccessible::nsHTMLTableCellAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
-nsBlockAccessible(aDomNode, aShell)
+nsHyperTextAccessible(aDomNode, aShell)
 { 
 }
 
@@ -62,36 +62,10 @@ NS_IMETHODIMP nsHTMLTableCellAccessible::GetState(PRUint32 *aResult)
   return NS_OK;
 }
 
-nsHTMLTableCaptionAccessible::nsHTMLTableCaptionAccessible
-(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
-nsAccessibleWrap(aDomNode, aShell)
-{
-  Init(); // Make sure this generated accessible of the table is cached
-}
-
-NS_IMETHODIMP
-nsHTMLTableCaptionAccessible::GetState(PRUint32 *aResult)
-{
-  nsAccessible::GetState(aResult);
-  *aResult &= ~STATE_FOCUSABLE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLTableCaptionAccessible::GetValue(nsAString& aResult)
-{
-  aResult.Truncate();  // Default name is blank
-
-  nsCOMPtr<nsIContent> captionContent(do_QueryInterface(mDOMNode));
-  AppendFlatStringFromSubtree(captionContent, &aResult);
-
-  return NS_OK;
-}
-
-NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLTableAccessible, nsBlockAccessible)
+NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLTableAccessible, nsHyperTextAccessible)
 
 nsHTMLTableAccessible::nsHTMLTableAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
-nsBlockAccessible(aDomNode, aShell)
+nsHyperTextAccessible(aDomNode, aShell)
 { 
 }
 
