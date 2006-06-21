@@ -45,6 +45,7 @@
 #include "nsIComponentManager.h"
 #include "nsIDocShell.h"
 #include "prinrval.h"
+#include "nsIRollupListener.h"
 
 #include "nsMenuX.h"
 #include "nsIMenu.h"
@@ -67,6 +68,10 @@
 #include "nsGUIEvent.h"
 
 #include "nsCRT.h"
+
+// externs defined in nsChildView.mm
+extern nsIRollupListener * gRollupListener;
+extern nsIWidget         * gRollupWidget;
 
 static PRBool gConstructingMenu = PR_FALSE;
 
@@ -1117,7 +1122,6 @@ nsMenuX::ContentInserted(nsIDocument *aDocument, nsIContent *aChild, PRInt32 aIn
 
 static pascal OSStatus MyMenuEventHandler(EventHandlerCallRef myHandler, EventRef event, void* userData)
 {
-  OSStatus result = eventNotHandledErr;
   UInt32 kind = ::GetEventKind(event);
   if (kind == kEventMenuTargetItem) {
     // get the position of the menu item we want
@@ -1131,7 +1135,7 @@ static pascal OSStatus MyMenuEventHandler(EventHandlerCallRef myHandler, EventRe
     nsIMenu* targetMenu = NS_REINTERPRET_CAST(nsIMenu*, userData);
     targetMenu->GetItemCount(itemCount);
     if (aPos >= itemCount)
-      return result;
+      return eventNotHandledErr;
     
     nsISupports* aTargetMenuItem;
     targetMenu->GetItemAt((PRUint32)aPos, aTargetMenuItem);
@@ -1142,9 +1146,15 @@ static pascal OSStatus MyMenuEventHandler(EventHandlerCallRef myHandler, EventRe
     if (bTargetMenuItem) {
       PRBool handlerCalledPreventDefault; // but we don't actually care
       bTargetMenuItem->DispatchDOMEvent(NS_LITERAL_STRING("DOMMenuItemActive"), &handlerCalledPreventDefault);
+      return noErr;
     }
   }
   else if (kind == kEventMenuOpening || kind == kEventMenuClosed) {
+    if (kind == kEventMenuOpening && gRollupListener != nsnull && gRollupWidget != nsnull) {
+      gRollupListener->Rollup();
+      return userCanceledErr;
+    }
+    
     nsISupports* supports = reinterpret_cast<nsISupports*>(userData);
     nsCOMPtr<nsIMenuListener> listener(do_QueryInterface(supports));
     if (listener) {
@@ -1153,15 +1163,14 @@ static pascal OSStatus MyMenuEventHandler(EventHandlerCallRef myHandler, EventRe
       nsMenuEvent menuEvent(PR_TRUE, NS_MENU_SELECTED, nsnull);
       menuEvent.time = PR_IntervalNow();
       menuEvent.mCommand = (PRUint32)menuRef;
-      if (kind == kEventMenuOpening) {
+      if (kind == kEventMenuOpening)
         listener->MenuSelected(menuEvent);
-      }
-      else {
+      else
         listener->MenuDeselected(menuEvent);
-      }
+      return noErr;
     }
   }
-  return result;
+  return eventNotHandledErr;
 }
 
 static OSStatus InstallMyMenuEventHandler(MenuRef menuRef, void* userData, EventHandlerRef* outHandler)
