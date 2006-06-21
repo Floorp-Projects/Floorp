@@ -83,9 +83,12 @@ var gUpdateWizard = {
     this.shouldSuggestAutoChecking = 
       gShowMismatch && 
       !pref.getBoolPref(PREF_UPDATE_EXTENSIONS_AUTOUPDATEENABLED);
-
-    this.xpinstallEnabled = pref.getBoolPref(PREF_XPINSTALL_ENABLED);
-    this.xpinstallLocked = pref.prefIsLocked(PREF_XPINSTALL_ENABLED);
+    try {
+      this.xpinstallEnabled = pref.getBoolPref(PREF_XPINSTALL_ENABLED);
+      this.xpinstallLocked = pref.prefIsLocked(PREF_XPINSTALL_ENABLED);
+    }
+    catch (e) {
+    }
     document.documentElement.currentPage = 
       document.getElementById("versioninfo");
   },
