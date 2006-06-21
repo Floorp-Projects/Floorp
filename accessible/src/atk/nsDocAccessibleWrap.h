@@ -47,10 +47,8 @@
 #define _nsDocAccessibleWrap_H_
 
 #include "nsDocAccessible.h"
-#include "nsAccessibleText.h"
 
-class nsDocAccessibleWrap: public nsDocAccessible,
-                           public nsAccessibleEditableText
+class nsDocAccessibleWrap: public nsDocAccessible
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -60,11 +58,6 @@ public:
   NS_IMETHOD FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessible,
                               void* aData);
   NS_IMETHOD FireDocLoadingEvent(PRBool isFinished);
-  NS_IMETHOD Shutdown();
-  NS_IMETHOD GetRole(PRUint32 *aAccRole);
-
-protected:
-  void CheckForEditor();
 };
 
 #endif

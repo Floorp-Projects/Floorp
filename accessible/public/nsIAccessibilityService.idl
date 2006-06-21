@@ -54,7 +54,7 @@ interface nsIAccessibilityService : nsIAccessibleRetrieval
   nsIAccessible createHTML4ButtonAccessible(in nsISupports aFrame);
   nsIAccessible createXULAlertAccessible(in nsIDOMNode aNode);
   nsIAccessible createHTMLAreaAccessible(in nsIWeakReference aPresShell, in nsIDOMNode aDOMNode, in nsIAccessible aAccParent);
-  nsIAccessible createHTMLBlockAccessible(in nsISupports aFrame);
+  nsIAccessible createHyperTextAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLButtonAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLButtonAccessibleXBL(in nsIDOMNode aNode);
   nsIAccessible createHTMLAccessibleByMarkup(in nsISupports aFrame, in nsIWeakReference aWeakShell, in nsIDOMNode aDOMNode, in AString aRole);
@@ -74,7 +74,6 @@ interface nsIAccessibilityService : nsIAccessibleRetrieval
   nsIAccessible createHTMLSelectOptionAccessible(in nsIDOMNode aNode, in nsIAccessible aAccParent, in nsIWeakReference aPresShell);
   nsIAccessible createHTMLTableAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLTableCellAccessible(in nsISupports aFrame);
-  nsIAccessible createHTMLTableCaptionAccessible(in nsIDOMNode aDOMNode);
   nsIAccessible createHTMLTableHeadAccessible(in nsIDOMNode aDOMNode);
   nsIAccessible createHTMLTextAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLTextFieldAccessible(in nsISupports aFrame);

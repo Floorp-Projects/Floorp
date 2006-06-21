@@ -1045,7 +1045,7 @@ NS_IMETHODIMP nsHTMLComboboxTextFieldAccessible::GetPreviousSibling(nsIAccessibl
   */
 NS_IMETHODIMP nsHTMLComboboxTextFieldAccessible::GetRole(PRUint32 *_retval)
 {
-  *_retval = ROLE_STATICTEXT;
+  *_retval = ROLE_ENTRY;
   return NS_OK;
 }
 

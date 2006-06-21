@@ -40,21 +40,17 @@
 #ifndef _nsHTMLTableAccessibleWrap_H_
 #define _nsHTMLTableAccessibleWrap_H_
 
-#include "nsAccessibleHyperText.h"
 #include "nsHTMLTableAccessible.h"
 #include "nsIAccessibleTable.h"
 
 class nsITableLayout;
 
-class nsHTMLTableCellAccessibleWrap : public nsHTMLTableCellAccessible,
-                                      public nsAccessibleHyperText
+class nsHTMLTableCellAccessibleWrap : public nsHTMLTableCellAccessible
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
   nsHTMLTableCellAccessibleWrap(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
-
-  NS_IMETHOD Shutdown();
 };
 
 class nsHTMLTableAccessibleWrap : public nsHTMLTableAccessible,

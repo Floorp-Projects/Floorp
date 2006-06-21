@@ -149,6 +149,12 @@ interface nsIAccessible : nsISupports
   readonly attribute unsigned long extState;
 
   /**
+   * True if this element is live in an editor.
+   * False if the content is being displayed but not edited. 
+   */
+  readonly attribute boolean isEditable;
+
+  /**
    * Help text associated with node
    */
   readonly attribute AString help;
@@ -293,6 +299,7 @@ interface nsIAccessible : nsISupports
  * Extended state flags (for now non-MSAA, for Java and Gnome/ATK support)
  * "Extended state flags" has seperate value space from "MSAA State flags".
  */
+  const unsigned long  EXT_STATE_SELECTABLE_TEXT= 0x00100000;  // For text which is selectable, object must implement nsIAccessibleText
   const unsigned long  EXT_STATE_EDITABLE       = 0x00200000;  // Used for XUL/HTML input (type = text,password) element
   const unsigned long  EXT_STATE_ACTIVE         = 0x00400000;  // This window is currently the active window    
   const unsigned long  EXT_STATE_EXPANDABLE     = 0x00800000;  // An item that can be expanded, such as a tree item with children    
@@ -452,8 +459,9 @@ interface nsIAccessible : nsISupports
   enum { ROLE_INDICATOR = 66U };   // ATK_ROLE_UNKNOWN
   enum { ROLE_GRAPHIC = 26U };     // ATK_ROLE_IMAGE
   // Read-only text, can't be modified or selected
-  enum { ROLE_STATICTEXT = 60U };  // ATK_ROLE_TEXT
-  enum { ROLE_TEXT = 60U };        // ATK_ROLE_TEXT
+  enum { ROLE_STATICTEXT = 50000U };  // No matching ATK role, we will strip out
+  enum { ROLE_TEXT_LEAF = 50000U };   // No matching ATK role, we will strip out
+  enum { ROLE_TEXT_CONTAINER = 60U }; // ATK_ROLE_TEXT
   enum { ROLE_PUSHBUTTON = 42U };  // ATK_ROLE_PUSH_BUTTON
   enum { ROLE_CHECKBUTTON = 7U };  // ATK_ROLE_CHECK_BOX
   enum { ROLE_RADIOBUTTON = 43U }; // ATK_ROLE_RADIO_BUTTON
@@ -481,7 +489,7 @@ interface nsIAccessible : nsISupports
   enum { ROLE_IPADDRESS = 66U };   // ATK_ROLE_UNKNOWN
   enum { ROLE_NOTHING = 66U };     // ATK_ROLE_UNKNOWN
   // Represent top level window
-  enum { ROLE_FRAME = 22U };               // ATK_ROLE_FRAME
+  enum { ROLE_FRAME = 22U };       // ATK_ROLE_FRAME
 
   // Other roles from atk.h
   enum { ROLE_ACCEL_LABEL = 1U };          // ATK_ROLE_ACCEL_LABEL
@@ -530,6 +538,7 @@ interface nsIAccessible : nsISupports
   enum { ROLE_PAGE = 82U };                // ATK_ROLE_PAGE
   enum { ROLE_SECTION = 83U };             // ATK_ROLE_SECTION
   enum { ROLE_REDUNDANT_OBJECT = 84U };    // ATK_ROLE_REDUNDANT_OBJECT
+  enum { ROLE_FORM = 85U };                // ATK_ROLE_FORM
 #else
 // MSAA Roles - only one per nsIAccessible or IAccessible
   enum { ROLE_TITLEBAR = 1U };
@@ -576,7 +585,7 @@ interface nsIAccessible : nsISupports
   enum { ROLE_INDICATOR = 39U };
   enum { ROLE_GRAPHIC = 40U };
   enum { ROLE_STATICTEXT = 41U };
-  enum { ROLE_TEXT = 42U };
+  enum { ROLE_TEXT_LEAF = 42U };
   enum { ROLE_PUSHBUTTON = 43U };
   enum { ROLE_CHECKBUTTON = 44U };
   enum { ROLE_RADIOBUTTON = 45U };
@@ -614,6 +623,11 @@ interface nsIAccessible : nsISupports
   enum { ROLE_PAGE = ROLE_NOTHING };
   enum { ROLE_SECTION = ROLE_NOTHING };
   enum { ROLE_REDUNDANT_OBJECT = ROLE_NOTHING };
+  enum { ROLE_HTML_CONTAINER = ROLE_NOTHING };
+  enum { ROLE_FORM = ROLE_NOTHING };
+  enum { ROLE_PARAGRAPH = ROLE_NOTHING };
+  enum { ROLE_TEXT_CONTAINER = ROLE_NOTHING };
+  enum { ROLE_LABEL = ROLE_STATICTEXT };
 
 // MSAA relationship extensions to accNavigate
   enum { NAVRELATION_CONTROLLED_BY = 0x1000 };

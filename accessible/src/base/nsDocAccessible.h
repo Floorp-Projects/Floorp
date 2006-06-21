@@ -39,7 +39,7 @@
 #ifndef _nsDocAccessible_H_
 #define _nsDocAccessible_H_
 
-#include "nsBaseWidgetAccessible.h"
+#include "nsHyperTextAccessible.h"
 #include "nsIAccessibleDocument.h"
 #include "nsPIAccessibleDocument.h"
 #include "nsIAccessibleEvent.h"
@@ -57,7 +57,7 @@ class nsIScrollableView;
 
 const PRUint32 kDefaultCacheSize = 256;
 
-class nsDocAccessible : public nsBlockAccessible,
+class nsDocAccessible : public nsHyperTextAccessible,
                         public nsIAccessibleDocument,
                         public nsPIAccessibleDocument,
                         public nsIDocumentObserver,
@@ -107,6 +107,9 @@ class nsDocAccessible : public nsBlockAccessible,
     void RefreshNodes(nsIDOMNode *aStartNode, PRUint32 aChangeEvent);
     static void ScrollTimerCallback(nsITimer *aTimer, void *aClosure);
     virtual void CheckForEditor();
+    virtual void SetEditor(nsIEditor *aEditor);
+    virtual already_AddRefed<nsIEditor> GetEditor() { nsIEditor *editor = mEditor; NS_IF_ADDREF(editor); return editor; }
+
     nsresult FireDelayedToolkitEvent(PRUint32 aEvent, nsIDOMNode *aDOMNode,
                                      void *aData, PRBool aAllowDupes = PR_FALSE);
 
@@ -115,10 +118,10 @@ class nsDocAccessible : public nsBlockAccessible,
     nsCOMPtr<nsIDocument> mDocument;
     nsCOMPtr<nsITimer> mScrollWatchTimer;
     nsCOMPtr<nsITimer> mFireEventTimer;
-    nsCOMPtr<nsIEditor> mEditor; // Editor, if there is one
     PRUint16 mScrollPositionChangedTicks; // Used for tracking scroll events
     PRPackedBool mIsContentLoaded;
     nsCOMArray<nsIAccessibleEvent> mEventsToFire;
+    nsCOMPtr<nsIEditor> mEditor;
 };
 
 #endif  

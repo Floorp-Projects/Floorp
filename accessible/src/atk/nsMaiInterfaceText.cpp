@@ -244,16 +244,17 @@ getRunAttributesCB(AtkText *aText, gint aOffset,
                             getter_AddRefs(accText));
     NS_ENSURE_TRUE(accText, nsnull);
 
-    nsCOMPtr<nsISupports> attrSet;
+    nsCOMPtr<nsIAccessible> accessibleWithAttrs;
     PRInt32 startOffset = 0, endOffset = 0;
     nsresult rv = accText->GetAttributeRange(aOffset,
                                              &startOffset, &endOffset,
-                                             getter_AddRefs(attrSet));
+                                             getter_AddRefs(accessibleWithAttrs));
     *aStartOffset = startOffset;
     *aEndOffset = endOffset;
     NS_ENSURE_SUCCESS(rv, nsnull);
 
-    /* what to do with the nsISupports ? ??? */
+    // XXX Turn accessibleWithAttrs into AtkAttributeSet by getting CSS for it
+    // Look at  nsAccessNodeWrap::get_computedStyle() for MSAA implementation
     return nsnull;
 }
 

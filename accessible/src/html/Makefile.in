@@ -50,6 +50,7 @@ LIBXUL_LIBRARY = 1
 REQUIRES	= content \
 		  docshell \
 		  dom \
+		  editor \
 		  gfx \
 		  imglib2 \
 		  intl \
@@ -57,6 +58,7 @@ REQUIRES	= content \
 		  locale \
 		  necko \
 		  string \
+		  webshell \
 		  widget \
 		  xpcom \
 		  $(NULL)
@@ -73,6 +75,11 @@ CPPSRCS = \
   nsHTMLSelectAccessible.cpp \
   nsHTMLTableAccessible.cpp \
   nsHTMLTextAccessible.cpp \
+  nsHyperTextAccessible.cpp \
+  $(NULL)
+
+EXPORTS = \
+  nsHyperTextAccessible.h \
   $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

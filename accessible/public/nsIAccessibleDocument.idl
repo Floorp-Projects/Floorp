@@ -82,14 +82,6 @@ interface nsIAccessibleDocument : nsISupports
   readonly attribute AString docType;
 
   /**
-   * True if the document is live in an editor.
-   * False if the document is being displayed but not edited. 
-   * If a <div> is contentEditable, then it has its own document, 
-   * with isEditable == true.
-   */
-  readonly attribute boolean isEditable;
-
-  /**
    * The nsIDOMDocument interface associated with this document.
    */
   readonly attribute nsIDOMDocument document;

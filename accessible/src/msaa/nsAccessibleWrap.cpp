@@ -432,7 +432,7 @@ STDMETHODIMP nsAccessibleWrap::get_accRole(
 
   // Begin check for extended roles that need to be mapped to something known
   if (role == ROLE_ENTRY || role == ROLE_PASSWORD_TEXT) {
-    role = ROLE_TEXT;
+    role = ROLE_TEXT_LEAF;
   }
 
   // -- Try enumerated role

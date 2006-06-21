@@ -274,6 +274,10 @@ NS_IMETHODIMP nsAccessibleWrap::GetNativeInterface(void **aOutAccessible)
 {
     *aOutAccessible = nsnull;
 
+    if (HasRole(this, ROLE_TEXT_LEAF)) {
+      // We don't create ATK objects for nsIAccessible plain text leaves
+      return NS_ERROR_FAILURE;
+    }
     if (!mMaiAtkObject) {
         GType type = GetMaiAtkType(CreateMaiInterfaces());
         NS_ENSURE_TRUE(type, NS_ERROR_FAILURE);
@@ -320,22 +324,20 @@ nsAccessibleWrap::CreateMaiInterfaces(void)
     PRUint32 accRole;
     GetRole(&accRole);
 
-    if (accRole != nsIAccessible::ROLE_HTML_CONTAINER) {
-        //nsIAccessibleText
-        nsCOMPtr<nsIAccessibleText> accessInterfaceText;
-        QueryInterface(NS_GET_IID(nsIAccessibleText),
-                       getter_AddRefs(accessInterfaceText));
-        if (accessInterfaceText) {
-            interfacesBits |= 1 << MAI_INTERFACE_TEXT;
-        }
+    //nsIAccessibleText
+    nsCOMPtr<nsIAccessibleText> accessInterfaceText;
+    QueryInterface(NS_GET_IID(nsIAccessibleText),
+                   getter_AddRefs(accessInterfaceText));
+    if (accessInterfaceText) {
+        interfacesBits |= 1 << MAI_INTERFACE_TEXT;
+    }
 
-        //nsIAccessibleEditableText
-        nsCOMPtr<nsIAccessibleEditableText> accessInterfaceEditableText;
-        QueryInterface(NS_GET_IID(nsIAccessibleEditableText),
-                       getter_AddRefs(accessInterfaceEditableText));
-        if (accessInterfaceEditableText) {
-            interfacesBits |= 1 << MAI_INTERFACE_EDITABLE_TEXT;
-        }
+    //nsIAccessibleEditableText
+    nsCOMPtr<nsIAccessibleEditableText> accessInterfaceEditableText;
+    QueryInterface(NS_GET_IID(nsIAccessibleEditableText),
+                   getter_AddRefs(accessInterfaceEditableText));
+    if (accessInterfaceEditableText) {
+        interfacesBits |= 1 << MAI_INTERFACE_EDITABLE_TEXT;
     }
 
     //nsIAccessibleSelection
@@ -533,10 +535,12 @@ nsAccessibleWrap::TranslateStates(PRUint32 aState, PRUint32 aExtState, void *aAt
         atk_state_set_add_state (state_set, ATK_STATE_SENSITIVE);
     }
 
+#ifdef USE_ATK_STATE_INVALID_ENTRY
     if (aState & nsIAccessible::STATE_INVALID)
-        atk_state_set_add_state (state_set, ATK_STATE_INVALID);
+        atk_state_set_add_state (state_set, ATK_STATE_INVALID_ENTRY);
+#endif
 
-#if 0
+#ifdef USE_ATK_STATE_DEFAULT
     if (aState & nsIAccessible::STATE_DEFAULT)
         atk_state_set_add_state (state_set, ATK_STATE_DEFAULT);
 #endif
@@ -546,8 +550,23 @@ nsAccessibleWrap::TranslateStates(PRUint32 aState, PRUint32 aExtState, void *aAt
         atk_state_set_add_state (state_set, ATK_STATE_REQUIRED);
 #endif
 
+#ifdef USE_ATK_STATE_VISITED
+    if (aState & nsIAccessible::STATE_TRAVERSED)
+        atk_state_set_add_state (state_set, ATK_STATE_VISITED);
+#endif
+
+#ifdef USE_ATK_STATE_ANIMATED
+    if (aState & nsIAccessible::STATE_ANIMATED)
+        atk_state_set_add_state (state_set, ATK_STATE_ANIMATED);
+#endif
+
     // The following state is
     // Extended state flags (for now non-MSAA, for Java and Gnome/ATK support)
+#ifdef USE_ATK_STATE_SELECTABLE_TEXT
+    if (aExtState & nsIAccessible::EXT_STATE_SELECTABLE_TEXT)
+        atk_state_set_add_state (state_set, ATK_STATE_SELECTABLE_TEXT);
+#endif
+
     if (aExtState & nsIAccessible::EXT_STATE_ACTIVE)
         atk_state_set_add_state (state_set, ATK_STATE_ACTIVE);
 
@@ -800,6 +819,9 @@ getRoleCB(AtkObject *aAtkObj)
             }
             accRole = linkRole;
         }
+        else if (accRole == nsIAccessible::ROLE_TEXT_CONTAINER) {
+          accRole = ATK_ROLE_TEXT;
+        }
 #ifndef USE_ATK_ROLE_AUTOCOMPLETE
         else if (accRole == nsIAccessible::ROLE_AUTOCOMPLETE) {
           accRole = ATK_ROLE_COMBO_BOX;
@@ -810,9 +832,29 @@ getRoleCB(AtkObject *aAtkObj)
           accRole = ATK_ROLE_TEXT;
         }
 #endif
-#ifndef USE_ATK_ROLE_CAPTION
-        else if (accRole == nsIAccessible::ROLE_CAPTION) {
-          accRole = ATK_ROLE_LABEL;
+#ifndef USE_ATK_ROLE_FORM
+        else if (accRole == nsIAccessible::ROLE_FORM) {
+          accRole = ATK_ROLE_PANEL;
+        }
+#endif
+#ifndef USE_ATK_ROLE_HEADING
+        else if (accRole == nsIAccessible::ROLE_HEADING) {
+          accRole = ATK_ROLE_TEXT;
+        }
+#endif
+#ifndef USE_ATK_ROLE_SECTION
+        else if (accRole == nsIAccessible::ROLE_SECTION) {
+          accRole = ATK_ROLE_TEXT;
+        }
+#endif
+#ifndef USE_ATK_ROLE_PARAGRAPH
+        else if (accRole == nsIAccessible::ROLE_PARAGRAPH) {
+          accRole = ATK_ROLE_TEXT;
+        }
+#endif
+#ifndef USE_ATK_ROLE_DOCUMENT_FRAME
+        else if (accRole == nsIAccessible::ROLE_DOCUMENT) {
+          accRole = ATK_ROLE_HTML_CONTAINER;
         }
 #endif
         aAtkObj->role = NS_STATIC_CAST(AtkRole, accRole);
@@ -850,20 +892,50 @@ getChildCountCB(AtkObject *aAtkObj)
         NS_REINTERPRET_CAST(MaiAtkObject*, aAtkObj)->accWrap;
 
     PRInt32 count = 0;
-    accWrap->GetChildCount(&count);
+    nsCOMPtr<nsIAccessibleHyperText> hyperText;
+    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleHyperText), getter_AddRefs(hyperText));
+    if (hyperText) {
+        // If HyperText, then number of links matches number of children
+        hyperText->GetLinks(&count);
+    }
+    else {
+        nsCOMPtr<nsIAccessibleText> accText;
+        accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText), getter_AddRefs(accText));
+        if (!accText) {    // Accessible text that is not a HyperText has no children
+            accWrap->GetChildCount(&count);
+        }
+    }
     return count;
 }
 
 AtkObject *
 refChildCB(AtkObject *aAtkObj, gint aChildIndex)
 {
+    // XXX Fix this so it is not O(n^2) to walk through the children!
+    // Either we can cache the last accessed child so that we can just GetNextSibling()
+    // or we should cache an array of children in each nsAccessible
+    // (instead of mNextSibling on the children)
     NS_ENSURE_SUCCESS(CheckMaiAtkObject(aAtkObj), nsnull);
     nsAccessibleWrap *accWrap =
         NS_REINTERPRET_CAST(MaiAtkObject*, aAtkObj)->accWrap;
 
     nsresult rv;
     nsCOMPtr<nsIAccessible> accChild;
-    rv = accWrap->GetChildAt(aChildIndex, getter_AddRefs(accChild));
+    nsCOMPtr<nsIAccessibleHyperText> hyperText;
+    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleHyperText), getter_AddRefs(hyperText));
+    if (hyperText) {
+        // If HyperText, then number of links matches number of children
+        nsCOMPtr<nsIAccessibleHyperLink> hyperLink;
+        rv = hyperText->GetLink(aChildIndex, getter_AddRefs(hyperLink));
+        accChild = do_QueryInterface(hyperLink);
+    }
+    else {
+        nsCOMPtr<nsIAccessibleText> accText;
+        accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText), getter_AddRefs(accText));
+        if (!accText) {  // Accessible Text that is not HyperText has no children
+            rv = accWrap->GetChildAt(aChildIndex, getter_AddRefs(accChild));
+        }
+    }
 
     if (NS_FAILED(rv) || !accChild)
         return nsnull;

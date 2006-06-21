@@ -523,35 +523,6 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
 
   nsCOMPtr<nsIPresShell> eventShell = GetPresShellFor(targetNode);
 
-#ifdef MOZ_ACCESSIBILITY_ATK
-  nsCOMPtr<nsIDOMHTMLAnchorElement> anchorElement(do_QueryInterface(targetNode));
-  // For ATK, check whether this link is for an image.
-  // If so, fire event for the image.
-  if (anchorElement) {
-    nsCOMPtr<nsIDOMNode> childNode;
-    if (NS_SUCCEEDED(targetNode->GetFirstChild(getter_AddRefs(childNode)))) {
-      while (childNode) {
-        nsCOMPtr<nsIDOMHTMLImageElement> imgNode(do_QueryInterface(childNode));
-        if (imgNode) {
-          anchorElement = nsnull; // ignore the link
-          targetNode = childNode; // only fire event for image
-          break;
-        }
-        nsCOMPtr<nsIDOMNode> tmpNode;
-        tmpNode.swap(childNode);
-        tmpNode->GetNextSibling(getter_AddRefs(childNode));
-      }
-    }
-  }
-
-  if (anchorElement) {
-    nsCOMPtr<nsIDOMNode> blockNode;
-    // For ATK, we don't create any individual object for hyperlink, use its parent who has block frame instead
-    if (NS_SUCCEEDED(nsAccessible::GetParentBlockNode(eventShell, targetNode, getter_AddRefs(blockNode))))
-      targetNode = blockNode;
-  }
-#endif
-
   if (!eventShell) {
     return NS_OK;
   }
@@ -800,19 +771,6 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
       privAcc = do_QueryInterface(treeItemAccessible);
       privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS, 
                                 treeItemAccessible, nsnull);
-    }
-    else if (anchorElement) {
-      nsCOMPtr<nsIAccessibleHyperText> hyperText(do_QueryInterface(accessible));
-      if (hyperText) {
-        nsCOMPtr<nsIDOMNode> focusedNode(do_QueryInterface(anchorElement));
-        NS_IF_RELEASE(gLastFocusedNode);
-        gLastFocusedNode = focusedNode;
-        NS_IF_ADDREF(gLastFocusedNode);
-
-        PRInt32 selectedLink;
-        hyperText->GetSelectedLinkIndex(&selectedLink);
-        privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_ATK_LINK_SELECTED, accessible, &selectedLink);
-      }
     }
     else if (localName.EqualsIgnoreCase("radiogroup")) {
       // fire focus event for checked radio instead of radiogroup

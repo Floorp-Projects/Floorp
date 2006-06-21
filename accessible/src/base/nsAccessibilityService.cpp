@@ -49,6 +49,7 @@
 #include "nsHTMLSelectAccessible.h"
 #include "nsHTMLTableAccessible.h"
 #include "nsHTMLTextAccessible.h"
+#include "nsHyperTextAccessible.h"
 #include "nsIAccessibilityService.h"
 #include "nsIAccessibleProvider.h"
 #include "nsIDOMDocument.h"
@@ -98,11 +99,8 @@
 #endif
 
 #ifdef MOZ_ACCESSIBILITY_ATK
-#include "nsHTMLBlockAccessible.h"
 #include "nsHTMLLinkAccessibleWrap.h"
-#include "nsHTMLFormControlAccessibleWrap.h"
 #include "nsHTMLTableAccessibleWrap.h"
-#include "nsXULFormControlAccessibleWrap.h"
 #endif
 
 nsAccessibilityService *nsAccessibilityService::gAccessibilityService = nsnull;
@@ -411,29 +409,6 @@ nsAccessibilityService::CreateHTMLAreaAccessible(nsIWeakReference *aShell, nsIDO
 }
 
 NS_IMETHODIMP
-nsAccessibilityService::CreateHTMLBlockAccessible(nsISupports *aFrame, nsIAccessible **_retval)
-{
-#ifndef MOZ_ACCESSIBILITY_ATK
-  *_retval = nsnull;
-  return NS_ERROR_FAILURE;
-#else
-  nsIFrame* frame;
-  nsCOMPtr<nsIDOMNode> node;
-  nsCOMPtr<nsIWeakReference> weakShell;
-  nsresult rv = GetInfo(aFrame, &frame, getter_AddRefs(weakShell), getter_AddRefs(node));
-  if (NS_FAILED(rv))
-    return rv;
-
-  *_retval = new nsHTMLBlockAccessible(node, weakShell);
-  if (! *_retval) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-  return NS_OK;
-#endif
-}
-
-NS_IMETHODIMP
 nsAccessibilityService::CreateHTMLButtonAccessible(nsISupports *aFrame, nsIAccessible **_retval)
 {
   nsIFrame* frame;
@@ -496,10 +471,6 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsISupports *aFrame,
   else if (tag == nsAccessibilityAtoms::optgroup) {
     *aAccessible = new nsHTMLSelectOptGroupAccessible(aNode, aWeakShell);
   }
-  else if (tag == nsAccessibilityAtoms::caption) {
-    *aAccessible = new nsEnumRoleAccessible(aNode, aWeakShell, nsIAccessible::ROLE_CAPTION);
-  }
-#ifndef MOZ_ACCESSIBILITY_ATK
   else if (tag == nsAccessibilityAtoms::ul || tag == nsAccessibilityAtoms::ol) {
     *aAccessible = new nsHTMLListAccessible(aNode, aWeakShell);
   }
@@ -517,6 +488,7 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsISupports *aFrame,
   else if (tag == nsAccessibilityAtoms::abbr ||
            tag == nsAccessibilityAtoms::acronym ||
            tag == nsAccessibilityAtoms::blockquote ||
+           tag == nsAccessibilityAtoms::caption ||
            tag == nsAccessibilityAtoms::dd ||
            tag == nsAccessibilityAtoms::dl ||
            tag == nsAccessibilityAtoms::dt ||
@@ -531,14 +503,11 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsISupports *aFrame,
            tag == nsAccessibilityAtoms::tbody ||
            tag == nsAccessibilityAtoms::tfoot ||
            tag == nsAccessibilityAtoms::thead ||
-#else
-  else if (
-#endif
            content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::tabindex) ||
            // The role from a <body> or doc element is already exposed in nsDocAccessible
            (tag != nsAccessibilityAtoms::body && content->GetParent() &&
            !aRole.IsEmpty())) {
-    *aAccessible = new nsAccessibleWrap(aNode, aWeakShell);
+    *aAccessible = new nsHyperTextAccessible(aNode, aWeakShell);
   }
   NS_IF_ADDREF(*aAccessible);
   return NS_OK;
@@ -560,6 +529,24 @@ nsAccessibilityService::CreateHTMLLIAccessible(nsISupports *aFrame,
   NS_ASSERTION(bulletFrame, "bullet frame argument not a frame");
 
   *_retval = new nsHTMLLIAccessible(node, weakShell, bulletFrame, aBulletText);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAccessibilityService::CreateHyperTextAccessible(nsISupports *aFrame, nsIAccessible **_retval)
+{
+  nsIFrame* frame;
+  nsCOMPtr<nsIDOMNode> node;
+  nsCOMPtr<nsIWeakReference> weakShell;
+  nsresult rv = GetInfo(aFrame, &frame, getter_AddRefs(weakShell), getter_AddRefs(node));
+  if (NS_FAILED(rv))
+    return rv;
+
+  *_retval = new nsHyperTextAccessible(node, weakShell);
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -822,28 +809,6 @@ nsAccessibilityService::CreateHTMLTableAccessible(nsISupports *aFrame, nsIAccess
 }
 
 NS_IMETHODIMP
-nsAccessibilityService::CreateHTMLTableCaptionAccessible(nsIDOMNode *aDOMNode, nsIAccessible **_retval)
-{
-  NS_ENSURE_ARG_POINTER(aDOMNode);
-
-  nsresult rv = NS_OK;
-
-  nsCOMPtr<nsIWeakReference> weakShell;
-  rv = GetShellFromNode(aDOMNode, getter_AddRefs(weakShell));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsHTMLTableCaptionAccessible* accTableCaption =
-    new nsHTMLTableCaptionAccessible(aDOMNode, weakShell);
-
-  NS_ENSURE_TRUE(accTableCaption, NS_ERROR_OUT_OF_MEMORY);
-
-  *_retval = NS_STATIC_CAST(nsIAccessible *, accTableCaption);
-  NS_IF_ADDREF(*_retval);
-
-  return rv;
-}
-
-NS_IMETHODIMP
 nsAccessibilityService::CreateHTMLTableHeadAccessible(nsIDOMNode *aDOMNode, nsIAccessible **_retval)
 {
 #ifndef MOZ_ACCESSIBILITY_ATK
@@ -891,6 +856,8 @@ nsAccessibilityService::CreateHTMLTableCellAccessible(nsISupports *aFrame, nsIAc
 NS_IMETHODIMP
 nsAccessibilityService::CreateHTMLTextAccessible(nsISupports *aFrame, nsIAccessible **_retval)
 {
+  *_retval = nsnull;
+
   nsIFrame* frame;
   nsCOMPtr<nsIDOMNode> node;
   nsCOMPtr<nsIWeakReference> weakShell;
@@ -898,31 +865,8 @@ nsAccessibilityService::CreateHTMLTextAccessible(nsISupports *aFrame, nsIAccessi
   if (NS_FAILED(rv))
     return rv;
 
-  *_retval = nsnull;
-
-#ifndef MOZ_ACCESSIBILITY_ATK
+  // XXX Don't create ATK objects for these
   *_retval = new nsHTMLTextAccessible(node, weakShell, frame);
-#else
-  // In ATK, we are only creating the accessible object for the text frame that is the FIRST
-  //   text frame in its block.
-  // A depth-first traversal from its nearest parent block frame will produce a frame sequence like
-  //   TTTBTTBTT... (B for block frame, T for text frame), so every T frame which is the immediate 
-  //   sibling of B frame will be the FIRST text frame.
-  nsIFrame* parentFrame = nsAccessible::GetParentBlockFrame(frame);
-  if (! parentFrame)
-    return NS_ERROR_FAILURE; 
-
-  nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(weakShell));
-  nsIFrame* childFrame = parentFrame->GetFirstChild(nsnull);
-  PRInt32 index = 0;
-  nsIFrame* firstTextFrame = nsnull;
-  PRBool ret = nsAccessible::FindTextFrame(index, presShell->GetPresContext(),
-                                           childFrame, &firstTextFrame, frame);
-  if (!ret || index != 0)
-    return NS_ERROR_FAILURE; 
-
-  *_retval = new nsHTMLBlockAccessible(node, weakShell);
-#endif //MOZ_ACCESSIBILITY_ATK
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -940,7 +884,7 @@ nsAccessibilityService::CreateHTMLTextFieldAccessible(nsISupports *aFrame, nsIAc
   if (NS_FAILED(rv))
     return rv;
 
-  *_retval = new nsHTMLTextFieldAccessibleWrap(node, weakShell);
+  *_retval = new nsHTMLTextFieldAccessible(node, weakShell);
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -955,7 +899,7 @@ nsAccessibilityService::CreateXULTextBoxAccessible(nsIDOMNode *aNode, nsIAccessi
   nsCOMPtr<nsIWeakReference> weakShell;
   GetShellFromNode(aNode, getter_AddRefs(weakShell));
 
-  *_retval = new nsXULTextFieldAccessibleWrap(aNode, weakShell);
+  *_retval = new nsXULTextFieldAccessible(aNode, weakShell);
 
   if (! *_retval)
     return NS_ERROR_OUT_OF_MEMORY;

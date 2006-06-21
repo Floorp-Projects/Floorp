@@ -71,26 +71,26 @@
 #define USE_ATK_ROLE_CAPTION
 #define USE_ATK_ROLE_ENTRY
 #define USE_ATK_ROLE_CHART             // XXX not currently used
-#define USE_ATK_ROLE_DOCUMENT_FRAME    // XXX not currently used
-#define USE_ATK_ROLE_HEADING           // XXX not currently used
-#define USE_ATK_ROLE_PAGE              // XXX not currently used
-#define USE_ATK_ROLE_SECTION           // XXX not currently used
+#define USE_ATK_ROLE_DOCUMENT_FRAME
+#define USE_ATK_ROLE_HEADING
+#define USE_ATK_ROLE_PAGE
+#define USE_ATK_ROLE_SECTION
 #define USE_ATK_ROLE_REDUNDANT_OBJECT  // XXX not currently used
 #define USE_ATK_OBJECT_ATTRIBUTES      // XXX not currently used
-#define USE_ATK_STATE_INVALID_ENTRY    // XXX not currently used
+#define USE_ATK_STATE_INVALID_ENTRY
+// When should we use ROLE_AUTCOMPLETE vs. STATE_SUPPORTS_AUTOCOMPLETION?
 #define USE_ATK_STATE_SUPPORTS_AUTOCOMPLETION   // XXX not currently used
-#define USE_ATK_STATE_SELECTABLE_TEXT  // XXX not currently used
-#define USE_ATK_DOCUMENT               // XXX not currently used
+#define USE_ATK_STATE_SELECTABLE_TEXT
 #endif
   
 // ATK 1.12.0 or later
 #if ATK_MAJOR_VERSION >=2 || \
     (ATK_MAJOR_VERSION == 1 && ATK_MINOR_VERSION >= 12)
-#define USE_ATK_VALUE_MINIMUMINCREMENT // XXX not currently used
-#define USE_ATK_STATE_DEFAULT          // XXX not currently used
-#define USE_ATK_STATE_VISITED          // XXX not currently used
-#define USE_ATK_STATE_ANIMATED         // XXX not currently used
-#define USE_ATK_ROLE_FORM              // XXX not currently used
+#define USE_ATK_VALUE_MINIMUMINCREMENT
+#define USE_ATK_STATE_DEFAULT
+#define USE_ATK_STATE_VISITED
+#define USE_ATK_STATE_ANIMATED
+#define USE_ATK_ROLE_FORM
 #define USE_ATK_DESCRIPTION_RELATIONS
 #endif
 
@@ -138,5 +138,7 @@ protected:
 private:
     PRUint16 CreateMaiInterfaces(void);
 };
+
+typedef class nsHTMLRadioButtonAccessible nsHTMLRadioButtonAccessibleWrap;
 
 #endif /* __NS_ACCESSIBLE_WRAP_H__ */

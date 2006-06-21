@@ -44,6 +44,8 @@
 typedef long nsAccessibleTextBoundary;
 typedef long nsAccessibleCoordType;
 
+interface nsIAccessible;
+
 [scriptable, uuid(E44D3FA6-9CB2-432A-8BDB-69D72B6ADA00)]
 interface nsIAccessibleText : nsISupports
 {
@@ -93,9 +95,14 @@ interface nsIAccessibleText : nsISupports
       */
   wchar getCharacterAtOffset (in long offset);
 
-  nsISupports getAttributeRange (in long offset,
-                                 out long rangeStartOffset,
-                                 out long rangeEndOffset);
+  /**
+   * Get the accessible and start/end offsets around the given offset.
+   * This accessible get return the DOM node and layout frame
+   * with the uniform attributes for this range of text
+   */
+  nsIAccessible getAttributeRange (in long offset,
+                                   out long rangeStartOffset,
+                                   out long rangeEndOffset);
 
   void getCharacterExtents (in long offset,
                             out long x,

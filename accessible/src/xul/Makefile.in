@@ -50,6 +50,7 @@ LIBXUL_LIBRARY = 1
 REQUIRES	= content \
 		  docshell \
 		  dom \
+		  editor \
 		  gfx \
 		  intl \
 		  layout \

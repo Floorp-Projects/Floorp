@@ -42,17 +42,18 @@
 
 #include "nsBaseWidgetAccessible.h"
 #include "nsTextAccessibleWrap.h"
+#include "nsHyperTextAccessible.h"
 
 class nsIWeakReference;
 
-class nsXULTextAccessible : public nsTextAccessibleWrap
+class nsXULTextAccessible : public nsHyperTextAccessible
 {
 
 public:
   nsXULTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
   NS_IMETHOD GetName(nsAString& _retval); 
   NS_IMETHOD GetState(PRUint32 *_retval);
-  NS_IMETHOD GetRole(PRUint32 *aRole) { *aRole = ROLE_STATICTEXT; return NS_OK; }
+  NS_IMETHOD GetRole(PRUint32 *aRole) { *aRole = ROLE_LABEL; return NS_OK; }
 };
 
 class nsXULTooltipAccessible : public nsLeafAccessible

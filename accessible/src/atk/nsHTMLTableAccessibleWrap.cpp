@@ -54,17 +54,11 @@
 // --------------------------------------------------------
 // nsHTMLTableCellAccessibleWrap Accessible
 // --------------------------------------------------------
-NS_IMPL_ISUPPORTS_INHERITED2(nsHTMLTableCellAccessibleWrap, nsHTMLTableCellAccessible, nsIAccessibleText, nsIAccessibleHyperText)
+NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLTableCellAccessibleWrap, nsHTMLTableCellAccessible)
 
 nsHTMLTableCellAccessibleWrap::nsHTMLTableCellAccessibleWrap(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
-nsHTMLTableCellAccessible(aDomNode, aShell), nsAccessibleHyperText(aDomNode, aShell)
+nsHTMLTableCellAccessible(aDomNode, aShell)
 {
-}
-
-NS_IMETHODIMP nsHTMLTableCellAccessibleWrap::Shutdown()
-{
-  nsAccessibleHyperText::Shutdown();
-  return nsHTMLTableCellAccessible::Shutdown();
 }
 
 // --------------------------------------------------------
@@ -101,7 +95,7 @@ nsHTMLTableAccessibleWrap::GetCaption(nsIAccessible **aCaption)
   if (*aCaption)
     return NS_OK;
 
-  return accService->CreateHTMLTableCaptionAccessible(captionNode, aCaption);
+  return accService->CreateHyperTextAccessible(captionNode, aCaption);
 }
 
 NS_IMETHODIMP

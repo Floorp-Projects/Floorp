@@ -40,6 +40,7 @@
 #define _nsTextAccessibleWrap_H_
 
 #include "nsTextAccessible.h"
-#include "nsAccessibleText.h"
+
+typedef class nsTextAccessible nsTextAccessibleWrap;
 
 #endif

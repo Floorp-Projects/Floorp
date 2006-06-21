@@ -46,17 +46,12 @@
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIFrame.h"
 #include "nsIPresShell.h"
+#include "nsRootAccessible.h"
 #include "nsISelectionController.h"
 #include "nsISelectionPrivate.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIViewManager.h"
 #include "nsIWidget.h"
-#include "nsRootAccessible.h"
-#include "nsTextAccessible.h"
-
-#ifdef MOZ_ACCESSIBILITY_ATK
-#include "nsAccessibleText.h"
-#endif
 
 NS_IMPL_ISUPPORTS_INHERITED2(nsCaretAccessible, nsLeafAccessible, nsIAccessibleCaret, nsISelectionListener)
 
@@ -129,11 +124,6 @@ NS_IMETHODIMP nsCaretAccessible::AttachNewSelectionListener(nsIDOMNode *aCurrent
 
 NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, nsISelection *aSel, PRInt16 aReason)
 {
-#ifdef MOZ_ACCESSIBILITY_ATK
-  if (nsAccessibleText::gSuppressedNotifySelectionChanged)
-    return NS_OK;
-#endif    
-
   nsCOMPtr<nsIPresShell> presShell = GetPresShellFor(mCurrentDOMNode);
   nsCOMPtr<nsISelection> domSel(do_QueryReferent(mDomSelectionWeak));
   if (!presShell || domSel != aSel)
@@ -183,15 +173,19 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
   if (visible) {
     mRootAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_LOCATION_CHANGE, this, nsnull);
   }
-#else
+#endif
+
+#if 0
+  // XXX Needs to be rewritten to deal with NEW atk
+  // May want to grab some of the code Ginn Chen put in bug 312093 for it
   nsCOMPtr<nsIAccessible> accessible;
   nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
   accService->GetAccessibleInShell(mCurrentDOMNode, presShell, getter_AddRefs(accessible));
-  nsCOMPtr<nsIAccessibleDocument> docAcc(do_QueryInterface(accessible));
-  if (docAcc) {
-    PRBool isEditable;
-    docAcc->GetIsEditable(&isEditable);
-    if (!isEditable) { // this is not a composer window, find out the text accessible object
+  if (accessible) {
+    PRUint32 extState;
+    accessible->GetExtState(&extState);
+    if (0 == (extState & EXT_STATE_EDITABLE)) {
+      // this is not a composer window, find out the text accessible object
       nsCOMPtr<nsIDOMNode> focusNode;
       domSel->GetFocusNode(getter_AddRefs(focusNode));
       if (!focusNode) {

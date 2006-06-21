@@ -155,6 +155,18 @@ nsresult nsAccessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     }
   }                       
 
+  if (aIID.Equals(NS_GET_IID(nsIAccessibleHyperLink))) {
+    nsCOMPtr<nsIAccessible> parent;
+    GetParent(getter_AddRefs(parent));
+    nsCOMPtr<nsIAccessibleHyperText> hyperTextParent(do_QueryInterface(parent));
+    if (hyperTextParent) {
+      *aInstancePtr = NS_STATIC_CAST(nsIAccessibleHyperLink*, this);
+      NS_ADDREF_THIS();
+      return NS_OK;
+    }
+    return NS_ERROR_NO_INTERFACE;
+  }
+
   return nsAccessNode::QueryInterface(aIID, aInstancePtr);
 }
 
@@ -564,6 +576,18 @@ NS_IMETHODIMP nsAccessible::GetChildAt(PRInt32 aChildNum, nsIAccessible **aChild
   return NS_OK;
 }
 
+nsIAccessible *nsAccessible::NextChild(nsCOMPtr<nsIAccessible>& aAccessible)
+{
+  nsCOMPtr<nsIAccessible> nextChild;
+  if (!aAccessible) {
+    GetFirstChild(getter_AddRefs(nextChild));
+  }
+  else {
+    aAccessible->GetNextSibling(getter_AddRefs(nextChild));
+  }
+  return (aAccessible = nextChild);
+}
+
 void nsAccessible::CacheChildren(PRBool aWalkAnonContent)
 {
   if (!mWeakShell) {
@@ -767,17 +791,9 @@ NS_IMETHODIMP nsAccessible::GetState(PRUint32 *aState)
     *aState |= STATE_UNAVAILABLE;
   }
   else if (content->IsNodeOfType(nsINode::eELEMENT)) {
-    if (!content->HasAttr(kNameSpaceID_XHTML2_Unofficial, 
-                         nsAccessibilityAtoms::role)) {
-      // Default state for element accessible is focusable unless role is manually set
-      // Subclasses of nsAccessible will clear focusable state if necessary
+    nsIFrame *frame = GetFrame();
+    if (frame && frame->IsFocusable()) {
       *aState |= STATE_FOCUSABLE;
-    }
-    else {
-      nsIFrame *frame = GetFrame();
-      if (frame && frame->IsFocusable()) {
-        *aState |= STATE_FOCUSABLE;
-      }
     }
 
     if (gLastFocusedNode == mDOMNode) {
@@ -826,8 +842,6 @@ NS_IMETHODIMP nsAccessible::GetFocusedChild(nsIAccessible **aFocusedChild)
 NS_IMETHODIMP nsAccessible::GetChildAtPoint(PRInt32 tx, PRInt32 ty, nsIAccessible **aAccessible)
 {
   *aAccessible = nsnull;
-  PRInt32 numChildren; // Make sure all children cached first
-  GetChildCount(&numChildren);
 
   nsCOMPtr<nsIAccessible> child;
   GetFirstChild(getter_AddRefs(child));
@@ -835,13 +849,38 @@ NS_IMETHODIMP nsAccessible::GetChildAtPoint(PRInt32 tx, PRInt32 ty, nsIAccessibl
   PRInt32 x, y, w, h;
   PRUint32 state;
 
+  nsCOMPtr<nsIAccessible> childAtPoint;
   while (child) {
     child->GetBounds(&x, &y, &w, &h);
     if (tx >= x && tx < x + w && ty >= y && ty < y + h) {
-      child->GetFinalState(&state);
-      if ((state & (STATE_OFFSCREEN|STATE_INVISIBLE)) == 0) {   // Don't walk into offscreen items
-        NS_ADDREF(*aAccessible = child);
-        return NS_OK;
+      nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(child));
+      if (accessNode) {
+        nsIFrame *frame = accessNode->GetFrame();
+        if (!frame) {
+          child->GetFinalState(&state);
+          // Some case accessibles don't have a frame; examples are
+          // tree items or combo box dropdown markers. For these cases
+          // just ensure that the returned accessible is visible.
+          if ((state & (STATE_OFFSCREEN|STATE_INVISIBLE)) == 0) {
+            // Don't walk into offscreen or invisible items
+            NS_IF_ADDREF(*aAccessible = child);
+            return NS_OK;
+          }
+        }
+        else {
+          // If there are multiple accessibles the contain the point 
+          // and they overlap then pick the one with a frame that contains the point
+          // For example, A point that's in block #2 is also in block #1, but we want to return #2:
+          // [[block #1 is long wrapped text that continues to
+          // another line]]  [[here is a shorter block #2]]
+          while (frame) {
+            if (frame->GetScreenRectExternal().Contains(tx, ty)) {
+              childAtPoint = child;
+              break; // Definitely in this accessible, since one of its frame matches the point
+            }
+            frame = frame->GetNextContinuation();
+          }
+        }
       }
     }
     nsCOMPtr<nsIAccessible> next;
@@ -849,6 +888,10 @@ NS_IMETHODIMP nsAccessible::GetChildAtPoint(PRInt32 tx, PRInt32 ty, nsIAccessibl
     child = next;
   }
 
+  if (childAtPoint) {
+    NS_ADDREF(*aAccessible = childAtPoint);
+    return NS_OK;
+  }
   GetState(&state);
   GetBounds(&x, &y, &w, &h);
   if ((state & (STATE_OFFSCREEN|STATE_INVISIBLE)) == 0 &&
@@ -1618,11 +1661,11 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
   {"combobox", ROLE_COMBOBOX, eNameLabelOrTitle, eNoValue, eNoReqStates,
             {"readonly", BOOL_STATE, STATE_READONLY},
             {"multiselect", BOOL_STATE, STATE_MULTISELECTABLE | STATE_EXTSELECTABLE}, END_ENTRY},
-  {"description", ROLE_STATICTEXT, eNameOkFromChildren, eNoValue, eNoReqStates, END_ENTRY},
+  {"description", ROLE_TEXT_CONTAINER, eNameOkFromChildren, eNoValue, eNoReqStates, END_ENTRY},
   {"dialog", ROLE_DIALOG, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
   {"document", ROLE_DOCUMENT, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
   {"icon", ROLE_ICON, eNameOkFromChildren, eNoValue, eNoReqStates, END_ENTRY},
-  {"label", ROLE_STATICTEXT, eNameOkFromChildren, eNoValue, eNoReqStates, END_ENTRY},
+  {"label", ROLE_LABEL, eNameOkFromChildren, eNoValue, eNoReqStates, END_ENTRY},
   {"list", ROLE_LIST, eNameLabelOrTitle, eNoValue, eNoReqStates,
             {"readonly", BOOL_STATE, STATE_READONLY},
             {"multiselect", BOOL_STATE, STATE_MULTISELECTABLE | STATE_EXTSELECTABLE}, END_ENTRY},
@@ -2168,6 +2211,12 @@ NS_IMETHODIMP nsAccessible::GetExtState(PRUint32 *aExtState)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsAccessible::GetIsEditable(PRBool *aIsEditable)
+{
+  *aIsEditable = PR_FALSE;
+  return NS_OK;
+}
+
 /* [noscript] void getNativeInterface(out voidPtr aOutAccessible); */
 NS_IMETHODIMP nsAccessible::GetNativeInterface(void **aOutAccessible)
 {
@@ -2405,111 +2454,100 @@ NS_IMETHODIMP nsAccessible::SelectAllSelection(PRBool *_retval)
   return NS_OK;
 }
 
-#ifdef MOZ_ACCESSIBILITY_ATK
-// static helper functions
-nsresult nsAccessible::GetParentBlockNode(nsIPresShell *aPresShell, nsIDOMNode *aCurrentNode, nsIDOMNode **aBlockNode)
+// nsIAccessibleHyperLink
+// Because of new-atk design, any embedded object in text can implement
+// nsIAccessibleHyperLink, which helps determine where it is located
+// within containing text
+
+NS_IMETHODIMP nsAccessible::GetAnchors(PRInt32 *aAnchors)
 {
-  *aBlockNode = nsnull;
+  *aAnchors = 1;
+  return NS_OK;
+}
 
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aCurrentNode));
-  if (! content)
-    return NS_ERROR_FAILURE;
+NS_IMETHODIMP nsAccessible::GetStartIndex(PRInt32 *aStartIndex)
+{
+  *aStartIndex = 0;
+  PRInt32 endIndex;
+  return GetLinkOffset(aStartIndex, &endIndex);
+}
 
-  nsIFrame *frame = aPresShell->GetPrimaryFrameFor(content);
-  if (! frame)
-    return NS_ERROR_FAILURE;
+NS_IMETHODIMP nsAccessible::GetEndIndex(PRInt32 *aEndIndex)
+{
+  *aEndIndex = 0;
+  PRInt32 startIndex;
+  return GetLinkOffset(&startIndex, aEndIndex);
+}
 
-  nsIFrame *parentFrame = GetParentBlockFrame(frame);
-  if (! parentFrame)
-    return NS_ERROR_FAILURE;
-
-  nsPresContext *presContext = aPresShell->GetPresContext();
-  nsIAtom* frameType = nsnull;
-  while (frame && (frameType = frame->GetType()) != nsAccessibilityAtoms::textFrame) {
-    frame = frame->GetFirstChild(nsnull);
-  }
-  if (! frame || frameType != nsAccessibilityAtoms::textFrame)
-    return NS_ERROR_FAILURE;
-
-  PRInt32 index = 0;
-  nsIFrame *firstTextFrame = nsnull;
-  FindTextFrame(index, presContext, parentFrame->GetFirstChild(nsnull),
-                &firstTextFrame, frame);
-  if (firstTextFrame) {
-    nsIContent *content = firstTextFrame->GetContent();
-
-    if (content) {
-      CallQueryInterface(content, aBlockNode);
-    }
-
-    return NS_OK;
-  }
-  else {
-    //XXX, why?
-  }
+NS_IMETHODIMP nsAccessible::GetURI(PRInt32 i, nsIURI **aURI)
+{
+  *aURI = nsnull;
   return NS_ERROR_FAILURE;
 }
 
-nsIFrame* nsAccessible::GetParentBlockFrame(nsIFrame *aFrame)
+NS_IMETHODIMP nsAccessible::GetObject(PRInt32 aIndex,
+                                      nsIAccessible **aAccessible)
 {
-  if (! aFrame)
-    return nsnull;
-
-  nsIFrame* frame = aFrame;
-  while (frame && frame->GetType() != nsAccessibilityAtoms::blockFrame) {
-    nsIFrame* parentFrame = frame->GetParent();
-    frame = parentFrame;
+  if (aIndex != 0) {
+    *aAccessible = nsnull;
+    return NS_ERROR_FAILURE;
   }
-  return frame;
+  *aAccessible = this;
+  NS_ADDREF_THIS();
+  return NS_OK;
 }
 
-PRBool nsAccessible::FindTextFrame(PRInt32 &index, nsPresContext *aPresContext, nsIFrame *aCurFrame, 
-                                   nsIFrame **aFirstTextFrame, const nsIFrame *aTextFrame)
-// Do a depth-first traversal to find the given text frame(aTextFrame)'s index of the block frame(aCurFrame)
-//   it belongs to, also return the first text frame within the same block.
-// Parameters:
-//   index        [in/out] - the current index - finally, it will be the aTextFrame's index in its block;
-//   aCurFrame        [in] - the current frame - its initial value is the first child frame of the block frame;
-//   aFirstTextFrame [out] - the first text frame which is within the same block with aTextFrame;
-//   aTextFrame       [in] - the text frame we are looking for;
-// Return:
-//   PR_TRUE  - the aTextFrame was found in its block frame;
-//   PR_FALSE - the aTextFrame was NOT found in its block frame;
+// nsIAccessibleHyperLink::IsValid()
+NS_IMETHODIMP nsAccessible::IsValid(PRBool *aIsValid)
 {
-  while (aCurFrame) {
+  PRUint32 state;
+  GetFinalState(&state);
+  *aIsValid = (state & STATE_INVALID) != 0;
+  // XXX In order to implement this we would need to follow every link
+  // Perhaps we can get information about invalid links from the cache
+  // In the mean time authors can use role="wairole:link" aaa:invalid="true"
+  // to force it for links they internally know to be invalid
+  return NS_OK;
+}
 
-    if (aCurFrame == aTextFrame) {
-      if (index == 0)
-        *aFirstTextFrame = aCurFrame;
-      // we got it, stop traversing
-      return PR_TRUE;
+NS_IMETHODIMP nsAccessible::IsSelected(PRBool *aIsSelected)
+{
+  *aIsSelected = (gLastFocusedNode == mDOMNode);
+  return NS_OK;
+}
+
+nsresult nsAccessible::GetLinkOffset(PRInt32* aStartOffset, PRInt32* aEndOffset)
+{
+  *aStartOffset = *aEndOffset = 0;
+  nsCOMPtr<nsIAccessible> parent;
+  GetParent(getter_AddRefs(parent));
+  if (!parent) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIAccessible> accessible;
+  PRInt32 characterCount = 0;
+
+  while (NextChild(accessible)) {
+    if (Role(accessible) == ROLE_TEXT_LEAF) {
+      nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(accessible));
+      nsIFrame *frame = accessNode->GetFrame();
+      if (frame) {
+        nsITextContent *textContent = NS_STATIC_CAST(nsITextContent*, frame->GetContent());
+        NS_ASSERTION(textContent, "No text content for a ROLE_TEXT?");
+        characterCount += textContent->TextLength();
+      }
     }
-
-    nsIAtom* frameType = aCurFrame->GetType();
-    if (frameType == nsAccessibilityAtoms::blockFrame) {
-      // every block frame will reset the index
-      index = 0;
+    else if (accessible == this) {
+      *aStartOffset = characterCount;
+      *aEndOffset = characterCount + 1;
+      return NS_OK;
     }
     else {
-      if (frameType == nsAccessibilityAtoms::textFrame) {
-        nsRect frameRect = aCurFrame->GetRect();
-       // skip the empty frame
-        if (! frameRect.IsEmpty()) {
-          if (index == 0)
-            *aFirstTextFrame = aCurFrame;
-          index++;
-        }
-      }
-
-      // we won't expand the tree under a block frame.
-      if (FindTextFrame(index, aPresContext, aCurFrame->GetFirstChild(nsnull),
-                        aFirstTextFrame, aTextFrame))
-        return PR_TRUE;
+      ++ characterCount;
     }
-
-    nsIFrame* siblingFrame = aCurFrame->GetNextSibling();
-    aCurFrame = siblingFrame;
   }
-  return PR_FALSE;
+
+  return NS_ERROR_FAILURE;
 }
-#endif //MOZ_ACCESSIBILITY_ATK
+

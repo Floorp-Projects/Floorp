@@ -61,7 +61,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsINameSpaceManager.h"
 #include "nsIObserverService.h"
-#include "nsIPlaintextEditor.h"
 #include "nsIPresShell.h"
 #include "nsIServiceManager.h"
 #include "nsIScrollableView.h"
@@ -80,8 +79,8 @@
 // construction
 //-----------------------------------------------------
 nsDocAccessible::nsDocAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell):
-  nsBlockAccessible(aDOMNode, aShell), mWnd(nsnull),
-  mEditor(nsnull), mScrollPositionChangedTicks(0), mIsContentLoaded(PR_FALSE)
+  nsHyperTextAccessible(aDOMNode, aShell), mWnd(nsnull),
+  mScrollPositionChangedTicks(0), mIsContentLoaded(PR_FALSE)
 {
   // Because of the way document loading happens, the new nsIWidget is created before
   // the old one is removed. Since it creates the nsDocAccessible, for a brief moment
@@ -130,10 +129,10 @@ NS_INTERFACE_MAP_BEGIN(nsDocAccessible)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAccessibleDocument)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
-NS_INTERFACE_MAP_END_INHERITING(nsBlockAccessible)
+NS_INTERFACE_MAP_END_INHERITING(nsHyperTextAccessible)
 
-NS_IMPL_ADDREF_INHERITED(nsDocAccessible, nsBlockAccessible)
-NS_IMPL_RELEASE_INHERITED(nsDocAccessible, nsBlockAccessible)
+NS_IMPL_ADDREF_INHERITED(nsDocAccessible, nsHyperTextAccessible)
+NS_IMPL_RELEASE_INHERITED(nsDocAccessible, nsHyperTextAccessible)
 
 NS_IMETHODIMP nsDocAccessible::GetName(nsAString& aName)
 {
@@ -217,13 +216,13 @@ NS_IMETHODIMP nsDocAccessible::GetState(PRUint32 *aState)
     *aState |= STATE_INVISIBLE;
   }
 
-  PRBool isEditable;
-  GetIsEditable(&isEditable);
-
-  if (!isEditable) {
+  PRUint32 extState;
+  GetExtState(&extState);
+  if (0 == (extState & EXT_STATE_EDITABLE)) {
     // Use STATE_READONLY when we're not in an editor pane
     *aState |= STATE_READONLY;
   }
+
   return NS_OK;
 }
 
@@ -352,6 +351,13 @@ NS_IMETHODIMP nsDocAccessible::GetDocument(nsIDOMDocument **aDOMDoc)
   return NS_ERROR_FAILURE;
 }
 
+void nsDocAccessible::SetEditor(nsIEditor* aEditor)
+{
+  mEditor = aEditor;
+  if (mEditor)
+    mEditor->AddEditActionListener(this);
+}
+
 void nsDocAccessible::CheckForEditor()
 {
   if (mEditor) {
@@ -379,17 +385,6 @@ void nsDocAccessible::CheckForEditor()
     FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, this, nsnull);
 #endif
   }
-}
-
-NS_IMETHODIMP nsDocAccessible::GetIsEditable(PRBool *aIsEditable)
-{
-  *aIsEditable = PR_FALSE;
-  if (mEditor) {
-    PRUint32 flags;
-    mEditor->GetFlags(&flags);
-    *aIsEditable = (flags & nsIPlaintextEditor::eEditorReadonlyMask) == 0;
-  }
-  return NS_OK;
 }
 
 NS_IMETHODIMP nsDocAccessible::GetCachedAccessNode(void *aUniqueID, nsIAccessNode **aAccessNode)
@@ -435,7 +430,7 @@ NS_IMETHODIMP nsDocAccessible::Init()
 
   AddEventListeners();
 
-  nsresult rv = nsBlockAccessible::Init();
+  nsresult rv = nsHyperTextAccessible::Init();
 
   if (mRoleMapEntry && mRoleMapEntry->role != ROLE_DIALOG &&
       mRoleMapEntry->role != ROLE_APPLICATION &&
@@ -462,11 +457,14 @@ NS_IMETHODIMP nsDocAccessible::Shutdown()
     return NS_OK;  // Already shutdown
   }
 
+  if (mEditor) {
+    mEditor->RemoveEditActionListener(this);
+    mEditor = nsnull;
+  }
+
   RemoveEventListeners();
 
   mWeakShell = nsnull;  // Avoid reentrancy
-
-  mEditor = nsnull;
 
   if (mFireEventTimer) {
     mFireEventTimer->Cancel();
@@ -478,7 +476,7 @@ NS_IMETHODIMP nsDocAccessible::Shutdown()
 
   mDocument = nsnull;
 
-  return nsBlockAccessible::Shutdown();
+  return nsHyperTextAccessible::Shutdown();
 }
 
 nsIFrame* nsDocAccessible::GetFrame()
