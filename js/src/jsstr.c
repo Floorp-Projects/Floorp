@@ -1835,6 +1835,7 @@ str_split(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
             /* Set a magic value so we can detect a successful re match. */
             sep->chars = NULL;
+            sep->length = 0;
         } else {
             JSString *str2 = js_ValueToString(cx, argv[0]);
             if (!str2)
