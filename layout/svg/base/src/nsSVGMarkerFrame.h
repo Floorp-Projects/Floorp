@@ -49,10 +49,7 @@ class nsISVGRendererCanvas;
 class nsSVGPathGeometryFrame;
 class nsIURI;
 class nsIContent;
-
-struct nsSVGMark {
-    float x, y, angle;
-};
+struct nsSVGMark;
 
 typedef nsSVGContainerFrame nsSVGMarkerFrameBase;
 

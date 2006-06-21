@@ -39,7 +39,7 @@
 #ifndef __NS_SVGPATHELEMENT_H__
 #define __NS_SVGPATHELEMENT_H__
 
-#include "nsSVGGraphicElement.h"
+#include "nsSVGPathGeometryElement.h"
 #include "nsIDOMSVGPathElement.h"
 #include "nsIDOMSVGAnimatedPathData.h"
 
@@ -80,7 +80,7 @@ public:
                  float *aX, float *aY, float *aAngle);
 };
 
-typedef nsSVGGraphicElement nsSVGPathElementBase;
+typedef nsSVGPathGeometryElement nsSVGPathElementBase;
 
 class nsSVGPathElement : public nsSVGPathElementBase,
                          public nsIDOMSVGPathElement,
@@ -112,6 +112,12 @@ public:
   // nsISVGValueObserver
   NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
                                      nsISVGValue::modificationType aModType);
+
+  // nsSVGPathGeometryElement methods:
+  virtual PRBool IsDependentAttribute(nsIAtom *aName);
+  virtual PRBool IsMarkable();
+  virtual void GetMarkPoints(nsVoidArray *aMarks);
+  virtual void ConstructPath(cairo_t *aCtx);
 
   nsSVGFlattenedPath *GetFlattenedPath();
 

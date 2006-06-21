@@ -36,14 +36,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsSVGGraphicElement.h"
+#include "nsSVGPathGeometryElement.h"
 #include "nsSVGAtoms.h"
 #include "nsSVGPointList.h"
 #include "nsIDOMSVGPolylineElement.h"
 #include "nsIDOMSVGAnimatedPoints.h"
 #include "nsCOMPtr.h"
+#include "nsIDOMSVGPoint.h"
+#include "nsSVGUtils.h"
 
-typedef nsSVGGraphicElement nsSVGPolylineElementBase;
+typedef nsSVGPathGeometryElement nsSVGPolylineElementBase;
 
 class nsSVGPolylineElement : public nsSVGPolylineElementBase,
                              public nsIDOMSVGPolylineElement,
@@ -69,7 +71,13 @@ public:
 
   // nsIContent interface
   NS_IMETHODIMP_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
-  
+
+  // nsSVGPathGeometryElement methods:
+  virtual PRBool IsDependentAttribute(nsIAtom *aName);
+  virtual PRBool IsMarkable() { return PR_TRUE; }
+  virtual void GetMarkPoints(nsVoidArray *aMarks);
+  virtual void ConstructPath(cairo_t *aCtx);
+
 protected:
   nsCOMPtr<nsIDOMSVGPointList> mPoints;
 };
@@ -158,4 +166,84 @@ nsSVGPolylineElement::IsAttributeMapped(const nsIAtom* name) const
   
   return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
     nsSVGPolylineElementBase::IsAttributeMapped(name);
+}
+
+//----------------------------------------------------------------------
+// nsSVGPathGeometryElement methods
+
+PRBool
+nsSVGPolylineElement::IsDependentAttribute(nsIAtom *aName)
+{
+  if (aName == nsGkAtoms::points)
+    return PR_TRUE;
+
+  return PR_FALSE;
+}
+
+void
+nsSVGPolylineElement::GetMarkPoints(nsVoidArray *aMarks)
+{
+  if (!mPoints)
+    return;
+
+  PRUint32 count;
+  mPoints->GetNumberOfItems(&count);
+  if (count == 0)
+    return;
+
+  float px = 0.0, py = 0.0, prevAngle;
+
+  for (PRUint32 i = 0; i < count; ++i) {
+    nsCOMPtr<nsIDOMSVGPoint> point;
+    mPoints->GetItem(i, getter_AddRefs(point));
+
+    float x, y;
+    point->GetX(&x);
+    point->GetY(&y);
+
+    float angle = atan2(y-py, x-px);
+    if (i == 1)
+      ((nsSVGMark *)aMarks->ElementAt(aMarks->Count()-1))->angle = angle;
+    else if (i > 1)
+      ((nsSVGMark *)aMarks->ElementAt(aMarks->Count()-1))->angle =
+        nsSVGUtils::AngleBisect(prevAngle, angle);
+
+    nsSVGMark *mark;
+    mark = new nsSVGMark;
+    mark->x = x;
+    mark->y = y;
+    aMarks->AppendElement(mark);
+
+    prevAngle = angle;
+    px = x;
+    py = y;
+  }
+
+  ((nsSVGMark *)aMarks->ElementAt(aMarks->Count()-1))->angle = prevAngle;
+}
+
+void
+nsSVGPolylineElement::ConstructPath(cairo_t *aCtx)
+{
+  if (!mPoints)
+    return;
+
+  PRUint32 count;
+  mPoints->GetNumberOfItems(&count);
+  if (count == 0)
+    return;
+
+  PRUint32 i;
+  for (i = 0; i < count; ++i) {
+    nsCOMPtr<nsIDOMSVGPoint> point;
+    mPoints->GetItem(i, getter_AddRefs(point));
+
+    float x, y;
+    point->GetX(&x);
+    point->GetY(&y);
+    if (i == 0)
+      cairo_move_to(aCtx, x, y);
+    else
+      cairo_line_to(aCtx, x, y);
+  }
 }

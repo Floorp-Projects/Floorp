@@ -110,6 +110,7 @@ CPPSRCS		= \
 		nsSVGNumberList.cpp \
 		nsSVGPathDataParser.cpp \
 		nsSVGPathElement.cpp \
+		nsSVGPathGeometryElement.cpp \
 		nsSVGPathSeg.cpp \
 		nsSVGPathSegList.cpp \
 		nsSVGPatternElement.cpp \

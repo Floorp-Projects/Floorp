@@ -96,7 +96,6 @@ public:
   virtual nsresult GetFillPaintType() { return eStyleSVGPaintType_Color; }
 
   // nsSVGPathGeometryFrame methods:
-  virtual void ConstructPath(cairo_t *aCtx);
   virtual PRUint16 GetHittestMask();
 
   // nsIFrame interface:
@@ -209,27 +208,6 @@ nsSVGImageFrame::AttributeChanged(PRInt32         aNameSpaceID,
 
    return nsSVGPathGeometryFrame::AttributeChanged(aNameSpaceID,
                                                    aAttribute, aModType);
-}
-
-//----------------------------------------------------------------------
-// nsISVGPathGeometrySource methods:
-
-/* For the purposes of the update/invalidation logic pretend to
-   be a rectangle. */
-void
-nsSVGImageFrame::ConstructPath(cairo_t *aCtx)
-{
-  float x, y, width, height;
-
-  nsSVGElement *element = NS_STATIC_CAST(nsSVGElement*, mContent);
-  element->GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
-
-  /* In a perfect world, this would be handled by the DOM, and 
-     return a DOM exception. */
-  if (width == 0 || height == 0)
-    return;
-
-  cairo_rectangle(aCtx, x, y, width, height);
 }
 
 //----------------------------------------------------------------------
@@ -481,6 +459,9 @@ nsSVGImageFrame::ConvertFrame(gfxIImageFrame *aNewFrame)
   
   return NS_OK;
 }
+
+//----------------------------------------------------------------------
+// nsSVGPathGeometryFrame methods:
 
 // Lie about our fill/stroke so that hit detection works properly
 

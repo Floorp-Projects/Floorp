@@ -36,12 +36,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsSVGGraphicElement.h"
+#include "nsSVGPathGeometryElement.h"
 #include "nsIDOMSVGCircleElement.h"
 #include "nsSVGLength2.h"
 #include "nsGkAtoms.h"
+#include "nsSVGUtils.h"
 
-typedef nsSVGGraphicElement nsSVGCircleElementBase;
+typedef nsSVGPathGeometryElement nsSVGCircleElementBase;
 
 class nsSVGCircleElement : public nsSVGCircleElementBase,
                            public nsIDOMSVGCircleElement
@@ -60,6 +61,9 @@ public:
   NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGCircleElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGCircleElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGCircleElementBase::)
+
+  // nsSVGPathGeometryElement methods:
+  virtual void ConstructPath(cairo_t *aCtx);
 
 protected:
 
@@ -137,3 +141,15 @@ nsSVGCircleElement::GetLengthInfo()
                               NS_ARRAY_LENGTH(sLengthInfo));
 }
 
+//----------------------------------------------------------------------
+// nsSVGPathGeometryElement methods
+
+void
+nsSVGCircleElement::ConstructPath(cairo_t *aCtx)
+{
+  float x, y, r;
+
+  GetAnimatedLengthValues(&x, &y, &r, nsnull);
+
+  cairo_arc(aCtx, x, y, r, 0, 2*M_PI);
+}

@@ -67,10 +67,8 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPPSRCS		= \
-		nsSVGCircleFrame.cpp \
 		nsSVGClipPathFrame.cpp \
 		nsSVGContainerFrame.cpp \
-		nsSVGEllipseFrame.cpp \
 		nsSVGFilterFrame.cpp \
 		nsSVGGFrame.cpp \
 		nsSVGGenericContainerFrame.cpp \
@@ -80,17 +78,12 @@ CPPSRCS		= \
 		nsSVGImageFrame.cpp \
 		nsSVGInnerSVGFrame.cpp \
 		nsSVGLeafFrame.cpp \
-		nsSVGLineFrame.cpp \
 		nsSVGMarkerFrame.cpp \
 		nsSVGMaskFrame.cpp \
 		nsSVGOuterSVGFrame.cpp \
 		nsSVGPaintServerFrame.cpp \
-		nsSVGPathFrame.cpp \
 		nsSVGPathGeometryFrame.cpp \
 		nsSVGPatternFrame.cpp \
-		nsSVGPolygonFrame.cpp \
-		nsSVGPolylineFrame.cpp \
-		nsSVGRectFrame.cpp \
 		nsSVGStopFrame.cpp \
 		nsSVGTextFrame.cpp \
 		nsSVGTextPathFrame.cpp \

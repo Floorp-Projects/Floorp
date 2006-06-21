@@ -37,12 +37,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsSVGGraphicElement.h"
+#include "nsSVGPathGeometryElement.h"
 #include "nsIDOMSVGRectElement.h"
 #include "nsSVGLength2.h"
 #include "nsGkAtoms.h"
 
-typedef nsSVGGraphicElement nsSVGRectElementBase;
+typedef nsSVGPathGeometryElement nsSVGRectElementBase;
 
 class nsSVGRectElement : public nsSVGRectElementBase,
                          public nsIDOMSVGRectElement
@@ -61,6 +61,9 @@ public:
   NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGRectElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGRectElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGRectElementBase::)
+
+  // nsSVGPathGeometryElement methods:
+  virtual void ConstructPath(cairo_t *aCtx);
 
 protected:
 
@@ -157,4 +160,78 @@ nsSVGRectElement::GetLengthInfo()
 {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               NS_ARRAY_LENGTH(sLengthInfo));
+}
+
+//----------------------------------------------------------------------
+// nsSVGPathGeometryElement methods
+
+void
+nsSVGRectElement::ConstructPath(cairo_t *aCtx)
+{
+  float x, y, width, height, rx, ry;
+
+  GetAnimatedLengthValues(&x, &y, &width, &height, &rx, &ry, nsnull);
+
+  /* In a perfect world, this would be handled by the DOM, and
+     return a DOM exception. */
+  if (width <= 0 || height <= 0 || ry < 0 || rx < 0)
+    return;
+
+  /* Clamp rx and ry to half the rect's width and height respectively. */
+  float halfWidth  = width/2;
+  float halfHeight = height/2;
+  if (rx > halfWidth)
+    rx = halfWidth;
+  if (ry > halfHeight)
+    ry = halfHeight;
+
+  /* If either the 'rx' or the 'ry' attribute isn't set in the markup, then we
+     have to set it to the value of the other. We do this after clamping rx and
+     ry since omitting one of the attributes implicitly means they should both
+     be the same. */
+  PRBool hasRx = HasAttr(kNameSpaceID_None, nsGkAtoms::rx);
+  PRBool hasRy = HasAttr(kNameSpaceID_None, nsGkAtoms::ry);
+  if (hasRx && !hasRy)
+    ry = rx;
+  else if (hasRy && !hasRx)
+    rx = ry;
+
+  /* However, we may now have made rx > width/2 or else ry > height/2. (If this
+     is the case, we know we must be giving rx and ry the same value.) */
+  if (rx > halfWidth)
+    rx = ry = halfWidth;
+  else if (ry > halfHeight)
+    rx = ry = halfHeight;
+
+  if (rx == 0 && ry == 0) {
+    cairo_rectangle(aCtx, x, y, width, height);
+  } else {
+    // Conversion factor used for ellipse to bezier conversion.
+    // Gives radial error of 0.0273% in circular case.
+    // See comp.graphics.algorithms FAQ 4.04
+    const float magic = 4*(sqrt(2.)-1)/3;
+
+    cairo_move_to(aCtx, x+rx, y);
+    cairo_line_to(aCtx, x+width-rx, y);
+    cairo_curve_to(aCtx,
+                   x+width-rx + magic*rx, y,
+                   x+width, y+ry-magic*ry,
+                   x+width, y+ry);
+    cairo_line_to(aCtx, x+width, y+height-ry);
+    cairo_curve_to(aCtx,
+                   x+width, y+height-ry + magic*ry,
+                   x+width-rx + magic*rx, y+height,
+                   x+width-rx, y+height);
+    cairo_line_to(aCtx, x+rx, y+height);
+    cairo_curve_to(aCtx,
+                   x+rx - magic*rx, y+height,
+                   x, y+height-ry + magic*ry,
+                   x, y+height-ry);
+    cairo_line_to(aCtx, x, y+ry);
+    cairo_curve_to(aCtx,
+                   x, y+ry - magic*ry,
+                   x+rx - magic*rx, y,
+                   x+rx, y);
+    cairo_close_path(aCtx);
+  }
 }
