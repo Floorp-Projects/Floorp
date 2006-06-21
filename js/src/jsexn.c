@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=80:
+ * vim: set ts=8 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -833,6 +833,7 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
     for (i = 0; exceptions[i].name != 0; i++) {
         JSAtom *atom;
         JSFunction *fun;
+        JSObject *funobj;
         JSString *nameString;
         int protoIndex = exceptions[i].protoIndex;
 
@@ -857,8 +858,11 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
         /* Make this constructor make objects of class Exception. */
         fun->clasp = &js_ErrorClass;
 
+        /* Extract the constructor object. */
+        funobj = fun->object;
+
         /* Make the prototype and constructor links. */
-        if (!js_SetClassPrototype(cx, fun->object, protos[i],
+        if (!js_SetClassPrototype(cx, funobj, protos[i],
                                   JSPROP_READONLY | JSPROP_PERMANENT)) {
             break;
         }
@@ -875,6 +879,10 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
                                JSPROP_ENUMERATE)) {
             break;
         }
+
+        /* Finally, stash the constructor for later uses. */
+        if (!js_SetClassObject(cx, obj, exceptions[i].key, funobj))
+            break;
     }
 
     js_LeaveLocalRootScope(cx);
