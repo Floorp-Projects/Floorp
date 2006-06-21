@@ -1514,7 +1514,7 @@ function MsgApplyFilters()
   for (var i = 0; i < numFilters; i++)
   {
     var curFilter = curFilterList.getFilterAt(i);
-    if (curFilter.enabled)
+    if (curFilter.enabled && !curFilter.temporary) // only add enabled, UI visibile filters
     {
       tempFilterList.insertFilterAt(newFilterIndex, curFilter);
       newFilterIndex++;

@@ -57,7 +57,9 @@
   <script type="application/x-javascript" src="chrome://messenger/content/FilterListDialog.js"/>
   <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
-  <stringbundle id="bundle_filter" src="chrome://messenger/locale/filter.properties"/>
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="bundle_filter" src="chrome://messenger/locale/filter.properties"/>
+  </stringbundleset>
 
   <keyset id="dialogKeys"/>
 
