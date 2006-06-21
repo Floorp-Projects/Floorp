@@ -3734,6 +3734,27 @@ nsBrowserStatusHandler.prototype =
 
   onLocationChange : function(aWebProgress, aRequest, aLocation)
   {
+
+   if (document.tooltipNode) {
+     // Optimise for the common case
+     if (aWebProgress.DOMWindow == content) {
+       document.getElementById("aHTMLTooltip").hidePopup();
+       document.tooltipNode = null;
+     }
+     else {
+       for (var tooltipWindow =
+              document.tooltipNode.target.ownerDocument.defaultView;
+            tooltipWindow != tooltipWindow.parent;
+            tooltipWindow = tooltipWindow.parent) {
+         if (tooltipWindow == aWebProgress.DOMWindow) {
+           document.getElementById("aHTMLTooltip").hidePopup();
+           document.tooltipNode = null;
+           break;
+         }
+       }
+     }
+   }
+
     // This code here does not compare uris exactly when determining
     // whether or not the message should be hidden since the message
     // may be prematurely hidden when an install is invoked by a click
