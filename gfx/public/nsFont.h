@@ -97,7 +97,7 @@ struct NS_GFX nsFont {
   // needs to be done.
   float sizeAdjust;
 
-  // Initialize the font struct with an iso-latin1 name
+  // Initialize the font struct with an ASCII name
   nsFont(const char* aName, PRUint8 aStyle, PRUint8 aVariant,
          PRUint16 aWeight, PRUint8 aDecoration, nscoord aSize,
          float aSizeAdjust=0.0f);
