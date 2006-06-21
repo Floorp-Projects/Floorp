@@ -73,26 +73,30 @@ public:
 
 };
 
-NS_IMPL_ISUPPORTS1(nsShutdownObserver, nsIObserver)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsShutdownObserver, nsIObserver)
 
 static nsresult NS_InitCaseConversion() {
-    if (gCaseConv) return NS_OK;
-
-    nsresult rv;
-    
-    rv = CallGetService(NS_UNICHARUTIL_CONTRACTID, &gCaseConv);
-
-    if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsIObserverService> obs =
-            do_GetService("@mozilla.org/observer-service;1", &rv);
-        if (NS_SUCCEEDED(rv)) {
-            nsShutdownObserver *observer = new nsShutdownObserver();
-            if (observer)
-                obs->AddObserver(observer, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
-        }
+    if (gCaseConv)
+      return NS_OK;
+     
+    nsresult rv = CallGetService(NS_UNICHARUTIL_CONTRACTID, &gCaseConv);
+    if (NS_FAILED(rv)) {
+      gCaseConv = nsnull;
+      return rv;
     }
-    
-    return NS_OK;
+
+    nsCOMPtr<nsIObserverService> obs =
+        do_GetService("@mozilla.org/observer-service;1", &rv);
+ 
+     if (NS_SUCCEEDED(rv)) {
+        nsCOMPtr<nsIObserver> observer;
+        NS_NEWXPCOM(observer, nsShutdownObserver);
+        if (observer)
+            obs->AddObserver(observer, NS_XPCOM_SHUTDOWN_OBSERVER_ID,
+                             PR_FALSE);
+     }
+     
+     return NS_OK;
 }
 
 void
