@@ -418,6 +418,8 @@ nsTableFrame::SetInitialChildList(nsIAtom*        aListName,
     }
     else if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay)
     {
+      NS_ASSERTION(nsLayoutAtoms::tableColGroupFrame == childFrame->GetType(),
+                   "This is not a colgroup");
       if (mColGroups.IsEmpty())
         mColGroups.SetFrames(childFrame);
       else
@@ -1110,7 +1112,7 @@ nsTableFrame::InsertRows(nsTableRowGroupFrame& aRowGroupFrame,
                          PRBool                aConsiderSpans)
 {
 #ifdef DEBUG_TABLE_CELLMAP
-  printf("insertRowsBefore firstRow=%d \n", aRowIndex);
+  printf("=== insertRowsBefore firstRow=%d \n", aRowIndex);
   Dump(PR_TRUE, PR_FALSE, PR_TRUE);
 #endif
 
@@ -1142,7 +1144,7 @@ nsTableFrame::InsertRows(nsTableRowGroupFrame& aRowGroupFrame,
     }
   }
 #ifdef DEBUG_TABLE_CELLMAP
-  printf("insertRowsAfter \n");
+  printf("=== insertRowsAfter \n");
   Dump(PR_TRUE, PR_FALSE, PR_TRUE);
 #endif
 
@@ -1172,7 +1174,7 @@ void nsTableFrame::RemoveRows(nsTableRowFrame& aFirstRowFrame,
 
   PRInt32 firstRowIndex = aFirstRowFrame.GetRowIndex();
 #ifdef DEBUG_TABLE_CELLMAP
-  printf("removeRowsBefore firstRow=%d numRows=%d\n", firstRowIndex, aNumRowsToRemove);
+  printf("=== removeRowsBefore firstRow=%d numRows=%d\n", firstRowIndex, aNumRowsToRemove);
   Dump(PR_TRUE, PR_FALSE, PR_TRUE);
 #endif
   nsTableCellMap* cellMap = GetCellMap();
@@ -1203,8 +1205,8 @@ void nsTableFrame::RemoveRows(nsTableRowFrame& aFirstRowFrame,
   }
   AdjustRowIndices(firstRowIndex, -aNumRowsToRemove);
 #ifdef DEBUG_TABLE_CELLMAP
-  printf("removeRowsAfter\n");
-  Dump(PR_TRUE, PR_FALSE, PR_TRUE);
+  printf("=== removeRowsAfter\n");
+  Dump(PR_TRUE, PR_TRUE, PR_TRUE);
 #endif
 }
 
@@ -1275,7 +1277,7 @@ nsTableFrame::InsertRowGroups(nsIFrame* aFirstRowGroupFrame,
                               nsIFrame* aLastRowGroupFrame)
 {
 #ifdef DEBUG_TABLE_CELLMAP
-  printf("insertRowGroupsBefore");
+  printf("=== insertRowGroupsBefore\n");
   Dump(PR_TRUE, PR_FALSE, PR_TRUE);
 #endif
   nsTableCellMap* cellMap = GetCellMap();
@@ -1296,6 +1298,7 @@ nsTableFrame::InsertRowGroups(nsIFrame* aFirstRowGroupFrame,
             ? nsnull : GetRowGroupFrame((nsIFrame*)orderedRowGroups.ElementAt(rgIndex - 1)); 
           // create and add the cell map for the row group
           cellMap->InsertGroupCellMap(*rgFrame, priorRG);
+          cellMap->Synchronize(this);
           // collect the new row frames in an array and add them to the table
           PRInt32 numRows = CollectRows(kidFrame, rows);
           if (numRows > 0) {
@@ -1319,8 +1322,8 @@ nsTableFrame::InsertRowGroups(nsIFrame* aFirstRowGroupFrame,
     }
   }
 #ifdef DEBUG_TABLE_CELLMAP
-  printf("insertRowGroupsAfter");
-  Dump(PR_TRUE, PR_FALSE, PR_TRUE);
+  printf("=== insertRowGroupsAfter\n");
+  Dump(PR_TRUE, PR_TRUE, PR_TRUE);
 #endif
 }
 
@@ -2452,7 +2455,7 @@ nsTableFrame::AppendFrames(nsIAtom*        aListName,
   }
 
 #ifdef DEBUG_TABLE_CELLMAP
-  printf("TableFrame::AppendFrames");
+  printf("=== TableFrame::AppendFrames\n");
   Dump(PR_TRUE, PR_TRUE, PR_TRUE);
 #endif
   SetNeedStrategyInit(PR_TRUE); // XXX assume the worse
@@ -2508,7 +2511,10 @@ nsTableFrame::InsertFrames(nsIAtom*        aListName,
   }
 
   AppendDirtyReflowCommand(this);
-
+#ifdef DEBUG_TABLE_CELLMAP
+  printf("=== TableFrame::InsertFrames\n");
+  Dump(PR_TRUE, PR_TRUE, PR_TRUE);
+#endif
   return NS_OK;
 }
 
@@ -2570,7 +2576,9 @@ nsTableFrame::RemoveFrame(nsIAtom*        aListName,
       AdjustRowIndices(startRowIndex, -numRows);
       // remove the row group frame from the sibling chain
       mFrames.DestroyFrame(aOldFrame);
-
+      if (cellMap) {
+        cellMap->Synchronize(this);
+      }
       // XXX This could probably be optimized with much effort
       SetNeedStrategyInit(PR_TRUE);
       AppendDirtyReflowCommand(this);
