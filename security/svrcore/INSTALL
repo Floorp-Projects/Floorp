@@ -1,15 +1,6 @@
 Building:
 
-You first need to do the patch to fix the broken ../coreconf/location.mk.  You must run the patch command from the top level directory.  If you checked out the code from CVS like this:
- cvs co mozilla/security/coreconf mozilla/security/svrcore
-Then run patch as follows:
- patch -p0 < mozilla/security/svrcore/corecore-location.patch
-Then
- cd mozilla/security/svrcore ; make [args] ...
-
-This adds NSS_INCLUDE_DIR and NSS_LIB_DIR - if they are already there (i.e. someone fixed it) then patch will complain, but just ignore it.
-
-Next, if you are not doing an "in-tree" build, you will need to set the environment variables NSPR_INCLUDE_DIR, NSPR_LIB_DIR, NSS_INCLUDE_DIR, and NSS_LIB_DIR to point to the appropriate places.  On Windows, if you are using the build method described below (cygwin + MSVC), you should use the "mixed" style path e.g.
+If you are not doing an "in-tree" build, you will need to set the environment variables NSPR_INCLUDE_DIR, NSPR_LIB_DIR, NSS_INCLUDE_DIR, and NSS_LIB_DIR to point to the appropriate places.  On Windows, if you are using the build method described below (cygwin + MSVC), you should use the "mixed" style path e.g.
 export NSPR_INCLUDE_DIR=`cygpath -m $HOME/nspr-4.6.1/include`
 etc.
 The MSVC compiler (cl.exe) will barf on paths like /cygdrive/c/foo/bar.
@@ -72,7 +63,6 @@ I've put my nsinstall.exe in my $HOME/bin directory and put that first in my PAT
 
 * Building
 
- patch -p0 < mozilla/security/svrcore/corecore-location.patch
  cd mozilla/security/svrcore
  make AR='link /lib -nologo -out:"$@"
 

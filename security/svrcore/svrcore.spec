@@ -3,8 +3,8 @@
 
 Summary:          Svrcore - development files for secure PIN handling using NSS crypto
 Name:             svrcore-devel
-Version:          4.0.1
-Release:          3
+Version:          4.0.2
+Release:          1
 License:          MPL/GPL/LGPL
 URL:              http://www.mozilla.org/projects/security/pki/
 Group:            Development/Libraries
@@ -17,7 +17,6 @@ BuildRequires:    gawk
 Provides:         svrcore-devel
 
 Source0:          %{name}-%{version}.tar.gz
-Patch0:           coreconf-location.patch
 
 %description
 svrcore provides applications with several ways to handle secure PIN storage
@@ -27,7 +26,6 @@ uses the facilities provided by NSS.
 
 %prep
 %setup -q
-%patch
 
 %build
 
@@ -104,6 +102,10 @@ done
 %{_includedir}/svrcore.h
 
 %changelog
+* Thu Jun 22 2006 Rich Megginson <rmeggins@redhat.com> - 4.0.2-1
+- Bump rev to 4.0.2; now using HEAD of mozilla/security/coreconf
+- which includes the coreconf-location.patch, so got rid of patch
+
 * Tue Apr 18 2006 Rich Megginson <rmeggins@redhat.com> - 4.0.1-3
 - Use pkg-config --variable=includedir to get include dirs
 
