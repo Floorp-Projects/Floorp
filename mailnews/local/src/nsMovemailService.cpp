@@ -388,7 +388,7 @@ nsMovemailService::GetNewMail(nsIMsgWindow *aMsgWindow,
                                            getter_AddRefs(inbox));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = newMailParser->Init(serverFolder, inbox, 
-                             fileSpec, &outFileStream, nsnull);
+                             fileSpec, &outFileStream, nsnull, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
 
     in_server->SetServerBusy(PR_TRUE);
