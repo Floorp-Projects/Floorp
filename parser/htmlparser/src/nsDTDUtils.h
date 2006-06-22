@@ -124,6 +124,7 @@ public:
   void            PushEntry(nsTagEntry* aEntry, PRBool aRefCntNode = PR_TRUE);
   void            EnsureCapacityFor(PRInt32 aNewMax, PRInt32 aShiftOffset=0);
   void            Push(nsCParserNode* aNode,nsEntryStack* aStyleStack=0, PRBool aRefCntNode = PR_TRUE);
+  void            PushTag(eHTMLTags aTag);
   void            PushFront(nsCParserNode* aNode,nsEntryStack* aStyleStack=0, PRBool aRefCntNode = PR_TRUE);
   void            Append(nsEntryStack *aStack);
   nsCParserNode*  Pop(void);
@@ -309,6 +310,7 @@ public:
   void            PushEntry(nsTagEntry* aEntry, PRBool aRefCntNode = PR_TRUE);
   void            MoveEntries(nsDTDContext& aDest, PRInt32 aCount);
   void            Push(nsCParserNode* aNode,nsEntryStack* aStyleStack=0, PRBool aRefCntNode = PR_TRUE);
+  void            PushTag(eHTMLTags aTag);
   nsCParserNode*  Pop(nsEntryStack*& aChildStack);
   nsCParserNode*  Pop();
   nsCParserNode*  PeekNode() { return mStack.NodeAt(mStack.mCount-1); }

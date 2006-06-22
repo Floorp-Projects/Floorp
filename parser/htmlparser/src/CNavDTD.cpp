@@ -409,7 +409,10 @@ CNavDTD::DidBuildModel(nsresult anErrorCode,
 
           // mContextTopIndex refers to the misplaced content's legal parent index.
           result = HandleSavedTokens(mBodyContext->mContextTopIndex);
-          NS_ENSURE_SUCCESS(result, result);
+          if (NS_FAILED(result)) {
+            NS_ERROR("Bug in the DTD");
+            break;
+          }
 
           // If we start handling misplaced content while handling misplaced
           // content, mContextTopIndex gets modified. However, this new index
@@ -601,7 +604,6 @@ CNavDTD::HandleToken(CToken* aToken, nsIParser* aParser)
   switch(theTag) {
     case eHTMLTag_html:
     case eHTMLTag_noframes:
-    case eHTMLTag_noscript:
     case eHTMLTag_script:
     case eHTMLTag_doctypeDecl:
     case eHTMLTag_instruction:
@@ -613,14 +615,16 @@ CNavDTD::HandleToken(CToken* aToken, nsIParser* aParser)
                         NS_DTD_FLAG_ALTERNATE_CONTENT))) {
           // For bug examples from this code, see bugs: 18928, 20989.
           // At this point we know the body/frameset aren't open.
-          // If the child belongs in the head, then handle it (which may open the head);
-          // otherwise, push it onto the misplaced stack.
+          // If the child belongs in the head, then handle it (which may open
+          // the head); otherwise, push it onto the misplaced stack.
 
           PRBool isExclusive = PR_FALSE;
           PRBool theChildBelongsInHead =
             gHTMLElements[eHTMLTag_head].IsChildOfHead(theTag, isExclusive);
           if (theChildBelongsInHead && !isExclusive) {
-            if (mMisplacedContent.GetSize() == 0) {
+            if (mMisplacedContent.GetSize() == 0 &&
+                (!gHTMLElements[theTag].HasSpecialProperty(kPreferBody) ||
+                 (mFlags & NS_DTD_FLAG_HAS_EXPLICIT_HEAD))) {
               // This tag can either be in the body or the head. Since
               // there is no indication that the body should be open,
               // put this token in the head.
@@ -636,7 +640,7 @@ CNavDTD::HandleToken(CToken* aToken, nsIParser* aParser)
             eHTMLTags top = mBodyContext->Last();
             NS_ASSERTION(top != eHTMLTag_userdefined,
                          "Userdefined tags should act as leaves in the head");
-            if (top != eHTMLTag_html &&
+            if (top != eHTMLTag_html && top != eHTMLTag_head &&
                 gHTMLElements[top].CanContain(theTag, mDTDMode)) {
               // Some tags (such as <object> and <script>) are opened in the
               // head and allow other non-head content to be children.
@@ -1543,7 +1547,8 @@ CNavDTD::HandleEndToken(CToken* aToken)
 
     case eHTMLTag_head:
       StripWSFollowingTag(theChildTag, mTokenizer, mTokenAllocator, mLineNumber);
-      result = CloseContainer(eHTMLTag_head, PR_FALSE);
+      result = CloseContainersTo(eHTMLTag_head, PR_FALSE);
+      mFlags &= ~NS_DTD_FLAG_HAS_EXPLICIT_HEAD;
       break;
 
     case eHTMLTag_form:
@@ -1723,9 +1728,11 @@ CNavDTD::HandleSavedTokens(PRInt32 anIndex)
       STOP_TIMER()
       MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::HandleSavedTokensAbove(), this=%p\n", this));
       // Pause the main context and switch to the new context.
-      mSink->BeginContext(anIndex);
+      result = mSink->BeginContext(anIndex);
       MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::HandleSavedTokensAbove(), this=%p\n", this));
       START_TIMER()
+
+      NS_ENSURE_SUCCESS(result, result);
 
       // The body context should contain contents only upto the marked position.
       mBodyContext->MoveEntries(*mTempContext, theTagCount - theTopIndex);
@@ -2642,6 +2649,15 @@ CNavDTD::CloseContainer(const eHTMLTags aTag, PRBool aMalformed)
     case eHTMLTag_head:
       if (mFlags & NS_DTD_FLAG_HAS_OPEN_HEAD) {
         mFlags &= ~NS_DTD_FLAG_HAS_OPEN_HEAD;
+        if (mBodyContext->Last() == eHTMLTag_head) {
+          mBodyContext->Pop();
+        } else {
+          // This else can happen because CloseContainer is called both directly
+          // and from CloseContainersTo. CloseContainersTo pops the current tag
+          // off of the stack before calling CloseContainer.
+          NS_ASSERTION(mBodyContext->LastOf(eHTMLTag_head) == kNotFound,
+                       "Closing the wrong tag");
+        }
         done = PR_FALSE;
       }
       break;
@@ -2967,6 +2983,7 @@ CNavDTD::AddHeadContent(nsIParserNode *aNode)
     // Make sure the head is opened.
     if (!(mFlags & NS_DTD_FLAG_HAS_OPEN_HEAD)) {
       mFlags |= NS_DTD_FLAG_HAS_OPEN_HEAD;
+      mBodyContext->PushTag(eHTMLTag_head);
       result = mSink->OpenHead();
     }
 
