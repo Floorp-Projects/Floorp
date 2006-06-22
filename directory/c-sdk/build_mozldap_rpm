@@ -1,0 +1,189 @@
+#!/bin/sh
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is the Netscape svrcore library.
+#
+# The Initial Developer of the Original Code is
+# Red Hat
+# Portions created by the Initial Developer are Copyright (C) 2006
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s): Rich Megginson <richm@stanfordalumni.org>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+# This script can be used to build the mozldap rpms and srpm.  It assumes
+# you begin with nothing but this script.  You must have nspr, nspr-devel,
+# nss, and nss-devel, and svrcore-devel installed on your system in order to run this script.  Not
+# only will the script check, but the rpmbuild will also check and bomb out if
+# those dependencies are not present.  The script allows you to build the rpm
+# as a non root user and puts the build files under the current directory.  This
+# script does not install the rpm.
+#
+# You may need to edit this script to change:
+# the versions of nspr and nss and svrcore used
+# the CVS tag for pulling mozldap
+# the mozldap version and release - these should match the spec file
+
+# Always switch into the base directory of this
+# shell script prior to executing it so that all
+# of its output is written to this directory
+cd `dirname $0`
+
+# This script may ONLY be run on Linux!
+OS=`uname`
+if [ ${OS} != "Linux" ]; then
+	echo "The '$0' script is ONLY executable on a 'Linux' machine!"
+	exit 255
+fi
+
+# This script may ONLY be executed on either
+# an 'i386' platform or an 'x86_64' platform!
+PLATFORM=`uname -i`
+if [ ${PLATFORM} = "i386" ]; then
+	BITSIZE=32-bit
+elif [ ${PLATFORM} = "x86_64" ]; then
+	BITSIZE=64-bit
+else
+	echo "The '$0' script is ONLY executable on either"
+	echo "an 'i386' platform or an 'x86_64' platform!"
+	exit 255
+fi
+
+# initialize environment variables for this script
+unset LD_LIBRARY_PATH
+
+CVSROOT=:pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot
+export CVSROOT
+
+# define the remaining variables
+PACKAGE=mozldap
+VERSION=5.17
+RELEASE=3
+MOZLDAP_TAG=HEAD
+#MOZLDAP_TAG=LDAPCSDK_5_1_7_RTM
+PRJ=${PACKAGE}-${VERSION}
+RPM_HOME=`pwd`
+SPEC_FILENAME=${PACKAGE}.spec
+
+# define subroutines for this script
+usage() {
+	echo
+	echo "Usage:  $0"
+	echo
+}
+
+mkdirs() {
+	for d in "$@" ; do
+		if [ -d $d ]; then
+			mv $d $d.deleted
+			rm -rf $d.deleted &
+		fi
+		mkdir -p $d
+	done
+}
+
+# check the number of arguments supplied to this script
+if [ $# -ne 0 ] ; then
+	usage
+	exit 255
+fi
+
+# remove any old RPM directories
+echo "Removing any old RPM directories . . ."
+if [ -d ${RPM_HOME}/BUILD ]; then
+	rm -rf ${RPM_HOME}/BUILD
+fi
+if [ -d ${RPM_HOME}/SOURCES ]; then
+	rm -rf ${RPM_HOME}/SOURCES
+fi
+if [ -d ${RPM_HOME}/SPECS ]; then
+	rm -rf ${RPM_HOME}/SPECS
+fi
+echo "Finished."
+
+echo "Changing current working directory to ${RPM_HOME}."
+cd ${RPM_HOME}
+
+# create new RPM directories
+echo "Creating new RPM directories . . ."
+mkdirs BUILD
+if [ ! -d ${RPM_HOME}/RPMS ]; then
+	mkdirs ${RPM_HOME}/RPMS
+fi
+if [ ! -d ${RPM_HOME}/SGTARS ]; then
+	mkdirs ${RPM_HOME}/SGTARS
+fi
+mkdirs SOURCES SPECS
+if [ ! -d ${RPM_HOME}/SRPMS ]; then
+	mkdirs ${RPM_HOME}/SRPMS
+fi
+echo "Finished."
+
+# check out MOZLDAP code
+echo "Checking out MOZLDAP source code . . ."
+cvs -z3 export -r ${MOZLDAP_TAG} -d ${PRJ} -N DirectorySDKSourceC
+echo "Finished."
+
+# create a tarball from the checked out code
+echo "Creating tarball of MOZLDAP source code . . ."
+tar cf - ${PRJ} | gzip > SOURCES/${PRJ}.tar.gz
+echo "Finished."
+
+# remove the checked out code
+echo "Removing checked out MOZLDAP source code . . ."
+rm -rf ${PRJ}
+echo "Finished."
+
+# create a spec file from the MOZLDAP template
+cp ${SPEC_FILENAME} SPECS/${SPEC_FILENAME}
+
+# build the ${BITSIZE} RPM and Source RPM
+echo "Executing ${BITSIZE} rpmbuild of ${SPEC_FILENAME} file . . . "
+if [ ! -f SRPMS/${PACKAGE}-${VERSION}-${RELEASE}.src.rpm ]; then
+	rpmbuild --define="_topdir ${RPM_HOME}" --target ${PLATFORM} -ba --clean --rmsource --rmspec SPECS/${SPEC_FILENAME}
+else
+	rpmbuild --define="_topdir ${RPM_HOME}" --target ${PLATFORM} -bb --clean --rmsource --rmspec SPECS/${SPEC_FILENAME}
+fi
+echo "Finished doing ${BITSIZE} rpmbuild of ${SPEC_FILENAME} file."
+
+echo "Removing BUILD directory . . ."
+if [ -d ${RPM_HOME}/BUILD ]; then
+	rm -rf ${RPM_HOME}/BUILD
+fi
+echo "Finished."
+
+echo "Removing SOURCES directory . . ."
+if [ -d ${RPM_HOME}/SOURCES ]; then
+	rm -rf ${RPM_HOME}/SOURCES
+fi
+echo "Finished."
+
+echo "Removing SPECS directory . . ."
+if [ -d ${RPM_HOME}/SPECS ]; then
+	rm -rf ${RPM_HOME}/SPECS
+fi
+echo "Finished."
+
