@@ -29,7 +29,7 @@
     function validateDOMNode(aNodeValue, aType, aNSPrefix, aIsValid) {
       var rv = false;
 
-      var x = dp.parseFromString('<test xmlns:test="http://www.mozilla.org/schema/test" xmlns="http://www.mozilla.org/schema/test" xmlns:xsi="http://www.w3.org/1999/XMLSchema" xsi:type="' + aNSPrefix + ":" + aType + '">' + aNodeValue + '</test>', "text/xml");
+      var x = dp.parseFromString('<test xmlns:test="http://www.mozilla.org/schema/test" xmlns:testi="http://www.mozilla.org/schema/test_imported" xmlns="http://www.mozilla.org/schema/test" xmlns:xsi="http://www.w3.org/1999/XMLSchema" xsi:type="' + aNSPrefix + ":" + aType + '">' + aNodeValue + '</test>', "text/xml");
 
       rv = getValidator().validate(x.documentElement);
 
@@ -39,6 +39,13 @@
 
     function validateString(aNodeValue, aType, aIsValid) {
       var rv = getValidator().validateString(aNodeValue, aType, "http://www.mozilla.org/schema/test");
+
+      counter++;
+      results[results.length] = {type: aType, nodevalue: aNodeValue, rv: rv, isvalid: aIsValid};
+    }
+
+    function validateStringNS(aNodeValue, aType, aNS, aIsValid) {
+      var rv = getValidator().validateString(aNodeValue, aType, aNS);
 
       counter++;
       results[results.length] = {type: aType, nodevalue: aNodeValue, rv: rv, isvalid: aIsValid};
@@ -633,6 +640,21 @@
 
         validate("Applicant Trustee Supplier", "IndividualRoleListType5", false);
         validate("Applicant Trustee", "IndividualRoleListType5", true);
+
+        validateStringNS("220", "import-integer-test-1", "http://www.mozilla.org/schema/test_imported", false);
+        validateStringNS("6", "import-integer-test-1", "http://www.mozilla.org/schema/test_imported", true);
+
+        validateStringNS("-220", "import-integer-test-2", "http://www.mozilla.org/schema/test_imported2", false);
+        validateStringNS(  "-2", "import-integer-test-2", "http://www.mozilla.org/schema/test_imported2", true);
+
+        validateStringNS("220", "include-integer-test-1", "http://www.mozilla.org/schema/test_imported", false);
+        validateStringNS("6", "include-integer-test-1", "http://www.mozilla.org/schema/test_imported", true);
+
+        validateStringNS("220", "include-integer-test-2", "http://www.mozilla.org/schema/test_imported", false);
+        validateStringNS("6", "include-integer-test-2", "http://www.mozilla.org/schema/test_imported", true);
+
+        validateStringNS("220", "include-integer-test-3", "http://www.mozilla.org/schema/test_imported", false);
+        validateStringNS("6", "include-integer-test-3", "http://www.mozilla.org/schema/test_imported", true);
 
       }
 

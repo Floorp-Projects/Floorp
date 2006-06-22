@@ -786,7 +786,6 @@ nsSchemaLoader::ProcessSchemaElement(nsIDOMElement* aElement,
 
   // For now, ignore the following
   // annotations
-  // import
   // redefine
   // notation
   // identity-constraint elements
@@ -842,13 +841,24 @@ nsSchemaLoader::ProcessSchemaElement(nsIDOMElement* aElement,
         rv = schemaInst->AddModelGroup(modelGroup);
       }
     }
-    else if (tagName == nsSchemaAtoms::sInclude_atom) {
-      /* http://www.w3.org/TR/2004/REC-xmlschema-1-20041028/structures.html#element-include
+    else if (tagName == nsSchemaAtoms::sInclude_atom ||
+             tagName == nsSchemaAtoms::sImport_atom) {
+      /* Mixing the handling of <include> and <import> as they are very similar,
+        other than a few requirements regarding namespaces.
+       
+        http://www.w3.org/TR/2004/REC-xmlschema-1-20041028/structures.html#element-include
          If we include a schema, it must either
            (a) have the same targetNamespace as the including schema document or
            (b) no targetNamespace at all
 
-         If the uri to load doesn't resolve, it isn't a error.  It is if it's an
+        http://www.w3.org/TR/2004/REC-xmlschema-1-20041028/structures.html#element-import
+         When importing a schema, it must either
+           (a) if namespace is defined, then namespace == imported
+               targetNamespace
+           (b) if namespace is not defined, then imported schema must NOT
+               have a targetNamespace
+
+         If the uri to load doesn't resolve, it isn't a error.  It is if its an
          invalid XML document or not a schema file
        */
 
@@ -937,6 +947,13 @@ nsSchemaLoader::ProcessSchemaElement(nsIDOMElement* aElement,
 
       // XXX: check the target namespace requirements
 
+      // If <import>, simply call self to do all the heavy lifting
+      if (tagName == nsSchemaAtoms::sImport_atom) {
+        rv = ProcessSchemaElement(element, nsnull, aResult);
+        NS_ENSURE_SUCCESS(rv, rv);
+        continue;
+      }
+
       // import/append all elements in the included file to our schema element
       nsCOMPtr<nsIDOMDocument> ownerDoc;
       rv = childElement->GetOwnerDocument(getter_AddRefs(ownerDoc));
@@ -977,7 +994,6 @@ nsSchemaLoader::ProcessSchemaElement(nsIDOMElement* aElement,
       iterator.SetElement(aElement);
       iterator.Reset(index);
     } else if (tagName != nsSchemaAtoms::sAnnotation_atom &&
-               tagName != nsSchemaAtoms::sImport_atom &&
                tagName != nsSchemaAtoms::sRedefine_atom &&
                tagName != nsSchemaAtoms::sNotation_atom) {
       // if it is none of these, unexpected element.

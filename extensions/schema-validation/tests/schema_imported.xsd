@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<schema targetNamespace="http://www.mozilla.org/schema/test_imported"
+        xmlns:test="http://www.mozilla.org/schema/test_imported"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified"
+        attributeFormDefault="qualified"
+        xmlns="http://www.w3.org/2001/XMLSchema">
+
+  <import namespace="http://www.mozilla.org/schema/test_imported2" schemaLocation="schema_imported2.xsd" />
+
+  <include schemaLocation="schema_no_ns.xsd" />
+  <include schemaLocation="schema_ns.xsd" />
+
+  <simpleType name="import-integer-test-1">
+    <restriction base='integer'>
+      <maxExclusive value="10"/>
+      <minExclusive value="5"/>
+    </restriction>
+  </simpleType>
+
+
+</schema>
+

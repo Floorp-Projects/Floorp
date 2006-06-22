@@ -5,6 +5,8 @@
         attributeFormDefault="qualified"
         xmlns="http://www.w3.org/2001/XMLSchema">
 
+  <import namespace="http://www.mozilla.org/schema/test_imported" schemaLocation="schema_imported.xsd" />
+
   <simpleType name="integer-test-1">
     <restriction base='integer'>
       <totalDigits value="3"/>
