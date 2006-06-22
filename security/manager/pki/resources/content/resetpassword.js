@@ -47,13 +47,6 @@ function onLoad()
   } else {
     tokenName = self.name;
   }
-
-  var okButton = document.documentElement.getButton("accept");
-  var cancelButton = document.documentElement.getButton("cancel");
-  
-  okButton.removeAttribute("default");
-  cancelButton.setAttribute("default", "true");
-  cancelButton.focus();
 }
 
 function resetPassword()

@@ -48,6 +48,7 @@
 #expand buttons="accept,cancel__HELP_BUTTON__,extra2"
   buttonlabelextra2="&examineCert.label;"
   buttonaccesskeyextra2="&examineCert.accesskey;"
+  defaultButton="cancel"
   ondialogaccept="return doOK();"
   ondialogcancel="return doCancel();"
   ondialoghelp="openHelp('bad_name_web_cert');"

@@ -66,6 +66,4 @@ function onLoad()
                                               1);
   setText("message1", message1);
   setText("message2", message2);
-
-  document.documentElement.getButton("accept").focus();
 }
