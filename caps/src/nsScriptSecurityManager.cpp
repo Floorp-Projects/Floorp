@@ -918,7 +918,7 @@ nsScriptSecurityManager::CheckSameOriginPrincipalInternal(nsIPrincipal* aSubject
         nsXPIDLCString origin;
         rv = aObject->GetOrigin(getter_Copies(origin));
         NS_ENSURE_SUCCESS(rv, rv);
-        if (nsCRT::strcasecmp(origin, "about:blank") == 0)
+        if (nsCRT::strcasecmp(origin, "moz-safe-about:blank") == 0)
             return NS_OK;
     }
 

@@ -117,10 +117,18 @@ nsAboutProtocolHandler::NewURI(const nsACString &aSpec,
     }
 
     if (isSafe) {
-        // We need to indicate that this baby is safe.  Use an inner
-        // URI that no one but the security manager will see.
+        // We need to indicate that this baby is safe.  Use an inner URI that
+        // no one but the security manager will see.  Make sure to preserve our
+        // path, in case someone decides to hardcode checks for particular
+        // about: URIs somewhere.
+        nsCAutoString spec;
+        rv = url->GetPath(spec);
+        NS_ENSURE_SUCCESS(rv, rv);
+        
+        spec.Insert("moz-safe-about:", 0);
+
         nsCOMPtr<nsIURI> inner;
-        rv = NS_NewURI(getter_AddRefs(inner), "moz-safe-about:x");
+        rv = NS_NewURI(getter_AddRefs(inner), spec);
         NS_ENSURE_SUCCESS(rv, rv);
 
         nsSimpleNestedURI* outer = new nsSimpleNestedURI(inner);
