@@ -144,6 +144,9 @@ nsCocoaWindow::nsCocoaWindow()
 nsCocoaWindow::~nsCocoaWindow()
 {
   if (mWindow && mWindowMadeHere) {
+    // we want to unhook the delegate here because we don't want events
+    // sent to it after this object has been destroyed
+    [mWindow setDelegate:nil];
     [mWindow autorelease];
     [mDelegate autorelease];
   }
