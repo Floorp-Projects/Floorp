@@ -118,12 +118,14 @@ COMPONENT_LIBS += \
 	$(NULL)
 
 ifdef MOZ_PLUGINS
+DEFINES += -DMOZ_PLUGINS
 COMPONENT_LIBS += \
 	gkplugin \
 	$(NULL)
 endif
 
 ifdef MOZ_XPFE_COMPONENTS
+DEFINES += -DMOZ_XPFE_COMPONENTS
 COMPONENT_LIBS += \
 	mozfind \
 	appcomps \
@@ -131,24 +133,28 @@ COMPONENT_LIBS += \
 endif
 
 ifdef MOZ_XPINSTALL
+DEFINES += -DMOZ_XPINSTALL
 COMPONENT_LIBS += \
 	xpinstall \
 	$(NULL)
 endif
 
 ifdef MOZ_JSDEBUGGER
+DEFINES += -DMOZ_JSDEBUGGER
 COMPONENT_LIBS += \
 	jsd \
 	$(NULL)
 endif
 
 ifdef MOZ_PREF_EXTENSIONS
+DEFINES += -DMOZ_PREF_EXTENSIONS
 COMPONENT_LIBS += \
 	autoconfig \
 	$(NULL)
 endif
 
 ifdef MOZ_WEBSERVICES
+DEFINES += -DMOZ_WEBSERVICES
 COMPONENT_LIBS += \
 	websrvcs \
 	$(NULL)
