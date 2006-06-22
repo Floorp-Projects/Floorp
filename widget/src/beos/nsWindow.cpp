@@ -101,7 +101,7 @@ static BWindow           * gLastActiveWindow = NULL;
 // such as regxpcom, do not create a BApplication object, and therefor fail to run.,
 // since a BCursor requires a vaild BApplication (see Bug#129964).  But, we still want
 // to cache them for performance.  Currently, there are 17 cursors available;
-static nsVoidArray		gCursorArray(17);
+static nsVoidArray		gCursorArray(21);
 // Used in contrain position.  Specifies how much of a window must remain on screen
 #define kWindowPositionSlop 20
 // BeOS does not provide this information, so we must hard-code it
@@ -918,7 +918,7 @@ nsWindow::DealWithPopups(uint32 methodID, nsPoint pos)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::IsVisible(PRBool & bState)
 {
-	bState = mIsVisible;
+	bState = mIsVisible && mView && mView->Visible();
 	return NS_OK;
 }
 
@@ -1062,8 +1062,6 @@ NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 	mBounds.width  = aWidth;
 	mBounds.height = aHeight;
 	
-	if (eWindowType_child == mWindowType && aRepaint)
-		HideKids(PR_TRUE);
 	// until we lack separate window and widget, we "cannot" resize BWindow without BView
 	if (mView && mView->LockLooper())
 	{
@@ -1573,9 +1571,6 @@ NS_IMETHODIMP nsWindow::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSyn
 NS_IMETHODIMP nsWindow::Update()
 {
 	nsresult rv = NS_ERROR_FAILURE;
-	//Restoring children visibility if scrolling trigger is off
-	if (!mIsScrolling)
-		HideKids(PR_FALSE);
 	//Switching scrolling trigger off
 	mIsScrolling = PR_FALSE;
 	// Getting whole paint cache filled in native and non-native Invalidate() calls.
@@ -1649,7 +1644,9 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 	HideKids(PR_TRUE);
 	if (mView && mView->LockLooper())
 	{
-
+		// Kill any attempt to invalidate until scroll is finished
+		mView->SetVisible(false);
+		
 		BRect src;
 		BRect b = mView->Bounds();
 
@@ -1726,25 +1723,19 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 			nsRect bounds = childWidget->mBounds;
 			bounds.x += aDx;
 			bounds.y += aDy; 
+			childWidget->Move(bounds.x, bounds.y);
 			BView *child = ((BView *)kid->GetNativeData(NS_NATIVE_WIDGET));
 			if (child)
-			{
-				//There is native child
-				childWidget->SetBounds(bounds);
 				mView->paintregion.Exclude(child->Frame());
-				child->MoveBy(aDx, aDy);
-			}
-			else
-			{
-				childWidget->Move(bounds.x, bounds.y);
-			}
-		}			
-
-		mView->UnlockLooper();
-
+		}
+		
 		// Painting calculated region now,
 		// letting Update() to paint remaining content of paintregion
 		OnPaint(&invalid);
+		HideKids(PR_FALSE);
+		// re-allow updates
+		mView->SetVisible(true);
+		mView->UnlockLooper();
 	}
 	return NS_OK;
 }
@@ -2941,10 +2932,29 @@ nsViewBeOS::nsViewBeOS(nsIWidget *aWidgetWindow, BRect aFrame, const char *aName
 	fRestoreMouseMask = false;
 	fJustValidated = true;
 	fWheelDispatched = true;
+	fVisible = true;
 }
 
+void nsViewBeOS::SetVisible(bool visible)
+{
+	if (visible)
+		SetFlags(Flags() | B_WILL_DRAW);
+	else
+		SetFlags(Flags() & ~B_WILL_DRAW);
+	fVisible = visible;
+}
+
+inline bool nsViewBeOS::Visible()
+{
+	return fVisible;
+}
+ 
 void nsViewBeOS::Draw(BRect updateRect)
 {
+	// Ignore all, we are scrolling.
+	if (!fVisible)
+		return;
+
 	paintregion.Include(updateRect);
 
 	// We have send message already, and Mozilla still didn't get it

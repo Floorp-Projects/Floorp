@@ -181,7 +181,7 @@ public:
 	NS_IMETHOD              DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
 	NS_IMETHOD              HideWindowChrome(PRBool aShouldHide);
 
-	virtual void             ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY) {}
+	virtual void            ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY) {}
 
 
 	// nsSwitchToUIThread interface
@@ -322,6 +322,8 @@ public:
 	void                    KeyUp(const char *bytes, int32 numBytes);
 	virtual void            MakeFocus(bool focused);
 	virtual void            MessageReceived(BMessage *msg);
+	void                    SetVisible(bool visible);
+	bool                    Visible();
 	BRegion                 paintregion;
 	uint32                  buttons;
 
@@ -336,6 +338,7 @@ private:
 	bool                 fRestoreMouseMask;	
 	bool                 fJustValidated;
 	bool                 fWheelDispatched;
+	bool                 fVisible;
 };
 
 #if defined(BeIME)
