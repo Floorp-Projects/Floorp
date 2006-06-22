@@ -492,13 +492,14 @@ sub update_create_package {
 
     my($update_product, $update_version, $update_platform);
     my($update_appv, $update_extv);
+    my $update_aus_host = $Settings::update_aus_host;
 
     if ( defined($Settings::update_product) ) {
         $update_product = $Settings::update_product;
     } else {
         TinderUtils::print_log("update_product is undefined, skipping update generation.\n");
         $status = 1;
-        goto NOUPDATE;
+        return $status;
     }
 
     if ( defined($Settings::update_version) ) {
@@ -506,7 +507,7 @@ sub update_create_package {
     } else {
         TinderUtils::print_log("update_version is undefined, skipping update generation.\n");
         $status = 1;
-        goto NOUPDATE;
+        return $status;
     }
 
     if ( defined($Settings::update_platform) ) {
@@ -514,7 +515,7 @@ sub update_create_package {
     } else {
         TinderUtils::print_log("update_platform is undefined, skipping update generation.\n");
         $status = 1;
-        goto NOUPDATE;
+        return $status;
     }
 
     if ( defined($Settings::update_appv) ) {
@@ -525,7 +526,7 @@ sub update_create_package {
     } else {
         TinderUtils::print_log("both update_appv and update_ver_file are undefined, skipping update generation.\n");
         $status = 1;
-        goto NOUPDATE;
+        return $status;
     }
 
     if ( defined($Settings::update_extv) ) {
@@ -536,7 +537,7 @@ sub update_create_package {
     } else {
         TinderUtils::print_log("both update_extv and update_ver_file are undefined, skipping update generation.\n");
         $status = 1;
-        goto NOUPDATE;
+        return $status;
     }
 
     # We're making an update.
@@ -568,7 +569,7 @@ sub update_create_package {
     } else {
       TinderUtils::print_log("No MAR file found matching '$update_glob', update generation failed.\n");
       $status = 1;
-      goto NOUPDATE;
+      return $status;
     }
 
     TinderUtils::run_shell_command("rsync -av $temp_stagedir/$update_file $stagedir/");
@@ -579,12 +580,10 @@ sub update_create_package {
     if ( ! -f $update_path ) {
       TinderUtils::print_log("Error: Unable to get info on '$update_path' or include in upload because it doesn't exist!\n");
       $status = 1;
-      goto NOUPDATE;
-    }
+      return $status;
+    } else {
+      TinderUtils::run_shell_command("rm -rf $temp_stagedir");
 
-    TinderUtils::run_shell_command("rm -rf $temp_stagedir");
-
-    if ( -f $update_path ) {
       # Make update dist directory.
       TinderUtils::run_shell_command("mkdir -p $objdir/dist/update/");
       TinderUtils::print_log("\nGathering complete update info...\n");
@@ -604,44 +603,20 @@ sub update_create_package {
 
       # Push update information to update-staging/auslite.
 
-      # Only push the build schema 0 data if this is a trunk build.
-      if ( 0 and $update_version eq "trunk" ) {
-          TinderUtils::print_log("\nPushing first-gen update info...\n");
-          my $path = "/opt/aus2/incoming/0";
-          $path = "$path/$update_product/$update_platform";
-
-          TinderUtils::run_shell_command("ssh -i $ENV{HOME}/.ssh/aus cltbld\@aus-staging.mozilla.org mkdir -p $path");
-          TinderUtils::run_shell_command("scp -i $ENV{HOME}/.ssh/aus $objdir/dist/update/update.snippet.0 cltbld\@aus-staging.mozilla.org:$path/$locale.txt");
-      } else {
-          TinderUtils::print_log("\nNot pushing first-gen update info...\n");
-      }
-
-      # Push the build schema 1 data.
-      if ( 0 ) {
-          TinderUtils::print_log("\nPushing second-gen update info...\n");
-          my $path = "/opt/aus2/incoming/1";
-          $path = "$path/$update_product/$update_version/$update_platform";
-
-          TinderUtils::run_shell_command("ssh -i $ENV{HOME}/.ssh/aus cltbld\@aus-staging.mozilla.org mkdir -p $path");
-          TinderUtils::run_shell_command("scp -i $ENV{HOME}/.ssh/aus $objdir/dist/update/update.snippet.0 cltbld\@aus-staging.mozilla.org:$path/$locale.txt");
-      }
-
       # Push the build schema 2 data.
       if ( $Settings::update_pushinfo ) {
           TinderUtils::print_log("\nPushing third-gen update info...\n");
           my $path = "/opt/aus2/build/0";
           $path = "$path/$update_product/$update_version/$update_platform/$buildid/$locale";
 
-          TinderUtils::run_shell_command("ssh -i $ENV{HOME}/.ssh/aus cltbld\@aus-staging.mozilla.org mkdir -p $path");
-          TinderUtils::run_shell_command("scp -i $ENV{HOME}/.ssh/aus $objdir/dist/update/update.snippet.1 cltbld\@aus-staging.mozilla.org:$path/complete.txt");
+          TinderUtils::run_shell_command("ssh -i $ENV{HOME}/.ssh/aus cltbld\@$update_aus_host mkdir -p $path");
+          TinderUtils::run_shell_command("scp -i $ENV{HOME}/.ssh/aus $objdir/dist/update/update.snippet.1 cltbld\@$update_aus_host:$path/complete.txt");
+          TinderUtils::print_log("\nCompleted pushing update info...\n");
       }
 
-      TinderUtils::print_log("\nCompleted pushing update info...\n");
-      TinderUtils::print_log("\nUpdate build completed.\n\n");
     }
 
-    NOUPDATE:
-
+    TinderUtils::print_log("\nUpdate build completed.\n\n");
     return $status;
 }
 

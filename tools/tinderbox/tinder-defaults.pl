@@ -231,7 +231,8 @@ $update_package = 0;
 #$update_extv = "1.0+";
 # the master file for app version in Firefox, use mail instead of browser for Thunderbird
 #$update_ver_file = "browser/config/version.txt"; 
-#$update_pushinfo = 1;
+$update_pushinfo = 0;
+$update_aus_host = 'aus2-staging.mozilla.org';
 
 # Reboot the OS at the end of build-and-test cycle. This is primarily
 # intended for Win9x, which can't last more than a few cycles before
