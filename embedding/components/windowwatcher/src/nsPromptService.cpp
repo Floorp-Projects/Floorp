@@ -438,7 +438,7 @@ nsPromptService::PromptUsernameAndPassword(nsIDOMWindow *parent,
   nsXPIDLString stringOwner;
  
   if (!dialogTitle) {
-    rv = GetLocaleString("PromptUsernameAndPassword", getter_Copies(stringOwner));
+    rv = GetLocaleString("PromptUsernameAndPassword2", getter_Copies(stringOwner));
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
     dialogTitle = stringOwner.get();
   }
@@ -508,7 +508,7 @@ NS_IMETHODIMP nsPromptService::PromptPassword(nsIDOMWindow *parent,
   nsXPIDLString stringOwner;
  
   if (!dialogTitle) {
-    rv = GetLocaleString("PromptPassword", getter_Copies(stringOwner));
+    rv = GetLocaleString("PromptPassword2", getter_Copies(stringOwner));
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
     dialogTitle = stringOwner.get();
   }
