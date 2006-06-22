@@ -1619,19 +1619,28 @@ nsScriptSecurityManager::CanExecuteScripts(JSContext* cx,
     }
 
     // OK, the docshell doesn't have script execution explicitly disabled.
-    // Check whether our URI is "about:".  If it is, we need to allow JS to
-    // run...  In this case, don't apply the JS enabled pref or policies.
+    // Check whether our URI is an "about:" URI that allows scripts.  If it is,
+    // we need to allow JS to run.  In this case, don't apply the JS enabled
+    // pref or policies.  On failures, just press on and don't do this special
+    // case.
     nsCOMPtr<nsIURI> principalURI;
     aPrincipal->GetURI(getter_AddRefs(principalURI));
     if (principalURI)
     {
-        nsCAutoString spec;
-        principalURI->GetSpec(spec);
-        if (spec.EqualsLiteral("about:") ||
-            StringBeginsWith(spec, NS_LITERAL_CSTRING("about:neterror?")))
-        {
-            *result = PR_TRUE;
-            return NS_OK;              
+        PRBool isAbout;
+        rv = principalURI->SchemeIs("about", &isAbout);
+        if (NS_SUCCEEDED(rv) && isAbout) {
+            nsCOMPtr<nsIAboutModule> module;
+            rv = NS_GetAboutModule(principalURI, getter_AddRefs(module));
+            if (NS_SUCCEEDED(rv)) {
+                PRUint32 flags;
+                rv = module->GetURIFlags(principalURI, &flags);
+                if (NS_SUCCEEDED(rv) &&
+                    (flags & nsIAboutModule::ALLOW_SCRIPT)) {
+                    *result = PR_TRUE;
+                    return NS_OK;              
+                }
+            }
         }
     }
 

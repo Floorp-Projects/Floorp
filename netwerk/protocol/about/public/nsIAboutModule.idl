@@ -59,6 +59,12 @@ interface nsIAboutModule : nsISupports
     const unsigned long URI_SAFE_FOR_UNTRUSTED_CONTENT = (1 << 0);
 
     /**
+     * A flag that indicates whether script should be enabled for the
+     * given about: URI even if it's disabled in general.
+     */
+    const unsigned long ALLOW_SCRIPT = (1 << 1);
+
+    /**
      * A method to get the flags that apply to a given about: URI.  The URI
      * passed in is guaranteed to be one of the URIs that this module
      * registered to deal with.

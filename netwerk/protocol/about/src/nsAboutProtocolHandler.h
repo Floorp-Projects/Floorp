@@ -54,9 +54,6 @@ public:
     // nsAboutProtocolHandler methods:
     nsAboutProtocolHandler() {}
     virtual ~nsAboutProtocolHandler() {}
-
-protected:
-    static nsresult GetModuleForURI(nsIURI* uri, nsIAboutModule** module);
 };
 
 class nsSafeAboutProtocolHandler : public nsIProtocolHandler
