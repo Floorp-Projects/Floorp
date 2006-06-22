@@ -2483,7 +2483,7 @@ nsGenericElement::doRemoveChildAt(PRUint32 aIndex, PRBool aNotify,
   // was processing.
   if (guard.Mutated(0)) {
     aIndex = container->IndexOf(aKid);
-    if (aIndex < 0) {
+    if (NS_STATIC_CAST(PRInt32, aIndex) < 0) {
       return NS_OK;
     }
   }
