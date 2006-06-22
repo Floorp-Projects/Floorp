@@ -174,9 +174,50 @@
 #endif
 
 #ifdef MOZ_ENABLE_GTK2
-#define SYSTEMPREF_MODULES MODULE(system-pref)
+#ifdef MOZ_PREF_EXTENSIONS
+#define SYSTEMPREF_MODULES MODULE(system-pref) \
+	MODULE(nsAutoConfigModule)
 #else
 #define SYSTEMPREF_MODULES
+#endif
+#else
+#define SYSTEMPREF_MODULES
+#endif
+
+#ifdef MOZ_PLUGINS
+#define PLUGINS_MODULES \
+    MODULE(nsPluginModule)
+#else
+#define PLUGINS_MODULES
+#endif
+
+#ifdef MOZ_WEBSERVICES
+#define WEBSERVICES_MODULES \
+    MODULE(nsWebServicesModule)
+#else
+#define WEBSERVICES_MODULES
+#endif
+
+#ifdef MOZ_XPFE_COMPONENTS
+#define APPLICATION_MODULES \
+    MODULE(application) \
+    MODULE(nsFindComponent)
+#else
+#define APPLICATION_MODULES
+#endif
+
+#ifdef MOZ_UPDATER
+#define UPDATER_MODULES \
+    MODULE(nsSoftwareUpdate)
+#else
+#define UPDATER_MODULES
+#endif
+
+#ifdef MOZ_JSDEBUGGER
+#define JSDEBUGGER_MODULES \
+    MODULE(JavaScript_Debugger)
+#else
+#define JSDEBUGGER_MODULES
 #endif
 
 #ifdef MOZ_FILEVIEW
@@ -189,9 +230,13 @@
 #define PLACES_MODULES \
     MODULE(mozStorageModule)
 #else
+#ifdef MOZ_MORK
 #define PLACES_MODULES \
     MODULE(nsMorkModule)                     \
     MODULE(nsToolkitHistory)
+#else
+#define PLACES_MODULES
+#endif
 #endif    
 
 #ifdef MOZ_XUL
@@ -224,10 +269,10 @@
     WIDGET_MODULES                           \
     MODULE(nsImageLib2Module)                \
     ICON_MODULE                              \
-    MODULE(nsPluginModule)                   \
+    PLUGINS_MODULES                          \
     MODULE(nsLayoutModule)                   \
     MODULE(nsXMLExtrasModule)                \
-    MODULE(nsWebServicesModule)              \
+    WEBSERVICES_MODULES                      \
     MODULE(docshell_provider)                \
     MODULE(embedcomponents)                  \
     MODULE(Browser_Embedding_Module)         \
@@ -238,8 +283,7 @@
     MODULE(nsTransactionManagerModule)       \
     COMPOSER_MODULE                          \
     MODULE(nsChromeModule)                   \
-    MODULE(nsFindComponent)                  \
-    MODULE(application)                      \
+    APPLICATION_MODULES                      \
     MODULE(nsWindowDataSourceModule)         \
     MODULE(nsXPIntlModule)                   \
     MODULE(Apprunner)                        \
@@ -249,11 +293,10 @@
     XULENABLED_MODULES                       \
     MODULE(nsToolkitCompsModule)             \
     XREMOTE_MODULES                          \
-    MODULE(nsSoftwareUpdate)                 \
-    MODULE(JavaScript_Debugger)              \
+    UPDATER_MODULES			     \
+    JSDEBUGGER_MODULES                       \
     MODULE(BOOT)                             \
     MODULE(NSS)                              \
-    MODULE(nsAutoConfigModule)               \
     SYSTEMPREF_MODULES                       \
     /* end of list */
 

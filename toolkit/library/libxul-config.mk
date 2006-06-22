@@ -100,10 +100,8 @@ COMPONENT_LIBS += \
 	rdf \
 	htmlpars \
 	imglib2 \
-	gkplugin \
 	gklayout \
 	xmlextras \
-	websrvcs \
 	docshell \
 	embedcomponents \
 	webbrwsr \
@@ -111,18 +109,50 @@ COMPONENT_LIBS += \
 	nsappshell \
 	txmgr \
 	chrome \
-	mozfind \
-	appcomps \
 	windowds \
 	intlapp \
 	commandlines \
 	toolkitcomps \
-	xpinstall \
-	jsd \
 	pipboot \
 	pipnss \
+	$(NULL)
+
+ifdef MOZ_PLUGINS
+COMPONENT_LIBS += \
+	gkplugin \
+	$(NULL)
+endif
+
+ifdef MOZ_XPFE_COMPONENTS
+COMPONENT_LIBS += \
+	mozfind \
+	appcomps \
+	$(NULL)
+endif
+
+ifdef MOZ_XPINSTALL
+COMPONENT_LIBS += \
+	xpinstall \
+	$(NULL)
+endif
+
+ifdef MOZ_JSDEBUGGER
+COMPONENT_LIBS += \
+	jsd \
+	$(NULL)
+endif
+
+ifdef MOZ_PREF_EXTENSIONS
+COMPONENT_LIBS += \
 	autoconfig \
 	$(NULL)
+endif
+
+ifdef MOZ_WEBSERVICES
+COMPONENT_LIBS += \
+	websrvcs \
+	$(NULL)
+endif
 
 ifdef MOZ_AUTH_EXTENSION
 COMPONENT_LIBS += auth
@@ -154,10 +184,12 @@ ifdef MOZ_PLACES
 COMPONENT_LIBS += storagecomps
 STATIC_LIBS += morkreader_s
 else
+ifdef MOZ_MORK
 COMPONENT_LIBS += \
 	mork \
 	tkhstory \
 	$(NULL)
+endif
 endif
 
 ifdef MOZ_XUL
@@ -197,7 +229,9 @@ endif
 
 ifdef MOZ_ENABLE_GTK2
 COMPONENT_LIBS += widget_gtk2
+ifdef MOZ_PREF_EXTENSIONS
 COMPONENT_LIBS += system-pref
+endif
 endif
 
 ifneq (,$(MOZ_ENABLE_GTK)$(MOZ_ENABLE_GTK2))
