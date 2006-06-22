@@ -107,12 +107,22 @@ gfxWindowsPlatform::FontEnumProc(const ENUMLOGFONTEXW *lpelfe,
     fe->mFamily = logFont.lfPitchAndFamily & 0xF0;
     fe->mPitch = logFont.lfPitchAndFamily & 0x0F;
 
-    // set the unicode ranges
-    PRUint32 x = 0;
-    for (PRUint32 i = 0; i < 4; ++i) {
-        DWORD range = nmetrics->ntmFontSig.fsUsb[i];
-        for (PRUint32 k = 0; k < 32; ++k) {
-            fe->mUnicodeRanges[x++] = (range & (1 << k)) != 0;
+    if (nmetrics->ntmFontSig.fsUsb[0] == 0x00000000 &&
+        nmetrics->ntmFontSig.fsUsb[1] == 0x00000000 &&
+        nmetrics->ntmFontSig.fsUsb[2] == 0x00000000 &&
+        nmetrics->ntmFontSig.fsUsb[3] == 0x00000000) {
+        // no unicode ranges
+        fe->mUnicodeFont = PR_FALSE;
+    } else {
+        fe->mUnicodeFont = PR_TRUE;
+
+        // set the unicode ranges
+        PRUint32 x = 0;
+        for (PRUint32 i = 0; i < 4; ++i) {
+            DWORD range = nmetrics->ntmFontSig.fsUsb[i];
+            for (PRUint32 k = 0; k < 32; ++k) {
+                fe->mUnicodeRanges[x++] = (range & (1 << k)) != 0;
+            }
         }
     }
 
@@ -321,7 +331,7 @@ gfxWindowsPlatform::FindOtherFonts(const PRUnichar* aString, PRUint32 aLength, c
             FontSearch data(ch, CharRangeBit(ch), aLangGroup, aGeneric);
 
             mFonts.Enumerate(gfxWindowsPlatform::FindFontForChar, &data);
-            
+
             data.fontMatches.Sort();
 
             PRUint32 nmatches = data.fontMatches.Length();

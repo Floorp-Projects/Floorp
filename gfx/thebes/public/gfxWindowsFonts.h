@@ -241,13 +241,14 @@ public:
     THEBES_DECL_REFCOUNTING
 
     FontEntry(const nsAString& aName, PRUint16 aFontType) : 
-        mName(aName), mFontType(aFontType), mCharset(0), mUnicodeRanges(0)
+        mName(aName), mFontType(aFontType), mUnicodeFont(PR_FALSE),
+        mCharset(0), mUnicodeRanges(0)
     {
     }
 
     PRBool IsCrappyFont() const {
-        /* return if it is a bitmap or old school font */
-        return (mFontType == 0 || mFontType == 1);
+        /* return if it is a bitmap, old school font or not a unicode font */
+        return (!mUnicodeFont || mFontType == 0 || mFontType == 1);
     }
 
     PRBool MatchesGenericFamily(const nsACString& aGeneric) const {
@@ -341,6 +342,7 @@ public:
 
     PRUint8 mFamily;
     PRUint8 mPitch;
+    PRPackedBool mUnicodeFont;
 
     std::bitset<256> mCharset;
     std::bitset<128> mUnicodeRanges;
