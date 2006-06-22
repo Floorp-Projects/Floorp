@@ -633,6 +633,7 @@ ConditionRect(gfxRect& r) {
     if (r.pos.y + r.size.height > COORD_MAX) {
         r.size.height = COORD_MAX - r.pos.y;
     }
+    return PR_TRUE;
 }
 
 NS_IMETHODIMP
