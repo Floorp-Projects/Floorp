@@ -70,6 +70,10 @@ ifneq (,$(MOZ_PHOENIX)$(MOZ_XULRUNNER))
 REQUIRES += toolkitcomps history
 endif
 
+ifdef MOZ_XPFE_COMPONENTS
+DEFINES         +=-DMOZ_XPFE_COMPONENTS
+endif
+
 CPPSRCS		= \
 		nsBrowserInstance.cpp \
 		nsBrowserStatusFilter.cpp \
