@@ -54,7 +54,6 @@ class nsAccessibleWrap : public nsAccessible
 };
 
 // Define unsupported wrap classes here
-typedef class nsHTMLLinkAccessible         nsHTMLLinkAccessibleWrap;
 typedef class nsHTMLTableCellAccessible    nsHTMLTableCellAccessibleWrap;
 typedef class nsHTMLTableAccessible        nsHTMLTableAccessibleWrap;
 

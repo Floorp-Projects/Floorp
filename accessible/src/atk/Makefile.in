@@ -68,7 +68,6 @@ CPPSRCS = \
   nsDocAccessibleWrap.cpp \
   nsRootAccessibleWrap.cpp \
   nsAppRootAccessible.cpp \
-  nsHTMLLinkAccessibleWrap.cpp \
   nsHTMLTableAccessibleWrap.cpp \
   nsMaiInterfaceComponent.cpp \
   nsMaiInterfaceAction.cpp \
