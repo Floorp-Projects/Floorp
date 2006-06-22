@@ -516,7 +516,7 @@ gfxWindowsTextRun::MeasureOrDrawFast(gfxContext *aContext,
         aWString = mString.BeginReading();
         aLength = mString.Length();
         if (ScriptIsComplex(aWString, aLength, SIC_COMPLEX) == S_OK)
-            return -1;
+            return -1; // try uniscribe instead
     }
 
     nsRefPtr<gfxASurface> surf = aContext->CurrentSurface();
@@ -551,12 +551,20 @@ gfxWindowsTextRun::MeasureOrDrawFast(gfxContext *aContext,
     else
         ret = GetGlyphIndicesW(aDC, aWString, aLength, glyphs, GGI_MARK_NONEXISTING_GLYPHS);
 
+    if (ret == GDI_ERROR) {
+        NS_WARNING("GetGlyphIndicies failed\n");
+        free(glyphs);
+        cairo_win32_scaled_font_done_font(scaledFont);
+        RestoreDC(aDC, -1);
+        return 0; // return 0 length
+    }
+
     for (DWORD i = 0; i < ret; ++i) {
         if (glyphs[i] == 0xffff) {
             free(glyphs);
             cairo_win32_scaled_font_done_font(scaledFont);
             RestoreDC(aDC, -1);
-            return -1;
+            return -1; // try uniscribe instead
         }
     }
 
