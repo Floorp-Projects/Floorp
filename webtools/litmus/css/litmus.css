@@ -459,7 +459,8 @@ td.headerleft {
     color: #000000;
 }
 
-.edit-testcase td.headerleft {
+table.manage td.headerleft {
+    background-color: inherit;
     border: 0;
 }
 
@@ -914,18 +915,38 @@ div.closeLink a:hover {
 /* 16 Admin ********************************************************** */
 
 input.manage {
-    width: 15em;
+    width: 170px;
     font-size: 1em;
 }
 
-table.edit-testcase {
+table.manage {
     border: 0;
-    padding: 5px;
+    padding: 0px;
     margin: 0;
 }    
 
-table.edit-testcase td {
+table.manage td {
     padding-bottom: 5px;
+}
+
+table.manage input.button {
+    margin: 5px;
+}
+
+select.testcase-subgroups {
+    width: 300px;
+}
+
+select.testcase, select.subgroup {
+    width: 700px;
+}
+
+div.manage {
+    border: solid #bbbbbb 1px;
+    background-color: #efefef; 
+    width: 100%;
+    padding: 0px;
+    margin: 0px;
 }
 
 /* Misc ************************************************************** */

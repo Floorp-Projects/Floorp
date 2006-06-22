@@ -1,4 +1,4 @@
-<select id="[% name %]" name="[% name %]"[% IF size %] size="[% size %]"[% END %][% IF onchange %] onChange="[% onchange %]"[% END %][% IF disabled %] disabled[% END %]>
+<select class="testcase" id="[% name %]" name="[% name %]"[% IF size %] size="[% size %]"[% END %][% IF onchange %] onChange="[% onchange %]"[% END %][% IF disabled %] disabled[% END %]>
     [% IF placeholder %]<option value="">-Testcase ID#[% IF show_summary %]: Summary[% END %]-</option>[% END %]
 [% IF testcases %]
 [% FOREACH testcase=testcases %]

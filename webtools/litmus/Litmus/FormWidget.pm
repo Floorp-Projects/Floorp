@@ -186,7 +186,14 @@ sub getTestcaseIDs()
 #########################################################################
 sub getTestcases()
 {
-    my $sql = "SELECT testcase_id, summary FROM testcases ORDER BY testcase_id";
+    my $sql = "SELECT testcase_id, summary, product_id FROM testcases ORDER BY testcase_id";
+    return _getValues($sql);
+}
+
+#########################################################################
+sub getSubgroups()
+{
+    my $sql = "SELECT subgroup_id, name FROM subgroups ORDER BY name, subgroup_id";
     return _getValues($sql);
 }
 

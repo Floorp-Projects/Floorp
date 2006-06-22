@@ -83,7 +83,7 @@ if ($c->param("delete_testcase_button")) {
 } elsif ($c->param("editform_mode")) {
   requireField('summary', $c->param('editform_summary'));
   requireField('product', $c->param('product'));
-  requireField('product', $c->param('subgroup'));
+  requireField('subgroup', $c->param('subgroup'));
   requireField('author', $c->param('editform_author_id'));
   my $enabled = $c->param('editform_enabled') ? 1 : 0;
   my $community_enabled = $c->param('editform_communityenabled') ? 1 : 0;

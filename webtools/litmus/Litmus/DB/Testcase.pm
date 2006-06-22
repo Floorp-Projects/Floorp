@@ -1,5 +1,3 @@
-
-
 # -*- mode: cperl; c-basic-offset: 8; indent-tabs-mode: nil; -*-
 
 =head1 COPYRIGHT
@@ -63,16 +61,17 @@ Litmus::DB::Testcase->has_a("author" => "Litmus::DB::User");
 Litmus::DB::Testcase->has_a("product" => "Litmus::DB::Product");
 
 __PACKAGE__->set_sql(EnabledBySubgroup => qq{
-						      SELECT t.* 
-						      FROM testcases t, testcase_subgroups tsg
-						      WHERE tsg.subgroup_id=? AND tsg.testcase_id=t.testcase_id AND t.enabled=1 
-						      ORDER BY tsg.sort_order ASC
-						     });
+				             SELECT t.* 
+					     FROM testcases t, testcase_subgroups tsg
+					     WHERE tsg.subgroup_id=? AND tsg.testcase_id=t.testcase_id AND t.enabled=1 
+					     ORDER BY tsg.sort_order ASC
+});
+
 __PACKAGE__->set_sql(CommunityEnabledBySubgroup => qq{
-							       SELECT t.* 
-							       FROM testcases t, testcase_subgroups tsg 
-							       WHERE tsg.subgroup_id=? AND tsg.testcase_id=t.testcase_id AND t.enabled=1 AND t.community_enabled=1 
-							       ORDER BY tsg.sort_order ASC
+                                                      SELECT t.* 
+                                                      FROM testcases t, testcase_subgroups tsg 
+						      WHERE tsg.subgroup_id=? AND tsg.testcase_id=t.testcase_id AND t.enabled=1 AND t.community_enabled=1 
+						      ORDER BY tsg.sort_order ASC
 });
 
 Litmus::DB::Testcase->has_many(test_results => "Litmus::DB::Testresult", {order_by => 'submission_time DESC'});
@@ -178,7 +177,7 @@ sub clone() {
 		     );
   if (! $rows) {
     # XXX: Do we need to throw a warning here?
-    # What happens when we clone a testcase that doesn't clong to  
+    # What happens when we clone a testcase that doesn't belong to  
     # any subgroups?
   }  
 

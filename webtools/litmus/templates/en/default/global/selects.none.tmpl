@@ -165,6 +165,7 @@
    #                     (can be either a single object or a list)
    # testcase (optional) - the current testcase object. If given, 
    #    the selname will be product_testcase_id
+   # onchange (optional) - optional js code to run for the onChange event
 %]
 [% BLOCK productbox %]
     [% IF testcase %] [% testidflag = "_$testcase.testcase_id" %] 
@@ -177,7 +178,7 @@
         value="[%valuelist FILTER html%]">
     [% END %]
     <select name="product[%testidflag FILTER html%]" id="product[%testidflag FILTER html%]" 
-        onchange="changeProduct([%testcase.testcase_id FILTER js%])"
+        onchange="[% IF onchange %][% onchange %][% ELSE %]changeProduct([%testcase.testcase_id FILTER js%])[% END %]"
         class="select_product"[% IF disabled %] disabled[% END %]>
     </select>
 [% END %]

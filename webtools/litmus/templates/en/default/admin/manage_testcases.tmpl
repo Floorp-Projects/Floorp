@@ -35,57 +35,8 @@
 var d;
 var testcase;
 
-function changeSelectedValue(selectid, optionvalue) {
-  var em = document.getElementById(selectid)
-  var options = em.getElementsByTagName('option');  
-  var found = 0;
-  for (var i=0; i<options.length; i++) {
-    if (options[i].value == optionvalue) {
-      options[i].selected = true;
-      found=1;
-    } else {
-      options[i].selected = false;
-    }      
-  }
-  if (found == 0) {
-    options[0].selected = true;
-  } 
-}
-
 function setAuthor(user_id) {
   changeSelectedValue('editform_author_id',user_id);;
-}
-
-function enableForm(formid) {
-  var f = document.getElementById(formid);
-  var ems = f.getElementsByTagName('input');
-  for (var i in ems) {
-    ems[i].disabled=false;
-  }
-  ems = f.getElementsByTagName('select');
-  for (var i in ems) {
-    ems[i].disabled=false;
-  }
-  ems = f.getElementsByTagName('textarea');
-  for (var i in ems) {
-    ems[i].disabled=false;
-  }
-}
-
-function disableForm(formid) {
-  var f = document.getElementById(formid);
-  var ems = f.getElementsByTagName('input');
-  for (var i in ems) {
-    ems[i].disabled=true;
-  }
-  ems = f.getElementsByTagName('select');
-  for (var i in ems) {
-    ems[i].disabled=true;
-  }
-  ems = f.getElementsByTagName('textarea');
-  for (var i in ems) {
-    ems[i].disabled=true;
-  }
 }
 
 function enableModeButtons() {
@@ -287,7 +238,7 @@ function switchToEdit() {
 	   <input id="clone_testcase_button" name="clone_testcase_button" class="manage" type="submit" onClick="confirm('Really clone this testcase?');" value="Clone testcase" disabled>&nbsp;
 	   <input id="delete_testcase_button" name="delete_testcase_button" class="manage" type="submit" onClick="confirm('Really delete this testcase?');" value="Delete testcase" disabled>&nbsp;
       </td>
-     </tr>
+      </tr>
 	</table>
 	</form>
 

@@ -1,0 +1,9 @@
+<select class="subgroup" id="[% name %]" name="[% name %]"[% IF size %] size="[% size %]"[% END %][% IF onchange %] onChange="[% onchange %]"[% END %][% IF disabled %] disabled[% END %]>
+    [% IF placeholder %]<option value="">-Subgroup Name (Subgroup ID#)-</option>[% END %]
+[% IF subgroups %]
+[% FOREACH subgroup=subgroups %]
+    <option[% IF defaults.subgroup_id==subgroup.subgroup_id %] selected[% END %] 
+        value="[% subgroup.subgroup_id | html %]">[% subgroup.name %] ([% subgroup.subgroup_id | html%])</option>
+[% END %]
+[% END %]
+</select>

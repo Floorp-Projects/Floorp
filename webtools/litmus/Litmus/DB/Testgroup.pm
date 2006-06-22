@@ -49,6 +49,12 @@ __PACKAGE__->set_sql(EnabledByBranch => qq{
                                            WHERE tgb.branch_id=? AND tgb.testgroup_id=tg.testgroup_id AND tg.enabled=1 ORDER by tg.name ASC
 });
 
+__PACKAGE__->set_sql(EnabledBySubgroup => qq{
+                                             SELECT tg.* 
+                                             FROM testgroups tg, subgroup_testgroups sgtg
+                                             WHERE sgtg.subgroup_id=? AND sgtg.testgroup_id=tg.testgroup_id AND tg.enabled=1 ORDER by tg.name ASC
+});
+
 __PACKAGE__->set_sql(EnabledByTestcase => qq{
                                              SELECT tg.* 
                                              FROM testgroups tg, subgroup_testgroups sgtg, testcase_subgroups tcsg
