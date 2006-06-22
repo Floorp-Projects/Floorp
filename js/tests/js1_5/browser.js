@@ -121,6 +121,10 @@ var _reportFailure = reportFailure;
 reportFailure = function (msg, page, line)
 {
   var testcase;
+  var jsOptions = new JavaScriptOptions();
+
+  jsOptions.setOption('strict', false);
+  jsOptions.setOption('werror', false);
 
   if (gInReportCompare)
   {
@@ -157,6 +161,9 @@ reportFailure = function (msg, page, line)
   }
   _reportFailure(msg);
 
+  gDelayTestDriverEnd = false;
+  jsTestDriverEnd();
+
 };
 
 function gc()
@@ -172,6 +179,7 @@ function gc()
   }
   catch(ex)
   {
+    writeLineToLog('gc: ' + ex);
     // Thanks to igor.bukanov@gmail.com
     var tmp = Math.PI * 1e500, tmp2;
     for (var i = 0; i != 1 << 15; ++i) 

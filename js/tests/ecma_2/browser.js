@@ -114,6 +114,10 @@ var gExceptionExpected = false;
 
 function err( msg, page, line ) {
   var testcase;
+  var jsOptions = new JavaScriptOptions();
+
+  jsOptions.setOption('strict', false);
+  jsOptions.setOption('werror', false);
 
   if (typeof(EXPECTED) == "undefined" || EXPECTED != "error") {
     /*
@@ -149,6 +153,10 @@ function err( msg, page, line ) {
   testcase.reason += "Error: " + msg + 
     " Source File: " + page + " Line: " + line + ".";
   stopTest();
+
+  gDelayTestDriverEnd = false;
+  jsTestDriverEnd();
+
 }
 
 var gVersion = 0;
@@ -174,6 +182,7 @@ function gc()
   }
   catch(ex)
   {
+    writeLineToLog('gc: ' + ex);
     // Thanks to igor.bukanov@gmail.com
     var tmp = Math.PI * 1e500, tmp2;
     for (var i = 0; i != 1 << 15; ++i) 
