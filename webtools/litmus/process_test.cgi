@@ -37,12 +37,25 @@ use Litmus::SysConfig;
 use Litmus::Auth;
 use Litmus::Utils;
 use Litmus::DB::Resultbug;
+use Litmus::XML;
 
 use CGI;
 use Date::Manip;
 use diagnostics;
 
 my $c = Litmus->cgi(); 
+
+if ($c->param('data')) {
+	# we're getting XML result data from an automated testing provider, 
+	# so pass that off to XML.pm for processing
+	my $x = Litmus::XML->new();
+	$x->processResults($c->param('data'));
+	
+	# return whatever response was generated:
+	print $c->header('text/plain');
+	print $x->response();
+	exit; # that's all folks!
+}
 
 my $user;
 my $sysconfig;

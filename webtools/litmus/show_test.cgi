@@ -146,9 +146,9 @@ if ($c->param("id")) {
   $vars->{'result_statuses'} = \@result_statuses;
   $vars->{'showallresults'} = $showallresults;
   $vars->{'test_results'} = $test_results;
-  
+
   Litmus->template()->process("show/show.html.tmpl", $vars) || 
-    internalError(Litmus->template()->error());    
+   internalError(Litmus->template()->error());    
 
   exit;
 }

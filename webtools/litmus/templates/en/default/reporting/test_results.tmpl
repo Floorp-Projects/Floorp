@@ -29,11 +29,17 @@
 
 [% IF results %]
 <script type="text/javascript" src="js/Comments.js"></script>
+ [% # ZLL 2006-06-19: Timezones are removed from the time being
+    # to work around a crash in Time::Piece's strftime on some platforms 
+    # (including my own) and to work around formatting nastyness when 
+    # it doesn't crash. Add &nbsp;%Z to the end of the strftime string 
+    # to put it back when this is fixed
+ %]
 <script type="text/javascript">
   var comments = new Array();
   [% subscript=0 %]
   [% FOREACH result=results %]
-  comments[[% subscript | js %]] = "[% IF result.comments %][% FOREACH comment=result.comments %][% IF loop.count>1 %]<hr/>[% END %]<p class='comment'><b>[% IF show_admin %]<a href=\"mailto:[% comment.user.email | html | email | uri %]\">[% END %][% comment.user.getDisplayName | html | js | email %][% IF show_admin %]</a>[% END %]<br/>[% comment.submission_time.strftime("%Y-%m-%d&nbsp;%T&nbsp;%Z") %]</b><br/>[% staricon | none %]&nbsp;[% comment.comment | js | html %]<br/></p>[% END %][% END %]";
+  comments[[% subscript | js %]] = "[% IF result.comments %][% FOREACH comment=result.comments %][% IF loop.count>1 %]<hr/>[% END %]<p class='comment'><b>[% IF show_admin %]<a href=\"mailto:[% comment.user.email | html | email | uri %]\">[% END %][% comment.user.getDisplayName | html | js | email %][% IF show_admin %]</a>[% END %]<br/>[% comment.submission_time.strftime("%Y-%m-%d&nbsp;%T") %]</b><br/>[% staricon | none %]&nbsp;[% comment.comment | js | html %]<br/></p>[% END %][% END %]";
   [% subscript=subscript+1 %]
   [% END %]
 </script>

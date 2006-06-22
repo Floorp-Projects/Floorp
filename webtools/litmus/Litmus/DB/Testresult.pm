@@ -71,7 +71,8 @@ Litmus::DB::Testresult->has_a(locale => "Litmus::DB::Locale");
 Litmus::DB::Testresult->has_a(platform => 
                               [ "Litmus::DB::Opsys" => "platform" ]);
 
-Litmus::DB::Testresult->has_many("logs" => "Litmus::DB::Log", {order_by => 'submission_time'});
+Litmus::DB::Testresult->has_many(logs => 
+						  ["Litmus::DB::LogTestresult" => 'log_id']);
 Litmus::DB::Testresult->has_many(comments => "Litmus::DB::Comment", {order_by => 'comment_id ASC, submission_time ASC'});
 Litmus::DB::Testresult->has_many(bugs => "Litmus::DB::Resultbug", {order_by => 'bug_id ASC, submission_time DESC'});
 

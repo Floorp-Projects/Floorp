@@ -51,4 +51,11 @@ Litmus::DB::Platform->set_sql(ByProduct => qq{
                                               WHERE plpr.product_id=? AND plpr.platform_id=pl.platform_id
 });
 
+Litmus::DB::Platform->set_sql(ByProductAndName => qq{
+                                              SELECT pl.* 
+                                              FROM platforms pl, platform_products plpr
+                                              WHERE plpr.product_id=? AND plpr.platform_id=pl.platform_id
+                                              AND pl.name=?
+});
+
 1;

@@ -241,6 +241,10 @@ $dbtool->AddKey("users", "irc_nickname", "(irc_nickname)");
 $dbtool->DropIndex("users", "key(email, realname, irc_nickname)");
 $dbtool->AddKey("users", '(email, realname, irc_nickname)', '');
 
+# make logs have a many-to-many relationship with test_results
+$dbtool->DropIndex("test_result_logs", "test_result_id");
+$dbtool->DropField("test_result_logs", "test_result_id");
+
 
 print "Schema update complete.\n\n";
 print <<EOS;

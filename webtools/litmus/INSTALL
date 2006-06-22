@@ -16,7 +16,7 @@ Required Perl Modules:
 Class::DBI 
 Class::DBI::mysql 
 Template 
-Time::Piece
+Time::Piece 
 Time::Piece::mysql 
 Time::Seconds
 Date::Manip

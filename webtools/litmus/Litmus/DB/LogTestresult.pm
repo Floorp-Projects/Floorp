@@ -30,21 +30,18 @@
 
 =cut
 
-package Litmus::DB::Log;
+package Litmus::DB::LogTestresult;
 
 use strict;
 use base 'Litmus::DBI';
 
-Litmus::DB::Log->table('test_result_logs');
+Litmus::DB::LogTestresult->table('testresult_logs_join');
 
-Litmus::DB::Log->columns(All => qw/log_id last_updated submission_time log_type_id log_text/);
+Litmus::DB::LogTestresult->columns(Primary => qw/test_result_id log_id/);
 
-Litmus::DB::Log->column_alias("test_results", "testresults");
-Litmus::DB::Log->column_alias("log_type_id", "log_type");
+Litmus::DB::LogTestresult->column_alias("test_result_id", "test_result");
 
-Litmus::DB::Log->has_a(log_type => "Litmus::DB::LogType");
-Litmus::DB::Log->has_many(test_results => ["Litmus::DB::LogTestresult" => 'test_result']);
-
-Litmus::DB::Testresult->autoinflate(dates => 'Time::Piece');
+Litmus::DB::LogTestresult->has_a(test_result => "Litmus::DB::Testresult");
+Litmus::DB::LogTestresult->has_a(log_id => "Litmus::DB::Log");
 
 1;

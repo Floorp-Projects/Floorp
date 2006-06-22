@@ -169,17 +169,21 @@ $table{test_result_comments} =
 	 
 $table{test_result_logs} = 
 	'log_id int(11) not null primary key auto_increment,
-	 test_result_id int(11) not null,
 	 last_updated datetime not null,
 	 submission_time datetime not null,
-         log_text longtext,
+     log_text longtext,
 	 log_type_id tinyint(4) not null default \'1\',
 	 
-	 index(test_result_id),
 	 index(last_updated),
 	 index(submission_time),
 	 index(log_type_id),
-         index(log_text(255))';
+     index(log_text(255))';
+
+$table{testresult_logs_join} = 
+	'test_result_id int(11) not null,
+	 log_id int(11) not null,
+	 
+	 primary key(test_result_id, log_id)';
 
 	 
 $table{test_result_status_lookup} = 

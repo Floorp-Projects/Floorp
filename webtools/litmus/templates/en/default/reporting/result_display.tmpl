@@ -199,9 +199,15 @@ Logs
 <table class="single-result">
 <tr class="odd">
 <td>
-[% IF result.logs %]
-  [% FOREACH log=result.logs %]
-    [% log.log_type.name | html %]: <br/>
+[% logs = result.logs %]
+[% IF logs %]
+[% c = 0 %]
+  [% FOREACH log=logs %]
+     [% log.log_type.name | html %]: [% log.log_text | html %]<br/>
+     [% UNLESS c == logs.size - 1 %]
+    	<hr />
+     [% END %]
+     [% c = c+1 %]
   [% END %]
 [% ELSE %]
 No logs available.
