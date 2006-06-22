@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * 	 Christopher Seawood <cls@seawood.org>
+ *   Christopher Seawood <cls@seawood.org>
  *   Chris Waterson <waterson@netscape.com>
  *   Benjamin Smedberg <bsmedberg@covad.net>
  *
@@ -176,7 +176,7 @@
 #ifdef MOZ_ENABLE_GTK2
 #ifdef MOZ_PREF_EXTENSIONS
 #define SYSTEMPREF_MODULES MODULE(system-pref) \
-	MODULE(nsAutoConfigModule)
+    MODULE(nsAutoConfigModule)
 #else
 #define SYSTEMPREF_MODULES
 #endif
@@ -206,11 +206,11 @@
 #define APPLICATION_MODULES
 #endif
 
-#ifdef MOZ_UPDATER
-#define UPDATER_MODULES \
+#ifdef MOZ_XPINSTALL
+#define XPINSTALL_MODULES \
     MODULE(nsSoftwareUpdate)
 #else
-#define UPDATER_MODULES
+#define XPINSTALL_MODULES
 #endif
 
 #ifdef MOZ_JSDEBUGGER
@@ -293,7 +293,7 @@
     XULENABLED_MODULES                       \
     MODULE(nsToolkitCompsModule)             \
     XREMOTE_MODULES                          \
-    UPDATER_MODULES			     \
+    XPINSTALL_MODULES                        \
     JSDEBUGGER_MODULES                       \
     MODULE(BOOT)                             \
     MODULE(NSS)                              \
@@ -313,7 +313,7 @@ XUL_MODULES
  * The nsStaticModuleInfo
  */
 static nsStaticModuleInfo const gStaticModuleInfo[] = {
-	XUL_MODULES
+    XUL_MODULES
 };
 
 nsStaticModuleInfo const *const kPStaticModules = gStaticModuleInfo;
