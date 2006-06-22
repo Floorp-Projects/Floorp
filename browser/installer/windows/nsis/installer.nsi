@@ -90,6 +90,7 @@ Var fhUninstallLog
 !include defines.nsi
 !include SetProgramAccess.nsi
 !include common.nsh
+!include locales.nsi
 !include version.nsh
 
 !insertmacro RegCleanMain
@@ -129,7 +130,13 @@ ReserveFile shortcuts.ini
 !define MUI_UNWELCOMEFINISHPAGE_BITMAP wizWatermark.bmp
 !define MUI_HEADERIMAGE
 !define MUI_HEADERIMAGE_RIGHT
+
+; Use a right to left header image when the language is right to left
+!ifdef ${AB_CD}_rtl
+!define MUI_HEADERIMAGE_BITMAP_RTL wizHeaderRTL.bmp
+!else
 !define MUI_HEADERIMAGE_BITMAP wizHeader.bmp
+!endif
 
 /**
  * Installation Pages

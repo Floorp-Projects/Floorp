@@ -61,6 +61,7 @@ INSTALLER_FILES = \
 
 BRANDING_FILES = \
 	wizHeader.bmp \
+	wizHeaderRTL.bmp \
 	wizWatermark.bmp \
 	$(NULL)
 
@@ -102,5 +103,6 @@ ifndef MOZ_BRANDING_DIRECTORY
 	cp $(srcdir)/Header.bmp    $(DIST)/branding/Header.bmp
 	cp $(srcdir)/Watermrk.bmp  $(DIST)/branding/Watermrk.bmp
 	cp $(srcdir)/wizHeader.bmp     $(DIST)/branding/wizHeader.bmp
+	cp $(srcdir)/wizHeaderRTL.bmp  $(DIST)/branding/wizHeaderRTL.bmp
 	cp $(srcdir)/wizWatermark.bmp  $(DIST)/branding/wizWatermark.bmp
 endif
