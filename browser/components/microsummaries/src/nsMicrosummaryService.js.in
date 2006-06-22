@@ -1113,7 +1113,8 @@ MicrosummaryGenerator.prototype = {
 
   // Normally this is just the URL from which we download the generator,
   // but for generators stored in the app or profile generators directory
-  // it's the value of the generator tag's sourceURI attribute.
+  // it's the value of the generator tag's sourceURI attribute (or the
+  // generator's local URI should the sourceURI be missing).
   _uri: null,
   get uri() { return this._uri },
   set uri(newValue) { this._uri = newValue },
@@ -1216,8 +1217,9 @@ MicrosummaryGenerator.prototype = {
     // if this is a locally-installed generator, since for remote generators
     // the source URI of the generator is the URI from which we downloaded it.
     if (this.localURI) {
-      //NS_ASSERT(xml.hasAttribute("sourceURI"), "local generator has no source URI");
-      this.uri = this._ios.newURI(xml.getAttribute("sourceURI"), null, null);
+      this.uri = xml.hasAttribute("sourceURI") ?
+                 this._ios.newURI(xml.getAttribute("sourceURI"), null, null) :
+                 this.localURI; // locally created generator without sourceURI
     }
 
     // Slurp the include/exclude rules that determine the pages to which
