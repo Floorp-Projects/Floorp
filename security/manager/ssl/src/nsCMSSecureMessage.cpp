@@ -177,6 +177,7 @@ SendMessage(const char *msg, const char *base64Cert, char ** _retval)
   SECItem output;
   PLArenaPool *arena = PORT_NewArena(1024);
   SECStatus s;
+  nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
 
   /* Step 0. Create a CMS Message */
   cmsMsg = NSS_CMSMessage_Create(NULL);
@@ -254,7 +255,7 @@ SendMessage(const char *msg, const char *base64Cert, char ** _retval)
 
   output.data = 0; output.len = 0;
   ecx = NSS_CMSEncoder_Start(cmsMsg, 0, 0, &output, arena,
-            0, 0, 0, 0, 0, 0);
+            0, ctx, 0, 0, 0, 0);
   if (!ecx) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSSecureMessage::SendMessage - can't start cms encoder\n"));
     rv = NS_ERROR_FAILURE;

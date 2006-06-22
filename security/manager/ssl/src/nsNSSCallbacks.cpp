@@ -624,39 +624,56 @@ PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
   nsIInterfaceRequestor *ir = NS_STATIC_CAST(nsIInterfaceRequestor*, arg);
   nsCOMPtr<nsIPrompt> proxyPrompt;
 
-  // If no context is provided, no prompt is possible.
-  if (!ir)
-    return nsnull;
-
   /* TODO: Retry should generate a different dialog message */
 /*
   if (retry)
     return nsnull;
 */
 
-  // The interface requestor object may not be safe, so
-  // proxy the call to get the nsIPrompt.
+  if (!ir)
+  {
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
+    if (!wwatch)
+      return nsnull;
 
-  nsCOMPtr<nsIInterfaceRequestor> proxiedCallbacks;
-  NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
-                       NS_GET_IID(nsIInterfaceRequestor),
-                       ir,
-                       NS_PROXY_SYNC,
-                       getter_AddRefs(proxiedCallbacks));
+    nsCOMPtr<nsIPrompt> prompter;
+    wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
+    if (!prompter)
+      return nsnull;
 
-  // Get the desired interface
-  nsCOMPtr<nsIPrompt> prompt(do_GetInterface(proxiedCallbacks));
-  if (!prompt) {
-    NS_ASSERTION(PR_FALSE, "callbacks does not implement nsIPrompt");
-    return nsnull;
+    NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+                         NS_GET_IID(nsIPrompt),
+                         prompter, NS_PROXY_SYNC,
+                         getter_AddRefs(proxyPrompt));
+    if (!proxyPrompt)
+      return nsnull;
   }
-
-  // Finally, get a proxy for the nsIPrompt
-  NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
-                       NS_GET_IID(nsIPrompt),
-                       prompt,
-                       NS_PROXY_SYNC,
-                       getter_AddRefs(proxyPrompt));
+  else
+  {
+    // The interface requestor object may not be safe, so
+    // proxy the call to get the nsIPrompt.
+  
+    nsCOMPtr<nsIInterfaceRequestor> proxiedCallbacks;
+    NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+                         NS_GET_IID(nsIInterfaceRequestor),
+                         ir,
+                         NS_PROXY_SYNC,
+                         getter_AddRefs(proxiedCallbacks));
+  
+    // Get the desired interface
+    nsCOMPtr<nsIPrompt> prompt(do_GetInterface(proxiedCallbacks));
+    if (!prompt) {
+      NS_ASSERTION(PR_FALSE, "callbacks does not implement nsIPrompt");
+      return nsnull;
+    }
+  
+    // Finally, get a proxy for the nsIPrompt
+    NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+                         NS_GET_IID(nsIPrompt),
+                         prompt,
+                         NS_PROXY_SYNC,
+                         getter_AddRefs(proxyPrompt));
+  }
 
   nsAutoString promptString;
   nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
