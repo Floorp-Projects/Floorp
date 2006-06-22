@@ -99,7 +99,6 @@
 #endif
 
 #ifdef MOZ_ACCESSIBILITY_ATK
-#include "nsHTMLLinkAccessibleWrap.h"
 #include "nsHTMLTableAccessibleWrap.h"
 #endif
 
@@ -615,15 +614,6 @@ nsAccessibilityService::CreateHTMLImageAccessible(nsISupports *aFrame, nsIAccess
   *_retval = nsnull;
   nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(node));
   if (domElement) {
-#ifdef MOZ_ACCESSIBILITY_ATK
-    PRBool hasAttribute;
-    rv = domElement->HasAttribute(NS_LITERAL_STRING("usemap"), &hasAttribute);
-    if (NS_SUCCEEDED(rv) && hasAttribute) {
-      //There is a "use map"
-      *_retval = new nsHTMLImageMapAccessible(node, weakShell);
-    }
-    else
-#endif //MOZ_ACCESSIBILITY_ATK
       *_retval = new nsHTMLImageAccessible(node, weakShell);
   }
 
