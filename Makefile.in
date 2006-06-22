@@ -170,6 +170,10 @@ ifdef MOZ_XUL
 tier_9_dirs += rdf
 endif
 
+ifdef MOZ_JSDEBUGGER
+tier_9_dirs += js/jsd
+endif
+
 tier_9_dirs	+= \
 		uriloader \
 		modules/libpref \
@@ -265,10 +269,6 @@ endif
 
 ifdef MOZ_XPINSTALL
 tier_50_dirs     +=  xpinstall
-endif
-
-ifdef MOZ_JSDEBUGGER
-tier_50_dirs += js/jsd
 endif
 
 ifdef MOZ_PSM

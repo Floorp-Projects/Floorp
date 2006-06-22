@@ -87,6 +87,10 @@ ifdef NS_TRACE_MALLOC
 REQUIRES	+= tracemalloc
 endif
 
+ifdef MOZ_JSDEBUGGER
+REQUIRES	+= jsdebug
+endif
+
 CPPSRCS =			\
 	nsBarProps.cpp          \
 	nsDOMException.cpp 	\
@@ -121,5 +125,9 @@ LOCAL_INCLUDES = \
 		$(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT
+
+ifdef MOZ_JSDEBUGGER
+DEFINES += -DMOZ_JSDEBUGGER
+endif
 
 include $(topsrcdir)/config/rules.mk
