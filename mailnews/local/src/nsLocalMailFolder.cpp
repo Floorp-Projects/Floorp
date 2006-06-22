@@ -3791,7 +3791,7 @@ nsMsgLocalMailFolder::AddMessage(const char *aMessage)
 
 
   rv = newMailParser->Init(rootFolder, this, 
-                           fileSpec, &outFileStream, nsnull);
+                           fileSpec, &outFileStream, nsnull, PR_FALSE);
   if (NS_SUCCEEDED(rv))
   {
 

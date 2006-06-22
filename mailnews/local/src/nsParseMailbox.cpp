@@ -1499,7 +1499,9 @@ nsParseNewMailState::nsParseNewMailState()
 NS_IMPL_ISUPPORTS_INHERITED1(nsParseNewMailState, nsMsgMailboxParser, nsIMsgFilterHitNotify)
 
 nsresult
-nsParseNewMailState::Init(nsIMsgFolder *serverFolder, nsIMsgFolder *downloadFolder, nsFileSpec &folder, nsIOFileStream *inboxFileStream, nsIMsgWindow *aMsgWindow)
+nsParseNewMailState::Init(nsIMsgFolder *serverFolder, nsIMsgFolder *downloadFolder, nsFileSpec &folder, 
+                          nsIOFileStream *inboxFileStream, nsIMsgWindow *aMsgWindow,
+                          PRBool downloadingToTempFile)
 {
   nsresult rv;
   m_position = folder.GetFileSize();
@@ -1508,6 +1510,7 @@ nsParseNewMailState::Init(nsIMsgFolder *serverFolder, nsIMsgFolder *downloadFold
   m_inboxFileStream = inboxFileStream;
   m_msgWindow = aMsgWindow;
   m_downloadFolder = downloadFolder;
+  m_downloadingToTempFile = downloadingToTempFile;
 
   // the new mail parser isn't going to get the stream input, it seems, so we can't use
   // the OnStartRequest mechanism the mailbox parser uses. So, let's open the db right now.
@@ -1842,7 +1845,12 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
             {
               if (loggingEnabled)
                 (void)filter->LogRuleHit(filterAction, msgHdr); 
-              m_mailDB->RemoveHeaderMdbRow(msgHdr);
+              // if we're downloading to a temp file, our message key is wrong,
+              // i.e., relative to the temp file and not the original mailbox,
+              // and we need to let nsPop3Sink remove the message hdr after
+              // it fixes the key.
+              if (!m_downloadingToTempFile)
+                m_mailDB->RemoveHeaderMdbRow(msgHdr);
             }
           }
         }

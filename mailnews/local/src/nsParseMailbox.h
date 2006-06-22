@@ -233,7 +233,9 @@ public:
   nsParseNewMailState();
   virtual ~nsParseNewMailState();
   NS_DECL_ISUPPORTS_INHERITED
-  nsresult Init(nsIMsgFolder *rootFolder, nsIMsgFolder *downloadFolder, nsFileSpec &folder, nsIOFileStream *inboxFileStream, nsIMsgWindow *aMsgWindow);
+  nsresult Init(nsIMsgFolder *rootFolder, nsIMsgFolder *downloadFolder, nsFileSpec &folder, 
+                nsIOFileStream *inboxFileStream, nsIMsgWindow *aMsgWindow,
+                PRBool downloadingToTempFile);
   
   virtual void	DoneParsingFolder(nsresult status);
   
@@ -276,6 +278,7 @@ protected:
   nsIOFileStream  *m_inboxFileStream;
   nsFileSpec    m_inboxFileSpec;
   PRBool        m_disableFilters;
+  PRBool        m_downloadingToTempFile;
   PRUint32      m_ibuffer_fp;
   char          *m_ibuffer;
   PRUint32      m_ibuffer_size;

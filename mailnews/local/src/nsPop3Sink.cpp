@@ -353,7 +353,8 @@ nsPop3Sink::BeginMailDelivery(PRBool uidlDownload, nsIMsgWindow *aMsgWindow, PRB
     rv = GetServerFolder(getter_AddRefs(serverFolder));
     if (NS_FAILED(rv)) return rv;
 
-    rv = m_newMailParser->Init(serverFolder, m_folder, (m_downloadingToTempFile) ? m_tmpDownloadFileSpec : fileSpec, m_outFileStream, aMsgWindow);
+    rv = m_newMailParser->Init(serverFolder, m_folder, (m_downloadingToTempFile) ? m_tmpDownloadFileSpec : fileSpec, 
+                              m_outFileStream, aMsgWindow, m_downloadingToTempFile);
 	// if we failed to initialize the parser, then just don't use it!!!
 	// we can still continue without one...
 
@@ -871,8 +872,8 @@ nsPop3Sink::IncorporateComplete(nsIMsgWindow *aMsgWindow, PRInt32 aSize)
       {
         nsFileSpec destFolderSpec;
         nsCOMPtr<nsIFileSpec> path;
-        // nsParseNewMailState::ApplyFilterHit already removed the hdr from the db
-        // so we don't have to.
+        // cleanup after mailHdr in source DB because we moved the message.
+        m_newMailParser->m_mailDB->RemoveHeaderMdbRow(hdr);
 
         // if the filter moved the message, it called nsParseMailMessageState::Init
         // to truncate the source folder, which resets m_envelopePos and m_position.
