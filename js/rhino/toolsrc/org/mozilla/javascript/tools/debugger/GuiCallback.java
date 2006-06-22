@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  * Igor Bukanov, igor@fastmail.fm
+ * Cameron McCormack
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -32,20 +33,36 @@
  * the provisions above, a recipient may use your version of this
  * file under either the NPL or the GPL.
  */
-
-
 package org.mozilla.javascript.tools.debugger;
 
-public interface GuiCallback
-{
-    public void updateSourceText(Dim.SourceInfo sourceInfo);
+/**
+ * Interface for communication between the debugger and its GUI.  This
+ * should be implemented by the GUI.
+ */
+public interface GuiCallback {
 
-    public void enterInterrupt(Dim.StackFrame lastFrame,
-                               String threadTitle,
-                               String alertMessage);
+    /**
+     * Called when the source text of some script has been changed.
+     */
+    void updateSourceText(Dim.SourceInfo sourceInfo);
 
-    public boolean isGuiEventThread();
+    /**
+     * Called when the interrupt loop has been entered.
+     */
+    void enterInterrupt(Dim.StackFrame lastFrame,
+                        String threadTitle,
+                        String alertMessage);
 
-    public void dispatchNextGuiEvent()
-        throws InterruptedException;
+    /**
+     * Returns whether the current thread is the GUI's event thread.
+     * This information is required to avoid blocking the event thread
+     * from the debugger.
+     */
+    boolean isGuiEventThread();
+
+    /**
+     * Processes the next GUI event.  This manual pumping of GUI events
+     * is necessary when the GUI event thread itself has been stopped.
+     */
+    void dispatchNextGuiEvent() throws InterruptedException;
 }

@@ -14,13 +14,14 @@
  * November 21, 2000.
  *
  * The Initial Developer of the Original Code is See Beyond Corporation.
-
+ *
  * Portions created by See Beyond are
  * Copyright (C) 2000 See Beyond Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s):
  * Christopher Oliver
+ * Cameron McCormack
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -33,11 +34,17 @@
  * the provisions above, a recipient may use your version of this
  * file under either the NPL or the GPL.
  */
-
 package org.mozilla.javascript.tools.debugger;
 
 import org.mozilla.javascript.Scriptable;
 
+/**
+ * Interface to provide a scope object for script evalutaion to the debugger.
+ */
 public interface ScopeProvider {
-    public Scriptable getScope();
+
+    /**
+     * Returns the scope object to be used for script evaluation.
+     */
+    Scriptable getScope();
 };
