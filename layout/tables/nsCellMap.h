@@ -94,6 +94,9 @@ public:
 
   nsCellMap* GetMapFor(nsTableRowGroupFrame& aRowGroup);
 
+  /** synchronize the cellmaps with the rowgroups again **/
+  void Synchronize(nsTableFrame* aTableFrame);
+
   nsTableCellFrame* GetCellFrame(PRInt32   aRowIndex,
                                  PRInt32   aColIndex,
                                  CellData& aData,

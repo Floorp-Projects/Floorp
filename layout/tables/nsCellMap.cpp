@@ -81,7 +81,6 @@ nsTableCellMap::nsTableCellMap(nsTableFrame&   aTableFrame,
   nsAutoVoidArray orderedRowGroups;
   PRUint32 numRowGroups;
   aTableFrame.OrderRowGroups(orderedRowGroups, numRowGroups);
-  NS_ASSERTION(orderedRowGroups.Count() == (PRInt32) numRowGroups,"problem in OrderRowGroups");
 
   for (PRUint32 rgX = 0; rgX < numRowGroups; rgX++) {
     nsTableRowGroupFrame* rgFrame =
@@ -297,6 +296,44 @@ nsTableCellMap::GetMapFor(nsTableRowGroupFrame& aRowGroup)
   }
 
   return nsnull;
+}
+
+void
+nsTableCellMap::Synchronize(nsTableFrame* aTableFrame)
+{
+  nsAutoVoidArray orderedRowGroups;
+  nsAutoVoidArray maps;
+  PRUint32 numRowGroups;
+  PRInt32 mapIndex;
+
+  maps.Clear();
+  aTableFrame->OrderRowGroups(orderedRowGroups, numRowGroups);
+  if (!numRowGroups) {
+    return;
+  }
+
+  for (PRUint32 rgX = 0; rgX < numRowGroups; rgX++) {
+    nsTableRowGroupFrame* rgFrame =
+      nsTableFrame::GetRowGroupFrame((nsIFrame*)orderedRowGroups.ElementAt(rgX));
+    if (rgFrame) {
+      nsCellMap* map = GetMapFor(*rgFrame);
+      if (map) {
+        if (!maps.AppendElement(map)) {
+          delete map;
+          NS_WARNING("Could not AppendElement");
+        }
+      }
+    }
+  }
+  mapIndex = maps.Count() - 1;
+  nsCellMap* nextMap = (nsCellMap*) maps.ElementAt(mapIndex);
+  nextMap->SetNextSibling(nsnull);
+  for (mapIndex-- ; mapIndex >= 0; mapIndex--) {
+    nsCellMap* map = (nsCellMap*) maps.ElementAt(mapIndex);
+    map->SetNextSibling(nextMap);
+    nextMap = map;
+  }
+  mFirstMap = nextMap;
 }
 
 PRBool
