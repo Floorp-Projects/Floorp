@@ -43,7 +43,7 @@ interface nsINNTPProtocol;
 interface nsIURI;
 interface nsIMsgWindow;
 
-[scriptable, uuid(020b614c-7bb2-44a3-9e6c-550e117d86e4)]
+[scriptable, uuid(6200a8d1-21ac-4d28-926f-f9d7ea9d7bf7)]
 interface nsINntpIncomingServer : nsISupports {
     /* the on-disk path to the newsrc file for this server */
     attribute nsIFileSpec newsrcFilePath;
@@ -127,4 +127,8 @@ interface nsINntpIncomingServer : nsISupports {
                        in boolean opening);
 
     void setPrettyNameForGroup(in AString name, in AString prettyName);
+
+    // user has successfully authenticated in this session.
+    // Used to decide whether to throw away the user's password
+    attribute boolean userAuthenticated; 
 };

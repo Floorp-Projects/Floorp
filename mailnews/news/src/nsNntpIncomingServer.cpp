@@ -64,6 +64,7 @@
 #include "nsMsgI18N.h"
 #include "nsUnicharUtils.h"
 #include "nsEscape.h"
+#include "nsISupportsObsolete.h"
 
 #define INVALID_VERSION         0
 #define VALID_VERSION           1
@@ -118,6 +119,7 @@ nsNntpIncomingServer::nsNntpIncomingServer() : nsMsgLineBuffer(nsnull, PR_FALSE)
   mUniqueId = 0;
   mHasSeenBeginGroups = PR_FALSE;
   mPostingAllowed = PR_FALSE;
+  m_userAuthenticated = PR_FALSE;
   mLastUpdatedTime = 0;
 
   // these atoms are used for subscribe search
@@ -464,6 +466,8 @@ nsNntpIncomingServer::GetNewsrcHasChanged(PRBool *aNewsrcHasChanged)
     *aNewsrcHasChanged = mNewsrcHasChanged;
     return NS_OK;
 }
+
+NS_IMPL_GETSET(nsNntpIncomingServer, UserAuthenticated, PRBool, m_userAuthenticated)
 
 NS_IMETHODIMP
 nsNntpIncomingServer::CloseCachedConnections()

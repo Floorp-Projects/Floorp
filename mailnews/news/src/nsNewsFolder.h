@@ -161,6 +161,9 @@ protected:
   char 		*mGroupUsername;
   char		*mGroupPassword;
 
+  nsCString mPrevUsername;
+  nsCString mPrevPassword;
+
   // the name of the newsgroup.
   nsCString	mRawName;
   PRInt32 mSortOrder;

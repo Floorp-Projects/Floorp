@@ -1224,6 +1224,7 @@ NS_IMETHODIMP nsMsgNewsFolder::GetGroupPassword(char **aGroupPassword)
     if (mGroupPassword) 
     {
         *aGroupPassword = nsCRT::strdup(mGroupPassword);
+        mPrevPassword = mGroupPassword;
         rv = NS_OK;
     }
     else 
@@ -1406,16 +1407,20 @@ nsMsgNewsFolder::GetGroupPasswordWithUI(const PRUnichar * aPromptMessage, const
     NS_ASSERTION(dialog,"we didn't get a net prompt");
     if (dialog) 
     {
-      nsXPIDLString uniGroupPassword;
-
       PRBool okayValue = PR_TRUE;
             
       nsXPIDLCString signonURL;
       rv = CreateNewsgroupPasswordUrlForSignon(mURI.get(), getter_Copies(signonURL));
       if (NS_FAILED(rv)) return rv;
 
+      PRUnichar *uniGroupPassword = nsnull;
+      if (!mPrevPassword.IsEmpty())
+        uniGroupPassword = ToNewUnicode(NS_ConvertASCIItoUTF16(mPrevPassword));
+
       rv = dialog->PromptPassword(aPromptTitle, aPromptMessage, NS_ConvertASCIItoUTF16(NS_STATIC_CAST(const char*, signonURL)).get(), nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
-                                  getter_Copies(uniGroupPassword), &okayValue);
+                                  &uniGroupPassword, &okayValue);
+      nsAutoString uniPasswordAdopted;
+      uniPasswordAdopted.Adopt(uniGroupPassword);
       if (NS_FAILED(rv)) return rv;
 
       if (!okayValue) // if the user pressed cancel, just return NULL;
@@ -1425,14 +1430,13 @@ nsMsgNewsFolder::GetGroupPasswordWithUI(const PRUnichar * aPromptMessage, const
       }
 
       // we got a password back...so remember it
-      rv = SetGroupPassword(NS_LossyConvertUTF16toASCII(uniGroupPassword).get());
+      rv = SetGroupPassword(NS_LossyConvertUTF16toASCII(uniPasswordAdopted).get());
       if (NS_FAILED(rv)) return rv;
 
     } // if we got a prompt dialog
   } // if the password is empty
 
-  rv = GetGroupPassword(aGroupPassword);
-  return rv;
+  return GetGroupPassword(aGroupPassword);
 }
 
 NS_IMETHODIMP
@@ -1475,7 +1479,6 @@ nsMsgNewsFolder::GetGroupUsernameWithUI(const PRUnichar * aPromptMessage, const
     if (dialog) 
     {
       nsXPIDLString uniGroupUsername;
-      
       PRBool okayValue = PR_TRUE;
       
       nsXPIDLCString signonURL;
@@ -1483,8 +1486,9 @@ nsMsgNewsFolder::GetGroupUsernameWithUI(const PRUnichar * aPromptMessage, const
       if (NS_FAILED(rv)) return rv;
       
       rv = dialog->Prompt(aPromptTitle, aPromptMessage, NS_ConvertASCIItoUTF16(signonURL).get(), 
-        nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY, nsnull,
+        nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY, NS_ConvertASCIItoUTF16(mPrevUsername).get(),
         getter_Copies(uniGroupUsername), &okayValue);
+
       if (NS_FAILED(rv)) return rv;
       
       if (!okayValue) // if the user pressed cancel, just return NULL;
@@ -1501,6 +1505,7 @@ nsMsgNewsFolder::GetGroupUsernameWithUI(const PRUnichar * aPromptMessage, const
   } // if the password is empty
   
   rv = GetGroupUsername(aGroupUsername);
+  mPrevUsername.Assign(*aGroupUsername);
   return rv;
 }
 
