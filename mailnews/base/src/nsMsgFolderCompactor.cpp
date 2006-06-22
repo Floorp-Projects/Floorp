@@ -807,7 +807,6 @@ nsFolderCompactState::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
       
       }
       writeCount += m_fileStream->write(m_dataBuffer + blockOffset, readCount - blockOffset);
-      printf("writing at offset %d bytes %d string %s\n", blockOffset, readCount - blockOffset, m_dataBuffer+blockOffset);
       count -= readCount;
       if (writeCount != readCount)
       {
