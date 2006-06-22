@@ -11,15 +11,14 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Mozilla installer build scripts.
+# The Original Code is the Mozilla Installer code.
 #
-# The Initial Developer of the Original Code is
-# Robert Strong <robert.bugzilla@gmail.com>
-#
-# Portions created by the Initial Developer are Copyright (C) 2005
-# the Mozilla Foundation <http://www.mozilla.org/>. All Rights Reserved.
+# The Initial Developer of the Original Code is Mozilla Foundation
+# Portions created by the Initial Developer are Copyright (C) 2006
+# the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#  Robert Strong <robert.bugzilla@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,23 +34,22 @@
 #
 # ***** END LICENSE BLOCK *****
 
-# Read a removed-files manifest and create an NSIS include file to delete the
-# files and directories specified in the first part of the installation phase
+/**
+ * "One off" locale configuration settings for font name, font size, and RTL
+ * (e.g. locale text is read right to left).
+ */
 
-# deleteThisFile/deleteThisFolder instructions suitable for an install.js
-# script. This simply processes <> to stdout.
+; Arabic
+!define ar_rtl
 
-while (<>) {
-    m|^\s*(\S+)\s*$|;
-    my $file = $1;
-    next if ($file eq "");
+; Hebrew
+!define he_rtl
 
-    $file =~ s/\//\\/g;
-    if ($file =~ m|\\$|) {
-        print "Dir: \\$file\n";
-    }
-    else {
-        print "File: $file\n";
-    }
-}
+; Chinese Simplified, China
+!define zh-CN_font  "ËÎÌå"
+!define zh-CN_size  "9"
+
+; Chinese Traditional, Taiwan
+!define zh-TW_font  "·s²Ó©úÅé"
+!define zh-TW_size  "9"
 

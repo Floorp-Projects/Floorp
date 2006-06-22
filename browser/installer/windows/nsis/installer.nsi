@@ -49,6 +49,10 @@ SetDatablockOptimize on
 SetCompress off
 CRCCheck on
 
+; empty files - except for the comment line - for generating custom pages.
+!system 'echo ; > options.ini'
+!system 'echo ; > shortcuts.ini'
+
 !addplugindir ./
 
 ; Other files may depend upon these includes!
@@ -69,7 +73,6 @@ CRCCheck on
 !insertmacro TrimNewLines
 !insertmacro un.TrimNewLines
 !insertmacro WordFind
-!insertmacro un.WordFind
 !insertmacro WordReplace
 
 ; Use the pre-processor where ever possible
@@ -84,12 +87,9 @@ Var fhInstallLog
 Var fhUninstallLog
 
 !include defines.nsi
-!include commonLocale.nsh
 !include SetProgramAccess.nsi
 !include common.nsh
 !include version.nsh
-; If/when appLocale.nsi contains required locale strings remove /NONFATAL
-!include /NONFATAL appLocale.nsi
 
 !insertmacro RegCleanMain
 !insertmacro un.RegCleanMain
@@ -108,18 +108,17 @@ OutFile "setup.exe"
 InstallDirRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${BrandFullName} (${AppVersion})" "InstallLocation"
 InstallDir "$PROGRAMFILES\${BrandFullName}"
 
-; using " " for BrandingText will hide the "Nullsoft Install System..." branding
-BrandingText " "
-
 ShowInstDetails nevershow
 ShowUnInstDetails nevershow
 
 ################################################################################
 # Modern User Interface - MUI
 
-;!insertmacro MUI_RESERVEFILE_LANGDLL
 ReserveFile options.ini
 ReserveFile shortcuts.ini
+
+!define MUI_ABORTWARNING
+!define MUI_COMPONENTSPAGE_SMALLDESC
 
 !define MUI_ICON setup.ico
 !define MUI_UNICON setup.ico
@@ -127,15 +126,9 @@ ReserveFile shortcuts.ini
 !define MUI_WELCOMEPAGE_TITLE_3LINES
 !define MUI_WELCOMEFINISHPAGE_BITMAP wizWatermark.bmp
 !define MUI_UNWELCOMEFINISHPAGE_BITMAP wizWatermark.bmp
-
 !define MUI_HEADERIMAGE
 !define MUI_HEADERIMAGE_RIGHT
 !define MUI_HEADERIMAGE_BITMAP wizHeader.bmp
-
-!define MUI_ABORTWARNING
-
-!define MUI_CUSTOMFUNCTION_GUIINIT myGUIINIT
-!define MUI_CUSTOMFUNCTION_UNGUIINIT un.myGUIINIT
 
 /**
  * Installation Pages
@@ -144,19 +137,19 @@ ReserveFile shortcuts.ini
 !insertmacro MUI_PAGE_WELCOME
 
 ; License Page
-LicenseForceSelection radiobuttons
+!define MUI_LICENSEPAGE_RADIOBUTTONS
 !insertmacro MUI_PAGE_LICENSE license.txt
 
 ; Custom Options Page
-Page custom Options ChangeOptions
+Page custom preOptions ChangeOptions
+
+; Select Install Components Page
+!define MUI_PAGE_CUSTOMFUNCTION_PRE preComponents
+!insertmacro MUI_PAGE_COMPONENTS
 
 ; Select Install Directory Page
 !define MUI_PAGE_CUSTOMFUNCTION_PRE CheckCustom
 !insertmacro MUI_PAGE_DIRECTORY
-
-; Select Install Components Page
-!define MUI_PAGE_CUSTOMFUNCTION_PRE CheckCustom
-!insertmacro MUI_PAGE_COMPONENTS
 
 ; Custom Shortcuts Page - CheckCustom is Called in Shortcuts
 Page custom preShortcuts ChangeShortcuts
@@ -199,42 +192,20 @@ Page custom preShortcuts ChangeShortcuts
 !define MUI_FINISHPAGE_SHOWREADME_NOTCHECKED
 !define MUI_FINISHPAGE_SHOWREADME ""
 
-; Only setup the survey controls, functions, etc. when the appLocale.nsi
-; has DO_UNINSTALL_SURVEY defined to indicate the survey has been localized.
-!ifdef DO_UNINSTALL_SURVEY
+; Setup the survey controls, functions, etc. except when the application has
+; defined NO_UNINSTALL_SURVEY
+!ifndef NO_UNINSTALL_SURVEY
 !define MUI_FINISHPAGE_SHOWREADME_TEXT $(SURVEY_TEXT)
 !define MUI_FINISHPAGE_SHOWREADME_FUNCTION un.survey
 !endif
 
-!insertmacro MUI_UNPAGE_FINISH
-
-; Languages
-; DEF_MUI_LANGUAGE is defined in commonLocale.nsh so MUI_LANGUAGE can be
-; easily defined along with the other locale specific settings
-!insertmacro DEF_MUI_LANGUAGE
-
-
-################################################################################
-# Modern User Interface - MUI
+!insertmacro MUI_UNPAGE_FINISH\
 
 /**
  * Adds a section divider to the human readable log.
  */
 Function WriteLogSeparator
   FileWrite $fhInstallLog "$\r$\n-------------------------------------------------------------------------------$\r$\n"
-FunctionEnd
-
-; Runs before the UI has been initialized for install
-Function myGUIINIT
-  !insertmacro MUI_INSTALLOPTIONS_EXTRACT "options.ini"
-  !insertmacro MUI_INSTALLOPTIONS_EXTRACT "shortcuts.ini"
-FunctionEnd
-
-; Runs before the UI has been initialized for uninstall
-Function un.myGUIINIT
-  GetFullPathName $INSTDIR "$INSTDIR\.."
-; XXXrstrong - should we quit when the app exe is not present?
-  Call un.SetAccess
 FunctionEnd
 
 ; Callback used to check if the app being uninstalled is running.
@@ -290,9 +261,9 @@ Function un.GetParameters
    Exch $R0
 FunctionEnd
 
-; Only setup the survey controls, functions, etc. when the appLocale.nsi
-; has DO_UNINSTALL_SURVEY defined to indicate the survey has been localized.
-!ifdef DO_UNINSTALL_SURVEY
+; Setup the survey controls, functions, etc. except when the application has
+; defined NO_UNINSTALL_SURVEY
+!ifndef NO_UNINSTALL_SURVEY
 Function un.survey
   Exec "$\"$TmpVal$\" $\"${SurveyURL}$\""
 FunctionEnd
@@ -381,7 +352,7 @@ Function FinishInstall
   FileClose $fhInstallLog
 FunctionEnd
 
-Section "Application" Section1
+Section "-Application" Section1
   SectionIn 1 RO
   SetOutPath $INSTDIR
   ; For a "Standard" upgrade without talkback installed add the InstallDisabled
@@ -455,10 +426,10 @@ Section "Application" Section1
   ${LogMsg} "App Version: ${AppVersion}"
   ${LogMsg} "GRE Version: ${GREVersion}"
 
-  ${If} ${FileExists} "$EXEDIR\config\removed-files.log"
+  ${If} ${FileExists} "$EXEDIR\removed-files.log"
     ${LogHeader} "Removing Obsolete Files and Directories"
-    ${LineFind} "$EXEDIR\config\removed-files.log" "/NUL" "1:-1" "onInstallDeleteFile"
-    ${LineFind} "$EXEDIR\config\removed-files.log" "/NUL" "1:-1" "onInstallRemoveDir"
+    ${LineFind} "$EXEDIR\removed-files.log" "/NUL" "1:-1" "onInstallDeleteFile"
+    ${LineFind} "$EXEDIR\removed-files.log" "/NUL" "1:-1" "onInstallRemoveDir"
   ${EndIf}
 
   ${DeleteFile} "$INSTDIR\install_wizard.log"
@@ -509,7 +480,160 @@ Section "Application" Section1
     ${EndIf}
   ${EndIf}
 
-  !include /NONFATAL instfiles-extra.nsi
+  ${LogHeader} "Adding Additional Files"
+  ; Only for Firefox and only if they don't already exist
+  ; Check if QuickTime is installed and copy the contents of its plugins
+  ; directory into the app's plugins directory. Previously only the
+  ; nsIQTScriptablePlugin.xpt files was copied which is not enough to enable
+  ; QuickTime as a plugin.
+  ClearErrors
+  ReadRegStr $R0 HKLM "Software\Apple Computer, Inc.\QuickTime" "InstallDir"
+  ${Unless} ${Errors}
+    Push $R0
+    ${GetPathFromRegStr}
+    Pop $R0
+    ${Unless} ${Errors}
+      GetFullPathName $R0 "$R0\Plugins"
+      ${Unless} ${Errors}
+        ${LogHeader} "Copying QuickTime Plugin Files"
+        ${LogMsg} "Source Directory: $R0\Plugins"
+        StrCpy $R1 "$INSTDIR\plugins"
+        Call DoCopyFiles
+      ${EndUnless}
+    ${EndUnless}
+  ${EndUnless}
+  ClearErrors
+
+  ; Default for creating Start Menu folder and shortcuts
+  ; (1 = create, 0 = don't create)
+  ${If} $AddStartMenuSC == ""
+    StrCpy $AddStartMenuSC "1"
+  ${EndIf}
+
+  ; Default for creating Quick Launch shortcut (1 = create, 0 = don't create)
+  ${If} $AddQuickLaunchSC == ""
+    StrCpy $AddQuickLaunchSC "1"
+  ${EndIf}
+
+  ; Default for creating Desktop shortcut (1 = create, 0 = don't create)
+  ${If} $AddDesktopSC == ""
+    StrCpy $AddDesktopSC "1"
+  ${EndIf}
+
+  ; Remove registry entries for non-existent apps and for apps that point to our
+  ; install location in the Software\Mozilla key.
+  SetShellVarContext current  ; Set SHCTX to HKCU
+  ${RegCleanMain} "Software\Mozilla"
+  SetShellVarContext all  ; Set SHCTX to HKLM
+  ${RegCleanMain} "Software\Mozilla"
+
+  ; Remove uninstall entries that point to our install location
+  ${RegCleanUninstall}
+
+  ${LogHeader} "Adding Registry Entries"
+  ClearErrors
+  WriteRegStr HKLM "Software\Mozilla\InstallerTest" "InstallerTest" "Test"
+  ${If} ${Errors}
+    SetShellVarContext current  ; Set SHCTX to HKCU
+    StrCpy $TmpVal "HKCU" ; used primarily for logging
+  ${Else}
+    SetShellVarContext all  ; Set SHCTX to HKLM
+    DeleteRegKey HKLM "Software\Mozilla\InstallerTest"
+    StrCpy $TmpVal "HKLM" ; used primarily for logging
+  ${EndIf}
+
+  ; The previous installer adds several regsitry values to both HKLM and HKCU.
+  ; We now try to add to HKLM and if that fails to HKCU
+
+  ; The order that reg keys and values are added is important if you use the
+  ; uninstall log to remove them on uninstall. When using the uninstall log you
+  ; MUST add children first so they will be removed first on uninstall so they
+  ; will be empty when the key is deleted. This allows the uninstaller to
+  ; specify that only empty keys will be deleted.
+
+  StrCpy $0 "Software\Mozilla\${BrandFullName}\${AppVersion} (${AB_CD})\Main"
+  ${WriteRegStr2} $TmpVal "$0" "Install Directory" "$INSTDIR" 0
+  ${WriteRegStr2} $TmpVal "$0" "PathToExe" "$INSTDIR\${FileMainEXE}" 0
+  ${WriteRegStr2} $TmpVal "$0" "Program Folder Path" "$SMPROGRAMS\$StartMenuDir" 0
+  ${WriteRegDWORD2} $TmpVal "$0" "Create Quick Launch Shortcut" $AddQuickLaunchSC 0
+  ${WriteRegDWORD2} $TmpVal "$0" "Create Desktop Shortcut" $AddDesktopSC 0
+  ${WriteRegDWORD2} $TmpVal "$0" "Create Start Menu Shortcut" $AddStartMenuSC 0
+
+  StrCpy $0 "Software\Mozilla\${BrandFullName}\${AppVersion} (${AB_CD})\Uninstall"
+  ${WriteRegStr2} $TmpVal "$0" "Uninstall Log Folder" "$INSTDIR\uninstall" 0
+  ${WriteRegStr2} $TmpVal "$0" "Description" "${BrandFullName} (${AppVersion})" 0
+
+  StrCpy $0 "Software\Mozilla\${BrandFullName}\${AppVersion} (${AB_CD})"
+  ${WriteRegStr2} $TmpVal  "$0" "" "${AppVersion} (${AB_CD})" 0
+
+  StrCpy $0 "Software\Mozilla\${BrandFullName} ${AppVersion}\bin"
+  ${WriteRegStr2} $TmpVal "$0" "PathToExe" "$INSTDIR\${FileMainEXE}" 0
+
+  StrCpy $0 "Software\Mozilla\${BrandFullName} ${AppVersion}\extensions"
+  ${WriteRegStr2} $TmpVal "$0" "Components" "$INSTDIR\components" 0
+  ${WriteRegStr2} $TmpVal "$0" "Plugins" "$INSTDIR\plugins" 0
+
+  StrCpy $0 "Software\Mozilla\${BrandFullName} ${AppVersion}"
+  ${WriteRegStr2} $TmpVal "$0" "GeckoVer" "${GREVersion}" 0
+
+  StrCpy $0 "Software\Mozilla\${BrandFullName}"
+  ${WriteRegStr2} $TmpVal "$0" "" "${GREVersion}" 0
+  ${WriteRegStr2} $TmpVal "$0" "CurrentVersion" "${AppVersion} (${AB_CD})" 0
+
+  ; XXXrstrong - there are several values that will be overwritten by and
+  ; overwrite other installs of the same application.
+  ${StrFilter} "${FileMainEXE}" "+" "" "" $R9
+  StrCpy $0 "Software\Clients\StartMenuInternet\$R9"
+  ${WriteRegStr2} $TmpVal "$0" "" "${BrandFullName}" 0
+
+  StrCpy $0 "Software\Clients\StartMenuInternet\$R9\DefaultIcon"
+  StrCpy $1 "$\"$INSTDIR\${FileMainEXE}$\",0"
+  ${WriteRegStr2} $TmpVal "$0" "" "$1" 0
+
+  ; The Reinstall Command is defined at
+  ; http://msdn.microsoft.com/library/default.asp?url=/library/en-us/shellcc/platform/shell/programmersguide/shell_adv/registeringapps.asp
+  StrCpy $0 "Software\Clients\StartMenuInternet\$R9\InstallInfo"
+  StrCpy $1 "$\"$INSTDIR\uninstall\uninstaller.exe$\" /ua $\"${AppVersion} (${AB_CD})$\" /hs browser"
+  ${WriteRegStr2} $TmpVal "$0" "HideIconsCommand" "$1" 0
+  ${WriteRegDWORD2} $TmpVal "$0" "IconsVisible" 1 0
+
+  StrCpy $0 "Software\Clients\StartMenuInternet\$R9\InstallInfo"
+  StrCpy $1 "$\"$INSTDIR\${FileMainEXE}$\" -silent -setDefaultBrowser"
+  ${WriteRegStr2} $TmpVal "$0" "ReinstallCommand" "$1" 0
+  StrCpy $1 "$\"$INSTDIR\uninstall\uninstaller.exe$\" /ua $\"${AppVersion} (${AB_CD})$\" /ss browser"
+  ${WriteRegStr2} $TmpVal "$0" "ShowIconsCommand" "$1" 0
+
+  StrCpy $0 "Software\Clients\StartMenuInternet\$R9\shell\open\command"
+  ${WriteRegStr2} $TmpVal "$0" "" "$INSTDIR\${FileMainEXE}" 0
+
+  ; These need special handling on uninstall since they may be overwritten by
+  ; an install into a different location.
+  StrCpy $0 "Software\Microsoft\Windows\CurrentVersion\App Paths\${FileMainEXE}"
+  ${WriteRegStr2} $TmpVal "$0" "" "$INSTDIR\${FileMainEXE}" 0
+  ${WriteRegStr2} $TmpVal "$0" "Path" "$INSTDIR" 0
+
+  StrCpy $0 "MIME\Database\Content Type\application/x-xpinstall;app=firefox"
+  ${WriteRegStrHKCR} "HKCR" "$0" "Extension" ".xpi" 0
+
+  StrCpy $0 "Software\Microsoft\MediaPlayer\ShimInclusionList\$R9"
+  ${CreateRegKey} "$TmpVal" "$0" 0
+
+  ; Write the uninstall registry keys
+  StrCpy $0 "Software\Microsoft\Windows\CurrentVersion\Uninstall\${BrandFullName} (${AppVersion})"
+  StrCpy $1 "$\"$INSTDIR\uninstall\uninstaller.exe$\" $\"/ua ${AppVersion} (${AB_CD})$\""
+
+  ${WriteRegStr2} $TmpVal "$0" "Comments" "${BrandFullName}" 0
+  ${WriteRegStr2} $TmpVal "$0" "DisplayIcon" "$INSTDIR\${FileMainEXE},0" 0
+  ${WriteRegStr2} $TmpVal "$0" "DisplayName" "${BrandFullName} (${AppVersion})" 0
+  ${WriteRegStr2} $TmpVal "$0" "DisplayVersion" "${AppVersion} (${AB_CD})" 0
+  ${WriteRegStr2} $TmpVal "$0" "InstallLocation" "$INSTDIR" 0
+  ${WriteRegStr2} $TmpVal "$0" "Publisher" "Mozilla" 0
+  ${WriteRegStr2} $TmpVal "$0" "UninstallString" "$1" 0
+  ${WriteRegStr2} $TmpVal "$0" "URLInfoAbout" "${URLInfoAbout}" 0
+  ${WriteRegStr2} $TmpVal "$0" "URLUpdateInfo" "${URLUpdateInfo}" 0
+  ${WriteRegDWORD2} $TmpVal "$0" "NoModify" 1 0
+  ${WriteRegDWORD2} $TmpVal "$0" "NoRepair" 1 0
+  !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
 
   ; Create Start Menu shortcuts
   ${LogHeader} "Adding Shortcuts"
@@ -519,50 +643,18 @@ Section "Application" Section1
     ${LogUninstall} "File: $SMPROGRAMS\$StartMenuDir\${BrandFullName}.lnk"
     CreateShortCut "$SMPROGRAMS\$StartMenuDir\${BrandFullName} ($(SAFE_MODE)).lnk" "$INSTDIR\${FileMainEXE}" "-safe-mode" "$INSTDIR\${FileMainEXE}" 0
     ${LogUninstall} "File: $SMPROGRAMS\$StartMenuDir\${BrandFullName} ($(SAFE_MODE)).lnk"
-  ${Else}
-    ${If} ${FileExists} "$SMPROGRAMS\$StartMenuDir"
-      ${If} ${FileExists} "$SMPROGRAMS\$StartMenuDir\${BrandFullName}.lnk"
-        Delete "$SMPROGRAMS\$StartMenuDir\${BrandFullName}.lnk"
-        ${If} ${Errors}
-          ClearErrors
-          ${LogMsg} "** ERROR Deleting Start Menu Shortcut: $SMPROGRAMS\$StartMenuDir\${BrandFullName}.lnk **"
-        ${Else}
-          ${LogMsg} "Removed Start Menu Shortcut: $SMPROGRAMS\$StartMenuDir\${BrandFullName}.lnk"
-        ${EndIf}
-      ${EndIf}
-      ${If} ${FileExists} "$SMPROGRAMS\$StartMenuDir\${BrandFullName} ($(SAFE_MODE)).lnk"
-        Delete "$SMPROGRAMS\$StartMenuDir\${BrandFullName} ($(SAFE_MODE)).lnk"
-        ${If} ${Errors}
-          ClearErrors
-          ${LogMsg} "** ERROR Deleting Start Menu Shortcut: $SMPROGRAMS\$StartMenuDir\${BrandFullName} ($(SAFE_MODE)).lnk **"
-        ${Else}
-          ${LogMsg} "Removed Start Menu Shortcut: $SMPROGRAMS\$StartMenuDir\${BrandFullName} ($(SAFE_MODE)).lnk"
-        ${EndIf}
-      ${EndIf}
-      RmDir "$SMPROGRAMS\$StartMenuDir"
-      ${If} ${Errors}
-        ClearErrors
-        ${LogMsg} "** ERROR Removing Start Menu Directory: $SMPROGRAMS\$StartMenuDir **"
-      ${Else}
-        ${LogMsg} "Removed Start Menu Shortcut: $SMPROGRAMS\$StartMenuDir"
-      ${EndIf}
-    ${EndIf}
   ${EndIf}
 
   ; perhaps use the uninstall keys
   ${If} $AddQuickLaunchSC == 1
     CreateShortCut "$QUICKLAUNCH\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
     ${LogUninstall} "File: $QUICKLAUNCH\${BrandFullName}.lnk"
-  ${Else}
-    ${DeleteFile} "$QUICKLAUNCH\${BrandFullName}.lnk"
   ${EndIf}
 
   ${LogHeader} "Updating Quick Launch Shortcuts"
   ${If} $AddDesktopSC == 1
     CreateShortCut "$DESKTOP\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
     ${LogUninstall} "File: $DESKTOP\${BrandFullName}.lnk"
-  ${Else}
-    ${DeleteFile} "$DESKTOP\${BrandFullName}.lnk"
   ${EndIf}
 
   !insertmacro MUI_STARTMENU_WRITE_END
@@ -577,7 +669,6 @@ SectionEnd
 Section /o "Developer Tools" Section2
   Call install_inspector
 SectionEnd
-
 
 Section /o "Quality Feedback Agent" Section3
   Call install_talkback
@@ -629,7 +720,71 @@ Function install_talkback
 FunctionEnd
 
 Section "Uninstall"
-  !include /NONFATAL uninstfiles-extra.nsi
+  ; Remove registry entries for non-existent apps and for apps that point to our
+  ; install location in the Software\Mozilla key.
+  SetShellVarContext current  ; Sets SHCTX to HKCU
+  ${un.RegCleanMain} "Software\Mozilla"
+  SetShellVarContext all  ; Sets SHCTX to HKLM
+  ${un.RegCleanMain} "Software\Mozilla"
+
+  ; Remove uninstall entries that point to our install location
+  ${un.RegCleanUninstall}
+
+  SetShellVarContext all  ; Set SHCTX to HKLM
+  ${un.GetSecondInstallPath} "Software\Mozilla" $R9
+  ${If} $R9 == "false"
+    SetShellVarContext current  ; Set SHCTX to HKCU
+    ${un.GetSecondInstallPath} "Software\Mozilla" $R9
+  ${EndIf}
+
+  StrCpy $0 "Software\Clients\StartMenuInternet\${FileMainEXE}\shell\open\command"
+  ReadRegStr $1 HKLM "$0" ""
+  Push $1
+  ${GetPathFromRegStr}
+  Pop $R0
+  Push $R0
+  ${GetParentDir}
+  Pop $R1
+
+  ; Only remove the StartMenuInternet key if it refers to this install location.
+  ; The StartMenuInternet registry key is independent of the default browser
+  ; settings. The XPInstall base un-installer always removes this key if it is
+  ; uninstalling the default browser and it will always replace the keys when
+  ; installing even if there is another install of Firefox that is set as the
+  ; default browser. Now the key is always updated on install but it is only
+  ; removed if it refers to this install location.
+  ${If} $INSTDIR == $R1
+    ; XXXrstrong - if there is another installation of the same app ideally we
+    ; would just modify these values. The GetSecondInstallPath macro could be
+    ; made to provide enough information to do this.
+    DeleteRegKey HKLM "Software\Clients\StartMenuInternet\${FileMainEXE}"
+  ${EndIf}
+
+  StrCpy $0 "Software\Microsoft\Windows\CurrentVersion\App Paths\${FileMainEXE}"
+  ${If} $R9 == "false"
+    DeleteRegKey HKLM "$0"
+    DeleteRegKey HKCU "$0"
+    StrCpy $0 "Software\Microsoft\MediaPlayer\ShimInclusionList\$R9"
+    DeleteRegKey HKLM "$0"
+    DeleteRegKey HKCU "$0"
+    StrCpy $0 "MIME\Database\Content Type\application/x-xpinstall;app=firefox"
+    DeleteRegKey HKCR "$0"
+  ${Else}
+    ReadRegStr $1 HKLM "$0" ""
+    Push $1
+    ${GetPathFromRegStr}
+    Pop $R0
+    Push $R0
+    ${GetParentDir}
+    Pop $R1
+    ${If} $INSTDIR == $R1
+      WriteRegStr HKLM "$0" "" "$R9"
+      Push $R9
+      ${GetParentDir}
+      Pop $R1
+      WriteRegStr HKLM "$0" "Path" "$R1"
+    ${EndIf}
+  ${EndIf}
 
   ; Remove files. If we don't have a log file skip
   ${If} ${FileExists} "$INSTDIR\uninstall\uninstall.log"
@@ -657,6 +812,11 @@ Section "Uninstall"
     ; Remove the installation directory if it is empty
     ${RemoveDir} "$INSTDIR"
   ${EndIf}
+
+  ; Refresh destop icons otherwise the start menu internet item won't be removed
+  ; and other ugly things will happen like recreation of the registry key by the
+  ; OS under some conditions.
+  System::Call "shell32::SHChangeNotify(i, i, i, i) v (0x08000000, 0, 0, 0)"
 SectionEnd
 
 ; When we add an optional action to the finish page the cancel button is
@@ -669,9 +829,9 @@ FunctionEnd
 Function un.disableCancel
   !insertmacro MUI_INSTALLOPTIONS_WRITE "ioSpecial.ini" "settings" "cancelenabled" "0"
 
-  ; Only setup the survey controls, functions, etc. when the appLocale.nsi
-  ; has DO_UNINSTALL_SURVEY defined to indicate the survey has been localized.
-  !ifndef DO_UNINSTALL_SURVEY
+  ; Setup the survey controls, functions, etc. except when the application has
+  ; defined NO_UNINSTALL_SURVEY
+  !ifdef NO_UNINSTALL_SURVEY
     !insertmacro MUI_INSTALLOPTIONS_WRITE "ioSpecial.ini" "settings" "NumFields" "3"
   !else
     StrCpy $TmpVal "SOFTWARE\Microsoft\IE Setup\Setup"
@@ -694,37 +854,8 @@ Function un.disableCancel
   !endif
 FunctionEnd
 
-Function Options
-  !insertmacro MUI_HEADER_TEXT $(OPTIONS_PAGE_TITLE) $(OPTIONS_PAGE_SUBTITLE)
-  !insertmacro MUI_INSTALLOPTIONS_DISPLAY "options.ini"
-FunctionEnd
-
-
-Function ChangeOptions
-  ${MUI_INSTALLOPTIONS_READ} $0 "options.ini" "Settings" "State"
-;  ReadINIStr $0 "$PLUGINSDIR\options.ini" "Settings" "State"
-  ${If} $0 != 0
-    Abort
-  ${EndIf}
-  ${MUI_INSTALLOPTIONS_READ} $R0 "options.ini" "Field 2" "State"
-  StrCmp $R0 "1" +1 +2
-  StrCpy $InstallType "1"
-  ${MUI_INSTALLOPTIONS_READ} $R0 "options.ini" "Field 3" "State"
-  StrCmp $R0 "1" +1 +2
-  StrCpy $InstallType "2"
-  ${MUI_INSTALLOPTIONS_READ} $R0 "options.ini" "Field 4" "State"
-  StrCmp $R0 "1" +1 +2
-  StrCpy $InstallType "4"
-FunctionEnd
-
-Function preShortcuts
-  Call CheckCustom
-  !insertmacro MUI_HEADER_TEXT "$(SHORTCUTS_PAGE_TITLE)" "$(SHORTCUTS_PAGE_SUBTITLE)"
-  !insertmacro MUI_INSTALLOPTIONS_DISPLAY "shortcuts.ini"
-FunctionEnd
-
 Function ChangeShortcuts
-  ReadINIStr $0 "$PLUGINSDIR\options.ini" "Settings" "State"
+  ${MUI_INSTALLOPTIONS_READ} $0 "shortcuts.ini" "Settings" "State"
   ${If} $0 != 0
     Abort
   ${EndIf}
@@ -787,49 +918,6 @@ Function CopyFile
     ${WordReplace} "$R1$R3\$R7" "$INSTDIR" "" "+" $R3
     ${LogUninstall} "File: $R3"
   ${EndIf}
-  Push 0
-FunctionEnd
-
-; There must be a cleaner way of doing this but this will suffice for now.
-Function un.RemoveRegEntriesCallback
-  ${un.TrimNewLines} "$R9" "$R9"
-  StrCpy $R3 "$R9" 7
-  ${If} $R3 == "RegVal:"
-  ${OrIf} $R3 == "RegKey:"
-    StrCpy $R9 "$R9" "" 8
-    ${un.WordFind} "$R9" " | " "+1" $R0
-    ${un.WordFind} "$R9" " | " "+2" $R1
-    ${If} $R3 == "RegVal:"
-      ${un.WordFind} "$R9" " | " "+3" $R2
-      ; When setting the default value the name will be empty and WordFind will
-      ; return the entire string so copy an empty string into $R2 when this
-      ; occurs.
-      ${If} $R2 == $R9
-        StrCpy $R2 ""
-      ${EndIf}
-    ${EndIf}
-    ${Switch} $R0
-      ${Case} "HKCR"
-        ${If} $R3 == "RegVal:"
-          DeleteRegValue HKCR "$R1" "$R2"
-        ${EndIf}
-        DeleteRegKey /ifempty HKCR "$R1"
-        ${Break}
-      ${Case} "HKCU"
-        ${If} $R3 == "RegVal:"
-          DeleteRegValue HKCU "$R1" "$R2"
-        ${EndIf}
-        DeleteRegKey /ifempty HKCU "$R1"
-        ${Break}
-      ${Case} "HKLM"
-        ${If} $R3 == "RegVal:"
-          DeleteRegValue HKLM "$R1" "$R2"
-        ${EndIf}
-        DeleteRegKey /ifempty HKLM "$R1"
-        ${Break}
-    ${EndSwitch}
-  ${EndIf}
-  ClearErrors
   Push 0
 FunctionEnd
 
@@ -1006,22 +1094,79 @@ Function CleanOldLogFilesCallback
     Push 0
 FunctionEnd
 
-/*
-install_wizard1.log
-
-     [12/12]	Installing: C:\Program Files\Mozilla Thunderbird\extensions\talkback@mozilla.org\components\talkback.cnt
-     ** performInstall() returned: 0
-
-     Install completed successfully  --  2005-12-05 11:36:25
-
-     ** copy file: C:\WINDOWS\UninstallThunderbird.exe to C:\Program Files\Mozilla Thunderbird\uninstall\UninstallThunderbird.exe
-
-UPDATE [Wed, 21 Dec 2005 20:32:51 GMT]
-installing: C:\Program Files\Mozilla Thunderbird\softokn3.chk
-*/
-
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
   !insertmacro MUI_DESCRIPTION_TEXT ${Section1} $(APP_DESC)
   !insertmacro MUI_DESCRIPTION_TEXT ${Section2} $(DEV_TOOLS_DESC)
   !insertmacro MUI_DESCRIPTION_TEXT ${Section3} $(QFA_DESC)
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
+
+!insertmacro MOZ_MUI_LANGUAGE 'baseLocale'
+!verbose push
+!verbose 3
+!include "overrideLocale.nsh"
+!include "customLocale.nsh"
+!verbose pop
+
+; Set this after the locale files to override it if it is in the locale
+; using " " for BrandingText will hide the "Nullsoft Install System..." branding
+BrandingText " "
+
+Function preShortcuts
+  Call CheckCustom
+  !insertmacro MUI_HEADER_TEXT "$(SHORTCUTS_PAGE_TITLE)" "$(SHORTCUTS_PAGE_SUBTITLE)"
+  !insertmacro MUI_INSTALLOPTIONS_DISPLAY "shortcuts.ini"
+FunctionEnd
+
+Function preOptions
+  !insertmacro MUI_HEADER_TEXT "$(OPTIONS_PAGE_TITLE)" "$(OPTIONS_PAGE_SUBTITLE)"
+  !insertmacro MUI_INSTALLOPTIONS_DISPLAY "options.ini"
+FunctionEnd
+
+Function ChangeOptions
+  ${MUI_INSTALLOPTIONS_READ} $0 "options.ini" "Settings" "State"
+  ${If} $0 != 0
+    Abort
+  ${EndIf}
+  ${MUI_INSTALLOPTIONS_READ} $R0 "options.ini" "Field 2" "State"
+  StrCmp $R0 "1" +1 +2
+  StrCpy $InstallType "1"
+  ${MUI_INSTALLOPTIONS_READ} $R0 "options.ini" "Field 3" "State"
+  StrCmp $R0 "1" +1 +2
+  StrCpy $InstallType "4"
+FunctionEnd
+
+Function preComponents
+  Call CheckCustom
+  ; If DOMi isn't available skip the options page
+  ${Unless} ${FileExists} "$EXEDIR\optional\extensions\inspector@mozilla.org"
+    ; If talkback exists always install it enabled.
+    ${If} ${FileExists} "$EXEDIR\optional\extensions\talkback@mozilla.org"
+      SectionSetFlags 2 1
+    ${EndIf}
+    Abort
+  ${EndUnless}
+FunctionEnd
+
+Function .onInit
+  StrCpy $LANGUAGE 0
+  !insertmacro MUI_INSTALLOPTIONS_EXTRACT "options.ini"
+  !insertmacro MUI_INSTALLOPTIONS_EXTRACT "shortcuts.ini"
+  !insertmacro createShortcutsINI
+  !insertmacro createBasicCustomOptionsINI
+  ; Hide DOMi in the components page if it isn't available
+  ${Unless} ${FileExists} "$EXEDIR\optional\extensions\inspector@mozilla.org"
+    SectionSetText 1 ""
+  ${EndUnless}
+  ; Hide Talkback in the components page if it isn't available
+  ${Unless} ${FileExists} "$EXEDIR\optional\extensions\talkback@mozilla.org"
+    SectionSetText 2 ""
+  ${EndUnless}
+FunctionEnd
+
+Function un.onInit
+  GetFullPathName $INSTDIR "$INSTDIR\.."
+  StrCpy $LANGUAGE 0
+; XXXrstrong - should we quit when the app exe is not present?
+  Call un.SetAccess
+FunctionEnd
+
