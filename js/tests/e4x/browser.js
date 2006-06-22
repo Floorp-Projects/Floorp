@@ -117,6 +117,10 @@ function reportSuccess(section, expected, actual)
 function reportError(msg, page, line)
 {
   var testcase;
+  var jsOptions = new JavaScriptOptions();
+
+  jsOptions.setOption('strict', false);
+  jsOptions.setOption('werror', false);
 
   if (typeof SUMMARY == 'undefined')
   {
@@ -149,6 +153,9 @@ function reportError(msg, page, line)
     testcase.reason += ' Line: ' + line;
   }
   reportFailure(SECTION, msg);
+
+  gDelayTestDriverEnd = false;
+  jsTestDriverEnd();
 
 };
 
@@ -219,6 +226,7 @@ function gc()
   }
   catch(ex)
   {
+    writeLineToLog('gc: ' + ex);
     // Thanks to igor.bukanov@gmail.com
     var tmp = Math.PI * 1e500, tmp2;
     for (var i = 0; i != 1 << 15; ++i) 
