@@ -54,7 +54,7 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-CMMSRCS		= nsIconChannel.mm
+CMMSRCS		= nsIconChannelCocoa.mm
 else
 CPPSRCS		= nsIconChannel.cpp
 endif
