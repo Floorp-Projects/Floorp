@@ -1729,11 +1729,14 @@ SessionStoreService.prototype = {
    *        Object containing session data
    */
   _openWindowWithState: function sss_openWindowWithState(aState) {
-    
+    var argString = Cc["@mozilla.org/supports-string;1"].
+                    createInstance(Ci.nsISupportsString);
+    argString.data = "";
+
     //zeniko: why isn't it possible to set the window's dimensions here (as feature)?
     var window = Cc["@mozilla.org/embedcomp/window-watcher;1"].
                  getService(Ci.nsIWindowWatcher).
-                 openWindow(null, this._getPref("chromeURL", null), "_blank", "chrome,dialog=no,all", null);
+                 openWindow(null, this._getPref("chromeURL", null), "_blank", "chrome,dialog=no,all", argString);
     
     window.__SS_state = aState;
     var _this = this;
