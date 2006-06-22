@@ -408,7 +408,9 @@ ConvertAndWrite(const nsAString& aString,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCAutoString charXferString;
-  charXferString.SetCapacity(charLength);
+  if (!EnsureStringLength(charXferString, charLength))
+    return NS_ERROR_OUT_OF_MEMORY;
+
   char* charXferBuf = charXferString.BeginWriting();
   nsresult convert_rv = NS_OK;
 

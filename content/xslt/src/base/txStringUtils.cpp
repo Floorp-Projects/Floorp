@@ -146,7 +146,8 @@ void TX_ToLowerCase(const nsAString& aSource, nsAString& aDest)
 {
   nsAString::const_iterator fromBegin, fromEnd;
   nsAString::iterator toBegin;
-  aDest.SetLength(aSource.Length());
+  if (!EnsureStringLength(aDest, aSource.Length()))
+    return; // XXX no way to signal out-of-memory
   CopyToLowerCase converter(aDest.BeginWriting(toBegin));
   copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd),
               converter);

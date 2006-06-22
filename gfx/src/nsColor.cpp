@@ -170,6 +170,7 @@ NS_GFX_(void) NS_RGBToASCIIHex(nscolor aColor,
                                           nsAFlatCString& aResult)
 {
   aResult.SetLength(7);
+  NS_ASSERTION(aResult.Length() == 7, "small SetLength failed, use an autostring instead!");
   char *buf = aResult.BeginWriting();
   PR_snprintf(buf, 8, "#%02x%02x%02x",
               NS_GET_R(aColor), NS_GET_G(aColor), NS_GET_B(aColor));

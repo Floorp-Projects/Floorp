@@ -282,7 +282,8 @@ static OSErr AETextToString(AEDesc &aAEDesc, nsString& aOutString, Size& text_si
 
 
   text_size = ::AEGetDescDataSize(&aAEDesc) / 2;
-  aOutString.SetLength(text_size + 1);
+  if (!EnsureStringLength(aOutString, text_size + 1))
+    return memFullErr;
   unicodeTextPtr = aOutString.BeginWriting();
   err = AEGetDescData(&aAEDesc, (void *) unicodeTextPtr, text_size * 2);
   if (err!=noErr) 

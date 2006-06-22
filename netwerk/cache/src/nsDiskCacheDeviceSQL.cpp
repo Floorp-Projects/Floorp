@@ -564,7 +564,8 @@ nsDiskCacheDevice::UpdateEntry(nsCacheEntry *entry)
 
   nsCString metaDataBuf;
   PRUint32 mdSize = entry->MetaDataSize();
-  metaDataBuf.SetLength(mdSize);
+  if (!EnsureStringLength(metaDataBuf, mdSize))
+    return NS_ERROR_OUT_OF_MEMORY;
   char *md = metaDataBuf.BeginWriting();
   entry->FlattenMetaData(md, mdSize);
 

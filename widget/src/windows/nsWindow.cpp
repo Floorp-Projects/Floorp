@@ -6624,7 +6624,8 @@ void nsWindow::GetCompositionString(HIMC aHIMC, DWORD aIndex, nsString* aStrUnic
 {
   long lRtn;
   lRtn = ::ImmGetCompositionStringW(aHIMC, aIndex, NULL, 0);
-  aStrUnicode->SetCapacity((lRtn / sizeof(WCHAR)) + 1);
+  if (!EnsureStringLength(*aStrUnicode, (lRtn / sizeof(WCHAR)) + 1))
+    return; // out of memory
 
   long buflen = lRtn + sizeof(WCHAR);
   lRtn = ::ImmGetCompositionStringW(aHIMC, aIndex, (LPVOID)aStrUnicode->BeginWriting(), buflen);

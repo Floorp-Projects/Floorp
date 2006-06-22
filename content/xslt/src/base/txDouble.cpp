@@ -317,8 +317,10 @@ void Double::toString(double aValue, nsAString& aDest)
     }
     if (aValue < 0)
         ++length;
+    // grow the string
     PRUint32 oldlength = aDest.Length();
-    aDest.SetLength(oldlength + length); // grow the string
+    if (!EnsureStringLength(aDest, oldlength + length))
+        return; // out of memory
     nsAString::iterator dest;
     aDest.BeginWriting(dest).advance(PRInt32(oldlength));
     if (aValue < 0) {

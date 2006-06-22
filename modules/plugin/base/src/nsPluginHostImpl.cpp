@@ -4095,7 +4095,8 @@ static nsresult DoCharsetConversion(nsIUnicodeDecoder *aUnicodeDecoder,
   nsAutoString buffer;
   rv = aUnicodeDecoder->GetMaxLength(aANSIString, numberOfBytes, &outUnicodeLen);
   NS_ENSURE_SUCCESS(rv, rv);
-  buffer.SetCapacity(outUnicodeLen);
+  if (!EnsureStringLength(buffer, outUnicodeLen))
+    return NS_ERROR_OUT_OF_MEMORY;
   rv = aUnicodeDecoder->Convert(aANSIString, &numberOfBytes, buffer.BeginWriting(), &outUnicodeLen);
   NS_ENSURE_SUCCESS(rv, rv);
   buffer.SetLength(outUnicodeLen);

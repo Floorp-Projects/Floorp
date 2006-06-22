@@ -602,7 +602,9 @@ nsBinaryInputStream::ReadString(nsAString& aString)
     if (NS_FAILED(rv)) return rv;
 
     // pre-allocate output buffer, and get direct access to buffer...
-    aString.SetLength(length);
+    if (!EnsureStringLength(aString, length))
+        return NS_ERROR_OUT_OF_MEMORY;
+
     nsAString::iterator start;
     aString.BeginWriting(start);
     

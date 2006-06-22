@@ -933,7 +933,9 @@ nsScriptLoader::ConvertToUTF16(nsIChannel* aChannel, const PRUint8* aData,
     rv = unicodeDecoder->GetMaxLength(NS_REINTERPRET_CAST(const char*, aData),
                                       aLength, &unicodeLength);
     if (NS_SUCCEEDED(rv)) {
-      aString.SetLength(unicodeLength);
+      if (!EnsureStringLength(aString, unicodeLength))
+        return NS_ERROR_OUT_OF_MEMORY;
+
       PRUnichar *ustr = aString.BeginWriting();
 
       PRInt32 consumedLength = 0;
