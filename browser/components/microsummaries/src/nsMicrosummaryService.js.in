@@ -683,7 +683,8 @@ MicrosummaryService.prototype = {
       
       // rebuild the bookmarks toolbar
       var bookmarksToolbar = win.document.getElementById("bookmarks-ptf");
-      bookmarksToolbar.builder.rebuild();
+      if (bookmarksToolbar)
+        bookmarksToolbar.builder.rebuild();
       
       // rebuild the bookmarks sidebar
       var sidebar = win.document.getElementById("sidebar");
