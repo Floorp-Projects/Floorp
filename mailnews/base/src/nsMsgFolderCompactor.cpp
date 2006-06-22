@@ -628,8 +628,18 @@ nsFolderCompactState::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
       {
         (void) m_curSrcHdr->GetFlags(&msgFlags);
         (void) m_curSrcHdr->GetStatusOffset(&statusOffset);
+        
         if (statusOffset == 0)
           m_needStatusLine = PR_TRUE;
+        // x-mozilla-status lines should be at the start of the headers, and the code
+        // below assumes everything will fit in m_dataBuffer - if there's not
+        // room, skip the keyword stuff.
+        if (statusOffset > sizeof(m_dataBuffer) - 1024)
+        {
+          checkForKeyword = PR_FALSE;
+          NS_ASSERTION(PR_FALSE, "status offset past end of read buffer size");
+          
+        }
       }
     }
     m_startOfMsg = PR_FALSE;
@@ -637,20 +647,30 @@ nsFolderCompactState::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
   PRUint32 maxReadCount, readCount, writeCount;
   while (NS_SUCCEEDED(rv) && (PRInt32) count > 0)
   {
-    maxReadCount = count > 4096 ? 4096 : count;
+    maxReadCount = count > sizeof(m_dataBuffer) - 1 ? sizeof(m_dataBuffer) - 1 : count;
     writeCount = 0;
     rv = inStr->Read(m_dataBuffer, maxReadCount, &readCount);
+    
+    // if status offset is past the number of bytes we read, it's probably bogus,
+    // and we shouldn't do any of the keyword stuff.
+    if (statusOffset + X_MOZILLA_STATUS_LEN > readCount)
+      checkForKeyword = PR_FALSE;
+    
     if (NS_SUCCEEDED(rv))
     {
       if (checkForKeyword)
       {
-        const char *keywordHdr = PL_strnrstr(m_dataBuffer, HEADER_X_MOZILLA_KEYWORDS, readCount);
-        if (keywordHdr)
-          m_curSrcHdr->GetUint32Property("growKeywords", &needToGrowKeywords);
-        else
-          addKeywordHdr = PR_TRUE;
+        // make sure that status offset really points to x-mozilla-status line
+        if  (!strncmp(m_dataBuffer + statusOffset, X_MOZILLA_STATUS, X_MOZILLA_STATUS_LEN))
+        {
+          const char *keywordHdr = PL_strnrstr(m_dataBuffer, HEADER_X_MOZILLA_KEYWORDS, readCount);
+          if (keywordHdr)
+            m_curSrcHdr->GetUint32Property("growKeywords", &needToGrowKeywords);
+          else
+            addKeywordHdr = PR_TRUE;
+          m_curSrcHdr->GetStringProperty("keywords", getter_Copies(msgHdrKeywords));
+        }
         checkForKeyword = PR_FALSE;
-        m_curSrcHdr->GetStringProperty("keywords", getter_Copies(msgHdrKeywords));
       }
       PRUint32 blockOffset = 0;
       if (m_needStatusLine)
@@ -689,6 +709,8 @@ nsFolderCompactState::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
       }
 #define EXTRA_KEYWORD_HDR "                                                                                 "MSG_LINEBREAK
 
+       // if status offset isn't in the first block, this code won't work. There's no good reason
+      // for the status offset not to be at the beginning of the message anyway.
       if (addKeywordHdr)
       {
         // if blockOffset is set, we added x-mozilla-status headers so
@@ -778,8 +800,14 @@ nsFolderCompactState::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
         writeCount += blockOffset - preKeywordBlockOffset; // fudge writeCount
 
       }
-      NS_ASSERTION(readCount > blockOffset, "bad block offset");
+      if (readCount <= blockOffset)
+      {
+        NS_ASSERTION(PR_FALSE, "bad block offset");
+        // not sure what to do to handle this.
+      
+      }
       writeCount += m_fileStream->write(m_dataBuffer + blockOffset, readCount - blockOffset);
+      printf("writing at offset %d bytes %d string %s\n", blockOffset, readCount - blockOffset, m_dataBuffer+blockOffset);
       count -= readCount;
       if (writeCount != readCount)
       {
