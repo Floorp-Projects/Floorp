@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -889,7 +890,7 @@ const nsHTMLElement gHTMLElements[] = {
     /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
     /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,
     /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kHeadMisc|kFlowEntity, kFlowEntity|kSelf, kNone,
+    /*parent,incl,exclgroups*/          kFlowEntity, kFlowEntity|kSelf, kNone,
     /*special props, prop-range*/       0, kNoPropRange,
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown,
     /*contain-func*/                    0
@@ -2216,6 +2217,22 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 
       }
 
       if (!CanContain(theTag, aMode)) {
+        break;
+      }
+    }
+  }
+
+  else if (mTagID == eHTMLTag_head) {
+    while (--theIndex >= anIndex) {
+      eHTMLTags tag = aContext.TagAt(theIndex);
+      if (tag == eHTMLTag_html) {
+        // HTML gates head closing, but the head should never be the parent of
+        // an html tag.
+        break;
+      }
+
+      if (tag == eHTMLTag_head) {
+        result = eHTMLTag_head;
         break;
       }
     }

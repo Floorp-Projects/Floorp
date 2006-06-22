@@ -167,6 +167,15 @@ void nsEntryStack::Push(nsCParserNode* aNode,
   }
 }
 
+void nsEntryStack::PushTag(eHTMLTags aTag)
+{
+  EnsureCapacityFor(mCount + 1);
+  mEntries[mCount].mTag = aTag;
+  mEntries[mCount].mParent = nsnull;
+  mEntries[mCount].mStyles = nsnull;
+  ++mCount;
+}
+
 
 /**
  * This method inserts the given node onto the front of this stack
@@ -488,6 +497,17 @@ void nsDTDContext::Push(nsCParserNode* aNode,
 #endif
     mStack.Push(aNode, aStyleStack, aRefCntNode);
   }
+}
+
+void nsDTDContext::PushTag(eHTMLTags aTag)
+{
+#ifdef NS_DEBUG
+  if (mStack.mCount < eMaxTags) {
+    mXTags[mStack.mCount] = aTag;
+  }
+#endif
+
+  mStack.PushTag(aTag);
 }
 
 nsTagEntry*
