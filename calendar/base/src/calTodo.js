@@ -164,7 +164,7 @@ calTodo.prototype = {
             return null;
         if (!this.dueDate)
             return null;
-        return this.entryDate.subtractDate(this.dueDate);
+        return this.dueDate.subtractDate(this.entryDate);
     },
 
     get recurrenceStartDate() {
