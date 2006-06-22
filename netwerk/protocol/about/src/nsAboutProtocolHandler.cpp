@@ -105,7 +105,7 @@ nsAboutProtocolHandler::NewURI(const nsACString &aSpec,
     PRBool isSafe = PR_FALSE;
     
     nsCOMPtr<nsIAboutModule> aboutMod;
-    rv = GetModuleForURI(url, getter_AddRefs(aboutMod));
+    rv = NS_GetAboutModule(url, getter_AddRefs(aboutMod));
     if (NS_SUCCEEDED(rv)) {
         // The standard return case
         PRUint32 flags;
@@ -147,7 +147,7 @@ nsAboutProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 
     // about:what you ask?
     nsCOMPtr<nsIAboutModule> aboutMod;
-    nsresult rv = GetModuleForURI(uri, getter_AddRefs(aboutMod));
+    nsresult rv = NS_GetAboutModule(uri, getter_AddRefs(aboutMod));
     if (NS_SUCCEEDED(rv)) {
         // The standard return case:
         return aboutMod->NewChannel(uri, result);
@@ -170,24 +170,6 @@ nsAboutProtocolHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_ret
     // don't override anything.  
     *_retval = PR_FALSE;
     return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/* static */
-nsresult
-nsAboutProtocolHandler::GetModuleForURI(nsIURI* uri, nsIAboutModule** module)
-{
-    NS_PRECONDITION(uri, "Must have URI");
-
-    nsresult rv;
-    nsCAutoString contractID;
-    rv = NS_GetAboutModuleName(uri, contractID);
-    if (NS_FAILED(rv)) return rv;
-
-    // look up a handler to deal with "what"
-    contractID.Insert(NS_LITERAL_CSTRING(NS_ABOUT_MODULE_CONTRACTID_PREFIX), 0);
-
-    return CallGetService(contractID.get(), module);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

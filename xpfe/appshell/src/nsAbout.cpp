@@ -80,7 +80,7 @@ nsAbout::NewChannel(nsIURI *aURI, nsIChannel **result)
 NS_IMETHODIMP
 nsAbout::GetURIFlags(nsIURI *aURI, PRUint32 *result)
 {
-    *result = 0;
+    *result = nsIAboutModule::ALLOW_SCRIPT;
     return NS_OK;
 }
 
