@@ -2260,6 +2260,10 @@ Downloader.prototype = {
     const NS_BINDING_ABORTED = 0x804b0002;
     const NS_ERROR_ABORT = 0x80004004;
     if (Components.isSuccessCode(status)) {
+      var sbs = 
+          Components.classes["@mozilla.org/intl/stringbundle;1"].
+          getService(Components.interfaces.nsIStringBundleService);
+      var updateStrings = sbs.createBundle(URI_UPDATES_PROPERTIES);
       if (this._verifyDownload()) {
         state = STATE_PENDING;
         
@@ -2272,15 +2276,12 @@ Downloader.prototype = {
         // Tell the updater.exe we're ready to apply.
         writeStatusFile(getUpdatesDir(), state);
         this._update.installDate = (new Date()).getTime();
-        this._update.statusText = "Install Pending";
+        this._update.statusText = updateStrings.
+          GetStringFromName("installPending");
       } else {
         LOG("Downloader", "onStopRequest: download verification failed");
         state = STATE_DOWNLOAD_FAILED;
         
-        var sbs = 
-            Components.classes["@mozilla.org/intl/stringbundle;1"].
-            getService(Components.interfaces.nsIStringBundleService);
-        var updateStrings = sbs.createBundle(URI_UPDATES_PROPERTIES);
         var brandStrings = sbs.createBundle(URI_BRAND_PROPERTIES);
         var brandShortName = brandStrings.GetStringFromName("brandShortName");
         this._update.statusText = updateStrings.
