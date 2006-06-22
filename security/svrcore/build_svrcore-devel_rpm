@@ -165,9 +165,6 @@ echo "Finished."
 # copy spec file
 cp ${SPEC_FILENAME} SPECS/${SPEC_FILENAME}
 
-# copy patches into SOURCES
-cp *.patch SOURCES/
-
 # build the ${BITSIZE} RPM and Source RPM
 echo "Executing ${BITSIZE} rpmbuild of ${SPEC_FILENAME} file . . . "
 if [ ! -f SRPMS/${PACKAGE}-${VERSION}-${RELEASE}.src.rpm ]; then
