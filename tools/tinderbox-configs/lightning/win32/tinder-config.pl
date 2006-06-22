@@ -147,7 +147,7 @@ $moz_cvsroot   = ":ext:cltbld\@cvs.mozilla.org:/cvsroot";
 $ObjDir = 'lightning-obj';
 
 # Extra build name, if needed.
-$BuildNameExtra = 'Lt-Release';
+$BuildNameExtra = 'Lt-Nightly';
 
 # User comment, eg. ip address for dhcp builds.
 # ex: $UserComment = "ip = 208.12.36.108";

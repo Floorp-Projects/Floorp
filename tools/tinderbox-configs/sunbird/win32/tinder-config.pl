@@ -146,7 +146,7 @@ $moz_cvsroot   = ":ext:cltbld\@cvs.mozilla.org:/cvsroot";
 $ObjDir = 'sunbird-obj';
 
 # Extra build name, if needed.
-$BuildNameExtra = 'Sb-Release';
+$BuildNameExtra = 'Sb-Nightly';
 
 # User comment, eg. ip address for dhcp builds.
 # ex: $UserComment = "ip = 208.12.36.108";
