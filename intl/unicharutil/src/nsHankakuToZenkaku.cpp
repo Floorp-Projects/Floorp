@@ -84,6 +84,8 @@ void HankakuToZenkaku (
     const PRUnichar* aSrc, PRInt32 aLen, 
     PRUnichar* aDest, PRInt32 aDestLen, PRInt32* oLen)
 {
+    // XXX aDestLen is never checked, assumed to be as long as aLen
+    NS_ASSERTION(aDestLen >= aLen, "aDest must be as long as aSrc");
 
     PRInt32 i,j;
     if ( aLen == 0) {
@@ -153,8 +155,9 @@ nsHankakuToZenkaku::~nsHankakuToZenkaku()
 NS_IMETHODIMP nsHankakuToZenkaku::Change( const PRUnichar* aText, PRInt32 aTextLength, nsString& aResult)
 {
   PRInt32 ol;
-  aResult.SetCapacity(aTextLength);
-   
+  if (!EnsureStringLength(aResult, aTextLength))
+    return NS_ERROR_OUT_OF_MEMORY;
+
   HankakuToZenkaku ( aText, aTextLength, aResult.BeginWriting(), aTextLength, &ol);
   aResult.SetLength(ol);
 

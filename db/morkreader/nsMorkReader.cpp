@@ -85,7 +85,12 @@ MorkUnescape(const nsCSubstring &aString, nsCString &aResult)
   // We optimize for speed over space here -- size the result buffer to
   // the size of the source, which is an upper bound on the size of the
   // unescaped string.
-  aResult.SetLength(len);
+  // FIXME: Mork assume there will never be errors
+  if (!EnsureStringLength(aResult, len)) {
+    aResult.Truncate();
+    return; // out of memory.
+  }
+
   char *result = aResult.BeginWriting();
   const char *source = aString.BeginReading();
   const char *sourceEnd = source + len;

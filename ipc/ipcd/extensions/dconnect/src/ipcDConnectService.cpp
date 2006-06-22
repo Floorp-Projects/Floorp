@@ -376,6 +376,7 @@ DeserializeParam(ipcMessageReader &reader, const nsXPTType &t, nsXPTCVariant &v)
     case nsXPTType::T_IID:
       {
         nsID *buf = (nsID *) malloc(sizeof(nsID));
+        NS_ENSURE_TRUE(buf, NS_ERROR_OUT_OF_MEMORY);
         reader.GetBytes(buf, sizeof(nsID));
         v.val.p = v.ptr = buf;
         v.flags = nsXPTCVariant::PTR_IS_DATA | nsXPTCVariant::VAL_IS_ALLOCD;
@@ -386,6 +387,7 @@ DeserializeParam(ipcMessageReader &reader, const nsXPTType &t, nsXPTCVariant &v)
       {
         PRUint32 len = reader.GetInt32();
         char *buf = (char *) malloc(len + 1);
+        NS_ENSURE_TRUE(buf, NS_ERROR_OUT_OF_MEMORY);
         reader.GetBytes(buf, len);
         buf[len] = char(0);
 
@@ -398,6 +400,7 @@ DeserializeParam(ipcMessageReader &reader, const nsXPTType &t, nsXPTCVariant &v)
       {
         PRUint32 len = reader.GetInt32();
         PRUnichar *buf = (PRUnichar *) malloc(len + 2);
+        NS_ENSURE_TRUE(buf, NS_ERROR_OUT_OF_MEMORY);
         reader.GetBytes(buf, len);
         buf[len] = PRUnichar(0);
 
@@ -421,7 +424,8 @@ DeserializeParam(ipcMessageReader &reader, const nsXPTType &t, nsXPTCVariant &v)
         PRUint32 len = reader.GetInt32();
 
         nsString *str = new nsString();
-        str->SetLength(len / 2);
+        if (!str || !(EnsureStringLength(*str, len/2)))
+          return NS_ERROR_OUT_OF_MEMORY;
         PRUnichar *buf = str->BeginWriting();
         reader.GetBytes(buf, len);
 
@@ -436,7 +440,8 @@ DeserializeParam(ipcMessageReader &reader, const nsXPTType &t, nsXPTCVariant &v)
         PRUint32 len = reader.GetInt32();
 
         nsCString *str = new nsCString();
-        str->SetLength(len);
+        if (!str || !(EnsureStringLength(*str, len)))
+          return NS_ERROR_OUT_OF_MEMORY;
         char *buf = str->BeginWriting();
         reader.GetBytes(buf, len);
 
@@ -623,8 +628,9 @@ DeserializeResult(ipcMessageReader &reader, const nsXPTType &t, nsXPTCMiniVarian
 
         nsAString *str = (nsAString *) v.val.p;
 
+        if (!str || !(EnsureStringLength(*str, len/2)))
+          return NS_ERROR_OUT_OF_MEMORY;
         nsAString::iterator begin;
-        str->SetLength(len / 2);
         str->BeginWriting(begin);
 
         reader.GetBytes(begin.get(), len);
@@ -638,8 +644,9 @@ DeserializeResult(ipcMessageReader &reader, const nsXPTType &t, nsXPTCMiniVarian
 
         nsACString *str = (nsACString *) v.val.p;
 
+        if (!str || !(EnsureStringLength(*str, len)))
+          return NS_ERROR_OUT_OF_MEMORY;
         nsACString::iterator begin;
-        str->SetLength(len);
         str->BeginWriting(begin);
 
         reader.GetBytes(begin.get(), len);
@@ -718,6 +725,8 @@ public:
   void OnResponseAvailable(PRUint32 sender, const DConnectOp *op, PRUint32 opLen)
   {
     mReply = (DConnectInvokeReply *) malloc(opLen);
+    if (!mReply)
+      return; // out of memory
     memcpy(mReply, op, opLen);
 
     // the length in bytes of the parameter blob
@@ -1456,6 +1465,7 @@ ipcDConnectService::CreateInstanceByContractID(PRUint32 aPeerID,
 
   DConnectSetupContractID *msg =
       (DConnectSetupContractID *) malloc(size);
+  NS_ENSURE_TRUE(msg, NS_ERROR_OUT_OF_MEMORY);
 
   msg->opcode_minor = DCON_OP_SETUP_NEW_INST_CONTRACTID;
   msg->iid = aIID;
@@ -1492,6 +1502,7 @@ ipcDConnectService::GetServiceByContractID(PRUint32 aPeerID,
 
   DConnectSetupContractID *msg =
       (DConnectSetupContractID *) malloc(size);
+  NS_ENSURE_TRUE(msg, NS_ERROR_OUT_OF_MEMORY);
 
   msg->opcode_minor = DCON_OP_SETUP_GET_SERV_CONTRACTID;
   msg->iid = aIID;

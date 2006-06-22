@@ -489,7 +489,10 @@ CopyUnicodeTo( const nsScannerIterator& aSrcStart,
                nsAString& aDest )
   {
     nsAString::iterator writer;
-    aDest.SetLength(Distance(aSrcStart, aSrcEnd));
+    if (!EnsureStringLength(aDest, Distance(aSrcStart, aSrcEnd))) {
+      aDest.Truncate();
+      return; // out of memory
+    }
     aDest.BeginWriting(writer);
     nsScannerIterator fromBegin(aSrcStart);
     
@@ -519,7 +522,8 @@ AppendUnicodeTo( const nsScannerIterator& aSrcStart,
   {
     nsAString::iterator writer;
     PRUint32 oldLength = aDest.Length();
-    aDest.SetLength(oldLength + Distance(aSrcStart, aSrcEnd));
+    if (!EnsureStringLength(aDest, oldLength + Distance(aSrcStart, aSrcEnd)))
+      return; // out of memory
     aDest.BeginWriting(writer).advance(oldLength);
     nsScannerIterator fromBegin(aSrcStart);
     
