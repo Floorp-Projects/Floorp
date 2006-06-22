@@ -115,7 +115,7 @@ CheckResult(const char *aLhs, PRUint32 aRule, const char *aRhs = nsnull)
 {
     switch (aRule) {
         case MUST_BE_NULL:
-            return !aLhs;
+            return !aLhs || !*aLhs;
 
         case MUST_EQUAL:
             return !PL_strcmp(aLhs, aRhs);
