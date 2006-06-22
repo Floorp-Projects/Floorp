@@ -3765,13 +3765,16 @@ nsTypedSelection::GetTableSelectionType(nsIDOMRange* aRange, PRInt32* aTableSele
   // Not a single selected node
   if (startNode != endNode) return NS_OK;
 
-  nsCOMPtr<nsIContent> content = do_QueryInterface(startNode);
-  if (!content) return NS_ERROR_FAILURE;
+  nsCOMPtr<nsINode> node = do_QueryInterface(startNode);
+  if (!node) return NS_ERROR_FAILURE;
 
   // if we simply cannot have children, return NS_OK as a non-failing,
   // non-completing case for table selection
-  if (!content->IsNodeOfType(nsINode::eELEMENT))
-    return NS_OK; //got to be a text node, definitely not a table row/cell
+  if (!node->IsNodeOfType(nsINode::eELEMENT))
+    return NS_OK; //definitely not a table row/cell
+
+  nsCOMPtr<nsIContent> content = do_QueryInterface(startNode);
+  NS_ASSERTION(content, "No content here?");
   
   PRInt32 startOffset;
   PRInt32 endOffset;
