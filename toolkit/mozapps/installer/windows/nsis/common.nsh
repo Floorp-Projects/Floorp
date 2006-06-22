@@ -69,6 +69,266 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
 
 !define MUI_INSTALLOPTIONS_READ "!insertmacro MUI_INSTALLOPTIONS_READ"
 
+!macro MOZ_MUI_LANGUAGE LANGUAGE
+  !verbose push
+  !verbose ${MUI_VERBOSE}
+  !include "${LANGUAGE}.nsh"
+  !verbose pop
+!macroend
+
+!macro MOZ_MUI_LANGUAGEFILE_BEGIN LANGUAGE
+  !ifndef MUI_INSERT
+    !define MUI_INSERT
+    !insertmacro MUI_INSERT
+  !endif
+  !ifndef "MUI_LANGUAGEFILE_${LANGUAGE}_USED"
+    !define "MUI_LANGUAGEFILE_${LANGUAGE}_USED"
+    LoadLanguageFile "${LANGUAGE}.nlf"
+  !else
+    !error "Modern UI language file ${LANGUAGE} included twice!"
+  !endif
+!macroend
+
+; Custom version of MUI_LANGUAGEFILE_END. The macro to add the default MUI
+; strings and the macros for several strings that are part of the NSIS MUI and
+; not in our locale files have been commented out.
+!macro MOZ_MUI_LANGUAGEFILE_END
+
+#  !include "${NSISDIR}\Contrib\Modern UI\Language files\Default.nsh"
+  !ifdef MUI_LANGUAGEFILE_DEFAULT_USED
+    !undef MUI_LANGUAGEFILE_DEFAULT_USED
+    !warning "${LANGUAGE} Modern UI language file version doesn't match. Using default English texts for missing strings."
+  !endif
+
+  !insertmacro MUI_LANGUAGEFILE_DEFINE "MUI_${LANGUAGE}_LANGNAME" "MUI_LANGNAME"
+
+  !ifndef MUI_LANGDLL_PUSHLIST
+    !define MUI_LANGDLL_PUSHLIST "'${MUI_${LANGUAGE}_LANGNAME}' ${LANG_${LANGUAGE}} "
+  !else
+    !ifdef MUI_LANGDLL_PUSHLIST_TEMP
+      !undef MUI_LANGDLL_PUSHLIST_TEMP
+    !endif
+    !define MUI_LANGDLL_PUSHLIST_TEMP "${MUI_LANGDLL_PUSHLIST}"
+    !undef MUI_LANGDLL_PUSHLIST
+    !define MUI_LANGDLL_PUSHLIST "'${MUI_${LANGUAGE}_LANGNAME}' ${LANG_${LANGUAGE}} ${MUI_LANGDLL_PUSHLIST_TEMP}"
+  !endif
+
+  !insertmacro MUI_LANGUAGEFILE_LANGSTRING_PAGE WELCOME "MUI_TEXT_WELCOME_INFO_TITLE"
+  !insertmacro MUI_LANGUAGEFILE_LANGSTRING_PAGE WELCOME "MUI_TEXT_WELCOME_INFO_TEXT"
+
+  !insertmacro MUI_LANGUAGEFILE_LANGSTRING_PAGE LICENSE "MUI_TEXT_LICENSE_TITLE"
+  !insertmacro MUI_LANGUAGEFILE_LANGSTRING_PAGE LICENSE "MUI_TEXT_LICENSE_SUBTITLE"
+  !insertmacro MUI_LANGUAGEFILE_MULTILANGSTRING_PAGE LICENSE "MUI_INNERTEXT_LICENSE_TOP"
+
+#  !insertmacro MUI_LANGUAGEFILE_LANGSTRING_PAGE LICENSE "MUI_INNERTEXT_LICENSE_BOTTOM"
+#  !insertmacro MUI_LANGUAGEFILE_LANGSTRING_PAGE LICENSE "MUI_INNERTEXT_LICENSE_BOTTOM_CHECKBOX"
+  !insertmacro MUI_LANGUAGEFILE_LANGSTRING_PAGE LICENSE "MUI_INNERTEXT_LICENSE_BOTTOM_RADIOBUTTONS"
+
+  !insertmacro MUI_LANGUAGEFILE_LANGSTRING_PAGE COMPONENTS "MUI_TEXT_COMPONENTS_TITLE"
+  !insertmacro MUI_LANGUAGEFILE_LANGSTRING_PAGE COMPONENTS "MUI_TEXT_COMPONENTS_SUBTITLE"
+  !insertmacro MUI_LANGUAGEFILE_MULTILANGSTRING_PAGE COMPONENTS "MUI_INNERTEXT_COMPONENTS_DESCRIPTION_TITLE"
+  !insertmacro MUI_LANGUAGEFILE_MULTILANGSTRING_PAGE COMPONENTS "MUI_INNERTEXT_COMPONENTS_DESCRIPTION_INFO"
+
+  !insertmacro MUI_LANGUAGEFILE_LANGSTRING_PAGE DIRECTORY "MUI_TEXT_DIRECTORY_TITLE"
+  !insertmacro MUI_LANGUAGEFILE_LANGSTRING_PAGE DIRECTORY "MUI_TEXT_DIRECTORY_SUBTITLE"
+
+  !insertmacro MUI_LANGUAGEFILE_LANGSTRING_PAGE STARTMENU "MUI_TEXT_STARTMENU_TITLE"
+  !insertmacro MUI_LANGUAGEFILE_LANGSTRING_PAGE STARTMENU "MUI_TEXT_STARTMENU_SUBTITLE"
+  !insertmacro MUI_LANGUAGEFILE_LANGSTRING_PAGE STARTMENU "MUI_INNERTEXT_STARTMENU_TOP"
+#  !insertmacro MUI_LANGUAGEFILE_LANGSTRING_PAGE STARTMENU "MUI_INNERTEXT_STARTMENU_CHECKBOX"
+
+  !insertmacro MUI_LANGUAGEFILE_LANGSTRING_PAGE INSTFILES "MUI_TEXT_INSTALLING_TITLE"
+  !insertmacro MUI_LANGUAGEFILE_LANGSTRING_PAGE INSTFILES "MUI_TEXT_INSTALLING_SUBTITLE"
+
+  !insertmacro MUI_LANGUAGEFILE_LANGSTRING_PAGE INSTFILES "MUI_TEXT_FINISH_TITLE"
+  !insertmacro MUI_LANGUAGEFILE_LANGSTRING_PAGE INSTFILES "MUI_TEXT_FINISH_SUBTITLE"
+
+  !insertmacro MUI_LANGUAGEFILE_LANGSTRING_PAGE INSTFILES "MUI_TEXT_ABORT_TITLE"
+  !insertmacro MUI_LANGUAGEFILE_LANGSTRING_PAGE INSTFILES "MUI_TEXT_ABORT_SUBTITLE"
+
+  !insertmacro MUI_LANGUAGEFILE_MULTILANGSTRING_PAGE FINISH "MUI_BUTTONTEXT_FINISH"
+  !insertmacro MUI_LANGUAGEFILE_LANGSTRING_PAGE FINISH "MUI_TEXT_FINISH_INFO_TITLE"
+  !insertmacro MUI_LANGUAGEFILE_LANGSTRING_PAGE FINISH "MUI_TEXT_FINISH_INFO_TEXT"
+  !insertmacro MUI_LANGUAGEFILE_LANGSTRING_PAGE FINISH "MUI_TEXT_FINISH_INFO_REBOOT"
+  !insertmacro MUI_LANGUAGEFILE_MULTILANGSTRING_PAGE FINISH "MUI_TEXT_FINISH_REBOOTNOW"
+  !insertmacro MUI_LANGUAGEFILE_MULTILANGSTRING_PAGE FINISH "MUI_TEXT_FINISH_REBOOTLATER"
+#  !insertmacro MUI_LANGUAGEFILE_MULTILANGSTRING_PAGE FINISH "MUI_TEXT_FINISH_RUN"
+#  !insertmacro MUI_LANGUAGEFILE_MULTILANGSTRING_PAGE FINISH "MUI_TEXT_FINISH_SHOWREADME"
+
+  !insertmacro MUI_LANGUAGEFILE_LANGSTRING_DEFINE MUI_ABORTWARNING "MUI_TEXT_ABORTWARNING"
+
+
+  !insertmacro MUI_LANGUAGEFILE_UNLANGSTRING_PAGE WELCOME "MUI_UNTEXT_WELCOME_INFO_TITLE"
+  !insertmacro MUI_LANGUAGEFILE_UNLANGSTRING_PAGE WELCOME "MUI_UNTEXT_WELCOME_INFO_TEXT"
+
+  !insertmacro MUI_LANGUAGEFILE_UNLANGSTRING_PAGE CONFIRM "MUI_UNTEXT_CONFIRM_TITLE"
+  !insertmacro MUI_LANGUAGEFILE_UNLANGSTRING_PAGE CONFIRM "MUI_UNTEXT_CONFIRM_SUBTITLE"
+
+#  !insertmacro MUI_LANGUAGEFILE_UNLANGSTRING_PAGE LICENSE "MUI_UNTEXT_LICENSE_TITLE"
+#  !insertmacro MUI_LANGUAGEFILE_UNLANGSTRING_PAGE LICENSE "MUI_UNTEXT_LICENSE_SUBTITLE"
+
+#  !insertmacro MUI_LANGUAGEFILE_UNLANGSTRING_PAGE LICENSE "MUI_UNINNERTEXT_LICENSE_BOTTOM"
+#  !insertmacro MUI_LANGUAGEFILE_UNLANGSTRING_PAGE LICENSE "MUI_UNINNERTEXT_LICENSE_BOTTOM_CHECKBOX"
+#  !insertmacro MUI_LANGUAGEFILE_UNLANGSTRING_PAGE LICENSE "MUI_UNINNERTEXT_LICENSE_BOTTOM_RADIOBUTTONS"
+
+#  !insertmacro MUI_LANGUAGEFILE_UNLANGSTRING_PAGE COMPONENTS "MUI_UNTEXT_COMPONENTS_TITLE"
+#  !insertmacro MUI_LANGUAGEFILE_UNLANGSTRING_PAGE COMPONENTS "MUI_UNTEXT_COMPONENTS_SUBTITLE"
+
+#  !insertmacro MUI_LANGUAGEFILE_UNLANGSTRING_PAGE DIRECTORY "MUI_UNTEXT_DIRECTORY_TITLE"
+#  !insertmacro MUI_LANGUAGEFILE_UNLANGSTRING_PAGE DIRECTORY  "MUI_UNTEXT_DIRECTORY_SUBTITLE"
+
+  !insertmacro MUI_LANGUAGEFILE_UNLANGSTRING_PAGE INSTFILES "MUI_UNTEXT_UNINSTALLING_TITLE"
+  !insertmacro MUI_LANGUAGEFILE_UNLANGSTRING_PAGE INSTFILES "MUI_UNTEXT_UNINSTALLING_SUBTITLE"
+
+  !insertmacro MUI_LANGUAGEFILE_UNLANGSTRING_PAGE INSTFILES "MUI_UNTEXT_FINISH_TITLE"
+  !insertmacro MUI_LANGUAGEFILE_UNLANGSTRING_PAGE INSTFILES "MUI_UNTEXT_FINISH_SUBTITLE"
+
+  !insertmacro MUI_LANGUAGEFILE_UNLANGSTRING_PAGE INSTFILES "MUI_UNTEXT_ABORT_TITLE"
+  !insertmacro MUI_LANGUAGEFILE_UNLANGSTRING_PAGE INSTFILES "MUI_UNTEXT_ABORT_SUBTITLE"
+
+  !insertmacro MUI_LANGUAGEFILE_UNLANGSTRING_PAGE FINISH "MUI_UNTEXT_FINISH_INFO_TITLE"
+  !insertmacro MUI_LANGUAGEFILE_UNLANGSTRING_PAGE FINISH "MUI_UNTEXT_FINISH_INFO_TEXT"
+  !insertmacro MUI_LANGUAGEFILE_UNLANGSTRING_PAGE FINISH "MUI_UNTEXT_FINISH_INFO_REBOOT"
+
+  !insertmacro MUI_LANGUAGEFILE_LANGSTRING_DEFINE MUI_UNABORTWARNING "MUI_UNTEXT_ABORTWARNING"
+
+!macroend
+
+!macro createShortcutsINI
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Settings" NumFields "4"
+
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 1" Type "label"
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 1" Text "$(CREATE_ICONS_DESC)"
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 1" Left   "0"
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 1" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 1" Top    "5"
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 1" Bottom "15"
+
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 2" Type "checkbox"
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 2" Text "$(ICONS_DESKTOP)"
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 2" Left   "15"
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 2" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 2" Top    "20"
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 2" Bottom "30"
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 2" State "1"
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 2" Flags "GROUP"
+
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 3" Type "checkbox"
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 3" Text "$(ICONS_STARTMENU)"
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 3" Left   "15"
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 3" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 3" Top    "40"
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 3" Bottom "50"
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 3" State "1"
+
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 4" Type "checkbox"
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 4" Text "$(ICONS_QUICKLAUNCH)"
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 4" Left   "15"
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 4" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 4" Top    "60"
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 4" Bottom "70"
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 4" State "1"
+!macroend
+
+!macro createBasicCustomOptionsINI
+  WriteINIStr "$PLUGINSDIR\options.ini" "Settings" NumFields "5"
+
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 1" Type "label"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 1" Text "$(OPTIONS_SUMMARY)"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 1" Left   "0"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 1" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 1" Top    "0"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 1" Bottom "10"
+
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 2" Type "RadioButton"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 2" Text "$(OPTION_STANDARD_RADIO)"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 2" Left   "15"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 2" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 2" Top    "25"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 2" Bottom "35"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 2" State "1"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 2" Flags "GROUP"
+
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 3" Type "RadioButton"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 3" Text "$(OPTION_CUSTOM_RADIO)"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 3" Left   "15"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 3" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 3" Top    "55"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 3" Bottom "65"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 3" State "0"
+
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 4" Type "label"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 4" Text "$(OPTION_STANDARD_DESC)"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 4" Left   "30"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 4" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 4" Top    "37"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 4" Bottom "57"
+
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 5" Type "label"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 5" Text "$(OPTION_CUSTOM_DESC)"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 5" Left   "30"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 5" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 5" Top    "67"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 5" Bottom "87"
+!macroend
+
+!macro createBasicCompleteCustomOptionsINI
+  WriteINIStr "$PLUGINSDIR\options.ini" "Settings" NumFields "7"
+
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 1" Type "label"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 1" Text "$(OPTIONS_DESC)"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 1" Left   "0"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 1" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 1" Top    "0"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 1" Bottom "10"
+
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 2" Type "RadioButton"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 2" Text "$(OPTION_STANDARD_RADIO)"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 2" Left   "15"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 2" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 2" Top    "25"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 2" Bottom "35"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 2" State "1"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 2" Flags "GROUP"
+
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 3" Type "RadioButton"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 3" Text "$(OPTION_COMPLETE_RADIO)"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 3" Left   "15"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 3" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 3" Top    "55"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 3" Bottom "65"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 3" State "0"
+
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 4" Type "RadioButton"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 4" Text "$(OPTION_CUSTOM_RADIO)"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 4" Left   "15"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 4" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 4" Top    "85"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 4" Bottom "95"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 4" State "0"
+
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 5" Type "label"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 5" Text "$(OPTION_STANDARD_DESC)"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 5" Left   "30"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 5" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 5" Top    "37"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 5" Bottom "57"
+
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 6" Type "label"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 6" Text "$(OPTION_COMPLETE_DESC)"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 6" Left   "30"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 6" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 6" Top    "67"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 6" Bottom "87"
+
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 7" Type "label"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 7" Text "$(OPTION_CUSTOM_DESC)"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 7" Left   "30"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 7" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 7" Top    "97"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 7" Bottom "117"
+!macroend
+
 !macro GetParentDir
    Exch $R0
    Push $R1
@@ -121,9 +381,10 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
 
   ClearErrors
   GetFullPathName $R8 $R0
-  IfErrors 0 +2
+  IfErrors +2 0
   StrCpy $R0 $R8
 
+  ClearErrors
   Pop $R9
   Pop $R8
   Exch $R0
@@ -185,7 +446,6 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
   FileWrite $fhUninstallLog "${_MSG}$\r$\n"
 !macroend
 !define LogUninstall "!insertmacro LogUninstall"
-
 
 /**
  * Common installer macros used by toolkit applications.

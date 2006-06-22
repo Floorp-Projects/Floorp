@@ -55,6 +55,15 @@
 ; When installing with defaults we should always install into the previous location
 ; ReadRegStr $0 HKCR "http\shell\open\command" ""
 
+; Sets program access and defaults - hide / show shortcuts on the Desktop and in
+; QuickLaunch. This is a royal PITA since the application version can change out
+; from under us and there may also be more than one version of the application
+; installed. This also needs to respect whether the shortcuts have been modified
+; since their initial creation and take into account whether the shortcut is
+; located in all users or the current user desktop.
+; To remove a shortcut it must point to this installation main executable and it
+; must not have additional arguments.
+; To create a shortcut a shortcut must not already exist with the same name.
 Function un.SetAccess
   Call un.GetParameters
   Pop $R0
@@ -64,25 +73,32 @@ Function un.SetAccess
 
   ; Hide icons - initiated from Set Program Access and Defaults
   ${If} $R0 == '/ua "${AppVersion} (${AB_CD})" /hs browser'
-    ${If} ${FileExists} "$QUICKLAUNCH\${BrandFullName}.lnk"
-      ShellLink::GetShortCutTarget "$QUICKLAUNCH\${BrandFullName}.lnk"
-      Pop $0
-      ${If} $0 == "$INSTDIR\${FileMainEXE}"
-        Delete "$QUICKLAUNCH\${BrandFullName}.lnk"
-        WriteRegDWORD HKLM $R1 "IconsVisible" 0
-      ${EndIf}
-    ${EndIf}
-
+    WriteRegDWORD HKLM $R1 "IconsVisible" 0
     ${Unless} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
       SetShellVarContext current  ; Set $DESKTOP to the current user's desktop
     ${EndUnless}
 
     ${If} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
-      ShellLink::GetShortCutTarget "$DESKTOP\${BrandFullName}.lnk"
+      ShellLink::GetShortCutArgs "$DESKTOP\${BrandFullName}.lnk"
       Pop $0
-      ${If} $0 == "$INSTDIR\${FileMainEXE}"
-        Delete "$DESKTOP\${BrandFullName}.lnk"
-        WriteRegDWORD HKLM $R1 "IconsVisible" 0
+      ${If} $0 == ""
+        ShellLink::GetShortCutTarget "$DESKTOP\${BrandFullName}.lnk"
+        Pop $0
+        ${If} $0 == "$INSTDIR\${FileMainEXE}"
+          Delete "$DESKTOP\${BrandFullName}.lnk"
+        ${EndIf}
+      ${EndIf}
+    ${EndIf}
+
+    ${If} ${FileExists} "$QUICKLAUNCH\${BrandFullName}.lnk"
+      ShellLink::GetShortCutArgs "$QUICKLAUNCH\${BrandFullName}.lnk"
+      Pop $0
+      ${If} $0 == ""
+        ShellLink::GetShortCutTarget "$QUICKLAUNCH\${BrandFullName}.lnk"
+        Pop $0
+        ${If} $0 == "$INSTDIR\${FileMainEXE}"
+          Delete "$QUICKLAUNCH\${BrandFullName}.lnk"
+        ${EndIf}
       ${EndIf}
     ${EndIf}
     Abort
@@ -91,17 +107,20 @@ Function un.SetAccess
   ; Show icons - initiated from Set Program Access and Defaults
   ${If} $R0 == '/ua "${AppVersion} (${AB_CD})" /ss browser'
     WriteRegDWORD HKLM $R1 "IconsVisible" 1
-    ${Unless} ${FileExists} "$QUICKLAUNCH\${BrandFullName}.lnk"
-      CreateShortCut "$QUICKLAUNCH\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
-    ${EndUnless}
     ${Unless} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
       CreateShortCut "$DESKTOP\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
+      ShellLink::SetShortCutWorkingDirectory "$DESKTOP\${BrandFullName}.lnk" "$INSTDIR"
       ${Unless} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
         SetShellVarContext current  ; Set $DESKTOP to the current user's desktop
         ${Unless} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
           CreateShortCut "$DESKTOP\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
+          ShellLink::SetShortCutWorkingDirectory "$DESKTOP\${BrandFullName}.lnk" "$INSTDIR"
         ${EndUnless}
       ${EndUnless}
+    ${EndUnless}
+    ${Unless} ${FileExists} "$QUICKLAUNCH\${BrandFullName}.lnk"
+      CreateShortCut "$QUICKLAUNCH\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
+      ShellLink::SetShortCutWorkingDirectory "$QUICKLAUNCH\${BrandFullName}.lnk" "$INSTDIR"
     ${EndUnless}
     Abort
   ${EndIf}

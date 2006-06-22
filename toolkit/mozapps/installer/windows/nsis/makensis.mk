@@ -46,9 +46,7 @@ endif
 
 TOOLKIT_NSIS_FILES = \
 	common.nsh \
-	installer.nsi \
-	options.ini \
-	shortcuts.ini \
+	locales.nsi \
 	ShellLink.dll \
 	version.nsh \
 	$(NULL)
@@ -56,7 +54,6 @@ TOOLKIT_NSIS_FILES = \
 installer::
 	$(INSTALL) $(addprefix $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/,$(TOOLKIT_NSIS_FILES)) $(CONFIG_DIR)
 	$(INSTALL) $(topsrcdir)/toolkit/mozapps/installer/windows/wizard/setuprsc/setup.ico $(CONFIG_DIR)
-	$(INSTALL) $(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/installer/windows/commonLocale.nsh $(CONFIG_DIR)
 	cd $(CONFIG_DIR) && makensis.exe installer.nsi
 	$(INSTALL) $(CONFIG_DIR)/removed-files.log $(CONFIG_DIR)/setup.exe $(DEPTH)/installer-stage
 	cd $(DEPTH)/installer-stage && $(CYGWIN_WRAPPER) 7z a -r -t7z $(CONFIG_DIR)/app.7z -mx -m0=BCJ2 -m1=LZMA:d24 -m2=LZMA:d19 -m3=LZMA:d19  -mb0:1 -mb0s1:2 -mb0s2:3
