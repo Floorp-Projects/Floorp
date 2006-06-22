@@ -33,6 +33,7 @@ use strict;
 
 use Litmus;
 use Litmus::Auth;
+use Litmus::Cache;
 use Litmus::Error;
 use Litmus::FormWidget;
 use Litmus::Utils;
@@ -55,7 +56,7 @@ my $rv;
 if ($c->param("subgroup_id")) {
   $subgroup_id = $c->param("subgroup_id");
 }
-
+my $rebuild_cache = 0;
 if ($c->param("delete_subgroup_button")) {
   my $subgroup = Litmus::DB::Subgroup->retrieve($subgroup_id);
   if ($subgroup) {
@@ -63,6 +64,7 @@ if ($c->param("delete_subgroup_button")) {
     if ($rv) {
       $status = "success";
       $message = "Subgroup ID# $subgroup_id deleted successfully.";
+      $rebuild_cache = 1;
     } else {
       $status = "failure";
       $message = "Failed to delete Subgroup ID# $subgroup_id.";
@@ -77,6 +79,7 @@ if ($c->param("delete_subgroup_button")) {
   if ($new_subgroup) {
     $status = "success";
     $message = "Subgroup cloned successfully. New subgroup ID# is " . $new_subgroup->subgroup_id;
+    $rebuild_cache = 1;
   } else {
     $status = "failure";
     $message = "Failed to clone Subgroup ID# $subgroup_id.";
@@ -101,6 +104,7 @@ if ($c->param("delete_subgroup_button")) {
       $new_subgroup->update_testcases(\@selected_testcases);
       $status = "success";
       $message = "Subgroup added successfully. New subgroup ID# is " . $new_subgroup->subgroup_id;
+      $rebuild_cache = 1;
     } else {
       $status = "failure";
       $message = "Failed to add subgroup.";        
@@ -121,6 +125,7 @@ if ($c->param("delete_subgroup_button")) {
         $subgroup->update_testcases(\@selected_testcases);
         $status = "success";
 	$message = "Subgroup ID# $subgroup_id updated successfully.";
+        $rebuild_cache = 1;
       } else {
 	$status = "failure";
 	$message = "Failed to update subgroup ID# $subgroup_id.";        
@@ -138,6 +143,10 @@ if ($c->param("delete_subgroup_button")) {
 
 if ($status and $message) {
   $vars->{'onload'} = "toggleMessage('$status','$message');";
+}
+
+if ($rebuild_cache) {
+  rebuildCache();
 }
 
 my $subgroups = Litmus::FormWidget->getSubgroups;
