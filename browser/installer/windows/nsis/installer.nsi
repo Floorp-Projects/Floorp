@@ -74,6 +74,7 @@ CRCCheck on
 !insertmacro un.TrimNewLines
 !insertmacro WordFind
 !insertmacro WordReplace
+!insertmacro GetSize
 
 ; Use the pre-processor where ever possible
 ; Remember that !define's create smaller packages than Var's!
@@ -1153,14 +1154,30 @@ Function .onInit
   !insertmacro MUI_INSTALLOPTIONS_EXTRACT "shortcuts.ini"
   !insertmacro createShortcutsINI
   !insertmacro createBasicCustomOptionsINI
-  ; Hide DOMi in the components page if it isn't available
-  ${Unless} ${FileExists} "$EXEDIR\optional\extensions\inspector@mozilla.org"
+
+  ; There must always be nonlocalized and localized directories.
+  ${GetSize} "$EXEDIR\nonlocalized\" "/S=0K" $1 $8 $9
+  ${GetSize} "$EXEDIR\localized\" "/S=0K" $2 $8 $9
+  IntOp $0 $1 + $2
+  SectionSetSize 0 $0
+
+  ${If} ${FileExists} "$EXEDIR\optional\extensions\inspector@mozilla.org"
+    ; Set the section size for DOMi.
+    ${GetSize} "$EXEDIR\optional\extensions\inspector@mozilla.org" "/S=0K" $0 $8 $9
+    SectionSetSize 1 $0
+  ${Else}
+    ; Hide DOMi in the components page if it isn't available.
     SectionSetText 1 ""
-  ${EndUnless}
-  ; Hide Talkback in the components page if it isn't available
-  ${Unless} ${FileExists} "$EXEDIR\optional\extensions\talkback@mozilla.org"
+  ${EndIf}
+
+  ; Set the section size for Talkback only if it exists.
+  ${If} ${FileExists} "$EXEDIR\optional\extensions\talkback@mozilla.org"
+    ${GetSize} "$EXEDIR\optional\extensions\talkback@mozilla.org" "/S=0K" $0 $8 $9
+    SectionSetSize 2 $0
+  ${Else}
+    ; Hide Talkback in the components page if it isn't available.
     SectionSetText 2 ""
-  ${EndUnless}
+  ${EndIf}
 FunctionEnd
 
 Function un.onInit
