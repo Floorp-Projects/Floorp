@@ -1153,7 +1153,7 @@ nsXULDocument::GetElementsByAttribute(const nsAString& aAttribute,
                                             nsnull,
                                             PR_TRUE,
                                             attrAtom,
-                                            kNameSpaceID_None);
+                                            kNameSpaceID_Unknown);
     NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
 
     NS_ADDREF(*aReturn = list);
@@ -2014,11 +2014,34 @@ nsXULDocument::MatchAttribute(nsIContent* aContent,
                               const nsAString& aAttrValue)
 {
     NS_PRECONDITION(aContent, "Must have content node to work with!");
-  
-    return aAttrValue.EqualsLiteral("*") ?
-           aContent->HasAttr(aNamespaceID, aAttrName) :
-           aContent->AttrValueIs(aNamespaceID, aAttrName, aAttrValue,
-                                 eCaseMatters);
+
+    if (aNamespaceID != kNameSpaceID_Unknown) {
+        return aAttrValue.EqualsLiteral("*") ?
+            aContent->HasAttr(aNamespaceID, aAttrName) :
+            aContent->AttrValueIs(aNamespaceID, aAttrName, aAttrValue,
+                                  eCaseMatters);
+    }
+
+    // Qualified name match. This takes more work.
+
+    PRUint32 count = aContent->GetAttrCount();
+    for (PRUint32 i = 0; i < count; ++i) {
+        const nsAttrName* name = aContent->GetAttrNameAt(i);
+        PRBool nameMatch;
+        if (name->IsAtom()) {
+            nameMatch = name->Atom() == aAttrName;
+        } else {
+            nameMatch = name->NodeInfo()->QualifiedNameEquals(aAttrName);
+        }
+
+        if (nameMatch) {
+            return aAttrValue.EqualsLiteral("*") ||
+                aContent->AttrValueIs(name->NamespaceID(), name->LocalName(),
+                                      aAttrValue, eCaseMatters);
+        }
+    }
+
+    return PR_FALSE;
 }
 
 nsresult

@@ -505,7 +505,7 @@ nsXULElement::GetElementsByAttribute(const nsAString& aAttribute,
                           this,
                           PR_TRUE,
                           attrAtom,
-                          kNameSpaceID_None);
+                          kNameSpaceID_Unknown);
     NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
 
     NS_ADDREF(*aReturn = list);
