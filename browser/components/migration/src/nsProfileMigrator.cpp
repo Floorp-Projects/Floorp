@@ -261,34 +261,28 @@ nsProfileMigrator::GetDefaultBrowserMigratorKey(nsACString& aKey,
     aKey = "phoenix";
     return NS_OK;
   }
-
-  return NS_ERROR_FAILURE;
-
 #else
-  // XXXben - until we figure out what to do here with default browsers on MacOS and
-  // GNOME, simply copy data from a previous Seamonkey install. 
   PRBool exists = PR_FALSE;
-  bpm = do_CreateInstance(NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "phoenix");
-  if (bpm)
-    bpm->GetSourceExists(&exists);
-  if (exists)
-    aKey = "phoenix";
-  else {
-    bpm = do_CreateInstance(NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "seamonkey");
-    if (bpm)
-      bpm->GetSourceExists(&exists);
-    if (exists)
-      aKey = "seamonkey";
-    else {
-       bpm = do_CreateInstance(NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "opera");
-       if (bpm)
-         bpm->GetSourceExists(&exists);
-       if (exists)
-         aKey = "opera";
-    }
-  }
+#define CHECK_MIGRATOR(browser) do {\
+  bpm = do_CreateInstance(NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX browser);\
+  if (bpm)\
+    bpm->GetSourceExists(&exists);\
+  if (exists) {\
+    aKey = browser;\
+    return NS_OK;\
+  }} while(0)
+
+#if defined(XP_MACOSX)
+  CHECK_MIGRATOR("safari");
+  CHECK_MIGRATOR("macie");
 #endif
-  return NS_OK;
+  CHECK_MIGRATOR("phoenix");
+  CHECK_MIGRATOR("seamonkey");
+  CHECK_MIGRATOR("opera");
+
+#undef CHECK_MIGRATOR
+#endif
+  return NS_ERROR_FAILURE;
 }
 
 PRBool

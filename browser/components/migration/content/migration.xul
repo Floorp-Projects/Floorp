@@ -66,6 +66,9 @@
     <description id="importBookmarks" control="importSourceGroup" hidden="true">&importFromBookmarks.label;</description>
 
     <radiogroup id="importSourceGroup" align="start">
+      <!-- If you are adding a migrator, please add the appropriate
+           hooks to GetDefaultBrowserMigratorKey in
+           browser/components/migration/src/nsProfileMigrator.cpp -->
       <radio id="phoenix"   label="&importFromPhoenix.label;"   accesskey="&importFromPhoenix.accesskey;"/>
 #ifdef XP_UNIX
 #ifdef XP_MACOSX
