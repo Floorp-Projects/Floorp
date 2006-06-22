@@ -57,6 +57,7 @@ if ($c->param("subgroup_id")) {
   $subgroup_id = $c->param("subgroup_id");
 }
 my $rebuild_cache = 0;
+my $defaults;
 if ($c->param("delete_subgroup_button")) {
   my $subgroup = Litmus::DB::Subgroup->retrieve($subgroup_id);
   if ($subgroup) {
@@ -79,6 +80,7 @@ if ($c->param("delete_subgroup_button")) {
   if ($new_subgroup) {
     $status = "success";
     $message = "Subgroup cloned successfully. New subgroup ID# is " . $new_subgroup->subgroup_id;
+    $defaults->{'subgroup_id'} = $new_subgroup->subgroup_id;
     $rebuild_cache = 1;
   } else {
     $status = "failure";
@@ -104,6 +106,7 @@ if ($c->param("delete_subgroup_button")) {
       $new_subgroup->update_testcases(\@selected_testcases);
       $status = "success";
       $message = "Subgroup added successfully. New subgroup ID# is " . $new_subgroup->subgroup_id;
+      $defaults->{'subgroup_id'} = $new_subgroup->subgroup_id;
       $rebuild_cache = 1;
     } else {
       $status = "failure";
@@ -125,6 +128,7 @@ if ($c->param("delete_subgroup_button")) {
         $subgroup->update_testcases(\@selected_testcases);
         $status = "success";
 	$message = "Subgroup ID# $subgroup_id updated successfully.";
+        $defaults->{'subgroup_id'} = $subgroup_id;
         $rebuild_cache = 1;
       } else {
 	$status = "failure";
@@ -136,8 +140,10 @@ if ($c->param("delete_subgroup_button")) {
     }
   } 
 } else {
-  my $defaults;
   $defaults->{'subgroup_id'} = $c->param("subgroup_id");
+}
+
+if ($defaults) {
   $vars->{'defaults'} = $defaults;  
 }
 

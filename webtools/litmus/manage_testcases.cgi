@@ -57,6 +57,7 @@ if ($c->param("testcase_id")) {
 }
 
 my $rebuild_cache = 0;
+my $defaults;
 if ($c->param("delete_testcase_button")) {
   my $testcase = Litmus::DB::Testcase->retrieve($testcase_id);
   if ($testcase) {
@@ -79,6 +80,7 @@ if ($c->param("delete_testcase_button")) {
   if ($new_testcase) {
     $status = "success";
     $message = "Testcase cloned successfully. New testcase ID# is " . $new_testcase->testcase_id;
+    $defaults->{'testcase_id'} = $new_testcase->testcase_id;
     $rebuild_cache=1;
   } else {
     $status = "failure";
@@ -113,6 +115,7 @@ if ($c->param("delete_testcase_button")) {
       $new_testcase->update_subgroups(\@selected_subgroups);
       $status = "success";
       $message = "Testcase added successfully. New testcase ID# is " . $new_testcase->testcase_id;
+      $defaults->{'testcase_id'} = $new_testcase->testcase_id;
       $rebuild_cache=1;
     } else {
       $status = "failure";
@@ -140,6 +143,7 @@ if ($c->param("delete_testcase_button")) {
         $testcase->update_subgroups(\@selected_subgroups);
         $status = "success";
 	$message = "Testcase ID# $testcase_id updated successfully.";
+        $defaults->{'testcase_id'} = $testcase_id;
         $rebuild_cache=1;
       } else {
 	$status = "failure";
@@ -151,9 +155,11 @@ if ($c->param("delete_testcase_button")) {
     }
   } 
 } else {
-  my $defaults;
   $defaults->{'testcase_id'} = $c->param("testcase_id");
-  $vars->{'defaults'} = $defaults;  
+}
+
+if ($defaults) {
+  $vars->{'defaults'} = $defaults;
 }
 
 if ($status and $message) {
