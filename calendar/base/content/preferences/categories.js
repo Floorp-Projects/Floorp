@@ -187,14 +187,13 @@ var gCategoriesPane = {
             }
         }
 
-       // If 'Overwrite' was chosen, delete category that was being edited
-       if (toBeDeleted != -1) {
-           list.selectedIndex = toBeDeleted;
-           this.deleteCategory();
-       }
+        // If 'Overwrite' was chosen, delete category that was being edited
+        if (toBeDeleted != -1) {
+            list.selectedIndex = toBeDeleted;
+            this.deleteCategory();
+        }
 
-       this.updateCategoryList();
-
+        this.updateCategoryList();
     },
 
     fixName: function (categoryName) {
@@ -204,8 +203,8 @@ var gCategoriesPane = {
     },
 
     enableButtons: function () {
-        document.getElementById("editCButton").disabled=null;
-        document.getElementById("deleteCButton").disabled=null;
+        document.getElementById("editCButton").disabled = null;
+        document.getElementById("deleteCButton").disabled = null;
     },
 
     backupData: function (categoryNameFix) {
@@ -213,12 +212,13 @@ var gCategoriesPane = {
         try {
             currentColor = categoryPrefBranch.getCharPref(categoryNameFix);
         } catch (ex) {
-            currentColor="##NEW";
+            currentColor = "##NEW";
         }
 
         for (var i=0; i < parent.backupPrefList.length; i++) {
-            if (categoryNameFix == parent.backupPrefList[i].name)
+            if (categoryNameFix == parent.backupPrefList[i].name) {
                 return;
+            }
         }
         parent.backupPrefList[parent.backupPrefList.length] =
             { name : categoryNameFix, color : currentColor };
