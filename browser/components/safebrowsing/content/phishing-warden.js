@@ -502,8 +502,10 @@ PROT_PhishingWarden.prototype.checkRemoteData = function(callback,
  * @returns Boolean indicating whether Fritz thinks it's too boring to notice
  */ 
 PROT_PhishingWarden.prototype.isSpurious_ = function(url) {
-  return (url.startsWith("about:") ||
+  return (url == "about:blank" ||
+          url == "about:config" ||  
           url.startsWith("chrome://") ||
           url.startsWith("file://") ||
+          url.startsWith("jar:") ||
           url.startsWith("javascript:"));
 }
