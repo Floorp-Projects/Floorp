@@ -596,11 +596,10 @@ nsIncrementalDownload::OnStartRequest(nsIRequest *request,
         NS_WARNING("server returned no content-length header!");
         return NS_ERROR_UNEXPECTED;
       }
-      // Need to truncate the file since we are downloading the whole thing.
-      if (mCurrentSize != nsInt64(0)) {
-        WriteToFile(mDest, nsnull, 0, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE);
-        mCurrentSize = 0;
-      }
+      // Need to truncate (or create, if it doesn't exist) the file since we
+      // are downloading the whole thing.
+      WriteToFile(mDest, nsnull, 0, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE);
+      mCurrentSize = 0;
     }
 
     // Notify observer that we are starting...
