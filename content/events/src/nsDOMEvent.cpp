@@ -270,7 +270,11 @@ nsDOMEvent::SetTrusted(PRBool aTrusted)
 NS_IMETHODIMP
 nsDOMEvent::GetEventPhase(PRUint16* aEventPhase)
 {
-  if (mEvent->currentTarget == mEvent->target) {
+  // Note, remember to check that this works also
+  // if or when Bug 235441 is fixed.
+  if (mEvent->currentTarget == mEvent->target ||
+      ((mEvent->flags & NS_EVENT_FLAG_CAPTURE) &&
+       (mEvent->flags & NS_EVENT_FLAG_BUBBLE))) {
     *aEventPhase = nsIDOMEvent::AT_TARGET;
   } else if (mEvent->flags & NS_EVENT_FLAG_CAPTURE) {
     *aEventPhase = nsIDOMEvent::CAPTURING_PHASE;
