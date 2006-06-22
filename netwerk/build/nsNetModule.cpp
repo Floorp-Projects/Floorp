@@ -989,7 +989,7 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
     },
     { NS_SAFEABOUTPROTOCOLHANDLER_CLASSNAME,
       NS_SAFEABOUTPROTOCOLHANDLER_CID,
-      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "safe-about", 
+      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "moz-safe-about", 
       nsSafeAboutProtocolHandlerConstructor
     },
     { "about:blank", 
