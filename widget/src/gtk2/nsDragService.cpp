@@ -133,7 +133,10 @@ nsDragService::Observe(nsISupports *aSubject, const char *aTopic,
   if (!nsCRT::strcmp(aTopic, "quit-application")) {
     PR_LOG(sDragLm, PR_LOG_DEBUG,
            ("nsDragService::Observe(\"quit-application\")"));
-    gtk_widget_destroy(mHiddenWidget);
+    if (mHiddenWidget) {
+      gtk_widget_destroy(mHiddenWidget);
+      mHiddenWidget = 0;
+    }
     TargetResetData();
   } else {
     NS_NOTREACHED("unexpected topic");
