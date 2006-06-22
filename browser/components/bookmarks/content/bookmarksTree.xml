@@ -892,6 +892,22 @@
                 </treeitem>
               </treechildren>
             </rule>
+            <rule rdf:type="http://home.netscape.com/NC-rdf#MicsumBookmark">
+              <treechildren>
+                <treeitem uri="rdf:*">
+                  <treerow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
+                    <treecell src="rdf:http://home.netscape.com/NC-rdf#Icon"
+                              label="rdf:http://home.netscape.com/NC-rdf#GeneratedTitle"/>
+                    <treecell label="rdf:http://home.netscape.com/NC-rdf#URL" />
+                    <treecell label="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" />
+                    <treecell label="rdf:http://home.netscape.com/NC-rdf#Description" />
+                    <treecell label="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate" />
+                    <treecell label="rdf:http://home.netscape.com/WEB-rdf#LastModifiedDate" />
+                    <treecell label="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate"/>
+                  </treerow>
+                </treeitem>
+              </treechildren>
+            </rule>
             <rule>
               <treechildren>
                 <treeitem uri="rdf:*">
@@ -984,6 +1000,16 @@
               <treeitem uri="rdf:*">
                 <treerow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type separator">
                   <treecell properties="separator" label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                </treerow>
+              </treeitem>
+            </treechildren>
+          </rule>
+          <rule rdf:type="http://home.netscape.com/NC-rdf#MicsumBookmark">
+            <treechildren>
+              <treeitem uri="rdf:*">
+                <treerow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
+                  <treecell src="rdf:http://home.netscape.com/NC-rdf#Icon"
+                            label="rdf:http://home.netscape.com/NC-rdf#GeneratedTitle"/>
                 </treerow>
               </treeitem>
             </treechildren>
