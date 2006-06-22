@@ -69,6 +69,10 @@ function onLoad()
   setText("intro", intro);
   setText("reason3", reason3);
   setText("question", question);
+  
+  // Focus the accept button explicitly, because the dialog onLoad handler
+  // focuses the first focusable element in the dialog, which is the "View
+  // Certificate" button.
   document.documentElement.getButton("accept").focus();
 }
 

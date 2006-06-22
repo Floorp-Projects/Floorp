@@ -49,6 +49,7 @@
   buttonlabelaccept="&serverCertExpired.accept.label;"
   buttonlabelextra2="&examineCert.label;"
   buttonaccesskeyextra2="&examineCert.accesskey;"
+  defaultButton="accept"
   ondialogaccept="return doOK();"
   ondialogcancel="return doCancel();"
   ondialoghelp="openHelp('exp_web_cert');"
