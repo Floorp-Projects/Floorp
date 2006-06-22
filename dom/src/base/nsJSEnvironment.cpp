@@ -1577,7 +1577,12 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
     PRUint32 argc = 0;
     jsval *argv = nsnull;
 
-    rv = ConvertSupportsTojsvals(aargv, aScope, &argc,
+    // Use |target| as the scope for wrapping the arguments, since aScope is
+    // the safe scope in many cases, which isn't very useful.  Wrapping aTarget
+    // was OK because those typically have PreCreate methods that give them the
+    // right scope anyway, and we want to make sure that the arguments end up
+    // in the same scope as aTarget.
+    rv = ConvertSupportsTojsvals(aargv, target, &argc,
                                  NS_REINTERPRET_CAST(void **, &argv), &mark);
     NS_ENSURE_SUCCESS(rv, rv);
   
