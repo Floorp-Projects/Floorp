@@ -86,7 +86,7 @@ SVRCORE_TAG=SVRCORE_4_0_2_RTM
 SVRCORE_CORECONF_TAG=$SVRCORE_TAG
 PRJ=${PACKAGE}-${VERSION}
 RPM_HOME=`pwd`
-SPEC_FILENAME=svrcore-devel.spec
+SPEC_FILENAME=${PACKAGE}.spec
 
 # define subroutines for this script
 usage() {
@@ -133,9 +133,6 @@ mkdirs BUILD
 if [ ! -d ${RPM_HOME}/RPMS ]; then
 	mkdirs ${RPM_HOME}/RPMS
 fi
-if [ ! -d ${RPM_HOME}/SGTARS ]; then
-	mkdirs ${RPM_HOME}/SGTARS
-fi
 mkdirs SOURCES SPECS
 if [ ! -d ${RPM_HOME}/SRPMS ]; then
 	mkdirs ${RPM_HOME}/SRPMS
@@ -168,9 +165,9 @@ cp ${SPEC_FILENAME} SPECS/${SPEC_FILENAME}
 # build the ${BITSIZE} RPM and Source RPM
 echo "Executing ${BITSIZE} rpmbuild of ${SPEC_FILENAME} file . . . "
 if [ ! -f SRPMS/${PACKAGE}-${VERSION}-${RELEASE}.src.rpm ]; then
-	rpmbuild --define="_topdir ${RPM_HOME}" --target ${PLATFORM} -ba --clean --rmsource --rmspec SPECS/${SPEC_FILENAME}
+	rpmbuild --define="_topdir ${RPM_HOME}" --target ${PLATFORM} -ba --clean --rmspec SPECS/${SPEC_FILENAME}
 else
-	rpmbuild --define="_topdir ${RPM_HOME}" --target ${PLATFORM} -bb --clean --rmsource --rmspec SPECS/${SPEC_FILENAME}
+	rpmbuild --define="_topdir ${RPM_HOME}" --target ${PLATFORM} -bb --clean --rmspec SPECS/${SPEC_FILENAME}
 fi
 echo "Finished doing ${BITSIZE} rpmbuild of ${SPEC_FILENAME} file."
 
@@ -180,11 +177,11 @@ if [ -d ${RPM_HOME}/BUILD ]; then
 fi
 echo "Finished."
 
-echo "Removing SOURCES directory . . ."
-if [ -d ${RPM_HOME}/SOURCES ]; then
-	rm -rf ${RPM_HOME}/SOURCES
-fi
-echo "Finished."
+#echo "Removing SOURCES directory . . ."
+#if [ -d ${RPM_HOME}/SOURCES ]; then
+#	rm -rf ${RPM_HOME}/SOURCES
+#fi
+#echo "Finished."
 
 echo "Removing SPECS directory . . ."
 if [ -d ${RPM_HOME}/SPECS ]; then
