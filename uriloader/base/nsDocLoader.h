@@ -184,6 +184,15 @@ protected:
     void doStopURLLoad(nsIRequest *request, nsresult aStatus);
     void doStopDocumentLoad(nsIRequest *request, nsresult aStatus);
 
+    // Inform a parent docloader that aChild is about to call its onload
+    // handler.
+    PRBool ChildEnteringOnload(nsIDocumentLoader* aChild) {
+        // It's ok if we're already in the list -- we'll just be in there twice
+        // and then the RemoveObject calls from ChildDoneWithOnload will remove
+        // us.
+        return mChildrenInOnload.AppendObject(aChild);
+    }
+
 protected:
     // IMPORTANT: The ownership implicit in the following member
     // variables has been explicitly checked and set using nsCOMPtr
@@ -233,15 +242,6 @@ private:
     // This method is idempotent and does nothing if the docloader is not in
     // fact empty.
     void DocLoaderIsEmpty();
-
-    // Inform a parent docloader that aChild is about to call its onload
-    // handler.
-    PRBool ChildEnteringOnload(nsIDocumentLoader* aChild) {
-        // It's ok if we're already in the list -- we'll just be in there twice
-        // and then the RemoveObject calls from ChildDoneWithOnload will remove
-        // us.
-        return mChildrenInOnload.AppendObject(aChild);
-    }
 
     // Inform a parent docloader that aChild is done calling its onload
     // handler.
