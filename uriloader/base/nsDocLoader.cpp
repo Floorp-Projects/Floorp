@@ -310,6 +310,12 @@ nsDocLoader::Stop(void)
   if (mLoadGroup)
     rv = mLoadGroup->Cancel(NS_BINDING_ABORTED);
 
+  // Clear out mChildrenInOnload.  We want to make sure to fire our
+  // onload at this point, and there's no issue with mChildrenInOnload
+  // after this, since mDocumentRequest will be null after the
+  // DocLoaderIsEmpty() call.
+  mChildrenInOnload.Clear();
+
   // Make sure to call DocLoaderIsEmpty now so that we reset mDocumentRequest,
   // etc, as needed.  We could be getting into here from a subframe onload, in
   // which case the call to DocLoaderIsEmpty() is coming but hasn't quite
@@ -319,6 +325,8 @@ nsDocLoader::Stop(void)
 
   // XXXbz If the child frame loadgroups were requests in mLoadgroup, I suspect
   // we wouldn't need the call here....
+
+  NS_ASSERTION(!IsBusy(), "Shouldn't be busy here");
   DocLoaderIsEmpty();
   
   return rv;
@@ -333,9 +341,15 @@ nsDocLoader::IsBusy()
   //
   // A document loader is busy if either:
   //
-  //   1. It is currently loading a document (ie. one or more URIs)
-  //   2. One of it's child document loaders is busy...
+  //   1. One of its children is in the middle of an onload handler.  Note that
+  //      the handler may have already removed this child from mChildList!
+  //   2. It is currently loading a document (ie. one or more URIs)
+  //   3. One of it's child document loaders is busy...
   //
+
+  if (mChildrenInOnload.Count()) {
+    return PR_TRUE;
+  }
 
   /* Is this document loader busy? */
   if (mIsLoadingDocument) {
@@ -733,16 +747,20 @@ void nsDocLoader::DocLoaderIsEmpty()
       // Take a ref to our parent now so that we can call DocLoaderIsEmpty() on
       // it even if our onload handler removes us from the docloader tree.
       nsRefPtr<nsDocLoader> parent = mParent;
-      
-      //
-      // Do nothing after firing the OnEndDocumentLoad(...). The document
-      // loader may be loading a *new* document - if LoadDocument()
-      // was called from a handler!
-      //
-      doStopDocumentLoad(docRequest, loadGroupStatus);
 
-      if (parent) {
-        parent->DocLoaderIsEmpty();
+      // Note that if calling ChildEnteringOnload() on the parent returns false
+      // then calling our onload handler is not safe.  That can only happen on
+      // OOM, so that's ok.
+      if (!parent || parent->ChildEnteringOnload(this)) {
+        // Do nothing with our state after firing the
+        // OnEndDocumentLoad(...). The document loader may be loading a *new*
+        // document - if LoadDocument() was called from a handler!
+        //
+        doStopDocumentLoad(docRequest, loadGroupStatus);
+
+        if (parent) {
+          parent->ChildDoneWithOnload(this);
+        }
       }
     }
   }
