@@ -2018,13 +2018,13 @@ function SendUnsentMessages()
 function CoalesceGetMsgsForPop3ServersByDestFolder(currentServer, pop3DownloadServersArray, localFoldersToDownloadTo)
 {
   var outNumFolders = new Object();
-  var inboxFolder = currentServer.rootMsgFolder.getFoldersWithFlag(0x1000, 1, outNumFolders); 
-  pop3Server = currentServer.QueryInterface(Components.interfaces.nsIPop3IncomingServer);
+  var inboxFolder = currentServer.rootMsgFolder.getFoldersWithFlag(0x1000, 1, outNumFolders);
+  var pop3Server = currentServer.QueryInterface(Components.interfaces.nsIPop3IncomingServer);
   // coalesce the servers that download into the same folder...
   var index = localFoldersToDownloadTo.GetIndexOf(inboxFolder);
   if (index == -1)
   {
-    if(inboxFolder) 
+    if(inboxFolder)
     {
       inboxFolder.biffState =  Components.interfaces.nsIMsgFolder.nsMsgBiffState_NoMail;
       inboxFolder.clearNewMessages();
