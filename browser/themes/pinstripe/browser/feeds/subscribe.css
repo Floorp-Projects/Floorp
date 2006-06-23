@@ -205,10 +205,6 @@ a[href] img {
   -moz-padding-start: 4px;
 }
 
-#chooseClientApp {
-  font-size: 80%;
-}
-
 #application {
   border-bottom: 1px solid ThreeDShadow;
 }
