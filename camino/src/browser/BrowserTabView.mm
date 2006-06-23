@@ -492,7 +492,6 @@ NSString* const kTabBarBackgroundDoubleClickedNotification = @"kTabBarBackground
 
 - (void)setJumpbackTab:(BrowserTabViewItem*)inTab
 {
-NSLog(@"setting jumpback to %d", inTab);
   mJumpbackTab = inTab;
 }
 
