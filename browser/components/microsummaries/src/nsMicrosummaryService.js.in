@@ -655,6 +655,11 @@ MicrosummaryService.prototype = {
                         this._resource(FIELD_RDF_TYPE),
                         this._resource(VALUE_MICSUM_BOOKMARK),
                         this._resource(VALUE_NORMAL_BOOKMARK));
+
+    // If we're clearing a field that could affect this bookmark's label,
+    // then force all bookmark trees to rebuild from scratch.
+    if (fieldName == FIELD_MICSUM_GEN_URI || fieldName == FIELD_GENERATED_TITLE)
+      this._forceBookmarkTreesRebuild();
   },
 
   _hasField: function MSS__hasField(bookmarkID, fieldName) {
