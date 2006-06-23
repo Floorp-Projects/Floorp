@@ -451,6 +451,7 @@ static const char kDOMStringBundleURL[] =
 
 #define NODE_SCRIPTABLE_FLAGS                                                 \
  ((GCPARTICIPANT_SCRIPTABLE_FLAGS |                                           \
+   nsIXPCScriptable::WANT_GETPROPERTY |                                       \
    nsIXPCScriptable::WANT_PRECREATE |                                         \
    nsIXPCScriptable::WANT_ADDPROPERTY |                                       \
    nsIXPCScriptable::WANT_SETPROPERTY) &                                      \
@@ -1240,6 +1241,9 @@ jsval nsDOMClassInfo::sAdd_id             = JSVAL_VOID;
 jsval nsDOMClassInfo::sAll_id             = JSVAL_VOID;
 jsval nsDOMClassInfo::sTags_id            = JSVAL_VOID;
 jsval nsDOMClassInfo::sAddEventListener_id= JSVAL_VOID;
+jsval nsDOMClassInfo::sBaseURIObject_id   = JSVAL_VOID;
+jsval nsDOMClassInfo::sNodePrincipal_id   = JSVAL_VOID;
+jsval nsDOMClassInfo::sDocumentURIObject_id=JSVAL_VOID;
 
 const JSClass *nsDOMClassInfo::sObjectClass = nsnull;
 const JSClass *nsDOMClassInfo::sXPCNativeWrapperClass = nsnull;
@@ -1428,6 +1432,9 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSVAL_TO_STRING(sAll_id,             cx, "all");
   SET_JSVAL_TO_STRING(sTags_id,            cx, "tags");
   SET_JSVAL_TO_STRING(sAddEventListener_id,cx, "addEventListener");
+  SET_JSVAL_TO_STRING(sBaseURIObject_id,   cx, "baseURIObject");
+  SET_JSVAL_TO_STRING(sNodePrincipal_id,   cx, "nodePrincipal");
+  SET_JSVAL_TO_STRING(sDocumentURIObject_id,cx,"documentURIObject");
 
   return NS_OK;
 }
@@ -3765,6 +3772,13 @@ nsDOMClassInfo::ShutDown()
   sFrames_id          = JSVAL_VOID;
   sSelf_id            = JSVAL_VOID;
   sOpener_id          = JSVAL_VOID;
+  sAdd_id             = JSVAL_VOID;
+  sAll_id             = JSVAL_VOID;
+  sTags_id            = JSVAL_VOID;
+  sAddEventListener_id= JSVAL_VOID;
+  sBaseURIObject_id   = JSVAL_VOID;
+  sNodePrincipal_id   = JSVAL_VOID;
+  sDocumentURIObject_id=JSVAL_VOID;
 
   NS_IF_RELEASE(sXPConnect);
   NS_IF_RELEASE(sSecMan);
@@ -5181,6 +5195,23 @@ nsDOMClassInfo::PreserveNodeWrapper(nsIXPConnectWrappedNative *aWrapper,
   if (!participant)
     // nsJSContext::PreserveWrapper needs us to null-check
     return NS_OK;
+
+#ifdef DEBUG
+  nsCOMPtr<nsIClassInfo> info = do_QueryInterface(participant);
+  NS_ASSERTION(info, "Must have classinfo");
+
+  nsCOMPtr<nsISupports> sup;
+  info->GetHelperForLanguage(nsIProgrammingLanguage::JAVASCRIPT,
+                             getter_AddRefs(sup));
+
+  nsCOMPtr<nsIXPCScriptable> scriptable = do_QueryInterface(sup);
+  NS_ASSERTION(scriptable, "Must have scriptable");
+
+  PRUint32 flags;
+  scriptable->GetScriptableFlags(&flags);
+  NS_ASSERTION(flags & nsIXPCScriptable::WANT_FINALIZE,
+               "We'll never get cleaned up!");
+#endif
 
   return nsDOMClassInfo::PreserveWrapper(aWrapper, IdentityKeyToWrapperFunc,
                                          participant,
@@ -6622,6 +6653,44 @@ nsNavigatorSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
 
 // DOM Node helper
 
+PRBool
+nsNodeSH::IsCapabilityEnabled(const char* aCapability)
+{
+  PRBool enabled;
+  return sSecMan &&
+    NS_SUCCEEDED(sSecMan->IsCapabilityEnabled(aCapability, &enabled)) &&
+    enabled;
+}
+
+nsresult
+nsNodeSH::DefineVoidProp(JSContext* cx, JSObject* obj, jsval id,
+                         JSObject** objp)
+{
+  NS_ASSERTION(JSVAL_IS_STRING(id), "id must be a string");
+
+  JSString* str = JSVAL_TO_STRING(id);
+
+  // We might have a document here.
+  PRBool doSecurityCheckInAddProperty = sDoSecurityCheckInAddProperty;
+  sDoSecurityCheckInAddProperty = PR_FALSE;
+
+  // We want this to be as invisible to content script as possible.  So
+  // don't enumerate this, and set is as JSPROP_SHARED so it won't get
+  // cached on the object.
+  JSBool ok = ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
+                                    ::JS_GetStringLength(str), JSVAL_VOID,
+                                    nsnull, nsnull, JSPROP_SHARED);
+
+  sDoSecurityCheckInAddProperty = doSecurityCheckInAddProperty;
+
+  if (!ok) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *objp = obj;
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
                     JSObject **parentObj)
@@ -6722,6 +6791,75 @@ nsNodeSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   NS_ENSURE_SUCCESS(rv, rv);
 
   return nsEventReceiverSH::AddProperty(wrapper, cx, obj, id, vp, _retval);
+}
+
+NS_IMETHODIMP
+nsNodeSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                     JSObject *obj, jsval id, PRUint32 flags,
+                     JSObject **objp, PRBool *_retval)
+{
+  if ((id == sBaseURIObject_id || id == sNodePrincipal_id) &&
+      IsPrivilegedScript()) {
+    return DefineVoidProp(cx, obj, id, objp);
+  }
+
+  return nsEventReceiverSH::NewResolve(wrapper, cx, obj, id, flags, objp,
+                                       _retval);
+}
+
+NS_IMETHODIMP
+nsNodeSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                      JSObject *obj, jsval id, jsval *vp, PRBool *_retval)
+{
+  if (id == sBaseURIObject_id && IsPrivilegedScript()) {
+    // I wish GetBaseURI lived on nsINode
+    nsCOMPtr<nsIURI> uri;
+    nsCOMPtr<nsIContent> content = do_QueryWrappedNative(wrapper);
+    if (content) {
+      uri = content->GetBaseURI();
+      NS_ENSURE_TRUE(uri, NS_ERROR_OUT_OF_MEMORY);
+    } else {
+      nsCOMPtr<nsIDocument> doc = do_QueryWrappedNative(wrapper);
+      NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
+
+      uri = doc->GetBaseURI();
+      NS_ENSURE_TRUE(uri, NS_ERROR_NOT_AVAILABLE);
+    }
+
+    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+    nsresult rv = WrapNative(cx, obj, uri, NS_GET_IID(nsIURI), vp,
+                             getter_AddRefs(holder));
+    return NS_FAILED(rv) ? rv : NS_SUCCESS_I_DID_SOMETHING;
+  }
+
+  if (id == sNodePrincipal_id && IsPrivilegedScript()) {
+    nsCOMPtr<nsINode> node = do_QueryWrappedNative(wrapper);
+    NS_ENSURE_TRUE(node, NS_ERROR_UNEXPECTED);
+
+    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+    nsresult rv = WrapNative(cx, obj, node->NodePrincipal(),
+                             NS_GET_IID(nsIPrincipal), vp,
+                             getter_AddRefs(holder));
+    return NS_FAILED(rv) ? rv : NS_SUCCESS_I_DID_SOMETHING;
+  }    
+
+  // Note: none of our ancestors want GetProperty
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNodeSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                      JSObject *obj, jsval id, jsval *vp, PRBool *_retval)
+{
+  if ((id == sBaseURIObject_id || id == sNodePrincipal_id) &&
+      IsPrivilegedScript()) {
+    // Is there a better error we could use here?  We don't want privileged
+    // script that can read these properties to set them, but _do_ want to
+    // allow everyone else to.
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  }
+
+  return nsEventReceiverSH::SetProperty(wrapper, cx, obj, id, vp,_retval);
 }
 
 NS_IMETHODIMP
@@ -7607,6 +7745,10 @@ nsDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     }
   }
 
+  if (id == sDocumentURIObject_id && IsPrivilegedScript()) {
+    return DefineVoidProp(cx, obj, id, objp);
+  } 
+
   return nsNodeSH::NewResolve(wrapper, cx, obj, id, flags, objp, _retval);
 }
 
@@ -7630,7 +7772,21 @@ nsDocumentSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     }
   }
 
-  return NS_OK;
+  if (id == sDocumentURIObject_id && IsPrivilegedScript()) {
+    nsCOMPtr<nsIDocument> doc = do_QueryWrappedNative(wrapper);
+    NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
+
+    nsIURI* uri = doc->GetDocumentURI();
+    NS_ENSURE_TRUE(uri, NS_ERROR_NOT_AVAILABLE);
+
+    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+    nsresult rv = WrapNative(cx, obj, uri, NS_GET_IID(nsIURI), vp,
+                             getter_AddRefs(holder));
+
+    return NS_FAILED(rv) ? rv : NS_SUCCESS_I_DID_SOMETHING;
+  }
+
+  return nsNodeSH::GetProperty(wrapper, cx, obj, id, vp, _retval);
 }
 
 NS_IMETHODIMP
@@ -7678,6 +7834,13 @@ nsDocumentSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     }
   }
 
+  if (id == sDocumentURIObject_id && IsPrivilegedScript()) {
+    // Is there a better error we could use here?  We don't want privileged
+    // script that can read this property to set it, but _do_ want to allow
+    // everyone else to.
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  }
+  
   return nsNodeSH::SetProperty(wrapper, cx, obj, id, vp, _retval);
 }
 
