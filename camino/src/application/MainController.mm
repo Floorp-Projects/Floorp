@@ -1371,34 +1371,29 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
 -(BOOL)validateMenuItem:(NSMenuItem*)aMenuItem
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
-
-  // disable items that aren't relevant if there's no main browser window open
-  // or the bookmark/history manager is open
   SEL action = [aMenuItem action];
 
   // NSLog(@"MainController validateMenuItem for %@ (%s)", [aMenuItem title], action);
-  
+
+  // disable items that aren't relevant if there's no main browser window open
+  // or the bookmark/history manager is open
   // XXX some of these should be wired to the First Responder (like reload:).
   if (action == @selector(printPage:) ||
         /* ... many more items go here ... */
-        /* action == @selector(goHome:) || */			// always enabled
-        /* action == @selector(doSearch:) || */		// always enabled
         action == @selector(pageSetup:) ||
         action == @selector(findInPage:) ||
         action == @selector(doReload:) ||
         action == @selector(savePage:))
   {
-    if (browserController != nil)
-      return (![browserController bookmarkManagerIsVisible]);
-    return NO;
+    return (browserController && ![browserController bookmarkManagerIsVisible]);
   }
-  
-    // disable open menu items if a sheet is up (maybe disable others too)
+
+  // disable open menu items if a sheet is up (maybe disable others too)
   if (action == @selector(openFile:) ||
       action == @selector(openLocation:)) {
     return (!browserController || [[browserController window] attachedSheet] == nil);
   }
-    
+
   // check what the state of the personal toolbar should be, but only if there is a browser
   // window open. Popup windows that have the personal toolbar removed should always gray
   // out this menu.
@@ -1414,20 +1409,17 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
           [mBookmarksToolbarMenuItem setTitle: NSLocalizedString(@"Show Bookmarks Toolbar",@"")];
         return YES;
       }
-      else
-        return NO;
     }
-    else
-      return NO;
+    return NO;
   }
 
   // only enable newTab if there is a browser window frontmost, or if there is no window
   // (i.e. disable it for non-browser windows).
   if (action == @selector(newTab:))
   {
-    return (browserController != nil) || ([NSApp mainWindow] == nil);
+    return (browserController || ![NSApp mainWindow]);
   }
-  
+
   if (action == @selector(closeTab:))
   {
     BrowserWindowController* keyBWC = [self getKeyWindowBrowserController];
@@ -1435,17 +1427,12 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
   }
 
   // only activate if we've got multiple tabs open.
-  if ((action == @selector(nextTab:) ||
-       action == @selector(previousTab:)))
+  if (action == @selector(nextTab:) ||
+       action == @selector(previousTab:))
   {
     return (browserController && [[browserController getTabBrowser] numberOfTabViewItems] > 1);
   }
-  
-#if 0
-  if (action == @selector(addBookmark:))
-    return (browserController && ![[browserController getBrowserWrapper] isEmpty]);
-#endif
-  
+
   if (action == @selector(biggerTextSize:))
     return (browserController &&
             ![[browserController getBrowserWrapper] isEmpty] &&
@@ -1458,12 +1445,10 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
 
   // don't allow View Source on the bookmark manager or on non-text content
   if (action == @selector(viewSource:)) {
-    NSString* curURL = [[browserController getBrowserWrapper] getCurrentURI];
     return (browserController &&
             ![browserController bookmarkManagerIsVisible] &&
             [[[browserController getBrowserWrapper] getBrowserView] isTextBasedContent]);
   }
-
 
   if (action == @selector(doStop:))
     return (browserController && [[browserController getBrowserWrapper] isBusy]);
@@ -1476,10 +1461,9 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
       if (action == @selector(goForward:))
         return [browserView canGoForward];
     }
-    else
-      return NO;
+    return NO;
   }
-  
+
   if (action == @selector(manageBookmarks:))
   {
     BOOL showingBookmarks = (browserController && [browserController bookmarkManagerIsVisible]);
@@ -1488,7 +1472,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
     [aMenuItem setTitle:showBMLabel];
     return showingBookmarks ? [browserController canHideBookmarks] : YES;
   }
-  
+
   if (action == @selector(sendURL:))
   {
     NSString* urlString = [[[self getMainWindowBrowserController] getBrowserWrapper] getCurrentURI];
