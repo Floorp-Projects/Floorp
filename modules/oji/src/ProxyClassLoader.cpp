@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set ts=4 sw=4 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -62,35 +63,57 @@ static nsresult getScriptClassLoader(JNIEnv* env, jobject* classloader)
 {
     // get the current JSContext from the context stack service.
     nsresult rv;
-    nsCOMPtr<nsIJSContextStack> contexts = do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
+    nsCOMPtr<nsIJSContextStack> contexts =
+        do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
     if (NS_FAILED(rv)) return rv;
     JSContext* cx;
     rv = contexts->Peek(&cx);
     if (NS_FAILED(rv)) return rv;
     
-    // lookup "window.navigator.javaclasses", if it exists, this is the class loader bound
-    // to this page.
+    // lookup "window.navigator.javaclasses", if it exists, this is the class
+    // loader bound to this page.
     JSObject* window = JS_GetGlobalObject(cx);
     if (!window) return NS_ERROR_FAILURE;
 
-    jsval navigator;
-    if (!JS_GetProperty(cx, window, "navigator", &navigator)) return NS_ERROR_FAILURE;
+    jsval navigator = JSVAL_NULL;
+    if (!JS_LookupProperty(cx, window, "navigator", &navigator))
+        return NS_ERROR_FAILURE;
     
-    jsval javaclasses;
-    if (JS_GetProperty(cx, JSVAL_TO_OBJECT(navigator), "javaclasses", &javaclasses)) {
-        // unwrap this, the way LiveConnect does it.
+    jsval javaclasses = JSVAL_NULL;
+    if (!JSVAL_IS_PRIMITIVE(navigator)) {
+        uintN attrs;
+        JSBool found;
+
+        // Make sure that we pull out the correct javaclasses object that we
+        // set.  Since content can't spoof READONLY or PERMANANT properties,
+        // their presence on this property indicates that this truely is the
+        // correct object.
+        JSObject *obj = JSVAL_TO_OBJECT(navigator);
+        if (!JS_GetPropertyAttributes(cx, obj, "javaclasses", &attrs, &found))
+            return NS_ERROR_FAILURE;
+        if ((~attrs & (JSPROP_READONLY | JSPROP_PERMANENT)) == 0 &&
+            !JS_GetProperty(cx, obj, "javaclasses", &javaclasses)) {
+            return NS_ERROR_FAILURE;
+        }
+
+        // Unwrap this, the way LiveConnect does it. Note that this function
+        // checks if javaclasses is primitive or not.
         if (JSJ_ConvertJSValueToJavaObject(cx, javaclasses, classloader))
             return NS_OK;
     }
 
-    // use default netscape.oji.ProxyClassLoaderFactory (which is no longer supported in recent JRE) as the classloader
-    jclass netscape_oji_ProxyClassLoaderFac = env->FindClass("netscape/oji/ProxyClassLoaderFactory");
+    // use default netscape.oji.ProxyClassLoaderFactory (which is no longer
+    // supported in recent JRE) as the classloader
+    jclass netscape_oji_ProxyClassLoaderFac =
+        env->FindClass("netscape/oji/ProxyClassLoaderFactory");
     if (!netscape_oji_ProxyClassLoaderFac) {
         env->ExceptionClear();
         return NS_ERROR_FAILURE;
     }
-    jmethodID staticMethodID = env->GetStaticMethodID(netscape_oji_ProxyClassLoaderFac, "createClassLoader",
-						      "(Ljava/lang/String;)Ljava/lang/ClassLoader;");
+    jmethodID staticMethodID =
+        env->GetStaticMethodID(netscape_oji_ProxyClassLoaderFac,
+                               "createClassLoader",
+                               "(Ljava/lang/String;)Ljava/lang/ClassLoader;");
     if (!staticMethodID) {
         env->ExceptionClear();
         return NS_ERROR_FAILURE;
@@ -130,18 +153,20 @@ static nsresult getScriptClassLoader(JNIEnv* env, jobject* classloader)
         return NS_ERROR_FAILURE;
     }
 
-    // In order to have permission to create classloader, we need to grant enough permission
+    // In order to have permission to create classloader, we need to grant
+    // enough permission
     nsISecurityContext* origContext = nsnull;
     if (NS_FAILED(GetSecurityContext(env, &origContext))) {
-	return NS_ERROR_FAILURE;
+        return NS_ERROR_FAILURE;
     }
     nsCOMPtr<nsISecurityContext> nullContext(new nsCNullSecurityContext());
     if (!nullContext) {
-	return NS_ERROR_OUT_OF_MEMORY;
+        return NS_ERROR_OUT_OF_MEMORY;
     }
     
     SetSecurityContext(env, nullContext);
-    *classloader = env->CallStaticObjectMethod(netscape_oji_ProxyClassLoaderFac, staticMethodID, jspec);
+    *classloader = env->CallStaticObjectMethod(netscape_oji_ProxyClassLoaderFac,
+                                               staticMethodID, jspec);
     SetSecurityContext(env, origContext);
     if (!*classloader) {
         env->ExceptionClear();
@@ -152,8 +177,12 @@ static nsresult getScriptClassLoader(JNIEnv* env, jobject* classloader)
     env->DeleteLocalRef(netscape_oji_ProxyClassLoaderFac);
     
     // now, cache the class loader in "window.navigator.javaclasses"
-    if (JSJ_ConvertJavaObjectToJSValue(cx, *classloader, &javaclasses)) {
-        JS_SetProperty(cx, JSVAL_TO_OBJECT(navigator), "javaclasses", &javaclasses);
+    if (!JSVAL_IS_PRIMITIVE(navigator) &&
+        JSJ_ConvertJavaObjectToJSValue(cx, *classloader, &javaclasses) &&
+        !JS_DefineProperty(cx, JSVAL_TO_OBJECT(navigator), "javaclasses",
+                           javaclasses, NULL, NULL, JSPROP_ENUMERATE |
+                           JSPROP_READONLY | JSPROP_PERMANENT)) {
+        return NS_ERROR_FAILURE;
     }
     
     return NS_OK;

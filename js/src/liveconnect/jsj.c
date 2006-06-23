@@ -869,7 +869,7 @@ JSJ_ConvertJavaObjectToJSValue(JSContext *cx, jobject java_obj, jsval *vp)
 JS_EXPORT_API(JSBool)
 JSJ_ConvertJSValueToJavaObject(JSContext *cx, jsval v, jobject *vp)
 {
-    if (JSVAL_IS_OBJECT(v)) {
+    if (!JSVAL_IS_PRIMITIVE(v)) {
         JSObject *js_obj = JSVAL_TO_OBJECT(v);
         JavaObjectWrapper *java_wrapper = JS_GetPrivate(cx, js_obj);
         *vp = java_wrapper->java_obj;
