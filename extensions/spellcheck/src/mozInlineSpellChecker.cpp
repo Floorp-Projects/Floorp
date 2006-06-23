@@ -447,6 +447,7 @@ NS_IMETHODIMP mozInlineSpellChecker::ReplaceWord(nsIDOMNode *aNode, PRInt32 aOff
     NS_ENSURE_SUCCESS(res, res);
     selection->RemoveAllRanges();
     selection->AddRange(range);
+    editor->DeleteSelection(nsIEditor::eNone);
 
     nsCOMPtr<nsIPlaintextEditor> textEditor(do_QueryReferent(mEditor));
     textEditor->InsertText(newword);
