@@ -219,10 +219,10 @@
               tooltiptext="&cmd.continue.tooltip;"
               command="cmd_restartApp"/>
       <label id="getMore" class="text-link"
-             valuethemes="&getMoreThemes.label;"
-             valueextensions="&getMoreExtensions.label;"
-             tooltiptextthemes="&getMoreThemes.tooltip;"
-             tooltiptextextensions="&getMoreExtensions.tooltip;"/>
+             valuethemes="&getThemes.label;"
+             valueextensions="&getExtensions.label;"
+             tooltiptextthemes="&getThemes.tooltip;"
+             tooltiptextextensions="&getExtensions.tooltip;"/>
     </hbox>
     <hbox id="resizerBox" style="min-width:1px;">
       <spacer flex="1"/>
