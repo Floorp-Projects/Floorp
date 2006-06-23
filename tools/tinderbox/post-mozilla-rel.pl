@@ -341,9 +341,17 @@ sub packit {
   } # do_installer
 
   my $lightningXpi = "$builddir/dist/xpi-stage/lightning.xpi";
-  if (-e $lightningXpi) {
-    TinderUtils::run_shell_command("mkdir -p $stagedir/linux-xpi");
-    TinderUtils::run_shell_command("cp -r $lightningXpi $stagedir/linux-xpi");
+  my $lightningXpiStageDir = undef;
+  
+  if (is_windows()) {
+    $lightningXpiStageDir = 'windows-xpi';
+  } elsif (is_linux()) {
+    $lightningXpiStageDir = 'linux-xpi';
+  }
+
+  if (-e $lightningXpi && $lightningXpiStageDir ne undef) {
+    TinderUtils::run_shell_command("mkdir -p $stagedir/$lightningXpiStageDir");
+    TinderUtils::run_shell_command("cp -r $lightningXpi $stagedir/$lightningXpiStageDir");
   }
 
   if ($Settings::archive) {
