@@ -919,15 +919,16 @@ nsresult nsZipArchive::BuildFileList()
     if (!item)
       return ZIP_ERR_MEMORY;
 
-    item->offset      = xtolong(central->localhdr_offset);
-    item->size        = xtolong(central->size);
-    item->realsize    = xtolong(central->orglen);
-    item->crc32       = xtolong(central->crc32);
-    item->time        = xtoint(central->time);
-    item->date        = xtoint(central->date);
-    item->isSynthetic = PR_FALSE;
+    item->headerOffset  = xtolong(central->localhdr_offset);
+    item->dataOffset    = 0;
+    item->size          = xtolong(central->size);
+    item->realsize      = xtolong(central->orglen);
+    item->crc32         = xtolong(central->crc32);
+    item->time          = xtoint(central->time);
+    item->date          = xtoint(central->date);
+    item->isSynthetic   = PR_FALSE;
     item->hasDataOffset = PR_FALSE;
-    item->compression = (PRUint8)xtoint(central->method);
+    item->compression   = (PRUint8)xtoint(central->method);
 #if defined(DEBUG)
     /* Make sure our space optimization is non lossy. */
     PR_ASSERT(xtoint(central->method) == (PRUint16)item->compression);
@@ -1069,14 +1070,13 @@ nsresult  nsZipArchive::SeekToItem(nsZipItem* aItem, PRFileDesc* aFd)
   //-- the first time an item is used we need to calculate its offset
   if (!aItem->hasDataOffset)
   {
-    //-- aItem->offset contains the header offset, not the data offset.
     //-- read local header to get variable length values and calculate
     //-- the real data offset
     //--
     //-- NOTE: extralen is different in central header and local header
     //--       for archives created using the Unix "zip" utility. To set
     //--       the offset accurately we need the _local_ extralen.
-    if (!ZIP_Seek(aFd, aItem->offset, PR_SEEK_SET))
+    if (!ZIP_Seek(aFd, aItem->headerOffset, PR_SEEK_SET))
       return ZIP_ERR_CORRUPT;
 
     ZipLocal   Local;
@@ -1087,14 +1087,15 @@ nsresult  nsZipArchive::SeekToItem(nsZipItem* aItem, PRFileDesc* aFd)
       return ZIP_ERR_CORRUPT;
     }
 
-    aItem->offset += ZIPLOCAL_SIZE +
-                     xtoint(Local.filename_len) +
-                     xtoint(Local.extrafield_len);
+    aItem->dataOffset = aItem->headerOffset +
+                        ZIPLOCAL_SIZE +
+                        xtoint(Local.filename_len) +
+                        xtoint(Local.extrafield_len);
     aItem->hasDataOffset = PR_TRUE;
   }
 
   //-- move to start of file in archive
-  if (!ZIP_Seek(aFd, aItem->offset, PR_SEEK_SET))
+  if (!ZIP_Seek(aFd, aItem->dataOffset, PR_SEEK_SET))
     return  ZIP_ERR_CORRUPT;
 
   return ZIP_OK;
