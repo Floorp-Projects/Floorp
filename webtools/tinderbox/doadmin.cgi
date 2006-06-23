@@ -185,10 +185,17 @@ sub create_tree {
     open( F, ">$treename/notes.txt" );
     close( F );
 
+    open( F, ">$treename/index.html");
+    print F "<HTML>\n";
+    print F "<HEAD><META HTTP-EQUIV=\"refresh\" content=\"0,url=../showbuilds.cgi?tree=$treename\"></HEAD>\n";
+    print F "<BODY></BODY>\n";
+    print F "</HTML>\n";
+    close( F );
+    
     chmod oct($perm), "$treename/build.dat", "$treename/who.dat", "$treename/notes.txt",
-                "$treename/treedata.pl";
+    "$treename/treedata.pl", "$treename/index.html";
 
-    print "<h2><a href=showbuilds.cgi?tree=$treename>Tree created or modified</a></h2>\n";
+    print "<h2><a href=\"showbuilds.cgi?tree=$treename\">Tree created or modified</a></h2>\n";
 }
 
 
