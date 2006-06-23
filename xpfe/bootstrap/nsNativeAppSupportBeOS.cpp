@@ -463,16 +463,6 @@ nsNativeAppSupportBeOS::Stop(PRBool *aResult)
 	 return NS_OK;
 }
 
-nsresult NS_CreateSplashScreen(nsISplashScreen **aResult)
-{
-	nsresult rv = NS_OK;
-	if (aResult)
-		*aResult = nsnull;
-	else
-		rv = NS_ERROR_NULL_POINTER;
-	return rv;
-}
-
 NS_IMETHODIMP
 nsNativeAppSupportBeOS::Quit() 
 {
