@@ -155,44 +155,22 @@ InstallTriggerCheckLoadURIFromScript(JSContext *cx, const nsAString& uriStr)
         do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID,&rv));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // get the script base URI
-    nsCOMPtr<nsIURI> scriptURI;
+    // get the script principal
     nsCOMPtr<nsIPrincipal> principal;
     rv = secman->GetSubjectPrincipal(getter_AddRefs(principal));
     NS_ENSURE_SUCCESS(rv, rv);
     if (!principal)
         return NS_ERROR_FAILURE;
 
-    rv = principal->GetURI(getter_AddRefs(scriptURI));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!scriptURI) {
-      // No URI reachable from the principal, get one from the calling
-      // window.
-
-      nsIScriptContext *scx = GetScriptContextFromJSContext(cx);
-      NS_ENSURE_TRUE(scx, NS_ERROR_FAILURE);
-
-      nsCOMPtr<nsIDOMWindow> window =
-        do_QueryInterface(scx->GetGlobalObject());
-      NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
-
-      nsCOMPtr<nsIDOMDocument> domDoc;
-      window->GetDocument(getter_AddRefs(domDoc));
-
-      nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-      NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-
-      scriptURI = doc->GetDocumentURI();
-    }
-
     // convert the requested URL string to a URI
+    // Note that we use a null base URI here, since that's what we use when we
+    // actually convert the string into a URI to load.
     nsCOMPtr<nsIURI> uri;
     rv = NS_NewURI(getter_AddRefs(uri), uriStr);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // are we allowed to load this one?
-    rv = secman->CheckLoadURI(scriptURI, uri,
+    rv = secman->CheckLoadURIWithPrincipal(principal, uri,
                     nsIScriptSecurityManager::DISALLOW_SCRIPT_OR_DATA);
     return rv;
 }
