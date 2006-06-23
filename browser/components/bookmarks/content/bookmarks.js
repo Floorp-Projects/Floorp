@@ -86,6 +86,10 @@ var kIOContractID;
 var kIOIID;
 var IOSVC;
 
+var kMICSUMContractID;
+var kMICSUMIID;
+var MICSUMSVC;
+
 var gBmProperties;
 var gBkmkTxnSvc;
 
