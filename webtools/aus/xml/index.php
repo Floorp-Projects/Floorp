@@ -117,8 +117,7 @@ switch ($clean['updateVersion']) {
             $partialPatch->findPatch($clean['product'],$clean['platform'],$clean['locale'],$clean['version'],$clean['build'],$clean['channel']);
 
             // If our partial patch is valid, set the patch line.
-            // We only want to deliver the partial patch if the destination build for the partial patch is equal to the build in the complete patch (which will always point to the latest).
-            if ($partialPatch->isPatch() && $partialPatch->isNewBuild($clean['build']) && $partialPatch->isOneStepFromLatest($completePatch->build)) {
+            if ($partialPatch->isPatch() && $partialPatch->isNewBuild($clean['build'])) {
                 $xml->setPatchLine($partialPatch);
             }
         }
