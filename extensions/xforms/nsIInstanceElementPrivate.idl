@@ -48,6 +48,10 @@ interface nsIInstanceElementPrivate : nsIXFormsNSInstanceElement
 {
   /**
    * Set instance document.
+   *
+   * WARNING: This must never be exposed to untrusted parties
+   * (ie. script). Because setting the instance document, we assume ownership
+   * over it security-wise!
    */
   void setInstanceDocument(in nsIDOMDocument document);
 

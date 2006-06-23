@@ -262,12 +262,36 @@ nsXFormsInstanceElement::OnStopRequest(nsIRequest *request, nsISupports *ctx,
     }
   }
 
+  // Replace the principal for the loaded document
+  nsCOMPtr<nsIDocument> iDoc(do_QueryInterface(mDocument));
+  nsresult rv = ReplacePrincipal(iDoc);
+  if (NS_FAILED(rv)) {
+    SetInstanceDocument(nsnull);
+    return rv;
+  }
+
   nsCOMPtr<nsIModelElementPrivate> model = GetModel();
   if (model) {
     model->InstanceLoadFinished(succeeded);
   }
 
   mListener = nsnull;
+  return NS_OK;
+}
+
+nsresult
+nsXFormsInstanceElement::ReplacePrincipal(nsIDocument *aDocument)
+{
+  if (!aDocument || !mElement)
+    return NS_ERROR_FAILURE;
+
+  // Set Principal
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  mElement->GetOwnerDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDocument> fromDoc(do_QueryInterface(domDoc));
+  NS_ENSURE_STATE(fromDoc);
+  aDocument->SetPrincipal(fromDoc->NodePrincipal());
+
   return NS_OK;
 }
 
@@ -302,6 +326,15 @@ nsXFormsInstanceElement::SetInstanceDocument(nsIDOMDocument *aDocument)
     nsCOMPtr<nsISupports> owner(do_QueryInterface(mElement));
     NS_ENSURE_STATE(owner);
     rv = doc->SetProperty(nsXFormsAtoms::instanceDocumentOwner, owner);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Replace the principal of the instance document so it is the same as for
+    // the owning form. Why is this not a security breach? Because we handle
+    // our own whitelist of domains that we trust (see
+    // nsXFormsUtils::CheckSameOrigin()), and if we have gotten this far
+    // (ie. loaded the document) the user has trusted obviously trusted the
+    // source. See also https://bugzilla.mozilla.org/show_bug.cgi?id=338451
+    rv = ReplacePrincipal(doc);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

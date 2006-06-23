@@ -495,7 +495,8 @@ nsXFormsSubmissionElement::LoadReplaceInstance(nsIChannel *channel)
   mPipeIn->Available(&contentLength);
 
   // set the base uri so that the document can get the correct security
-  // principal
+  // principal (this has to be here to work on 1.8.0)
+  // @see https://bugzilla.mozilla.org/show_bug.cgi?id=338451
   nsCOMPtr<nsIURI> uri;
   nsresult rv = channel->GetURI(getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, rv);

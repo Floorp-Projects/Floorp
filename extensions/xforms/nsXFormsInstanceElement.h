@@ -49,6 +49,7 @@
 #include "nsIChannelEventSink.h"
 #include "nsIInterfaceRequestor.h"
 
+class nsIDocument;
 class nsIDOMElement;
 
 /**
@@ -87,6 +88,18 @@ private:
   NS_HIDDEN_(void) LoadExternalInstance(const nsAString &aSrc);
   NS_HIDDEN_(nsresult) CreateInstanceDocument(const nsAString &aQualifiedName);
   NS_HIDDEN_(already_AddRefed<nsIModelElementPrivate>) GetModel();
+
+  /**
+   * Replace principal for document to be the same as for the owning document.
+   *
+   * WARNING: This could lead to a security breach, and should be used with
+   * extreme care!
+   *
+   * @see https://bugzilla.mozilla.org/show_bug.cgi?id=338451
+   *
+   * @param aDoc              The document to replace principal for
+   */
+  nsresult ReplacePrincipal(nsIDocument *aDoc);
 
   nsCOMPtr<nsIDOMDocument>    mDocument;
   nsCOMPtr<nsIDOMDocument>    mOriginalDocument;
