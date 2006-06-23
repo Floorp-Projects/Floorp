@@ -59,6 +59,7 @@ en-US.jar:
         locale/en-US/help/images/mail_flag.png          (locale/en-US/images/mail_flag.png)
         locale/en-US/help/images/mail_junk_column.png   (locale/en-US/images/mail_junk_column.png)
         locale/en-US/help/images/mail_newmail_alert.png (locale/en-US/images/mail_newmail_alert.png)
+        locale/en-US/help/images/mail_newmail_trayicon.png (locale/en-US/images/mail_newmail_trayicon.png)
         locale/en-US/help/images/mail_quicksearch.png   (locale/en-US/images/mail_quicksearch.png)
         locale/en-US/help/images/mail_read.png          (locale/en-US/images/mail_read.png)
         locale/en-US/help/images/mail_read_column.png   (locale/en-US/images/mail_read_column.png)
