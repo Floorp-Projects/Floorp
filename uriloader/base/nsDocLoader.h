@@ -193,6 +193,13 @@ protected:
         return mChildrenInOnload.AppendObject(aChild);
     }
 
+    // Inform a parent docloader that aChild is done calling its onload
+    // handler.
+    void ChildDoneWithOnload(nsIDocumentLoader* aChild) {
+        mChildrenInOnload.RemoveObject(aChild);
+        DocLoaderIsEmpty();
+    }        
+
 protected:
     // IMPORTANT: The ownership implicit in the following member
     // variables has been explicitly checked and set using nsCOMPtr
@@ -242,13 +249,6 @@ private:
     // This method is idempotent and does nothing if the docloader is not in
     // fact empty.
     void DocLoaderIsEmpty();
-
-    // Inform a parent docloader that aChild is done calling its onload
-    // handler.
-    void ChildDoneWithOnload(nsIDocumentLoader* aChild) {
-        mChildrenInOnload.RemoveObject(aChild);
-        DocLoaderIsEmpty();
-    }        
 
     nsListenerInfo *GetListenerInfo(nsIWebProgressListener* aListener);
 
