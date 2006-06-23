@@ -159,7 +159,7 @@ jsd_IsValueNative(JSDContext* jsdc, JSDValue* jsdval)
         fun = JS_ValueToFunction(cx, val);
         JS_RestoreExceptionState(cx, exceptionState);
         if(fun)
-            ok = JS_GetFunctionScript(cx, fun) ? JS_TRUE : JS_FALSE;
+            ok = JS_GetFunctionScript(cx, fun) ? JS_FALSE : JS_TRUE;
         JS_EndRequest(cx);
         JS_ASSERT(fun);
         return ok;
