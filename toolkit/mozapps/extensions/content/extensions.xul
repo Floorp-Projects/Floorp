@@ -191,29 +191,29 @@
   </hbox>
   <vbox>
     <hbox id="commandBarBottom" align="center">
-        <button id="installFileButton" label="&cmd.installFile.label;"
-                accesskey="&cmd.installFile.accesskey;"
-                tooltiptextaddons="&cmd.installFileAddon.tooltip;"
-                tooltiptextthemes="&cmd.installFileTheme.tooltip;"
-                command="cmd_installFile"/>
-        <button id="checkUpdatesAllButton" label="&cmd.checkUpdatesAll.label;"
-                accesskey="&cmd.checkUpdatesAll.accesskey;"
-                tooltiptextaddons="&cmd.checkUpdatesAllAddon.tooltip;"
-                tooltiptextthemes="&cmd.checkUpdatesAllTheme.tooltip;"
-                command="cmd_checkUpdatesAll"/>
-        <button id="installUpdatesAllButton" label="&cmd.installUpdatesAll.label;"
-                accesskey="&cmd.installUpdatesAll.accesskey;"
-                tooltiptext="&cmd.installUpdatesAll.tooltip;"
-                command="cmd_installUpdatesAll"/>
-      <spacer flex="1"/>
-      <button id="restartAppButton" label="&cmd.restartApp.label;"
-              accesskey="&cmd.restartApp.accesskey;"
-              tooltiptext="&cmd.restartApp.tooltip;"
-              command="cmd_restartApp"/>
+      <button id="installFileButton" label="&cmd.installFile.label;"
+              accesskey="&cmd.installFile.accesskey;"
+              tooltiptextaddons="&cmd.installFileAddon.tooltip;"
+              tooltiptextthemes="&cmd.installFileTheme.tooltip;"
+              command="cmd_installFile"/>
+      <button id="checkUpdatesAllButton" label="&cmd.checkUpdatesAll.label;"
+              accesskey="&cmd.checkUpdatesAll.accesskey;"
+              tooltiptextaddons="&cmd.checkUpdatesAllAddon.tooltip;"
+              tooltiptextthemes="&cmd.checkUpdatesAllTheme.tooltip;"
+              command="cmd_checkUpdatesAll"/>
       <button id="skipDialogButton" label="&cmd.skip.label;"
               accesskey="&cmd.skip.accesskey;"
               tooltiptext="&cmd.skip.tooltip;"
               command="cmd_close"/>
+      <spacer flex="1"/>
+      <button id="installUpdatesAllButton" label="&cmd.installUpdatesAll.label;"
+              accesskey="&cmd.installUpdatesAll.accesskey;"
+              tooltiptext="&cmd.installUpdatesAll.tooltip;"
+              command="cmd_installUpdatesAll"/>
+      <button id="restartAppButton" label="&cmd.restartApp.label;"
+              accesskey="&cmd.restartApp.accesskey;"
+              tooltiptext="&cmd.restartApp.tooltip;"
+              command="cmd_restartApp"/>
       <button id="continueDialogButton" label="&cmd.continue.label;"
               accesskey="&cmd.continue.accesskey;"
               tooltiptext="&cmd.continue.tooltip;"
