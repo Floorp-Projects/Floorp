@@ -119,6 +119,7 @@ sub trim_logs {
 
 sub create_tree {
     $treename = $form{'treename'};
+    $who_days = $form{'who_days'};
     my $repository = $form{'repository'};
     $modulename = $form{'modulename'};
     $branchname = $form{'branchname'};
@@ -155,6 +156,7 @@ sub create_tree {
         mkdir( $treename, oct($dir_perm)) || die "<h1> Cannot mkdir $treename</h1>";
     }
     open( F, ">$treename/treedata.pl" );
+    print F "\$who_days=$who_days;\n";
     print F "\$use_bonsai=$use_bonsai;\n";
     print F "\$use_viewvc=$use_viewvc;\n";
     print F "\$cvs_module='$modulename';\n";

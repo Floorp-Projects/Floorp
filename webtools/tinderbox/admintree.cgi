@@ -155,6 +155,11 @@ print "
 <TD>(SeaMonkey)</TD>
 </TR>
 <TR>
+<TD>days of commit history to display:</TD>
+<TD><INPUT NAME=who_days VALUE=14></TD>
+<TD>(14)</TD>
+</TR>
+<TR>
 <TD>
 <b>Bonsai query options:</b><br>
 </TD>

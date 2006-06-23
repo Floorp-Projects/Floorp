@@ -30,15 +30,26 @@ $F_DEBUG=1;
 # Process args:
 #   $days: How many days of data to process.
 #   $tree: Which tree to use.
-my ($days, $tree) = process_args();
+$days = $tree = undef;
+
+if ($ARGV[0] eq '-days') {
+    shift;
+    $days = shift;
+}
+$tree = shift;
+
+&usage() if (!defined($tree));
 
 # Grab globals for this tree:
+#   $who_days:    Number of days of commit info to make available
 #   $cvs_module:  The checkout module
 #   $cvs_branch:  The current branch
 #   $cvs_root:    The path to the cvs root
 #   $bonsai_tree: The data directory for this tree in ../bonsai
 #   $viewvc_repository: Repository path used by viewvc for this tree
 require "$tree/treedata.pl";
+
+$days = $who_days if (!defined($days));
 
 # Exit early if no query system is enabled
 exit 0 if (!$use_bonsai && !$use_viewvc);
@@ -77,15 +88,9 @@ unlock_datafile($lock);
 
 # End of main
 ##################################################################
-sub process_args {
-  my ($days, $tree);
-  
-  if ($ARGV[0] eq '-days') {
-    ($days, $tree) = @ARGV[1,2];
-  } else {
-    ($days, $tree) = (2, $ARGV[0]);
-  }
-  return $days, $tree;
+sub usage() {
+    print "Usage: $0 [-days days_of_commitinfo] treename\n";
+    exit 1;
 }
 
 sub lock_datafile {
