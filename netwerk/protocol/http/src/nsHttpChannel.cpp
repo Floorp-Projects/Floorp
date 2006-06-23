@@ -245,6 +245,17 @@ nsHttpChannel::AsyncCall(nsAsyncCallback funcPtr)
     return NS_DispatchToCurrentThread(event);
 }
 
+PRBool
+nsHttpChannel::RequestIsConditional()
+{
+    // Is our consumer issuing a conditional request?
+    return mRequestHead.PeekHeader(nsHttp::If_Modified_Since) ||
+           mRequestHead.PeekHeader(nsHttp::If_None_Match) ||
+           mRequestHead.PeekHeader(nsHttp::If_Unmodified_Since) ||
+           mRequestHead.PeekHeader(nsHttp::If_Match) ||
+           mRequestHead.PeekHeader(nsHttp::If_Range);
+}
+
 nsresult
 nsHttpChannel::Connect(PRBool firstTime)
 {
@@ -1226,11 +1237,18 @@ nsHttpChannel::OpenCacheEntry(PRBool offline, PRBool *delayed)
         // don't use the cache for other types of requests
         return NS_OK;
     }
-    else if (mRequestHead.PeekHeader(nsHttp::Range)) {
+
+    if (mRequestHead.PeekHeader(nsHttp::Range)) {
         // we don't support caching for byte range requests initiated
         // by our clients or via nsIResumableChannel.
         // XXX perhaps we could munge their byte range into the cache
         // key to make caching sort'a work.
+        return NS_OK;
+    }
+
+    if (RequestIsConditional()) {
+        // don't use the cache if our consumer is making a conditional request
+        // (see bug 331825).
         return NS_OK;
     }
 
