@@ -2643,7 +2643,6 @@ nsLocalFile::SetPersistentDescriptor(const nsACString &aPersistentDescriptor)
 NS_IMETHODIMP
 nsLocalFile::Reveal()
 {
-#ifndef WINCE
     // make sure mResolvedPath is set
     nsresult rv = ResolveAndStat();
     if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND)
@@ -2673,8 +2672,7 @@ nsLocalFile::Reveal()
                                  explorerParams.get(),
                                  NULL, SW_SHOWNORMAL) <= (HINSTANCE) 32)
         return NS_ERROR_FAILURE;
-#endif
- 
+
     return NS_OK;
 }
 
