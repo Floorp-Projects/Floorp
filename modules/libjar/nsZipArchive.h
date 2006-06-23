@@ -108,7 +108,8 @@ struct nsZipItem
 {
   nsZipItem*  next;
 
-  PRUint32    offset;
+  PRUint32    headerOffset;
+  PRUint32    dataOffset;
   PRUint32    size;             /* size in original file */
   PRUint32    realsize;         /* inflated size */
   PRUint32    crc32;
