@@ -1595,6 +1595,8 @@ case "$target" in
 	   LDFLAGS="$LDFLAGS -n32"
        fi
        AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
+       AC_MSG_WARN([Clearing MOZ_FIX_LINK_PATHS for OSF/1 as fix for bug 333545 (till the reference bug 332075 is fixed.])
+       MOZ_FIX_LINK_PATHS=
     fi
     if test -z "$GNU_CXX"; then
       MIPSPRO_CXX=1
