@@ -585,7 +585,7 @@
         <body>
           <![CDATA[
             this.hidden = true;
-            if (this.closeButton.hidden && this.notifyData) {
+            if (this._buttonElement.hidden && this.notifyData) {
               var os = Components.classes["@mozilla.org/observer-service;1"]
                                  .getService(Components.interfaces.nsIObserverService);
               os.notifyObservers(null, "addons-message-notification", this.notifyData);
@@ -651,15 +651,11 @@
         <setter>
           <![CDATA[
             if (val) {
-              if (this._buttonElement.hasAttribute("style"))
-                this._buttonElement.removeAttribute("style");
+              this._buttonElement.hidden = false;
               this._buttonElement.label = val;
             }
             else {
-              if (this._buttonElement.hasAttribute("label"))
-                this._buttonElement.removeAttribute("label");
-              this._buttonElement.setAttribute("style", "max-width: 1px; visibility: hidden;");
-            }
+              this._buttonElement.hidden = true;
             return val;
           ]]>
         </setter>
