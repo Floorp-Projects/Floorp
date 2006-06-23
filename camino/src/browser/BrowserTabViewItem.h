@@ -40,6 +40,12 @@
 
 #import "IconTabViewItem.h"
 
+// sent when the current tab will changed. The object is the tab that's being
+// switched to. NSTabView does have a delegate method when the tab changes,
+// but no notification and we don't want to take over the delegate for internal
+// implementation.
+extern NSString* const kTabWillChangeNotifcation;
+
 // a subclass of IconTabViewItem that handles dragging of site icons
 @class BrowserTabItemContainerView;
 @class TruncatingTextAndImageCell;

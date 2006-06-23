@@ -96,6 +96,14 @@ NSString* const kTabBarBackgroundDoubleClickedNotification = @"kTabBarBackground
     [self registerForDraggedTypes:[NSArray arrayWithObjects:
         kCaminoBookmarkListPBoardType, kWebURLsWithTitlesPboardType,
         NSStringPboardType, NSFilenamesPboardType, NSURLPboardType, nil]];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(tabWillChange:)
+        name:kTabWillChangeNotifcation object:nil];
+}
+
+- (void)dealloc 
+{
+  [[NSNotificationCenter defaultCenter] removeObserver:self];
+  [super dealloc];
 }
 
 /******************************************/
@@ -119,6 +127,9 @@ NSString* const kTabBarBackgroundDoubleClickedNotification = @"kTabBarBackground
 
 - (void)addTabViewItem:(NSTabViewItem *)tabViewItem
 {
+  // creating a new tab means clearing the jumpback tab.
+  [self setJumpbackTab:nil];
+  
   [super addTabViewItem:tabViewItem];
   // the new tab view item needs to have its tab visibility synchronized to the tab bar so that
   // its content view will be hooked up correctly
@@ -133,17 +144,34 @@ NSString* const kTabBarBackgroundDoubleClickedNotification = @"kTabBarBackground
   // of the tab being removed. Users, however, want the tab to the right to
   // be selected. This also matches how mozilla works. Select the right tab
   // first so we don't take the hit of displaying the left tab before we switch.
+  //
+  // Ben and I talked about a way to improve this slightly, with the concept
+  // of a "jumpback tab" that is associated with a tab that is opened via
+  // cmd-click or single-window-mode. When the current tab is closed, we jump
+  // back to that tab, the thought being they are related. Switching tabs in
+  // any way (even closing a tab) will clear the jumpback tab and return to
+  // the "select to the right" behavior. 
   
   // make sure the close button and spinner get removed
   [(BrowserTabViewItem *)tabViewItem willBeRemoved:YES];
-  if ([self selectedTabViewItem] == tabViewItem)
-    [self selectNextTabViewItem:self];
+  if ([self selectedTabViewItem] == tabViewItem) {
+    if (mJumpbackTab)
+      [mJumpbackTab selectTab:self]; 
+    else
+      [self selectNextTabViewItem:self];
+  }
   [super removeTabViewItem:tabViewItem];
   [self showOrHideTabsAsAppropriate];
+  
+  // clear the jumpback tab, it's served its purpose
+  [self setJumpbackTab:nil];
 }
 
 - (void)insertTabViewItem:(NSTabViewItem *)tabViewItem atIndex:(int)index
 {
+  // inserting a new tab means clearing the jumpback tab.
+  [self setJumpbackTab:nil];
+  
   [super insertTabViewItem:tabViewItem atIndex:index];
   [self showOrHideTabsAsAppropriate];
 }
@@ -451,6 +479,40 @@ NSString* const kTabBarBackgroundDoubleClickedNotification = @"kTabBarBackground
 + (BrowserTabViewItem*)makeNewTabItem
 {
   return [[[BrowserTabViewItem alloc] init] autorelease];
+}
+
+#pragma mark -
+
+//
+// get and set the "jumpback tab", the tab that is jumped to when the currently
+// visible tab is closed. Reset automatically when switching tabs or after
+// jumping back. This isn't designed to be a tab history, it only lives for a very
+// well-defined period.
+//
+
+- (void)setJumpbackTab:(BrowserTabViewItem*)inTab
+{
+NSLog(@"setting jumpback to %d", inTab);
+  mJumpbackTab = inTab;
+}
+
+- (BrowserTabViewItem*)jumpbackTab
+{
+  return mJumpbackTab;
+}
+
+//
+// tabWillChange:
+//
+// Called when the tab is about to change and is our cue to clear out the jumpback tab.
+//
+- (void)tabWillChange:(NSNotification*)inNotify
+{
+  // If the user clicks on the same tab that's already selected, we'll still get
+  // a notification, so do nothing if we're "switching" to the currently selected tab
+  id object = [inNotify object];
+  if (!object || object != [self selectedTabViewItem])
+    [self setJumpbackTab:nil];
 }
 
 @end

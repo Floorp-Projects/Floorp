@@ -52,6 +52,10 @@ extern NSString* const kTabBarBackgroundDoubleClickedNotification;
   BOOL mLastClickIsPotentialDrag;
   BOOL mVisible; // YES if the view is in the hierarchy
   IBOutlet BrowserTabBarView * mTabBar;
+  
+  // if non-nil, the tab to jump back to when the currently visible tab is
+  // closed.
+  BrowserTabViewItem* mJumpbackTab;
 }
 
 + (BrowserTabViewItem*)makeNewTabItem;
@@ -71,5 +75,12 @@ extern NSString* const kTabBarBackgroundDoubleClickedNotification;
 // inform the view that it will be shown or hidden; e.g. prior to showing or hiding the bookmarks
 - (void)setVisible:(BOOL)show;
 - (void)windowClosed;
+
+// get and set the "jumpback tab", the tab that is jumped to when the currently
+// visible tab is closed. Reset automatically when switching tabs or after
+// jumping back. This isn't designed to be a tab history, it only lives for a very
+// well-defined period.
+- (void)setJumpbackTab:(BrowserTabViewItem*)inTab;
+- (BrowserTabViewItem*)jumpbackTab;
 
 @end

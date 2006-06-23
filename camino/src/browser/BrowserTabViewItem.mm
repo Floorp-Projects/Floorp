@@ -50,6 +50,8 @@
 #import "TabButtonCell.h"
 #import "RolloverImageButton.h"
 
+NSString* const kTabWillChangeNotifcation = @"kTabWillChangeNotifcation";
+
 // we cannot use the spinner before 10.2, so don't allow it. This is the
 // version of appkit in 10.2 (taken from the 10.3 SDK headers which we cannot use).
 const double kJaguarAppKitVersion = 663;
@@ -240,6 +242,7 @@ const int kMenuTruncationChars = 60;
   }
   
   mSelectTabOnMouseUp = NO;
+  [[NSNotificationCenter defaultCenter] postNotificationName:kTabWillChangeNotifcation object:mTabViewItem];
   [[mTabViewItem tabView] selectTabViewItem:mTabViewItem];
 }
 
@@ -247,6 +250,7 @@ const int kMenuTruncationChars = 60;
 {
   if (mSelectTabOnMouseUp)
   {
+    [[NSNotificationCenter defaultCenter] postNotificationName:kTabWillChangeNotifcation object:mTabViewItem];
     [[mTabViewItem tabView] selectTabViewItem:mTabViewItem];
     mSelectTabOnMouseUp = NO;
   }
@@ -522,6 +526,7 @@ const int kMenuTruncationChars = 60;
 
 - (void) selectTab:(id)sender
 {
+  [[NSNotificationCenter defaultCenter] postNotificationName:kTabWillChangeNotifcation object:self];
   [[self tabView] selectTabViewItem:self];
 }
 

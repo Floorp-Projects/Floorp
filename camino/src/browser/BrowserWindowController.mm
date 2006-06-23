@@ -1894,7 +1894,7 @@ enum BWCOpenDest {
   if ([resolvedURLs count] == 1) {
     resolvedURL = [resolvedURLs lastObject];
     if (inDest == kDestinationNewTab)
-      [self openNewTabWithURL:resolvedURL referrer:nil loadInBackground:inLoadInBG allowPopups:NO];
+      [self openNewTabWithURL:resolvedURL referrer:nil loadInBackground:inLoadInBG allowPopups:NO setJumpback:NO];
     else if (inDest == kDestinationNewWindow)
       [self openNewWindowWithURL:resolvedURL referrer:nil loadInBackground:inLoadInBG allowPopups:NO];
     else // if it's not a new window or a new tab, load into the current view
@@ -1960,7 +1960,7 @@ enum BWCOpenDest {
     if (canUseCache)
       [self openNewTabWithDescriptor:desc displayType:nsIWebPageDescriptor::DISPLAY_AS_SOURCE loadInBackground:loadInBackground];
     else
-      [self openNewTabWithURL:viewSource referrer:nil loadInBackground:loadInBackground allowPopups:NO];
+      [self openNewTabWithURL:viewSource referrer:nil loadInBackground:loadInBackground allowPopups:NO setJumpback:NO];
   }      
   else {
     // open a new window and hide the toolbars for prettyness
@@ -2070,7 +2070,7 @@ enum BWCOpenDest {
       aDomain = [NSString stringWithUTF8String:spec.get()];
       
       if (inDest == kDestinationNewTab)
-        [self openNewTabWithURL:aDomain referrer:nil loadInBackground:inLoadInBG allowPopups:NO];
+        [self openNewTabWithURL:aDomain referrer:nil loadInBackground:inLoadInBG allowPopups:NO setJumpback:NO];
       else if (inDest == kDestinationNewWindow)
         [self openNewWindowWithURL:aDomain referrer:nil loadInBackground:inLoadInBG allowPopups:NO];
       else // if it's not a new window or a new tab, load into the current view
@@ -2097,7 +2097,7 @@ enum BWCOpenDest {
     [escapedSearchString release];
     
     if (inDest == kDestinationNewTab)
-      [self openNewTabWithURL:searchURL referrer:nil loadInBackground:inLoadInBG allowPopups:NO];
+      [self openNewTabWithURL:searchURL referrer:nil loadInBackground:inLoadInBG allowPopups:NO setJumpback:NO];
     else if (inDest == kDestinationNewWindow)
       [self openNewWindowWithURL:searchURL referrer:nil loadInBackground:inLoadInBG allowPopups:NO];
     else // if it's not a new window or a new tab, load into the current view
@@ -2552,7 +2552,7 @@ enum BWCOpenDest {
   // assumes mContextMenuNode has been set
   NSString* frameURL = [self getContextMenuNodeDocumentURL];
   if ([frameURL length] > 0)
-    [self openNewTabWithURL:frameURL referrer:nil loadInBackground:NO allowPopups:NO];        // follow the pref?
+    [self openNewTabWithURL:frameURL referrer:nil loadInBackground:NO allowPopups:NO setJumpback:NO];  // follow the pref?
 }
 
 - (IBAction)frameToThisWindow:(id)sender
@@ -2786,6 +2786,8 @@ enum BWCOpenDest {
 
 - (IBAction)previousTab:(id)sender
 {
+  // pass |nil| because it's way too complicated to compute the previous tab.
+  [[NSNotificationCenter defaultCenter] postNotificationName:kTabWillChangeNotifcation object:nil];
   if ([mTabBrowser indexOfTabViewItem:[mTabBrowser selectedTabViewItem]] == 0)
     [mTabBrowser selectLastTabViewItem:sender];
   else
@@ -2794,6 +2796,8 @@ enum BWCOpenDest {
 
 - (IBAction)nextTab:(id)sender
 {
+  // pass |nil| because it's way too complicated to compute the next tab.
+  [[NSNotificationCenter defaultCenter] postNotificationName:kTabWillChangeNotifcation object:nil];
   if ([mTabBrowser indexOfTabViewItem:[mTabBrowser selectedTabViewItem]] == [mTabBrowser numberOfTabViewItems] - 1)
     [mTabBrowser selectFirstTabViewItem:sender];
   else
@@ -2978,9 +2982,19 @@ enum BWCOpenDest {
   return browser;
 }
 
--(void)openNewTabWithURL:(NSString*)aURLSpec referrer:(NSString*)aReferrer loadInBackground:(BOOL)aLoadInBG allowPopups:(BOOL)inAllowPopups
+-(void)openNewTabWithURL:(NSString*)aURLSpec referrer:(NSString*)aReferrer loadInBackground:(BOOL)aLoadInBG 
+        allowPopups:(BOOL)inAllowPopups setJumpback:(BOOL)inSetJumpback
 {
+  BrowserTabViewItem* previouslySelected = [mTabBrowser selectedTabViewItem];
   BrowserTabViewItem* newTab = [self openNewTab:aLoadInBG];
+
+  // if instructed, tell the tab browser to remember the currently selected tab to
+  // jump back to if this new one is closed w/out switching to any other tabs.
+  // This must come after the call to |openNewTab:| which clears the jumpback
+  // tab and changes the selected tab to the new tab.
+  if (inSetJumpback)
+    [mTabBrowser setJumpbackTab:previouslySelected];
+
   [[newTab view] loadURI:aURLSpec referrer:aReferrer flags:NSLoadFlagsNone activate:!aLoadInBG allowPopups:inAllowPopups];
 }
 
@@ -2993,7 +3007,15 @@ enum BWCOpenDest {
 //
 - (CHBrowserView*)createNewTabBrowser:(BOOL)inLoadInBG
 {
+  BrowserTabViewItem* previouslySelected = [mTabBrowser selectedTabViewItem];
   BrowserTabViewItem* newTab = [self openNewTab:inLoadInBG];
+ 
+  // tell the tab browser to remember the currently selected tab to
+  // jump back to if this new one is closed w/out switching to any other tabs.
+  // This must come after the call to |openNewTab:| which clears the jumpback
+  // tab and changes the selected tab to the new tab.
+  [mTabBrowser setJumpbackTab:previouslySelected];
+
   return [[newTab view] getBrowserView];
 }
 
@@ -3439,7 +3461,7 @@ enum BWCOpenDest {
   if (aUseWindow)
     [self openNewWindowWithURL: hrefStr referrer:referrer loadInBackground: loadInBackground allowPopups:NO];
   else
-    [self openNewTabWithURL: hrefStr referrer:referrer loadInBackground: loadInBackground allowPopups:NO];
+    [self openNewTabWithURL: hrefStr referrer:referrer loadInBackground: loadInBackground allowPopups:NO setJumpback:NO];
 }
 
 - (IBAction)savePageAs:(id)aSender
@@ -3526,7 +3548,7 @@ enum BWCOpenDest {
       if (modifiers & NSShiftKeyMask)
         loadInBG = !loadInBG; // shift key should toggle the foreground/background pref as it does elsewhere
       if (loadInTab)
-        [self openNewTabWithURL:urlStr referrer:referrer loadInBackground:loadInBG allowPopups:NO];
+        [self openNewTabWithURL:urlStr referrer:referrer loadInBackground:loadInBG allowPopups:NO setJumpback:NO];
       else
         [self openNewWindowWithURL:urlStr referrer:referrer loadInBackground:loadInBG allowPopups:NO];
     }
