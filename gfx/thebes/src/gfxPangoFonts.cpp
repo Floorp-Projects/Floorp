@@ -586,8 +586,9 @@ DrawCairoGlyphs(gfxContext* ctx,
     int num_invalid_glyphs = 0;
     for (gint i = 0; i < aGlyphs->num_glyphs; ++i) {
         PangoGlyphInfo* info = &aGlyphs->glyphs[i];
-        // 0x10000000 is PANGO_{CAIRO,XFT,FT,WIN32}_UNKNOWN_FLAG
-        if (info->glyph & 0x10000000) {
+        // Skip glyph when it is PANGO_GLYPH_EMPTY (0x0FFFFFFF) or has
+        // PANGO_GLYPH_UNKNOWN_FLAG (0x10000000) bit set.
+        if ((info->glyph & 0x10000000) || info->glyph == 0x0FFFFFFF) {
             // XXX we should to render a slug for the invalid glyph instead of just skipping it
             num_invalid_glyphs++;
         } else {
