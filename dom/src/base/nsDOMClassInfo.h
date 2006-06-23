@@ -394,6 +394,9 @@ protected:
   static jsval sAll_id;
   static jsval sTags_id;
   static jsval sAddEventListener_id;
+  static jsval sBaseURIObject_id;
+  static jsval sNodePrincipal_id;
+  static jsval sDocumentURIObject_id;
 
   static const JSClass *sObjectClass;
   static const JSClass *sXPCNativeWrapperClass;
@@ -613,10 +616,31 @@ protected:
   {
   }
 
+  // Helper to check whether a capability is enabled
+  PRBool IsCapabilityEnabled(const char* aCapability);
+
+  inline PRBool IsPrivilegedScript() {
+    return IsCapabilityEnabled("UniversalXPConnect");
+  }
+
+  // Helper to define a void property with JSPROP_SHARED; this can do all the
+  // work so it's safe to just return whatever it returns.  |obj| is the object
+  // we're defining on, |id| is the name of the prop.  This must be a string
+  // jsval.  |objp| is the out param if we define successfully.
+  nsresult DefineVoidProp(JSContext* cx, JSObject* obj, jsval id,
+                          JSObject** objp);
+
 public:
   NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
                        JSObject *globalObj, JSObject **parentObj);
   NS_IMETHOD AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                         JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
+  NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                        JSObject *obj, jsval id, PRUint32 flags,
+                        JSObject **objp, PRBool *_retval);
+  NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                         JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
+  NS_IMETHOD SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
   NS_IMETHOD GetFlags(PRUint32 *aFlags);
 
