@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: secsign.c,v 1.17 2006/03/15 21:42:21 rrelyea%redhat.com Exp $ */
+/* $Id: secsign.c,v 1.18 2006/06/23 17:01:37 rrelyea%redhat.com Exp $ */
 
 #include <stdio.h>
 #include "cryptohi.h"
@@ -88,6 +88,13 @@ SGN_NewContext(SECOidTag alg, SECKEYPrivateKey *key)
 	PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
 	return 0;
     }
+
+#ifndef NSS_ECC_MORE_THAN_SUITE_B
+    if (key->keyType == ecKey) {
+	PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
+	return 0;
+    }
+#endif
 
     cx = (SGNContext*) PORT_ZAlloc(sizeof(SGNContext));
     if (cx) {
