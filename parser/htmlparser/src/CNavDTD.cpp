@@ -1547,7 +1547,9 @@ CNavDTD::HandleEndToken(CToken* aToken)
 
     case eHTMLTag_head:
       StripWSFollowingTag(theChildTag, mTokenizer, mTokenAllocator, mLineNumber);
-      result = CloseContainersTo(eHTMLTag_head, PR_FALSE);
+      if (mBodyContext->LastOf(eHTMLTag_head) != kNotFound) {
+        result = CloseContainersTo(eHTMLTag_head, PR_FALSE);
+      }
       mFlags &= ~NS_DTD_FLAG_HAS_EXPLICIT_HEAD;
       break;
 
