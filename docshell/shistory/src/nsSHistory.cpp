@@ -116,7 +116,8 @@ nsSHistoryObserver::Observe(nsISupports *aSubject, const char *aTopic,
     }
 
     nsSHistory::EvictGlobalContentViewer();
-  } else if (!strcmp(aTopic, NS_CACHESERVICE_EMPTYCACHE_TOPIC_ID)) {
+  } else if (!strcmp(aTopic, NS_CACHESERVICE_EMPTYCACHE_TOPIC_ID) ||
+             !strcmp(aTopic, "memory-pressure")) {
     nsSHistory::EvictAllContentViewers();
   }
 
@@ -242,13 +243,16 @@ nsSHistory::Startup()
       branch->AddObserver(PREF_SHISTORY_MAX_TOTAL_VIEWERS,
                           obs, PR_FALSE);
 
-      // Observe empty-cache notifications so that clearing the disk/memory
-      // cache will also evict all content viewers.
       nsCOMPtr<nsIObserverService> obsSvc =
         do_GetService("@mozilla.org/observer-service;1");
       if (obsSvc) {
+        // Observe empty-cache notifications so tahat clearing the disk/memory
+        // cache will also evict all content viewers.
         obsSvc->AddObserver(obs,
                             NS_CACHESERVICE_EMPTYCACHE_TOPIC_ID, PR_FALSE);
+
+        // Same for memory-pressure notifications
+        obsSvc->AddObserver(obs, "memory-pressure", PR_FALSE);
       }
     }
   }
