@@ -4,7 +4,7 @@
 Summary:          Svrcore - development files for secure PIN handling using NSS crypto
 Name:             svrcore-devel
 Version:          4.0.2
-Release:          1
+Release:          1%{?dist}
 License:          MPL/GPL/LGPL
 URL:              http://www.mozilla.org/projects/security/pki/
 Group:            Development/Libraries
@@ -14,9 +14,12 @@ BuildRoot:        %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires:    nspr-devel >= %{nspr_version}
 BuildRequires:    nss-devel >= %{nss_version}
 BuildRequires:    gawk
+BuildRequires:    perl
+BuildRequires:    sed
+BuildRequires:    pkgconfig
 Provides:         svrcore-devel
 
-Source0:          %{name}-%{version}.tar.gz
+Source0:          ftp://ftp.mozilla.org/pub/mozilla.org/directory/svrcore/releases/4.0.2/%{name}-%{version}.tar.gz
 
 %description
 svrcore provides applications with several ways to handle secure PIN storage

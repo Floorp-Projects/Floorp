@@ -86,7 +86,7 @@ SVRCORE_TAG=SVRCORE_4_0_2_RTM
 SVRCORE_CORECONF_TAG=$SVRCORE_TAG
 PRJ=${PACKAGE}-${VERSION}
 RPM_HOME=`pwd`
-SPEC_FILENAME=svrcore.spec
+SPEC_FILENAME=svrcore-devel.spec
 
 # define subroutines for this script
 usage() {
