@@ -2499,9 +2499,12 @@ print_td:
       case bltestECDSA:
           if (td)
               fprintf(stdout, "%12s", "ec_curve");
-          else
+          else {
+	      ECCurveName curveName = info->params.ecdsa.eckey->ecParams.name;
               fprintf(stdout, "%12s",
-                      ecCurve_map[info->params.ecdsa.eckey->ecParams.name]->text);
+                      ecCurve_map[curveName]? ecCurve_map[curveName]->text:
+					      "Unsupported curve");
+	  }
           break;
 #endif
       case bltestMD2:
