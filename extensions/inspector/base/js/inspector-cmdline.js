@@ -79,28 +79,31 @@ InspectorCmdLineHandler.prototype =
 
   /* nsICommandLineHandler */
   handle : function handler_handle(cmdLine) {
-    var args;
-    try {
-      var uristr = cmdLine.handleFlagWithParam("inspect", false);
-      if (uristr) {
-        var uri = cmdLine.resolveURI(uristr);
-        args = Components.classes["@mozilla.org/supports-string;1"]
+    var args = Components.classes["@mozilla.org/supports-string;1"]
                          .createInstance(nsISupportsString);
-        args.data = uri.spec;
+    try {
+      var uristr = cmdLine.handleFlagWithParam("inspector", false);
+      if (uristr == null)
+        return;
+      try {
+        args.data = cmdLine.resolveURI(uristr).spec;
+      }
+      catch (e) {
+        return;
       }
     }
     catch (e) {
+      cmdLine.handleFlag("inspector", true);
     }
 
-    if (args || cmdLine.handleFlag("inspector", false)) {
-      var wwatch = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                             .getService(nsIWindowWatcher);
-      wwatch.openWindow(null, "chrome://inspector/content/", "_blank",
-                        "chrome,dialog=no,all", args);
-    }
+    var wwatch = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                           .getService(nsIWindowWatcher);
+    wwatch.openWindow(null, "chrome://inspector/content/", "_blank",
+                      "chrome,dialog=no,all", args);
+    cmdLine.preventDefault = true;
   },
 
-  helpInfo : "  -inspect <url>       Open the URL in the DOM inspector.\n  -inspector           Open the DOM inspector.\n"
+  helpInfo : "  -inspector <url>     Open the DOM inspector.\n"
 };
 
 
