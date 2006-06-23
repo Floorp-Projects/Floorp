@@ -432,7 +432,7 @@ static const unsigned int kMaxTitleLength = 50;
       {
         BOOL backgroundLoad = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
         if ([[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL])
-          [bwc openNewTabWithURL:itemURL referrer:nil loadInBackground:backgroundLoad allowPopups:NO];
+          [bwc openNewTabWithURL:itemURL referrer:nil loadInBackground:backgroundLoad allowPopups:NO setJumpback:NO];
         else
           [bwc openNewWindowWithURL:itemURL referrer: nil loadInBackground:backgroundLoad allowPopups:NO];
       }

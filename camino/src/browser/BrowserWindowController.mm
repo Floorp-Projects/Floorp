@@ -2992,7 +2992,7 @@ enum BWCOpenDest {
   // jump back to if this new one is closed w/out switching to any other tabs.
   // This must come after the call to |openNewTab:| which clears the jumpback
   // tab and changes the selected tab to the new tab.
-  if (inSetJumpback)
+  if (inSetJumpback && !aLoadInBG)
     [mTabBrowser setJumpbackTab:previouslySelected];
 
   [[newTab view] loadURI:aURLSpec referrer:aReferrer flags:NSLoadFlagsNone activate:!aLoadInBG allowPopups:inAllowPopups];
@@ -3014,7 +3014,8 @@ enum BWCOpenDest {
   // jump back to if this new one is closed w/out switching to any other tabs.
   // This must come after the call to |openNewTab:| which clears the jumpback
   // tab and changes the selected tab to the new tab.
-  [mTabBrowser setJumpbackTab:previouslySelected];
+  if (!inLoadInBG)
+    [mTabBrowser setJumpbackTab:previouslySelected];
 
   return [[newTab view] getBrowserView];
 }

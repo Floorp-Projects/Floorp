@@ -556,7 +556,7 @@ const int kReuseWindowOnAE = 2;
     if (openInNewWindow)
       [self openBrowserWindowWithURL:[(Bookmark *)item url] andReferrer:nil behind:behindWindow allowPopups:YES];
     else if (openInNewTab)
-      [browserWindowController openNewTabWithURL:[(Bookmark *)item url] referrer:nil loadInBackground:newTabInBackground allowPopups:YES];
+      [browserWindowController openNewTabWithURL:[(Bookmark *)item url] referrer:nil loadInBackground:newTabInBackground allowPopups:YES setJumpback:NO];
     else
       [browserWindowController loadURL:[(Bookmark *)item url] referrer:nil activate:YES allowPopups:YES];
   }
@@ -1107,7 +1107,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
     if (tabOrWindowIsAvailable || reuseWindow == kReuseWindowOnAE)
       [controller loadURL:inURLString referrer:nil activate:YES allowPopups:NO];
     else if (reuseWindow == kOpenNewTabOnAE)
-      [controller openNewTabWithURL:inURLString referrer:aReferrer loadInBackground:loadInBackground allowPopups:NO];
+      [controller openNewTabWithURL:inURLString referrer:aReferrer loadInBackground:loadInBackground allowPopups:NO setJumpback:NO];
     else
     {
       // note that we're opening a new window here

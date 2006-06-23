@@ -471,7 +471,7 @@ NSString* const kTabBarBackgroundDoubleClickedNotification = @"kTabBarBackground
 
 -(void)addTabForURL:(NSString*)aURL referrer:(NSString*)aReferrer
 {
-  [[[self window] windowController] openNewTabWithURL:aURL referrer:aReferrer loadInBackground:YES allowPopups:NO];
+  [[[self window] windowController] openNewTabWithURL:aURL referrer:aReferrer loadInBackground:YES allowPopups:NO setJumpback:NO];
 }
 
 #pragma mark -
@@ -492,6 +492,7 @@ NSString* const kTabBarBackgroundDoubleClickedNotification = @"kTabBarBackground
 
 - (void)setJumpbackTab:(BrowserTabViewItem*)inTab
 {
+NSLog(@"setting jumpback to %d", inTab);
   mJumpbackTab = inTab;
 }
 

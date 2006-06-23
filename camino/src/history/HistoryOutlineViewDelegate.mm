@@ -204,7 +204,7 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
     if (cmdKeyDown)
     {
       if (openInTabs)
-        [mBrowserWindowController openNewTabWithURL:url referrer:nil loadInBackground:loadInBackground allowPopups:NO];
+        [mBrowserWindowController openNewTabWithURL:url referrer:nil loadInBackground:loadInBackground allowPopups:NO setJumpback:YES];
       else
         [mBrowserWindowController openNewWindowWithURL:url referrer: nil loadInBackground:loadInBackground allowPopups:NO];
     }
@@ -273,7 +273,7 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
   while ((curItem = [itemsEnum nextObject]))
   {
     if ([curItem isKindOfClass:[HistorySiteItem class]])
-      [mBrowserWindowController openNewTabWithURL:[curItem url] referrer:nil loadInBackground:backgroundLoad allowPopups:NO];
+      [mBrowserWindowController openNewTabWithURL:[curItem url] referrer:nil loadInBackground:backgroundLoad allowPopups:NO setJumpback:YES];
   }
 }
 
