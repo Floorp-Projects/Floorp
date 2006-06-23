@@ -267,7 +267,7 @@ class Patch extends AUS_Object {
      * @return boolean
      */
     function isTrunk($version) {
-       return ($version == 'trunk') ? true : false;
+       return $version === 'trunk';
     }
 
     /**
