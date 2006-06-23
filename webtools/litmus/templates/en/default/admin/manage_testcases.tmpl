@@ -67,10 +67,12 @@ function loadTestcase() {
   var testcase_id = testcase_select.options[testcase_select.selectedIndex].value;
 
   disableForm('edit_testcase_form');
+  toggleMessage('loading','Loading Testcase ID# ' + testcase_id + '...');
   var url = 'json.cgi?testcase_id=' + testcase_id;
   var d = loadJSONDoc(url);
   d.addBoth(function (res) { 
     d.deferred = null;  
+    toggleMessage('none');
     return res; 
   }); 
   d.addCallback(populateTestcase); 

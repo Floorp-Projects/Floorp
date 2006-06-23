@@ -365,7 +365,10 @@ function toggleMessage(msgType,msg) {
 
   switch (msgType) {
     case "loading":
-      em.innerHTML = '<div class="loading">Loading...</div>';
+      if (!msg || msg == '') {
+        msg = 'Loading...';
+      }
+      em.innerHTML = '<div class="loading">'+msg+'</div>';
       em.style.display = 'block';
       break;
     case "info":
