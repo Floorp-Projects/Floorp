@@ -65,6 +65,9 @@ const nsISidebar                = Components.interfaces.nsISidebar;
 const nsISidebarExternal        = Components.interfaces.nsISidebarExternal;
 const nsIClassInfo              = Components.interfaces.nsIClassInfo;
 
+// File extension for Sherlock search plugin description files
+const SHERLOCK_FILE_EXT_REGEXP = /\.src$/i;
+
 function nsSidebar()
 {
     const PROMPTSERVICE_CONTRACTID = "@mozilla.org/embedcomp/prompt-service;1";
@@ -183,21 +186,16 @@ function (engineURL, suggestedTitle)
   return {confirmed: confirm, useNow: checked.value};
 }
 
-// The expected suffix for the engine URL should be bare, i.e. without the
-// leading dot.  "src" (for Sherlock files) and "xml" (for OpenSearch files)
-// are common choices.
 nsSidebar.prototype.validateSearchEngine =
-function (engineURL, expectedSuffix, iconURL)
+function (engineURL, iconURL)
 {
   try
   {
-    // make sure using HTTP, HTTPS, or FTP and refering to the expected kind of file
-    // for the engine.
-    const engineRegexp = new RegExp("^(https?|ftp):\/\/.+\." + expectedSuffix + "$", "i");
-    if (! engineRegexp.test(engineURL))
+    // Make sure we're using HTTP, HTTPS, or FTP.
+    if (! /^(https?|ftp):\/\//i.test(engineURL))
       throw "Unsupported search engine URL";
   
-    // make sure using HTTP, HTTPS, or FTP and refering to a
+    // Make sure we're using HTTP, HTTPS, or FTP and refering to a
     // .gif/.jpg/.jpeg/.png/.ico file for the icon.
     if (iconURL &&
         ! /^(https?|ftp):\/\/.+\.(gif|jpg|jpeg|png|ico)$/i.test(iconURL))
@@ -219,15 +217,23 @@ function (engineURL, iconURL, suggestedTitle, suggestedCategory)
   debug("addSearchEngine(" + engineURL + ", " + iconURL + ", " +
         suggestedCategory + ", " + suggestedTitle + ")");
 
-  if (!this.validateSearchEngine(engineURL, "src", iconURL))
+  if (!this.validateSearchEngine(engineURL, iconURL))
     return;
 
   var confirmation = this.confirmSearchEngine(engineURL, suggestedTitle);
   if (!confirmation.confirmed)
     return;
 
-  const typeText = Components.interfaces.nsISearchEngine.DATA_TEXT;
-  this.searchService.addEngine(engineURL, typeText, iconURL,
+  // OpenSearch files will likely be far more common than Sherlock files, and
+  // have less consistent suffixes, so we assume that ".src" is a Sherlock
+  // (text) file, and anything else is OpenSearch (XML).
+  var dataType;
+  if (SHERLOCK_FILE_EXT_REGEXP.test(engineURL))
+    dataType = Components.interfaces.nsISearchEngine.DATA_TEXT;
+  else
+    dataType = Components.interfaces.nsISearchEngine.DATA_XML;
+
+  this.searchService.addEngine(engineURL, dataType, iconURL,
                                confirmation.useNow);
 }
 
@@ -249,7 +255,7 @@ function (aDescriptionURL)
   if (browser.shouldLoadFavIcon(browser.selectedBrowser.currentURI))
     iconURL = win.gProxyFavIcon.getAttribute("src");
   
-  if (!this.validateSearchEngine(aDescriptionURL, "xml", iconURL))
+  if (!this.validateSearchEngine(aDescriptionURL, iconURL))
     return;
 
   var confirmation = this.confirmSearchEngine(aDescriptionURL, "");
@@ -302,7 +308,7 @@ nsSidebar.prototype.getHelperForLanguage = function(count) {return null;}
 nsSidebar.prototype.QueryInterface =
 function (iid) {
     if (!iid.equals(nsISidebar) &&
-				!iid.equals(nsISidebarExternal) &&
+        !iid.equals(nsISidebarExternal) &&
         !iid.equals(nsIClassInfo) &&
         !iid.equals(nsISupports))
         throw Components.results.NS_ERROR_NO_INTERFACE;
