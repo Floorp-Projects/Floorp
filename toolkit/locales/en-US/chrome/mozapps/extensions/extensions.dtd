@@ -97,10 +97,10 @@
 <!ENTITY needsUninstall.label             "Will be uninstalled when &brandShortName; is restarted.">
 <!ENTITY needsUpgrade.label               "Will be upgraded when &brandShortName; is restarted.">
 
-<!ENTITY getMoreExtensions.label          "Get More Extensions">
-<!ENTITY getMoreExtensions.tooltip        "Get More Extensions from addons.mozilla.org">
-<!ENTITY getMoreThemes.label              "Get More Themes">
-<!ENTITY getMoreThemes.tooltip            "Get More Themes from addons.mozilla.org">
+<!ENTITY getExtensions.label              "Get Extensions">
+<!ENTITY getExtensions.tooltip            "Get Extensions from addons.mozilla.org">
+<!ENTITY getThemes.label                  "Get Themes">
+<!ENTITY getThemes.tooltip                "Get Themes from addons.mozilla.org">
 <!ENTITY previewNoThemeSelected.label     "No Theme Selected">
 <!ENTITY previewNoPreviewImage.label      "This Theme does not have a Preview Image">
 <!ENTITY moreInfo.label                   "More Information">
