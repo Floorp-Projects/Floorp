@@ -29,6 +29,7 @@
   # $testcase   - the testcase object to show
   # $show_config  - display the config options (testgroup, subgroup, etc.)
   #                 for a given testcase
+  # $show_edit (optional) - display testcase for editing
 #%]
 
 [% PROCESS global/selects.none.tmpl %]
@@ -38,30 +39,29 @@
   <tr>
   <td width="20%"><b>Product:</b></td>
   <td>
-    <div id="product_text_[% testcase.testcase_id | html %]">[% testcase.product.name | html %]</div>
+    <div id="product_text[% IF ! show_edit %]_[% testcase.testcase_id | html %][% END %]">[% testcase.product.name | html %]</div>
     </td>
-    <td align="right" valign="top" colspan="5"><a href="manage_testcases.cgi?testcase_id=[%testcase.testcase_id | html%]"> Edit Testcase</a>
-    </td>
+    [% IF ! show_edit %]<td align="right" valign="top" colspan="5"><a href="manage_testcases.cgi?testcase_id=[%testcase.testcase_id | html%]"> Edit Testcase</a></td>[% END %]
   </tr>
   <tr>
     <td><b>Test Group(s):</b></td>
     <td>
-      <div id="testgroups_[% testcase.testcase_id | html %]">[% IF testgroups.size==0 %]<span class="errorHeading">This testcase does not belong to any testgroups that are currently enabled.</span>[% ELSE %][% FOREACH testgroup=testgroups %][% testgroup.name | html %][% UNLESS loop.last %], [% END %][% END %][% END %]</div>
+      <div id="testgroups_display[% IF ! show_edit %]_[% testcase.testcase_id | html %][% END %]">[% IF testgroups.size==0 %]<span class="errorHeading">This testcase does not belong to any testgroups that are currently enabled.</span>[% ELSE %][% FOREACH testgroup=testgroups %][% testgroup.name | html %][% UNLESS loop.last %], [% END %][% END %][% END %]</div>
     </td>
   </tr>
   <tr>
     <td><b>Subgroup(s):</b></td>
     <td>
-      <div id="subgroups_[% testcase.testcase_id | html %]">[% IF subgroups.size==0 %]<span class="errorHeading">This testcase does not belong to any subgroups that are currently enabled.</span>[% ELSE %][% FOREACH subgroup=subgroups %][% subgroup.name | html %][% UNLESS loop.last %], [% END %][% END %][% END %]</div>
+      <div id="subgroups_display[% IF ! show_edit %]_[% testcase.testcase_id | html %][% END %]">[% IF subgroups.size==0 %]<span class="errorHeading">This testcase does not belong to any subgroups that are currently enabled.</span>[% ELSE %][% FOREACH subgroup=subgroups %][% subgroup.name | html %][% UNLESS loop.last %], [% END %][% END %][% END %]</div>
     </td>
   </tr>
   <tr>
     <td><b>Testcase ID #:</b></td>
-    <td>[% testcase.testcase_id | html %]</td>
+    <td id="testcase_id_display[% IF ! show_edit %]_[% testcase.testcase_id | html %][% END %]">[% testcase.testcase_id | html %]</td>
   </tr>
   <tr>
     <td><b>Summary:</b></td>
-    <td><div id="summary_text_[%testcase.testcase_id | html%]">[% testcase.summary | html %]</div></td>
+    <td><div id="summary_text[% IF ! show_edit %]_[%testcase.testcase_id | html%][% END %]">[% testcase.summary | html %]</div></td>
   </tr>
 </table>
 
@@ -71,16 +71,16 @@
 <table cellspacing="0" cellpadding="0" class="tcm">
   <tr>
    <td width="50%" class="content"><div class="dh">Steps to Perform:</div>
-     <div class="dv" id="steps_text_[%testcase.testcase_id | html%]">[% testcase.steps | markdown | testdata %]</div>
+     <div class="dv" id="steps_text[% IF ! show_edit %]_[%testcase.testcase_id | html%][% END %]">[% testcase.steps | markdown | testdata %]</div>
     </td>
     <td width="50%" class="content"><div class="dh">Expected Results:</div>
-      <div class="dv" id="results_text_[%testcase.testcase_id | html%]">[% testcase.expected_results | markdown | testdata %]</div>
+      <div class="dv" id="results_text[% IF ! show_edit %]_[%testcase.testcase_id | html%][% END %]">[% testcase.expected_results | markdown | testdata %]</div>
     </td>
   </tr>
 
-  [% IF defaultemail OR sysconfig %]
+  [% IF defaultemail AND ! show_edit %]
   <!-- Only allow the user to submit a single result if they are already 
-       logged in _AND_ have a sysconfig cookie for the current product. -->
+       logged in. -->
   <tr>
    <td class="content" colspan="2">
 
