@@ -125,13 +125,39 @@ if (defined($tree)) {
 #  Trim logs.
 #
 
+    # Determine the collective size & age of the build logs
+    opendir(TRIM_DIR, "$tree") || die "opendir($tree): $!";
+    my @trim_files = grep { /\.(?:gz|brief\.html)$/ && -f "$tree/$_" } readdir(TRIM_DIR);
+    close(TRIM_DIR);
+    my $trim_bytes = 0;
+    my $now = time();
+    my $trim_oldest = $now;
+    my $size_K = 1024;
+    my $size_M = 1048576;
+    my $size_G = 1073741824;
+    for my $file (@trim_files) {
+        my @file_stat = stat("$tree/$file");
+        $trim_bytes += $file_stat[7];
+        $trim_oldest = $file_stat[9] if ($trim_oldest > $file_stat[9]);
+    }
+    $trim_days = int (($now - $trim_oldest) / 86400);
+    if ($trim_bytes < $size_k) {
+        $trim_size = "$trim_bytes b";
+    } elsif ($trim_bytes < $size_M) {
+        $trim_size = int($trim_bytes / $size_K) . " Kb";
+    } elsif ($trim_bytes < $size_G){
+        $trim_size = int($trim_bytes / $size_M) . " Mb";
+    } else {
+        $trim_size = int($trim_bytes / $size_G) . " Gb";
+    }
+
     print "
 <FORM method=post action=doadmin.cgi>
-<INPUT TYPE=HIDDEN NAME=tree VALUE=$tree>
+<INPUT TYPE=HIDDEN NAME=tree VALUE='$tree'>
 <INPUT TYPE=HIDDEN NAME=command VALUE=trim_logs>
 <b>Trim Logs</b><br>
-Trim Logs to <INPUT NAME=days size=5 VALUE='7'> days. (Tinderbox 
-shows 2 days history by default.  You can see more by clicking show all).<br>
+Trim Logs to <INPUT NAME=days size=5 VALUE='$trim_days'> days<br>
+Tinderbox is configured to show up to $who_days days of log history. Currently, there are $trim_days days of logging taking up $trim_size of space.<br>
 <B>Password:</B> <INPUT NAME=password TYPE=password>
 <INPUT TYPE=SUBMIT VALUE='Trim Logs'>
 </FORM>
