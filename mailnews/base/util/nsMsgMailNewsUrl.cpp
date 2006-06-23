@@ -574,10 +574,21 @@ NS_IMETHODIMP nsMsgMailNewsUrl::Clone(nsIURI **_retval)
   nsresult rv;
   nsCAutoString urlSpec;
   nsCOMPtr<nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   rv = GetSpec(urlSpec);
-  if (NS_FAILED(rv)) return rv;
-  return ioService->NewURI(urlSpec, nsnull, nsnull, _retval);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = ioService->NewURI(urlSpec, nsnull, nsnull, _retval);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // add the msg window to the cloned url
+  if (m_msgWindow)
+  {
+    nsCOMPtr<nsIMsgMailNewsUrl> msgMailNewsUrl = do_QueryInterface(*_retval, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    msgMailNewsUrl->SetMsgWindow(m_msgWindow);
+  }
+
+  return rv;
 } 
 
 NS_IMETHODIMP nsMsgMailNewsUrl::Resolve(const nsACString &relativePath, nsACString &result) 
