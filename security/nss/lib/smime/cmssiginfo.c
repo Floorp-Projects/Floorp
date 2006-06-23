@@ -38,7 +38,7 @@
 /*
  * CMS signerInfo methods.
  *
- * $Id: cmssiginfo.c,v 1.30 2006/02/08 06:13:43 rrelyea%redhat.com Exp $
+ * $Id: cmssiginfo.c,v 1.31 2006/06/23 17:01:38 rrelyea%redhat.com Exp $
  */
 
 #include "cmslocal.h"
@@ -380,6 +380,13 @@ NSS_CMSSignerInfo_Verify(NSSCMSSignerInfo *signerinfo,
 	vs = NSSCMSVS_SignatureAlgorithmUnknown;
 	goto loser;
     }
+
+#ifndef NSS_ECC_MORE_THAN_SUITE_B
+    if (pubkAlgTag == SEC_OID_ANSIX962_EC_PUBLIC_KEY) {
+	vs = NSSCMSVS_SignatureAlgorithmUnknown;
+	goto loser;
+    }
+#endif
 
     if (!NSS_CMSArray_IsEmpty((void **)signerinfo->authAttr)) {
 	if (contentType) {

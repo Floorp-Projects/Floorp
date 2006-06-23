@@ -38,7 +38,7 @@
 /*
  * PKCS7 decoding, verification.
  *
- * $Id: p7decode.c,v 1.21 2006/02/08 06:14:18 rrelyea%redhat.com Exp $
+ * $Id: p7decode.c,v 1.22 2006/06/23 17:01:38 rrelyea%redhat.com Exp $
  */
 
 #include "nssrenam.h"
@@ -1662,6 +1662,14 @@ sec_pkcs7_verify_signature(SEC_PKCS7ContentInfo *cinfo,
 	goto done;
     }
 
+#ifndef NSS_ECC_MORE_THAN_SUITE_B
+    if (encTag == SEC_OID_ANSIX962_EC_PUBLIC_KEY) {
+	PORT_SetError(SEC_ERROR_PKCS7_BAD_SIGNATURE);
+	goto done;
+    }
+#endif
+
+
     if (signerinfo->authAttr != NULL) {
 	SEC_PKCS7Attribute *attr;
 	SECItem *value;
@@ -1725,6 +1733,7 @@ sec_pkcs7_verify_signature(SEC_PKCS7ContentInfo *cinfo,
 	    PORT_SetError (SEC_ERROR_PKCS7_BAD_SIGNATURE);
 	    goto done;
 	}
+
 
 	goodsig = (PRBool)(VFY_VerifyDataDirect(encoded_attrs.data, 
 				   encoded_attrs.len,

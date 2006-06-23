@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslimpl.h,v 1.51 2006/04/23 00:17:18 nelson%bolyard.com Exp $ */
+/* $Id: sslimpl.h,v 1.52 2006/06/23 17:01:38 rrelyea%redhat.com Exp $ */
 
 #ifndef __sslimpl_h_
 #define __sslimpl_h_
@@ -180,7 +180,7 @@ typedef enum { SSLAppOpRead = 0,
 #define NUM_MIXERS                      9
 
 /* Mask of the 25 named curves we support. */
-#ifdef NSS_ECC_ONLY_SUITE_B
+#ifndef NSS_ECC_MORE_THAN_SUITE_B
 #define SSL3_SUPPORTED_CURVES_MASK 0x3800000	/* only 3 curves, suite B*/
 #else
 #define SSL3_SUPPORTED_CURVES_MASK 0x3fffffe

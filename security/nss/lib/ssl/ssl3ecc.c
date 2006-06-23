@@ -40,7 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* ECC code moved here from ssl3con.c */
-/* $Id: ssl3ecc.c,v 1.12 2006/05/19 03:59:06 nelson%bolyard.com Exp $ */
+/* $Id: ssl3ecc.c,v 1.13 2006/06/23 17:01:38 rrelyea%redhat.com Exp $ */
 
 #include "nssrenam.h"
 #include "nss.h"
@@ -1030,7 +1030,7 @@ ssl3_IsECCEnabled(sslSocket * ss)
 
 #define BE(n) 0, n
 
-#ifdef NSS_ECC_ONLY_SUITE_B
+#ifndef NSS_ECC_MORE_THAN_SUITE_B
 /* Prefabricated TLS client hello extension, Elliptic Curves List,
  * offers only 3 curves, the Suite B curves, 23-35 
  */

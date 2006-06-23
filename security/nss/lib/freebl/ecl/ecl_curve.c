@@ -91,7 +91,8 @@ ECCurveParams_dup(const ECCurveParams * params)
 ECCurveParams *
 EC_GetNamedCurveParams(const ECCurveName name)
 {
-	if ((name <= ECCurve_noName) || (ECCurve_pastLastCurve <= name)) {
+	if ((name <= ECCurve_noName) || (ECCurve_pastLastCurve <= name) ||
+					(ecCurve_map[name] == NULL)) {
 		return NULL;
 	} else {
 		return ECCurveParams_dup(ecCurve_map[name]);
