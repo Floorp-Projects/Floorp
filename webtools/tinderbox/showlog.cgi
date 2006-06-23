@@ -33,6 +33,9 @@ require 'header.pl';
 $LINES_AFTER_ERROR = 5;
 $LINES_BEFORE_ERROR = 30;
 
+my $last_modified_time = 0;
+my $expires_time = time() + 3600;
+
 # These variables are set by the error parser functions:
 #    has_error(), has_warning(), and has_errorline().
 $error_file = '';
@@ -72,6 +75,14 @@ require "$tree/treedata.pl";
 $time_str = print_time($buildtime);
 
 $|=1;
+
+my @stat_logfile = stat("$tree/$logfile");
+my @stat_notes = stat("$tree/notes.txt");
+if ($stat_logfile[9] > $stat_notes[9]) {
+    $last_modified_time = $stat_logfile[9];
+} else {
+    $last_modified_time = $stat_notes[9];
+}
 
 if ($linenum) {
 
@@ -115,9 +126,10 @@ else
 ############################################################
 
 sub print_fragment {
-  print "Content-type: text/html\n\n";
-
-  print "<META HTTP-EQUIV=\"EXPIRES\" CONTENT=\"1\">\n";
+  print "Content-type: text/html\n";
+  print "Last-Modified: " . gmtime($last_modified_time) . "\n";
+  print "Expires: " . gmtime($expires_time) . "\n";
+  print "\n";
 
   my $heading = "Build Log (Fragment)";
   my $subheading = "$buildname on $time_str";
@@ -145,7 +157,10 @@ sub print_fragment {
 }
 
 sub print_header {
-  print "Content-type: text/html\n\n";
+  print "Content-type: text/html\n";
+  print "Last-Modified: " . gmtime($last_modified_time) . "\n";
+  print "Expires: " . gmtime($expires_time) . "\n";
+  print "\n";
 
   if ($fulltext) {
     $s = 'Show <b>Brief</b> Log';
@@ -158,8 +173,6 @@ sub print_header {
     $s2 = 'Brief';
   }
   
-  print "<META HTTP-EQUIV=\"EXPIRES\" CONTENT=\"1\">\n";
-
   my $heading = "Build Log ($s2)";
   my $subheading = "$buildname on $time_str";
   my $title = "$heading - $subheading";
