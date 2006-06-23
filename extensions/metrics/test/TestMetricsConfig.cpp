@@ -43,6 +43,9 @@
 #include "nsMetricsService.h"
 #include "nsXPCOM.h"
 #include "nsILocalFile.h"
+#ifndef MOZILLA_1_8_BRANCH
+#include "nsIClassInfoImpl.h"
+#endif
 
 #include <stdio.h>
 
