@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Joe Hewitt <hewitt@netscape.com> (original author)
  *   Jason Barnabe <jason_barnabe@fastmail.fm>
+ *   Shawn Wilsher <me@shawnwilsher.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -261,3 +262,22 @@ function CSSDeclaration(aProperty, aValue, aImportant) {
 CSSDeclaration.prototype.toString = function toString() {
   return this.property + ": " + this.value + (this.important ? " !important" : "") + ";";
 }
+
+/**
+ * Represents a DOM attribute.
+ * @param aNode the attribute node
+ */
+function DOMAttribute(aNode)
+{
+  this.flavor = "inspector/dom-attribute";
+  this.node = aNode.cloneNode(false);
+  this.delimiter = " ";
+}
+/**
+ * Returns a string representing an attribute name/value pair
+ * @return a string in the form of 'name="value"'
+ */
+DOMAttribute.prototype.toString = function toString()
+{
+  return this.node.nodeName + "=\"" + InsUtil.unicodeToEntity(this.node.nodeValue) + "\"";
+};

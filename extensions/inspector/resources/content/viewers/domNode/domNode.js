@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Joe Hewitt <hewitt@netscape.com> (original author)
  *   Jason Barnabe <jason_barnabe@fastmail.fm>
+ *   Shawn Wilsher <me@shawnwilsher.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -92,10 +93,48 @@ DOMNodeViewer.prototype =
     return this.mAttrTree.currentIndex;
   },
 
+ /**
+  * Returns an array of the selected indices
+  * @return an array of indices
+  */
+  get selectedIndices()
+  {
+    var indices = [];
+    var rangeCount = this.mAttrTree.view.selection.getRangeCount();
+    for (var i = 0; i < rangeCount; ++i) {
+      var start = {};
+      var end = {};
+      this.mAttrTree.view.selection.getRangeAt(i, start, end);
+      for (var c = start.value; c <= end.value; ++c) {
+        indices.push(c);
+      }
+    }
+    return indices;
+  },
+
+ /**
+  * Returns a DOMAttribute from the selected index
+  * @return a DomAttribute
+  */
   get selectedAttribute()
   {
     var index = this.selectedIndex;
-    return index >= 0 ? this.mDOMView.getNodeFromRowIndex(index) : null;
+    return index >= 0 ?
+      new DOMAttribute(this.mDOMView.getNodeFromRowIndex(index)) : null;
+  },
+
+ /**
+  * Returns an array of DOMAttributes from the selected indices
+  * @return an array of DOMAttributes
+  */
+  get selectedAttributes()
+  {
+    var indices = this.selectedIndices;
+    var attrs = [];
+    for (var i = 0; i < indices.length; ++i) {
+      attrs.push(new DOMAttribute(this.mDOMView.getNodeFromRowIndex(indices[i])));
+    }
+    return attrs;
   },
 
   ////////////////////////////////////////////////////////////////////////////
@@ -165,19 +204,17 @@ DOMNodeViewer.prototype =
   {
     switch (aCommand) {
       case "cmdEditPaste":
-        var canPaste = this.mPanel.panelset.clipboardFlavor == "inspector/dom-node";
-        if (canPaste) {
-          var node = this.mPanel.panelset.getClipboardData();
-          canPaste = node ? node.nodeType == Node.ATTRIBUTE_NODE : false;
-        }
-        return canPaste;
+        var flavor = this.mPanel.panelset.clipboardFlavor;
+        return (flavor == "inspector/dom-attribute" ||
+                flavor == "inspector/dom-attributes");
       case "cmdEditInsert":
         return true;
       case "cmdEditCut":
       case "cmdEditCopy":
-      case "cmdEditEdit":
       case "cmdEditDelete":
         return this.selectedAttribute != null;
+      case "cmdEditEdit":
+        return this.mAttrTree.view.selection.count == 1;
       case "cmdEditNodeValue":
         // this function can be fired before the subject is set
         if (this.subject) {
@@ -202,7 +239,7 @@ DOMNodeViewer.prototype =
       case "cmdEditCut":
         return new cmdEditCut();
       case "cmdEditCopy":
-        return new cmdEditCopy();
+        return new cmdEditCopy(this.selectedAttributes);
       case "cmdEditPaste":
         return new cmdEditPaste();
       case "cmdEditInsert":
@@ -249,9 +286,9 @@ cmdEditCut.prototype =
   {
     if (!this.cmdCopy) {
       this.cmdDelete = new cmdEditDelete();
-      this.cmdCopy = new cmdEditCopy();
+      this.cmdCopy = new cmdEditCopy(viewer.selectedAttributes);
     }
-    this.cmdCopy.doCommand();
+    this.cmdCopy.doTransaction();
     this.cmdDelete.doCommand();    
   },
 
@@ -261,60 +298,71 @@ cmdEditCut.prototype =
   }
 };
 
-function cmdEditCopy() {}
-cmdEditCopy.prototype =
-{
-  copiedAttr: null,
-    
-  doCommand: function()
-  {
-    var copiedAttr = null;
-    if (!this.copiedAttr) {
-      copiedAttr = viewer.selectedAttribute;
-      if (!copiedAttr)
-        return true;
-      this.copiedAttr = copiedAttr;
-    } else
-      copiedAttr = this.copiedAttr;
-      
-    var text = copiedAttr.nodeName + "=\"" + InsUtil.unicodeToEntity(copiedAttr.nodeValue) + "\"";
-    viewer.pane.panelset.setClipboardData(copiedAttr, "inspector/dom-node", text);
-    return true;
-  }
-};
-
 function cmdEditPaste() {}
 cmdEditPaste.prototype =
 {
   pastedAttr: null,
   previousAttrValue: null,
   subject: null,
+  flavor: null,
   
   doCommand: function()
   {
-    var subject, pastedAttr;
+    var subject, pastedAttr, flavor;
     if (this.subject) {
       subject = this.subject;
       pastedAttr = this.pastedAttr;
+      flavor = this.flavor;
     } else {
       subject = viewer.subject;
       pastedAttr = viewer.pane.panelset.getClipboardData();
+      flavor = viewer.pane.panelset.clipboardFlavor;
       this.pastedAttr = pastedAttr;
       this.subject = subject;
-      this.previousAttrValue = viewer.subject.getAttribute(pastedAttr.nodeName);
+      this.flavor = flavor;
+      if (flavor == "inspector/dom-attributes") {
+        this.previousAttrValue = [];
+        for (var i = 0; i < pastedAttr.length; ++i) {
+          this.previousAttrValue[pastedAttr[i].node.nodeName] =
+            viewer.subject.getAttribute(pastedAttr[i].node.nodeName);
+        }
+      } else if (flavor == "inspector/dom-attribute") {
+        this.previousAttrValue =
+          viewer.subject.getAttribute(pastedAttr.node.nodeName);
+      }
     }
     
-    if (subject && pastedAttr)
-      subject.setAttribute(pastedAttr.nodeName, pastedAttr.nodeValue);      
+    if (subject && pastedAttr) {
+      if (flavor == "inspector/dom-attributes") {
+        for (var i = 0; i < pastedAttr.length; ++i) {
+          subject.setAttribute(pastedAttr[i].node.nodeName,
+                               pastedAttr[i].node.nodeValue);
+        }
+      } else if (flavor == "inspector/dom-attribute") {
+        subject.setAttribute(pastedAttr.node.nodeName,
+                             pastedAttr.node.nodeValue);
+      }
+    }
   },
   
   undoCommand: function()
   {
     if (this.pastedAttr) {
-      if (this.previousAttrValue)
-        this.subject.setAttribute(this.pastedAttr.nodeName, this.previousAttrValue);
-      else
-        this.subject.removeAttribute(this.pastedAttr.nodeName);
+      if (this.flavor == "inspector/dom-attributes") {
+        for (var i = 0; i < this.pastedAttr.length; ++i) {
+          if (this.previousAttrValue[this.pastedAttr[i].node.nodeName])
+            this.subject.setAttribute(this.pastedAttr[i].node.nodeName,
+                      this.previousAttrValue[this.pastedAttr[i].node.nodeName]);
+          else
+            this.subject.removeAttribute(this.pastedAttr[i].node.nodeName);
+        }
+      } else if (this.flavor == "inspector/dom-attribute") {
+        if (this.previousAttrValue)
+          this.subject.setAttribute(this.pastedAttr.node.nodeName,
+                                    this.previousAttrValue);
+        else
+          this.subject.removeAttribute(this.pastedAttr.node.nodeName);
+      }
     }
   }
 };
@@ -370,26 +418,36 @@ cmdEditInsert.prototype =
 function cmdEditDelete() {}
 cmdEditDelete.prototype =
 {
-  attr: null,
+  attrs: null,
   subject: null,
   
   doCommand: function()
   {
-    var attr = this.attr ? this.attr : viewer.selectedAttribute;
-    if (attr) {
-      this.attr = attr;
+    var attrs = this.attrs ? this.attrs : viewer.selectedAttributes;
+    if (attrs) {
+      this.attrs = attrs;
       this.subject = viewer.subject;
-      this.subject.removeAttribute(attr.nodeName);
+      for (var i = 0; i < this.attrs.length; ++i) {
+        this.subject.removeAttribute(this.attrs[i].node.nodeName);
+      }
     }
   },
   
   undoCommand: function()
   {
-    if (this.attr)
-      this.subject.setAttribute(this.attr.nodeName, this.attr.nodeValue);
+    if (this.attrs) {
+      for (var i = 0; i < this.attrs.length; ++i) {
+        this.subject.setAttribute(this.attrs[i].node.nodeName,
+                                  this.attrs[i].node.nodeValue);
+      }
+    }
   }
 };
 
+// XXX when editing the a attribute in this document:
+// data:text/xml,<x a="hi&#x0a;lo&#x0d;go"/>
+// You only get "hi" and not the mutltiline text (windows)
+// This seems to work on Linux, but not very usable
 function cmdEditEdit() {}
 cmdEditEdit.prototype =
 {
@@ -400,7 +458,7 @@ cmdEditEdit.prototype =
   
   promptFor: function()
   {
-    var attr = viewer.selectedAttribute;
+    var attr = viewer.selectedAttribute.node;
     if (attr) {
       if (!gPromptService) {
         gPromptService = XPCU.getService(kPromptServiceCID, "nsIPromptService");
