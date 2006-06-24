@@ -1638,14 +1638,7 @@ var gExtensionsViewController = {
       var name = aSelectedItem.getAttribute("name");
       var id = getIDFromResourceURI(aSelectedItem.id);
       var dependentItems = gExtensionManager.getDependentItemListForID(id, true, { });
-
-      if (dependentItems.length > 0)
-        var message = getExtensionString("uninstallWarningDependMsg", [name]);
-      else
-        message = getExtensionString("uninstallWarningMessage", [name]);
-
       var params = {
-        message1: message,
         message2: getExtensionString("uninstallQueryMessage", [name]),
         title: getExtensionString("uninstallTitle", [name]),
         buttons: {
@@ -1654,6 +1647,8 @@ var gExtensionsViewController = {
           cancel: { label: getExtensionString("cancelButton") }
         }
       }
+      if (dependentItems.length > 0)
+        params.message1 = getExtensionString("uninstallWarnDependMsg", [name]);
       var names = [];
       for (var i = 0; i < dependentItems.length; ++i)
         names.push(dependentItems[i].name + " " + dependentItems[i].version);

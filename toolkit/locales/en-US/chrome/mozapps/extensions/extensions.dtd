@@ -91,11 +91,11 @@
 <!-- Status Messsages -->
 <!ENTITY needsDependencies.label          "Requires additional items.">
 <!ENTITY blocklisted.label                "Disabled for your protection.">
-<!ENTITY needsDisable.label               "Will be disabled when &brandShortName; is restarted.">
-<!ENTITY needsEnable.label                "Will be enabled when &brandShortName; is restarted.">
-<!ENTITY needsInstall.label               "Will be installed when &brandShortName; is restarted.">
-<!ENTITY needsUninstall.label             "Will be uninstalled when &brandShortName; is restarted.">
-<!ENTITY needsUpgrade.label               "Will be upgraded when &brandShortName; is restarted.">
+<!ENTITY toBeDisabled.label               "This add-on will be disabled when &brandShortName; is restarted.">
+<!ENTITY toBeEnabled.label                "This add-on will be enabled when &brandShortName; is restarted.">
+<!ENTITY toBeInstalled.label              "This add-on will be installed when &brandShortName; is restarted.">
+<!ENTITY toBeUninstalled.label            "This add-on will be uninstalled when &brandShortName; is restarted.">
+<!ENTITY toBeUpgraded.label               "This add-on will be upgraded when &brandShortName; is restarted.">
 
 <!ENTITY getExtensions.label              "Get Extensions">
 <!ENTITY getExtensions.tooltip            "Get Extensions from addons.mozilla.org">
