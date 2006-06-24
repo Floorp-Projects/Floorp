@@ -224,7 +224,7 @@ libs::
 	$(INSTALL) $(DIST)/branding/default.xpm $(DIST)/bin/chrome/icons/default
 
 install::
-	$(SYSINSTALL) $(IFLAGS1) $(DIST)/branding/default.xpm $(DESTDIR)$(mozappdir)/icons
+	$(SYSINSTALL) $(IFLAGS1) $(DIST)/branding/default.xpm $(DESTDIR)$(mozappdir)/chrome/icons/default
 endif
 
 # XXX applications would need to supply this file
