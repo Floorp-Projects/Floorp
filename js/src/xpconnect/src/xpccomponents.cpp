@@ -2394,6 +2394,36 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
 #endif
 }
 
+class ContextHolder : public nsISupports
+{
+public:
+    ContextHolder(JSContext *aOuterCx, JSObject *aSandbox);
+
+    JSContext * GetJSContext()
+    {
+        return mJSContext;
+    }
+
+    NS_DECL_ISUPPORTS
+
+private:
+    XPCAutoJSContext mJSContext;
+};
+
+NS_IMPL_ISUPPORTS0(ContextHolder)
+
+ContextHolder::ContextHolder(JSContext *aOuterCx, JSObject *aSandbox)
+    : mJSContext(JS_NewContext(JS_GetRuntime(aOuterCx), 1024), JS_FALSE)
+{
+    if (mJSContext) {
+        JS_SetOptions(mJSContext,
+                      JSOPTION_DONT_REPORT_UNCAUGHT |
+                      JSOPTION_PRIVATE_IS_NSISUPPORTS);
+        JS_SetGlobalObject(mJSContext, aSandbox);
+        JS_SetContextPrivate(mJSContext, this);
+    }
+}
+
 /***************************************************************************/
 
 /* void evalInSandbox(in AString source, in nativeobj sandbox); */
@@ -2460,21 +2490,18 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString &source)
         return NS_ERROR_FAILURE;
     }
 
-    XPCAutoJSContext sandcx(JS_NewContext(JS_GetRuntime(cx), 1024), false);
-    if(!sandcx) {
+    nsRefPtr<ContextHolder> sandcx = new ContextHolder(cx, sandbox);
+    if(!sandcx || !sandcx->GetJSContext()) {
         JS_ReportError(cx, "Can't prepare context for evalInSandbox");
         JSPRINCIPALS_DROP(cx, jsPrincipals);
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    JS_SetOptions(sandcx, JSOPTION_DONT_REPORT_UNCAUGHT);
-    JS_SetGlobalObject(sandcx, sandbox);
-
     XPCPerThreadData *data = XPCPerThreadData::GetData();
     XPCJSContextStack *stack;
     PRBool popContext = PR_FALSE;
     if (data && (stack = data->GetJSContextStack())) {
-        if (NS_FAILED(stack->Push(sandcx))) {
+        if (NS_FAILED(stack->Push(sandcx->GetJSContext()))) {
             JS_ReportError(cx,
                     "Unable to initialize XPConnect with the sandbox context");
             JSPRINCIPALS_DROP(cx, jsPrincipals);
@@ -2500,15 +2527,16 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString &source)
         }
     }
 
-    AutoJSRequestWithNoCallContext req(sandcx);
-    if (!JS_EvaluateUCScriptForPrincipals(sandcx, sandbox, jsPrincipals,
+    AutoJSRequestWithNoCallContext req(sandcx->GetJSContext());
+    if (!JS_EvaluateUCScriptForPrincipals(sandcx->GetJSContext(), sandbox,
+                                          jsPrincipals,
                                           NS_REINTERPRET_CAST(const jschar *,
                                               PromiseFlatString(source).get()),
                                           source.Length(), filename.get(),
                                           lineNo, rval)) {
         jsval exn;
-        if (JS_GetPendingException(sandcx, &exn)) {
-            AutoJSSuspendRequestWithNoCallContext sus(sandcx);
+        if (JS_GetPendingException(sandcx->GetJSContext(), &exn)) {
+            AutoJSSuspendRequestWithNoCallContext sus(sandcx->GetJSContext());
             AutoJSRequestWithNoCallContext cxreq(cx);
 
             JS_SetPendingException(cx, exn);

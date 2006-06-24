@@ -155,6 +155,7 @@ class nsCryptoRunArgs : public nsISupports {
 public:
   nsCryptoRunArgs();
   virtual ~nsCryptoRunArgs();
+  nsCOMPtr<nsISupports> m_kungFuDeathGrip;
   JSContext *m_cx;
   JSObject  *m_scope;
   nsCOMPtr<nsIPrincipal> m_principals;
@@ -1413,7 +1414,15 @@ loser:
   return nsnull;;
 }
 
-                                                 
+static nsISupports *
+GetISupportsFromContext(JSContext *cx)
+{
+    if (JS_GetOptions(cx) & JSOPTION_PRIVATE_IS_NSISUPPORTS)
+        return NS_STATIC_CAST(nsISupports *, JS_GetContextPrivate(cx));
+
+    return nsnull;
+}
+
 //The top level method which is a member of nsIDOMCrypto
 //for generate a base64 encoded CRMF request.
 NS_IMETHODIMP
@@ -1620,6 +1629,7 @@ nsCrypto::GenerateCRMFRequest(nsIDOMCRMFObject** aReturn)
     return NS_ERROR_OUT_OF_MEMORY;
 
   args->m_cx         = cx;
+  args->m_kungFuDeathGrip = GetISupportsFromContext(cx);
   args->m_scope      = JS_GetParent(cx, script_obj);
   args->m_jsCallback.Adopt(jsCallback ? nsCRT::strdup(jsCallback) : 0);
   args->m_principals = principals;
