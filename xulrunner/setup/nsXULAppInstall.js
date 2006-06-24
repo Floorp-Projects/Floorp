@@ -45,7 +45,6 @@ const nsIINIParserFactory = Components.interfaces.nsIINIParserFactory;
 const nsILocalFile        = Components.interfaces.nsILocalFile;
 const nsISupports         = Components.interfaces.nsISupports;
 const nsIXULAppInstall    = Components.interfaces.nsIXULAppInstall;
-const nsIZipEntry         = Components.interfaces.nsIZipEntry;
 const nsIZipReader        = Components.interfaces.nsIZipReader;
 
 function getDirectoryKey(aKey) {
@@ -131,8 +130,7 @@ directoryExtractor.prototype = {
 function zipExtractor(aFile) {
   this.mZipReader = Components.classes["@mozilla.org/libjar/zip-reader;1"].
     createInstance(nsIZipReader);
-  this.mZipReader.init(aFile);
-  this.mZipReader.open();
+  this.mZipReader.open(aFile);
   this.mZipReader.test(null);
 }
 
@@ -167,11 +165,11 @@ zipExtractor.prototype = {
   },
 
   copyTo : function ze_CopyTo(aDest) {
-    var entries = this.mZipReader.findEntries("*");
-    while (entries.hasMoreElements()) {
-      var entry = entries.getNext().QueryInterface(nsIZipEntry);
+    var entries = this.mZipReader.findEntries(null);
+    while (entries.hasMore()) {
+      var entryName = entries.getNext();
 
-      this._installZipEntry(this.mZipReader, entry, aDest);
+      this._installZipEntry(this.mZipReader, entryName, aDest);
     }
   },
 
@@ -179,8 +177,7 @@ zipExtractor.prototype = {
                                                  aDestination) {
     var file = aDestination.clone();
 
-    var path = aZipEntry.name;
-    var dirs = path.split(/\//);
+    var dirs = aZipEntry.split(/\//);
     var isDirectory = path.match(/\/$/) != null;
 
     var end = dirs.length;
