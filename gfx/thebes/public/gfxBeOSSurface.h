@@ -44,8 +44,6 @@
 #include <cairo-beos.h>
 
 class gfxBeOSSurface : public gfxASurface {
-    THEBES_DECL_ISUPPORTS_INHERITED
-
 public:
     gfxBeOSSurface(BView* aView);
     gfxBeOSSurface(BView* aView, BBitmap* aBitmap);

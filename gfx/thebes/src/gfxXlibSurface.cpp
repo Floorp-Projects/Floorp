@@ -48,8 +48,6 @@ typedef struct {
 
 static void pixmap_free_func (void *);
 
-THEBES_IMPL_REFCOUNTING(gfxXlibSurface)
-
 gfxXlibSurface::gfxXlibSurface(Display* dpy, Drawable drawable, Visual* visual)
     : mPixmapTaken(PR_FALSE), mDisplay(dpy), mDrawable(drawable)
 {

@@ -38,8 +38,6 @@
 
 #include "gfxGlitzSurface.h"
 
-THEBES_IMPL_REFCOUNTING(gfxGlitzSurface)
-
 gfxGlitzSurface::gfxGlitzSurface(glitz_drawable_t *drawable, glitz_surface_t *surface, PRBool takeOwnership)
     : mGlitzDrawable (drawable), mGlitzSurface(surface), mOwnsSurface(takeOwnership)
 {

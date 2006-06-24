@@ -40,8 +40,6 @@
 
 #include "gfxBeOSSurface.h"
 
-THEBES_IMPL_REFCOUNTING(gfxBeOSSurface)
-
 gfxBeOSSurface::gfxBeOSSurface(BView* aView) :
     mOwnsView(PR_FALSE), mView(aView), mBitmap(nsnull)
 {

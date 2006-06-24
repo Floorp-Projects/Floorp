@@ -39,8 +39,6 @@
 
 #include "cairo-quartz2.h"
 
-THEBES_IMPL_REFCOUNTING(gfxQuartzSurface)
-
 gfxQuartzSurface::gfxQuartzSurface(gfxImageFormat format,
                                    int width, int height,
                                    PRBool y_grows_down)

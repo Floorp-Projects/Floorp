@@ -39,8 +39,6 @@
 
 #include <cairo-pdf.h>
 
-THEBES_IMPL_REFCOUNTING(gfxPDFSurface)
-
 gfxPDFSurface::gfxPDFSurface(const char *filename, gfxSize aSizeInPoints)
     : mXDPI(-1), mYDPI(-1), mSize(aSizeInPoints)
 {

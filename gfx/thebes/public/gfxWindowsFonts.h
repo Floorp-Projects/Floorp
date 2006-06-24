@@ -356,8 +356,6 @@ public:
  **********************************************************************/
 
 class gfxWindowsFont : public gfxFont {
-    THEBES_DECL_ISUPPORTS_INHERITED
-
 public:
     gfxWindowsFont(const nsAString& aName, const gfxFontStyle *aFontStyle);
     virtual ~gfxWindowsFont();
@@ -464,8 +462,6 @@ private:
  **********************************************************************/
 
 class THEBES_API gfxWindowsTextRun : public gfxTextRun {
-    THEBES_DECL_ISUPPORTS_INHERITED
-
 public:
     gfxWindowsTextRun(const nsAString& aString, gfxWindowsFontGroup *aFontGroup);
     gfxWindowsTextRun(const nsACString& aString, gfxWindowsFontGroup *aFontGroup);

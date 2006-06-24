@@ -44,8 +44,6 @@
 #include <pango/pango.h>
 
 class gfxPangoFont : public gfxFont {
-    THEBES_DECL_ISUPPORTS_INHERITED
-
 public:
     gfxPangoFont (const nsAString& aName,
                   const gfxFontStyle *aFontStyle);
@@ -90,7 +88,6 @@ protected:
 };
 
 class THEBES_API gfxPangoTextRun : public gfxTextRun {
-    THEBES_DECL_ISUPPORTS_INHERITED
 public:
     gfxPangoTextRun(const nsAString& aString, gfxPangoFontGroup *aFontGroup);
     ~gfxPangoTextRun();

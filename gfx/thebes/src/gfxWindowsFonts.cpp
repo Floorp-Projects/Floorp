@@ -75,9 +75,6 @@ THEBES_IMPL_REFCOUNTING(FontEntry)
  *
  **********************************************************************/
 
-NS_IMPL_ADDREF(gfxWindowsFont)
-NS_IMPL_RELEASE(gfxWindowsFont)
-
 gfxWindowsFont::gfxWindowsFont(const nsAString& aName, const gfxFontStyle *aFontStyle)
     : gfxFont(aName, aFontStyle),
       mFont(nsnull), mScriptCache(nsnull),
@@ -442,8 +439,6 @@ gfxWindowsFontGroup::MakeTextRun(const nsACString& aString)
  * class gfxWindowsTextRun
  *
  **********************************************************************/
-
-THEBES_IMPL_REFCOUNTING(gfxWindowsTextRun)
 
 gfxWindowsTextRun::gfxWindowsTextRun(const nsAString& aString, gfxWindowsFontGroup *aFontGroup)
     : mGroup(aFontGroup), mString(aString), mCString(EmptyCString()), mIsASCII(PR_FALSE)

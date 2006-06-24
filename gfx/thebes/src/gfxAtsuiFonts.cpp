@@ -63,8 +63,6 @@ OSStatus ATSInitializeGlyphVector(int size, void *glyphVectorPtr);
 OSStatus ATSClearGlyphVector(void *glyphVectorPtr);
 #endif
 
-THEBES_IMPL_REFCOUNTING(gfxAtsuiFont)
-
 gfxAtsuiFont::gfxAtsuiFont(ATSUFontID fontID,
                            const gfxFontStyle *fontStyle)
     : gfxFont(EmptyString(), fontStyle),

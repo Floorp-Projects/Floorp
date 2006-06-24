@@ -87,8 +87,6 @@
 #define FLOAT_PANGO_SCALE ((gfxFloat)PANGO_SCALE)
 #define NSToCoordRound(x) (floor((x) + 0.5))
 
-THEBES_IMPL_REFCOUNTING(gfxPangoFont)
-
 static PangoLanguage *GetPangoLanguage(const nsACString& aLangGroup);
 
 /**

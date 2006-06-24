@@ -39,8 +39,6 @@
 
 #include "gfxImageSurface.h"
 
-THEBES_IMPL_REFCOUNTING(gfxImageSurface)
-
 gfxImageSurface::gfxImageSurface(gfxImageFormat format, long width, long height) :
     mFormat(format), mWidth(width), mHeight(height)
 {

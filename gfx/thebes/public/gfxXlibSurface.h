@@ -45,8 +45,6 @@
 #include <cairo-xlib-xrender.h>
 
 class THEBES_API gfxXlibSurface : public gfxASurface {
-    THEBES_DECL_ISUPPORTS_INHERITED
-
 public:
     // create a surface for the specified dpy/drawable/visual.
     // Will use XGetGeometry to query the window/pixmap size.
