@@ -824,7 +824,7 @@ nsDiskCacheStreamIO::Seek(PRInt32 whence, PRInt32 offset)
     }
 
     // stream buffer sanity checks
-    NS_ASSERTION(mBufEnd <= (16 * 1024), "bad stream");
+    NS_ASSERTION(mBufEnd <= kMaxBufferSize, "bad stream");
     NS_ASSERTION(mBufPos <= mBufEnd,     "bad stream");
     NS_ASSERTION(mStreamPos == mBufPos,  "bad stream");
     NS_ASSERTION(mStreamEnd == mBufEnd,  "bad stream");
@@ -885,7 +885,7 @@ nsDiskCacheStreamIO::SetEOF()
         NS_ASSERTION(mBinding->mRecord.DataFileSize() == oldSizeK, "bad disk cache entry size");
     } else {
         // data stored in buffer.
-        NS_ASSERTION(mStreamEnd < (16 * 1024), "buffer truncation inadequate");
+        NS_ASSERTION(mStreamEnd <= kMaxBufferSize, "buffer truncation inadequate");
         NS_ASSERTION(mBufPos == mStreamPos, "bad stream");
         NS_ASSERTION(mBuffer ? mBufEnd == mStreamEnd : PR_TRUE, "bad stream");
 #endif
