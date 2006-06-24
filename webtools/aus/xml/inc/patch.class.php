@@ -178,29 +178,28 @@ class Patch extends AUS_Object {
                 return true;
         }
 
-        // If our first check fails for the official channels, we will check for nightly updates, but only if the 
-        // given channel is a nightly channel as defined in config.php.
-        //
-        // If the complete snippet exists and isn't null, it's valid and we should read its contents and return true.
-        elseif ($this->isComplete() && $this->isNightlyChannel($channel) && $this->setPath($product,$platform,$locale,$branchVersion,$build,2,$channel) && file_exists($this->path) && filesize($this->path) > 0) {
-            $this->setSnippet($this->path); 
-            $this->setVar('isPatch',true,true);
-            return true;
-        } 
+        // Otherwise, if it is a complete patch and a nightly channel, force the complete update to take the user to the latest build.
+        elseif ($this->isComplete() && $this->isNightlyChannel($channel)) {
 
-        elseif ($this->isPartial() && $this->isNightlyChannel($channel) && $this->setPath($product,$platform,$locale,$branchVersion,$build,2,$channel) && file_exists($this->path) && filesize($this->path) > 0) {
-            $this->setSnippet($this->path); 
+            // Get the latest build for this branch.
+            $latestbuild = $this->getLatestBuild($product,$branchVersion,$platform);
 
-            // As a special check for nightly partials, we add the call to isOneStepFromLatest() which determines
-            // if the destination (what we'd upgrade to) build is equal to the latest build.
-            //
-            // This way we will only offer a partial update if the partial will upgrade to the latest build.
-            if ($this->isOneStepFromLatest($product,$branchVersion,$platform)) {
+            if ($latestbuild && $this->setPath($product,$platform,$locale,$branchVersion,$latestbuild,2,$channel) && file_exists($this->path) && filesize($this->path) > 0) {
+                $this->setSnippet($this->path); 
                 $this->setVar('isPatch',true,true);
                 return true;
             }
         } 
 
+
+        // Otherwise, check for the partial snippet info.  If an update exists, pass it along.
+        elseif ($this->isNightlyChannel($channel) && $this->setPath($product,$platform,$locale,$branchVersion,$build,2,$channel) && file_exists($this->path) && filesize($this->path) > 0) {
+                $this->setSnippet($this->path); 
+                $this->setVar('isPatch',true,true);
+                return true;
+        } 
+
+        // Note: Other data sets were made obsolete in 0.6.  May incoming/0,1 rest in peace.
 
         // If we get here, we know for sure that no updates exist for the current request..
         // Return false by default, which prompts the "no updates" XML output.
@@ -267,7 +266,7 @@ class Patch extends AUS_Object {
      * @return boolean
      */
     function isTrunk($version) {
-       return $version === 'trunk';
+       return ($version == 'trunk') ? true : false;
     }
 
     /**
@@ -281,14 +280,7 @@ class Patch extends AUS_Object {
      * Determine whether or not this patch is complete.
      */
     function isComplete() {
-       return $this->patchType === 'complete';
-    }
-
-    /**
-     * Determine whether or not this patch is partial.
-     */
-    function isPartial() {
-        return $this->patchType === 'partial';
+       return ($this->patchType === 'complete') ? true : false;
     }
 
     /**
@@ -306,21 +298,27 @@ class Patch extends AUS_Object {
     }
 
     /**
+     * Determine whether or not the to_build matches the latest build for a partial patch.
+     * @param string $build
+     *
+     * @return bool
+     */
+    function isOneStepFromLatest($build) {
+        return ($this->build == $build) ? true : false;
+    }
+
+    /**
      * Get the latest build for this branch.
      * @param string $product
      * @param string $branchVersion
      * @param string $platform
-     * @return boolean 
+     * @param return string|false false if there is no matching build
      */
-    function isOneStepFromLatest($product,$branchVersion,$platform) {
-    
+    function getLatestBuild($product,$branchVersion,$platform) {
         $files = array();
-        $latestBuild = '';
 
         $dir = SOURCE_DIR.'/2/'.$product.'/'.$branchVersion.'/'.$platform;
 
-        // Read the source directory to get the build ids.  Sort it numerically
-        // to get the latest build.
         if (is_dir($dir)) {
             $fp = opendir($dir);
             while (false !== ($filename = readdir($fp))) {
@@ -330,16 +328,14 @@ class Patch extends AUS_Object {
             }
             closedir($fp);
             
-            rsort($files,SORT_NUMERIC); 
+            if (is_array($files)) {
+                rsort($files,SORT_NUMERIC); 
+            }
 
-            // If we have a valid build id, set the latest build.
-            $latestBuild = !empty($files[0]) && is_numeric($files[0]) ? $files[0] : '';
+            return $files[1];
         }
 
-        // If our latest build exists and is equal to the destination build
-        // (the build our patch will upgrade the client to) then that means the current
-        // build is only one hop away.  In this case only, we return true.
-        return ( $latestBuild === $this->build) ? true : false;
+        return false;
     }
 }
 ?>
