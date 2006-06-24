@@ -72,10 +72,12 @@ void nsTableColGroupFrame::ResetColIndices(nsIFrame*       aFirstColGroup,
   PRInt32 colIndex = aFirstColIndex;
   while (colGroupFrame) {
     if (nsLayoutAtoms::tableColGroupFrame == colGroupFrame->GetType()) {
-      // reset the starting col index for the first cg only if
+      // reset the starting col index for the first cg only if we should reset
+      // the whole colgroup (aStartColFrame defaults to nsnull) or if
       // aFirstColIndex is smaller than the existing starting col index
       if ((colIndex != aFirstColIndex) ||
-          (colIndex < colGroupFrame->GetStartColumnIndex())) {
+          (colIndex < colGroupFrame->GetStartColumnIndex()) ||
+          !aStartColFrame) {
         colGroupFrame->SetStartColumnIndex(colIndex);
       }
       nsIFrame* colFrame = aStartColFrame; 
