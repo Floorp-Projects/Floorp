@@ -504,8 +504,12 @@ var BookmarksCommand = {
       tmpBmItem.push(childCount +  "\n" + sBookmarkItem);
       sBookmarkItem = "";
 
+      var url;
+      if (aType == "Livemark")
+        url = BookmarksUtils.getProperty(aSelection.item[i], gNC_NS+"FeedURL");
+      else
+        url = BookmarksUtils.getProperty(aSelection.item[i], gNC_NS+"URL");
 
-      var url  = BookmarksUtils.getProperty(aSelection.item[i], gNC_NS+"URL" );
       var name = BookmarksUtils.getProperty(aSelection.item[i], gNC_NS+"Name");
 
       sTextUnicode += url + "\n";
