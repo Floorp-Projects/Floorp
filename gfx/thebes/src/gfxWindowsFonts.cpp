@@ -66,9 +66,6 @@ inline HDC GetDCFromSurface(gfxASurface *aSurface) {
     return NS_STATIC_CAST(gfxWindowsSurface*, aSurface)->GetDC();
 }
 
-THEBES_IMPL_REFCOUNTING(WeightTable)
-THEBES_IMPL_REFCOUNTING(FontEntry)
-
 /**********************************************************************
  *
  * class gfxWindowsFont

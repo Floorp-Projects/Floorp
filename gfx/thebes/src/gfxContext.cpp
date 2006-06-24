@@ -52,9 +52,6 @@
 #include "gfxASurface.h"
 #include "gfxPattern.h"
 
-THEBES_IMPL_REFCOUNTING(gfxContext)
-THEBES_IMPL_REFCOUNTING(gfxASurface)
-
 gfxContext::gfxContext(gfxASurface *surface) :
     mSurface(surface)
 {

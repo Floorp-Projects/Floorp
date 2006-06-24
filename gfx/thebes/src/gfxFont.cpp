@@ -46,9 +46,6 @@
 
 #include "nsCRT.h"
 
-THEBES_IMPL_REFCOUNTING(gfxFont)
-THEBES_IMPL_REFCOUNTING(gfxTextRun)
-
 gfxFont::gfxFont(const nsAString &aName, const gfxFontStyle *aFontStyle) :
     mName(aName), mStyle(aFontStyle)
 {

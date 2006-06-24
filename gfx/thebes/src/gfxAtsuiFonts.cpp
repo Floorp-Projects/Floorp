@@ -288,8 +288,6 @@ gfxAtsuiFontGroup::MakeTextRun(const nsAString& aString)
  ** gfxAtsuiTextRun
  **/
 
-THEBES_IMPL_REFCOUNTING(gfxAtsuiTextRun)
-
 gfxAtsuiTextRun::gfxAtsuiTextRun(const nsAString& aString, gfxAtsuiFontGroup *aGroup)
     : mString(aString), mGroup(aGroup)
 {

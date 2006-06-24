@@ -25,7 +25,6 @@ CPPSRCS	= \
 	gfxASurface.cpp \
 	gfxContext.cpp \
 	gfxImageSurface.cpp \
-	gfxPattern.cpp \
 	gfxFont.cpp \
 	gfxPlatform.cpp \
 	$(NULL)

@@ -49,7 +49,7 @@
  * abstract class, and use gfxContext to draw on this surface.
  */
 class THEBES_API gfxASurface {
-    THEBES_DECL_REFCOUNTING
+    THEBES_INLINE_DECL_REFCOUNTING(gfxASurface)
 
 public:
     /**
