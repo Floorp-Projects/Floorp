@@ -359,6 +359,9 @@ var gPermissionManager = {
           continue;
         }
 
+        if (!hosts)
+          continue;
+
         hostList = hosts.split(",");
         var capability = prefList[i][1];
         for (var j = 0; j < hostList.length; ++j) {
