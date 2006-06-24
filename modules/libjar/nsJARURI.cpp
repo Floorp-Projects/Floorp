@@ -518,11 +518,12 @@ nsJARURI::Clone(nsIURI **result)
         uri->mJARFile = newJARFile;
         uri->mJAREntry = newJAREntry;
         *result = uri;
+        rv = NS_OK;
     } else {
         rv = NS_ERROR_OUT_OF_MEMORY;
     }
 
-    return NS_OK;
+    return rv;
 }
 
 NS_IMETHODIMP
