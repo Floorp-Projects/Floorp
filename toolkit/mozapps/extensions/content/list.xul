@@ -58,11 +58,11 @@
     <vbox>
       <image id="infoIcon"/>
     </vbox>
-    <vbox class="spaced" style="width: 30em;">
+    <vbox class="spaced" style="min-width: 20em;">
       <label id="message1" class="spaced" hidden="true"/>
       <separator class="thin"/>
-      <tree id="addonsTree" rows="8" hidecolumnpicker="true" hidden="true" class="spaced">
-        <treecols>
+      <tree id="addonsTree" rows="6" hidecolumnpicker="true" hidden="true" class="spaced">
+        <treecols style="max-width: 25em;">
           <treecol flex="1" id="nameColumn" hideheader="true"/>
         </treecols>
         <treechildren id="addonsChildren"/>

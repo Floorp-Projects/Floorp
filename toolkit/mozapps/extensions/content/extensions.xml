@@ -313,31 +313,31 @@
 
   <binding id="addon-needs-install">
     <content>
-      <xul:label value="&needsInstall.label;" crop="end"/>
+      <xul:label value="&toBeInstalled.label;" crop="end"/>
     </content>
   </binding>
 
   <binding id="addon-needs-upgrade">
     <content>
-      <xul:label value="&needsUpgrade.label;" crop="end"/>
+      <xul:label value="&toBeUpgraded.label;" crop="end"/>
     </content>
   </binding>
 
   <binding id="addon-needs-uninstall">
     <content>
-      <xul:label value="&needsUninstall.label;" crop="end"/>
+      <xul:label value="&toBeUninstalled.label;" crop="end"/>
     </content>
   </binding>
 
   <binding id="addon-needs-enable">
     <content>
-      <xul:label value="&needsEnable.label;" crop="end"/>
+      <xul:label value="&toBeEnabled.label;" crop="end"/>
     </content>
   </binding>
 
   <binding id="addon-needs-disable">
     <content>
-      <xul:label value="&needsDisable.label;" crop="end"/>
+      <xul:label value="&toBeDisabled.label;" crop="end"/>
     </content>
   </binding>
 
