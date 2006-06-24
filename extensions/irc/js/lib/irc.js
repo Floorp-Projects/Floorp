@@ -688,8 +688,8 @@ function serv_connect (password)
         if (jsenv.HAS_NSPR_EVENTQ)
             this.connection.startAsyncRead(this);
         else
-            s.parent.eventPump.addEvent(new CEvent ("server", "poll", s,
-                                                    "onPoll"));
+            this.parent.eventPump.addEvent(new CEvent("server", "poll", this,
+                                                      "onPoll"));
     }
 
     return true;
@@ -1363,6 +1363,8 @@ function serv_001 (e)
     this.parent.connectAttempt = 0;
     this.parent.connectCandidate = 0;
     this.parent.state = NET_ONLINE;
+    // nextHost is incremented after picking a server. Push it back here.
+    this.parent.nextHost--;
 
     /* servers won't send a nick change notification if user was forced
      * to change nick while logging in (eg. nick already in use.)  We need
