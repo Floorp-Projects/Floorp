@@ -47,18 +47,6 @@
 #include "nsIStreamConverterService.h"
 #include "nsIContentSniffer.h"
 
-// Determine if this URI is using a safe port.
-static nsresult
-CheckPort(nsIURI *uri) {
-  PRInt32 port;
-  nsresult rv = uri->GetPort(&port);
-  if (NS_FAILED(rv) || port == -1)  // port undefined or default-valued
-    return NS_OK;
-  nsCAutoString scheme;
-  uri->GetScheme(scheme);
-  return NS_CheckPortSafety(port, scheme.get());
-}
-
 PR_STATIC_CALLBACK(PLDHashOperator)
 CopyProperties(const nsAString &key, nsIVariant *data, void *closure)
 {
@@ -472,7 +460,7 @@ nsBaseChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
   NS_ENSURE_ARG(listener);
 
   // Ensure that this is an allowed port before proceeding.
-  nsresult rv = CheckPort(mURI);
+  nsresult rv = NS_CheckPortSafety(mURI);
   if (NS_FAILED(rv))
     return rv;
 
