@@ -244,7 +244,7 @@ nsStringBundle::GetStringFromID(PRInt32 aID, PRUnichar **aResult)
 {
   nsresult rv;
   rv = LoadProperties();
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) return rv;
   
   *aResult = nsnull;
   nsAutoString tmpstr;
@@ -267,7 +267,7 @@ nsStringBundle::GetStringFromName(const PRUnichar *aName, PRUnichar **aResult)
 
   nsresult rv;
   rv = LoadProperties();
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) return rv;
 
   nsAutoCMonitor(this);
   *aResult = nsnull;
