@@ -365,6 +365,14 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
   // event at the element.  It will take care of retargeting it to its
   // command element, if applicable, and executing the event handler.
   if (isXULKey) {
+    if (mHandlerElement->AttrValueIs(kNameSpaceID_None,
+                                     nsXULAtoms::disabled,
+                                     nsXULAtoms::_true,
+                                     eCaseMatters)) {
+      // Don't dispatch command events for disabled keys.
+      return NS_OK;
+    }
+
     aEvent->PreventDefault();
 
     nsEventStatus status = nsEventStatus_eIgnore;
