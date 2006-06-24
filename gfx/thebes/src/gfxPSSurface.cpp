@@ -39,8 +39,6 @@
 
 #include <cairo-ps.h>
 
-THEBES_IMPL_REFCOUNTING(gfxPSSurface)
-
 gfxPSSurface::gfxPSSurface(const char *filename, gfxSize aSizeInPoints)
     : mXDPI(-1), mYDPI(-1), mSize(aSizeInPoints)
 {

@@ -41,8 +41,6 @@
 #include "gfxASurface.h"
 
 class THEBES_API gfxPDFSurface : public gfxASurface {
-    THEBES_DECL_ISUPPORTS_INHERITED
-
 public:
     /* size is in points */
     gfxPDFSurface(const char *filename, gfxSize aSizeInPonits);

@@ -46,8 +46,6 @@
  * A surface that wraps a glitz surface.
  */
 class THEBES_API gfxGlitzSurface : public gfxASurface {
-    THEBES_DECL_ISUPPORTS_INHERITED
-
 public:
     gfxGlitzSurface(glitz_drawable_t *drawable,
                     glitz_surface_t *glitzSurface,

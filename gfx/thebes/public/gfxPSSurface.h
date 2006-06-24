@@ -41,8 +41,6 @@
 #include "gfxASurface.h"
 
 class THEBES_API gfxPSSurface : public gfxASurface {
-    THEBES_DECL_ISUPPORTS_INHERITED
-
 public:
     gfxPSSurface(const char *filename, gfxSize aSizeInPonits);
     virtual ~gfxPSSurface();

@@ -49,8 +49,6 @@
  * but it can also be drawn to.
  */
 class THEBES_API gfxImageSurface : public gfxASurface {
-    THEBES_DECL_ISUPPORTS_INHERITED
-
 public:
     /**
      * Construct an image surface.

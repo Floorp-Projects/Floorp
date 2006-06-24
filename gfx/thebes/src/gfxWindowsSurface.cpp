@@ -40,8 +40,6 @@
 
 #include <cairo-win32.h>
 
-THEBES_IMPL_REFCOUNTING(gfxWindowsSurface)
-
 gfxWindowsSurface::gfxWindowsSurface(HWND wnd) :
     mOwnsDC(PR_TRUE), mWnd(wnd)
 {

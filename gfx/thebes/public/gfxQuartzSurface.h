@@ -44,8 +44,6 @@
 #include <Carbon/Carbon.h>
 
 class THEBES_API gfxQuartzSurface : public gfxASurface {
-    THEBES_DECL_ISUPPORTS_INHERITED
-
 public:
     gfxQuartzSurface(gfxImageFormat format,
                      int width, int height,

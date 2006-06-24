@@ -43,8 +43,6 @@
 #include <windows.h>
 
 class THEBES_API gfxWindowsSurface : public gfxASurface {
-    THEBES_DECL_ISUPPORTS_INHERITED
-
 public:
     gfxWindowsSurface(HWND wnd);
     gfxWindowsSurface(HDC dc, PRBool deleteDC = PR_FALSE);
