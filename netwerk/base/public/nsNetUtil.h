@@ -574,10 +574,24 @@ NS_CheckPortSafety(PRInt32       port,
     if (ioService) {
         PRBool allow;
         rv = ioService->AllowPort(port, scheme, &allow);
-        if (NS_SUCCEEDED(rv) && !allow)
+        if (NS_SUCCEEDED(rv) && !allow) {
+            NS_WARNING("port blocked");
             rv = NS_ERROR_PORT_ACCESS_NOT_ALLOWED;
+        }
     }
     return rv;
+}
+
+// Determine if this URI is using a safe port.
+inline nsresult
+NS_CheckPortSafety(nsIURI *uri) {
+    PRInt32 port;
+    nsresult rv = uri->GetPort(&port);
+    if (NS_FAILED(rv) || port == -1)  // port undefined or default-valued
+        return NS_OK;
+    nsCAutoString scheme;
+    uri->GetScheme(scheme);
+    return NS_CheckPortSafety(port, scheme.get());
 }
 
 inline nsresult

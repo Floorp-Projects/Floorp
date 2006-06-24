@@ -3292,16 +3292,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
 
     nsresult rv;
 
-    PRInt32 port;
-    rv = mURI->GetPort(&port);
-    if (NS_FAILED(rv))
-        return rv;
- 
-    nsCOMPtr<nsIIOService> ioService;
-    rv = gHttpHandler->GetIOService(getter_AddRefs(ioService));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = NS_CheckPortSafety(port, "http", ioService); // this works for https
+    rv = NS_CheckPortSafety(mURI);
     if (NS_FAILED(rv))
         return rv;
 
