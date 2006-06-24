@@ -192,19 +192,93 @@
         <body><![CDATA[
           if (aTopic == "browser-search-engine-modified") {
             switch (aVerb) {
+            case "engine-removed":
+              this.offerNewEngine(aEngine);
+              break;
+            case "engine-added":
+              this.hideNewEngine(aEngine);
+              break;
             case "engine-current":
               // The current engine was changed.  Rebuilding the menu appears to
               // confuse its idea of whether it should be open when it's just
               // been clicked, so we force it to close now.
               this._popup.hidePopup();
-              // Fall through.
-            case "engine-removed":
-            case "engine-added":
+              break;
             case "engine-changed":
               // An engine was removed (or hidden) or added, or an icon was
-              // changed.
-              this.rebuildPopup();
-              this.updateDisplay();
+              // changed.  Do nothing special.
+            }
+
+            // Rebuild the popup and update the display after any modification.
+            this.rebuildPopup();
+            this.updateDisplay();
+            }
+          }
+        ]]></body>
+      </method>
+
+      <!-- There are two seaprate lists of search engines, whose uses intersect
+      in this file.  The search service (nsIBrowserSearchService and
+      nsSearchService.js) maintains a list of Engine objects which is used to
+      populate the searchbox list of available engines and to perform queries.
+      That list is accessed here via this.SearchService, and it's that sort of
+      Engine that is passed to this binding's observer as aEngine.
+
+      In addition, browser.js fills two lists of autodetected search engines
+      (browser.engines and browser.hiddenEngines) as properties of
+      mCurrentBrowser.  Those lists contain unnamed JS objects of the form
+      { uri:, title:, icon: }, and that's what the searchbar uses to determine
+      whether to show any "Add <EngineName>" menu items in the drop-down.
+
+      The two types of engines are currently related by their identifying
+      titles (the Engine object's 'name'), although that may change; see bug
+      335102.  -->
+
+      <!-- If the engine that was just removed from the searchbox list was
+      autodetected on this page, move it to the browser's active list so it will
+      be offered to be added again. -->
+      <method name="offerNewEngine">
+        <parameter name="aEngine"/>
+        <body><![CDATA[
+          var browser = getBrowser().mCurrentBrowser;
+          if (browser.hiddenEngines) {
+            // XXX This will need to be changed when engines are identified by
+            // URL rather than title; see bug 335102.
+            var removeTitle = aEngine.wrappedJSObject.name;
+            for (var i = 0; i < browser.hiddenEngines.length; i++) {
+              if (browser.hiddenEngines[i].title == removeTitle) {
+                if (!browser.engines)
+                  browser.engines = [];
+                browser.engines.push(browser.hiddenEngines[i]);
+                browser.hiddenEngines.splice(i, 1);
+                BrowserSearch.updateSearchButton();
+                break;
+              }
+            }
+          }
+        ]]></body>
+      </method>
+
+      <!-- If the engine that was just added to the searchbox list was
+      autodetected on this page, move it to the browser's hidden list so it is
+      no longer offered to be added. -->
+      <method name="hideNewEngine">
+        <parameter name="aEngine"/>
+        <body><![CDATA[
+          var browser = getBrowser().mCurrentBrowser;
+          if (browser.engines) {
+            // XXX This will need to be changed when engines are identified by
+            // URL rather than title; see bug 335102.
+            var removeTitle = aEngine.wrappedJSObject.name;
+            for (var i = 0; i < browser.engines.length; i++) {
+              if (browser.engines[i].title == removeTitle) {
+                if (!browser.hiddenEngines)
+                  browser.hiddenEngines = [];
+                browser.hiddenEngines.push(browser.engines[i]);
+                browser.engines.splice(i, 1);
+                BrowserSearch.updateSearchButton();
+                break;
+              }
             }
           }
         ]]></body>
@@ -360,21 +434,6 @@
             var type = Components.interfaces.nsISearchEngine.DATA_XML;
             searchService.addEngine(aTarget.getAttribute("uri"), type,
                                     aTarget.getAttribute("src"), false);
-            // Remove this engine from the list and refresh the search button.
-            // XXX This will need to be changed when engines are identified
-            // by URL; see bug 335102.
-            var browser = getBrowser().mCurrentBrowser;
-            var removeTitle = aTarget.getAttribute("title");
-            // No need to null-check browser.engines, since it should contain at
-            // least the item the user just chose.
-            for (var i = 0; i < browser.engines.length; i++) {
-              if (browser.engines[i].title == removeTitle) {
-                browser.engines.splice(i, 1);
-                break;
-              }
-            }
-            if (browser.engines.length == 0)
-              this._button.removeAttribute("addengines");
           }
           else if (aTarget.engine) {
             this.currentEngine = aTarget.engine;
