@@ -1,11 +1,11 @@
 <!ENTITY  updateWizard.title              "&brandShortName; Update">
 
 <!ENTITY  mismatch.win.title              "Incompatible Add-ons">
-<!ENTITY  mismatch.intro-1.label          "The following add-ons are not compatible with the new version
-                                           of &brandShortName; you have just installed:">
+<!ENTITY  mismatch.introduction1.label    "The following add-ons are not compatible with this version
+                                           of &brandShortName;:">
 <!ENTITY  mismatch.intro2.label           "They have been disabled until compatible versions are 
                                            installed.">
-<!ENTITY  mismatch.intro-3.label          "&brandShortName; can check for and install newer, compatible 
+<!ENTITY  mismatch.introduction3.label    "&brandShortName; can check for compatible
                                            versions of these add-ons.">
 
 <!ENTITY  checking.title                  "Checking for Updates">
@@ -17,8 +17,9 @@
 <!ENTITY  from.label                      "from: ">
 
 <!ENTITY  updateFound.addons.accesskey    "A">
-<!ENTITY  updateFound.addons.label        "The following updates are available to add-ons that you already have installed">
-<!ENTITY  found.xpinstallDisabled.label   "Updates can not be installed because software installation is currently
+<!ENTITY  foundUpdates.addons.label       "Updates are available for the following add-ons to make
+                                           them compatible with this version of &brandShortName;:">
+<!ENTITY  found.disabledXPinstall.label   "These updates can't be installed because software installation is currently
                                            disabled. You can change this setting below.">
 <!ENTITY  found.enableXPInstall.label     "Allow web sites to install software">
 <!ENTITY  found.enableXPInstall.accesskey "A">
@@ -40,10 +41,10 @@
 <!ENTITY  finished.title                  "Update Complete">
 <!ENTITY  finished.updated.label          "&brandShortName; has installed the available updates. You will have to restart &brandShortName; for some updates to take effect.">
 <!ENTITY  finished.adminDisabled.label    "&brandShortName; is unable to install updates.">
-<!ENTITY  finished.remain.label           "Some incompatible add-ons could not be updated, perhaps
-                                           because compatible versions are not available at this time.
-                                           &brandShortName; will check periodically and inform you
-                                           when updated versions become available.">
+<!ENTITY  finished.remain1.label          "No compatible versions of the following add-ons could
+                                           be found. These add-ons will be disabled, but &brandShortName;
+                                           will check periodically and inform you when compatible
+                                           versions become available.">
 <!ENTITY  finished.xpinstallLocked.label  "It is not possible to update the incompatible add-ons because
                                            software installation for &brandShortName; has been disabled.
                                            Please contact your System Administrator for assistance.">

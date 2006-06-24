@@ -82,7 +82,7 @@
               label="&mismatch.win.title;"
               onpageshow="gMismatchPage.onPageShow();">
 
-    <label>&mismatch.intro-1.label;</label>
+    <label>&mismatch.introduction1.label;</label>
     
     <separator class="thin"/>
     
@@ -93,7 +93,7 @@
     <label style="font-weight: bold;">&mismatch.intro2.label;</label>
     <separator class="thin"/>
     
-    <label>&mismatch.intro-3.label;</label>
+    <label>&mismatch.introduction3.label;</label>
 
   </wizardpage>
   
@@ -153,7 +153,7 @@
     <radiogroup type="update-types" id="found.updates" flex="1" _uninitialized="true"
                 onselect="gFoundPage.onSelect(event);">
       <radio type="update-type" id="addons" accesskey="&updateFound.addons.accesskey;" collapsed="true">
-        <description>&updateFound.addons.label;</description>
+        <description>&foundUpdates.addons.label;</description>
         <separator class="thin"/>        
         <vbox id="found.addons.list"/>
         <label>.</label>
@@ -161,7 +161,7 @@
     </radiogroup>
     <separator class="thin"/>
     <vbox align="left" id="xpinstallDisabledAlert">
-      <description flex="1">&found.xpinstallDisabled.label;</description>
+      <description flex="1">&found.disabledXPinstall.label;</description>
       <checkbox label="&found.enableXPInstall.label;"
                 id="enableXPInstall"
                 accesskey="&found.enableXPInstall.accesskey;"
@@ -204,7 +204,7 @@
     <hbox id="incompatibleAlert" align="top" hidden="true">
       <image id="alert"/>
       <description id="incompatibleRemaining" hidden="true"
-                   flex="1">&finished.remain.label;</description>
+                   flex="1">&finished.remain1.label;</description>
       <description id="incompatibleRemainingLocked" hidden="true"
                    flex="1">&finished.xpinstallLocked.label;</description>
     </hbox>
