@@ -1237,6 +1237,9 @@ js_script_filename_sweeper(JSHashEntry *he, intN i, void *arg)
 void
 js_SweepScriptFilenames(JSRuntime *rt)
 {
+    if (!rt->scriptFilenameTable)
+        return;
+
     JS_HashTableEnumerateEntries(rt->scriptFilenameTable,
                                  js_script_filename_sweeper,
                                  rt);
