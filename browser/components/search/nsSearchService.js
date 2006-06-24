@@ -2013,7 +2013,7 @@ SearchService.prototype = {
 
   _buildSortedEngineList: function SRCH_SVC_buildSortedEngineList() {
     var addedEngines = { };
-    this._sortedEngines = new Array(this._engines.length);
+    this._sortedEngines = [];
     var engine;
 
     for each (engine in this._engines) {
