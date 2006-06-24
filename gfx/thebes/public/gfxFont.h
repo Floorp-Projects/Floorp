@@ -117,7 +117,7 @@ struct THEBES_API gfxFontStyle {
 
 /* a SPECIFIC single font family */
 class THEBES_API gfxFont {
-    THEBES_DECL_REFCOUNTING
+    THEBES_INLINE_DECL_REFCOUNTING(gfxFont)
 
 public:
     gfxFont(const nsAString &aName, const gfxFontStyle *aFontGroup);
@@ -204,7 +204,7 @@ protected:
 
 // these do not copy the text
 class THEBES_API gfxTextRun { 
-    THEBES_DECL_REFCOUNTING
+    THEBES_INLINE_DECL_REFCOUNTING(gfxTextRun)
 
 public:
     virtual void Draw(gfxContext *aContext, gfxPoint pt) = 0;

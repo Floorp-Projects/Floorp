@@ -67,7 +67,7 @@
 class WeightTable
 {
 public:
-    THEBES_DECL_REFCOUNTING
+    THEBES_INLINE_DECL_REFCOUNTING(WeightTable)
 
     WeightTable() : mWeights(0) {}
     ~WeightTable() {
@@ -238,7 +238,7 @@ static PRUint8 CharRangeBit(PRUint32 ch) {
 class FontEntry
 {
 public:
-    THEBES_DECL_REFCOUNTING
+    THEBES_INLINE_DECL_REFCOUNTING(FontEntry)
 
     FontEntry(const nsAString& aName, PRUint16 aFontType) : 
         mName(aName), mFontType(aFontType), mUnicodeFont(PR_FALSE),

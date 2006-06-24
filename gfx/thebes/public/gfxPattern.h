@@ -50,7 +50,7 @@ class gfxContext;
 class THEBES_API gfxPattern {
     friend class gfxContext;
 
-    THEBES_DECL_REFCOUNTING
+    THEBES_INLINE_DECL_REFCOUNTING(gfxPattern)
 
 public:
     // from another surface

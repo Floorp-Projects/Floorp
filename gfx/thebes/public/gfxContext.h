@@ -65,7 +65,7 @@ class gfxTextRun;
  * pattern set by SetPattern, SetColor or SetSource.
  */
 class THEBES_API gfxContext {
-    THEBES_DECL_REFCOUNTING
+    THEBES_INLINE_DECL_REFCOUNTING(gfxContext)
 
 public:
     /**
