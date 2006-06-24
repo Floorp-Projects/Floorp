@@ -585,7 +585,7 @@
         <body>
           <![CDATA[
             this.hidden = true;
-            if (this._buttonElement.hidden && this.notifyData) {
+            if (this._buttonElement.style.visibility == "hidden" && this.notifyData) {
               var os = Components.classes["@mozilla.org/observer-service;1"]
                                  .getService(Components.interfaces.nsIObserverService);
               os.notifyObservers(null, "addons-message-notification", this.notifyData);
@@ -639,6 +639,8 @@
         </setter>
       </property>
       
+<!-- _buttonElement uses visibility hidden so the height of the notification
+     box is consistent whether the button is displayed or not. -->
       <field name="_buttonElement">
         document.getAnonymousElementByAttribute(this, "anonid", "messageButton");
       </field>
@@ -651,11 +653,15 @@
         <setter>
           <![CDATA[
             if (val) {
-              this._buttonElement.hidden = false;
+              if (this._buttonElement.hasAttribute("style"))
+                this._buttonElement.removeAttribute("style");
               this._buttonElement.label = val;
             }
             else {
-              this._buttonElement.hidden = true;
+              if (this._buttonElement.hasAttribute("label"))
+                this._buttonElement.removeAttribute("label");
+              this._buttonElement.setAttribute("style", "max-width: 1px; visibility: hidden;");
+            }
             return val;
           ]]>
         </setter>
