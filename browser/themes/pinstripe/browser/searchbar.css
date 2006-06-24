@@ -26,6 +26,10 @@
   list-style-image: url("chrome://browser/skin/bookmarks/bookmark-item.png");
 }
 
+.searchbar-popup {
+  min-width: 100px;
+}
+
 .autocomplete-textbox-container {
   border: none;
   padding-right: 0px;

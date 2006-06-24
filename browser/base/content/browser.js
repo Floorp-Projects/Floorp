@@ -2962,16 +2962,6 @@ const BrowserSearch = {
     if (!etype)
       return;
       
-    if (target.title) {
-      // If this engine (identified by title) is already in the list, ignore it.
-      // XXX This will need to be changed when engines are identified by URL;
-      // see bug 335102.
-      var searchService = Components.classes["@mozilla.org/browser/search-service;1"]
-                                    .getService(Components.interfaces.nsIBrowserSearchService);
-      if (searchService.getEngineByName(target.title))
-        return;
-    }
-
     if (etype == "application/opensearchdescription+xml" &&
         searchRelRegex.test(erel) && searchHrefRegex.test(ehref))
     {
@@ -2982,21 +2972,45 @@ const BrowserSearch = {
       if (searchButton) {
         var browser = gBrowser.getBrowserForDocument(targetDoc);
          // Append the URI and an appropriate title to the browser data.
-        var engines = [];
-        if (browser.engines)
-          engines = browser.engines;
-
         var iconURL = null;
         if (gBrowser.shouldLoadFavIcon(browser.currentURI))
           iconURL = browser.currentURI.prePath + "/favicon.ico";
         var usableTitle = target.title || browser.contentTitle || target.href;
+        var hidden = false;
+        if (target.title) {
+          // If this engine (identified by title) is already in the list, add it
+          // to the list of hidden engines rather than to the main list.
+          // XXX This will need to be changed when engines are identified by URL;
+          // see bug 335102.
+          var searchService =
+              Components.classes["@mozilla.org/browser/search-service;1"]
+                        .getService(Components.interfaces.nsIBrowserSearchService);
+          if (searchService.getEngineByName(target.title))
+            hidden = true;
+        }
+
+        var engines = [];
+        if (hidden) {
+          if (browser.hiddenEngines)
+            engines = browser.hiddenEngines;
+        }
+        else {
+          if (browser.engines)
+            engines = browser.engines;
+        }
+
         engines.push({ uri: target.href,
                        title: usableTitle,
                        icon: iconURL });
-        browser.engines = engines;
 
-        if (browser == gBrowser || browser == gBrowser.mCurrentBrowser)
-          this.updateSearchButton();
+         if (hidden) {
+           browser.hiddenEngines = engines;
+         }
+         else {
+           browser.engines = engines;
+           if (browser == gBrowser || browser == gBrowser.mCurrentBrowser)
+             this.updateSearchButton();
+         }
       }
     }
   },
