@@ -553,8 +553,6 @@ gfxPangoFont::GetMetrics()
  ** gfxPangoTextRun
  **/
 
-THEBES_IMPL_REFCOUNTING(gfxPangoTextRun)
-
 #ifndef THEBES_USE_PANGO_CAIRO
 
 #define AUTO_GLYPHBUF_SIZE 100
