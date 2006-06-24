@@ -181,10 +181,11 @@ class Patch extends AUS_Object {
         // Otherwise, if it is a complete patch and a nightly channel, force the complete update to take the user to the latest build.
         elseif ($this->isComplete() && $this->isNightlyChannel($channel)) {
 
-            // Get the latest build for this branch.
-            $latestbuild = $this->getLatestBuild($product,$branchVersion,$platform);
+            // Get the latest build that has an update for this branch.
+            $latestCompleteBuild = $this->getLatestCompleteBuild($product,$branchVersion,$platform);
 
-            if ($latestbuild && $this->setPath($product,$platform,$locale,$branchVersion,$latestbuild,2,$channel) && file_exists($this->path) && filesize($this->path) > 0) {
+            // If we have the latest complete build, the path is valid, the file exists, and the filesize is greater than zero, we have a valid complete patch.
+            if ($latestCompleteBuild && $this->setPath($product,$platform,$locale,$branchVersion,$latestCompleteBuild,2,$channel) && file_exists($this->path) && filesize($this->path) > 0) {
                 $this->setSnippet($this->path); 
                 $this->setVar('isPatch',true,true);
                 return true;
@@ -193,7 +194,7 @@ class Patch extends AUS_Object {
 
 
         // Otherwise, check for the partial snippet info.  If an update exists, pass it along.
-        elseif ($this->isNightlyChannel($channel) && $this->setPath($product,$platform,$locale,$branchVersion,$build,2,$channel) && file_exists($this->path) && filesize($this->path) > 0) {
+        elseif ($this->isPartial() && $this->isNightlyChannel($channel) && $this->setPath($product,$platform,$locale,$branchVersion,$build,2,$channel) && file_exists($this->path) && filesize($this->path) > 0) {
                 $this->setSnippet($this->path); 
                 $this->setVar('isPatch',true,true);
                 return true;
@@ -277,11 +278,19 @@ class Patch extends AUS_Object {
     }
 
     /**
-     * Determine whether or not this patch is complete.
+     * Determine whether or not this patch is a complete patch.
      */
     function isComplete() {
-       return ($this->patchType === 'complete') ? true : false;
+       return $this->patchType === 'complete';
     }
+
+    /**
+     * Determine whether or not this patch is a partial patch.
+     */
+    function isPartial() {
+       return $this->patchType === 'partial';
+    }
+
 
     /**
      * Determine whether or not this patch has a details URL.
@@ -298,27 +307,31 @@ class Patch extends AUS_Object {
     }
 
     /**
-     * Determine whether or not the to_build matches the latest build for a partial patch.
-     * @param string $build
+     * Determine whether or not the to_build matches the latest build (taken from the complete build) for a partial patch.
+     * @param string $completeBuild
      *
      * @return bool
      */
-    function isOneStepFromLatest($build) {
-        return ($this->build == $build) ? true : false;
+    function isOneStepFromLatest($completeBuild) {
+        return ($this->build == $completeBuild) ? true : false;
     }
 
     /**
-     * Get the latest build for this branch.
+     * Get the latest build with and update for this branch.  The purpose of this function is to find the last build that contains an update.
      * @param string $product
      * @param string $branchVersion
      * @param string $platform
      * @param return string|false false if there is no matching build
      */
-    function getLatestBuild($product,$branchVersion,$platform) {
+    function getLatestCompleteBuild($product,$branchVersion,$platform) {
         $files = array();
 
         $dir = SOURCE_DIR.'/2/'.$product.'/'.$branchVersion.'/'.$platform;
 
+        // Find the build ids for the given product/branchVersion/platform.  The last complete update
+        // is found in the second-to-last build directory.
+        //
+        // To get this build id, we sort the directory listing by number and retrieve $files[1].
         if (is_dir($dir)) {
             $fp = opendir($dir);
             while (false !== ($filename = readdir($fp))) {
@@ -328,13 +341,16 @@ class Patch extends AUS_Object {
             }
             closedir($fp);
             
-            if (is_array($files)) {
-                rsort($files,SORT_NUMERIC); 
-            }
+            rsort($files,SORT_NUMERIC); 
 
-            return $files[1];
+            // Only return the build id if it is not empty and not numeric.
+            if (!empty($files[1]) && is_numeric($files[1])) {
+                return $files[1];
+            }
         }
 
+        // By default we return false, meaning that there is no latest complete update.
+        // Doing so means no updates for the nightly channel.
         return false;
     }
 }
