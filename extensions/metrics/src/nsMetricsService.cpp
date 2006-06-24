@@ -116,6 +116,7 @@ PRLogModuleInfo *gMetricsLog;
 
 static const char kQuitApplicationTopic[] = "quit-application";
 static const char kUploadTimePref[] = "metrics.upload.next-time";
+static const char kPingTimePref[] = "metrics.upload.next-ping";
 
 const PRUint32 nsMetricsService::kMaxRetries = 3;
 
@@ -541,6 +542,24 @@ nsMetricsService::Upload()
     return NS_OK;
   }
 
+  // If we don't have anything to upload, then don't upload, unless
+  // the time given by the next-ping pref has passed.
+  if (mEventCount == 0) {
+    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    NS_ENSURE_STATE(prefs);
+
+    PRInt32 pingTime_sec;
+    if (NS_SUCCEEDED(prefs->GetIntPref(kPingTimePref, &pingTime_sec))) {
+      PRInt32 now_sec = PRInt32(PR_Now() / PR_USEC_PER_SEC);
+      if (now_sec < pingTime_sec) {
+        // No need to upload yet, just reset our timer
+        MS_LOG(("Suppressing upload while idle"));
+        InitUploadTimer(PR_FALSE);
+        return NS_OK;
+      }
+    }
+  }
+
   // XXX Download filtering rules and apply them.
 
   nsresult rv = Flush();
@@ -705,6 +724,23 @@ nsMetricsService::RemoveDataFile()
   }
 }
 
+PRInt32
+nsMetricsService::GetRandomUploadInterval()
+{
+  static const int kSecondsPerHour = 60 * 60;
+  mRetryCount = 0;
+
+  PRInt32 interval_sec = kSecondsPerHour * 12;
+  PRUint32 random = 0;
+  if (nsMetricsUtils::GetRandomNoise(&random, sizeof(random))) {
+    interval_sec += (random % (24 * kSecondsPerHour));
+  }
+  // If we couldn't get any random bytes, just use the default of
+  // 12 hours.
+
+  return interval_sec;
+}
+
 NS_IMETHODIMP
 nsMetricsService::OnStopRequest(nsIRequest *request, nsISupports *context,
                                 nsresult status)
@@ -789,24 +825,21 @@ nsMetricsService::OnStopRequest(nsIRequest *request, nsISupports *context,
     // Clear the next-upload-time pref, in case it was set somehow.
     FlushClearPref(kUploadTimePref);
     MS_LOG(("Uploaded successfully and reset retry count"));
+
+    // Set the minimum next-ping time to a random time 12-36 hours from now.
+    // This is the time at which we'll upload to get a new config, even
+    // if we have no data.
+    PRInt32 interval_sec = GetRandomUploadInterval();
+    MS_LOG(("Next ping no later than %d seconds from now", interval_sec));
+    FlushIntPref(kPingTimePref, (PR_Now() / PR_USEC_PER_SEC) + interval_sec);
   } else if (++mRetryCount >= kMaxRetries) {
     RemoveDataFile();
 
-    static const int kSecondsPerHour = 60 * 60;
-    mRetryCount = 0;
-
-    PRInt32 interval_sec = kSecondsPerHour * 12;
-    PRUint32 random = 0;
-    if (nsMetricsUtils::GetRandomNoise(&random, sizeof(random))) {
-      interval_sec += (random % (24 * kSecondsPerHour));
-    }
-    // If we couldn't get any random bytes, just use the default of
-    // 12 hours.
-
-    FlushIntPref(kUploadTimePref, (PR_Now() / PR_USEC_PER_SEC) + interval_sec);
-
+    PRInt32 interval_sec = GetRandomUploadInterval();
     MS_LOG(("Reached max retry count, deferring upload for %d seconds",
             interval_sec));
+    FlushIntPref(kUploadTimePref, (PR_Now() / PR_USEC_PER_SEC) + interval_sec);
+
     // We'll initialize a timer for this interval below by calling
     // InitUploadTimer().
   }
