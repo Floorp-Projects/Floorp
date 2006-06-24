@@ -215,6 +215,9 @@ private:
   // Removes the existing data file (metrics.xml)
   void RemoveDataFile();
 
+  // Generates a random interval, in seconds, between 12 and 36 hours.
+  PRInt32 GetRandomUploadInterval();
+
   static PLDHashOperator PR_CALLBACK
   PruneDisabledCollectors(const nsAString &key,
                           nsCOMPtr<nsIMetricsCollector> &value,
