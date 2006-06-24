@@ -202,8 +202,8 @@
       <xul:listcell class="ruleactiontarget" xbl:inherits="type=value"
                     orient="vertical" align="start" pack="center"/>
       <xul:listcell>
-        <xul:button class="small-button" label="+" onclick="this.parentNode.parentNode.addRow();"/>
-        <xul:button class="small-button" label="-" onclick="this.parentNode.parentNode.removeRow();" anonid="removeButton"/>
+        <xul:button class="small-button" label="+" oncommand="this.parentNode.parentNode.addRow();"/>
+        <xul:button class="small-button" label="-" oncommand="this.parentNode.parentNode.removeRow();" anonid="removeButton"/>
       </xul:listcell>
       <xul:listcell/>
     </content>
