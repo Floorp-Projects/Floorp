@@ -1928,7 +1928,7 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     *((NPNToolkitType*)result) = NPNVGtk2;
 #endif
 
-    if (result)
+    if (*result)
         return NPERR_NO_ERROR;
 
     return NPERR_GENERIC_ERROR;
