@@ -14,6 +14,7 @@ bin/.autoreg
 ;
 ; en-US
 bin/chrome/en-US.jar
+bin/chrome/en-US.manifest
 bin/defaults/profile/en-US/*
 bin/defaults/messenger/en-US/*
 bin/defaults/isp/en-US/movemail.rdf
@@ -51,6 +52,22 @@ bin/libxpcom_compat.so
 bin/components/libxpcom_compat_c.so
 
 [browser]
+; MOZ_XUL_APP=1 items
+bin/libxul.so
+bin/components/commandlines.xpt
+bin/components/feeds.xpt
+bin/components/nsUpdateService.js
+bin/components/toolkitprofile.xpt
+bin/components/update.xpt
+bin/components/libcommandlines.so
+bin/components/libsuite.so
+bin/components/libtoolkitcomps.so
+bin/components/nsBrowserContentHandler.js
+bin/components/nsExtensionManager.js
+bin/components/pluginGlue.js
+bin/components/xulapp.xpt
+
+; Original items (pre MOZ_XUL_APP=1)
 bin/seamonkey
 bin/seamonkey-bin
 bin/init.d/README
@@ -96,7 +113,6 @@ bin/components/autocomplete.xpt
 bin/components/appshell.xpt
 bin/components/caps.xpt
 bin/components/chrome.xpt
-bin/components/nsBrowserContentHandler.js
 bin/components/nsComposerCmdLineHandler.js
 bin/components/cookie.xpt
 bin/components/libjsd.so
@@ -242,6 +258,7 @@ bin/components/libxremoteservice.so
 bin/components/xremoteservice.xpt
 bin/components/libremoteservice.so
 bin/components/toolkitremote.xpt
+bin/components/xremoteservice.xpt
 bin/components/embed_base.xpt
 bin/components/commandhandler.xpt
 bin/components/webbrowserpersist.xpt
@@ -259,7 +276,6 @@ bin/components/typeaheadfind.xpt
 bin/components/libtypeaheadfind.so
 bin/components/nsCloseAllWindows.js
 bin/components/extensions.xpt
-bin/components/nsExtensionManager.js
 bin/components/libsystem-pref.so
 bin/components/htmlparser.xpt
 bin/components/lwbrk.xpt
@@ -299,11 +315,26 @@ bin/chrome/sroaming.jar
 bin/components/p3p.xpt
 bin/components/libp3p.so
 
+; classic theme
+bin/chrome/classic.jar
+bin/chrome/classic.manifest
+bin/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/icon.png
+bin/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/install.rdf
+bin/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/preview.png
+
+; modern theme
+bin/chrome/modern.jar
+bin/extensions/modern@themes.mozilla.org/chrome/modern.jar
+bin/extensions/modern@themes.mozilla.org/chrome.manifest
+bin/extensions/modern@themes.mozilla.org/icon.png
+bin/extensions/modern@themes.mozilla.org/install.rdf
+bin/extensions/modern@themes.mozilla.org/preview.png
+
 bin/chrome/help.jar
 bin/chrome/toolkit.jar
+bin/chrome/toolkit.manifest
 bin/chrome/comm.jar
-bin/chrome/modern.jar
-bin/chrome/classic.jar
+bin/chrome/comm.manifest
 bin/chrome/installed-chrome.txt
 bin/chrome/chromelist.txt
 ;-bin/chrome/comm/content/editor/EditorInitPage.html
@@ -388,6 +419,10 @@ bin/res/svg.css
 bin/components/dom_svg.xpt
 
 [mail]
+; MOZ_XUL_APP=1 addition
+bin/components/libmail.so
+
+; Original items (pre MOZ_XUL_APP=1)
 bin/libmsgbaseutil.so
 bin/components/addrbook.xpt
 bin/components/libaddrbook.so
@@ -418,6 +453,7 @@ bin/components/nsLDAPPrefsService.js
 bin/components/import.xpt
 bin/components/impComm4xMail.xpt
 bin/chrome/messenger.jar
+bin/chrome/messenger.manifest
 bin/components/libmsgsmime.so
 bin/components/msgsmime.xpt
 bin/components/smime-service.js
@@ -486,6 +522,7 @@ bin/libfreebl_64int_3.so
 bin/libssl3.so
 bin/chrome/pipnss.jar
 bin/chrome/pippki.jar
+bin/chrome/pippki.manifest
 
 [inspector]
 bin/components/inspector-cmdline.js
@@ -503,3 +540,4 @@ bin/components/myspell/*
 
 [reporter]
 bin/chrome/reporter.jar
+bin/chrome/reporter.manifest
