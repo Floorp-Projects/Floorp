@@ -49,7 +49,7 @@ menuitem {
   -moz-appearance: menuitem !important;
   -moz-box-align: center;
   color: MenuText;
-  font: menu;
+  font: -moz-pull-down-menu;
   list-style-image: none;
   -moz-image-region: auto;
 }
