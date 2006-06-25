@@ -129,6 +129,8 @@ pref("browser.tabs.loadDivertedInBackground", false);
 pref("browser.tabs.loadInBackground", false);
 pref("browser.tabs.opentabfor.middleclick", false);
 pref("browser.tabs.opentabfor.urlbar", false);
+pref("browser.tabs.tooltippreview.enable", true);
+pref("browser.tabs.tooltippreview.width", 300);
 
 // external link handling in tabbed browsers. values from nsIBrowserDOMWindow.
 // 0=default window, 1=current window/tab, 2=new window, 3=new tab in most recent window

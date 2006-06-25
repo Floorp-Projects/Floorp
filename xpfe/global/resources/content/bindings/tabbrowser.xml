@@ -23,6 +23,7 @@
    - Contributor(s):
    -   David Hyatt <hyatt@netscape.com> (Original Author of <tabbrowser>)
    -   Mike Connor <mconnor@steelgryphon.com>
+   -   Christopher Thomas <cst@yecc.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -45,6 +46,7 @@
 
 <bindings id="tabBrowserBindings"
           xmlns="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
 
@@ -65,7 +67,10 @@
                   ondragover="nsDragAndDrop.dragOver(event, this.parentNode.parentNode); event.stopPropagation();"
                   ondragdrop="nsDragAndDrop.drop(event, this.parentNode.parentNode); event.stopPropagation();"
                   ondragexit="nsDragAndDrop.dragExit(event, this.parentNode.parentNode); event.stopPropagation();">
-          <xul:tooltip onpopupshowing="event.stopPropagation(); if (document.tooltipNode.hasAttribute('label')) { this.setAttribute('label', document.tooltipNode.getAttribute('label')); return true; } return false;"/>
+          <xul:tooltip onpopupshowing="return this.parentNode.parentNode.parentNode.doPreview(this); event.stopPropagation();" orient="vertical">
+            <xul:label class="tooltip-label" crop="right"/>
+            <xul:label class="tooltip-label" hidden="true"><html:canvas/></xul:label>
+          </xul:tooltip>
           <xul:menupopup onpopupshowing="this.parentNode.parentNode.parentNode.updatePopupMenu(this);">
             <xul:menuitem label="&closeTab.label;" accesskey="&closeTab.accesskey;"
                           tbattr="tabbrowser-multiple"
@@ -189,6 +194,57 @@
       <field name="_browsers">
         null
       </field>
+
+      <method name="doPreview">
+        <parameter name="aPopup"/>
+        <body>
+        <![CDATA[
+          var tab = document.tooltipNode;
+          if (tab.localName != "tab")
+            return false;
+          var b = tab.linkedBrowser;
+          if (!b)
+            return false;
+
+          var label = aPopup.firstChild;
+          label.setAttribute("value", tab.getAttribute("label"));
+
+          var canvas = aPopup.lastChild.firstChild;
+
+          if (!this.mPrefs.getBoolPref("browser.tabs.tooltippreview.enable")) {
+            canvas.parentNode.hidden = true;
+            label.removeAttribute("width");
+            return true;
+          }
+
+          var ctx;
+          try {
+            ctx = canvas.getContext("2d");
+          } catch (e) {
+            return true;
+          }
+
+          label.width = 0;
+          var win = b.contentWindow;
+          var w = win.innerWidth;
+          var h = win.innerHeight;
+
+          var canvasW = this.mPrefs.getIntPref("browser.tabs.tooltippreview.width");
+          var canvasH = Math.round(canvasW * h / w);
+
+          canvas.width = canvasW;
+          canvas.height = canvasH;
+          canvas.parentNode.hidden = false;
+
+          ctx.save();
+          ctx.scale(canvasW / w, canvasH / h);
+          var bgColor = this.mPrefs.getCharPref("browser.display.background_color");
+          ctx.drawWindow(win, win.pageXOffset, win.pageYOffset, w, h, bgColor);
+          ctx.restore();
+          return true;
+        ]]>
+        </body>
+      </method>
 
       <!-- A web progress listener object definition for a given tab. -->
       <method name="mTabProgressListener">
