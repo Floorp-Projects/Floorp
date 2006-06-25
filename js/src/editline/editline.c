@@ -64,6 +64,7 @@
 #include "editline.h"
 #include <signal.h>
 #include <ctype.h>
+#include <unistd.h>
 
 /*
 **  Manifest constants.
