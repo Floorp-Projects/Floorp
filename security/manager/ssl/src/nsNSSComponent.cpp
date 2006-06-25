@@ -1346,8 +1346,13 @@ nsNSSComponent::InitializeNSS(PRBool showWarningBox)
                                 getter_AddRefs(profilePath));
     if (NS_FAILED(rv)) {
       PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to get profile directory\n"));
-      return rv;
+      ConfigureInternalPKCS11Token();
+      SECStatus init_rv = NSS_NoDB_Init(NULL);
+      if (init_rv != SECSuccess)
+        return NS_ERROR_NOT_AVAILABLE;
     }
+    else
+    {
 
   // XP_MAC == CFM
   // XP_MACOSX == MachO
@@ -1425,9 +1430,12 @@ nsNSSComponent::InitializeNSS(PRBool showWarningBox)
         PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("can not init in r/o either\n"));
         which_nss_problem = problem_no_security_at_all;
 
-        NSS_NoDB_Init(profileStr.get());
+        init_rv = NSS_NoDB_Init(profileStr.get());
+        if (init_rv != SECSuccess)
+          return NS_ERROR_NOT_AVAILABLE;
       }
-    }
+    } // have profile dir
+    } // lock
 
     // init phase 3, only if phase 2 was successful
 
