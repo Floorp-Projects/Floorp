@@ -411,17 +411,15 @@ const int kReuseWindowOnAE = 2;
 - (void)setupRendezvous // aka "Bonjour"
 {
   BOOL doingRendezvous = NO;
-  
+
   if ([[PreferenceManager sharedInstance] getBooleanPref:"chimera.enable_rendezvous" withSuccess:NULL]) {
-    if ([NSWorkspace supportsBonjour]) {
-      NSNotificationCenter* notificationCenter = [NSNotificationCenter defaultCenter];
-      [notificationCenter addObserver:self selector:@selector(availableServicesChanged:) name:NetworkServicesAvailableServicesChanged object:nil];
-      [notificationCenter addObserver:self selector:@selector(serviceResolved:) name:NetworkServicesResolutionSuccess object:nil];
-      [notificationCenter addObserver:self selector:@selector(serviceResolutionFailed:) name:NetworkServicesResolutionFailure object:nil];
-      doingRendezvous = YES;
-    }
+    NSNotificationCenter* notificationCenter = [NSNotificationCenter defaultCenter];
+    [notificationCenter addObserver:self selector:@selector(availableServicesChanged:) name:NetworkServicesAvailableServicesChanged object:nil];
+    [notificationCenter addObserver:self selector:@selector(serviceResolved:) name:NetworkServicesResolutionSuccess object:nil];
+    [notificationCenter addObserver:self selector:@selector(serviceResolutionFailed:) name:NetworkServicesResolutionFailure object:nil];
+    doingRendezvous = YES;
   }
-  
+
   if (!doingRendezvous) {
     // remove rendezvous items
     int itemIndex;

@@ -165,22 +165,6 @@
 }
 
 //
-// +supportsBonjour
-//
-// returns YES if we're running on a machine that supports bonjour (formerly rendezvous, 10.2
-// or higher)
-//
-+ (BOOL)supportsBonjour
-{
-  // The DNS resolution stuff is broken before 10.2.3
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_3
-  return YES;
-#else
-  return [self systemVersion] >= 0x1023;
-#endif
-}
-
-//
 // +supportsSpotlight
 //
 // returns YES if we're running on a machine that supports spotlight (tiger or higher)
