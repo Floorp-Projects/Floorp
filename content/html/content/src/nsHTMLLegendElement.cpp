@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -254,9 +255,8 @@ nsHTMLLegendElement::SetFocus(nsPresContext* aPresContext)
     return;
   }
 
-  nsCOMPtr<nsIEventStateManager> esm = aPresContext->EventStateManager();
   if (IsFocusable()) {
-    esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
+    nsGenericHTMLFormElement::SetFocus(aPresContext);
   } else {
     // If the legend isn't focusable (no tabindex) we focus whatever is
     // focusable following the legend instead, bug 81481.
