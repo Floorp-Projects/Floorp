@@ -131,6 +131,38 @@ function disableDebugCommands()
         cmds[i].enabled = true;
 }
 
+
+function isDOMIInstalled()
+{
+    const IOSERVICE_CTRID = "@mozilla.org/network/io-service;1";
+    const nsIIOService    = Components.interfaces.nsIIOService;
+    const CHROMEREG_CTRID = "@mozilla.org/chrome/chrome-registry;1";
+    const nsIChromeReg    = Components.interfaces.nsIChromeRegistry;
+
+    var iosvc = Components.classes[IOSERVICE_CTRID].getService(nsIIOService);
+    var uri = iosvc.newURI("chrome://inspector/content/inspector.xul",
+                           null, null);
+    // Evil hack: check if the chrome registry knows about Inspector.
+    // If it does, it's installed, otherwise it isn't.
+    try
+    {
+        var cr = Components.classes[CHROMEREG_CTRID].getService(nsIChromeReg);
+        var realURI = cr.convertChromeURL(uri);
+    }
+    catch (ex)
+    {
+        return false;
+    }
+    return true;
+}
+
+function isDOMThing(o)
+{
+    const nsIDOMNode     = Components.interfaces.nsIDOMNode;
+    const nsIDOMDocument = Components.interfaces.nsIDOMDocument;
+    return isinstance(o, nsIDOMNode);
+}
+
 function isURLVenkman (url)
 {
     return (url.search (/^chrome:\/\/venkman/) == 0 &&

@@ -108,6 +108,7 @@ function initCommands()
          ["frame",          cmdFrame,             CMD_CONSOLE | CMD_NEED_STACK],
          ["gc",             cmdGC,                                 CMD_CONSOLE],
          ["help",           cmdHelp,                               CMD_CONSOLE],
+         ["inspect",        cmdInspect,                            CMD_CONSOLE],
          ["loadd",          cmdLoadd,                              CMD_CONSOLE],
          ["move-view",      cmdMoveView,                           CMD_CONSOLE],
          ["mozilla-help",   cmdMozillaHelp,                                  0],
@@ -1204,6 +1205,28 @@ function cmdHelp (e)
 function cmdHook(e)
 {
     /* empty function used for "hook" commands. */
+}
+
+function cmdInspect(e)
+{
+    var key, value;
+    if ("jsdValue" in e)
+    {
+        key = e.propertyName;
+        value = e.jsdValue.getWrappedValue();
+    }
+    else if ("expression" in e)
+    {
+        key = e.expression;
+        value = evalInTargetScope(e.expression, true).getWrappedValue();
+    }
+    if (!value || !isDOMThing(value))
+    {
+        display(getMsg(MSN_ERR_NOT_A_DOM_NODE, key), MT_ERROR);
+        return;
+    }
+    window.openDialog("chrome://inspector/content/", "_blank",
+                      "chrome,all,dialog=no", value);
 }
 
 function cmdLoadd (e)

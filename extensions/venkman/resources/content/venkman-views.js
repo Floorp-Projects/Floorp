@@ -546,6 +546,9 @@ function lv_init ()
                            enabledif: "has('jsdValue') && " +
                                       "cx.jsdValue.jsType == TYPE_OBJECT"}],
          ["-"],
+         ["inspect", {visibleif: "isDOMIInstalled()",
+                      enabledif: "has('jsdValue') && " + 
+                                 "isDOMThing(cx.jsdValue.getWrappedValue())"}],
          ["find-creator",
                  {enabledif: "cx.target instanceof ValueRecord && " +
                   "cx.target.jsType == jsdIValue.TYPE_OBJECT  && " +
@@ -4099,6 +4102,9 @@ function wv_init()
                            enabledif: "has('jsdValue') && " +
                                       "cx.jsdValue.jsType == TYPE_OBJECT"}],
          ["-"],
+         ["inspect", {visibleif: "isDOMIInstalled()",
+                      enabledif: "has('jsdValue') && " + 
+                                 "isDOMThing(cx.jsdValue.getWrappedValue())"}],
          ["find-creator",
                  {enabledif: "cx.target instanceof ValueRecord && " +
                   "cx.target.jsType == jsdIValue.TYPE_OBJECT  && " +

@@ -1028,3 +1028,15 @@ function makeExpression (items)
     
     return expression;
 }
+
+function isinstance(inst, base)
+{
+    /* Returns |true| if |inst| was constructed by |base|. Not 100% accurate,
+     * but plenty good enough for us. This is to work around the fix for bug
+     * 254067 which makes instanceof fail if the two sides are 'from'
+     * different windows (something we don't care about).
+     */
+    return (inst && base &&
+            ((inst instanceof base) ||
+             (inst.constructor && (inst.constructor.name == base.name))));
+}
