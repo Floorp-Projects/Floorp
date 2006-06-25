@@ -135,6 +135,7 @@ function initCommands()
          ["save-settings",  cmdSaveSettings,                       CMD_CONSOLE],
          ["scan-source",    cmdScanSource,                                   0],
          ["scope",          cmdScope,             CMD_CONSOLE | CMD_NEED_STACK],
+         ["show-profile",   cmdShowProfile,                        CMD_CONSOLE],
          ["this-expr",      cmdThisExpr,                           CMD_CONSOLE],
          ["toggle-float",   cmdToggleFloat,                        CMD_CONSOLE],
          ["toggle-view",    cmdToggleView,                         CMD_CONSOLE],
@@ -1700,7 +1701,6 @@ function cmdSaveProfile (e)
     
     var file = fopen (e.targetFile, ">");
 
-    var templateName;
     var ary = file.localFile.path.match(/\.([^.]+)$/);
 
     if (ary)
@@ -1708,52 +1708,9 @@ function cmdSaveProfile (e)
     else
         ext = "txt";
 
-    templateName = templatePfx + ext;
-    var templateFile;
-    if (templateName in console.prefs)
-        templateFile = console.prefs[templateName];
-    else
-        templateFile = console.prefs[templatePfx + "txt"];
-    
-    var reportTemplate = console.profiler.loadTemplate(templateFile);
+    var rv = writeProfile(e, file, ext, onComplete);
 
-    var scriptInstanceList = new Array();
-    
-    var j;
-
-    if (!("urlList" in e) || e.urlList.length == 0)
-    {
-        if ("url" in e && e.url)
-            e.urlList = [e.url];
-        else
-            e.urlList = keys(console.scriptManagers);
-    }
-    
-    e.urlList = e.urlList.sort();
-    
-    for (i = 0; i < e.urlList.length; ++i)
-    {
-        var url = e.urlList[i];
-        if (!ASSERT (url in console.scriptManagers, "url not loaded"))
-            continue;
-        var manager = console.scriptManagers[url];
-        for (j in manager.instances)
-            scriptInstanceList.push (manager.instances[j]);
-    }
-
-    var rangeList;
-    if (("profile.ranges." + ext) in console.prefs)
-        rangeList = console.prefs["profile.ranges." + ext].split(",");
-    else
-        rangeList = console.prefs["profile.ranges.default"].split(",");
-    
-    var profileReport = new ProfileReport (reportTemplate, file, rangeList,
-                                           scriptInstanceList);
-    profileReport.onComplete = onComplete;
-    
-    console.profiler.generateReport (profileReport);
-
-    return file.localFile;
+    return rv.localFile;
 }
 
 function cmdSaveSettings(e)
@@ -1791,6 +1748,82 @@ function cmdScope ()
         displayProperties (getCurrentFrame().scope);
     
     return true;
+}
+
+function cmdShowProfile(e)
+{
+    function onComplete(i)
+    {
+        // We need a window since the current browserwindow could be disabled
+        // by us if a script in it is stopped, so we can't do anything there.
+        var w = window.open("about:blank");
+        w.wrappedJSObject.document.open();
+        w.wrappedJSObject.document.write(fileString.str);
+        w.wrappedJSObject.document.close();
+    };
+
+    // In order not to create files, we hack in a small wrapper around a big string:
+    var fileString = {
+        str: "",
+        write: function _write(_str) { this.str += _str; }
+    };
+
+    writeProfile(e, fileString, "html", onComplete);
+}
+
+function writeProfile(e, file, type, onComplete)
+{
+    // Get us a template
+    if (!type)
+        type = "txt";
+
+    var templatePfx = "profile.template.";
+    var templateName = templatePfx + type;
+    var templateFile;
+    if (templateName in console.prefs)
+        templateFile = console.prefs[templateName];
+    else
+        templateFile = console.prefs[templatePfx + "txt"];
+    
+    var reportTemplate = console.profiler.loadTemplate(templateFile);
+
+    // Get a list of scripts we profiled.
+    var scriptInstanceList = new Array();
+    
+    if (!("urlList" in e) || e.urlList.length == 0)
+    {
+        if ("url" in e && e.url)
+            e.urlList = [e.url];
+        else
+            e.urlList = keys(console.scriptManagers);
+    }
+    
+    e.urlList = e.urlList.sort();
+
+    var i, j;
+    for (i = 0; i < e.urlList.length; ++i)
+    {
+        var url = e.urlList[i];
+        if (!ASSERT(url in console.scriptManagers, "url not loaded"))
+            continue;
+        var manager = console.scriptManagers[url];
+        for (j in manager.instances)
+            scriptInstanceList.push(manager.instances[j]);
+    }
+
+    var rangeList;
+    if (("profile.ranges." + type) in console.prefs)
+        rangeList = console.prefs["profile.ranges." + type].split(",");
+    else
+        rangeList = console.prefs["profile.ranges.default"].split(",");
+    
+    var profileReport = new ProfileReport(reportTemplate, file, rangeList,
+                                          scriptInstanceList);
+    profileReport.onComplete = onComplete;
+    
+    console.profiler.generateReport(profileReport);
+
+    return file;
 }
 
 function cmdThisExpr(e)

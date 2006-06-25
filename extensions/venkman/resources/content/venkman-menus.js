@@ -184,7 +184,8 @@ function initMenus()
                  {type: "checkbox",
                   checkedif: "console.jsds.flags & COLLECT_PROFILE_DATA"}],
          ["clear-profile"],
-         ["save-profile"]
+         ["save-profile"],
+         ["show-profile"]
         ]
     };
 
