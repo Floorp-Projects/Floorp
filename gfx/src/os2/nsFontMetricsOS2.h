@@ -250,6 +250,8 @@ public:
   NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
   NS_IMETHOD  GetAveCharWidth(nscoord &aAveCharWidth);
   NS_IMETHOD  GetSpaceWidth(nscoord &aSpaceWidth);
+  // No known string length limits on OS/2
+  virtual PRInt32 GetMaxStringLength() { return PR_INT32_MAX; }
 
   virtual nsresult
   ResolveForwards(HPS                  aPS,

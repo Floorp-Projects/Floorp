@@ -109,6 +109,7 @@ public:
     virtual nsresult SetRightToLeftText(PRBool aIsRTL) = 0;
     virtual PRBool GetRightToLeftText() = 0;
 
+    virtual PRInt32 GetMaxStringLength() = 0;
 };
 
 #endif /* __nsIThebesFontMetrics_h */

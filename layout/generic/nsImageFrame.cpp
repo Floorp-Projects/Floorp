@@ -1033,7 +1033,7 @@ nsImageFrame::MeasureString(const PRUnichar*     aString,
   
     // Measure this chunk of text, and see if it fits
     nscoord width;
-    nsLayoutUtils::SafeGetWidth(&aContext, aString, len, width);
+    aContext.GetWidth(aString, len, width);
     PRBool  fits = (totalWidth + width) <= aMaxWidth;
 
     // If it fits on the line, or it's the first word we've processed then
@@ -1101,7 +1101,7 @@ nsImageFrame::DisplayAltText(nsPresContext*      aPresContext,
     MeasureString(str, strLen, aRect.width, maxFit, aRenderingContext);
     
     // Display the text
-    nsLayoutUtils::SafeDrawString(&aRenderingContext, str, maxFit, aRect.x, y + maxAscent);
+    aRenderingContext.DrawString(str, maxFit, aRect.x, y + maxAscent);
 
     // Move to the next line
     str += maxFit;

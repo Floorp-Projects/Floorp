@@ -3823,6 +3823,11 @@ nsFontMetricsWin::RealizeFont()
   mMaxAscent = NSToCoordRound(metrics.tmAscent * dev2app);
   mMaxDescent = NSToCoordRound(metrics.tmDescent * dev2app);
   mMaxAdvance = NSToCoordRound(metrics.tmMaxCharWidth * dev2app);
+  // Windows may screw up if we try to measure/draw more than 32767 pixels in
+  // one operation.
+  mMaxStringLength = (PRInt32)floor(32767.0/metrics.tmMaxCharWidth);
+  mMaxStringLength = PR_MAX(1, mMaxStringLength);
+  
   mAveCharWidth = PR_MAX(1, NSToCoordRound(metrics.tmAveCharWidth * dev2app));
 
   if (gDoingLineheightFixup) {
@@ -3992,6 +3997,12 @@ nsFontMetricsWin::GetAveCharWidth(nscoord &aAveCharWidth)
 {
   aAveCharWidth = mAveCharWidth;
   return NS_OK;
+}
+
+PRInt32
+nsFontMetricsWin::GetMaxStringLength()
+{
+  return mMaxStringLength;
 }
 
 NS_IMETHODIMP

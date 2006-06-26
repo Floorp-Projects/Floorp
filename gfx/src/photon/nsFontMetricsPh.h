@@ -171,6 +171,8 @@ public:
 		aSpaceWidth = mSpaceWidth;
 		return NS_OK;
 		}
+  // No known string length limits on Photon
+  virtual PRInt32 GetMaxStringLength() { return PR_INT32_MAX; }
   
 protected:
   void RealizeFont();
@@ -197,7 +199,9 @@ protected:
   nscoord             mUnderlineOffset;
   nscoord             mSpaceWidth;
   nscoord			mAveCharWidth;
-  
+  // No known string length limits on Photon
+  virtual PRInt32 GetMaxStringLength() { return PR_INT32_MAX; }
+
   nsCOMPtr<nsIAtom>   mLangGroup;
 };
 

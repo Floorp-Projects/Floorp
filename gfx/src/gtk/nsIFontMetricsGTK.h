@@ -144,7 +144,7 @@ public:
                                    PRUint32 aStart,
                                    PRUint32 aEnd,
                                    PRUint32 &aWidth) = 0;
-
+    virtual PRInt32 GetMaxStringLength() = 0;
 };
 
 #endif /* __nsIFontMetricsGTK_h */

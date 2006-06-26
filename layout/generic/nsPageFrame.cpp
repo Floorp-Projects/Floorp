@@ -304,7 +304,7 @@ nscoord nsPageFrame::GetXPosition(nsIRenderingContext& aRenderingContext,
                                   const nsString&      aStr)
 {
   PRInt32 width;
-  nsLayoutUtils::SafeGetWidth(&aRenderingContext, aStr.get(), aStr.Length(), width);
+  aRenderingContext.GetWidth(aStr, width);
 
   nscoord x = aRect.x;
   switch (aJust) {
@@ -459,8 +459,7 @@ nsPageFrame::DrawHeaderFooter(nsPresContext*      aPresContext,
     }
     if (NS_FAILED(rv))
 #endif // IBMBIDI
-    nsLayoutUtils::SafeDrawString(&aRenderingContext, str.get(), str.Length(),
-                                  x, y + aAscent);
+    aRenderingContext.DrawString(str, x, y + aAscent);
     aRenderingContext.PopState();
 
 #ifdef DEBUG_PRINTING

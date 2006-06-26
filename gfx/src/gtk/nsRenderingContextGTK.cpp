@@ -1219,21 +1219,8 @@ nsRenderingContextGTK::GetWidth(PRUnichar aC, nscoord& aWidth,
 }
 
 NS_IMETHODIMP
-nsRenderingContextGTK::GetWidth(const nsString& aString,
-                                nscoord& aWidth, PRInt32* aFontID)
-{
-  return GetWidth(aString.get(), aString.Length(), aWidth, aFontID);
-}
-
-NS_IMETHODIMP
-nsRenderingContextGTK::GetWidth(const char* aString, nscoord& aWidth)
-{
-  return GetWidth(aString, strlen(aString), aWidth);
-}
-
-NS_IMETHODIMP
-nsRenderingContextGTK::GetWidth(const char* aString, PRUint32 aLength,
-                                nscoord& aWidth)
+nsRenderingContextGTK::GetWidthInternal(const char* aString, PRUint32 aLength,
+                                        nscoord& aWidth)
 {
   if (0 == aLength) {
     aWidth = 0;
@@ -1246,8 +1233,8 @@ nsRenderingContextGTK::GetWidth(const char* aString, PRUint32 aLength,
 }
 
 NS_IMETHODIMP
-nsRenderingContextGTK::GetWidth(const PRUnichar* aString, PRUint32 aLength,
-                                nscoord& aWidth, PRInt32* aFontID)
+nsRenderingContextGTK::GetWidthInternal(const PRUnichar* aString, PRUint32 aLength,
+                                        nscoord& aWidth, PRInt32* aFontID)
 {
   if (0 == aLength) {
     aWidth = 0;
@@ -1260,8 +1247,8 @@ nsRenderingContextGTK::GetWidth(const PRUnichar* aString, PRUint32 aLength,
 }
 
 NS_IMETHODIMP
-nsRenderingContextGTK::GetTextDimensions(const char* aString, PRUint32 aLength,
-                                         nsTextDimensions& aDimensions)
+nsRenderingContextGTK::GetTextDimensionsInternal(const char* aString, PRUint32 aLength,
+                                                 nsTextDimensions& aDimensions)
 {
   mFontMetrics->GetMaxAscent(aDimensions.ascent);
   mFontMetrics->GetMaxDescent(aDimensions.descent);
@@ -1269,25 +1256,25 @@ nsRenderingContextGTK::GetTextDimensions(const char* aString, PRUint32 aLength,
 }
 
 NS_IMETHODIMP
-nsRenderingContextGTK::GetTextDimensions(const PRUnichar* aString,
-                                         PRUint32 aLength,
-                                         nsTextDimensions& aDimensions, 
-                                         PRInt32* aFontID)
+nsRenderingContextGTK::GetTextDimensionsInternal(const PRUnichar* aString,
+                                                 PRUint32 aLength,
+                                                 nsTextDimensions& aDimensions, 
+                                                 PRInt32* aFontID)
 {
   return mFontMetrics->GetTextDimensions(aString, aLength, aDimensions,
                                          aFontID, this);
 }
 
 NS_IMETHODIMP
-nsRenderingContextGTK::GetTextDimensions(const char*       aString,
-                                         PRInt32           aLength,
-                                         PRInt32           aAvailWidth,
-                                         PRInt32*          aBreaks,
-                                         PRInt32           aNumBreaks,
-                                         nsTextDimensions& aDimensions,
-                                         PRInt32&          aNumCharsFit,
-                                         nsTextDimensions& aLastWordDimensions,
-                                         PRInt32*          aFontID)
+nsRenderingContextGTK::GetTextDimensionsInternal(const char*       aString,
+                                                 PRInt32           aLength,
+                                                 PRInt32           aAvailWidth,
+                                                 PRInt32*          aBreaks,
+                                                 PRInt32           aNumBreaks,
+                                                 nsTextDimensions& aDimensions,
+                                                 PRInt32&          aNumCharsFit,
+                                                 nsTextDimensions& aLastWordDimensions,
+                                                 PRInt32*          aFontID)
 {
   return mFontMetrics->GetTextDimensions(aString, aLength, aAvailWidth,
                                          aBreaks, aNumBreaks, aDimensions,
@@ -1296,15 +1283,15 @@ nsRenderingContextGTK::GetTextDimensions(const char*       aString,
                                          this);
 }
 NS_IMETHODIMP
-nsRenderingContextGTK::GetTextDimensions(const PRUnichar*  aString,
-                                         PRInt32           aLength,
-                                         PRInt32           aAvailWidth,
-                                         PRInt32*          aBreaks,
-                                         PRInt32           aNumBreaks,
-                                         nsTextDimensions& aDimensions,
-                                         PRInt32&          aNumCharsFit,
-                                         nsTextDimensions& aLastWordDimensions,
-                                         PRInt32*          aFontID)
+nsRenderingContextGTK::GetTextDimensionsInternal(const PRUnichar*  aString,
+                                                 PRInt32           aLength,
+                                                 PRInt32           aAvailWidth,
+                                                 PRInt32*          aBreaks,
+                                                 PRInt32           aNumBreaks,
+                                                 nsTextDimensions& aDimensions,
+                                                 PRInt32&          aNumCharsFit,
+                                                 nsTextDimensions& aLastWordDimensions,
+                                                 PRInt32*          aFontID)
 {
   return mFontMetrics->GetTextDimensions(aString, aLength, aAvailWidth,
                                          aBreaks, aNumBreaks, aDimensions,
@@ -1314,32 +1301,22 @@ nsRenderingContextGTK::GetTextDimensions(const PRUnichar*  aString,
 }
 
 NS_IMETHODIMP
-nsRenderingContextGTK::DrawString(const char *aString, PRUint32 aLength,
-                                  nscoord aX, nscoord aY,
-                                  const nscoord* aSpacing)
+nsRenderingContextGTK::DrawStringInternal(const char *aString, PRUint32 aLength,
+                                          nscoord aX, nscoord aY,
+                                          const nscoord* aSpacing)
 {
   return mFontMetrics->DrawString(aString, aLength, aX, aY, aSpacing,
                                   this, mSurface);
 }
 
 NS_IMETHODIMP
-nsRenderingContextGTK::DrawString(const PRUnichar* aString, PRUint32 aLength,
-                                  nscoord aX, nscoord aY,
-                                  PRInt32 aFontID,
-                                  const nscoord* aSpacing)
+nsRenderingContextGTK::DrawStringInternal(const PRUnichar* aString, PRUint32 aLength,
+                                          nscoord aX, nscoord aY,
+                                          PRInt32 aFontID,
+                                          const nscoord* aSpacing)
 {
   return mFontMetrics->DrawString(aString, aLength, aX, aY, aFontID,
                                   aSpacing, this, mSurface);
-}
-
-NS_IMETHODIMP
-nsRenderingContextGTK::DrawString(const nsString& aString,
-                                  nscoord aX, nscoord aY,
-                                  PRInt32 aFontID,
-                                  const nscoord* aSpacing)
-{
-  return DrawString(aString.get(), aString.Length(),
-                    aX, aY, aFontID, aSpacing);
 }
 
 NS_IMETHODIMP
@@ -1424,19 +1401,19 @@ nsRenderingContextGTK::CopyOffScreenBits(nsIDrawingSurface* aSrcSurf,
 #ifdef MOZ_MATHML
 
 NS_IMETHODIMP
-nsRenderingContextGTK::GetBoundingMetrics(const char*        aString, 
-                                          PRUint32           aLength,
-                                          nsBoundingMetrics& aBoundingMetrics)
+nsRenderingContextGTK::GetBoundingMetricsInternal(const char*        aString, 
+                                                  PRUint32           aLength,
+                                                  nsBoundingMetrics& aBoundingMetrics)
 {
   return mFontMetrics->GetBoundingMetrics(aString, aLength, aBoundingMetrics,
                                           this);
 }
 
 NS_IMETHODIMP
-nsRenderingContextGTK::GetBoundingMetrics(const PRUnichar*   aString, 
-                                          PRUint32           aLength,
-                                          nsBoundingMetrics& aBoundingMetrics,
-                                          PRInt32*           aFontID)
+nsRenderingContextGTK::GetBoundingMetricsInternal(const PRUnichar*   aString, 
+                                                  PRUint32           aLength,
+                                                  nsBoundingMetrics& aBoundingMetrics,
+                                                  PRInt32*           aFontID)
 {
   return mFontMetrics->GetBoundingMetrics(aString, aLength, aBoundingMetrics,
                                           aFontID, this);
@@ -1453,6 +1430,13 @@ NS_IMETHODIMP nsRenderingContextGTK::GetRightToLeftText(PRBool* aIsRTL)
 {
   *aIsRTL = mFontMetrics->GetRightToLeftText();
   return NS_OK;
+}
+
+PRInt32 nsRenderingContextGTK::GetMaxStringLength()
+{
+  if (!mFontMetrics)
+    return 1;
+  return mFontMetrics->GetMaxStringLength();
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::GetClusterInfo(const PRUnichar *aText,

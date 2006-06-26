@@ -1222,7 +1222,7 @@ nsTreeBodyFrame::GetCoordsForCellItem(PRInt32 aRow, nsITreeColumn* aCol, const n
 
     rc->SetFont(fm);
     nscoord width;
-    nsLayoutUtils::SafeGetWidth(rc, cellText, width);
+    rc->GetWidth(cellText, width);
 
     nscoord totalTextWidth = width + bp.left + bp.right;
     if (totalTextWidth < remainWidth) {
@@ -1265,7 +1265,7 @@ nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
                                    nsRect& aTextRect)
 {
   nscoord width;
-  nsLayoutUtils::SafeGetWidth(&aRenderingContext, aText, width);
+  aRenderingContext.GetWidth(aText, width);
 
   nscoord maxWidth = aTextRect.width;
 
@@ -1391,7 +1391,7 @@ nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
     }
   }
 
-  nsLayoutUtils::SafeGetWidth(&aRenderingContext, aText, width);
+  aRenderingContext.GetWidth(aText, width);
   aTextRect.width = width;
 }
 
@@ -1638,7 +1638,7 @@ nsTreeBodyFrame::GetCellWidth(PRInt32 aRow, nsTreeColumn* aCol,
 
     // Get the width of the text itself
     nscoord width;
-    nsLayoutUtils::SafeGetWidth(aRenderingContext, cellText, width);
+    aRenderingContext->GetWidth(cellText, width);
     nscoord totalTextWidth = width + bp.left + bp.right;
     aDesiredSize += totalTextWidth;
   }
@@ -3402,7 +3402,7 @@ nsTreeBodyFrame::PaintText(PRInt32              aRowIndex,
   }
   if (NS_FAILED(rv))
 #endif // IBMBIDI
-  nsLayoutUtils::SafeDrawString(&aRenderingContext, text, textRect.x, textRect.y + baseline);
+  aRenderingContext.DrawString(text, textRect.x, textRect.y + baseline);
 #ifdef MOZ_TIMELINE
   NS_TIMELINE_STOP_TIMER("Render Outline Text");
   NS_TIMELINE_MARK_TIMER("Render Outline Text");

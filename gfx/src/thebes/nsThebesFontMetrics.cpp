@@ -272,6 +272,13 @@ nsThebesFontMetrics::GetNormalLineHeight(nscoord& aLineHeight)
     return NS_OK;
 }
 
+PRInt32
+nsThebesFontMetrics::GetMaxStringLength()
+{
+    PRInt32 len = (PRInt32)floor(32767.0/GetMetrics().maxAdvance);
+    return PR_MAX(1, len);
+}
+
 nsresult 
 nsThebesFontMetrics::GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth,
                               nsThebesRenderingContext *aContext)

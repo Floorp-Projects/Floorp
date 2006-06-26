@@ -1736,6 +1736,10 @@ void nsFontMetricsGTK::RealizeFont()
     mMaxDescent = nscoord(ft->max_descent() * f);
 
     mMaxAdvance = nscoord(ft->max_width() * f);
+    // X may screw up if we try to measure/draw more than 32767 pixels in
+    // one operation
+    mMaxStringLength = (PRInt32)floor(32767.0/ft->max_width());
+    mMaxStringLength = PR_MAX(1, mMaxStringLength);
 
     // 56% of ascent, best guess for non-true type
     mXHeight = NSToCoordRound((float) ft->ascent()* f * 0.56f);
@@ -1818,6 +1822,10 @@ void nsFontMetricsGTK::RealizeFont()
   mEmDescent = mEmHeight - mEmAscent;
 
   mMaxAdvance = nscoord(fontInfo->max_bounds.width * f);
+  // X may screw up if we try to measure/draw more than 32767 pixels in
+  // one operation.
+  mMaxStringLength = (PRInt32)floor(32767.0/fontInfo->max_bounds.width);
+  mMaxStringLength = PR_MAX(1, mMaxStringLength);
 
   gint rawWidth, rawAverage;
   if ((fontInfo->min_byte1 == 0) && (fontInfo->max_byte1 == 0)) {
@@ -2008,6 +2016,11 @@ NS_IMETHODIMP nsFontMetricsGTK::GetAveCharWidth(nscoord &aAveCharWidth)
 {
   aAveCharWidth = mAveCharWidth;
   return NS_OK;
+}
+
+PRInt32 nsFontMetricsGTK::GetMaxStringLength()
+{
+  return mMaxStringLength;
 }
 
 NS_IMETHODIMP  nsFontMetricsGTK::GetLangGroup(nsIAtom** aLangGroup)

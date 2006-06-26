@@ -468,15 +468,13 @@ nsTextBoxFrame::PaintTitle(nsIRenderingContext& aRenderingContext,
            // underline position by getting the text metric.
            // XXX are attribute values always two byte?
            if (mAccessKeyInfo->mAccesskeyIndex > 0)
-               nsLayoutUtils::SafeGetWidth(&aRenderingContext, mCroppedTitle.get(),
-                                           mAccessKeyInfo->mAccesskeyIndex,
-                                           mAccessKeyInfo->mBeforeWidth);
+               aRenderingContext.GetWidth(mCroppedTitle.get(), mAccessKeyInfo->mAccesskeyIndex,
+                                          mAccessKeyInfo->mBeforeWidth);
            else
                mAccessKeyInfo->mBeforeWidth = 0;
        }
 
-       nsLayoutUtils::SafeDrawString(&aRenderingContext, mCroppedTitle,
-                                     textRect.x, textRect.y + baseline);
+       aRenderingContext.DrawString(mCroppedTitle, textRect.x, textRect.y + baseline);
     }
 
     if (mAccessKeyInfo && mAccessKeyInfo->mAccesskeyIndex != kNotFound) {
@@ -513,7 +511,6 @@ nsTextBoxFrame::CalculateUnderline(nsIRenderingContext& aRenderingContext)
          // Calculate all fields of mAccessKeyInfo which
          // are the same for both BiDi and non-BiDi rames.
          const PRUnichar *titleString = mCroppedTitle.get();
-         // XXX this doesn't handle clusters... or UTF16 surrogate pairs
          aRenderingContext.GetWidth(titleString[mAccessKeyInfo->mAccesskeyIndex],
                                     mAccessKeyInfo->mAccessWidth);
 
@@ -541,7 +538,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
     aRenderingContext.SetFont(fontMet);
 
     // see if the text will completely fit in the width given
-    nsLayoutUtils::SafeGetWidth(&aRenderingContext, mTitle, mTitleWidth);
+    aRenderingContext.GetWidth(mTitle, mTitleWidth);
 
     if (mTitleWidth <= aWidth) {
         mCroppedTitle = mTitle;
@@ -651,7 +648,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
         case CropCenter:
         {
             nscoord stringWidth = 0;
-            nsLayoutUtils::SafeGetWidth(&aRenderingContext, mTitle, stringWidth);
+            aRenderingContext.GetWidth(mTitle, stringWidth);
             if (stringWidth <= aWidth) {
                 // the entire string will fit in the maximum width
                 mCroppedTitle.Insert(mTitle, 0);
@@ -712,7 +709,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
         break;
     }
 
-    nsLayoutUtils::SafeGetWidth(&aRenderingContext, mCroppedTitle, mTitleWidth);
+    aRenderingContext.GetWidth(mCroppedTitle, mTitleWidth);
 }
 
 // the following block is to append the accesskey to mTitle if there is an accesskey
@@ -838,7 +835,7 @@ nsTextBoxFrame::GetTextSize(nsPresContext* aPresContext, nsIRenderingContext& aR
                                                  *getter_AddRefs(fontMet));
     fontMet->GetHeight(aSize.height);
     aRenderingContext.SetFont(fontMet);
-    nsLayoutUtils::SafeGetWidth(&aRenderingContext, aString, aSize.width);
+    aRenderingContext.GetWidth(aString, aSize.width);
     fontMet->GetMaxAscent(aAscent);
 }
 
