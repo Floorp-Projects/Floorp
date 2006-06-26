@@ -115,9 +115,9 @@ TEMP_SDK_DIR = $(DIST)/bin/sdk/lib
 $(TEMP_SDK_DIR)::
 	$(NSINSTALL) -D $@
 
-libs:: $(JARFILE) $(JARFILE_SRC) $(TEMP_SDK_DIR)
+export:: $(JARFILE) $(JARFILE_SRC) $(TEMP_SDK_DIR)
 	$(INSTALL) $(IFLAGS2) $^
 
 # Build the implementation Java classes, which depend on these interfaces
-libs::
+export::
 	$(MAKE) -C ../src jarfile
