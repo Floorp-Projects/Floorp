@@ -805,6 +805,7 @@ getRoleCB(AtkObject *aAtkObj)
             if (childCount > 0)
                 accRole = nsIAccessible::ROLE_MENUPOPUP;
         }
+#ifndef USE_ATK_ROLE_LINK
         else if (accRole == nsIAccessible::ROLE_LINK) {
             //ATK doesn't have role-link now
             //register it on runtime
@@ -814,6 +815,7 @@ getRoleCB(AtkObject *aAtkObj)
             }
             accRole = linkRole;
         }
+#endif
         else if (accRole == nsIAccessible::ROLE_TEXT_CONTAINER) {
           accRole = ATK_ROLE_TEXT;
         }

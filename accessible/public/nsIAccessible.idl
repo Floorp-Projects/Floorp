@@ -445,7 +445,6 @@ interface nsIAccessible : nsISupports
   enum { ROLE_COLUMN = 66U };      // ATK_ROLE_UNKNOWN
   enum { ROLE_ROW = 66U };         // ATK_ROLE_UNKNOWN
   enum { ROLE_CELL = 55U };        // ATK_ROLE_TABLE_CELL
-  enum { ROLE_LINK = 101U };        // ATK doesn't have such role now
   enum { ROLE_HELPBALLOON = 66U }; // ATK_ROLE_UNKNOWN
   // The object represents a cartoon-like graphic object
   enum { ROLE_CHARACTER = 26U };   // ATK_ROLE_IMAGE
@@ -540,6 +539,8 @@ interface nsIAccessible : nsISupports
   enum { ROLE_SECTION = 83U };             // ATK_ROLE_SECTION
   enum { ROLE_REDUNDANT_OBJECT = 84U };    // ATK_ROLE_REDUNDANT_OBJECT
   enum { ROLE_FORM = 85U };                // ATK_ROLE_FORM
+  enum { ROLE_LINK = 86U };                // ATK_ROLE_LINK
+  enum { ROLE_IME = 87U };                 // ATK_ROLE_INPUT_METHOD_WINDOW
 #else
 // MSAA Roles - only one per nsIAccessible or IAccessible
   enum { ROLE_TITLEBAR = 1U };
