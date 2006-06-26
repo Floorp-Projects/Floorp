@@ -78,11 +78,9 @@ MOZ_NONLOCALIZED_PKG_LIST = \
 MOZ_LOCALIZED_PKG_LIST = $(AB_CD)
 
 MOZ_OPTIONAL_PKG_LIST = \
-# adt = Additional Developer Tools (inspector)
-#   adt \
-# XXX Re-enable when we enable talkback for Sunbird
-#   talkback \
-    $(NULL)
+	adt \
+	talkback \
+	$(NULL)
 
 DEFINES += -DAB_CD=$(AB_CD)
 

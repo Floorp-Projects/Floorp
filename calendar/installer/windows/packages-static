@@ -8,29 +8,20 @@
 ; ; file comment
 ;
 
+#filter substitution
+
 bin/.autoreg
 
-[langenus]
-; en-US 
-bin\chrome\en-US.jar
-bin\chrome\en-win.jar
+[@AB_CD@]
+bin\chrome\@AB_CD@.jar
+bin\chrome\@AB_CD@.manifest
+bin\chrome\calendar-@AB_CD@.jar
+bin\chrome\calendar-@AB_CD@.manifest
+bin\defaults\pref\sunbird-l10n.js
+bin\defaults\profile\prefs.js
+bin\defaults\profile\chrome\*
+bin\updater.ini
 
-[regus]
-; US
-; If you add a new directory you must explicitly call addDirectory in regus.jst
-bin\chrome\US.jar
-bin\defaults\profile\US\*
-bin\searchplugins\*
-
-[deflenus]
-; Default files for US
-bin\defaults\profile\bookmarks.html
-bin\defaults\profile\localstore.rdf
-;!4sunbird bin\defaults\profile\prefs.js
-bin\defaults\profile\search.rdf
-bin\defaults\profile\mimeTypes.rdf
-;!4sunbird bin\defaults\profile\extensions\{641d8d09-7dda-4850-8228-ac0ab65e2ac9}\install.rdf
-bin\extensions\{972ce4c6-7e08-4474-a285-3208198ce6fd}\install.rdf
 
 [xpcom]
 bin\js3250.dll
@@ -42,128 +33,135 @@ bin\xpistub.dll
 bin\nspr4.dll
 bin\components\xpinstal.dll
 bin\components\jar50.dll
-bin\xpcom_compat.dll
+bin\Microsoft.VC80.CRT.manifest
+bin\msvcm80.dll
+bin\msvcp80.dll
+bin\msvcr80.dll
 
-[browser]
+[calendar]
 ; [Base Calendar Files]
 bin\sunbird.exe
-bin\plugins\npnul32.dll
 bin\res\cmessage.txt
 bin\xpicleanup.exe
 bin\LICENSE
 bin\README.txt
 
 ; [Components]
-bin\components\alerts.xpt
-bin\components\accessibility.xpt
+bin\AccessibleMarshal.dll
 bin\components\accessibility-msaa.xpt
+bin\components\accessibility.xpt
+bin\components\alerts.xpt
 bin\components\appshell.xpt
 bin\components\appstartup.xpt
 bin\components\autocomplete.xpt
 bin\components\autoconfig.xpt
 bin\components\bookmarks.xpt
-bin\components\calendar.xpt
+bin\components\calbase.xpt
+bin\components\calbaseinternal.xpt
 bin\components\caps.xpt
 bin\components\chardet.xpt
-;!4sunbird bin\components\chrome.xpt
+bin\components\chrome.xpt
 bin\components\commandhandler.xpt
+bin\components\commandlines.xpt
+bin\components\composer.xpt
 bin\components\content_base.xpt
 bin\components\content_html.xpt
 bin\components\content_htmldoc.xpt
 bin\components\content_xmldoc.xpt
 bin\components\content_xslt.xpt
-;!4sunbird bin\components\cookie.xpt
-;!4sunbird bin\components\directory.xpt
+bin\components\content_xtf.xpt
+bin\components\cookie.xpt
 bin\components\docshell_base.xpt
 bin\components\dom.xpt
 bin\components\dom_base.xpt
+bin\components\dom_canvas.xpt
 bin\components\dom_core.xpt
 bin\components\dom_css.xpt
 bin\components\dom_events.xpt
 bin\components\dom_html.xpt
+bin\components\dom_loadsave.xpt
 bin\components\dom_range.xpt
+bin\components\dom_sidebar.xpt
+bin\components\dom_storage.xpt
 bin\components\dom_stylesheets.xpt
+bin\components\dom_svg.xpt
 bin\components\dom_traversal.xpt
 bin\components\dom_views.xpt
 bin\components\dom_xbl.xpt
 bin\components\dom_xpath.xpt
 bin\components\dom_xul.xpt
-;!4sunbird bin\components\downloads.xpt
+bin\components\downloads.xpt
 bin\components\editor.xpt
 bin\components\embed_base.xpt
+bin\components\extensions.xpt
 bin\components\exthandler.xpt
+bin\components\fastfind.xpt
+bin\components\feeds.xpt
 bin\components\find.xpt
 bin\components\gfx.xpt
-bin\components\helperAppDlg.xpt
+bin\components\gksvgrenderer.xpt
 bin\components\history.xpt
 bin\components\htmlparser.xpt
-bin\components\imglib2.xpt
 bin\components\imgicon.xpt
+bin\components\imglib2.xpt
+bin\components\inspector.xpt
 bin\components\intl.xpt
 bin\components\intlcmpt.xpt
 bin\components\jar.xpt
 bin\components\jsconsole.xpt
-bin\components\jsconsole-clhandler.js
-;!4sunbird bin\components\jsd3250.dll
-;!4sunbird bin\components\jsdservice.xpt
+bin\components\jsd3250.dll
+bin\components\jsdservice.xpt
 bin\components\layout_base.xpt
 bin\components\layout_printing.xpt
 bin\components\layout_xul.xpt
 bin\components\layout_xul_tree.xpt
 bin\components\locale.xpt
 bin\components\lwbrk.xpt
-;!4sunbird bin\components\migration.xpt
 bin\components\mimetype.xpt
-bin\components\mozbrwsr.xpt
 bin\components\mozfind.xpt
 bin\components\necko.xpt
+bin\components\necko_about.xpt
 bin\components\necko_cache.xpt
 bin\components\necko_cookie.xpt
-bin\components\necko_strconv.xpt
-bin\components\necko_about.xpt
 bin\components\necko_dns.xpt
 bin\components\necko_file.xpt
 bin\components\necko_ftp.xpt
 bin\components\necko_http.xpt
 bin\components\necko_res.xpt
+bin\components\necko_socket.xpt
+bin\components\necko_strconv.xpt
 bin\components\necko_viewsource.xpt
-;!4sunbird bin\components\oji.xpt
 bin\components\passwordmgr.xpt
-bin\components\plugin.xpt
+bin\components\pipboot.xpt
+bin\components\pipnss.xpt
+bin\components\pippki.xpt
 bin\components\pref.xpt
 bin\components\prefetch.xpt
-bin\components\prefmigr.xpt
 bin\components\profile.xpt
 bin\components\progressDlg.xpt
 bin\components\proxyObject.xpt
 bin\components\rdf.xpt
-;!4sunbird bin\components\related.xpt
-;!4sunbird bin\components\satchel.xpt
-;!4sunbird bin\components\search.xpt
+bin\components\satchel.xpt
+bin\components\saxparser.xpt
 bin\components\shistory.xpt
-bin\components\sidebar.xpt
-;!4sunbird bin\components\signonviewer.xpt
-bin\components\txtsvc.xpt
+bin\components\storage.xpt
+bin\components\toolkitprofile.xpt
 bin\components\txmgr.xpt
-;!4sunbird bin\components\typeaheadfind.xpt
-;!4sunbird bin\components\ucnative.xpt
+bin\components\txtsvc.xpt
 bin\components\uconv.xpt
 bin\components\unicharutil.xpt
+bin\components\update.xpt
 bin\components\uriloader.xpt
-;!4sunbird bin\components\util.xpt
-;!4sunbird bin\components\wallet.xpt
-;!4sunbird bin\components\walleteditor.xpt
-;!4sunbird bin\components\walletpreview.xpt
 bin\components\webBrowser_core.xpt
 bin\components\webbrowserpersist.xpt
+bin\components\webdav.xpt
 bin\components\webshell_idls.xpt
-;!4sunbird bin\components\websrvcs.xpt
+bin\components\websrvcs.xpt
 bin\components\widget.xpt
 bin\components\windowds.xpt
 bin\components\windowwatcher.xpt
-;!4sunbird bin\components\shellservice.xpt
-;!4sunbird bin\components\xml-rpc.xpt
-;!4sunbird bin\components\xmlextras.xpt
+bin\components\winhooks.xpt
+bin\components\xpautocomplete.xpt
 bin\components\xpcom_base.xpt
 bin\components\xpcom_components.xpt
 bin\components\xpcom_ds.xpt
@@ -171,48 +169,65 @@ bin\components\xpcom_io.xpt
 bin\components\xpcom_thread.xpt
 bin\components\xpcom_xpti.xpt
 bin\components\xpconnect.xpt
+bin\components\xpinstal.dll
 bin\components\xpinstall.xpt
+bin\components\xulapp.xpt
 bin\components\xuldoc.xpt
 bin\components\xultmpl.xpt
 ; JavaScript components
+bin\components\nsDefaultCLH.js
 bin\components\nsSetDefaultBrowser.js
 bin\components\nsCloseAllWindows.js
+bin\components\nsInterfaceInfoToIDL.js
+bin\components\nsPostUpdateWin.js
+bin\components\nsProgressDialog.js
+bin\components\nsSetDefaultMail.js
+bin\components\nsUnsetDefaultMail.js
+bin\components\nsUpdateService.js
 ;!4sunbird bin\components\nsDictionary.js
 bin\components\nsHelperAppDlg.js
 bin\components\nsProxyAutoConfig.js
 ;!4sunbird bin\components\nsSidebar.js
 ;!4sunbird bin\components\nsXmlRpcClient.js
 bin\components\nsExtensionManager.js
-bin\components\nsBackgroundUpdateService.js
 bin\components\extensions.xpt
 bin\components\update.xpt
 bin\components\calendarService.js
 bin\components\calAlarmMonitor.js
+bin\components\calAttendee.js
+bin\components\calAlarmService.js
+bin\components\calAttachment.js
+bin\components\calCalendarManager.js
+bin\components\calCompositeCalendar.js
+bin\components\calDateTimeFormatter.js
+bin\components\calDavCalendar.js
+bin\components\calEvent.js
+bin\components\calHtmlExport.js
+bin\components\calICSCalendar.js
+bin\components\calIcsImportExport.js
+bin\components\calImportExportModule.js
+bin\components\calItemBase.js
+bin\components\calItemModule.js
+bin\components\calListFormatter.js
+bin\components\calMemoryCalendar.js
+bin\components\calOutlookCSVImportExport.js
+bin\components\calRecurrenceInfo.js
+bin\components\calStorageCalendar.js
+bin\components\calTodo.js
+bin\components\calWeekTitleService.js
+bin\components\FeedProcessor.js
+bin\components\pluginGlue.js
 
-; [Browser Chrome Files]
+; [Calendar Chrome Files]
 bin\chrome\calendar.jar
+bin\chrome\calendar.manifest
 bin\chrome\classic.jar
+bin\chrome\classic.manifest
+bin\extensions\{972ce4c6-7e08-4474-a285-3208198ce6fd}\install.rdf
 bin\chrome\comm.jar
+bin\chrome\comm.manifest
 bin\chrome\toolkit.jar
-
-bin\chrome\calendar-ca-AD.jar
-bin\chrome\calendar-de-AT.jar
-bin\chrome\calendar-hu-HU.jar
-bin\chrome\calendar-lt-LT.jar
-bin\chrome\calendar-pt-BR.jar
-bin\chrome\calendar-sv-SE.jar
-bin\chrome\calendar-cs-CZ.jar
-bin\chrome\calendar-es-ES.jar
-bin\chrome\calendar-it-IT.jar
-bin\chrome\calendar-nl-NL.jar
-bin\chrome\calendar-sk-SK.jar
-bin\chrome\calendar-tr-TR.jar
-bin\chrome\calendar-cy-GB.jar
-bin\chrome\calendar-fr-FR.jar
-bin\chrome\calendar-ja-JP.jar
-bin\chrome\calendar-pl-PL.jar
-bin\chrome\calendar-sl-SI.jar
-bin\chrome\calendar-wen-DE.jar
+bin\chrome\toolkit.manifest
 
 ; [Default Preferences]
 ; All the pref files must be part of base to prevent migration bugs
@@ -225,36 +240,17 @@ bin\defaults\autoconfig\prefcalls.js
 
 ; [Layout Engine Resources]
 ; Style Sheets, Graphics and other Resources used by the layout engine. 
+bin\res\hiddenWindow.html
 bin\res\ua.css
 bin\res\html.css
 bin\res\quirk.css
 bin\res\forms.css
-;!4sunbird bin\res\EditorOverride.css
-;!4sunbird bin\res\table-add-column-after-active.gif
-;!4sunbird bin\res\table-add-column-after-hover.gif
-;!4sunbird bin\res\table-add-column-after.gif
-;!4sunbird bin\res\table-add-column-before-active.gif
-;!4sunbird bin\res\table-add-column-before-hover.gif
-;!4sunbird bin\res\table-add-column-before.gif
-;!4sunbird bin\res\table-add-row-after-active.gif
-;!4sunbird bin\res\table-add-row-after-hover.gif
-;!4sunbird bin\res\table-add-row-after.gif
-;!4sunbird bin\res\table-add-row-before-active.gif
-;!4sunbird bin\res\table-add-row-before-hover.gif
-;!4sunbird bin\res\table-add-row-before.gif
-;!4sunbird bin\res\table-remove-column-active.gif
-;!4sunbird bin\res\table-remove-column-hover.gif
-;!4sunbird bin\res\table-remove-column.gif
-;!4sunbird bin\res\table-remove-row-active.gif
-;!4sunbird bin\res\table-remove-row-hover.gif
-;!4sunbird bin\res\table-remove-row.gif
-;!4sunbird bin\res\arrowd.gif
-;!4sunbird bin\res\grabber.gif
+
+bin\res\arrowd.gif
 bin\res\viewsource.css
-bin\res\mathml.css
 bin\res\arrow.gif
-;!4sunbird bin\res\loading-image.gif
-;!4sunbird bin\res\broken-image.gif
+bin\res\loading-image.gif
+bin\res\broken-image.gif
 bin\res\fonts\*
 bin\res\dtd\*
 bin\res\html\*
@@ -280,25 +276,31 @@ bin\freebl3.dll
 bin\ssl3.dll
 bin\chrome\pipnss.jar
 bin\chrome\pippki.jar
+bin\chrome\pippki.manifest
+
+; [Updater]
+;
+bin\updater.exe
 
 ; [Additional Developer Tools]
 [adt]
-; [Document Inspector]
-;!4sunbird bin\components\inspector-cmdline.js
-;!4sunbird bin\components\inspector.dll
-;!4sunbird bin\components\inspector.xpt
-;!4sunbird bin\chrome\inspector.jar
-;!4sunbird bin\defaults\pref\inspector.js
-;!4sunbird bin\res\inspector\viewer-registry.rdf
-;!4sunbird bin\res\inspector\search-registry.rdf
-; [Venkman JavaScript Debugger]
-; bin\components\venkman-service.js
-; bin\chrome\venkman.jar
+bin\extensions\inspector@mozilla.org\install.rdf
+bin\extensions\inspector@mozilla.org\components\inspector-cmdline.js
+bin\extensions\inspector@mozilla.org\chrome.manifest
+bin\extensions\inspector@mozilla.org\chrome\inspector.jar
+bin\extensions\inspector@mozilla.org\defaults\preferences\inspector.js
+bin\extensions\inspector@mozilla.org\chrome\icons\default\winInspectorMain.ico
 
-; [Help]
-[help]
-bin\chrome\help.jar
-
-; [Additional Browsing Enhancements]
-[abe]
-
+[talkback]
+bin\README.txt,bin\readme.txt
+bin\extensions\talkback@mozilla.org\install.rdf
+bin\extensions\talkback@mozilla.org\chrome.manifest
+bin\extensions\talkback@mozilla.org\components\qfaservices.dll
+bin\extensions\talkback@mozilla.org\components\qfaservices.xpt
+bin\extensions\talkback@mozilla.org\components\BrandRes.dll
+bin\extensions\talkback@mozilla.org\components\fullsoft.dll
+bin\extensions\talkback@mozilla.org\components\master.ini
+bin\extensions\talkback@mozilla.org\components\talkback-l10n.ini
+bin\extensions\talkback@mozilla.org\components\talkback.cnt
+bin\extensions\talkback@mozilla.org\components\talkback.exe
+bin\extensions\talkback@mozilla.org\components\talkback.hlp
