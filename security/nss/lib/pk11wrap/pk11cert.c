@@ -702,7 +702,30 @@ PK11_FindCertsFromNickname(char *nickname, void *wincx)
 	                                                &status);
 	nssPKIObjectCollection_AddInstances(collection, instances, 0);
 	nss_ZFreeIf(instances);
-	nssList_Destroy(nameList);
+
+        /* if it wasn't found, repeat the process for email address */
+        if (nssPKIObjectCollection_Count(collection) == 0 &&
+            PORT_Strchr(nickname, '@') != NULL) 
+        {
+            char* lowercaseName = CERT_FixupEmailAddr(nickname);
+            if (lowercaseName) {
+                (void)nssTrustDomain_GetCertsForEmailAddressFromCache(defaultTD, 
+                                                                      lowercaseName, 
+                                                                      nameList);
+                transfer_token_certs_to_collection(nameList, token, collection);
+                instances = nssToken_FindCertificatesByEmail(token,
+                                                             NULL,
+                                                             lowercaseName,
+                                                             tokenOnly,
+                                                             0,
+                                                             &status);
+                nssPKIObjectCollection_AddInstances(collection, instances, 0);
+                nss_ZFreeIf(instances);
+                PORT_Free(lowercaseName);
+            }
+        }
+
+        nssList_Destroy(nameList);
 	foundCerts = nssPKIObjectCollection_GetCertificates(collection,
 	                                                    NULL, 0, NULL);
 	nssPKIObjectCollection_Destroy(collection);
