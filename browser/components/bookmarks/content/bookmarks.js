@@ -588,13 +588,13 @@ var BookmarksCommand = {
         items[i] = RDF.GetResource(childs[0]);
         var propArray = [];
         for (var k = 0; k < childCount; ++k) {
-          var props = [RDF.GetResource(childs[p*k]), null, null, null, null, null, null];
           for (var j = 1; j < p; ++j) {
              var prop = childs[p*k+j];
              if (prop)
-                 props[j] = RDF.GetLiteral(prop);
+                 propArray.push(RDF.GetLiteral(prop));
+             else
+                 propArray.push(null);
           }
-          propArray.push(props);
         }
         removedProps.push(propArray);
       }
@@ -1608,13 +1608,13 @@ var BookmarksUtils = {
         // (if the selection is folder save all childs property)
         var propArray;
         if (aAction != "move") {
-            propArray = [aSelection.item[i], null, null, null, null, null, null];
+            propArray = new Array(gBmProperties.length);
             var aType = BookmarksUtils.resolveType(aSelection.item[i]);            
             if (aType != "Livemark") {// don't change livemark properties
                for (var j = 0; j < gBmProperties.length; ++j) {
                   var oldValue = BMDS.GetTarget(aSelection.item[i], gBmProperties[j], true);
                   if (oldValue)
-                      propArray[j+1] = oldValue.QueryInterface(kRDFLITIID);
+                      propArray[j] = oldValue.QueryInterface(kRDFLITIID);
                }
             }
             if (aType == "Folder" || aType == "Livemark")
@@ -1647,13 +1647,13 @@ var BookmarksUtils = {
       if (child instanceof Components.interfaces.nsIRDFResource){
          var aType = BookmarksUtils.resolveType(child);
          var childResource = child.QueryInterface(kRDFRSCIID);
-         var props = [childResource, null, null, null, null, null, null];
+         var props = new Array(gBmProperties.length);
          // don't change livemark properties
          if (aType != "Livemark") {
             for (var j = 0; j < gBmProperties.length; ++j) {
                var oldValue = BMDS.GetTarget(childResource, gBmProperties[j], true);
                if (oldValue)
-                   props[(j+1)] = oldValue.QueryInterface(kRDFLITIID);
+                   props[(j)] = oldValue.QueryInterface(kRDFLITIID);
             }
          }
          propArray.push(props);

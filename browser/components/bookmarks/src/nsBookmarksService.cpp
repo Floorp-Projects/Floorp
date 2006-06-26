@@ -3794,7 +3794,8 @@ nsBookmarksService::UpdateBookmarkForwardProxy(nsIRDFDataSource* aDS, nsIRDFReso
     }
 
     // unfortunately, urlNode is a Literal; we need it to be a Resource
-    nsCOMPtr<nsIRDFLiteral> urlLiteral = do_QueryInterface(urlNode);
+    nsCOMPtr<nsIRDFLiteral> urlLiteral = do_QueryInterface(urlNode, &rv);
+    if (NS_FAILED(rv)) return rv;
     const PRUnichar *urlstr;
     rv = urlLiteral->GetValueConst(&urlstr);
     if (NS_FAILED(rv)) return rv;
