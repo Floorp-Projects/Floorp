@@ -375,7 +375,8 @@
 
       <method name="refresh">
         <body>
-          if (this.accessors.hasBoundNode()) {
+          if (this.accessors.hasBoundNode() ||
+              this.hasAttribute('src')) {
             this.bindingData.textContent = this.stringValue;
             this.inlineData.style.display = "none";
             this.bindingData.style.display = "inherit";

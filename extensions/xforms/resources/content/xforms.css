@@ -105,7 +105,7 @@ html|*:root select1[appearance='full'] choices {
   display: none;
 }
 
-message, alert {
+message, alert, help {
   display: none;
 }
 
