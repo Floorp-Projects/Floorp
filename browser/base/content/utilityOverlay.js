@@ -67,22 +67,15 @@ function goToggleToolbar( id, elementID )
 
 function getTopWin()
 {
-    var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
-    var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
-    var topWindowOfType = windowManagerInterface.getMostRecentWindow( "navigator:browser" );
-
-    if (topWindowOfType) {
-        return topWindowOfType;
-    }
-    return null;
+  var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1']
+                                .getService(Components.interfaces.nsIWindowMediator);
+  return windowManager.getMostRecentWindow("navigator:browser");
 }
 
 function openTopWin( url )
 {
-    openUILink(url, {})
+  openUILink(url, {})
 }
-
-
 
 function getBoolPref ( prefname, def )
 {
@@ -95,13 +88,12 @@ function getBoolPref ( prefname, def )
     return def;
   }
 }
-  
 
 // openUILink handles clicks on UI elements that cause URLs to load.
-function openUILink( url, e, ignoreButton, ignoreAlt )
+function openUILink( url, e, ignoreButton, ignoreAlt, allowKeywordFixup, postData )
 {
   var where = whereToOpenLink(e, ignoreButton, ignoreAlt);
-  openUILinkIn(url, where, false);
+  openUILinkIn(url, where, allowKeywordFixup, postData);
 }
 
 
@@ -179,45 +171,37 @@ function whereToOpenLink( e, ignoreButton, ignoreAlt )
  * I Feel Lucky are allowed to interpret this URL. This parameter may be
  * undefined, which is treated as false.
  */
-function openUILinkIn( url, where, allowThirdPartyFixup )
+function openUILinkIn( url, where, allowThirdPartyFixup, postData )
 {
-  if (!where)
+  if (!where || !url)
     return;
-
-  if ((url == null) || (url == "")) 
-    return;
-  // xlate the URL if necessary
-  if (url.indexOf("urn:") == 0) {
-      url = xlateURL(url);        // does RDF urn expansion
-  }
-  // avoid loading "", since this loads a directory listing
-  if (url == "") {
-      url = "about:blank";
-  }
 
   if (where == "save") {
     saveURL(url, null, null, true);
     return;
   }
 
-  var w = (where == "window") ? null : getTopWin();
-  if (!w) {
-    openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url);
+  var w = getTopWin();
+
+  if (!w || where == "window") {
+    openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url,
+               null, null, postData, allowThirdPartyFixup);
     return;
   }
-  var browser = w.document.getElementById("content");
+
   var loadInBackground = getBoolPref("browser.tabs.loadBookmarksInBackground", false);
 
   switch (where) {
   case "current":
-    browser.loadURI(url);
+    w.loadURI(url, null, postData, allowThirdPartyFixup);
     w.content.focus();
     break;
   case "tabshifted":
     loadInBackground = !loadInBackground;
     // fall through
   case "tab":
-    browser.loadOneTab(url, null, null, null, loadInBackground,
+    var browser = w.getBrowser();
+    browser.loadOneTab(url, null, null, postData, loadInBackground,
                        allowThirdPartyFixup || false);
     break;
   }
@@ -496,4 +480,3 @@ function buildHelpMenu()
   else
     checkForUpdates.removeAttribute("loading");
 }
-

@@ -1945,22 +1945,28 @@ function loadURI(uri, referrer, postData, allowThirdPartyFixup)
   }
 }
 
-function BrowserLoadURL(aTriggeringEvent, aPostData)
-{
+function BrowserLoadURL(aTriggeringEvent, aPostData) {
   var url = gURLBar.value;
-  if (gBrowser.localName == "tabbrowser" &&
-      aTriggeringEvent && 'altKey' in aTriggeringEvent &&
-      aTriggeringEvent.altKey) {
+
+  if (aTriggeringEvent instanceof MouseEvent) {
+    // We have a mouse event (from the go button), so use the standard
+    // UI link behaviors
+    openUILink(url, aTriggeringEvent, false, false,
+               true /* allow third party fixup */, aPostData);
+    return;
+  }
+
+  if (aTriggeringEvent && aTriggeringEvent.altKey) {
     handleURLBarRevert();
     content.focus();
     gBrowser.loadOneTab(url, null, null, aPostData, false,
                         true /* allow third party fixup */);
-    gURLBar.value = url;
     aTriggeringEvent.preventDefault();
     aTriggeringEvent.stopPropagation();
   }
-  else  
+  else
     loadURI(url, null, aPostData, true /* allow third party fixup */);
+
   content.focus();
 }
 
@@ -2275,8 +2281,7 @@ function handleURLBarRevert()
   return !isScrolling;
 }
 
-function handleURLBarCommand(aTriggeringEvent)
-{
+function handleURLBarCommand(aTriggeringEvent) {
   var postData = { };
   canonizeUrl(aTriggeringEvent, postData);
 
@@ -2290,48 +2295,49 @@ function handleURLBarCommand(aTriggeringEvent)
   BrowserLoadURL(aTriggeringEvent, postData.value);
 }
 
-function canonizeUrl(aTriggeringEvent, aPostDataRef)
-{
+function canonizeUrl(aTriggeringEvent, aPostDataRef) {
   if (!gURLBar || !gURLBar.value)
     return;
 
   var url = gURLBar.value;
 
-  // Prevent suffix when already exists www , http , /
-  if (!/^(www|http)|\/\s*$/i.test(url) && aTriggeringEvent) {
-    var suffix = null;
+  // Only add the suffix when the URL bar value isn't already "URL-like".
+  // Since this function is called from handleURLBarCommand, which receives
+  // both mouse (from the go button) and keyboard events, we also make sure not
+  // to do the fixup unless we get a keyboard event, to match user expectations.
+  if (!/^(www|http)|\/\s*$/i.test(url) &&
+      (aTriggeringEvent instanceof KeyEvent)) {
 #ifdef XP_MACOSX
-    var accelPressed = 'metaKey' in aTriggeringEvent &&
-                       aTriggeringEvent.metaKey;
+    var accel = aTriggeringEvent.metaKey;
 #else
-    var accelPressed = 'ctrlKey' in aTriggeringEvent &&
-                       aTriggeringEvent.ctrlKey;
+    var accel = aTriggeringEvent.ctrlKey;
 #endif
-    var shiftPressed = 'shiftKey' in aTriggeringEvent &&
-                       aTriggeringEvent.shiftKey;
+    var shift = aTriggeringEvent.shiftKey;
 
-    if (accelPressed && shiftPressed)
-      suffix = ".org/";
+    var suffix = "";
 
-    else if (accelPressed)
-    {
-      try {
-        suffix = gPrefService.getCharPref("browser.fixup.alternate.suffix");
-        if (suffix.charAt(suffix.length - 1) != '/')
-          suffix += "/";
-      }
-      catch(e) {
-        suffix = ".com/";
-      }
+    switch (true) {
+      case (accel && shift):
+        suffix = ".org/";
+        break;
+      case (shift):
+        suffix = ".net/";
+        break;
+      case (accel):
+        try {
+          suffix = gPrefService.getCharPref("browser.fixup.alternate.suffix");
+          if (suffix.charAt(suffix.length - 1) != "/")
+            suffix += "/";
+        } catch(e) {
+          suffix = ".com/";
+        }
+        break;
     }
 
-    else if (shiftPressed)
-      suffix = ".net/";
-
-    if (suffix != null) {
+    if (suffix) {
       // trim leading/trailing spaces (bug 233205)
-      url = url.replace( /^\s+/, "");
-      url = url.replace( /\s+$/, "");
+      url = url.replace(/^\s+/, "").replace(/\s+$/, "");
+
       // Tack www. and suffix on.  If user has appended directories, insert
       // suffix before them (bug 279035).  Be careful not to get two slashes.
       var firstSlash = url.indexOf("/");

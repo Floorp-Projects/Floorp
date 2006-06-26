@@ -278,7 +278,7 @@
         <toolbarbutton id="go-button"
                        chromedir="&locale.dir;"
                        label="&goButton.label;"
-                       onclick="if (event.button != 2) openUILink(gURLBar.value, event);"
+                       onclick="handleURLBarCommand(event);"
                        ondragover="nsDragAndDrop.dragOver(event, goButtonObserver);"
                        ondragdrop="nsDragAndDrop.drop(event, goButtonObserver);"
                        ondragexit="nsDragAndDrop.dragExit(event, goButtonObserver);"
