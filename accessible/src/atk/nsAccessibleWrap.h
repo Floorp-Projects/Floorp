@@ -80,7 +80,6 @@
 #define USE_ATK_STATE_INVALID_ENTRY
 // When should we use ROLE_AUTCOMPLETE vs. STATE_SUPPORTS_AUTOCOMPLETION?
 #define USE_ATK_STATE_SUPPORTS_AUTOCOMPLETION   // XXX not currently used
-#define USE_ATK_STATE_SELECTABLE_TEXT
 #endif
   
 // ATK 1.12.0 or later
@@ -92,6 +91,14 @@
 #define USE_ATK_STATE_ANIMATED
 #define USE_ATK_ROLE_FORM
 #define USE_ATK_DESCRIPTION_RELATIONS
+#endif
+
+// ATK 1.12.1 or later
+#if ATK_MAJOR_VERSION >=2 || \
+    (ATK_MAJOR_VERSION == 1 && ATK_MINOR_VERSION >= 13) || \
+    (ATK_MAJOR_VERSION == 1 && ATK_MINOR_VERSION == 12 && ATK_REV_VERSION >= 1)
+#define USE_ATK_ROLE_LINK
+#define USE_ATK_STATE_SELECTABLE_TEXT
 #endif
 
 struct _AtkObject;
