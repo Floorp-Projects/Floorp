@@ -44,6 +44,9 @@
 #ifdef XP_MAC
 #include "nsILocalFileMac.h"
 #endif
+#ifdef XP_OS2
+#include "nsILocalFileOS2.h"
+#endif
 
 #include "nsNetUtil.h"
 #include "nsComponentManagerUtils.h"
@@ -726,9 +729,29 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStopRequest(
     OutputData *data = (OutputData *) mOutputMap.Get(&key);
     if (data)
     {
+#if defined(XP_OS2)
+        // delete 'data';  this will close the stream and let
+        // us tag the file it created with its source URI
+        nsCOMPtr<nsIURI> uriSource = data->mOriginalLocation;
+        nsCOMPtr<nsILocalFile> localFile;
+        GetLocalFileFromURI(data->mFile, getter_AddRefs(localFile));
+        delete data;
+        mOutputMap.Remove(&key);
+        if (localFile)
+        {
+            nsCOMPtr<nsILocalFileOS2> localFileOS2 = do_QueryInterface(localFile);
+            if (localFileOS2)
+            {
+                nsCAutoString url;
+                uriSource->GetSpec(url);
+                localFileOS2->SetFileSource(url);
+            }
+        }
+#else
         // This will close automatically close the output stream
         delete data;
         mOutputMap.Remove(&key);
+#endif
     }
     else
     {
@@ -1643,6 +1666,16 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
                     cleanupData->mIsDirectory = PR_TRUE;
                     mCleanupList.AppendElement(cleanupData);
                 }
+#if defined(XP_OS2)
+                // tag the directory with the URI that originated its contents
+                nsCOMPtr<nsILocalFileOS2> localFileOS2 = do_QueryInterface(localDataPath);
+                if (localFileOS2)
+                {
+                    nsCAutoString url;
+                    mCurrentBaseURI->GetSpec(url);
+                    localFileOS2->SetFileSource(url);
+                }
+#endif
             }
         }
 
@@ -3622,6 +3655,20 @@ nsWebBrowserPersist::SaveDocumentWithFixup(
             NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
         }
     }
+#if defined(XP_OS2)
+    else
+    {
+        // close the stream, then tag the file it created with its source URI
+        outputStream->Close();
+        nsCOMPtr<nsILocalFileOS2> localFileOS2 = do_QueryInterface(localFile);
+        if (localFileOS2)
+        {
+            nsCAutoString url;
+            mCurrentBaseURI->GetSpec(url);
+            localFileOS2->SetFileSource(url);
+        }
+    }
+#endif
 
     return rv;
 }

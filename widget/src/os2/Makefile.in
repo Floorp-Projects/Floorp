@@ -64,7 +64,8 @@ REQUIRES	= gfx \
 		  plugin \
 		  docshell \
 		  webbrowserpersist \
-     		  imglib2 \
+		  content \
+		  imglib2 \
 		  unicharutil \
 		  $(NULL)
 
