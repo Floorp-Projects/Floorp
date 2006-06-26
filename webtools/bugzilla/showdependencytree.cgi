@@ -32,6 +32,8 @@ use Bugzilla;
 use Bugzilla::Error;
 use Bugzilla::Bug;
 
+use List::Util qw(max);
+
 my $user = Bugzilla->login();
 
 my $cgi = Bugzilla->cgi;
