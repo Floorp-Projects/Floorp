@@ -166,6 +166,8 @@ pref("browser.tabs.maxOpenBeforeWarn", 15);
 // 0 = append, 1 = replace
 pref("browser.tabs.loadGroup", 1);
 
+pref("toolkit.scrollbox.scrollIncrement", 20);
+
 // lets new tab/window load something different than first window
 // -1 - use navigator startup preference
 //  0 - loads blank page

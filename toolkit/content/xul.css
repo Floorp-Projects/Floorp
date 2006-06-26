@@ -625,6 +625,14 @@ tab {
 }
 
 .tab-close-button {
+  display: none;
+}
+
+.tabbrowser-tabs:not([closebuttons="noclose"]):not([closebuttons="closeatend"]) > .tabbrowser-tab[selected="true"] > .tab-close-button {
+  display: -moz-box;
+}
+
+.tabbrowser-tabs[closebuttons="alltabs"] > .tabbrowser-tab > .tab-close-button {
   display: -moz-box;
 }
 
@@ -632,22 +640,15 @@ tab {
   display: none;
 }
 
+.tabs-closebutton-box > .tab-close-button {
+  display: -moz-box;
+}
+
 .tabbrowser-tabs[disablebackgroundclose="true"] > .tabbrowser-tab:not([selected="true"]) > .tab-close-button {
   display: none;
 }
 
-.tabbrowser-tabs[disablebackgroundclose="true"]:not([tiny="true"]):not([singlechild="true"]) > .tabbrowser-tab:not([selected="true"]) .tab-close-button-placeholder {
-  display: -moz-box;
-}
-
-.tabbrowser-tabs[tiny="true"] > .tabbrowser-tab > .tab-close-button,
-.tabbrowser-tabs[tiny="true"] > .tabbrowser-tab .tab-close-button-placeholder,
-.tabbrowser-tabs[singlechild="true"] > .tabbrowser-tab > .tab-close-button,
-.tabbrowser-tabs[singlechild="true"] > .tabbrowser-tab .tab-close-button-placeholder {
-  display: none;
-}
-
-.tabbrowser-tabs[tiny="true"] > .tabbrowser-tab[selected="true"] > .tab-close-button {
+.tabbrowser-tabs[disablebackgroundclose="true"]:not([closebuttons="noclose"]):not([closebuttons="closeatend"]) > .tabbrowser-tab:not([selected="true"]) .tab-close-button-placeholder {
   display: -moz-box;  
 }
 

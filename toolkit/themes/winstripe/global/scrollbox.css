@@ -3,19 +3,32 @@
 /*
  * Autorepeatbutton
  */
-.autorepeatbutton-up 
+.autorepeatbutton-up
+  {
+    list-style-image      : url("chrome://global/skin/arrow/arrow-lft.gif");
+    -moz-image-region     : auto; /* cut off inheritance */
+  }
+
+.autorepeatbutton-down
+  {
+    list-style-image      : url("chrome://global/skin/arrow/arrow-rit.gif");
+    -moz-image-region     : auto; /* cut off inheritance */
+  }
+
+.autorepeatbutton-up[orient="vertical"]
   {
     list-style-image      : url("chrome://global/skin/arrow/arrow-up.gif");
     -moz-image-region     : auto; /* cut off inheritance */
   }
 
-.autorepeatbutton-down 
+.autorepeatbutton-down[orient="vertical"]
   {
     list-style-image      : url("chrome://global/skin/arrow/arrow-dn.gif");
     -moz-image-region     : auto; /* cut off inheritance */
   }
 
-autorepeatbutton 
+autorepeatbutton,
+autorepeatbutton[clicktoscroll="true"]:hover
   {
     -moz-box-align        : center;
     -moz-box-pack         : center;
@@ -27,7 +40,8 @@ autorepeatbutton
     padding               : 1px;
   }
 
-autorepeatbutton:hover 
+autorepeatbutton:hover,
+autorepeatbutton:hover:active
   {
     margin                : 1px;
     border                : 1px inset ThreeDFace;

@@ -1,5 +1,10 @@
 <?xml version="1.0"?>
 
+<!DOCTYPE bindings [
+  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+  %globalDTD;
+]>
+
 <bindings id="arrowscrollboxBindings"
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -13,7 +18,7 @@
 
   <binding id="scrollbox" extends="chrome://global/content/bindings/scrollbox.xml#scrollbox-base">
     <content>
-      <xul:box class="box-inherit scrollbox-innerbox" xbl:inherits="orient,align,pack,dir">
+      <xul:box class="box-inherit scrollbox-innerbox" xbl:inherits="orient,align,pack,dir" flex="1">
         <children/>
       </xul:box>
     </content>
@@ -21,25 +26,97 @@
 
   <binding id="arrowscrollbox" extends="chrome://global/content/bindings/scrollbox.xml#scrollbox-base">
     <content>
-      <xul:autorepeatbutton class="autorepeatbutton-up" collapsed="true"
-                            oncommand="this.parentNode.scrollByIndex(-1); event.stopPropagation();"/>
+      <xul:autorepeatbutton class="autorepeatbutton-up" collapsed="true" xbl:inherits="orient,clicktoscroll"
+                            onclick="handleOnClick(event, -1);"
+                            oncommand="handleOnCommand(event, -1);"/>
       <xul:scrollbox xbl:inherits="orient,align,pack,dir" flex="1">
         <children/>
       </xul:scrollbox>
-      <xul:autorepeatbutton class="autorepeatbutton-down" collapsed="true"
-                            oncommand="this.parentNode.scrollByIndex(1); event.stopPropagation();"/>
+      <xul:autorepeatbutton class="autorepeatbutton-down" collapsed="true" xbl:inherits="orient,clicktoscroll"
+                            onclick="handleOnClick(event, 1);"
+                            oncommand="handleOnCommand(event, 1);"/>
     </content>
     
     <implementation>
+      <field name="_scrollIncrement">0</field>
+      <property name="scrollIncrement" readonly="true">
+        <getter><![CDATA[
+          if (!this._scrollIncrement) {
+            var pb2 =
+              Components.classes['@mozilla.org/preferences-service;1'].
+              getService(Components.interfaces.nsIPrefBranch2);
+            try {
+              this._scrollIncrement = pb2.getIntPref("toolkit.scrollbox.scrollIncrement");
+            }
+            catch (ex) {
+              this._scrollIncrement = 20;
+            }
+          }
+          return this._scrollIncrement;
+        ]]></getter>
+      </property>
+
+      <field name="_scrollBoxObject">null</field>
+      <property name="scrollBoxObject" readonly="true">
+        <getter><![CDATA[
+          if (!this._scrollBoxObject) {
+            var kids = document.getAnonymousNodes(this);
+            this._scrollBoxObject = kids[1].boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
+          }
+          return this._scrollBoxObject;
+        ]]></getter>
+      </property>
+
+      <method name="ensureElementIsVisible">
+        <parameter name="aElement"/>
+        <body><![CDATA[
+          this.scrollBoxObject.ensureElementIsVisible(aElement);
+        ]]></body>
+      </method>            
+    
+      <method name="handleOnCommand">
+        <parameter name="aEvent"/>
+        <parameter name="aMultiple"/>
+        <body><![CDATA[
+          // don't scroll on mouseover if clicktoscroll="true"
+          if (this.getAttribute("clicktoscroll") != "true") {
+            var px = this.scrollIncrement * aMultiple;
+            this.scrollByPixels(px); 
+            aEvent.stopPropagation();
+          }
+        ]]></body>
+      </method>            
+
+      <method name="handleOnClick">
+        <parameter name="aEvent"/>
+        <parameter name="aMultiple"/>
+        <body><![CDATA[
+          // only scroll by index on click if clicktoscroll="true"
+          if (this.getAttribute("clicktoscroll") == "true") {
+            this.scrollByIndex(aMultiple);
+            aEvent.stopPropagation();
+          }
+        ]]></body>
+      </method>            
+
       <method name="scrollByIndex">
         <parameter name="lines"/>
         <body><![CDATA[
-          if (!("mScrollBoxObject" in this)) {
-            var kids = document.getAnonymousNodes(this);
-            this.mScrollBoxObject = kids[1].boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
-          }
+          this.scrollBoxObject.scrollByIndex(lines);
+        ]]></body>
+      </method>
 
-          this.mScrollBoxObject.scrollByIndex(lines);
+      <method name="scrollByPixels">
+        <parameter name="px"/>
+        <body><![CDATA[
+          if (this.getAttribute("orient") == "horizontal") {
+            // if not ltr, we want to scroll the other direction
+            var actualPx = window.getComputedStyle(this.parentNode, "")
+                                 .direction == "ltr" ? px : (-1 * px);
+            this.scrollBoxObject.scrollBy(actualPx, 0);
+          }
+          else
+            this.scrollBoxObject.scrollBy(0, px);
         ]]></body>
       </method>            
     </implementation>    
@@ -64,7 +141,7 @@
   </binding>
 
   <binding id="autorepeatbutton" extends="chrome://global/content/bindings/scrollbox.xml#scrollbox-base">
-    <content>
+    <content chromedir="&locale.dir;">
       <xul:image class="autorepeatbutton-icon"/>
     </content>
   </binding>
