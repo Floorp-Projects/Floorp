@@ -66,6 +66,8 @@ pref("xpinstall.dialog.progress.type.chrome", "Extension:Manager");
 pref("extensions.ignoreMTimeChanges", false);
 // Enables some extra Extension System Logging (can reduce performance)
 pref("extensions.logging.enabled", false);
+// Hides the install button in the add-ons mgr
+pref("extensions.hideInstallButton", true);
 
 // Blocklist preferences
 pref("extensions.blocklist.enabled", true);

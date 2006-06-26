@@ -63,6 +63,7 @@ const PREF_EXTENSIONS_GETMORETHEMESURL      = "extensions.getMoreThemesURL";
 const PREF_EXTENSIONS_GETMOREEXTENSIONSURL  = "extensions.getMoreExtensionsURL";
 const PREF_EXTENSIONS_DSS_ENABLED           = "extensions.dss.enabled";
 const PREF_EXTENSIONS_DSS_SWITCHPENDING     = "extensions.dss.switchPending";
+const PREF_EXTENSIONS_HIDE_INSTALL_BTN      = "extensions.hideInstallButton";
 const PREF_EM_LAST_SELECTED_SKIN            = "extensions.lastSelectedSkin";
 const PREF_GENERAL_SKINS_SELECTEDSKIN       = "general.skins.selectedSkin";
 const PREF_UPDATE_NOTIFYUSER                = "extensions.update.notifyUser";
@@ -228,6 +229,10 @@ function showView(aView) {
                       ["version", "?version"] ];
 
   var showInstallFile = true;
+  try {
+    showInstallFile = !gPref.getBoolPref(PREF_EXTENSIONS_HIDE_INSTALL_BTN);
+  }
+  catch (e) { }
   var showCheckUpdatesAll = true;
   var showInstallUpdatesAll = false;
   var showRestartApp = false;
@@ -1214,7 +1219,7 @@ function isXPInstallEnabled() {
       return true;
     locked = gPref.prefIsLocked("xpinstall.enabled");
   }
-  catch (e) { alert(e); }
+  catch (e) { }
 
   var msgText = getExtensionString(locked ? "xpinstallDisabledMsgLocked" :
                                             "xpinstallDisabledMsg");
