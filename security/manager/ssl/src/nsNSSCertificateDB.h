@@ -68,6 +68,9 @@ private:
   static nsresult
   ImportValidCACertsInList(CERTCertList *certList, nsIInterfaceRequestor *ctx);
 
+  static void DisplayCertificateAlert(nsIInterfaceRequestor *ctx, 
+                                      const char *stringID, nsIX509Cert *certToShow);
+
   void getCertNames(CERTCertList *certList,
                     PRUint32      type, 
                     PRUint32     *_count,
