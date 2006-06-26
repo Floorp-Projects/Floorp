@@ -108,11 +108,11 @@ popup[type="autocomplete"],
 }
 
 treechildren.autocomplete-treebody::-moz-tree-row(selected) {
- background-color: Highlight;
+ background-color: -moz-mac-alternateprimaryhighlight;
 }
 
 treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
-  color: HighlightText !important;
+  color: #FFFFFF !important;
 }
 
 /* ::::: textboxes inside toolbarpaletteitems ::::: */
