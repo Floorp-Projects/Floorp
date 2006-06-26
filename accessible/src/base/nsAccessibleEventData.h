@@ -111,8 +111,8 @@ enum AtkProperty {
 
 struct AtkPropertyChange {
   PRInt32 type;     // property type as listed above 
-  double oldvalue;  
-  double newvalue;
+  void *oldvalue;  
+  void *newvalue;
 };
 
 struct AtkChildrenChange {
