@@ -193,6 +193,18 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
                                                  pAtkPropChange->newvalue));
             rv = NS_OK;
             break;
+        case PROP_VALUE:
+            {
+              // Old value not used for anything other than state change events
+              nsCOMPtr<nsIAccessibleValue> accValue(do_QueryInterface(aAccessible));
+              NS_ENSURE_TRUE(accValue, NS_ERROR_FAILURE);
+              double newValue;
+              rv = accValue->GetCurrentValue(&newValue);
+              NS_ENSURE_SUCCESS(rv, rv);
+              g_value_init(&values.new_value, G_TYPE_DOUBLE);
+              g_value_set_double(&values.new_value, newValue);
+            }
+            break;
   
             //Perhaps need more cases in the future
         default:
