@@ -1476,6 +1476,19 @@ DocumentViewerImpl::Destroy()
     if (mPrintEngine->CheckBeforeDestroy()) {
       return NS_OK;
     }
+
+    // Clear the list of old child docshells. CChild docshells for the new
+    // document will be constructed as frames are created.
+    nsCOMPtr<nsIDocShellTreeNode> node = do_QueryInterface(container);
+    if (node) {
+      PRInt32 count;
+      node->GetChildCount(&count);
+      for (PRInt32 i = 0; i < count; ++i) {
+        nsCOMPtr<nsIDocShellTreeItem> child;
+        node->GetChildAt(0, getter_AddRefs(child));
+        node->RemoveChild(child);
+      }
+    }
   }
 #endif
 

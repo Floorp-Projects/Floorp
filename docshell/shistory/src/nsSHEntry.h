@@ -102,7 +102,7 @@ private:
   nsISHEntry *                    mParent;  // weak reference
   nsCOMPtr<nsISupports>           mWindowState;
   nsRect                          mViewerBounds;
-  nsVoidArray                     mChildShells;
+  nsCOMArray<nsIDocShellTreeItem> mChildShells;
   nsCOMPtr<nsISupportsArray>      mRefreshURIList;
   nsCOMPtr<nsISupports>           mOwner;
 };

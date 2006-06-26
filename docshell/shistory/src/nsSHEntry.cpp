@@ -572,16 +572,14 @@ NS_IMETHODIMP
 nsSHEntry::AddChildShell(nsIDocShellTreeItem *aShell)
 {
   NS_ASSERTION(aShell, "Null child shell added to history entry");
-  mChildShells.AppendElement(aShell);
+  mChildShells.AppendObject(aShell);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSHEntry::ChildShellAt(PRInt32 aIndex, nsIDocShellTreeItem **aShell)
 {
-  NS_IF_ADDREF(*aShell =
-               NS_STATIC_CAST(nsIDocShellTreeItem*,
-                              mChildShells.SafeElementAt(aIndex)));
+  NS_IF_ADDREF(*aShell = mChildShells.SafeObjectAt(aIndex));
   return NS_OK;
 }
 
