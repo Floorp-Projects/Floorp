@@ -60,7 +60,6 @@ REQUIRES += \
 		  string \
 		  xpcom \
 		  xpconnect \
-		  widget \
 		  dom \
 		  $(NULL)
 
