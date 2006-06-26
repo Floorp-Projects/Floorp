@@ -120,9 +120,7 @@ typedef GLXContext (* glitz_glx_create_new_context_t)
 #define GLX_SAMPLES_ARB                     0x186a1
 #endif
 
-typedef Bool *(* glitz_glx_bind_tex_image_t)
-    (Display *display, GLXPbuffer pbuffer, int buffer);
-typedef Bool (* glitz_glx_release_tex_image_t)
-    (Display *display, GLXPbuffer pbuffer, int buffer);
+typedef void *(* glitz_glx_copy_sub_buffer_t)
+    (Display *display, GLXDrawable draw, int x, int y, int w, int h);
 
 #endif /* GLITZ_GLXEXT_H_INCLUDED */

@@ -80,7 +80,7 @@ _glitz_buffer_init (glitz_buffer_t      *buffer,
 	glitz_drawable_reference (drawable);
 
 	drawable->backend->push_current (drawable, NULL,
-					 GLITZ_ANY_CONTEXT_CURRENT);
+					 GLITZ_ANY_CONTEXT_CURRENT, NULL);
 
 	gl->gen_buffers (1, &buffer->name);
 	if (buffer->name) {
@@ -177,7 +177,7 @@ glitz_pixel_buffer_create (glitz_drawable_t    *drawable,
     }
 
     if (drawable->backend->feature_mask &
-        GLITZ_FEATURE_PIXEL_BUFFER_OBJECT_MASK)
+	GLITZ_FEATURE_PIXEL_BUFFER_OBJECT_MASK)
 	status = _glitz_buffer_init (buffer, drawable, data, size, hint);
     else
 	status = _glitz_buffer_init (buffer, NULL, data, size, hint);
@@ -219,7 +219,8 @@ glitz_buffer_destroy (glitz_buffer_t *buffer)
 
     if (buffer->drawable) {
 	buffer->drawable->backend->push_current (buffer->drawable, NULL,
-						 GLITZ_ANY_CONTEXT_CURRENT);
+						 GLITZ_ANY_CONTEXT_CURRENT,
+						 NULL);
 	buffer->drawable->backend->gl->delete_buffers (1, &buffer->name);
 	buffer->drawable->backend->pop_current (buffer->drawable);
 	glitz_drawable_destroy (buffer->drawable);
@@ -248,7 +249,8 @@ glitz_buffer_set_data (glitz_buffer_t *buffer,
 	GLITZ_GL_DRAWABLE (buffer->drawable);
 
 	buffer->drawable->backend->push_current (buffer->drawable, NULL,
-						 GLITZ_ANY_CONTEXT_CURRENT);
+						 GLITZ_ANY_CONTEXT_CURRENT,
+						 NULL);
 	gl->bind_buffer (buffer->target, buffer->name);
 	gl->buffer_sub_data (buffer->target, offset, size, data);
 	gl->bind_buffer (buffer->target, 0);
@@ -268,8 +270,8 @@ glitz_buffer_get_data (glitz_buffer_t *buffer,
 	GLITZ_GL_DRAWABLE (buffer->drawable);
 
 	buffer->drawable->backend->push_current (buffer->drawable, NULL,
-						 GLITZ_ANY_CONTEXT_CURRENT);
-
+						 GLITZ_ANY_CONTEXT_CURRENT,
+						 NULL);
 	gl->bind_buffer (buffer->target, buffer->name);
 	gl->get_buffer_sub_data (buffer->target, offset, size, data);
 	gl->bind_buffer (buffer->target, 0);
@@ -292,7 +294,8 @@ glitz_buffer_map (glitz_buffer_t        *buffer,
 	GLITZ_GL_DRAWABLE (buffer->drawable);
 
 	buffer->drawable->backend->push_current (buffer->drawable, NULL,
-						 GLITZ_ANY_CONTEXT_CURRENT);
+						 GLITZ_ANY_CONTEXT_CURRENT,
+						 NULL);
 
 	switch (access) {
 	case GLITZ_BUFFER_ACCESS_READ_ONLY:
@@ -328,7 +331,8 @@ glitz_buffer_unmap (glitz_buffer_t *buffer)
 	GLITZ_GL_DRAWABLE (buffer->drawable);
 
 	buffer->drawable->backend->push_current (buffer->drawable, NULL,
-						 GLITZ_ANY_CONTEXT_CURRENT);
+						 GLITZ_ANY_CONTEXT_CURRENT,
+						 NULL);
 
 	gl->bind_buffer (buffer->target, buffer->name);
 

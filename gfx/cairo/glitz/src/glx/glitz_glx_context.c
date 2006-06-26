@@ -279,6 +279,7 @@ glitz_glx_context_get (glitz_glx_screen_info_t *screen_info,
     context->backend.attach_notify = _glitz_glx_notify_dummy;
     context->backend.detach_notify = _glitz_glx_notify_dummy;
     context->backend.swap_buffers = glitz_glx_swap_buffers;
+    context->backend.copy_sub_buffer = glitz_glx_copy_sub_buffer;
 
     context->backend.create_context = _glitz_glx_create_context;
     context->backend.destroy_context = _glitz_glx_context_destroy;
@@ -364,6 +365,9 @@ _glitz_glx_context_initialize (glitz_glx_screen_info_t *screen_info,
 	}
     }
 
+    if (screen_info->glx_feature_mask & GLITZ_GLX_FEATURE_COPY_SUB_BUFFER_MASK)
+	context->backend.feature_mask |= GLITZ_FEATURE_COPY_SUB_BUFFER_MASK;
+
     context->initialized = 1;
 }
 
@@ -375,7 +379,10 @@ _glitz_glx_context_make_current (glitz_glx_drawable_t *drawable,
 	drawable->screen_info->display_info;
 
     if (finish)
+    {
 	glFinish ();
+	drawable->base.finished = 1;
+    }
 
     if (display_info->thread_info->cctx)
     {
@@ -400,10 +407,22 @@ _glitz_glx_context_make_current (glitz_glx_drawable_t *drawable,
 
 static void
 _glitz_glx_context_update (glitz_glx_drawable_t *drawable,
-			   glitz_constraint_t   constraint)
+			   glitz_constraint_t   constraint,
+			   glitz_bool_t         *restore_state)
 {
     glitz_glx_display_info_t *dinfo = drawable->screen_info->display_info;
     GLXContext context = NULL;
+
+    if (restore_state && constraint == GLITZ_ANY_CONTEXT_CURRENT)
+    {
+	if (dinfo->thread_info->cctx)
+	{
+	    *restore_state = 1;
+	    return;
+	}
+    }
+
+    drawable->base.flushed = drawable->base.finished = 0;
 
     switch (constraint) {
     case GLITZ_NONE:
@@ -442,12 +461,16 @@ _glitz_glx_context_update (glitz_glx_drawable_t *drawable,
 glitz_bool_t
 glitz_glx_push_current (void               *abstract_drawable,
 			glitz_surface_t    *surface,
-			glitz_constraint_t constraint)
+			glitz_constraint_t constraint,
+			glitz_bool_t       *restore_state)
 {
     glitz_glx_drawable_t *drawable = (glitz_glx_drawable_t *)
 	abstract_drawable;
     glitz_glx_context_info_t *context_info;
     int index;
+
+    if (restore_state)
+	*restore_state = 0;
 
     index = drawable->screen_info->context_stack_size++;
 
@@ -456,7 +479,8 @@ glitz_glx_push_current (void               *abstract_drawable,
     context_info->surface = surface;
     context_info->constraint = constraint;
 
-    _glitz_glx_context_update (context_info->drawable, constraint);
+    _glitz_glx_context_update (context_info->drawable, constraint,
+			       restore_state);
 
     return 1;
 }
@@ -476,7 +500,8 @@ glitz_glx_pop_current (void *abstract_drawable)
 
     if (context_info->drawable)
 	_glitz_glx_context_update (context_info->drawable,
-				   context_info->constraint);
+				   context_info->constraint,
+				   NULL);
 
     if (context_info->constraint == GLITZ_DRAWABLE_CURRENT)
 	return context_info->surface;

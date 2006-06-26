@@ -212,15 +212,14 @@ glitz_context_draw_buffers (glitz_context_t	          *context,
 
     if (mask)
     {
-	if (mask == (FRONT_BIT | BACK_BIT))
-	    context->drawable->backend->draw_buffer (context->drawable,
-						     GLITZ_GL_FRONT_AND_BACK);
-	else if (mask == FRONT_BIT)
-	    context->drawable->backend->draw_buffer (context->drawable,
-						     GLITZ_GL_FRONT);
-	else
-	    context->drawable->backend->draw_buffer (context->drawable,
-						     GLITZ_GL_BACK);
+	static const glitz_gl_enum_t mode[] = {
+	    GLITZ_GL_FRONT,
+	    GLITZ_GL_BACK,
+	    GLITZ_GL_FRONT_AND_BACK
+	};
+
+	context->drawable->backend->draw_buffer (context->drawable,
+						 mode[mask - 1]);
     }
 
 #undef FRONT_BIT

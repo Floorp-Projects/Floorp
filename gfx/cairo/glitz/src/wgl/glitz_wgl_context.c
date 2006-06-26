@@ -106,8 +106,8 @@ _glitz_wgl_copy_context (void          *abstract_src,
 }
 
 static void
-_glitz_wgl_make_current (void *abstract_context,
-			 void *abstract_drawable)
+_glitz_wgl_make_current (void *abstract_drawable,
+                         void *abstract_context)
 {
     glitz_wgl_context_t  *context = (glitz_wgl_context_t *) abstract_context;
     glitz_wgl_drawable_t *drawable = (glitz_wgl_drawable_t *) abstract_drawable;
@@ -115,8 +115,19 @@ _glitz_wgl_make_current (void *abstract_context,
     if (wglGetCurrentContext() != context->context ||
 	wglGetCurrentDC() != drawable->dc)
     {
+        if (drawable->screen_info->thread_info->cctx) {
+	    glitz_context_t *ctx = drawable->screen_info->thread_info->cctx;
+
+            if (ctx->lose_current)
+                ctx->lose_current (ctx->closure);
+
+            drawable->screen_info->thread_info->cctx = NULL;
+        }
+
 	wglMakeCurrent (drawable->dc, context->context);
     }
+
+    drawable->screen_info->thread_info->cctx = &context->base;
 }
 
 static void
@@ -186,6 +197,7 @@ glitz_wgl_context_get (glitz_wgl_screen_info_t          *screen_info,
     context->backend.attach_notify = _glitz_wgl_notify_dummy;
     context->backend.detach_notify = _glitz_wgl_notify_dummy;
     context->backend.swap_buffers = glitz_wgl_swap_buffers;
+    context->backend.copy_sub_buffer = glitz_wgl_copy_sub_buffer;
 
     context->backend.create_context = _glitz_wgl_create_context;
     context->backend.destroy_context = _glitz_wgl_destroy_context;
@@ -251,6 +263,15 @@ _glitz_wgl_context_make_current (glitz_wgl_drawable_t *drawable,
 	glFlush ();
     }
 
+    if (drawable->screen_info->thread_info->cctx) {
+        glitz_context_t *ctx = drawable->screen_info->thread_info->cctx;
+
+        if (ctx->lose_current)
+            ctx->lose_current (ctx->closure);
+
+        drawable->screen_info->thread_info->cctx = NULL;
+    }
+
     wglMakeCurrent (drawable->dc, drawable->context->context);
 
     drawable->base.update_all = 1;
@@ -264,6 +285,8 @@ _glitz_wgl_context_update (glitz_wgl_drawable_t *drawable,
 			   glitz_constraint_t   constraint)
 {
     HGLRC context;
+
+    drawable->base.flushed = drawable->base.finished = 0;
 
     switch (constraint) {
     case GLITZ_NONE:
@@ -290,11 +313,15 @@ _glitz_wgl_context_update (glitz_wgl_drawable_t *drawable,
 glitz_bool_t
 glitz_wgl_push_current (void               *abstract_drawable,
 			glitz_surface_t    *surface,
-			glitz_constraint_t constraint)
+			glitz_constraint_t constraint,
+			glitz_bool_t       *restore_state)
 {
     glitz_wgl_drawable_t *drawable = (glitz_wgl_drawable_t *) abstract_drawable;
     glitz_wgl_context_info_t *context_info;
     int index;
+
+    if (restore_state)
+	*restore_state = 0;
 
     index = drawable->screen_info->context_stack_size++;
 

@@ -119,7 +119,8 @@ glitz_agl_create_pbuffer (void                    *abstract_templ,
 extern glitz_bool_t __internal_linkage
 glitz_agl_push_current (void               *abstract_drawable,
 			glitz_surface_t    *surface,
-			glitz_constraint_t constraint);
+			glitz_constraint_t constraint,
+			glitz_bool_t       *restore_state);
 
 extern glitz_surface_t __internal_linkage *
 glitz_agl_pop_current (void *abstract_drawable);
@@ -129,6 +130,13 @@ glitz_agl_destroy (void *abstract_drawable);
 
 extern glitz_bool_t __internal_linkage
 glitz_agl_swap_buffers (void *abstract_drawable);
+
+extern glitz_bool_t __internal_linkage
+glitz_agl_copy_sub_buffer (void *abstract_drawable,
+			   int  x,
+			   int  y,
+			   int  width,
+			   int  height);
 
 extern glitz_bool_t __internal_linkage
 glitz_agl_drawable_update_size (glitz_agl_drawable_t *drawable,

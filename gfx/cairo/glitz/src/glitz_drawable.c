@@ -53,6 +53,8 @@ _glitz_drawable_init (glitz_drawable_t	          *drawable,
     drawable->viewport.height = 65535;
 
     drawable->update_all = 1;
+    drawable->flushed    = 0;
+    drawable->finished   = 0;
 }
 
 void
@@ -195,124 +197,158 @@ glitz_drawable_swap_buffer_region (glitz_drawable_t *drawable,
 				   glitz_box_t      *box,
 				   int              n_box)
 {
-    if (drawable->format->d.doublebuffer && n_box)
+    glitz_box_t	    rect;
+    glitz_surface_t *surface = NULL;
+    int		    x_pos, y_pos;
+    int		    x, y, w, h;
+
+    GLITZ_GL_DRAWABLE (drawable);
+
+    if (!drawable->format->d.doublebuffer || !n_box)
+	return;
+
+    /* try swap buffers (fastest) */
+    if (n_box == 1)
     {
-	glitz_box_t	rect;
-	glitz_surface_t *surface = NULL;
-	int		x_pos, y_pos;
-	int		x, y, w, h;
+	rect.x1 = x_origin + box->x1;
+	rect.y1 = y_origin + box->y1;
+	rect.x2 = x_origin + box->x2;
+	rect.y2 = y_origin + box->y2;
 
-	GLITZ_GL_DRAWABLE (drawable);
-
-	if (n_box == 1)
+	if (rect.x1 <= 0	       &&
+	    rect.y1 <= 0	       &&
+	    rect.x2 >= drawable->width &&
+	    rect.x2 >= drawable->height)
 	{
-	    rect.x1 = x_origin + box->x1;
-	    rect.y1 = y_origin + box->y1;
-	    rect.x2 = x_origin + box->x2;
-	    rect.y2 = y_origin + box->y2;
-
-	    if (rect.x1 <= 0		   &&
-		rect.y1 <= 0		   &&
-		rect.x2 >= drawable->width &&
-		rect.x2 >= drawable->height)
+	    if (drawable->backend->swap_buffers (drawable))
 	    {
-		if (drawable->backend->swap_buffers (drawable))
+		if (drawable->front)
 		{
-		    if (drawable->front)
-		    {
-			REGION_EMPTY (&drawable->front->drawable_damage);
-			glitz_surface_damage (drawable->front, NULL,
-					      GLITZ_DAMAGE_TEXTURE_MASK |
-					      GLITZ_DAMAGE_SOLID_MASK);
-		    }
-		    return;
+		    REGION_EMPTY (&drawable->front->drawable_damage);
+		    glitz_surface_damage (drawable->front, NULL,
+					  GLITZ_DAMAGE_TEXTURE_MASK |
+					  GLITZ_DAMAGE_SOLID_MASK);
 		}
-	    }
-	}
-
-	if (drawable->front)
-	{
-	    if (glitz_surface_push_current (drawable->front,
-					    GLITZ_DRAWABLE_CURRENT))
-		surface = drawable->front;
-	}
-
-	if (!surface)
-	{
-	    if (drawable->backend->push_current (drawable, NULL,
-						 GLITZ_DRAWABLE_CURRENT))
-	    {
-		drawable->update_all = 1;
-
-		gl->viewport (0, 0, drawable->width, drawable->height);
-		gl->matrix_mode (GLITZ_GL_PROJECTION);
-		gl->load_identity ();
-		gl->ortho (0.0, drawable->width, 0.0,
-			   drawable->height, -1.0, 1.0);
-		gl->matrix_mode (GLITZ_GL_MODELVIEW);
-		gl->load_identity ();
-		gl->scale_f (1.0f, -1.0f, 1.0f);
-		gl->translate_f (0.0f, -drawable->height, 0.0f);
-	    }
-	    else
-	    {
-		drawable->backend->pop_current (drawable);
 		return;
 	    }
 	}
-
-	gl->disable (GLITZ_GL_DITHER);
-
-	drawable->backend->read_buffer (drawable, GLITZ_GL_BACK);
-	drawable->backend->draw_buffer (drawable, GLITZ_GL_FRONT);
-
-	glitz_set_operator (gl, GLITZ_OPERATOR_SRC);
-
-	x_pos = 0;
-	y_pos = 0;
-
-	glitz_set_raster_pos (gl, x_pos, y_pos);
-
-	while (n_box--)
-	{
-	    rect.x1 = x_origin + box->x1;
-	    rect.y1 = y_origin + box->y1;
-	    rect.x2 = x_origin + box->x2;
-	    rect.y2 = y_origin + box->y2;
-
-	    if (rect.x1 < rect.x2 && rect.y1 < rect.y2)
-	    {
-		x = rect.x1;
-		y = drawable->height - rect.y2;
-		w = rect.x2 - rect.x1;
-		h = rect.y2 - rect.y1;
-
-		if (x != x_pos || y != y_pos)
-		{
-		    gl->bitmap (0, 0, 0, 0, x - x_pos, y - y_pos, NULL);
-
-		    x_pos = x;
-		    y_pos = y;
-		}
-
-		gl->scissor (x, y, w, h);
-		gl->copy_pixels (x, y, w, h, GLITZ_GL_COLOR);
-
-		if (surface)
-		    glitz_surface_damage (surface, &rect,
-					  GLITZ_DAMAGE_TEXTURE_MASK |
-					  GLITZ_DAMAGE_SOLID_MASK);
-
-		box++;
-	    }
-	}
-	drawable->backend->gl->finish ();
-
-	if (surface)
-	    glitz_surface_pop_current (surface);
-	else
-	    drawable->backend->pop_current (drawable);
     }
+
+    /* try copy sub buffer (almost as fast) */
+    while (n_box)
+    {
+	rect.x1 = x_origin + box->x1;
+	rect.y1 = y_origin + box->y1;
+	rect.x2 = x_origin + box->x2;
+	rect.y2 = y_origin + box->y2;
+
+	if (rect.x1 < rect.x2 && rect.y1 < rect.y2)
+	{
+	    x = rect.x1;
+	    y = drawable->height - rect.y2;
+	    w = rect.x2 - rect.x1;
+	    h = rect.y2 - rect.y1;
+
+	    if (!drawable->backend->copy_sub_buffer (drawable, x, y, w, h))
+		break;
+
+	    if (drawable->front)
+		glitz_surface_damage (drawable->front, &rect,
+				      GLITZ_DAMAGE_TEXTURE_MASK |
+				      GLITZ_DAMAGE_SOLID_MASK);
+	}
+
+	n_box--;
+	box++;
+    }
+
+    if (!n_box)
+	return;
+
+    /* do copy pixels (slow) */
+    if (drawable->front)
+    {
+	if (glitz_surface_push_current (drawable->front,
+					GLITZ_DRAWABLE_CURRENT))
+	    surface = drawable->front;
+    }
+    if (!surface)
+    {
+	if (drawable->backend->push_current (drawable, NULL,
+					     GLITZ_DRAWABLE_CURRENT, NULL))
+	{
+	    drawable->update_all = 1;
+
+	    gl->viewport (0, 0, drawable->width, drawable->height);
+	    gl->matrix_mode (GLITZ_GL_PROJECTION);
+	    gl->load_identity ();
+	    gl->ortho (0.0, drawable->width, 0.0,
+		       drawable->height, -1.0, 1.0);
+	    gl->matrix_mode (GLITZ_GL_MODELVIEW);
+	    gl->load_identity ();
+	    gl->scale_f (1.0f, -1.0f, 1.0f);
+	    gl->translate_f (0.0f, -drawable->height, 0.0f);
+	}
+	else
+	{
+	    drawable->backend->pop_current (drawable);
+	    return;
+	}
+    }
+
+    gl->disable (GLITZ_GL_DITHER);
+
+    drawable->backend->read_buffer (drawable, GLITZ_GL_BACK);
+    drawable->backend->draw_buffer (drawable, GLITZ_GL_FRONT);
+
+    glitz_set_operator (gl, GLITZ_OPERATOR_SRC);
+
+    x_pos = 0;
+    y_pos = 0;
+
+    glitz_set_raster_pos (gl, x_pos, y_pos);
+
+    while (n_box--)
+    {
+	rect.x1 = x_origin + box->x1;
+	rect.y1 = y_origin + box->y1;
+	rect.x2 = x_origin + box->x2;
+	rect.y2 = y_origin + box->y2;
+
+	if (rect.x1 < rect.x2 && rect.y1 < rect.y2)
+	{
+	    x = rect.x1;
+	    y = drawable->height - rect.y2;
+	    w = rect.x2 - rect.x1;
+	    h = rect.y2 - rect.y1;
+
+	    if (x != x_pos || y != y_pos)
+	    {
+		gl->bitmap (0, 0, 0, 0, x - x_pos, y - y_pos, NULL);
+
+		x_pos = x;
+		y_pos = y;
+	    }
+
+	    gl->scissor (x, y, w, h);
+	    gl->copy_pixels (x, y, w, h, GLITZ_GL_COLOR);
+
+	    if (surface)
+		glitz_surface_damage (surface, &rect,
+				      GLITZ_DAMAGE_TEXTURE_MASK |
+				      GLITZ_DAMAGE_SOLID_MASK);
+
+	    box++;
+	}
+    }
+
+    drawable->backend->gl->flush ();
+    drawable->flushed = 1;
+
+    if (surface)
+	glitz_surface_pop_current (surface);
+    else
+	drawable->backend->pop_current (drawable);
 }
 
 void
@@ -332,18 +368,30 @@ slim_hidden_def(glitz_drawable_swap_buffers);
 void
 glitz_drawable_flush (glitz_drawable_t *drawable)
 {
-    drawable->backend->push_current (drawable, NULL, GLITZ_DRAWABLE_CURRENT);
+    if (drawable->flushed)
+	return;
+
+    drawable->backend->push_current (drawable, NULL, GLITZ_DRAWABLE_CURRENT,
+				     NULL);
     drawable->backend->gl->flush ();
     drawable->backend->pop_current (drawable);
+
+    drawable->flushed = 1;
 }
 slim_hidden_def(glitz_drawable_flush);
 
 void
 glitz_drawable_finish (glitz_drawable_t *drawable)
 {
-    drawable->backend->push_current (drawable, NULL, GLITZ_DRAWABLE_CURRENT);
+    if (drawable->finished)
+	return;
+
+    drawable->backend->push_current (drawable, NULL, GLITZ_DRAWABLE_CURRENT,
+				     NULL);
     drawable->backend->gl->finish ();
     drawable->backend->pop_current (drawable);
+
+    drawable->finished = drawable->flushed = 1;
 }
 slim_hidden_def(glitz_drawable_finish);
 
