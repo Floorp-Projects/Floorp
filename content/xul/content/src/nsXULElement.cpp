@@ -2757,8 +2757,8 @@ nsXULPrototypeScript::nsXULPrototypeScript(PRUint32 aLangID, PRUint32 aLineNo, P
       mSrcLoading(PR_FALSE),
       mOutOfLine(PR_TRUE),
       mSrcLoadWaiters(nsnull),
-      mScriptObject(aLangID, nsnull),
-      mLangVersion(aVersion)
+      mLangVersion(aVersion),
+      mScriptObject(aLangID, nsnull)
 {
     NS_LOG_ADDREF(this, 1, ClassName(), ClassSize());
     NS_ASSERTION(aLangID != nsIProgrammingLanguage::UNKNOWN,
