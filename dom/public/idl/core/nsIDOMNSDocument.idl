@@ -43,19 +43,23 @@ interface nsIBoxObject;
 interface nsIDOMLocation;
 
 
-[scriptable, uuid(170763c7-c94e-4db9-98be-e69ac3a02a41)]
+[scriptable, uuid(d9434314-b772-49d8-af0d-54126de63430)]
 interface nsIDOMNSDocument : nsISupports
 {
-  readonly attribute DOMString            characterSet;
-           attribute DOMString            dir;
+  readonly attribute DOMString      characterSet;
+           attribute DOMString      dir;
 
-  readonly attribute nsIDOMLocation       location;
+  readonly attribute nsIDOMLocation location;
 
-           attribute DOMString            title;
+           attribute DOMString      title;
 
-  readonly attribute DOMString            contentType;
-  readonly attribute DOMString            lastModified;
-  readonly attribute DOMString            referrer;
+  readonly attribute DOMString      contentType;
+  readonly attribute DOMString      lastModified;
+  readonly attribute DOMString      referrer;
 
-  nsIBoxObject              getBoxObjectFor(in nsIDOMElement elt);
+  nsIBoxObject getBoxObjectFor(in nsIDOMElement elt);
+
+  boolean      hasFocus();
+
+  readonly attribute nsIDOMElement  activeElement;
 };

@@ -53,6 +53,7 @@
 #include "nsUnicharUtils.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIEventStateManager.h"
+#include "nsIFocusController.h"
 #include "nsContentList.h"
 #include "nsIObserver.h"
 #include "nsIBaseWindow.h"
@@ -131,6 +132,7 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 
 #include "nsIScriptContext.h"
 #include "nsBindingManager.h"
+#include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIRequest.h"
 #include "nsILink.h"
@@ -1285,11 +1287,133 @@ nsDocument::SetContentType(const nsAString& aContentType)
   CopyUTF16toUTF8(aContentType, mContentType);
 }
 
+/* Return true if the document is in the focused top-level window, and is an
+ * ancestor of the focused DOMWindow. */
+NS_IMETHODIMP
+nsDocument::HasFocus(PRBool* aResult)
+{
+  *aResult = PR_FALSE;
+
+  nsPIDOMWindow* window = GetWindow();
+  nsIFocusController* focusController = window ?
+    window->GetRootFocusController() : nsnull;
+  if (!focusController) {
+    return NS_OK;
+  }
+
+  // Does the top-level window have focus?
+  PRBool active;
+  nsresult rv = focusController->GetActive(&active);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!active){
+    return NS_OK;
+  }
+
+  // Is there a focused DOMWindow?
+  nsCOMPtr<nsIDOMWindowInternal> focusedWindow;
+  rv = focusController->GetFocusedWindow(getter_AddRefs(focusedWindow));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!focusedWindow) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Are we an ancestor of the focused DOMWindow?
+  nsCOMPtr<nsIDOMDocument> domDocument;
+  focusedWindow->GetDocument(getter_AddRefs(domDocument));
+  nsCOMPtr<nsIDocument> document = do_QueryInterface(domDocument);
+
+  for (nsIDocument* currentDoc = document; currentDoc;
+       currentDoc = currentDoc->GetParentDocument()) {
+    if (currentDoc == this) {
+      // Yes, we are an ancestor
+      *aResult = PR_TRUE;
+      return NS_OK;
+    }
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsDocument::GetReferrer(nsAString& aReferrer)
 {
   CopyUTF8toUTF16(mReferrer, aReferrer);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::GetActiveElement(nsIDOMElement **aElement)
+{
+  *aElement = nsnull;
+
+  // Get the focused element.
+  nsPIDOMWindow* window = GetWindow();
+  if (!window) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsIFocusController* focusController = window->GetRootFocusController();
+  if (!focusController) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDOMElement> focusedElement;
+  focusController->GetFocusedElement(getter_AddRefs(focusedElement));
+  nsCOMPtr<nsIContent> content = do_QueryInterface(focusedElement);
+  if (content) {
+    // Found a focused element.  See if it's in this document.
+    nsIDocument* currentDoc = content->GetCurrentDoc();
+    if (currentDoc == this) {
+      focusedElement.swap(*aElement);
+      return NS_OK;
+    }
+
+    // Not in this document.  If it's in a child document, return the iframe in
+    // this document that's an ancestor of the child.
+    if (currentDoc) {
+      *aElement = CheckAncestryAndGetFrame(currentDoc).get();
+      if (*aElement) {
+        return NS_OK;
+      }
+    }
+  }
+
+  // Couldn't find a focused element.  Check if something like an IFRAME is
+  // focused, which will give us a focused window rather than a focused
+  // element.
+  nsCOMPtr<nsIDOMWindowInternal> focusedWindow;
+  focusController->GetFocusedWindow(getter_AddRefs(focusedWindow));
+  if (focusedWindow) {
+    // Found a focused window.  See if it's in a child of this document.  (If
+    // the window's document is this, then we should just fall through to
+    // returning the BODY below).
+    nsCOMPtr<nsIDOMDocument> domDocument;
+    focusedWindow->GetDocument(getter_AddRefs(domDocument));
+    nsCOMPtr<nsIDocument> document = do_QueryInterface(domDocument);
+
+    if (document && (document != this)) {
+      *aElement = CheckAncestryAndGetFrame(document).get();
+      if (*aElement) {
+        return NS_OK;
+      }
+    }
+  }
+
+  // No focused element anywhere in this document.  Try to get the BODY.
+  nsCOMPtr<nsIDOMHTMLDocument> htmlDoc =
+    do_QueryInterface(NS_STATIC_CAST(nsIDocument*, this));
+  if (htmlDoc) {
+    nsCOMPtr<nsIDOMHTMLElement> bodyElement;
+    htmlDoc->GetBody(getter_AddRefs(bodyElement));
+    if (bodyElement) {
+      *aElement = bodyElement;
+      NS_ADDREF(*aElement);
+      return NS_OK;
+    }
+  }
+
+  // If we couldn't get a BODY, return the root element.
+  return GetDocumentElement(aElement);
 }
 
 nsresult
@@ -4963,6 +5087,43 @@ nsDocument::DoUnblockOnload()
       loadGroup->RemoveRequest(mOnloadBlocker, nsnull, NS_OK);
     }
   }
+}
+
+/* See if document is a child of this.  If so, return the frame element in this
+ * document that holds currentDoc (or an ancestor). */
+already_AddRefed<nsIDOMElement>
+nsDocument::CheckAncestryAndGetFrame(nsIDocument* aDocument) const
+{
+  nsIDocument* parentDoc;
+  for (parentDoc = aDocument->GetParentDocument(); parentDoc != this;
+       parentDoc = parentDoc->GetParentDocument()) {
+    if (!parentDoc) {
+      return nsnull;
+    }
+
+    aDocument = parentDoc;
+  }
+
+  // In a child document.  Get the appropriate frame.
+  nsPIDOMWindow* currentWindow = aDocument->GetWindow();
+  if (!currentWindow) {
+    return nsnull;
+  }
+  nsIDOMElement* frameElement = currentWindow->GetFrameElementInternal();
+  if (!frameElement) {
+    return nsnull;
+  }
+
+  // Sanity check result
+  nsCOMPtr<nsIDOMDocument> domDocument;
+  frameElement->GetOwnerDocument(getter_AddRefs(domDocument));
+  if (domDocument != this) {
+    NS_ERROR("Child documents should live in windows the parent owns");
+    return nsnull;
+  }
+
+  NS_ADDREF(frameElement);
+  return frameElement;
 }
 
 void

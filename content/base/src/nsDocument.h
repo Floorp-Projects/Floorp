@@ -867,6 +867,10 @@ private:
   void PostUnblockOnloadEvent();
   void DoUnblockOnload();
 
+/* See if document is a child of this.  If so, return the frame element in this
+ * document that holds currentDoc (or an ancestor). */
+  already_AddRefed<nsIDOMElement> CheckAncestryAndGetFrame(nsIDocument* aDocument) const;
+
   // These are not implemented and not supported.
   nsDocument(const nsDocument& aOther);
   nsDocument& operator=(const nsDocument& aOther);
