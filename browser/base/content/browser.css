@@ -17,6 +17,10 @@ menuitem.spell-suggestion {
   font-size: 12px !important;
 }
 
+#sidebar-box toolbarbutton.tabs-closebutton {
+  -moz-user-focus: normal;
+}
+
 %ifdef MOZ_PLACES
 #PersonalToolbar > #bookmarksBarShowPlaces > .toolbarbutton-text {
   visibility: collapse;
