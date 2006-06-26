@@ -127,6 +127,8 @@ public:
   inline void SetMaxAdvance(nscoord aMaxAdvance) { mMaxAdvance = aMaxAdvance; };
   inline void SetAveCharWidth(nscoord aAveCharWidth) { mAveCharWidth = aAveCharWidth; };
   inline void SetSpaceWidth(nscoord aSpaceWidth) { mSpaceWidth = aSpaceWidth; };
+  // No known string length limits in Postscript
+  virtual PRInt32 GetMaxStringLength() { return PR_INT32_MAX; }
 
   inline nsDeviceContextPS* GetDeviceContext() { return mDeviceContext; }
   inline nsVoidArray* GetFontsPS() {

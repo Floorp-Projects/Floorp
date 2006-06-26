@@ -243,6 +243,7 @@ public:
   NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
   NS_IMETHOD  GetAveCharWidth(nscoord &aAveCharWidth);
   NS_IMETHOD  GetSpaceWidth(nscoord &aSpaceWidth);
+  virtual PRInt32 GetMaxStringLength();
 
   virtual nsresult
   ResolveForwards(HDC                  aDC,
@@ -362,6 +363,7 @@ protected:
   nscoord             mUnderlineSize;
   nscoord             mUnderlineOffset;
   nscoord             mSpaceWidth;
+  PRInt32             mMaxStringLength;
 };
 
 

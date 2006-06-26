@@ -51,7 +51,6 @@
 #include "nsBidiUtils.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsHTMLContainerFrame.h"
-#include "nsLayoutUtils.h"
 #include "nsInlineFrame.h"
 
 static NS_DEFINE_IID(kInlineFrameCID, NS_INLINE_FRAME_CID);
@@ -1391,7 +1390,7 @@ nsresult nsBidiPresUtils::RenderText(const PRUnichar*     aText,
      * x-coordinate of the end of the run for the start of the next run.
      */
     if (level & 1) {
-      nsLayoutUtils::SafeGetWidth(&aRenderingContext, aText + start, subRunLength, width);
+      aRenderingContext.GetWidth(aText + start, subRunLength, width, nsnull);
       aX += width;
       xEndRun = aX;
     }
@@ -1418,11 +1417,11 @@ nsresult nsBidiPresUtils::RenderText(const PRUnichar*     aText,
                         (nsCharType)charType, level & 1,
                         isBidiSystem);
 
-      nsLayoutUtils::SafeGetWidth(&aRenderingContext, runVisualText.get(), subRunLength, width);
+      aRenderingContext.GetWidth(runVisualText.get(), subRunLength, width, nsnull);
       if (level & 1) {
         aX -= width;
       }
-      nsLayoutUtils::SafeDrawString(&aRenderingContext, runVisualText.get(), subRunLength, aX, aY, width);
+      aRenderingContext.DrawString(runVisualText.get(), subRunLength, aX, aY, width);
 
       /*
        * The caller may request to calculate the visual position of one
@@ -1477,9 +1476,9 @@ nsresult nsBidiPresUtils::RenderText(const PRUnichar*     aText,
             }
             // The delta between the start of the run and the left part's end.
             PRInt32 visualLeftLength = posResolve->visualIndex - visualStart;
-            nsLayoutUtils::SafeGetWidth(&aRenderingContext, visualLeftPart,
-                                        visualLeftLength,
-                                        subWidth);
+            aRenderingContext.GetWidth(visualLeftPart,
+                                       visualLeftLength,
+                                       subWidth, nsnull);
             posResolve->visualLeftTwips = aX + subWidth - xStartText;
           }
         }

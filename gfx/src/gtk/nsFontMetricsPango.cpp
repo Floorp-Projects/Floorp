@@ -322,6 +322,10 @@ nsFontMetricsPango::CacheFontMetrics(void)
     // mMaxAdvance
     val = MOZ_FT_TRUNC(face->size->metrics.max_advance);
     mMaxAdvance = NSToIntRound(val * f);
+    // X may screw up if we try to measure/draw more than 32767 pixels in
+    // one operation.
+    mMaxStringLength = (PRInt32)floor(32767.0/val);
+    mMaxStringLength = PR_MAX(1, mMaxStringLength);
 
     // mPangoSpaceWidth
     PangoLayout *layout = pango_layout_new(mPangoContext);

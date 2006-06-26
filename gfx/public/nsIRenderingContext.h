@@ -823,8 +823,6 @@ public:
    * right-to-left base direction
    */
   NS_IMETHOD SetRightToLeftText(PRBool aIsRTL) = 0;
-  
-  NS_IMETHOD GetRightToLeftText(PRBool* aIsRTL) = 0;
 
   /**
    *  Draw a portion of an image, scaling it to fit within a specified rect.

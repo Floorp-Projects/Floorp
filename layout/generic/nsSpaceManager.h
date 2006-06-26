@@ -282,17 +282,6 @@ protected:
   nsresult RemoveRegion(nsIFrame* aFrame);
 
 public:
-  // Structure that stores the current state of a frame manager for
-  // Save/Restore purposes.
-  struct SavedState {
-  private:
-    nsIFrame *mLastFrame;
-    nscoord mX, mY;
-    nscoord mLowestTop;
-    
-    friend class nsSpaceManager;
-  };
-
   /**
    * Clears the list of regions representing the unavailable space.
    */
@@ -320,19 +309,21 @@ public:
   }
 
   /**
-   * Saves the current state of the space manager into aState.
+   * Pushes the current state of the space manager onto a state stack.
    */
-  void PushState(SavedState* aState);
+  void PushState();
 
   /**
-   * Restores the space manager to the saved state.
-   * 
-   * These states must be managed using stack discipline. PopState can only
-   * be used after PushState has been used to save the state, and it can only
-   * be used once --- although it can be omitted; saved states can be ignored.
-   * States must be popped in the reverse order they were pushed. 
+   * Restores the space manager to the state at the top of the state stack,
+   * then pops this state off the stack.
    */
-  void PopState(SavedState* aState);
+  void PopState();
+
+  /**
+   * Pops the state off the stack without restoring it. Useful for speculative
+   * reflow where we're not sure if we're going to keep the result.
+   */
+  void DiscardState();
 
   /**
    * Get the top of the last region placed into the space manager, to
@@ -366,6 +357,15 @@ protected:
 #ifdef NS_BUILD_REFCNT_LOGGING
     ~FrameInfo();
 #endif
+  };
+
+  // Structure that stores the current state of a frame manager for
+  // Save/Restore purposes.
+  struct SpaceManagerState {
+    nscoord mX, mY;
+    nsIFrame *mLastFrame;
+    nscoord mLowestTop;
+    SpaceManagerState *mNext;
   };
 
 public:
@@ -439,6 +439,9 @@ protected:
   nscoord         mLowestTop;  // the lowest *top*
   FrameInfo*      mFrameInfoMap;
   nsIntervalSet   mFloatDamage;
+
+  SpaceManagerState *mSavedStates;
+  SpaceManagerState mAutoState;
 
 protected:
   FrameInfo* GetFrameInfoFor(nsIFrame* aFrame);

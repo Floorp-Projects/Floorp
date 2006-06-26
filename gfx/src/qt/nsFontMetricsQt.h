@@ -143,6 +143,8 @@ public:
     NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
 
     NS_IMETHOD  GetSpaceWidth(nscoord &aSpaceWidth);
+    // No known string length limits on Qt
+    virtual PRInt32 GetMaxStringLength() { return PR_INT32_MAX; }
 
     nsFontQt    *qFont;
 

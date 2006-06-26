@@ -79,8 +79,7 @@ public:
     NS_IMETHOD  GetSpaceWidth(nscoord& aSpaceCharWidth);
     NS_IMETHOD  GetLeading(nscoord& aLeading);
     NS_IMETHOD  GetNormalLineHeight(nscoord& aLineHeight);
-
-
+    virtual PRInt32 GetMaxStringLength();
 
 
     virtual nsresult GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth,

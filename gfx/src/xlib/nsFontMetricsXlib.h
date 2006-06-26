@@ -373,6 +373,8 @@ public:
   NS_IMETHOD  GetAveCharWidth(nscoord &aAveCharWidth);
   NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
   NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
+  // Xlib probably has string length limits, but I can't be bothered
+  virtual PRInt32 GetMaxStringLength() { return PR_INT32_MAX; }
   
   NS_IMETHOD  GetSpaceWidth(nscoord &aSpaceWidth);
   NS_IMETHOD  ResolveForwards(const PRUnichar* aString, PRUint32 aLength,

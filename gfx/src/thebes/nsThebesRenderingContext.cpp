@@ -1157,6 +1157,14 @@ nsThebesRenderingContext::GetFontMetrics(nsIFontMetrics *&aFontMetrics)
     return NS_OK;
 }
 
+PRInt32
+nsThebesRenderingContext::GetMaxStringLength()
+{
+  if (!mFontMetrics)
+    return 1;
+  return mFontMetrics->GetMaxStringLength();
+}
+
 NS_IMETHODIMP
 nsThebesRenderingContext::GetWidth(char aC, nscoord &aWidth)
 {
@@ -1173,19 +1181,7 @@ nsThebesRenderingContext::GetWidth(PRUnichar aC, nscoord &aWidth, PRInt32 *aFont
 }
 
 NS_IMETHODIMP
-nsThebesRenderingContext::GetWidth(const nsString& aString, nscoord &aWidth, PRInt32 *aFontID)
-{
-    return GetWidth(aString.get(), aString.Length(), aWidth, aFontID);
-}
-
-NS_IMETHODIMP
-nsThebesRenderingContext::GetWidth(const char* aString, nscoord& aWidth)
-{
-    return GetWidth(aString, strlen(aString), aWidth);
-}
-
-NS_IMETHODIMP
-nsThebesRenderingContext::GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth)
+nsThebesRenderingContext::GetWidthInternal(const char* aString, PRUint32 aLength, nscoord& aWidth)
 {
     if (aLength == 0) {
         aWidth = 0;
@@ -1196,8 +1192,8 @@ nsThebesRenderingContext::GetWidth(const char* aString, PRUint32 aLength, nscoor
 }
 
 NS_IMETHODIMP
-nsThebesRenderingContext::GetWidth(const PRUnichar *aString, PRUint32 aLength,
-                                   nscoord &aWidth, PRInt32 *aFontID)
+nsThebesRenderingContext::GetWidthInternal(const PRUnichar *aString, PRUint32 aLength,
+                                           nscoord &aWidth, PRInt32 *aFontID)
 {
     if (aLength == 0) {
         aWidth = 0;
@@ -1208,8 +1204,8 @@ nsThebesRenderingContext::GetWidth(const PRUnichar *aString, PRUint32 aLength,
 }
 
 NS_IMETHODIMP
-nsThebesRenderingContext::GetTextDimensions(const char* aString, PRUint32 aLength,
-                                            nsTextDimensions& aDimensions)
+nsThebesRenderingContext::GetTextDimensionsInternal(const char* aString, PRUint32 aLength,
+                                                    nsTextDimensions& aDimensions)
 {
   mFontMetrics->GetMaxAscent(aDimensions.ascent);
   mFontMetrics->GetMaxDescent(aDimensions.descent);
@@ -1217,10 +1213,10 @@ nsThebesRenderingContext::GetTextDimensions(const char* aString, PRUint32 aLengt
 }
 
 NS_IMETHODIMP
-nsThebesRenderingContext::GetTextDimensions(const PRUnichar* aString,
-                                            PRUint32 aLength,
-                                            nsTextDimensions& aDimensions,
-                                            PRInt32* aFontID)
+nsThebesRenderingContext::GetTextDimensionsInternal(const PRUnichar* aString,
+                                                    PRUint32 aLength,
+                                                    nsTextDimensions& aDimensions,
+                                                    PRInt32* aFontID)
 {
   mFontMetrics->GetMaxAscent(aDimensions.ascent);
   mFontMetrics->GetMaxDescent(aDimensions.descent);
@@ -1229,29 +1225,29 @@ nsThebesRenderingContext::GetTextDimensions(const PRUnichar* aString,
 
 #if defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11) || defined(XP_BEOS)
 NS_IMETHODIMP
-nsThebesRenderingContext::GetTextDimensions(const char*       aString,
-                                            PRInt32           aLength,
-                                            PRInt32           aAvailWidth,
-                                            PRInt32*          aBreaks,
-                                            PRInt32           aNumBreaks,
-                                            nsTextDimensions& aDimensions,
-                                            PRInt32&          aNumCharsFit,
-                                            nsTextDimensions& aLastWordDimensions,
-                                            PRInt32*          aFontID)
+nsThebesRenderingContext::GetTextDimensionsInternal(const char*       aString,
+                                                    PRInt32           aLength,
+                                                    PRInt32           aAvailWidth,
+                                                    PRInt32*          aBreaks,
+                                                    PRInt32           aNumBreaks,
+                                                    nsTextDimensions& aDimensions,
+                                                    PRInt32&          aNumCharsFit,
+                                                    nsTextDimensions& aLastWordDimensions,
+                                                    PRInt32*          aFontID)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsThebesRenderingContext::GetTextDimensions(const PRUnichar*  aString,
-                                            PRInt32           aLength,
-                                            PRInt32           aAvailWidth,
-                                            PRInt32*          aBreaks,
-                                            PRInt32           aNumBreaks,
-                                            nsTextDimensions& aDimensions,
-                                            PRInt32&          aNumCharsFit,
-                                            nsTextDimensions& aLastWordDimensions,
-                                            PRInt32*          aFontID)
+nsThebesRenderingContext::GetTextDimensionsInternal(const PRUnichar*  aString,
+                                                    PRInt32           aLength,
+                                                    PRInt32           aAvailWidth,
+                                                    PRInt32*          aBreaks,
+                                                    PRInt32           aNumBreaks,
+                                                    nsTextDimensions& aDimensions,
+                                                    PRInt32&          aNumCharsFit,
+                                                    nsTextDimensions& aLastWordDimensions,
+                                                    PRInt32*          aFontID)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1259,50 +1255,40 @@ nsThebesRenderingContext::GetTextDimensions(const PRUnichar*  aString,
 
 #ifdef MOZ_MATHML
 NS_IMETHODIMP 
-nsThebesRenderingContext::GetBoundingMetrics(const char*        aString,
-                                             PRUint32           aLength,
-                                             nsBoundingMetrics& aBoundingMetrics)
+nsThebesRenderingContext::GetBoundingMetricsInternal(const char*        aString,
+                                                     PRUint32           aLength,
+                                                     nsBoundingMetrics& aBoundingMetrics)
 {
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsThebesRenderingContext::GetBoundingMetrics(const PRUnichar*   aString,
-                                             PRUint32           aLength,
-                                             nsBoundingMetrics& aBoundingMetrics,
-                                             PRInt32*           aFontID)
+nsThebesRenderingContext::GetBoundingMetricsInternal(const PRUnichar*   aString,
+                                                     PRUint32           aLength,
+                                                     nsBoundingMetrics& aBoundingMetrics,
+                                                     PRInt32*           aFontID)
 {
-    return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 #endif // MOZ_MATHML
 
 NS_IMETHODIMP
-nsThebesRenderingContext::DrawString(const char *aString, PRUint32 aLength,
-                                     nscoord aX, nscoord aY,
-                                     const nscoord* aSpacing)
+nsThebesRenderingContext::DrawStringInternal(const char *aString, PRUint32 aLength,
+                                             nscoord aX, nscoord aY,
+                                             const nscoord* aSpacing)
 {
     return mFontMetrics->DrawString(aString, aLength, aX, aY, aSpacing,
                                     this);
 }
 
 NS_IMETHODIMP
-nsThebesRenderingContext::DrawString(const PRUnichar *aString, PRUint32 aLength,
-                                     nscoord aX, nscoord aY,
-                                     PRInt32 aFontID,
-                                     const nscoord* aSpacing)
+nsThebesRenderingContext::DrawStringInternal(const PRUnichar *aString, PRUint32 aLength,
+                                             nscoord aX, nscoord aY,
+                                             PRInt32 aFontID,
+                                             const nscoord* aSpacing)
 {
     return mFontMetrics->DrawString(aString, aLength, aX, aY, aFontID,
                                     aSpacing, this);
-}
-
-NS_IMETHODIMP
-nsThebesRenderingContext::DrawString(const nsString& aString,
-                                     nscoord aX, nscoord aY,
-                                     PRInt32 aFontID,
-                                     const nscoord* aSpacing)
-{
-    return DrawString(aString.get(), aString.Length(),
-                      aX, aY, aFontID, aSpacing);
 }
 
 NS_IMETHODIMP
