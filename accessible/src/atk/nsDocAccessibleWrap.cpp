@@ -196,10 +196,9 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
   
             //Perhaps need more cases in the future
         default:
-            g_value_init (&values.old_value, G_TYPE_POINTER);
-            g_value_set_pointer (&values.old_value, pAtkPropChange->oldvalue);
-            g_value_init (&values.new_value, G_TYPE_POINTER);
-            g_value_set_pointer (&values.new_value, pAtkPropChange->newvalue);
+            // Old value not used for anything other than state change events
+            g_value_init(&values.new_value, G_TYPE_DOUBLE);
+            g_value_set_double(&values.new_value, pAtkPropChange->newvalue);
             rv = NS_OK;
         }
         if (NS_SUCCEEDED(rv)) {

@@ -805,18 +805,22 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
       privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_REORDER, accessible, nsnull);
     }
   }
-#if 0
-  // XXX todo: value change events for ATK are done with 
+  // Value change events for ATK are done with 
   // AtkPropertyChange, PROP_VALUE. Need the old and new value.
-  // Not sure how we'll get the old value.
-  // Aaron: I think this is a problem with the ATK API -- its much harder to
-  // grab the old value for all the application developers than it is for
-  // AT's to cache old values when they need to (when would that be!?)
+  // Don't bother sending old value, it's not used.
   else if (eventType.LowerCaseEqualsLiteral("valuechange")) { 
-    privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, 
-                              accessible, nsnull);
+    nsCOMPtr<nsIAccessibleValue> accValue(do_QueryInterface(privAcc));
+    NS_ASSERTION(accValue, "No nsIAccessibleValue for source of value change event");
+    if (accValue) {
+      AtkPropertyChange propChange;
+      propChange.type = PROP_VALUE;
+      propChange.oldValue = 0; // Not used
+      nsresult rv = accValue->GetCurrentValue(&propChange.newValue);
+      NS_ENSURE_SUCCESS(rv, rv);
+      privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_ATK_PROPERTY_CHANGE, 
+                                accessible, &propChange);
+    }
   }
-#endif
   else if (eventType.LowerCaseEqualsLiteral("checkboxstatechange") || // it's a XUL <checkbox>
            eventType.LowerCaseEqualsLiteral("radiostatechange")) { // it's a XUL <radio>
     accessible->GetFinalState(&stateData.state);
