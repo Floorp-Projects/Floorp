@@ -158,24 +158,6 @@ public:
                                        nsTextDimensions& aDimensions);
   NS_IMETHOD GetTextDimensionsInternal(const PRUnichar *aString, PRUint32 aLength,
                                        nsTextDimensions& aDimensions,PRInt32 *aFontID);
-  NS_IMETHOD GetTextDimensionsInternal(const char*       aString,
-                                       PRInt32           aLength,
-                                       PRInt32           aAvailWidth,
-                                       PRInt32*          aBreaks,
-                                       PRInt32           aNumBreaks,
-                                       nsTextDimensions& aDimensions,
-                                       PRInt32&          aNumCharsFit,
-                                       nsTextDimensions& aLastWordDimensions,
-                                       PRInt32*          aFontID);
-  NS_IMETHOD GetTextDimensionsInternal(const PRUnichar*  aString,
-                                       PRInt32           aLength,
-                                       PRInt32           aAvailWidth,
-                                       PRInt32*          aBreaks,
-                                       PRInt32           aNumBreaks,
-                                       nsTextDimensions& aDimensions,
-                                       PRInt32&          aNumCharsFit,
-                                       nsTextDimensions& aLastWordDimensions,
-                                       PRInt32*          aFontID);
 
 #ifdef MOZ_MATHML
   /**
