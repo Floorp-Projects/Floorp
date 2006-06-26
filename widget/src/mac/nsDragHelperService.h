@@ -41,7 +41,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDragService.h"
 
-#include <Drag.h>
+#include <Carbon/Carbon.h>
 
 #include "nsIDragHelperService.h"
 
@@ -69,9 +69,18 @@ public:
 
 protected:
 
+    // Send a drag event into Gecko
+  PRBool DoDragAction(PRUint32      aMessage,
+                      DragReference aDragRef,
+                      nsIEventSink* aSink);
+
     // handles modifier keys (cmd, option, etc) and sets the appropriate 
     // action (move, copy, etc) based on the given modifiers.
   void SetDragActionBasedOnModifiers ( short inModifiers ) ;
+
+    // Arranges to send NS_DRAGDROP_OVER events at regular intervals
+  void SetDragOverTimer(nsIEventSink* aSink, DragRef aDragRef);
+  static void DragOverTimerHandler(EventLoopTimerRef aTimer, void* aUserData);
   
     // holds our drag service across multiple calls to this callback. The reference to
     // the service is obtained when the mouse enters the window and is released when
@@ -80,6 +89,10 @@ protected:
     // handling the |kDragTrackingInWindow| message.
   nsCOMPtr<nsIDragService> mDragService;
 
+    // Used to implement the NS_DRAGDROP_OVER timer
+  EventLoopTimerRef      mDragOverTimer;
+  nsCOMPtr<nsIEventSink> mDragOverSink;
+  DragRef                mDragOverDragRef;
 }; // nsDragHelperService
 
 
