@@ -75,7 +75,7 @@ _glitz_wgl_create_drawable (glitz_wgl_screen_info_t *screen_info,
 			  height);
 
     if (!context->initialized) {
-	glitz_wgl_push_current (drawable, NULL, GLITZ_CONTEXT_CURRENT);
+	glitz_wgl_push_current (drawable, NULL, GLITZ_CONTEXT_CURRENT, NULL);
 	glitz_wgl_pop_current (drawable);
     }
 
@@ -105,24 +105,21 @@ _glitz_wgl_create_pbuffer_drawable (glitz_wgl_screen_info_t    *screen_info,
     if (!(iformat->types & GLITZ_DRAWABLE_TYPE_PBUFFER_MASK))
 	return NULL;
 
+    context = glitz_wgl_context_get (screen_info, dc, format);
+    if (!context)
+        return NULL;
+    
     pbuffer = glitz_wgl_pbuffer_create (screen_info, screen_info->format_ids[format->id],
 					width, height,
 					&dc);
     if (!pbuffer)
 	return NULL;
 
-    context = glitz_wgl_context_get (screen_info, dc, format);
-    if (!context) {
-	glitz_wgl_pbuffer_destroy (screen_info, pbuffer, dc);
-	return NULL;
-    }
-
     drawable = _glitz_wgl_create_drawable (screen_info, context, format,
 					   NULL, dc, pbuffer,
 					   width, height);
     if (!drawable) {
 	glitz_wgl_pbuffer_destroy (screen_info, pbuffer, dc);
-	glitz_wgl_context_destroy (screen_info, context);
 	return NULL;
     }
 
@@ -199,7 +196,8 @@ glitz_wgl_destroy (void *abstract_drawable)
 	 * Last drawable? We have to destroy all fragment programs as this may
 	 * be our last chance to have a context current.
 	 */
-	glitz_wgl_push_current (abstract_drawable, NULL, GLITZ_CONTEXT_CURRENT);
+	glitz_wgl_push_current (abstract_drawable, NULL, GLITZ_CONTEXT_CURRENT,
+				NULL);
 	glitz_program_map_fini (drawable->base.backend->gl,
 				&drawable->screen_info->program_map);
 	glitz_program_map_init (&drawable->screen_info->program_map);
@@ -225,4 +223,14 @@ glitz_wgl_swap_buffers (void *abstract_drawable)
     SwapBuffers (drawable->dc);
 
     return 1;
+}
+
+glitz_bool_t
+glitz_wgl_copy_sub_buffer (void *abstract_drawable,
+			   int  x,
+			   int  y,
+			   int  width,
+			   int  height)
+{
+    return 0;
 }

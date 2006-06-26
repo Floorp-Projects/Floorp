@@ -28,7 +28,7 @@
 
 #define GLITZ_MAJOR    0
 #define GLITZ_MINOR    5
-#define GLITZ_REVISION 2
+#define GLITZ_REVISION 5
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -129,6 +129,7 @@ typedef enum {
 #define GLITZ_FEATURE_PACKED_PIXELS_MASK            (1L << 14)
 #define GLITZ_FEATURE_MULTI_DRAW_ARRAYS_MASK        (1L << 15)
 #define GLITZ_FEATURE_FRAMEBUFFER_OBJECT_MASK       (1L << 16)
+#define GLITZ_FEATURE_COPY_SUB_BUFFER_MASK          (1L << 17)
 
 
 /* glitz_format.c */
@@ -397,8 +398,12 @@ typedef enum {
 } glitz_texture_filter_type_t;
 
 typedef enum {
-  GLITZ_TEXTURE_FILTER_NEAREST = 0,
-  GLITZ_TEXTURE_FILTER_LINEAR  = 1
+  GLITZ_TEXTURE_FILTER_NEAREST		      = 0,
+  GLITZ_TEXTURE_FILTER_LINEAR		      = 1,
+  GLITZ_TEXTURE_FILTER_NEAREST_MIPMAP_NEAREST = 2,
+  GLITZ_TEXTURE_FILTER_LINEAR_MIPMAP_NEAREST  = 3,
+  GLITZ_TEXTURE_FILTER_NEAREST_MIPMAP_LINEAR  = 3,
+  GLITZ_TEXTURE_FILTER_LINEAR_MIPMAP_LINEAR   = 4
 } glitz_texture_filter_t;
 
 void

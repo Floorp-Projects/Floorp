@@ -76,6 +76,7 @@ typedef struct _glitz_wgl_thread_info_t {
   glitz_wgl_screen_info_t *screen;
   char                    *gl_library;
   HMODULE                 dlhand;
+  glitz_context_t         *cctx;
 } glitz_wgl_thread_info_t;
 
 typedef struct _glitz_wgl_context_info_t {
@@ -173,7 +174,8 @@ glitz_wgl_create_pbuffer (void                       *abstract_templ,
 extern glitz_bool_t __internal_linkage
 glitz_wgl_push_current (void                *abstract_drawable,
 			glitz_surface_t     *surface,
-			glitz_constraint_t  constraint);
+			glitz_constraint_t  constraint,
+			glitz_bool_t       *restore_state);
 
 extern glitz_surface_t *__internal_linkage
 glitz_wgl_pop_current (void *abstract_drawable);
@@ -186,6 +188,13 @@ glitz_wgl_destroy (void *abstract_drawable);
 
 extern glitz_bool_t __internal_linkage
 glitz_wgl_swap_buffers (void *abstract_drawable);
+
+extern glitz_bool_t __internal_linkage
+glitz_wgl_copy_sub_buffer (void *abstract_drawable,
+			   int  x,
+			   int  y,
+			   int  width,
+			   int  height);
 
 extern void __internal_linkage
 glitz_wgl_print_win32_error_string (int error_code);

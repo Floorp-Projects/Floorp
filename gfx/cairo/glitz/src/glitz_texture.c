@@ -69,24 +69,15 @@ glitz_texture_init (glitz_texture_t *texture,
 	    GLITZ_TEXTURE_FLAG_PADABLE_MASK;
 	break;
     default:
+	texture->box.x1 = texture->box.y1 = 0;
+	texture->box.x2 = texture->width = width;
+	texture->box.y2 = texture->height = height;
+
+	texture->flags = GLITZ_TEXTURE_FLAG_PADABLE_MASK |
+	    GLITZ_TEXTURE_FLAG_REPEATABLE_MASK;
+
 	if (feature_mask & GLITZ_FEATURE_TEXTURE_BORDER_CLAMP_MASK)
-	{
-	    texture->box.x1 = texture->box.y1 = 0;
-	    texture->box.x2 = texture->width = width;
-	    texture->box.y2 = texture->height = height;
-	    texture->flags =  GLITZ_TEXTURE_FLAG_CLAMPABLE_MASK |
-		GLITZ_TEXTURE_FLAG_REPEATABLE_MASK |
-		GLITZ_TEXTURE_FLAG_PADABLE_MASK;
-	}
-	else
-	{
-	    texture->box.x1 = texture->box.y1 = 1;
-	    texture->box.x2 = width + 1;
-	    texture->box.y2 = height + 1;
-	    texture->width = width + 2;
-	    texture->height = height + 2;
-	    texture->flags =  GLITZ_TEXTURE_FLAG_CLAMPABLE_MASK;
-	}
+	    texture->flags |= GLITZ_TEXTURE_FLAG_CLAMPABLE_MASK;
     }
 
     if (!unnormalized &&
@@ -180,8 +171,8 @@ glitz_texture_allocate (glitz_gl_proc_address_list_t *gl,
     glitz_texture_bind (gl, texture);
 
     if (TEXTURE_CLAMPABLE (texture) &&
-	(texture->box.x2 != texture->width ||
-	 texture->box.y2 != texture->height))
+	(texture->box.x2 > texture->width ||
+	 texture->box.y2 > texture->height))
     {
 	data = malloc (texture->width * texture->height);
 	if (data)
@@ -353,14 +344,9 @@ glitz_texture_object_create (glitz_surface_t *surface)
 
     GLITZ_GL_SURFACE (surface);
 
-    /* GL_ARB_texture_rectangle is required for sane texture coordinates.
-       GL_ARB_texture_border_clamp is required right now as glitz will
-       emulate it when missing, which means a 1 pixel translucent black
-       border inside textures and that cannot be exposed to clients. */
-    if ((!(surface->drawable->backend->feature_mask &
-	   GLITZ_FEATURE_TEXTURE_BORDER_CLAMP_MASK)) ||
-	(!(surface->drawable->backend->feature_mask &
-	   GLITZ_FEATURE_TEXTURE_BORDER_CLAMP_MASK)))
+    /* texture dimensions must match surface dimensions */
+    if (surface->texture.width  != surface->box.x2 &&
+	surface->texture.height != surface->box.y2)
 	return 0;
 
     texture = malloc (sizeof (glitz_texture_object_t));
@@ -402,12 +388,25 @@ glitz_texture_object_set_filter (glitz_texture_object_t      *texture,
 				 glitz_texture_filter_type_t type,
 				 glitz_texture_filter_t      filter)
 {
-    static glitz_gl_enum_t filters[] = {
-	GLITZ_GL_NEAREST,
-	GLITZ_GL_LINEAR
+    static glitz_gl_enum_t filters[2][6] = {
+	{
+	    GLITZ_GL_NEAREST,
+	    GLITZ_GL_LINEAR,
+	    GLITZ_GL_NEAREST,
+	    GLITZ_GL_LINEAR,
+	    GLITZ_GL_NEAREST,
+	    GLITZ_GL_LINEAR
+	}, {
+	    GLITZ_GL_NEAREST,
+	    GLITZ_GL_LINEAR,
+	    GLITZ_GL_NEAREST_MIPMAP_NEAREST,
+	    GLITZ_GL_LINEAR_MIPMAP_NEAREST,
+	    GLITZ_GL_NEAREST_MIPMAP_LINEAR,
+	    GLITZ_GL_LINEAR_MIPMAP_LINEAR
+	}
     };
 
-    texture->param.filter[type] = filters[filter];
+    texture->param.filter[type] = filters[type][filter];
 }
 
 void

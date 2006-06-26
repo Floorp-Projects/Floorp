@@ -227,6 +227,7 @@ _glitz_wgl_thread_info_init (glitz_wgl_thread_info_t *thread_info)
     thread_info->screen = NULL;
     thread_info->gl_library = NULL;
     thread_info->dlhand = NULL;
+    thread_info->cctx = NULL;
 }
 
 static void

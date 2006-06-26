@@ -601,7 +601,7 @@ glitz_surface_push_current (glitz_surface_t    *surface,
     {
 	drawable = surface->attached;
 	if (drawable->backend->push_current (drawable, surface,
-					     constraint))
+					     constraint, NULL))
 	{
 	    if (constraint == GLITZ_DRAWABLE_CURRENT)
 	    {
@@ -641,12 +641,12 @@ glitz_surface_push_current (glitz_surface_t    *surface,
 	if (constraint == GLITZ_DRAWABLE_CURRENT)
 	{
 	    drawable->backend->push_current (drawable, surface,
-					     GLITZ_ANY_CONTEXT_CURRENT);
+					     GLITZ_ANY_CONTEXT_CURRENT, NULL);
 	}
 	else
 	{
 	    return drawable->backend->push_current (drawable, surface,
-						    constraint);
+						    constraint, NULL);
 	}
     }
 

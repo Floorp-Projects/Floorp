@@ -201,7 +201,8 @@ _glitz_fbo_attach_notify (void            *abstract_drawable,
     if (!TEXTURE_ALLOCATED (texture))
     {
 	drawable->other->backend->push_current (drawable->other, NULL,
-						GLITZ_ANY_CONTEXT_CURRENT);
+						GLITZ_ANY_CONTEXT_CURRENT,
+						NULL);
 	glitz_texture_allocate (gl, texture);
 	drawable->other->backend->pop_current (drawable->other);
 
@@ -225,7 +226,8 @@ _glitz_fbo_detach_notify (void            *abstract_drawable,
 	GLITZ_GL_DRAWABLE (drawable->other);
 
 	drawable->other->backend->push_current (drawable->other, NULL,
-						GLITZ_ANY_CONTEXT_CURRENT);
+						GLITZ_ANY_CONTEXT_CURRENT,
+						NULL);
 
 	gl->bind_framebuffer (GLITZ_GL_FRAMEBUFFER, drawable->fb);
 
@@ -258,13 +260,14 @@ _glitz_fbo_detach_notify (void            *abstract_drawable,
 static glitz_bool_t
 _glitz_fbo_push_current (void               *abstract_drawable,
 			 glitz_surface_t    *surface,
-			 glitz_constraint_t constraint)
+			 glitz_constraint_t constraint,
+			 glitz_bool_t       *restore_state)
 {
     glitz_fbo_drawable_t *drawable = (glitz_fbo_drawable_t *)
 	abstract_drawable;
 
     drawable->other->backend->push_current (drawable->other, surface,
-					    constraint);
+					    constraint, restore_state);
 
     if (constraint == GLITZ_DRAWABLE_CURRENT)
     {
@@ -329,6 +332,16 @@ _glitz_fbo_swap_buffers (void *abstract_drawable)
     return 0;
 }
 
+static glitz_bool_t
+_glitz_fbo_copy_sub_buffer (void *abstract_drawable,
+			    int  x,
+			    int  y,
+			    int  width,
+			    int  height)
+{
+    return 0;
+}
+
 static void
 _glitz_fbo_destroy (void *abstract_drawable)
 {
@@ -340,7 +353,8 @@ _glitz_fbo_destroy (void *abstract_drawable)
 	GLITZ_GL_DRAWABLE (drawable->other);
 
 	drawable->other->backend->push_current (drawable->other, NULL,
-						GLITZ_ANY_CONTEXT_CURRENT);
+						GLITZ_ANY_CONTEXT_CURRENT,
+						NULL);
 
 	gl->delete_framebuffers (1, &drawable->fb);
 
@@ -427,15 +441,16 @@ _glitz_fbo_drawable_create (glitz_drawable_t	        *other,
     backend = (glitz_backend_t *) (drawable + 1);
     *backend = *other->backend;
 
-    backend->destroy       = _glitz_fbo_destroy;
-    backend->push_current  = _glitz_fbo_push_current;
-    backend->pop_current   = _glitz_fbo_pop_current;
-    backend->attach_notify = _glitz_fbo_attach_notify;
-    backend->detach_notify = _glitz_fbo_detach_notify;
-    backend->swap_buffers  = _glitz_fbo_swap_buffers;
-    backend->make_current  = _glitz_fbo_make_current;
-    backend->draw_buffer   = _glitz_fbo_draw_buffer;
-    backend->read_buffer   = _glitz_fbo_read_buffer;
+    backend->destroy         = _glitz_fbo_destroy;
+    backend->push_current    = _glitz_fbo_push_current;
+    backend->pop_current     = _glitz_fbo_pop_current;
+    backend->attach_notify   = _glitz_fbo_attach_notify;
+    backend->detach_notify   = _glitz_fbo_detach_notify;
+    backend->swap_buffers    = _glitz_fbo_swap_buffers;
+    backend->copy_sub_buffer = _glitz_fbo_copy_sub_buffer;
+    backend->make_current    = _glitz_fbo_make_current;
+    backend->draw_buffer     = _glitz_fbo_draw_buffer;
+    backend->read_buffer     = _glitz_fbo_read_buffer;
 
     drawable->fb = 0;
 

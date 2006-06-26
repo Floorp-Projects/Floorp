@@ -302,6 +302,7 @@ glitz_agl_context_get (glitz_agl_thread_info_t *thread_info,
     context->backend.attach_notify = _glitz_agl_notify_dummy;
     context->backend.detach_notify = _glitz_agl_notify_dummy;
     context->backend.swap_buffers = glitz_agl_swap_buffers;
+    context->backend.copy_sub_buffer = glitz_agl_copy_sub_buffer;
 
     context->backend.create_context = _glitz_agl_create_context;
     context->backend.destroy_context = _glitz_agl_context_destroy;
@@ -423,6 +424,8 @@ _glitz_agl_context_update (glitz_agl_drawable_t *drawable,
 {
     AGLContext context;
 
+    drawable->base.flushed = drawable->base.finished = 0;
+
     switch (constraint) {
     case GLITZ_NONE:
 	break;
@@ -472,12 +475,16 @@ _glitz_agl_context_update (glitz_agl_drawable_t *drawable,
 glitz_bool_t
 glitz_agl_push_current (void               *abstract_drawable,
 			glitz_surface_t    *surface,
-			glitz_constraint_t constraint)
+			glitz_constraint_t constraint,
+			glitz_bool_t       *restore_state)
 {
     glitz_agl_drawable_t *drawable = (glitz_agl_drawable_t *)
 	abstract_drawable;
     glitz_agl_context_info_t *context_info;
     int index;
+
+    if (restore_state)
+	*restore_state = 0;
 
     index = drawable->thread_info->context_stack_size++;
 

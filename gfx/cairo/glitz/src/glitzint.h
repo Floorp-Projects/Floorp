@@ -374,7 +374,8 @@ typedef struct glitz_backend {
   glitz_bool_t
   (*push_current)              (void               *drawable,
 				glitz_surface_t    *surface,
-				glitz_constraint_t constraint);
+				glitz_constraint_t constraint,
+				glitz_bool_t       *restore_state);
 
   glitz_surface_t *
   (*pop_current)               (void *drawable);
@@ -390,6 +391,12 @@ typedef struct glitz_backend {
   glitz_bool_t
   (*swap_buffers)              (void *drawable);
 
+  glitz_bool_t
+  (*copy_sub_buffer)           (void *drawable,
+				int  x,
+				int  y,
+				int  width,
+				int  height);
 
   glitz_context_t *
   (*create_context)            (void                    *drawable,
@@ -444,6 +451,8 @@ struct _glitz_drawable {
   int                         width, height;
   glitz_rectangle_t           viewport;
   glitz_bool_t                update_all;
+  glitz_bool_t                flushed;
+  glitz_bool_t                finished;
   glitz_surface_t             *front;
   glitz_surface_t             *back;
 };

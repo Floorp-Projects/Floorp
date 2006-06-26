@@ -256,6 +256,17 @@ _glitz_glx_proc_address_lookup (glitz_glx_screen_info_t *screen_info)
 		~GLITZ_GLX_FEATURE_MAKE_CURRENT_READ_MASK;
     }
 
+    if (screen_info->glx_feature_mask & GLITZ_GLX_FEATURE_COPY_SUB_BUFFER_MASK)
+    {
+        screen_info->glx.copy_sub_buffer = (glitz_glx_copy_sub_buffer_t)
+            glitz_glx_get_proc_address ("glXCopySubBufferMESA",
+                                        (void *) screen_info);
+
+	if (!screen_info->glx.copy_sub_buffer)
+	    screen_info->glx_feature_mask &=
+		~GLITZ_GLX_FEATURE_COPY_SUB_BUFFER_MASK;
+    }
+
     if (screen_info->glx_feature_mask &
 	GLITZ_GLX_FEATURE_GET_PROC_ADDRESS_MASK) {
 	if (screen_info->glx_version >= 1.4f) {

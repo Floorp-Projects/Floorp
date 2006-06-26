@@ -57,7 +57,7 @@ _glitz_agl_create_drawable (glitz_agl_thread_info_t *thread_info,
 			  width, height);
 
     if (!context->initialized) {
-	glitz_agl_push_current (drawable, NULL, GLITZ_CONTEXT_CURRENT);
+	glitz_agl_push_current (drawable, NULL, GLITZ_CONTEXT_CURRENT, NULL);
 	glitz_agl_pop_current (drawable);
     }
 
@@ -203,7 +203,7 @@ glitz_agl_destroy (void *abstract_drawable)
 	 * be our last chance to have a context current.
 	 */
 	glitz_agl_push_current (abstract_drawable, NULL,
-				GLITZ_CONTEXT_CURRENT);
+				GLITZ_CONTEXT_CURRENT, NULL);
 	glitz_program_map_fini (drawable->base.backend->gl,
 				&drawable->thread_info->program_map);
 	glitz_program_map_init (&drawable->thread_info->program_map);
@@ -241,9 +241,20 @@ glitz_agl_swap_buffers (void *abstract_drawable)
     glitz_agl_drawable_t *drawable = (glitz_agl_drawable_t *)
 	abstract_drawable;
 
-    glitz_agl_push_current (abstract_drawable, NULL, GLITZ_DRAWABLE_CURRENT);
+    glitz_agl_push_current (abstract_drawable, NULL, GLITZ_DRAWABLE_CURRENT,
+			    NULL);
     aglSwapBuffers (drawable->context->context);
     glitz_agl_pop_current (abstract_drawable);
 
     return 1;
+}
+
+glitz_bool_t
+glitz_agl_copy_sub_buffer (void *abstract_drawable,
+			   int  x,
+			   int  y,
+			   int  width,
+			   int  height)
+{
+    return 0;
 }
