@@ -82,9 +82,7 @@ interface nsISHEntry : nsIHistoryEntry
     [noscript] void setViewerBounds([const] in nsRect bounds);
 
     /**
-     * Saved child docshells corresponding to contentViewer.  There are weak
-     * references since it's assumed that the content viewer's document has
-     * an owning reference to the subdocument for each shell.  The child shells
+     * Saved child docshells corresponding to contentViewer.  The child shells
      * are restored as children of the parent docshell, in this order, when the
      * parent docshell restores a saved presentation.
      */
