@@ -973,7 +973,8 @@ nsBookmarksService::UpdateLivemarkChildren(nsIRDFResource* aSource)
     if (rv == NS_RDF_NO_VALUE)
         return NS_OK;
 
-    nsCOMPtr<nsIRDFLiteral> feedUrlLiteral = do_QueryInterface(feedUrlNode);
+    nsCOMPtr<nsIRDFLiteral> feedUrlLiteral = do_QueryInterface(feedUrlNode, &rv);
+    if (NS_FAILED(rv)) return rv;
     const PRUnichar *feedUrl = nsnull;
     rv = feedUrlLiteral->GetValueConst(&feedUrl);
     if (NS_FAILED(rv)) return rv;

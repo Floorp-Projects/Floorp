@@ -41,6 +41,7 @@
 
 interface nsIRDFResource;
 interface nsIRDFNode;
+interface nsIRDFLiteral;
 interface nsITransactionManager;
 
 /**
@@ -73,7 +74,7 @@ interface nsIBookmarkTransactionManager : nsISupports
                           in long aIndex,
                           in nsIRDFResource aParent,
                           in unsigned long aPropCount,
-                          [array, size_is(aPropCount)] in nsIRDFNode aRemovedProps);
+                          [array, size_is(aPropCount)] in nsIRDFLiteral aRemovedProps);
 
   /**
    * Constants corresponding to the 3 different types of transactions possible

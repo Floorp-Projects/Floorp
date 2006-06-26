@@ -97,14 +97,14 @@ function bookmarkTransactionManager() {
                     var oldValue = this.BMDS.GetTarget(this.item, this.Properties[i], true);
                     // must check, if paste call after copy the oldvalue didn't remove.
                     if (!oldValue) {
-                        var newValue = aProps[i+1];
+                        var newValue = aProps[i];
                         if (newValue) {
                             this.BMDS.Assert(this.item, 
                                              this.Properties[i], 
                                              newValue, true);
                         }
                     } else {
-                        this.removedProp[i+1] = oldValue;
+                        this.removedProp[i] = oldValue;
                     }
                 }
             }
@@ -116,7 +116,7 @@ function bookmarkTransactionManager() {
             }
             for each (var prop in aProps) {
                 for (var i = 0; i < this.Properties.length; i++) {
-                    var oldValue = aProps[i+1];
+                    var oldValue = aProps[i];
                     if (oldValue) {
                         this.BMDS.Unassert(this.item, this.Properties[i], oldValue);
                     }
@@ -141,7 +141,7 @@ function bookmarkTransactionManager() {
              rdfService.GetResource("http://home.netscape.com/NC-rdf#FeedURL")];
 
     function bkmkInsertTxn(aAction) {
-        this.type    = "insert";
+        this.type = "insert";
         // move container declaration to here so it can be recognized if
         // undoTransaction is call after the BM manager is close and reopen.
         this.container = Components.classes["@mozilla.org/rdf/container;1"]
