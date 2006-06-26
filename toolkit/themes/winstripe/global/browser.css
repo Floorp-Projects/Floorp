@@ -43,11 +43,6 @@ tab[selected="true"] {
   -moz-padding-start: 3px;
 }
 
-.tabbrowser-tabs[tiny="true"] > .tabbrowser-tab[selected="true"],
-.tabborwser-tabs[singlechild="true"] > .tabbrowser-tab[selected="true"] {
-  min-width: 50px; /* approximately favicon + close icon + slop for tab boundaries */
-}
-
 tab {
   margin-bottom: 1px;
 }

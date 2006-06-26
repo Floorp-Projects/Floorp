@@ -293,9 +293,14 @@
               }
             }
             
-            // Fire an onselect event for the tabs element.
+            // Support both the old "select" event and the new, better-named
+            // "TabSelect" event.
             var event = document.createEvent('Events');
             event.initEvent('select', true, true);
+            this.dispatchEvent(event);
+
+            event = document.createEvent("Events");
+            event.initEvent("TabSelect", true, false);
             this.dispatchEvent(event);
           }
           return val;
