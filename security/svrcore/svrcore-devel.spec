@@ -4,7 +4,7 @@
 Summary:          Svrcore - development files for secure PIN handling using NSS crypto
 Name:             svrcore-devel
 Version:          4.0.2
-Release:          1%{?dist}
+Release:          2%{?dist}
 License:          MPL/GPL/LGPL
 URL:              http://www.mozilla.org/projects/security/pki/
 Group:            Development/Libraries
@@ -105,6 +105,10 @@ done
 %{_includedir}/svrcore.h
 
 %changelog
+* Mon Jun 26 2006 Rich Megginson <rmeggins@redhat.com> - 4.0.2-2
+- Bump spec rev to 2 due to change of spec file name from svrcore
+- to svrcore-devel to comply with fedora packaging guidelines
+
 * Thu Jun 22 2006 Rich Megginson <rmeggins@redhat.com> - 4.0.2-1
 - Bump rev to 4.0.2; now using HEAD of mozilla/security/coreconf
 - which includes the coreconf-location.patch, so got rid of patch
