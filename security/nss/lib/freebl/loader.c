@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: loader.c,v 1.28 2006/02/01 21:18:44 wtchang%redhat.com Exp $ */
+/* $Id: loader.c,v 1.29 2006/06/26 23:42:58 wtchang%redhat.com Exp $ */
 
 #include "loader.h"
 #include "prmem.h"
@@ -284,12 +284,12 @@ bl_LoadLibrary(const char *name)
     return lib;
 }
 
-static void *
+static PRFuncPtr
 bl_FindSymbol(BLLibrary *lib, const char *name)
 {
-    void *f;
+    PRFuncPtr f;
 
-    f = PR_FindSymbol(lib->dlh, name);
+    f = PR_FindFunctionSymbol(lib->dlh, name);
     return f;
 }
 
@@ -324,7 +324,7 @@ freebl_LoadDSO( void )
 
   handle = bl_LoadLibrary(name);
   if (handle) {
-    void * address = bl_FindSymbol(handle, "FREEBL_GetVector");
+    PRFuncPtr address = bl_FindSymbol(handle, "FREEBL_GetVector");
     if (address) {
       FREEBLGetVectorFn  * getVector = (FREEBLGetVectorFn *)address;
       const FREEBLVector * dsoVector = getVector();

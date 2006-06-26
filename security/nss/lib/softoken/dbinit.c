@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: dbinit.c,v 1.28 2005/09/28 17:12:17 relyea%netscape.com Exp $ */
+/* $Id: dbinit.c,v 1.29 2006/06/26 23:42:59 wtchang%redhat.com Exp $ */
 
 #include <ctype.h>
 #include "seccomon.h"
@@ -335,8 +335,8 @@ DB * rdbopen(const char *appName, const char *prefix,
     }
 
     /* get the entry points */
-    sftk_rdbstatusfunc = (rdbstatusfunc) PR_FindSymbol(lib,"rdbstatus");
-    sftk_rdbfunc = (rdbfunc) PR_FindSymbol(lib,"rdbopen");
+    sftk_rdbstatusfunc = (rdbstatusfunc) PR_FindFunctionSymbol(lib,"rdbstatus");
+    sftk_rdbfunc = (rdbfunc) PR_FindFunctionSymbol(lib,"rdbopen");
     if (sftk_rdbfunc) {
 	db = (*sftk_rdbfunc)(appName,prefix,type,rdbmapflags(flags));
 	if (!db && status && sftk_rdbstatusfunc) {
