@@ -1007,8 +1007,8 @@ sub match_field {
         }
 
         my $limit = 0;
-        if (&::Param('maxusermatches')) {
-            $limit = &::Param('maxusermatches') + 1;
+        if (Param('maxusermatches')) {
+            $limit = Param('maxusermatches') + 1;
         }
 
         for my $query (@queries) {
@@ -1039,16 +1039,16 @@ sub match_field {
                 $cgi->append(-name=>$field,
                              -values=>[@{$users}[0]->{'login'}]);
 
-                $need_confirm = 1 if &::Param('confirmuniqueusermatch');
+                $need_confirm = 1 if Param('confirmuniqueusermatch');
 
             }
             elsif ((scalar(@{$users}) > 1)
-                    && (&::Param('maxusermatches') != 1)) {
+                    && (Param('maxusermatches') != 1)) {
                 $need_confirm = 1;
                 $match_multiple = 1;
 
-                if ((&::Param('maxusermatches'))
-                   && (scalar(@{$users}) > &::Param('maxusermatches')))
+                if ((Param('maxusermatches'))
+                   && (scalar(@{$users}) > Param('maxusermatches')))
                 {
                     $matches->{$field}->{$query}->{'status'} = 'trunc';
                     pop @{$users};  # take the last one out
@@ -1265,7 +1265,7 @@ sub get_userlist {
 
     my $dbh = Bugzilla->dbh;
     my $query  = "SELECT DISTINCT login_name, realname,";
-    if (&::Param('usevisibilitygroups')) {
+    if (Param('usevisibilitygroups')) {
         $query .= " COUNT(group_id) ";
     } else {
         $query .= " 1 ";

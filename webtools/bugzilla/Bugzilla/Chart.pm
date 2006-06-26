@@ -32,6 +32,7 @@ use lib ".";
 # the same points.
 package Bugzilla::Chart;
 
+use Bugzilla::Error;
 use Bugzilla::Util;
 use Bugzilla::Series;
 
@@ -75,7 +76,7 @@ sub init {
         if ($param =~ /^line(\d+)$/) {
             foreach my $series_id ($cgi->param($param)) {
                 detaint_natural($series_id) 
-                                     || &::ThrowCodeError("invalid_series_id");
+                                     || ThrowCodeError("invalid_series_id");
                 my $series = new Bugzilla::Series($series_id);
                 push(@{$self->{'lines'}[$1]}, $series) if $series;
             }
@@ -101,7 +102,7 @@ sub init {
     foreach my $date ('datefrom', 'dateto') {
         if ($self->{$date}) {
             $self->{$date} = str2time($self->{$date}) 
-              || &::ThrowUserError("illegal_date", { date => $self->{$date}});
+              || ThrowUserError("illegal_date", { date => $self->{$date}});
         }
     }
 
@@ -109,7 +110,7 @@ sub init {
     if ($self->{'datefrom'} && $self->{'dateto'} && 
         $self->{'datefrom'} > $self->{'dateto'}) 
     {
-          &::ThrowUserError("misarranged_dates", 
+          ThrowUserError("misarranged_dates", 
                                          {'datefrom' => $cgi->param('datefrom'),
                                           'dateto' => $cgi->param('dateto')});
     }    
