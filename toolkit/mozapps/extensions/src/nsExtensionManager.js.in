@@ -72,7 +72,6 @@ const PREF_DSS_SKIN_TO_SELECT         = "extensions.lastSelectedSkin";
 const PREF_GENERAL_SKINS_SELECTEDSKIN = "general.skins.selectedSkin";
 const PREF_EM_LOGGING_ENABLED         = "extensions.logging.enabled";
 const PREF_EM_UPDATE_INTERVAL         = "extensions.update.interval";
-const PREF_XPINSTALL_STATUS_DLG_SKIN  = "xpinstall.dialog.progress.skin";
 const PREF_BLOCKLIST_URL              = "extensions.blocklist.url";
 const PREF_BLOCKLIST_DETAILS_URL      = "extensions.blocklist.detailsURL";
 const PREF_BLOCKLIST_ENABLED          = "extensions.blocklist.enabled";
@@ -4389,29 +4388,6 @@ ExtensionManager.prototype = {
                     "missingPackageFilesMessage", [installData.name,
                     bundle.GetStringFromName("type-" + installData.type)]);
         return;
-      }
-
-      // When installing themes we need to open the theme manager if it is not
-      // already opened except when we are installing a xpi dropped into a
-      // extensions directory.
-      fileURL = getURIFromFile(files[files.length - 1]).QueryInterface(nsIURL);
-      if (fileURL.fileExtension.toLowerCase() == "jar") {
-        var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                           .getService(Components.interfaces.nsIWindowMediator);
-        var win = wm.getMostRecentWindow("Extension:Manager-extensions");
-        if (win) {
-          win = wm.getMostRecentWindow("Extension:Manager-themes");
-          if (win) {
-            win.focus();
-          }
-          else {
-            var themeManagerURL = gPref.getCharPref(PREF_XPINSTALL_STATUS_DLG_SKIN);
-            var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                               .getService(Components.interfaces.nsIWindowWatcher);
-            ww.openWindow(null, themeManagerURL, 
-                          "", "chrome,centerscreen,titlebar,dialog=no,resizable", []);
-          }
-        }
       }
 
       for (i = 0; i < files.length; ++i) {
