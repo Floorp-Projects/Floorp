@@ -604,21 +604,23 @@ nsFormFillController::KeyPress(nsIDOMEvent* aEvent)
 #ifndef XP_MACOSX
     mController->HandleDelete(&cancel);
     break;
+  case nsIDOMKeyEvent::DOM_VK_BACK_SPACE:
+    mController->HandleText(PR_FALSE);
+    break;
 #else
+  case nsIDOMKeyEvent::DOM_VK_BACK_SPACE:
     {
       PRBool isShift = PR_FALSE;
       keyEvent->GetShiftKey(&isShift);
 
-      if (isShift) {
+      if (isShift)
         mController->HandleDelete(&cancel);
-        break;
-      }
+      else
+        mController->HandleText(PR_FALSE);
+
+      break;
     }
-    // fall through
 #endif
-  case nsIDOMKeyEvent::DOM_VK_BACK_SPACE:
-    mController->HandleText(PR_FALSE);
-    break;
   case nsIDOMKeyEvent::DOM_VK_UP:
     mController->HandleKeyNavigation(nsIAutoCompleteController::KEY_UP, &cancel);
     break;
