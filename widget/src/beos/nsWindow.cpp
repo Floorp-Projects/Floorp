@@ -1571,17 +1571,17 @@ NS_IMETHODIMP nsWindow::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSyn
 NS_IMETHODIMP nsWindow::Update()
 {
 	nsresult rv = NS_ERROR_FAILURE;
-	//Switching scrolling trigger off
-	mIsScrolling = PR_FALSE;
-	// Getting whole paint cache filled in native and non-native Invalidate() calls.
-	// Sending it all to view manager via OnPaint()
 	BRegion reg;
 	reg.MakeEmpty();
 	if(mView && mView->LockLooper())
 	{
-		//Flushing native pending updates*/
-		if (mView->Window())
+		//Flushing native pending updates
+		if (mIsScrolling && mView->Window())
 			mView->Window()->UpdateIfNeeded();
+		else
+			mView->Invalidate();
+		//Switching scrolling trigger off
+		mIsScrolling = PR_FALSE;
 		bool nonempty = mView->GetPaintRegion(&reg);
 		mView->UnlockLooper();
 		if (nonempty)
