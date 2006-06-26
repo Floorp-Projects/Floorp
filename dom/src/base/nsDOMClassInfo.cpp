@@ -6024,68 +6024,65 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   nsresult rv = NS_OK;
 
-  // It is not worth calling JS_ResolveStandardClass() if we are
-  // resolving for assignment, since only read-write properties
-  // get dealt with there.
+  // Resolve standard classes on my_context's JSContext (or on cx,
+  // if we don't have a my_context yet), in case the two contexts
+  // have different origins.  We want lazy standard class
+  // initialization to behave as if it were done eagerly, on each
+  // window's own context (not on some other window-caller's
+  // context).
+
+  JSContext *my_cx;
+
+  if (!my_context) {
+    my_cx = cx;
+  } else {
+    my_cx = (JSContext *)my_context->GetNativeContext();
+  }
+
+  // Resolving a standard class won't do any evil, and it's possible
+  // for caps to get the answer wrong, so disable the security check
+  // for this case.
+
+  JSBool did_resolve = JS_FALSE;
+  PRBool doSecurityCheckInAddProperty = sDoSecurityCheckInAddProperty;
+  sDoSecurityCheckInAddProperty = PR_FALSE;
+
+  JSAutoRequest ar(my_cx);
+
+  // Don't resolve standard classes on XPCNativeWrapper.
+  JSBool ok = !ObjectIsNativeWrapper(cx, obj) ?
+              ::JS_ResolveStandardClass(my_cx, obj, id, &did_resolve) :
+              JS_TRUE;
+
+  sDoSecurityCheckInAddProperty = doSecurityCheckInAddProperty;
+
+  if (!ok) {
+    // Trust the JS engine (or the script security manager) to set
+    // the exception in the JS engine.
+
+    jsval exn;
+    if (!JS_GetPendingException(my_cx, &exn)) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    // Return NS_OK to avoid stomping over the exception that was passed
+    // down from the ResolveStandardClass call.
+    // Note that the order of the JS_ClearPendingException and
+    // JS_SetPendingException is important in the case that my_cx == cx.
+
+    JS_ClearPendingException(my_cx);
+    JS_SetPendingException(cx, exn);
+    *_retval = JS_FALSE;
+    return NS_OK;
+  }
+
+  if (did_resolve) {
+    *objp = obj;
+
+    return NS_OK;
+  }
+
   if (!(flags & JSRESOLVE_ASSIGNING)) {
-    // Resolve standard classes on my_context's JSContext (or on cx,
-    // if we don't have a my_context yet), in case the two contexts
-    // have different origins.  We want lazy standard class
-    // initialization to behave as if it were done eagerly, on each
-    // window's own context (not on some other window-caller's
-    // context).
-
-    JSContext *my_cx;
-
-    if (!my_context) {
-      my_cx = cx;
-    } else {
-      my_cx = (JSContext *)my_context->GetNativeContext();
-    }
-
-    // Resolving a standard class won't do any evil, and it's possible
-    // for caps to get the answer wrong, so disable the security check
-    // for this case.
-
-    JSBool did_resolve = JS_FALSE;
-    PRBool doSecurityCheckInAddProperty = sDoSecurityCheckInAddProperty;
-    sDoSecurityCheckInAddProperty = PR_FALSE;
-
-    JSAutoRequest ar(my_cx);
-
-    // Don't resolve standard classes on XPCNativeWrapper.
-    JSBool ok = !ObjectIsNativeWrapper(cx, obj) ?
-                ::JS_ResolveStandardClass(my_cx, obj, id, &did_resolve) :
-                JS_TRUE;
-
-    sDoSecurityCheckInAddProperty = doSecurityCheckInAddProperty;
-
-    if (!ok) {
-      // Trust the JS engine (or the script security manager) to set
-      // the exception in the JS engine.
-
-      jsval exn;
-      if (!JS_GetPendingException(my_cx, &exn)) {
-        return NS_ERROR_UNEXPECTED;
-      }
-
-      // Return NS_OK to avoid stomping over the exception that was passed
-      // down from the ResolveStandardClass call.
-      // Note that the order of the JS_ClearPendingException and
-      // JS_SetPendingException is important in the case that my_cx == cx.
-
-      JS_ClearPendingException(my_cx);
-      JS_SetPendingException(cx, exn);
-      *_retval = JS_FALSE;
-      return NS_OK;
-    }
-
-    if (did_resolve) {
-      *objp = obj;
-
-      return NS_OK;
-    }
-
     // We want this code to be before the child frame lookup code
     // below so that a child frame named 'constructor' doesn't
     // shadow the window's constructor property.
