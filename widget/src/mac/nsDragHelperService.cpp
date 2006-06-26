@@ -54,6 +54,8 @@ NS_IMPL_QUERY_INTERFACE1(nsDragHelperService, nsIDragHelperService)
 // nsDragHelperService constructor
 //
 nsDragHelperService::nsDragHelperService()
+: mDragOverTimer(nsnull)
+, mDragOverDragRef(nsnull)
 {
 }
 
@@ -63,6 +65,9 @@ nsDragHelperService::nsDragHelperService()
 //
 nsDragHelperService::~nsDragHelperService()
 {
+  if (mDragOverTimer)
+    ::RemoveEventLoopTimer(mDragOverTimer);
+
   NS_ASSERTION(!mDragService.get(),
                "A drag was not correctly ended by shutdown");
 }
@@ -92,13 +97,10 @@ nsDragHelperService::Enter(DragReference inDragRef, nsIEventSink *inSink)
   if (macSession)
     macSession->SetDragReference(inDragRef);
 
-  // let gecko know that the mouse has entered the window so it
-  // can start tracking and sending enter/exit events to frames.
-  Point mouseLocGlobal;
-  ::GetDragMouse(inDragRef, &mouseLocGlobal, nsnull);
-  PRBool handled = PR_FALSE;
-  inSink->DragEvent(NS_DRAGDROP_ENTER, mouseLocGlobal.h, mouseLocGlobal.v, 0L,
-                    &handled);
+  DoDragAction(NS_DRAGDROP_ENTER, inDragRef, inSink);
+
+  // Start sending regular NS_DRAGDROP_OVER events.
+  SetDragOverTimer(inSink, inDragRef);
 
   return NS_OK;
 }
@@ -107,7 +109,7 @@ nsDragHelperService::Enter(DragReference inDragRef, nsIEventSink *inSink)
 //
 // Tracking
 //
-// Called while the mouse is inside the rectangle bounding the browser
+// Called while the mouse is moved inside the rectangle bounding the browser
 // during a drag. The important thing done here is to clear the |canDrop|
 // property of the drag session every time through. The event handlers
 // will reset it if appropriate.
@@ -123,14 +125,6 @@ nsDragHelperService::Tracking(DragReference inDragRef, nsIEventSink *inSink,
     return NS_ERROR_FAILURE;
   }
 
-  Point mouseLocGlobal;
-  ::GetDragMouse(inDragRef, &mouseLocGlobal, nsnull);
-  short modifiers;
-  ::GetDragModifiers(inDragRef, &modifiers, nsnull, nsnull);
-
-  // set the drag action on the service so the frames know what is going on
-  SetDragActionBasedOnModifiers(modifiers);
-
   // clear out the |canDrop| property of the drag session. If it's meant to
   // be, it will be set again.
   nsCOMPtr<nsIDragSession> session;
@@ -139,10 +133,11 @@ nsDragHelperService::Tracking(DragReference inDragRef, nsIEventSink *inSink,
   if (session)
     session->SetCanDrop(PR_FALSE);
 
-  // pass into gecko for handling...
-  PRBool handled = PR_FALSE;
-  inSink->DragEvent(NS_DRAGDROP_OVER, mouseLocGlobal.h, mouseLocGlobal.v,
-                    modifiers, &handled);
+  // mDragOverTimer is running, but an NS_DRAGDROP_OVER event is about to be
+  // sent.  Make sure that the timer doesn't send another event too quickly.
+  SetDragOverTimer(inSink, inDragRef);
+
+  DoDragAction(NS_DRAGDROP_OVER, inDragRef, inSink);
 
   // check if gecko has since allowed the drop and return it
   if (session)
@@ -161,6 +156,9 @@ nsDragHelperService::Tracking(DragReference inDragRef, nsIEventSink *inSink,
 NS_IMETHODIMP
 nsDragHelperService::Leave(DragReference inDragRef, nsIEventSink *inSink)
 {
+  // Stop sending NS_DRAGDROP_OVER events.
+  SetDragOverTimer(nsnull, nsnull);
+
   NS_ASSERTION(mDragService,
                "Couldn't get a drag service, we're in biiig trouble");
   if (!mDragService || !inSink)
@@ -174,13 +172,7 @@ nsDragHelperService::Leave(DragReference inDragRef, nsIEventSink *inSink)
   if (macSession)
     macSession->SetDragReference(0);
 
-  // let gecko know that the mouse has left the window so it
-  // can stop tracking and sending enter/exit events to frames.
-  Point mouseLocGlobal;
-  ::GetDragMouse(inDragRef, &mouseLocGlobal, nsnull);
-  PRBool handled = PR_FALSE;
-  inSink->DragEvent(NS_DRAGDROP_EXIT, mouseLocGlobal.h, mouseLocGlobal.v, 0L,
-                    &handled);
+  DoDragAction(NS_DRAGDROP_EXIT, inDragRef, inSink);
 
 #ifndef MOZ_WIDGET_COCOA
   ::HideDragHilite(inDragRef);
@@ -219,6 +211,9 @@ NS_IMETHODIMP
 nsDragHelperService::Drop(DragReference inDragRef, nsIEventSink *inSink,
                           PRBool* outAccepted)
 {
+  // Stop sending NS_DRAGDROP_OVER events.
+  SetDragOverTimer(nsnull, nsnull);
+
   NS_ASSERTION(mDragService,
                "Couldn't get a drag service, we're in biiig trouble");
   if (!mDragService || !inSink) {
@@ -238,16 +233,8 @@ nsDragHelperService::Drop(DragReference inDragRef, nsIEventSink *inSink,
     // to gecko, otherwise set phasers for failure.
     PRBool canDrop = PR_FALSE;
     if (NS_SUCCEEDED(dragSession->GetCanDrop(&canDrop)))
-      if (canDrop) {
-        // pass the drop event along to Gecko
-        Point mouseLocGlobal;
-        ::GetDragMouse(inDragRef, &mouseLocGlobal, nsnull);
-        short modifiers;
-        ::GetDragModifiers(inDragRef, &modifiers, nsnull, nsnull);
-        PRBool handled = PR_FALSE;
-        inSink->DragEvent(NS_DRAGDROP_DROP, mouseLocGlobal.h, mouseLocGlobal.v,
-                          modifiers, &handled);
-      }
+      if (canDrop)
+        DoDragAction(NS_DRAGDROP_DROP, inDragRef, inSink);
       else
         result = dragNotAcceptedErr;
   } // if a valid drag session
@@ -260,6 +247,35 @@ nsDragHelperService::Drop(DragReference inDragRef, nsIEventSink *inSink,
   *outAccepted = (result == noErr);
 
   return NS_OK;
+}
+
+
+// DoDragAction
+//
+// Common routine for NS_DRAGDROP_(ENTER|EXIT|OVER|DROP) events.  Obtains
+// information about the drag in progress and dispatches the event.
+//
+// protected
+PRBool
+nsDragHelperService::DoDragAction(PRUint32      aMessage,
+                                  DragReference aDragRef,
+                                  nsIEventSink* aSink)
+{
+  // Get information about the drag.
+  Point mouseLocGlobal;
+  ::GetDragMouse(aDragRef, &mouseLocGlobal, nsnull);
+  short modifiers;
+  ::GetDragModifiers(aDragRef, &modifiers, nsnull, nsnull);
+
+  // Set the drag action on the service so the frames know what is going on.
+  SetDragActionBasedOnModifiers(modifiers);
+
+  // Pass into Gecko for handling.
+  PRBool handled = PR_FALSE;
+  aSink->DragEvent(aMessage, mouseLocGlobal.h, mouseLocGlobal.v,
+                   modifiers, &handled);
+
+  return handled;
 }
 
 
@@ -290,3 +306,64 @@ nsDragHelperService::SetDragActionBasedOnModifiers(short inModifiers)
 
 } // SetDragActionBasedOnModifiers
 
+
+// SetDragOverTimer
+//
+// Sets a timer to send NS_DRAGDROP_OVER events into Gecko at regular
+// intervals.  If a timer is already running, the interval is reset.
+// If either argument is null, any running timer is stopped.
+//
+// protected
+void
+nsDragHelperService::SetDragOverTimer(nsIEventSink* aSink,
+                                      DragRef       aDragRef)
+{
+  // win32 seems to use 16Hz internally, gtk2 has a 10Hz timer
+  const EventTimerInterval kDragOverInterval = 1.0/10.0;
+
+  if (!aSink || !aDragRef) {
+    // Cancel the timer.
+    if (mDragOverTimer) {
+      ::RemoveEventLoopTimer(mDragOverTimer);
+      mDragOverTimer = nsnull;
+      mDragOverSink = nsnull;
+    }
+    return;
+  }
+
+  if (mDragOverTimer) {
+    // A timer is already running, just bump its next-fire time.
+    ::SetEventLoopTimerNextFireTime(mDragOverTimer, kDragOverInterval);
+    return;
+  }
+
+  mDragOverSink = aSink;
+  mDragOverDragRef = aDragRef;
+
+  static EventLoopTimerUPP sDragOverTimerUPP;
+  if (!sDragOverTimerUPP)
+    sDragOverTimerUPP = ::NewEventLoopTimerUPP(DragOverTimerHandler);
+ 
+  ::InstallEventLoopTimer(::GetCurrentEventLoop(),
+                          kDragOverInterval,
+                          kDragOverInterval,
+                          sDragOverTimerUPP,
+                          this,
+                          &mDragOverTimer);
+}
+
+
+// DragOverTimerHandler
+//
+// Called at regular intervals to send NS_DRAGDROP_OVER events.
+//
+// protected static
+void
+nsDragHelperService::DragOverTimerHandler(EventLoopTimerRef aTimer,
+                                          void* aUserData)
+{
+  nsDragHelperService* self = NS_STATIC_CAST(nsDragHelperService*, aUserData);
+
+  self->DoDragAction(NS_DRAGDROP_OVER,
+                     self->mDragOverDragRef, self->mDragOverSink);
+}
