@@ -53,14 +53,14 @@ try
 {
   // see if we can crash...
   "".join();
+  String = saveString;
   actual = 'No Error';
 }
 catch(ex)
 {
+  String = saveString;
   actual = ex.name;
   printStatus(ex + '');
 }
-
-String = saveString;
 
 reportCompare(expect, actual, summary);
