@@ -5309,7 +5309,7 @@ NS_IMETHODIMP nsMsgDBFolder::RemoveKeywordFromMessages(nsISupportsArray *aMessag
         nsMsgLabelValue labelValue;
         message->GetLabel(&labelValue);
         if (labelValue == aKeyword[6] - '0')
-          message->SetLabel(0);
+          SetLabelForMessages(aMessages, (nsMsgLabelValue) 0);
       }
 
       rv = message->GetStringProperty("keywords", getter_Copies(keywords));
