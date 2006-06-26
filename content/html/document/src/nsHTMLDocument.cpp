@@ -3623,21 +3623,18 @@ nsHTMLDocument::CreateAndAddWyciwygChannel(void)
 nsresult
 nsHTMLDocument::RemoveWyciwygChannel(void)
 {
-  nsresult rv = NS_OK;
-
   nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup();
 
   // note there can be a write request without a load group if
   // this is a synchronously constructed about:blank document
   if (loadGroup && mWyciwygChannel) {
     mWyciwygChannel->CloseCacheEntry(NS_OK);
-    rv = loadGroup->RemoveRequest(mWyciwygChannel, nsnull, NS_OK);
-    NS_ENSURE_SUCCESS(rv, rv);
+    loadGroup->RemoveRequest(mWyciwygChannel, nsnull, NS_OK);
   }
 
   mWyciwygChannel = nsnull;
 
-  return rv;
+  return NS_OK;
 }
 
 void *
