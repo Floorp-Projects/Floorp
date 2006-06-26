@@ -475,7 +475,6 @@ function setRestartMessage(aItem)
 // Startup, Shutdown
 function Startup() 
 {
-  var startupView = window.location.search.substr("?view=".length, window.location.search.length);
   gExtensionStrings = document.getElementById("extensionsStrings");
   gPref = Components.classes["@mozilla.org/preferences-service;1"]
                     .getService(Components.interfaces.nsIPrefBranch);
@@ -512,12 +511,6 @@ function Startup()
   gExtensionsView.setAttribute("ref", RDFURI_ITEM_ROOT);
 
   var viewGroup = document.getElementById("viewGroup");
-  if (startupView == "installs")
-    showView("installs");
-  else if (viewGroup.hasAttribute("last-selected"))
-    showView(viewGroup.getAttribute("last-selected"));
-  else
-    showView("extensions");
 
   gExtensionsView.focus();
   gExtensionsViewController.onCommandUpdate(); 
@@ -551,16 +544,15 @@ function Startup()
   if ("arguments" in window) {
     try {
       var params = window.arguments[0].QueryInterface(Components.interfaces.nsIDialogParamBlock);
+      showView("installs");
       gDownloadManager.addDownloads(params);
     }
     catch (e) {
-      if (window.arguments[0] == "updatecheck")
-        checkUpdatesAll();
-      else if (window.arguments[0] == "updates-only") {
+      if (window.arguments[0] == "updates-only") {
         gUpdatesOnly = true;
         document.getElementById("viewGroup").hidden = true;
         document.getElementById("extensionsView").setAttribute("norestart", "");
-        showView('updates');
+        showView("updates");
         var addonsMsg = document.getElementById("addonsMsg");
         addonsMsg.showMessage("chrome://mozapps/skin/extensions/question.png",
                               getExtensionString("newUpdatesAvailableMsg"),
@@ -569,11 +561,18 @@ function Startup()
       }
     }
   }
+  else if (viewGroup.hasAttribute("last-selected"))
+    showView(viewGroup.getAttribute("last-selected"));
+  else
+    showView("extensions");
 
   if (gExtensionsView.selectedItem)
     gExtensionsView.scrollBoxObject.scrollToElement(gExtensionsView.selectedItem);
 
   gPref.setBoolPref(PREF_UPDATE_NOTIFYUSER, false);
+
+  if (gUpdatesOnly && gExtensionsView.children.length == 0)
+    window.close();
 }
 
 function Shutdown() 
