@@ -41,7 +41,7 @@
 
 interface nsIArray;
 
-[scriptable, uuid(4c712847-8f55-4a2b-bbbc-2cb550cce019)]
+[scriptable, uuid(26de2089-239d-4697-818b-bae1fe8e8e0d)]
 interface nsILocalFileOS2 : nsILocalFile
 {
    /**
@@ -54,6 +54,18 @@ interface nsILocalFileOS2 : nsILocalFile
     nsIArray getFileTypes( );
 
    /**
+    * setFileTypes
+    *
+    * Sets the file's .TYPE extended attribute from a comma-separated
+    * list of types (this format is used because clients are unlikely
+    * to write more than a single type).
+    *   @param fileTypes
+    *       a string in the filesystem's native character set
+    *
+    */
+    void setFileTypes( in ACString fileTypes );
+
+   /**
     * isFileType
     *
     * Returns TRUE if the file has a .TYPE extended attribute that
@@ -63,5 +75,16 @@ interface nsILocalFileOS2 : nsILocalFile
     *
     */
     PRBool isFileType( in ACString fileType );
-};
 
+   /**
+    * setFileSource
+    *
+    * Identifies the origin of a downloaded file by writing the
+    * source URI's spec to the .SUBJECT extended attribute.
+    *
+    *   @param aURI
+    *       the source URI
+    *
+    */
+    void setFileSource( in AUTF8String aURI );
+};
