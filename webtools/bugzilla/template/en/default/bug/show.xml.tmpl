@@ -17,8 +17,10 @@
   # Rights Reserved.
   #
   # Contributor(s): Bradley Baetz <bbaetz@student.usyd.edu.au>
+  #                 Colin Ogilvie <mozilla@colinogilvie.co.uk>
   #
   #%]
+[% PROCESS bug/time.html.tmpl %]
 <?xml version="1.0" [% IF Param('utf8') %]encoding="UTF-8" [% END %]standalone="yes" ?>
 <!DOCTYPE bugzilla SYSTEM "[% Param('urlbase') %]bugzilla.dtd">
 
@@ -69,6 +71,9 @@
           <long_desc isprivate="[% c.isprivate FILTER xml %]">
             <who>[% c.email FILTER xml %]</who>
             <bug_when>[% c.time FILTER time FILTER xml %]</bug_when>
+            [% IF UserInGroup(Param('timetrackinggroup')) && (c.work_time - 0 != 0) %]
+              <work_time>[% PROCESS formattimeunit time_unit = c.work_time FILTER xml %]</work_time>
+            [% END %]
             <thetext>[% c.body FILTER xml %]</thetext>
           </long_desc>
         [% END %]

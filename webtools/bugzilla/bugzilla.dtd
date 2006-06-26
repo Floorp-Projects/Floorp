@@ -5,7 +5,7 @@
 	maintainer CDATA #REQUIRED
 	exporter CDATA #IMPLIED
 >
-<!ELEMENT bug (bug_id, (alias?, creation_ts, short_desc, delta_ts, reporter_accessible, cclist_accessible, classification_id, classification, product, component, version, rep_platform, op_sys, bug_status, resolution?, bug_file_loc?, status_whiteboard?, keywords*, priority, bug_severity, target_milestone?, dependson*, blocked*, votes?, everconfirmed, reporter, assigned_to, qa_contact?, cc*, (estimated_time, remaining_time, actual_time, deadline)?, group*, flag*, long_desc*, attachment*)?)>
+<!ELEMENT bug (bug_id, (alias?, creation_ts, short_desc, delta_ts, reporter_accessible, cclist_accessible, classification_id, classification, product, component, version, rep_platform, op_sys, bug_status, resolution?, dup_id?, bug_file_loc?, status_whiteboard?, keywords*, priority, bug_severity, target_milestone?, dependson*, blocked*, votes?, everconfirmed, reporter, assigned_to, qa_contact?, cc*, (estimated_time, remaining_time, actual_time, deadline)?, group*, flag*, long_desc*, attachment*)?)>
 <!ATTLIST bug
 	error (NotFound | NotPermitted | InvalidBugId) #IMPLIED
 >
@@ -33,6 +33,7 @@
 <!ELEMENT status_whiteboard (#PCDATA)>
 <!ELEMENT op_sys (#PCDATA)>
 <!ELEMENT resolution (#PCDATA)>
+<!ELEMENT dup_id (#PCDATA)>
 <!ELEMENT bug_file_loc (#PCDATA)>
 <!ELEMENT short_desc (#PCDATA)>
 <!ELEMENT keywords (#PCDATA)>
@@ -46,13 +47,14 @@
 <!ELEMENT remaining_time (#PCDATA)>
 <!ELEMENT actual_time (#PCDATA)>
 <!ELEMENT deadline (#PCDATA)>
-<!ELEMENT long_desc (who, bug_when, thetext)>
+<!ELEMENT long_desc (who, bug_when, work_time?, thetext)>
 <!ATTLIST long_desc
           encoding (base64) #IMPLIED
           isprivate (0|1) #IMPLIED
  >
 <!ELEMENT who (#PCDATA)>
 <!ELEMENT bug_when (#PCDATA)>
+<!ELEMENT work_time (#PCDATA)>
 <!ELEMENT thetext (#PCDATA)>
 <!ELEMENT attachment (attachid, date, desc, filename?, type?, data?, flag*)>
 <!ATTLIST attachment

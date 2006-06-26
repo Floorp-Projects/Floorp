@@ -289,7 +289,7 @@ sub fields {
            reporter_accessible cclist_accessible
            classification_id classification
            product component version rep_platform op_sys
-           bug_status resolution
+           bug_status resolution dup_id
            bug_file_loc status_whiteboard keywords
            priority bug_severity target_milestone
            dependson blocked votes
