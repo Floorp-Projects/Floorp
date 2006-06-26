@@ -1183,7 +1183,7 @@ function GetArgs(originalData)
   return args;
 }
 
-function ComposeFieldsReady(msgType)
+function ComposeFieldsReady()
 {
   //If we are in plain text, we need to set the wrap column
   if (! gMsgCompose.composeHTML) {
@@ -1195,7 +1195,7 @@ function ComposeFieldsReady(msgType)
       dump("### textEditor.wrapWidth exception text: " + e + " - failed\n");
     }
   }
-  CompFields2Recipients(gMsgCompose.compFields, gMsgCompose.type);
+  CompFields2Recipients(gMsgCompose.compFields);
   SetComposeWindowTitle();
 
   // need timeout for reply to work

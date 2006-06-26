@@ -194,7 +194,7 @@ function Recipients2CompFields(msgCompFields)
     dump("Message Compose Error: msgCompFields is null (ExtractRecipients)");
 }
 
-function CompFields2Recipients(msgCompFields, msgType)
+function CompFields2Recipients(msgCompFields)
 {
   if (msgCompFields) {
     gMimeHeaderParser = Components.classes["@mozilla.org/messenger/headerparser;1"].getService(Components.interfaces.nsIMsgHeaderParser);
