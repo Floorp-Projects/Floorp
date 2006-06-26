@@ -216,10 +216,8 @@ NS_IMETHODIMP nsDocAccessible::GetState(PRUint32 *aState)
     *aState |= STATE_INVISIBLE;
   }
 
-  PRUint32 extState;
-  GetExtState(&extState);
-  if (0 == (extState & EXT_STATE_EDITABLE)) {
-    // Use STATE_READONLY when we're not in an editor pane
+  nsCOMPtr<nsIEditor> editor = GetEditor();
+  if (!editor) {
     *aState |= STATE_READONLY;
   }
 
