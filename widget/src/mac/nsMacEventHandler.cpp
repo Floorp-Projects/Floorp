@@ -468,76 +468,126 @@ PRBool nsMacEventHandler::HandleMenuCommand(
 
 #endif
 
+
+void
+nsMacEventHandler::InitializeMouseEvent(nsMouseEvent& aMouseEvent,
+                                        nsPoint&      aPoint,
+                                        PRInt16       aModifiers,
+                                        PRUint32      aClickCount)
+{
+  // nsEvent
+  aMouseEvent.refPoint   = aPoint;
+  aMouseEvent.time       = PR_IntervalNow();
+
+  // nsInputEvent
+  aMouseEvent.isShift    = ((aModifiers & shiftKey)   != 0);
+  aMouseEvent.isControl  = ((aModifiers & controlKey) != 0);
+  aMouseEvent.isAlt      = ((aModifiers & optionKey)  != 0);
+  aMouseEvent.isMeta     = ((aModifiers & cmdKey)     != 0);
+
+  // nsMouseEvent
+  aMouseEvent.clickCount = aClickCount;
+}
+
+
 //-------------------------------------------------------------------------
 //
 // DragEvent
 //
 //-------------------------------------------------------------------------
 //
-// Someone on the outside told us that something related to a drag is happening. The
-// exact event type is passed in as |aMessage|. We need to send this event into Gecko 
-// for processing. Create a Gecko event (using the appropriate message type) and pass
-// it along.
+// Someone on the outside told us that something related to a drag is
+// happening.  The exact event type is passed in as |aMessage|. We need to
+// send this event into Gecko for processing.  Create a Gecko event (using
+// the appropriate message type) and pass it along.
 //
-// ÄÄÄTHIS REALLY NEEDS TO BE CLEANED UP! TOO MUCH CODE COPIED FROM ConvertOSEventToMouseEvent
-//
-PRBool nsMacEventHandler::DragEvent ( unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers )
+PRBool nsMacEventHandler::DragEvent(unsigned int aMessage,
+                                    Point        aMouseGlobal,
+                                    UInt16       aKeyModifiers)
 {
-	// convert the mouse to local coordinates. We have to do all the funny port origin
-	// stuff just in case it has been changed.
-	Point hitPointLocal = aMouseGlobal;
-	WindowRef wind = reinterpret_cast<WindowRef>(mTopLevelWidget->GetNativeData(NS_NATIVE_DISPLAY));
-	nsGraphicsUtils::SafeSetPortWindowPort(wind);
-	{
-	    StOriginSetter  originSetter(wind);
-    	::GlobalToLocal(&hitPointLocal);
-	}
-	nsPoint widgetHitPoint(hitPointLocal.h, hitPointLocal.v);
+  // Convert the mouse to local coordinates.  We have to do all the funny port
+  // origin stuff just in case it has been changed.
+  Point hitPointLocal = aMouseGlobal;
+  WindowRef wind =
+   NS_STATIC_CAST(WindowRef, mTopLevelWidget->GetNativeData(NS_NATIVE_DISPLAY));
+  nsGraphicsUtils::SafeSetPortWindowPort(wind);
+  {
+    StOriginSetter  originSetter(wind);
+    ::GlobalToLocal(&hitPointLocal);
+  }
+  nsPoint widgetHitPoint(hitPointLocal.h, hitPointLocal.v);
 
-	nsWindow* widgetHit = mTopLevelWidget->FindWidgetHit(hitPointLocal);
-	if ( widgetHit ) {
-		// adjust from local coordinates to window coordinates in case the hit widget
-		// isn't at 0, 0
-		nsRect bounds;
-		widgetHit->GetBounds(bounds);
-		nsPoint widgetOrigin(bounds.x, bounds.y);
-		widgetHit->LocalToWindowCoordinate(widgetOrigin);
-		widgetHitPoint.MoveBy(-widgetOrigin.x, -widgetOrigin.y);		
-	}
-	else {
-	  // this is most likely the case of a drag exit, so we need to make sure
-	  // we send the event to the last pointed to widget. We don't really care
-	  // about the mouse coordinates because we know they're outside the window.
-	  widgetHit = mEventDispatchHandler->GetWidgetPointed();
-	  widgetHitPoint = nsPoint(0,0);
-	}	
+  nsWindow* widgetHit = mTopLevelWidget->FindWidgetHit(hitPointLocal);
+  if (widgetHit) {
+    // Adjust from local coordinates to window coordinates in case the hit
+    // widget isn't at (0, 0).
+    nsRect bounds;
+    widgetHit->GetBounds(bounds);
+    nsPoint widgetOrigin(bounds.x, bounds.y);
+    widgetHit->LocalToWindowCoordinate(widgetOrigin);
+    widgetHitPoint.MoveBy(-widgetOrigin.x, -widgetOrigin.y);		
+  }
 
-	// update the tracking of which widget the mouse is now over.
-	mEventDispatchHandler->SetWidgetPointed(widgetHit);
-	
-	nsMouseEvent geckoEvent(PR_TRUE, aMessage, widgetHit, nsMouseEvent::eReal);
+  // Note that aMessage will be NS_DRAGDROP_(ENTER|EXIT|OVER|DROP) depending
+  // on the state of the drag relative to the top-level window, not the
+  // widget that interests us.  As a result, NS_DRAGDROP_ENTER and
+  // NS_DRAGDROP_EXIT events must be synthesized as the drag moves between
+  // widgets in this window.
 
-	// nsEvent
-	geckoEvent.refPoint = widgetHitPoint;
-	geckoEvent.time	= PR_IntervalNow();
+  if (aMessage == NS_DRAGDROP_EXIT) {
+    // If the drag is leaving the window, it can't be over a widget contained
+    // within the window.
+    widgetHit = nsnull;
+  }
 
-	// nsInputEvent
-	geckoEvent.isShift = ((aKeyModifiers & shiftKey) != 0);
-	geckoEvent.isControl = ((aKeyModifiers & controlKey) != 0);
-	geckoEvent.isAlt = ((aKeyModifiers & optionKey) != 0);
-	geckoEvent.isMeta = ((aKeyModifiers & cmdKey) != 0);
+  nsWindow* lastWidget = mEventDispatchHandler->GetWidgetPointed();
+  if (lastWidget != widgetHit) {
+    if (aMessage != NS_DRAGDROP_ENTER) {
+      if (lastWidget) {
+        // Send an NS_DRAGDROP_EXIT event to the last widget.  This is not done
+        // if aMessage == NS_DRAGDROP_ENTER, because that indicates that the
+        // drag is either beginning (in which case there is no valid last
+        // widget for the drag) or reentering the window (in which case
+        // NS_DRAGDROP_EXIT was sent when the mouse left the window).
 
-	// nsMouseEvent
-	geckoEvent.clickCount = 1;
-	
-	if ( widgetHit )
-		widgetHit->DispatchMouseEvent(geckoEvent);
-	else
-		NS_WARNING ("Oh shit, no widget to dispatch event to, we're in trouble" );
-	
-	return PR_TRUE;
-	
-} // DropOccurred
+        nsMouseEvent exitEvent(PR_TRUE, NS_DRAGDROP_EXIT, lastWidget,
+                               nsMouseEvent::eReal);
+        nsPoint zero(0, 0);
+        InitializeMouseEvent(exitEvent, zero, aKeyModifiers, 1);
+        lastWidget->DispatchMouseEvent(exitEvent);
+      }
+
+      if (aMessage != NS_DRAGDROP_EXIT && widgetHit) {
+        // Send an NS_DRAGDROP_ENTER event to the new widget.  This is not
+        // done when aMessage == NS_DRAGDROP_EXIT, because that indicates
+        // that the drag is leaving the window.
+
+        nsMouseEvent enterEvent(PR_TRUE, NS_DRAGDROP_EXIT, widgetHit,
+                                nsMouseEvent::eReal);
+        InitializeMouseEvent(enterEvent, widgetHitPoint, aKeyModifiers, 1);
+        widgetHit->DispatchMouseEvent(enterEvent);
+      }
+    }
+  }
+
+  // update the tracking of which widget the mouse is now over.
+  mEventDispatchHandler->SetWidgetPointed(widgetHit);
+
+  if (!widgetHit) {
+    // There is no widget to receive the event.  This happens when the drag
+    // leaves the window or when the drag moves over a part of the window
+    // not containing any widget, such as the title bar.  When appropriate,
+    // NS_DRAGDROP_EXIT was dispatched to lastWidget above, so there's nothing
+    // to do but return.
+    return PR_TRUE;
+  }
+
+  nsMouseEvent geckoEvent(PR_TRUE, aMessage, widgetHit, nsMouseEvent::eReal);
+  InitializeMouseEvent(geckoEvent, widgetHitPoint, aKeyModifiers, 1);
+  widgetHit->DispatchMouseEvent(geckoEvent);
+
+  return PR_TRUE;
+}
 
 
 #pragma mark -
@@ -1714,24 +1764,18 @@ void nsMacEventHandler::ConvertOSEventToMouseEvent(
     // in the view code about null widgets.
     if ( !widgetHit && topLevelIsAPopup && (hitPoint.h < 0 || hitPoint.v < 0) )
         widgetHit = mTopLevelWidget;
-		
+
+    InitializeMouseEvent(aMouseEvent, widgetHitPoint, aOSEvent.modifiers,
+                         sLastClickCount);
+
     // nsEvent
     aMouseEvent.message     = aMessage;
-    aMouseEvent.refPoint    = widgetHitPoint;
-    aMouseEvent.time        = PR_IntervalNow();
 
     // nsGUIEvent
     aMouseEvent.widget      = widgetHit;
     aMouseEvent.nativeMsg   = (void*)&aOSEvent;
 
-    // nsInputEvent
-    aMouseEvent.isShift     = ((aOSEvent.modifiers & shiftKey) != 0);
-    aMouseEvent.isControl   = ((aOSEvent.modifiers & controlKey) != 0);
-    aMouseEvent.isAlt       = ((aOSEvent.modifiers & optionKey) != 0);
-    aMouseEvent.isMeta      = ((aOSEvent.modifiers & cmdKey) != 0);
-
     // nsMouseEvent
-    aMouseEvent.clickCount  = sLastClickCount;
     aMouseEvent.acceptActivation = PR_TRUE;
 }
 

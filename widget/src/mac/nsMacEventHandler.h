@@ -136,13 +136,15 @@ public:
 		virtual void	HandleActivateEvent(EventRef aEvent);
 		inline nsMacEventDispatchHandler* GetEventDispatchHandler() { return mEventDispatchHandler; }
 protected:
-#if 1
-		virtual void InitializeKeyEvent(nsKeyEvent& aKeyEvent, EventRecord& aOSEvent, 
+		void InitializeMouseEvent(nsMouseEvent& aMouseEvent,
+                                          nsPoint&      aPoint,
+                                          PRInt16       aModifiers,
+                                          PRUint32      aClickCount);
+		void InitializeKeyEvent(nsKeyEvent& aKeyEvent, EventRecord& aOSEvent, 
                               nsWindow* aFocusedWidget, PRUint32 aMessage, 
                               PRBool aConvertChar=PR_TRUE);
 		virtual PRBool		IsSpecialRaptorKey(UInt32 macKeyCode);
 		virtual PRUint32	ConvertKeyEventToUnicode(EventRecord& aOSEvent);
-#endif
 		virtual PRBool	HandleMouseDownEvent(EventRecord& aOSEvent);
 		virtual PRBool	HandleMouseUpEvent(EventRecord& aOSEvent);
 		virtual PRBool	HandleMouseMoveEvent(EventRecord& aOSEvent);
