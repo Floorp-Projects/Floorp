@@ -55,8 +55,8 @@ pref("intl.charset.default",  "chrome://global-platform/locale/intl.properties")
 pref("intl.menuitems.alwaysappendaccesskeys","chrome://global/locale/intl.properties");
 pref("intl.menuitems.insertseparatorbeforeaccesskeys","chrome://global/locale/intl.properties");
 pref("xpinstall.dialog.confirm", "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul");
-pref("xpinstall.dialog.progress.chrome", "chrome://mozapps/content/extensions/extensions.xul?view=installs");
-pref("xpinstall.dialog.progress.skin", "chrome://mozapps/content/extensions/extensions.xul?view=installs");
+pref("xpinstall.dialog.progress.chrome", "chrome://mozapps/content/extensions/extensions.xul");
+pref("xpinstall.dialog.progress.skin", "chrome://mozapps/content/extensions/extensions.xul");
 pref("xpinstall.dialog.progress.type.chrome", "Extension:Manager");
 pref("xpinstall.dialog.progress.type.skin", "Extension:Manager");
 pref("xpinstall.enabled", true);
