@@ -3618,18 +3618,18 @@ nsBrowserStatusHandler.prototype =
     {
       // update the favicon in the URL bar
       PageProxySetIcon(aBrowser.mIconURL);
+    }
 
 #ifdef MOZ_PLACES
-      // Save this favicon in the favicon service
-      if (aBrowser.mIconURL) {
-        var faviconService = Components.classes["@mozilla.org/browser/favicon-service;1"].
-          getService(Components.interfaces.nsIFaviconService);
-        var uri = Components.classes["@mozilla.org/network/io-service;1"]
-            .getService(Components.interfaces.nsIIOService).newURI(aBrowser.mIconURL, null, null);
-        faviconService.setAndLoadFaviconForPage(gBrowser.currentURI, uri, false);
-      }
-#endif
+    // Save this favicon in the favicon service
+    if (aBrowser.mIconURL) {
+      var faviconService = Components.classes["@mozilla.org/browser/favicon-service;1"]
+        .getService(Components.interfaces.nsIFaviconService);
+      var uri = Components.classes["@mozilla.org/network/io-service;1"]
+        .getService(Components.interfaces.nsIIOService).newURI(aBrowser.mIconURL, null, null);
+      faviconService.setAndLoadFaviconForPage(aBrowser.currentURI, uri, false);
     }
+#endif
   },
 
   onProgressChange : function (aWebProgress, aRequest,
