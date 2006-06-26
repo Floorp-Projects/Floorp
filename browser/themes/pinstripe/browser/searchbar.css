@@ -63,3 +63,7 @@
 .searchbar-engine-menuitem[selected="true"] > .menu-iconic-text {
   font-weight: bold;
 }
+
+.search-go-button .toolbarbutton-menubutton-dropmarker {
+  list-style-image: url("chrome://browser/skin/bookmarks/folderarrow.png") !important;
+}
