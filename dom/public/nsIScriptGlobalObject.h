@@ -40,7 +40,6 @@
 #define nsIScriptGlobalObject_h__
 
 #include "nsISupports.h"
-#include "nsEvent.h"
 #include "nsIProgrammingLanguage.h"
 
 class nsIScriptContext;

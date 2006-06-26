@@ -57,11 +57,8 @@
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 
-/* XXX this stuff is used by NestEventLoop, a temporary hack to be refactored
- * later */
-#include "nsWidgetsCID.h"
+/* XXX DOM dependency */
 #include "nsIScriptContext.h"
-#include "nsIAppShell.h"
 #include "nsIJSContextStack.h"
 
 /*
