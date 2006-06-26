@@ -371,9 +371,14 @@ CreateCertRequest(TESTKeyPair *pair, long inRequestID)
     SECStatus                 rv;
     CRMFValidityCreationInfo  validity;
     unsigned char             UIDbuf[UID_BITS / BPB];
-    SECItem                   issuerUID  = { siBuffer, UIDbuf, UID_BITS };
-    SECItem                   subjectUID = { siBuffer, UIDbuf, UID_BITS };
-                                                               /* len in bits */
+    SECItem                   issuerUID  = { siBuffer, NULL, 0 };
+    SECItem                   subjectUID = { siBuffer, NULL, 0 };
+
+    /* len in bits */
+    issuerUID.data = UIDbuf;
+    issuerUID.len = UID_BITS;
+    subjectUID.data = UIDbuf;
+    subjectUID.len = UID_BITS;
 
     pair->certReq = NULL;
     certReq = CRMF_CreateCertRequest(inRequestID);
