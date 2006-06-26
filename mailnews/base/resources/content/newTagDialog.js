@@ -62,7 +62,7 @@ function onOK()
 {
   var name = dialog.nameField.value;
 
-  var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"].getService(Components.interfaces.nsIMsgTagService); 
+  var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"].getService(Components.interfaces.nsIMsgTagService);
   // do name validity check? Has to be non-empty, and not existing already
   try
   {
@@ -70,7 +70,7 @@ function onOK()
     // above will throw an error if tag doesn't exist. So if it doesn't throw an error,
     // the tag exists, so alert the user and return false.
   }
-  catch (ex) {return dialog.okCallback(name, "")}
+  catch (ex) {return dialog.okCallback(name, document.getElementById("tagColorPicker").color)}
   
   var messengerBundle = document.getElementById("bundle_messenger");
   var alertText = messengerBundle.getString("tagExists");

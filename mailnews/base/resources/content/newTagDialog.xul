@@ -49,10 +49,10 @@
   </stringbundleset>
   
   <script type="application/x-javascript" src="chrome://messenger/content/newTagDialog.js"/>
-
-    <label value="&name.label;" accesskey="&name.accesskey;" control="name"/>
+  <label value="&name.label;" accesskey="&name.accesskey;" control="name"/>
+  <hbox>
     <textbox id="name" oninput="doEnabling();"/>
-
-    <separator/>
-
+    <colorpicker class="small-margin" type="button" id="tagColorPicker" palettename="standard"/>
+  </hbox>
+  <separator/>
 </dialog>

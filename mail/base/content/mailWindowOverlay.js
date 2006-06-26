@@ -561,6 +561,7 @@ function TagCurMessage(key)
   var messages = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
   messages.AppendElement(msgHdr);
   msgHdr.folder.addKeywordToMessages(messages, key);
+  onTagsChange();
 }
 
 function UnTagCurMessage(key)
@@ -570,12 +571,12 @@ function UnTagCurMessage(key)
   var messages = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
   messages.AppendElement(msgHdr);
   msgHdr.folder.removeKeywordFromMessages(messages, key);
+  onTagsChange();
 }
-
 
 function AddTag()
 {
-    var args = {result: "", okCallback: AddTagCallback};
+  var args = {result: "", okCallback: AddTagCallback};
 	var dialog = window.openDialog(
 				"chrome://messenger/content/newTagDialog.xul",
 				"",
@@ -585,22 +586,23 @@ function AddTag()
 
 function AddTagCallback(name, color)
 {
-  var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"].getService(Components.interfaces.nsIMsgTagService); 
+  var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"].getService(Components.interfaces.nsIMsgTagService);
   tagService.addTag(name, color);
   TagCurMessage(name);
   return true;
 }
 
-function InitMessageTags(menuType)
+function InitMessageTags(menuPopup)
 {
-  var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"].getService(Components.interfaces.nsIMsgTagService); 
+  var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"].getService(Components.interfaces.nsIMsgTagService);
   var allTags = tagService.tagEnumerator;
   var allKeys = tagService.keyEnumerator;
-  // remove any existing entries...
-  var menuItemId = menuType + "-tagpopup";
-  var menupopupNode = document.getElementById(menuItemId);
-  for (var i = menupopupNode.childNodes.length - 1; i >= 0; --i)
-      menupopupNode.removeChild(menupopupNode.childNodes[i]);
+  
+  // remove existing entries up until the menuseparator which precedes the Add New Tag option
+  while (menuPopup.firstChild && menuPopup.firstChild.localName != 'menuseparator')
+    menuPopup.removeChild(menuPopup.firstChild);
+    
+  var menuSeparatorNode = menuPopup.firstChild;
 
   // now rebuild the list
   var msgHdr = gDBView.hdrForFirstSelectedMessage;
@@ -620,6 +622,8 @@ function InitMessageTags(menuType)
     newMenuItem.setAttribute('label', tag);
     newMenuItem.setAttribute('value',  key);
     newMenuItem.setAttribute('type', 'checkbox');
+    newMenuItem.style.color = tagService.getColorForKey(key);
+    
     var keySet = false;
     for ( var index = 0; index < curMsgHdrKeyArray.length; index++ )
     {
@@ -633,15 +637,8 @@ function InitMessageTags(menuType)
     var command = ((keySet) ? "Un" : "") + "TagCurMessage(" + "'" + key + "');";
     newMenuItem.setAttribute('oncommand', command);
     newMenuItem.setAttribute('checked', keySet);
-    menupopupNode.appendChild(newMenuItem);
+    menuPopup.insertBefore(newMenuItem, menuSeparatorNode);
   }
-  var menuseparator = document.createElement('menuseparator');
-  menupopupNode.appendChild(menuseparator);
-  
-  newMenuItem = document.createElement('menuitem');
-  newMenuItem.setAttribute('label', gMessengerBundle.getString("newTag"));
-  newMenuItem.setAttribute('oncommand', "AddTag()");
-  menupopupNode.appendChild(newMenuItem);
 }
 
 function InitMessageMark()

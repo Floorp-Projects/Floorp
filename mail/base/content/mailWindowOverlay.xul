@@ -229,7 +229,6 @@
   <command id="cmd_createFilterFromMenu" oncommand="goDoCommand('cmd_createFilterFromMenu')"/>
   <command id="cmd_killThread" oncommand="goDoCommand('cmd_killThread')"/>
   <command id="cmd_watchThread" oncommand="goDoCommand('cmd_watchThread')"/>
-
 </commandset>
 
 <commandset id="mailToolbarItems"
@@ -242,6 +241,7 @@
   <command id="button_forward"/>
   <command id="button_delete"/>
   <command id="button_mark"/>
+  <command id="cmd_tag"/>
   <command id="button_getNewMessages"/>
   <command id="button_print"/>
   <command id="button_next"/>
@@ -607,7 +607,10 @@
       </template>
     </menu>
     <menu id="threadPaneContext-tags" label="&tagMenu.label;" accesskey="&tagMenu.accesskey;">
-      <menupopup id="threadPaneContext-tagpopup" onpopupshowing="InitMessageTags('threadPaneContext')">
+      <menupopup id="threadPaneContext-tagpopup" onpopupshowing="InitMessageTags(this)">
+        <menuseparator/>
+        <menuitem id="addNewTag" label="&addNewTag.label;" accesskey="&addNewTag.accesskey;"
+                  oncommand="AddTag();"/>
       </menupopup>
     </menu>
     <menu id="threadPaneContext-mark" label="&markMenu.label;" accesskey="&markMenu.accesskey;">
@@ -913,7 +916,10 @@
     </menu>
     <menuseparator id="messagePaneContext-sep-tags-1"/>
     <menu id="messagePaneContext-tags" label="&tagMenu.label;" accesskey="&tagMenu.accesskey;">
-      <menupopup id="messagePaneContext-tagpopup" onpopupshowing="InitMessageTags('messagePaneContext')">
+      <menupopup id="messagePaneContext-tagpopup" onpopupshowing="InitMessageTags(this)">
+        <menuseparator/>
+        <menuitem id="addNewTag" label="&addNewTag.label;" accesskey="&addNewTag.accesskey;"
+                  oncommand="AddTag();"/>
       </menupopup>
     </menu>
     <menu id="messagePaneContext-mark" label="&markMenu.label;" accesskey="&markMenu.accesskey;">
@@ -1539,8 +1545,11 @@
               </template>
             </menu>
 
-            <menu id="tagMenu" label="&tagMenu.label;" accesskey="&tagMenu.accesskey;">
-              <menupopup id="tagMenu-tagpopup" onpopupshowing="InitMessageTags('tagMenu')">
+            <menu id="tagMenu" label="&tagMenu.label;" accesskey="&tagMenu.accesskey;" observes="cmd_tag">
+              <menupopup id="tagMenu-tagpopup" onpopupshowing="InitMessageTags(this)">
+                <menuseparator/>
+                <menuitem id="addNewTag" label="&addNewTag.label;" accesskey="&addNewTag.accesskey;"
+                          oncommand="AddTag();"/>
               </menupopup>
             </menu>
             <menu id="markMenu" label="&markMenu.label;" accesskey="&markMenu.accesskey;">
@@ -1853,6 +1862,15 @@
             </menupopup>
       </toolbarbutton>
 
+      <toolbarbutton id="button-tag" type="menu" class="toolbarbutton-1"
+                     label="&tagButton.label;" tooltiptext="&tagButton.tooltip;" observes="cmd_tag">
+        <menupopup onpopupshowing="InitMessageTags(this)">
+          <menuseparator/>
+          <menuitem id="addNewTag" label="&addNewTag.label;" accesskey="&addNewTag.accesskey;"
+                    oncommand="AddTag();"/>
+        </menupopup>
+      </toolbarbutton>
+
       <toolbarbutton id="button-address" class="toolbarbutton-1" label="&addressBookButton.label;" oncommand="toAddressBook();" tooltiptext="&addressBookButton.tooltip;"/>
 
       <toolbaritem id="throbber-box" title="&throbberItem.title;" align="center" pack="center">
@@ -1919,9 +1937,9 @@
            customizable="true"
            context="toolbar-context-menu"
 #ifdef XP_MACOSX
-           defaultset="button-getmsg,button-newmsg,button-address,spacer,button-reply,button-replyall,button-forward,spacer,button-delete,button-junk,spacer,button-print,button-stop,spring,search-container,throbber-box">
+           defaultset="button-getmsg,button-newmsg,button-address,spacer,button-reply,button-replyall,button-forward,spacer,button-tag,button-delete,button-junk,spacer,button-print,button-stop,spring,search-container,throbber-box">
 #else
-           defaultset="button-getmsg,button-newmsg,button-address,separator,button-reply,button-replyall,button-forward,separator,button-delete,button-junk,separator,button-print,button-stop,spring,search-container">
+           defaultset="button-getmsg,button-newmsg,button-address,separator,button-reply,button-replyall,button-forward,separator,button-tag,button-delete,button-junk,separator,button-print,button-stop,spring,search-container">
 #endif
   </toolbar>
   <toolbarset id="customToolbars" context="toolbar-context-menu"/>

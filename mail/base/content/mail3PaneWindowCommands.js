@@ -203,6 +203,7 @@ var DefaultController =
 			case "cmd_findPrevious":
       case "cmd_search":
       case "button_mark":
+      case "cmd_tag":
 			case "cmd_markAsRead":
 			case "cmd_markAllRead":
 			case "cmd_markThreadAsRead":
@@ -338,6 +339,7 @@ var DefaultController =
           gDBView.getCommandStatus(nsMsgViewCommandType.deleteJunk, enabled, checkStatus);
         return enabled.value;
       case "button_mark":
+      case "cmd_tag":
       case "cmd_markAsRead":
       case "cmd_markThreadAsRead":
         return GetNumSelectedMessages() > 0;

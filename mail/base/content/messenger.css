@@ -79,6 +79,10 @@ mail-urlfield {
   -moz-binding: url("chrome://messenger/content/mailWidgets.xml#mail-urlfield");
 }
 
+mail-tagfield {
+  -moz-binding: url("chrome://messenger/content/mailWidgets.xml#mail-headerfield-tags");
+}
+
 searchattribute {
   -moz-binding: url("chrome://messenger/content/mailWidgets.xml#searchattribute");
 }

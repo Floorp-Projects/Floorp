@@ -178,6 +178,11 @@ description[selectable="true"]:focus > descriptionitem[selected="true"]
   background-color: transparent;
 }
 
+.tagvalue {
+  font-weight: bold;
+  margin-left: 0px;
+}
+
 /* ::::: msg header email addresses ::::: */
 
 .emailDisplayButton {

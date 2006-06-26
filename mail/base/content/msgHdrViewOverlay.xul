@@ -148,8 +148,9 @@
 
         <mail-headerfield id="expandednewsgroupsBox"  label="&newsgroupsField.label;" collapsed="true"/>
         <mail-headerfield id="expandedfollowup-toBox" label="&followupToField.label;" collapsed="true"/>
+        <mail-tagfield    id="expandedtagsBox" label="&tagsHdr.label;" collapsed="true"/>
+        <mail-urlfield    id="expandedcontent-baseBox" label="&originalWebsite.label;" collapsed="true"/>    
         <mail-headerfield id="expandeduser-agentBox"  label="&userAgentField.label;"  collapsed="true"/>
-        <mail-urlfield    id="expandedcontent-baseBox" label="&originalWebsite.label;" collapsed="true"/>
       </vbox>
 
       <vbox id="editMessageBox" class="header-part1" originalclass="header-part1" collapsed="true">

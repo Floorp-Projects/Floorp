@@ -238,6 +238,21 @@ toolbarbutton[type="menu-button"] > toolbarbutton {
   -moz-image-region: rect(64px 448px 96px 416px) !important;
 }
 
+/* temporarily re-use the mark button for tags */
+
+#button-tag {
+  -moz-image-region: rect(0px 448px 32px 416px);
+}
+
+#button-tag:hover:active,
+#button-tag[open="true"] {
+  -moz-image-region: rect(32px 448px 64px 416px);
+}
+
+#button-tag[disabled] {
+  -moz-image-region: rect(64px 448px 96px 416px) !important;
+}
+
 /* ::::: small primary toolbar buttons ::::: */
 
 toolbar[iconsize="small"] .toolbarbutton-1 {
@@ -388,6 +403,21 @@ toolbar[iconsize="small"] #button-mark[open] {
 } 
 
 toolbar[iconsize="small"] #button-mark[disabled] {
+  -moz-image-region: rect(48px 288px 72px 264px) !important;
+} 
+
+/* temporarily re-use the mark button for tags */
+
+toolbar[iconsize="small"] #button-tag {
+  -moz-image-region: rect(0px 288px 24px 264px);
+}
+
+toolbar[iconsize="small"] #button-tag:hover:active,
+toolbar[iconsize="small"] #button-tag[open] {
+  -moz-image-region: rect(24px 288px 48px 264px);
+} 
+
+toolbar[iconsize="small"] #button-tag[disabled] {
   -moz-image-region: rect(48px 288px 72px 264px) !important;
 } 
 

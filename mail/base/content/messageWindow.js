@@ -756,6 +756,7 @@ var MessageWindowController =
       case "cmd_saveAsTemplate":
       case "cmd_viewPageSource":
       case "cmd_getMsgsForAuthAccounts":
+      case "cmd_tag":
       case "button_mark":
       case "cmd_markAsRead":
       case "cmd_markAllRead":
@@ -867,6 +868,7 @@ var MessageWindowController =
 			case "cmd_viewPageSource":
 			case "cmd_reload":
 			case "cmd_find":
+			case "cmd_tag":
       case "button_mark":
 			case "cmd_markAsRead":
 			case "cmd_markAllRead":

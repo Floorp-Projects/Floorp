@@ -128,7 +128,8 @@ var gExpandedHeaderList = [ {name:"subject"},
                             {name:"bcc", useToggle:true, outputFunction:OutputEmailAddresses},
                             {name:"newsgroups", outputFunction:OutputNewsgroups},
                             {name:"followup-to", outputFunction:OutputNewsgroups},
-                            {name:"content-base"} ];
+                            {name:"content-base"},
+                            {name:"tags"} ];
 
 // Now, for each view the message pane can generate, we need a global table of headerEntries. These
 // header entry objects are generated dynamically based on the static date in the header lists (see above)
@@ -331,16 +332,18 @@ var messageHeaderSink = {
       ClearHeaderView(gCollapsedHeaderView);
       ClearHeaderView(gExpandedHeaderView);
 
-      EnsureSubjectValue(); // make sure there is a subject even if it's empty so we'll show the subject and the twisty
+      EnsureSubjectValue(); // make sure there is a subject even if it's empty so we'll show the subject and the twisty    
       
       ShowMessageHeaderPane();
       UpdateMessageHeaders();
+  
       if (gIsEditableMsgFolder)
         ShowEditMessageButton();
       
       for (index in gMessageListeners)
         gMessageListeners[index].onEndHeaders();
     },
+    
     processHeaders: function(headerNameEnumerator, headerValueEnumerator, dontCollectAddress)
     {
       this.onStartHeaders(); 
@@ -395,6 +398,9 @@ var messageHeaderSink = {
         else
          currentHeaderData[lowerCaseHeaderName] = header;
       } // while we have more headers to parse
+      
+      // process message tags as if they were headers in the message
+      setTagHeader();      
 
       if (("from" in currentHeaderData) && ("sender" in currentHeaderData) && msgHeaderParser)
       {
@@ -408,7 +414,7 @@ var messageHeaderSink = {
 
       this.onEndHeaders();
     },
-
+    
     handleAttachment: function(contentType, url, displayName, uri, isExternalAttachment) 
     {
       // presentation level change....don't show vcards as external attachments in the UI.
@@ -510,6 +516,57 @@ var messageHeaderSink = {
     }
 };
 
+// private method which generates a space delimited list of tag names
+// for the current message. This list is then stored in
+// currentHeaderData['tags']. Each tag is encoded.
+function setTagHeader()
+{
+  // it would be nice if we passed in the msg hdr from the back end
+  var msgHdr = gDBView.hdrForFirstSelectedMessage;
+  var tagsString = "";
+  
+  // extract the tags from the msg hdr
+  var tags = msgHdr.getStringProperty('keywords');
+  
+  var label = msgHdr.label;
+  if (label > 0)
+  {
+    var labelTag = '$label' + label + '0';
+    tagsString = encodeURIComponent(gPrefBranch.getComplexValue("mailnews.labels.description." + label, 
+                 Components.interfaces.nsIPrefLocalizedString).data);
+  }
+  
+  // now convert the list of tag ids into user presentable strings, separate by commas
+  var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"]
+                   .getService(Components.interfaces.nsIMsgTagService);
+  // tokenize the keywords based on ' '
+  var tagsArray = tags.split(' ');
+  for (var index = 0; index < tagsArray.length; index++)
+  {
+    if (tagsArray[index])
+    {
+      var tagName;
+      try {
+        // if we got a bad tag name, getTagForKey will throw an exception, skip it 
+        // and go to the next one.
+        tagName = tagService.getTagForKey(tagsArray[index]);
+      } catch (ex) { continue; }
+      
+      if (tagName)
+      {          
+        if (tagsString)
+          tagsString += " ";
+        tagsString += encodeURIComponent(tagName);
+      }
+    }
+  }
+  
+  if (tagsString)
+    currentHeaderData['tags'] = { headerName: 'tags', headerValue: tagsString};
+  else if (currentHeaderData['tags']) // no more tags, so clear out the header field
+    currentHeaderData['tags'] = null;
+}
+
 function EnsureSubjectValue()
 {
   if (!('subject' in currentHeaderData))
@@ -527,6 +584,33 @@ function CheckNotify()
     NotifyClearAddresses();
 }
 
+// Public method called by the tag front end code when the tags for the selected
+// message has changed. 
+function onTagsChange()
+{
+  // rebuild the tag headers
+  setTagHeader();
+  
+  // now update the expanded header view to rebuild the tags,
+  // and then show or hide the tag header box.  
+  if (gBuiltExpandedView)
+  {
+    headerEntry = gExpandedHeaderView['tags'];
+    if (headerEntry)
+    {
+      if (currentHeaderData['tags'])
+      {
+        headerEntry.outputFunction(headerEntry, currentHeaderData['tags'].headerValue);
+        headerEntry.valid = true;
+      }
+      
+      // if we are showing the expanded header view then we may need to collapse or
+      // show the tag header box...
+      if (!gCollapsedHeaderViewMode)
+        headerEntry.enclosingBox.collapsed = !currentHeaderData['tags'];
+    }
+  }
+}
 
 // flush out any local state being held by a header entry for a given
 // table
@@ -728,10 +812,10 @@ function UpdateMessageHeaders()
     } // if we are in expanded view....
 
     if (headerEntry)
-      {
-        headerEntry.outputFunction(headerEntry, headerField.headerValue);
-        headerEntry.valid = true;
-      }
+    {
+      headerEntry.outputFunction(headerEntry, headerField.headerValue);
+      headerEntry.valid = true;
+    }
   }
 
   if (gCollapsedHeaderViewMode)

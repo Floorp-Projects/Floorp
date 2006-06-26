@@ -443,6 +443,7 @@
 <!ENTITY addressBookButton.label "Address Book">
 <!ENTITY searchItem.title "Quick Search">
 <!ENTITY mailViewsToolbarItem.title "Mail Views">
+<!ENTITY tagButton.label "Tag">
 
 <!-- Mail Toolbar Tooltips-->
 <!ENTITY advancedButton.tooltip "Advanced message search">
@@ -463,6 +464,11 @@
 <!ENTITY junkButton.tooltip "Mark the selected messages as junk">
 <!ENTITY notJunkButton.tooltip "Mark the selected messages as not junk">
 <!ENTITY addressBookButton.tooltip "Go to the address book">
+<!ENTITY tagButton.tooltip "Tag messages">
+
+<!-- Tags Menu Popup -->
+<!ENTITY addNewTag.label "New Tag...">
+<!ENTITY addNewTag.accesskey "N">
 
 <!-- Folder Pane -->
 <!ENTITY folderColumn.label "Name">

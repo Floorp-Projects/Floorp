@@ -608,7 +608,7 @@
     </content>
 
     <implementation>      
-      <property name="headerValue" onset="return document.getAnonymousElementByAttribute(this, 'anonid', 'headerValue').value = val;"/>  
+      <property name="headerValue" onset="return document.getAnonymousElementByAttribute(this, 'anonid', 'headerValue').value = val;"/>
     </implementation>
   </binding>
 
@@ -953,6 +953,55 @@
         <body><![CDATA[
           return this.getPart("emailImage");
         ]]></body>
+      </method>
+    </implementation>
+  </binding>
+
+  <!-- Header field for showing the tags associated with a message -->
+  <binding id="mail-headerfield-tags">
+    <content>
+      <xul:hbox class="headerNameBox" align="start">
+        <xul:label class="headerName" xbl:inherits="value=label" flex="1"/>
+      </xul:hbox>
+      <xul:label class="headerValue plain" anonid="headerValue" flex="1"/>
+    </content>
+
+    <implementation>
+      <property name="headerValue" onset="return this.buildTags(val);"/>
+      <method name="buildTags">
+        <parameter name="aTags"/>
+        <body>
+          <![CDATA[
+            // aTags contains a list of actual tag names (not the keys), delimited by spaces
+            // each tag name is encoded.
+            
+            // remove any existing tag items we've appended to the list
+            var headerValueNode = document.getAnonymousElementByAttribute(this, 'anonid', 'headerValue');
+            for (var i = headerValueNode.childNodes.length - 1; i >= 0; --i)
+              headerValueNode.removeChild(headerValueNode.childNodes[i]);
+              
+            var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"]
+                             .getService(Components.interfaces.nsIMsgTagService);
+            // tokenize the keywords based on ' '
+            var tagsArray = aTags.split(' ');
+            var decodedTagName;
+            for (var index = 0; index < tagsArray.length; index++)
+            {
+              // for each tag, create a label, give it the font color that corresponds to the
+              // color of the tag and append it.
+              decodedTagName = decodeURIComponent(tagsArray[index]);
+              var tagKey = tagService.getKeyForTag(decodedTagName);
+              var color = tagService.getColorForKey(tagKey);              
+              
+              // now create a label for the tag name, and set the color
+              var label = document.createElement("label");              
+              label.setAttribute('value', decodedTagName);
+              label.style.color = color;
+              label.className = "tagvalue";
+              headerValueNode.appendChild(label);
+            }
+        ]]>
+        </body>
       </method>
     </implementation>
   </binding>

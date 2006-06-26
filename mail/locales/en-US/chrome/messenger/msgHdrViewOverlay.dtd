@@ -47,7 +47,7 @@
 <!ENTITY bccField.label "Bcc: ">
 <!ENTITY newsgroupsField.label "Newsgroups: ">
 <!ENTITY followupToField.label "Followup-To: ">
-
+<!ENTITY tagsHdr.label "Tags: ">
 <!ENTITY dateField.label "Date: ">
 <!ENTITY userAgentField.label "User-Agent: ">
 <!ENTITY originalWebsite.label "Website: ">
