@@ -1256,6 +1256,8 @@ BookmarkParser::ParseBookmarkInfo(BookmarkField *fields, PRBool isBookmarkFlag,
 
                     if (!data.IsEmpty())
                     {
+                        Unescape(data);
+
                         // XXX Bug 58421 We should not ever hit this assertion
                         NS_ASSERTION(!field->mValue, "Field already has a value");
                         // but prevent a leak if we do hit it
@@ -5090,10 +5092,15 @@ nsBookmarksService::WriteBookmarkIdAndName(nsIRDFDataSource *aDs,
     rv = aChild->GetValueConst(&id);
     if (NS_SUCCEEDED(rv) && (id))
     {
-        rv  = aStrm->Write(kSpaceStr, sizeof(kSpaceStr)-1, &dummy);
-        rv |= aStrm->Write(kIDEquals, sizeof(kIDEquals)-1, &dummy);
-        rv |= aStrm->Write(id, strlen(id), &dummy);
-        rv |= aStrm->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
+        char *escapedID = nsEscapeHTML(id);
+        if (escapedID)
+        {
+            rv |= aStrm->Write(kSpaceStr, sizeof(kSpaceStr)-1, &dummy);
+            rv |= aStrm->Write(kIDEquals, sizeof(kIDEquals)-1, &dummy);
+            rv |= aStrm->Write(escapedID, strlen(escapedID), &dummy);
+            rv |= aStrm->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
+            nsCRT::free(escapedID);
+        }
     }
 
     // <A ... ID="rdf:#$Rd48+1">Name</A>
@@ -5161,27 +5168,24 @@ nsBookmarksService::WriteBookmarkProperties(nsIRDFDataSource *aDs,
                     rv |= aStrm->Write(kSpaceStr, sizeof(kSpaceStr)-1, &dummy);
                 }
 
-                if (aProperty == kNC_Description)
+                if (!literalString.IsEmpty())
                 {
-                    if (!literalString.IsEmpty())
+                    char *escapedAttrib = nsEscapeHTML(attribute);
+                    if (escapedAttrib)
                     {
-                        char *escapedAttrib = nsEscapeHTML(attribute);
-                        if (escapedAttrib)
+                        rv |= aStrm->Write(aHtmlAttrib, strlen(aHtmlAttrib), &dummy);
+                        rv |= aStrm->Write(escapedAttrib, strlen(escapedAttrib), &dummy);
+                        if (aProperty == kNC_Description)
                         {
-                            rv |= aStrm->Write(aHtmlAttrib, strlen(aHtmlAttrib), &dummy);
-                            rv |= aStrm->Write(escapedAttrib, strlen(escapedAttrib), &dummy);
                             rv |= aStrm->Write(kNL, sizeof(kNL)-1, &dummy);
-
-                            nsCRT::free(escapedAttrib);
-                            escapedAttrib = nsnull;
                         }
+                        else
+                        {
+                            rv |= aStrm->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
+                        }
+                        nsCRT::free(escapedAttrib);
+                        escapedAttrib = nsnull;
                     }
-                }
-                else
-                {
-                    rv |= aStrm->Write(aHtmlAttrib, strlen(aHtmlAttrib), &dummy);
-                    rv |= aStrm->Write(attribute, strlen(attribute), &dummy);
-                    rv |= aStrm->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
                 }
                 nsCRT::free(attribute);
                 attribute = nsnull;
