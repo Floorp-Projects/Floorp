@@ -408,7 +408,7 @@ nsHttpNegotiateAuth::MatchesBaseURI(const nsCSubstring &matchScheme,
 
     // XXX this does not work for IPv6-literals
     const char *hostEnd = strchr(hostStart, ':');
-    if (hostEnd && hostEnd <= baseEnd) {
+    if (hostEnd && hostEnd < baseEnd) {
         // the given port must match the parsed port exactly
         int port = atoi(hostEnd + 1);
         if (matchPort != (PRInt32) port)
