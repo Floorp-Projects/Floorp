@@ -197,7 +197,7 @@
           </treecols>
           <treechildren flex="1"/>
         </tree>
-        <splitter orient="vertical" collapse="after"/>
+        <splitter orient="vertical"/>
         <vbox flex="1">
           <textbox readonly="true" class="header" id="formname"/>
           <grid>
@@ -280,7 +280,7 @@
           </treecols>
           <treechildren flex="1"/>
         </tree>
-        <splitter collapse="after" orient="vertical"/>
+        <splitter orient="vertical"/>
         <vbox flex="1">
           <grid>
             <columns>
