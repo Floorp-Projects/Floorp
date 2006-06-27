@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=4 sw=4 sts=4 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,7 +13,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Feed Subscribe Handler.
+ * The Original Code is The about:feeds Page.
  *
  * The Initial Developer of the Original Code is Google Inc.
  * Portions created by the Initial Developer are Copyright (C) 2006
@@ -35,27 +36,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var SubscribeHandler = {
-  /**
-   * The nsIFeedWriter object that produces the UI
-   */
-  _feedWriter: null,
+
+#ifndef nsAboutFeeds_h__
+#define nsAboutFeeds_h__
+
+#include "nsIAboutModule.h"
+
+class nsAboutFeeds : public nsIAboutModule
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  NS_DECL_NSIABOUTMODULE
+
+  nsAboutFeeds() { }
+  virtual ~nsAboutFeeds() { }
   
-  init: function SH_init() {
-    this._feedWriter = new BrowserFeedWriter();
-    this._feedWriter.write(window);
-  },
-  
-  uninit: function SH_uninit() {
-    this._feedWriter.close();
-  },
-  
-  changeOptions: function SH_changeOptions() {
-    this._feedWriter.changeOptions();
-  },
-  
-  subscribe: function FH_subscribe() {
-    this._feedWriter.subscribe();
-  },
+  static NS_METHOD
+    Create(nsISupports* outer, REFNSIID iid, void** result);
+protected:
 };
 
+#endif // nsAboutFeeds_h__

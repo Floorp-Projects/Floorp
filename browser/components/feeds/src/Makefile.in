@@ -46,12 +46,13 @@ LIBRARY_NAME = browser_feeds_s
 
 EXTRA_PP_COMPONENTS = \
 	FeedConverter.js \
+	FeedWriter.js \
 	WebContentConverter.js \
 	$(NULL)
 
-REQUIRES = xpcom string necko
+REQUIRES = xpcom string necko caps js xpconnect
 
-CPPSRCS = nsFeedSniffer.cpp
+CPPSRCS = nsFeedSniffer.cpp nsAboutFeeds.cpp
 
 LOCAL_INCLUDES = -I$(srcdir)/../../build
 
