@@ -53,6 +53,7 @@ class nsIPresShell;
 [ptr] native nsIPresShell(nsIPresShell);
 
 interface nsIURI;
+interface nsIChannel;
 interface nsIContentViewer;
 interface nsIURIContentListener;
 interface nsIChromeEventHandler;
@@ -67,7 +68,7 @@ interface nsILayoutHistoryState;
 interface nsISecureBrowserUI;
 interface nsIDOMStorage;
 
-[scriptable, uuid(616b8670-d170-11da-a94d-0800200c9a66)]
+[scriptable, uuid(51241d7c-73c9-4b85-970c-bd4f91acfbcc)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -421,5 +422,12 @@ interface nsIDocShell : nsISupports
    * @param storage the storage object to add
    */
   void addSessionStorage(in ACString aDomain, in nsIDOMStorage storage);
+
+  /**
+   * Gets the channel for the currently loaded document, if any. 
+   * For a new document load, this will be the channel of the previous document
+   * until after OnLocationChange fires.
+   */
+  readonly attribute nsIChannel currentDocumentChannel;
 };
 
