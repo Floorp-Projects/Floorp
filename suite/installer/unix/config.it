@@ -1,5 +1,5 @@
-; XXXThis is the Configuration file for Suite builds with MOZ_XUL_APP=0
-; set. For MOZ_XUL_APP=1 see suite/installer/unix/config.it
+; XXX This is the Configuration file for Suite builds with MOZ_XUL_APP=1
+; set. For MOZ_XUL_APP=0 see xpinstall/packager/unix/config.it
 ; Changes should be reflected in both files.
 
 ;-------------------------------------------------------------------------
@@ -247,16 +247,8 @@ XPInstall Engine=xpcom.xpi
 ;-------------------------------------------------------------------------
 [PostInstallRun0]
 ;-------------------------------------------------------------------------
-Target=run-mozilla.sh
-Arguments=regxpcom
-
-
-;-------------------------------------------------------------------------
-[PostInstallRun1]
-;-------------------------------------------------------------------------
-Target=run-mozilla.sh
-Arguments=regchrome
-
+Target=seamonkey
+Arguments=-register
 
 ;-------------------------------------------------------------------------
 [LegacyCheck0]

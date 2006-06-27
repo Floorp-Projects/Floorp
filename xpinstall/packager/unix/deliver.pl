@@ -102,10 +102,12 @@ $aBlobName = "mozilla-installer";
 $aBuildWizard = "NO";
 $aMozAppName = "mozilla";
 $aMozAppDisplayName = "Mozilla";
+$aConfigItLocation = ".";
 
 #// parse args
 # all optional args: version, URLPath, stubName, blobName, MozAppName,
 # MozDisplayName
+if ($#ARGV >= 7) { $aConfigItLocation  = $ARGV[7]; }
 if ($#ARGV >= 6) { $aMozAppDisplayName = $ARGV[6]; }
 if ($#ARGV >= 5) { $aMozAppName        = $ARGV[5]; }
 if ($#ARGV >= 4) { $aBuildWizard       = $ARGV[4]; }
@@ -204,8 +206,8 @@ spew("Completed signing NSS libraries");
 
 #// call makeall.pl tunneling args (delivers .xpis to $topobjdir/installer/stage)
 chdir("$topsrcdir/xpinstall/packager/unix");
-system("perl makeall.pl $aVersion $aURLPath $STAGE $XPI $aMozAppName $aMozAppDisplayName");
-system("mv $topsrcdir/xpinstall/packager/unix/config.ini $RAW");
+system("perl makeall.pl $aVersion $aURLPath $STAGE $XPI $aMozAppName $aMozAppDisplayName $aConfigItLocation");
+system("mv $aConfigItLocation/config.ini $RAW");
 spew("Completed making .xpis");
 
 #-------------------------------------------------------------------------
