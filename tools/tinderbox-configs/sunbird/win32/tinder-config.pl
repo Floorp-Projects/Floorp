@@ -202,7 +202,7 @@ $url_path      = "http://ftp.mozilla.org/pub/mozilla.org/calendar/sunbird/nightl
 $milestone     = "trunk";
 $notify_list   = "build-announce\@mozilla.org";
 $stub_installer = 0;
-$sea_installer = 0;
+$sea_installer = 1;
 $archive       = 1;
 $push_raw_xpis = 0;
 
