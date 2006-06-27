@@ -500,6 +500,14 @@ class nsTArray : public nsTArray_base {
       return RemoveElement(item, nsDefaultComparator<elem_type, Item>());
     }
 
+    // This method causes the elements contained in this array and the given
+    // array to be swapped.
+    void SwapElements(self_type& other) {
+      Header *h = other.mHdr;
+      other.mHdr = mHdr;
+      mHdr = h;
+    }
+
     //
     // Allocation
     //

@@ -99,7 +99,7 @@ private:
     nsresult    Flush();
 
 
-    nsDiskCacheBinding *        mBinding;
+    nsDiskCacheBinding *        mBinding;       // not an owning reference
     nsDiskCacheDevice *         mDevice;
     nsDiskCacheOutputStream *   mOutStream;     // not an owning reference
     PRInt32                     mInStreamCount;
