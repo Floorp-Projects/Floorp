@@ -308,8 +308,11 @@ nsHttpResponseHead::ComputeFreshnessLifetime(PRUint32 *result)
     if (NS_SUCCEEDED(GetLastModifiedValue(&date2))) {
         LOG(("using last-modified to determine freshness-lifetime\n"));
         LOG(("last-modified = %u, date = %u\n", date2, date));
-        *result = (date - date2) / 10;
-        return NS_OK;
+        if (date2 <= date) {
+            // this only makes sense if last-modified is actually in the past
+            *result = (date - date2) / 10;
+            return NS_OK;
+        }
     }
 
     // These responses can be cached indefinitely.
@@ -446,7 +449,6 @@ nsHttpResponseHead::UpdateHeaders(nsHttpHeaderArray &headers)
             header == nsHttp::Content_Location    ||
             header == nsHttp::Content_MD5         ||
             header == nsHttp::ETag                ||
-            header == nsHttp::Last_Modified       ||
         // Assume Cache-Control: "no-transform"
             header == nsHttp::Content_Encoding    ||
             header == nsHttp::Content_Range       ||
