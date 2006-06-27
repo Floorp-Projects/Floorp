@@ -21,6 +21,7 @@
  * Contributor(s):
  *  Ben Goodger <ben@mozilla.org> (Original Author)
  *  Asaf Romano <mozilla.mano@sent.com>
+ *  Jeff Walden <jwalden+code@mit.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1367,6 +1368,43 @@ var gErrorsPage = {
     gUpdates.wiz.getButton("back").disabled = true;
     gUpdates.wiz.getButton("cancel").disabled = true;
     gUpdates.wiz.getButton("next").focus();
+  },
+
+  /**
+   * Finish button clicked.
+   */
+  onWizardFinish: function() {
+    // XXXjwalden COMPLETE AND TOTAL HACK!!!
+    //
+    // The problem the following code is working around is this: the update
+    // service's API for responding to updates is poor.  Essentially, all
+    // the information we can get is that we've started to request a download or
+    // that the download we've started has finished, with minimal details about
+    // how it finished which aren't described in the API (and which internally
+    // are not entirely useful, either -- mostly unuseful nsresults).  How
+    // do you signal the difference between "this download failed" and "all
+    // downloads failed", particularly if you aim for API compatibility?  The
+    // code in nsApplicationUpdateService only determines the difference *after*
+    // the current request is stopped, and since the subsequent second call to
+    // downloadUpdate doesn't start/stop a request, the download listener is
+    // never notified and whatever code was relying on it just fails without
+    // notification.  The consequence of this is that it's impossible to
+    // properly remove the download listener.
+    //
+    // The code before this patch tried to do the exit after all downloads
+    // failed but was missing a QueryInterface to work; with it, making sure
+    // that the download listener is removed in all cases, including in the case
+    // where the last onStopRequest corresponds to *a* failed download instead
+    // of to *all* failed downloads, simply means that we have to try to remove
+    // that listener in the error page spawned by the update service.  If there
+    // were time and API compat weren't a problem, we'd add an onFinish handler
+    // or something which could signal exactly what happened and not overload
+    // onStopRequest, but there isn't, so we can't.
+    //
+    var updates =
+        Components.classes["@mozilla.org/updates/update-service;1"].
+        getService(Components.interfaces.nsIApplicationUpdateService);
+    updates.removeDownloadListener(gDownloadingPage);
   }
 };
 
