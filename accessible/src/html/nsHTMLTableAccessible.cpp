@@ -74,7 +74,7 @@ NS_IMETHODIMP nsHTMLTableCellAccessible::GetState(PRUint32 *aResult)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLTableAccessible, nsAccessibleWrap)
+NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLTableAccessible, nsAccessible)
 
 nsHTMLTableAccessible::nsHTMLTableAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
 nsAccessibleWrap(aDomNode, aShell)
