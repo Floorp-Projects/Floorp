@@ -178,7 +178,7 @@ nsSVGTextPathFrame::GetFlattenedPath() {
 
   nsSVGUtils::GetReferencedFrame(&path, targetURI, mContent,
                                  GetPresContext()->PresShell());
-  if (!path || (path->GetType() != nsGkAtoms::svgPathFrame))
+  if (!path || (path->GetType() != nsGkAtoms::svgPathGeometryFrame))
     return nsnull;
 
   if (!mSegments) {
@@ -190,10 +190,10 @@ nsSVGTextPathFrame::GetFlattenedPath() {
     }
   }
 
-  nsSVGPathElement *pathElement = NS_STATIC_CAST(nsSVGPathElement*,
-                                                 path->GetContent());
+  nsSVGPathGeometryElement *element = NS_STATIC_CAST(nsSVGPathGeometryElement*,
+                                                     path->GetContent());
 
-  return pathElement->GetFlattenedPath();
+  return element->GetFlattenedPath();
 }
 
 //----------------------------------------------------------------------
