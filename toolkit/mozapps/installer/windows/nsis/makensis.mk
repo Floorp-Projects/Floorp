@@ -40,9 +40,10 @@
 ifndef CONFIG_DIR
 $(error CONFIG_DIR must be set before including makensis.mk)
 endif
-ifndef SFX_MODULE
-$(error SFX_MODULE must be set before including makensis.mk)
-endif
+
+ABS_CONFIG_DIR := $(shell cd $(CONFIG_DIR) && pwd)
+
+SFX_MODULE ?= $(error SFX_MODULE is not defined)
 
 TOOLKIT_NSIS_FILES = \
 	common.nsh \
@@ -51,13 +52,18 @@ TOOLKIT_NSIS_FILES = \
 	version.nsh \
 	$(NULL)
 
-installer::
+$(CONFIG_DIR)/setup.exe::
 	$(INSTALL) $(addprefix $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/,$(TOOLKIT_NSIS_FILES)) $(CONFIG_DIR)
 	$(INSTALL) $(topsrcdir)/toolkit/mozapps/installer/windows/wizard/setuprsc/setup.ico $(CONFIG_DIR)
 	cd $(CONFIG_DIR) && makensis.exe installer.nsi
-	$(INSTALL) $(CONFIG_DIR)/removed-files.log $(CONFIG_DIR)/setup.exe $(DEPTH)/installer-stage
-	cd $(DEPTH)/installer-stage && $(CYGWIN_WRAPPER) 7z a -r -t7z $(CONFIG_DIR)/app.7z -mx -m0=BCJ2 -m1=LZMA:d24 -m2=LZMA:d19 -m3=LZMA:d19  -mb0:1 -mb0s1:2 -mb0s2:3
+
+$(CONFIG_DIR)/7zSD.sfx:
 	$(CYGWIN_WRAPPER) upx --best -o $(CONFIG_DIR)/7zSD.sfx $(SFX_MODULE)
+
+installer::
+	$(INSTALL) $(CONFIG_DIR)/removed-files.log $(CONFIG_DIR)/setup.exe $(DEPTH)/installer-stage
+	cd $(DEPTH)/installer-stage && $(CYGWIN_WRAPPER) 7z a -r -t7z $(ABS_CONFIG_DIR)/app.7z -mx -m0=BCJ2 -m1=LZMA:d24 -m2=LZMA:d19 -m3=LZMA:d19  -mb0:1 -mb0s1:2 -mb0s2:3
+	$(MAKE) $(CONFIG_DIR)/7zSD.sfx
 	$(NSINSTALL) -D $(DIST)/install/sea
 	cat $(CONFIG_DIR)/7zSD.sfx $(CONFIG_DIR)/app.tag $(CONFIG_DIR)/app.7z > $(DIST)/install/sea/$(PKG_BASENAME).installer.exe
 	chmod 0755 $(DIST)/install/sea/$(PKG_BASENAME).installer.exe
