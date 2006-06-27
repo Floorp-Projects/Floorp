@@ -81,6 +81,9 @@ interface nsILoadGroup : nsIRequest
     /**
      * Removes a request from the group.  If this is a foreground request
      * then the groupObserver's onStopRequest will be called.
+     *
+     * By the time this call ends, aRequest will have been removed from the
+     * loadgroup, even if this function throws an exception.
      */
     void removeRequest(in nsIRequest aRequest, 
                        in nsISupports aContext,
