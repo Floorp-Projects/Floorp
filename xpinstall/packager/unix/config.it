@@ -1,3 +1,7 @@
+; XXXThis is the Configuration file for Suite builds with MOZ_XUL_APP=0
+; set. For MOZ_XUL_APP=1 see suite/installer/unix/config.it
+; Changes should be reflected in both files.
+
 ;-------------------------------------------------------------------------
 [General]
 ;-------------------------------------------------------------------------
