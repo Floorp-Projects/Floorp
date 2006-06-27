@@ -205,19 +205,6 @@
     {0xb1, 0xd6, 0x53, 0x88, 0xe0, 0x41, 0xfb, 0x67} \
 }
 
-// DEPRECATED component implementing nsIAsyncStreamListener.
-#define NS_ASYNCSTREAMLISTENER_CLASSNAME \
-    "nsAsyncStreamListener"
-#define NS_ASYNCSTREAMLISTENER_CONTRACTID \
-    "@mozilla.org/network/async-stream-listener;1"
-#define NS_ASYNCSTREAMLISTENER_CID                   \
-{ /* 60047bb2-91c0-11d3-8cd9-0060b0fc14a3 */         \
-    0x60047bb2,                                      \
-    0x91c0,                                          \
-    0x11d3,                                          \
-    {0x8c, 0xd9, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
-}
-
 // component implementing nsIStreamListenerTee.
 #define NS_STREAMLISTENERTEE_CLASSNAME \
     "nsStreamListenerTee"
