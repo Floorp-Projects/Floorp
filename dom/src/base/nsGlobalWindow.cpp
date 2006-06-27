@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set sw=2 ts=2 et tw=80: */
+/* vim: set sw=2 ts=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -49,6 +49,7 @@
 #include "nsHistory.h"
 #include "nsBarProps.h"
 #include "nsDOMStorage.h"
+#include "nsDOMError.h"
 
 // Helper Classes
 #include "nsXPIDLString.h"
@@ -6311,7 +6312,7 @@ nsGlobalWindow::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
                                           &interval,
                                           getter_AddRefs(handler));
   if (NS_FAILED(rv))
-    return rv;
+    return (rv == NS_ERROR_DOM_TYPE_ERR) ? NS_OK : rv;
 
   return SetTimeoutOrInterval(handler, interval, aIsInterval, aReturn);
 }

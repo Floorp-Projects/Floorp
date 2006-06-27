@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=2 sw=2 et tw=80: */
+/* vim: set ts=2 sw=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -48,6 +48,7 @@
 #include "nsContentUtils.h"
 #include "nsJSEnvironment.h"
 #include "nsServiceManagerUtils.h"
+#include "nsDOMError.h"
 
 static const char kSetIntervalStr[] = "setInterval";
 static const char kSetTimeoutStr[] = "setTimeout";
@@ -242,7 +243,9 @@ nsJSScriptTimeoutHandler::Init(nsIScriptContext *aContext, PRBool aIsInterval,
     ::JS_ReportError(cx, "useless %s call (missing quotes around argument?)",
                      aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
 
-    return ncc->SetExceptionWasThrown(PR_TRUE);
+    // Return an error that nsGlobalWindow can recognize and turn into NS_OK.
+    ncc->SetExceptionWasThrown(PR_TRUE);
+    return NS_ERROR_DOM_TYPE_ERR;
   }
 
   if (expr) {
