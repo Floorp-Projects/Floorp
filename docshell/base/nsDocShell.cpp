@@ -1739,6 +1739,27 @@ nsDocShell::AddSessionStorage(const nsACString& aDomain,
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDocShell::GetCurrentDocumentChannel(nsIChannel** aResult)
+{
+    *aResult = nsnull;
+    if (!mContentViewer)
+        return NS_OK;
+
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    nsresult rv = mContentViewer->GetDOMDocument(getter_AddRefs(domDoc));
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+    if (doc) {
+      *aResult = doc->GetChannel();
+      NS_IF_ADDREF(*aResult);
+    }
+  
+    return NS_OK;
+}
+
 //*****************************************************************************
 // nsDocShell::nsIDocShellTreeItem
 //*****************************************************************************   
