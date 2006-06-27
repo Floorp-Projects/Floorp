@@ -1,4 +1,4 @@
-#
+# -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -12,14 +12,14 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is the Generic Component Factory.
 #
-# The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2001
+# The Initial Developer of the Original Code is Google Inc.
+# Portions created by the Initial Developer are Copyright (C) 2006
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Ben Goodger <beng@google.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -33,18 +33,31 @@
 # the provisions above, a recipient may use your version of this file under
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
-# ***** END LICENSE BLOCK *****
+# ***** END LICENSE BLOCK ***** */
 
-DEPTH   = ../../../..
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH   = @srcdir@
+/**
+ * An object implementing nsIFactory that can construct other objects upon
+ * createInstance, passing a set of parameters to that object's constructor.
+ */
+function GenericComponentFactory(ctor, params) {
+  this._ctor = ctor;
+  this._params = params;
+}
+GenericComponentFactory.prototype = {
+  _ctor: null,
+  _params: null,
+  
+  createInstance: function GCF_createInstance(outer, iid) {
+    if (outer != null)
+      throw Cr.NS_ERROR_NO_AGGREGATION;
+    return (new this._ctor(this._params)).QueryInterface(iid);
+  },
+  
+  QueryInterface: function GCF_QueryInterface(iid) {
+    if (iid.equals(Ci.nsIFactory) ||
+        iid.equals(Ci.nsISupports)) 
+      return this;
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  }
+};
 
-include $(DEPTH)/config/autoconf.mk
-
-MODULE = browser-feeds
-XPIDL_MODULE  = browser-feeds
-
-XPIDLSRCS = nsIFeedResultService.idl nsIWebContentConverterRegistrar.idl nsIFeedWriter.idl
-
-include $(topsrcdir)/config/rules.mk

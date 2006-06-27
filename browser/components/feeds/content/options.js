@@ -79,6 +79,7 @@ var SubscriptionOptions = {
     reader.value = handler != "bookmarks" ? "reader" : "bookmarks";
     
     var readers = document.getElementById("readers");
+    readers.selectedIndex = 0;
     if (handler == "web") {
       try {
         readers.value = prefs.getCharPref(PREF_SELECTED_WEB);
@@ -87,8 +88,6 @@ var SubscriptionOptions = {
         readers.selectedIndex = 1;
       }
     }
-    else if (handler == "client")
-      readers.selectedIndex = 0;
 
     if ("arguments" in window && window.arguments[0] == "subscribe") {
       var strings = document.getElementById("bundle");
@@ -240,7 +239,7 @@ var SubscriptionOptions = {
           getService(Ci.nsIWebContentConverterService);
       if (autoHandle.checked) {
         var handler = 
-            wccr.getWebContentHandlerByURI(TYPE_MAYBE_FEED, webService.value);
+            wccr.getWebContentHandlerByURI(TYPE_MAYBE_FEED, readers.selectedItem.value);
         if (handler)
           wccr.setAutoHandler(TYPE_MAYBE_FEED, handler);
       }
