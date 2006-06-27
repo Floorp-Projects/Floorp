@@ -412,51 +412,71 @@ nsUnknownContentTypeDialog.prototype = {
       var iconString = "moz-icon://" + fname + "?size=16&contentType=" + this.mLauncher.MIMEInfo.MIMEType;
       this.dialogElement("contentTypeImage").setAttribute("src", iconString);
 
-      this.initAppAndSaveToDiskValues();
-
-      // Initialize "always ask me" box. This should always be disabled
-      // and set to true for the ambiguous type application/octet-stream.
-      // We don't also check for application/x-msdownload here since we
-      // want users to be able to autodownload .exe files. 
-      var rememberChoice = this.dialogElement("rememberChoice");
-
-#if 0
-      // Just because we have a content-type of application/octet-stream 
-      // here doesn't actually mean that the content is of that type. Many 
-      // servers default to sending text/plain for file types they don't know
-      // about. To account for this, the uriloader does some checking to see 
-      // if a file sent as text/plain contains binary characters, and if so (*)
-      // it morphs the content-type into application/octet-stream so that
-      // the file can be properly handled. Since this is not generic binary
-      // data, rather, a data format that the system probably knows about, 
-      // we don't want to use the content-type provided by this dialog's 
-      // opener, as that's the generic application/octet-stream that the 
-      // uriloader has passed, rather we want to ask the External Helper App
-      // Service, which will ask the host OS. This is so we don't needlessly
-      // disable the "autohandle" checkbox. 
-      var mimeService = Components.classes["@mozilla.org/uriloader/external-helper-app-service;1"].getService(Components.interfaces.nsIMIMEService);
-      var type = mimeService.getTypeFromURI(this.mLauncher.source);
-      this.realMIMEInfo = mimeService.getFromTypeAndExtension(type, "");
-
-      if (type == "application/octet-stream") {
-#endif
+      // if always-save and is-executable and no-handler
+      // then set up simple ui
+      var defaultApp = this.mLauncher.MIMEInfo.preferredApplicationHandler;
+      var noDefaultApp = (!defaultApp || !defaultApp.path);
       var mimeType = this.mLauncher.MIMEInfo.MIMEType;
-      if (mimeType == "application/octet-stream" || 
-          mimeType == "application/x-msdownload" ||
-          this.mLauncher.targetFile.isExecutable()) {
-        rememberChoice.checked = false;
-        rememberChoice.disabled = true;
+      var shouldntRememberChoice = (mimeType == "application/octet-stream" || 
+                                    mimeType == "application/x-msdownload" ||
+                                    this.mLauncher.targetFile.isExecutable());
+      if (shouldntRememberChoice && noDefaultApp) {
+        // hide featured choice 
+        this.mDialog.document.getElementById("normalBox").collapsed = "true";
+        // show basic choice 
+        this.mDialog.document.getElementById("basicBox").collapsed = "false";
+        // change button labels
+        this.mDialog.document.documentElement.getButton("accept").label = this.dialogElement("strings").getString("unknownAccept.label");
+        this.mDialog.document.documentElement.getButton("cancel").label = this.dialogElement("strings").getString("unknownCancel.label");
+        // hide other handler
+        this.mDialog.document.getElementById("openHandler").collapsed = "true";
+        // set save as the selected option
+        this.dialogElement("mode").selectedItem = this.dialogElement("save");
       }
       else {
-        rememberChoice.checked = !this.mLauncher.MIMEInfo.alwaysAskBeforeHandling;
-      }
-      this.toggleRememberChoice(rememberChoice);
+        this.initAppAndSaveToDiskValues();
 
-      // XXXben - menulist won't init properly, hack. 
-      var openHandler = this.dialogElement("openHandler");
-      openHandler.parentNode.removeChild(openHandler);
-      var openHandlerBox = this.dialogElement("openHandlerBox");
-      openHandlerBox.appendChild(openHandler);
+        // Initialize "always ask me" box. This should always be disabled
+        // and set to true for the ambiguous type application/octet-stream.
+        // We don't also check for application/x-msdownload here since we
+        // want users to be able to autodownload .exe files. 
+        var rememberChoice = this.dialogElement("rememberChoice");
+
+#if 0
+        // Just because we have a content-type of application/octet-stream 
+        // here doesn't actually mean that the content is of that type. Many 
+        // servers default to sending text/plain for file types they don't know
+        // about. To account for this, the uriloader does some checking to see 
+        // if a file sent as text/plain contains binary characters, and if so (*)
+        // it morphs the content-type into application/octet-stream so that
+        // the file can be properly handled. Since this is not generic binary
+        // data, rather, a data format that the system probably knows about, 
+        // we don't want to use the content-type provided by this dialog's 
+        // opener, as that's the generic application/octet-stream that the 
+        // uriloader has passed, rather we want to ask the External Helper App
+        // Service, which will ask the host OS. This is so we don't needlessly
+        // disable the "autohandle" checkbox. 
+        var mimeService = Components.classes["@mozilla.org/uriloader/external-helper-app-service;1"].getService(Components.interfaces.nsIMIMEService);
+        var type = mimeService.getTypeFromURI(this.mLauncher.source);
+        this.realMIMEInfo = mimeService.getFromTypeAndExtension(type, "");
+
+        if (type == "application/octet-stream") {
+#endif
+        if (shouldntRememberChoice) {
+          rememberChoice.checked = false;
+          rememberChoice.disabled = true;
+        }
+        else {
+          rememberChoice.checked = !this.mLauncher.MIMEInfo.alwaysAskBeforeHandling;
+        }
+        this.toggleRememberChoice(rememberChoice);
+
+        // XXXben - menulist won't init properly, hack. 
+        var openHandler = this.dialogElement("openHandler");
+        openHandler.parentNode.removeChild(openHandler);
+        var openHandlerBox = this.dialogElement("openHandlerBox");
+        openHandlerBox.appendChild(openHandler);
+      }
 
       this.mDialog.setTimeout("dialog.postShowCallback()", 0);
       

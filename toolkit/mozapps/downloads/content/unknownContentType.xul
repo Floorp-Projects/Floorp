@@ -79,9 +79,14 @@
       <description id="source" class="plain" crop="start" flex="1"/>
     </hbox>
     
+    <hbox align="center" id="basicBox" collapsed="true">
+      <label value="&unknownPromptText.label;" id="from"/>
+      <description id="source" class="plain" crop="start" flex="1"/>
+    </hbox>
+
     <separator class="thin"/>
 
-    <groupbox flex="1">
+    <groupbox flex="1" id="normalBox">
       <caption label="&actionQuestion.label;"/>
       <separator class="thin"/>
       <radiogroup id="mode" class="small-indent">
