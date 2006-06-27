@@ -44,7 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
 
-CONFIG_DIR := $(shell pwd)/instgen
+CONFIG_DIR = instgen
 SFX_MODULE = $(topsrcdir)/other-licenses/7zstub/sunbird/7zSD.sfx
 
 PP_LOCALIZED_FILES = \
@@ -76,6 +76,9 @@ include $(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/installer/windows/charset.m
 
 installer::
 	$(MAKE) -C .. installer-stage
+	$(MAKE) $(CONFIG_DIR)/setup.exe
+
+$(CONFIG_DIR)/setup.exe::
 	$(RM) -rf instgen && mkdir instgen
 	$(INSTALL) $(addprefix $(srcdir)/,$(INSTALLER_FILES)) instgen
 	$(INSTALL) $(addprefix $(DIST)/branding/,$(BRANDING_FILES)) instgen
