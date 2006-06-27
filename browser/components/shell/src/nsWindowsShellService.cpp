@@ -54,6 +54,7 @@
 #include "nsShellService.h"
 #include "nsWindowsShellService.h"
 #include "nsIObserverService.h"
+#include "nsIProcess.h"
 #include "nsICategoryManager.h"
 #include "nsBrowserCompsCID.h"
 #include "nsNativeCharsetUtils.h"
@@ -1077,5 +1078,24 @@ nsWindowsShellService::Observe(nsISupports* aObject, const char* aTopic, const P
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindowsShellService::OpenApplicationWithURI(nsILocalFile* aApplication, const ACString& aURI)
+{
+  nsresult rv;
+  nsCOMPtr<nsIProcess> process = 
+    do_CreateInstance("@mozilla.org/process/util;1", &rv);
+  if (NS_FAILED(rv))
+    return rv;
+  
+  rv = process->Init(aApplication);
+  if (NS_FAILED(rv))
+    return rv;
+  
+  const nsPromiseFlatCString& spec = PromiseFlatCString(aURI);
+  const char* specStr = spec.get();
+  PRUint32 pid;
+  return process->Run(PR_FALSE, &specStr, 1, &pid);
 }
 

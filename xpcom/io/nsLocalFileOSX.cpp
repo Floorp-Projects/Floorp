@@ -1827,6 +1827,29 @@ NS_IMETHODIMP nsLocalFile::IsPackage(PRBool *_retval)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsLocalFile::GetBundleDisplayName(nsAString& outBundleName)
+{
+  PRBool isPackage = PR_FALSE;
+  nsresult rv = IsPackage(&isPackage);
+  if (NS_FAILED(rv) || !isPackage)
+    return NS_ERROR_FAILURE;
+  
+  nsAutoString name;
+  rv = GetLeafName(name);
+  if (NS_FAILED(rv))
+    return rv;
+  
+  PRInt32 length = name.Length();
+  if (Substring(name, length - 4, length).EqualsLiteral(".app")) {
+    // 4 characters in ".app"
+    outBundleName = Substring(name, 0, length - 4);
+  }
+  else
+    outBundleName = name;
+  
+  return NS_OK;
+}
 
 //*****************************************************************************
 //  nsLocalFile Methods

@@ -301,7 +301,7 @@ var FeedResultService = {
   /**
    * See nsIFeedService.idl
    */
-  addToClientReader: function FRS_addToClientReader(uri) {
+  addToClientReader: function FRS_addToClientReader(spec) {
     var prefs =   
         Cc["@mozilla.org/preferences-service;1"].
         getService(Ci.nsIPrefBranch);
@@ -315,11 +315,31 @@ var FeedResultService = {
       catch (e) {
         return;
       }
-      var process = 
-          Cc["@mozilla.org/process/util;1"].
-          createInstance(Ci.nsIProcess);
-      process.init(clientApp);
-      process.run(false, [uri], 1);
+#ifdef XP_MACOSX
+      // On OS X, the built in feed dispatcher (Safari) sends feeds to other
+      // applications (When Default Reader is adjusted) in the following format:
+      //
+      // http urls: replace scheme with feed, e.g.
+      // http://foo.com/index.rdf -> feed://foo.com/index.rdf
+      // other urils: prepend feed: scheme, e.g.
+      // https://foo.com/index.rdf -> feed:https://foo.com/index.rdf
+      //
+      // We duplicate this here for compatibility. 
+      var ios = 
+          Cc["@mozilla.org/network/io-service;1"].
+          getService(Ci.nsIIOService);
+      var macURI = ios.newURI(spec, null, null);
+      if (macURI.schemeIs("http")) {
+        macURI.scheme = "feed";
+        spec = macURI.spec;
+      }
+      else
+        spec = "feed:" + spec;
+#endif
+      var ss = 
+          Cc["@mozilla.org/browser/shell-service;1"].
+          getService(Ci.nsIShellService);
+      ss.openApplicationWithURI(clientApp, spec);
       break;
     case "bookmarks":
       var wm = 
@@ -327,9 +347,9 @@ var FeedResultService = {
           getService(Ci.nsIWindowMediator);
       var topWindow = wm.getMostRecentWindow("navigator:browser");
 #ifdef MOZ_PLACES
-      topWindow.PlacesCommandHook.addLiveBookmark(uri);
+      topWindow.PlacesCommandHook.addLiveBookmark(spec);
 #else
-      topWindow.FeedHandler.addLiveBookmark(uri);
+      topWindow.FeedHandler.addLiveBookmark(spec);
 #endif
       break;
     }

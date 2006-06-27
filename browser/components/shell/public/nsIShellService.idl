@@ -38,8 +38,9 @@
 #include "nsISupports.idl"
 
 interface nsIDOMElement;
+interface nsILocalFile;
 
-[scriptable, uuid(d6f62053-3769-46f6-bd2b-0a1440d6c394)]
+[scriptable, uuid(FD63944D-F851-4116-A372-962E4D030B2D)]
 interface nsIShellService : nsISupports
 {
   /**
@@ -112,5 +113,14 @@ interface nsIShellService : nsISupports
    * entire screen. A rgb value, where (r << 16 | g << 8 | b)
    */
   attribute unsigned long desktopBackgroundColor;
+
+  /**
+   * Opens an application with a specific URI to load.
+   * @param   application
+   *          The application file (or bundle directory, on OS X)
+   * @param   uri
+   *          The uri to be loaded by the application
+   */
+  void openApplicationWithURI(in nsILocalFile aApplication, in ACString aURI);
 };
  
