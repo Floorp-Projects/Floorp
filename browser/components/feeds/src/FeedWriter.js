@@ -278,8 +278,7 @@ FeedWriter.prototype = {
 #ifdef XP_MACOSX
     var lfm = file.QueryInterface(Components.interfaces.nsILocalFileMac);
     try {
-      if (lfm.isPackage())
-        return lfm.bundleName;
+      return lfm.bundleDisplayName;
     }
     catch (e) {
       // fall through to the file name

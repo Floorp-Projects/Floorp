@@ -58,7 +58,15 @@
             // fall through to the filename
           }
 #endif
-          // XXXben - Read the bundle name on OS X.
+#ifdef XP_MACOSX
+          var lfm = aFile.QueryInterface(Components.interfaces.nsILocalFileMac);
+          try {
+            return lfm.bundleDisplayName;
+          }
+          catch (e) {
+            // fall through to the file name
+          }
+#endif
           var ios = Components.classes["@mozilla.org/network/io-service;1"]
                               .getService(Components.interfaces.nsIIOService);
           var url = ios.newFileURI(aFile).QueryInterface(Components.interfaces.nsIURL);

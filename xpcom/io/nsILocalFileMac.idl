@@ -51,7 +51,7 @@
 [ptr] native FSRefPtr(FSRef);
       native CFURLRef(CFURLRef);
 
-[uuid(614c3010-1dd2-11b2-be04-bcd57a64ffc9)]
+[scriptable, uuid(FC93A109-7BF2-4CEF-B283-2E973E5DCF7E)]
 interface nsILocalFileMac : nsILocalFile
 {
    /**
@@ -65,7 +65,7 @@ interface nsILocalFileMac : nsILocalFile
     * @param   aCFURL         the CoreFoundation URL
     *
     */
-    void initWithCFURL(in CFURLRef aCFURL);
+  [noscript] void initWithCFURL(in CFURLRef aCFURL);
 
    /**
     * initWithFSRef
@@ -77,7 +77,7 @@ interface nsILocalFileMac : nsILocalFile
     * @param   aFSRef         the native file spec
     *
     */
-    void initWithFSRef([const] in FSRefPtr aFSRef);
+  [noscript] void initWithFSRef([const] in FSRefPtr aFSRef);
 
    /**
     * initWithFSSpec
@@ -88,7 +88,7 @@ interface nsILocalFileMac : nsILocalFile
     * @param   aFileSpec       the native file spec
     *
     */
-    void initWithFSSpec([const] in FSSpecPtr aFileSpec);
+  [noscript] void initWithFSSpec([const] in FSSpecPtr aFileSpec);
 
    /**
     * initToAppWithCreatorCode
@@ -100,7 +100,7 @@ interface nsILocalFileMac : nsILocalFile
     * @param   aAppCreator     the signature of the app
     *
     */
-    void initToAppWithCreatorCode(in OSType aAppCreator);
+  [noscript] void initToAppWithCreatorCode(in OSType aAppCreator);
 
     /**
     * getCFURL
@@ -118,7 +118,7 @@ interface nsILocalFileMac : nsILocalFile
     * @return
     *  
     */ 
-    CFURLRef getCFURL();
+  [noscript] CFURLRef getCFURL();
  
     /**
     * getFSRef
@@ -135,7 +135,7 @@ interface nsILocalFileMac : nsILocalFile
     * @return
     *  
     */ 
-    FSRef getFSRef();
+  [noscript] FSRef getFSRef();
    
    /**
     * getFSSpec
@@ -150,7 +150,7 @@ interface nsILocalFileMac : nsILocalFile
     * @return
     *  
     */ 
-    FSSpec getFSSpec();
+  [noscript] FSSpec getFSSpec();
 
    /**
     * fileSizeWithResFork
@@ -160,12 +160,12 @@ interface nsILocalFileMac : nsILocalFile
     * as returned by GetFileSize()
     *
     */
-    readonly attribute PRInt64 fileSizeWithResFork;
+   readonly attribute PRInt64 fileSizeWithResFork;
     
    /**
     * Use with SetFileType() to specify the signature of current process
     */
-    const unsigned long CURRENT_PROCESS_CREATOR = 0x8000000;
+   const unsigned long CURRENT_PROCESS_CREATOR = 0x8000000;
     
    /**
     * fileType, creator
@@ -173,8 +173,8 @@ interface nsILocalFileMac : nsILocalFile
     * File type and creator attributes
     *
     */
-    attribute OSType fileType;
-    attribute OSType fileCreator;
+   [noscript] attribute OSType fileType;
+   [noscript] attribute OSType fileCreator;
     
    /**
     * setFileTypeAndCreatorFromMIMEType
@@ -185,7 +185,7 @@ interface nsILocalFileMac : nsILocalFile
     * @param   aMIMEType
     *
     */
-    void setFileTypeAndCreatorFromMIMEType(in string aMIMEType);
+   void setFileTypeAndCreatorFromMIMEType(in string aMIMEType);
     
    /**
     * setFileTypeAndCreatorFromExtension
@@ -196,7 +196,7 @@ interface nsILocalFileMac : nsILocalFile
     * @param   aExtension
     *
     */
-    void setFileTypeAndCreatorFromExtension(in string aExtension);
+   void setFileTypeAndCreatorFromExtension(in string aExtension);
     
    /**
     * launchWithDoc
@@ -207,7 +207,7 @@ interface nsILocalFileMac : nsILocalFile
     * @param   aLaunchInBackground TRUE if the application should not come to the front.
     *
     */
-    void launchWithDoc(in nsILocalFile aDocToLoad, in boolean aLaunchInBackground);
+   void launchWithDoc(in nsILocalFile aDocToLoad, in boolean aLaunchInBackground);
 
    /**
     * openDocWithApp
@@ -220,7 +220,7 @@ interface nsILocalFileMac : nsILocalFile
     * @param   aLaunchInBackground TRUE if the application should not come to the front.
     *
     */
-    void openDocWithApp(in nsILocalFile aAppToOpenWith, in boolean aLaunchInBackground);
+   void openDocWithApp(in nsILocalFile aAppToOpenWith, in boolean aLaunchInBackground);
 
    /**
     * isPackage
@@ -228,7 +228,15 @@ interface nsILocalFileMac : nsILocalFile
     * returns true if a directory is determined to be a package under Mac OS 9/X
     *
     */
-    boolean isPackage();
+   boolean isPackage();
+
+   /**
+    * bundleDisplayName
+    *
+    * returns the display name of the application bundle (usually the human 
+    * readable name of the application)
+    */
+   readonly attribute AString bundleDisplayName;
 };
 
 %{C++

@@ -42,6 +42,7 @@
 #include "nsIImageLoadingContent.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
+#include "nsILocalFileMac.h"
 #include "nsIObserverService.h"
 #include "nsIPrefService.h"
 #include "nsIServiceManager.h"
@@ -457,3 +458,41 @@ nsMacShellService::SetDesktopBackgroundColor(PRUint32 aColor)
   // supports.
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+NS_IMETHODIMP
+nsMacShellService::OpenApplicationWithURI(nsILocalFile* aApplication, const nsACString& aURI)
+{
+  nsCOMPtr<nsILocalFileMac> lfm(do_QueryInterface(aApplication));
+  CFURLRef appURL;
+  nsresult rv = lfm->GetCFURL(&appURL);
+  if (NS_FAILED(rv))
+    return rv;
+  
+  const nsPromiseFlatCString& spec = PromiseFlatCString(aURI);
+  const UInt8* uriString = (const UInt8*)spec.get();
+  CFURLRef uri = ::CFURLCreateWithBytes(NULL, uriString, aURI.Length(),
+                                        kCFStringEncodingUTF8, NULL);
+  if (!uri) 
+    return NS_ERROR_OUT_OF_MEMORY;
+  
+  CFArrayRef uris = ::CFArrayCreate(NULL, (const void**)&uri, 1, NULL);
+  if (!uris) {
+    ::CFRelease(uri);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  
+  LSLaunchURLSpec launchSpec;
+  launchSpec.appURL = appURL;
+  launchSpec.itemURLs = uris;
+  launchSpec.passThruParams = NULL;
+  launchSpec.launchFlags = kLSLaunchDefaults;
+  launchSpec.asyncRefCon = NULL;
+  
+  OSErr err = ::LSOpenFromURLSpec(&launchSpec, NULL);
+  
+  ::CFRelease(uris);
+  ::CFRelease(uri);
+  
+  return err != noErr ? NS_ERROR_FAILURE : NS_OK;
+}
+

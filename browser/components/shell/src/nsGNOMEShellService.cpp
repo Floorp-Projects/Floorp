@@ -49,6 +49,7 @@
 #include "nsIStringBundle.h"
 #include "gfxIImageFrame.h"
 #include "nsIOutputStream.h"
+#include "nsIProcess.h"
 #include "nsNetUtil.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIImageLoadingContent.h"
@@ -540,4 +541,23 @@ nsGNOMEShellService::OpenApplication(PRInt32 aApplication)
   delete[] newArgv;
 
   return err ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsGNOMEShellService::OpenApplicationWithURI(nsILocalFile* aApplication, const nsACString& aURI)
+{
+  nsresult rv;
+  nsCOMPtr<nsIProcess> process = 
+    do_CreateInstance("@mozilla.org/process/util;1", &rv);
+  if (NS_FAILED(rv))
+    return rv;
+  
+  rv = process->Init(aApplication);
+  if (NS_FAILED(rv))
+    return rv;
+
+  const nsPromiseFlatCString& spec = PromiseFlatCString(aURI);
+  const char* specStr = spec.get();
+  PRUint32 pid;
+  return process->Run(PR_FALSE, &specStr, 1, &pid);
 }
