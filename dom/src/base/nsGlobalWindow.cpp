@@ -6134,8 +6134,11 @@ nsGlobalWindow::ClearWindowScope(nsISupports *aWindow)
   nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(aWindow));
   nsIScriptContext *jsscx = sgo->GetScriptContext(
                               nsIProgrammingLanguage::JAVASCRIPT);
-  if (jsscx) {
-    JS_BeginRequest(NS_STATIC_CAST(JSContext *, jsscx->GetNativeContext()));
+  JSContext *cx = jsscx
+                  ? NS_STATIC_CAST(JSContext *, jsscx->GetNativeContext())
+                  : nsnull;
+  if (cx) {
+    JS_BeginRequest(cx);
   }
   
   PRUint32 lang_id;
@@ -6146,8 +6149,8 @@ nsGlobalWindow::ClearWindowScope(nsISupports *aWindow)
       scx->ClearScope(global, PR_FALSE);
     }
   }
-  if (jsscx) {
-    JS_EndRequest(NS_STATIC_CAST(JSContext *, jsscx->GetNativeContext()));
+  if (cx) {
+    JS_EndRequest(cx);
   }
 }
 
