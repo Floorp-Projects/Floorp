@@ -115,7 +115,6 @@ SessionStartup.prototype = {
    * Initialize the component
    */
   init: function sss_init() {
-    debug("startup init");
     this._prefBranch = Cc["@mozilla.org/preferences-service;1"].
                        getService(Ci.nsIPrefService).
                        getBranch("browser.");
@@ -133,7 +132,7 @@ SessionStartup.prototype = {
                      getService(Ci.nsIProperties);
     this._sessionFile = dirService.get("ProfD", Ci.nsILocalFile);
     this._sessionFileBackup = this._sessionFile.clone();
-    this._sessionFile.append("sessionstore.ini");
+    this._sessionFile.append("sessionstore.js");
     this._sessionFileBackup.append("sessionstore.bak");
    
     // only read the session file if config allows possibility of restoring
@@ -144,11 +143,13 @@ SessionStartup.prototype = {
       if (this._iniString) {
         try {
           // parse the session state into JS objects
-          this._initialState = IniObjectSerializer.decode(this._iniString);
+          var s = new Components.utils.Sandbox(this._sessionFile.path);
+          this._initialState = Components.utils.evalInSandbox(this._iniString, s);
+
           // set bool detecting crash
           this._lastSessionCrashed =
-            this._initialState.Session && this._initialState.Session.state &&
-            this._initialState.Session.state == STATE_RUNNING_STR;
+            this._initialState.session && this._initialState.session.state &&
+            this._initialState.session.state == STATE_RUNNING_STR;
         // invalid .INI file - nothing can be restored
         }
         catch (ex) { debug("The session file is invalid: " + ex); } 
@@ -366,151 +367,6 @@ SessionStartup.prototype = {
     }
     
     return this;
-  }
-};
-
-/* :::::::: File Format Converter ::::::::::::::: */
-
-/**
- * Sessions are serialized to and restored from .INI files
- * 
- * The serialization can store nested JS objects and arrays. Each object or array
- * gets a session header containing the "path" to it (using dots as name separators).
- * Arrays are stored as a list of objects where the path name is the array name plus
- * the object's index (e.g. [Window2.Cookies] is the Cookies object of the second entry
- * of the Window array).
- * 
- * The .INI format used here is for performance and convenience reasons somewhat restricted:
- * * files must be stored in a Unicode compatible encoding (such as UTF-8)
- * * section headers and key names are case-sensitive
- * * dots in section names have special meaning (separating the names in the object hierarchy)
- * * numbers can have some special meaning as well (see below)
- * * keys could occur in the "root" section (i.e. before the first section header)
- * 
- * Despite these restrictions, these files should be quite interoperable with other .INI
- * parsers since we're quite conservative in what we emit and pretty tolerant in what we
- * accept (except for the encoding and the case sensitivity issues - which could be
- * remedied by encoding all values containing non US-ASCII characters and by requesting
- * all keys to be lower-cased (and enforcing this when restoring).
- * 
- * Implementation details you have to be aware of:
- * * empty (string) values aren't stored at all
- * * keys beginning with an underscore are ignored
- * * Arrays are stored with index-base 1 (NOT: 0!)
- * * Array lengths are stored implicitely
- * * true and false are (re)stored as boolean values
- * * positive integers are returned as Number (all other numbers as String)
- * * string values can contain all possible characters
- *   (they are automatically URI encoded/decoded should that be necessary)
- */
-var IniObjectSerializer = {
-  encode: function(aObj, aPrefix) {
-    aPrefix = aPrefix ? aPrefix + "." : "";
-    
-    var ini = [], iniChildren = [];
-    
-    for (var key in aObj) {
-      if (!key || /[;\[\]=]/.test(key)) {
-        debug("Ignoring invalid key name: '" + key + "'!");
-        continue;
-      }
-      else if (key.charAt(0) == "_") { // ignore this key
-        continue;
-      }
-      
-      var value = aObj[key];
-      if (typeof value == "boolean" || typeof value == "number") {
-        ini.push(key + "=" + value);
-      }
-      else if (typeof value == "string" && value) {
-        ini.push(key + "=" + (/^\s|[%\t\r\n;]|\s$/.test(value) ? encodeURI(value).replace(/;/g, "%3B") : value));
-      }
-      else if (value instanceof Array) {
-        for (var i = 0; i < value.length; i++) {
-          if (value[i] instanceof Object) {
-            iniChildren.push("[" + aPrefix + key + (i + 1) + "]");
-            iniChildren.push(this.encode(value[i], aPrefix + key + (i + 1)));
-          }
-        }
-      }
-      else if (typeof value == "object" && value) {
-        iniChildren.push("[" + aPrefix + key + "]");
-        iniChildren.push(this.encode(value, aPrefix + key));
-      }
-    }
-    
-    return ini.concat(iniChildren).join("\n");
-  },
-
-  decode: function(aIniString) {
-    var rootObject = {};
-    var obj = rootObject;
-    var lines = aIniString.split("\n");
-    
-    for (var i = 0; i < lines.length; i++) {
-      var line = lines[i].replace(/;.*/, "");
-      try {
-        if (line.charAt(0) == "[") {
-          obj = this._getObjForHeader(rootObject, line);
-        }
-        else if (/\S/.test(line)) { // ignore blank lines
-          this._setValueForLine(obj, line);
-        }
-      }
-      catch (ex) {
-        throw new Error("Error at line " + (i + 1) + ": " + ex.description);
-      }
-    }
-    
-    return rootObject;
-  },
-
-  // Object which results after traversing the path indicated in the section header
-  _getObjForHeader: function(aObj, aLine) {
-    var names = aLine.split("]")[0].substr(1).split(".");
-    
-    for (var i = 0; i < names.length; i++) {
-      var name = names[i];
-      if (!names[i]) {
-        throw new Error("Invalid header: [" + names.join(".") + "]!");
-      }
-      if (/(\d+)$/.test(names[i])) {
-        names[i] = names[i].slice(0, -RegExp.$1.length);
-        var ix = parseInt(RegExp.$1) - 1;
-        aObj = aObj[names[i]] = aObj[names[i]] || [];
-        aObj = aObj[ix] = aObj[ix] || {};
-      }
-      else {
-        aObj = aObj[names[i]] = aObj[names[i]] || {};
-      }
-    }
-    
-    return aObj;
-  },
-
-  _setValueForLine: function(aObj, aLine) {
-    var ix = aLine.indexOf("=");
-    if (ix < 1) {
-      throw new Error("Invalid entry: " + aLine + "!");
-    }
-    
-    var key = this._trim(aLine.substr(0, ix));
-    var value = this._trim(aLine.substr(ix + 1));
-    if (value == "true" || value == "false") {
-      value = (value == "true");
-    }
-    else if (/^\d+$/.test(value)) {
-      value = parseInt(value);
-    }
-    else if (value.indexOf("%") > -1) {
-      value = decodeURI(value.replace(/%3B/gi, ";"));
-    }
-    
-    aObj[key] = value;
-  },
-
-  _trim: function(aString) {
-    return aString.replace(/^\s+|\s+$/g, "");
   }
 };
 

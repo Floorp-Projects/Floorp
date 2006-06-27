@@ -175,7 +175,6 @@ SessionStoreService.prototype = {
    * Initialize the component
    */
   init: function sss_init(aWindow) {
-    debug("store init");
     if (!aWindow || aWindow == null)
       return;
 
@@ -210,7 +209,7 @@ SessionStoreService.prototype = {
                      getService(Ci.nsIProperties);
     this._sessionFile = dirService.get("ProfD", Ci.nsILocalFile);
     this._sessionFileBackup = this._sessionFile.clone();
-    this._sessionFile.append("sessionstore.ini");
+    this._sessionFile.append("sessionstore.js");
     this._sessionFileBackup.append("sessionstore.bak");
    
     // get string containing session state
@@ -226,17 +225,17 @@ SessionStoreService.prototype = {
     if (iniString) {
       try {
         // parse the session state into JS objects
-        this._initialState = IniObjectSerializer.decode(iniString);
+        this._initialState = this._safeEval(iniString);
         // set bool detecting crash
         this._lastSessionCrashed =
-          this._initialState.Session && this._initialState.Session.state &&
-          this._initialState.Session.state == STATE_RUNNING_STR;
+          this._initialState.session && this._initialState.session.state &&
+          this._initialState.session.state == STATE_RUNNING_STR;
         
         // restore the features of the first window from localstore.rdf
         WINDOW_ATTRIBUTES.forEach(function(aAttr) {
-          delete this._initialState.Window[0][aAttr];
+          delete this._initialState.windows[0][aAttr];
         }, this);
-        delete this._initialState.Window[0].hidden;
+        delete this._initialState.windows[0].hidden;
       }
       catch (ex) { debug("The session file is invalid: " + ex); } // invalid .INI file - nothing can be restored
     }
@@ -381,7 +380,7 @@ SessionStoreService.prototype = {
     aWindow.__SSi = "window" + Date.now();
 
     // and create its data object
-    this._windows[aWindow.__SSi] = { Tab: [], selected: 0, _closedTabs: [] };
+    this._windows[aWindow.__SSi] = { tabs: [], selected: 0, _closedTabs: [] };
     
     // perform additional initialization when the first window is loading
     if (this._loadState == STATE_STOPPED) {
@@ -541,7 +540,7 @@ SessionStoreService.prototype = {
     this._updateTextAndScrollData(aWindow);
     
     // DOMNodeRemoved is received *twice* after closing a tab, only take the first
-    var tabState = this._windows[aWindow.__SSi].Tab[aTab._tPos];
+    var tabState = this._windows[aWindow.__SSi].tabs[aTab._tPos];
     if (tabState) {
       this._windows[aWindow.__SSi]._closedTabs.unshift({
         state: tabState,
@@ -654,16 +653,16 @@ SessionStoreService.prototype = {
   },
 
   get closedWindowData() {
-    return IniObjectSerializer.encode(this._closedWindows);
+    return this._closedWindows;
   },
 
   set closedWindowData(aData) {
-    this._closedWindows = IniObjectSerializer.decode(aData);
+    this._closedWindows = aData;
   },
 
   undoCloseWindow: function sss_undoCloseWindow(aIx) {
     if (aIx in this._closedWindows) {
-      this._openWindowWithState({ Window: this._closedWindows.splice(aIx, 1) });
+      this._openWindowWithState({ windows: this._closedWindows.splice(aIx, 1) });
     }
     else {
       Components.returnCode = -1; //zeniko: or should we rather fail silently?
@@ -684,11 +683,11 @@ SessionStoreService.prototype = {
   },
 
   getClosedTabData: function sss_getClosedTabDataAt(aWindow) {
-    return IniObjectSerializer.encode(this._windows[aWindow.__SSi]._closedTabs);
+    return this._windows[aWindow.__SSi]._closedTabs;
   },
 
   setClosedTabData: function sss_setClosedTabDataAt(aWindow, aData) {
-    this._windows[aWindow.__SSi]._closedTabs = IniObjectSerializer.decode(aData);
+    this._windows[aWindow.__SSi]._closedTabs = aData;
   },
 
   undoCloseTab: function sss_undoCloseTab(aWindow, aIndex) {
@@ -722,7 +721,7 @@ SessionStoreService.prototype = {
 
   getWindowValue: function sss_getWindowValue(aWindow, aKey) {
     if (aWindow.__SSi) {
-      var data = this._windows[aWindow.__SSi].ExtData || {};
+      var data = this._windows[aWindow.__SSi].extData || {};
       return data[aKey] || "";
     }
     else {
@@ -732,10 +731,10 @@ SessionStoreService.prototype = {
 
   setWindowValue: function sss_setWindowValue(aWindow, aKey, aStringValue) {
     if (aWindow.__SSi) {
-      if (!this._windows[aWindow.__SSi].ExtData) {
-        this._windows[aWindow.__SSi].ExtData = {};
+      if (!this._windows[aWindow.__SSi].extData) {
+        this._windows[aWindow.__SSi].extData = {};
       }
-      this._windows[aWindow.__SSi].ExtData[aKey] = aStringValue;
+      this._windows[aWindow.__SSi].extData[aKey] = aStringValue;
       this.saveStateDelayed(aWindow);
     }
     else {
@@ -771,11 +770,11 @@ SessionStoreService.prototype = {
   _saveWindowHistory: function sss_saveWindowHistory(aWindow) {
     var tabbrowser = aWindow.getBrowser();
     var browsers = tabbrowser.browsers;
-    var tabs = this._windows[aWindow.__SSi].Tab = [];
+    var tabs = this._windows[aWindow.__SSi].tabs = [];
     this._windows[aWindow.__SSi].selected = 0;
     
     for (var i = 0; i < browsers.length; i++) {
-      var tabData = { Entry: [], index: 0 };
+      var tabData = { entries: [], index: 0 };
       
       var browser = browsers[i];
       if (!browser || !browser.currentURI) {
@@ -790,20 +789,20 @@ SessionStoreService.prototype = {
       }
       catch (ex) { } // this could happen if we catch a tab during (de)initialization
       
-      if (history && browser.parentNode.__SS_data && browser.parentNode.__SS_data.Entry[history.index]) {
+      if (history && browser.parentNode.__SS_data && browser.parentNode.__SS_data.entries[history.index]) {
         tabData = browser.parentNode.__SS_data;
         tabData.index = history.index + 1;
       }
       else if (history && history.count > 0) {
         for (var j = 0; j < history.count; j++) {
-          tabData.Entry.push(this._serializeHistoryEntry(history.getEntryAtIndex(j, false)));
+          tabData.entries.push(this._serializeHistoryEntry(history.getEntryAtIndex(j, false)));
         }
         tabData.index = history.index + 1;
         
         browser.parentNode.__SS_data = tabData;
       }
       else {
-        tabData.Entry[0] = { url: browser.currentURI.spec };
+        tabData.entries[0] = { url: browser.currentURI.spec };
         tabData.index = 1;
       }
       tabData.zoom = browser.markupDocumentViewer.textZoom;
@@ -821,7 +820,7 @@ SessionStoreService.prototype = {
       });
       tabData.xultab = xulattr.join(" ");
       
-      tabData.ExtData = tabbrowser.mTabs[i].__SS_extdata || null;
+      tabData.extData = tabbrowser.mTabs[i].__SS_extdata || null;
       
       tabs.push(tabData);
       
@@ -839,7 +838,7 @@ SessionStoreService.prototype = {
    * @returns object
    */
   _serializeHistoryEntry: function sss_serializeHistoryEntry(aEntry) {
-    var entry = { url: aEntry.URI.spec, Child: [] };
+    var entry = { url: aEntry.URI.spec, children: [] };
     
     if (aEntry.title && aEntry.title != entry.url) {
       entry.title = aEntry.title;
@@ -886,10 +885,10 @@ SessionStoreService.prototype = {
     for (var i = 0; i < aEntry.childCount; i++) {
       var child = aEntry.GetChildAt(i);
       if (child) {
-        entry.Child.push(this._serializeHistoryEntry(child));
+        entry.children.push(this._serializeHistoryEntry(child));
       }
       else { // to maintain the correct frame order, insert a dummy entry 
-        entry.Child.push({ url: "about:blank" });
+        entry.children.push({ url: "about:blank" });
       }
     }
     
@@ -938,8 +937,8 @@ SessionStoreService.prototype = {
     var _this = this;
     function updateRecursively(aContent, aData) {
       for (var i = 0; i < aContent.frames.length; i++) {
-        if (aData.Child && aData.Child[i]) {
-          updateRecursively(aContent.frames[i], aData.Child[i]);
+        if (aData.children && aData.children[i]) {
+          updateRecursively(aContent.frames[i], aData.children[i]);
         }
       }
       // designMode is undefined e.g. for XUL documents (as about:config)
@@ -957,7 +956,7 @@ SessionStoreService.prototype = {
     
     Array.forEach(aWindow.getBrowser().browsers, function(aBrowser, aIx) {
       try {
-        var tabData = this._windows[aWindow.__SSi].Tab[aIx];
+        var tabData = this._windows[aWindow.__SSi].tabs[aIx];
         
         var text = [];
         if (aBrowser.parentNode.__SS_text && this._checkPrivacyLevel(aBrowser.currentURI.schemeIs("https"))) {
@@ -970,7 +969,7 @@ SessionStoreService.prototype = {
         }
         tabData.text = text.join(" ");
         
-        updateRecursively(XPCNativeWrapper(aBrowser.contentWindow), tabData.Entry[tabData.index - 1]);
+        updateRecursively(XPCNativeWrapper(aBrowser.contentWindow), tabData.entries[tabData.index - 1]);
       }
       catch (ex) { debug(ex); } // get as much data as possible, ignore failures (might succeed the next time)
     }, this);
@@ -996,12 +995,12 @@ SessionStoreService.prototype = {
         }
         hosts[host] = true;
       }
-      if (aEntry.Child) {
-        aEntry.Child.forEach(extractHosts);
+      if (aEntry.children) {
+        aEntry.children.forEach(extractHosts);
       }
     }
     
-    this._windows[aWindow.__SSi].Tab.forEach(function(aTabData) { aTabData.Entry.forEach(extractHosts); });
+    this._windows[aWindow.__SSi].tabs.forEach(function(aTabData) { aTabData.entries.forEach(extractHosts); });
   },
 
   /**
@@ -1114,7 +1113,7 @@ SessionStoreService.prototype = {
       total.push(this._lastWindowClosed);
     }
     
-    return IniObjectSerializer.encode({ Window: total });
+    return { windows: total };
   },
 
   /**
@@ -1131,7 +1130,7 @@ SessionStoreService.prototype = {
     var total = [this._windows[aWindow.__SSi]];
     this._updateCookies(total);
     
-    return IniObjectSerializer.encode({ Window: total });
+    return { windows: total };
   },
 
   _collectWindowData: function sss_collectWindowData(aWindow) {
@@ -1157,8 +1156,8 @@ SessionStoreService.prototype = {
    */
   restoreWindow: function sss_restoreWindow(aWindow, aState, aOverwriteTabs) {
     try {
-      var root = typeof aState == "string" ? IniObjectSerializer.decode(aState) : aState;
-      if (!root.Window[0]) {
+      var root = typeof aState == "string" ? this._safeEval(aState) : aState;
+      if (!root.windows[0]) {
         return; // nothing to restore
       }
     }
@@ -1168,24 +1167,24 @@ SessionStoreService.prototype = {
     }
     
     // open new windows for all further window entries of a multi-window session
-    for (var w = 1; w < root.Window.length; w++) {
-      this._openWindowWithState({ Window: [root.Window[w]], opener: aWindow });
+    for (var w = 1; w < root.windows.length; w++) {
+      this._openWindowWithState({ windows: [root.windows[w]], opener: aWindow });
     }
     
-    var winData = root.Window[0];
-    if (!winData.Tab) {
-      winData.Tab = [];
+    var winData = root.windows[0];
+    if (!winData.tabs) {
+      winData.tabs = [];
     }
     
     var tabbrowser = aWindow.getBrowser();
     var openTabCount = aOverwriteTabs ? tabbrowser.browsers.length : -1;
-    var newTabCount = winData.Tab.length;
+    var newTabCount = winData.tabs.length;
     
     for (var t = 0; t < newTabCount; t++) {
-      winData.Tab[t]._tab = t < openTabCount ? tabbrowser.mTabs[t] : tabbrowser.addTab();
+      winData.tabs[t]._tab = t < openTabCount ? tabbrowser.mTabs[t] : tabbrowser.addTab();
       // when resuming at startup: add additionally requested pages to the end
       if (!aOverwriteTabs && root._firstTabs) {
-        tabbrowser.moveTabTo(winData.Tab[t]._tab, t);
+        tabbrowser.moveTabTo(winData.tabs[t]._tab, t);
       }
     }
 
@@ -1200,16 +1199,16 @@ SessionStoreService.prototype = {
     if (winData.Cookies) {
       this.restoreCookies(winData.Cookies);
     }
-    if (winData.ExtData) {
-      if (!this._windows[aWindow.__SSi].ExtData) {
-        this._windows[aWindow.__SSi].ExtData = {}
+    if (winData.extData) {
+      if (!this._windows[aWindow.__SSi].extData) {
+        this._windows[aWindow.__SSi].extData = {}
       }
-      for (var key in winData.ExtData) {
-        this._windows[aWindow.__SSi].ExtData[key] = winData.ExtData[key];
+      for (var key in winData.extData) {
+        this._windows[aWindow.__SSi].extData[key] = winData.extData[key];
       }
     }
     
-    this.restoreHistoryPrecursor(aWindow, winData.Tab, (aOverwriteTabs ?
+    this.restoreHistoryPrecursor(aWindow, winData.tabs, (aOverwriteTabs ?
       (parseInt(winData.selected) || 1) : 0), 0, 0);
   },
 
@@ -1298,17 +1297,17 @@ SessionStoreService.prototype = {
     }
     history.QueryInterface(Ci.nsISHistoryInternal);
     
-    if (!tabData.Entry) {
-      tabData.Entry = [];
+    if (!tabData.entries) {
+      tabData.entries = [];
     }
-    if (tabData.ExtData) {
-      tab.__SS_extdata = tabData.ExtData;
+    if (tabData.extData) {
+      tab.__SS_extdata = tabData.extData;
     }
     
     browser.markupDocumentViewer.textZoom = parseFloat(tabData.zoom || 1);
     
-    for (var i = 0; i < tabData.Entry.length; i++) {
-      history.addEntry(this._deserializeHistoryEntry(tabData.Entry[i], idMap), true);
+    for (var i = 0; i < tabData.entries.length; i++) {
+      history.addEntry(this._deserializeHistoryEntry(tabData.entries[i], idMap), true);
     }
     
     // make sure to reset the capabilities and attributes, in case this tab gets reused
@@ -1332,7 +1331,7 @@ SessionStoreService.prototype = {
     event.initEvent("SSTabRestoring", true, false);
     tab.dispatchEvent(event);
     
-    var activeIndex = (tabData.index || tabData.Entry.length) - 1;
+    var activeIndex = (tabData.index || tabData.entries.length) - 1;
     try {
       browser.webNavigation.gotoIndex(activeIndex);
     }
@@ -1341,7 +1340,7 @@ SessionStoreService.prototype = {
     // restore those aspects of the currently active documents
     // which are not preserved in the plain history entries
     // (mainly scroll state and text data)
-    browser.__SS_restore_data = tabData.Entry[activeIndex] || {};
+    browser.__SS_restore_data = tabData.entries[activeIndex] || {};
     browser.__SS_restore_text = tabData.text || "";
     browser.__SS_restore_tab = tab;
     browser.__SS_restore = this.restoreDocument_proxy;
@@ -1398,9 +1397,9 @@ SessionStoreService.prototype = {
       shEntry.postData = stream;
     }
     
-    if (aEntry.Child && shEntry instanceof Ci.nsISHContainer) {
-      for (var i = 0; i < aEntry.Child.length; i++) {
-        shEntry.AddChild(this._deserializeHistoryEntry(aEntry.Child[i], aIdMap), i);
+    if (aEntry.children && shEntry instanceof Ci.nsISHContainer) {
+      for (var i = 0; i < aEntry.children.length; i++) {
+        shEntry.AddChild(this._deserializeHistoryEntry(aEntry.children[i], aIdMap), i);
       }
     }
     
@@ -1442,8 +1441,8 @@ SessionStoreService.prototype = {
         aContent.scrollTo(RegExp.$1, RegExp.$2);
       }
       for (var i = 0; i < aContent.frames.length; i++) {
-        if (aData.Child && aData.Child[i]) {
-          restoreTextDataAndScrolling(aContent.frames[i], aData.Child[i], i + "|" + aPrefix);
+        if (aData.children && aData.children[i]) {
+          restoreTextDataAndScrolling(aContent.frames[i], aData.children[i], i + "|" + aPrefix);
         }
       }
     }
@@ -1649,15 +1648,9 @@ SessionStoreService.prototype = {
    */
   saveState: function sss_saveState(aUpdateAll) {
     this._dirty = aUpdateAll;
-    this._writeFile(this._getSessionFile(), [
-      "; This file is automatically generated",
-      "; Do not edit while Firefox is running",
-      "; The file encoding is UTF-8",
-      "[Session]",
-      "state=" + (this._loadState == STATE_RUNNING ? STATE_RUNNING_STR : STATE_STOPPED_STR),
-      this._getCurrentState(),
-      ""
-    ].join("\n").replace(/\n\[/g, "\n$&"));
+    var oState = this._getCurrentState();
+    oState.session = {state: ((this._loadState == STATE_RUNNING) ? STATE_RUNNING_STR : STATE_STOPPED_STR) };
+    this._writeFile(this._getSessionFile(), oState.toSource());
     this._lastSaveTime = Date.now();
   },
 
@@ -1877,6 +1870,14 @@ SessionStoreService.prototype = {
      return ioService.newURI(aString, null, null);
    },
 
+  /**
+   * safe eval'ing
+   */
+  _safeEval: function sss_safeEval(aStr) {
+    var s = new Components.utils.Sandbox(this._sessionFile.path);
+    return Components.utils.evalInSandbox(aStr, s);
+  },
+
 /* ........ Storage API .............. */
 
   /**
@@ -2014,151 +2015,6 @@ AutoDownloader.prototype = {
       
       this._window.saveURL(this._URL, this._filename, null, true, true, null);
     }
-  }
-};
-
-/* :::::::: File Format Converter ::::::::::::::: */
-
-/**
- * Sessions are serialized to and restored from .INI files
- * 
- * The serialization can store nested JS objects and arrays. Each object or array
- * gets a session header containing the "path" to it (using dots as name separators).
- * Arrays are stored as a list of objects where the path name is the array name plus
- * the object's index (e.g. [Window2.Cookies] is the Cookies object of the second entry
- * of the Window array).
- * 
- * The .INI format used here is for performance and convenience reasons somewhat restricted:
- * * files must be stored in a Unicode compatible encoding (such as UTF-8)
- * * section headers and key names are case-sensitive
- * * dots in section names have special meaning (separating the names in the object hierarchy)
- * * numbers can have some special meaning as well (see below)
- * * keys could occur in the "root" section (i.e. before the first section header)
- * 
- * Despite these restrictions, these files should be quite interoperable with other .INI
- * parsers since we're quite conservative in what we emit and pretty tolerant in what we
- * accept (except for the encoding and the case sensitivity issues - which could be
- * remedied by encoding all values containing non US-ASCII characters and by requesting
- * all keys to be lower-cased (and enforcing this when restoring).
- * 
- * Implementation details you have to be aware of:
- * * empty (string) values aren't stored at all
- * * keys beginning with an underscore are ignored
- * * Arrays are stored with index-base 1 (NOT: 0!)
- * * Array lengths are stored implicitely
- * * true and false are (re)stored as boolean values
- * * positive integers are returned as Number (all other numbers as String)
- * * string values can contain all possible characters
- *   (they are automatically URI encoded/decoded should that be necessary)
- */
-var IniObjectSerializer = {
-  encode: function(aObj, aPrefix) {
-    aPrefix = aPrefix ? aPrefix + "." : "";
-    
-    var ini = [], iniChildren = [];
-    
-    for (var key in aObj) {
-      if (!key || /[;\[\]=]/.test(key)) {
-        debug("Ignoring invalid key name: '" + key + "'!");
-        continue;
-      }
-      else if (key.charAt(0) == "_") { // ignore this key
-        continue;
-      }
-      
-      var value = aObj[key];
-      if (typeof value == "boolean" || typeof value == "number") {
-        ini.push(key + "=" + value);
-      }
-      else if (typeof value == "string" && value) {
-        ini.push(key + "=" + (/^\s|[%\t\r\n;]|\s$/.test(value) ? encodeURI(value).replace(/;/g, "%3B") : value));
-      }
-      else if (value instanceof Array) {
-        for (var i = 0; i < value.length; i++) {
-          if (value[i] instanceof Object) {
-            iniChildren.push("[" + aPrefix + key + (i + 1) + "]");
-            iniChildren.push(this.encode(value[i], aPrefix + key + (i + 1)));
-          }
-        }
-      }
-      else if (typeof value == "object" && value) {
-        iniChildren.push("[" + aPrefix + key + "]");
-        iniChildren.push(this.encode(value, aPrefix + key));
-      }
-    }
-    
-    return ini.concat(iniChildren).join("\n");
-  },
-
-  decode: function(aIniString) {
-    var rootObject = {};
-    var obj = rootObject;
-    var lines = aIniString.split("\n");
-    
-    for (var i = 0; i < lines.length; i++) {
-      var line = lines[i].replace(/;.*/, "");
-      try {
-        if (line.charAt(0) == "[") {
-          obj = this._getObjForHeader(rootObject, line);
-        }
-        else if (/\S/.test(line)) { // ignore blank lines
-          this._setValueForLine(obj, line);
-        }
-      }
-      catch (ex) {
-        throw new Error("Error at line " + (i + 1) + ": " + ex.description);
-      }
-    }
-    
-    return rootObject;
-  },
-
-  // Object which results after traversing the path indicated in the section header
-  _getObjForHeader: function(aObj, aLine) {
-    var names = aLine.split("]")[0].substr(1).split(".");
-    
-    for (var i = 0; i < names.length; i++) {
-      var name = names[i];
-      if (!names[i]) {
-        throw new Error("Invalid header: [" + names.join(".") + "]!");
-      }
-      if (/(\d+)$/.test(names[i])) {
-        names[i] = names[i].slice(0, -RegExp.$1.length);
-        var ix = parseInt(RegExp.$1) - 1;
-        aObj = aObj[names[i]] = aObj[names[i]] || [];
-        aObj = aObj[ix] = aObj[ix] || {};
-      }
-      else {
-        aObj = aObj[names[i]] = aObj[names[i]] || {};
-      }
-    }
-    
-    return aObj;
-  },
-
-  _setValueForLine: function(aObj, aLine) {
-    var ix = aLine.indexOf("=");
-    if (ix < 1) {
-      throw new Error("Invalid entry: " + aLine + "!");
-    }
-    
-    var key = this._trim(aLine.substr(0, ix));
-    var value = this._trim(aLine.substr(ix + 1));
-    if (value == "true" || value == "false") {
-      value = (value == "true");
-    }
-    else if (/^\d+$/.test(value)) {
-      value = parseInt(value);
-    }
-    else if (value.indexOf("%") > -1) {
-      value = decodeURI(value.replace(/%3B/gi, ";"));
-    }
-    
-    aObj[key] = value;
-  },
-
-  _trim: function(aString) {
-    return aString.replace(/^\s+|\s+$/g, "");
   }
 };
 
