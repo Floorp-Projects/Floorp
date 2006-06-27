@@ -437,6 +437,9 @@ JS_Lock(JSRuntime *rt);
 extern JS_PUBLIC_API(void)
 JS_Unlock(JSRuntime *rt);
 
+extern JS_PUBLIC_API(JSContextCallback)
+JS_SetContextCallback(JSRuntime *rt, JSContextCallback cxCallback);
+
 extern JS_PUBLIC_API(JSContext *)
 JS_NewContext(JSRuntime *rt, size_t stackChunkSize);
 

@@ -541,6 +541,27 @@ typedef JSBool
 
 /* Callbacks and their arguments. */
 
+typedef enum JSContextOp {
+    JSCONTEXT_NEW,
+    JSCONTEXT_DESTROY
+} JSContextOp;
+
+/*
+ * The possible values for contextOp when the runtime calls the callback are:
+ *   JSCONTEXT_NEW      JS_NewContext succesfully created a new JSContext
+ *                      instance. The callback can initialize the instance as
+ *                      required. If the callback returns false, the instance
+ *                      will be destroyed and JS_NewContext returns null. In
+ *                      this case the callback is not called again.
+ *   JSCONTEXT_DESTROY  One of JS_DestroyContext* methods is called. The
+ *                      callback may perform its own cleanup and must always
+ *                      return true.
+ *   Any other value    For future compatibility the callback must do nothing
+ *                      and return true in this case.
+ */
+typedef JSBool
+(* JS_DLL_CALLBACK JSContextCallback)(JSContext *cx, uintN contextOp);
+
 typedef enum JSGCStatus {
     JSGC_BEGIN,
     JSGC_END,
