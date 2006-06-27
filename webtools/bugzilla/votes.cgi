@@ -36,6 +36,8 @@ use Bugzilla::Bug;
 use Bugzilla::User;
 use Bugzilla::Product;
 
+use List::Util qw(min);
+
 my $cgi = Bugzilla->cgi;
 my $template = Bugzilla->template;
 my $vars = {};

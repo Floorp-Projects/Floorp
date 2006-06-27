@@ -35,7 +35,7 @@ use base qw(Exporter);
                              html_quote url_quote value_quote xml_quote
                              css_class_quote
                              i_am_cgi get_netaddr
-                             lsearch max min
+                             lsearch
                              diff_arrays diff_strings
                              trim wrap_comment find_wrap_point
                              perform_substs
@@ -156,22 +156,6 @@ sub lsearch {
         $count++;
     }
     return -1;
-}
-
-sub max {
-    my $max = shift(@_);
-    foreach my $val (@_) {
-        $max = $val if $val > $max;
-    }
-    return $max;
-}
-
-sub min {
-    my $min = shift(@_);
-    foreach my $val (@_) {
-        $min = $val if $val < $min;
-    }
-    return $min;
 }
 
 sub diff_arrays {
@@ -450,8 +434,6 @@ Bugzilla::Util - Generic utility functions for bugzilla
 
   # Functions for searching
   $loc = lsearch(\@arr, $val);
-  $val = max($a, $b, $c);
-  $val = min($a, $b, $c);
 
   # Data manipulation
   ($removed, $added) = diff_arrays(\@old, \@new);
@@ -597,14 +579,6 @@ Returns the position of C<$item> in C<$list>. C<$list> must be a list
 reference.
 
 If the item is not in the list, returns -1.
-
-=item C<max($a, $b, ...)>
-
-Returns the maximum from a set of values.
-
-=item C<min($a, $b, ...)>
-
-Returns the minimum from a set of values.
 
 =back
 

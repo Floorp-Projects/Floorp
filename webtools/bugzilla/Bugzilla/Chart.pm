@@ -38,6 +38,7 @@ use Bugzilla::Series;
 
 use Date::Format;
 use Date::Parse;
+use List::Util qw(max);
 
 sub new {
     my $invocant = shift;
@@ -313,10 +314,10 @@ sub readData {
             my $datediff = shift @datediff_total;
             push @processed_datediff, $datediff if defined($datediff);
         }
-        $self->{'y_max_value'} = Bugzilla::Util::max(@processed_datediff);
+        $self->{'y_max_value'} = max(@processed_datediff);
     }
     else {
-        $self->{'y_max_value'} = Bugzilla::Util::max(@maxvals);
+        $self->{'y_max_value'} = max(@maxvals);
     }
     $self->{'y_max_value'} |= 1; # For log()
 

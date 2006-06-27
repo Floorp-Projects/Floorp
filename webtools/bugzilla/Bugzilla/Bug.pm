@@ -43,6 +43,8 @@ use Bugzilla::Util;
 use Bugzilla::Error;
 use Bugzilla::Product;
 
+use List::Util qw(min);
+
 use base qw(Exporter);
 @Bugzilla::Bug::EXPORT = qw(
     AppendComment ValidateComment

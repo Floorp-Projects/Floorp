@@ -28,7 +28,7 @@ use lib 't';
 use Support::Files;
 
 BEGIN { 
-        use Test::More tests => 15;
+        use Test::More tests => 13;
         use_ok(Bugzilla);
         use_ok(Bugzilla::Util);
 }
@@ -56,11 +56,6 @@ my @list = ('apple','pear','plum','<"\\%');
 is(lsearch(\@list,'pear'),1,'lsearch 1');
 is(lsearch(\@list,'<"\\%'),3,'lsearch 2');
 is(lsearch(\@list,'kiwi'),-1,'lsearch 3 (missing item)');
-
-#max() and min():
-@list = (7,27,636,2);
-is(max(@list),636,'max()');
-is(min(@list),2,'min()');
 
 #trim():
 is(trim(" fg<*\$%>+=~~ "),'fg<*$%>+=~~','trim()');
