@@ -98,10 +98,6 @@
 #include "nsHTMLWin32ObjectAccessible.h"
 #endif
 
-#ifdef MOZ_ACCESSIBILITY_ATK
-#include "nsHTMLTableAccessibleWrap.h"
-#endif
-
 nsAccessibilityService *nsAccessibilityService::gAccessibilityService = nsnull;
 
 /**
@@ -499,9 +495,11 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsISupports *aFrame,
            tag == nsAccessibilityAtoms::h5 ||
            tag == nsAccessibilityAtoms::h6 ||
            tag == nsAccessibilityAtoms::q ||
+#ifndef MOZ_ACCESSIBILITY_ATK
            tag == nsAccessibilityAtoms::tbody ||
            tag == nsAccessibilityAtoms::tfoot ||
            tag == nsAccessibilityAtoms::thead ||
+#endif
            content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::tabindex) ||
            // The role from a <body> or doc element is already exposed in nsDocAccessible
            (tag != nsAccessibilityAtoms::body && content->GetParent() &&
@@ -790,7 +788,7 @@ nsAccessibilityService::CreateHTMLTableAccessible(nsISupports *aFrame, nsIAccess
   if (NS_FAILED(rv))
     return rv;
 
-  *_retval = new nsHTMLTableAccessibleWrap(node, weakShell);
+  *_retval = new nsHTMLTableAccessible(node, weakShell);
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -835,7 +833,7 @@ nsAccessibilityService::CreateHTMLTableCellAccessible(nsISupports *aFrame, nsIAc
   if (NS_FAILED(rv))
     return rv;
 
-  *_retval = new nsHTMLTableCellAccessibleWrap(node, weakShell);
+  *_retval = new nsHTMLTableCellAccessible(node, weakShell);
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
 

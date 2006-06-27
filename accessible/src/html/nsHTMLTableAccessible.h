@@ -40,6 +40,7 @@
 #define _nsHTMLTableAccessible_H_
 
 #include "nsBaseWidgetAccessible.h"
+#include "nsIAccessibleTable.h"
 
 class nsHTMLTableCellAccessible : public nsHyperTextAccessible
 {
@@ -51,15 +52,45 @@ public:
   NS_IMETHOD GetState(PRUint32 *aResult); 
 };
 
-class nsHTMLTableAccessible : public nsHyperTextAccessible
+class nsITableLayout;
+
+class nsHTMLTableAccessible : public nsAccessibleWrap
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIACCESSIBLETABLE
 
   nsHTMLTableAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
   NS_IMETHOD GetRole(PRUint32 *aResult); 
   NS_IMETHOD GetState(PRUint32 *aResult); 
   NS_IMETHOD GetName(nsAString& aResult);
+
+protected:
+  nsresult GetTableNode(nsIDOMNode **_retval);
+  nsresult GetTableLayout(nsITableLayout **aLayoutObject);
+  nsresult GetCellAt(PRInt32        aRowIndex,
+                     PRInt32        aColIndex,
+                     nsIDOMElement* &aCell);
+};
+
+
+class nsHTMLTableHeadAccessible : public nsHTMLTableAccessible
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+
+  nsHTMLTableHeadAccessible(nsIDOMNode *aDomNode, nsIWeakReference *aShell);
+
+  /* nsIAccessible */
+  NS_IMETHOD GetRole(PRUint32 *aResult);
+
+  /* nsIAccessibleTable */
+  NS_IMETHOD GetCaption(nsIAccessible **aCaption);
+  NS_IMETHOD SetCaption(nsIAccessible *aCaption);
+  NS_IMETHOD GetSummary(nsAString &aSummary);
+  NS_IMETHOD SetSummary(const nsAString &aSummary);
+  NS_IMETHOD GetColumnHeader(nsIAccessibleTable **aColumnHeader);
+  NS_IMETHOD GetRows(PRInt32 *aRows);
 };
 
 #endif  
