@@ -1081,7 +1081,7 @@ nsWindowsShellService::Observe(nsISupports* aObject, const char* aTopic, const P
 }
 
 NS_IMETHODIMP
-nsWindowsShellService::OpenApplicationWithURI(nsILocalFile* aApplication, const ACString& aURI)
+nsWindowsShellService::OpenApplicationWithURI(nsILocalFile* aApplication, const nsACString& aURI)
 {
   nsresult rv;
   nsCOMPtr<nsIProcess> process = 
