@@ -859,7 +859,8 @@ nsHttpChannel::ProcessNormal()
     // expiration time (bug 87710).
     if (mCacheEntry) {
         rv = InitCacheEntry();
-        if (NS_FAILED(rv)) return rv; // XXX this early return prevents OnStartRequest from firing!
+        if (NS_FAILED(rv))
+            CloseCacheEntry();
     }
 
     // Check that the server sent us what we were asking for
