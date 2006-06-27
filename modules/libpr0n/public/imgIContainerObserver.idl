@@ -54,7 +54,7 @@ interface gfxIImageFrame;
  * @author Stuart Parmenter <pavlov@netscape.com>
  * @version 0.1
  */
-[uuid(53102f15-0f53-4939-957e-aea353ad2700)]
+[scriptable, uuid(53102f15-0f53-4939-957e-aea353ad2700)]
 interface imgIContainerObserver : nsISupports
 {
   [noscript] void frameChanged(in imgIContainer aContainer,
