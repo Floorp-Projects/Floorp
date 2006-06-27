@@ -202,7 +202,7 @@ if ($c->param) {
 # Set a default value as appropriate.
 my $products = Litmus::FormWidget->getProducts;
 my $platforms = Litmus::FormWidget->getUniquePlatforms;
-my $test_groups = Litmus::FormWidget->getTestGroups;
+my $test_groups = Litmus::FormWidget->getTestgroups;
 my $testcases = Litmus::FormWidget->getTestcaseIDs;
 my $result_statuses = Litmus::FormWidget->getResultStatuses;
 my $branches = Litmus::FormWidget->getBranches;

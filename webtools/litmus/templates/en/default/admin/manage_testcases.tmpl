@@ -110,9 +110,9 @@ function populateTestcase(data) {
     } else {
       options[i].selected = false;
     }      
-  }
-  if (found_product == 0) {
-    options[0].selected = true;
+    if (found_product == 0) {
+      options[0].selected = true;
+    }
   }
   changeProduct();
   var found_testgroup = 0;
@@ -127,9 +127,9 @@ function populateTestcase(data) {
         options[i].selected = false;
       }      
     }
-  }
-  if (found_testgroup == 0) {
-    options[0].selected = true;
+    if (found_testgroup == 0) {
+      options[0].selected = true;
+    }
   }
 
   var testgroups_text = "";
@@ -158,9 +158,9 @@ function populateTestcase(data) {
         options[i].selected = false;
       }      
     }
-  }
-  if (found_subgroup == 0) {
-    options[0].selected = true;
+    if (found_subgroup == 0) {
+      options[0].selected = true;
+    }
   }
 
   var subgroups_text = "";

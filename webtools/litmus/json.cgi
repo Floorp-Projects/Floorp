@@ -60,4 +60,16 @@ if ($c->param("testcase_id")) {
   my $json = JSON->new(skipinvalid => 1, convblessed => 1);
   my $js = $json->objToJson($subgroup);
   print $js;
+} elsif ($c->param("testgroup_id")) {
+  my $testgroup_id = $c->param("testgroup_id");
+  my $testgroup = Litmus::DB::Testgroup->retrieve($testgroup_id);
+  my @subgroups = Litmus::DB::Subgroup->search_EnabledByTestgroup($testgroup_id);
+  $testgroup->{'subgroups'} = \@subgroups;
+  my $json = JSON->new(skipinvalid => 1, convblessed => 1);
+  my $js = $json->objToJson($testgroup);
+  print $js;
 }
+
+
+
+

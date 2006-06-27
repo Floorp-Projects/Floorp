@@ -1,0 +1,63 @@
+[%# ***** BEGIN LICENSE BLOCK *****
+  # Version: MPL 1.1
+  #
+  # The contents of this file are subject to the Mozilla Public License Version
+  # 1.1 (the "License"); you may not use this file except in compliance with
+  # the License. You may obtain a copy of the License at
+  # http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS IS" basis,
+  # WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+  # for the specific language governing rights and limitations under the
+  # License.
+  #
+  # The Original Code is Litmus.
+  #
+  # The Initial Developer of the Original Code is
+  # The Mozilla Corporation.
+  # Portions created by the Initial Developer are Copyright (C) 2006
+  # the Initial Developer. All Rights Reserved.
+  #
+  # Contributor(s):
+  #   Chris Cooper <ccooper@deadsquid.com>
+  #   Zach Lipton <zach@zachlipton.com>
+  #
+  # ***** END LICENSE BLOCK *****
+#%]
+
+[%# INTERFACE:
+  # $subgroup   - the subgroup object to show
+  # $show_config  - display the config options (testgroup, etc.)
+  #                 for a given subgroup
+  # $show_edit (optional) - display subgroup for editing
+#%]
+
+[% PROCESS global/selects.none.tmpl %]
+
+[% IF show_config %]
+<table cellspacing="0" cellpadding="0" class="tcm">
+  <tr>
+  <td width="20%"><b>Product:</b></td>
+  <td>
+    <div id="product_text[% IF ! show_edit %]_[% subgroup.subgroup_id | html %][% END %]">[% subgroup.product.name | html %]</div>
+    </td>
+    [% IF ! show_edit %]<td align="right" valign="top" colspan="5"><a href="manage_subgroups.cgi?subgroup_id=[%subgroup.subgroup_id | html%]"> Edit Subgroup</a></td>[% END %]
+  </tr>
+  <tr>
+    <td><b>Test Group(s):</b></td>
+    <td>
+      <div id="testgroups_display[% IF ! show_edit %]_[% subgroup.subgroup_id | html %][% END %]">[% IF testgroups.size==0 %]<span class="errorHeading">This subgroup does not belong to any testgroups that are currently enabled.</span>[% ELSE %][% FOREACH testgroup=testgroups %][% testgroup.name | html %][% UNLESS loop.last %], [% END %][% END %][% END %]</div>
+    </td>
+  </tr>
+  <tr>
+    <td><b>Subgroup ID #:</b></td>
+    <td id="subgroup_id_display[% IF ! show_edit %]_[% subgroup.subgroup_id | html %][% END %]">[% subgroup.subgroup_id | html %]</td>
+  </tr>
+  <tr>
+    <td><b>Name:</b></td>
+    <td><div id="name_text[% IF ! show_edit %]_[% subgroup.subgroup_id | html%][% END %]">[% subgroup.name | html %]</div></td>
+  </tr>
+</table>
+
+<br clear="all" />
+[% END %]

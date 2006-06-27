@@ -54,6 +54,8 @@ function loadSubgroup() {
   if (! subgroup_select ||
       subgroup_select.options[subgroup_select.selectedIndex].value=="") {
     disableModeButtons();
+    document.getElementById('subgroup_display_div').style.display = 'none';
+    document.getElementById('editform_div').style.display = 'none';
     disableForm('edit_subgroup_form');
     blankForm('edit_subgroup_form');
     return false;
@@ -63,9 +65,11 @@ function loadSubgroup() {
 
   disableForm('edit_subgroup_form');
   var url = 'json.cgi?subgroup_id=' + subgroup_id;
+  toggleMessage('loading','Loading Subgroup ID# ' + subgroup_id + '...');
   var d = loadJSONDoc(url);
   d.addBoth(function (res) { 
     d.deferred = null;  
+    toggleMessage('none');
     return res; 
   }); 
   d.addCallback(populateSubgroup); 
@@ -85,12 +89,16 @@ function populateSubgroup(data) {
   document.getElementById('editform_subgroup_id').value = subgroup.subgroup_id;
   document.getElementById('editform_subgroup_id_display').innerHTML = subgroup.subgroup_id;
   document.getElementById('editform_name').value = subgroup.name;
+  document.getElementById('name_text').innerHTML = subgroup.name;
+  document.getElementById('subgroup_id_display').innerHTML = subgroup.subgroup_id;
+
   var productBox = document.getElementById('product');
   var options = productBox.getElementsByTagName('option');  
   var found_product = 0;
   for (var i=0; i<options.length; i++) {
     if (options[i].value == subgroup.product_id.product_id) {
       options[i].selected = true;
+      document.getElementById('product_text').innerHTML = options[i].text;
       found_product=1;
     } else {
       options[i].selected = false;
@@ -114,9 +122,24 @@ function populateSubgroup(data) {
     }
   }
   if (found_testgroup == 0) {
-    options[0].selected = true;
+    if (options[0]) {
+      options[0].selected = true;
+    }
+  }
+  var testgroups_text = "";
+  for (var i in subgroup.testgroups) {
+    if (subgroup.testgroups[i].name != '') {
+      testgroups_text = testgroups_text + subgroup.testgroups[i].name + ', ';
+    }
+  }
+  if (testgroups_text != '') {
+    testgroups_text = testgroups_text.replace(/, $/g,'');
+    document.getElementById('testgroups_display').innerHTML = testgroups_text;
+  } else {
+    document.getElementById('testgroups_display').innerHTML = '<span class="errorHeading">This subgroup does not belong to any testgroups that are currently enabled.</span>';
   }
   changeTestgroup();
+
   var enabled_em = document.getElementById('editform_enabled')
   if (subgroup.enabled == 1) {
     enabled_em.checked = true;
@@ -135,6 +158,8 @@ function populateSubgroup(data) {
                                                      subgroup.testcases[i].testcase_id);
   }
 
+  document.getElementById('editform_div').style.display = 'none';
+  document.getElementById('subgroup_display_div').style.display = 'block';
   enableModeButtons();
 }
 
@@ -142,6 +167,7 @@ function blankForm(formid) {
   var f = document.getElementById(formid);
   var ems = f.getElementsByTagName('input');
   for (var i in ems) {
+    ems[i].checked=false;
     if (ems[i].type == 'submit' || 
 	ems[i].value == 'Reset' ||
 	ems[i].type == 'radio' ||
@@ -150,7 +176,6 @@ function blankForm(formid) {
       continue;
     }
     ems[i].value='';
-    ems[i].checked=false;
   }
   ems = f.getElementsByTagName('select');
   for (var i in ems) {
@@ -171,6 +196,9 @@ function blankForm(formid) {
   selectBoxSubgroup.options[selectBoxSubgroup.length] = new Option("--No subgroup selected--",
                                                              "");
   selectBoxSubgroup.selectedIndex=-1
+ 
+  document.getElementById('editform_testrunner_group_id').innerHTML = '';
+
   changeProduct();
   changeTestgroup();
 }
@@ -181,12 +209,16 @@ function switchToAdd() {
   document.getElementById('editform_submit').value = 'Add Subgroup';
   document.getElementById('editform_mode').value = 'add';
   enableForm('edit_subgroup_form');
+  document.getElementById('subgroup_display_div').style.display = 'none';
+  document.getElementById('editform_div').style.display = 'block';
 }
 
 function switchToEdit() {
   document.getElementById('editform_submit').value = 'Submit Edits';
   document.getElementById('editform_mode').value = 'edit';
   enableForm('edit_subgroup_form');
+  document.getElementById('subgroup_display_div').style.display = 'none';
+  document.getElementById('editform_div').style.display = 'block';
 }
 
 function populateAllTestcases() {
@@ -237,8 +269,18 @@ function populateAllTestcases() {
       </div> <!--end section-content-->
     </div> <!--end section-full-->
 
-    <div class="section-full">
-      <div id="subgroup-title" class="section-header">Subgroup info</div>
+    <div style="display: none;" id="subgroup_display_div" class="section-full">
+      <div id="subgroup-title" class="section-header">Subgroup Info</div>
+      <div class="section-content">
+
+        <div class="subgroup-content">
+          [% INCLUDE subgroup/subgroup.tmpl subgroup=subgroup show_config=1 show_edit=1 %]
+        </div>
+      </div>
+    </div>
+
+    <div style="display: none;" id="editform_div" class="section-full">
+      <div id="subgroup-title" class="section-header">Subgroup Info</div>
 
       <div class="section-content">
 

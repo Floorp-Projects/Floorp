@@ -1,0 +1,278 @@
+[%# ***** BEGIN LICENSE BLOCK *****
+  # Version: MPL 1.1
+  #
+  # The contents of this file are subject to the Mozilla Public License Version
+  # 1.1 (the "License"); you may not use this file except in compliance with
+  # the License. You may obtain a copy of the License at
+  # http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS IS" basis,
+  # WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+  # for the specific language governing rights and limitations under the
+  # License.
+  #
+  # The Original Code is Litmus.
+  #
+  # The Initial Developer of the Original Code is
+  # The Mozilla Corporation.
+  # Portions created by the Initial Developer are Copyright (C) 2006
+  # the Initial Developer. All Rights Reserved.
+  #
+  # Contributor(s):
+  #   Chris Cooper <ccooper@deadsquid.com>
+  #   Zach Lipton <zach@zachlipton.com>
+  #
+  # ***** END LICENSE BLOCK *****
+#%]
+
+[% PROCESS global/selects.none.tmpl %]
+
+[% includeselects=1 %]  
+[% INCLUDE global/html_header.tmpl js_files=['js/prototype.lite.js','js/moo.fx.js','js/moo.fx.pack.js','js/FormValidation.js','js/MochiKit/MochiKit.js','js/json.js','js/Help.js','js/SelectBoxes.js','js/SelectSort.js'] %]
+[% INCLUDE global/litmus_header.tmpl %]
+
+<script type="text/javascript">
+var d;
+var testgroup;
+var subgroups=[% IF all_subgroups %][% all_subgroups %][% ELSE %]{}[% END %];
+
+function enableModeButtons() {
+  document.getElementById("edit_testgroup_button").disabled=false;
+  document.getElementById("clone_testgroup_button").disabled=false;
+  document.getElementById("delete_testgroup_button").disabled=false;
+}
+
+function disableModeButtons() {
+  document.getElementById("edit_testgroup_button").disabled=true;
+  document.getElementById("clone_testgroup_button").disabled=true;
+  document.getElementById("delete_testgroup_button").disabled=true;
+}
+
+function loadTestgroup() {
+  var testgroup_select = document.getElementById("testgroup_id");
+
+  if (! testgroup_select ||
+      testgroup_select.options[testgroup_select.selectedIndex].value=="") {
+    disableModeButtons();
+    document.getElementById('testgroup_display_div').style.display = 'none';
+    document.getElementById('editform_div').style.display = 'none';
+    disableForm('edit_testgroup_form');
+    blankForm('edit_testgroup_form');
+    return false;
+  } 
+
+  var testgroup_id = testgroup_select.options[testgroup_select.selectedIndex].value;
+
+  disableForm('edit_testgroup_form');
+  toggleMessage('loading','Loading Testgroup ID# ' + testgroup_id + '...');
+  var url = 'json.cgi?testgroup_id=' + testgroup_id;
+  var d = loadJSONDoc(url);
+  d.addBoth(function (res) { 
+    d.deferred = null;  
+    toggleMessage('none');
+    return res; 
+  }); 
+  d.addCallback(populateTestgroup); 
+  // if anything goes wrong, except for a simple cancellation, 
+  // then log the error and show the logger 
+  d.addErrback(function (err) { 
+    if (err instanceof CancelledError) { 
+      return; 
+    }
+    logError(err); 
+    logger.debuggingBookmarklet(); 
+  });
+}
+
+function populateTestgroup(data) {
+  testgroup=data;
+  document.getElementById('editform_testgroup_id').value = testgroup.testgroup_id;
+  document.getElementById('editform_testgroup_id_display').innerHTML = testgroup.testgroup_id;
+  document.getElementById('editform_name').value = testgroup.name;
+  document.getElementById('name_text').innerHTML = testgroup.name;
+  document.getElementById('testgroup_id_display').innerHTML = testgroup.testgroup_id;
+
+  var productBox = document.getElementById('product');
+  var options = productBox.getElementsByTagName('option');  
+  var found_product = 0;
+  for (var i=0; i<options.length; i++) {
+    if (options[i].value == testgroup.product_id.product_id) {
+      options[i].selected = true;
+      document.getElementById('product_text').innerHTML = options[i].text;
+      found_product=1;
+    } else {
+      options[i].selected = false;
+    }      
+    if (found_product == 0) {
+      options[0].selected = true;
+    }
+  }
+  changeProduct();
+  var enabled_em = document.getElementById('editform_enabled')
+  if (testgroup.enabled == 1) {
+    enabled_em.checked = true;
+  } else {
+    enabled_em.checked = false;
+ } 
+  document.getElementById('editform_testrunner_plan_id').innerHTML = testgroup.testrunner_plan_id;
+
+  populateAllSubgroups();
+
+  var selectBoxTestgroup = document.getElementById('editform_testgroup_subgroups');
+  selectBoxTestgroup.options.length = 0;
+  for (var i=0; i<testgroup.subgroups.length; i++) {
+    var optionText = testgroup.subgroups[i].name + ' (' + testgroup.subgroups[i].subgroup_id + ')'; 
+
+    selectBoxTestgroup.options[selectBoxTestgroup.length] = new Option(optionText,
+                                                     testgroup.subgroups[i].subgroup_id);
+  }
+
+  document.getElementById('editform_div').style.display = 'none';
+  document.getElementById('testgroup_display_div').style.display = 'block';
+  enableModeButtons();
+}
+
+function blankForm(formid) {
+  var f = document.getElementById(formid);
+  var ems = f.getElementsByTagName('input');
+  for (var i in ems) {
+    ems[i].checked=false;
+    if (ems[i].type == 'submit' || 
+	ems[i].value == 'Reset' ||
+	ems[i].type == 'radio' ||
+	ems[i].type == 'checkbox' ||
+	ems[i].type == 'button') {
+      continue;
+    }
+    ems[i].value='';
+  }
+  ems = f.getElementsByTagName('select');
+  for (var i in ems) {
+    ems[i].selectedIndex=0;
+  }
+  ems = f.getElementsByTagName('textarea');
+  for (var i in ems) {
+    ems[i].value='';
+  }
+  document.getElementById('editform_testgroup_id_display').innerHTML = '';
+  var selectBoxAll = document.getElementById('editform_subgroups_for_product');
+  selectBoxAll.options.length = 0;
+  selectBoxAll.options[selectBoxAll.length] = new Option("--No product selected--",
+                                                             "");
+  selectBoxAll.selectedIndex=-1
+  var selectBoxTestgroup = document.getElementById('editform_testgroup_subgroups');
+  selectBoxTestgroup.options.length = 0;
+  selectBoxTestgroup.options[selectBoxTestgroup.length] = new Option("--No testgroup selected--",
+                                                             "");
+  selectBoxTestgroup.selectedIndex=-1
+
+  document.getElementById('editform_testrunner_plan_id').innerHTML = '';
+
+  changeProduct();
+}
+
+function switchToAdd() {
+  disableModeButtons();
+  blankForm('edit_testgroup_form');
+  document.getElementById('editform_submit').value = 'Add Testgroup';
+  document.getElementById('editform_mode').value = 'add';
+  enableForm('edit_testgroup_form');
+  document.getElementById('testgroup_display_div').style.display = 'none';
+  document.getElementById('editform_div').style.display = 'block';
+}
+
+function switchToEdit() {
+  document.getElementById('editform_submit').value = 'Submit Edits';
+  document.getElementById('editform_mode').value = 'edit';
+  enableForm('edit_testgroup_form');
+  document.getElementById('testgroup_display_div').style.display = 'none';
+  document.getElementById('editform_div').style.display = 'block';
+}
+
+function populateAllSubgroups() {
+  var productBox = document.getElementById('product');
+  var selectBoxAll = document.getElementById('editform_subgroups_for_product');
+  selectBoxAll.options.length = 0;
+  for (var i in subgroups) {
+    if (subgroups[i].product_id == productBox.options[productBox.selectedIndex].value) {
+      var optionText = subgroups[i].name + ' (' + subgroups[i].subgroup_id + ')'; 
+      selectBoxAll.options[selectBoxAll.length] = new Option(optionText,
+                                                           subgroups[i].subgroup_id);
+    }
+  }
+}  
+</script>
+
+<div id="page">
+
+[% INCLUDE sidebar/sidebar.tmpl %]
+
+  <div id="content">
+
+    <h1 class="firstHeading">[% title %]</h1>
+
+    <div class="section-full">
+      <div class="section-header">Existing Testgroups</div>
+
+      <div class="section-content">
+
+        <form id="select_testgroup_and_mode_form" name="select_testgroup_and_mode_form" method="post" action="manage_testgroups.cgi">
+	<table border="0" cellspacing="0" cellpadding="5">
+	<tr>
+        <td>
+	[% INCLUDE form_widgets/select_testgroup_id.tmpl name="testgroup_id" placeholder=1 size=10 onchange="loadTestgroup();" %]
+        </td>
+        </tr>
+        <tr>        
+        <td>
+	<input id="add_testgroup_button" name="add_testgroup_button" class="manage" type="button" onClick="switchToAdd();" value="Add testgroup">&nbsp;
+	<input id="edit_testgroup_button" name="edit_testgroup_button" class="manage" type="button" onClick="switchToEdit();" value="Edit testgroup" disabled>&nbsp;
+	<input id="clone_testgroup_button" name="clone_testgroup_button" class="manage" type="submit" onClick="confirm('Really clone this testgroup?');" value="Clone testgroup" disabled>&nbsp;
+	<input id="delete_testgroup_button" name="delete_testgroup_button" class="manage" type="submit" onClick="confirm('Really delete this testgroup?');" value="Delete testgroup" disabled>
+        </td>
+        </tr>
+	</table>
+	</form>
+
+      </div> <!--end section-content-->
+    </div> <!--end section-full-->
+
+    <div style="display: none;" id="testgroup_display_div" class="section-full">
+      <div id="testgroup-title" class="section-header">Testgroup Info</div>
+      <div class="section-content">
+
+        <div class="testgroup-content">
+          [% INCLUDE testgroup/testgroup.tmpl testgroup=testgroup show_config=1 show_edit=1 %]
+        </div>
+      </div>
+    </div>
+
+    <div style="display: none;" id="editform_div" class="section-full">
+      <div id="testgroup-title" class="section-header">Testgroup Info</div>
+
+      <div class="section-content">
+
+      [% INCLUDE admin/edit_testgroup.tmpl %]
+
+      </div> <!--end section-content-->
+    </div> <!--end section-full-->
+
+  </div> <!--END content-->
+
+</div> <!--END page-->
+
+<script type="text/javascript">
+var em = document.getElementById('testgroup_id'); 
+if (em.selectedIndex >= 0) {
+  loadTestgroup();
+  enableForm('edit_testgroup_form');
+} else {
+  disableForm('edit_testgroup_form');
+}
+</script>
+
+[% INCLUDE global/litmus_footer.tmpl %]
+[% INCLUDE global/html_footer.tmpl %]
+
+
+

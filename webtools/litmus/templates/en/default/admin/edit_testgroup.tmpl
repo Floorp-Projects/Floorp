@@ -1,0 +1,136 @@
+[%# ***** BEGIN LICENSE BLOCK *****
+  # Version: MPL 1.1
+  #
+  # The contents of this file are subject to the Mozilla Public License Version
+  # 1.1 (the "License"); you may not use this file except in compliance with
+  # the License. You may obtain a copy of the License at
+  # http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS IS" basis,
+  # WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+  # for the specific language governing rights and limitations under the
+  # License.
+  #
+  # The Original Code is Litmus.
+  #
+  # The Initial Developer of the Original Code is
+  # The Mozilla Corporation.
+  # Portions created by the Initial Developer are Copyright (C) 2006
+  # the Initial Developer. All Rights Reserved.
+  #
+  # Contributor(s):
+  #   Chris Cooper <ccooper@deadsquid.com>
+  #   Zach Lipton <zach@zachlipton.com>
+  #
+  # ***** END LICENSE BLOCK *****
+#%]
+
+[%# INTERFACE:
+  # $testgroup - the testgroup object to show
+#%]
+
+<script type="text/javascript">
+function checkFormContents(f) {
+  return (
+          checkString(f.editform_name, 'Name') &&
+          verifySelected(f.product, 'Product')
+         );
+}
+
+function previewSubgroup(selectID) {
+  var selectBox = document.getElementById(selectID);
+  if (selectBox) {
+    if (selectBox.selectedIndex >= 0) {
+      if (selectBox.options[selectBox.selectedIndex].value != '') {
+        window.open('manage_subgroups.cgi?subgroup_id=' + selectBox.options[selectBox.selectedIndex].value,
+                    'subgroup_preview');
+      }
+    } else {
+      toggleMessage('failure','No testgroup selected!');
+    }
+  }
+}
+
+var manageTestgroupsHelpTitle="Help with Managing Testgroups";
+var manageTestgroupsHelpText="<p>The select box on the left contains all the subgroups for the chosen product, <strong><em>INCLUDING</em></strong> any subgroups already contained in the testgroup. You can use the <input type='button' value='&rArr;' disabled> button to add subgroups to the testgroup, and the <input type='button' value='&lArr;' disabled> button to remove subgroups from the testgroup. <strong>NOTE</strong>: neither of the actions will alter the list of subgroups on the left.</p><p>You can preview any subgroup from the left-hand select box by selecting the subgroup, and then clicking on  the 'Preview Subgroup' link below the select box. If more than one subgroup is selected, only the first subgroup will be previewed.</p><p>You can change the display order of subgroups within the testgroup using the <input type='button' value='&uArr;' disabled> and <input type='button' value='&dArr;' disabled> buttons to the right of the right-hand select box. Subgroups can be re-ordered singly or in groups by selecting multiple subgroups in the right-hand select box.</p>";
+
+</script>
+
+      <form id="edit_testgroup_form" name="edit_testgroup_form" method="post" action="manage_testgroups.cgi" onSubmit="selectNone('editform_subgroups_for_product');selectAll('editform_testgroup_subgroups');return checkFormContents(this);">
+      <input id="editform_mode" name="editform_mode" type="hidden" value="edit">
+      <input id="editform_testgroup_id" name="editform_testgroup_id" type="hidden" value="">
+
+      <table class="manage">
+	<tr>
+	<td class="headerleft">Testgroup ID#:</td>
+	<td name="editform_testgroup_id_display" id="editform_testgroup_id_display"></td>
+	</tr>
+        <tr>
+        <td class="headerleft">Name:</td>
+        <td><input name="editform_name"
+                   id="editform_name"
+                   value=""
+                   size="35"/ disabled></td>
+        </tr>
+	<tr>
+	<td class="headerleft">Product:</td>
+	<td>[% INCLUDE productbox onchange="changeProduct();populateAllSubgroups();" %]</td>
+	</tr>
+	<!-- XXX: Placeholder for test runs. -->
+        <tr>
+          <td class="headerleft">Enabled?</td>
+          <td>
+            <input name="editform_enabled" 
+                   type="checkbox"
+                   id="editform_enabled"
+                   value="1" disabled
+		   onChange="if (this.checked == false) {document.getElementById('editform_communityenabled').checked =false;}">
+          </td>
+          <td>&lArr;&nbsp;Uncheck this to completely disable this testgroup.</td>
+        </tr>
+        <tr>
+          <td class="headerleft">Testrunner Plan ID#:</td>
+          <td name="editform_testrunner_plan_id" id="editform_testrunner_plan_id"></td>
+        </tr>
+	<tr>
+	<td colspan="3"><hr/></td>
+        </tr> 
+	<tr>
+	<td class="headerleft" colspan="3">Manage Subgroups for this Testgroup</td>
+        </tr> 
+	<tr>
+	<td colspan="3">
+	<div class="manage">
+          <table border="0" cellspacing="10" cellpadding="0">
+            <tr>
+            <td id="editform_subgroups_for_product_header" name="editform_subgroups_for_product_header" class="headerleft">All Subgroups For Product</td>
+            <td></td>
+            <td class="headerleft">Subgroups in Testgroup</td>
+            </tr>
+            <tr>
+            <td><select multiple class="subgroup-testgroups" id="editform_subgroups_for_product" name="editform_subgroups_for_product" size="15">
+            <option value="">--No product selected--</option>
+            </select></td>
+            <td align="center" valign="middle"><input id="add_subgroup_button" name="add_subgroup_button" type="button" value="&rArr;" onClick="copyToList('editform_subgroups_for_product','editform_testgroup_subgroups');"><br/><br/><input id="remove_subgroup_button" name="remove_subgroup_button" type="button" value="&lArr;" onClick="removeSelectedFromList('editform_testgroup_subgroups',true);"></td>
+            <td><select multiple class="subgroup-testgroups" id="editform_testgroup_subgroups" name="editform_testgroup_subgroups" size="15">
+            <option value="">--No testgroup selected--</option>
+            </select></td>
+            <td align="center" valign="middle"><input id="move_subgroup_up_button" name="move_subgroup_up_button" type="button" value="&uArr;" onClick="up('editform_testgroup_subgroups');"><br/><br/><input id="move_subgroup_down_button" name="move_subgroup_down_button" type="button" value="&dArr;" onClick="down('editform_testgroup_subgroups');"></td>
+            </tr>
+            <tr>
+            <td align="right">&uArr;&nbsp;<a name="previewSubgroup" onclick="previewSubgroup('editform_subgroups_for_product');">Preview Subgroup</a></td>
+            <td></td>
+            <td align="right">&uArr;&nbsp;<a name="showManageSubgroupsHelp" onclick="toggleHelp(manageSubgroupsHelpTitle,manageSubgroupsHelpText);">Help with Managing Subgroups</a></td>
+            <td></td>
+            </tr>            
+          </table>
+          </div>
+        </td>
+	</tr>
+        <tr>
+          <td colspan="3" align="right"><input id="editform_reset" class="button" type="button" value="Reset" disabled />&nbsp;<input class="button" type="submit" id="editform_submit" name="editform_submit" value="Submit Edits" disabled /></div> 
+          </td>
+        </tr>	
+      </table>
+
+      </form>

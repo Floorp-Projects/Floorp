@@ -170,13 +170,6 @@ sub getResultStatuses()
 }
 
 #########################################################################
-sub getTestGroups()
-{
-    my $sql = "SELECT DISTINCT(name) FROM testgroups ORDER BY name";
-    return _getValues($sql);
-}
-
-#########################################################################
 sub getTestcaseIDs()
 {
     my $sql = "SELECT testcase_id FROM testcases ORDER BY testcase_id";
@@ -193,9 +186,17 @@ sub getTestcases()
 #########################################################################
 sub getSubgroups()
 {
-    my $sql = "SELECT subgroup_id, name FROM subgroups ORDER BY name, subgroup_id";
+    my $sql = "SELECT subgroup_id, name, product_id FROM subgroups ORDER BY name, subgroup_id";
     return _getValues($sql);
 }
+
+#########################################################################
+sub getTestgroups()
+{
+    my $sql = "SELECT testgroup_id, name, product_id FROM testgroups ORDER BY name, testgroup_id";
+    return _getValues($sql);
+}
+
 
 #########################################################################
 sub getLocales()

@@ -1,0 +1,58 @@
+[%# ***** BEGIN LICENSE BLOCK *****
+  # Version: MPL 1.1
+  #
+  # The contents of this file are subject to the Mozilla Public License Version
+  # 1.1 (the "License"); you may not use this file except in compliance with
+  # the License. You may obtain a copy of the License at
+  # http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS IS" basis,
+  # WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+  # for the specific language governing rights and limitations under the
+  # License.
+  #
+  # The Original Code is Litmus.
+  #
+  # The Initial Developer of the Original Code is
+  # The Mozilla Corporation.
+  # Portions created by the Initial Developer are Copyright (C) 2006
+  # the Initial Developer. All Rights Reserved.
+  #
+  # Contributor(s):
+  #   Chris Cooper <ccooper@deadsquid.com>
+  #   Zach Lipton <zach@zachlipton.com>
+  #
+  # ***** END LICENSE BLOCK *****
+#%]
+
+[%# INTERFACE:
+  # $testgroup            - the testgroup object to show
+  # $show_config          - display the config options (product, etc.)
+  #                         for a given testgroup
+  # $show_edit (optional) - display testgroup for editing
+#%]
+
+[% PROCESS global/selects.none.tmpl %]
+
+[% IF show_config %]
+<table cellspacing="0" cellpadding="0" class="tcm">
+  <tr>
+  <td width="20%"><b>Product:</b></td>
+  <td>
+    <div id="product_text[% IF ! show_edit %]_[% testgroup.testgroup_id | html %][% END %]">[% testgroup.product.name | html %]</div>
+    </td>
+    [% IF ! show_edit %]<td align="right" valign="top" colspan="5"><a href="manage_testgroups.cgi?testgroup_id=[%testgroup.testgroup_id | html%]"> Edit Testgroup</a></td>[% END %]
+  </tr>
+  <!-- XXX: Placeholder for test runs -->
+  <tr>
+    <td><b>Testgroup ID #:</b></td>
+    <td id="testgroup_id_display[% IF ! show_edit %]_[% testgroup.testgroup_id | html %][% END %]">[% testgroup.testgroup_id | html %]</td>
+  </tr>
+  <tr>
+    <td><b>Name:</b></td>
+    <td><div id="name_text[% IF ! show_edit %]_[% testgroup.testgroup_id | html%][% END %]">[% testgroup.name | html %]</div></td>
+  </tr>
+</table>
+
+<br clear="all" />
+[% END %]
