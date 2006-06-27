@@ -359,33 +359,51 @@ nsWindowWatcher::OpenWindow(nsIDOMWindow *aParent,
                             nsISupports *aArguments,
                             nsIDOMWindow **_retval)
 {
-  nsCOMPtr<nsIMutableArray> argsArray;
+  nsCOMPtr<nsIArray> argsArray;
   PRUint32 argc = 0;
   if (aArguments) {
-    // aArguments is allowed to be either an nsISupportsArray (in which case
-    // it is treated as argv) or any other COM object (in which case it
-    // becomes argv[0]).
+    // aArguments is allowed to be either an nsISupportsArray or an nsIArray
+    // (in which case it is treated as argv) or any other COM object (in which
+    // case it becomes argv[0]).
     nsresult rv;
-    argsArray = do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
-    if (NS_FAILED(rv))
-      return rv;
 
     nsCOMPtr<nsISupportsArray> supArray(do_QueryInterface(aArguments));
     if (!supArray) {
-      rv = argsArray->AppendElement(aArguments, PR_FALSE);
-      if (NS_FAILED(rv))
-        return rv;
-      argc = 1;
+      nsCOMPtr<nsIArray> array(do_QueryInterface(aArguments));
+      if (!array) {
+        nsCOMPtr<nsIMutableArray> muteArray;
+        argsArray = muteArray = do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
+        if (NS_FAILED(rv))
+          return rv;
+        rv = muteArray->AppendElement(aArguments, PR_FALSE);
+        if (NS_FAILED(rv))
+          return rv;
+        argc = 1;
+      } else {
+        rv = array->GetLength(&argc);
+        if (NS_FAILED(rv))
+          return rv;
+        if (argc > 0)
+          argsArray = array;
+      }
     } else {
       // nsISupports array - copy into nsIArray...
       rv = supArray->Count(&argc);
       if (NS_FAILED(rv))
         return rv;
-      for (PRUint32 i = 0; i < argc; i++) {
-        nsCOMPtr<nsISupports> elt(dont_AddRef(supArray->ElementAt(i)));
-        rv = argsArray->AppendElement(elt, PR_FALSE);
+      // But only create an arguments array if there's at least one element in
+      // the supports array.
+      if (argc > 0) {
+        nsCOMPtr<nsIMutableArray> muteArray;
+        argsArray = muteArray = do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
         if (NS_FAILED(rv))
           return rv;
+        for (PRUint32 i = 0; i < argc; i++) {
+          nsCOMPtr<nsISupports> elt(dont_AddRef(supArray->ElementAt(i)));
+          rv = muteArray->AppendElement(elt, PR_FALSE);
+          if (NS_FAILED(rv))
+            return rv;
+        }
       }
     }
   }
@@ -445,6 +463,17 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
                               nsIArray *argv,
                               nsIDOMWindow **_retval)
 {
+  if (argv) {
+    PRUint32 argc;
+    nsresult rv = argv->GetLength(&argc);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // For compatibility with old code, no arguments implies that we shouldn't
+    // create an arguments object on the new window at all.
+    if (argc == 0)
+      argv = nsnull;
+  }
+
   return OpenWindowJSInternal(aParent, aUrl, aName, aFeatures, aDialog,
                               argv, PR_TRUE, _retval);
 }
