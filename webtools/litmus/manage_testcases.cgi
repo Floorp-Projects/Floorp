@@ -29,8 +29,6 @@
 
 use strict;
 
-# Litmus homepage
-
 use Litmus;
 use Litmus::Auth;
 use Litmus::Cache;
