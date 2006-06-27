@@ -1404,10 +1404,8 @@ nsCacheService::Unlock()
 #endif
     PR_Unlock(gService->mLock);
 
-    for (PRUint32 i = 0; i < doomed.Length(); ++i) {
-        printf(">>>>>> releasing [%p]\n", (void*) doomed[i]);
+    for (PRUint32 i = 0; i < doomed.Length(); ++i)
         doomed[i]->Release();
-    }
 }
 
 void
