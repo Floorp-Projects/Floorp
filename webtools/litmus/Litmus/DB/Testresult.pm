@@ -44,7 +44,7 @@ our $_num_results_default = 15;
 
 Litmus::DB::Testresult->table('test_results');
 
-Litmus::DB::Testresult->columns(All => qw/testresult_id testcase_id last_updated submission_time user_id opsys_id branch_id build_id user_agent result_status_id build_type_id machine_name exit_status_id duration_ms talkback_id valid vetted validated_by_user_id vetted_by_user_id validated_timestamp vetted_timestamp locale_abbrev/);
+Litmus::DB::Testresult->columns(All => qw/testresult_id testcase_id last_updated submission_time user_id opsys_id branch_id build_id user_agent result_status_id build_type_id machine_name exit_status_id duration_ms talkback_id valid vetted validated_by_user_id vetted_by_user_id validated_timestamp vetted_timestamp locale_abbrev is_automated_result/);
 
 Litmus::DB::Testresult->column_alias("testcase_id", "testcase");
 Litmus::DB::Testresult->column_alias("submission_time", "timestamp");
@@ -58,6 +58,7 @@ Litmus::DB::Testresult->column_alias("exit_status_id", "exit_status");
 Litmus::DB::Testresult->column_alias("validity_id", "validity");
 Litmus::DB::Testresult->column_alias("vetting_status_id", "vetting_status");
 Litmus::DB::Testresult->column_alias("locale_abbrev", "locale");
+Litmus::DB::Testresult->column_alias("is_automated_result", "isAutomated");
 
 Litmus::DB::Testresult->has_a(opsys => "Litmus::DB::Opsys");
 Litmus::DB::Testresult->has_a(branch => "Litmus::DB::Branch");

@@ -245,6 +245,7 @@ $dbtool->AddKey("users", '(email, realname, irc_nickname)', '');
 $dbtool->DropIndex("test_result_logs", "test_result_id");
 $dbtool->DropField("test_result_logs", "test_result_id");
 
+$dbtool->AddField("test_results", "is_automated_result", "tinyint(1) not null default '0'");
 
 print "Schema update complete.\n\n";
 print <<EOS;

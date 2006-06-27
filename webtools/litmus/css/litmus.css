@@ -576,6 +576,12 @@ table.radio-testresults tr {
     padding: 0px 5px 10px 5px;
 }
 
+div.automated-result-banner { 
+	background-color: #ECE9AA; 
+	padding: 0px 5px 10px 5px;
+	border: solid #bbbbbb 1px;
+}
+
 /* 11 Run Test ****************************************************************************** */
 
 div.title_sub { 

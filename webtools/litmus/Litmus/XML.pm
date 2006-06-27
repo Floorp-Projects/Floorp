@@ -75,8 +75,6 @@ sub processResults {
 		return 1;
 	}
 	
-	my ($machinename) = $self->{'sysconfig'}->{'useragent'} =~ m/\((.*)\)/;
-	
 	# add so-called 'global logs' that apply to all the results
 	# we save them in @globallogs so we can map them to the results later
 	my @globallogs;
@@ -100,12 +98,13 @@ sub processResults {
 			branch 	      => $self->{'sysconfig'}->{'branch'},
 			locale	      => $self->{'sysconfig'}->{'locale'},
 			build_id      => $self->{'sysconfig'}->{'buildid'},
-			machine_name  => $machinename,
+			machine_name  => $self->{'machinename'},
 			result_status => $result->{'resultstatus'},
 			timestamp     => $result->{'timestamp'},
 			exit_status   => $result->{'exitstatus'},
 			duration_ms   => $result->{'duration'},
 			valid		  => 1,
+			isAutomated   => $result->{'isAutomated'},
 		});
 		
 		if (!$newres) { $self->respErrResult($result->{'testid'}); next; }
@@ -162,6 +161,7 @@ sub parseResultFile {
 	my $data = shift;
 	my $x = XML::XPath->new(xml => $data, standalone => 1);
 	$self->{'useragent'} = $x->findvalue('/litmusresults/@useragent');
+	$self->{'machinename'} = $x->findvalue('litmusresults/@machinename');
 	$self->{'action'} = $x->findvalue('/litmusresults/@action');
 	$self->{'user'}->{'username'} = $x->findvalue(
 									'/litmusresults/testresults/@username');
@@ -189,6 +189,7 @@ sub parseResultFile {
 	my $c = 0;
 	foreach my $result (@results) {
 		$self->{'results'}->[$c]->{'testid'} = $x->findvalue('@testid', $result);
+		$self->{'results'}->[$c]->{'isAutomated'} = $x->findvalue('@is_automated_result', $result);
 		$self->{'results'}->[$c]->{'resultstatus'} = $x->findvalue('@resultstatus', $result);
 		$self->{'results'}->[$c]->{'exitstatus'} = $x->findvalue('@exitstatus', $result);
 		$self->{'results'}->[$c]->{'duration'} = $x->findvalue('@duration', $result);
@@ -311,6 +312,10 @@ sub validateResults {
 			next;
 		}
 		$result->{'testid'} = $tests[0];
+		
+		# assume it's an automated test result if not specified
+		($result->{'isAutomated'} eq '0' || $result->{'isAutomated'} ne undef) ? 
+			$result->{'isAutomated'} = 0 : $result->{'isAutomated'} = 1;
 		
 		my @results = Litmus::DB::ResultStatus->search(
 									name => $result->{'resultstatus'});

@@ -219,6 +219,7 @@ $table{test_results} =
          vetted_by_user_id int(11) default \'0\',
          validated_timestamp datetime,
          vetted_timestamp datetime,
+     is_automated_result tinyint(1) not null default \'0\',
 	 
 	 index(testcase_id),
 	 index(last_updated),

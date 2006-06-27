@@ -25,6 +25,17 @@
   # ***** END LICENSE BLOCK *****
 #%]
 
+[% IF result.isAutomated %]
+<div class="automated-result-banner">
+  <strong>automated test result</strong><br /><br />
+  [% IF result.machine_name %]Machine: <i>[% result.machine_name | html %]</i><br />[%END%]
+  [% IF result.duration_ms %]Duration: [% result.duration_ms | html %]<br />[%END%]
+  [% IF result.exit_status %]Exit Status: [% result.exit_status.name | html %][%END%]
+</div>
+[% END %]
+
+<br />
+
 <div class="section-full">
   <div class="section-header">
 Summary Information
