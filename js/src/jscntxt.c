@@ -168,6 +168,7 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 {
     JSContext *cx;
     JSBool ok, first;
+    JSContextCallback cxCallback;
 
     cx = (JSContext *) malloc(sizeof *cx);
     if (!cx)
@@ -214,7 +215,7 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
     JS_InitArenaPool(&cx->tempPool, "temp", 1024, sizeof(jsdouble));
 
     if (!js_InitRegExpStatics(cx, &cx->regExpStatics)) {
-        js_DestroyContext(cx, JS_NO_GC);
+        js_DestroyContext(cx, JSDCM_NEW_FAILED);
         return NULL;
     }
 
@@ -250,7 +251,7 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
         JS_EndRequest(cx);
 #endif
         if (!ok) {
-            js_DestroyContext(cx, JS_NO_GC);
+            js_DestroyContext(cx, JSDCM_NEW_FAILED);
             return NULL;
         }
 
@@ -260,19 +261,40 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
         JS_UNLOCK_GC(rt);
     }
 
+    cxCallback = rt->cxCallback;
+    if (cxCallback && !cxCallback(cx, JSCONTEXT_NEW)) {
+        js_DestroyContext(cx, JSDCM_NEW_FAILED);
+        return NULL;
+    }
     return cx;
 }
 
 void
-js_DestroyContext(JSContext *cx, JSGCMode gcmode)
+js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
 {
     JSRuntime *rt;
+    JSContextCallback cxCallback;
     JSBool last;
     JSArgumentFormatMap *map;
     JSLocalRootStack *lrs;
     JSLocalRootChunk *lrc;
 
     rt = cx->runtime;
+
+    if (mode != JSDCM_NEW_FAILED) {
+        cxCallback = rt->cxCallback;
+        if (cxCallback) {
+            /*
+             * JSCONTEXT_DESTROY callback is not allowed to fail and must
+             * return true.
+             */
+#ifdef DEBUG
+            JSBool callbackStatus =
+#endif
+            cxCallback(cx, JSCONTEXT_DESTROY);
+            JS_ASSERT(callbackStatus);
+        }
+    }
 
     /* Remove cx from context list first. */
     JS_LOCK_GC(rt);
@@ -357,9 +379,9 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
         JS_NOTIFY_ALL_CONDVAR(rt->stateChange);
         JS_UNLOCK_GC(rt);
     } else {
-        if (gcmode == JS_FORCE_GC)
+        if (mode == JSDCM_FORCE_GC)
             js_ForceGC(cx, 0);
-        else if (gcmode == JS_MAYBE_GC)
+        else if (mode == JSDCM_MAYBE_GC)
             JS_MaybeGC(cx);
     }
 

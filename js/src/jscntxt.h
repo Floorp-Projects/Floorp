@@ -94,7 +94,12 @@ js_GetCurrentThread(JSRuntime *rt);
 
 #endif /* JS_THREADSAFE */
 
-typedef enum JSGCMode { JS_NO_GC, JS_MAYBE_GC, JS_FORCE_GC } JSGCMode;
+typedef enum JSDestroyContextMode {
+    JSDCM_NO_GC,
+    JSDCM_MAYBE_GC,
+    JSDCM_FORCE_GC,
+    JSDCM_NEW_FAILED
+} JSDestroyContextMode;
 
 typedef enum JSRuntimeState {
     JSRTS_DOWN,
@@ -116,6 +121,9 @@ typedef struct JSNativeIteratorState JSNativeIteratorState;
 struct JSRuntime {
     /* Runtime state, synchronized by the stateChange/gcLock condvar/lock. */
     JSRuntimeState      state;
+
+    /* Context create/destroy callback. */
+    JSContextCallback   cxCallback;
 
     /* Garbage collector state, used by jsgc.c. */
     JSGCArenaList       gcArenaList[GC_NUM_FREELISTS];
@@ -735,7 +743,7 @@ extern JSContext *
 js_NewContext(JSRuntime *rt, size_t stackChunkSize);
 
 extern void
-js_DestroyContext(JSContext *cx, JSGCMode gcmode);
+js_DestroyContext(JSContext *cx, JSDestroyContextMode mode);
 
 /*
  * Return true if cx points to a context in rt->contextList, else return false.
