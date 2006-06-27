@@ -5095,7 +5095,8 @@ already_AddRefed<nsIDOMElement>
 nsDocument::CheckAncestryAndGetFrame(nsIDocument* aDocument) const
 {
   nsIDocument* parentDoc;
-  for (parentDoc = aDocument->GetParentDocument(); parentDoc != this;
+  for (parentDoc = aDocument->GetParentDocument();
+       parentDoc != NS_STATIC_CAST(const nsIDocument* const, this);
        parentDoc = parentDoc->GetParentDocument()) {
     if (!parentDoc) {
       return nsnull;
