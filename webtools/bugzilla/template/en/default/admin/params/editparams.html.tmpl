@@ -46,9 +46,9 @@
 
 [% title = BLOCK %]
   [% IF curpanel == -1 %]
-    [% terms.Bugzilla FILTER html %] Parameters: Index
+    Parameters: Index
   [% ELSE %]
-    [% terms.Bugzilla FILTER html %] Configuration:
+    Configuration:
     [%+ current_panel.title FILTER html %]
   [% END %]
 [% END %]

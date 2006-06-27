@@ -123,30 +123,35 @@
   # 'bannerhtml'
   #%]
 
+
+<div id="header">
+
 [% INCLUDE global/banner.html.tmpl %]
 
-<table border="0" cellspacing="0" cellpadding="0" id="header">
+<table border="0" cellspacing="0" cellpadding="0" id="titles">
 <tr>
-  [% IF h1 %]
-    <td>
-      <h1>[% h1 %]</h1>
-    </td>
-  [% END %]
+  <td id="title">
+    [% terms.Bugzilla %][% IF h1 %] - [% h1 %] [% END %]
+  </td>
 
   [% IF h2 %]
-    <td>
-      <h2>[% h2 %]</h2>
+    <td id="subtitle">
+      [% h2 %]
     </td>
   [% END %]
 
   [% IF h3 %]
-    <td>
-      <h3>[% h3 %]</h3>
+    <td id="information">
+      [% h3 %]
     </td>
   [% END %]
 </tr>
 </table>
 
+[% PROCESS "global/common-links.html.tmpl" %]
+
 [% IF message %]
 <div id="message">[% message %]</div>
 [% END %]
+
+</div>

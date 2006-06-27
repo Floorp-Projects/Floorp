@@ -31,6 +31,7 @@
 
 [% PROCESS global/header.html.tmpl
    title = "$terms.Bugzilla Main Page"
+   h1 = "Main Page" 
    h3 = "version $VERSION"
    style_urls = [ 'skins/standard/index.css' ]
    onload = 'document.forms[\'f\'].quicksearch.focus();'

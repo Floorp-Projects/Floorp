@@ -95,7 +95,7 @@ print $cgi->header();
 
 my @row;
 
-$template->put_header("Bugzilla Sanity Check");
+$template->put_header("Sanity Check");
 
 ###########################################################################
 # Fix vote cache
