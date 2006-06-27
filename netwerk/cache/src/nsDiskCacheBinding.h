@@ -76,7 +76,7 @@ public:
 public:
     nsCacheEntry*           mCacheEntry;    // back pointer to parent nsCacheEntry
     nsDiskCacheRecord       mRecord;
-    nsDiskCacheStreamIO*    mStreamIO;
+    nsDiskCacheStreamIO*    mStreamIO;      // strong reference
     PRBool                  mDoomed;        // record is not stored in cache map
     PRUint8                 mGeneration;    // possibly just reservation
 };
