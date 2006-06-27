@@ -942,6 +942,12 @@ nsScriptSecurityManager::CheckSameOriginDOMProp(nsIPrincipal* aSubject,
         return NS_OK;
 
     /*
+    * Content can't ever touch chrome (we check for UniversalXPConnect later)
+    */
+    if (aObject == mSystemPrincipal)
+        return NS_ERROR_DOM_PROP_ACCESS_DENIED;
+
+    /*
     * If we failed the origin tests it still might be the case that we
     * are a signed script and have permissions to do this operation.
     * Check for that here.

@@ -747,8 +747,17 @@ nsContentUtils::CanCallerAccess(nsIDOMNode *aNode)
   nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
   NS_ENSURE_TRUE(node, PR_FALSE);
 
+  nsIPrincipal* nodePrincipal = node->NodePrincipal();
+  if (nodePrincipal == systemPrincipal) {
+    // we already know subjectPrincipal isn't the systemPrincipal so if
+    // the object principal is they cannot match. Bail out now to
+    // avoid wasting time in CheckSameOriginPrincipal
+
+    return PR_FALSE;
+  }
+
   nsresult rv = sSecurityManager->
-    CheckSameOriginPrincipal(subjectPrincipal, node->NodePrincipal());
+    CheckSameOriginPrincipal(subjectPrincipal, nodePrincipal);
   if (NS_SUCCEEDED(rv)) {
     return PR_TRUE;
   }
