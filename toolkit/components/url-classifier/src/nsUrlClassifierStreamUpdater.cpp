@@ -99,9 +99,10 @@ TableUpdateListener::OnDataAvailable(nsIRequest *request,
                                      PRUint32 aSourceOffset,
                                      PRUint32 aLength)
 {
-  LOG(("OnDataAvailable (%d bytes)", aLength));
+  if (!mDBService)
+    return NS_ERROR_NOT_INITIALIZED;
 
-  NS_ASSERTION(mDBService != nsnull, "UrlClassifierDBService is null");
+  LOG(("OnDataAvailable (%d bytes)", aLength));
 
   nsresult rv;
   // Copy the data into a nsCString
@@ -121,6 +122,9 @@ NS_IMETHODIMP
 TableUpdateListener::OnStopRequest(nsIRequest *request, nsISupports* context,
                                    nsresult aStatus)
 {
+  if (!mDBService)
+    return NS_ERROR_NOT_INITIALIZED;
+
   LOG(("OnStopRequest status: %d", aStatus));
 
   // If we got the whole stream, call Finish to commit the changes.
