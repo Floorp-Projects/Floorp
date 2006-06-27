@@ -23,6 +23,7 @@
  *  Ben Goodger <ben@mozilla.org> (Original Author)
  *  Darin Fisher <darin@meer.net>
  *  Ben Turner <bent.mozilla@gmail.com>
+ *  Jeff Walden <jwalden+code@mit.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -82,7 +83,7 @@ const MODE_TRUNCATE = 0x20;
 const PERMS_FILE      = 0644;
 const PERMS_DIRECTORY = 0755;
 
-const STATE_NONE            = null;
+const STATE_NONE            = "null";
 const STATE_DOWNLOADING     = "downloading";
 const STATE_PENDING         = "pending";
 const STATE_APPLYING        = "applying";
@@ -128,7 +129,7 @@ var gLogEnabled = { };
  */  
 function LOG(module, string) {
   if (module in gLogEnabled) {
-    dump("*** " + module + ":" + string + "\n");
+    dump("*** " + module + ": " + string + "\n");
     gConsole.logStringMessage(string);
   }
 }
@@ -534,6 +535,7 @@ function getObserverService()
  * Update Patch
  * @param   patch
  *          A <patch> element to initialize this object with
+ * @throws if patch has a size of 0
  * @constructor
  */
 function UpdatePatch(patch) {
@@ -545,6 +547,12 @@ function UpdatePatch(patch) {
     case "selected":
       this.selected = attr.value == "true";
       break;
+    case "size":
+      if (0 == parseInt(attr.value)) {
+        LOG("UpdatePatch", "0-sized patch!");
+        throw Components.results.NS_ERROR_ILLEGAL_VALUE;
+      }
+      // fall through
     default:
       this[attr.name] = attr.value;
       break;
@@ -655,6 +663,7 @@ UpdatePatch.prototype = {
  * Implements nsIUpdate
  * @param   update
  *          An <update> element to initialize this object with
+ * @throws if the update contains no patches
  * @constructor
  */
 function Update(update) {
@@ -676,8 +685,16 @@ function Update(update) {
       continue;
 
     patchElement.QueryInterface(Components.interfaces.nsIDOMElement);
-    this._patches.push(new UpdatePatch(patchElement));
+    try {
+      var patch = new UpdatePatch(patchElement);
+    } catch (e) {
+      continue;
+    }
+    this._patches.push(patch);
   }
+  
+  if (0 == this._patches.length)
+    throw Components.results.NS_ERROR_ILLEGAL_VALUE;
 
   for (var i = 0; i < update.attributes.length; ++i) {
     var attr = update.attributes.item(i);
@@ -1474,6 +1491,12 @@ UpdateManager.prototype = {
           continue;
 
         updateElement.QueryInterface(Components.interfaces.nsIDOMElement);
+        try {
+          var update = new Update(updateElement);
+        } catch (e) {
+          LOG("UpdateManager", "_loadXMLFileIntoArray: invalid update");
+          continue;
+        }
         result.push(new Update(updateElement));
       }
     }
@@ -1556,7 +1579,8 @@ UpdateManager.prototype = {
       return;
     if (this._updates) {
       for (var i = 0; i < this._updates.length; ++i) {
-        if (this._updates[i].version == update.version &&
+        if (this._updates[i] &&
+            this._updates[i].version == update.version &&
             this._updates[i].buildID == update.buildID) {
           // Replace the existing entry with the new value, updating
           // all metadata.
@@ -1795,7 +1819,12 @@ Checker.prototype = {
         continue;
 
       updateElement.QueryInterface(Components.interfaces.nsIDOMElement);
-      var update = new Update(updateElement);
+      try {
+        var update = new Update(updateElement);
+      } catch (e) {
+        LOG("Checker", "Invalid <update/>, ignoring...");
+        continue;
+      }
       update.serviceURL = this.updateURL;
       update.channel = getUpdateChannel();
       updates.push(update);
@@ -2076,8 +2105,13 @@ Downloader.prototype = {
 
     // Restore the updateDir since we may have deleted it.
     updateDir = getUpdatesDir();
-    
-    selectedPatch.selected = true;
+
+    // if update only contains a partial patch, selectedPatch == null here if
+    // the partial patch has been attempted and fails and we're trying to get a
+    // complete patch
+    if (selectedPatch)    
+      selectedPatch.selected = true;
+
     update.isCompleteUpdate = useComplete;
     
     // Reset the Active Update object on the Update Manager and flush the
@@ -2338,17 +2372,25 @@ Downloader.prototype = {
     
     if (state == STATE_DOWNLOAD_FAILED) {
       if (!this._update.isCompleteUpdate) {
+        var allFailed = true;
+  
         // If we were downloading a patch and the patch verification phase 
         // failed, log this and then commence downloading the complete update.
         LOG("Downloader", "onStopRequest: Verification of patch failed, downloading complete update");
         this._update.isCompleteUpdate = true;
         var status = this.downloadUpdate(this._update);
-        if (status == STATE_NONE)
+
+        if (status == STATE_NONE) {
           cleanupActiveUpdate();
+        } else {
+          allFailed = false;
+        }
         // This will reset the |.state| property on this._update if a new 
         // download initiates.
       }
-      else {
+    
+      // if we still fail after trying a complete download, give up completely
+      if (allFailed) {
         // In all other failure cases, i.e. we're S.O.L. - no more failing over
         // ...
         
@@ -2356,12 +2398,13 @@ Downloader.prototype = {
         // (e.g. because the user closed the download window) and there was an
         // error, we must notify now. Otherwise we can keep the failure to 
         // ourselves since the user won't be expecting it. 
-        var fgdl = false;
         try {
-          fgdl = this._update.getProperty("foregroundDownload");
+          this._update.QueryInterface(Components.interfaces.nsIWritablePropertyBag);
+          var fgdl = this._update.getProperty("foregroundDownload");
         }
         catch (e) {
         }
+      
         if (fgdl == "true") {
           var prompter = 
               Components.classes["@mozilla.org/updates/update-prompt;1"].
@@ -2371,6 +2414,9 @@ Downloader.prototype = {
           prompter.showUpdateError(this._update);
         }
       }
+
+      // the complete download succeeded or total failure was handled, so exit
+      return;
     }
 
     // Do this after *everything* else, since it will likely cause the app 
@@ -2688,42 +2734,33 @@ var gModule = {
     throw Components.results.NS_ERROR_NO_INTERFACE;
   },
   
-  _makeFactory: #1= function(ctor) {
-    function ci(outer, iid) {
-      if (outer != null)
-        throw Components.results.NS_ERROR_NO_AGGREGATION;
-      return (new ctor()).QueryInterface(iid);
-    } 
-    return { createInstance: ci };
-  },
-  
   _objects: {
     service: { CID        : Components.ID("{B3C290A6-3943-4B89-8BBE-C01EB7B3B311}"),
                contractID : "@mozilla.org/updates/update-service;1",
                className  : "Update Service",
-               factory    : #1#(UpdateService)
+               factory    : makeFactory(UpdateService)
              },
     checker: { CID        : Components.ID("{898CDC9B-E43F-422F-9CC4-2F6291B415A3}"),
                contractID : "@mozilla.org/updates/update-checker;1",
                className  : "Update Checker",
-               factory    : #1#(Checker)
+               factory    : makeFactory(Checker)
              },
 #ifdef MOZ_XUL_APP
     prompt:  { CID        : Components.ID("{27ABA825-35B5-4018-9FDD-F99250A0E722}"),
                contractID : "@mozilla.org/updates/update-prompt;1",
                className  : "Update Prompt",
-               factory    : #1#(UpdatePrompt)
+               factory    : makeFactory(UpdatePrompt)
              },
 #endif
     timers:  { CID        : Components.ID("{B322A5C0-A419-484E-96BA-D7182163899F}"),
                contractID : "@mozilla.org/updates/timer-manager;1",
                className  : "Timer Manager",
-               factory    : #1#(TimerManager)
+               factory    : makeFactory(TimerManager)
              },
     manager: { CID        : Components.ID("{093C2356-4843-4C65-8709-D7DBCBBE7DFB}"),
                contractID : "@mozilla.org/updates/update-manager;1",
                className  : "Update Manager",
-               factory    : #1#(UpdateManager)
+               factory    : makeFactory(UpdateManager)
              },
   },
   
@@ -2732,6 +2769,19 @@ var gModule = {
   }
 };
 
+/**
+ * Creates a factory for instances of an object created using the passed-in
+ * constructor.
+ */
+function makeFactory(ctor) {
+  function ci(outer, iid) {
+    if (outer != null)
+      throw Components.results.NS_ERROR_NO_AGGREGATION;
+    return (new ctor()).QueryInterface(iid);
+  } 
+  return { createInstance: ci };
+}
+  
 function NSGetModule(compMgr, fileSpec) {
   return gModule;
 }
