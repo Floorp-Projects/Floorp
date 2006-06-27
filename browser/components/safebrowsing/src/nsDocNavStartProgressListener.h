@@ -71,4 +71,7 @@ protected:
 
   nsresult AttachListeners();
   nsresult DetachListeners();
+
+  // Return true if we don't want to check the request url.
+  nsresult IsSpurious(nsIRequest* aReq, PRBool* isSpurious);
 };

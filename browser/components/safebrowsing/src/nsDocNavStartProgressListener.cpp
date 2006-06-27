@@ -40,6 +40,7 @@
 #include "nsIChannel.h"
 #include "nsIRequest.h"
 #include "nsITimer.h"
+#include "nsIURI.h"
 #include "nsIWebProgress.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
@@ -98,6 +99,34 @@ nsDocNavStartProgressListener::DetachListeners()
   NS_ENSURE_SUCCESS(rv, rv);
 
   return webProgressService->RemoveProgressListener(this);
+}
+
+/**
+ * We ignore about:, chrome: and file: URIs.
+ * It's better to err on the side of checking too many URIs.  So if
+ * something fails, we return false.
+ */
+nsresult
+nsDocNavStartProgressListener::IsSpurious(nsIRequest* aReq, PRBool* isSpurious)
+{
+  nsCOMPtr<nsIChannel> channel;
+  nsresult rv;
+  channel = do_QueryInterface(aReq, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIURI> uri;
+  rv = channel->GetURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCAutoString scheme;
+  rv = uri->GetScheme(scheme);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *isSpurious = scheme.Equals("about") ||
+                scheme.Equals("chrome") ||
+                scheme.Equals("file");
+
+  return NS_OK;
 }
 
 // nsIDocNavStartProgressCallback ***********************************************
@@ -275,11 +304,17 @@ nsDocNavStartProgressListener::Observe(nsISupports *subject, const char *topic,
     nsIRequest* request = mRequests[0];
 
     if (mCallback) {
-      nsCAutoString name;
-      nsresult rv = request->GetName(name);
+      PRBool isSpurious;
+      nsresult rv = IsSpurious(request, &isSpurious);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      mCallback->OnDocNavStart(request, name);
+      if (!isSpurious) {
+        nsCAutoString name;
+        rv = request->GetName(name);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        mCallback->OnDocNavStart(request, name);
+      }
     }
 
     mRequests.RemoveObjectAt(0);
