@@ -273,6 +273,10 @@ nsAutoCompleteController::HandleText(PRBool aIgnoreSelection)
 NS_IMETHODIMP
 nsAutoCompleteController::HandleEnter(PRBool *_retval)
 {
+  *_retval = PR_FALSE;
+  if (!mInput)
+    return NS_OK;
+
   // allow the event through unless there is something selected in the popup
   mInput->GetPopupOpen(_retval);
   if (*_retval) {
@@ -295,6 +299,10 @@ nsAutoCompleteController::HandleEnter(PRBool *_retval)
 NS_IMETHODIMP
 nsAutoCompleteController::HandleEscape(PRBool *_retval)
 {
+  *_retval = PR_FALSE;
+  if (!mInput)
+    return NS_OK;
+
   // allow the event through if the popup is closed
   mInput->GetPopupOpen(_retval);
   
@@ -485,6 +493,9 @@ NS_IMETHODIMP
 nsAutoCompleteController::HandleDelete(PRBool *_retval)
 {
   *_retval = PR_FALSE;
+  if (!mInput)
+    return NS_OK;
+
   PRBool isOpen = PR_FALSE;
   mInput->GetPopupOpen(&isOpen);
   if (!isOpen || mRowCount <= 0) {
@@ -953,6 +964,7 @@ nsAutoCompleteController::ClosePopup()
 nsresult
 nsAutoCompleteController::StartSearch()
 {
+  NS_ENSURE_STATE(mInput);
   mSearchStatus = nsIAutoCompleteController::STATUS_SEARCHING;
   mDefaultIndexCompleted = PR_FALSE;
   
@@ -1020,7 +1032,7 @@ nsAutoCompleteController::StartSearchTimer()
   // Don't create a new search timer if we're already waiting for one to fire.
   // If we don't check for this, we won't be able to cancel the original timer
   // and may crash when it fires (bug 236659).
-  if (mTimer)
+  if (mTimer || !mInput)
     return NS_OK;
 
   PRUint32 timeout;
@@ -1121,6 +1133,7 @@ nsAutoCompleteController::RevertTextValue()
 nsresult
 nsAutoCompleteController::ProcessResult(PRInt32 aSearchIndex, nsIAutoCompleteResult *aResult)
 {
+  NS_ENSURE_STATE(mInput);
   // If this is the first search to return, we should clear out the previous cached results
   PRUint32 searchCount;
   mSearches->Count(&searchCount);
