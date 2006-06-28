@@ -88,6 +88,9 @@ public:
 
   // XXX move this function into interface nsISVGLocatableMetrics
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval)=0; // bbox in local coords
+
+  // Are we a container frame?
+  NS_IMETHOD_(PRBool) IsDisplayContainer()=0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGChildFrame, NS_ISVGCHILDFRAME_IID)

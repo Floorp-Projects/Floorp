@@ -206,7 +206,13 @@ nsSVGCairoGlyphGeometry::Render(nsSVGGlyphFrame *aSource,
     else
       cairo_set_fill_rule(ctx, CAIRO_FILL_RULE_WINDING);
 
-    LoopCharacters(ctx, text, cp, cairo_text_path);
+    if (renderMode == nsISVGRendererCanvas::SVG_RENDER_MODE_CLIP_MASK) {
+      cairo_set_antialias(ctx, CAIRO_ANTIALIAS_NONE);
+      cairo_set_source_rgba(ctx, 1.0f, 1.0f, 1.0f, 1.0f);
+      LoopCharacters(ctx, text, cp, cairo_show_text);
+    } else {
+      LoopCharacters(ctx, text, cp, cairo_text_path);
+    }
 
     cairo_set_matrix(ctx, &matrix);
 
