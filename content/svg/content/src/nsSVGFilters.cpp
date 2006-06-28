@@ -56,6 +56,7 @@
 #include "nsSVGAnimatedNumber.h"
 #include "nsISVGValueUtils.h"
 #include "nsSVGFilters.h"
+#include "nsSVGUtils.h"
 
 nsSVGElement::LengthInfo nsSVGFE::sLengthInfo[4] =
 {
@@ -404,10 +405,6 @@ boxBlurV(PRUint8 *aInput, PRUint8 *aOutput,
       aOutput[aStride*y + 4*x + 3] = sums[3]/boxSize;
     }
 }
-
-#ifndef M_PI
-#define M_PI 3.1415926
-#endif
 
 static void
 gaussianBlur(PRUint8 *aInput, PRUint8 *aOutput,
