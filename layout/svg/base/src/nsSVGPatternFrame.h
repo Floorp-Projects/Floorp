@@ -138,17 +138,14 @@ protected:
                               nsIDOMSVGRect *bbox,
                               nsIDOMSVGMatrix *callerCTM);
   nsresult   ConstructCTM(nsIDOMSVGMatrix **ctm, nsIDOMSVGRect *callerBBox);
-  nsresult   CreateSurface(nsISVGRendererSurface **aSurface);
+  nsresult   CreateSurface(nsISVGRendererSurface **aSurface,
+                           nsIDOMSVGRect *bbox);
   nsresult   GetCallerGeometry(nsIDOMSVGMatrix **aCTM, 
                                nsIDOMSVGRect **aBBox,
                                nsSVGElement **aContent, 
                                nsSVGGeometryFrame *aSource);
 
-  //
-
 private:
-  nsCOMPtr<nsIDOMSVGRect>                 mBBox;
-
   // this is a *temporary* reference to the frame of the element currently
   // referencing our pattern.  This must be termporary because different
   // referencing frames will all reference this one fram

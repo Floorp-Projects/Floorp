@@ -256,25 +256,26 @@ nsSVGPatternFrame::PaintPattern(nsISVGRendererCanvas* canvas,
   // Get the bounding box of the pattern.  This will be used to determine
   // the size of the surface, and will also be used to define the bounding
   // box for the pattern tile.
-  if (NS_FAILED(GetPatternRect(getter_AddRefs(mBBox), callerBBox, 
+  nsCOMPtr<nsIDOMSVGRect> bbox;
+  if (NS_FAILED(GetPatternRect(getter_AddRefs(bbox), callerBBox, 
                                callerContent)))
     return NS_ERROR_FAILURE;
 
   // Get the transformation matrix that we will hand to the renderer's pattern
   // routine.
-  if (NS_FAILED(GetPatternMatrix(patternMatrix, mBBox, callerCTM)))
+  if (NS_FAILED(GetPatternMatrix(patternMatrix, bbox, callerCTM)))
      return NS_ERROR_FAILURE;
 
 #ifdef DEBUG_scooter
-  printRect("Bounding Rect: ",mBBox);
+  printRect("Bounding Rect: ",bbox);
   printCTM("Pattern TM ",*patternMatrix);
   printCTM("Child TM ",mCTM);
 #endif
 
   // Now that we have all of the necessary geometries, we can
-  // create our surface.  Note that this uses mBBox for the size
+  // create our surface.
   nsCOMPtr<nsISVGRendererSurface> patternSurface;
-  if (NS_FAILED(CreateSurface(getter_AddRefs(patternSurface))))
+  if (NS_FAILED(CreateSurface(getter_AddRefs(patternSurface), bbox)))
     return NS_ERROR_FAILURE;
 
   // Push the surface
@@ -760,7 +761,8 @@ nsSVGPatternFrame::GetCallerGeometry(nsIDOMSVGMatrix **aCTM,
 }
 
 nsresult
-nsSVGPatternFrame::CreateSurface(nsISVGRendererSurface **aSurface)
+nsSVGPatternFrame::CreateSurface(nsISVGRendererSurface **aSurface,
+                                 nsIDOMSVGRect *bbox)
 {
   *aSurface = nsnull;
 
@@ -770,8 +772,8 @@ nsSVGPatternFrame::CreateSurface(nsISVGRendererSurface **aSurface)
   }
 
   float width, height;
-  mBBox->GetWidth(&width);
-  mBBox->GetHeight(&height);
+  bbox->GetWidth(&width);
+  bbox->GetHeight(&height);
 
   nsCOMPtr<nsISVGRenderer> renderer;
   outerSVGFrame->GetRenderer(getter_AddRefs(renderer));
