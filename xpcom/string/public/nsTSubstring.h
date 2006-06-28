@@ -134,7 +134,7 @@ class nsTSubstring_CharT : public nsTAString_CharT
       
       iterator& BeginWriting( iterator& iter )
         {
-          char_type *data = EnsureMutable() ? mData : char_type(0);
+          char_type *data = EnsureMutable() ? mData : nsnull;
           iter.mStart = data;
           iter.mEnd = data + mLength;
           iter.mPosition = iter.mStart;
@@ -143,7 +143,7 @@ class nsTSubstring_CharT : public nsTAString_CharT
 
       iterator& EndWriting( iterator& iter )
         {
-          char_type *data = EnsureMutable() ? mData : char_type(0);
+          char_type *data = EnsureMutable() ? mData : nsnull;
           iter.mStart = data;
           iter.mEnd = data + mLength;
           iter.mPosition = iter.mEnd;
@@ -447,7 +447,7 @@ class nsTSubstring_CharT : public nsTAString_CharT
         {
           if (!EnsureMutable(newLen))
             {
-              *data = char_type(0);
+              *data = nsnull;
               return 0;
             }
 
