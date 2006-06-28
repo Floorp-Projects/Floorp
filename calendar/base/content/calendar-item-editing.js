@@ -325,17 +325,17 @@ calTransaction.prototype = {
     undoTransaction: function () {
         switch (this.mAction) {
             case 'add':
-                this.mCalendar.deleteItem(this.mItem, null);
+                this.mCalendar.deleteItem(this.mItem, this);
                 break;
             case 'modify':
-                this.mCalendar.modifyItem(this.mOldItem, this.mItem, null);
+                this.mCalendar.modifyItem(this.mOldItem, this.mItem, this);
                 break;
             case 'delete':
-                this.mCalendar.addItem(this.mItem, null);
+                this.mCalendar.addItem(this.mItem, this);
                 break;
             case 'move':
-                this.mCalendar.deleteItem(this.mItem, this.mListener);
-                this.mOldCalendar.addItem(this.mOldItem, this.mListener);
+                this.mCalendar.deleteItem(this.mItem, this);
+                this.mOldCalendar.addItem(this.mOldItem, this);
                 break;
         }
     },
