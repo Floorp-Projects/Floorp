@@ -315,6 +315,7 @@ MODULES_calendar :=                             \
   mozilla/db/sqlite3                            \
   mozilla/calendar                              \
   mozilla/other-licenses/branding/sunbird       \
+  mozilla/other-licenses/7zstub/sunbird         \
   $(NULL)
 
 LOCALES_calendar :=                             \
