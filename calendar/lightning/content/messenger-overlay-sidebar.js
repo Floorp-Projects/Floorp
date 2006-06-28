@@ -342,6 +342,26 @@ function findMailSearchBox() {
     return null;
 }
 
+function toggleWorkdaysOnly() {
+    var deck = document.getElementById("calendar-view-box")
+    for each (view in deck.childNodes) {
+        view.workdaysOnly = !view.workdaysOnly;
+    }
+
+    // Refresh the current view
+    currentView().goToDay(currentView().selectedDay);
+}
+
+function toggleTasksInView() {
+    var deck = document.getElementById("calendar-view-box")
+    for each (view in deck.childNodes) {
+        view.tasksInView = !view.tasksInView;
+    }
+
+    // Refresh the current view
+    currentView().goToDay(currentView().selectedDay);
+}
+
 document.getElementById("displayDeck").
     addEventListener("select", LtnObserveDisplayDeckChange, true);
 

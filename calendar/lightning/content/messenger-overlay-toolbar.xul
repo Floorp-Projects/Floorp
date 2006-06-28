@@ -91,6 +91,17 @@
                   label="&lightning.toolbar.monthview.label;" 
                   oncommand="showCalendarView('month')"/>
         <menuseparator/>
+         <menu label="&viewMenu.label;">
+            <menupopup>
+               <menuitem type="checkbox"
+                         label="&calendar.onlyworkday.checkbox.label;"
+                         oncommand="toggleWorkdaysOnly()"/>
+               <menuitem type="checkbox"
+                         checked="true"
+                         label="&calendar.displaytodos.checkbox.label;"
+                         oncommand="toggleTasksInView()"/>
+           </menupopup>
+        </menu>
         <menuitem id="ltnGoToToday" 
                   label="&calendar.context.gototoday.label;" 
                   oncommand="goToToday()"/>

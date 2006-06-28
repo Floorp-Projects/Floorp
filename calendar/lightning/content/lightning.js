@@ -59,5 +59,14 @@ pref("calendar.view.defaultendhour", 17);
 // a locale specific file.
 pref("calendar.week.start", 0);
 
+// Default days off
+pref("calendar.week.d0sundaysoff", true);
+pref("calendar.week.d1mondaysoff", false);
+pref("calendar.week.d2tuesdaysoff", false);
+pref("calendar.week.d3wednesdaysoff", false);
+pref("calendar.week.d4thursdaysoff", false);
+pref("calendar.week.d5fridaysoff", false);
+pref("calendar.week.d6saturdaysoff", true);
+
 // Do not set this!  If it's not there, then we guess the system timezone
 //pref("calendar.timezone.local", "");
