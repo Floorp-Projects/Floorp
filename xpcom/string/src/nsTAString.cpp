@@ -484,7 +484,7 @@ nsTAString_CharT::GetWritableBuffer(char_type** data, size_type size)
       {
         AsObsoleteString()->SetLength(size);
         if (AsObsoleteString()->Length() != size) {
-          *data = char_type(0);
+          *data = nsnull;
           return 0;
         }
       }
@@ -496,7 +496,7 @@ nsTAString_CharT::GetWritableBuffer(char_type** data, size_type size)
 
     if (size_type(frag.mEnd - frag.mStart) != len)
       {
-        *data = char_type(0);
+        *data = nsnull;
         return 0;
       }
 
