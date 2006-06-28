@@ -54,9 +54,6 @@ class nsSVGGenericContainerFrame : public nsSVGGenericContainerFrameBase
 protected:
   nsSVGGenericContainerFrame(nsStyleContext* aContext) : nsSVGGenericContainerFrameBase(aContext) {}
   
-private:
-  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
-  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }  
 public:
   // nsIFrame:
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,

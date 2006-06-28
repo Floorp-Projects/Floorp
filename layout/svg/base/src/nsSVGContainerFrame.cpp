@@ -38,6 +38,9 @@
 #include "nsSVGUtils.h"
 #include "nsSVGOuterSVGFrame.h"
 
+//----------------------------------------------------------------------
+// nsISupports methods
+
 NS_INTERFACE_MAP_BEGIN(nsSVGDisplayContainerFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGChildFrame)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGContainerFrame)

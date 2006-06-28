@@ -44,7 +44,7 @@
 #include "nsISVGGlyphFragmentLeaf.h"
 #include "nsISVGChildFrame.h"
 
-class nsISVGTextFrame;
+class nsSVGTextFrame;
 
 typedef nsSVGGeometryFrame nsSVGGlyphFrameBase;
 
@@ -152,7 +152,7 @@ protected:
   void UpdateGeometry(PRBool bRedraw, PRBool suppressInvalidation);
   void UpdateMetrics();
   void UpdateFragmentTree();
-  nsISVGTextFrame *GetTextFrame();
+  nsSVGTextFrame *GetTextFrame();
   
   nsString mCharacterData;
   nsCOMPtr<nsISVGRendererGlyphGeometry> mGeometry;

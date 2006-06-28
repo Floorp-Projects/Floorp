@@ -39,7 +39,6 @@
 
 #include "nsContainerFrame.h"
 #include "nsISVGChildFrame.h"
-#include "nsSVGUtils.h"
 #include "nsIDOMSVGMatrix.h"
 #include "nsSVGCoordCtxProvider.h"
 
@@ -92,6 +91,11 @@ public:
    // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
+private:
+  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
+  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }  
+
+public:
   // nsIFrame:
   NS_IMETHOD InsertFrames(nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,

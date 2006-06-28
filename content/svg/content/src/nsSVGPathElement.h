@@ -42,6 +42,7 @@
 #include "nsSVGPathGeometryElement.h"
 #include "nsIDOMSVGPathElement.h"
 #include "nsIDOMSVGAnimatedPathData.h"
+#include "cairo.h"
 
 class nsSVGPathList
 {

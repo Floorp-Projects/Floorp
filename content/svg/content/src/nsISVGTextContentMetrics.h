@@ -41,6 +41,7 @@
 
 #include "nsISupports.h"
 class nsIDOMSVGRect;
+class nsIDOMSVGPoint;
 
 ////////////////////////////////////////////////////////////////////////
 // nsISVGTextContentMetrics
