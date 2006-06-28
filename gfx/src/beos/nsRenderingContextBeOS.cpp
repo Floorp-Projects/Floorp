@@ -1341,17 +1341,25 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawString(const char *aString, PRUint32 a
 
 	nscoord xx = aX, yy = aY, y=aY;
 	
-	// Subtract xFontStruct ascent since drawing specifies baseline
-	
 	if (LockAndUpdateView())  
 	{
-		// XXX: the following maybe isn't  most efficient for text rendering,
-		// but it's the easy way to render antialiased text correctly
-		mView->SetDrawingMode(B_OP_OVER);
+		PRBool doEmulateBold = PR_FALSE;
+		
+		if (mFontMetrics) 
+		{
+			doEmulateBold = ((nsFontMetricsBeOS *)mFontMetrics)->IsBold() && !(mCurrentBFont->Face() & B_BOLD_FACE);
+		}
+		// XXX: B_OP_OVER isn't  most efficient for text rendering,
+		// but it's the only way to render antialiased text correctly on arbitrary background
+		PRBool offscreen;
+		mSurface->IsOffscreen(&offscreen);
+		mView->SetDrawingMode( offscreen ? B_OP_OVER : B_OP_COPY);
 		if (nsnull == aSpacing || utf8_char_len((uchar)aString[0])==aLength) 
 		{
 			mTranMatrix->TransformCoord(&xx, &yy);
 			mView->DrawString(aString, aLength, BPoint(xx, yy));
+			if (doEmulateBold)
+				mView->DrawString(aString, aLength, BPoint(xx + 1.0, yy));
 		}
 		else 
 		{
@@ -1365,7 +1373,9 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawString(const char *aString, PRUint32 a
 				yy = y;
 				mTranMatrix->TransformCoord(&xx, &yy);
 				// yy++; DrawString quirk!
-				mView->DrawString((char *)(wpoint), ch_len, BPoint(xx, yy)); 
+				mView->DrawString((char *)(wpoint), ch_len, BPoint(xx, yy));
+				if (doEmulateBold)
+					mView->DrawString((char *)(wpoint), ch_len, BPoint(xx + 1.0, yy));
 				position += aSpacing[unichnum++];
 			}
 		}
