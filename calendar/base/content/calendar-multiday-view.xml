@@ -2370,6 +2370,7 @@
               var dayEventsBox;
               if (counter < dayboxkids.length) {
                   dayEventsBox = dayboxkids[counter];
+                  dayEventsBox.removeAttribute("today");
                   dayEventsBox.mEvents = new Array();
               } else {
                   dayEventsBox = createXULElement("calendar-event-column");
@@ -2381,6 +2382,7 @@
               var dayHeaderBox;
               if (counter < headerboxkids.length) {
                   dayHeaderBox = headerboxkids[counter];
+                  dayHeaderBox.removeAttribute("today");
                   for each (item in dayHeaderBox.mItemBoxes) {
                       dayHeaderBox.deleteEvent(item.occurrence);
                   }
