@@ -220,6 +220,12 @@ function SetupLabelsMenuItem(menuID, numSelected, forceHide)
   EnableMenuItem(menuID, (numSelected == 1));
 }
 
+function SetupTagMenuItem(menuID, numSelected, forceHide)
+{
+  ShowMenuItem(menuID, (numSelected <= 1) && !forceHide);
+  EnableMenuItem(menuID, (numSelected == 1));
+}
+
 function SetupMarkMenuItem(menuID, numSelected, forceHide)
 {
   ShowMenuItem(menuID, (numSelected <= 1) && !forceHide);
@@ -448,6 +454,7 @@ function fillMessagePaneContextMenu()
   SetupMoveMenuItem("messagePaneContext-moveMenu", numSelected, isNewsgroup, (numSelected == 0 || hideMailItems));
   SetupLabelsMenuItem("messagePaneContext-labels", numSelected, (numSelected == 0 || hideMailItems));
   SetupMarkMenuItem("messagePaneContext-mark", numSelected, (numSelected == 0 || hideMailItems));
+  SetupTagMenuItem("messagePaneContext-tags", numSelected, (numSelected == 0 || hideMailItems));
   SetupSaveAsMenuItem("messagePaneContext-saveAs", numSelected, (numSelected == 0 || hideMailItems));
 #ifdef XP_MACOSX
   SetupPrintPreviewMenuItem("messagePaneContext-printpreview", numSelected, true);
@@ -476,8 +483,8 @@ function fillMessagePaneContextMenu()
   ShowMenuItem("messagePaneContext-sep-link", shouldShowSeparator("messagePaneContext-sep-link"));
   ShowMenuItem("messagePaneContext-sep-open", shouldShowSeparator("messagePaneContext-sep-open"));
   ShowMenuItem("messagePaneContext-sep-reply", shouldShowSeparator("messagePaneContext-sep-reply"));
-  ShowMenuItem("messagePaneContext-sep-labels-1", shouldShowSeparator("messagePaneContext-sep-labels-1"));
-  ShowMenuItem("messagePaneContext-sep-labels-2", shouldShowSeparator("messagePaneContext-sep-labels-2"));
+  ShowMenuItem("messagePaneContext-sep-tags-1", shouldShowSeparator("messagePaneContext-sep-tags-1"));
+  ShowMenuItem("messagePaneContext-sep-saveAs", shouldShowSeparator("messagePaneContext-sep-saveAs"));
   ShowMenuItem("messagePaneContext-sep-edit", shouldShowSeparator("messagePaneContext-sep-edit"));
   ShowMenuItem("messagePaneContext-sep-copy", shouldShowSeparator("messagePaneContext-sep-copy"));
 }

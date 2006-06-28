@@ -599,31 +599,6 @@ nsContextMenu.prototype = {
                                          Components.interfaces.nsIClipboardHelper );
         clipboard.copyString(addresses);
     },    
-    addBookmark : function() {
-      var docshell = document.getElementById( "content" ).webNavigation;
-      BookmarksUtils.addBookmark( docshell.currentURI.spec,
-                                  docshell.document.title,
-                                  docshell.document.characterSet,
-                                  false );
-    },
-    addBookmarkForFrame : function() {
-      var doc = this.target.ownerDocument;
-      var uri = doc.location.href;
-      var title = doc.title;
-      if ( !title )
-        title = uri;
-      BookmarksUtils.addBookmark( uri,
-                                  title,
-                                  doc.characterSet,
-                                  false );
-    },
-    // Open Metadata window for node
-    showMetadata : function () {
-        window.openDialog(  "chrome://navigator/content/metadata.xul",
-                            "_blank",
-                            "scrollbars,resizable,chrome,dialog=no",
-                            this.target);
-    },
 
     ///////////////
     // Utilities //
@@ -796,71 +771,3 @@ nsContextMenu.prototype = {
       return false;  
     }
 };
-
-/*************************************************************************
- *
- *   nsDefaultEngine : nsIObserver
- *
- *************************************************************************/
-function nsDefaultEngine()
-{
-    try
-    {
-        var pb = Components.classes["@mozilla.org/preferences-service;1"].
-                   getService(Components.interfaces.nsIPrefBranch);
-        var pbi = pb.QueryInterface(
-                    Components.interfaces.nsIPrefBranch2);
-        pbi.addObserver(this.domain, this, false);
-
-        // reuse code by explicitly invoking initial |observe| call
-        // to initialize the |icon| and |name| member variables
-        this.observe(pb, "", this.domain);
-    }
-    catch (ex)
-    {
-    }
-}
-
-nsDefaultEngine.prototype = 
-{
-    name: "",
-    icon: "",
-    domain: "browser.search.defaultengine",
-
-    // nsIObserver implementation
-    observe: function(aPrefBranch, aTopic, aPrefName)
-    {
-        try
-        {
-            var rdf = Components.
-                        classes["@mozilla.org/rdf/rdf-service;1"].
-                        getService(Components.interfaces.nsIRDFService);
-            var ds = rdf.GetDataSource("rdf:internetsearch");
-            var defaultEngine = aPrefBranch.getCharPref(aPrefName);
-            var res = rdf.GetResource(defaultEngine);
-
-            // get engine ``pretty'' name
-            const kNC_Name = rdf.GetResource(
-                               "http://home.netscape.com/NC-rdf#Name");
-            var engineName = ds.GetTarget(res, kNC_Name, true);
-            if (engineName)
-            {
-                this.name = engineName.QueryInterface(
-                              Components.interfaces.nsIRDFLiteral).Value;
-            }
-
-            // get URL to engine vendor icon
-            const kNC_Icon = rdf.GetResource(
-                               "http://home.netscape.com/NC-rdf#Icon");
-            var iconURL = ds.GetTarget(res, kNC_Icon, true);
-            if (iconURL)
-            {
-                this.icon = iconURL.QueryInterface(
-                  Components.interfaces.nsIRDFLiteral).Value;
-            }
-        }
-        catch (ex)
-        {
-        }
-    }
-}

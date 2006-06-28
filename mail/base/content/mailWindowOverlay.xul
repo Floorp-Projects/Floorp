@@ -957,7 +957,7 @@
 
       </menupopup>
     </menu>
-    <menuseparator id="messagePaneContext-sep-labels-2"/>
+    <menuseparator id="messagePaneContext-sep-saveAs"/>
     <menuitem id="messagePaneContext-saveAs"
         label="&contextSaveAs.label;"
         accesskey="&contextSaveAs.accesskey;"

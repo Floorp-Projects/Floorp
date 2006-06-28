@@ -549,7 +549,6 @@ function IsImapMessage(messageUri)
 function SetMenuItemLabel(menuItemId, customLabel)
 {
     var menuItem = document.getElementById(menuItemId);
-
     if(menuItem)
         menuItem.setAttribute('label', customLabel);
 }

@@ -521,8 +521,13 @@ var messageHeaderSink = {
 // currentHeaderData['tags']. Each tag is encoded.
 function setTagHeader()
 {
-  // it would be nice if we passed in the msg hdr from the back end
-  var msgHdr = gDBView.hdrForFirstSelectedMessage;
+  // it would be nice if we passed in the msg hdr from the back end  
+  var msgHdr;
+  try {
+    msgHdr = gDBView.hdrForFirstSelectedMessage;
+  }
+  catch (ex) { return; } // no msgHdr to add our tags to.
+  
   var tagsString = "";
   
   // extract the tags from the msg hdr
