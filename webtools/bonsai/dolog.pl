@@ -42,6 +42,9 @@ use bytes;
 use File::Basename;
 use Mail::Mailer;
 
+# Set use_sendmail = 0 to send mail via $mailhost using SMTP
+$use_sendmail = 1;
+
 $username = $ENV{"CVS_USER"} || getlogin || (getpwuid($<))[0] || "nobody";
 $envcvsroot = $ENV{'CVSROOT'};
 $cvsroot = $envcvsroot;
@@ -469,8 +472,13 @@ sub do_commitinfo {
 
 sub mail_notification {
     chop(my $hostname = `hostname`);
-    my $mailer = Mail::Mailer->new("smtp", Server => $mailhost) ||
-        die("Failed to send mail notification\n");
+    my $mailer;
+    if ($use_sendmail) {
+        $mailer = Mail::Mailer->new("sendmail");
+    } else {
+        $mailer = Mail::Mailer->new("smtp", Server => $mailhost);
+    }
+    die("Failed to send mail notification\n") if !defined($mailer);
     my %headers;
 
     $headers{'From'} = "bonsai-daemon\@$hostname";
