@@ -60,6 +60,7 @@ const nsIWindowMediator      = Components.interfaces.nsIWindowMediator;
 const nsIWindowWatcher       = Components.interfaces.nsIWindowWatcher;
 const nsICategoryManager     = Components.interfaces.nsICategoryManager;
 const nsIWebNavigationInfo   = Components.interfaces.nsIWebNavigationInfo;
+const nsIBrowserSearchService = Components.interfaces.nsIBrowserSearchService;
 
 const NS_BINDING_ABORTED = 0x804b0002;
 const NS_ERROR_WONT_HANDLE_CONTENT = 0x805d0001;
@@ -191,6 +192,38 @@ function getMostRecentBrowserWindow() {
 #endif
 
   return win;
+}
+
+function doSearch(searchTerm, cmdLine) {
+  var ss = Components.classes["@mozilla.org/browser/search-service;1"]
+                     .getService(nsIBrowserSearchService);
+
+  var submission = ss.defaultEngine.getSubmission(searchTerm);
+
+  // fill our nsISupportsArray with uri-as-wstring, null, null, postData
+  var sa = Components.classes["@mozilla.org/supports-array;1"]
+                     .createInstance(Components.interfaces.nsISupportsArray);
+
+  var wuri = Components.classes["@mozilla.org/supports-string;1"]
+                       .createInstance(Components.interfaces.nsISupportsString);
+  wuri.data = submission.uri.spec;
+
+  sa.AppendElement(wuri);
+  sa.AppendElement(null);
+  sa.AppendElement(null);
+  sa.AppendElement(submission.postData);
+
+  // XXXbsmedberg: use handURIToExistingBrowser to obey tabbed-browsing
+  // preferences, but need nsIBrowserDOMWindow extensions
+
+  var wwatch = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                         .getService(nsIWindowWatcher);
+
+  return wwatch.openWindow(null, nsBrowserContentHandler.chromeURL,
+                           "_blank",
+                           "chrome,dialog=no,all" +
+                             nsBrowserContentHandler.getFeatures(cmdLine),
+                           sa);
 }
 
 var nsBrowserContentHandler = {
@@ -341,6 +374,26 @@ var nsBrowserContentHandler = {
     }
     if (cmdLine.handleFlag("silent", false))
       cmdLine.preventDefault = true;
+
+    var searchParam = cmdLine.handleFlagWithParam("search", false);
+    if (searchParam) {
+      doSearch(searchParam, cmdLine);
+      cmdLine.preventDefault = true;
+    }
+
+#ifdef XP_WIN
+    // Handle "? searchterm" for Windows Vista start menu integration
+    for (var i = cmdLine.length - 1; i >= 0; --i) {
+      var param = cmdLine.getArgument(i);
+      if (param.match(/^\? /)) {
+        cmdLine.removeArguments(i, i);
+        cmdLine.preventDefault = true;
+
+        searchParam = param.substr(2);
+        doSearch(searchParam, cmdLine);
+      }
+    }
+#endif
   },
 
   helpInfo : "  -browser            Open a browser window.\n",
@@ -635,11 +688,11 @@ var Module = {
 
     function registerType(contentType) {
       compReg.registerFactoryLocation( bch_CID,
-				       "Browser Cmdline Handler",
-				       CONTRACTID_PREFIX + contentType,
-				       fileSpec,
-				       location,
-				       type );
+                                       "Browser Cmdline Handler",
+                                       CONTRACTID_PREFIX + contentType,
+                                       fileSpec,
+                                       location,
+                                       type );
     }
 
     registerType("text/html");
