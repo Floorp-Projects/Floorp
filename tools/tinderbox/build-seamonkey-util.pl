@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.320 $ ';
+$::UtilsVersion = '$Revision: 1.321 $ ';
 
 package TinderUtils;
 
@@ -1100,6 +1100,19 @@ sub BuildIt {
                 $build_status = 'success';
               }
             }
+          } elsif ($build_status ne 'busted' and $Settings::TestOnlyTinderbox) {
+            my $prebuilt = "$build_dir/$Settings::DownloadBuildDir";
+            my $status = 0;
+            if ( -f $prebuilt) {
+              $status = run_shell_command("rm -rf $prebuilt");
+              $build_status = 'busted' if not ($status);
+            }
+            $status = run_shell_command("mkdir -p $prebuilt");
+            $build_status = 'busted' if not ($status);
+            $status = run_shell_command("wget -O $prebuilt/build.tgz $Settings::DownloadBuildURL");
+            $build_status = 'busted' if not ($status);
+            $status = run_shell_command("tar -C $prebuilt -xvf $prebuilt/build.tgz");
+            $build_status = 'busted' if not ($status);
           }
 
           if ($build_status ne 'busted' and BinaryExists($full_binary_name)) {
