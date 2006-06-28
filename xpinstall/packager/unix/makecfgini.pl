@@ -90,9 +90,8 @@ $inAppName        = $ARGV[5];
 $inAppDisplayName = $ARGV[6];
 
 # Get the name of the file replacing the .it extension with a .ini extension
-@inItFileSplit    = split(/\./,$inItFile);
-$outIniFile       = $inItFileSplit[0];
-$outIniFile      .= ".ini";
+$outIniFile       = $inItFile;
+$outIniFile       =~ s/\.[^.]*$/\.ini/;
 
 # Open the input file
 open(fpInIt, $inItFile) || die "\ncould not open $ARGV[0]: $!\n";
