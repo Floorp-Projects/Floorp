@@ -839,10 +839,7 @@ nsImageLoadingContent::FireEvent(const nsAString& aEventType)
   NS_ASSERTION(NS_IsMainThread(), "should be on the main thread");
 
   nsIPresShell *shell = document->GetShellAt(0);
-  NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
-
-  nsPresContext *presContext = shell->GetPresContext();
-  NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
+  nsPresContext *presContext = shell ? shell->GetPresContext() : nsnull;
 
   nsCOMPtr<nsIRunnable> evt =
       new nsImageLoadingContent::Event(presContext, this, aEventType, document);
