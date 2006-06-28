@@ -641,7 +641,9 @@ var gFindBar = {
       }
       else if (elt instanceof HTMLTextAreaElement ||
                elt instanceof HTMLSelectElement ||
-               elt instanceof HTMLIsIndexElement)
+               elt instanceof HTMLIsIndexElement ||
+               elt instanceof HTMLObjectElement ||
+               elt instanceof HTMLEmbedElement)
         return false;
     }
 
