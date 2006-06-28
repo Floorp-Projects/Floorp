@@ -160,6 +160,7 @@ sub getNewTestcases() {
 				          SELECT testcase_id, summary, creation_date, last_updated
                                           FROM testcases
                                           WHERE creation_date>=?
+                                          ORDER BY creation_date DESC
                                           LIMIT $match_limit
 });
   
@@ -186,6 +187,7 @@ sub getRecentlyUpdated() {
                                              SELECT testcase_id, summary, creation_date, last_updated
                                              FROM testcases
                                              WHERE last_updated>=? AND last_updated>creation_date
+                                             ORDER BY last_updated DESC
                                              LIMIT $match_limit
 });
   
