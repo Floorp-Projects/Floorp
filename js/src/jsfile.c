@@ -1129,7 +1129,7 @@ js_size(JSContext *cx, JSFile *file)
         : PR_GetFileInfo(file->path, &info) != PR_SUCCESS) {
         JS_ReportErrorNumber(cx, JSFile_GetErrorMessage, NULL,
                              JSFILEMSG_CANNOT_ACCESS_FILE_STATUS, file->path);
-        return JS_FALSE;
+        return JSVAL_VOID;
     }
 
     return INT_TO_JSVAL(info.size);
@@ -2544,10 +2544,12 @@ file_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 if (!strcmp(entry->name, prop_name)){
                     bytes = js_combinePath(cx, file->path, prop_name);
                     *vp = OBJECT_TO_JSVAL(js_NewFileObject(cx, bytes));
+                    PR_CloseDir(dir);
                     JS_free(cx, bytes);
-                    return JS_TRUE;
+                    return !JSVAL_IS_NULL(*vp);
                 }
             }
+            PR_CloseDir(dir);
         }
     }
     return JS_TRUE;
