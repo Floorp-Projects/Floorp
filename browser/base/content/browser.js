@@ -4385,7 +4385,7 @@ nsContextMenu.prototype = {
             this.setItemAttr( "context-setDesktopBackground", "disabled", this.disableSetDesktopBackground());
 
         // View Image depends on whether an image was clicked on.
-        this.showItem( "context-viewimage", this.onImage  && !this.onStandaloneImage );
+        this.showItem( "context-viewimage", this.onImage  && ( !this.onStandaloneImage || this.inFrame ) );
 
         // View background image depends on whether there is one.
         this.showItem( "context-viewbgimage", !( this.inDirList || this.onImage || this.isContentSelected || this.onLink || this.onTextInput ) );
