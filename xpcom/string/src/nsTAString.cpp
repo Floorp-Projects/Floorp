@@ -475,19 +475,33 @@ nsTAString_CharT::GetReadableBuffer( const char_type **data ) const
   }
 
 nsTAString_CharT::size_type
-nsTAString_CharT::GetWritableBuffer(char_type **data)
+nsTAString_CharT::GetWritableBuffer(char_type** data, size_type size)
   {
     if (mVTable == obsolete_string_type::sCanonicalVTable)
+      return AsSubstring()->GetMutableData(data, size);
+    
+    if (size != size_type(-1) && size != AsObsoleteString()->Length())
       {
-        substring_type* str = AsSubstring();
-        str->BeginWriting(*data);
-        return str->Length();
+        AsObsoleteString()->SetLength(size);
+        if (AsObsoleteString()->Length() != size) {
+          *data = char_type(0);
+          return 0;
+        }
       }
+
+    size_type len = AsObsoleteString()->Length();
 
     obsolete_string_type::fragment_type frag;
     AsObsoleteString()->GetWritableFragment(frag, obsolete_string_type::kFirstFragment, 0);
+
+    if (size_type(frag.mEnd - frag.mStart) != len)
+      {
+        *data = char_type(0);
+        return 0;
+      }
+
     *data = frag.mStart;
-    return (frag.mEnd - frag.mStart);
+    return len;
   }
 
 PRBool
