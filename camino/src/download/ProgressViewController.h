@@ -79,7 +79,7 @@ const int kRemoveUponSuccessfulDownloadPrefValue = 2;
   
   BOOL            mIsFileSave;
   BOOL            mUserCancelled;
-  BOOL            mDownloadingError;
+  BOOL            mDownloadFailed;
   BOOL            mDownloadDone;
   BOOL            mRefreshIcon;
   BOOL            mFileExists;
@@ -123,6 +123,7 @@ const int kRemoveUponSuccessfulDownloadPrefValue = 2;
 -(BOOL)isPaused;
 -(BOOL)fileExists;
 
+-(BOOL)hasSucceeded;
 
 -(void)checkFileExists;
 -(void)setSelected:(BOOL)inSelected;

@@ -387,7 +387,7 @@ static void FileSystemNotificationProc(FNMessage message, OptionBits flags, void
 
 -(void)launchFileIfAppropriate
 {
-  if (!mIsFileSave && !mUserCancelled && !mDownloadingError) {
+  if (!mIsFileSave && !mUserCancelled && !mDownloadFailed) {
     if ([[PreferenceManager sharedInstance] getBooleanPref:"browser.download.autoDispatch" withSuccess:NULL]) {
       [[NSWorkspace sharedWorkspace] openFile:mDestPath withApplication:nil andDeactivate:NO];
     }
@@ -400,7 +400,7 @@ static void FileSystemNotificationProc(FNMessage message, OptionBits flags, void
   int downloadRemoveActionValue = [[PreferenceManager sharedInstance] getIntPref:"browser.download.downloadRemoveAction" 
                                                                      withSuccess:NULL];
   
-  if (!mUserCancelled && !mDownloadingError && downloadRemoveActionValue == kRemoveUponSuccessfulDownloadPrefValue)
+  if (!mUserCancelled && !mDownloadFailed && downloadRemoveActionValue == kRemoveUponSuccessfulDownloadPrefValue)
     [mProgressWindowController removeDownload:self];
 }
 
@@ -447,7 +447,7 @@ static void FileSystemNotificationProc(FNMessage message, OptionBits flags, void
       if (mUserCancelled) {
         statusString = NSLocalizedString(@"DownloadCancelled", nil);
       }
-      else if (mDownloadingError) {
+      else if (mDownloadFailed) {
         statusString = NSLocalizedString(@"DownloadInterrupted", nil);
       }
       else {
@@ -546,6 +546,12 @@ static void FileSystemNotificationProc(FNMessage message, OptionBits flags, void
 -(BOOL)fileExists
 {
   return mFileExists; 
+}
+
+// If the download failed during transfer or the user cancelled return NO
+-(BOOL)hasSucceeded
+{
+  return (!mDownloadFailed && !mUserCancelled);
 }
 
 // this is the callback from the file system notification
@@ -682,7 +688,7 @@ static void FileSystemNotificationProc(FNMessage message, OptionBits flags, void
 
 - (void)onEndDownload:(BOOL)completedOK statusCode:(nsresult)aStatus
 {
-  mDownloadingError = !completedOK;
+  mDownloadFailed = !completedOK;
 
   [self downloadDidEnd];
   [mProgressWindowController didEndDownload:self withSuccess:completedOK statusCode:aStatus];

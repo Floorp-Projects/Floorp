@@ -68,7 +68,7 @@ static NSString* const kProgressWindowFrameSaveName = @"ProgressWindow";
 -(BOOL)shouldAllowOpenAction;
 -(BOOL)fileExistsForSelectedItems;
 -(void)maybeCloseWindow;
--(void)removeSavedDownloadPlist;
+-(void)removeSuccessfulDownloads;
 -(BOOL)shouldRemoveDownloadsOnQuit;
 -(NSString*)downloadsPlistPath;
 
@@ -771,7 +771,7 @@ static id gSharedProgressController = nil;
 {
   // Check the download item removal policy here to see if downloads should be removed when camino quits.
   if ([self shouldRemoveDownloadsOnQuit])
-    [self removeSavedDownloadPlist];
+    [self removeSuccessfulDownloads];
   
   // Since the pref is not set to remove the downloads when Camino quits, save them here before the app terminates.
   else  
@@ -818,10 +818,20 @@ static id gSharedProgressController = nil;
   }
 }
 
-// Remove the saved downloads plist
--(void)removeSavedDownloadPlist
+// Remove the successful downloads from the downloads list
+-(void)removeSuccessfulDownloads
 {
-  [[NSFileManager defaultManager] removeFileAtPath:[self downloadsPlistPath] handler:NULL];
+  NSEnumerator* downloadsEnum = [mProgressViewControllers objectEnumerator];
+  ProgressViewController* curProgView = nil;
+  
+  while ((curProgView = [downloadsEnum nextObject]))
+  {
+    // Remove successful downloads from the list
+    if ([curProgView hasSucceeded])
+      [mProgressViewControllers removeObject:curProgView];
+  }
+  
+  [self saveProgressViewControllers];
 }
 
 // Return true if the pref is set to remove downloads when the application quits
