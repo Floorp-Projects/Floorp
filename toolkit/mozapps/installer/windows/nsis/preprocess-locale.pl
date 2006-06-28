@@ -38,6 +38,7 @@ my $topsrcdir = "$ARGV[0]";
 my $appLocaleDir = "$ARGV[1]";
 my $AB_CD = "$ARGV[2]";
 my $langCP = "$ARGV[3]";
+my $configDir = "$ARGV[4]";
 my $nsisVer = "v6";
 # Set the language ID to 0 to make this locale the default locale. An actual
 # ID will need to be used to create a multi-language installer (e.g. for CD
@@ -80,7 +81,7 @@ if ($codepage != "CP1252") {
 
 # Create the main NSIS language file with just the codepage, font, and
 # RTL information
-open(outfile, ">instgen/nlf.in");
+open(outfile, ">$configDir/nlf.in");
 print outfile "# Header, don't edit\r\nNLF $nsisVer\r\n# Start editing here\r\n";
 print outfile "# Language ID\r\n$langID\r\n";
 print outfile "# Font and size - dash (-) means default\r\n$fontName\r\n$fontSize\r\n";
@@ -96,7 +97,7 @@ if (!-e $inFile) {
   die "Error $inFile does not exist!";
 }
 open(infile, "<$inFile");
-open(outfile, ">instgen/override.properties");
+open(outfile, ">$configDir/override.properties");
 $lnum = 1;
 while( $line = <infile> ) {
   $line =~ s/[\r\n]*//g;    # remove \r and \n
@@ -120,7 +121,7 @@ if (!-e $inFile) {
   die "Error $inFile does not exist!";
 }
 open(infile, "<$inFile");
-open(outfile, ">instgen/mui.properties");
+open(outfile, ">$configDir/mui.properties");
 print outfile ";NSIS Modern User Interface - Language File\r\n";
 print outfile ";Compatible with Modern UI 1.68\r\n";
 print outfile ";Language: baseLocale ($langID)\r\n";
@@ -152,7 +153,7 @@ if (!-e $inFile) {
   die "Error $inFile does not exist!";
 }
 open(infile, "<$inFile");
-open(outfile, ">instgen/custom.properties");
+open(outfile, ">$configDir/custom.properties");
 
 $lnum = 1;
 while( $line = <infile> ) {
@@ -179,8 +180,8 @@ sub cpConvert
   my $srcFile = $_[0];
   my $targetFile = $_[1];
   my $targetCodepage = $_[2];
-  print "iconv -f UTF-8 -t $targetCodepage instgen/$srcFile > instgen/$targetFile\n";
-  system("iconv -f UTF-8 -t $targetCodepage instgen/$srcFile > instgen/$targetFile") &&
-    die "Error converting codepage to $targetCodepage for instgen/$srcFile";
-  unlink <instgen/$srcFile>;
+  print "iconv -f UTF-8 -t $targetCodepage $configDir/$srcFile > $configDir/$targetFile\n";
+  system("iconv -f UTF-8 -t $targetCodepage $configDir/$srcFile > $configDir/$targetFile") &&
+    die "Error converting codepage to $targetCodepage for $configDir/$srcFile";
+  unlink <$configDir/$srcFile>;
 }

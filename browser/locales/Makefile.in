@@ -173,41 +173,22 @@ repackage-win32-installer: $(WIN32_INSTALLER_IN)
 	if test ! -d $(dir $(WIN32_INSTALLER_OUT)); then \
 	  $(NSINSTALL) -D $(dir $(WIN32_INSTALLER_OUT)); \
 	fi
-	$(RM) -rf $(DIST)/l10n-stage
-	mkdir $(DIST)/l10n-stage
-	cd $(DIST)/l10n-stage && \
-	  $(CYGWIN_WRAPPER) 7z e $(WIN32_INSTALLER_IN)
-	$(RM) $(DIST)/l10n-stage/en-US.xpi
+	$(RM) -rf l10n-stage
+	mkdir l10n-stage
+	$(CYGWIN_WRAPPER) 7z x -ol10n-stage $(WIN32_INSTALLER_IN)
+	$(RM) -r l10n-stage/localized
+	$(RM) l10n-stage/setup.exe
 	$(RM) -rf $(DIST)/xpi-stage/locale-$(AB_CD)
 	$(MAKE) libs-$(AB_CD)
-	$(RM) -rf $(DIST)/l10n-temp-stage
-	mkdir $(DIST)/l10n-temp-stage
-	mv $(DIST)/xpi-stage/locale-$(AB_CD) $(DIST)/l10n-temp-stage/bin
-	iconv -f UTF-8 -t $(WIN_INSTALLER_CHARSET) $(call EXPAND_LOCALE_SRCDIR,browser/locales)/installer/installer.inc > \
-	  installer.inc
-	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) \
-	  -Iinstaller.inc \
-	  -I$(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/installer/windows/install.it \
-	  $(topsrcdir)/browser/installer/windows/install.it > install.it
-	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) \
-	  $(topsrcdir)/browser/installer/windows/installer.cfg > installer.cfg
-	$(PERL) $(topsrcdir)/toolkit/mozapps/installer/makeinstallini.pl \
-	  installer.cfg install.it
-	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) \
-	  $(topsrcdir)/browser/installer/windows/ab-CD.jst > $(AB_CD).jst
-	$(PERL) $(topsrcdir)/toolkit/mozapps/installer/parseandmakejs.pl \
-	  installer.cfg $(AB_CD).jst $(DIST)/l10n-temp-stage
-	cp $(AB_CD).js $(DIST)/l10n-temp-stage/install.js
-	cd $(DIST)/l10n-temp-stage && \
-	  $(ZIP) -D -0 -r ../l10n-stage/$(AB_CD).xpi .
-	$(SYSINSTALL) install.ini $(DIST)/l10n-stage
-	cd $(DIST)/l10n-stage && \
-	  $(CYGWIN_WRAPPER) 7z a -t7z ../l10n-temp-stage/app.7z *.* -mx -m0=BCJ2 -m1=LZMA:d24 -m2=LZMA:d19 -m3=LZMA:d19 -mb0:1 -mb0s1:2 -mb0s2:3
-	$(CYGWIN_WRAPPER) upx --best -o $(DIST)/l10n-temp-stage/7zSD.sfxc $(topsrcdir)/other-licenses/7zstub/firefox/7zSD.sfx
-	$(INSTALL) $(topsrcdir)/browser/installer/windows/app.tag $(DIST)/l10n-temp-stage
-	cd $(DIST)/l10n-temp-stage && \
-	  $(CYGWIN_WRAPPER) cmd /C copy /b 7zSD.sfxc+app.tag+app.7z firefox-installer.exe
-	mv -f $(DIST)/l10n-temp-stage/firefox-installer.exe $(WIN32_INSTALLER_OUT)
+	mv $(DIST)/xpi-stage/locale-$(AB_CD) l10n-stage/localized
+	$(MAKE) -C ../installer/windows CONFIG_DIR=l10ngen l10ngen/setup.exe l10ngen/7zSD.sfx
+	cp ../installer/windows/l10ngen/setup.exe l10n-stage
+	rm -f app.7z
+	cd l10n-stage && \
+	  $(CYGWIN_WRAPPER) 7z a -r -t7z ../app.7z -mx -m0=BCJ2 -m1=LZMA:d24 -m2=LZMA:d19 -m3=LZMA:d19 -mb0:1 -mb0s1:2 -mb0s2:3
+	cat ../installer/windows/l10ngen/7zSD.sfx \
+	    $(topsrcdir)/browser/installer/windows/app.tag \
+	    app.7z > $(WIN32_INSTALLER_OUT)
 
 repackage-win32-installer-%: WIN32_INSTALLER_IN=$(_ABS_DIST)/install/sea/$(PKG_BASENAME).installer.exe
 repackage-win32-installer-%: $(WIN32_INSTALLER_IN)
