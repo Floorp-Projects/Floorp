@@ -61,15 +61,13 @@
 
 <script type="application/x-javascript" src="chrome://calendar/content/calendarUtils.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/calendarCreation.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/mouseoverPreviews.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/calendar-item-editing.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/import-export.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/publish.js"/>
 <script type="application/x-javascript" src="chrome://lightning/content/lightning-utils.js"/>
 <script type="application/x-javascript" src="chrome://lightning/content/calendar-management.js"/>
 <script type="application/x-javascript" src="chrome://lightning/content/messenger-overlay-sidebar.js"/>
-
-<tooltip id="itemTooltip"
-         noautohide="true"/>
 
 <window id="messengerWindow">
   <commandset id="calendar_commands">
@@ -108,6 +106,8 @@
                 oncommand="ltnDeleteSelectedItem()"/>
     </popup>
   </popupset>
+  <tooltip id="itemTooltip" noautohide="true"/>
+
 </window>
 
 <vbox id="folderPaneBox" persist="collapsed width height">

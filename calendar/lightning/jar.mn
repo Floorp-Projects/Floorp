@@ -28,6 +28,7 @@ calendar.jar:
   content/calendar/calendarProperties.js		(/calendar/resources/content/calendarProperties.js) 
   content/calendar/calendarCreation.xul		(/calendar/resources/content/calendarCreation.xul) 
   content/calendar/calendarCreation.js		(/calendar/resources/content/calendarCreation.js) 
+  content/calendar/mouseoverPreviews.js		(/calendar/resources/content/mouseoverPreviews.js) 
   content/calendar/calendarUtils.js		(/calendar/resources/content/calendarUtils.js)
   content/calendar/calErrorPrompt.xul           (/calendar/base/content/calErrorPrompt.xul) 
   content/calendar/chooseCalendarDialog.xul     (/calendar/base/content/chooseCalendarDialog.xul)

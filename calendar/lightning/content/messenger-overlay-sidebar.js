@@ -320,10 +320,6 @@ var ltnPrefObserver =
    }
 }
 
-function onMouseOverItem(event) {
-//set the item's context-menu text here
-}
-
 // After 1.5 was released, the search box was moved into an optional toolbar
 // item, with a different ID.  This function keeps us compatible with both.
 function findMailSearchBox() {

@@ -169,17 +169,13 @@ function getPreviewForTask( toDoItem )
       var priorityInteger = parseInt(toDoItem.priority);
       var priorityString;
 
-      var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                          .getService(Components.interfaces.nsIStringBundleService);
-      var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
-
       // These cut-offs should match calendar-event-dialog.js
       if (priorityInteger >= 1 && priorityInteger <= 4) {
-           priorityString = props.GetStringFromName('highPriority'); // high priority
+           priorityString = calGetString('calendar', 'highPriority'); // high priority
       } else if (priorityInteger == 5) {
-          priorityString = props.GetStringFromName('mediumPriority'); // medium priority
+          priorityString = calGetString('calendar', 'mediumPriority'); // medium priority
       } else {
-          priorityString = props.GetStringFromName('lowPriority'); // low priority
+          priorityString = calGetString('calendar', 'lowPriority'); // low priority
       }
       boxAppendLabeledText(vbox, "tooltipPriority", priorityString);
       hasHeader = true;
@@ -303,11 +299,11 @@ function getEventStatusString(calendarEvent)
   {
     // Event status value keywords are specified in RFC2445sec4.8.1.11
     case "TENTATIVE":
-      return gCalendarBundle.getString("statusTentative");
+      return calGetString('calendar', "statusTentative");
     case "CONFIRMED":
-      return gCalendarBundle.getString("statusConfirmed");
+      return calGetString('calendar', "statusConfirmed");
     case "CANCELLED":
-      return gCalendarBundle.getString("statusCancelled");
+      return calGetString('calendar', "statusCancelled");
      default: 
         return "";
   }
@@ -320,13 +316,13 @@ function getToDoStatusString(iCalToDo)
   {
     // Todo status keywords are specified in RFC2445sec4.8.1.11
     case "NEEDS-ACTION":
-      return gCalendarBundle.getString("statusNeedsAction");
+      return calGetString('calendar', "statusNeedsAction");
     case "IN-PROCESS":
-      return gCalendarBundle.getString("statusInProcess");
+      return calGetString('calendar', "statusInProcess");
     case "CANCELLED":
-      return gCalendarBundle.getString("statusCancelled");
+      return calGetString('calendar', "statusCancelled");
     case "COMPLETED":
-      return gCalendarBundle.getString("statusCompleted");
+      return calGetString('calendar', "statusCompleted");
      default: 
         return "";
   }
@@ -408,7 +404,7 @@ function boxInitializeHeaderGrid(box)
 
 function boxAppendLabeledText(box, labelProperty, textString)
 {
-  var labelText = gCalendarBundle.getString(labelProperty);
+  var labelText = calGetString('calendar', labelProperty);
   var rows = box.getElementsByTagName("rows")[0];
   { 
     var row = document.createElement("row");

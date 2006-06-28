@@ -158,6 +158,21 @@ function isToDo(aObject)
    return aObject instanceof Components.interfaces.calITodo;
 }
 
+/**
+ * Gets the value of a string in a .properties file
+ *
+ * @param aBundleName  the name of the properties file.  It is assumed that the
+ *                     file lives in chrome://calendar/locale/
+ * @param aStringName the name of the string within the properties file
+ */
+function calGetString(aBundleName, aStringName)
+{
+    var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                        .getService(Components.interfaces.nsIStringBundleService);
+    var props = sbs.createBundle("chrome://calendar/locale/"+aBundleName+".properties");
+    return props.GetStringFromName(aStringName);
+}
+
 /** If now is during an occurrence, return the ocurrence.
     Else if now is before an ocurrence, return the next ocurrence.
     Otherwise return the previous ocurrence. **/
