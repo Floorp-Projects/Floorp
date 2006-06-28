@@ -46,7 +46,7 @@
     <binding id="calendar-navigation-buttons">
         <content>
             <xul:hbox anonid="controls-box" flex="1">
-                <xul:spacer flex="1"/>
+                <xul:spacer width="10"/>
                 <xul:vbox class="previous-button-box">
                     <xul:spacer flex="1" />
                     <xul:image direction="prev"
@@ -54,6 +54,7 @@
                                onclick="moveView(-1)"/>
                     <xul:spacer flex="1" />
                 </xul:vbox>
+                <xul:spacer flex="1"/>
                 <xul:vbox anonid="title-container" flex="1">
                     <xul:hbox anonid="title-box" flex="1">
                         <xul:spacer flex="1" />
@@ -75,6 +76,7 @@
                         <xul:spacer flex="1" />
                     </xul:hbox>
                 </xul:vbox>
+                <xul:spacer flex="1"/>
                 <xul:vbox class="next-button-box">
                     <xul:spacer flex="1" />
                     <xul:image direction="next"
@@ -82,7 +84,7 @@
                                onclick="moveView(1)"/>
                     <xul:spacer flex="1" />
                 </xul:vbox>
-                <xul:spacer flex="1"/>
+                <xul:spacer width="10"/>
             </xul:hbox>
         </content>
 
