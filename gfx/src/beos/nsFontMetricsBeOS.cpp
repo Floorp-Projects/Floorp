@@ -188,7 +188,12 @@ NS_IMETHODIMP nsFontMetricsBeOS::Init(const nsFont& aFont, nsIAtom* aLangGroup,
     face |= B_ITALIC_FACE;
 
   if ( aFont.weight > NS_FONT_WEIGHT_NORMAL )
+  {
+    mIsBold = PR_TRUE;
   	face |= B_BOLD_FACE;
+  }
+  else
+    mIsBold = PR_FALSE;
         
   // I don't think B_UNDERSCORE_FACE and B_STRIKEOUT_FACE really works...
   // instead, nsTextFrame do them for us. ( my guess... Makoto Hamanaka )
@@ -197,7 +202,7 @@ NS_IMETHODIMP nsFontMetricsBeOS::Init(const nsFont& aFont, nsIAtom* aLangGroup,
   	
   if ( aFont.decorations & NS_FONT_DECORATION_LINE_THROUGH )
   	face |= B_STRIKEOUT_FACE;
-  	
+
   mFontHandle.SetFace( face );
   // emulate italic the selected family has no such style
   if (aFont.style == NS_FONT_STYLE_ITALIC
@@ -206,6 +211,7 @@ NS_IMETHODIMP nsFontMetricsBeOS::Init(const nsFont& aFont, nsIAtom* aLangGroup,
 
   mFontHandle.SetSize(mFont.size/app2twip);
   mFontHandle.SetSpacing(B_FIXED_SPACING);
+
 #ifdef NOISY_FONTS
 #ifdef DEBUG
   fprintf(stderr, "looking for font %s (%d)", wildstring, aFont.size / app2twip);
@@ -454,6 +460,8 @@ float  nsFontMetricsBeOS::GetStringWidth(char *utf8str, uint32 bytelen)
 		retwidth +=  width;
 		utf8str += charlen;
 	}
+	if (mIsBold && !(mFontHandle.Face() & B_BOLD_FACE))
+		retwidth += 1.0;
 	return retwidth;
 }
  
