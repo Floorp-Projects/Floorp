@@ -59,7 +59,7 @@
             <xul:stack>
               <xul:spacer class="tabs-left"/>
             </xul:stack>
-            <xul:arrowscrollbox anonid="arrowscrollbox" orient="horizontal" flex="1" style="min-width: 1px;">
+            <xul:arrowscrollbox anonid="arrowscrollbox" orient="horizontal" flex="1" style="min-width: 1px;" clicktoscroll="true">
               <children/>
             </xul:arrowscrollbox>
             <xul:hbox class="tabs-closebutton-box" align="center" pack="end" anonid="tabstrip-closebutton">
