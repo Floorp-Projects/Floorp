@@ -54,51 +54,45 @@
 
  ******/
 
+WIDGET_ATOM(accesskey, "accesskey") // The shortcut key for a menu or menu item
 WIDGET_ATOM(ascending, "ascending")
+WIDGET_ATOM(autocheck, "autocheck")
+WIDGET_ATOM(checkbox, "checkbox")
 WIDGET_ATOM(checked, "checked")
 WIDGET_ATOM(_class, "class")
+WIDGET_ATOM(collapsed, "collapsed")
+WIDGET_ATOM(command, "command")
 WIDGET_ATOM(curpos, "curpos")
 WIDGET_ATOM(_default, "default")
 WIDGET_ATOM(descending, "descending")
 WIDGET_ATOM(disabled, "disabled")
-WIDGET_ATOM(focused, "focused")
-WIDGET_ATOM(maxpos, "maxpos")
-WIDGET_ATOM(mode, "mode")
-WIDGET_ATOM(mozmenuactive, "_moz-menuactive")
-WIDGET_ATOM(readonly, "readonly")
-WIDGET_ATOM(selected, "selected")
-WIDGET_ATOM(sortdirection, "sortDirection")
-WIDGET_ATOM(_true, "true")
-WIDGET_ATOM(value, "value")
-
-#if defined(XP_MACOSX)
-WIDGET_ATOM(accesskey, "accesskey") // The shortcut key for a menu or menu item
-WIDGET_ATOM(autocheck, "autocheck")
-WIDGET_ATOM(checkbox, "checkbox")
-WIDGET_ATOM(collapsed, "collapsed")
-WIDGET_ATOM(command, "command")
 WIDGET_ATOM(_false, "false")
+WIDGET_ATOM(firsttab, "first-tab")
+WIDGET_ATOM(focused, "focused")
 WIDGET_ATOM(hidden, "hidden")
 WIDGET_ATOM(horizontal, "horizontal")
 WIDGET_ATOM(id, "id")
+WIDGET_ATOM(input, "input")
 WIDGET_ATOM(key, "key") // The key element / attribute
 WIDGET_ATOM(label, "label")
+WIDGET_ATOM(maxpos, "maxpos")
 WIDGET_ATOM(menu, "menu") // Represents an XP menu
 WIDGET_ATOM(menuitem, "menuitem") // Represents an XP menu item
 WIDGET_ATOM(menupopup, "menupopup") // The XP menu's children.
 WIDGET_ATOM(menuseparator, "menuseparator")  // Divider between menu items
 WIDGET_ATOM(minpos, "minpos")
+WIDGET_ATOM(mode, "mode")
 WIDGET_ATOM(modifiers, "modifiers") // The modifiers attribute
+WIDGET_ATOM(mozinputchecked, "_moz-input-checked")
+WIDGET_ATOM(mozmenuactive, "_moz-menuactive")
 WIDGET_ATOM(name, "name")
 WIDGET_ATOM(open, "open") // Whether or not a menu, tree, etc. is open
 WIDGET_ATOM(orient, "orient")
 WIDGET_ATOM(radio, "radio")
+WIDGET_ATOM(readonly, "readonly")
+WIDGET_ATOM(selected, "selected")
+WIDGET_ATOM(sortdirection, "sortDirection")
+WIDGET_ATOM(_true, "true")
 WIDGET_ATOM(type, "type")
-#endif
-
-#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
-WIDGET_ATOM(firsttab, "first-tab")
-WIDGET_ATOM(input, "input")
-WIDGET_ATOM(mozinputchecked, "_moz-input-checked")
-#endif
+WIDGET_ATOM(value, "value")
 

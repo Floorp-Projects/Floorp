@@ -163,7 +163,6 @@ endif
 DEFINES		+= 
 INCLUDES	+= \
 		-I$(srcdir)/../xpwidgets \
-		-I$(srcdir)/../../public \
 		$(NULL)
 
 test_container: mozdrawingarea.o mozcontainer.o test_container.c

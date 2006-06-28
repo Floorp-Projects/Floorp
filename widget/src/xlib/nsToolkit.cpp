@@ -40,6 +40,7 @@
 #include "nsToolkit.h"
 #include "nsGCCache.h"
 #include "nsAppShell.h" // needed for nsAppShell::GetXlibRgbHandle()
+#include "nsWidgetAtoms.h"
 
 // Static Thread Local Storage index of the toolkit object associated with
 // a given thread...
@@ -83,6 +84,8 @@ xGC *nsToolkit::GetSharedGC()
 NS_METHOD nsToolkit::Init(PRThread *aThread)
 {
   CreateSharedGC();
+
+  nsWidgetAtoms::RegisterAtoms();
 
   return NS_OK;
 }

@@ -72,10 +72,6 @@ EXPORTS		= \
 		nsIDeviceContextSpecFactory.h \
 		$(NULL)
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-EXPORTS       += nsWidgetAtoms.h nsWidgetAtomList.h
-endif
-
 XPIDLSRCS	= \
 		nsIAppShell.idl \
 		nsIFilePicker.idl \

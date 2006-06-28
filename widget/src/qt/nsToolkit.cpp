@@ -42,6 +42,7 @@
 #include "nsToolkit.h"
 #include "nsGUIEvent.h"
 #include "plevent.h"
+#include "nsWidgetAtoms.h"
 
 // Static thread local storage index of the Toolkit
 // object associated with a given thread...
@@ -71,6 +72,8 @@ NS_IMPL_ISUPPORTS1(nsToolkit, nsIToolkit)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsToolkit::Init(PRThread *aThread)
 {
+  nsWidgetAtoms::RegisterAtoms();
+
   return NS_OK;
 }
 
