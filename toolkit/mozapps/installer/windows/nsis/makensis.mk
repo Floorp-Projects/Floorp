@@ -41,7 +41,7 @@ ifndef CONFIG_DIR
 $(error CONFIG_DIR must be set before including makensis.mk)
 endif
 
-ABS_CONFIG_DIR := $(shell cd $(CONFIG_DIR) && pwd)
+ABS_CONFIG_DIR := $(shell pwd)/$(CONFIG_DIR)
 
 SFX_MODULE ?= $(error SFX_MODULE is not defined)
 
