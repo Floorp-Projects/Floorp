@@ -1008,7 +1008,11 @@ function updateToDoStatus(status, passedInCompletedDate)
         setElementValue("completed-date-picker", completedDate);
         enableElement("completed-date-picker");
     } else {
-        setElementValue("percent-complete-textbox", oldPercentComplete);
+        if (oldPercentComplete != 100) {
+            setElementValue("percent-complete-textbox", oldPercentComplete);
+        } else {
+            setElementValue("percent-complete-textbox", "");
+        }
         setElementValue("completed-date-picker", oldCompletedDate);
         disableElement("completed-date-picker");
     }
