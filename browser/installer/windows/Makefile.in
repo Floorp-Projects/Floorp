@@ -81,21 +81,21 @@ installer::
 	$(MAKE) $(CONFIG_DIR)/setup.exe
 
 $(CONFIG_DIR)/setup.exe::
-	$(RM) -rf instgen && mkdir instgen
-	$(INSTALL) $(addprefix $(srcdir)/,$(INSTALLER_FILES)) instgen
-	$(INSTALL) $(addprefix $(DIST)/branding/,$(BRANDING_FILES)) instgen
-	cp $(topsrcdir)/browser/EULA instgen/license.txt
+	$(RM) -rf $(CONFIG_DIR) && mkdir $(CONFIG_DIR)
+	$(INSTALL) $(addprefix $(srcdir)/,$(INSTALLER_FILES)) $(CONFIG_DIR)
+	$(INSTALL) $(addprefix $(DIST)/branding/,$(BRANDING_FILES)) $(CONFIG_DIR)
+	cp $(topsrcdir)/browser/EULA $(CONFIG_DIR)/license.txt
 	$(EXIT_ON_ERROR) \
 	for i in $(PP_LOCALIZED_FILES); do \
-	  $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $(srcdir)/$$i > instgen/$$i; \
+	  $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $(srcdir)/$$i > $(CONFIG_DIR)/$$i; \
 	done
 	$(PERL) $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/make-installremoves.pl \
-	  ../removed-files > instgen/removed-files.log
+	  ../removed-files > $(CONFIG_DIR)/removed-files.log
 	$(PERL) $(topsrcdir)/config/preprocessor.pl -Fsubstitution $(DEFINES) $(ACDEFINES) \
-	  $(srcdir)/nsis/defines.nsi.in > instgen/defines.nsi
+	  $(srcdir)/nsis/defines.nsi.in > $(CONFIG_DIR)/defines.nsi
 	$(PERL) $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/preprocess-locale.pl \
 	  $(topsrcdir) $(call EXPAND_LOCALE_SRCDIR,browser/locales)/installer $(AB_CD) \
-	  $(WIN_INSTALLER_CHARSET)
+	  $(WIN_INSTALLER_CHARSET) $(CONFIG_DIR)
 
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/makensis.mk

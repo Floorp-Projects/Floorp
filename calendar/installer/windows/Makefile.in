@@ -93,7 +93,7 @@ $(CONFIG_DIR)/setup.exe::
 	  $(srcdir)/nsis/defines.nsi.in > instgen/defines.nsi
 	$(PERL) $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/preprocess-locale.pl \
 	  $(topsrcdir) $(call EXPAND_LOCALE_SRCDIR,calendar/locales)/installer $(AB_CD) \
-	  $(WIN_INSTALLER_CHARSET)
+	  $(WIN_INSTALLER_CHARSET) instgen
 
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/makensis.mk
