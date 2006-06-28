@@ -150,8 +150,6 @@
 
   <key id="go_to_today_key"      keycode="VK_DOWN"                       observes="go_today_command"            modifiers="accel"/>
   <key id="go_to_date_key"       keycode="VK_UP"                         observes="go_date_command"             modifiers="accel"/>
-  <key id="go_backward_key"      keycode="VK_PAGE_UP"                    observes="previous_command"/>
-  <key id="go_forward_key"       keycode="VK_PAGE_DOWN"                  observes="next_command"/>
 
   <key id="import_key"           key="&calendar.import.key;"             observes="import_command"              modifiers="accel"/>
   <key id="reload_server_key"    key="&calendar.reloadserver.key;"       observes="reload_remote_calendars"     modifiers="accel"/>

@@ -233,6 +233,18 @@
               this.moveView(event.detail);
             ]]>
           </handler>
+        <handler event="keypress"><![CDATA[
+            const kKE = Components.interfaces.nsIDOMKeyEvent;
+            switch (event.keyCode) {
+                case kKE.DOM_VK_PAGE_UP:
+                    this.moveView(-1);
+                    break;
+                case kKE.DOM_VK_PAGE_DOWN:
+                    this.moveView(1);
+                    break;
+            }
+            ]]>
+          </handler>
         </handlers>
     </binding>
 </bindings>
