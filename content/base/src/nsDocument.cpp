@@ -633,73 +633,6 @@ nsDOMImplementation::Init(nsIURI* aDocumentURI, nsIURI* aBaseURI,
   return NS_OK;
 }
 
-PRBool
-nsDocumentObserverList::PrependElement(nsIDocumentObserver* aObserver)
-{
-  PRBool prepended = mObservers.InsertElementAt(aObserver, 0);
-
-  // This introduces an inconsistency -- forward iterators will not see the new
-  // element, while backwards ones will.  That's kinda inherent in the
-  // different iteration orders, though.
-  if (prepended) {
-    for (Iterator* iter = mIterators; iter; iter = iter->mNext) {
-      iter->mPosition++;
-    }
-  }
-
-  return prepended;
-}
-
-PRBool
-nsDocumentObserverList::RemoveElement(nsIDocumentObserver* aElement)
-{
-  PRInt32 index = mObservers.IndexOf(aElement);
-  if (index == -1) {
-    return PR_FALSE;
-  }
-
-#ifdef DEBUG
-  PRBool removed =
-#endif
-    mObservers.RemoveElementAt(index);
-  NS_ASSERTION(removed, "How could we fail to remove by index?");
-
-  for (Iterator* iter = mIterators; iter; iter = iter->mNext) {
-    // If iter->mPosition == index then forward iterators are safe, since in
-    // that case the position is not affected by the removal; all that's
-    // affected is what element is at that position.  Backward iterators,
-    // however, need to decrement mPosition in that case.
-    if (iter->mPosition > index ||
-        (iter->mPosition == index && iter->mStep < 0)) {
-      iter->mPosition--;
-    }
-  }
-  
-  return PR_TRUE;
-}
-
-void
-nsDocumentObserverList::Clear()
-{
-  mObservers.Clear(); 
-
-  // Reset all iterators to a bogus position so they don't return
-  // anything next time they're called.
-  for (Iterator* iter = mIterators; iter; iter = iter->mNext) {
-    iter->mPosition = -1;
-  }
-}
-
-nsIDocumentObserver*
-nsDocumentObserverList::Iterator::GetNext()
-{
-  nsIDocumentObserver* ret =
-    NS_STATIC_CAST(nsIDocumentObserver*,
-                   mList.mObservers.SafeElementAt(mPosition));
-  mPosition += mStep;
-  return ret;
-}
-
 // ==================================================================
 // =
 // ==================================================================
@@ -895,7 +828,7 @@ nsDocument::Init()
   mBindingManager = bindingManager;
 
   // The binding manager must always be the first observer of the document.
-  mObservers.PrependElement(bindingManager);
+  mObservers.PrependObserver(bindingManager);
 
   mOnloadBlocker = new nsOnloadBlocker();
   NS_ENSURE_TRUE(mOnloadBlocker, NS_ERROR_OUT_OF_MEMORY);
@@ -2302,9 +2235,9 @@ nsDocument::GetScriptLoader()
 void
 nsDocument::AddObserver(nsIDocumentObserver* aObserver)
 {
-  // XXX Make sure the observer isn't already in the list
+  // Make sure the observer isn't already in the list
   if (!mObservers.Contains(aObserver)) {
-    mObservers.AppendElement(aObserver);
+    mObservers.AppendObserver(aObserver);
   }
 }
 
@@ -2316,7 +2249,7 @@ nsDocument::RemoveObserver(nsIDocumentObserver* aObserver)
   // observers from the list. This is not a big deal, since we
   // don't hold a live reference to the observers.
   if (!mInDestructor) {
-    return mObservers.RemoveElement(aObserver);
+    return mObservers.RemoveObserver(aObserver);
   }
 
   return mObservers.Contains(aObserver);

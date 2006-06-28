@@ -139,6 +139,7 @@ CPPSRCS		= \
 		nsSyncLoadService.cpp \
 		nsTextFragment.cpp \
 		nsTextNode.cpp \
+		nsTObserverArray.cpp \
 		nsTreeWalker.cpp \
 		nsXMLContentSerializer.cpp \
 		nsXMLHttpRequest.cpp \
