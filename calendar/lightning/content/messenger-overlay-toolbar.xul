@@ -60,6 +60,13 @@
   <script type="application/x-javascript" 
           src="chrome://lightning/content/calendar-management.js"/>
 
+  <window id="messengerWindow">
+    <keyset>
+      <key id="openLightningKey" key="3" modifiers="accel"
+           oncommand="ltnMinimonthPick(document.getElementById('ltnMinimonth'))"/>
+    </keyset>
+  </window>
+
   <menupopup id="menu_NewPopup">
     <menuseparator />
     <menuitem id="ltnNewEvent" label="&lightning.menupopup.new.event.label;" 
