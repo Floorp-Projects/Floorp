@@ -53,8 +53,7 @@
 class nsWidgetAtoms {
 public:
 
-  static void AddRefAtoms();
-  static void ReleaseAtoms();
+  static void RegisterAtoms();
 
   /* Declare all atoms
 
