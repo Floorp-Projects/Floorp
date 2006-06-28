@@ -111,7 +111,8 @@ public:
   NS_IMETHOD SetMatrixPropagation(PRBool aPropagate) { return NS_OK; }
   NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM) { return NS_ERROR_FAILURE; }
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
-  
+  NS_IMETHOD_(PRBool) IsDisplayContainer() { return PR_FALSE; }
+
   // nsISVGGeometrySource interface: 
   NS_IMETHOD GetCanvasTM(nsIDOMSVGMatrix * *aCTM);
   virtual nsresult UpdateGraphic(PRBool suppressInvalidation = PR_FALSE);
