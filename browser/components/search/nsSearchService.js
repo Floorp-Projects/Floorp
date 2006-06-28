@@ -89,8 +89,8 @@ const NEW_LINES = /(\r\n|\r|\n)/;
 // cause big delays when loading them at startup.
 const MAX_ICON_SIZE   = 10000;
 
-// Default charset to use for sending search parameters. This is used to match
-// previous nsInternetSearchService behavior.
+// Default charset to use for sending search parameters. ISO-8859-1 is used to
+// match previous nsInternetSearchService behavior.
 const DEFAULT_QUERY_CHARSET = "ISO-8859-1";
 
 const SEARCH_BUNDLE = "chrome://browser/locale/search.properties";
@@ -102,9 +102,12 @@ const OPENSEARCH_NS_11  = "http://a9.com/-/spec/opensearch/1.1/";
 // Although the specification at http://opensearch.a9.com/spec/1.1/description/
 // gives the namespace names defined above, many existing OpenSearch engines
 // are using the following versions.  We therefore allow either.
-const OPENSEARCH_NAMESPACES = [ OPENSEARCH_NS_11, OPENSEARCH_NS_10,
-                                "http://a9.com/-/spec/opensearchdescription/1.1/",
-                                "http://a9.com/-/spec/opensearchdescription/1.0/"];
+const OPENSEARCH_NAMESPACES = [
+  OPENSEARCH_NS_11, OPENSEARCH_NS_10,
+  "http://a9.com/-/spec/opensearchdescription/1.1/",
+  "http://a9.com/-/spec/opensearchdescription/1.0/"
+];
+
 const OPENSEARCH_LOCALNAME = "OpenSearchDescription";
 
 const MOZSEARCH_NS_10     = "http://www.mozilla.org/2006/browser/search/";
@@ -122,31 +125,49 @@ const EMPTY_DOC = "<?xml version=\"1.0\"?>\n" +
 
 const BROWSER_SEARCH_PREF = "browser.search.";
 
-// Unsupported search parameters, which will be replaced with blanks.
-// XXX We do use inputEncoding - should consider having it available. This
-// would require doing multiple parameter substitution, so just having
-// searchTerms is sufficient for now.
-const kInvalidWords = /(\{count\})|(\{startIndex\})|(\{startPage\})|(\{language\})|(\{outputEncoding\})|(\{inputEncoding\})/;
+const USER_DEFINED = "{searchTerms}";
 
-// Supported search parameters.
-const kValidWords = /\{searchTerms\}/gi;
-const kUserDefined = "{searchTerms}";
+// Supported OpenSearch parameters
+// See http://opensearch.a9.com/spec/1.1/querysyntax/#core
+const OS_PARAM_USER_DEFINED    = /\{searchTerms\??\}/g;
+const OS_PARAM_INPUT_ENCODING  = /\{inputEncoding\??\}/g;
+const OS_PARAM_LANGUAGE        = /\{language\??\}/g;
+const OS_PARAM_OUTPUT_ENCODING = /\{outputEncoding\??\}/g;
+
+// Default values
+const OS_PARAM_LANGUAGE_DEF         = "*";
+const OS_PARAM_OUTPUT_ENCODING_DEF  = "UTF-8";
+
+// "Unsupported" OpenSearch parameters. For example, we don't support
+// page-based results, so if the engine requires that we send the "page index"
+// parameter, we'll always send "1".
+const OS_PARAM_COUNT        = /\{count\??\}/g;
+const OS_PARAM_START_INDEX  = /\{startIndex\??\}/g;
+const OS_PARAM_START_PAGE   = /\{startPage\??\}/g;
+
+// Default values
+const OS_PARAM_COUNT_DEF        = "20"; // 20 results
+const OS_PARAM_START_INDEX_DEF  = "1";  // start at 1st result
+const OS_PARAM_START_PAGE_DEF   = "1";  // 1st page
+
+// Optional parameter
+const OS_PARAM_OPTIONAL     = /\{\w+\?\}/g;
+
+// A array of arrays containing parameters that we don't fully support, and
+// their default values. We will only send values for these parameters if
+// required, since our values are just really arbitrary "guesses" that should
+// give us the output we want.
+var OS_UNSUPPORTED_PARAMS = [
+  [OS_PARAM_COUNT, OS_PARAM_COUNT_DEF],
+  [OS_PARAM_START_INDEX, OS_PARAM_START_INDEX_DEF],
+  [OS_PARAM_START_PAGE, OS_PARAM_START_PAGE_DEF],
+];
 
 // Returns false for whitespace-only or commented out lines in a
 // Sherlock file, true otherwise.
 function isUsefulLine(aLine) {
   return !(/^\s*($|#)/i.test(aLine));
 }
-
-/**
- * Used to determine whether an "input" line from a Sherlock file is a "user
- * defined" input. That is, check for the string "user", preceded by either
- * whitespace or a quote, followed by any of ">", "=", """, "'", whitespace,
- * a slash, "+", or EOL.
- */
-const kIsUserInput = /(\s|["'=])user(\s|[>="'\/\\+]|$)/i;
-
-var MozStorageStatementWrapper = null;
 
 /**
  * Prefixed to all search debug output.
@@ -537,6 +558,23 @@ function sherlockBytesToLines(aBytes, aCharsetCode) {
 }
 
 /**
+ * Gets the current value of the locale.  It's possible for this preference to
+ * be localized, so we have to do a little extra work here.  Similar code
+ * exists in nsHttpHandler.cpp when building the UA string.
+ */
+function getLocale() {
+  const localePref = "general.useragent.locale";
+  var locale = getLocalizedPref(localePref);
+  if (locale)
+    return locale;
+
+  // Not localized
+  var prefs = Cc["@mozilla.org/preferences-service;1"].
+              getService(Ci.nsIPrefBranch);
+  return prefs.getCharPref(localePref);
+}
+
+/**
  * Wrapper for nsIPrefBranch::getComplexValue.
  * @param aPrefName
  *        The name of the pref to get.
@@ -647,19 +685,52 @@ function notifyAction(aEngine, aVerb) {
 
 /**
  * Simple object representing a name/value pair.
- * @throws NS_ERROR_NOT_IMPLEMENTED if the provided value includes unsupported
- *         parameters.
- * @see kInvalidWords.
  */
 function QueryParameter(aName, aValue) {
-  ENSURE_ARG(aName && (aValue != null), "missing name or value for QueryParameter!");
-
-  ENSURE(!kInvalidWords.test(aValue),
-         "Illegal value while creating a QueryParameter",
-         Cr.NS_ERROR_NOT_IMPLEMENTED);
+  ENSURE_ARG(aName && (aValue != null),
+             "missing name or value for QueryParameter!");
 
   this.name = aName;
   this.value = aValue;
+}
+
+/**
+ * Perform OpenSearch parameter substitution on aParamValue.
+ * 
+ * @param aParamValue
+ *        A string containing OpenSearch search parameters.
+ * @param aSearchTerms
+ *        The user-provided search terms. This string will inserted into
+ *        aParamValue as the value of the OS_PARAM_USER_DEFINED parameter.
+ *        This value must already be escaped appropriately - it is inserted
+ *        as-is.
+ * @param aQueryEncoding
+ *        The value to use for the OS_PARAM_INPUT_ENCODING parameter. See
+ *        definition in the OpenSearch spec.
+ *
+ * @see http://opensearch.a9.com/spec/1.1/querysyntax/#core
+ */
+function ParamSubstitution(aParamValue, aSearchTerms, aQueryEncoding) {
+  var value = aParamValue;
+
+  // Insert the parameters we're confident about
+  value = value.replace(OS_PARAM_USER_DEFINED, aSearchTerms);
+  value = value.replace(OS_PARAM_INPUT_ENCODING, aQueryEncoding);
+  value = value.replace(OS_PARAM_LANGUAGE,
+                        getLocale() || OS_PARAM_LANGUAGE_DEF);
+  value = value.replace(OS_PARAM_OUTPUT_ENCODING,
+                        OS_PARAM_OUTPUT_ENCODING_DEF);
+
+  // Replace any optional parameters
+  value = value.replace(OS_PARAM_OPTIONAL, "");
+
+  // Insert any remaining required params with our default values
+  for (var i = 0; i < OS_UNSUPPORTED_PARAMS.length; ++i) {
+    value = value.replace(OS_UNSUPPORTED_PARAMS[i][0],
+                          OS_UNSUPPORTED_PARAMS[i][1]);
+  }
+
+  return value;
 }
 
 /**
@@ -671,7 +742,8 @@ function QueryParameter(aName, aValue) {
  */
 function createStatement (dbconn, sql) {
   var stmt = dbconn.createStatement(sql);
-  var wrapper = new MozStorageStatementWrapper();
+  var wrapper = Cc["@mozilla.org/storage/statement-wrapper;1"].
+                createInstance(Ci.mozIStorageStatementWrapper);
 
   wrapper.initialize(stmt);
   return wrapper;
@@ -693,10 +765,7 @@ function createStatement (dbconn, sql) {
  *
  * @see http://opensearch.a9.com/spec/1.1/querysyntax/#urltag
  *
- * @throws NS_ERROR_NOT_IMPLEMENTED if aType is unsupported.  If invalid
- *         (unsupported) parameters are included in aTemplate, they will be
- *         replaced with blanks in the final query, so no error needs to be
- *         returned here.
+ * @throws NS_ERROR_NOT_IMPLEMENTED if aType is unsupported.
  */
 function EngineURL(aType, aMethod, aTemplate) {
   ENSURE_ARG(aType && aMethod && aTemplate,
@@ -735,41 +804,23 @@ EngineURL.prototype = {
     this.params.push(new QueryParameter(aName, aValue));
   },
 
-  getSubmission: function SRCH_EURL_getSubmission(aData) {
-    /**
-     * From an array of QueryParameter objects, generates a string in the
-     * application/x-www-form-urlencoded format:
-     * name=value&name=value&name=value...
-     * Any invalid or unimplemented query fields will be replaced with empty
-     * strings.
-     * @param   aParams
-     *          An array of QueryParameter objects
-     * @param   aData
-     *          Data to be substituted into parameter values using the
-     *          |kValidWords| regexp
-     * @returns A string of encoded param names and values in
-     *          application/x-www-form-urlencoded format.
-     *
-     * @see kInvalidWords
-     */
-    function makeQueryString(aParams, aData) {
-      var str = "";
-      for (var i = 0; i < aParams.length; ++i) {
-        var param = aParams[i];
-        var value = param.value.replace(kValidWords, aData);
-        str += (i > 0 ? "&" : "") + param.name + "=" + value;
-      }
-      return str;
+  getSubmission: function SRCH_EURL_getSubmission(aSearchTerms, aQueryCharset) {
+    var url = ParamSubstitution(this.template, aSearchTerms, aQueryCharset);
+
+    // Create an application/x-www-form-urlencoded representation of our params
+    // (name=value&name=value&name=value)
+    var dataString = "";
+    for (var i = 0; i < this.params.length; ++i) {
+      var param = this.params[i];
+      var value = ParamSubstitution(param.value, aSearchTerms, aQueryCharset);
+
+      dataString += (i > 0 ? "&" : "") + param.name + "=" + value;
     }
 
-    // Replace known fields with given parameters and clear unknown fields.
-    var url = this.template.replace(kValidWords, aData);
-    url = url.replace(kInvalidWords, "");
     var postData = null;
-    var dataString = makeQueryString(this.params, aData);
     if (this.method == "GET") {
       // GET method requests have no post data, and append the encoded
-      // text to the url...
+      // query string to the url...
       if (url.indexOf("?") == -1 && dataString)
         url += "?";
       url += dataString;
@@ -1379,9 +1430,9 @@ Engine.prototype = {
 
     /**
      * Returns an array of name-value pair arrays representing the Sherlock
-     * file's input elements. User defined inputs return kUserDefined as the
-     * value. Elements are returned in the order they appear in the source
-     * file.
+     * file's input elements. User defined inputs return USER_DEFINED
+     * as the value. Elements are returned in the order they appear in the
+     * source file.
      *
      *   Example:
      *      <input name="foo" value="bar">
@@ -1414,6 +1465,10 @@ Engine.prototype = {
        *          doesn't exist.
        */
       function getAttr(aAttr, aLine) {
+        // Used to determine whether an "input" line from a Sherlock file is a
+        // "user defined" input.
+        const userInput = /(\s|["'=])user(\s|[>="'\/\\+]|$)/i;
+
         LOG("_parseAsSherlock::getAttr: Getting attr: \"" +
             aAttr + "\" for line: \"" + aLine + "\"");
         // We're not case sensitive, but we want to return the attribute value
@@ -1423,12 +1478,13 @@ Engine.prototype = {
 
         var attrStart = lLine.search(new RegExp("\\s" + attr, "i"));
         if (attrStart == -1) {
+        
           // If this is the "user defined input" (i.e. contains the empty
           // "user" attribute), return our special keyword
-          if (kIsUserInput.test(lLine) && attr == "value") {
+          if (userInput.test(lLine) && attr == "value") {
             LOG("_parseAsSherlock::getAttr: Found user input!\nLine:\"" + lLine
                 + "\"");
-            return kUserDefined;
+            return USER_DEFINED;
           }
           // The attribute doesn't exist - ignore
           LOG("_parseAsSherlock::getAttr: Failed to find attribute:\nLine:\""
@@ -1569,7 +1625,7 @@ Engine.prototype = {
         var value = inputs[i][1];
         if (i==0) {
           if (name == "")
-            template += kUserDefined;
+            template += USER_DEFINED;
           else
             template += "?" + name + "=" + value;
         } else if (name != "")
@@ -1834,7 +1890,7 @@ Engine.prototype = {
       data = textToSubURI.ConvertAndEscape(DEFAULT_QUERY_CHARSET, aData);
     }
     LOG("getSubmission: Out data: \"" + data + "\"");
-    return url.getSubmission(data);
+    return url.getSubmission(data, this.queryCharset);
   },
 
   // from nsISearchEngine
@@ -2401,14 +2457,11 @@ var engineMetadataService = {
   newTable: false,
 
   init: function epsInit() {
-    MozStorageStatementWrapper = 
-      new Components.Constructor("@mozilla.org/storage/statement-wrapper;1",
-                                 Ci.mozIStorageStatementWrapper);
     var engineDataTable = "id INTEGER PRIMARY KEY, engineid STRING, name STRING, value STRING";
     var file = getDir(NS_APP_USER_PROFILE_50_DIR);
+    file.append("search.sqlite");
     var dbService = Cc["@mozilla.org/storage/service;1"].
                     getService(Ci.mozIStorageService);
-    file.append("search.sqlite");
     this.mDB = dbService.openDatabase(file);
 
     try {
