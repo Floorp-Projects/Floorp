@@ -48,7 +48,15 @@ ifeq ($(OS),Windows_NT)
 DIRS	+= nsztool
 endif
 
+# XXX Suite still wants the xpfe installer at the moment
 ifndef MOZ_XUL_APP
+BUILD_SETUP=1
+endif
+ifdef MOZ_SUITE
+BUILD_SETUP=1
+endif
+
+ifdef BUILD_SETUP
 DIRS    += \
 	uninstall \
 	setuprsc \
