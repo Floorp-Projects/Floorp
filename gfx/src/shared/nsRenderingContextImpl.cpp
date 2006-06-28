@@ -650,7 +650,7 @@ nsRenderingContextImpl::GetTextDimensions(const PRUnichar* aString, PRUint32 aLe
   if (aLength <= maxChunkLength)
     return GetTextDimensionsInternal(aString, aLength, aDimensions);
     
-  if (*aFontID) {
+  if (aFontID) {
     *aFontID = nsnull;
   }
  
