@@ -1245,6 +1245,10 @@ table.testcases td.headerleft {
     text-align: left;
 }
 
+table.testcases td {
+    padding-left: 5px;
+}
+
 table.testcases tr {
     border: solid #bbbbbb 1px;
 }
