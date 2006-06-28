@@ -42,6 +42,7 @@ use Litmus::Error;
 
 our $default_relevance_threshold = 1.0;
 our $default_match_limit = 25;
+our $default_num_days = 7;
 
 Litmus::DB::Testcase->table('testcases');
 
@@ -69,8 +70,8 @@ __PACKAGE__->set_sql(EnabledBySubgroup => qq{
 
 __PACKAGE__->set_sql(CommunityEnabledBySubgroup => qq{
                                                       SELECT t.* 
-                                                      FROM testcases t, testcase_subgroups tsg 
-						      WHERE tsg.subgroup_id=? AND tsg.testcase_id=t.testcase_id AND t.enabled=1 AND t.community_enabled=1 
+                                                      FROM testcases t, testcase_subgroups tsg
+						      WHERE tsg.subgroup_id=? AND tsg.testcase_id=t.testcase_id AND t.enabled=1 AND t.community_enabled=1
 						      ORDER BY tsg.sort_order ASC
 });
 
@@ -97,7 +98,7 @@ sub is_completed {
                                                               $build_id,
                                                               $locale->{'abbrev'},
                                                               $platform->{'platform_id'},
-                                                              $user->{'user_id'},                                                              
+                                                              $user->{'user_id'},
                                                              );
   } else {
     @results = Litmus::DB::Testresult->search_Completed(
@@ -107,8 +108,8 @@ sub is_completed {
                                                         $platform->{'platform_id'},
                                                        );
   }
-  
-  return @results;  
+
+  return @results;
 }
 
 #########################################################################
@@ -117,28 +118,80 @@ sub getFullTextMatches() {
   my $text_snippet = shift;
   my $match_limit = shift;
   my $relevance_threshold = shift;
- 
+  
   if (!$match_limit) {
     $match_limit = $default_match_limit;
   }
   if (!$relevance_threshold) {
     $relevance_threshold = $default_relevance_threshold
   }
-
+  
   __PACKAGE__->set_sql(FullTextMatches => qq{
-					   SELECT testcase_id, summary, MATCH (summary,steps,expected_results) AGAINST (?) AS relevance 
-					   FROM testcases 
-					   WHERE MATCH (summary,steps,expected_results) AGAINST (?) HAVING relevance > ? 
-					   ORDER BY relevance DESC, summary ASC
-                                           LIMIT $match_limit
+                                             SELECT testcase_id, summary, creation_date, last_updated, MATCH (summary,steps,expected_results) AGAINST (?) AS relevance
+					     FROM testcases
+					     WHERE MATCH (summary,steps,expected_results) AGAINST (?) HAVING relevance > ?
+					     ORDER BY relevance DESC, summary ASC
+                                             LIMIT $match_limit
 });
-
-
+  
+  
   return $self->search_FullTextMatches(
                                        $text_snippet,
                                        $text_snippet,
                                        $relevance_threshold
-                                      );                                     
+                                      );
+}
+
+#########################################################################
+sub getNewTestcases() {
+  my $self = shift;
+  my $num_days = shift;
+  my $match_limit = shift;
+  
+  if (!$num_days) {
+    $num_days = $default_num_days;
+  }
+  
+  if (!$match_limit) {
+    $match_limit = $default_match_limit;
+  }
+  
+  __PACKAGE__->set_sql(NewTestcases => qq{
+				          SELECT testcase_id, summary, creation_date, last_updated
+                                          FROM testcases
+                                          WHERE creation_date>=?
+                                          LIMIT $match_limit
+});
+  
+  my $err;
+  my $new_datestamp=&UnixDate(DateCalc("now","- $num_days days"),"%q");
+  return $self->search_NewTestcases($new_datestamp);
+}
+
+#########################################################################
+sub getRecentlyUpdated() {
+  my $self = shift;
+  my $num_days = shift;
+  my $match_limit = shift;
+  
+  if (!$num_days) {
+    $num_days = $default_num_days;
+  }
+  
+  if (!$match_limit) {
+    $match_limit = $default_match_limit;
+  }
+  
+  __PACKAGE__->set_sql(RecentlyUpdated => qq{
+                                             SELECT testcase_id, summary, creation_date, last_updated
+                                             FROM testcases
+                                             WHERE last_updated>=? AND last_updated>creation_date
+                                             LIMIT $match_limit
+});
+  
+  my $err;
+  my $new_datestamp=&UnixDate(DateCalc("now","- $num_days days"),"%q");
+  return $self->search_RecentlyUpdated($new_datestamp);
 }
 
 #########################################################################
@@ -152,45 +205,50 @@ sub getDefaultRelevanceThreshold() {
 }
 
 #########################################################################
+sub getDefaultNumDays() {
+  return $default_num_days;
+}
+
+#########################################################################
 sub clone() {
   my $self = shift;
-
+  
   my $new_testcase = $self->copy;
-  if (!$new_testcase) { 
+  if (!$new_testcase) {
     return undef;
   }
-
+  
   # Update dates to now.
   my $now = &UnixDate("today","%q");
   $new_testcase->creation_date($now);
   $new_testcase->last_updated($now);
   $new_testcase->update();
-
+  
   # Propagate subgroup membership;
-  my $dbh = __PACKAGE__->db_Main();  
+  my $dbh = __PACKAGE__->db_Main();
   my $sql = "INSERT INTO testcase_subgroups (testcase_id,subgroup_id,sort_order) SELECT ?,subgroup_id,sort_order FROM testcase_subgroups WHERE testcase_id=?";
   
-  my $rows = $dbh->do($sql, 
+  my $rows = $dbh->do($sql,
 		      undef,
 		      $new_testcase->testcase_id,
 		      $self->testcase_id
 		     );
   if (! $rows) {
     # XXX: Do we need to throw a warning here?
-    # What happens when we clone a testcase that doesn't belong to  
+    # What happens when we clone a testcase that doesn't belong to
     # any subgroups?
-  }  
-
+  }
+  
   $sql = "INSERT INTO related_testcases (testcase_id, related_testcase_id) VALUES (?,?)";
   $rows = $dbh->do($sql, 
-		      undef,
-		      $self->testcase_id,
-		      $new_testcase->testcase_id
-		     );
+                   undef,
+                   $self->testcase_id,
+                   $new_testcase->testcase_id
+                  );
   if (! $rows) {
     # XXX: Do we need to throw a warning here?
-  }    
-
+  }
+  
   return $new_testcase;
 }
 
@@ -198,7 +256,7 @@ sub clone() {
 sub delete_from_subgroups() {
   my $self = shift;
   
-  my $dbh = __PACKAGE__->db_Main();  
+  my $dbh = __PACKAGE__->db_Main();
   my $sql = "DELETE from testcase_subgroups WHERE testcase_id=?";
   my $rows = $dbh->do($sql,
                       undef,
@@ -209,8 +267,8 @@ sub delete_from_subgroups() {
 #########################################################################
 sub delete_from_related() {
   my $self = shift;
-
-  my $dbh = __PACKAGE__->db_Main();  
+  
+  my $dbh = __PACKAGE__->db_Main();
   my $sql = "DELETE from related_testcases WHERE testcase_id=? OR related_testcase_id=?";
   my $rows = $dbh->do($sql,
                       undef,
@@ -235,7 +293,7 @@ sub update_subgroups() {
   if (scalar @$new_subgroup_ids) {
     # Failing to delete subgroups is _not_ fatal when adding a new testcase.
     my $rv = $self->delete_from_subgroups();
-    my $dbh = __PACKAGE__->db_Main();  
+    my $dbh = __PACKAGE__->db_Main();
     my $sql = "INSERT INTO testcase_subgroups (testcase_id,subgroup_id,sort_order) VALUES (?,?,1)";
     foreach my $new_subgroup_id (@$new_subgroup_ids) {
       my $rows = $dbh->do($sql, 

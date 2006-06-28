@@ -31,14 +31,16 @@
 
 <table class="testcases">
 <tr>
-  <th width="5%">Relevance</th>
+  [% IF fulltext %]<th width="5%">Relevance</th>[% END %]
   <th width="5%">Testcase ID#</th>
   <td class="headerleft">Name</td>
+  <th>Creation Date</th>
+  <th>Last Updated</th>
 </tr>
 
 [% IF testcases.size==0 %]
 <tr>
-    <td class="no-results" colspan="3">No matching testcases were found.</td>
+    <td class="no-results" colspan="[% IF fulltext %]5[% ELSE %]4[% END %]">No matching testcases were found.</td>
 </tr>
 [% ELSE %]
 [% FOREACH testcase=testcases %]
@@ -48,9 +50,11 @@
   [% rowstyle = 'odd' %]
 [% END %]
 <tr class="[% rowstyle %]">
-<td align="center">[% testcase.relevance | html | format('%.2f') %]</td>
+[% IF fulltext %]<td align="center">[% testcase.relevance | html | format('%.2f') %]</td>[% END %]
 <td align="center"><a href="show_test.cgi?id=[% testcase.testcase_id | html | uri %]">[% testcase.testcase_id | html %]</a></td>
 <td align="left">[% testcase.summary | html %]</td>
+<td align="center">[% testcase.creation_date | html %]</td>
+<td align="center">[% testcase.last_updated | html %]</td>
 </tr>
 [% END %]
 [% END %]

@@ -57,7 +57,7 @@ my $cookie_expire_days = 7;
 my $curSession;
 
 # Given a username and password, validate the login. Returns the 
-# Lutmus::DB::User object associated with the username if the login 
+# Litmus::DB::User object associated with the username if the login 
 # is sucuessful. Returns false otherwise.
 sub validate_login($$) {
   my $username = shift;
@@ -488,7 +488,7 @@ sub setCookie {
 
   my $user_id = 0;
   if ($user) {
-    $user_id = $user->userid();
+    $user_id = $user->user_id();
   }
   
   if (!$expires or $expires eq '') {

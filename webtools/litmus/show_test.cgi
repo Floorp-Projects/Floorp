@@ -47,6 +47,7 @@ $vars->{"defaultemail"} = $cookie;
 $vars->{"show_admin"} = Litmus::Auth::istrusted($cookie); 
 
 $vars->{'default_match_limit'} = Litmus::DB::Testcase->getDefaultMatchLimit();
+$vars->{'default_num_days'} = Litmus::DB::Testcase->getDefaultNumDays();
 $vars->{'default_relevance_threshold'} = Litmus::DB::Testcase->getDefaultRelevanceThreshold();
 
 if (! $c->param) {
@@ -116,7 +117,7 @@ if ($c->param("id")) {
       $vars->{'onload'} = "toggleMessage('$status','$message');";
     }
   } elsif ($c->param("editingTestcases") && 
-           ! Litmus::Auth::canEdit(Litmus::Auth::getCookie())) {
+          ! Litmus::Auth::canEdit(Litmus::Auth::getCookie())) {
     invalidInputError("You do not have permissions to edit testcases. ");
   }
   
@@ -162,8 +163,29 @@ if ($c->param("text_snippet")) {
                                                            $relevance_threshold);
   $vars->{'testcases'} = \@testcases;
   $vars->{'search_string_for_display'} = "Full-Text Search: \"$text_snippet\"";
+  $vars->{'fulltext'} = 1;
+} elsif ($c->param("recently")) {
+  my $recently = $c->param("recently");
+  my $match_limit = $c->param("match_limit");
+  my $num_days = $c->param("num_days") || Litmus::DB::Testcase->getDefaultNumDays();
+  my @testcases;
+  my $search_string_for_display;
+  if ($recently eq 'added') {
+    @testcases = Litmus::DB::Testcase->getNewTestcases(
+                                                       $num_days,
+                                                       $match_limit
+                                                      );
+    $search_string_for_display = "Testcases added in the last $num_days days";
+  } elsif ($recently eq 'changed') {
+    @testcases = Litmus::DB::Testcase->getRecentlyUpdated(
+                                                          $num_days,
+                                                          $match_limit
+                                                         );
+    $search_string_for_display = "Testcases changed in the last $num_days days";
+  }
+  $vars->{'testcases'} = \@testcases;
+  $vars->{'search_string_for_display'} = $search_string_for_display;
 } 
 
 Litmus->template()->process("show/search_for_testcases.tmpl", $vars) || 
   internalError(Litmus->template()->error());
-

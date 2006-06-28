@@ -32,15 +32,20 @@
 
 [% title="View Testcase" %]
 
-[% INCLUDE global/html_header.tmpl %]
+[% INCLUDE global/html_header.tmpl js_files=['js/Help.js'] %]
 [% INCLUDE global/litmus_header.tmpl %]
 
 <script type="text/javascript">
 function init()
 {
-    FormInit(document.forms['search_by_testcase_id'], document.location.search);
-    FormInit(document.forms['search_fulltext'], document.location.search);
+    FormInit(document.forms['testcase_search_by_id'], document.location.search);
+    FormInit(document.forms['testcase_fulltext_search'], document.location.search);
+    FormInit(document.forms['testcase_search_recent'], document.location.search);
 }
+
+var relevanceHelpTitle = 'What is relevance?';
+var relevanceHelpText = '<p>Relevance values are non-negative floating-point numbers. Zero relevance means no similarity. Relevance is computed based on the number of words in the row, the number of unique words in that row, the total number of words in the collection, and the number of documents (rows) that contain a particular word.</p><p><a target="external_link" href="http://dev.mysql.com/doc/refman/5.0/en/fulltext-search.html">More information on full-text searching can be found here.</a></p>';
+
 </script>
 
 <div id="page">
@@ -51,56 +56,23 @@ function init()
 
     <h1 class="firstHeading">[% title | html %]</h1>
 
-<div class="section-full">
+    <div class="section-full">
 
-  <div class="section-header">
-Search by Testcase ID # 
+      <table class="testcase-search">
+      <tr>
+      <th>By Testcase ID#</th>
+      <th>By Full-text Search</th>
+      <th>By Recently Added/Changed</th>
+      </tr>
+      <tr>
+      <td valign="top" width="33%"><div class="testcase-search">Testcase ID#:<br/><form action="show_test.cgi" method="get" name="testcase_search_by_id" id="testcase_search_by_id"><input type="text" id="id" name="id" size="25" /><br/><input class="button" type="submit" value="Search By ID"></form></td></div></td>
+      <td valign="top" width="33%"><div class="testcase-search">String to match:<br/><form action="show_test.cgi" method="get" name="testcase_fulltext_search" id="testcase_fulltext_search"><input type="text" id="text_snippet" name="text_snippet" size="25" /><br/>Minimum Relevance Score:<br/><input type="text" name="relevance_threshold" id="relevance_threshold" value="[% default_relevance_threshold %]" size="5" />&nbsp;&lArr;&nbsp;<a name="relevance_help" onclick="toggleHelp(relevanceHelpTitle,relevanceHelpText);">What is relevance?</a><br/># of Matches:<br/><input type="text" name="match_limit" id="match_limit" value="[% default_match_limit %]" size="5" /><br/><input class="button" type="submit" value="Fulltext Search"></form>
+</div></td>
+      <td valign="top"><div class="testcase-search"><form action="show_test.cgi" method="get" name="testcase_search_recent" id="testcase_search_recent"><input type="radio" id="recently" name="recently" value="added" checked/>&nbsp;Added<br/><input type="radio" id="recently" name="recently" value="changed" />&nbsp;Changed<br/>Within the last <input type="text" name="num_days" value="[% default_num_days %]" size="3"> days<br/># of Matches:<br/><input type="text" name="match_limit" id="match_limit" value="[% default_match_limit %]" size="5" /><br/><input class="button" type="submit" value="Search Recent"></div></td>
+      </tr>
+
+    </table>
   </div>
-  <div class="section-content">
-
-<form action="show_test.cgi" method="get" name="search_by_testcase_id" id="search_by_testcase_id">
-
-<table border="0" celpadding="5" cellspacing="5">
-<tr>
-<td>Testcase ID#:</td><td><input type="text" id="id" name="id" size="25" /></td>
-</tr>
-<tr>
-<td colspan="2" align="right"><input type="submit" value="Submit"></td>
-</tr>
-</table>
-</form>
-
-</div>
-
-<div class="or">OR</div>
-
-  <div class="section-header">
-Full-text Search 
-  </div>
-  <div class="section-content">
-
-<form action="show_test.cgi" method="get" name="search_fulltext" id="search_fulltext">
-<table border="0" celpadding="5" cellspacing="5">
-<tr>
-<td>String to match:</td><td><input type="text" id="text_snippet" name="text_snippet" size="25" /></td>
-</tr>
-
-<tr>
-<td># of Matches:</td><td><input type="text" name="match_limit" id="match_limit" value="[% default_match_limit %]" size="5" /></td>
-</tr>
-
-<tr>
-<td>Minimum Relevance Score:</td><td><input type="text" name="relevance_threshold" id="relevance_threshold" value="[% default_relevance_threshold %]" size="5" /></td>
-</tr>
-
-<tr>
-<td colspan="2" align="right"><input type="submit" value="Submit"></td>
-</tr>
-</table>
-</form>
-
-  </div>
-</div>
 
 [% IF testcases %]
 <h1 class="firstHeading">Matching Testcases[% IF search_string_for_display %] - [% search_string_for_display | html %][% END %]</h1>

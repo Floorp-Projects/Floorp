@@ -1232,9 +1232,29 @@ table.testcase-search th, table.test-runs th {
     border: 0;
 }
 
+table.testcases th, table.testcases td.headerleft {
+    vertical-align: middle;
+    font-weight: bold;
+    text-transform: lowercase; 
+    color: #666666;
+    padding: 0px 5px 0px 5px;
+    border: 0;
+}
+
+table.testcases td.headerleft {
+    text-align: left;
+}
+
+table.testcases tr {
+    border: solid #bbbbbb 1px;
+}
+
 div.testcase-search {
     margin: 5px;
     background-color: #efefef;
     padding: 10px;
     border: solid #bbbbbb 1px;
 }
+
+
+
