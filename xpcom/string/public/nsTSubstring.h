@@ -117,8 +117,16 @@ class nsTSubstring_CharT : public nsTAString_CharT
          * writing iterators
          */
       
-      char_iterator BeginWriting() { EnsureMutable(); return mData; }
-      char_iterator EndWriting() { EnsureMutable(); return mData + mLength; }
+      char_iterator BeginWriting()
+        {
+          return EnsureMutable() ? mData : char_iterator(0);
+        }
+
+      char_iterator EndWriting()
+        {
+          return EnsureMutable() ? (mData + mLength) : char_iterator(0);
+        }
+
 
         /**
          * deprecated writing iterators
@@ -126,32 +134,30 @@ class nsTSubstring_CharT : public nsTAString_CharT
       
       iterator& BeginWriting( iterator& iter )
         {
-          EnsureMutable();
-          iter.mStart = mData;
-          iter.mEnd = mData + mLength;
+          char_type *data = EnsureMutable() ? mData : char_type(0);
+          iter.mStart = data;
+          iter.mEnd = data + mLength;
           iter.mPosition = iter.mStart;
           return iter;
         }
 
       iterator& EndWriting( iterator& iter )
         {
-          EnsureMutable();
-          iter.mStart = mData;
-          iter.mEnd = mData + mLength;
+          char_type *data = EnsureMutable() ? mData : char_type(0);
+          iter.mStart = data;
+          iter.mEnd = data + mLength;
           iter.mPosition = iter.mEnd;
           return iter;
         }
 
       char_iterator& BeginWriting( char_iterator& iter )
         {
-          EnsureMutable();
-          return iter = mData;
+          return iter = EnsureMutable() ? mData : char_iterator(0);
         }
 
       char_iterator& EndWriting( char_iterator& iter )
         {
-          EnsureMutable();
-          return iter = mData + mLength;
+          return iter = EnsureMutable() ? (mData + mLength) : char_iterator(0);
         }
 
 
@@ -399,14 +405,54 @@ class nsTSubstring_CharT : public nsTAString_CharT
          * buffer sizing
          */
 
-      NS_COM void NS_FASTCALL SetCapacity( size_type capacity );
+      NS_COM void NS_FASTCALL SetCapacity( size_type newCapacity );
 
-      NS_COM void NS_FASTCALL SetLength( size_type );
+      NS_COM void NS_FASTCALL SetLength( size_type newLength );
 
       void Truncate( size_type newLength = 0 )
         {
           NS_ASSERTION(newLength <= mLength, "Truncate cannot make string longer");
           SetLength(newLength);
+        }
+
+
+        /**
+         * buffer access
+         */
+
+
+        /**
+         * Get a const pointer to the string's internal buffer.  The caller
+         * MUST NOT modify the characters at the returned address.
+         *
+         * @returns The length of the buffer in characters.
+         */
+      inline size_type GetData( const char_type** data ) const
+        {
+          *data = mData;
+          return mLength;
+        }
+        
+        /**
+         * Get a pointer to the string's internal buffer, optionally resizing
+         * the buffer first.  If size_type(-1) is passed for newLen, then the
+         * current length of the string is used.  The caller MAY modify the
+         * characters at the returned address (up to but not exceeding the
+         * length of the string).
+         *
+         * @returns The length of the buffer in characters or 0 if unable to
+         * satisfy the request due to low-memory conditions.
+         */
+      inline size_type GetMutableData( char_type** data, size_type newLen = size_type(-1) )
+        {
+          if (!EnsureMutable(newLen))
+            {
+              *data = char_type(0);
+              return 0;
+            }
+
+          *data = mData;
+          return mLength;
         }
 
 
@@ -569,7 +615,7 @@ class nsTSubstring_CharT : public nsTAString_CharT
          * this helper function can be called prior to directly manipulating
          * the contents of mData.  see, for example, BeginWriting.
          */
-      NS_COM void NS_FASTCALL EnsureMutable();
+      NS_COM PRBool NS_FASTCALL EnsureMutable( size_type newLen = size_type(-1) );
 
         /**
          * returns true if this string overlaps with the given string fragment.

@@ -272,16 +272,26 @@ nsTSubstring_CharT::Capacity() const
     return capacity;
   }
 
-void
-nsTSubstring_CharT::EnsureMutable()
+PRBool
+nsTSubstring_CharT::EnsureMutable( size_type newLen )
   {
-    if (mFlags & (F_FIXED | F_OWNED))
-      return;
-    if ((mFlags & F_SHARED) && !nsStringBuffer::FromData(mData)->IsReadonly())
-      return;
+    if (newLen == size_type(-1) || newLen == mLength)
+      {
+        if (mFlags & (F_FIXED | F_OWNED))
+          return PR_TRUE;
+        if ((mFlags & F_SHARED) && !nsStringBuffer::FromData(mData)->IsReadonly())
+          return PR_TRUE;
 
-    // promote to a shared string buffer
-    Assign(string_type(mData, mLength));
+        // promote to a shared string buffer
+        char_type* prevData = mData;
+        Assign(string_type(mData, mLength));
+        return mData != prevData;
+      }
+    else
+      {
+        SetLength(newLen);
+        return mLength == newLen;
+      }
   }
 
 // ---------------------------------------------------------------------------
