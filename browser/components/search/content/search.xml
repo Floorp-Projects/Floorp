@@ -605,7 +605,7 @@
           <![CDATA[
             // Don't open search popup if history popup is open
             if (!this.popupOpen) {
-              this._button.open = true;
+              this._getParentSearchbar()._button.open = true;
               return false;
             }
             return true;
