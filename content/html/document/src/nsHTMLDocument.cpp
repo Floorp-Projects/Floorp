@@ -106,6 +106,8 @@
 #include "nsISelectElement.h"
 #include "nsFrameSelection.h"
 #include "nsISelectionPrivate.h"//for toStringwithformat code
+#include "nsIInlineSpellChecker.h"
+#include "nsIEditor.h"
 
 #include "nsICharsetDetector.h"
 #include "nsICharsetDetectionAdaptor.h"
@@ -152,6 +154,8 @@ const PRInt32 kBackward = 1;
 // reasonable value, though -- no real nsIContent* will be equal to 2.
 #define ID_NOT_IN_DOCUMENT ((nsIContent *)2)
 #define NAME_NOT_VALID ((nsBaseContentList*)1)
+
+#define PREF_DEFAULT_SPELLCHECK "layout.spellcheckDefault"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
@@ -339,6 +343,9 @@ nsHTMLDocument::~nsHTMLDocument()
   if (mIdAndNameHashTable.ops) {
     PL_DHashTableFinish(&mIdAndNameHashTable);
   }
+
+  nsContentUtils::UnregisterPrefCallback(PREF_DEFAULT_SPELLCHECK, 
+                                         nsHTMLDocument::RealTimeSpellCallback, this);
 }
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLDocument, nsDocument)
@@ -3710,7 +3717,11 @@ nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
       rv = ExecCommand(NS_LITERAL_STRING("insertBrOnReturn"), PR_FALSE,
                        NS_LITERAL_STRING("false"), &unused);
 
-      if (NS_FAILED(rv)) {
+      if (NS_SUCCEEDED(rv)) {
+        nsContentUtils::RegisterPrefCallback(PREF_DEFAULT_SPELLCHECK, 
+                                             nsHTMLDocument::RealTimeSpellCallback, this);
+      }
+      else {
         // Editor setup failed. Editing is is not on after all.
 
         editSession->TearDownEditorOnWindow(window);
@@ -3724,10 +3735,66 @@ nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
 
     if (NS_SUCCEEDED(rv)) {
       mEditingIsOn = PR_FALSE;
+      nsContentUtils::UnregisterPrefCallback(PREF_DEFAULT_SPELLCHECK, 
+                                             nsHTMLDocument::RealTimeSpellCallback, this);
     }
   }
 
+  SetEnableRealTimeSpell(window, editSession);
+
   return rv;
+}
+
+void
+nsHTMLDocument::SetEnableRealTimeSpell(nsPIDOMWindow* aWindow,
+                                       nsIEditingSession* aEditSession)
+{
+  // enable inline spelling for design mode documents unless the
+  // pref disables it. Otherwise, disable inline spelling.
+  PRBool enabled = mEditingIsOn;
+
+  if (aWindow) {
+    if (enabled) {
+      // check if the spellchecking is enabled as long as the level is not 0
+      PRInt32 spellcheckLevel = nsContentUtils::GetIntPref(PREF_DEFAULT_SPELLCHECK, 0);
+      enabled = (spellcheckLevel != 0);
+    }
+
+    // get the editor for the window and enable inline spellchecking
+    nsCOMPtr<nsIEditor> editor;
+    aEditSession->GetEditorForWindow(aWindow, getter_AddRefs(editor));
+    if (editor) {
+      nsCOMPtr<nsIInlineSpellChecker> inlineSpellChecker;
+      nsresult rv = editor->GetInlineSpellChecker(enabled,
+                                                  getter_AddRefs(inlineSpellChecker));
+
+      if (NS_SUCCEEDED(rv) && inlineSpellChecker) {
+        inlineSpellChecker->SetEnableRealTimeSpell(enabled);
+      }
+    }
+  }
+}
+
+// PrefCallback for real time spell pref
+// static
+int PR_CALLBACK nsHTMLDocument::RealTimeSpellCallback(const char* aPref, void* aContext)
+{
+  if (strcmp(aPref, PREF_DEFAULT_SPELLCHECK) == 0) {
+    nsHTMLDocument* doc = NS_STATIC_CAST(nsHTMLDocument*, aContext);
+    NS_ASSERTION(doc, "Pref callback: aContext was of an unexpected type");
+
+    nsPIDOMWindow *window = doc->GetWindow();
+    if (window) {
+      nsIDocShell *docshell = window->GetDocShell();
+      if (docshell) {
+        nsCOMPtr<nsIEditingSession> editSession = do_GetInterface(docshell);
+        if (editSession)
+          doc->SetEnableRealTimeSpell(window, editSession);
+      }
+    }
+  }
+
+  return 0;
 }
 
 nsresult
