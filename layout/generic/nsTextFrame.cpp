@@ -437,7 +437,8 @@ public:
                           nsAutoTextBuffer* aTextBuffer,
                           PRInt32* aTextLen,
                           PRBool aForceArabicShaping = PR_FALSE,
-                          PRIntn* aJustifiableCharCount = nsnull);
+                          PRIntn* aJustifiableCharCount = nsnull,
+                          PRBool aRemoveMultipleTrimmedWS = PR_FALSE);
   void ComputeExtraJustificationSpacing(nsIRenderingContext& aRenderingContext,
                                         nsTextStyle& aTextStyle,
                                         PRUnichar* aBuffer, PRInt32 aLength, PRInt32 aNumJustifiableCharacter);
@@ -2179,7 +2180,8 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
                                 nsAutoTextBuffer* aTextBuffer,
                                 PRInt32* aTextLen,
                                 PRBool aForceArabicShaping,
-                                PRIntn* aJustifiableCharCount)
+                                PRIntn* aJustifiableCharCount,
+                                PRBool aRemoveMultipleTrimmedWS)
 {
   // Setup transform to operate starting in the content at our content
   // offset
@@ -2383,15 +2385,26 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
   // TEXT_TRIMMED_WS can be set in measureText during reflow, and 
   // nonexitent text buffer may occur in this situation.
   if (TEXT_TRIMMED_WS & mState && textBuffer) {
-    if (--dstOffset >= 0) {
+    while (--dstOffset >= 0) {
       PRUnichar ch = textBuffer->mBuffer[dstOffset];
       if (XP_IS_SPACE(ch))
         textLength--;
+      else
+        break;
+      if (!aRemoveMultipleTrimmedWS)
+        break;
     }
   }
 
   if (aIndexBuffer) {
     PRInt32* ip = aIndexBuffer->mBuffer;
+    // Make sure no indexes point beyond text length
+    for (PRInt32 i = mContentLength - 1; i >= 0; i--) {
+      if (ip[i] > textLength + mContentOffset)
+        ip[i] = textLength + mContentOffset;
+      else
+        break;
+    }
     ip[mContentLength] = ip[mContentLength-1];
     if ((ip[mContentLength] - mContentOffset) < textLength) {
       // Must set up last one for selection beyond edge if in boundary
@@ -2908,7 +2921,7 @@ nsTextFrame::PaintUnicodeText(nsPresContext* aPresContext,
   PRInt32 textLength;
   // no need to worry about justification, that's always on the slow path
   PrepareUnicodeText(tx, (displaySelection ? &indexBuffer : nsnull),
-                     &paintBuffer, &textLength);
+                     &paintBuffer, &textLength, PR_FALSE, nsnull, PR_TRUE);
 
   PRInt32* ip = indexBuffer.mBuffer;
   PRUnichar* text = paintBuffer.mBuffer;
