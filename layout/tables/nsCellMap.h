@@ -124,7 +124,8 @@ public:
   void RemoveCell(nsTableCellFrame* aCellFrame,
                   PRInt32           aRowIndex,
                   nsRect&           aDamageArea);
-
+  /** Remove the previously gathered column information */
+  void ClearCols();
   void InsertRows(nsTableRowGroupFrame& aRowGroup,
                   nsVoidArray&          aRows,
                   PRInt32               aFirstRowIndex,
@@ -165,6 +166,18 @@ public:
 
   PRBool RowIsSpannedInto(PRInt32 aRowIndex, PRInt32 aNumEffCols);
   PRBool RowHasSpanningCells(PRInt32 aRowIndex, PRInt32 aNumEffCols);
+  void RebuildConsideringCells(nsCellMap*      aCellMap,
+                               nsVoidArray*    aCellFrames,
+                               PRInt32         aRowIndex,
+                               PRInt32         aColIndex,
+                               PRBool          aInsert,
+                               nsRect&         aDamageArea);
+  void RebuildConsideringRows(nsCellMap*      aCellMap,
+                              PRInt32         aStartRowIndex,
+                              nsVoidArray*    aRowsToInsert,
+                              PRBool          aNumRowsToRemove,
+                              nsRect&         aDamageArea);
+
   PRBool ColIsSpannedInto(PRInt32 aColIndex);
   PRBool ColHasSpanningCells(PRInt32 aColIndex);
 
@@ -403,12 +416,14 @@ protected:
                          nsRect&           aDamageArea);
 
   void RebuildConsideringRows(nsTableCellMap& aMap,
+                              PRInt32         aNumOrigCols,
                               PRInt32         aStartRowIndex,
                               nsVoidArray*    aRowsToInsert,
                               PRInt32         aNumRowsToRemove,
                               nsRect&         aDamageArea);
 
   void RebuildConsideringCells(nsTableCellMap& aMap,
+                               PRInt32         aNumOrigCols,
                                nsVoidArray*    aCellFrames,
                                PRInt32         aRowIndex,
                                PRInt32         aColIndex,

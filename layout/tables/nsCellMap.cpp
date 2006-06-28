@@ -507,6 +507,26 @@ nsTableCellMap::RemoveColsAtEnd()
   }
 }
 
+void 
+nsTableCellMap::ClearCols()
+{
+  PRInt32 numCols = GetColCount();
+  for (PRInt32 colX = numCols - 1; (colX >= 0);colX--) {
+    nsColInfo* colInfo = (nsColInfo*)mCols.ElementAt(colX);  
+    delete colInfo;
+    mCols.RemoveElementAt(colX);
+    if (mBCInfo) { 
+      PRInt32 count = mBCInfo->mBottomBorders.Count();
+      if (colX < count) {
+        BCData* bcData = (BCData*)mBCInfo->mBottomBorders.ElementAt(colX);
+        if (bcData) {
+              delete bcData;
+        }
+        mBCInfo->mBottomBorders.RemoveElementAt(colX);
+      }
+    }
+  }
+}
 void
 nsTableCellMap::InsertRows(nsTableRowGroupFrame& aParent,
                            nsVoidArray&          aRows,
@@ -696,6 +716,69 @@ nsTableCellMap::RemoveCell(nsTableCellFrame* aCellFrame,
   // the deleted cell which will cause a subsequent crash when this cell is 
   // referenced later
   NS_ERROR("nsTableCellMap::RemoveCell - could not remove cell");
+}
+
+void
+SetDamageArea(PRInt32 aXOrigin,
+              PRInt32 aYOrigin,
+              PRInt32 aWidth,
+              PRInt32 aHeight,
+              nsRect& aDamageArea)
+{
+  aDamageArea.x      = aXOrigin;
+  aDamageArea.y      = aYOrigin;
+  aDamageArea.width  = PR_MAX(1, aWidth);
+  aDamageArea.height = PR_MAX(1, aHeight);
+}
+
+void 
+nsTableCellMap::RebuildConsideringCells(nsCellMap*      aCellMap,
+                                        nsVoidArray*    aCellFrames,
+                                        PRInt32         aRowIndex,
+                                        PRInt32         aColIndex,
+                                        PRBool          aInsert,
+                                        nsRect&         aDamageArea)
+{
+  PRInt32 numOrigCols = GetColCount();
+  ClearCols();
+  nsCellMap* cellMap = mFirstMap;
+  PRInt32 rowCount = 0;
+  while (cellMap) {
+    if (cellMap == aCellMap) {
+      cellMap->RebuildConsideringCells(*this, numOrigCols, aCellFrames, aRowIndex, aColIndex, aInsert, aDamageArea);
+      
+    }
+    else {
+      cellMap->RebuildConsideringCells(*this, numOrigCols, nsnull, -1, 0, PR_FALSE, aDamageArea);
+    }
+    rowCount += cellMap->GetRowCount();
+    cellMap = cellMap->GetNextSibling();
+  }
+  SetDamageArea(0, 0, GetColCount(), rowCount, aDamageArea);
+}
+
+void 
+nsTableCellMap::RebuildConsideringRows(nsCellMap*      aCellMap,
+                                       PRInt32         aStartRowIndex,
+                                       nsVoidArray*    aRowsToInsert,
+                                       PRBool          aNumRowsToRemove,
+                                       nsRect&         aDamageArea)
+{
+  PRInt32 numOrigCols = GetColCount();
+  ClearCols();
+  nsCellMap* cellMap = mFirstMap;
+  PRInt32 rowCount = 0;
+  while (cellMap) {
+    if (cellMap == aCellMap) {
+      cellMap->RebuildConsideringRows(*this, numOrigCols, aStartRowIndex, aRowsToInsert, aNumRowsToRemove, aDamageArea);
+    }
+    else {
+      cellMap->RebuildConsideringCells(*this, numOrigCols, nsnull, -1, 0, PR_FALSE, aDamageArea);
+    }
+    rowCount += cellMap->GetRowCount();
+    cellMap = cellMap->GetNextSibling();
+  }
+  SetDamageArea(0, 0, GetColCount(), rowCount, aDamageArea);
 }
 
 PRInt32 
@@ -1197,7 +1280,7 @@ nsCellMap::InsertRows(nsTableCellMap& aMap,
   }
 
   if (spansCauseRebuild) {
-    RebuildConsideringRows(aMap, aFirstRowIndex, &aRows, 0, aDamageArea);
+    aMap.RebuildConsideringRows(this, aFirstRowIndex, &aRows, 0, aDamageArea);
   }
   else {
     ExpandWithRows(aMap, aRows, aFirstRowIndex, aDamageArea);
@@ -1230,25 +1313,14 @@ nsCellMap::RemoveRows(nsTableCellMap& aMap,
                                               0, numCols - 1);
 
   if (spansCauseRebuild) {
-    RebuildConsideringRows(aMap, aFirstRowIndex, nsnull, aNumRowsToRemove, aDamageArea);
+    aMap.RebuildConsideringRows(this, aFirstRowIndex, nsnull, aNumRowsToRemove, aDamageArea);
   }
   else {
     ShrinkWithoutRows(aMap, aFirstRowIndex, aNumRowsToRemove, aDamageArea);
   }
 }
 
-void
-SetDamageArea(PRInt32 aXOrigin,
-              PRInt32 aYOrigin,
-              PRInt32 aWidth,
-              PRInt32 aHeight,
-              nsRect& aDamageArea)
-{
-  aDamageArea.x      = aXOrigin;
-  aDamageArea.y      = aYOrigin;
-  aDamageArea.width  = PR_MAX(1, aWidth);
-  aDamageArea.height = PR_MAX(1, aHeight);
-}
+
 
 
 CellData* 
@@ -1298,7 +1370,7 @@ nsCellMap::AppendCell(nsTableCellMap&   aMap,
   if (aRebuildIfNecessary && (aRowIndex < mRowCount - 1) && (rowSpan > 1)) {
     nsAutoVoidArray newCellArray;
     newCellArray.AppendElement(aCellFrame);
-    RebuildConsideringCells(aMap, &newCellArray, aRowIndex, startColIndex, PR_TRUE, aDamageArea);
+    aMap.RebuildConsideringCells(this, &newCellArray, aRowIndex, startColIndex, PR_TRUE, aDamageArea);
     return origData;
   }
   mRowCount = PR_MAX(mRowCount, aRowIndex + 1);
@@ -1519,7 +1591,7 @@ void nsCellMap::InsertCells(nsTableCellMap& aMap,
   }
 
   if (spansCauseRebuild) {
-    RebuildConsideringCells(aMap, &aCellFrames, aRowIndex, startColIndex, PR_TRUE, aDamageArea);
+    aMap.RebuildConsideringCells(this, &aCellFrames, aRowIndex, startColIndex, PR_TRUE, aDamageArea);
   }
   else {
     ExpandWithCells(aMap, aCellFrames, aRowIndex, startColIndex, rowSpan, zeroRowSpan, aDamageArea);
@@ -1928,6 +2000,7 @@ void nsCellMap::ShrinkWithoutCell(nsTableCellMap&   aMap,
 
 void
 nsCellMap::RebuildConsideringRows(nsTableCellMap& aMap,
+                                  PRInt32         aNumOrigCols,
                                   PRInt32         aStartRowIndex,
                                   nsVoidArray*    aRowsToInsert,
                                   PRBool          aNumRowsToRemove,
@@ -1936,7 +2009,6 @@ nsCellMap::RebuildConsideringRows(nsTableCellMap& aMap,
   NS_ASSERTION(!!aMap.mBCInfo == mIsBC, "BC state mismatch");
   // copy the old cell map into a new array
   PRInt32 numOrigRows = mRows.Count();
-  PRInt32 numOrigCols = aMap.GetColCount();
   void** origRows = new void*[numOrigRows];
   if (!origRows) return;
   PRInt32 rowX, colX;
@@ -1945,10 +2017,7 @@ nsCellMap::RebuildConsideringRows(nsTableCellMap& aMap,
     nsVoidArray* row = (nsVoidArray *)mRows.ElementAt(rowX);
     origRows[rowX] = row;
   }
-  for (colX = 0; colX < numOrigCols; colX++) {
-    nsColInfo* colInfo = aMap.GetColInfoAt(colX);
-    colInfo->mNumCellsOrig = 0;
-  }
+  
 
   mRows.Clear();
   // adjust mRowCount based on the function arguments as they are known to
@@ -1963,7 +2032,7 @@ nsCellMap::RebuildConsideringRows(nsTableCellMap& aMap,
   for (rowX = 0; rowX < aStartRowIndex; rowX++) {
     nsVoidArray* row = (nsVoidArray *)origRows[rowX];
     PRInt32 numCols = row->Count();
-    for (colX = 0; colX < numCols; colX++) {
+    for (colX = 0; colX < aNumOrigCols; colX++) {
       // put in the original cell from the cell map
       CellData* data = (CellData*) row->ElementAt(colX);
       if (data && data->IsOrig()) {
@@ -2024,6 +2093,7 @@ nsCellMap::RebuildConsideringRows(nsTableCellMap& aMap,
 }
 
 void nsCellMap::RebuildConsideringCells(nsTableCellMap& aMap,
+                                        PRInt32         aNumOrigCols,
                                         nsVoidArray*    aCellFrames,
                                         PRInt32         aRowIndex,
                                         PRInt32         aColIndex,
@@ -2034,7 +2104,7 @@ void nsCellMap::RebuildConsideringCells(nsTableCellMap& aMap,
   // copy the old cell map into a new array
   PRInt32 mRowCountOrig = mRowCount;
   PRInt32 numOrigRows   = mRows.Count();
-  PRInt32 numOrigCols   = aMap.GetColCount();
+ 
   void** origRows = new void*[numOrigRows];
   if (!origRows) return;
   PRInt32 rowX;
@@ -2052,8 +2122,8 @@ void nsCellMap::RebuildConsideringCells(nsTableCellMap& aMap,
   PRInt32 numNewCells = (aCellFrames) ? aCellFrames->Count() : 0;
   
   // the new cells might extend the previous column number
-  NS_ASSERTION(numOrigCols >= aColIndex, "Appending cells far beyond cellmap data?!");
-  PRInt32 numCols = aInsert ? PR_MAX(numOrigCols, aColIndex + 1) : numOrigCols;  
+  NS_ASSERTION(aNumOrigCols >= aColIndex, "Appending cells far beyond cellmap data?!");
+  PRInt32 numCols = aInsert ? PR_MAX(aNumOrigCols, aColIndex + 1) : aNumOrigCols;  
   
   // build the new cell map 
   for (rowX = 0; rowX < numOrigRows; rowX++) {
@@ -2094,9 +2164,7 @@ void nsCellMap::RebuildConsideringCells(nsTableCellMap& aMap,
     }
     delete row;
   }
-  delete [] origRows;
-
-  SetDamageArea(0, 0, aMap.GetColCount(), GetRowCount(), aDamageArea); 
+  delete [] origRows; 
 }
 
 void nsCellMap::RemoveCell(nsTableCellMap&   aMap,
@@ -2133,7 +2201,7 @@ void nsCellMap::RemoveCell(nsTableCellMap&   aMap,
     spansCauseRebuild = PR_TRUE;
 
   if (spansCauseRebuild) {
-    RebuildConsideringCells(aMap, nsnull, aRowIndex, startColIndex, PR_FALSE, aDamageArea);
+    aMap.RebuildConsideringCells(this, nsnull, aRowIndex, startColIndex, PR_FALSE, aDamageArea);
   }
   else {
     ShrinkWithoutCell(aMap, *aCellFrame, aRowIndex, startColIndex, aDamageArea);
