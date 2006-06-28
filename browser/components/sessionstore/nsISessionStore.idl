@@ -55,6 +55,11 @@ interface nsISessionStore : nsISupports
   void init(in nsIDOMWindow aWindow);
 
   /**
+   * Get the number of restore-able tabs for a window
+   */
+  unsigned long getClosedTabCount(in nsIDOMWindow aWindow);
+
+  /**
    * @param aWindow
    *          The window to reopen a closed tab in.
    * @param aIndex
