@@ -146,16 +146,16 @@
           <checkbox id="manualMark" 
                     preference="mail.spam.manualMark"
                     oncommand="gPrivacyPane.updateManualMarkMode(this.checked);"
-                    label="&manualMark.label;"/>
-          
+                    label="&manualMark.label;" accesskey="&manualMark.accesskey;"/>
+
           <radiogroup id="manualMarkMode" class="indent"
                       preference="mail.spam.manualMarkMode">
-            <radio id="manualMarkMode0" value="0" label="&manualMarkModeMove.label;"/>
-            <radio id="manualMarkMode1" value="1" label="&manualMarkModeDelete.label;"/>
+            <radio id="manualMarkMode0" value="0" label="&manualMarkModeMove.label;" accesskey="&manualMarkModeMove.accesskey;"/>
+            <radio id="manualMarkMode1" value="1" label="&manualMarkModeDelete.label;" accesskey="&manualMarkModeDelete.accesskey;"/>
           </radiogroup>
           
           <checkbox id="markAsReadOnSpam" label="&markAsReadOnSpam.label;" 
-                    accesskey="&markAsReadOnSpam.acesskey;"
+                    accesskey="&markAsReadOnSpam.accesskey;"
                     preference="mail.spam.markAsReadOnSpam"/>
 
           <hbox align="start">
