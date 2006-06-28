@@ -37,7 +37,7 @@ function load_testgroups(selects) {
         addNullEntry(groupbox);
         // find the currently selected product that goes with this select
         var productbox = document.getElementById("product"+groupbox.name.substr(9));
-	if (productbox.selectedIndex >= 0)
+	if (productbox.selectedIndex >= 0) {
             var productid = productbox.options[productbox.selectedIndex].value;
             var product = getProductById(productid);
             if (!product) {
