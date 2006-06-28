@@ -118,6 +118,7 @@ public:
   NS_IMETHOD SetMatrixPropagation(PRBool aPropagate);
   NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM);
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
+  NS_IMETHOD_(PRBool) IsDisplayContainer() { return PR_TRUE; }
 
   // foreignobject public methods
   /**
