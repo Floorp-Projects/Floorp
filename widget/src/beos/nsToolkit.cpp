@@ -40,6 +40,7 @@
 #include "prmon.h"
 #include "nsSwitchToUIThread.h"
 #include "prprf.h"
+#include "nsWidgetAtoms.h"
 
 // 
 // Static thread local storage index of the Toolkit 
@@ -204,6 +205,8 @@ NS_METHOD nsToolkit::Init(PRThread *aThread)
   }
 
   cached = false;
+
+  nsWidgetAtoms::RegisterAtoms();
 
   return NS_OK;
 }

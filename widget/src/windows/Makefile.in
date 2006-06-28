@@ -120,7 +120,6 @@ EXPORTS		= nsdefs.h
 LOCAL_INCLUDES	= \
 		-I. \
 		-I$(srcdir)/../xpwidgets \
-		-I$(srcdir)/../../public \
 		-I$(srcdir) \
 		$(NULL)
 

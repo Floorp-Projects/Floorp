@@ -143,7 +143,6 @@ endif
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../xpwidgets \
-		-I$(srcdir)/../../public \
 		-I$(srcdir) \
 		-I$(topsrcdir)/gfx/src/gtk \
 		$(NULL)
