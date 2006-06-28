@@ -79,7 +79,7 @@
     
     <checkbox id="markAsReadOnSpam" 
               label="&markAsReadOnSpam.label;"
-              accesskey="&markAsReadOnSpam.acesskey;"
+              accesskey="&markAsReadOnSpam.accesskey;"
               prefstring="mail.spam.markAsReadOnSpam"/>
   
     <hbox align="start">
