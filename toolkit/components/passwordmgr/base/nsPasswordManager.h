@@ -144,6 +144,7 @@ public:
                             nsIAutoCompleteResult** aResult);
 
 protected:
+  void LoadPasswords();
   void WritePasswords(nsIFile* aPasswordFile);
   void AddSignonData(const nsACString& aRealm, SignonDataEntry* aEntry);
 
