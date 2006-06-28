@@ -772,6 +772,10 @@ public:
   NS_IMETHOD AdjustRowIndices(nsIFrame* aRowGroup,
                               PRInt32   aRowIndex,
                               PRInt32   anAdjustment);
+  /** Reset the rowindices of all rows as they might have changed due to rowgroup
+    * reordering
+    */
+  void ResetRowIndices(void);
 
   // Remove cell borders which aren't bordering row and/or col groups 
   void ProcessGroupRules(nsPresContext* aPresContext);
