@@ -47,6 +47,14 @@ function init()
   {
     gVersion = 150;
   }
+  else if(value.indexOf('1.6') != -1)
+  {
+    gVersion = 150;
+  }
+  else if(value.indexOf('1.7') != -1)
+  {
+    gVersion = 150;
+  }
 
   var testpathparts = testpath.split(/\//);
 
