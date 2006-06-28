@@ -1874,7 +1874,9 @@ SessionStoreService.prototype = {
    * safe eval'ing
    */
   _safeEval: function sss_safeEval(aStr) {
-    var s = new Components.utils.Sandbox(this._sessionFile.path);
+    var ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+    var uri = ioService.newFileURI(this._sessionFile, null, null);
+    var s = new Components.utils.Sandbox(uri.spec);
     return Components.utils.evalInSandbox(aStr, s);
   },
 

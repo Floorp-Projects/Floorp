@@ -142,8 +142,12 @@ SessionStartup.prototype = {
       this._iniString = this._readFile(this._getSessionFile());
       if (this._iniString) {
         try {
+          // get uri for file path
+          var ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+          var uri = ioService.newFileURI(this._sessionFile, null, null);
+
           // parse the session state into JS objects
-          var s = new Components.utils.Sandbox(this._sessionFile.path);
+          var s = new Components.utils.Sandbox(uri.spec);
           this._initialState = Components.utils.evalInSandbox(this._iniString, s);
 
           // set bool detecting crash
