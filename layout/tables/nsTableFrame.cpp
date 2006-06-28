@@ -663,7 +663,26 @@ NS_IMETHODIMP nsTableFrame::AdjustRowIndices(nsIFrame*       aRowGroup,
   return rv;
 }
 
+void nsTableFrame::ResetRowIndices(void)
+{
+  // Iterate over the row groups and adjust the row indices of all rows 
+  nsAutoVoidArray rowGroups;
+  PRUint32 numRowGroups;
+  OrderRowGroups(rowGroups, numRowGroups, nsnull);
 
+  PRInt32 rowIndex = 0;
+  for (PRUint32 rgX = 0; rgX < numRowGroups; rgX++) {
+    nsIFrame* kidFrame = (nsIFrame*)rowGroups.ElementAt(rgX);
+    nsTableRowGroupFrame* rgFrame = GetRowGroupFrame(kidFrame);
+    nsIFrame* rowFrame = rgFrame->GetFirstChild(nsnull);
+    for ( ; rowFrame; rowFrame = rowFrame->GetNextSibling()) {
+      if (NS_STYLE_DISPLAY_TABLE_ROW==rowFrame->GetStyleDisplay()->mDisplay) {
+        ((nsTableRowFrame *)rowFrame)->SetRowIndex(rowIndex);
+        rowIndex++;
+      }
+    }
+  }
+}
 void nsTableFrame::InsertColGroups(PRInt32         aStartColIndex,
                                    nsIFrame*       aFirstFrame,
                                    nsIFrame*       aLastFrame)
@@ -1298,7 +1317,6 @@ nsTableFrame::InsertRowGroups(nsIFrame* aFirstRowGroupFrame,
             ? nsnull : GetRowGroupFrame((nsIFrame*)orderedRowGroups.ElementAt(rgIndex - 1)); 
           // create and add the cell map for the row group
           cellMap->InsertGroupCellMap(*rgFrame, priorRG);
-          cellMap->Synchronize(this);
           // collect the new row frames in an array and add them to the table
           PRInt32 numRows = CollectRows(kidFrame, rows);
           if (numRows > 0) {
@@ -1320,6 +1338,8 @@ nsTableFrame::InsertRowGroups(nsIFrame* aFirstRowGroupFrame,
         }
       }
     }
+    cellMap->Synchronize(this);
+    ResetRowIndices();
   }
 #ifdef DEBUG_TABLE_CELLMAP
   printf("=== insertRowGroupsAfter\n");
@@ -2578,6 +2598,7 @@ nsTableFrame::RemoveFrame(nsIAtom*        aListName,
       mFrames.DestroyFrame(aOldFrame);
       if (cellMap) {
         cellMap->Synchronize(this);
+        ResetRowIndices();
       }
       // XXX This could probably be optimized with much effort
       SetNeedStrategyInit(PR_TRUE);
@@ -2588,6 +2609,10 @@ nsTableFrame::RemoveFrame(nsIAtom*        aListName,
       return NS_OK;
     }
   }
+#ifdef DEBUG_TABLE_CELLMAP
+  printf("=== TableFrame::RemoveFrame\n");
+  Dump(PR_TRUE, PR_TRUE, PR_TRUE);
+#endif
   return NS_OK;
 }
 
