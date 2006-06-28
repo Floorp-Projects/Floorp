@@ -5,6 +5,7 @@ classic.jar:
 +  skin/classic/global/20pct_transparent_pixel.png
 +  skin/classic/global/50pct_transparent_grey.png
 +  skin/classic/global/50pct_transparent_white.png
++  skin/classic/global/about.css                                      (../../winstripe/global/about.css)
 +  skin/classic/global/activetab-left.png
 +  skin/classic/global/activetab-middle.png
 +  skin/classic/global/activetab-right.png
