@@ -39,7 +39,6 @@
 #include "nsCOMPtr.h"
 #include "nsIDocumentViewer.h"
 #include "nsIContent.h"
-#include "nsPresContext.h"
 
 #include "nsMenuBarX.h"  // for MenuHelpers namespace
 #include "nsMenuItemX.h"
@@ -284,16 +283,14 @@ nsEventStatus nsMenuItemX::SetRebuild(PRBool aNeedsRebuild)
 */
 NS_METHOD nsMenuItemX::DoCommand()
 {
-  nsCOMPtr<nsPresContext> presContext;
   nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShellWeakRef);
   if (!docShell)
     return nsEventStatus_eConsumeNoDefault;
-  MenuHelpersX::DocShellToPresContext(docShell, getter_AddRefs(presContext));
 
   nsEventStatus status = nsEventStatus_eIgnore;
   nsXULCommandEvent event(PR_TRUE, NS_XUL_COMMAND, nsnull);
 
-  mContent->DispatchDOMEvent(&event, nsnull, presContext, &status);
+  mContent->DispatchDOMEvent(&event, nsnull, nsnull, &status);
   return nsEventStatus_eConsumeNoDefault;
 }
     
