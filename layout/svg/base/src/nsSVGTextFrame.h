@@ -36,24 +36,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef NSSVGTSPANFRAME_H
-#define NSSVGTSPANFRAME_H
+#ifndef NS_SVGTEXTFRAME_H
+#define NS_SVGTEXTFRAME_H
 
 #include "nsSVGTextContainerFrame.h"
-#include "nsISVGGlyphFragmentNode.h"
+#include "nsISVGValueObserver.h"
+#include "nsWeakReference.h"
 
-typedef nsSVGTextContainerFrame nsSVGTSpanFrameBase;
+typedef nsSVGTextContainerFrame nsSVGTextFrameBase;
 
-class nsSVGTSpanFrame : public nsSVGTSpanFrameBase,
-                        public nsISVGGlyphFragmentNode
+class nsSVGTextFrame : public nsSVGTextFrameBase,
+                       public nsISVGValueObserver,
+                       public nsSupportsWeakReference
 {
   friend nsIFrame*
-  NS_NewSVGTSpanFrame(nsIPresShell* aPresShell, nsIContent* aContent,
-                      nsIFrame* parentFrame, nsStyleContext* aContext);
+  NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 protected:
-  nsSVGTSpanFrame(nsStyleContext* aContext) :
-    nsSVGTextContainerFrame(aContext),
-    mFragmentTreeDirty(PR_FALSE), mPropagateTransform(PR_TRUE) {}
+  nsSVGTextFrame(nsStyleContext* aContext);
 
    // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -65,47 +64,80 @@ public:
   // nsIFrame:
   NS_IMETHOD  RemoveFrame(nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
+  
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
 
+  NS_IMETHOD DidSetStyleContext();
+
   /**
    * Get the "type" of the frame
    *
-   * @see nsLayoutAtoms::svgTSpanFrame
+   * @see nsLayoutAtoms::svgTextFrame
    */
   virtual nsIAtom* GetType() const;
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const
   {
-    return MakeFrameName(NS_LITERAL_STRING("SVGTSpan"), aResult);
+    return MakeFrameName(NS_LITERAL_STRING("SVGText"), aResult);
   }
 #endif
+
+  // nsISVGValueObserver
+  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
+                                     nsISVGValue::modificationType aModType);
+  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
+                                     nsISVGValue::modificationType aModType);
+
+  // nsISupportsWeakReference
+  // implementation inherited from nsSupportsWeakReference
+  
   // nsISVGChildFrame interface:
   NS_IMETHOD SetMatrixPropagation(PRBool aPropagate);
   NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM);
+  NS_IMETHOD NotifyCanvasTMChanged(PRBool suppressInvalidation);
+  NS_IMETHOD NotifyRedrawSuspended();
+  NS_IMETHOD NotifyRedrawUnsuspended();
+  NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
   
   // nsSVGContainerFrame methods:
   virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
   
-  // nsISVGGlyphFragmentNode interface:
-  NS_IMETHOD_(PRUint32) GetNumberOfChars();
-  NS_IMETHOD_(float) GetComputedTextLength();
-  NS_IMETHOD_(float) GetSubStringLength(PRUint32 charnum, PRUint32 fragmentChars);
-  NS_IMETHOD_(PRInt32) GetCharNumAtPosition(nsIDOMSVGPoint *point);
-  NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetFirstGlyphFragment();
-  NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetNextGlyphFragment();
-  NS_IMETHOD_(PRUint32) BuildGlyphFragmentTree(PRUint32 charNum, PRBool lastBranch);
-  NS_IMETHOD_(void) NotifyMetricsSuspended();
-  NS_IMETHOD_(void) NotifyMetricsUnsuspended();
-  NS_IMETHOD_(void) NotifyGlyphFragmentTreeSuspended();
-  NS_IMETHOD_(void) NotifyGlyphFragmentTreeUnsuspended();
+  // nsISVGTextContentMetrics
+  NS_IMETHOD GetNumberOfChars(PRInt32 *_retval);
+  NS_IMETHOD GetComputedTextLength(float *_retval);
+  NS_IMETHOD GetSubStringLength(PRUint32 charnum, PRUint32 nchars, float *_retval);
+  NS_IMETHOD GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval);
+  NS_IMETHOD GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval);
+  NS_IMETHOD GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval);
+  NS_IMETHOD GetRotationOfChar(PRUint32 charnum, float *_retval);
+  NS_IMETHOD GetCharNumAtPosition(nsIDOMSVGPoint *point, PRInt32 *_retval);
+
+  void NotifyGlyphMetricsChange(nsISVGGlyphFragmentNode* caller);
+  void NotifyGlyphFragmentTreeChange(nsISVGGlyphFragmentNode* caller);
+  PRBool IsMetricsSuspended();
+  PRBool IsGlyphFragmentTreeSuspended();
 
 private:
+  void EnsureFragmentTreeUpToDate();
+  void UpdateFragmentTree();
+  void UpdateGlyphPositioning();
+
+  nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
   nsCOMPtr<nsIDOMSVGMatrix> mOverrideCTM;
+
+  enum UpdateState{
+    unsuspended,
+    suspended,
+    updating};
+  UpdateState mFragmentTreeState;
+  UpdateState mMetricsState;
+
   PRPackedBool mFragmentTreeDirty;
   PRPackedBool mPropagateTransform;
+  PRPackedBool mPositioningDirty;
 };
 
 #endif

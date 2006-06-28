@@ -35,18 +35,22 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGTextPathFrame.h"
+#include "nsSVGTextFrame.h"
 #include "nsIDOMSVGTextPathElement.h"
 #include "nsIDOMSVGAnimatedLength.h"
 #include "nsSVGLength.h"
 #include "nsIDOMSVGURIReference.h"
+#include "nsSVGUtils.h"
 #include "nsContentUtils.h"
 #include "nsIDOMSVGAnimatedPathData.h"
 #include "nsSVGPathElement.h"
+#include "nsISVGValueUtils.h"
+#include "nsIDOMSVGPathSegList.h"
 
 NS_INTERFACE_MAP_BEGIN(nsSVGTextPathFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
   NS_INTERFACE_MAP_ENTRY(nsSupportsWeakReference)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGTSpanFrame)
+NS_INTERFACE_MAP_END_INHERITING(nsSVGTextPathFrameBase)
 
 //----------------------------------------------------------------------
 // Implementation
@@ -56,9 +60,9 @@ NS_NewSVGTextPathFrame(nsIPresShell* aPresShell, nsIContent* aContent,
                        nsIFrame* parentFrame, nsStyleContext* aContext)
 {
   NS_ASSERTION(parentFrame, "null parent");
-  nsISVGTextFrame *text_container;
-  parentFrame->QueryInterface(NS_GET_IID(nsISVGTextFrame), (void**)&text_container);
-  if (!text_container) {
+  nsISVGTextContentMetrics *metrics;
+  CallQueryInterface(parentFrame, &metrics);
+  if (!metrics) {
     NS_ERROR("trying to construct an SVGTextPathFrame for an invalid container");
     return nsnull;
   }
@@ -75,7 +79,8 @@ NS_NewSVGTextPathFrame(nsIPresShell* aPresShell, nsIContent* aContent,
 
 nsSVGTextPathFrame::~nsSVGTextPathFrame()
 {
-  NS_REMOVE_SVGVALUE_OBSERVER(mSegments);
+  if (mSegments)
+    NS_REMOVE_SVGVALUE_OBSERVER(mSegments);
 }
 
 NS_IMETHODIMP
@@ -210,7 +215,7 @@ NS_IMETHODIMP
 nsSVGTextPathFrame::DidModifySVGObservable(nsISVGValue* observable,
                                            nsISVGValue::modificationType aModType)
 {
-  nsISVGTextFrame* text_frame = GetTextFrame();
+  nsSVGTextFrame* text_frame = GetTextFrame();
   if (text_frame)
     text_frame->NotifyGlyphMetricsChange(this);
 
@@ -227,7 +232,7 @@ nsSVGTextPathFrame::AttributeChanged(PRInt32         aNameSpaceID,
 {
   if (aNameSpaceID == kNameSpaceID_None &&
       aAttribute == nsGkAtoms::startOffset) {
-    nsISVGTextFrame* text_frame = GetTextFrame();
+    nsSVGTextFrame* text_frame = GetTextFrame();
     if (text_frame)
       text_frame->NotifyGlyphMetricsChange(this);
   } else if (aNameSpaceID == kNameSpaceID_XLink &&

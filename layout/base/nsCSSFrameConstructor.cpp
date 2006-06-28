@@ -172,7 +172,7 @@ NS_NewHTMLCanvasFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 #ifdef MOZ_SVG
 #include "nsSVGAtoms.h"
-#include "nsISVGTextContainerFrame.h"
+#include "nsISVGTextContentMetrics.h"
 #include "nsStyleUtil.h"
 #include "nsSVGUtils.h"
 
@@ -5489,8 +5489,9 @@ nsCSSFrameConstructor::ConstructTextFrame(nsFrameConstructorState& aState,
 
 #ifdef MOZ_SVG
   if (aParentFrame->IsFrameOfType(nsIFrame::eSVG)) {
-    nsCOMPtr<nsISVGTextContainerFrame> svg_parent = do_QueryInterface(aParentFrame);
-    if (!svg_parent) {
+    nsISVGTextContentMetrics* metrics;
+    CallQueryInterface(aParentFrame, &metrics);
+    if (!metrics) {
       return NS_OK;
     }
     newFrame = NS_NewSVGGlyphFrame(mPresShell, aContent, aParentFrame, aStyleContext);

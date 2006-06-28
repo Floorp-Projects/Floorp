@@ -36,9 +36,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsIDOMSVGTSpanElement.h"
 #include "nsSVGTSpanFrame.h"
 #include "nsSVGUtils.h"
+#include "nsSVGTextFrame.h"
 #include "nsSVGOuterSVGFrame.h"
+#include "nsSVGMatrix.h"
 
 //----------------------------------------------------------------------
 // Implementation
@@ -48,10 +51,9 @@ NS_NewSVGTSpanFrame(nsIPresShell* aPresShell, nsIContent* aContent,
                     nsIFrame* parentFrame, nsStyleContext* aContext)
 {
   NS_ASSERTION(parentFrame, "null parent");
-  nsISVGTextContainerFrame *text_container;
-  parentFrame->QueryInterface(NS_GET_IID(nsISVGTextContainerFrame),
-                              (void**)&text_container);
-  if (!text_container) {
+  nsISVGTextContentMetrics *metrics;
+  CallQueryInterface(parentFrame, &metrics);
+  if (!metrics) {
     NS_ERROR("trying to construct an SVGTSpanFrame for an invalid container");
     return nsnull;
   }
@@ -66,12 +68,6 @@ NS_NewSVGTSpanFrame(nsIPresShell* aPresShell, nsIContent* aContent,
   return new (aPresShell) nsSVGTSpanFrame(aContext);
 }
 
-nsSVGTSpanFrame::nsSVGTSpanFrame(nsStyleContext* aContext)
-  : nsSVGTSpanFrameBase(aContext),
-    mFragmentTreeDirty(PR_FALSE), mPropagateTransform(PR_TRUE)
-{
-}
-
 nsIAtom *
 nsSVGTSpanFrame::GetType() const
 {
@@ -82,11 +78,8 @@ nsSVGTSpanFrame::GetType() const
 // nsISupports methods
 
 NS_INTERFACE_MAP_BEGIN(nsSVGTSpanFrame)
-  NS_INTERFACE_MAP_ENTRY(nsISVGTextContainerFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGGlyphFragmentNode)
-  NS_INTERFACE_MAP_ENTRY(nsISVGTextContentMetrics)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGTSpanFrameBase)
-
 
 //----------------------------------------------------------------------
 // nsIFrame methods
@@ -118,7 +111,7 @@ nsSVGTSpanFrame::AttributeChanged(PRInt32         aNameSpaceID,
        aAttribute == nsGkAtoms::y ||
        aAttribute == nsGkAtoms::dx ||
        aAttribute == nsGkAtoms::dy)) {
-    nsISVGTextFrame* text_frame = GetTextFrame();
+    nsSVGTextFrame* text_frame = GetTextFrame();
     if (text_frame)
       text_frame->NotifyGlyphMetricsChange(this);
   }
@@ -127,78 +120,7 @@ nsSVGTSpanFrame::AttributeChanged(PRInt32         aNameSpaceID,
 }
 
 //----------------------------------------------------------------------
-// nsISVGTextContentMetrics
-NS_IMETHODIMP
-nsSVGTSpanFrame::GetNumberOfChars(PRInt32 *_retval)
-{
-  *_retval = nsSVGUtils::GetNumberOfChars(&mFrames);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGTSpanFrame::GetComputedTextLength(float *_retval)
-{
-  *_retval = nsSVGUtils::GetComputedTextLength(&mFrames);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGTSpanFrame::GetSubStringLength(PRUint32 charnum, PRUint32 nchars, float *_retval)
-{
-  return nsSVGUtils::GetSubStringLength(&mFrames, charnum, nchars, _retval);
-}
-
-NS_IMETHODIMP
-nsSVGTSpanFrame::GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
-{
-  return nsSVGUtils::GetStartPositionOfChar(&mFrames, charnum, _retval);
-}
-
-NS_IMETHODIMP
-nsSVGTSpanFrame::GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
-{
-  return nsSVGUtils::GetEndPositionOfChar(&mFrames, charnum, _retval);
-}
-
-NS_IMETHODIMP
-nsSVGTSpanFrame::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)
-{
-  return nsSVGUtils::GetExtentOfChar(&mFrames, charnum, _retval);
-}
-
-NS_IMETHODIMP
-nsSVGTSpanFrame::GetRotationOfChar(PRUint32 charnum, float *_retval)
-{
-  return nsSVGUtils::GetRotationOfChar(&mFrames, charnum, _retval);
-}
-
-NS_IMETHODIMP
-nsSVGTSpanFrame::GetCharNumAtPosition(nsIDOMSVGPoint *point, PRInt32 *_retval)
-{
-  *_retval = nsSVGUtils::GetCharNumAtPosition(&mFrames, point);
-
-  return NS_OK;
-}
-
-
-//----------------------------------------------------------------------
 // nsISVGChildFrame methods
-
-NS_IMETHODIMP
-nsSVGTSpanFrame::PaintSVG(nsISVGRendererCanvas* canvas)
-{
-  for (nsIFrame* kid = mFrames.FirstChild(); kid;
-       kid = kid->GetNextSibling()) {
-    nsISVGChildFrame* SVGFrame = nsnull;
-    CallQueryInterface(kid, &SVGFrame);
-    if (SVGFrame)
-      SVGFrame->PaintSVG(canvas);
-  }
-
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsSVGTSpanFrame::SetMatrixPropagation(PRBool aPropagate)
@@ -238,71 +160,30 @@ nsSVGTSpanFrame::GetCanvasTM()
 }
 
 //----------------------------------------------------------------------
-// nsISVGTextContainerFrame methods:
-
-NS_IMETHODIMP_(nsISVGTextFrame *)
-nsSVGTSpanFrame::GetTextFrame()
-{
-  NS_ASSERTION(mParent, "null parent");
-  nsISVGTextContainerFrame *containerFrame;
-  mParent->QueryInterface(NS_GET_IID(nsISVGTextContainerFrame), (void**)&containerFrame);
-  if (!containerFrame) {
-    return nsnull;
-  }
-
-  return containerFrame->GetTextFrame();  
-}
-
-NS_IMETHODIMP_(PRBool)
-nsSVGTSpanFrame::GetAbsolutePositionAdjustmentX(float &x, PRUint32 charNum)
-{
-  return PR_FALSE;  
-}
-
-NS_IMETHODIMP_(PRBool)
-nsSVGTSpanFrame::GetAbsolutePositionAdjustmentY(float &y, PRUint32 charNum)
-{
-  return PR_FALSE;    
-}
-
-NS_IMETHODIMP_(PRBool)
-nsSVGTSpanFrame::GetRelativePositionAdjustmentX(float &dx, PRUint32 charNum)
-{
-  return PR_FALSE;    
-}
-
-NS_IMETHODIMP_(PRBool)
-nsSVGTSpanFrame::GetRelativePositionAdjustmentY(float &dy, PRUint32 charNum)
-{
-  return PR_FALSE;    
-}
-
-
-//----------------------------------------------------------------------
 // nsISVGGlyphFragmentNode methods:
 
 NS_IMETHODIMP_(PRUint32)
 nsSVGTSpanFrame::GetNumberOfChars()
 {
-  return nsSVGUtils::GetNumberOfChars(&mFrames);
+  return nsSVGTSpanFrameBase::GetNumberOfChars();
 }
 
 NS_IMETHODIMP_(float)
 nsSVGTSpanFrame::GetComputedTextLength()
 {
-  return nsSVGUtils::GetComputedTextLength(&mFrames);
+  return nsSVGTSpanFrameBase::GetComputedTextLength();
 }
 
 NS_IMETHODIMP_(float)
 nsSVGTSpanFrame::GetSubStringLength(PRUint32 charnum, PRUint32 nchars)
 {
-  return nsSVGUtils::GetSubStringLengthNoValidation(&mFrames, charnum, nchars);
+  return nsSVGTSpanFrameBase::GetSubStringLengthNoValidation(charnum, nchars);
 }
 
 NS_IMETHODIMP_(PRInt32)
 nsSVGTSpanFrame::GetCharNumAtPosition(nsIDOMSVGPoint *point)
 {
-  return nsSVGUtils::GetCharNumAtPosition(&mFrames, point);
+  return nsSVGTSpanFrameBase::GetCharNumAtPosition(point);
 }
 
 NS_IMETHODIMP_(nsISVGGlyphFragmentLeaf *)
@@ -312,7 +193,7 @@ nsSVGTSpanFrame::GetFirstGlyphFragment()
   nsIFrame* kid = mFrames.FirstChild();
   while (kid) {
     nsISVGGlyphFragmentNode *node = nsnull;
-    kid->QueryInterface(NS_GET_IID(nsISVGGlyphFragmentNode),(void**)&node);
+    CallQueryInterface(kid, &node);
     if (node)
       return node->GetFirstGlyphFragment();
     kid = kid->GetNextSibling();
@@ -329,7 +210,7 @@ nsSVGTSpanFrame::GetNextGlyphFragment()
   nsIFrame* sibling = mNextSibling;
   while (sibling) {
     nsISVGGlyphFragmentNode *node = nsnull;
-    sibling->QueryInterface(NS_GET_IID(nsISVGGlyphFragmentNode), (void**)&node);
+    CallQueryInterface(sibling, &node);
     if (node)
       return node->GetFirstGlyphFragment();
     sibling = sibling->GetNextSibling();
@@ -339,14 +220,14 @@ nsSVGTSpanFrame::GetNextGlyphFragment()
   
   NS_ASSERTION(mParent, "null parent");
   nsISVGGlyphFragmentNode *node = nsnull;
-  mParent->QueryInterface(NS_GET_IID(nsISVGGlyphFragmentNode), (void**)&node);
+  CallQueryInterface(mParent, &node);
   return node ? node->GetNextGlyphFragment() : nsnull;
 }
 
 NS_IMETHODIMP_(PRUint32)
 nsSVGTSpanFrame::BuildGlyphFragmentTree(PRUint32 charNum, PRBool lastBranch)
 {
-  return nsSVGUtils::BuildGlyphFragmentTree(&mFrames, charNum, lastBranch);
+  return nsSVGTSpanFrameBase::BuildGlyphFragmentTree(charNum, lastBranch);
 }
 
 NS_IMETHODIMP_(void)
@@ -355,7 +236,7 @@ nsSVGTSpanFrame::NotifyMetricsSuspended()
   nsIFrame* kid = mFrames.FirstChild();
   while (kid) {
     nsISVGGlyphFragmentNode *node = nsnull;
-    kid->QueryInterface(NS_GET_IID(nsISVGGlyphFragmentNode), (void**)&node);
+    CallQueryInterface(kid, &node);
     if (node)
       node->NotifyMetricsSuspended();
     kid = kid->GetNextSibling();
@@ -368,7 +249,7 @@ nsSVGTSpanFrame::NotifyMetricsUnsuspended()
   nsIFrame* kid = mFrames.FirstChild();
   while (kid) {
     nsISVGGlyphFragmentNode *node = nsnull;
-    kid->QueryInterface(NS_GET_IID(nsISVGGlyphFragmentNode), (void**)&node);
+    CallQueryInterface(kid, &node);
     if (node)
       node->NotifyMetricsUnsuspended();
     kid = kid->GetNextSibling();
@@ -381,7 +262,7 @@ nsSVGTSpanFrame::NotifyGlyphFragmentTreeSuspended()
   nsIFrame* kid = mFrames.FirstChild();
   while (kid) {
     nsISVGGlyphFragmentNode *node = nsnull;
-    kid->QueryInterface(NS_GET_IID(nsISVGGlyphFragmentNode), (void**)&node);
+    CallQueryInterface(kid, &node);
     if (node)
       node->NotifyGlyphFragmentTreeSuspended();
     kid = kid->GetNextSibling();
@@ -392,7 +273,7 @@ NS_IMETHODIMP_(void)
 nsSVGTSpanFrame::NotifyGlyphFragmentTreeUnsuspended()
 {
   if (mFragmentTreeDirty) {
-    nsISVGTextFrame* text_frame = GetTextFrame();
+    nsSVGTextFrame* text_frame = GetTextFrame();
     NS_ASSERTION(text_frame, "null text frame");
     if (text_frame)
       text_frame->NotifyGlyphFragmentTreeChange(this);
@@ -402,75 +283,9 @@ nsSVGTSpanFrame::NotifyGlyphFragmentTreeUnsuspended()
   nsIFrame* kid = mFrames.FirstChild();
   while (kid) {
     nsISVGGlyphFragmentNode *node = nsnull;
-    kid->QueryInterface(NS_GET_IID(nsISVGGlyphFragmentNode), (void**)&node);
+    CallQueryInterface(kid, &node);
     if (node)
       node->NotifyGlyphFragmentTreeUnsuspended();
     kid = kid->GetNextSibling();
   }
-}
-
-
-//----------------------------------------------------------------------
-//
-
-NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
-nsSVGTSpanFrame::GetX()
-{
-  nsCOMPtr<nsIDOMSVGTextPositioningElement> tpElement = do_QueryInterface(mContent);
-  if (!tpElement)
-    return nsnull;
-
-  if (!mContent->HasAttr(kNameSpaceID_None, nsSVGAtoms::x))
-      return nsnull;
-
-  nsCOMPtr<nsIDOMSVGAnimatedLengthList> animLengthList;
-  tpElement->GetX(getter_AddRefs(animLengthList));
-  nsIDOMSVGLengthList *retval;
-  animLengthList->GetAnimVal(&retval);
-  return retval;
-}
-
-NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
-nsSVGTSpanFrame::GetY()
-{
-  nsCOMPtr<nsIDOMSVGTextPositioningElement> tpElement = do_QueryInterface(mContent);
-  if (!tpElement)
-    return nsnull;
-
-  if (!mContent->HasAttr(kNameSpaceID_None, nsSVGAtoms::y))
-      return nsnull;
-
-  nsCOMPtr<nsIDOMSVGAnimatedLengthList> animLengthList;
-  tpElement->GetY(getter_AddRefs(animLengthList));
-  nsIDOMSVGLengthList *retval;
-  animLengthList->GetAnimVal(&retval);
-  return retval;
-}
-
-NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
-nsSVGTSpanFrame::GetDx()
-{
-  nsCOMPtr<nsIDOMSVGTextPositioningElement> tpElement = do_QueryInterface(mContent);
-  if (!tpElement)
-    return nsnull;
-
-  nsCOMPtr<nsIDOMSVGAnimatedLengthList> animLengthList;
-  tpElement->GetDx(getter_AddRefs(animLengthList));
-  nsIDOMSVGLengthList *retval;
-  animLengthList->GetAnimVal(&retval);
-  return retval;
-}
-
-NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
-nsSVGTSpanFrame::GetDy()
-{
-  nsCOMPtr<nsIDOMSVGTextPositioningElement> tpElement = do_QueryInterface(mContent);
-  if (!tpElement)
-    return nsnull;
-
-  nsCOMPtr<nsIDOMSVGAnimatedLengthList> animLengthList;
-  tpElement->GetDy(getter_AddRefs(animLengthList));
-  nsIDOMSVGLengthList *retval;
-  animLengthList->GetAnimVal(&retval);
-  return retval;
 }

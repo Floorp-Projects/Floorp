@@ -41,24 +41,14 @@
 #include "nsISVGRenderer.h"
 #include "nsITextContent.h"
 #include "nsSVGOuterSVGFrame.h"
-#include "nsISVGTextFrame.h"
-#include "nsSVGContainerFrame.h"
-#include "nsISVGTextContainerFrame.h"
-#include "nsISVGValueUtils.h"
-#include "nsReadableUtils.h"
-#include "nsCRT.h"
-#include "prdtoa.h"
-#include "nsIDOMSVGRect.h"
+#include "nsSVGTextFrame.h"
 #include "nsILookAndFeel.h"
 #include "nsTextFragment.h"
-#include "nsSVGRect.h"
-#include "nsSVGPoint.h"
-#include "nsSVGAtoms.h"
-#include "nsIViewManager.h"
-#include "nsINameSpaceManager.h"
-#include "nsContainerFrame.h"
-#include "nsLayoutAtoms.h"
 #include "nsSVGUtils.h"
+#include "nsIDOMSVGLengthList.h"
+#include "nsIDOMSVGLength.h"
+#include "nsIDOMSVGRect.h"
+#include "nsIDOMSVGPoint.h"
 #include "nsSVGGlyphFrame.h"
 #include "nsSVGTextPathFrame.h"
 #include "nsSVGPathElement.h"
@@ -69,15 +59,13 @@
 nsIFrame*
 NS_NewSVGGlyphFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* parentFrame, nsStyleContext* aContext)
 {
-#ifdef DEBUG
   NS_ASSERTION(parentFrame, "null parent");
-  nsISVGTextContainerFrame *text_container;
-  parentFrame->QueryInterface(NS_GET_IID(nsISVGTextContainerFrame), (void**)&text_container);
-  NS_ASSERTION(text_container, "trying to construct an SVGGlyphFrame for an invalid container");
+  nsISVGTextContentMetrics *metrics;
+  CallQueryInterface(parentFrame, &metrics);
+  NS_ASSERTION(metrics, "trying to construct an SVGGlyphFrame for an invalid container");
   
   nsCOMPtr<nsITextContent> tc = do_QueryInterface(aContent);
   NS_ASSERTION(tc, "trying to construct an SVGGlyphFrame for wrong content element");
-#endif
 
   return new (aPresShell) nsSVGGlyphFrame(aContext);
 }
@@ -722,9 +710,8 @@ nsSVGGlyphFrame::GetAdjustedPosition(/* inout */ float &x, /* inout */ float &y)
 NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
 nsSVGGlyphFrame::GetX()
 {
-  nsISVGTextContainerFrame *containerFrame;
-  mParent->QueryInterface(NS_GET_IID(nsISVGTextContainerFrame),
-                          (void**)&containerFrame);
+  nsSVGTextContainerFrame *containerFrame;
+  containerFrame = NS_STATIC_CAST (nsSVGTextContainerFrame *, mParent);
   if (containerFrame)
     return containerFrame->GetX();
   return nsnull;
@@ -733,9 +720,8 @@ nsSVGGlyphFrame::GetX()
 NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
 nsSVGGlyphFrame::GetY()
 {
-  nsISVGTextContainerFrame *containerFrame;
-  mParent->QueryInterface(NS_GET_IID(nsISVGTextContainerFrame),
-                          (void**)&containerFrame);
+  nsSVGTextContainerFrame *containerFrame;
+  containerFrame = NS_STATIC_CAST (nsSVGTextContainerFrame *, mParent);
   if (containerFrame)
     return containerFrame->GetY();
   return nsnull;
@@ -744,9 +730,8 @@ nsSVGGlyphFrame::GetY()
 NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
 nsSVGGlyphFrame::GetDx()
 {
-  nsISVGTextContainerFrame *containerFrame;
-  mParent->QueryInterface(NS_GET_IID(nsISVGTextContainerFrame),
-                          (void**)&containerFrame);
+  nsSVGTextContainerFrame *containerFrame;
+  containerFrame = NS_STATIC_CAST (nsSVGTextContainerFrame *, mParent);
   if (containerFrame)
     return containerFrame->GetDx();
   return nsnull;
@@ -755,9 +740,8 @@ nsSVGGlyphFrame::GetDx()
 NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
 nsSVGGlyphFrame::GetDy()
 {
-  nsISVGTextContainerFrame *containerFrame;
-  mParent->QueryInterface(NS_GET_IID(nsISVGTextContainerFrame),
-                          (void**)&containerFrame);
+  nsSVGTextContainerFrame *containerFrame;
+  containerFrame = NS_STATIC_CAST (nsSVGTextContainerFrame *, mParent);
   if (containerFrame)
     return containerFrame->GetDy();
   return nsnull;
@@ -788,8 +772,8 @@ nsSVGGlyphFrame::IsAbsolutelyPositioned()
       return PR_TRUE;
         
     if (frame &&
-        (frame->GetContent()->HasAttr(kNameSpaceID_None, nsSVGAtoms::x) ||
-         frame->GetContent()->HasAttr(kNameSpaceID_None, nsSVGAtoms::y)))
+        (frame->GetContent()->HasAttr(kNameSpaceID_None, nsGkAtoms::x) ||
+         frame->GetContent()->HasAttr(kNameSpaceID_None, nsGkAtoms::y)))
         return PR_TRUE;
 
     if (frame->GetType() == nsLayoutAtoms::svgTextFrame)
@@ -905,7 +889,7 @@ nsSVGGlyphFrame::NotifyMetricsUnsuspended()
       mMetrics->Update(&metricsDirty);
     if (metricsDirty) {
       AddStateBits(NS_STATE_SVG_DIRTY);
-      nsISVGTextFrame* text_frame = GetTextFrame();
+      nsSVGTextFrame* text_frame = GetTextFrame();
       NS_ASSERTION(text_frame, "null text frame");
       if (text_frame)
         text_frame->NotifyGlyphMetricsChange(this);
@@ -924,7 +908,7 @@ NS_IMETHODIMP_(void)
 nsSVGGlyphFrame::NotifyGlyphFragmentTreeUnsuspended()
 {
   if (mFragmentTreeDirty) {
-    nsISVGTextFrame* text_frame = GetTextFrame();
+    nsSVGTextFrame* text_frame = GetTextFrame();
     NS_ASSERTION(text_frame, "null text frame");
     if (text_frame)
       text_frame->NotifyGlyphFragmentTreeChange(this);
@@ -974,7 +958,7 @@ void nsSVGGlyphFrame::UpdateGeometry(PRBool bRedraw,
 
 void nsSVGGlyphFrame::UpdateMetrics()
 {
-  nsISVGTextFrame* text_frame = GetTextFrame();
+  nsSVGTextFrame* text_frame = GetTextFrame();
   if (!text_frame) {
     NS_ERROR("null text_frame");
     return;
@@ -999,7 +983,7 @@ void nsSVGGlyphFrame::UpdateFragmentTree()
 {
   mFragmentTreeDirty = PR_TRUE;
     
-  nsISVGTextFrame* text_frame = GetTextFrame();
+  nsSVGTextFrame* text_frame = GetTextFrame();
   if (!text_frame) {
     NS_ERROR("null text_frame");
     return;
@@ -1012,13 +996,13 @@ void nsSVGGlyphFrame::UpdateFragmentTree()
   }
 }
 
-nsISVGTextFrame *
+nsSVGTextFrame *
 nsSVGGlyphFrame::GetTextFrame()
 {
   NS_ASSERTION(mParent, "null parent");
 
-  nsISVGTextContainerFrame *containerFrame;
-  mParent->QueryInterface(NS_GET_IID(nsISVGTextContainerFrame), (void**)&containerFrame);
+  nsSVGTextContainerFrame *containerFrame;
+  containerFrame = NS_STATIC_CAST (nsSVGTextContainerFrame *, mParent);
   if (!containerFrame) {
     NS_ERROR("invalid container");
     return nsnull;
