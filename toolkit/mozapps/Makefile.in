@@ -44,11 +44,14 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS = downloads extensions update xpinstall plugins
 
+# XXX SUITE doesn't want to build the toolkit installer yet
+ifndef MOZ_SUITE
 # The installer is built during the packaging phase, but the uninstaller needs
 # to be built earlier.
 ifdef MOZ_INSTALLER
 ifeq ($(OS_ARCH),WINNT)
 DIRS += installer/windows/wizard/uninstall
+endif
 endif
 endif
 
