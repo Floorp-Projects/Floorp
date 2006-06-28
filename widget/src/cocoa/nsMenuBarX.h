@@ -44,7 +44,6 @@
 #include "nsIDocumentObserver.h"
 #include "nsIChangeManager.h"
 #include "nsIMenuCommandDispatcher.h"
-#include "nsPresContext.h"
 #include "nsCOMArray.h"
 #include "nsHashtable.h"
 #include "nsWeakReference.h"
@@ -61,8 +60,6 @@ extern "C" MenuRef _NSGetCarbonMenu(NSMenu* aMenu);
 
 namespace MenuHelpersX
 {
-  // utility routine for getting a PresContext out of a docShell
-  nsresult DocShellToPresContext(nsIDocShell* inDocShell, nsPresContext** outContext);
   nsEventStatus DispatchCommandTo(nsIWeakReference* aDocShellWeakRef,
                                   nsIContent* aTargetContent);
   NSString* CreateTruncatedCocoaLabel(nsString itemLabel);

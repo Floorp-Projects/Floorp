@@ -1002,38 +1002,6 @@ nsMenuBarX::Unregister(PRUint32 inCommandID)
 }
 
 
-//
-// DocShellToPresContext
-//
-// Helper to dig out a pres context from a docshell. A common thing to do before
-// sending an event into the dom.
-//
-nsresult
-MenuHelpersX::DocShellToPresContext(nsIDocShell* inDocShell, nsPresContext** outContext)
-{
-  NS_ENSURE_ARG_POINTER(outContext);
-  *outContext = nsnull;
-  if (!inDocShell)
-    return NS_ERROR_INVALID_ARG;
-  
-  nsresult retval = NS_OK;
-  
-  nsCOMPtr<nsIContentViewer> contentViewer;
-  inDocShell->GetContentViewer(getter_AddRefs(contentViewer));
-  if (contentViewer) {
-    nsCOMPtr<nsIDocumentViewer> docViewer(do_QueryInterface(contentViewer));
-    if (docViewer)
-      docViewer->GetPresContext(outContext); // AddRefs for us
-    else
-      retval = NS_ERROR_FAILURE;
-  }
-  else
-    retval = NS_ERROR_FAILURE;
-  
-  return retval;
-  
-} // DocShellToPresContext
-
 nsEventStatus
 MenuHelpersX::DispatchCommandTo(nsIWeakReference* aDocShellWeakRef,
                                 nsIContent* aTargetContent)
@@ -1043,8 +1011,6 @@ MenuHelpersX::DispatchCommandTo(nsIWeakReference* aDocShellWeakRef,
   nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(aDocShellWeakRef);
   if (!docShell)
     return nsEventStatus_eConsumeNoDefault;
-  nsCOMPtr<nsPresContext> presContext;
-  MenuHelpersX::DocShellToPresContext(docShell, getter_AddRefs(presContext));
   
   nsEventStatus status = nsEventStatus_eConsumeNoDefault;
   nsXULCommandEvent event(PR_TRUE, NS_XUL_COMMAND, nsnull);
@@ -1052,7 +1018,7 @@ MenuHelpersX::DispatchCommandTo(nsIWeakReference* aDocShellWeakRef,
   // FIXME: Should probably figure out how to init this with the actual
   // pressed keys, but this is a big old edge case anyway. -dwh
   
-  aTargetContent->DispatchDOMEvent(&event, nsnull, presContext, &status);
+  aTargetContent->DispatchDOMEvent(&event, nsnull, nsnull, &status);
   return status;
 }
 

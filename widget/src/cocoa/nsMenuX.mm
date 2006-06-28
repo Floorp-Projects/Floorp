@@ -52,7 +52,6 @@
 #include "nsIMenuBar.h"
 #include "nsIMenuItem.h"
 #include "nsIMenuListener.h"
-#include "nsPresContext.h"
 #include "nsIMenuCommandDispatcher.h"
 
 #include "nsString.h"
@@ -731,15 +730,12 @@ nsMenuX::OnCreate()
     NS_ERROR("No doc shell");
     return PR_FALSE;
   }
-  nsCOMPtr<nsPresContext> presContext;
-  MenuHelpersX::DocShellToPresContext(docShell, getter_AddRefs(presContext));
-  if (presContext) {
-    nsresult rv = NS_OK;
-    nsIContent* dispatchTo = popupContent ? popupContent : mMenuContent;
-    rv = dispatchTo->DispatchDOMEvent(&event, nsnull, presContext, &status);
-    if (NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault)
-      return PR_FALSE;
-  }
+  
+  nsresult rv = NS_OK;
+  nsIContent* dispatchTo = popupContent ? popupContent : mMenuContent;
+  rv = dispatchTo->DispatchDOMEvent(&event, nsnull, nsnull, &status);
+  if (NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault)
+    return PR_FALSE;
 
   // the menu is going to show and the oncreate handler has executed. We
   // now need to walk our menu items, checking to see if any of them have
@@ -814,15 +810,12 @@ nsMenuX::OnCreated()
     NS_ERROR("No doc shell");
     return PR_FALSE;
   }
-  nsCOMPtr<nsPresContext> presContext;
-  MenuHelpersX::DocShellToPresContext(docShell, getter_AddRefs(presContext));
-  if (presContext) {
-    nsresult rv = NS_OK;
-    nsIContent* dispatchTo = popupContent ? popupContent : mMenuContent;
-    rv = dispatchTo->DispatchDOMEvent(&event, nsnull, presContext, &status);
-    if (NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault)
-      return PR_FALSE;
- }
+
+  nsresult rv = NS_OK;
+  nsIContent* dispatchTo = popupContent ? popupContent : mMenuContent;
+  rv = dispatchTo->DispatchDOMEvent(&event, nsnull, nsnull, &status);
+  if (NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault)
+    return PR_FALSE;  
   
   return PR_TRUE;
 }
@@ -843,7 +836,7 @@ nsMenuX::OnDestroy()
   nsMouseEvent event(PR_TRUE, NS_XUL_POPUP_HIDING, nsnull,
                      nsMouseEvent::eReal);
   
-  nsCOMPtr<nsIDocShell>  docShell = do_QueryReferent(mDocShellWeakRef);
+  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShellWeakRef);
   if (!docShell) {
     NS_WARNING("No doc shell so can't run the OnDestroy");
     return PR_FALSE;
@@ -852,18 +845,15 @@ nsMenuX::OnDestroy()
   nsCOMPtr<nsIContent> popupContent;
   GetMenuPopupContent(getter_AddRefs(popupContent));
 
-  nsCOMPtr<nsPresContext> presContext;
-  MenuHelpersX::DocShellToPresContext(docShell, getter_AddRefs(presContext));
-  if (presContext) {
-    nsresult rv = NS_OK;
-    nsIContent* dispatchTo = popupContent ? popupContent : mMenuContent;
-    rv = dispatchTo->DispatchDOMEvent(&event, nsnull, presContext, &status);
-
-    mDestroyHandlerCalled = PR_TRUE;
-    
-    if (NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault)
-      return PR_FALSE;
-  }
+  nsresult rv = NS_OK;
+  nsIContent* dispatchTo = popupContent ? popupContent : mMenuContent;
+  rv = dispatchTo->DispatchDOMEvent(&event, nsnull, nsnull, &status);
+  
+  mDestroyHandlerCalled = PR_TRUE;
+  
+  if (NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault)
+    return PR_FALSE;
+  
   return PR_TRUE;
 }
 
@@ -883,18 +873,15 @@ nsMenuX::OnDestroyed()
   nsCOMPtr<nsIContent> popupContent;
   GetMenuPopupContent(getter_AddRefs(popupContent));
 
-  nsCOMPtr<nsPresContext> presContext;
-  MenuHelpersX::DocShellToPresContext(docShell, getter_AddRefs(presContext));
-  if (presContext)  {
-    nsresult rv = NS_OK;
-    nsIContent* dispatchTo = popupContent ? popupContent : mMenuContent;
-    rv = dispatchTo->DispatchDOMEvent(&event, nsnull, presContext, &status);
-
-    mDestroyHandlerCalled = PR_TRUE;
-    
-    if (NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault)
-      return PR_FALSE;
-  }
+  nsresult rv = NS_OK;
+  nsIContent* dispatchTo = popupContent ? popupContent : mMenuContent;
+  rv = dispatchTo->DispatchDOMEvent(&event, nsnull, nsnull, &status);
+  
+  mDestroyHandlerCalled = PR_TRUE;
+  
+  if (NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault)
+    return PR_FALSE;
+  
   return PR_TRUE;
 }
 //
