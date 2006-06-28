@@ -439,9 +439,7 @@
         <parameter name="aOccurrence"/>
         <body><![CDATA[
           for each (var chunk in this.mEvents) {
-              if (chunk.event.id == aOccurrence.id &&
-                  chunk.event.startDate.compare(aOccurrence.startDate) == 0)
-              {
+              if (chunk.event.hasSameIds(aOccurrence)) {
                   return chunk;
               }
           }
@@ -522,8 +520,8 @@
       <method name="getStartEndMinutesForOccurrence">
         <parameter name="aOccurrence"/>
         <body><![CDATA[
-           var stdate = aOccurrence.startDate;
-           var enddate = aOccurrence.endDate;
+           var stdate = aOccurrence.startDate || aOccurrence.entryDate;
+           var enddate = aOccurrence.endDate || aOccurrence.dueDate;
 
            if (stdate.timezone != this.mTimezone) {
                stdate = stdate.getInTimezone (this.mTimezone);
@@ -760,8 +758,6 @@
           eventMap.push(new Array());
 
           for each (var event in this.mEvents) {
-              //if (event.startDate.isDate)
-              //    continue;
 
               if (event.startMinute == null || event.endMinute == null || event.event == null)
                   continue;
@@ -1023,8 +1019,10 @@
               newEnd = col.mDate.clone();
               newEnd.isDate = false;
           } else {
-              newStart = dragState.dragOccurrence.startDate.clone();
-              newEnd = dragState.dragOccurrence.endDate.clone();
+              var oldStart = dragState.dragOccurrence.startDate || dragState.dragOccurrence.entryDate;
+              var oldEnd = dragState.dragOccurrence.endDate || dragState.dragOccurrence.dueDate;
+              newStart = oldStart.clone();
+              newEnd = oldEnd.clone();
 
               // Our views are pegged to the default timezone.  If the event
               // isn't also in the timezone, we're going to need to do some
@@ -1470,11 +1468,23 @@
         onget="return this.mParentColumn;"
         onset="return (this.mParentColumn = val);"/>
 
-      <property name="startMinute" readonly="true"
-        onget="if (!this.mOccurrence) return 0; return this.mOccurrence.startDate.hour * 60 + this.mOccurrence.startDate.minute"/>
+      <property name="startMinute">
+        <getter><![CDATA[
+            if (!this.mOccurrence)
+                return 0; 
+            var startDate = this.mOccurrence.startDate || this.mOccurrence.entryDate;
+            return startDate.hour * 60 + startDate.minute;
+        ]]></getter>
+      </property>
 
-      <property name="endMinute" readonly="true"
-        onget="if (!this.mOccurrence) return 0; return this.mOccurrence.endDate.hour * 60 + this.mOccurrence.endDate.minute"/>
+      <property name="endMinute">
+        <getter><![CDATA[
+            if (!this.mOccurrence)
+                return 0; 
+            var endDate = this.mOccurrence.endDate || this.mOccurrence.dueDate;
+            return endDate.hour * 60 + endDate.minute;
+        ]]></getter>
+      </property>
     </implementation>
 
     <handlers>
@@ -1635,8 +1645,9 @@
 	       // when the selection really did change, so just do it.
                if (this.calView.mSelectedItem) {
                    var cols = this.calView.findColumnsForItem(this.calView.mSelectedItem);
+                   var selectedStart = this.calView.mSelectedItem.startDate || this.calView.mSelectedItem.entryDate
                    for each (col in cols) {
-                       if (!this.calView.mSelectedItem.startDate.isDate) {
+                       if (!selectedStart.isDate) {
                            col.column.selectOccurrence(null);
                        } else {
                            col.header.selectOccurrence(null);
@@ -1646,13 +1657,11 @@
                this.calView.mSelectedItem = itemSelectionArray[0];
                if (!this.calView.mSelectedItem)
                   return;
-               if (this.calView.mSelectedItem.startDate)
-                   this.calView.showDate(this.calView.mSelectedItem.startDate);
-               if (this.calView.mSelectedItem.entryDate)
-                   this.calView.showDate(this.calView.mSelectedItem.entryDate);
+               var newSelectedStart = this.calView.mSelectedItem.startDate || this.calView.mSelectedItem.entryDate;
+               this.calView.showDate(newSelectedStart);
                var cols = this.calView.findColumnsForItem(this.calView.mSelectedItem);
                for each (col in cols) {
-                   if (!this.calView.mSelectedItem.startDate.isDate) {
+                   if (!newSelectedStart.isDate) {
                        col.column.selectOccurrence(this.calView.mSelectedItem);
                    } else {
                        col.header.selectOccurrence(this.calView.mSelectedItem);
@@ -1694,10 +1703,10 @@
                 if (this.mBatchCount) {
                     return;
                 }
-                //dump ("++ AddItem " + aItem + "\n");
-                if (!(aItem instanceof Components.interfaces.calIEvent))
+
+                if (aItem instanceof Components.interfaces.calITodo && 
+                    (!aItem.entryDate || !aItem.dueDate))
                     return;
-                aItem = aItem.QueryInterface(Components.interfaces.calIEvent);
 
                 var occs = aItem.getOccurrencesBetween(this.calView.startDate,
                                                        this.calView.queryEndDate,
@@ -1718,14 +1727,21 @@
                 if (this.mBatchCount) {
                     return;
                 }
-                //dump ("++ ModifyItem\n");
-                if (!(aOldItem instanceof Components.interfaces.calIEvent))
-                    return;
-
-                if (!(aNewItem instanceof Components.interfaces.calIEvent))
-                    return;
-
                 var occs;
+
+
+                if (!aOldItem instanceof Components.interfaces.calITodo ||
+                    (aOldItem.entryDate && aOldItem.dueDate)) {
+                    occs = aOldItem.getOccurrencesBetween(this.calView.startDate,
+                                                          this.calView.queryEndDate,
+                                                          {});
+                    for each (var occ in occs) {
+                        this.calView.doDeleteEvent(occ);
+                    }
+                }
+                if (aNewItem instanceof Components.interfaces.calITodo && 
+                    (!aNewItem.entryDate || !aNewItem.dueDate))
+                    return;
                 occs = aOldItem.getOccurrencesBetween(this.calView.startDate,
                                                       this.calView.queryEndDate,
                                                       {});
@@ -1746,8 +1762,8 @@
                 if (this.mBatchCount) {
                     return;
                 }
-                //dump ("++ DeleteItem\n");
-                if (!(aItem instanceof Components.interfaces.calIEvent))
+                if (aItem instanceof Components.interfaces.calITodo && 
+                    (!aItem.entryDate || !aItem.dueDate))
                     return;
 
                 var occs = aItem.getOccurrencesBetween(this.calView.startDate,
@@ -1799,6 +1815,15 @@
                                aCount, aItems) {
               if (!Components.isSuccessCode(aStatus))
                   return;
+
+              function hasGoodDates(item) {
+                  if (item instanceof Components.interfaces.calITodo && 
+                      (!item.entryDate || !item.dueDate)) {
+                      return false;
+                  }
+                  return true;
+              }
+              aItems = aItems.filter(hasGoodDates);
 
               var chunks = this.calView.createChunksForNonDateItems(aItems);
 
@@ -2057,7 +2082,7 @@
               if (val) {
                   var cols = this.findColumnsForItem(val);
                   if (cols.length > 0) {
-                      var start = val.startDate;
+                      var start = val.startDate || val.entryDate;
                       for each (col in cols) {
                           if(start.isDate) {
                               col.header.selectOccurrence(val);
@@ -2270,10 +2295,7 @@
           else
             filter |= this.mCalendar.ITEM_FILTER_TYPE_EVENT;
 
-          //XXX Once tasks are supported use filter here instead of this list
-          this.mCalendar.getItems(this.mCalendar.ITEM_FILTER_COMPLETED_ALL |
-                                  this.mCalendar.ITEM_FILTER_TYPE_EVENT |
-                                  this.mCalendar.ITEM_FILTER_CLASS_OCCURRENCES,
+          this.mCalendar.getItems(filter,
                                   0,
                                   this.startDate,
                                   this.queryEndDate,
@@ -2469,14 +2491,13 @@
         <body><![CDATA[
           var columns = new Array();
 
-          // We don't support tasks here, yet
-          if (!(aItem instanceof Components.interfaces.calIEvent))
-              return columns;
           var tz = this.mDateColumns[0].date.timezone;
 
           // Note that these may be dates or datetimes
-          var targetDate = aItem.startDate.getInTimezone(tz);
-          var finishDate = aItem.endDate.getInTimezone(tz);
+          var startDate = aItem.startDate || aItem.entryDate;
+          var targetDate = startDate.getInTimezone(tz);
+          var endDate = aItem.endDate || aItem.dueDate;
+          var finishDate = endDate.getInTimezone(tz);
 
           if (!targetDate.isDate) {
             // Set the time to 00:00 so that we get all the boxes
@@ -2537,7 +2558,7 @@
               var column = col.column;
               var header = col.header;
 
-              var estart = aEvent.startDate;
+              var estart = aEvent.startDate || aEvent.entryDate;
               if (estart.isDate) {
                   header.addEvent(aEvent);
               } else {
@@ -2558,7 +2579,7 @@
               var column = col.column;
               var header = col.header;
 
-              var estart = aEvent.startDate;
+              var estart = aEvent.startDate || aEvent.entryDate;
               if (estart.isDate) {
                   header.deleteEvent(aEvent);
               } else {
@@ -2670,7 +2691,8 @@
 
           var chunks = new Array();
           for each (var item in aItems) {
-              if (item.startDate.isDate) {
+              var startDate = item.startDate || item.entryDate;
+              if (startDate.isDate) {
                   continue;
               }
 
