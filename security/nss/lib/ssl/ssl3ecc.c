@@ -40,7 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* ECC code moved here from ssl3con.c */
-/* $Id: ssl3ecc.c,v 1.13 2006/06/23 17:01:38 rrelyea%redhat.com Exp $ */
+/* $Id: ssl3ecc.c,v 1.14 2006/06/28 21:15:04 julien.pierre.bugs%sun.com Exp $ */
 
 #include "nssrenam.h"
 #include "nss.h"
@@ -367,6 +367,8 @@ ssl3_SendECDHClientKeyExchange(sslSocket * ss, SECKEYPublicKey * svrPubKey)
 			    CKD_NULL, NULL, NULL);
 
     if (pms == NULL) {
+	SSL3AlertDescription desc  = illegal_parameter;
+	(void)SSL3_SendAlert(ss, alert_fatal, desc);
 	ssl_MapLowLevelError(SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE);
 	goto loser;
     }
