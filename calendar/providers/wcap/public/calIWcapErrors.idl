@@ -1,0 +1,220 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: NPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Sun Microsystems, Inc.
+ * Portions created by Sun Microsystems are Copyright (C) 2006 Sun
+ * Microsystems, Inc. All Rights Reserved.
+ *
+ * Original Author: Daniel Boelzle (daniel.boelzle@sun.com)
+ *
+ * Contributor(s):
+ *
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the NPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "calIErrors.idl"
+
+/** WCAP error codes.
+ */
+[scriptable, uuid(2ADC008C-A7A6-4f9a-91C8-A99742B68F3D)]
+interface calIWcapErrors : calIErrors
+{
+    /*  1 */ const unsigned long WCAP_LOGIN_FAILED =
+                 WCAP_ERROR_BASE + 1;
+    /*  2 */ const unsigned long WCAP_LOGIN_OK_DEFAULT_CALENDAR_NOT_FOUND =
+                 WCAP_ERROR_BASE + 2;
+    /*  6 */ const unsigned long WCAP_DELETE_EVENTS_BY_ID_FAILED =
+                 WCAP_ERROR_BASE + 6;
+    /*  8 */ const unsigned long WCAP_SETCALPROPS_FAILED =
+                 WCAP_ERROR_BASE + 8;
+    /*  9 */ const unsigned long WCAP_FETCH_EVENTS_BY_ID_FAILED =
+                 WCAP_ERROR_BASE + 9;
+    /* 10 */ const unsigned long WCAP_CREATECALENDAR_FAILED =
+                 WCAP_ERROR_BASE + 10;
+    /* 11 */ const unsigned long WCAP_DELETECALENDAR_FAILED =
+                 WCAP_ERROR_BASE + 11;
+    /* 12 */ const unsigned long WCAP_ADDLINK_FAILED =
+                 WCAP_ERROR_BASE + 12;
+    /* 13 */ const unsigned long WCAP_FETCHBYDATERANGE_FAILED =
+                 WCAP_ERROR_BASE + 13;
+    /* 14 */ const unsigned long WCAP_STOREEVENTS_FAILED =
+                 WCAP_ERROR_BASE + 14;
+    /* 15 */ const unsigned long WCAP_STORETODOS_FAILED =
+                 WCAP_ERROR_BASE + 15;
+    /* 16 */ const unsigned long WCAP_DELETE_TODOS_BY_ID_FAILED =
+                 WCAP_ERROR_BASE + 16;
+    /* 17 */ const unsigned long WCAP_FETCH_TODOS_BY_ID_FAILED =
+                 WCAP_ERROR_BASE + 17;
+    /* 18 */ const unsigned long WCAP_FETCHCOMPONENTS_FAILED_BAD_TZID =
+                 WCAP_ERROR_BASE + 18;
+    /* 19 */ const unsigned long WCAP_SEARCH_CALPROPS_FAILED =
+                 WCAP_ERROR_BASE + 19;
+    /* 20 */ const unsigned long WCAP_GET_CALPROPS_FAILED =
+                 WCAP_ERROR_BASE + 20;
+    /* 21 */ const unsigned long WCAP_DELETECOMPONENTS_BY_RANGE_FAILED =
+                 WCAP_ERROR_BASE + 21;
+    /* 22 */ const unsigned long WCAP_DELETEEVENTS_BY_RANGE_FAILED =
+                 WCAP_ERROR_BASE + 22;
+    /* 23 */ const unsigned long WCAP_DELETETODOS_BY_RANGE_FAILED =
+                 WCAP_ERROR_BASE + 23;
+    /* 24 */ const unsigned long WCAP_GET_ALL_TIMEZONES_FAILED =
+                 WCAP_ERROR_BASE + 24;
+    /* 25 */ const unsigned long WCAP_CREATECALENDAR_ALREADY_EXISTS_FAILED =
+                 WCAP_ERROR_BASE + 25;
+    /* 26 */ const unsigned long WCAP_SET_USERPREFS_FAILED =
+                 WCAP_ERROR_BASE + 26;
+    /* 27 */ const unsigned long WCAP_CHANGE_PASSWORD_FAILED =
+                 WCAP_ERROR_BASE + 27;
+    /* 28 */ const unsigned long WCAP_ACCESS_DENIED_TO_CALENDAR =
+                 WCAP_ERROR_BASE + 28;
+    /* 29 */ const unsigned long WCAP_CALENDAR_DOES_NOT_EXIST =
+                 WCAP_ERROR_BASE + 29;
+    /* 30 */ const unsigned long WCAP_ILLEGAL_CALID_NAME =
+                 WCAP_ERROR_BASE + 30;
+    /* 31 */ const unsigned long WCAP_CANNOT_MODIFY_LINKED_EVENTS =
+                 WCAP_ERROR_BASE + 31;
+    /* 32 */ const unsigned long WCAP_CANNOT_MODIFY_LINKED_TODOS =
+                 WCAP_ERROR_BASE + 32;
+    /* 33 */ const unsigned long WCAP_CANNOT_SENT_EMAIL =
+                 WCAP_ERROR_BASE + 33;
+    /* 34 */ const unsigned long WCAP_CALENDAR_DISABLED =
+                 WCAP_ERROR_BASE + 34;
+    /* 35 */ const unsigned long WCAP_WRITE_IMPORT_FAILED =
+                 WCAP_ERROR_BASE + 35;
+    /* 36 */ const unsigned long WCAP_FETCH_BY_LAST_MODIFIED_FAILED =
+                 WCAP_ERROR_BASE + 36;
+    /* 37 */ const unsigned long WCAP_CAPI_NOT_SUPPORTED =
+                 WCAP_ERROR_BASE + 37;
+    /* 38 */ const unsigned long WCAP_CALID_NOT_SPECIFIED =
+                 WCAP_ERROR_BASE + 38;
+    /* 39 */ const unsigned long WCAP_GET_FREEBUSY_FAILED =
+                 WCAP_ERROR_BASE + 39;
+    /* 40 */ const unsigned long WCAP_STORE_FAILED_DOUBLE_BOOKED =
+                 WCAP_ERROR_BASE + 40;
+    /* 41 */ const unsigned long WCAP_FETCH_BY_ALARM_RANGE_FAILED =
+                 WCAP_ERROR_BASE + 41;
+    /* 42 */ const unsigned long WCAP_FETCH_BY_ATTENDEE_ERROR_FAILED =
+                 WCAP_ERROR_BASE + 42;
+    /* 43 */ const unsigned long WCAP_ATTENDEE_GROUP_EXPANSION_CLIPPED =
+                 WCAP_ERROR_BASE + 43;
+    /* 44 */ const unsigned long WCAP_USERPREFS_ACCESS_DENIED =
+                 WCAP_ERROR_BASE + 44;
+    /* 45 */ const unsigned long WCAP_NOT_ALLOWED_TO_REQUEST_PUBLISH =
+                 WCAP_ERROR_BASE + 45;
+    /* 46 */ const unsigned long WCAP_INSUFFICIENT_PARAMETERS =
+                 WCAP_ERROR_BASE + 46;
+    /* 47 */ const unsigned long WCAP_MUSTBEOWNER_OPERATION =
+                 WCAP_ERROR_BASE + 47;
+    /* 48 */ const unsigned long WCAP_DWP_CONNECTION_FAILED =
+                 WCAP_ERROR_BASE + 48;
+    /* 49 */ const unsigned long WCAP_DWP_MAX_CONNECTION_REACHED =
+                 WCAP_ERROR_BASE + 49;
+    /* 50 */ const unsigned long WCAP_DWP_CANNOT_RESOLVE_CALENDAR =
+                 WCAP_ERROR_BASE + 50;
+    /* 51 */ const unsigned long WCAP_DWP_BAD_DATA =
+                 WCAP_ERROR_BASE + 51;
+    /* 52 */ const unsigned long WCAP_BAD_COMMAND =
+                 WCAP_ERROR_BASE + 52;
+    /* 53 */ const unsigned long WCAP_NOT_FOUND =
+                 WCAP_ERROR_BASE + 53;
+    /* 54 */ const unsigned long WCAP_WRITE_IMPORT_CANT_EXPAND_CALID =
+                 WCAP_ERROR_BASE + 54;
+    /* 55 */ const unsigned long WCAP_GETTIME_FAILED =
+                 WCAP_ERROR_BASE + 55;
+    /* 56 */ const unsigned long WCAP_FETCH_DELETEDCOMPONENTS_FAILED =
+                 WCAP_ERROR_BASE + 56;
+    /* 57 */ const unsigned long WCAP_FETCH_DELETEDCOMPONENTS_PARTIAL_RESULT =
+                 WCAP_ERROR_BASE + 57;
+    /* 58 */ const unsigned long WCAP_WCAP_NO_SUCH_FORMAT =
+                 WCAP_ERROR_BASE + 58;
+    /* 59 */ const unsigned long WCAP_COMPONENT_NOT_FOUND =
+                 WCAP_ERROR_BASE + 59;
+    /* 60 */ const unsigned long WCAP_BAD_ARGUMENTS =
+                 WCAP_ERROR_BASE + 60;
+    /* 61 */ const unsigned long WCAP_GET_USERPREFS_FAILED =
+                 WCAP_ERROR_BASE + 61;
+    /* 62 */ const unsigned long WCAP_WCAP_MODIFY_NO_EVENT =
+                 WCAP_ERROR_BASE + 62;
+    /* 63 */ const unsigned long WCAP_WCAP_CREATE_EXISTS =
+                 WCAP_ERROR_BASE + 63;
+    /* 64 */ const unsigned long WCAP_WCAP_MODIFY_CANT_MAKE_COPY =
+                 WCAP_ERROR_BASE + 64;
+    /* 65 */ const unsigned long WCAP_STORE_FAILED_RECUR_SKIP =
+                 WCAP_ERROR_BASE + 65;
+    /* 66 */ const unsigned long WCAP_STORE_FAILED_RECUR_SAMEDAY =
+                 WCAP_ERROR_BASE + 66;
+    /* 67 */ const unsigned long WCAP_BAD_ORG_ARGUMENTS =
+                 WCAP_ERROR_BASE + 67;
+    /* 68 */ const unsigned long WCAP_STORE_FAILED_RECUR_PRIVACY =
+                 WCAP_ERROR_BASE + 68;
+    /* 69 */ const unsigned long WCAP_LDAP_ERROR =
+                 WCAP_ERROR_BASE + 69;
+    /* 70 */ const unsigned long WCAP_GET_INVITE_COUNT_FAILED =
+                 WCAP_ERROR_BASE + 70;
+    /* 71 */ const unsigned long WCAP_LIST_FAILED =
+                 WCAP_ERROR_BASE + 71;
+    /* 72 */ const unsigned long WCAP_LIST_SUBSCRIBED_FAILED =
+                 WCAP_ERROR_BASE + 72;
+    /* 73 */ const unsigned long WCAP_SUBSCRIBE_FAILED =
+                 WCAP_ERROR_BASE + 73;
+    /* 74 */ const unsigned long WCAP_UNSUBSCRIBE_FAILED =
+                 WCAP_ERROR_BASE + 74;
+    /* 75 */ const unsigned long WCAP_ANONYMOUS_NOT_ALLOWED =
+                 WCAP_ERROR_BASE + 75;
+    /* 76 */ const unsigned long WCAP_ACCESS_DENIED =
+                 WCAP_ERROR_BASE + 76;
+    /* 77 */ const unsigned long WCAP_BAD_IMPORT_ARGUMENTS =
+                 WCAP_ERROR_BASE + 77;
+    /* 78 */ const unsigned long WCAP_READONLY_DATABASE =
+                 WCAP_ERROR_BASE + 78;
+    /* 79 */ const unsigned long WCAP_ATTENDEE_NOT_ALLOWED_TO_REQUEST_ON_MODIFY=
+                 WCAP_ERROR_BASE + 79;
+    /* 80 */ const unsigned long WCAP_TRANSP_RESOURCE_NOT_ALLOWED =
+                 WCAP_ERROR_BASE + 80;
+    /* 81 */ const unsigned long WCAP_RECURRING_COMPONENT_NOT_FOUND =
+                 WCAP_ERROR_BASE + 81;
+    /* 11000 */ const unsigned long WCAP_CDWP_ERR_MAX_CONNECTION_REACHED =
+                    WCAP_ERROR_BASE + 100;
+    /* 11001 */ const unsigned long WCAP_CDWP_ERR_CANNOT_CONNECT =
+                    WCAP_ERROR_BASE + 101;
+    /* 11002 */ const unsigned long WCAP_CDWP_ERR_CANNOT_RESOLVE_CALENDAR =
+                    WCAP_ERROR_BASE + 102;
+    /* 11003 */ const unsigned long WCAP_CDWP_ERR_BAD_DATA =
+                    WCAP_ERROR_BASE + 103;
+    /* 11004 */ const unsigned long WCAP_CDWP_ERR_DWPHOST_CTX_DOES_NOT_EXIST =
+                    WCAP_ERROR_BASE + 104;
+    /* 11005 */ const unsigned long WCAP_CDWP_ERR_HOSTNAME_NOT_RESOLVABLE =
+                    WCAP_ERROR_BASE + 105;
+    /* 11006 */ const unsigned long WCAP_CDWP_ERR_NO_DATA =
+                    WCAP_ERROR_BASE + 106;
+    /* 11007 */ const unsigned long WCAP_CDWP_ERR_AUTH_FAILED =
+                    WCAP_ERROR_BASE + 107;
+    /* 11008 */ const unsigned long WCAP_CDWP_ERR_CHECKVERSION_FAILED =
+                    WCAP_ERROR_BASE + 108;
+};
+
