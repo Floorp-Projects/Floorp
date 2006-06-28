@@ -2,6 +2,4 @@
 <!ENTITY license.part1     "by its">
 <!ENTITY license.contrib   "contributors">
 <!ENTITY license.part2     "according to terms set out in the">
-<!ENTITY license.and       "and">
 <!ENTITY license.part3     "document. All Rights Reserved.">
-<!ENTITY license.credits   'For full Mozilla credits, type "about:credits" into the Location bar.'>

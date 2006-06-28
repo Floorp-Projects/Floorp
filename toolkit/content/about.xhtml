@@ -4,8 +4,8 @@
   "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd" [
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
 %brandDTD;
-<!ENTITY % licenseDTD SYSTEM "chrome://global/locale/license.dtd" >
-%licenseDTD;
+<!ENTITY % aboutDTD SYSTEM "chrome://global/locale/about.dtd" >
+%aboutDTD;
 ]>
 
 <!-- ***** BEGIN LICENSE BLOCK *****
@@ -33,6 +33,7 @@
    -   Henrik Gemal <mozilla@gemal.dk>
    -   Daniel Veditz <dveditz@netscape.com>
    -   Alexey Chernyak <alexeyc@bigfoot.com>
+   -   Steffen Wilberg <steffen.wilberg@web.de>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -50,68 +51,36 @@
   
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<title>About:</title>
-<style type="text/css">
-img {
-  border: 0;
-}
-p {
-  font-size: smaller;
-}
-h1 {
-  margin: 0;
-}
-:link {
-  color: #00e;
-}
-:visited {
-  color: #551a8b;
-}
-:link:active, :visited:active {
-  color: #f00;
-}
-</style>
+  <title>About:</title>
+  <link rel="stylesheet" href="chrome://global/skin/about.css" type="text/css"/>
 </head>
+
 <body>
+<div id="aboutPageContainer">
+  <div id="aboutLogoContainer">
+    <a href="http://www.mozilla.org/">
+      <img src="chrome://branding/content/about.png" alt="&brandShortName;"/>
+#expand <p id="version">version __MOZ_APP_VERSION__</p>
+    </a>
+  </div>
+  
+  <ul id="aboutPageList">
+    <li>&about.copy.beforeLink1; <a href="about:credits"> &about.copy.link1Title;</a>
+      &about.copy.beforeLink2; <a href="http://www.mozilla.org/about/">&about.copy.link2Title;</a>.</li>
+    <li>&about.license.beforeLink; <a href="&about.license.link;">&about.license.linkTitle;</a> &about.license.afterLink;</li>
+#expand <li>&about.relnotes.beforeLink; <a href="&releaseBaseURL;__MOZ_APP_VERSION__.html">&about.relnotes.linkTitle;</a> &about.relnotes.afterLink;</li>
+    <li>&about.buildconfig.beforeLink; <a href="about:buildconfig">&about.buildconfig.linkTitle;</a> &about.buildconfig.afterLink;</li>
+    <script type="application/x-javascript">
+      var ua = navigator.userAgent;
+      if (ua) {
+        var list = document.getElementById("aboutPageList");
+        var listItem = list.appendChild(document.createElement("li"));
+        listItem.appendChild(document.createTextNode("&about.buildIdentifier;"));
+        listItem.appendChild(document.createTextNode(ua));
+      }
+    </script>
+  </ul>
 
-<div id="mozinfo" align="center">
-<a href="http://www.mozilla.org/">
-<img src="chrome://branding/content/about.png" alt="&brandShortName;"/></a>
-
-<h1>
-#expand <a id="mozlink" href="&releaseBaseURL;__MOZ_APP_VERSION__.html">&brandShortName; __MOZ_APP_VERSION__</a>
-</h1>
-<script type="application/x-javascript">
-  // using try..catch to handle empty useragents and other cases where the regex fails to apply
-  try {
-    document.getElementById("mozinfo").appendChild(document.createTextNode(navigator.userAgent));
-  }
-  catch (e) {}
-</script>
 </div>
-<hr />
-
-<ul>
-<li>Copyright &copy; 1998-2006 &license.part1; <a href="about:credits">&license.contrib;</a>
-  &license.part2;
-  <a href="about:license">Mozilla Public License &license.and; Netscape Public License</a>&license.part3;
-</li>
-<li>Portions of this software are copyright &copy; 1994 The Regents of the 
-University of California.  All Rights Reserved.</li>
-<li>This software may contain portions that are copyright &copy; 1998-2002 
-<a href="http://www.supportsoft.com/">SupportSoft, Inc.</a>  All Rights Reserved.
-</li>
-</ul>
-
-<p>
-U.S. GOVERNMENT END USERS. The Software is a &quot;commercial
-item,&quot; as that term is defined in 48 C.F.R. 2.101 (Oct. 1995), consisting
-of &quot;commercial computer software&quot; and &quot;commercial computer software 
-documentation,&quot; as such terms are used in 48 C.F.R. 12.212 (Sept. 1995). 
-Consistent with 48 C.F.R. 12.212 and 48 C.F.R. 227.7202-1 through 227.7202-4
-(June 1995), all U.S. Government End Users acquire the Software with only 
-those rights set forth herein.
-</p>
-
 </body>
 </html>
