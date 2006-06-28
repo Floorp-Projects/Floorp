@@ -45,7 +45,7 @@ class nsTObserverArray_base {
 
     class Iterator_base {
       protected:
-        friend nsTObserverArray_base;
+        friend class nsTObserverArray_base;
 
         Iterator_base(PRInt32 aPosition, nsTObserverArray_base& aArray)
           : mPosition(aPosition),
