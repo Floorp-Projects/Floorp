@@ -37,13 +37,11 @@
 //-----------------------------------------------------------------------------
 var bug = 234389;
 var summary = 'Do not Crash when overloaded toString causes infinite recursion';
-var actual = 'No Crash';
-var expect = 'No Crash';
+var actual = ''
+var expect = 'Internal Error: too much recursion';
 
 printBugNumber (bug);
 printStatus (summary);
-printStatus ("Expect too much recursion error");
-expectExitCode(3);
 
 var foo = {
   toString: function() {
@@ -58,6 +56,15 @@ var foo = {
   re: /bar/
 };
 
-var f = foo.toString();
-  
+try
+{
+  var f = foo.toString();
+  expect = 'No Crash';
+  actual = 'No Crash';
+}
+catch(ex)
+{
+  expect = 'InternalError: too much recursion';
+  actual = ex.name + ': ' + ex.message;
+}
 reportCompare(expect, actual, summary);
