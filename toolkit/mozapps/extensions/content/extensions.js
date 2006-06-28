@@ -1398,7 +1398,10 @@ function installUpdatesAll() {
 
 function restartApp() {
   const nsIAppStartup = Components.interfaces.nsIAppStartup;
-  if (canQuitApplication())
+
+  if (gUpdatesOnly)
+    window.close();
+  else if (canQuitApplication())
     Components.classes["@mozilla.org/toolkit/app-startup;1"].getService(nsIAppStartup)
               .quit(nsIAppStartup.eRestart | nsIAppStartup.eAttemptQuit);
 }
