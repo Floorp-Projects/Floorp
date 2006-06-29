@@ -764,8 +764,10 @@ nsPasswordManager::Observe(nsISupports* aSubject,
     NS_ASSERTION(branch == mPrefBranch, "unexpected pref change notification");
 
     branch->GetBoolPref("rememberSignons", &sRememberPasswords);
-  } else if (!strcmp(aTopic, "app-startup"))
+  } else if (!strcmp(aTopic, "app-startup")) {
     GetInstance();
+    NS_IF_RELEASE(sPasswordManager);
+  }
 
   return NS_OK;
 }
