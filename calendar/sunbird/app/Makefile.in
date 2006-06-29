@@ -45,8 +45,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MOZILLA_INTERNAL_API = 1
-
 DIRS		= profile/extensions
 
 PREF_JS_EXPORTS = $(srcdir)/profile/sunbird.js
@@ -60,6 +58,25 @@ DEFINES += -DAPP_VERSION="$(APP_VERSION)"
 
 APP_UA_NAME = $(shell echo $(MOZ_APP_DISPLAYNAME) | sed -e's/[^A-Za-z]//g')
 DEFINES += -DAPP_UA_NAME="$(APP_UA_NAME)"
+
+ifdef LIBXUL_SDK
+# Build application.ini for a XULRunner app
+DIST_FILES = application.ini
+
+# GRE_BUILD_ID is only available in nsBuildID.h in a form that we can't use
+# directly. So munge it. Beware makefile and shell escaping
+AWK_EXPR = '/\#define GRE_BUILD_ID/ { gsub(/"/, "", $$3); print $$3 }'
+AWK_CMD = awk $(AWK_EXPR) < $(DEPTH)/config/nsBuildID.h
+
+GRE_BUILD_ID = $(shell $(AWK_CMD))
+DEFINES += -DGRE_BUILD_ID=$(GRE_BUILD_ID)
+
+include $(topsrcdir)/config/rules.mk
+
+else
+# Build a binary bootstrapping with XRE_main
+
+MOZILLA_INTERNAL_API = 1
 
 ifeq ($(USE_SHORT_LIBNAME), 1)
 PROGRAM = sunbird$(BIN_SUFFIX)
@@ -318,6 +335,8 @@ libs repackage:: $(PROGRAM)
 	find $(DIST)/$(APP_NAME).app -type d -name "CVS" -prune -exec rm -rf {} \;
 
 endif
+
+endif # LIBXUL_SDK
 
 README_FILE = $(topsrcdir)/README.txt
 
