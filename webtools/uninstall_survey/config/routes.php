@@ -1,5 +1,5 @@
 <?php
-/* SVN FILE: $Id: routes.php,v 1.1 2006/05/24 19:14:24 uid815 Exp $ */
+/* SVN FILE: $Id: routes.php,v 1.2 2006/06/29 21:37:53 wclouser%mozilla.com Exp $ */
 
 /**
  * Short description for file.
@@ -24,9 +24,9 @@
  * @package      cake
  * @subpackage   cake.app.config
  * @since        CakePHP v 0.2.9
- * @version      $Revision: 1.1 $
+ * @version      $Revision: 1.2 $
  * @modifiedby   $LastChangedBy: phpnut $
- * @lastmodified $Date: 2006/05/24 19:14:24 $
+ * @lastmodified $Date: 2006/06/29 21:37:53 $
  * @license      http://www.opensource.org/licenses/mit-license.php The MIT License
  */
 
@@ -40,12 +40,12 @@ $Route->connect ('/', array('controller'=>'results', 'action'=>'', ''));
 /**
  * ...and connect the rest of 'Pages' controller's urls.
  */
-$Route->connect ('/pages/*', array('controller'=>'pages', 'action'=>'display'));
+//$Route->connect ('/pages/*', array('controller'=>'pages', 'action'=>'display'));
 
 /**
  * Then we connect url '/test' to our test controller. This is helpfull in
  * developement.
  */
-$Route->connect ('/tests', array('controller'=>'tests', 'action'=>'index'));
+//$Route->connect ('/tests', array('controller'=>'tests', 'action'=>'index'));
 
 ?>
