@@ -900,7 +900,7 @@ NS_IMETHODIMP nsWebBrowser::SetPersistFlags(PRUint32 aPersistFlags)
     mPersistFlags = aPersistFlags;
     if (mPersist)
     {
-        rv = SetPersistFlags(mPersistFlags);
+        rv = mPersist->SetPersistFlags(mPersistFlags);
         mPersist->GetPersistFlags(&mPersistFlags);
     }
     return rv;
