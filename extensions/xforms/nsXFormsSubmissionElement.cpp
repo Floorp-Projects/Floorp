@@ -1321,6 +1321,8 @@ nsXFormsSubmissionElement::CopyChildren(nsIModelElementPrivate *aModel,
             aDest->AppendChild(destChild, getter_AddRefs(node));
           }
         }
+
+        break;
       }
 
       default: {
@@ -1342,6 +1344,46 @@ nsXFormsSubmissionElement::CopyChildren(nsIModelElementPrivate *aModel,
           nsXFormsUtils::ReportError(NS_LITERAL_STRING("warnSubmitInvalidNode"),
                                      currentNode, nsIScriptError::warningFlag);
           return NS_ERROR_ILLEGAL_VALUE;
+        }
+
+        // If this node has attributes, make sure that we don't copy any
+        // that aren't relevant, etc.
+        PRBool hasAttrs = PR_FALSE;
+        currentNode->HasAttributes(&hasAttrs);
+        if ((type == nsIDOMNode::ELEMENT_NODE) && hasAttrs) {
+          nsCOMPtr<nsIDOMNamedNodeMap> attrMap;
+          nsCOMPtr<nsIDOMNode> attrNode, tempNode;
+        
+          currentNode->GetAttributes(getter_AddRefs(attrMap));
+          NS_ENSURE_STATE(attrMap);
+        
+          nsresult rv = NS_OK;
+          PRUint32 length;
+          nsCOMPtr<nsIDOMElement> destElem(do_QueryInterface(destChild));
+          attrMap->GetLength(&length);
+        
+          for (PRUint32 run = 0; run < length; ++run) {
+            attrMap->Item(run, getter_AddRefs(attrNode));
+            NS_ENSURE_STATE(attrNode);
+            aModel->HandleInstanceDataNode(attrNode, &handleNodeResult);
+
+            if (handleNodeResult == nsIModelElementPrivate::SUBMIT_SKIP_NODE) {
+              nsAutoString localName, namespaceURI;
+
+              rv = attrNode->GetLocalName(localName);
+              NS_ENSURE_SUCCESS(rv, rv);
+              rv = attrNode->GetNamespaceURI(namespaceURI);
+              NS_ENSURE_SUCCESS(rv, rv);
+              rv = destElem->RemoveAttributeNS(namespaceURI, localName);
+              NS_ENSURE_SUCCESS(rv, rv);
+            } else if (handleNodeResult ==
+                       nsIModelElementPrivate::SUBMIT_ABORT_SUBMISSION) {
+              // abort
+              nsXFormsUtils::ReportError(NS_LITERAL_STRING("warnSubmitInvalidNode"),
+                                         currentNode, nsIScriptError::warningFlag);
+              return NS_ERROR_ILLEGAL_VALUE;
+            }
+          }
         }
 
         aDest->AppendChild(destChild, getter_AddRefs(node));
