@@ -262,3 +262,14 @@ $ENV{NO_EM_RESTART} = '1';
 # Build Mac OS X universal binaries (must be used with an objdir and
 # universal support from mozilla/build/macosx/universal)
 $MacUniversalBinary = 0;
+
+# If tinderbox is running in a test-only mode, it needs to be able to download
+# the latest build and unpack it rather than building it.
+$TestOnlyTinderbox = 0;
+#$DownloadBuildURL = 'http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-mozilla1.8/firefox-2.0a3.en-US.linux-i686.tar.gz';
+#$DownloadBuildDir = 'firefox';
+
+# If TestOnlyTinderbox is enabled, fetch the latest build info from tinderbox in a 
+# parseable format
+#$TinderboxServerURL = 'http://tinderbox.mozilla.org/showbuilds.cgi?tree=MozillaTest&quickparse=1';
+#$MatchBuildname = "Linux bl-bldlnx01 Depend Fx-Mozilla1.5.0.4-baseline-test2";
