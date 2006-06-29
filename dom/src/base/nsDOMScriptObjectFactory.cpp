@@ -94,17 +94,6 @@ nsDOMScriptObjectFactory::nsDOMScriptObjectFactory() :
   NS_CreateJSRuntime(getter_AddRefs(mLanguageArray[NS_STID_INDEX(nsIProgrammingLanguage::JAVASCRIPT)]));
 }
 
-nsDOMScriptObjectFactory::~nsDOMScriptObjectFactory()
-{
-  PRUint32 i;
-  NS_STID_FOR_INDEX(i) {
-    if (mLanguageArray[i] != nsnull) {
-      mLanguageArray[i]->ShutDown();
-      mLanguageArray[i] = nsnull;
-    }
-  }
-}
-
 NS_INTERFACE_MAP_BEGIN(nsDOMScriptObjectFactory)
   NS_INTERFACE_MAP_ENTRY(nsIDOMScriptObjectFactory)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
@@ -296,6 +285,14 @@ nsDOMScriptObjectFactory::Observe(nsISupports *aSubject,
     nsGlobalWindow::ShutDown();
     nsDOMClassInfo::ShutDown();
 
+    PRUint32 i;
+    NS_STID_FOR_INDEX(i) {
+      if (mLanguageArray[i] != nsnull) {
+        mLanguageArray[i]->ShutDown();
+        mLanguageArray[i] = nsnull;
+      }
+    }
+
     nsCOMPtr<nsIExceptionService> xs =
       do_GetService(NS_EXCEPTIONSERVICE_CONTRACTID);
 
@@ -308,10 +305,6 @@ nsDOMScriptObjectFactory::Observe(nsISupports *aSubject,
       xs->UnregisterExceptionProvider(this, NS_ERROR_MODULE_DOM_XPATH);
       xs->UnregisterExceptionProvider(this, NS_ERROR_MODULE_XPCONNECT);
     }
-    // Note that we do *not* cleanup the script language references held
-    // in the nsDOMScriptObjectFactory service - they may be required
-    // after this is called, as other things shut down and release their
-    // script object references.
   }
 
   return NS_OK;
