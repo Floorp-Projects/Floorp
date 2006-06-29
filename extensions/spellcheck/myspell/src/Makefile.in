@@ -57,7 +57,6 @@ REQUIRES	= xpcom \
 		  uconv \
 		  unicharutil \
 		  spellchecker \
-		  xulapp \
 		  $(NULL)
 
 CPPSRCS =         affentry.cpp \
@@ -69,10 +68,6 @@ CPPSRCS =         affentry.cpp \
 		  mozMySpell.cpp \
 		  mozMySpellFactory.cpp \
                   $(NULL)
-
-ifdef MOZ_XUL_APP
-CPPSRCS += mozMySpellDirProvider.cpp
-endif
 
 EXTRA_DSO_LDOPTS = \
 		$(LIBS_DIR) \

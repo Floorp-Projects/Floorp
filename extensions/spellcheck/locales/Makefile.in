@@ -51,8 +51,8 @@ DICTIONARY_FILES = $(strip $(wildcard $(LOCALE_SRCDIR)/myspell/*.dic) $(wildcard
 
 ifneq (,$(DICTIONARY_FILES))
 libs::
-	$(INSTALL)  $(DICTIONARY_FILES) $(FINAL_TARGET)/dictionaries
+	$(INSTALL)  $(DICTIONARY_FILES) $(FINAL_TARGET)/components/myspell
 
 install::
-	$(SYSINSTALL) $(IFLAGS1) $(DICTIONARY_FILES) $(DESTDIR)$(mozappdir)/dictionaries
+	$(SYSINSTALL) $(IFLAGS1) $(DICTIONARY_FILES) $(DESTDIR)$(mozappdir)/components/myspell
 endif

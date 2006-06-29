@@ -39,21 +39,13 @@
 
 #include "mozMySpell.h"
 
-#ifdef MOZ_XUL_APP
-#include "mozMySpellDirProvider.h"
-#endif
-
 ////////////////////////////////////////////////////////////////////////
 // Define the contructor function for the objects
 //
 // NOTE: This creates an instance of objects by using the default constructor
 //
 
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(mozMySpell, Init)
-
-#ifdef MOZ_XUL_APP
-NS_GENERIC_FACTORY_CONSTRUCTOR(mozMySpellDirProvider)
-#endif
+NS_GENERIC_FACTORY_CONSTRUCTOR(mozMySpell)
 
 ////////////////////////////////////////////////////////////////////////
 // Define a table of CIDs implemented by this module along with other
@@ -61,22 +53,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(mozMySpellDirProvider)
 // class name.
 //
 static nsModuleComponentInfo components[] = {
-    {
-        "mozMySpell",
-        MOZ_MYSPELL_CID,
-        MOZ_MYSPELL_CONTRACTID,
-        mozMySpellConstructor
-    }
-#ifdef MOZ_XUL_APP
-    , {
-        "mozMySpellDirProvider",
-        MYSPELLDIRPROVIDER_CID,
-        mozMySpellDirProvider::kContractID,
-        mozMySpellDirProviderConstructor,
-        mozMySpellDirProvider::Register,
-        mozMySpellDirProvider::Unregister
-    }
-#endif
+  { NULL, MOZ_MYSPELL_CID, MOZ_MYSPELL_CONTRACTID, mozMySpellConstructor }
 };
 
 ////////////////////////////////////////////////////////////////////////
