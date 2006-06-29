@@ -180,8 +180,8 @@ nsMsgDBFolder::nsMsgDBFolder(void)
   mHaveParsedURI(PR_FALSE),
   mIsServerIsValid(PR_FALSE),
   mIsServer(PR_FALSE),
-  mInVFEditSearchScope (PR_FALSE),
-  mBaseMessageURI(nsnull)
+  mBaseMessageURI(nsnull),
+  mInVFEditSearchScope (PR_FALSE)
 {
   NS_NewISupportsArray(getter_AddRefs(mSubFolders));
   if (mInstanceCount++ <=0) {
@@ -5308,8 +5308,10 @@ NS_IMETHODIMP nsMsgDBFolder::RemoveKeywordFromMessages(nsISupportsArray *aMessag
       {
         nsMsgLabelValue labelValue;
         message->GetLabel(&labelValue);
-        if (labelValue == aKeyword[6] - '0')
-          SetLabelForMessages(aMessages, (nsMsgLabelValue) 0);
+        // if we're removing the keyword that corresponds to a pre 2.0 label,
+        // we need to clear the old label attribute on the messsage.
+        if (labelValue == (nsMsgLabelValue) (aKeyword[6] - '0'))
+          message->SetLabel((nsMsgLabelValue) 0);
       }
 
       rv = message->GetStringProperty("keywords", getter_Copies(keywords));

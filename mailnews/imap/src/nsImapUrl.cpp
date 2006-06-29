@@ -770,9 +770,16 @@ void nsImapUrl::ParseImapPart(char *imapPartOfUrl)
       ParseUidChoice();
       ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
       ParseListOfMessageIds();
-    	char *flagsPtr = m_tokenPlaceHolder ? nsCRT::strtok(m_tokenPlaceHolder, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)nsnull;
-      m_customAddFlags.Assign(flagsPtr);
-      flagsPtr = m_tokenPlaceHolder ? nsCRT::strtok(m_tokenPlaceHolder, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)nsnull;
+      PRBool addKeyword = (m_tokenPlaceHolder && *m_tokenPlaceHolder != '>');
+      // if we're not adding a keyword, m_tokenPlaceHolder will now look like >keywordToSubtract>
+      // and strtok will leave flagsPtr pointing to keywordToSubtract. So detect this
+      // case and only set the customSubtractFlags.
+      char *flagsPtr = m_tokenPlaceHolder ? nsCRT::strtok(m_tokenPlaceHolder, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)nsnull;
+      if (addKeyword)
+      {
+        m_customAddFlags.Assign(flagsPtr);
+        flagsPtr = m_tokenPlaceHolder ? nsCRT::strtok(m_tokenPlaceHolder, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)nsnull;
+      }
       m_customSubtractFlags.Assign(flagsPtr);
     }
     else
