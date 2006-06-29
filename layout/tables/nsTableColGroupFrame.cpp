@@ -211,6 +211,8 @@ NS_IMETHODIMP
 nsTableColGroupFrame::AppendFrames(nsIAtom*        aListName,
                                    nsIFrame*       aFrameList)
 {
+  NS_ASSERTION(!aListName, "unexpected child list");
+
   nsTableColFrame* col = GetFirstColumn();
   nsTableColFrame* nextCol;
   while (col && col->GetColType() == eColAnonymousColGroup) {
@@ -228,9 +230,13 @@ nsTableColGroupFrame::AppendFrames(nsIAtom*        aListName,
 
 NS_IMETHODIMP
 nsTableColGroupFrame::InsertFrames(nsIAtom*        aListName,
-                                   nsIFrame*       aPrevFrameIn,
+                                   nsIFrame*       aPrevFrame,
                                    nsIFrame*       aFrameList)
 {
+  NS_ASSERTION(!aListName, "unexpected child list");
+  NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
+               "inserting after sibling frame with different parent");
+
   nsFrameList frames(aFrameList); // convience for getting last frame
   nsIFrame* lastFrame = frames.LastChild();
 
@@ -244,8 +250,8 @@ nsTableColGroupFrame::InsertFrames(nsIAtom*        aListName,
     col = nextCol;
   }
 
-  mFrames.InsertFrames(this, aPrevFrameIn, aFrameList);
-  nsIFrame* prevFrame = nsTableFrame::GetFrameAtOrBefore(this, aPrevFrameIn,
+  mFrames.InsertFrames(this, aPrevFrame, aFrameList);
+  nsIFrame* prevFrame = nsTableFrame::GetFrameAtOrBefore(this, aPrevFrame,
                                                          nsLayoutAtoms::tableColFrame);
 
   PRInt32 colIndex = (prevFrame) ? ((nsTableColFrame*)prevFrame)->GetColIndex() + 1 : GetStartColumnIndex();
@@ -309,6 +315,8 @@ NS_IMETHODIMP
 nsTableColGroupFrame::RemoveFrame(nsIAtom*        aListName,
                                   nsIFrame*       aOldFrame)
 {
+  NS_ASSERTION(!aListName, "unexpected child list");
+
   if (!aOldFrame) return NS_OK;
 
   if (nsLayoutAtoms::tableColFrame == aOldFrame->GetType()) {

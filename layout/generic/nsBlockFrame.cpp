@@ -5347,15 +5347,18 @@ nsBlockFrame::AppendFrames(nsIAtom*  aListName,
   if (nsnull == aFrameList) {
     return NS_OK;
   }
-  if (mAbsoluteContainer.GetChildListName() == aListName) {
-    return mAbsoluteContainer.AppendFrames(this, aListName, aFrameList);
-  }
-  else if (nsLayoutAtoms::floatList == aListName) {
-    mFloats.AppendFrames(nsnull, aFrameList);
-    return NS_OK;
-  }
-  else if (nsnull != aListName) {
-    return NS_ERROR_INVALID_ARG;
+  if (aListName) {
+    if (mAbsoluteContainer.GetChildListName() == aListName) {
+      return mAbsoluteContainer.AppendFrames(this, aListName, aFrameList);
+    }
+    else if (nsLayoutAtoms::floatList == aListName) {
+      mFloats.AppendFrames(nsnull, aFrameList);
+      return NS_OK;
+    }
+    else {
+      NS_ERROR("unexpected child list");
+      return NS_ERROR_INVALID_ARG;
+    }
   }
 
   // Find the proper last-child for where the append should go
@@ -5389,19 +5392,25 @@ nsBlockFrame::InsertFrames(nsIAtom*  aListName,
                            nsIFrame* aPrevFrame,
                            nsIFrame* aFrameList)
 {
-  if (mAbsoluteContainer.GetChildListName() == aListName) {
-    return mAbsoluteContainer.InsertFrames(this, aListName, aPrevFrame,
-                                           aFrameList);
-  }
-  else if (nsLayoutAtoms::floatList == aListName) {
-    mFloats.InsertFrames(this, aPrevFrame, aFrameList);
-    return NS_OK;
-  }
+  NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
+               "inserting after sibling frame with different parent");
+
+  if (aListName) {
+    if (mAbsoluteContainer.GetChildListName() == aListName) {
+      return mAbsoluteContainer.InsertFrames(this, aListName, aPrevFrame,
+                                             aFrameList);
+    }
+    else if (nsLayoutAtoms::floatList == aListName) {
+      mFloats.InsertFrames(this, aPrevFrame, aFrameList);
+      return NS_OK;
+    }
 #ifdef IBMBIDI
-  else if (nsLayoutAtoms::nextBidi == aListName) {}
+    else if (nsLayoutAtoms::nextBidi == aListName) {}
 #endif // IBMBIDI
-  else if (nsnull != aListName) {
-    return NS_ERROR_INVALID_ARG;
+    else {
+      NS_ERROR("unexpected child list");
+      return NS_ERROR_INVALID_ARG;
+    }
   }
 
 #ifdef NOISY_REFLOW_REASON
@@ -5678,6 +5687,7 @@ nsBlockFrame::RemoveFrame(nsIAtom*  aListName,
   }
 #endif // IBMBIDI
   else {
+    NS_ERROR("unexpected child list");
     rv = NS_ERROR_INVALID_ARG;
   }
 

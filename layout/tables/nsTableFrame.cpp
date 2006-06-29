@@ -383,7 +383,7 @@ nsTableFrame::PageBreakAfter(nsIFrame& aSourceFrame,
 }
 
 // XXX this needs to be cleaned up so that the frame constructor breaks out col group
-// frames into a separate child list.
+// frames into a separate child list, bug 343048.
 NS_IMETHODIMP
 nsTableFrame::SetInitialChildList(nsIAtom*        aListName,
                                   nsIFrame*       aChildList)
@@ -2433,8 +2433,13 @@ NS_IMETHODIMP
 nsTableFrame::AppendFrames(nsIAtom*        aListName,
                            nsIFrame*       aFrameList)
 {
+  NS_ASSERTION(!aListName || aListName == nsLayoutAtoms::colGroupList,
+               "unexpected child list");
+
   // Because we actually have two child lists, one for col group frames and one
   // for everything else, we need to look at each frame individually
+  // XXX The frame construction code should be separating out child frames
+  // based on the type, bug 343048.
   nsIFrame* f = aFrameList;
   while (f) {
     // Get the next frame and disconnect this frame from its sibling
@@ -2493,13 +2498,17 @@ nsTableFrame::InsertFrames(nsIAtom*        aListName,
   // row group frames and col group frames go in separate child lists and
   // so if there's more than one this gets messy...
   // XXX The frame construction code should be separating out child frames
-  // based on the type...
+  // based on the type, bug 343048.
   NS_PRECONDITION(!aFrameList->GetNextSibling(), "expected only one child frame");
+  NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
+               "inserting after sibling frame with different parent");
 
   // See what kind of frame we have
   const nsStyleDisplay* display = aFrameList->GetStyleDisplay();
 
   if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay) {
+    NS_ASSERTION(!aListName || aListName == nsLayoutAtoms::colGroupList,
+                 "unexpected child list");
     // Insert the column group frame
     nsFrameList frames(aFrameList); // convience for getting last frame
     nsIFrame* lastFrame = frames.LastChild();
@@ -2517,6 +2526,7 @@ nsTableFrame::InsertFrames(nsIAtom*        aListName,
     InsertColGroups(startColIndex, aFrameList, lastFrame);
     SetNeedStrategyInit(PR_TRUE);
   } else if (IsRowGroup(display->mDisplay)) {
+    NS_ASSERTION(!aListName, "unexpected child list");
     nsFrameList newList(aFrameList);
     nsIFrame* lastSibling = newList.LastChild();
     // Insert the frames in the sibling chain
@@ -2525,6 +2535,7 @@ nsTableFrame::InsertFrames(nsIAtom*        aListName,
     InsertRowGroups(aFrameList, lastSibling);
     SetNeedStrategyInit(PR_TRUE);
   } else {
+    NS_ASSERTION(!aListName, "unexpected child list");
     // Just insert the frame and don't worry about reflowing it
     mFrames.InsertFrame(nsnull, aPrevFrame, aFrameList);
     return NS_OK;
@@ -2545,7 +2556,11 @@ nsTableFrame::RemoveFrame(nsIAtom*        aListName,
   // See what kind of frame we have
   const nsStyleDisplay* display = aOldFrame->GetStyleDisplay();
 
+  // XXX The frame construction code should be separating out child frames
+  // based on the type, bug 343048.
   if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay) {
+    NS_ASSERTION(!aListName || aListName == nsLayoutAtoms::colGroupList,
+                 "unexpected child list");
     nsIFrame* nextColGroupFrame = aOldFrame->GetNextSibling();
     nsTableColGroupFrame* colGroup = (nsTableColGroupFrame*)aOldFrame;
     PRInt32 firstColIndex = colGroup->GetStartColumnIndex();
@@ -2572,6 +2587,7 @@ nsTableFrame::RemoveFrame(nsIAtom*        aListName,
     SetNeedStrategyInit(PR_TRUE);
     AppendDirtyReflowCommand(this);
   } else {
+    NS_ASSERTION(!aListName, "unexpected child list");
     nsTableRowGroupFrame* rgFrame = GetRowGroupFrame(aOldFrame);
     if (rgFrame) {
       PRInt32 startRowIndex = rgFrame->GetStartRowIndex();
@@ -2606,7 +2622,6 @@ nsTableFrame::RemoveFrame(nsIAtom*        aListName,
     } else {
       // Just remove the frame
       mFrames.DestroyFrame(aOldFrame);
-      return NS_OK;
     }
   }
 #ifdef DEBUG_TABLE_CELLMAP

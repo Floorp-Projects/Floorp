@@ -165,17 +165,22 @@ nsFrameList::InsertFrame(nsIFrame* aParent,
 {
   NS_PRECONDITION(nsnull != aNewFrame, "null ptr");
   if (nsnull != aNewFrame) {
+    if (aParent) {
+      aNewFrame->SetParent(aParent);
+    }
     if (nsnull == aPrevSibling) {
       aNewFrame->SetNextSibling(mFirstChild);
       mFirstChild = aNewFrame;
     }
     else {
+      NS_ASSERTION(aNewFrame->GetParent() == aPrevSibling->GetParent(),
+                   "prev sibling has different parent");
       nsIFrame* nextFrame = aPrevSibling->GetNextSibling();
+      NS_ASSERTION(!nextFrame ||
+                   aNewFrame->GetParent() == nextFrame->GetParent(),
+                   "next sibling has different parent");
       aPrevSibling->SetNextSibling(aNewFrame);
       aNewFrame->SetNextSibling(nextFrame);
-    }
-    if (aParent) {
-      aNewFrame->SetParent(aParent);
     }
   }
 #ifdef DEBUG
@@ -211,7 +216,12 @@ nsFrameList::InsertFrames(nsIFrame* aParent,
       mFirstChild = aFrameList;
     }
     else {
+      NS_ASSERTION(aFrameList->GetParent() == aPrevSibling->GetParent(),
+                   "prev sibling has different parent");
       nsIFrame* nextFrame = aPrevSibling->GetNextSibling();
+      NS_ASSERTION(!nextFrame ||
+                   aFrameList->GetParent() == nextFrame->GetParent(),
+                   "next sibling has different parent");
       aPrevSibling->SetNextSibling(aFrameList);
       lastNewFrame->SetNextSibling(nextFrame);
     }

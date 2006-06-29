@@ -210,6 +210,8 @@ NS_IMETHODIMP
 nsTableRowFrame::AppendFrames(nsIAtom*        aListName,
                               nsIFrame*       aFrameList)
 {
+  NS_ASSERTION(!aListName, "unexpected child list");
+
   // Append the frames
   mFrames.AppendFrames(nsnull, aFrameList);
 
@@ -238,6 +240,10 @@ nsTableRowFrame::InsertFrames(nsIAtom*        aListName,
                               nsIFrame*       aPrevFrame,
                               nsIFrame*       aFrameList)
 {
+  NS_ASSERTION(!aListName, "unexpected child list");
+  NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
+               "inserting after sibling frame with different parent");
+
   // Get the table frame
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   
@@ -274,7 +280,8 @@ NS_IMETHODIMP
 nsTableRowFrame::RemoveFrame(nsIAtom*        aListName,
                              nsIFrame*       aOldFrame)
 {
-  // Get the table frame
+  NS_ASSERTION(!aListName, "unexpected child list");
+
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   if (tableFrame) {
     if (IS_TABLE_CELL(aOldFrame->GetType())) {
@@ -295,6 +302,10 @@ nsTableRowFrame::RemoveFrame(nsIAtom*        aListName,
       // Target the row so that it gets a dirty reflow before a resize reflow
       // in case another cell gets added to the row during a reflow coallesce.
       tableFrame->AppendDirtyReflowCommand(this);
+    }
+    else {
+      NS_ERROR("unexpected frame type");
+      return NS_ERROR_INVALID_ARG;
     }
   }
 

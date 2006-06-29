@@ -1158,6 +1158,8 @@ nsBoxFrame::InsertFrames(nsIAtom*        aListName,
                          nsIFrame*       aPrevFrame,
                          nsIFrame*       aFrameList)
 {
+   NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
+                "inserting after sibling frame with different parent");
    NS_PRECONDITION(!aListName, "We don't support out-of-flow kids");
    nsBoxLayoutState state(GetPresContext());
 
