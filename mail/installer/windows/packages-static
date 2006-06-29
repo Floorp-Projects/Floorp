@@ -8,6 +8,7 @@
 bin\chrome\@AB_CD@.jar
 bin\chrome\@AB_CD@.manifest
 bin\chrome\mail-locales.manifest
+bin\dictionaries\*
 
 [xpcom]
 bin\xpcom.dll
@@ -158,8 +159,6 @@ bin\components\downloads.xpt
 bin\components\myspell.dll
 bin\components\spellchecker.xpt
 bin\components\spellchk.dll
-;; XXX these two files are bogus, they should not be in components\myspell...
-bin\components\myspell\*
 
 ; xpinstall (needed to dynamically install themes
 bin\components\xpinstall.xpt

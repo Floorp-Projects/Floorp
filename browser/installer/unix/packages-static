@@ -26,6 +26,7 @@ bin/defaults/profile/search.rdf
 bin/defaults/profile/mimeTypes.rdf
 bin/defaults/profile/chrome/*
 bin/updater.ini
+bin/dictionaries/*
 
 [xpcom]
 bin/libmozjs.so
@@ -304,8 +305,6 @@ bin/components/dom_svg.xpt
 bin/components/libmyspell.so
 bin/components/spellchecker.xpt
 bin/components/libspellchecker.so
-;; XXX these two files are bogus, they should not be in components/myspell...
-bin/components/myspell/*
 
 ; [Personal Security Manager]
 ;

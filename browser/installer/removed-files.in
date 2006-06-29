@@ -68,3 +68,5 @@ extensions/inspector@mozilla.org/components/inspector.xpt
 extensions/inspector@mozilla.org/components/@DLL_PREFIX@inspector@DLL_SUFFIX@
 uninstall/UninstallFirefox.exe
 uninstall/UninstallDeerPark.exe
+components/myspell/en-US.dic
+components/myspell/en-US.aff

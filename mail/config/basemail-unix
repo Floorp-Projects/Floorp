@@ -50,7 +50,7 @@ chrome/en-US-mail.jar
 ;;a static installed-chrome.txt
 chrome/en-unix.jar
 ;;chrome/en-unix.jar
-
+dictionaries/*
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Default Profile Settings
@@ -99,8 +99,6 @@ components/downloads.xpt
 components/libmyspell.so
 components/spellchecker.xpt
 components/libspellchecker.so
-;; XXX these two files are bogus, they should not be in components/myspell...
-components/myspell/*
 
 ; xpinstall (needed to dynamically install themes
 components/libxpinstall.so

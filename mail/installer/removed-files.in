@@ -200,3 +200,5 @@ mozABConduit.dll
 components/palmsync.dll
 components/palmSync.xpt
 uninstall/UninstallThunderbird.exe
+components/myspell/en-US.dic
+components/myspell/en-US.aff
