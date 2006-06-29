@@ -143,7 +143,7 @@
 #define DEBUG_xpc_hacker
 #endif
 
-#if defined(DEBUG_brendan) || defined(DEBUG_bzbarsky)
+#if defined(DEBUG_brendan)
 #define DEBUG_XPCNativeWrapper 1
 #endif
 
@@ -170,7 +170,7 @@
 //#define XPC_TRACK_AUTOMARKINGPTR_STATS
 #endif
 
-#if defined(DEBUG_dbaron) // only part of DEBUG_xpc_hacker!
+#if defined(DEBUG_dbaron) || defined(DEBUG_bzbarsky) // only part of DEBUG_xpc_hacker!
 #define XPC_DUMP_AT_SHUTDOWN
 #endif
 

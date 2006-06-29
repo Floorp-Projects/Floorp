@@ -412,7 +412,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
         return rv;
     }
 
-#if DEBUG_XPCNativeWrapper
+#if DEBUG_xpc_leaks
     {
         char* s = wrapper->ToString(ccx);
         NS_ASSERTION(wrapper->GetFlatJSObject(), "eh?");

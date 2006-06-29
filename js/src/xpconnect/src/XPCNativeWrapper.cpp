@@ -1160,7 +1160,7 @@ XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return JS_FALSE;
   }
 
-#ifdef DEBUG_XPCNativeWrapper
+#if defined(DEBUG_XPCNativeWrapper) || defined(DEBUG_xpc_leaks)
   {
     XPCCallContext ccx(JS_CALLER, cx);
 
@@ -1429,7 +1429,7 @@ XPCNativeWrapper::GetNewOrUsed(JSContext *cx, XPCWrappedNative *wrapper)
 
   wrapper->SetNativeWrapper(obj);
 
-#ifdef DEBUG_XPCNativeWrapper
+#if defined(DEBUG_XPCNativeWrapper) || defined(DEBUG_xpc_leaks)
   {
     XPCCallContext ccx(NATIVE_CALLER, cx);
 
