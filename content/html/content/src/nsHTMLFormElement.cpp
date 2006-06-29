@@ -1615,7 +1615,6 @@ nsHTMLFormElement::GetNextRadioButton(const nsAString& aName,
                                       nsIDOMHTMLInputElement*  aFocusedRadio,
                                       nsIDOMHTMLInputElement** aRadioOut)
 {
-  // Get Next (aGetAdjacentInDir == 1) or previous (-1) radio button.
   // Return the radio button relative to the focused radio button.
   // If no radio is focused, get the radio relative to the selected one.
   *aRadioOut = nsnull;
@@ -1650,8 +1649,10 @@ nsHTMLFormElement::GetNextRadioButton(const nsAString& aName,
 
   PRUint32 numRadios;
   radioGroup->GetLength(&numRadios);
-  PRBool disabled;
+  PRBool disabled = PR_TRUE;
   nsCOMPtr<nsIDOMHTMLInputElement> radio;
+  nsCOMPtr<nsIDOMNode> radioDOMNode;
+  nsCOMPtr<nsIFormControl> formControl;
 
   do {
     if (aPrevious) {
@@ -1662,10 +1663,15 @@ nsHTMLFormElement::GetNextRadioButton(const nsAString& aName,
     else if (++index >= (PRInt32)numRadios) {
       index = 0;
     }
-    nsCOMPtr<nsIDOMNode> radioDOMNode;
     radioGroup->Item(index, getter_AddRefs(radioDOMNode));
     radio = do_QueryInterface(radioDOMNode);
-    NS_ASSERTION(radio, "mRadioButtons holding a non-radio button");
+    if (!radio)
+      continue;
+
+    formControl = do_QueryInterface(radio);
+    if (!formControl || formControl->GetType() != NS_FORM_INPUT_RADIO)
+      continue;
+
     radio->GetDisabled(&disabled);
   } while (disabled && radio != currentRadio);
 

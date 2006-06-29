@@ -85,7 +85,7 @@ public:
                                    nsIDOMHTMLInputElement** aRadio) = 0;
 
   /**
-   * Set the next/prev radio button in a group
+   * Get the next/prev radio button in a group
    * @param aName the group name
    * @param aPrevious, true gets previous radio button, false gets next
    * @param aFocusedRadio the currently focused radio button
