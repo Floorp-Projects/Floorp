@@ -110,6 +110,33 @@ PACKAGER_NO_LIBS = 1
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 include $(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/installer/windows/charset.mk
 
+repackage-win32-installer: WIN32_INSTALLER_OUT=$(_ABS_DIST)/install/sea/$(PKG_BASENAME).installer.exe
+repackage-win32-installer: $(WIN32_INSTALLER_IN)
+	@echo "Repackaging $(WIN32_INSTALLER_IN) into $(WIN32_INSTALLER_OUT)."
+	if test ! -d $(dir $(WIN32_INSTALLER_OUT)); then \
+	  $(NSINSTALL) -D $(dir $(WIN32_INSTALLER_OUT)); \
+	fi
+	$(RM) -rf l10n-stage
+	mkdir l10n-stage
+	$(CYGWIN_WRAPPER) 7z x -ol10n-stage $(WIN32_INSTALLER_IN)
+	$(RM) -r l10n-stage/localized
+	$(RM) l10n-stage/setup.exe
+	$(RM) -rf $(DIST)/xpi-stage/locale-$(AB_CD)
+	$(MAKE) libs-$(AB_CD)
+	mv $(DIST)/xpi-stage/locale-$(AB_CD) l10n-stage/localized
+	$(MAKE) -C ../installer/windows CONFIG_DIR=l10ngen l10ngen/setup.exe l10ngen/7zSD.sfx
+	cp ../installer/windows/l10ngen/setup.exe l10n-stage
+	rm -f app.7z
+	cd l10n-stage && \
+	  $(CYGWIN_WRAPPER) 7z a -r -t7z ../app.7z -mx -m0=BCJ2 -m1=LZMA:d24 -m2=LZMA:d19 -m3=LZMA:d19 -mb0:1 -mb0s1:2 -mb0s2:3
+	cat ../installer/windows/l10ngen/7zSD.sfx \
+	    $(topsrcdir)/calendar/installer/windows/app.tag \
+	    app.7z > $(WIN32_INSTALLER_OUT)
+
+repackage-win32-installer-%: WIN32_INSTALLER_IN=$(_ABS_DIST)/install/sea/$(PKG_BASENAME).installer.exe
+repackage-win32-installer-%: $(WIN32_INSTALLER_IN)
+	@$(MAKE) repackage-win32-installer AB_CD=$* WIN32_INSTALLER_IN=$(WIN32_INSTALLER_IN)
+
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 STAGEDIST = $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/MacOS
 else
