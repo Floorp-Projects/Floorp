@@ -995,7 +995,7 @@ nsPrintOptions::GetDefaultPrinterName(PRUnichar * *aDefaultPrinterName)
     rv = prtEnum->EnumeratePrinters(&ctPrinters, &printers);
     if (NS_SUCCEEDED(rv)) {
       PRBool isValid = PR_FALSE;
-      for (PRUint32 ii = ctPrinters - 1; ii >= 0; --ii) {
+      for (PRInt32 ii = ctPrinters - 1; ii >= 0; --ii) {
         if (lastPrinterName.Equals(printers[ii])) {
           isValid = PR_TRUE;
           break;
