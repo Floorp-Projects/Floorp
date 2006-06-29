@@ -78,6 +78,9 @@
 # so that they can be shared by macBrowserOverlay.xul.
 #include global-scripts.inc
 
+#ifdef MOZ_SAFE_BROWSING
+<script type="application/x-javascript" src="chrome://browser/content/safebrowsing/sb-loader.js"/>
+#endif
 <script type="application/x-javascript" src="chrome://global/content/contentAreaUtils.js"/>
 
 # All sets except for popupsets (commands, keys, stringbundles and broadcasters) *must* go into the 

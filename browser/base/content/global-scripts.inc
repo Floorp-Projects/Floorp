@@ -52,6 +52,3 @@
 <script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
 <script type="application/x-javascript" src="chrome://global/content/inlineSpellCheckUI.js"/>
 <script type="application/x-javascript" src="chrome://global/content/viewSourceUtils.js"/>
-#ifdef MOZ_SAFE_BROWSING
-<script type="application/x-javascript" src="chrome://browser/content/safebrowsing/sb-loader.js"/>
-#endif
