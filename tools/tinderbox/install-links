@@ -11,4 +11,7 @@ ln -s ../mozilla/tools/tinderbox/gettime.pl
 ln -s ../mozilla/tools/tinderbox/bloatdiff.pl
 ln -s ../mozilla/tools/tinderbox/tinder-defaults.pl
 ln -s ../mozilla/tools/tinderbox/reportdata.pl
+ln -s ../mozilla/tools/tinderbox/post-mozilla-rel.pl
+ln -s ../mozilla/tools/tinderbox/post-mozilla-l10n.pl
+ln -s ../mozilla/tools/tinderbox/post-mozilla.pl
 
