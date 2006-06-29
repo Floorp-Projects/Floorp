@@ -138,7 +138,8 @@ BEGIN {
 use lib ".";
 use Bugzilla::Constants;
 
-my (%answer, $silent, %switch);
+our %answer;
+my ($silent, %switch);
 
 $switch{'no_templates'} = grep(/^--no-templates$/, @ARGV) 
     || grep(/^-t$/, @ARGV);
