@@ -60,8 +60,6 @@
 #define NS_MSGCONTENTPOLICY_CONTRACTID "@mozilla.org/messenger/content-policy;1"
 
 class nsIMsgDBHdr;
-class nsIMsgMessageUrl;
-class nsIDocShell;
 
 class nsMsgContentPolicy : public nsIContentPolicy,
                            public nsIObserver,
@@ -86,13 +84,6 @@ protected:
 
   nsresult IsSenderInWhiteList(nsIMsgDBHdr * aMsgHdr, PRBool * aWhiteListed);
   nsresult IsTrustedDomain(nsIURI * aContentLocation, PRBool * aTrustedDomain);
-  nsresult AllowRemoteContentForMsgHdr(nsIMsgDBHdr * aMsgHdr, nsIURI * aRequestingLocation, nsIURI * aContentLocation, PRInt16 *aDecision);
-
-  nsresult MailShouldLoadHandler(nsIURI * aRequestingLocation, nsIURI * aContentLocation, PRInt16 * aDecision);
-  nsresult ComposeShouldLoadHandler(nsIDocShell * aRootDocShell, nsIURI * aContentLocation, PRInt16 * aDecision);
-  
-  // helper routine to extract the root docshell from aRequestingContext
-  nsresult GetRootDocShellForContext(nsISupports * aRequestingContext, nsIDocShell ** aDocShell);
 };
 
 /* 2C4B5CC1-8C0F-4080-92A7-D133CC30F43B */
