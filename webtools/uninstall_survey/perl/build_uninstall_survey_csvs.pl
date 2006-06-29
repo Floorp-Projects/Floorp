@@ -52,11 +52,12 @@ use DBI;
         SELECT
             `results`.`id`,
             `results`.`created`,
-            `intentions`.`description` as `intention`,
-            `results`.`intention_text` as `intention_other`,
+            `choices`.`description` as `intention`,
+            `choices_results`.`other` as `intention_other`,
             `results`.`comments`
         FROM `results` 
-        LEFT JOIN `intentions` ON `results`.`intention_id`=`intentions`.`id` 
+        LEFT JOIN `choices_results` ON `results`.`id`=`choices_results`.`result_id` 
+        INNER JOIN `choices` ON `choices_results`.`choice_id` = `choices`.`id`
         INNER JOIN `applications` ON `applications`.`id` = `results`.`application_id`
         WHERE
             `applications`.`name` LIKE ?
@@ -64,6 +65,8 @@ use DBI;
             `applications`.`version` LIKE ?
         AND
             `results`.`id` > ?
+        AND
+            `choices`.`type` = 'intention'
         ORDER BY 
             `results`.`created` ASC");
 
@@ -79,7 +82,7 @@ use DBI;
         my $application_version = $apps->{version};
             $application_version =~ tr/ /_/;
 
-        my $filename = "export-$application_name-$application_version.csv";
+        my $filename = "export-$application_name"."_"."$application_version.csv";
 
         # Used for incremental additions.  Default to adding rows starting at zero
         my $maxid = 0;
