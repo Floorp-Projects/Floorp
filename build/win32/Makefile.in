@@ -60,7 +60,7 @@ endif
 ifdef REDIST_FILES
 libs::
 	for file in $(REDIST_FILES) ; do \
-	  $(INSTALL) "$(WIN32_REDIST_DIR)"/$$file $(FINAL_TARGET) ; \
+	  cp --preserve=timestamps "$(WIN32_REDIST_DIR)"/$$file $(FINAL_TARGET) ; \
 	done
 endif
 
