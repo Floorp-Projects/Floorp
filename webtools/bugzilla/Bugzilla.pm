@@ -39,6 +39,9 @@ use Bugzilla::Field;
 use File::Basename;
 use Safe;
 
+# This creates the request cache for non-mod_perl installations.
+our $_request_cache = {};
+
 #####################################################################
 # Constants
 #####################################################################
@@ -117,42 +120,33 @@ if (!$^C
 # Subroutines and Methods
 #####################################################################
 
-my $_template;
 sub template {
     my $class = shift;
-    $_template ||= Bugzilla::Template->create();
-    return $_template;
+    request_cache()->{template} ||= Bugzilla::Template->create();
+    return request_cache()->{template};
 }
 
-my $_cgi;
 sub cgi {
     my $class = shift;
-    $_cgi ||= new Bugzilla::CGI();
-    return $_cgi;
+    request_cache()->{cgi} ||= new Bugzilla::CGI();
+    return request_cache()->{cgi};
 }
 
-my $_params;
 sub params {
     my $class = shift;
-    $_params ||= _load_param_values();
-    return $_params;
+    request_cache()->{params} ||= _load_param_values();
+    return request_cache()->{params};
 }
 
-my $_user;
 sub user {
     my $class = shift;
-
-    if (not defined $_user) {
-        $_user = new Bugzilla::User;
-    }
-
-    return $_user;
+    request_cache()->{user} ||= new Bugzilla::User;
+    return request_cache()->{user};
 }
 
-my $_sudoer;
 sub sudoer {
     my $class = shift;    
-    return $_sudoer;
+    return request_cache()->{sudoer};
 }
 
 sub sudo_request {
@@ -160,8 +154,8 @@ sub sudo_request {
     my $new_user = shift;
     my $new_sudoer = shift;
 
-    $_user = $new_user;
-    $_sudoer = $new_sudoer;
+    request_cache()->{user}   = $new_user;
+    request_cache()->{sudoer} = $new_sudoer;
 
     # NOTE: If you want to log the start of an sudo session, do it here.
 
@@ -197,19 +191,19 @@ sub login {
         !($sudo_target->in_group('bz_sudo_protect'))
        )
     {
-        $_user = $sudo_target;
-        $_sudoer = $authenticated_user;
+        request_cache()->{user}   = $sudo_target;
+        request_cache()->{sudoer} = $authenticated_user;
         # And make sure that both users have the same Auth object,
         # since we never call Auth::login for the sudo target.
-        $_user->set_authorizer($_sudoer->authorizer);
+        $sudo_target->set_authorizer($authenticated_user->authorizer);
 
         # NOTE: If you want to do any special logging, do it here.
     }
     else {
-        $_user = $authenticated_user;
+        request_cache()->{user} = $authenticated_user;
     }
     
-    return $_user;
+    return request_cache()->{user};
 }
 
 sub logout {
@@ -239,50 +233,45 @@ sub logout_user_by_id {
 
 # hack that invalidates credentials for a single request
 sub logout_request {
-    undef $_user;
-    undef $_sudoer;
+    delete request_cache()->{user};
+    delete request_cache()->{sudoer};
     # We can't delete from $cgi->cookie, so logincookie data will remain
     # there. Don't rely on it: use Bugzilla->user->login instead!
 }
 
-my $_dbh;
-my $_dbh_main;
-my $_dbh_shadow;
 sub dbh {
     my $class = shift;
 
     # If we're not connected, then we must want the main db
-    if (!$_dbh) {
-        $_dbh = $_dbh_main = Bugzilla::DB::connect_main();
-    }
+    request_cache()->{dbh} ||= request_cache()->{dbh_main} 
+        = Bugzilla::DB::connect_main();
 
-    return $_dbh;
+    return request_cache()->{dbh};
 }
 
-my $_batch;
 sub batch {
     my $class = shift;
     my $newval = shift;
     if ($newval) {
-        $_batch = $newval;
+        request_cache()->{batch} = $newval;
     }
-    return $_batch || 0;
+    return request_cache()->{batch} || 0;
 }
 
 sub switch_to_shadow_db {
     my $class = shift;
 
-    if (!$_dbh_shadow) {
+    if (!request_cache()->{dbh_shadow}) {
         if (Bugzilla->params->{'shadowdb'}) {
-            $_dbh_shadow = Bugzilla::DB::connect_shadow();
+            request_cache()->{dbh_shadow} = Bugzilla::DB::connect_shadow();
         } else {
-            $_dbh_shadow = $_dbh_main;
+            request_cache()->{dbh_shadow} = request_cache()->{dbh_main};
         }
     }
 
-    $_dbh = $_dbh_shadow;
-    # we have to return $class->dbh instead of $_dbh as
-    # $_dbh_shadow may be undefined if no shadow DB is used
+    request_cache()->{dbh} = request_cache()->{dbh_shadow};
+    # we have to return $class->dbh instead of {dbh} as
+    # {dbh_shadow} may be undefined if no shadow DB is used
     # and no connection to the main DB has been established yet.
     return $class->dbh;
 }
@@ -290,9 +279,9 @@ sub switch_to_shadow_db {
 sub switch_to_main_db {
     my $class = shift;
 
-    $_dbh = $_dbh_main;
-    # We have to return $class->dbh instead of $_dbh as
-    # $_dbh_main may be undefined if no connection to the main DB
+    request_cache()->{dbh} = request_cache()->{dbh_main};
+    # We have to return $class->dbh instead of {dbh} as
+    # {dbh_main} may be undefined if no connection to the main DB
     # has been established yet.
     return $class->dbh;
 }
@@ -308,19 +297,25 @@ sub custom_field_names {
     return map($_->{name}, Bugzilla::Field::match({ custom=>1, obsolete=>0 }));
 }
 
+sub request_cache {
+    if ($ENV{MOD_PERL}) {
+        require Apache2::RequestUtil;
+        return Apache2::RequestUtil->request->pnotes();
+    }
+    return $_request_cache;
+}
+
 # Private methods
 
 # Per process cleanup
 sub _cleanup {
-    undef $_cgi;
-    undef $_user;
 
     # When we support transactions, need to ->rollback here
-    $_dbh_main->disconnect if $_dbh_main;
-    $_dbh_shadow->disconnect if $_dbh_shadow && Bugzilla->params->{"shadowdb"};
-    undef $_dbh_main;
-    undef $_dbh_shadow;
-    undef $_dbh;
+    my $main   = request_cache()->{dbh_main};
+    my $shadow = request_cache()->{dbh_shadow};
+    $main->disconnect if $main;
+    $shadow->disconnect if $shadow && Bugzilla->params->{"shadowdb"};
+    undef $_request_cache;
 }
 
 sub _load_param_values {
