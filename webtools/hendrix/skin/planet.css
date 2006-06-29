@@ -23,7 +23,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-@import url("http://planet.mozilla.org/planet2.css");
+@import url("http://planet.mozilla.org/planet.css");
 
 input[type="text"] {
   font-family: monospace;
@@ -53,6 +53,7 @@ input[type="text"] {
 }
 
 div.sidebar {
+  position: static;
   float: right;
   text-align: center;
 }
