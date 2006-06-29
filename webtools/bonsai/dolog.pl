@@ -270,7 +270,7 @@ sub get_filename {
     my $FILE_CHECKED = 0;
     my $file;
     my $partial_file;
-    my $path;
+    my $path, $apath;
     if ($flag_debug) {
         print STDERR "\n-- get_filename ------------------------\n";
     }
@@ -282,16 +282,18 @@ sub get_filename {
         }
         if ($state eq "I") {
             $path = "$envcvsroot/$file";
+            $apath = "$envcvsroot/Attic/$file";
         } elsif ($state eq "R") {
-            $path = "$envcvsroot/$repository/Attic/$file";
+            $path = $apath = "$envcvsroot/$repository/Attic/$file";
         } else {
             $path = "$envcvsroot/$repository/$file";
+            $apath = "$envcvsroot/$repository/Attic/$file";
         }
         if ($flag_debug) {
             print STDERR "changed file: $file\n";
             print STDERR "path: $path\n";
         }
-        if (-r "$path,v") {
+        if (-r "$path,v" || -r "$apath,v") {
             push(@fixed_files, $file);
             $FILE_EXISTS = 1;
             $FILE_CHECKED = 1;
