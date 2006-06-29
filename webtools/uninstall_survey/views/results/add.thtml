@@ -1,12 +1,12 @@
 <?php echo $html->formTag('/results/add'); ?>
 
-<?php if(!empty($intentions['Intention'])): ?>
-    <h2>How did you intend to use <?php echo $intentions['Application']['name']; ?> when you installed it?</h2>
-    <?php foreach ($intentions['Intention'] as $var => $val) : ?>
-        <input type="radio" name="data[Result][intention_id]" id="radio<?php echo $val['id']; ?>" value="<?php echo $val['id']; ?>"><label for="radio<?php echo $val['id']; ?>"><?php echo $val['description']; ?></label>
+<?php if(!empty($intentions)): ?>
+    <h2>How did you intend to use <?php echo $intentions[0]['applications']['name']; ?> when you installed it?</h2>
+    <?php foreach ($intentions as $var => $val) : ?>
+        <input type="radio" name="data[Intention][id]" id="radio<?php echo $val['choices']['id']; ?>" value="<?php echo $val['choices']['id']; ?>"><label for="radio<?php echo $val['choices']['id']; ?>"><?php echo $val['choices']['description']; ?></label>
         <?php
-            if ($val['description'] == 'Other') {
-                echo $html->input('Result/intention_text');
+            if ($val['choices']['description'] == 'Other') {
+                echo $html->input('Intention/text');
             }
 
         ?>
@@ -14,21 +14,20 @@
     <?php endforeach; ?>
 <?php endif; ?>
 
-
-<?php if(!empty($issues['Issue'])): ?>
-    <h2>Why did you uninstall <?php echo $intentions['Application']['name']; ?>? (select all that apply)</h2>
-    <?php foreach ($issues['Issue'] as $var => $val) : ?>
-        <input type="checkbox" name="data[Issue][id][]" id="checkbox<?php echo $val['id']; ?>" value="<?php echo $val['id']; ?>"><label for="checkbox<?php echo $val['id']; ?>"><?php echo $val['description']; ?></label>
+<?php if(!empty($issues)): ?>
+    <h2>Why did you uninstall <?php echo $issues[0]['applications']['name']; ?>? (select all that apply)</h2>
+    <?php foreach ($issues as $var => $val) : ?>
+        <input type="checkbox" name="data[Issue][id][]" id="checkbox<?php echo $val['choices']['id']; ?>" value="<?php echo $val['choices']['id']; ?>"><label for="checkbox<?php echo $val['choices']['id']; ?>"><?php echo $val['choices']['description']; ?></label>
         <?php
-            if ($val['description'] == 'Other') {
-                echo $html->input('issues_results/other');
+            if ($val['choices']['description'] == 'Other') {
+                echo $html->input('Issue/text');
             }
         ?>
         <br />
     <?php endforeach; ?>
 <?php endif; ?>
 
-<h2>How can we improve <?php echo $intentions['Application']['name']; ?>?</h2>
+<h2>How can we improve <?php echo $intentions[0]['applications']['name']; ?>?</h2>
 <p>Please share your ideas, suggestions or details about any issues below.</p>
 <p><?php echo $html->textarea('Result/comments',array('id'=>'comments'));?></p>
 
@@ -36,7 +35,6 @@
 <?php echo $html->hidden('application', 'value="'.$url_params['application'].'"') ?>
 <?php echo $html->hidden('ua', 'value="'.$url_params['ua'].'"') ?>
 <?php echo $html->hidden('lang', 'value="'.$url_params['lang'].'"') ?>
-
 
 <p><?php echo $html->submit('Save') ?></p>
 </form>

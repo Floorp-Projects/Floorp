@@ -32,5 +32,25 @@ class ExportHelper
 
         return "{$this->webroot}{$url}{$seperator}{$arguments}";
     }
+
+    function buildCsvExportString($params)
+    {
+        if (array_key_exists('product', $params)) {
+            $filename = $params['product'];
+        } else {
+            $filename = DEFAULT_APP_NAME.' '.DEFAULT_APP_VERSION;
+        }
+
+        // Our filenames have underscores
+        $filename = str_replace(' ','_',$filename);
+
+        $filename = "export-{$filename}.csv";
+
+        if (is_readable(ROOT.DS.APP_DIR.DS.WEBROOT_DIR.DS.'export'.DS.$filename)) {
+            return "{$this->webroot}export/{$filename}";
+        } else {
+            return '';
+        }
+    }
 }
 ?>

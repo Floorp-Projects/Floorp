@@ -11,7 +11,7 @@ class ResultsController extends AppController {
      * Model's this controller uses
      * @var array
      */
-    var $uses = array('Application','Result','Intention','Issue');
+    var $uses = array('Application','Collection','Choice','Result');
 
     /**
      * Cake Helpers
@@ -62,8 +62,7 @@ class ResultsController extends AppController {
         $_input_name = $this->Sanitize->Sql(isset($this->data['application'][0]) ?  $this->data['application'][0] : (isset($this->params['url']['application']) ?  $this->params['url']['application'] : ''));
         $_input_ua   = $this->Sanitize->Sql(isset($this->data['ua'][0]) ?  $this->data['ua'][0] : (isset($this->params['url']['ua']) ?  $this->params['url']['ua'] : ''));
 
-        // Please, oh please can we talk about standards in the future. :)  The ua
-        // comes over $_GET in the form:
+        // The ua comes over $_GET in the form:
         //          x.x.x.x (aa-bb)
         // Where x is the versions and a and b are locale information.  We're not
         // interested in the locale information, 
@@ -83,7 +82,6 @@ class ResultsController extends AppController {
 
             $app_id = $app->getLastInsertID();
 
-            // Warning: hard coding ahead! - Hopefully this is a temporary thing.
             // The database will handle any combination of questions
             // (issues/intentions) and applications+versions.  However, since we're
             // adding stuff in that comes in over the URL, we kinda have to guess at
@@ -92,18 +90,18 @@ class ResultsController extends AppController {
             // then manually adding those values to the table.
             if (stristr($this->params['url']['application'], 'Firefox') !== false) {
                 // Intention Id's
-                $this->Intention->query("INSERT INTO applications_intentions VALUES ({$app_id}, 1), ({$app_id}, 2), ({$app_id}, 3), ({$app_id}, 9)");
+                $this->Application->query("INSERT INTO applications_collections VALUES ({$app_id}, ".DEFAULT_FIREFOX_INTENTION_SET_ID.")");
 
                 // Issue Id's
-                $this->Issue->query("INSERT INTO applications_issues VALUES ({$app_id}, 1), ({$app_id}, 2), ({$app_id}, 3), ({$app_id}, 4), ({$app_id}, 5), ({$app_id}, 6), ({$app_id}, 7), ({$app_id}, 8), ({$app_id}, 9), ({$app_id}, 15)");
+                $this->Application->query("INSERT INTO applications_collections VALUES ({$app_id}, ".DEFAULT_FIREFOX_ISSUE_SET_ID.")");
 
             } elseif (stristr($this->params['url']['application'], 'Thunderbird') !== false) {
 
                 // Intention Id's
-                $this->Intention->query("INSERT INTO applications_intentions VALUES ({$app_id}, 5), ({$app_id}, 6), ({$app_id}, 7), ({$app_id}, 8), ({$app_id}, 9)");
+                $this->Application->query("INSERT INTO applications_collections VALUES ({$app_id}, ".DEFAULT_THUNDERBIRD_INTENTION_SET_ID.")");
 
                 // Issue Id's
-                $this->Issue->query("INSERT INTO applications_issues VALUES ({$app_id}, 10), ({$app_id}, 11), ({$app_id}, 12), ({$app_id}, 13), ({$app_id}, 14), ({$app_id}, 15)"); 
+                $this->Application->query("INSERT INTO applications_collections VALUES ({$app_id}, ".DEFAULT_THUNDERBIRD_ISSUE_SET_ID.")"); 
 
             } else {
                 // Whatever they entered doesn't have firefox or thunderbird in it.
@@ -118,13 +116,12 @@ class ResultsController extends AppController {
             $_conditions = "name LIKE '{$_input_name}' AND version LIKE '{$_input_ua}' AND 1=1";
             $_application = $this->Application->findAll($_conditions);
         }
-
         // Pull the information for our radio buttons (only the
         // questions for their applications will be shown)
-        $this->set('intentions', $this->Intention->Application->findById($_application[0]['Application']['id']));
+        $this->set('intentions', $this->Application->getIntentions($this->Sanitize->sql($_application[0]['Application']['id'])));
 
         // Checkboxes
-        $this->set('issues', $this->Issue->Application->findById($_application[0]['Application']['id']));
+        $this->set('issues', $this->Application->getIssues($this->Sanitize->sql($_application[0]['Application']['id'])));
 
         // We'll need the url parameters to put in hidden fields
         $this->set('url_params', $this->Sanitize->html($this->params['url']));
@@ -165,6 +162,9 @@ class ResultsController extends AppController {
 
         // We'll need to include the graphing libraries
         $this->set('include_graph_libraries', true);
+
+        // Fill in our question sets
+        $this->set('collections',$this->Application->getCollectionsFromUrl($this->params['url'],'issue'));
 
         // Core data to show on page
         $this->set('descriptionAndTotalsData',$this->Result->getDescriptionAndTotalsData($this->params['url']));
@@ -215,8 +215,17 @@ class ResultsController extends AppController {
         // Get rid of the header/footer/etc.
         $this->layout = null;
 
+        // Auto generated .csv's are turned off since they were taking too much
+        // cpu/ram.  If you turn them back on, be sure to check the code - there was
+        // a substantial database change between the time they were disabled and now.
+        return false;
+
+        $csv = new csv();
+
+        $csv->loadDataFromArray($this->Result->getCsvExportData($this->params['url'], false));
+
         // Our CSV library sends headers and everything.  Keep the view empty!
-        csv_send_csv($this->Result->getCsvExportData($this->params['url']));
+        $csv->sendCSV();
 
         // I'm not exiting here in case someone is going to use post callback stuff.
         // In development, that means extra lines get added to our CSVs, but in
