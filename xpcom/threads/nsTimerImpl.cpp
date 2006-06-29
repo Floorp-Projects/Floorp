@@ -49,8 +49,6 @@
 
 static PRInt32          gGenerator = 0;
 static TimerThread*     gThread = nsnull;
-static PRBool           gFireOnIdle = PR_FALSE;
-static nsTimerManager*  gManager = nsnull;
 
 #ifdef DEBUG_TIMERS
 #include <math.h>
@@ -79,7 +77,7 @@ myNS_MeanAndStdDev(double n, double sumOfValues, double sumOfSquaredValues,
 }
 #endif
 
-NS_IMPL_THREADSAFE_QUERY_INTERFACE2(nsTimerImpl, nsITimer, nsITimerInternal)
+NS_IMPL_THREADSAFE_QUERY_INTERFACE1(nsTimerImpl, nsITimer)
 NS_IMPL_THREADSAFE_ADDREF(nsTimerImpl)
 
 NS_IMETHODIMP_(nsrefcnt) nsTimerImpl::Release(void)
@@ -140,7 +138,6 @@ NS_IMETHODIMP_(nsrefcnt) nsTimerImpl::Release(void)
 nsTimerImpl::nsTimerImpl() :
   mClosure(nsnull),
   mCallbackType(CALLBACK_TYPE_UNKNOWN),
-  mIdle(PR_TRUE),
   mFiring(PR_FALSE),
   mArmed(PR_FALSE),
   mCanceled(PR_FALSE),
@@ -200,8 +197,6 @@ void nsTimerImpl::Shutdown()
 
   gThread->Shutdown();
   NS_RELEASE(gThread);
-
-  gFireOnIdle = PR_FALSE;
 }
 
 
@@ -347,18 +342,6 @@ NS_IMETHODIMP nsTimerImpl::GetCallback(nsITimerCallback **aCallback)
 }
 
 
-NS_IMETHODIMP nsTimerImpl::GetIdle(PRBool *aIdle)
-{
-  *aIdle = mIdle;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsTimerImpl::SetIdle(PRBool aIdle)
-{
-  mIdle = aIdle;
-  return NS_OK;
-}
-
 void nsTimerImpl::Fire()
 {
   if (mCanceled)
@@ -470,17 +453,6 @@ NS_IMETHODIMP nsTimerEvent::Run()
   }
 #endif
 
-  if (gFireOnIdle) {
-    PRBool idle = PR_FALSE;
-    timer->GetIdle(&idle);
-    if (idle) {
-      NS_ASSERTION(gManager, "Global Thread Manager is null!");
-      if (gManager)
-        gManager->AddIdleTimer(timer);
-      return NS_OK;
-    }
-  }
-
   timer->Fire();
 
   return NS_OK;
@@ -541,93 +513,6 @@ void nsTimerImpl::SetDelayInternal(PRUint32 aDelay)
   }
 #endif
 }
-
-/**
- * Timer Manager code
- */
-
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsTimerManager, nsITimerManager)
-
-nsTimerManager::nsTimerManager()
-{
-  mLock = PR_NewLock();
-  gManager = this;
-}
-
-nsTimerManager::~nsTimerManager()
-{
-  gManager = nsnull;
-  PR_DestroyLock(mLock);
-
-  nsTimerImpl *theTimer;
-  PRInt32 count = mIdleTimers.Count();
-
-  for (PRInt32 i = 0; i < count; i++) {
-    theTimer = NS_STATIC_CAST(nsTimerImpl*, mIdleTimers[i]);
-    NS_IF_RELEASE(theTimer);
-  }
-}
-
-NS_IMETHODIMP nsTimerManager::SetUseIdleTimers(PRBool aUseIdleTimers)
-{
-  if (aUseIdleTimers == PR_FALSE && gFireOnIdle == PR_TRUE)
-    return NS_ERROR_FAILURE;
-
-  gFireOnIdle = aUseIdleTimers;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsTimerManager::GetUseIdleTimers(PRBool *aUseIdleTimers)
-{
-  *aUseIdleTimers = gFireOnIdle;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsTimerManager::HasIdleTimers(PRBool *aHasTimers)
-{
-  nsAutoLock lock (mLock);
-  PRUint32 count = mIdleTimers.Count();
-  *aHasTimers = (count != 0);
-  return NS_OK;
-}
-
-nsresult nsTimerManager::AddIdleTimer(nsITimer* timer)
-{
-  if (!timer)
-    return NS_ERROR_FAILURE;
-  nsAutoLock lock(mLock);
-  mIdleTimers.AppendElement(timer);
-  NS_ADDREF(timer);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsTimerManager::FireNextIdleTimer()
-{
-  if (!gFireOnIdle || !NS_IsMainThread()) {
-    return NS_OK;
-  }
-
-  nsTimerImpl *theTimer = nsnull;
-
-  {
-    nsAutoLock lock (mLock);
-    PRUint32 count = mIdleTimers.Count();
-    
-    if (count == 0) 
-      return NS_OK;
-    
-    theTimer = NS_STATIC_CAST(nsTimerImpl*, mIdleTimers[0]);
-    mIdleTimers.RemoveElement(theTimer);
-  }
-
-  theTimer->Fire();
-
-  NS_RELEASE(theTimer);
-
-  return NS_OK;
-}
-
 
 // NOT FOR PUBLIC CONSUMPTION!
 nsresult

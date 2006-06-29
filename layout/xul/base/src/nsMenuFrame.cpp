@@ -81,7 +81,6 @@
 #include "nsIStringBundle.h"
 #include "nsGUIEvent.h"
 #include "nsIEventStateManager.h"
-#include "nsITimerInternal.h"
 #include "nsContentUtils.h"
 #include "nsDisplayList.h"
 
@@ -511,10 +510,6 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
 
       // We're a menu, we're built, we're closed, and no timer has been kicked off.
       mOpenTimer = do_CreateInstance("@mozilla.org/timer;1");
-
-      nsCOMPtr<nsITimerInternal> ti = do_QueryInterface(mOpenTimer);
-      ti->SetIdle(PR_FALSE);
-
       mOpenTimer->InitWithCallback(mTimerMediator, menuDelay, nsITimer::TYPE_ONE_SHOT);
 
     }

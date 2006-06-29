@@ -71,7 +71,6 @@
 #include "nsGUIEvent.h"
 #include "nsIRootBox.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsITimerInternal.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsCSSFrameConstructor.h"
@@ -1404,8 +1403,6 @@ NS_IMETHODIMP nsMenuPopupFrame::SetCurrentMenuItem(nsIMenuFrame* aMenuItem)
 
       // Kick off the timer.
       mCloseTimer = do_CreateInstance("@mozilla.org/timer;1");
-      nsCOMPtr<nsITimerInternal> ti = do_QueryInterface(mCloseTimer);
-      ti->SetIdle(PR_FALSE);
       mCloseTimer->InitWithCallback(mTimerMediator, menuDelay, nsITimer::TYPE_ONE_SHOT);
       mTimerMenu = mCurrentMenu;
     }

@@ -80,8 +80,6 @@ XPIDLSRCS	= \
 		nsIThreadManager.idl \
 		nsIThreadPool.idl \
 		nsITimer.idl \
-		nsITimerInternal.idl \
-		nsITimerManager.idl \
 		nsIRunnable.idl \
 		nsIEnvironment.idl \
 		nsIProcess.idl \

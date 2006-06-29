@@ -91,7 +91,6 @@
 #include "nsIScrollableView.h"
 #include "nsITheme.h"
 #include "nsITimelineService.h"
-#include "nsITimerInternal.h"
 #include "imgIRequest.h"
 #include "imgIContainer.h"
 #include "imgIContainerObserver.h"
@@ -1693,13 +1692,8 @@ nsTreeBodyFrame::CreateTimer(const nsILookAndFeel::nsMetricID aID,
   // Zero value means that this feature is completely disabled.
   if (delay > 0) {
     timer = do_CreateInstance("@mozilla.org/timer;1");
-    if (timer) {
-      nsCOMPtr<nsITimerInternal> timerInternal = do_QueryInterface(timer);
-      if (timerInternal) {
-        timerInternal->SetIdle(PR_FALSE);
-      }
+    if (timer)
       timer->InitWithFuncCallback(aFunc, this, delay, aType);
-    }
   }
 
   NS_IF_ADDREF(*aTimer = timer);
