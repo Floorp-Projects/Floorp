@@ -1793,6 +1793,11 @@ NS_IMETHODIMP nsMsgDBView::Close()
   m_flags.RemoveAll();
   m_levels.RemoveAll();
 
+  // clear these out since they no longer apply if we're switching a folder
+  nsMemory::Free(mJunkIndices);
+  mJunkIndices = nsnull;
+  mNumJunkIndices = 0;
+
   // this needs to happen after we remove all the keys, since RowCountChanged() will call our GetRowCount()
   if (mTree) 
     mTree->RowCountChanged(0, -oldSize);
