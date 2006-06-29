@@ -292,7 +292,7 @@
                     var daysOff = new Array();
                     const weekPrefix = "calendar.week.";
                     for (var i in prefNames) {
-                         if (getPrefSafe(weekPref+prefNames[i], defaults[i])) {
+                         if (getPrefSafe(weekPrefix+prefNames[i], defaults[i])) {
                                 daysOff.push(Number(i));
                          }
                     }
