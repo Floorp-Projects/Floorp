@@ -243,3 +243,8 @@ $push_raw_xpis = 0;
 # Prevent Extension Manager from spawning child processes during tests
 # - processes that tbox scripts cannot kill. 
 #$ENV{NO_EM_RESTART} = '1';
+
+# Windows only:
+# Path to Microsoft Visual C++ 8.0 redistributable runtime libraries
+$ENV{WIN32_REDIST_DIR} = 'C:\Program Files\Microsoft Visual Studio 8\VC\Redist\x86\Microsoft.VC80.CRT';
+
