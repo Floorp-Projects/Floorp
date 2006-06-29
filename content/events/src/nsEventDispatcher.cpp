@@ -51,6 +51,8 @@
 #include "nsContentUtils.h"
 #include "nsDOMError.h"
 #include "nsMutationEvent.h"
+#include NEW_H
+#include "nsFixedSizeAllocator.h"
 
 #define NS_TARGET_CHAIN_IS_NODE                (1 << 0)
 #define NS_TARGET_CHAIN_IS_WINDOW              (1 << 1)
@@ -62,16 +64,36 @@
   (NS_TARGET_CHAIN_IS_NODE | NS_TARGET_CHAIN_IS_WINDOW | \
    NS_TARGET_CHAIN_IS_CHROMEHANDLER)
 
-// nsEventTargetChainItem is a stack-allocated object represeting a
-// single item in the event target chain.
+// nsEventTargetChainItem represents a single item in the event target chain.
 class nsEventTargetChainItem
 {
-public:
+private:
   nsEventTargetChainItem(nsISupports* aTarget,
                          PRBool aTargetIsChromeHandler,
                          nsEventTargetChainItem* aChild = nsnull);
 
-  ~nsEventTargetChainItem();
+  void Destroy(nsFixedSizeAllocator* aAllocator);
+
+public:
+  static nsEventTargetChainItem* Create(nsFixedSizeAllocator* aAllocator, 
+                                        nsISupports* aTarget,
+                                        PRBool aTargetIsChromeHandler,
+                                        nsEventTargetChainItem* aChild = nsnull)
+  {
+    void* place = aAllocator->Alloc(sizeof(nsEventTargetChainItem));
+    return place
+      ? ::new (place) nsEventTargetChainItem(aTarget, aTargetIsChromeHandler,
+                                             aChild)
+      : nsnull;
+  }
+
+  static void Destroy(nsFixedSizeAllocator* aAllocator,
+                      nsEventTargetChainItem* aItem)
+  {
+    aItem->Destroy(aAllocator);
+    aItem->~nsEventTargetChainItem();
+    aAllocator->Free(aItem, sizeof(nsEventTargetChainItem));
+  }
 
   PRBool IsValid()
   {
@@ -104,12 +126,6 @@ public:
 
   already_AddRefed<nsIEventListenerManager> GetListenerManager(
     PRBool aCreateIfNotFound);
-
-  /**
-   * Creates event target chain and calls HandleEventTargetChain.
-   */
-  nsresult CreateChainAndHandleEvent(nsEventChainPreVisitor& aVisitor,
-                                     nsDispatchingCallback* aCallback);
 
   /**
    * Dispatches event through the event target chain.
@@ -196,13 +212,18 @@ nsEventTargetChainItem::nsEventTargetChainItem(nsISupports* aTarget,
                    "No event target in event target chain!");
 }
 
-nsEventTargetChainItem::~nsEventTargetChainItem()
+void
+nsEventTargetChainItem::Destroy(nsFixedSizeAllocator* aAllocator)
 {
   if (mChild) {
     mChild->mParent = nsnull;
     mChild = nsnull;
   }
-  mParent = nsnull;
+
+  if (mParent) {
+    Destroy(aAllocator, mParent);
+    mParent = nsnull;
+  }
 
   switch (mFlags & NS_TARGET_CHAIN_TYPE_MASK) {
     case NS_TARGET_CHAIN_IS_NODE:
@@ -366,49 +387,6 @@ nsEventTargetChainItem::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 }
 
 nsresult
-nsEventTargetChainItem::CreateChainAndHandleEvent(nsEventChainPreVisitor& aVisitor,
-                                                  nsDispatchingCallback* aCallback)
-{
-  if (aVisitor.mParentTarget) {
-    // There is something which should be added to the event target chain.
-    nsEventTargetChainItem parentEtci(aVisitor.mParentTarget,
-                                      aVisitor.mParentIsChromeHandler,
-                                      this);
-    NS_ENSURE_TRUE(parentEtci.IsValid(), NS_ERROR_FAILURE);
-
-    // Item needs event retargetting.
-    if (aVisitor.mEventTargetAtParent) {
-      // Need to set the target of the event
-      // so that also the next retargeting works.
-      aVisitor.mEvent->target = aVisitor.mEventTargetAtParent;
-      parentEtci.SetNewTarget(aVisitor.mEventTargetAtParent);
-    }
-
-    parentEtci.PreHandleEvent(aVisitor);
-
-    if (aVisitor.mCanHandle) {
-      // The parent event target chain item can handle the event. Continue
-      // chain creation.
-      return parentEtci.CreateChainAndHandleEvent(aVisitor, aCallback);
-    }
-  }
-
-  // Event target chain is created. Handle the chain.
-  nsEventChainPostVisitor postVisitor(aVisitor);
-  nsresult rv =  HandleEventTargetChain(postVisitor,
-                                        NS_EVENT_FLAG_BUBBLE |
-                                        NS_EVENT_FLAG_CAPTURE,
-                                        aCallback);
-
-  aVisitor.mEventStatus = postVisitor.mEventStatus;
-  // If the DOM event was created during event flow.
-  if (!aVisitor.mDOMEvent && postVisitor.mDOMEvent) {
-    aVisitor.mDOMEvent = postVisitor.mDOMEvent;
-  }
-  return rv;
-}
-
-nsresult
 nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor, PRUint32 aFlags,
                                                nsDispatchingCallback* aCallback)
 {
@@ -508,6 +486,48 @@ nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor
   return NS_OK;
 }
 
+class ChainItemPool {
+public:
+  ChainItemPool() {
+    if (!sEtciPool) {
+      sEtciPool = new nsFixedSizeAllocator();
+      if (sEtciPool) {
+        static const size_t kBucketSizes[] = { sizeof(nsEventTargetChainItem) };
+        static const PRInt32 kNumBuckets = sizeof(kBucketSizes) / sizeof(size_t);
+        static const PRInt32 kInitialPoolSize =
+          NS_SIZE_IN_HEAP(sizeof(nsEventTargetChainItem)) * 128;
+        nsresult rv = sEtciPool->Init("EventTargetChainItem Pool", kBucketSizes,
+                                      kNumBuckets, kInitialPoolSize);
+        if (NS_FAILED(rv)) {
+          delete sEtciPool;
+          sEtciPool = nsnull;
+        }
+      }
+    }
+    if (sEtciPool) {
+      ++sEtciPoolUsers;
+    }
+  }
+
+  ~ChainItemPool() {
+    if (sEtciPool) {
+      --sEtciPoolUsers;
+    }
+    if (!sEtciPoolUsers) {
+      delete sEtciPool;
+      sEtciPool = nsnull;
+    }
+  }
+
+  nsFixedSizeAllocator* GetPool() { return sEtciPool; }
+
+  static nsFixedSizeAllocator* sEtciPool;
+  static PRInt32               sEtciPoolUsers;
+};
+
+nsFixedSizeAllocator* ChainItemPool::sEtciPool = nsnull;
+PRInt32 ChainItemPool::sEtciPoolUsers = 0;
+
 /* static */ nsresult
 nsEventDispatcher::Dispatch(nsISupports* aTarget,
                             nsPresContext* aPresContext,
@@ -544,10 +564,17 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
   // If we have a PresContext, make sure it doesn't die before
   // event dispatching is finished.
   nsCOMPtr<nsPresContext> kungFuDeathGrip(aPresContext);
+  ChainItemPool pool;
+  NS_ENSURE_TRUE(pool.GetPool(), NS_ERROR_OUT_OF_MEMORY);
 
   // Create the event target chain item for the event target.
-  nsEventTargetChainItem targetEtci(aTarget, aTargetIsChromeHandler);
-  NS_ENSURE_TRUE(targetEtci.IsValid(), NS_ERROR_FAILURE);
+  nsEventTargetChainItem* targetEtci =
+    nsEventTargetChainItem::Create(pool.GetPool(), aTarget, aTargetIsChromeHandler);
+  NS_ENSURE_TRUE(targetEtci, NS_ERROR_OUT_OF_MEMORY);
+  if (!targetEtci->IsValid()) {
+    nsEventTargetChainItem::Destroy(pool.GetPool(), targetEtci);
+    return NS_ERROR_FAILURE;
+  }
 
   // Make sure that nsIDOMEvent::target and nsIDOMNSEvent::originalTarget
   // point to the last item in the chain.
@@ -565,15 +592,62 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
   // PreHandleEvent for the original target.
   nsEventStatus status = aEventStatus ? *aEventStatus : nsEventStatus_eIgnore;
   nsEventChainPreVisitor preVisitor(aPresContext, aEvent, aDOMEvent, status);
-  targetEtci.PreHandleEvent(preVisitor);
+  targetEtci->PreHandleEvent(preVisitor);
 
   if (preVisitor.mCanHandle) {
     // At least the original target can handle the event.
     // Setting the retarget to the |target| simplifies retargeting code.
-    targetEtci.SetNewTarget(aEvent->target);
-    // Create rest of the event target chain and handle event.
-    rv = targetEtci.CreateChainAndHandleEvent(preVisitor, aCallback);
+    targetEtci->SetNewTarget(aEvent->target);
+    nsEventTargetChainItem* topEtci = targetEtci;
+    while (preVisitor.mParentTarget) {
+      nsEventTargetChainItem* parentEtci =
+        nsEventTargetChainItem::Create(pool.GetPool(), preVisitor.mParentTarget,
+                                       preVisitor.mParentIsChromeHandler,
+                                       topEtci);
+      if (!parentEtci) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+        break;
+      }
+      if (!parentEtci->IsValid()) {
+        rv = NS_ERROR_FAILURE;
+        break;
+      }
+
+      // Item needs event retargetting.
+      if (preVisitor.mEventTargetAtParent) {
+        // Need to set the target of the event
+        // so that also the next retargeting works.
+        preVisitor.mEvent->target = preVisitor.mEventTargetAtParent;
+        parentEtci->SetNewTarget(preVisitor.mEventTargetAtParent);
+      }
+
+      parentEtci->PreHandleEvent(preVisitor);
+      if (preVisitor.mCanHandle) {
+        topEtci = parentEtci;
+      } else {
+        nsEventTargetChainItem::Destroy(pool.GetPool(), parentEtci);
+        parentEtci = nsnull;
+        break;
+      }
+    }
+    if (NS_SUCCEEDED(rv)) {
+      // Event target chain is created. Handle the chain.
+      nsEventChainPostVisitor postVisitor(preVisitor);
+      rv = topEtci->HandleEventTargetChain(postVisitor,
+                                           NS_EVENT_FLAG_BUBBLE |
+                                           NS_EVENT_FLAG_CAPTURE,
+                                           aCallback);
+
+      preVisitor.mEventStatus = postVisitor.mEventStatus;
+      // If the DOM event was created during event flow.
+      if (!preVisitor.mDOMEvent && postVisitor.mDOMEvent) {
+        preVisitor.mDOMEvent = postVisitor.mDOMEvent;
+      }
+    }
   }
+
+  nsEventTargetChainItem::Destroy(pool.GetPool(), targetEtci);
+  targetEtci = nsnull;
 
   NS_MARK_EVENT_DISPATCH_DONE(aEvent);
 
