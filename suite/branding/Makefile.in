@@ -20,6 +20,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Mark Banner <bugzilla@standard8.demon.co.uk>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,11 +43,77 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-libs::
-ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
-	$(INSTALL) $(srcdir)/icons/gtk/default.xpm $(DIST)/bin/chrome/icons/default
-	$(INSTALL) $(srcdir)/icons/gtk/default16.xpm $(DIST)/bin/chrome/icons/default
-	$(INSTALL) $(srcdir)/icons/gtk/seamonkey.png $(DIST)/bin/chrome/icons/default
+# Note: mac icons are handled in /suite/app during the final application
+# packaging
+ifneq (,$(filter windows os2 gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter windows os2,$(MOZ_WIDGET_TOOLKIT)))
+ICON_SUFFIX=.ico
+else
+ICON_SUFFIX=.xpm
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+ICON_DIR=gtk
+else
+ICON_DIR=$(MOZ_WIDGET_TOOLKIT)
+endif
+
+DESKTOP_ICONS = \
+	abcardWindow \
+	addressbookWindow \
+	bmPropsWindow \
+	bookmark-window \
+	calendar-window \
+	chatzilla-window \
+	downloadManager \
+	editorWindow \
+	findBookmarkWindow \
+	findHistoryWindow \
+	history-window \
+	jsconsoleWindow \
+	main-window \
+	messengerWindow \
+	msgcomposeWindow \
+	venkman-window \
+	winInspectorMain \
+	$(NULL) 
+
+ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
+# Windows icons
+DESKTOP_ICONS += \
+	gif-file \
+	html-file \
+	misc-file \
+	image-file \
+	jpeg-file \
+	script-file \
+	xml-file \
+	xul-file \
+	$(NULL)
+endif
+
+ifeq ($(ICON_DIR),gtk)
+libs:: icons/gtk/seamonkey.png
+	$(INSTALL) $^ $(DIST)/bin/chrome/icons/default
+
+install:: icons/gtk/seamonkey.png
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/chrome/icons/default
+
+GARBAGE	+= $(DIST)/bin/chrome/icons/default/seamonkey.png
+
+DESKTOP_ICONS += default
+DESKTOP_ICONS_SMALL=$(patsubst %,%16,$(DESKTOP_ICONS))
+endif
+
+DESKTOP_ICON_FILES = $(addsuffix $(ICON_SUFFIX), $(DESKTOP_ICONS) $(DESKTOP_ICONS_SMALL))
+
+libs:: $(addprefix icons/$(ICON_DIR)/,$(DESKTOP_ICON_FILES))
+	$(INSTALL) $^ $(DIST)/bin/chrome/icons/default
+
+install:: $(addprefix icons/$(ICON_DIR)/,$(DESKTOP_ICON_FILES))
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/chrome/icons/default
+
+GARBAGE	+= $(addprefix $(DIST)/bin/chrome/icons/default/,$(DESKTOP_ICON_FILES))
 endif
 
 include $(topsrcdir)/config/rules.mk
