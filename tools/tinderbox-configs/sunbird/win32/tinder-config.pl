@@ -7,13 +7,26 @@
 #-    Uncomment the variables you need to set.
 #-    The default values are the same as the commented variables.
 
+# $ENV{MOZ_INSTALLER_USE_7ZIP}
+#-----------------------------------------------------------------------------
+#  Purpose: Controls whether a 7-Zip Self Extracting Full Installer is made.
+# Requires: Windows and a local 7-Zip installation.
+$ENV{MOZ_INSTALLER_USE_7ZIP} = 1;
+
+# $ENV{MOZ_PACKAGE_NSIS}
+#-----------------------------------------------------------------------------
+#  Purpose: Controls whether the Nullsoft Installer System is used for
+#           creating an installer.
+# Requires: Windows and a local NSIS installation.
+$ENV{MOZ_PACKAGE_NSIS} = 1;
+
 # $ENV{MOZ_PACKAGE_MSI}
 #-----------------------------------------------------------------------------
 #  Default: 0
 #   Values: 0 | 1
 #  Purpose: Controls whether a MSI package is made.
 # Requires: Windows and a local MakeMSI installation.
-#$ENV{MOZ_PACKAGE_MSI} = 0;
+$ENV{MOZ_PACKAGE_MSI} = 0;
 
 # $ENV{MOZ_SYMBOLS_TRANSFER_TYPE}
 #-----------------------------------------------------------------------------
@@ -202,7 +215,7 @@ $url_path      = "http://ftp.mozilla.org/pub/mozilla.org/calendar/sunbird/nightl
 $milestone     = "trunk";
 $notify_list   = "build-announce\@mozilla.org";
 $stub_installer = 0;
-$sea_installer = 0;
+$sea_installer = 1;
 $archive       = 1;
 $push_raw_xpis = 0;
 
