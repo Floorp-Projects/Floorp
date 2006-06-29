@@ -67,6 +67,8 @@ __PACKAGE__->set_sql(TopTesters => qq{
 });
 
 # the COLLATE latin1_general_ci sillyness forces a case-insensitive match
+# removed a LIMIT 300 to work around a mysql bug in the ancient version
+# on rodan
 __PACKAGE__->set_sql(FullTextMatches => q{
 	SELECT *
 	FROM __TABLE__ 
@@ -75,7 +77,6 @@ __PACKAGE__->set_sql(FullTextMatches => q{
 	  irc_nickname COLLATE latin1_general_ci  like concat('%%',?,'%%') OR 
 	  realname COLLATE latin1_general_ci like concat('%%',?,'%%') 
 	ORDER BY email ASC
-	LIMIT 300
 });
 
 
