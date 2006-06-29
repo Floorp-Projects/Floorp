@@ -172,7 +172,13 @@ struct JSRuntime {
      * Table for tracking objects of extended classes that have non-null close
      * hooks, and need the GC to perform two-phase finalization.
      */
-    JSGCCloseTable      gcCloseTable;
+    JSPtrTable          gcCloseTable;
+
+    /*
+     * Table for tracking iterators to ensure that we close iterator's state
+     * before finalizing the iterable object.
+     */
+    JSPtrTable          gcIteratorTable;
 
 #ifdef JS_GCMETER
     JSGCStats           gcStats;
