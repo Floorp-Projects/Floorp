@@ -62,7 +62,6 @@ class nsDOMScriptObjectFactory : public nsIDOMScriptObjectFactory,
 {
 public:
   nsDOMScriptObjectFactory();
-  virtual ~nsDOMScriptObjectFactory();
 
   NS_DECL_ISUPPORTS
 
