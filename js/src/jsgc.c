@@ -1127,7 +1127,11 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
              * see bug 162779 at https://bugzilla.mozilla.org/.
              */
             if (!js_GC(cx, GC_KEEP_ATOMS | GC_LAST_DITCH)) {
-                /* js_GC ensures that GC is unlocked after GC was canceled. */
+                /*
+                 * js_GC ensures that GC is unlocked when the branch callback
+                 * wants to stop execution, and in this case we do not report
+                 * out-of-memory.
+                 */
                 return NULL;
             }
             METER(rt->gcStats.retry++);
@@ -2295,8 +2299,8 @@ js_MarkStackFrame(JSContext *cx, JSStackFrame *fp)
 }
 
 /*
- * Return false when GC was canceled or true when the full GC cycle was
- * performed which may or may not free things.
+ * Return false when the branch callback wants to stop exeution ASAP and true
+ * otherwise.
  *
  * When gcflags contains GC_LAST_DITCH, it indicates a call from js_NewGCThing
  * with rt->gcLock already held. On return to js_NewGCThing the lock is kept
@@ -2338,12 +2342,8 @@ js_GC(JSContext *cx, uintN gcflags)
      * should suppress that final collection or there may be shutdown leaks,
      * or runtime bloat until the next context is created.
      */
-    if (rt->state != JSRTS_UP && !(gcflags & GC_LAST_CONTEXT)) {
-        /* Always unlock GC when canceled. */
-        if (gcflags & GC_LAST_DITCH)
-            JS_UNLOCK_GC(rt);
-        return JS_FALSE;
-    }
+    if (rt->state != JSRTS_UP && !(gcflags & GC_LAST_CONTEXT))
+        return JS_TRUE;
 
     /*
      * Let the API user decide to defer a GC if it wants to (unless this
@@ -2352,9 +2352,7 @@ js_GC(JSContext *cx, uintN gcflags)
     if (rt->gcCallback &&
         !rt->gcCallback(cx, JSGC_BEGIN) &&
         !(gcflags & GC_LAST_CONTEXT)) {
-        if (gcflags & GC_LAST_DITCH)
-            JS_UNLOCK_GC(rt);
-        return JS_FALSE;
+        return JS_TRUE;
     }
 
     /* Lock out other GC allocator and collector invocations. */
@@ -2364,8 +2362,9 @@ js_GC(JSContext *cx, uintN gcflags)
     /* Do nothing if no mutator has executed since the last GC. */
     if (!rt->gcPoke) {
         METER(rt->gcStats.nopoke++);
-        JS_UNLOCK_GC(rt);
-        return JS_FALSE;
+        if (!(gcflags & GC_LAST_DITCH))
+            JS_UNLOCK_GC(rt);
+        return JS_TRUE;
     }
     METER(rt->gcStats.poke++);
     rt->gcPoke = JS_FALSE;
@@ -2377,8 +2376,9 @@ js_GC(JSContext *cx, uintN gcflags)
         rt->gcLevel++;
         METER(if (rt->gcLevel > rt->gcStats.maxlevel)
                   rt->gcStats.maxlevel = rt->gcLevel);
-        JS_UNLOCK_GC(rt);
-        return JS_FALSE;
+        if (!(gcflags & GC_LAST_DITCH))
+            JS_UNLOCK_GC(rt);
+        return JS_TRUE;
     }
 
     /*
@@ -2433,8 +2433,9 @@ js_GC(JSContext *cx, uintN gcflags)
             JS_AWAIT_GC_DONE(rt);
         if (requestDebit)
             rt->requestCount += requestDebit;
-        JS_UNLOCK_GC(rt);
-        return JS_FALSE;
+        if (!(gcflags & GC_LAST_DITCH))
+            JS_UNLOCK_GC(rt);
+        return JS_TRUE;
     }
 
     /* No other thread is in GC, so indicate that we're now in GC. */
@@ -2453,7 +2454,7 @@ js_GC(JSContext *cx, uintN gcflags)
     METER(if (rt->gcLevel > rt->gcStats.maxlevel)
               rt->gcStats.maxlevel = rt->gcLevel);
     if (rt->gcLevel > 1)
-        return JS_FALSE;
+        return JS_TRUE;
 
 #endif /* !JS_THREADSAFE */
 
@@ -2823,6 +2824,8 @@ restart:
             cx->branchCallback && /* gcCallback can reset the branchCallback */
             !cx->branchCallback(cx, NULL)) {
             METER(rt->gcStats.retryhalt++);
+
+            /* Keep GC unlocked when canceled. */
             return JS_FALSE;
         }
         if (gcflags & GC_LAST_DITCH)
