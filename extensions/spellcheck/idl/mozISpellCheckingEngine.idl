@@ -96,8 +96,3 @@ interface mozISpellCheckingEngine : nsISupports {
    */
   void suggest(in wstring word,[array, size_is(count)] out wstring suggestions, out PRUint32 count);
 };
-
-%{C++
-#define DICTIONARY_SEARCH_DIRECTORY "DictD"
-#define DICTIONARY_SEARCH_DIRECTORY_LIST "DictDL"
-%}
