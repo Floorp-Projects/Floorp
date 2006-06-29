@@ -88,9 +88,7 @@
   <wizardpage id="updatesfound" pageid="updatesfound" next="downloading"
               object="gUpdatesAvailablePage" label="&updatesfound.title;"
               onpageshow="gUpdatesAvailablePage.onPageShow();"
-              onextra1="dump('+++++++++++++ GOAT\n');gUpdates.wiz.cancel()"
-              downloadNowLabel="&download.label;"
-              downloadLaterLabel="&later.label;">
+              onextra1="dump('+++++++++++++ GOAT\n');gUpdates.wiz.cancel()">
     <description id="updateType"/>
     <separator class="thin"/>
     <label id="updateName" crop="right"/>

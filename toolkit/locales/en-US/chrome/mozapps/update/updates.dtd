@@ -24,11 +24,6 @@
 <!ENTITY  listIncompatible.label          "Show List">
 <!ENTITY  listIncompatible.accesskey      "L">
 
-<!ENTITY  later.label                     "Later">
-<!ENTITY  later.accesskey                 "a">
-<!ENTITY  download.label                  "Download &amp; Install Now &#0187;">
-<!ENTITY  download.accesskey              "D">
-
 <!ENTITY  upgrade.evangelism              "It is strongly recommended that you upgrade &brandShortName; 
                                            as soon as possible.">
 

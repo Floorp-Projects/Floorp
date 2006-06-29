@@ -124,52 +124,74 @@ var gUpdates = {
    * The <wizard> element
    */
   wiz: null,
+
+  /**
+   * Helper function for setButtons
+   * Resets button to original label & accesskey if string is null.
+   */
+  _setButton: function(button, string) {
+    if (string) {
+      var label = this.strings.getString(string);
+      if (label.indexOf("%S") != -1)
+        label = label.replace(/%S/, this.brandName);
+      button.label = label;
+      button.setAttribute("accesskey",
+                          this.strings.getString(string + ".accesskey"));
+    } else {
+      button.label = button.defaultLabel;
+      button.setAttribute("accesskey", button.defaultAccesskey);
+    }
+  },
   
   /**
    * Set the state for the Wizard's control buttons (labels and disabled
    * state).
-   * @param   backButtonLabel
-   *          The label to put on the Back button, or null for default.
+   * @param   backButtonString
+   *          The property in the stringbundle containing the label
+   *          to put on the Back button, or null for default.
    * @param   backButtonDisabled
    *          true if the Back button should be disabled, false otherwise
-   * @param   nextButtonLabel
-   *          The label to put on the Next button, or null for default.
+   * @param   nextButtonString
+   *          The property in the stringbundle containing the label
+   *          to put on the Next button, or null for default.
    * @param   nextButtonDisabled
    *          true if the Next button should be disabled, false otherwise
-   * @param   finishButtonLabel
-   *          The label to put on the Finish button, or null for default.
+   * @param   finishButtonString
+   *          The property in the stringbundle containing the label
+   *          to put on the Finish button, or null for default.
    * @param   finishButtonDisabled
    *          true if the Finish button should be disabled, false otherwise
-   * @param   cancelButtonLabel
-   *          The label to put on the Cancel button, or null for default.
+   * @param   cancelButtonString
+   *          The property in the stringbundle containing the label
+   *          to put on the Cancel button, or null for default.
    * @param   cancelButtonDisabled
    *          true if the Cancel button should be disabled, false otherwise
    * @param   hideBackAndCancelButtons
    *          true if the Cancel button should be hidden, false otherwise
-   * @param   extraButtonLabel
-   *          The label to put on the Extra button, if present, or null for 
-   *          default.
+   * @param   extraButtonString
+   *          The property in the stringbundle containing the label to put
+   *          on the Extra button, if present, or null for default.
    * @param   extraButtonDisabled
    *          true if the Extra button should be disabled, false otherwise
    */
-  setButtons: function(backButtonLabel, backButtonDisabled, 
-                       nextButtonLabel, nextButtonDisabled,
-                       finishButtonLabel, finishButtonDisabled,
-                       cancelButtonLabel, cancelButtonDisabled,
+  setButtons: function(backButtonString, backButtonDisabled,
+                       nextButtonString, nextButtonDisabled,
+                       finishButtonString, finishButtonDisabled,
+                       cancelButtonString, cancelButtonDisabled,
                        hideBackAndCancelButtons,
-                       extraButtonLabel, extraButtonDisabled) {
+                       extraButtonString, extraButtonDisabled) {
     var bb = this.wiz.getButton("back");
     var bn = this.wiz.getButton("next");
     var bf = this.wiz.getButton("finish");
     var bc = this.wiz.getButton("cancel");
     var be = this.wiz.getButton("extra1");
 
-    bb.label    = backButtonLabel   || this._buttonLabel_back;
-    bn.label    = nextButtonLabel   || this._buttonLabel_next;
-    bf.label    = finishButtonLabel || this._buttonLabel_finish;
-    bc.label    = cancelButtonLabel || this._buttonLabel_hide;
-    be.label    = extraButtonLabel || this._buttonLabel_hide;
-    
+    this._setButton(bb, backButtonString);
+    this._setButton(bn, nextButtonString);
+    this._setButton(bf, finishButtonString);
+    this._setButton(bc, cancelButtonString);
+    this._setButton(be, extraButtonString);
+
     // update button state using the wizard commands
     this.wiz.canRewind  = !backButtonDisabled;
     // The Finish and Next buttons are never exposed at the same time
@@ -188,7 +210,7 @@ var gUpdates = {
     bb.hidden   = hideBackAndCancelButtons;
 
     // Show or hide the extra button
-    be.hidden = extraButtonLabel == null;
+    be.hidden = extraButtonString == null;
   },
   
   /**
@@ -249,6 +271,16 @@ var gUpdates = {
    * readable text, used to initialize the error page.
    */
   errorMessage: "",
+
+  /**
+   * Helper function for onLoad
+   * Saves default button label & accesskey for use by _setButton
+   */
+  _cacheButtonStrings: function (buttonName) {
+    var button = this.wiz.getButton(buttonName);
+    button.defaultLabel = button.label;
+    button.defaultAccesskey = button.getAttribute("accesskey");
+  },
   
   /**
    * Called when the wizard UI is loaded.
@@ -274,12 +306,11 @@ var gUpdates = {
     }
   
     // Cache the standard button labels in case we need to restore them
-    this._buttonLabel_back = this.wiz.getButton("back").label;
-    this._buttonLabel_next = this.wiz.getButton("next").label;
-    this._buttonLabel_finish = this.wiz.getButton("finish").label;
-    this._buttonLabel_cancel = this.wiz.getButton("cancel").label;
-    this._buttonLabel_hide = this.strings.getString("hideButtonLabel");
-    this.wiz.getButton("cancel").label = this._buttonLabel_hide;
+    this._cacheButtonStrings("back");
+    this._cacheButtonStrings("next");
+    this._cacheButtonStrings("finish");
+    this._cacheButtonStrings("cancel");
+    this._cacheButtonStrings("extra1");
     
     // Advance to the Start page. 
     gUpdates.wiz.currentPage = this.startPage;
@@ -476,7 +507,7 @@ var gCheckingPage = {
    */
   onPageShow: function() {
     gUpdates.setButtons(null, true, null, true, null, true, 
-                        gUpdates._buttonLabel_cancel, false, false, null, 
+                        null, false, false, null, 
                         false);
     this._checker = 
       Components.classes["@mozilla.org/updates/update-checker;1"].
@@ -558,8 +589,8 @@ var gNoUpdatesPage = {
    * Initialize
    */
   onPageShow: function() {
-    gUpdates.setButtons(null, true, null, true, null, false, null, true, false,
-                        null, false);
+    gUpdates.setButtons(null, true, null, true, null, false, "hideButton",
+                        true, false, null, false);
     gUpdates.wiz.getButton("finish").focus();
   }
 };
@@ -626,11 +657,9 @@ var gUpdatesAvailablePage = {
       gUpdates.update.setProperty("licenseAccepted", "false");
     }
 
-    var downloadNowLabel = gUpdates.wiz.currentPage.getAttribute("downloadNowLabel");
-    var downloadLaterLabel = gUpdates.wiz.currentPage.getAttribute("downloadLaterLabel");
-    gUpdates.setButtons(null, false, downloadNowLabel, false, null, false,
+    gUpdates.setButtons(null, false, "downloadButton", false, null, false,
                         null, false, true, 
-                        downloadLaterLabel, false);
+                        "laterButton", false);
     gUpdates.wiz.getButton("next").focus();
   },
   
@@ -708,9 +737,7 @@ var gLicensePage = {
   onPageShow: function() {
     this._licenseContent = document.getElementById("licenseContent");
     
-    var IAgree = gUpdates.strings.getString("IAgreeLabel");
-    var IDoNotAgree = gUpdates.strings.getString("IDoNotAgreeLabel");
-    gUpdates.setButtons(null, true, IAgree, true, null, true, IDoNotAgree, 
+    gUpdates.setButtons(null, true, "IAgree", true, null, true, "IDoNotAgree", 
                         false, false, null, false);
 
     this._licenseContent.addEventListener("load", this.onLicenseLoad, false);
@@ -1061,8 +1088,8 @@ var gDownloadingPage = {
     var link = document.getElementById("detailsLink");
     link.href = gUpdates.update.detailsURL;
 
-    gUpdates.setButtons(null, true, null, true, null, true, null, false, false,
-                        null, false);
+    gUpdates.setButtons(null, true, null, true, null, true, "hideButton",
+                        false, false, null, false);
   },
   
   /** 
@@ -1349,8 +1376,8 @@ var gErrorsPage = {
    * Initialize
    */
   onPageShow: function() {
-    gUpdates.setButtons(null, true, null, true, null, false, null, true, false, 
-                        null, false);
+    gUpdates.setButtons(null, true, null, true, null, false, "hideButton",
+                        true, false, null, false);
     gUpdates.wiz.getButton("finish").focus();
     
     var errorReason = document.getElementById("errorReason");
@@ -1420,11 +1447,8 @@ var gFinishedPage = {
    *          short delay
    */
   onPageShow: function(aDelayRestart) {  
-    var restart = gUpdates.strings.getFormattedString("restartButton",
-      [gUpdates.brandName]);
-    var later = gUpdates.strings.getString("laterButton");
-    gUpdates.setButtons(null, true, null, true, restart, aDelayRestart, later,
-                        false, false, null, false);
+    gUpdates.setButtons(null, true, null, true, "restartButton", aDelayRestart,
+                        "laterButton", false, false, null, false);
     if (aDelayRestart)
       setTimeout(this._enableRestartButton, 2000);
     else
@@ -1555,8 +1579,8 @@ var gInstalledPage = {
     catch (e) {
     }
     
-    this.setButtons(null, true, null, true, null, false, null, true, false, 
-                    null, false);
+    gUpdates.setButtons(null, true, null, true, null, false, "hideButton",
+                        true, false, null, false);
     gUpdates.wiz.getButton("finish").focus();
   }
 };
