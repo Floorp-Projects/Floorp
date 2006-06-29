@@ -522,14 +522,6 @@ NS_IMETHODIMP nsChildView::Destroy()
   nsBaseWidget::OnDestroy();
   nsBaseWidget::Destroy();
 
-  // just to be safe. If we're going away and for some reason we're still
-  // the rollup widget, rollup and turn off capture.
-  if (this == gRollupWidget) {
-    if (gRollupListener)
-      gRollupListener->Rollup();
-    CaptureRollupEvents(nsnull, PR_FALSE, PR_TRUE);
-  }
-
   ReportDestroyEvent(); // beard: this seems to cause the window to be deleted. moved all release code to destructor.
   mParentWidget = nil;
 
@@ -540,7 +532,7 @@ NS_IMETHODIMP nsChildView::Destroy()
 
 #pragma mark -
 
-#if DEBUG
+#if 0
 static void PrintViewHierarcy(NSView *view)
 {
   while (view)
@@ -1836,18 +1828,7 @@ NS_IMETHODIMP nsChildView::CaptureRollupEvents(nsIRollupListener * aListener,
                                                PRBool aDoCapture, 
                                                PRBool aConsumeRollupEvent)
 {
-  if (aDoCapture) {
-    NS_IF_RELEASE(gRollupListener);
-    NS_IF_RELEASE(gRollupWidget);
-    gRollupListener = aListener;
-    NS_ADDREF(aListener);
-    gRollupWidget = this;
-    NS_ADDREF(this);
-  } else {
-    NS_IF_RELEASE(gRollupListener);
-    NS_IF_RELEASE(gRollupWidget);
-  }
-
+  // this never gets called, only top-level windows can be rollup widgets
   return NS_OK;
 }
 
@@ -2570,7 +2551,7 @@ nsChildView::GetThebesSurface()
   macEvent.what = mouseDown;
   macEvent.message = 0;
   macEvent.when = ::TickCount();
-  GetGlobalMouse(&macEvent.where);
+  ::GetGlobalMouse(&macEvent.where);
   macEvent.modifiers = GetCurrentKeyModifiers();
   geckoEvent.nativeMsg = &macEvent;
 
@@ -2599,7 +2580,7 @@ nsChildView::GetThebesSurface()
   macEvent.what = mouseUp;
   macEvent.message = 0;
   macEvent.when = ::TickCount();
-  GetGlobalMouse(&macEvent.where);
+  ::GetGlobalMouse(&macEvent.where);
   macEvent.modifiers = GetCurrentKeyModifiers();
   geckoEvent.nativeMsg = &macEvent;
 
@@ -2640,7 +2621,7 @@ nsChildView::GetThebesSurface()
   macEvent.what = nullEvent;
   macEvent.message = 0;
   macEvent.when = ::TickCount();
-  GetGlobalMouse(&macEvent.where);
+  ::GetGlobalMouse(&macEvent.where);
   
   macEvent.modifiers = GetCurrentKeyModifiers();
   geckoEvent.nativeMsg = &macEvent;
@@ -2664,7 +2645,7 @@ nsChildView::GetThebesSurface()
   macEvent.what = nullEvent;
   macEvent.message = 0;
   macEvent.when = ::TickCount();
-  GetGlobalMouse(&macEvent.where);
+  ::GetGlobalMouse(&macEvent.where);
   macEvent.modifiers = btnState | GetCurrentKeyModifiers();
   geckoEvent.nativeMsg = &macEvent;
   
@@ -2787,7 +2768,7 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w
   macEvent.what = mouseDown;
   macEvent.message = 0;
   macEvent.when = ::TickCount();
-  GetGlobalMouse(&macEvent.where);
+  ::GetGlobalMouse(&macEvent.where);
   macEvent.modifiers = controlKey;  // fake a context menu click
   geckoEvent.nativeMsg = &macEvent;
 
@@ -2807,7 +2788,7 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w
   macEvent.what = mouseUp;
   macEvent.message = 0;
   macEvent.when = ::TickCount();
-  GetGlobalMouse(&macEvent.where);
+  ::GetGlobalMouse(&macEvent.where);
   macEvent.modifiers = controlKey;  // fake a context menu click
   geckoEvent.nativeMsg = &macEvent;
 
@@ -2908,7 +2889,7 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w
                             &delta);
 
       Point mouseLoc;
-      GetGlobalMouse(&mouseLoc);
+      ::GetGlobalMouse(&mouseLoc);
       SetEventParameter(theEvent,
                             kEventParamMouseLocation,
                             typeQDPoint,
@@ -3075,7 +3056,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
     }
     macEvent.message = (charCode & 0x00FF) | ([cocoaEvent keyCode] << 8);
     macEvent.when = ::TickCount();
-    GetGlobalMouse(&macEvent.where);
+    ::GetGlobalMouse(&macEvent.where);
     macEvent.modifiers = ::GetCurrentKeyModifiers();
 }
 
