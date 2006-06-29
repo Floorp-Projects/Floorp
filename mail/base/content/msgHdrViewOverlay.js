@@ -531,14 +531,14 @@ function setTagHeader()
   var tagsString = "";
   
   // extract the tags from the msg hdr
-  var tags = msgHdr.getStringProperty('keywords');
-  
+  var tags = msgHdr.getStringProperty('keywords'); 
   var label = msgHdr.label;
   if (label > 0)
   {
-    var labelTag = '$label' + label + '0';
-    tagsString = encodeURIComponent(gPrefBranch.getComplexValue("mailnews.labels.description." + label, 
-                 Components.interfaces.nsIPrefLocalizedString).data);
+    var labelTag = '$label' + label;
+    if (!tags.search(labelTag)) // don't add the label if it's already in our keyword list
+      tagsString = encodeURIComponent(gPrefBranch.getComplexValue("mailnews.labels.description." + label, 
+                   Components.interfaces.nsIPrefLocalizedString).data);
   }
   
   // now convert the list of tag ids into user presentable strings, separate by commas
