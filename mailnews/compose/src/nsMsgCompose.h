@@ -99,7 +99,8 @@ private:
 
   nsresult                      LoadDataFromFile(nsFileSpec& fSpec,
                                                  nsString &sigData,
-                                                 PRBool aAllowUTF8 = PR_TRUE);
+                                                 PRBool aAllowUTF8 = PR_TRUE,
+                                                 PRBool aAllowUTF16 = PR_TRUE);
 
 /*
   nsresult                      GetCompFields(nsMsgCompFields **aCompFields) 

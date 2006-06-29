@@ -147,7 +147,11 @@ nsresult nsMsgI18NConvertToUnicode(const char* aCharset,
   }
   else if (!PL_strcasecmp(aCharset, "UTF-8")) {
     if (IsUTF8(inString)) {
-      CopyUTF8toUTF16(inString, outString);
+      nsAutoString tmp;
+      CopyUTF8toUTF16(inString, tmp);
+      if (!tmp.IsEmpty() && tmp.get()[0] == PRUnichar(0xFEFF))
+        tmp.Cut(0, 1);
+      outString.Assign(tmp);
       return NS_OK;
     }
     NS_WARNING("Invalid UTF-8 string");

@@ -3504,7 +3504,7 @@ nsMsgCompose::ConvertTextToHTML(nsFileSpec& aSigFile, nsString &aSigData)
 
 nsresult
 nsMsgCompose::LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData,
-                               PRBool aAllowUTF8)
+                               PRBool aAllowUTF8, PRBool aAllowUTF16)
 {
   PRInt32       readSize;
   PRInt32       nGot;
@@ -3544,6 +3544,12 @@ nsMsgCompose::LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData,
     if (aAllowUTF8 && IsUTF8(nsDependentCString(readBuf))) {
       sigEncoding.Assign("UTF-8");
     }
+    else if (sigEncoding.IsEmpty() && aAllowUTF16 &&
+             fSpec.GetFileSize() % 2 == 0 && fSpec.GetFileSize() >= 2 &&
+             ((readBuf[0] == char(0xFE) && readBuf[1] == char(0xFF)) ||
+              (readBuf[0] == char(0xFF) && readBuf[1] == char(0xFE)))) {
+      sigEncoding.Assign("UTF-16");
+    }
     else {
       //default to platform encoding for plain text files w/o meta charset
       nsCAutoString textFileCharset;
@@ -3552,8 +3558,11 @@ nsMsgCompose::LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData,
     }
   }
 
-  if (NS_FAILED(ConvertToUnicode(sigEncoding.get(), readBuf, sigData)))
-    CopyASCIItoUTF16(readBuf, sigData);
+  nsCAutoString readStr(readBuf, fSpec.GetFileSize());
+  PR_FREEIF(readBuf);
+
+  if (NS_FAILED(ConvertToUnicode(sigEncoding.get(), readStr, sigData)))
+    CopyASCIItoUTF16(readStr, sigData);
 
   //remove sig meta charset to allow user charset override during composition
   if (removeSigCharset)
@@ -3569,7 +3578,6 @@ nsMsgCompose::LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData,
       sigData.Cut(Distance(realstart, start), Distance(start, end));
   }
 
-  PR_FREEIF(readBuf);
   return NS_OK;
 }
 
