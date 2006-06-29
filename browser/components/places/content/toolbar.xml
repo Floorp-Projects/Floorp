@@ -529,13 +529,8 @@
         _ibTimer: null, 
         
         _setTimer: function TBV_DO_setTimer(time) {
-          // There is a problem in Windows where timers don't fire while the
-          // mouse is dragging.  QI-ing the timer to nsITimerInternal and setting
-          // idle to false makes the timer fire.
           var timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
           timer.initWithCallback(this, time, timer.TYPE_ONE_SHOT);
-          timer.QueryInterface(Ci.nsITimerInternal);
-          timer.idle = false;
           return timer;
         },
         

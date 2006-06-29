@@ -546,8 +546,6 @@ var PlacesMenuDNDController = {
     var timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     timer.initWithCallback(new Callback(this, callback, args), delay, 
                            timer.TYPE_ONE_SHOT);
-    timer.QueryInterface(Ci.nsITimerInternal);
-    timer.idle = false;
     this._timers[id] = timer;
   },
   

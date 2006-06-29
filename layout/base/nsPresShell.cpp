@@ -178,7 +178,6 @@
 #include "nsIDOMHTMLAreaElement.h"
 #include "nsIDOMHTMLLinkElement.h"
 #include "nsITimer.h"
-#include "nsITimerInternal.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
 #include "nsIAccessible.h"
@@ -2969,9 +2968,6 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
       PRInt32 delay =
         nsContentUtils::GetIntPref("nglayout.initialpaint.delay",
                                    PAINTLOCK_EVENT_DELAY);
-
-      nsCOMPtr<nsITimerInternal> ti = do_QueryInterface(mPaintSuppressionTimer);
-      ti->SetIdle(PR_FALSE);
 
       mPaintSuppressionTimer->InitWithFuncCallback(sPaintSuppressionCallback,
                                                    this, delay, 
