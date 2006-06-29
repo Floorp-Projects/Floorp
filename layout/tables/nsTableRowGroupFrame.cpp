@@ -1351,6 +1351,8 @@ NS_IMETHODIMP
 nsTableRowGroupFrame::AppendFrames(nsIAtom*        aListName,
                                    nsIFrame*       aFrameList)
 {
+  NS_ASSERTION(!aListName, "unexpected child list");
+
   // collect the new row frames in an array
   nsAutoVoidArray rows;
   for (nsIFrame* rowFrame = aFrameList; rowFrame;
@@ -1395,6 +1397,10 @@ nsTableRowGroupFrame::InsertFrames(nsIAtom*        aListName,
                                    nsIFrame*       aPrevFrame,
                                    nsIFrame*       aFrameList)
 {
+  NS_ASSERTION(!aListName, "unexpected child list");
+  NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
+               "inserting after sibling frame with different parent");
+
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   if (!tableFrame)
     return NS_ERROR_NULL_POINTER;
@@ -1449,6 +1455,8 @@ NS_IMETHODIMP
 nsTableRowGroupFrame::RemoveFrame(nsIAtom*        aListName,
                                   nsIFrame*       aOldFrame)
 {
+  NS_ASSERTION(!aListName, "unexpected child list");
+
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   if (tableFrame) {
     if (nsLayoutAtoms::tableRowFrame == aOldFrame->GetType()) {

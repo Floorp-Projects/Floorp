@@ -83,6 +83,8 @@ nsAbsoluteContainingBlock::AppendFrames(nsIFrame*      aDelegatingFrame,
                                         nsIAtom*       aListName,
                                         nsIFrame*      aFrameList)
 {
+  NS_ASSERTION(GetChildListName() == aListName, "unexpected child list");
+
   // Append the frames to our list of absolutely positioned frames
 #ifdef NS_DEBUG
   nsFrame::VerifyDirtyBitSet(aFrameList);
@@ -101,7 +103,10 @@ nsAbsoluteContainingBlock::InsertFrames(nsIFrame*      aDelegatingFrame,
                                         nsIFrame*      aPrevFrame,
                                         nsIFrame*      aFrameList)
 {
-  // Insert the new frames
+  NS_ASSERTION(GetChildListName() == aListName, "unexpected child list");
+  NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == aDelegatingFrame,
+               "inserting after sibling frame with different parent");
+
 #ifdef NS_DEBUG
   nsFrame::VerifyDirtyBitSet(aFrameList);
 #endif
@@ -118,6 +123,8 @@ nsAbsoluteContainingBlock::RemoveFrame(nsIFrame*       aDelegatingFrame,
                                        nsIAtom*        aListName,
                                        nsIFrame*       aOldFrame)
 {
+  NS_ASSERTION(GetChildListName() == aListName, "unexpected child list");
+
   PRBool result = mAbsoluteFrames.DestroyFrame(aOldFrame);
   NS_ASSERTION(result, "didn't find frame to delete");
   // Because positioned frames aren't part of a flow, there's no additional

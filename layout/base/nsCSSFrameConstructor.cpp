@@ -9636,11 +9636,17 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
     if (NS_SUCCEEDED(rv) && newCaptionFrame) {
       nsIFrame* outerTableFrame;
       if (GetCaptionAdjustedParent(parentFrame, newCaptionFrame, &outerTableFrame)) {
+        // If we did adjust the parent then the calculated insertion point is
+        // now invalid (bug 341382).
+        if (parentFrame != outerTableFrame) {
+          prevSibling = nsnull;
+        }
         // If the parent is not a outer table frame we will try to add frames
         // to a named child list that the parent does not honour and the frames
         // will get lost
         NS_ASSERTION(nsLayoutAtoms::tableOuterFrame == outerTableFrame->GetType(),
-                     "Pseudo frame construction failure, a caption can be only a child of a outer table frame");
+                     "Pseudo frame construction failure, "
+                     "a caption can be only a child of a outer table frame");
         if (isAppend) {
           state.mFrameManager->AppendFrames(outerTableFrame,
                                             nsLayoutAtoms::captionList,

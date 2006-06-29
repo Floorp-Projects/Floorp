@@ -201,6 +201,8 @@ nsHTMLScrollFrame::InsertFrames(nsIAtom*  aListName,
                                 nsIFrame* aFrameList)
 {
   NS_ASSERTION(!aListName, "Only main list supported");
+  NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
+               "inserting after sibling frame with different parent");
   mFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
   mInner.ReloadChildFrames();
   return NS_OK;

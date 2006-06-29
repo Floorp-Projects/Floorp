@@ -177,7 +177,10 @@ nsInlineFrame::AppendFrames(nsIAtom*        aListName,
 #ifdef IBMBIDI
     if (aListName != nsLayoutAtoms::nextBidi)
 #endif
+    {
+      NS_ERROR("unexpected child list");
       return NS_ERROR_INVALID_ARG;
+    }
   }
   if (aFrameList) {
     mFrames.AppendFrames(this, aFrameList);
@@ -196,11 +199,17 @@ nsInlineFrame::InsertFrames(nsIAtom*        aListName,
                             nsIFrame*       aPrevFrame,
                             nsIFrame*       aFrameList)
 {
+  NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
+               "inserting after sibling frame with different parent");
+
   if (nsnull != aListName) {
 #ifdef IBMBIDI
     if (aListName != nsLayoutAtoms::nextBidi)
 #endif
-    return NS_ERROR_INVALID_ARG;
+    {
+      NS_ERROR("unexpected child list");
+      return NS_ERROR_INVALID_ARG;
+    }
   }
   if (aFrameList) {
     // Insert frames after aPrevFrame
@@ -223,7 +232,10 @@ nsInlineFrame::RemoveFrame(nsIAtom*        aListName,
 #ifdef IBMBIDI
     if (nsLayoutAtoms::nextBidi != aListName)
 #endif
-    return NS_ERROR_INVALID_ARG;
+    {
+      NS_ERROR("unexpected child list");
+      return NS_ERROR_INVALID_ARG;
+    }
   }
 
   if (aOldFrame) {

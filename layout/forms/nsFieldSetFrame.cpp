@@ -625,6 +625,10 @@ nsFieldSetFrame::InsertFrames(nsIAtom*       aListName,
                               nsIFrame*      aPrevFrame,
                               nsIFrame*      aFrameList)
 {
+  NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this ||
+               aPrevFrame->GetParent() == mContentFrame,
+               "inserting after sibling frame with different parent");
+
   aFrameList = MaybeSetLegend(aFrameList, aListName);
   if (aFrameList) {
     ReParentFrameList(aFrameList);
