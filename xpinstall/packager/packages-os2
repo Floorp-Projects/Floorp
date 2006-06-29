@@ -479,7 +479,7 @@ bin/res/inspector/search-registry.rdf
 bin/components/myspell.dll
 bin/components/spellchk.dll
 bin/components/spellchecker.xpt
-bin/components/myspell/*
+bin/dictionaries/*
 
 [reporter]
 bin/chrome/reporter.jar

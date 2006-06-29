@@ -536,7 +536,7 @@ bin/chrome/icons/default/winInspectorMain*.xpm
 bin/components/libmyspell.so
 bin/components/libspellchecker.so
 bin/components/spellchecker.xpt
-bin/components/myspell/*
+bin/dictionaries/*
 
 [reporter]
 bin/chrome/reporter.jar
