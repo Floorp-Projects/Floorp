@@ -1,4 +1,4 @@
-<?xml version="1.0"?> 
+﻿<?xml version="1.0"?> 
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 
@@ -31,7 +31,9 @@
 #endif
       <!-- text -->
       <description id="info.header" class="header"/>
-      <vbox id="info.box"/>
+      <vbox id="info.box">
+        <description/>
+      </vbox>
 
       <!-- textboxes -->
       <vbox id="loginContainer" hidden="true">
