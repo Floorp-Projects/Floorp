@@ -5907,6 +5907,9 @@ void nsImapProtocol::GetMyRightsForFolder(const char *mailboxName)
   nsCString command(GetServerCommandTag());
   char *escapedName = CreateEscapedMailboxName(mailboxName);
     
+  if (MailboxIsNoSelectMailbox(escapedName))
+    return; // Don't issue myrights on Noselect folder
+
   command.Append(" myrights \"");
   command.Append(escapedName);
   command.Append("\"" CRLF);
