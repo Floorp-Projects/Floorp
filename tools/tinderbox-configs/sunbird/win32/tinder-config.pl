@@ -11,14 +11,14 @@
 #-----------------------------------------------------------------------------
 #  Purpose: Controls whether a 7-Zip Self Extracting Full Installer is made.
 # Requires: Windows and a local 7-Zip installation.
-#$ENV{MOZ_INSTALLER_USE_7ZIP} = 1;
+$ENV{MOZ_INSTALLER_USE_7ZIP} = 0;
 
 # $ENV{MOZ_PACKAGE_NSIS}
 #-----------------------------------------------------------------------------
 #  Purpose: Controls whether the Nullsoft Installer System is used for
 #           creating an installer.
 # Requires: Windows and a local NSIS installation.
-#$ENV{MOZ_PACKAGE_NSIS} = 1;
+$ENV{MOZ_PACKAGE_NSIS} = 0;
 
 # $ENV{MOZ_PACKAGE_MSI}
 #-----------------------------------------------------------------------------
