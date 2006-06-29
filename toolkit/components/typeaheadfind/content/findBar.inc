@@ -6,6 +6,7 @@
       <hbox id="find-field-container" class="find-fast">
         <textbox id="find-field" oninput="gFindBar.find(this.value);"
                 onkeypress="gFindBar.onFindBarKeyPress(event);"
+                onfocus="gFindBar.onFindBarFocus();"
                 onblur="gFindBar.onFindBarBlur();"
                 oncompositionstart="gFindBar.onFindBarCompositionStart(event);"
                 oncompositionend="gFindBar.onFindBarCompositionEnd(event);"/>
