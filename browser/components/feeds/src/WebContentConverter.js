@@ -668,7 +668,7 @@ var WebContentConverterRegistrar = {
    */
   QueryInterface: function WCCR_QueryInterface(iid) {
     if (iid.equals(Ci.nsIWebContentConverterService) || 
-        /*iid.equals(Ci.nsIWebContentHandlerRegistrar) ||  see bug 340179 */
+        iid.equals(Ci.nsIWebContentHandlerRegistrar) ||
         iid.equals(Ci.nsIObserver) ||
         iid.equals(Ci.nsIClassInfo) ||
         iid.equals(Ci.nsIFactory) ||
