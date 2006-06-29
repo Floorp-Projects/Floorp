@@ -140,34 +140,24 @@ var gEngineManagerDialog = {
 
     document.getElementById("cmd_movedown").setAttribute("disabled",
                                              disableButtons || lastSelected);
-  },
+  }
+};
 
-  startDrag: function engineManager_startDrag(aEvent) {
+var gDragObserver = {
+  onDragStart: function (aEvent, aXferData, aDragAction) {
     var selectedIndex = gEngineView.selectedIndex;
     if (selectedIndex == -1)
       return;
 
-    var transfer = Cc["@mozilla.org/widget/transferable;1"].
-                   createInstance(Ci.nsITransferable);
-    var dragData = Cc["@mozilla.org/supports-string;1"].
-                   createInstance(Ci.nsISupportsString);
+    aXferData.data = new TransferData();
+    aXferData.data.addDataForFlavour(ENGINE_FLAVOR, selectedIndex.toString());
 
-    transfer.addDataFlavor(ENGINE_FLAVOR);
-
-    var indexStr = selectedIndex.toString();
-    dragData.data = indexStr;                         // 2 bytes per character
-    transfer.setTransferData(ENGINE_FLAVOR, dragData, indexStr.length * 2);
-
-    var transArray = Cc["@mozilla.org/supports-array;1"].
-                     createInstance(Ci.nsISupportsArray);
-    transfer.QueryInterface(Components.interfaces.nsISupports)
-    transArray.AppendElement(transfer);
-
-    var dragService = Cc["@mozilla.org/widget/dragservice;1"].
-                      getService(Ci.nsIDragService);
-    dragService.invokeDragSession(aEvent.target, transArray, null,
-                                  Ci.nsIDragService.DRAGDROP_ACTION_MOVE);
-  }
+    aDragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_MOVE;
+  },
+  onDrop: function (aEvent, aXferData, aDragSession) { },
+  onDragExit: function (aEvent, aDragSession) { },
+  onDragOver: function (aEvent, aFlavour, aDragSession) { },
+  getSupportedFlavours: function() { return null; }
 };
 
 // "Operation" objects
@@ -370,6 +360,7 @@ EngineView.prototype = {
 
       // Redraw, and adjust selection
       this.invalidate();
+      this.selection.clearSelection();
       this.selection.select(newIndex);
     }
   },

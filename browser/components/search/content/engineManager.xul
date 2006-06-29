@@ -55,6 +55,8 @@
 
   <script type="application/x-javascript"
           src="chrome://browser/content/search/engineManager.js"/>
+  <script type="application/x-javascript"
+          src="chrome://global/content/nsDragAndDrop.js"/>
 
   <commandset id="engineManagerCommandSet">
     <command id="cmd_remove"
@@ -81,7 +83,7 @@
     <tree id="engineList" flex="1" rows="10" hidecolumnpicker="true"
           seltype="single" onselect="gEngineManagerDialog.onSelect();">
       <treechildren id="engineChildren" flex="1"
-                    ondraggesture="gEngineManagerDialog.startDrag(event);"/>
+                    ondraggesture="nsDragAndDrop.startDrag(event, gDragObserver);"/>
       <treecols>
         <treecol id="engineName" flex="1" hideheader="true"/>
       </treecols>
