@@ -64,7 +64,7 @@ sub processResults {
 	
 	$self->parseResultFile($data) ? 1 : return 0;
 	
-	unless ($self->authenticate()) { return } # login failure
+	unless ($self->authenticate()) { return 0} # login failure
 	
 	$self->validateResults() ? 1 : return 0;
 	
