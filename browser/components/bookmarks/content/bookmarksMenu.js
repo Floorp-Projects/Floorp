@@ -58,7 +58,7 @@ var BookmarksMenu = {
   },
 
   /////////////////////////////////////////////////////////////////////////////
-  // shows the 'Open in Tabs' menu item if validOpenInTabsMenuItem is true -->
+  // shows the 'Open All in Tabs' menu item if validOpenInTabsMenuItem is true -->
   showOpenInTabsMenuItem: function (aTarget)
   {
     if (!this.validOpenInTabsMenuItem(aTarget) ||
@@ -105,7 +105,7 @@ var BookmarksMenu = {
   },
 #else
   /////////////////////////////////////////////////////////////////////////////
-  // hides the 'Open in Tabs' on popuphidden so that we won't duplicate it -->
+  // hides the 'Open All in Tabs' on popuphidden so that we won't duplicate it -->
   hideOpenInTabsMenuItem: function (aTarget)
   {
     BookmarksMenu.realHideOpenInTabsMenuItem(aTarget);
@@ -436,7 +436,7 @@ var BookmarksMenu = {
 
   ///////////////////////////////////////////////////////////////
   // Load a bookmark in menus or toolbar buttons
-  // aTarget may not the aEvent target (see Open in tabs command)
+  // aTarget may not the aEvent target (see Open all in tabs command)
   loadBookmark: function (aEvent, aTarget, aDS)
   {
     if (aTarget.getAttribute("class") == "openintabs-menuitem")
