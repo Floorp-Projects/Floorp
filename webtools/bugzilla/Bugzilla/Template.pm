@@ -35,7 +35,7 @@ package Bugzilla::Template;
 use strict;
 
 use Bugzilla::Constants;
-use Bugzilla::Config qw(:DEFAULT $templatedir $datadir $project);
+use Bugzilla::Config;
 use Bugzilla::Util;
 use Bugzilla::User;
 use Bugzilla::Error;
@@ -110,6 +110,9 @@ sub getTemplateIncludePath {
     if ($template_include_path) {
         return $template_include_path;
     }
+    my $templatedir = bz_locations()->{'templatedir'};
+    my $project     = bz_locations()->{'project'};
+
     my $languages = trim(Param('languages'));
     if (not ($languages =~ /,/)) {
        if ($project) {
@@ -159,7 +162,7 @@ sub getTemplateIncludePath {
     }
     
     # add in extension template directories:
-    my @extensions = glob($Bugzilla::Config::extensionsdir."/*");
+    my @extensions = glob(bz_locations()->{'extensionsdir'} . "/*");
     foreach my $extension (@extensions) {
         trick_taint($extension); # since this comes right from the filesystem
                                  # we have bigger issues if it is insecure
@@ -533,7 +536,7 @@ sub create {
         PRE_CHOMP => 1,
         TRIM => 1,
 
-        COMPILE_DIR => "$datadir/template",
+        COMPILE_DIR => bz_locations()->{'datadir'} . "/template",
 
         # Initialize templates (f.e. by loading plugins like Hook).
         PRE_PROCESS => "global/initialize.none.tmpl",

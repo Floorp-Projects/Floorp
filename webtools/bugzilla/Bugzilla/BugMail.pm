@@ -35,7 +35,7 @@ package Bugzilla::BugMail;
 use Bugzilla::Error;
 use Bugzilla::User;
 use Bugzilla::Constants;
-use Bugzilla::Config qw(:DEFAULT $datadir);
+use Bugzilla::Config;
 use Bugzilla::Util;
 use Bugzilla::Bug;
 use Bugzilla::Product;
@@ -62,7 +62,7 @@ my %rel_names = (REL_ASSIGNEE          , "AssignedTo",
 my %nomail;
 
 # This is run when we load the package
-if (open(NOMAIL, '<', "$datadir/nomail")) {
+if (open(NOMAIL, '<', bz_locations->{'datadir'} . "/nomail")) {
     while (<NOMAIL>) {
         $nomail{trim($_)} = 1;
     }

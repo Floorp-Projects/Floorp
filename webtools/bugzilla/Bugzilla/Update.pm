@@ -18,10 +18,10 @@ package Bugzilla::Update;
 
 use strict;
 
-use Bugzilla::Config qw($datadir);
+use Bugzilla::Constants;
 
 use constant REMOTE_FILE   => 'http://updates.bugzilla.org/bugzilla-update.xml';
-use constant LOCAL_FILE    => "/bugzilla-update.xml"; # Relative to $datadir.
+use constant LOCAL_FILE    => "/bugzilla-update.xml"; # Relative to datadir.
 use constant TIME_INTERVAL => 604800; # Default is one week, in seconds.
 use constant TIMEOUT       => 5; # Number of seconds before timeout.
 
@@ -34,7 +34,7 @@ sub get_notifications {
     eval("require XML::Twig");
     return if $@;
 
-    my $local_file = $datadir . LOCAL_FILE;
+    my $local_file = bz_locations()->{'datadir'} . LOCAL_FILE;
     # Update the local XML file if this one doesn't exist or if
     # the last modification time (stat[9]) is older than TIME_INTERVAL.
     if (!-e $local_file || (time() - (stat($local_file))[9] > TIME_INTERVAL)) {
@@ -127,7 +127,7 @@ sub _synchronize_data {
     eval("require LWP::UserAgent");
     return if $@;
 
-    my $local_file = $datadir . LOCAL_FILE;
+    my $local_file = bz_locations()->{'datadir'} . LOCAL_FILE;
 
     my $ua = LWP::UserAgent->new();
     $ua->timeout(TIMEOUT);

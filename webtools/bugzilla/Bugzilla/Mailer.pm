@@ -37,7 +37,7 @@ use base qw(Exporter);
 @Bugzilla::Mailer::EXPORT = qw(MessageToMTA);
 
 use Bugzilla::Constants;
-use Bugzilla::Config qw(:DEFAULT $datadir);
+use Bugzilla::Config;
 use Bugzilla::Util;
 
 use Mail::Header;
@@ -99,7 +99,8 @@ sub MessageToMTA {
     }
     my $mailer = new Mail::Mailer Param("mail_delivery_method"), @args;
     if (Param("mail_delivery_method") eq "testfile") {
-        $Mail::Mailer::testfile::config{outfile} = "$datadir/mailer.testfile";
+        $Mail::Mailer::testfile::config{outfile} = 
+            bz_locations()->{'datadir'} . '/mailer.testfile';
     }
     
     $mailer->open($headers->header_hashref);

@@ -22,6 +22,7 @@
 
 package Bugzilla::Hook;
 
+use Bugzilla::Constants;
 use Bugzilla::Util;
 use Bugzilla::Error;
 
@@ -32,7 +33,7 @@ sub process {
     trick_taint($name);
     
     # get a list of all extensions
-    my @extensions = glob($Bugzilla::Config::extensionsdir."/*");
+    my @extensions = glob(bz_locations()->{'extensionsdir'} . "/*");
     
     # check each extension to see if it uses the hook
     # if so, invoke the extension source file:

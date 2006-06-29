@@ -47,9 +47,10 @@ that users upload to the Bugzilla server.
 
 =cut
 
+use Bugzilla::Constants;
 use Bugzilla::Error;
 use Bugzilla::Flag;
-use Bugzilla::Config qw(:locations Param);
+use Bugzilla::Config;
 use Bugzilla::User;
 use Bugzilla::Util qw(trick_taint);
 
@@ -384,7 +385,7 @@ sub _get_local_filename {
     my $self = shift;
     my $hash = ($self->id % 100) + 100;
     $hash =~ s/.*(\d\d)$/group.$1/;
-    return "$attachdir/$hash/attachment." . $self->id;
+    return bz_locations()->{'attachdir'} . "/$hash/attachment." . $self->id;
 }
 
 sub _validate_filename {
@@ -700,6 +701,7 @@ sub insert_attachment_for_bug {
     # If the file is to be stored locally, stream the file from the webserver
     # to the local file without reading it into a local variable.
     if ($cgi->param('bigfile')) {
+        my $attachdir = bz_locations()->{'attachdir'};
         my $fh = $cgi->upload('data');
         my $hash = ($attachid % 100) + 100;
         $hash =~ s/.*(\d\d)$/group.$1/;

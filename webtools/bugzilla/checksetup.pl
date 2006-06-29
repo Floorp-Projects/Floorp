@@ -510,7 +510,7 @@ BEGIN {
     $::ENV{'PATH'} = $env;
 
     require Bugzilla::Config;
-    import Bugzilla::Config qw(:DEFAULT :admin :locations);
+    import Bugzilla::Config qw(:DEFAULT :admin);
 }
 
 # 12/17/00 justdave@syndicomm.com - removed declarations of the localconfig
@@ -550,6 +550,7 @@ BEGIN {
 
 print "Checking user setup ...\n" unless $silent;
 $@ = undef;
+my $localconfig = bz_locations()->{'localconfig'};
 do $localconfig;
 if ($@) { # capture errors in localconfig, bug 97290
    print STDERR <<EOT;
@@ -582,7 +583,7 @@ sub LocalVar
     my ($name, $definition) = @_;
     return if LocalVarExists($name); # if localconfig declared it, we're done.
     $newstuff .= " " . $name;
-    open FILE, '>>', $localconfig;
+    open FILE, '>>', bz_locations()->{'localconfig'};
     print FILE ($answer{$name} or $definition), "\n\n";
     close FILE;
 }
@@ -803,7 +804,8 @@ if (LocalVarExists('mysqlpath')) {
 if ($newstuff ne "") {
     print "\nThis version of Bugzilla contains some variables that you may \n",
           "want to change and adapt to your local settings. Please edit the\n",
-          "file '$localconfig' and rerun checksetup.pl\n\n",
+          "file " . bz_locations()->{'localconfig'} ." and rerun ",
+          "checksetup.pl\n\n",
           "The following variables are new to localconfig since you last ran\n",
           "checksetup.pl:  $newstuff\n\n";
     exit;
@@ -938,6 +940,7 @@ if ($my_db_check) {
        # Try to create the DB, and if we fail print an error.
        if (!eval { $dbh->do("CREATE DATABASE $my_db_name") }) {
             my $error = $dbh->errstr;
+            my $localconfig = bz_locations()->{'localconfig'};
             die <<"EOF"
 
 The '$my_db_name' database could not be created.  The error returned was:
@@ -1048,7 +1051,7 @@ while (my ($table, $values) = each %$enum_values) {
 #
 # Create initial --DATA-- directory and make the initial empty files there:
 #
-
+my $datadir = bz_locations()->{'datadir'};
 unless (-d $datadir && -e "$datadir/nomail") {
     print "Creating data directory ($datadir) ...\n";
     # permissions for non-webservergroup are fixed later on
@@ -1058,13 +1061,14 @@ unless (-d $datadir && -e "$datadir/nomail") {
     open FILE, '>>', "$datadir/mail"; close FILE;
 }
 
-
+my $attachdir = bz_locations->{'attachdir'};
 unless (-d $attachdir) {
     print "Creating local attachments directory ...\n";
     # permissions for non-webservergroup are fixed later on
     mkdir $attachdir, 0770;
 }
 
+my $extensionsdir = bz_locations->{'extensionsdir'};
 # ZLL: 2005-08-20 Create extensions/ if it does not already exist:
 unless (-d $extensionsdir) {
     print "Creating extensions directory ($extensionsdir) ...\n";
@@ -1161,6 +1165,7 @@ unless (-d "$datadir/mining") {
     mkdir "$datadir/mining", 0700;
 }
 
+my $webdotdir = bz_locations()->{'webdotdir'};
 unless (-d "$webdotdir") {
     # perms/ownership are fixed up later
     mkdir "$webdotdir", 0700;
@@ -1277,6 +1282,7 @@ END
     chmod $fileperm, "$datadir/.htaccess";
   }
   # Ditto for the template dir
+  my $templatedir = bz_locations()->{'templatedir'};
   if (!-e "$templatedir/.htaccess") {
     print "Creating $templatedir/.htaccess...\n";
     open HTACCESS, '>', "$templatedir/.htaccess";
@@ -1344,11 +1350,7 @@ END
     }
 }
 
-# Just to be sure ...
-unlink "$datadir/versioncache";
-
 # Check for a new install
-
 my $newinstall = !-e "$datadir/params";
 
 # Remove parameters from the params file that no longer exist in Bugzilla,
@@ -1405,6 +1407,7 @@ if ($newinstall) {
 # WriteParams will only write out still-valid entries
 WriteParams();
 
+my $templatedir = bz_locations()->{'templatedir'};
 unless ($switch{'no_templates'}) {
     if (-e "$datadir/template") {
         print "Removing existing compiled templates ...\n" unless $silent;
@@ -1579,7 +1582,8 @@ if ($^O !~ /MSWin32/i) {
         fixPerms("$datadir/duplicates", $<, $webservergid, 027, 1);
         fixPerms("$datadir/mining", $<, $webservergid, 027, 1);
         fixPerms("$datadir/template", $<, $webservergid, 007, 1); # webserver will write to these
-        fixPerms($attachdir, $<, $webservergid, 007, 1); # webserver will write to these
+        # webserver will write to attachdir.
+        fixPerms(bz_locations()->{'attachdir'}, $<, $webservergid, 007, 1);
         fixPerms($webdotdir, $<, $webservergid, 007, 1);
         fixPerms("$webdotdir/.htaccess", $<, $webservergid, 027);
         fixPerms("$datadir/params", $<, $webservergid, 017);
@@ -4352,6 +4356,11 @@ EOF
                                                  NOTNULL => 1});
 }
 
+if (-e "$datadir/versioncache") {
+    print "Removing versioncache...\n";
+    unlink "$datadir/versioncache";
+}
+
 
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
@@ -4777,8 +4786,6 @@ if (!$adminuid) { die "No administrator!" } # should never get here
 $dbh->do("UPDATE components " .
             "SET initialowner = $adminuid " .
           "WHERE initialowner = 0");
-
-unlink "$datadir/versioncache";
 
 # Check if the default parameter for urlbase is still set, and if so, give
 # notification that they should go and visit editparams.cgi 

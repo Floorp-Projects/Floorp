@@ -33,43 +33,7 @@ package Bugzilla::Config;
 use strict;
 
 use base qw(Exporter);
-
-# Under mod_perl, get this from a .htaccess config variable,
-# and/or default from the current 'real' dir
-# At some stage after this, it may be possible for these dir locations
-# to go into localconfig. localconfig can't be specified in a config file,
-# except possibly with mod_perl. If you move localconfig, you need to change
-# the define here.
-# $libpath is really only for mod_perl; its not yet possible to move the
-# .pms elsewhere.
-# $webdotdir must be in the webtree somewhere. Even if you use a local dot,
-# we output images to there. Also, if $webdot dir is not relative to the
-# bugzilla root directory, you'll need to change showdependencygraph.cgi to
-# set image_url to the correct location.
-# The script should really generate these graphs directly...
-# Note that if $libpath is changed, some stuff will break, notably dependency
-# graphs (since the path will be wrong in the HTML). This will be fixed at
-# some point.
-
-# constant paths
-our $libpath = '.';
-our $templatedir = "$libpath/template";
-
-# variable paths
-our $project;
-our $localconfig;
-our $datadir;
-if ($ENV{'PROJECT'} && $ENV{'PROJECT'} =~ /^(\w+)$/) {
-    $project = $1;
-    $localconfig = "$libpath/localconfig.$project";
-    $datadir = "$libpath/data/$project";
-} else {
-    $localconfig = "$libpath/localconfig";
-    $datadir = "$libpath/data";
-}
-our $attachdir = "$datadir/attachments";
-our $webdotdir = "$datadir/webdot";
-our $extensionsdir = "$libpath/extensions";
+use Bugzilla::Constants;
 
 our @parampanels = ();
 
@@ -84,11 +48,9 @@ our @parampanels = ();
    admin => [qw(UpdateParams SetParam WriteParams)],
    db => [qw($db_driver $db_host $db_port $db_name $db_user $db_pass $db_sock)],
    localconfig => [qw($cvsbin $interdiffbin $diffpath $webservergroup)],
-   locations => [qw($libpath $localconfig $attachdir $datadir $templatedir
-                    $webdotdir $project $extensionsdir)],
    params => [qw(@parampanels)],
   );
-Exporter::export_ok_tags('admin', 'db', 'localconfig', 'locations', 'params');
+Exporter::export_ok_tags('admin', 'db', 'localconfig', 'params');
 
 # Bugzilla version
 $Bugzilla::Config::VERSION = "2.23.1+";
@@ -106,10 +68,13 @@ use vars qw(@param_list);
 }
 
 # INITIALISATION CODE
+# Perl throws a warning if we use bz_locations() directly after do.
+my $localconfig = bz_locations()->{'localconfig'};
 do $localconfig;
 my %params;
 # Load in the param definitions
 sub _load_params {
+    my $libpath = bz_locations()->{'libpath'};
     foreach my $item ((glob "$libpath/Bugzilla/Config/*.pm")) {
         $item =~ m#/([^/]+)\.pm$#;
         my $module = $1;
@@ -265,6 +230,7 @@ sub UpdateParams {
 
 sub WriteParams {
     require Data::Dumper;
+    my $datadir = bz_locations()->{'datadir'};
 
     # This only has an affect for Data::Dumper >= 2.12 (ie perl >= 5.8.0)
     # Its just cosmetic, though, so that doesn't matter
@@ -294,7 +260,7 @@ sub WriteParams {
 sub ChmodDataFile {
     my ($file, $mask) = @_;
     my $perm = 0770;
-    if ((stat($datadir))[2] & 0002) {
+    if ((stat(bz_locations()->{'datadir'}))[2] & 0002) {
         $perm = 0777;
     }
     $perm = $perm & $mask;

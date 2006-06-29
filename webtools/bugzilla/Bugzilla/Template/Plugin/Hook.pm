@@ -26,6 +26,7 @@ package Bugzilla::Template::Plugin::Hook;
 use strict;
 
 use Bugzilla::Config;
+use Bugzilla::Constants;
 use Bugzilla::Template;
 use Bugzilla::Util;
 use Bugzilla::Error;
@@ -64,7 +65,7 @@ sub process {
     my $type = $2;
     # munge the filename to create the extension hook filename:
     my $extensiontemplate = $subpath.'/'.$templatename.'-'.$hook_name.'.'.$type.'.tmpl';
-    my @extensions = glob($Bugzilla::Config::extensionsdir."/*");
+    my @extensions = glob(bz_locations()->{'extensionsdir'} . "/*");
     my @usedlanguages = getLanguages();
     foreach my $extension (@extensions) {
         foreach my $language (@usedlanguages) {
