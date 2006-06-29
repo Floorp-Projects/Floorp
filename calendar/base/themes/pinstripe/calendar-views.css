@@ -280,3 +280,11 @@ calendar-editable-item[selected="true"] .calendar-event-box-container {
   color: #000000 !important;
   background: #ffdb67 !important;
 }
+
+box[dropbox="true"] { 
+  background: blue !important;
+  height: 1.2em;
+  margin: 1px;
+  padding: 0px 1px 0px 1px;
+  opacity: 0.5;
+}

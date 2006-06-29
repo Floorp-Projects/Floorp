@@ -89,12 +89,86 @@
           this.setCSSClasses();
         ]]></setter>
       </property>
+      <property name="parentBox"
+                onget="return this.mParentBox;"
+                onset="this.mParentBox = val;"/>
     </implementation>
+
+    <handlers>
+      <handler event="draggesture"><![CDATA[
+        var dragService = Components.classes["@mozilla.org/widget/dragservice;1"]
+                                    .getService(Components.interfaces.nsIDragService);
+        var transfer = Components.classes["@mozilla.org/widget/transferable;1"]
+                                 .createInstance(Components.interfaces.nsITransferable);
+
+        var item = this.occurrence;
+        transfer.addDataFlavor("text/calendar");
+
+        var flavourProvider = {
+            QueryInterface: function(aIID) {
+                if (aIID.equals(Components.interfaces.nsIFlavorDataProvider) ||
+                    aIID.equals(Components.interfaces.nsISupports)) {
+                    return this;
+                }
+                throw Components.results.NS_NOINTERFACE;
+            },
+            item: item,
+
+            getFlavorData: function(aInTransferable, aInFlavor, aOutData, aOutDataLen) {
+                if ((aInFlavor == "application/vnd.x-moz-cal-event") ||
+                    (aInFlavor == "application/vnd.x-moz-cal-task")) {
+                    aOutData.value = this.item;
+                    aOutDataLen.value = 1;
+                    return Components.results.NS_OK;
+                } else {
+                    alert("error:"+aInFlavor);
+                }
+            }
+        };
+
+        if (item instanceof Components.interfaces.calIEvent) {
+          transfer.addDataFlavor("application/vnd.x-moz-cal-event");
+          transfer.setTransferData("application/vnd.x-moz-cal-event", flavourProvider, 0);
+        } else if (item instanceof Components.interfaces.calITodo) {
+          transfer.addDataFlavor("application/vnd.x-moz-cal-task");
+          transfer.setTransferData("application/vnd.x-moz-cal-task", flavourProvider, 0);
+        }
+
+        // Also set some normal data-types, in case we drag into another app
+        var supportsString = Components.classes["@mozilla.org/supports-string;1"]
+                                       .createInstance(Components.interfaces.nsISupportsString);
+        supportsString.data = item.icalComponent.serializeToICS();
+        transfer.setTransferData("text/calendar", supportsString, supportsString.data.length*2);
+        transfer.setTransferData("text/unicode", supportsString, supportsString.data.length*2);
+
+        var action = dragService.DRAGDROP_ACTION_MOVE;
+        var supArray = Components.classes["@mozilla.org/supports-array;1"]
+                                 .createInstance(Components.interfaces.nsISupportsArray);
+        supArray.AppendElement(transfer);
+
+        // OK, now that the data is all set up, start playing with the shadows
+        this.parentBox.monthView.doDeleteItem(item);
+
+        // Figure out how many shadows we're going to need, and how they should
+        // be oriented from the mouse's position
+        var boxes = this.parentBox.monthView.findBoxesForItem(item);
+        this.parentBox.monthView.mShadowLength = boxes.length;
+        for (var i in boxes) {
+            if (boxes[i].box == this.parentBox) {
+                this.parentBox.monthView.mShadowIndex = i;
+                break;
+            }
+        }
+        this.parentBox.addDropShadows();
+
+        dragService.invokeDragSession(this, supArray, null, action);
+      ]]></handler>
+    </handlers>
   </binding>
 
   <binding id="calendar-month-day-box">
     <content>
-      <xul:vbox>
+      <xul:vbox flex="1">
         <xul:label anonid="day-label" crop="end" class="calendar-month-day-box-date-label"/>
         <xul:vbox anonid="day-items"/>
       </xul:vbox>
@@ -350,9 +424,54 @@
               box.calendarView = this.monthView;
               box.item = itd.item;
               box.occurrence = itd.item;
+              box.parentBox = this;
               itd.box = box;
             }
           }
+        ]]></body>
+      </method>
+
+      <!-- While you might expect 'dragexit' to be fired when we drag outside
+         - the node in question, this isn't actually the case.  So, we need 
+         - to keep track of these shadows on the month-view itself, so they can
+         - be properly removed.
+        -->
+      <method name="addDropShadows">
+        <body><![CDATA[
+          // Only allow one set of drop-boxes
+          if (this.monthView.mDropShadows) {
+              return;
+          }
+
+          this.monthView.mDropShadows = [];
+          var shadowStart = this.mDate.clone();
+          shadowStart.day -= this.monthView.mShadowIndex;
+          shadowStart.normalize();
+          for (var i = 0; i < this.monthView.mShadowLength; i++) {
+              shadowStart.day += i;
+              shadowStart.normalize();
+
+              var dropbox =  document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "box");
+              dropbox.setAttribute("dropbox", "true");
+              dropbox.setAttribute("flex", "1");
+
+              var box = this.monthView.findBoxForDate(shadowStart).box;
+              box.dayitems.insertBefore(dropbox, box.dayitems.firstChild);
+              this.monthView.mDropShadows.push(dropbox);
+          }
+        ]]></body>
+      </method>
+      <method name="removeDropShadows">
+        <body><![CDATA[
+          if (!this.monthView.mDropShadows) {
+              return;
+          }
+
+          for each (shadow in this.monthView.mDropShadows) {
+              shadow.parentNode.removeChild(shadow);
+          }
+
+          this.monthView.mDropShadows = null;
         ]]></body>
       </method>
     </implementation>
@@ -367,6 +486,90 @@
       <handler event="dblclick"><![CDATA[
         event.stopPropagation();
         this.monthView.controller.createNewEvent();
+      ]]></handler>
+      <handler event="dragenter"><![CDATA[
+        var dragService = Components.classes["@mozilla.org/widget/dragservice;1"]
+                                    .getService(Components.interfaces.nsIDragService);
+        var session = dragService.getCurrentSession();
+        session.canDrop = true;
+        this.removeDropShadows();
+        this.addDropShadows();
+      ]]></handler>
+
+      <handler event="dragover"><![CDATA[
+        var dragService = Components.classes["@mozilla.org/widget/dragservice;1"]
+                                    .getService(Components.interfaces.nsIDragService);
+        var session = dragService.getCurrentSession();
+        session.canDrop = true;
+      ]]></handler>
+      <handler event="dragexit"><![CDATA[
+        if (event.originalTarget != this) {
+            return;
+        }
+        this.removeDropShadows();
+        var dragService = Components.classes["@mozilla.org/widget/dragservice;1"]
+                                    .getService(Components.interfaces.nsIDragService);
+        var session = dragService.getCurrentSession();
+        session.canDrop = false;
+      ]]></handler>
+
+      <handler event="dragdrop"><![CDATA[
+         var dragService = Components.classes["@mozilla.org/widget/dragservice;1"]
+                                     .getService(Components.interfaces.nsIDragService);
+         var session = dragService.getCurrentSession();
+
+         var transfer = Components.classes["@mozilla.org/widget/transferable;1"]
+                                  .createInstance(Components.interfaces.nsITransferable);
+         transfer.addDataFlavor("application/x-moz-cal-event");
+         session.getData(transfer, 0);
+         var flavor = {};
+         var data = {};
+
+         // nsITransferable sucks when it comes to trying to add extra flavors.
+         // This will throw NS_ERROR_FAILURE, so as a workaround, we use the 
+         // sourceNode property and get the event that way
+         //transfer.getAnyTransferData(flavor, data, {});
+
+         var newStart;
+         var newEnd;
+
+         var boxDate = this.mDate;
+         var offset = this.monthView.mShadowIndex;
+
+         function adjustDate(date) {
+           var newDate = date.clone();
+           newDate.day = boxDate.day - offset;
+           newDate.month = boxDate.month;
+           newDate.year = boxDate.year;
+           return newDate;
+         }
+
+         if (!session.sourceNode || !session.sourceNode.occurrence) {
+             return;
+         }
+
+         event.stopPropagation();
+         var item = session.sourceNode.occurrence;
+         if (item instanceof Components.interfaces.calIEvent) {
+           var duration = item.duration;
+           newStart = adjustDate(item.startDate);
+           newEnd = newStart.clone();
+           newEnd.addDuration(duration);
+         } else if (item instanceof Components.interfaces.calITodo) {
+           if (item.entryDate && item.dueDate) {
+             var duration = item.duration;
+             newStart = adjustDate(item.entryDate);
+             newEnd = newStart.clone();
+             newEnd.addDuration(duration);
+           } else if (item.entryDate) {
+             newStart = adjustDate(item.entryDate);
+           } else { // only due date
+             newEnd = adjustDate(item.dueDate);
+           }
+         }
+
+         this.removeDropShadows();
+         this.monthView.controller.modifyOccurrence(item, newStart, newEnd);
       ]]></handler>
     </handlers>
   </binding>
@@ -520,6 +723,8 @@
       <field name="mWeekStartOffset">0</field>
       <field name="mDaysOffArray">[0,6]</field>
       <field name="mDisplayDaysOff">true</field>
+      <field name="mDropShadows">null</field>
+      <field name="mShadowIndex">0</field>
 
       <field name="mSelectionObserver"><![CDATA[
       ({  calView: this,
