@@ -67,6 +67,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMNSHTMLElement.h"
 #include "nsContentErrors.h"
+#include "ImageErrors.h"
 
 #define AUTOMATIC_IMAGE_RESIZING_PREF "browser.enable_automatic_image_resizing"
 
@@ -221,6 +222,11 @@ ImageListener::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
     imageLoader->RemoveObserver(imgDoc);
   }
 
+  // |status| is NS_IMAGELIB_ERROR_LOAD_ABORTED if the image was found in
+  // the cache (bug 177747 comment 51).
+  if (status == NS_IMAGELIB_ERROR_LOAD_ABORTED) {
+    status = NS_OK;
+  }
 
   // mImageContent can be null if the document is already destroyed
   if (NS_FAILED(status) && imgDoc->mStringBundle && imgDoc->mImageContent) {
