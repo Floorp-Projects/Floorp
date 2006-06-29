@@ -225,8 +225,7 @@ extern void
 js_ForceGC(JSContext *cx, uintN gcflags);
 
 /*
- * Return false when GC was canceled or true when the full GC cycle was
- * performed which may or may not free things.
+ * Return false when the branch callback cancels GC and true otherwise.
  */
 extern JSBool
 js_GC(JSContext *cx, uintN gcflags);
