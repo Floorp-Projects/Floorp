@@ -85,7 +85,7 @@ protected:
 
   void SaveFind();
   void PlayNotFoundSound(); 
-  nsresult FindInternal(PRBool aFindBackwards, PRUint16* aResult);
+  nsresult FindInternal(PRBool aFindBackwards, PRBool aHasFocus, PRUint16* aResult);
   nsresult GetWebBrowserFind(nsIDocShell *aDocShell,
                              nsIWebBrowserFind **aWebBrowserFind);
 
@@ -95,12 +95,14 @@ protected:
   void GetSelection(nsIPresShell *aPresShell, nsISelectionController **aSelCon, 
                     nsISelection **aDomSel);
   PRBool IsRangeVisible(nsIPresShell *aPresShell, nsPresContext *aPresContext,
-                         nsIDOMRange *aRange, PRBool aMustBeVisible, 
-                         PRBool aGetTopVisibleLeaf,
-                         nsIDOMRange **aNewRange);
+                        nsIDOMRange *aRange, PRBool aMustBeVisible, 
+                        PRBool aGetTopVisibleLeaf, nsIDOMRange **aNewRange,
+                        PRBool *aUsesIndependentSelection);
   nsresult FindItNow(nsIPresShell *aPresShell, PRBool aIsRepeatingSameChar, 
-                     PRBool aIsLinksOnly, PRBool aIsFirstVisiblePreferred, PRBool aFindNext, PRUint16* aResult);
-  nsresult GetSearchContainers(nsISupports *aContainer,                                
+                     PRBool aIsLinksOnly, PRBool aIsFirstVisiblePreferred, 
+                     PRBool aFindNext, PRBool aHasFocus, PRUint16* aResult);
+  nsresult GetSearchContainers(nsISupports *aContainer,
+                               nsISelectionController *aSelectionController,
                                PRBool aIsRepeatingSameChar,
                                PRBool aIsFirstVisiblePreferred, 
                                PRBool aCanUseDocSelection,
@@ -124,8 +126,8 @@ protected:
   PRBool mStartLinksOnlyPref;
   PRPackedBool mLinksOnly;
   PRBool mCaretBrowsingOn;
-  PRBool mFocusLinks;
-  nsCOMPtr<nsIDOMElement> mFoundLink;
+  nsCOMPtr<nsIDOMElement> mFoundLink;     // Most recent elem found, if a link
+  nsCOMPtr<nsIDOMElement> mFoundEditable; // Most recent elem found, if editable
   nsCOMPtr<nsIDOMWindow> mCurrentWindow;
   PRPackedBool mLiteralTextSearchOnly;
   PRPackedBool mDontTryExactMatch;
@@ -152,7 +154,9 @@ protected:
   nsCOMPtr<nsIFind> mFind;
   nsCOMPtr<nsIWebBrowserFind> mWebBrowserFind;
 
-  // The focused content window that we're listening to
+  // The focused content window that we're listening to and its cached objects
   nsWeakPtr mDocShell;
   nsWeakPtr mPresShell;
+  nsWeakPtr mSelectionController;
+                                          // Most recent match's controller
 };

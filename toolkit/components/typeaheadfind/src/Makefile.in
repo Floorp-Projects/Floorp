@@ -52,6 +52,7 @@ PACKAGE_FILE = typeaheadfind.pkg
 REQUIRES	= content \
 		  docshell \
 		  dom \
+		  editor \
 		  find \
 		  gfx \
 		  layout \

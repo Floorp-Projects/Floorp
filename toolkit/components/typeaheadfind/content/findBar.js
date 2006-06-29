@@ -58,10 +58,14 @@ const CHAR_CODE_APOSTROPHE = "'".charCodeAt(0);
  */
 
 var gFindBar = {
+  SELECTION_CONTROLLER: Components.interfaces.nsISelectionController,
+
   mFindEnabled: true,
   mFindMode: FIND_NORMAL,
   mFoundLink: null,
+  mFoundEditable: null,
   mCurrentWindow: null,
+  mHasFocus: false,
   mTmpOutline: null,
   mTmpOutlineOffset: "0",
   mDrawOutline: false,
@@ -143,9 +147,6 @@ var gFindBar = {
       prefService.getBoolPref("accessibility.typeaheadfind.linksonly");
     this.mTypeAheadCaseSensitive =
       prefService.getIntPref("accessibility.typeaheadfind.casesensitive");
-
-    var fastFind = getBrowser().fastFind;
-    fastFind.focusLinks = true;
 
     var findField = document.getElementById("find-field");
     findField.addEventListener("dragdrop", findBar_OnDrop, true);
@@ -368,41 +369,6 @@ var gFindBar = {
     return node;
   },
 
-  getSelectionControllerForFindToolbar: function (ds)
-  {
-    try {
-      var display =
-        ds.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-          .getInterface(Components.interfaces.nsISelectionDisplay);
-    }
-    catch (e) { return null; }
-    return display.QueryInterface(Components.interfaces.nsISelectionController);
-  },
-
-  changeSelectionColor: function (aAttention)
-  {
-    try {
-      var ds = getBrowser().docShell;
-    } catch(e) {
-      // If we throw here, the browser we were in is already destroyed.
-      // See bug 273200.
-      return;
-    }
-    var dsEnum = ds.getDocShellEnumerator(
-                      Components.interfaces.nsIDocShellTreeItem.typeContent,
-                      Components.interfaces.nsIDocShell.ENUMERATE_FORWARDS);
-    while (dsEnum.hasMoreElements()) {
-      ds = dsEnum.getNext().QueryInterface(Components.interfaces.nsIDocShell);
-      var controller = this.getSelectionControllerForFindToolbar(ds);
-      if (!controller)
-        continue;
-      const selCon = Components.interfaces.nsISelectionController;
-      controller.setDisplaySelection(aAttention ?
-                                       selCon.SELECTION_ATTENTION :
-                                       selCon.SELECTION_ON);
-    }
-  },
-
   setCaseSensitiveStr: function (val)
   {
     var findToolbar = document.getElementById("FindToolbar");
@@ -557,7 +523,11 @@ var gFindBar = {
     try {
       if (this.mFoundLink)
         this.mFoundLink.focus();
-      else if (this.mCurrentWindow)
+      else if (this.mFoundEditable) {
+        this.mFoundEditable.focus();
+        var fastFind = getBrowser().fastFind;
+        fastFind.collapseSelection();
+      } else if (this.mCurrentWindow)
         this.mCurrentWindow.focus();
       else
         return false;
@@ -565,9 +535,6 @@ var gFindBar = {
     catch(e) {
       return false;
     }
-
-    // NOTE: In this time, gFoundLink and gCurrentWindow are set null.
-    // Because find toolbar lost focus.
 
     if (aKeypressEvent)
       aKeypressEvent.preventDefault();
@@ -596,6 +563,8 @@ var gFindBar = {
         try {
           if (this.mFoundLink)
             this.mFoundLink.focus();
+          else if (this.mFoundEditable)
+            this.mFoundEditable.focus();
           else if (this.mCurrentWindow)
             this.mCurrentWindow.focus();
           else
@@ -613,8 +582,10 @@ var gFindBar = {
     }
 
     findToolbar.hidden = true;
-    this.changeSelectionColor(false);
+    var fastFind = getBrowser().fastFind;
+    fastFind.setSelectionModeAndRepaint(this.SELECTION_CONTROLLER.SELECTION_ON);
     this.setFoundLink(null);
+    this.mFoundEditable = null;
     this.mCurrentWindow = null;
     if (this.mQuickFindTimeout) {
       clearTimeout(this.mQuickFindTimeout);
@@ -670,11 +641,23 @@ var gFindBar = {
     return (str != str.toLowerCase() && str != str.toUpperCase());
   },
 
+  onFindBarFocus: function ()
+  {
+    this.mHasFocus = true;
+  },
+
   onFindBarBlur: function ()
   {
-    this.changeSelectionColor(false);
+    var fastFind = getBrowser().fastFind;
+    if (this.mFoundEditable) {
+      fastFind.collapseSelection();
+    } else {
+      fastFind.setSelectionModeAndRepaint(this.SELECTION_CONTROLLER.SELECTION_ON);
+    }
     this.setFoundLink(null);
+    this.mFoundEditable = null;
     this.mCurrentWindow = null;
+    this.mHasFocus = false;
   },
 
   onBrowserMouseUp: function (evt)
@@ -844,9 +827,11 @@ var gFindBar = {
     var val = document.getElementById("find-field").value;
     if (res == Components.interfaces.nsITypeAheadFind.FIND_NOTFOUND || !val) {
       this.setFoundLink(null);
+      this.mFoundEditable = null;
       this.mCurrentWindow = null;
     } else {
       this.setFoundLink(getBrowser().fastFind.foundLink);
+      this.mFoundEditable = getBrowser().fastFind.foundEditable;
       this.mCurrentWindow = getBrowser().fastFind.currentWindow;
     }
   },
@@ -865,8 +850,7 @@ var gFindBar = {
     var fastFind = getBrowser().fastFind;
     fastFind.caseSensitive = this.shouldBeCaseSensitive(val);
     this.setCaseSensitiveStr(val);
-    var res = fastFind.find(val, this.mFindMode == FIND_LINKS);
-    this.changeSelectionColor(true);
+    var res = fastFind.find(val, this.mFindMode == FIND_LINKS, this.mHasFocus);
     this.updateFoundLink(res);
     this.updateStatus(res, true);
 
@@ -982,8 +966,7 @@ var gFindBar = {
   findNext: function ()
   {
     var fastFind = getBrowser().fastFind; 
-    var res = fastFind.findNext();  
-    this.changeSelectionColor(true);
+    var res = fastFind.findNext(this.mHasFocus);  
     this.updateFoundLink(res);
     this.updateStatus(res, true);
 
@@ -996,8 +979,7 @@ var gFindBar = {
   findPrevious: function ()
   {
     var fastFind = getBrowser().fastFind;
-    var res = fastFind.findPrevious();
-    this.changeSelectionColor(true);
+    var res = fastFind.findPrevious(this.mHasFocus);
     this.updateFoundLink(res);
     this.updateStatus(res, false);
 
