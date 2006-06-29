@@ -37,7 +37,7 @@
  ***** END LICENSE BLOCK ***** -->
 
 <!ENTITY pref.composing.messages.title        "Composition">
-<!ENTITY forwardReply.label                   "Forwarding Messages">
+<!ENTITY generalComposing.label               "General">
 <!ENTITY forwardMsg.label                     "Forward messages:">
 <!ENTITY inline.label                         "Inline">
 <!ENTITY inline.accesskey                     "n">
@@ -46,21 +46,24 @@
 
 <!ENTITY warnOnSendAccelKey.label             "Confirm when using keyboard shortcut to send message">
 <!ENTITY warnOnSendAccelKey.accesskey         "k">
-
-<!ENTITY sendingMessagesHeader.label          "Composing Messages">
 <!-- LOCALIZATION NOTE (autoSave.label): This will concatenate with
      "xxx minutes", using a number and (autoSaveEnd.label). -->
 <!ENTITY autoSave.label                       "Automatically save the message every">
 <!ENTITY autoSave.accesskey                   "u">
 <!ENTITY autoSaveEnd.label                    "minutes">
-<!ENTITY spellCheck.label                     "Check spelling before sending">
-<!ENTITY spellCheck.accesskey                 "C">
-<!ENTITY spellCheckInline.label               "Check spelling as you type">
-<!ENTITY spellCheckInline.accesskey           "e">
 <!-- LOCALIZATION NOTE (wrapOutMsg.label): This will concatenate with "xxx characters", using a number and (char.label). -->
 <!ENTITY wrapOutMsg.label                     "Wrap plain text messages at">
 <!ENTITY wrapOutMsg.accesskey                 "W">
 <!ENTITY char.label                           "characters">
+
+<!ENTITY spellingHeader.label                 "Spelling">
+<!ENTITY spellCheck.label                     "Check spelling before sending">
+<!ENTITY spellCheck.accesskey                 "C">
+<!ENTITY spellCheckInline.label               "Check spelling as you type">
+<!ENTITY spellCheckInline.accesskey           "e">
+<!ENTITY languagePopup.label                  "Language:">
+<!ENTITY languagePopup.accessKey              "g">
+<!ENTITY moreDictionaries.label               "Download more dictionaries...">
 
 <!ENTITY defaultMessagesHeader.label          "Defaults for HTML Messages">
 <!ENTITY font.label                           "Font:">

@@ -45,6 +45,7 @@ var gComposePane = {
   mDirectories: null,
   mLDAPPrefsService: null,
   mSpellChecker: null,
+  mDictCount : 0,
 
   init: function ()
   {
@@ -299,7 +300,6 @@ var gComposePane = {
     this.mSpellChecker = Components.classes['@mozilla.org/spellchecker/myspell;1'].getService(Components.interfaces.mozISpellCheckingEngine);
     var o1 = {};
     var o2 = {};
-    var languageMenuList = document.getElementById('LanguageMenulist');
 
     // Get the list of dictionaries from
     // the spellchecker.
@@ -309,60 +309,73 @@ var gComposePane = {
     var dictList = o1.value;
     var count    = o2.value;
 
+    // If dictionary count hasn't changed then no need to update the menu.
+    if (this.mDictCount == count)
+      return;
+
+    // Store current dictionary count.
+    this.mDictCount = count;
+
     // Load the string bundles that will help us map
     // RFC 1766 strings to UI strings.
 
     // Load the language string bundle.
     var languageBundle = document.getElementById("languageBundle");
-    var regionBundle;
+    var regionBundle = null;
     // If we have a language string bundle, load the region string bundle.
     if (languageBundle)
       regionBundle = document.getElementById("regionBundle");
   
     var menuStr2;
     var isoStrArray;
-    var defaultItem = null;
     var langId;
+    var langLabel;
     var i;
 
-    for (i = 0; i < dictList.length; i++)
+    for (i = 0; i < count; i++)
     {
       try {
         langId = dictList[i];
         isoStrArray = dictList[i].split("-");
 
-        dictList[i] = new Array(2); // first subarray element - pretty name
-        dictList[i][1] = langId;    // second subarray element - language ID
-
         if (languageBundle && isoStrArray[0])
-          dictList[i][0] = languageBundle.getString(isoStrArray[0].toLowerCase());
+          langLabel = languageBundle.getString(isoStrArray[0].toLowerCase());
 
-        if (regionBundle && dictList[i][0] && isoStrArray.length > 1 && isoStrArray[1])
+        if (regionBundle && langLabel && isoStrArray.length > 1 && isoStrArray[1])
         {
           menuStr2 = regionBundle.getString(isoStrArray[1].toLowerCase());
           if (menuStr2)
-            dictList[i][0] = dictList[i][0] + "/" + menuStr2;
+            langLabel += "/" + menuStr2;
         }
 
-        if (!dictList[i][0])
-          dictList[i][0] = dictList[i][1];
+        if (!langLabel)
+          langLabel = langId;
       } catch (ex) {
-        // GetString throws an exception when
-        // a key is not found in the bundle. In that
-        // case, just use the original dictList string.
-
-        dictList[i][0] = dictList[i][1];
+        // getString throws an exception when a key is not found in the
+        // bundle. In that case, just use the original dictList string.
+        langLabel = langId;
       }
+      dictList[i] = [langLabel, langId];
     }
   
-    // note this is not locale-aware collation, just simple ASCII-based sorting
-    // we really need to add loacel-aware JS collation, see bug XXXXX
-    dictList.sort();
+    // sort by locale-aware collation
+    dictList.sort(
+      function compareFn(a, b)
+      {
+        return a[0].localeCompare(b[0]);
+      }
+    );
+
+    var languageMenuList = document.getElementById("languageMenuList");
+    // Remove any languages from the list.
+    var languageMenuPopup = languageMenuList.firstChild;
+    while (languageMenuPopup.hasChildNodes())
+      languageMenuPopup.removeChild(languageMenuPopup.firstChild);
 
     var curLang  = languageMenuList.value;
+    var defaultItem = null;
 
-    // now select the dictionary we are currently using
-    for (i = 0; i < dictList.length; i++)
+    for (i = 0; i < count; i++)
     {
       var item = languageMenuList.appendItem(dictList[i][0], dictList[i][1]);
       if (curLang && dictList[i][1] == curLang)

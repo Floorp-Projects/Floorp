@@ -40,14 +40,15 @@
 /**
  * interfaces
  */
-var nsIMsgCompDeliverMode = Components.interfaces.nsIMsgCompDeliverMode;
-var nsIMsgCompSendFormat = Components.interfaces.nsIMsgCompSendFormat;
-var nsIMsgCompConvertible = Components.interfaces.nsIMsgCompConvertible;
-var nsIMsgCompType = Components.interfaces.nsIMsgCompType;
-var nsIMsgCompFormat = Components.interfaces.nsIMsgCompFormat;
-var nsIAbPreferMailFormat = Components.interfaces.nsIAbPreferMailFormat;
-var nsIPlaintextEditorMail = Components.interfaces.nsIPlaintextEditor;
-
+const nsIMsgCompDeliverMode = Components.interfaces.nsIMsgCompDeliverMode;
+const nsIMsgCompSendFormat = Components.interfaces.nsIMsgCompSendFormat;
+const nsIMsgCompConvertible = Components.interfaces.nsIMsgCompConvertible;
+const nsIMsgCompType = Components.interfaces.nsIMsgCompType;
+const nsIMsgCompFormat = Components.interfaces.nsIMsgCompFormat;
+const nsIAbPreferMailFormat = Components.interfaces.nsIAbPreferMailFormat;
+const nsIPlaintextEditorMail = Components.interfaces.nsIPlaintextEditor;
+const nsISupportsString = Components.interfaces.nsISupportsString;
+const mozISpellCheckingEngine = Components.interfaces.mozISpellCheckingEngine;
 
 /**
  * In order to distinguish clearly globals that are initialized once when js load (static globals) and those that need to be 
@@ -67,6 +68,7 @@ var sOther_headers = "";
 var sAccountManagerDataSource = null;
 var sRDF = null;
 var sNameProperty = null;
+var sDictCount = 0;
 
 /* Create message window object. This is use by mail-offline.js and therefore should not be renamed. We need to avoid doing 
    this kind of cross file global stuff in the future and instead pass this object as parameter when needed by function
@@ -2112,6 +2114,120 @@ function ToggleInlineSpellChecker(target)
     if (InlineSpellChecker.inlineSpellChecker.enableRealTimeSpell)
       InlineSpellChecker.checkDocument(window.content.document);
   }
+}
+
+function InitLanguageMenu()
+{
+  var languageMenuList = document.getElementById("languageMenuList");
+  if (!languageMenuList)
+    return;
+
+  var spellChecker = Components.classes["@mozilla.org/spellchecker/myspell;1"]
+                               .getService(mozISpellCheckingEngine);
+  var o1 = {};
+  var o2 = {};
+
+  // Get the list of dictionaries from the spellchecker.
+  spellChecker.getDictionaryList(o1, o2);
+
+  var dictList = o1.value;
+  var count    = o2.value;
+
+  // If dictionary count hasn't changed then no need to update the menu.
+  if (sDictCount == count)
+    return;
+
+  // Store current dictionary count.
+  sDictCount = count;
+
+  // Load the language string bundle that will help us map
+  // RFC 1766 strings to UI strings.
+  var languageBundle = document.getElementById("languageBundle");
+  var isoStrArray;
+  var langId;
+  var langLabel;
+  var i;
+
+  for (i = 0; i < count; i++)
+  {
+    try
+    {
+      langId = dictList[i];
+      isoStrArray = dictList[i].split("-");
+
+      if (languageBundle && isoStrArray[0])
+        langLabel = languageBundle.getString(isoStrArray[0].toLowerCase());
+
+      // the user needs to be able to distinguish between the UK English dictionary
+      // and say the United States English Dictionary. If we have a isoStr value then
+      // wrap it in parentheses and append it to the menu item string. i.e.
+      // English (US) and English (UK)
+      if (!langLabel)
+        langLabel = langId;
+      else if (isoStrArray.length > 1 && isoStrArray[1]) // if we have a language ID like US or UK, append it to the menu item
+        langLabel += ' (' + isoStrArray[1] + ')';
+    }
+    catch (ex)
+    {
+      // getString throws an exception when a key is not found in the
+      // bundle. In that case, just use the original dictList string.
+      langLabel = langId;
+    }
+    dictList[i] = [langLabel, langId];
+  }
+
+  // sort by locale-aware collation
+  dictList.sort(
+    function compareFn(a, b)
+    {
+      return a[0].localeCompare(b[0]);
+    }
+  );
+ 
+  // Remove any languages from the list.
+  while (languageMenuList.hasChildNodes())
+    languageMenuList.removeChild(languageMenuList.firstChild);
+
+  for (i = 0; i < count; i++)
+  {
+    var item = document.createElement("menuitem");
+    item.setAttribute("label", dictList[i][0]);
+    item.setAttribute("value", dictList[i][1]);
+    item.setAttribute("type", "radio");
+    languageMenuList.appendChild(item);
+  }      
+}
+
+function OnShowDictionaryMenu(aTarget)
+{
+  InitLanguageMenu();
+  var curLang = sPrefs.getComplexValue("spellchecker.dictionary", nsISupportsString).data;
+  var languages = aTarget.getElementsByAttribute("value", curLang);
+  if (languages.length > 0)
+    languages[0].setAttribute("checked", true);
+}
+
+function ChangeLanguage(event)
+{
+  // We need to change the dictionary language and if we are using inline spell check,
+  // recheck the message
+
+  var spellChecker = Components.classes["@mozilla.org/spellchecker/myspell;1"]
+                               .getService(mozISpellCheckingEngine);
+  if (spellChecker.dictionary != event.target.value)
+  {
+    spellChecker.dictionary = event.target.value;
+    var str = Components.classes["@mozilla.org/supports-string;1"]
+                        .createInstance(nsISupportsString);
+    str.data = event.target.value;
+    sPrefs.setComplexValue("spellchecker.dictionary", nsISupportsString, str);
+
+    // now check the document over again with the new dictionary
+    if (InlineSpellChecker.inlineSpellChecker)
+      if (InlineSpellChecker.inlineSpellChecker.enableRealTimeSpell)
+        InlineSpellChecker.checkDocument(window.content.document);
+  }
+  event.stopPropagation();
 }
 
 function ToggleReturnReceipt(target)

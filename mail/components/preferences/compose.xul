@@ -192,9 +192,9 @@
             <separator class="thin"/>
 
             <hbox align="center" pack="start">
-              <label value ="&languagePopup.label;" control="LanguageMenulist" accesskey="&languagePopup.accessKey;"/>
-              <menulist id="LanguageMenulist" preference="spellchecker.dictionary">
-                <menupopup>
+              <label value ="&languagePopup.label;" control="languageMenuList" accesskey="&languagePopup.accessKey;"/>
+              <menulist id="languageMenuList" preference="spellchecker.dictionary">
+                <menupopup onpopupshowing="gComposePane.initLanguageMenu();">
                   <!-- dynamic content populated by JS -->
                 </menupopup>
               </menulist>

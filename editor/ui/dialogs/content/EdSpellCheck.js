@@ -44,12 +44,14 @@ var gAllowSelectWord = true;
 var gPreviousReplaceWord = "";
 var gFirstTime = true;
 var gLastSelectedLang = null;
+var gDictCount = 0;
 
 function Startup()
 {
   var sendMailMessageMode = false;
 
-  if (!GetCurrentEditor())
+  var editor = GetCurrentEditor();
+  if (!editor)
   {
     window.close();
     return;
@@ -78,11 +80,8 @@ function Startup()
       filterContractId = "@mozilla.org/editor/txtsrvfilter;1";
 
     gSpellChecker.setFilter(Components.classes[filterContractId].createInstance(Components.interfaces.nsITextServicesFilter));
-    gSpellChecker.InitSpellChecker(GetCurrentEditor(), enableSelectionChecking);
+    gSpellChecker.InitSpellChecker(editor, enableSelectionChecking);
 
-   // XXX: We need to read in a pref here so we can set the
-   //      default language for the spellchecker!
-   // gSpellChecker.SetCurrentDictionary();
   }
   catch(ex) {
    dump("*** Exception error: InitSpellChecker\n");
@@ -146,7 +145,7 @@ function Startup()
   gFirstTime = false;
 }
 
-function InitLanguageMenu(curLang)
+function InitLanguageMenu(aCurLang)
 {
 
   var o1 = {};
@@ -155,9 +154,12 @@ function InitLanguageMenu(curLang)
   // Get the list of dictionaries from
   // the spellchecker.
 
-  try {
+  try
+  {
     gSpellChecker.GetDictionaryList(o1, o2);
-  } catch(ex) {
+  }
+  catch(ex)
+  {
     dump("Failed to get DictionaryList!\n");
     return;
   }
@@ -165,65 +167,84 @@ function InitLanguageMenu(curLang)
   var dictList = o1.value;
   var count    = o2.value;
 
+  // If we're not just starting up and dictionary count
+  // hasn't changed then no need to update the menu.
+  if (gDictCount == count)
+    return;
+
+  // Store current dictionary count.
+  gDictCount = count;
+
   // Load the string bundles that will help us map
   // RFC 1766 strings to UI strings.
 
   // Load the language string bundle.
   var languageBundle = document.getElementById("languageBundle");
-  var regionBundle;
+  var regionBundle = null;
   // If we have a language string bundle, load the region string bundle.
   if (languageBundle)
     regionBundle = document.getElementById("regionBundle");
   
   var menuStr2;
   var isoStrArray;
-  var defaultItem = null;
   var langId;
+  var langLabel;
   var i;
-  for (i = 0; i < dictList.length; i++)
+
+  for (i = 0; i < count; i++)
   {
-    try {
+    try
+    {
       langId = dictList[i];
       isoStrArray = dictList[i].split("-");
 
-      dictList[i] = new Array(2); // first subarray element - pretty name
-      dictList[i][1] = langId;    // second subarray element - language ID
-
       if (languageBundle && isoStrArray[0])
-        dictList[i][0] = languageBundle.getString(isoStrArray[0].toLowerCase());
+        langLabel = languageBundle.getString(isoStrArray[0].toLowerCase());
 
-      if (regionBundle && dictList[i][0] && isoStrArray.length > 1 && isoStrArray[1])
+      if (regionBundle && langLabel && isoStrArray.length > 1 && isoStrArray[1])
       {
         menuStr2 = regionBundle.getString(isoStrArray[1].toLowerCase());
         if (menuStr2)
-          dictList[i][0] = dictList[i][0] + "/" + menuStr2;
+          langLabel += "/" + menuStr2;
       }
 
-      if (!dictList[i][0])
-        dictList[i][0] = dictList[i][1];
-    } catch (ex) {
-      // GetString throws an exception when
-      // a key is not found in the bundle. In that
-      // case, just use the original dictList string.
-
-      dictList[i][0] = dictList[i][1];
+      if (!langLabel)
+        langLabel = langId;
     }
+    catch (ex)
+    {
+      // getString throws an exception when a key is not found in the
+      // bundle. In that case, just use the original dictList string.
+      langLabel = langId;
+    }
+    dictList[i] = [langLabel, langId];
   }
   
-  // note this is not locale-aware collation, just simple ASCII-based sorting
-  // we really need to add loacel-aware JS collation, see bug XXXXX
-  dictList.sort();
+  // sort by locale-aware collation
+  dictList.sort(
+    function compareFn(a, b)
+    {
+      return a[0].localeCompare(b[0]);
+    }
+  );
 
-  for (i = 0; i < dictList.length; i++)
+  // Remove any languages from the list.
+  var languageMenuPopup = gDialog.LanguageMenulist.firstChild;
+  while (languageMenuPopup.firstChild.localName != "menuseparator")
+    languageMenuPopup.removeChild(languageMenuPopup.firstChild);
+
+  var defaultItem = null;
+
+  for (i = 0; i < count; i++)
   {
-    var item = gDialog.LanguageMenulist.appendItem(dictList[i][0], dictList[i][1]);
-    if (curLang && dictList[i][1] == curLang)
+    var item = gDialog.LanguageMenulist.insertItemAt(i, dictList[i][0], dictList[i][1]);
+    if (aCurLang && dictList[i][1] == aCurLang)
       defaultItem = item;
   }
 
   // Now make sure the correct item in the menu list is selected.
-
-  if (defaultItem) {
+  if (defaultItem)
+  {
     gDialog.LanguageMenulist.selectedItem = defaultItem;
     gLastSelectedLang = defaultItem;
   }
@@ -448,7 +469,6 @@ function Recheck()
   //TODO: Should we bother to add a "Recheck" method to interface?
   try {
     var curLang = gSpellChecker.GetCurrentDictionary();
-
     gSpellChecker.UninitSpellChecker();
     gSpellChecker.InitSpellChecker(GetCurrentEditor(), false);
     gSpellChecker.SetCurrentDictionary(curLang);
@@ -535,14 +555,34 @@ function doDefault()
   return false;
 }
 
-function CancelSpellCheck()
+function ExitSpellChecker()
 {
   if (gSpellChecker)
   {
-    try {
+    try
+    {
+      var curLang = gSpellChecker.GetCurrentDictionary();
       gSpellChecker.UninitSpellChecker();
-    } finally { gSpellChecker = null; }
+      if ("@mozilla.org/spellchecker;1" in Components.classes) {
+        var spellChecker = Components.classes["@mozilla.org/spellchecker/myspell;1"]
+                                     .getService(Components.interfaces.mozISpellCheckingEngine);
+        spellChecker.dictionary = curLang;
+      }
+      // now check the document over again with the new dictionary
+      if ("inlineSpellChecker" in window.opener.InlineSpellChecker)
+        if (window.opener.InlineSpellChecker.inlineSpellChecker.enableRealTimeSpell)
+          window.opener.InlineSpellChecker.checkDocument(window.opener.content.document);
+    }
+    finally
+    {
+      gSpellChecker = null;
+    }
   }
+}
+
+function CancelSpellCheck()
+{
+  ExitSpellChecker();
 
   // Signal to calling window that we canceled
   window.opener.cancelSendMessage = true;
@@ -551,12 +591,8 @@ function CancelSpellCheck()
 
 function onClose()
 {
-  if (gSpellChecker)
-  {
-    try {
-      gSpellChecker.UninitSpellChecker();
-    } finally { gSpellChecker = null; }
-  }
+  ExitSpellChecker();
+
   window.opener.cancelSendMessage = false;
   window.close();
 }

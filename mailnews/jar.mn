@@ -167,6 +167,7 @@ messenger.jar:
     content/messenger/junkLog.xul                                              (base/resources/content/junkLog.xul)
     content/messenger/junkLog.js                                               (base/resources/content/junkLog.js)
     content/messenger/messengercompose/pref-composing_messages.xul             (compose/prefs/resources/content/pref-composing_messages.xul)
+    content/messenger/messengercompose/pref-composing_messages.js              (compose/prefs/resources/content/pref-composing_messages.js)
     content/messenger/messengercompose/pref-formatting.xul                     (compose/prefs/resources/content/pref-formatting.xul)
     content/messenger/messengercompose/pref-formatting.js                      (compose/prefs/resources/content/pref-formatting.js)
     content/messenger/messengercompose/messengercompose.xul                    (compose/resources/content/messengercompose.xul)

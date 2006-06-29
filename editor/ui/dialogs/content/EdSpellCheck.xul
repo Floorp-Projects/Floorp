@@ -127,10 +127,10 @@
              accesskey="&languagePopup.accessKey;"/>
       <row>
         <menulist id="LanguageMenulist" oncommand="SelectLanguage()">
-          <menupopup>
-            <menuitem value="more-cmd" label="&moreDictionaries.label;"/>
-            <menuseparator/>
+          <menupopup onpopupshowing="InitLanguageMenu(gDialog.LanguageMenulist.selectedItem.value);">
             <!-- dynamic content populated by JS -->
+            <menuseparator/>
+            <menuitem value="more-cmd" label="&moreDictionaries.label;"/>
           </menupopup>
         </menulist>
         <hbox flex="1">

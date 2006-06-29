@@ -2,6 +2,8 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 
+<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
+
 <!DOCTYPE page [
 <!ENTITY % pref-composing_messagesDTD SYSTEM "chrome://messenger/locale/messengercompose/pref-composing_messages.dtd" >
 %pref-composing_messagesDTD;
@@ -10,56 +12,25 @@
 ]>
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="populateFonts();parent.initPanel('chrome://messenger/content/messengercompose/pref-composing_messages.xul');"
+      onload="PopulateFonts();parent.initPanel('chrome://messenger/content/messengercompose/pref-composing_messages.xul');"
       headertitle="&pref.composing.messages.title;">
-    
+
+  <stringbundle id="languageBundle" src="chrome://global/locale/languageNames.properties"/>
+  <stringbundle id="regionBundle" src="chrome://global/locale/regionNames.properties"/>
+
+  <script type="application/x-javascript" src="chrome://messenger/content/messengercompose/pref-composing_messages.js"/>
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["forwardMessageMode", "autoSave",
-                       "autoSaveInterval","spellCheckBeforeSend", "inlineSpellCheck",
-                       "mailWarnOnSendAccelKey", "wrapLength", "FontSelect",
+    var _elementIDs = ["forwardMessageMode", "autoSave", "autoSaveInterval",
+                       "spellCheckBeforeSend", "inlineSpellCheck", "languageMenuList",
+                       "mailWarnOnSendAccelKey", "wrapLength", "fontSelect",
                        "fontSizeSelect", "textColor", "backgroundColor"];
-    var gAutoSaveInterval;
-
-    function Startup()
-    {
-      var hideSpellCheck = !("@mozilla.org/spellchecker;1" in Components.classes);
-      document.getElementById("spellCheckBeforeSend").hidden = hideSpellCheck;
-      document.getElementById("inlineSpellCheck").hidden = hideSpellCheck;
-      gAutoSaveInterval = document.getElementById("autoSaveInterval");
-      enableTextbox(document.getElementById("autoSave"), gAutoSaveInterval, true);
-    }
-
-    function enableTextbox(checkbox, textbox, startingUp) {
-      textbox.disabled = (!checkbox.checked ||
-                          parent.hPrefWindow.getPrefIsLocked(textbox.getAttribute("prefstring")));
-
-      if (!textbox.disabled && !startingUp)
-        textbox.focus();
-    }
-
-    function populateFonts() {
-      var fontsList = document.getElementById("FontSelect");
-      try {
-        var enumerator = Components.classes["@mozilla.org/gfx/fontenumerator;1"]
-                                   .getService(Components.interfaces.nsIFontEnumerator);
-        var localFontCount = { value: 0 }
-        var localFonts = enumerator.EnumerateAllFonts(localFontCount);
-        for (var i = 0; i < localFonts.length; ++i) {
-          if (localFonts[i] != "") {
-            fontsList.appendItem(localFonts[i], localFonts[i]);
-          }
-        }
-      }
-      catch(e) { }
-    }
-
   ]]>
   </script>  
 
   <groupbox>
-    <caption label="&forwardReply.label;"/>
-    
+    <caption label="&generalComposing.label;"/>
+
     <radiogroup id="forwardMessageMode" orient="horizontal" align="center"
                 prefstring="mail.forward_message_mode">
       <label value="&forwardMsg.label;"/>
@@ -67,28 +38,14 @@
       <radio value="0" label="&asAttachment.label;"
              accesskey="&asAttachment.accesskey;"/>
     </radiogroup>
-  </groupbox>
-
-  <!-- Composing Mail -->
-  <groupbox align="start">
-    <caption label="&sendingMessagesHeader.label;"/>
-
-    <vbox align="start">
-      <checkbox id="spellCheckBeforeSend" label="&spellCheck.label;"
-                prefstring="mail.SpellCheckBeforeSend"
-                accesskey="&spellCheck.accesskey;"/>
-      <checkbox id="inlineSpellCheck" label="&spellCheckInline.label;"
-                prefstring="mail.spellcheck.inline"
-                accesskey="&spellCheckInline.accesskey;"/>
-    </vbox>
 
     <hbox align="center">
       <checkbox id="autoSave" label="&autoSave.label;"
                 prefstring="mail.compose.autosave"
                 accesskey="&autoSave.accesskey;"
-                oncommand="enableTextbox(this, gAutoSaveInterval, false);"/>
-      <textbox  id="autoSaveInterval" size="2" preftype="int"
-                prefstring="mail.compose.autosaveinterval"/>
+                oncommand="EnableTextbox(this, gAutoSaveInterval, false);"/>
+      <textbox id="autoSaveInterval" size="2" preftype="int"
+               prefstring="mail.compose.autosaveinterval"/>
       <label value="&autoSaveEnd.label;"/>
     </hbox>
 
@@ -102,15 +59,44 @@
                prefstring="mailnews.wraplength" prefattribute="value"/>
       <label value="&char.label;"/>
     </hbox>
+  </groupbox>
+
+  <!-- Composing Mail -->
+  <groupbox id="spellingGroup" align="start">
+    <caption label="&spellingHeader.label;"/>
+    <vbox align="start">
+      <checkbox id="spellCheckBeforeSend" label="&spellCheck.label;"
+                prefstring="mail.SpellCheckBeforeSend"
+                accesskey="&spellCheck.accesskey;"/>
+      <checkbox id="inlineSpellCheck" label="&spellCheckInline.label;"
+                prefstring="mail.spellcheck.inline"
+                accesskey="&spellCheckInline.accesskey;"/>
+    </vbox>
+
+    <separator class="thin"/>
+
+    <hbox align="center" pack="start">
+      <label value="&languagePopup.label;" control="languageMenuList"
+             accesskey="&languagePopup.accessKey;"/>
+      <menulist id="languageMenuList" oncommand="SelectLanguage(event.target)"
+                preftype="localizedstring" prefstring="spellchecker.dictionary">
+        <menupopup onpopupshowing="InitLanguageMenu();">
+          <!-- dynamic content populated by JS -->
+          <menuseparator/>
+          <menuitem value="more-cmd" label="&moreDictionaries.label;"/>
+        </menupopup>
+      </menulist>
+      <spring flex="1"/>
+    </hbox>
 
   </groupbox>
-  
+
   <groupbox align="start">
-    <caption label="&defaultMessagesHeader.label;"/>  
+    <caption label="&defaultMessagesHeader.label;"/>
     <vbox>
       <hbox align="center">
-        <label control="FontSelect" value="&font.label;" accesskey="&font.accesskey;"/>
-        <menulist id="FontSelect" preftype="string" prefstring="msgcompose.font_face">
+        <label control="fontSelect" value="&font.label;" accesskey="&font.accesskey;"/>
+        <menulist id="fontSelect" preftype="string" prefstring="msgcompose.font_face">
           <menupopup>
             <menuitem value="" label="&fontVarWidth.label;"/>
             <menuitem value="tt" label="&fontFixedWidth.label;"/>
@@ -120,7 +106,7 @@
             <menuitem value="Courier New, Courier, monospace" label="&fontCourier.label;"/>
             <menuseparator/>
           </menupopup>
-        </menulist>           
+        </menulist>
       </hbox>
       <hbox align="center">
         <label control="fontSizeSelect" value="&size.label;" accesskey="&size.accesskey;"/>
@@ -136,10 +122,10 @@
         </menulist>
         <label control="textColor" value="&fontColor.label;" accesskey="&fontColor.accesskey;"/>
         <colorpicker type="button" id="textColor" prefstring="msgcompose.text_color"/>
-        <label control="backgroundColor" value="&bgColor.label;" accesskey="&bgColor.accesskey;"/>      
+        <label control="backgroundColor" value="&bgColor.label;" accesskey="&bgColor.accesskey;"/>
         <colorpicker type="button" id="backgroundColor" prefstring="msgcompose.background_color"/>
       </hbox>
-    </vbox>    
+    </vbox>
   </groupbox>
 
 </page>

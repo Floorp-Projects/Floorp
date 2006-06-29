@@ -610,9 +610,9 @@
     <toolbarbutton class="toolbarbutton-1" type="menu-button"
                id="spellingButton" label="&spellingButton.label;" 
                command="cmd_spelling">
-      <menupopup id="LanguageMenulist" onpopupshowing="onShowDictionaryMenu();">
-        <!-- this popup gets dynamically generated -->
-      </menupopup>
+      <!-- this popup gets dynamically generated -->
+      <menupopup id="languageMenuList" oncommand="ChangeLanguage(event);"
+                 onpopupshowing="OnShowDictionaryMenu(event.target);"/>
     </toolbarbutton>
     
     <toolbarbutton class="toolbarbutton-1" type="menu-button"
