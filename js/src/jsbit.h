@@ -149,6 +149,14 @@ extern JS_PUBLIC_API(JSIntn) JS_FloorLog2(JSUint32 i);
 
 /*
  * Internal function.
+ * Compute the log of the least power of 2 greater than or equal to n.
+ * This is a version of JS_CeilingLog2 that operates on jsuword with
+ * CPU-dependant size.
+ */
+#define JS_CEILING_LOG2W(n) ((n) <= 1 ? 0 : 1 + JS_FLOOR_LOG2W((n) - 1))
+
+/*
+ * Internal function.
  * Compute the log of the greatest power of 2 less than or equal to n.
  * This is a version of JS_FloorLog2 that operates on jsuword with
  * CPU-dependant size and requires that n != 0.
