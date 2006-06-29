@@ -19,6 +19,10 @@
       height:150px;
   }
 
+  input[type="text"] {
+      width:7em;
+  }
+
   /* The labels that are floated over the bar charts */
   div.bar_chart_label {
          position: absolute;
