@@ -159,6 +159,89 @@ function isToDo(aObject)
 }
 
 /**
+ * Normal get*Pref calls will throw if the pref is undefined.  This function
+ * will get a bool, int, or string pref.  If the pref is undefined, it will
+ * return aDefault.
+ *
+ * @param aPrefName   the (full) name of preference to get
+ * @param aDefault    (optional) the value to return if the pref is undefined
+ */
+function getPrefSafe(aPrefName, aDefault) {
+    const nsIPrefBranch = Components.interfaces.nsIPrefBranch;
+    const prefB = Components.classes["@mozilla.org/preferences-service;1"]
+                            .getService(nsIPrefBranch);
+    switch (prefB.getPrefType(aPrefName)) {
+        case nsIPrefBranch.PREF_BOOL:
+            return prefB.getBoolPref(aPrefName);
+        case nsIPrefBranch.PREF_INT:
+            return prefB.getIntPref(aPrefName);
+        case nsIPrefBranch.PREF_String:
+            return prefB.getCharPref(aPrefName);
+        default: // includes nsIPrefBranch.PREF_INVALID
+            return aDefault;
+    }
+}
+
+/**
+ * Wrapper for setting prefs of various types
+ *
+ * @param aPrefName   the (full) name of preference to set
+ * @param aPrefType   the type of preference to set.  Valid valuse are:
+                        BOOL, INT, and CHAR
+ * @param aPrefValue  the value to set the pref to
+ */
+function setPref(aPrefName, aPrefType, aPrefValue) {
+    const nsIPrefBranch = Components.interfaces.nsIPrefBranch;
+    const prefB = Components.classes["@mozilla.org/preferences-service;1"]
+                            .getService(nsIPrefBranch);
+    switch (aPrefType) {
+        case "BOOL":
+            prefB.setBoolPref(aPrefName, aPrefValue);
+            break;
+        case "INT":
+            prefB.setIntPref(aPrefName, aPrefValue);
+            break;
+        case "CHAR":
+            prefB.setCharPref(aPrefName, aPrefValue);
+            break;
+    }
+}
+
+/**
+ * Helper function to set a localized (complex) pref from a given string
+ *
+ * @param aPrefName   the (full) name of preference to set
+ * @param aString     the string to which the preference value should be set
+ */
+function setLocalizedPref(aPrefName, aString) {
+    const prefB = Components.classes["@mozilla.org/preferences-service;1"]
+                            .getService(Components.interfaces.nsIPrefBranch);
+    var str = Components.classes["@mozilla.org/supports-string;1"]
+                        .createInstance(Components.interfaces.nsISupportsString);
+    str.data = aString;
+    prefB.setComplexValue(aPrefName, Components.interfaces.nsISupportsString, str);
+}
+
+/**
+ * Like getPrefSafe, except for complex prefs (those used for localized data).
+ *
+ * @param aPrefName   the (full) name of preference to get
+ * @param aDefault    (optional) the value to return if the pref is undefined
+ */
+function getLocalizedPref(aPrefName, aDefault) {
+    const pb2 = Components.classes["@mozilla.org/preferences-service;1"]
+                          .getService(Components.interfaces.nsIPrefBranch2);
+    var result;
+    try {
+        result = pb2.getComplexValue(aPrefName, 
+                                     Components.interfaces.nsISupportsString).data;
+    } catch(ex) {
+        return aDefault;
+    }
+    return result;
+}
+
+/**
  * Gets the value of a string in a .properties file
  *
  * @param aBundleName  the name of the properties file.  It is assumed that the

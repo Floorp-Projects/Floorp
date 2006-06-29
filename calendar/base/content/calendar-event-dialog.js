@@ -187,10 +187,7 @@ function loadDialog(item)
 
     /* Categories */
     try {
-        var pb2 = Components.classes["@mozilla.org/preferences-service;1"]
-                            .getService(Components.interfaces.nsIPrefBranch2);
-        var categoriesString = pb2.getComplexValue("calendar.categories.names", 
-                                                  Components.interfaces.nsISupportsString).data;
+        var categoriesString = getLocalizedPref("calendar.categories.names");
         var categoriesList = categoriesString.split( "," );
 
         // insert the category already in the menulist so it doesn't get lost
@@ -210,10 +207,7 @@ function loadDialog(item)
         var indexToSelect = 0;
 
         // Add a 'none' option to allow users to cancel the category
-        var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                            .getService(Components.interfaces.nsIStringBundleService);
-        var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
-        var noneItem = categoryMenuList.appendItem(props.GetStringFromName("None"), "NONE");
+        var noneItem = categoryMenuList.appendItem(calGetString("calendar", "None"), "NONE");
 
         for (var i in categoriesList) {
             var catItem = categoryMenuList.appendItem(categoriesList[i], categoriesList[i]);
@@ -222,7 +216,10 @@ function loadDialog(item)
                 indexToSelect = parseInt(i)+1;  // Add 1 because of 'None'
             }
         }
+        var newCategory = calGetString("calendar", "newCategory");
+        categoryMenuList.appendItem(newCategory, "##NEW");
         categoryMenuList.selectedIndex = indexToSelect;
+        gOldCatIndex = indexToSelect;
 
     } catch (ex) {
         // The app using this dialog doesn't support categories
@@ -406,19 +403,16 @@ function saveDialog(item)
 function updateTitle()
 {
     var isNew = window.calendarItem.isMutable;
-    var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                        .getService(Components.interfaces.nsIStringBundleService);
-    var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
     if (isEvent(window.calendarItem)) {
         if (isNew)
-            document.title = props.GetStringFromName("newEventDialog");
+            document.title = calGetString("calendar", "newEventDialog");
         else
-            document.title = props.GetStringFromName("editEventDialog");
+            document.title = calGetString("calendar", "editEventDialog");
     } else if (isToDo(window.calendarItem)) {
         if (isNew)
-            document.title = props.GetStringFromName("newTaskDialog");
+            document.title = calGetString("calendar", "newTaskDialog");
         else
-            document.title = props.GetStringFromName("editTaskDialog");
+            document.title = calGetString("calendar", "editTaskDialog");
     }
 }
 
@@ -1052,3 +1046,61 @@ function loadURL()
     launchBrowser(url);
     return;
 }
+
+var gOldCatIndex = 0;
+function categorySelect(aValue) {
+    if (aValue != "##NEW") {
+        gOldCatIndex = document.getElementById("item-categories").selectedIndex;
+        return;
+    }
+
+    // Make sure we don't leave 'New..' selected if they hit cancel
+    document.getElementById("item-categories").selectedIndex = gOldCatIndex;
+
+    window.openDialog("chrome://calendar/content/preferences/editCategory.xul",
+                      "addCategory", "modal,centerscreen,chrome,resizable=no",
+                      "", null, calGetString("calendar", "addCategory"));
+}
+
+// Trick the dialog into thinking we're the categories pane
+var gCategoriesPane = {
+    saveCategory: function eventDialog_saveCategory(aName, aColor) {
+        //Check to make sure another category doesn't have the same name
+        var promptService = 
+                 Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                           .getService(Components.interfaces.nsIPromptService);
+        var categoriesString = getLocalizedPref("calendar.categories.names");
+        var categoriesList = categoriesString.split( "," );
+        for each (cat in categoriesList) {
+            if (aName.toLowerCase() == cat.toLowerCase()) {
+                var repTitle = calGetString("calendar", "categoryReplaceTitle");
+                var rep = calGetString("calendar", "categoryReplace");
+                if (promptService.confirm(null, repTitle, rep)) {
+                    var categoryNameFix = aName.toLowerCase().replace(' ','_');
+                    setPref("calendar.category.color."+categoryNameFix, 
+                            "CHAR", aColor);
+                }
+                return;
+            }
+        }
+
+        if (aName.length == 0) {
+            promptService.alert(null, null, noBlankCategories);
+            return;
+        }
+
+        categoriesList.push(aName);
+        categoriesList.sort();
+
+        setLocalizedPref("calendar.categories.names", categoriesList.join(','));
+
+        if (aColor) {
+            var categoryNameFix = aName.toLowerCase().replace(' ','_');
+            setPref("calendar.category.color."+categoryNameFix, "CHAR", aColor);
+        }
+        var catList = document.getElementById("item-categories");
+        var index = categoriesList.indexOf(aName);
+        catList.insertItemAt(index, aName, aName);
+        catList.selectedIndex = index;
+    }
+};

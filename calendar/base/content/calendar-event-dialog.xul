@@ -156,7 +156,7 @@
             <spacer flex="1"/>
             <hbox id="categories-box" align="center">
                 <label value="&newtodo.categories.label;" class="label"/>
-                <menulist id="item-categories"/>
+                <menulist id="item-categories" oncommand="categorySelect(this.value)"/>
             </hbox>
           </hbox>
         </row>
