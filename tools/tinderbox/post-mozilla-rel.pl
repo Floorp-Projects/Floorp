@@ -656,22 +656,24 @@ sub update_create_stats {
 
   my($hashfunction, $hashvalue, $size, $output, $output_file);
 
-  $hashfunction = "md5";
-  if ( defined($Settings::update_hash) ) {
-    $hashfunction = $Settings::update_hash;
-  }
   ($size) = (stat($update))[7];
-  $hashvalue;
 
-  if ($hashfunction eq "sha1") {
-    $hashvalue = `sha1sum $update`;
-  } else {
-    $hashvalue = `md5sum $update`;
+  # We only support md5 and sha1, and sha1 is the default, so create md5
+  # sums if that's what requested; otherwise (it's either sha1 or bogus
+  # input), sha1.
+  $hashfunction = ($Settings::update_hash eq 'md5') ? 'md5' : 'sha1';
+
+  $hashvalue = `openssl dgst -$hashfunction $update`;
+  # if we errored out, make sure the hash value is empty... 
+  if ($?) {
+    $hashvalue = '';
   }
+
   chomp($hashvalue);
 
-  $hashvalue =~ s:^(\w+)\s.*$:$1:g;
-  $hashfunction = uc($hashfunction);
+  # Expects input like MD5(mozconfig)= d7433cc4204b4f3c65d836fe483fa575
+  # Removes everything up to and including the "= "
+  $hashvalue =~ s/^.+\s+(\w+)$/$1/;
 
   if ( defined($Settings::update_filehost) ) {
     $url =~ s|^([^:]*)://([^/:]*)(.*)$|$1://$Settings::update_filehost$3|g;
