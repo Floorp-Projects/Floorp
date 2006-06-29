@@ -53,7 +53,6 @@ CSRCS = db.c	   \
 	hash_buf.c \
 	hsearch.c  \
 	mktemp.c   \
-	ndbm.c	   \
 	dirent.c   \
 	$(NULL)
 

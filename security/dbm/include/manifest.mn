@@ -47,7 +47,6 @@ EXPORTS =	cdefs.h   \
 PRIVATE_EXPORTS =	hsearch.h \
 			page.h    \
 			extern.h  \
-			ndbm.h    \
 			queue.h   \
 			hash.h    \
 			mpool.h   \
