@@ -76,6 +76,8 @@
                                   this, "anonid", "view-element");
                 viewElement.setStartEndMinutes(this.mStartMin,
                                                this.mEndMin);
+                // We don't care about weekends in the day view
+                viewElement.daysOffArray = [];
 
                 // add a preference observer to monitor changes
                 pb2.addObserver("calendar.view.", this.mPrefObserver, false);

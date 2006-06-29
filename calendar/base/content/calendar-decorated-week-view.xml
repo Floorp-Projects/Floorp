@@ -38,6 +38,8 @@
    - ***** END LICENSE BLOCK *****
 -->
 
+<!-- Note that we depend on some helper functions in calendarUtils.js here-->
+
 <bindings id="calendar-specific-view-bindings"
     xmlns="http://www.mozilla.org/xbl"
     xmlns:html="http://www.w3.org/1999/xhtml"
@@ -56,33 +58,27 @@
 
         <implementation implements="calIDecoratedView">
 	    <constructor><![CDATA[
-                var pb2 = Components.classes
-                          ["@mozilla.org/preferences-service;1"]
-                          .getService(Components.interfaces.nsIPrefBranch2);
-
                 // get default start/end times from prefs and set on the
-                // view.  if we hit an error (eg because sunbird's pref
-                // infrastructure hasn't created the pref yet), the
-                // defaults will do
-                try {
-                    this.mStartMin = pb2.getIntPref(
-                                     "calendar.view.defaultstarthour") * 60;
-                    this.mEndMin = pb2.getIntPref(
-                                   "calendar.view.defaultendhour") * 60;
-                } catch (ex) {
-                }
+                // view.  
+                this.mStartMin = getPrefSafe(
+                                 "calendar.view.defaultstarthour", 8) * 60;
+                this.mEndMin = getPrefSafe(
+                               "calendar.view.defaultendhour", 17) * 60;
 
                 var viewElement = document.getAnonymousElementByAttribute(
                                   this, "anonid", "view-element");
                 viewElement.setStartEndMinutes(this.mStartMin,
                                                this.mEndMin);
 
-                try {
-                    this.mWeekStartOffset = pb2.getIntPref("calendar.week.start");
-                } catch (ex) {}
+                this.mWeekStartOffset = getPrefSafe("calendar.week.start", 0);
 
                 // add a preference observer to monitor changes
+                var pb2 = Components.classes
+                          ["@mozilla.org/preferences-service;1"]
+                          .getService(Components.interfaces.nsIPrefBranch2);
                 pb2.addObserver("calendar.", this.mPrefObserver, false);
+
+                this.updateDaysOffPrefs();
                 return;
             ]]></constructor>
 
@@ -119,6 +115,7 @@
                            return;
                        }
 
+                       this.calView.updateDaysOffPrefs();
                        this.calView.goToDay(this.calView.selectedDay);
                        break;
 
@@ -282,6 +279,27 @@
                         }
                     }
                     viewElement.setDateList(newDateList.length, newDateList);
+                ]]></body>
+            </method>
+
+            <method name="updateDaysOffPrefs">
+                <body><![CDATA[
+                    var weekBranch = prefService.getBranch("calendar.week.");
+                    var prefNames = ["d0sundaysoff", "d1mondaysoff", "d2tuesdaysoff",
+                                     "d3wednesdaysoff", "d4thursdaysoff",
+                                     "d5fridaysoff", "d6saturdaysoff"];
+                    var defaults = [true, false, false, false, false, false, true];
+                    var daysOff = new Array();
+                    const weekPrefix = "calendar.week.";
+                    for (var i in prefNames) {
+                         if (getPrefSafe(weekPref+prefNames[i], defaults[i])) {
+                                daysOff.push(Number(i));
+                         }
+                    }
+                    var viewElem = document.getAnonymousElementByAttribute(
+                                            this, "anonid", "view-element");
+
+                    viewElem.daysOffArray = daysOff;
                 ]]></body>
             </method>
         </implementation>

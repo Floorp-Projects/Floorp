@@ -1636,6 +1636,7 @@
       <field name="mStartMin">8*60</field>
       <field name="mEndMin">20*60</field>
       <field name="mTasksInView">true</field>
+      <field name="mDaysOffArray">[0,6]</field>
       <field name="mTimezone">"UTC"</field>
 
       <field name="mSelectionObserver"><![CDATA[
@@ -1911,6 +1912,16 @@
         <setter><![CDATA[
           this.mTimezone = val;
           return val;
+        ]]></setter>
+      </property>
+
+      <property name="daysOffArray">
+        <getter><![CDATA[
+           return this.mDaysOffArray;
+        ]]></getter>
+        <setter><![CDATA[
+           this.mDaysOffArray = val;
+           return val;
         ]]></setter>
       </property>
 
@@ -2392,6 +2403,15 @@
                   headerdaybox.appendChild(dayHeaderBox);
               }
               setUpDayHeaderBox(dayHeaderBox);
+
+              function matchesDayOff(dayOffNum) { return dayOffNum == d.weekday; }
+              if (this.mDaysOffArray.some(matchesDayOff)) {
+                dayEventsBox.setAttribute("weekend", "true");
+                dayHeaderBox.setAttribute("weekend", "true");
+              } else {
+                dayEventsBox.removeAttribute("weekend");
+                dayHeaderBox.removeAttribute("weekend");
+              }
 
               // highlight today
               if (this.numVisibleDates > 1 && d.compare(today) == 0) {
