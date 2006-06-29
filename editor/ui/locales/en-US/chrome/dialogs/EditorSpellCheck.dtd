@@ -56,7 +56,7 @@
 <!ENTITY stopButton.label "Stop">
 <!ENTITY stopButton.accessKey "t">
 <!ENTITY userDictionary.label "Personal Dictionary:">
-<!ENTITY moreDictionaries.label "Download More">
+<!ENTITY moreDictionaries.label "Download more dictionaries...">
 <!ENTITY addToUserDictionaryButton.label "Add Word">
 <!ENTITY addToUserDictionaryButton.accessKey "d">
 <!ENTITY editUserDictionaryButton.label "Edit...">
