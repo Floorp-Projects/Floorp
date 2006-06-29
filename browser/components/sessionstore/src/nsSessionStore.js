@@ -411,19 +411,15 @@ SessionStoreService.prototype = {
       this.onTabAdd(aWindow, tabpanels.childNodes[i], true);
     }
     // notification of tab add/remove/selection
-    // http://developer.mozilla.org/en/docs/Extension_Code_Snippets:Tabbed_Browser
-    // - to be replaced with events from bug 322898
-    tabpanels.addEventListener("DOMNodeInserted", function(aEvent) {
+    tabbrowser.addEventListener("TabOpen", function(aEvent) {
       _this.onTabAdd(aEvent.currentTarget.ownerDocument.defaultView, aEvent.target);
       }, false);
-    tabpanels.addEventListener("DOMNodeRemoved", function(aEvent) {
+    tabbrowser.addEventListener("TabClose", function(aEvent) {
+      _this.onTabClose(aEvent.currentTarget.ownerDocument.defaultView, aEvent.originalTarget);
       _this.onTabRemove(aEvent.currentTarget.ownerDocument.defaultView, aEvent.target);
       }, false);
-    tabpanels.addEventListener("select", function(aEvent) {
+    tabbrowser.addEventListener("TabSelect", function(aEvent) {
       _this.onTabSelect(aEvent.currentTarget.ownerDocument.defaultView, aEvent.currentTarget);
-      }, false);
-    tabbrowser.addEventListener("DOMNodeRemoved", function(aEvent) {
-      _this.onTabClose(aEvent.currentTarget.ownerDocument.defaultView, aEvent.originalTarget);
       }, false);
   },
 
@@ -500,7 +496,6 @@ SessionStoreService.prototype = {
 
   /**
    * remove listeners for a tab
-   * zeniko: unify with onTabClose as soon as the required events are available
    * @param aWindow
    *        Window reference
    * @param aPanel
@@ -539,7 +534,7 @@ SessionStoreService.prototype = {
     this._saveWindowHistory(aWindow);
     this._updateTextAndScrollData(aWindow);
     
-    // DOMNodeRemoved is received *twice* after closing a tab, only take the first
+    // store closed-tab data for undo
     var tabState = this._windows[aWindow.__SSi].tabs[aTab._tPos];
     if (tabState && tabState.entries[0].url != "about:blank") {
       this._windows[aWindow.__SSi]._closedTabs.unshift({
