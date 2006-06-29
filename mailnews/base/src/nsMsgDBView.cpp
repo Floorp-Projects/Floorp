@@ -710,27 +710,40 @@ nsresult nsMsgDBView::FetchTags(nsIMsgDBHdr *aHdr, PRUnichar ** aTagString)
     mTagService = do_GetService(NS_MSGTAGSERVICE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  nsXPIDLString tags;
   nsXPIDLCString keywords;
-  nsXPIDLString label, tags;
-  FetchLabel(aHdr, getter_Copies(label));
   aHdr->GetStringProperty("keywords", getter_Copies(keywords));
+
+  nsMsgLabelValue label = 0;
+  rv = aHdr->GetLabel(&label);  
+  if (label > 0)
+  {
+    nsCAutoString labelStr("$label");
+    labelStr.Append((char) (label + '0'));
+    if (!FindInReadable(labelStr, keywords))
+      FetchLabel(aHdr, getter_Copies(tags));
+  }
+
   nsCStringArray keywordsArray;
   keywordsArray.ParseString(keywords.get(), " ");
   nsAutoString tag;
+
   for (PRInt32 i = 0; i < keywordsArray.Count(); i++)
   {
     rv = mTagService->GetTagForKey(*(keywordsArray[i]), tag);
-    if (NS_SUCCEEDED(rv) && !tag.IsEmpty() && !tag.Equals(label))
+    if (NS_SUCCEEDED(rv) && !tag.IsEmpty())
     {
       if (!tags.IsEmpty())
         tags.Append((PRUnichar) ' ');
       tags.Append(tag);
     }
   }
-  tags.Append(label);
+
   *aTagString = ToNewUnicode(tags);
   return rv;
 }
+
 nsresult nsMsgDBView::FetchLabel(nsIMsgDBHdr *aHdr, PRUnichar ** aLabelString)
 {
   nsresult rv = NS_OK;
