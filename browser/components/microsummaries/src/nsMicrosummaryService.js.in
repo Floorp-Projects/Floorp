@@ -326,41 +326,25 @@ MicrosummaryService.prototype = {
    */
   _cacheLocalGeneratorFile: function MSS__cacheLocalGeneratorFile(file) {
     var uri = this._ios.newFileURI(file);
-    var request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
-                  createInstance(Ci.nsIDOMEventTarget);
 
     var t = this;
-    request.addEventListener("load",
-                             function(e) { t._localGeneratorLoadHandler(e) },
-                             false);
-    request = request.QueryInterface(Ci.nsIXMLHttpRequest);
-    request.open("GET", uri.spec, true);
-    request.send(null);
+    var callback =
+      function MSS_cacheLocalGeneratorCallback(resource) {
+        try     { t._handleLocalGenerator(resource) }
+        finally { resource.destroy() }
+      };
+
+    var resource = new MicrosummaryResource(uri);
+    resource.load(callback);
   },
 
-  _localGeneratorLoadHandler: function(event) {
-    // XXX Factor out code using getPageFromEvent().
-    var request = event.target;
-    var uri = request.channel.originalURI;
-    var doc = request.responseXML;
-
-    if (!doc)
-      throw(uri.spec + " microsummary generator loaded, but not XML");
-
-    if (doc.documentElement.nodeName == "parsererror")
-      throw(uri.spec + " microsummary generator loaded, but invalid XML");
+  _handleLocalGenerator: function MSS__handleLocalGenerator(resource) {
+    if (!resource.isXML)
+      throw(resource.uri.spec + " microsummary generator loaded, but not XML");
   
-    // XXX Right now the code retrieves the first "generator" element
-    // in the microsummaries namespace, regardless of whether or not
-    // it's the root element.  Should it matter?
-    // XXX We should assert if the file doesn't contain a generator.
-    var node = doc.getElementsByTagNameNS(MICSUM_NS, "generator")[0];
-    if (!node)
-      return;
-
     var generator = new MicrosummaryGenerator();
-    generator.localURI = uri;
-    generator.initFromXML(node);
+    generator.localURI = resource.uri;
+    generator.initFromXML(resource.content);
 
     // Add the generator to the local generators cache.
     // XXX Figure out why Firefox crashes on shutdown if we index generators
@@ -385,47 +369,48 @@ MicrosummaryService.prototype = {
    */
   addGenerator: function MSS_addGenerator(generatorURI) {
     var t = this;
-    downloadXMLPage(generatorURI, function(e) { t._addGeneratorLoadHandler(e) });
+    var callback =
+      function MSS_addGeneratorCallback(resource) {
+        try     { t._handleNewGenerator(resource) }
+        finally { resource.destroy() }
+      };
+
+    var resource = new MicrosummaryResource(generatorURI);
+    resource.load(callback);
   },
 
-  _addGeneratorLoadHandler: function(event) {
-    // XXX Factor out code using getPageFromEvent().
-    var request = event.target;
-    var uri = request.channel.originalURI;
-    var doc = request.responseXML;
+  _handleNewGenerator: function MSS__handleNewGenerator(resource) {
+    if (!resource.isXML)
+      throw(resource.uri.spec + " microsummary generator loaded, but not XML");
 
-    if (!doc)
-      throw(uri.spec + " microsummary generator loaded, but not XML");
-
-    if (doc.documentElement.nodeName == "parsererror")
-      throw(uri.spec + " microsummary generator loaded, but invalid XML");
-  
     // XXX Make sure it's a valid microsummary generator.
+
+    var rootNode = resource.content.documentElement;
 
     // Add a reference to the URI from which we got this generator so we have
     // a unique identifier for the generator and also so we can check back later
     // for updates.
-    doc.documentElement.setAttribute("sourceURI", uri.spec);
+    rootNode.setAttribute("sourceURI", resource.uri.spec);
 
-    var genName = doc.documentElement.getAttribute("name");
-    var fileName = sanitizeName(genName) + ".xml";
+    var generatorName = rootNode.getAttribute("name");
+    var fileName = sanitizeName(generatorName) + ".xml";
     var file = this._dirs.get("UsrMicsumGens", Ci.nsIFile);
     file.append(fileName);
     file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);
 
-    var fos = Cc["@mozilla.org/network/safe-file-output-stream;1"].
-              createInstance(Ci.nsIFileOutputStream);
+    var outputStream = Cc["@mozilla.org/network/safe-file-output-stream;1"].
+                       createInstance(Ci.nsIFileOutputStream);
     var localFile = file.QueryInterface(Ci.nsILocalFile);
-    fos.init(localFile, (MODE_WRONLY | MODE_TRUNCATE), PERMS_FILE, 0);
+    outputStream.init(localFile, (MODE_WRONLY | MODE_TRUNCATE), PERMS_FILE, 0);
     var serializer = Cc["@mozilla.org/xmlextras/xmlserializer;1"].
                      createInstance(Ci.nsIDOMSerializer);
-    serializer.serializeToStream(doc.documentElement, fos, null);
-    if (fos instanceof Ci.nsISafeOutputStream) {
-      try       { fos.finish() }
-      catch (e) { fos.close()  }
+    serializer.serializeToStream(resource.content, outputStream, null);
+    if (outputStream instanceof Ci.nsISafeOutputStream) {
+      try       { outputStream.finish() }
+      catch (e) { outputStream.close()  }
     }
     else
-      fos.close();
+      outputStream.close();
 
     // Finally, cache the generator in the local generators cache.
     this._cacheLocalGeneratorFile(file);
@@ -475,36 +460,28 @@ MicrosummaryService.prototype = {
 
     // Get microsummaries defined by the page.  If we don't have the page,
     // download it asynchronously, and then finish populating the set.
-    var pageContent = getLoadedPageContent(pageURI);
-    if (pageContent)
-      microsummaries.extractFromPage(pageURI, pageContent);
-
+    var resource = getLoadedMicrosummaryResource(pageURI);
+    if (resource) {
+      try     { microsummaries.extractFromPage(resource) }
+      finally { resource.destroy() }
+    }
     else {
       // Load the page with a callback that will add the page's microsummaries
       // to the set once the page has loaded.
-      var callback = {
-        _set: microsummaries,
-        handleEvent: function(event) {
-          event.target.removeEventListener("load", this, false);
-
-          var page = getPageFromEvent(event);
-
-          if (page.content)
-            this._set.extractFromPage(page.uri, page.content);
-          
-          // Purge the hidden iframe we used to load the page, if any.
-          if (page.container && page.container.parentNode)
-            page.container.parentNode.removeChild(page.container);
-        }
+      var callback = function MSS_extractFromPageCallback(resource) {
+        try     { microsummaries.extractFromPage(resource) }
+        finally { resource.destroy() }
       };
 
       try {
-        downloadPage(pageURI, callback);
+        resource = new MicrosummaryResource(pageURI);
+        resource.load(callback);
       }
       catch(e) {
-        // We shouldn't have to do anything if the call fails.  We'll just
-        // return the list of microsummaries without including page-defined
-        // microsummaries in the list.
+        // We don't have to do anything special if the call fails besides
+        // destroying the Resource object.  We can just return the list
+        // of microsummaries without including page-defined microsummaries.
+        resource.destroy();
         LOG("error downloading page to extract its microsummaries: " + e);
       }
     }
@@ -750,9 +727,9 @@ MicrosummaryService.prototype = {
       return null;
 
     var pageURI = this._getPageForBookmark(bookmarkID);
-    var genURI = this._uri(this._getField(bookmarkID, FIELD_MICSUM_GEN_URI));
+    var generatorURI = this._uri(this._getField(bookmarkID, FIELD_MICSUM_GEN_URI));
     
-    var microsummary = new Microsummary(pageURI, genURI);
+    var microsummary = new Microsummary(pageURI, generatorURI);
     if (this._localGenerators[generatorURI.spec])
       microsummary.generator = this._localGenerators[generatorURI.spec];
 
@@ -949,9 +926,11 @@ Microsummary.prototype = {
   get pageContent() {
     if (!this._pageContent) {
       // If the page is currently loaded into a browser window, use that.
-      var pageContent = getLoadedPageContent(this.pageURI);
-      if (pageContent)
-        this._pageContent = pageContent;
+      var resource = getLoadedMicrosummaryResource(this.pageURI);
+      if (resource) {
+        this._pageContent = resource.content;
+        resource.destroy();
+      }
     }
 
     return this._pageContent;
@@ -988,21 +967,19 @@ Microsummary.prototype = {
     LOG("microsummary.update called for page:\n  " + this.pageURI.spec +
         "\nwith generator:\n  " + this.generatorURI.spec);
 
+    var t = this;
+
     // If we don't have the generator, download it now.  After it downloads,
     // we'll re-call this method to continue updating the microsummary.
     if (!this.generator) {
       LOG("generator not yet loaded; downloading it");
-
-      var generatorCallback = {
-        _self: this,
-        handleEvent: function(event) {
-          this._self._generatorLoadHandler(event);
-          event.target.removeEventListener("load", this, false);
-          this._self = null;
-        }
-      };
-
-      downloadXMLPage(this.generatorURI, generatorCallback);
+      var generatorCallback =
+        function MS_generatorCallback(resource) {
+          try     { t._handleGeneratorLoad(resource) }
+          finally { resource.destroy() }
+        };
+      var resource = new MicrosummaryResource(this.generatorURI);
+      resource.load(generatorCallback);
       return;
     }
 
@@ -1010,17 +987,13 @@ Microsummary.prototype = {
     // Afterwards we'll re-call this method to continue updating the microsummary.
     if (this.generator.needsPageContent && !this.pageContent) {
       LOG("page content not yet loaded; downloading it");
-
-      var pageCallback = {
-        _self: this,
-        handleEvent: function(event) {
-          this._self._pageLoadHandler(event);
-          event.target.removeEventListener("load", this, false);
-          this._self = null;
-        }
-      };
-
-      downloadPage(this.pageURI, pageCallback);
+      var pageCallback =
+        function MS_pageCallback(resource) {
+          try     { t._handlePageLoad(resource) }
+          finally { resource.destroy() }
+        };
+      var resource = new MicrosummaryResource(this.pageURI);
+      resource.load(pageCallback);
       return;
     }
 
@@ -1036,39 +1009,27 @@ Microsummary.prototype = {
     LOG("generated microsummary: " + this.content);
   },
 
-  _generatorLoadHandler: function MS__generatorLoadHandler(event) {
-    var request = event.target;
-    var uri = request.channel.originalURI;
-
+  _handleGeneratorLoad: function MS__handleGeneratorLoad(resource) {
     var generator = new MicrosummaryGenerator();
-    generator.uri = uri;
-    LOG(uri.spec + " microsummary generator downloaded");
-
-    if (request.responseXML) {
-      if (request.responseXML.documentElement.nodeName == "parsererror") {
-        // XXX Figure out the parsererror format and log a specific error.
-        LOG(uri.spec + " microsummary generator downloaded, but invalid XML");
-        return;
-      }
-
-      generator.initFromXML(request.responseXML.documentElement);
-    }
-    else if (request.responseText) {
-      generator.initFromText(request.responseText);
-    }
+    generator.uri = resource.uri;
+    LOG(generator.uri.spec + " microsummary generator downloaded");
+    if (resource.isXML)
+      generator.initFromXML(resource.content);
+    else if (resource.contentType == "text/plain")
+      generator.initFromText(resource.content);
+    else
+      throw("generator is neither XML nor plain text");
 
     this.generator = generator;
     this.update();
   },
 
-  _pageLoadHandler: function MS__pageLoadHandler(event) {
-    var page = getPageFromEvent(event);
-    this.pageContent = page.content;
-    this.update();
+  _handlePageLoad: function MS__handlePageLoad(resource) {
+    if (!resource.isXML && !resource.contentType == "text/html")
+      throw("page is neither HTML nor XML");
 
-    // Purge the hidden iframe we used to load the page, if any.
-    if (page.container && page.container.parentNode)
-      page.container.parentNode.removeChild(page.container);
+    this.pageContent = resource.content;
+    this.update();
   }
 
 };
@@ -1191,27 +1152,34 @@ MicrosummaryGenerator.prototype = {
   /**
    * Initializes a generator from an XML description of it.
    * 
-   * @param   node
-   *          The XML DOM node containing the description.  This node should be
-   *          a "generator" element in the microsummaries namespace.
+   * @param   xmlDocument
+   *          An XMLDocument object describing a microsummary generator.
    *
    */
-  initFromXML: function(xml) {
-    // XXX Make sure the argument is a DOM node, that its name is "generator",
-    // and that it is in the microsummaries namespace.
+  initFromXML: function(xmlDocument) {
+    // XXX Make sure the argument is a valid generator XML document.
 
     // XXX I would have wanted to retrieve the info from the XML via E4X,
     // but we'll need to pass the XSLT transform sheet to the XSLT processor,
     // and the processor can't deal with an E4X-wrapped template node.
 
-    this.name = xml.getAttribute("name");
+    // XXX Right now the code retrieves the first "generator" element
+    // in the microsummaries namespace, regardless of whether or not
+    // it's the root element.  Should it matter?
+    var generatorNode = xmlDocument.getElementsByTagNameNS(MICSUM_NS, "generator")[0];
+    // XXX We should throw instead of returning if the file doesn't contain
+    // a generator.
+    if (!generatorNode)
+      return;
+
+    this.name = generatorNode.getAttribute("name");
 
     // Only set the source URI from the XML if we have a local URI, i.e.
     // if this is a locally-installed generator, since for remote generators
     // the source URI of the generator is the URI from which we downloaded it.
     if (this.localURI) {
-      this.uri = xml.hasAttribute("sourceURI") ?
-                 this._ios.newURI(xml.getAttribute("sourceURI"), null, null) :
+      this.uri = generatorNode.hasAttribute("sourceURI") ?
+                 this._ios.newURI(generatorNode.getAttribute("sourceURI"), null, null) :
                  this.localURI; // locally created generator without sourceURI
     }
 
@@ -1219,7 +1187,7 @@ MicrosummaryGenerator.prototype = {
     // this generator applies.  Order is important, so we add the rules
     // in the order in which they appear in the XML.
     this._rules = [];
-    var pages = xml.getElementsByTagNameNS(MICSUM_NS, "pages")[0];
+    var pages = generatorNode.getElementsByTagNameNS(MICSUM_NS, "pages")[0];
     if (pages) {
       // XXX Make sure the pages tag exists.
       for ( var i = 0; i < pages.childNodes.length ; i++ ) {
@@ -1232,7 +1200,7 @@ MicrosummaryGenerator.prototype = {
       }
     }
 
-    var templateNode = xml.getElementsByTagNameNS(MICSUM_NS, "template")[0];
+    var templateNode = generatorNode.getElementsByTagNameNS(MICSUM_NS, "template")[0];
     if (templateNode) {
       this.template = templateNode.getElementsByTagNameNS(XSLT_NS, "transform")[0]
                       || templateNode.getElementsByTagNameNS(XSLT_NS, "stylesheet")[0];
@@ -1343,8 +1311,14 @@ MicrosummarySet.prototype = {
     }
   },
 
-  extractFromPage: function MSSet_extractFromPage(pageURI, pageContent) {
-    var links = pageContent.getElementsByTagName("LINK");
+  extractFromPage: function MSSet_extractFromPage(resource) {
+    if (!resource.isXML && resource.contentType != "text/html")
+      throw("page is neither HTML nor XML");
+
+    // XXX Handle XML documents, whose microsummaries are specified
+    // via processing instructions.
+
+    var links = resource.content.getElementsByTagName("LINK");
     for ( var i = 0; i < links.length; i++ ) {
       var link = links[i];
 
@@ -1353,9 +1327,24 @@ MicrosummarySet.prototype = {
 
       // Unlike the "href" attribute, the "href" property contains
       // an absolute URI spec, so we use it here to create the URI.
-      var genURI = this._ios.newURI(link.href, null, null);
+      var generatorURI = this._ios.newURI(link.href,
+                                          resource.content.characterSet,
+                                          null);
 
-      var microsummary = new Microsummary(pageURI, genURI);
+      try {
+        const securityManager = Cc["@mozilla.org/scriptsecuritymanager;1"].
+                                getService(Ci.nsIScriptSecurityManager);
+        securityManager.checkLoadURI(resource.uri,
+                                     generatorURI,
+                                     Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+      }
+      catch(e) {
+        LOG("can't load generator " + generatorURI.spec + " from page " +
+            resource.uri.spec + ": " + e);
+        continue;
+      }
+
+      var microsummary = new Microsummary(resource.uri, generatorURI);
       this.AppendElement(microsummary);
     }
   },
@@ -1437,209 +1426,282 @@ function LOG(str) {
 
 
 
+
 /**
- * Get the document object for a page currently loaded into a browser window.
+ * A resource (page, microsummary, generator, etc.) identifiable by URI.
+ * This object abstracts away much of the code for loading resources
+ * and parsing their content if they are XML or HTML.
  * 
- * @param   pageURI
- *          the URI of the page
+ * @constructor
+ * 
+ * @param   uri
+ *          the location of the resource
  *
- * @returns the document object, if the page is currently loaded
+ */
+function MicrosummaryResource(uri) {
+  // Make sure we're not loading javascript: or data: URLs, which could
+  // take advantage of the load to run code with chrome: privileges.
+  // XXX Perhaps use nsIScriptSecurityManager.checkLoadURI instead.
+  if (uri.scheme != "http" && uri.scheme != "https" && uri.scheme != "file")
+    throw NS_ERROR_DOM_BAD_URI;
+
+  this._uri = uri;
+}
+
+MicrosummaryResource.prototype = {
+  // IO Service
+  __ios: null,
+  get _ios() {
+    if (!this.__ios)
+      this.__ios = Cc["@mozilla.org/network/io-service;1"].
+                   getService(Ci.nsIIOService);
+    return this.__ios;
+  },
+
+  _uri: null,
+  get uri() {
+    return this._uri;
+  },
+
+  _content: null,
+  get content() {
+    return this._content;
+  },
+
+  _contentType: null,
+  get contentType() {
+    return this._contentType;
+  },
+
+  _isXML: false,
+  get isXML() {
+    return this._isXML;
+  },
+
+  // A function to call when we finish loading/parsing the resource.
+  _callback: null,
+
+  // A hidden iframe to parse HTML content.
+  _iframe: null,
+
+  /**
+   * Initialize the resource from an existing DOM document object.
+   * 
+   * @param   document
+   *          a DOM document object
+   *
+   */
+  initFromDocument: function MSR_initFromDocument(document) {
+    this._content = document;
+    this._contentType = document.contentType;
+
+    // Normally we set this property based on whether or not
+    // XMLHttpRequest parsed the content into an XML document object,
+    // but since we already have the content, we have to analyze
+    // its content type ourselves to see if it is XML.
+    this._isXML = (this.contentType == "text/xml" ||
+                   this.contentType == "application/xml" ||
+                   /^.+\/.+\+xml$/.test(this.contentType));
+  },
+
+  /**
+   * Destroy references to avoid leak-causing cycles.  Instantiators must call
+   * this method on all instances they instantiate once they're done with them.
+   *
+   */
+  destroy: function MSR_destroy() {
+    this._uri = null;
+    this._content = null;
+    this._callback = null;
+    if (this._iframe) {
+      if (this._iframe && this._iframe.parentNode)
+        this._iframe.parentNode.removeChild(this._iframe);
+      this._iframe = null;
+    }
+  },
+
+  /**
+   * Load the resource.
+   * 
+   * @param   callback
+   *          a function to invoke when the resource finishes loading
+   *
+   */
+  load: function MSR_load(callback) {
+    LOG(this.uri.spec + " loading");
+  
+    this._callback = callback;
+
+    var request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
+  
+    var loadHandler = {
+      _self: this,
+      handleEvent: function MSR_loadHandler_handleEvent(event) {
+        event.target.removeEventListener("load", this, false);
+        try     { this._self._handleLoad(event) }
+        finally { this._self = null }
+      }
+    };
+
+    request = request.QueryInterface(Ci.nsIDOMEventTarget);
+    request.addEventListener("load", loadHandler, false);
+    
+    request = request.QueryInterface(Ci.nsIXMLHttpRequest);
+    request.open("GET", this.uri.spec, true);
+    request.send(null);
+  },
+
+  _handleLoad: function MSR__handleLoad(event) {
+    var request = event.target;
+
+    if (request.responseXML) {
+      this._isXML = true;
+      // XXX Figure out the parsererror format and log a specific error.
+      if (request.responseXML.documentElement.nodeName == "parsererror")
+        throw(request.channel.originalURI.spec + " contains invalid XML");
+      this._content = request.responseXML;
+      this._contentType = request.channel.contentType;
+      this._callback(this);
+    }
+
+    else if (request.channel.contentType == "text/html") {
+      // request.responseText itself will always be UTF-16 because it is
+      // a DOMString (XMLHttpRequest will convert it to that when it was
+      // something else).  When we pass this to newURI(), it becomes UTF-8.
+      // So the charset in the data: URL should always be UTF-8.
+      var dataURISpec = "data:text/html;charset=UTF-8," + request.responseText;
+      var dataURI = this._ios.newURI(dataURISpec, null, null);
+      this._parse(dataURI);
+    }
+
+    else {
+      // This catches text/plain as well as any other content types
+      // not accounted for by the content type-specific code above.
+      this._content = request.responseText;
+      this._contentType = request.channel.contentType;
+      this._callback(this);
+    }
+  },
+  
+  /**
+   * Parse content encapsulated in a data URI.  Used by _load() to parse HTML.
+   * We do this via hidden XUL iframes, which according to bz is the best way
+   * to do it currently, since bug 102699 is hard to fix.
+   * 
+   * @param   dataURI
+   *          the data URI containing the encapsulated content
+   *
+   */
+  _parse: function MSR__parse(dataURI) {
+    if (dataURI.scheme != "data")
+      throw NS_ERROR_DOM_BAD_URI;
+  
+    // Find a window to stick our hidden iframe into.
+    var windowMediator = Cc['@mozilla.org/appshell/window-mediator;1'].
+                         getService(Ci.nsIWindowMediator);
+    var window = windowMediator.getMostRecentWindow("navigator:browser");
+    // XXX We can use other windows, too, so perhaps we should try to get
+    // some other window if there's no browser window open.  Perhaps we should
+    // even prefer other windows, since there's less chance of any browser
+    // window machinery like throbbers treating our load like one initiated
+    // by the user.
+    if (!window)
+      throw(dataURI.spec + " can't parse; no browser window");
+    var document = window.document;
+    var rootElement = document.documentElement;
+  
+    // Create an iframe, make it hidden, and secure it against untrusted content.
+    this._iframe = document.createElement('iframe');
+    this._iframe.setAttribute("collapsed", true);
+    this._iframe.setAttribute("type", "content");
+  
+    // Insert the iframe into the window, creating the doc shell, then turn off
+    // JavaScript and auth dialogs for security and turn off other things
+    // to reduce network load.
+    // XXX We should also turn off CSS.
+    rootElement.appendChild(this._iframe);
+    this._iframe.docShell.allowJavascript = false;
+    this._iframe.docShell.allowAuth = false;
+    this._iframe.docShell.allowPlugins = false;
+    this._iframe.docShell.allowMetaRedirects = false;
+    this._iframe.docShell.allowSubframes = false;
+    this._iframe.docShell.allowImages = false;
+  
+    var parseHandler = {
+      _self: this,
+      handleEvent: function MSR_parseHandler_handleEvent(event) {
+        // Appending a new iframe to a XUL window makes it immediately start
+        // loading "about:blank", and we'll probably get notified about that
+        // first, so make sure we check for that and drop it on the floor.
+        if (event.originalTarget.location == "about:blank")
+          return;
+
+        event.target.removeEventListener("DOMContentLoaded", this, false);
+        try     { this._self._handleParse(event) }
+        finally { this._self = null }
+      }
+    };
+
+    // Register the parse handler as a load event listener and kick off the load.
+    // We use the URI loader instead of the iframe's src attribute so we can set
+    // the LOAD_BACKGROUND flag.
+    this._iframe.addEventListener("DOMContentLoaded", parseHandler, true);
+    var channel = this._ios.newChannelFromURI(dataURI);
+    channel.loadFlags |= Ci.nsIRequest.LOAD_BACKGROUND;
+    var uriLoader = Cc["@mozilla.org/uriloader;1"].getService(Ci.nsIURILoader);
+    uriLoader.openURI(channel, true, this._iframe.docShell);
+  },
+
+  /**
+   * Handle a load event for the iframe-based parser.
+   * 
+   * @param   event
+   *          the event object representing the load event
+   *
+   */
+  _handleParse: function MSR__handleParse(event) {
+    // XXX Make sure the parse was successful?
+
+    this._content = this._iframe.contentDocument;
+    this._contentType = this._iframe.contentDocument.contentType;
+    this._callback(this);
+  }
+
+};
+
+/**
+ * Get a resource currently loaded into a browser window.  Checks windows
+ * one at a time, starting with the frontmost (a.k.a. most recent) one.
+ * 
+ * @param   uri
+ *          the URI of the resource
+ *
+ * @returns a Resource object, if the resource is currently loaded
  *          into a browser window; otherwise null
  *
  */
-function getLoadedPageContent(pageURI) {
-  // Check open browser windows for the document, starting with the frontmost
-  // window (a.k.a. the most recent one).
+function getLoadedMicrosummaryResource(uri) {
   var mediator = Cc["@mozilla.org/appshell/window-mediator;1"].
                  getService(Ci.nsIWindowMediator);
-  // Apparently the Z order enumerator is broken on Linux.
+
+  // Apparently the Z order enumerator is broken on Linux per bug 156333.
   //var windows = mediator.getZOrderDOMWindowEnumerator("navigator:browser", true);
   var windows = mediator.getEnumerator("navigator:browser");
+
   while (windows.hasMoreElements()) {
     var win = windows.getNext();
     var tabBrowser = win.document.getElementById("content");
-    for ( i = 0; i < tabBrowser.browsers.length; i++ ) {
+    for ( var i = 0; i < tabBrowser.browsers.length; i++ ) {
       var browser = tabBrowser.browsers[i];
-      if (pageURI.equals(browser.currentURI))
-        return browser.contentDocument;
+      if (uri.equals(browser.currentURI)) {
+        var resource = new MicrosummaryResource(uri);
+        resource.initFromDocument(browser.contentDocument);
+        return resource;
+      }
     }
   }
 
   return null;
-}
-
-/**
- * Download a page.  This function checks the content type annotation
- * for a clue how to load the file.  It calls downloadXMLPage() for XML pages
- * and downloadHTMLPage() otherwise.
- * 
- * @param   pageURI
- *          the URI of the page to download
- *
- * @param   loadHandler 
- *          the function to call when the page finishes downloading
- *
- */
-function downloadPage(pageURI, loadHandler) {
-  LOG(pageURI.spec + " downloading");
-
-  var contentType;
-
-#ifdef MOZ_PLACES
-  var ans = Cc["@mozilla.org/browser/annotation-service;1"].
-            getService(Ci.nsIAnnotationService);
-  if (ans.hasAnnotation(pageURI, FIELD_CONTENT_TYPE))
-    contentType = ans.getAnnotationString(pageURI, FIELD_CONTENT_TYPE);
-#endif
-
-  if (contentType && contentType.search(/xml$/) != -1)
-    downloadXMLPage(pageURI, loadHandler);
-  else
-    downloadHTMLPage(pageURI, loadHandler);
-}
-
-/**
- * Download an XML page.
- * 
- * @param   pageURI
- *          the URI of the page to download
- *
- * @param   loadHandler
- *          the function to call when the page finishes downloading
- *
- */
-function downloadXMLPage(pageURI, loadHandler) {
-  // Make sure we're not loading javascript: or data: URLs, which could
-  // take advantage of the load to run code with chrome: privileges.
-  if (pageURI.scheme != "http" && pageURI.scheme != "https")
-    throw NS_ERROR_DOM_BAD_URI;
-
-  LOG(pageURI.spec + " downloading as XML");
-
-  var request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
-
-  if (loadHandler) {
-    request = request.QueryInterface(Ci.nsIDOMEventTarget);
-    request.addEventListener("load", loadHandler, false);
-  }
-  
-  request = request.QueryInterface(Ci.nsIXMLHttpRequest);
-  request.open("GET", pageURI.spec, true);
-  request.send(null);
-}
-
-/**
- * Download an HTML page.
- * 
- * @param   pageURI
- *          the URI of the page to download
- *
- * @param   loadHandler 
- *          the function to call when the page finishes downloading
- *
- */
-function downloadHTMLPage(pageURI, loadHandler) {
-  // Make sure we're not loading javascript: or data: URLs, which could
-  // take advantage of the load to run code with chrome: privileges.
-  if (pageURI.scheme != "http" && pageURI.scheme != "https")
-    throw NS_ERROR_DOM_BAD_URI;
-
-  LOG(pageURI.spec + " downloading as HTML");
-
-  // We download HTML pages via hidden iframes in browser windows.
-  // According to bz, this is the best way to do it, since bug 102699
-  // is hard to fix.
-  var windowMediator = Cc['@mozilla.org/appshell/window-mediator;1'].
-                       getService(Ci.nsIWindowMediator);
-  var window = windowMediator.getMostRecentWindow("navigator:browser");
-  // XXX We can use other windows, too, so perhaps we should try
-  // to get some other window if there's no browser window open.
-  if (!window)
-    throw(pageURI.spec + " can't download as HTML; no browser window");
-  var document = window.document;
-  var mainWindow = document.getElementById('main-window');
-
-  var iframe = document.createElement('iframe');
-  iframe.setAttribute("collapsed", true);
-  iframe.addEventListener("load", loadHandler, true);
-  mainWindow.appendChild(iframe);
-
-  // Now that we've added the iframe to the window, we can access docShell
-  // to turn off JavaScript for security and turn off images to reduce load
-  // on the network.
-  iframe.docShell.allowJavascript = false;
-  iframe.docShell.allowImages = false;
-
-  // Attach the URI to the iframe so we can retrieve it later.
-  iframe.originalURI = pageURI;
-
-  // Kick off the download.
-  iframe.setAttribute('src', pageURI.spec);
-}
-
-/**
- * Get the original URI and the document object from a page load event.
- * Abstracts away the differences between the XMLHttpRequest and hidden iframe
- * approaches to loading pages.
- *
- * @param   event
- *          the page load event from which to get the URI and doc object
- *
- * @returns A page object containing the page URI, content, and container.
- *          The container is the hidden iframe the page was loaded in; we have
- *          to pass that back so the caller can delete it after processing
- *          the document, since the document would get screwed up if we deleted
- *          the iframe here.
- *
- */
-function getPageFromEvent(event) {
-  var page = {};
-
-  if (event.target.channel) {
-    // this was an XMLHttpRequest page load
-
-    var request = event.target;
-    page.uri = request.channel.originalURI;
-
-    if (!request.responseXML) {
-      throw(page.uri.spec + " page downloaded as XML, but not XML");
-      // XXX Update the page's content type annotation
-      // XXX Do something about pages with an XML content type
-      // but which aren't XML?
-    }
-    
-    page.content = request.responseXML;
-
-    if (page.content.documentElement.nodeName == "parsererror") {
-      throw(page.uri.spec + " page downloaded, but invalid XML");
-      // XXX Figure out the parsererror format and log a specific error.
-    }
-  }
-  else if (event.currentTarget && event.currentTarget.nodeName &&
-           event.currentTarget.nodeName == "iframe") {
-    // this was a hidden iframe page load
-
-    var iframe = event.currentTarget;
-
-    page.uri = iframe.originalURI;
-    page.content = iframe.contentDocument;
-    page.container = iframe;
-  }
-
-#ifdef MOZ_PLACES
-  // This is as good a time as any to update the page's content type
-  // in the annotations database.  XXX But should we only do this for pages
-  // being summarized?  If we do it here, we'll do it for generators too.
-  var ans = Cc["@mozilla.org/browser/annotation-service;1"].
-            getService(Ci.nsIAnnotationService);
-  ans.setAnnotationString(page.uri,
-                          FIELD_CONTENT_TYPE,
-                          page.content.contentType,
-                          0,
-                          ans.EXPIRE_NEVER);
-#endif
-
-  return page;
 }
 
 
