@@ -120,12 +120,14 @@ public:
 
   nsFloatCache* Tail() const;
 
+  void DeleteAll();
+
   nsFloatCache* Find(nsIFrame* aOutOfFlowFrame);
 
   // Remove a nsFloatCache from this list.  Deleting this nsFloatCache
   // becomes the caller's responsibility.
-  void Remove(nsFloatCache* aElement);
-
+  void Remove(nsFloatCache* aElement) { RemoveAndReturnPrev(aElement); }
+  
   // Steal away aList's nsFloatCache objects and put them in this
   // list.  aList must not be empty.
   void Append(nsFloatCacheFreeList& aList);
@@ -133,12 +135,18 @@ public:
 protected:
   nsFloatCache* mHead;
 
+  // Remove a nsFloatCache from this list.  Deleting this nsFloatCache
+  // becomes the caller's responsibility. Returns the nsFloatCache that was
+  // before aElement, or nsnull if aElement was the first.
+  nsFloatCache* RemoveAndReturnPrev(nsFloatCache* aElement);
+  
   friend class nsFloatCacheFreeList;
 };
 
 //---------------------------------------
+// Like nsFloatCacheList, but with fast access to the tail
 
-class nsFloatCacheFreeList : public nsFloatCacheList {
+class nsFloatCacheFreeList : private nsFloatCacheList {
 public:
 #ifdef NS_BUILD_REFCNT_LOGGING
   nsFloatCacheFreeList();
@@ -148,15 +156,37 @@ public:
   ~nsFloatCacheFreeList() { }
 #endif
 
+  // Reimplement trivial functions
+  PRBool IsEmpty() const {
+    return nsnull == mHead;
+  }
+
+  nsFloatCache* Head() const {
+    return mHead;
+  }
+
+  nsFloatCache* Tail() const {
+    return mTail;
+  }
+  
+  PRBool NotEmpty() const {
+    return nsnull != mHead;
+  }
+
+  void DeleteAll();
+
   // Steal away aList's nsFloatCache objects and put them on this
   // free-list.  aList must not be empty.
   void Append(nsFloatCacheList& aList);
 
   void Append(nsFloatCache* aFloatCache);
 
-  // Allocate a new nsFloatCache object
-  nsFloatCache* Alloc();
+  void Remove(nsFloatCache* aElement);
 
+  // Remove an nsFloatCache object from this list and return it, or create
+  // a new one if this one is empty;
+  nsFloatCache* Alloc();
+  
 protected:
   nsFloatCache* mTail;
 

@@ -2744,13 +2744,14 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
       // a placeholder and then reflow its associated float we don't
       // end up resetting the line's right edge and have it think the
       // width is unconstrained...
-      aState.mSpaceManager->PushState();
+      nsSpaceManager::SavedState spaceManagerState;
+      aState.mSpaceManager->PushState(&spaceManagerState);
       aState.SetFlag(BRS_UNCONSTRAINEDWIDTH, PR_TRUE);
       ReflowInlineFrames(aState, aLine, aKeepReflowGoing, aDamageDirtyArea, PR_TRUE);
       aState.mY = oldY;
       aState.mPrevBottomMargin = oldPrevBottomMargin;
       aState.SetFlag(BRS_UNCONSTRAINEDWIDTH, oldUnconstrainedWidth);
-      aState.mSpaceManager->PopState();
+      aState.mSpaceManager->PopState(&spaceManagerState);
 
       // Update the line's maximum width
       aLine->mMaximumWidth = aLine->mBounds.XMost();
@@ -3507,9 +3508,10 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
                                   aState.mReflowState.reason, PR_TRUE);
     blockHtmlRS.mFlags.mHasClearance = aLine->HasClearance();
     
+    nsSpaceManager::SavedState spaceManagerState;
     if (mayNeedRetry) {
       blockHtmlRS.mDiscoveredClearance = &clearanceFrame;
-      aState.mSpaceManager->PushState();
+      aState.mSpaceManager->PushState(&spaceManagerState);
     } else if (!applyTopMargin) {
       blockHtmlRS.mDiscoveredClearance = aState.mReflowState.mDiscoveredClearance;
     }
@@ -3526,19 +3528,12 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       return rv;
     }
     
-    if (mayNeedRetry) {
-      if (clearanceFrame) {
-        UndoSplitPlaceholders(aState, lastPlaceholder);
-        aState.mSpaceManager->PopState();
-        aState.mY = startingY;
-        aState.mPrevBottomMargin = incomingMargin;
-        continue;
-      } else {
-        // pop the saved state off the stack and discard it, because we
-        // want to keep the current state, since our speculation
-        // succeeded
-        aState.mSpaceManager->DiscardState();
-      }
+    if (mayNeedRetry && clearanceFrame) {
+      UndoSplitPlaceholders(aState, lastPlaceholder);
+      aState.mSpaceManager->PopState(&spaceManagerState);
+      aState.mY = startingY;
+      aState.mPrevBottomMargin = incomingMargin;
+      continue;
     }
     
     aState.mPrevChild = frame;
@@ -3765,12 +3760,6 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
   return rv;
 }
 
-#define LINE_REFLOW_OK        0
-#define LINE_REFLOW_STOP      1
-#define LINE_REFLOW_REDO      2
-// a frame was complete, but truncated and not at the top of a page
-#define LINE_REFLOW_TRUNCATED 3
-
 nsresult
 nsBlockFrame::ReflowInlineFrames(nsBlockReflowState& aState,
                                  line_iterator aLine,
@@ -3784,45 +3773,61 @@ nsBlockFrame::ReflowInlineFrames(nsBlockReflowState& aState,
 #ifdef DEBUG
   PRInt32 spins = 0;
 #endif
-  PRUint8 lineReflowStatus = LINE_REFLOW_REDO;
-  PRBool didRedo = PR_FALSE;
+  LineReflowStatus lineReflowStatus = LINE_REFLOW_REDO_NEXT_BAND;
+  PRBool movedPastFloat = PR_FALSE;
   do {
-    // Once upon a time we allocated the first 30 nsLineLayout objects
-    // on the stack, and then we switched to the heap.  At that time
-    // these objects were large (1100 bytes on a 32 bit system).
-    // Then the nsLineLayout object was shrunk to 156 bytes by
-    // removing some internal buffers.  Given that it is so much
-    // smaller, the complexity of 2 different ways of allocating
-    // no longer makes sense.  Now we always allocate on the stack
+    PRBool allowPullUp = PR_TRUE;
+    do {
+      nsSpaceManager::SavedState spaceManagerState;
+      aState.mReflowState.mSpaceManager->PushState(&spaceManagerState);
 
-    nsLineLayout lineLayout(aState.mPresContext,
-                            aState.mReflowState.mSpaceManager,
-                            &aState.mReflowState,
-                            aState.GetFlag(BRS_COMPUTEMAXELEMENTWIDTH));
-    lineLayout.Init(&aState, aState.mMinLineHeight, aState.mLineNumber);
-    rv = DoReflowInlineFrames(aState, lineLayout, aLine,
-                              aKeepReflowGoing, &lineReflowStatus,
-                              aUpdateMaximumWidth, aDamageDirtyArea);
-    lineLayout.EndLineReflow();
-    
-    if (LINE_REFLOW_REDO == lineReflowStatus) {
-      didRedo = PR_TRUE;
-    }
-
+      // Once upon a time we allocated the first 30 nsLineLayout objects
+      // on the stack, and then we switched to the heap.  At that time
+      // these objects were large (1100 bytes on a 32 bit system).
+      // Then the nsLineLayout object was shrunk to 156 bytes by
+      // removing some internal buffers.  Given that it is so much
+      // smaller, the complexity of 2 different ways of allocating
+      // no longer makes sense.  Now we always allocate on the stack
+      nsLineLayout lineLayout(aState.mPresContext,
+                              aState.mReflowState.mSpaceManager,
+                              &aState.mReflowState,
+                              aState.GetFlag(BRS_COMPUTEMAXELEMENTWIDTH));
+      lineLayout.Init(&aState, aState.mMinLineHeight, aState.mLineNumber);
+      rv = DoReflowInlineFrames(aState, lineLayout, aLine,
+                                aKeepReflowGoing, &lineReflowStatus,
+                                aUpdateMaximumWidth, aDamageDirtyArea,
+                                allowPullUp);
+      lineLayout.EndLineReflow();
+      
+      if (LINE_REFLOW_REDO_NO_PULL == lineReflowStatus ||
+          LINE_REFLOW_REDO_NEXT_BAND == lineReflowStatus) {
+        // restore the space manager state
+        aState.mReflowState.mSpaceManager->PopState(&spaceManagerState);
+        // Clear out below-current-line-floats
+        aState.mBelowCurrentLineFloats.DeleteAll();
+      }
+      
 #ifdef DEBUG
-    spins++;
-    if (1000 == spins) {
-      ListTag(stdout);
-      printf(": yikes! spinning on a line over 1000 times!\n");
-      NS_ABORT();
-    }
+      spins++;
+      if (1000 == spins) {
+        ListTag(stdout);
+        printf(": yikes! spinning on a line over 1000 times!\n");
+        NS_ABORT();
+      }
 #endif
 
-  } while (NS_SUCCEEDED(rv) && LINE_REFLOW_REDO == lineReflowStatus);
+      // Don't allow pullup on a subsequent LINE_REFLOW_REDO_NO_PULL pass
+      allowPullUp = PR_FALSE;
+    } while (NS_SUCCEEDED(rv) && LINE_REFLOW_REDO_NO_PULL == lineReflowStatus);
 
-  // If we did at least one REDO, then the line did not fit next to some float.
+    if (LINE_REFLOW_REDO_NEXT_BAND == lineReflowStatus) {
+      movedPastFloat = PR_TRUE;
+    }
+  } while (NS_SUCCEEDED(rv) && LINE_REFLOW_REDO_NEXT_BAND == lineReflowStatus);
+
+  // If we did at least one REDO_FOR_FLOAT, then the line did not fit next to some float.
   // Mark it as impacted by a float, even if it no longer is next to a float.
-  if (didRedo) {
+  if (movedPastFloat) {
     aLine->SetLineIsImpactedByFloat(PR_TRUE);
   }
 
@@ -3853,9 +3858,10 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
                                    nsLineLayout& aLineLayout,
                                    line_iterator aLine,
                                    PRBool* aKeepReflowGoing,
-                                   PRUint8* aLineReflowStatus,
+                                   LineReflowStatus* aLineReflowStatus,
                                    PRBool aUpdateMaximumWidth,
-                                   PRBool aDamageDirtyArea)
+                                   PRBool aDamageDirtyArea,
+                                   PRBool aAllowPullUp)
 {
   // Forget all of the floats on the line
   aLine->FreeFloats(aState.mFloatCacheFreeList);
@@ -3905,7 +3911,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
 
   // Reflow the frames that are already on the line first
   nsresult rv = NS_OK;
-  PRUint8 lineReflowStatus = LINE_REFLOW_OK;
+  LineReflowStatus lineReflowStatus = LINE_REFLOW_OK;
   PRInt32 i;
   nsIFrame* frame = aLine->mFirstChild;
   aLine->SetHasPercentageChild(PR_FALSE); // To be set by ReflowInlineFrame below
@@ -3952,7 +3958,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
   }
 
   // Don't pull up new frames into lines with continuation placeholders
-  if (!isContinuingPlaceholders) {
+  if (!isContinuingPlaceholders && aAllowPullUp) {
     // Pull frames and reflow them until we can't
     while (LINE_REFLOW_OK == lineReflowStatus) {
       rv = PullFrame(aState, aLine, aDamageDirtyArea, frame);
@@ -3984,7 +3990,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
     }
   }
 
-  if (LINE_REFLOW_REDO == lineReflowStatus) {
+  if (LINE_REFLOW_REDO_NEXT_BAND == lineReflowStatus) {
     // This happens only when we have a line that is impacted by
     // floats and the first element in the line doesn't fit with
     // the floats.
@@ -3995,7 +4001,6 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
                  "redo line on totally empty line");
     NS_ASSERTION(NS_UNCONSTRAINEDSIZE != aState.mAvailSpaceRect.height,
                  "unconstrained height on totally empty line");
-
 
     if (aState.mAvailSpaceRect.height > 0) {
       aState.mY += aState.mAvailSpaceRect.height;
@@ -4029,6 +4034,13 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
     // push the line and return now instead of later on after we are
     // past the float.
   }
+  else if (LINE_REFLOW_REDO_NO_PULL == lineReflowStatus) {
+    // We don't want to advance by the bottom margin anymore (we did it
+    // once at the beginning of this function, which will just be called
+    // again), and we certainly don't want to go back if it's negative
+    // (infinite loop, bug 153429).
+    aState.mPrevBottomMargin.Zero();
+  }
   else if (LINE_REFLOW_TRUNCATED != lineReflowStatus) {
     // If we are propagating out a break-before status then there is
     // no point in placing the line.
@@ -4056,9 +4068,9 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
                                 nsLineLayout& aLineLayout,
                                 line_iterator aLine,
                                 nsIFrame* aFrame,
-                                PRUint8* aLineReflowStatus)
+                                LineReflowStatus* aLineReflowStatus)
 {
- NS_ENSURE_ARG_POINTER(aFrame);
+  NS_ENSURE_ARG_POINTER(aFrame);
   
   *aLineReflowStatus = LINE_REFLOW_OK;
 
@@ -4151,12 +4163,12 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
         // be trying to place content where there's no room (e.g. on a
         // line with wide floats). Inform the caller to reflow the
         // line after skipping past a float.
-        *aLineReflowStatus = LINE_REFLOW_REDO;
+        *aLineReflowStatus = LINE_REFLOW_REDO_NEXT_BAND;
       }
       else {
         // It's not the first child on this line so go ahead and split
         // the line. We will see the frame again on the next-line.
-        rv = SplitLine(aState, aLineLayout, aLine, aFrame);
+        rv = SplitLine(aState, aLineLayout, aLine, aFrame, aLineReflowStatus);
         if (NS_FAILED(rv)) {
           return rv;
         }
@@ -4199,7 +4211,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
       }
 
       // Split line, but after the frame just reflowed
-      rv = SplitLine(aState, aLineLayout, aLine, aFrame->GetNextSibling());
+      rv = SplitLine(aState, aLineLayout, aLine, aFrame->GetNextSibling(), aLineReflowStatus);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -4249,7 +4261,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
     if (splitLine) {
       // Split line after the current frame
       *aLineReflowStatus = LINE_REFLOW_STOP;
-      rv = SplitLine(aState, aLineLayout, aLine, aFrame->GetNextSibling());
+      rv = SplitLine(aState, aLineLayout, aLine, aFrame->GetNextSibling(), aLineReflowStatus);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -4331,11 +4343,35 @@ nsBlockFrame::SplitPlaceholder(nsBlockReflowState& aState,
   return NS_OK;
 }
 
+static nsFloatCache*
+GetLastFloat(nsLineBox* aLine)
+{
+  nsFloatCache* fc = aLine->GetFirstFloat();
+  while (fc && fc->Next()) {
+    fc = fc->Next();
+  }
+  return fc;
+}
+
+static PRBool
+CheckPlaceholderInLine(nsIFrame* aBlock, nsLineBox* aLine, nsFloatCache* aFC)
+{
+  if (!aFC)
+    return PR_TRUE;
+  for (nsIFrame* f = aFC->mPlaceholder; f; f = f->GetParent()) {
+    if (f->GetParent() == aBlock)
+      return aLine->Contains(f);
+  }
+  NS_ASSERTION(PR_FALSE, "aBlock is not an ancestor of aFrame!");
+  return PR_TRUE;
+}
+
 nsresult
 nsBlockFrame::SplitLine(nsBlockReflowState& aState,
                         nsLineLayout& aLineLayout,
                         line_iterator aLine,
-                        nsIFrame* aFrame)
+                        nsIFrame* aFrame,
+                        LineReflowStatus* aLineReflowStatus)
 {
   NS_ABORT_IF_FALSE(aLine->IsInline(), "illegal SplitLine on block line");
 
@@ -4382,6 +4418,17 @@ nsBlockFrame::SplitLine(nsBlockReflowState& aState,
     // Let line layout know that some frames are no longer part of its
     // state.
     aLineLayout.SplitLineTo(aLine->GetChildCount());
+
+    // If floats have been placed whose placeholders have been pushed to the new
+    // line, we need to reflow the old line again. We don't want to look at the
+    // frames in the new line, because as a large paragraph is laid out the 
+    // we'd get O(N^2) performance. So instead we just check that the last
+    // float and the last below-current-line float are still in aLine.
+    if (!CheckPlaceholderInLine(this, aLine, GetLastFloat(aLine)) ||
+        !CheckPlaceholderInLine(this, aLine, aState.mBelowCurrentLineFloats.Tail())) {
+      *aLineReflowStatus = LINE_REFLOW_REDO_NO_PULL;
+    }
+
 #ifdef DEBUG
     VerifyLines(PR_TRUE);
 #endif
