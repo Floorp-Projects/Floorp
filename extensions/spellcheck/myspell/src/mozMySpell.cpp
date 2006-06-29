@@ -142,7 +142,7 @@ NS_IMETHODIMP mozMySpell::SetDictionary(const PRUnichar *aDictionary)
     return NS_ERROR_FAILURE;
 
   dictFileName.SetLength(dotPos);
-  dictFileName.AppendLiteral(".aff");
+  dictFileName.AppendLiteral(".dic");
 
   // SetDictionary can be called multiple times, so we might have a
   // valid mMySpell instance which needs cleaned up.
