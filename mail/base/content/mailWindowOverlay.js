@@ -587,7 +587,7 @@ function AddTagCallback(name, color)
 {
   var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"].getService(Components.interfaces.nsIMsgTagService);
   tagService.addTag(name, color);
-  TagCurMessage(name);
+  TagCurMessage(tagService.getKeyForTag(name));
   return true;
 }
 
