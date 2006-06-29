@@ -61,8 +61,11 @@
 #include "mozIPersonalDictionary.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
+#include "nsIObserver.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsIUnicodeDecoder.h"
+#include "nsInterfaceHashtable.h"
+#include "nsWeakReference.h"
 
 #define MOZ_MYSPELL_CONTRACTID "@mozilla.org/spellchecker/myspell;1"
 #define MOZ_MYSPELL_CID         \
@@ -70,14 +73,22 @@
 0xD1EE1205, 0x3F96, 0x4a0f,                    \
 { 0xAB, 0xFE, 0x09, 0xE8, 0xC5, 0x4C, 0x9E, 0x9A} }
 
-class mozMySpell : public mozISpellCheckingEngine
+class mozMySpell : public mozISpellCheckingEngine,
+                   public nsIObserver,
+                   public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_MOZISPELLCHECKINGENGINE
+  NS_DECL_NSIOBSERVER
 
-  mozMySpell();
+  mozMySpell() : mMySpell(nsnull) { }
   virtual ~mozMySpell();
+
+  nsresult Init();
+
+  void LoadDictionaryList();
+  void LoadDictionariesFromDir(nsIFile* aDir);
 
   // helper method for converting a word to the charset of the dictionary
   nsresult ConvertCharset(const PRUnichar* aStr, char ** aDst);
@@ -87,8 +98,12 @@ protected:
   nsCOMPtr<mozIPersonalDictionary> mPersonalDictionary;
   nsCOMPtr<nsIUnicodeEncoder>      mEncoder; 
   nsCOMPtr<nsIUnicodeDecoder>      mDecoder; 
+
+  // Hashtable matches dictionary name to .aff file
+  nsInterfaceHashtable<nsUnicharPtrHashKey, nsIFile> mDictionaries;
   nsString  mDictionary;
   nsString  mLanguage;
+
   MySpell  *mMySpell;
 };
 

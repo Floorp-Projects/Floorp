@@ -60,8 +60,10 @@
 #include "mozMySpell.h"
 #include "nsReadableUtils.h"
 #include "nsXPIDLString.h"
+#include "nsIObserverService.h"
 #include "nsISimpleEnumerator.h"
-#include "nsDirectoryService.h"
+#include "nsIDirectoryEnumerator.h"
+#include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "mozISpellI18NManager.h"
 #include "nsICharsetConverterManager.h"
@@ -70,13 +72,26 @@
 #include "nsCRT.h"
 #include <stdlib.h>
 
-const PRInt32 kFirstDirSize=8;
+NS_IMPL_ISUPPORTS3(mozMySpell,
+                   mozISpellCheckingEngine,
+                   nsIObserver,
+                   nsISupportsWeakReference)
 
-NS_IMPL_ISUPPORTS1(mozMySpell, mozISpellCheckingEngine)
-
-mozMySpell::mozMySpell()
+nsresult
+mozMySpell::Init()
 {
-  mMySpell = NULL;
+  if (!mDictionaries.Init())
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  LoadDictionaryList();
+
+  nsCOMPtr<nsIObserverService> obs =
+    do_GetService("@mozilla.org/observer-service;1");
+  if (obs) {
+    obs->AddObserver(this, "profile-do-change", PR_TRUE);
+  }
+
+  return NS_OK;
 }
 
 mozMySpell::~mozMySpell()
@@ -90,6 +105,9 @@ NS_IMETHODIMP mozMySpell::GetDictionary(PRUnichar **aDictionary)
 {
   NS_ENSURE_ARG_POINTER(aDictionary);
 
+  if (mDictionary.IsEmpty())
+    return NS_ERROR_NOT_INITIALIZED;
+
   *aDictionary = ToNewUnicode(mDictionary);
   return *aDictionary ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
@@ -101,74 +119,76 @@ NS_IMETHODIMP mozMySpell::SetDictionary(const PRUnichar *aDictionary)
 {
   NS_ENSURE_ARG_POINTER(aDictionary);
 
-  nsresult rv = NS_OK;
-  
-  if (*aDictionary && !mDictionary.Equals(aDictionary)) {
-    mDictionary = aDictionary;
+  if (mDictionary.Equals(aDictionary))
+    return NS_OK;
 
-    nsAutoString affFileName, dictFileName;
+  nsIFile* affFile = mDictionaries.GetWeak(aDictionary);
+  if (!affFile)
+    return NS_ERROR_FILE_NOT_FOUND;
 
-    // XXX This isn't really good. nsIFile->Path isn't xp save etc.
-    // see nsIFile.idl
-    // A better way would be to QU ti nsILocalFile, and get a filehandle
-    // from there. Only problem is that myspell wants a path
+  nsCAutoString dictFileName, affFileName;
 
-    nsCOMPtr<nsIFile> file;
-    nsresult rv = NS_GetSpecialDirectory(NS_XPCOM_COMPONENT_DIR, getter_AddRefs(file));
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!file)
-      return NS_ERROR_FAILURE;
-    rv = file->Append(NS_LITERAL_STRING("myspell"));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = file->Append(mDictionary + NS_LITERAL_STRING(".aff"));
-    NS_ENSURE_SUCCESS(rv, rv);
-    file->GetPath(affFileName);
+  // XXX This isn't really good. nsIFile->NativePath isn't safe for all
+  // character sets on Windows.
+  // A better way would be to QI to nsILocalFile, and get a filehandle
+  // from there. Only problem is that myspell wants a path
 
-    rv = NS_GetSpecialDirectory(NS_XPCOM_COMPONENT_DIR, getter_AddRefs(file));
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!file)
-      return NS_ERROR_FAILURE;
-    rv = file->Append(NS_LITERAL_STRING("myspell"));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = file->Append(mDictionary + NS_LITERAL_STRING(".dic"));
-    NS_ENSURE_SUCCESS(rv, rv);
-    file->GetPath(dictFileName);
+  nsresult rv = affFile->GetNativePath(affFileName);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    // SetDictionary can be called multiple times, so we might have a valid mMySpell instance 
-    // which needs cleaned up.
-    if (mMySpell)
-      delete mMySpell;
+  dictFileName = affFileName;
+  PRInt32 dotPos = dictFileName.RFindChar('.');
+  if (dotPos == -1)
+    return NS_ERROR_FAILURE;
 
-    mMySpell = new MySpell(NS_ConvertUTF16toUTF8(affFileName).get(), NS_ConvertUTF16toUTF8(dictFileName).get());
-    if (!mMySpell)
-      return NS_ERROR_FAILURE;
+  dictFileName.SetLength(dotPos);
+  dictFileName.AppendLiteral(".aff");
 
-    nsCOMPtr<nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+  // SetDictionary can be called multiple times, so we might have a
+  // valid mMySpell instance which needs cleaned up.
+  delete mMySpell;
 
-    rv = ccm->GetUnicodeDecoder(mMySpell->get_dic_encoding(), getter_AddRefs(mDecoder));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = ccm->GetUnicodeEncoder(mMySpell->get_dic_encoding(), getter_AddRefs(mEncoder));
-    if (mEncoder && NS_SUCCEEDED(rv)) {
-      mEncoder->SetOutputErrorBehavior(mEncoder->kOnError_Signal, nsnull, '?');
-    }
+  mDictionary = aDictionary;
 
-    NS_ENSURE_SUCCESS(rv, rv);
+  mMySpell = new MySpell(affFileName.get(),
+                         dictFileName.get());
+  if (!mMySpell)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-    PRInt32 pos = mDictionary.FindChar('-');
-    if (pos == -1)
-      mLanguage.Assign(NS_LITERAL_STRING("en"));      
-    else
-      mLanguage = Substring(mDictionary, 0, pos);
-  }
-  
-  return rv;
+  nsCOMPtr<nsICharsetConverterManager> ccm =
+    do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = ccm->GetUnicodeDecoder(mMySpell->get_dic_encoding(),
+                              getter_AddRefs(mDecoder));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = ccm->GetUnicodeEncoder(mMySpell->get_dic_encoding(),
+                              getter_AddRefs(mEncoder));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (mEncoder)
+    mEncoder->SetOutputErrorBehavior(mEncoder->kOnError_Signal, nsnull, '?');
+
+  PRInt32 pos = mDictionary.FindChar('-');
+  if (pos == -1)
+    pos = mDictionary.FindChar('_');
+
+  if (pos == -1)
+    mLanguage.Assign(mDictionary);
+  else
+    mLanguage = Substring(mDictionary, 0, pos);
+
+  return NS_OK;
 }
 
 /* readonly attribute wstring language; */
 NS_IMETHODIMP mozMySpell::GetLanguage(PRUnichar **aLanguage)
 {
   NS_ENSURE_ARG_POINTER(aLanguage);
+
+  if (mDictionary.IsEmpty())
+    return NS_ERROR_NOT_INITIALIZED;
 
   *aLanguage = ToNewUnicode(mLanguage);
   return *aLanguage ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
@@ -218,70 +238,149 @@ NS_IMETHODIMP mozMySpell::SetPersonalDictionary(mozIPersonalDictionary * aPerson
   return NS_OK;
 }
 
+struct AppendNewStruct
+{
+  PRUnichar **dics;
+  PRUint32 count;
+  PRBool failed;
+};
+
+static PLDHashOperator
+AppendNewString(const PRUnichar *aString, nsIFile* aFile, void* aClosure)
+{
+  AppendNewStruct *ans = (AppendNewStruct*) aClosure;
+  ans->dics[ans->count] = NS_strdup(aString);
+  if (!ans->dics[ans->count]) {
+    ans->failed = PR_TRUE;
+    return PL_DHASH_STOP;
+  }
+
+  ++ans->count;
+  return PL_DHASH_NEXT;
+}
+
 /* void GetDictionaryList ([array, size_is (count)] out wstring dictionaries, out PRUint32 count); */
-NS_IMETHODIMP mozMySpell::GetDictionaryList(PRUnichar ***aDictionaries, PRUint32 *aCount)
+NS_IMETHODIMP mozMySpell::GetDictionaryList(PRUnichar ***aDictionaries,
+                                            PRUint32 *aCount)
 {
   if (!aDictionaries || !aCount)
     return NS_ERROR_NULL_POINTER;
 
-  *aDictionaries = 0;
-  *aCount = 0;
-  PRInt32 tempCount=0, arraySize = kFirstDirSize;
-  PRUnichar **newPtr;
+  AppendNewStruct ans = {
+    (PRUnichar**) NS_Alloc(sizeof(PRUnichar*) * mDictionaries.Count()),
+    0,
+    PR_FALSE
+  };
 
-  nsCOMPtr<nsIFile> file;
-  nsresult rv = NS_GetSpecialDirectory(NS_XPCOM_COMPONENT_DIR, getter_AddRefs(file));
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!file)
-    return NS_ERROR_FAILURE;
+  // This pointer is used during enumeration
+  mDictionaries.EnumerateRead(AppendNewString, &ans);
 
-  rv = file->Append(NS_LITERAL_STRING("myspell"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsISimpleEnumerator> dirEntries;
-  rv = file->GetDirectoryEntries(getter_AddRefs(dirEntries));
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!dirEntries)
-    return NS_ERROR_FAILURE;
-
-  PRUnichar **tmpPtr = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * kFirstDirSize);
-  if (!tmpPtr)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  PRBool hasMore = PR_FALSE;
-  while (NS_SUCCEEDED(dirEntries->HasMoreElements(&hasMore)) && hasMore) {
-    nsCOMPtr<nsISupports> nextItem;
-
-    dirEntries->GetNext(getter_AddRefs(nextItem));
-    nsCOMPtr<nsIFile> theFile = do_QueryInterface(nextItem);
-    
-    if (theFile) {
-      nsAutoString fileName;
-      theFile->GetLeafName(fileName);
-      PRInt32 dotLocation = fileName.FindChar('.');
-      if ((dotLocation != -1) &&
-          Substring(fileName,dotLocation,4).EqualsLiteral(".dic")) {
-        if (tempCount >= arraySize) {
-          arraySize = 2 * tempCount;
-          newPtr = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * arraySize);
-          if (!newPtr){
-            NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(tempCount, tmpPtr);
-            return NS_ERROR_OUT_OF_MEMORY;
-          }
-          for (PRInt32 i = 0; i < tempCount; ++i){
-            newPtr[i] = tmpPtr[i];
-          }
-          nsMemory::Free(tmpPtr);
-          tmpPtr=newPtr;
-        }
-        tmpPtr[tempCount++] = ToNewUnicode(Substring(fileName,0,dotLocation));
-      }
+  if (ans.failed) {
+    while (ans.count) {
+      --ans.count;
+      NS_Free(ans.dics[ans.count]);
     }
+    NS_Free(ans.dics);
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  *aDictionaries = tmpPtr;
-  *aCount = tempCount;
+  *aDictionaries = ans.dics;
+  *aCount = ans.count;
+
   return NS_OK;
+}
+
+void
+mozMySpell::LoadDictionaryList()
+{
+  mDictionaries.Clear();
+
+  nsresult rv;
+
+  nsCOMPtr<nsIProperties> dirSvc =
+    do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
+  if (!dirSvc)
+    return;
+
+  nsCOMPtr<nsIFile> dictDir;
+  rv = dirSvc->Get(DICTIONARY_SEARCH_DIRECTORY,
+                   NS_GET_IID(nsIFile), getter_AddRefs(dictDir));
+  if (NS_FAILED(rv)) {
+    // default to appdir/dictionaries
+    rv = dirSvc->Get(NS_XPCOM_CURRENT_PROCESS_DIR,
+                     NS_GET_IID(nsIFile), getter_AddRefs(dictDir));
+    if (NS_FAILED(rv))
+      return;
+
+    dictDir->AppendNative(NS_LITERAL_CSTRING("dictionaries"));
+  }
+
+  LoadDictionariesFromDir(dictDir);
+
+  nsCOMPtr<nsISimpleEnumerator> dictDirs;
+  rv = dirSvc->Get(DICTIONARY_SEARCH_DIRECTORY_LIST,
+                   NS_GET_IID(nsISimpleEnumerator), getter_AddRefs(dictDirs));
+  if (NS_FAILED(rv))
+    return;
+
+  PRBool hasMore;
+  while (NS_SUCCEEDED(dictDirs->HasMoreElements(&hasMore)) && hasMore) {
+    nsCOMPtr<nsISupports> elem;
+    dictDirs->GetNext(getter_AddRefs(elem));
+
+    dictDir = do_QueryInterface(elem);
+    if (dictDir)
+      LoadDictionariesFromDir(dictDir);
+  }
+}
+
+void
+mozMySpell::LoadDictionariesFromDir(nsIFile* aDir)
+{
+  nsresult rv;
+
+  PRBool check = PR_FALSE;
+  rv = aDir->Exists(&check);
+  if (NS_FAILED(rv) || !check)
+    return;
+
+  rv = aDir->IsDirectory(&check);
+  if (NS_FAILED(rv) || !check)
+    return;
+
+  nsCOMPtr<nsISimpleEnumerator> e;
+  rv = aDir->GetDirectoryEntries(getter_AddRefs(e));
+  if (NS_FAILED(rv))
+    return;
+
+  nsCOMPtr<nsIDirectoryEnumerator> files(do_QueryInterface(e));
+  if (!files)
+    return;
+
+  nsCOMPtr<nsIFile> file;
+  while (NS_SUCCEEDED(files->GetNextFile(getter_AddRefs(file))) && file) {
+    nsAutoString leafName;
+    file->GetLeafName(leafName);
+    if (!StringEndsWith(leafName, NS_LITERAL_STRING(".dic")))
+      continue;
+
+    nsAutoString dict(leafName);
+    dict.SetLength(dict.Length() - 4); // magic length of ".dic"
+
+    // check for the presence of the .aff file
+    leafName = dict;
+    leafName.AppendLiteral(".aff");
+    file->SetLeafName(leafName);
+    rv = file->Exists(&check);
+    if (NS_FAILED(rv) || !check)
+      continue;
+
+#ifdef DEBUG_bsmedberg
+    printf("Adding dictionary: %s\n", NS_ConvertUTF16toUTF8(dict).get());
+#endif
+
+    mDictionaries.Put(dict.get(), file);
+  }
 }
 
 nsresult mozMySpell::ConvertCharset(const PRUnichar* aStr, char ** aDst)
@@ -373,4 +472,16 @@ NS_IMETHODIMP mozMySpell::Suggest(const PRUnichar *aWord, PRUnichar ***aSuggesti
   
   NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(*aSuggestionCount, wlst);
   return rv;
+}
+
+NS_IMETHODIMP
+mozMySpell::Observe(nsISupports* aSubj, const char *aTopic,
+                    const PRUnichar *aData)
+{
+  NS_ASSERTION(!strcmp(aTopic, "profile-do-change"),
+               "Unexpected observer topic");
+
+  LoadDictionaryList();
+
+  return NS_OK;
 }
