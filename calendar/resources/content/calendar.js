@@ -489,12 +489,18 @@ function openPreferences() {
                        .getService(Components.interfaces.nsIWindowMediator);
 
     var win = wm.getMostRecentWindow("Calendar:Preferences");
-    var url = "chrome://calendar/content/preferences/preferences.xul";
-    var features = "chrome,titlebar,toolbar,centerscreen,dialog=no";
 
     if (win) {
         win.focus();
     } else {
+        // The prefwindow should only be modal on non-instant-apply platforms
+        var instApply = getPrefSafe("browser.preferences.instantApply", false);
+
+        var features = "chrome,titlebar,toolbar,centerscreen," +
+                       (instApply ? "dialog=no" : "modal");
+
+        var url = "chrome://calendar/content/preferences/preferences.xul";
+
         openDialog(url, "Preferences", features);
     }
 }
