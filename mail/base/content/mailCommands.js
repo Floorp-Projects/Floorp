@@ -38,8 +38,8 @@
 
 function DoRDFCommand(dataSource, command, srcArray, argumentArray)
 {
-	var commandResource = RDF.GetResource(command);
-	if(commandResource) {
+  var commandResource = RDF.GetResource(command);
+  if (commandResource) {
     try {
       if (!argumentArray)
         argumentArray = Components.classes["@mozilla.org/supports-array;1"]
@@ -47,9 +47,9 @@ function DoRDFCommand(dataSource, command, srcArray, argumentArray)
 
       if (argumentArray)
         argumentArray.AppendElement(msgWindow);
-		  dataSource.DoCommand(srcArray, commandResource, argumentArray);
+      dataSource.DoCommand(srcArray, commandResource, argumentArray);
     }
-    catch(e) { 
+    catch(e) {
       if (command == "http://home.netscape.com/NC-rdf#NewFolder") {
         throw(e); // so that the dialog does not automatically close.
       }
@@ -60,83 +60,86 @@ function DoRDFCommand(dataSource, command, srcArray, argumentArray)
 
 function GetNewMessages(selectedFolders, server, compositeDataSource)
 {
-	var numFolders = selectedFolders.length;
-	if(numFolders > 0)
-	{
-		var msgFolder = selectedFolders[0];
+  var numFolders = selectedFolders.length;
+  if (numFolders > 0)
+  {
+    var msgFolder = selectedFolders[0];
 
-		//Whenever we do get new messages, clear the old new messages.
-		if(msgFolder) 
-		{
-			var nsIMsgFolder = Components.interfaces.nsIMsgFolder;
-			msgFolder.biffState = nsIMsgFolder.nsMsgBiffState_NoMail;
-			msgFolder.clearNewMessages();
-		}
-		
-		if(compositeDataSource)
-		{
-			var folderResource = msgFolder.QueryInterface(Components.interfaces.nsIRDFResource);
-		    var folderArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
-			folderArray.AppendElement(folderResource);
-		  var serverArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
+    // Whenever we do get new messages, clear the old new messages.
+    if (msgFolder)
+    {
+      var nsIMsgFolder = Components.interfaces.nsIMsgFolder;
+      msgFolder.biffState = nsIMsgFolder.nsMsgBiffState_NoMail;
+      msgFolder.clearNewMessages();
+    }
+
+    if (compositeDataSource)
+    {
+      var folderResource = msgFolder.QueryInterface(Components.interfaces.nsIRDFResource);
+      var folderArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
+      folderArray.AppendElement(folderResource);
+      var serverArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
       serverArray.AppendElement(server);
-
-			DoRDFCommand(compositeDataSource, "http://home.netscape.com/NC-rdf#GetNewMessages", folderArray, serverArray);
-		}
-	}
-	else {
-		dump("Nothing was selected\n");
-	}
+      DoRDFCommand(compositeDataSource, "http://home.netscape.com/NC-rdf#GetNewMessages", folderArray, serverArray);
+    }
+  }
+  else {
+    dump("Nothing was selected\n");
+  }
 }
 
 function getBestIdentity(identities, optionalHint)
 {
   var identity = null;
 
+  var identitiesCount = identities.Count();
+
   try
   {
-  // if we have more than one identity and a hint to help us pick one
-  if (identities.Count() > 1 && optionalHint) {
-    // normalize case on the optional hint to improve our chances of finding a match
-    optionalHint = optionalHint.toLowerCase();
-    // iterate over all of the identities
-    var tempID;
-    for (id = 0; id < identities.Count(); id++) { 
-      tempID = identities.GetElementAt(id).QueryInterface(Components.interfaces.nsIMsgIdentity);
-      if (optionalHint.indexOf(tempID.email.toLowerCase()) >= 0) {
-        identity = tempID;
-        break;
-      }
-    }
+    // if we have more than one identity and a hint to help us pick one
+    if (identitiesCount > 1 && optionalHint) {
+      // normalize case on the optional hint to improve our chances of finding a match
+      optionalHint = optionalHint.toLowerCase();
 
-    // if we could not find an exact email address match within the hint fields then maybe the message
-    // was to a mailing list. In this scenario, we won't have a match based on email address. 
-    // Before we just give up, try and search for just a shared domain between the the hint and 
-    // the email addresses for our identities. Hey, it is better than nothing and in the case
-    // of multiple matches here, we'll end up picking the first one anyway which is what we would have done
-    // if we didn't do this second search. This helps the case for corporate users where mailing lists will have the same domain
-    // as one of your multiple identities.
+      var id;
+      // iterate over all of the identities
+      var tempID;
 
-    if (!identity) {
-      for (id = 0; id < identities.Count(); id++) { 
+      for (id = 0; id < identitiesCount; ++id) {
         tempID = identities.GetElementAt(id).QueryInterface(Components.interfaces.nsIMsgIdentity);
-
-        // extract out the partial domain
-        var start = tempID.email.lastIndexOf("@"); // be sure to include the @ sign in our search to reduce the risk of false positives
-  
-        if (optionalHint.search(tempID.email.slice(start, tempID.email.length).toLowerCase()) >= 0) {
+        if (optionalHint.indexOf(tempID.email.toLowerCase()) >= 0) {
           identity = tempID;
           break;
         }
       }
+
+      // if we could not find an exact email address match within the hint fields then maybe the message
+      // was to a mailing list. In this scenario, we won't have a match based on email address.
+      // Before we just give up, try and search for just a shared domain between the hint and
+      // the email addresses for our identities. Hey, it is better than nothing and in the case
+      // of multiple matches here, we'll end up picking the first one anyway which is what we would have done
+      // if we didn't do this second search. This helps the case for corporate users where mailing lists will have the same domain
+      // as one of your multiple identities.
+
+      if (!identity) {
+        for (id = 0; id < identitiesCount; ++id) {
+          tempID = identities.GetElementAt(id).QueryInterface(Components.interfaces.nsIMsgIdentity);
+          // extract out the partial domain
+          var start = tempID.email.lastIndexOf("@"); // be sure to include the @ sign in our search to reduce the risk of false positives
+          if (optionalHint.search(tempID.email.slice(start).toLowerCase()) >= 0) {
+            identity = tempID;
+            break;
+          }
+        }
+      }
     }
-  }
   }
   catch (ex) {dump (ex + "\n");}
 
-  // still no matches? Give up and pick the first one like we used to.
-  if (!identity)
-    identity = identities.GetElementAt(0).QueryInterface(Components.interfaces.nsIMsgIdentity); 
+  // Still no matches ?
+  // Give up and pick the first one (if it exists), like we used to.
+  if (!identity && identitiesCount > 0)
+    identity = identities.GetElementAt(0).QueryInterface(Components.interfaces.nsIMsgIdentity);
 
   return identity;
 }
@@ -144,14 +147,13 @@ function getBestIdentity(identities, optionalHint)
 function getIdentityForServer(server, optionalHint)
 {
     var identity = null;
-    if(server) {
-		// get the identity associated with this server
+
+    if (server) {
+        // Get the identities associated with this server.
         var identities = accountManager.GetIdentitiesForServer(server);
         // dump("identities = " + identities + "\n");
-        // just get the first one
-        if (identities.Count() > 0 ) { 
-          identity = getBestIdentity(identities, optionalHint);
-        }
+        // Try and find the best one.
+        identity = getBestIdentity(identities, optionalHint);
     }
 
     return identity;
@@ -159,32 +161,31 @@ function getIdentityForServer(server, optionalHint)
 
 function GetNextNMessages(folder)
 {
-	if (folder) {
-		var newsFolder = folder.QueryInterface(Components.interfaces.nsIMsgNewsFolder);
-		if (newsFolder) {
-			newsFolder.getNextNMessages(msgWindow);
-		}
-	}
+  if (folder) {
+    var newsFolder = folder.QueryInterface(Components.interfaces.nsIMsgNewsFolder);
+    if (newsFolder) {
+      newsFolder.getNextNMessages(msgWindow);
+    }
+  }
 }
 
-
 // type is a nsIMsgCompType and format is a nsIMsgCompFormat
-function ComposeMessage(type, format, folder, messageArray) 
+function ComposeMessage(type, format, folder, messageArray)
 {
   var msgComposeType = Components.interfaces.nsIMsgCompType;
   var identity = null;
   var newsgroup = null;
   var server;
 
-  //dump("ComposeMessage folder="+folder+"\n");
-  try 
+  // dump("ComposeMessage folder=" + folder + "\n");
+  try
   {
     if (folder)
     {
-      // get the incoming server associated with this uri
+      // Get the incoming server associated with this uri.
       server = folder.server;
 
-      // if they hit new or reply and they are reading a newsgroup
+      // If they hit new or reply and they are reading a newsgroup,
       // turn this into a new post or a reply to group.
       if (!folder.isServer && server.type == "nntp" && type == msgComposeType.New)
       {
@@ -196,52 +197,54 @@ function ComposeMessage(type, format, folder, messageArray)
       // dump("identity = " + identity + "\n");
     }
   }
-  catch (ex) 
+  catch (ex)
   {
     dump("failed to get an identity to pre-select: " + ex + "\n");
   }
 
-  //dump("\nComposeMessage from XUL: " + identity + "\n");
+  // dump("\nComposeMessage from XUL: " + identity + "\n");
   var uri = null;
 
-  if (! msgComposeService)
+  if (!msgComposeService)
   {
     dump("### msgComposeService is invalid\n");
     return;
   }
-	
-  if (type == msgComposeType.New) //new message
-  {
-    //dump("OpenComposeWindow with " + identity + "\n");
 
-    // if the addressbook sidebar panel is open and has focus, get
-    // the selected addresses from it
+  if (type == msgComposeType.New)
+  {
+    // New message.
+
+    // dump("OpenComposeWindow with " + identity + "\n");
+
+    // If the addressbook sidebar panel is open and has focus, get
+    // the selected addresses from it.
     if (document.commandDispatcher.focusedWindow.document.documentElement.hasAttribute("selectedaddresses"))
       NewMessageToSelectedAddresses(type, format, identity);
     else
       msgComposeService.OpenComposeWindow(null, null, type, format, identity, msgWindow);
     return;
   }
-  else if (type == msgComposeType.NewsPost) 
+  else if (type == msgComposeType.NewsPost)
   {
-    //dump("OpenComposeWindow with " + identity + " and " + newsgroup + "\n");
+    // dump("OpenComposeWindow with " + identity + " and " + newsgroup + "\n");
     msgComposeService.OpenComposeWindow(null, newsgroup, type, format, identity, msgWindow);
     return;
   }
-		
+
   messenger.SetWindow(window, msgWindow);
-		  
+
   var object = null;
-  
+
   if (messageArray && messageArray.length > 0)
   {
     uri = "";
-    for (var i = 0; i < messageArray.length; i ++)
-    {	
+    for (var i = 0; i < messageArray.length; ++i)
+    {
       var messageUri = messageArray[i];
 
       var hdr = messenger.msgHdrFromURI(messageUri);
-      // if we treat reply from sent specially, do we check for that folder flag here?
+      // If we treat reply from sent specially, do we check for that folder flag here ?
       var hintForIdentity = (type == msgComposeType.Template) ? hdr.author : hdr.recipients + hdr.ccList;
       var accountKey = hdr.accountKey;
       if (accountKey.length > 0)
@@ -256,24 +259,26 @@ function ComposeMessage(type, format, folder, messageArray)
 
       var messageID = hdr.messageId;
       var messageIDScheme = messageID ? messageID.split(":")[0] : "";
-      if (messageIDScheme && (messageIDScheme == 'http' || messageIDScheme == 'https') &&  "openComposeWindowForRSSArticle" in this) 
-        openComposeWindowForRSSArticle(messageID, hdr, type); 
+      if (messageIDScheme && (messageIDScheme == 'http' || messageIDScheme == 'https') &&  "openComposeWindowForRSSArticle" in this)
+        openComposeWindowForRSSArticle(messageID, hdr, type);
       else if (type == msgComposeType.Reply ||
-                type == msgComposeType.ReplyAll ||
-                type == msgComposeType.ReplyToList ||
-                type == msgComposeType.ForwardInline ||
-                type == msgComposeType.ReplyToGroup || type == msgComposeType.ReplyToSender || 
-                type == msgComposeType.ReplyToSenderAndGroup ||
-                type == msgComposeType.Template || type == msgComposeType.Draft)
+               type == msgComposeType.ReplyAll ||
+               type == msgComposeType.ReplyToList ||
+               type == msgComposeType.ForwardInline ||
+               type == msgComposeType.ReplyToGroup ||
+               type == msgComposeType.ReplyToSender ||
+               type == msgComposeType.ReplyToSenderAndGroup ||
+               type == msgComposeType.Template ||
+               type == msgComposeType.Draft)
       {
         msgComposeService.OpenComposeWindow(null, messageUri, type, format, identity, msgWindow);
-        //limit the number of new compose windows to 8. Why 8? I like that number :-)
+        // Limit the number of new compose windows to 8. Why 8 ? I like that number :-)
         if (i == 7)
           break;
       }
       else
       {
-        if (i) 
+        if (i)
           uri += ","
         uri += messageUri;
       }
@@ -309,119 +314,115 @@ function NewMessageToSelectedAddresses(type, format, identity) {
     }
   }
 }
- 
 
 function CreateNewSubfolder(chromeWindowURL, preselectedMsgFolder,
                             dualUseFolders, callBackFunctionName)
 {
-	var preselectedURI;
+  var preselectedURI;
 
-	if(preselectedMsgFolder)
-	{
-		var preselectedFolderResource = preselectedMsgFolder.QueryInterface(Components.interfaces.nsIRDFResource);
-		if(preselectedFolderResource)
-			preselectedURI = preselectedFolderResource.Value;
-		dump("preselectedURI = " + preselectedURI + "\n");
-	}
+  if (preselectedMsgFolder)
+  {
+    var preselectedFolderResource = preselectedMsgFolder.QueryInterface(Components.interfaces.nsIRDFResource);
+    if (preselectedFolderResource)
+      preselectedURI = preselectedFolderResource.Value;
+    dump("preselectedURI = " + preselectedURI + "\n");
+  }
 
-	var dialog = window.openDialog(
-				chromeWindowURL,
-				"",
-				"chrome,titlebar,modal",
-				{preselectedURI:preselectedURI,
-	                         dualUseFolders:dualUseFolders,
-	                         okCallback:callBackFunctionName});
+  window.openDialog(chromeWindowURL,
+                    "",
+                    "chrome,titlebar,modal",
+                    {preselectedURI:preselectedURI,
+                      dualUseFolders:dualUseFolders,
+                      okCallback:callBackFunctionName});
 }
 
 function NewFolder(name,uri)
 {
-	//dump("uri,name = " + uri + "," + name + "\n");
-	if (uri && (uri != "") && name && (name != "")) {
-		var selectedFolderResource = RDF.GetResource(uri);
-		//dump("selectedFolder = " + uri + "\n");
-		var compositeDataSource = GetCompositeDataSource("NewFolder");
+  // dump("uri,name = " + uri + "," + name + "\n");
+  if (uri && (uri != "") && name && (name != "")) {
+    var selectedFolderResource = RDF.GetResource(uri);
+    // dump("selectedFolder = " + uri + "\n");
+    var compositeDataSource = GetCompositeDataSource("NewFolder");
+    var folderArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
+    var nameArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
 
-	    var folderArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
-	    var nameArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
+    folderArray.AppendElement(selectedFolderResource);
 
-		folderArray.AppendElement(selectedFolderResource);
-
-		var nameLiteral = RDF.GetLiteral(name);
-		nameArray.AppendElement(nameLiteral);
-		DoRDFCommand(compositeDataSource, "http://home.netscape.com/NC-rdf#NewFolder", folderArray, nameArray);
-
-	}
-	else {
-		dump("no name or nothing selected\n");
-	}
+    var nameLiteral = RDF.GetLiteral(name);
+    nameArray.AppendElement(nameLiteral);
+    DoRDFCommand(compositeDataSource, "http://home.netscape.com/NC-rdf#NewFolder", folderArray, nameArray);
+  }
+  else {
+    dump("no name or nothing selected\n");
+  }
 }
 
 function UnSubscribe(folder)
 {
-	// Unsubscribe the current folder from the newsserver, this assumes any confirmation has already
-	// been made by the user  SPL
-    
-	var server = folder.server;
-	var subscribableServer =  server.QueryInterface(Components.interfaces.nsISubscribableServer);       
-	subscribableServer.unsubscribe(folder.name);
-	subscribableServer.commitSubscribeChanges();
-}   
+  // Unsubscribe the current folder from the newsserver, this assumes any confirmation has already
+  // been made by the user  SPL
+
+  var server = folder.server;
+  var subscribableServer = server.QueryInterface(Components.interfaces.nsISubscribableServer);
+  subscribableServer.unsubscribe(folder.name);
+  subscribableServer.commitSubscribeChanges();
+}
 
 function Subscribe(preselectedMsgFolder)
 {
-	var preselectedURI;
+  var preselectedURI;
 
-	if(preselectedMsgFolder)
-	{
-		var preselectedFolderResource = preselectedMsgFolder.QueryInterface(Components.interfaces.nsIRDFResource);
-		if(preselectedFolderResource)
-			preselectedURI = preselectedFolderResource.Value;
-		dump("preselectedURI = " + preselectedURI + "\n");
-	}
+  if (preselectedMsgFolder)
+  {
+    var preselectedFolderResource = preselectedMsgFolder.QueryInterface(Components.interfaces.nsIRDFResource);
+    if (preselectedFolderResource)
+      preselectedURI = preselectedFolderResource.Value;
+    dump("preselectedURI = " + preselectedURI + "\n");
+  }
 
-	window.openDialog("chrome://messenger/content/subscribe.xul",
-					  "subscribe", "chrome,modal,titlebar,resizable=yes",
-				{preselectedURI:preselectedURI,
-				 okCallback:SubscribeOKCallback});
+  window.openDialog("chrome://messenger/content/subscribe.xul",
+                    "subscribe", "chrome,modal,titlebar,resizable=yes",
+                    {preselectedURI:preselectedURI,
+                      okCallback:SubscribeOKCallback});
 }
 
 function SubscribeOKCallback(changeTable)
 {
-	for (var serverURI in changeTable) {
-	    var folder = GetMsgFolderFromUri(serverURI, true);
-	    var server = folder.server;
-	    var subscribableServer =
-            server.QueryInterface(Components.interfaces.nsISubscribableServer);
+  for (var serverURI in changeTable) {
+    var folder = GetMsgFolderFromUri(serverURI, true);
+    var server = folder.server;
+    var subscribableServer =
+          server.QueryInterface(Components.interfaces.nsISubscribableServer);
 
-        for (var name in changeTable[serverURI]) {
-		    if (changeTable[serverURI][name] == true) {
-                try {
-			        subscribableServer.subscribe(name);
-                }
-                catch (ex) {
-                    dump("failed to subscribe to " + name + ": " + ex + "\n");
-                }
-		    }
-		    else if (changeTable[serverURI][name] == false) {
-                try {
-			        subscribableServer.unsubscribe(name);
-                }
-                catch (ex) {
-                    dump("failed to unsubscribe to " + name + ": " + ex + "\n");
-                }
-            }
-		    else {
-			    // no change
-		    }
-        }
-
+    for (var name in changeTable[serverURI]) {
+      if (changeTable[serverURI][name] == true) {
         try {
-            subscribableServer.commitSubscribeChanges();
+          subscribableServer.subscribe(name);
         }
         catch (ex) {
-            dump("failed to commit the changes: " + ex + "\n");
+          dump("failed to subscribe to " + name + ": " + ex + "\n");
         }
+      }
+      else if (changeTable[serverURI][name] == false) {
+        try {
+          subscribableServer.unsubscribe(name);
+        }
+        catch (ex) {
+          dump("failed to unsubscribe to " + name + ": " + ex + "\n");
+        }
+      }
+      else {
+        // no change
+      }
     }
+
+    try {
+      subscribableServer.commitSubscribeChanges();
+    }
+    catch (ex) {
+      dump("failed to commit the changes: " + ex + "\n");
+    }
+  }
 }
 
 function SaveAsFile(uri)
@@ -440,10 +441,10 @@ function SaveAsFile(uri)
 
 function SaveAsTemplate(uri, folder)
 {
-	if (uri) {
-		var identity = getIdentityForServer(folder.server);
-		messenger.saveAs(uri, false, identity, null);
-	}
+  if (uri) {
+    var identity = getIdentityForServer(folder.server);
+    messenger.saveAs(uri, false, identity, null);
+  }
 }
 
 function MarkSelectedMessagesRead(markRead)
@@ -478,13 +479,13 @@ function DownloadSelectedMessages(compositeDataSource, messages, markFlagged)
 
 function ViewPageSource(messages)
 {
-	var numMessages = messages.length;
+  var numMessages = messages.length;
 
-	if (numMessages == 0)
-	{
-		dump("MsgViewPageSource(): No messages selected.\n");
-		return false;
-	}
+  if (numMessages == 0)
+  {
+    dump("MsgViewPageSource(): No messages selected.\n");
+    return false;
+  }
 
     try {
         // First, get the mail session
@@ -512,7 +513,7 @@ function ViewPageSource(messages)
     }
 }
 
-function doHelpButton() 
+function doHelpButton()
 {
     openHelp("mail-offline-items");
 }
@@ -579,7 +580,7 @@ function determineActionsForJunkMsgs(aView, aIndices)
       actions.junkTargetFolder = GetMsgFolderFromUri(spamFolderURI);
     }
   }
-  
+
   return actions;
 }
 
@@ -592,7 +593,7 @@ function performActionsOnJunkMsgs(aIndices)
 
   var treeSelection = treeView.selection;
   treeSelection.clearSelection();
-   
+
   // select the messages
   for (i=0;i<aIndices.length;i++)
     treeSelection.rangedSelect(aIndices[i], aIndices[i], true /* augment */);
@@ -600,12 +601,12 @@ function performActionsOnJunkMsgs(aIndices)
   var actionParams = determineActionsForJunkMsgs(treeView, aIndices);
   if (actionParams.markRead)
     MarkSelectedMessagesRead(true);
-
   if (actionParams.junkTargetFolder)
   {
-    SetNextMessageAfterDelete();  
+    SetNextMessageAfterDelete();
     gDBView.doCommandWithFolder(nsMsgViewCommandType.moveMessages, actionParams.junkTargetFolder);
   }
+
   treeSelection.clearSelection();
 }
 
@@ -674,11 +675,11 @@ var gMessageClassificator =
     // update status bar, or a progress dialog
     // running junk mail controls manually, on a large folder
     // can take a while, and the user doesn't know when we are done.
-    
+
     // XXX TODO
     // make the cut off 50, like in nsMsgSearchTerm.cpp
 
-    var score = 
+    var score =
       aClassification == nsIJunkMailPlugin.JUNK ? "100" : "0";
 
     // set these props via the db (instead of the message header
@@ -754,7 +755,7 @@ function JunkSelectedMessages(setAsJunk)
   // only to automatically-classified messages.
   // Note that this behaviour should match the one in the back end for marking
   // as junk via clicking the 'junk' column.
-  
+
   if (setAsJunk && pref.getBoolPref("mailnews.ui.junk.manualMarkAsJunkMarksRead"))
     MarkSelectedMessagesRead(true);
 
@@ -778,20 +779,20 @@ function deleteJunkInFolder()
   var treeSelection = treeView.selection;
 
   var clearedSelection = false;
-  
+
   // select the junk messages
   var messageUri;
-  for (var i = 0; i < count; i++) 
+  for (var i = 0; i < count; ++i)
   {
     try {
       messageUri = view.getURIForViewIndex(i);
     }
     catch (ex) {continue;} // blow off errors for dummy rows
     var msgHdr = messenger.messageServiceFromURI(messageUri).messageURIToMsgHdr(messageUri);
-    var junkScore = msgHdr.getStringProperty("junkscore"); 
+    var junkScore = msgHdr.getStringProperty("junkscore");
     var isJunk = ((junkScore != "") && (junkScore != "0"));
     // if the message is junk, select it.
-    if (isJunk) 
+    if (isJunk)
     {
       // only do this once
       if (!clearedSelection)
@@ -815,9 +816,9 @@ function deleteJunkInFolder()
   // delete the selected messages
   //
   // XXX todo
-  // should we try to set next message after delete 
+  // Should we try to set next message after delete
   // to the message selected before we did all this, if it was not junk?
-  SetNextMessageAfterDelete();  
+  SetNextMessageAfterDelete();
   view.doCommand(nsMsgViewCommandType.deleteMsg);
   treeSelection.clearSelection();
 }
