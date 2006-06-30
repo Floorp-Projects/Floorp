@@ -142,6 +142,8 @@
       <xul:toolbargrippy xbl:inherits="last-toolbar,hidden=grippyhidden"
                          tbattr="toolbar-grippy"
                          class="toolbar-grippy"/>
+      <xul:hbox class="toolbar-prefix" 
+                xbl:inherits="onclick=prefixonclick,tooltiptext=prefixtooltip,hidden=prefixhidden,prefixopen"/>
       <xul:hbox flex="1" class="toolbar-holder" align="center"
                 xbl:inherits="collapsed,last-toolbar,orient=tborient,align=tbalign,pack=tbpack">
         <children/>
