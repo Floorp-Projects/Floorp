@@ -1,5 +1,15 @@
 <?xml version="1.0"?>
 
+<!-- 
+    XXX THIS FILE IS DEPRECATED AND NO LONGER USED!  
+        Per the SeaMonkey toolkit transition plan, jar.mn refers to 
+              /toolkit/content/widgets/toolbar.xml
+        instead of this file.  
+        DO NOT MAKE ANY FURTHER CHANGES TO THIS FILE, 
+        AS IT WILL EVENTUALLY BE REMOVED FROM THE REPOSITORY!
+        See bug 282188 for details.
+  -->
+
 <bindings id="toolbarBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

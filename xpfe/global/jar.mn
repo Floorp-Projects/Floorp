@@ -61,7 +61,7 @@ toolkit.jar:
         content/global/bindings/tabbrowser.xml      (resources/content/bindings/tabbrowser.xml)
         content/global/bindings/text.xml            (resources/content/bindings/text.xml)
         content/global/bindings/textbox.xml         (resources/content/bindings/textbox.xml)
-        content/global/bindings/toolbar.xml         (resources/content/bindings/toolbar.xml)
+*       content/global/bindings/toolbar.xml         (/toolkit/content/widgets/toolbar.xml)
         content/global/bindings/toolbarbutton.xml   (resources/content/bindings/toolbarbutton.xml)
         content/global/bindings/tree.xml            (resources/content/bindings/tree.xml)
         content/global/bindings/wizard.xml          (resources/content/bindings/wizard.xml)

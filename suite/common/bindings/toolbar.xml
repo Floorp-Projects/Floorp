@@ -1,30 +1,72 @@
 <?xml version="1.0"?>
 
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is mozilla.org code.
+   -
+   - The Initial Developer of the Original Code is
+   - the mozilla.org SeaMonkey project.
+   - Portions created by the Initial Developer are Copyright (C) 2006
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -  Joe Hewitt <hewitt@netscape.com>
+   -  Blake Ross <blakeross@telocity.com>
+   -  David Hyatt <hyatt@netscape.com>
+   -  Peter Annema <jaggernaut@netscape.com>
+   -  Aaron Leventhal <aaronl@netscape.com>
+   -  John Gaunt <jgaunt@netscape.com>
+   -  Brian Ryner <bryner@netscape.com>
+   -  Jonas Sicking <sicking@bigfoot.com>
+   -  Neil Rashbrook <neil@parkwaycc.co.uk>
+   -  Boris Zbarsky <bzbarsky@mit.edu>
+   -  Josh Soref <timeless@mac.com>
+   -  Jan Varga <varga@netscape.com>
+   -  Kyle Yuan <kyle.yuan@sun.com>
+   -  <shliang@netscape.com>
+   -  Benjamin Smedberg <bsmedberg@covad.net>
+   -  Karsten Düsterloh <mnyromyr@tprac.de>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
 <bindings id="toolbarBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="toolbar-base">
-    <resources>
-      <stylesheet src="chrome://global/skin/toolbar.css"/>
-    </resources>
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessible">
-        <getter>
-          <![CDATA[
-            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            if (this.localName == "toolbarseparator")
-              return accService.createXULToolbarSeparatorAccessible(this);
-            else
-              return accService.createXULToolbarAccessible(this);
-          ]]>
-        </getter>
-      </property>
-    </implementation>
-  </binding>
+  <!-- With the move to the new toolkit, SeaMonkey needs to overwrite certain
+       bindings if it wants to keep its distinctive likeness. The bindings
+       found here reimplement the XPFE toolbar behaviour by providing toolbar
+       bindings in in the chrome://communicator/ domain that are based upon the
+       new toolkit's toolbar bindings in the chrome://global/ domain.
+       The now hidden new toolkit bindings are accessible via a set xpfe="false"
+       attribute, though.
+    -->
 
-  <binding id="toolbox" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base">
+  <binding id="grippytoolbox" extends="chrome://global/content/bindings/toolbar.xml#toolbox">
     <content orient="vertical">
       <xul:vbox flex="1" class="toolbar-internal-box">
         <children/>
@@ -34,7 +76,6 @@
         <xul:spacer flex="1" class="collapsed-tray-spacer"/>
       </xul:hbox>
     </content>
-    
     <implementation>
       <method name="collapseToolbar">
         <parameter name="toolbar"/>
@@ -50,7 +91,7 @@
         ]]>
         </body>
       </method>
-      
+
       <method name="expandToolbar">
         <parameter name="aGrippyID"/>
         <body>
@@ -61,13 +102,13 @@
           var collapsedTray = document.getAnonymousElementByAttribute(this, "tbattr", "collapsed-tray");
           var collapsedToolbar = document.getElementById("moz_tb_collapsed_" + toolbar.id);
           collapsedTray.removeChild(collapsedToolbar);
-          if (!collapsedTray.hasChildNodes()) 
+          if (!collapsedTray.hasChildNodes())
             document.getAnonymousElementByAttribute(this, "tbattr", "collapsed-tray-holder").setAttribute("moz-collapsed", "true");
           document.persist(toolbar.id, "moz-collapsed");
         ]]>
         </body>
       </method>
-      
+
       <method name="createCollapsedGrippy">
         <parameter name="aToolbar"/>
         <body>
@@ -84,7 +125,7 @@
               collapsedGrippy.setAttribute("style", styleString);
               collapsedGrippy.setAttribute("tooltiptext", aToolbar.getAttribute("grippytooltiptext"));
               collapsedGrippy.setAttribute("id", "moz_tb_collapsed_" + aToolbar.id);
-              collapsedGrippy.setAttribute("moz_grippy_collapsed", "true"); 
+              collapsedGrippy.setAttribute("moz_grippy_collapsed", "true");
               collapsedGrippy.setAttribute("tbgrippy-collapsed", "true");
               var collapsedTrayHolder = document.getAnonymousElementByAttribute(this, "tbattr", "collapsed-tray-holder");
               if (collapsedTrayHolder.getAttribute("moz-collapsed") == "true")
@@ -96,52 +137,43 @@
           catch (e) {
             throw e;
           }
-        ]]>        
+        ]]>
         </body>
       </method>
-
-      <property name="deferAttached">
-        <getter>
-          return (this.hasAttribute("deferattached") ? "true" : "false");
-        </getter>
-        <setter>
-          if (val)
-            this.setAttribute("deferattached", "true");
-          else
-            this.removeAttribute("deferattached");
-          return val;
-        </setter>
-      </property>
-      
     </implementation>
   </binding>
 
-  <binding id="toolbar" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base">
+  <binding id="grippytoolbar" extends="chrome://global/content/bindings/toolbar.xml#toolbar">
     <content>
       <xul:toolbargrippy xbl:inherits="last-toolbar,hidden=grippyhidden"
                          tbattr="toolbar-grippy"
                          class="toolbar-grippy"/>
-      <xul:hbox class="toolbar-prefix" 
+      <xul:hbox class="toolbar-prefix"
                 xbl:inherits="onclick=prefixonclick,tooltiptext=prefixtooltip,hidden=prefixhidden,prefixopen"/>
       <xul:hbox flex="1" class="toolbar-holder" align="center"
                 xbl:inherits="collapsed,last-toolbar,orient=tborient,align=tbalign,pack=tbpack">
         <children/>
       </xul:hbox>
     </content>
-    
-    <implementation>
+  </binding>
+
+  <binding id="grippytoolbar-primary" extends="chrome://communicator/content/bindings/toolbar.xml#grippytoolbar">
+    <implementation implements="nsIObserver">
       <constructor>
         <![CDATA[
           if (this.getAttribute("moz-collapsed") == "true" &&
               this.parentNode.localName == "toolbox")
             this.parentNode.createCollapsedGrippy(this);
+          this.prefs.addObserver(this.domain, this, false);
+          if (this.prefs.getIntPref(this.domain) != 2)
+            this.observe(this.prefs, "nsPref:changed", this.domain);
         ]]>
       </constructor>
-    </implementation>
-  </binding>
 
-  <binding id="toolbar-primary" extends="chrome://global/content/bindings/toolbar.xml#toolbar">
-    <implementation implements="nsIObserver">
+      <destructor>
+        this.prefs.removeObserver(this.domain, this);
+      </destructor>
+
       <field name="domain" readonly="true">
         "browser.chrome.toolbar_style"
       </field>
@@ -180,24 +212,10 @@
           ]]>
         </body>
       </method>
-
-      <constructor>
-        this.prefs.addObserver(this.domain, this, false);
-        if (this.prefs.getIntPref(this.domain) != 2)
-          this.observe(this.prefs, "nsPref:changed", this.domain);
-      </constructor>
-
-      <destructor>
-        this.prefs.removeObserver(this.domain, this);
-      </destructor>
     </implementation>
   </binding>
 
-  <binding id="menubar" extends="xul:menubar">
-    <resources>
-      <stylesheet src="chrome://global/skin/toolbar.css"/>
-    </resources>
-
+  <binding id="grippymenubar" extends="chrome://global/content/bindings/toolbar.xml#menubar">
     <content>
       <xul:toolbargrippy xbl:inherits="last-toolbar,hidden=grippyhidden"
                          tbattr="toolbar-grippy" class="toolbar-grippy"/>
@@ -205,17 +223,7 @@
         <children/>
       </xul:hbox>
     </content>
-    
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessible">
-        <getter>
-          <![CDATA[
-            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return accService.createXULMenubarAccessible(this);
-          ]]>
-        </getter>
-       </property>
-
+    <implementation>
       <constructor>
         <![CDATA[
           if (this.getAttribute("moz-collapsed") == "true" &&
@@ -246,14 +254,14 @@
           return val;
         </setter>
       </property>
-      
+
       <method name="returnNode">
         <parameter name="aNodeA"/>
         <parameter name="aNodeB"/>
         <body>
         <![CDATA[
           var node = this.parentNode;
-          while (node && node.localName != "window" && 
+          while (node && node.localName != "window" &&
                  (node.localName != aNodeA && (node.localName != aNodeB)))  {
             node = node.parentNode;
           }
@@ -261,21 +269,21 @@
         ]]>
         </body>
       </method>
-      
+
       <method name="grippyTriggered">
         <body>
         <![CDATA[
           var toolbox = this.returnNode("toolbox");
           var toolbar = this.returnNode("toolbar", "menubar");
-          if (this.collapsed) 
+          if (this.collapsed)
             toolbox.expandToolbar(this.id);
           else
             toolbox.collapseToolbar(toolbar);
         ]]>
         </body>
       </method>
-    </implementation>  
-    
+    </implementation>
+
     <handlers>
       <handler event="command">
       <![CDATA[
@@ -283,9 +291,7 @@
       ]]>
       </handler>
     </handlers>
-  </binding>  
+  </binding>
 
-  <binding id="toolbarseparator" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base"/>
-
-</bindings>          
+</bindings>
 

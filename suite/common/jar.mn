@@ -75,3 +75,4 @@ comm.jar:
    content/communicator/pref/platformPrefOverlay.xul                (pref/unix/platformPrefOverlay.xul)
 #endif
 #endif
+   content/communicator/bindings/toolbar.xml                        (bindings/toolbar.xml)

@@ -25,6 +25,7 @@
  *                 ArentJan Banck <ajbanck@planet.nl>
  *                 Mark Swaffer <swaff@fudo.org>
  *                 Eric Belhaire <belhaire@ief.u-psud.fr>
+ *                 Karsten Düsterloh <mnyromyr@tprac.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,6 +40,8 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+@import url("chrome://communicator/skin/");
 
 #view-deck {
   background: #FFFFFF;
