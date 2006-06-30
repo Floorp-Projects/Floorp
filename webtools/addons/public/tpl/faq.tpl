@@ -58,8 +58,7 @@ Software.  Browse plug-ins for:
 <table class="appversions">
 <tr>
     <th>Application Name</th>
-    <th>Display Version</th>
-    <th>install.rdf Version</th>
+    <th>Version</th>
     <th>GUID</th>
 </tr>
 
@@ -67,7 +66,6 @@ Software.  Browse plug-ins for:
 <tr>
 <td>{$app.appName}</td>
 <td>{$app.displayVersion}</td>
-<td>{$app.versionNumber}</td>
 <td>{$app.guid}</td></tr>
 {/foreach}
 </table>
