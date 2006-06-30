@@ -173,8 +173,8 @@
 
       <field name="prefs" readonly="true">
         Components.classes["@mozilla.org/preferences-service;1"]
-                  .getService(Components.interfaces.nsIPrefBranchInternal)
-                  .QueryInterface(Components.interfaces.nsIPrefBranch)
+                  .getService(Components.interfaces.nsIPrefService).getBranch(null)
+                  .QueryInterface(Components.interfaces.nsIPrefBranchInternal)
       </field>
 
       <method name="observe">
