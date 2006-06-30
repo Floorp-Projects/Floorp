@@ -68,6 +68,18 @@
       sum = sum + ary[i];
     }
 
+    // median
+    sorted_ary = ary.concat();
+    sorted_ary.sort();
+    // remove longest run
+    sorted_ary.pop();
+    if (sorted_ary.length%2) {
+      r.median = sorted_ary[(sorted_ary.length-1)/2]; 
+    }else{
+      var n = Math.floor(sorted_ary.length / 2);
+      r.median = (sorted_ary[n] + sorted_ary[n + 1]) / 2;
+    }
+
     // ignore max value when computing mean and stddev
     r.mean = (sum - r.max) / (ary.length - 1);
 
@@ -92,6 +104,43 @@
     return td;
   }
 
+  function dumpReport() {
+    var all = new Array();
+    var counter = 0;
+    
+    for (var i = 0; i < timeVals.length; ++i) {
+      for (var j = 0; j < timeVals[i].length; ++j) {
+        all[counter] = timeVals[i][j];
+        ++counter;
+      }
+    }
+
+    var r = getArrayStats(all);
+    dump(
+      "(tinderbox dropping follows)\n"+
+      "_x_x_mozilla_page_load,"+r.median+","+r.max+","+r.min+"\n"+
+      "_x_x_mozilla_page_load_details,avgmedian|"+r.median+"|average|"+r.mean.toFixed(2)+"|minimum|"+r.min+"|maximum|"+r.max+":"
+    );
+
+    for (var i = 0; i < timeVals.length; ++i) {
+      r = getArrayStats(timeVals[i]);
+      dump(
+        '|'+
+        i+';'+
+        pages[i]+';'+
+        r.median+';'+
+        r.mean+';'+
+        r.min+';'+
+        r.max
+      );
+      for (var j = 0; j < timeVals[i].length; ++j) {
+        dump(
+          ';'+timeVals[i][j]
+        );
+      }
+    } 
+  }
+
   function showReport() {
     var doc = frames["content"].document;
     var tbody = doc.getElementById("tbody");
@@ -105,6 +154,7 @@
       appendTableCol(tr, r.max.toFixed(2));
       appendTableCol(tr, r.mean.toFixed(2));
       appendTableCol(tr, r.stdd.toFixed(2));
+      appendTableCol(tr, r.median.toFixed(2));
 
       for (var j = 0; j < timeVals[i].length; ++j) {
         var tv = timeVals[i][j];
@@ -125,6 +175,8 @@
   function frameLoad() {
     if (cycle == NUM_CYCLES) {
       showReport();
+      dumpReport();
+      window.close();
       return;
     }
 
