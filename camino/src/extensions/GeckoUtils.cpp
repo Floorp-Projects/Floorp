@@ -52,6 +52,9 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 
+#include "nsIEditor.h"
+#include "nsISelection.h"
+
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 
@@ -242,4 +245,23 @@ void GeckoUtils::FindDocShellForURI (nsIURI *aURI, nsIDocShell *aRoot, nsIDocShe
   }
 
   // We never found the docshell.
+}
+
+//
+// GetAnchorNodeFromSelection
+//
+// Finds the anchor node for the selection in the given editor
+//
+void GeckoUtils::GetAnchorNodeFromSelection(nsIEditor* inEditor, nsIDOMNode** outAnchorNode, PRInt32* outOffset)
+{
+  if (!inEditor || !outAnchorNode)
+    return;
+  *outAnchorNode = nsnull;
+
+  nsCOMPtr<nsISelection> selection;
+  inEditor->GetSelection(getter_AddRefs(selection));
+  if (!selection)
+    return;
+  selection->GetAnchorOffset(outOffset);
+  selection->GetAnchorNode(outAnchorNode);
 }

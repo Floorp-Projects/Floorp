@@ -91,6 +91,7 @@
 #include "nsNetUtil.h"
 #include "nsIPref.h"
 #include "nsISupportsArray.h"
+#include "nsIDOMNSEditableElement.h"
 
 #include "nsIClipboardCommands.h"
 #include "nsICommandManager.h"
@@ -111,6 +112,13 @@
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIFocusController.h"
 #include "nsIX509Cert.h"
+
+// for spellchecking
+#include "nsIEditor.h"
+#include "nsIInlineSpellChecker.h"
+#include "nsIEditorSpellCheck.h"
+#include "nsISelection.h"
+#include "nsIDOMRange.h"
 
 #include "nsAppDirectoryServiceDefs.h"
 
@@ -465,6 +473,8 @@ enum BWCOpenDest {
 // create back/forward session history menus on toolbar button
 - (IBAction)backMenu:(id)inSender;
 - (IBAction)forwardMenu:(id)inSender;
+
+- (BOOL)prepareSpellingSuggestionMenu:(NSMenu*)inMenu tag:(int)inTag;
 
 @end
 
@@ -2604,6 +2614,24 @@ enum BWCOpenDest {
 }
 
 //
+// -currentEditor:
+//
+// Returns the nsIEditor of the currently focused text area or input
+//
+- (void)currentEditor:(nsIEditor**)outEditor
+{
+  if (!outEditor)
+    return;
+  *outEditor = nsnull;
+
+  nsCOMPtr<nsIDOMElement> focusedElement;
+  [self focusedElement:getter_AddRefs(focusedElement)];
+  nsCOMPtr<nsIDOMNSEditableElement> editElement = do_QueryInterface(focusedElement);
+  if (editElement)
+    editElement->GetEditor(outEditor);
+}
+
+//
 // -isPageTextFieldFocused
 //
 // Determine if a text field in the content area has focus. Returns YES if the
@@ -3337,6 +3365,7 @@ enum BWCOpenDest {
     return nil;
 
   BOOL showFrameItems = NO;
+  BOOL showSpellingItems = NO;
   
   NSMenu* menuPrototype = nil;
   int contextMenuFlags = mDataOwner->mContextMenuFlags;
@@ -3345,7 +3374,7 @@ enum BWCOpenDest {
   unsigned numEmailAddresses = 0;
 
   BOOL hasSelection = [[mBrowserView getBrowserView] canCopy];
-
+  
   if ((contextMenuFlags & nsIContextMenuListener::CONTEXT_LINK) != 0)
   {
     emailAddresses = [self mailAddressesInContextMenuLinkNode];
@@ -3368,6 +3397,7 @@ enum BWCOpenDest {
   else if ((contextMenuFlags & nsIContextMenuListener::CONTEXT_INPUT) != 0 ||
            (contextMenuFlags & nsIContextMenuListener::CONTEXT_TEXT) != 0) {
     menuPrototype = mInputMenu;
+    showSpellingItems = YES;
   }
   else if ((contextMenuFlags & nsIContextMenuListener::CONTEXT_IMAGE) != 0) {
     menuPrototype = mImageMenu;
@@ -3402,7 +3432,18 @@ enum BWCOpenDest {
   const int kFrameRelatedItemsTag = 100;
   const int kFrameInapplicableItemsTag = 101;
   const int kSelectionRelatedItemsTag = 102;
+  const int kSpellingRelatedItemsTag = 103;
   
+  if (showSpellingItems)
+    showSpellingItems = [self prepareSpellingSuggestionMenu:result tag:kSpellingRelatedItemsTag];
+
+  if (!showSpellingItems) {
+    // word spelled correctly or not applicable, remove all traces of spelling items
+    NSMenuItem* selectionItem;
+    while ((selectionItem = [result itemWithTag:kSpellingRelatedItemsTag]) != nil)
+      [result removeItem:selectionItem];
+  }
+
   // if there's no selection or no search bar in the toolbar, hide the search item.
   // We need a search item to know what the user's preferred search is.
   if (!hasSelection) {
@@ -3437,7 +3478,112 @@ enum BWCOpenDest {
   return result;
 }
 
+//
+// -prepareSpellingSuggestionMenu:tag:
+//
+// Adds suggestions to the top of |inMenu| for the currently mispelled word
+// under the insertion point. Starts inserting before the first item in the menu
+// with |inTag| and will insert up to |kMaxSuggestions|. 
+//
+- (BOOL)prepareSpellingSuggestionMenu:(NSMenu*)inMenu tag:(int)inTag
+{
+  #define ENSURE_TRUE(x) if (!x) return NO;
+  BOOL showSuggestions = YES;
+  
+  nsCOMPtr<nsIEditor> editor;
+  [self currentEditor:getter_AddRefs(editor)];
+  ENSURE_TRUE(editor);
+
+  nsCOMPtr<nsIInlineSpellChecker> inlineChecker;
+  editor->GetInlineSpellChecker(PR_TRUE, getter_AddRefs(inlineChecker));
+  ENSURE_TRUE(inlineChecker);
+  
+  // verify inline spellchecking is "on" before we continue
+  PRBool enabled = NO;
+  inlineChecker->GetEnableRealTimeSpell(&enabled);
+  if (!enabled)
+    return NO;
+  
+  nsCOMPtr<nsIEditorSpellCheck> spellCheck;
+  inlineChecker->GetSpellChecker(getter_AddRefs(spellCheck));
+  ENSURE_TRUE(spellCheck);
+  
+  // if there is a mispelled word, ask the spellchecker to check it, which seems redundant
+  // but is also used to generate the suggestions list. 
+  PRBool isIncorrect = NO;
+  nsCOMPtr<nsIDOMNode> anchorNode;
+  PRInt32 anchorOffset = 0;
+  GeckoUtils::GetAnchorNodeFromSelection(editor, getter_AddRefs(anchorNode), &anchorOffset);
+  nsCOMPtr<nsIDOMRange> mispelledRange;
+  inlineChecker->GetMispelledWord(anchorNode, (long)anchorOffset, getter_AddRefs(mispelledRange));
+  if (mispelledRange) {
+    nsString currentWord;
+    mispelledRange->ToString(currentWord);
+    spellCheck->CheckCurrentWord(currentWord.get(), &isIncorrect);
+  }
+  if (isIncorrect) {
+    // there's still a mispelled word, loop over the suggestions. The spellchecker will return
+    // an empty string when it's done (NOT nil), so keep going until we get that or our
+    // max.
+    const unsigned long insertBase = [inMenu indexOfItemWithTag:inTag];
+    const unsigned long kMaxSuggestions = 7;
+    unsigned long numSuggestions = 0;
+    do {
+      PRUnichar* suggestion = nil;
+      spellCheck->GetSuggestedWord(&suggestion);
+      if (!nsCRT::strlen(suggestion))
+        break;
+      
+      NSString* suggStr = [NSString stringWithPRUnichars:suggestion];
+      NSMenuItem* item = [inMenu insertItemWithTitle:suggStr action:@selector(replaceMispelledWord:) keyEquivalent:@"" atIndex:numSuggestions + insertBase];
+      [item setTarget:self];
+      
+      ++numSuggestions;
+      nsCRT::free(suggestion);
+    } while (numSuggestions < kMaxSuggestions);
+  }
+  else
+    showSuggestions = NO;
+
+  return showSuggestions;
+  #undef ENSURE_TRUE
+}
+
 // Context menu methods
+
+//
+// -replaceMispelledWord:
+//
+// Context menu action for the suggestions in a text field. Replaces the
+// current word in the editor with string that's the title of the chosen menu
+// item.
+//
+- (IBAction)replaceMispelledWord:(id)inSender
+{
+  #define ENSURE_TRUE(x) if (!x) return;
+
+  // it's unfortunate that we have to re-fetch this stuff since we just did it
+  // when buliding the context menu, but we don't really have any convenient place
+  // to stash it where we can guarantee it will get cleaned up when the menu goes
+  // away.
+  nsCOMPtr<nsIEditor> editor;
+  [self currentEditor:getter_AddRefs(editor)];
+  ENSURE_TRUE(editor);
+
+  nsCOMPtr<nsIInlineSpellChecker> inlineChecker;
+  editor->GetInlineSpellChecker(PR_TRUE, getter_AddRefs(inlineChecker));
+  ENSURE_TRUE(inlineChecker);
+  nsCOMPtr<nsIDOMNode> anchorNode;
+  PRInt32 anchorOffset = 0;
+  GeckoUtils::GetAnchorNodeFromSelection(editor, getter_AddRefs(anchorNode), &anchorOffset);
+  
+  nsString newWord;
+  [[inSender title] assignTo_nsAString:newWord];
+  inlineChecker->ReplaceWord(anchorNode, anchorOffset, newWord);
+
+  #undef ENSURE_TRUE
+}
+
 - (IBAction)openLinkInNewWindow:(id)aSender
 {
   [self openLinkInNewWindowOrTab: YES];

@@ -44,6 +44,7 @@ class nsIDOMNode;
 class nsIDOMElement;
 class nsIDocShell;
 class nsIURI;
+class nsIEditor;
 
 class GeckoUtils
 {
@@ -55,6 +56,9 @@ class GeckoUtils
     /* Ouputs the docshell |aDocShell|'s URI as a nsACString. */
     static void GetURIForDocShell(nsIDocShell* aDocShell, nsACString& aURI);
   
+    // Finds the anchor node for the selection in the given editor
+    static void GetAnchorNodeFromSelection(nsIEditor* inEditor, nsIDOMNode** outAnchorNode, PRInt32* outAnchorOffset);
+    
     /* Given a URI, and a docshell node, will traverse the tree looking for the docshell with the
        given URI.  This is used for example when unblocking popups, because the popup "windows" are docshells
        found somewhere in a document's docshell tree.  NOTE: Addrefs the found docshell! 
