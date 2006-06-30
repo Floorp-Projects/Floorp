@@ -22,10 +22,6 @@
     </content>
     
     <implementation>
-      <constructor>
-        this.init(event);
-      </constructor>
-
       <method name="collapseToolbar">
         <parameter name="toolbar"/>
         <body>
@@ -111,19 +107,7 @@
         ]]>        
         </body>
       </method>
-      
-      <method name="init">
-        <parameter name="aEvent"/>
-        <body>
-        <![CDATA[
-          for (var i = 0; i < this.childNodes.length; i++) {
-            if (this.childNodes[i].getAttribute("moz-collapsed") == "true")
-              this.createCollapsedGrippy(this.childNodes[i]);
-          }
-        ]]>
-        </body>
-      </method>
-      
+
       <property name="deferAttached">
         <getter>
           return this.getAttribute("deferattached");
@@ -149,6 +133,14 @@
     </content>
     
     <implementation>
+      <constructor>
+        <![CDATA[
+          if (this.getAttribute("moz-collapsed") == "true" &&
+              this.parentNode.localName == "toolbox")
+            this.parentNode.createCollapsedGrippy(this);
+        ]]>
+      </constructor>
+
       <method name="findNodeByAttribute">
         <parameter name="aAttribute"/>
         <parameter name="aValue"/>
@@ -184,6 +176,14 @@
     </content>
     
     <implementation>
+      <constructor>
+        <![CDATA[
+          if (this.getAttribute("moz-collapsed") == "true" &&
+              this.parentNode.localName == "toolbox")
+            this.parentNode.createCollapsedGrippy(this);
+        ]]>
+      </constructor>
+
       <method name="findNodeByAttribute">
         <parameter name="aAttribute"/>
         <parameter name="aValue"/>
