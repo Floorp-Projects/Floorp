@@ -88,7 +88,7 @@ public:
 #endif
 
   // nsISVGChildFrame interface:
-  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas);
+  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas, nsRect *aDirtyRect);
   NS_IMETHOD NotifyCanvasTMChanged(PRBool suppressInvalidation);
   NS_IMETHOD SetMatrixPropagation(PRBool aPropagate);
   NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM);
@@ -173,7 +173,7 @@ nsSVGInnerSVGFrame::GetType() const
 // nsISVGChildFrame methods
 
 NS_IMETHODIMP
-nsSVGInnerSVGFrame::PaintSVG(nsISVGRendererCanvas* canvas)
+nsSVGInnerSVGFrame::PaintSVG(nsISVGRendererCanvas* canvas, nsRect *aDirtyRect)
 {
 #ifdef DEBUG
 //  printf("nsSVGInnerSVG(%p)::Paint\n", this);
@@ -200,7 +200,7 @@ nsSVGInnerSVGFrame::PaintSVG(nsISVGRendererCanvas* canvas)
       canvas->SetClipRect(clipTransform, x, y, width, height);
   }
 
-  nsSVGInnerSVGFrameBase::PaintSVG(canvas);
+  nsSVGInnerSVGFrameBase::PaintSVG(canvas, aDirtyRect);
 
   canvas->PopClip();
 

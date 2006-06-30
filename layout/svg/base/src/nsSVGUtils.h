@@ -171,9 +171,12 @@ public:
                       nsIDOMSVGAnimatedPreserveAspectRatio *aPreserveAspectRatio,
                       PRBool aIgnoreAlign = PR_FALSE);
 
-  /* Paint frame with SVG effects */
+  /* Paint frame with SVG effects - aDirtyRect is the area being
+   * redrawn, in frame offset pixel coordinates */
   static void
-  PaintChildWithEffects(nsISVGRendererCanvas *aCanvas, nsIFrame *aFrame);
+  PaintChildWithEffects(nsISVGRendererCanvas *aCanvas,
+                        nsRect *aDirtyRect,
+                        nsIFrame *aFrame);
 
   /* Style change for effects (filter/clip/mask/opacity) - call when
    * the frame's style has changed to make sure the effects properties

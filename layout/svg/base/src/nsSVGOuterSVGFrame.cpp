@@ -404,15 +404,6 @@ nsSVGOuterSVGFrame::Paint(nsIRenderingContext& aRenderingContext,
   PRTime start = PR_Now();
 #endif
 
-  float pxPerTwips = GetPxPerTwips();
-  int x0 = (int)(dirtyRect.x*pxPerTwips);
-  int y0 = (int)(dirtyRect.y*pxPerTwips);
-  int x1 = (int)ceil((dirtyRect.XMost())*pxPerTwips);
-  int y1 = (int)ceil((dirtyRect.YMost())*pxPerTwips);
-  NS_ASSERTION(x0>=0 && y0>=0, "unexpected negative coordinates");
-  NS_ASSERTION(x1-x0>0 && y1-y0>0, "zero sized dirtyRect");
-  nsRect dirtyRectPx(x0, y0, x1-x0, y1-y0);
-
   // If we don't have a renderer due to the component failing
   // to load (gdi+ or cairo not available), indicate to the user
   // what's going on by drawing a red "X" at the appropriate spot.
@@ -424,16 +415,18 @@ nsSVGOuterSVGFrame::Paint(nsIRenderingContext& aRenderingContext,
     return;
   }
 
+  dirtyRect.ScaleRoundOut(GetPxPerTwips());
+
   nsCOMPtr<nsISVGRendererCanvas> canvas;
-  mRenderer->CreateCanvas(&aRenderingContext, GetPresContext(), dirtyRectPx,
+  mRenderer->CreateCanvas(&aRenderingContext, GetPresContext(), dirtyRect,
                           getter_AddRefs(canvas));
 
   // paint children:
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
-    nsSVGUtils::PaintChildWithEffects(canvas, kid);
+    nsSVGUtils::PaintChildWithEffects(canvas, &dirtyRect, kid);
   }
-  
+
   canvas->Flush();
 
   canvas = nsnull;

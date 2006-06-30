@@ -211,7 +211,8 @@ TransformRect(float* aX, float *aY, float* aWidth, float *aHeight,
 }
 
 NS_IMETHODIMP
-nsSVGForeignObjectFrame::PaintSVG(nsISVGRendererCanvas* canvas)
+nsSVGForeignObjectFrame::PaintSVG(nsISVGRendererCanvas* canvas,
+                                  nsRect *aDirtyRect)
 {
   nsIFrame* kid = GetFirstChild(nsnull);
   if (!kid)
