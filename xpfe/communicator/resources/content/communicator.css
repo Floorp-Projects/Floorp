@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Samir Gehani <sgehani@netscape.com>
+ *   Karsten Düsterloh <mnyromyr@tprac.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,4 +42,43 @@
 
 toolbar[printpreview="true"] {
   -moz-binding: url("chrome://communicator/content/printPreviewBindings.xml#printpreviewtoolbar");
+}
+
+
+/* With the move to the new toolkit, SeaMonkey needs to overwrite certain bindings
+ * if it wants to keep its distinctive likeness. The now hidden new toolkit bindings
+ * will stay accessible via a set xpfe="false" attribute, though, where necessary.
+ */
+
+/******* toolkit access layer *******/
+/* These rules' content needs to be a verbatim copy of those in toolkit's xul.css! */
+toolbox[xpfe="false"] { 
+  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbox");
+  -moz-box-orient: vertical;
+}
+
+toolbar[xpfe="false"] {
+  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar");
+}
+
+menubar[xpfe="false"] {
+  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#menubar");
+}
+
+/******* SeaMonkey XPFE *******/
+/* These bindings reflect SeaMonkey XPFE, modulo new toolkit features. */
+toolbox { 
+  -moz-binding: url("chrome://communicator/content/bindings/toolbar.xml#grippytoolbox");
+}
+  
+toolbar {
+  -moz-binding: url("chrome://communicator/content/bindings/toolbar.xml#grippytoolbar");
+}
+
+toolbargrippy {
+  -moz-binding: url("chrome://communicator/content/bindings/toolbar.xml#toolbargrippy");
+}
+
+menubar {
+  -moz-binding: url("chrome://communicator/content/bindings/toolbar.xml#grippymenubar");
 }

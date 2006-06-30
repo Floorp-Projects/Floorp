@@ -211,12 +211,28 @@ toolbar {
   -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar");
 }
 
-toolbargrippy {
-  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbargrippy");
+toolbarseparator {
+  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbardecoration");
 }
 
-toolbarseparator {
-  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbarseparator");
+toolbarspacer {
+  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbardecoration");
+  display: inline;
+}
+
+toolbarspring {
+  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbardecoration");
+  -moz-box-flex: 1000;
+  display: inline;
+}
+
+toolbarpaletteitem {
+  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbarpaletteitem");
+}
+
+toolbarpaletteitem[place="palette"] {
+  -moz-box-orient: vertical;
+  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbarpaletteitem-palette");
 }
 
 /********* menubar ***********/
