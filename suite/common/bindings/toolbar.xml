@@ -17,7 +17,7 @@
       </xul:vbox>
       <xul:hbox tbattr="collapsed-tray-holder" class="collapsed-tray-holder" moz-collapsed="true">
         <xul:hbox tbattr="collapsed-tray" class="collapsed-tray"/>
-        <xul:spring flex="1" class="collapsed-tray-spring"/>
+        <xul:spacer flex="1" class="collapsed-tray-spacer"/>
       </xul:hbox>
     </content>
     
