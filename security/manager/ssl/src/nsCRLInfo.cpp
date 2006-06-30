@@ -74,8 +74,8 @@ nsCRLInfo::nsCRLInfo(CERTSignedCrl *signedCrl)
   nsAutoString nextUpdateLocale;
   nsAutoString lastUpdateLocale;
   nsCAutoString lastFetchURL;
-  PRTime lastUpdate;
-  PRTime nextUpdate;
+  PRTime lastUpdate = 0;
+  PRTime nextUpdate = 0;
   SECStatus sec_rv;
   
   // Get the information we need here //
