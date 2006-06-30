@@ -32,6 +32,7 @@ use strict;
 use Litmus;
 use Litmus::Auth;
 use Litmus::Error;
+use Text::Markdown;
 use JSON;
 
 use CGI;
@@ -48,6 +49,11 @@ if ($c->param("testcase_id")) {
   $testcase->{'testgroups'} = \@testgroups;
   $testcase->{'subgroups'} = \@subgroups;
   my $json = JSON->new(skipinvalid => 1, convblessed => 1);
+  
+  # apply markdown formatting to the steps and expected results:
+  $testcase->{'steps_formatted'} = Text::Markdown::markdown($testcase->steps());
+  $testcase->{'expected_results_formatted'} = Text::Markdown::markdown($testcase->expected_results());
+  
   my $js = $json->objToJson($testcase);
   print $js;
 } elsif ($c->param("subgroup_id")) {

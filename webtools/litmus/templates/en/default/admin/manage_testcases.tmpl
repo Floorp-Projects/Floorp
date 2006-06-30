@@ -96,8 +96,8 @@ function populateTestcase(data) {
   document.getElementById('editform_results').value = testcase.expected_results;
   document.getElementById('testcase_id_display').innerHTML = testcase.testcase_id;
   document.getElementById('summary_text').innerHTML = testcase.summary;
-  document.getElementById('steps_text').innerHTML = testcase.steps;
-  document.getElementById('results_text').innerHTML = testcase.expected_results;
+  document.getElementById('steps_text').innerHTML = testcase.steps_formatted;
+  document.getElementById('results_text').innerHTML = testcase.expected_results_formatted;
 
   var product_box = document.getElementById('product');
   var options = product_box.getElementsByTagName('option');  
@@ -201,6 +201,16 @@ function populateTestcase(data) {
   document.getElementById('editform_div').style.display = 'none';
   document.getElementById('testcase_display_div').style.display = 'block';
   enableModeButtons();
+  
+  [% IF edit %] 
+    // user clicked an "edit testcase" button for a test, so switch to edit
+    // right away
+    if (testcase.testcase_id == [% edit | js | html %]) {
+      switchToEdit();
+    }
+  [% END %]
+
+  
 }
 
 function blankForm(formid) {

@@ -41,7 +41,7 @@
   <td>
     <div id="product_text[% IF ! show_edit %]_[% testcase.testcase_id | html %][% END %]">[% testcase.product.name | html %]</div>
     </td>
-    [% IF ! show_edit %]<td align="right" valign="top" colspan="5"><a href="manage_testcases.cgi?testcase_id=[%testcase.testcase_id | html%]"> Edit Testcase</a></td>[% END %]
+    [% IF ! show_edit %]<td align="right" valign="top" colspan="5"><a href="manage_testcases.cgi?testcase_id=[%testcase.testcase_id | html%]&edit=1"> Edit Testcase</a></td>[% END %]
   </tr>
   <tr>
     <td><b>Test Group(s):</b></td>

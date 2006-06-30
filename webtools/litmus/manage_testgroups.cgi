@@ -113,8 +113,9 @@ if ($c->param("delete_testgroup_button")) {
     $testgroup_id = $c->param("editform_testgroup_id");
     my $testgroup = Litmus::DB::Testgroup->retrieve($testgroup_id);
     if ($testgroup) {
-      $testgroup->product_id($c->param('product'));
+      $testgroup->product_id($c->param('editform_product'));
       $testgroup->enabled($enabled);
+      $testgroup->name($c->param('editform_name'));
       $rv = $testgroup->update();
       if ($rv) {
         my @selected_subgroups = $c->param("editform_testgroup_subgroups");

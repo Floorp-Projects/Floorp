@@ -47,11 +47,15 @@ Litmus::Auth::requireAdmin('manage_testcases.cgi');
 my $vars;
 
 my $testcase_id;
+my $edit;
 my $message;
 my $status;
 my $rv;
 if ($c->param("testcase_id")) {
   $testcase_id = $c->param("testcase_id");
+  if ($c->param("edit")) {
+  	  $edit = $testcase_id;
+  }
 }
 
 my $rebuild_cache = 0;
@@ -177,6 +181,7 @@ $vars->{'testcases'} = $testcases;
 $vars->{'products'} = $products;
 $vars->{'authors'} = $authors;
 $vars->{'user'} = Litmus::Auth::getCurrentUser();
+$vars->{'edit'} = $edit;
 
 my $cookie =  Litmus::Auth::getCookie();
 $vars->{"defaultemail"} = $cookie;
