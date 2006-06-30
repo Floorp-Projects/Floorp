@@ -1,0 +1,264 @@
+<?xml version="1.0"?>
+
+<bindings id="toolbarBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="toolbar-base">
+    <resources>
+      <stylesheet src="chrome://global/skin/toolbar.css"/>
+    </resources>
+  </binding>
+
+  <binding id="toolbox" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base">
+    <content orient="vertical">
+      <xul:box orient="vertical" flex="1" class="toolbar-internal-box">
+        <children/>
+      </xul:box>
+      <xul:box tbattr="collapsed-tray-holder" class="collapsed-tray-holder" moz-collapsed="true">
+        <xul:box tbattr="collapsed-tray" class="collapsed-tray"/>
+        <xul:spring flex="1" class="collapsed-tray-spring"/>
+      </xul:box>
+    </content>
+    
+    <implementation>
+      <constructor>
+        this.init(event);
+      </constructor>
+
+      <method name="collapseToolbar">
+        <parameter name="toolbar"/>
+        <body>
+        <![CDATA[
+          const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+          try {
+            this.createCollapsedGrippy(toolbar);
+            toolbar.setAttribute("moz-collapsed", "true");
+            document.persist(toolbar.id, "moz-collapsed");
+          }
+          catch(e) {
+          }
+        ]]>
+        </body>
+      </method>
+      
+      <method name="expandToolbar">
+        <parameter name="aGrippyID"/>
+        <body>
+        <![CDATA[
+          var idString = aGrippyID.substring("moz_tb_collapsed_".length, aGrippyID.length);
+          var toolbar = document.getElementById(idString);
+          toolbar.setAttribute("moz-collapsed", "false");
+          var collapsedTray = this.findNodeByAttribute("tbattr", "collapsed-tray");
+          var collapsedToolbar = document.getElementById("moz_tb_collapsed_" + toolbar.id);
+          collapsedTray.removeChild(collapsedToolbar);
+          if (!collapsedTray.hasChildNodes()) 
+            this.findNodeByAttribute("tbattr", "collapsed-tray-holder").setAttribute("moz-collapsed", "true");
+          document.persist(toolbar.id, "moz-collapsed");
+        ]]>
+        </body>
+      </method>
+      
+      <method name="findNodeByAttribute">
+        <parameter name="aAttribute"/>
+        <parameter name="aValue"/>
+        <body>
+        <![CDATA[
+          var nodes = document.getAnonymousNodes(this);
+          for (var i = 0; i < nodes.length; i++) {
+            if (nodes[i].getAttribute(aAttribute) == aValue)
+              return nodes[i];
+            else {
+              var subnodes = nodes[i].getElementsByAttribute(aAttribute, aValue);
+              if (!subnodes.length) continue;
+              return subnodes[0];
+            }
+          }
+          return null;
+        ]]>
+        </body>
+      </method>
+      
+      <method name="createCollapsedGrippy">
+        <parameter name="aToolbar"/>
+        <body>
+        <![CDATA[
+          const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+          try {
+            var grippy = aToolbar.findNodeByAttribute("tbattr", "toolbar-grippy");
+            var boxObject = grippy.boxObject.QueryInterface(Components.interfaces.nsIBoxObject);
+            var collapsedGrippy = document.createElementNS(XUL_NS, "toolbargrippy");
+            if (collapsedGrippy) {
+              var width = boxObject.height > 20 ? boxObject.height : 23;
+              var height = boxObject.width > 10 ? boxObject.width : 12;
+              var styleString = "width: " + width + "px; height: " + height + "px;";
+              collapsedGrippy.setAttribute("style", styleString);
+              collapsedGrippy.setAttribute("tooltip", aToolbar.getAttribute("grippytooltip"));
+              collapsedGrippy.setAttribute("tooltiptext", aToolbar.getAttribute("grippytooltiptext"));
+              collapsedGrippy.setAttribute("id", "moz_tb_collapsed_" + aToolbar.id);
+              collapsedGrippy.collapsed = true;
+              collapsedGrippy.setAttribute("tbgrippy-collapsed", "true");
+              var collapsedTrayHolder = this.findNodeByAttribute("tbattr", "collapsed-tray-holder");
+              if (collapsedTrayHolder.getAttribute("moz-collapsed") == "true")
+                collapsedTrayHolder.removeAttribute("moz-collapsed");
+              this.findNodeByAttribute("tbattr", "collapsed-tray").appendChild(collapsedGrippy);
+              collapsedGrippy = document.getElementById("moz_tb_collapsed_" + aToolbar.id);
+            }
+          }
+          catch (e) {
+            throw e;
+          }
+        ]]>        
+        </body>
+      </method>
+      
+      <method name="init">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          for (var i = 0; i < this.childNodes.length; i++) {
+            if (this.childNodes[i].getAttribute("moz-collapsed") == "true")
+              this.createCollapsedGrippy(this.childNodes[i]);
+          }
+        ]]>
+        </body>
+      </method>
+      
+      <property name="deferAttached">
+        <getter>
+          return this.getAttribute("deferattached");
+        </getter>
+        <setter>
+          this.setAttribute("deferattached", val);
+          return val;
+        </setter>
+      </property>
+      
+    </implementation>
+  </binding>
+
+  <binding id="toolbar" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base">
+    <content>
+      <xul:toolbargrippy inherits="tooltiptext=grippytooltiptext,tooltip=grippytooltip,last-toolbar,hidden=grippyhidden"
+                         tbattr="toolbar-grippy"
+                         class="toolbar-grippy"/>
+      <xul:box flex="1" class="toolbar-holder" autostretch="never"
+               inherits="collapsed,last-toolbar,orient=tborient,autostretch=tbautostretch">
+        <children/>
+      </xul:box>
+    </content>
+    
+    <implementation>
+      <method name="findNodeByAttribute">
+        <parameter name="aAttribute"/>
+        <parameter name="aValue"/>
+        <body>
+        <![CDATA[
+          var nodes = document.getAnonymousNodes(this);
+          for (var i = 0; i < nodes.length; i++) {
+            if (nodes[i].getAttribute(aAttribute) == aValue)
+              return nodes[i];
+            else {
+              var subnodes = nodes[i].getElementsByAttribute(aAttribute, aValue);
+              return subnodes.length ? subnodes[0] : null;
+            }
+          }
+          return null;
+        ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+  <binding id="menubar" extends="xul:menubar">
+    <resources>
+      <stylesheet src="chrome://global/skin/toolbar.css"/>
+    </resources>
+
+    <content>
+      <xul:toolbargrippy inherits="tooltiptext=grippytooltiptext,tooltip=grippytooltip,last-toolbar,hidden=grippyhidden"
+                         tbattr="toolbar-grippy" class="toolbar-grippy"/>
+      <xul:box flex="1" class="toolbar-holder" inherits="collapsed,last-toolbar" autostretch="never">
+        <children/>
+      </xul:box>
+    </content>
+    
+    <implementation>
+      <method name="findNodeByAttribute">
+        <parameter name="aAttribute"/>
+        <parameter name="aValue"/>
+        <body>
+        <![CDATA[
+          var nodes = document.getAnonymousNodes(this);
+          for (var i = 0; i < nodes.length; i++) {
+            if (nodes[i].getAttribute(aAttribute) == aValue)
+              return nodes[i];
+            else {
+              var subnodes = nodes[i].getElementsByAttribute(aAttribute, aValue);
+              return subnodes.length ? subnodes[0] : null;
+            }
+          }
+          return null;
+        ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+  <binding id="toolbargrippy" extends="xul:button">
+    <resources>
+      <stylesheet src="chrome://global/skin/toolbar.css"/>
+    </resources>
+
+    <implementation>
+      <property name="collapsed">
+        <getter>
+          return this.getAttribute("moz_grippy_collapsed");
+        </getter>
+        <setter>
+          this.setAttribute("moz_grippy_collapsed", val);
+          return val;
+        </setter>
+      </property>
+      
+      <method name="returnNode">
+        <parameter name="aNodeA"/>
+        <parameter name="aNodeB"/>
+        <body>
+        <![CDATA[
+          var node = this.parentNode;
+          while (node && node.localName != "window" && 
+                 (node.localName != aNodeA && (node.localName != aNodeB)))  {
+            node = node.parentNode;
+          }
+          return node;
+        ]]>
+        </body>
+      </method>
+      
+      <method name="grippyClicked">
+        <body>
+        <![CDATA[
+          var toolbox = this.returnNode("toolbox");
+          var toolbar = this.returnNode("toolbar", "menubar");
+          if (this.collapsed) 
+            toolbox.expandToolbar(this.id);
+          else
+            toolbox.collapseToolbar(toolbar);
+        ]]>
+        </body>
+      </method>
+    </implementation>  
+    
+    <handlers>
+      <handler event="click">
+      <![CDATA[
+        this.grippyClicked();
+      ]]>
+      </handler>
+    </handlers>
+  </binding>  
+
+  <binding id="toolbarseparator" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base"/>
+
+</bindings>          
