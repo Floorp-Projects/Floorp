@@ -55,5 +55,7 @@ include $(topsrcdir)/config/rules.mk
 libs-%:
 	@$(MAKE) -C ../../netwerk/locales/ libs AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) -C ../../dom/locales/ libs AB_CD=$* XPI_NAME=locale-$*
+ifdef MOZ_PSM
 	@$(MAKE) -C ../../security/manager/locales/ libs AB_CD=$* XPI_NAME=locale-$*
+endif
 	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$*
