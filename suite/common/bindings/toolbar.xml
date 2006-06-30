@@ -40,7 +40,6 @@
         <parameter name="toolbar"/>
         <body>
         <![CDATA[
-          const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
           try {
             this.createCollapsedGrippy(toolbar);
             toolbar.setAttribute("moz-collapsed", "true");
