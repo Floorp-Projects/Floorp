@@ -496,7 +496,6 @@ class Result extends AppModel {
             $_issue_array = $this->Choice->findAll($_conditions);
 
             if ($_intention_id != $_intention_array[0]['Choice']['id']) {
-                echo 'not equal!';
                 $_intention_text = '';
             }
 
