@@ -22,7 +22,7 @@
  *
  * Contributor(s):
  *   Javier Delgadillo <javi@netscape.com>
- *   Håkan Waara <hwaara@chello.se>
+ *   Håkan Waara <hwaara@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -73,7 +73,11 @@ function onLoad()
   // Focus the accept button explicitly, because the dialog onLoad handler
   // focuses the first focusable element in the dialog, which is the "View
   // Certificate" button.
+  // Never explicitly focus buttons on OS X, as this breaks default focus
+  // handling, outlined in dialog.xml
+#ifndef XP_MACOSX
   document.documentElement.getButton("accept").focus();
+#endif
 }
 
 function doOK()
