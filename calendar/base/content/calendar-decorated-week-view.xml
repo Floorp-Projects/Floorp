@@ -119,47 +119,37 @@
                        this.calView.goToDay(this.calView.selectedDay);
                        break;
 
-                   case "calendar.view.defaultstarthour":
-                       this.calView.mStartMin = subj.getIntPref(pref) * 60;
-                       var viewElem = document.getAnonymousElementByAttribute(
-                                      this.calView, "anonid", "view-element");
-                       viewElem.setStartEndMinutes(this.calView.mStartMin,
-                                                   this.calView.mEndMin);
-		       break;
-
-                   case "calendar.week.d0sundaysoff":
-                   case "calendar.week.d1mondaysoff":
-                   case "calendar.week.d2tuesdaysoff":
-                   case "calendar.week.d3wednesdaysoff":
-                   case "calendar.week.d4thursdaysoff":
-                   case "calendar.week.d5fridaysoff":
-                   case "calendar.week.d6saturdaysoff":
-                       if (this.calView.mWorkdaysOnly) {
-                           this.calView.goToDay(this.calView.selectedDay);
-                       }
-                       break;
-                   case "calendar.week.start":
-                       this.calView.goToDay(this.calView.selectedDay);
-                       break;
-                   case "calendar.view.defaultendhour":
-                       this.calView.mEndMin = subj.getIntPref(pref) * 60;
-                       viewElem = document.getAnonymousElementByAttribute(
-                                  this.calView, "anonid", "view-element");
-                       viewElem.setStartEndMinutes(this.calView.mStartMin, 
-                                                   this.calView.mEndMin);
-		       break;
-
                    case "calendar.week.start":
                        this.calView.mWeekStartOffset = subj.getIntPref(pref);
+                       viewElem = document.getAnonymousElementByAttribute(
+                                  this.calView, "anonid", "view-element");
+                       viewElem.weekStartOffset = subj.getIntPref(pref);
 
                        if (!this.calView.startDay || !this.calView.endDay) {
                            // Don't refresh if we're not initialized
                            return;
                        }
 
-                       // Refresh the view.  goToDay will do the calculation
+                       // Refresh the view so the settings take effect
                        this.calView.goToDay(this.calView.selectedDay);
                        break;
+
+                   case "calendar.view.defaultstarthour":
+                       this.calView.mStartMin = subj.getIntPref(pref) * 60;
+                       var viewElem = document.getAnonymousElementByAttribute(
+                                      this.calView, "anonid", "view-element");
+                       viewElem.setStartEndMinutes(this.calView.mStartMin,
+                                                   this.calView.mEndMin);
+                       break;
+
+                   case "calendar.view.defaultendhour":
+                       this.calView.mEndMin = subj.getIntPref(pref) * 60;
+                       viewElem = document.getAnonymousElementByAttribute(
+                                  this.calView, "anonid", "view-element");
+                       viewElem.setStartEndMinutes(this.calView.mStartMin, 
+                                                   this.calView.mEndMin);
+                       break;
+
                    case "calendar.timezone.local":
                        var viewElem = document.getAnonymousElementByAttribute(
                                       this.calView, "anonid", "view-element");
