@@ -48,6 +48,7 @@ SFX_MODULE ?= $(error SFX_MODULE is not defined)
 TOOLKIT_NSIS_FILES = \
 	common.nsh \
 	locales.nsi \
+	overrides.nsh \
 	ShellLink.dll \
 	version.nsh \
 	$(NULL)
