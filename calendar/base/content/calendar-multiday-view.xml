@@ -2530,7 +2530,10 @@
 
           if (targetDate.compare(finishDate) == 0) {
               // Zero length events are silly, but we have to handle them
-              return [this.findColumnForDate(targetDate)];
+              var col = this.findColumnForDate(targetDate);
+              if (col) {
+                  columns.push(col);
+              }
           }
 
           while (targetDate.compare(finishDate) == -1) {
