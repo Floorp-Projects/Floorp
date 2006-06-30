@@ -89,7 +89,6 @@
               var height = boxObject.width > 10 ? boxObject.width : 12;
               var styleString = "width: " + width + "px; height: " + height + "px;";
               collapsedGrippy.setAttribute("style", styleString);
-              collapsedGrippy.setAttribute("tooltip", aToolbar.getAttribute("grippytooltip"));
               collapsedGrippy.setAttribute("tooltiptext", aToolbar.getAttribute("grippytooltiptext"));
               collapsedGrippy.setAttribute("id", "moz_tb_collapsed_" + aToolbar.id);
               collapsedGrippy.setAttribute("moz_grippy_collapsed", "true"); 
@@ -123,7 +122,7 @@
 
   <binding id="toolbar" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base">
     <content>
-      <xul:toolbargrippy inherits="tooltiptext=grippytooltiptext,tooltip=grippytooltip,last-toolbar,hidden=grippyhidden"
+      <xul:toolbargrippy inherits="last-toolbar,hidden=grippyhidden"
                          tbattr="toolbar-grippy"
                          class="toolbar-grippy"/>
       <xul:hbox flex="1" class="toolbar-holder" align="center"
@@ -168,7 +167,7 @@
     </resources>
 
     <content>
-      <xul:toolbargrippy inherits="tooltiptext=grippytooltiptext,tooltip=grippytooltip,last-toolbar,hidden=grippyhidden"
+      <xul:toolbargrippy inherits="tooltiptext=grippytooltiptext,last-toolbar,hidden=grippyhidden"
                          tbattr="toolbar-grippy" class="toolbar-grippy"/>
       <xul:hbox flex="1" class="toolbar-holder" inherits="collapsed,last-toolbar" align="center">
         <children/>
