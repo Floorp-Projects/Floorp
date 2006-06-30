@@ -119,7 +119,7 @@
     dump(
       "(tinderbox dropping follows)\n"+
       "_x_x_mozilla_page_load,"+r.median+","+r.max+","+r.min+"\n"+
-      "_x_x_mozilla_page_load_details,avgmedian|"+r.median+"|average|"+r.mean.toFixed(2)+"|minimum|"+r.min+"|maximum|"+r.max+":"
+      "_x_x_mozilla_page_load_details,avgmedian|"+r.median+"|average|"+r.mean.toFixed(2)+"|minimum|"+r.min+"|maximum|"+r.max+"|stddev|"+r.stdd.toFixed(2)+":"
     );
 
     for (var i = 0; i < timeVals.length; ++i) {
