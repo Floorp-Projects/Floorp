@@ -67,9 +67,7 @@ CRCCheck on
 !insertmacro GetTime
 !insertmacro LineFind
 !insertmacro un.LineFind
-!insertmacro Locate
 !insertmacro StrFilter
-!insertmacro TextCompare
 !insertmacro TrimNewLines
 !insertmacro un.TrimNewLines
 !insertmacro WordFind
@@ -104,6 +102,10 @@ Var fhUninstallLog
 !insertmacro WriteRegStrHKCR
 !insertmacro CreateRegKey
 !insertmacro un.GetSecondInstallPath
+
+!include overrides.nsh
+!insertmacro LocateNoDetails
+!insertmacro TextCompareNoDetails
 
 Name "${BrandFullName}"
 OutFile "setup.exe"
@@ -340,12 +342,15 @@ Function FinishInstall
   FileClose $fhUninstallLog
   ; Diff and add missing entries from the previous file log if it exists
   ${If} ${FileExists} "$INSTDIR\uninstall\uninstall.bak"
+    SetDetailsPrint textonly
+    DetailPrint $(STATUS_CLEANUP)
+    SetDetailsPrint none
     ${LogHeader} "Updating Uninstall Log With Previous Uninstall Log"
     StrCpy $R0 "$INSTDIR\uninstall\uninstall.log"
     StrCpy $R1 "$INSTDIR\uninstall\uninstall.bak"
     GetTempFileName $R2
     FileOpen $R3 $R2 w
-    ${TextCompare} "$R1" "$R0" "SlowDiff" "GetDiff"
+    ${TextCompareNoDetails} "$R1" "$R0" "SlowDiff" "GetDiff"
     FileClose $R3
     ${Unless} ${Errors}
       ${FileJoin} "$INSTDIR\uninstall\uninstall.log" "$R2" "$INSTDIR\uninstall\uninstall.log"
@@ -362,6 +367,9 @@ FunctionEnd
 
 Section "-Application" Section1
   SectionIn 1 RO
+  SetDetailsPrint textonly
+  DetailPrint $(STATUS_CLEANUP)
+  SetDetailsPrint none
   SetOutPath $INSTDIR
   ; For a "Standard" upgrade without talkback installed add the InstallDisabled
   ; file to the talkback source files so it will be disabled by the extension
@@ -405,7 +413,7 @@ Section "-Application" Section1
     StrCpy $R1 "$INSTDIR\uninstall\cleanup.log"
     GetTempFileName $R2
     FileOpen $R3 $R2 w
-    ${TextCompare} "$R1" "$R0" "SlowDiff" "GetDiff"
+    ${TextCompareNoDetails} "$R1" "$R0" "SlowDiff" "GetDiff"
     FileClose $R3
 
     ${Unless} ${Errors}
@@ -443,6 +451,9 @@ Section "-Application" Section1
   ${DeleteFile} "$INSTDIR\install_wizard.log"
   ${DeleteFile} "$INSTDIR\install_status.log"
 
+  SetDetailsPrint textonly
+  DetailPrint $(STATUS_INSTALL_APP)
+  SetDetailsPrint none
   ${LogHeader} "Installing Main Files"
   StrCpy $R0 "$EXEDIR\nonlocalized"
   StrCpy $R1 "$INSTDIR"
@@ -476,6 +487,9 @@ Section "-Application" Section1
   ${LogUninstall} "File: \install_wizard.log"
   ${LogUninstall} "File: \updates.xml"
 
+  SetDetailsPrint textonly
+  DetailPrint $(STATUS_INSTALL_LANG)
+  SetDetailsPrint none
   ${LogHeader} "Installing Localized Files"
   StrCpy $R0 "$EXEDIR\localized"
   StrCpy $R1 "$INSTDIR"
@@ -684,6 +698,9 @@ SectionEnd
 
 Function install_inspector
   ${If} ${FileExists} "$EXEDIR\optional\extensions\inspector@mozilla.org"
+    SetDetailsPrint textonly
+    DetailPrint $(STATUS_INSTALL_OPTIONAL)
+    SetDetailsPrint none
     ${RemoveDir} "$INSTDIR\extensions\extensions\inspector@mozilla.org"
     ClearErrors
     ${LogHeader} "Installing Developer Tools"
@@ -696,6 +713,9 @@ FunctionEnd
 Function install_talkback
   StrCpy $R0 "$EXEDIR\optional\extensions\talkback@mozilla.org"
   ${If} ${FileExists} "$R0"
+    SetDetailsPrint textonly
+    DetailPrint $(STATUS_INSTALL_OPTIONAL)
+    SetDetailsPrint none
     StrCpy $R1 "$INSTDIR\extensions\talkback@mozilla.org"
     ${If} ${FileExists} "$R1"
       ; If there is an existing InstallDisabled file copy it to the source dir.
@@ -728,6 +748,9 @@ Function install_talkback
 FunctionEnd
 
 Section "Uninstall"
+  SetDetailsPrint textonly
+  DetailPrint $(STATUS_UNINSTALL_MAIN)
+  SetDetailsPrint none
   ; Remove registry entries for non-existent apps and for apps that point to our
   ; install location in the Software\Mozilla key.
   SetShellVarContext current  ; Sets SHCTX to HKCU
@@ -883,7 +906,7 @@ FunctionEnd
 
 Function DoCopyFiles
   StrLen $R2 $R0
-  ${Locate} "$R0" "/L=FD" "CopyFile"
+  ${LocateNoDetails} "$R0" "/L=FD" "CopyFile"
 FunctionEnd
 
 Function CopyFile
@@ -1056,7 +1079,7 @@ Function DiffOldLogFiles
   StrCpy $R1 "$1"
   GetTempFileName $R2
   FileOpen $R3 $R2 w
-  ${TextCompare} "$R1" "$TmpVal" "SlowDiff" "GetDiff"
+  ${TextCompareNoDetails} "$R1" "$TmpVal" "SlowDiff" "GetDiff"
   FileClose $R3
   ${FileJoin} "$TmpVal" "$R2" "$TmpVal"
   ${DeleteFile} "$R2"
