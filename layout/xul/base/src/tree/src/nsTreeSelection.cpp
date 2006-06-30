@@ -215,7 +215,8 @@ struct nsTreeRange
   };
 
   void Invalidate() {
-    mSelection->mTree->InvalidateRange(mMin, mMax);
+    if (mSelection->mTree)
+      mSelection->mTree->InvalidateRange(mMin, mMax);
     if (mNext)
       mNext->Invalidate();
   };
@@ -413,7 +414,8 @@ NS_IMETHODIMP nsTreeSelection::ToggleSelect(PRInt32 aIndex)
     else
       rv = mFirstRange->Remove(aIndex);
     if (NS_SUCCEEDED(rv)) {
-      mTree->InvalidateRow(aIndex);
+      if (mTree)
+        mTree->InvalidateRow(aIndex);
 
       FireOnSelectHandler();
     }
@@ -483,7 +485,8 @@ NS_IMETHODIMP nsTreeSelection::ClearRange(PRInt32 aStartIndex, PRInt32 aEndIndex
 
     mFirstRange->RemoveRange(start, end);
 
-    mTree->InvalidateRange(start, end);
+    if (mTree)
+      mTree->InvalidateRange(start, end);
   }
   
   return NS_OK;
@@ -510,6 +513,9 @@ NS_IMETHODIMP nsTreeSelection::InvertSelection()
 
 NS_IMETHODIMP nsTreeSelection::SelectAll()
 {
+  if (!mTree)
+    return NS_OK;
+
   nsCOMPtr<nsITreeView> view;
   mTree->GetView(getter_AddRefs(view));
   if (!view)
@@ -602,10 +608,12 @@ NS_IMETHODIMP nsTreeSelection::SetCurrentIndex(PRInt32 aIndex)
   if (mCurrentIndex == aIndex) {
     return NS_OK;
   }
-  if (mCurrentIndex != -1)
+  if (mCurrentIndex != -1 && mTree)
     mTree->InvalidateRow(mCurrentIndex);
   
   mCurrentIndex = aIndex;
+  if (!mTree)
+    return NS_OK;
   
   if (aIndex != -1)
     mTree->InvalidateRow(aIndex);
@@ -789,7 +797,7 @@ nsTreeSelection::GetShiftSelectPivot(PRInt32* aIndex)
 nsresult
 nsTreeSelection::FireOnSelectHandler()
 {
-  if (mSuppressed)
+  if (mSuppressed || !mTree)
     return NS_OK;
 
   nsCOMPtr<nsIBoxObject> boxObject = do_QueryInterface(mTree);
