@@ -388,14 +388,9 @@ class Result extends AppModel {
             JOIN applications_collections ON applications_collections.collection_id = collections.id
             JOIN applications ON applications.id = applications_collections.application_id
             AND applications.id = {$_application_id[0]['Application']['id']}
+            AND collections.id = {$_collection_id['Collection']['id']}
             AND choices.type = 'issue'
-        ";
-        if (!empty($_collection_id['Collection']['id'])) {
-            $_query .= "AND collections.id = {$_collection_id['Collection']['id']}";
-        }
-        $_query .= "
-            ORDER BY 
-                choices.description DESC
+            ORDER BY choices.pos ASC
                 ";
 
         $_issues = $this->query($_query);

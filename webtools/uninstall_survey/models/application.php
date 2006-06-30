@@ -31,6 +31,11 @@ class Application extends AppModel {
             return array();
         }
 
+        $_max_id = $this->getMaxCollectionId($id,'issue');
+        if (!is_numeric($_max_id[0][0]['max'])) {
+            return array();
+        }
+
         $_query = "
             SELECT 
                 * 
@@ -43,7 +48,10 @@ class Application extends AppModel {
             WHERE 
                 applications.id={$id} 
             AND 
-                choices.type='intention'";
+                choices.type='intention'
+            AND
+                collections.id={$_max_id[0][0]['max']}
+            ";
 
         return $this->query($_query);
     }
