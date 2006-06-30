@@ -89,7 +89,7 @@
 {if $results}
 
 <h2>Search Results</h2>
-<p class="first"><b>{$page.resultCount}</b> Addons found.  Showing records <b>{$page.leftDisplay}-{$page.right}</b>. <em>Too many results?  Try narrowing your search.</em></p>
+<p class="first"><b>{$page.resultCount}</b> Add-ons found.  Showing records <b>{$page.leftDisplay}-{$page.right}</b>. <em>Too many results?  Try narrowing your search.</em></p>
 
 <div class="pages">
 <div class="prev">

@@ -4,7 +4,7 @@
 {if $success}
 <p>Your password has been reset.</p>
 <ul>
-<li><a href="login.php">Login to Mozilla Addons</a></li>
+li><a href="login.php">Login to Mozilla Add-ons</a></li>
 </ul>
 {else}
 <form id="resetpassword" name="resetpassword" method="post" action="">

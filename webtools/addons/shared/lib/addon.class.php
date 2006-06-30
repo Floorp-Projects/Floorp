@@ -201,6 +201,7 @@ class AddOn extends AMO_Object {
                 version.URI, 
                 version.Notes, 
                 version.DateAdded as VersionDateAdded,
+                version.hash as hash,
                 applications.AppName
             FROM  
                 version

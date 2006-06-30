@@ -16,7 +16,7 @@ Email not disclosed
 <dd>{$user->UserLastLogin|date_format:"%A, %B %e, %Y"}</dd>
 </dl>
 
-<h3>Addons by {$user->UserName}</h3>
+<h3>Add-ons by {$user->UserName}</h3>
 <dl>
 {section name=aa loop=$user->AddOns}
 <dt><a href="{$config.webpath}/{$app}/{$user->AddOns[aa].ID}/">{$user->AddOns[aa].Name}</a></dt>

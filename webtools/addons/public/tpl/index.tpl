@@ -29,7 +29,7 @@
 
 </div>
 
-<form id="front-search" method="get" action="{$config.webpath}/search.php" title="Search Mozilla Addons">
+<form id="front-search" method="get" action="{$config.webpath}/search.php" title="Search Mozilla Add-ons">
     <div>
     <label for="q2" title="Search addons.mozilla.org">search:</label>
     <input id="q2" type="text" name="q" accesskey="s" size="40"/>

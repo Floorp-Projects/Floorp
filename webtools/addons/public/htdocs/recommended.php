@@ -36,7 +36,7 @@ $amo = new AMO_Object();
 // Assign template variables.
 $tpl->assign(
     array(  'recommendedExtensions'  => $amo->getRecommendedAddons($sql['app'],'E',10),
-            'title'             => 'Recommended '.$clean['app'].' Addons',
+            'title'             => 'Recommended '.$clean['app'].' Add-ons',
             'content'           => 'recommended.tpl',
             'cats'              => $amo->getCats('E'))
 );

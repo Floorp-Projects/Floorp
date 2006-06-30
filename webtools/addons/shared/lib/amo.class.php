@@ -348,6 +348,7 @@ class AMO_Object
                 r.title,
                 v.size,
                 v.version,
+                v.hash,
                 p.previewuri
             FROM
                 main m

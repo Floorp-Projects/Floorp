@@ -69,7 +69,7 @@
                 <acronym title="Really Simple Syndication">RSS</acronym> feeds 
                 allow you to take the latest content from our site and view it in other places
                 such as a feed reader, your browser or your website. Feeds make it easy and 
-                convenient to stay on top of the latest from Mozilla Addons.
+                convenient to stay on top of the latest from Mozilla Add-ons.
             </p>
 
             <p>

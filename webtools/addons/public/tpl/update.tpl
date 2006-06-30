@@ -18,6 +18,9 @@
             <em:minVersion>{$update.appminver|escape:html:"UTF-8"}</em:minVersion>
             <em:maxVersion>{$update.appmaxver|escape:html:"UTF-8"}</em:maxVersion>
             <em:updateLink>{$update.exturi|escape:html:"UTF-8"}</em:updateLink>
+            {if $update.hash}
+            <em:updateHash>{$update.hash|escape:html:"UTF-8"}</em:updateHash>
+            {/if}
         </RDF:Description>
     </em:targetApplication>
 </RDF:Description>

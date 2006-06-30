@@ -88,7 +88,8 @@ if (empty($errors)) {
             version.uri AS exturi,
             version.minappver AS appminver,
             version.maxappver AS appmaxver,
-            applications.guid AS appguid
+            applications.guid AS appguid,
+            version.hash AS hash
         FROM
             main
         INNER JOIN version ON main.id = version.id

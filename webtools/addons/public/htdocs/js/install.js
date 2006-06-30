@@ -31,7 +31,7 @@ function getPlatformName()
   return "Unknown";
 }
 
-function install( aEvent, extName, iconURL)  {   
+function install( aEvent, extName, iconURL, extHash)  {   
 
     if (aEvent.target.href.match(/^.+\.xpi$/)) {
 
@@ -42,6 +42,14 @@ function install( aEvent, extName, iconURL)  {
             IconURL: iconURL,
             toString: function () { return this.URL; }
         };
+
+        // Only add the Hash param if it exists.
+        //
+        // We optionally add this to params[] because installTrigger
+        // will still try to compare a null hash as long as the var is set.
+        if (extHash) {
+            params[extName][Hash] = extHash;
+        }
 
         InstallTrigger.install(params);
 

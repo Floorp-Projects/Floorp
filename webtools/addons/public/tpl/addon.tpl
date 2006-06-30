@@ -41,7 +41,7 @@ Works with:
             {foreach key=key item=item from=$addon->OsVersions}
                 {if $item.URI}
                     <div class="{$item.OSName|escape}">
-                        <a href="{$item.URI|escape}" onclick="return {$addon->installFunc}(event,'{$addon->Name|escape} {$item.Version|escape}', '{$config.webpath}/images/default.png');" title="Install for {$item.OSName|escape} {$item.Version|escape} (Right-Click to Download)">
+                        <a href="{$item.URI|escape}" onclick="return {$addon->installFunc}(event,'{$addon->Name|escape} {$item.Version|escape}', '{$config.webpath}/images/default.png', '{$addon->hash|escape}');" title="Install for {$item.OSName|escape} {$item.Version|escape} (Right-Click to Download)">
                             Install Now
                             {if $multiDownloadLinks}
                                 for {$item.OSName|escape}

@@ -41,7 +41,7 @@
         <input id="emailconfirm" name="emailconfirm" type="text" value="{$emailconfirm_value|escape}" size="40"/>
         </div>
 
-        <p>How do you want to be known to visitors of Mozilla Addons?</p>
+        <p>How do you want to be known to visitors of Mozilla Add-ons?</p>
 
         {if $error_name_empty}
             <div class="amo-form-error">Name is a required field.</div>
@@ -54,7 +54,7 @@
 
         <p>If you have a website, enter the URL here. (including the http:// ) Your website
         will be shown to site visitors on your author profile page. This field is optional;
-        if you don't have a website or don't want it linked to from Mozilla Addons, leave 
+        if you don't have a website or don't want it linked to from Mozilla Add-ons, leave 
         this box blank.</p>
 
         <div>
@@ -80,10 +80,10 @@
         </div>
 
         <p>Review what you entered above. If everything's correct, click the "Join Mozilla
-        Addons" button.</p>
+        Add-ons" button.</p>
 
         <div>
-        <input name="submit" type="submit" value="Join Mozilla Addons &raquo;" class="amo-submit"/>
+        <input name="submit" type="submit" value="Join Mozilla Add-ons &raquo;" class="amo-submit"/>
         </div>
     </form>
 {/if}

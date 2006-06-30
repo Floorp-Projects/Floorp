@@ -26,9 +26,9 @@
     <li><span>Find Similar Add-ons</span>
         <ul>
             {section name=cats loop=$addon->AddonCats}
-                <li><a href="{$config.webpath}/search.php?cat={$addon->AddonCats[cats].CategoryID}" title="See other Addons in this category.">{$addon->AddonCats[cats].CatName}</a></li>
+                <li><a href="{$config.webpath}/search.php?cat={$addon->AddonCats[cats].CategoryID}" title="See other Add-ons in this category.">{$addon->AddonCats[cats].CatName}</a></li>
             {/section}
-            <li><a href="{$config.webpath}/search.php?app={$app}">Other {$app|capitalize} Addons</a></li>
+            <li><a href="{$config.webpath}/search.php?app={$app}">Other {$app|capitalize} Add-ons</a></li>
         </ul>
     </li>
 </ul>

@@ -1,15 +1,15 @@
 <?xml-stylesheet type="text/xsl" href="{$config.webpath|escape:html:"UTF-8"}/css/rss.xsl" media="screen"?>
 <rss version="2.0">
 <channel>
-    <title>{$list|escape:html:"UTF-8"} Mozilla Addons</title>
+    <title>{$list|escape:html:"UTF-8"} Mozilla Add-ons</title>
     <link>{$config.host|escape:html:"UTF-8"}{$config.webpath|escape:html:"UTF-8"}</link>
-    <description>Mozilla Addons is the place to get extensions and themes for your Mozilla applications.</description>
+    <description>Mozilla Add-ons is the place to get extensions and themes for your Mozilla applications.</description>
     <language>en-US</language>
     <copyright>{$smarty.now|date_format:'%Y'} The Mozilla Foundation</copyright>
     <lastBuildDate>{$smarty.now|date_format:"%a, %d %b %Y %H:%M:%S %Z"}</lastBuildDate>
     <ttl>120</ttl>
     <image>
-        <title>Mozilla Addons</title>
+        <title>Mozilla Add-ons</title>
         <link>{$config.host|escape:html:"UTF-8"}{$config.webpath|escape:html:"UTF-8"}</link>
         <url>http://mozilla.org/images/mozilla-16.png</url>
         <width>16</width>

@@ -46,7 +46,7 @@ if (preg_match('/^(\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
 $tpl->assign(
     array(  'newestThemes'      => $newestThemes,
             'popularThemes'     => $popularThemes,
-            'title'             => 'Addons',
+            'title'             => 'Add-ons',
             'currentTab'        => $currentTab,
             'content'           => 'themes.tpl',
             'sidebar'           => 'inc/category-sidebar.tpl',
