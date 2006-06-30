@@ -283,9 +283,7 @@ sub get_filename {
         if ($state eq "I") {
             $path = "$envcvsroot/$file";
             $apath = "$envcvsroot/Attic/$file";
-        } elsif ($state eq "R") {
-            $path = $apath = "$envcvsroot/$repository/Attic/$file";
-        } else {
+        } else { 
             $path = "$envcvsroot/$repository/$file";
             $apath = "$envcvsroot/$repository/Attic/$file";
         }
