@@ -1243,6 +1243,8 @@ PRBool MsgFindKeyword(const nsACString &keyword, nsACString &keywords, nsACStrin
       {
         if (*end == ' ')
           end++;
+        if (*beforeStart == ' ' && endMatches)
+          start--;
         return PR_TRUE;
       }
       else 

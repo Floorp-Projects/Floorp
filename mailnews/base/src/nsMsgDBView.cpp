@@ -360,6 +360,11 @@ nsresult nsMsgDBView::AppendKeywordProperties(const char *keywords, nsISupportsA
   // append that as a property.
   nsCStringArray keywordsArray;
   nsCAutoString color;
+  // skip leading spaces 
+  while (*keywords == ' ')
+    keywords++;
+  if (!*keywords)
+    return NS_OK;
   keywordsArray.ParseString(keywords, " ");
   nsresult rv;
   if (!mTagService)
