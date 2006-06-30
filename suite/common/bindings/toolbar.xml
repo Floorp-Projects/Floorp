@@ -216,10 +216,12 @@
     </implementation>
   </binding>
 
-  <binding id="toolbargrippy" extends="xul:button">
-    <resources>
-      <stylesheet src="chrome://global/skin/toolbar.css"/>
-    </resources>
+  <binding id="toolbargrippy" display="xul:button"
+           extends="chrome://global/content/bindings/toolbar.xml#toolbar-base">
+    <content>
+      <xul:image class="toolbargrippy-arrow"/>
+      <xul:spacer class="toolbargrippy-texture" flex="1"/>
+    </content>
 
     <implementation>
       <property name="collapsed">
