@@ -6,5 +6,6 @@ class Collection extends AppModel {
                                 'Application' => array('className'  => 'Application'),
                                 'Choice' => array('className'  => 'Choice')
                                );
+
 }
 ?>

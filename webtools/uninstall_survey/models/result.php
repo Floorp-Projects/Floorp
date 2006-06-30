@@ -29,14 +29,14 @@ class Result extends AppModel {
         $params = $this->cleanArrayForSql($params);
 
         // We only want to see rows with comments
-        $_conditions = array("comments NOT LIKE ''");
+        $_conditions = "comments NOT LIKE ''";
 
         if (!empty($params['start_date'])) {
             $_timestamp = strtotime($params['start_date']);
 
             if (!($_timestamp == -1) || $_timestamp == false) {
                 $_date = date('Y-m-d H:i:s', $_timestamp);//sql format
-                array_push($_conditions, "`created` >= '{$_date}'");
+                $_conditions .= " AND `created` >= '{$_date}'";
             }
         }
         if (!empty($params['end_date'])) {
@@ -44,41 +44,50 @@ class Result extends AppModel {
 
             if (!($_timestamp == -1) || $_timestamp == false) {
                 $_date = date('Y-m-d 23:59:59', $_timestamp);//sql format
-                array_push($_conditions, "`created` <= '{$_date}'");
+                $_conditions .= " AND `created` <= '{$_date}'";
             }
         }
 
-        if (!empty($params['product'])) {
-            // product's come in looking like:
-            //      Mozilla Firefox 1.5.0.1
-            $_exp = explode(' ',urldecode($params['product']));
+        $_application_id = $this->Application->getIdFromUrl($params);
+        $_conditions .= " AND `results`.`application_id`={$_application_id}";
 
-            if(count($_exp) == 3) {
-                $_product = $_exp[0].' '.$_exp[1];
-
-                $_version = $_exp[2];
-
-                /* Note that 'Application' is not the actual name of the table!  You can
-                 * thank cake for that.*/
-                array_push($_conditions, "`Application`.`name` LIKE '{$_product}'");
-                array_push($_conditions, "`Application`.`version` LIKE '{$_version}'");
+        // Next determine our collection
+            if (!empty($params['collection'])) {
+                $_collection_id = $this->Choice->Collection->findByDescription($params['collection']);
+                $clear = true;
+                foreach ($_collection_id['Application'] as $var => $val) {
+                    if ($_application_id == $val['id']) {
+                        $clear = false;
+                    }
+                }
+                if ($clear) {
+                    $_id = $this->Application->getMaxCollectionId($_application_id, 'issue');
+                    $_collection_id['Collection']['id'] = $_id[0][0]['max'];
+                }
             } else {
-                // defaults I guess?
-                array_push($_conditions, "`Application`.`name` LIKE '".DEFAULT_APP_NAME."'");
-                array_push($_conditions, "`Application`.`version` LIKE '".DEFAULT_APP_VERSION."'");
+                $_id = $this->Application->getMaxCollectionId($_application_id, 'issue');
+                $_collection_id['Collection']['id'] = $_id[0][0]['max'];
             }
+        $_conditions .= " AND `collections`.`id`={$_collection_id['Collection']['id']}";
 
-        } else {
-            // I'm providing a default here, because otherwise all results will be
-            // returned (across all applications) and that is not desired
-            array_push($_conditions, "`Application`.`name` LIKE '".DEFAULT_APP_NAME."'");
-            array_push($_conditions, "`Application`.`version` LIKE '".DEFAULT_APP_VERSION."'");
-        }
+        $_query = "
+            SELECT 
+                COUNT(*) as count 
+            FROM 
+                results 
+            JOIN choices_results ON choices_results.result_id = results.id
+            JOIN choices ON choices_results.choice_id = choices.id
+            JOIN choices_collections ON choices_collections.choice_id = choices.id
+            JOIN collections ON collections.id = choices_collections.collection_id
+            
+            WHERE 
+             {$_conditions} 
+        ";
 
         // Do the actual query
-        $comments = $this->findCount($_conditions);
+        $comments = $this->query($_query);
 
-        return $comments;
+        return $comments[0][0]['count'];
     }
 
     /**
@@ -92,6 +101,8 @@ class Result extends AppModel {
     function getComments($params, $pagination, $privacy=true)
     {
         $params = $this->cleanArrayForSql($params);
+
+        $_application_id = $this->Application->getIdFromUrl($params);
 
         // We only want to see rows with comments
         $_conditions = array("comments NOT LIKE ''");
@@ -113,35 +124,51 @@ class Result extends AppModel {
             }
         }
 
-        if (!empty($params['product'])) {
-            // product's come in looking like:
-            //      Mozilla Firefox 1.5.0.1
-            $_exp = explode(' ',urldecode($params['product']));
+        $_application_id = $this->Application->getIdFromUrl($params);
+        array_push($_conditions, "`Result`.`application_id`={$_application_id}");
 
-            if(count($_exp) == 3) {
-                $_product = $_exp[0].' '.$_exp[1];
-
-                $_version = $_exp[2];
-
-                /* Note that 'Application' is not the actual name of the table!  You can
-                 * thank cake for that.*/
-                array_push($_conditions, "`Application`.`name` LIKE '{$_product}'");
-                array_push($_conditions, "`Application`.`version` LIKE '{$_version}'");
-            } else {
-                // defaults I guess?
-                array_push($_conditions, "`Application`.`name` LIKE '".DEFAULT_APP_NAME."'");
-                array_push($_conditions, "`Application`.`version` LIKE '".DEFAULT_APP_VERSION."'");
+        // Next determine our collection
+        if (!empty($params['collection'])) {
+            $_collection_id = $this->Choice->Collection->findByDescription($params['collection']);
+            $clear = true;
+            foreach ($_collection_id['Application'] as $var => $val) {
+                if ($_application_id == $val['id']) {
+                    $clear = false;
+                }
             }
-
+            if ($clear) {
+                $_id = $this->Application->getMaxCollectionId($_application_id, 'issue');
+                $_collection_id['Collection']['id'] = $_id[0][0]['max'];
+            }
         } else {
-            // I'm providing a default here, because otherwise all results will be
-            // returned (across all applications) and that is not desired
-            array_push($_conditions, "`Application`.`name` LIKE '".DEFAULT_APP_NAME."'");
-            array_push($_conditions, "`Application`.`version` LIKE '".DEFAULT_APP_VERSION."'");
+            $_id = $this->Application->getMaxCollectionId($_application_id, 'issue');
+            $_collection_id['Collection']['id'] = $_id[0][0]['max'];
         }
 
-        // Save ourselves quite a few joins
-        $comments = $this->findAll($_conditions, null, $pagination['order'], $pagination['show'], $pagination['page']);
+echo '<h1>TODOTHAT</h1>';
+        $_query = "
+            SELECT `Result`.`id`, 
+             `Result`.`comments`, `Result`.`created`
+            
+            FROM `results` AS `Result`
+            
+            JOIN choices_results ON choices_results.result_id = Result.id
+            JOIN choices ON choices_results.choice_id = choices.id
+            JOIN choices_collections ON choices_collections.choice_id = choices.id
+            JOIN collections ON collections.id = choices_collections.collection_id
+            
+            
+            WHERE ( comments NOT LIKE
+            '') 
+            AND collection_id={$_collection_id['Collection']['id']}
+            
+            AND Result.application_id={$_application_id}
+            
+            ORDER BY `Result`.`created` DESC
+            LIMIT 10
+        ";
+        $comments = $this->query($_query);
+        //$comments = $this->findAll($_conditions, null, $pagination['order'], $pagination['show'], $pagination['page']);
 
         if ($privacy) {
             // Pull out all the email addresses and phone numbers.  The original
@@ -330,49 +357,26 @@ class Result extends AppModel {
         */
 
         $_conditions = "1=1";
+
         // Firstly, determine our application
-        if (!empty($params['product'])) {
-
-            // product's come in looking like:
-            //      Mozilla Firefox 1.5.0.1
-            $_exp = explode(' ',urldecode($params['product']));
-            
-            if(count($_exp) == 3) {
-                $_product = $_exp[0].' '.$_exp[1];
-
-                $_version = $_exp[2];
-
-                $_conditions .= " AND `Application`.`name` LIKE '{$_product}'";
-                $_conditions .= " AND `Application`.`version` LIKE '{$_version}'";
-            } else {
-                // defaults I guess?
-                $_conditions .= " AND `Application`.`name` LIKE '".DEFAULT_APP_NAME."'";
-                $_conditions .= " AND `Application`.`version` LIKE '".DEFAULT_APP_VERSION."'";
-            }
-        } else {
-            // I'm providing a default here, because otherwise all results will be
-            // returned (across all applications) and that is not desired
-            $_conditions .= " AND `Application`.`name` LIKE '".DEFAULT_APP_NAME."'";
-            $_conditions .= " AND `Application`.`version` LIKE '".DEFAULT_APP_VERSION."'";
-        }
-
-        $_application_id = $this->Application->findAll($_conditions, 'Application.id');
+        $_application_id = $this->Application->getIdFromUrl($params);
+        $_conditions .= " AND `Result`.`application_id`={$_application_id}";
         
         // Next determine our collection
         if (!empty($params['collection'])) {
             $_collection_id = $this->Choice->Collection->findByDescription($params['collection']);
             $clear = true;
             foreach ($_collection_id['Application'] as $var => $val) {
-                if ($_application_id[0]['Application']['id'] == $val['id']) {
+                if ($_application_id == $val['id']) {
                     $clear = false;
                 }
             }
             if ($clear) {
-                $_id = $this->Application->getMaxCollectionId($_application_id[0]['Application']['id'], 'issue');
+                $_id = $this->Application->getMaxCollectionId($_application_id, 'issue');
                 $_collection_id['Collection']['id'] = $_id[0][0]['max'];
             }
         } else {
-            $_id = $this->Application->getMaxCollectionId($_application_id[0]['Application']['id'], 'issue');
+            $_id = $this->Application->getMaxCollectionId($_application_id, 'issue');
             $_collection_id['Collection']['id'] = $_id[0][0]['max'];
         }
 
@@ -387,7 +391,7 @@ class Result extends AppModel {
             JOIN collections ON collections.id = choices_collections.collection_id
             JOIN applications_collections ON applications_collections.collection_id = collections.id
             JOIN applications ON applications.id = applications_collections.application_id
-            AND applications.id = {$_application_id[0]['Application']['id']}
+            AND applications.id = {$_application_id}
             AND collections.id = {$_collection_id['Collection']['id']}
             AND choices.type = 'issue'
             ORDER BY choices.pos ASC
@@ -421,7 +425,7 @@ class Result extends AppModel {
                 results 
             JOIN choices_results ON results.id = choices_results.result_id
             WHERE 
-                results.application_id = {$_application_id[0]['Application']['id']}
+                results.application_id = {$_application_id}
             AND 
                 choices_results.choice_id in ({$_issue_ids})
         ";

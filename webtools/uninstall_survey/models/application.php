@@ -21,6 +21,45 @@ class Application extends AppModel {
 
         $this->Sanitize = new Sanitize();
     }
+
+    /**
+     * Expecting to have cake's version of $_GET
+     * Will return the default APP+Version if given invalid input.
+     */
+    function getIdFromUrl($params) 
+    {
+        $_conditions = array();
+
+        // defaults
+        if (empty($params['product'])) {
+            array_push($_conditions, "`Application`.`name` LIKE '".DEFAULT_APP_NAME."'");
+            array_push($_conditions, "`Application`.`version` LIKE '".DEFAULT_APP_VERSION."'");
+        } else {
+            // product's come in looking like:
+            //      Mozilla Firefox 1.5.0.1
+            $_exp = explode(' ',urldecode($params['product']));
+
+            if(count($_exp) == 3) {
+                $_product = $_exp[0].' '.$_exp[1];
+
+                $_version = $_exp[2];
+
+                array_push($_conditions, "`Application`.`name` LIKE '{$_product}'");
+                array_push($_conditions, "`Application`.`version` LIKE '{$_version}'");
+            } else {
+                array_push($_conditions, "`Application`.`name` LIKE '".DEFAULT_APP_NAME."'");
+                array_push($_conditions, "`Application`.`version` LIKE '".DEFAULT_APP_VERSION."'");
+            }
+        }
+
+        $_application_id = $this->findAll($_conditions, 'Application.id');
+        if (is_numeric($_application_id[0]['Application']['id'])) {
+            return $_application_id[0]['Application']['id'];
+        } else {
+            return false;
+        }
+    }
+
     /**
      * @param int application id
      * @return array set of intentions
