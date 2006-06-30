@@ -236,7 +236,7 @@
         </body>
       </method>
       
-      <method name="grippyClicked">
+      <method name="grippyTriggered">
         <body>
         <![CDATA[
           var toolbox = this.returnNode("toolbox");
@@ -251,9 +251,9 @@
     </implementation>  
     
     <handlers>
-      <handler event="click">
+      <handler event="command">
       <![CDATA[
-        this.grippyClicked();
+        this.grippyTriggered();
       ]]>
       </handler>
     </handlers>
