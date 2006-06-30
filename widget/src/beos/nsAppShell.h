@@ -44,14 +44,14 @@
 
 struct ThreadInterfaceData
 {
-  void	*data;
-  thread_id waitingThread;
+	void*     data;
+	thread_id waitingThread;
 };
 
 struct EventItem
 {
-  int32 code;
-  ThreadInterfaceData ifdata;
+	int32               code;
+	ThreadInterfaceData ifdata;
 };
 
 struct MethodInfo;
@@ -64,17 +64,17 @@ class nsAppShell : public nsBaseAppShell
 {
   public:
 	nsAppShell();
-	nsresult Init();
+	nsresult        Init();
 protected:
-	virtual void ScheduleNativeEventCallback();
-	virtual PRBool ProcessNextNativeEvent(PRBool mayWait);
-	virtual ~nsAppShell();
+	virtual void    ScheduleNativeEventCallback();
+	virtual PRBool  ProcessNextNativeEvent(PRBool mayWait);
+	virtual        ~nsAppShell();
 
 private:
-    port_id					eventport;
-    sem_id					syncsem;
-    bool is_port_error;
-	void InvokeBeOSMessage(EventItem *item);    
+	port_id	       eventport;
+	volatile bool  scheduled;
+	bool           is_port_error;
+	bool           InvokeBeOSMessage(bigtime_t timeout);    
 };
 
 #endif // nsAppShell_h__
