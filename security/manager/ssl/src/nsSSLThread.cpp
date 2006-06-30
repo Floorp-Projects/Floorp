@@ -222,8 +222,11 @@ PRInt16 nsSSLThread::requestPoll(nsNSSSocketInfo *si, PRInt16 in_flags, PRInt16 
   {
     nsAutoLock threadLock(ssl_thread_singleton->mMutex);
 
-    if (si == ssl_thread_singleton->mBusySocket)
+    if (ssl_thread_singleton->mBusySocket)
     {
+      // If there is currently a socket busy on the SSL thread,
+      // use our tricky implementation.
+      
       switch (si->mThreadData->mSSLState)
       {
         case nsSSLSocketThreadData::ssl_writing_done:
@@ -251,13 +254,47 @@ PRInt16 nsSSLThread::requestPoll(nsNSSSocketInfo *si, PRInt16 in_flags, PRInt16 
         case nsSSLSocketThreadData::ssl_pending_write:
         case nsSSLSocketThreadData::ssl_pending_read:
         {
-          // The lower layer of the socket is currently the pollable event,
-          // which signals the readable state.
-          
-          return PR_POLL_READ;
+          if (si == ssl_thread_singleton->mBusySocket)
+          {
+            // The lower layer of the socket is currently the pollable event,
+            // which signals the readable state.
+            
+            return PR_POLL_READ;
+          }
+          else
+          {
+            // We should never get here, well, at least not with the current
+            // implementation of SSL thread, where we have one worker only.
+            // While another socket is busy, this socket "si" 
+            // can not be marked with pending I/O at the same time.
+            
+            NS_NOTREACHED("Socket not busy on SSL thread marked as pending");
+            return 0;
+          }
         }
         
         case nsSSLSocketThreadData::ssl_idle:
+        {
+          if (si != ssl_thread_singleton->mBusySocket)
+          {
+            // Some other socket is currently busy on the SSL thread.
+            // That busy socket could currently be blocked (e.g. by UI)
+            // If socket "si" had become readable/writeable,
+            // and we reported the event to the caller,
+            // the caller would end up in a busy loop. continously trying to
+            // do I/O, although our read/write function will not be able to
+            // (because of the blocked busy socket on the SSL thread).
+            // To avoid that scenario, for socket "si".we will report 
+            // "neither readable nor writeable" to the caller 
+            // Let's fake our caller did not ask for readable or writeable
+            // when querying the lower layer.
+            
+            in_flags &= ~(PR_POLL_READ | PR_POLL_WRITE);
+          }
+          else
+            break;
+        }
+        
         default:
           break;
       }
