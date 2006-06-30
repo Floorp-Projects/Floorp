@@ -233,7 +233,7 @@ nsSVGGlyphFrame::IsFrameOfType(PRUint32 aFlags) const
 // nsISVGChildFrame methods
 
 NS_IMETHODIMP
-nsSVGGlyphFrame::PaintSVG(nsISVGRendererCanvas* canvas)
+nsSVGGlyphFrame::PaintSVG(nsISVGRendererCanvas* canvas, nsRect *aDirtyRect)
 {
 #ifdef DEBUG
   //printf("nsSVGGlyphFrame(%p)::Paint\n", this);

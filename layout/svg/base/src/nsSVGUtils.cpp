@@ -622,6 +622,7 @@ GetMaskSurface(nsISVGRendererCanvas *aCanvas, nsIFrame *aFrame, float opacity)
 
 void
 nsSVGUtils::PaintChildWithEffects(nsISVGRendererCanvas *aCanvas,
+                                  nsRect *aDirtyRect,
                                   nsIFrame *aFrame)
 {
   nsISVGChildFrame *svgChildFrame;
@@ -638,6 +639,17 @@ nsSVGUtils::PaintChildWithEffects(nsISVGRendererCanvas *aCanvas,
 
   AddEffectProperties(aFrame);
   nsFrameState state = aFrame->GetStateBits();
+
+  /* Check if we need to draw anything */
+  if (aDirtyRect) {
+    if (state & NS_STATE_SVG_FILTERED) {
+      if (!aDirtyRect->Intersects(FindFilterInvalidation(aFrame)))
+        return;
+    } else if (svgChildFrame->HasValidCoveredRect()) {
+      if (!aDirtyRect->Intersects(aFrame->GetRect()))
+        return;
+    }
+  }
 
   /* SVG defines the following rendering model:
    *
@@ -688,7 +700,7 @@ nsSVGUtils::PaintChildWithEffects(nsISVGRendererCanvas *aCanvas,
                               aFrame->GetProperty(nsGkAtoms::filter));
     property->mFilter->FilterPaint(aCanvas, svgChildFrame);
   } else {
-    svgChildFrame->PaintSVG(aCanvas);
+    svgChildFrame->PaintSVG(aCanvas, aDirtyRect);
   }
   
   if (state & NS_STATE_SVG_CLIPPED_TRIVIAL) {

@@ -266,7 +266,7 @@ nsSVGMaskFrame::MaskPaint(nsISVGRendererCanvas* aCanvas,
 
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
-    nsSVGUtils::PaintChildWithEffects(aCanvas, kid);
+    nsSVGUtils::PaintChildWithEffects(aCanvas, nsnull, kid);
   }
 
   aCanvas->PopSurface();

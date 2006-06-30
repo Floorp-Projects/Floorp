@@ -292,7 +292,7 @@ nsSVGPatternFrame::PaintPattern(nsISVGRendererCanvas* canvas,
   nsRect dummyRect;
   for (nsIFrame* kid = firstKid; kid;
        kid = kid->GetNextSibling()) {
-    nsSVGUtils::PaintChildWithEffects(canvas, kid);
+    nsSVGUtils::PaintChildWithEffects(canvas, nsnull, kid);
   }
   mSource = nsnull;
 

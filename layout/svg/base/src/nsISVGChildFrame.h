@@ -50,14 +50,16 @@ class nsIDOMSVGMatrix;
 struct nsRect;
 
 #define NS_ISVGCHILDFRAME_IID \
-{ 0xa28b3f99, 0xdf64, 0x42eb, { 0x9e, 0x90, 0x63, 0x54, 0xd7, 0x46, 0x5b, 0x31 } }
+{ 0xa365580d, 0x9d14, 0x4e33, { 0x99, 0xfa, 0x81, 0x07, 0x0d, 0xa0, 0xfe, 0xa6 } }
 
 class nsISVGChildFrame : public nsISupports {
 public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGCHILDFRAME_IID)
 
-  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas)=0;
+  // Paint this frame - aDirtyRect is the area being redrawn, in frame
+  // offset pixel coordinates
+  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas, nsRect *aDirtyRect)=0;
 
   // Check if this frame or children contain the given point,
   // specified in device pixels relative to the origin of the outer
@@ -91,6 +93,9 @@ public:
 
   // Are we a container frame?
   NS_IMETHOD_(PRBool) IsDisplayContainer()=0;
+
+  // Does this frame have an current covered region in mRect (aka GetRect())?
+  NS_IMETHOD_(PRBool) HasValidCoveredRect()=0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGChildFrame, NS_ISVGCHILDFRAME_IID)

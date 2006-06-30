@@ -277,7 +277,8 @@ nsSVGPathGeometryFrame::UpdateMarkerProperty()
 // nsISVGChildFrame methods
 
 NS_IMETHODIMP
-nsSVGPathGeometryFrame::PaintSVG(nsISVGRendererCanvas* canvas)
+nsSVGPathGeometryFrame::PaintSVG(nsISVGRendererCanvas* canvas,
+                                 nsRect *aDirtyRect)
 {
   if (!GetStyleVisibility()->IsVisible())
     return NS_OK;

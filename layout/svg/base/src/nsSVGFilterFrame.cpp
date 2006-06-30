@@ -243,7 +243,7 @@ nsSVGFilterFrame::FilterFailCleanup(nsISVGRendererCanvas *aCanvas,
   aTarget->SetOverrideCTM(nsnull);
   aTarget->SetMatrixPropagation(PR_TRUE);
   aTarget->NotifyCanvasTMChanged(PR_TRUE);
-  aTarget->PaintSVG(aCanvas);
+  aTarget->PaintSVG(aCanvas, nsnull);
 }
 
 NS_IMETHODIMP
@@ -281,7 +281,7 @@ nsSVGFilterFrame::FilterPaint(nsISVGRendererCanvas *aCanvas,
     if (unimplementedFilter)
       fprintf(stderr, "FilterFrame: unimplemented filter element\n");
 #endif
-    aTarget->PaintSVG(aCanvas);
+    aTarget->PaintSVG(aCanvas, nsnull);
     return NS_OK;
   }
 
@@ -371,7 +371,7 @@ nsSVGFilterFrame::FilterPaint(nsISVGRendererCanvas *aCanvas,
   }
 
   aCanvas->PushSurface(surface, PR_FALSE);
-  aTarget->PaintSVG(aCanvas);
+  aTarget->PaintSVG(aCanvas, nsnull);
   aCanvas->PopSurface();
 
   mPrimitiveUnits->GetAnimVal(&type);
