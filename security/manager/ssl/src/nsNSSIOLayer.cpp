@@ -2494,9 +2494,20 @@ nsSSLIOLayerSetOptions(PRFileDesc *fd, PRBool forSTARTTLS,
   nsCAutoString key;
   key = nsDependentCString(host) + NS_LITERAL_CSTRING(":") + nsPrintfCString("%d", port);
 
-  if (nsSSLIOLayerHelpers::isKnownAsIntolerantSite(key) && 
-      SECSuccess != SSL_OptionSet(fd, SSL_ENABLE_TLS, PR_FALSE)) {
-    return NS_ERROR_FAILURE;
+  if (nsSSLIOLayerHelpers::isKnownAsIntolerantSite(key)) {
+    if (SECSuccess != SSL_OptionSet(fd, SSL_ENABLE_TLS, PR_FALSE))
+      return NS_ERROR_FAILURE;
+      
+    // We assume that protocols that use the STARTTLS mechanism should support
+    // modern hellos. For other protocols, if we suspect a site 
+    // does not support TLS, let's also use V2 hellos.
+    // One advantage of this approach, if a site only supports the older
+    // hellos, it is more likely that we will get a reasonable error code
+    // on our single retry attempt.
+    
+    if (!forSTARTTLS &&
+        SECSuccess != SSL_OptionSet(fd, SSL_V2_COMPATIBLE_HELLO, PR_TRUE))
+      return NS_ERROR_FAILURE;
   }
 
   if (SECSuccess != SSL_OptionSet(fd, SSL_HANDSHAKE_AS_CLIENT, PR_TRUE)) {
