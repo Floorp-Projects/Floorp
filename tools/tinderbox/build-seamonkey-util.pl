@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.324 $ ';
+$::UtilsVersion = '$Revision: 1.325 $ ';
 
 package TinderUtils;
 
@@ -829,7 +829,11 @@ sub BuildIt {
       die 'ASSERT: \$SubObjDir needs a trailing slash!';
 
     my $binary_dir;
-    $binary_dir = "$build_dir/$Settings::Topsrcdir/${Settings::ObjDir}/${Settings::SubObjDir}$Settings::DistBin";
+    if ($Settings::TestOnlyTinderbox){
+        $binary_dir = "$build_dir/$Settings::DownloadBuildDir/firefox";
+    } else {
+        $binary_dir = "$build_dir/$Settings::Topsrcdir/${Settings::ObjDir}/${Settings::SubObjDir}$Settings::DistBin";
+    }
 
     my $dist_dir = "$build_dir/$Settings::Topsrcdir/${Settings::ObjDir}/dist";
     my $full_binary_name = "$binary_dir/$binary_basename";
@@ -1113,14 +1117,14 @@ sub BuildIt {
             my $status = 0;
             if ( -f $prebuilt) {
               $status = run_shell_command("rm -rf $prebuilt");
-              $build_status = 'busted' if not ($status);
+              $build_status = 'busted' if ($status);
             }
             $status = run_shell_command("mkdir -p $prebuilt");
-            $build_status = 'busted' if not ($status);
-            $status = run_shell_command("wget -O $prebuilt/build.tgz $Settings::DownloadBuildURL");
-            $build_status = 'busted' if not ($status);
-            $status = run_shell_command("tar -C $prebuilt -xvf $prebuilt/build.tgz");
-            $build_status = 'busted' if not ($status);
+            $build_status = 'busted' if ($status);
+            $status = run_shell_command("wget -qO $prebuilt/build.tgz $Settings::DownloadBuildURL");
+            $build_status = 'busted' if ($status);
+            $status = run_shell_command("tar -C $prebuilt -xf $prebuilt/build.tgz");
+            $build_status = 'busted' if ($status);
           }
 
           if ($build_status ne 'busted' and BinaryExists($full_binary_name)) {
