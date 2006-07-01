@@ -237,6 +237,8 @@ nsPrefWindow.prototype =
                 var pageData = this.wsm.dataManager.getPageData( pageTag );
                 if ("initialized" in pageData && pageData.initialized)
                   {
+                if ( "elementIDs" in pageData )
+                  pageData = pageData.elementIDs;
                 for( var elementID in pageData )
                   {
                     if (elementID == "initialized") continue;
@@ -362,7 +364,7 @@ nsPrefWindow.prototype =
                 var prefElements = window.frames[this.contentFrame].document.getElementsByAttribute( "prefstring", "*" );
 				if (this.pagePrefChanged)
          			this.pagePrefUpdated[aPageTag] = [];
-                this.wsm.dataManager.pageData[aPageTag] = [];
+                this.wsm.dataManager.getPageData( aPageTag );
                 for( var i = 0; i < prefElements.length; i++ )
                   {
                     var prefstring    = prefElements[i].getAttribute( "prefstring" );
