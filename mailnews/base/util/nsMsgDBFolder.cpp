@@ -95,6 +95,7 @@ static PRTime gtimeOfLastPurgeCheck;    //variable to know when to check for pur
 
 #define PREF_MAIL_PROMPT_PURGE_THRESHOLD "mail.prompt_purge_threshhold"
 #define PREF_MAIL_PURGE_THRESHOLD "mail.purge_threshhold"
+#define PREF_MAIL_PURGE_ASK "mail.purge.ask"
 #define PREF_MAIL_WARN_FILTER_CHANGED "mail.warn_filter_changed"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -1594,11 +1595,51 @@ nsMsgDBFolder::AutoCompact(nsIMsgWindow *aWindow)
          NS_ENSURE_SUCCESS(rv, rv);
          if (totalExpungedBytes > (purgeThreshold*1024))
          {
-           nsXPIDLString confirmString;
            PRBool okToCompact = PR_FALSE;
-           rv = GetStringFromBundle("autoCompactAllFolders", getter_Copies(confirmString));
-           if (NS_SUCCEEDED(rv) && confirmString)
-             ThrowConfirmationPrompt(aWindow, confirmString.get(), &okToCompact);
+
+           nsCOMPtr<nsIPrefService> pref = do_GetService(NS_PREFSERVICE_CONTRACTID);
+           nsCOMPtr<nsIPrefBranch> branch;
+           pref->GetBranch("", getter_AddRefs(branch));
+          
+           PRBool askBeforePurge;
+           branch->GetBoolPref(PREF_MAIL_PURGE_ASK, &askBeforePurge);
+           if (askBeforePurge)
+           {
+             nsCOMPtr <nsIStringBundle> bundle;
+             rv = GetBaseStringBundle(getter_AddRefs(bundle));
+             NS_ENSURE_SUCCESS(rv, rv);
+             nsXPIDLString dialogTitle;
+             nsXPIDLString confirmString;
+             nsXPIDLString checkboxText;
+
+             rv = bundle->GetStringFromName(NS_LITERAL_STRING("autoCompactAllFoldersTitle").get(), getter_Copies(dialogTitle));
+             NS_ENSURE_SUCCESS(rv, rv);
+             rv = bundle->GetStringFromName(NS_LITERAL_STRING("autoCompactAllFolders").get(), getter_Copies(confirmString));
+             NS_ENSURE_SUCCESS(rv, rv);
+             rv = bundle->GetStringFromName(NS_LITERAL_STRING("autoCompactAllFoldersCheckbox").get(), getter_Copies(checkboxText));
+             NS_ENSURE_SUCCESS(rv, rv);
+
+             PRBool checkValue = PR_FALSE;
+             PRInt32 buttonPressed = 0;
+
+             nsCOMPtr<nsIPrompt> dialog;
+             rv = aWindow->GetPromptDialog(getter_AddRefs(dialog));
+             NS_ENSURE_SUCCESS(rv, rv);
+
+             rv = dialog->ConfirmEx(dialogTitle.get(), confirmString.get(), nsIPrompt::STD_OK_CANCEL_BUTTONS,
+                                    nsnull, nsnull, nsnull, checkboxText.get(), &checkValue, &buttonPressed);
+             NS_ENSURE_SUCCESS(rv, rv);
+             if (!buttonPressed)
+             {
+               okToCompact = PR_TRUE;
+
+               if (checkValue)
+                 branch->SetBoolPref(PREF_MAIL_PURGE_ASK, PR_FALSE);
+             }
+           }
+           else
+             okToCompact = PR_TRUE;
+
            if (okToCompact)
            {
              if ( localExpungedBytes > 0)

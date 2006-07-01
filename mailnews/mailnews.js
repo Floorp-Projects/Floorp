@@ -210,8 +210,9 @@ pref("mailnews.reply_header_originalmessage",   "chrome://messenger/locale/messe
 
 pref("mailnews.reply_to_self_check_all_ident", false);
 
-pref("mail.purge_threshhold",                100);
-pref("mail.prompt_purge_threshhold",             false);   
+pref("mail.purge_threshhold",              100);
+pref("mail.prompt_purge_threshhold",       false);
+pref("mail.purge.ask",                     true);
 
 pref("mailnews.offline_sync_mail",         false);
 pref("mailnews.offline_sync_news",         false);
