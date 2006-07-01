@@ -307,21 +307,57 @@ array_length_getter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 static JSBool
 array_length_setter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-    jsuint newlen, oldlen, slot;
+    jsuint newlen, oldlen, gap, index;
     jsid id2;
     jsval junk;
+    JSObject *iter;
+    JSTempValueRooter tvr;
+    JSBool ok;
 
     if (!ValueIsLength(cx, *vp, &newlen))
         return JS_FALSE;
     if (!js_GetLengthProperty(cx, obj, &oldlen))
         return JS_FALSE;
-    slot = oldlen;
-    while (slot > newlen) {
-        --slot;
-        if (!IndexToId(cx, slot, &id2))
-            return JS_FALSE;
-        if (!OBJ_DELETE_PROPERTY(cx, obj, id2, &junk))
-            return JS_FALSE;
+    if (oldlen > newlen) {
+        if (oldlen - newlen < (1 << 24)) {
+            do {
+                --oldlen;
+                if (!IndexToId(cx, oldlen, &id2))
+                    return JS_FALSE;
+                if (!OBJ_DELETE_PROPERTY(cx, obj, id2, &junk))
+                    return JS_FALSE;
+            } while (oldlen != newlen);
+        } else {
+            /*
+             * We are going to remove a lot of indexes in a presumably sparse
+             * array. So instead of looping through indexes between newlen and
+             * oldlen, we iterate through all properties and remove those that
+             * correspond to indexes from the [newlen, oldlen) range.
+             * See bug 322135.
+             */
+            iter = JS_NewPropertyIterator(cx, obj);
+            if (!iter)
+                return JS_FALSE;
+
+            /* Protect iter against GC in OBJ_DELETE_PROPERTY. */
+            JS_PUSH_SINGLE_TEMP_ROOT(cx, iter, &tvr);
+            gap = oldlen - newlen;
+            for (;;) {
+                ok = JS_NextProperty(cx, iter, &id2);
+                if (!ok)
+                    break;
+                if (id2 == JSVAL_VOID)
+                    break;
+                if (js_IdIsIndex(id2, &index) && index - newlen < gap) {
+                    ok = OBJ_DELETE_PROPERTY(cx, obj, id2, &junk);
+                    if (!ok)
+                        break;
+                }
+            }
+            JS_POP_TEMP_ROOT(cx, &tvr);
+            if (!ok)
+                return JS_FALSE;
+        }
     }
     return IndexToValue(cx, newlen, vp);
 }
