@@ -235,7 +235,7 @@ function FinalizeSignonDeletions() {
 
 function HandleSignonKeyPress(e) {
   if (e.keyCode == 46) {
-    DeleteSignonSelected();
+    DeleteSignon();
   }
 }
 
