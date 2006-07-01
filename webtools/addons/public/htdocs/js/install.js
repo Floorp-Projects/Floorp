@@ -48,7 +48,7 @@ function install( aEvent, extName, iconURL, extHash)  {
         // We optionally add this to params[] because installTrigger
         // will still try to compare a null hash as long as the var is set.
         if (extHash) {
-            params[extName][Hash] = extHash;
+            params[extName].Hash = extHash;
         }
 
         InstallTrigger.install(params);
