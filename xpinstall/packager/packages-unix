@@ -79,6 +79,7 @@ bin/libgtkxtbin.so
 bin/libjsj.so
 bin/libprotocol.so
 bin/libgkgfx.so
+bin/libthebes.so
 bin/libmoz_art_lgpl.so
 bin/run-mozilla.sh
 bin/regExport
@@ -102,6 +103,7 @@ bin/components/libwindowds.so
 bin/components/libintlapp.so
 bin/components/libxpautocomplete.so
 bin/components/libsearchservice.so
+bin/components/libgkgfxthebes.so
 bin/components/appstartup.xpt
 bin/components/bookmarks.xpt
 bin/components/directory.xpt

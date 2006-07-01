@@ -58,6 +58,7 @@ bin/components/xpinstal.dll
 bin/README.txt,bin/readme.txt
 bin/LICENSE,bin/license.txt
 bin/gkgfx.dll
+bin/thebes.dll
 ;bin/components/gkgfxwin.dll
 bin/components/gfx_os2.dll
 ;bin/components/gkwidget.dll
@@ -149,6 +150,7 @@ bin/components/content_xslt.xpt
 bin/components/content_xtf.xpt
 bin/components/xuldoc.xpt
 bin/components/xultmpl.xpt
+bin/components/gkgfxthebes.dll
 bin/components/gklayout.dll
 bin/components/gkparser.dll
 bin/components/gkplugin.dll

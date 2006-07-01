@@ -69,6 +69,7 @@ components\gfx.xpt
 ; layout
 moz_art_lgpl.dll
 components\gkcontent.dll
+components\gkgfxthebes.dll                   
 components\gklayout.dll                   
 components\gkparser.dll                 
 components\layout_base.xpt              
