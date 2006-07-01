@@ -38,6 +38,16 @@ use constant DB_TABLE => 'keyworddefs';
 
 sub description       { return $_[0]->{'description'}; }
 
+sub bug_count {
+    ($_[0]->{'bug_count'}) ||=
+      Bugzilla->dbh->selectrow_array('SELECT COUNT(keywords.bug_id) AS bug_count
+                                        FROM keyworddefs
+                                   LEFT JOIN keywords
+                                          ON keyworddefs.id = keywords.keywordid
+                                       WHERE keyworddefs.id=?', undef, ($_[0]->id));
+    return $_[0]->{'bug_count'};
+}
+
 ###############################
 ####      Subroutines    ######
 ###############################
@@ -46,6 +56,29 @@ sub keyword_count {
     my ($count) = 
         Bugzilla->dbh->selectrow_array('SELECT COUNT(*) FROM keyworddefs');
     return $count;
+}
+
+sub get_all_with_bug_count {
+    my $class = shift;
+    my $dbh = Bugzilla->dbh;
+    my $keywords =
+      $dbh->selectall_arrayref('SELECT ' . join(', ', DB_COLUMNS) . ',
+                                       COUNT(keywords.bug_id) AS bug_count
+                                  FROM keyworddefs
+                             LEFT JOIN keywords
+                                    ON keyworddefs.id = keywords.keywordid ' .
+                                  $dbh->sql_group_by('keyworddefs.id',
+                                                     'keyworddefs.name,
+                                                      keyworddefs.description') . '
+                                 ORDER BY keyworddefs.name', {'Slice' => {}});
+    if (!$keywords) {
+        return [];
+    }
+    
+    foreach my $keyword (@$keywords) {
+        bless($keyword, $class);
+    }
+    return $keywords;
 }
 
 1;
@@ -63,6 +96,8 @@ Bugzilla::Keyword - A Keyword that can be added to a bug.
  my $count = Bugzilla::Keyword::keyword_count;
 
  my $description = $keyword->description;
+
+ my $keywords = Bugzilla::Keyword->get_all_with_bug_count();
 
 =head1 DESCRIPTION
 
@@ -86,6 +121,16 @@ implements.
               if there are any keywords defined at all.
  Params:      none
  Returns:     An integer, the count of keywords.
+
+=item C<get_all_with_bug_count()> 
+
+ Description: Returns all defined keywords. This is an efficient way
+              to get the associated bug counts, as only one SQL query
+              is executed with this method, instead of one per keyword
+              when calling get_all and then bug_count.
+ Params:      none
+ Returns:     A reference to an array of Keyword objects, or an empty
+              arrayref if there are no keywords.
 
 =back
 

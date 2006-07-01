@@ -27,6 +27,7 @@ use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Util;
 use Bugzilla::Error;
+use Bugzilla::Keyword;
 
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
@@ -79,17 +80,7 @@ $vars->{'action'} = $action;
 
 
 if ($action eq "") {
-    my @keywords;
-
-    $vars->{'keywords'} =
-      $dbh->selectall_arrayref('SELECT keyworddefs.id, keyworddefs.name,
-                                       keyworddefs.description,
-                                       COUNT(keywords.bug_id) AS bug_count
-                                  FROM keyworddefs
-                             LEFT JOIN keywords
-                                    ON keyworddefs.id = keywords.keywordid ' .
-                                  $dbh->sql_group_by('id', 'name, description') . '
-                                 ORDER BY keyworddefs.name', {'Slice' => {}});
+    $vars->{'keywords'} = Bugzilla::Keyword->get_all_with_bug_count();
 
     print $cgi->header();
     $template->process("admin/keywords/list.html.tmpl", $vars)
