@@ -549,7 +549,7 @@ nsPopupSetFrame::ActivatePopup(nsPopupFrameList* aEntry, PRBool aActivateFlag)
           viewManager->ResizeView(view, r);
           if (aEntry->mIsOpen) {
             aEntry->mIsOpen = PR_FALSE;
-            FireDOMEventSynch(NS_LITERAL_STRING("DOMMenuInactive"), aEntry->mPopupContent);
+            FireDOMEvent(NS_LITERAL_STRING("DOMMenuInactive"), aEntry->mPopupContent);
           }
         }
       }
