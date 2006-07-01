@@ -673,11 +673,11 @@
     <para>
       For maximum flexibility, customizing this means editing Bugzilla's Perl 
       code. This gives the administrator complete control over exactly who is
-      allowed to do what. The relevant function is called 
-      <filename>CheckCanChangeField()</filename>,
-      and is found in <filename>process_bug.cgi</filename> in your 
-      Bugzilla directory. If you open that file and search for 
-      <quote>sub CheckCanChangeField</quote>, you'll find it.
+      allowed to do what. The relevant method is called
+      <filename>check_can_change_field()</filename>,
+      and is found in <filename>Bug.pm</filename> in your
+      Bugzilla/ directory. If you open that file and search for
+      <quote>sub check_can_change_field</quote>, you'll find it.
     </para>
     
     <para>
