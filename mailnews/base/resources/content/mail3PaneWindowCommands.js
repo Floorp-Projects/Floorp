@@ -859,7 +859,10 @@ function IsRenameFolderEnabled()
 
 function IsCanSearchMessagesEnabled()
 {
-  var folder = GetMsgFolderFromUri(GetSelectedFolderURI(), false);
+  var folderURI = GetSelectedFolderURI();
+  if (!folderURI)
+    return false;
+  var folder = GetMsgFolderFromUri(folderURI, false);
   var isVirtualFolder = folder.flags & MSG_FOLDER_FLAG_VIRTUAL;
   return folder.server.canSearchMessages && !isVirtualFolder;
 }
