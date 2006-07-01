@@ -261,17 +261,16 @@ PRInt16 nsSSLThread::requestPoll(nsNSSSocketInfo *si, PRInt16 in_flags, PRInt16 
             
             return PR_POLL_READ;
           }
-          else
-          {
-            // We should never get here, well, at least not with the current
-            // implementation of SSL thread, where we have one worker only.
-            // While another socket is busy, this socket "si" 
-            // can not be marked with pending I/O at the same time.
-            
-            NS_NOTREACHED("Socket not busy on SSL thread marked as pending");
-            return 0;
-          }
+          
+          // We should never get here, well, at least not with the current
+          // implementation of SSL thread, where we have one worker only.
+          // While another socket is busy, this socket "si" 
+          // can not be marked with pending I/O at the same time.
+          
+          NS_NOTREACHED("Socket not busy on SSL thread marked as pending");
+          return 0;
         }
+        break;
         
         case nsSSLSocketThreadData::ssl_idle:
         {
@@ -291,9 +290,8 @@ PRInt16 nsSSLThread::requestPoll(nsNSSSocketInfo *si, PRInt16 in_flags, PRInt16 
             
             in_flags &= ~(PR_POLL_READ | PR_POLL_WRITE);
           }
-          else
-            break;
         }
+        break;
         
         default:
           break;
