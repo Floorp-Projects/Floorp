@@ -23,8 +23,11 @@
         <getter>
           <![CDATA[
             var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            // Won't create accessible for (menu)popup if parent node is menu
+            // to avoid redundant accessible for menu
             if (this.localName == "popup" || this.localName == "menupopup")
-              return accService.createXULMenupopupAccessible(this);
+              return (this.parentNode.localName != "menu") ?
+                     accService.createXULMenupopupAccessible(this): null;
             else if (this.localName == "tooltip")
               return accService.createXULTooltipAccessible(this);
             return null;
