@@ -435,8 +435,8 @@ NS_IMETHODIMP nsDocAccessible::Init()
       mRoleMapEntry->role != ROLE_ALERT &&
       mRoleMapEntry->role != ROLE_DOCUMENT) {
     // Document accessible can only have certain roles
-    // This was set in nsAccessible::Init() based on xhtml2:role attribute
-    mRoleMapEntry = nsnull; // xhtml2:role is not valid
+    // This was set in nsAccessible::Init() based on dynamic role attribute
+    mRoleMapEntry = nsnull; // role attribute is not valid for a document
   }
 
   return rv;
@@ -756,7 +756,8 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
     return;
   }
 
-  if (aNameSpaceID == kNameSpaceID_XHTML2_Unofficial) {
+  if (aNameSpaceID == kNameSpaceID_XHTML2_Unofficial ||
+      aNameSpaceID == kNameSpaceID_XHTML) {
     if (aAttribute == nsAccessibilityAtoms::role) {
       InvalidateCacheSubtree(aContent, nsIAccessibleEvent::EVENT_REORDER);
     }
@@ -802,8 +803,7 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
   }
   else if (aNameSpaceID == kNameSpaceID_WAIProperties) {
     // DHTML accessibility attributes
-    if (!aContent->HasAttr(kNameSpaceID_XHTML2_Unofficial,
-                           nsAccessibilityAtoms::role)) {
+    if (HasRoleAttribute(aContent)) {
       // We don't care about DHTML state changes unless there is
       // a DHTML role set for the element
       return;
@@ -825,10 +825,9 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
       // This affects whether the accessible supports nsIAccessibleSelectable.
       // COM says we cannot change what interfaces are supported on-the-fly,
       // so invalidate this object. A new one will be created on demand.
-      if (aContent->HasAttr(kNameSpaceID_XHTML2_Unofficial,
-                            nsAccessibilityAtoms::role)) {
+      if (HasRoleAttribute(aContent)) {
         // The multiselect and other waistate attributes only take affect
-        // when XHTML2:role is present
+        // when dynamic content role is present
         InvalidateCacheSubtree(aContent, nsIAccessibleEvent::EVENT_REORDER);
       }
     }
@@ -1161,8 +1160,8 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
     // STATE_INVISIBLE for the event's accessible object.
     FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_SHOW, childNode, nsnull);
     nsAutoString role;
-    aChild->GetAttr(kNameSpaceID_XHTML2_Unofficial, nsAccessibilityAtoms::role, role);
-    if (StringEndsWith(role, NS_LITERAL_STRING(":menu"), nsCaseInsensitiveStringComparator())) {
+    if (GetRoleAttribute(aChild, role) &&
+        StringEndsWith(role, NS_LITERAL_STRING(":menu"), nsCaseInsensitiveStringComparator())) {
       FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_MENUPOPUPSTART, childNode, nsnull);
     }
   }
@@ -1172,8 +1171,8 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
     nsIContent *ancestor = aChild;
     nsAutoString role;
     while (ancestor) {
-      ancestor->GetAttr(kNameSpaceID_XHTML2_Unofficial, nsAccessibilityAtoms::role, role);
-      if (StringEndsWith(role, NS_LITERAL_STRING(":alert"), nsCaseInsensitiveStringComparator())) {
+      if (GetRoleAttribute(ancestor, role) &&
+          StringEndsWith(role, NS_LITERAL_STRING(":alert"), nsCaseInsensitiveStringComparator())) {
         nsCOMPtr<nsIDOMNode> alertNode(do_QueryInterface(ancestor));
         FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_ALERT, alertNode, nsnull);
         break;

@@ -206,7 +206,7 @@ protected:
   PRInt32 mAccChildCount;
 
   static nsRoleMapEntry gWAIRoleMap[];
-  static nsStateMapEntry gDisabledStateMap;
+  static nsStateMapEntry gUnivStateMap[];
 };
 
 

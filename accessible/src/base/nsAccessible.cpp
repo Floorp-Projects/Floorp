@@ -109,7 +109,7 @@ NS_IMPL_RELEASE_INHERITED(nsAccessible, nsAccessNode)
 nsresult nsAccessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   // Custom-built QueryInterface() knows when we support nsIAccessibleSelectable
-  // based on xhtml2:role and waistate:multiselect
+  // based on role attribute and waistate:multiselect
   *aInstancePtr = nsnull;
   
   if (aIID.Equals(NS_GET_IID(nsIAccessible))) {
@@ -129,8 +129,7 @@ nsresult nsAccessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     if (!content) {
       return NS_ERROR_FAILURE; // This accessible has been shut down
     }
-    if (!content->HasAttr(kNameSpaceID_XHTML2_Unofficial, 
-                         nsAccessibilityAtoms::role)) {
+    if (HasRoleAttribute(content)) {
       // If we have an XHTML role attribute present and the
       // waistate multiselect attribute not empty or false, then we need
       // to support nsIAccessibleSelectable
@@ -234,11 +233,8 @@ NS_IMETHODIMP nsAccessible::GetDescription(nsAString& aDescription)
   }
   if (!content->IsNodeOfType(nsINode::eTEXT)) {
     nsAutoString description;
-    if (content->HasAttr(kNameSpaceID_XHTML2_Unofficial, 
-                         nsAccessibilityAtoms::role)) {
-      GetTextFromRelationID(nsAccessibilityAtoms::describedby, description);
-    }
-    if (description.IsEmpty()) {
+    nsresult rv = GetTextFromRelationID(nsAccessibilityAtoms::describedby, description);
+    if (NS_FAILED(rv)) {
       PRBool isXUL = content->IsNodeOfType(nsINode::eXUL);
       if (isXUL) {
         // Try XUL <description control="[id]">description text</description>
@@ -333,8 +329,7 @@ NS_IMETHODIMP nsAccessible::Init()
 {
   nsIContent *content = GetRoleContent(mDOMNode);
   nsAutoString roleString;
-  if (content && content->GetAttr(kNameSpaceID_XHTML2_Unofficial, 
-                                  nsAccessibilityAtoms::role, roleString)) {
+  if (content && GetRoleAttribute(content, roleString)) {
     // QI to nsIDOM3Node causes some overhead. Unfortunately we need to do this each
     // time there is a role attribute, because the prefixe to namespace mappings
     // can change within any subtree via the xmlns attribute
@@ -396,8 +391,7 @@ nsIContent *nsAccessible::GetRoleContent(nsIDOMNode *aDOMNode)
         htmlDoc->GetBody(getter_AddRefs(bodyElement));
         content = do_QueryInterface(bodyElement);
       }
-      if (!content || !content->HasAttr(kNameSpaceID_XHTML2_Unofficial, 
-                                        nsAccessibilityAtoms::role)) {
+      if (!content || !HasRoleAttribute(content)) {
         nsCOMPtr<nsIDOMElement> docElement;
         domDoc->GetDocumentElement(getter_AddRefs(docElement));
         content = do_QueryInterface(docElement);
@@ -1415,27 +1409,47 @@ nsresult nsAccessible::GetTextFromRelationID(nsIAtom *aIDAttrib, nsString &aName
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   NS_ASSERTION(content, "Called from shutdown accessible");
 
-  nsAutoString id;
-  if (!content->GetAttr(kNameSpaceID_WAIProperties, aIDAttrib, id)) {
+  nsAutoString ids;
+  if (!content->GetAttr(kNameSpaceID_WAIProperties, aIDAttrib, ids)) {
     return NS_ERROR_FAILURE;
   }
+  ids.CompressWhitespace(PR_TRUE, PR_TRUE);
 
   nsCOMPtr<nsIDOMDocument> domDoc;
   mDOMNode->GetOwnerDocument(getter_AddRefs(domDoc));
   NS_ENSURE_TRUE(domDoc, NS_ERROR_FAILURE);
+  
+  nsresult rv = NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMElement> labelElement;
-  domDoc->GetElementById(id, getter_AddRefs(labelElement));
-  content = do_QueryInterface(labelElement);
-  if (!content) {
-    return NS_OK;
+  // Support idlist as in aaa::labelledby="id1 id2 id3"
+  while (!ids.IsEmpty()) {
+    nsAutoString id;
+    PRInt32 idLength = ids.FindChar(' ');
+    NS_ASSERTION(idLength != 0, "Should not be 0 because of CompressWhitespace() call above");
+    if (idLength == kNotFound) {
+      id = ids;
+      ids.Truncate();
+    } else {
+      id = Substring(ids, 0, idLength);
+      ids.Cut(0, idLength + 1);
+    }
+
+    if (!aName.IsEmpty()) {
+      aName += ' '; // Need whitespace between multiple labels or descriptions
+    }
+    nsCOMPtr<nsIDOMElement> labelElement;
+    domDoc->GetElementById(id, getter_AddRefs(labelElement));
+    content = do_QueryInterface(labelElement);
+    if (!content) {
+      return NS_OK;
+    }
+    // We have a label content
+    rv = AppendFlatStringFromSubtree(content, &aName);
+    if (NS_SUCCEEDED(rv)) {
+      aName.CompressWhitespace();
+    }
   }
   
-  // We have a label content
-  nsresult rv = AppendFlatStringFromSubtree(content, &aName);
-  if (NS_SUCCEEDED(rv)) {
-    aName.CompressWhitespace();
-  }
   return rv;
 }
 
@@ -1486,14 +1500,10 @@ nsresult nsAccessible::GetHTMLName(nsAString& aLabel, PRBool aCanAggregateSubtre
 
   // Check for DHTML accessibility labelledby relationship property
   nsAutoString label;
-  nsresult rv;
-  if (content->HasAttr(kNameSpaceID_XHTML2_Unofficial, 
-                       nsAccessibilityAtoms::role)) {
-    rv = GetTextFromRelationID(nsAccessibilityAtoms::labelledby, label);
-    if (NS_SUCCEEDED(rv)) {
-      aLabel = label;
-      return rv;
-    }
+  nsresult rv = GetTextFromRelationID(nsAccessibilityAtoms::labelledby, label);
+  if (NS_SUCCEEDED(rv)) {
+    aLabel = label;
+    return rv;
   }
 
   nsIContent *labelContent = GetHTMLLabelContent(content);
@@ -1541,14 +1551,10 @@ nsresult nsAccessible::GetXULName(nsAString& aLabel, PRBool aCanAggregateSubtree
 
   // First check for label override via accessibility labelledby relationship
   nsAutoString label;
-  nsresult rv = NS_OK;
-  if (content->HasAttr(kNameSpaceID_XHTML2_Unofficial, 
-                       nsAccessibilityAtoms::role)) {
-    rv = GetTextFromRelationID(nsAccessibilityAtoms::labelledby, label);
-    if (NS_SUCCEEDED(rv)) {
-      aLabel = label;
-      return rv;
-    }
+  nsresult rv = GetTextFromRelationID(nsAccessibilityAtoms::labelledby, label);
+  if (NS_SUCCEEDED(rv)) {
+    aLabel = label;
+    return rv;
   }
 
   // CASE #1 (via label attribute) -- great majority of the cases
@@ -1645,15 +1651,11 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
   {"buttoncancel", ROLE_PUSHBUTTON, eNameOkFromChildren, eNoValue, eNoReqStates, END_ENTRY},
   {"checkbox", ROLE_CHECKBUTTON, eNameOkFromChildren, eNoValue, STATE_CHECKABLE,
             {"checked", BOOL_STATE, STATE_CHECKED},
-            {"readonly", BOOL_STATE, STATE_READONLY},
-            {"invalid", BOOL_STATE, STATE_INVALID},
-            {"required", BOOL_STATE, STATE_REQUIRED}, END_ENTRY},
+            {"readonly", BOOL_STATE, STATE_READONLY}, END_ENTRY},
   {"checkboxtristate", ROLE_CHECKBUTTON, eNameOkFromChildren, eNoValue, STATE_CHECKABLE,
             {"checked", BOOL_STATE, STATE_CHECKED},
             {"checked", "mixed", STATE_MIXED},
-            {"readonly", BOOL_STATE, STATE_READONLY},
-            {"invalid", BOOL_STATE, STATE_INVALID},
-            {"required", BOOL_STATE, STATE_REQUIRED}},
+            {"readonly", BOOL_STATE, STATE_READONLY}, END_ENTRY},
   {"columnheader", ROLE_COLUMNHEADER, eNameOkFromChildren, eNoValue, eNoReqStates,
             {"selected", BOOL_STATE, STATE_SELECTED | STATE_SELECTABLE},
             {"selected", "false", STATE_SELECTABLE},
@@ -1689,48 +1691,35 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
   {"gridcell", ROLE_CELL, eNameOkFromChildren, eNoValue, eNoReqStates,
             {"selected", BOOL_STATE, STATE_SELECTED | STATE_SELECTABLE},
             {"selected", "false", STATE_SELECTABLE},
-            {"readonly", BOOL_STATE, STATE_READONLY},
-            {"invalid", BOOL_STATE, STATE_INVALID},
-            {"required", BOOL_STATE, STATE_REQUIRED}, END_ENTRY},
+            {"readonly", BOOL_STATE, STATE_READONLY}, END_ENTRY},
   {"group", ROLE_GROUPING, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
   {"link", ROLE_LINK, eNameLabelOrTitle, eNoValue, STATE_LINKED, END_ENTRY},
   {"progressbar", ROLE_PROGRESSBAR, eNameLabelOrTitle, eHasValueMinMax, STATE_READONLY,
             {"valuenow", "unknown", STATE_MIXED}, END_ENTRY},
   {"radio", ROLE_RADIOBUTTON, eNameOkFromChildren, eNoValue, eNoReqStates,
             {"checked", BOOL_STATE, STATE_CHECKED}, END_ENTRY},
-  {"radiogroup", ROLE_GROUPING, eNameLabelOrTitle, eNoValue, eNoReqStates,
-            {"invalid", BOOL_STATE, STATE_INVALID},
-            {"required", BOOL_STATE, STATE_REQUIRED}, END_ENTRY},
+  {"radiogroup", ROLE_GROUPING, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
   {"rowheader", ROLE_ROWHEADER, eNameOkFromChildren, eNoValue, eNoReqStates,
             {"selected", BOOL_STATE, STATE_SELECTED | STATE_SELECTABLE},
             {"selected", "false", STATE_SELECTABLE},
             {"readonly", BOOL_STATE, STATE_READONLY}, END_ENTRY},
   {"secret", ROLE_PASSWORD_TEXT, eNameLabelOrTitle, eNoValue, STATE_PROTECTED,
-            {"invalid", BOOL_STATE, STATE_INVALID},
-            {"required", BOOL_STATE, STATE_REQUIRED}, END_ENTRY}, // XXX EXT_STATE_SINGLE_LINE
+             END_ENTRY},  // EXT_STATE_SINGLE_LINE manually supported in code
   {"separator", ROLE_SEPARATOR, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
   {"slider", ROLE_SLIDER, eNameLabelOrTitle, eHasValueMinMax, eNoReqStates,
-            {"readonly", BOOL_STATE, STATE_READONLY},
-            {"invalid", BOOL_STATE, STATE_INVALID},
-            {"required", BOOL_STATE, STATE_REQUIRED}, END_ENTRY},
+            {"readonly", BOOL_STATE, STATE_READONLY}, END_ENTRY},
   {"spinbutton", ROLE_SPINBUTTON, eNameLabelOrTitle, eHasValueMinMax, eNoReqStates,
-            {"readonly", BOOL_STATE, STATE_READONLY},
-            {"invalid", BOOL_STATE, STATE_INVALID},
-            {"required", BOOL_STATE, STATE_REQUIRED}, END_ENTRY},
+            {"readonly", BOOL_STATE, STATE_READONLY}, END_ENTRY},
   {"spreadsheet", ROLE_TABLE, eNameLabelOrTitle, eNoValue, STATE_MULTISELECTABLE | STATE_EXTSELECTABLE | STATE_FOCUSABLE,
             {"readonly", BOOL_STATE, STATE_READONLY}, END_ENTRY},
   {"tab", ROLE_PAGETAB, eNameOkFromChildren, eNoValue, eNoReqStates, END_ENTRY},
   {"tablist", ROLE_PAGETABLIST, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
   {"tabpanel", ROLE_PROPERTYPAGE, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
   {"textarea", ROLE_ENTRY, eNameLabelOrTitle, eHasValueMinMax, eNoReqStates,
-            {"readonly", BOOL_STATE, STATE_READONLY},
-            {"invalid", BOOL_STATE, STATE_INVALID},
-            {"required", BOOL_STATE, STATE_REQUIRED}, END_ENTRY}, // XXX EXT_STATE_MULTI_LINE
+            {"readonly", BOOL_STATE, STATE_READONLY}, END_ENTRY}, // XXX EXT_STATE_MULTI_LINE supported in code
   {"textfield", ROLE_ENTRY, eNameLabelOrTitle, eHasValueMinMax, eNoReqStates,
-            {"readonly", BOOL_STATE, STATE_READONLY},
-            {"invalid", BOOL_STATE, STATE_INVALID},
-            {"required", BOOL_STATE, STATE_REQUIRED},
-            {"haspopup", BOOL_STATE, STATE_HASPOPUP}, END_ENTRY}, // XXX EXT_STATE_SINGLE_LINE
+            {"readonly", BOOL_STATE, STATE_READONLY}, 
+            {"haspopup", BOOL_STATE, STATE_HASPOPUP}, END_ENTRY}, // XXX EXT_STATE_SINGLE_LINE supported in code
   {"toolbar", ROLE_TOOLBAR, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
   {"tree", ROLE_OUTLINE, eNameLabelOrTitle, eNoValue, eNoReqStates,
             {"readonly", BOOL_STATE, STATE_READONLY},
@@ -1749,7 +1738,11 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
 // These don't need a mapping - they are exposed either through DOM or via MSAA role string
 // banner, contentinfo, main, navigation, note, search, secondary, seealso
 
-nsStateMapEntry nsAccessible::gDisabledStateMap = {"disabled", BOOL_STATE, STATE_UNAVAILABLE};
+nsStateMapEntry nsAccessible::gUnivStateMap[] = {
+  {"disabled", BOOL_STATE, STATE_UNAVAILABLE},
+  {"required", BOOL_STATE, STATE_REQUIRED},
+  {"invalid", BOOL_STATE, STATE_INVALID}
+};
 
 NS_IMETHODIMP nsAccessible::GetFinalRole(PRUint32 *aRole)
 {
@@ -1790,11 +1783,24 @@ PRBool nsAccessible::MappedAttrState(nsIContent *aContent, PRUint32 *aStateInOut
 
 NS_IMETHODIMP nsAccessible::GetFinalState(PRUint32 *aState)
 {
+  *aState = 0;
   if (!mDOMNode) {
     return NS_ERROR_FAILURE;  // Node already shut down
   }
   nsresult rv = GetState(aState);
-  if (NS_FAILED(rv) || !mRoleMapEntry) {
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // Test for universal states first
+  nsIContent *content = GetRoleContent(mDOMNode);
+  if (!content) {
+    return NS_ERROR_FAILURE;  // Node already shut down
+  }
+  for (PRInt32 index = 0; index < NS_ARRAY_LENGTH(gUnivStateMap); index ++) {
+    MappedAttrState(content, aState, &gUnivStateMap[index]);
+  }
+  if (!mRoleMapEntry) {
     return rv;
   }
 
@@ -1807,19 +1813,14 @@ NS_IMETHODIMP nsAccessible::GetFinalState(PRUint32 *aState)
     finalState &= ~(STATE_SELECTABLE | STATE_FOCUSABLE);
   }
 
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (content) {
-    finalState |= mRoleMapEntry->state;
-    if (MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap1) &&
-        MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap2) &&
-        MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap3) &&
-        MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap4) &&
-        MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap5) &&
-        MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap6)) {
-      MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap7);
-    }
-    // Anything can be disabled/unavailable
-    MappedAttrState(content, &finalState, &gDisabledStateMap);
+  finalState |= mRoleMapEntry->state;
+  if (MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap1) &&
+      MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap2) &&
+      MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap3) &&
+      MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap4) &&
+      MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap5) &&
+      MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap6)) {
+    MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap7);
   }
 
   *aState = finalState;

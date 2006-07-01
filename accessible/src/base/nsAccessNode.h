@@ -44,10 +44,13 @@
 #define _nsAccessNode_H_
 
 #include "nsCOMPtr.h"
+#include "nsAccessibilityAtoms.h"
 #include "nsIAccessNode.h"
+#include "nsIContent.h"
 #include "nsPIAccessNode.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDOMNode.h"
+#include "nsINameSpaceManager.h"
 #include "nsIStringBundle.h"
 #include "nsWeakReference.h"
 #include "nsInterfaceHashtable.h"
@@ -119,6 +122,23 @@ class nsAccessNode: public nsIAccessNode, public nsPIAccessNode
 
     static already_AddRefed<nsIDocShellTreeItem> GetDocShellTreeItemFor(nsIDOMNode *aStartNode);
     static already_AddRefed<nsIPresShell> GetPresShellFor(nsIDOMNode *aStartNode);
+    
+    // Return PR_TRUE if there is a role attribute
+    static PRBool HasRoleAttribute(nsIContent *aContent)
+    {
+      return (aContent->IsNodeOfType(nsINode::eHTML) && aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::role)) ||
+              aContent->HasAttr(kNameSpaceID_XHTML, nsAccessibilityAtoms::role) ||
+              aContent->HasAttr(kNameSpaceID_XHTML2_Unofficial, nsAccessibilityAtoms::role);
+    }
+
+    // Return PR_TRUE if there is a role attribute, and fill it into aRole
+    static PRBool GetRoleAttribute(nsIContent *aContent, nsAString& aRole)
+    {
+      aRole.Truncate();
+      return (aContent->IsNodeOfType(nsINode::eHTML) && aContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::role, aRole)) ||
+              aContent->GetAttr(kNameSpaceID_XHTML, nsAccessibilityAtoms::role, aRole) ||
+              aContent->GetAttr(kNameSpaceID_XHTML2_Unofficial, nsAccessibilityAtoms::role, aRole);
+    }
     
     static nsIDOMNode *gLastFocusedNode;
 
