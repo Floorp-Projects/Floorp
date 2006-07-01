@@ -271,20 +271,22 @@ SessionStartup.prototype = {
         // create prompt strings
         var ssStringBundle = this._getStringBundle("chrome://browser/locale/sessionstore.properties");
         var restoreTitle = ssStringBundle.formatStringFromName("restoreTitle", [brandShortName], 1);
-        var restoreText = ssStringBundle.formatStringFromName("restoreText", [brandShortName], 1);
+        var restoreText = ssStringBundle.formatStringFromName("restoredText", [brandShortName], 1);
         var buttonTitle = ssStringBundle.GetStringFromName("buttonTitle");
+        var cancelTitle = ssStringBundle.GetStringFromName("cancelTitle");
 
         var promptService = Cc["@mozilla.org/embedcomp/prompt-service;1"].
                             getService(Ci.nsIPromptService);
 
         // set the buttons that will appear on the dialog
-        var flags = promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_1 +
-                    promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_0;
+        var flags = promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0 +
+                    promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_1 +
+                    promptService.BUTTON_POS_0_DEFAULT;
         
         var buttonChoice = promptService.confirmEx(null, restoreTitle, restoreText, 
-                                          flags, null, buttonTitle, null, 
+                                          flags, buttonTitle, cancelTitle, null, 
                                           null, {});
-        recover = (buttonChoice == 1);
+        recover = (buttonChoice == 0);
       }
     }
     catch (ex) { dump(ex + "\n"); } // if the prompt fails, recover anyway
