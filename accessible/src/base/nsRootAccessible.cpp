@@ -553,8 +553,8 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
 
   if (eventType.LowerCaseEqualsLiteral("domcontentloaded")) {
     // Don't create the doc accessible until load scripts have a chance to set
-    // xhtml2:role for <body> or <html> element, because the value of 
-    // xhtml2:role will be cached when the doc accessible is Init()'d
+    // role attribute for <body> or <html> element, because the value of 
+    // role attribute will be cached when the doc accessible is Init()'d
     TryFireEarlyLoadEvent(targetNode);
     return NS_OK;
   }

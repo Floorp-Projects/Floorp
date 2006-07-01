@@ -98,7 +98,7 @@ interface nsIAccessible : nsISupports
 
   /**
    * Accessible value -- a number or a secondary text equivalent for this node
-   * Widgets that use xhtml2:role can force a value using the valuenow attribute
+   * Widgets that use role attribute can force a value using the valuenow attribute
    */
   readonly attribute AString value;
 
@@ -124,22 +124,21 @@ interface nsIAccessible : nsISupports
    * Natural enumerated accessible role for the associated element.
    * The values depend on platform because of variations.
    * See the ROLE_* constants defined later in this file.
-   * This does not take into account xhtml2:role as the finalRole does.
+   * This does not take into account role attribute as the finalRole does.
    */
   readonly attribute unsigned long role;
 
   /**
    * Enumerated accessible role. The values depend on platform because of variations.
    * See the ROLE_* constants defined later in this file.
-   * Widgets can use xhtml2:role to force the final role
+   * Widgets can use role attribute to force the final role
    */
   readonly attribute unsigned long finalRole;
 
   /**
    * Accessible states -- bit field which describes boolean properties of node. 
    * See the STATE_* constants defined later in this file.
-   * Widgets that use xhtml2:role can force the state using the attributes
-   * disabled, etc.
+   * Many states are only valid given a certain role attribute that supports them
    */
   readonly attribute unsigned long finalState;
 
