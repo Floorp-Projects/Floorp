@@ -1,0 +1,58 @@
+<?xml version="1.0" ?>
+<!DOCTYPE Test [
+  <!ATTLIST test id ID #REQUIRED>
+  <!ATTLIST foo:test id ID #REQUIRED>
+  <!ATTLIST foo2:test id ID #REQUIRED>
+  <!ATTLIST bar:test id ID #REQUIRED>
+]>
+
+<!-- Comment -->
+
+<?This-is-a-PI ?>
+
+<root xmlns:foo="foo"
+      xmlns:bar="bar"
+      xmlns:foo2="foo">
+
+  <test id="test1">
+  </test>
+
+  <test id="test2">
+    <!-- Another comment -->
+    <test id="test3">
+    </test>
+
+    <test id="test4" xmlns="foo">
+       <test id="test5">
+       </test>
+
+       <bar:test id="test6" />
+    </test>
+
+    <foo:test id="test7">
+    </foo:test>
+
+    <foo2:test id="test8">
+      <?Another-PI ?>
+      <baz />
+    </foo2:test>
+
+    <bar:test id="test9">
+    </bar:test>
+  </test>
+
+  <foo:test id="test10">
+    <foo2:test id="test11">
+      <bar:test id="test12">
+      </bar:test>
+    </foo2:test>
+  </foo:test>
+
+  <foo2:test id="test13">
+  </foo2:test>
+
+  <bar:test id="test14">
+  </bar:test>
+
+</root>
+

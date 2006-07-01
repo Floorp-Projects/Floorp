@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<!DOCTYPE window [
+  <!ENTITY fooSet '
+    <addOrRemove foo:foo="foo"/>
+    <addOrRemove foo:foo="bar"/>
+    <addOrRemove foo:bar="foo"/>
+    <addOrRemove foo:bar="bar"/>
+    <addOrRemove foo:foo="foo" foo:bar="bar"/>
+    <addOrRemove foo2:foo="foo"/>
+    <addOrRemove foo="foo"/>
+    <addOrRemove foo="bar"/>
+    <addOrRemove bar="bar" foo="foo"/>
+'>
+]>
+<window
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:foo="foo"
+  xmlns:foo2="foo"
+  xmlns:bar="bar"
+  >
+  <vbox id="boxes">
+    <groupbox id="master1" foo:foo="bar">
+      &fooSet;
+      <groupbox foo:foo="foo">
+        &fooSet;
+      </groupbox>
+    </groupbox>
+    <groupbox id="master2" foo:foo="foo">
+      &fooSet;
+      <groupbox foo:foo="bar">
+        &fooSet;
+      </groupbox>
+    </groupbox>
+    <groupbox id="master3">
+      &fooSet;
+      <groupbox foo2:foo="foo">
+        &fooSet;
+      </groupbox>
+    </groupbox>
+    <groupbox id="external">
+      &fooSet;
+    </groupbox>
+  </vbox>
+</window>

@@ -47,7 +47,11 @@ MODULE		= test_content
 
 include $(topsrcdir)/config/rules.mk
 
-_UNIT_FILES := $(wildcard $(srcdir)/unit/*.js)
+_UNIT_FILES := \
+	$(wildcard $(srcdir)/unit/*.js) \
+	$(wildcard $(srcdir)/unit/*.xml) \
+	$(wildcard $(srcdir)/unit/*.xul) \
+	$(NULL)
 
 libs:: $(_UNIT_FILES)
 	$(INSTALL) $^ $(DIST)/bin/content_unit_tests

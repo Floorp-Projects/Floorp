@@ -52,6 +52,8 @@ const nsIDOMElement        = I.nsIDOMElement;
 const nsIDOMNode           = I.nsIDOMNode;
 const nsIDOMCharacterData  = I.nsIDOMCharacterData;
 const nsIDOMAttr           = I.nsIDOMAttr;
+const nsIDOMNodeList       = I.nsIDOMNodeList;
+const nsIDOMXULElement     = I.nsIDOMXULElement;
 const nsIDOMProcessingInstruction = I.nsIDOMProcessingInstruction;
 
 function DOMParser() {
