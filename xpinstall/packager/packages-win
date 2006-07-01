@@ -60,6 +60,7 @@ bin\jpeg3250.dll
 bin\seamonkey.exe
 bin\regxpcom.exe
 bin\xpicleanup.exe
+bin\thebes.dll
 bin\components\AcctIdl.dll
 bin\components\AcctIdl.xpt
 bin\components\appcomps.dll
