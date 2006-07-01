@@ -205,6 +205,16 @@ function (engineURL, iconURL)
   {
     debug(ex);
     Components.utils.reportError("Invalid argument passed to window.sidebar.addSearchEngine: " + ex);
+    
+    var searchBundle = srGetStrBundle("chrome://browser/locale/search.properties");
+    var brandBundle = srGetStrBundle("chrome://branding/locale/brand.properties");
+    var brandName = brandBundle.GetStringFromName("brandShortName");
+    var title = searchBundle.GetStringFromName("error_invalid_engine_title");
+    var msg = searchBundle.formatStringFromName("error_invalid_engine_msg",
+                                                [brandName], 1);
+    var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"].
+             getService(Components.interfaces.nsIWindowWatcher);
+    ww.getNewPrompter(null).alert(title, msg);
     return false;
   }
   
