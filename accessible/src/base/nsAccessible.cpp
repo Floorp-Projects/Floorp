@@ -2246,10 +2246,18 @@ void nsAccessible::DoCommandCallback(nsITimer *aTimer, void *aClosure)
     if (presShell && outerWindow) {
       nsAutoPopupStatePusher popupStatePusher(outerWindow, openAllowed);
 
+      nsMouseEvent downEvent(PR_TRUE, NS_MOUSE_LEFT_BUTTON_DOWN, nsnull,
+                             nsMouseEvent::eSynthesized);
+      nsMouseEvent upEvent(PR_TRUE, NS_MOUSE_LEFT_BUTTON_UP, nsnull,
+                           nsMouseEvent::eSynthesized);
       nsMouseEvent clickEvent(PR_TRUE, NS_MOUSE_LEFT_CLICK, nsnull,
                               nsMouseEvent::eSynthesized);
 
       nsEventStatus eventStatus = nsEventStatus_eIgnore;
+      content->DispatchDOMEvent(&downEvent, nsnull,
+                                 presShell->GetPresContext(), &eventStatus);
+      content->DispatchDOMEvent(&upEvent, nsnull,
+                                 presShell->GetPresContext(), &eventStatus);
       content->DispatchDOMEvent(&clickEvent, nsnull,
                                  presShell->GetPresContext(), &eventStatus);
     }
