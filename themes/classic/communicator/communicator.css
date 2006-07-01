@@ -47,6 +47,8 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+/* ::::: toolbar-primary ::::: */
+
 .toolbar-primary {
   -moz-binding: url("chrome://communicator/content/bindings/toolbar.xml#grippytoolbar-primary");
 }
