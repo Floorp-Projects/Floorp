@@ -1007,6 +1007,7 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         return JS_FALSE;
     }
 
+    /* After this point control must flow through label out: to exit. */
     vec = (jsval *) JS_malloc(cx, ((size_t) len) * sizeof(jsval));
     if (!vec)
         return JS_FALSE;
@@ -1016,7 +1017,7 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
      * one while increasing fp->nvars when we know that the property at
      * the corresponding index exists and its value must be rooted.
      *
-     * In this way when sorting a huge mostly spare array we will not
+     * In this way when sorting a huge mostly sparse array we will not
      * access the tail of vec corresponding to properties that do not
      * exist allowing OS to avoiding committing RAM for it. See bug 330812.
      */
@@ -1069,31 +1070,31 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     ok = js_HeapSort(vec, (size_t) newlen, pivotroot, sizeof(jsval),
                      all_strings ? sort_compare_strings : sort_compare,
                      &ca);
+    if (!ok)
+        goto out;
 
-    if (ok) {
-        while (undefs != 0) {
-            --undefs;
-            vec[newlen++] = JSVAL_VOID;
-        }
-        ok = InitArrayElements(cx, obj, newlen, vec);
-        if (ok)
-            *rval = OBJECT_TO_JSVAL(obj);
-
-        /* Re-create any holes that sorted to the end of the array. */
-        while (len > newlen) {
-            jsval junk;
-
-            if (!IndexToId(cx, --len, &id))
-                return JS_FALSE;
-            if (!OBJ_DELETE_PROPERTY(cx, obj, id, &junk))
-                return JS_FALSE;
-        }
+    while (undefs != 0) {
+        --undefs;
+        vec[newlen++] = JSVAL_VOID;
     }
+    ok = InitArrayElements(cx, obj, newlen, vec);
 
-out:
-    if (vec)
-        JS_free(cx, vec);
-    return ok;
+  out:
+    JS_free(cx, vec);
+    if (!ok)
+        return JS_FALSE;
+
+    /* Re-create any holes that sorted to the end of the array. */
+    while (len > newlen) {
+        jsval junk;
+
+        if (!IndexToId(cx, --len, &id))
+            return JS_FALSE;
+        if (!OBJ_DELETE_PROPERTY(cx, obj, id, &junk))
+            return JS_FALSE;
+    }
+    *rval = OBJECT_TO_JSVAL(obj);
+    return JS_TRUE;
 }
 
 /*
