@@ -1195,10 +1195,26 @@ nsAccessibilityService::CreateXULMenuitemAccessible(nsIDOMNode *aNode, nsIAccess
 NS_IMETHODIMP
 nsAccessibilityService::CreateXULMenupopupAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
 {
+  *_retval = nsnull;
 #ifdef MOZ_XUL
   nsCOMPtr<nsIWeakReference> weakShell;
   GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
+#ifdef MOZ_ACCESSIBILITY_ATK
+  // ATK considers this node to be redundant when within menubars, and it makes menu
+  // navigation with assistive technologies more difficult
+  // XXX In the future we will should this for consistency across the nsIAccessible
+  // implementations on each platform for a consistent scripting environment, but
+  // then strip out redundant accessibles in the nsAccessibleWrap class for each platform.
+  if (content) {
+    nsIContent *parent = content->GetParent();
+    if (parent && parent->Tag() == nsAccessibilityAtoms::menu &&
+        parent->GetNameSpaceID() == kNameSpaceID_XUL) {
+      return NS_OK;
+    }
+  }
+#endif
+ 
   *_retval = new nsXULMenupopupAccessible(aNode, weakShell);
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
