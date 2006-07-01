@@ -287,6 +287,17 @@ nsresult nsCMSMessage::CommonVerifySignature(unsigned char* aDigestData, PRUint3
   PR_ASSERT(nsigners > 0);
   si = NSS_CMSSignedData_GetSignerInfo(sigd, 0);
 
+
+  // See bug 324474. We want to make sure the signing cert is 
+  // still valid at the current time.
+  if (CERT_VerifyCertificateNow(CERT_GetDefaultCertDB(), si->cert, PR_TRUE, 
+                                certificateUsageEmailSigner,
+                                si->cmsg->pwfn_arg, NULL) != SECSuccess) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CommonVerifySignature - signing cert not trusted now\n"));
+    rv = NS_ERROR_CMS_VERIFY_UNTRUSTED;
+    goto loser;
+  }
+
   // We verify the first signer info,  only //
   if (NSS_CMSSignedData_VerifySignerInfo(sigd, 0, CERT_GetDefaultCertDB(), certUsageEmailSigner) != SECSuccess) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CommonVerifySignature - unable to verify signature\n"));
@@ -296,7 +307,7 @@ nsresult nsCMSMessage::CommonVerifySignature(unsigned char* aDigestData, PRUint3
       rv = NS_ERROR_CMS_VERIFY_NOCERT;
     }
     else if(NSSCMSVS_SigningCertNotTrusted == si->verificationStatus) {
-      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CommonVerifySignature - signing cert not trusted\n"));
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CommonVerifySignature - signing cert not trusted at signing time\n"));
       rv = NS_ERROR_CMS_VERIFY_UNTRUSTED;
     }
     else if(NSSCMSVS_Unverified == si->verificationStatus) {
