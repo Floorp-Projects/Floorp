@@ -403,13 +403,16 @@ InspectorApp.prototype =
       }
     }
 
+    // Clear out any previous menu
+    this.emptyChildren(this.mInspectDocumentMenu);
+
     // Now add what we found to the menu
     var docNumber = 0;
     for (var i = 0; i < contentDocs.length; i++) {
       this.addInspectDocumentMenuItem(contentDocs[i], ++docNumber);
     }
     if (showChrome) {
-      // Put a seperator in if there were content docs
+      // Put a separator in if there were content docs
       if (contentDocs.length > 0) {
         this.mInspectDocumentMenu.appendChild(document.createElementNS(XULNS, "menuseparator"));
       }
@@ -663,11 +666,11 @@ InspectorApp.prototype =
 
   emptyChildren: function(aNode)
   {
-    while (aNode.childNodes.length > 0) {
+    while (aNode.hasChildNodes()) {
       aNode.removeChild(aNode.lastChild);
     }
   },
-  
+
   onSplitterOpen: function(aSplitter)
   {
     if (aSplitter.id == "splBrowser") {
