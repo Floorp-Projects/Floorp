@@ -29,8 +29,8 @@
   <menupopup id="menu_FilePopup">
     <menu oncommand="inspector.setTargetDocument(event.target.doc);" id="mnInspectDocumentFile" label="&mnInspectDocument.label;"
           accesskey="&mnInspectDocument.accesskey;">
-      <menupopup id="listDocuments-popup" onpopupshowing="inspector.showInspectDocumentList()"
-                 onpopuphiding="inspector.emptyChildren(this);"/>
+      <menupopup id="listDocuments-popup"
+                 onpopupshowing="inspector.showInspectDocumentList()"/>
     </menu>
     <menuitem label="&cmdShowOpenURLDialog.label;" accesskey="&cmdShowOpenURLDialog.accesskey;"
               observes="cmdShowOpenURLDialog"/>
