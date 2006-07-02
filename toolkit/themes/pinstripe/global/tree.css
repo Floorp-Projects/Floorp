@@ -123,7 +123,7 @@ treechildren::-moz-tree-cell-text(selected) {
 }
 
 tree[seltype="cell"] > treechildren::-moz-tree-cell(active, selected) {
-  background-color: #D0D0D0;
+  background-color: -moz-mac-secondaryhighlight;
 
 }
 tree[seltype="cell"] > treechildren::-moz-tree-cell-text(active, selected) {
@@ -131,7 +131,7 @@ tree[seltype="cell"] > treechildren::-moz-tree-cell-text(active, selected) {
 }
 
 tree[seltype="text"] > treechildren::-moz-tree-cell-text(active, selected) {
-  background-color: #D0D0D0;
+  background-color: -moz-mac-secondaryhighlight;
   color: -moz-DialogText;
 }
 
@@ -141,14 +141,14 @@ treechildren::-moz-tree-cell-text(selected, focus) {
 }
 
 tree[seltype="cell"] > treechildren::-moz-tree-cell(active, selected, focus) {
-  background-color: #3874D1;
+  background-color: -moz-mac-alternateprimaryhighlight;
 }
 tree[seltype="cell"] > treechildren::-moz-tree-cell-text(active, selected, focus) {
   color: #FFFFFF;
 }
 
 tree[seltype="text"] > treechildren::-moz-tree-cell-text(active, selected, focus) {
-  background-color: #3874D1;
+  background-color: -moz-mac-alternateprimaryhighlight;
   color: #FFFFFF;
 }
 
@@ -375,7 +375,7 @@ treechildren[alternatingbackground="true"]::-moz-tree-row(odd) {
 }
 
 treechildren[alternatingbackground="true"]::-moz-tree-row(odd, selected) {
-  background-color: -moz-Dialog;
+  background-color: -moz-mac-secondaryhighlight;
 }
 
 treechildren[alternatingbackground="true"]::-moz-tree-cell-text(odd, selected) {
@@ -383,9 +383,9 @@ treechildren[alternatingbackground="true"]::-moz-tree-cell-text(odd, selected) {
 }
 
 treechildren[alternatingbackground="true"]::-moz-tree-row(odd, selected, focus) {
-  background-color: Highlight;
+  background-color: -moz-mac-alternateprimaryhighlight;
 }
 
 treechildren[alternatingbackground="true"]::-moz-tree-cell-text(odd, selected, focus) {
-  color: HighlightText;
+  color: #FFFFFF;
 }
