@@ -65,7 +65,7 @@ $VendorName               = 'Mozilla';
 
 #$RunMozillaTests          = 1;  # Allow turning off of all tests if needed.
 #$RegxpcomTest             = 1;
-#$AliveTest                = 1;
+$AliveTest                = 0;
 #$JavaTest                 = 0;
 #$ViewerTest               = 0;
 #$BloatTest                = 0;  # warren memory bloat test
