@@ -418,6 +418,11 @@ toolbox {
   background: url("chrome://navigator/skin/toolbar/urlbar-mid.gif") #EDF5F7 bottom repeat-x;
 }
 
+#urlbar[level="high"] ,
+#urlbar[level="low"] {
+  background: #E8DB99;
+}
+
 /* ::::: page proxy icon ::::: */
 
 #page-proxy-deck,

@@ -195,6 +195,12 @@
   -moz-border-left-colors: transparent ThreeDShadow ThreeDDarkShadow;
 }
 
+#urlbar[level="high"] > .autocomplete-textbox-container,
+#urlbar[level="low"] > .autocomplete-textbox-container {
+  background-color: InfoBackground;
+  color: InfoText;
+}
+
 /* ::::: page proxy icon ::::: */
 
 #page-proxy-deck,
