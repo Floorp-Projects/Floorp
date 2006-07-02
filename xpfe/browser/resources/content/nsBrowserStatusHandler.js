@@ -393,16 +393,20 @@ nsBrowserStatusHandler.prototype =
     switch (aState) {
       case wpl.STATE_IS_SECURE | wpl.STATE_SECURE_HIGH:
         this.securityButton.setAttribute("level", "high");
+        this.urlBar.setAttribute("level", "high");
         break;
       case wpl.STATE_IS_SECURE | wpl.STATE_SECURE_LOW:
         this.securityButton.setAttribute("level", "low");
+        this.urlBar.setAttribute("level", "low");
         break;
       case wpl.STATE_IS_BROKEN:
         this.securityButton.setAttribute("level", "broken");
+        this.urlBar.setAttribute("level", "broken");
         break;
       case wpl.STATE_IS_INSECURE:
       default:
         this.securityButton.removeAttribute("level");
+        this.urlBar.removeAttribute("level");
         break;
     }
 
