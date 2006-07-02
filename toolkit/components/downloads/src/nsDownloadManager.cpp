@@ -70,10 +70,14 @@
 #include "nsInt64.h"
 #include "nsAutoPtr.h"
 
+#ifdef XP_WIN
+#include <shlobj.h>
+#endif
+
 /* Outstanding issues/todo:
  * 1. Implement pause/resume.
  */
-  
+
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static PRBool gStoppingDownloads = PR_FALSE;
 
@@ -88,6 +92,7 @@ static PRBool gStoppingDownloads = PR_FALSE;
 #define PREF_BDM_FOCUSWHENSTARTING "browser.download.manager.focusWhenStarting"
 #define PREF_BDM_CLOSEWHENDONE "browser.download.manager.closeWhenDone"
 #define PREF_BDM_FLASHCOUNT "browser.download.manager.flashCount"
+#define PREF_BDM_ADDTORECENTDOCS "browser.download.manager.addToRecentDocs"
 
 static const nsInt64 gInterval((PRUint32)(400 * PR_USEC_PER_MSEC));
 
@@ -2143,6 +2148,9 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
   // We need to update mDownloadState before updating the dialog, because
   // that will close and call CancelDownload if it was the last open window.
   nsresult rv = NS_OK;
+
+  nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID));
+
   if (aStateFlags & STATE_STOP) {
     if (nsDownloadManager::IsInFinalStage(mDownloadState)) {
       if (mDownloadState != nsIXPInstallManagerUI::INSTALL_INSTALLING)
@@ -2165,13 +2173,11 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
       nsAutoString path;
       rv = GetFilePathFromURI(mTarget, path);
       // can't do an early return; have to break reference cycle below
-      if (NS_SUCCEEDED(rv)) {
+      if (NS_SUCCEEDED(rv))
         mDownloadManager->DownloadEnded(path.get(), nsnull);
-      }
 
       // Master pref to control this function. 
       PRBool showTaskbarAlert = PR_FALSE;
-      nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID));
       if (pref)
         pref->GetBoolPref(PREF_BDM_SHOWALERTONCOMPLETE, &showTaskbarAlert);
 
@@ -2210,26 +2216,47 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
       }
     }
 
+    nsAutoString path;
+    rv = GetFilePathFromURI(mTarget, path);
+    if (NS_FAILED(rv))
+      return rv;
+
+#ifdef XP_WIN
+    PRBool addToRecentDocs = PR_TRUE;
+    if (pref)
+      pref->GetBoolPref(PREF_BDM_ADDTORECENTDOCS, &addToRecentDocs);
+
+    if (addToRecentDocs) {
+      LPSHELLFOLDER lpShellFolder = NULL;
+
+      if (SUCCEEDED(::SHGetDesktopFolder(&lpShellFolder))) {
+        PRUnichar *filePath = ToNewUnicode(path);
+        LPITEMIDLIST lpItemIDList = NULL;
+        if (SUCCEEDED(lpShellFolder->ParseDisplayName(NULL, NULL, filePath, NULL, &lpItemIDList, NULL))) {
+          ::SHAddToRecentDocs(SHARD_PIDL, lpItemIDList);
+          ::CoTaskMemFree(lpItemIDList);
+        }
+        nsMemory::Free(filePath);
+        lpShellFolder->Release();
+      }
+    }
+#endif
+
     gObserverService->NotifyObservers(NS_STATIC_CAST(nsIDownload *, this), "dl-done", nsnull);
 
     // break the cycle we created in AddDownload
     mCancelable = nsnull;
 
     // Now remove the download if the user's retention policy is "Remove when Done"
-    if (mDownloadManager->GetRetentionBehavior() == 0) {
-      nsAutoString path;
-      GetFilePathFromURI(mTarget, path);
-
+    if (mDownloadManager->GetRetentionBehavior() == 0)
       mDownloadManager->RemoveDownload(path.get());
-    }
   }
 
   if (mDownloadManager->NeedsUIUpdate()) {
     nsCOMPtr<nsIDownloadProgressListener> dpl;
     mDownloadManager->GetInternalListener(getter_AddRefs(dpl));
-    if (dpl) {
+    if (dpl)
       dpl->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus, this);
-    }
   }
 
   return rv;
