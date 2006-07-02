@@ -17,6 +17,11 @@ if (verifyDiskSpace(getFolder("Program"), srDest))
             getFolder("Chrome"),        // target folder
             "");                        // target subdir 
 
+    addDirectory("Venkman Icons",
+                 "bin/chrome/icons",  // jar source folder
+                 getFolder("Chrome", "icons"), // target folder
+                 "");                 // target subdir
+
     registerChrome(PACKAGE | DELAYED_CHROME, getFolder("Chrome","venkman.jar"), "content/venkman/");
     registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","venkman.jar"), "skin/modern/venkman/");
     registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome","venkman.jar"), "locale/en-US/venkman/");
