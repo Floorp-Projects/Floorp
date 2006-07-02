@@ -91,8 +91,8 @@ class nsIDocumentObserver;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0xffa1f165, 0x8b0e, 0x4010, \
-  { 0xb6, 0xec, 0x6f, 0x49, 0x6b, 0x1b, 0x30, 0x3a } }
+{ 0xd14c81b1, 0x029e, 0x4c01, \
+  { 0x8f, 0xfc, 0x42, 0xc1, 0xe1, 0x34, 0x0f, 0xe4 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -529,27 +529,11 @@ public:
   virtual void EndUpdate(nsUpdateType aUpdateType) = 0;
   virtual void BeginLoad() = 0;
   virtual void EndLoad() = 0;
-  virtual void CharacterDataChanged(nsIContent* aContent, PRBool aAppend) = 0;
   // notify that one or two content nodes changed state
   // either may be nsnull, but not both
   virtual void ContentStatesChanged(nsIContent* aContent1,
                                     nsIContent* aContent2,
                                     PRInt32 aStateMask) = 0;
-  virtual void AttributeWillChange(nsIContent* aChild,
-                                   PRInt32 aNameSpaceID,
-                                   nsIAtom* aAttribute) = 0;
-  virtual void AttributeChanged(nsIContent* aChild,
-                                PRInt32 aNameSpaceID,
-                                nsIAtom* aAttribute,
-                                PRInt32 aModType) = 0;
-  virtual void ContentAppended(nsIContent* aContainer,
-                               PRInt32 aNewIndexInContainer) = 0;
-  virtual void ContentInserted(nsIContent* aContainer,
-                               nsIContent* aChild,
-                               PRInt32 aIndexInContainer) = 0;
-  virtual void ContentRemoved(nsIContent* aContainer,
-                              nsIContent* aChild,
-                              PRInt32 aIndexInContainer) = 0;
 
   // Observation hooks for style data to propagate notifications
   // to document observers
@@ -560,6 +544,13 @@ public:
                               nsIStyleRule* aStyleRule) = 0;
   virtual void StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
                                 nsIStyleRule* aStyleRule) = 0;
+
+  /**
+   * Notify document of pending attribute change
+   */
+  virtual void AttributeWillChange(nsIContent* aChild,
+                                   PRInt32 aNameSpaceID,
+                                   nsIAtom* aAttribute) = 0;
 
   /**
    * Flush notifications for this document and its parent documents

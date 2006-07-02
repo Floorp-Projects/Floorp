@@ -289,7 +289,8 @@ SetOrRemoveObject(PLDHashTable& table, nsISupports* aKey, nsISupports* aValue)
 // Static member variable initialization
 
 // Implement our nsISupports methods
-NS_IMPL_ISUPPORTS3(nsBindingManager, nsIBindingManager, nsIStyleRuleSupplier, nsIDocumentObserver)
+NS_IMPL_ISUPPORTS4(nsBindingManager, nsIBindingManager, nsIStyleRuleSupplier,
+                   nsIDocumentObserver, nsIMutationObserver)
 
 // Constructors/Destructors
 nsBindingManager::nsBindingManager(void)

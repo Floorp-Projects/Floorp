@@ -45,6 +45,7 @@ class nsIDOMNode;
 class nsILoadGroup;
 class nsIURI;
 class nsIPrincipal;
+class nsString;
 
 #define NS_ITRANSFORMOBSERVER_IID \
   {0xcce88481, 0x6eb3, 0x11d6, \

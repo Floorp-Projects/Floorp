@@ -110,7 +110,7 @@ void
 nsBaseContentList::AppendElement(nsIContent *aContent)
 {
   // Shouldn't hold a reference since we'll be told when the content
-  // leaves the document or the document will be destroyed.
+  // leaves the root or the root will be destroyed.
   mElements.AppendElement(aContent);
 }
 
@@ -242,9 +242,11 @@ ContentListHashtableMatchEntry(PLDHashTable *table,
 }
 
 already_AddRefed<nsContentList>
-NS_GetContentList(nsIDocument* aDocument, nsIAtom* aMatchAtom,
-                  PRInt32 aMatchNameSpaceId, nsIContent* aRootContent)
+NS_GetContentList(nsINode* aRootNode, nsIAtom* aMatchAtom,
+                  PRInt32 aMatchNameSpaceId)
 {
+  NS_ASSERTION(aRootNode, "content list has to have a root");
+
   nsContentList* list = nsnull;
 
   static PLDHashTableOps hash_table_ops =
@@ -274,8 +276,8 @@ NS_GetContentList(nsIDocument* aDocument, nsIAtom* aMatchAtom,
   ContentListHashEntry *entry = nsnull;
   // First we look in our hashtable.  Then we create a content list if needed
   if (gContentListHashTable.ops) {
-    nsContentListKey hashKey(aDocument, aMatchAtom,
-                             aMatchNameSpaceId, aRootContent);
+    nsContentListKey hashKey(aRootNode, aMatchAtom,
+                             aMatchNameSpaceId);
     
     // A PL_DHASH_ADD is equivalent to a PL_DHASH_LOOKUP for cases
     // when the entry is already in the hashtable.
@@ -290,8 +292,8 @@ NS_GetContentList(nsIDocument* aDocument, nsIAtom* aMatchAtom,
   if (!list) {
     // We need to create a ContentList and add it to our new entry, if
     // we have an entry
-    list = new nsContentList(aDocument, aMatchAtom,
-                             aMatchNameSpaceId, aRootContent);
+    list = new nsContentList(aRootNode, aMatchAtom,
+                             aMatchNameSpaceId);
     if (entry) {
       if (list)
         entry->mContentList = list;
@@ -309,7 +311,7 @@ NS_GetContentList(nsIDocument* aDocument, nsIAtom* aMatchAtom,
   // bumping the refcount on the list if the requested list is the one
   // that's already cached.
 
-  if (!aRootContent && gCachedContentList != list) {
+  if (gCachedContentList != list) {
     NS_IF_RELEASE(gCachedContentList);
 
     gCachedContentList = list;
@@ -322,39 +324,37 @@ NS_GetContentList(nsIDocument* aDocument, nsIAtom* aMatchAtom,
 
 // nsContentList implementation
 
-nsContentList::nsContentList(nsIDocument *aDocument,
+nsContentList::nsContentList(nsINode* aRootNode,
                              nsIAtom* aMatchAtom,
                              PRInt32 aMatchNameSpaceId,
-                             nsIContent* aRootContent,
                              PRBool aDeep)
   : nsBaseContentList(),
-    nsContentListKey(aDocument, aMatchAtom, aMatchNameSpaceId, aRootContent),
+    nsContentListKey(aRootNode, aMatchAtom, aMatchNameSpaceId),
     mFunc(nsnull),
     mData(nsnull),
     mState(LIST_DIRTY),
     mDeep(aDeep),
     mFuncMayDependOnAttr(PR_FALSE)
 {
-  NS_ASSERTION(mDeep || mRootContent, "Must have root content for non-deep list!");
+  NS_ASSERTION(mRootNode, "Must have root");
   if (nsLayoutAtoms::_asterix == mMatchAtom) {
     mMatchAll = PR_TRUE;
   }
   else {
     mMatchAll = PR_FALSE;
   }
-  Init(aDocument);
+  mRootNode->AddMutationObserver(this);
 }
 
-nsContentList::nsContentList(nsIDocument *aDocument,
+nsContentList::nsContentList(nsINode* aRootNode,
                              nsContentListMatchFunc aFunc,
                              const nsAString& aData,
-                             nsIContent* aRootContent,
                              PRBool aDeep,
                              nsIAtom* aMatchAtom,
                              PRInt32 aMatchNameSpaceId,
                              PRBool aFuncMayDependOnAttr)
   : nsBaseContentList(),
-    nsContentListKey(aDocument, aMatchAtom, aMatchNameSpaceId, aRootContent),
+    nsContentListKey(aRootNode, aMatchAtom, aMatchNameSpaceId),
     mFunc(aFunc),
     mData(&EmptyString()),
     mMatchAll(PR_FALSE),
@@ -362,32 +362,19 @@ nsContentList::nsContentList(nsIDocument *aDocument,
     mDeep(aDeep),
     mFuncMayDependOnAttr(aFuncMayDependOnAttr)
 {
-  NS_ASSERTION(mDeep || mRootContent, "Must have root content for non-deep list!");
+  NS_ASSERTION(mRootNode, "Must have root");
   if (!aData.IsEmpty()) {
     mData = new nsString(aData);
     // If this fails, fail silently
   }
-  Init(aDocument);
-}
-
-void nsContentList::Init(nsIDocument *aDocument)
-{
-  // We don't reference count the reference to the document
-  // If the document goes away first, we'll be informed and we
-  // can drop our reference.
-  // If we go away first, we'll get rid of ourselves from the
-  // document's observer list.
-  mDocument = aDocument;
-  if (mDocument) {
-    mDocument->AddObserver(this);
-  }
+  mRootNode->AddMutationObserver(this);
 }
 
 nsContentList::~nsContentList()
 {
   RemoveFromHashtable();
-  if (mDocument) {
-    mDocument->RemoveObserver(this);
+  if (mRootNode) {
+    mRootNode->RemoveMutationObserver(this);
   }
   
   if (mData && mData != &EmptyString()) {
@@ -400,7 +387,7 @@ nsContentList::~nsContentList()
 // QueryInterface implementation for nsContentList
 NS_INTERFACE_MAP_BEGIN(nsContentList)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLCollection)
-  NS_INTERFACE_MAP_ENTRY(nsIDocumentObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(ContentList)
 NS_INTERFACE_MAP_END_INHERITING(nsBaseContentList)
 
@@ -412,17 +399,12 @@ NS_IMPL_RELEASE_INHERITED(nsContentList, nsBaseContentList)
 nsISupports *
 nsContentList::GetParentObject()
 {
-  if (mRootContent) {
-    return mRootContent;
-  }
-
-  return mDocument;
+  return mRootNode;
 }
   
 PRUint32
 nsContentList::Length(PRBool aDoFlush)
 {
-  CheckDocumentExistence();
   BringSelfUpToDate(aDoFlush);
     
   return mElements.Count();
@@ -431,17 +413,21 @@ nsContentList::Length(PRBool aDoFlush)
 nsIContent *
 nsContentList::Item(PRUint32 aIndex, PRBool aDoFlush)
 {
-  CheckDocumentExistence();
-
-  if (mDocument && aDoFlush) {
-    // Flush pending content changes Bug 4891.
-    mDocument->FlushPendingNotifications(Flush_ContentAndNotify);
+  if (mRootNode && aDoFlush) {
+    // XXX sXBL/XBL2 issue
+    // Ideally we should call GetCurrentDoc here, i think, but that doesn't
+    // live on nsINode
+    nsIDocument* doc = mRootNode->GetOwnerDoc();
+    if (doc) {
+      // Flush pending content changes Bug 4891.
+      doc->FlushPendingNotifications(Flush_ContentAndNotify);
+    }
   }
 
   if (mState != LIST_UP_TO_DATE)
     PopulateSelf(aIndex+1);
 
-  NS_ASSERTION(!mDocument || mState != LIST_DIRTY,
+  NS_ASSERTION(!mRootNode || mState != LIST_DIRTY,
                "PopulateSelf left the list in a dirty (useless) state!");
 
   return NS_STATIC_CAST(nsIContent *, mElements.SafeElementAt(aIndex));
@@ -450,8 +436,6 @@ nsContentList::Item(PRUint32 aIndex, PRBool aDoFlush)
 nsIContent *
 nsContentList::NamedItem(const nsAString& aName, PRBool aDoFlush)
 {
-  CheckDocumentExistence();
-
   BringSelfUpToDate(aDoFlush);
     
   PRInt32 i, count = mElements.Count();
@@ -479,18 +463,26 @@ nsContentList::NamedItem(const nsAString& aName, PRBool aDoFlush)
 PRInt32
 nsContentList::IndexOf(nsIContent *aContent, PRBool aDoFlush)
 {
-  CheckDocumentExistence();
   BringSelfUpToDate(aDoFlush);
     
   return mElements.IndexOf(aContent);
 }
 
 void
-nsContentList::RootDestroyed()
+nsContentList::NodeWillBeDestroyed(const nsINode* aNode)
 {
   // We shouldn't do anything useful from now on
-  DisconnectFromDocument();  // This dirties us so we lose all state
-  mRootContent = nsnull;
+
+  RemoveFromHashtable();
+  mRootNode = nsnull;
+
+  // We will get no more updates, so we can never know we're up to
+  // date
+  mState = LIST_DIRTY;
+
+  // Call Reset() to prevent getting bogus (or eveng dangling) items since
+  // PopulateSelf() will be a no-op after mRootNode was nulled out above
+  Reset();
 }
 
 NS_IMETHODIMP
@@ -537,26 +529,25 @@ nsContentList::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
   NS_PRECONDITION(aContent, "Must have a content node to work with");
   
   if (!mFunc || !mFuncMayDependOnAttr || mState == LIST_DIRTY ||
+      !MayContainRelevantNodes(aContent->GetNodeParent()) ||
       IsContentAnonymous(aContent)) {
     // Either we're already dirty or this notification doesn't affect
     // whether we might match aContent.
     return;
   }
   
-  if (MayContainRelevantNodes(aContent->GetParent())) {
-    if (Match(aContent)) {
-      if (mElements.IndexOf(aContent) == -1) {
-        // We match aContent now, and it's not in our list already.  Just dirty
-        // ourselves; this is simpler than trying to figure out where to insert
-        // aContent.
-        mState = LIST_DIRTY;
-      }
-    } else {
-      // We no longer match aContent.  Remove it from our list.  If
-      // it's already not there, this is a no-op, which is fine.
-      // Either way, no change of mState is required here.
-      mElements.RemoveElement(aContent);
+  if (Match(aContent)) {
+    if (mElements.IndexOf(aContent) == -1) {
+      // We match aContent now, and it's not in our list already.  Just dirty
+      // ourselves; this is simpler than trying to figure out where to insert
+      // aContent.
+      mState = LIST_DIRTY;
     }
+  } else {
+    // We no longer match aContent.  Remove it from our list.  If
+    // it's already not there, this is a no-op, which is fine.
+    // Either way, no change of mState is required here.
+    mElements.RemoveElement(aContent);
   }
 }
 
@@ -572,7 +563,8 @@ nsContentList::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
    * aContainer is anonymous from our point of view, we know that we can't
    * possibly be matching any of the kids.
    */
-  if (mState == LIST_DIRTY || IsContentAnonymous(aContainer)) 
+  if (mState == LIST_DIRTY || IsContentAnonymous(aContainer) ||
+      !MayContainRelevantNodes(aContainer))
     return;
 
   /*
@@ -586,7 +578,7 @@ nsContentList::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
   
   PRInt32 count = aContainer->GetChildCount();
 
-  if (count > 0 && MayContainRelevantNodes(aContainer)) {
+  if (count > 0) {
     PRInt32 ourCount = mElements.Count();
     PRBool appendToList = PR_FALSE;
     if (ourCount == 0) {
@@ -636,7 +628,7 @@ nsContentList::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
      */
     for (i = aNewIndexInContainer; i <= count-1; ++i) {
       PRUint32 limit = PRUint32(-1);
-      PopulateWith(aContainer->GetChildAt(i), PR_TRUE, limit);
+      PopulateWith(aContainer->GetChildAt(i), limit);
     }
   }
 }
@@ -650,11 +642,12 @@ nsContentList::ContentInserted(nsIDocument *aDocument,
   // Note that aContainer can be null here if we are inserting into
   // the document itself; any attempted optimizations to this method
   // should deal with that.
-  if (mState == LIST_DIRTY || IsContentAnonymous(aChild))
-    return;
-
-  if (MayContainRelevantNodes(aContainer) && MatchSelf(aChild))
+  if (mState != LIST_DIRTY &&
+      MayContainRelevantNodes(NODE_FROM(aContainer, aDocument)) &&
+      !IsContentAnonymous(aChild) &&
+      MatchSelf(aChild)) {
     mState = LIST_DIRTY;
+  }
 }
  
 void
@@ -666,28 +659,12 @@ nsContentList::ContentRemoved(nsIDocument *aDocument,
   // Note that aContainer can be null here if we are removing from
   // the document itself; any attempted optimizations to this method
   // should deal with that.
-  if (mState != LIST_DIRTY) {
-    if (MayContainRelevantNodes(aContainer)) {
-      if (!IsContentAnonymous(aChild) && MatchSelf(aChild)) {
-        mState = LIST_DIRTY;
-      }
-      return;
-    }
+  if (mState != LIST_DIRTY &&
+      MayContainRelevantNodes(NODE_FROM(aContainer, aDocument)) &&
+      !IsContentAnonymous(aChild) &&
+      MatchSelf(aChild)) {
+    mState = LIST_DIRTY;
   }
-
-  // Even if aChild is anonymous from our point of view, it could
-  // contain our root (eg say our root is an anonymous child of
-  // aChild).
-  if (ContainsRoot(aChild)) {
-    DisconnectFromDocument();
-  }
-}
-
-void
-nsContentList::DocumentWillBeDestroyed(nsIDocument *aDocument)
-{
-  DisconnectFromDocument();
-  Reset();
 }
 
 PRBool
@@ -718,24 +695,11 @@ nsContentList::Match(nsIContent *aContent)
   return PR_FALSE;
 }
 
-void
-nsContentList::CheckDocumentExistence()
-{
-  if (!mDocument && mRootContent) {
-    
-    mDocument = mRootContent->GetDocument();
-    if (mDocument) {
-      mDocument->AddObserver(this);
-      mState = LIST_DIRTY;
-    }
-  }
-}
-
 PRBool 
 nsContentList::MatchSelf(nsIContent *aContent)
 {
   NS_PRECONDITION(aContent, "Can't match null stuff, you know");
-  NS_PRECONDITION(mDeep || aContent->GetParent() == mRootContent,
+  NS_PRECONDITION(mDeep || aContent->GetNodeParent() == mRootNode,
                   "MatchSelf called on a node that we can't possibly match");
   
   if (Match(aContent))
@@ -755,52 +719,45 @@ nsContentList::MatchSelf(nsIContent *aContent)
   return PR_FALSE;
 }
 
-void 
-nsContentList::PopulateWith(nsIContent *aContent, PRBool aIncludeRoot,
-                            PRUint32 & aElementsToAppend)
+void
+nsContentList::PopulateWith(nsIContent *aContent, PRUint32& aElementsToAppend)
 {
-  NS_PRECONDITION(mDeep || aContent == mRootContent ||
-                  aContent->GetParent() == mRootContent,
+  NS_PRECONDITION(mDeep || aContent->GetNodeParent() == mRootNode,
                   "PopulateWith called on nodes we can't possibly match");
-  NS_PRECONDITION(mDeep || aIncludeRoot || aContent == mRootContent,
-                  "Bogus root passed to PopulateWith in non-deep list");
-  NS_PRECONDITION(!aIncludeRoot || aContent != mRootContent,
-                  "We should never be trying to match mRootContent");
-  
-  if (aIncludeRoot) {
-    if (Match(aContent)) {
-      mElements.AppendElement(aContent);
-      --aElementsToAppend;
-      if (aElementsToAppend == 0)
-        return;
-    }
+  NS_PRECONDITION(aContent != mRootNode,
+                  "We should never be trying to match mRootNode");
+
+  if (Match(aContent)) {
+    mElements.AppendElement(aContent);
+    --aElementsToAppend;
+    if (aElementsToAppend == 0)
+      return;
   }
 
-  // Don't recurse down if we're not doing a deep match and we're
-  // already looking at kids of the root.
-  if (!mDeep && aIncludeRoot)
+  // Don't recurse down if we're not doing a deep match.
+  if (!mDeep)
     return;
   
   PRUint32 i, count = aContent->GetChildCount();
 
   for (i = 0; i < count; i++) {
-    PopulateWith(aContent->GetChildAt(i), PR_TRUE, aElementsToAppend);
+    PopulateWith(aContent->GetChildAt(i), aElementsToAppend);
     if (aElementsToAppend == 0)
       return;
   }
 }
 
 void 
-nsContentList::PopulateWithStartingAfter(nsIContent *aStartRoot,
-                                         nsIContent *aStartChild,
+nsContentList::PopulateWithStartingAfter(nsINode *aStartRoot,
+                                         nsINode *aStartChild,
                                          PRUint32 & aElementsToAppend)
 {
-  NS_PRECONDITION(mDeep || aStartRoot == mRootContent ||
-                  (aStartRoot->GetParent() == mRootContent &&
+  NS_PRECONDITION(mDeep || aStartRoot == mRootNode ||
+                  (aStartRoot->GetNodeParent() == mRootNode &&
                    aStartChild == nsnull),
                   "Bogus aStartRoot or aStartChild");
 
-  if (mDeep || aStartRoot == mRootContent) {
+  if (mDeep || aStartRoot == mRootNode) {
 #ifdef DEBUG
     PRUint32 invariant = aElementsToAppend + mElements.Count();
 #endif
@@ -813,7 +770,7 @@ nsContentList::PopulateWithStartingAfter(nsIContent *aStartRoot,
 
     PRUint32 childCount = aStartRoot->GetChildCount();
     for ( ; ((PRUint32)i) < childCount; ++i) {
-      PopulateWith(aStartRoot->GetChildAt(i), PR_TRUE, aElementsToAppend);
+      PopulateWith(aStartRoot->GetChildAt(i), aElementsToAppend);
     
       NS_ASSERTION(aElementsToAppend + mElements.Count() == invariant,
                    "Something is awry in PopulateWith!");
@@ -824,10 +781,14 @@ nsContentList::PopulateWithStartingAfter(nsIContent *aStartRoot,
 
   // We want to make sure we don't move up past our root node. So if
   // we're there, don't move to the parent.
-  if (aStartRoot == mRootContent)
+  if (aStartRoot == mRootNode)
     return;
   
-  nsIContent* parent = aStartRoot->GetParent();
+  // We could call GetParent() here to avoid walking children of the
+  // document node. However they should be very few in number and we
+  // might want to walk them in the future so it's unnecessary to have
+  // this be the only thing that prevents it
+  nsINode* parent = aStartRoot->GetNodeParent();
   
   if (parent)
     PopulateWithStartingAfter(parent, aStartRoot, aElementsToAppend);
@@ -836,6 +797,10 @@ nsContentList::PopulateWithStartingAfter(nsIContent *aStartRoot,
 void 
 nsContentList::PopulateSelf(PRUint32 aNeededLength)
 {
+  if (!mRootNode) {
+    return;
+  }
+
   if (mState == LIST_DIRTY) {
     Reset();
   }
@@ -848,93 +813,20 @@ nsContentList::PopulateSelf(PRUint32 aNeededLength)
 #ifdef DEBUG
   PRUint32 invariant = elementsToAppend + mElements.Count();
 #endif
-  if (count != 0) {
-    PopulateWithStartingAfter(NS_STATIC_CAST(nsIContent*,
-                                             mElements.ElementAt(count - 1)),
-                              nsnull,
-                              elementsToAppend);
-    NS_ASSERTION(elementsToAppend + mElements.Count() == invariant,
-                 "Something is awry in PopulateWithStartingAfter!");
-  } else if (mRootContent) {
-    PopulateWith(mRootContent, PR_FALSE, elementsToAppend);
-    NS_ASSERTION(elementsToAppend + mElements.Count() == invariant,
-                 "Something is awry in PopulateWith!");
-  }
-  else if (mDocument) {
-    nsIContent *root = mDocument->GetRootContent();
-    if (root) {
-      PopulateWith(root, PR_TRUE, elementsToAppend);
-      NS_ASSERTION(elementsToAppend + mElements.Count() == invariant,
-                   "Something is awry in PopulateWith!");
-    }
-  }
 
-  if (mDocument) {
-    if (elementsToAppend != 0)
-      mState = LIST_UP_TO_DATE;
-    else
-      mState = LIST_LAZY;
-  } else {
-    // No document means we have to stay on our toes since we don't
-    // get content notifications.
-    mState = LIST_DIRTY;
-  }
-}
+  // If we already have nodes start searching at the last one, otherwise
+  // start searching at the root.
+  nsINode* startRoot = count == 0 ? mRootNode :
+    NS_STATIC_CAST(nsIContent*, mElements.ElementAt(count - 1));
 
-PRBool
-nsContentList::MayContainRelevantNodes(nsIContent* aContainer) 
-{
-  if (!mRootContent) {
-#ifdef DEBUG
-    // aContainer can be null when ContentInserted/ContentRemoved are
-    // called, but we still want to return PR_TRUE in such cases if
-    // mRootContent is null.  We could pass the document into this
-    // method instead of trying to get it from aContainer, but that
-    // seems a little pointless just to run this debug-only integrity
-    // check.
-    if (aContainer) { 
-      NS_ASSERTION(aContainer->GetDocument() == mDocument,
-                   "We should not get in here if aContainer is in some _other_ document!");
-    }
-#endif
-    return PR_TRUE;
-  }
+  PopulateWithStartingAfter(startRoot, nsnull, elementsToAppend);
+  NS_ASSERTION(elementsToAppend + mElements.Count() == invariant,
+               "Something is awry in PopulateWith!");
 
-  if (!aContainer) {
-    return PR_FALSE;
-  }
-
-  if (!mDeep) {
-    // We only care about cases when aContainer is our root content node.
-    return aContainer == mRootContent;
-  }
-  
-  return nsContentUtils::ContentIsDescendantOf(aContainer, mRootContent);
-}
-
-PRBool
-nsContentList::ContainsRoot(nsIContent* aContent)
-{
-  if (!mRootContent || !aContent) {
-    return PR_FALSE;
-  }
-
-  return nsContentUtils::ContentIsDescendantOf(mRootContent, aContent);
-}
-
-void 
-nsContentList::DisconnectFromDocument()
-{
-  if (mDocument) {
-    // Our key will change... Best remove ourselves before that happens.
-    RemoveFromHashtable();
-    mDocument->RemoveObserver(this);
-    mDocument = nsnull;
-  }
-
-  // We will get no more updates, so we can never know we're up to
-  // date
-  mState = LIST_DIRTY;
+  if (elementsToAppend != 0)
+    mState = LIST_UP_TO_DATE;
+  else
+    mState = LIST_LAZY;
 }
 
 void
@@ -961,15 +853,21 @@ nsContentList::RemoveFromHashtable()
 void
 nsContentList::BringSelfUpToDate(PRBool aDoFlush)
 {
-  if (mDocument && aDoFlush) {
-    // Flush pending content changes Bug 4891.
-    mDocument->FlushPendingNotifications(Flush_ContentAndNotify);
+  if (mRootNode && aDoFlush) {
+    // XXX sXBL/XBL2 issue
+    // Ideally we should call GetCurrentDoc here, i think, but that doesn't
+    // live on nsINode
+    nsIDocument* doc = mRootNode->GetOwnerDoc();
+    if (doc) {
+      // Flush pending content changes Bug 4891.
+      doc->FlushPendingNotifications(Flush_ContentAndNotify);
+    }
   }
 
   if (mState != LIST_UP_TO_DATE)
     PopulateSelf(PRUint32(-1));
     
-  NS_ASSERTION(!mDocument || mState == LIST_UP_TO_DATE,
+  NS_ASSERTION(!mRootNode || mState == LIST_UP_TO_DATE,
                "PopulateSelf dod not bring content list up to date!");
 }
 
@@ -987,34 +885,35 @@ nsContentList::IsContentAnonymous(nsIContent* aContent)
    * that node that it can see are not anonymous from our point of view.
    */
 
-  if (!mRootContent) {
+  if (!mRootNode->IsNodeOfType(nsINode::eCONTENT)) {
     /**
-     * If we have no root, that means we correspond to a list gotten off the
-     * "document" object, so will always contain only nodes that the document
-     * can see, which means only nodes with a null bindingParent.
+     * The root isn't an nsIContent, that means we correspond to a list gotten
+     * off the "document" object, so will always contain only nodes that the
+     * document can see, which means only nodes with a null bindingParent.
      */
     return aContent->GetBindingParent() != nsnull;
   }
 
   /**
-   * If mRootContent and aContent have _different_ bindingParents, then there
+   * If mRootNode and aContent have _different_ bindingParents, then there
    * are two possibilities:
    *
    * 1) aContent or one of its ancestors is an anonymous child of a descendant
-   *    of mRootContent (or of mRootContent itself).
-   * 2) mRootContent is not an ancestor of aContent.
+   *    of mRootNode (or of mRootNode itself).
+   * 2) mRootNode is not an ancestor of aContent.
    *
    * In either case, we don't want to be matching aContent or any of its
    * descendants.
    *
-   * On the other hand, if mRootContent and aContent have the same
+   * On the other hand, if mRootNode and aContent have the same
    * bindingParent then they are part of the same binding (or native anonymous
-   * content chunk) and then aContent may be a descendant of mRootContent and
+   * content chunk) and then aContent may be a descendant of mRootNode and
    * we may want to match it.
    *
    * So we return true if the binding parents don't match; if the binding
    * parents are the same, the checks we normally do to determine whether we
    * match a node should be done.
    */
-  return mRootContent->GetBindingParent() != aContent->GetBindingParent();
+  return NS_STATIC_CAST(nsIContent*, mRootNode)->GetBindingParent() !=
+         aContent->GetBindingParent();
 }

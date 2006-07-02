@@ -68,6 +68,7 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
 #include "nsAttrName.h"
+#include "nsNodeUtils.h"
 
 #include "jsapi.h"
 #include "pldhash.h"
@@ -147,7 +148,7 @@ public:
                                   nsIAtom*     aAttribute,
                                   PRInt32      aModType);
 
-    void DocumentWillBeDestroyed(nsIDocument* aDocument);
+    void NodeWillBeDestroyed(const nsINode* aNode);
 
 protected:
     friend NS_IMETHODIMP
@@ -1770,12 +1771,12 @@ nsXULContentBuilder::AttributeChanged(nsIDocument* aDocument,
 }
 
 void
-nsXULContentBuilder::DocumentWillBeDestroyed(nsIDocument *aDocument)
+nsXULContentBuilder::NodeWillBeDestroyed(const nsINode* aNode)
 {
     // Break circular references
     mContentSupportMap.Clear();
 
-    nsXULTemplateBuilder::DocumentWillBeDestroyed(aDocument);
+    nsXULTemplateBuilder::NodeWillBeDestroyed(aNode);
 }
 
 
@@ -2005,11 +2006,7 @@ nsXULContentBuilder::OpenContainer(nsIContent* aElement)
     if (container && IsLazyWidgetItem(aElement)) {
         // The tree widget is special, and has to be spanked every
         // time we add content to a container.
-        nsCOMPtr<nsIDocument> doc = mRoot->GetDocument();
-        if (! doc)
-            return NS_OK;
-
-        doc->ContentAppended(container, newIndex);
+        nsNodeUtils::ContentAppended(container, newIndex);
     }
 
     return NS_OK;
@@ -2075,12 +2072,7 @@ nsXULContentBuilder::RebuildAll()
     CreateTemplateAndContainerContents(mRoot, getter_AddRefs(container), &newIndex);
 
     if (container) {
-        nsCOMPtr<nsIDocument> doc = mRoot->GetDocument();
-        NS_ASSERTION(doc, "root element has no document");
-        if (! doc)
-            return NS_ERROR_UNEXPECTED;
-
-        doc->ContentAppended(container, newIndex);
+        nsNodeUtils::ContentAppended(container, newIndex);
     }
 
     return NS_OK;

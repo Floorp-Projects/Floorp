@@ -41,6 +41,7 @@
 #include "nsIDOMGCParticipant.h"
 #include "nsEvent.h"
 #include "nsPropertyTable.h"
+#include "nsTObserverArray.h"
 
 #ifdef MOZILLA_INTERNAL_API
 #include "nsINodeInfo.h"
@@ -57,8 +58,9 @@ class nsIEventListenerManager;
 class nsIPrincipal;
 class nsIDOMRange;
 class nsVoidArray;
+class nsIMutationObserver;
 
-// This bit will be set if the node doesn't have nsDOMSlots
+// This bit will be set if the node doesn't have nsSlots
 #define NODE_DOESNT_HAVE_SLOTS      0x00000001U
 
 // This bit will be set if the node has a range list in the range list hash
@@ -85,6 +87,14 @@ class nsVoidArray;
 // Remaining bits are node type specific.
 #define NODE_TYPE_SPECIFIC_BITS_OFFSET      0x0a
 
+// Useful macro for getting a node given an nsIContent and an nsIDocument
+// Returns the first argument cast to nsINode if it is non-null, otherwise
+// returns the second (which may be null)
+#define NODE_FROM(content_, document_)                  \
+  ((content_) ? NS_STATIC_CAST(nsINode*, (content_)) :  \
+                NS_STATIC_CAST(nsINode*, (document_)))
+
+
 // IID for the nsINode interface
 #define NS_INODE_IID \
 { 0x7b23c37c, 0x18e6, 0x4d80, \
@@ -107,6 +117,8 @@ public:
   // If you're using the external API, the only thing you can know about
   // nsINode is that it exists with an IID, if that....
     
+  friend class nsNodeUtils;
+
   nsINode(nsINodeInfo* aNodeInfo)
     : mNodeInfo(aNodeInfo),
       mParentPtrBits(0),
@@ -510,7 +522,20 @@ public:
     return NS_REINTERPRET_CAST(nsINode*, mParentPtrBits & ~kParentBitMask);
   }
 
-  // This class should be extended by subclasses that wish to store more
+  /**
+   * Adds a mutation observer to be notified when this node, or any of its
+   * descendants, are modified. The node will hold a weak reference to the
+   * observer, which means that it is the responsibility of the observer to
+   * remove itself in case it dies before the node.
+   */
+  virtual void AddMutationObserver(nsIMutationObserver* aMutationObserver);
+
+  /**
+   * Removes a mutation observer.
+   */
+  virtual void RemoveMutationObserver(nsIMutationObserver* aMutationObserver);
+
+  // This class can be extended by subclasses that wish to store more
   // information in the slots.
   class nsSlots
   {
@@ -519,18 +544,32 @@ public:
     {
     }
 
+    // If needed we could remove the vtable pointer this dtor causes by
+    // putting a DestroySlots function on nsINode
+    virtual ~nsSlots()
+    {
+    }
+
+    /**
+     * Storage for flags for this node. These are the same flags as the
+     * mFlagsOrSlots member, but these are used when the slots class
+     * is allocated.
+     */
     PtrBits mFlags;
 
-  protected:
-    // This is protected so that no-one accidentally deletes this rather than
-    // the subclass
-    ~nsSlots() {}
+    /**
+     * A list of mutation observers
+     */
+    nsTObserverArray<nsIMutationObserver> mMutationObservers;
   };
 
 protected:
   /**
    * Functions for managing flags and slots
    */
+
+  // Override this function to create a custom slots class.
+  virtual nsINode::nsSlots* CreateSlots();
 
   PRBool HasSlots() const
   {
@@ -548,10 +587,18 @@ protected:
     return HasSlots() ? FlagsAsSlots() : nsnull;
   }
 
-  void SetSlots(nsSlots* aSlots)
+  nsSlots* GetSlots()
   {
-    NS_ASSERTION(!HasSlots(), "Already has slots");
-    mFlagsOrSlots = NS_REINTERPRET_CAST(PtrBits, aSlots);
+    if (HasSlots()) {
+      return FlagsAsSlots();
+    }
+
+    nsSlots* slots = CreateSlots();
+    if (slots) {
+      mFlagsOrSlots = NS_REINTERPRET_CAST(PtrBits, slots);
+    }
+
+    return slots;
   }
 
   PtrBits GetFlags() const
@@ -589,7 +636,7 @@ protected:
   PtrBits mParentPtrBits;
 
   /**
-   * Used for either storing flags for this element or a pointer to
+   * Used for either storing flags for this node or a pointer to
    * this contents nsContentSlots. See the definition of the
    * NODE_* macros for the layout of the bits in this
    * member.

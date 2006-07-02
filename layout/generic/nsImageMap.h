@@ -43,7 +43,7 @@
 #include "nsISupports.h"
 #include "nsCoord.h"
 #include "nsVoidArray.h"
-#include "nsStubDocumentObserver.h"
+#include "nsStubMutationObserver.h"
 #include "nsIDOMFocusListener.h"
 #include "nsIFrame.h"
 #include "nsIImageMap.h"
@@ -56,7 +56,7 @@ class nsIURI;
 class nsString;
 class nsIDOMEvent;
 
-class nsImageMap : public nsStubDocumentObserver, public nsIDOMFocusListener,
+class nsImageMap : public nsStubMutationObserver, public nsIDOMFocusListener,
                    public nsIImageMap
 {
 public:
@@ -84,7 +84,7 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS
 
-  // nsIDocumentObserver
+  // nsIMutationObserver
   virtual void AttributeChanged(nsIDocument* aDocument, nsIContent* aContent,
                                 PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                                 PRInt32 aModType);
@@ -122,7 +122,6 @@ protected:
 
   nsIPresShell* mPresShell; // WEAK - owns the frame that owns us
   nsIFrame* mImageFrame;  // the frame that owns us
-  nsIDocument* mDocument; // WEAK - the imagemap will not outlive the document
   nsCOMPtr<nsIContent> mMap;
   nsAutoVoidArray mAreas; // almost always has some entries
   PRBool mContainsBlockContents;

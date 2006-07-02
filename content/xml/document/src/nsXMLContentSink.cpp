@@ -97,6 +97,7 @@
 #include "nsContentPolicyUtils.h"
 #include "nsContentErrors.h"
 #include "nsIDOMProcessingInstruction.h"
+#include "nsNodeUtils.h"
 
 #ifdef MOZ_SVG
 #include "nsSVGAtoms.h"
@@ -315,10 +316,8 @@ nsXMLContentSink::DidBuildModel()
                    "mDocElement not in doc?");
 
       mozAutoDocUpdate docUpdate(mDocument, UPDATE_CONTENT_MODEL, PR_TRUE);
-      mDocument->ContentInserted(nsnull, mDocElement,
-                                 // XXXbz is this last arg relevant if
-                                 // the container is null?
-                                 mDocument->IndexOf(mDocElement));
+      nsNodeUtils::ContentInserted(mDocument, mDocElement,
+                                   mDocument->IndexOf(mDocElement));
     }
 
     // Check if we want to prettyprint
@@ -405,10 +404,8 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
     NS_ASSERTION(mDocument->IndexOf(rootContent) != -1,
                  "rootContent not in doc?");
     mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
-    mDocument->ContentInserted(nsnull, rootContent,
-                               // XXXbz is this last arg relevant if
-                               // the container is null?
-                               mDocument->IndexOf(rootContent));
+    nsNodeUtils::ContentInserted(mDocument, rootContent,
+                                 mDocument->IndexOf(rootContent));
     mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
   }
   

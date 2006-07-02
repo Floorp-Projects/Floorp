@@ -56,6 +56,7 @@
 #include "nsEventDispatcher.h"
 #include "nsGkAtoms.h"
 #include "nsCOMArray.h"
+#include "nsNodeUtils.h"
 
 //----------------------------------------------------------------------
 PRBool nsDOMAttribute::sInitialized;
@@ -74,6 +75,8 @@ nsDOMAttribute::nsDOMAttribute(nsDOMAttributeMap *aAttrMap,
 
 nsDOMAttribute::~nsDOMAttribute()
 {
+  nsNodeUtils::NodeWillBeDestroyed(this);
+
   if (mChildList) {
     mChildList->DropReference();
     NS_RELEASE(mChildList);

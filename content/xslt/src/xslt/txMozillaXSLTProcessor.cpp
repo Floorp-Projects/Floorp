@@ -301,7 +301,7 @@ NS_INTERFACE_MAP_BEGIN(txMozillaXSLTProcessor)
     NS_INTERFACE_MAP_ENTRY(nsIXSLTProcessor)
     NS_INTERFACE_MAP_ENTRY(nsIXSLTProcessorObsolete)
     NS_INTERFACE_MAP_ENTRY(nsIDocumentTransformer)
-    NS_INTERFACE_MAP_ENTRY(nsIDocumentObserver)
+    NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXSLTProcessor)
     NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XSLTProcessor)
 NS_INTERFACE_MAP_END
@@ -316,7 +316,7 @@ txMozillaXSLTProcessor::txMozillaXSLTProcessor() : mStylesheetDocument(nsnull),
 txMozillaXSLTProcessor::~txMozillaXSLTProcessor()
 {
     if (mStylesheetDocument) {
-        mStylesheetDocument->RemoveObserver(this);
+        mStylesheetDocument->RemoveMutationObserver(this);
     }
 }
 
@@ -612,7 +612,7 @@ txMozillaXSLTProcessor::ImportStylesheet(nsIDOMNode *aStyle)
         mStylesheetDocument = styleDoc;
     }
 
-    mStylesheetDocument->AddObserver(this);
+    mStylesheetDocument->AddMutationObserver(this);
 
     return NS_OK;
 }
@@ -973,7 +973,7 @@ NS_IMETHODIMP
 txMozillaXSLTProcessor::Reset()
 {
     if (mStylesheetDocument) {
-        mStylesheetDocument->RemoveObserver(this);
+        mStylesheetDocument->RemoveMutationObserver(this);
     }
     mStylesheet = nsnull;
     mStylesheetDocument = nsnull;
@@ -1149,24 +1149,8 @@ txMozillaXSLTProcessor::ensureStylesheet()
     return TX_CompileStylesheet(style, getter_AddRefs(mStylesheet));
 }
 
-NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(txMozillaXSLTProcessor)
-NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(txMozillaXSLTProcessor)
-NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(txMozillaXSLTProcessor)
-
 void
-txMozillaXSLTProcessor::BeginUpdate(nsIDocument* aDocument,
-                                    nsUpdateType aUpdateType)
-{
-}
-
-void
-txMozillaXSLTProcessor::EndUpdate(nsIDocument* aDocument,
-                                  nsUpdateType aUpdateType)
-{
-}
-
-void
-txMozillaXSLTProcessor::DocumentWillBeDestroyed(nsIDocument* aDocument)
+txMozillaXSLTProcessor::NodeWillBeDestroyed(const nsINode* aNode)
 {
     if (NS_FAILED(mCompileResult)) {
         return;
@@ -1175,11 +1159,6 @@ txMozillaXSLTProcessor::DocumentWillBeDestroyed(nsIDocument* aDocument)
     mCompileResult = ensureStylesheet();
     mStylesheetDocument = nsnull;
     mEmbeddedStylesheetRoot = nsnull;
-
-    // This might not be necessary, but just in case some element ends up
-    // causing a notification as the document goes away we don't want to
-    // invalidate the stylesheet.
-    aDocument->RemoveObserver(this);
 }
 
 void

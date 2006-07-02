@@ -57,7 +57,7 @@ nsXPathResult::nsXPathResult() : mDocument(nsnull),
 nsXPathResult::~nsXPathResult()
 {
     if (mDocument) {
-        mDocument->RemoveObserver(this);
+        mDocument->RemoveMutationObserver(this);
     }
 }
 
@@ -65,7 +65,7 @@ NS_IMPL_ADDREF(nsXPathResult)
 NS_IMPL_RELEASE(nsXPathResult)
 NS_INTERFACE_MAP_BEGIN(nsXPathResult)
   NS_INTERFACE_MAP_ENTRY(nsIDOMXPathResult)
-  NS_INTERFACE_MAP_ENTRY(nsIDocumentObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
   NS_INTERFACE_MAP_ENTRY(nsIXPathResult)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMXPathResult)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XPathResult)
@@ -199,10 +199,13 @@ nsXPathResult::SnapshotItem(PRUint32 aIndex, nsIDOMNode **aResult)
     return NS_OK;
 }
 
-NS_IMPL_NSIDOCUMENTOBSERVER_CORE_STUB(nsXPathResult)
-NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(nsXPathResult)
-NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsXPathResult)
-NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(nsXPathResult)
+void
+nsXPathResult::NodeWillBeDestroyed(const nsINode* aNode)
+{
+    // Set to null to avoid unregistring unnecessarily
+    mDocument = nsnull;
+    Invalidate();
+}
 
 void
 nsXPathResult::CharacterDataChanged(nsIDocument* aDocument,
@@ -259,7 +262,7 @@ nsXPathResult::SetExprResult(txAExprResult* aExprResult, PRUint16 aResultType)
     }
 
     if (mDocument) {
-        mDocument->RemoveObserver(this);
+        mDocument->RemoveMutationObserver(this);
         mDocument = nsnull;
     }
  
@@ -291,7 +294,7 @@ nsXPathResult::SetExprResult(txAExprResult* aExprResult, PRUint16 aResultType)
 
         NS_ASSERTION(mDocument, "We need a document!");
         if (mDocument) {
-            mDocument->AddObserver(this);
+            mDocument->AddMutationObserver(this);
         }
     }
 
@@ -302,7 +305,7 @@ void
 nsXPathResult::Invalidate()
 {
     if (mDocument) {
-        mDocument->RemoveObserver(this);
+        mDocument->RemoveMutationObserver(this);
         mDocument = nsnull;
     }
     mInvalidIteratorState = PR_TRUE;

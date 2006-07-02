@@ -237,6 +237,7 @@ NS_IMPL_RELEASE(nsXULTemplateBuilder)
 NS_INTERFACE_MAP_BEGIN(nsXULTemplateBuilder)
   NS_INTERFACE_MAP_ENTRY(nsIXULTemplateBuilder)
   NS_INTERFACE_MAP_ENTRY(nsIDocumentObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXULTemplateBuilder)
   NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(XULTemplateBuilder)
 NS_INTERFACE_MAP_END
@@ -918,7 +919,7 @@ nsXULTemplateBuilder::ContentRemoved(nsIDocument* aDocument,
 }
 
 void
-nsXULTemplateBuilder::DocumentWillBeDestroyed(nsIDocument *aDocument)
+nsXULTemplateBuilder::NodeWillBeDestroyed(const nsINode* aNode)
 {
     // The call to RemoveObserver could release the last reference to
     // |this|, so hold another reference.

@@ -226,9 +226,9 @@ nsLoadCollector::~nsLoadCollector()
   GetMemUsage_Shutdown();
 }
 
-NS_IMPL_ISUPPORTS4(nsLoadCollector, nsIMetricsCollector,
+NS_IMPL_ISUPPORTS5(nsLoadCollector, nsIMetricsCollector,
                    nsIWebProgressListener, nsISupportsWeakReference,
-                   nsIDocumentObserver)
+                   nsIDocumentObserver, nsIMutationObserver)
 
 NS_IMETHODIMP
 nsLoadCollector::OnStateChange(nsIWebProgress *webProgress,

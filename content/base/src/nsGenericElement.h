@@ -874,9 +874,7 @@ protected:
   {
   public:
     nsDOMSlots(PtrBits aFlags);
-    ~nsDOMSlots();
-
-    PRBool IsEmpty();
+    virtual ~nsDOMSlots();
 
     /**
      * An object implementing nsIDOMNodeList for this content (childNodes)
@@ -911,19 +909,12 @@ protected:
     };
   };
 
+  // Override from nsINode
+  virtual nsINode::nsSlots* CreateSlots();
+
   nsDOMSlots *GetDOMSlots()
   {
-    if (!HasSlots()) {
-      nsDOMSlots *slots = new nsDOMSlots(mFlagsOrSlots);
-
-      if (!slots) {
-        return nsnull;
-      }
-
-      SetSlots(slots);
-    }
-
-    return NS_STATIC_CAST(nsDOMSlots*, FlagsAsSlots());
+    return NS_STATIC_CAST(nsDOMSlots*, GetSlots());
   }
 
   nsDOMSlots *GetExistingDOMSlots() const

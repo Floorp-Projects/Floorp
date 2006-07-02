@@ -126,7 +126,7 @@ nsSHEntry::~nsSHEntry()
 //*****************************************************************************
 
 NS_IMPL_ISUPPORTS4(nsSHEntry, nsISHContainer, nsISHEntry, nsIHistoryEntry,
-                   nsIDocumentObserver)
+                   nsIMutationObserver)
 
 //*****************************************************************************
 //    nsSHEntry: nsISHEntry
@@ -191,7 +191,7 @@ nsSHEntry::SetContentViewer(nsIContentViewer *aViewer)
     mDocument = do_QueryInterface(domDoc);
     if (mDocument) {
       mDocument->SetShellsHidden(PR_TRUE);
-      mDocument->AddObserver(this);
+      mDocument->AddMutationObserver(this);
     }
   }
 
@@ -624,7 +624,7 @@ nsSHEntry::DropPresentationState()
 
   if (mDocument) {
     mDocument->SetShellsHidden(PR_FALSE);
-    mDocument->RemoveObserver(this);
+    mDocument->RemoveMutationObserver(this);
     mDocument = nsnull;
   }
   if (mContentViewer)
@@ -639,13 +639,14 @@ nsSHEntry::DropPresentationState()
 }
 
 //*****************************************************************************
-//    nsSHEntry: nsIDocumentObserver
+//    nsSHEntry: nsIMutationObserver
 //*****************************************************************************
 
-NS_IMPL_NSIDOCUMENTOBSERVER_CORE_STUB(nsSHEntry)
-NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(nsSHEntry)
-NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(nsSHEntry)
-NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsSHEntry)
+void
+nsSHEntry::NodeWillBeDestroyed(const nsINode* aNode)
+{
+  NS_NOTREACHED("Document destroyed while we're holding a strong ref to it");
+}
 
 void
 nsSHEntry::CharacterDataChanged(nsIDocument* aDocument,

@@ -64,6 +64,7 @@
 #include "nsChangeHint.h"
 #include "nsEventDispatcher.h"
 #include "nsCOMArray.h"
+#include "nsNodeUtils.h"
 
 #include "pldhash.h"
 #include "prprf.h"
@@ -88,12 +89,10 @@ nsGenericDOMDataNode::nsGenericDOMDataNode(nsINodeInfo *aNodeInfo)
 
 nsGenericDOMDataNode::~nsGenericDOMDataNode()
 {
-  if (HasSlots()) {
-    nsDataSlots* slots = GetDataSlots();
-    PtrBits flags = slots->mFlags | NODE_DOESNT_HAVE_SLOTS;
-    delete slots;
-    mFlagsOrSlots = flags;
-  }
+  NS_PRECONDITION(!IsInDoc(),
+                  "Please remove this from the document properly");
+
+  nsNodeUtils::NodeWillBeDestroyed(this);
 }
 
 
@@ -435,10 +434,8 @@ nsGenericDOMDataNode::AppendData(const nsAString& aData)
     nsEventDispatcher::Dispatch(this, nsnull, &mutation);
   }
 
-  // Trigger a reflow
-  if (document) {
-    document->CharacterDataChanged(this, PR_TRUE);
-  }
+  // Notify observers
+  nsNodeUtils::CharacterDataChanged(this, PR_TRUE);
 
   return NS_OK;
 }
@@ -898,6 +895,12 @@ nsGenericDOMDataNode::GetBaseURI() const
   return uri;
 }
 
+nsINode::nsSlots*
+nsGenericDOMDataNode::CreateSlots()
+{
+  return new nsDataSlots(mFlagsOrSlots);
+}
+
 //----------------------------------------------------------------------
 
 // Implementation of the nsIDOMText interface
@@ -1010,7 +1013,7 @@ nsGenericDOMDataNode::SetText(const PRUnichar* aBuffer,
 
   // Trigger a reflow
   if (aNotify && document) {
-    document->CharacterDataChanged(this, PR_FALSE);
+    nsNodeUtils::CharacterDataChanged(this, PR_FALSE);
   }
 }
 

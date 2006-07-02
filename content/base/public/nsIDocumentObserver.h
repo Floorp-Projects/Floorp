@@ -38,6 +38,7 @@
 #define nsIDocumentObserver_h___
 
 #include "nsISupports.h"
+#include "nsIMutationObserver.h"
 
 class nsIAtom;
 class nsIContent;
@@ -48,8 +49,8 @@ class nsString;
 class nsIDocument;
 
 #define NS_IDOCUMENT_OBSERVER_IID \
-{ 0x589761bb, 0x9856, 0x42fe, \
- { 0x9b, 0xf9, 0x6a, 0xdf, 0xf4, 0x92, 0x17, 0x05 } }
+{ 0x4e14e321, 0xa4bb, 0x49f8, \
+  { 0xa5, 0x7a, 0x23, 0x63, 0x66, 0x8d, 0x14, 0xd0 } }
 
 typedef PRUint32 nsUpdateType;
 
@@ -59,7 +60,7 @@ typedef PRUint32 nsUpdateType;
 #define UPDATE_ALL (UPDATE_CONTENT_MODEL | UPDATE_STYLE | UPDATE_CONTENT_STATE)
 
 // Document observer interface
-class nsIDocumentObserver : public nsISupports
+class nsIDocumentObserver : public nsIMutationObserver
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_OBSERVER_IID)
@@ -90,26 +91,6 @@ public:
   virtual void EndLoad(nsIDocument *aDocument) = 0;
 
   /**
-   * Notification that the content model has changed. This method is
-   * called automatically by content objects when their state is changed
-   * (therefore there is normally no need to invoke this method
-   * directly).  The notification is passed to any
-   * IDocumentObservers. The notification is passed on to all of the
-   * document observers. <p>
-   *
-   * This notification is not sent when a piece of content is
-   * added/removed from the document (the other notifications are used
-   * for that).
-   *
-   * @param aDocument The document being observed
-   * @param aContent the piece of content that changed
-   * @param aAppend   Whether the change was an append
-   */
-  virtual void CharacterDataChanged(nsIDocument *aDocument,
-                                    nsIContent* aContent,
-                                    PRBool aAppend) = 0;
-
-  /**
    * Notification that the state of a content node has changed. 
    * (ie: gained or lost focus, became active or hovered over)
    * This method is called automatically by content objects 
@@ -136,76 +117,6 @@ public:
                                     nsIContent* aContent1,
                                     nsIContent* aContent2,
                                     PRInt32 aStateMask) = 0;
-
-  /**
-   * Notification that the content model has changed. This method is called
-   * automatically by content objects when an attribute's value has changed
-   * (therefore there is normally no need to invoke this method directly). The
-   * notification is passed to any IDocumentObservers document observers. <p>
-   *
-   * @param aDocument The document being observed
-   * @param aContent the piece of content whose attribute changed
-   * @param aAttribute the atom name of the attribute
-   * @param aModType Whether or not the attribute was added, changed, or removed.
-   *   The constants are defined in nsIDOMMutationEvent.h.
-   */
-  virtual void AttributeChanged(nsIDocument* aDocument,
-                                nsIContent*  aContent,
-                                PRInt32      aNameSpaceID,
-                                nsIAtom*     aAttribute,
-                                PRInt32      aModType) = 0;
-
-  /**
-   * Notifcation that the content model has had data appended to the
-   * given content object. This method is called automatically by the
-   * content container objects when a new content object is appended to
-   * the container (therefore there is normally no need to invoke this
-   * method directly). The notification is passed on to all of the
-   * document observers.
-   *
-   * @param aDocument The document being observed
-   * @param aContainer the container that had a new child appended
-   * @param aNewIndexInContainer the index in the container of the first
-   *          new child
-   */
-  virtual void ContentAppended(nsIDocument *aDocument,
-                               nsIContent* aContainer,
-                               PRInt32     aNewIndexInContainer) = 0;
-
-  /**
-   * Notification that content has been inserted. This method is called
-   * automatically by the content container objects when a new content
-   * object is inserted in the container (therefore there is normally no
-   * need to invoke this method directly). The notification is passed on
-   * to all of the document observers.
-   *
-   * @param aDocument The document being observed
-   * @param aContainer the container that now contains aChild
-   * @param aChild the child that was inserted
-   * @param aIndexInContainer the index of the child in the container
-   */
-  virtual void ContentInserted(nsIDocument *aDocument,
-                               nsIContent* aContainer,
-                               nsIContent* aChild,
-                               PRInt32 aIndexInContainer) = 0;
-
-  /**
-   * Content has just been removed. This method is called automatically
-   * by content container objects when a content object has just been
-   * removed from the container (therefore there is normally no need to
-   * invoke this method directly). The notification is passed on to all
-   * of the document observers.
-   *
-   * @param aDocument The document being observed
-   * @param aContainer the container that had a child removed
-   * @param aChild the child that was just removed
-   * @param aIndexInContainer the index of the child in the container
-   *  before it was removed
-   */
-  virtual void ContentRemoved(nsIDocument *aDocument,
-                              nsIContent* aContainer,
-                              nsIContent* aChild,
-                              PRInt32 aIndexInContainer) = 0;
 
   /**
    * A StyleSheet has just been added to the document.  This method is
@@ -310,15 +221,6 @@ public:
   virtual void StyleRuleRemoved(nsIDocument *aDocument,
                                 nsIStyleSheet* aStyleSheet,
                                 nsIStyleRule* aStyleRule) = 0;
-
- /**
-   * The document is in the process of being destroyed.
-   * This method is called automatically during document
-   * destruction.
-   * 
-   * @param aDocument The document being observed
-   */
-  virtual void DocumentWillBeDestroyed(nsIDocument *aDocument) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentObserver, NS_IDOCUMENT_OBSERVER_IID)
@@ -328,29 +230,10 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentObserver, NS_IDOCUMENT_OBSERVER_IID)
     virtual void EndUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType);\
     virtual void BeginLoad(nsIDocument* aDocument);                          \
     virtual void EndLoad(nsIDocument* aDocument);                            \
-    virtual void CharacterDataChanged(nsIDocument* aDocument,                \
-                                      nsIContent* aContent,                  \
-                                      PRBool aAppend);                       \
     virtual void ContentStatesChanged(nsIDocument* aDocument,                \
                                       nsIContent* aContent1,                 \
                                       nsIContent* aContent2,                 \
                                       PRInt32 aStateMask);                   \
-    virtual void AttributeChanged(nsIDocument* aDocument,                    \
-                                  nsIContent* aContent,                      \
-                                  PRInt32 aNameSpaceID,                      \
-                                  nsIAtom* aAttribute,                       \
-                                  PRInt32 aModType);                         \
-    virtual void ContentAppended(nsIDocument* aDocument,                     \
-                                 nsIContent* aContainer,                     \
-                                 PRInt32 aNewIndexInContainer);              \
-    virtual void ContentInserted(nsIDocument* aDocument,                     \
-                                 nsIContent* aContainer,                     \
-                                 nsIContent* aChild,                         \
-                                 PRInt32 aIndexInContainer);                 \
-    virtual void ContentRemoved(nsIDocument* aDocument,                      \
-                                nsIContent* aContainer,                      \
-                                nsIContent* aChild,                          \
-                                PRInt32 aIndexInContainer);                  \
     virtual void StyleSheetAdded(nsIDocument* aDocument,                     \
                                  nsIStyleSheet* aStyleSheet,                 \
                                  PRBool aDocumentSheet);                     \
@@ -370,7 +253,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentObserver, NS_IDOCUMENT_OBSERVER_IID)
     virtual void StyleRuleRemoved(nsIDocument* aDocument,                    \
                                   nsIStyleSheet* aStyleSheet,                \
                                   nsIStyleRule* aStyleRule);                 \
-    virtual void DocumentWillBeDestroyed(nsIDocument* aDocument);            \
+    NS_DECL_NSIMUTATIONOBSERVER
 
 
 #define NS_IMPL_NSIDOCUMENTOBSERVER_CORE_STUB(_class)                     \
@@ -382,10 +265,7 @@ void                                                                      \
 _class::EndUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType)       \
 {                                                                         \
 }                                                                         \
-void                                                                      \
-_class::DocumentWillBeDestroyed(nsIDocument* aDocument)                   \
-{                                                                         \
-}
+NS_IMPL_NSIMUTATIONOBSERVER_CORE_STUB(_class)
 
 #define NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(_class)                     \
 void                                                                      \
@@ -407,40 +287,7 @@ _class::ContentStatesChanged(nsIDocument* aDocument,                      \
 }
 
 #define NS_IMPL_NSIDOCUMENTOBSERVER_CONTENT(_class)                       \
-void                                                                      \
-_class::CharacterDataChanged(nsIDocument* aDocument,                      \
-                             nsIContent* aContent,                        \
-                             PRBool aAppend)                              \
-{                                                                         \
-}                                                                         \
-void                                                                      \
-_class::AttributeChanged(nsIDocument* aDocument,                          \
-                         nsIContent* aContent,                            \
-                         PRInt32 aNameSpaceID,                            \
-                         nsIAtom* aAttribute,                             \
-                         PRInt32 aModType)                                \
-{                                                                         \
-}                                                                         \
-void                                                                      \
-_class::ContentAppended(nsIDocument* aDocument,                           \
-                        nsIContent* aContainer,                           \
-                        PRInt32 aNewIndexInContainer)                     \
-{                                                                         \
-}                                                                         \
-void                                                                      \
-_class::ContentInserted(nsIDocument* aDocument,                           \
-                        nsIContent* aContainer,                           \
-                        nsIContent* aChild,                               \
-                        PRInt32 aIndexInContainer)                        \
-{                                                                         \
-}                                                                         \
-void                                                                      \
-_class::ContentRemoved(nsIDocument* aDocument,                            \
-                       nsIContent* aContainer,                            \
-                       nsIContent* aChild,                                \
-                       PRInt32 aIndexInContainer)                         \
-{                                                                         \
-}
+NS_IMPL_NSIMUTATIONOBSERVER_CONTENT(_class)
 
 #define NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(_class)                    \
 void                                                                      \

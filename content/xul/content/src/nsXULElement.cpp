@@ -137,6 +137,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsLayoutAtoms.h"
 #include "nsXULContentUtils.h"
+#include "nsNodeUtils.h"
 
 #include "prlog.h"
 #include "rdf.h"
@@ -499,10 +500,9 @@ nsXULElement::GetElementsByAttribute(const nsAString& aAttribute,
     NS_ENSURE_TRUE(attrAtom, NS_ERROR_OUT_OF_MEMORY);
 
     nsContentList *list = 
-        new nsContentList(GetDocument(),
+        new nsContentList(this,
                           nsXULDocument::MatchAttribute,
                           aValue,
-                          this,
                           PR_TRUE,
                           attrAtom,
                           kNameSpaceID_Unknown);
@@ -1472,10 +1472,11 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
         if (binding)
             binding->AttributeChanged(aName, aNameSpaceID, PR_TRUE, aNotify);
 
-        if (aNotify) {
-            doc->AttributeChanged(this, aNameSpaceID, aName,
-                                  nsIDOMMutationEvent::REMOVAL);
-        }
+    }
+
+    if (aNotify) {
+        nsNodeUtils::AttributeChanged(this, aNameSpaceID, aName,
+                                      nsIDOMMutationEvent::REMOVAL);
     }
 
     return NS_OK;

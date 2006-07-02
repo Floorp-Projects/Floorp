@@ -64,6 +64,8 @@
 #include "prtime.h"
 #include "prlog.h"
 #include "nsInt64.h"
+#include "nsNodeUtils.h"
+#include "nsIContent.h"
 
 #include "nsGenericHTMLElement.h"
 #include "nsITextContent.h"
@@ -1852,20 +1854,22 @@ HTMLContentSink::~HTMLContentSink()
 }
 
 #if DEBUG
+NS_IMPL_ISUPPORTS_INHERITED6(HTMLContentSink,
+                             nsContentSink,
+                             nsIContentSink,
+                             nsIHTMLContentSink,
+                             nsITimerCallback,
+                             nsIDocumentObserver,
+                             nsIMutationObserver,
+                             nsIDebugDumpContent)
+#else
 NS_IMPL_ISUPPORTS_INHERITED5(HTMLContentSink,
                              nsContentSink,
                              nsIContentSink,
                              nsIHTMLContentSink,
                              nsITimerCallback,
                              nsIDocumentObserver,
-                             nsIDebugDumpContent)
-#else
-NS_IMPL_ISUPPORTS_INHERITED4(HTMLContentSink,
-                             nsContentSink,
-                             nsIContentSink,
-                             nsIHTMLContentSink,
-                             nsITimerCallback,
-                             nsIDocumentObserver)
+                             nsIMutationObserver)
 #endif
 
 static PRBool
@@ -3615,7 +3619,7 @@ HTMLContentSink::NotifyAppend(nsIContent* aContainer, PRUint32 aStartIndex)
   MOZ_TIMER_SAVE(mWatch)
   MOZ_TIMER_STOP(mWatch);
 
-  mDocument->ContentAppended(aContainer, aStartIndex);
+  nsNodeUtils::ContentAppended(aContainer, aStartIndex);
   mLastNotificationTime = PR_Now();
 
   MOZ_TIMER_DEBUGLOG(("Restore: nsHTMLContentSink::NotifyAppend()\n"));
@@ -3641,7 +3645,8 @@ HTMLContentSink::NotifyInsert(nsIContent* aContent,
   MOZ_TIMER_SAVE(mWatch)
   MOZ_TIMER_STOP(mWatch);
 
-  mDocument->ContentInserted(aContent, aChildContent, aIndexInContainer);
+  nsNodeUtils::ContentInserted(NODE_FROM(aContent, mDocument),
+                               aChildContent, aIndexInContainer);
   mLastNotificationTime = PR_Now();
 
   MOZ_TIMER_DEBUGLOG(("Restore: nsHTMLContentSink::NotifyInsert()\n"));

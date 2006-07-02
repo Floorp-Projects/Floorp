@@ -109,19 +109,21 @@ public:
 
     virtual void EndLoad();
 
-    virtual void ContentAppended(nsIContent* aContainer,
+    // nsIMutationObserver interface
+    virtual void ContentAppended(nsIDocument* aDocument,
+                                 nsIContent* aContainer,
                                  PRInt32 aNewIndexInContainer);
-
-    virtual void ContentInserted(nsIContent* aContainer,
+    virtual void ContentInserted(nsIDocument* aDocument,
+                                 nsIContent* aContainer,
                                  nsIContent* aChild,
                                  PRInt32 aIndexInContainer);
-
-    virtual void ContentRemoved(nsIContent* aContainer,
+    virtual void ContentRemoved(nsIDocument* aDocument,
+                                nsIContent* aContainer,
                                 nsIContent* aChild,
                                 PRInt32 aIndexInContainer);
-
-    virtual void AttributeChanged(nsIContent* aElement, PRInt32 aNameSpaceID,
-                                  nsIAtom* aAttribute, PRInt32 aModType);
+    virtual void AttributeChanged(nsIDocument* aDocument, nsIContent* aElement,
+                                  PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                                  PRInt32 aModType);
 
     // nsIXULDocument interface
     NS_IMETHOD AddElementForID(const nsAString& aID, nsIContent* aElement);

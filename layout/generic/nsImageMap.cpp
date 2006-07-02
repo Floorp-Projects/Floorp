@@ -722,7 +722,6 @@ void CircleArea::GetRect(nsPresContext* aCX, nsRect& aRect)
 nsImageMap::nsImageMap() :
   mPresShell(nsnull),
   mImageFrame(nsnull),
-  mDocument(nsnull),
   mContainsBlockContents(PR_FALSE)
 {
 }
@@ -733,7 +732,7 @@ nsImageMap::~nsImageMap()
 }
 
 NS_IMPL_ISUPPORTS4(nsImageMap,
-                   nsIDocumentObserver,
+                   nsIMutationObserver,
                    nsIDOMFocusListener,
                    nsIDOMEventListener,
                    nsIImageMap)
@@ -788,17 +787,12 @@ nsImageMap::Init(nsIPresShell* aPresShell, nsIFrame* aImageFrame, nsIDOMHTMLMapE
   mPresShell = aPresShell;
   mImageFrame = aImageFrame;
 
-  nsresult rv;
-  mMap = do_QueryInterface(aMap, &rv);
+  mMap = do_QueryInterface(aMap);
   NS_ASSERTION(mMap, "aMap is not an nsIContent!");
-  mDocument = mMap->GetDocument();
-  if (mDocument) {
-    mDocument->AddObserver(this);
-  }
+  mMap->AddMutationObserver(this);
 
   // "Compile" the areas in the map into faster access versions
-  rv = UpdateAreas();
-  return rv;
+  return UpdateAreas();
 }
 
 
@@ -943,9 +937,7 @@ nsImageMap::Draw(nsPresContext* aCX, nsIRenderingContext& aRC)
 void
 nsImageMap::MaybeUpdateAreas(nsIContent *aContent)
 {
-  if (aContent && (aContent == mMap ||
-                   (mContainsBlockContents &&
-                    nsContentUtils::ContentIsDescendantOf(aContent, mMap)))) {
+  if (aContent == mMap || mContainsBlockContents) {
     UpdateAreas();
   }
 }
@@ -1060,7 +1052,5 @@ void
 nsImageMap::Destroy(void)
 {
   FreeAreas();
-  if (mDocument) {
-    mDocument->RemoveObserver(this);
-  }
+  mMap->RemoveMutationObserver(this);
 }

@@ -41,7 +41,7 @@
 
 #include "nsIMenuBar.h"
 #include "nsIMenuListener.h"
-#include "nsIDocumentObserver.h"
+#include "nsIMutationObserver.h"
 #include "nsIChangeManager.h"
 #include "nsIMenuCommandDispatcher.h"
 #include "nsCOMArray.h"
@@ -81,7 +81,7 @@ namespace MenuHelpersX
 
 class nsMenuBarX : public nsIMenuBar,
                    public nsIMenuListener,
-                   public nsIDocumentObserver,
+                   public nsIMutationObserver,
                    public nsIChangeManager,
                    public nsIMenuCommandDispatcher,
                    public nsSupportsWeakReference
@@ -111,8 +111,8 @@ public:
     nsEventStatus CheckRebuild(PRBool & aMenuEvent);
     nsEventStatus SetRebuild(PRBool aMenuEvent);
 
-    // nsIDocumentObserver
-    NS_DECL_NSIDOCUMENTOBSERVER
+    // nsIMutationObserver
+    NS_DECL_NSIMUTATIONOBSERVER
 
     NS_IMETHOD Create(nsIWidget * aParent);
 
