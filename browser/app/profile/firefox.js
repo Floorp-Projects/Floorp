@@ -249,7 +249,8 @@ pref("browser.tabs.loadFolderAndReplace", true);
 pref("browser.tabs.opentabfor.middleclick", true);
 pref("browser.tabs.loadDivertedInBackground", false);
 pref("browser.tabs.loadBookmarksInBackground", false);
-pref("browser.tabs.tabClipWidth", 140);
+pref("browser.tabs.tabMinWidth", 125);
+pref("browser.tabs.tabClipWidth", 115);
 pref("browser.tabs.disableBackgroundClose", false);
 
 // When tabs opened by links in other tabs via a combination of 

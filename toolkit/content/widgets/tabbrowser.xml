@@ -106,7 +106,7 @@
             <xul:tab selected="true" validate="never"
                      onerror="this.parentNode.parentNode.parentNode.parentNode.addToMissedIconCache(this.getAttribute('image'));
                               this.removeAttribute('image');"
-                     maxwidth="250" width="0" minwidth="140" flex="100"
+                     maxwidth="250" width="0" minwidth="125" flex="100"
                      class="tabbrowser-tab" label="&untitledTab;" crop="end"/>
           </xul:tabs>
         </xul:hbox>
@@ -1099,7 +1099,7 @@
 
             t.setAttribute("crop", "end");
             t.maxWidth = 250;
-            t.minWidth = 140;
+            t.minWidth = this.mTabContainer.mTabMinWidth;
             t.width = 0;
             t.setAttribute("flex", "100");
             t.setAttribute("validate", "never");
@@ -2393,27 +2393,33 @@
     </content>
     <implementation>
       <constructor>
-        var pb2 =
-            Components.classes['@mozilla.org/preferences-service;1'].
-            getService(Components.interfaces.nsIPrefBranch2);
-        try {
-          this.mTabClipWidth = pb2.getIntPref("browser.tabs.tabClipWidth");
-          this.mCloseButtons = pb2.getIntPref("browser.tabs.closeButtons");
-        }
-        catch (e) {
-        }
+        <![CDATA[
+          var pb2 =
+              Components.classes['@mozilla.org/preferences-service;1'].
+              getService(Components.interfaces.nsIPrefBranch2);
+          try {
+            this.mTabMinWidth = pb2.getIntPref("browser.tabs.tabMinWidth");
+            this.mTabClipWidth = pb2.getIntPref("browser.tabs.tabClipWidth");
+            this.mCloseButtons = pb2.getIntPref("browser.tabs.closeButtons");
+          }
+          catch (e) {
+          }
 
-        this._updateDisableBackgroundClose();
-        this.adjustTabstrip(false);
+          this.firstChild.minWidth = this.mTabMinWidth;
+          this._updateDisableBackgroundClose();
+          this.adjustTabstrip(false);
 
-        pb2.addObserver("browser.tabs.disableBackgroundClose", this._prefObserver, true);
-        pb2.addObserver("browser.tabs.closeButtons", this._prefObserver, true);
+          pb2.addObserver("browser.tabs.disableBackgroundClose", this._prefObserver, true);
+          pb2.addObserver("browser.tabs.closeButtons", this._prefObserver, true);
 
-        var self = this;
-        function onResize() {
-          self.adjustTabstrip(false);
-        }
-        window.addEventListener("resize", onResize, false);
+          var self = this;
+          function onResize() {
+            self.adjustTabstrip(false);
+            self.mTabstrip.scrollBoxObject
+                          .ensureElementIsVisible(self.selectedItem);
+          }
+          window.addEventListener("resize", onResize, false);
+        ]]>
       </constructor>
 
       <field name="mTabstrip">
@@ -2472,7 +2478,8 @@
         }
         });
       </field>
-      <field name="mTabClipWidth">130</field>
+      <field name="mTabMinWidth">125</field>
+      <field name="mTabClipWidth">115</field>
       <field name="mCloseButtons">1</field>
 
       <method name="adjustTabstrip">
@@ -2500,17 +2507,17 @@
                   this.childNodes.length == 1)
                 this.setAttribute("closebuttons", "noclose");
               else {
-            var width = this.firstChild.boxObject.width;
-            // 0 width is an invalid value and indicates an item without display,
-            // so ignore.
-            if (width > this.mTabClipWidth || width == 0)
+                var width = this.firstChild.boxObject.width;
+                // 0 width is an invalid value and indicates 
+                // an item without display, so ignore.
+                if (width > this.mTabClipWidth || width == 0)
                   this.setAttribute("closebuttons", "alltabs");
-            else
+                else
                   this.setAttribute("closebuttons", "activetab");
               }
-          }
-          catch (e) {
-          }
+            }
+            catch (e) {
+            }
             break;
           case 2:
           case 3:
@@ -2551,18 +2558,12 @@
         ]]></body>
       </method>
         
-      <method name="_handleUnderflow">
-        <body><![CDATA[
-          this.mTabstrip.scrollBoxObject.scrollBy(-2400, 0);
-        ]]></body>
-      </method>
     </implementation>
 
     <handlers>
       <handler event="TabOpen"   action="this.adjustTabstrip(false);"/>
       <handler event="TabClose"  action="this.adjustTabstrip(true);"/>
       <handler event="TabSelect" action="this._handleTabSelect()"/>
-      <handler event="underflow" action="this._handleUnderflow()"/>
     </handlers>
   </binding>
 
