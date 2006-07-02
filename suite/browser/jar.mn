@@ -1,0 +1,4 @@
+#ifdef MOZ_XUL_APP
+comm.jar:
+% overlay chrome://navigator/content/pageInfo.xul chrome://pippki/content/PageInfoOverlay.xul
+#endif

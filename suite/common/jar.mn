@@ -3,6 +3,7 @@ comm.jar:
 #% content communicator %content/communicator/ xpcnativewrappers=yes
 % overlay chrome://global/content/console.xul chrome://communicator/content/consoleOverlay.xul
 % overlay chrome://communicator/content/tasksOverlay.xul chrome://communicator/content/emOverlay.xul
+% overlay chrome://communicator/content/pref/preftree.xul chrome://pippki/content/PrefOverlay.xul
 #else
 #*  content/communicator/contents.rdf                                (contents.rdf)
 #endif
