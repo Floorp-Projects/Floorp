@@ -592,6 +592,7 @@ nsTreeBodyFrame::GetTreeBody(nsIDOMElement** aElement)
 NS_IMETHODIMP 
 nsTreeBodyFrame::GetColumns(nsITreeColumns** aColumns)
 {
+  EnsureBoxObject();
   NS_IF_ADDREF(*aColumns = mColumns);
   return NS_OK;
 }
