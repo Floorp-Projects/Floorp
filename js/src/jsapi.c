@@ -3388,8 +3388,17 @@ JS_NewPropertyIterator(JSContext *cx, JSObject *obj)
         pdata = (scope->object == obj) ? scope->lastProp : NULL;
         index = -1;
     } else {
-        /* Non-native case: enumerate a JSIdArray and keep it via private. */
+        JSTempValueRooter tvr;
+
+        /*
+         * Non-native case: enumerate a JSIdArray and keep it via private.
+         *
+         * Note: we have to make sure that we root obj around the call to
+         * JS_Enumerate to protect against multiple allocations under it.
+         */
+        JS_PUSH_SINGLE_TEMP_ROOT(cx, OBJECT_TO_JSVAL(obj), &tvr);
         ida = JS_Enumerate(cx, obj);
+        JS_POP_TEMP_ROOT(cx, &tvr);
         if (!ida)
             goto bad;
         pdata = ida;
