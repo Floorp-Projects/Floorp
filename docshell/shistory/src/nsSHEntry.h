@@ -57,11 +57,11 @@
 #include "nsIHistoryEntry.h"
 #include "nsRect.h"
 #include "nsSupportsArray.h"
-#include "nsIDocumentObserver.h"
+#include "nsIMutationObserver.h"
 
 class nsSHEntry : public nsISHEntry,
                   public nsISHContainer,
-                  public nsIDocumentObserver
+                  public nsIMutationObserver
 {
 public: 
   nsSHEntry();
@@ -71,13 +71,12 @@ public:
   NS_DECL_NSIHISTORYENTRY
   NS_DECL_NSISHENTRY
   NS_DECL_NSISHCONTAINER
-  NS_DECL_NSIDOCUMENTOBSERVER
+  NS_DECL_NSIMUTATIONOBSERVER
 
   void DropPresentationState();
 
 private:
   ~nsSHEntry();
-  void RemoveDocumentObserver();
   void DocumentMutated();
 
   nsCOMPtr<nsIURI>                mURI;

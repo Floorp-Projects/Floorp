@@ -75,6 +75,7 @@
 #include "nsIDOMCDATASection.h"
 #include "nsIDOMProcessingInstruction.h"
 #include "nsDOMString.h"
+#include "nsNodeUtils.h"
 
 #include "nsRange.h"
 #include "nsIDOMText.h"
@@ -331,6 +332,7 @@ nsDOMStyleSheetList::~nsDOMStyleSheetList()
 NS_INTERFACE_MAP_BEGIN(nsDOMStyleSheetList)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStyleSheetList)
   NS_INTERFACE_MAP_ENTRY(nsIDocumentObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMStyleSheetList)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(DocumentStyleSheetList)
 NS_INTERFACE_MAP_END
@@ -385,12 +387,9 @@ nsDOMStyleSheetList::Item(PRUint32 aIndex, nsIDOMStyleSheet** aReturn)
 }
 
 void
-nsDOMStyleSheetList::DocumentWillBeDestroyed(nsIDocument *aDocument)
+nsDOMStyleSheetList::NodeWillBeDestroyed(const nsINode *aNode)
 {
-  if (nsnull != mDocument) {
-    aDocument->RemoveObserver(this);
-    mDocument = nsnull;
-  }
+  mDocument = nsnull;
 }
 
 void
@@ -679,14 +678,9 @@ nsDocument::~nsDocument()
                                         this, nsnull, nsnull);
   }
 
-  // XXX Inform any remaining observers that we are going away.
-  // Note that this currently contradicts the rule that all
-  // observers must hold on to live references to the document.
-  // This notification will occur only after the reference has
-  // been dropped.
-
-  PRInt32 indx;
-  NS_DOCUMENT_NOTIFY_OBSERVERS(DocumentWillBeDestroyed, (this));
+  nsNodeUtils::NodeWillBeDestroyed(this);
+  // Clear mObservers to keep it in sync with the mutationobserver list
+  mObservers.Clear();
 
   mParentDocument = nsnull;
 
@@ -698,6 +692,7 @@ nsDocument::~nsDocument()
     mSubDocuments = nsnull;
   }
 
+  PRInt32 indx;
   if (mRootContent) {
     if (mRootContent->GetCurrentDoc()) {
       NS_ASSERTION(mRootContent->GetCurrentDoc() == this,
@@ -794,6 +789,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocument)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIRadioGroupContainer)
   NS_INTERFACE_MAP_ENTRY(nsINode)
+  NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDocument)
   if (aIID.Equals(NS_GET_IID(nsIDOMXPathEvaluator)) ||
       aIID.Equals(NS_GET_IID(nsIXPathEvaluatorInternal))) {
@@ -829,6 +825,19 @@ nsDocument::Init()
 
   // The binding manager must always be the first observer of the document.
   mObservers.PrependObserver(bindingManager);
+  nsINode::nsSlots* slots = GetSlots();
+  NS_ENSURE_TRUE(slots &&
+                 slots->mMutationObservers.PrependObserver(bindingManager),
+                 NS_ERROR_OUT_OF_MEMORY);
+  // Prepend self as mutation-observer whether we need it or not (some
+  // subclasses currently do, other don't). This is because the code in
+  // nsNodeUtils always notifies the first observer first, even when going
+  // backwards, expecting the first observer to be the document.
+  // If we remove that hack, we can move the below registring out to the leaf
+  // classes.
+  NS_ENSURE_TRUE(slots->mMutationObservers.PrependObserver(this),
+                 NS_ERROR_OUT_OF_MEMORY);
+
 
   mOnloadBlocker = new nsOnloadBlocker();
   NS_ENSURE_TRUE(mOnloadBlocker, NS_ERROR_OUT_OF_MEMORY);
@@ -935,7 +944,7 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
   for (PRInt32 i = PRInt32(count) - 1; i >= 0; i--) {
     nsCOMPtr<nsIContent> content = mChildren.ChildAt(i);
 
-    ContentRemoved(nsnull, content, i);
+    nsNodeUtils::ContentRemoved(this, content, i);
     content->UnbindFromTree();
     mChildren.RemoveChildAt(i);
   }
@@ -2235,10 +2244,9 @@ nsDocument::GetScriptLoader()
 void
 nsDocument::AddObserver(nsIDocumentObserver* aObserver)
 {
-  // Make sure the observer isn't already in the list
-  if (!mObservers.Contains(aObserver)) {
-    mObservers.AppendObserver(aObserver);
-  }
+  // The array makes sure the observer isn't already in the list
+  mObservers.AppendObserver(aObserver);
+  AddMutationObserver(aObserver);
 }
 
 PRBool
@@ -2249,6 +2257,7 @@ nsDocument::RemoveObserver(nsIDocumentObserver* aObserver)
   // observers from the list. This is not a big deal, since we
   // don't hold a live reference to the observers.
   if (!mInDestructor) {
+    RemoveMutationObserver(aObserver);
     return mObservers.RemoveObserver(aObserver);
   }
 
@@ -2408,67 +2417,11 @@ nsDocument::EndLoad()
 }
 
 void
-nsDocument::CharacterDataChanged(nsIContent* aContent, PRBool aAppend)
-{
-  NS_ABORT_IF_FALSE(aContent, "Null content!");
-
-  NS_DOCUMENT_NOTIFY_OBSERVERS(CharacterDataChanged, (this, aContent, aAppend));
-}
-
-void
 nsDocument::ContentStatesChanged(nsIContent* aContent1, nsIContent* aContent2,
                                  PRInt32 aStateMask)
 {
   NS_DOCUMENT_NOTIFY_OBSERVERS(ContentStatesChanged,
                                (this, aContent1, aContent2, aStateMask));
-}
-
-
-void
-nsDocument::ContentAppended(nsIContent* aContainer,
-                            PRInt32 aNewIndexInContainer)
-{
-  NS_ABORT_IF_FALSE(aContainer, "Null container!");
-
-  // XXXdwh There is a hacky ordering dependency between the binding
-  // manager and the frame constructor that forces us to walk the
-  // observer list in a forward order
-  // XXXldb So one should notify the other rather than both being
-  // registered.
-  NS_DOCUMENT_FORWARD_NOTIFY_OBSERVERS(ContentAppended,
-                                       (this, aContainer,
-                                        aNewIndexInContainer));
-}
-
-void
-nsDocument::ContentInserted(nsIContent* aContainer, nsIContent* aChild,
-                            PRInt32 aIndexInContainer)
-{
-  NS_ABORT_IF_FALSE(aChild, "Null child!");
-
-  // XXXdwh There is a hacky ordering dependency between the binding manager
-  // and the frame constructor that forces us to walk the observer list
-  // in a forward order
-  // XXXldb So one should notify the other rather than both being
-  // registered.
-  NS_DOCUMENT_FORWARD_NOTIFY_OBSERVERS(ContentInserted,
-                                       (this, aContainer, aChild,
-                                        aIndexInContainer));
-}
-
-void
-nsDocument::ContentRemoved(nsIContent* aContainer, nsIContent* aChild,
-                           PRInt32 aIndexInContainer)
-{
-  NS_ABORT_IF_FALSE(aChild, "Null child!");
-
-  // XXXdwh There is a hacky ordering dependency between the binding
-  // manager and the frame constructor that forces us to walk the
-  // observer list in a reverse order
-  // XXXldb So one should notify the other rather than both being
-  // registered.
-  NS_DOCUMENT_NOTIFY_OBSERVERS(ContentRemoved,
-                               (this, aContainer, aChild, aIndexInContainer));
 }
 
 void
@@ -2477,17 +2430,6 @@ nsDocument::AttributeWillChange(nsIContent* aChild, PRInt32 aNameSpaceID,
 {
   NS_ASSERTION(aChild, "Null child!");
 }
-
-void
-nsDocument::AttributeChanged(nsIContent* aChild, PRInt32 aNameSpaceID,
-                             nsIAtom* aAttribute, PRInt32 aModType)
-{
-  NS_ABORT_IF_FALSE(aChild, "Null child!");
-  
-  NS_DOCUMENT_NOTIFY_OBSERVERS(AttributeChanged, (this, aChild, aNameSpaceID,
-                                                  aAttribute, aModType));
-}
-
 
 void
 nsDocument::StyleRuleChanged(nsIStyleSheet* aStyleSheet,
@@ -2784,8 +2726,7 @@ nsDocument::GetElementsByTagName(const nsAString& aTagname,
   nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aTagname);
   NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
 
-  nsContentList *list = NS_GetContentList(this, nameAtom, kNameSpaceID_Unknown,
-                                          nsnull).get();
+  nsContentList *list = NS_GetContentList(this, nameAtom, kNameSpaceID_Unknown).get();
   NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
 
   // transfer ref to aReturn
@@ -2808,7 +2749,7 @@ nsDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
 
     if (nameSpaceId == kNameSpaceID_Unknown) {
       // Unknown namespace means no matches, we create an empty list...
-      list = NS_GetContentList(this, nsnull, kNameSpaceID_None, nsnull).get();
+      list = NS_GetContentList(this, nsnull, kNameSpaceID_None).get();
       NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
     }
   }
@@ -2817,7 +2758,7 @@ nsDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
     nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aLocalName);
     NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
 
-    list = NS_GetContentList(this, nameAtom, nameSpaceId, nsnull).get();
+    list = NS_GetContentList(this, nameAtom, nameSpaceId).get();
     NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
   }
 
@@ -5079,10 +5020,9 @@ nsDocument::OnPageShow(PRBool aPersisted)
   
   if (aPersisted) {
     // Send out notifications that our <link> elements are attached.
-    nsRefPtr<nsContentList> links = NS_GetContentList(this,
+    nsRefPtr<nsContentList> links = NS_GetContentList(mRootContent,
                                                       nsHTMLAtoms::link,
-                                                      kNameSpaceID_Unknown,
-                                                      mRootContent);
+                                                      kNameSpaceID_Unknown);
 
     if (links) {
       PRUint32 linkCount = links->Length(PR_TRUE);
@@ -5105,10 +5045,9 @@ nsDocument::OnPageHide(PRBool aPersisted)
   // Send out notifications that our <link> elements are detached,
   // but only if this is not a full unload.
   if (aPersisted) {
-    nsRefPtr<nsContentList> links = NS_GetContentList(this,
+    nsRefPtr<nsContentList> links = NS_GetContentList(mRootContent,
                                                       nsHTMLAtoms::link,
-                                                      kNameSpaceID_Unknown,
-                                                      mRootContent);
+                                                      kNameSpaceID_Unknown);
 
     if (links) {
       PRUint32 linkCount = links->Length(PR_TRUE);

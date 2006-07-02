@@ -35,7 +35,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsTArray.h"
+#ifndef nsTObserverArray_h___
+#define nsTObserverArray_h___
+
 #include "nsVoidArray.h"
 
 class nsTObserverArray_base {
@@ -122,6 +124,9 @@ class nsTObserverArray : public nsTObserverArray_base {
      * @param aObserver Observer to add
      */
     PRBool PrependObserver(T* aObserver) {
+      NS_PRECONDITION(!Contains(aObserver),
+                      "Don't prepend if the observer is already in the list");
+
       PRBool res = mObservers.InsertElementAt(aObserver, 0);
       if (res) {
         AdjustIterators(0, 1);
@@ -130,12 +135,13 @@ class nsTObserverArray : public nsTObserverArray_base {
     }
 
     /**
-     * Adds an observer to the end of the array
+     * Adds an observer to the end of the array unless it already exists in
+     * the array.
      * @param aObserver Observer to add
      * @return True on success, false otherwise
      */
     PRBool AppendObserver(T* aObserver) {
-      return mObservers.AppendElement(aObserver);
+      return Contains(aObserver) || mObservers.AppendElement(aObserver);
     }
 
     /**
@@ -157,6 +163,14 @@ class nsTObserverArray : public nsTObserverArray_base {
 
     PRBool Contains(T* aObserver) const {
       return mObservers.IndexOf(aObserver) >= 0;
+    }
+
+    PRBool IsEmpty() const {
+      return mObservers.Count() == 0;
+    }
+
+    T* SafeObserverAt(PRInt32 aIndex) {
+      return NS_STATIC_CAST(T*, mObservers.SafeElementAt(aIndex));
     }
 
     /**
@@ -206,3 +220,5 @@ class nsTObserverArray : public nsTObserverArray_base {
         }
     };
 };
+
+#endif // nsTObserverArray_h___

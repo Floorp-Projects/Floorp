@@ -40,7 +40,7 @@
 #define TRANSFRMX_TXMOZILLAXSLTPROCESSOR_H
 
 #include "nsAutoPtr.h"
-#include "nsIDocumentObserver.h"
+#include "nsIMutationObserver.h"
 #include "nsIDocumentTransformer.h"
 #include "nsIXSLTProcessor.h"
 #include "nsIXSLTProcessorObsolete.h"
@@ -69,7 +69,7 @@ class txResultRecycler;
 class txMozillaXSLTProcessor : public nsIXSLTProcessor,
                                public nsIXSLTProcessorObsolete,
                                public nsIDocumentTransformer,
-                               public nsIDocumentObserver
+                               public nsIMutationObserver
 {
 public:
     /**
@@ -105,8 +105,8 @@ public:
                             const nsString& aValue,
                             nsIDOMNode* aContext);
 
-    // nsIDocumentObserver interface
-    NS_DECL_NSIDOCUMENTOBSERVER
+    // nsIMutationObserver interface
+    NS_DECL_NSIMUTATIONOBSERVER
 
     nsresult setStylesheet(txStylesheet* aStylesheet);
     void reportError(nsresult aResult, const PRUnichar *aErrorText,

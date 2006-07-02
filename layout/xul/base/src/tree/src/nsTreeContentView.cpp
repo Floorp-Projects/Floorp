@@ -165,6 +165,7 @@ NS_INTERFACE_MAP_BEGIN(nsTreeContentView)
   NS_INTERFACE_MAP_ENTRY(nsITreeView)
   NS_INTERFACE_MAP_ENTRY(nsITreeContentView)
   NS_INTERFACE_MAP_ENTRY(nsIDocumentObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsITreeContentView)
   NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(TreeContentView)
 NS_INTERFACE_MAP_END
@@ -1096,7 +1097,7 @@ nsTreeContentView::ContentRemoved(nsIDocument *aDocument,
 }
 
 void
-nsTreeContentView::DocumentWillBeDestroyed(nsIDocument *aDocument)
+nsTreeContentView::NodeWillBeDestroyed(const nsINode* aNode)
 {
   ClearRows();
 }

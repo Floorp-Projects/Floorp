@@ -54,7 +54,6 @@ class nsHTMLTableSectionElement : public nsGenericHTMLElement,
 {
 public:
   nsHTMLTableSectionElement(nsINodeInfo *aNodeInfo);
-  virtual ~nsHTMLTableSectionElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -91,14 +90,6 @@ nsHTMLTableSectionElement::nsHTMLTableSectionElement(nsINodeInfo *aNodeInfo)
 {
 }
 
-nsHTMLTableSectionElement::~nsHTMLTableSectionElement()
-{
-  if (mRows) {
-    mRows->RootDestroyed();
-  }
-}
-
-
 NS_IMPL_ADDREF_INHERITED(nsHTMLTableSectionElement, nsGenericElement) 
 NS_IMPL_RELEASE_INHERITED(nsHTMLTableSectionElement, nsGenericElement) 
 
@@ -126,10 +117,9 @@ nsHTMLTableSectionElement::GetRows(nsIDOMHTMLCollection** aValue)
   *aValue = nsnull;
 
   if (!mRows) {
-    mRows = new nsContentList(GetDocument(),
+    mRows = new nsContentList(this,
                               nsHTMLAtoms::tr,
                               mNodeInfo->NamespaceID(),
-                              this,
                               PR_FALSE);
 
     NS_ENSURE_TRUE(mRows, NS_ERROR_OUT_OF_MEMORY);

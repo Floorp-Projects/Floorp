@@ -285,7 +285,7 @@ nsXMLEventsManager::~nsXMLEventsManager()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsXMLEventsManager, nsIDocumentObserver)
+NS_IMPL_ISUPPORTS2(nsXMLEventsManager, nsIDocumentObserver, nsIMutationObserver)
 
 void nsXMLEventsManager::AddXMLEventsContent(nsIContent * aContent)
 {
@@ -332,11 +332,11 @@ nsXMLEventsManager::BeginUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType
 void 
 nsXMLEventsManager::EndUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType) {}
 void 
-nsXMLEventsManager::DocumentWillBeDestroyed(nsIDocument* aDocument){
+nsXMLEventsManager::NodeWillBeDestroyed(const nsINode* aNode)
+{
   mIncomplete.Clear();
   mListeners.Enumerate(EnumAndUnregisterListener, this);
   mListeners.Clear();
-  aDocument->RemoveObserver(this);
 }
 
 void 

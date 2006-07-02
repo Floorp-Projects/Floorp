@@ -122,6 +122,7 @@
 #include "nsEventDispatcher.h"
 #include "nsContentErrors.h"
 #include "nsIObserverService.h"
+#include "nsNodeUtils.h"
 
 //----------------------------------------------------------------------
 //
@@ -212,10 +213,11 @@ nsXULDocument::~nsXULDocument()
     NS_ASSERTION(mNextSrcLoadWaiter == nsnull,
         "unreferenced document still waiting for script source to load?");
 
-    // Notify our observers here, we can't let the nsDocument
+    // Notify our observers here, we can't let the nsINode
     // destructor do that for us since some of the observers are
     // deleted by the time we get there.
-    NS_DOCUMENT_NOTIFY_OBSERVERS(DocumentWillBeDestroyed, (this));
+    nsNodeUtils::NodeWillBeDestroyed(this);
+    // Clear mObservers to keep it in sync with the mutationobserver list
     mObservers.Clear();
 
     // In case we failed somewhere early on and the forward observer
@@ -886,9 +888,12 @@ nsXULDocument::ExecuteOnBroadcastHandlerFor(nsIContent* aBroadcaster,
 }
 
 void
-nsXULDocument::AttributeChanged(nsIContent* aElement, PRInt32 aNameSpaceID,
+nsXULDocument::AttributeChanged(nsIDocument* aDocument,
+                                nsIContent* aElement, PRInt32 aNameSpaceID,
                                 nsIAtom* aAttribute, PRInt32 aModType)
 {
+    NS_ASSERTION(aDocument == this, "unexpected doc");
+
     nsresult rv;
 
     // XXXbz check aNameSpaceID, dammit!
@@ -966,46 +971,42 @@ nsXULDocument::AttributeChanged(nsIContent* aElement, PRInt32 aNameSpaceID,
 }
 
 void
-nsXULDocument::ContentAppended(nsIContent* aContainer,
+nsXULDocument::ContentAppended(nsIDocument* aDocument,
+                               nsIContent* aContainer,
                                PRInt32 aNewIndexInContainer)
 {
-    // First update our element map
+    NS_ASSERTION(aDocument == this, "unexpected doc");
+
+    // Update our element map
     PRUint32 count = aContainer->GetChildCount();
 
-    for (PRUint32 i = aNewIndexInContainer; i < count; ++i) {
-        nsresult rv = AddSubtreeToDocument(aContainer->GetChildAt(i));
-        if (NS_FAILED(rv))
-            return;
+    nsresult rv = NS_OK;
+    for (PRUint32 i = aNewIndexInContainer; i < count && NS_SUCCEEDED(rv);
+         ++i) {
+        rv = AddSubtreeToDocument(aContainer->GetChildAt(i));
     }
-
-    nsXMLDocument::ContentAppended(aContainer, aNewIndexInContainer);
 }
 
 void
-nsXULDocument::ContentInserted(nsIContent* aContainer,
+nsXULDocument::ContentInserted(nsIDocument* aDocument,
+                               nsIContent* aContainer,
                                nsIContent* aChild,
                                PRInt32 aIndexInContainer)
 {
-    nsresult rv = AddSubtreeToDocument(aChild);
-    if (NS_FAILED(rv))
-        return;
+    NS_ASSERTION(aDocument == this, "unexpected doc");
 
-    nsXMLDocument::ContentInserted(aContainer, aChild,
-                                   aIndexInContainer);
+    AddSubtreeToDocument(aChild);
 }
 
 void
-nsXULDocument::ContentRemoved(nsIContent* aContainer,
+nsXULDocument::ContentRemoved(nsIDocument* aDocument,
+                              nsIContent* aContainer,
                               nsIContent* aChild,
                               PRInt32 aIndexInContainer)
 {
-    nsresult rv;
-    rv = RemoveSubtreeFromDocument(aChild);
-    if (NS_FAILED(rv))
-        return;
+    NS_ASSERTION(aDocument == this, "unexpected doc");
 
-    nsXMLDocument::ContentRemoved(aContainer, aChild,
-                                  aIndexInContainer);
+    RemoveSubtreeFromDocument(aChild);
 }
 
 //----------------------------------------------------------------------
@@ -1150,7 +1151,6 @@ nsXULDocument::GetElementsByAttribute(const nsAString& aAttribute,
     nsContentList *list = new nsContentList(this,
                                             MatchAttribute,
                                             aValue,
-                                            nsnull,
                                             PR_TRUE,
                                             attrAtom,
                                             kNameSpaceID_Unknown);

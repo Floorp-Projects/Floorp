@@ -55,7 +55,7 @@
 #include "nsIDocument.h"
 #include "nsIDocShell.h"
 #include "nsIDocumentViewer.h"
-#include "nsIDocumentObserver.h"
+#include "nsIMutationObserver.h"
 
 #include "nsIDOMDocument.h"
 #include "nsWidgetAtoms.h"
@@ -68,7 +68,7 @@
 #include "nsWidgetsCID.h"
 static NS_DEFINE_CID(kMenuCID, NS_MENU_CID);
 
-NS_IMPL_ISUPPORTS6(nsMenuBarX, nsIMenuBar, nsIMenuListener, nsIDocumentObserver, 
+NS_IMPL_ISUPPORTS6(nsMenuBarX, nsIMenuBar, nsIMenuListener, nsIMutationObserver, 
                    nsIChangeManager, nsIMenuCommandDispatcher, nsISupportsWeakReference)
 
 NSMenu* nsMenuBarX::sApplicationMenu = nsnull;
@@ -94,8 +94,7 @@ nsMenuBarX::~nsMenuBarX()
   
   // make sure we unregister ourselves as a document observer
   if (mDocument) {
-    nsCOMPtr<nsIDocumentObserver> observer(do_QueryInterface(NS_STATIC_CAST(nsIMenuBar*,this)));
-    mDocument->RemoveObserver(observer);
+    mDocument->RemoveMutationObserver(this);
   }
   
   [mRootMenu autorelease];
@@ -201,8 +200,7 @@ nsMenuBarX::RegisterAsDocumentObserver(nsIDocShell* inDocShell)
     return;
   
   // register ourselves
-  nsCOMPtr<nsIDocumentObserver> observer(do_QueryInterface(NS_STATIC_CAST(nsIMenuBar*,this)));
-  doc->AddObserver(observer);
+  doc->AddMutationObserver(this);
   // also get pointer to doc, just in case docshell goes away
   // we can still remove ourself as doc observer directly from doc
   mDocument = doc;
@@ -809,23 +807,9 @@ NS_IMETHODIMP nsMenuBarX::Paint()
 
 
 //
-// nsIDocumentObserver
+// nsIMutationObserver
 // this is needed for menubar changes
 //
-
-NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(nsMenuBarX)
-NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(nsMenuBarX)
-NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsMenuBarX)
-
-void
-nsMenuBarX::BeginUpdate(nsIDocument * aDocument, nsUpdateType aUpdateType)
-{
-}
-
-void
-nsMenuBarX::EndUpdate(nsIDocument * aDocument, nsUpdateType aUpdateType)
-{
-}
 
 void
 nsMenuBarX::CharacterDataChanged(nsIDocument * aDocument,
@@ -854,7 +838,7 @@ nsMenuBarX::ContentAppended(nsIDocument * aDocument, nsIContent  * aContainer,
 }
 
 void
-nsMenuBarX::DocumentWillBeDestroyed(nsIDocument * aDocument)
+nsMenuBarX::NodeWillBeDestroyed(const nsINode * aNode)
 {
   mDocument = nsnull;
 }

@@ -271,6 +271,7 @@ public:
   void ToCString(nsAString& aBuf, PRInt32 aOffset, PRInt32 aLen) const;
 #endif
 
+protected:
   /**
    * There are a set of DOM- and scripting-specific instance variables
    * that may only be instantiated when a content object is accessed
@@ -283,7 +284,7 @@ public:
   {
   public:
     nsDataSlots(PtrBits aFlags);
-    ~nsDataSlots();
+    virtual ~nsDataSlots();
 
     /**
      * An object implementing nsIDOMNodeList for this content (childNodes)
@@ -298,26 +299,19 @@ public:
     nsIContent* mBindingParent;  // [Weak]
   };
 
+  // Override from nsINode
+  virtual nsINode::nsSlots* CreateSlots();
+
   nsDataSlots *GetDataSlots()
   {
-    if (!HasSlots()) {
-      nsDataSlots *slots = new nsDataSlots(mFlagsOrSlots);
-
-      if (!slots) {
-        return nsnull;
-      }
-
-      SetSlots(slots);
-    }
-
-    return NS_STATIC_CAST(nsDataSlots*, FlagsAsSlots());
+    return NS_STATIC_CAST(nsDataSlots*, GetSlots());
   }
 
   nsDataSlots *GetExistingDataSlots() const
   {
     return NS_STATIC_CAST(nsDataSlots*, GetExistingSlots());
   }
-protected:
+
   nsresult SplitText(PRUint32 aOffset, nsIDOMText** aReturn);
 
   /**

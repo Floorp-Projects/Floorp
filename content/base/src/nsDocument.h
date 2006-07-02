@@ -89,6 +89,7 @@
 #include "nsIRequest.h"
 #include "nsILoadGroup.h"
 #include "nsTObserverArray.h"
+#include "nsStubMutationObserver.h"
 
 // Put these here so all document impls get them automatically
 #include "nsHTMLStyleSheet.h"
@@ -238,7 +239,7 @@ public:
   NS_DECL_NSIDOMSTYLESHEETLIST
 
   // nsIDocumentObserver
-  virtual void DocumentWillBeDestroyed(nsIDocument *aDocument);
+  virtual void NodeWillBeDestroyed(const nsINode *aNode);
   virtual void StyleSheetAdded(nsIDocument *aDocument,
                                nsIStyleSheet* aStyleSheet,
                                PRBool aDocumentSheet);
@@ -288,7 +289,8 @@ class nsDocument : public nsIDocument,
                    public nsIDOM3EventTarget,
                    public nsIDOMNSEventTarget,
                    public nsIScriptObjectPrincipal,
-                   public nsIRadioGroupContainer
+                   public nsIRadioGroupContainer,
+                   public nsStubMutationObserver
 {
 public:
   NS_DECL_ISUPPORTS
@@ -468,8 +470,6 @@ public:
   virtual void EndUpdate(nsUpdateType aUpdateType);
   virtual void BeginLoad();
   virtual void EndLoad();
-  virtual void CharacterDataChanged(nsIContent* aContent,
-                                    PRBool aAppend);
   virtual void ContentStatesChanged(nsIContent* aContent1,
                                     nsIContent* aContent2,
                                     PRInt32 aStateMask);
@@ -477,18 +477,6 @@ public:
   virtual void AttributeWillChange(nsIContent* aChild,
                                    PRInt32 aNameSpaceID,
                                    nsIAtom* aAttribute);
-  virtual void AttributeChanged(nsIContent* aChild,
-                                PRInt32 aNameSpaceID,
-                                nsIAtom* aAttribute,
-                                PRInt32 aModType);
-  virtual void ContentAppended(nsIContent* aContainer,
-                               PRInt32 aNewIndexInContainer);
-  virtual void ContentInserted(nsIContent* aContainer,
-                               nsIContent* aChild,
-                               PRInt32 aIndexInContainer);
-  virtual void ContentRemoved(nsIContent* aContainer,
-                              nsIContent* aChild,
-                              PRInt32 aIndexInContainer);
 
   virtual void StyleRuleChanged(nsIStyleSheet* aStyleSheet,
                                 nsIStyleRule* aOldStyleRule,

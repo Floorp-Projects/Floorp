@@ -155,7 +155,7 @@ inDOMView::InitAtoms()
 NS_IMPL_ISUPPORTS3(inDOMView,
                    inIDOMView,
                    nsITreeView,
-                   nsIDocumentObserver)
+                   nsIMutationObserver)
 
 ////////////////////////////////////////////////////////////////////////
 // inIDOMView
@@ -176,9 +176,9 @@ inDOMView::SetRootNode(nsIDOMNode* aNode)
 
   if (mRootDocument) {
     // remove previous document observer
-    nsCOMPtr<nsIDocument> doc(do_QueryInterface(mRootDocument));
+    nsCOMPtr<nsINode> doc(do_QueryInterface(mRootDocument));
     if (doc)
-      doc->RemoveObserver(this);
+      doc->RemoveMutationObserver(this);
   }
 
   RemoveAllNodes();
@@ -204,9 +204,9 @@ inDOMView::SetRootNode(nsIDOMNode* aNode)
     }
 
     // add document observer
-    nsCOMPtr<nsIDocument> doc(do_QueryInterface(mRootDocument));
+    nsCOMPtr<nsINode> doc(do_QueryInterface(mRootDocument));
     if (doc)
-      doc->AddObserver(this);
+      doc->AddMutationObserver(this);
   } else {
     mRootDocument = nsnull;
   }
@@ -652,12 +652,13 @@ inDOMView::PerformActionOnCell(const PRUnichar* action, PRInt32 row, nsITreeColu
 }
 
 ///////////////////////////////////////////////////////////////////////
-// nsIDocumentObserver
+// nsIMutationObserver
 
-NS_IMPL_NSIDOCUMENTOBSERVER_CORE_STUB(inDOMView)
-NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(inDOMView)
-NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(inDOMView)
-NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(inDOMView)
+void
+inDOMView::NodeWillBeDestroyed(const nsINode* aNode)
+{
+  NS_NOTREACHED("Document destroyed while we're holding a strong ref to it");
+}
 
 void
 inDOMView::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,

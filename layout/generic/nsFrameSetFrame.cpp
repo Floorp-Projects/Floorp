@@ -75,6 +75,7 @@
 #include "nsLayoutAtoms.h"
 #include "nsIContent.h"
 #include "nsDisplayList.h"
+#include "nsNodeUtils.h"
 
 // masks for mEdgeVisibility
 #define LEFT_VIS   0x0001
@@ -288,10 +289,10 @@ nsHTMLFramesetFrame::FrameResizePrefCallback(const char* aPref, void* aClosure)
 
   frame->RecalculateBorderResize();
   if (doc) {
-    doc->AttributeChanged(frame->GetContent(),
-                          kNameSpaceID_None,
-                          nsHTMLAtoms::frameborder,
-                          nsIDOMMutationEvent::MODIFICATION);
+    nsNodeUtils::AttributeChanged(frame->GetContent(),
+                                  kNameSpaceID_None,
+                                  nsHTMLAtoms::frameborder,
+                                  nsIDOMMutationEvent::MODIFICATION);
   }
 
   return 0;

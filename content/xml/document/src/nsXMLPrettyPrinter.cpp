@@ -55,8 +55,9 @@
 #include "nsIContent.h"
 #include "nsIDOMDocumentFragment.h"
 
-NS_IMPL_ISUPPORTS1(nsXMLPrettyPrinter,
-                   nsIDocumentObserver)
+NS_IMPL_ISUPPORTS2(nsXMLPrettyPrinter,
+                   nsIDocumentObserver,
+                   nsIMutationObserver)
 
 nsXMLPrettyPrinter::nsXMLPrettyPrinter() : mDocument(nsnull),
                                            mUpdateDepth(0),
@@ -267,7 +268,7 @@ nsXMLPrettyPrinter::ContentRemoved(nsIDocument* aDocument,
 }
 
 void
-nsXMLPrettyPrinter::DocumentWillBeDestroyed(nsIDocument* aDocument)
+nsXMLPrettyPrinter::NodeWillBeDestroyed(const nsINode* aNode)
 {
     mDocument = nsnull;
     NS_RELEASE_THIS();

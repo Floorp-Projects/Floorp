@@ -140,10 +140,9 @@ TableRowsCollection::~TableRowsCollection()
 nsresult
 TableRowsCollection::Init()
 {
-  mOrphanRows = new nsContentList(mParent->GetDocument(),
+  mOrphanRows = new nsContentList(mParent,
                                   nsHTMLAtoms::tr,
                                   mParent->NodeInfo()->NamespaceID(),
-                                  mParent,
                                   PR_FALSE);
   return mOrphanRows ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
@@ -326,10 +325,6 @@ nsHTMLTableElement::nsHTMLTableElement(nsINodeInfo *aNodeInfo)
 
 nsHTMLTableElement::~nsHTMLTableElement()
 {
-  if (mTBodies) {
-    mTBodies->RootDestroyed();
-  }
-
   if (mRows) {
     mRows->ParentDestroyed();
   }
@@ -519,10 +514,9 @@ nsHTMLTableElement::GetTBodies(nsIDOMHTMLCollection** aValue)
 {
   if (!mTBodies) {
     // Not using NS_GetContentList because this should not be cached
-    mTBodies = new nsContentList(GetDocument(),
+    mTBodies = new nsContentList(this,
                                  nsHTMLAtoms::tbody,
                                  mNodeInfo->NamespaceID(),
-                                 this,
                                  PR_FALSE);
 
     NS_ENSURE_TRUE(mTBodies, NS_ERROR_OUT_OF_MEMORY);

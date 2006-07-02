@@ -42,7 +42,7 @@
 #include "txExprResult.h"
 #include "nsIDOMXPathResult.h"
 #include "nsIDocument.h"
-#include "nsIDocumentObserver.h"
+#include "nsIMutationObserver.h"
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
 
@@ -90,7 +90,7 @@ private:
  * A class for evaluating an XPath expression string
  */
 class nsXPathResult : public nsIDOMXPathResult,
-                      public nsIDocumentObserver,
+                      public nsIMutationObserver,
                       public nsIXPathResult
 {
 public:
@@ -103,8 +103,8 @@ public:
     // nsIDOMXPathResult interface
     NS_DECL_NSIDOMXPATHRESULT
 
-    // nsIDocumentObserver interface
-    NS_DECL_NSIDOCUMENTOBSERVER
+    // nsIMutationObserver interface
+    NS_DECL_NSIMUTATIONOBSERVER
 
     // nsIXPathResult interface
     nsresult SetExprResult(txAExprResult *aExprResult, PRUint16 aResultType);

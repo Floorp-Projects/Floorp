@@ -12,16 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is nsStubMutationObserver.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * The Initial Developer of the Original Code is the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Peter Van der Beken <peterv@netscape.com>
- *   Allan Beaufour <allan@beaufour.dk>
+ *   Jonas Sicking <jonas@sicking.cc> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,52 +35,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsIAttribute_h___
-#define nsIAttribute_h___
+/*
+ * nsStubMutationObserver is an implementation of the nsIMutationObserver
+ * interface (except for the methods on nsISupports) that is intended to be
+ * used as a base class within the content/layout library.  All methods do
+ * nothing.
+ */
 
-#include "nsINode.h"
+#include "nsStubMutationObserver.h"
 
-class nsDOMAttributeMap;
-class nsIContent;
-
-#define NS_IATTRIBUTE_IID  \
-{ 0x5a3fa236, 0x9249, 0x4949, \
-  { 0x86, 0xb4, 0x98, 0xc1, 0x86, 0xb3, 0xe5, 0x50 } }
-
-class nsIAttribute : public nsINode
-{
-public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IATTRIBUTE_IID)
-
-  virtual void SetMap(nsDOMAttributeMap *aMap) = 0;
-  
-  nsDOMAttributeMap *GetMap()
-  {
-    return mAttrMap;
-  }
-
-  nsINodeInfo *NodeInfo()
-  {
-    return mNodeInfo;
-  }
-
-  virtual nsIContent* GetContent() const = 0;
-
-  /**
-   * Called when our ownerElement is moved into a new document.
-   * Updates the nodeinfo of this node.
-   */
-  virtual nsresult SetOwnerDocument(nsIDocument* aDocument) = 0;
-
-protected:
-  nsIAttribute(nsDOMAttributeMap *aAttrMap, nsINodeInfo *aNodeInfo)
-    : nsINode(aNodeInfo), mAttrMap(aAttrMap)
-  {
-  }
-
-  nsDOMAttributeMap *mAttrMap; // WEAK
-};
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIAttribute, NS_IATTRIBUTE_IID)
-
-#endif /* nsIAttribute_h___ */
+NS_IMPL_NSIMUTATIONOBSERVER_CORE_STUB(nsStubMutationObserver)
+NS_IMPL_NSIMUTATIONOBSERVER_CONTENT(nsStubMutationObserver)

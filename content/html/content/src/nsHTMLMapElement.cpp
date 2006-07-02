@@ -51,7 +51,6 @@ class nsHTMLMapElement : public nsGenericHTMLElement,
 {
 public:
   nsHTMLMapElement(nsINodeInfo *aNodeInfo);
-  virtual ~nsHTMLMapElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -85,14 +84,6 @@ nsHTMLMapElement::nsHTMLMapElement(nsINodeInfo *aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }
-
-nsHTMLMapElement::~nsHTMLMapElement()
-{
-  if (mAreas) {
-    mAreas->RootDestroyed();
-  }
-}
-
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLMapElement, nsGenericElement) 
 NS_IMPL_RELEASE_INHERITED(nsHTMLMapElement, nsGenericElement) 
@@ -146,10 +137,9 @@ nsHTMLMapElement::GetAreas(nsIDOMHTMLCollection** aAreas)
 
   if (!mAreas) {
     // Not using NS_GetContentList because this should not be cached
-    mAreas = new nsContentList(GetDocument(),
+    mAreas = new nsContentList(this,
                                nsHTMLAtoms::area,
                                mNodeInfo->NamespaceID(),
-                               this,
                                PR_FALSE);
 
     if (!mAreas) {

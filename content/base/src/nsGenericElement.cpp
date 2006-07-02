@@ -84,6 +84,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsMutationEvent.h"
+#include "nsNodeUtils.h"
 
 #include "nsIBindingManager.h"
 #include "nsXBLBinding.h"
@@ -295,6 +296,30 @@ nsINode::GetListenerManager(PRBool aCreateIfNotFound,
     SetFlags(NODE_HAS_LISTENERMANAGER);
   }
   return rv;
+}
+
+nsINode::nsSlots*
+nsINode::CreateSlots()
+{
+  return new nsSlots(mFlagsOrSlots);
+}
+
+void
+nsINode::AddMutationObserver(nsIMutationObserver* aMutationObserver)
+{
+  nsSlots* slots = GetSlots();
+  if (slots) {
+    slots->mMutationObservers.AppendObserver(aMutationObserver);
+  }
+}
+
+void
+nsINode::RemoveMutationObserver(nsIMutationObserver* aMutationObserver)
+{
+  nsSlots* slots = GetExistingSlots();
+  if (slots) {
+    slots->mMutationObservers.RemoveObserver(aMutationObserver);
+  }
 }
 
 //----------------------------------------------------------------------
@@ -990,12 +1015,6 @@ nsGenericElement::nsDOMSlots::~nsDOMSlots()
   }
 }
 
-PRBool
-nsGenericElement::nsDOMSlots::IsEmpty()
-{
-  return (!mChildNodes && !mStyle && !mAttributeMap && !mBindingParent);
-}
-
 nsGenericElement::nsGenericElement(nsINodeInfo *aNodeInfo)
   : nsIXMLContent(aNodeInfo)
 {
@@ -1009,12 +1028,7 @@ nsGenericElement::~nsGenericElement()
   NS_PRECONDITION(!IsInDoc(),
                   "Please remove this from the document properly");
 
-  if (HasSlots()) {
-    nsDOMSlots* slots = GetDOMSlots();
-    PtrBits flags = slots->mFlags | NODE_DOESNT_HAVE_SLOTS;
-    delete slots;
-    mFlagsOrSlots = flags;
-  }
+  nsNodeUtils::NodeWillBeDestroyed(this);
 }
 
 /**
@@ -1543,8 +1557,8 @@ nsGenericElement::GetElementsByTagName(const nsAString& aTagname,
   nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aTagname);
   NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
 
-  nsContentList *list = NS_GetContentList(GetCurrentDoc(), nameAtom,
-                                          kNameSpaceID_Unknown, this).get();
+  nsContentList *list = NS_GetContentList(this, nameAtom,
+                                          kNameSpaceID_Unknown).get();
   NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
 
   // transfer ref to aReturn
@@ -1674,7 +1688,7 @@ nsGenericElement::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
     if (nameSpaceId == kNameSpaceID_Unknown) {
       // Unknown namespace means no matches, we create an empty list...
       list = NS_GetContentList(document, nsnull,
-                               kNameSpaceID_None, nsnull).get();
+                               kNameSpaceID_None).get();
       NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
     }
   }
@@ -1683,7 +1697,7 @@ nsGenericElement::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
     nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aLocalName);
     NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
 
-    list = NS_GetContentList(document, nameAtom, nameSpaceId, this).get();
+    list = NS_GetContentList(this, nameAtom, nameSpaceId).get();
     NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
   }
 
@@ -2396,20 +2410,17 @@ nsGenericElement::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
   // really need to stop running them while we're in the middle of modifying
   // the DOM....
 
-  nsINode* container = aParent ? NS_STATIC_CAST(nsINode*, aParent) :
-                                 NS_STATIC_CAST(nsINode*, aDocument);
-  if (aKid->GetNodeParent() == container) {
-    if (aNotify && aDocument) {
-      // Note that we always want to call ContentInserted when things are added
-      // as kids to documents
-      if (aParent && isAppend) {
-        aDocument->ContentAppended(aParent, aIndex);
-      } else {
-        aDocument->ContentInserted(aParent, aKid, aIndex);
-      }
+  nsINode* container = NODE_FROM(aParent, aDocument);
+  if (aNotify && aKid->GetNodeParent() == container) {
+    // Note that we always want to call ContentInserted when things are added
+    // as kids to documents
+    if (aParent && isAppend) {
+      nsNodeUtils::ContentAppended(aParent, aIndex);
+    } else {
+      nsNodeUtils::ContentInserted(container, aKid, aIndex);
     }
-    if (aNotify &&
-        nsContentUtils::HasMutationListeners(container,
+
+    if (nsContentUtils::HasMutationListeners(container,
           NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
       nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEINSERTED);
       mutation.mRelatedNode = do_QueryInterface(container);
@@ -2458,10 +2469,7 @@ nsGenericElement::doRemoveChildAt(PRUint32 aIndex, PRBool aNotify,
 
   nsMutationGuard::DidMutate();
 
-  nsINode* container = aParent;
-  if (!container) {
-    container = aDocument;
-  }
+  nsINode* container = NODE_FROM(aParent, aDocument);
   
   NS_PRECONDITION(aKid && aKid->GetParent() == aParent &&
                   aKid == container->GetChildAt(aIndex) &&
@@ -2494,8 +2502,8 @@ nsGenericElement::doRemoveChildAt(PRUint32 aIndex, PRBool aNotify,
 
   aChildArray.RemoveChildAt(aIndex);
 
-  if (aNotify && aDocument) {
-    aDocument->ContentRemoved(aParent, aKid, aIndex);
+  if (aNotify) {
+    nsNodeUtils::ContentRemoved(container, aKid, aIndex);
   }
 
   aKid->UnbindFromTree();
@@ -2819,10 +2827,7 @@ nsGenericElement::doReplaceOrInsertBefore(PRBool aReplace,
   nsresult res = NS_OK;
   PRInt32 insPos;
 
-  nsINode* container = aParent;
-  if (!container) {
-    container = aDocument;
-  }
+  nsINode* container = NODE_FROM(aParent, aDocument);
 
   // Figure out which index to insert at
   if (aRefChild) {
@@ -3060,10 +3065,7 @@ nsGenericElement::doRemoveChild(nsIDOMNode* aOldChild, nsIContent* aParent,
   *aReturn = nsnull;
   NS_ENSURE_TRUE(aOldChild, NS_ERROR_NULL_POINTER);
 
-  nsINode* container = aParent;
-  if (!container) {
-    container = aDocument;
-  }
+  nsINode* container = NODE_FROM(aParent, aDocument);
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(aOldChild);
   // fix children to be a passed argument
@@ -3424,8 +3426,8 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
     nsEventDispatcher::Dispatch(this, nsnull, &mutation);
   }
 
-  if (document && aNotify) {
-    document->AttributeChanged(this, aNamespaceID, aName, modType);
+  if (aNotify) {
+    nsNodeUtils::AttributeChanged(this, aNamespaceID, aName, modType);
   }
   
   if (aNamespaceID == kNameSpaceID_XMLEvents && 
@@ -3637,11 +3639,11 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     nsXBLBinding *binding = document->BindingManager()->GetBinding(this);
     if (binding)
       binding->AttributeChanged(aName, aNameSpaceID, PR_TRUE, aNotify);
+  }
 
-    if (aNotify) {
-      document->AttributeChanged(this, aNameSpaceID, aName,
-                                 nsIDOMMutationEvent::REMOVAL);
-    }
+  if (aNotify) {
+    nsNodeUtils::AttributeChanged(this, aNameSpaceID, aName,
+                                  nsIDOMMutationEvent::REMOVAL);
   }
 
   return NS_OK;
@@ -3783,6 +3785,12 @@ PRInt32
 nsGenericElement::IndexOf(nsINode* aPossibleChild) const
 {
   return mAttrsAndChildren.IndexOfChild(aPossibleChild);
+}
+
+nsINode::nsSlots*
+nsGenericElement::CreateSlots()
+{
+  return new nsDOMSlots(mFlagsOrSlots);
 }
 
 void

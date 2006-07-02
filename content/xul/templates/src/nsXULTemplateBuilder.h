@@ -104,7 +104,7 @@ public:
                                 nsIContent* aContainer,
                                 nsIContent* aChild,
                                 PRInt32 aIndexInContainer);
-    virtual void DocumentWillBeDestroyed(nsIDocument *aDocument);
+    virtual void NodeWillBeDestroyed(const nsINode* aNode);
 
     /**
      * Remove an old result and/or add a new result. This method will retrieve

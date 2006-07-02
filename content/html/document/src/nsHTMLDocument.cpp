@@ -84,6 +84,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIScrollableView.h"
 #include "nsAttrName.h"
+#include "nsNodeUtils.h"
 
 #include "nsNetCID.h"
 #include "nsIIOService.h"
@@ -1196,42 +1197,40 @@ nsHTMLDocument::SetCompatibilityMode(nsCompatibility aMode)
 }
 
 void
-nsHTMLDocument::ContentAppended(nsIContent* aContainer,
+nsHTMLDocument::ContentAppended(nsIDocument* aDocument,
+                                nsIContent* aContainer,
                                 PRInt32 aNewIndexInContainer)
 {
-  NS_ABORT_IF_FALSE(aContainer, "Null container!");
+  NS_ASSERTION(aDocument == this, "unexpected doc");
 
-  // Register new content. That is the content numbered from
-  // aNewIndexInContainer and upwards.
   PRUint32 count = aContainer->GetChildCount();
-
   for (PRUint32 i = aNewIndexInContainer; i < count; ++i) {
     RegisterNamedItems(aContainer->GetChildAt(i));
   }
-
-  nsDocument::ContentAppended(aContainer, aNewIndexInContainer);
 }
 
 void
-nsHTMLDocument::ContentInserted(nsIContent* aContainer, nsIContent* aContent,
+nsHTMLDocument::ContentInserted(nsIDocument* aDocument,
+                                nsIContent* aContainer,
+                                nsIContent* aContent,
                                 PRInt32 aIndexInContainer)
 {
+  NS_ASSERTION(aDocument == this, "unexpected doc");
+
   NS_ABORT_IF_FALSE(aContent, "Null content!");
 
-  nsresult rv = RegisterNamedItems(aContent);
-
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  nsDocument::ContentInserted(aContainer, aContent, aIndexInContainer);
+  RegisterNamedItems(aContent);
 }
 
 void
-nsHTMLDocument::ContentRemoved(nsIContent* aContainer, nsIContent* aContent,
+nsHTMLDocument::ContentRemoved(nsIDocument* aDocument,
+                               nsIContent* aContainer,
+                               nsIContent* aChild,
                                PRInt32 aIndexInContainer)
 {
-  NS_ABORT_IF_FALSE(aContent, "Null content!");
+  NS_ASSERTION(aDocument == this, "unexpected doc");
+
+  NS_ABORT_IF_FALSE(aChild, "Null content!");
 
   if (aContainer == mRootContent) {
     // Reset mBodyContent in case we got a new body.
@@ -1239,13 +1238,7 @@ nsHTMLDocument::ContentRemoved(nsIContent* aContainer, nsIContent* aContent,
     mBodyContent = nsnull;
   }
 
-  nsresult rv = UnregisterNamedItems(aContent);
-
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  nsDocument::ContentRemoved(aContainer, aContent, aIndexInContainer);
+  UnregisterNamedItems(aChild);
 }
 
 void
@@ -1278,9 +1271,12 @@ nsHTMLDocument::AttributeWillChange(nsIContent* aContent, PRInt32 aNameSpaceID,
 }
 
 void
-nsHTMLDocument::AttributeChanged(nsIContent* aContent, PRInt32 aNameSpaceID,
+nsHTMLDocument::AttributeChanged(nsIDocument* aDocument,
+                                 nsIContent* aContent, PRInt32 aNameSpaceID,
                                  nsIAtom* aAttribute, PRInt32 aModType)
 {
+  NS_ASSERTION(aDocument == this, "unexpected doc");
+
   NS_ABORT_IF_FALSE(aContent, "Null content!");
   NS_PRECONDITION(aAttribute, "Must have an attribute that's changing!");
 
@@ -1289,25 +1285,15 @@ nsHTMLDocument::AttributeChanged(nsIContent* aContent, PRInt32 aNameSpaceID,
 
     nsIAtom* name = IsNamedItem(aContent);
     if (name) {
-      nsresult rv = UpdateNameTableEntry(name, aContent);
-
-      if (NS_FAILED(rv)) {
-        return;
-      }
+      UpdateNameTableEntry(name, aContent);
     }
   } else if (aAttribute == aContent->GetIDAttributeName() &&
              aNameSpaceID == kNameSpaceID_None) {
     nsIAtom* id = aContent->GetID();
     if (id) {
-      nsresult rv = UpdateIdTableEntry(id, aContent);
-
-      if (NS_FAILED(rv)) {
-        return;
-      }
+      UpdateIdTableEntry(id, aContent);
     }
   }
-
-  nsDocument::AttributeChanged(aContent, aNameSpaceID, aAttribute, aModType);
 }
 
 void
@@ -2078,7 +2064,7 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
 
   if (root) {
     // Tear down the frames for the root element.
-    ContentRemoved(nsnull, root, 0);
+    nsNodeUtils::ContentRemoved(this, root, 0);
 
     // Put the root element back into the document, we don't notify
     // the document about this insertion since the sink will do that

@@ -59,7 +59,6 @@ class nsHTMLTableRowElement : public nsGenericHTMLElement,
 {
 public:
   nsHTMLTableRowElement(nsINodeInfo *aNodeInfo);
-  virtual ~nsHTMLTableRowElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -122,14 +121,6 @@ nsHTMLTableRowElement::nsHTMLTableRowElement(nsINodeInfo *aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }
-
-nsHTMLTableRowElement::~nsHTMLTableRowElement()
-{
-  if (mCells) {
-    mCells->RootDestroyed();
-  }
-}
-
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLTableRowElement, nsGenericElement) 
 NS_IMPL_RELEASE_INHERITED(nsHTMLTableRowElement, nsGenericElement) 
@@ -270,10 +261,9 @@ NS_IMETHODIMP
 nsHTMLTableRowElement::GetCells(nsIDOMHTMLCollection** aValue)
 {
   if (!mCells) {
-    mCells = new nsContentList(GetDocument(),
+    mCells = new nsContentList(this,
                                IsCell,
                                EmptyString(),
-                               this,
                                PR_FALSE,
                                nsnull,
                                kNameSpaceID_None,

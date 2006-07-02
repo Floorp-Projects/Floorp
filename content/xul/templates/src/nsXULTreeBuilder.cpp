@@ -88,7 +88,7 @@ public:
     // nsINativeTreeView: Untrusted code can use us
     NS_IMETHOD EnsureNative() { return NS_OK; }
 
-    virtual void DocumentWillBeDestroyed(nsIDocument *aDocument);
+    virtual void NodeWillBeDestroyed(const nsINode* aNode);
 
 protected:
     friend NS_IMETHODIMP
@@ -1099,12 +1099,12 @@ nsXULTreeBuilder::PerformActionOnCell(const PRUnichar* aAction, PRInt32 aRow, ns
 
 
 void
-nsXULTreeBuilder::DocumentWillBeDestroyed(nsIDocument* aDocument)
+nsXULTreeBuilder::NodeWillBeDestroyed(const nsINode* aNode)
 {
     if (mObservers)
         mObservers->Clear();
 
-    nsXULTemplateBuilder::DocumentWillBeDestroyed(aDocument);
+    nsXULTemplateBuilder::NodeWillBeDestroyed(aNode);
 }
 
 NS_IMETHODIMP

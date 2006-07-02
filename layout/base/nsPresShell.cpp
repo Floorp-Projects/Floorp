@@ -1646,9 +1646,10 @@ PresShell::PresShell()
   new (this) nsFrameManager();
 }
 
-NS_IMPL_ISUPPORTS7(PresShell, nsIPresShell, nsIDocumentObserver,
+NS_IMPL_ISUPPORTS8(PresShell, nsIPresShell, nsIDocumentObserver,
                    nsIViewObserver, nsISelectionController,
-                   nsISelectionDisplay, nsIObserver, nsISupportsWeakReference)
+                   nsISelectionDisplay, nsIObserver, nsISupportsWeakReference,
+                   nsIMutationObserver)
 
 PresShell::~PresShell()
 {

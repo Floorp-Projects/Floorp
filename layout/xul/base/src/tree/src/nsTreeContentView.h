@@ -86,7 +86,7 @@ class nsTreeContentView : public nsINativeTreeView,
                                  PRInt32 aIndexInContainer);
     virtual void ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer,
                                 nsIContent* aChild, PRInt32 aIndexInContainer);
-    virtual void DocumentWillBeDestroyed(nsIDocument *aDocument);
+    virtual void NodeWillBeDestroyed(const nsINode* aNode);
 
   protected:
     // Recursive methods which deal with serializing of nested content.
