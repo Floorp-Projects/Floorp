@@ -150,7 +150,7 @@ struct JSArenaPool {
         if (_a->avail == (jsuword)(p) + JS_ARENA_ALIGN(pool, size)) {         \
             size_t _nb = (size) + (incr);                                     \
             _nb = JS_ARENA_ALIGN(pool, _nb);                                  \
-            if ((jsuword)(p) <= _a->limit - _nb) {                            \
+            if (_a->limit >= _nb && (jsuword)(p) <= _a->limit - _nb) {        \
                 _a->avail = (jsuword)(p) + _nb;                               \
                 JS_ArenaCountInplaceGrowth(pool, size, incr);                 \
             } else if ((jsuword)(p) == _a->base) {                            \
