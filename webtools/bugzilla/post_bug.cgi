@@ -509,7 +509,8 @@ if (UserInGroup("editbugs")) {
         my $list = $dbh->selectcol_arrayref(qq{
                                     SELECT name 
                                       FROM keyworddefs 
-                                     WHERE id IN ($kw_ids)});
+                                     WHERE id IN ($kw_ids)
+                                  ORDER BY name});
         my $kw_list = join(', ', @$list);
         $dbh->do(q{UPDATE bugs 
                       SET delta_ts = ?, keywords = ? 
