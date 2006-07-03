@@ -35,7 +35,6 @@ use fields qw(
     ldap
 );
 
-use Bugzilla::Config;
 use Bugzilla::Constants;
 use Bugzilla::Error;
 

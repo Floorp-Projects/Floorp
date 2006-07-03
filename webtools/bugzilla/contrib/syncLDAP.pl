@@ -26,7 +26,6 @@ use lib qw(.);
 
 use Net::LDAP;
 use Bugzilla;
-use Bugzilla::Config qw(:DEFAULT);
 use Bugzilla::User;
 
 my $cgi = Bugzilla->cgi;

@@ -25,7 +25,7 @@ use Bugzilla;
 use Bugzilla::Util;
 use Bugzilla::Error;
 use Bugzilla::Constants;
-use Bugzilla::Config qw(:DEFAULT :admin);
+use Bugzilla::Config qw(:admin);
 
 # List of different tables that contain the changeable field values
 # (the old "enums.") Keep them in alphabetical order by their 

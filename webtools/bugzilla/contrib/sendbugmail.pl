@@ -4,7 +4,7 @@
 #
 # Nick Barnes, Ravenbrook Limited, 2004-04-01.
 #
-# $Id: sendbugmail.pl,v 1.6 2006/07/03 21:26:22 mkanat%bugzilla.org Exp $
+# $Id: sendbugmail.pl,v 1.7 2006/07/03 21:42:47 mkanat%bugzilla.org Exp $
 # 
 # Bugzilla email script for Bugzilla 2.17.4 and later.  Invoke this to send
 # bugmail for a bug which has been changed directly in the database.
@@ -17,7 +17,6 @@
 use lib qw(.);
 
 use Bugzilla;
-use Bugzilla::Config qw(:DEFAULT);
 use Bugzilla::Util;
 use Bugzilla::BugMail;
 use Bugzilla::User;

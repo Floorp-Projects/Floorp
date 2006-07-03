@@ -38,7 +38,6 @@ use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Error;
 use Bugzilla::Util;
-use Bugzilla::Config qw(:DEFAULT);
 use Bugzilla::Search;
 use Bugzilla::Search::Quicksearch;
 use Bugzilla::User;

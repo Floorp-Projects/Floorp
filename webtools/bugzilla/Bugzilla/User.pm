@@ -40,7 +40,6 @@ use strict;
 # This module implements utilities for dealing with Bugzilla users.
 package Bugzilla::User;
 
-use Bugzilla::Config;
 use Bugzilla::Error;
 use Bugzilla::Util;
 use Bugzilla::Constants;

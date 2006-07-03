@@ -25,7 +25,6 @@ package Bugzilla::Template::Plugin::Hook;
 
 use strict;
 
-use Bugzilla::Config;
 use Bugzilla::Constants;
 use Bugzilla::Template;
 use Bugzilla::Util;

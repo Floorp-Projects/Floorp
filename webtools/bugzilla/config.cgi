@@ -32,7 +32,6 @@ use lib qw(.);
 
 use Bugzilla;
 use Bugzilla::Constants;
-use Bugzilla::Config qw(:DEFAULT);
 use Bugzilla::Error;
 use Bugzilla::Keyword;
 use Bugzilla::Bug;

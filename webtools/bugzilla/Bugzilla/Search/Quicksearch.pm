@@ -23,7 +23,6 @@ package Bugzilla::Search::Quicksearch;
 # Make it harder for us to do dangerous things in Perl.
 use strict;
 
-use Bugzilla::Config;
 use Bugzilla::Error;
 use Bugzilla::Constants;
 use Bugzilla::Keyword;

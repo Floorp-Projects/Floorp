@@ -59,7 +59,6 @@ use Bugzilla::User;
 
 use Bugzilla::Error;
 use Bugzilla::Util;
-use Bugzilla::Config;
 
 ######################################################################
 # Global Variables

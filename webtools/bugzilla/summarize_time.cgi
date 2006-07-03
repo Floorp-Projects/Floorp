@@ -25,7 +25,6 @@ use Date::Format;        # strftime
 
 use Bugzilla;
 use Bugzilla::Constants; # LOGIN_*
-use Bugzilla::Config qw(:DEFAULT);
 use Bugzilla::Bug;       # EmitDependList
 use Bugzilla::Util;      # trim
 use Bugzilla::Error;

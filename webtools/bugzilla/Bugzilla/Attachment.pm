@@ -50,7 +50,6 @@ that users upload to the Bugzilla server.
 use Bugzilla::Constants;
 use Bugzilla::Error;
 use Bugzilla::Flag;
-use Bugzilla::Config;
 use Bugzilla::User;
 use Bugzilla::Util qw(trick_taint);
 

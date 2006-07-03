@@ -35,9 +35,6 @@ use strict;
 use base qw(Exporter);
 use Bugzilla::Constants;
 
-# Module stuff
-@Bugzilla::Config::EXPORT = qw(Param);
-
 # Don't export localvars by default - people should have to explicitly
 # ask for it, as a (probably futile) attempt to stop code using it
 # when it shouldn't
@@ -90,28 +87,6 @@ sub param_panels {
         push(@param_panels, $module) unless $module eq 'Common';
     }
     return @param_panels;
-}
-
-sub Param {
-    my ($param) = @_;
-
-    _load_params unless %params;
-    my %param_values = %{Bugzilla->params};
-
-    # By this stage, the param must be in the hash
-    die "Can't find param named $param" unless (exists $params{$param});
-
-    # When module startup code runs (which is does even via -c, when using
-    # |use|), we may try to grab params which don't exist yet. This affects
-    # tests, so have this as a fallback for the -c case
-    return $params{$param}->{default} 
-        if ($^C && not exists $param_values{$param});
-
-    # If we have a value for the param, return it
-    return $param_values{$param} if exists $param_values{$param};
-
-    # Else error out
-    die "No value for param $param (try running checksetup.pl again)";
 }
 
 sub SetParam {
@@ -277,11 +252,6 @@ Bugzilla::Config - Configuration parameters for Bugzilla
 
 =head1 SYNOPSIS
 
-  # Getting parameters
-  use Bugzilla::Config;
-
-  my $fooSetting = Bugzilla->params->{'foo'};
-
   # Administration functions
   use Bugzilla::Config qw(:admin);
 
@@ -304,11 +274,6 @@ This package contains ways to access Bugzilla configuration parameters.
 Parameters can be set, retrieved, and updated.
 
 =over 4
-
-=item C<Bugzilla->params->{$name}>
-
-Returns the Param with the specified name. Either a string, or, in the case
-of multiple-choice parameters, an array reference.
 
 =item C<SetParam($name, $value)>
 

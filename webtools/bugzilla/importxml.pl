@@ -79,7 +79,6 @@ use Bugzilla::Version;
 use Bugzilla::Component;
 use Bugzilla::Milestone;
 use Bugzilla::FlagType;
-use Bugzilla::Config qw(:DEFAULT);
 use Bugzilla::BugMail;
 use Bugzilla::Mailer;
 use Bugzilla::User;

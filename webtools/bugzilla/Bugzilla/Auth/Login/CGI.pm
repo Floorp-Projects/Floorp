@@ -33,7 +33,6 @@ use strict;
 use base qw(Bugzilla::Auth::Login);
 use constant user_can_create_account => 1;
 
-use Bugzilla::Config;
 use Bugzilla::Constants;
 use Bugzilla::Util;
 use Bugzilla::Error;

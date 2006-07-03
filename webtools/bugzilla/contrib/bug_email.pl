@@ -38,7 +38,7 @@
 #
 # You need to work with bug_email.pl the MIME::Parser installed.
 # 
-# $Id: bug_email.pl,v 1.43 2006/07/03 21:26:22 mkanat%bugzilla.org Exp $
+# $Id: bug_email.pl,v 1.44 2006/07/03 21:42:47 mkanat%bugzilla.org Exp $
 ###############################################################
 
 # 02/12/2000 (SML)
@@ -91,7 +91,6 @@ use lib "../";
 
 use Bugzilla;
 use BugzillaEmail;
-use Bugzilla::Config qw(:DEFAULT);
 use Bugzilla::Constants;
 use Bugzilla::Util;
 use Bugzilla::BugMail;

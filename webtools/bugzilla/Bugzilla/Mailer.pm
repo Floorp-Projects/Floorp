@@ -37,7 +37,6 @@ use base qw(Exporter);
 @Bugzilla::Mailer::EXPORT = qw(MessageToMTA);
 
 use Bugzilla::Constants;
-use Bugzilla::Config;
 use Bugzilla::Util;
 
 use Mail::Header;

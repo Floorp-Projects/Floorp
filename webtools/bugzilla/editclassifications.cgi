@@ -27,7 +27,6 @@ use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Util;
 use Bugzilla::Error;
-use Bugzilla::Config qw(:DEFAULT);
 use Bugzilla::Classification;
 
 my $cgi = Bugzilla->cgi;

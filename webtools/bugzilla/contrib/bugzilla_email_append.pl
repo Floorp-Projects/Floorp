@@ -40,7 +40,6 @@ BEGIN {
 use Bugzilla;
 use Bugzilla::Constants;
 use BugzillaEmail;
-use Bugzilla::Config qw(:DEFAULT);
 use Bugzilla::BugMail;
 
 my $dbh = Bugzilla->dbh;

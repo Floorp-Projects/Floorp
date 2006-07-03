@@ -35,7 +35,6 @@ package Bugzilla::BugMail;
 use Bugzilla::Error;
 use Bugzilla::User;
 use Bugzilla::Constants;
-use Bugzilla::Config;
 use Bugzilla::Util;
 use Bugzilla::Bug;
 use Bugzilla::Product;

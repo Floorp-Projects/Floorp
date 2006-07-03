@@ -25,7 +25,6 @@ use lib ".";
 
 use Bugzilla;
 use Bugzilla::Constants;
-use Bugzilla::Config qw(:DEFAULT);
 use Bugzilla::Util;
 use Bugzilla::Error;
 use Bugzilla::User;

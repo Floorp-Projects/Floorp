@@ -32,7 +32,6 @@ package Bugzilla::Auth::Persist::Cookie;
 use strict;
 use fields qw();
 
-use Bugzilla::Config;
 use Bugzilla::Constants;
 use Bugzilla::Util;
 use Bugzilla::Token;

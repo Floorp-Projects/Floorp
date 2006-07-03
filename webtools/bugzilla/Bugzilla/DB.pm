@@ -35,7 +35,7 @@ use DBI;
 # Inherit the DB class from DBI::db.
 use base qw(DBI::db);
 
-use Bugzilla::Config qw(:DEFAULT :db);
+use Bugzilla::Config qw(:db);
 use Bugzilla::Constants;
 use Bugzilla::Util;
 use Bugzilla::Error;

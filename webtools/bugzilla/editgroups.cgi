@@ -29,7 +29,7 @@ use lib ".";
 
 use Bugzilla;
 use Bugzilla::Constants;
-use Bugzilla::Config qw(:DEFAULT :admin);
+use Bugzilla::Config qw(:admin);
 use Bugzilla::Util;
 use Bugzilla::Error;
 use Bugzilla::Group;

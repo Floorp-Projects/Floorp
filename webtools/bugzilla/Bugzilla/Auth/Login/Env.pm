@@ -24,7 +24,6 @@ package Bugzilla::Auth::Login::Env;
 use strict;
 use base qw(Bugzilla::Auth::Login);
 
-use Bugzilla::Config;
 use Bugzilla::Constants;
 use Bugzilla::Error;
 

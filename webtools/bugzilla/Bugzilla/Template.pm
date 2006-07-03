@@ -35,7 +35,6 @@ package Bugzilla::Template;
 use strict;
 
 use Bugzilla::Constants;
-use Bugzilla::Config;
 use Bugzilla::Util;
 use Bugzilla::User;
 use Bugzilla::Error;
@@ -771,7 +770,7 @@ sub create {
         # Default variables for all templates
         VARIABLES => {
             # Function for retrieving global parameters.
-            'Param' => \&Bugzilla::Config::Param,
+            'Param' => sub { return Bugzilla->params->{$_[0]}; },
 
             # Function to create date strings
             'time2str' => \&Date::Format::time2str,

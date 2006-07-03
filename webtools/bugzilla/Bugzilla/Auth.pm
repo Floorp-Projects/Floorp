@@ -32,7 +32,6 @@ use fields qw(
 
 use Bugzilla::Constants;
 use Bugzilla::Error;
-use Bugzilla::Config;
 use Bugzilla::Auth::Login::Stack;
 use Bugzilla::Auth::Verify::Stack;
 use Bugzilla::Auth::Persist::Cookie;

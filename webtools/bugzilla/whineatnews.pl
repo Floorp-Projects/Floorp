@@ -31,7 +31,6 @@ use strict;
 use lib '.';
 
 use Bugzilla;
-use Bugzilla::Config qw(:DEFAULT);
 use Bugzilla::Mailer;
 use Bugzilla::Util;
 

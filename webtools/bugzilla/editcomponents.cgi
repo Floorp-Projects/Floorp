@@ -31,7 +31,6 @@ use lib ".";
 
 use Bugzilla;
 use Bugzilla::Constants;
-use Bugzilla::Config qw(:DEFAULT);
 use Bugzilla::Series;
 use Bugzilla::Util;
 use Bugzilla::Error;

@@ -38,7 +38,7 @@ use strict;
 use lib qw(.);
 
 use Bugzilla;
-use Bugzilla::Config qw(:DEFAULT :localconfig);
+use Bugzilla::Config qw(:localconfig);
 use Bugzilla::Constants;
 use Bugzilla::Error;
 use Bugzilla::Flag; 

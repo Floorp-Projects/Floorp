@@ -33,7 +33,6 @@ use strict;
 use CGI::Carp qw(fatalsToBrowser);
 
 use Bugzilla::Attachment;
-use Bugzilla::Config;
 use Bugzilla::Constants;
 use Bugzilla::Field;
 use Bugzilla::Flag;

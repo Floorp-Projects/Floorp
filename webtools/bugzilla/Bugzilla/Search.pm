@@ -34,7 +34,6 @@ package Bugzilla::Search;
 use base qw(Exporter);
 @Bugzilla::Search::EXPORT = qw(IsValidQueryType);
 
-use Bugzilla::Config;
 use Bugzilla::Error;
 use Bugzilla::Util;
 use Bugzilla::Constants;

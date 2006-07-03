@@ -29,7 +29,6 @@ use strict;
 use lib ".";
 
 use Bugzilla;
-use Bugzilla::Config qw(:DEFAULT);
 use Bugzilla::Constants;
 use Bugzilla::Search;
 use Bugzilla::User;

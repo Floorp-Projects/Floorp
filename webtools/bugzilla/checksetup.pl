@@ -517,7 +517,7 @@ BEGIN {
     $::ENV{'PATH'} = $env;
 
     require Bugzilla::Config;
-    import Bugzilla::Config qw(:DEFAULT :admin);
+    import Bugzilla::Config qw(:admin);
 }
 
 # 12/17/00 justdave@syndicomm.com - removed declarations of the localconfig

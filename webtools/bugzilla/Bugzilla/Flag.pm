@@ -61,7 +61,6 @@ package Bugzilla::Flag;
 
 use Bugzilla::FlagType;
 use Bugzilla::User;
-use Bugzilla::Config;
 use Bugzilla::Util;
 use Bugzilla::Error;
 use Bugzilla::Mailer;
