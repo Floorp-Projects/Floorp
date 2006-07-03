@@ -1,24 +1,28 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 /*
- * Autorepeatbutton
+ * Scroll arrows
  */
-.autorepeatbutton-up
+.autorepeatbutton-up,
+.scrollbutton-up
  {
    list-style-image      : url("chrome://global/skin/arrow/arrow-lft-sharp.gif");
  }
  
-.autorepeatbutton-down
+.autorepeatbutton-down,
+.scrollbutton-down
   {
     list-style-image     : url("chrome://global/skin/arrow/arrow-rit-sharp.gif");
   }
 
-.autorepeatbutton-up[orient="vertical"]
+.autorepeatbutton-up[orient="vertical"],
+.scrollbutton-up[orient="vertical"]
  {
    list-style-image      : url("chrome://global/skin/arrow/arrow-up-sharp.gif");
  }
  
-.autorepeatbutton-down[orient="vertical"]
+.autorepeatbutton-down[orient="vertical"],
+.scrollbutton-down[orient="vertical"]
   {
     list-style-image     : url("chrome://global/skin/arrow/arrow-dn-sharp.gif");
   }
@@ -30,4 +34,3 @@ autorepeatbutton
     margin               : 1px 2px 2px 1px;
     padding              : 4px;
   }
-

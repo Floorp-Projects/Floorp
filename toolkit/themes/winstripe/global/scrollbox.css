@@ -1,34 +1,39 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 /*
- * Autorepeatbutton
+ * Scroll arrows
  */
-.autorepeatbutton-up, .autorepeatbutton-down[chromedir="rtl"]
+.autorepeatbutton-up, .autorepeatbutton-down[chromedir="rtl"],
+.scrollbutton-up, .scrollbutton-down[chromedir="rtl"]
   {
     list-style-image      : url("chrome://global/skin/arrow/arrow-lft.gif");
     -moz-image-region     : auto; /* cut off inheritance */
   }
 
-.autorepeatbutton-down, .autorepeatbutton-up[chromedir="rtl"]
+.autorepeatbutton-down, .autorepeatbutton-up[chromedir="rtl"],
+.scrollbutton-down, .scrollbutton-up[chromedir="rtl"]
   {
     list-style-image      : url("chrome://global/skin/arrow/arrow-rit.gif");
     -moz-image-region     : auto; /* cut off inheritance */
   }
 
-.autorepeatbutton-up[orient="vertical"]
+.autorepeatbutton-up[orient="vertical"],
+.scrollbutton-up[orient="vertical"]
   {
     list-style-image      : url("chrome://global/skin/arrow/arrow-up.gif");
     -moz-image-region     : auto; /* cut off inheritance */
   }
 
-.autorepeatbutton-down[orient="vertical"]
+.autorepeatbutton-down[orient="vertical"],
+.scrollbutton-down[orient="vertical"]
   {
     list-style-image      : url("chrome://global/skin/arrow/arrow-dn.gif");
     -moz-image-region     : auto; /* cut off inheritance */
   }
 
 autorepeatbutton,
-autorepeatbutton[clicktoscroll="true"]:hover
+.scrollbutton-up,
+.scrollbutton-down
   {
     -moz-box-align        : center;
     -moz-box-pack         : center;
