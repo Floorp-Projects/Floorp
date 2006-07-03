@@ -141,14 +141,6 @@ sub process_args {
     }
     $repository =~ s:^$cvsroot/::;
     $repository =~ s:^$envcvsroot/::;
-
-    if (!$flag_tagcmd) {
-        if (open(REP, "<CVS/Tag")) {
-            $repository_tag = <REP>;
-            chop($repository_tag);
-            close(REP);
-        }
-    }
 }
 
 sub get_loginfo {
@@ -178,6 +170,8 @@ sub get_loginfo {
 
         s/^[ \t\n]+//;         # delete leading whitespace
         s/[ \t\n]+$//;         # delete trailing whitespace
+
+        if ($state != $STATE_LOG && /^Tag:/) { ($repository_tag = $_) =~ s/^Tag:\s*(\S+).*/$1/; }
 
         if ($state == $STATE_CHANGED && !(/^Tag:/)) { push(@changed_files, split); }
         if ($state == $STATE_ADDED && !(/^Tag:/))   { push(@added_files,   split); }
