@@ -32,6 +32,9 @@ package Bugzilla::Constants;
 use strict;
 use base qw(Exporter);
 
+# For bz_locations
+use File::Basename;
+
 @Bugzilla::Constants::EXPORT = qw(
     BUGZILLA_VERSION
 
@@ -295,46 +298,50 @@ use constant DB_MODULE => {
                 name => 'PostgreSQL'},
 };
 
-# Under mod_perl, get this from a .htaccess config variable,
-# and/or default from the current 'real' dir.
-# At some stage after this, it may be possible for these dir locations
-# to go into localconfig. localconfig can't be specified in a config file,
-# except possibly with mod_perl. If you move localconfig, you need to change
-# the define here.
-# $libpath is really only for mod_perl; its not yet possible to move the
-# .pms elsewhere.
-# $webdotdir must be in the webtree somewhere. Even if you use a local dot,
-# we output images to there. Also, if $webdot dir is not relative to the
-# bugzilla root directory, you'll need to change showdependencygraph.cgi to
-# set image_url to the correct location.
-# The script should really generate these graphs directly...
-# Note that if $libpath is changed, some stuff will break, notably dependency
-# graphs (since the path will be wrong in the HTML). This will be fixed at
-# some point.
 sub bz_locations {
-    my $libpath = '.';
-    my $project;
-    my $localconfig;
-    my $datadir;
+    # We know that Bugzilla/Constants.pm must be in %INC at this point.
+    # So the only question is, what's the name of the directory
+    # above it? This is the most reliable way to get our current working
+    # directory under both mod_cgi and mod_perl. We call dirname twice
+    # to get the name of the directory above the "Bugzilla/" directory.
+    #
+    # Calling dirname twice like that won't work on VMS or AmigaOS
+    # but I doubt anybody runs Bugzilla on those.
+    #
+    # On mod_cgi this will be a relative path. On mod_perl it will be an
+    # absolute path.
+    my $libpath = dirname(dirname($INC{'Bugzilla/Constants.pm'}));
+    # We have to detaint $libpath, but we can't use Bugzilla::Util here.
+    $libpath =~ /(.*)/;
+    $libpath = $1;
+
+    my ($project, $localconfig, $datadir);
     if ($ENV{'PROJECT'} && $ENV{'PROJECT'} =~ /^(\w+)$/) {
         $project = $1;
-        $localconfig = "$libpath/localconfig.$project";
-        $datadir = "$libpath/data/$project";
+        $localconfig = "localconfig.$project";
+        $datadir = "data/$project";
     } else {
-        $localconfig = "$libpath/localconfig";
-        $datadir = "$libpath/data";
+        $localconfig = "localconfig";
+        $datadir = "data";
     }
 
-    # Returns a hash of paths.
+    # We have to return absolute paths for mod_perl. 
+    # That means that if you modify these paths, they must be absolute paths.
     return {
         'libpath'     => $libpath,
         'templatedir' => "$libpath/template",
         'project'     => $project,
-        'localconfig' => $localconfig,
-        'datadir'     => $datadir,
-        'attachdir'   => "$datadir/attachments",
-        'webdotdir'   => "$datadir/webdot",
-        'extensionsdir' => "$libpath/extensions"
+        'localconfig' => "$libpath/$localconfig",
+        'datadir'     => "$libpath/$datadir",
+        'attachdir'   => "$libpath/$datadir/attachments",
+        # $webdotdir must be in the webtree somewhere. Even if you use a 
+        # local dot, we output images to there. Also, if $webdotdir is 
+        # not relative to the bugzilla root directory, you'll need to 
+        # change showdependencygraph.cgi to set image_url to the correct 
+        # location.
+        # The script should really generate these graphs directly...
+        'webdotdir'   => "$libpath/$datadir/webdot",
+        'extensionsdir' => "$libpath/extensions",
     };
 }
 
