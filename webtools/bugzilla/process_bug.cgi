@@ -1606,10 +1606,10 @@ foreach my $id (@idlist) {
     foreach my $group_control (@$group_controls) {
         my ($group, $control) = @$group_control;
         $control ||= 0;
-        unless ($control > &::CONTROLMAPNA)  {
+        unless ($control > CONTROLMAPNA)  {
             $groupsforbidden{$group} = 1;
         }
-        if ($control == &::CONTROLMAPMANDATORY) {
+        if ($control == CONTROLMAPMANDATORY) {
             $groupsrequired{$group} = 1;
         }
     }
