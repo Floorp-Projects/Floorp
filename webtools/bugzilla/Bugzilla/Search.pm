@@ -346,7 +346,7 @@ sub init {
 
     my $sql_deadlinefrom;
     my $sql_deadlineto;
-    if (Bugzilla->user->in_group(Param('timetrackinggroup'))){
+    if (Bugzilla->user->in_group(Bugzilla->params->{'timetrackinggroup'})){
       my $deadlinefrom;
       my $deadlineto;
             
@@ -579,8 +579,8 @@ sub init {
              # Add the longdescs table to the query so we can search comments.
              my $table = "longdescs_$chartid";
              my $extra = "";
-             if (Param("insidergroup") 
-                 && !UserInGroup(Param("insidergroup")))
+             if (Bugzilla->params->{"insidergroup"} 
+                 && !UserInGroup(Bugzilla->params->{"insidergroup"}))
              {
                  $extra = "AND $table.isprivate < 1";
              }
@@ -644,7 +644,9 @@ sub init {
              }
              my $table = "longdescs_$chartseq";
              my $extra = "";
-             if (Param("insidergroup") && !UserInGroup(Param("insidergroup"))) {
+             if (Bugzilla->params->{"insidergroup"} 
+                 && !UserInGroup(Bugzilla->params->{"insidergroup"})) 
+             {
                  $extra = "AND $table.isprivate < 1";
              }
              push(@supptables, "LEFT JOIN longdescs AS $table " .
@@ -662,7 +664,9 @@ sub init {
              }
              my $table = "longdescs_$chartseq";
              my $extra = "";
-             if (Param("insidergroup") && !UserInGroup(Param("insidergroup"))) {
+             if (Bugzilla->params->{"insidergroup"} 
+                 && !UserInGroup(Bugzilla->params->{"insidergroup"})) 
+             {
                  $extra = "AND $table.isprivate < 1";
              }
              if ($list) {
@@ -683,7 +687,9 @@ sub init {
          "^long_?desc," => sub {
              my $table = "longdescs_$chartid";
              my $extra = "";
-             if (Param("insidergroup") && !UserInGroup(Param("insidergroup"))) {
+             if (Bugzilla->params->{"insidergroup"} 
+                 && !UserInGroup(Bugzilla->params->{"insidergroup"})) 
+             {
                  $extra = "AND $table.isprivate < 1";
              }
              push(@supptables, "INNER JOIN longdescs AS $table " .
@@ -790,7 +796,9 @@ sub init {
              my $atable = "attachments_$chartid";
              my $dtable = "attachdata_$chartid";
              my $extra = "";
-             if (Param("insidergroup") && !UserInGroup(Param("insidergroup"))) {
+             if (Bugzilla->params->{"insidergroup"} 
+                 && !UserInGroup(Bugzilla->params->{"insidergroup"})) 
+             {
                  $extra = "AND $atable.isprivate = 0";
              }
              push(@supptables, "INNER JOIN attachments AS $atable " .
@@ -802,7 +810,9 @@ sub init {
          "^attachments\..*," => sub {
              my $table = "attachments_$chartid";
              my $extra = "";
-             if (Param("insidergroup") && !UserInGroup(Param("insidergroup"))) {
+             if (Bugzilla->params->{"insidergroup"} 
+                 && !UserInGroup(Bugzilla->params->{"insidergroup"})) 
+             {
                  $extra = "AND $table.isprivate = 0";
              }
              push(@supptables, "INNER JOIN attachments AS $table " .
@@ -1422,7 +1432,7 @@ sub init {
         $query .= "    OR (bugs.reporter_accessible = 1 AND bugs.reporter = $userid) " .
               "    OR (bugs.cclist_accessible = 1 AND cc.who IS NOT NULL) " .
               "    OR (bugs.assigned_to = $userid) ";
-        if (Param('useqacontact')) {
+        if (Bugzilla->params->{'useqacontact'}) {
             $query .= "OR (bugs.qa_contact = $userid) ";
         }
     }

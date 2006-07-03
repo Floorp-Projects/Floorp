@@ -72,12 +72,12 @@ if ($action eq "show") {
 }
 
 if ($action eq "add") {
-    (Param('quip_list_entry_control') eq "closed") &&
+    (Bugzilla->params->{'quip_list_entry_control'} eq "closed") &&
       ThrowUserError("no_new_quips");
 
     # Add the quip 
-    my $approved = 
-      (Param('quip_list_entry_control') eq "open") || (UserInGroup('admin')) || 0;
+    my $approved = (Bugzilla->params->{'quip_list_entry_control'} eq "open")
+                   || UserInGroup('admin') || 0;
     my $comment = $cgi->param("quip");
     $comment || ThrowUserError("need_quip");
     trick_taint($comment); # Used in a placeholder below

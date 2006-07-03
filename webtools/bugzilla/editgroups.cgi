@@ -342,7 +342,7 @@ if ($action eq 'del') {
     # Groups having a special role cannot be deleted.
     my @special_groups;
     foreach my $special_group ('chartgroup', 'insidergroup', 'timetrackinggroup') {
-        if ($name eq Param($special_group)) {
+        if ($name eq Bugzilla->params->{$special_group}) {
             push(@special_groups, $special_group);
         }
     }
@@ -406,7 +406,7 @@ if ($action eq 'delete') {
     # Groups having a special role cannot be deleted.
     my @special_groups;
     foreach my $special_group ('chartgroup', 'insidergroup', 'timetrackinggroup') {
-        if ($name eq Param($special_group)) {
+        if ($name eq Bugzilla->params->{$special_group}) {
             push(@special_groups, $special_group);
         }
     }
@@ -625,7 +625,7 @@ sub doGroupChanges {
             # these parameters too.
             my $update_params = 0;
             foreach my $group ('chartgroup', 'insidergroup', 'timetrackinggroup') {
-                if ($cgi->param('oldname') eq Param($group)) {
+                if ($cgi->param('oldname') eq Bugzilla->params->{$group}) {
                     SetParam($group, $name);
                     $update_params = 1;
                 }
@@ -690,7 +690,7 @@ sub doGroupChanges {
             }
 
             my $cansee = $cgi->param("cansee-$v") || 0;
-            if (Param("usevisibilitygroups") 
+            if (Bugzilla->params->{"usevisibilitygroups"} 
                && ($cgi->param("oldcansee-$v") != $cansee)) {
                 $chgs = 1;
                 if ($cansee != 0) {

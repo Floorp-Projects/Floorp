@@ -4,7 +4,7 @@
 #
 # Nick Barnes, Ravenbrook Limited, 2004-04-01.
 #
-# $Id: sendbugmail.pl,v 1.5 2006/06/21 00:44:48 lpsolit%gmail.com Exp $
+# $Id: sendbugmail.pl,v 1.6 2006/07/03 21:26:22 mkanat%bugzilla.org Exp $
 # 
 # Bugzilla email script for Bugzilla 2.17.4 and later.  Invoke this to send
 # bugmail for a bug which has been changed directly in the database.
@@ -54,7 +54,7 @@ if (!$id) {
 }
 
 # Validate the changer address.
-my $match = Param('emailregexp');
+my $match = Bugzilla->params->{'emailregexp'};
 if ($changer !~ /$match/) {
     print STDERR "Changer \"$changer\" doesn't match email regular expression.\n";
     usage();

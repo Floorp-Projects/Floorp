@@ -165,8 +165,8 @@ sub validateID
     # Make sure the user is authorized to access this attachment's bug.
 
     ValidateBugID($bugid);
-    if ($isprivate && Param("insidergroup")) {
-        UserInGroup(Param("insidergroup"))
+    if ($isprivate && Bugzilla->params->{"insidergroup"}) {
+        UserInGroup(Bugzilla->params->{"insidergroup"})
           || ThrowUserError("auth_failure", {action => "access",
                                              object => "attachment"});
     }
@@ -487,8 +487,9 @@ sub get_unified_diff
   my $last_reader = $reader;
 
   # fixes patch root (makes canonical if possible)
-  if (Param('cvsroot')) {
-    my $fix_patch_root = new PatchReader::FixPatchRoot(Param('cvsroot'));
+  if (Bugzilla->params->{'cvsroot'}) {
+    my $fix_patch_root = 
+        new PatchReader::FixPatchRoot(Bugzilla->params->{'cvsroot'});
     $last_reader->sends_data_to($fix_patch_root);
     $last_reader = $fix_patch_root;
   }
@@ -548,20 +549,21 @@ sub setup_patch_readers {
   my $reader = new PatchReader::Raw;
   my $last_reader = $reader;
   # Fix the patch root if we have a cvs root
-  if (Param('cvsroot'))
+  if (Bugzilla->params->{'cvsroot'})
   {
     require PatchReader::FixPatchRoot;
-    $last_reader->sends_data_to(new PatchReader::FixPatchRoot(Param('cvsroot')));
+    $last_reader->sends_data_to(
+        new PatchReader::FixPatchRoot(Bugzilla->params->{'cvsroot'}));
     $last_reader->sends_data_to->diff_root($diff_root) if defined($diff_root);
     $last_reader = $last_reader->sends_data_to;
   }
   # Add in cvs context if we have the necessary info to do it
-  if ($context ne "patch" && $cvsbin && Param('cvsroot_get'))
+  if ($context ne "patch" && $cvsbin && Bugzilla->params->{'cvsroot_get'})
   {
     require PatchReader::AddCVSContext;
     $last_reader->sends_data_to(
           new PatchReader::AddCVSContext($context,
-                                         Param('cvsroot_get')));
+                                         Bugzilla->params->{'cvsroot_get'}));
     $last_reader = $last_reader->sends_data_to;
   }
   return ($reader, $last_reader);
@@ -581,7 +583,8 @@ sub setup_template_patch_reader
   }
   $vars->{collapsed} = $cgi->param('collapsed');
   $vars->{context} = $context;
-  $vars->{do_context} = $cvsbin && Param('cvsroot_get') && !$vars->{'newid'};
+  $vars->{do_context} = $cvsbin && Bugzilla->params->{'cvsroot_get'} 
+                        && !$vars->{'newid'};
 
   # Print everything out
   print $cgi->header(-type => 'text/html',
@@ -591,9 +594,9 @@ sub setup_template_patch_reader
                              "attachment/diff-file.$format.tmpl",
                              "attachment/diff-footer.$format.tmpl",
                              { %{$vars},
-                               bonsai_url => Param('bonsai_url'),
-                               lxr_url => Param('lxr_url'),
-                               lxr_root => Param('lxr_root'),
+                               bonsai_url => Bugzilla->params->{'bonsai_url'},
+                               lxr_url => Bugzilla->params->{'lxr_url'},
+                               lxr_root => Bugzilla->params->{'lxr_root'},
                              }));
 }
 
@@ -677,7 +680,9 @@ sub viewall
     my $privacy = "";
     my $dbh = Bugzilla->dbh;
 
-    if (Param("insidergroup") && !(UserInGroup(Param("insidergroup")))) {
+    if ( Bugzilla->params->{"insidergroup"} 
+         && !UserInGroup(Bugzilla->params->{"insidergroup"}) )
+    {
         $privacy = "AND isprivate < 1 ";
     }
   my $attachments = $dbh->selectall_arrayref(
@@ -1099,7 +1104,7 @@ sub delete_attachment {
                                          action => 'delete',
                                          object => 'attachment'});
 
-    Param('allow_attachment_deletion')
+    Bugzilla->params->{'allow_attachment_deletion'}
       || ThrowUserError('attachment_deletion_disabled');
 
     # Make sure the administrator is allowed to edit this attachment.

@@ -239,7 +239,8 @@ sub ProcessOneBug {
         my $diffpart = {};
         if ($who ne $lastwho) {
             $lastwho = $who;
-            $diffheader = "\n$whoname <$who" . Param('emailsuffix') . "> changed:\n\n";
+            $diffheader = "\n$whoname <$who" . Bugzilla->params->{'emailsuffix'}
+                          . "> changed:\n\n";
             $diffheader .= FormatTriple("What    ", "Removed", "Added");
             $diffheader .= ('-' x 76) . "\n";
         }
@@ -293,7 +294,7 @@ sub ProcessOneBug {
                 $deptext .= $thisdiff;
             }
             $lastbug = $depbug;
-            my $urlbase = Param("urlbase");
+            my $urlbase = Bugzilla->params->{"urlbase"};
             $thisdiff =
               "\nBug $id depends on bug $depbug, which changed state.\n\n" . 
               "Bug $depbug Summary: $summary\n" . 
@@ -352,7 +353,7 @@ sub ProcessOneBug {
     $recipients{$reporter}->{+REL_REPORTER} = BIT_DIRECT;
     
     # QA Contact
-    if (Param('useqacontact')) {
+    if (Bugzilla->params->{'useqacontact'}) {
         foreach (@qa_contacts) {
             # QA Contact can be blank; ignore it if so.
             $recipients{$_}->{+REL_QA} = BIT_DIRECT if $_;
@@ -387,7 +388,7 @@ sub ProcessOneBug {
         }
     }
     
-    if (Param("supportwatchers")) {
+    if (Bugzilla->params->{"supportwatchers"}) {
         # Find all those user-watching anyone on the current list, who is not 
         # on it already themselves.
         my $involved = join(",", keys %recipients);
@@ -444,9 +445,9 @@ sub ProcessOneBug {
             # If we are using insiders, and the comment is private, only send 
             # to insiders
             my $insider_ok = 1;
-            $insider_ok = 0 if (Param("insidergroup") && 
+            $insider_ok = 0 if (Bugzilla->params->{"insidergroup"} && 
                                 ($anyprivate != 0) && 
-                                (!$user->groups->{Param("insidergroup")}));
+                                (!$user->groups->{Bugzilla->params->{"insidergroup"}}));
 
             # We shouldn't send mail if this is a dependency mail (i.e. there 
             # is something in @depbugs), and any of the depending bugs are not 
@@ -518,7 +519,7 @@ sub sendMail {
         }
         # Only send estimated_time if it is enabled and the user is in the group
         if (($f ne 'estimated_time' && $f ne 'deadline') ||
-             $user->groups->{Param('timetrackinggroup')}) {
+             $user->groups->{Bugzilla->params->{'timetrackinggroup'}}) {
 
             my $desc = $fielddescription{$f};
             $head .= FormatDouble($desc, $value);
@@ -539,12 +540,12 @@ sub sendMail {
              $diff->{'fieldname'} eq 'remaining_time' ||
              $diff->{'fieldname'} eq 'work_time' ||
              $diff->{'fieldname'} eq 'deadline')){
-            if ($user->groups->{Param("timetrackinggroup")}) {
+            if ($user->groups->{Bugzilla->params->{"timetrackinggroup"}}) {
                 $add_diff = 1;
             }
         } elsif (($diff->{'isprivate'}) 
-                 && Param('insidergroup')
-                 && !($user->groups->{Param('insidergroup')})
+                 && Bugzilla->params->{'insidergroup'}
+                 && !($user->groups->{Bugzilla->params->{'insidergroup'}})
                 ) {
             $add_diff = 0;
         } else {
@@ -599,7 +600,7 @@ sub sendMail {
     if ( $newcomments =~ /Created an attachment \(/ ) {
 
         my $showattachurlbase =
-            Param('urlbase') . "attachment.cgi?id=";
+            Bugzilla->params->{'urlbase'} . "attachment.cgi?id=";
 
         $newcomments =~ s/(Created an attachment \(id=([0-9]+)\))/$1\n --> \(${showattachurlbase}$2\)/g;
     }
@@ -639,7 +640,7 @@ sub sendMail {
     $substs{"changer"} = $values{'changer'};
     $substs{"changername"} = $values{'changername'};
 
-    my $sitespec = '@' . Param('urlbase');
+    my $sitespec = '@' . Bugzilla->params->{'urlbase'};
     $sitespec =~ s/:\/\//\./; # Make the protocol look like part of the domain
     $sitespec =~ s/^([^:\/]+):(\d+)/$1/; # Remove a port number, to relocate
     if ($2) {
@@ -653,7 +654,7 @@ sub sendMail {
                                      $user->id . "$sitespec>";
     }
     
-    my $template = Param("newchangedmail");
+    my $template = Bugzilla->params->{"newchangedmail"};
     
     my $msg = perform_substs($template, \%substs);
 
@@ -667,7 +668,7 @@ sub MailPassword {
     my ($login, $password) = (@_);
     my $template = Bugzilla->template;
     my $vars = {
-      mailaddress => $login . Param('emailsuffix'),
+      mailaddress => $login . Bugzilla->params->{'emailsuffix'},
       login => $login,
       password => $password };
     my $msg;
@@ -716,10 +717,10 @@ sub get_comments_by_bug {
         my ($who, $whoname, $when, $text, $isprivate, $already_wrapped) = @$_;
         if ($count) {
             $result .= "\n\n--- Comment #$count from $whoname <$who" .
-                       Param('emailsuffix'). ">  " . format_time($when) .
-                       " ---\n";
+                       Bugzilla->params->{'emailsuffix'}. ">  " 
+                       . format_time($when) . " ---\n";
         }
-        if ($isprivate > 0 && Param('insidergroup')) {
+        if ($isprivate > 0 && Bugzilla->params->{'insidergroup'}) {
             $anyprivate = 1;
         }
         $result .= ($already_wrapped ? $text : wrap_comment($text));

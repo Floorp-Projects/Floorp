@@ -82,7 +82,7 @@ elsif ($action eq "show_user") {
     show_user();
 }
 elsif ($action eq "vote") {
-    record_votes() if Param('usevotes');
+    record_votes() if Bugzilla->params->{'usevotes'};
     show_user();
 }
 else {
@@ -126,7 +126,7 @@ sub show_user {
     my $who = login_to_id($name, THROW_ERROR);
     my $userid = $user->id;
 
-    my $canedit = (Param('usevotes') && $userid == $who) ? 1 : 0;
+    my $canedit = (Bugzilla->params->{'usevotes'} && $userid == $who) ? 1 : 0;
 
     $dbh->bz_lock_tables('bugs READ', 'products READ', 'votes WRITE',
              'cc READ', 'bug_group_map READ', 'user_group_map READ',

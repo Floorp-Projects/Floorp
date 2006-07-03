@@ -36,7 +36,7 @@ use Bugzilla::Mailer;
 use Bugzilla::Util;
 
 # Whining is disabled if whinedays is zero
-exit unless Param('whinedays') >= 1;
+exit unless Bugzilla->params->{'whinedays'} >= 1;
 
 my $dbh = Bugzilla->dbh;
 my $query = q{SELECT bug_id, short_desc, login_name
@@ -46,7 +46,7 @@ my $query = q{SELECT bug_id, short_desc, login_name
                WHERE (bug_status = ? OR bug_status = ?)
                  AND } . $dbh->sql_to_days('NOW()') . " - " .
                        $dbh->sql_to_days('delta_ts') . " > " .
-                       Param('whinedays') .
+                       Bugzilla->params->{'whinedays'} .
           " ORDER BY bug_id";
 
 my %bugs;

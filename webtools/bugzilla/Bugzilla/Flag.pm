@@ -305,8 +305,8 @@ sub validate {
                 # the requestee isn't in the group of insiders who can see it.
                 if ($attach_id
                     && $cgi->param('isprivate')
-                    && Param("insidergroup")
-                    && !$requestee->in_group(Param("insidergroup")))
+                    && Bugzilla->params->{"insidergroup"}
+                    && !$requestee->in_group(Bugzilla->params->{"insidergroup"}))
                 {
                     ThrowUserError("flag_requestee_unauthorized_attachment",
                                    { flag_type  => $flag->{'type'},
@@ -798,8 +798,8 @@ sub notify {
 
             next if ($bug->groups && !$ccuser->can_see_bug($bug->bug_id));
             next if $attachment_is_private
-              && Param("insidergroup")
-              && !$ccuser->in_group(Param("insidergroup"));
+              && Bugzilla->params->{"insidergroup"}
+              && !$ccuser->in_group(Bugzilla->params->{"insidergroup"});
             push(@new_cc_list, $cc);
         }
         $flag->{'type'}->{'cc_list'} = join(", ", @new_cc_list);

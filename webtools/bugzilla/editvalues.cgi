@@ -156,7 +156,7 @@ unless ($action) {
                                  {Slice =>{}});
     $vars->{'field'} = $field;
     $vars->{'values'} = $fieldvalues;
-    $vars->{'default'} = Param($defaults{$field});
+    $vars->{'default'} = Bugzilla->params->{$defaults{$field}};
     $template->process("admin/fieldvalues/list.html.tmpl",
                        $vars)
       || ThrowTemplateError($template->error());
@@ -258,7 +258,7 @@ if ($action eq 'del') {
 #
 if ($action eq 'delete') {
     ValueMustExist($field, $value);
-    if ($value eq Param($defaults{$field})) {
+    if ($value eq Bugzilla->params->{$defaults{$field}}) {
         ThrowUserError('fieldvalue_is_default', {field      => $field,
                                                  value      => $value,
                                                  param_name => $defaults{$field}})
@@ -381,7 +381,7 @@ if ($action eq 'update') {
     # This update is done while tables are unlocked due to the
     # annoying calls in Bugzilla/Config/Common.pm.
     if ($value ne $valueold
-        && $valueold eq Param($defaults{$field}))
+        && $valueold eq Bugzilla->params->{$defaults{$field}})
     {
         SetParam($defaults{$field}, $value);
         WriteParams();

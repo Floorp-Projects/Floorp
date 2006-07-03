@@ -118,7 +118,7 @@ sub quicksearch {
 
         if (index($searchstring, ',') < $[) {
             # Single bug number; shortcut to show_bug.cgi.
-            print $cgi->redirect(-uri => Param('urlbase') .
+            print $cgi->redirect(-uri => Bugzilla->params->{'urlbase'} .
                                          "show_bug.cgi?id=$searchstring");
             exit;
         }
@@ -138,7 +138,7 @@ sub quicksearch {
                                                   WHERE alias = ?},
                                                undef,
                                                $1)) {
-                print $cgi->redirect(-uri => Param('urlbase') .
+                print $cgi->redirect(-uri => Bugzilla->params->{'urlbase'} .
                                              "show_bug.cgi?id=$1");
                 exit;
             }
@@ -154,7 +154,8 @@ sub quicksearch {
         $searchstring =~ s/\s+NOT\s+/ -/g;
 
         my @words = splitString($searchstring);
-        my $searchComments = $#words < Param('quicksearch_comment_cutoff');
+        my $searchComments = 
+            $#words < Bugzilla->params->{'quicksearch_comment_cutoff'};
         my @openStates = BUG_STATE_OPEN;
         my @closedStates;
         my (%states, %resolutions);
@@ -381,9 +382,9 @@ sub quicksearch {
 
     if ($cgi->param('load')) {
         # Param 'load' asks us to display the query in the advanced search form.
-        print $cgi->redirect(-uri => Param('urlbase') . "query.cgi?" .
-                                     "format=advanced&amp;" .
-                                     $modified_query_string);
+        print $cgi->redirect(-uri => Bugzilla->params->{'urlbase'} 
+                             . "query.cgi?format=advanced&amp;"
+                             . $modified_query_string);
     }
 
     # Otherwise, pass the modified query string to the caller.

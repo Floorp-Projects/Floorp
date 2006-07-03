@@ -81,7 +81,7 @@ my $showbugcounts = (defined $cgi->param('showbugcounts'));
 # classifications enabled)
 #
 
-if (Param('useclassification') 
+if (Bugzilla->params->{'useclassification'} 
     && !$classification_name
     && !$product_name)
 {
@@ -101,7 +101,7 @@ if (Param('useclassification')
 if (!$action && !$product_name) {
     my $products;
 
-    if (Param('useclassification')) {
+    if (Bugzilla->params->{'useclassification'}) {
         my $classification = 
             Bugzilla::Classification::check_classification($classification_name);
 
@@ -130,7 +130,7 @@ if (!$action && !$product_name) {
 
 if ($action eq 'add') {
 
-    if (Param('useclassification')) {
+    if (Bugzilla->params->{'useclassification'}) {
         my $classification = 
             Bugzilla::Classification::check_classification($classification_name);
         $vars->{'classification'} = $classification;
@@ -151,7 +151,7 @@ if ($action eq 'new') {
     # Cleanups and validity checks
 
     my $classification_id = 1;
-    if (Param('useclassification')) {
+    if (Bugzilla->params->{'useclassification'}) {
         my $classification = 
             Bugzilla::Classification::check_classification($classification_name);
         $classification_id = $classification->id;
@@ -232,7 +232,7 @@ if ($action eq 'new') {
 
     # If we're using bug groups, then we need to create a group for this
     # product as well.  -JMR, 2/16/00
-    if (Param("makeproductgroups")) {
+    if (Bugzilla->params->{"makeproductgroups"}) {
         # Next we insert into the groups table
         my $productgroup = $product->name;
         while (new Bugzilla::Group({name => $productgroup})) {
@@ -265,7 +265,8 @@ if ($action eq 'new') {
                   (group_id, product_id, entry, membercontrol,
                    othercontrol, canedit)
                   VALUES (?, ?, ?, ?, ?, ?)',
-                 undef, ($gid, $product->id, Param('useentrygroupdefault'),
+                 undef, ($gid, $product->id, 
+                         Bugzilla->params->{'useentrygroupdefault'},
                  CONTROLMAPDEFAULT, CONTROLMAPNA, 0));
     }
 
@@ -328,7 +329,7 @@ if ($action eq 'del') {
     $user->can_see_product($product->name)
       || ThrowUserError('product_access_denied', {product => $product->name});
 
-    if (Param('useclassification')) {
+    if (Bugzilla->params->{'useclassification'}) {
         my $classification = 
             Bugzilla::Classification::check_classification($classification_name);
         if ($classification->id != $product->classification_id) {
@@ -360,7 +361,7 @@ if ($action eq 'delete') {
     
     $vars->{'product'} = $product;
 
-    if (Param('useclassification')) {
+    if (Bugzilla->params->{'useclassification'}) {
         my $classification = 
             Bugzilla::Classification::check_classification($classification_name);
         if ($classification->id != $product->classification_id) {
@@ -372,7 +373,7 @@ if ($action eq 'delete') {
     }
 
     if ($product->bug_count) {
-        if (Param("allowbugdeletion")) {
+        if (Bugzilla->params->{"allowbugdeletion"}) {
             foreach my $bug_id (@{$product->bug_ids}) {
                 my $bug = new Bugzilla::Bug($bug_id, $whoid);
                 $bug->remove_from_db();
@@ -432,7 +433,7 @@ if ($action eq 'edit' || (!$action && $product_name)) {
     $user->can_see_product($product->name)
       || ThrowUserError('product_access_denied', {product => $product->name});
 
-    if (Param('useclassification')) {
+    if (Bugzilla->params->{'useclassification'}) {
         my $classification; 
         if (!$classification_name) {
             $classification = 
@@ -755,7 +756,7 @@ if ($action eq 'update') {
     $user->can_see_product($product_old->name)
       || ThrowUserError('product_access_denied', {product => $product_old->name});
 
-    if (Param('useclassification')) {
+    if (Bugzilla->params->{'useclassification'}) {
         my $classification; 
         if (!$classification_name) {
             $classification = 
@@ -811,7 +812,7 @@ if ($action eq 'update') {
     }
 
     # Only update milestone related stuff if 'usetargetmilestone' is on.
-    if (Param('usetargetmilestone')) {
+    if (Bugzilla->params->{'usetargetmilestone'}) {
         my $milestone = new Bugzilla::Milestone($product_old->id,
                                                 $defaultmilestone);
 

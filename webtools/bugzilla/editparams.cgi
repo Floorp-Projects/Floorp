@@ -89,7 +89,7 @@ if ($action eq 'save' && $current_module) {
 
         my $changed;
         if ($i->{'type'} eq 'm') {
-            my @old = sort @{Param($name)};
+            my @old = sort @{Bugzilla->params->{$name}};
             my @new = sort @$value;
             if (scalar(@old) != scalar(@new)) {
                 $changed = 1;
@@ -104,7 +104,7 @@ if ($action eq 'save' && $current_module) {
                 }
             }
         } else {
-            $changed = ($value eq Param($name))? 0 : 1;
+            $changed = ($value eq Bugzilla->params->{$name})? 0 : 1;
         }
 
         if ($changed) {

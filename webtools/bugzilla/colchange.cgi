@@ -45,33 +45,33 @@ my @masterlist = ("opendate", "changeddate", "bug_severity", "priority",
                   "reporter", "reporter_realname", "bug_status",
                   "resolution");
 
-if (Param("useclassification")) {
+if (Bugzilla->params->{"useclassification"}) {
     push(@masterlist, "classification");
 }
 
 push(@masterlist, ("product", "component", "version", "op_sys"));
 
-if (Param("usevotes")) {
+if (Bugzilla->params->{"usevotes"}) {
     push (@masterlist, "votes");
 }
-if (Param("usebugaliases")) {
+if (Bugzilla->params->{"usebugaliases"}) {
     unshift(@masterlist, "alias");
 }
-if (Param("usetargetmilestone")) {
+if (Bugzilla->params->{"usetargetmilestone"}) {
     push(@masterlist, "target_milestone");
 }
-if (Param("useqacontact")) {
+if (Bugzilla->params->{"useqacontact"}) {
     push(@masterlist, "qa_contact");
     push(@masterlist, "qa_contact_realname");
 }
-if (Param("usestatuswhiteboard")) {
+if (Bugzilla->params->{"usestatuswhiteboard"}) {
     push(@masterlist, "status_whiteboard");
 }
 if (Bugzilla::Keyword::keyword_count()) {
     push(@masterlist, "keywords");
 }
 
-if (UserInGroup(Param("timetrackinggroup"))) {
+if (UserInGroup(Bugzilla->params->{"timetrackinggroup"})) {
     push(@masterlist, ("estimated_time", "remaining_time", "actual_time",
                        "percentage_complete", "deadline")); 
 }
@@ -96,7 +96,7 @@ if (defined $cgi->param('rememberedquery')) {
         }
     }
     my $list = join(" ", @collist);
-    my $urlbase = Param("urlbase");
+    my $urlbase = Bugzilla->params->{"urlbase"};
 
     if ($list) {
         $cgi->send_cookie(-name => 'COLUMNLIST',

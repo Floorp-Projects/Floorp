@@ -187,7 +187,7 @@ if (!PrefillForm($buffer)) {
     if ($userdefaultquery) {
         PrefillForm($userdefaultquery);
     } else {
-        PrefillForm(Param("defaultquery"));
+        PrefillForm(Bugzilla->params->{"defaultquery"});
     }
 }
 
@@ -218,7 +218,7 @@ my @milestones = sort(keys %milestones);
 $vars->{'product'} = \@selectable_products;
 
 # Create data structures representing each classification
-if (Param('useclassification')) {
+if (Bugzilla->params->{'useclassification'}) {
     $vars->{'classification'} = $user->get_selectable_classifications;
 }
 
@@ -227,7 +227,7 @@ $vars->{'component_'} = \@components;
 
 $vars->{'version'} = \@versions;
 
-if (Param('usetargetmilestone')) {
+if (Bugzilla->params->{'usetargetmilestone'}) {
     $vars->{'target_milestone'} = \@milestones;
 }
 
@@ -255,7 +255,7 @@ foreach my $val (editable_bug_fields()) {
     push @chfields, $val;
 }
 
-if (UserInGroup(Param('timetrackinggroup'))) {
+if (UserInGroup(Bugzilla->params->{'timetrackinggroup'})) {
     push @chfields, "work_time";
 } else {
     @chfields = grep($_ ne "estimated_time", @chfields);

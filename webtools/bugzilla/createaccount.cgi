@@ -53,7 +53,7 @@ unless (Bugzilla->user->authorizer->user_can_create_account) {
     ThrowUserError("auth_cant_create_account");
 }
 
-my $createexp = Param('createemailregexp');
+my $createexp = Bugzilla->params->{'createemailregexp'};
 unless ($createexp) {
     ThrowUserError("account_creation_disabled");
 }

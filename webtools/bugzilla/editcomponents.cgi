@@ -159,7 +159,7 @@ if ($action eq 'new') {
                                         {name => $comp_name});
 
     my $default_assignee_id   = login_to_id($default_assignee);
-    my $default_qa_contact_id = Param('useqacontact') ?
+    my $default_qa_contact_id = Bugzilla->params->{'useqacontact'} ?
         (login_to_id($default_qa_contact) || undef) : undef;
 
     trick_taint($comp_name);
@@ -251,7 +251,7 @@ if ($action eq 'delete') {
         Bugzilla::Component::check_component($product, $comp_name);
 
     if ($component->bug_count) {
-        if (Param("allowbugdeletion")) {
+        if (Bugzilla->params->{"allowbugdeletion"}) {
             foreach my $bug_id (@{$component->bug_ids}) {
                 my $bug = new Bugzilla::Bug($bug_id, $whoid);
                 $bug->remove_from_db();
@@ -380,7 +380,7 @@ if ($action eq 'update') {
         $vars->{'updated_initialowner'} = 1;
     }
 
-    if (Param('useqacontact')
+    if (Bugzilla->params->{'useqacontact'}
         && $default_qa_contact ne $component_old->default_qa_contact->login) {
         $dbh->do("UPDATE components SET initialqacontact = ?
                   WHERE id = ?", undef,

@@ -298,10 +298,9 @@ sub fields {
            reporter assigned_to cc),
     
         # Conditional Fields
-        Param('useqacontact') ? "qa_contact" : (),
-        Param('timetrackinggroup') ? qw(estimated_time remaining_time
-                                        actual_time deadline)
-                                   : (),
+        Bugzilla->params->{'useqacontact'} ? "qa_contact" : (),
+        Bugzilla->params->{'timetrackinggroup'} ? 
+            qw(estimated_time remaining_time actual_time deadline) : (),
     
         # Custom Fields
         Bugzilla->custom_field_names
@@ -346,7 +345,7 @@ sub actual_time {
     return $self->{'actual_time'} if exists $self->{'actual_time'};
 
     if ( $self->{'error'} || 
-         !Bugzilla->user->in_group(Param("timetrackinggroup")) ) {
+         !Bugzilla->user->in_group(Bugzilla->params->{"timetrackinggroup"}) ) {
         $self->{'actual_time'} = undef;
         return $self->{'actual_time'};
     }
@@ -492,7 +491,7 @@ sub qa_contact {
     return $self->{'qa_contact'} if exists $self->{'qa_contact'};
     return undef if $self->{'error'};
 
-    if (Param('useqacontact') && $self->{'qa_contact_id'}) {
+    if (Bugzilla->params->{'useqacontact'} && $self->{'qa_contact_id'}) {
         $self->{'qa_contact'} = new Bugzilla::User($self->{'qa_contact_id'});
     } else {
         # XXX - This is somewhat inconsistent with the assignee/reporter 
@@ -542,7 +541,8 @@ sub use_votes {
 
     $self->{'prod_obj'} ||= new Bugzilla::Product({name => $self->{'product'}});
 
-    return Param('usevotes') && $self->{'prod_obj'}->votes_per_user > 0;
+    return Bugzilla->params->{'usevotes'} 
+           && $self->{'prod_obj'}->votes_per_user > 0;
 }
 
 sub groups {
@@ -617,7 +617,7 @@ sub user {
     return {} if $self->{'error'};
 
     my $user = Bugzilla->user;
-    my $canmove = Param('move-enabled') && $user->is_mover;
+    my $canmove = Bugzilla->params->{'move-enabled'} && $user->is_mover;
 
     # In the below, if the person hasn't logged in, then we treat them
     # as if they can do anything.  That's because we don't know why they
@@ -629,7 +629,7 @@ sub user {
                              || $user->in_group("editbugs");
     my $canedit = $unknown_privileges
                   || $user->id == $self->{assigned_to_id}
-                  || (Param('useqacontact')
+                  || (Bugzilla->params->{'useqacontact'}
                       && $self->{'qa_contact_id'}
                       && $user->id == $self->{qa_contact_id});
     my $canconfirm = $unknown_privileges
@@ -703,7 +703,7 @@ sub settable_resolutions {
 # the ID of the bug if it exists or the undefined value if it doesn't.
 sub bug_alias_to_id {
     my ($alias) = @_;
-    return undef unless Param("usebugaliases");
+    return undef unless Bugzilla->params->{"usebugaliases"};
     my $dbh = Bugzilla->dbh;
     trick_taint($alias);
     return $dbh->selectrow_array(
@@ -823,7 +823,7 @@ sub GetComments {
     while (my $comment_ref = $sth->fetchrow_hashref()) {
         my %comment = %$comment_ref;
 
-        $comment{'email'} .= Param('emailsuffix');
+        $comment{'email'} .= Bugzilla->params->{'emailsuffix'};
         $comment{'name'} = $comment{'name'} || $comment{'email'};
 
         push (@comments, \%comment);
@@ -856,7 +856,9 @@ sub GetBugActivity {
     # Only includes attachments the user is allowed to see.
     my $suppjoins = "";
     my $suppwhere = "";
-    if (Param("insidergroup") && !UserInGroup(Param('insidergroup'))) {
+    if (Bugzilla->params->{"insidergroup"} 
+        && !UserInGroup(Bugzilla->params->{'insidergroup'})) 
+    {
         $suppjoins = "LEFT JOIN attachments 
                    ON attachments.attach_id = bugs_activity.attach_id";
         $suppwhere = "AND COALESCE(attachments.isprivate, 0) = 0";
@@ -901,7 +903,8 @@ sub GetBugActivity {
             || $fieldname eq 'work_time'
             || $fieldname eq 'deadline')
         {
-            $activity_visible = UserInGroup(Param('timetrackinggroup')) ? 1 : 0;
+            $activity_visible = 
+                UserInGroup(Bugzilla->params->{'timetrackinggroup'}) ? 1 : 0;
         } else {
             $activity_visible = 1;
         }
@@ -1090,7 +1093,7 @@ sub RemoveVotes {
             # been reduced or removed.
             my $vars = {
 
-                'to' => $name . Param('emailsuffix'),
+                'to' => $name . Bugzilla->params->{'emailsuffix'},
                 'bugid' => $id,
                 'reason' => $reason,
 
@@ -1281,7 +1284,7 @@ sub check_can_change_field {
     }
     # - change the priority (unless he could have set it originally)
     if ($field eq 'priority'
-        && !Param('letsubmitterchoosepriority'))
+        && !Bugzilla->params->{'letsubmitterchoosepriority'})
     {
         $PrivilegesRequired = 2;
         return 0;

@@ -152,7 +152,7 @@ sub _create {
 # Accessors for user attributes
 sub id { $_[0]->{id}; }
 sub login { $_[0]->{login}; }
-sub email { $_[0]->{login} . Param('emailsuffix'); }
+sub email { $_[0]->{login} . Bugzilla->params->{'emailsuffix'}; }
 sub name { $_[0]->{name}; }
 sub disabledtext { $_[0]->{'disabledtext'}; }
 sub is_disabled { $_[0]->disabledtext ? 1 : 0; }
@@ -365,7 +365,9 @@ sub bless_groups {
     }
 
     # If visibilitygroups are used, restrict the set of groups.
-    if ((!$self->in_group('editusers')) && Param('usevisibilitygroups')) {
+    if (!$self->in_group('editusers')
+        && Bugzilla->params->{'usevisibilitygroups'}) 
+    {
         # Users need to see a group in order to bless it.
         my $visibleGroups = join(', ', @{$self->visible_groups_direct()})
             || return $self->{'bless_groups'} = [];
@@ -393,7 +395,7 @@ sub can_see_user {
     my ($self, $otherUser) = @_;
     my $query;
 
-    if (Param('usevisibilitygroups')) {
+    if (Bugzilla->params->{'usevisibilitygroups'}) {
         # If the user can see no groups, then no users are visible either.
         my $visibleGroups = $self->visible_groups_as_string() || return 0;
         $query = qq{SELECT COUNT(DISTINCT userid)
@@ -466,7 +468,8 @@ sub can_see_bug {
     $self->{sthCanSeeBug} = $sth;
     return ($ready
             && ((($reporter == $userid) && $reporter_access)
-                || (Param('useqacontact') && $qacontact && ($qacontact == $userid))
+                || (Bugzilla->params->{'useqacontact'} 
+                    && $qacontact && ($qacontact == $userid))
                 || ($owner == $userid)
                 || ($isoncclist && $cclist_access)
                 || (!$missinggroup)));
@@ -493,7 +496,7 @@ sub get_selectable_products {
                 "FROM products " .
                 "LEFT JOIN group_control_map " .
                 "ON group_control_map.product_id = products.id ";
-    if (Param('useentrygroupdefault')) {
+    if (Bugzilla->params->{'useentrygroupdefault'}) {
         $query .= "AND group_control_map.entry != 0 ";
     } else {
         $query .= "AND group_control_map.membercontrol = " .
@@ -503,7 +506,7 @@ sub get_selectable_products {
                $self->groups_as_string . ") " .
               "WHERE group_id IS NULL ";
 
-    if (Param('useclassification') && $classification_id) {
+    if (Bugzilla->params->{'useclassification'} && $classification_id) {
         $query .= "AND classification_id = ? ";
         detaint_natural($classification_id);
         push(@params, $classification_id);
@@ -783,20 +786,22 @@ sub match {
     # first try wildcards
     my $wildstr = $str;
 
-    if ($wildstr =~ s/\*/\%/g && # don't do wildcards if no '*' in the string
-        Param('usermatchmode') ne 'off') { # or if we only want exact matches
+    if ($wildstr =~ s/\*/\%/g # don't do wildcards if no '*' in the string
+        # or if we only want exact matches
+        && Bugzilla->params->{'usermatchmode'} ne 'off') 
+    {
 
         # Build the query.
         trick_taint($wildstr);
         my $query  = "SELECT DISTINCT login_name FROM profiles ";
-        if (Param('usevisibilitygroups')) {
+        if (Bugzilla->params->{'usevisibilitygroups'}) {
             $query .= "INNER JOIN user_group_map
                                ON user_group_map.user_id = profiles.userid ";
         }
         $query .= "WHERE ("
             . $dbh->sql_istrcmp('login_name', '?', "LIKE") . " OR " .
               $dbh->sql_istrcmp('realname', '?', "LIKE") . ") ";
-        if (Param('usevisibilitygroups')) {
+        if (Bugzilla->params->{'usevisibilitygroups'}) {
             $query .= "AND isbless = 0 " .
                       "AND group_id IN(" .
                       join(', ', (-1, @{$user->visible_groups_inherited})) . ") ";
@@ -824,21 +829,21 @@ sub match {
 
     # then try substring search
     if ((scalar(@users) == 0)
-        && (Param('usermatchmode') eq 'search')
+        && (Bugzilla->params->{'usermatchmode'} eq 'search')
         && (length($str) >= 3))
     {
         $str = lc($str);
         trick_taint($str);
 
         my $query   = "SELECT DISTINCT login_name FROM profiles ";
-        if (Param('usevisibilitygroups')) {
+        if (Bugzilla->params->{'usevisibilitygroups'}) {
             $query .= "INNER JOIN user_group_map
                                ON user_group_map.user_id = profiles.userid ";
         }
         $query     .= " WHERE (" .
                 $dbh->sql_position('?', 'LOWER(login_name)') . " > 0" . " OR " .
                 $dbh->sql_position('?', 'LOWER(realname)') . " > 0) ";
-        if (Param('usevisibilitygroups')) {
+        if (Bugzilla->params->{'usevisibilitygroups'}) {
             $query .= " AND isbless = 0" .
                       " AND group_id IN(" .
                 join(', ', (-1, @{$user->visible_groups_inherited})) . ") ";
@@ -906,6 +911,8 @@ sub match_field {
     my $matchsuccess = 1;       # did the match fail?
     my $need_confirm = 0;       # whether to display confirmation screen
     my $match_multiple = 0;     # whether we ever matched more than one user
+
+    my $params = Bugzilla->params;
 
     # prepare default form values
 
@@ -1007,8 +1014,8 @@ sub match_field {
         }
 
         my $limit = 0;
-        if (Param('maxusermatches')) {
-            $limit = Param('maxusermatches') + 1;
+        if ($params->{'maxusermatches'}) {
+            $limit = $params->{'maxusermatches'} + 1;
         }
 
         for my $query (@queries) {
@@ -1039,16 +1046,16 @@ sub match_field {
                 $cgi->append(-name=>$field,
                              -values=>[@{$users}[0]->{'login'}]);
 
-                $need_confirm = 1 if Param('confirmuniqueusermatch');
+                $need_confirm = 1 if $params->{'confirmuniqueusermatch'};
 
             }
             elsif ((scalar(@{$users}) > 1)
-                    && (Param('maxusermatches') != 1)) {
+                    && ($params->{'maxusermatches'} != 1)) {
                 $need_confirm = 1;
                 $match_multiple = 1;
 
-                if ((Param('maxusermatches'))
-                   && (scalar(@{$users}) > Param('maxusermatches')))
+                if (($params->{'maxusermatches'})
+                   && (scalar(@{$users}) > $params->{'maxusermatches'}))
                 {
                     $matches->{$field}->{$query}->{'status'} = 'trunc';
                     pop @{$users};  # take the last one out
@@ -1251,7 +1258,7 @@ sub is_mover {
     my $self = shift;
 
     if (!defined $self->{'is_mover'}) {
-        my @movers = map { trim($_) } split(',', Param('movers'));
+        my @movers = map { trim($_) } split(',', Bugzilla->params->{'movers'});
         $self->{'is_mover'} = ($self->id
                                && lsearch(\@movers, $self->login) != -1);
     }
@@ -1265,13 +1272,13 @@ sub get_userlist {
 
     my $dbh = Bugzilla->dbh;
     my $query  = "SELECT DISTINCT login_name, realname,";
-    if (Param('usevisibilitygroups')) {
+    if (Bugzilla->params->{'usevisibilitygroups'}) {
         $query .= " COUNT(group_id) ";
     } else {
         $query .= " 1 ";
     }
     $query     .= "FROM profiles ";
-    if (Param('usevisibilitygroups')) {
+    if (Bugzilla->params->{'usevisibilitygroups'}) {
         $query .= "LEFT JOIN user_group_map " .
                   "ON user_group_map.user_id = userid AND isbless = 0 " .
                   "AND group_id IN(" .

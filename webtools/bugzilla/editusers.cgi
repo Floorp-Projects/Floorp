@@ -88,7 +88,7 @@ if ($action eq 'search') {
         $group || ThrowUserError('invalid_group_ID');
     }
 
-    if (!$editusers && Param('usevisibilitygroups')) {
+    if (!$editusers && Bugzilla->params->{'usevisibilitygroups'}) {
         # Show only users in visible groups.
         $visibleGroups = $user->visible_groups_as_string();
 
@@ -426,7 +426,8 @@ if ($action eq 'search') {
     my $otherUser = check_user($otherUserID, $otherUserLogin);
     $otherUserID = $otherUser->id;
 
-    Param('allowuserdeletion') || ThrowUserError('users_deletion_disabled');
+    Bugzilla->params->{'allowuserdeletion'} 
+        || ThrowUserError('users_deletion_disabled');
     $editusers || ThrowUserError('auth_failure', {group  => "editusers",
                                                   action => "delete",
                                                   object => "users"});
@@ -534,7 +535,7 @@ if ($action eq 'search') {
                          'whine_queries WRITE',
                          'whine_events WRITE');
 
-    Param('allowuserdeletion')
+    Bugzilla->params->{'allowuserdeletion'}
         || ThrowUserError('users_deletion_disabled');
     $editusers || ThrowUserError('auth_failure',
                                  {group  => "editusers",

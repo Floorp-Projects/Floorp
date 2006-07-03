@@ -398,9 +398,9 @@ sub validate {
                 # Throw an error if the target is a private attachment and
                 # the requestee isn't in the group of insiders who can see it.
                 if ($attach_id
-                    && Param("insidergroup")
+                    && Bugzilla->params->{"insidergroup"}
                     && $cgi->param('isprivate')
-                    && !$requestee->in_group(Param("insidergroup")))
+                    && !$requestee->in_group(Bugzilla->params->{"insidergroup"}))
                 {
                     ThrowUserError("flag_requestee_unauthorized_attachment",
                                    { flag_type => $flag_type,

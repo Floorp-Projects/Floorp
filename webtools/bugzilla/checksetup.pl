@@ -1389,7 +1389,7 @@ if (@oldparams) {
 # if running on Windows and no third party sendmail wrapper
 # is available
 if ($^O =~ /MSWin32/i
-    && Param('mail_delivery_method') eq 'sendmail'
+    && Bugzilla->params->{'mail_delivery_method'} eq 'sendmail'
     && !-e SENDMAIL_EXE)
 {
     print "\nBugzilla requires an SMTP server to function on Windows.\n" .
@@ -1670,7 +1670,7 @@ import Bugzilla::Bug qw(is_open_state);
 # Check for LDAP
 ###########################################################################
 
-for my $verifymethod (split /,\s*/, Param('user_verify_class')) {
+for my $verifymethod (split /,\s*/, Bugzilla->params->{'user_verify_class'}) {
     if ($verifymethod eq 'LDAP') {
         my $netLDAP = have_vers("Net::LDAP", 0);
         if (!$netLDAP && !$silent) {
@@ -1688,12 +1688,12 @@ for my $verifymethod (split /,\s*/, Param('user_verify_class')) {
 # and that the generated images are accessible.
 #
 
-if( Param('webdotbase') && Param('webdotbase') !~ /^https?:/ ) {
+if( Bugzilla->params->{'webdotbase'} && Bugzilla->params->{'webdotbase'} !~ /^https?:/ ) {
     printf("Checking for %15s %-9s ", "GraphViz", "(any)") unless $silent;
-    if(-x Param('webdotbase')) {
+    if(-x Bugzilla->params->{'webdotbase'}) {
         print "ok: found\n" unless $silent;
     } else {
-        print "not a valid executable: " . Param('webdotbase') . "\n";
+        print "not a valid executable: " . Bugzilla->params->{'webdotbase'} . "\n";
     }
 
     # Check .htaccess allows access to generated images
@@ -3413,7 +3413,7 @@ if ($dbh->bz_table_info("flagtypes")) {
 #
 # If group_control_map is empty, backward-compatibility 
 # usebuggroups-equivalent records should be created.
-my $entry = Param('useentrygroupdefault');
+my $entry = Bugzilla->params->{'useentrygroupdefault'};
 $sth = $dbh->prepare("SELECT COUNT(*) FROM group_control_map");
 $sth->execute();
 my ($mapcnt) = $sth->fetchrow_array();
@@ -4088,7 +4088,7 @@ if (!exists $dbh->bz_column_info('whine_queries', 'title')->{DEFAULT}) {
              undef, "Other", "other");
     $dbh->do('UPDATE bugs SET op_sys = ? WHERE op_sys = ?',
              undef, "Other", "other");
-    if (Param('defaultopsys') eq 'other') {
+    if (Bugzilla->params->{'defaultopsys'} eq 'other') {
         # We can't actually fix the param here, because WriteParams() will
         # make $datadir/params unwriteable to the webservergroup.
         # It's too much of an ugly hack to copy the permission-fixing code
@@ -4608,9 +4608,9 @@ if ($sth->rows == 0) {
     if (-e "$datadir/params") { 
         require "$datadir/params"; # if they have a params file, use that
     }
-    if (Param('emailregexp')) {
-        $mailcheckexp = Param('emailregexp');
-        $mailcheck    = Param('emailregexpdesc');
+    if (Bugzilla->params->{'emailregexp'}) {
+        $mailcheckexp = Bugzilla->params->{'emailregexp'};
+        $mailcheck    = Bugzilla->params->{'emailregexpdesc'};
     } else {
         $mailcheckexp = '^[\\w\\.\\+\\-=]+@[\\w\\.\\-]+\\.[\\w\\-]+$';
         $mailcheck    = 'A legal address must contain exactly one \'@\', 
@@ -4805,7 +4805,7 @@ foreach my $item (@params) {
     last;
 }
 
-if (Param('urlbase') eq $urlbase_default) {
+if (Bugzilla->params->{'urlbase'} eq $urlbase_default) {
     print "Now that you have installed Bugzilla, you should visit the \n" .
           "'Parameters' page (linked in the footer of the Administrator \n" .
           "account) to ensure it is set up as you wish - this includes \n" .

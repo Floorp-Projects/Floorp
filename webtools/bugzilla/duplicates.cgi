@@ -132,7 +132,7 @@ if (!tie(%dbmcount, 'AnyDBM_File', "$datadir/duplicates/dupes$today",
 
 # Remove all those dupes under the threshold parameter. 
 # We do this, before the sorting, for performance reasons.
-my $threshold = Param("mostfreqthreshold");
+my $threshold = Bugzilla->params->{"mostfreqthreshold"};
 
 while (my ($key, $value) = each %count) {
     delete $count{$key} if ($value < $threshold);

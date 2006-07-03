@@ -52,7 +52,7 @@ sub persist_login {
 
     my $ip_addr = $cgi->remote_addr;
     unless ($cgi->param('Bugzilla_restrictlogin') ||
-            Param('loginnetmask') == 32) 
+            Bugzilla->params->{'loginnetmask'} == 32) 
     {
         $ip_addr = get_netaddr($ip_addr);
     }
@@ -70,8 +70,8 @@ sub persist_login {
 
     # Remember cookie only if admin has told so
     # or admin didn't forbid it and user told to remember.
-    if ( Param('rememberlogin') eq 'on' ||
-         (Param('rememberlogin') ne 'off' &&
+    if ( Bugzilla->params->{'rememberlogin'} eq 'on' ||
+         (Bugzilla->params->{'rememberlogin'} ne 'off' &&
           $cgi->param('Bugzilla_remember') &&
           $cgi->param('Bugzilla_remember') eq 'on') ) 
     {

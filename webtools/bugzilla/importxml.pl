@@ -120,6 +120,7 @@ our @attachments;
 our $bugtotal;
 my $xml;
 my $dbh = Bugzilla->dbh;
+my $params = Bugzilla->params;
 my ($timestamp) = $dbh->selectrow_array("SELECT NOW()");
 
 ###############################################################################
@@ -131,7 +132,7 @@ sub MailMessage {
     my $subject    = shift;
     my $message    = shift;
     my @recipients = @_;
-    my $from   = Param("moved-from-address");
+    my $from   = $params->{"moved-from-address"};
     $from =~ s/@/\@/g;
 
     foreach my $to (@recipients){
@@ -158,8 +159,8 @@ sub Error {
     my $subject = "Bug import error: $reason";
     my $message = "Cannot import these bugs because $reason ";
     $message .= "\n\nPlease re-open the original bug.\n" if ($errtype);
-    $message .= "For more info, contact " . Param("maintainer") . ".\n";
-    my @to = ( Param("maintainer"), $exporter);
+    $message .= "For more info, contact " . $params->{"maintainer"} . ".\n";
+    my @to = ( $params->{"maintainer"}, $exporter);
     Debug( $message, ERR_LEVEL );
     MailMessage( $subject, $message, @to );
     exit;
@@ -315,23 +316,23 @@ sub init() {
     }
     Error( "no maintainer", "REOPEN", $exporter ) unless ($maintainer);
     Error( "no exporter",   "REOPEN", $exporter ) unless ($exporter);
-    Error( "bug importing is disabled here", undef, $exporter ) unless ( Param("move-enabled") );
+    Error( "bug importing is disabled here", undef, $exporter ) unless ( $params->{"move-enabled"} );
     Error( "invalid exporter: $exporter", "REOPEN", $exporter ) if ( !login_to_id($exporter) );
     Error( "no urlbase set", "REOPEN", $exporter ) unless ($urlbase);
     my $def_product =
-        new Bugzilla::Product( { name => Param("moved-default-product") } )
+        new Bugzilla::Product( { name => $params->{"moved-default-product"} } )
         || Error("Cannot import these bugs because an invalid default 
                   product was defined for the target db."
-                  . Param("maintainer") . " needs to fix the definitions of
+                  . $params->{"maintainer"} . " needs to fix the definitions of
                   moved-default-product. \n", "REOPEN", $exporter);
     my $def_component = new Bugzilla::Component(
         {
             product_id => $def_product->id,
-            name       => Param("moved-default-component")
+            name       => $params->{"moved-default-component"}
         })
     || Error("Cannot import these bugs because an invalid default 
               component was defined for the target db."
-              . Param("maintainer") . " needs to fix the definitions of
+              . $params->{"maintainer"} . " needs to fix the definitions of
               moved-default-component.\n", "REOPEN", $exporter);
 }
     
@@ -487,7 +488,7 @@ sub process_bug {
         $long_desc{'isprivate'} = $comment->{'att'}->{'isprivate'} || 0;
 
         # if one of the comments is private we need to set this flag
-        if ( $long_desc{'isprivate'} && $exporter->in_group(Param('insidergroup'))) {
+        if ( $long_desc{'isprivate'} && $exporter->in_group($params->{'insidergroup'})) {
             $private = 1;
         }
         my $data = $comment->field('thetext');
@@ -545,7 +546,7 @@ sub process_bug {
 
     $comments .= "\n\n--- Bug imported by $exporter_login ";
     $comments .= time2str( "%Y-%m-%d %H:%M", time ) . " ";
-    $comments .= Param('timezone');
+    $comments .= $params->{'timezone'};
     $comments .= " ---\n\n";
     $comments .= "This bug was previously known as _bug_ $bug_fields{'bug_id'} at ";
     $comments .= $urlbase . "show_bug.cgi?id=" . $bug_fields{'bug_id'} . "\n";
@@ -609,11 +610,11 @@ sub process_bug {
     # Product and Component if there is no valid default product and
     # component defined in the parameters, we wouldn't be here
     my $def_product =
-      new Bugzilla::Product( { name => Param("moved-default-product") } );
+      new Bugzilla::Product( { name => $params->{"moved-default-product"} } );
     my $def_component = new Bugzilla::Component(
         {
             product_id => $def_product->id,
-            name       => Param("moved-default-component")
+            name       => $params->{"moved-default-component"}
         }
     );
     my $product;
@@ -681,7 +682,7 @@ sub process_bug {
     }
 
     # Milestone
-    if ( Param("usetargetmilestone") ) {
+    if ( $params->{"usetargetmilestone"} ) {
         my $milestone =
           new Bugzilla::Milestone( $product->id,
                                    $bug_fields{'target_milestone'} );
@@ -710,13 +711,13 @@ sub process_bug {
         push( @values, $bug_fields{'bug_severity'} );
     }
     else {
-        push( @values, Param('defaultseverity') );
+        push( @values, $params->{'defaultseverity'} );
         $err .= "Unknown severity ";
         $err .= ( defined $bug_fields{'bug_severity'} )
           ? $bug_fields{'bug_severity'}
           : "unknown";
         $err .= ". Setting to default severity \"";
-        $err .= Param('defaultseverity') . "\".\n";
+        $err .= $params->{'defaultseverity'} . "\".\n";
     }
     push( @query, "bug_severity" );
 
@@ -727,13 +728,13 @@ sub process_bug {
         push( @values, $bug_fields{'priority'} );
     }
     else {
-        push( @values, Param('defaultpriority') );
+        push( @values, $params->{'defaultpriority'} );
         $err .= "Unknown priority ";
         $err .= ( defined $bug_fields{'priority'} )
           ? $bug_fields{'priority'}
           : "unknown";
         $err .= ". Setting to default priority \"";
-        $err .= Param('defaultpriority') . "\".\n";
+        $err .= $params->{'defaultpriority'} . "\".\n";
     }
     push( @query, "priority" );
 
@@ -744,13 +745,13 @@ sub process_bug {
         push( @values, $bug_fields{'rep_platform'} );
     }
     else {
-        push( @values, Param('defaultplatform') );
+        push( @values, $params->{'defaultplatform'} );
         $err .= "Unknown platform ";
         $err .= ( defined $bug_fields{'rep_platform'} )
           ? $bug_fields{'rep_platform'}
           : "unknown";
         $err .=". Setting to default platform \"";
-        $err .= Param('defaultplatform') . "\".\n";
+        $err .= $params->{'defaultplatform'} . "\".\n";
     }
     push( @query, "rep_platform" );
 
@@ -761,17 +762,17 @@ sub process_bug {
         push( @values, $bug_fields{'op_sys'} );
     }
     else {
-        push( @values, Param('defaultopsys') );
+        push( @values, $params->{'defaultopsys'} );
         $err .= "Unknown operating system ";
         $err .= ( defined $bug_fields{'op_sys'} )
           ? $bug_fields{'op_sys'}
           : "unknown";
-        $err .= ". Setting to default OS \"" . Param('defaultopsys') . "\".\n";
+        $err .= ". Setting to default OS \"" . $params->{'defaultopsys'} . "\".\n";
     }
     push( @query, "op_sys" );
 
     # Process time fields
-    if ( Param("timetrackinggroup") ) {
+    if ( $params->{"timetrackinggroup"} ) {
         my $date = format_time( $bug_fields{'deadline'}, "%Y-%m-%d" )
           || undef;
         push( @values, $date );
@@ -841,7 +842,7 @@ sub process_bug {
         }
     }
 
-    if ( Param("useqacontact") ) {
+    if ( $params->{"useqacontact"} ) {
         my $qa_contact;
         push( @query, "qa_contact" );
         if ( ( defined $bug_fields{'qa_contact'})
@@ -1079,7 +1080,7 @@ sub process_bug {
             $err .= "No attachment ID specified, dropping attachment\n";
             next;
         }
-        if (!$exporter->in_group(Param('insidergroup')) && $att->{'isprivate'}){
+        if (!$exporter->in_group($params->{'insidergroup'}) && $att->{'isprivate'}){
             $err .= "Exporter not in insidergroup and attachment marked private.\n";
             $err .= "   Marking attachment public\n";
             $att->{'isprivate'} = 0;
@@ -1118,7 +1119,7 @@ sub process_bug {
 
     # Insert longdesc and append any errors
     my $worktime = $bug_fields{'actual_time'} || 0.0;
-    $worktime = 0.0 if (!$exporter->in_group(Param('timetrackinggroup')));
+    $worktime = 0.0 if (!$exporter->in_group($params->{'timetrackinggroup'}));
     $long_description .= "\n" . $comments;
     if ($err) {
         $long_description .= "\n$err\n";
@@ -1142,7 +1143,7 @@ sub process_bug {
 
     $log .= "Bug ${urlbase}show_bug.cgi?id=$bug_fields{'bug_id'} ";
     $log .= "imported as bug $id.\n";
-    $log .= Param("urlbase") . "show_bug.cgi?id=$id\n\n";
+    $log .= $params->{"urlbase"} . "show_bug.cgi?id=$id\n\n";
     if ($err) {
         $log .= "The following problems were encountered while creating bug $id.\n";
         $log .= $err;
@@ -1193,7 +1194,7 @@ my $urlbase    = $root->{'att'}->{'urlbase'};
 my $log = join("\n\n", @logs);
 $log .=  "\n\nImported $bugtotal bug(s) from $urlbase,\n  sent by $exporter.\n";
 my $subject =  "$bugtotal Bug(s) successfully moved from $urlbase to " 
-   . Param("urlbase");
+   . $params->{"urlbase"};
 my @to = ($exporter, $maintainer);
 MailMessage( $subject, $log, @to );
 

@@ -80,7 +80,9 @@ sub queue {
     my $form_group = validateGroup($cgi->param('group'));
 
     my $attach_join_clause = "flags.attach_id = attachments.attach_id";
-    if (Param("insidergroup") && !UserInGroup(Param("insidergroup"))) {
+    if (Bugzilla->params->{"insidergroup"} 
+        && !UserInGroup(Bugzilla->params->{"insidergroup"})) 
+    {
         $attach_join_clause .= " AND attachments.isprivate < 1";
     }
 
@@ -131,7 +133,7 @@ sub queue {
                  (ccmap.who IS NOT NULL AND cclist_accessible = 1) OR
                  (bugs.reporter = $userid AND bugs.reporter_accessible = 1) OR
                  (bugs.assigned_to = $userid) " .
-                 (Param('useqacontact') ? "OR
+                 (Bugzilla->params->{'useqacontact'} ? "OR
                  (bugs.qa_contact = $userid))" : ")");
     
     # Limit query to pending requests.

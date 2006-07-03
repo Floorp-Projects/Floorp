@@ -156,7 +156,7 @@ if (!defined $cgi->param('short_desc')
 # Check that if required a description has been provided
 # This has to go somewhere after 'maketemplate' 
 #  or it breaks bookmarks with no comments.
-if (Param("commentoncreate") && !trim($cgi->param('comment'))) {
+if (Bugzilla->params->{"commentoncreate"} && !trim($cgi->param('comment'))) {
     ThrowUserError("description_required");
 }
 
@@ -181,7 +181,7 @@ my @bug_fields = ("version", "rep_platform",
                   "bug_status", "everconfirmed", "bug_file_loc", "short_desc",
                   "target_milestone", "status_whiteboard");
 
-if (Param("usebugaliases")) {
+if (Bugzilla->params->{"usebugaliases"}) {
    my $alias = trim($cgi->param('alias') || "");
    if ($alias ne "") {
        ValidateBugAlias($alias);
@@ -191,7 +191,7 @@ if (Param("usebugaliases")) {
 }
 
 # Retrieve the default QA contact if the field is empty
-if (Param("useqacontact")) {
+if (Bugzilla->params->{"useqacontact"}) {
     my $qa_contact;
     if (!UserInGroup("editbugs") || !defined $cgi->param('qa_contact')
         || trim($cgi->param('qa_contact')) eq "") {
@@ -235,8 +235,8 @@ if (!defined $cgi->param('target_milestone')) {
     $cgi->param(-name => 'target_milestone', -value => $defaultmilestone);
 }
 
-if (!Param('letsubmitterchoosepriority')) {
-    $cgi->param(-name => 'priority', -value => Param('defaultpriority'));
+if (!Bugzilla->params->{'letsubmitterchoosepriority'}) {
+    $cgi->param(-name => 'priority', -value => Bugzilla->params->{'defaultpriority'});
 }
 
 # Some more sanity checking
@@ -305,11 +305,11 @@ if ($cgi->param('keywords') && UserInGroup("editbugs")) {
     }
 }
 
-if (Param("strict_isolation")) {
+if (Bugzilla->params->{"strict_isolation"}) {
     my @blocked_users = ();
     my %related_users = %ccids;
     $related_users{$cgi->param('assigned_to')} = 1;
-    if (Param('useqacontact') && $cgi->param('qa_contact')) {
+    if (Bugzilla->params->{'useqacontact'} && $cgi->param('qa_contact')) {
         $related_users{$cgi->param('qa_contact')} = 1;
     }
     foreach my $pid (keys %related_users) {
@@ -382,7 +382,7 @@ my $est_time = 0;
 my $deadline;
 
 # Time Tracking
-if (UserInGroup(Param("timetrackinggroup")) &&
+if (UserInGroup(Bugzilla->params->{"timetrackinggroup"}) &&
     defined $cgi->param('estimated_time')) {
 
     $est_time = $cgi->param('estimated_time');
@@ -393,7 +393,9 @@ if (UserInGroup(Param("timetrackinggroup")) &&
 
 push (@fields_values, $est_time, $est_time);
 
-if ((UserInGroup(Param("timetrackinggroup"))) && ($cgi->param('deadline'))) {
+if ( UserInGroup(Bugzilla->params->{"timetrackinggroup"})
+     && $cgi->param('deadline') ) 
+{
     validate_date($cgi->param('deadline'))
       || ThrowUserError('illegal_date', {date => $cgi->param('deadline'),
                                          format => 'YYYY-MM-DD'});
@@ -481,7 +483,9 @@ foreach my $grouptoadd (@groupstoadd) {
 
 # Add the initial comment, allowing for the fact that it may be private
 my $privacy = 0;
-if (Param("insidergroup") && UserInGroup(Param("insidergroup"))) {
+if (Bugzilla->params->{"insidergroup"} 
+    && UserInGroup(Bugzilla->params->{"insidergroup"})) 
+{
     $privacy = $cgi->param('commentprivacy') ? 1 : 0;
 }
 

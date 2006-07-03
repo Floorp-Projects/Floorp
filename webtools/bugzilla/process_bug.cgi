@@ -160,7 +160,7 @@ foreach my $field ("estimated_time", "work_time", "remaining_time") {
     }
 }
 
-if (UserInGroup(Param('timetrackinggroup'))) {
+if (UserInGroup(Bugzilla->params->{'timetrackinggroup'})) {
     my $wk_time = $cgi->param('work_time');
     if ($cgi->param('comment') =~ /^\s*$/ && $wk_time && $wk_time != 0) {
         ThrowUserError('comment_required');
@@ -190,7 +190,7 @@ foreach my $field ("dependson", "blocked") {
             # ValidateBugID is called without $field here so that it will
             # throw an error if any of the changed bugs are not visible.
             ValidateBugID($id);
-            if (Param("strict_isolation")) {
+            if (Bugzilla->params->{"strict_isolation"}) {
                 my $deltabug = new Bugzilla::Bug($id, $user->id);
                 if (!$user->can_edit_product($deltabug->{'product_id'})) {
                     $vars->{'field'} = $field;
@@ -272,7 +272,7 @@ sub CheckonComment {
     my ($function) = (@_);
     
     # Param is 1 if comment should be added !
-    my $ret = Param( "commenton" . $function );
+    my $ret = Bugzilla->params->{ "commenton" . $function };
 
     # Allow without comment in case of undefined Params.
     $ret = 0 unless ( defined( $ret ));
@@ -354,7 +354,7 @@ if (((defined $cgi->param('id') && $cgi->param('product') ne $oldproduct)
 
     my $mok = 1;   # so it won't affect the 'if' statement if milestones aren't used
     my @milestone_names = ();
-    if ( Param("usetargetmilestone") ) {
+    if ( Bugzilla->params->{"usetargetmilestone"} ) {
        defined($cgi->param('target_milestone'))
          || ThrowCodeError('undefined_field', { field => 'target_milestone' });
 
@@ -382,7 +382,7 @@ if (((defined $cgi->param('id') && $cgi->param('product') ne $oldproduct)
             if ($cok) {
                 $defaults{'component'} = $cgi->param('component');
             }
-            if (Param("usetargetmilestone")) {
+            if (Bugzilla->params->{"usetargetmilestone"}) {
                 $vars->{'use_target_milestone'} = 1;
                 $vars->{'milestones'} = \@milestone_names;
                 if ($mok) {
@@ -464,7 +464,7 @@ if (defined $cgi->param('id')) {
                 [map($_->name, @{$prod_obj->components})]);
     check_field('version', scalar $cgi->param('version'),
                 [map($_->name, @{$prod_obj->versions})]);
-    if ( Param("usetargetmilestone") ) {
+    if ( Bugzilla->params->{"usetargetmilestone"} ) {
         check_field('target_milestone', scalar $cgi->param('target_milestone'), 
                     [map($_->name, @{$prod_obj->milestones})]);
     }
@@ -487,8 +487,8 @@ if (defined $cgi->param('id')) {
 
 my $action = trim($cgi->param('action') || '');
 
-if ($action eq Param('move-button-text')) {
-    Param('move-enabled') || ThrowUserError("move_bugs_disabled");
+if ($action eq Bugzilla->params->{'move-button-text'}) {
+    Bugzilla->params->{'move-enabled'} || ThrowUserError("move_bugs_disabled");
 
     $user->is_mover || ThrowUserError("auth_failure", {action => 'move',
                                                        object => 'bugs'});
@@ -506,7 +506,7 @@ if ($action eq Param('move-button-text')) {
     if (defined $cgi->param('comment') && $cgi->param('comment') !~ /^\s*$/) {
         $comment = $cgi->param('comment') . "\n\n";
     }
-    $comment .= "Bug moved to " . Param('move-to-url') . ".\n\n";
+    $comment .= "Bug moved to " . Bugzilla->params->{'move-to-url'} . ".\n\n";
     $comment .= "If the move succeeded, " . $user->login . " will receive a mail\n";
     $comment .= "containing the number of the new bug in the other database.\n";
     $comment .= "If all went well,  please mark this bug verified, and paste\n";
@@ -553,9 +553,9 @@ if ($action eq Param('move-button-text')) {
         $vars->{'header_done'} = 1;
     }
     # Prepare and send all data about these bugs to the new database
-    my $to = Param('move-to-address');
+    my $to = Bugzilla->params->{'move-to-address'};
     $to =~ s/@/\@/;
-    my $from = Param('moved-from-address');
+    my $from = Bugzilla->params->{'moved-from-address'};
     $from =~ s/@/\@/;
     my $msg = "To: $to\n";
     $msg .= "From: Bugzilla <" . $from . ">\n";
@@ -591,7 +591,7 @@ my @values;
 umask(0);
 
 sub _remove_remaining_time {
-    if (UserInGroup(Param('timetrackinggroup'))) {
+    if (UserInGroup(Bugzilla->params->{'timetrackinggroup'})) {
         if ( defined $cgi->param('remaining_time') 
              && $cgi->param('remaining_time') > 0 )
         {
@@ -817,7 +817,7 @@ if ($cgi->param('component') ne $cgi->param('dontchange')) {
 
 # If this installation uses bug aliases, and the user is changing the alias,
 # add this change to the query.
-if (Param("usebugaliases") && defined $cgi->param('alias')) {
+if (Bugzilla->params->{"usebugaliases"} && defined $cgi->param('alias')) {
     my $alias = trim($cgi->param('alias'));
     
     # Since aliases are unique (like bug numbers), they can only be changed
@@ -863,8 +863,10 @@ if (defined $cgi->param('id')) {
     }
 }
 
-if (defined $cgi->param('id') &&
-    (Param("insidergroup") && UserInGroup(Param("insidergroup")))) {
+if ( defined $cgi->param('id') &&
+     (Bugzilla->params->{"insidergroup"} 
+      && UserInGroup(Bugzilla->params->{"insidergroup"})) ) 
+{
 
     my $sth = $dbh->prepare('UPDATE longdescs SET isprivate = ?
                              WHERE bug_id = ? AND bug_when = ?');
@@ -953,7 +955,7 @@ if (defined $cgi->param('qa_contact')
     # The QA contact cannot be deleted from show_bug.cgi for a single bug!
     if ($name ne $cgi->param('dontchange')) {
         $qacontact = login_to_id($name, THROW_ERROR) if ($name ne "");
-        if ($qacontact && Param("strict_isolation")) {
+        if ($qacontact && Bugzilla->params->{"strict_isolation"}) {
                 $usercache{$qacontact} ||= Bugzilla::User->new($qacontact);
                 my $qa_user = $usercache{$qacontact};
                 foreach my $product_id (@newprod_ids) {
@@ -992,7 +994,9 @@ SWITCH: for ($cgi->param('knob')) {
     /^accept$/ && CheckonComment( "accept" ) && do {
         DoConfirm();
         ChangeStatus('ASSIGNED');
-        if (Param("usetargetmilestone") && Param("musthavemilestoneonaccept")) {
+        if (Bugzilla->params->{"usetargetmilestone"} 
+            && Bugzilla->params->{"musthavemilestoneonaccept"}) 
+        {
             $requiremilestone = 1;
         }
         last SWITCH;
@@ -1007,7 +1011,7 @@ SWITCH: for ($cgi->param('knob')) {
                     Bugzilla::Bug->settable_resolutions);
 
         # don't resolve as fixed while still unresolved blocking bugs
-        if (Param("noresolveonopenblockers")
+        if (Bugzilla->params->{"noresolveonopenblockers"}
             && $cgi->param('resolution') eq 'FIXED')
         {
             my @dependencies = Bugzilla::Bug::CountOpenDependencies(@idlist);
@@ -1038,7 +1042,7 @@ SWITCH: for ($cgi->param('knob')) {
         if (defined $cgi->param('assigned_to')
             && trim($cgi->param('assigned_to')) ne "") { 
             $assignee = login_to_id(trim($cgi->param('assigned_to')), THROW_ERROR);
-            if (Param("strict_isolation")) {
+            if (Bugzilla->params->{"strict_isolation"}) {
                 $usercache{$assignee} ||= Bugzilla::User->new($assignee);
                 my $assign_user = $usercache{$assignee};
                 foreach my $product_id (@newprod_ids) {
@@ -1177,7 +1181,7 @@ if ($::comma eq ""
 }
 
 # Process data for Time Tracking fields
-if (UserInGroup(Param('timetrackinggroup'))) {
+if (UserInGroup(Bugzilla->params->{'timetrackinggroup'})) {
     foreach my $field ("estimated_time", "remaining_time") {
         if (defined $cgi->param($field)) {
             my $er_time = trim($cgi->param($field));
@@ -1249,7 +1253,7 @@ sub LogDependencyActivity {
     return 0;
 }
 
-if (Param("strict_isolation")) {
+if (Bugzilla->params->{"strict_isolation"}) {
     my @blocked_cc = ();
     foreach my $pid (keys %cc_add) {
         $usercache{$pid} ||= Bugzilla::User->new($pid);
@@ -1268,7 +1272,7 @@ if (Param("strict_isolation")) {
     }
 }
 
-if ($prod_changed && Param("strict_isolation")) {
+if ($prod_changed && Bugzilla->params->{"strict_isolation"}) {
     my $sth_cc = $dbh->prepare("SELECT who
                                 FROM cc
                                 WHERE bug_id = ?");
@@ -1339,7 +1343,7 @@ foreach my $id (@idlist) {
                                            undef, $new_comp_id);
         $query .= ", assigned_to = ?";
         push(@bug_values, $assignee);
-        if (Param("useqacontact")) {
+        if (Bugzilla->params->{"useqacontact"}) {
             $qacontact = $dbh->selectrow_array('SELECT initialqacontact
                                                 FROM components
                                                 WHERE components.id = ?',
@@ -1396,7 +1400,7 @@ foreach my $id (@idlist) {
     #   email addresses into their corresponding IDs;
     # - update $newhash{'bug_status'} to its real state if the bug
     #   is in the unconfirmed state.
-    $formhash{'qa_contact'} = $qacontact if Param('useqacontact');
+    $formhash{'qa_contact'} = $qacontact if Bugzilla->params->{'useqacontact'};
     if ($cgi->param('knob') eq 'reassignbycomponent'
         || $cgi->param('knob') eq 'reassign') {
         $formhash{'assigned_to'} = $assignee;
@@ -1519,7 +1523,7 @@ foreach my $id (@idlist) {
     $timestamp = $dbh->selectrow_array(q{SELECT NOW()});
 
     my $work_time;
-    if (UserInGroup(Param('timetrackinggroup'))) {
+    if (UserInGroup(Bugzilla->params->{'timetrackinggroup'})) {
         $work_time = $cgi->param('work_time');
         if ($work_time) {
             # AppendComment (called below) can in theory raise an error,

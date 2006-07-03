@@ -110,7 +110,7 @@ if (!defined $cgi->param('id') && !defined $cgi->param('doall')) {
 my ($fh, $filename) = File::Temp::tempfile("XXXXXXXXXX",
                                            SUFFIX => '.dot',
                                            DIR => $webdotdir);
-my $urlbase = Param('urlbase');
+my $urlbase = Bugzilla->params->{'urlbase'};
 
 print $fh "digraph G {";
 print $fh qq{
@@ -218,7 +218,7 @@ close $fh;
 
 chmod 0777, $filename;
 
-my $webdotbase = Param('webdotbase');
+my $webdotbase = Bugzilla->params->{'webdotbase'};
 
 if ($webdotbase =~ /^https?:/) {
      # Remote dot server

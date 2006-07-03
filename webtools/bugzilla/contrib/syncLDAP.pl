@@ -92,7 +92,7 @@ foreach my $login_name (keys %$bugzilla_users) {
 ###
 # Get current LDAP users
 ###
-my $LDAPserver = Param("LDAPserver");
+my $LDAPserver = Bugzilla->params->{"LDAPserver"};
 if ($LDAPserver eq "") {
    print "No LDAP server defined in bugzilla preferences.\n";
    exit;
@@ -108,8 +108,8 @@ if(!$LDAPconn) {
    exit;
 }
 my $mesg;
-if (Param("LDAPbinddn")) {
-    my ($LDAPbinddn,$LDAPbindpass) = split(":",Param("LDAPbinddn"));
+if (Bugzilla->params->{"LDAPbinddn"}) {
+    my ($LDAPbinddn,$LDAPbindpass) = split(":",Bugzilla->params->{"LDAPbinddn"});
     $mesg = $LDAPconn->bind($LDAPbinddn, password => $LDAPbindpass);
 }
 else {
@@ -121,9 +121,9 @@ if($mesg->code) {
 }
 
 # We've got our anonymous bind;  let's look up the users.
-$mesg = $LDAPconn->search( base   => Param("LDAPBaseDN"),
+$mesg = $LDAPconn->search( base   => Bugzilla->params->{"LDAPBaseDN"},
                            scope  => "sub",
-                           filter => '(&(' . Param("LDAPuidattribute") . "=*)" . Param("LDAPfilter") . ')',
+                           filter => '(&(' . Bugzilla->params->{"LDAPuidattribute"} . "=*)" . Bugzilla->params->{"LDAPfilter"} . ')',
                          );
                          
 
@@ -136,7 +136,7 @@ my $val = $mesg->as_struct;
 
 while( my ($key, $value) = each(%$val) ) {
 
-   my $login_name = @$value{Param("LDAPmailattribute")};
+   my $login_name = @$value{Bugzilla->params->{"LDAPmailattribute"}};
    my $realname  = @$value{"cn"};
 
    # no mail entered? go to next
@@ -147,7 +147,7 @@ while( my ($key, $value) = each(%$val) ) {
 
    # no cn entered? use uid instead
    if(! defined $realname) { 
-      $realname = @$value{Param("LDAPuidattribute")};
+      $realname = @$value{Bugzilla->params->{"LDAPuidattribute"}};
    }
   
    my $login = shift @$login_name;

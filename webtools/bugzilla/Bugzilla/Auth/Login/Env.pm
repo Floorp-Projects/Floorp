@@ -36,9 +36,9 @@ sub get_login_info {
     my ($self) = @_;
     my $dbh = Bugzilla->dbh;
 
-    my $env_id       = $ENV{Param("auth_env_id")} || '';
-    my $env_email    = $ENV{Param("auth_env_email")} || '';
-    my $env_realname = $ENV{Param("auth_env_realname")} || '';
+    my $env_id       = $ENV{Bugzilla->params->{"auth_env_id"}} || '';
+    my $env_email    = $ENV{Bugzilla->params->{"auth_env_email"}} || '';
+    my $env_realname = $ENV{Bugzilla->params->{"auth_env_realname"}} || '';
 
     return { failure => AUTH_NODATA } if !$env_email;
 

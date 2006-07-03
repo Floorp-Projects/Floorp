@@ -52,11 +52,13 @@ use constant BLOB_TYPE => DBI::SQL_BLOB;
 #####################################################################
 
 sub connect_shadow {
-    die "Tried to connect to non-existent shadowdb" unless Param('shadowdb');
+    my $params = Bugzilla->params;
+    die "Tried to connect to non-existent shadowdb" 
+        unless $params->{'shadowdb'};
 
-    return _connect($db_driver, Param("shadowdbhost"),
-                    Param('shadowdb'), Param("shadowdbport"),
-                    Param("shadowdbsock"), $db_user, $db_pass);
+    return _connect($db_driver, $params->{"shadowdbhost"},
+                    $params->{'shadowdb'}, $params->{"shadowdbport"},
+                    $params->{"shadowdbsock"}, $db_user, $db_pass);
 }
 
 sub connect_main {
@@ -205,7 +207,7 @@ sub bz_get_field_defs {
     my ($self) = @_;
 
     my $extra = "";
-    if (!Bugzilla->user->in_group(Param('timetrackinggroup'))) {
+    if (!Bugzilla->user->in_group(Bugzilla->params->{'timetrackinggroup'})) {
         $extra = "AND name NOT IN ('estimated_time', 'remaining_time', " .
                  "'work_time', 'percentage_complete', 'deadline')";
     }

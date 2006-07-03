@@ -405,7 +405,7 @@ my $cgi = Bugzilla->cgi;
 
 Bugzilla->switch_to_shadow_db();
 
-UserInGroup(Param("timetrackinggroup"))
+UserInGroup(Bugzilla->params->{"timetrackinggroup"})
     || ThrowUserError("auth_failure", {group  => "time-tracking",
                                        action => "access",
                                        object => "timetracking_summaries"});

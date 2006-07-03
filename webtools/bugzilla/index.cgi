@@ -45,10 +45,10 @@ my $user = Bugzilla->login(LOGIN_OPTIONAL);
 ###############################################################################
 
 my $cgi = Bugzilla->cgi;
-# Force to use HTTPS unless Param('ssl') equals 'never'.
+# Force to use HTTPS unless Bugzilla->params->{'ssl'} equals 'never'.
 # This is required because the user may want to log in from here.
-if (Param('sslbase') ne '' and Param('ssl') ne 'never') {
-    $cgi->require_https(Param('sslbase'));
+if (Bugzilla->params->{'sslbase'} ne '' and Bugzilla->params->{'ssl'} ne 'never') {
+    $cgi->require_https(Bugzilla->params->{'sslbase'});
 }
 
 my $template = Bugzilla->template;

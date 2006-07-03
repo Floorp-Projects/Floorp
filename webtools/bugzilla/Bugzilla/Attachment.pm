@@ -413,7 +413,8 @@ sub _validate_filename {
 sub _validate_data {
     my ($throw_error, $hr_vars) = @_;
     my $cgi = Bugzilla->cgi;
-    my $maxsize = $cgi->param('ispatch') ? Param('maxpatchsize') : Param('maxattachmentsize');
+    my $maxsize = $cgi->param('ispatch') ? Bugzilla->params->{'maxpatchsize'} 
+                  : Bugzilla->params->{'maxattachmentsize'};
     $maxsize *= 1024; # Convert from K
     my $fh;
     # Skip uploading into a local variable if the user wants to upload huge
@@ -439,7 +440,7 @@ sub _validate_data {
     # makes for a quick way to eat up disk space. Let's compress them.
     # We do this before we check the size since the uncompressed version
     # could easily be greater than maxattachmentsize.
-    if (Param('convert_uncompressed_images')
+    if (Bugzilla->params->{'convert_uncompressed_images'}
         && $cgi->param('contenttype') eq 'image/bmp') {
         require Image::Magick;
         my $img = Image::Magick->new(magick=>'bmp');
@@ -710,7 +711,7 @@ sub insert_attachment_for_bug {
         open(AH, ">$attachdir/$hash/attachment.$attachid");
         binmode AH;
         my $sizecount = 0;
-        my $limit = (Param("maxlocalattachment") * 1048576);
+        my $limit = (Bugzilla->params->{"maxlocalattachment"} * 1048576);
         while (<$fh>) {
             print AH $_;
             $sizecount += length($_);

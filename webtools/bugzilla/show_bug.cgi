@@ -114,7 +114,7 @@ if ($cgi->param("field")) {
     @fieldlist = $cgi->param("field");
 }
 
-unless (UserInGroup(Param("timetrackinggroup"))) {
+unless (UserInGroup(Bugzilla->params->{"timetrackinggroup"})) {
     @fieldlist = grep($_ !~ /_time$/, @fieldlist);
 }
 

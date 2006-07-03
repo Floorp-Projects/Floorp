@@ -90,8 +90,8 @@ if ($action eq "search") {
 
 my $user = Bugzilla->login(LOGIN_REQUIRED);
 
-UserInGroup(Param("chartgroup"))
-  || ThrowUserError("auth_failure", {group  => Param("chartgroup"),
+UserInGroup(Bugzilla->params->{"chartgroup"})
+  || ThrowUserError("auth_failure", {group  => Bugzilla->params->{"chartgroup"},
                                      action => "use",
                                      object => "charts"});
 

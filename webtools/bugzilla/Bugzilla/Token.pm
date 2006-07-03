@@ -50,6 +50,7 @@ my $maxtokenage = 3;
 
 sub IssueEmailChangeToken {
     my ($userid, $old_email, $new_email) = @_;
+    my $email_suffix = Bugzilla->params->{'emailsuffix'};
 
     my ($token, $token_ts) = _create_token($userid, 'emailold', $old_email . ":" . $new_email);
 
@@ -60,14 +61,14 @@ sub IssueEmailChangeToken {
     my $template = Bugzilla->template;
     my $vars = {};
 
-    $vars->{'oldemailaddress'} = $old_email . Param('emailsuffix');
-    $vars->{'newemailaddress'} = $new_email . Param('emailsuffix');
+    $vars->{'oldemailaddress'} = $old_email . $email_suffix;
+    $vars->{'newemailaddress'} = $new_email . $email_suffix;
     
     $vars->{'max_token_age'} = $maxtokenage;
     $vars->{'token_ts'} = $token_ts;
 
     $vars->{'token'} = $token;
-    $vars->{'emailaddress'} = $old_email . Param('emailsuffix');
+    $vars->{'emailaddress'} = $old_email . $email_suffix;
 
     my $message;
     $template->process("account/email/change-old.txt.tmpl", $vars, \$message)
@@ -76,7 +77,7 @@ sub IssueEmailChangeToken {
     MessageToMTA($message);
 
     $vars->{'token'} = $newtoken;
-    $vars->{'emailaddress'} = $new_email . Param('emailsuffix');
+    $vars->{'emailaddress'} = $new_email . $email_suffix;
 
     $message = "";
     $template->process("account/email/change-new.txt.tmpl", $vars, \$message)
@@ -112,7 +113,7 @@ sub IssuePasswordToken {
 
     # Mail the user the token along with instructions for using it.
     $vars->{'token'} = $token;
-    $vars->{'emailaddress'} = $loginname . Param('emailsuffix');
+    $vars->{'emailaddress'} = $loginname . Bugzilla->params->{'emailsuffix'};
 
     $vars->{'max_token_age'} = $maxtokenage;
     $vars->{'token_ts'} = $token_ts;
@@ -191,11 +192,11 @@ sub Cancel {
                                 undef, $token);
 
     # Get the email address of the Bugzilla maintainer.
-    my $maintainer = Param('maintainer');
+    my $maintainer = Bugzilla->params->{'maintainer'};
 
     my $template = Bugzilla->template;
 
-    $vars->{'emailaddress'} = $loginname . Param('emailsuffix');
+    $vars->{'emailaddress'} = $loginname . Bugzilla->params->{'emailsuffix'};
     $vars->{'maintainer'} = $maintainer;
     $vars->{'remoteaddress'} = $::ENV{'REMOTE_ADDR'};
     $vars->{'token'} = $token;

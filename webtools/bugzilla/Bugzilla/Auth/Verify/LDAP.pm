@@ -85,7 +85,7 @@ sub check_credentials {
 
     my $user_entry = $detail_result->shift_entry;
 
-    my $mail_attr = Param("LDAPmailattribute");
+    my $mail_attr = Bugzilla->params->{"LDAPmailattribute"};
     if ($mail_attr) {
         if (!$user_entry->exists($mail_attr)) {
             return { failure => AUTH_ERROR,
@@ -106,17 +106,19 @@ sub check_credentials {
 
 sub _bz_search_params {
     my ($username) = @_;
-    return (base   => Param("LDAPBaseDN"),
+    return (base   => Bugzilla->params->{"LDAPBaseDN"},
             scope  => "sub",
-            filter => '(&(' . Param("LDAPuidattribute") . "=$username)"
-                      . Param("LDAPfilter") . ')');
+            filter => '(&(' . Bugzilla->params->{"LDAPuidattribute"} 
+                      . "=$username)"
+                      . Bugzilla->params->{"LDAPfilter"} . ')');
 }
 
 sub _bind_ldap_anonymously {
     my ($self) = @_;
     my $bind_result;
-    if (Param("LDAPbinddn")) {
-        my ($LDAPbinddn,$LDAPbindpass) = split(":",Param("LDAPbinddn"));
+    if (Bugzilla->params->{"LDAPbinddn"}) {
+        my ($LDAPbinddn,$LDAPbindpass) = 
+            split(":",Bugzilla->params->{"LDAPbinddn"});
         $bind_result = 
             $self->ldap->bind($LDAPbinddn, password => $LDAPbindpass);
     }
@@ -136,7 +138,7 @@ sub ldap {
     my ($self) = @_;
     return $self->{ldap} if $self->{ldap};
 
-    my $server = Param("LDAPserver");
+    my $server = Bugzilla->params->{"LDAPserver"};
     ThrowCodeError("ldap_server_not_defined") unless $server;
 
     my $port = DEFAULT_PORT;
@@ -166,7 +168,7 @@ sub ldap {
         || ThrowCodeError("ldap_connect_failed", { server => $conn_string });
 
     # try to start TLS if needed
-    if (Param("LDAPstarttls")) {
+    if (Bugzilla->params->{"LDAPstarttls"}) {
         my $mesg = $self->{ldap}->start_tls();
         ThrowCodeError("ldap_start_tls_failed", { error => $mesg->error() })
             if $mesg->code();

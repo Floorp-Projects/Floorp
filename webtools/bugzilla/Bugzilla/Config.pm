@@ -280,7 +280,7 @@ Bugzilla::Config - Configuration parameters for Bugzilla
   # Getting parameters
   use Bugzilla::Config;
 
-  my $fooSetting = Param('foo');
+  my $fooSetting = Bugzilla->params->{'foo'};
 
   # Administration functions
   use Bugzilla::Config qw(:admin);
@@ -305,7 +305,7 @@ Parameters can be set, retrieved, and updated.
 
 =over 4
 
-=item C<Param($name)>
+=item C<Bugzilla->params->{$name}>
 
 Returns the Param with the specified name. Either a string, or, in the case
 of multiple-choice parameters, an array reference.

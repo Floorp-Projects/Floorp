@@ -113,7 +113,7 @@ sub getTemplateIncludePath {
     my $templatedir = bz_locations()->{'templatedir'};
     my $project     = bz_locations()->{'project'};
 
-    my $languages = trim(Param('languages'));
+    my $languages = trim(Bugzilla->params->{'languages'});
     if (not ($languages =~ /,/)) {
        if ($project) {
            $template_include_path = [
@@ -141,7 +141,7 @@ sub getTemplateIncludePath {
             push (@usedlanguages, @found);
         }
     }
-    push(@usedlanguages, Param('defaultlanguage'));
+    push(@usedlanguages, Bugzilla->params->{'defaultlanguage'});
     if ($project) {
         $template_include_path = [
            map((
@@ -277,7 +277,9 @@ sub quoteUrls {
     my $tmp;
 
     # Provide tooltips for full bug links (Bug 74355)
-    my $urlbase_re = '(' . join('|', map { qr/$_/ } grep($_, Param('urlbase'), Param('sslbase'))) . ')';
+    my $urlbase_re = '(' . join('|',
+        map { qr/$_/ } grep($_, Bugzilla->params->{'urlbase'}, 
+                            Bugzilla->params->{'sslbase'})) . ')';
     $text =~ s~\b(${urlbase_re}\Qshow_bug.cgi?id=\E([0-9]+))\b
               ~($things[$count++] = get_bug_link($3, $1)) &&
                ("\0\0" . ($count-1) . "\0\0")
@@ -697,7 +699,7 @@ sub create {
                 my ($var) = Template::Filters::html_filter(@_);
                 # Obscure '@'.
                 $var =~ s/\@/\&#64;/g;
-                if (Param('utf8')) {
+                if (Bugzilla->params->{'utf8'}) {
                     # Remove the following characters because they're
                     # influencing BiDi:
                     # --------------------------------------------------------

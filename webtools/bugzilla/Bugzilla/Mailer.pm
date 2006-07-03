@@ -50,12 +50,15 @@ use MIME::Base64;
 
 sub MessageToMTA {
     my ($msg) = (@_);
-    return if (Param('mail_delivery_method') eq "none");
+    my $params = Bugzilla->params;
+    return if ($params->{'mail_delivery_method'} eq "none");
 
     my ($header, $body) = $msg =~ /(.*?\n)\n(.*)/s ? ($1, $2) : ('', $msg);
     my $headers;
 
-    if (Param('utf8') and (!is_7bit_clean($header) or !is_7bit_clean($body))) {
+    if ($params->{'utf8'} 
+        and (!is_7bit_clean($header) or !is_7bit_clean($body))) 
+    {
         ($headers, $body) = encode_message($msg);
     } else {
         my @header_lines = split(/\n/, $header);
@@ -65,7 +68,7 @@ sub MessageToMTA {
     # Use trim to remove any whitespace (incl. newlines)
     my $from = trim($headers->get('from'));
 
-    if (Param("mail_delivery_method") eq "sendmail" && $^O =~ /MSWin32/i) {
+    if ($params->{"mail_delivery_method"} eq "sendmail" && $^O =~ /MSWin32/i) {
         my $cmd = '|' . SENDMAIL_EXE . ' -t -i';
         if ($from) {
             # We're on Windows, thus no danger of command injection
@@ -82,23 +85,25 @@ sub MessageToMTA {
     }
 
     my @args;
-    if (Param("mail_delivery_method") eq "sendmail") {
+    if ($params->{"mail_delivery_method"} eq "sendmail") {
         push @args, "-i";
         if ($from) {
             push(@args, "-f$from");
         }
     }
-    if (Param("mail_delivery_method") eq "sendmail" && !Param("sendmailnow")) {
+    if ($params->{"mail_delivery_method"} eq "sendmail" 
+        && !$params->{"sendmailnow"}) 
+    {
         push @args, "-ODeliveryMode=deferred";
     }
-    if (Param("mail_delivery_method") eq "smtp") {
-        push @args, Server => Param("smtpserver");
+    if ($params->{"mail_delivery_method"} eq "smtp") {
+        push @args, Server => $params->{"smtpserver"};
         if ($from) {
             $ENV{'MAILADDRESS'} = $from;
         }
     }
-    my $mailer = new Mail::Mailer Param("mail_delivery_method"), @args;
-    if (Param("mail_delivery_method") eq "testfile") {
+    my $mailer = new Mail::Mailer($params->{"mail_delivery_method"}, @args);
+    if ($params->{"mail_delivery_method"} eq "testfile") {
         $Mail::Mailer::testfile::config{outfile} = 
             bz_locations()->{'datadir'} . '/mailer.testfile';
     }
