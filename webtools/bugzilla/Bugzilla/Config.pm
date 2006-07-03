@@ -52,9 +52,6 @@ our @parampanels = ();
   );
 Exporter::export_ok_tags('admin', 'db', 'localconfig', 'params');
 
-# Bugzilla version
-$Bugzilla::Config::VERSION = "2.23.1+";
-
 use vars qw(@param_list);
 
 # Data::Dumper is required as needed, below. The problem is that then when

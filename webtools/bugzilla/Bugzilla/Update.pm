@@ -76,7 +76,7 @@ sub get_notifications {
 
     # On which branch is the current installation running?
     my @current_version =
-        ($Bugzilla::Config::VERSION =~ m/^(\d+)\.(\d+)(?:(rc|\.)(\d+))?\+?$/);
+        (BUGZILLA_VERSION =~ m/^(\d+)\.(\d+)(?:(rc|\.)(\d+))?\+?$/);
 
     my @release;
     if (Bugzilla->params->{'upgrade_notification'} eq 'development_snapshot') {

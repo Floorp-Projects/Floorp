@@ -47,6 +47,7 @@ merge-users.pl - Merge two user accounts.
 use lib qw(.);
 
 use Bugzilla;
+use Bugzilla::Constants;
 use Bugzilla::Config qw(:DEFAULT);
 use Bugzilla::Util;
 
@@ -62,7 +63,7 @@ pod2usage(0) if $help;
 
 
 # We require Bugzilla 2.20 or higher (including 2.22+).
-my $current_version = $Bugzilla::Config::VERSION;
+my $current_version = BUGZILLA_VERSION;
 if ($current_version =~ /^2\.2[0123]/) {
     print "OK, you are using Bugzilla $current_version\n"
 }

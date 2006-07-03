@@ -28,7 +28,7 @@
      xmlns:bz="http://www.bugzilla.org/rdf#">
 
 <bz:installation rdf:about="[% Param('urlbase') FILTER html %]">
-  <bz:install_version>[% VERSION FILTER html %]</bz:install_version>
+  <bz:install_version>[% constants.BUGZILLA_VERSION FILTER html %]</bz:install_version>
   <bz:maintainer>[% Param('maintainer') FILTER html %]</bz:maintainer>
 
   <bz:status>

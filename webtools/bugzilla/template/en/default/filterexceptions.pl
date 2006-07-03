@@ -350,7 +350,7 @@
 ],
 
 'bug/show.xml.tmpl' => [
-  'VERSION', 
+  'constants.BUGZILLA_VERSION', 
   'a.id', 
   'field', 
 ],

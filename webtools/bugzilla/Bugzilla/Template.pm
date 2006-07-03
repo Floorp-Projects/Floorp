@@ -795,9 +795,6 @@ sub create {
                 Bugzilla::BugMail::Send($id, $mailrecipients);
             },
 
-            # Bugzilla version
-            # This could be made a ref, or even a CONSTANT with TT2.08
-            'VERSION' => $Bugzilla::Config::VERSION ,
         },
 
    }) || die("Template creation failed: " . $class->error());

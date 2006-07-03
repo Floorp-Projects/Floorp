@@ -305,11 +305,11 @@ sub init() {
     my $urlbase    = $root->{'att'}->{'urlbase'};
     my $xmlversion = $root->{'att'}->{'version'};
 
-    if ($xmlversion ne $Bugzilla::Config::VERSION) {
+    if ($xmlversion ne BUGZILLA_VERSION) {
             my $log = "Possible version conflict!\n";
             $log .= "   XML was exported from Bugzilla version $xmlversion\n";
             $log .= "   But this installation uses ";
-            $log .= $Bugzilla::Config::VERSION . "\n";
+            $log .= BUGZILLA_VERSION . "\n";
             Debug($log, OK_LEVEL);
             push(@logs, $log);
     }

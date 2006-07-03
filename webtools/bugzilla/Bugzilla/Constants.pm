@@ -33,6 +33,8 @@ use strict;
 use base qw(Exporter);
 
 @Bugzilla::Constants::EXPORT = qw(
+    BUGZILLA_VERSION
+
     bz_locations
     CONTROLMAPNA
     CONTROLMAPSHOWN
@@ -109,6 +111,10 @@ use base qw(Exporter);
 @Bugzilla::Constants::EXPORT_OK = qw(contenttypes);
 
 # CONSTANTS
+#
+# Bugzilla version
+use constant BUGZILLA_VERSION => "2.23.1+";
+
 #
 # ControlMap constants for group_control_map.
 # membercontol:othercontrol => meaning

@@ -27,7 +27,7 @@
 // the global bugzilla url
 var installation = {
   base_url        : '[% Param('urlbase') FILTER js %]',
-  install_version : '[% VERSION FILTER js %]',
+  install_version : '[% constants.BUGZILLA_VERSION FILTER js %]',
   maintainer      : '[% Param('maintainer') FILTER js %]'
 };
 

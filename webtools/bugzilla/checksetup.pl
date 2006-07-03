@@ -161,6 +161,7 @@ sub help_page {
     my $programname = $0;
     $programname =~ s#^\./##;
     print "$programname - checks your setup and updates your Bugzilla installation\n";
+    printf "Version: " . BUGZILLA_VERSION . " on perl %vd\n", $^V; 
     print "\nUsage: $programname [SCRIPT [--verbose]] [--check-modules|--help]\n";
     print "                     [--no-templates]\n";
     print "\n";
@@ -196,6 +197,12 @@ if ($ARGV[0] && ($ARGV[0] !~ /^-/)) {
         or die("Error $! processing $ARGV[0]");
     $silent = !grep(/^--no-silent$/, @ARGV) && !grep(/^--verbose$/, @ARGV);
 }
+
+###########################################################################
+# Display version information
+###########################################################################
+
+printf "\n*** This is Bugzilla " . BUGZILLA_VERSION . " on perl %vd ***\n", $^V unless $silent;
 
 ###########################################################################
 # Check required module
