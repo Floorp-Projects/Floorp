@@ -119,7 +119,7 @@ sub initBug  {
 
   $self->{'who'} = new Bugzilla::User($user_id);
 
-  if ((! defined $bug_id) || (!$bug_id) || (!detaint_natural($bug_id))) {
+  unless ($bug_id && detaint_natural($bug_id)) {
       # no bug number given or the alias didn't match a bug
       $self->{'bug_id'} = $old_bug_id;
       $self->{'error'} = "InvalidBugId";
