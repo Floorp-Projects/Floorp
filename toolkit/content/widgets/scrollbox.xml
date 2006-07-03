@@ -26,15 +26,13 @@
 
   <binding id="arrowscrollbox" extends="chrome://global/content/bindings/scrollbox.xml#scrollbox-base">
     <content>
-      <xul:autorepeatbutton class="autorepeatbutton-up" collapsed="true" xbl:inherits="orient,clicktoscroll"
-                            onclick="handleOnClick(event, -1);"
-                            oncommand="handleOnCommand(event, -1);"/>
+      <xul:autorepeatbutton class="autorepeatbutton-up" collapsed="true" xbl:inherits="orient"
+                            oncommand="scrollByPixels(this.scrollIncrement * -1)"/>
       <xul:scrollbox xbl:inherits="orient,align,pack,dir" flex="1">
         <children/>
       </xul:scrollbox>
-      <xul:autorepeatbutton class="autorepeatbutton-down" collapsed="true" xbl:inherits="orient,clicktoscroll"
-                            onclick="handleOnClick(event, 1);"
-                            oncommand="handleOnCommand(event, 1);"/>
+      <xul:autorepeatbutton class="autorepeatbutton-down" collapsed="true" xbl:inherits="orient"
+                            oncommand="scrollByPixels(this.scrollIncrement)"/>
     </content>
     
     <implementation>
@@ -72,32 +70,7 @@
         <body><![CDATA[
           this.scrollBoxObject.ensureElementIsVisible(aElement);
         ]]></body>
-      </method>            
-    
-      <method name="handleOnCommand">
-        <parameter name="aEvent"/>
-        <parameter name="aMultiple"/>
-        <body><![CDATA[
-          // don't scroll on mouseover if clicktoscroll="true"
-          if (this.getAttribute("clicktoscroll") != "true") {
-            var px = this.scrollIncrement * aMultiple;
-            this.scrollByPixels(px); 
-            aEvent.stopPropagation();
-          }
-        ]]></body>
-      </method>            
-
-      <method name="handleOnClick">
-        <parameter name="aEvent"/>
-        <parameter name="aMultiple"/>
-        <body><![CDATA[
-          // only scroll by index on click if clicktoscroll="true"
-          if (this.getAttribute("clicktoscroll") == "true") {
-            this.scrollByIndex(aMultiple);
-            aEvent.stopPropagation();
-          }
-        ]]></body>
-      </method>            
+      </method>
 
       <method name="scrollByIndex">
         <parameter name="lines"/>
@@ -152,4 +125,21 @@
     </content>
   </binding>
 
+  <binding id="arrowscrollbox-clicktoscroll" extends="chrome://global/content/bindings/scrollbox.xml#arrowscrollbox">
+    <content>
+      <xul:toolbarbutton class="scrollbutton-up" collapsed="true"
+                         xbl:inherits="orient"
+                         oncommand="scrollByIndex(-1);"
+                         anonid="scrollbutton-up"
+                         chromedir="&locale.dir;"/>
+      <xul:scrollbox xbl:inherits="orient,align,pack,dir" flex="1">
+        <children/>
+      </xul:scrollbox>
+      <xul:toolbarbutton class="scrollbutton-down" collapsed="true"
+                         xbl:inherits="orient"
+                         anonid="scrollbutton-down"
+                         oncommand="scrollByIndex(1);"
+                         chromedir="&locale.dir;"/>
+    </content>
+  </binding>
 </bindings>

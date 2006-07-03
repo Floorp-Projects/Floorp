@@ -933,6 +933,10 @@ arrowscrollbox {
   -moz-binding: url("chrome://global/content/bindings/scrollbox.xml#arrowscrollbox");
 }
 
+arrowscrollbox[clicktoscroll="true"] {
+  -moz-binding: url("chrome://global/content/bindings/scrollbox.xml#arrowscrollbox-clicktoscroll");
+}
+
 autorepeatbutton {
   -moz-binding: url("chrome://global/content/bindings/scrollbox.xml#autorepeatbutton");
 }
@@ -1103,4 +1107,3 @@ richlistbox {
 richlistitem {
   -moz-binding: url('chrome://global/content/bindings/richlistbox.xml#richlistitem');
 }
-
