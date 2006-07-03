@@ -27,12 +27,10 @@ use lib ".";
 
 use Bugzilla;
 use Bugzilla::Constants;
-use Bugzilla::Config qw(:DEFAULT :admin :params);
+use Bugzilla::Config qw(:DEFAULT :admin);
 use Bugzilla::Config::Common;
 use Bugzilla::Util;
 use Bugzilla::Error;
-
-use vars qw(@parampanels);
 
 my $user = Bugzilla->login(LOGIN_REQUIRED);
 my $cgi = Bugzilla->cgi;
@@ -53,9 +51,8 @@ $current_panel = $1;
 
 my $current_module;
 my @panels = ();
-foreach my $panel (@parampanels) {
-    next if ($panel eq 'Common');
-    require "Bugzilla/Config/$panel.pm";
+foreach my $panel (Bugzilla::Config::param_panels()) {
+    eval("require Bugzilla::Config::$panel") || die $@;
     my @module_param_list = "Bugzilla::Config::${panel}"->get_param_list(1);
     my $item = { name => lc($panel),
                  current => ($current_panel eq lc($panel)) ? 1 : 0,

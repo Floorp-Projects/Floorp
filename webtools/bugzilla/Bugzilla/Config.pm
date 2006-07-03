@@ -35,8 +35,6 @@ use strict;
 use base qw(Exporter);
 use Bugzilla::Constants;
 
-our @parampanels = ();
-
 # Module stuff
 @Bugzilla::Config::EXPORT = qw(Param);
 
@@ -48,9 +46,8 @@ our @parampanels = ();
    admin => [qw(UpdateParams SetParam WriteParams)],
    db => [qw($db_driver $db_host $db_port $db_name $db_user $db_pass $db_sock)],
    localconfig => [qw($cvsbin $interdiffbin $diffpath $webservergroup)],
-   params => [qw(@parampanels)],
   );
-Exporter::export_ok_tags('admin', 'db', 'localconfig', 'params');
+Exporter::export_ok_tags('admin', 'db', 'localconfig');
 
 use vars qw(@param_list);
 
@@ -71,23 +68,29 @@ do $localconfig;
 my %params;
 # Load in the param definitions
 sub _load_params {
-    my $libpath = bz_locations()->{'libpath'};
-    foreach my $item ((glob "$libpath/Bugzilla/Config/*.pm")) {
-        $item =~ m#/([^/]+)\.pm$#;
-        my $module = $1;
-        next if ($module eq 'Common');
-        require "Bugzilla/Config/$module.pm";
+    foreach my $module (param_panels()) {
+        eval("require Bugzilla::Config::$module") || die $@;
         my @new_param_list = "Bugzilla::Config::$module"->get_param_list();
         foreach my $item (@new_param_list) {
             $params{$item->{'name'}} = $item;
         }
-        push(@parampanels, $module);
         push(@param_list, @new_param_list);
     }
 }
 # END INIT CODE
 
 # Subroutines go here
+
+sub param_panels {
+    my @param_panels;
+    my $libpath = bz_locations()->{'libpath'};
+    foreach my $item ((glob "$libpath/Bugzilla/Config/*.pm")) {
+        $item =~ m#/([^/]+)\.pm$#;
+        my $module = $1;
+        push(@param_panels, $module) unless $module eq 'Common';
+    }
+    return @param_panels;
+}
 
 sub Param {
     my ($param) = @_;
