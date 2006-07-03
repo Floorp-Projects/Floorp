@@ -2919,9 +2919,15 @@ nsTextFrame::PaintUnicodeText(nsPresContext* aPresContext,
 
   nsTextTransformer tx(aPresContext);
   PRInt32 textLength;
+
+  // In whitespace:-moz-pre-wrap it's possible that we trimmed multiple
+  // spaces from the end of line because they did not fit in the line.
+  // In that case, all those spaces need to be removed before painting.
+  PRBool removeMultipleTrimmedWS = NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == GetStyleText()->mWhiteSpace;
+
   // no need to worry about justification, that's always on the slow path
   PrepareUnicodeText(tx, (displaySelection ? &indexBuffer : nsnull),
-                     &paintBuffer, &textLength, PR_FALSE, nsnull, PR_TRUE);
+                     &paintBuffer, &textLength, PR_FALSE, nsnull, removeMultipleTrimmedWS);
 
   PRInt32* ip = indexBuffer.mBuffer;
   PRUnichar* text = paintBuffer.mBuffer;
