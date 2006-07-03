@@ -2414,13 +2414,20 @@
 
           var self = this;
           function onResize() {
-            self.adjustTabstrip(false);
-            self.mTabstrip.scrollBoxObject
-                          .ensureElementIsVisible(self.selectedItem);
+            var width = self.mTabstrip.boxObject.width;
+            if (width != self.mTabstripWidth) {
+              self.adjustTabstrip(false);
+              self.mTabstrip.scrollByIndex(1);
+              self.mTabstrip.scrollBoxObject
+                            .ensureElementIsVisible(self.selectedItem);
+              self.mTabstripWidth = width;
+            }
           }
           window.addEventListener("resize", onResize, false);
         ]]>
       </constructor>
+
+      <field name="mTabstripWidth">0</field>
 
       <field name="mTabstrip">
         document.getAnonymousElementByAttribute(this, "anonid", "arrowscrollbox");
@@ -2563,7 +2570,7 @@
     <handlers>
       <handler event="TabOpen"   action="this.adjustTabstrip(false);"/>
       <handler event="TabClose"  action="this.adjustTabstrip(true);"/>
-      <handler event="TabSelect" action="this._handleTabSelect()"/>
+      <handler event="TabSelect" action="this._handleTabSelect();"/>
     </handlers>
   </binding>
 
