@@ -27,12 +27,12 @@
   <binding id="arrowscrollbox" extends="chrome://global/content/bindings/scrollbox.xml#scrollbox-base">
     <content>
       <xul:autorepeatbutton class="autorepeatbutton-up" collapsed="true" xbl:inherits="orient"
-                            oncommand="scrollByPixels(this.scrollIncrement * -1)"/>
+                            oncommand="scrollByPixels(this.parentNode.scrollIncrement * -1); event.stopPropagation();"/>
       <xul:scrollbox xbl:inherits="orient,align,pack,dir" flex="1">
         <children/>
       </xul:scrollbox>
       <xul:autorepeatbutton class="autorepeatbutton-down" collapsed="true" xbl:inherits="orient"
-                            oncommand="scrollByPixels(this.scrollIncrement)"/>
+                            oncommand="scrollByPixels(this.parentNode.scrollIncrement); event.stopPropagation();"/>
     </content>
     
     <implementation>
