@@ -128,12 +128,12 @@
         var kids = document.getAnonymousNodes(this);
         kids[0].collapsed = true;
         kids[2].collapsed = true;
-        var scrollBoxInnerBox = document.getAnonymousNodes(kids[1])[0]
-                                        .boxObject;
-        if (scrollBoxInnerBox.firstChild)
-          this.ensureElementIsVisible(scrollBoxInnerBox.firstChild);
-        if (scrollBoxInnerBox.lastChild)
-          this.ensureElementIsVisible(scrollBoxInnerBox.lastChild);
+        var childNodes = document.getAnonymousNodes(kids[1]);
+        if (childNodes && childNodes.length) {
+          this.ensureElementIsVisible(childNodes[0]);
+          if (childNodes.length > 1)
+            this.ensureElementIsVisible(childNodes[childNodes.length-1]);
+        }
         event.stopPropagation();
       ]]></handler>
 
