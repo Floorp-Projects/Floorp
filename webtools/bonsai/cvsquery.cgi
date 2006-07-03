@@ -190,9 +190,13 @@ $::query_whotype = &ExpectMatchtype($::FORM{'whotype'});
 # branch
 #
 $::query_branch = $::FORM{'branch'};
-$::query_branch = 'HEAD' if !defined($::query_branch);
-$::query_branch = &SanitizeRevision($::query_branch);
 $::query_branchtype = &ExpectMatchtype($::FORM{'branchtype'});
+$::query_branch = 'HEAD' if !defined($::query_branch);
+if ($::query_branchtype eq 'notregexp' || $::query_branchtype eq 'regexp') {
+    $::query_branch =~ s/\W*([\w-]+).*/\1/;
+} else {
+    $::query_branch = &SanitizeRevision($::query_branch);
+}
 $::query_dirtype = $::FORM{'dirtype'};
 $::query_dirtype = 'recurse' if !defined ($::query_dirtype);
 
