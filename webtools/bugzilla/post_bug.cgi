@@ -165,11 +165,7 @@ $cgi->param('bug_file_loc', '') if $cgi->param('bug_file_loc') eq 'http://';
 
 # Default assignee is the component owner.
 if (!UserInGroup("editbugs") || $cgi->param('assigned_to') eq "") {
-    my $initialowner = $dbh->selectrow_array(q{SELECT initialowner
-                                                 FROM components
-                                                WHERE id = ?},
-                                               undef, $component->id);
-    $cgi->param(-name => 'assigned_to', -value => $initialowner);
+    $cgi->param(-name => 'assigned_to', -value => $component->default_assignee->id);
 } else {
     $cgi->param(-name => 'assigned_to',
                 -value => login_to_id(trim($cgi->param('assigned_to')), THROW_ERROR));
@@ -194,10 +190,7 @@ if (Bugzilla->params->{"useqacontact"}) {
     my $qa_contact;
     if (!UserInGroup("editbugs") || !defined $cgi->param('qa_contact')
         || trim($cgi->param('qa_contact')) eq "") {
-        ($qa_contact) = $dbh->selectrow_array(q{SELECT initialqacontact 
-                                                  FROM components 
-                                                 WHERE id = ?},
-                                                undef, $component->id);
+        $qa_contact = $component->default_qa_contact->id;
     } else {
         $qa_contact = login_to_id(trim($cgi->param('qa_contact')), THROW_ERROR);
     }
@@ -208,30 +201,19 @@ if (Bugzilla->params->{"useqacontact"}) {
     }
 }
 
-if (UserInGroup("editbugs") || UserInGroup("canconfirm")) {
-    # Default to NEW if the user hasn't selected another status
-    if (!defined $cgi->param('bug_status')) {
-        $cgi->param(-name => 'bug_status', -value => "NEW");
+my $bug_status = 'UNCONFIRMED';
+if ($product->votes_to_confirm) {
+    # Default to NEW if the user with privs hasn't selected another status.
+    if (UserInGroup('editbugs') || UserInGroup('canconfirm')) {
+        $bug_status = scalar($cgi->param('bug_status')) || 'NEW';
     }
 } else {
-    # Default to UNCONFIRMED if we are using it, NEW otherwise
-    $cgi->param(-name => 'bug_status', -value => 'UNCONFIRMED');
-    my $votestoconfirm = $dbh->selectrow_array(q{SELECT votestoconfirm 
-                                                   FROM products 
-                                                  WHERE id = ?},
-                                                 undef, $product->id);
-
-    if (!$votestoconfirm) {
-        $cgi->param(-name => 'bug_status', -value => "NEW");
-    }
+    $bug_status = 'NEW';
 }
+$cgi->param(-name => 'bug_status', -value => $bug_status);
 
 if (!defined $cgi->param('target_milestone')) {
-    my $defaultmilestone = $dbh->selectrow_array(q{SELECT defaultmilestone
-                                                     FROM products
-                                                    WHERE name = ?},
-                                                    undef, $product->name);
-    $cgi->param(-name => 'target_milestone', -value => $defaultmilestone);
+    $cgi->param(-name => 'target_milestone', -value => $product->default_milestone);
 }
 
 if (!Bugzilla->params->{'letsubmitterchoosepriority'}) {
