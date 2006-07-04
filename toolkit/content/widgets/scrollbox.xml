@@ -26,16 +26,32 @@
 
   <binding id="arrowscrollbox" extends="chrome://global/content/bindings/scrollbox.xml#scrollbox-base">
     <content>
-      <xul:autorepeatbutton class="autorepeatbutton-up" collapsed="true" xbl:inherits="orient"
+      <xul:autorepeatbutton class="autorepeatbutton-up"
+                            anonid="scrollbutton-up"
+                            collapsed="true"
+                            xbl:inherits="orient"
                             oncommand="scrollByPixels(this.parentNode.scrollIncrement * -1); event.stopPropagation();"/>
-      <xul:scrollbox xbl:inherits="orient,align,pack,dir" flex="1">
+      <xul:scrollbox xbl:inherits="orient,align,pack,dir" flex="1" anonid="scrollbox">
         <children/>
       </xul:scrollbox>
-      <xul:autorepeatbutton class="autorepeatbutton-down" collapsed="true" xbl:inherits="orient"
+      <xul:autorepeatbutton class="autorepeatbutton-down"
+                            anonid="scrollbutton-down"
+                            collapsed="true"
+                            xbl:inherits="orient"
                             oncommand="scrollByPixels(this.parentNode.scrollIncrement); event.stopPropagation();"/>
     </content>
     
     <implementation>
+      <field name="_scrollbox">
+        document.getAnonymousElementByAttribute(this, "anonid", "scrollbox");
+      </field>
+      <field name="_scrollButtonUp">
+        document.getAnonymousElementByAttribute(this, "anonid", "scrollbutton-up");
+      </field>
+      <field name="_scrollButtonDown">
+        document.getAnonymousElementByAttribute(this, "anonid", "scrollbutton-down");
+      </field>
+
       <field name="_scrollIncrement">0</field>
       <property name="scrollIncrement" readonly="true">
         <getter><![CDATA[
@@ -58,12 +74,17 @@
       <property name="scrollBoxObject" readonly="true">
         <getter><![CDATA[
           if (!this._scrollBoxObject) {
-            var kids = document.getAnonymousNodes(this);
-            this._scrollBoxObject = kids[1].boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
+            this._scrollBoxObject =
+              this._scrollbox.boxObject
+                             .QueryInterface(Components.interfaces.nsIScrollBoxObject);
           }
           return this._scrollBoxObject;
         ]]></getter>
       </property>
+
+      <field name="_isLTRScollbox">
+        window.getComputedStyle(this._scrollbox, "").direction == "ltr";
+      </field>
 
       <method name="ensureElementIsVisible">
         <parameter name="aElement"/>
@@ -84,24 +105,65 @@
         <body><![CDATA[
           if (this.getAttribute("orient") == "horizontal") {
             // if not ltr, we want to scroll the other direction
-            var actualPx = window.getComputedStyle(this.parentNode, "")
-                                 .direction == "ltr" ? px : (-1 * px);
+            var actualPx = this._isLTRScollbox ? px : (-1 * px);
             this.scrollBoxObject.scrollBy(actualPx, 0);
           }
           else
             this.scrollBoxObject.scrollBy(0, px);
         ]]></body>
-      </method>            
+      </method>
+
+      <method name="_updateScrollButtonsDisabledState">
+        <body><![CDATA[
+          var disableUpButton = false;
+          var disableDownButton = false;
+
+          if (this.getAttribute("orient") == "horizontal") {
+            var width = { };
+            this.scrollBoxObject.getScrolledSize(width, {});
+            var xPos = { }
+            this.scrollBoxObject.getPosition(xPos, {});
+            if (xPos.value == 0) {
+              // In the RTL case, this means the _last_ element in the
+              // scrollbox is visible
+              if (this._isLTRScollbox) 
+                disableUpButton = true;
+              else
+                disableDownButton = true;
+            }
+            else if (this._scrollbox.boxObject.width + xPos.value == width.value) {
+              // In the RTL case, this means the _first_ element in the
+              // scrollbox is visible
+              if (this._isLTRScollbox)
+                disableDownButton = true;
+              else
+                disableUpButton = true;
+            }
+          }
+          else {  // vertical scrollbox
+            var height = { };
+            this.scrollBoxObject.getScrolledSize({}, height);
+            var yPos = { }
+            this.scrollBoxObject.getPosition({}, yPos);
+            if (yPos.value == 0)
+              disableUpButton = true;
+            else if (this._scrollbox.boxObject.height + yPos.value == height.value)
+              disableDownButton = true;
+          }
+
+          this._scrollButtonUp.disabled = disableUpButton;
+          this._scrollButtonDown.disabled = disableDownButton;
+        ]]></body>
+      </method>
     </implementation>    
 
     <handlers>
       <handler event="DOMMouseScroll" action="this.scrollByIndex(event.detail); event.stopPropagation();"/>
 
       <handler event="underflow"><![CDATA[
-        var kids = document.getAnonymousNodes(this);
-        kids[0].collapsed = true;
-        kids[2].collapsed = true;
-        var childNodes = document.getAnonymousNodes(kids[1]);
+        this._scrollButtonUp.collapsed = true;
+        this._scrollButtonDown.collapsed = true;
+        var childNodes = document.getAnonymousNodes(this._scrollbox);
         if (childNodes && childNodes.length) {
           this.ensureElementIsVisible(childNodes[0]);
           if (childNodes.length > 1)
@@ -111,11 +173,13 @@
       ]]></handler>
 
       <handler event="overflow"><![CDATA[
-        var kids = document.getAnonymousNodes(this);
-        kids[0].collapsed = false;
-        kids[2].collapsed = false;
+        this._scrollButtonUp.collapsed = false;
+        this._scrollButtonDown.collapsed = false;
+        this._updateScrollButtonsDisabledState();
         event.stopPropagation();
       ]]></handler>
+
+      <handler event="scroll" action="this._updateScrollButtonsDisabledState()"/>
     </handlers>
   </binding>
 
@@ -132,7 +196,7 @@
                          oncommand="scrollByIndex(-1);"
                          anonid="scrollbutton-up"
                          chromedir="&locale.dir;"/>
-      <xul:scrollbox xbl:inherits="orient,align,pack,dir" flex="1">
+      <xul:scrollbox xbl:inherits="orient,align,pack,dir" flex="1" anonid="scrollbox">
         <children/>
       </xul:scrollbox>
       <xul:toolbarbutton class="scrollbutton-down" collapsed="true"
