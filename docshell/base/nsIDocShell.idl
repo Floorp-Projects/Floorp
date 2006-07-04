@@ -122,6 +122,9 @@ interface nsIDocShell : nsISupports
   const long INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER      = 0x2;
   const long INTERNAL_LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP = 0x4;
 
+  // This flag marks the first load in a new window.
+  const long INTERNAL_LOAD_FLAGS_NEW_WINDOW              = 0x8;
+
   /**
    * Loads the given URI.  This method is identical to loadURI(...) except
    * that its parameter list is broken out instead of being packaged inside

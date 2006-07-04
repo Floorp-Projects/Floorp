@@ -112,6 +112,10 @@
 #include "nsIGlobalHistory.h" // to mark downloads as visited
 #include "nsIGlobalHistory2.h" // to mark downloads as visited
 
+#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
+#include "nsIDocShell.h"
+
 #include "nsCRT.h"
 
 #ifdef PR_LOGGING
@@ -1343,6 +1347,8 @@ nsExternalAppHandler::nsExternalAppHandler(nsIMIMEInfo * aMIMEInfo,
 , mWindowContext(aWindowContext)
 , mSuggestedFileName(aSuggestedFilename)
 , mCanceled(PR_FALSE)
+, mHasRefreshHeader(PR_FALSE)
+, mShouldCloseWindow(PR_FALSE)
 , mReceivedDispositionInfo(PR_FALSE)
 , mStopRequestIssued(PR_FALSE)
 , mProgressListenerInitialized(PR_FALSE)
@@ -1608,6 +1614,12 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
     PRInt32 len;
     aChannel->GetContentLength(&len);
     mContentLength = len;
+  }
+
+  // Determine whether a new window was opened specifically for this request
+  if (props) {
+    props->GetPropertyAsBool(NS_LITERAL_STRING("docshell.newWindowTarget"),
+                             &mShouldCloseWindow);
   }
 
   // Now get the URI
@@ -2066,6 +2078,10 @@ nsresult nsExternalAppHandler::ExecuteDesiredAction()
       }
       mWebProgressListener->OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_STOP, NS_OK);
     }
+
+    // Close the underlying DOMWindow if there is no refresh header
+    // and it was opened specifically for the download
+    MaybeCloseWindow();
   }
   
   return rv;
@@ -2452,6 +2468,10 @@ NS_IMETHODIMP nsExternalAppHandler::Cancel(nsresult aReason)
   NS_ENSURE_ARG(NS_FAILED(aReason));
   // XXX should not ignore the reason
 
+  // Close the underlying DOMWindow if there is no refresh header
+  // and it was opened specifically for the download
+  MaybeCloseWindow();
+
   mCanceled = PR_TRUE;
   // Break our reference cycle with the helper app dialog (set up in
   // OnStartRequest)
@@ -2497,8 +2517,12 @@ void nsExternalAppHandler::ProcessAnyRefreshTags()
    if (mWindowContext && mOriginalChannel)
    {
      nsCOMPtr<nsIRefreshURI> refreshHandler (do_GetInterface(mWindowContext));
-     if (refreshHandler)
-        refreshHandler->SetupRefreshURI(mOriginalChannel);
+     if (refreshHandler) {
+        nsresult rv = refreshHandler->SetupRefreshURI(mOriginalChannel);
+        if (rv == NS_REFRESHURI_HEADER_FOUND) {
+          mHasRefreshHeader = PR_TRUE;
+        }
+     }
      mOriginalChannel = nsnull;
    }
 }
@@ -2528,6 +2552,21 @@ PRBool nsExternalAppHandler::GetNeverAskFlagFromPref(const char * prefName, cons
   }
   // Default is true, if not found in the pref string.
   return PR_TRUE;
+}
+
+nsresult nsExternalAppHandler::MaybeCloseWindow()
+{
+  nsCOMPtr<nsIDOMWindow> window(do_GetInterface(mWindowContext));
+  nsCOMPtr<nsIDOMWindowInternal> internalWindow = do_QueryInterface(window);
+  NS_ENSURE_STATE(internalWindow);
+
+  // Only close the page if there is no refresh header and if the window
+  // was opened specifically for the download
+  if (!mHasRefreshHeader && mShouldCloseWindow) {
+    internalWindow->Close();
+  }
+
+  return NS_OK;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2871,4 +2910,3 @@ PRBool nsExternalHelperAppService::GetTypeFromExtras(const nsACString& aExtensio
 
   return PR_FALSE;
 }
-

@@ -79,6 +79,7 @@ REQUIRES	= xpcom \
 		  docshell \
 		  windowwatcher \
 		  embed_base \
+		  dom \
 		  $(NULL)
 
 ifdef MOZ_PHOENIX

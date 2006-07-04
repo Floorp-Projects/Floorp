@@ -241,7 +241,8 @@ protected:
                                nsIInputStream * aHeadersData,
                                PRBool firstParty,
                                nsIDocShell ** aDocShell,
-                               nsIRequest ** aRequest);
+                               nsIRequest ** aRequest,
+                               PRBool aIsNewWindowTarget);
     NS_IMETHOD AddHeadersToChannel(nsIInputStream * aHeadersData, 
                                   nsIChannel * aChannel);
     virtual nsresult DoChannelLoad(nsIChannel * aChannel,

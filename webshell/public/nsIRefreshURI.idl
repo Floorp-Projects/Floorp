@@ -62,6 +62,9 @@ interface nsIRefreshURI : nsISupports {
       * request will be queued and executed when the current page 
       * finishes loading. 
       *
+      * Returns the NS_REFRESHURI_HEADER_FOUND success code if a refresh
+      * header was found and successfully setup.
+      *
       * @param aChannel The channel to be parsed. 
       */
     void setupRefreshURI(in nsIChannel aChannel); 
@@ -82,3 +85,14 @@ interface nsIRefreshURI : nsISupports {
       */
     void cancelRefreshURITimers();
 };
+
+
+/**
+ * This success code indicates that a refresh header was found and
+ * successfully setup.
+ */
+%{C++
+#define NS_REFRESHURI_HEADER_FOUND \
+     NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_URILOADER, \
+                               2)
+%}

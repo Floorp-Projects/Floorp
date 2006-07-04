@@ -368,6 +368,19 @@ protected:
   PRPackedBool mCanceled;
 
   /**
+   * This flag is set if a refresh header was found.  In this case, we
+   * don't want to close the dom window after handling the content.
+   */
+  PRPackedBool mHasRefreshHeader;
+
+  /**
+   * This is set based on whether the channel indicates that a new window
+   * was opened specifically for this download.  If so, then we
+   * close it.
+   */
+  PRBool mShouldCloseWindow;
+
+  /**
    * have we received information from the user about how they want to
    * dispose of this content
    */
@@ -468,7 +481,14 @@ protected:
    * Utility function to send proper error notification to web progress listener
    */
   void SendStatusChange(ErrorType type, nsresult aStatus, nsIRequest *aRequest, const nsAFlatString &path);
-  
+
+  /**
+   * Closes the window context if it does not have a refresh header
+   * and it never displayed content before the external helper app
+   * service was invoked.
+   */
+  nsresult MaybeCloseWindow();
+
   nsCOMPtr<nsIWebProgressListener2> mWebProgressListener;
   nsCOMPtr<nsIChannel> mOriginalChannel; /**< in the case of a redirect, this will be the pre-redirect channel. */
   nsCOMPtr<nsIHelperAppLauncherDialog> mDialog;

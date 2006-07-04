@@ -819,6 +819,9 @@ nsDocShell::LoadURI(nsIURI * aURI,
         if (aLoadFlags & LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP)
             flags |= INTERNAL_LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
 
+        if (aLoadFlags & LOAD_FLAGS_NEW_WINDOW)
+            flags |= INTERNAL_LOAD_FLAGS_NEW_WINDOW;
+
         rv = InternalLoad(aURI,
                           referrer,
                           owner,
@@ -4530,6 +4533,9 @@ NS_IMETHODIMP nsDocShell::SetupRefreshURI(nsIChannel * aChannel)
         if (!refreshHeader.IsEmpty()) {
             SetupReferrerFromChannel(aChannel);
             rv = SetupRefreshURIFromHeader(mCurrentURI, refreshHeader);
+            if (NS_SUCCEEDED(rv)) {
+                return NS_REFRESHURI_HEADER_FOUND;
+            }
         }
     }
     return rv;
@@ -6372,6 +6378,8 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             NS_ENSURE_TRUE(win, NS_ERROR_NOT_AVAILABLE);
 
             isNewWindow = PR_TRUE;
+            aFlags |= INTERNAL_LOAD_FLAGS_NEW_WINDOW;
+
             nsDependentString name(aWindowTarget);
             nsCOMPtr<nsIDOMWindow> newWin;
             rv = win->Open(EmptyString(), // URL to load
@@ -6718,7 +6726,8 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     rv = DoURILoad(aURI, aReferrer,
                    !(aFlags & INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER),
                    owner, aTypeHint, aPostData, aHeadersData, aFirstParty,
-                   aDocShell, getter_AddRefs(req));
+                   aDocShell, getter_AddRefs(req),
+                   aFlags & INTERNAL_LOAD_FLAGS_NEW_WINDOW);
     if (req && aRequest)
         NS_ADDREF(*aRequest = req);
 
@@ -6778,7 +6787,8 @@ nsDocShell::DoURILoad(nsIURI * aURI,
                       nsIInputStream * aHeadersData,
                       PRBool aFirstParty,
                       nsIDocShell ** aDocShell,
-                      nsIRequest ** aRequest)
+                      nsIRequest ** aRequest,
+                      PRBool aIsNewWindowTarget)
 {
     nsresult rv;
     nsCOMPtr<nsIURILoader> uriLoader;
@@ -6946,6 +6956,15 @@ nsDocShell::DoURILoad(nsIURI * aURI,
     rv = URIInheritsSecurityContext(aURI, &inherit);
     if (NS_SUCCEEDED(rv) && inherit) {
         channel->SetOwner(aOwner);
+    }
+
+    if (aIsNewWindowTarget) {
+        nsCOMPtr<nsIWritablePropertyBag2> props = do_QueryInterface(channel);
+        if (props) {
+            props->SetPropertyAsBool(
+                NS_LITERAL_STRING("docshell.newWindowTarget"),
+                PR_TRUE);
+        }
     }
 
     rv = DoChannelLoad(channel, uriLoader);
