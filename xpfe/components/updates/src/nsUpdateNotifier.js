@@ -263,8 +263,21 @@ var nsUpdateDatasourceObserver =
       // user wants update now so open new window
       // (result => 0 is button0)
       if (result == 0)
-        winWatcher.openWindow(winWatcher.activeWindow, updateInfo.URL,
-          "_blank", "", null);
+      {
+        var browserURL = "chrome://navigator/content/navigator.xul";
+        try {
+          browserURL = Components.classes["@mozilla.org/preferences-service;1"]
+                                 .getService(Components.interfaces.nsIPrefBranch)
+                                 .getCharPref("browser.chromeURL");
+        } catch (e) {
+        }
+
+        var argstring = Components.classes["@mozilla.org/supports-string;1"]
+                                  .createInstance(Components.interfaces.nsISupportsString);
+        argstring.data = updateInfo.URL;
+        winWatcher.openWindow(winWatcher.activeWindow, browserURL,
+                              "_blank", "chrome,all,dialog=no", argstring);
+      }
 
       // if "Don't ask again" was checked disable update notifications
       if (checkVal.value)
