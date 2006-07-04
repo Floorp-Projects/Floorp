@@ -3,29 +3,59 @@
 /*
  * Scroll arrows
  */
+ 
+/* Horizontal enabled */
+.autorepeatbutton-up[orient="horizontal"],
+.scrollbutton-up[orient="horizontal"]
+ {
+   list-style-image      : url("chrome://global/skin/arrow/arrow-lft-sharp.gif");
+ }
+ 
+.autorepeatbutton-down[orient="horizontal"],
+.scrollbutton-down[orient="horizontal"]
+  {
+    list-style-image     : url("chrome://global/skin/arrow/arrow-rit-sharp.gif");
+  }
+
+/* Horizontal disabled */
+.autorepeatbutton-up[orient="horizontal"][disabled="true"],
+.scrollbutton-up[orient="horizontal"][disabled="true"]
+ {
+   list-style-image      : url("chrome://global/skin/arrow/arrow-lft-dis.gif");
+ }
+ 
+.autorepeatbutton-down[orient="horizontal"][disabled="true"],
+.scrollbutton-down[orient="horizontal"][disabled="true"]
+  {
+    list-style-image     : url("chrome://global/skin/arrow/arrow-rit-dis.gif");
+  }
+
+/* Vertical enabled */
 .autorepeatbutton-up,
 .scrollbutton-up
  {
-   list-style-image      : url("chrome://global/skin/arrow/arrow-lft-sharp.gif");
+   list-style-image      : url("chrome://global/skin/arrow/arrow-up-sharp.gif");
  }
  
 .autorepeatbutton-down,
 .scrollbutton-down
   {
-    list-style-image     : url("chrome://global/skin/arrow/arrow-rit-sharp.gif");
-  }
-
-.autorepeatbutton-up[orient="vertical"],
-.scrollbutton-up[orient="vertical"]
- {
-   list-style-image      : url("chrome://global/skin/arrow/arrow-up-sharp.gif");
- }
- 
-.autorepeatbutton-down[orient="vertical"],
-.scrollbutton-down[orient="vertical"]
-  {
     list-style-image     : url("chrome://global/skin/arrow/arrow-dn-sharp.gif");
   }
+
+/* Vertical disabled */
+.autorepeatbutton-up[disabled="true"],
+.scrollbutton-up[disabled="true"]
+ {
+   list-style-image      : url("chrome://global/skin/arrow/arrow-up-dis.gif");
+ }
+ 
+.autorepeatbutton-down[disabled="true"],
+.scrollbutton-down[disabled="true"]
+  {
+    list-style-image     : url("chrome://global/skin/arrow/arrow-dn-dis.gif");
+  }
+
 
 autorepeatbutton
   {
