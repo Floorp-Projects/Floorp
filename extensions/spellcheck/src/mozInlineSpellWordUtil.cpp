@@ -118,6 +118,8 @@ static nsIDOMNode*
 FindNextNode(nsIDOMNode* aNode, nsIDOMNode* aRoot,
              OnLeaveNodeFunPtr aOnLeaveNode = nsnull, void* aClosure = nsnull)
 {
+  NS_PRECONDITION(aNode, "Null starting node?");
+
   nsCOMPtr<nsIDOMNode> next;
   aNode->GetFirstChild(getter_AddRefs(next));
   if (next)
@@ -149,6 +151,7 @@ FindNextNode(nsIDOMNode* aNode, nsIDOMNode* aRoot,
 static nsIDOMNode*
 FindNextTextNode(nsIDOMNode* aNode, PRInt32 aOffset, nsIDOMNode* aRoot)
 {
+  NS_PRECONDITION(aNode, "Null starting node?");
   NS_ASSERTION(!IsTextNode(aNode), "FindNextTextNode should start with a non-text node");
 
   nsIDOMNode* checkNode;
@@ -156,7 +159,9 @@ FindNextTextNode(nsIDOMNode* aNode, PRInt32 aOffset, nsIDOMNode* aRoot)
   nsCOMPtr<nsIDOMNode> child;
   aNode->GetFirstChild(getter_AddRefs(child));
   while (child && aOffset > 0) {
-    child->GetNextSibling(getter_AddRefs(child));
+    nsCOMPtr<nsIDOMNode> next;
+    child->GetNextSibling(getter_AddRefs(next));
+    child.swap(next);
     --aOffset;
   }
   if (child) {
@@ -164,7 +169,6 @@ FindNextTextNode(nsIDOMNode* aNode, PRInt32 aOffset, nsIDOMNode* aRoot)
   } else {
     // aOffset was beyond the end of the child list. Start checking at the next
     // node after the last child, or aNode if there are no children.
-    nsCOMPtr<nsIDOMNode> child;
     aNode->GetLastChild(getter_AddRefs(child));
     if (child) {
       checkNode = FindNextNode(child, aRoot);
@@ -199,6 +203,8 @@ FindNextTextNode(nsIDOMNode* aNode, PRInt32 aOffset, nsIDOMNode* aRoot)
 nsresult
 mozInlineSpellWordUtil::SetEnd(nsIDOMNode* aEndNode, PRInt32 aEndOffset)
 {
+  NS_PRECONDITION(aEndNode, "Null end node?");
+
   NS_ASSERTION(mRootNode, "Not initialized");
 
   InvalidateWords();
