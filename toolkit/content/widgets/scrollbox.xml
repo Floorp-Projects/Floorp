@@ -52,18 +52,17 @@
         document.getAnonymousElementByAttribute(this, "anonid", "scrollbutton-down");
       </field>
 
-      <field name="_scrollIncrement">0</field>
+      <field name="_scrollIncrement">20</field>
       <property name="scrollIncrement" readonly="true">
         <getter><![CDATA[
           if (!this._scrollIncrement) {
             var pb2 =
-              Components.classes['@mozilla.org/preferences-service;1'].
-              getService(Components.interfaces.nsIPrefBranch2);
+              Components.classes['@mozilla.org/preferences-service;1']
+                        .getService(Components.interfaces.nsIPrefBranch2);
             try {
               this._scrollIncrement = pb2.getIntPref("toolkit.scrollbox.scrollIncrement");
             }
             catch (ex) {
-              this._scrollIncrement = 20;
             }
           }
           return this._scrollIncrement;
@@ -193,8 +192,10 @@
     <content>
       <xul:toolbarbutton class="scrollbutton-up" collapsed="true"
                          xbl:inherits="orient"
-                         oncommand="scrollByIndex(-1);"
                          anonid="scrollbutton-up"
+                         onmousedown="_startScroll(-1);"
+                         onmouseup="_stopScroll();"
+                         onmouseout="_stopScroll();"
                          chromedir="&locale.dir;"/>
       <xul:scrollbox xbl:inherits="orient,align,pack,dir" flex="1" anonid="scrollbox">
         <children/>
@@ -202,8 +203,81 @@
       <xul:toolbarbutton class="scrollbutton-down" collapsed="true"
                          xbl:inherits="orient"
                          anonid="scrollbutton-down"
-                         oncommand="scrollByIndex(1);"
+                         onmousedown="_startScroll(1);"
+                         onmouseup="_stopScroll();"
+                         onmouseout="_stopScroll();"
                          chromedir="&locale.dir;"/>
     </content>
+    <implementation implements="nsITimerCallback">
+      <constructor><![CDATA[
+        var pb2 =
+          Components.classes['@mozilla.org/preferences-service;1']
+                    .getService(Components.interfaces.nsIPrefBranch2);
+        try {
+          this._scrollDelay = pb2.getIntPref("toolkit.scrollbox.clickToScroll.scrollDelay");
+        }
+        catch (ex) {
+        }
+      ]]></constructor>
+
+      <destructor><![CDATA[
+        // Release timers to avoid reference cycles.
+        if (this._scrollTimer) {
+          this._scrollTimer.cancel();
+          this._scrollTimer = null;
+        }
+      ]]></destructor>
+
+      <field name="_scrollTimer">null</field>
+      <field name="_scrollLines">0</field>
+      <field name="_scrollDelay">200</field>
+
+      <method name="notify">
+        <parameter name="aTimer"/>
+        <body>
+        <![CDATA[
+          if (!document)
+            aTimer.cancel();
+          
+          if (aTimer == this._scrollTimer)
+            this.scrollByIndex(this._scrollLines);
+        ]]>
+        </body>
+      </method>
+
+      <method name="_setUpScrollTimer">
+        <body>
+        <![CDATA[
+          if (!this._scrollTimer) 
+            this._scrollTimer = 
+              Components.classes["@mozilla.org/timer;1"]
+                        .createInstance(Components.interfaces.nsITimer);
+          else
+             this._scrollTimer.cancel();
+
+          this._scrollTimer.initWithCallback(this, 
+                        this._scrollDelay,
+                        Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
+        ]]>
+        </body>
+      </method>
+
+      <method name="_startScroll">
+        <parameter name="aScrollLines"/>
+        <body><![CDATA[
+          this._scrollLines = aScrollLines;
+          this.scrollByIndex(this._scrollLines);
+          this._setUpScrollTimer();
+        ]]></body>
+      </method>            
+
+      <method name="_stopScroll">
+        <body><![CDATA[
+          if (this._scrollTimer) 
+            this._scrollTimer.cancel();
+        ]]></body>
+      </method>            
+
+    </implementation>
   </binding>
 </bindings>
