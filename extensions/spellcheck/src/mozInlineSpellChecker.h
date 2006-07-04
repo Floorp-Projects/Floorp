@@ -20,6 +20,7 @@
  *
  * Contributor(s): Neil Deakin (neil@mozdevgroup.com)
  *                 Scott MacGregor (mscott@mozilla.org)
+ *                 Brett Wilson <brettw@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -51,6 +52,7 @@
 #include "mozISpellI18NUtil.h"
 
 class nsIDOMMouseEventListener;
+class mozInlineSpellWordUtil;
 
 class mozInlineSpellChecker : public nsIInlineSpellChecker, nsIEditActionListener, nsIDOMMouseListener, nsIDOMKeyListener,
                                      nsSupportsWeakReference
@@ -160,13 +162,14 @@ public:
   // or an e-mail signature...)
   nsresult SkipSpellCheckForNode(nsIDOMNode *aNode, PRBool * aCheckSpelling);
 
-  nsresult AdjustSpellHighlighting(nsIDOMNode *aNode,
-                                   PRInt32 aOffset,
-                                   nsISelection *aSpellCheckSelection,
-                                   PRBool isDeletion);
+  nsresult SpellCheckAfterChange(nsIDOMNode* aCursorNode, PRInt32 aCursorOffset,
+                                 nsIDOMNode* aPreviousNode, PRInt32 aPreviousOffset,
+                                 nsISelection* aSpellCheckSelection);
 
   // spell check  the text contained within aRange
-  nsresult SpellCheckRange(nsIDOMRange *aRange, nsISelection *aSpellCheckSelection);
+  nsresult DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
+                        nsIDOMRange *aRange, nsIDOMRange* aNoCheckRange,
+                        nsISelection *aSpellCheckSelection);
 
   // helper routine to determine if a point is inside of a the passed in selection.
   nsresult IsPointInSelection(nsISelection *aSelection,
@@ -175,7 +178,6 @@ public:
                               nsIDOMRange **aRange);
   
   nsresult CleanupRangesInSelection(nsISelection *aSelection);
-  nsresult RemoveCurrentWordFromSpellSelection(nsISelection *aSpellCheckSelection, nsIDOMRange * aWordRange);
 
   // helper routines used to control how many ranges we allow into the spell check selection
   nsresult RemoveRange(nsISelection *aSpellCheckSelection, nsIDOMRange * aRange);
@@ -187,15 +189,8 @@ public:
   nsresult UnregisterEventListeners();
   nsresult HandleNavigationEvent(nsIDOMEvent * aEvent, PRBool aForceWordSpellCheck, PRInt32 aNewPositionOffset = 0);
 
-  // helper routine which expands a point in a text node out to the range for the containing word. 
-  nsresult GenerateRangeForSurroundingWord(nsIDOMNode * aNode, PRInt32 aOffset, nsIDOMRange ** aWordRange);
-
-  // helper routine for determining if aNode/aOffset is an end of word delimiter.
-  PRBool EndOfAWord(nsIDOMNode *aNode, PRInt32 aOffset);
-
   nsresult GetSpellCheckSelection(nsISelection ** aSpellCheckSelection);
   nsresult SaveCurrentSelectionPosition();
-  nsresult EnsureConverter();
 };
 
 #endif /* __mozinlinespellchecker_h__ */
