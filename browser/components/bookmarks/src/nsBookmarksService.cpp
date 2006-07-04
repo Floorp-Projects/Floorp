@@ -1256,7 +1256,11 @@ BookmarkParser::ParseBookmarkInfo(BookmarkField *fields, PRBool isBookmarkFlag,
 
                     if (!data.IsEmpty())
                     {
-                        Unescape(data);
+                        // We don't HTML-escape URL properties (we instead
+                        // URL-escape double-quotes in them), so we don't have
+                        // to HTML-unescape them here.
+                        if (aProperty != kNC_URL && aProperty != kNC_FeedURL)
+                            Unescape(data);
 
                         // XXX Bug 58421 We should not ever hit this assertion
                         NS_ASSERTION(!field->mValue, "Field already has a value");
@@ -5152,7 +5156,7 @@ nsBookmarksService::WriteBookmarkProperties(nsIRDFDataSource *aDs,
         nsAutoString    literalString;
         if (NS_SUCCEEDED(rv = GetTextForNode(node, literalString)))
         {
-            if (aProperty == kNC_URL) {
+            if (aProperty == kNC_URL || aProperty == kNC_FeedURL) {
                 // Now do properly replace %22's; this is particularly important for javascript: URLs
                 PRInt32 offset;
                 while ((offset = literalString.FindChar('\"')) >= 0) {
@@ -5171,21 +5175,34 @@ nsBookmarksService::WriteBookmarkProperties(nsIRDFDataSource *aDs,
 
                 if (!literalString.IsEmpty())
                 {
-                    char *escapedAttrib = nsEscapeHTML(attribute);
-                    if (escapedAttrib)
+                    // We don't HTML-escape URL properties (we instead
+                    // URL-escape double-quotes in them--see above) so that
+                    // URLs with ampersands don't break if the user switches
+                    // back to a build from before we started escaping.
+                    if (aProperty == kNC_URL || aProperty == kNC_FeedURL)
                     {
                         rv |= aStrm->Write(aHtmlAttrib, strlen(aHtmlAttrib), &dummy);
-                        rv |= aStrm->Write(escapedAttrib, strlen(escapedAttrib), &dummy);
-                        if (aProperty == kNC_Description)
+                        rv |= aStrm->Write(attribute, strlen(attribute), &dummy);
+                        rv |= aStrm->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
+                    }
+                    else
+                    {
+                        char *escapedAttrib = nsEscapeHTML(attribute);
+                        if (escapedAttrib)
                         {
-                            rv |= aStrm->Write(kNL, sizeof(kNL)-1, &dummy);
+                            rv |= aStrm->Write(aHtmlAttrib, strlen(aHtmlAttrib), &dummy);
+                            rv |= aStrm->Write(escapedAttrib, strlen(escapedAttrib), &dummy);
+                            if (aProperty == kNC_Description)
+                            {
+                                rv |= aStrm->Write(kNL, sizeof(kNL)-1, &dummy);
+                            }
+                            else
+                            {
+                                rv |= aStrm->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
+                            }
+                            nsCRT::free(escapedAttrib);
+                            escapedAttrib = nsnull;
                         }
-                        else
-                        {
-                            rv |= aStrm->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
-                        }
-                        nsCRT::free(escapedAttrib);
-                        escapedAttrib = nsnull;
                     }
                 }
                 nsCRT::free(attribute);
