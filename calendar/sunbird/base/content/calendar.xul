@@ -44,8 +44,8 @@
 
 <!-- Style sheets -->
 
-<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
-<?xml-stylesheet href="chrome://global/skin/toolbar.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/toolbar.css" type="text/css"?>
 <?xml-stylesheet href="chrome://calendar/skin/calendar.css" type="text/css"?>
 <?xml-stylesheet href="chrome://calendar/content/datetimepickers/minimonth.css" type="text/css"?>
 

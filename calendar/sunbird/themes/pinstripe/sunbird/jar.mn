@@ -9,7 +9,6 @@ calendar.jar:
    skin/classic/calendar/datetimepickers/right-arrow.png            (datetimepickers/right-arrow.png)
    skin/classic/calendar/datetimepickers/right-arrow-hover.png      (datetimepickers/right-arrow.png)
 +  skin/classic/calendar/datetimepickers/minimonth.css              (datetimepickers/minimonth.css)
-
 classic.jar:
    icon.png
    preview.png
