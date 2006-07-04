@@ -72,6 +72,11 @@
     -moz-image-region     : auto; /* cut off inheritance */
   }
 
+.scrollbutton-up > .toolbarbutton-text,
+.scrollbutton-down > .toolbarbutton-text {
+  display: none;
+}
+
 autorepeatbutton,
 .scrollbutton-up,
 .scrollbutton-down
