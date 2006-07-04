@@ -167,6 +167,7 @@ pref("browser.tabs.maxOpenBeforeWarn", 15);
 pref("browser.tabs.loadGroup", 1);
 
 pref("toolkit.scrollbox.scrollIncrement", 20);
+pref("toolkit.scrollbox.clickToScroll.scrollDelay", 200);
 
 // lets new tab/window load something different than first window
 // -1 - use navigator startup preference
