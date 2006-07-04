@@ -75,6 +75,7 @@ CPPSRCS		= \
 		mozGenericWordUtils.cpp		\
 		mozSpellI18NManager.cpp		\
 		mozInlineSpellChecker.cpp	\
+		mozInlineSpellWordUtil.cpp      \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \

@@ -1,0 +1,1028 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is inline spellchecker code.
+ *
+ * The Initial Developer of the Original Code is Google Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2004-2006
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Brett Wilson <brettw@gmail.com> (original author)
+ *   Robert O'Callahan <rocallahan@novell.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "cattable.h"
+#include "mozInlineSpellWordUtil.h"
+#include "nsDebug.h"
+#include "nsIAtom.h"
+#include "nsIDOMCSSStyleDeclaration.h"
+#include "nsIDOMDocumentView.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMNSRange.h"
+#include "nsIDOMRange.h"
+#include "nsIEditor.h"
+#include "nsIDOMNode.h"
+#include "nsIDOMHTMLBRElement.h"
+
+
+// IsIgnorableCharacter
+//
+//    These characters are ones that we should ignore in input.
+
+inline PRBool IsIgnorableCharacter(PRUnichar ch)
+{
+  return (ch == 0x200D || // ZERO-WIDTH JOINER
+          ch == 0xAD ||   // SOFT HYPHEN
+          ch == 0x1806);  // MONGOLIAN TODO SOFT HYPHEN
+}
+
+// mozInlineSpellWordUtil::Init
+
+nsresult
+mozInlineSpellWordUtil::Init(nsWeakPtr aWeakEditor)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIEditor> editor = do_QueryReferent(aWeakEditor, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  rv = editor->GetDocument(getter_AddRefs(domDoc));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mDocument = do_QueryInterface(domDoc, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mDOMDocumentRange = do_QueryInterface(domDoc, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // view
+  nsCOMPtr<nsIDOMDocumentView> docView = do_QueryInterface(domDoc, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDOMAbstractView> abstractView;
+  rv = docView->GetDefaultView(getter_AddRefs(abstractView));
+  NS_ENSURE_SUCCESS(rv, rv);
+  mCSSView = do_QueryInterface(abstractView, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Find the root node for the editor. For contenteditable we'll need something
+  // cleverer here.
+  nsCOMPtr<nsIDOMElement> rootElt;
+  rv = editor->GetRootElement(getter_AddRefs(rootElt));
+  NS_ENSURE_SUCCESS(rv, rv);
+  mRootNode = rootElt;
+
+  return NS_OK;
+}
+
+static PRBool
+IsTextNode(nsIDOMNode* aNode)
+{
+  PRUint16 type = 0;
+  aNode->GetNodeType(&type);
+  return type == nsIDOMNode::TEXT_NODE;
+}
+
+typedef void (* OnLeaveNodeFunPtr)(nsIDOMNode* aNode, void* aClosure);
+
+// Find the next node in the DOM tree in preorder. This isn't fast because
+// one call to GetNextSibling can be O(N) in the number of siblings...
+// Calls OnLeaveNodeFunPtr when the traversal leaves a node
+static nsIDOMNode*
+FindNextNode(nsIDOMNode* aNode, nsIDOMNode* aRoot,
+             OnLeaveNodeFunPtr aOnLeaveNode = nsnull, void* aClosure = nsnull)
+{
+  nsCOMPtr<nsIDOMNode> next;
+  aNode->GetFirstChild(getter_AddRefs(next));
+  if (next)
+    return next;
+
+  aNode->GetNextSibling(getter_AddRefs(next));
+  if (next)
+    return next;
+
+  // Go up
+  for (;;) {
+    if (aOnLeaveNode) {
+      aOnLeaveNode(aNode, aClosure);
+    }
+    
+    aNode->GetParentNode(getter_AddRefs(next));
+    if (next == aRoot)
+      return nsnull;
+    aNode = next;
+    
+    aNode->GetNextSibling(getter_AddRefs(next));
+    if (next)
+      return next;
+  }
+}
+
+// aNode is not a text node. Find the first text node starting at aNode/aOffset
+// in a preorder DOM traversal.
+static nsIDOMNode*
+FindNextTextNode(nsIDOMNode* aNode, PRInt32 aOffset, nsIDOMNode* aRoot)
+{
+  NS_ASSERTION(!IsTextNode(aNode), "FindNextTextNode should start with a non-text node");
+
+  nsIDOMNode* checkNode;
+  // Need to start at the aOffset'th child
+  nsCOMPtr<nsIDOMNode> child;
+  aNode->GetFirstChild(getter_AddRefs(child));
+  while (child && aOffset > 0) {
+    child->GetNextSibling(getter_AddRefs(child));
+    --aOffset;
+  }
+  if (child) {
+    checkNode = child;
+  } else {
+    // aOffset was beyond the end of the child list. Start checking at the next
+    // node after the last child, or aNode if there are no children.
+    nsCOMPtr<nsIDOMNode> child;
+    aNode->GetLastChild(getter_AddRefs(child));
+    if (child) {
+      checkNode = FindNextNode(child, aRoot);
+    } else {
+      checkNode = FindNextNode(aNode, aRoot);
+    }
+  }
+  
+  while (checkNode && !IsTextNode(checkNode)) {
+    checkNode = FindNextNode(checkNode, aRoot);
+  }
+  return checkNode;
+}
+
+// mozInlineSpellWordUtil::SetEnd
+//
+//    We have two ranges "hard" and "soft". The hard boundary is simply
+//    the scope of the root node. The soft boundary is that which is set
+//    by the caller of this class by calling this function. If this function is
+//    not called, the soft boundary is the same as the hard boundary.
+//
+//    When we reach the soft boundary (mSoftEnd), we keep
+//    going until we reach the end of a word. This allows the caller to set the
+//    end of the range to anything, and we will always check whole multiples of
+//    words. When we reach the hard boundary we stop no matter what.
+//
+//    There is no beginning soft boundary. This is because we only go to the
+//    previous node once, when finding the previous word boundary in
+//    SetPosition(). You might think of the soft boundary as being this initial
+//    position.
+
+nsresult
+mozInlineSpellWordUtil::SetEnd(nsIDOMNode* aEndNode, PRInt32 aEndOffset)
+{
+  NS_ASSERTION(mRootNode, "Not initialized");
+
+  InvalidateWords();
+
+  if (!IsTextNode(aEndNode)) {
+    // End at the start of the first text node after aEndNode/aEndOffset.
+    aEndNode = FindNextTextNode(aEndNode, aEndOffset, mRootNode);
+    aEndOffset = 0;
+  }
+  mSoftEnd = NodeOffset(aEndNode, aEndOffset);
+  return NS_OK;
+}
+
+
+// mozInlineSpellWordUtil::ExpandFor
+
+nsresult
+mozInlineSpellWordUtil::ExpandFor(nsIDOMNode* aBeginNode, PRInt32 aBeginOffset,
+                                  nsIDOMNode* aEndNode, PRInt32 aEndOffset)
+{
+  // InvalidateWords();
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+mozInlineSpellWordUtil::SetPosition(nsIDOMNode* aNode, PRInt32 aOffset)
+{
+  InvalidateWords();
+
+  if (!IsTextNode(aNode)) {
+    // Start at the start of the first text node after aNode/aOffset.
+    aNode = FindNextTextNode(aNode, aOffset, mRootNode);
+    aOffset = 0;
+  }
+  mSoftBegin = NodeOffset(aNode, aOffset);
+
+  EnsureWords();
+  
+  PRInt32 textOffset = MapDOMPositionToSoftTextOffset(mSoftBegin);
+  if (textOffset < 0)
+    return NS_OK;
+  mNextWordIndex = FindRealWordContaining(textOffset, HINT_END, PR_TRUE);
+  return NS_OK;
+}
+
+void
+mozInlineSpellWordUtil::EnsureWords()
+{
+  if (mSoftTextValid)
+    return;
+  BuildSoftText();
+  BuildRealWords();
+  mSoftTextValid = PR_TRUE;
+}
+
+nsresult
+mozInlineSpellWordUtil::MakeRangeForWord(const RealWord& aWord, nsIDOMRange** aRange)
+{
+  NodeOffset begin = MapSoftTextOffsetToDOMPosition(aWord.mSoftTextOffset, HINT_BEGIN);
+  NodeOffset end = MapSoftTextOffsetToDOMPosition(aWord.EndOffset(), HINT_END);
+  return MakeRange(begin, end, aRange);
+}
+
+// mozInlineSpellWordUtil::GetRangeForWord
+
+nsresult
+mozInlineSpellWordUtil::GetRangeForWord(nsIDOMNode* aWordNode,
+                                        PRInt32 aWordOffset,
+                                        nsIDOMRange** aRange)
+{
+  // Set our soft end and start
+  NodeOffset pt = NodeOffset(aWordNode, aWordOffset);
+  
+  InvalidateWords();
+  mSoftBegin = mSoftEnd = pt;
+  EnsureWords();
+  
+  PRInt32 offset = MapDOMPositionToSoftTextOffset(pt);
+  if (offset < 0)
+    return MakeRange(pt, pt, aRange);
+  PRInt32 wordIndex = FindRealWordContaining(offset, HINT_BEGIN, PR_FALSE);
+  if (wordIndex < 0)
+    return MakeRange(pt, pt, aRange);
+  return MakeRangeForWord(mRealWords[wordIndex], aRange);
+}
+
+// This is to fix characters that the spellchecker may not like
+static void
+NormalizeWord(const nsSubstring& aInput, PRInt32 aPos, PRInt32 aLen, nsAString& aOutput)
+{
+  aOutput.Truncate();
+  for (PRInt32 i = 0; i < aLen; i++) {
+    PRUnichar ch = aInput.CharAt(i + aPos);
+
+    // remove ignorable characters from the word
+    if (IsIgnorableCharacter(ch))
+      continue;
+
+    // the spellchecker doesn't handle curly apostrophes in all languages
+    if (ch == 0x2019) { // RIGHT SINGLE QUOTATION MARK
+      ch = '\'';
+    }
+
+    aOutput.Append(ch);
+  }
+}
+
+// mozInlineSpellWordUtil::GetNextWord
+//
+//    FIXME-optimization: we shouldn't have to generate a range every single
+//    time. It would be better if the inline spellchecker didn't require a
+//    range unless the word was misspelled. This may or may not be possible.
+
+nsresult
+mozInlineSpellWordUtil::GetNextWord(nsAString& aText, nsIDOMRange** aRange,
+                                    PRBool* aSkipChecking)
+{
+#ifdef DEBUG_SPELLCHECK
+  printf("GetNextWord called; mNextWordIndex=%d\n", mNextWordIndex);
+#endif
+
+  if (mNextWordIndex < 0 ||
+      mNextWordIndex >= PRInt32(mRealWords.Length())) {
+    mNextWordIndex = -1;
+    *aRange = nsnull;
+    *aSkipChecking = PR_TRUE;
+    return NS_OK;
+  }
+  
+  const RealWord& word = mRealWords[mNextWordIndex];
+  nsresult rv = MakeRangeForWord(word, aRange);
+  NS_ENSURE_SUCCESS(rv, rv);
+  ++mNextWordIndex;
+  *aSkipChecking = !word.mCheckableWord;
+  ::NormalizeWord(mSoftText, word.mSoftTextOffset, word.mLength, aText);
+
+#ifdef DEBUG_SPELLCHECK
+  printf("GetNextWord returning: %s (skip=%d)\n",
+         NS_ConvertUTF16toUTF8(aText).get(), *aSkipChecking);
+#endif
+  
+  return NS_OK;
+}
+
+// mozInlineSpellWordUtil::MakeRange
+//
+//    Convenience function for creating a range over the current document.
+
+nsresult
+mozInlineSpellWordUtil::MakeRange(NodeOffset aBegin, NodeOffset aEnd,
+                                  nsIDOMRange** aRange)
+{
+  if (! mDOMDocumentRange)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsresult rv = mDOMDocumentRange->CreateRange(aRange);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = (*aRange)->SetStart(aBegin.mNode, aBegin.mOffset);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = (*aRange)->SetEnd(aEnd.mNode, aEnd.mOffset);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+/*********** DOM text extraction ************/
+
+// IsDOMWordSeparator
+//
+//    Determines if the given character should be considered as a DOM Word
+//    separator. Basically, this is whitespace, although it could also have
+//    certain punctuation that we know ALWAYS breaks words. This is important.
+//    For example, we can't have any punctuation that could appear in a URL
+//    or email address in this, because those need to always fit into a single
+//    DOM word.
+
+static PRBool
+IsDOMWordSeparator(PRUnichar ch)
+{
+  // simple spaces
+  if (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r')
+    return PR_TRUE;
+
+  // complex spaces - check only if char isn't ASCII (uncommon)
+  if (ch >= 0xA0 &&
+      (ch == 0x00A0 ||  // NO-BREAK SPACE
+       ch == 0x2002 ||  // EN SPACE
+       ch == 0x2003 ||  // EM SPACE
+       ch == 0x2009 ||  // THIN SPACE
+       ch == 0x200C ||  // ZERO WIDTH NON-JOINER
+       ch == 0x3000))   // IDEOGRAPHIC SPACE
+    return PR_TRUE;
+
+  // otherwise not a space
+  return PR_FALSE;
+}
+
+static PRBool
+IsBRElement(nsIDOMNode* aNode)
+{
+  nsresult rv;
+  nsCOMPtr<nsIDOMHTMLBRElement> elt = do_QueryInterface(aNode, &rv);
+  return NS_SUCCEEDED(rv);
+}
+
+static void
+GetNodeText(nsIDOMNode* aNode, nsAutoString& aText)
+{
+  nsresult rv = aNode->GetNodeValue(aText);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to get node text");
+}
+
+// Find the previous node in the DOM tree in preorder. This isn't fast because
+// one call to GetPrevSibling can be O(N) in the number of siblings...
+static nsIDOMNode*
+FindPrevNode(nsIDOMNode* aNode, nsIDOMNode* aRoot)
+{
+  if (aNode == aRoot)
+    return nsnull;
+  
+  nsCOMPtr<nsIDOMNode> prev;
+  aNode->GetPreviousSibling(getter_AddRefs(prev));
+  if (prev) {
+    for (;;) {
+      nsCOMPtr<nsIDOMNode> lastChild;
+      prev->GetLastChild(getter_AddRefs(lastChild));
+      if (!lastChild)
+        return prev;
+      prev = lastChild;
+    }
+  }
+
+  // No prev sibling. So we are the first child of our parent, if any. Our
+  // parent is our previous node.
+  aNode->GetParentNode(getter_AddRefs(prev));
+  return prev;
+}
+
+/**
+ * Check if there's a DOM word separator before aBeforeOffset in this node.
+ * Always returns PR_TRUE if it's a BR element.
+ * aSeparatorOffset is set to the index of the last separator if any is found
+ * (0 for BR elements).
+ */
+static PRBool
+ContainsDOMWordSeparator(nsIDOMNode* aNode, PRInt32 aBeforeOffset,
+                         PRInt32* aSeparatorOffset)
+{
+  if (IsBRElement(aNode)) {
+    *aSeparatorOffset = 0;
+    return PR_TRUE;
+  }
+  
+  if (!IsTextNode(aNode))
+    return PR_FALSE;
+
+  nsAutoString str;
+  GetNodeText(aNode, str);
+  for (PRInt32 i = PR_MIN(aBeforeOffset, PRInt32(str.Length())) - 1; i >= 0; --i) {
+    if (IsDOMWordSeparator(str.CharAt(i))) {
+      *aSeparatorOffset = i;
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
+static PRBool
+IsBreakElement(nsIDOMViewCSS* aDocView, nsIDOMNode* aNode)
+{
+  nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aNode);
+  if (!element)
+    return PR_FALSE;
+    
+  if (IsBRElement(aNode))
+    return PR_TRUE;
+  
+  nsCOMPtr<nsIDOMCSSStyleDeclaration> style;
+  aDocView->GetComputedStyle(element, EmptyString(), getter_AddRefs(style));
+  if (!style)
+    return PR_FALSE;
+
+#ifdef DEBUG_SPELLCHECK
+  printf("    searching element %p\n", (void*)aNode);
+#endif
+
+  nsAutoString display;
+  style->GetPropertyValue(NS_LITERAL_STRING("display"), display);
+#ifdef DEBUG_SPELLCHECK
+  printf("      display=\"%s\"\n", NS_ConvertUTF16toUTF8(display).get());
+#endif
+  if (!display.EqualsLiteral("inline"))
+    return PR_TRUE;
+
+  nsAutoString position;
+  style->GetPropertyValue(NS_LITERAL_STRING("position"), position);
+#ifdef DEBUG_SPELLCHECK
+  printf("      position=%s\n", NS_ConvertUTF16toUTF8(position).get());
+#endif
+  if (!position.EqualsLiteral("static"))
+    return PR_TRUE;
+    
+  // XXX What about floats? What else?
+  return PR_FALSE;
+}
+
+struct CheckLeavingBreakElementClosure {
+  nsIDOMViewCSS* mDocView;
+  PRPackedBool   mLeftBreakElement;
+};
+
+static void
+CheckLeavingBreakElement(nsIDOMNode* aNode, void* aClosure)
+{
+  CheckLeavingBreakElementClosure* cl =
+    NS_STATIC_CAST(CheckLeavingBreakElementClosure*, aClosure);
+  if (!cl->mLeftBreakElement && IsBreakElement(cl->mDocView, aNode)) {
+    cl->mLeftBreakElement = PR_TRUE;
+  }
+}
+
+void
+mozInlineSpellWordUtil::NormalizeWord(nsSubstring& aWord)
+{
+  nsAutoString result;
+  ::NormalizeWord(aWord, 0, aWord.Length(), result);
+  aWord = result;
+}
+
+void
+mozInlineSpellWordUtil::BuildSoftText()
+{
+  // First we have to work backwards from mSoftStart to find a text node
+  // containing a DOM word separator, a non-inline-element
+  // boundary, or the hard start node. That's where we'll start building the
+  // soft string from.
+  nsIDOMNode* node = mSoftBegin.mNode;
+  PRInt32 firstOffsetInNode = 0;
+  PRInt32 checkBeforeOffset = mSoftBegin.mOffset;
+  while (node) {
+    if (ContainsDOMWordSeparator(node, checkBeforeOffset, &firstOffsetInNode))
+      break;
+    checkBeforeOffset = PR_INT32_MAX;
+    if (IsBreakElement(mCSSView, node)) {
+      // Since FindPrevNode follows tree *preorder*, we're about to traverse
+      // up out of 'node'. Since node induces breaks (e.g., it's a block),
+      // don't bother trying to look outside it, just stop now.
+      break;
+    }
+    node = FindPrevNode(node, mRootNode);
+  }
+
+  // Now build up the string moving forward through the DOM until we reach
+  // the soft end and *then* see a DOM word separator, a non-inline-element
+  // boundary, or the hard end node.
+  mSoftText.Truncate();
+  mSoftTextDOMMapping.Clear();
+  PRBool seenSoftEnd = PR_FALSE;
+  // Leave this outside the loop so large heap string allocations can be reused
+  // across iterations
+  nsAutoString str;
+  while (node) {
+    if (node == mSoftEnd.mNode) {
+      seenSoftEnd = PR_TRUE;
+    }
+
+    PRBool exit = PR_FALSE;
+    if (IsTextNode(node)) {
+      GetNodeText(node, str);
+      PRInt32 lastOffsetInNode = str.Length();
+
+      if (seenSoftEnd) {
+        // check whether we can stop after this
+        for (PRInt32 i = node == mSoftEnd.mNode ? mSoftEnd.mOffset : 0;
+             i < PRInt32(str.Length()); ++i) {
+          if (IsDOMWordSeparator(str.CharAt(i))) {
+            exit = PR_TRUE;
+            // stop at the first separator after the soft end point
+            lastOffsetInNode = i;
+            break;
+          }
+        }
+      }
+      
+      if (firstOffsetInNode < lastOffsetInNode) {
+        PRInt32 len = lastOffsetInNode - firstOffsetInNode;
+        mSoftTextDOMMapping.AppendElement(
+          DOMTextMapping(NodeOffset(node, firstOffsetInNode), mSoftText.Length(), len));
+        mSoftText.Append(Substring(str, firstOffsetInNode, len));
+      }
+      
+      firstOffsetInNode = 0;
+    }
+
+    if (exit)
+      break;
+
+    CheckLeavingBreakElementClosure closure = { mCSSView, PR_FALSE };
+    node = FindNextNode(node, mRootNode, CheckLeavingBreakElement, &closure);
+    if (closure.mLeftBreakElement || IsBreakElement(mCSSView, node)) {
+      // We left, or are entering, a break element (e.g., block). Maybe we can
+      // stop now.
+      if (seenSoftEnd)
+        break;
+      // Record the break
+      mSoftText.Append(' ');
+    }
+  }
+  
+#ifdef DEBUG_SPELLCHECK
+  printf("Got DOM string: %s\n", NS_ConvertUTF16toUTF8(mSoftText).get());
+#endif
+}
+
+void
+mozInlineSpellWordUtil::BuildRealWords()
+{
+  // This is pretty simple. We just have to walk mSoftText, tokenizing it
+  // into "real words".
+  // We do an outer traversal of words delimited by IsDOMWordSeparator, calling
+  // SplitDOMWord on each of those DOM words
+  PRInt32 wordStart = -1;
+  mRealWords.Clear();
+  for (PRInt32 i = 0; i < PRInt32(mSoftText.Length()); ++i) {
+    if (IsDOMWordSeparator(mSoftText.CharAt(i))) {
+      if (wordStart >= 0) {
+        SplitDOMWord(wordStart, i);
+        wordStart = -1;
+      }
+    } else {
+      if (wordStart < 0) {
+        wordStart = i;
+      }
+    }
+  }
+  if (wordStart >= 0) {
+    SplitDOMWord(wordStart, mSoftText.Length());
+  }
+}
+
+/*********** DOM/realwords<->mSoftText mapping functions ************/
+
+PRInt32
+mozInlineSpellWordUtil::MapDOMPositionToSoftTextOffset(NodeOffset aNodeOffset)
+{
+  if (!mSoftTextValid) {
+    NS_ERROR("Soft text must be valid if we're to map into it");
+    return -1;
+  }
+  
+  for (PRInt32 i = 0; i < PRInt32(mSoftTextDOMMapping.Length()); ++i) {
+    const DOMTextMapping& map = mSoftTextDOMMapping[i];
+    if (map.mNodeOffset.mNode == aNodeOffset.mNode) {
+      // Allow offsets at either end of the string, in particular, allow the
+      // offset that's at the end of the contributed string
+      PRInt32 offsetInContributedString =
+        aNodeOffset.mOffset - map.mNodeOffset.mOffset;
+      if (offsetInContributedString >= 0 &&
+          offsetInContributedString <= map.mLength)
+        return map.mSoftTextOffset + offsetInContributedString;
+      return -1;
+    }
+  }
+  return -1;
+}
+
+mozInlineSpellWordUtil::NodeOffset
+mozInlineSpellWordUtil::MapSoftTextOffsetToDOMPosition(PRInt32 aSoftTextOffset,
+                                                       DOMMapHint aHint)
+{
+  NS_ASSERTION(mSoftTextValid, "Soft text must be valid if we're to map out of it");
+  if (!mSoftTextValid)
+    return NodeOffset(nsnull, -1);
+  
+  // The invariant is that the range start..end includes the last mapping,
+  // if any, such that mSoftTextOffset <= aSoftTextOffset
+  PRInt32 start = 0;
+  PRInt32 end = mSoftTextDOMMapping.Length();
+  while (end - start >= 2) {
+    PRInt32 mid = (start + end)/2;
+    const DOMTextMapping& map = mSoftTextDOMMapping[mid];
+    if (map.mSoftTextOffset > aSoftTextOffset) {
+      end = mid;
+    } else {
+      start = mid;
+    }
+  }
+  
+  if (start >= end)
+    return NodeOffset(nsnull, -1);
+
+  // 'start' is now the last mapping, if any, such that
+  // mSoftTextOffset <= aSoftTextOffset.
+  // If we're doing HINT_END, then we may want to return the end of the
+  // the previous mapping instead of the start of this mapping
+  if (aHint == HINT_END && start > 0) {
+    const DOMTextMapping& map = mSoftTextDOMMapping[start - 1];
+    if (map.mSoftTextOffset + map.mLength == aSoftTextOffset)
+      return NodeOffset(map.mNodeOffset.mNode, map.mNodeOffset.mOffset + map.mLength);
+  }
+  
+  // We allow ourselves to return the end of this mapping even if we're
+  // doing HINT_START. This will only happen if there is no mapping which this
+  // point is the start of. I'm not 100% sure this is OK...
+  const DOMTextMapping& map = mSoftTextDOMMapping[start];
+  PRInt32 offset = aSoftTextOffset - map.mSoftTextOffset;
+  if (offset >= 0 && offset <= map.mLength)
+    return NodeOffset(map.mNodeOffset.mNode, map.mNodeOffset.mOffset + offset);
+    
+  return NodeOffset(nsnull, -1);
+}
+
+PRInt32
+mozInlineSpellWordUtil::FindRealWordContaining(PRInt32 aSoftTextOffset,
+    DOMMapHint aHint, PRBool aSearchForward)
+{
+  NS_ASSERTION(mSoftTextValid, "Soft text must be valid if we're to map out of it");
+  if (!mSoftTextValid)
+    return -1;
+
+  // The invariant is that the range start..end includes the last word,
+  // if any, such that mSoftTextOffset <= aSoftTextOffset
+  PRInt32 start = 0;
+  PRInt32 end = mRealWords.Length();
+  while (end - start >= 2) {
+    PRInt32 mid = (start + end)/2;
+    const RealWord& word = mRealWords[mid];
+    if (word.mSoftTextOffset > aSoftTextOffset) {
+      end = mid;
+    } else {
+      start = mid;
+    }
+  }
+  
+  if (start >= end)
+    return -1;
+
+  // 'start' is now the last word, if any, such that
+  // mSoftTextOffset <= aSoftTextOffset.
+  // If we're doing HINT_END, then we may want to return the end of the
+  // the previous word instead of the start of this word
+  if (aHint == HINT_END && start > 0) {
+    const RealWord& word = mRealWords[start - 1];
+    if (word.mSoftTextOffset + word.mLength == aSoftTextOffset)
+      return start - 1;
+  }
+  
+  // We allow ourselves to return the end of this word even if we're
+  // doing HINT_START. This will only happen if there is no word which this
+  // point is the start of. I'm not 100% sure this is OK...
+  const RealWord& word = mRealWords[start];
+  PRInt32 offset = aSoftTextOffset - word.mSoftTextOffset;
+  if (offset >= 0 && offset <= word.mLength)
+    return start;
+
+  if (aSearchForward) {
+    if (mRealWords[0].mSoftTextOffset > aSoftTextOffset) {
+      // All words have mSoftTextOffset > aSoftTextOffset
+      return 0;
+    }
+    // 'start' is the last word such that mSoftTextOffset <= aSoftTextOffset.
+    // Word start+1, if it exists, will be the first with
+    // mSoftTextOffset > aSoftTextOffset.
+    if (start + 1 < PRInt32(mRealWords.Length()))
+      return start + 1;
+  }
+
+  return -1;
+}
+
+/*********** Word Splitting ************/
+
+// classifies a given character in the DOM word
+enum CharClass {
+  CHAR_CLASS_WORD,
+  CHAR_CLASS_SEPARATOR,
+  CHAR_CLASS_END_OF_INPUT };
+
+// Encapsulates DOM-word to real-word splitting
+struct WordSplitState
+{
+  const nsDependentSubstring mDOMWordText;
+  PRInt32                    mDOMWordOffset;
+  CharClass                  mCurCharClass;
+  
+  WordSplitState(const nsString& aString, PRInt32 aStart, PRInt32 aLen)
+    : mDOMWordText(aString, aStart, aLen), mDOMWordOffset(0),
+      mCurCharClass(CHAR_CLASS_END_OF_INPUT) {}
+  
+  CharClass ClassifyCharacter(PRInt32 aIndex, PRBool aRecurse) const;
+  void Advance();
+  void AdvanceThroughSeparators();
+  void AdvanceThroughWord();
+
+  // Finds special words like email addresses and URLs that may start at the
+  // current position, and returns their length, or 0 if not found. This allows
+  // arbitrary word breaking rules to be used for these special entities, as
+  // long as they can not contain whitespace.
+  PRInt32 FindSpecialWord();
+
+  // Similar to FindSpecialWord except that this takes a split word as
+  // input. This checks for things that do not require special word-breaking
+  // rules.
+  PRBool ShouldSkipWord(PRInt32 aStart, PRInt32 aLength);
+};
+
+// WordSplitState::ClassifyCharacter
+
+CharClass
+WordSplitState::ClassifyCharacter(PRInt32 aIndex, PRBool aRecurse) const
+{
+  NS_ASSERTION(aIndex >= 0 && aIndex <= PRInt32(mDOMWordText.Length()),
+               "Index out of range");
+  if (aIndex == PRInt32(mDOMWordText.Length()))
+    return CHAR_CLASS_SEPARATOR;
+
+  // this will classify the character, we want to treat "ignorable" characters
+  // such as soft hyphens as word characters.
+  PRInt32 charCategory = GetCat(mDOMWordText[aIndex]);
+  if (charCategory == 5 || IsIgnorableCharacter(mDOMWordText[aIndex]))
+    return CHAR_CLASS_WORD;
+
+  // all other whitespace chars, control chars, and most punctuation (with
+  // several exceptions) are word separators. These exceptions are for
+  // characters that can be considered part of a word if it is surrounded by
+  // word characters
+  if ((isspace(mDOMWordText[aIndex]) || mDOMWordText[aIndex] < ' ' ||
+       ispunct(mDOMWordText[aIndex]))
+      && mDOMWordText[aIndex] != '\'')
+    return CHAR_CLASS_SEPARATOR;
+
+  // For punctuation excluded from the above:
+  // If punctuation is surrounded immediately on both sides by word characters
+  // it also counts as a word character.
+  if (ispunct(mDOMWordText[aIndex])) {
+    if (!aRecurse) {
+      // not allowed to look around, this punctuation counts like a separator
+      return CHAR_CLASS_SEPARATOR;
+    }
+    
+    // check the left-hand character
+    if (aIndex == 0)
+      return CHAR_CLASS_SEPARATOR;
+    if (ClassifyCharacter(aIndex - 1, false) != CHAR_CLASS_WORD)
+      return CHAR_CLASS_SEPARATOR;
+
+    // now we know left char is a word-char, check the right-hand character
+    if (aIndex == PRInt32(mDOMWordText.Length()) - 1)
+      return CHAR_CLASS_SEPARATOR;
+    if (ClassifyCharacter(aIndex + 1, false) != CHAR_CLASS_WORD)
+      return CHAR_CLASS_SEPARATOR;
+
+    // char on either side is a word, this counts as a word
+    return CHAR_CLASS_WORD;
+  }
+
+  // any other character counts as a word
+  return CHAR_CLASS_WORD;
+}
+
+
+// WordSplitState::Advance
+
+void
+WordSplitState::Advance()
+{
+  NS_ASSERTION(mDOMWordOffset >= 0, "Negative word index");
+  NS_ASSERTION(mDOMWordOffset < (PRInt32)mDOMWordText.Length(),
+               "Length beyond end");
+
+  mDOMWordOffset ++;
+  if (mDOMWordOffset >= (PRInt32)mDOMWordText.Length())
+    mCurCharClass = CHAR_CLASS_END_OF_INPUT;
+  else
+    mCurCharClass = ClassifyCharacter(mDOMWordOffset, PR_TRUE);
+}
+
+
+// WordSplitState::AdvanceThroughSeparators
+
+void
+WordSplitState::AdvanceThroughSeparators()
+{
+  while (mCurCharClass == CHAR_CLASS_SEPARATOR)
+    Advance();
+}
+
+// WordSplitState::AdvanceThroughWord
+
+void
+WordSplitState::AdvanceThroughWord()
+{
+  while (mCurCharClass == CHAR_CLASS_WORD)
+    Advance();
+}
+
+
+// WordSplitState::FindSpecialWord
+
+PRInt32
+WordSplitState::FindSpecialWord()
+{
+  PRInt32 i;
+
+  // Search for email addresses. We simply define these as any sequence of
+  // characters with an '@' character in the middle. The DOM word is already
+  // split on whitepace, so we know that everything to the end is the address
+  //
+  // Also look for periods, this tells us if we want to run the URL finder.
+  PRBool foundDot = PR_FALSE;
+  for (i = mDOMWordOffset;
+       i < PRInt32(mDOMWordText.Length()); i ++) {
+    if (mDOMWordText[i] == '@') {
+      // only accept this if there are unambigous word characters (don't bother
+      // recursing to disambiguate apostrophes) on each side. This prevents
+      // classifying, e.g. "@home" as an email address
+
+      // Use this condition to only accept words with '@' in the middle of
+      // them. It works, but the inlinespellcker doesn't like this. The problem
+      // is that you type "fhsgfh@" that's a misspelled word followed by a
+      // symbol, but when you type another letter "fhsgfh@g" that first word
+      // need to be unmarked misspelled. It doesn't do this. it only checks the
+      // current position for potentially removing a spelling range.
+      //if (i > 0 && ClassifyCharacter(i - 1, PR_FALSE) == CHAR_CLASS_WORD &&
+      //    i < (PRInt32)mDOMWordText.Length() - 1 &&
+      //    ClassifyCharacter(i + 1, PR_FALSE) == CHAR_CLASS_WORD)
+
+      return mDOMWordText.Length() - mDOMWordOffset;
+    } 
+    if (mDOMWordText[i] == '.' && ! foundDot &&
+        i > 0 && i < (PRInt32)mDOMWordText.Length() - 1) {
+      // we found a period not at the end, we should check harder for URLs
+      foundDot = PR_TRUE;
+    }
+  }
+
+  // Search for URLs
+  /*
+  THIS CODE DOES NOT WORK YET - crashes
+
+  It also has the same problem as email addresses above.
+  FIXME: what we should do is always check the full DOM word. This will make
+  it work properly.
+
+  if (foundDot) {
+    printf("Checking for URL\n");
+    if (! mURLDetector) {
+      // lazily create the URL detector
+      nsresult rv;
+      mURLDetector = do_CreateInstance(MOZ_TXTTOHTMLCONV_CONTRACTID, &rv);
+      if (NS_FAILED(rv))
+        return -1;
+    }
+    PRInt32 urlStart = -1, urlEnd = -1;
+    printf("Checking string %s       = %s\n",
+           NS_ConvertUTF16toUTF8(mDOMWordText).get(),
+           NS_ConvertUTF16toUTF8(Substring(mDOMWordText, state.mDOMWordOffset)));
+    mURLDetector->FindURLInPlaintext(mDOMWordText.get(), state.mDOMWordOffset,
+                                     mDOMWordText.Length() - state.mDOMWordOffset,
+                                     &urlStart, &urlEnd);
+    if (urlStart == 0 && urlEnd > 0) {
+      NS_ASSERTION(state.mDOMWordOffset + urlEnd < (PRInt32)mDOMWordText.Length(),
+                   "URL out of bounds");
+      return urlEnd - state.mDOMWordOffset;
+    }
+  }
+  */
+
+  return -1;
+}
+
+// WordSplitState::ShouldSkipWord
+
+PRBool
+WordSplitState::ShouldSkipWord(PRInt32 aStart, PRInt32 aLength)
+{
+  PRInt32 last = aStart + aLength;
+
+  // check to see if the word contains a digit
+  for (PRInt32 i = aStart; i < last; i ++) {
+    char ch = mDOMWordText[i];
+    if (ch >= '0' && ch <= '9')
+      return PR_TRUE;
+  }
+
+  // not special
+  return PR_FALSE;
+}
+
+// mozInlineSpellWordUtil::SplitDOMWord
+
+void
+mozInlineSpellWordUtil::SplitDOMWord(PRInt32 aStart, PRInt32 aEnd)
+{
+  WordSplitState state(mSoftText, aStart, aEnd - aStart);
+  state.mCurCharClass = state.ClassifyCharacter(0, PR_TRUE);
+
+  while (state.mCurCharClass != CHAR_CLASS_END_OF_INPUT) {
+    state.AdvanceThroughSeparators();
+    if (state.mCurCharClass == CHAR_CLASS_END_OF_INPUT)
+      break;
+
+    PRInt32 specialWordLength = state.FindSpecialWord();
+    if (specialWordLength > 0) {
+      mRealWords.AppendElement(
+        RealWord(aStart + state.mDOMWordOffset, specialWordLength, PR_FALSE));
+
+      // skip the special word
+      state.mDOMWordOffset += specialWordLength;
+      if (state.mDOMWordOffset + aStart >= aEnd)
+        state.mCurCharClass = CHAR_CLASS_END_OF_INPUT;
+      else
+        state.mCurCharClass = state.ClassifyCharacter(state.mDOMWordOffset, PR_TRUE);
+      continue;
+    }
+
+    // save the beginning of the word
+    PRInt32 wordOffset = state.mDOMWordOffset;
+
+    // find the end of the word
+    state.AdvanceThroughWord();
+    PRInt32 wordLen = state.mDOMWordOffset - wordOffset;
+    mRealWords.AppendElement(
+      RealWord(aStart + wordOffset, wordLen,
+               !state.ShouldSkipWord(wordOffset, wordLen)));
+  }
+}
