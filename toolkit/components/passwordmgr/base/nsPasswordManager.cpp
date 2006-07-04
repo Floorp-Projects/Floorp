@@ -765,9 +765,12 @@ nsPasswordManager::Observe(nsISupports* aSubject,
 
     branch->GetBoolPref("rememberSignons", &sRememberPasswords);
   } else if (!strcmp(aTopic, "app-startup")) {
-    GetInstance();
-    NS_IF_RELEASE(sPasswordManager);
-  }
+    nsCOMPtr<nsIObserverService> obsService = do_GetService("@mozilla.org/observer-service;1");
+    NS_ASSERTION(obsService, "No observer service");
+
+    obsService->AddObserver(this, "profile-after-change", PR_TRUE);
+  } else if (!strcmp(aTopic, "profile-after-change"))
+    nsCOMPtr<nsIPasswordManager> pm = do_GetService(NS_PASSWORDMANAGER_CONTRACTID);
 
   return NS_OK;
 }
