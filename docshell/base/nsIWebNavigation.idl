@@ -184,6 +184,11 @@ interface nsIWebNavigation : nsISupports
   const unsigned long LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP = 0x2000;
 
   /**
+   * This flag specifies that this load is the first load in a new window.
+   */
+  const unsigned long LOAD_FLAGS_NEW_WINDOW = 0x4000;
+
+  /**
    * Loads a given URI.  This will give priority to loading the requested URI
    * in the object implementing	this interface.  If it can't be loaded here
    * however, the URI dispatcher will go through its normal process of content

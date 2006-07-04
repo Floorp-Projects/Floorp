@@ -844,7 +844,8 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
     }
 
     newDocShell->LoadURI(uriToLoad, loadInfo,
-                         nsIWebNavigation::LOAD_FLAGS_NONE, PR_TRUE);
+      windowIsNew ? nsIWebNavigation::LOAD_FLAGS_NEW_WINDOW :
+                    nsIWebNavigation::LOAD_FLAGS_NONE, PR_TRUE);
   }
 
   if (isNewToplevelWindow)
