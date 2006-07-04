@@ -544,13 +544,13 @@ nsHandleSSLError(nsNSSSocketInfo *socketInfo, PRInt32 err)
   case SSL_ERROR_SSL_DISABLED:
     params[0] = brandShortName.get();
     params[1] = hostNameU.get();
-    nssComponent->PIPBundleFormatStringFromName("SSLDisabled",
+    nssComponent->PIPBundleFormatStringFromName("SSL_Disabled",
                                                 params, 2, formattedString);
     break;
   case SSL_ERROR_SSL2_DISABLED:
     params[0] = brandShortName.get();
     params[1] = hostNameU.get();
-    nssComponent->PIPBundleFormatStringFromName("SSL2Disabled",
+    nssComponent->PIPBundleFormatStringFromName("SSL2_Disabled",
                                                 params, 2, formattedString);
     break;
   case SSL_ERROR_EXPORT_ONLY_SERVER:
@@ -562,7 +562,7 @@ nsHandleSSLError(nsNSSSocketInfo *socketInfo, PRInt32 err)
   case SSL_ERROR_FORTEZZA_PQG:
     params[0] = brandShortName.get();
     params[1] = hostNameU.get();
-    nssComponent->PIPBundleFormatStringFromName("SSLNoMatchingCiphers",
+    nssComponent->PIPBundleFormatStringFromName("SSL_NoMatchingCiphers",
                                                 params, 2, formattedString);
                                                   
     break;
