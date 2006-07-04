@@ -95,8 +95,9 @@ mozInlineSpellWordUtil::Init(nsWeakPtr aWeakEditor)
   nsCOMPtr<nsIDOMElement> rootElt;
   rv = editor->GetRootElement(getter_AddRefs(rootElt));
   NS_ENSURE_SUCCESS(rv, rv);
+  
   mRootNode = rootElt;
-
+  NS_ASSERTION(mRootNode, "GetRootElement returned null *and* claimed to suceed!");
   return NS_OK;
 }
 
