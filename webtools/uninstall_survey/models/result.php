@@ -88,7 +88,7 @@ class Result extends AppModel {
         // SQL_CALC_FOUND_ROWS used for counting comments
         $_query = "
             SELECT 
-                SQL_CALC_FOUND_ROWS 
+                SQL_CALC_FOUND_ROWS DISTINCT
                 `Result`.`id`, 
                 `Result`.`comments`, 
                 `Result`.`created`
@@ -105,7 +105,6 @@ class Result extends AppModel {
                 collection_id={$_collection_id['Collection']['id']}
             AND 
                 Result.application_id={$_application_id}
-            GROUP BY Result.comments
             ";
 
         $_start =($pagination['page'] -1) * $pagination['show'];
