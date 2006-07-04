@@ -184,10 +184,16 @@ class ResultsController extends AppController {
         // Give us some breadcrumbs
         $this->set('breadcrumbs', array('Home' => 'http://mozilla.org', 'Uninstall Survey Results' => 'results/', 'Comments' => ''));
 
+        // Fill in our question sets
+        $this->set('collections',$this->Application->getCollectionsFromUrl($this->params['url'],'issue'));
+
+        // Core data to show on page
+        $this->set('commentsData',$this->Result->getComments($this->params['url'], $this->pagination_parameters));
+
         // Pagination settings
+            $paging['count'] = $this->Result->getCommentCount();
             $paging['style'] = 'html';
-            $paging['link']  = "/results/comments/?product=".urlencode($this->params['url']['product'])."&start_date=".urlencode($this->params['url']['start_date'])."&end_date=".urlencode($this->params['url']['end_date'])."&show={$this->pagination_parameters['show']}&sort={$this->pagination_parameters['sortBy']}&direction={$this->pagination_parameters['direction']}&page=";
-            $paging['count'] = $this->Result->getCommentCount($this->params['url']);
+            $paging['link']  = "/results/comments/?collection=".urlencode($this->params['url']['collection'])."&product=".urlencode($this->params['url']['product'])."&start_date=".urlencode($this->params['url']['start_date'])."&end_date=".urlencode($this->params['url']['end_date'])."&show={$this->pagination_parameters['show']}&sort={$this->pagination_parameters['sortBy']}&direction={$this->pagination_parameters['direction']}&page=";
             $paging['page']  = $this->pagination_parameters['page'];
             $paging['limit'] = $this->pagination_parameters['show'];
             $paging['show']  = array('10','25','50');
@@ -201,8 +207,6 @@ class ResultsController extends AppController {
             // Set pagination array
             $this->set('paging',$paging);
 
-        // Core data to show on page
-        $this->set('commentsData',$this->Result->getComments($this->params['url'], $this->pagination_parameters));
 
 
     }

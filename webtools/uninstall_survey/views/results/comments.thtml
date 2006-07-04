@@ -21,6 +21,27 @@
             <?php endforeach; ?>
         </select>
 
+        <?php if (!empty($collections)) : ?>
+            <label for="collection">Questions:</label>
+                <select name="collection" id="collection">
+                <?php
+                    foreach ($collections as $select) :
+                        $collection = $select['collections']['description'];
+                        // php's built in functions won't decode UTF-8 or numeric
+                        // entities.  Since we've only got 1, I'm putting in this to
+                        // get this done quickly. :(
+                        $url_params['collection'] = str_replace('&#45;','-',urldecode($url_params['collection']));
+                        echo "{$url_params['collection']}<br />";
+                        $selected = ($collection == trim($url_params['collection'])) ?  ' selected="selected" ' : '';
+                ?>
+                        <option<?=$selected?>><?=$collection?></option>
+
+                <?php endforeach; ?>
+                </select>
+        <?php endif; ?>
+
+
+
         <input type="submit" name="submit" id="submit" value="Go" />
     </form>
     <br />

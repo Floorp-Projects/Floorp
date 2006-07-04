@@ -19,73 +19,13 @@ class Result extends AppModel {
     }
 
     /**
-     * Count's all the comments, according to the parameters.
-     * @param array URL parameters
-     * @return Cake's findCount() value
+     * Count's all the comments.  To speed things up I'm using found_rows().  That
+     * means this must be called directly after getComments()!
+     * @return int count value
      */
-    function getCommentCount($params)
+    function getCommentCount()
     {
-        // Clean parameters
-        $params = $this->cleanArrayForSql($params);
-
-        // We only want to see rows with comments
-        $_conditions = "comments NOT LIKE ''";
-
-        if (!empty($params['start_date'])) {
-            $_timestamp = strtotime($params['start_date']);
-
-            if (!($_timestamp == -1) || $_timestamp == false) {
-                $_date = date('Y-m-d H:i:s', $_timestamp);//sql format
-                $_conditions .= " AND `created` >= '{$_date}'";
-            }
-        }
-        if (!empty($params['end_date'])) {
-            $_timestamp = strtotime($params['end_date']);
-
-            if (!($_timestamp == -1) || $_timestamp == false) {
-                $_date = date('Y-m-d 23:59:59', $_timestamp);//sql format
-                $_conditions .= " AND `created` <= '{$_date}'";
-            }
-        }
-
-        $_application_id = $this->Application->getIdFromUrl($params);
-        $_conditions .= " AND `results`.`application_id`={$_application_id}";
-
-        // Next determine our collection
-            if (!empty($params['collection'])) {
-                $_collection_id = $this->Choice->Collection->findByDescription($params['collection']);
-                $clear = true;
-                foreach ($_collection_id['Application'] as $var => $val) {
-                    if ($_application_id == $val['id']) {
-                        $clear = false;
-                    }
-                }
-                if ($clear) {
-                    $_id = $this->Application->getMaxCollectionId($_application_id, 'issue');
-                    $_collection_id['Collection']['id'] = $_id[0][0]['max'];
-                }
-            } else {
-                $_id = $this->Application->getMaxCollectionId($_application_id, 'issue');
-                $_collection_id['Collection']['id'] = $_id[0][0]['max'];
-            }
-        $_conditions .= " AND `collections`.`id`={$_collection_id['Collection']['id']}";
-
-        $_query = "
-            SELECT 
-                COUNT(*) as count 
-            FROM 
-                results 
-            JOIN choices_results ON choices_results.result_id = results.id
-            JOIN choices ON choices_results.choice_id = choices.id
-            JOIN choices_collections ON choices_collections.choice_id = choices.id
-            JOIN collections ON collections.id = choices_collections.collection_id
-            
-            WHERE 
-             {$_conditions} 
-        ";
-
-        // Do the actual query
-        $comments = $this->query($_query);
+        $comments = $this->query("SELECT FOUND_ROWS() as count");
 
         return $comments[0][0]['count'];
     }
@@ -145,30 +85,36 @@ class Result extends AppModel {
             $_collection_id['Collection']['id'] = $_id[0][0]['max'];
         }
 
-echo '<h1>TODOTHAT</h1>';
+        // SQL_CALC_FOUND_ROWS used for counting comments
         $_query = "
-            SELECT `Result`.`id`, 
-             `Result`.`comments`, `Result`.`created`
-            
-            FROM `results` AS `Result`
+            SELECT 
+                SQL_CALC_FOUND_ROWS 
+                `Result`.`id`, 
+                `Result`.`comments`, 
+                `Result`.`created`
+            FROM 
+                `results` AS `Result`
             
             JOIN choices_results ON choices_results.result_id = Result.id
             JOIN choices ON choices_results.choice_id = choices.id
             JOIN choices_collections ON choices_collections.choice_id = choices.id
-            JOIN collections ON collections.id = choices_collections.collection_id
             
-            
-            WHERE ( comments NOT LIKE
-            '') 
-            AND collection_id={$_collection_id['Collection']['id']}
-            
-            AND Result.application_id={$_application_id}
-            
-            ORDER BY `Result`.`created` DESC
-            LIMIT 10
+            WHERE  
+                comments != '' 
+            AND 
+                collection_id={$_collection_id['Collection']['id']}
+            AND 
+                Result.application_id={$_application_id}
+            GROUP BY Result.comments
+            ";
+
+        $_start =($pagination['page'] -1) * $pagination['show'];
+
+        $_query .= "
+            ORDER BY `Result`.`created` {$pagination['direction']}
+            LIMIT {$_start},{$pagination['show']}
         ";
         $comments = $this->query($_query);
-        //$comments = $this->findAll($_conditions, null, $pagination['order'], $pagination['show'], $pagination['page']);
 
         if ($privacy) {
             // Pull out all the email addresses and phone numbers.  The original
