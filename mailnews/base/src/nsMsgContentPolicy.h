@@ -86,6 +86,8 @@ protected:
   nsresult IsTrustedDomain(nsIURI * aContentLocation, PRBool * aTrustedDomain);
 };
 
+#ifdef MOZ_THUNDERBIRD
+
 /* 2C4B5CC1-8C0F-4080-92A7-D133CC30F43B */
 #define NS_MSGCOOKIEPOLICY_CID \
 { 0x2c4b5cc1, 0x8c0f, 0x4080, { 0x92, 0xa7, 0xd1, 0x33, 0xcc, 0x30, 0xf4, 0x3b } }
@@ -101,5 +103,7 @@ public:
 
   virtual ~nsMsgCookiePolicy() {}
 };
+
+#endif
 
 #endif // _nsMsgContentPolicy_H_

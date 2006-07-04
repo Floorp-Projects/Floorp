@@ -446,6 +446,8 @@ NS_IMETHODIMP nsMsgContentPolicy::Observe(nsISupports *aSubject, const char *aTo
   return NS_OK;
 }
 
+#ifdef MOZ_THUNDERBIRD
+
 NS_IMPL_ISUPPORTS1(nsMsgCookiePolicy, nsICookiePermission)
 
 
@@ -497,3 +499,5 @@ NS_IMETHODIMP nsMsgCookiePolicy::CanSetCookie(nsIURI     *aURI,
   *aResult = PR_TRUE;
   return NS_OK;
 }
+
+#endif
