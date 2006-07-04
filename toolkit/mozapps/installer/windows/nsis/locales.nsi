@@ -45,11 +45,19 @@
 ; Hebrew
 !define he_rtl
 
+; Japanese
+!define ja_font  "ï¼­ï¼³ ï¼°ã‚´ã‚·ãƒƒã‚¯"
+!define ja_size  "9"
+
+;Korean
+;define ko_font  "êµ´ë¦¼"
+;define ko_size  "9"
+
 ; Chinese Simplified, China
-!define zh-CN_font  "ËÎÌå"
+!define zh-CN_font  "å®‹ä½“"
 !define zh-CN_size  "9"
 
 ; Chinese Traditional, Taiwan
-!define zh-TW_font  "·s²Ó©úÅé"
+!define zh-TW_font  "æ–°ç´°æ˜Žé«”"
 !define zh-TW_size  "9"
 
