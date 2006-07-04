@@ -1570,13 +1570,7 @@ MicrosummaryResource.prototype = {
     }
 
     else if (request.channel.contentType == "text/html") {
-      // request.responseText itself will always be UTF-16 because it is
-      // a DOMString (XMLHttpRequest will convert it to that when it was
-      // something else).  When we pass this to newURI(), it becomes UTF-8.
-      // So the charset in the data: URL should always be UTF-8.
-      var dataURISpec = "data:text/html;charset=UTF-8," + request.responseText;
-      var dataURI = this._ios.newURI(dataURISpec, null, null);
-      this._parse(dataURI);
+      this._parse(request.responseText);
     }
 
     else {
@@ -1589,18 +1583,15 @@ MicrosummaryResource.prototype = {
   },
   
   /**
-   * Parse content encapsulated in a data URI.  Used by _load() to parse HTML.
+   * Parse a string of HTML text.  Used by _load() when it retrieves HTML.
    * We do this via hidden XUL iframes, which according to bz is the best way
    * to do it currently, since bug 102699 is hard to fix.
    * 
-   * @param   dataURI
-   *          the data URI containing the encapsulated content
+   * @param   htmlText
+   *          a string containing the HTML content
    *
    */
-  _parse: function MSR__parse(dataURI) {
-    if (dataURI.scheme != "data")
-      throw NS_ERROR_DOM_BAD_URI;
-  
+  _parse: function MSR__parse(htmlText) {
     // Find a window to stick our hidden iframe into.
     var windowMediator = Cc['@mozilla.org/appshell/window-mediator;1'].
                          getService(Ci.nsIWindowMediator);
@@ -1611,7 +1602,7 @@ MicrosummaryResource.prototype = {
     // window machinery like throbbers treating our load like one initiated
     // by the user.
     if (!window)
-      throw(dataURI.spec + " can't parse; no browser window");
+      throw(this._uri.spec + " can't parse; no browser window");
     var document = window.document;
     var rootElement = document.documentElement;
   
@@ -1646,13 +1637,38 @@ MicrosummaryResource.prototype = {
         finally { this._self = null }
       }
     };
+ 
+    // Convert the HTML text into an input stream.
+    var converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
+                    createInstance(Ci.nsIScriptableUnicodeConverter);
+    converter.charset = "UTF-8";
+    var stream = converter.convertToInputStream(htmlText);
 
-    // Register the parse handler as a load event listener and kick off the load.
-    // We use the URI loader instead of the iframe's src attribute so we can set
-    // the LOAD_BACKGROUND flag.
+    // Set up a channel to load the input stream.
+    var channel = Cc["@mozilla.org/network/input-stream-channel;1"].
+                  createInstance(Ci.nsIInputStreamChannel);
+    channel.setURI(this._uri);
+    channel.contentStream = stream;
+
+    // Load in the background so we don't trigger web progress listeners.
+    var request = channel.QueryInterface(Ci.nsIRequest);
+    request.loadFlags |= Ci.nsIRequest.LOAD_BACKGROUND;
+
+    // Specify the content type since we're not loading content from a server,
+    // so it won't get specified for us, and if we don't specify it ourselves,
+    // then Firefox will prompt the user to download content of "unknown type".
+    var baseChannel = channel.QueryInterface(Ci.nsIChannel);
+    baseChannel.contentType = "text/html";
+
+    // Load as UTF-8, which it'll always be, because XMLHttpRequest converts
+    // the text (i.e. XMLHTTPRequest.responseText) from its original charset
+    // to UTF-16, then the string input stream component converts it to UTF-8.
+    baseChannel.contentCharset = "UTF-8";
+
+    // Register the parse handler as a load event listener and start the load.
+    // Listen for "DOMContentLoaded" instead of "load" because background loads
+    // don't fire "load" events.
     this._iframe.addEventListener("DOMContentLoaded", parseHandler, true);
-    var channel = this._ios.newChannelFromURI(dataURI);
-    channel.loadFlags |= Ci.nsIRequest.LOAD_BACKGROUND;
     var uriLoader = Cc["@mozilla.org/uriloader;1"].getService(Ci.nsIURILoader);
     uriLoader.openURI(channel, true, this._iframe.docShell);
   },
