@@ -423,7 +423,7 @@ if ((!$gd || !$chartbase) && !$silent) {
 }
 if (!$xmlparser && !$silent) {
     print "If you want to use the bug import/export feature to move bugs to\n",
-          "or from other bugzilla installations, you will need to install\n ",
+          "or from other bugzilla installations, you will need to install\n",
           "the XML::Twig module by running (as $::root):\n\n",
     "   " . install_command("XML::Twig") . "\n\n";
 }
