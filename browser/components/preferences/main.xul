@@ -1,0 +1,214 @@
+<?xml version="1.0"?>
+
+# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is the Firefox Preferences System.
+#
+# The Initial Developer of the Original Code is
+# Ben Goodger.
+# Portions created by the Initial Developer are Copyright (C) 2005
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Ben Goodger <ben@mozilla.org>
+#   Jeff Walden <jwalden+code@mit.edu>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+<!DOCTYPE overlay [
+  <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+  <!ENTITY % mainDTD SYSTEM "chrome://browser/locale/preferences/main.dtd">
+  %brandDTD;
+  %mainDTD;
+]>
+
+<overlay id="MainPaneOverlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+           
+  <prefpane id="paneMain" onpaneload="gMainPane.init();"
+            helpTopic="prefs-main" helpURI="chrome://browser/locale/help/help.rdf">
+
+    <script type="application/x-javascript" src="chrome://browser/content/preferences/main.js"/>
+#ifdef MOZ_PLACES
+    <script type="application/x-javascript" src="chrome://browser/content/places/controller.js"/>
+#endif
+
+    <preferences id="mainPreferences">
+      <!-- XXX Button preferences -->
+
+      <!-- Home Page -->
+      <preference id="browser.startup.homepage"
+                  name="browser.startup.homepage"
+                  type="wstring"/>
+
+      <preference id="pref.browser.homepage.disable_button.current_page"
+                  name="pref.browser.homepage.disable_button.current_page"
+                  type="bool"/>
+      <preference id="pref.browser.homepage.disable_button.bookmark_page"
+                  name="pref.browser.homepage.disable_button.bookmark_page"
+                  type="bool"/>
+
+      <!-- Downloads -->
+      <preference id="browser.download.manager.showWhenStarting"
+                  name="browser.download.manager.showWhenStarting"
+                  type="bool"
+                  onchange="gMainPane.showDownloadsWhenStartingPrefChanged();"/>
+      <preference id="browser.download.manager.closeWhenDone"
+                  name="browser.download.manager.closeWhenDone"
+                  type="bool"/>
+      <preference id="browser.download.useDownloadDir"
+                  name="browser.download.useDownloadDir"
+                  type="bool"/>
+      <preference id="browser.download.dir"
+                  name="browser.download.dir"
+                  type="file"
+                  onchange="gMainPane.readDownloadDirPref();"/>
+      <preference id="browser.download.downloadDir"       name="browser.download.downloadDir"       type="file"/>
+      <preference id="browser.download.folderList"        name="browser.download.folderList"        type="int"/>
+
+      <!-- SYSTEM DEFAULTS -->
+      <preference id="browser.shell.checkDefaultBrowser"
+                  name="browser.shell.checkDefaultBrowser"
+                  type="bool"/>
+
+      <preference id="pref.general.disable_button.default_browser"
+                  name="pref.general.disable_button.default_browser"
+                  type="bool"/>
+
+    </preferences>
+    
+    <stringbundle id="bundlePreferences" src="chrome://browser/locale/preferences/preferences.properties"/>
+#ifdef HAVE_SHELL_SERVICE
+    <stringbundle id="bundleShell" src="chrome://browser/locale/shellservice.properties"/>
+    <stringbundle id="bundleBrand" src="chrome://branding/locale/brand.properties"/>
+#endif
+
+    <!-- Home Page -->
+    <groupbox id="homePageGroup">
+      <caption label="&homePage.label;"/>
+
+      <radiogroup id="browserStartPage"
+                  preference="browser.startup.homepage"
+                  onsyncfrompreference="return gMainPane.readHomePage();"
+                  onsynctopreference="return gMainPane.writeHomePage();">
+        <radio id="useDefaultHome"
+               label="&useDefaultHome.label;"
+               accesskey="&useDefaultHome.accesskey;"
+               value="default"/>
+        <hbox id="bookmarkRow">
+          <radio id="useABookmark"
+                 label="&useABookmark.label;"
+                 accesskey="&useABookmark.accesskey;"
+                 value="bookmark"/>
+          <textbox id="bookmarkName"
+                   class="padded"
+                   flex="1"
+                   readonly="true"/>
+          <button id="chooseBookmark"
+                  label="&choose.label;"
+                  accesskey="&choose.accesskey;"
+                  oncommand="gMainPane.setHomePageToBookmark();"/>
+        </hbox>
+        <hbox id="otherRow">
+          <radio id="useOther"
+                 label="&useOther.label;"
+                 accesskey="&useOther.accesskey;"
+                 value="other"/>
+          <textbox id="otherURL"
+                   class="padded"
+                   flex="1"/>
+          <button id="useCurrent"
+                  label="&useCurrent.label;"
+                  accesskey="&useCurrent.accesskey;"
+                  oncommand="gMainPane.setHomePageToCurrent();"/>
+        </hbox>
+      </radiogroup>
+    </groupbox>
+
+    <!-- Downloads -->
+    <groupbox id="downloadsGroup">
+      <caption label="&downloads.label;"/>
+
+      <checkbox id="showWhenDownloading" label="&showWhenDownloading.label;"
+                accesskey="&showWhenDownloading.accesskey;"
+                preference="browser.download.manager.showWhenStarting"
+                onsyncfrompreference="return gMainPane.readShowDownloadsWhenStarting();"/>
+      <checkbox id="closeWhenDone" label="&closeWhenDone.label;"
+                accesskey="&closeWhenDone.accesskey;" class="indent"
+                preference="browser.download.manager.closeWhenDone"/>
+
+      <separator/>
+
+      <radiogroup id="saveWhere"
+                  preference="browser.download.useDownloadDir"
+                  onsyncfrompreference="return gMainPane.readUseDownloadDir();">
+        <hbox id="saveToRow">
+          <radio id="saveTo" value="true"
+                 label="&saveTo.label;"
+                 accesskey="&saveTo.accesskey;"/>
+          <filefield id="downloadFolder" flex="1"
+                     preference="browser.download.folderList"
+                     preference-editable="true"
+                     onsyncfrompreference="return gMainPane.readDownloadDirPref();"
+                     onsynctopreference="return gMainPane.writeFolderList()"/>
+          <button id="chooseFolder" oncommand="gMainPane.chooseFolder();"
+#ifdef XP_MACOSX
+                  accesskey="&chooseFolderMac.accesskey;"
+                  label="&chooseFolderMac.label;"
+#else
+                  accesskey="&chooseFolderWin.accesskey;"
+                  label="&chooseFolderWin.label;"
+#endif
+                  preference="browser.download.folderList"
+                  onsynctopreference="return gMainPane.writeFolderList();"/>
+        </hbox>
+        <radio id="alwaysAsk" value="false"
+               label="&alwaysAsk.label;"
+               accesskey="&alwaysAsk.accesskey;"/>
+      </radiogroup>
+    </groupbox>
+
+#ifdef HAVE_SHELL_SERVICE
+    <!-- System Defaults -->
+    <groupbox id="systemDefaultsGroup" orient="horizontal">
+      <caption label="&systemDefaults.label;"/>
+
+      <hbox id="checkDefaultBox" align="center" flex="1">      
+        <checkbox id="alwaysCheckDefault" preference="browser.shell.checkDefaultBrowser"
+                  label="&alwaysCheckDefault.label;" accesskey="&alwaysCheckDefault.accesskey;"
+                  flex="1"/>
+        <button id="checkDefaultButton"
+                label="&checkNow.label;" accesskey="&checkNow.accesskey;"
+                oncommand="gMainPane.checkNow()"
+                preference="pref.general.disable_button.default_browser"/>
+      </hbox>
+    </groupbox>
+#endif
+
+  </prefpane>
+
+</overlay>
