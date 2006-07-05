@@ -737,6 +737,13 @@ SessionStoreService.prototype = {
     }
   },
 
+  deleteWindowValue: function sss_deleteWindowValue(aWindow, aKey) {
+    if (this._windows[aWindow.__SSi].extData[aKey])
+      delete this._windows[aWindow.__SSi].extData[aKey];
+    else
+      Components.returnCode = -1; //zeniko: or should we rather fail silently?
+  },
+
   getTabValue: function sss_getTabValue(aTab, aKey) {
     var data = aTab.__SS_extdata || {};
     return data[aKey] || "";
@@ -747,8 +754,16 @@ SessionStoreService.prototype = {
       aTab.__SS_extdata = {};
     }
     aTab.__SS_extdata[aKey] = aStringValue;
-    this.saveStateDelayed(aTop.ownerDocument.defaultView);
+    this.saveStateDelayed(aTab.ownerDocument.defaultView);
   },
+
+  deleteTabValue: function sss_deleteTabValue(aTab, aKey) {
+    if (aTab.__SS_extdata[aKey])
+      delete aTab.__SS_extdata[aKey];
+    else
+      Components.returnCode = -1; //zeniko: or should we rather fail silently?
+  },
+
 
   persistTabAttribute: function sss_persistTabAttribute(aName) {
     this.xulAttributes.push(aName);
