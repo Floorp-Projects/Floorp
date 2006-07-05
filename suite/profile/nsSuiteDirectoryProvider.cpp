@@ -36,55 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDirectoryService.h"
-
-#include "nsIFile.h"
-#include "nsISimpleEnumerator.h"
-
+#include "nsSuiteDirectoryProvider.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsCategoryManagerUtils.h"
-#include "nsCOMArray.h"
-#include "nsIGenericFactory.h"
-#include "nsString.h"
 #include "nsXULAppAPI.h"
-
-class nsSuiteDirectoryProvider : public nsIDirectoryServiceProvider2
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDIRECTORYSERVICEPROVIDER
-  NS_DECL_NSIDIRECTORYSERVICEPROVIDER2
-
-  static NS_METHOD Register(nsIComponentManager* aCompMgr,
-                            nsIFile* aPath, const char *aLoaderStr,
-                            const char *aType,
-                            const nsModuleComponentInfo *aInfo);
-
-  static NS_METHOD Unregister(nsIComponentManager* aCompMgr,
-                              nsIFile* aPath, const char *aLoaderStr,
-                              const nsModuleComponentInfo *aInfo);
-
-private:
-  void EnsureProfileFile(const nsACString& aLeafName,
-			 nsIFile* aParentDir, nsIFile* aTarget);
-
-  class AppendingEnumerator : public nsISimpleEnumerator
-  {
-  public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSISIMPLEENUMERATOR
-
-    AppendingEnumerator(nsISimpleEnumerator* aBase,
-                        const char* const aLeafName);
-
-  private:
-    void GetNext();
-
-    nsCOMPtr<nsISimpleEnumerator> mBase;
-    nsDependentCString            mLeafName;
-    nsCOMPtr<nsIFile>             mNext;
-  };
-};
 
 NS_IMPL_ISUPPORTS2(nsSuiteDirectoryProvider,
                    nsIDirectoryServiceProvider,
@@ -235,12 +190,6 @@ nsSuiteDirectoryProvider::AppendingEnumerator::AppendingEnumerator
   GetNext();
 }
 
-static char const kContractID[] = "@mozilla.org/suite/directory-provider;1";
-
-// {9aa21826-9d1d-433d-8c10-f313b26fa9dd}
-#define NS_SUITEDIRECTORYPROVIDER_CID \
-  { 0x9aa21826, 0x9d1d, 0x433d, { 0x8c, 0x10, 0xf3, 0x13, 0xb2, 0x6f, 0xa9, 0xdd } }
-
 NS_METHOD
 nsSuiteDirectoryProvider::Register(nsIComponentManager* aCompMgr,
                                    nsIFile* aPath,
@@ -256,7 +205,8 @@ nsSuiteDirectoryProvider::Register(nsIComponentManager* aCompMgr,
 
   return catMan->AddCategoryEntry(XPCOM_DIRECTORY_PROVIDER_CATEGORY,
                                   "suite-directory-provider",
-                                  kContractID, PR_TRUE, PR_TRUE, nsnull);
+                                  NS_SUITEDIRECTORYPROVIDER_CONTRACTID,
+                                  PR_TRUE, PR_TRUE, nsnull);
 }
 
 
@@ -274,18 +224,3 @@ nsSuiteDirectoryProvider::Unregister(nsIComponentManager* aCompMgr,
   return catMan->DeleteCategoryEntry(XPCOM_DIRECTORY_PROVIDER_CATEGORY,
                                      "suite-directory-provider", PR_TRUE);
 }
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSuiteDirectoryProvider)
-
-static const nsModuleComponentInfo components[] = {
-  {
-    "nsSuiteDirectoryProvider",
-    NS_SUITEDIRECTORYPROVIDER_CID,
-    kContractID,
-    nsSuiteDirectoryProviderConstructor,
-    nsSuiteDirectoryProvider::Register,
-    nsSuiteDirectoryProvider::Unregister
-  }
-};
-
-NS_IMPL_NSGETMODULE(SuiteDirProvider, components)

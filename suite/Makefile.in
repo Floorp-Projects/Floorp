@@ -57,6 +57,7 @@ ifdef MOZ_XUL_APP
 DIRS += \
 		browser \
 		profile \
+		build \
 		app \
 		$(NULL)
 else

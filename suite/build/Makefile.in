@@ -42,24 +42,50 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= suiteprofile
-LIBRARY_NAME	= suiteprofile_s
+MODULE		= suite
+LIBRARY_NAME	= suite
+EXPORT_LIBRARY	= 1
+IS_COMPONENT	= 1
+MODULE_NAME	= nsSuiteModule
 MOZILLA_INTERNAL_API = 1
 
 REQUIRES	= \
 		xpcom \
 		string \
 		xulapp \
+		intl \
+		necko \
+		dom \
+		libreg \
+		pref \
+		rdf \
+		unicharutil \
+		windowwatcher \
+		appcomps \
 		$(NULL)
 
 CPPSRCS 	= \
-		nsSuiteDirectoryProvider.cpp \
+		nsSuiteModule.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = $(MOZ_COMPONENT_LIBS)
 
-# we don't want the shared lib, but we want to force the creation of a static lib.
-FORCE_STATIC_LIB=1
+LOCAL_INCLUDES += \
+		-I$(topsrcdir)/suite/profile \
+		$(NULL)
+
+SHARED_LIBRARY_LIBS = \
+        ../profile/$(LIB_PREFIX)suiteprofile_s.$(LIB_SUFFIX) \
+        $(NULL)
+
+# Link to gkgfx for GNOME shell service
+ifeq ($(MOZ_WIDGET_TOOLKIT), gtk2)
+EXTRA_DSO_LIBS += gkgfx
+endif
+
+EXTRA_DSO_LDOPTS += \
+        $(LIBXUL_DIST)/../modules/libreg/src/$(LIB_PREFIX)mozreg_s.$(LIB_SUFFIX) \
+        $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
