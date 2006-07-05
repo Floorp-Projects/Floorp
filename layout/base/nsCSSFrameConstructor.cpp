@@ -5754,7 +5754,7 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(aState, aFrameItems);
     }
-    isReplaced = PR_TRUE;
+    isReplaced = PR_FALSE;
     newFrame = NS_NewIsIndexFrame(mPresShell, aStyleContext);
     triedFrame = PR_TRUE;
   }
