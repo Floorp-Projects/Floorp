@@ -577,7 +577,7 @@ static void FileSystemNotificationProc(FNMessage message, OptionBits flags, void
   mDownloadDone = YES; 
 
   [self setDestinationPath:[aDict valueForKey:@"destPath"]];
-  mSourceURL = [[aDict valueForKey:@"sourceURL"] retain]; 
+  [self setSourceURL:[aDict valueForKey:@"sourceURL"]]; 
   mDownloadSize = [[aDict valueForKey:@"downloadSize"] longLongValue];
   mCurrentProgress = [[aDict valueForKey:@"currentProgress"] longLongValue];
   mDownloadTime = [[aDict valueForKey:@"downloadTime"] doubleValue];
