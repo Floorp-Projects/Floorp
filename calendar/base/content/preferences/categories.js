@@ -63,14 +63,14 @@ var gCategoriesPane = {
             parent.backupPrefList = [];
         }
 
-        var categories = document.getElementById("categories").value;
+        var categories = document.getElementById("calendar.categories.names").value;
         gCategoryList = categories.split(",");
         this.updateCategoryList();
     },
 
     updateCategoryList: function () {
         gCategoryList.sort();
-        document.getElementById("categories").value = gCategoryList.join(",");
+        document.getElementById("calendar.categories.names").value = gCategoryList.join(",");
         var listbox = document.getElementById("categorieslist");
 
         listbox.clearSelection();
@@ -183,6 +183,7 @@ var gCategoriesPane = {
                 try {
                     categoryPrefBranch.clearUserPref(categoryNameFix);
                 } catch (ex) {
+                    dump("Exception caught in 'saveCategory': " + ex + "\n");
                 }
             }
         }
@@ -212,6 +213,7 @@ var gCategoriesPane = {
         try {
             currentColor = categoryPrefBranch.getCharPref(categoryNameFix);
         } catch (ex) {
+            dump("Exception caught in 'backupData': " + ex + "\n");
             currentColor = "##NEW";
         }
 
@@ -230,6 +232,7 @@ var gCategoriesPane = {
                 try {
                    categoryPrefBranch.clearUserPref(parent.backupPrefList[i].name);
                 } catch (ex) {
+                    dump("Exception caught in 'panelOnCancel': " + ex + "\n");
                 }
             } else {
                 categoryPrefBranch.setCharPref(parent.backupPrefList[i].name,

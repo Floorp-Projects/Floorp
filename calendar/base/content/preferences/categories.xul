@@ -94,10 +94,6 @@
                         label="&remove.label;"
                         oncommand="gCategoriesPane.deleteCategory()"/>
             </hbox>
-            <textbox id="categories"
-                     preference="calendar.categories.names"
-                     hidden="true"/>
-
         </groupbox>
 
         <separator/>
