@@ -7,5 +7,7 @@
   <Param name="s" value="{searchTerms}"/>
   <Param name="gwp" value="13"/>
 </Url>
+<Url type="application/x-suggestions+json" method="GET"
+     template="http://www.answers.com/main/startswith?output=json&amp;client=firefox&amp;s={searchTerms}"/>
 <SearchForm>http://www.answers.com/</SearchForm>
 </SearchPlugin>
