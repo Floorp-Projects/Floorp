@@ -236,6 +236,14 @@ nsUnknownContentTypeDialog.prototype = {
         result = picker.file;
 
         if (result) {
+          try {
+            // Remove the file so that it's not there when we ensure non-existence later;
+            // this is safe because for the file to exist, the user would have had to
+            // confirm that he wanted the file overwritten.
+            if (result.exists())
+              result.remove(false);
+          }
+          catch (e) { }
           var newDir = result.parent;
           prefs.setComplexValue("browser.download.dir", Components.interfaces.nsILocalFile, newDir);
           result = this.validateLeafName(newDir, result.leafName, null);
