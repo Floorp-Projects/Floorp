@@ -768,17 +768,16 @@ NS_IMETHODIMP nsRenderingContextMac::GetColor(nscolor &aColor) const
 
 NS_IMETHODIMP nsRenderingContextMac::SetLineStyle(nsLineStyle aLineStyle)
 {
-	// note: the line style must be saved in the nsGraphicState like font, color, etc...
-  mLineStyle = aLineStyle;
-	return NS_OK;
+  mGS->mLineStyle = aLineStyle;
+  return NS_OK;
 }
 
 //------------------------------------------------------------------------
 
 NS_IMETHODIMP nsRenderingContextMac::GetLineStyle(nsLineStyle &aLineStyle)
 {
-  aLineStyle = mLineStyle;
-	return NS_OK;
+  aLineStyle = mGS->mLineStyle;
+  return NS_OK;
 }
 
 
@@ -871,19 +870,20 @@ static const Pattern dashedPattern = {0xf0,0x78,0x3c,0x1e,0x0f,0x87,0xc3,0xe1};
 
 NS_IMETHODIMP nsRenderingContextMac::DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
 {
-  if (mLineStyle == nsLineStyle_kNone)
+  if (mGS->mLineStyle == nsLineStyle_kNone)
     return NS_OK;
 
   SetupPortState();
 
   PenState savedPenState;
   RGBColor savedBGColor;
-  if (mLineStyle == nsLineStyle_kDotted || mLineStyle == nsLineStyle_kDashed) {
+  if (mGS->mLineStyle == nsLineStyle_kDotted ||
+      mGS->mLineStyle == nsLineStyle_kDashed) {
     ::GetPenState(&savedPenState);
     ::GetBackColor(&savedBGColor);
 
     ::PenMode(transparent);
-    if (mLineStyle == nsLineStyle_kDashed)
+    if (mGS->mLineStyle == nsLineStyle_kDashed)
       ::PenPat(&dashedPattern);
     else
       ::PenPat(&dottedPattern);
@@ -908,7 +908,8 @@ NS_IMETHODIMP nsRenderingContextMac::DrawLine(nscoord aX0, nscoord aY0, nscoord 
   ::MoveTo(aX0, aY0);
   ::Line(diffX, diffY);
 
-  if (mLineStyle == nsLineStyle_kDotted || mLineStyle == nsLineStyle_kDashed) {
+  if (mGS->mLineStyle == nsLineStyle_kDotted ||
+      mGS->mLineStyle == nsLineStyle_kDashed) {
     ::PenMode(savedPenState.pnMode);
     ::PenPat(&savedPenState.pnPat);
     ::RGBBackColor(&savedBGColor);
@@ -921,19 +922,20 @@ NS_IMETHODIMP nsRenderingContextMac::DrawLine(nscoord aX0, nscoord aY0, nscoord 
 
 NS_IMETHODIMP nsRenderingContextMac::DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
-  if (mLineStyle == nsLineStyle_kNone)
+  if (mGS->mLineStyle == nsLineStyle_kNone)
     return NS_OK;
 
   SetupPortState();
 
   PenState savedPenState;
   RGBColor savedBGColor;
-  if (mLineStyle == nsLineStyle_kDotted || mLineStyle == nsLineStyle_kDashed) {
+  if (mGS->mLineStyle == nsLineStyle_kDotted ||
+      mGS->mLineStyle == nsLineStyle_kDashed) {
     ::GetPenState(&savedPenState);
     ::GetBackColor(&savedBGColor);
 
     ::PenMode(transparent);
-    if (mLineStyle == nsLineStyle_kDashed)
+    if (mGS->mLineStyle == nsLineStyle_kDashed)
       ::PenPat(&dashedPattern);
     else
       ::PenPat(&dottedPattern);
@@ -957,7 +959,8 @@ NS_IMETHODIMP nsRenderingContextMac::DrawPolyline(const nsPoint aPoints[], PRInt
     ::LineTo(x,y);
   }
 
-  if (mLineStyle == nsLineStyle_kDotted || mLineStyle == nsLineStyle_kDashed) {
+  if (mGS->mLineStyle == nsLineStyle_kDotted ||
+      mGS->mLineStyle == nsLineStyle_kDashed) {
     ::PenMode(savedPenState.pnMode);
     ::PenPat(&savedPenState.pnPat);
     ::RGBBackColor(&savedBGColor);

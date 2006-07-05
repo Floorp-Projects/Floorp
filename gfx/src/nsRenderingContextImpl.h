@@ -62,7 +62,6 @@ public:
 
 protected:
   nsTransform2D		  *mTranMatrix;				// The rendering contexts transformation matrix
-  nsLineStyle       mLineStyle;					// The current linestyle, currenly used on mac, other platfroms to follow
   int               mAct;		        		// number of active edges 
   Edge              *mActive;	      		// active edge list:edges crossing scanline y
 
