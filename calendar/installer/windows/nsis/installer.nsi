@@ -967,7 +967,7 @@ Function un.RemoveDirsCallback
       Pop $R0
       GetFullPathName $R1 "$R0"
       ; We only try to remove empty directories but the Desktop, StartMenu, and
-      ; QuickLaunch directories can be empty so gaurd against removing them.
+      ; QuickLaunch directories can be empty so guard against removing them.
       SetShellVarContext all
       ${If} $R1 == "$DESKTOP"
       ${OrIf} $R1 == "$STARTMENU"
