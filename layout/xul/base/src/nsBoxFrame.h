@@ -199,6 +199,11 @@ public:
 
   static nsresult LayoutChildAt(nsBoxLayoutState& aState, nsIBox* aBox, const nsRect& aRect);
 
+  // Fire DOM event. If no aContent argument use frame's mContent.
+  // XXX This will be deprecated, because it is not good to fire synchronous DOM events
+  // from layout. It's better to use nsFrame::FireDOMEvent() which is asynchronous.
+  void FireDOMEventSynch(const nsAString& aDOMEventName, nsIContent *aContent = nsnull);
+
   /**
    * Utility method to redirect events on descendants to this frame.
    * Supports 'allowevents' attribute on descendant elements to allow those
