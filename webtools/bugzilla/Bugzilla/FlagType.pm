@@ -428,55 +428,6 @@ sub validate {
     }
 }
 
-=pod
-
-=over
-
-=item C<normalize(@ids)>
-
-Given a list of flag types, checks its flags to make sure they should
-still exist after a change to the inclusions/exclusions lists.
-
-=back
-
-=cut
-
-sub normalize {
-    # A list of IDs of flag types to normalize.
-    my (@ids) = @_;
-    my $dbh = Bugzilla->dbh;
-
-    my $ids = join(", ", @ids);
-
-    # Check for flags whose product/component is no longer included.
-    my $flag_ids = $dbh->selectcol_arrayref("
-        SELECT flags.id
-        FROM (flags INNER JOIN bugs ON flags.bug_id = bugs.bug_id)
-          LEFT OUTER JOIN flaginclusions AS i
-            ON (flags.type_id = i.type_id
-            AND (bugs.product_id = i.product_id OR i.product_id IS NULL)
-            AND (bugs.component_id = i.component_id OR i.component_id IS NULL))
-        WHERE flags.type_id IN ($ids)
-        AND i.type_id IS NULL");
-
-    foreach my $flag_id (@$flag_ids) {
-        Bugzilla::Flag::clear($flag_id);
-    }
-
-    $flag_ids = $dbh->selectcol_arrayref("
-        SELECT flags.id 
-        FROM flags, bugs, flagexclusions AS e
-        WHERE flags.type_id IN ($ids)
-        AND flags.bug_id = bugs.bug_id
-        AND flags.type_id = e.type_id 
-        AND (bugs.product_id = e.product_id OR e.product_id IS NULL)
-        AND (bugs.component_id = e.component_id OR e.component_id IS NULL)");
-
-    foreach my $flag_id (@$flag_ids) {
-        Bugzilla::Flag::clear($flag_id);
-    }
-}
-
 ######################################################################
 # Private Functions
 ######################################################################
