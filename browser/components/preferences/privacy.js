@@ -1,3 +1,4 @@
+/*
 # -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -21,6 +22,7 @@
 #
 # Contributor(s):
 #   Ben Goodger <ben@mozilla.org>
+#   Jeff Walden <jwalden+code@mit.edu>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,157 +37,172 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
+*/
 
 var gPrivacyPane = {
-  _inited: false,
-  tabSelectionChanged: function (event)
-  {
-    if (event.target.localName != "tabpanels" || !this._inited)
-      return;
-    var privacyPrefs = document.getElementById("privacyPrefs");
-    var preference = document.getElementById("browser.preferences.privacy.selectedTabIndex");
-    preference.valueFromPreferences = privacyPrefs.selectedIndex;
-  },
-  
-  _sanitizer: null,
+
+  /**
+   * Sets up the UI for the number of days of history to keep.
+   */
   init: function ()
   {
-    this._inited = true;
-    var privacyPrefs = document.getElementById("privacyPrefs");
-    var preference = document.getElementById("browser.preferences.privacy.selectedTabIndex");
-    if (preference.value !== null)
-      privacyPrefs.selectedIndex = preference.value;
-    
-    // Update the clear buttons
-    if (!this._sanitizer)
-      this._sanitizer = new Sanitizer();
-    this._updateClearButtons();
-    
-    window.addEventListener("unload", this.uninit, false);
-    
-    // Update the MP buttons
-    this.updateMasterPasswordButton();
-  },
-  
-  uninit: function ()
-  {
-    if (this._updateInterval != -1)
-      clearInterval(this._updateInterval);
-  },
-  
-  _updateInterval: -1,
-  _updateClearButtons: function ()
-  {
-    var buttons = document.getElementsByAttribute("item", "*");
-    var buttonCount = buttons.length;
-    for (var i = 0; i < buttonCount; ++i)
-      buttons[i].disabled = !this._sanitizer.canClearItem(buttons[i].getAttribute("item"));
-  },
+    this.historyDaysPrefChanged();
 
-#if 0
-  onItemSelect: function ()
-  {
-    var itemList = document.getElementById("itemList");
-    var itemPreferences = document.getElementById("itemPreferences");
-    itemPreferences.setAttribute("selectedIndex", itemList.selectedIndex);
-    itemList.setAttribute("lastSelected", itemList.selectedIndex);
-    document.persist("itemList", "lastSelected");
-  },
-#endif
-  showSanitizeSettings: function ()
-  {
-    document.documentElement.openSubDialog("chrome://browser/content/preferences/sanitize.xul",
-                                           "", null);
-  },
-
-  _enableRestrictedWasChecked: false,
-  writeEnableCookiesPref: function ()
-  { 
-    var enableCookies = document.getElementById("enableCookies");
-    if (enableCookies.checked) {
-      var enableRestricted = document.getElementById("enableCookiesForOriginating");
-      this._enableRestrictedWasChecked = enableRestricted.checked;
-      return this._enableRestrictedWasChecked ? 1 : 0;
+    var self = this;
+    function checkboxChanged() {
+      self.onchangeHistoryDaysCheckbox();
     }
-    return 2;
+    var historyDaysCheckbox = document.getElementById("rememberHistoryDays");
+    historyDaysCheckbox.addEventListener("CheckboxStateChange",
+                                         checkboxChanged,
+                                         false);
   },
 
-  readEnableCookiesPref: function ()
+  // HISTORY
+
+  /*
+   * Preferences:
+   *
+   * browser.history_expire_days
+   * - the number of days of history to remember
+   * browser.formfill.enable
+   * - true if entries in forms and the search bar should be saved, false
+   *   otherwise
+   * browser.download.manager.retention
+   * - determines when downloads are automatically removed from the download
+   *   manager:
+   *
+   *     0 means remove downloads when they finish downloading
+   *     1 means downloads will be removed when the browser quits
+   *     2 means never remove downloads
+   */
+
+  // XXXjwalden the UI for days of history to remember is totally broken -- I blame beltzner
+
+  /**
+   * Enables/disables the history days textbox based on the state of the
+   * associated checkbox.
+   */
+  historyDaysPrefChanged: function ()
   {
-    var pref = document.getElementById("network.cookie.cookieBehavior");
-    var enableRestricted = document.getElementById("enableCookiesForOriginating");    
-    enableRestricted.disabled = pref.value == 2;
-    this.enableCookiesChanged();
-    return (pref.value == 0 || pref.value == 1);
-  },
-  
-  readEnableRestrictedPref: function ()
-  {
-    var pref = document.getElementById("network.cookie.cookieBehavior");
-    return pref.value != 2 ? pref.value : this._enableRestrictedWasChecked;
+    var pref = document.getElementById("browser.history_expire_days");
+    var textbox = document.getElementById("historyDays");
+    var checkbox = document.getElementById("rememberHistoryDays");
+
+    var prefVal = pref.value;
+    textbox.disabled = (prefVal == 0);
+    textbox.value = prefVal;
+    checkbox.checked = (prefVal != 0);
   },
 
-  enableCookiesChanged: function ()
+  /**
+   * Handles enabling/disabling the "days of history" textbox based on the state
+   * of the associated checkbox.
+   */
+  onchangeHistoryDaysCheckbox: function (event)
   {
-    var preference = document.getElementById("network.cookie.cookieBehavior");
-    var blockFutureCookies = document.getElementById("network.cookie.blockFutureCookies");
-    blockFutureCookies.disabled = preference.value == 2;
-    var lifetimePref = document.getElementById("network.cookie.lifetimePolicy");
-    lifetimePref.disabled = preference.value == 2;
+    var textbox = document.getElementById("historyDays");
+    var checkbox = document.getElementById("rememberHistoryDays");
+
+    textbox.disabled = !checkbox.checked;
+    if (!checkbox.checked) {
+      var pref = document.getElementById("browser.history_expire_days");
+      pref.value = 0;
+    }
   },
-  
-  readCacheSizePref: function ()
+
+  /**
+   * Sets the value of browser.history_expire_days appropriately based on the
+   * value displayed in UI.
+   */
+  changeHistoryDays: function ()
   {
-    var preference = document.getElementById("browser.cache.disk.capacity");
-    return preference.value / 1000;
+    var pref = document.getElementById("browser.history_expire_days");
+    var historyDays = document.getElementById("historyDays");
+
+    // allow deletion of everything before typing a new value
+    if (historyDays.value == "")
+      return;
+
+    var uiValue = parseInt(historyDays.value, 10);
+    pref.value = isNaN(uiValue) ? 0 : uiValue;
   },
-  
-  writeCacheSizePref: function ()
+
+
+
+  /**
+   * Converts the value of the browser.download.manager.retention preference
+   * into a Boolean value.  "remove on close" and "don't remember" both map
+   * to an unchecked checkbox, while "remember" maps to a checked checkbox.
+   */
+  readDownloadRetention: function ()
   {
-    var cacheSize = document.getElementById("cacheSize");
-    var intValue = parseInt(cacheSize.value, 10) + '';
-    return intValue != "NaN" ? intValue * 1000 : 0;
+    var pref = document.getElementById("browser.download.manager.retention");
+    return (pref.value == 2);
   },
-  
-  _sanitizer: null,
-  clear: function (aButton) 
+
+  /**
+   * Returns the appropriate value of the browser.download.manager.retention
+   * preference for the current UI.
+   */
+  writeDownloadRetention: function ()
   {
-    var category = aButton.getAttribute("item");
-    this._sanitizer.clearItem(category);
-    if (category == "cache")
-      aButton.disabled = true;
-    else
-      aButton.disabled = !this._sanitizer.canClearItem(category);
-    if (this._updateInterval == -1)
-      this._updateInterval = setInterval("gPrivacyPane._updateClearButtons()", 10000);
+    var checkbox = document.getElementById("rememberDownloads");
+    return checkbox.checked ? 2 : 0;
   },
-  
-  viewCookies: function (aCategory) 
+
+  // COOKIES
+
+  /*
+   * Preferences:
+   *
+   * network.cookie.cookieBehavior
+   * - determines how the browser should handle cookies:
+   *     0   means enable all cookies
+   *     1   means allow cookies from the "originating" server only; see
+   *         netwerk/cookie/src/nsCookieService.cpp for a hairier definition
+   *     2   means disable all cookies
+   *     3   means use P3P policy to decide, which is probably broken
+   * network.cookie.lifetimePolicy
+   * - determines how long cookies are stored:
+   *     0   means keep cookies until they expire
+   *     1   means ask how long to keep each cookie
+   *     2   means keep cookies until the browser is closed
+   */
+
+  /**
+   * Reads the network.cookie.cookieBehavior preference value and
+   * enables/disables the "Keep until:" UI accordingly, returning true
+   * if cookies are enabled.
+   */
+  readAcceptCookies: function ()
   {
-    document.documentElement.openWindow("Browser:Cookies",
-                                        "chrome://browser/content/preferences/cookies.xul",
-                                        "", null);
+    var pref = document.getElementById("network.cookie.cookieBehavior");
+    var keepUntil = document.getElementById("keepUntil");
+    var menu = document.getElementById("keepCookiesUntil");
+
+    // anything other than "disable all cookies" maps to "accept cookies"
+    var acceptCookies = (pref.value != 2);
+
+    keepUntil.disabled = menu.disabled = !acceptCookies;
+    
+    return acceptCookies;
   },
-  viewDownloads: function (aCategory) 
+
+  /**
+   * Enables/disables the "keep until" label and menulist in response to the
+   * "accept cookies" checkbox being checked or unchecked.
+   */
+  writeAcceptCookies: function ()
   {
-    document.documentElement.openWindow("Download:Manager", 
-                                        "chrome://mozapps/content/downloads/downloads.xul",
-                                        "", null);
+    var checkbox = document.getElementById("acceptCookies");
+    return checkbox.checked ? 0 : 2;
   },
-  viewPasswords: function (aCategory) 
-  {
-    document.documentElement.openWindow("Toolkit:PasswordManager",
-                                        "chrome://passwordmgr/content/passwordManager.xul",
-                                        "", null);
-  },
-  viewPasswordExceptions: function (aCategory)
-  {
-    document.documentElement.openWindow("Toolkit:PasswordManagerExceptions",
-                                        "chrome://passwordmgr/content/passwordManagerExceptions.xul",
-                                        "", null);
-  },
-  
-  viewCookieExceptions: function ()
+
+  /**
+   * Displays fine-grained, per-site preferences for cookies.
+   */
+  showCookieExceptions: function ()
   {
     var bundlePreferences = document.getElementById("bundlePreferences");
     var params = { blockVisible   : true, 
@@ -199,50 +216,34 @@ var gPrivacyPane = {
                                         "chrome://browser/content/preferences/permissions.xul",
                                         "", params);
   },
-  
-  changeMasterPassword: function ()
-  {
-    document.documentElement.openSubDialog("chrome://mozapps/content/preferences/changemp.xul",
-                                           "", null);
-    this.updateMasterPasswordButton();
-  },
-  
-  updateMasterPasswordButton: function ()
-  {
-    // See if there's a master password and set the button label accordingly
-    var secmodDB = Components.classes["@mozilla.org/security/pkcs11moduledb;1"]
-                             .getService(Components.interfaces.nsIPKCS11ModuleDB);
-    var slot = secmodDB.findSlotByName("");
-    if (slot) {
-      const nsIPKCS11Slot = Components.interfaces.nsIPKCS11Slot;
-      var status = slot.status;
-      var noMP = status == nsIPKCS11Slot.SLOT_UNINITIALIZED || 
-                 status == nsIPKCS11Slot.SLOT_READY;
 
-      var bundle = document.getElementById("bundlePreferences");
-      var button = document.getElementById("setMasterPassword");
-      button.label = bundle.getString(noMP ? "setMasterPassword" : "changeMasterPassword");
-      
-      var removeButton = document.getElementById("removeMasterPassword");
-      removeButton.disabled = noMP;
-    }
-  },
-  
-  removeMasterPassword: function ()
+  /**
+   * Displays all the user's cookies in a dialog.
+   */  
+  showCookies: function (aCategory)
   {
-    var secmodDB = Components.classes["@mozilla.org/security/pkcs11moduledb;1"]
-                              .getService(Components.interfaces.nsIPKCS11ModuleDB); 
-    if (secmodDB.isFIPSEnabled) {
-      var bundle = document.getElementById("bundlePreferences");
-      promptService.alert(window,
-                          bundle.getString("pw_change_failed_title"),
-                          bundle.getString("pw_change2empty_in_fips_mode"));
-    }
-    else {
-      document.documentElement.openSubDialog("chrome://mozapps/content/preferences/removemp.xul",
-                                             "", null);
-      this.updateMasterPasswordButton();
-      document.getElementById("setMasterPassword").focus();
-    }
+    document.documentElement.openWindow("Browser:Cookies",
+                                        "chrome://browser/content/preferences/cookies.xul",
+                                        "", null);
+  },
+
+  // CLEAR PRIVATE DATA
+
+  /*
+   * Preferences:
+   *
+   * privacy.sanitize.sanitizeOnShutdown
+   * - true if the user's private data is cleared on startup according to the
+   *   Clear Private Data settings, false otherwise
+   */
+
+  /**
+   * Displays the Clear Private Data settings dialog.
+   */
+  showClearPrivateDataSettings: function ()
+  {
+    document.documentElement.openSubDialog("chrome://browser/content/preferences/sanitize.xul",
+                                           "", null);
   }
+
 };

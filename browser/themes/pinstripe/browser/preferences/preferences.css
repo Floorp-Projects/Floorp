@@ -83,11 +83,11 @@ radio[pane][selected="true"] {
     color: ButtonText !important;
 }
 
-radio[pane=paneGeneral] {
+radio[pane=paneMain] {
 	-moz-image-region: rect(0px, 32px, 32px, 0px)
 }
 
-radio[pane=paneGeneral]:active {
+radio[pane=paneMain]:active {
 	-moz-image-region: rect(32px, 32px, 64px, 0px)
 }
 
@@ -115,11 +115,11 @@ radio[pane=paneTabs]:active {
 	-moz-image-region: rect(32px, 128px, 64px, 96px)
 }
 
-radio[pane=paneDownloads] {
+radio[pane=paneSecurity] {
 	-moz-image-region: rect(0px, 224px, 32px, 192px)
 }
 
-radio[pane=paneDownloads]:active {
+radio[pane=paneSecurity]:active {
 	-moz-image-region: rect(32px, 224px, 64px, 192px)
 }
 
@@ -200,7 +200,7 @@ caption {
   padding: 4px 4px 0px 0px !important;
 }
 
-#paneGeneral description, #paneAdvanced description, #paneDownloads description {
+#paneMain description, #paneAdvanced description, #paneSecurity description {
   font: -moz-dialog;
 }
 

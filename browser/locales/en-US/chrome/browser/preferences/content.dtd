@@ -13,6 +13,14 @@
 <!ENTITY  advancedJS.label            "Advanced...">
 <!ENTITY  advancedJS.accesskey        "v">
 
+<!ENTITY  fontsColors.label           "Change default fonts and colors:">
+
+<!ENTITY  fontsBtn.label              "Fonts...">
+<!ENTITY  fontsBtn.accesskey          "F">
+
+<!ENTITY  colors.label                "Colors...">
+<!ENTITY  colors.accesskey            "C">
+
 <!ENTITY  font.label                  "Default font:">
 <!ENTITY  font.accesskey              "u">
 <!ENTITY  advancedFonts.label         "Advanced...">
@@ -20,8 +28,6 @@
 
 <!ENTITY  defaultSize.label           "Default size:">
 <!ENTITY  defaultSize.accesskey       "s">
-<!ENTITY  colors.label                "Colors...">
-<!ENTITY  colors.accesskey            "C">
 
 
 <!ENTITY  feeds.label                 "Feeds">
@@ -43,36 +49,3 @@
 <!ENTITY configureFileTypes.label     "Configure how &brandShortName; handles certain types of files">
 <!ENTITY manage.label                 "Manage...">
 <!ENTITY manage.accesskey             "M">
-
-
-<!-- LOCALIZATION NOTE:
-     The entities below are old entities which probably will not be in v2.0.
-     Spend your time on other entities before localizing these, because they
-     are unlikely to be used and may even be removed.
--->
-
-<!ENTITY  lHeader                           "Web Features">
-
-<!ENTITY  enbJavaCheck.label                "Enable Java">
-<!ENTITY  enbJavaCheck.accesskey            "J">
-
-<!ENTITY  enableImages.label                "Load Images">
-<!ENTITY  enableImages.accesskey            "I">
-<!ENTITY  popupReject.label                 "Block Popup Windows">
-<!ENTITY  popupReject.accesskey             "B">
-<!ENTITY  enableXPInstallWarning.label      "Warn me when web sites try to install extensions or themes">
-<!ENTITY  enableXPInstallWarning.accesskey  "a">
-
-<!ENTITY  allowedSitesPopup.label           "Allowed Sites">
-<!ENTITY  allowedSitesPopup.accesskey       "l">
-<!ENTITY  exceptionsSoftware.label          "Exceptions">
-<!ENTITY  exceptionsSoftware.accesskey      "x">
-<!ENTITY  exceptions.label                  "Exceptions">
-<!ENTITY  exceptions.accesskey              "E">
-
-<!ENTITY  fonts.caption                     "Fonts &amp; Colors">
-<!ENTITY  defaultFontSize.label             "Size:">
-<!ENTITY  defaultFontSize.accesskey         "z">
-<!ENTITY  defaultFont.label                 "Default Font:">
-<!ENTITY  defaultFont.accesskey             "F">
-

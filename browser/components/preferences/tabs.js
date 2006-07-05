@@ -21,6 +21,7 @@
 #
 # Contributor(s):
 #   Ben Goodger <ben@mozilla.org>
+#   Jeff Walden <jwalden+code@mit.edu>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,16 +38,55 @@
 # ***** END LICENSE BLOCK *****
 
 var gTabsPane = {
+
+  /*
+   * Preferences:
+   *
+   * browser.link.open_external
+   * - determines where pages opened by external applications are opened:
+   *     0 opens such links in the default window,
+   *     1 opens such links in the most recent window or tab,
+   *     2 opens such links in a new window,
+   *     3 opens such links in a new tab
+   * browser.link.open_newwindow
+   * - determines where pages which would open in a new window are opened:
+   *     0 opens such links in the default window,
+   *     1 opens such links in the most recent window or tab,
+   *     2 opens such links in a new window,
+   *     3 opens such links in a new tab
+   * browser.tabs.autoHide
+   * - true if the tab bar is hidden when only one tab is open, false to always
+   *   show it
+   * browser.tabs.loadInBackground
+   * - true if display should switch to a new tab which has been opened from a
+   *   link, false if display shouldn't switch
+   * browser.tabs.warnOnClose
+   * - true if when closing a window with multiple tabs the user is warned and
+   *   allowed to cancel the action, false to just close the window
+   * browser.tabs.warnOnOpen
+   * - true if the user should be warned if he attempts to open a lot of tabs at
+   *   once (e.g. a large folder of bookmarks), false otherwise
+   */
+
+  /**
+   * Determines where a link which opens a new window will open.
+   *
+   * @returns 2 if such links should be opened in new windows,
+   *          3 if such links should be opened in new tabs
+   */
   readLinkTarget: function() {
-    // Each open link preference has an integer value of the form:
-    // 0 - open links in the default window
-    // 1 - open links in the most recent window or tab
-    // 2 - open links in a new window
-    // 3 - open links in a new tab
     var openExternal = document.getElementById("browser.link.open_external");
     return openExternal.value != 2 ? 3 : 2;
   },
-  
+
+  /**
+   * Ensures that pages opened in new windows by web pages and pages opened by
+   * external applications both open in the same way (e.g. in a new tab, window,
+   * etc.).
+   *
+   * @returns 2 if such links should be opened in new windows,
+   *          3 if such links should be opened in new tabs
+   */
   writeLinkTarget: function() {
     var linkTargeting = document.getElementById("linkTargeting");
     document.getElementById("browser.link.open_newwindow").value = linkTargeting.value;

@@ -3,6 +3,12 @@
 <!ENTITY  window.macWidth                         "43em">
 <!ENTITY  window.unixWidth                        "41em">
 
+<!ENTITY  defaultFontAndSize.label                "Default Font:">
+<!ENTITY  defaultFont.label                       "Default font:">
+<!ENTITY  defaultFont.accesskey                   "D">
+<!ENTITY  defaultSize.label                       "Size:">
+<!ENTITY  defaultSize.accesskey                   "i">
+
 <!ENTITY  language.label                          "Fonts for:">
 <!ENTITY  language.accesskey                      "F">
 

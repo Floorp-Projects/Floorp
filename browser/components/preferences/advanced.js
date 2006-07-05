@@ -21,6 +21,7 @@
 #
 # Contributor(s):
 #   Ben Goodger <ben@mozilla.org>
+#   Jeff Walden <jwalden+code@mit.edu>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,6 +39,10 @@
 
 var gAdvancedPane = {
   _inited: false,
+
+  /**
+   * Brings the appropriate tab to the front and initializes various bits of UI.
+   */
   init: function ()
   {
     this._inited = true;
@@ -50,11 +55,12 @@ var gAdvancedPane = {
     this.updateAppUpdateItems();
     this.updateAutoItems();
     this.updateModeItems();
-#ifdef MOZ_SAFE_BROWSING
-    this.updateSBItems();
-#endif
   },
-  
+
+  /**
+   * Stores the identity of the current tab in preferences so that the selected
+   * tab can be persisted between openings of the preferences window.
+   */
   tabSelectionChanged: function ()
   {
     if (!this._inited)
@@ -64,43 +70,105 @@ var gAdvancedPane = {
     preference.valueFromPreferences = advancedPrefs.selectedIndex;
   },
   
-  updateButtons: function (aButtonID, aPreferenceID)
-  {
-    var button = document.getElementById(aButtonID);
-    var preference = document.getElementById(aPreferenceID);
-    // This is actually before the value changes, so the value is not as you expect. 
-    button.disabled = preference.value == true;
-    return undefined;
-  },
+  // GENERAL TAB
 
-  showCertificates: function ()
+  /*
+   * Preferences:
+   *
+   * accessibility.browsewithcaret
+   * - true enables keyboard navigation and selection within web pages using a
+   *   visible caret, false uses normal keyboard navigation with no caret
+   * accessibility.typeaheadfind
+   * - when set to true, typing outside text areas and input boxes will
+   *   automatically start searching for what's typed within the current
+   *   document; when set to false, no search action happens
+   * general.autoScroll
+   * - when set to true, clicking the scroll wheel on the mouse activates a
+   *   mouse mode where moving the mouse down scrolls the document downward with
+   *   speed correlated with the distance of the cursor from the original
+   *   position at which the click occurred (and likewise with movement upward);
+   *   if false, this behavior is disabled
+   * general.smoothScroll
+   * - set to true to enable finer page scrolling than line-by-line on page-up,
+   *   page-down, and other such page movements
+   */
+
+  /**
+   * Shows a dialog in which the preferred language for web content may be set.
+   */
+  showLanguages: function ()
   {
-    document.documentElement.openWindow("mozilla:certmanager",
-                                        "chrome://pippki/content/certManager.xul",
-                                        "width=600,height=400", null);
-  },
-  
-  showCRLs: function ()
-  {
-    document.documentElement.openWindow("Mozilla:CRLManager", 
-                                        "chrome://pippki/content/crlManager.xul",
-                                        "width=600,height=400", null);
-  },
-  
-  showOCSP: function ()
-  {
-    document.documentElement.openSubDialog("chrome://mozapps/content/preferences/ocsp.xul",
+    document.documentElement.openSubDialog("chrome://browser/content/preferences/languages.xul",
                                            "", null);
   },
-  
-  showSecurityDevices: function ()
+
+  // NETWORK TAB
+
+  /*
+   * Preferences:
+   *
+   * browser.cache.disk.capacity
+   * - the size of the browser cache in KB
+   */
+
+  /**
+   * Displays a dialog in which proxy settings may be changed.
+   */
+  showConnections: function ()
   {
-    document.documentElement.openWindow("mozilla:devicemanager",
-                                        "chrome://pippki/content/device_manager.xul",
-                                        "width=600,height=400", null);
+    document.documentElement.openSubDialog("chrome://browser/content/preferences/connection.xul",
+                                           "", null);
   },
 
   /**
+   * Converts the cache size from units of KB to units of MB and returns that
+   * value.
+   */
+  readCacheSize: function ()
+  {
+    var preference = document.getElementById("browser.cache.disk.capacity");
+    return preference.value / 1000;
+  },
+
+  /**
+   * Converts the cache size as specified in UI (in MB) to KB and returns that
+   * value.
+   */
+  writeCacheSize: function ()
+  {
+    var cacheSize = document.getElementById("cacheSize");
+    var intValue = parseInt(cacheSize.value, 10);
+    return isNaN(intValue) ? 0 : intValue * 1000;
+  },
+
+  // UPDATE TAB
+
+  /*
+   * Preferences:
+   *
+   * app.update.enabled
+   * - true if updates to the application are enabled, false otherwise
+   * extensions.update.enabled
+   * - true if updates to extensions and themes are enabled, false otherwise
+   * browser.search.update
+   * - true if updates to search engines are enabled, false otherwise
+   * app.update.auto
+   * - true if updates should be automatically downloaded and installed,
+   *   possibly with a warning if incompatible extensions are installed (see
+   *   app.update.mode); false if the user should be asked what he wants to do
+   *   when an update is available
+   * app.update.mode
+   * - an integer:
+   *     0    do not warn if an update will disable extensions or themes
+   *     1    warn if an update will disable extensions or themes
+   *     2    warn if an update will disable extensions or themes *or* if the
+   *          update is a major update
+   */
+
+  /**
+   * Enables and disables various UI preferences as necessary to reflect locked,
+   * disabled, and checked/unchecked states.
+   *
    * UI state matrix for update preference conditions
    * 
    * UI Components:                                     Preferences
@@ -139,7 +207,11 @@ var gAdvancedPane = {
 
     enableAppUpdate.disabled = !aus.canUpdate || enabledPref.locked;
   },
-  
+
+  /**
+   * Enables/disables UI for "when updates are found" based on the values,
+   * and "locked" states of associated preferences.
+   */
   updateAutoItems: function () 
   {
     var enabledPref = document.getElementById("app.update.enabled");
@@ -153,6 +225,10 @@ var gAdvancedPane = {
     updateModeLabel.disabled = updateMode.disabled = disable;
   },
 
+  /**
+   * Enables/disables the "warn if incompatible extensions/themes exist" UI
+   * based on the values and "locked" states of various preferences.
+   */
   updateModeItems: function () 
   {
     var enabledPref = document.getElementById("app.update.enabled");
@@ -179,30 +255,49 @@ var gAdvancedPane = {
   },  
 
   /**
-   * app.update.mode is a three state integer preference, and we have to 
-   * express all three values in a single checkbox:
-   * "Warn me if this will disable extensions or themes"
-   * Preference Value         Checkbox State    Meaning
+   * Stores the value of the app.update.mode preference, which is a tristate
+   * integer preference.  We store the value here so that we can properly
+   * restore the preference value if the UI reflecting the preference value
+   * is in a state which can represent either of two integer values (as
+   * opposed to only one possible value in the other UI state).
+   */
+  _modePreference: -1,
+
+  /**
+   * Reads the app.update.mode preference and converts its value into a
+   * true/false value for use in determining whether the "Warn me if this will
+   * disable extensions or themes" checkbox is checked.  We also save the value
+   * of the preference so that the preference value can be properly restored if
+   * the user's preferences cannot adequately be expressed by a single checkbox.
+   *
+   * app.update.modee         Checkbox State    Meaning
    * 0                        Unchecked         Do not warn
    * 1                        Checked           Warn if there are incompatibilities
    * 2                        Checked           Warn if there are incompatibilities,
    *                                            or the update is major.
    */
-  _modePreference: -1,
-  addonWarnSyncFrom: function ()
+  readAddonWarn: function ()
   {
     var preference = document.getElementById("app.update.mode");
     var doNotWarn = preference.value != 0;
     gAdvancedPane._modePreference = doNotWarn ? preference.value : 1;
     return doNotWarn;
   },
-  
-  addonWarnSyncTo: function ()
+
+  /**
+   * Converts the state of the "Warn me if this will disable extensions or
+   * themes" checkbox into the integer preference which represents it,
+   * returning that value.
+   */
+  writeAddonWarn: function ()
   {
     var warnIncompatible = document.getElementById("warnIncompatible");
     return !warnIncompatible.checked ? 0 : gAdvancedPane._modePreference;
   },
-  
+
+  /**
+   * Displays the history of installed updates.
+   */
   showUpdates: function ()
   {
     var prompter = Components.classes["@mozilla.org/updates/update-prompt;1"]
@@ -210,24 +305,60 @@ var gAdvancedPane = {
     prompter.showUpdateHistory(window);
   },
   
-  showLanguages: function ()
+  // ENCRYPTION TAB
+
+  /*
+   * Preferences:
+   *
+   * security.enable_ssl3
+   * - true if SSL 3 encryption is enabled, false otherwise
+   * security.enable_tls
+   * - true if TLS encryption is enabled, false otherwise
+   * security.default_personal_cert
+   * - a string:
+   *     "Select Automatically"   select a certificate automatically when a site
+   *                              requests one
+   *     "Ask Every Time"         present a dialog to the user so he can select
+   *                              the certificate to use on a site which
+   *                              requests one
+   */
+
+  /**
+   * Displays the user's certificates and associated options.
+   */
+  showCertificates: function ()
   {
-    document.documentElement.openSubDialog("chrome://browser/content/preferences/languages.xul",
+    document.documentElement.openWindow("mozilla:certmanager",
+                                        "chrome://pippki/content/certManager.xul",
+                                        "width=600,height=400", null);
+  },
+
+  /**
+   * Displays a dialog which describes the user's CRLs.
+   */
+  showCRLs: function ()
+  {
+    document.documentElement.openWindow("Mozilla:CRLManager", 
+                                        "chrome://pippki/content/crlManager.xul",
+                                        "width=600,height=400", null);
+  },
+
+  /**
+   * Displays a dialog in which OCSP preferences can be configured.
+   */
+  showOCSP: function ()
+  {
+    document.documentElement.openSubDialog("chrome://mozapps/content/preferences/ocsp.xul",
                                            "", null);
   },
 
-  showWarnings: function ()
+  /**
+   * Displays a dialog from which the user can manage his security devices.
+   */
+  showSecurityDevices: function ()
   {
-    document.documentElement.openSubDialog("chrome://browser/content/preferences/securityWarnings.xul",
-                                           "", null);
-#ifdef MOZ_SAFE_BROWSING
-  },
-  
-  updateSBItems: function ()
-  {
-    var sbEnabled = document.getElementById("safe-active").checked;
-    document.getElementById("safe-local").disabled = !sbEnabled;
-    document.getElementById("safe-remote").disabled = !sbEnabled;
-#endif
+    document.documentElement.openWindow("mozilla:devicemanager",
+                                        "chrome://pippki/content/device_manager.xul",
+                                        "width=600,height=400", null);
   }
 };

@@ -34,6 +34,12 @@
 
 <!ENTITY cache.label "Cache">
 
+<!-- LOCALIZATION NOTE:
+  The entities useCacheBefore.label and useCacheAfter.label appear on a single
+  line in preferences as follows:
+
+  &useCacheBefore.label  [ textbox for cache size in MB ]   &useCacheAfter.label;
+-->
 <!ENTITY useCacheBefore.label            "Use up to">
 <!ENTITY useCacheBefore.accesskey        "U">
 <!ENTITY useCacheAfter.label             "MB of space for the cache">
@@ -48,8 +54,6 @@
 <!ENTITY enableExtensionUpdate.accesskey "x">
 <!ENTITY enableSearchUpdate.label        "Search Engines">
 <!ENTITY enableSearchUpdate.accesskey    "h">
-<!ENTITY checkNow.label                  "Check Now...">
-<!ENTITY appCheckNow.accesskey           "N">
 <!ENTITY whenUpdatesFound.label          "When updates to &brandShortName; are found:">
 <!ENTITY askMe.label                     "Ask me what I want to do">
 <!ENTITY askMe.accesskey                 "k">
@@ -82,53 +86,3 @@
 <!ENTITY verify.accesskey                "i">
 <!ENTITY viewSecurityDevices.label       "Security Devices">
 <!ENTITY viewSecurityDevices.accesskey   "y">
-
-
-<!-- LOCALIZATION NOTE:
-     The entities below are old entities which probably will not be in v2.0.
-     Spend your time on other entities before localizing these, because they
-     are unlikely to be used and may even be removed.
--->
-
-<!ENTITY moveSystemCaret.label          "Allow text to be selected with the keyboard">
-<!ENTITY moveSystemCaret.accesskey      "b">
-<!ENTITY useTypeAheadFind.label         "Begin finding when you begin typing">
-<!ENTITY useTypeAheadFind.accesskey     "p">
-<!ENTITY enableAutoImageResizing.label  "Resize large images to fit in the browser window">
-<!ENTITY enableAutoImageResizing.accesskey "z">
-<!ENTITY useAutoScrolling.label         "Use autoscrolling">
-<!ENTITY useAutoScrolling.accesskey     "s">
-
-<!ENTITY modeAskMe.label                "Ask me what I want to do">
-<!ENTITY modeAskMe.accesskey            "A">
-<!ENTITY showUpdates.label              "Show Update History">
-<!ENTITY showUpdates.accesskey          "U">
-
-<!ENTITY securityTab.label              "Security">
-<!ENTITY certselect.auto                "Select one automatically">
-<!ENTITY certselect.auto.accesskey      "e">
-<!ENTITY certselect.ask                 "Ask me every time">
-<!ENTITY certselect.ask.accesskey       "k">
-<!ENTITY viewCertificates.label         "View Certificates">
-<!ENTITY viewCertificates.accesskey     "C">
-<!ENTITY viewOCSP.label                 "Verification">
-<!ENTITY viewOCSP.accesskey             "V">
-
-<!ENTITY securityWarnings.label            "Warnings">
-<!ENTITY securityWarnings.description      "Choose which security warnings should be displayed while browsing.">
-<!ENTITY securityWarningsButton.label      "Configure Security Warnings">
-<!ENTITY securityWarningsButton.accesskey  "g">
-
-<!ENTITY languages.caption              "Languages">
-<!ENTITY languagesInfo.label            "Choose Languages web pages are displayed in.">
-<!ENTITY showLanguages.label            "Edit Languages...">
-<!ENTITY showLanguages.accesskey        "L">
-
-<!ENTITY safeBrowsingTab.label          "Anti-Phishing">
-<!ENTITY safeBrowsing.label             "While I'm browsing the Internet:">
-<!ENTITY safeBrowsingEnable.label       "Check to see if the site I'm visiting might be a scam">
-<!ENTITY safeBrowsingEnable.accesskey   "o">
-<!ENTITY safeBrowsingLocal.label        "Using a locally stored list">
-<!ENTITY safeBrowsingLocal.accesskey    "t">
-<!ENTITY safeBrowsingRemote.label       "By asking:">
-<!ENTITY safeBrowsingRemote.accesskey   "i">

@@ -11,13 +11,3 @@
 <!ENTITY  panePrivacy.title       "Privacy">
 <!ENTITY  paneSecurity.title      "Security">
 <!ENTITY  paneAdvanced.title      "Advanced">
-
-
-<!-- LOCALIZATION NOTE:
-     The entities below are old entities which probably will not be in v2.0.
-     Spend your time on other entities before localizing these, because they
-     are unlikely to be used and may even be removed.
--->
-
-<!ENTITY  paneGeneral.title       "General">
-<!ENTITY  paneDownloads.title     "Downloads">

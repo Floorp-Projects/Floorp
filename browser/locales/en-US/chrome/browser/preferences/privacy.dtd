@@ -1,5 +1,11 @@
 <!ENTITY  history.label "History">
 
+<!-- LOCALIZATION NOTE:
+  The entities rememberBefore.label and rememberAfter.label appear on a single
+  line in preferences as follows:
+
+  &rememberBefore.label  [ textbox for number of days ]   &rememberAfter.label;
+-->
 <!ENTITY  rememberBefore.label          "Remember visited pages for the last">
 <!ENTITY  rememberBefore.accesskey      "v">
 <!ENTITY  rememberAfter.label           "days.">
@@ -15,33 +21,19 @@
 
 <!ENTITY  acceptCookies.label           "Accept cookies from sites">
 <!ENTITY  acceptCookies.accesskey       "c">
-<!ENTITY  alwaysAsk.label               "Always ask before accepting a cookie">
-<!ENTITY  alwaysAsk.accesskey           "A">
-<!ENTITY  keepUntilClose.label          "Only keep the cookies until I close &brandShortName;">
-<!ENTITY  keepUntilClose.accesskey      "O">
+
+<!ENTITY  keepUntil.label               "Keep until:">
+<!ENTITY  keepUntil.accesskey           "K">
+
+<!ENTITY  expire.label                  "they expire">
+<!ENTITY  close.label                   "I close &brandShortName;">
+<!ENTITY  askEachTime.label             "ask me every time">
 
 <!ENTITY  cookieExceptions.label        "Exceptions...">
 <!ENTITY  cookieExceptions.accesskey    "E">
 
 <!ENTITY  showCookies.label             "Show Cookies...">
 <!ENTITY  showCookies.accesskey         "S">
-
-
-<!ENTITY  passwords.label               "Passwords">
-
-<!ENTITY  rememberPasswords.label       "Remember passwords for sites">
-<!ENTITY  rememberPasswords.accesskey   "R">
-<!ENTITY  useMasterPassword.label       "Use a master password">
-<!ENTITY  useMasterPassword.accesskey   "U">
-
-<!ENTITY  passwordExceptions.label      "Exceptions...">
-<!ENTITY  passwordExceptions.accesskey  "x">
-
-<!ENTITY  masterPassword.label          "Set Master Password...">
-<!ENTITY  masterPassword.accesskey       "M">
-
-<!ENTITY  showPasswords.label            "Show Saved Passwords...">
-<!ENTITY  showPasswords.accesskey        "P">
 
 
 <!ENTITY  clearPrivateData.label         "Clear Private Data">
@@ -51,97 +43,3 @@
 
 <!ENTITY  clearDataSettings.label        "Settings...">
 <!ENTITY  clearDataSettings.accesskey    "t">
-
-
-<!-- LOCALIZATION NOTE:
-     The entities below are old entities which probably will not be in v2.0.
-     Spend your time on other entities before localizing these, because they
-     are unlikely to be used and may even be removed.
--->
-
-<!ENTITY  privacy.intro               "As you browse the web, &brandShortName; keeps information about where you have been, what you have done etc. in the following areas:">
-<!ENTITY  clear.label                 "Clear">
-<!ENTITY  view.label                  "View">
-
-<!ENTITY  privacy.label               "Privacy">
-
-<!ENTITY  itemHistory.label           "History">
-<!ENTITY  rememberPages.label         "Remember visited pages for the last">
-<!ENTITY  rememberPages.accesskey     "d">
-<!ENTITY  rememberDays.label          "days.">
-<!ENTITY  clearHistory.label          "Clear Browsing History Now">
-<!ENTITY  clearHistory.accesskey      "C">
-
-<!ENTITY  itemFormData.label          "Saved Forms">
-<!ENTITY  savedFormData.intro         "Information entered in forms and the Search Bar is saved to make filling out forms and searching faster.">
-<!ENTITY  enableFormFill.label        "Save information I enter in forms and the Search Bar.">
-<!ENTITY  enableFormFill.accesskey    "S">
-<!ENTITY  clearFormData.label         "Clear Saved Form Data Now">
-<!ENTITY  clearFormData.accesskey     "F">
-
-<!ENTITY  itemPasswords.label         "Passwords">
-<!ENTITY  savedPasswords.intro        "&brandShortName; can remember login information for web pages so that you do not need to re-enter your login details every time you visit.">
-<!ENTITY  enablePasswords.label       "Remember Passwords">
-<!ENTITY  enablePasswords.accesskey   "b">
-<!ENTITY  masterPassword.intro        "When set, the Master Password protects all your passwords - but you must enter it once per session.">
-<!ENTITY  setMasterPassword.label     "Master Password">
-<!ENTITY  setMasterPassword.accesskey "M">
-<!ENTITY  removeMasterPassword.label  "Remove Master Password...">
-<!ENTITY  removeMasterPassword.accesskey "R">
-<!ENTITY  viewPasswords.label         "View Saved Passwords">
-<!ENTITY  viewPasswords.accesskey     "V">
-<!-- This accesskey is used with exceptions.label, defined below. -->
-<!ENTITY  viewPasswordExceptions.accesskey
-                                      "i">
-
-
-<!ENTITY  itemDownloads.label         "Download History">
-<!ENTITY  downloadManager.intro       "The Downloads window keeps track of recently downloaded files.">
-<!ENTITY  downloadsRetentionPolicy.label      
-                                      "Remove files from the Download Manager:">
-<!ENTITY  downloadsRetentionPolicy.accesskey  
-                                      "e">
-<!ENTITY  downloadsRemoveImmediately.label    
-                                      "Upon successful download">
-<!ENTITY  downloadsRemoveExit.label   "When &brandShortName; exits">
-<!ENTITY  downloadsRemoveManually.label       
-                                      "Manually">
-<!ENTITY  viewDownloads.label         "View Download History">
-<!ENTITY  viewDownloads.accesskey     "y">
-<!ENTITY  clearDownloads.label        "Clear Download History Now">
-<!ENTITY  clearDownloads.accesskey    "a">
-
-<!ENTITY  itemCookies.label           "Cookies">
-<!ENTITY  cookies.intro               "Cookies are pieces of information stored by sites on your computer. They are used to remember login information and other data.">
-<!ENTITY  enableCookies.label         "Allow sites to set Cookies">
-<!ENTITY  enableCookies.accesskey     "l">
-<!ENTITY  exceptions.label            "Exceptions">
-<!ENTITY  enableCookiesForOriginating.label 
-                                      "for the originating site only">
-<!ENTITY  enableCookiesForOriginating.accesskey
-                                      "g">
-<!ENTITY  enableCookiesNotRemoved.label     
-                                      "unless I have removed cookies set by the site">
-<!ENTITY  enableCookiesNotRemoved.accesskey
-                                      "u">
-<!ENTITY  keepCookies.label           "Keep Cookies:">
-<!ENTITY  keepCookies.accesskey       "K">
-<!ENTITY  acceptNormally.label        "until they expire">
-<!ENTITY  acceptForSession.label      "until I close &brandShortName;">
-<!ENTITY  askAboutCookies.label       "ask me every time">
-<!ENTITY  viewCookies.label           "View Cookies">
-<!ENTITY  viewCookies.accesskey       "w">
-<!ENTITY  clearCookies.label          "Clear Cookies Now">
-<!ENTITY  clearCookies.accesskey      "o">
-
-<!ENTITY  itemCache.label             "Cache">
-<!ENTITY  cache.intro                 "Pages you view are stored in the cache for faster viewing later on.">
-<!ENTITY  cacheUseUpTo.label          "Use up to:">
-<!ENTITY  cacheUseUpTo.accesskey      "p">
-<!ENTITY  cacheSize.label             "MB of disk space for the cache.">
-<!ENTITY  clearCache.label            "Clear Cache Now">
-<!ENTITY  clearCache.accesskey        "N">
-
-<!ENTITY  sanitizeSettings.label      "Settings...">
-<!ENTITY  sanitizeSettings.accesskey  "t">
-<!ENTITY  sanitize.intro              "The Clear Private Data tool can be used to erase your private data using a keyboard shortcut or when &brandShortName; closes.">
