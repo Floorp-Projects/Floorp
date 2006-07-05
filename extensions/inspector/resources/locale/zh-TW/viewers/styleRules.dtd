@@ -5,9 +5,6 @@
 <!ENTITY deleteSelectedRules.label "刪除">
 <!ENTITY disableSelectedRules.label "暫停使用">
 <!ENTITY openSelectedFileInEditor.label "用編輯器開啟">
-<!ENTITY newProperty.label "新增屬性">
-<!ENTITY editSelectedProperty.label "編輯">
-<!ENTITY deleteSelectedProperty.label "刪除">
 <!ENTITY toggleSelectedImportant.label "切換 !important">
 <!ENTITY styleRule.label "規則">
 <!ENTITY styleRuleURI.label "檔案">

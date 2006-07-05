@@ -44,9 +44,6 @@
 <!ENTITY disableSelectedRules.label "Deaktiver">
 <!ENTITY openSelectedFileInEditor.label "Åbn fil i editor">
 
-<!ENTITY newProperty.label "Ny egenskab">
-<!ENTITY editSelectedProperty.label "Rediger">
-<!ENTITY deleteSelectedProperty.label "Slet">
 <!-- LOCALIZATION NOTE: DO NOT LOCALIZE "!important" since it is a CSS API -->
 <!ENTITY toggleSelectedImportant.label "Tænd/sluk !important">
 

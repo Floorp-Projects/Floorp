@@ -42,9 +42,6 @@
 <!ENTITY disableSelectedRules.label "Απενεργοποίηση">
 <!ENTITY openSelectedFileInEditor.label "Άνοιγμα αρχείου στον επεξεργαστή">
 
-<!ENTITY newProperty.label "Νέα ιδιότητα">
-<!ENTITY editSelectedProperty.label "Επεξεργασία">
-<!ENTITY deleteSelectedProperty.label "Διαγραφή">
 <!-- LOCALIZATION NOTE: DO NOT LOCALIZE "!important" since it is a CSS API -->
 <!ENTITY toggleSelectedImportant.label "Εναλλαγή !important">
 

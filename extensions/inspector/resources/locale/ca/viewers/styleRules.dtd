@@ -47,9 +47,6 @@
 <!ENTITY disableSelectedRules.label "Inhabilita">
 <!ENTITY openSelectedFileInEditor.label "Obre el fitxer a l'editor">
 
-<!ENTITY newProperty.label "Nova propietat">
-<!ENTITY editSelectedProperty.label "Edita">
-<!ENTITY deleteSelectedProperty.label "Suprimeix">
 <!-- LOCALIZATION NOTE: DO NOT LOCALIZE "!important" since it is a CSS API -->
 <!ENTITY toggleSelectedImportant.label "Commuta !important">
 

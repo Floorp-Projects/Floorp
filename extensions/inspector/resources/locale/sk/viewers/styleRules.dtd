@@ -36,7 +36,6 @@
 #endif
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY newProperty.label "Nová vlastnosť">
 <!ENTITY disableSelectedRules.label "deaktivovaný">
 <!ENTITY styleRulePropPriority.label "Priorita">
 <!ENTITY styleRulePropName.label "Vlastnosť">
@@ -45,10 +44,8 @@
 <!ENTITY openSelectedFileInEditor.label "Otvoriť v editore">
 <!ENTITY toggleSelectedImportant.label "Prepnúť !important">
 <!ENTITY deleteSelectedRules.label "Odstrániť">
-<!ENTITY editSelectedProperty.label "Upraviť hodnotu">
 <!ENTITY styleRulePropValue.label "Hodnota">
 <!ENTITY miFindCSSRules.accesskey "N">
-<!ENTITY deleteSelectedProperty.label "Odstrániť">
 <!ENTITY styleRuleLineNumber.label "Riadok">
 <!ENTITY styleRule.label "Pravidlo">
 <!ENTITY styleRuleURI.label "Súbor">
