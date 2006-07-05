@@ -3,7 +3,7 @@
 
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule ^(.+)/(.+)/(.+)\ (.+)/exit.html$ index.php?url=/results/add/&version=$1&application=$2&ua=$3&lang=$4 [QSA,L]
+    RewriteRule ^(.+)/(.+)/(.+)[/\ ](.+)/exit.html$ index.php?url=/results/add/&version=$1&application=$2&ua=$3&lang=$4 [QSA,L]
 
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
