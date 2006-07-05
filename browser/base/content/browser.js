@@ -1949,6 +1949,9 @@ function BrowserLoadURL(aTriggeringEvent, aPostData) {
   var url = gURLBar.value;
 
   if (aTriggeringEvent instanceof MouseEvent) {
+    if (aTriggeringEvent.button == 2)
+      return; // Do nothing for right clicks
+
     // We have a mouse event (from the go button), so use the standard
     // UI link behaviors
     openUILink(url, aTriggeringEvent, false, false,
