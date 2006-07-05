@@ -458,6 +458,7 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 {
   [mDelegate loadingDone:mActivateOnLoad];
   mActivateOnLoad = NO;
+  mIsBusy = NO;
   
   [mDelegate setLoadingActive:NO];
 
@@ -478,7 +479,6 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   [mTabItem setLabel:tabTitle];
   
   mProgress = 1.0;
-  mIsBusy = NO;
 
   // tell the bookmarks when a url loaded.
   // note that this currently fires even when you go Back of Forward to the page,

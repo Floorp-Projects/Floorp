@@ -1538,6 +1538,7 @@ enum BWCOpenDest {
     [mProgress stopAnimation:self];
     [self hideProgressIndicator];
     [mProgress setIndeterminate:YES];
+    [[[self window] toolbar] validateVisibleItems];
   }
 }
 
