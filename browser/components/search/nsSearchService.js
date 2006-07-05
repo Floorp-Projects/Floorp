@@ -2134,6 +2134,9 @@ SearchService.prototype = {
       }
     }
 
+    // Filter out any nulls for engines that may have been removed
+    this._sortedEngines = this._sortedEngines.filter(function(a) { return !!a; });
+
     // Array for the remaining engines, alphabetically sorted
     var alphaEngines = [];
 
