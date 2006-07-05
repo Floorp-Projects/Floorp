@@ -2208,6 +2208,32 @@ nsBoxFrame::RegUnregAccessKey(PRBool aDoReg)
   return rv;
 }
 
+void
+nsBoxFrame::FireDOMEventSynch(const nsAString& aDOMEventName, nsIContent *aContent)
+{
+  // XXX This will be deprecated, because it is not good to fire synchronous DOM events
+  // from layout. It's better to use nsFrame::FireDOMEvent() which is asynchronous.
+  nsPresContext *presContext = GetPresContext();
+  nsIContent *content = aContent ? aContent : mContent;
+  if (content && presContext) {
+    // Fire a DOM event
+    nsCOMPtr<nsIDOMEvent> event;
+    nsCOMPtr<nsIEventListenerManager> manager;
+    content->GetListenerManager(PR_TRUE, getter_AddRefs(manager));
+    if (manager && NS_SUCCEEDED(manager->CreateEvent(presContext, nsnull,
+                                                     NS_LITERAL_STRING("Events"),
+                                                     getter_AddRefs(event)))) {
+      event->InitEvent(aDOMEventName, PR_TRUE, PR_TRUE);
+
+      nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
+      privateEvent->SetTrusted(PR_TRUE);
+
+      nsEventStatus eventStatusUnused;
+      nsEventDispatcher::DispatchDOMEvent(content, nsnull, event,
+                                          presContext, &eventStatusUnused);
+    }
+  }
+}
 
 void 
 nsBoxFrame::CheckBoxOrder(nsBoxLayoutState& aState)
