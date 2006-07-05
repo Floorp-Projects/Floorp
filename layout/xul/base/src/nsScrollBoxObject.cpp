@@ -169,13 +169,32 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollByIndex(PRInt32 dindexes)
     scrollableView->GetScrollPosition(cp.x,cp.y);
     nscoord diff = 0;
     PRInt32 curIndex = 0;
+    PRBool isLTR = scrolledBox->IsNormalDirection();
+
+    PRInt32 frameWidth = 0;
+    if (!isLTR && horiz) {
+      GetWidth(&frameWidth);
+      nsCOMPtr<nsIPresShell> shell = GetPresShell(PR_FALSE);
+      if (!shell) {
+        return NS_ERROR_UNEXPECTED;
+      }
+      frameWidth = NSToIntRound(frameWidth *
+                                shell->GetPresContext()->PixelsToTwips());
+    }
 
     // first find out what index we are currently at
     while(child) {
       rect = child->GetRect();
       if (horiz) {
+        // In the left-to-right case we break from the loop when the center of
+        // the current child rect is greater than the scrolled position of
+        // the left edge of the scrollbox
+        // In the right-to-left case we break when the center of the current
+        // child rect is less than the scrolled position of the right edge of
+        // the scrollbox.
         diff = rect.x + rect.width/2; // use the center, to avoid rounding errors
-        if (diff > cp.x) {
+        if ((isLTR && diff > cp.x) ||
+            (!isLTR && diff < cp.x + frameWidth)) {
           break;
         }
       } else {
@@ -217,7 +236,13 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollByIndex(PRInt32 dindexes)
    }
 
    if (horiz)
-       return scrollableView->ScrollTo(rect.x, cp.y, NS_SCROLL_PROPERTY_ALWAYS_BLIT);
+       // In the left-to-right case we scroll so that the left edge of the
+       // selected child is scrolled to the left edge of the scrollbox.
+       // In the right-to-left case we scroll so that the right edge of the
+       // selected child is scrolled to the right edge of the scrollbox.
+       return scrollableView->ScrollTo((isLTR) ? rect.x :
+                                       rect.x + rect.width - frameWidth, 
+                                       cp.y, NS_SCROLL_PROPERTY_ALWAYS_BLIT);
    else
        return scrollableView->ScrollTo(cp.x, rect.y, NS_SCROLL_PROPERTY_ALWAYS_BLIT);
 }
