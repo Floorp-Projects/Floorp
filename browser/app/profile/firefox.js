@@ -49,6 +49,7 @@
 #endif
 
 pref("startup.homepage_override_url","chrome://browser-region/locale/region.properties");
+pref("startup.homepage_welcome_url","chrome://browser-region/locale/region.properties");
 pref("general.startup.browser", true);
 
 pref("browser.chromeURL","chrome://browser/content/");

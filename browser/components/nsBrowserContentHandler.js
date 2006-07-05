@@ -115,11 +115,14 @@ function needHomepageOverride(prefb) {
   var mstone = Components.classes["@mozilla.org/network/protocol;1?name=http"]
                          .getService(nsIHttpProtocolHandler).misc;
 
-  if (mstone != savedmstone)
+  if (mstone != savedmstone) {
     prefb.setCharPref("browser.startup.homepage_override.mstone", mstone);
+    // Return 1 if true if the pref didn't exist (i.e. new profile) or 2 for an upgrade
+    return (savedmstone ? 2 : 1);
+  }
 
-  // Return true if the pref didn't exist (i.e. new profile)
-  return !savedmstone;
+  // Return 0 if not a new profile and not an upgrade
+  return 0;
 }
 
 function openWindow(parent, url, target, features, args) {
@@ -404,28 +407,42 @@ var nsBrowserContentHandler = {
     var prefb = Components.classes["@mozilla.org/preferences-service;1"]
                           .getService(nsIPrefBranch);
 
-    if (needHomepageOverride(prefb)) {
-      try {
-        return prefb.getComplexValue("startup.homepage_override_url",
-                                     nsIPrefLocalizedString).data;
-      }
-      catch (e) {
-      }
-    }
-
+    var pagesToLoad = "";
+    var overrideState = needHomepageOverride(prefb);
     try {
-      var choice = prefb.getIntPref("browser.startup.page");
-      if (choice == 1)
-        return this.startPage;
-
-      if (choice == 2)
-        return Components.classes["@mozilla.org/browser/global-history;2"]
-                         .getService(nsIBrowserHistory).lastPageVisited;
+      if (overrideState == 1) {
+        pagesToLoad = prefb.getComplexValue("startup.homepage_welcome_url",
+                                            nsIPrefLocalizedString).data;
+      }
+      else if (overrideState == 2) {
+        pagesToLoad = prefb.getComplexValue("startup.homepage_override_url",
+                                            nsIPrefLocalizedString).data;
+      }
     }
     catch (e) {
     }
 
-    return "about:blank";
+    var startpage = "";
+    try {
+      var choice = prefb.getIntPref("browser.startup.page");
+      if (choice == 1)
+        startpage = this.startPage;
+
+      if (choice == 2)
+        startpage = Components.classes["@mozilla.org/browser/global-history;2"]
+                              .getService(nsIBrowserHistory).lastPageVisited;
+    }
+    catch (e) {
+    }
+
+    if (startpage == "about:blank")
+      startpage = "";
+
+    if (pagesToLoad && startpage)
+      pagesToLoad += "|";
+    pagesToLoad += startpage;
+
+    return (pagesToLoad ?  pagesToLoad : "about:blank");
   },
 
   get startPage() {
