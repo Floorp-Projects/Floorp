@@ -127,6 +127,18 @@ const BROWSER_SEARCH_PREF = "browser.search.";
 
 const USER_DEFINED = "{searchTerms}";
 
+// Custom search parameters
+#ifdef OFFICIAL_BUILD
+const MOZ_OFFICIAL = "official";
+#else
+const MOZ_OFFICIAL = "unofficial";
+#endif
+#expand const MOZ_DISTRIBUTION_ID = __MOZ_DISTRIBUTION_ID__;
+
+const MOZ_PARAM_LOCALE         = /\{moz:locale\}/g;
+const MOZ_PARAM_DIST_ID        = /\{moz:distributionID\}/g;
+const MOZ_PARAM_OFFICIAL       = /\{moz:official\}/g;
+
 // Supported OpenSearch parameters
 // See http://opensearch.a9.com/spec/1.1/querysyntax/#core
 const OS_PARAM_USER_DEFINED    = /\{searchTerms\??\}/g;
@@ -710,12 +722,20 @@ function QueryParameter(aName, aValue) {
  *
  * @see http://opensearch.a9.com/spec/1.1/querysyntax/#core
  */
-function ParamSubstitution(aParamValue, aSearchTerms, aQueryEncoding) {
+function ParamSubstitution(aParamValue, aSearchTerms, aEngine) {
   var value = aParamValue;
 
-  // Insert the parameters we're confident about
+  // Custom search parameters. These are only available to app-shipped search
+  // engines.
+  if (aEngine._isInAppDir) {
+    value = value.replace(MOZ_PARAM_LOCALE, getLocale());
+    value = value.replace(MOZ_PARAM_DIST_ID, MOZ_DISTRIBUTION_ID);
+    value = value.replace(MOZ_PARAM_OFFICIAL, MOZ_OFFICIAL);
+  }
+
+  // Insert the OpenSearch parameters we're confident about
   value = value.replace(OS_PARAM_USER_DEFINED, aSearchTerms);
-  value = value.replace(OS_PARAM_INPUT_ENCODING, aQueryEncoding);
+  value = value.replace(OS_PARAM_INPUT_ENCODING, aEngine.queryCharset);
   value = value.replace(OS_PARAM_LANGUAGE,
                         getLocale() || OS_PARAM_LANGUAGE_DEF);
   value = value.replace(OS_PARAM_OUTPUT_ENCODING,
@@ -804,15 +824,15 @@ EngineURL.prototype = {
     this.params.push(new QueryParameter(aName, aValue));
   },
 
-  getSubmission: function SRCH_EURL_getSubmission(aSearchTerms, aQueryCharset) {
-    var url = ParamSubstitution(this.template, aSearchTerms, aQueryCharset);
+  getSubmission: function SRCH_EURL_getSubmission(aSearchTerms, aEngine) {
+    var url = ParamSubstitution(this.template, aSearchTerms, aEngine);
 
     // Create an application/x-www-form-urlencoded representation of our params
     // (name=value&name=value&name=value)
     var dataString = "";
     for (var i = 0; i < this.params.length; ++i) {
       var param = this.params[i];
-      var value = ParamSubstitution(param.value, aSearchTerms, aQueryCharset);
+      var value = ParamSubstitution(param.value, aSearchTerms, aEngine);
 
       dataString += (i > 0 ? "&" : "") + param.name + "=" + value;
     }
@@ -944,6 +964,8 @@ Engine.prototype = {
   // This is null for local plugins, and is used for error messages, logging,
   // and determining whether to start using a newly added engine right away.
   _uri: null,
+  // Whether the search engine file is in the app dir.
+  __isInAppDir: null,
 
   /**
    * Retrieves the data from the engine's file. If the engine's dataType is
@@ -1271,6 +1293,29 @@ Engine.prototype = {
         } catch (ex) {
           // Ignore failure
           LOG("_parseURL: Url element has an invalid param");
+        }
+      } else if (param.localName == "MozParam" &&
+                 // We only support MozParams for appdir-shipped search engines
+                 this._isInAppDir) {
+        var value;
+        // For now, we only support the "defaultEngine" condition.
+        if (param.getAttribute("condition") == "defaultEngine") {
+          const defPref = BROWSER_SEARCH_PREF + "defaultenginename";
+          var defaultPrefB = Cc["@mozilla.org/preferences-service;1"].
+                             getService(Ci.nsIPrefService).
+                             getDefaultBranch(null);
+          const nsIPLS = Ci.nsIPrefLocalizedString;
+          var defaultName;
+          try {
+            defaultName = defaultPrefB.getComplexValue(defPref, nsIPLS).data;
+          } catch (ex) {}
+
+          // If this engine was the default search engine, use the true value
+          if (this.name == defaultName)
+            value = param.getAttribute("trueValue");
+          else
+            value = param.getAttribute("falseValue");
+          url.addParam(param.getAttribute("name"), value);
         }
       }
     }
@@ -1806,12 +1851,21 @@ Engine.prototype = {
     if (this._file.parent.equals(getDir(NS_APP_USER_SEARCH_DIR)))
       return "[profile]/" + this._file.leafName;
 
-    if (this._file.parent.equals(getDir(NS_APP_SEARCH_DIR)))
+    if (this._isInAppDir)
       return "[app]/" + this._file.leafName;
 
     // We're not in the profile or appdir, so this must be an extension-shipped
     // plugin. Use the full path.
     return this._file.path;
+  },
+
+  get _isInAppDir() {
+    ENSURE_WARN(this._file && this._file.exists(),
+                "_isInAppDir: engine has no file!",
+                Cr.NS_ERROR_FAILURE);
+    if (this.__isInAppDir === null)
+      this.__isInAppDir = this._file.parent.equals(getDir(NS_APP_SEARCH_DIR));
+    return this.__isInAppDir;
   },
 
   get name() {
@@ -1890,7 +1944,7 @@ Engine.prototype = {
       data = textToSubURI.ConvertAndEscape(DEFAULT_QUERY_CHARSET, aData);
     }
     LOG("getSubmission: Out data: \"" + data + "\"");
-    return url.getSubmission(data, this.queryCharset);
+    return url.getSubmission(data, this);
   },
 
   // from nsISearchEngine

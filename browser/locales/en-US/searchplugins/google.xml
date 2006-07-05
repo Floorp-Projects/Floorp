@@ -6,12 +6,12 @@
 <Url type="application/x-suggestions+json" method="GET" template="http://suggestqueries.google.com/complete/search?output=firefox&amp;client=firefox&amp;qu={searchTerms}"/>
 <Url type="text/html" method="GET" template="http://www.google.com/search">
   <Param name="q" value="{searchTerms}"/>
-  <Param name="start" value="0"/>
   <Param name="ie" value="utf-8"/>
   <Param name="oe" value="utf-8"/>
-  <Param name="client" value="firefox"/>
-  <!-- XXX Hard coded for now - will be removed -->
-  <Param name="rls" value="org.mozilla:en-US:unofficial"/>
+  <!-- Dynamic parameters -->
+  <Param name="rls" value="{moz:distributionID}:{moz:locale}:{moz:official}"/>
+  <Param name="hl" value="{moz:locale}"/>
+  <MozParam name="client" condition="defaultEngine" trueValue="firefox-a" falseValue="firefox"/>
 </Url>
 <SearchForm>http://www.google.com/firefox</SearchForm>
 </SearchPlugin>

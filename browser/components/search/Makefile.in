@@ -51,4 +51,10 @@ XPIDLSRCS = nsIBrowserSearchService.idl
 EXTRA_PP_COMPONENTS = nsSearchService.js \
 	nsSearchSuggestions.js
 
+ifdef MOZ_BRANDING_DIRECTORY
+DEFINES += -DOFFICIAL_BUILD=1
+endif
+
+DEFINES += -DMOZ_DISTRIBUTION_ID=$(MOZ_DISTRIBUTION_ID)
+
 include $(topsrcdir)/config/rules.mk
