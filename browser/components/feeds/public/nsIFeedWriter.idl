@@ -61,6 +61,11 @@ interface nsIFeedWriter : nsISupports
   void changeOptions();
 
   /**
+   * Uninitialize the feed writer.
+   */
+  void close();
+
+  /**
    * Subscribe to the current feed.
    */
   void subscribe();

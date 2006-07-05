@@ -180,6 +180,7 @@ bin/components/shellservice.xpt
 ; JavaScript components
 bin/components/FeedProcessor.js
 bin/components/FeedConverter.js
+bin/components/FeedWriter.js
 bin/components/WebContentConverter.js
 bin/components/nsBrowserContentHandler.js
 bin/components/nsBrowserGlue.js
