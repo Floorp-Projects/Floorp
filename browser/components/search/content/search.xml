@@ -730,6 +730,19 @@
                action="return this.openSearch();"/>
 #endif
 
+      <handler event="keypress" keycode="VK_ENTER"><![CDATA[
+        // this is a bit of a hack to ensure that even if a search is ongoing
+        // we will still search immediately
+        const contractID = 
+          "@mozilla.org/autocomplete/search;1?name=search-autocomplete";
+        const nsIACSearch = Components.interfaces.nsIAutoCompleteSearch
+        var searchService = Components.classes[contractID]
+                                      .getService(nsIACSearch);
+        searchService.stopSearch();
+        this.mEnterEvent = null;
+        this.onTextEntered(event);        
+      ]]></handler>
+
       <handler event="dragdrop" phase="capturing">
         nsDragAndDrop.drop(event, this.searchbarDNDObserver);
       </handler>
