@@ -1259,7 +1259,7 @@ BookmarkParser::ParseBookmarkInfo(BookmarkField *fields, PRBool isBookmarkFlag,
                         // We don't HTML-escape URL properties (we instead
                         // URL-escape double-quotes in them), so we don't have
                         // to HTML-unescape them here.
-                        if (aProperty != kNC_URL && aProperty != kNC_FeedURL)
+                        if (field->mProperty != kNC_URL && field->mProperty != kNC_FeedURL)
                             Unescape(data);
 
                         // XXX Bug 58421 We should not ever hit this assertion
