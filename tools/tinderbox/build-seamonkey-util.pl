@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.325 $ ';
+$::UtilsVersion = '$Revision: 1.326 $ ';
 
 package TinderUtils;
 
@@ -484,11 +484,14 @@ sub SetupPath {
         # you have to match BuildDebug and --enable-optimize, 
         # --disable-debug to make things work here.
 
+        my $actualProductName = defined($Settings::MacOSProductName) ?
+         $Settings::MacOSProductName : $Settings::ProductName;
+        
         $Settings::DistBin = "dist/";
 
         # Deal with the most common case first.
         if ($Settings::ProductName ne 'XULRunner') {
-            $Settings::DistBin .= "$Settings::ProductName";
+            $Settings::DistBin .= $actualProductName;
             if ($Settings::BuildDebug) {
                 $Settings::DistBin .= "Debug";
             }
@@ -1782,7 +1785,7 @@ sub send_results_to_server {
         };
         if ($@) {
             warn "Failed to submit startup results: $@";
-            print_log "send_results_to_server() failed.\n";
+            print_log "send_results_to_server() failed: $@\n";
         } else {
             print_log "Results submitted to server: \n" .
               $res->status_line . "\n" . $res->content . "\n";
