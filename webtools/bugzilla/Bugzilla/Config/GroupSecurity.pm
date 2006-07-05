@@ -41,8 +41,6 @@ $Bugzilla::Config::GroupSecurity::sortkey = "07";
 sub get_param_list {
   my $class = shift;
 
-  my @group_names = map {$_->name} Bugzilla::Group::get_all_groups();
-
   my @param_list = (
   {
    name => 'makeproductgroups',
@@ -59,7 +57,7 @@ sub get_param_list {
   {
    name => 'chartgroup',
    type => 's',
-   choices => \@group_names,
+   choices => \&_get_all_group_names,
    default => 'editbugs',
    checker => \&check_group
   },
@@ -67,7 +65,7 @@ sub get_param_list {
   {
    name => 'insidergroup',
    type => 's',
-   choices => \@group_names,
+   choices => \&_get_all_group_names,
    default => '',
    checker => \&check_group
   },
@@ -75,7 +73,7 @@ sub get_param_list {
   {
    name => 'timetrackinggroup',
    type => 's',
-   choices => \@group_names,
+   choices => \&_get_all_group_names,
    default => 'editbugs',
    checker => \&check_group
   },
@@ -94,4 +92,8 @@ sub get_param_list {
   return @param_list;
 }
 
+sub _get_all_group_names {
+    my @group_names = map {$_->name} Bugzilla::Group::get_all_groups();
+    return \@group_names;
+}
 1;
