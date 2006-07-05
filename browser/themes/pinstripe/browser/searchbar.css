@@ -64,6 +64,11 @@
   font-weight: bold;
 }
 
+
 .search-go-button .toolbarbutton-menubutton-dropmarker {
+%ifdef MOZ_PLACES
+  list-style-image: url("chrome://browser/skin/places/folderDropArrow.png") !important;
+%else
   list-style-image: url("chrome://browser/skin/bookmarks/folderarrow.png") !important;
+%endif
 }
