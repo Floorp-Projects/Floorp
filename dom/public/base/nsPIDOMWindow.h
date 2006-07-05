@@ -400,14 +400,22 @@ public:
 
   virtual void EnsureSizeUpToDate() = 0;
 
+  /**
+   * Callback for notifying a window about a modal dialog being
+   * opened/closed with the window as a parent.
+   */
+  virtual void EnterModalState() = 0;
+  virtual void LeaveModalState() = 0;
+
+
 protected:
   // The nsPIDOMWindow constructor. The aOuterWindow argument should
   // be null if and only if the created window itself is an outer
   // window. In all other cases aOuterWindow should be the outer
   // window for the inner window that is being created.
   nsPIDOMWindow(nsPIDOMWindow *aOuterWindow)
-    : mFrameElement(nsnull), mDocShell(nsnull), mRunningTimeout(nsnull),
-      mMutationBits(0), mIsDocumentLoaded(PR_FALSE),
+    : mFrameElement(nsnull), mDocShell(nsnull), mModalStateDepth(0),
+      mRunningTimeout(nsnull), mMutationBits(0), mIsDocumentLoaded(PR_FALSE),
       mIsHandlingResizeEvent(PR_FALSE), mIsInnerWindow(aOuterWindow != nsnull),
       mInnerWindow(nsnull), mOuterWindow(aOuterWindow)
   {
@@ -422,6 +430,8 @@ protected:
   // These members are only used on outer windows.
   nsIDOMElement *mFrameElement; // weak
   nsIDocShell           *mDocShell;  // Weak Reference
+
+  PRUint32               mModalStateDepth;
 
   // These variables are only used on inner windows.
   nsTimeout             *mRunningTimeout;
