@@ -263,6 +263,11 @@ MicrosummaryService.prototype = {
           this._getField(bookmarkID, FIELD_MICSUM_EXPIRATION) > now)
         continue;
 
+      // Reset the expiration time immediately, so if the refresh is failing
+      // we don't try it every 15 seconds, potentially overloading the server.
+      var now = new Date().getTime();
+      this._setField(bookmarkID, FIELD_MICSUM_EXPIRATION, now + UPDATE_INTERVAL);
+
       this.refreshMicrosummary(bookmarkID);
     }
   },
