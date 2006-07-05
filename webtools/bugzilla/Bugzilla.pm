@@ -61,6 +61,19 @@ use constant SHUTDOWNHTML_EXIT_SILENTLY => [
 # Global Code
 #####################################################################
 
+# The following subroutine is for debugging purposes only.
+# Uncommenting this sub and the $::SIG{__DIE__} trap underneath it will
+# cause any fatal errors to result in a call stack trace to help track
+# down weird errors.
+#
+#sub die_with_dignity {
+#    use Carp ();
+#    my ($err_msg) = @_;
+#    print $err_msg;
+#    Carp::confess($err_msg);
+#}
+#$::SIG{__DIE__} = \&Bugzilla::die_with_dignity;
+
 # Some environment variables are not taint safe
 delete @::ENV{'PATH', 'IFS', 'CDPATH', 'ENV', 'BASH_ENV'};
 

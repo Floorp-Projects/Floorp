@@ -50,18 +50,6 @@ $| = 1;
 $::SIG{TERM} = 'IGNORE';
 $::SIG{PIPE} = 'IGNORE';
 
-# The following subroutine is for debugging purposes only.
-# Uncommenting this sub and the $::SIG{__DIE__} trap underneath it will
-# cause any fatal errors to result in a call stack trace to help track
-# down weird errors.
-#sub die_with_dignity {
-#    use Carp;  # for confess()
-#    my ($err_msg) = @_;
-#    print $err_msg;
-#    confess($err_msg);
-#}
-#$::SIG{__DIE__} = \&die_with_dignity;
-
 # CGI.pm uses AUTOLOAD, but explicitly defines a DESTROY sub.
 # We need to do so, too, otherwise perl dies when the object is destroyed
 # and we don't have a DESTROY method (because CGI.pm's AUTOLOAD will |die|
