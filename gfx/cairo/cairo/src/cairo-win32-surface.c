@@ -698,6 +698,10 @@ _cairo_win32_surface_composite (cairo_operator_t	op,
         src_y = 0;
     }
 
+    if (src_x >= src->extents.x + src->extents.width ||
+	src_y >= src->extents.y + src->extents.height)
+	return CAIRO_STATUS_SUCCESS;
+
     if (src_x + width > src->extents.width)
         width = src->extents.width - src_x;
 
