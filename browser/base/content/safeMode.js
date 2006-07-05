@@ -82,6 +82,13 @@ function disableAddons() {
   prefB.clearUserPref("general.skins.selectedSkin");
 }
 
+function restoreDefaultSearchEngines() {
+  var searchService = Components.classes["@mozilla.org/browser/search-service;1"]
+                                .getService(Components.interfaces.nsIBrowserSearchService);
+
+  searchService.restoreDefaultEngines();
+}
+
 function onOK() {
   try {
     if (document.getElementById("resetUserPrefs").checked)
@@ -92,6 +99,8 @@ function onOK() {
       deleteLocalstore();
     if (document.getElementById("disableAddons").checked)
       disableAddons();
+    if (document.getElementById("restoreSearch").checked)
+      restoreDefaultSearchEngines();
   } catch(e) {
   }
 
@@ -114,5 +123,6 @@ function UpdateOKButtonState() {
     !document.getElementById("resetUserPrefs").checked &&
     !document.getElementById("resetBookmarks").checked &&
     !document.getElementById("resetToolbars").checked &&
-    !document.getElementById("disableAddons").checked;
+    !document.getElementById("disableAddons").checked &&
+    !document.getElementById("restoreSearch").checked;
 }

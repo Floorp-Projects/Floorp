@@ -54,5 +54,8 @@
 <!ENTITY resetUserPrefs.label         "Reset all user preferences to &brandShortName; defaults">
 <!ENTITY resetUserPrefs.accesskey     "p">
 
+<!ENTITY restoreSearch.label          "Restore default search engines">
+<!ENTITY restoreSearch.accesskey      "s">
+
 <!ENTITY changeAndRestartButton.label "Make Changes and Restart">
 <!ENTITY continueButton.label         "Continue in Safe Mode">
