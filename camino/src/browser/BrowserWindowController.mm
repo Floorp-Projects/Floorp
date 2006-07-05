@@ -2353,8 +2353,8 @@ enum BWCOpenDest {
     BookmarkViewController* bookmarksController = [self bookmarkViewControllerForCurrentTab];
     [bookmarksController addBookmarkFolder:aSender];
   }
-  
-  [[AddBookmarkDialogController sharedAddBookmarkDialogController] showDialogWithLocationsAndTitles:nil isFolder:YES onWindow:[self window]];
+  else
+    [[AddBookmarkDialogController sharedAddBookmarkDialogController] showDialogWithLocationsAndTitles:nil isFolder:YES onWindow:[self window]];
 }
 
 - (IBAction)addBookmarkSeparator:(id)aSender
