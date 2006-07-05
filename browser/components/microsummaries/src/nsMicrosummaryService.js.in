@@ -481,7 +481,8 @@ MicrosummaryService.prototype = {
         // We don't have to do anything special if the call fails besides
         // destroying the Resource object.  We can just return the list
         // of microsummaries without including page-defined microsummaries.
-        resource.destroy();
+        if (resource)
+          resource.destroy();
         LOG("error downloading page to extract its microsummaries: " + e);
       }
     }
