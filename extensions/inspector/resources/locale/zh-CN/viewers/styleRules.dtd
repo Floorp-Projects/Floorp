@@ -1,10 +1,7 @@
-<!ENTITY deleteSelectedProperty.label "删除">
 <!ENTITY deleteSelectedRules.label "删除">
 <!ENTITY disableSelectedRules.label "禁用">
-<!ENTITY editSelectedProperty.label "编辑">
 <!ENTITY miFindCSSRules.accesskey "F">
 <!ENTITY miFindCSSRules.label "搜索CSS规则...">
-<!ENTITY newProperty.label "新建属性">
 <!ENTITY newRules.label "新建">
 <!ENTITY openSelectedFileInEditor.label "在编辑器中打开文件">
 <!ENTITY styleRule.label "规则">

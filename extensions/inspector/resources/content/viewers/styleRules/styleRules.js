@@ -138,18 +138,69 @@ StyleRulesViewer.prototype =
     this.mPropsBoxObject.view = null;
   },
 
-  isCommandEnabled: function(aCommand)
+  isCommandEnabled: function isCommandEnabled(aCommand)
   {
-    if (aCommand == "cmdEditCopy") {
-      return this.mPropsTree.view.selection.count > 0;
+    switch (aCommand) {
+      case "cmdEditCopy":
+      case "cmdEditDelete":
+      case "cmdTogglePriority":
+        return this.mPropsTree.view.selection.count > 0;
+      case "cmdEditInsert":
+        return this.mRuleTree.view.selection.count == 1;
+      case "cmdEditEdit":
+        return this.mPropsTree.view.selection.count == 1;
     }
     return false;
   },
   
-  getCommand: function(aCommand)
+  getCommand: function getCommand(aCommand)
   {
-    if (aCommand == "cmdEditCopy") {
-      return new cmdEditCopy(this.mPropsView.getSelectedRowObjects());
+    switch (aCommand) {
+      case "cmdEditCopy":
+        return new cmdEditCopy(this.mPropsView.getSelectedRowObjects());
+      case "cmdEditDelete":
+        return new cmdEditDelete(this.getSelectedDec(),
+                                 this.mPropsView.getSelectedRowObjects());
+      case "cmdEditInsert":
+        var bundle = this.mPanel.panelset.stringBundle;
+        var msg = bundle.getString("styleRulePropertyName.message");
+        var title = bundle.getString("styleRuleNewProperty.title");
+
+        var property = { value: "" };
+        var value = { value: "" };
+        var dummy = { value: false };
+
+        if (!gPromptService.prompt(window, title, msg, property, null, dummy)) {
+          return null;
+        }
+
+        msg = bundle.getString("styleRulePropertyValue.message");
+        if (!gPromptService.prompt(window, title, msg, value, null, dummy)) {
+          return null;
+        }
+
+        return new cmdEditInsert(this.getSelectedDec(), property.value,
+                                  value.value, "");
+      case "cmdEditEdit":
+        var rule = this.getSelectedDec();
+        var property = this.getSelectedProp();
+        var priority = rule.getPropertyPriority(property);
+
+        var bundle = this.mPanel.panelset.stringBundle;
+        var msg = bundle.getString("styleRulePropertyValue.message");
+        var title = bundle.getString("styleRuleEditProperty.title");
+
+        var value = { value: rule.getPropertyValue(property) };
+        var dummy = { value: false };
+
+        if (!gPromptService.prompt(window, title, msg, value, null, dummy)) {
+          return null;
+        }
+
+        return new cmdEditEdit(rule, property, value.value, priority);
+      case "cmdTogglePriority":
+        return new cmdTogglePriority(this.getSelectedDec(),
+                                     this.mPropsView.getSelectedRowObjects());
     }
     return null;
   },
@@ -215,80 +266,6 @@ StyleRulesViewer.prototype =
     }
   },
   
-  //////// property contextual commands
-  
-  cmdNewProperty: function()
-  {
-    var bundle = this.mPanel.panelset.stringBundle;
-    var msg = bundle.getString("styleRulePropertyName.message");
-    var title = bundle.getString("styleRuleNewProperty.title");
-
-    var propName = { value: "" };
-    var propValue = { value: "" };
-    var dummy = { value: false };
-
-    if (!gPromptService.prompt(window, title, msg, propName, null, dummy)) {
-      return;
-    }
-
-    msg = bundle.getString("styleRulePropertyValue.message");
-    if (!gPromptService.prompt(window, title, msg, propValue, null, dummy)) {
-      return;
-    }
-
-    this.mPropsBoxObject.beginUpdateBatch();
-    var style = this.getSelectedDec();
-    style.setProperty(propName.value, propValue.value, "");
-    this.mPropsBoxObject.endUpdateBatch();
-  },
-  
-  cmdEditSelectedProperty: function()
-  {
-    var style = this.getSelectedDec();
-    var propname = this.getSelectedProp();
-    var propval = style.getPropertyValue(propname);
-    var priority = style.getPropertyPriority(propname);
-
-    var bundle = this.mPanel.panelset.stringBundle;
-    var msg = bundle.getString("styleRulePropertyValue.message");
-    var title = bundle.getString("styleRuleEditProperty.title");
-
-    var propValue = { value: propval };
-    var dummy = { value: false };
-
-    if (!gPromptService.prompt(window, title, msg, propValue, null, dummy)) {
-      return;
-    }
-
-    style.removeProperty(propname);
-    style.setProperty(propname, propValue.value, priority);
-    this.mPropsBoxObject.invalidate();
-  },
-
-  cmdDeleteSelectedProperty: function()
-  {
-    this.mPropsBoxObject.beginUpdateBatch();
-    var style = this.getSelectedDec();
-    var propname = this.getSelectedProp();
-    style.removeProperty(propname);
-    this.mPropsBoxObject.endUpdateBatch();
-  },
-
-  cmdToggleSelectedImportant: function()
-  {
-    var style = this.getSelectedDec();
-    var propname = this.getSelectedProp();
-    var propval = style.getPropertyValue(propname);
-
-    var priority = style.getPropertyPriority(propname);
-    priority = priority == "important" ? "" : "important";
-
-    style.removeProperty(propname);
-    style.setProperty(propname, propval, priority);
-    
-    this.mPropsBoxObject.invalidate();
-  },
-  
   ////////////////////////////////////////////////////////////////////////////
   //// Uncategorized
 
@@ -310,6 +287,7 @@ StyleRulesViewer.prototype =
     var dec = this.getSelectedDec();
     this.mPropsView = new StylePropsView(dec);
     this.mPropsBoxObject.view = this.mPropsView;
+    viewer.pane.panelset.updateAllCommands();
   },
 
   onPropSelect: function()
@@ -319,6 +297,15 @@ StyleRulesViewer.prototype =
 
   onCreateRulePopup: function()
   {
+  },
+
+  propOnPopupShowing: function propOnPopupShowing()
+  {
+    var commandset = document.getElementById("cmdsProps");
+    for (var i = 0; i < commandset.childNodes.length; i++) {
+      var command = commandset.childNodes[i];
+      command.setAttribute("disabled", !viewer.isCommandEnabled(command.id));
+    }
   }
 
 };
@@ -487,4 +474,186 @@ function getRowObjectFromIndex(aIndex)
   var prop = this.mDec.item(aIndex);
   return new CSSDeclaration(prop, this.mDec.getPropertyValue(prop),
                             this.mDec.getPropertyPriority(prop));
+}
+
+/**
+ * Handles inserting a CSS declaration
+ * @param aRule the rule that will contain the new declaration
+ * @param aProperty the property of the new declaration
+ * @param aValue the value of the new declaration
+ * @param aPriority the priority of the new declaration ("important" or "")
+ */
+function cmdEditInsert(aRule, aProperty, aValue, aPriority)
+{
+  this.rule = aRule;
+  this.property = aProperty;
+  this.value = aValue;
+  this.priority = aPriority;
+}
+cmdEditInsert.prototype =
+{
+  // remove this line for bug 179621, Phase Three
+  txnType: "standard",
+  
+  // required for nsITransaction
+  QueryInterface: txnQueryInterface,
+  merge: txnMerge,
+  isTransient: false,
+
+  doTransaction: function doTransaction()
+  {
+    viewer.mPropsBoxObject.beginUpdateBatch();
+    try {
+      this.rule.setProperty(this.property, this.value, this.priority);
+    } finally {
+      viewer.mPropsBoxObject.endUpdateBatch();
+    }
+  },
+
+  undoTransaction: function undoTransaction()
+  {
+    this.rule.removeProperty(this.property);
+    viewer.mPropsBoxObject.invalidate();
+  },
+
+  redoTransaction: function redoTransaction()
+  {
+    this.doTransaction();
+  }
+}
+
+/**
+ * Handles deleting CSS declarations
+ * @param aRule the rule containing the declarations
+ * @param aDeclarations an array of CSSDeclarations to delete
+ */
+function cmdEditDelete(aRule, aDeclarations)
+{
+  this.rule = aRule;
+  this.declarations = aDeclarations;
+}
+cmdEditDelete.prototype =
+{
+  // remove this line for bug 179621, Phase Three
+  txnType: "standard",
+  
+  // required for nsITransaction
+  QueryInterface: txnQueryInterface,
+  merge: txnMerge,
+  isTransient: false,
+
+  doTransaction: function doTransaction()
+  {
+    viewer.mPropsBoxObject.beginUpdateBatch();
+    for (var i = 0; i < this.declarations.length; i++)
+      this.rule.removeProperty(this.declarations[i].property);
+    viewer.mPropsBoxObject.endUpdateBatch();
+  },
+
+  undoTransaction: function undoTransaction()
+  {
+    viewer.mPropsBoxObject.beginUpdateBatch();
+    for (var i = 0; i < this.declarations.length; i++)
+      this.rule.setProperty(this.declarations[i].property,
+                            this.declarations[i].value,
+                            this.declarations[i].important ? "important" : "");
+  },
+
+  redoTransaction: function redoTransaction()
+  {
+    this.doTransaction();
+  }
+}
+
+/**
+ * Handles editing CSS declarations
+ * @param aRule the rule containing the declaration
+ * @param aProperty the property to change
+ * @param aNewValue the new value for the property
+ * @param aNewValue the new priority for the property ("important" or "")
+ */
+function cmdEditEdit(aRule, aProperty, aNewValue, aNewPriority)
+{
+  this.rule = aRule;
+  this.property = aProperty;
+  this.oldValue = aRule.getPropertyValue(aProperty);
+  this.newValue = aNewValue;
+  this.oldPriority = aRule.getPropertyPriority(aProperty);
+  this.newPriority = aNewPriority;
+}
+cmdEditEdit.prototype =
+{
+  // remove this line for bug 179621, Phase Three
+  txnType: "standard",
+  
+  // required for nsITransaction
+  QueryInterface: txnQueryInterface,
+  merge: txnMerge,
+  isTransient: false,
+
+  doTransaction: function doTransaction()
+  {
+    this.rule.setProperty(this.property, this.newValue,
+                          this.newPriority);
+    viewer.mPropsBoxObject.invalidate();
+  },
+
+  undoTransaction: function undoTransaction()
+  {
+    this.rule.setProperty(this.property, this.oldValue,
+                          this.oldPriority);
+    viewer.mPropsBoxObject.invalidate();
+  },
+
+  redoTransaction: function redoTransaction()
+  {
+    this.doTransaction();
+  }
+}
+
+/**
+ * Handles toggling CSS !important.
+ * @param aRule the rule containing the declarations
+ * @param aDeclarations an array of CSSDeclarations to toggle
+ */
+function cmdTogglePriority(aRule, aDeclarations)
+{
+  this.rule = aRule;
+  this.declarations = aDeclarations;
+}
+cmdTogglePriority.prototype =
+{
+  // remove this line for bug 179621, Phase Three
+  txnType: "standard",
+  
+  // required for nsITransaction
+  QueryInterface: txnQueryInterface,
+  merge: txnMerge,
+  isTransient: false,
+
+  doTransaction: function doTransaction()
+  {
+    for (var i = 0; i < this.declarations.length; i++) {
+      //XXX bug 305761 means we can't make something not important, so instead
+      // we'll delete this property and make a new one at the proper priority.
+      // this method also sucks because the property gets moved to the bottom.
+      var property = this.declarations[i].property;
+      var value = this.declarations[i].value;
+      var newPriority = this.rule.getPropertyPriority(property) == "" ?
+                          "important" : "";
+      this.rule.removeProperty(property);
+      this.rule.setProperty(property, value, newPriority);
+    }
+    viewer.mPropsBoxObject.invalidate();
+  },
+
+  undoTransaction: function undoTransaction()
+  {
+    this.doTransaction();
+  },
+
+  redoTransaction: function redoTransaction()
+  {
+    this.doTransaction();
+  }
 }

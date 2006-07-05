@@ -26,6 +26,10 @@
   <!--============================ COMMANDS ============================= -->
 
   <commandset id="cmdsEditing"/>
+  <commandset id="cmdsProps">
+    <command id="cmdTogglePriority"
+             oncommand="viewer.pane.panelset.execCommand('cmdTogglePriority')"/>
+  </commandset>
 
   <!--============================= POPUPS ============================== -->
 
@@ -38,21 +42,23 @@
       <menuitem label="&openSelectedFileInEditor.label;" oncommand="viewer.cmdOpenSelectedFileInEditor()"/>
     </popup>
 
-    <popup id="ppStylePropsContext">
+    <popup id="ppStylePropsContext"
+           onpopupshowing="viewer.propOnPopupShowing(this)">
       <menuitem id="mnEditCopy"/>
       <menuseparator/>
-      <menuitem label="&newProperty.label;" oncommand="viewer.cmdNewProperty()"/>
-      <menuitem label="&editSelectedProperty.label;" oncommand="viewer.cmdEditSelectedProperty()"/>
-      <menuitem label="&deleteSelectedProperty.label;" oncommand="viewer.cmdDeleteSelectedProperty()"/>
+      <menuitem id="mnEditInsert"/>
+      <menuitem id="mnEditEdit"/>
+      <menuitem id="mnEditDelete"/>
       <menuseparator/>
-      <menuitem label="&toggleSelectedImportant.label;" oncommand="viewer.cmdToggleSelectedImportant()"/>
+      <menuitem label="&toggleSelectedImportant.label;"
+                command="cmdTogglePriority"/>
     </popup>
   </popupset>
 
   <!--============================= CONTENT ============================== -->
 
   <tree id="olStyleRules" class="plain" flex="1" persist="height"
-            onselect="viewer.onRuleSelect()">
+        seltype="single" onselect="viewer.onRuleSelect()">
     <treecols>
       <treecol id="olcRule" label="&styleRule.label;" flex="1"/>
       <splitter class="tree-splitter"/>
@@ -83,7 +89,7 @@
     </treecols>
     <treechildren id="olbStyleProps"
                   alternatingbackground="true"
-                  ondblclick="viewer.cmdEditSelectedProperty()"/>
+                  ondblclick="viewer.pane.panelset.execCommand('cmdEditEdit')"/>
   </tree>
 
 </page>

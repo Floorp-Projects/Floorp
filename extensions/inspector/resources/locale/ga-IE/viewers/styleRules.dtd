@@ -41,9 +41,6 @@
 <!ENTITY deleteSelectedRules.label "Scrios">
 <!ENTITY disableSelectedRules.label "Díchumasaigh">
 <!ENTITY openSelectedFileInEditor.label "Oscail Comhad in Eagarthóir">
-<!ENTITY newProperty.label "Airí Nua">
-<!ENTITY editSelectedProperty.label "Eagar">
-<!ENTITY deleteSelectedProperty.label "Scrios">
 <!-- LOCALIZATION NOTE: DO NOT LOCALIZE "!important" since it is a CSS API -->
 <!ENTITY toggleSelectedImportant.label "Scoránaigh !important">
 <!ENTITY styleRule.label "Riail">

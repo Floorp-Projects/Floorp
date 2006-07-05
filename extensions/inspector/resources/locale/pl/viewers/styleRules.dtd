@@ -44,9 +44,6 @@
 <!ENTITY disableSelectedRules.label "Wyłącz">
 <!ENTITY openSelectedFileInEditor.label "Otwórz plik w edytorze">
 
-<!ENTITY newProperty.label "Nowa właściwość">
-<!ENTITY editSelectedProperty.label "Edytuj">
-<!ENTITY deleteSelectedProperty.label "Usuń">
 <!-- LOCALIZATION NOTE: DO NOT LOCALIZE "!important" since it is a CSS API -->
 <!ENTITY toggleSelectedImportant.label "Przełącz atrybut !important">
 

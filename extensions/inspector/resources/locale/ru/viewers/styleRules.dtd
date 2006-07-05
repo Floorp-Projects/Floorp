@@ -1,10 +1,7 @@
-<!ENTITY deleteSelectedProperty.label "Удалить">
 <!ENTITY deleteSelectedRules.label "Удалить">
 <!ENTITY disableSelectedRules.label "Отключить">
-<!ENTITY editSelectedProperty.label "Изменить">
 <!ENTITY miFindCSSRules.accesskey "Н">
 <!ENTITY miFindCSSRules.label "Найти правила CSS...">
-<!ENTITY newProperty.label "Создать свойство">
 <!ENTITY newRules.label "Создать">
 <!ENTITY openSelectedFileInEditor.label "Открыть файл в редакторе">
 <!ENTITY styleRule.label "Правило">

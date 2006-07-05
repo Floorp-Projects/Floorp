@@ -44,9 +44,6 @@
 <!ENTITY disableSelectedRules.label "Letiltás">
 <!ENTITY openSelectedFileInEditor.label "Fájl megnyitása szerkesztőben">
 
-<!ENTITY newProperty.label "Új tulajdonság">
-<!ENTITY editSelectedProperty.label "Szerkesztés">
-<!ENTITY deleteSelectedProperty.label "Törlés">
 <!-- LOCALIZATION NOTE: DO NOT LOCALIZE "!important" since it is a CSS API -->
 <!ENTITY toggleSelectedImportant.label "!important kapcsoló">
 

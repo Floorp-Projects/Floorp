@@ -41,9 +41,6 @@
 <!ENTITY deleteSelectedRules.label "Odstranit">
 <!ENTITY disableSelectedRules.label "deaktivovaný">
 <!ENTITY openSelectedFileInEditor.label "Otevřít v editoru">
-<!ENTITY newProperty.label "Nová vlastnost">
-<!ENTITY editSelectedProperty.label "Upravit hodnotu">
-<!ENTITY deleteSelectedProperty.label "Odstranit">
 <!-- LOCALIZATION NOTE: DO NOT LOCALIZE "!important" since it is a CSS API -->
 <!ENTITY toggleSelectedImportant.label "Přepnout !important">
 <!ENTITY styleRule.label "Pravidlo">

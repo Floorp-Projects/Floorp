@@ -44,9 +44,6 @@
 <!ENTITY disableSelectedRules.label "Disable">
 <!ENTITY openSelectedFileInEditor.label "Open File in Editor">
 
-<!ENTITY newProperty.label "New Property">
-<!ENTITY editSelectedProperty.label "Edit">
-<!ENTITY deleteSelectedProperty.label "Delete">
 <!-- LOCALIZATION NOTE: DO NOT LOCALIZE "!important" since it is a CSS API -->
 <!ENTITY toggleSelectedImportant.label "Toggle !important">
 
