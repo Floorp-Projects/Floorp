@@ -124,6 +124,10 @@ FindNextNode(nsIDOMNode* aNode, nsIDOMNode* aRoot,
   aNode->GetFirstChild(getter_AddRefs(next));
   if (next)
     return next;
+  
+  // Don't look at siblings or otherwise outside of aRoot
+  if (aNode == aRoot)
+    return nsnull;
 
   aNode->GetNextSibling(getter_AddRefs(next));
   if (next)
@@ -605,7 +609,7 @@ mozInlineSpellWordUtil::BuildSoftText()
 
     CheckLeavingBreakElementClosure closure = { mCSSView, PR_FALSE };
     node = FindNextNode(node, mRootNode, CheckLeavingBreakElement, &closure);
-    if (closure.mLeftBreakElement || IsBreakElement(mCSSView, node)) {
+    if (closure.mLeftBreakElement || (node && IsBreakElement(mCSSView, node))) {
       // We left, or are entering, a break element (e.g., block). Maybe we can
       // stop now.
       if (seenSoftEnd)
