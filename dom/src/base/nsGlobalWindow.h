@@ -266,6 +266,9 @@ public:
                                            PRBool aOriginalOpener);
   virtual NS_HIDDEN_(void) EnsureSizeUpToDate();
 
+  virtual NS_HIDDEN_(void) EnterModalState();
+  virtual NS_HIDDEN_(void) LeaveModalState();
+
   // nsIDOMViewCSS
   NS_DECL_NSIDOMVIEWCSS
 
@@ -504,6 +507,8 @@ protected:
   {
     mIsFrozen = PR_FALSE;
   }
+
+  PRBool IsInModalState();
 
   // When adding new member variables, be careful not to create cycles
   // through JavaScript.  If there is any chance that a member variable
