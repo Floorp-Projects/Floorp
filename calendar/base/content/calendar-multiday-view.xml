@@ -1304,7 +1304,7 @@
 
   <binding id="calendar-header-container">
     <content>
-      <xul:vbox xbl:inherits="selected" anonid="thebox" flex="1" class="calendar-vent-column-header"/>
+      <xul:vbox xbl:inherits="selected" anonid="thebox" flex="1" class="calendar-event-column-header"/>
     </content>
 
     <implementation>
