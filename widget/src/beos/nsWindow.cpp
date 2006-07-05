@@ -1992,11 +1992,35 @@ bool nsWindow::CallMethod(MethodInfo *info)
 			event.isAlt     = mod & B_COMMAND_KEY;
 			event.isMeta     = mod & B_OPTION_KEY;
 
+			// Setting drag action, must be done before event dispatch
+			nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
+			if (dragService)
+			{
+				nsCOMPtr<nsIDragSession> dragSession;
+				dragService->GetCurrentSession(getter_AddRefs(dragSession));
+				if (dragSession)
+				{
+					// Original action mask stored in dragsession.
+					// For native events such mask must be set in nsDragServiceBeOS::UpdateDragMessageIfNeeded()
+	
+					PRUint32 action_mask = 0;
+					dragSession->GetDragAction(&action_mask);
+					PRUint32 action = nsIDragService::DRAGDROP_ACTION_MOVE;
+					if (mod & B_OPTION_KEY)
+					{
+						if (mod & B_COMMAND_KEY)
+							action = nsIDragService::DRAGDROP_ACTION_LINK & action_mask;
+						else
+							action = nsIDragService::DRAGDROP_ACTION_COPY & action_mask;
+					}
+					dragSession->SetDragAction(action);
+				}
+			}
 			DispatchWindowEvent(&event);
 			NS_RELEASE(event.widget);
 
-			nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
-			dragService->EndDragSession();
+			if (dragService)
+				dragService->EndDragSession();
 		}
 		break;
 
