@@ -162,7 +162,7 @@ interface nsISearchEngine : nsISupports
 
 };
 
-[scriptable, uuid(89a503ac-ea67-4bad-89f9-aa2b06140702)]
+[scriptable, uuid(019c7025-0e26-48d0-b2a4-97cc7e0296cf)]
 interface nsIBrowserSearchService : nsISupports
 {
   /**
@@ -222,6 +222,12 @@ interface nsIBrowserSearchService : nsISupports
                             in AString description,
                             in AString method,
                             in AString url);
+
+  /**
+   * Un-hides all engines installed in the directory corresponding to
+   * the directory service's NS_APP_SEARCH_DIR key.
+   */
+  void restoreDefaultEngines();
 
   /**
    * Returns an engine with the specified alias.

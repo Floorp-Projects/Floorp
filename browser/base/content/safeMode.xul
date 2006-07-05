@@ -81,6 +81,7 @@
     <checkbox id="resetToolbars"  label="&resetToolbars.label;"  accesskey="&resetToolbars.accesskey;"/>
     <checkbox id="resetBookmarks" label="&resetBookmarks.label;" accesskey="&resetBookmarks.accesskey;"/>
     <checkbox id="resetUserPrefs" label="&resetUserPrefs.label;" accesskey="&resetUserPrefs.accesskey;"/>
+    <checkbox id="restoreSearch"  label="&restoreSearch.label;"  accesskey="&restoreSearch.accesskey;"/>
   </vbox>
      
   <separator class="thin"/>

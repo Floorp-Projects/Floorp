@@ -21,7 +21,7 @@
 # Contributor(s):
 #   Ben Goodger <beng@google.com> (Original author)
 #   Gavin Sharp <gavin@gavinsharp.com>
-#   Joe Hughes  <joe@retrovirus.com
+#   Joe Hughes  <joe@retrovirus.com>
 #   Pamela Greene <pamg.bugs@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
@@ -2427,6 +2427,14 @@ SearchService.prototype = {
     this._sortedEngines.splice(aNewIndex, 0, movedEngine);
 
     notifyAction(engine, SEARCH_ENGINE_CHANGED);
+  },
+
+  restoreDefaultEngines: function SRCH_SVC_resetDefaultEngines() {
+    for each (var e in this._engines) {
+      // Unhide all appdir-installed engines
+      if (e.hidden && e._isInAppDir)
+        e.hidden = false;
+    }
   },
 
   get defaultEngine() {
