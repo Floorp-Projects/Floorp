@@ -39,10 +39,12 @@
  * SelectBookmarkDialog controls the user interface for the "Use Bookmark for
  * Home Page" dialog. 
  * 
- * The caller (gGeneralPane.setHomePageToBookmark in general.js) invokes this
- * dialog with a single argument - a reference to an object with a .url 
- * property. This dialog is responsible for updating the contents of the .url
- * property with the new value of the "Home Page" text field before it closes.
+ * The caller (gMainPane.setHomePageToBookmark in main.js) invokes this dialog
+ * with a single argument - a reference to an object with a .urls property and
+ * a .names property.  This dialog is responsible for updating the contents of
+ * the .urls property with an array of URLs to use as home pages and for
+ * updating the .names property with an array of names for those URLs before it
+ * closes.
  */ 
 var SelectBookmarkDialog = {
   init: function SBD_init() {
@@ -85,6 +87,7 @@ var SelectBookmarkDialog = {
     NS_ASSERT(bookmarks.hasSelection,
               "Should not be able to accept dialog if there is no selected URL!");
     var urls = [];
+    var names = [];
     var selectedNode = bookmarks.selectedNode;
     if (bookmarks.hasSingleSelection && 
         PlacesController.nodeIsFolder(selectedNode)) {
@@ -92,17 +95,22 @@ var SelectBookmarkDialog = {
       var cc = contents.childCount;
       for (var i = 0; i < cc; ++i) {
         var node = contents.getChild(i);
-        if (PlacesController.nodeIsURI(node));
+        if (PlacesController.nodeIsURI(node)) {
           urls.push(node.uri);
+          names.push(node.title);
+        }
       }
     }
     else {
       var nodes = bookmarks.getSelectionNodes();
-      for (i = 0; i < nodes.length; ++i)
+      for (i = 0; i < nodes.length; ++i) {
         urls.push(nodes[i].uri);
+        names.push(nodes[i].title);
+      }
     }
-    window.arguments[0].url = urls.join("|");
-  },
+    window.arguments[0].urls = urls;
+    window.arguments[0].names = names;
+  }
 };
 
 #include ../../../toolkit/content/debug.js

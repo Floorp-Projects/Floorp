@@ -43,10 +43,10 @@
   list-style-image: url("chrome://browser/skin/preferences/Options.png"); 
 }
 
-radio[pane=paneGeneral] {
+radio[pane=paneMain] {
 	-moz-image-region: rect(0px, 32px,  32px, 0px)
 }
-radio[pane=paneGeneral]:hover, radio[pane=paneGeneral][selected="true"]  {
+radio[pane=paneMain]:hover, radio[pane=paneMain][selected="true"]  {
 	-moz-image-region: rect(32px, 32px,  64px, 0px)
 }
 
@@ -64,10 +64,10 @@ radio[pane=paneContent]:hover, radio[pane=paneContent][selected="true"]  {
 	-moz-image-region: rect(32px, 96px,  64px, 64px)
 }
 
-radio[pane=paneDownloads] {
+radio[pane=paneSecurity] {
 	-moz-image-region: rect(0px, 128px, 32px, 96px)
 }
-radio[pane=paneDownloads]:hover, radio[pane=paneDownloads][selected="true"] {
+radio[pane=paneSecurity]:hover, radio[pane=paneSecurity][selected="true"] {
 	-moz-image-region: rect(32px, 128px, 64px, 96px)
 }
 

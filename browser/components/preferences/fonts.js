@@ -22,6 +22,7 @@
 # Contributor(s):
 #   Ben Goodger <ben@mozilla.org>
 #   Asaf Romano <mozilla.mano@sent.com>
+#   Jeff Walden <jwalden+code@mit.edu>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -51,6 +52,79 @@ const kFontSizeFmtFixed         = "font.size.fixed.%LANG%";
 const kFontMinSizeFmt           = "font.minimum-size.%LANG%";
 
 var gFontsDialog = {
+  init: function ()
+  {
+    this._rebuildFonts();
+    var menulist = document.getElementById("defaultFont");
+    if (menulist.selectedIndex == -1) {
+      menulist.insertItemAt(0, "", "", "");
+      menulist.selectedIndex = 0;
+    }
+  },
+
+  _rebuildFonts: function ()
+  {
+    var langGroupPref = document.getElementById("font.language.group");
+    this._selectDefaultLanguageGroup(langGroupPref.value,
+                                     this._readDefaultFontTypeForLanguage(langGroupPref.value) == "serif");
+  },
+
+  _selectDefaultLanguageGroup: function (aLanguageGroup, aIsSerif)
+  {
+    var prefs = [{ format   : aIsSerif ? kFontNameFmtSerif : kFontNameFmtSansSerif,
+                   type     : "unichar",
+                   element  : "defaultFont",
+                   fonttype : aIsSerif ? "serif" : "sans-serif" },
+                 { format   : aIsSerif ? kFontNameListFmtSerif : kFontNameListFmtSansSerif,
+                   type     : "unichar",
+                   element  : null,
+                   fonttype : aIsSerif ? "serif" : "sans-serif" },
+                 { format   : kFontSizeFmtVariable,
+                   type     : "int",
+                   element  : "defaultFontSize",
+                   fonttype : null }];
+    var preferences = document.getElementById("fontPreferences");
+    for (var i = 0; i < prefs.length; ++i) {
+      var preference = document.getElementById(prefs[i].format.replace(/%LANG%/, aLanguageGroup));
+      if (!preference) {
+        preference = document.createElement("preference");
+        var name = prefs[i].format.replace(/%LANG%/, aLanguageGroup);
+        preference.id = name;
+        preference.setAttribute("name", name);
+        preference.setAttribute("type", prefs[i].type);
+        preferences.appendChild(preference);
+      }
+
+      if (!prefs[i].element)
+        continue;
+
+      var element = document.getElementById(prefs[i].element);
+      if (element) {
+        element.setAttribute("preference", preference.id);
+
+        if (prefs[i].fonttype)
+          FontBuilder.buildFontList(aLanguageGroup, prefs[i].fonttype, element);
+
+        preference.setElementValue(element);
+      }
+    }
+  },
+
+  _readDefaultFontTypeForLanguage: function (aLanguageGroup)
+  {
+    var defaultFontTypePref = kDefaultFontType.replace(/%LANG%/, aLanguageGroup);
+    var preference = document.getElementById(defaultFontTypePref);
+    if (!preference) {
+      preference = document.createElement("preference");
+      preference.id = defaultFontTypePref;
+      preference.setAttribute("name", defaultFontTypePref);
+      preference.setAttribute("type", "string");
+      preference.setAttribute("onchange", "gContentPane._rebuildFonts();");
+      document.getElementById("fontPreferences").appendChild(preference);
+    }
+    return preference.value;
+  },
+
   _selectLanguageGroup: function (aLanguageGroup)
   {
     var prefs = [{ format: kDefaultFontType,          type: "string", element: "defaultFontType", fonttype: null},

@@ -15,29 +15,3 @@
 
 <!ENTITY switchToNewTabs.label        "When I open a link in a new tab, switch to it immediately">
 <!ENTITY switchToNewTabs.accesskey    "s">
-
-
-<!-- LOCALIZATION NOTE:
-     The entities below are old entities which probably will not be in v2.0.
-     Spend your time on other entities before localizing these, because they
-     are unlikely to be used and may even be removed.
--->
-
-<!ENTITY tabsTab.label                       "Tabs">
-<!ENTITY linkTargeting.label                 "Open links that would open new windows in:">
-<!ENTITY newWindow.label                     "new windows">
-<!ENTITY newWindow.accesskey                 "w">
-<!ENTITY newTabInRecentWindow.label          "new tabs in the most recent window">
-<!ENTITY newTabInRecentWindow.accesskey      "t">
-<!ENTITY hideTabBar.label                    "Hide the tab bar when only one web site is open">
-<!ENTITY hideTabBar.accesskey                "d">
-<!ENTITY loadInBackground.label              "Select new tabs opened from links">
-<!ENTITY loadInBackground.accesskey          "l">
-<!ENTITY loadBookmarksInBackground.label     "Select new tabs opened from bookmarks or history">
-<!ENTITY loadBookmarksInBackground.accesskey "b">
-
-<!ENTITY warnOnClose.label                   "Warn when closing multiple tabs">
-<!ENTITY warnOnClose.accesskey               "m">
-
-<!ENTITY warnOnOpen.label                    "Warn when opening a lot of tabs at once">
-<!ENTITY warnOnOpen.accesskey                "o">

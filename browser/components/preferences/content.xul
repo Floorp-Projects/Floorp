@@ -23,6 +23,7 @@
 #
 # Contributor(s):
 #   Ben Goodger <ben@mozilla.org>
+#   Jeff Walden <jwalden+code@mit.edu>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,33 +39,51 @@
 #
 # ***** END LICENSE BLOCK *****
 
-<!DOCTYPE overlay SYSTEM "chrome://browser/locale/preferences/content.dtd">
+<!DOCTYPE overlay [
+  <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+  <!ENTITY % contentDTD SYSTEM "chrome://browser/locale/preferences/content.dtd">
+  %brandDTD;
+  %contentDTD;
+]>
 
 <overlay id="ContentPaneOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <prefpane id="paneContent" onpaneload="gContentPane.init();"
+  <prefpane id="paneContent"
             helpTopic="prefs-content" helpURI="chrome://browser/locale/help/help.rdf">
 
     <preferences id="contentPreferences">
+      <!--XXX buttons prefs -->
+
+      <!-- POPUPS, IMAGES, JAVASCRIPT -->
       <preference id="dom.disable_open_during_load"   name="dom.disable_open_during_load"   type="bool"/>
-      <preference id="xpinstall.whitelist.required"   name="xpinstall.whitelist.required"   type="bool"/>
       <preference id="permissions.default.image"      name="permissions.default.image"      type="int"/>
-      <preference id="security.enable_java"           name="security.enable_java"           type="bool"/>
       <preference id="javascript.enabled"             name="javascript.enabled"             type="bool"/>
-      <preference id="font.language.group"            name="font.language.group"            type="wstring"  onchange="gContentPane._rebuildFonts();"/>
+
       <preference id="pref.advanced.images.disable_button.view_image"
                   name="pref.advanced.images.disable_button.view_image"
                   type="bool"/>
       <preference id="pref.advanced.javascript.disable_button.advanced"
                   name="pref.advanced.javascript.disable_button.advanced"
                   type="bool"/>
+
+      <!-- FONTS -->
+      <preference id="font.language.group"
+                  name="font.language.group"
+                  type="wstring"
+                  onchange="gContentPane._rebuildFonts();"/>
+
+      <!-- FEEDS -->
+
+      <!-- FILE TYPES -->
+
     </preferences>
     
     <script type="application/x-javascript" src="chrome://mozapps/content/preferences/fontbuilder.js"/>
     <script type="application/x-javascript" src="chrome://browser/content/preferences/content.js"/>
 
-    <groupbox id="contentGroupbox">
+    <!-- various checkboxes, font-fu -->
+    <groupbox id="miscGroup">
       <grid id="contentGrid">
         <columns>
           <column flex="1"/>
@@ -74,46 +93,28 @@
           <row id="popupPolicyRow">
             <vbox align="start">
               <checkbox id="popupPolicy" preference="dom.disable_open_during_load"
-                        label="&popupReject.label;" accesskey="&popupReject.accesskey;"
+                        label="&blockPopups.label;" accesskey="&blockPopups.accesskey;"
                         onsyncfrompreference="return gContentPane.updateButtons('popupPolicyButton', 
                                                                             'dom.disable_open_during_load');"/>
             </vbox>
-            <button id="popupPolicyButton" label="&allowedSitesPopup.label;"
-                    oncommand="gContentPane.showExceptions('popup');"
-                    accesskey="&allowedSitesPopup.accesskey;"/>
-          </row>
-          <row id="enableSoftwareInstallRow">
-            <vbox align="start">
-              <checkbox id="enableSoftwareInstall" preference="xpinstall.whitelist.required"
-                        label="&enableXPInstallWarning.label;" accesskey="&enableXPInstallWarning.accesskey;"
-                        onsyncfrompreference="return gContentPane.updateButtons('enableSoftwareInstallButton', 
-                                                                            'xpinstall.whitelist.required');"/>
-            </vbox>
-            <button id="enableSoftwareInstallButton" label="&exceptionsSoftware.label;"
-                    oncommand="gContentPane.showExceptions('install');"
-                    accesskey="&exceptionsSoftware.accesskey;"/>
+            <button id="popupPolicyButton" label="&popupExceptions.label;"
+                    oncommand="gContentPane.showPopupExceptions();"
+                    accesskey="&popupExceptions.accesskey;"/>
           </row>
           <row id="enableImagesRow">
             <vbox align="start">
-              <checkbox id="enableImages" 
-                        label="&enableImages.label;" 
-                        accesskey="&enableImages.accesskey;"
+              <checkbox id="loadImages"
+                        label="&loadImages.label;"
+                        accesskey="&loadImages.accesskey;"
                         preference="permissions.default.image"
-                        onsyncfrompreference="return gContentPane.readEnableImagesPref();"
-                        onsynctopreference="return gContentPane.writeEnableImagesPref();"/>
+                        onsyncfrompreference="return gContentPane.readLoadImages();"
+                        onsynctopreference="return gContentPane.writeLoadImages();"/>
             </vbox>
             <vbox>
-              <button id="manageImages" label="&exceptions.label;"
-                      accesskey="&exceptions.accesskey;"
-                      oncommand="gContentPane.showExceptions('image');"
+              <button label="&imageExceptions.label;"
+                      accesskey="&imageExceptions.accesskey;"
+                      oncommand="gContentPane.showImageExceptions();"
                       preference="pref.advanced.images.disable_button.view_image"/>
-            </vbox>
-          </row>
-          <separator class="thin"/>
-          <row id="advancedJavaAllowRow">
-            <vbox align="start">
-              <checkbox id="advancedJavaAllow" label="&enbJavaCheck.label;" accesskey="&enbJavaCheck.accesskey;"
-                        preference="security.enable_java"/>
             </vbox>
           </row>
           <row id="enableJavaScriptRow">
@@ -130,67 +131,69 @@
                       preference="pref.advanced.javascript.disable_button.advanced"/>
             </vbox>
           </row>
-        </rows>
-      </grid>
-    </groupbox>  
 
-    <groupbox>
-      <caption label="&fonts.caption;"/>
-      
-      <grid>
-        <columns>
-          <column flex="1"/>
-          <column/>
-        </columns>
-        <rows id="contentRows-2">
-          <row id="fontRow">
-            <hbox align="center">
-              <label control="defaultFont" accesskey="&defaultFont.accesskey;">&defaultFont.label;</label>
-              <menulist id="defaultFont" flex="1"/>
-              <label control="defaultFontSize" accesskey="&defaultFontSize.accesskey;">&defaultFontSize.label;</label>
-              <menulist id="defaultFontSize">
-                <menupopup>
-                  <menuitem value="9" label="9"/>
-                  <menuitem value="10" label="10"/>
-                  <menuitem value="11" label="11"/>
-                  <menuitem value="12" label="12"/>
-                  <menuitem value="13" label="13"/>
-                  <menuitem value="14" label="14"/>
-                  <menuitem value="15" label="15"/>
-                  <menuitem value="16" label="16"/>
-                  <menuitem value="17" label="17"/>
-                  <menuitem value="18" label="18"/>
-                  <menuitem value="20" label="20"/>
-                  <menuitem value="22" label="22"/>
-                  <menuitem value="24" label="24"/>
-                  <menuitem value="26" label="26"/>
-                  <menuitem value="28" label="28"/>
-                  <menuitem value="30" label="30"/>
-                  <menuitem value="32" label="32"/>
-                  <menuitem value="34" label="34"/>
-                  <menuitem value="36" label="36"/>
-                  <menuitem value="40" label="40"/>
-                  <menuitem value="44" label="44"/>
-                  <menuitem value="48" label="48"/>
-                  <menuitem value="56" label="56"/>
-                  <menuitem value="64" label="64"/>
-                  <menuitem value="72" label="72"/>
-                </menupopup>
-              </menulist>
-            </hbox>
-            <button icon="select-font" label="&advancedFonts.label;" 
-                    accesskey="&advancedFonts.accesskey;" 
-                    oncommand="gContentPane.showFonts();"/>
-          </row>
-          <row id="selectColorRow">
-            <hbox/>
-            <button icon="select-color" label="&colors.label;" 
-                    accesskey="&colors.accesskey;" 
-                    oncommand="gContentPane.showColors();"/>
-          </row>
+          <separator class="thin"/>
+
+          <hbox id="fontsColorsRow" align="center">
+            <description flex="1">&fontsColors.label;</description>
+            <button id="fontsButton"
+                    icon="select-font"
+                    label="&fontsBtn.label;"
+                    accesskey="&fontsBtn.accesskey;"
+                    oncommand="gContentPane.configureFonts();"/>
+            <button id="colorsButton"
+                    label="&colors.label;"
+                    accesskey="&colors.accesskey;"
+                    oncommand="gContentPane.configureColors();"/>
+          </hbox>
+
         </rows>
       </grid>
     </groupbox>
+
+#ifdef MOZ_FEEDS
+    <!-- Feeds -->
+    <groupbox id="feedsGroup">
+      <caption label="&feeds.label;"/>
+
+      <hbox id="chooseReaderBox" align="center">
+        <label control="chooseFeedReader"
+               accesskey="&feedReader.accesskey;">&feedReader.label;</label>
+        <menulist id="chooseFeedReader">
+          <menupopup>
+            <menuitem value="foo" label="XXX"/>
+          </menupopup>
+        </menulist>
+      </hbox>
+
+      <separator class="thin"/>
+
+      <label id="feedClickLabel"
+             control="feedClick">&feedClick.label;</label>
+      <radiogroup id="feedClick" class="indent"
+                  preference="XXX"
+                  onsyncfrompreference="throw 'XXX';"
+                  onsynctopreference="throw 'XXX';">
+        <radio label="&ask.label;" accesskey="&ask.accesskey;" value="XXX"/>
+        <radio label="&subLiveBookmark.label;" accesskey="&subLiveBookmark.accesskey;" value="XXX"/>
+        <radio label="&subReader.label;" accesskey="&subReader.accesskey;" value="XXX"/>
+      </radiogroup>
+    </groupbox>
+#endif
+
+    <!-- File Types -->
+    <groupbox id="fileTypesGroup">
+      <caption label="&fileTypes.label;"/>
+
+      <hbox id="configureFileTypesRow" align="center">
+        <description flex="1">&configureFileTypes.label;</description>
+        <button id="manageTypes"
+                label="&manage.label;"
+                accesskey="&manage.accesskey;"
+                oncommand="gContentPane.configureFileTypes();"/>
+      </hbox>
+    </groupbox>
+
   </prefpane>
 
 </overlay>

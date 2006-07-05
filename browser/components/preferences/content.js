@@ -22,6 +22,7 @@
 # Contributor(s):
 #   Ben Goodger <ben@mozilla.org>
 #   Asaf Romano <mozilla.mano@sent.com>
+#   Jeff Walden <jwalden+code@mit.edu>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,108 +39,35 @@
 # ***** END LICENSE BLOCK *****
 
 
-const kDefaultFontType          = "font.default.%LANG%";
-const kFontNameFmtSerif         = "font.name.serif.%LANG%";
-const kFontNameFmtSansSerif     = "font.name.sans-serif.%LANG%";
-const kFontNameListFmtSerif     = "font.name-list.serif.%LANG%";
-const kFontNameListFmtSansSerif = "font.name-list.sans-serif.%LANG%";
-const kFontSizeFmtVariable      = "font.size.variable.%LANG%";
-
 var gContentPane = {
-  _pane: null,
-  
-  init: function ()
-  {
-    this._pane = document.getElementById("paneContent");
-    this._rebuildFonts();
-    var menulist = document.getElementById("defaultFont");
-    if (menulist.selectedIndex == -1) {
-      menulist.insertItemAt(0, "", "", "");
-      menulist.selectedIndex = 0;
-    }
-  },
-  
-  _rebuildFonts: function ()
-  {
-    var langGroupPref = document.getElementById("font.language.group");
-    this._selectLanguageGroup(langGroupPref.value, 
-                              this._readDefaultFontTypeForLanguage(langGroupPref.value) == "serif");
-  },
-  
-  _selectLanguageGroup: function (aLanguageGroup, aIsSerif)
-  {
-    var prefs = [{ format   : aIsSerif ? kFontNameFmtSerif : kFontNameFmtSansSerif,
-                   type     : "unichar", 
-                   element  : "defaultFont",      
-                   fonttype : aIsSerif ? "serif" : "sans-serif" },
-                 { format   : aIsSerif ? kFontNameListFmtSerif : kFontNameListFmtSansSerif,
-                   type     : "unichar", 
-                   element  : null,               
-                   fonttype : aIsSerif ? "serif" : "sans-serif" },
-                 { format   : kFontSizeFmtVariable,      
-                   type     : "int",     
-                   element  : "defaultFontSize",  
-                   fonttype : null }];
-    var preferences = document.getElementById("contentPreferences");
-    for (var i = 0; i < prefs.length; ++i) {
-      var preference = document.getElementById(prefs[i].format.replace(/%LANG%/, aLanguageGroup));
-      if (!preference) {
-        preference = document.createElement("preference");
-        var name = prefs[i].format.replace(/%LANG%/, aLanguageGroup);
-        preference.id = name;
-        preference.setAttribute("name", name);
-        preference.setAttribute("type", prefs[i].type);
-        preferences.appendChild(preference);
-      }
-      
-      if (!prefs[i].element)
-        continue;
-        
-      var element = document.getElementById(prefs[i].element);
-      if (element) {
-        element.setAttribute("preference", preference.id);
-      
-        if (prefs[i].fonttype)
-          FontBuilder.buildFontList(aLanguageGroup, prefs[i].fonttype, element);
 
-        preference.setElementValue(element);
-      }
-    }
+  // UTILITY FUNCTIONS
+
+  /**
+   * Utility function to enable/disable the button specified by aButtonID based
+   * on the value of the Boolean preference specified by aPreferenceID.
+   */  
+  updateButtons: function (aButtonID, aPreferenceID)
+  {
+    var button = document.getElementById(aButtonID);
+    var preference = document.getElementById(aPreferenceID);
+    button.disabled = preference.value != true;
+    return undefined;
   },
 
-  _readDefaultFontTypeForLanguage: function (aLanguageGroup)
-  {
-    var defaultFontTypePref = kDefaultFontType.replace(/%LANG%/, aLanguageGroup);
-    var preference = document.getElementById(defaultFontTypePref);
-    if (!preference) {
-      preference = document.createElement("preference");
-      preference.id = defaultFontTypePref;
-      preference.setAttribute("name", defaultFontTypePref);
-      preference.setAttribute("type", "string");
-      preference.setAttribute("onchange", "gContentPane._rebuildFonts();");
-      document.getElementById("contentPreferences").appendChild(preference);
-    }  
-    return preference.value;
-  },
-
-  writeEnableImagesPref: function ()
-  { 
-    return (document.getElementById("enableImages").checked) ? 1 : 2;
-  },
-  
-  readEnableImagesPref: function ()
-  {
-    var pref = document.getElementById("permissions.default.image");
-    return (pref.value == 1 || pref.value == 3);
-  },
-  
+  /**
+   * The exceptions types which may be passed to this._showExceptions().
+   */
   _exceptionsParams: {
-    install: { blockVisible: false, sessionVisible: false, allowVisible: true, prefilledHost: "", permissionType: "install" },
     popup:   { blockVisible: false, sessionVisible: false, allowVisible: true, prefilledHost: "", permissionType: "popup"   },
     image:   { blockVisible: true,  sessionVisible: false, allowVisible: true, prefilledHost: "", permissionType: "image"   }
   },
-  
-  showExceptions: function (aPermissionType)
+
+  /**
+   * Displays the exceptions dialog of the given type, where types map onto the
+   * the fields in this._exceptionsParams.
+   */  
+  _showExceptions: function (aPermissionType)
   {
     var bundlePreferences = document.getElementById("bundlePreferences");
     var params = this._exceptionsParams[aPermissionType];
@@ -149,30 +77,130 @@ var gContentPane = {
                                         "chrome://browser/content/preferences/permissions.xul",
                                         "", params);
   },
-  
-  updateButtons: function (aButtonID, aPreferenceID)
+
+  // BEGIN UI CODE
+
+  /*
+   * Preferences:
+   *
+   * dom.disable_open_during_load
+   * - true if popups are blocked by default, false otherwise
+   * permissions.default.image
+   * - an integer:
+   *     1   all images should be loaded,
+   *     2   no images should be loaded,
+   *     3   load only images from the site on which the current page resides
+   *         (i.e., if viewing foo.example.com, foo.example.com/foo.jpg and
+   *         bar.foo.example.com/bar.jpg load but example.com/quux.jpg does not)
+   * javascript.enabled
+   * - true if JavaScript is enabled, false otherwise
+   */
+
+  // POP-UPS
+
+  /**
+   * Displays the popup exceptions dialog where specific site popup preferences
+   * can be set.
+   */
+  showPopupExceptions: function ()
   {
-    var button = document.getElementById(aButtonID);
-    var preference = document.getElementById(aPreferenceID);
-    button.disabled = preference.value != true;
-    return undefined;
+    this._showExceptions("popup");
   },
-  
+
+  // IMAGES
+
+  /**
+   * Converts the value of the permissions.default.image preference into a
+   * Boolean value for use in determining the state of the "load images"
+   * checkbox, returning true if images should be loaded and false otherwise.
+   */
+  readLoadImages: function ()
+  {
+    var pref = document.getElementById("permissions.default.image");
+    return (pref.value == 1 || pref.value == 3);
+  },
+
+  /**
+   * Returns the "load images" preference value which maps to the state of the
+   * preferences UI.
+   */
+  writeLoadImages: function ()
+  { 
+    return (document.getElementById("loadImages").checked) ? 1 : 2;
+  },
+
+  /**
+   * Displays image exception preferences for which websites can and cannot
+   * load images.
+   */
+  showImageExceptions: function ()
+  {
+    this._showExceptions("image");
+  },
+
+  // JAVASCRIPT
+
+  /**
+   * Displays the advanced JavaScript preferences for enabling or disabling
+   * various annoying behaviors.
+   */
   showAdvancedJS: function ()
   {
     document.documentElement.openSubDialog("chrome://browser/content/preferences/advanced-scripts.xul",
                                            "", null);  
   },
 
-  showFonts: function ()
+  // FONTS
+
+  /**
+   * Displays the fonts dialog, where web page font names and sizes can be
+   * configured.
+   */  
+  configureFonts: function ()
   {
     document.documentElement.openSubDialog("chrome://browser/content/preferences/fonts.xul",
-                                           "", null);  
+                                           "", null);
   },
 
-  showColors: function ()
+  /**
+   * Displays the colors dialog, where default web page/link/etc. colors can be
+   * configured.
+   */
+  configureColors: function ()
   {
     document.documentElement.openSubDialog("chrome://browser/content/preferences/colors.xul",
                                            "", null);  
+  },
+
+#ifdef MOZ_FEEDS
+  // FEEDS
+  
+  /*
+   * Preferences:
+   *
+   * XXX fill these in when this code is written!
+   */
+
+  /**
+   * Displays a dialog from which a feed reader can be chosen.
+   */
+  chooseFeedReader: function ()
+  {
+    openDialog("chrome://browser/content/feeds/options.xul", "", "modal,centerscreen");
+  },
+
+#endif
+
+  // FILE TYPES
+
+  /**
+   * Displays the file type configuration dialog.
+   */
+  configureFileTypes: function ()
+  {
+    document.documentElement.openWindow("Preferences:DownloadActions",
+                                        "chrome://browser/content/preferences/downloadactions.xul",
+                                        "", null);
   }
+
 };

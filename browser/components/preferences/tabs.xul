@@ -23,6 +23,7 @@
 #
 # Contributor(s):
 #   Ben Goodger <ben@mozilla.org>
+#   Jeff Walden <jwalden+bmo@mit.edu>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -49,10 +50,11 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <prefpane id="paneTabs" helpTopic="prefs-tabs" helpURI="chrome://browser/locale/help/help.rdf">
-    <preferences>
+
+    <preferences id="tabsPreferences">
       <preference id="browser.link.open_external"      name="browser.link.open_external"      type="int"/>
       <preference id="browser.link.open_newwindow"     name="browser.link.open_newwindow"     type="int"/>
-      <preference id="browser.tabs.autoHide"           name="browser.tabs.autoHide"           type="bool"/>
+      <preference id="browser.tabs.autoHide"           name="browser.tabs.autoHide"           type="bool" inverted="true"/>
       <preference id="browser.tabs.loadInBackground"   name="browser.tabs.loadInBackground"   type="bool" inverted="true"/>
       <preference id="browser.tabs.warnOnClose"        name="browser.tabs.warnOnClose"        type="bool"/>
       <preference id="browser.tabs.warnOnOpen"         name="browser.tabs.warnOnOpen"         type="bool"/>
@@ -60,30 +62,38 @@
     
     <script type="application/x-javascript" src="chrome://browser/content/preferences/tabs.js"/>
 
-    <groupbox align="start">
-      <caption label="&linkTargeting.label;"/>
-      <radiogroup id="linkTargeting"
-                  preference="browser.link.open_external"
-                  onsyncfrompreference="return gTabsPane.readLinkTarget();"
-                  onsynctopreference="return gTabsPane.writeLinkTarget();">
-        <radio label="&newWindow.label;" accesskey="&newWindow.accesskey;" value="2"/>
-        <radio label="&newTabInRecentWindow.label;" accesskey="&newTabInRecentWindow.accesskey;" value="3"/>
-      </radiogroup>
+    <groupbox id="tabsGroup" orient="vertical">
+
+      <vbox id="linksOpenInBox">
+        <label control="linkTargeting">&linksOpenIn.label;</label>
+        <radiogroup id="linkTargeting" class="indent"
+                    preference="browser.link.open_external"
+                    onsyncfrompreference="return gTabsPane.readLinkTarget();"
+                    onsynctopreference="return gTabsPane.writeLinkTarget();">
+          <radio label="&inNewWindow.label;" accesskey="&inNewWindow.accesskey;" value="2"/>
+          <radio label="&inNewTab.label;" accesskey="&inNewTab.accesskey;" value="3"/>
+        </radiogroup>
+      </vbox>
+
+      <separator id="tabsSeparator"/>
+
+      <vbox id="tabPrefsBox" align="start">
+        <checkbox id="warnCloseMultiple" label="&warnCloseMultiple.label;"
+                  accesskey="&warnCloseMultiple.accesskey;"
+                  preference="browser.tabs.warnOnClose"/>
+        <checkbox id="warnOpenMany" label="&warnOpenMany.label;"
+                  accesskey="&warnOpenMany.accesskey;"
+                  preference="browser.tabs.warnOnOpen"/>
+        <checkbox id="showTabBar" label="&showTabBar.label;"
+                  accesskey="&showTabBar.accesskey;"
+                  preference="browser.tabs.autoHide"/>
+        <checkbox id="switchToNewTabs" label="&switchToNewTabs.label;"
+                  accesskey="&switchToNewTabs.accesskey;"
+                  preference="browser.tabs.loadInBackground"/>
+      </vbox>
+
     </groupbox>
-    <vbox align="start">
-      <checkbox id="hideTabBar" label="&hideTabBar.label;"
-                accesskey="&hideTabBar.accesskey;"
-                preference="browser.tabs.autoHide"/>
-      <checkbox id="loadInBackground" label="&loadInBackground.label;"
-                accesskey="&loadInBackground.accesskey;"
-                preference="browser.tabs.loadInBackground"/>
-      <checkbox id="warnOnClose" label="&warnOnClose.label;"
-                accesskey="&warnOnClose.accesskey;"
-                preference="browser.tabs.warnOnClose"/>
-      <checkbox id="warnOnOpen" label="&warnOnOpen.label;"
-                accesskey="&warnOnOpen.accesskey;"
-                preference="browser.tabs.warnOnOpen"/>
-    </vbox>
+
   </prefpane>
 
 </overlay>

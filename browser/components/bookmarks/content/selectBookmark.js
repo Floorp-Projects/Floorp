@@ -39,6 +39,7 @@
 var gBookmarkTree;
 var gOK;
 var gUrls;
+var gNames;
 
 function Startup()
 {
@@ -60,8 +61,9 @@ function updateOK()
 {
   var selection = gBookmarkTree._selection;
   var ds = gBookmarkTree.tree.database;
-  var url;
+  var url, name;
   gUrls = [];
+  gNames = [];
   for (var i=0; i<selection.length; ++i) {
     var type     = selection.type[i];
 // XXX protocol is broken since we have unique id...
@@ -69,9 +71,12 @@ function updateOK()
 //    if ((type == "Bookmark" || type == "") && 
 //        protocol != "find" && protocol != "javascript") {
     if (type == "Bookmark" || type == "") {
-      url = BookmarksUtils.getProperty(selection.item[i], gNC_NS+"URL", ds)
-      if (url)
+      url = BookmarksUtils.getProperty(selection.item[i], gNC_NS+"URL", ds);
+      name = BookmarksUtils.getProperty(selection.item[i], gNC_NS+"Name", name);
+      if (url && name) {
         gUrls.push(url);
+        gNames.push(name);
+      }
     } else if (type == "Folder" || type == "PersonalToolbarFolder") {
       RDFC.Init(ds, selection.item[i]);
       var children = RDFC.GetElements();
@@ -84,8 +89,11 @@ function updateOK()
 //            protocol != "javascript") {
           if (type == gNC_NS+"Bookmark") {
           url = BookmarksUtils.getProperty(child, gNC_NS+"URL", ds);
-          if (url)
+          name = BookmarksUtils.getProperty(child, gNC_NS+"Name", ds);
+          if (url && name) {
             gUrls.push(url);
+            gNames.push(name);
+          }
         }
       }
     }
@@ -95,5 +103,6 @@ function updateOK()
 
 function onOK(aEvent)
 {
-  window.arguments[0].url = gUrls.join("|");
+  window.arguments[0].urls = gUrls;
+  window.arguments[0].names = gNames;
 }

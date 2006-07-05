@@ -23,6 +23,7 @@
 #
 # Contributor(s):
 #   Ben Goodger <ben@mozilla.org>
+#   Jeff Walden <jwalden+bmo@mit.edu>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -86,16 +87,16 @@
     <stringbundle id="bundlePreferences"
                   src="chrome://browser/locale/preferences/preferences.properties"/>
 
-    <prefpane id="paneGeneral" label="&paneGeneral.title;"
-              src="chrome://browser/content/preferences/general.xul"/>
-    <prefpane id="panePrivacy" label="&panePrivacy.title;"
-              src="chrome://browser/content/preferences/privacy.xul"/>
-    <prefpane id="paneContent" label="&paneContent.title;"
-              src="chrome://browser/content/preferences/content.xul"/>
+    <prefpane id="paneMain" label="&paneMain.title;"
+              src="chrome://browser/content/preferences/main.xul"/>
     <prefpane id="paneTabs" label="&paneTabs.title;"
               src="chrome://browser/content/preferences/tabs.xul"/>
-    <prefpane id="paneDownloads" label="&paneDownloads.title;"
-              src="chrome://browser/content/preferences/downloads.xul"/>
+    <prefpane id="paneContent" label="&paneContent.title;"
+              src="chrome://browser/content/preferences/content.xul"/>
+    <prefpane id="panePrivacy" label="&panePrivacy.title;"
+              src="chrome://browser/content/preferences/privacy.xul"/>
+    <prefpane id="paneSecurity" label="&paneSecurity.title;"
+              src="chrome://browser/content/preferences/security.xul"/>
     <prefpane id="paneAdvanced" label="&paneAdvanced.title;"
               src="chrome://browser/content/preferences/advanced.xul"/>
 

@@ -23,6 +23,7 @@
 #
 # Contributor(s):
 #   Ben Goodger <ben@mozilla.org>
+#   Jeff Walden <jwalden+code@mit.edu>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -54,38 +55,51 @@
             xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#"
             xmlns:aaa="http://www.w3.org/2005/07/aaa">
 
-    <preferences>
+    <preferences id="advancedPreferences">
       <preference id="browser.preferences.advanced.selectedTabIndex"
                   name="browser.preferences.advanced.selectedTabIndex"
                   type="int"/>
 
+      <!--XXX button prefs -->
+
+      <!-- General tab -->
       <preference id="accessibility.browsewithcaret"   name="accessibility.browsewithcaret"   type="bool"/>
       <preference id="accessibility.typeaheadfind"     name="accessibility.typeaheadfind"     type="bool"/>
-      <preference id="browser.enable_automatic_image_resizing"
-                  name="browser.enable_automatic_image_resizing"
-                  type="bool"/>
+
       <preference id="general.autoScroll"              name="general.autoScroll"              type="bool"/>
       <preference id="general.smoothScroll"            name="general.smoothScroll"            type="bool"/>
 
+
+      <!-- Network tab -->
+      <preference id="browser.cache.disk.capacity"     name="browser.cache.disk.capacity"     type="int"/>
+
+
+      <!-- Update tab -->
       <preference id="app.update.enabled"              name="app.update.enabled"              type="bool"
                   onchange="gAdvancedPane.updateAppUpdateItems();
                             gAdvancedPane.updateAutoItems();
                             gAdvancedPane.updateModeItems();"/>
+      <preference id="extensions.update.enabled"       name="extensions.update.enabled"       type="bool"
+                  onchange="gAdvancedPane.updateAddonUpdateUI();"/>
+      <preference id="browser.search.update"           name="browser.search.update"           type="bool"/>
+
       <preference id="app.update.auto"                 name="app.update.auto"                 type="bool"
                   onchange="gAdvancedPane.updateAutoItems();
                             gAdvancedPane.updateModeItems();"/>
       <preference id="app.update.mode"                 name="app.update.mode"                 type="int"
                   onchange="gAdvancedPane.updateModeItems();"/>
-      <preference id="extensions.update.enabled"       name="extensions.update.enabled"       type="bool"
-                  onchange="gAdvancedPane.updateAddonUpdateUI();"/>
+
       <preference id="app.update.disable_button.showUpdateHistory"
                   name="app.update.disable_button.showUpdateHistory"
                   type="bool"/>
-      <preference id="browser.search.update"           name="browser.search.update"           type="bool"/>
 
+
+      <!-- Encryption tab -->
       <preference id="security.enable_ssl3"            name="security.enable_ssl3"            type="bool"/>
       <preference id="security.enable_tls"             name="security.enable_tls"             type="bool"/>
+
       <preference id="security.default_personal_cert"  name="security.default_personal_cert"  type="string"/>
+
       <preference id="security.disable_button.openCertManager"
                   name="security.disable_button.openCertManager"
                   type="bool"/>
@@ -95,64 +109,101 @@
       <preference id="security.disable_button.openDeviceManager"
                   name="security.disable_button.openDeviceManager"
                   type="bool"/>
-#ifdef MOZ_SAFE_BROWSING
-      <preference id="browser.safebrowsing.enabled"
-                  name="browser.safebrowsing.enabled"
-                  type="bool"
-                  onchange="gAdvancedPane.updateSBItems();"/>
-      <preference id="browser.safebrowsing.remoteLookups"
-                  name="browser.safebrowsing.remoteLookups"
-                  type="bool"/>
-#endif
     </preferences>
     
     <script type="application/x-javascript" src="chrome://browser/content/preferences/advanced.js"/>
 
     <tabbox id="advancedPrefs" flex="1"
             onselect="gAdvancedPane.tabSelectionChanged();">
-      <tabs>
-        <tab label="&generalTab.label;" helpTopic="prefs-advanced-general"/>
-        <tab label="&updateTab.label;" helpTopic="prefs-advanced-update"/>
-        <tab label="&securityTab.label;" helpTopic="prefs-advanced-security"/>
-#ifdef MOZ_SAFE_BROWSING
-        <tab label="&safeBrowsingTab.label;" helpTopic="prefs-advanced-safebrowsing"/>
-#endif
+
+      <tabs id="tabsElement">
+        <tab id="generalTab" label="&generalTab.label;" helpTopic="prefs-advanced-general"/>
+        <tab id="networkTab" label="&networkTab.label;" helpTopic="prefs-advanced-network"/>
+        <tab id="updateTab" label="&updateTab.label;"  helpTopic="prefs-advanced-update"/>
+        <tab id="encryptionTab" label="&encryptionTab.label;" helpTopic="prefs-advanced-encryption"/>
       </tabs>
+
       <tabpanels flex="1">
-        <tabpanel orient="vertical"><!-- General -->
-          <groupbox align="start">
+
+        <!-- General -->
+        <tabpanel id="generalPanel" orient="vertical">
+
+          <!-- Accessibility -->
+          <groupbox id="accessibilityGroup" align="start">
             <caption label="&accessibility.label;"/>
-            <checkbox id="moveSystemCaret" label="&moveSystemCaret.label;" 
-                      accesskey="&moveSystemCaret.accesskey;"
+
+            <checkbox id="useCursorNavigation"
+                      label="&useCursorNavigation.label;"
+                      accesskey="&useCursorNavigation.accesskey;"
                       preference="accessibility.browsewithcaret"/>
-            <checkbox id="useTypeAheadFind" label="&useTypeAheadFind.label;"
-                      accesskey="&useTypeAheadFind.accesskey;"
+            <checkbox id="searchStartTyping"
+                      label="&searchStartTyping.label;"
+                      accesskey="&searchStartTyping.accesskey;"
                       preference="accessibility.typeaheadfind"/>
           </groupbox>
-          <groupbox align="start">
+
+          <!-- Browsing -->
+          <groupbox id="browsingGroup" align="start">
             <caption label="&browsing.label;"/>
-            <checkbox id="enableAutoImageResizing"
-                      label="&enableAutoImageResizing.label;"
-                      accesskey="&enableAutoImageResizing.accesskey;"
-                      preference="browser.enable_automatic_image_resizing"/>
-            <checkbox id="useAutoScrolling" label="&useAutoScrolling.label;"
-                      accesskey="&useAutoScrolling.accesskey;"
+
+            <checkbox id="useAutoScroll"
+                      label="&useAutoScroll.label;"
+                      accesskey="&useAutoScroll.accesskey;"
                       preference="general.autoScroll"/>
-            <checkbox id="useSmoothScrolling" label="&useSmoothScrolling.label;"
+            <checkbox id="useSmoothScrolling"
+                      label="&useSmoothScrolling.label;"
                       accesskey="&useSmoothScrolling.accesskey;"
                       preference="general.smoothScroll"/>
           </groupbox>
-          <groupbox>
-            <caption label="&languages.caption;"/>
-            <hbox align="center">
-              <description flex="1" control="showLanguages">&languagesInfo.label;</description>
-              <button label="&showLanguages.label;"
-                      accesskey="&showLanguages.accesskey;"
+
+          <!-- Languages -->
+          <groupbox id="languagesGroup">
+            <caption label="&languages.label;"/>
+
+            <hbox id="languagesBox" align="center">
+              <description flex="1" control="showLanguages">&chooseLanguage.label;</description>
+              <button id="chooseLanguageButton"
+                      label="&chooseButton.label;"
+                      accesskey="&chooseButton.accesskey;"
                       oncommand="gAdvancedPane.showLanguages();"/>
             </hbox>
           </groupbox>
+
         </tabpanel>
-        <tabpanel orient="vertical" align="start"><!-- Update -->
+
+        <!-- Network -->
+        <tabpanel id="networkPanel" orient="vertical">
+
+           <!-- Connection -->
+           <groupbox id="connectionGroup">
+             <caption label="&connection.label;"/>
+
+             <hbox align="center">
+               <description flex="1" control="connectionSettings">&connectionDesc.label;</description>
+               <button id="connectionSettings" icon="network" label="&connectionSettings.label;"
+                       accesskey="&connectionSettings.accesskey;"
+                       oncommand="gAdvancedPane.showConnections();"/>
+             </hbox>
+           </groupbox>
+
+           <!-- Cache -->
+           <groupbox id="cacheGroup">
+             <caption label="&cache.label;"/>
+
+             <hbox id="cacheSizeBox" align="center">
+               <label control="cacheSize"
+                      accesskey="&useCacheBefore.accesskey;">&useCacheBefore.label;</label>
+               <textbox id="cacheSize" size="2"
+                        preference="browser.cache.disk.capacity"
+                        onsyncfrompreference="return gAdvancedPane.readCacheSize();"
+                        onsynctopreference="return gAdvancedPane.writeCacheSize();"/>
+               <label>&useCacheAfter.label;</label>
+             </hbox>
+           </groupbox>
+        </tabpanel>
+
+        <!-- Update -->
+        <tabpanel id="updatePanel" orient="vertical" align="start">
           <label control="autoUpdateGroup">&autoCheck.label;</label>
           <vbox class="indent" id="autoUpdateGroup" xhtml2:role="wairole:groupbox">
             <checkbox id="enableAppUpdate"
@@ -168,13 +219,15 @@
                       accesskey="&enableSearchUpdate.accesskey;"
                       preference="browser.search.update"/>
           </vbox>
-          <separator/>
+
+          <separator id="updateSeparator1"/>
+
           <label id="updateModeLabel" control="updateMode">&whenUpdatesFound.label;</label>
           <radiogroup id="updateMode" class="indent"
                       preference="app.update.auto">
             <radio id="ask" value="false"
-                   label="&modeAskMe.label;"
-                   accesskey="&modeAskMe.accesskey;"/>
+                   label="&askMe.label;"
+                   accesskey="&askMe.accesskey;"/>
             <radio id="automatic" value="true"
                    label="&modeAutomatic.label;"
                    accesskey="&modeAutomatic.accesskey;"/>
@@ -182,21 +235,28 @@
               <checkbox id="warnIncompatible" 
                         label="&modeAutoWarn.label;" accesskey="&modeAutoWarn.accesskey;"
                         preference="app.update.mode"
-                        onsyncfrompreference="return gAdvancedPane.addonWarnSyncFrom();"
-                        onsynctopreference="return gAdvancedPane.addonWarnSyncTo();"/>
+                        onsyncfrompreference="return gAdvancedPane.readAddonWarn();"
+                        onsynctopreference="return gAdvancedPane.writeAddonWarn();"/>
             </hbox>
           </radiogroup>
-          <separator/>
+
+          <separator id="updateSeparator2"/>
+
           <hbox>
             <button id="showUpdateHistory" 
-                    label="&showUpdates.label;" accesskey="&showUpdates.accesskey;"
+                    label="&updateHistory.label;" accesskey="&updateHistory.accesskey;"
                     preference="app.update.disable_button.showUpdateHistory"
                     oncommand="gAdvancedPane.showUpdates();"/>
           </hbox>
         </tabpanel>
-        <tabpanel orient="vertical"><!-- Security -->
-          <groupbox>
+
+        <!-- Encryption -->
+        <tabpanel id="encryptionPanel" orient="vertical">
+
+          <!-- Protocols -->
+          <groupbox id="protocolsGroup">
             <caption label="&protocols.label;"/>
+
             <grid>
               <columns>
                 <column flex="1"/>
@@ -218,26 +278,23 @@
               </rows>
             </grid>
           </groupbox>
-          <groupbox>
-            <caption label="&securityWarnings.label;"/>
-            <description control="showWarnings"
-                         value="&securityWarnings.description;"/>
-            <separator class="thin"/>
-            <hbox>
-              <button id="showWarnings"
-                      label="&securityWarningsButton.label;"
-                      accesskey="&securityWarningsButton.accesskey;"
-                      oncommand="gAdvancedPane.showWarnings();"/>
-            </hbox>
-          </groupbox>
-          <groupbox>
+
+          <!-- Certificates -->
+          <groupbox id="certificatesGroup">
             <caption label="&certificates.label;"/>
+
             <description control="certselection">&certselect.description;</description>
+
+            <!--
+              The values on these radio buttons may look like l12y issues, but
+              they're not - this preference uses *those strings* as its values.
+              I KID YOU NOT.
+            -->
             <radiogroup id="certSelection" orient="horizontal" preftype="string" 
 	                      preference="security.default_personal_cert">
-              <radio label="&certselect.auto;" accesskey="&certselect.auto.accesskey;" 
+              <radio label="&certs.auto;" accesskey="&certs.auto.accesskey;" 
                      value="Select Automatically"/>
-              <radio label="&certselect.ask;" accesskey="&certselect.ask.accesskey;" 
+              <radio label="&certs.ask;" accesskey="&certs.ask.accesskey;" 
                      value="Ask Every Time"/>
             </radiogroup>
 
@@ -247,19 +304,23 @@
             <vbox>
 #endif
             <hbox>
-              <button label="&viewCertificates.label;" accesskey="&viewCertificates.accesskey;" 
+              <button id="viewCertificatesButton"
+                      label="&viewCerts.label;" accesskey="&viewCerts.accesskey;" 
                       oncommand="gAdvancedPane.showCertificates();"
                       preference="security.disable_button.openCertManager"/>
-              <button label="&viewCRLs.label;" accesskey="&viewCRLs.accesskey;" 
+              <button id="viewCRLButton"
+                      label="&viewCRLs.label;" accesskey="&viewCRLs.accesskey;" 
                       oncommand="gAdvancedPane.showCRLs();"
                       preference="security.OCSP.disable_button.managecrl"/>
-              <button label="&viewOCSP.label;" accesskey="&viewOCSP.accesskey;" 
+              <button id="verificationButton"
+                      label="&verify.label;" accesskey="&verify.accesskey;" 
                       oncommand="gAdvancedPane.showOCSP();"/>
 #ifdef XP_MACOSX
             </hbox>
             <hbox>
 #endif
-              <button label="&viewSecurityDevices.label;" accesskey="&viewSecurityDevices.accesskey;" 
+              <button id="viewSecurityDevicesButton"
+                      label="&viewSecurityDevices.label;" accesskey="&viewSecurityDevices.accesskey;"
                       oncommand="gAdvancedPane.showSecurityDevices();"
                       preference="security.disable_button.openDeviceManager"/>
             </hbox>
@@ -268,36 +329,9 @@
 #endif
           </groupbox>
         </tabpanel>
-#ifdef MOZ_SAFE_BROWSING
-        <tabpanel orient="vertical">
-          <label id="safe-pref">&safeBrowsing.label;</label>
-          <checkbox id="safe-active"
-                    class="indent"
-                    label="&safeBrowsingEnable.label;"
-                    accesskey="&safeBrowsingEnable.accesskey;"
-                    preference="browser.safebrowsing.enabled"/>
-          <radiogroup id="safe-provider" class="indent"
-                      preference="browser.safebrowsing.remoteLookups">
-            <radio id="safe-local" value="false"
-                   class="indent"
-                   label="&safeBrowsingLocal.label;"
-                   accesskey="&safeBrowsingLocal.accesskey;"/>
-            <hbox>
-              <radio id="safe-remote" value="true"
-                     class="indent"
-                     label="&safeBrowsingRemote.label;"
-                     accesskey="&safeBrowsingRemote.accesskey;"/>
-              <menulist id="safe-provider" disabled="true">
-                <menupopup>
-                  <menuitem label="Google"/>
-                </menupopup>
-              </menulist>
-            </hbox>
-          </radiogroup>
-        </tabpanel>
-#endif
+
       </tabpanels>
-    </tabbox>   
+    </tabbox>
   </prefpane>
 
 </overlay>
