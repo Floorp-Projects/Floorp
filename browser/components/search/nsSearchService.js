@@ -1069,7 +1069,7 @@ Engine.prototype = {
       var brandBundle = sbs.createBundle(BRAND_BUNDLE);
       var brandName = brandBundle.GetStringFromName("brandShortName");
       var title = searchBundle.GetStringFromName("error_loading_engine_title");
-      var text = searchBundle.formatStringFromName("error_loading_engine_msg",
+      var text = searchBundle.formatStringFromName("error_loading_engine_msg2",
                                                    [brandName, aEngine._location],
                                                    2);
 
