@@ -802,11 +802,12 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
   // Put the old script back in case it wants to do anything else.
   mCurrentScript = oldCurrent;
 
+  JSContext *cx = nsnull; // Initialize this to keep GCC happy.
   if (stid == nsIProgrammingLanguage::JAVASCRIPT) {
-    JS_BeginRequest((JSContext *)context->GetNativeContext());
+    cx = (JSContext *)context->GetNativeContext();
+    ::JS_BeginRequest(cx);
+    ::JS_ReportPendingException(cx);
   }
-  if (NS_FAILED(rv) && stid == nsIProgrammingLanguage::JAVASCRIPT)
-    ::JS_ReportPendingException((JSContext *)context->GetNativeContext());
 
   context->SetProcessingScriptTag(oldProcessingScriptTag);
 
@@ -816,9 +817,11 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
       GetCurrentNativeCallContext(getter_AddRefs(ncc));
 
     if (ncc) {
+      NS_ASSERTION(!::JS_IsExceptionPending(cx),
+                   "JS_ReportPendingException wasn't called");
       ncc->SetExceptionWasThrown(PR_FALSE);
     }
-    JS_EndRequest((JSContext *)context->GetNativeContext());
+    ::JS_EndRequest(cx);
   }
   return rv;
 }
