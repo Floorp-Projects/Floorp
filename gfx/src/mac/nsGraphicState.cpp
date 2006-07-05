@@ -128,6 +128,7 @@ void nsGraphicState::Clear()
 	mFont						= 0;
   mFontMetrics		= nsnull;
   mCurrFontHandle	= 0;
+  mLineStyle = nsLineStyle_kSolid;
 }
 
 //------------------------------------------------------------------------
@@ -206,6 +207,8 @@ void nsGraphicState::Duplicate(nsGraphicState* aGS)
 	NS_IF_ADDREF(mFontMetrics);
 
 	mCurrFontHandle	= aGS->mCurrFontHandle;
+
+	mLineStyle = aGS->mLineStyle;
 	
 	mChanges				= aGS->mChanges;
 }

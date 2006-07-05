@@ -56,7 +56,6 @@ nsSize nsRenderingContextImpl::gLargestRequestedSize = nsSize(0, 0);
  */
 nsRenderingContextImpl :: nsRenderingContextImpl()
 : mTranMatrix(nsnull)
-, mLineStyle(nsLineStyle_kSolid)
 , mAct(0)
 , mActive(nsnull)
 , mPenMode(nsPenMode_kNone)

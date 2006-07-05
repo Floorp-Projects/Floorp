@@ -82,6 +82,7 @@ public:
   PRInt32               mFont;
   nsIFontMetrics * 			mFontMetrics;
 	PRInt32               mCurrFontHandle;
+  nsLineStyle           mLineStyle;
 	
 	PRUint32							mChanges;							// flags indicating changes between this graphics state and the previous.
 
