@@ -487,30 +487,6 @@ Section "-Application" Section1
     ${EndIf}
   ${EndIf}
 
-  ${LogHeader} "Adding Additional Files"
-  ; Only for Firefox and only if they don't already exist
-  ; Check if QuickTime is installed and copy the contents of its plugins
-  ; directory into the app's plugins directory. Previously only the
-  ; nsIQTScriptablePlugin.xpt files was copied which is not enough to enable
-  ; QuickTime as a plugin.
-  ClearErrors
-  ReadRegStr $R0 HKLM "Software\Apple Computer, Inc.\QuickTime" "InstallDir"
-  ${Unless} ${Errors}
-    Push $R0
-    ${GetPathFromRegStr}
-    Pop $R0
-    ${Unless} ${Errors}
-      GetFullPathName $R0 "$R0\Plugins"
-      ${Unless} ${Errors}
-        ${LogHeader} "Copying QuickTime Plugin Files"
-        ${LogMsg} "Source Directory: $R0\Plugins"
-        StrCpy $R1 "$INSTDIR\plugins"
-        Call DoCopyFiles
-      ${EndUnless}
-    ${EndUnless}
-  ${EndUnless}
-  ClearErrors
-
   ; Default for creating Start Menu folder and shortcuts
   ; (1 = create, 0 = don't create)
   ${If} $AddStartMenuSC == ""
@@ -990,15 +966,27 @@ Function un.RemoveDirsCallback
       Call un.GetParentDir
       Pop $R0
       GetFullPathName $R1 "$R0"
+      ; We only try to remove empty directories but the Desktop, StartMenu, and
+      ; QuickLaunch directories can be empty so gaurd against removing them.
+      SetShellVarContext all
+      ${If} $R1 == "$DESKTOP"
+      ${OrIf} $R1 == "$STARTMENU"
+        GoTo end
+      ${EndIf}
+      SetShellVarContext current
+      ${If} $R1 == "$QUICKLAUNCH"
+      ${OrIf} $R1 == "$DESKTOP"
+      ${OrIf} $R1 == "$STARTMENU"
+        GoTo end
+      ${EndIf}
       ${If} ${FileExists} "$R1"
         RmDir "$R1"
       ${EndIf}
       ${If} ${Errors}
-      ${OrIf} $R2 != "INSTDIR"
+      ${OrIf} $R1 != "$INSTDIR"
         GoTo end
-      ${Else}
-        GoTo loop
       ${EndIf}
+      GoTo loop
   ${EndIf}
 
   end:
