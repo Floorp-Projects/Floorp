@@ -6,15 +6,17 @@
  * @subpackage docs
  */
 
-// Get our cache_id based on what we have in our query string.
-$cacheId = md5($_SERVER['QUERY_STRING']);
-
-startProcessing('search.tpl',$cacheId,$compileId,'nonav');
+startProcessing('search.tpl',$memcacheId,$compileId,'nonav');
 require_once('includes.php');
 
 // Instantiate AMO_Object so we can get our categories and platforms.
 $amo = new AMO_Object();
-$appSelectList = $amo->getApps();
+$appList = $amo->getApps();
+
+$appSelectList = array();
+foreach ($appList as $id=>$name) {
+    $appSelectList[strtolower($name)] = $name; 
+}
 
 // Array to store our page information.
 $page = array();
@@ -54,10 +56,10 @@ if (isset($_GET['appfilter'])&&$_GET['appfilter']!='null'&&(ctype_alpha($_GET['a
 
     $clean['appfilter'] = $_GET['appfilter'];
 
-    if (!is_numeric($clean['appfilter'])) {
-        foreach ($appSelectList as $id=>$name) {
-            if (strtolower($clean['appfilter']) == strtolower($name)) {
-                $clean['appfilter'] = $id;
+    if (is_numeric($clean['appfilter'])) {
+        foreach ($appList as $id=>$name) {
+            if ($clean['appfilter'] == $id) {
+                $clean['appfilter'] = $name;
                 break;
             }
         }
@@ -163,7 +165,7 @@ if (!empty($sql['platform'])) {
 if (!empty($sql['appfilter'])) {
     $select .= " INNER JOIN applications ON version.AppID = applications.AppID ";
 
-    $where .= " applications.AppID = '{$sql['appfilter']}' AND ";
+    $where .= " applications.AppName = '{$sql['appfilter']}' AND ";
 }
 
 if (!empty($sql['q'])) {
