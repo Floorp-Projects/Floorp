@@ -982,20 +982,25 @@
               
             var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"]
                              .getService(Components.interfaces.nsIMsgTagService);
+            
             // tokenize the keywords based on ' '
             var tagsArray = aTags.split(' ');
-            var decodedTagName;
             for (var index = 0; index < tagsArray.length; index++)
             {
               // for each tag, create a label, give it the font color that corresponds to the
               // color of the tag and append it.
-              decodedTagName = decodeURIComponent(tagsArray[index]);
-              var tagKey = tagService.getKeyForTag(decodedTagName);
-              var color = tagService.getColorForKey(tagKey);              
+              var tagName;
+              try {
+                // if we got a bad tag name, getTagForKey will throw an exception, skip it 
+                // and go to the next one.
+                tagName = tagService.getTagForKey(tagsArray[index]);
+              } catch (ex) { continue; }
+              
+              var color = tagService.getColorForKey(tagsArray[index]);
               
               // now create a label for the tag name, and set the color
               var label = document.createElement("label");              
-              label.setAttribute('value', decodedTagName);
+              label.setAttribute('value', tagName);
               label.style.color = color;
               label.className = "tagvalue";
               headerValueNode.appendChild(label);

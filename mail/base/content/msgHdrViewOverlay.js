@@ -536,20 +536,17 @@ function setTagHeader()
   if (label > 0)
   {
     var labelTag = '$label' + label;
-    if (!tags.search(labelTag)) // don't add the label if it's already in our keyword list
-      tagsString = encodeURIComponent(gPrefBranch.getComplexValue("mailnews.labels.description." + label, 
-                   Components.interfaces.nsIPrefLocalizedString).data);
+    if (!tags || !tags.search(labelTag)) // don't add the label if it's already in our keyword list
+      tagsString = labelTag;
   }
   
-  // now convert the list of tag ids into user presentable strings, separate by commas
+  // rebuild the keywords string with just the keys that are
+  // actual tags and not other keywords like Junk and NonJunk.
   var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"]
                    .getService(Components.interfaces.nsIMsgTagService);
-  // tokenize the keywords based on ' '
   var tagsArray = tags.split(' ');
   for (var index = 0; index < tagsArray.length; index++)
   {
-    if (tagsArray[index])
-    {
       var tagName;
       try {
         // if we got a bad tag name, getTagForKey will throw an exception, skip it 
@@ -561,8 +558,7 @@ function setTagHeader()
       {          
         if (tagsString)
           tagsString += " ";
-        tagsString += encodeURIComponent(tagName);
-      }
+      tagsString += tagsArray[index];
     }
   }
   
