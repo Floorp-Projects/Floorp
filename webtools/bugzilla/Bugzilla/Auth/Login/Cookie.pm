@@ -22,6 +22,8 @@ use base qw(Bugzilla::Auth::Login);
 use Bugzilla::Constants;
 use Bugzilla::Util;
 
+use List::Util qw(first);
+
 use constant requires_persistence  => 0;
 use constant requires_verification => 0;
 use constant can_login => 0;
@@ -37,6 +39,19 @@ sub get_login_info {
     my $net_addr     = get_netaddr($ip_addr);
     my $login_cookie = $cgi->cookie("Bugzilla_logincookie");
     my $user_id      = $cgi->cookie("Bugzilla_login");
+
+    # If cookies cannot be found, this could mean that they haven't
+    # been made available yet. In this case, look at Bugzilla_cookie_list.
+    unless ($login_cookie) {
+        my $cookie = first {$_->name eq 'Bugzilla_logincookie'}
+                            @{$cgi->{'Bugzilla_cookie_list'}};
+        $login_cookie = $cookie->value if $cookie;
+    }
+    unless ($user_id) {
+        my $cookie = first {$_->name eq 'Bugzilla_login'}
+                            @{$cgi->{'Bugzilla_cookie_list'}};
+        $user_id = $cookie->value if $cookie;
+    }
 
     if ($login_cookie && $user_id) {
         # Anything goes for these params - they're just strings which
