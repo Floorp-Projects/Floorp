@@ -117,6 +117,8 @@ typedef unsigned int DragReference;
 #include "nsICommandManager.h"
 #include "nsICommandParams.h"
 
+#include "GeckoUtils.h"
+
 
 const char kPersistContractID[] = "@mozilla.org/embedding/browser/nsWebBrowserPersist;1";
 const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
@@ -1218,6 +1220,16 @@ const long NSFindPanelActionSetFindString = 7;
     return NULL;
   return privWin->GetDocShell();
 }
+
+// used for finding a blocked popup's docshell
+// addrefs the result!
+- (already_AddRefed<nsIDocShell>)findDocShellForURI:(nsIURI*)aURI
+{
+  nsIDocShell *match;
+  GeckoUtils::FindDocShellForURI(aURI, [self getDocShell], &match);
+  return match;
+}
+
 
 - (id<CHBrowserContainer>)getBrowserContainer
 {

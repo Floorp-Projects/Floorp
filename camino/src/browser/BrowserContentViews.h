@@ -58,8 +58,3 @@
 }
 
 @end
-
-@interface BookmarkManagerView : NSView
-{
-}
-@end

@@ -1111,7 +1111,7 @@ KeychainFormSubmitObserver::CheckChangeDataYN(nsIDOMWindowInternal* window)
 {
 }
 
-- (void)onPopupBlocked:(nsIURI*)inURIBlocked fromSite:(nsIURI*)inSite
+- (void)onPopupBlocked:(nsIDOMPopupBlockedEvent*)data;
 {
 }
 

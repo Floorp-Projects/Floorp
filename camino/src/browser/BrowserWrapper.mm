@@ -55,7 +55,8 @@
 
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
-#include "nsISupportsArray.h"
+#include "nsIMutableArray.h"
+#include "nsIArray.h"
 #include "nsIURI.h"
 #include "nsIIOService.h"
 #include "nsIDocument.h"
@@ -71,6 +72,7 @@
 #include "nsIWebProgressListener.h"
 #include "nsIBrowserDOMWindow.h"
 
+class nsIDOMPopupBlockedEvent;
 
 static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 
@@ -134,7 +136,6 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
     mListenersAttached = NO;
     mSecureState = nsIWebProgressListener::STATE_IS_INSECURE;
     mProgress = 0.0;
-    mBlockedSites = nsnull;
 
     BOOL gotPref;
     BOOL pluginsEnabled = [[PreferenceManager sharedInstance] getBooleanPref:"camino.enable_plugins" withSuccess:&gotPref];
@@ -317,7 +318,7 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   if (!mBlockedSites) return NO;
   
   PRUint32 numBlocked = 0;
-  mBlockedSites->Count(&numBlocked);
+  mBlockedSites->GetLength(&numBlocked);
   
   return (numBlocked > 0);
 }
@@ -526,7 +527,8 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   {
     // defer hiding of blocked popup view until we've loaded the new page
     [self removeBlockedPopupViewAndDisplay];
-    NS_IF_RELEASE(mBlockedSites);
+    if(mBlockedSites)
+      mBlockedSites->Clear();
     [mDelegate showPopupBlocked:NO];
   
     NSString* faviconURI = [SiteIconProvider defaultFaviconLocationStringFromURI:urlSpec];
@@ -708,18 +710,18 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 //
 // - onPopupBlocked:fromSite:
 //
-// Called when gecko blocks a popup, telling us who it came from. Keep track
-// of the blocked URI so we can allow the user to unblock the site later. This
+// Called when gecko blocks a popup, telling us who it came from, the modifiers of the popup
+// and more data that we'll need if the user wants to unblock the popup later. This
 // doesn't show the blocked popup view, we wait until the page finishes loading
 // to do that.
 //
-- (void)onPopupBlocked:(nsIURI*)inURIBlocked fromSite:(nsIURI*)inSite
+- (void)onPopupBlocked:(nsIDOMPopupBlockedEvent*)eventData;
 {
   // lazily instantiate.
   if (!mBlockedSites)
-    NS_NewISupportsArray(&mBlockedSites);
+    CallCreateInstance(NS_ARRAY_CONTRACTID, &mBlockedSites);
   if (mBlockedSites) {
-    mBlockedSites->AppendElement(inSite);
+    mBlockedSites->AppendElement((nsISupports*)eventData, PR_FALSE);
     [mDelegate showPopupBlocked:YES];
   }
 }
@@ -1046,14 +1048,6 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   return [[self getBrowserView] currentCharset];
 }
 
-- (void)getBlockedSites:(nsISupportsArray**)outSites
-{
-  if ( !outSites )
-    return;
-  *outSites = mBlockedSites;
-  NS_IF_ADDREF(*outSites);
-}
-
 //
 // -configurePopupBlocking:
 //
@@ -1077,7 +1071,8 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 {
   NS_ASSERTION([self popupsBlocked], "no popups to unblock!");
   if ([self popupsBlocked]) {
-    [mDelegate unblockAllPopupSites:mBlockedSites];
+    nsCOMPtr<nsIArray> blockedSites = do_QueryInterface(mBlockedSites);
+    [mDelegate unblockAllPopupSites:blockedSites];
     [self removeBlockedPopupViewAndDisplay];
   }
 }

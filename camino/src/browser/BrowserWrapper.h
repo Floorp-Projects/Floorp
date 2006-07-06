@@ -42,7 +42,8 @@
 @class ToolTip;
 @class AutoCompleteTextField;
 
-class nsISupportsArray;
+class nsIMutableArray;
+class nsIArray;
 
 // 
 // The BrowserWrapper communicates with the UI via this delegate.
@@ -65,7 +66,7 @@ class nsISupportsArray;
 
 - (void)showPopupBlocked:(BOOL)blocked;
 - (void)configurePopupBlocking;
-- (void)unblockAllPopupSites:(nsISupportsArray*)inSites;
+- (void)unblockAllPopupSites:(nsIArray*)inSites;
 - (void)showSecurityState:(unsigned long)state;
 
 - (BOOL)userChangedLocationField;
@@ -138,9 +139,9 @@ class nsISupportsArray;
   NSString*                 mTitle;
     // the title we use for the tab. This differs for mTitle when the tab is loading
   NSString*                 mTabTitle;
-    // array of sites that have blocked popups. If nil, no sites are blocked. Cleared
-    // after each new page.
-  nsISupportsArray*         mBlockedSites;    // STRONG
+    // array of popupevents that have been blocked. We can use them to reconstruct the popups
+    // later. If nil, no sites are blocked. Cleared after each new page.
+  nsIMutableArray*          mBlockedSites;
 
   CHBrowserView*            mBrowserView;     // retained
   NSString*                 mDefaultStatusString;
@@ -194,7 +195,6 @@ class nsISupportsArray;
 
 - (NSString*)getCurrentURI;
 
-- (void)getBlockedSites:(nsISupportsArray**)outSites;
 - (IBAction)configurePopupBlocking:(id)sender;
 - (IBAction)unblockPopupSites:(id)sender;
 - (IBAction)hideBlockedPopupView:(id)sender;

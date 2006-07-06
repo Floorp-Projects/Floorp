@@ -50,7 +50,9 @@
 class CHBrowserListener;
 class nsIDOMWindow;
 class nsIWebBrowser;
+class nsIDocShell;
 class nsIDOMNode;
+class nsIDOMPopupBlockedEvent;
 class nsIDOMEvent;
 class nsIEventSink;
 class nsIDragHelperService;
@@ -82,7 +84,7 @@ class nsISecureBrowserUI;
 - (void)onShowTooltip:(NSPoint)where withText:(NSString*)text;
 - (void)onHideTooltip;
 // Called when a popup is blocked
-- (void)onPopupBlocked:(nsIURI*)inURIBlocked fromSite:(nsIURI*)inSite;
+- (void)onPopupBlocked:(nsIDOMPopupBlockedEvent*)data;
 // Called when a "shortcut icon" link element is noticed
 - (void)onFoundShortcutIcon:(NSString*)inIconURI;
 
@@ -281,6 +283,8 @@ typedef enum {
 
 - (already_AddRefed<nsISupports>)getPageDescriptor;
 - (void)setPageDescriptor:(nsISupports*)aDesc displayType:(PRUint32)aDisplayType;
+
+- (already_AddRefed<nsIDocShell>)findDocShellForURI:(nsIURI*)aURI;
 
 @end
 

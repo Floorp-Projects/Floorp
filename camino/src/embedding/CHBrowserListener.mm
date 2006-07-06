@@ -769,13 +769,10 @@ CHBrowserListener::HandleEvent(nsIDOMEvent* inEvent)
 nsresult
 CHBrowserListener::HandleBlockedPopupEvent(nsIDOMEvent* inEvent)
 {
-  nsCOMPtr<nsIDOMPopupBlockedEvent> blockEvent = do_QueryInterface(inEvent);
-  if (blockEvent) {
-    nsCOMPtr<nsIURI> blockedURI, blockedSite;
-    blockEvent->GetPopupWindowURI(getter_AddRefs(blockedURI));
-    blockEvent->GetRequestingWindowURI(getter_AddRefs(blockedSite));
-    [mContainer onPopupBlocked:blockedURI fromSite:blockedSite];
-  }
+  nsCOMPtr<nsIDOMPopupBlockedEvent> blockedPopupEvent = do_QueryInterface(inEvent);
+  if (blockedPopupEvent)
+    [mContainer onPopupBlocked:blockedPopupEvent];
+
   return NS_OK;
 }
 

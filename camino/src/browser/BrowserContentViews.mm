@@ -186,24 +186,3 @@
 }
 
 @end
-
-#pragma mark -
-
-@implementation BookmarkManagerView
-
-- (BOOL) isOpaque
-{
-  return YES;
-}
-
-- (void)drawRect:(NSRect)aRect
-{
-  [[NSColor windowBackgroundColor] set];
-  NSRectFill(aRect);
-  [[NSColor lightGrayColor] set];
-  NSFrameRect([self bounds]);
-}
-
-@end
-
-

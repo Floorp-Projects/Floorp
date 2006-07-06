@@ -187,7 +187,7 @@ typedef enum
 
 - (void)focusURLBar;
 
-- (void)unblockAllPopupSites:(nsISupportsArray*)inSites;
+- (void)unblockAllPopupSites:(nsIArray*)inSites;
 
 - (void)performAppropriateLocationAction;
 - (IBAction)goToLocationFromToolbarURLField:(id)sender;
