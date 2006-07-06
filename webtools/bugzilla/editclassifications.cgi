@@ -29,13 +29,15 @@ use Bugzilla::Util;
 use Bugzilla::Error;
 use Bugzilla::Classification;
 
-my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
+my $cgi = Bugzilla->cgi;
 my $template = Bugzilla->template;
-my $vars = {};
+local our $vars = {};
 
 sub LoadTemplate {
     my $action = shift;
+    my $cgi = Bugzilla->cgi;
+    my $template = Bugzilla->template;
 
     $action =~ /(\w+)/;
     $action = $1;

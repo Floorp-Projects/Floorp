@@ -26,7 +26,7 @@ use Bugzilla::Error;
 use Bugzilla::User::Setting;
 
 my $template = Bugzilla->template;
-my $vars = {};
+local our $vars = {};
 
 ###############################
 ###  Subroutine Definitions ###

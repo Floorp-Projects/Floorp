@@ -41,11 +41,9 @@ use Bugzilla::Component;
 
 # Make sure the user is logged in.
 my $user = Bugzilla->login();
-my $userid = $user->id;
 
 my $cgi = Bugzilla->cgi;
-my $template = Bugzilla->template;
-my $vars = {};
+local our $vars = {};
 
 
 ################################################################################
@@ -74,6 +72,9 @@ exit;
 sub queue {
     my $cgi = Bugzilla->cgi;
     my $dbh = Bugzilla->dbh;
+    my $template = Bugzilla->template;
+    my $user = Bugzilla->user;
+    my $userid = $user->id;
 
     my $status = validateStatus($cgi->param('status'));
     my $form_group = validateGroup($cgi->param('group'));

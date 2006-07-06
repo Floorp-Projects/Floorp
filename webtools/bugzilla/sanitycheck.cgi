@@ -333,6 +333,7 @@ print "OK, now running sanity checks.<p>\n";
 sub CrossCheck {
     my $table = shift @_;
     my $field = shift @_;
+    my $dbh = Bugzilla->dbh;
 
     Status("Checking references to $table.$field");
 
@@ -509,6 +510,7 @@ sub DoubleCrossCheck {
     my $table = shift @_;
     my $field1 = shift @_;
     my $field2 = shift @_;
+    my $dbh = Bugzilla->dbh;
  
     Status("Checking references to $table.$field1 / $table.$field2");
  
@@ -582,12 +584,9 @@ while (my ($id, $email) = $sth->fetchrow_array) {
 # Perform vote/keyword cache checks
 ###########################################################################
 
-my $offervotecacherebuild = 0;
-
 sub AlertBadVoteCache {
     my ($id) = (@_);
     Alert("Bad vote cache for bug " . BugLink($id));
-    $offervotecacherebuild = 1;
 }
 
 $sth = $dbh->prepare(q{SELECT bug_id, votes, keywords
@@ -615,21 +614,25 @@ $sth = $dbh->prepare(q{SELECT bug_id, SUM(vote_count)
                        $dbh->sql_group_by('bug_id'));
 $sth->execute;
 
+my $offer_votecache_rebuild = 0;
+
 while (my ($id, $v) = $sth->fetchrow_array) {
     if ($v <= 0) {
         Alert("Bad vote sum for bug $id");
     } else {
         if (!defined $votes{$id} || $votes{$id} != $v) {
             AlertBadVoteCache($id);
+            $offer_votecache_rebuild = 1;
         }
         delete $votes{$id};
     }
 }
 foreach my $id (keys %votes) {
     AlertBadVoteCache($id);
+    $offer_votecache_rebuild = 1;
 }
 
-if ($offervotecacherebuild) {
+if ($offer_votecache_rebuild) {
     print qq{<a href="sanitycheck.cgi?rebuildvotecache=1">Click here to rebuild the vote cache</a><p>\n};
 }
 
@@ -752,6 +755,7 @@ if (defined $cgi->param('rebuildkeywordcache')) {
 
 sub BugCheck {
     my ($middlesql, $errortext, $repairparam, $repairtext) = @_;
+    my $dbh = Bugzilla->dbh;
  
     my $badbugs = $dbh->selectcol_arrayref(qq{SELECT DISTINCT bugs.bug_id
                                                 FROM $middlesql 
@@ -817,6 +821,8 @@ BugCheck("bugs INNER JOIN products ON bugs.product_id = products.id " .
 sub DateCheck {
     my $table = shift @_;
     my $field = shift @_;
+    my $dbh = Bugzilla->dbh;
+
     Status("Checking dates in $table.$field");
     my $c = $dbh->selectrow_array(qq{SELECT COUNT($field)
                                        FROM $table

@@ -103,7 +103,7 @@ if ($userid) {
          undef, ($userid, DEFAULT_QUERY_NAME));
 }
 
-my %default;
+local our %default;
 
 # We pass the defaults as a hash of references to arrays. For those
 # Items which are single-valued, the template should only reference [0]

@@ -145,7 +145,7 @@ $user->can_enter_product($product ? $product->name : $product_name, THROW_ERROR)
 ##############################################################################
 sub formvalue {
     my ($name, $default) = (@_);
-    return $cgi->param($name) || $default || "";
+    return Bugzilla->cgi->param($name) || $default || "";
 }
 
 # Takes the name of a field and a list of possible values for that 

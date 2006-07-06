@@ -60,13 +60,13 @@ use Bugzilla::Flag;
 use Bugzilla::FlagType;
 
 my $user = Bugzilla->login(LOGIN_REQUIRED);
-my $whoid = $user->id;
+local our $whoid = $user->id;
 my $grouplist = $user->groups_as_string;
 
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
 my $template = Bugzilla->template;
-my $vars = {};
+local our $vars = {};
 $vars->{'use_keywords'} = 1 if Bugzilla::Keyword::keyword_count();
 
 my @editable_bug_fields = editable_bug_fields();
@@ -269,6 +269,7 @@ foreach my $field_name ('product', 'component', 'version') {
 #
 sub CheckonComment {
     my ($function) = (@_);
+    my $cgi = Bugzilla->cgi;
     
     # Param is 1 if comment should be added !
     my $ret = Bugzilla->params->{ "commenton" . $function };
@@ -413,6 +414,10 @@ if (((defined $cgi->param('id') && $cgi->param('product') ne $oldproduct)
 
 # Confirm that the reporter of the current bug can access the bug we are duping to.
 sub DuplicateUserConfirm {
+    my $cgi = Bugzilla->cgi;
+    my $dbh = Bugzilla->dbh;
+    my $template = Bugzilla->template;
+
     # if we've already been through here, then exit
     if (defined $cgi->param('confirm_add_duplicate')) {
         return;
@@ -586,10 +591,11 @@ if ($action eq Bugzilla->params->{'move-button-text'}) {
 
 $::query = "UPDATE bugs SET";
 $::comma = "";
-my @values;
+local our @values;
 umask(0);
 
 sub _remove_remaining_time {
+    my $cgi = Bugzilla->cgi;
     if (UserInGroup(Bugzilla->params->{'timetrackinggroup'})) {
         if ( defined $cgi->param('remaining_time') 
              && $cgi->param('remaining_time') > 0 )
@@ -611,9 +617,12 @@ sub DoComma {
 
 # $everconfirmed is used by ChangeStatus() to determine whether we are
 # confirming the bug or not.
-my $everconfirmed;
+local our $everconfirmed;
 sub DoConfirm {
-    if ($bug->check_can_change_field("canconfirm", 0, 1, \$PrivilegesRequired)) {
+    my $bug = shift;
+    if ($bug->check_can_change_field("canconfirm", 0, 1, 
+                                     \$PrivilegesRequired)) 
+    {
         DoComma();
         $::query .= "everconfirmed = 1";
         $everconfirmed = 1;
@@ -622,6 +631,9 @@ sub DoConfirm {
 
 sub ChangeStatus {
     my ($str) = (@_);
+    my $cgi = Bugzilla->cgi;
+    my $dbh = Bugzilla->dbh;
+
     if (!$cgi->param('dontchange')
         || $str ne $cgi->param('dontchange')) {
         DoComma();
@@ -683,6 +695,9 @@ sub ChangeStatus {
 
 sub ChangeResolution {
     my ($str) = (@_);
+    my $dbh = Bugzilla->dbh;
+    my $cgi = Bugzilla->cgi;
+
     if (!$cgi->param('dontchange')
         || $str ne $cgi->param('dontchange'))
     {
@@ -986,12 +1001,12 @@ SWITCH: for ($cgi->param('knob')) {
         last SWITCH;
     };
     /^confirm$/ && CheckonComment( "confirm" ) && do {
-        DoConfirm();
+        DoConfirm($bug);
         ChangeStatus('NEW');
         last SWITCH;
     };
     /^accept$/ && CheckonComment( "accept" ) && do {
-        DoConfirm();
+        DoConfirm($bug);
         ChangeStatus('ASSIGNED');
         if (Bugzilla->params->{"usetargetmilestone"} 
             && Bugzilla->params->{"musthavemilestoneonaccept"}) 
@@ -1034,7 +1049,7 @@ SWITCH: for ($cgi->param('knob')) {
     };
     /^reassign$/ && CheckonComment( "reassign" ) && do {
         if ($cgi->param('andconfirm')) {
-            DoConfirm();
+            DoConfirm($bug);
         }
         ChangeStatus('NEW');
         DoComma();
@@ -1066,7 +1081,7 @@ SWITCH: for ($cgi->param('knob')) {
     };
     /^reassignbycomponent$/  && CheckonComment( "reassignbycomponent" ) && do {
         if ($cgi->param('compconfirm')) {
-            DoConfirm();
+            DoConfirm($bug);
         }
         ChangeStatus('NEW');
         last SWITCH;
@@ -1210,13 +1225,13 @@ if (UserInGroup(Bugzilla->params->{'timetrackinggroup'})) {
 }
 
 my $basequery = $::query;
-my $delta_ts;
 
-
+local our $delta_ts;
 sub SnapShotBug {
     my ($id) = (@_);
+    my $dbh = Bugzilla->dbh;
     my @row = $dbh->selectrow_array(q{SELECT delta_ts, } .
-                join(',', @editable_bug_fields).q{ FROM bugs WHERE bug_id = ?},
+                join(',', editable_bug_fields()).q{ FROM bugs WHERE bug_id = ?},
                 undef, $id);
     $delta_ts = shift @row;
 
@@ -1226,6 +1241,7 @@ sub SnapShotBug {
 
 sub SnapShotDeps {
     my ($i, $target, $me) = (@_);
+    my $dbh = Bugzilla->dbh;
     my $list = $dbh->selectcol_arrayref(qq{SELECT $target FROM dependencies
                                         WHERE $me = ? ORDER BY $target},
                                         undef, $i);
@@ -1234,10 +1250,11 @@ sub SnapShotDeps {
 
 
 my $timestamp;
-my $bug_changed;
 
+local our $bug_changed;
 sub LogDependencyActivity {
     my ($i, $oldstr, $target, $me, $timestamp) = (@_);
+    my $dbh = Bugzilla->dbh;
     my $newstr = SnapShotDeps($i, $target, $me);
     if ($oldstr ne $newstr) {
         # Figure out what's really different...

@@ -186,7 +186,7 @@ foreach my $chart (@charts) {
 # Utilities
 ################################################################################
 
-my @weekday= qw( Sun Mon Tue Wed Thu Fri Sat );
+local our @weekday= qw( Sun Mon Tue Wed Thu Fri Sat );
 sub DiffDate {
     my ($datestr) = @_;
     my $date = str2time($datestr);
@@ -520,7 +520,7 @@ if (!$params->param('query_format')) {
 # Note: For column names using aliasing (SQL "<field> AS <alias>"), the column
 #       ID needs to be identical to the field ID for list ordering to work.
 
-my $columns = {};
+local our $columns = {};
 sub DefineColumn {
     my ($id, $name, $title) = @_;
     $columns->{$id} = { 'name' => $name , 'title' => $title };

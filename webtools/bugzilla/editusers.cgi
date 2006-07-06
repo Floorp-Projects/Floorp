@@ -37,10 +37,10 @@ my $user = Bugzilla->login(LOGIN_REQUIRED);
 
 my $cgi       = Bugzilla->cgi;
 my $template  = Bugzilla->template;
-my $vars      = {};
 my $dbh       = Bugzilla->dbh;
 my $userid    = $user->id;
 my $editusers = $user->in_group('editusers');
+local our $vars     = {};
 
 # Reject access if there is no sense in continuing.
 $editusers
@@ -778,6 +778,7 @@ sub check_user {
 
 # Copy incoming list selection values from CGI params to template variables.
 sub mirrorListSelectionValues {
+    my $cgi = Bugzilla->cgi;
     if (defined($cgi->param('matchtype'))) {
         foreach ('matchvalue', 'matchstr', 'matchtype', 'grouprestrict', 'groupid') {
             $vars->{'listselectionvalues'}{$_} = $cgi->param($_);
@@ -791,6 +792,7 @@ sub userDataToVars {
     my $otheruserid = shift;
     my $otheruser = new Bugzilla::User($otheruserid);
     my $query;
+    my $user = Bugzilla->user;
     my $dbh = Bugzilla->dbh;
 
     my $grouplist = $otheruser->groups_as_string;
@@ -846,8 +848,10 @@ sub userDataToVars {
 
 sub edit_processing {
     my $otherUser = shift;
+    my $user = Bugzilla->user;
+    my $template = Bugzilla->template;
 
-    $editusers || $user->can_see_user($otherUser)
+    $user->in_group('editusers') || $user->can_see_user($otherUser)
         || ThrowUserError('auth_failure', {reason => "not_visible",
                                            action => "modify",
                                            object => "user"});

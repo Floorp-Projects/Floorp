@@ -72,7 +72,7 @@ my %before;
 # Get params from URL
 sub formvalue {
     my ($name, $default) = (@_);
-    return $cgi->param($name) || $default || "";
+    return Bugzilla->cgi->param($name) || $default || "";
 }
 
 my $sortby = formvalue("sortby");

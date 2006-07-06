@@ -52,9 +52,13 @@ use Bugzilla::Token;
 
 Bugzilla->login();
 
-my $cgi = Bugzilla->cgi;
-my $template = Bugzilla->template;
-my $vars = {};
+# For most scripts we don't make $cgi and $template global variables. But
+# when preparing Bugzilla for mod_perl, this script used these
+# variables in so many subroutines that it was easier to just
+# make them globals.
+local our $cgi = Bugzilla->cgi;
+local our $template = Bugzilla->template;
+local our $vars = {};
 
 ################################################################################
 # Main Body Execution

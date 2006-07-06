@@ -444,6 +444,7 @@ $template->process("whine/schedule.html.tmpl", $vars)
 # the subject and body of each event that user owns
 sub get_events {
     my $userid = shift;
+    my $dbh = Bugzilla->dbh;
     my $events = {};
 
     my $sth = $dbh->prepare("SELECT DISTINCT id, subject, body " .

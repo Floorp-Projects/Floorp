@@ -44,8 +44,9 @@ use Bugzilla::Attachment;
 
 use List::Util qw(reduce);
 
-my $template = Bugzilla->template;
-my $vars = {};
+local our $cgi = Bugzilla->cgi;
+local our $template = Bugzilla->template;
+local our $vars = {};
 
 # Make sure the user is logged in and is an administrator.
 my $user = Bugzilla->login(LOGIN_REQUIRED);
@@ -53,8 +54,6 @@ $user->in_group('editcomponents')
   || ThrowUserError("auth_failure", {group  => "editcomponents",
                                      action => "edit",
                                      object => "flagtypes"});
-
-my $cgi = Bugzilla->cgi;
 
 ################################################################################
 # Main Body Execution
@@ -75,9 +74,9 @@ if (@categoryActions = grep(/^categoryAction-.+/, $cgi->param())) {
 }
 
 if    ($action eq 'list')           { list();           }
-elsif ($action eq 'enter')          { edit();           }
-elsif ($action eq 'copy')           { edit();           }
-elsif ($action eq 'edit')           { edit();           }
+elsif ($action eq 'enter')          { edit($action);    }
+elsif ($action eq 'copy')           { edit($action);    }
+elsif ($action eq 'edit')           { edit($action);    }
 elsif ($action eq 'insert')         { insert();         }
 elsif ($action eq 'update')         { update();         }
 elsif ($action eq 'confirmdelete')  { confirmDelete();  } 
@@ -167,6 +166,7 @@ sub list {
 
 
 sub edit {
+    my ($action) = @_;
     $action eq 'enter' ? validateTargetType() : (my $id = validateID());
     my $dbh = Bugzilla->dbh;
 
@@ -365,6 +365,7 @@ sub update {
     validateGroups();
 
     my $dbh = Bugzilla->dbh;
+    my $user = Bugzilla->user;
     $dbh->bz_lock_tables('flagtypes WRITE', 'products READ',
                          'components READ', 'flaginclusions WRITE',
                          'flagexclusions WRITE');

@@ -42,10 +42,7 @@ my $vars = {};
 # performance.
 my $dbh = Bugzilla->switch_to_shadow_db();
 
-my %seen;
-my %edgesdone;
-my %bugtitles; # html title attributes for imagemap areas
-
+local our (%seen, %edgesdone, %bugtitles);
 
 # CreateImagemap: This sub grabs a local filename as a parameter, reads the 
 # dot-generated image map datafile residing in that file and turns it into

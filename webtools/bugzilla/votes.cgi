@@ -38,8 +38,7 @@ use Bugzilla::Product;
 use List::Util qw(min);
 
 my $cgi = Bugzilla->cgi;
-my $template = Bugzilla->template;
-my $vars = {};
+local our $vars = {};
 
 # If the action is show_bug, you need a bug_id.
 # If the action is show_user, you can supply a userid to show the votes for
@@ -94,6 +93,8 @@ exit;
 sub show_bug {
     my $cgi = Bugzilla->cgi;
     my $dbh = Bugzilla->dbh;
+    my $template = Bugzilla->template;
+    my $bug_id = $cgi->param('bug_id');
 
     ThrowCodeError("missing_bug_id") unless defined $bug_id;
 
@@ -117,6 +118,8 @@ sub show_user {
     my $cgi = Bugzilla->cgi;
     my $dbh = Bugzilla->dbh;
     my $user = Bugzilla->user;
+    my $template = Bugzilla->template;
+    my $bug_id = $cgi->param('bug_id');
 
     # If a bug_id is given, and we're editing, we'll add it to the votes list.
     $bug_id ||= "";
@@ -215,6 +218,7 @@ sub record_votes {
 
     my $cgi = Bugzilla->cgi;
     my $dbh = Bugzilla->dbh;
+    my $template = Bugzilla->template;
 
     # Build a list of bug IDs for which votes have been submitted.  Votes
     # are submitted in form fields in which the field names are the bug 

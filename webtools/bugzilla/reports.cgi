@@ -47,8 +47,8 @@ $@ && ThrowCodeError("gd_not_installed");
 eval "use Chart::Lines";
 $@ && ThrowCodeError("chart_lines_not_installed");
 
-my $dir = bz_locations()->{'datadir'} . "/mining";
-my $graph_dir = "graphs";
+local our $dir = bz_locations()->{'datadir'} . "/mining";
+local our $graph_dir = bz_locations()->{'libpath'} . "/graphs";
 
 # If we're using bug groups for products, we should apply those restrictions
 # to viewing reports, as well.  Time to check the login in that case.
@@ -58,7 +58,7 @@ Bugzilla->switch_to_shadow_db();
 
 my $cgi = Bugzilla->cgi;
 my $template = Bugzilla->template;
-my $vars = {};
+local our $vars = {};
 
 # We only want those products that the user has permissions for.
 my @myproducts;
@@ -101,7 +101,9 @@ if (! defined $cgi->param('product')) {
 
 sub choose_product {
     my @myproducts = (@_);
-    
+    my $cgi = Bugzilla->cgi;
+    my $template = Bugzilla->template;
+
     my $datafile = daily_stats_filename('-All-');
 
     # Can we do bug charts?  
@@ -182,6 +184,7 @@ sub daily_stats_filename {
 
 sub show_chart {
     my ($product) = @_;
+    my $cgi = Bugzilla->cgi;
 
     if (! defined $cgi->param('datasets')) {
         ThrowUserError("missing_datasets", $vars);

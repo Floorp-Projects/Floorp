@@ -34,7 +34,7 @@ use Bugzilla::Error;
 use Bugzilla::User;
 
 my $template = Bugzilla->template;
-my $vars = {};
+local our $vars = {};
 
 ###############################################################################
 # Each panel has two functions - panel Foo has a DoFoo, to get the data 

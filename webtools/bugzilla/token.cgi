@@ -36,10 +36,10 @@ use Bugzilla::Error;
 use Bugzilla::Token;
 use Bugzilla::User;
 
-my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
-my $template = Bugzilla->template;
-my $vars = {};
+local our $cgi = Bugzilla->cgi;
+local our $template = Bugzilla->template;
+local our $vars = {};
 
 Bugzilla->login(LOGIN_OPTIONAL);
 
