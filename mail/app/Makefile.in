@@ -58,7 +58,11 @@ PREF_JS_EXPORTS = \
 ifeq ($(USE_SHORT_LIBNAME), 1)
 PROGRAM = thunderbird$(BIN_SUFFIX)
 else
+ifeq ($(OS_ARCH),Darwin)
+PROGRAM = $(MOZ_APP_DISPLAYNAME)
+else
 PROGRAM = thunderbird-bin$(BIN_SUFFIX)
+endif
 endif
 
 REQUIRES = \
@@ -309,7 +313,7 @@ libs:: $(PROGRAM)
 	rsync -a --exclude CVS --exclude "*.in" $(srcdir)/macbuild/Contents $(DIST)/$(APP_NAME).app --exclude English.lproj
 	mkdir -p $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj
 	rsync -a --exclude CVS $(srcdir)/macbuild/Contents/Resources/English.lproj/ $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj
-	sed -e "s/APP_VERSION/$(APP_VERSION)/" $(srcdir)/macbuild/Contents/Info.plist.in > $(DIST)/$(APP_NAME).app/Contents/Info.plist
+	sed -e "s/APP_VERSION/$(APP_VERSION)/" -e "s/MOZ_APP_DISPLAYNAME/$(MOZ_APP_DISPLAYNAME)/" $(srcdir)/macbuild/Contents/Info.plist.in > $(DIST)/$(APP_NAME).app/Contents/Info.plist
 	rsync -a $(DIST)/bin/ $(DIST)/$(APP_NAME).app/Contents/MacOS
 	rm -f $(DIST)/$(APP_NAME).app/Contents/MacOS/$(PROGRAM)
 	rsync -aL $(PROGRAM) $(DIST)/$(APP_NAME).app/Contents/MacOS
