@@ -5964,15 +5964,6 @@ interrupt:
             if (op == JSOP_LEAVEBLOCKEXPR)
                 rval = FETCH_OPND(-1);
 
-            sp -= GET_UINT16(pc);
-            JS_ASSERT(op == JSOP_LEAVEBLOCKEXPR
-                      ? fp->spbase < sp && sp <= fp->spbase + depth
-                      : fp->spbase <= sp && sp < fp->spbase + depth);
-
-            /* Store the result into the topmost stack slot. */
-            if (op == JSOP_LEAVEBLOCKEXPR)
-                STORE_OPND(-1, rval);
-
             chainp = &fp->blockChain;
             obj = *chainp;
             if (!obj) {
@@ -5983,10 +5974,21 @@ interrupt:
                  * This block was cloned, so clear its private data and sync
                  * its locals to their property slots.
                  */
+                SAVE_SP_AND_PC(fp);
                 ok = js_PutBlockObject(cx, obj);
                 if (!ok)
                     goto out;
             }
+
+            sp -= GET_UINT16(pc);
+            JS_ASSERT(op == JSOP_LEAVEBLOCKEXPR
+                      ? fp->spbase < sp && sp <= fp->spbase + depth
+                      : fp->spbase <= sp && sp < fp->spbase + depth);
+
+            /* Store the result into the topmost stack slot. */
+            if (op == JSOP_LEAVEBLOCKEXPR)
+                STORE_OPND(-1, rval);
+
             JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_BlockClass);
             JS_ASSERT(op == JSOP_LEAVEBLOCKEXPR
                       ? fp->spbase + OBJ_BLOCK_DEPTH(cx, obj) == sp - 1
