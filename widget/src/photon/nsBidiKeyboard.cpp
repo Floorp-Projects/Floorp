@@ -53,7 +53,7 @@ NS_IMETHODIMP nsBidiKeyboard::IsLangRTL(PRBool *aIsRTL)
 #ifdef IBMBIDI
   // XXX Insert platform specific code to determine keyboard direction
 #endif
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsBidiKeyboard::SetLangFromBidiLevel(PRUint8 aLevel)
@@ -61,5 +61,5 @@ NS_IMETHODIMP nsBidiKeyboard::SetLangFromBidiLevel(PRUint8 aLevel)
 #ifdef IBMBIDI
   // XXX Insert platform specific code to set keyboard language
 #endif
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }

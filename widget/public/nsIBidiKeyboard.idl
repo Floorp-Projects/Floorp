@@ -39,17 +39,19 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(BB961AE1-7432-11d4-B77A-00104B4119F8)]
+[scriptable, uuid(0D8F8F10-C92D-4A6A-B2BB-E1921F3F4DDA)]
 interface nsIBidiKeyboard : nsISupports
 {
   /**
    * Determines if the current keyboard language is right-to-left
+   * @throws NS_ERROR_FAILURE if no right-to-left keyboards are installed
    */
-  void isLangRTL(out PRBool aIsRTL);
+  boolean isLangRTL();
 
   /**
    * Sets the keyboard language to left-to-right or right-to-left
    * @param aLevel - if odd set the keyboard to RTL, if even set LTR 
+   * @throws NS_ERROR_FAILURE if no right-to-left keyboards are installed
    */
   void setLangFromBidiLevel(in PRUint8 aLevel);
 };
