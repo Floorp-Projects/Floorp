@@ -53,6 +53,7 @@ XPIDLSRCS	= \
 		nsIXSLTException.idl  \
 		nsIXSLTProcessor.idl  \
 		nsIXSLTProcessorObsolete.idl  \
+		nsIXSLTProcessorPrivate.idl  \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -93,7 +93,7 @@ private:
 class txExecutionState : public txIMatchContext
 {
 public:
-    txExecutionState(txStylesheet* aStylesheet);
+    txExecutionState(txStylesheet* aStylesheet, PRBool aDisableLoads);
     ~txExecutionState();
     nsresult init(const txXPathNode& aNode, txExpandedNameMap* aGlobalParams);
     nsresult end(nsresult aResult);
@@ -181,6 +181,7 @@ private:
     txLoadedDocumentsHash mLoadedDocuments;
     txKeyHash mKeyHash;
     nsRefPtr<txResultRecycler> mRecycler;
+    PRPackedBool mDisableLoads;
 
     static const PRInt32 kMaxRecursionDepth;
 };

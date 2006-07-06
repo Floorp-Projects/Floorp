@@ -84,7 +84,8 @@ txLoadedDocumentsHash::~txLoadedDocumentsHash()
     }
 }
 
-txExecutionState::txExecutionState(txStylesheet* aStylesheet)
+txExecutionState::txExecutionState(txStylesheet* aStylesheet,
+                                   PRBool aDisableLoads)
     : mStylesheet(aStylesheet),
       mNextInstruction(nsnull),
       mLocalVariables(nsnull),
@@ -96,7 +97,8 @@ txExecutionState::txExecutionState(txStylesheet* aStylesheet)
       mInitialEvalContext(nsnull),
 //      mRTFDocument(nsnull),
       mGlobalParams(nsnull),
-      mKeyHash(aStylesheet->getKeyMap())
+      mKeyHash(aStylesheet->getKeyMap()),
+      mDisableLoads(aDisableLoads)
 {
 }
 
@@ -462,6 +464,10 @@ txExecutionState::retrieveDocument(const nsAString& aUri)
 {
     NS_ASSERTION(aUri.FindChar(PRUnichar('#')) == kNotFound,
                  "Remove the fragment.");
+
+    if (mDisableLoads) {
+        return nsnull;
+    }
 
     PR_LOG(txLog::xslt, PR_LOG_DEBUG,
            ("Retrieve Document %s", NS_LossyConvertUTF16toASCII(aUri).get()));
