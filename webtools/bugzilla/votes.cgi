@@ -259,7 +259,7 @@ sub record_votes {
     # the ballot box.
     if (scalar(@buglist)) {
         my %prodcount;
-        my %products = {};
+        my %products;
         # XXX - We really need a $bug->product() method.
         foreach my $bug_id (@buglist) {
             my $bug = new Bugzilla::Bug($bug_id, $who);
