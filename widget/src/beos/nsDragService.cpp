@@ -171,8 +171,9 @@ nsDragService::InvokeDragSession (nsIDOMNode *aDOMNode,
     if (nsnull != aRegion)
     {
         PRInt32 aX, aY, aWidth, aHeight;
+        // TODO. Region may represent multiple rects - when dragging multiple items.
         aRegion->GetBoundingBox(&aX, &aY, &aWidth, &aHeight);
-        dragRect.Set( aX, aY, aWidth, aHeight);
+        dragRect.Set( aX, aY, aX + aWidth, aX + aHeight);
         haveRect = true;
         // does this need to be offset?
     } 
