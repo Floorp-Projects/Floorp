@@ -724,6 +724,22 @@ FunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun,
             pn = NULL;
     }
 
+    /*
+     * If we have a parse tree in pn and a code generator in tc, emit this
+     * function's code.  We must do this here, not in js_CompileFunctionBody,
+     * in order to detect TCF_IN_FUNCTION among tc->flags.
+     */
+    if (pn && (tc->flags & TCF_COMPILING)) {
+        JSCodeGenerator *cg = (JSCodeGenerator *) tc;
+
+        if (!js_FoldConstants(cx, pn, tc) ||
+            !js_AllocTryNotes(cx, cg) ||
+            !js_EmitTree(cx, cg, pn) ||
+            js_Emit1(cx, cg, JSOP_STOP) < 0) {
+            pn = NULL;
+        }
+    }
+
     cx->fp = fp;
     tc->flags = oldflags | (tc->flags & (TCF_FUN_FLAGS | TCF_HAS_DEFXMLNS));
     return pn;
@@ -741,7 +757,6 @@ js_CompileFunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun)
     JSStackFrame *fp, frame;
     JSObject *funobj;
     JSParseNode *pn;
-    JSBool ok;
 
     JS_InitArenaPool(&codePool, "code", 1024, sizeof(jsbytecode));
     JS_InitArenaPool(&notePool, "note", 1024, sizeof(jssrcnote));
@@ -781,21 +796,14 @@ js_CompileFunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun)
      */
     CURRENT_TOKEN(ts).type = TOK_LC;
     pn = FunctionBody(cx, ts, fun, &funcg.treeContext);
-    if (!pn ||
-        !js_FoldConstants(cx, pn, &funcg.treeContext) ||
-        !js_AllocTryNotes(cx, &funcg) ||
-        !js_EmitTree(cx, &funcg, pn) ||
-        js_Emit1(cx, &funcg, JSOP_STOP) < 0) {
-        ok = JS_FALSE;
-    } else {
+    if (pn) {
         fun->u.i.script = js_NewScriptFromCG(cx, &funcg, fun);
         if (!fun->u.i.script) {
-            ok = JS_FALSE;
+            pn = NULL;
         } else {
             fun->flags |= JSFUN_INTERPRETED;
             if (funcg.treeContext.flags & TCF_FUN_HEAVYWEIGHT)
                 fun->flags |= JSFUN_HEAVYWEIGHT;
-            ok = JS_TRUE;
         }
     }
 
@@ -805,7 +813,7 @@ js_CompileFunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun)
     js_FinishCodeGenerator(cx, &funcg);
     JS_FinishArenaPool(&codePool);
     JS_FinishArenaPool(&notePool);
-    return ok;
+    return pn != NULL;
 }
 
 static JSParseNode *
