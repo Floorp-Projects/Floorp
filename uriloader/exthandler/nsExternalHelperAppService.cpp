@@ -2139,6 +2139,9 @@ nsresult nsExternalAppHandler::CreateProgressListener()
   if (NS_SUCCEEDED(rv))
     InitializeDownload(tr);
 
+  if (tr)
+    tr->OnStateChange(nsnull, mRequest, nsIWebProgressListener::STATE_START, NS_OK);
+
   // note we might not have a listener here if the QI() failed, or if
   // there is no nsITransfer object, but we still call
   // SetWebProgressListener() to make sure our progress state is sane
@@ -2146,9 +2149,6 @@ nsresult nsExternalAppHandler::CreateProgressListener()
   // its observer). This cycle will be broken in Cancel, CloseProgressWindow or
   // OnStopRequest.
   SetWebProgressListener(tr);
-
-  if (tr)
-    tr->OnStateChange(nsnull, mRequest, nsIWebProgressListener::STATE_START, NS_OK);
 
   return rv;
 }
