@@ -72,6 +72,7 @@ protected:
   nsresult AttachListeners();
   nsresult DetachListeners();
 
-  // Return true if we don't want to check the request url.
-  nsresult IsSpurious(nsIRequest* aReq, PRBool* isSpurious);
+  // Helper method for checking a request URI.  Pulls the URI out of
+  // the request and checks to see if it's spurious.
+  nsresult IsSpuriousRequest(nsIRequest* aReq, PRBool* isSpurious);
 };

@@ -1,4 +1,6 @@
 browser.jar:
 # script file included into main browser.js
-+ content/browser/safebrowsing/sb-loader.js            (content/sb-loader.js)
-+ content/browser/safebrowsing/warning-overlay.xul     (content/warning-overlay.xul)
++ content/browser/safebrowsing/sb-loader.js                    (content/sb-loader.js)
++ content/browser/safebrowsing/warning-overlay.xul             (content/warning-overlay.xul)
++ content/browser/safebrowsing/report-phishing-overlay.xul     (content/report-phishing-overlay.xul)
+% overlay chrome://browser/content/browser.xul         chrome://browser/content/safebrowsing/report-phishing-overlay.xul
