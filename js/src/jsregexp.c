@@ -2681,7 +2681,20 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
 
     jschar matchCh1, matchCh2;
     RECharSet *charSet;
-
+    
+    JSBranchCallback onbranch = gData->cx->branchCallback;
+    uintN onbranchCalls = 0;
+#define ONBRANCH_CALLS_MASK             127
+#define CHECK_BRANCH()                                                         \
+    JS_BEGIN_MACRO                                                             \
+        if (onbranch &&                                                        \
+            (++onbranchCalls & ONBRANCH_CALLS_MASK) == 0 &&                    \
+            !(*onbranch)(gData->cx, NULL)) {                                   \
+            gData->ok = JS_FALSE;                                              \
+            return NULL;                                                       \
+        }                                                                      \
+    JS_END_MACRO
+    
     JSBool anchor;
     jsbytecode *pc = gData->regexp->program;
     REOp op = (REOp) *pc++;
@@ -2954,6 +2967,7 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                 continue;
 
             case REOP_REPEAT:
+                CHECK_BRANCH();
                 --curState;
                 do {
                     --gData->stateStackTop;
@@ -3051,6 +3065,7 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                 continue;
 
             case REOP_MINIMALREPEAT:
+                CHECK_BRANCH();
                 --gData->stateStackTop;
                 --curState;
 
