@@ -116,8 +116,8 @@ function isPhishingURL(aLinkNode, aSilentMode)
   {
     unobscuredHostName.value = hrefURL.host;
   
-    if (hostNameIsIPAddress(hrefURL.host, unobscuredHostName))
-      phishingType = kPhishingWithIPAddress;
+    if (hostNameIsIPAddress(hrefURL.host, unobscuredHostName) && !isLocalIPAddress(unobscuredHostName))
+        phishingType = kPhishingWithIPAddress;
     else if (misMatchedHostWithLinkText(aLinkNode, hrefURL, linkTextURL))
       phishingType = kPhishingWithMismatchedHosts;
 
@@ -246,4 +246,15 @@ function confirmSuspiciousURL(aPhishingType, aSuspiciousHostName)
   var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(nsIPS);
   var buttons = nsIPS.STD_YES_NO_BUTTONS + nsIPS.BUTTON_POS_1_DEFAULT;
   return promptService.confirmEx(window, titleMsg, dialogMsg, buttons, "", "", "", "", {}); /* the yes button is in position 0 */
+}
+
+// returns true if the IP address is a local address.
+function isLocalIPAddress(unobscuredHostName) 
+{
+  var ipComponents = unobscuredHostName.value.split(".");
+  
+  return ipComponents[0] == 10 || 
+         (ipComponents[0] == 192 && ipComponents[1] == 168) ||
+         (ipComponents[0] == 169 && ipComponents[1] == 254) ||
+         (ipComponents[0] == 172 && ipComponents[1] >= 16 && ipComponents[1] < 32);
 }

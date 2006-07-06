@@ -805,6 +805,7 @@ function delayedOnLoadMessenger()
   InitPanes();
   MigrateAttachmentDownloadStore();
   MigrateJunkMailSettings();
+  MigrateFolderViews();
 
   accountManager.setSpecialFolders();
   accountManager.loadVirtualFolders();
@@ -1721,6 +1722,30 @@ function MigrateJunkMailSettings()
     }  
     // bump the version so we don't bother doing this again.
     pref.setIntPref("mail.spam.version", 1);
+  }
+}
+
+// The first time a user runs a build that supports folder views, pre-populate the favorite folders list
+// with the existing INBOX folders.
+function MigrateFolderViews()
+{
+  var folderViewsVersion = pref.getIntPref("mail.folder.views.version");
+  if (!folderViewsVersion)
+  {
+     var servers = accountManager.allServers;
+     var server;
+     var inbox;
+     for (var index = 0; index < servers.Count(); index++)
+     {
+       server = servers.QueryElementAt(index, Components.interfaces.nsIMsgIncomingServer);
+       if (server)
+       {
+         inbox = GetInboxFolder(server);
+         if (inbox)
+           inbox.setFlag(MSG_FOLDER_FLAG_FAVORITE);
+       }
+     }
+    pref.setIntPref("mail.folder.views.version", 1);
   }
 }
 
