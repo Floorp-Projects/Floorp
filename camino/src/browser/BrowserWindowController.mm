@@ -1649,10 +1649,17 @@ enum BWCOpenDest {
   aPopupBlockedEvent->GetRequestingWindowURI(getter_AddRefs(requestingWindowURI));
   aPopupBlockedEvent->GetPopupWindowURI(getter_AddRefs(popupWindowURI));
 
-  // get the blocked popup's modifiers, and window name
-  nsAutoString features, windowName;
-  aPopupBlockedEvent->GetPopupWindowFeatures(features);
+  nsAutoString windowName, features;
+  
+  // get the popup window's features
+  aPopupBlockedEvent->GetPopupWindowFeatures(features);  
+  
+#ifndef MOZILLA_1_8_BRANCH
+  // XXXhakan: nsIDOMPopupBlockedEvent didn't get the popupWindowName property added on branch, so
+  // we can't set the popup window's original name for now.
+  // see bug 343734
   aPopupBlockedEvent->GetPopupWindowName(windowName);
+#endif 
 
   // find the docshell for the blocked popup window, in order to show it
   nsCOMPtr<nsIDocShell> popupWinDocShell = [[mBrowserView getBrowserView] findDocShellForURI:requestingWindowURI];
