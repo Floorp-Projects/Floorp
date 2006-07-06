@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=128 ft=C:
+ * vim: set ts=8 sw=4 et tw=0 ft=C:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -415,12 +415,12 @@ OPDEF(JSOP_TYPEOFEXPR,    198,js_typeof_str, NULL,    1,  1,  1, 10,  JOF_BYTE|J
  */
 OPDEF(JSOP_ENTERBLOCK,    199,"enterblock",  NULL,    3,  0,  0,  0,  JOF_CONST)
 OPDEF(JSOP_LEAVEBLOCK,    200,"leaveblock",  NULL,    3,  0,  0,  0,  JOF_UINT16)
-OPDEF(JSOP_GETLOCAL,      201,"getlocal",    NULL,    3,  0,  1, 13,  JOF_LOCAL)
-OPDEF(JSOP_SETLOCAL,      202,"setlocal",    NULL,    3,  1,  1,  1,  JOF_LOCAL|JOF_SET|JOF_ASSIGNING|JOF_DETECTING)
-OPDEF(JSOP_INCLOCAL,      203,"inclocal",    NULL,    3,  0,  1, 10,  JOF_LOCAL|JOF_INC)
-OPDEF(JSOP_DECLOCAL,      204,"declocal",    NULL,    3,  0,  1, 10,  JOF_LOCAL|JOF_DEC)
-OPDEF(JSOP_LOCALINC,      205,"localinc",    NULL,    3,  0,  1, 10,  JOF_LOCAL|JOF_INC|JOF_POST)
-OPDEF(JSOP_LOCALDEC,      206,"localdec",    NULL,    3,  0,  1, 10,  JOF_LOCAL|JOF_DEC|JOF_POST)
+OPDEF(JSOP_GETLOCAL,      201,"getlocal",    NULL,    3,  0,  1, 13,  JOF_LOCAL|JOF_NAME)
+OPDEF(JSOP_SETLOCAL,      202,"setlocal",    NULL,    3,  1,  1,  1,  JOF_LOCAL|JOF_NAME|JOF_SET|JOF_ASSIGNING|JOF_DETECTING)
+OPDEF(JSOP_INCLOCAL,      203,"inclocal",    NULL,    3,  0,  1, 10,  JOF_LOCAL|JOF_NAME|JOF_INC)
+OPDEF(JSOP_DECLOCAL,      204,"declocal",    NULL,    3,  0,  1, 10,  JOF_LOCAL|JOF_NAME|JOF_DEC)
+OPDEF(JSOP_LOCALINC,      205,"localinc",    NULL,    3,  0,  1, 10,  JOF_LOCAL|JOF_NAME|JOF_INC|JOF_POST)
+OPDEF(JSOP_LOCALDEC,      206,"localdec",    NULL,    3,  0,  1, 10,  JOF_LOCAL|JOF_NAME|JOF_DEC|JOF_POST)
 OPDEF(JSOP_FORLOCAL,      207,"forlocal",    NULL,    3,  0,  1,  0,  JOF_LOCAL|JOF_NAME|JOF_FOR)
 
 /*
@@ -431,3 +431,12 @@ OPDEF(JSOP_ENDITER,       209,"enditer",     NULL,    1,  3,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_GENERATOR,     210,"generator",   NULL,    1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_YIELD,         211,"yield",       NULL,    1,  1,  1,  0,  JOF_BYTE)
 OPDEF(JSOP_ARRAYPUSH,     212,"arraypush",   NULL,    3,  1,  0,  0,  JOF_LOCAL)
+
+OPDEF(JSOP_FOREACHKEYVAL, 213,"foreachkeyval",NULL,   1,  0,  0,  0,  JOF_BYTE)
+
+/*
+ * Variant of JSOP_ENUMELEM for destructuring const (const [a, b] = ...).
+ */
+OPDEF(JSOP_ENUMCONSTELEM, 214,"enumconstelem",NULL,   1,  3,  0,  1,  JOF_BYTE|JOF_SET|JOF_ASSIGNING)
+
+OPDEF(JSOP_LEAVEBLOCKEXPR,215,"leaveblockexpr",NULL,  3,  0,  0,  0,  JOF_UINT16)

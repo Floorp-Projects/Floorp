@@ -373,6 +373,12 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
         if (rt->scriptFilenameTable && rt->scriptFilenameTable->nentries == 0)
             js_FinishRuntimeScriptState(rt);
 
+        /*
+         * Free the deflated string cache, but only after the last GC has
+         * collected all unleaked strings.
+         */
+        js_FinishDeflatedStringCache(rt);
+
         /* Take the runtime down, now that it has no contexts or atoms. */
         JS_LOCK_GC(rt);
         rt->state = JSRTS_DOWN;

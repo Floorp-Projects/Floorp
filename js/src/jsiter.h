@@ -48,6 +48,7 @@
 #define JSITER_FOREACH  0x1     /* return [key, value] pair rather than key */
 #define JSITER_COMPAT   0x2     /* compatibility flag for old XDR'd bytecode */
 #define JSITER_HIDDEN   0x4     /* internal iterator hidden from user view */
+#define JSITER_KEYVALUE 0x8     /* destructuring for-in wants [key, value] */
 
 extern JSBool
 js_NewNativeIterator(JSContext *cx, JSObject *obj, uintN flags, jsval *vp);

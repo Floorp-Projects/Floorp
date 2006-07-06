@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set sw=4 ts=8 et tw=80:
+ * vim: set sw=4 ts=8 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -298,7 +298,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
       case JOF_UINT24:
         if (op == JSOP_FINDNAME) {
             /* Special case to avoid a JOF_FINDNAME just for this op. */
-            atom = js_GetAtom(cx, &script->atomMap, GET_LITERAL_INDEX(pc));
+            atom = js_GetAtom(cx, &script->atomMap, GET_UINT24(pc));
             bytes = ToDisassemblySource(cx, ATOM_KEY(atom));
             if (!bytes)
                 return 0;
@@ -307,7 +307,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
         }
 
         JS_ASSERT(op == JSOP_UINT24 || op == JSOP_LITERAL);
-        fprintf(fp, " %u", GET_LITERAL_INDEX(pc));
+        fprintf(fp, " %u", GET_UINT24(pc));
         break;
 
       case JOF_LITOPX:
@@ -908,6 +908,8 @@ VarPrefix(jssrcnote *sn)
             return "var ";
         if (type == SRC_DECL_CONST)
             return "const ";
+        if (type == SRC_DECL_LET)
+            return "let ";
     }
     return "";
 }
@@ -1483,8 +1485,51 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
               case JSOP_GETLOCAL:
                 i = GET_UINT16(pc);
-                rval = OFF2STR(&ss->sprinter, ss->offsets[i]);
-                todo = SprintCString(&ss->sprinter, rval);
+                sn = js_GetSrcNote(jp->script, pc);
+                if ((uintN)i < ss->top) {
+                    rval = OFF2STR(&ss->sprinter, ss->offsets[i]);
+                } else {
+                    jsatomid j, n;
+                    JSScript *script;
+                    jsint depth, count;
+                    JSScopeProperty *sprop;
+
+                    /*
+                     * We must be called from js_DecompileValueGenerator when
+                     * dereferencing a local that's undefined or null.  Search
+                     * jp->script->atomMap for the block containing this local
+                     * by its stack index, i.
+                     */
+                    script = jp->script;
+                    for (j = 0, n = script->atomMap.length; j < n; j++) {
+                        atom = script->atomMap.vector[j];
+                        if (ATOM_IS_OBJECT(atom)) {
+                            obj = ATOM_TO_OBJECT(atom);
+                            if (OBJ_GET_CLASS(cx, obj) == &js_BlockClass) {
+                                depth = OBJ_BLOCK_DEPTH(cx, obj);
+                                count = OBJ_BLOCK_COUNT(cx, obj);
+                                if ((jsuint)(i - depth) < (jsuint)count)
+                                    break;
+                            }
+                        }
+                    }
+
+                    LOCAL_ASSERT(j < n);
+                    i -= depth;
+                    for (sprop = OBJ_SCOPE(obj)->lastProp; sprop;
+                         sprop = sprop->parent) {
+                        if (sprop->shortid == i)
+                            break;
+                    }
+
+                    LOCAL_ASSERT(sprop && JSID_IS_ATOM(sprop->id));
+                    atom = JSID_TO_ATOM(sprop->id);
+                    rval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
+                    if (!rval)
+                        return JS_FALSE;
+                    RETRACT(&ss->sprinter, rval);
+                }
+                todo = Sprint(&ss->sprinter, ss_format, VarPrefix(sn), rval);
                 break;
 
               case JSOP_SETLOCAL:
@@ -1529,7 +1574,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 rval = POP_STR();
                 todo = (*rval != '\0')
                        ? Sprint(&ss->sprinter, "%s %s", js_yield_str, rval)
-                       : Sprint(&ss->sprinter, "%s", js_yield_str);
+                       : SprintCString(&ss->sprinter, js_yield_str);
                 break;
 
               case JSOP_ARRAYPUSH:
@@ -2302,7 +2347,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 goto do_sprint_int;
 
               case JSOP_UINT24:
-                i = (jsint) GET_LITERAL_INDEX(pc);
+                i = (jsint) GET_UINT24(pc);
               do_sprint_int:
                 todo = Sprint(&ss->sprinter, "%u", (unsigned) i);
                 break;

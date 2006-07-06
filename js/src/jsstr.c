@@ -2393,7 +2393,11 @@ js_FinishRuntimeStringState(JSContext *cx)
 
     js_UnlockGCThingRT(rt, rt->emptyString);
     rt->emptyString = NULL;
+}
 
+void
+js_FinishDeflatedStringCache(JSRuntime *rt)
+{
     if (rt->deflatedStringCache) {
         JS_HashTableDestroy(rt->deflatedStringCache);
         rt->deflatedStringCache = NULL;

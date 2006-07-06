@@ -54,7 +54,7 @@
 #include "jsgc.h"
 #include "jslock.h"
 #include "jsnum.h"
-#include "jsopcode.h"
+#include "jsscan.h"
 #include "jsstr.h"
 
 JS_FRIEND_API(const char *)
