@@ -64,7 +64,10 @@
       <preference id="browser.safebrowsing.remoteLookups"
                   name="browser.safebrowsing.remoteLookups"
                   type="bool"/>
-      <preference id="browser.safebrowsing.dataProvider"  name="browser.safebrowsing.dataProvider" type="int"/>
+      <preference id="browser.safebrowsing.dataProvider"
+                  name="browser.safebrowsing.dataProvider"
+                  type="int"
+                  onchange="gSecurityPane.onProviderChanged();"/>
 
       <!-- Passwords -->
       <preference id="signon.rememberSignons" name="signon.rememberSignons" type="bool"/>
@@ -92,7 +95,8 @@
                 label="&checkMaybePhish.label;"
                 accesskey="&checkMaybePhish.accesskey;"
                 preference="browser.safebrowsing.enabled"
-                onsyncfrompreference="return gSecurityPane.readCheckPhish();"/>
+                onsyncfrompreference="return gSecurityPane.readCheckPhish();"
+                onsynctopreference="return gSecurityPane.writeCheckPhish();"/>
       <radiogroup id="checkPhishChoice" class="indent"
                   preference="browser.safebrowsing.remoteLookups"
                   onsyncfrompreference="return gSecurityPane.readPhishChoice();">
