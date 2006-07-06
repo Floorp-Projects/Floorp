@@ -2009,24 +2009,32 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 #endif
     int stackDummy;
 
+#ifdef __GNUC__
+# define JS_EXTENSION __extension__
+# define JS_EXTENSION_(s) __extension__ ({ s; })
+#else
+# define JS_EXTENSION
+# define JS_EXTENSION_(s) s
+#endif
+
 #ifdef JS_THREADED_INTERP
     static void *normalJumpTable[] = {
 # define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format) \
-        &&L_##op,
+        JS_EXTENSION &&L_##op,
 # include "jsopcode.tbl"
 # undef OPDEF
     };
 
     static void *interruptJumpTable[] = {
 # define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format) \
-        &&interrupt,
+        JS_EXTENSION &&interrupt,
 # include "jsopcode.tbl"
 # undef OPDEF
     };
 
     register void **jumpTable = normalJumpTable;
 
-# define DO_OP()            goto *jumpTable[op]
+# define DO_OP()            JS_EXTENSION_(goto *jumpTable[op])
 # define DO_NEXT_OP(n)      do { op = *(pc += (n)); DO_OP(); } while (0)
 # define BEGIN_CASE(OP)     L_##OP:
 # define END_CASE(OP)       DO_NEXT_OP(OP##_LENGTH);
@@ -2184,7 +2192,7 @@ interrupt:
     }
 
     op = (JSOp) *pc;
-    goto *normalJumpTable[op];
+    JS_EXTENSION_(goto *normalJumpTable[op]);
 
 #else  /* !JS_THREADED_INTERP */
 
@@ -4957,10 +4965,10 @@ interrupt:
             if (ok) {
                 ok = OBJ_DEFINE_PROPERTY(cx, parent, id, rval,
                                          (flags & JSPROP_GETTER)
-                                         ? (JSPropertyOp) obj
+                                         ? JS_EXTENSION (JSPropertyOp) obj
                                          : NULL,
                                          (flags & JSPROP_SETTER)
-                                         ? (JSPropertyOp) obj
+                                         ? JS_EXTENSION (JSPropertyOp) obj
                                          : NULL,
                                          attrs,
                                          &prop);
@@ -5101,10 +5109,10 @@ interrupt:
             }
             ok = OBJ_DEFINE_PROPERTY(cx, parent, ATOM_TO_JSID(fun->atom), rval,
                                      (attrs & JSPROP_GETTER)
-                                     ? (JSPropertyOp) obj
+                                     ? JS_EXTENSION (JSPropertyOp) obj
                                      : NULL,
                                      (attrs & JSPROP_SETTER)
-                                     ? (JSPropertyOp) obj
+                                     ? JS_EXTENSION (JSPropertyOp) obj
                                      : NULL,
                                      attrs |
                                      JSPROP_ENUMERATE | JSPROP_PERMANENT |
@@ -5181,10 +5189,10 @@ interrupt:
             parent = fp->varobj;
             ok = OBJ_DEFINE_PROPERTY(cx, parent, ATOM_TO_JSID(fun->atom), rval,
                                      (attrs & JSPROP_GETTER)
-                                     ? (JSPropertyOp) obj
+                                     ? JS_EXTENSION (JSPropertyOp) obj
                                      : NULL,
                                      (attrs & JSPROP_SETTER)
-                                     ? (JSPropertyOp) obj
+                                     ? JS_EXTENSION (JSPropertyOp) obj
                                      : NULL,
                                      attrs | JSPROP_ENUMERATE
                                            | JSPROP_PERMANENT,
@@ -5278,12 +5286,12 @@ interrupt:
                 goto out;
 
             if (op == JSOP_GETTER) {
-                getter = (JSPropertyOp) JSVAL_TO_OBJECT(rval);
+                getter = JS_EXTENSION (JSPropertyOp) JSVAL_TO_OBJECT(rval);
                 setter = NULL;
                 attrs = JSPROP_GETTER;
             } else {
                 getter = NULL;
-                setter = (JSPropertyOp) JSVAL_TO_OBJECT(rval);
+                setter = JS_EXTENSION (JSPropertyOp) JSVAL_TO_OBJECT(rval);
                 attrs = JSPROP_SETTER;
             }
             attrs |= JSPROP_ENUMERATE | JSPROP_SHARED;
