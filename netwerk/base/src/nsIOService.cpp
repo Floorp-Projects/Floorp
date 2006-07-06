@@ -126,6 +126,7 @@ PRInt16 gBadPortList[] = {
   143,  // imap2  
   179,  // BGP
   389,  // ldap        
+  465,  // smtp+ssl
   512,  // print / exec          
   513,  // login         
   514,  // shell         
@@ -136,8 +137,12 @@ PRInt16 gBadPortList[] = {
   532,  // netnews        
   540,  // uucp       
   556,  // remotefs    
+  563,  // nntp+ssl
   587,  //
   601,  //       
+  636,  // ldap+ssl
+  993,  // imap+ssl
+  995,  // pop3+ssl
   2049, // nfs
   4045, // lockd
   6000, // x11        
