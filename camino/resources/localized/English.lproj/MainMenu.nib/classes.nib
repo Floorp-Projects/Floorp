@@ -19,6 +19,7 @@
                 addBookmarkSeparator = id; 
                 fillForm = id; 
                 getInfo = id; 
+                miniaturizeAll = id; 
                 showPageInfo = id; 
             }; 
             CLASS = FirstResponder; 
@@ -39,10 +40,12 @@
                 aboutWindow = id; 
                 biggerTextSize = id; 
                 clearHistory = id; 
+                closeAllWindows = id; 
                 closeTab = id; 
                 connectToServer = id; 
                 displayPreferencesWindow = id; 
                 doReload = id; 
+                doReloadAllTabs = id; 
                 doSearch = id; 
                 doStop = id; 
                 downloadsWindow = id; 
@@ -81,6 +84,7 @@
                 toggleBookmarksToolbar = id; 
                 toggleOfflineMode = id; 
                 viewSource = id; 
+                zoomAll = id; 
             }; 
             CLASS = MainController; 
             LANGUAGE = ObjC; 
