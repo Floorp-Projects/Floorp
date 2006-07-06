@@ -1618,8 +1618,10 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
 
   // Determine whether a new window was opened specifically for this request
   if (props) {
+    PRBool tmp = PR_FALSE;
     props->GetPropertyAsBool(NS_LITERAL_STRING("docshell.newWindowTarget"),
-                             &mShouldCloseWindow);
+                             &tmp);
+    mShouldCloseWindow = tmp;
   }
 
   // Now get the URI
