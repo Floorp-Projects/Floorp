@@ -1901,6 +1901,22 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, JSObject *parent,
     return clone;
 }
 
+JSBool
+js_PutBlockObject(JSContext *cx, JSObject *obj)
+{
+    JSScopeProperty *sprop;
+    jsval v;
+
+    for (sprop = OBJ_SCOPE(obj)->lastProp; sprop; sprop = sprop->parent) {
+        if (!OBJ_GET_PROPERTY(cx, obj, sprop->id, &v)) {
+            JS_SetPrivate(cx, obj, NULL);
+            return JS_FALSE;
+        }
+    }
+
+    return JS_SetPrivate(cx, obj, NULL);
+}
+
 static JSBool
 block_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {

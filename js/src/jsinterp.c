@@ -486,6 +486,24 @@ CloneBlockChain(JSContext *cx, JSStackFrame *fp, JSObject *obj)
     return js_CloneBlockObject(cx, obj, parent, fp);
 }
 
+static JSBool
+PutBlockObjects(JSContext *cx, JSStackFrame *fp)
+{
+    JSBool ok;
+    JSObject *obj;
+
+    /*
+     * Walk the scope chain looking for block scopes whose locals need to be
+     * copied from stack slots into object slots before fp goes away.
+     */
+    ok = JS_TRUE;
+    for (obj = fp->scopeChain; obj; obj = OBJ_GET_PARENT(cx, obj)) {
+        if (OBJ_GET_CLASS(cx, obj) == &js_BlockClass)
+            ok &= js_PutBlockObject(cx, obj);
+    }
+    return ok;
+}
+
 JSObject *
 js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
 {
@@ -496,6 +514,7 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
         obj = CloneBlockChain(cx, fp, obj);
         if (!obj)
             return NULL;
+        fp->flags |= JSFRAME_POP_BLOCKS;
         fp->scopeChain = obj;
         fp->blockChain = NULL;
         return obj;
@@ -1359,6 +1378,10 @@ out:
         if (hook)
             hook(cx, &frame, JS_FALSE, &ok, hookData);
     }
+
+    /* If frame has block objects on its scope chain, cut them loose. */
+    if (frame.flags & JSFRAME_POP_BLOCKS)
+        ok &= PutBlockObjects(cx, &frame);
 
     /* If frame has a call object, sync values and clear back-pointer. */
     if (frame.callobj)
@@ -2342,8 +2365,14 @@ interrupt:
                     }
                 }
 
+                /* If fp has blocks on its scope chain, cut them loose. */
+                if (fp->flags & JSFRAME_POP_BLOCKS) {
+                    SAVE_SP_AND_PC(fp);
+                    ok &= PutBlockObjects(cx, fp);
+                }
+
                 /*
-                 * If frame has a call object, sync values and clear the back-
+                 * If fp has a call object, sync values and clear the back-
                  * pointer. This can happen for a lightweight function if it
                  * calls eval unexpectedly (in a way that is hidden from the
                  * compiler). See bug 325540.
@@ -5428,23 +5457,33 @@ interrupt:
           BEGIN_CASE(JSOP_SETSP)
             i = (jsint) GET_ATOM_INDEX(pc);
             JS_ASSERT(i >= 0);
-            sp = fp->spbase + i;
 
             for (obj = fp->blockChain; obj; obj = OBJ_GET_PARENT(cx, obj)) {
                 JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_BlockClass);
-                if (OBJ_BLOCK_DEPTH(cx, obj) <= i)
+                if (OBJ_BLOCK_DEPTH(cx, obj) < i)
                     break;
             }
             fp->blockChain = obj;
 
+            JS_ASSERT(ok);
             for (obj = fp->scopeChain;
                  (clasp = OBJ_GET_CLASS(cx, obj)) == &js_WithClass ||
                  clasp == &js_BlockClass;
                  obj = OBJ_GET_PARENT(cx, obj)) {
-                if (OBJ_BLOCK_DEPTH(cx, obj) <= i)
+                if (OBJ_BLOCK_DEPTH(cx, obj) < i)
                     break;
+                if (clasp == &js_BlockClass)
+                    ok &= js_PutBlockObject(cx, obj);
             }
+
             fp->scopeChain = obj;
+
+            /* Set sp after js_PutBlockObject to avoid potential GC hazards. */
+            sp = fp->spbase + i;
+
+            /* Don't fail until after we've updated all stacks. */
+            if (!ok)
+                goto out;
           END_CASE(JSOP_SETSP)
 
           BEGIN_CASE(JSOP_GOSUB)
@@ -5939,6 +5978,14 @@ interrupt:
             if (!obj) {
                 chainp = &fp->scopeChain;
                 obj = *chainp;
+
+                /*
+                 * This block was cloned, so clear its private data and sync
+                 * its locals to their property slots.
+                 */
+                ok = js_PutBlockObject(cx, obj);
+                if (!ok)
+                    goto out;
             }
             JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_BlockClass);
             JS_ASSERT(op == JSOP_LEAVEBLOCKEXPR
