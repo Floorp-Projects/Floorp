@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 50; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,12 +15,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * mozilla.org
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Mike Shaver <shaver@mozilla.org>
+ *   Seth Spitzer <sspitzer@mozilla.org> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,27 +36,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#ifndef _NSSYSTEMINFO_H_
+#define _NSSYSTEMINFO_H_
 
-/**
- * System information service.
- * 
- * At present, a thin wrapper around PR_GetSystemInfo.
- */
+#include "nsHashPropertyBag.h"
 
-[scriptable,uuid(4189b420-1dd2-11b2-bff7-daaf5c1f7b10)]
-interface nsISystemInfo : nsISupports
-{
-  /** The system hostname. */
-  readonly attribute string hostname;
+class nsSystemInfo : public nsHashPropertyBag {
+public:
+    nsSystemInfo();
 
-  /** The operating system name. */
-  readonly attribute string OSName;
+    nsresult Init();
 
-  /** The operating system version. */
-  readonly attribute string OSVersion;
-
-  /** The processor architecture of the machine. */
-  readonly attribute string architecture;
+private:
+    ~nsSystemInfo();
 };
 
+#define NS_SYSTEMINFO_CONTRACTID "@mozilla.org/system-info;1"
+#define NS_SYSTEMINFO_CLASSNAME "System Info Service"
+#define NS_SYSTEMINFO_CID \
+{ 0xd962398a, 0x99e5, 0x49b2, \
+{ 0x85, 0x7a, 0xc1, 0x59, 0x04, 0x9c, 0x7f, 0x6c } }
+
+#endif /* _NSSYSTEMINFO_H_ */
