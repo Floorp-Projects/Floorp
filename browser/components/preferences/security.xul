@@ -160,7 +160,7 @@
         <button id="warningSettings"
                 label="&warningSettings.label;"
                 accesskey="&warningSettings.accesskey;"
-                oncommmand="gSecurityPane.showWarningMessageSettings();"/>
+                oncommand="gSecurityPane.showWarningMessageSettings();"/>
       </hbox>
       <separator/>
     </groupbox>
