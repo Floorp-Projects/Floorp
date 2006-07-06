@@ -1375,8 +1375,13 @@ nsSocketTransport::OnSocketEvent(PRUint32 type, nsresult status, nsISupports *pa
         }
         // status contains DNS lookup status
         if (NS_FAILED(status)) {
-            // fixup error code if proxy was not found
-            if ((status == NS_ERROR_UNKNOWN_HOST) && !mProxyHost.IsEmpty())
+            // When using a HTTP proxy, NS_ERROR_UNKNOWN_HOST means the HTTP 
+            // proxy host is not found, so we fixup the error code.
+            // For SOCKS proxies (mProxyTransparent == true), the socket 
+            // transport resolves the real host here, so there's no fixup 
+            // (see bug 226943).
+            if ((status == NS_ERROR_UNKNOWN_HOST) && !mProxyTransparent &&
+                !mProxyHost.IsEmpty())
                 mCondition = NS_ERROR_UNKNOWN_PROXY_HOST;
             else
                 mCondition = status;
