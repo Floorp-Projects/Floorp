@@ -219,7 +219,7 @@ sub get_format {
     eval {
         $self->context->template($template);
     };
-    # This parsing may seem fragile, but its OK:
+    # This parsing may seem fragile, but it's OK:
     # http://lists.template-toolkit.org/pipermail/templates/2003-March/004370.html
     # Even if it is wrong, any sort of error is going to cause a failure
     # eventually, so the only issue would be an incorrect error message
@@ -253,7 +253,7 @@ sub quoteUrls {
     # bug refs out, so we have to do replacements.
     # mailto can't contain space or #, so we don't have to bother for that
     # Do this by escaping \0 to \1\0, and replacing matches with \0\0$count\0\0
-    # \0 is used because its unlikely to occur in the text, so the cost of
+    # \0 is used because it's unlikely to occur in the text, so the cost of
     # doing this should be very small
     # Also, \0 won't appear in the value_quote'd bug title, so we don't have
     # to worry about bogus substitutions from there
@@ -269,7 +269,7 @@ sub quoteUrls {
     # if it was substituted as a bug title (since that always involve leading
     # and trailing text)
 
-    # Because of entities, its easier (and quicker) to do this before escaping
+    # Because of entities, it's easier (and quicker) to do this before escaping
 
     my @things;
     my $count = 0;

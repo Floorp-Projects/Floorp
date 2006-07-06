@@ -405,7 +405,7 @@ with mod_perl
 
 =item *
 
-Everything is in one central place, so its easy to access, modify, and maintain
+Everything is in one central place, so it's easy to access, modify, and maintain
 
 =item *
 

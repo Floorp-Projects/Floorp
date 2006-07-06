@@ -372,7 +372,7 @@ if (((defined $cgi->param('id') && $cgi->param('product') ne $oldproduct)
             $vars->{'verify_fields'} = 1;
             my %defaults;
             # We set the defaults to these fields to the old value,
-            # if its a valid option, otherwise we use the default where
+            # if it's a valid option, otherwise we use the default where
             # that's appropriate
             $vars->{'versions'} = \@version_names;
             if ($vok) {
@@ -664,7 +664,7 @@ sub ChangeStatus {
             #     - leave it as it was
 
             # This is valid only because 'reopen' is the only thing which moves
-            # from closed to open, and its handled above
+            # from closed to open, and it's handled above
             # This also relies on the fact that confirming and accepting have
             # already called DoConfirm before this is called
 
@@ -752,7 +752,7 @@ foreach my $group (@$groups) {
     # (eg product groups when listing more than one product)
     # Only consider groups which were present on the form. We can't do this
     # for single bug changes because non-checked checkboxes aren't present.
-    # All the checkboxes should be shown in that case, though, so its not
+    # All the checkboxes should be shown in that case, though, so it isn't
     # an issue there
     if (defined $cgi->param('id') || defined $cgi->param("bit-$b")) {
         if (!$cgi->param("bit-$b")) {
@@ -1020,7 +1020,7 @@ SWITCH: for ($cgi->param('knob')) {
         last SWITCH;
     };
     /^(resolve|change_resolution)$/ && CheckonComment( "resolve" ) && do {
-        # Check here, because its the only place we require the resolution
+        # Check here, because it's the only place we require the resolution
         check_field('resolution', scalar $cgi->param('resolution'),
                     Bugzilla::Bug->settable_resolutions);
 
