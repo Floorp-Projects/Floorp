@@ -511,6 +511,10 @@ txCompileObserver::loadURI(const nsAString& aUri,
                            const nsAString& aReferrerUri,
                            txStylesheetCompiler* aCompiler)
 {
+    if (mProcessor->DisableLoads()) {
+        return NS_ERROR_XSLT_LOAD_BLOCKED_ERROR;
+    }
+
     nsCOMPtr<nsIURI> uri;
     nsresult rv = NS_NewURI(getter_AddRefs(uri), aUri);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -695,16 +699,18 @@ handleNode(nsIDOMNode* aNode, txStylesheetCompiler* aCompiler)
 class txSyncCompileObserver : public txACompileObserver
 {
 public:
-    txSyncCompileObserver();
+    txSyncCompileObserver(txMozillaXSLTProcessor* aProcessor);
     virtual ~txSyncCompileObserver();
 
     TX_DECL_ACOMPILEOBSERVER;
 
 protected:
+    txMozillaXSLTProcessor* mProcessor;
     nsAutoRefCnt mRefCnt;
 };
 
-txSyncCompileObserver::txSyncCompileObserver()
+txSyncCompileObserver::txSyncCompileObserver(txMozillaXSLTProcessor* aProcessor)
+  : mProcessor(aProcessor)
 {
 }
 
@@ -734,6 +740,10 @@ txSyncCompileObserver::loadURI(const nsAString& aUri,
                                const nsAString& aReferrerUri,
                                txStylesheetCompiler* aCompiler)
 {
+    if (mProcessor->DisableLoads()) {
+        return NS_ERROR_XSLT_LOAD_BLOCKED_ERROR;
+    }
+
     nsCOMPtr<nsIURI> uri;
     nsresult rv = NS_NewURI(getter_AddRefs(uri), aUri);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -771,7 +781,8 @@ void txSyncCompileObserver::onDoneCompiling(txStylesheetCompiler* aCompiler,
 }
 
 nsresult
-TX_CompileStylesheet(nsIDOMNode* aNode, txStylesheet** aStylesheet)
+TX_CompileStylesheet(nsIDOMNode* aNode, txMozillaXSLTProcessor* aProcessor,
+                     txStylesheet** aStylesheet)
 {
     // If we move GetBaseURI to nsINode this can be simplified.
     nsCOMPtr<nsIURI> uri;
@@ -802,7 +813,8 @@ TX_CompileStylesheet(nsIDOMNode* aNode, txStylesheet** aStylesheet)
     uri->GetSpec(spec);
     NS_ConvertUTF8toUTF16 stylesheetURI(spec);
 
-    nsRefPtr<txSyncCompileObserver> obs = new txSyncCompileObserver();
+    nsRefPtr<txSyncCompileObserver> obs =
+        new txSyncCompileObserver(aProcessor);
     NS_ENSURE_TRUE(obs, NS_ERROR_OUT_OF_MEMORY);
 
     nsRefPtr<txStylesheetCompiler> compiler =

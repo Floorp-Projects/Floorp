@@ -44,6 +44,7 @@
 #include "nsIDocumentTransformer.h"
 #include "nsIXSLTProcessor.h"
 #include "nsIXSLTProcessorObsolete.h"
+#include "nsIXSLTProcessorPrivate.h"
 #include "txExpandedNameMap.h"
 #include "txNamespaceMap.h"
 
@@ -68,6 +69,7 @@ class txResultRecycler;
  */
 class txMozillaXSLTProcessor : public nsIXSLTProcessor,
                                public nsIXSLTProcessorObsolete,
+                               public nsIXSLTProcessorPrivate,
                                public nsIDocumentTransformer,
                                public nsIMutationObserver
 {
@@ -90,6 +92,9 @@ public:
 
     // nsIXSLTProcessorObsolete interface
     NS_DECL_NSIXSLTPROCESSOROBSOLETE
+
+    // nsIXSLTProcessorPrivate interface
+    NS_DECL_NSIXSLTPROCESSORPRIVATE
 
     // nsIDocumentTransformer interface
     NS_IMETHOD SetTransformObserver(nsITransformObserver* aObserver);
@@ -120,6 +125,11 @@ public:
     nsresult TransformToDoc(nsIDOMDocument *aOutputDoc,
                             nsIDOMDocument **aResult);
 
+    PRBool DisableLoads()
+    {
+        return (mFlags & DISABLE_ALL_LOADS) != 0;
+    }
+
 private:
     nsresult DoTransform();
     void notifyError();
@@ -137,6 +147,8 @@ private:
     txExpandedNameMap mVariables;
     txNamespaceMap mParamNamespaceMap;
     nsRefPtr<txResultRecycler> mRecycler;
+
+    PRUint32 mFlags;
 };
 
 extern nsresult TX_LoadSheet(nsIURI* aUri, txMozillaXSLTProcessor* aProcessor,
@@ -144,6 +156,7 @@ extern nsresult TX_LoadSheet(nsIURI* aUri, txMozillaXSLTProcessor* aProcessor,
                              nsIPrincipal* aCallerPrincipal);
 
 extern nsresult TX_CompileStylesheet(nsIDOMNode* aNode,
+                                     txMozillaXSLTProcessor* aProcessor,
                                      txStylesheet** aStylesheet);
 
 #endif
