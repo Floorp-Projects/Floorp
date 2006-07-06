@@ -409,7 +409,7 @@ sub init {
     my %funcsbykey;
     my @funcdefs =
         (
-         "^(?:assigned_to|reporter|qa_contact),(?:notequals|equals|anyexact),%group\\.(\\w+)%" => sub {
+         "^(?:assigned_to|reporter|qa_contact),(?:notequals|equals|anyexact),%group\\.([^%]+)%" => sub {
              my $group = $1;
              my $groupid = Bugzilla::Group::ValidateGroupName( $group, ($user));
              $groupid || ThrowUserError('invalid_group_name',{name => $group});
@@ -451,7 +451,7 @@ sub init {
              $f = "COALESCE(map_$f.login_name,'')";
          },
 
-         "^(?:cc),(?:notequals|equals|anyexact),%group\\.(\\w+)%" => sub {
+         "^(?:cc),(?:notequals|equals|anyexact),%group\\.([^%]+)%" => sub {
              my $group = $1;
              my $groupid = Bugzilla::Group::ValidateGroupName( $group, ($user));
              $groupid || ThrowUserError('invalid_group_name',{name => $group});
