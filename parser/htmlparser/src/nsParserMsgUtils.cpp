@@ -41,8 +41,6 @@
 #include "nsParserMsgUtils.h"
 #include "nsNetCID.h"
 
-// This code is derived from nsFormControlHelper::GetLocalizedString()
-
 static nsresult GetBundle(const char * aPropFileName, nsIStringBundle **aBundle)
 {
   NS_ENSURE_ARG_POINTER(aPropFileName);

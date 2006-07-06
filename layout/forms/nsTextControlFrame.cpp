@@ -48,7 +48,6 @@
 #include "nsIPlaintextEditor.h"
 #include "nsEditorCID.h"
 #include "nsLayoutCID.h"
-#include "nsFormControlHelper.h"
 #include "nsIDocumentEncoder.h"
 #include "nsICaret.h"
 #include "nsISelectionListener.h"
@@ -77,6 +76,7 @@
 #include "nsIPrintPreviewContext.h"
 #endif // USE_QI_IN_SUPPRESS_EVENT_HANDLERS
 #include "nsHTMLAtoms.h"
+#include "nsLayoutUtils.h"
 #include "nsIComponentManager.h"
 #include "nsIView.h"
 #include "nsIDOMHTMLInputElement.h"
@@ -143,6 +143,51 @@ static const PRInt32 DEFAULT_UNDO_CAP = 1000;
 
 static nsINativeKeyBindings *sNativeInputBindings = nsnull;
 static nsINativeKeyBindings *sNativeTextAreaBindings = nsnull;
+
+static void
+PlatformToDOMLineBreaks(nsString &aString)
+{
+  // Windows linebreaks: Map CRLF to LF:
+  aString.ReplaceSubstring(NS_LITERAL_STRING("\r\n").get(),
+                           NS_LITERAL_STRING("\n").get());
+
+  // Mac linebreaks: Map any remaining CR to LF:
+  aString.ReplaceSubstring(NS_LITERAL_STRING("\r").get(),
+                           NS_LITERAL_STRING("\n").get());
+}
+
+// wrap can be one of these three values.  
+typedef enum {
+  eHTMLTextWrap_Off     = 1,    // "off"
+  eHTMLTextWrap_Hard    = 2,    // "hard"
+  eHTMLTextWrap_Soft    = 3     // the default
+} nsHTMLTextWrap;
+
+static PRBool 
+GetWrapPropertyEnum(nsIContent* aContent, nsHTMLTextWrap& aWrapProp)
+{
+  // soft is the default; "physical" defaults to soft as well because all other
+  // browsers treat it that way and there is no real reason to maintain physical
+  // and virtual as separate entities if no one else does.  Only hard and off
+  // do anything different.
+  aWrapProp = eHTMLTextWrap_Soft; // the default
+  
+  nsAutoString wrap;
+  if (aContent->IsNodeOfType(nsINode::eHTML)) {
+    static nsIContent::AttrValuesArray strings[] =
+      {&nsHTMLAtoms::HARD, &nsHTMLAtoms::OFF, nsnull};
+
+    switch (aContent->FindAttrValueIn(kNameSpaceID_None, nsHTMLAtoms::wrap,
+                                      strings, eIgnoreCase)) {
+      case 0: aWrapProp = eHTMLTextWrap_Hard; break;
+      case 1: aWrapProp = eHTMLTextWrap_Off; break;
+    }
+
+    return PR_TRUE;
+  }
+ 
+  return PR_FALSE;
+}
 
 class nsTextInputListener : public nsISelectionListener,
                             public nsIDOMFocusListener,
@@ -1305,7 +1350,8 @@ nsTextControlFrame::CalculateSizeStandard(nsPresContext*       aPresContext,
   nscoord charMaxAdvance  = 0;
 
   nsCOMPtr<nsIFontMetrics> fontMet;
-  nsresult rv = nsFormControlHelper::GetFrameFontFM(this, getter_AddRefs(fontMet));
+  nsresult rv =
+    nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet));
   NS_ENSURE_SUCCESS(rv, rv);
   nsIRenderingContext* rendContext = aReflowState.rendContext;
   rendContext->SetFont(fontMet);
@@ -1502,9 +1548,9 @@ nsTextControlFrame::CreateFrameFor(nsPresContext*   aPresContext,
     // Set up wrapping
     if (IsTextArea()) {
       // wrap=off means -1 for wrap width no matter what cols is
-      nsFormControlHelper::nsHTMLTextWrap wrapProp;
-      nsFormControlHelper::GetWrapPropertyEnum(mContent, wrapProp);
-      if (wrapProp == nsFormControlHelper::eHTMLTextWrap_Off) {
+      nsHTMLTextWrap wrapProp;
+      ::GetWrapPropertyEnum(mContent, wrapProp);
+      if (wrapProp == eHTMLTextWrap_Off) {
         // do not wrap when wrap=off
         textEditor->SetWrapWidth(-1);
       } else {
@@ -2646,9 +2692,9 @@ nsTextControlFrame::GetValue(nsAString& aValue, PRBool aIgnoreWrap) const
     flags |= nsIDocumentEncoder::OutputPreformatted;
 
     if (!aIgnoreWrap) {
-      nsFormControlHelper::nsHTMLTextWrap wrapProp;
-      if (nsFormControlHelper::GetWrapPropertyEnum(mContent, wrapProp) &&
-          wrapProp == nsFormControlHelper::eHTMLTextWrap_Hard) {
+      nsHTMLTextWrap wrapProp;
+      if (::GetWrapPropertyEnum(mContent, wrapProp) &&
+          wrapProp == eHTMLTextWrap_Hard) {
         flags |= nsIDocumentEncoder::OutputWrap;
       }
     }
@@ -2724,7 +2770,7 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
       // Unfortunately aValue is declared const, so we have to copy
       // in order to do this substitution.
       currentValue.Assign(aValue);
-      nsFormControlHelper::PlatformToDOMLineBreaks(currentValue);
+      ::PlatformToDOMLineBreaks(currentValue);
 
       nsCOMPtr<nsIDOMDocument>domDoc;
       nsresult rv = mEditor->GetDocument(getter_AddRefs(domDoc));

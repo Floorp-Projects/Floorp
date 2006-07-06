@@ -37,7 +37,6 @@
 #include "nsCOMPtr.h"
 #include "nsIImageControlFrame.h"
 #include "nsImageFrame.h"
-#include "nsFormControlHelper.h"
 #include "nsIFormControlFrame.h"
 #include "nsIFormControl.h"
 #include "nsHTMLParts.h"
@@ -225,7 +224,7 @@ nsImageControlFrame::HandleEvent(nsPresContext* aPresContext,
   if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE || uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED)
     return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 
-  if (nsFormControlHelper::GetDisabled(mContent)) { // XXX cache disabled
+  if (mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled)) { // XXX cache disabled
     return NS_OK;
   }
 

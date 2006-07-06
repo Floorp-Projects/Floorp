@@ -40,7 +40,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsHTMLContainerFrame.h"
-#include "nsFormControlHelper.h"
 #include "nsIFormControlFrame.h"
 #include "nsHTMLParts.h"
 

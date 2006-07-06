@@ -45,7 +45,6 @@
 #include "nsIAnonymousContentCreator.h"
 #include "nsIEditor.h"
 #include "nsITextControlFrame.h"
-#include "nsFormControlHelper.h"//for the inputdimensions
 #include "nsIFontMetrics.h"
 #include "nsWeakReference.h" //for service and presshell pointers
 #include "nsIScrollableViewProvider.h"
