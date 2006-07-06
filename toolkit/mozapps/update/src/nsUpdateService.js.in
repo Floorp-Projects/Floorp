@@ -119,6 +119,7 @@ const Node = Components.interfaces.nsIDOMNode;
 var gApp        = null;
 var gPref       = null;
 var gABI        = null;
+var gOSVersion  = null;
 var gConsole    = null;
 var gLogEnabled = { };
 
@@ -905,6 +906,18 @@ function UpdateService() {
     LOG("UpdateService", "XPCOM ABI unknown: updates are not possible.");
   }
 
+  try {
+    var sysInfo = 
+      Components.classes["@mozilla.org/system-info;1"]
+                .getService(Components.interfaces.nsIPropertyBag2);
+
+    gOSVersion = encodeURIComponent(sysInfo.getProperty("name") + " " +  
+                                    sysInfo.getProperty("version"));
+  }
+  catch (e) {
+    LOG("UpdateService", "OS Version unknown: updates are not possible.");
+  }
+
 #ifdef XP_MACOSX
   // Mac universal build should report a different ABI than either macppc
   // or mactel.
@@ -1368,6 +1381,10 @@ UpdateService.prototype = {
     if (!gABI)
       return false;
 
+    // If we don't know the OS version we're updating, we can't update.
+    if (!gOSVersion)
+      return false;
+
     return true;
   },
   
@@ -1749,6 +1766,7 @@ Checker.prototype = {
     url = url.replace(/%VERSION%/g, gApp.version);
     url = url.replace(/%BUILD_ID%/g, gApp.appBuildID);
     url = url.replace(/%BUILD_TARGET%/g, gApp.OS + "_" + gABI);
+    url = url.replace(/%OS_VERSION%/g, gOSVersion);
     url = url.replace(/%LOCALE%/g, getLocale());
     url = url.replace(/%CHANNEL%/g, getUpdateChannel());
     url = url.replace(/\+/g, "%2B");

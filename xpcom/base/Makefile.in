@@ -63,6 +63,7 @@ CPPSRCS		= \
 		nsTraceRefcntImpl.cpp \
 		nsInterfaceRequestorAgg.cpp \
 		nsUUIDGenerator.cpp \
+		nsSystemInfo.cpp \
 		$(NULL)
 
 ifdef GC_LEAK_DETECTOR
