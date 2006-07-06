@@ -1152,34 +1152,36 @@ have_fun:
             nslots += fun->u.n.extra;
         }
 
-        if (fun->flags & JSFUN_BOUND_METHOD) {
+        if (JSFUN_BOUND_METHOD_TEST(fun->flags)) {
             /* Handle bound method special case. */
             thisp = parent;
         } else if (JSVAL_IS_OBJECT(thisv)) {
             thisp = JSVAL_TO_OBJECT(thisv);
         } else {
+            uintN thispflags = JSFUN_THISP_FLAGS(fun->flags);
+
             JS_ASSERT(!(flags & JSINVOKE_CONSTRUCT));
             if (JSVAL_IS_STRING(thisv)) {
-                if (fun->flags & JSFUN_THISP_STRING) {
+                if (JSFUN_THISP_TEST(thispflags, JSFUN_THISP_STRING)) {
                     thisp = (JSObject *) thisv;
                     goto init_frame;
                 }
                 thisp = js_StringToObject(cx, JSVAL_TO_STRING(thisv));
             } else if (JSVAL_IS_INT(thisv)) {
-                if (fun->flags & JSFUN_THISP_NUMBER) {
+                if (JSFUN_THISP_TEST(thispflags, JSFUN_THISP_NUMBER)) {
                     thisp = (JSObject *) thisv;
                     goto init_frame;
                 }
                 thisp = js_NumberToObject(cx, (jsdouble)JSVAL_TO_INT(thisv));
             } else if (JSVAL_IS_DOUBLE(thisv)) {
-                if (fun->flags & JSFUN_THISP_NUMBER) {
+                if (JSFUN_THISP_TEST(thispflags, JSFUN_THISP_NUMBER)) {
                     thisp = (JSObject *) thisv;
                     goto init_frame;
                 }
                 thisp = js_NumberToObject(cx, *JSVAL_TO_DOUBLE(thisv));
             } else {
                 JS_ASSERT(JSVAL_IS_BOOLEAN(thisv));
-                if (fun->flags & JSFUN_THISP_BOOLEAN) {
+                if (JSFUN_THISP_TEST(thispflags, JSFUN_THISP_BOOLEAN)) {
                     thisp = (JSObject *) thisv;
                     goto init_frame;
                 }
@@ -1337,7 +1339,7 @@ have_fun:
 #endif
         /* Use parent scope so js_GetCallObject can find the right "Call". */
         frame.scopeChain = parent;
-        if (fun->flags & JSFUN_HEAVYWEIGHT) {
+        if (JSFUN_HEAVYWEIGHT_TEST(fun->flags)) {
             /* Scope with a call object parented by the callee's parent. */
             if (!js_GetCallObject(cx, &frame, parent)) {
                 ok = JS_FALSE;
@@ -3975,7 +3977,7 @@ interrupt:
                 }
                 newifp->frame.thisp =
                     js_ComputeThis(cx,
-                                   (fun->flags & JSFUN_BOUND_METHOD)
+                                   JSFUN_BOUND_METHOD_TEST(fun->flags)
                                    ? parent
                                    : JSVAL_TO_OBJECT(vp[1]),
                                    newifp->frame.argv);
@@ -4007,7 +4009,7 @@ interrupt:
                 }
 
                 /* Scope with a call object parented by the callee's parent. */
-                if ((fun->flags & JSFUN_HEAVYWEIGHT) &&
+                if (JSFUN_HEAVYWEIGHT_TEST(fun->flags) &&
                     !js_GetCallObject(cx, &newifp->frame, parent)) {
                     ok = JS_FALSE;
                     goto out;
@@ -4937,7 +4939,7 @@ interrupt:
              * and setters do not need a slot, their value is stored elsewhere
              * in the property itself, not in obj->slots.
              */
-            flags = fun->flags & (JSFUN_GETTER | JSFUN_SETTER);
+            flags = JSFUN_GSFLAG2ATTR(fun->flags);
             if (flags) {
                 attrs |= flags | JSPROP_SHARED;
                 rval = JSVAL_VOID;
@@ -4954,10 +4956,10 @@ interrupt:
             ok = js_CheckRedeclaration(cx, parent, id, attrs, NULL, NULL);
             if (ok) {
                 ok = OBJ_DEFINE_PROPERTY(cx, parent, id, rval,
-                                         (flags & JSFUN_GETTER)
+                                         (flags & JSPROP_GETTER)
                                          ? (JSPropertyOp) obj
                                          : NULL,
-                                         (flags & JSFUN_SETTER)
+                                         (flags & JSPROP_SETTER)
                                          ? (JSPropertyOp) obj
                                          : NULL,
                                          attrs,
@@ -5092,16 +5094,16 @@ interrupt:
              * value is Result(3), and attributes are { DontDelete, ReadOnly }.
              */
             fun = (JSFunction *) JS_GetPrivate(cx, obj);
-            attrs = fun->flags & (JSFUN_GETTER | JSFUN_SETTER);
+            attrs = JSFUN_GSFLAG2ATTR(fun->flags);
             if (attrs) {
                 attrs |= JSPROP_SHARED;
                 rval = JSVAL_VOID;
             }
             ok = OBJ_DEFINE_PROPERTY(cx, parent, ATOM_TO_JSID(fun->atom), rval,
-                                     (attrs & JSFUN_GETTER)
+                                     (attrs & JSPROP_GETTER)
                                      ? (JSPropertyOp) obj
                                      : NULL,
-                                     (attrs & JSFUN_SETTER)
+                                     (attrs & JSPROP_SETTER)
                                      ? (JSPropertyOp) obj
                                      : NULL,
                                      attrs |
@@ -5171,17 +5173,17 @@ interrupt:
              * a JSPropertyOp and passed accordingly).
              */
             fun = (JSFunction *) JS_GetPrivate(cx, obj);
-            attrs = fun->flags & (JSFUN_GETTER | JSFUN_SETTER);
+            attrs = JSFUN_GSFLAG2ATTR(fun->flags);
             if (attrs) {
                 attrs |= JSPROP_SHARED;
                 rval = JSVAL_VOID;
             }
             parent = fp->varobj;
             ok = OBJ_DEFINE_PROPERTY(cx, parent, ATOM_TO_JSID(fun->atom), rval,
-                                     (attrs & JSFUN_GETTER)
+                                     (attrs & JSPROP_GETTER)
                                      ? (JSPropertyOp) obj
                                      : NULL,
-                                     (attrs & JSFUN_SETTER)
+                                     (attrs & JSPROP_SETTER)
                                      ? (JSPropertyOp) obj
                                      : NULL,
                                      attrs | JSPROP_ENUMERATE

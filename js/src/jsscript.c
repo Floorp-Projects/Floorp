@@ -284,7 +284,7 @@ script_exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     caller = JS_GetScriptedCaller(cx, fp);
     if (caller && !caller->varobj) {
         /* Called from a lightweight function. */
-        JS_ASSERT(caller->fun && !(caller->fun->flags & JSFUN_HEAVYWEIGHT));
+        JS_ASSERT(caller->fun && !JSFUN_HEAVYWEIGHT_TEST(caller->fun->flags));
 
         /* Scope chain links from Call object to callee's parent. */
         parent = OBJ_GET_PARENT(cx, JSVAL_TO_OBJECT(caller->argv[-2]));

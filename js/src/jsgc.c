@@ -2273,7 +2273,7 @@ js_MarkStackFrame(JSContext *cx, JSStackFrame *fp)
         }
     }
     JS_ASSERT(JSVAL_IS_OBJECT((jsval)fp->thisp) ||
-              (fp->fun && (fp->fun->flags & JSFUN_THISP_PRIMITIVE)));
+              (fp->fun && JSFUN_THISP_FLAGS(fp->fun->flags)));
     if (JSVAL_IS_GCTHING((jsval)fp->thisp))
         GC_MARK(cx, fp->thisp, "this");
     if (fp->argv) {
