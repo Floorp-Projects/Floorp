@@ -149,18 +149,12 @@ var safebrowsing = {
   },
 
   setReportPhishingMenu: function() {
-    var broadcaster = document.getElementById("reportPhishingBroadcaster");
-    if (!broadcaster)
-      return;
-
-    // On macs, we could be on a non-browser window.
-    if (window.location.href != getBrowserURL()) {
-      broadcaster.setAttribute("disabled", true);
-      return;
-    }
-
     var uri = getBrowser().currentURI;
     if (!uri)
+      return;
+
+    var broadcaster = document.getElementById("reportPhishingBroadcaster");
+    if (!broadcaster)
       return;
 
     var progressListener =
