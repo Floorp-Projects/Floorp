@@ -1245,7 +1245,8 @@ nsresult nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent, nsA
         return NS_OK;
       }
  
-      if (aContent->Tag() == nsAccessibilityAtoms::label) {
+      if (aContent->Tag() == nsAccessibilityAtoms::label ||
+          aContent->Tag() == nsAccessibilityAtoms::description) {
         aContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value,
                          textEquivalent);
       }
