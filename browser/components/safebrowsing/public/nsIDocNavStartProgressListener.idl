@@ -46,7 +46,7 @@ interface nsIDocNavStartProgressCallback : nsISupports
   void onDocNavStart(in nsIRequest aRequest, in AUTF8String aUri);
 };
 
-[scriptable, uuid(c21b40c0-be77-4328-a822-24f539391445)]
+[scriptable, uuid(84991d1b-b010-4127-9e71-82017559abff)]
 interface nsIDocNavStartProgressListener : nsISupports
 {
   /**
@@ -68,4 +68,9 @@ interface nsIDocNavStartProgressListener : nsISupports
    * NULL when there is no callback.
    */
   attribute nsIDocNavStartProgressCallback callback;
+
+  /**
+   * We ignore about:, chrome: and file: URIs.
+   */
+  boolean isSpurious(in nsIURI aURI);
 };
