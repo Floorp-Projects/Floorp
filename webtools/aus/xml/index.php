@@ -60,7 +60,8 @@ $rawPath = substr(urldecode($_SERVER['QUERY_STRING']),5,255);
 $path = explode('/',$rawPath);
 
 // Determine incoming request and clean inputs.
-// These are common URL elements, agreed upon in revision 0.
+// These are common URI elements, agreed upon in revision 0.
+// For successive versions, the path of least resistence is to append and not reorder.
 $clean = Array();
 $clean['updateVersion'] = isset($path[0]) ? intval($path[0]) : null;
 $clean['product'] = isset($path[1]) ? trim($path[1]) : null;
@@ -69,11 +70,36 @@ $clean['build'] = isset($path[3]) ? trim($path[3]) : null;
 $clean['platform'] = isset($path[4]) ? trim($path[4]) : null;
 $clean['locale'] = isset($path[5]) ? trim($path[5]) : null;
 
-// For each updateVersion, we will run separate code.
+/**
+ * For each updateVersion, we will run separate code when it differs.
+ * Our case statements below are ordered by date added, desc (recent ones first).
+ *
+ * If the only difference is an added parameter, etc., then we may blend cases
+ * together by omitting a break.
+ */
 switch ($clean['updateVersion']) {
     
     /*
-     * This is for the second revision of the URL schema, with %CHANNEL% added.
+     * This is for the third revision of the URI schema, with %OS_VERSION%.
+     * /update2/2/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION/update.xml
+     */
+    case 2:
+
+        // Parse out the %OS_VERSION% if it exists.
+        $clean['platformVersion'] = isset($path[7]) ? trim($path[7]) : null;
+
+        // Check to see if the %OS_VERSION% value passed in the URI is in our no-longer-supported
+        // array which is set in our config.
+        if (!empty($clean['platformVersion']) && !empty($unsupportedPlatforms) && is_array($unsupportedPlatforms) && in_array($clean['platformVersion'], $unsupportedPlatforms)) {
+
+            // If the passed OS_VERSION is in our array of unsupportedPlatforms, break the switch() and skip to the end.
+            //
+            // The default behavior is "no updates", so essentially the client would get an empty XML doc.
+            break;
+        }
+
+    /*
+     * This is for the second revision of the URI schema, with %CHANNEL% added.
      * /update2/1/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/update.xml
      */
     case 1:
@@ -132,7 +158,7 @@ switch ($clean['updateVersion']) {
         break;
 
     /*
-     * This is for the first revision of the URL schema.
+     * This is for the first revision of the URI schema.
      * /update2/0/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/update.xml
      */
     case 0:

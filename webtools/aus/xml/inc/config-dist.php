@@ -85,4 +85,13 @@ $branchVersions = array(
     '2.0a3'=>'2.0',
     '3.0a1'=>'trunk'
 );
+
+// Array that defines which %OS_VERSION% values are no longer supported.
+// For incoming URIs containing these as their platformVersion, no updates
+// will be offered.
+$unsupportedPlatforms = array(
+    'Windows 3.1 Professional Edition XP Limited Edition with Batteries (tm)',
+    'CareBears 1.0',
+    'Windows_98'
+);
 ?>
