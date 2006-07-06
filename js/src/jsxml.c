@@ -7452,7 +7452,7 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
         if (!fun)
             return NULL;
         fun->u.n.extra = 0;
-        fun->u.n.spare = fs->extra;
+        fun->u.n.spare = (uint16)fs->extra;
     }
 
     xml = js_NewXML(cx, JSXML_CLASS_TEXT);
