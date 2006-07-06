@@ -79,19 +79,30 @@ UrlClassifierTableUrl.prototype.exists = function(url, callback) {
 
   var dbservice_ = Cc["@mozilla.org/url-classifier/dbservice;1"]
                    .getService(Ci.nsIUrlClassifierDBService);
+  var callbackHelper = new UrlLookupCallback(callback);
   dbservice_.exists(this.name,
                     canonicalized,
-                    BindToObject(this.dbCallback_, 
-                                 this,
-                                 callback));
+                    BindToObject(callbackHelper.dbCallback,
+                                 callbackHelper));
 }
 
 /**
- * For the url table, we only need to check if the return value is a non-empty
- * string.
+ * A helper class for handling url lookups in the database.  This allows us to
+ * break our reference to callback to avoid memory leaks.
+ * @param callback nsIUrlListManagerCallback
  */
-UrlClassifierTableUrl.prototype.dbCallback_ = function(callback, value) {
-  callback.handleEvent(value.length > 0);
+function UrlLookupCallback(callback) {
+  this.callback_ = callback;
+}
+
+/**
+ * Callback function from nsIUrlClassifierDBService.exists.  For url lookup,
+ * any non-empty string value is a database hit.
+ * @param value String
+ */
+UrlLookupCallback.prototype.dbCallback = function(value) {
+  this.callback_.handleEvent(value.length > 0);
+  this.callback_ = null;
 }
 
 /////////////////////////////////////////////////////////////////////
