@@ -351,17 +351,19 @@ extern JS_PUBLIC_API(size_t)
 JS_GetScriptTotalSize(JSContext *cx, JSScript *script);
 
 /*
- * Get the filename flags for the script.  If the script doesn't have a
+ * Get the top-most running script on cx starting from fp, or from the top of
+ * cx's frame stack if fp is null, and return its script filename flags.  If
+ * the script has a null filename member, return JSFILENAME_NULL.
+ */
+extern JS_PUBLIC_API(uint32)
+JS_GetTopScriptFilenameFlags(JSContext *cx, JSStackFrame *fp);
+
+/*
+ * Get the script filename flags for the script.  If the script doesn't have a
  * filename, return JSFILENAME_NULL.
  */
 extern JS_PUBLIC_API(uint32)
 JS_GetScriptFilenameFlags(JSScript *script);
-
-/*
- * Get the filename flags for the top-most active script on cx.
- */
-extern JS_PUBLIC_API(uint32)
-JS_GetTopScriptFilenameFlags(JSContext *cx, JSStackFrame *fp);
 
 /*
  * Associate flags with a script filename prefix in rt, so that any subsequent
