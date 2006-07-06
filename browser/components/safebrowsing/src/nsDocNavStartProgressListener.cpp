@@ -71,6 +71,8 @@ nsDocNavStartProgressListener::~nsDocNavStartProgressListener()
   }
 
   mTimers.Clear();
+  
+  mCallback = nsnull;
 }
 
 // nsDocNavStartProgressListener::AttachListeners

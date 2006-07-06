@@ -207,6 +207,7 @@ MultiTableQuerier.prototype.run = function() {
 
     // Break circular ref to callback.
     this.evilCallback_ = null;
+    this.listManager_ = null;
   }
 }
 
@@ -218,8 +219,13 @@ MultiTableQuerier.prototype.whiteTableCallback_ = function(isFound) {
   //G_Debug(this, "whiteTableCallback_: " + isFound);
   if (!isFound)
     this.run();
-  else
+  else {
     G_Debug(this, "Found in whitelist: " + this.url_)
+
+    // Break circular ref to callback.
+    this.evilCallback_ = null;
+    this.listManager_ = null;
+  }
 }
 
 /**
@@ -234,5 +240,9 @@ MultiTableQuerier.prototype.blackTableCallback_ = function(isFound) {
     // In the blacklist, must be an evil url.
     G_Debug(this, "Found in blacklist: " + this.url_)
     this.evilCallback_();
+
+    // Break circular ref to callback.
+    this.evilCallback_ = null;
+    this.listManager_ = null;
   }
 }

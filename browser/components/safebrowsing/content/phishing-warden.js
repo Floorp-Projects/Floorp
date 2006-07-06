@@ -148,6 +148,7 @@ PROT_PhishingWarden.prototype.QueryInterface = function(iid) {
 PROT_PhishingWarden.prototype.shutdown = function() {
   this.progressListener_.callback = null;
   this.progressListener_ = null;
+  this.listManager_ = null;
 }
 
 /**
