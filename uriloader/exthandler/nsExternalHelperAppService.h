@@ -378,7 +378,7 @@ protected:
    * was opened specifically for this download.  If so, then we
    * close it.
    */
-  PRBool mShouldCloseWindow;
+  PRPackedBool mShouldCloseWindow;
 
   /**
    * have we received information from the user about how they want to
