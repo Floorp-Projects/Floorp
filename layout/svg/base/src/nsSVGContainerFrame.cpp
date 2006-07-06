@@ -166,15 +166,14 @@ nsSVGDisplayContainerFrame::RemoveFrame(nsIAtom* aListName,
   if (SVGFrame && !(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD))
     dirtyRect = SVGFrame->GetCoveredRegion();
 
-  PRBool result = nsSVGContainerFrame::RemoveFrame(aListName, aOldFrame);
+  nsresult rv = nsSVGContainerFrame::RemoveFrame(aListName, aOldFrame);
 
   nsSVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   NS_ASSERTION(outerSVGFrame, "no outer svg frame");
   if (outerSVGFrame)
     outerSVGFrame->InvalidateRect(dirtyRect);
 
-  NS_ASSERTION(result, "didn't find frame to delete");
-  return result ? NS_OK : NS_ERROR_FAILURE;
+  return rv;
 }
 
 //----------------------------------------------------------------------
