@@ -86,11 +86,13 @@
 #include "nsIDOMEvent.h"
 #include "nsIContextMenuListener.h"
 #include "nsIDOMWindow.h"
+#include "nsIDOMPopupBlockedEvent.h"
+#include "nsIDOMHTMLImageElement.h"
 #include "nsIWebProgressListener.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsNetUtil.h"
 #include "nsIPref.h"
-#include "nsISupportsArray.h"
+#include "nsIDocShell.h"
 #include "nsIDOMNSEditableElement.h"
 
 #include "nsIClipboardCommands.h"
@@ -112,6 +114,7 @@
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIFocusController.h"
 #include "nsIX509Cert.h"
+#include "nsIArray.h"
 
 // for spellchecking
 #include "nsIEditor.h"
@@ -466,6 +469,9 @@ enum BWCOpenDest {
 - (BrowserTabViewItem*)tabForBrowser:(BrowserWrapper*)inWrapper;
 - (BookmarkViewController*)bookmarkViewControllerForCurrentTab;
 - (void)bookmarkableTitle:(NSString **)outTitle URL:(NSString**)outURLString forWrapper:(BrowserWrapper*)inWrapper;
+
+- (void)whitelistURL:(nsIURI*)URL;
+- (void)whitelistAndShowPopup:(nsIDOMPopupBlockedEvent*)aBlockedPopup;
 
 - (void)clearContextMenuTarget;
 - (void)updateLock:(unsigned int)securityState;
@@ -1612,23 +1618,75 @@ enum BWCOpenDest {
 //
 // -unblockAllPopupSites:
 //
-// Called in response to the menu item from the unblock popup. Loop over all
-// the items in the blocked sites array in the browser wrapper and add them
-// to the whitelist.
+// Called in response to the menu item from the unblock popup. Puts all the
+// blocked popups in the array on the whitelist, and shows them.
 //
-- (void)unblockAllPopupSites:(nsISupportsArray*)inSites
+- (void)unblockAllPopupSites:(nsIArray*)inSites
 {
-  nsCOMPtr<nsIPermissionManager> pm (do_GetService(NS_PERMISSIONMANAGER_CONTRACTID));
-  if (!pm)
+  nsCOMPtr<nsISimpleEnumerator> enumerator;
+  inSites->Enumerate(getter_AddRefs(enumerator));
+  PRBool hasMore = PR_FALSE;
+
+  // iterate over the array of blocked popup events, and unblock & show
+  // them, one by one.
+  while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMore)) && hasMore) {
+    nsCOMPtr<nsISupports> curSupports;
+    enumerator->GetNext(getter_AddRefs(curSupports));
+    if (!curSupports)
+      continue;
+
+    nsCOMPtr<nsIDOMPopupBlockedEvent> evt;
+    evt = do_QueryInterface(curSupports);
+    if (evt)
+      [self whitelistAndShowPopup:evt];
+  }
+}
+
+- (void)whitelistAndShowPopup:(nsIDOMPopupBlockedEvent*)aPopupBlockedEvent
+{ 
+  // get the URIs for the popup window, and it's parent document
+  nsCOMPtr<nsIURI> requestingWindowURI, popupWindowURI;
+  aPopupBlockedEvent->GetRequestingWindowURI(getter_AddRefs(requestingWindowURI));
+  aPopupBlockedEvent->GetPopupWindowURI(getter_AddRefs(popupWindowURI));
+
+  // get the blocked popup's modifiers, and window name
+  nsAutoString features, windowName;
+  aPopupBlockedEvent->GetPopupWindowFeatures(features);
+  aPopupBlockedEvent->GetPopupWindowName(windowName);
+
+  // find the docshell for the blocked popup window, in order to show it
+  nsCOMPtr<nsIDocShell> popupWinDocShell = [[mBrowserView getBrowserView] findDocShellForURI:requestingWindowURI];
+  if (!popupWinDocShell)
     return;
 
-  PRUint32 count = 0;
-  inSites->Count(&count);
-  for (PRUint32 i = 0; i < count; ++i) {
-    nsCOMPtr<nsISupports> genUri = dont_AddRef(inSites->ElementAt(i));
-    nsCOMPtr<nsIURI> uri = do_QueryInterface(genUri);
-    pm->Add(uri, "popup", nsIPermissionManager::ALLOW_ACTION);   
-  }
+  nsCOMPtr<nsIDOMWindowInternal> domWin = do_GetInterface(popupWinDocShell);
+  if (!domWin)
+    return;
+
+  nsCOMPtr<nsPIDOMWindow> piDomWin = do_QueryInterface(domWin);
+  if (!piDomWin)
+    return;
+
+  // needed so the blocking code will know that we're allowed to
+  // show this popup.
+  nsAutoPopupStatePusher popupStatePusher(piDomWin, openAllowed);
+  nsCAutoString uriStr;
+  popupWindowURI->GetSpec(uriStr);
+  
+  // whitelist the URL
+  [self whitelistURL:requestingWindowURI];
+
+  // show the blocked popup
+  nsCOMPtr<nsIDOMWindow> openedWindow;
+  nsresult rv = domWin->Open(NS_ConvertUTF8toUTF16(uriStr), windowName, features, getter_AddRefs(openedWindow));
+  if (NS_FAILED(rv))
+    NSLog(@"Couldn't show the blocked popup window for %@", [NSString stringWith_nsACString:uriStr]);  
+}
+
+- (void)whitelistURL:(nsIURI*)URL
+{
+  nsCOMPtr<nsIPermissionManager> pm (do_GetService(NS_PERMISSIONMANAGER_CONTRACTID));
+  pm->Add(URL, "popup", nsIPermissionManager::ALLOW_ACTION);
 }
 
 - (void)showSecurityState:(unsigned long)state
@@ -3759,28 +3817,6 @@ enum BWCOpenDest {
 - (void)setWindowClosesQuietly:(BOOL)inClosesQuietly
 {
   mWindowClosesQuietly = inClosesQuietly;
-}
-
-//
-// - unblockAllSites:
-//
-// Called in response to the menu item from the unblock popup. Loop over all
-// the items in the blocked sites array in the browser wrapper and add them
-// to the whitelist.
-//
-- (void)unblockAllSites:(nsISupportsArray*)sender
-{
-  nsCOMPtr<nsISupportsArray> blockedSites;
-  [[self getBrowserWrapper] getBlockedSites:getter_AddRefs(blockedSites)];
-  nsCOMPtr<nsIPermissionManager> pm ( do_GetService(NS_PERMISSIONMANAGER_CONTRACTID) );
-
-  PRUint32 count = 0;
-  blockedSites->Count(&count);
-  for ( PRUint32 i = 0; i < count; ++i ) {
-    nsCOMPtr<nsISupports> genUri = dont_AddRef(blockedSites->ElementAt(i));
-    nsCOMPtr<nsIURI> uri = do_QueryInterface(genUri);
-    pm->Add(uri, "popup", nsIPermissionManager::ALLOW_ACTION);   
-  }
 }
 
 // updateLock:
