@@ -79,7 +79,7 @@ var AddFeedReader = {
     var addQuestion = document.getElementById("addQuestion");
 
     var wccr = 
-        Cc["@mozilla.org/web-content-handler-registrar;1"].
+        Cc["@mozilla.org/embeddor.implemented/web-content-handler-registrar;1"].
         getService(Ci.nsIWebContentConverterService);
     var handler = 
         wccr.getWebContentHandlerByURI(this._type, this._uri);

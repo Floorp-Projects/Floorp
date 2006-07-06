@@ -43,7 +43,7 @@ function LOG(str) {
   dump("*** " + str + "\n");
 }
 
-const WCCR_CONTRACTID = "@mozilla.org/web-content-handler-registrar;1";
+const WCCR_CONTRACTID = "@mozilla.org/embeddor.implemented/web-content-handler-registrar;1";
 const WCCR_CLASSID = Components.ID("{792a7e82-06a0-437c-af63-b2d12e808acc}");
 const WCCR_CLASSNAME = "Web Content Handler Registrar";
 
@@ -68,7 +68,7 @@ WebContentConverter.prototype = {
   
   onStartRequest: function WCC_onStartRequest(request, context) {
     var wccr = 
-        Cc["@mozilla.org/web-content-handler-registrar;1"].
+        Cc[WCCR_CONTRACTID].
         getService(Ci.nsIWebContentConverterService);
     wccr.loadPreferredHandler(request);
   },
@@ -310,7 +310,13 @@ var WebContentConverterRegistrar = {
     ps.setComplexValue(PREF_SELECTED_WEB, Ci.nsIPrefLocalizedString, 
                        localizedString);
     
-    if (ps.getCharPref(PREF_SELECTED_HANDLER) != "web")
+    var needToUpdateHandler = true;
+    try {
+      needToUpdateHandler = ps.getCharPref(PREF_SELECTED_HANDLER) != "web";
+    }
+    catch (e) {
+    }
+    if (needToUpdateHandler)
       ps.setCharPref(PREF_SELECTED_HANDLER, "web");
   },
   

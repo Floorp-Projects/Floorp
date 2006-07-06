@@ -178,7 +178,7 @@ FeedConverter.prototype = {
         var handler = safeGetCharPref(PREF_SELECTED_HANDLER, "bookmarks");
         if (handler == "web") {
           var wccr = 
-              Cc["@mozilla.org/web-content-handler-registrar;1"].
+              Cc["@mozilla.org/embeddor.implemented/web-content-handler-registrar;1"].
               getService(Ci.nsIWebContentConverterService);
           var feed = result.doc.QueryInterface(Ci.nsIFeed);
           if (feed.type == Ci.nsIFeed.TYPE_FEED &&

@@ -158,7 +158,7 @@ var SubscriptionOptions = {
   
   populateWebHandlers: function SO_populateWebHandlers() {
     var wccr = 
-        Cc["@mozilla.org/web-content-handler-registrar;1"].
+        Cc["@mozilla.org/embeddor.implemented/web-content-handler-registrar;1"].
         getService(Ci.nsIWebContentConverterService);
     var handlers = wccr.getContentHandlers(TYPE_MAYBE_FEED, {});
     if (handlers.length == 0)
@@ -235,7 +235,7 @@ var SubscriptionOptions = {
     
     if (selectedHandler == "web") {
       var wccr = 
-          Cc["@mozilla.org/web-content-handler-registrar;1"].
+          Cc["@mozilla.org/embeddor.implemented/web-content-handler-registrar;1"].
           getService(Ci.nsIWebContentConverterService);
       if (autoHandle.checked) {
         var handler = 
