@@ -1468,6 +1468,20 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
 
   if (httpChannel) {
     httpChannel->GetRequestMethod(method); // If GET, method name will be uppercase
+
+    nsCOMPtr<nsIDocument> doc =
+      do_QueryInterface(nsContentUtils::GetDocumentFromCaller());
+
+    if (doc) {
+      nsIPrincipal *principal = doc->NodePrincipal();
+
+      if (principal) {
+        nsCOMPtr<nsIURI> codebase;
+        principal->GetURI(getter_AddRefs(codebase));
+
+        httpChannel->SetReferrer(codebase);
+      }
+    }
   }
 
   if (aBody && httpChannel && !method.EqualsLiteral("GET")) {
