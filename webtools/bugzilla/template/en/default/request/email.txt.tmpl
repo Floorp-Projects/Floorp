@@ -60,7 +60,7 @@ Attachment [% attidsummary %]
 [%- FILTER bullet = wrap(80) %]
 
 [% USE Bugzilla %]
-[% IF Bugzilla.cgi.param("comment").length > 0 %]
+[% IF Bugzilla.cgi.param("comment") && Bugzilla.cgi.param("comment").length > 0 %]
 ------- Additional Comments from [% user.identity %]
 [%+ Bugzilla.cgi.param("comment") %]
 [% END %]
