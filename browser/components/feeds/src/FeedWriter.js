@@ -318,7 +318,7 @@ FeedWriter.prototype = {
       case "web":
         var webURI = prefs.getCharPref(PREF_SELECTED_WEB);
         var wccr = 
-            Cc["@mozilla.org/web-content-handler-registrar;1"].
+            Cc["@mozilla.org/embeddor.implemented/web-content-handler-registrar;1"].
             getService(Ci.nsIWebContentConverterService);
         var title ="Unknown";
         var handler = 
@@ -454,7 +454,7 @@ FeedWriter.prototype = {
     if (handler == "web") {
       var webURI = prefs.getCharPref(PREF_SELECTED_WEB);
       var wccr = 
-          Cc["@mozilla.org/web-content-handler-registrar;1"].
+          Cc["@mozilla.org/embeddor.implemented/web-content-handler-registrar;1"].
           getService(Ci.nsIWebContentConverterService);
       var handler = 
           wccr.getWebContentHandlerByURI(TYPE_MAYBE_FEED, webURI);
