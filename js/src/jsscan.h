@@ -44,6 +44,7 @@
  */
 #include <stddef.h>
 #include <stdio.h>
+#include "jsconfig.h"
 #include "jsopcode.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
@@ -134,6 +135,7 @@ typedef enum JSTokenType {
     TOK_ARRAYCOMP = 80,                 /* array comprehension initialiser */
     TOK_ARRAYPUSH = 81,                 /* array push within comprehension */
     TOK_LEXICALSCOPE = 82,              /* block scope AST node label */
+    TOK_LET = 83,                       /* let keyword */
     TOK_RESERVED,                       /* reserved keywords */
     TOK_LIMIT                           /* domain size */
 } JSTokenType;
@@ -143,6 +145,12 @@ typedef enum JSTokenType {
 
 #define TOKEN_TYPE_IS_XML(tt) \
     (tt == TOK_AT || tt == TOK_DBLCOLON || tt == TOK_ANYNAME)
+
+#if JS_HAS_BLOCK_SCOPE
+# define TOKEN_TYPE_IS_DECL(tt) ((tt) == TOK_VAR || (tt) == TOK_LET)
+#else
+# define TOKEN_TYPE_IS_DECL(tt) ((tt) == TOK_VAR)
+#endif
 
 struct JSStringBuffer {
     jschar      *base;

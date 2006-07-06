@@ -106,6 +106,7 @@
 #define JS_HAS_ARRAY_EXTRAS     0       /* has indexOf and Lispy extras */
 #define JS_HAS_GENERATORS       0       /* has yield in generator function */
 #define JS_HAS_BLOCK_SCOPE      0       /* has block scope via let/arraycomp */
+#define JS_HAS_DESTRUCTURING    0       /* has [a,b] = ... or {p:a,q:b} = ... */
 
 #elif JS_VERSION < 150
 
@@ -137,6 +138,7 @@
 #define JS_HAS_ARRAY_EXTRAS     0       /* has indexOf and Lispy extras */
 #define JS_HAS_GENERATORS       0       /* has yield in generator function */
 #define JS_HAS_BLOCK_SCOPE      0       /* has block scope via let/arraycomp */
+#define JS_HAS_DESTRUCTURING    0       /* has [a,b] = ... or {p:a,q:b} = ... */
 
 #elif JS_VERSION == 160
 
@@ -164,6 +166,7 @@
 #define JS_HAS_ARRAY_EXTRAS     1       /* has indexOf and Lispy extras */
 #define JS_HAS_GENERATORS       0       /* has yield in generator function */
 #define JS_HAS_BLOCK_SCOPE      0       /* has block scope via let/arraycomp */
+#define JS_HAS_DESTRUCTURING    0       /* has [a,b] = ... or {p:a,q:b} = ... */
 
 #elif JS_VERSION == 170
 
@@ -191,6 +194,7 @@
 #define JS_HAS_ARRAY_EXTRAS     1       /* has indexOf and Lispy extras */
 #define JS_HAS_GENERATORS       1       /* has yield in generator function */
 #define JS_HAS_BLOCK_SCOPE      1       /* has block scope via let/arraycomp */
+#define JS_HAS_DESTRUCTURING    1       /* has [a,b] = ... or {p:a,q:b} = ... */
 
 #else
 

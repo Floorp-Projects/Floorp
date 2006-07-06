@@ -88,7 +88,8 @@ typedef enum JSStmtType {
 typedef struct JSStmtInfo JSStmtInfo;
 
 struct JSStmtInfo {
-    JSStmtType      type;           /* statement type */
+    uint16          type;           /* statement type */
+    uint16          flags;          /* flags, see below */
     ptrdiff_t       update;         /* loop update offset (top if none) */
     ptrdiff_t       breaks;         /* offset of last break in loop */
     ptrdiff_t       continues;      /* offset of last continue in loop */
@@ -99,6 +100,11 @@ struct JSStmtInfo {
     JSStmtInfo      *downScope;     /* next enclosing lexical scope */
     JSObject        *blockObj;      /* block object if BLOCK_SCOPE */
 };
+
+#define SIF_BODY_BLOCK  0x0001      /* STMT_BLOCK type is a function body */
+
+#define AT_TOP_LEVEL(tc)                                                      \
+    (!(tc)->topStmt || ((tc)->topStmt->flags & SIF_BODY_BLOCK))
 
 #define SET_STATEMENT_TOP(stmt, top)                                          \
     ((stmt)->update = (top), (stmt)->breaks =                                 \
@@ -113,6 +119,8 @@ struct JSTreeContext {              /* tree context for semantic checks */
     JSStmtInfo      *topStmt;       /* top of statement info stack */
     JSStmtInfo      *topScopeStmt;  /* top lexical scope statement */
     JSObject        *blockChain;    /* compile time block scope chain */
+    JSParseNode     *blockNode;     /* parse node for a lexical scope.
+                                       XXX combine with blockChain? */
     JSAtomList      decls;          /* function, const, and var declarations */
     JSParseNode     *nodeList;      /* list of recyclable parse-node structs */
 };
@@ -135,7 +143,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
      (tc)->topStmt = (tc)->topScopeStmt = NULL,                               \
      (tc)->blockChain = NULL,                                                 \
      ATOM_LIST_INIT(&(tc)->decls),                                            \
-     (tc)->nodeList = NULL)
+     (tc)->nodeList = NULL, (tc)->blockNode = NULL)
 
 #define TREE_CONTEXT_FINISH(tc)                                               \
     ((void)0)
@@ -428,6 +436,9 @@ js_EmitFunctionBody(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body,
 typedef enum JSSrcNoteType {
     SRC_NULL        = 0,        /* terminates a note vector */
     SRC_IF          = 1,        /* JSOP_IFEQ bytecode is from an if-then */
+    SRC_INITPROP    = 1,        /* disjoint meaning applied to JSOP_INITELEM or
+                                   to an index label in a regular (structuring)
+                                   or a destructuring object initialiser */
     SRC_IF_ELSE     = 2,        /* JSOP_IFEQ bytecode is from an if-then-else */
     SRC_WHILE       = 3,        /* JSOP_IFEQ is from a while loop */
     SRC_FOR         = 4,        /* JSOP_NOP or JSOP_POP in for loop head */
@@ -463,6 +474,7 @@ typedef enum JSSrcNoteType {
 /* Constants for the SRC_DECL source note. */
 #define SRC_DECL_VAR             0
 #define SRC_DECL_CONST           1
+#define SRC_DECL_LET             2
 
 #define SN_TYPE_BITS            5
 #define SN_DELTA_BITS           3

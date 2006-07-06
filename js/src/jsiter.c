@@ -171,7 +171,7 @@ SetupKeyValueReturn(JSContext *cx, jsid id, jsval val, jsval *rval)
 }
 
 static JSBool
-CheckKeyValueReturn(JSContext *cx, jsid *idp, jsval *rval)
+CheckKeyValueReturn(JSContext *cx, uintN flags, jsid *idp, jsval *rval)
 {
     jsval val, idval;
     JSBool arraylike;
@@ -183,9 +183,10 @@ CheckKeyValueReturn(JSContext *cx, jsid *idp, jsval *rval)
 #if JS_HAS_LVALUE_RETURN
     if (cx->rval2set == JS_RVAL2_ITERKEY) {
         cx->rval2set = JS_RVAL2_CLEAR;
-        if (!idp)
+        if (idp)
+            *idp = (jsid) cx->rval2;
+        if (!idp || (flags & JSITER_KEYVALUE))
             return NewKeyValuePair(cx, (jsid) cx->rval2, val, rval);
-        *idp = (jsid) cx->rval2;
         return JS_TRUE;
     }
 #endif
@@ -207,6 +208,8 @@ CheckKeyValueReturn(JSContext *cx, jsid *idp, jsval *rval)
             return JS_FALSE;
         if (!JS_ValueToId(cx, idval, idp))
             return JS_FALSE;
+        if (flags & JSITER_KEYVALUE)
+            return JS_TRUE;
         return OBJ_GET_PROPERTY(cx, obj, INT_TO_JSID(1), rval);
     }
 
@@ -408,6 +411,7 @@ js_ValueToIterator(JSContext *cx, jsval v, uintN flags)
     if (!JS_GetMethodById(cx, obj, ATOM_TO_JSID(atom), &obj, &fval))
         goto bad;
     if (JSVAL_IS_VOID(fval)) {
+        /* Fail over to the default native iterator, called directly. */
         if (!js_DefaultIterator(cx, obj, 1, &arg, &rval))
             goto bad;
         if (JSVAL_IS_PRIMITIVE(rval))
@@ -476,7 +480,7 @@ js_CallIteratorNext(JSContext *cx, JSObject *iterobj, uintN flags,
         JS_ASSERT(OBJ_GET_CLASS(cx, iterobj) == &js_IteratorClass);
         JS_ASSERT(flags & JSITER_HIDDEN);
         if (!iterator_next(cx, iterobj, 0, NULL, rval) ||
-            !CheckKeyValueReturn(cx, idp, rval)) {
+            !CheckKeyValueReturn(cx, flags, idp, rval)) {
             cx->cachedIterObj = NULL;
             return JS_FALSE;
         }
@@ -515,7 +519,7 @@ js_CallIteratorNext(JSContext *cx, JSObject *iterobj, uintN flags,
             fun = (JSFunction *) JS_GetPrivate(cx, JSVAL_TO_OBJECT(fval));
             if (!FUN_INTERPRETED(fun) && fun->u.n.native == iterator_next) {
                 if (!iterator_next(cx, iterobj, 0, NULL, rval) ||
-                    !CheckKeyValueReturn(cx, idp, rval)) {
+                    !CheckKeyValueReturn(cx, flags, idp, rval)) {
                     return JS_FALSE;
                 }
                 if (flags & JSITER_HIDDEN)
@@ -530,7 +534,7 @@ js_CallIteratorNext(JSContext *cx, JSObject *iterobj, uintN flags,
 
     return JS_GetMethodById(cx, iterobj, id, &iterobj, &fval) &&
            js_InternalCall(cx, iterobj, fval, 0, NULL, rval) &&
-           CheckKeyValueReturn(cx, idp, rval);
+           CheckKeyValueReturn(cx, flags, idp, rval);
 }
 
 static JSBool

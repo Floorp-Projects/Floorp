@@ -64,6 +64,7 @@
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
+#include "jsscan.h"
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
@@ -2539,6 +2540,12 @@ interrupt:
             flags = JSITER_FOREACH;
           END_CASE(JSOP_FOREACH)
 
+#if JS_HAS_DESTRUCTURING
+          BEGIN_CASE(JSOP_FOREACHKEYVAL)
+            flags = JSITER_FOREACH | JSITER_KEYVALUE;
+          END_CASE(JSOP_FOREACHKEYVAL)
+#endif
+
           BEGIN_CASE(JSOP_FORPROP)
             /*
              * Handle JSOP_FORPROP first, so the cost of the goto do_forinloop
@@ -3009,6 +3016,23 @@ interrupt:
                 goto out;
             STORE_OPND(-1, rval);
           END_LITOPX_CASE(JSOP_SETCONST)
+
+#if JS_HAS_DESTRUCTURING
+          BEGIN_CASE(JSOP_ENUMCONSTELEM)
+            FETCH_ELEMENT_ID(-1, id);
+            FETCH_OBJECT(cx, -2, lval, obj);
+            CHECK_ELEMENT_ID(obj, id);
+            rval = FETCH_OPND(-3);
+            SAVE_SP_AND_PC(fp);
+            ok = OBJ_DEFINE_PROPERTY(cx, obj, id, rval, NULL, NULL,
+                                     JSPROP_ENUMERATE | JSPROP_PERMANENT |
+                                     JSPROP_READONLY,
+                                     NULL);
+            if (!ok)
+                goto out;
+            sp -= 3;
+          END_CASE(JSOP_ENUMCONSTELEM)
+#endif
 
           BEGIN_LITOPX_CASE(JSOP_BINDNAME, 0)
             SAVE_SP_AND_PC(fp);
@@ -5873,20 +5897,34 @@ interrupt:
           BEGIN_LITOPX_CASE(JSOP_ENTERBLOCK, 0)
             obj = ATOM_TO_OBJECT(atom);
             JS_ASSERT(fp->spbase + OBJ_BLOCK_DEPTH(cx, obj) == sp);
-            i = OBJ_BLOCK_COUNT(cx, obj);
-            sp += i;
-            JS_ASSERT(sp <= fp->spbase + depth);
+            vp = sp + OBJ_BLOCK_COUNT(cx, obj);
+            JS_ASSERT(vp <= fp->spbase + depth);
+            while (sp < vp) {
+                STORE_OPND(0, JSVAL_VOID);
+                sp++;
+            }
             JS_ASSERT(OBJ_GET_PARENT(cx, obj) == fp->blockChain);
             fp->blockChain = obj;
           END_LITOPX_CASE(JSOP_ENTERBLOCK)
 
+          BEGIN_CASE(JSOP_LEAVEBLOCKEXPR)
           BEGIN_CASE(JSOP_LEAVEBLOCK)
           {
             JSObject **chainp;
 
-            i = GET_UINT16(pc);
-            sp -= i;
-            JS_ASSERT(sp <= fp->spbase + depth);
+            /* Grab the result of the expression. */
+            if (op == JSOP_LEAVEBLOCKEXPR)
+                rval = FETCH_OPND(-1);
+
+            sp -= GET_UINT16(pc);
+            JS_ASSERT(op == JSOP_LEAVEBLOCKEXPR
+                      ? fp->spbase < sp && sp <= fp->spbase + depth
+                      : fp->spbase <= sp && sp < fp->spbase + depth);
+
+            /* Store the result into the topmost stack slot. */
+            if (op == JSOP_LEAVEBLOCKEXPR)
+                STORE_OPND(-1, rval);
+
             chainp = &fp->blockChain;
             obj = *chainp;
             if (!obj) {
@@ -5894,7 +5932,9 @@ interrupt:
                 obj = *chainp;
             }
             JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_BlockClass);
-            JS_ASSERT(fp->spbase + OBJ_BLOCK_DEPTH(cx, obj) == sp);
+            JS_ASSERT(op == JSOP_LEAVEBLOCKEXPR
+                      ? fp->spbase + OBJ_BLOCK_DEPTH(cx, obj) == sp - 1
+                      : fp->spbase + OBJ_BLOCK_DEPTH(cx, obj) == sp);
             *chainp = OBJ_GET_PARENT(cx, obj);
           }
           END_CASE(JSOP_LEAVEBLOCK)
@@ -6029,6 +6069,32 @@ interrupt:
           END_CASE(JSOP_ARRAYPUSH)
 #endif /* JS_HAS_GENERATORS */
 
+#if !JS_HAS_BLOCK_SCOPE
+          L_JSOP_ENTERBLOCK:
+          L_JSOP_LEAVEBLOCK:
+          L_JSOP_LEAVEBLOCKEXPR:
+          L_JSOP_GETLOCAL:
+          L_JSOP_SETLOCAL:
+          L_JSOP_INCLOCAL:
+          L_JSOP_DECLOCAL:
+          L_JSOP_LOCALINC:
+          L_JSOP_LOCALDEC:
+          L_JSOP_FORLOCAL:
+#endif
+
+#if !JS_HAS_GENERATORS
+          L_JSOP_STARTITER:
+          L_JSOP_ENDITER:
+          L_JSOP_GENERATOR:
+          L_JSOP_YIELD:
+          L_JSOP_ARRAYPUSH:
+#endif
+
+#if !JS_HAS_DESTRUCTURING
+          L_JSOP_FOREACHKEYVAL:
+          L_JSOP_ENUMCONSTELEM:
+#endif
+
 #ifdef JS_THREADED_INTERP
           L_JSOP_BACKPATCH:
           L_JSOP_BACKPATCH_PUSH:
@@ -6142,7 +6208,6 @@ out:
                 /* Don't clear cx->throwing to save cx->exception from GC. */
                 len = 0;
                 ok = JS_TRUE;
-                flags = 0;
                 DO_NEXT_OP(len);
             }
         }
@@ -6154,10 +6219,8 @@ no_catch:;
      * exception thrown under such a function was not caught by it.  If so, go
      * to the inline code under JSOP_RETURN.
      */
-    if (inlineCallCount) {
-        flags = 0;
+    if (inlineCallCount)
         goto inline_return;
-    }
 
     /*
      * Reset sp before freeing stack slots, because our caller may GC soon.

@@ -45,7 +45,6 @@
 #include <stddef.h>
 #include "jsprvtd.h"
 #include "jspubtd.h"
-#include "jsconfig.h"
 #include "jsutil.h"
 
 JS_BEGIN_EXTERN_C
@@ -167,26 +166,31 @@ typedef enum JSOp {
 #define GET_ATOM(cx,script,pc)  js_GetAtom((cx), &(script)->atomMap,          \
                                            GET_ATOM_INDEX(pc))
 
-/* A full atom index for JSOP_LITERAL uses 24 bits of immediate operand. */
-#define LITERAL_INDEX_LEN       3
-#define LITERAL_INDEX_HI(i)     ((jsbytecode)((i) >> 16))
-#define LITERAL_INDEX_MID(i)    ((jsbytecode)((i) >> 8))
-#define LITERAL_INDEX_LO(i)     ((jsbytecode)(i))
-#define GET_LITERAL_INDEX(pc)   ((jsatomid)(((pc)[1] << 16) |                 \
+/* A full atom index for JSOP_UINT24 uses 24 bits of immediate operand. */
+#define UINT24_HI(i)            ((jsbytecode)((i) >> 16))
+#define UINT24_MID(i)           ((jsbytecode)((i) >> 8))
+#define UINT24_LO(i)            ((jsbytecode)(i))
+#define GET_UINT24(pc)          ((jsatomid)(((pc)[1] << 16) |                 \
                                             ((pc)[2] << 8) |                  \
                                             (pc)[3]))
-#define SET_LITERAL_INDEX(pc,i) ((pc)[1] = LITERAL_INDEX_HI(i),               \
-                                 (pc)[2] = LITERAL_INDEX_MID(i),              \
-                                 (pc)[3] = LITERAL_INDEX_LO(i))
+#define SET_UINT24(pc,i)        ((pc)[1] = UINT24_HI(i),                      \
+                                 (pc)[2] = UINT24_MID(i),                     \
+                                 (pc)[3] = UINT24_LO(i))
+
+/* Same format for JSOP_LITERAL, etc., but future-proof with different names. */
+#define LITERAL_INDEX_LEN       3
+#define LITERAL_INDEX_HI(i)     UINT24_HI(i)
+#define LITERAL_INDEX_MID(i)    UINT24_MID(i)
+#define LITERAL_INDEX_LO(i)     UINT24_LO(i)
+#define GET_LITERAL_INDEX(pc)   GET_UINT24(pc)
+#define SET_LITERAL_INDEX(pc,i) SET_UINT24(pc,i)
 
 /* Atom index limit is determined by SN_3BYTE_OFFSET_FLAG, see jsemit.h. */
 #define ATOM_INDEX_LIMIT_LOG2   23
 #define ATOM_INDEX_LIMIT        ((uint32)1 << ATOM_INDEX_LIMIT_LOG2)
 
-#if JS_HAS_SHARP_VARS
 JS_STATIC_ASSERT(sizeof(jsatomid) * JS_BITS_PER_BYTE >=
                  ATOM_INDEX_LIMIT_LOG2 + 1);
-#endif
 
 /* Common uint16 immediate format helpers. */
 #define UINT16_HI(i)            ((jsbytecode)((i) >> 8))
@@ -222,20 +226,6 @@ struct JSCodeSpec {
     uint32              format;         /* immediate operand format */
 };
 
-extern const char       js_const_str[];
-extern const char       js_var_str[];
-extern const char       js_function_str[];
-extern const char       js_in_str[];
-extern const char       js_instanceof_str[];
-extern const char       js_new_str[];
-extern const char       js_delete_str[];
-extern const char       js_typeof_str[];
-extern const char       js_void_str[];
-extern const char       js_null_str[];
-extern const char       js_this_str[];
-extern const char       js_false_str[];
-extern const char       js_true_str[];
-extern const char       js_default_str[];
 extern const JSCodeSpec js_CodeSpec[];
 extern uintN            js_NumCodeSpecs;
 extern const jschar     js_EscapeMap[];
