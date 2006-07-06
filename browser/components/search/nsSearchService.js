@@ -1843,6 +1843,12 @@ Engine.prototype = {
     return "";
   },
 
+  // This getter is used in SearchService.observe.  It is not intended to be
+  // used (or needed) by callers outside this file.
+  get uri() {
+    return this._uri;
+  },
+
   // The file that the plugin is loaded from is a unique identifier for it.  We
   // use this as the identifier to store data in the sqlite database
   get _id() {
@@ -1874,12 +1880,6 @@ Engine.prototype = {
 
   get type() {
     return this._type;
-  },
-
-  // This getter is used in SearchService.observer.  It is not intended to be
-  // used (or needed) by callers outside this file.
-  get uri() {
-    return this._uri;
   },
 
   get searchForm() {
