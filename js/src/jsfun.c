@@ -579,8 +579,6 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
 {
     JSObject *callobj;
     JSBool ok;
-    JSObject *obj;
-    JSScopeProperty *sprop;
     jsid argsid;
     jsval aval;
 
@@ -592,17 +590,6 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
     if (!callobj)
         return JS_TRUE;
     ok = call_enumerate(cx, callobj);
-
-    /*
-     * Walk the scope chain looking for block scopes whose locals need to be
-     * copied from stack slots into object slots before fp goes away.
-     */
-    for (obj = fp->scopeChain; obj; obj = OBJ_GET_PARENT(cx, obj)) {
-        if (OBJ_GET_CLASS(cx, obj) == &js_BlockClass) {
-            for (sprop = OBJ_SCOPE(obj)->lastProp; sprop; sprop = sprop->parent)
-                ok &= OBJ_GET_PROPERTY(cx, obj, sprop->id, &aval);
-        }
-    }
 
     /*
      * Get the arguments object to snapshot fp's actual argument values.

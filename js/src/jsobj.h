@@ -282,6 +282,9 @@ extern JSObject *
 js_CloneBlockObject(JSContext *cx, JSObject *proto, JSObject *parent,
                     JSStackFrame *fp);
 
+extern JSBool
+js_PutBlockObject(JSContext *cx, JSObject *obj);
+
 struct JSSharpObjectMap {
     jsrefcount  depth;
     jsatomid    sharpgen;
