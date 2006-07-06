@@ -38,7 +38,7 @@
 
 #include "nsEventQueue.h"
 #include "nsAutoLock.h"
-#include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 #include "prlog.h"
 
 #ifdef PR_LOGGING
@@ -96,7 +96,7 @@ PRBool
 nsEventQueue::PutEvent(nsIRunnable *runnable)
 {
   // Avoid calling AddRef+Release while holding our monitor.
-  nsCOMPtr<nsIRunnable> event(runnable);
+  nsRefPtr<nsIRunnable> event(runnable);
   PRBool rv = PR_TRUE;
   {
     nsAutoMonitor mon(mMonitor);
