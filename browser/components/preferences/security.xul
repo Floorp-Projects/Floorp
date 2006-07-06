@@ -88,9 +88,9 @@
                 accesskey="&addonExceptions.accesskey;"
                 oncommand="gSecurityPane.showAddonExceptions();"/>
       </hbox>
-      <checkbox id="checkPhish"
-                label="&checkPhish.label;"
-                accesskey="&checkPhish.accesskey;"
+      <checkbox id="checkMaybePhish"
+                label="&checkMaybePhish.label;"
+                accesskey="&checkMaybePhish.accesskey;"
                 preference="browser.safebrowsing.enabled"
                 onsyncfrompreference="return gSecurityPane.readCheckPhish();"/>
       <radiogroup id="checkPhishChoice" class="indent"
