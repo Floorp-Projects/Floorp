@@ -52,7 +52,7 @@
 
 NS_INTERFACE_MAP_BEGIN(nsSVGGFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
-  NS_INTERFACE_MAP_ENTRY(nsSupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGDisplayContainerFrame)
 
 //----------------------------------------------------------------------
