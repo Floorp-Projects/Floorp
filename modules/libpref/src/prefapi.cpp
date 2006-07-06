@@ -303,7 +303,7 @@ nsresult
 PREF_SetBoolPref(const char *pref_name, PRBool value, PRBool set_default)
 {
     PrefValue pref;
-    pref.boolVal = value;
+    pref.boolVal = value ? PR_TRUE : PR_FALSE;
 
     return pref_HashPref(pref_name, pref, PREF_BOOL, set_default);
 }
