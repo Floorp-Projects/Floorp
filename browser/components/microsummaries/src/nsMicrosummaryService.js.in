@@ -1234,6 +1234,11 @@ MicrosummaryGenerator.prototype = {
     // XXX Should we just have one global instance of the processor?
     var processor = Cc["@mozilla.org/document-transformer;1?type=xslt"].
                     createInstance(Ci.nsIXSLTProcessor);
+
+    // Turn off document loading of all kinds (document(), <include>, <import>)
+    // for security (otherwise local generators would be able to load local files).
+    processor.flags |= Ci.nsIXSLTProcessorPrivate.DISABLE_ALL_LOADS;
+
     processor.importStylesheet(this.template);
     var fragment = processor.transformToFragment(doc, doc);
 
