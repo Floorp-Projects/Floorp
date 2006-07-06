@@ -363,6 +363,10 @@
                           command="Browser:ShowHistory"/>
                 <menuseparator id="startTabHistorySeparator"/>
                 <menuseparator hidden="true" id="endTabHistorySeparator"/>
+                <menu label="&historyUndoMenu.label;" disabled="true">
+                  <menupopup id="historyUndoPopup"/>
+                </menu>
+                <menuseparator id="endUndoSeparator"/>
                 <menuitem id="sanitizeItem" 
                           accesskey="&clearPrivateDataCmd.accesskey;"
                           label="&clearPrivateDataCmd.label;"

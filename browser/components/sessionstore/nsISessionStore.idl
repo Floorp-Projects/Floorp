@@ -40,6 +40,7 @@
 
 interface nsIDOMWindow;
 interface nsIDOMNode;
+interface nsIDictionary;
 
 /**
  * nsISessionStore keeps track of the current browsing state - i.e.
@@ -47,7 +48,7 @@ interface nsIDOMNode;
  * - and allows to restore everything into one window.
  */
 
-[scriptable, uuid(320996f0-0c5e-11db-9cd8-0800200c9a66)]
+[scriptable, uuid(f217cde0-0c68-11db-9cd8-0800200c9a66)]
 interface nsISessionStore : nsISupports
 {
   /**
@@ -59,6 +60,12 @@ interface nsISessionStore : nsISupports
    * Get the number of restore-able tabs for a window
    */
   unsigned long getClosedTabCount(in nsIDOMWindow aWindow);
+
+  /**
+   * Get closed tab data
+   * XXX - This format is not final, and will be updated when a better way is found.
+   */
+  nsIDictionary getClosedTabData(in nsIDOMWindow aWindow);
 
   /**
    * @param aWindow

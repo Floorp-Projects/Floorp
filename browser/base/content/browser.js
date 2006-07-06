@@ -1124,6 +1124,9 @@ function delayedStartup()
 
   // browser-specific tab augmentation
   AugmentTabs.init();
+
+  // set up history menu
+  HistoryMenu.init();
 }
 
 function BrowserShutdown()
@@ -6716,21 +6719,11 @@ var AugmentTabs = {
     var undoCloseTabItem = document.createElement("menuitem");
     undoCloseTabItem.setAttribute("label", menuLabel);
     undoCloseTabItem.setAttribute("accesskey", menuAccessKey);
-    undoCloseTabItem.addEventListener("command", this.undoCloseTab, false);
+    undoCloseTabItem.addEventListener("command", function() { undoCloseTab(0); }, false);
 
     // add to tab context menu
     var insertPos = this.tabContextMenu.lastChild.previousSibling;
     this.undoCloseTabMenu = this.tabContextMenu.insertBefore(undoCloseTabItem, insertPos);
-  },
-
-  /**
-   * Re-open the most-recently-closed tab
-   */
-  undoCloseTab: function at_undoCloseTab() {
-    // get session-store service
-    var ss = Cc["@mozilla.org/browser/sessionstore;1"].
-             getService(Ci.nsISessionStore);
-    ss.undoCloseTab(window, 0);
   },
 
   onTabContextMenuLoad: function at_onTabContextMenuLoad() {
@@ -6742,3 +6735,81 @@ var AugmentTabs = {
     }
   }
 };
+
+/**
+* History menu initialization
+*/
+#ifndef MOZ_PLACES
+var HistoryMenu = {};
+#endif
+
+HistoryMenu.init = function PHM_init() {
+  this.initializeUndoSubmenu();
+}
+
+/**
+ * Initialize the "Undo Close Tabs" menu
+ */
+HistoryMenu.initializeUndoSubmenu = function PHM_initializeUndoSubmenu() {
+  // get history menupopup 
+  var histMenu = document.getElementById("goPopup");
+  histMenu.addEventListener("popupshowing", function() { HistoryMenu.populateUndoSubmenu(); }, false);
+}
+
+/**
+ * Populate when the history menu is opened
+ */
+HistoryMenu.populateUndoSubmenu = function PHM_populateUndoSubmenu() {
+  var undoPopup = document.getElementById("historyUndoPopup");
+
+  // remove existing menu items
+  while (undoPopup.hasChildNodes())
+    undoPopup.removeChild(undoPopup.firstChild);
+
+  // get closed-tabs from nsSessionStore
+  var ss = Cc["@mozilla.org/browser/sessionstore;1"].
+           getService(Ci.nsISessionStore);
+  // no restorable tabs, so make sure menu is disabled, and return
+  if (ss.getClosedTabCount(window) == 0) {
+    undoPopup.parentNode.setAttribute("disabled", true);
+    return;
+  }
+
+  // enable menu
+  undoPopup.parentNode.removeAttribute("disabled");
+
+  // populate menu
+  var urls = [];
+  var undoItems = ss.getClosedTabData(window);
+  var keys = undoItems.getKeys({});
+  for (var i = 0; i < keys.length; i++) {
+    var key = keys[i];
+    var tabData = undoItems.getValue(key).wrappedJSObject;
+    var m = undoPopup.appendChild(document.createElement("menuitem"));
+    m.setAttribute("label", tabData.title);
+    m.setAttribute("value", key);
+    m.addEventListener("command", function(aEvent) { 
+      undoCloseTab(aEvent.originalTarget.getAttribute("value"));
+    }, false);
+    urls.push(tabData.state.entries[0].url);
+  }
+
+  // "open in tabs"
+  var strings = document.getElementById("placeBundle");
+  undoPopup.appendChild(document.createElement("menuseparator"));
+  m = undoPopup.appendChild(document.createElement("menuitem"));
+  m.setAttribute("label", strings.getString("menuOpenInTabs.label"));
+  m.setAttribute("accesskey", strings.getString("menuOpenInTabs.accesskey"));
+  m.addEventListener("command", function() { loadOneOrMoreURIs(urls.join("|")); }, false);
+}
+
+/**
+ * Re-open a closed tab.
+ * @param aIndex
+ *        The index of the tab (via nsSessionStore.getClosedTabData)
+ */
+function undoCloseTab(aIndex) {
+  var ss = Cc["@mozilla.org/browser/sessionstore;1"].
+           getService(Ci.nsISessionStore);
+  ss.undoCloseTab(window, aIndex);
+}
