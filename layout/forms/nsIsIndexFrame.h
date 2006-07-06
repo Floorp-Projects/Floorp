@@ -46,7 +46,6 @@
 #include "nsIDOMKeyListener.h"
 
 #include "nsTextControlFrame.h"
-#include "nsFormControlHelper.h"
 typedef   nsTextControlFrame nsNewFrame;
 
 class nsISupportsArray;

@@ -52,6 +52,7 @@
 #include "nsAutoPtr.h"
 #include "nsStyleSet.h"
 #include "nsContentUtils.h"
+#include "nsHTMLAtoms.h"
 // MouseEvent suppression in PP
 #include "nsGUIEvent.h"
 

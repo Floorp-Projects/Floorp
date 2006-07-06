@@ -43,7 +43,6 @@
 #include "nsUnicharUtils.h"
 #include "nsListControlFrame.h"
 #include "nsFormControlFrame.h" // for COMPARE macro
-#include "nsFormControlHelper.h"
 #include "nsHTMLAtoms.h"
 #include "nsIFormControl.h"
 #include "nsIDeviceContext.h" 
@@ -965,7 +964,8 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
   if (visibleHeight == 0) {
     if (aReflowState.mComputedHeight != 0) {
       nsCOMPtr<nsIFontMetrics> fontMet;
-      nsresult rvv = nsFormControlHelper::GetFrameFontFM(this, getter_AddRefs(fontMet));
+      nsresult rvv =
+        nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet));
       if (NS_SUCCEEDED(rvv) && fontMet) {
         aReflowState.rendContext->SetFont(fontMet);
         fontMet->GetHeight(visibleHeight);
@@ -1386,7 +1386,7 @@ nsListControlFrame::HandleEvent(nsPresContext* aPresContext,
   if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE || uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED)
     return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 
-  if (nsFormControlHelper::GetDisabled(mContent))
+  if (mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled))
     return NS_OK;
 
   return nsHTMLScrollFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
@@ -2055,7 +2055,7 @@ nsListControlFrame::GetFormProperty(nsIAtom* aName, nsAString& aValue) const
     if (error == 0)
        selected = IsContentSelectedByIndex(indx); 
   
-    nsFormControlHelper::GetBoolString(selected, aValue);
+    aValue.Assign(selected ? NS_LITERAL_STRING("1") : NS_LITERAL_STRING("0"));
     
   // For selectedIndex, get the value from the widget
   } else if (nsHTMLAtoms::selectedindex == aName) {
@@ -2260,7 +2260,7 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
 
   mButtonDown = PR_FALSE;
 
-  if (nsFormControlHelper::GetDisabled(mContent)) {
+  if (mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled)) {
     return NS_OK;
   }
 
@@ -2509,7 +2509,7 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
 
   mButtonDown = PR_TRUE;
 
-  if (nsFormControlHelper::GetDisabled(mContent)) {
+  if (mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled)) {
     return NS_OK;
   }
 
@@ -2839,7 +2839,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
 {
   NS_ASSERTION(aKeyEvent, "keyEvent is null.");
 
-  if (nsFormControlHelper::GetDisabled(mContent))
+  if (mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled))
     return NS_OK;
 
   // Start by making sure we can query for a key event

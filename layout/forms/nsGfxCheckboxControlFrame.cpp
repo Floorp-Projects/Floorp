@@ -54,7 +54,45 @@
 #include "nsITheme.h"
 #include "imgIRequest.h"
 #include "nsDisplayList.h"
-#include "nsFormControlHelper.h"
+
+static void
+PaintCheckMark(nsIRenderingContext& aRenderingContext,
+               float aPixelsToTwips, const nsRect& aRect)
+{
+  const PRUint32 checkpoints = 7;
+  const PRUint32 checksize   = 9; //This is value is determined by added 2 units to the end
+                                  //of the 7X7 pixel rectangle below to provide some white space
+                                  //around the checkmark when it is rendered.
+
+    // Points come from the coordinates on a 7X7 pixels 
+    // box with 0,0 at the lower left. 
+  nscoord checkedPolygonDef[] = {0,2, 2,4, 6,0 , 6,2, 2,6, 0,4, 0,2 };
+    // Location of the center point of the checkmark
+  const PRUint32 centerx = 3;
+  const PRUint32 centery = 3;
+  
+  nsPoint checkedPolygon[checkpoints];
+  PRUint32 defIndex = 0;
+  PRUint32 polyIndex = 0;
+
+     // Scale the checkmark based on the smallest dimension
+  PRUint32 size = aRect.width / checksize;
+  if (aRect.height < aRect.width) {
+   size = aRect.height / checksize;
+  }
+  
+    // Center and offset each point in the polygon definition.
+  for (defIndex = 0; defIndex < (checkpoints * 2); defIndex++) {
+    checkedPolygon[polyIndex].x =
+      nscoord((((checkedPolygonDef[defIndex]) - centerx) * (size)) + (aRect.width / 2) + aRect.x);
+    defIndex++;
+    checkedPolygon[polyIndex].y =
+      nscoord((((checkedPolygonDef[defIndex]) - centery) * (size)) + (aRect.height / 2) + aRect.y);
+    polyIndex++;
+  }
+  
+  aRenderingContext.FillPolygon(checkedPolygon, checkpoints);
+}
 
 //------------------------------------------------------------
 nsIFrame*
@@ -200,8 +238,6 @@ nsGfxCheckboxControlFrame::PaintCheckBox(nsIRenderingContext& aRenderingContext,
 {
   // REVIEW: moved the mAppearance test out so we avoid constructing
   // a display item if it's not needed
-  aRenderingContext.PushState();
-
   nsMargin borderPadding(0,0,0,0);
   CalcBorderPadding(borderPadding);
 
@@ -211,11 +247,9 @@ nsGfxCheckboxControlFrame::PaintCheckBox(nsIRenderingContext& aRenderingContext,
   const nsStyleColor* color = GetStyleColor();
   aRenderingContext.SetColor(color->mColor);
 
-  nsFormControlHelper::PaintCheckMark(aRenderingContext,
-                                      GetPresContext()->ScaledPixelsToTwips(),
-                                      checkRect);
-
-  aRenderingContext.PopState();
+  ::PaintCheckMark(aRenderingContext,
+                   GetPresContext()->ScaledPixelsToTwips(),
+                   checkRect);
 }
 
 //------------------------------------------------------------

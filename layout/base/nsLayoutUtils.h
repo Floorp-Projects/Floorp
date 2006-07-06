@@ -48,6 +48,7 @@ class nsIScrollableFrame;
 class nsIDOMEvent;
 class nsRegion;
 class nsDisplayListBuilder;
+class nsIFontMetrics;
 
 #include "prtypes.h"
 #include "nsStyleContext.h"
@@ -421,6 +422,15 @@ public:
    * differently from others.
    */
   static nsRect GetAllInFlowBoundingRect(nsIFrame* aFrame);
+
+  /**
+   * Get the font metrics corresponding to the frame's style data.
+   * @param aFrame the frame
+   * @param aFontMetrics the font metrics result
+   * @return success or failure code
+   */
+  static nsresult GetFontMetricsForFrame(nsIFrame* aFrame,
+                                         nsIFontMetrics** aFontMetrics);
 };
 
 #endif // nsLayoutUtils_h__

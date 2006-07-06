@@ -581,7 +581,7 @@ nsFileControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // just to catch events
   // REVIEW: I'm not sure why we do this, but that's what nsFileControlFrame::
   // GetFrameForPoint was doing
-  if (nsFormControlHelper::GetDisabled(mContent) && 
+  if (mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled) && 
       IsVisibleForPainting(aBuilder)) {
     nsDisplayItem* item = new (aBuilder) nsDisplayEventReceiver(this);
     if (!item)

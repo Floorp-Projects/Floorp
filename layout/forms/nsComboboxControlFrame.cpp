@@ -88,6 +88,7 @@
 #include "nsStyleSet.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
+#include "nsLayoutUtils.h"
 #include "nsDisplayList.h"
 
 #ifdef MOZ_XUL
@@ -625,7 +626,9 @@ nsComboboxControlFrame::ReflowItems(nsPresContext* aPresContext,
   //printf("*****************\n");
   nscoord visibleHeight = 0;
   nsCOMPtr<nsIFontMetrics> fontMet;
-  nsresult res = nsFormControlHelper::GetFrameFontFM(mDisplayFrame, getter_AddRefs(fontMet));
+  nsresult res =
+    nsLayoutUtils::GetFontMetricsForFrame(mDisplayFrame,
+                                          getter_AddRefs(fontMet));
   if (fontMet) {
     fontMet->GetHeight(visibleHeight);
   }
@@ -1481,7 +1484,7 @@ nsComboboxControlFrame::GetFrameName(nsAString& aResult) const
 void
 nsComboboxControlFrame::ShowDropDown(PRBool aDoDropDown) 
 {
-  if (nsFormControlHelper::GetDisabled(mContent)) {
+  if (mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled)) {
     return;
   }
 
@@ -1702,7 +1705,7 @@ nsComboboxControlFrame::HandleEvent(nsPresContext* aPresContext,
   if (nsEventStatus_eConsumeNoDefault == *aEventStatus) {
     return NS_OK;
   }
-  if (nsFormControlHelper::GetDisabled(mContent)) {
+  if (mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled)) {
     return NS_OK;
   }
 
@@ -2073,7 +2076,8 @@ void nsComboboxControlFrame::PaintFocus(nsIRenderingContext& aRenderingContext,
   /////////////////////
   // draw focus
   // XXX This is only temporary
-  if (!nsFormControlHelper::GetDisabled(mContent) && mFocused == this) {
+  if (!mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled) &&
+      mFocused == this) {
     aRenderingContext.SetLineStyle(nsLineStyle_kDotted);
     aRenderingContext.SetColor(0);
   } else {

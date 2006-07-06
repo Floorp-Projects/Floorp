@@ -38,6 +38,7 @@
 
 #include "nsLayoutUtils.h"
 #include "nsIFrame.h"
+#include "nsIFontMetrics.h"
 #include "nsIFormControlFrame.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
@@ -979,4 +980,15 @@ nsLayoutUtils::GetAllInFlowBoundingRect(nsIFrame* aFrame)
   }
 
   return r - aFrame->GetPosition();
+}
+
+nsresult
+nsLayoutUtils::GetFontMetricsForFrame(nsIFrame* aFrame,
+                                      nsIFontMetrics** aFontMetrics)
+{
+  nsStyleContext* sc = aFrame->GetStyleContext();
+  return aFrame->GetPresContext()->DeviceContext()->
+    GetMetricsFor(sc->GetStyleFont()->mFont,
+                  sc->GetStyleVisibility()->mLangGroup,
+                  *aFontMetrics);
 }
