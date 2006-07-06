@@ -7652,7 +7652,7 @@ js_SetDefaultXMLNamespace(JSContext *cx, jsval v)
             return JS_FALSE;
         }
     } else {
-        JS_ASSERT(fp->fun && !(fp->fun->flags & JSFUN_HEAVYWEIGHT));
+        JS_ASSERT(fp->fun && !JSFUN_HEAVYWEIGHT_TEST(fp->fun->flags));
     }
     fp->xmlNamespace = JSVAL_TO_OBJECT(v);
     return JS_TRUE;

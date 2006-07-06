@@ -3126,9 +3126,9 @@ js_DecompileFunction(JSPrinter *jp, JSFunction *fun)
         if (!jp->grouped && (fun->flags & JSFUN_LAMBDA))
             js_puts(jp, "(");
     }
-    if (fun->flags & JSFUN_GETTER)
+    if (JSFUN_GETTER_TEST(fun->flags))
         js_printf(jp, "%s ", js_getter_str);
-    else if (fun->flags & JSFUN_SETTER)
+    else if (JSFUN_SETTER_TEST(fun->flags))
         js_printf(jp, "%s ", js_setter_str);
 
     js_printf(jp, "%s ", js_function_str);

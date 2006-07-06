@@ -1303,6 +1303,22 @@ JS_GetScriptFilenameFlags(JSScript *script)
     return js_GetScriptFilenameFlags(script->filename);
 }
 
+JS_PUBLIC_API(uint32)
+JS_GetTopScriptFilenameFlags(JSContext *cx, JSStackFrame *fp)
+{
+    if (!fp)
+        fp = cx->fp;
+    while (fp) {
+        if (fp->script) {
+            if (!fp->script->filename)
+                return JSFILENAME_NULL;
+            return js_GetScriptFilenameFlags(fp->script->filename);
+        }
+        fp = fp->down;
+    }
+    return 0;
+}
+
 JS_PUBLIC_API(JSBool)
 JS_FlagScriptFilenamePrefix(JSRuntime *rt, const char *prefix, uint32 flags)
 {
