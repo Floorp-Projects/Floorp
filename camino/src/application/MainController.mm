@@ -639,7 +639,68 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
   }
 }
 
-// XXX move to BWC
+//
+// Closes all windows (including minimized windows), respecting the "warn before closing multiple tabs" pref
+//
+-(IBAction)closeAllWindows:(id)aSender
+{
+  BOOL doCloseWindows = YES;
+  PreferenceManager* prefManager = [PreferenceManager sharedInstance];
+
+  if ([prefManager getBooleanPref:"camino.warn_when_closing" withSuccess:NULL]) {
+    NSString* closeAlertMsg = nil;
+    NSString* closeAlertExpl = nil;
+
+    NSArray* openBrowserWins = [self browserWindows];
+    // We need different warnings depending on whether there's only a single window with multiple tabs,
+    // or multiple windows open
+    if ([openBrowserWins count] == 1) {
+      BrowserWindowController* bwc = [self getMainWindowBrowserController];
+      unsigned int numTabs = [[bwc getTabBrowser] numberOfTabViewItems];
+      if (numTabs > 1) { // only show the warning if there are multiple tabs
+        closeAlertMsg  = NSLocalizedString(@"CloseWindowWithMultipleTabsMsg", @"");
+        closeAlertExpl = [NSString stringWithFormat:NSLocalizedString(@"CloseWindowWithMultipleTabsExplFormat", @""),
+                            numTabs];
+      }
+    } else if ([openBrowserWins count] > 1) {
+      closeAlertMsg  = NSLocalizedString(@"CloseMultipleWindowsMsg", @"");
+      closeAlertExpl = [NSString stringWithFormat:NSLocalizedString(@"CloseMultipleWindowsExpl", @""),
+                            [openBrowserWins count]];
+    }
+
+    // make the warning dialog
+    if (closeAlertMsg) {
+      [NSApp activateIgnoringOtherApps:YES];
+      nsAlertController* controller = CHBrowserService::GetAlertController();
+      BOOL dontShowAgain = NO;
+
+      NS_DURING
+        doCloseWindows = [controller confirmCheckEx:nil
+                                              title:closeAlertMsg
+                                               text:closeAlertExpl
+                                            button1:NSLocalizedString(@"OKButtonText", @"")
+                                            button2:NSLocalizedString(@"CancelButtonText", @"")
+                                            button3:nil
+                                           checkMsg:NSLocalizedString(@"CloseMultipleWindowsCheckboxLabel", @"")
+                                         checkValue:&dontShowAgain];
+      NS_HANDLER
+      NS_ENDHANDLER
+
+      if (dontShowAgain)
+        [prefManager setPref:"camino.warn_when_closing" toBoolean:NO];
+    }
+  }
+
+  // Actually close the windows
+  if (doCloseWindows) {
+    NSArray* windows = [NSApp windows];
+    NSEnumerator* windowEnum = [windows objectEnumerator];
+    NSWindow* curWindow;
+    while (curWindow = [windowEnum nextObject]) 
+      [curWindow close];
+  }
+}
+
 -(IBAction)closeTab:(id)aSender
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
@@ -647,7 +708,6 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
     [browserController closeCurrentTab:aSender];
 }
 
-// XXX move to BWC
 -(IBAction) previousTab:(id)aSender
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
@@ -655,7 +715,6 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
     [browserController previousTab:aSender];
 }
 
-// XXX move to BWC
 -(IBAction) nextTab:(id)aSender
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
@@ -812,7 +871,6 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
   [mFindDialog showWindow:self];
 }
 
-// XXX move to BWC
 -(IBAction) goBack:(id)aSender
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
@@ -820,7 +878,6 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
     [browserController back: aSender]; 
 }
 
-// XXX move to BWC
 -(IBAction) goForward:(id)aSender
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
@@ -828,7 +885,6 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
     [browserController forward: aSender]; 
 }
 
-// XXX move to BWC
 -(IBAction) doReload:(id)aSender
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
@@ -836,7 +892,13 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
     [browserController reload: aSender]; 
 }
 
-// XXX move to BWC
+-(IBAction) doReloadAllTabs:(id)aSender
+{
+  BrowserWindowController* browserController = [self getMainWindowBrowserController];
+  if (browserController)
+    [browserController reloadAllTabs:aSender];
+}
+
 -(IBAction) reloadWithCharset:(id)aSender
 {
   // Figure out which charset to tell gecko to load based on the sender's tag. There
@@ -859,7 +921,6 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
   [self doReload:nil];
 }
 
-// XXX move to BWC
 -(IBAction) doStop:(id)aSender
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
@@ -1426,7 +1487,8 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
 
   // only activate if we've got multiple tabs open.
   if (action == @selector(nextTab:) ||
-       action == @selector(previousTab:))
+      action == @selector(previousTab:) ||
+      action == @selector(doReloadAllTabs:))
   {
     return (browserController && [[browserController getTabBrowser] numberOfTabViewItems] > 1);
   }
@@ -1494,6 +1556,15 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
   // save prefs here
   NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
   [defaults setInteger: ((showToolbar) ? 0 : 1) forKey: USER_DEFAULTS_HIDE_PERS_TOOLBAR_KEY];
+}
+
+-(IBAction) zoomAll:(id)aSender
+{
+  NSArray* windows = [NSApp windows];
+  NSEnumerator* windowEnum = [windows objectEnumerator];
+  NSWindow* curWindow;
+  while (curWindow = [windowEnum nextObject])
+    [curWindow zoom:aSender];
 }
 
 -(IBAction) supportLink:(id)aSender;

@@ -108,6 +108,9 @@ typedef enum EBookmarkOpenBehavior
 
 // File menu actions.
 -(IBAction) newWindow:(id)aSender;
+-(IBAction) newTab:(id)aSender;
+-(IBAction) closeAllWindows:(id)aSender;
+-(IBAction) closeTab:(id)aSender;
 -(IBAction) openFile:(id)aSender;
 -(IBAction) openLocation:(id)aSender;
 -(IBAction) savePage:(id)aSender;
@@ -124,8 +127,6 @@ typedef enum EBookmarkOpenBehavior
 -(IBAction) goForward:(id)aSender;
 -(IBAction) goHome:(id)aSender;
 -(IBAction) doSearch:(id)aSender;
--(IBAction) previousTab:(id)aSender;
--(IBAction) nextTab:(id)aSender;
 
 // Local servers submenu
 -(IBAction) aboutServers:(id)aSender;
@@ -134,6 +135,7 @@ typedef enum EBookmarkOpenBehavior
 // View menu actions.
 -(IBAction) toggleBookmarksToolbar:(id)aSender;
 -(IBAction) doReload:(id)aSender;
+-(IBAction) doReloadAllTabs:(id)aSender;
 -(IBAction) doStop:(id)aSender;
 -(IBAction) biggerTextSize:(id)aSender;
 -(IBAction) smallerTextSize:(id)aSender;
@@ -151,8 +153,9 @@ typedef enum EBookmarkOpenBehavior
 -(IBAction) openMenuBookmark:(id)aSender;
 
 // Window menu actions
--(IBAction) newTab:(id)aSender;
--(IBAction) closeTab:(id)aSender;
+-(IBAction) zoomAll:(id)aSender;
+-(IBAction) previousTab:(id)aSender;
+-(IBAction) nextTab:(id)aSender;
 -(IBAction) downloadsWindow:(id)aSender;
 
 // Help menu actions
