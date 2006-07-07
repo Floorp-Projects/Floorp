@@ -411,7 +411,7 @@ var gMainPane = {
     var fph = ios.getProtocolHandler("file")
                  .QueryInterface(Components.interfaces.nsIFileProtocolHandler);
     var currentDirPref = document.getElementById("browser.download.downloadDir");
-    var downloadDir = currentDirPref.value || this._indexToFile(folderListPref.value);
+    var downloadDir = currentDirPref.value || this._indexToFolder(folderListPref.value);
     var urlspec = fph.getURLSpecFromFile(downloadDir);
     downloadFolder.image = "moz-icon://" + urlspec + "?size=16";
 
