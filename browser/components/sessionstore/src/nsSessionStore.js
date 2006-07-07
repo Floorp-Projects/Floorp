@@ -385,7 +385,7 @@ SessionStoreService.prototype = {
           this.onTabAdd(aEvent.currentTarget.ownerDocument.defaultView, tabpanel);
         }
         else {
-          this.onTabClose(aEvent.currentTarget.ownerDocument.defaultView, tabpanel);
+          this.onTabClose(aEvent.currentTarget.ownerDocument.defaultView, aEvent.originalTarget);
           this.onTabRemove(aEvent.currentTarget.ownerDocument.defaultView, tabpanel);
         }
         break;
