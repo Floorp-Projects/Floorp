@@ -1039,14 +1039,17 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     } else {
         /*
          * If this function is a named statement function not at top-level
-         * (i.e. a JSOP_CLOSURE), or if it refers to unqualified names that
-         * are not local args or vars (TCF_FUN_USES_NONLOCALS), then our
-         * enclosing function, if any, must be heavyweight.
+         * (i.e. a JSOP_CLOSURE, not a function definiton or expression), then
+         * our enclosing function, if any, must be heavyweight.
+         *
+         * The TCF_FUN_USES_NONLOCALS flag is set only by the code generator,
+         * so it won't be set here.  Assert that it's not.  We have to check
+         * it later, in js_EmitTree, after js_EmitFunctionBody has traversed
+         * the function's body
          */
-        if ((!lambda && funAtom && !AT_TOP_LEVEL(tc)) ||
-            (funtc.flags & TCF_FUN_USES_NONLOCALS)) {
+        JS_ASSERT(!(funtc.flags & TCF_FUN_USES_NONLOCALS));
+        if (!lambda && funAtom && !AT_TOP_LEVEL(tc))
             tc->flags |= TCF_FUN_HEAVYWEIGHT;
-        }
     }
 
     result = pn;

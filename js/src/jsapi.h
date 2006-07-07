@@ -144,15 +144,16 @@ JS_BEGIN_EXTERN_C
  */
 #define JSFUN_GETTER_TEST(f)       (JSFUN_GSFLAGS(f) == JSFUN_GETTER)
 #define JSFUN_SETTER_TEST(f)       (JSFUN_GSFLAGS(f) == JSFUN_SETTER)
-#define JSFUN_FLAGS_TEST(f,t)      (JSFUN_GSFLAGS(~(f)) ? 0 : (f) & (t))
+#define JSFUN_FLAGS_TEST(f,t)      (JSFUN_GSFLAGS(~(f)) ? (f) & (t) : 0)
 #define JSFUN_BOUND_METHOD_TEST(f) JSFUN_FLAGS_TEST(f, JSFUN_BOUND_METHOD)
 #define JSFUN_HEAVYWEIGHT_TEST(f)  JSFUN_FLAGS_TEST(f, JSFUN_HEAVYWEIGHT)
 
 #define JSFUN_GSFLAG2ATTR(f)       (JSFUN_GETTER_TEST(f) ? JSPROP_GETTER :    \
                                     JSFUN_SETTER_TEST(f) ? JSPROP_SETTER : 0)
 
-#define JSFUN_THISP_FLAGS(f)    (JSFUN_GSFLAGS(~(f)) ? 0 :                    \
-                                 (f) & JSFUN_THISP_PRIMITIVE)
+#define JSFUN_THISP_FLAGS(f)    (JSFUN_GSFLAGS(~(f))                          \
+                                 ? (f) & JSFUN_THISP_PRIMITIVE                \
+                                 : 0)
 #define JSFUN_THISP_TEST(f,t)   ((f) == (t))
 
 #define JSFUN_THISP_STRING      0x30    /* |this| may be a primitive string */
