@@ -515,9 +515,13 @@ gfxWindowsTextRun::MeasureOrDrawFast(gfxContext *aContext,
     HDC aDC = GetDCFromSurface(surf);
     NS_ASSERTION(aDC, "No DC");
 
-    // cairo munges it underneath us
+    PRBool needsSave = aContext->CurrentMatrix().HasNonTranslation();
+
     XFORM savedxform;
-    GetWorldTransform(aDC, &savedxform);
+    if (needsSave) {
+        // cairo munges it underneath us
+        GetWorldTransform(aDC, &savedxform);
+    }
 
     cairo_t *cr = aContext->GetCairo();
 
@@ -529,7 +533,8 @@ gfxWindowsTextRun::MeasureOrDrawFast(gfxContext *aContext,
     cairo_set_font_face(cr, fontFace);
     cairo_set_font_size(cr, mGroup->mStyle.size);
 
-    SaveDC(aDC);
+    if (needsSave)
+        SaveDC(aDC);
 
     cairo_win32_scaled_font_select_font(scaledFont, aDC);
 
@@ -618,7 +623,8 @@ gfxWindowsTextRun::MeasureOrDrawFast(gfxContext *aContext,
             }
         }
 
-        SetWorldTransform(aDC, &savedxform);
+        if (needsSave)
+            SetWorldTransform(aDC, &savedxform);
 
         cairo_show_glyphs(cr, cglyphs, numGlyphs);
 
@@ -632,7 +638,8 @@ gfxWindowsTextRun::MeasureOrDrawFast(gfxContext *aContext,
 
     cairo_win32_scaled_font_done_font(scaledFont);
 
-    RestoreDC(aDC, -1);
+    if (needsSave)
+        RestoreDC(aDC, -1);
 
     if (aDraw)
         surf->MarkDirty();
