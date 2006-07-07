@@ -186,7 +186,7 @@
 <!ENTITY historyMenu.label "History">
 <!ENTITY historyMenu.accesskey "i">
 <!ENTITY historyUndoMenu.label "Recently Closed Tabs">
-<!ENTITY historyUndoMenu.accesskey "u">
+<!ENTITY historyUndoMenu.accesskey "R">
 
 <!-- XXX places only -->
 <!ENTITY historyHomeCmd.label "Home">
