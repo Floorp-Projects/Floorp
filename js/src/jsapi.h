@@ -151,10 +151,9 @@ JS_BEGIN_EXTERN_C
 #define JSFUN_GSFLAG2ATTR(f)       (JSFUN_GETTER_TEST(f) ? JSPROP_GETTER :    \
                                     JSFUN_SETTER_TEST(f) ? JSPROP_SETTER : 0)
 
-#define JSFUN_THISP_FLAGS(f)    (JSFUN_GSFLAGS(~(f))                          \
-                                 ? (f) & JSFUN_THISP_PRIMITIVE                \
-                                 : 0)
-#define JSFUN_THISP_TEST(f,t)   ((f) == (t))
+#define JSFUN_THISP_FLAGS(f)    (JSFUN_GSFLAGS(~(f)) ? 0 :                    \
+                                 (f) & JSFUN_THISP_PRIMITIVE)
+#define JSFUN_THISP_TEST(f,t)   ((f) == (t) || (f) == JSFUN_THISP_PRIMITIVE)
 
 #define JSFUN_THISP_STRING      0x30    /* |this| may be a primitive string */
 #define JSFUN_THISP_NUMBER      0x70    /* |this| may be a primitive number */
