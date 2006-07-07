@@ -359,25 +359,39 @@ boxBlurH(PRUint8 *aInput, PRUint8 *aOutput,
          PRInt32 aStride, nsRect aRegion,
          PRUint32 leftLobe, PRUint32 rightLobe)
 {
-  PRUint32 boxSize = leftLobe + rightLobe + 1;
+  PRInt32 boxSize = leftLobe + rightLobe + 1;
 
-  for (PRInt32 y = aRegion.y; y < aRegion.y + aRegion.height; y++)
+  for (PRInt32 y = aRegion.y; y < aRegion.y + aRegion.height; y++) {
+    PRUint32 sums[4] = {0, 0, 0, 0};
+    for (PRInt32 i=0; i < boxSize; i++) {
+      PRInt32 pos = aRegion.x - leftLobe + i;
+      pos = PR_MAX(pos, aRegion.x);
+      pos = PR_MIN(pos, aRegion.x + aRegion.width - 1);
+      sums[0] += aInput[aStride*y + 4*pos    ];
+      sums[1] += aInput[aStride*y + 4*pos + 1];
+      sums[2] += aInput[aStride*y + 4*pos + 2];
+      sums[3] += aInput[aStride*y + 4*pos + 3];
+    }
     for (PRInt32 x = aRegion.x; x < aRegion.x + aRegion.width; x++) {
-      PRUint32 sums[4] = {0, 0, 0, 0};
-      for (PRUint32 i=0; i < boxSize; i++) {
-        PRInt32 pos = (int)x - leftLobe + i;
-        pos = PR_MAX(pos, aRegion.x);
-        pos = PR_MIN(pos, aRegion.x + aRegion.width - 1);
-        sums[0] += aInput[aStride*y + 4*pos    ];
-        sums[1] += aInput[aStride*y + 4*pos + 1];
-        sums[2] += aInput[aStride*y + 4*pos + 2];
-        sums[3] += aInput[aStride*y + 4*pos + 3];
-      }
+      PRInt32 tmp = x - leftLobe;
+      PRInt32 last = PR_MAX(tmp, aRegion.x);
+      PRInt32 next = PR_MIN(tmp + boxSize, aRegion.x + aRegion.width - 1);
+
       aOutput[aStride*y + 4*x    ] = sums[0]/boxSize;
       aOutput[aStride*y + 4*x + 1] = sums[1]/boxSize;
       aOutput[aStride*y + 4*x + 2] = sums[2]/boxSize;
       aOutput[aStride*y + 4*x + 3] = sums[3]/boxSize;
+
+      sums[0] += aInput[aStride*y + 4*next    ] -
+                 aInput[aStride*y + 4*last    ];
+      sums[1] += aInput[aStride*y + 4*next + 1] -
+                 aInput[aStride*y + 4*last + 1];
+      sums[2] += aInput[aStride*y + 4*next + 2] -
+                 aInput[aStride*y + 4*last + 2];
+      sums[3] += aInput[aStride*y + 4*next + 3] -
+                 aInput[aStride*y + 4*last + 3];
     }
+  }
 }
 
 static void
@@ -385,25 +399,39 @@ boxBlurV(PRUint8 *aInput, PRUint8 *aOutput,
          PRInt32 aStride, nsRect aRegion,
          unsigned topLobe, unsigned bottomLobe)
 {
-  PRUint32 boxSize = topLobe + bottomLobe + 1;
+  PRInt32 boxSize = topLobe + bottomLobe + 1;
 
-  for (PRInt32 y = aRegion.y; y < aRegion.y + aRegion.height; y++)
-    for (PRInt32 x = aRegion.x; x < aRegion.x + aRegion.width; x++) {
-      PRUint32 sums[4] = {0, 0, 0, 0};
-      for (PRUint32 i = 0; i < boxSize; i++) {
-        PRInt32 pos = (int)y - topLobe + i;
-        pos = PR_MAX(pos, aRegion.y);
-        pos = PR_MIN(pos, aRegion.y + aRegion.height - 1);
-        sums[0] += aInput[aStride*pos + 4*x   ];
-        sums[1] += aInput[aStride*pos + 4*x + 1];
-        sums[2] += aInput[aStride*pos + 4*x + 2];
-        sums[3] += aInput[aStride*pos + 4*x + 3];
-      }
+  for (PRInt32 x = aRegion.x; x < aRegion.x + aRegion.width; x++) {
+    PRUint32 sums[4] = {0, 0, 0, 0};
+    for (PRInt32 i=0; i < boxSize; i++) {
+      PRInt32 pos = aRegion.y - topLobe + i;
+      pos = PR_MAX(pos, aRegion.y);
+      pos = PR_MIN(pos, aRegion.y + aRegion.height - 1);
+      sums[0] += aInput[aStride*pos + 4*x    ];
+      sums[1] += aInput[aStride*pos + 4*x + 1];
+      sums[2] += aInput[aStride*pos + 4*x + 2];
+      sums[3] += aInput[aStride*pos + 4*x + 3];
+    }
+    for (PRInt32 y = aRegion.y; y < aRegion.y + aRegion.height; y++) {
+      PRInt32 tmp = y - topLobe;
+      PRInt32 last = PR_MAX(tmp, aRegion.y);
+      PRInt32 next = PR_MIN(tmp + boxSize, aRegion.y + aRegion.height - 1);
+
       aOutput[aStride*y + 4*x    ] = sums[0]/boxSize;
       aOutput[aStride*y + 4*x + 1] = sums[1]/boxSize;
       aOutput[aStride*y + 4*x + 2] = sums[2]/boxSize;
       aOutput[aStride*y + 4*x + 3] = sums[3]/boxSize;
+
+      sums[0] += aInput[aStride*next + 4*x    ] -
+                 aInput[aStride*last + 4*x    ];
+      sums[1] += aInput[aStride*next + 4*x + 1] -
+                 aInput[aStride*last + 4*x + 1];
+      sums[2] += aInput[aStride*next + 4*x + 2] -
+                 aInput[aStride*last + 4*x + 2];
+      sums[3] += aInput[aStride*next + 4*x + 3] -
+                 aInput[aStride*last + 4*x + 3];
     }
+  }
 }
 
 static nsresult
