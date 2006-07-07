@@ -85,6 +85,7 @@ Var AddDesktopSC
 Var fhInstallLog
 Var fhUninstallLog
 
+!include branding.nsi
 !include defines.nsi
 !include SetProgramAccess.nsi
 !include common.nsh
