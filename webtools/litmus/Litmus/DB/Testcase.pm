@@ -72,7 +72,7 @@ __PACKAGE__->set_sql(CommunityEnabledBySubgroup => qq{
                                                       SELECT t.* 
                                                       FROM testcases t, testcase_subgroups tsg
 						      WHERE tsg.subgroup_id=? AND tsg.testcase_id=t.testcase_id AND t.enabled=1 AND t.community_enabled=1
-						      ORDER BY tsg.sort_order ASC
+						      ORDER BY tsg.sort_order ASC, t.testcase_id ASC
 });
 
 Litmus::DB::Testcase->has_many(test_results => "Litmus::DB::Testresult", {order_by => 'submission_time DESC'});

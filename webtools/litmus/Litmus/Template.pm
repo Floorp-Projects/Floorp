@@ -47,7 +47,7 @@ package Litmus::Template;
 use strict;
 
 use Litmus::Config;
-use HTML::StripScripts::Parser;
+use Litmus::StripScripts;
 use Text::Markdown;
 
 use base qw(Template);
@@ -66,14 +66,14 @@ my %constants;
 $constants{litmus_version} = $Litmus::Config::version;
 
 # html tag stripper:
-my $strip = HTML::StripScripts::Parser->new(
-                            {
-                                AllowHref => 1,
-                                AllowSrc => 1,
-                                Context => 'Flow'
-                            },
-                              strict_names => 1,
-                            );
+my $strip = Litmus::StripScripts->new(
+                                      {
+                                       AllowHref => 1,
+                                       AllowSrc => 1,
+                                       Context => 'Document'
+                                      },
+                                      strict_names => 1,
+                                     );
 
 ###############################################################################
 # Templatization Code
@@ -148,7 +148,7 @@ sub create {
                 $strip->parse($data);
                 $strip->eof();
                 
-                return $strip->filtered_document();
+                return $strip->filtered_document;
             }, 
             
             # process the text with the markdown text processor
