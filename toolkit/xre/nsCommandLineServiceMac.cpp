@@ -376,17 +376,19 @@ OSErr nsMacCommandLine::Quit(TAskSave askSave)
   if (NS_FAILED(rv))
     return errAEEventNotHandled;
 
-    PRBool doQuit;
-    rv = closer->CloseAll(askSave != eSaveNo, &doQuit);
-    if (NS_FAILED(rv) || !doQuit)
-        return errAEEventNotHandled;
-          
-  nsCOMPtr<nsIAppStartup> appStartup = 
-           (do_GetService(NS_APPSTARTUP_CONTRACTID, &rv));
+  PRBool doQuit;
+  rv = closer->CloseAll(askSave != eSaveNo, &doQuit);
   if (NS_FAILED(rv))
     return errAEEventNotHandled;
-  
-  (void)appStartup->Quit(nsIAppStartup::eAttemptQuit);
+  if (!doQuit)
+    return userCanceledErr;
+
+  nsCOMPtr<nsIAppStartup> appStartup =
+           do_GetService(NS_APPSTARTUP_CONTRACTID, &rv);
+  if (NS_FAILED(rv))
+    return errAEEventNotHandled;
+
+  appStartup->Quit(nsIAppStartup::eAttemptQuit);
   return noErr;
 }
 
