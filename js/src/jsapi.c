@@ -3232,6 +3232,14 @@ JS_ClearScope(JSContext *cx, JSObject *obj)
 
     if (obj->map->ops->clear)
         obj->map->ops->clear(cx, obj);
+
+    /* Clear cached class objects on the global object. */
+    if (JS_GET_CLASS(cx, obj)->flags & JSCLASS_IS_GLOBAL) {
+        JSProtoKey key;
+
+        for (key = JSProto_Null; key < JSProto_LIMIT; key++)
+            JS_SetReservedSlot(cx, obj, key, JSVAL_VOID);
+    }
 }
 
 JS_PUBLIC_API(JSIdArray *)
