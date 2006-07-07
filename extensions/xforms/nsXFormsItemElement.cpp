@@ -52,11 +52,12 @@
 #include "nsIModelElementPrivate.h"
 #include "nsIXFormsItemElement.h"
 #include "nsIXFormsControl.h"
-#include "nsIXFormsLabelElement.h"
 #include "nsIDocument.h"
 #include "nsXFormsModelElement.h"
 #include "nsIXFormsCopyElement.h"
 #include "nsIDOMEventTarget.h"
+#include "nsIXFormsDelegate.h"
+#include "nsIXFormsAccessors.h"
 
 /**
  * nsXFormsItemElement implements the XForms \<item\> element.
@@ -436,11 +437,14 @@ nsXFormsItemElement::GetLabelText(nsAString& aValue)
   for (PRUint32 i = 0; i < childCount; ++i) {
     children->Item(i, getter_AddRefs(child));
     if (nsXFormsUtils::IsXFormsElement(child, NS_LITERAL_STRING("label"))) {
-      nsCOMPtr<nsIXFormsLabelElement> label(do_QueryInterface(child));
-      if (label) {
-        label->GetTextValue(aValue);
-        return NS_OK;
-      }
+      nsCOMPtr<nsIXFormsDelegate> label(do_QueryInterface(child));
+      NS_ENSURE_STATE(label);
+
+      nsCOMPtr<nsIXFormsAccessors> accessors;
+      label->GetXFormsAccessors(getter_AddRefs(accessors));
+      NS_ENSURE_STATE(accessors);
+
+      return accessors->GetValue(aValue);
     }
   }
 

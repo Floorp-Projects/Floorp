@@ -139,7 +139,6 @@ XPIDLSRCS	= \
 		nsIDelegateInternal.idl \
 		nsIXFormsUIWidget.idl \
 		nsIXFormsItemElement.idl \
-		nsIXFormsLabelElement.idl \
 		nsIXFormsItemSetUIElement.idl \
 		nsIXFormsRepeatUIElement.idl \
 		nsIXFormsAccessors.idl \
