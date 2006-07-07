@@ -125,7 +125,7 @@ public:
     nsresult TransformToDoc(nsIDOMDocument *aOutputDoc,
                             nsIDOMDocument **aResult);
 
-    PRBool DisableLoads()
+    PRBool IsLoadDisabled()
     {
         return (mFlags & DISABLE_ALL_LOADS) != 0;
     }

@@ -511,7 +511,7 @@ txCompileObserver::loadURI(const nsAString& aUri,
                            const nsAString& aReferrerUri,
                            txStylesheetCompiler* aCompiler)
 {
-    if (mProcessor->DisableLoads()) {
+    if (mProcessor->IsLoadDisabled()) {
         return NS_ERROR_XSLT_LOAD_BLOCKED_ERROR;
     }
 
@@ -705,7 +705,7 @@ public:
     TX_DECL_ACOMPILEOBSERVER;
 
 protected:
-    txMozillaXSLTProcessor* mProcessor;
+    nsRefPtr<txMozillaXSLTProcessor> mProcessor;
     nsAutoRefCnt mRefCnt;
 };
 
@@ -740,7 +740,7 @@ txSyncCompileObserver::loadURI(const nsAString& aUri,
                                const nsAString& aReferrerUri,
                                txStylesheetCompiler* aCompiler)
 {
-    if (mProcessor->DisableLoads()) {
+    if (mProcessor->IsLoadDisabled()) {
         return NS_ERROR_XSLT_LOAD_BLOCKED_ERROR;
     }
 

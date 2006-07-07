@@ -345,7 +345,8 @@ txMozillaXSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
                    type == nsIDOMNode::DOCUMENT_NODE,
                    NS_ERROR_INVALID_ARG);
 
-    nsresult rv = TX_CompileStylesheet(aStyleDOM, this, getter_AddRefs(mStylesheet));
+    nsresult rv = TX_CompileStylesheet(aStyleDOM, this,
+                                       getter_AddRefs(mStylesheet));
     NS_ENSURE_SUCCESS(rv, rv);
 
     mSource = aSourceDOM;
@@ -596,7 +597,8 @@ txMozillaXSLTProcessor::ImportStylesheet(nsIDOMNode *aStyle)
                    type == nsIDOMNode::DOCUMENT_NODE,
                    NS_ERROR_INVALID_ARG);
 
-    nsresult rv = TX_CompileStylesheet(aStyle, this, getter_AddRefs(mStylesheet));
+    nsresult rv = TX_CompileStylesheet(aStyle, this,
+                                       getter_AddRefs(mStylesheet));
     // XXX set up exception context, bug 204658
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -654,7 +656,7 @@ txMozillaXSLTProcessor::TransformToDoc(nsIDOMDocument *aOutputDoc,
         sourceDOMDocument = do_QueryInterface(mSource);
     }
 
-    txExecutionState es(mStylesheet, DisableLoads());
+    txExecutionState es(mStylesheet, IsLoadDisabled());
 
     // XXX Need to add error observers
 
@@ -705,7 +707,7 @@ txMozillaXSLTProcessor::TransformToFragment(nsIDOMNode *aSource,
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    txExecutionState es(mStylesheet, DisableLoads());
+    txExecutionState es(mStylesheet, IsLoadDisabled());
 
     // XXX Need to add error observers
 

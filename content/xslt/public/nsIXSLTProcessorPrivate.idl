@@ -40,16 +40,16 @@
 [scriptable, uuid(b8d727f7-67f4-4dc1-a318-ec0c87280816)]
 interface nsIXSLTProcessorPrivate : nsISupports
 {
-	/**
-	 * Disables all loading of external documents, such as from
-	 * <xsl:import> and document()
-	 * Defaults to off and is *not* reset by calls to reset()
-	 */
-	const unsigned long DISABLE_ALL_LOADS = 1;
+  /**
+   * Disables all loading of external documents, such as from
+   * <xsl:import> and document()
+   * Defaults to off and is *not* reset by calls to reset()
+   */
+  const unsigned long DISABLE_ALL_LOADS = 1;
 
   /**
    * Flags for this processor. Defaults to 0. See individual flags above
    * for documentation for effect of reset()
    */
-	attribute unsigned long flags;
+  attribute unsigned long flags;
 };
