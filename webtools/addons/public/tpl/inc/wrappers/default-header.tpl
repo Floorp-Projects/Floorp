@@ -1,6 +1,16 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html lang="en">
 
+{if $smarty.get.app eq "thunderbird"}
+    {assign var="app" value="thunderbird"}
+{elseif $smarty.get.app eq "mozilla"}
+    {assign var="app" value="mozilla"}
+{elseif $smarty.get.app eq "seamonkey"}
+    {assign var="app" value="mozilla"}
+{else}
+    {assign var="app" value="firefox"}
+{/if}
+
 <head>
     <title>{if $title}{$title} :: {/if}Mozilla Add-ons :: Add Features to Mozilla Software</title>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
@@ -12,7 +22,7 @@
     <link rel="stylesheet" type="text/css" href="{$config.webpath}/css/cavendish/template.css" title="Cavendish" media="screen">
     <link rel="stylesheet" type="text/css" href="{$config.webpath}/css/forms.css" media="screen">
     <link rel="home" title="Home" href="https://addons.mozilla.org/">
-    <link rel="alternate" type="application/rss+xml" title="New {$smarty.get.app|escape:html:"UTF-8"} {if $currentTab eq "themes"}Themes{else}Extensions{/if}" href="{$config.webpath}/rss/{$smarty.get.app|escape:html:"UTF-8"}/{if $currentTab eq "themes"}themes{else}extensions{/if}/newest/">
+    <link rel="alternate" type="application/rss+xml" title="New {$app|escape:html:"UTF-8"} {if $currentTab eq "themes"}Themes{else}Extensions{/if}" href="{$config.webpath}/rss/{$app|escape:html:"UTF-8"}/{if $currentTab eq "themes"}themes{else}extensions{/if}/newest/">
     <link rel="icon" href="{$config.webpath}/images/favicon.ico" type="image/png">
     <script src="{$config.webpath}/js/install.js" type="text/javascript"></script>
     <script src="{$config.webpath}/js/search-plugin.js" type="text/javascript"></script>
@@ -32,17 +42,13 @@
 
     <div id="key-title">
 
-{if $smarty.get.app eq "thunderbird"}
-    {assign var="app" value="thunderbird"}
+{if $app eq "thunderbird"}
         <h1><a href="{$config.webpath}/?app=thunderbird" title="Return to home page" accesskey="1"><img src="{$config.webpath}/images/title-thunderbird.gif" width="355" height="54" alt="Thunderbird Add-ons Beta"></a></h1>
-{elseif $smarty.get.app eq "mozilla"}
-    {assign var="app" value="mozilla"}
+{elseif $app eq "mozilla"}
         <h1><a href="{$config.webpath}/?app=mozilla" title="Return to home page" accesskey="1"><img src="{$config.webpath}/images/title-suite.gif" width="370" height="54" alt="Mozilla Suite Add-ons Beta"></a></h1>
-{elseif $smarty.get.app eq "seamonkey"}
-    {assign var="app" value="mozilla"}
+{elseif $app eq "seamonkey"}
         <h1><a href="{$config.webpath}/?app=mozilla" title="Return to home page" accesskey="1"><img src="{$config.webpath}/images/title-suite.gif" width="370" height="54" alt="Mozilla Suite Add-ons Beta"></a></h1>
 {else}
-    {assign var="app" value="firefox"}
         <h1><a href="{$config.webpath}/?app=firefox" title="Return to home page" accesskey="1"><img src="{$config.webpath}/images/title-firefox.gif" width="276" height="54" alt="Firefox Add-ons Beta"></a></h1>
 {/if}
 
