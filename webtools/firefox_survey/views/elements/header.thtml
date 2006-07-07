@@ -1,0 +1,43 @@
+ <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+  <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+      <title>Mozilla Firefox Survey</title>
+      <meta name="author" content="Mozilla Corporation" />
+      <meta name="copyright" content="Mozilla Corporation" />
+      <?php echo $html->charset('UTF-8'); ?>
+      <?php echo $html->css('rustico/template'); ?>
+      <?php echo $html->css('rustico/content'); ?>
+      <?php echo $html->css('screen'); ?>
+    </head>
+    <body>
+        <div id="header">
+            <div>
+                <h1>
+                    <?php 
+                        echo $html->link(
+                                    $html->image('moz-com-logo.png', array('alt'=>'Mozilla Corporation', 'height'=>38,'width'=>89)), 
+                                    'http://mozilla.com/', array('title'=>'Return to home page', 'accesskey'=>'1'),false,false
+                                ); 
+                    ?>
+                </h1>
+                <ul>
+                    <li id="menu-products"><a href="http://mozilla.com/products/">Products</a></li>
+                    <li id="menu-extensions"><a href="http://mozilla.com/extensions/">Extensions</a></li>
+                    <li id="menu-support"><a href="http://mozilla.com/support/">Support</a></li>
+                    <li id="menu-developers"><a href="http://mozilla.com/developers/">Developers</a></li>
+
+                </ul>
+            </div>
+        </div>
+        <div id="breadcrumbs">
+            <?php if (isset($breadcrumb) && isset($breadcrumbs)): ?>
+                <div>
+                    <?php $breadcrumb->addLinks($breadcrumbs); ?>
+                    <?php echo $breadcrumb->showLinks(); ?>
+                </div>
+            <?php endif; ?>
+        </div>
+        <hr class="hide" />
+
+        <div id="content">
+

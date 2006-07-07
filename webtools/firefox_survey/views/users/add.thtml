@@ -1,0 +1,14 @@
+<h1>Firefox Survey</h1>
+<p>You're on your way to taking the Firefox Survey, Summer '06 edition!</p>
+<p>After you supply your name (optional) and email address (required) we'll send you the first profile survey.</p>
+<div id="UsersAdd">
+    <?php echo $html->formTag('/users/add')?>
+        <p><label for="UserFirstname">First Name:</label> <?php echo $html->input('User/firstname', array('size' => '40'))?></p>
+        <p><label for="UserLastname">Last Name:</label> <?php echo $html->input('User/lastname', array('size' => '40'))?></p>
+        <p><label for="UserEmail">Email Address:<span class="required">*</span></label> 
+            <?php echo $html->input('User/email', array('size' => '40'))?>
+            <?php echo $html->tagErrorMsg('User/email', 'A properly formatted email address is required.') ?>
+        </p>
+        <p><?php echo $html->submit('Send') ?></p>
+    </form>
+</div>

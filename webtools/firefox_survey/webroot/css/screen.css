@@ -1,0 +1,14 @@
+ /* Screen Stylesheet */
+
+ .required {
+     color: red;
+ }
+
+ div#UsersAdd label {
+     float:left;
+     width:12em;
+ }
+
+ .center {
+     text-align:center;
+ }

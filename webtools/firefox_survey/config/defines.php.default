@@ -1,0 +1,29 @@
+<?php
+
+    if (!defined('DS'))
+    {
+        define('DS', DIRECTORY_SEPARATOR);
+    }
+
+    if (!defined('ROOT'))
+    {
+    //define('ROOT', 'FULL PATH TO DIRECTORY WHERE APP DIRECTORY IS LOCATED DO NOT ADD A TRAILING DIRECTORY SEPARATOR';
+    //You should also use the DS define to seperate your directories
+        define('ROOT', '');
+    }
+
+    if (!defined('APP_DIR'))
+    {
+    //define('APP_DIR', 'DIRECTORY NAME OF APPLICATION';
+        define ('APP_DIR', '');
+    }
+
+    if (!defined('CAKE_CORE_INCLUDE_PATH'))
+    {
+    //define ('CAKE_CORE_INCLUDE_PATH', FULL PATH TO DIRECTORY WHERE CAKE CORE IS INSTALLED DO NOT ADD A TRAILING DIRECTORY SEPARATOR';
+    //You should also use the DS define to seperate your directories
+        define('CAKE_CORE_INCLUDE_PATH', '');
+    }
+
+
+?>

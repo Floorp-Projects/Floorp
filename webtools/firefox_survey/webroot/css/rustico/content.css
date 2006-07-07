@@ -1,0 +1,562 @@
+/* mozilla.org Rustico Theme Content Styles
+ * Design by silverorange
+ * Markup Reference classes organized by fantasai
+ */
+
+/* Suggested order:
+ * display
+ * list-style
+ * position
+ * float
+ * clear
+ * width
+ * height
+ * margin
+ * padding
+ * border
+ * background
+ * color
+ * font
+ * text-decoration
+ * text-align
+ * vertical-align
+ * white-space
+ * other text
+ * content
+ *
+ */
+
+/* TOC:
+   Body
+   Random HTML Styles
+     Forms
+   General Structure
+   Navigation
+   Quotations
+   Comments and Other Asides
+   Emphasis
+   Computers - General
+   Code
+   Examples and Figures
+   Q and A (FAQ)
+   Tables
+   Meta
+*/
+
+/* Random HTML Styles */
+
+	hr {
+		height: 1px;
+		background-color: #000;
+		color: #000;
+		margin: 2em 0;
+	}
+
+	.hide { display: none; }
+
+	ul.spaced li, ol.spaced li {
+		margin-bottom: 0.5em;
+	}
+
+/* General Structure */
+    body, td, th, input { /* redundant rules for bad browsers  */
+            font-family: verdana, sans-serif;
+            font-size: x-small;
+            voice-family: "\"}\"";
+            voice-family: inherit;
+            font-size: small;
+    }
+
+	h1, h2, h3, h4, h5, h6 {
+		margin: 1em 0 0.2em 0;
+		border-bottom: 1px solid #ccc;
+		font-family: arial, verdana, sans-serif;
+	}
+	li h1, li h2, li h3, li h4, li h5, li h6 {
+		border: none;
+	}
+
+	#header h1 { border: 0; }
+
+	h1 { font-size: 160%; font-weight: normal; }
+	h2 { font-size: 150%; font-weight: normal; }
+	h3 { font-size: 120%; }
+	h4 { font-size: 100%; }
+	h5 { font-size: 90%; }
+	h6 { font-size: 90%; border: 0; }
+	
+/* Navigation */
+
+        :link { color: #039; }
+        :visited { color: #636; }
+        :link:hover, :visited:hover { color: #333; }
+        :link:active, :link:active { color: #000; }
+
+/* Quotations */
+
+
+/* Comments and other Asides */
+	#main-feature {
+		margin-top: -24px;
+		background: #EFF3F7 url("/images/template/feature-back.png") bottom repeat-x;
+	}
+	
+	#main-feature h2 {
+		margin: 10px 0 0 0;
+		border: none;
+	}
+	
+	#main-feature p.product-intro {
+		margin: 0 0 10px 0;
+		line-height: 145%;
+		color: #414D66;
+	}
+	
+	#main-feature .feature-contents {
+		padding: 15px 50px 65px 50px;
+		position: relative; /* this is required to absolutely position contained elements */
+		background: url("/images/home/feature-sun.png") bottom right no-repeat;
+	}
+	
+	#main-feature .feature-contents { height: 250px; }
+	body>#main-feature .feature-contents { height: auto; min-height: 260px; }
+
+	#main-feature .brief-feature { height: auto !important; min-height: 10px !important; }
+	* html #main-feature .brief-feature { padding-bottom: 5px !important }
+	
+	/* this hack is required for IE6 */
+	/* Hides from IE-mac \*/
+	* html #main-feature { height: 1%;}
+	/* End hide from IE-mac */
+	
+	#main-feature a.download-link {
+		display: block;
+		padding: 0 0 12px 0;
+		margin-bottom: 0.2em;
+		text-decoration: none;
+		color: #256504;
+		width: 285px;
+		margin-left: -8px;
+	}
+	
+	#main-feature a.download-firefox {
+		background: url("/images/template/download-firefox.png") 0 100% no-repeat;
+	}
+	
+	#main-feature a.download-thunderbird {
+		background: url("/images/template/download-thunderbird.png") 0 100% no-repeat;
+	}
+
+	#main-feature .brief-feature a.download-firefox {
+		background: url("/images/template/download-firefox-white.png") 0 100% no-repeat;
+		margin-right: 40px;
+		margin-left: 0;
+	}
+	
+	#main-feature a.download-link span {
+		display: block;
+		padding: 9px 10px 0 58px;
+		min-height: 43px;
+	} * html #main-feature a.download-link span { height: 43px; }
+	
+	#main-feature a.download-firefox span {
+		background: url("/images/template/download-firefox.png") 0 0 no-repeat;
+	}
+	
+	#main-feature a.download-thunderbird span {
+		background: url("/images/template/download-thunderbird.png") 0 0 no-repeat;
+	}
+
+	#main-feature .brief-feature a.download-firefox span {
+		background: url("/images/template/download-firefox-white.png") 0 0 no-repeat;
+	}
+
+	
+	#main-feature a.download-link strong {
+		font: 140% sans-serif;
+		letter-spacing: -0.02em;
+		text-decoration: underline;
+		color: #256504;
+	}
+	
+	#main-feature a.download-link em {
+		font-style: normal;
+		color: #367D10;
+		letter-spacing: 0;
+		display: block;
+		padding-top: 3px;
+		font-size: 85%;
+	}
+	
+	#main-feature a.download-link:hover, #main-feature a.download-link:hover span, #main-feature a.download-link:hover strong {
+		color: #143802;
+		cursor: pointer; /* need for IE6 */
+		background-position: 100% 100%;
+	}
+	
+	#main-feature a.download-link:hover span {
+		background-position: 100% 0;
+	}
+	
+	#main-feature .download-info {
+		font-size: 85%;
+		color: #666;
+		padding: 0;
+	}
+	
+	#main-feature .download-other {
+		font-size: 85%;
+		color: #515F78;
+		padding-left: 8px;
+	}
+
+	.brief-feature .home-download {
+		float: right;
+	}
+	
+	#main-feature .product-image {
+		float: right;
+		margin-left: 1.5em;
+		margin-top: 1em;
+	}
+	
+	#main-feature h2, #main-feature h3, #main-feature h4 {
+		border: none;
+	}
+	
+	.note {
+		color: #666;
+		font-style: normal;
+	}
+	
+	.first {
+		margin-top: 0;
+	}
+	
+	.remark {
+		color: #666;
+	}
+	
+	.sidenote {
+		border: #666;
+	}
+
+	.key-point:before {
+		line-height: 0.1;
+		font-size: 1px;
+		background: transparent url("/images/box/key-point_tr.gif") no-repeat top right;
+		margin: -15px -15px 0 -15px;
+		height: 15px;
+		display: block;
+		border: none;
+		content: url("/images/box/key-point_tl.gif");
+	}
+	.key-point {
+		background: #e4ecec url("/images/box/key-point_back.gif") right repeat-y;
+		padding: 15px;
+		margin-bottom: 1em;
+	} * html .key-point { height: 1px; }
+	.key-point:after {
+		display: block;
+		clear: both;
+		padding-top: 15px;
+		line-height: 0.1;
+		font-size: 1px;
+		content:  url("/images/box/key-point_bl.gif");
+		margin: -15px;
+		height: 8px;
+		background: transparent url("/images/box/key-point_br.gif") scroll no-repeat bottom right ;
+	}
+	
+	.key-point h2, .key-point h3, .key-point h4, .key-point h5 {
+		border: none;
+		margin-top: 0;
+		color: #4C5C5C;
+	}
+	
+	.news dt {
+		font-weight: normal;
+		color: #666;
+	}
+	.news dt a {
+		font-weight: bold;
+	}
+	
+	ul.compact {
+		margin-left: 0;
+		padding-left: 20px;
+	}
+			
+/* Emphasis */
+
+/* Computers - General */
+
+	kbd {
+		margin: 0.1em;
+		padding: 0.1em;
+		border: 1px #ccc;
+	}
+
+	kbd.command,
+	code.command {
+		color: #6B5839;
+	}
+
+/* Code */
+
+	pre.code {
+		background: #EEECF6;
+	}
+	
+	code > em,
+	code > strong,
+	pre.code > em,
+	pre.code > strong {
+		font-style: normal;
+	}
+
+/* Examples and Figures */
+
+	div.example {
+		border-color: #554FA0;
+	}
+	div.example:before {
+		color: #666;
+	}
+
+/* Q and A (FAQ) */
+
+ol.faq li a {
+	text-decoration: none;
+	border-bottom: 1px dotted #6C98EE;
+}
+
+ol.faq li a:hover {
+	border-color: #039;
+}
+
+	
+/* Tables */
+	table {
+		border-collapse: collapse;
+		border: none;
+		margin: 1em 0;
+	}
+	
+	th {
+		background: #ddd;
+		padding: 5px;
+		text-align: left;
+	}
+	
+	tr.table-title th {
+		font: 130% sans-serif;
+		font-weight: normal;
+		background: #666;
+		color: #fff;
+		border-top: 1px solid #666;
+		padding: 0.5em 10px;
+		text-align: center;
+	}
+
+	td {
+		border-top: 1px solid #ddd;
+		font-size: 85%;
+		padding: 5px;
+		text-align: left;
+	}
+
+	table.data thead th {
+		background: #e4ecec;
+		empty-cells: hide;
+	}
+
+	table.data th,
+	table.data td {
+		border: 1px solid #ccc;
+		font-size: 100%;
+		line-height: 130%;
+	}
+	
+	tr.odd {
+		background: #F5F5F5;
+	}
+
+/* Meta */
+
+	address {
+		color: #666;
+	}
+
+/* Product Specific CSS */
+
+	.productlist img.product-logo {
+		float: left;
+		margin: 0 10px 1em 0;
+	}
+	
+	.productlist h3 {
+		border: none;
+		clear: left;
+	}
+
+	.productlist p {
+		margin: 0.2em 0 2em 0;
+	}
+
+	.key-point h1, .key-point h3 {
+		margin: 0;
+	}
+	
+	#product-desc h2 {
+		text-indent: -700em;
+		height: 25px;
+		line-height: 2px;
+		font-size: 2px;
+	}
+	
+	#product-desc p {
+		padding-left: 170px;
+	}
+	
+	#product-desc ul, #key-desc {
+		padding-left: 190px;
+		margin-bottom: 0;		
+	}
+	
+	#product-side, #key-side {
+		margin-left: 65%;
+	}
+	
+	#product-side ul, #key-side ul {
+		margin-left: 0;
+		padding-bottom: 0;
+		padding-left: 20px;
+	}
+	
+	#product-side li, #key-side {
+		padding-bottom: 0.2em;
+	}
+	
+	#product-desc, #key-desc {
+		padding: 40px 0 25px 0;
+		color: #4C5C5C;
+		width: 60%;
+		float: left;
+		line-height: 140%;
+	}
+	
+	#key-desc {
+		padding: 0;
+	}
+	
+	#key-side {
+		color: #4C5C5C;
+	}
+	
+	.product-firefox {
+		background: url("../../images/product-firefox-screen.png") no-repeat;
+	}
+	.product-thunderbird {
+		background: url("../../images/product-thunderbird-screen.png") no-repeat;
+	}
+	
+	#product-side .download h3 {
+		color: #1D9101;
+		font-weight: bold;
+		margin: 0;
+		font-size: 140%;
+	}
+
+	.download h3 :link,
+	.download h3 :visited,
+	.download h3 :link:active, .download h3 :visited:active {
+		color: #1D9101;
+	}
+	
+	.download h3 :link:hover, .download h3 :visited:hover {
+		color: #156B01;
+	}
+	
+	.download li {
+		padding: 0;
+		margin: 0;
+	}
+	.download ul {
+		margin-top: 0;
+		margin-bottom: 0;
+		padding-bottom: 0;
+	}
+	.other {
+		padding-top: 3px;
+	}
+	.other a:link, .other a:visited { color: #515F78; }
+	.other a:hover { color: #000; }
+	
+	.configParent {
+		display: block;
+		font-size: 85%;
+	}
+
+
+/* Lists */
+
+dl {
+	margin-top: 0;
+}
+
+dt {
+	font-weight: bold;
+}
+
+dd {
+	margin: 0.2em 0 1em 1em;
+}
+
+/* Simple Logo Boxes */
+
+.firefox-logo, .thunderbird-logo {
+	padding-left: 72px;
+	min-height: 70px;
+	margin-bottom: 1em;
+	display: block; /* so this can be used for links */
+}
+
+* html .firefox-logo, * html .thunderbird-logo { height: 70px; } /* min-height for IE */
+
+.firefox-logo h2, .firefox-logo h3, .firefox-logo h4, .thunderbird-logo h2, .thunderbird-logo h3, .thunderbird-logo h4 {
+	border-bottom: none;
+}
+
+.firefox-logo {
+	background: url("/images/firefox-logo-64x64.png") no-repeat;
+}
+
+.thunderbird-logo {
+	background: url("/images/thunderbird-logo-64x64.png") no-repeat;
+}
+
+
+/* Firefox Page Styles */
+
+.product-thumb {
+	display: block;
+	margin: 15px 0 5px 0;
+	height: 70px;
+	border: 1px solid #666;
+	text-decoration: none;
+	opacity: 0.4;
+}
+
+.product-thumb:hover {
+	opacity: 1;
+}
+
+.thumb-firefox-tabs { background: url("/images/firefox-tabbedbrowsing-thumb.png") 0 0 no-repeat; }
+.thumb-firefox-live { background: url("/images/firefox-livebookmarks-thumb.png") 0 0 no-repeat; }
+.thumb-firefox-search { background: url("/images/firefox-searchbar-thumb.png") 100% 0 no-repeat; }
+
+.firefox-awards {
+	margin-top: 1em;
+	text-align: center;
+}
