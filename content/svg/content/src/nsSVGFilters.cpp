@@ -406,11 +406,20 @@ boxBlurV(PRUint8 *aInput, PRUint8 *aOutput,
     }
 }
 
-static void
+static nsresult
 gaussianBlur(PRUint8 *aInput, PRUint8 *aOutput,
              PRUint32 aLength, PRInt32 aStride, nsRect aRegion,
              float aStdX, float aStdY)
 {
+  if (aStdX < 0 || aStdY < 0) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (aStdX == 0 || aStdY == 0) {
+    memset(aOutput, 0, aLength);
+    return NS_OK;
+  }
+
   PRUint32 dX, dY;
   dX = (PRUint32) floor(aStdX * 3*sqrt(2*M_PI)/4 + 0.5);
   dY = (PRUint32) floor(aStdY * 3*sqrt(2*M_PI)/4 + 0.5);
@@ -424,9 +433,13 @@ gaussianBlur(PRUint8 *aInput, PRUint8 *aOutput,
     boxBlurH(aOutput, tmp, aStride, aRegion, dX/2, dX/2);
   } else {
     // even
-    boxBlurH(aInput, tmp,  aStride, aRegion, dX/2,     dX/2 - 1);
-    boxBlurH(tmp, aOutput, aStride, aRegion, dX/2 - 1, dX/2);
-    boxBlurH(aOutput, tmp, aStride, aRegion, dX/2,     dX/2);
+    if (dX == 0) {
+      memcpy(tmp, aInput, aLength);
+    } else {
+      boxBlurH(aInput, tmp,  aStride, aRegion, dX/2,     dX/2 - 1);
+      boxBlurH(tmp, aOutput, aStride, aRegion, dX/2 - 1, dX/2);
+      boxBlurH(aOutput, tmp, aStride, aRegion, dX/2,     dX/2);
+    }
   }
 
   if (dY & 1) {
@@ -436,12 +449,17 @@ gaussianBlur(PRUint8 *aInput, PRUint8 *aOutput,
     boxBlurV(tmp, aOutput, aStride, aRegion, dY/2, dY/2);
   } else {
     // even
-    boxBlurV(tmp, aOutput, aStride, aRegion, dY/2,     dY/2 - 1);
-    boxBlurV(aOutput, tmp, aStride, aRegion, dY/2 - 1, dY/2);
-    boxBlurV(tmp, aOutput, aStride, aRegion, dY/2,     dY/2);
+    if (dY == 0) {
+      memcpy(aOutput, tmp, aLength);
+    } else {
+      boxBlurV(tmp, aOutput, aStride, aRegion, dY/2,     dY/2 - 1);
+      boxBlurV(aOutput, tmp, aStride, aRegion, dY/2 - 1, dY/2);
+      boxBlurV(tmp, aOutput, aStride, aRegion, dY/2,     dY/2);
+    }
   }
 
   delete [] tmp;
+  return NS_OK;
 }
 
 static void
@@ -534,7 +552,9 @@ nsSVGFEGaussianBlurElement::Filter(nsSVGFilterInstance *instance)
   val.Init(nsSVGUtils::Y, 0xff, stdY, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER);
   stdY = instance->GetPrimitiveLength(&val);
 
-  gaussianBlur(sourceData, targetData, length, stride, rect, stdX, stdY);
+  nsresult rv = gaussianBlur(sourceData, targetData, length, 
+                             stride, rect, stdX, stdY);
+  NS_ENSURE_SUCCESS(rv, rv);
   fixupTarget(sourceData, targetData, width, height, stride, rect);
 
   sourceImage->Unlock();
