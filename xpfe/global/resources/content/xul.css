@@ -522,7 +522,6 @@ treecolpicker {
 
 tree {
   -moz-box-orient: vertical;
-  -moz-user-select: none;
   min-width: 0px;
   min-height: 0px;
   width: 10px;
