@@ -67,9 +67,9 @@
                   ondragover="nsDragAndDrop.dragOver(event, this.parentNode.parentNode); event.stopPropagation();"
                   ondragdrop="nsDragAndDrop.drop(event, this.parentNode.parentNode); event.stopPropagation();"
                   ondragexit="nsDragAndDrop.dragExit(event, this.parentNode.parentNode); event.stopPropagation();">
-          <xul:tooltip onpopupshowing="return this.parentNode.parentNode.parentNode.doPreview(this); event.stopPropagation();" orient="vertical">
+          <xul:tooltip onpopupshowing="event.stopPropagation(); return this.parentNode.parentNode.parentNode.doPreview(this);" orient="vertical">
             <xul:label class="tooltip-label" crop="right"/>
-            <xul:label class="tooltip-label" hidden="true"><html:canvas/></xul:label>
+            <xul:label class="tooltip-label" hidden="true"><html:canvas class="tab-tooltip-canvas"/></xul:label>
           </xul:tooltip>
           <xul:menupopup onpopupshowing="this.parentNode.parentNode.parentNode.updatePopupMenu(this);">
             <xul:menuitem label="&closeTab.label;" accesskey="&closeTab.accesskey;"
@@ -210,9 +210,9 @@
           label.setAttribute("value", tab.getAttribute("label"));
 
           var canvas = aPopup.lastChild.firstChild;
+          canvas.parentNode.hidden = true;
 
           if (!this.mPrefs.getBoolPref("browser.tabs.tooltippreview.enable")) {
-            canvas.parentNode.hidden = true;
             label.removeAttribute("width");
             return true;
           }
@@ -231,16 +231,31 @@
 
           var canvasW = this.mPrefs.getIntPref("browser.tabs.tooltippreview.width");
           var canvasH = Math.round(canvasW * h / w);
-
           canvas.width = canvasW;
           canvas.height = canvasH;
           canvas.parentNode.hidden = false;
 
-          ctx.save();
-          ctx.scale(canvasW / w, canvasH / h);
           var bgColor = this.mPrefs.getCharPref("browser.display.background_color");
-          ctx.drawWindow(win, win.pageXOffset, win.pageYOffset, w, h, bgColor);
-          ctx.restore();
+          if (b.contentDocument instanceof ImageDocument &&
+              !(b.contentDocument.imageRequest.imageStatus &
+                Components.interfaces.imgIRequest.STATUS_ERROR)) {
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(0, 0, canvasW, canvasH);
+            var img = b.contentDocument.body.firstChild;
+            var ratio = img.naturalHeight / img.naturalWidth;
+            if (ratio * canvasW > canvasH) {
+              ctx.drawImage(img, 0, 0, canvasH / ratio, canvasH);
+            }
+            else {
+              ctx.drawImage(img, 0, 0, canvasW, ratio * canvasW);
+            }
+          }
+          else {
+            ctx.save();
+            ctx.scale(canvasW / w, canvasH / h);
+            ctx.drawWindow(win, win.pageXOffset, win.pageYOffset, w, h, bgColor);
+            ctx.restore();
+          }
           return true;
         ]]>
         </body>
