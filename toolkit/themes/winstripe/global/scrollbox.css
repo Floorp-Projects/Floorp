@@ -87,6 +87,10 @@ autorepeatbutton,
     margin-bottom: 2px;
     -moz-margin-start: 1px;
     -moz-margin-end: 2px;
+  }
+
+autorepeatbutton
+  {
     border                : 1px solid transparent;
     padding               : 1px;
   }
