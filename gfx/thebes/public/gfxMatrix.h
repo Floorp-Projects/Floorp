@@ -96,6 +96,10 @@ public:
                 (mat.y0 == m.mat.y0));
     }
 
+    bool operator!=(const gfxMatrix& m) const {
+        return !(*this == m);
+    }
+
     gfxMatrix& operator=(const cairo_matrix_t& m) {
         mat = m;
         return *this;
