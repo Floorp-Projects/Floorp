@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>MOZ_APP_DISPLAYNAME</string>
+	<string>thunderbird-bin</string>
 	<key>CFBundleGetInfoString</key>
 	<string>Thunderbird APP_VERSION, © 1998-2006 Contributors</string>
 	<key>CFBundleIconFile</key>
