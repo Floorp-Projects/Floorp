@@ -21,7 +21,7 @@
 #else
           return aEvent.ctrlKey;
 #endif
-        ]]></body>       
+        ]]></body>
       </method>
     </implementation>
   </binding>
@@ -29,9 +29,12 @@
   <binding id="tree" extends="chrome://global/content/bindings/tree.xml#tree-base">
     <content hidevscroll="true" hidehscroll="true">
       <children includes="treecols"/>
-      <xul:treerows class="tree-rows" flex="1" xbl:inherits="hidevscroll">
-        <children/>
-      </xul:treerows>
+      <xul:stack flex="1">
+        <xul:treerows class="tree-rows" flex="1" xbl:inherits="hidevscroll">
+          <children/>
+        </xul:treerows>
+        <xul:textbox anonid="input" class="tree-input" left="0" top="0" hidden="true"/>
+      </xul:stack>
       <xul:hbox xbl:inherits="collapsed=hidehscroll">
         <xul:scrollbar orient="horizontal" flex="1" increment="16"/>
         <xul:scrollcorner xbl:inherits="collapsed=hidevscroll"/>
@@ -103,10 +106,28 @@
                 onset="if (val) this.setAttribute('enableColumnDrag', 'true');
                        else this.removeAttribute('enableColumnDrag'); return val;"/>
 
+      <field name="mInputField">null</field>
+
+      <property name="inputField" readonly="true">
+        <getter><![CDATA[
+          if (!this.mInputField)
+            this.mInputField = document.getAnonymousElementByAttribute(this, "anonid", "input");
+          return this.mInputField;
+        ]]></getter>
+      </property>
+
       <property name="disableKeyNavigation"
                 onget="return this.hasAttribute('disableKeyNavigation');"
                 onset="if (val) this.setAttribute('disableKeyNavigation', 'true');
                        else this.removeAttribute('disableKeyNavigation'); return val;"/>
+
+      <field name="_editingRow">-1</field>
+      <field name="_editingColumn">null</field>
+
+      <property name="editingRow" readonly="true"
+                onget="return this._editingRow;"/>
+      <property name="editingColumn" readonly="true"
+                onget="return this._editingColumn;"/>
 
       <property name="_selectDelay" 
                 onset="this.setAttribute('_selectDelay', val);"
@@ -222,7 +243,7 @@
           }
         ]]></body>
       </method>
-      
+
       <property name="_cellSelType">
         <getter>
           <![CDATA[
@@ -252,11 +273,87 @@
         ]]></body>
       </method>
 
+      <method name="startEditing">
+        <parameter name="row"/>
+        <parameter name="column"/>
+        <body>
+          <![CDATA[
+            if (row < 0 || row >= this.itemCount || !column)
+              return;
+            if (column.type != Components.interfaces.nsITreeColumn.TYPE_TEXT ||
+                column.cycler || !this.view.isEditable(row, column))
+              return;
+
+            if (this._editingColumn)
+              this.stopEditing();
+
+            var input = this.inputField;
+            input.hidden = false;
+
+            var box = this.treeBoxObject;
+            var outx = {}, outy = {}, outwidth = {}, outheight = {};
+            var coords = box.getCoordsForCellItem(row, column, "text",
+                                                  outx, outy, outwidth, outheight);
+
+            var style = window.getComputedStyle(input, "");
+            var topadj = parseInt(style.borderTopWidth) + parseInt(style.paddingTop);
+            input.top = outy.value - topadj;
+
+            var left = outx.value;
+            input.left = left;
+            input.height = outheight.value + topadj +
+                           parseInt(style.borderBottomWidth) +
+                           parseInt(style.paddingBottom);
+
+            coords = box.getCoordsForCellItem(row, column, "cell",
+                                              outx, outy, outwidth, outheight);
+            input.width = outwidth.value - (left - outx.value);
+
+            input.value = this.view.getCellText(row, column);
+            var selectText = function selectText() {
+              input.select();
+              input.inputField.focus();
+            }
+            setTimeout(selectText, 0);
+
+            this._editingRow = row;
+            this._editingColumn = column;
+
+            this.setAttribute("editing", "true");
+          ]]>
+        </body>
+      </method>
+
+      <method name="stopEditing">
+        <parameter name="accept"/>
+        <body>
+          <![CDATA[
+            if (!this._editingColumn)
+              return;
+
+            var input = this.inputField;
+            if (accept) {
+              var value = input.value;
+              this.view.setCellText(this._editingRow, this._editingColumn, value);
+            }
+            this._editingRow = -1;
+            this._editingColumn = null;
+
+            input.hidden = true;
+            input.value = "";
+            this.removeAttribute("editing");
+          ]]>
+        </body>
+      </method>
+
     </implementation>
     
     <handlers>
       <handler event="DOMMouseScroll" phase="capturing">
         <![CDATA[
+          if (this._editingColumn)
+            return;
+
           var rows = event.detail;
           if (rows == NSUIEvent.SCROLL_PAGE_UP)
             this.treeBoxObject.scrollByPages(-1);
@@ -266,6 +363,7 @@
             this.treeBoxObject.scrollByLines(rows);
         ]]>
       </handler>
+      <handler event="select" phase="target" action="this.stopEditing(true);"/>
       <handler event="focus">
         <![CDATA[
           this.treeBoxObject.focused = true;
@@ -279,9 +377,42 @@
         ]]>
       </handler>
       <handler event="blur" action="this.treeBoxObject.focused = false;"/>
-      <handler event="keypress" keycode="vk_enter" action="this.changeOpenState(this.currentIndex);"/>
-      <handler event="keypress" keycode="vk_return" action="this.changeOpenState(this.currentIndex);"/>
-      <handler event="keypress" keycode="vk_left">
+      <handler event="blur" phase="capturing"
+               action="if (event.originalTarget == this.inputField) this.stopEditing(true);"/>
+      <handler event="keypress" keycode="vk_enter">
+        <![CDATA[
+          if (this._editingColumn) {
+            this.stopEditing(true);
+            this.focus();
+            event.stopPropagation();
+          }
+          else {
+            this.changeOpenState(this.currentIndex);
+          }
+        ]]>
+      </handler>
+      <handler event="keypress" keycode="vk_return">
+        <![CDATA[
+          if (this._editingColumn) {
+            this.stopEditing(true);
+            this.focus();
+            event.stopPropagation();
+          }
+          else {
+            this.changeOpenState(this.currentIndex);
+          }
+        ]]>
+      </handler>
+      <handler event="keypress" keycode="vk_escape">
+        <![CDATA[
+          if (this._editingColumn) {
+            this.stopEditing(false);
+            this.focus();
+            event.stopPropagation();
+          }
+        ]]>
+      </handler>
+      <handler event="keypress" keycode="vk_left" phase="target">
         <![CDATA[
          var row = this.currentIndex;
          if (row < 0)
@@ -322,7 +453,7 @@
          }
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_right">
+      <handler event="keypress" keycode="vk_right" phase="target">
         <![CDATA[
           var row = this.currentIndex;
           if (row < 0)
@@ -371,7 +502,8 @@
           }
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_up" modifiers="accel any">
+      <handler event="keypress" keycode="vk_up"
+               modifiers="accel any" phase="target">
         <![CDATA[
          if (this._isAccelPressed(event) && this.view.selection.single) {
            this.treeBoxObject.scrollByLines(-1);
@@ -401,7 +533,8 @@
          this.treeBoxObject.ensureRowIsVisible(c);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_down" modifiers="accel any">
+      <handler event="keypress" keycode="vk_down"
+               modifiers="accel any" phase="target">
         <![CDATA[
          if (this._isAccelPressed(event) && this.view.selection.single) {
            this.treeBoxObject.scrollByLines(1);
@@ -431,7 +564,8 @@
          this.treeBoxObject.ensureRowIsVisible(c);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_up" modifiers="accel any, shift">
+      <handler event="keypress" keycode="vk_up"
+               modifiers="accel any, shift" phase="target">
         <![CDATA[
          if (this.view.selection.single)
            return;
@@ -444,7 +578,8 @@
          this.treeBoxObject.ensureRowIsVisible(c - 1);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_down" modifiers="accel any, shift">
+      <handler event="keypress" keycode="vk_down"
+               modifiers="accel any, shift" phase="target">
         <![CDATA[
          if (this.view.selection.single)
            return;
@@ -457,7 +592,8 @@
          this.treeBoxObject.ensureRowIsVisible(c + 1);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_page_up" modifiers="accel any">
+      <handler event="keypress" keycode="vk_page_up"
+               modifiers="accel any" phase="target">
         <![CDATA[
          if (this.pageUpOrDownMovesSelection == this._isAccelPressed(event)) {
            this.treeBoxObject.scrollByPages(-1);
@@ -479,7 +615,8 @@
          this.view.selection.timedSelect(i, this._selectDelay);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_page_down" modifiers="accel any">
+      <handler event="keypress" keycode="vk_page_down"
+               modifiers="accel any" phase="target">
         <![CDATA[
          if (this.pageUpOrDownMovesSelection == this._isAccelPressed(event)) {
            this.treeBoxObject.scrollByPages(1);
@@ -503,7 +640,8 @@
          this.view.selection.timedSelect(i, this._selectDelay);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_page_up" modifiers="accel any, shift">
+      <handler event="keypress" keycode="vk_page_up"
+               modifiers="accel any, shift" phase="target">
         <![CDATA[
          if (this.view.selection.single)
            return;
@@ -524,7 +662,8 @@
          this.view.selection.rangedSelect(-1, i, this._isAccelPressed(event));
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_page_down" modifiers="accel any, shift">
+      <handler event="keypress" keycode="vk_page_down"
+               modifiers="accel any, shift" phase="target">
         <![CDATA[
          if (this.view.selection.single)
            return;
@@ -547,9 +686,10 @@
          this.view.selection.rangedSelect(-1, i, this._isAccelPressed(event));
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_home" modifiers="accel any">
+      <handler event="keypress" keycode="vk_home"
+               modifiers="accel any" phase="target">
         <![CDATA[
-          if (this.view.rowCount == 0)
+         if (this.view.rowCount == 0)
            return;
          // Normal behaviour is to select the first row
          if (!this._isAccelPressed(event))
@@ -560,7 +700,8 @@
          this.treeBoxObject.ensureRowIsVisible(0);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_end" modifiers="accel any">
+      <handler event="keypress" keycode="vk_end"
+               modifiers="accel any" phase="target">
         <![CDATA[
          var l = this.view.rowCount - 1;
          if (l < 0)
@@ -574,7 +715,8 @@
          this.treeBoxObject.ensureRowIsVisible(l);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_home" modifiers="accel any, shift">
+      <handler event="keypress" keycode="vk_home"
+               modifiers="accel any, shift" phase="target">
         <![CDATA[
          if (this.view.selection.single)
            return;
@@ -583,7 +725,8 @@
          this.treeBoxObject.ensureRowIsVisible(0);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_end" modifiers="accel any, shift">
+      <handler event="keypress" keycode="vk_end"
+               modifiers="accel any, shift" phase="target">
         <![CDATA[
          if (this.view.selection.single)
            return;
@@ -595,6 +738,9 @@
       </handler>
       <handler event="keypress">
         <![CDATA[
+         if (this._editingColumn)
+           return;
+
          var c = this.currentIndex;
          if (event.charCode == ' '.charCodeAt(0)) {
            if (!this.view.selection.isSelected(c) ||
@@ -871,12 +1017,19 @@
           return;
         var b = this.parentNode.treeBoxObject;
         var row = b.view.selection.currentIndex;
-        if (row == -1 || !b.view.isContainer(row))
-          return;
-
-         var col = {};
-         var obj = {};
-         b.getCellAt(event.clientX, event.clientY, {}, col, obj);
+         if (row == -1)
+           return;
+  
+          var col = {};
+          var obj = {};
+          b.getCellAt(event.clientX, event.clientY, {}, col, obj);
+  
+          if (this.parentNode.editable)
+            this.parentNode.startEditing(row, col.value);
+ 
+          if (!b.view.isContainer(row))
+            return;
+ 
 
          // Cyclers and twisties respond to single clicks, not double clicks
          if (col.value && !col.value.cycler && obj.value != "twisty")
@@ -1154,6 +1307,7 @@
           }
           else {
             var tree = this.parentNode.parentNode;
+            tree.stopEditing(true);
             var menuitem = document.getAnonymousElementByAttribute(this, "anonid", "menuitem");
             if (event.originalTarget == menuitem) {
               tree.columns.restoreNaturalOrder();

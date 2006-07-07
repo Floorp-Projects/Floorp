@@ -349,3 +349,24 @@ treechildren.gridlines::-moz-tree-cell {
 treechildren.gridlines::-moz-tree-row {
   border: none;
 }
+
+/* ::::: editable tree ::::: */
+
+treechildren::-moz-tree-row(selected, editing) {
+  background-color: transparent;
+}
+
+treechildren::-moz-tree-cell-text(selected, editing) {
+  color: inherit;
+}
+
+.tree-input {
+  -moz-appearance: none;
+  border: 1px solid #C7D0D9;
+  -moz-border-top-colors: #C7D0D9;
+  -moz-border-bottom-colors: #C7D0D9;
+  -moz-border-left-colors: #C7D0D9;
+  -moz-border-right-colors: #C7D0D9;
+  margin: 0 0 0 -4px;
+  padding: 1px;
+}

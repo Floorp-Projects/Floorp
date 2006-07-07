@@ -1201,7 +1201,7 @@ nsTreeBodyFrame::GetCoordsForCellItem(PRInt32 aRow, nsITreeColumn* aCol, const n
     // X and Y coords, and a guess at the width and height. The width is the 
     // remaining width we have left to traverse in the cell, which will be the
     // widest possible value for the text rect, and the row height. 
-    nsRect textRect(cellX, cellRect.y, remainWidth, mRowHeight);
+    nsRect textRect(cellX, cellRect.y, remainWidth, cellRect.height);
 
     // Measure the width of the text. If the width of the text is greater than 
     // the remaining width available, then we just assume that the text has 
@@ -1215,10 +1215,19 @@ nsTreeBodyFrame::GetCoordsForCellItem(PRInt32 aRow, nsITreeColumn* aCol, const n
     nscoord height;
     fm->GetHeight(height);
 
+    nsMargin textMargin;
+    textContext->GetStyleMargin()->GetMargin(textMargin);
+    textRect.Deflate(textMargin);
+
+    // Center the text. XXX Obey vertical-align style prop?
+    if (height < textRect.height) {
+      textRect.y += (textRect.height - height) / 2;
+      textRect.height = height;
+    }
+
     nsMargin bp(0,0,0,0);
     GetBorderPadding(textContext, bp);
-    
-    textRect.height = height + bp.top + bp.bottom;
+    textRect.height += bp.top + bp.bottom;
 
     rc->SetFont(fm);
     nscoord width;
@@ -1880,6 +1889,10 @@ nsTreeBodyFrame::PrefillPropertyArray(PRInt32 aRowIndex, nsTreeColumn* aCol)
       mScratchArray->AppendElement(nsXULAtoms::odd);
     else
       mScratchArray->AppendElement(nsXULAtoms::even);
+
+    nsIContent* baseContent = GetBaseElement();
+    if (baseContent && baseContent->HasAttr(kNameSpaceID_None, nsXULAtoms::editing))
+      mScratchArray->AppendElement(nsXULAtoms::editing);
   }
 
   if (aCol) {

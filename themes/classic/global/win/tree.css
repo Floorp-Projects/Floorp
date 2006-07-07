@@ -380,3 +380,25 @@ treechildren[alternatingbackground="true"]::-moz-tree-row(odd, selected, focus) 
 treechildren[alternatingbackground="true"]::-moz-tree-cell-text(odd, selected, focus) {
   color: HighlightText;
 }
+
+/* ::::: editable tree ::::: */
+
+treechildren::-moz-tree-row(selected, editing) {
+  background-color: transparent;
+  border: none;
+}
+
+treechildren::-moz-tree-cell-text(selected, editing) {
+  color: inherit;
+}
+
+.tree-input {
+  -moz-appearance: none;
+  border: 1px solid Highlight;
+  -moz-border-top-colors: Highlight;
+  -moz-border-bottom-colors: Highlight;
+  -moz-border-left-colors: Highlight;
+  -moz-border-right-colors: Highlight;
+  margin: 0 0 0 -4px;
+  padding: 1px;
+}
