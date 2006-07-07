@@ -1085,6 +1085,8 @@ sub validateReferer {
     my $found = 0;
     my $script_path = dirname($ENV{'SCRIPT_NAME'});
     my $referer = $ENV{'HTTP_REFERER'} || "";
+    # Handle edge cases
+    $script_path =~ s@^[/\.]$@@;
 
     foreach $script (@scripts) {
         $found++ if
