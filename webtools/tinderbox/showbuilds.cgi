@@ -525,11 +525,31 @@ sub print_table_footer {
     my $save_hours = $hours;
     $hours = 24;
     print &open_showbuilds_href(maxdate=>"$nextdate", legend=>'0')
-      ."Show previous 24 hours</a>";
+      ."Show previous 24 hours</a><br>";
     $hours = $save_hours;
   }
+
+  print "Show $hours hours from the previous ";
+  $nextdate = $maxdate - 24*60*60*7;
+  print &open_showbuilds_href(maxdate=>"$nextdate", legend=>'0')
+    ."1</a>, ";
+
+  $nextdate = $maxdate - 24*60*60*7*4;
+  print &open_showbuilds_href(maxdate=>"$nextdate", legend=>'0')
+    ."4</a>, ";
+
+  $nextdate = $maxdate - 24*60*60*7*12;
+  print &open_showbuilds_href(maxdate=>"$nextdate", legend=>'0')
+    ."12</a>, or ";
+
+  $nextdate = $maxdate - 24*60*60*7*52;
+  print &open_showbuilds_href(maxdate=>"$nextdate", legend=>'0')
+    ."52</a> weeks.<br>";
+
   print "<p><a href='${rel_path}admintree.cgi?tree=$::tree'>",
         "Administrate Tinderbox Trees</a><br>\n";
+
+  # Chase was here!
 }
 
 sub open_showbuilds_url {
