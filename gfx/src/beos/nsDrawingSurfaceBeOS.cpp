@@ -38,6 +38,8 @@
 #include "nsDrawingSurfaceBeOS.h"
 #include "nsCoord.h"
 
+#include <Region.h>
+
 NS_IMPL_ISUPPORTS2(nsDrawingSurfaceBeOS, nsIDrawingSurface, nsIDrawingSurfaceBeOS)
 
 #ifdef CHEAP_PERFORMANCE_MEASUREMENT 
@@ -211,6 +213,21 @@ NS_IMETHODIMP nsDrawingSurfaceBeOS :: Init(BView *aView, PRUint32 aWidth,
     //Applicable here, because Mozilla paints backgrounds explicitly, with images or filling areas.
     mView->SetViewColor(B_TRANSPARENT_32_BIT);
     mBitmap->AddChild(mView);
+    // Import prototype onscreen view state
+    if (aView && aView->LockLooper())
+    {
+      BRegion region;
+      BFont font;
+      mView->SetHighColor(aView->HighColor());
+      mView->SetLowColor(aView->LowColor());
+      aView->GetFont(&font);
+      mView->SetFont(&font);
+      aView->GetClippingRegion(&region);
+      mView->ConstrainClippingRegion(&region);
+      mView->SetOrigin(aView->Origin());
+      mView->SetFlags(aView->Flags());
+      aView->UnlockLooper();
+    } 
   }
   
   return NS_OK;
