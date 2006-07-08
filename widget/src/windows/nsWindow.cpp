@@ -4521,11 +4521,11 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 #ifndef WINCE
     case WM_MOUSELEAVE:
     {
-      // We use MAXDWORD as the mouse position to make sure
+      // We use MINLONG | MINSHORT as the mouse position to make sure
       // EventStateManager doesn't convert this EXIT message to
       // a MOVE message (besides, WM_MOUSELEAVE doesn't have the position
       // in lParam). 
-      DispatchMouseEvent(NS_MOUSE_EXIT, wParam, MAXDWORD);
+      DispatchMouseEvent(NS_MOUSE_EXIT, wParam, MINLONG | MINSHORT);
     }
     break;
 #endif
