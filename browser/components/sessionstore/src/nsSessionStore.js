@@ -312,13 +312,17 @@ SessionStoreService.prototype = {
       this._uninit();
       break;
     case "browser:purge-session-history": // catch sanitization 
-      this._closedWindows = [];
       this._forEachBrowserWindow(function(aWindow) {
         Array.forEach(aWindow.getBrowser().browsers, function(aBrowser) {
           delete aBrowser.parentNode.__SS_data;
         });
       });
       this._clearDisk();
+      // also clear all data about closed windows and tabs
+      this._closedWindows = [];
+      for (ix in this._windows) {
+        this._windows[ix]._closedTabs = [];
+      }
       // give the tabbrowsers a chance to clear their histories first
       var win = this._getMostRecentBrowserWindow();
       if (win)
