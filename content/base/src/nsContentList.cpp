@@ -415,9 +415,7 @@ nsContentList::Item(PRUint32 aIndex, PRBool aDoFlush)
 {
   if (mRootNode && aDoFlush) {
     // XXX sXBL/XBL2 issue
-    // Ideally we should call GetCurrentDoc here, i think, but that doesn't
-    // live on nsINode
-    nsIDocument* doc = mRootNode->GetOwnerDoc();
+    nsIDocument* doc = mRootNode->GetCurrentDoc();
     if (doc) {
       // Flush pending content changes Bug 4891.
       doc->FlushPendingNotifications(Flush_ContentAndNotify);
@@ -855,9 +853,7 @@ nsContentList::BringSelfUpToDate(PRBool aDoFlush)
 {
   if (mRootNode && aDoFlush) {
     // XXX sXBL/XBL2 issue
-    // Ideally we should call GetCurrentDoc here, i think, but that doesn't
-    // live on nsINode
-    nsIDocument* doc = mRootNode->GetOwnerDoc();
+    nsIDocument* doc = mRootNode->GetCurrentDoc();
     if (doc) {
       // Flush pending content changes Bug 4891.
       doc->FlushPendingNotifications(Flush_ContentAndNotify);

@@ -91,8 +91,8 @@ class nsIDocumentObserver;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0xd14c81b1, 0x029e, 0x4c01, \
-  { 0x8f, 0xfc, 0x42, 0xc1, 0xe1, 0x34, 0x0f, 0xe4 } }
+{ 0x63f0c69a, 0x255a, 0x432f, \
+  { 0xa7, 0xe4, 0xaf, 0x81, 0x10, 0x56, 0x28, 0xef } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -114,6 +114,7 @@ public:
       mNodeInfoManager(nsnull),
       mPartID(0)
   {
+    mParentPtrBits |= PARENT_BIT_INDOCUMENT;
   }
 #endif
   
