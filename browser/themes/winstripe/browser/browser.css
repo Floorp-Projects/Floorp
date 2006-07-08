@@ -175,7 +175,9 @@ menuitem.bookmark-item {
 /* ..... fix bookmarks padding issue ..... */
 
 #bookmarksMenuPopup > menuitem > .menu-text,
-menupopup[type="places"] > menuitem > .menu-text { 
+#bookmarksMenuPopup > menu > .menu-text,
+menupopup[type="places"] > menuitem > .menu-text,
+menupopup[type="places"] > menu > .menu-text { 
   /* This sets the indentation of text on non-iconic menu items, e.g.
    * "Manage Bookmarks" to the size forced onto the icons in the rule
    * just above. */
