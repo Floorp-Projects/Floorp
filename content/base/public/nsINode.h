@@ -97,8 +97,8 @@ class nsIMutationObserver;
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0x7b23c37c, 0x18e6, 0x4d80, \
-  { 0xbc, 0x95, 0xb3, 0x7b, 0x3b, 0x89, 0x7a, 0xe0 } }
+{ 0x59693a45, 0x7cb2, 0x41d6, \
+  { 0xaf, 0xe3, 0xa7, 0xc7, 0x6f, 0xe0, 0x54, 0xf0 } }
 
 // hack to make egcs / gcc 2.95.2 happy
 class nsINode_base : public nsIDOMGCParticipant {
@@ -192,10 +192,6 @@ public:
   virtual PRInt32 IndexOf(nsINode* aPossibleChild) const = 0;
 
   /**
-   * Do we need a GetCurrentDoc of some sort?  I don't think we do...
-   */
-
-  /** 
    * Return the "owner document" of this node.  Note that this is not the same
    * as the DOM ownerDocument -- that's null for Document nodes, whereas for a
    * nsIDocument GetOwnerDocument returns the document itself.  For nsIContent
@@ -204,6 +200,27 @@ public:
   nsIDocument *GetOwnerDoc() const
   {
     return mNodeInfo->GetDocument();
+  }
+
+  /**
+   * Returns true if the content has an ancestor that is a document.
+   *
+   * @return whether this content is in a document tree
+   */
+  PRBool IsInDoc() const
+  {
+    return mParentPtrBits & PARENT_BIT_INDOCUMENT;
+  }
+
+  /**
+   * Get the document that this content is currently in, if any. This will be
+   * null if the content has no ancestor that is a document.
+   *
+   * @return the current document
+   */
+  nsIDocument *GetCurrentDoc() const
+  {
+    return IsInDoc() ? GetOwnerDoc() : nsnull;
   }
 
   /**
