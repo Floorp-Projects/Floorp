@@ -170,10 +170,11 @@ DOMNodeViewer.prototype =
       //XXX this view is designed for elements, write a more useful one for
       // document nodes, etc.
       default:
+        var bundle = this.pane.panelset.stringBundle;
         deck.setAttribute("selectedIndex", 0);
         
         this.setTextValue("nodeName", aObject.nodeName);
-        this.setTextValue("nodeType", aObject.nodeType);
+        this.setTextValue("nodeType", bundle.getString(aObject.nodeType));
         this.setTextValue("namespace", aObject.namespaceURI);
 
         if (aObject != this.mDOMView.rootNode) {
