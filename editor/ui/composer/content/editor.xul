@@ -54,7 +54,6 @@
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/contentAreaContextOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/sidebar/sidebarOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
 
 <!DOCTYPE window [
 <!ENTITY % editorDTD SYSTEM "chrome://editor/locale/editor.dtd" >

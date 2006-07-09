@@ -178,7 +178,6 @@ jar:resource:///chrome/comm.jar!/content/communicator/contentAreaContextOverlay.
 jar:resource:///chrome/comm.jar!/content/communicator/permissions/imageContextOverlay.xul
 jar:resource:///chrome/comm.jar!/content/wallet/walletContextOverlay.xul
 jar:resource:///chrome/comm.jar!/content/communicator/securityOverlay.xul
-jar:resource:///chrome/comm.jar!/content/communicator/communicatorOverlay.xul
 jar:resource:///chrome/comm.jar!/content/communicator/bookmarks/bookmarksOverlay.xul
 jar:resource:///chrome/toolkit.jar!/content/global/bindings/scrollbar.xml
 jar:resource:///chrome/toolkit.jar!/content/global/bindings/general.xml

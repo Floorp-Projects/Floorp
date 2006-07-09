@@ -3,8 +3,6 @@ content/global/nsWidgetStateManager.js, toolkit/content/global/nsWidgetStateMana
 
 content/communicator/contents.rdf, comm/content/communicator/contents.rdf
 content/communicator/communicator.css, comm/content/communicator/communicator.css
-# might not need the line below...
-content/communicator/communicatorOverlay.xul, comm/content/communicator/communicatorOverlay.xul
 skin/classic/communicator/communicator.css, classic/skin/classic/communicator/communicator.css
 skin/classic/communicator/brand.css, classic/skin/classic/communicator/brand.css
 skin/classic/communicator/button.css, classic/skin/classic/communicator/button.css

@@ -50,7 +50,6 @@
 <?xul-overlay href="chrome://communicator/content/bookmarks/bookmarksOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
 
 <!DOCTYPE window [
 <!ENTITY % utilDTD SYSTEM "chrome://communicator/locale/utilityOverlay.dtd" >
