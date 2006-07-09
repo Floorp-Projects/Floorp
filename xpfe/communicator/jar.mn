@@ -19,14 +19,12 @@ comm.jar:
 #endif
 #endif
     content/communicator/communicator.css                (resources/content/communicator.css)
-    content/communicator/communicatorOverlay.xul         (resources/content/communicatorOverlay.xul) 
     content/communicator/utilityOverlay.xul              (resources/content/utilityOverlay.xul) 
     content/communicator/utilityOverlay.js               (resources/content/utilityOverlay.js) 
     content/communicator/openLocation.js                 (resources/content/openLocation.js)
     content/communicator/openLocation.xul                (resources/content/openLocation.xul)
     content/communicator/tasksOverlay.js                 (resources/content/tasksOverlay.js) 
     content/communicator/tasksOverlay.xul                (resources/content/tasksOverlay.xul) 
-    content/communicator/browserBindings.xul             (resources/content/browserBindings.xul) 
     content/communicator/editorBindings.xul              (resources/content/editorBindings.xul) 
 #ifdef XP_MACOSX
     content/communicator/platformBrowserBindings.xul     (resources/content/mac/platformBrowserBindings.xul)

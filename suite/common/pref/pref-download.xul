@@ -37,7 +37,6 @@
  ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
 
 <!DOCTYPE page SYSTEM "chrome://communicator/locale/pref/pref-download.dtd" >
 
