@@ -47,6 +47,8 @@
 #include <Polygon.h>
 #include <math.h>
 
+static const pattern NS_BEOS_DASHED = { {0xc7, 0x8f, 0x1f, 0x3e, 0x7c, 0xf8, 0xf1, 0xe3} };
+static const pattern NS_BEOS_DOTTED = { {0x55, 0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55, 0xaa} };
 
 NS_IMPL_ISUPPORTS1(nsRenderingContextBeOS, nsIRenderingContext)
 
@@ -64,6 +66,7 @@ nsRenderingContextBeOS::nsRenderingContextBeOS()
 	mCurrentColor = NS_RGB(255, 255, 255);
 	mCurrentBFont = nsnull;
 	mCurrentLineStyle = nsLineStyle_kSolid;
+	mCurrentLinePattern = B_SOLID_HIGH;
 	mP2T = 1.0f;
 	mTranMatrix = nsnull;
 
@@ -521,8 +524,20 @@ NS_IMETHODIMP nsRenderingContextBeOS::SetFont(nsIFontMetrics *aFontMetrics)
 
 NS_IMETHODIMP nsRenderingContextBeOS::SetLineStyle(nsLineStyle aLineStyle)
 {
-	// TODO: BeOS Line Style. Maybe using patterns.
-	mCurrentLineStyle = aLineStyle;
+	switch(aLineStyle)
+	{
+		case nsLineStyle_kDashed:
+			mCurrentLinePattern = NS_BEOS_DASHED;
+			break;
+		case nsLineStyle_kDotted:
+			mCurrentLinePattern = NS_BEOS_DOTTED;
+			break;
+		case nsLineStyle_kSolid:
+		default:
+			mCurrentLinePattern = B_SOLID_HIGH;
+		break;
+	}
+	mCurrentLineStyle = aLineStyle ;
 	return NS_OK;
 }
 
@@ -617,7 +632,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawLine(nscoord aX0, nscoord aY0, nscoord
 	
 	if (LockAndUpdateView())
 	{
-		mView->StrokeLine(BPoint(aX0, aY0), BPoint(aX1 - diffX, aY1 - diffY));
+		mView->StrokeLine(BPoint(aX0, aY0), BPoint(aX1 - diffX, aY1 - diffY), mCurrentLinePattern);
 		UnlockView();
 	}
 	return NS_OK;
@@ -659,16 +674,16 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawPolyline(const nsPoint aPoints[], PRIn
 		{
 			if (1 == h) 
 			{
-				mView->StrokeLine(BPoint(r.left, r.top), BPoint(r.left + w - 1, r.top));
+				mView->StrokeLine(BPoint(r.left, r.top), BPoint(r.left + w - 1, r.top), mCurrentLinePattern);
 			}
 			else if (1 == w)
 			{
-				mView->StrokeLine(BPoint(r.left, r.top), BPoint(r.left, r.top + h -1));
+				mView->StrokeLine(BPoint(r.left, r.top), BPoint(r.left, r.top + h -1), mCurrentLinePattern);
 			}
 			else
 			{
 				poly.MapTo(r,BRect(r.left, r.top, r.left + w -1, r.top + h - 1));
-				mView->StrokePolygon(&poly, false);
+				mView->StrokePolygon(&poly, false, mCurrentLinePattern);
 			}
 			UnlockView();
 		}		
@@ -705,9 +720,9 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawRect(nscoord aX, nscoord aY, nscoord a
 		{
 			// FIXME: add line style
 			if (1 == h)
-				mView->StrokeLine(BPoint(x, y), BPoint(x + w - 1, y));
+				mView->StrokeLine(BPoint(x, y), BPoint(x + w - 1, y), mCurrentLinePattern);
 			else
-				mView->StrokeRect(BRect(x, y, x + w - 1, y + h - 1));
+				mView->StrokeRect(BRect(x, y, x + w - 1, y + h - 1), mCurrentLinePattern);
 			UnlockView();
 		}
 	}
@@ -813,16 +828,16 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawPolygon(const nsPoint aPoints[], PRInt
 		{
 			if (1 == h)
 			{
-				mView->StrokeLine(BPoint(r.left, r.top), BPoint(r.left + w - 1, r.top));
+				mView->StrokeLine(BPoint(r.left, r.top), BPoint(r.left + w - 1, r.top), mCurrentLinePattern);
 			}
 			else if (1 == w)
 			{
-				mView->StrokeLine(BPoint(r.left, r.top), BPoint(r.left, r.top + h -1));
+				mView->StrokeLine(BPoint(r.left, r.top), BPoint(r.left, r.top + h -1), mCurrentLinePattern);
 			}
 			else
 			{
 				poly.MapTo(r,BRect(r.left, r.top, r.left + w -1, r.top + h - 1));
-				mView->StrokePolygon(&poly, true, B_SOLID_HIGH);
+				mView->StrokePolygon(&poly, true, mCurrentLinePattern);
 			}
 			UnlockView();
 		}		
@@ -897,7 +912,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawEllipse(nscoord aX, nscoord aY, nscoor
 	
 	if (LockAndUpdateView())
 	{
-		mView->StrokeEllipse(BRect(x, y, x + w - 1, y + h - 1));
+		mView->StrokeEllipse(BRect(x, y, x + w - 1, y + h - 1), mCurrentLinePattern);
 		UnlockView();
 	}
 	return NS_OK;
@@ -941,7 +956,8 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawArc(nscoord aX, nscoord aY, nscoord aW
 	if (LockAndUpdateView())
 	{
 		// FIXME: add line style
-		mView->StrokeArc(BRect(x, y, x + w - 1, y + h - 1), aStartAngle, aEndAngle - aStartAngle);
+		mView->StrokeArc(BRect(x, y, x + w - 1, y + h - 1), 
+						aStartAngle, aEndAngle - aStartAngle, mCurrentLinePattern);
 		UnlockView();
 	}
 	return NS_OK;
@@ -1582,3 +1598,20 @@ nsRenderingContextBeOS::GetBoundingMetrics(const PRUnichar* aString, PRUint32 aL
 	return r;
 }
 #endif /* MOZ_MATHML */
+
+#ifdef NOBBCACHE
+// Do not cache the backbuffer. Doesn't work in BeOS at the moment - cannot repaint
+// Window-attached BVIew. @see bug 95952 for other platforms
+NS_IMETHODIMP nsRenderingContextBeOS::GetBackbuffer(const nsRect &aRequestedSize,
+                                                   const nsRect &aMaxSize,
+                                                   PRBool aForBlending,
+                                                   nsIDrawingSurface* &aBackbuffer)
+{
+  return AllocateBackbuffer(aRequestedSize, aMaxSize, aBackbuffer, PR_FALSE, 0);
+}
+ 
+NS_IMETHODIMP nsRenderingContextBeOS::ReleaseBackbuffer(void)
+{
+	return DestroyCachedBackbuffer();
+}
+#endif
