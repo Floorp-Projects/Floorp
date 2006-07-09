@@ -1650,9 +1650,10 @@ function constructGoMenuItem(goMenu, beforeItem, url, title)
   return menuitem;
 }
 
-function onGoMenuHidden()
+function onGoMenuHidden(aEvent)
 {
-  setTimeout(destroyGoMenuItems, 0, document.getElementById('goPopup'));
+  if (aEvent.target == aEvent.currentTarget)
+    setTimeout(destroyGoMenuItems, 0, document.getElementById('goPopup'));
 }
 
 function destroyGoMenuItems(goMenu) {
@@ -1677,8 +1678,11 @@ function destroyGoMenuItems(goMenu) {
   }
 }
 
-function updateGoMenu(goMenu)
+function updateGoMenu(aEvent, goMenu)
 {
+  if (aEvent.target != aEvent.currentTarget)
+    return;
+
   // In case the timer didn't fire.
   destroyGoMenuItems(goMenu);
 
