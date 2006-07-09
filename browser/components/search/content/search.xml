@@ -730,7 +730,7 @@
                action="return this.openSearch();"/>
 #endif
 
-      <handler event="keypress" keycode="VK_ENTER"><![CDATA[
+      <handler event="keypress" keycode="VK_RETURN"><![CDATA[
         // this is a bit of a hack to ensure that even if a search is ongoing
         // we will still search immediately
         const contractID = 
