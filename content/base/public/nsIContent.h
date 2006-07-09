@@ -61,8 +61,8 @@ class nsAttrName;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x469b2ce5, 0x3e00, 0x45e0, \
-  { 0x9c, 0x6e, 0x4e, 0x80, 0xfb, 0x27, 0x59, 0x7d } }
+{ 0x6aea736c, 0xe909, 0x43b7, \
+  { 0x9c, 0x55, 0xb0, 0xda, 0x9e, 0x37, 0x16, 0x45 } }
 
 // hack to make egcs / gcc 2.95.2 happy
 class nsIContent_base : public nsINode {
@@ -143,27 +143,6 @@ public:
   virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
                               PRBool aNullParent = PR_TRUE) = 0;
   
-  /**
-   * Returns true if the content has an ancestor that is a document.
-   *
-   * @return whether this content is in a document tree
-   */
-  PRBool IsInDoc() const
-  {
-    return mParentPtrBits & PARENT_BIT_INDOCUMENT;
-  }
-
-  /**
-   * Get the document that this content is currently in, if any. This will be
-   * null if the content has no ancestor that is a document.
-   *
-   * @return the current document
-   */
-  nsIDocument *GetCurrentDoc() const
-  {
-    return IsInDoc() ? GetOwnerDoc() : nsnull;
-  }
-
   /**
    * DEPRECATED - Use GetCurrentDoc or GetOwnerDoc.
    * Get the document for this content.
