@@ -18,7 +18,6 @@ use strict;
 
 package Bugzilla::Product;
 
-use Bugzilla::Component;
 use Bugzilla::Version;
 use Bugzilla::Milestone;
 
@@ -107,6 +106,7 @@ sub components {
             ORDER BY name}, undef, $self->id);
 
         my @components;
+        require Bugzilla::Component;
         foreach my $id (@$ids) {
             push @components, new Bugzilla::Component($id);
         }
