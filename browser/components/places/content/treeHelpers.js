@@ -220,6 +220,15 @@ var OptionsFilter = {
   },
   
   /**
+   * Destroy the OptionsFilter handlers (to avoid leaks).
+   */
+  destroy: function OF_destroy() {
+    this.historyHandler.destroy();
+    this.bookmarksHandler.destroy();
+    this.overrideHandlers["livemark/"].destroy();
+  },
+  
+  /**
    * Gets the handler best able to store options for a set of queries that are
    * about to be executed.
    * @param   queries

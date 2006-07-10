@@ -77,6 +77,9 @@ var PlacesOrganizer = {
     PlacesQueryBuilder.init();
   },
   
+  destroy: function PO_destroy() {
+    OptionsFilter.destroy();
+  },
   
   HEADER_TYPE_SHOWING: 1,
   HEADER_TYPE_SEARCH: 2,

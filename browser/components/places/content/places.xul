@@ -51,6 +51,7 @@
         windowtype="Places:Organizer" 
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="PlacesOrganizer.init();"
+        onunload="PlacesOrganizer.destroy();"
         width="700" height="500" screenX="10" screenY="10"
         persist="width height screenX screenY sizemode">
   
