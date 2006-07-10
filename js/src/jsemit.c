@@ -4847,6 +4847,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                                        ? JSOP_GETGVAR
                                        : (pn2->pn_op == JSOP_SETARG)
                                        ? JSOP_GETARG
+                                       : (pn2->pn_op == JSOP_SETLOCAL)
+                                       ? JSOP_GETLOCAL
                                        : JSOP_GETVAR,
                                        atomIndex);
                     break;
