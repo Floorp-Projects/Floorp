@@ -108,7 +108,10 @@ var gMainPane = {
           var ios = Cc["@mozilla.org/network/io-service;1"]
                       .getService(Ci.nsIIOService);
           var uri = ios.newURI(homePage.value, "UTF-8", null);
-          bookmarkTitle = PlacesController.bookmarks.getItemTitle(uri);
+
+          var bmSvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"]
+                        .getService(Ci.nsINavBookmarksService);
+          bookmarkTitle = bmSvc.getItemTitle(uri);
         } catch (e) {
           bookmarkTitle = null;
         }
