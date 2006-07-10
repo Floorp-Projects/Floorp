@@ -55,8 +55,10 @@ interface nsIDocument;
 [scriptable, uuid(d8cf3bd0-1dd1-11b2-a837-fec5f865b071)]
 interface nsIChangeObserver : nsISupports
 {
-  void AttributeChanged ( in nsIDocument aDocument,
-                          in long aNameSpaceID, in nsIAtom aAttribute ) ;
+  void AttributeChanged(in nsIDocument aDocument,
+                        in long aNameSpaceID,
+                        in nsIContent aContent,
+                        in nsIAtom aAttribute);
 
   void ContentRemoved ( in nsIDocument aDocument, in nsIContent aChild, 
                           in long aIndexInContainer ) ;

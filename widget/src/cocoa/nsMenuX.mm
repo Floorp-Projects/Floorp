@@ -544,17 +544,6 @@ NS_IMETHODIMP nsMenuX::GetEnabled(PRBool* aIsEnabled)
 }
 
 
-// This is only here because it implements a pure virtual function
-// that exists to support Carbon widgets. It can be removed when
-// Carbon widgets are dead for real.
-NS_IMETHODIMP nsMenuX::IsHelpMenu(PRBool* aIsHelpMenu)
-{
-  NS_ENSURE_ARG_POINTER(aIsHelpMenu);
-  *aIsHelpMenu = PR_FALSE;
-  return NS_OK;
-}
-
-
 NS_IMETHODIMP nsMenuX::GetMenuContent(nsIContent ** aMenuContent)
 {
   NS_ENSURE_ARG_POINTER(aMenuContent);
@@ -660,8 +649,7 @@ void nsMenuX::LoadMenuItem(nsIMenu* inParentMenu, nsIContent* inMenuItemContent)
 }
 
 
-void 
-nsMenuX::LoadSubMenu(nsIMenu * pParentMenu, nsIContent* inMenuItemContent)
+void nsMenuX::LoadSubMenu(nsIMenu * pParentMenu, nsIContent* inMenuItemContent)
 {
   // if menu should be hidden, bail
   if (inMenuItemContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::hidden,
@@ -696,8 +684,7 @@ nsMenuX::LoadSubMenu(nsIMenu * pParentMenu, nsIContent* inMenuItemContent)
 }
 
 
-void
-nsMenuX::LoadSeparator(nsIContent* inMenuItemContent) 
+void nsMenuX::LoadSeparator(nsIContent* inMenuItemContent) 
 {
   // if item should be hidden, bail
   if (inMenuItemContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::hidden,
@@ -708,15 +695,13 @@ nsMenuX::LoadSeparator(nsIContent* inMenuItemContent)
 }
 
 
-
 //
 // OnCreate
 //
 // Fire our oncreate handler. Returns TRUE if we should keep processing the event,
 // FALSE if the handler wants to stop the creation of the menu
 //
-PRBool
-nsMenuX::OnCreate()
+PRBool nsMenuX::OnCreate()
 {
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event(PR_TRUE, NS_XUL_POPUP_SHOWING, nsnull,
@@ -796,8 +781,8 @@ nsMenuX::OnCreate()
   return PR_TRUE;
 }
 
-PRBool
-nsMenuX::OnCreated()
+
+PRBool nsMenuX::OnCreated()
 {
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event(PR_TRUE, NS_XUL_POPUP_SHOWN, nsnull, nsMouseEvent::eReal);
@@ -820,14 +805,14 @@ nsMenuX::OnCreated()
   return PR_TRUE;
 }
 
+
 //
 // OnDestroy
 //
 // Fire our ondestroy handler. Returns TRUE if we should keep processing the event,
 // FALSE if the handler wants to stop the destruction of the menu
 //
-PRBool
-nsMenuX::OnDestroy()
+PRBool nsMenuX::OnDestroy()
 {
   if (mDestroyHandlerCalled)
     return PR_TRUE;
@@ -857,8 +842,8 @@ nsMenuX::OnDestroy()
   return PR_TRUE;
 }
 
-PRBool
-nsMenuX::OnDestroyed()
+
+PRBool nsMenuX::OnDestroyed()
 {
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event(PR_TRUE, NS_XUL_POPUP_HIDDEN, nsnull,
@@ -884,6 +869,8 @@ nsMenuX::OnDestroyed()
   
   return PR_TRUE;
 }
+
+
 //
 // GetMenuPopupContent
 //
@@ -891,8 +878,7 @@ nsMenuX::OnDestroyed()
 // of a very few children so we won't be iterating over a bazillion menu items to find
 // it (so the strcmp won't kill us).
 //
-void
-nsMenuX::GetMenuPopupContent(nsIContent** aResult)
+void nsMenuX::GetMenuPopupContent(nsIContent** aResult)
 {
   if (!aResult)
     return;
@@ -927,8 +913,7 @@ nsMenuX::GetMenuPopupContent(nsIContent** aResult)
 // It doesn't matter if I am visible. Note that this will always count the
 // Application menu, since we always put it in there.
 //
-nsresult 
-nsMenuX::CountVisibleBefore(PRUint32* outVisibleBefore)
+nsresult nsMenuX::CountVisibleBefore(PRUint32* outVisibleBefore)
 {
   NS_ASSERTION(outVisibleBefore, "bad index param");
   
@@ -974,13 +959,20 @@ nsMenuX::CountVisibleBefore(PRUint32* outVisibleBefore)
 } // CountVisibleBefore
 
 
+NS_IMETHODIMP nsMenuX::ChangeNativeEnabledStatusForMenuItem(nsIMenuItem* aMenuItem,
+                                                            PRBool aEnabled)
+{
+  return NS_OK;
+}
+
+
 //
 // nsIChangeObserver
 //
 
 
-NS_IMETHODIMP
-nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIContent *aContent, nsIAtom *aAttribute)
+NS_IMETHODIMP nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID,
+                                        nsIContent *aContent, nsIAtom *aAttribute)
 {
   // ignore the |open| attribute, which is by far the most common
   if (gConstructingMenu || (aAttribute == nsWidgetAtoms::open))
@@ -1076,8 +1068,8 @@ nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIConte
 } // AttributeChanged
 
 
-NS_IMETHODIMP
-nsMenuX::ContentRemoved(nsIDocument *aDocument, nsIContent *aChild, PRInt32 aIndexInContainer)
+NS_IMETHODIMP nsMenuX::ContentRemoved(nsIDocument *aDocument, nsIContent *aChild,
+                                      PRInt32 aIndexInContainer)
 {  
   if (gConstructingMenu)
     return NS_OK;
@@ -1091,8 +1083,8 @@ nsMenuX::ContentRemoved(nsIDocument *aDocument, nsIContent *aChild, PRInt32 aInd
 } // ContentRemoved
 
 
-NS_IMETHODIMP
-nsMenuX::ContentInserted(nsIDocument *aDocument, nsIContent *aChild, PRInt32 aIndexInContainer)
+NS_IMETHODIMP nsMenuX::ContentInserted(nsIDocument *aDocument, nsIContent *aChild,
+                                       PRInt32 aIndexInContainer)
 {  
   if (gConstructingMenu)
     return NS_OK;
@@ -1106,6 +1098,7 @@ nsMenuX::ContentInserted(nsIDocument *aDocument, nsIContent *aChild, PRInt32 aIn
 //
 // Carbon event support
 //
+
 
 static pascal OSStatus MyMenuEventHandler(EventHandlerCallRef myHandler, EventRef event, void* userData)
 {
@@ -1159,6 +1152,7 @@ static pascal OSStatus MyMenuEventHandler(EventHandlerCallRef myHandler, EventRe
   }
   return eventNotHandledErr;
 }
+
 
 static OSStatus InstallMyMenuEventHandler(MenuRef menuRef, void* userData, EventHandlerRef* outHandler)
 {

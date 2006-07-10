@@ -51,10 +51,10 @@ class nsIContent;
 class nsIMenuCommandDispatcher;
 
 
-// {ab6cea83-00ff-11d5-bb6f-f432a43ead7c}
+// {D0E18BEA-A0B9-4D33-899E-283A4D753F2C}
 #define NS_IMENU_IID      \
-{ 0xab6cea83, 0x00ff, 0x11d5, \
-  { 0xbb, 0x6f, 0xf4, 0x32, 0xa4, 0x3e, 0xad, 0x7c } }
+{ 0xD0E18BEA, 0xA0B9, 0x4D33, \
+{ 0x89, 0x9E, 0x28, 0x3A, 0x4D, 0x75, 0x3F, 0x2C } }
 
 
 /**
@@ -113,12 +113,6 @@ class nsIMenu : public nsISupports {
     *
     */
 	NS_IMETHOD GetEnabled(PRBool* aIsEnabled) = 0;
-	
-	/**
-    * Query if this is the help menu. Mostly for MacOS voodoo.
-    *
-    */
-	NS_IMETHOD IsHelpMenu(PRBool* aIsHelpMenu) = 0;
 	
 	/**
     * Adds a Menu Item
@@ -192,6 +186,12 @@ class nsIMenu : public nsISupports {
     */
     NS_IMETHOD GetMenuContent(nsIContent ** aMenuContent) = 0;
     
+   /**
+    * Enable/disable native widget for a particular nsIMenuItem
+    *
+    */
+    NS_IMETHOD ChangeNativeEnabledStatusForMenuItem(nsIMenuItem* aMenuItem,
+                                                    PRBool aEnabled) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIMenu, NS_IMENU_IID)

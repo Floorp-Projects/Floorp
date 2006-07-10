@@ -105,9 +105,8 @@ NS_IMPL_ISUPPORTS4(nsMenuX, nsIMenu, nsIMenuListener, nsIChangeObserver, nsISupp
 // nsMenuX constructor
 //
 nsMenuX::nsMenuX()
-    :   mNumMenuItems(0), mParent(nsnull), mManager(nsnull),
-        mMacMenuID(0), mMacMenuHandle(nsnull), mHelpMenuOSItemsCount(0),
-        mIsHelpMenu(PR_FALSE), mIsEnabled(PR_TRUE), mDestroyHandlerCalled(PR_FALSE),
+    :   mNumMenuItems(0), mParent(nsnull), mManager(nsnull), mMacMenuID(0),
+        mMacMenuHandle(nsnull), mIsEnabled(PR_TRUE), mDestroyHandlerCalled(PR_FALSE),
         mNeedsRebuild(PR_TRUE), mConstructed(PR_FALSE), mVisible(PR_TRUE), mHandler(nsnull)
 {
 #if DEBUG
@@ -174,6 +173,13 @@ nsMenuX::Create(nsISupports * aParent, const nsAString &aLabel, const nsAString 
   if (menubar && mMenuContent->GetChildCount() == 0)
     mVisible = PR_FALSE;
 
+  // We call MenuConstruct here because keyboard commands are dependent upon
+  // native menu items being created. If we only call MenuConstruct when a menu
+  // is actually selected, then we can't access keyboard commands until the
+  // menu gets selected, which is bad.
+  nsMenuEvent fake(PR_TRUE, 0, nsnull);
+  MenuConstruct(fake, nsnull, nsnull, nsnull);
+  
   return NS_OK;
 }
 
@@ -476,12 +482,6 @@ nsEventStatus nsMenuX::MenuSelected(const nsMenuEvent & aMenuEvent)
   MenuHandle selectedMenuHandle = (MenuHandle) aMenuEvent.mCommand;
 
   if (mMacMenuHandle == selectedMenuHandle) {
-    if (mIsHelpMenu && mConstructed){
-      RemoveAll();
-      mConstructed = false;
-      SetRebuild(PR_TRUE);
-    }
-
     // Open the node.
     mMenuContent->SetAttr(kNameSpaceID_None, nsWidgetAtoms::open, NS_LITERAL_STRING("true"), PR_TRUE);
   
@@ -489,10 +489,10 @@ nsEventStatus nsMenuX::MenuSelected(const nsMenuEvent & aMenuEvent)
     // Fire our oncreate handler. If we're told to stop, don't build the menu at all
     PRBool keepProcessing = OnCreate();
 
-    if (!mIsHelpMenu && !mNeedsRebuild || !keepProcessing)
+    if (!mNeedsRebuild || !keepProcessing)
       return nsEventStatus_eConsumeNoDefault;
 
-    if(!mConstructed || mNeedsRebuild) {
+    if (!mConstructed || mNeedsRebuild) {
       if (mNeedsRebuild)
         RemoveAll();
 
@@ -501,13 +501,9 @@ nsEventStatus nsMenuX::MenuSelected(const nsMenuEvent & aMenuEvent)
         NS_ERROR("No doc shell");
         return nsEventStatus_eConsumeNoDefault;
       }
-      if (mIsHelpMenu) {
-        HelpMenuConstruct(aMenuEvent, nsnull /* mParentWindow */, nsnull, docShell);	      
-        mConstructed = true;
-      } else {
-        MenuConstruct(aMenuEvent, nsnull /* mParentWindow */, nsnull, docShell);
-        mConstructed = true;
-      }	
+
+      MenuConstruct(aMenuEvent, nsnull /* mParentWindow */, nsnull, docShell);
+      mConstructed = true;
     } 
 
     OnCreated();  // Now that it's built, fire the popupShown event.
@@ -589,46 +585,6 @@ nsEventStatus nsMenuX::MenuConstruct(
   return nsEventStatus_eIgnore;
 }
 
-//-------------------------------------------------------------------------
-nsEventStatus nsMenuX::HelpMenuConstruct(
-    const nsMenuEvent & aMenuEvent,
-    nsIWidget         * aParentWindow, 
-    void              * /* menuNode */,
-    void              * aDocShell)
-{
-  //printf("nsMenuX::MenuConstruct called for %s = %d \n", NS_LossyConvertUTF16toASCII(mLabel).get(), mMacMenuHandle);
- 
-  int numHelpItems = ::CountMenuItems(mMacMenuHandle);
-  for (int i=0; i < numHelpItems; ++i) {
-    mMenuItemsArray.AppendElement(&gDummyMenuItemX);
-  }
-     
-  // Retrieve our menupopup.
-  nsCOMPtr<nsIContent> menuPopup;
-  GetMenuPopupContent(getter_AddRefs(menuPopup));
-  if (!menuPopup)
-    return nsEventStatus_eIgnore;
-      
-  // Iterate over the kids
-  PRUint32 count = menuPopup->GetChildCount();
-  for ( PRUint32 i = 0; i < count; ++i ) {
-    nsIContent *child = menuPopup->GetChildAt(i);
-    if ( child ) {      
-      // depending on the type, create a menu item, separator, or submenu
-      nsIAtom *tag = child->Tag();
-      if ( tag == nsWidgetAtoms::menuitem )
-        LoadMenuItem(this, child);
-      else if ( tag == nsWidgetAtoms::menuseparator )
-        LoadSeparator(child);
-      else if ( tag == nsWidgetAtoms::menu )
-        LoadSubMenu(this, child);
-    }   
-  } // for each menu item
-  
-  //printf("  Done building, mMenuItemVoidArray.Count() = %d \n", mMenuItemVoidArray.Count());
-             
-  return nsEventStatus_eIgnore;
-}
 
 //-------------------------------------------------------------------------
 nsEventStatus nsMenuX::MenuDestruct(const nsMenuEvent & aMenuEvent)
@@ -661,11 +617,9 @@ nsEventStatus nsMenuX::CheckRebuild(PRBool & aNeedsRebuild)
 //-------------------------------------------------------------------------
 nsEventStatus nsMenuX::SetRebuild(PRBool aNeedsRebuild)
 {
-  if(!gConstructingMenu) {
+  if (!gConstructingMenu)
     mNeedsRebuild = aNeedsRebuild;
-    //if(mNeedsRebuild)
-    //  RemoveAll();
-  }
+
   return nsEventStatus_eIgnore;
 }
 
@@ -686,7 +640,7 @@ NS_METHOD nsMenuX::SetEnabled(PRBool aIsEnabled)
   return NS_OK;
 }
 
-//-------------------------------------------------------------------------
+
 /**
 * Get enabled state
 *
@@ -698,20 +652,7 @@ NS_METHOD nsMenuX::GetEnabled(PRBool* aIsEnabled)
   return NS_OK;
 }
 
-//-------------------------------------------------------------------------
-/**
-* Query if this is the help menu
-*
-*/
-NS_METHOD nsMenuX::IsHelpMenu(PRBool* aIsHelpMenu)
-{
-  NS_ENSURE_ARG_POINTER(aIsHelpMenu);
-  *aIsHelpMenu = mIsHelpMenu;
-  return NS_OK;
-}
 
-
-//-------------------------------------------------------------------------
 /**
 * Get GetMenuContent
 *
@@ -814,10 +755,40 @@ void nsMenuX::LoadMenuItem( nsIMenu* inParentMenu, nsIContent* inMenuItemContent
   if (inMenuItemContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::hidden,
                                      nsWidgetAtoms::_true, eCaseMatters))
     return;
+  
+  nsCOMPtr<nsIDOMDocument> domDocument = do_QueryInterface(inMenuItemContent->GetDocument());
+  if (!domDocument)
+    return;
+  
+  // We want the enabled state from the command element, not the menu item element.
+  // The command element is more up-to-date and it matters for keyboard shortcuts
+  // that can be invoked without opening the menu for the item. Sync menu item's
+  // enabled state with its command element now.
+  nsAutoString ourCommand;
+  inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::command, ourCommand);
+  if (!ourCommand.IsEmpty()) {
+    // get the command DOM element
+    nsCOMPtr<nsIDOMElement> commandElt;
+    domDocument->GetElementById(ourCommand, getter_AddRefs(commandElt));
+    if (commandElt) {
+      nsCOMPtr<nsIContent> commandContent = do_QueryInterface(commandElt);
+      nsAutoString menuItemDisabled;
+      nsAutoString commandDisabled;
+      inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, menuItemDisabled);
+      commandContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, commandDisabled);
+      if (!commandDisabled.Equals(menuItemDisabled)) {
+        // The menu's disabled state needs to be updated to match the command
+        if (commandDisabled.IsEmpty()) 
+          inMenuItemContent->UnsetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, PR_TRUE);
+        else
+          inMenuItemContent->SetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, commandDisabled, PR_TRUE);
+      }
+    }
+  }
 
   // Create nsMenuItem
   nsCOMPtr<nsIMenuItem> pnsMenuItem = do_CreateInstance ( kMenuItemCID ) ;
-  if ( pnsMenuItem ) {
+  if (pnsMenuItem) {
     nsAutoString menuitemName;
     
     inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, menuitemName);
@@ -854,12 +825,7 @@ void nsMenuX::LoadMenuItem( nsIMenu* inParentMenu, nsIContent* inMenuItemContent
     nsAutoString keyValue;
     inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::key, keyValue);
 
-    // Try to find the key node. Get the document so we can do |GetElementByID|
-    nsCOMPtr<nsIDOMDocument> domDocument =
-      do_QueryInterface(inMenuItemContent->GetDocument());
-    if ( !domDocument )
-      return;
-
+    // Try to find the key node.
     nsCOMPtr<nsIDOMElement> keyElement;
     if (!keyValue.IsEmpty())
       domDocument->GetElementById(keyValue, getter_AddRefs(keyElement));
@@ -1232,6 +1198,29 @@ nsMenuX :: CountVisibleBefore ( PRUint32* outVisibleBefore )
 } // CountVisibleBefore
 
 
+NS_IMETHODIMP
+nsMenuX::ChangeNativeEnabledStatusForMenuItem(nsIMenuItem* aMenuItem, PRBool aEnabled)
+{
+  // look for the menu item given
+  PRUint32 menuItemCount;
+  mMenuItemsArray.Count(&menuItemCount);
+    
+  for (PRUint32 i = 0; i < menuItemCount; i++) {
+    nsISupports* currItem;
+    mMenuItemsArray.GetElementAt(i, &currItem);
+    if (currItem == aMenuItem) {
+      if (aEnabled)
+        ::EnableMenuItem(mMacMenuHandle, i + 1);
+      else
+        ::DisableMenuItem(mMacMenuHandle, i + 1);
+      break;
+    }
+  }
+
+  return NS_OK;
+}
+
+
 #pragma mark -
 
 //
@@ -1240,7 +1229,7 @@ nsMenuX :: CountVisibleBefore ( PRUint32* outVisibleBefore )
 
 
 NS_IMETHODIMP
-nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom *aAttribute)
+nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIContent *aContent, nsIAtom *aAttribute)
 {
   if (gConstructingMenu)
     return NS_OK;
