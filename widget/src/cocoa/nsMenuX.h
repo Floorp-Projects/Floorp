@@ -111,10 +111,10 @@ public:
     NS_IMETHOD GetMenuContent(nsIContent ** aMenuNode);
     NS_IMETHOD SetEnabled(PRBool aIsEnabled);
     NS_IMETHOD GetEnabled(PRBool* aIsEnabled);
-    NS_IMETHOD IsHelpMenu(PRBool* aIsEnabled);
 
     NS_IMETHOD AddMenuItem(nsIMenuItem * aMenuItem);
     NS_IMETHOD AddMenu(nsIMenu * aMenu);
+    NS_IMETHOD ChangeNativeEnabledStatusForMenuItem(nsIMenuItem* aMenuItem, PRBool aEnabled);
     
 protected:
     // Determines how many menus are visible among the siblings that are before me.

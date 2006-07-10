@@ -109,7 +109,8 @@ protected:
   nsCOMPtr<nsIMenuListener> mXULCommandListener;
   
   nsWeakPtr                 mDocShellWeakRef;     // weak ref to docshell
-  nsCOMPtr<nsIContent>      mContent; 
+  nsCOMPtr<nsIContent>      mContent;
+  nsCOMPtr<nsIContent>      mCommandContent;
   
   PRUint8           mModifiers;
   PRPackedBool      mIsSeparator;
