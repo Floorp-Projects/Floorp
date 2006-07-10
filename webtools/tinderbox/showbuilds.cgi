@@ -50,6 +50,7 @@ else {
 }
 
 %colormap = (
+  null       => 'a5a5a5',
   success    => '11DD11',
   busted     => 'EE0000',
   building   => 'EEFF00',
@@ -261,6 +262,8 @@ sub print_page_head {
                         <tt>Txul:TT.T</tt> (XUL openwindow time, ms)<br>
                         <tt>Ts:TT.T</tt>   (startup time, sec)<br>
                       </td>
+                <tr bgcolor="$colormap{null}">
+                  <td>No build in progress</td>
                 <tr bgcolor="$colormap{building}">
                   <td>Build in progress</td>
                 <tr bgcolor="$colormap{testfailed}">
@@ -342,7 +345,8 @@ BEGIN {
     # Build Status
     #
     for (my $build_index=0; $build_index < $name_count; $build_index++) {
-      if (not defined($br = $build_table->[$tt][$build_index])) {
+      $br = $build_table->[$tt][$build_index];
+      if (not defined($br)) {
         # No build data for this time (e.g. no build after this time).
         print "<td></td>\n";
         next;
@@ -350,9 +354,22 @@ BEGIN {
       next if $br == -1; # Covered by rowspan
 
       my $rowspan = $br->{rowspan};
-      $rowspan = $mindate_time_count - $tt + 1
-        if $tt + $rowspan - 1 > $mindate_time_count;
-      print "<td rowspan=$rowspan bgcolor=$colormap{$br->{buildstatus}}>\n";
+
+      # This appears to be designed to keep the rowspan from running beyond
+      # the length of the displayed table.  I'm not certain that can happen
+      # in a table.  Besides, if rowspan is set to that sort of invalid value,
+      # that's more of a sign that there's a bug in tbglobals.pl.
+      #
+      if ( $rowspan > $mindate_time_count - $tt + 1 ) {
+        $rowspan = $mindate_time_count - $tt + 1
+      }
+
+      print "<td rowspan=\"$rowspan\" bgcolor=\"$colormap{$br->{buildstatus}}\">\n";
+
+      if ( $br->{buildstatus} eq "null" ) {
+        print "</td>\n";
+        next;
+      }
       
       my $logfile = $br->{logfile};
       my $buildtree = $br->{td}->{name};
@@ -384,7 +401,7 @@ BEGIN {
           # end.  We should add in explicit setting of endtime in the client
           # scripts if they don't already have it and then use that here.
           my $start_timet = $br->{buildtime};
-          my $end_timet = $br->{mailtime};
+          my $end_timet = $br->{endtime};
 
           # If either of the times aren't today, we need to qualify both with
           # the month and day-of-month.
@@ -432,10 +449,11 @@ $textmap{$br->{buildstatus}}</a>
       #
       # Only add the "C" link if there have been changes since the last build.
       if ($br->{previousbuildtime}) {
-        my $previous_br = $build_table->[$tt+$rowspan][$build_index];
-        my $previous_rowspan = $previous_br->{rowspan};
-        if (&has_who_list($tt+$rowspan,
-                          $tt+$rowspan+$previous_rowspan-1)) {
+        my $previous_buildtime_index = $build_time_index->{$br->{previousbuildtime}};
+        my $this_buildtime_index = $build_time_index->{$br->{buildtime}} + 1;
+
+        if (&has_who_list($this_buildtime_index,
+                          $previous_buildtime_index)) {
           print "\n", &query_ref($br->{td}, 
                                  $br->{previousbuildtime},
                                  $br->{buildtime} - 1);
@@ -652,7 +670,7 @@ sub has_who_list {
     }
     return 0;
   } else {
-    return $who_check_list[$time1]; 
+    return 1 if $who_check_list[$time1]; 
   }
 }
 
@@ -926,10 +944,8 @@ __ENDJS
     print "\"$ss\";\n";
   }
   for ($ii=0; $ii < $name_count; $ii++) {
-    if (defined($br = $build_table->[0][$ii])) {
-      my $bn = $build_names->[$ii];
-      print "builds[$ii]='$bn';\n";
-    }
+    my $bn = $build_names->[$ii];
+    print "builds[$ii]='$bn';\n";
   }
   print "var buildtree = '$::tree';\n";
 

@@ -70,6 +70,10 @@ $bzip2 = '/usr/bin/bzip2';
 
 $data_dir='data';
 
+# Set this to show real end times for builds instead of just using
+# the start of the next build as the end time.
+$display_accurate_build_end_times = 1;
+
 1;
 
 sub lock{
@@ -80,9 +84,9 @@ sub unlock{
 
 sub print_time {
   my ($t) = @_;
-  my ($minute,$hour,$mday,$mon);
-  (undef,$minute,$hour,$mday,$mon,undef) = localtime($t);
-  sprintf("%02d/%02d&nbsp;%02d:%02d",$mon+1,$mday,$hour,$minute);
+  my ($sec,$minute,$hour,$mday,$mon);
+  ($sec,$minute,$hour,$mday,$mon,undef) = localtime($t);
+  sprintf("%02d/%02d&nbsp;%02d:%02d:%02d",$mon+1,$mday,$hour,$minute,$sec);
 }
 
 #------------------
@@ -519,11 +523,14 @@ sub load_buildlog {
   my ($bw) = Backwards->new("$treedata->{name}/build.dat") or die;
 
   my $tooearly = 0;
-  while( $_ = $bw->readline ) {
+  my $internal_build_list;
+  LOOP: while( $_ = $bw->readline ) {
     chomp;
     my ($mailtime, $buildtime, $buildname,
      $errorparser, $buildstatus, $logfile, $binaryurl) = split /\|/;
     
+    my ($endtime);
+
     # Ignore stuff in the future.
     next if $buildtime > $maxdate;
     
@@ -541,8 +548,28 @@ sub load_buildlog {
       next;
     }
     $tooearly = 0;
+
+    # We should get clients reporting their actual end time.  This would
+    # alleviate an obvious problem where a build starts immediately on the
+    # same system after another completed.  Now, since we infer the end time
+    # based on the mail time, the reported end time of the first build can
+    # be later than the reported start time of the second.
+
+    # Completed builds are eligible for inference of their end time.  If the
+    # build is on-going, it doesn't have an end time, so leave it undefined.
+    $endtime = $mailtime if ($buildstatus ne 'building');
+
     if ($form{noignore} or not $treedata->{ignore_builds}->{$buildname}) {
+
+      # Latest record in build.dat for this (buildtime, buildname) tuple wins.
+      if ( $internal_build_list->{$buildtime}->{$buildname} ) {
+        next LOOP;
+      } else {
+        $internal_build_list->{$buildtime}->{$buildname} = 1;
+      }
+
       my $buildrec = {    
+                      endtime     => $endtime,
                       mailtime    => $mailtime,
                       buildtime   => $buildtime,
                       buildname   => $buildname,
@@ -655,6 +682,9 @@ sub get_build_time_index {
   #
   foreach my $br (@{$build_list}) {
     $build_time_index->{$br->{buildtime}} = 1;
+    if ( $br->{endtime} and $display_accurate_build_end_times ) {
+      $build_time_index->{$br->{endtime}} = 1;
+    }
   }
 
   my $ii = 0;
@@ -692,17 +722,36 @@ sub make_build_table {
       if (defined($br = $build_table->[$ti][$bi])
           and not defined($br->{rowspan})) {
 
-        # If the cell immediately after us is defined, then we 
-        #  can have a previousbuildtime.
-        if (defined($br1 = $build_table->[$ti+1][$bi])) {
+        # Find the next-defined cell after us.  We may run all the way to the
+        # end of the page and not find a defined cell.  That's okay.
+        $ti1 = $ti+1;
+        while ( $ti1 < $time_count and not defined $build_table->[$ti1][$bi] ) {
+          $ti1++;
+        }
+        if (defined($br1 = $build_table->[$ti1][$bi])) {
           $br->{previousbuildtime} = $br1->{buildtime};
         }
 
         $ti1 = $ti-1;
-        while ($ti1 >= 0 and not defined $build_table->[$ti1][$bi]) {
-          $build_table->[$ti1][$bi] = -1;
-          $ti1--;
+
+        if ( $br->{buildstatus} eq 'building' or not $display_accurate_build_end_times ) {
+          # If the current record represents a system that's still building,
+          # we'll use the old style and let the build window "slide" up to the
+          # next defined build record.
+          while ( $ti1 >= 0 and not defined $build_table->[$ti1][$bi] ) {
+            $build_table->[$ti1][$bi] = -1;
+            $ti1--;
+          }
+        } else {
+          # If the current record has a non 'building' status, we stop the
+          # build window at its "endtime".
+          while ( $ti1 >= 0 and not defined $build_table->[$ti1][$bi]
+                  and $build_time_times->[$ti1] < $br->{endtime} ) {
+            $build_table->[$ti1][$bi] = -1;
+            $ti1--;
+          }
         }
+
         if ($ti1 > 0 and defined($br1 = $build_table->[$ti1][$bi])) {
           $br->{nextbuildtime} = $br1->{buildtime};
         }
@@ -712,6 +761,31 @@ sub make_build_table {
           $build_table->[$ti1+1][$bi] = $br;
           $build_table->[$ti][$bi] = -1;
         }
+      }
+    }
+  }
+
+  # After we've filled out $build_table with all of the applicable build
+  # records, we can do another pass over the table and fill in all the other
+  # pieces with null records to pretty up our output.  Ain't that fanciful.
+  #
+  # When we're not using the optional "show real end times" feature, this
+  # section of code is a no-op.  Every cell will be defined, either with a
+  # real $br or being set to -1.
+
+  for ($bi = $name_count - 1; $bi >= 0; $bi--) {
+    for ($ti = $time_count - 1; $ti >= 0; $ti--) {
+      if (not defined($build_table->[$ti][$bi])) {
+        my $ti1 = $ti;
+        while ( $ti1 >= 0 and not defined $build_table->[$ti1][$bi] ) {
+          $build_table->[$ti1][$bi] = -1;
+          $ti1--;
+        }
+
+        my $null_record_br = {};
+        $null_record_br->{buildstatus} = "null";
+        $null_record_br->{rowspan} = $ti - $ti1;
+        $build_table->[$ti1+1][$bi] = $null_record_br;
       }
     }
   }
