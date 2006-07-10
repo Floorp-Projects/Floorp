@@ -70,7 +70,7 @@ class Application extends AppModel {
             return array();
         }
 
-        $_max_id = $this->getMaxCollectionId($id,'issue');
+        $_max_id = $this->getMaxCollectionId($id,'intention');
         if (!is_numeric($_max_id[0][0]['max'])) {
             return array();
         }
