@@ -115,7 +115,7 @@ nsThebesFontMetrics::Destroy()
 
 #define ROUND_TO_TWIPS(x) NSToCoordRound((x) * mDev2App)
 
-gfxFont::Metrics nsThebesFontMetrics::GetMetrics()
+const gfxFont::Metrics& nsThebesFontMetrics::GetMetrics() const
 {
     return mFontGroup->GetFontAt(0)->GetMetrics();
 }

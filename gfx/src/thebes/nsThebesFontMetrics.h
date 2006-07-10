@@ -145,7 +145,7 @@ public:
 
 protected:
 
-    gfxFont::Metrics GetMetrics();
+    const gfxFont::Metrics& GetMetrics() const;
 
     gfxFontGroup *mFontGroup;
     gfxFontStyle *mFontStyle;
