@@ -1020,7 +1020,7 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
                                                                                  (CFStringRef)searchString, 
                                                                                  NULL, 
                                                                                  // legal URL characters that should be encoded in search terms
-                                                                                 CFSTR(";/?:@&=+$,"),
+                                                                                 CFSTR(";?:@&=+$,"),
                                                                                  kCFStringEncodingUTF8) autorelease];
     NSString* resultString = [NSString stringWithFormat:@"%@%@%@",
       [url substringToIndex:matchRange.location],
