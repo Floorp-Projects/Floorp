@@ -870,7 +870,8 @@ var PlacesController = {
    */
   _updateCreateCommands: 
   function PC__updateCreateCommands(inSysArea, canInsert) {
-    var canInsertFolders = canInsertSeparators = canInsertURLs = false;
+    var canInsertFolders, canInsertSeparators, canInsertURLs;
+    canInsertFolders = canInsertSeparators = canInsertURLs = false;
     var peerTypes = this.activeView.peerDropTypes;
     for (var i = 0; i < peerTypes.length; ++i) {
       switch(peerTypes[i]) {
