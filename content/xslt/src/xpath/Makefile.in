@@ -108,8 +108,7 @@ endif
 
 ifndef DISABLE_XFORMS_HOOKS # Dummy var, nobody sets it!
 ifndef MOZ_XSLT_STANDALONE
-EXPORTS = nsIXFormsUtilityService.h \
-          nsIXFormsXPathEvaluator.h
+EXPORTS = nsIXFormsXPathEvaluator.h
 
 CPPSRCS += nsXFormsXPathEvaluator.cpp \
            txXFormsFunctionCall.cpp

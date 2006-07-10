@@ -76,6 +76,10 @@ nsContentCreatorFunctions.h \
 nsXMLNameSpaceMap.h \
 $(NULL)
 
+ifndef DISABLE_XFORMS_HOOKS
+EXPORTS += nsIXFormsUtilityService.h
+endif
+
 SDK_XPIDLSRCS   = \
 		nsISelection.idl  \
 		$(NULL)

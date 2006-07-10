@@ -16,7 +16,7 @@
  *
  * The Initial Developer of the Original Code is
  * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -46,38 +46,22 @@
 #ifndef NS_NO_VTABLE
 #define NS_NO_VTABLE
 #endif
+
 class nsIDOMNode; /* forward declaration */
 
-class nsIXFormsModelElement; /* forward declaration */
-
-
-/* starting interface:    nsIXFormsUtilityService */
+/* nsIXFormsUtilityService */
 #define NS_IXFORMSUTILITYSERVICE_IID_STR "4a744a59-8771-4065-959d-b8de3dad81da"
 
 #define NS_IXFORMSUTILITYSERVICE_IID \
   {0x4a744a59, 0x8771, 0x4065, \
     { 0x95, 0x9d, 0xb8, 0xde, 0x3d, 0xad, 0x81, 0xda }}
 
-#define NS_XFORMS_UTILITY_CONTRACTID   "@mozilla.org/xforms-utility-service;1"
-
-/* Use this macro when declaring classes that implement this interface. */
-#define NS_DECL_NSIXFORMSUTILITYSERVICE \
-  NS_IMETHOD GetModelFromNode(nsIDOMNode *node, nsIDOMNode **_retval); \
-  NS_IMETHOD IsNodeAssocWithModel(nsIDOMNode *aNode, nsIDOMNode *aModel, PRBool *_retval); \
-  NS_IMETHOD GetInstanceDocumentRoot(const nsAString & aID, nsIDOMNode *aModelNode, nsIDOMNode **_retval); \
-  NS_IMETHOD ValidateString(const nsAString & aValue, const nsAString & aType, const nsAString & aNamespace, PRBool *_retval); \
-  NS_IMETHOD GetRepeatIndex(nsIDOMNode *aRepeat, PRInt32 *aIndex); \
-  NS_IMETHOD GetMonths(const nsAString & aValue, PRInt32 *aMonths); \
-  NS_IMETHOD GetSeconds(const nsAString & aValue, double *aSeconds); \
-  NS_IMETHOD GetSecondsFromDateTime(const nsAString & aValue, double *aSeconds); \
-  NS_IMETHOD GetDaysFromDateTime(const nsAString & aValue, PRInt32 *aDays);
-
 /**
- * Private interface implemented by the nsXFormsUtilityService in XForms extension.
- *   Defining it here to prevent XPath requiring XForms extension.
+ * Private interface implemented by the nsXFormsUtilityService in XForms
+ * extension.
  */
 class NS_NO_VTABLE nsIXFormsUtilityService : public nsISupports {
- public: 
+public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXFORMSUTILITYSERVICE_IID)
 
@@ -86,7 +70,7 @@ class NS_NO_VTABLE nsIXFormsUtilityService : public nsISupports {
    * a xforms instance data node.
    */
   /* nsIDOMNode getModelFromNode (in nsIDOMNode node); */
-  NS_IMETHOD GetModelFromNode(nsIDOMNode *node, nsIDOMNode **_retval) = 0;
+  NS_IMETHOD GetModelFromNode(nsIDOMNode *node, nsIDOMNode **aModel) = 0;
 
   /**
    * Function to see if the given node is associated with the given model.
@@ -104,22 +88,28 @@ class NS_NO_VTABLE nsIXFormsUtilityService : public nsISupports {
    * xforms:repeat.
    */
   /* PRBool isNodeAssocWithModel (in nsIDOMNode aNode, in nsIDOMNode aModel); */
-  NS_IMETHOD IsNodeAssocWithModel(nsIDOMNode *aNode, nsIDOMNode *aModel, PRBool *_retval) = 0;
+  NS_IMETHOD IsNodeAssocWithModel(nsIDOMNode *aNode, nsIDOMNode *aModel,
+                                  PRBool *aModelAssocWithNode) = 0;
 
   /**
    * Function to get the instance document root for the instance element with
    * the given id.  The instance element must be associated with the given
    * model.
    */
-  /* nsIDOMNode getInstanceDocumentRoot (in DOMString aID, in nsIDOMNode aModelNode); */
-  NS_IMETHOD GetInstanceDocumentRoot(const nsAString & aID, nsIDOMNode *aModelNode, nsIDOMNode **_retval) = 0;
+  /* nsIDOMNode getInstanceDocumentRoot(in DOMString aID,
+                                        in nsIDOMNode aModelNode); */
+  NS_IMETHOD GetInstanceDocumentRoot(const nsAString& aID,
+                                     nsIDOMNode *aModelNode,
+                                     nsIDOMNode **aInstanceRoot) = 0;
 
   /**
    * Function to ensure that aValue is of the schema type aType.  Will basically
    * be a forwarder to the nsISchemaValidator function of the same name.
    */
-  /* boolean validateString (in AString aValue, in AString aType, in AString aNamespace); */
-  NS_IMETHOD ValidateString(const nsAString & aValue, const nsAString & aType, const nsAString & aNamespace, PRBool *_retval) = 0;
+  /* boolean validateString (in AString aValue, in AString aType,
+                             in AString aNamespace); */
+  NS_IMETHOD ValidateString(const nsAString& aValue, const nsAString& aType,
+                            const nsAString & aNamespace, PRBool *aResult) = 0;
 
   /**
    * Function to retrieve the index from the given repeat element.
@@ -128,40 +118,36 @@ class NS_NO_VTABLE nsIXFormsUtilityService : public nsISupports {
   NS_IMETHOD GetRepeatIndex(nsIDOMNode *aRepeat, PRInt32 *aIndex) = 0;
 
   /**
-   * Function to retrieve the number of months represented by the 
+   * Function to retrieve the number of months represented by the
    * xsd:duration provided in aValue
    */
   /* long getMonths (in DOMString aValue); */
-  NS_IMETHOD GetMonths(const nsAString & aValue, PRInt32 *aMonths) = 0;
+  NS_IMETHOD GetMonths(const nsAString& aValue, PRInt32 *aMonths) = 0;
 
   /**
-   * Function to retrieve the number of seconds represented by the 
+   * Function to retrieve the number of seconds represented by the
    * xsd:duration provided in aValue
    */
-  /* AString getSeconds (in DOMString aValue); */
-  NS_IMETHOD GetSeconds(const nsAString & aValue, double *aSeconds) = 0;
+  /* double getSeconds (in DOMString aValue); */
+  NS_IMETHOD GetSeconds(const nsAString& aValue, double *aSeconds) = 0;
 
   /**
-   * Function to retrieve the number of seconds represented by the 
+   * Function to retrieve the number of seconds represented by the
    * xsd:dateTime provided in aValue
    */
-  /* AString getSecondsFromDateTime (in DOMString aValue); */
-  NS_IMETHOD GetSecondsFromDateTime(const nsAString & aValue, 
+  /* double getSecondsFromDateTime (in DOMString aValue); */
+  NS_IMETHOD GetSecondsFromDateTime(const nsAString& aValue,
                                     double *aSeconds) = 0;
 
   /**
-   * Function to retrieve the number of days represented by the 
+   * Function to retrieve the number of days represented by the
    * xsd:dateTime provided in aValue
    */
-  /* AString getDaysFromDateTime (in DOMString aValue); */
-  NS_IMETHOD GetDaysFromDateTime(const nsAString & aValue, 
-                                 PRInt32         * aDays) = 0;
+  /* long getDaysFromDateTime (in DOMString aValue); */
+  NS_IMETHOD GetDaysFromDateTime(const nsAString& aValue, PRInt32 *aDays) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIXFormsUtilityService,
                               NS_IXFORMSUTILITYSERVICE_IID)
-
-#define NS_ERROR_XFORMS_CALCUATION_EXCEPTION \
-                       NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GENERAL, 3001)
 
 #endif /* nsIXFormsUtilityService_h */

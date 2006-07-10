@@ -49,6 +49,9 @@
 #define NS_XFORMSUTILITYSERVICE_CID \
 { 0xbb0d9c8b, 0x3096, 0x4b66, { 0x92, 0xa0, 0x6c, 0x1d, 0xdf, 0x80, 0xe6, 0x5f }}
 
+#define NS_XFORMSUTILITYSERVICE_CONTRACTID \
+"@mozilla.org/xforms-utility-service;1"
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXFormsElementFactory)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXFormsUtilityService)
 
@@ -127,8 +130,9 @@ static const nsModuleComponentInfo components[] = {
   },
   { "XForms Utility Service",
     NS_XFORMSUTILITYSERVICE_CID,
-    NS_XFORMS_UTILITY_CONTRACTID,
-    nsXFormsUtilityServiceConstructor }
+    NS_XFORMSUTILITYSERVICE_CONTRACTID,
+    nsXFormsUtilityServiceConstructor
+  }
 };
 
 PR_STATIC_CALLBACK(nsresult)
