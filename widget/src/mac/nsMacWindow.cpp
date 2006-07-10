@@ -359,7 +359,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
               break;
 
             case eBorderStyle_default:
-              windowClass = kMovableModalWindowClass;
+              windowClass = kDocumentWindowClass;
               break;
 
             case eBorderStyle_all:
