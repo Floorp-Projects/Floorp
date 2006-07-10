@@ -149,7 +149,6 @@ pref("profile.allow_automigration", false);   // setting to false bypasses autom
 pref("alerts.slideIncrement", 1);
 pref("alerts.slideIncrementTime", 10);
 pref("alerts.totalOpenTime", 4000);
-pref("alerts.height", 50);
 
 pref("signon.rememberSignons",              true);
 pref("signon.expireMasterPassword",         false);
