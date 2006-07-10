@@ -746,7 +746,7 @@ nsresult nsMsgDBView::FetchTags(nsIMsgDBHdr *aHdr, PRUnichar ** aTagString)
   }
 
   *aTagString = ToNewUnicode(tags);
-  return rv;
+  return NS_OK;
 }
 
 nsresult nsMsgDBView::FetchLabel(nsIMsgDBHdr *aHdr, PRUnichar ** aLabelString)
