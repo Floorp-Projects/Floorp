@@ -431,6 +431,9 @@ nsSAXXMLReader::ParseFromStream(nsIInputStream *aStream,
     aStream = bufferedStream;
   }
  
+  rv = EnsureBaseURI();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsIChannel> parserChannel;
   rv = NS_NewInputStreamChannel(getter_AddRefs(parserChannel), mBaseURI,
                                 aStream, nsDependentCString(aContentType));
@@ -494,6 +497,8 @@ nsSAXXMLReader::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
 {
   NS_ENSURE_TRUE(mIsAsyncParse, NS_ERROR_FAILURE);
   nsresult rv;
+  rv = EnsureBaseURI();
+  NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
   rv = InitParser(mParserObserver, channel);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -543,11 +548,6 @@ nsSAXXMLReader::InitParser(nsIRequestObserver *aObserver, nsIChannel *aChannel)
   TryChannelCharset(aChannel, charsetSource, charset);
   parser->SetDocumentCharset(charset, charsetSource);
 
-  if (!mBaseURI) {
-    rv = NS_NewURI(getter_AddRefs(mBaseURI), "about:blank");
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
 #ifdef MOZILLA_1_8_BRANCH
   rv = parser->Parse(mBaseURI, aObserver, PR_FALSE);
 #else
@@ -588,6 +588,15 @@ nsSAXXMLReader::TryChannelCharset(nsIChannel *aChannel,
     }
   }
   return PR_FALSE;
+}
+
+nsresult
+nsSAXXMLReader::EnsureBaseURI()
+{
+  if (mBaseURI) 
+    return NS_OK;
+
+  return NS_NewURI(getter_AddRefs(mBaseURI), "about:blank");
 }
 
 nsresult

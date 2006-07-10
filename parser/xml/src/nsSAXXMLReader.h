@@ -110,6 +110,7 @@ private:
   static PRBool TryChannelCharset(nsIChannel *aChannel,
                                   PRInt32& aCharsetSource,
                                   nsACString& aCharset);
+  nsresult EnsureBaseURI();
   nsresult InitParser(nsIRequestObserver *aListener, nsIChannel *aChannel);
   nsresult SplitExpatName(const PRUnichar *aExpatName,
                           nsString &aURI,
