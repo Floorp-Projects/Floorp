@@ -217,43 +217,23 @@ NS_IMETHODIMP nsXULTreeAccessibleWrap::GetSelectedRows(PRUint32 *aNumRows, PRInt
   return rv;
 }
 
-NS_IMETHODIMP nsXULTreeAccessibleWrap::CellRefAt(PRInt32 aRow, PRInt32 aColumn, nsIAccessible **_retval)
+NS_IMETHODIMP nsXULTreeAccessibleWrap::CellRefAt(PRInt32 aRow, PRInt32 aColumn, nsIAccessible **aAccessibleCell)
 {
   NS_ENSURE_TRUE(mDOMNode && mTree, NS_ERROR_FAILURE);
 
   nsresult rv = NS_OK;
 
-  nsCOMPtr<nsIAccessibleTable> header;
-  rv = GetColumnHeader(getter_AddRefs(header));
+  PRInt32 index;
+  rv = GetIndexAt(aRow, aColumn, &index);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIAccessible> column;
-  rv = header->CellRefAt(0, aColumn, getter_AddRefs(column));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(column));
-  NS_ASSERTION(accessNode, "Unable to QI to nsIAccessNode");
-  nsCOMPtr<nsIDOMNode> columnNode;
-  rv = accessNode->GetDOMNode(getter_AddRefs(columnNode));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDOMElement> columnElement(do_QueryInterface(columnNode, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsITreeColumns> treeColumns;
-  rv = mTree->GetColumns(getter_AddRefs(treeColumns));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsITreeColumn> treeColumn;
-  rv = treeColumns->GetColumnFor(columnElement, getter_AddRefs(treeColumn));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return GetCachedTreeitemAccessible(aRow, treeColumn, _retval);
+  return GetChildAt(index, aAccessibleCell);
 }
 
-NS_IMETHODIMP nsXULTreeAccessibleWrap::GetIndexAt(PRInt32 aRow, PRInt32 aColumn, PRInt32 *_retval)
+NS_IMETHODIMP nsXULTreeAccessibleWrap::GetIndexAt(PRInt32 aRow, PRInt32 aColumn, PRInt32 *aIndex)
 {
-  NS_ENSURE_ARG_POINTER(_retval);
+  NS_ENSURE_TRUE(mDOMNode, NS_ERROR_FAILURE);
+  NS_ENSURE_ARG_POINTER(aIndex);
 
   nsresult rv = NS_OK;
 
@@ -261,7 +241,9 @@ NS_IMETHODIMP nsXULTreeAccessibleWrap::GetIndexAt(PRInt32 aRow, PRInt32 aColumn,
   rv = GetColumns(&columns);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *_retval = aRow * columns + aColumn;
+  PRInt32 treeCols;
+  nsAccessible::GetChildCount(&treeCols);
+  *aIndex = aRow * columns + aColumn + treeCols;
   return NS_OK;
 }
 
