@@ -3,15 +3,9 @@
 calendar.jar:
 %   content calendar %content/calendar/
 #ifndef MOZ_SUNBIRD
-%   overlay chrome://browser/content/browser.xul chrome://calendar/content/calExtOverlay.xul
 %   overlay chrome://communicator/content/tasksOverlay.xul chrome://calendar/content/calendarOverlay.xul
 %   overlay chrome://communicator/content/pref/preftree.xul chrome://calendar/content/pref/prefOverlay.xul
 %   overlay chrome://communicator/content/pref/pref-appearance.xul chrome://calendar/content/pref/prefOverlay.xul
-%   overlay chrome://messenger/content/mailWindowOverlay.xul chrome://calendar/content/calExtOverlay.xul
-%   overlay chrome://messenger/content/messengercompose/messengercompose.xul chrome://calendar/content/calExtOverlay.xul
-*   content/calendar/contents.rdf (content/contents.rdf)
-*   skin/classic/calendar/contents.rdf (skin/classic/contents.rdf)
-*   skin/modern/calendar/contents.rdf (skin/modern/contents.rdf)
 #endif
 %   skin calendar classic/1.0 %skin/classic/calendar/
 %   skin calendar modern/1.0 %skin/modern/calendar/
@@ -40,7 +34,6 @@ calendar.jar:
     content/calendar/calendar-recurrence-dialog.xul (/calendar/base/content/calendar-recurrence-dialog.xul)
     content/calendar/calendar-view-core.xml (/calendar/base/content/calendar-view-core.xml)
     content/calendar/calendarUtils.js (content/calendarUtils.js)
-*   content/calendar/calendar.xul (content/calendar.xul)
     content/calendar/calendarMail.js (content/calendarMail.js)
     content/calendar/calendarManagement.js (content/calendarManagement.js)
     content/calendar/calendarOverlay.js  (content/calendarOverlay.js)
@@ -96,12 +89,6 @@ calendar.jar:
     content/calendar/preferences/timezones.xul    (/calendar/base/content/preferences/timezones.xul)
     content/calendar/preferences/views.xul        (/calendar/base/content/preferences/views.xul)
 #ifndef MOZ_SUNBIRD
-    content/calendar/about.html (content/about.html)
-    content/calendar/about.xul (content/about.xul)
-    content/calendar/sunbird_small.png (content/sunbird_small.png)
-    content/calendar/calExtOverlay.js (content/calExtOverlay.js)
-    content/calendar/calExtOverlay.xul (content/calExtOverlay.xul)
-    content/calendar/menuOverlay.xul (content/menuOverlay.xul)
     skin/classic/calendar/calendar.css (skin/classic/calendar.css)
     skin/classic/calendar/prevnextarrow.png (skin/classic/prevnextarrow.png)
     skin/classic/calendar/datetimepickers/minimonth.css (skin/classic/datetimepickers/minimonth.css)

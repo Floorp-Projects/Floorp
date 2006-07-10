@@ -319,7 +319,6 @@
    -moz-border-radius: 0;
    padding: 1px;
    min-width: 0;
-   list-style-image: url('chrome://calendar/content/sunbird_small.png');
 }
 
 .calendar-unifinder-event-indent

@@ -469,14 +469,6 @@ function changeDisplayToDoInViewCheckbox() {
     currentView.goToDay(currentView.selectedDay);
 }
 
-// about Calendar dialog
-function displayCalendarVersion()
-{
-  // uses iframe, but iframe does not auto-size per bug 80713, so provide height
-  window.openDialog("chrome://calendar/content/about.xul", "About","modal,centerscreen,chrome,width=500,height=450,resizable=yes");
-}
-
-
 // about Sunbird dialog
 function openAboutDialog()
 {
