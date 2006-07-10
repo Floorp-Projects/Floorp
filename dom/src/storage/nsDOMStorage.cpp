@@ -49,6 +49,7 @@
 #include "nsIURI.h"
 #include "nsReadableUtils.h"
 #include "nsIObserverService.h"
+#include "nsNetUtil.h"
 
 //
 // Helper that tells us whether the caller is secure or not.
@@ -57,21 +58,32 @@
 static PRBool
 IsCallerSecure()
 {
-  nsCOMPtr<nsIDocument> callerDoc =
-    do_QueryInterface(nsContentUtils::GetDocumentFromCaller());
+  nsCOMPtr<nsIPrincipal> subjectPrincipal;
+  nsContentUtils::GetSecurityManager()->
+    GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
 
-  if (!callerDoc) {
+  if (!subjectPrincipal) {
+    // No subject principal means no code is running. Default to not
+    // being secure in that case.
+
     return PR_FALSE;
   }
 
-  nsIURI *uri = callerDoc->GetDocumentURI();
+  nsCOMPtr<nsIURI> codebase;
+  subjectPrincipal->GetURI(getter_AddRefs(codebase));
 
-  if (!uri) {
+  if (!codebase) {
+    return PR_FALSE;
+  }
+
+  nsCOMPtr<nsIURI> innerUri = NS_GetInnermostURI(codebase);
+
+  if (!innerUri) {
     return PR_FALSE;
   }
 
   PRBool isHttps = PR_FALSE;
-  nsresult rv = uri->SchemeIs("https", &isHttps);
+  nsresult rv = innerUri->SchemeIs("https", &isHttps);
 
   return NS_SUCCEEDED(rv) && isHttps;
 }
