@@ -2491,8 +2491,8 @@
         }
         });
       </field>
-      <field name="mTabMinWidth">125</field>
-      <field name="mTabClipWidth">115</field>
+      <field name="mTabMinWidth">60</field>
+      <field name="mTabClipWidth">140</field>
       <field name="mCloseButtons">1</field>
 
       <method name="adjustTabstrip">
