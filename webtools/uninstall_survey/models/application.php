@@ -11,7 +11,11 @@ class Application extends AppModel {
     //var $hasOne = array('Result');
 
     var $hasAndBelongsToMany = array(
-                                'Collection' => array( 'className'  => 'Collection')
+                                'Collection' => array(  'className'  => 'Collection',
+                                                        'joinTable' => 'applications_collections',
+                                                        'foreignKey' => 'application_id',
+                                                        'associationForeignKey' => 'collection_id'
+                                                        )
                                );
 
     var $Sanitize;
