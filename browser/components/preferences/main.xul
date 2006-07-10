@@ -53,9 +53,6 @@
             helpTopic="prefs-main" helpURI="chrome://browser/locale/help/help.rdf">
 
     <script type="application/x-javascript" src="chrome://browser/content/preferences/main.js"/>
-#ifdef MOZ_PLACES
-    <script type="application/x-javascript" src="chrome://browser/content/places/controller.js"/>
-#endif
 
     <preferences id="mainPreferences">
       <!-- XXX Button preferences -->
