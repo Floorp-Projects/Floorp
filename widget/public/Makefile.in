@@ -61,16 +61,33 @@ EXPORTS		= \
 		nsIMenuListener.h \
 		nsWidgetsCID.h \
 		nsILookAndFeel.h \
-		nsIDragSessionGTK.h \
-		nsIDragSessionXlib.h \
-		nsIDragSessionMac.h \
-		nsIDragSessionOS2.h \
-		nsIDragSessionBeOS.h \
 		nsIPluginWidget.h \
 		nsINativeKeyBindings.h \
 		nsIDeviceContextSpec.h \
 		nsIDeviceContextSpecFactory.h \
 		$(NULL)
+
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+EXPORTS		+= \
+		nsIDragSessionMac.h \
+		nsIPrintingContext.h
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+EXPORTS		+= nsIDragSessionOS2.h
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
+EXPORTS		+= nsIDragSessionBeOS.h
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),xlib)
+EXPORTS		+= nsIDragSessionXlib.h
+endif
+
+ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
+EXPORTS		+= nsIDragSessionGTK.h
+endif
 
 XPIDLSRCS	= \
 		nsIAppShell.idl \
@@ -108,8 +125,6 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 XPIDLSRCS	+= nsIEventSink.idl \
 		nsIPrintSettingsX.idl \
 		nsIPrintSessionX.idl
-
-EXPORTS		+= nsIPrintingContext.h
 endif
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
