@@ -8,6 +8,8 @@ Requires Ant version 1.2 or later
 <project name="Rhino" default="help" basedir=".">
 
   <target name="properties">
+    <!-- Allow user to override default settings from build.properties -->
+    <property file="build.local.properties" />
     <tstamp>
       <!-- Specify date part of Context#getImplementationVersion() -->
       <format property="implementation.date" pattern="yyyy MM dd"/>
