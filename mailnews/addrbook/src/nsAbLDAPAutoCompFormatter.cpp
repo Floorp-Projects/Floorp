@@ -49,6 +49,9 @@
 #include "nsNetError.h"
 #include "nsILDAPErrors.h"
 
+#define LDAP_ERROR_BUNDLE "chrome://mozldap/locale/ldap.properties"
+#define LDAP_AUTOCOMPLETE_ERROR_BUNDLE "chrome://messenger/locale/addressbook/ldapAutoCompErrs.properties"
+
 NS_IMPL_ISUPPORTS2(nsAbLDAPAutoCompFormatter, 
 		   nsILDAPAutoCompFormatter, 
 		   nsIAbLDAPAutoCompFormatter)
@@ -193,22 +196,22 @@ nsAbLDAPAutoCompFormatter::FormatException(PRInt32 aState,
     nsCOMPtr<nsIStringBundle> ldapBundle, ldapACBundle;
 
     rv = stringBundleSvc->CreateBundle(
-        "chrome://mozldap/locale/ldap.properties",
+        LDAP_ERROR_BUNDLE,
         getter_AddRefs(ldapBundle));
     if (NS_FAILED(rv)) {
         NS_ERROR("nsAbLDAPAutoCompleteFormatter::FormatException():"
-                 " error creating string bundle"
-                 " chrome://mozldap/locale/ldap.properties");
+                 " error creating string bundle "
+                 LDAP_ERROR_BUNDLE);
         return rv;
     } 
 
     rv = stringBundleSvc->CreateBundle(
-        "chrome://mailnews/locale/addressbook/ldapAutoCompErrs.properties",
+        LDAP_AUTOCOMPLETE_ERROR_BUNDLE,
         getter_AddRefs(ldapACBundle));
     if (NS_FAILED(rv)) {
         NS_ERROR("nsAbLDAPAutoCompleteFormatter::FormatException():"
-                 " error creating string bundle"
-                 " chrome://mailnews/locale/addressbook/ldapAutoCompErrs.properties");
+                 " error creating string bundle "
+                 LDAP_AUTOCOMPLETE_ERROR_BUNDLE);
         return rv;
     }
 
@@ -218,8 +221,8 @@ nsAbLDAPAutoCompFormatter::FormatException(PRInt32 aState,
     rv = ldapACBundle->GetStringFromID(aState, getter_Copies(errMsg));
     if (NS_FAILED(rv)) {
         NS_ERROR("nsAbLDAPAutoCompleteFormatter::FormatException():"
-                 " error getting general error from bundle"
-                 " chrome://mailnews/locale/addressbook/ldapAutoCompErrs.properties");
+                 " error getting general error from bundle "
+                 LDAP_AUTOCOMPLETE_ERROR_BUNDLE);
         return rv;
     }
 
@@ -229,8 +232,8 @@ nsAbLDAPAutoCompFormatter::FormatException(PRInt32 aState,
                                          getter_Copies(errCode));
     if (NS_FAILED(rv)) {
         NS_ERROR("nsAbLDAPAutoCompleteFormatter::FormatException"
-                   "(): error getting 'errCode' string from bundle "
-                   "chrome://mozldap/locale/ldap.properties");
+                 "(): error getting 'errCode' string from bundle "
+                 LDAP_AUTOCOMPLETE_ERROR_BUNDLE);
         return rv;
     }
 
@@ -251,7 +254,7 @@ nsAbLDAPAutoCompFormatter::FormatException(PRInt32 aState,
         if (NS_FAILED(rv)) {
             NS_ERROR("nsAbLDAPAutoCompleteFormatter::FormatException"
                      "(): error getting string 2 from bundle "
-                     "chrome://mozldap/locale/ldap.properties");
+                     LDAP_ERROR_BUNDLE);
             return rv;
         }
   
@@ -276,7 +279,7 @@ nsAbLDAPAutoCompFormatter::FormatException(PRInt32 aState,
             NS_ERROR("nsAbLDAPAutoCompleteFormatter::FormatException"
                      "(): error getting specific non LDAP error-string "
                      "from bundle "
-                     "chrome://mozldap/locale/ldap.properties");
+                     LDAP_AUTOCOMPLETE_ERROR_BUNDLE);
             return rv;
         }
     }
@@ -293,7 +296,7 @@ nsAbLDAPAutoCompFormatter::FormatException(PRInt32 aState,
         if (NS_FAILED(rv)) {
             NS_ERROR("nsAbLDAPAutoCompleteFormatter::FormatException()"
                      "(): error getting hint string from bundle "
-                     "chrome://mozldap/locale/ldap.properties");
+                     LDAP_AUTOCOMPLETE_ERROR_BUNDLE);
             return rv;
         }
     }
