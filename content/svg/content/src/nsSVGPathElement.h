@@ -94,6 +94,7 @@ protected:
                                        nsINodeInfo *aNodeInfo);
   nsSVGPathElement(nsINodeInfo *aNodeInfo);
   virtual ~nsSVGPathElement();
+  nsresult Init();
 
 public:
   // interfaces:
@@ -131,6 +132,7 @@ protected:
   nsresult CreatePathSegList();
 
   nsCOMPtr<nsIDOMSVGPathSegList> mSegments;
+  nsCOMPtr<nsIDOMSVGAnimatedNumber> mPathLength;
   nsSVGPathList mPathData;
 };
 

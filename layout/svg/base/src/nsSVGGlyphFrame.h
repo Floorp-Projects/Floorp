@@ -127,6 +127,7 @@ public:
   // nsISVGGlyphFragmentLeaf interface:
   NS_IMETHOD_(void) SetGlyphPosition(float x, float y);
   NS_IMETHOD GetGlyphMetrics(nsISVGRendererGlyphMetrics** metrics);
+  NS_IMETHOD_(nsSVGTextPathFrame*) FindTextPathParent();
   NS_IMETHOD_(PRBool) IsStartOfChunk(); // == is new absolutely positioned chunk.
   NS_IMETHOD_(void) GetAdjustedPosition(/* inout */ float &x, /* inout */ float &y);
 
