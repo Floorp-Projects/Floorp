@@ -145,6 +145,7 @@ public:
     NS_IMETHOD SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight) { return NS_OK; }
     NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus) ;
     NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
+    NS_IMETHOD GetAttention(PRInt32 aCycleCount);
     
     // be notified that a some form of drag event needs to go into Gecko
     virtual PRBool DragEvent(unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers);

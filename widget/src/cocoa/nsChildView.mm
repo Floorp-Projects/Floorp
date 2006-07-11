@@ -1842,7 +1842,7 @@ NS_IMETHODIMP nsChildView::SetTitle(const nsAString& title)
 
 NS_IMETHODIMP nsChildView::GetAttention(PRInt32 aCycleCount)
 {
-  [NSApp requestUserAttention:NSCriticalRequest];
+  [NSApp requestUserAttention:NSInformationalRequest];
   return NS_OK;
 }
 
