@@ -307,19 +307,15 @@ function updateCertDump()
 }
 
 function getProxyOnUIThread(aObject, aInterface) {
-    var eventQSvc = Components.
-            classes["@mozilla.org/event-queue-service;1"].
-            getService(Components.interfaces.nsIEventQueueService);
-
-    var uiQueue = eventQSvc.
-            getSpecialEventQueue(Components.interfaces.
-            nsIEventQueueService.UI_THREAD_EVENT_QUEUE);
+    var mainThread = Components.
+            classes["@mozilla.org/thread-manager;1"].
+            getService().mainThread;
 
     var proxyMgr = Components.
             classes["@mozilla.org/xpcomproxy;1"].
             getService(Components.interfaces.nsIProxyObjectManager);
 
-    return proxyMgr.getProxyForObject(uiQueue,
+    return proxyMgr.getProxyForObject(mainThread,
             aInterface, aObject, 5);
-    // 5 == PROXY_ALWAYS | PROXY_SYNC
+    // 5 == NS_PROXY_ALWAYS | NS_PROXY_SYNC
 }
