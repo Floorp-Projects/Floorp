@@ -54,6 +54,8 @@ var gIoService = Cc[IO_CONTRACTID].getService(Ci.nsIIOService);
 var gUnescapeHTML = Cc[UNESCAPE_CONTRACTID].
                     getService(Ci.nsIScriptableUnescapeHTML);
 
+const XMLNS = "http://www.w3.org/XML/1998/namespace";
+
 /***** Some general utils *****/
 function strToURI(link, base) {
   var base = base || null;
@@ -120,6 +122,33 @@ function plainTextFromTextConstruct(textConstruct) {
   return textConstruct;
 }
 
+/**
+ * Searches through an array of links and returns a JS array 
+ * of matching property bags.
+ */
+const IANA_URI = "http://www.iana.org/assignments/relation/";
+function findAtomLinks(rel, links) {
+  var rvLinks = [];
+  for (var i = 0; i < links.length; ++i) {
+    var linkElement = links.queryElementAt(i, Ci.nsIPropertyBag2);
+    // atom:link MUST have @href
+    if (bagHasKey(linkElement, "href")) {
+      var relAttribute = null;
+      if (bagHasKey(linkElement, "rel"))
+        relAttribute = linkElement.getPropertyAsAString("rel")
+      if ((!relAttribute && rel == "alternate") || relAttribute == rel) {
+        rvLinks.push(linkElement);
+        continue;
+      }
+      // catch relations specified by IANA URI 
+      if (relAttribute == IANA_URI + rel) {
+        rvLinks.push(linkElement);
+      }
+    }
+  }
+  return rvLinks;
+}
+
 function xmlEscape(s) {
   s = s.replace(/&/g, "&amp;");
   s = s.replace(/>/g, "&gt;");
@@ -136,6 +165,17 @@ function arrayContains(array, element) {
     }
   }
   return false;
+}
+
+// XXX add hasKey to nsIPropertyBag
+function bagHasKey(bag, key) {
+  try {
+    bag.getProperty(key);
+    return true;
+  }
+  catch (e) {
+    return false;
+  }
 }
 
 /**
@@ -235,7 +275,8 @@ var gNamespaces = {
   "http://www.w3.org/1999/02/22-rdf-syntax-ns#":"rdf",
   "http://purl.org/rss/1.0/":"rss1",
   "http://wellformedweb.org/CommentAPI/":"wfw",                              
-  "http://purl.org/rss/1.0/modules/wiki/":"wiki" 
+  "http://purl.org/rss/1.0/modules/wiki/":"wiki", 
+  "http://www.w3.org/XML/1998/namespace":"xml"
 }
 
 // lets us know to ignore extraneous attributes like 
@@ -284,6 +325,7 @@ function Feed() {
   this._title = null;
   this.items = [];
   this.link = null;
+  this.baseURI = null;
 }
 Feed.prototype = {
   subtitle: function Feed_subtitle(doStripTags) {
@@ -319,11 +361,33 @@ Feed.prototype = {
 
   normalize: function Feed_normalize() {
     fieldsToObj(this, this.searchLists);
-    if (this.skipDays) {
+    if (this.skipDays)
       this.skipDays = this.skipDays.getProperty("days");
-    }
-    if (this.skipHours) {
+    if (this.skipHours)
       this.skipHours = this.skipHours.getProperty("hours");
+  
+    // Assign Atom link if needed
+    if (bagHasKey(this.fields, "links"))
+      this._atomLinksToURI();
+  },
+
+  _atomLinksToURI: function Feed_linkToURI() {
+    var links = this.fields.getPropertyAsInterface("links", Ci.nsIArray);
+    var alternates = findAtomLinks("alternate", links);
+    if (alternates.length > 0) {
+      try {
+        var href = alternates[0].getPropertyAsAString("href");
+        var base;
+        if (bagHasKey(alternates[0], "xml:base"))
+          base = strToURI(alternates[0].getPropertyAsAString("xml:base"),
+                          this.baseURI);
+        else
+          base = this.baseURI;
+        this.link = strToURI(alternates[0].getPropertyAsAString("href"), base);
+      }
+      catch(e) {
+        LOG(e);
+      }
     }
   },
 
@@ -343,6 +407,7 @@ function Entry() {
   this.fields = Cc["@mozilla.org/hash-property-bag;1"].
                 createInstance(Ci.nsIWritablePropertyBag2);
   this.link = null;
+  this.baseURI = null;
 }
 
 Entry.prototype = {
@@ -386,8 +451,11 @@ Entry.prototype = {
     _content: ["content:encoded","atom03:content","atom:content"]
   },
 
-  normalize: function Feed_normalize() {
+  normalize: function Entry_normalize() {
     fieldsToObj(this, this.searchLists);
+    // Assign Atom link if needed
+    if (bagHasKey(this.fields, "links"))
+      this._atomLinksToURI();
   },
 
   QueryInterface: function(iid) {
@@ -399,6 +467,8 @@ Entry.prototype = {
     throw Cr.NS_ERROR_NOINTERFACE;
   }
 }
+
+Entry.prototype._atomLinksToURI = Feed.prototype._atomLinksToURI;
 
 // TextConstruct represents and element that could contain (X)HTML
 function TextConstruct() {
@@ -752,6 +822,7 @@ function FeedProcessor() {
   this._buf =  "";
   this._feed = Cc[BAG_CONTRACTID].createInstance(Ci.nsIWritablePropertyBag2);
   this._handlerStack = [];
+  this._xmlBaseStack = [];
   this._depth = 0;
   this._state = "START";
   this._result = null;
@@ -877,6 +948,7 @@ FeedProcessor.prototype = {
     if (uri) {
       this._result.uri = uri;
       this._reader.baseURI = uri;
+      this._xmlBaseStack[0] = uri;
     }
   },
 
@@ -885,6 +957,8 @@ FeedProcessor.prototype = {
   // than the root.
   _docVerified: function FP_docVerified(version) {
     this._result.doc = Cc[FEED_CONTRACTID].createInstance(Ci.nsIFeed);
+    this._result.doc.baseURI = 
+      this._xmlBaseStack[this._xmlBaseStack.length - 1];
     this._result.doc.fields = this._feed;
     this._result.version = version;
   },
@@ -991,6 +1065,13 @@ FeedProcessor.prototype = {
     ++this._depth;
     var elementInfo;
 
+    // Check for xml:base
+    var base = attributes.getValueFromName(XMLNS, "base");
+    if (base) {
+      this._xmlBaseStack[this._depth] =
+        strToURI(base, this._xmlBaseStack[this._xmlBaseStack.length - 1]);
+    }
+
     // To identify the element we're dealing with, we look up the
     // namespace URI in our gNamespaces dictionary, which will give us
     // a "canonical" prefix for a namespace URI. For example, this
@@ -1071,6 +1152,10 @@ FeedProcessor.prototype = {
     if (elementInfo && !elementInfo.isWrapper)
       this._closeComplexElement(elementInfo);
   
+    // cut down xml:base context
+    if (this._xmlBaseStack.length == this._depth + 1)
+      this._xmlBaseStack = this._xmlBaseStack.slice(0, this._depth);
+
     // our new state is whatever is at the top of the stack now
     if (this._stack.length > 0)
       this._state = this._stack[this._stack.length - 1][1];
@@ -1115,6 +1200,7 @@ FeedProcessor.prototype = {
       obj = elementInfo.containerClass.createInstance(Ci.nsIFeedEntry);
       // Set the parent property of the entry.
       obj.parent = this._result.doc;
+      obj.baseURI = this._xmlBaseStack[this._xmlBaseStack.length - 1];
       props = obj.fields;
     }
     else {

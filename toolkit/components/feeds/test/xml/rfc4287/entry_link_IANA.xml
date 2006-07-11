@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: atom entry with IANA URI link relations
+Expect: feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).link.spec == "http://www.snellspace.com/public/alternate";
+
+-->
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <id>tag:snellspace.com,2006:/atom/conformance/linktest/</id>
+  <title>Atom Link Tests</title>
+  <updated>2005-01-18T15:10:00Z</updated>
+  <author><name>James Snell</name></author>
+  <link href="http://www.intertwingly.net/wiki/pie/LinkConformanceTests" />
+  <link rel="self" href="http://www.snellspace.com/public/linktests.xml" />
+  
+  <entry>
+    <id>tag:example.org,2006:/linkreltest/1</id>
+    <title>Does your reader support http://www.iana.org/assignments/relation/alternate properly? </title>
+    <updated>2006-04-25T12:12:12Z</updated>
+   <link rel="http://example.org/random"
+         href="http://www.snellspace.com/public/random" /> 
+    <link rel="http://www.iana.org/assignments/relation/alternate"
+          href="http://www.snellspace.com/public/alternate" />
+   <link rel="http://example.org/random"
+         href="http://www.snellspace.com/public/random" /> 
+    <content>This entry uses link/@rel="http://www.iana.org/assignments/relation/alternate".</content>
+  </entry>
+  
+</feed>

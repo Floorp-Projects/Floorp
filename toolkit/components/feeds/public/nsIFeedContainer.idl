@@ -55,6 +55,11 @@ interface nsIFeedContainer : nsISupports
   attribute AString identifier;
 
   /**
+   * The baseURI for the Entry or Feed.
+   */
+  attribute nsIURI baseURI;
+
+  /**
   * The fields found in the document. Common Atom
   * and RSS fields are normalized. This includes some namespaced
   * extensions such as dc:subject and content:encoded. 
