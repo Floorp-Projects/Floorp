@@ -911,6 +911,13 @@ NS_IMETHODIMP nsCocoaWindow::CaptureRollupEvents(nsIRollupListener * aListener,
 }
 
 
+NS_IMETHODIMP nsCocoaWindow::GetAttention(PRInt32 aCycleCount)
+{
+  [NSApp requestUserAttention:NSInformationalRequest];
+  return NS_OK;
+}
+
+
 @implementation WindowDelegate
 
 
