@@ -237,6 +237,10 @@ class XML extends XMLObjectImpl
     {
         XScriptAnnotation anno;
         XmlCursor curs = xo.newCursor();
+        if (curs.currentTokenType().isStartdoc())
+        {
+            curs.toFirstContentToken();
+        }
         try {
             anno = new XScriptAnnotation(curs);
             curs.setBookmark(anno);
@@ -710,7 +714,11 @@ todo need to handle namespace prefix not found in XML look for namespace type in
         {
             copyCurs = xo.newCursor();
             copyCurs.toFirstContentToken();
-
+            if (cursToCopy.currentTokenType() == XmlCursor.TokenType.STARTDOC)
+            {
+                cursToCopy.toNextToken();
+            }
+            
             cursToCopy.copyXml(copyCurs);
             if (!cursToCopy.toNextSibling())        // If element skip element.
             {
