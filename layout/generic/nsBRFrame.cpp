@@ -205,9 +205,21 @@ NS_IMETHODIMP BRFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruc
   //BR is also a whitespace, but sometimes GetNextWord() can't handle this
   //See bug 304891
   nsTextTransformer::Initialize();
-  if (nsTextTransformer::GetWordSelectEatSpaceAfter() &&
-      aPos->mDirection == eDirNext)
+
+  if (aPos->mWordMovementType != eDefaultBehavior) {
+    // aPos->mWordMovementType possible values:
+    //       eEndWord: eat the space if we're moving backwards
+    //       eStartWord: eat the space if we're moving forwards
+    if ((aPos->mWordMovementType == eEndWord) == (aPos->mDirection == eDirPrevious)) {
+      aPos->mEatingWS = PR_TRUE;
+    }
+  }
+  else if (aPos->mDirection == eDirNext && nsTextTransformer::GetWordSelectEatSpaceAfter()) {
+    // Use the hidden preference which is based on operating system behavior.
+    // This pref only affects whether moving forward by word should go to the end of this word or start of the next word.
+    // When going backwards, the start of the word is always used, on every operating system.
     aPos->mEatingWS = PR_TRUE;
+  }
 
  //offset of this content in its parents child list. base 0
   PRInt32 offsetBegin = mContent->GetParent()->IndexOf(mContent);

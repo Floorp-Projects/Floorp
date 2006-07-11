@@ -4817,7 +4817,19 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
       PRBool found = PR_FALSE;
       PRBool isWhitespace, wasTransformed;
       PRInt32 wordLen, contentLen;
-      PRBool wordSelectEatSpaceAfter = aPos->mDirection == eDirNext && tx.GetWordSelectEatSpaceAfter();
+      PRBool wordSelectEatSpace;
+      if (aPos->mWordMovementType != eDefaultBehavior) {
+        // aPos->mWordMovementType possible values:
+        //       eEndWord: eat the space if we're moving backwards
+        //       eStartWord: eat the space if we're moving forwards
+        wordSelectEatSpace = ((aPos->mWordMovementType == eEndWord) == (aPos->mDirection == eDirPrevious));
+      }
+      else {
+        // Use the hidden preference which is based on operating system behavior.
+        // This pref only affects whether moving forward by word should go to the end of this word or start of the next word.
+        // When going backwards, the start of the word is always used, on every operating system.
+        wordSelectEatSpace = aPos->mDirection == eDirNext && nsTextTransformer::GetWordSelectEatSpaceAfter();
+      }
       
       PRBool selectable;
       PRUint8 selectStyle;
@@ -4841,10 +4853,10 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
           if (tx.GetPrevWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace,
                              PR_FALSE, aPos->mIsKeyboardSelect) &&
             (aPos->mStartOffset - contentLen >= mContentOffset) ){
-            if ((wordSelectEatSpaceAfter ? isWhitespace : !isWhitespace) || !aPos->mEatingWS){
+            if ((wordSelectEatSpace ? isWhitespace : !isWhitespace) || !aPos->mEatingWS){
               aPos->mContentOffset = aPos->mStartOffset - contentLen;
               keepSearching = PR_TRUE;
-              if (wordSelectEatSpaceAfter ? isWhitespace : !isWhitespace)
+              if (wordSelectEatSpace ? isWhitespace : !isWhitespace)
                 aPos->mEatingWS = PR_TRUE;
 #ifdef IBMBIDI
               wordLen = (mState & NS_FRAME_IS_BIDI) ? mContentOffset : -1;
@@ -4852,12 +4864,12 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
               while (tx.GetPrevWord(PR_FALSE, &wordLen, &contentLen,
                                     &isWhitespace, PR_FALSE,
                                     aPos->mIsKeyboardSelect)){
-                if (wordSelectEatSpaceAfter ? !isWhitespace : aPos->mEatingWS)
+                if (wordSelectEatSpace ? !isWhitespace : aPos->mEatingWS)
                   break;
                 if (aPos->mStartOffset - contentLen <= mContentOffset)
                   goto TryNextFrame;
                 aPos->mContentOffset -= contentLen;
-                if (wordSelectEatSpaceAfter ? isWhitespace : !isWhitespace)
+                if (wordSelectEatSpace ? isWhitespace : !isWhitespace)
                   aPos->mEatingWS = PR_TRUE;
 #ifdef IBMBIDI
                 wordLen = (mState & NS_FRAME_IS_BIDI) ? mContentOffset : -1;
@@ -4889,10 +4901,10 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 
             // On some platforms (mac, unix), we want the selection to end
             // at the end of the word (not the beginning of the next one).
-            if ((wordSelectEatSpaceAfter ? isWhitespace : !isWhitespace) || !aPos->mEatingWS) {
+            if ((wordSelectEatSpace ? isWhitespace : !isWhitespace) || !aPos->mEatingWS) {
               aPos->mContentOffset = aPos->mStartOffset + contentLen;
               keepSearching = PR_TRUE;
-              if (wordSelectEatSpaceAfter ? isWhitespace : !isWhitespace)
+              if (wordSelectEatSpace ? isWhitespace : !isWhitespace)
                 aPos->mEatingWS = PR_TRUE;
 #ifdef IBMBIDI
               wordLen = (mState & NS_FRAME_IS_BIDI)
@@ -4900,11 +4912,11 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 #endif // IBMBIDI
               while (tx.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, &wasTransformed, PR_TRUE, PR_FALSE, aPos->mIsKeyboardSelect))
               {
-                if (wordSelectEatSpaceAfter ? !isWhitespace : aPos->mEatingWS)
+                if (wordSelectEatSpace ? !isWhitespace : aPos->mEatingWS)
                   break;
                 if (aPos->mStartOffset + contentLen >= (mContentLength + mContentOffset))
                   goto TryNextFrame;
-                if (wordSelectEatSpaceAfter ? isWhitespace : !isWhitespace)
+                if (wordSelectEatSpace ? isWhitespace : !isWhitespace)
                   aPos->mEatingWS = PR_TRUE;
                 aPos->mContentOffset += contentLen;
 #ifdef IBMBIDI
@@ -4931,7 +4943,7 @@ TryNextFrame:
       {
         aPos->mContentOffset = PR_MIN(aPos->mContentOffset, mContentOffset + mContentLength);
         aPos->mContentOffset = PR_MAX(aPos->mContentOffset, mContentOffset);
-        if (wordSelectEatSpaceAfter && aPos->mEatingWS) {
+        if (wordSelectEatSpace && aPos->mEatingWS) {
           //If we want to stop at beginning of the next word
           //GetFrameFromDirction should not return NS_ERROR_FAILURE at end of line
           aPos->mEatingWS = PR_FALSE;

@@ -59,6 +59,8 @@ struct SelectionDetails
 
 class nsIPresShell;
 
+enum EWordMovementType { eStartWord, eEndWord, eDefaultBehavior };
+
 /*PeekOffsetStruct
    *  @param mShell is used to get the PresContext useful for measuring text etc.
    *  @param mDesiredX is the "desired" location of the new caret
@@ -72,6 +74,10 @@ class nsIPresShell;
    *  @param mPreferLeft true = prev line end, false = next line begin
    *  @param mJumpLines if this is true then it's ok to cross lines while peeking
    *  @param mScrollViewStop if this is true then stop peeking across scroll view boundary
+   *  @param mWordMovementType an enum that determines whether to prefer the start or end of a word
+   *                                or to use the default beahvior, which is a combination of 
+   *                                direction and the platform-based pref
+   *                                "layout.word_select.eat_space_to_next_word"
 */
 struct nsPeekOffsetStruct
 {
@@ -85,7 +91,8 @@ struct nsPeekOffsetStruct
                PRBool aJumpLines,
                PRBool aScrollViewStop,
                PRBool aIsKeyboardSelect,
-               PRBool aVisual)
+               PRBool aVisual,
+               EWordMovementType aWordMovementType = eDefaultBehavior )
       {
        mShell=aShell;
        mDesiredX=aDesiredX;
@@ -98,6 +105,7 @@ struct nsPeekOffsetStruct
        mScrollViewStop = aScrollViewStop;
        mIsKeyboardSelect = aIsKeyboardSelect;
        mVisual = aVisual;
+       mWordMovementType = aWordMovementType;
       }
   nsIPresShell *mShell;
   nscoord mDesiredX;
@@ -114,6 +122,7 @@ struct nsPeekOffsetStruct
   PRBool mScrollViewStop;
   PRBool mIsKeyboardSelect;
   PRBool mVisual;
+  EWordMovementType mWordMovementType;
 };
 
 struct nsPrevNextBidiLevels
