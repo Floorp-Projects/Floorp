@@ -261,12 +261,12 @@ nsJSScriptTimeoutHandler::Init(nsIScriptContext *aContext, PRBool aIsInterval,
 
     mFunObj = funobj;
 
-    /* Create our arg array - leave an extra slot for a secret final argument
-      that indicates to the called function how "late" the timeout is.  We
-      will fill that in when SetLateness is called.
-     */
+    // Create our arg array - leave an extra slot for a secret final argument
+    // that indicates to the called function how "late" the timeout is.  We
+    // will fill that in when SetLateness is called.
     nsCOMPtr<nsIArray> array;
-    rv = NS_CreateJSArgv(cx, argc-1, nsnull, getter_AddRefs(array));
+    rv = NS_CreateJSArgv(cx, (argc > 1) ? argc - 1 : argc, nsnull,
+                         getter_AddRefs(array));
     if (NS_FAILED(rv)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
