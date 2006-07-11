@@ -50,6 +50,8 @@
 #include "nsIAtom.h"
 #include "nsCOMPtr.h"
 
+class nsFixedSizeAllocator;
+
 class nsNodeInfo : public nsINodeInfo
 {
 public:
@@ -95,9 +97,7 @@ public:
   static void ClearCache();
 
 private:
-  void Clear();
-
-  static nsNodeInfo *sCachedNodeInfo;
+  static nsFixedSizeAllocator* sNodeInfoPool;
 
   /**
    * This method gets called by Release() when it's time to delete 

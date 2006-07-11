@@ -191,7 +191,6 @@ nsLayoutStatics::Shutdown()
   NS_LogDtor(&sLayoutStaticRefcnt, "nsLayoutStatics", 1);
 #endif
 
-  nsNodeInfo::ClearCache();
   txXSLTProcessor::shutdown();
   nsDOMAttribute::Shutdown();
   nsRange::Shutdown();
