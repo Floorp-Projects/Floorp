@@ -92,7 +92,8 @@
       <hbox class="indent" align="center" id="placeBox">
         <label value="&place.label;" accesskey="&place.accesskey;" control="identity.sig_bottom"/>
         <menulist wsm_persist="true" id="identity.sig_bottom" genericattr="true"
-                  pref="true" preftype="bool" prefattribute="value">
+                  pref="true" preftype="bool" prefattribute="value"
+                  prefstring="mail.identity.%identitykey%.sig_bottom">
           <menupopup>
             <menuitem value="true" label="&belowText.label;"/>
             <menuitem value="false" label="&aboveText.label;"/>
