@@ -1,4 +1,4 @@
-<h1>Firefox Survey</h1>
+<?php echo $html->image('firefox-survey-title.png', array('alt'=>'Firefox Survey')); ?>
 <p>You're on your way to taking the Firefox Survey, Summer '06 edition!</p>
 <p>After you supply your name (optional) and email address (required) we'll send you the first profile survey.</p>
 <div id="UsersAdd">
