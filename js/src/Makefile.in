@@ -382,5 +382,7 @@ endif
 # Extra dependancies and rules for keyword switch code
 jsscan.$(OBJ_SUFFIX): jsautokw.h jskeyword.tbl
 
-jsautokw.h: host_jskwgen$(HOST_BIN_SUFFIX) jskeyword.tbl
+host_jskwgen.$(OBJ_SUFFIX): jsconfig.h jskeyword.tbl
+
+jsautokw.h: host_jskwgen$(HOST_BIN_SUFFIX)
 	./host_jskwgen$(HOST_BIN_SUFFIX) $@
