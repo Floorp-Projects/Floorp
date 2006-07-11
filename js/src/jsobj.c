@@ -1908,7 +1908,16 @@ js_PutBlockObject(JSContext *cx, JSObject *obj)
     jsval v;
 
     for (sprop = OBJ_SCOPE(obj)->lastProp; sprop; sprop = sprop->parent) {
-        if (!OBJ_GET_PROPERTY(cx, obj, sprop->id, &v)) {
+        if (sprop->getter != js_BlockClass.getProperty)
+            continue;
+        if (!(sprop->flags & SPROP_HAS_SHORTID))
+            continue;
+        if (!sprop->getter(cx, obj, INT_TO_JSVAL(sprop->shortid), &v) ||
+            !js_DefineNativeProperty(cx, obj, sprop->id,
+                                     v, NULL, NULL,
+                                     JSPROP_ENUMERATE | JSPROP_PERMANENT,
+                                     SPROP_HAS_SHORTID, sprop->shortid,
+                                     NULL)) {
             JS_SetPrivate(cx, obj, NULL);
             return JS_FALSE;
         }

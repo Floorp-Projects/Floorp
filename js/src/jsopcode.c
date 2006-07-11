@@ -1467,19 +1467,26 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
               }
 
               case JSOP_LEAVEBLOCK:
+              case JSOP_LEAVEBLOCKEXPR:
               {
                 uintN top, depth;
 
                 sn = js_GetSrcNote(jp->script, pc);
                 todo = -2;
-                if (sn && SN_TYPE(sn) == SRC_HIDDEN)
+                if (sn && SN_TYPE(sn) == SRC_HIDDEN) {
+                    JS_ASSERT(op == JSOP_LEAVEBLOCK);
                     break;
+                }
+                if (op == JSOP_LEAVEBLOCKEXPR)
+                    rval = POP_STR();
                 top = ss->top;
                 depth = GET_UINT16(pc);
                 JS_ASSERT(top >= depth);
                 top -= depth;
                 ss->top = top;
                 ss->sprinter.offset = ss->offsets[top];
+                if (op == JSOP_LEAVEBLOCKEXPR)
+                    todo = SprintCString(&ss->sprinter, rval);
                 break;
               }
 
