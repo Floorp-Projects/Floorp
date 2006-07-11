@@ -43,10 +43,11 @@
 #include "nsIDOMSVGLengthList.h"
 
 class nsISVGRendererGlyphMetrics;
+class nsSVGTextPathFrame;
 
-// {33397E2B-C1DC-49f0-9738-4891FE083C92}
+// {bc02467f-f611-4c0f-8d95-e2923d66f775}
 #define NS_ISVGGLYPHFRAGMENTLEAF_IID \
-{ 0x33397e2b, 0xc1dc, 0x49f0, { 0x97, 0x38, 0x48, 0x91, 0xfe, 0x8, 0x3c, 0x92 } }
+{ 0xbc02467f, 0xf611, 0x4c0f, { 0x8d, 0x95, 0xe2, 0x92, 0x3d, 0x66, 0xf7, 0x75 } }
 
 class nsISVGGlyphFragmentLeaf : public nsISVGGlyphFragmentNode
 {
@@ -56,6 +57,7 @@ public:
 
   NS_IMETHOD_(void) SetGlyphPosition(float x, float y)=0;
   NS_IMETHOD GetGlyphMetrics(nsISVGRendererGlyphMetrics** metrics)=0;
+  NS_IMETHOD_(nsSVGTextPathFrame*) FindTextPathParent()=0;
   NS_IMETHOD_(PRBool) IsStartOfChunk()=0; // == is new absolutely positioned chunk.
   NS_IMETHOD_(void) GetAdjustedPosition(/* inout */ float &x, /* inout */ float &y)=0;
 

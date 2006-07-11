@@ -84,6 +84,7 @@ public:
 
   // nsSVGTextPathFrame methods:
   nsSVGFlattenedPath *GetFlattenedPath();
+  nsIFrame *GetPathFrame();
 
    // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);

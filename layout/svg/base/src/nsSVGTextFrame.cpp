@@ -41,6 +41,7 @@
 #include "nsWeakReference.h"
 #include "nsIDOMSVGLengthList.h"
 #include "nsIDOMSVGLength.h"
+#include "nsIDOMSVGAnimatedNumber.h"
 #include "nsISVGGlyphFragmentNode.h"
 #include "nsISVGGlyphFragmentLeaf.h"
 #include "nsISVGRendererGlyphMetrics.h"
@@ -515,31 +516,42 @@ GetSingleValue(nsISVGGlyphFragmentLeaf *fragment,
     list->GetItem(0, getter_AddRefs(length));
     length->GetValue(val);
 
-    /* check for % sizing of textpath */
-    PRUint16 type;
-    length->GetUnitType(&type);
-    if (type == nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-      nsIFrame *glyph;
-      CallQueryInterface(fragment, &glyph);
+    nsSVGTextPathFrame *textPath = fragment->FindTextPathParent();
 
-      nsSVGTextPathFrame *textPath = nsnull;
-      /* check if we're the child of a textPath */
-      for (nsIFrame *frame = glyph; frame != nsnull; frame = frame->GetParent())
-        if (frame->GetType() == nsLayoutAtoms::svgTextPathFrame) {
-          textPath = NS_STATIC_CAST(nsSVGTextPathFrame*, frame);
-          break;
-        }
+    if (textPath) {
+      nsAutoPtr<nsSVGFlattenedPath> data(textPath->GetFlattenedPath());
+      if (!data)
+        return;
 
-      if (textPath) {
-        nsAutoPtr<nsSVGFlattenedPath> data(textPath->GetFlattenedPath());
+      nsIFrame *pathFrame = textPath->GetPathFrame();
+      if (!pathFrame)
+        return;
 
-        if (!data)
-          return;
-
+      /* check for % sizing of textpath */
+      PRUint16 type;
+      length->GetUnitType(&type);
+      if (type == nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
         float percent;
         length->GetValueInSpecifiedUnits(&percent);
 
         *val = data->GetLength()*percent/100.0f;
+      } else if (pathFrame->GetContent()->HasAttr(kNameSpaceID_None, 
+                                                  nsGkAtoms::pathLength)) {
+         nsCOMPtr<nsIDOMSVGPathElement> pathElement = 
+                                     do_QueryInterface(pathFrame->GetContent());
+        if (!pathElement)
+          return;
+
+        nsIDOMSVGAnimatedNumber* pathLength;
+        pathElement->GetPathLength(&pathLength);
+        if (!pathLength)
+          return;
+        float pl;
+        pathLength->GetAnimVal(&pl);
+        if (pl) 
+           *val *= data->GetLength() / pl;
+        else 
+           *val = 0;
       }
     }
   }

@@ -169,8 +169,8 @@ nsSVGTextPathFrame::GetDy()
 //----------------------------------------------------------------------
 // nsSVGTextPathFrame methods:
 
-nsSVGFlattenedPath *
-nsSVGTextPathFrame::GetFlattenedPath() {
+nsIFrame *
+nsSVGTextPathFrame::GetPathFrame() {
   nsIFrame *path = nsnull;
 
   nsAutoString str;
@@ -178,12 +178,20 @@ nsSVGTextPathFrame::GetFlattenedPath() {
 
   nsCOMPtr<nsIURI> targetURI;
   nsCOMPtr<nsIURI> base = mContent->GetBaseURI();
-  nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI),
-   str, mContent->GetCurrentDoc(), base);
+  nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), str,
+                                            mContent->GetCurrentDoc(), base);
 
   nsSVGUtils::GetReferencedFrame(&path, targetURI, mContent,
                                  GetPresContext()->PresShell());
   if (!path || (path->GetType() != nsGkAtoms::svgPathGeometryFrame))
+    return nsnull;
+  return path;
+}
+
+nsSVGFlattenedPath *
+nsSVGTextPathFrame::GetFlattenedPath() {
+  nsIFrame *path = GetPathFrame();
+  if (!path)
     return nsnull;
 
   if (!mSegments) {

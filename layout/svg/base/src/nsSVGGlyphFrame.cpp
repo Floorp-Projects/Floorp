@@ -417,19 +417,7 @@ NS_IMETHODIMP
 nsSVGGlyphFrame::GetCharacterPosition(nsSVGCharacterPosition **aCharacterPosition)
 {
   *aCharacterPosition = nsnull;
-  nsSVGTextPathFrame *textPath = nsnull;
-
-  /* check if we're the child of a textPath */
-  for (nsIFrame *frame = GetParent();
-       frame != nsnull;
-       frame = frame->GetParent()) {
-    if (frame->GetType() == nsLayoutAtoms::svgTextPathFrame) {
-      textPath = NS_STATIC_CAST(nsSVGTextPathFrame*, frame);
-      break;
-    }
-    if (frame->GetType() == nsLayoutAtoms::svgTextFrame)
-      break;
-  }
+  nsSVGTextPathFrame *textPath = FindTextPathParent();
 
   /* we're an ordinary fragment - return */
   /* XXX: we might want to use this for individual x/y/dx/dy adjustment */
@@ -690,6 +678,22 @@ nsSVGGlyphFrame::GetGlyphMetrics(nsISVGRendererGlyphMetrics** metrics)
   *metrics = mMetrics;
   NS_IF_ADDREF(*metrics);
   return NS_OK;
+}
+
+NS_IMETHODIMP_(nsSVGTextPathFrame*) 
+nsSVGGlyphFrame::FindTextPathParent()
+{
+  /* check if we're the child of a textPath */
+  for (nsIFrame *frame = GetParent();
+       frame != nsnull;
+       frame = frame->GetParent()) {
+    nsIAtom* type = frame->GetType();
+    if (type == nsLayoutAtoms::svgTextPathFrame) {
+      return NS_STATIC_CAST(nsSVGTextPathFrame*, frame);
+    } else if (type == nsLayoutAtoms::svgTextFrame)
+      return nsnull;
+  }
+  return nsnull;
 }
 
 NS_IMETHODIMP_(PRBool)

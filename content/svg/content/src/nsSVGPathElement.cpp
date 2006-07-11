@@ -46,6 +46,7 @@
 #include "nsSVGPathElement.h"
 #include "nsISVGValueUtils.h"
 #include "nsSVGUtils.h"
+#include "nsSVGAnimatedNumber.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Path)
 
@@ -72,6 +73,20 @@ nsSVGPathElement::nsSVGPathElement(nsINodeInfo* aNodeInfo)
 {
 }
 
+nsresult
+nsSVGPathElement::Init()
+{
+  nsresult rv = nsSVGPathElementBase::Init();
+  NS_ENSURE_SUCCESS(rv, rv);
+  {
+    rv = NS_NewSVGAnimatedNumber(getter_AddRefs(mPathLength), 0.0);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = AddMappedSVGValue(nsSVGAtoms::pathLength, mPathLength);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return NS_OK;
+}
+
 nsSVGPathElement::~nsSVGPathElement()
 {
   if (mSegments)
@@ -90,7 +105,9 @@ NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGPathElement)
 NS_IMETHODIMP
 nsSVGPathElement::GetPathLength(nsIDOMSVGAnimatedNumber * *aPathLength)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aPathLength = mPathLength;
+  NS_IF_ADDREF(*aPathLength);
+  return NS_OK;
 }
 
 /* float getTotalLength (); */
