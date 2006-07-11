@@ -277,16 +277,16 @@ if (($mimetype == 'application/x-shockwave-flash' ||
  * Set up our plugin array based on what we've found.
  */
 $plugin = array();
-$plugin['name'] = !empty($name) ? $name : null;
-$plugin['guid'] = !empty($guid) ? $guid : null;
-$plugin['mimetype'] = !empty($mimetype) ? $mimetype : null;
+$plugin['mimetype'] = !empty($mimetype) ? $mimetype : '-1';
+$plugin['name'] = !empty($name) ? $name : '-1';
+$plugin['guid'] = !empty($guid) ? $guid : '-1';
 $plugin['version'] = !empty($version) ? $version : null;
 $plugin['iconUrl'] = !empty($iconUrl) ? $iconUrl : null;
 $plugin['XPILocation'] = !empty($XPILocation) ? $XPILocation : null;
 $plugin['installerShowsUI'] = !empty($installerShowsUI) ? $installerShowsUI : null;
 $plugin['manualInstallationURL'] = !empty($manualInstallationURL) ? $manualInstallationURL : null;
 $plugin['licenseURL'] = !empty($licenseURL) ? $licenseURL : null;
-$plugin['needsRestart'] = $needsRestart;
+$plugin['needsRestart'] = !empty($needsRestart) ? $needsRestart : 'false';
 
 $tpl->assign('plugin',$plugin);
 

@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 <RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:pfs="http://www.mozilla.org/2004/pfs-rdf#">
 
-{if $plugin.name}
 <RDF:Description about="urn:mozilla:plugin-results:{$plugin.mimetype|escape:html:"UTF-8"}">
  <pfs:plugins><RDF:Seq>
   <RDF:li resource="urn:mozilla:plugin:{$plugin.guid|escape:html:"UTF-8"}"/>
@@ -26,6 +25,5 @@
  <pfs:licenseURL>{$plugin.licenseURL|escape:html:"UTF-8"}</pfs:licenseURL>
  <pfs:needsRestart>{$plugin.needsRestart|escape:html:"UTF-8"}</pfs:needsRestart>
 </RDF:Description>
-{/if}
 
 </RDF:RDF>
