@@ -110,11 +110,8 @@ nsPopupBoxObject::HidePopup()
   nsIPopupSetFrame *popupSet = GetPopupSetFrame();
   nsIFrame *ourFrame = GetFrame(PR_FALSE);
   if (ourFrame && popupSet) {
-    nsWeakFrame weakFrame(ourFrame);
     popupSet->HidePopup(ourFrame);
-    if (weakFrame.IsAlive()) {
-      popupSet->DestroyPopup(ourFrame, PR_TRUE);
-    }
+    popupSet->DestroyPopup(ourFrame, PR_TRUE);
   }
 
   return NS_OK;

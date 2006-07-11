@@ -117,8 +117,7 @@ public:
   PRBool OnCreate(PRInt32 aX, PRInt32 aY, nsIContent* aPopupContent);
   PRBool OnDestroy(nsIContent* aPopupContent);
   PRBool OnCreated(PRInt32 aX, PRInt32 aY, nsIContent* aPopupContent);
-  static PRBool OnDestroyed(nsPresContext* aPresContext,
-                            nsIContent* aPopupContent);
+  PRBool OnDestroyed(nsIContent* aPopupContent);
 
   void ActivatePopup(nsPopupFrameList* aEntry, PRBool aActivateFlag);
   void OpenPopup(nsPopupFrameList* aEntry, PRBool aOpenFlag);

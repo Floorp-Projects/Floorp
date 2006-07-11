@@ -94,14 +94,12 @@ class nsIStyleSheet;
 class nsCSSFrameConstructor;
 class nsISelection;
 template<class E> class nsCOMArray;
-class nsWeakFrame;
 
 typedef short SelectionType;
 
 #define NS_IPRESSHELL_IID     \
-{ 0x67880b18, 0xaf91, 0x431b, \
-  { 0x89, 0x69, 0xfa, 0xd9, 0x2b, 0x3c, 0x33, 0x32 } }
-
+{ 0xa736d2fd, 0x0191, 0x42ea, \
+  { 0xb1, 0xb0, 0x80, 0x45, 0x1d, 0xfa, 0x03, 0x53 } }
 
 // Constants uses for ScrollFrameIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -751,8 +749,6 @@ public:
                              nscolor aBackgroundColor,
                              nsIRenderingContext** aRenderedContext) = 0;
 
-  void AddWeakFrame(nsWeakFrame* aWeakFrame);
-  void RemoveWeakFrame(nsWeakFrame* aWeakFrame);
 protected:
   // IMPORTANT: The ownership implicit in the following member variables
   // has been explicitly checked.  If you add any members to this class,
@@ -783,10 +779,7 @@ protected:
 
   // Set to true when the accessibility service is being used to mirror
   // the dom/layout trees
-  PRPackedBool              mIsAccessibilityActive;
-
-  // A list of weak frames. This is a pointer to the last item in the list.
-  nsWeakFrame*              mWeakFrames;
+  PRPackedBool mIsAccessibilityActive;
 };
 
 /**

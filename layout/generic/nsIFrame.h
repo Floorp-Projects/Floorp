@@ -1690,64 +1690,6 @@ private:
   NS_IMETHOD_(nsrefcnt) Release(void) = 0;
 };
 
-//----------------------------------------------------------------------
-
-/**
- * nsWeakFrame can be used to keep a reference to a nsIFrame in a safe way.
- * Whenever an nsIFrame object is deleted, the nsWeakFrames pointing
- * to it will be cleared.
- *
- * Create nsWeakFrame object when it is sure that nsIFrame object
- * is alive and after some operations which may destroy the nsIFrame
- * (for example any DOM modifications) use IsAlive() or GetFrame() methods to
- * check whether it is safe to continue to use the nsIFrame object.
- *
- * @note The usage of this class should be kept to a minimum.
- */
-
-class nsWeakFrame {
-public:
-  nsWeakFrame(nsIFrame* aFrame)
-  {
-    mPrev = nsnull;
-    mFrame = aFrame;
-    if (mFrame) {
-      nsIPresShell* shell = mFrame->GetPresContext()->GetPresShell();
-      NS_WARN_IF_FALSE(shell, "Null PresShell in nsWeakFrame!");
-      if (shell) {
-        shell->AddWeakFrame(this);
-      } else {
-        mFrame = nsnull;
-      }
-    }
-  }
-
-  void Clear(nsIPresShell* aShell) {
-    if (aShell) {
-      aShell->RemoveWeakFrame(this);
-    }
-    mFrame = nsnull;
-    mPrev = nsnull;
-  }
-
-  PRBool IsAlive() { return !!mFrame; }
-
-  nsIFrame* GetFrame() { return mFrame; }
-
-  nsWeakFrame* GetPreviousWeakFrame() { return mPrev; }
-
-  void SetPreviousWeakFrame(nsWeakFrame* aPrev) { mPrev = aPrev; }
-
-  ~nsWeakFrame()
-  {
-    Clear(mFrame ? mFrame->GetPresContext()->GetPresShell() : nsnull);
-  }
-private:
-  nsWeakFrame*  mPrev;
-  nsIFrame*     mFrame;
-};
-
-
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIFrame, NS_IFRAME_IID)
 
 #endif /* nsIFrame_h___ */
