@@ -8,7 +8,6 @@ calendar.jar:
 %   overlay chrome://communicator/content/pref/pref-appearance.xul chrome://calendar/content/pref/prefOverlay.xul
 #endif
 %   skin calendar classic/1.0 %skin/classic/calendar/
-%   skin calendar modern/1.0 %skin/modern/calendar/
 *   content/calendar/applicationUtil.js (content/applicationUtil.js)
     content/calendar/attachFile.js (content/attachFile.js)
     content/calendar/calendar.js (content/calendar.js)
@@ -125,30 +124,4 @@ calendar.jar:
     skin/classic/calendar/taskbar-cal-act.gif (skin/classic/taskbar-cal-act.gif)
     skin/classic/calendar/taskbar-calalarm.gif (skin/classic/taskbar-calalarm.gif)
     skin/classic/calendar/taskbar-calalarm-act.gif (skin/classic/taskbar-calalarm-act.gif)
-    skin/modern/calendar/btn1.png (skin/modern/btn1.png)
-    skin/modern/calendar/calendar-16.gif (skin/modern/calendar-16.gif)
-    skin/modern/calendar/calendar.css (skin/modern/calendar.css)
-    skin/modern/calendar/calendar_topbar.gif (skin/modern/calendar_topbar.gif)
-    skin/modern/calendar/calendar-button.css (skin/modern/calendar-button.css)
-    skin/modern/calendar/calendartoolbar.png (skin/modern/calendartoolbar.png)
-    skin/modern/calendar/calendartoolbar_small.png (skin/modern/calendartoolbar_small.png)
-    skin/modern/calendar/dialogOverlay.css (skin/modern/dialogOverlay.css)
-    skin/modern/calendar/overlay.css (skin/modern/overlay.css)
-    skin/modern/calendar/prevnextarrow.png (skin/modern/prevnextarrow.png)
-    skin/modern/calendar/synch_animated.gif (skin/modern/synch_animated.gif)
-    skin/modern/calendar/taskbar-cal.gif (skin/modern/taskbar-cal.gif)
-    skin/modern/calendar/taskbar-cal-act.gif (skin/modern/taskbar-cal-act.gif)
-    skin/modern/calendar/taskbar-calalarm.gif (skin/modern/taskbar-calalarm.gif)
-    skin/modern/calendar/taskbar-calalarm-act.gif (skin/modern/taskbar-calalarm-act.gif)
-    skin/modern/calendar/datetimepickers/datetimepickers.css (skin/modern/datetimepickers/datetimepickers.css)
-    skin/modern/calendar/datetimepickers/minimonth.css (skin/modern/datetimepickers/minimonth.css)
-    skin/modern/calendar/datetimepickers/left-arrow-hover.gif (skin/modern/datetimepickers/left-arrow-hover.gif)
-    skin/modern/calendar/datetimepickers/left-arrow.gif (skin/modern/datetimepickers/left-arrow.gif)
-    skin/modern/calendar/datetimepickers/right-arrow-hover.gif (skin/modern/datetimepickers/right-arrow-hover.gif)
-    skin/modern/calendar/datetimepickers/right-arrow.gif (skin/modern/datetimepickers/right-arrow.gif)
-    skin/modern/calendar/unifinder/checkbox_checked.png (skin/modern/unifinder/checkbox_checked.png)
-    skin/modern/calendar/unifinder/checkbox_unchecked.png (skin/modern/unifinder/checkbox_unchecked.png)
-    skin/modern/calendar/unifinder/priority_header.png (skin/modern/unifinder/priority_header.png)
-    skin/modern/calendar/unifinder/priority_high.png (skin/modern/unifinder/priority_high.png)
-    skin/modern/calendar/unifinder/priority_low.png (skin/modern/unifinder/priority_low.png)
 #endif
