@@ -1032,7 +1032,7 @@ nsWindowWatcher::RemoveWindow(nsIDOMWindow *aWindow)
     RemoveWindow(info);
     return NS_OK;
   }
-  NS_WARNING("requested removal of nonexistent window\n");
+  NS_WARNING("requested removal of nonexistent window");
   return NS_ERROR_INVALID_ARG;
 }
 
