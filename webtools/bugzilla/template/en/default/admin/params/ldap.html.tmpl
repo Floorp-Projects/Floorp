@@ -27,7 +27,10 @@
 [% param_descs = {
   LDAPserver => "The name (and optionally port) of your LDAP server " _
                 "(e.g. ldap.company.com, or ldap.company.com:portnum). " _
-                "Can be prefixed with ldap:// (default) or ldaps:// (for a secure connection).",
+                "URI syntax can also be used, such as "_
+                "ldaps://ldap.company.com (for a secure connection) or " _
+                "ldapi://%2fvar%2flib%2fldap_sock (for a socket-based " _
+                "local connection.",
 
   LDAPstartls => "Whether to require encrypted communication once normal " _
                  "LDAP connection achieved with the server.",

@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.121 2006/06/07 23:20:27 vladd%bugzilla.org Exp $ -->
+<!-- $Id: installation.xml,v 1.122 2006/07/11 00:42:58 lpsolit%gmail.com Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -1378,6 +1378,15 @@ c:\perl\bin\perl.exe -xc:\bugzilla -wT "%s" %s
             </para>
             <para>Ex. <quote>ldap.company.com</quote>
              or <quote>ldap.company.com:3268</quote>
+            </para>
+            <para>You can also specify a LDAP URI, so as to use other
+            protocols, such as LDAPS or LDAPI. If port was not specified in
+            the URI, the default is either 389 or 636 for 'LDAP' and 'LDAPS'
+            schemes respectively.
+            </para>
+            <para>Ex. <quote>ldap://ldap.company.com</quote>,
+            <quote>ldaps://ldap.company.com</quote> or
+            <quote>ldapi://%2fvar%2flib%2fldap_sock</quote>
             </para>
            </listitem>
          </varlistentry>

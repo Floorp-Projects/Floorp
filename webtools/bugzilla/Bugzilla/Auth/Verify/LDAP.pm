@@ -40,9 +40,6 @@ use Bugzilla::Error;
 
 use Net::LDAP;
 
-use constant DEFAULT_PORT     => 389;
-use constant DEFAULT_SSL_PORT => 636;
-
 use constant admin_can_create_account => 0;
 use constant user_can_create_account  => 0;
 
@@ -140,31 +137,8 @@ sub ldap {
     my $server = Bugzilla->params->{"LDAPserver"};
     ThrowCodeError("ldap_server_not_defined") unless $server;
 
-    my $port = DEFAULT_PORT;
-    my $protocol = "ldap";
-
-    if ($server =~ /(ldap|ldaps):\/\/(.*)/) {
-        # ldap(s)://server(:port)
-        $protocol = $1;
-        my $server_part = $2;
-        if ($server_part =~ /:/) {
-            # ldap(s)://server:port
-            ($server, $port) = split(":", $server_part);
-        } else {
-            # ldap(s)://server
-            $server = $server_part;
-            if ($protocol eq "ldaps") {
-                $port = DEFAULT_SSL_PORT;
-            }
-        }
-    } elsif ($server =~ /:/) {
-        # server:port
-        ($server, $port) = split(":", $server);
-    }
-
-    my $conn_string = "$protocol://$server:$port";
-    $self->{ldap} = new Net::LDAP($conn_string) 
-        || ThrowCodeError("ldap_connect_failed", { server => $conn_string });
+    $self->{ldap} = new Net::LDAP($server)
+        || ThrowCodeError("ldap_connect_failed", { server => $server });
 
     # try to start TLS if needed
     if (Bugzilla->params->{"LDAPstarttls"}) {
