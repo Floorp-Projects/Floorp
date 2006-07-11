@@ -1603,6 +1603,29 @@ nsIPresShell::GetVerifyReflowFlags()
 #endif
 }
 
+void
+nsIPresShell::AddWeakFrame(nsWeakFrame* aWeakFrame)
+{
+  aWeakFrame->SetPreviousWeakFrame(mWeakFrames);
+  mWeakFrames = aWeakFrame;
+}
+
+void
+nsIPresShell::RemoveWeakFrame(nsWeakFrame* aWeakFrame)
+{
+  if (mWeakFrames == aWeakFrame) {
+    mWeakFrames = aWeakFrame->GetPreviousWeakFrame();
+    return;
+  }
+  nsWeakFrame* nextWeak = mWeakFrames;
+  while (nextWeak && nextWeak->GetPreviousWeakFrame() != aWeakFrame) {
+    nextWeak = nextWeak->GetPreviousWeakFrame();
+  }
+  if (nextWeak) {
+    nextWeak->SetPreviousWeakFrame(aWeakFrame->GetPreviousWeakFrame());
+  }
+}
+
 //----------------------------------------------------------------------
 
 nsresult
@@ -1930,6 +1953,11 @@ PresShell::Destroy()
   // Destroy the frame manager. This will destroy the frame hierarchy
   mFrameConstructor->WillDestroyFrameTree();
   FrameManager()->Destroy();
+
+  NS_WARN_IF_FALSE(!mWeakFrames, "Weak frames alive after destroying FrameManager");
+  while (mWeakFrames) {
+    mWeakFrames->Clear(this);
+  }
 
   // Let the style set do its cleanup.
   mStyleSet->Shutdown(mPresContext);
@@ -3170,6 +3198,16 @@ PresShell::NotifyDestroyingFrame(nsIFrame* aFrame)
 
     // Remove frame properties
     mPresContext->PropertyTable()->DeleteAllPropertiesFor(aFrame);
+  }
+
+  nsWeakFrame* weakFrame = mWeakFrames;
+  while (weakFrame) {
+    nsWeakFrame* prev = weakFrame->GetPreviousWeakFrame();
+    if (weakFrame->GetFrame() == aFrame) {
+      // This removes weakFrame from mWeakFrames.
+      weakFrame->Clear(this);
+    }
+    weakFrame = prev;
   }
 
   return NS_OK;
