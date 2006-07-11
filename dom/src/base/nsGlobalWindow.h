@@ -413,6 +413,7 @@ protected:
                                     PRBool aDoJSFixups,
                                     nsIArray *argv,
                                     nsISupports *aExtraArgument,
+                                    nsIPrincipal *aCalleePrincipal,
                                     nsIDOMWindow **aReturn);
 
   static void CloseWindow(nsISupports* aWindow);

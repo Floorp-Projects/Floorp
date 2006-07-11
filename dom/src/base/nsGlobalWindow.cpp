@@ -4269,7 +4269,8 @@ nsGlobalWindow::Open(const nsAString& aUrl, const nsAString& aName,
                       PR_FALSE,          // aDialog
                       PR_TRUE,           // aCalledNoScript
                       PR_FALSE,          // aDoJSFixups
-                      nsnull, nsnull, // No args
+                      nsnull, nsnull,    // No args
+                      GetPrincipal(),    // aCalleePrincipal
                       _retval);
 }
 
@@ -4319,6 +4320,7 @@ nsGlobalWindow::Open(nsIDOMWindow **_retval)
                       PR_FALSE,          // aCalledNoScript
                       PR_TRUE,           // aDoJSFixups
                       nsnull, nsnull,    // No args
+                      GetPrincipal(),    // aCalleePrincipal
                       _retval);
 }
 
@@ -4334,6 +4336,7 @@ nsGlobalWindow::OpenDialog(const nsAString& aUrl, const nsAString& aName,
                       PR_TRUE,                    // aCalledNoScript
                       PR_FALSE,                   // aDoJSFixups
                       nsnull, aExtraArgument,     // Arguments
+                      GetPrincipal(),             // aCalleePrincipal
                       _retval);
 }
 
@@ -4391,6 +4394,7 @@ nsGlobalWindow::OpenDialog(nsIDOMWindow** _retval)
                       PR_FALSE,            // aCalledNoScript
                       PR_FALSE,            // aDoJSFixups
                       argvArray, nsnull,   // Arguments
+                      GetPrincipal(),      // aCalleePrincipal
                       _retval);
 }
 
@@ -5593,26 +5597,29 @@ nsGlobalWindow::GetDocument(nsIDOMDocumentView ** aDocumentView)
 NS_IMETHODIMP
 nsGlobalWindow::GetSessionStorage(nsIDOMStorage ** aSessionStorage)
 {
+  FORWARD_TO_INNER(GetSessionStorage, (aSessionStorage), NS_ERROR_UNEXPECTED);
+
   *aSessionStorage = nsnull;
 
-  FORWARD_TO_OUTER(GetSessionStorage, (aSessionStorage), NS_OK);
-
   nsIPrincipal *principal = GetPrincipal();
+  nsIDocShell *docShell = GetDocShell();
 
-  if (!principal || !mDocShell) {
+  if (!principal || !docShell) {
     return NS_OK;
   }
 
   nsCOMPtr<nsIURI> codebase;
   nsresult rv = principal->GetURI(getter_AddRefs(codebase));
-  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && codebase, rv);
+
+  if (NS_FAILED(rv) || !codebase) {
+    return NS_FAILED(rv) ? rv : NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  }
 
   nsCAutoString currentDomain;
   rv = codebase->GetAsciiHost(currentDomain);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return GetDocShell()->GetSessionStorageForDomain(currentDomain,
-                                                   aSessionStorage);
+  return docShell->GetSessionStorageForDomain(currentDomain, aSessionStorage);
 }
 
 NS_IMETHODIMP
@@ -5938,11 +5945,13 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
                              PRBool aCalledNoScript, PRBool aDoJSFixups,
                              nsIArray *argv,
                              nsISupports *aExtraArgument,
+                             nsIPrincipal *aCalleePrincipal,
                              nsIDOMWindow **aReturn)
 {
   FORWARD_TO_OUTER(OpenInternal, (aUrl, aName, aOptions, aDialog,
                                   aCalledNoScript, aDoJSFixups,
-                                  argv, aExtraArgument, aReturn),
+                                  argv, aExtraArgument, aCalleePrincipal,
+                                  aReturn),
                    NS_ERROR_NOT_INITIALIZED);
 
 #ifdef NS_DEBUG
@@ -5972,13 +5981,10 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
   const PRBool checkForPopup =
     !aDialog && !WindowExists(aName, !aCalledNoScript);
 
-  // Grab the current codebase before we do any opening as that could
-  // change the current codebase.
-  nsIPrincipal *currentPrincipal = GetPrincipal();
   nsCOMPtr<nsIURI> currentCodebase;
 
-  if (currentPrincipal) {
-    currentPrincipal->GetURI(getter_AddRefs(currentCodebase));
+  if (aCalleePrincipal) {
+    aCalleePrincipal->GetURI(getter_AddRefs(currentCodebase));
   }
 
   // These next two variables are only accessed when checkForPopup is true
