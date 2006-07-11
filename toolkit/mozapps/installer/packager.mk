@@ -281,6 +281,12 @@ endif
 
 PKG_ARG = , "$(pkg)"
 
+# Define packager macro to work around make 3.81 backslash issue (bug #339933)
+define PACKAGER_COPY
+$(PERL) -I$(topsrcdir)/xpinstall/packager -e 'use Packager; \
+       Packager::Copy($1,$2,$3,$4,$5,$6,$7);'
+endef
+
 installer-stage: $(MOZ_PKG_MANIFEST)
 ifndef MOZ_PKG_MANIFEST
 	$(error MOZ_PKG_MANIFEST unspecified!)
@@ -291,18 +297,18 @@ endif
 	@$(NSINSTALL) -D $(DEPTH)/installer-stage/localized
 	@$(NSINSTALL) -D $(DEPTH)/installer-stage/optional
 	@$(NSINSTALL) -D $(DIST)/xpt
-	$(PERL) -I$(topsrcdir)/xpinstall/packager -e 'use Packager; \
-	  Packager::Copy("$(DIST)", "$(DEPTH)/installer-stage/nonlocalized", \
-	                 "$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1 \
-	    $(foreach pkg,$(MOZ_NONLOCALIZED_PKG_LIST),$(PKG_ARG)) );'
-	$(PERL) -I$(topsrcdir)/xpinstall/packager -e 'use Packager; \
-	  Packager::Copy("$(DIST)", "$(DEPTH)/installer-stage/localized", \
-	                 "$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1 \
-	    $(foreach pkg,$(MOZ_LOCALIZED_PKG_LIST),$(PKG_ARG)) );'
-	$(PERL) -I$(topsrcdir)/xpinstall/packager -e 'use Packager; \
-	  Packager::Copy("$(DIST)", "$(DEPTH)/installer-stage/optional", \
-	                 "$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1 \
-	    $(foreach pkg,$(MOZ_OPTIONAL_PKG_LIST),$(PKG_ARG)) );'
+	$(call PACKAGER_COPY, "$(DIST)",\
+		"$(DEPTH)/installer-stage/nonlocalized", \
+		"$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1 \
+		$(foreach pkg,$(MOZ_NONLOCALIZED_PKG_LIST),$(PKG_ARG)) )
+	$(call PACKAGER_COPY, "$(DIST)",\
+		"$(DEPTH)/installer-stage/localized", \
+		"$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1 \
+		$(foreach pkg,$(MOZ_LOCALIZED_PKG_LIST),$(PKG_ARG)) )
+	$(call PACKAGER_COPY, "$(DIST)",\
+		"$(DEPTH)/installer-stage/optional", \
+		"$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1 \
+		$(foreach pkg,$(MOZ_OPTIONAL_PKG_LIST),$(PKG_ARG)) )
 	$(PERL) $(topsrcdir)/xpinstall/packager/xptlink.pl -s $(DIST) -d $(DIST)/xpt -f $(DEPTH)/installer-stage/nonlocalized/components -v
 
 $(PACKAGE): $(MOZILLA_BIN) $(MOZ_PKG_MANIFEST) $(MOZ_PKG_REMOVALS_GEN)
@@ -313,9 +319,9 @@ $(PACKAGE): $(MOZILLA_BIN) $(MOZ_PKG_MANIFEST) $(MOZ_PKG_REMOVALS_GEN)
 	@mkdir $(DIST)/$(MOZ_PKG_APPNAME)
 ifdef MOZ_PKG_MANIFEST
 	$(RM) -rf $(DIST)/xpt
-	$(PERL) -I$(topsrcdir)/xpinstall/packager -e 'use Packager; \
-	  Packager::Copy("$(DIST)", "$(DIST)/$(MOZ_PKG_APPNAME)", \
-	                 "$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1);'
+	$(call PACKAGER_COPY, "$(DIST)",\
+		 "$(DIST)/$(MOZ_PKG_APPNAME)", \
+		"$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1)
 	$(PERL) $(topsrcdir)/xpinstall/packager/xptlink.pl -s $(DIST) -d $(DIST)/xpt -f $(DIST)/$(MOZ_PKG_APPNAME)/components -v
 else # !MOZ_PKG_MANIFEST
 ifeq ($(MOZ_PKG_FORMAT),DMG)
