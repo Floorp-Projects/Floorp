@@ -4219,7 +4219,7 @@ nsWindowSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
 #ifdef DEBUG_SH_FORWARDING
   {
-    jschar *jsstr = ::JS_ValueToString(cx, id);
+    JSString *jsstr = ::JS_ValueToString(cx, id);
     if (jsstr) {
       nsDependentJSString str(jsstr);
 
