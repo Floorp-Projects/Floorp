@@ -562,6 +562,83 @@ LocaleCompare(JSContext *cx, JSString *src1, JSString *src2, jsval *rval)
   return JS_TRUE;
 }
 
+#ifdef DEBUG
+#include "nsGlobalWindow.h"
+
+// A couple of useful functions to call when you're debugging.
+nsGlobalWindow *
+JSObject2Win(JSContext *cx, JSObject *obj)
+{
+  nsIXPConnect *xpc = nsContentUtils::XPConnect();
+  if (!xpc) {
+    return nsnull;
+  }
+
+  nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+  xpc->GetWrappedNativeOfJSObject(cx, obj, getter_AddRefs(wrapper));
+  if (wrapper) {
+    nsCOMPtr<nsPIDOMWindow> win = do_QueryWrappedNative(wrapper);
+    if (win) {
+      return NS_STATIC_CAST(nsGlobalWindow *,
+                            NS_STATIC_CAST(nsPIDOMWindow *, win));
+    }
+  }
+
+  return nsnull;
+}
+
+void
+PrintWinURI(nsGlobalWindow *win)
+{
+  if (!win) {
+    printf("No window passed in.\n");
+    return;
+  }
+
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(win->GetExtantDocument());
+  if (!doc) {
+    printf("No document in the window.\n");
+    return;
+  }
+
+  nsIURI *uri = doc->GetDocumentURI();
+  if (uri) {
+    printf("Document doesn't have a URI.\n");
+    return;
+  }
+
+  nsCAutoString spec;
+  uri->GetSpec(spec);
+  printf("%s\n", spec.get());
+}
+
+void
+PrintWinCodebase(nsGlobalWindow *win)
+{
+  if (!win) {
+    printf("No window passed in.\n");
+    return;
+  }
+
+  nsIPrincipal *prin = win->GetPrincipal();
+  if (!prin) {
+    printf("Window doesn't have principals.\n");
+    return;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  prin->GetURI(getter_AddRefs(uri));
+  if (!uri) {
+    printf("No URI, maybe the system principal.\n");
+    return;
+  }
+
+  nsCAutoString spec;
+  uri->GetSpec(spec);
+  printf("%s\n", spec.get());
+}
+#endif
+
 // The number of branch callbacks between calls to JS_MaybeGC
 #define MAYBE_GC_BRANCH_COUNT_MASK 0x00000fff // 4095
 
