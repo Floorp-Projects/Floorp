@@ -63,18 +63,18 @@ nsSAXXMLReader::nsSAXXMLReader() : mIsAsyncParse(PR_FALSE)
 NS_IMETHODIMP
 nsSAXXMLReader::WillBuildModel()
 {
-  if (mContentHandler) {
+  if (mContentHandler)
     return mContentHandler->StartDocument();
-  }
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSAXXMLReader::DidBuildModel()
 {
-  if (mContentHandler) {
+  if (mContentHandler)
     return mContentHandler->EndDocument();
-  }
+
   return NS_OK;
 }
 
@@ -92,9 +92,8 @@ nsSAXXMLReader::HandleStartElement(const PRUnichar *aName,
                                    PRInt32 aIndex,
                                    PRUint32 aLineNumber)
 {
-  if (!mContentHandler) {
+  if (!mContentHandler)
     return NS_OK;
-  }
 
   nsCOMPtr<nsSAXAttributes> atts = new nsSAXAttributes();
   if (!atts)
@@ -130,9 +129,9 @@ nsSAXXMLReader::HandleEndElement(const PRUnichar *aName)
 NS_IMETHODIMP
 nsSAXXMLReader::HandleComment(const PRUnichar *aName)
 {
-  if (mLexicalHandler) {
+  if (mLexicalHandler)
     return mLexicalHandler->Comment(nsDependentString(aName));
-  }
+ 
   return NS_OK;
 }
 
@@ -155,6 +154,7 @@ nsSAXXMLReader::HandleCDataSection(const PRUnichar *aData,
     rv = mLexicalHandler->EndCDATA();
     NS_ENSURE_SUCCESS(rv, rv);
   }
+
   return NS_OK;
 }
 
@@ -168,6 +168,7 @@ nsSAXXMLReader::HandleStartDTD(const PRUnichar *aName,
                                      nsDependentString(aSystemId),
                                      nsDependentString(aPublicId));
   }
+
   return NS_OK;
 }
 
@@ -178,9 +179,9 @@ nsSAXXMLReader::HandleDoctypeDecl(const nsAString & aSubset,
                                   const nsAString & aPublicId,
                                   nsISupports* aCatalogData)
 {
-  if (mLexicalHandler) {
+  if (mLexicalHandler)
     return mLexicalHandler->EndDTD();
-  }
+
   return NS_OK;
 }
 
@@ -188,9 +189,9 @@ NS_IMETHODIMP
 nsSAXXMLReader::HandleCharacterData(const PRUnichar *aData,
                                     PRUint32 aLength)
 {
-  if (mContentHandler) {
+  if (mContentHandler)
     return mContentHandler->Characters(Substring(aData, aData+aLength));
-  }
+
   return NS_OK;
 }
 
@@ -198,29 +199,27 @@ NS_IMETHODIMP
 nsSAXXMLReader::HandleStartNamespaceDecl(const PRUnichar *aPrefix,
                                          const PRUnichar *aUri)
 {
-  if (!mContentHandler) {
+  if (!mContentHandler)
     return NS_OK;
-  }
   
-  const nsDependentString& uri = nsDependentString(aUri);
-  if (aPrefix) {
-    return mContentHandler->StartPrefixMapping(nsDependentString(aPrefix),
-                                               uri);
-  }
+  PRUnichar nullChar = PRUnichar(0);
+  if (!aPrefix)
+    aPrefix = &nullChar;
+  if (!aUri)
+    aUri = &nullChar;
 
-  return mContentHandler->StartPrefixMapping(EmptyString(), uri);
+  return mContentHandler->StartPrefixMapping(nsDependentString(aPrefix),
+                                             nsDependentString(aUri));
 }
 
 NS_IMETHODIMP
 nsSAXXMLReader::HandleEndNamespaceDecl(const PRUnichar *aPrefix)
 {
-  if (!mContentHandler) {
+  if (!mContentHandler)
     return NS_OK;
-  }
   
-  if (aPrefix) {
+  if (aPrefix)
     return mContentHandler->EndPrefixMapping(nsDependentString(aPrefix));
-  }
 
   return mContentHandler->EndPrefixMapping(EmptyString());
 }
@@ -233,6 +232,7 @@ nsSAXXMLReader::HandleProcessingInstruction(const PRUnichar *aTarget,
     return mContentHandler->ProcessingInstruction(nsDependentString(aTarget),
                                                   nsDependentString(aData));
   }
+
   return NS_OK;
 }
 
@@ -243,13 +243,16 @@ nsSAXXMLReader::HandleNotationDecl(const PRUnichar *aNotationName,
 {
   if (mDTDHandler) {
     PRUnichar nullChar = PRUnichar(0);
-    if (!aSystemId) aSystemId = &nullChar;
-    if (!aPublicId) aPublicId = &nullChar;
+    if (!aSystemId)
+      aSystemId = &nullChar;
+    if (!aPublicId)
+      aPublicId = &nullChar;
 
     return mDTDHandler->NotationDecl(nsDependentString(aNotationName),
                                      nsDependentString(aSystemId),
                                      nsDependentString(aPublicId));
   }
+
   return NS_OK;
 }
 
@@ -261,14 +264,17 @@ nsSAXXMLReader::HandleUnparsedEntityDecl(const PRUnichar *aEntityName,
 {
   if (mDTDHandler) {
     PRUnichar nullChar = PRUnichar(0);
-    if (!aSystemId) aSystemId = &nullChar;
-    if (!aPublicId) aPublicId = &nullChar;
+    if (!aSystemId)
+      aSystemId = &nullChar;
+    if (!aPublicId)
+      aPublicId = &nullChar;
 
     return mDTDHandler->UnparsedEntityDecl(nsDependentString(aEntityName),
                                            nsDependentString(aSystemId),
                                            nsDependentString(aPublicId),
                                            nsDependentString(aNotationName));
   }
+
   return NS_OK;
 }
 
@@ -290,9 +296,9 @@ nsSAXXMLReader::ReportError(const PRUnichar* aErrorText,
 {
   /// XXX need to settle what to do about the input setup, so I have
   /// coherent values for the nsISAXLocator here. nsnull for now.
-  if (mErrorHandler) {
+  if (mErrorHandler)
     return mErrorHandler->FatalError(nsnull, nsDependentString(aErrorText));
-  }
+
   return NS_OK;
 }
 
@@ -437,9 +443,8 @@ nsSAXXMLReader::ParseFromStream(nsIInputStream *aStream,
   nsCOMPtr<nsIChannel> parserChannel;
   rv = NS_NewInputStreamChannel(getter_AddRefs(parserChannel), mBaseURI,
                                 aStream, nsDependentCString(aContentType));
-  if (!parserChannel || NS_FAILED(rv)) {
+  if (!parserChannel || NS_FAILED(rv))
     return NS_ERROR_FAILURE;
-  }
 
   if (aCharset)
     parserChannel->SetContentCharset(nsDependentCString(aCharset));
@@ -566,9 +571,8 @@ nsSAXXMLReader::TryChannelCharset(nsIChannel *aChannel,
                                   PRInt32& aCharsetSource,
                                   nsACString& aCharset)
 {
-  if (aCharsetSource >= kCharsetFromChannel) {
+  if (aCharsetSource >= kCharsetFromChannel)
     return PR_TRUE;
-  }
   
   if (aChannel) {
     nsCAutoString charsetVal;
@@ -587,6 +591,7 @@ nsSAXXMLReader::TryChannelCharset(nsIChannel *aChannel,
       }
     }
   }
+
   return PR_FALSE;
 }
 
