@@ -277,7 +277,6 @@ menuseparator {
 menulist > menupopup > menuseparator,
 .menulist-menupopup > menuseparator {
   margin: 2px 0;
-  border-top: 1px solid #000000;
   border-bottom: none;
 }
 
