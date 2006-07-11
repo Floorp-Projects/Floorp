@@ -83,6 +83,7 @@
 #include "nsIServiceManager.h"
 #include "nsIScrollableFrame.h"
 #ifdef ACCESSIBILITY
+#include "nsIDOMHTMLDocument.h"
 #include "nsIAccessibilityService.h"
 #endif
 #include "nsLayoutUtils.h"
@@ -6553,16 +6554,36 @@ NS_IMETHODIMP nsBlockFrame::GetAccessible(nsIAccessible** aAccessible)
     do_GetService("@mozilla.org/accessibilityService;1");
   NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
 
-  // treat <hr> as block element instead of inline.
+  // block frame may be for <hr>
   if (mContent->Tag() == nsHTMLAtoms::hr) {
     return accService->CreateHTMLHRAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
   }
 
   nsPresContext *aPresContext = GetPresContext();
   if (!mBullet || !aPresContext) {
-    return NS_ERROR_FAILURE;
+    if (!mContent || !mContent->GetParent()) {
+      // Don't create accessible objects for the root content node, they are redundant with
+      // the nsDocAccessible object created with the document node
+      return NS_ERROR_FAILURE;
+    }
+    
+    nsCOMPtr<nsIDOMHTMLDocument> htmlDoc =
+      do_QueryInterface(mContent->GetDocument());
+    if (htmlDoc) {
+      nsCOMPtr<nsIDOMHTMLElement> body;
+      htmlDoc->GetBody(getter_AddRefs(body));
+      if (SameCOMIdentity(body, mContent)) {
+        // Don't create accessible objects for the body, they are redundant with
+        // the nsDocAccessible object created with the document node
+        return NS_ERROR_FAILURE;
+      }
+    }
+
+    // Not a bullet, treat as normal HTML container
+    return accService->CreateHyperTextAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
   }
 
+  // Create special list bullet accessible
   const nsStyleList* myList = GetStyleList();
   nsAutoString bulletText;
   if (myList->mListStyleImage || myList->mListStyleType == NS_STYLE_LIST_STYLE_DISC ||
