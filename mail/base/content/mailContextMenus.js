@@ -304,6 +304,7 @@ function fillFolderPaneContextMenu()
 
   EnableMenuItem("folderPaneContext-properties", true);
 
+  SetupNewMenuItem(folderResource, numSelected, isServer, serverType, specialFolder);
   SetupRenameMenuItem(folderResource, numSelected, isServer, serverType, specialFolder);
   SetupRemoveMenuItem(folderResource, numSelected, isServer, serverType, specialFolder);
   SetupCompactMenuItem(folderResource, numSelected);
@@ -344,6 +345,31 @@ function fillFolderPaneContextMenu()
   ShowMenuItem('folderPaneContext-sep2', shouldShowSeparator('folderPaneContext-sep2')); 
   ShowMenuItem("folderPaneContext-sep3", shouldShowSeparator('folderPaneContext-sep3')); // we always show the separator before properties menu item
   return(true);
+}
+
+function SetupNewMenuItem(folderResource, numSelected, isServer, serverType,specialFolder)
+{
+  var folderTree = GetFolderTree();
+  var canCreateNew = GetFolderAttribute(folderTree, folderResource, "CanCreateSubfolders") == "true";
+  var isInbox = specialFolder == "Inbox";
+  var isIMAPFolder = GetFolderAttribute(folderTree, folderResource,
+                       "ServerType") == "imap";
+
+  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                         .getService(Components.interfaces.nsIIOService);
+
+  var showNew = ((numSelected <=1) && (serverType != 'nntp') && canCreateNew) || isInbox;
+  ShowMenuItem("folderPaneContext-new", showNew);
+
+  EnableMenuItem("folderPaneContext-new", !isIMAPFolder || !ioService.offline);
+
+  if (showNew)
+  {
+    if (isServer || isInbox)
+      SetMenuItemLabel("folderPaneContext-new", gMessengerBundle.getString("newFolder"));
+    else
+      SetMenuItemLabel("folderPaneContext-new", gMessengerBundle.getString("newSubfolder"));
+  }
 }
 
 function SetupRenameMenuItem(folderResource, numSelected, isServer, serverType, specialFolder)

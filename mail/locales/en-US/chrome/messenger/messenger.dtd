@@ -477,6 +477,8 @@
 <!-- Folder Pane Context Menu -->
 <!ENTITY folderContextOpenNewWindow.label "Open">
 <!ENTITY folderContextOpenNewWindow.accesskey "O">
+<!ENTITY folderContextNew.label "New Subfolder...">
+<!ENTITY folderContextNew.accesskey "N">
 <!ENTITY folderContextRename.label "Rename">
 <!ENTITY folderContextRename.accesskey "R">
 <!ENTITY folderContextRemove.label "Delete">

@@ -693,6 +693,10 @@
     
     <menuseparator id="folderPaneContext-sep1"/>
 
+    <menuitem id="folderPaneContext-new"
+        label="&folderContextNew.label;"
+        accesskey="&folderContextNew.accesskey;"
+        oncommand="MsgNewFolder(NewFolder);"/>
     <menuitem id="folderPaneContext-remove"
         label="&folderContextRemove.label;"
         accesskey="&folderContextRemove.accesskey;"
