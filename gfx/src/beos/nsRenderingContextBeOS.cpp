@@ -1445,7 +1445,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::CopyOffScreenBits(nsIDrawingSurface* aSrcS
 	srcsurf->AcquireView(&srcview);
 	srcsurf->AcquireBitmap(&srcbitmap);
 	
-			
+	// XXX - No more use for that, should be removed in future
 	if (aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER) 
 	{
 		NS_ASSERTION(nsnull != mSurface, "no back buffer");
@@ -1501,9 +1501,15 @@ NS_IMETHODIMP nsRenderingContextBeOS::CopyOffScreenBits(nsIDrawingSurface* aSrcS
 
 	if (aCopyFlags & NS_COPYBITS_USE_SOURCE_CLIP_REGION) 
 	{
-		BRegion r;
-		srcview->GetClippingRegion(&r);
-		destview->ConstrainClippingRegion(&r);
+		BRegion *region = nsnull;
+		if(mClipRegion && mSurface == aSrcSurf)
+			mClipRegion->GetNativeRegion((void *&)region);
+		// Following else-code has sense only if srcview and destview frames
+		// are equal and is incompatible with #define NOBBCACHE.
+		// Keeping it here for fallback case.
+		else if(srcview->Bounds() == destview->Bounds())
+			srcview->GetClippingRegion(region);
+		destview->ConstrainClippingRegion(region);
 	}
 				
 				// Draw to destination synchronously to make sure srcbitmap doesn't change
