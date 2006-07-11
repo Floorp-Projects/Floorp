@@ -1172,11 +1172,15 @@ static int pr_ConvertUTF16toUTF8(LPCWSTR wname, LPSTR name, int len)
     int utf8Len = 0;
     PRBool highSurrogate = PR_FALSE;
 
-    /* Windows NT4/2k/XP supports CP_UTF8. So do Win 98/ME, but
-     * we don't bother to optimize for them. */
-    if (_pr_useUnicode) 
-        return WideCharToMultiByte(CP_UTF8, 0, wname, -1, name, len, 
-                                   NULL, NULL);
+    utf8Len = WideCharToMultiByte(CP_UTF8, 0, wname, -1, name, len, 
+                                  NULL, NULL);
+    /*
+     * Windows 95 and NT 3.51 don't support CP_UTF8.
+     * WideCharToMultiByte(CP_UTF8, ...) fails with the error code
+     * ERROR_INVALID_PARAMETER on Windows 95 and NT 3.51.
+     */
+    if (utf8Len || GetLastError() != ERROR_INVALID_PARAMETER)
+        return utf8Len;
 
     if (!wname || len < 0 || (len > 0 && !name)) {
         SetLastError(ERROR_INVALID_PARAMETER);
