@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: atom entry with random link relations
+Expect: feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).link.spec == "http://www.snellspace.com/public/linktests/alternate";
+
+-->
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <id>tag:snellspace.com,2006:/atom/conformance/linktest/</id>
+  <title>Atom Link Tests</title>
+  <updated>2005-01-18T15:10:00Z</updated>
+  <author><name>James Snell</name></author>
+  <link href="http://www.intertwingly.net/wiki/pie/LinkConformanceTests" />
+  <link rel="self" href="http://www.snellspace.com/public/linktests.xml" />
+
+  <entry>
+    <id>tag:snellspace.com,2006:/atom/conformance/linktest/3</id>
+    <title>One of each core link rel type</title>
+
+    <updated>2005-01-18T15:00:03Z</updated>
+    <summary>The aggregator should pick the first link as the alternate</summary>
+    <link href="http://www.snellspace.com/public/linktests/alternate" />
+    <link rel="enclosure" href="http://www.snellspace.com/public/linktests/enclosure" length="19" />
+    <link rel="related" href="http://www.snellspace.com/public/linktests/related" />
+    <link rel="self" href="http://www.snellspace.com/public/linktests/self" />
+    <link rel="via" href="http://www.snellspace.com/public/linktests/via" />
+  </entry>  
+</feed>
