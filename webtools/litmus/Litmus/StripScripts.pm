@@ -37,7 +37,7 @@ use base qw(HTML::StripScripts::Parser);
 sub validate_href_attribute {
   my ($self, $text) = @_;
   
-  $self->SUPER::validate_href_attribute or $text =~ m<^((https?|ftp|mailto)://[\w\-\.]{1,100}(?:\:\d{1,5})?(?:/(?:[\w\-.!~*|;/?=+\$\,%#]|&amp;){0,100})?)$>x ? $1 : undef;
+  $self->SUPER::validate_href_attribute or $text =~ m<^((https?|ftp|mailto)://[\w\-\.]{1,100}(?:\:\d{1,5})?(?:/(?:[\w\-.!~*|;:/?=+\$\,%#]|&amp;){0,100})?)$>x ? $1 : undef;
 } 
 
 1;
