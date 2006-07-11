@@ -54,7 +54,6 @@
 
 #if !INVOKE_LDAP_CALLBACKS_ON_MAIN_THREAD
 #include "nsNetUtil.h"
-#include "nsIEventQueueService.h"
 #endif
 
 static NS_DEFINE_IID(kILDAPMessageListenerIID, NS_ILDAPMESSAGELISTENER_IID);
@@ -106,24 +105,13 @@ nsLDAPChannel::Init(nsIURI *uri)
     //
 #if INVOKE_LDAP_CALLBACKS_ON_MAIN_THREAD
 
-    // get the proxy object manager
+    // get a proxy for this callback, saving it off in mCallback
     //
-    nsCOMPtr<nsIProxyObjectManager> proxyObjMgr = 
-        do_GetService("@mozilla.org/xpcomproxy;1", &rv);
-    if (NS_FAILED(rv)) {
-        NS_ERROR("nsLDAPChannel::Init(): could not create "
-                 "proxy object manager");
-        return NS_ERROR_FAILURE;
-    }
-
-    // and use it to get a proxy for this callback, saving it off in mCallback
-    //
-    rv = proxyObjMgr->GetProxyForObject(NS_UI_THREAD_EVENTQ,
-                                        kILDAPMessageListenerIID,
-                                        NS_STATIC_CAST(nsILDAPMessageListener *
-                                                       , this),
-                                        PROXY_ASYNC|PROXY_ALWAYS,
-                                        getter_AddRefs(mCallback));
+    rv = NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+                              kILDAPMessageListenerIID,
+                              NS_STATIC_CAST(nsILDAPMessageListener *, this),
+                              NS_PROXY_ASYNC|NS_PROXY_ALWAYS,
+                              getter_AddRefs(mCallback));
     if (NS_FAILED(rv)) {
         NS_ERROR("nsLDAPChannel::Init(): could not create proxy object");
         return NS_ERROR_FAILURE;
@@ -420,22 +408,12 @@ nsLDAPChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
 #else
     nsresult rv;
 
-    // get the proxy object manager
+    // get and save a proxy for the load group
     //
-    nsCOMPtr<nsIProxyObjectManager> proxyObjMgr = 
-        do_GetService("@mozilla.org/xpcomproxy;1", &rv);
-    if (NS_FAILED(rv)) {
-        NS_ERROR("nsLDAPChannel::SetLoadGroup(): could not create "
-                 "proxy object manager");
-        return NS_ERROR_FAILURE;
-    }
-
-    // and use it to get and save a proxy for the load group
-    //
-    rv = proxyObjMgr->GetProxyForObject(NS_UI_THREAD_EVENTQ, kILoadGroupIID,
-                                        mUnproxiedLoadGroup, 
-                                        PROXY_SYNC|PROXY_ALWAYS,
-                                        getter_AddRefs(mLoadGroup));
+    rv = NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD, kILoadGroupIID,
+                              mUnproxiedLoadGroup,
+                              NS_PROXY_SYNC|NS_PROXY_ALWAYS,
+                              getter_AddRefs(mLoadGroup));
     if (NS_FAILED(rv)) {
         NS_ERROR("nsLDAPChannel::SetLoadGroup(): could not create proxy "
                  "event");
@@ -487,24 +465,12 @@ nsLDAPChannel::SetNotificationCallbacks(nsIInterfaceRequestor*
 #if INVOKE_LDAP_CALLBACKS_ON_MAIN_THREAD
         mEventSink = eventSink;
 #else
-        // get the proxy object manager
+        // get a proxy for this callback, saving it off in mEventSink
         //
-        nsCOMPtr<nsIProxyObjectManager> proxyObjMgr = 
-            do_GetService("@mozilla.org/xpcomproxy;1", &rv);
-        if (NS_FAILED(rv)) {
-            NS_ERROR("nsLDAPChannel::SetNotificationCallbacks(): could not "
-                     "create proxy object manager");
-            return NS_ERROR_FAILURE;
-        }
-
-        // and use it to get a proxy for this callback, saving it off 
-        // in mEventSink
-        //
-        rv = proxyObjMgr->GetProxyForObject(NS_UI_THREAD_EVENTQ,
-                                            kIProgressEventSink,
-                                            eventSink,
-                                            PROXY_ASYNC | PROXY_ALWAYS,
-                                            getter_AddRefs(mEventSink));
+        rv = NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+                                  kIProgressEventSink, eventSink,
+                                  NS_PROXY_ASYNC | NS_PROXY_ALWAYS,
+                                  getter_AddRefs(mEventSink));
         if (NS_FAILED(rv)) {
             NS_ERROR("nsLDAPChannel::SetNotificationCallbacks(): "
                      "couldn't get proxy for event sink");
@@ -626,8 +592,11 @@ nsLDAPChannel::AsyncOpen(nsIStreamListener* aListener,
 #if INVOKE_LDAP_CALLBACKS_ON_MAIN_THREAD
     mListener = aListener;
 #else
-    rv = NS_NewAsyncStreamListener(getter_AddRefs(mListener), 
-                                   mUnproxiedListener, NS_UI_THREAD_EVENTQ);
+    rv = NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+                              NS_GET_IID(nsIStreamListener),
+                              mUnproxiedListener,
+                              NS_PROXY_ASYNC | NS_PROXY_ALWAYS,
+                              getter_AddRefs(mListener));
     if (NS_FAILED(rv)) {
         NS_ERROR("nsLDAPChannel::AsyncRead(): unable to create new "
                  "AsyncStreamListener");
