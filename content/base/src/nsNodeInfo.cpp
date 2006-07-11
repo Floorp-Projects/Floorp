@@ -51,35 +51,48 @@
 #include "nsCRT.h"
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
+#include "nsAutoPtr.h"
+#include NEW_H
+#include "nsFixedSizeAllocator.h"
+
+static const size_t kNodeInfoPoolSizes[] = {
+  sizeof(nsNodeInfo)
+};
+
+static const PRInt32 kNodeInfoPoolInitialSize = 
+  (NS_SIZE_IN_HEAP(sizeof(nsNodeInfo))) * 64;
+
+// static
+nsFixedSizeAllocator* nsNodeInfo::sNodeInfoPool = nsnull;
 
 // static
 nsNodeInfo*
 nsNodeInfo::Create()
 {
-  if (sCachedNodeInfo) {
-    // We have cached unused instances of this class, return a cached
-    // instance instead of always creating a new one.
-    nsNodeInfo *nodeInfo = sCachedNodeInfo;
-    sCachedNodeInfo = nsnull;
-    return nodeInfo;
+  if (!sNodeInfoPool) {
+    sNodeInfoPool = new nsFixedSizeAllocator();
+    if (!sNodeInfoPool)
+      return nsnull;
+
+    nsresult rv = sNodeInfoPool->Init("NodeInfo Pool", kNodeInfoPoolSizes,
+                                      1, kNodeInfoPoolInitialSize);
+    if (NS_FAILED(rv)) {
+      delete sNodeInfoPool;
+      sNodeInfoPool = nsnull;
+      return nsnull;
+    }
   }
 
   // Create a new one
-  return new nsNodeInfo();
+  void* place = sNodeInfoPool->Alloc(sizeof(nsNodeInfo));
+  return place ? new (place) nsNodeInfo() : nsnull;
 }
 
 nsNodeInfo::nsNodeInfo()
 {
 }
 
-
 nsNodeInfo::~nsNodeInfo()
-{
-  Clear();
-}
-
-void
-nsNodeInfo::Clear()
 {
   if (mOwnerManager) {
     mOwnerManager->RemoveNodeInfo(this);
@@ -266,37 +279,25 @@ nsNodeInfo::QualifiedNameEqualsInternal(const nsACString& aQualifiedName) const
 }
 
 // static
-nsNodeInfo *nsNodeInfo::sCachedNodeInfo = nsnull;
-
-// static
 void
 nsNodeInfo::ClearCache()
 {
   // Clear our cache.
-  delete sCachedNodeInfo;
-  sCachedNodeInfo = nsnull;
+  delete sNodeInfoPool;
+  sNodeInfoPool = nsnull;
 }
 
 void
 nsNodeInfo::LastRelease()
 {
-  // Clear object so that we have no references to anything external.
-  // Need to do this first so we don't have sCachedNodeInfo pointing
-  // to a nodeinfo that's not cleared yet.
-  Clear();
-
-  if (sCachedNodeInfo) {
-    // No room in cache
-    delete this;
-    return;
-  }
-
-  // There's space in the cache for one instance. Put
-  // this instance in the cache instead of deleting it.
-  sCachedNodeInfo = this;
+  nsRefPtr<nsNodeInfoManager> kungFuDeathGrip = mOwnerManager;
+  this->~nsNodeInfo();
 
   // The refcount balancing and destructor re-entrancy protection
   // code in Release() sets mRefCnt to 1 so we have to set it to 0
   // here to prevent leaks
   mRefCnt = 0;
+
+  NS_ASSERTION(sNodeInfoPool, "No NodeInfoPool when deleting NodeInfo!!!");
+  sNodeInfoPool->Free(this, sizeof(nsNodeInfo));
 }
