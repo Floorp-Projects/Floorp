@@ -38,6 +38,9 @@
 # The nightly build branding.nsi is located in browser/installer/windows/nsis/
 !define BrandShortName        "Firefox"
 !define BrandFullName         "Mozilla Firefox"
+# BrandFullNameInternal is used for some registry and file system values that
+# should not contain release that may be in the BrandFullName (e.g. Beta 1, etc.)
+!define BrandFullNameInternal "Mozilla Firefox"
 !define CompanyName           "Mozilla"
 !define URLInfoAbout          "http://www.mozilla.org/"
 !define URLUpdateInfo         "http://www.mozilla.org/products/firefox/"
