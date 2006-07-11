@@ -7,8 +7,9 @@
  * 
  * @package amo
  * @subpackage docs
+ * @TODO clean this ____ up
  *
- * @author Mike Morgan <morgamic@gmail.com> (rewritten 03/2006)
+ * @author Mike Morgan <morgamic@gmail.com> (03/2006)
  * @author Vladimir Vukicevic <vladimir@pobox.com>
  * @author Doron Rosenberg <doronr@us.ibm.com>
  * @author Johnny Stenback <jst@mozilla.org>
@@ -267,13 +268,6 @@ if (($mimetype == 'application/x-shockwave-flash' ||
   $manualInstallationURL = 'http://digitalwebbooks.com/reader/';
 }
 
-if (file_exists('/opt/update/plugins/requests.log')) {
-    $log = fopen('/opt/update/plugins/requests.log', 'a');
-    fwrite($log, date('Y-m-d H:i:s') . " type='{$mimetype}' os='{$clientOS}' cl='{$chromeLocale}' v='{$reqTargetAppVersion}' == plugin '{$name}'\n");
-    fclose($log);
-}
-
-
 }
 // End ridiculously huge if-else block... :\
 
@@ -283,13 +277,16 @@ if (file_exists('/opt/update/plugins/requests.log')) {
  * Set up our plugin array based on what we've found.
  */
 $plugin = array();
-$plugin['name'] = isset($name) ? $name : null;
-$plugin['guid'] = isset($guid) ? $guid : null;
-$plugin['version'] = isset($version) ? $version : null;
-$plugin['iconUrl'] = isset($iconUrl) ? $iconUrl : null;
-$plugin['XPILocation'] = isset($XPILocation) ? $XPILocation : null;
-$plugin['installerShowsUI'] = isset($installerShowsUI) ? $installerShowsUI : null;
-$plugin['manualInstallationURL'] = isset($manualInstallationURL) ? $manualInstallationURL : null;
+$plugin['name'] = !empty($name) ? $name : null;
+$plugin['guid'] = !empty($guid) ? $guid : null;
+$plugin['mimetype'] = !empty($mimetype) ? $mimetype : null;
+$plugin['version'] = !empty($version) ? $version : null;
+$plugin['iconUrl'] = !empty($iconUrl) ? $iconUrl : null;
+$plugin['XPILocation'] = !empty($XPILocation) ? $XPILocation : null;
+$plugin['installerShowsUI'] = !empty($installerShowsUI) ? $installerShowsUI : null;
+$plugin['manualInstallationURL'] = !empty($manualInstallationURL) ? $manualInstallationURL : null;
+$plugin['licenseURL'] = !empty($licenseURL) ? $licenseURL : null;
+$plugin['needsRestart'] = $needsRestart;
 
 $tpl->assign('plugin',$plugin);
 
