@@ -273,6 +273,49 @@
         ]]></body>
       </method>
 
+      <method name="keyNavigate">
+        <parameter name="event"/>
+        <body><![CDATA[
+          var key = String.fromCharCode(event.charCode).toLowerCase();
+          if (event.timeStamp - this._lastKeyTime > 1000)
+            this._incrementalString = key;
+          else
+            this._incrementalString += key;
+          this._lastKeyTime = event.timeStamp;
+
+          var length = this._incrementalString.length;
+          var incrementalString = this._incrementalString;
+          var charIndex = 1;
+          while (charIndex < length && incrementalString[charIndex] == incrementalString[charIndex - 1])
+            charIndex++;
+          // If all letters in incremental string are same, just try to match the first one
+          if (charIndex == length) {
+            length = 1;
+            incrementalString = incrementalString.substring(0, length);
+          }
+
+          var keyCol = this.columns.getKeyColumn();
+          var rowCount = this.view.rowCount;
+          var start = 1;
+
+          var c = this.currentIndex;
+          if (length > 1) {
+            start = 0;
+            if (c < 0)
+              c = 0;
+          }
+
+          for (var i = 0; i < rowCount; i++) {
+            var l = (i + start + c) % rowCount;
+            var cellText = this.view.getCellText(l, keyCol);
+            cellText = cellText.substring(0, length).toLowerCase();
+            if (cellText == incrementalString)
+              return l;
+          }
+          return -1;
+        ]]></body>
+      </method>
+
       <method name="startEditing">
         <parameter name="row"/>
         <parameter name="column"/>
@@ -741,8 +784,8 @@
          if (this._editingColumn)
            return;
 
-         var c = this.currentIndex;
          if (event.charCode == ' '.charCodeAt(0)) {
+           var c = this.currentIndex;
            if (!this.view.selection.isSelected(c) ||
                (!this.view.selection.single && this._isAccelPressed(event))) {
              this.view.selection.toggleSelect(c);
@@ -751,44 +794,10 @@
          else if (!this.disableKeyNavigation && event.charCode > 0 &&
                   !event.altKey && !this._isAccelPressed(event) &&
                   !event.metaKey) {
-           var key = String.fromCharCode(event.charCode);
-           key = key.toLowerCase();
-           if (event.timeStamp - this._lastKeyTime > 1000)
-             this._incrementalString = key;
-           else
-             this._incrementalString += key;
-           this._lastKeyTime = event.timeStamp;
-           
-           var length = this._incrementalString.length;
-           var incrementalString = this._incrementalString;
-           var charIndex = 1;
-           while (charIndex < length && incrementalString[charIndex] == incrementalString[charIndex - 1])
-             charIndex++;
-           // If all letters in incremental string are same, just try to match the first one
-           if (charIndex == length) {
-             length = 1;
-             incrementalString = incrementalString.substring(0, length);
-           }
-
-           var keyCol = this.columns.getKeyColumn();
-           var rowCount = this.view.rowCount;
-           var start = 1;
-           
-           if (length > 1) {
-             start = 0;
-             if (c < 0)
-               c = 0;
-           }
-
-           for (var i = 0; i < rowCount; i++) {
-             var l = (i + start + c) % rowCount;
-             var cellText = this.view.getCellText(l, keyCol);
-             cellText = cellText.substring(0, length).toLowerCase();
-             if (cellText == incrementalString) {
-               this.view.selection.timedSelect(l, this._selectDelay);
-               this.treeBoxObject.ensureRowIsVisible(l);
-               break;
-             }
+           var l = this.keyNavigate(event);
+           if (l >= 0) {
+             this.view.selection.timedSelect(l, this._selectDelay);
+             this.treeBoxObject.ensureRowIsVisible(l);
            }
           }
          ]]>
