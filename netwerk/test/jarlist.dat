@@ -101,7 +101,6 @@ jar:resource:///chrome/modern.jar!/skin/modern/communicator/sidebar/sidebar.css
 jar:resource:///chrome/modern.jar!/skin/modern/global/global.css
 jar:resource:///chrome/modern.jar!/skin/modern/communicator/brand.css
 jar:resource:///chrome/modern.jar!/skin/modern/communicator/button.css
-jar:resource:///chrome/modern.jar!/skin/modern/communicator/formatting.css
 jar:resource:///chrome/modern.jar!/skin/modern/communicator/toolbar.css
 jar:resource:///chrome/modern.jar!/skin/modern/communicator/bookmarks/bookmarksToolbar.css
 jar:resource:///chrome/en-US.jar!/locale/en-US/global/intl.css

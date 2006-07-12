@@ -23,7 +23,6 @@ classic.jar:
   skin/classic/communicator/brand.css                                   (communicator/brand.css)
   skin/classic/communicator/dialogs.css                                 (communicator/dialogs.css)
   skin/classic/communicator/communicator.css                            (communicator/communicator.css)
-  skin/classic/communicator/formatting.css                              (communicator/formatting.css)
   skin/classic/communicator/prefpanels.css                              (communicator/prefpanels.css)
   skin/classic/communicator/smileys.css                                 (communicator/smileys.css)
   skin/classic/communicator/bookmarks/bookmark-folder-button.gif        (communicator/bookmarks/bookmark-folder-button.gif)

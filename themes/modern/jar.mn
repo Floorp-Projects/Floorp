@@ -14,7 +14,6 @@ modern.jar:
   skin/modern/global/preview.gif                                   (global/preview.gif)
 #endif
   skin/modern/communicator/brand.css                               (communicator/brand.css)
-  skin/modern/communicator/formatting.css                          (communicator/formatting.css)
   skin/modern/communicator/prefpanels.css                          (communicator/prefpanels.css)
   skin/modern/communicator/tasksOverlay.css                        (communicator/tasksOverlay.css)
   skin/modern/communicator/button.css                              (communicator/button.css)

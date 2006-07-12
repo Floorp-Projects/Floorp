@@ -189,4 +189,27 @@ label[disabled="true"] {
 .wizard-box {
   padding: 20px 44px 10px 44px;
 }
-    
+
+/* class for text with a 'link' appearance */
+.text-link {
+  color: blue;
+  text-decoration: underline;
+}
+
+.text-link:focus {
+  color: red;
+  outline: 1px dotted invert;
+}
+
+.text-link:hover {
+  cursor: pointer;
+}
+
+.text-link:hover:active {
+  color: red;
+}
+
+.text-link[visited="true"] {
+  color: purple;
+}
+
