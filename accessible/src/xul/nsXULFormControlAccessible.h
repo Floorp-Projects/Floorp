@@ -44,6 +44,7 @@
 #include "nsAccessibleWrap.h"
 #include "nsFormControlAccessible.h"
 #include "nsXULSelectAccessible.h"
+#include "nsHyperTextAccessible.h"
 
 class nsXULButtonAccessible : public nsAccessibleWrap
 // Don't inherit from nsFormControlAccessible - it doesn't allow children and a button can have a dropmarker child
@@ -145,10 +146,15 @@ public:
   NS_IMETHOD GetState(PRUint32 *_retval); 
 };
 
-class nsXULTextFieldAccessible : public nsLeafAccessible
+class nsXULTextFieldAccessible : public nsHyperTextAccessible
 {
 public:
+  NS_DECL_ISUPPORTS_INHERITED
+
   nsXULTextFieldAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+
+  NS_IMETHOD Init(); 
+  NS_IMETHOD Shutdown(); 
   NS_IMETHOD GetValue(nsAString& aValue);
   NS_IMETHOD GetState(PRUint32 *aState);
   NS_IMETHOD GetExtState(PRUint32 *aExtState);
@@ -156,6 +162,13 @@ public:
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
   NS_IMETHOD DoAction(PRUint8 index);
+
+protected:
+  // Editor helpers, subclasses of nsHyperTextAccessible may have editor
+  virtual void SetEditor(nsIEditor *aEditor);
+  virtual already_AddRefed<nsIEditor> GetEditor() { nsIEditor *editor = mEditor; NS_IF_ADDREF(editor); return editor; }
+  void CheckForEditor();
+  nsCOMPtr<nsIEditor> mEditor;
 };
 
 

@@ -265,7 +265,7 @@ NS_IMETHODIMP nsAccessibleWrap::GetNativeInterface(void **aOutAccessible)
 {
     *aOutAccessible = nsnull;
 
-    if (Role(this) == ROLE_TEXT_LEAF) {
+    if (!IsEmbeddedObject(this)) {
       // We don't create ATK objects for nsIAccessible plain text leaves
       return NS_ERROR_FAILURE;
     }

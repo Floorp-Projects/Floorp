@@ -73,6 +73,15 @@ public:
   NS_IMETHOD GetState(PRUint32 *aState); 
 };
 
+class nsHTMLBRAccessible : public nsLeafAccessible
+{
+public:
+  nsHTMLBRAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
+  NS_IMETHOD GetRole(PRUint32 *aRole); 
+  NS_IMETHOD GetState(PRUint32 *aState); 
+  NS_IMETHOD GetName(nsAString& aName);
+};
+
 class nsHTMLLabelAccessible : public nsTextAccessible 
 {
 public:

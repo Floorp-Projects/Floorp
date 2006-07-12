@@ -48,7 +48,10 @@
 #include "nsIDOMXULMenuListElement.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDOMXULTextboxElement.h"
+#include "nsIFrame.h"
 #include "nsINameSpaceManager.h"
+#include "nsITextControlFrame.h"
+#include "nsIPresShell.h"
 
 /**
   * XUL Button: can contain arbitrary HTML content
@@ -70,7 +73,7 @@ nsAccessibleWrap(aNode, aShell)
 NS_IMETHODIMP nsXULButtonAccessible::GetNumActions(PRUint8 *_retval)
 {
   *_retval = eSingle_Action;
-  return NS_OK;;
+  return NS_OK;
 }
 
 /**
@@ -207,7 +210,7 @@ nsFormControlAccessible(aNode, aShell)
 NS_IMETHODIMP nsXULDropmarkerAccessible::GetNumActions(PRUint8 *aResult)
 {
   *aResult = eSingle_Action;
-  return NS_OK;;
+  return NS_OK;
 }
 
 PRBool nsXULDropmarkerAccessible::DropmarkerOpen(PRBool aToggleOpen)
@@ -633,8 +636,25 @@ NS_IMETHODIMP nsXULToolbarSeparatorAccessible::GetState(PRUint32 *_retval)
   */
 
 nsXULTextFieldAccessible::nsXULTextFieldAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell) :
- nsLeafAccessible(aNode, aShell)
+ nsHyperTextAccessible(aNode, aShell)
 {
+}
+
+NS_IMPL_ISUPPORTS_INHERITED2(nsXULTextFieldAccessible, nsAccessible, nsIAccessibleText, nsIAccessibleEditableText)
+
+NS_IMETHODIMP nsXULTextFieldAccessible::Init()
+{
+  CheckForEditor();
+  return nsHyperTextAccessible::Init();
+}
+
+NS_IMETHODIMP nsXULTextFieldAccessible::Shutdown()
+{
+  if (mEditor) {
+    mEditor->RemoveEditActionListener(this);
+    mEditor = nsnull;
+  }
+  return nsHyperTextAccessible::Shutdown();
 }
 
 NS_IMETHODIMP nsXULTextFieldAccessible::GetValue(nsAString& aValue)
@@ -653,7 +673,7 @@ NS_IMETHODIMP nsXULTextFieldAccessible::GetValue(nsAString& aValue)
 
 NS_IMETHODIMP nsXULTextFieldAccessible::GetExtState(PRUint32 *aExtState)
 {
-  nsresult rv = nsAccessible::GetExtState(aExtState);
+  nsresult rv = nsHyperTextAccessible::GetExtState(aExtState);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -675,11 +695,11 @@ NS_IMETHODIMP nsXULTextFieldAccessible::GetExtState(PRUint32 *aExtState)
 
 NS_IMETHODIMP nsXULTextFieldAccessible::GetState(PRUint32 *aState)
 {
-  *aState = 0;
   nsCOMPtr<nsIDOMXULTextBoxElement> textBox(do_QueryInterface(mDOMNode));
   if (!textBox) {
     return NS_ERROR_FAILURE;
   }
+  nsHyperTextAccessible::GetState(aState);
 
   nsCOMPtr<nsIDOMNode> inputField;
   textBox->GetInputField(getter_AddRefs(inputField));
@@ -712,12 +732,10 @@ NS_IMETHODIMP nsXULTextFieldAccessible::GetState(PRUint32 *aState)
 
 NS_IMETHODIMP nsXULTextFieldAccessible::GetRole(PRUint32 *aRole)
 {
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (!content) {
-    return NS_ERROR_FAILURE;  // Node has been Shutdown()
-  }
   *aRole = ROLE_ENTRY;
-  if (content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (content &&
+      content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
                            nsAccessibilityAtoms::password, eIgnoreCase)) {
     *aRole = ROLE_PASSWORD_TEXT;
   }
@@ -731,7 +749,7 @@ NS_IMETHODIMP nsXULTextFieldAccessible::GetRole(PRUint32 *aRole)
 NS_IMETHODIMP nsXULTextFieldAccessible::GetNumActions(PRUint8 *_retval)
 {
   *_retval = eSingle_Action;
-  return NS_OK;;
+  return NS_OK;
 }
 
 /**
@@ -761,4 +779,40 @@ NS_IMETHODIMP nsXULTextFieldAccessible::DoAction(PRUint8 index)
     return NS_ERROR_FAILURE;
   }
   return NS_ERROR_INVALID_ARG;
+}
+
+void nsXULTextFieldAccessible::SetEditor(nsIEditor* aEditor)
+{
+  mEditor = aEditor;
+  if (mEditor)
+    mEditor->AddEditActionListener(this);
+}
+
+void nsXULTextFieldAccessible::CheckForEditor()
+{
+  nsCOMPtr<nsIDOMXULTextBoxElement> textBox(do_QueryInterface(mDOMNode));
+  if (!textBox) {
+    return;
+  }
+
+  nsCOMPtr<nsIDOMNode> inputField;
+  textBox->GetInputField(getter_AddRefs(inputField));
+  nsCOMPtr<nsIContent> inputContent = do_QueryInterface(inputField);
+  if (!inputContent) {
+    return;
+  }
+  
+  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+  nsIFrame *inputFrame = presShell->GetPrimaryFrameFor(inputContent);
+  if (!inputFrame) {
+    return;
+  }
+  
+  nsITextControlFrame *textFrame;
+  inputFrame->QueryInterface(NS_GET_IID(nsITextControlFrame), (void**)&textFrame);
+  if (textFrame) {
+    nsCOMPtr<nsIEditor> editor;
+    textFrame->GetEditor(getter_AddRefs(editor));
+    SetEditor(editor);
+  }
 }

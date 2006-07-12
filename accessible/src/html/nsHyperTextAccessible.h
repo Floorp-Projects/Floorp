@@ -47,6 +47,7 @@
 #include "nsAccessibleEventData.h"
 #include "nsIEditActionListener.h"
 #include "nsIEditor.h"
+#include "nsFrameSelection.h"
 #include "nsISelectionController.h"
 
 enum EGetTextType { eGetBefore=-1, eGetAt=0, eGetAfter=1 };
@@ -54,6 +55,7 @@ enum EGetTextType { eGetBefore=-1, eGetAt=0, eGetAfter=1 };
 // This character marks where in the text returned via nsIAccessibleText(),
 // that embedded object characters exist
 const PRUnichar kEmbeddedObjectChar = 0xfffc;
+const PRUnichar kForcedNewLineChar = '\n';
 
 /**
   * Special Accessible that knows how contain both text and embedded objects
@@ -80,25 +82,23 @@ protected:
 
   nsresult GetTextHelper(EGetTextType aType, nsAccessibleTextBoundary aBoundaryType,
                          PRInt32 aOffset, PRInt32 *aStartOffset, PRInt32 *aEndOffset,
-                         nsISupports *aClosure, nsAString & aText);
-  nsIFrame* GetStartPosAndText(PRInt32& aStartOffset, PRInt32 aEndOffset, nsAString &aText);
+                         nsAString & aText);
+  PRInt32 GetRelativeOffset(nsIPresShell *aPresShell, nsIFrame *aFromFrame, PRInt32 aFromOffset,
+                            nsSelectionAmount amount, nsDirection direction, PRBool aNeedsStart);
+  nsIFrame* GetPosAndText(PRInt32& aStartOffset, PRInt32& aEndOffset, nsAString *aText = nsnull, nsIFrame **aEndFrame = nsnull);
 
   // Editor helpers, subclasses of nsHyperTextAccessible may have editor
   virtual void SetEditor(nsIEditor *aEditor) { return; }
-  virtual void CheckForEditor() { return; } // Not implemented for conteditable yet
   virtual already_AddRefed<nsIEditor> GetEditor() { return nsnull; }
 
   // Selection helpers
   nsresult GetSelections(nsISelectionController **aSelCon, nsISelection **aDomSel);
-  nsresult GetSelectionRange(PRInt32 *aStartPos, PRInt32 *aEndPos);
   nsresult SetSelectionRange(PRInt32 aStartPos, PRInt32 aEndPos);
 
   // Event helpers
   nsresult FireTextChangeEvent(AtkTextChange *aTextData);
 
   // Static helpers
-  static nsresult DOMPointToOffset(nsISupports *aClosure, nsIDOMNode* aNode, PRInt32 aNodeOffset, PRInt32 *aResult);
-  static nsresult OffsetToDOMPoint(nsISupports *aClosure, PRInt32 aOffset, nsIDOMNode** aResult, PRInt32* aPosition);
-  static nsresult GetCurrentOffset(nsISupports *aClosure, nsISelection *aDomSel, PRInt32 *aOffset);
+  nsresult DOMPointToOffset(nsIDOMNode* aNode, PRInt32 aNodeOffset, PRInt32 *aResult);
 };
 #endif  // _nsHyperTextAccessible_H_
