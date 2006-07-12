@@ -194,9 +194,9 @@ static PyObject *PySetTimeoutOrInterval(PyObject *self, PyObject *args)
     PyObject *obTarget;
     PyObject *obHandler;
     PyObject *obArgs;
-    double interval;
+    int interval;
     int isInterval;
-    if (!PyArg_ParseTuple(args, "OdOO!i:SetTimeoutOrInterval", &obTarget,
+    if (!PyArg_ParseTuple(args, "OiOO!i:SetTimeoutOrInterval", &obTarget,
                           &interval, &obHandler,
                           &PyTuple_Type, &obArgs,
                           &isInterval))
