@@ -746,10 +746,6 @@ nsLineIterator::CheckLineOrder(PRInt32                  aLine,
   }
   
   nsPresContext* presContext = line->mFirstChild->GetPresContext();
-  if (!presContext->BidiEnabled()) {
-    *aIsReordered = PR_FALSE;
-    return NS_OK;
-  }
 
   nsBidiPresUtils* bidiUtils = presContext->GetBidiUtils();
 
@@ -760,20 +756,6 @@ nsLineIterator::CheckLineOrder(PRInt32                  aLine,
   // map leftmost/rightmost to first/last according to paragraph direction
   *aFirstVisual = mRightToLeft ? rightmostFrame : leftmostFrame;
   *aLastVisual = mRightToLeft ? leftmostFrame : rightmostFrame;
-
-  // an RTL paragraph is always considered as reordered
-  if (mRightToLeft)
-    *aIsReordered = PR_TRUE;
-
-  // Check the preceding and following line, since we might be moving into them  
-  if (!*aIsReordered && aLine > 0) {
-    nsLineBox* line = mLines[aLine - 1];
-    *aIsReordered = bidiUtils->CheckLineOrder(line->mFirstChild, line->GetChildCount(), nsnull, nsnull);
-  }
-  if (!*aIsReordered && aLine < mNumLines - 1) {
-    nsLineBox* line = mLines[aLine + 1];
-    *aIsReordered = bidiUtils->CheckLineOrder(line->mFirstChild, line->GetChildCount(), nsnull, nsnull);
-  }
 
   return NS_OK;
 }
