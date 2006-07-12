@@ -41,17 +41,11 @@
 
 #include "xpcprivate.h"
 
-NS_INTERFACE_MAP_BEGIN(BackstagePass)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
-  NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
 #ifndef XPCONNECT_STANDALONE
-  NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
+NS_IMPL_THREADSAFE_ISUPPORTS2(BackstagePass, nsIScriptObjectPrincipal, nsIXPCScriptable)
+#else
+NS_IMPL_THREADSAFE_ISUPPORTS1(BackstagePass, nsIXPCScriptable)
 #endif
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCScriptable)
-NS_INTERFACE_MAP_END_THREADSAFE
-
-NS_IMPL_THREADSAFE_ADDREF(BackstagePass)
-NS_IMPL_THREADSAFE_RELEASE(BackstagePass)
 
 // The nsIXPCScriptable map declaration that will generate stubs for us...
 #define XPC_MAP_CLASSNAME           BackstagePass
@@ -78,105 +72,6 @@ BackstagePass::NewResolve(nsIXPConnectWrappedNative *wrapper,
     if(*_retval && resolved)
         *objp = obj;
     return NS_OK;
-}
-
-/***************************************************************************/
-/* void getInterfaces (out PRUint32 count, [array, size_is (count), retval] 
-                       out nsIIDPtr array); */
-NS_IMETHODIMP 
-BackstagePass::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
-{
-    nsresult rv = NS_OK;
-    PRUint32 count = 1;
-#ifndef XPCONNECT_STANDALONE
-    ++count;
-#endif
-    *aCount = count;
-    nsIID **array;
-    *aArray = array = NS_STATIC_CAST(nsIID**, nsMemory::Alloc(count * sizeof(nsIID*)));
-    if(!array)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    PRUint32 index = 0;
-    nsIID* clone;
-#define PUSH_IID(id) \
-    clone = NS_STATIC_CAST(nsIID *, nsMemory::Clone(&NS_GET_IID( id ), \
-                                                    sizeof(nsIID)));  \
-    if (!clone)                                                       \
-        goto oom;                                                     \
-    array[index++] = clone;
-
-    PUSH_IID(nsIXPCScriptable)
-#ifndef XPCONNECT_STANDALONE
-    PUSH_IID(nsIScriptObjectPrincipal)
-#endif
-#undef PUSH_IID
-
-    return NS_OK;
-oom:
-    while (index)
-        nsMemory::Free(array[--index]);
-    nsMemory::Free(array);
-    *aArray = nsnull;
-    return NS_ERROR_OUT_OF_MEMORY;
-}
-
-/* nsISupports getHelperForLanguage (in PRUint32 language); */
-NS_IMETHODIMP 
-BackstagePass::GetHelperForLanguage(PRUint32 language, 
-                                      nsISupports **retval)
-{
-    *retval = nsnull;
-    return NS_OK;
-}
-
-/* readonly attribute string contractID; */
-NS_IMETHODIMP 
-BackstagePass::GetContractID(char * *aContractID)
-{
-    *aContractID = nsnull;
-    return NS_ERROR_NOT_AVAILABLE;
-}
-
-/* readonly attribute string classDescription; */
-NS_IMETHODIMP 
-BackstagePass::GetClassDescription(char * *aClassDescription)
-{
-    static const char classDescription[] = "BackstagePass";
-    *aClassDescription = (char*)nsMemory::Clone(classDescription, sizeof(classDescription));
-    return *aClassDescription ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-
-/* readonly attribute nsCIDPtr classID; */
-NS_IMETHODIMP 
-BackstagePass::GetClassID(nsCID * *aClassID)
-{
-    *aClassID = nsnull;
-    return NS_OK;
-}
-
-/* readonly attribute PRUint32 implementationLanguage; */
-NS_IMETHODIMP 
-BackstagePass::GetImplementationLanguage(
-    PRUint32 *aImplementationLanguage)
-{
-    *aImplementationLanguage = nsIProgrammingLanguage::CPLUSPLUS;
-    return NS_OK;
-}
-
-/* readonly attribute PRUint32 flags; */
-NS_IMETHODIMP 
-BackstagePass::GetFlags(PRUint32 *aFlags)
-{
-    *aFlags = nsIClassInfo::THREADSAFE;
-    return NS_OK;
-}
-
-/* [notxpcom] readonly attribute nsCID classIDNoAlloc; */
-NS_IMETHODIMP 
-BackstagePass::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
-{
-    return NS_ERROR_NOT_AVAILABLE;
 }
 
 /*

@@ -88,7 +88,7 @@ static const nsModuleComponentInfo components[] = {
   {nsnull, NS_XPCEXCEPTION_CID,                  XPC_EXCEPTION_CONTRACTID,     nsXPCExceptionConstructor, nsnull, nsnull, nsnull, NS_CI_INTERFACE_GETTER_NAME(nsXPCException), nsnull, &NS_CLASSINFO_NAME(nsXPCException)},
   {nsnull, NS_JS_RUNTIME_SERVICE_CID,            XPC_RUNTIME_CONTRACTID,       nsIJSRuntimeServiceConstructor},
   {NS_SCRIPTERROR_CLASSNAME, NS_SCRIPTERROR_CID, NS_SCRIPTERROR_CONTRACTID,    nsScriptErrorConstructor      },
-  {nsnull, SCRIPTABLE_INTERFACES_CID,            NS_SCRIPTABLE_INTERFACES_CONTRACTID,        nsXPCComponents_InterfacesConstructor, 0, 0, 0, 0, 0, 0, nsIClassInfo::THREADSAFE },
+  {nsnull, SCRIPTABLE_INTERFACES_CID,            NS_SCRIPTABLE_INTERFACES_CONTRACTID,        nsXPCComponents_InterfacesConstructor },
   {nsnull, XPCVARIANT_CID,                       XPCVARIANT_CONTRACTID,        nsnull, nsnull, nsnull, nsnull, NS_CI_INTERFACE_GETTER_NAME(XPCVariant), nsnull, &NS_CLASSINFO_NAME(XPCVariant)},
   {nsnull, NS_XPC_JSCONTEXT_STACK_ITERATOR_CID,  XPC_JSCONTEXT_STACK_ITERATOR_CONTRACTID, nsXPCJSContextStackIteratorConstructor }
 

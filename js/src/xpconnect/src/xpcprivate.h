@@ -292,7 +292,7 @@ public:
                         {nsAutoMonitor::DestroyMonitor(lock);}
 
     XPCAutoLock(XPCLock* lock)
-#ifdef DEBUG_jband
+#ifdef DEBUG
         : nsAutoLockBase(lock ? (void*) lock : (void*) this, eAutoMonitor),
 #else
         : nsAutoLockBase(lock, eAutoMonitor),
@@ -2107,8 +2107,10 @@ private:
     XPCWrappedNativeTearOffChunk mFirstChunk;
     JSObject*                    mNativeWrapper;
 
+#ifdef XPC_CHECK_WRAPPER_THREADSAFETY
 public:
-    nsCOMPtr<nsIThread>          mThread;
+    nsCOMPtr<nsIThread>          mThread; // Don't want to overload _mOwningThread
+#endif
 };
 
 /***************************************************************************
@@ -2870,9 +2872,8 @@ public:
          mResolvingWrapper = w; return old;}
 
     void Cleanup();
-    void ReleaseNatives();
 
-    PRBool IsValid() const {return mJSContextStack && mNativesLock;}
+    PRBool IsValid() const {return mJSContextStack != nsnull;}
 
     static PRLock* GetLock() {return gLock;}
     // Must be called with the threads locked.
@@ -2923,9 +2924,6 @@ private:
 #ifdef XPC_CHECK_WRAPPER_THREADSAFETY
     JSUint32             mWrappedNativeThreadsafetyReportDepth;
 #endif
-    PRThread*            mThread;
-    nsVoidArray          mNativesToReleaseArray;
-    PRLock*              mNativesLock;
 
     static PRLock*           gLock;
     static XPCPerThreadData* gThreads;
@@ -2974,15 +2972,12 @@ private:
 #ifndef XPCONNECT_STANDALONE
 #include "nsIScriptSecurityManager.h"
 
-class BackstagePass : public nsIScriptObjectPrincipal,
-                      public nsIXPCScriptable,
-                      public nsIClassInfo
+class BackstagePass : public nsIScriptObjectPrincipal, public nsIXPCScriptable
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIXPCSCRIPTABLE
-  NS_DECL_NSICLASSINFO
-
+  
   virtual nsIPrincipal* GetPrincipal() {
     return mPrincipal;
   }
@@ -3000,12 +2995,11 @@ private:
 
 #else
 
-class BackstagePass : public nsIXPCScriptable, public nsIClassInfo
+class BackstagePass : public nsIXPCScriptable
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIXPCSCRIPTABLE
-  NS_DECL_NSICLASSINFO
 
   BackstagePass()
   {
@@ -3044,8 +3038,7 @@ class nsJSRuntimeServiceImpl : public nsIJSRuntimeService,
 // 'Components' object
 
 class nsXPCComponents : public nsIXPCComponents,
-                        public nsIXPCScriptable,
-                        public nsIClassInfo
+                        public nsIXPCScriptable
 #ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
                       , public nsISecurityCheckedComponent
 #endif
@@ -3054,7 +3047,6 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIXPCCOMPONENTS
     NS_DECL_NSIXPCSCRIPTABLE
-    NS_DECL_NSICLASSINFO
 
 #ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
     NS_DECL_NSISECURITYCHECKEDCOMPONENT
@@ -3090,8 +3082,7 @@ private:
 
 class nsXPCComponents_Interfaces :
             public nsIScriptableInterfaces,
-            public nsIXPCScriptable,
-            public nsIClassInfo
+            public nsIXPCScriptable
 #ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
           , public nsISecurityCheckedComponent
 #endif
@@ -3101,7 +3092,6 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSISCRIPTABLEINTERFACES
     NS_DECL_NSIXPCSCRIPTABLE
-    NS_DECL_NSICLASSINFO
 #ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
     NS_DECL_NSISECURITYCHECKEDCOMPONENT
 #endif
