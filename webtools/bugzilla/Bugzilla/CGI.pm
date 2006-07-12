@@ -158,12 +158,25 @@ sub multipart_init {
     # CGI.pm's header() sets nph according to a param or $CGI::NPH, which
     # is the desired behaviour.
 
-    # Allow multiple calls to $cgi->header()
-    $CGI::HEADERS_ONCE = 0;
-
     return $self->header(
         %param,
     ) . "WARNING: YOUR BROWSER DOESN'T SUPPORT THIS SERVER-PUSH TECHNOLOGY." . $self->multipart_end;
+}
+
+# Have to add the cookies in.
+sub multipart_start {
+    my $self = shift;
+    my $headers = $self->SUPER::multipart_start(@_);
+    # Eliminate the one extra CRLF at the end.
+    $headers =~ s/$CGI::CRLF$//;
+    # Add the cookies. We have to do it this way instead of
+    # passing them to multpart_start, because CGI.pm's multipart_start
+    # doesn't understand a '-cookie' argument pointing to an arrayref.
+    foreach my $cookie (@{$self->{Bugzilla_cookie_list}}) {
+        $headers .= "Set-Cookie: ${cookie}${CGI::CRLF}";
+    }
+    $headers .= $CGI::CRLF;
+    return $headers;
 }
 
 # Override header so we can add the cookies in
@@ -181,13 +194,6 @@ sub header {
     }
 
     return $self->SUPER::header(@_) || "";
-}
-
-# Override multipart_start to ensure our cookies are added and avoid bad quoting of
-# CGI's multipart_start (bug 275108)
-sub multipart_start {
-    my $self = shift;
-    return $self->header(@_);
 }
 
 # The various parts of Bugzilla which create cookies don't want to have to

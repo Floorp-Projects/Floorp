@@ -884,6 +884,12 @@ if ($serverpush) {
     $template->process("list/server-push.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
 
+    # Under mod_perl, flush stdout so that the page actually shows up.
+    if ($ENV{MOD_PERL}) {
+        require Apache2::RequestUtil;
+        Apache2::RequestUtil->request->rflush();
+    }
+
     # Don't do multipart_end() until we're ready to display the replacement
     # page, otherwise any errors that happen before then (like SQL errors)
     # will result in a blank page being shown to the user instead of the error.
