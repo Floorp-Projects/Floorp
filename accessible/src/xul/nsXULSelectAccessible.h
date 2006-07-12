@@ -154,6 +154,8 @@ public:
   NS_IMETHOD GetRole(PRUint32 *_retval);
   NS_IMETHOD GetState(PRUint32 *_retval);
   NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
+  // Don't use XUL menu's special child aggregator, this can be a rich list item
+  NS_IMETHOD GetChildCount(PRInt32 *aAccChildCount) { return nsAccessibleWrap::GetChildCount(aAccChildCount); }
 
 private:
   PRBool mIsCheckbox;

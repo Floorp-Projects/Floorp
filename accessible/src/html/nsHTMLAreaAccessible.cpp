@@ -51,8 +51,6 @@
 nsHTMLAreaAccessible::nsHTMLAreaAccessible(nsIDOMNode *aDomNode, nsIAccessible *aParent, nsIWeakReference* aShell):
 nsLinkableAccessible(aDomNode, aShell)
 { 
-  Init(); // Make sure we're in cache
-  mParent = aParent;
 }
 
 /* wstring getName (); */
