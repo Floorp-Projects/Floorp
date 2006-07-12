@@ -2117,8 +2117,15 @@ SearchService.prototype = {
 
   _saveSortedEngineList: function SRCH_SVC_saveSortedEngineList() {
     var engines = this._getSortedEngines(false);
-    for (var i = 0; i < engines.length; ++i)
-      engineMetadataService.setAttr(engines[i], "order", i+1);
+    var values = []; 
+    var names = [];
+  
+    for (var i = 0; i < engines.length; ++i) {
+      names[i] = "order";
+      values[i] = i + 1;
+    }
+    
+    engineMetadataService.setAttrs(engines, names, values);
   },
 
   _buildSortedEngineList: function SRCH_SVC_buildSortedEngineList() {
@@ -2584,6 +2591,30 @@ var engineMetadataService = {
     this.mInsertData.step();
     this.mInsertData.reset();
 
+    this.mDB.commitTransaction();
+  },
+  
+  setAttrs: function epsSetAttrs(engines, names, values) {
+    this.mDB.beginTransaction();
+    
+    for (var i = 0; i < engines.length; i++) {
+      // attr names must be lower case
+      var name = names[i].toLowerCase();
+
+      var pp = this.mDeleteData.params;
+      pp.engineid = engines[i]._id;
+      pp.name = names[i];
+      this.mDeleteData.step();
+      this.mDeleteData.reset();
+
+      pp = this.mInsertData.params;
+      pp.engineid = engines[i]._id;
+      pp.name = names[i];
+      pp.value = values[i];
+      this.mInsertData.step();
+      this.mInsertData.reset();
+    }
+      
     this.mDB.commitTransaction();
   },
 
