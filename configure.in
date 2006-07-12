@@ -4098,7 +4098,7 @@ MOZ_ARG_ENABLE_STRING(application,
                             mail (Thunderbird)
                             minimo
                             composer
-                            calendar
+                            calendar (Sunbird)
                             xulrunner
                             macbrowser (Camino)
                             content/xslt (Standalone Transformiix XSLT)
@@ -4760,12 +4760,14 @@ AC_SUBST(MOZ_UI_LOCALE)
 dnl =========================================================
 dnl = Calendar client
 dnl =========================================================
-MOZ_ARG_ENABLE_BOOL(calendar,
-[  --enable-calendar       Enable building of the calendar client],
-    MOZ_CALENDAR=1,
-    MOZ_CALENDAR= )
-AC_SUBST(MOZ_CALENDAR)
-
+MOZ_ARG_ENABLE_BOOL(calendar,,
+    AC_MSG_WARNING([Building with the calendar extension is no longer supported.])
+    if test "$MOZ_THUNDERBIRD"; then
+        AC_MSG_WARNING([Since you're trying to build mail, you could try adding "--enable-extensions=default,lightning" to your mozconfig and building WITH A FRESH TREE.])
+    fi
+    AC_MSG_ERROR([See http://www.mozilla.org/projects/calendar/ for more information.])
+)
+ 
 dnl =========================================================
 dnl = Mail & News
 dnl =========================================================
