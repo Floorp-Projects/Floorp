@@ -440,7 +440,10 @@ PRInt32 nsHyperTextAccessible::GetRelativeOffset(nsIPresShell *aPresShell, nsIFr
   nsresult rv = aFromFrame->PeekOffset(aPresShell->GetPresContext(), &pos);
 
   PRInt32 resultOffset = pos.mContentOffset;
-  nsIContent *resultContent = NS_SUCCEEDED(rv) ? pos.mResultContent : nsnull;
+  nsIContent *resultContent = nsnull;
+  if (NS_SUCCEEDED(rv)) {
+    resultContent = pos.mResultContent;
+  }
   nsCOMPtr<nsIDOMNode> resultNode = do_QueryInterface(resultContent);
   PRInt32 hyperTextOffset;
   if (resultContent && NS_SUCCEEDED(DOMPointToOffset(resultNode, resultOffset, &hyperTextOffset))) {
