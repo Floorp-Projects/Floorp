@@ -45,7 +45,7 @@ interface nsIArray;
 * but they have some divergent attributes and require
 * different convenience methods.
 */ 
-[scriptable, uuid(5622f340-7dd1-4ddf-b171-3dc815f96abf)]
+[scriptable, uuid(c7e65344-df1f-4a75-9615-d58357c1554b)]
 interface nsIFeedContainer : nsISupports 
 {
   /**
