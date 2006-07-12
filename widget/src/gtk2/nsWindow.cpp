@@ -218,6 +218,9 @@ PRBool nsWindow::sIsDraggingOutOf = PR_FALSE;
 // This is the time of the last button press event.  The drag service
 // uses it as the time to start drags.
 guint32   nsWindow::mLastButtonPressTime = 0;
+// Time of the last button release event. We use it to detect when the
+// drag ended before we could properly setup drag and drop.
+guint32   nsWindow::mLastButtonReleaseTime = 0;
 
 static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 
@@ -1857,6 +1860,7 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
 
     // Always save the time of this event
     mLastButtonPressTime = aEvent->time;
+    mLastButtonReleaseTime = 0;
 
     // check to see if we should rollup
     nsWindow *containerWindow;
@@ -1902,6 +1906,8 @@ void
 nsWindow::OnButtonReleaseEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
 {
     PRUint32      eventType;
+
+    mLastButtonReleaseTime = aEvent->time;
 
     switch (aEvent->button) {
     case 2:
@@ -2256,6 +2262,20 @@ nsWindow::OnDragMotionEvent(GtkWidget *aWidget,
                             gpointer aData)
 {
     LOG(("nsWindow::OnDragMotionSignal\n"));
+
+    if (mLastButtonReleaseTime) {
+      // The drag ended before it was even setup to handle the end of the drag
+      // So, we fake the button getting released again to release the drag
+      GtkWidget *widget = gtk_grab_get_current();
+      GdkEvent event;
+      gboolean retval;
+      memset(&event, 0, sizeof(event));
+      event.type = GDK_BUTTON_RELEASE;
+      event.button.time = mLastButtonReleaseTime;
+      event.button.button = 1;
+      g_signal_emit_by_name(widget, "button_release_event", &event, &retval);
+      return TRUE;
+    }
 
     sIsDraggingOutOf = PR_FALSE;
 

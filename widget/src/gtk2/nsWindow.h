@@ -266,6 +266,7 @@ public:
     Window             mOldFocusWindow;
 
     static guint32     mLastButtonPressTime;
+    static guint32     mLastButtonReleaseTime;
 
 #ifdef USE_XIM
     void               IMEDestroyContext (void);
