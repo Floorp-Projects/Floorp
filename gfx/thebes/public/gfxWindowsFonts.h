@@ -362,14 +362,15 @@ public:
 
     virtual const gfxFont::Metrics& GetMetrics();
 
+    HFONT GetHFONT();
     cairo_font_face_t *CairoFontFace();
     cairo_scaled_font_t *CairoScaledFont();
     SCRIPT_CACHE *ScriptCache() { return &mScriptCache; }
-    HFONT GetHFONT() { return mFont; }
     const gfxMatrix& CurrentMatrix() const { return mCTM; }
     void UpdateCTM(const gfxMatrix& aMatrix);
 
 protected:
+    HFONT MakeHFONT();
     cairo_font_face_t *MakeCairoFontFace();
     cairo_scaled_font_t *MakeCairoScaledFont();
     void FillLogFont(PRInt16 weight);
