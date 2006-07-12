@@ -156,6 +156,10 @@ already_AddRefed<nsIAccessible> nsHTMLImageAccessible::CreateAreaAccessible(PRIn
     accService->GetCachedAccessible(domNode, mWeakShell, &acc);
     if (!acc) {
       accService->CreateHTMLAreaAccessible(mWeakShell, domNode, this, &acc);
+      nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(acc));
+      if (accessNode) {
+        accessNode->Init();
+      }
     }
     return acc;
   }
@@ -202,6 +206,7 @@ void nsHTMLImageAccessible::CacheChildren(PRBool aWalkAnonContent)
 
     privatePrevAccessible = do_QueryInterface(areaAccessible);
     NS_ASSERTION(privatePrevAccessible, "nsIAccessible impl's should always support nsPIAccessible as well");
+    privatePrevAccessible->SetParent(this);
   }
 }
 

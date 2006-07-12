@@ -71,6 +71,7 @@ class nsXULLinkAccessible : public nsLinkableAccessible
 
 public:
   nsXULLinkAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
+  NS_IMETHOD GetName(nsAString& _retval); 
   NS_IMETHOD GetRole(PRUint32 *aRole);
   NS_IMETHOD GetValue(nsAString& _retval);
 

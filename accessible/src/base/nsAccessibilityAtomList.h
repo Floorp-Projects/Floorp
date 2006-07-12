@@ -103,6 +103,7 @@ ACCESSIBILITY_ATOM(input, "input")
 ACCESSIBILITY_ATOM(label, "label")
 ACCESSIBILITY_ATOM(li, "li")
 ACCESSIBILITY_ATOM(link, "link")
+ACCESSIBILITY_ATOM(map, "map")
 ACCESSIBILITY_ATOM(math, "math")
 ACCESSIBILITY_ATOM(menu, "menu")    // XUL
 ACCESSIBILITY_ATOM(object, "object")

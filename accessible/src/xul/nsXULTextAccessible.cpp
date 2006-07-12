@@ -123,6 +123,21 @@ NS_IMETHODIMP nsXULLinkAccessible::GetValue(nsAString& aValue)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP nsXULLinkAccessible::GetName(nsAString& aName)
+{ 
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (!content) {
+    return NS_ERROR_FAILURE;  // Node shut down
+  }
+  if (!content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value,
+                        aName)) {
+    // if the value doesn't exist, flatten the inner content as the name (for descriptions)
+    return AppendFlatStringFromSubtree(content, &aName);
+  }
+  // otherwise, use the value attribute as the name (for labels)
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsXULLinkAccessible::GetRole(PRUint32 *aRole)
 {
   if (mIsLink) {

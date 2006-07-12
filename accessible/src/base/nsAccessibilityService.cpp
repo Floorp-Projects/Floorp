@@ -1698,6 +1698,15 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   }
 #endif
 
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
+  if (content && content->Tag() == nsAccessibilityAtoms::map) {
+    // Don't walk into maps, they take up no space.
+    // The nsHTMLAreaAccessible's they contain are attached as
+    // children of the appropriate nsHTMLImageAccessible.
+    *aIsHidden = PR_TRUE;
+    return NS_ERROR_FAILURE;
+  }
+
   // Check to see if we already have an accessible for this
   // node in the cache
   nsCOMPtr<nsIAccessNode> accessNode;
@@ -1717,7 +1726,6 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
 
   // No cache entry, so we must create the accessible
   // Check to see if hidden first
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
   nsCOMPtr<nsIDocument> nodeIsDoc;
   if (!content) {
     nodeIsDoc = do_QueryInterface(aNode);
