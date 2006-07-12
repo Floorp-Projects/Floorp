@@ -38,8 +38,18 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* Multiday view */
-calendar-event-column,
-calendar-header-container { 
+calendar-event-column {
+  background: #FFFFFF;
+}
+
+calendar-event-column[orient="horizontal"] {
+  border-top: 1px solid #3F7D91;
+}
+calendar-event-column[orient="vertical"] {
+  border-left: 1px solid #3F7D91;
+}
+
+calendar-header-container {
   background: #FFFFFF;
   border-left: 1px solid #3F7D91;
   border-top: 1px solid #3F7D91;
@@ -63,8 +73,42 @@ calendar-header-container[selected="true"] {
 .calendar-event-column-linebox[orient="horizontal"] {
   border-right: 1px solid #3F7D91;
 }
-
 .calendar-event-column-linebox[orient="vertical"] {
+  border-bottom: 1px solid #3F7D91;
+}
+
+/* Make sure the box for day-labels appears to end before the scrollbar. */
+.calendar-label-day-box[orient="horizontal"] {
+  border-right: 1px solid #3F7D91;
+}
+.calendar-label-day-box[orient="vertical"] {
+  border-bottom: 1px solid #3F7D91;
+}
+
+/* Make sure we extend the bold line separating scrollable and non-scrollable
+   areas over the timebar. */
+.calendar-header-time-spacer[orient="horizontal"] {
+  border-bottom: 2px solid #3F7D91;
+}
+.calendar-header-time-spacer[orient="vertical"] {
+  border-right: 2px solid #3F7D91;
+}
+
+/* Bold the line separating all-day events from scrollable area. */
+.calendar-header-day-box[orient="horizontal"] {
+  border-bottom: 2px solid #3F7D91;
+  border-right: 1px solid #3F7D91;
+}
+.calendar-header-day-box[orient="vertical"] {
+  border-bottom: 1px solid #3F7D91;
+  border-right: 2px solid #3F7D91;
+}
+
+/* Make sure to have a border between the edge of the views and the scrollbar. */
+.calendar-day-box[orient="horizontal"] {
+  border-right: 1px solid #3F7D91;
+}
+.calendar-day-box[orient="vertical"] {
   border-bottom: 1px solid #3F7D91;
 }
 
@@ -161,7 +205,17 @@ calendar-event-gripbar[parentorient="horizontal"] {
   color: #3F7D91;
   background: #E7EEEC;
   text-align: right;
+}
+
+.calendar-time-bar-box-odd[orient="horizontal"],
+.calendar-time-bar-box-even[orient="horizontal"] {
   border-top: 1px solid #3F7D91;
+  border-right: 1px solid #3F7D91;
+}
+
+.calendar-time-bar-box-odd[orient="vertical"],
+.calendar-time-bar-box-even[orient="vertical"] {
+  border-bottom: 1px solid #3F7D91;
   border-left: 1px solid #3F7D91;
 }
 

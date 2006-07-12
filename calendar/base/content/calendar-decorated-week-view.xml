@@ -50,7 +50,7 @@
         <content>
              <xul:vbox anonid="main-box" flex="1">
                 <xul:calendar-navigation-buttons anonid="nav-control"/>
-                <xul:box style="overflow: auto;" flex="1">
+                <xul:box flex="1">
                     <xul:calendar-multiday-view anonid="view-element" flex="1" orient="vertical" xbl:inherits="context,item-context"/>
                 </xul:box>
             </xul:vbox>

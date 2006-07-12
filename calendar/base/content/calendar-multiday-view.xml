@@ -1551,17 +1551,23 @@
                         anonid="rotate-button"
              oncommand="var e=this.parentNode.parentNode.parentNode.parentNode; if (e.orient == 'horizontal') e.orient = 'vertical'; else e.orient = 'horizontal';" align="center"/>
           </xul:box>
-          <xul:box anonid="labeldaybox" flex="1" equalsize="always" />
+          <xul:box anonid="labeldaybox" class="calendar-label-day-box" flex="1"
+                   equalsize="always" />
+          <xul:box anonid="labelscrollbarspacer"/>
         </xul:box>
         <xul:box anonid="headerbox">
-          <xul:box anonid="headertimespacer"/>
-          <xul:box anonid="headerdaybox" flex="1" equalsize="always" />
+          <xul:box anonid="headertimespacer" 
+                   class="calendar-header-time-spacer"/>
+          <xul:box anonid="headerdaybox" class="calendar-header-day-box"
+                   flex="1" equalsize="always" />
+          <xul:box anonid="headerscrollbarspacer"/>
         </xul:box>
-        <xul:box anonid="childbox" flex="1">
+        <xul:scrollbox anonid="childbox" flex="1">
           <!-- the orient of the calendar-time-bar needs to be the opposite of the parent -->
           <xul:calendar-time-bar xbl:inherits="orient" anonid="timebar"/>
-          <xul:box anonid="daybox" flex="1" equalsize="always" />
-        </xul:box>
+          <xul:box anonid="daybox" class="calendar-day-box" flex="1"
+                   equalsize="always"/>
+        </xul:scrollbox>
       </xul:box>
     </content>
 
@@ -1577,6 +1583,14 @@
                             .getService(Components.interfaces.nsIStringBundleService);
         var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
         rButton.label = props.GetStringFromName("rotate");
+
+        // set the flex attribute at the scrollbox-innerbox
+        // (this can be removed, after Bug 343555 is fixed)
+        var childbox = document.getAnonymousElementByAttribute(
+                       this, "anonid", "childbox");
+        document.getAnonymousElementByAttribute(
+            childbox, "class", "box-inherit scrollbox-innerbox").flex = "1";
+
 	this.reorient();
       ]]></constructor>
 
@@ -1614,7 +1628,11 @@
           //self.removeAttribute("hidden");
           var minutes = self.mEndMin - self.mStartMin;
           var ppm = size / minutes;
-          self.pixelsPerMinute = Math.round(ppm * 10) / 10;
+          ppm = Math.round(ppm * 10) / 10;
+          if (ppm < self.mMinPPM) {
+            ppm = self.mMinPPM;
+          }
+          self.pixelsPerMinute = ppm;
         ]]></body>
       </method>
 
@@ -1628,6 +1646,7 @@
       <field name="mDateColumns">null</field>
       <field name="mBatchCount">0</field>
       <field name="mPixPerMin">0.6</field>
+      <field name="mMinPPM">0.4</field>
       <field name="mSelectedItem">null</field>
       <field name="mSelectedDayCol">null</field>
 
@@ -2218,7 +2237,8 @@
               this.setPixelsPerMin(0.6);
           
           var normalelems = ['mainbox', 'timebar'];
-          var otherelems = ['labelbox', 'labeldaybox', 'headerbox', 'headerdaybox', 'childbox', 'daybox'];
+          var otherelems = ['labelbox', 'labeldaybox', 'headertimespacer',
+                            'headerbox', 'headerdaybox', 'childbox', 'daybox'];
 
           for each (var id in normalelems) {
               document.getAnonymousElementByAttribute(this, "anonid", id).setAttribute("orient", orient);
@@ -2233,6 +2253,10 @@
           var headerbox = document.getAnonymousElementByAttribute(this, "anonid", "headerbox");
           var headertimespacer = document.getAnonymousElementByAttribute(this, "anonid", "headertimespacer");
           var timebar = document.getAnonymousElementByAttribute(this, "anonid", "timebar");
+          var childbox = document.getAnonymousElementByAttribute(
+                         this, "anonid", "childbox");
+          var mainbox = document.getAnonymousElementByAttribute(
+                        this, "anonid", "mainbox");
 
           if (orient == "vertical") {
               headerbox.setAttribute("height", 50);
@@ -2249,6 +2273,11 @@
               headertimespacer.removeAttribute("height");
               labeltimespacer.setAttribute("width", timebarWidth);
               labeltimespacer.removeAttribute("height");
+
+              childbox.setAttribute(
+                  "style", "overflow-x: hidden; overflow-y: auto;");
+              mainbox.setAttribute(
+                  "style", "overflow-x: auto; overflow-y: hidden;");
           } else {
               headerbox.setAttribute("width", 30);
               headerbox.removeAttribute("height");
@@ -2263,6 +2292,11 @@
               headertimespacer.removeAttribute("width");
               labeltimespacer.setAttribute("height", timebarHeight);
               labeltimespacer.removeAttribute("width");
+
+              childbox.setAttribute(
+                  "style", "overflow-x: auto; overflow-y: hidden;");
+              mainbox.setAttribute(
+                  "style", "overflow-x: hidden; overflow-y: auto;");
           }
 
           var boxes = ["daybox", "headerdaybox", "labeldaybox"];
@@ -2275,6 +2309,9 @@
               }
           }
           this.refresh();
+
+          // adjust scrollbar spacers
+          this.adjustScrollBarSpacers();
         ]]></body>
       </method>
 
@@ -2617,6 +2654,8 @@
       <method name="setPixelsPerMin">
         <parameter name="pixPerMin"/>
         <body><![CDATA[
+          this.mPixPerMin = pixPerMin;
+
           var timebar = document.getAnonymousElementByAttribute(this, "anonid", "timebar");
           timebar.pixelsPerMinute = pixPerMin;
 
@@ -2771,7 +2810,32 @@
           return date;
         ]]></body>
       </method>
- 
+      
+      <method name="adjustScrollBarSpacers">
+        <body><![CDATA[
+          // get the view's orientation
+          var propertyName;
+          if (this.getAttribute("orient") == "vertical") {
+              propertyName = "width";
+          } else {
+              propertyName = "height";
+          }
+
+          // get the width/height of the childbox scrollbar
+          var childbox = document.getAnonymousElementByAttribute(
+                         this, "anonid", "childbox");
+          var propertyValue = childbox.boxObject.firstChild
+                              .boxObject[propertyName];
+
+          // set the same width/height for the label and header box spacers
+          var headerScrollBarSpacer = document.getAnonymousElementByAttribute(
+                                      this, "anonid", "headerscrollbarspacer");
+          headerScrollBarSpacer.setAttribute(propertyName, propertyValue);
+          var labelScrollBarSpacer = document.getAnonymousElementByAttribute(
+                                     this, "anonid", "labelscrollbarspacer");
+          labelScrollBarSpacer.setAttribute(propertyName, propertyValue);
+        ]]></body>
+      </method>
     </implementation>
 
     <handlers>
@@ -2785,6 +2849,20 @@
                 this.controller.deleteOccurrence(occurrence);
             }
         }
+      ]]></handler>
+
+      <handler event="DOMAttrModified"><![CDATA[
+        // when a scrollbar appears/disappears in the view,
+        // it's disabled attribute is modified
+        if (event.attrName != "disabled" ||
+            event.originalTarget.localName != "scrollbar" ||
+            event.originalTarget.parentNode.getAttribute("anonid") !=
+                "childbox") {
+            return;
+        }
+
+        // adjust scrollbar spacers
+        this.adjustScrollBarSpacers();
       ]]></handler>
     </handlers>
   </binding>
