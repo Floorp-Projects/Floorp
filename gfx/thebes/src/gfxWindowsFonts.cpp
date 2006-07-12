@@ -48,7 +48,6 @@
 #include "nsUnicodeRange.h"
 #include "nsUnicharUtils.h"
 
-#include "nsIPref.h"
 #include "nsServiceManagerUtils.h"
 
 #include <math.h>
@@ -418,7 +417,7 @@ gfxWindowsFontGroup::MakeTextRun(const nsAString& aString)
         NS_WARNING("It is illegal to create a gfxTextRun with empty strings");
         return nsnull;
     }
-    return new gfxWindowsTextRun(aString, this);
+    return new gfxWindowsTextRun(&aString, this);
 }
 
 gfxTextRun *
@@ -428,7 +427,7 @@ gfxWindowsFontGroup::MakeTextRun(const nsACString& aString)
         NS_WARNING("It is illegal to create a gfxTextRun with empty strings");
         return nsnull;
     }
-    return new gfxWindowsTextRun(aString, this);
+    return new gfxWindowsTextRun(&aString, this);
 }
 
 /**********************************************************************
@@ -437,13 +436,13 @@ gfxWindowsFontGroup::MakeTextRun(const nsACString& aString)
  *
  **********************************************************************/
 
-gfxWindowsTextRun::gfxWindowsTextRun(const nsAString& aString, gfxWindowsFontGroup *aFontGroup)
-    : mGroup(aFontGroup), mString(aString), mCString(EmptyCString()), mIsASCII(PR_FALSE)
+gfxWindowsTextRun::gfxWindowsTextRun(const nsAString *aString, gfxWindowsFontGroup *aFontGroup)
+    : mGroup(aFontGroup), mString(aString), mCString(nsnull), mIsASCII(PR_FALSE)
 {
 }
 
-gfxWindowsTextRun::gfxWindowsTextRun(const nsACString& aString, gfxWindowsFontGroup *aFontGroup)
-    : mGroup(aFontGroup), mString(EmptyString()), mCString(aString), mIsASCII(PR_TRUE)
+gfxWindowsTextRun::gfxWindowsTextRun(const nsACString *aString, gfxWindowsFontGroup *aFontGroup)
+    : mGroup(aFontGroup), mString(nsnull), mCString(aString), mIsASCII(PR_TRUE)
 {
 }
 
@@ -502,11 +501,11 @@ gfxWindowsTextRun::MeasureOrDrawFast(gfxContext *aContext,
     PRUint32 aLength;
 
     if (mIsASCII) {
-        aCString = mCString.BeginReading();
-        aLength = mCString.Length();
+        aCString = mCString->BeginReading();
+        aLength = mCString->Length();
     } else {
-        aWString = mString.BeginReading();
-        aLength = mString.Length();
+        aWString = mString->BeginReading();
+        aLength = mString->Length();
         if (ScriptIsComplex(aWString, aLength, SIC_COMPLEX) == S_OK)
             return -1; // try uniscribe instead
     }
@@ -1207,10 +1206,16 @@ gfxWindowsTextRun::MeasureOrDrawUniscribe(gfxContext *aContext,
     HDC aDC = GetDCFromSurface(surf);
     NS_ASSERTION(aDC, "No DC");
 
-    const nsAString& theString = (mIsASCII) ? NS_STATIC_CAST(const nsAString&, NS_ConvertASCIItoUTF16(mCString)) : mString;
-    const PRUnichar *aString = theString.BeginReading();
-    const PRUint32 aLength = theString.Length();
-
+    /* we aren't going to change this. i swear */
+    nsAString *str = NS_CONST_CAST(nsAString*, mString);
+    nsString buf;
+    if (mIsASCII) {
+        CopyASCIItoUTF16(*mCString, buf);
+        str = &buf;
+    }
+ 
+    const PRUnichar *aString = str->BeginReading();
+    const PRUint32 aLength = str->Length();
     const PRBool isRTL = IsRightToLeft();
 
     // save the xform so that we can restore to it while cairo
