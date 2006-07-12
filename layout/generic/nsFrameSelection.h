@@ -446,8 +446,10 @@ public:
    * Dragging or extending selection will never allow for a subset
    * (or the whole) of the maintained selection to become unselected.
    * Primary use: double click selecting then dragging on second click
+   * @param aAmount the initial amount of text selected (word, line or paragraph).
+   *                For "line", use eSelectBeginLine.
    */
-  nsresult MaintainSelection();
+  nsresult MaintainSelection(nsSelectionAmount aAmount = eSelectNoAmount);
 
 
   nsFrameSelection();
@@ -562,6 +564,7 @@ private:
 
   // maintain selection
   nsCOMPtr<nsIDOMRange> mMaintainRange;
+  nsSelectionAmount mMaintainedAmount;
 
   //batching
   PRInt32 mBatching;

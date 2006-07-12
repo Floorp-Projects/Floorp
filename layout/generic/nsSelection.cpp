@@ -2051,7 +2051,7 @@ nsFrameSelection::GetFrameFromLevel(nsIFrame    *aFrameIn,
 
 
 nsresult
-nsFrameSelection::MaintainSelection()
+nsFrameSelection::MaintainSelection(nsSelectionAmount aAmount)
 {
   PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
   nsCOMPtr<nsIDOMRange> range;
@@ -2061,6 +2061,8 @@ nsFrameSelection::MaintainSelection()
   if (!range)
     return NS_ERROR_FAILURE;
 
+  mMaintainedAmount = aAmount;
+  
   nsCOMPtr<nsIDOMNode> startNode;
   nsCOMPtr<nsIDOMNode> endNode;
   PRInt32 startOffset;
@@ -2266,6 +2268,34 @@ nsFrameSelection::HandleDrag(nsIFrame *aFrame, nsPoint aPoint)
        AdjustForMaintainedSelection(offsets.content, offsets.offset))
     return;
 
+  // Adjust offsets according to maintained amount
+  if (mMaintainRange && 
+      mMaintainedAmount != eSelectNoAmount) {    
+    
+    nsCOMPtr<nsIDOMNode> rangenode;
+    PRInt32 rangeOffset;
+    mMaintainRange->GetStartContainer(getter_AddRefs(rangenode));
+    mMaintainRange->GetStartOffset(&rangeOffset);
+    nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(offsets.content);
+    PRInt32 relativePosition = nsRange::ComparePoints(rangenode, rangeOffset,
+                                                      domNode, offsets.offset);
+
+    nsDirection direction = relativePosition > 0 ? eDirPrevious : eDirNext;
+    nsSelectionAmount amount = mMaintainedAmount;
+    if (amount == eSelectBeginLine && direction == eDirNext)
+      amount = eSelectEndLine;
+
+    nsPeekOffsetStruct pos;
+    pos.SetData(mShell, 0, amount, direction, offsets.offset, PR_FALSE,
+                PR_TRUE, PR_FALSE, mLimiter != nsnull, PR_TRUE, PR_FALSE);
+    nsIFrame* frame = mShell->GetPrimaryFrameFor(offsets.content);
+
+    if (NS_SUCCEEDED(result = frame->PeekOffset(mShell->GetPresContext(), &pos)) && pos.mResultContent) {
+      offsets.content = pos.mResultContent;
+      offsets.offset = pos.mContentOffset;
+    }
+  }
+  
   // XXX Code not up to date
 #ifdef VISUALSELECTION
   if (mShell->GetPresContext()->BidiEnabled()) {

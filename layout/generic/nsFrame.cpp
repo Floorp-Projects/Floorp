@@ -2048,7 +2048,7 @@ nsFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
   //no release 
 
   // maintain selection
-  return GetFrameSelection()->MaintainSelection();
+  return GetFrameSelection()->MaintainSelection(aAmountBack);
 }
 
 // Figure out which view we should point capturing at, given that drag started
