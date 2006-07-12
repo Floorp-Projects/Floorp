@@ -311,6 +311,11 @@ NS_IMETHODIMP
 nsResProtocolHandler::ResolveURI(nsIURI *uri, nsACString &result)
 {
     nsresult rv;
+
+    nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
+    if (!url)
+        return NS_NOINTERFACE;
+
     nsCAutoString host;
     nsCAutoString path;
 
@@ -319,6 +324,13 @@ nsResProtocolHandler::ResolveURI(nsIURI *uri, nsACString &result)
 
     rv = uri->GetPath(path);
     if (NS_FAILED(rv)) return rv;
+
+    nsCAutoString filepath;
+    url->GetFilePath(filepath);
+
+    // Don't misinterpret the filepath as an absolute URI.
+    if (filepath.FindChar(':') != -1)
+        return NS_ERROR_MALFORMED_URI;
 
     nsCOMPtr<nsIURI> baseURI;
     rv = GetSubstitution(host, getter_AddRefs(baseURI));
