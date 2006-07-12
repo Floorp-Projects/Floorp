@@ -201,9 +201,9 @@
           this.setAttribute("selection", val);
 
           if (val == "open")
-            this.control.allowFreeEnry(true);
+            this.control.allowFreeEntry(true);
           else
-            this.control.allowFreeEnry(false);
+            this.control.allowFreeEntry(false);
         </setter>
       </property>
 
