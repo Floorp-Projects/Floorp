@@ -54,7 +54,7 @@ CPPSRCS	+= 	gfxWindowsFonts.cpp \
 		nsUnicodeRange.cpp \
 		$(NULL)
 
-_OS_LIBS	= usp10 ole32
+_OS_LIBS	= usp10
 ifdef GNU_CXX
 _OS_LIBS	+= uuid
 endif
