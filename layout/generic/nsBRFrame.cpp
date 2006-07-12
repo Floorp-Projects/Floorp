@@ -49,6 +49,12 @@
 #include "nsLayoutAtoms.h"
 #include "nsTextTransformer.h"
 
+#ifdef ACCESSIBILITY
+#include "nsIServiceManager.h"
+#include "nsIAccessible.h"
+#include "nsIAccessibilityService.h"
+#endif
+
 //FOR SELECTION
 #include "nsIContent.h"
 #include "nsFrameSelection.h"
@@ -69,6 +75,8 @@ public:
                     nsReflowStatus& aStatus);
   virtual nsIAtom* GetType() const;
   
+  NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
+
 protected:
   BRFrame(nsStyleContext* aContext) : nsFrame(aContext) {}
   virtual ~BRFrame();
@@ -234,3 +242,15 @@ NS_IMETHODIMP BRFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruc
   }
   return nsFrame::PeekOffset(aPresContext, aPos);//now we let the default take over.
 }
+
+#ifdef ACCESSIBILITY
+NS_IMETHODIMP BRFrame::GetAccessible(nsIAccessible** aAccessible)
+{
+  nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
+  if (accService) {
+    return accService->CreateHTMLBRAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
+  }
+  return NS_ERROR_FAILURE;
+}
+#endif
+
