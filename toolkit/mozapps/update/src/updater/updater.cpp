@@ -1090,6 +1090,19 @@ int main(int argc, char **argv)
 
   gSourcePath = argv[1];
 
+#ifdef XP_WIN
+  // By opening a file handle to the executable, we can tell the OS to
+  // prevent new application processes from launching while we are
+  // updating.
+
+  HANDLE exefile = NULL;
+
+  if (argc > 5)
+    exefile = CreateFile(argv[4], DELETE | GENERIC_WRITE,
+                         0, // no sharing!
+                         NULL, OPEN_EXISTING, 0, NULL);
+#endif
+
   LogInit();
 
   // Run update process on a background thread.  ShowProgressUI may return
@@ -1101,6 +1114,11 @@ int main(int argc, char **argv)
   t.Join();
 
   LogFinish();
+
+#ifdef XP_WIN
+  if (exefile)
+    CloseHandle(exefile);
+#endif
 
   // The callback to execute is given as the last N arguments of our command
   // line.  The first of those arguments specifies the working directory for
