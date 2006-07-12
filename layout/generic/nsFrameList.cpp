@@ -438,9 +438,6 @@ nsFrameList::GetPrevVisualFor(nsIFrame* aFrame) const
   if (!mFirstChild)
     return nsnull;
   
-  if (aFrame && aFrame->GetType() == nsLayoutAtoms::blockFrame)
-    return GetPrevSiblingFor(aFrame);
-
   nsIFrame* parent = mFirstChild->GetParent();
   if (!parent)
     return aFrame ? GetPrevSiblingFor(aFrame) : LastChild();
@@ -509,9 +506,6 @@ nsFrameList::GetNextVisualFor(nsIFrame* aFrame) const
   if (!mFirstChild)
     return nsnull;
   
-  if (aFrame && aFrame->GetType() == nsLayoutAtoms::blockFrame)
-    return aFrame->GetNextSibling();
-
   nsIFrame* parent = mFirstChild->GetParent();
   if (!parent)
     return aFrame ? GetPrevSiblingFor(aFrame) : mFirstChild;

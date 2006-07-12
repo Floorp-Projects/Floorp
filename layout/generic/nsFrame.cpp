@@ -102,6 +102,10 @@
 #include "nsIPercentHeightObserver.h"
 #include "nsTextTransformer.h"
 
+#ifdef IBMBIDI
+#include "nsBidiPresUtils.h"
+#endif
+
 // For triple-click pref
 #include "nsIServiceManager.h"
 #ifndef MOZ_CAIRO_GFX
@@ -4474,51 +4478,53 @@ nsFrame::GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *
     nsresult result = blockFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(it));
     NS_ASSERTION(NS_SUCCEEDED(result) && it, "GetLineNumber() succeeded but no block frame?");
 
+    PRBool atLineEdge;
     nsIFrame *firstFrame;
     nsIFrame *lastFrame;
-    nsRect  nonUsedRect;
-    PRInt32 lineFrameCount;
-    PRUint32 lineFlags;
-
 #ifdef IBMBIDI
-    /* Check whether the visual and logical order of the frames are different */
-    PRBool lineIsReordered = PR_FALSE;
-    nsIFrame *firstVisual;
-    nsIFrame *lastVisual;
-
-    if (aPos->mVisual) {
-      result = it->CheckLineOrder(thisLine, &lineIsReordered, &firstVisual, &lastVisual);
-      if (NS_FAILED(result))
-        return result;
-    }
-
-    if (lineIsReordered) {
-      firstFrame = firstVisual;
-      lastFrame = lastVisual;
-    }
-    else
+    if (aPos->mVisual && aPresContext->BidiEnabled()) {
+      PRBool lineIsRTL;                                                             
+      it->GetDirection(&lineIsRTL);
+      PRBool isReordered;
+      result = it->CheckLineOrder(thisLine, &isReordered, &firstFrame, &lastFrame);
+      nsIFrame** framePtr = aPos->mDirection == eDirPrevious ? &firstFrame : &lastFrame;
+      nsBidiLevel embeddingLevel = nsBidiPresUtils::GetFrameEmbeddingLevel(*framePtr);
+      if (((embeddingLevel & 1) && lineIsRTL || !(embeddingLevel & 1) && !lineIsRTL) ==
+          (aPos->mDirection == eDirPrevious)) {
+        GetFirstLeaf(aPresContext, framePtr);
+      } else {
+        GetLastLeaf(aPresContext, framePtr);
+      }
+      atLineEdge = *framePtr == traversedFrame;
+    } else
 #endif
     {
+      nsRect  nonUsedRect;
+      PRInt32 lineFrameCount;
+      PRUint32 lineFlags;
       result = it->GetLine(thisLine, &firstFrame, &lineFrameCount,nonUsedRect,
                            &lineFlags);
       if (NS_FAILED(result))
         return result;
 
-      lastFrame = firstFrame;
-      for (;lineFrameCount > 1;lineFrameCount --){
-        result = it->GetNextSiblingOnLine(lastFrame, thisLine);
-        if (NS_FAILED(result) || !lastFrame){
-          NS_ASSERTION(0,"should not be reached nsFrame\n");
-          return NS_ERROR_FAILURE;
+      if (aPos->mDirection == eDirPrevious) {
+        GetFirstLeaf(aPresContext, &firstFrame);
+        atLineEdge = firstFrame == traversedFrame;
+      } else { // eDirNext
+        lastFrame = firstFrame;
+        for (;lineFrameCount > 1;lineFrameCount --){
+          result = it->GetNextSiblingOnLine(lastFrame, thisLine);
+          if (NS_FAILED(result) || !lastFrame){
+            NS_ASSERTION(0,"should not be reached nsFrame\n");
+            return NS_ERROR_FAILURE;
+          }
         }
+        GetLastLeaf(aPresContext, &lastFrame);
+        atLineEdge = lastFrame == traversedFrame;
       }
     }
 
-    GetFirstLeaf(aPresContext, &firstFrame); // XXX Should be GetFirstVisualLeaf
-    GetLastLeaf(aPresContext, &lastFrame);   // XXX Should be GetLastVisualLeaf
-    //END LINE DATA CODE
-    if ((aPos->mDirection == eDirNext && lastFrame == traversedFrame)
-         || (aPos->mDirection == eDirPrevious && firstFrame == traversedFrame))
+    if (atLineEdge)
     {
       if (aPos->mJumpLines != PR_TRUE)
         return NS_ERROR_FAILURE;//we are done. cannot jump lines
@@ -4534,7 +4540,7 @@ nsFrame::GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *
     nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
     result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),
 #ifdef IBMBIDI
-                                  lineIsReordered ? VISUAL : 
+                                  aPos->mVisual && aPresContext->BidiEnabled() ? VISUAL : 
 #endif
                                   LEAF,
                                   aPresContext, 
