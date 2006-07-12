@@ -57,7 +57,6 @@ class nsSVGInnerSVGFrame : public nsSVGInnerSVGFrameBase,
   NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 protected:
   nsSVGInnerSVGFrame(nsStyleContext* aContext);
-  NS_IMETHOD InitSVG();
   
    // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -89,6 +88,7 @@ public:
 
   // nsISVGChildFrame interface:
   NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas, nsRect *aDirtyRect);
+  NS_IMETHOD InitialUpdate();
   NS_IMETHOD NotifyCanvasTMChanged(PRBool suppressInvalidation);
   NS_IMETHOD SetMatrixPropagation(PRBool aPropagate);
   NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM);
@@ -111,6 +111,9 @@ public:
   NS_IMETHOD NotifyViewportChange();
 
 protected:
+
+  void UpdateCoordCtx();
+
   nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
   nsCOMPtr<nsIDOMSVGMatrix> mOverrideCTM;
 
@@ -134,20 +137,14 @@ nsSVGInnerSVGFrame::nsSVGInnerSVGFrame(nsStyleContext* aContext) :
 #endif
 }
 
-NS_IMETHODIMP
-nsSVGInnerSVGFrame::InitSVG()
+void
+nsSVGInnerSVGFrame::UpdateCoordCtx()
 {
-  NS_ASSERTION(mParent, "no parent");
-  
-  // hook up CoordContextProvider chain:
-  
   nsSVGContainerFrame *containerFrame = NS_STATIC_CAST(nsSVGContainerFrame*,
                                                        mParent);
-  nsCOMPtr<nsISVGSVGElement> SVGElement = do_QueryInterface(mContent);
-  NS_ASSERTION(SVGElement, "wrong content element");
-  SVGElement->SetParentCoordCtxProvider(nsRefPtr<nsSVGCoordCtxProvider>(containerFrame->GetCoordContextProvider()));
+  nsSVGSVGElement *svgElement = NS_STATIC_CAST(nsSVGSVGElement*, mContent);
 
-  return NS_OK;
+  svgElement->SetParentCoordCtxProvider(nsRefPtr<nsSVGCoordCtxProvider>(containerFrame->GetCoordContextProvider()));
 }
 
 //----------------------------------------------------------------------
@@ -212,10 +209,18 @@ nsSVGInnerSVGFrame::NotifyCanvasTMChanged(PRBool suppressInvalidation)
 {
   // make sure our cached transform matrix gets (lazily) updated
   mCanvasTM = nsnull;
+  UpdateCoordCtx();
 
   return nsSVGInnerSVGFrameBase::NotifyCanvasTMChanged(suppressInvalidation);
 }
 
+NS_IMETHODIMP
+nsSVGInnerSVGFrame::InitialUpdate()
+{
+  UpdateCoordCtx();
+
+  return nsSVGInnerSVGFrameBase::InitialUpdate();
+}
 
 NS_IMETHODIMP
 nsSVGInnerSVGFrame::SetMatrixPropagation(PRBool aPropagate)
