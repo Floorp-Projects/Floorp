@@ -6,6 +6,7 @@
 
   <path id="xmlimpl.classpath">
      <pathelement location="${xbean.jar}"/>
+     <pathelement location="${jsr173.jar}"/>
   </path>
 
 
