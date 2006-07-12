@@ -118,3 +118,22 @@ String.prototype.parseJSON = function () {
         return false;
     }
 };
+
+function fetchJSON(url,callbackFunction) {
+  var d = loadJSONDoc(url);
+  d.addBoth(function (res) {
+    d.deferred = null;
+    toggleMessage('none');
+    return res;
+  });
+  d.addCallback(callbackFunction);
+  // if anything goes wrong, except for a simple cancellation,
+  // then log the error and show the logger
+  d.addErrback(function (err) {
+    if (err instanceof CancelledError) {
+      return;
+    }
+    logError(err);
+    logger.debuggingBookmarklet();
+  });
+}

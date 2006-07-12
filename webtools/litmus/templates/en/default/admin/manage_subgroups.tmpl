@@ -32,7 +32,6 @@
 [% INCLUDE global/litmus_header.tmpl %]
 
 <script type="text/javascript">
-var d;
 var subgroup;
 var testcases=[% IF all_testcases %][% all_testcases %][% ELSE %]{}[% END %];
 
@@ -57,7 +56,7 @@ function loadSubgroup() {
     document.getElementById('subgroup_display_div').style.display = 'none';
     document.getElementById('editform_div').style.display = 'none';
     disableForm('edit_subgroup_form');
-    blankForm('edit_subgroup_form');
+    blankSubgroupForm('edit_subgroup_form');
     return false;
   } 
 
@@ -66,22 +65,7 @@ function loadSubgroup() {
   disableForm('edit_subgroup_form');
   var url = 'json.cgi?subgroup_id=' + subgroup_id;
   toggleMessage('loading','Loading Subgroup ID# ' + subgroup_id + '...');
-  var d = loadJSONDoc(url);
-  d.addBoth(function (res) { 
-    d.deferred = null;  
-    toggleMessage('none');
-    return res; 
-  }); 
-  d.addCallback(populateSubgroup); 
-  // if anything goes wrong, except for a simple cancellation, 
-  // then log the error and show the logger 
-  d.addErrback(function (err) { 
-    if (err instanceof CancelledError) { 
-      return; 
-    }
-    logError(err); 
-    logger.debuggingBookmarklet(); 
-  });
+  fetchJSON(url,populateSubgroup);
 }
 
 function populateSubgroup(data) {
@@ -163,39 +147,19 @@ function populateSubgroup(data) {
   enableModeButtons();
 }
 
-function blankForm(formid) {
-  var f = document.getElementById(formid);
-  var ems = f.getElementsByTagName('input');
-  for (var i in ems) {
-    ems[i].checked=false;
-    if (ems[i].type == 'submit' || 
-	ems[i].value == 'Reset' ||
-	ems[i].type == 'radio' ||
-	ems[i].type == 'checkbox' ||
-	ems[i].type == 'button') {
-      continue;
-    }
-    ems[i].value='';
-  }
-  ems = f.getElementsByTagName('select');
-  for (var i in ems) {
-    ems[i].selectedIndex=0;
-  }
-  ems = f.getElementsByTagName('textarea');
-  for (var i in ems) {
-    ems[i].value='';
-  }
+function blankSubgroupForm(formid) {
+  blankForm(formid);
   document.getElementById('editform_subgroup_id_display').innerHTML = '';
   var selectBoxAll = document.getElementById('editform_testcases_for_product');
   selectBoxAll.options.length = 0;
   selectBoxAll.options[selectBoxAll.length] = new Option("--No product selected--",
                                                              "");
-  selectBoxAll.selectedIndex=-1
+  selectBoxAll.selectedIndex=-1;
   var selectBoxSubgroup = document.getElementById('editform_subgroup_testcases');
   selectBoxSubgroup.options.length = 0;
   selectBoxSubgroup.options[selectBoxSubgroup.length] = new Option("--No subgroup selected--",
                                                              "");
-  selectBoxSubgroup.selectedIndex=-1
+  selectBoxSubgroup.selectedIndex=-1;
  
   document.getElementById('editform_testrunner_group_id').innerHTML = '';
 
@@ -205,7 +169,7 @@ function blankForm(formid) {
 
 function switchToAdd() {
   disableModeButtons();
-  blankForm('edit_subgroup_form');
+  blankSubgroupForm('edit_subgroup_form');
   document.getElementById('editform_submit').value = 'Add Subgroup';
   document.getElementById('editform_mode').value = 'add';
   enableForm('edit_subgroup_form');
@@ -233,6 +197,16 @@ function populateAllTestcases() {
     }
   }
 }  
+
+function resetSubgroup() {
+  if (document.getElementById('editform_subgroup_id').value != '') {
+    populateSubgroup(subgroup);
+    switchToEdit();   
+  } else {
+    switchToAdd();
+  }
+}
+
 </script>
 
 <div id="page">

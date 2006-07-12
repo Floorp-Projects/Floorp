@@ -443,3 +443,27 @@ function changeSelectedValue(selectid, optionvalue) {
     options[0].selected = true;
   }
 }
+
+function blankForm(formid) {
+  var f = document.getElementById(formid);
+  var ems = f.getElementsByTagName('input');
+  for (var i in ems) {
+    if (ems[i].type == 'submit' ||
+        ems[i].value == 'Reset' ||
+        ems[i].type == 'radio' ||
+        ems[i].type == 'checkbox' ||
+        ems[i].type == 'button') {
+      continue;
+    }
+    ems[i].value='';
+    ems[i].checked=false;
+  }
+  ems = f.getElementsByTagName('select');
+  for (var i in ems) {
+    ems[i].selectedIndex=0;
+  }
+  ems = f.getElementsByTagName('textarea');
+  for (var i in ems) {
+    ems[i].value='';
+  }
+}

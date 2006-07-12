@@ -32,7 +32,6 @@
 [% INCLUDE global/litmus_header.tmpl %]
 
 <script type="text/javascript">
-var d;
 var testgroup;
 var subgroups=[% IF all_subgroups %][% all_subgroups %][% ELSE %]{}[% END %];
 
@@ -57,7 +56,7 @@ function loadTestgroup() {
     document.getElementById('testgroup_display_div').style.display = 'none';
     document.getElementById('editform_div').style.display = 'none';
     disableForm('edit_testgroup_form');
-    blankForm('edit_testgroup_form');
+    blankTestgroupForm('edit_testgroup_form');
     return false;
   } 
 
@@ -66,22 +65,7 @@ function loadTestgroup() {
   disableForm('edit_testgroup_form');
   toggleMessage('loading','Loading Testgroup ID# ' + testgroup_id + '...');
   var url = 'json.cgi?testgroup_id=' + testgroup_id;
-  var d = loadJSONDoc(url);
-  d.addBoth(function (res) { 
-    d.deferred = null;  
-    toggleMessage('none');
-    return res; 
-  }); 
-  d.addCallback(populateTestgroup); 
-  // if anything goes wrong, except for a simple cancellation, 
-  // then log the error and show the logger 
-  d.addErrback(function (err) { 
-    if (err instanceof CancelledError) { 
-      return; 
-    }
-    logError(err); 
-    logger.debuggingBookmarklet(); 
-  });
+  fetchJSON(url,populateTestgroup);
 }
 
 function populateTestgroup(data) {
@@ -132,39 +116,19 @@ function populateTestgroup(data) {
   enableModeButtons();
 }
 
-function blankForm(formid) {
-  var f = document.getElementById(formid);
-  var ems = f.getElementsByTagName('input');
-  for (var i in ems) {
-    ems[i].checked=false;
-    if (ems[i].type == 'submit' || 
-	ems[i].value == 'Reset' ||
-	ems[i].type == 'radio' ||
-	ems[i].type == 'checkbox' ||
-	ems[i].type == 'button') {
-      continue;
-    }
-    ems[i].value='';
-  }
-  ems = f.getElementsByTagName('select');
-  for (var i in ems) {
-    ems[i].selectedIndex=0;
-  }
-  ems = f.getElementsByTagName('textarea');
-  for (var i in ems) {
-    ems[i].value='';
-  }
+function blankTestgroupForm(formid) {
+  blankForm(formid);
   document.getElementById('editform_testgroup_id_display').innerHTML = '';
   var selectBoxAll = document.getElementById('editform_subgroups_for_product');
   selectBoxAll.options.length = 0;
   selectBoxAll.options[selectBoxAll.length] = new Option("--No product selected--",
                                                              "");
-  selectBoxAll.selectedIndex=-1
+  selectBoxAll.selectedIndex=-1;
   var selectBoxTestgroup = document.getElementById('editform_testgroup_subgroups');
   selectBoxTestgroup.options.length = 0;
   selectBoxTestgroup.options[selectBoxTestgroup.length] = new Option("--No testgroup selected--",
                                                              "");
-  selectBoxTestgroup.selectedIndex=-1
+  selectBoxTestgroup.selectedIndex=-1;
 
   document.getElementById('editform_testrunner_plan_id').innerHTML = '';
 
@@ -173,7 +137,7 @@ function blankForm(formid) {
 
 function switchToAdd() {
   disableModeButtons();
-  blankForm('edit_testgroup_form');
+  blankTestgroupForm('edit_testgroup_form');
   document.getElementById('editform_submit').value = 'Add Testgroup';
   document.getElementById('editform_mode').value = 'add';
   enableForm('edit_testgroup_form');
@@ -201,6 +165,15 @@ function populateAllSubgroups() {
     }
   }
 }  
+
+function resetTestgroup() {
+  if (document.getElementById('editform_testgroup_id').value != '') {
+    populateTestgroup(testgroup);
+    switchToEdit();   
+  } else {
+    switchToAdd();
+  }
+}
 </script>
 
 <div id="page">

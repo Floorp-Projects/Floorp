@@ -200,8 +200,32 @@ sub update_subgroups() {
   }
 }
 
-1;
-
+#########################################################################
+sub update_branches() {
+  my $self = shift;
+  my $new_branch_ids = shift;
+  
+  if (scalar @$new_branch_ids) {
+    # Failing to delete branches is _not_ fatal when adding a new testgroup.
+    my $rv = $self->delete_from_branches();
+    my $dbh = __PACKAGE__->db_Main();  
+    my $sql = "INSERT INTO testgroup_branches (testgroup_id,branch_id) VALUES (?,?,?)";
+    foreach my $new_branch_id (@$new_branch_ids) {
+      next if (!$new_branch_id);
+      # Log any failures/duplicate keys to STDERR.
+      eval {
+        my $rows = $dbh->do($sql, 
+                            undef,
+                            $self->testgroup_id,
+                            $new_branch_id,
+                           );
+      };
+      if ($@) {
+        print STDERR $@;
+      }
+    }
+  }
+}
 
 1;
 

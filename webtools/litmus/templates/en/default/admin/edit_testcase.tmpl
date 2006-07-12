@@ -75,8 +75,11 @@ function checkFormContents(f) {
             </td>
             </tr>
 	    <tr>
-            <td align="right">&uArr;&nbsp;<a name="showFormattingHelp" onclick="toggleHelp(formattingHelpTitle,formattingHelpText);">Formatting Help</a>&nbsp;|&nbsp;&uArr;&nbsp;<a name="stepsPreview" onClick="var newwin = window.open('preview.cgi?preview=' + escape(document.getElementById('editform_steps').value),'preview_window','height=400,width=400,resizeable=yes,scrollable=yes');newwin.focus();">Preview</a></td>
-            <td align="right">&uArr;&nbsp;<a name="showFormattingHelp" onclick="toggleHelp(formattingHelpTitle,formattingHelpText);">Formatting Help</a>&nbsp;|&nbsp;&uArr;&nbsp;<a name="resultsPreview" onClick="var newwin = window.open('preview.cgi?preview=' + escape(document.getElementById('editform_results').value),'preview_window','height=400,width=400,resizeable=yes,scrollable=yes');newwin.focus();">Preview</a></td>
+            <td align="right">&uArr;&nbsp;<a name="stepsPreview" onClick="var newwin = window.open('preview.cgi?preview=' + escape(document.getElementById('editform_steps').value),'preview_window','height=400,width=400,resizeable=yes,scrollable=yes');newwin.focus();">Preview</a></td>
+            <td align="right">&uArr;&nbsp;<a name="resultsPreview" onClick="var newwin = window.open('preview.cgi?preview=' + escape(document.getElementById('editform_results').value),'preview_window','height=400,width=400,resizeable=yes,scrollable=yes');newwin.focus();">Preview</a></td>
+            </tr>
+            <tr>
+            <td colspan="2" align="right">&uArr;&nbsp;<a name="showFormattingHelp" onclick="toggleHelp(formattingHelpTitle,formattingHelpText);">Formatting Help</a></td>
             </tr>
           </table>
 
@@ -151,7 +154,7 @@ function checkFormContents(f) {
           <td name="editform_testrunner_case_version" id="editform_testrunner_case_version"></td>
         </tr>
         <tr>
-          <td colspan="3" align="right"><input id="editform_reset" class="button" type="button" value="Reset" disabled />&nbsp;<input class="button" type="submit" id="editform_submit" name="editform_submit" value="Submit Edits" disabled /></div> 
+          <td colspan="3" align="right"><input id="editform_reset" class="button" type="button" value="Reset" disabled onClick="resetTestcase();" />&nbsp;<input class="button" type="submit" id="editform_submit" name="editform_submit" value="Submit Edits" disabled /></div> 
           </td>
         </tr>	
       </table>

@@ -91,7 +91,6 @@ sub page_pickGroupSubgroup {
         if (!$sysconfig) {
           page_pickProduct()
         };
-        print $c->header();
         $branch = $sysconfig->branch();
     } else {
         $branch = Litmus::DB::Branch->retrieve($c->param("branch"));
@@ -102,10 +101,11 @@ sub page_pickGroupSubgroup {
         $sysconfig = Litmus::SysConfig->processForm($c);
         # get the user id and set a sysconfig cookie
         $c->storeCookie($sysconfig->setCookie());
-        print $c->header();
     }
     
     Litmus::Auth::requireLogin("run_tests.cgi");
+
+    print $c->header();
     
     # Get all groups for the current branch.
     my @groups = Litmus::DB::Testgroup->search_EnabledByBranch($branch->branch_id());

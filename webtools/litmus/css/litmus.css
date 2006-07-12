@@ -936,6 +936,7 @@ table.manage td {
 }
 
 table.manage input.button {
+    font-size: 1em;    
     margin: 5px;
 }
 
@@ -1097,6 +1098,7 @@ div.section-header {
     color: #666666;
     text-transform: lowercase;
     overflow: auto;
+    margin-bottom: 10px;
 }
 
 div.category h2, div.category h3 {

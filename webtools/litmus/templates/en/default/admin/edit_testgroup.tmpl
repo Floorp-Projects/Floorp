@@ -120,15 +120,19 @@ var manageTestgroupsHelpText="<p>The select box on the left contains all the sub
             <tr>
             <td align="right">&uArr;&nbsp;<a name="previewSubgroup" onclick="previewSubgroup('editform_subgroups_for_product');">Preview Subgroup</a></td>
             <td></td>
-            <td align="right">&uArr;&nbsp;<a name="showManageSubgroupsHelp" onclick="toggleHelp(manageSubgroupsHelpTitle,manageSubgroupsHelpText);">Help with Managing Subgroups</a></td>
+            <td align="right">&uArr;&nbsp;<a name="previewSubgroup" onclick="previewSubgroup('editform_testgroup_subgroups');">Preview Subgroup</a></td>
             <td></td>
             </tr>            
+            <tr>
+            <td colspan="3" align="right">&uArr;&nbsp;<a name="showManageSubgroupsHelp" onclick="toggleHelp(manageSubgroupsHelpTitle,manageSubgroupsHelpText);">Help with Managing Subgroups</a></td>
+            <td></td>
+            </tr>
           </table>
           </div>
         </td>
 	</tr>
         <tr>
-          <td colspan="3" align="right"><input id="editform_reset" class="button" type="button" value="Reset" disabled />&nbsp;<input class="button" type="submit" id="editform_submit" name="editform_submit" value="Submit Edits" disabled /></div> 
+          <td colspan="3" align="right"><input id="editform_reset" class="button" type="button" value="Reset" disabled onClick="resetTestgroup();" />&nbsp;<input class="button" type="submit" id="editform_submit" name="editform_submit" value="Submit Edits" disabled /></div> 
           </td>
         </tr>	
       </table>

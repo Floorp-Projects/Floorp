@@ -191,10 +191,24 @@ sub delete_from_testgroups() {
   
   my $dbh = __PACKAGE__->db_Main();  
   my $sql = "DELETE from subgroup_testgroups WHERE subgroup_id=?";
-  my $rows = $dbh->do($sql,
-                      undef,
-                      $self->subgroup_id
-                     );
+  return $dbh->do($sql,
+                  undef,
+                  $self->subgroup_id
+                 );
+}
+
+#########################################################################
+sub delete_from_testgroup() {
+  my $self = shift;
+  my $testgroup_id = shift;
+  
+  my $dbh = __PACKAGE__->db_Main();  
+  my $sql = "DELETE from subgroup_testgroups WHERE subgroup_id=? AND testgroup_id=?";
+  return $dbh->do($sql,
+                  undef,
+                  $self->subgroup_id,
+                  $testgroup_id
+                 );
 }
 
 #########################################################################
@@ -203,10 +217,10 @@ sub delete_from_testcases() {
   
   my $dbh = __PACKAGE__->db_Main();  
   my $sql = "DELETE from testcase_subgroups WHERE subgroup_id=?";
-  my $rows = $dbh->do($sql,
-                      undef,
-                      $self->subgroup_id
-                     );
+  return $dbh->do($sql,
+                  undef,
+                  $self->subgroup_id
+                 );
 }
 
 #########################################################################
@@ -235,6 +249,28 @@ sub update_testgroups() {
 			 );
     }
   }
+}
+
+#########################################################################
+sub update_testgroup() {
+  my $self = shift;
+  my $testgroup_id = shift;
+  my $sort_order = shift;
+  
+  # Sort order defaults to 1.
+  if (!$sort_order) {
+    $sort_order = 1;
+  }
+
+  my $rv = $self->delete_from_testgroup($testgroup_id);
+  my $dbh = __PACKAGE__->db_Main();  
+  my $sql = "INSERT INTO subgroup_testgroups (subgroup_id,testgroup_id,sort_order) VALUES (?,?,?)";
+  return $dbh->do($sql, 
+                  undef,
+                  $self->subgroup_id,
+                  $testgroup_id,
+                  $sort_order
+                 );
 }
 
 #########################################################################

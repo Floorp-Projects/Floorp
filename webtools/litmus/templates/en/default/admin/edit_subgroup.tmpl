@@ -124,15 +124,19 @@ var manageTestcasesHelpText="<p>The select box on the left contains all the test
             <tr>
             <td align="right">&uArr;&nbsp;<a name="previewTestcase" onclick="previewTestcase('editform_testcases_for_product');">Preview Testcase</a></td>
             <td></td>
-            <td align="right">&uArr;&nbsp;<a name="showManageTestcasesHelp" onclick="toggleHelp(manageTestcasesHelpTitle,manageTestcasesHelpText);">Help with Managing Testcases</a></td>
+            <td align="right">&uArr;&nbsp;<a name="previewTestcase" onclick="previewTestcase('editform_subgroup_testcases');">Preview Testcase</a></td> 
             <td></td>
             </tr>            
+            <tr>
+            <td colspan="3" align="right">&uArr;&nbsp;<a name="showManageTestcasesHelp" onclick="toggleHelp(manageTestcasesHelpTitle,manageTestcasesHelpText);">Help with Managing Testcases</a></td>
+            <td></td>
+            </tr>
           </table>
           </div>
         </td>
 	</tr>
         <tr>
-          <td colspan="3" align="right"><input id="editform_reset" class="button" type="button" value="Reset" disabled />&nbsp;<input class="button" type="submit" id="editform_submit" name="editform_submit" value="Submit Edits" disabled /></div> 
+          <td colspan="3" align="right"><input id="editform_reset" class="button" type="button" value="Reset" disabled onClick="resetSubgroup();" />&nbsp;<input class="button" type="submit" id="editform_submit" name="editform_submit" value="Submit Edits" disabled /></div> 
           </td>
         </tr>	
       </table>

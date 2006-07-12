@@ -260,10 +260,24 @@ sub delete_from_subgroups() {
   
   my $dbh = __PACKAGE__->db_Main();
   my $sql = "DELETE from testcase_subgroups WHERE testcase_id=?";
-  my $rows = $dbh->do($sql,
-                      undef,
-                      $self->testcase_id
-                     );
+  return $dbh->do($sql,
+                  undef,
+                  $self->testcase_id
+                 );
+}
+
+#########################################################################
+sub delete_from_subgroup() {
+  my $self = shift;
+  my $subgroup_id = shift;  
+
+  my $dbh = __PACKAGE__->db_Main();
+  my $sql = "DELETE from testcase_subgroups WHERE testcase_id=? AND subgroup_id=?";
+  return $dbh->do($sql,
+                  undef,
+                  $self->testcase_id,
+                  $subgroup_id
+                 );
 }
 
 #########################################################################
@@ -272,11 +286,11 @@ sub delete_from_related() {
   
   my $dbh = __PACKAGE__->db_Main();
   my $sql = "DELETE from related_testcases WHERE testcase_id=? OR related_testcase_id=?";
-  my $rows = $dbh->do($sql,
-                      undef,
-                      $self->testcase_id,
-                      $self->testcase_id
-                     );
+  return $dbh->do($sql,
+                  undef,
+                  $self->testcase_id,
+                  $self->testcase_id
+                 );
 }
 
 #########################################################################
@@ -305,6 +319,28 @@ sub update_subgroups() {
 			 );
     }
   }
+}
+
+#########################################################################
+sub update_subgroup() {
+  my $self = shift;
+  my $subgroup_id = shift;
+  my $sort_order = shift;
+
+  # Sort order defaults to 1.
+  if (!$sort_order) {
+    $sort_order = 1;
+  }
+  
+  my $rv = $self->delete_from_subgroup($subgroup_id);
+  my $dbh = __PACKAGE__->db_Main();
+  my $sql = "INSERT INTO testcase_subgroups (testcase_id,subgroup_id,sort_order) VALUES (?,?,?)";
+  return $dbh->do($sql, 
+                  undef,
+                  $self->testcase_id,
+                  $subgroup_id,
+                  $sort_order
+                 );
 }
 
 1;
