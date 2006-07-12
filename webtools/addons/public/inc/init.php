@@ -30,7 +30,7 @@ ini_set('magic_quotes_gpc',0);
  * This is used in important comparisons with $shadow_config and $cache_config,
  * so it was pulled out of config.php so it's immutable.
  */
-define('SCRIPT_NAME',substr($_SERVER['SCRIPT_NAME'], strlen(WEB_PATH.'/'), strlen($_SERVER['SCRIPT_NAME'])));
+define('SCRIPT_NAME',basename($_SERVER['PHP_SELF']));
 
 
 
