@@ -44,7 +44,7 @@
 !define CompanyName           "Mozilla"
 !define URLInfoAbout          "http://www.mozilla.org/"
 !define URLUpdateInfo         "http://www.mozilla.org/products/firefox/"
-!define SurveyURL             "https://survey.mozilla.com/1/Mozilla%20Firefox/${AppVersion}%20(${AB_CD})/exit.html"
+!define SurveyURL             "https://survey.mozilla.com/1/Mozilla%20Firefox/${AppVersion}/${AB_CD}/exit.html"
 
 # Percentage of new "Standard" installs to enable talkback for
 !define RandomPercent         "10"
