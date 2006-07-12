@@ -187,6 +187,134 @@ GetDocumentFromWindow(nsIDOMWindow *aWindow)
   return doc;
 }
 
+static void
+SetFrameExternalReference(nsIFrame* aFrame)
+{
+  aFrame->AddStateBits(NS_FRAME_EXTERNAL_REFERENCE);
+}
+
+class nsMouseWheelTransaction {
+public:
+  static nsIFrame* GetTargetFrame() { return sTargetFrame; }
+  static void BeginTransaction(nsIFrame* aTargetFrame,
+                               nsGUIEvent* aEvent);
+  static void UpdateTransaction();
+  static void EndTransaction();
+  static void OnEvent(nsEvent* aEvent);
+protected:
+  static void Init();
+  static nsPoint GetScreenPoint(nsGUIEvent* aEvent);
+
+  static nsIFrame*            sTargetFrame; // weak reference
+  static PRUint32             sTime;        // in milliseconds
+};
+
+nsIFrame* nsMouseWheelTransaction::sTargetFrame = nsnull;
+PRUint32  nsMouseWheelTransaction::sTime        = 0;
+
+void
+nsMouseWheelTransaction::BeginTransaction(nsIFrame* aTargetFrame,
+                                          nsGUIEvent* aEvent)
+{
+  NS_ASSERTION(!sTargetFrame, "previous transaction is not finished!");
+  SetFrameExternalReference(aTargetFrame);
+  sTargetFrame = aTargetFrame;
+  UpdateTransaction();
+}
+
+void
+nsMouseWheelTransaction::UpdateTransaction()
+{
+  // We should use current time instead of nsEvent.time.
+  // 1. Some events doesn't have the correct creation time.
+  // 2. If the computer runs slowly by other processes eating the CPU resource,
+  //    the event creation time doesn't keep real time.
+  sTime = PR_IntervalToMilliseconds(PR_IntervalNow());
+}
+
+void
+nsMouseWheelTransaction::EndTransaction()
+{
+  sTargetFrame = nsnull;
+}
+
+static PRBool
+OutOfTime(PRUint32 aBaseTime, PRUint32 aThreshold)
+{
+  PRUint32 now = PR_IntervalToMilliseconds(PR_IntervalNow());
+  return (now - aBaseTime > aThreshold);
+}
+
+void
+nsMouseWheelTransaction::OnEvent(nsEvent* aEvent)
+{
+  if (!sTargetFrame)
+    return;
+
+  PRUint32 timeout =
+    nsContentUtils::GetIntPref("mousewheel.transaction.timeout", 3000);
+  if (OutOfTime(sTime, timeout)) {
+    // Time out the current transaction.
+    EndTransaction();
+    return;
+  }
+
+  switch (aEvent->message) {
+    case NS_MOUSE_SCROLL:
+      return;
+    case NS_MOUSE_MOVE:
+    case NS_DRAGDROP_OVER:
+      if (((nsMouseEvent*)aEvent)->reason == nsMouseEvent::eReal) {
+        // If the cursor is moving inside the frame, and it is less than
+        // ignoremovedelay milliseconds since the last scroll operation, ignore
+        // the mouse move; otherwise, terminate the scrollwheel transaction.
+        PRUint32 holdingTime =
+          nsContentUtils::GetIntPref("mousewheel.transaction.ignoremovedelay",
+                                     500);
+        if (OutOfTime(sTime, holdingTime)) {
+          EndTransaction();
+          return;
+        }
+        nsPoint pt = GetScreenPoint((nsGUIEvent*)aEvent);
+        nsIntRect r = sTargetFrame->GetScreenRectExternal();
+        if (!r.Contains(pt))
+          EndTransaction();
+      }
+      return;
+    case NS_KEY_PRESS:
+    case NS_KEY_UP:
+    case NS_KEY_DOWN:
+    case NS_MOUSE_LEFT_BUTTON_UP:
+    case NS_MOUSE_LEFT_BUTTON_DOWN:
+    case NS_MOUSE_MIDDLE_BUTTON_UP:
+    case NS_MOUSE_MIDDLE_BUTTON_DOWN:
+    case NS_MOUSE_RIGHT_BUTTON_UP:
+    case NS_MOUSE_RIGHT_BUTTON_DOWN:
+    case NS_MOUSE_LEFT_DOUBLECLICK:
+    case NS_MOUSE_MIDDLE_DOUBLECLICK:
+    case NS_MOUSE_RIGHT_DOUBLECLICK:
+    case NS_MOUSE_LEFT_CLICK:
+    case NS_MOUSE_MIDDLE_CLICK:
+    case NS_MOUSE_RIGHT_CLICK:
+    case NS_CONTEXTMENU:
+    case NS_CONTEXTMENU_KEY:
+    case NS_DRAGDROP_DROP:
+      EndTransaction();
+      return;
+  }
+}
+
+nsPoint
+nsMouseWheelTransaction::GetScreenPoint(nsGUIEvent* aEvent)
+{
+  NS_ASSERTION(aEvent, "aEvent is null");
+  NS_ASSERTION(aEvent->widget, "aEvent-widget is null");
+  nsRect tmpRect;
+  aEvent->widget->WidgetToScreen(nsRect(aEvent->refPoint, nsSize(1, 1)),
+                                 tmpRect);
+  return tmpRect.TopLeft();
+}
+
 /******************************************************************/
 /* nsEventStateManager                                            */
 /******************************************************************/
@@ -399,12 +527,6 @@ nsEventStateManager::Observe(nsISupports *aSubject,
 
 NS_IMPL_ISUPPORTS3(nsEventStateManager, nsIEventStateManager, nsIObserver, nsISupportsWeakReference)
 
-inline void
-SetFrameExternalReference(nsIFrame* aFrame)
-{
-  aFrame->AddStateBits(NS_FRAME_EXTERNAL_REFERENCE);
-}
-
 NS_IMETHODIMP
 nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
                                     nsEvent *aEvent,
@@ -432,6 +554,8 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     SetFrameExternalReference(mCurrentTarget);
 
   *aStatus = nsEventStatus_eIgnore;
+
+  nsMouseWheelTransaction::OnEvent(aEvent);
 
   switch (aEvent->message) {
   case NS_MOUSE_LEFT_BUTTON_DOWN:
@@ -1702,9 +1826,30 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
     }
   }
 
-  nsIScrollableView* scrollView;
+  nsIScrollableView* scrollView = nsnull;
   nsIFrame* scrollFrame = aTargetFrame;
-  PRBool passToParent = PR_TRUE;
+
+  // If the user recently scrolled with the mousewheel, then they probably want
+  // to scroll the same view as before instead of the view under the cursor.
+  // nsMouseWheelTransaction tracks the frame currently being scrolled with the
+  // mousewheel. We consider the transaction ended when the mouse moves more than
+  // "mousewheel.transaction.ignoremovedelay" milliseconds after the last scroll
+  // operation, or any time the mouse moves out of the frame, or when more than
+  // "mousewheel.transaction.timeout" milliseconds have passed after the last
+  // operation, even if the mouse hasn't moved.
+  nsIFrame* lastScrollFrame = nsMouseWheelTransaction::GetTargetFrame();
+  if (lastScrollFrame) {
+    nsCOMPtr<nsIScrollableViewProvider> svp =
+      do_QueryInterface(lastScrollFrame);
+    if (svp) {
+      scrollView = svp->GetScrollableView();
+      nsMouseWheelTransaction::UpdateTransaction();
+    } else {
+      nsMouseWheelTransaction::EndTransaction();
+      lastScrollFrame = nsnull;
+    }
+  }
+  PRBool passToParent = lastScrollFrame ? PR_FALSE : PR_TRUE;
 
   for (; scrollFrame && passToParent;
        scrollFrame = GetParentFrameToScroll(aPresContext, scrollFrame)) {
@@ -1733,8 +1878,10 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
       PRBool canScroll;
       nsresult rv = scrollView->CanScroll(aScrollHorizontal,
                                           (aNumLines > 0), canScroll);
-      if (NS_SUCCEEDED(rv))
-        passToParent = !canScroll;
+      if (NS_SUCCEEDED(rv) && canScroll) {
+        passToParent = PR_FALSE;
+        nsMouseWheelTransaction::BeginTransaction(scrollFrame, aEvent);
+      }
 
       // Comboboxes need special care.
       nsIComboboxControlFrame* comboBox = nsnull;
@@ -1745,6 +1892,7 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
           if (passToParent) {
             passToParent = PR_FALSE;
             scrollView = nsnull;
+            nsMouseWheelTransaction::EndTransaction();
           }
         } else {
           // Always propagate when not dropped down (even if focused).
@@ -2308,7 +2456,8 @@ nsEventStateManager::ClearFrameRefs(nsIFrame* aFrame)
   if (mDOMEventLevel > 0) {
     mClearedFrameRefsDuringEvent = PR_TRUE;
   }
-
+  if (aFrame == nsMouseWheelTransaction::GetTargetFrame())
+    nsMouseWheelTransaction::EndTransaction();
 
   return NS_OK;
 }
