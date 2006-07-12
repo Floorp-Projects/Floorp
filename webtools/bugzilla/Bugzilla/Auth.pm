@@ -36,8 +36,6 @@ use Bugzilla::Auth::Login::Stack;
 use Bugzilla::Auth::Verify::Stack;
 use Bugzilla::Auth::Persist::Cookie;
 
-use Switch;
-
 sub new {
     my ($class, $params) = @_;
     my $self = fields::new($class);
@@ -149,50 +147,41 @@ sub _handle_login_result {
             $self->{_persister}->persist_login($user);
         }
     }
-    else {
-        switch ($fail_code) {
-            case AUTH_ERROR {
-                ThrowCodeError($result->{error}, $result->{details});
-            }
-            case AUTH_NODATA {
-                if ($login_type == LOGIN_REQUIRED) {
-                    # This seems like as good as time as any to get rid of
-                    # old crufty junk in the logincookies table.  Get rid
-                    # of any entry that hasn't been used in a month.
-                    $dbh->do("DELETE FROM logincookies WHERE " .
-                             $dbh->sql_to_days('NOW()') . " - " .
-                             $dbh->sql_to_days('lastused') . " > 30");
-                    $self->{_info_getter}->fail_nodata($self);
-                }
-                # Otherwise, we just return the "default" user.
-                $user = Bugzilla->user;
-            }
-
-            # The username/password may be wrong
-            # Don't let the user know whether the username exists or whether
-            # the password was just wrong. (This makes it harder for a cracker
-            # to find account names by brute force)
-            case [AUTH_LOGINFAILED, AUTH_NO_SUCH_USER] {
-                ThrowUserError("invalid_username_or_password");
-            }
-
-            # The account may be disabled
-            case AUTH_DISABLED {
-                $self->{_persister}->logout();
-                # XXX This is NOT a good way to do this, architecturally.
-                $self->{_persister}->clear_browser_cookies();
-                # and throw a user error
-                ThrowUserError("account_disabled",
-                    {'disabled_reason' => $result->{user}->disabledtext});
-            }
-
-            # If we get here, then we've run out of options, which 
-            # shouldn't happen.
-            else {
-                ThrowCodeError("authres_unhandled", 
-                               { value => $fail_code });
-            }
+    elsif ($fail_code == AUTH_ERROR) {
+        ThrowCodeError($result->{error}, $result->{details});
+    }
+    elsif ($fail_code == AUTH_NODATA) {
+        if ($login_type == LOGIN_REQUIRED) {
+            # This seems like as good as time as any to get rid of
+            # old crufty junk in the logincookies table.  Get rid
+            # of any entry that hasn't been used in a month.
+            $dbh->do("DELETE FROM logincookies WHERE " .
+                     $dbh->sql_to_days('NOW()') . " - " .
+                     $dbh->sql_to_days('lastused') . " > 30");
+            $self->{_info_getter}->fail_nodata($self);
         }
+        # Otherwise, we just return the "default" user.
+        $user = Bugzilla->user;
+    }
+    # The username/password may be wrong
+    # Don't let the user know whether the username exists or whether
+    # the password was just wrong. (This makes it harder for a cracker
+    # to find account names by brute force)
+    elsif (($fail_code == AUTH_LOGINFAILED) || ($fail_code == AUTH_NO_SUCH_USER)) {
+        ThrowUserError("invalid_username_or_password");
+    }
+    # The account may be disabled
+    elsif ($fail_code == AUTH_DISABLED) {
+        $self->{_persister}->logout();
+        # XXX This is NOT a good way to do this, architecturally.
+        $self->{_persister}->clear_browser_cookies();
+        # and throw a user error
+        ThrowUserError("account_disabled",
+            {'disabled_reason' => $result->{user}->disabledtext});
+    }
+    # If we get here, then we've run out of options, which shouldn't happen.
+    else {
+        ThrowCodeError("authres_unhandled", { value => $fail_code });
     }
 
     return $user;
