@@ -5,7 +5,6 @@
 <?xml-stylesheet href="chrome://communicator/skin/button.css"?>
 <?xml-stylesheet href="chrome://communicator/skin/communicator.css"?>
 <?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css"?>
-<?xml-stylesheet href="chrome://communicator/skin/formatting.css"?>
 <?xml-stylesheet href="chrome://communicator/skin/menubutton.css"?>
 <?xml-stylesheet href="chrome://communicator/skin/prefpanels.css"?>
 <?xml-stylesheet href="chrome://communicator/skin/securityOverlay.css"?>

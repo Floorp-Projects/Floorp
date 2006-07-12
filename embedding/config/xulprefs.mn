@@ -6,8 +6,8 @@ content/communicator/communicator.css, comm/content/communicator/communicator.cs
 skin/classic/communicator/communicator.css, classic/skin/classic/communicator/communicator.css
 skin/classic/communicator/brand.css, classic/skin/classic/communicator/brand.css
 skin/classic/communicator/button.css, classic/skin/classic/communicator/button.css
-skin/classic/communicator/formatting.css, classic/skin/classic/communicator/formatting.css
 skin/classic/communicator/prefpanels.css, classic/skin/classic/communicator/prefpanels.css
+skin/classic/global/formatting.css, classic/skin/classic/global/formatting.css
 skin/classic/global/tree/twisty-clsd.gif, classic/skin/classic/global/tree/twisty-clsd.gif
 skin/classic/global/tree/twisty-open.gif, classic/skin/classic/global/tree/twisty-open.gif
 skin/classic/global/arrow/arrow-dn.gif, classic/skin/classic/global/arrow/arrow-dn.gif
