@@ -55,7 +55,7 @@
 #include "nsIObserverService.h"
 #include "nsIUploadChannel.h"
 #include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
+#include "nsIPrefBranch2.h"
 #include "nsIObserver.h"
 #include "nsILocalFile.h"
 #include "nsIPropertyBag.h"
@@ -117,6 +117,8 @@ PRLogModuleInfo *gMetricsLog;
 static const char kQuitApplicationTopic[] = "quit-application";
 static const char kUploadTimePref[] = "metrics.upload.next-time";
 static const char kPingTimePref[] = "metrics.upload.next-ping";
+static const char kEventCountPref[] = "metrics.event-count";
+static const char kEnablePref[] = "metrics.upload.enable";
 
 const PRUint32 nsMetricsService::kMaxRetries = 3;
 
@@ -1029,6 +1031,15 @@ nsMetricsService::Observe(nsISupports *subject, const char *topic,
         }
       }
     }
+  } else if (strcmp(topic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0) {
+    // The only pref we care about changing is the .enable pref
+    if (NS_ConvertUTF8toUTF16(kEnablePref).Equals(nsDependentString(data))) {
+      if (CollectionEnabled()) {
+        StartCollection();
+      } else {
+        StopCollection();
+      }
+    }
   }
   
   return NS_OK;
@@ -1037,8 +1048,17 @@ nsMetricsService::Observe(nsISupports *subject, const char *topic,
 nsresult
 nsMetricsService::ProfileStartup()
 {
+  nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  NS_ENSURE_STATE(prefs);
+  prefs->AddObserver(kEnablePref, this, PR_FALSE);
+
+  return CollectionEnabled() ? StartCollection() : StopCollection();
+}
+
+nsresult
+nsMetricsService::StartCollection()
+{
   // Initialize configuration by reading our old config file if one exists.
-  NS_ENSURE_STATE(mConfig.Init());
   nsCOMPtr<nsIFile> file;
   GetConfigFile(getter_AddRefs(file));
 
@@ -1068,6 +1088,35 @@ nsMetricsService::ProfileStartup()
 
   // If we didn't load a config file, we should upload as soon as possible.
   InitUploadTimer(!loaded);
+
+  return NS_OK;
+}
+
+nsresult
+nsMetricsService::StopCollection()
+{
+  // Clear out prefs and files associated with metrics collection
+  MS_LOG(("Clearing metrics state"));
+  FlushClearPref(kUploadTimePref);
+  FlushClearPref(kPingTimePref);
+  FlushClearPref(kEventCountPref);
+
+  nsCOMPtr<nsIFile> configFile;
+  GetConfigFile(getter_AddRefs(configFile));
+  if (configFile) {
+    configFile->Remove(PR_FALSE);
+  }
+
+  nsCOMPtr<nsILocalFile> dataFile;
+  GetDataFile(&dataFile);
+  if (dataFile) {
+    dataFile->Remove(PR_FALSE);
+  }
+
+  // Clear our current config and make sure all collectors are disabled
+  mConfig.Reset();
+  EnableCollectors();
+  CreateRoot();  // clear any unflushed events
 
   return NS_OK;
 }
@@ -1138,6 +1187,8 @@ nsMetricsService::Init()
 
   mMD5Context = MD5_NewContext();
   NS_ENSURE_TRUE(mMD5Context, NS_ERROR_FAILURE);
+
+  NS_ENSURE_STATE(mConfig.Init());
 
   // Create an XML document to serve as the owner document for elements.
   mDocument = do_CreateInstance("@mozilla.org/xml/xml-document;1");
@@ -1223,15 +1274,19 @@ nsMetricsService::UploadData()
   // TODO: Prepare a data stream for upload that is prefixed with a PROFILE
   //       event.
  
+  if (!CollectionEnabled()) {
+    MS_LOG(("Upload disabled"));
+    return NS_ERROR_ABORT;
+  }
+ 
   PRBool enable = PR_FALSE;
   nsCString spec;
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefs) {
-    prefs->GetBoolPref("metrics.upload.enable", &enable);
     prefs->GetCharPref("metrics.upload.uri", getter_Copies(spec));
   }
-  if (!enable || spec.IsEmpty()) {
-    MS_LOG(("Upload disabled or URI not set"));
+  if (spec.IsEmpty()) {
+    MS_LOG(("Upload URI not set"));
     return NS_ERROR_ABORT;
   }
 
@@ -1530,7 +1585,7 @@ nsMetricsService::HashBytes(const PRUint8 *bytes, PRUint32 length,
 PRBool
 nsMetricsService::PersistEventCount()
 {
-  return NS_SUCCEEDED(FlushIntPref("metrics.event-count", mEventCount));
+  return NS_SUCCEEDED(FlushIntPref(kEventCountPref, mEventCount));
 }
 
 /* static */ PRUint32
@@ -1633,6 +1688,16 @@ nsMetricsService::FlushClearPref(const char *prefName)
   return NS_OK;
 }
 
+/* static */ PRBool
+nsMetricsService::CollectionEnabled()
+{
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(prefs, PR_FALSE);
+
+  PRBool enabled = PR_FALSE;
+  prefs->GetBoolPref(kEnablePref, &enabled);
+  return enabled;
+}
 
 /* static */ nsresult
 nsMetricsUtils::NewPropertyBag(nsIWritablePropertyBag2 **result)

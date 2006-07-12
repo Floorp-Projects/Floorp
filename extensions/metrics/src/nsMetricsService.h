@@ -152,6 +152,12 @@ private:
   // Post-profile-initialization startup code
   nsresult ProfileStartup();
 
+  // Reads the config, starts a new session, and turns on collectors
+  nsresult StartCollection();
+
+  // Stops collectors and removes all metrics-related prefs and files
+  nsresult StopCollection();
+
   // Starts and stops collectors based on the current configuration
   void EnableCollectors();
   
@@ -235,6 +241,9 @@ private:
   static nsresult FlushIntPref(const char *prefName, PRInt32 prefValue);
   static nsresult FlushCharPref(const char *prefName, const char *prefValue);
   static nsresult FlushClearPref(const char *prefName);
+
+  // Returns true if the pref to enable collection is set to true
+  static PRBool CollectionEnabled();
 
 private:
   class BadCertListener;

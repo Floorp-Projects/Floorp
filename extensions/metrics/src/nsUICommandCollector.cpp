@@ -81,7 +81,8 @@ const nsIDOMWindow* key, PRUint32 windowID, void* userArg)
   nsresult rv = windowTarget->AddEventListener(NS_LITERAL_STRING("command"),
                                                listener, PR_TRUE);
   if (NS_FAILED(rv)) {
-    MS_LOG(("Warning: Adding event listener failed"));
+    MS_LOG(("Warning: Adding event listener failed, window %p (id %d)",
+            key, windowID));
   }
   return PL_DHASH_NEXT;
 }
@@ -107,7 +108,8 @@ const nsIDOMWindow* key, PRUint32 windowID, void* userArg)
   nsresult rv = windowTarget->RemoveEventListener(NS_LITERAL_STRING("command"),
                                                   listener, PR_TRUE);
   if (NS_FAILED(rv)) {
-    MS_LOG(("Warning: Removing event listener failed"));
+    MS_LOG(("Warning: Removing event listener failed, window %p (id %d)",
+            key, windowID));
   }
   return PL_DHASH_NEXT;
 }
