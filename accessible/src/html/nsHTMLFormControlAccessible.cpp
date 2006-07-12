@@ -48,6 +48,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsISelectionController.h"
 #include "nsISupportsArray.h"
+#include "nsITextControlFrame.h"
 
 // --- checkbox -----
 
@@ -289,20 +290,33 @@ NS_IMETHODIMP nsHTML4ButtonAccessible::GetState(PRUint32 *_retval)
 // --- textfield -----
 
 nsHTMLTextFieldAccessible::nsHTMLTextFieldAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsFormControlAccessible(aNode, aShell)
-{ 
+nsHyperTextAccessible(aNode, aShell)
+{
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLTextFieldAccessible, nsFormControlAccessible)
+NS_IMPL_ISUPPORTS_INHERITED2(nsHTMLTextFieldAccessible, nsAccessible, nsIAccessibleText, nsIAccessibleEditableText)
+
+NS_IMETHODIMP nsHTMLTextFieldAccessible::Init()
+{
+  CheckForEditor();
+  return nsHyperTextAccessible::Init();
+}
+
+NS_IMETHODIMP nsHTMLTextFieldAccessible::Shutdown()
+{
+  if (mEditor) {
+    mEditor->RemoveEditActionListener(this);
+    mEditor = nsnull;
+  }
+  return nsHyperTextAccessible::Shutdown();
+}
 
 NS_IMETHODIMP nsHTMLTextFieldAccessible::GetRole(PRUint32 *aRole)
 {
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (!content) {
-    return NS_ERROR_FAILURE;  // Node has been Shutdown()
-  }
   *aRole = ROLE_ENTRY;
-  if (content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (content &&
+      content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
                            nsAccessibilityAtoms::password, eIgnoreCase)) {
     *aRole = ROLE_PASSWORD_TEXT;
   }
@@ -331,7 +345,7 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetValue(nsAString& _retval)
 
 NS_IMETHODIMP nsHTMLTextFieldAccessible::GetState(PRUint32 *aState)
 {
-  nsresult rv = nsFormControlAccessible::GetState(aState);
+  nsresult rv = nsHyperTextAccessible::GetState(aState);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -354,7 +368,7 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetState(PRUint32 *aState)
 
 NS_IMETHODIMP nsHTMLTextFieldAccessible::GetExtState(PRUint32 *aExtState)
 {
-  nsresult rv = nsFormControlAccessible::GetExtState(aExtState);
+  nsresult rv = nsHyperTextAccessible::GetExtState(aExtState);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -400,6 +414,27 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::DoAction(PRUint8 index)
     return NS_ERROR_FAILURE;
   }
   return NS_ERROR_INVALID_ARG;
+}
+
+void nsHTMLTextFieldAccessible::SetEditor(nsIEditor* aEditor)
+{
+  mEditor = aEditor;
+  if (mEditor)
+    mEditor->AddEditActionListener(this);
+}
+
+void nsHTMLTextFieldAccessible::CheckForEditor()
+{
+  nsIFrame *frame = GetFrame();
+  if (frame) {
+    nsITextControlFrame *textFrame;
+    frame->QueryInterface(NS_GET_IID(nsITextControlFrame), (void**)&textFrame);
+    if (textFrame) {
+      nsCOMPtr<nsIEditor> editor;
+      textFrame->GetEditor(getter_AddRefs(editor));
+      SetEditor(editor);
+    }
+  }
 }
 
 // --- groupbox  -----

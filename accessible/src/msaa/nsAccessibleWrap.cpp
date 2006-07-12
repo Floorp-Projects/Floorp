@@ -113,8 +113,8 @@ STDMETHODIMP nsAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
   if (IID_IUnknown == iid || IID_IDispatch == iid || IID_IAccessible == iid)
     *ppv = NS_STATIC_CAST(IAccessible*, this);
   else if (IID_IEnumVARIANT == iid && !gIsEnumVariantSupportDisabled) {
-    PRInt32 numChildren;
-    GetChildCount(&numChildren);
+    long numChildren;
+    get_accChildCount(&numChildren);
     if (numChildren > 0)  // Don't support this interface for leaf elements
       *ppv = NS_STATIC_CAST(IEnumVARIANT*, this);
   }
@@ -226,6 +226,11 @@ STDMETHODIMP nsAccessibleWrap::get_accParent( IDispatch __RPC_FAR *__RPC_FAR *pp
 
 STDMETHODIMP nsAccessibleWrap::get_accChildCount( long __RPC_FAR *pcountChildren)
 {
+  *pcountChildren = 0;
+  if (MustPrune(this)) {
+    return NS_OK;
+  }
+
   PRInt32 numChildren;
   GetChildCount(&numChildren);
   *pcountChildren = numChildren;
@@ -249,8 +254,10 @@ STDMETHODIMP nsAccessibleWrap::get_accChild(
   }
 
   nsCOMPtr<nsIAccessible> childAccessible;
-  GetChildAt(varChild.lVal - 1, getter_AddRefs(childAccessible));
-  *ppdispChild = NativeAccessible(childAccessible);
+  if (!MustPrune(this)) {
+    GetChildAt(varChild.lVal - 1, getter_AddRefs(childAccessible));
+    *ppdispChild = NativeAccessible(childAccessible);
+  }
 
   return (*ppdispChild)? S_OK: E_FAIL;
 }
@@ -737,10 +744,14 @@ STDMETHODIMP nsAccessibleWrap::accNavigate(
       xpAccessibleStart->GetAccessibleBelow(getter_AddRefs(xpAccessibleResult));
       break;
     case NAVDIR_FIRSTCHILD:
-      xpAccessibleStart->GetFirstChild(getter_AddRefs(xpAccessibleResult));
+      if (!MustPrune(xpAccessibleStart)) {
+        xpAccessibleStart->GetFirstChild(getter_AddRefs(xpAccessibleResult));
+      }
       break;
     case NAVDIR_LASTCHILD:
-      xpAccessibleStart->GetLastChild(getter_AddRefs(xpAccessibleResult));
+      if (!MustPrune(xpAccessibleStart)) {
+        xpAccessibleStart->GetLastChild(getter_AddRefs(xpAccessibleResult));
+      }
       break;
     case NAVDIR_LEFT:
       xpAccessibleStart->GetAccessibleToLeft(getter_AddRefs(xpAccessibleResult));
@@ -807,7 +818,12 @@ STDMETHODIMP nsAccessibleWrap::accHitTest(
   xLeft = xLeft;
   yTop = yTop;
 
-  GetChildAtPoint(xLeft, yTop, getter_AddRefs(xpAccessible));
+  if (MustPrune(this)) {
+    xpAccessible = this;
+  }
+  else {
+    GetChildAtPoint(xLeft, yTop, getter_AddRefs(xpAccessible));
+  }
 
   // if we got a child
   if (xpAccessible) {
@@ -1048,6 +1064,9 @@ void nsAccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild, nsIAccessibl
   // if its us real easy - this seems to always be the case
   if (aVarChild.lVal == CHILDID_SELF) {
     *aXPAccessible = NS_STATIC_CAST(nsIAccessible*, this);
+  }
+  else if (MustPrune(this)) {
+    return;
   }
   else {
     // XXX It is rare to use a VARIANT with a child num

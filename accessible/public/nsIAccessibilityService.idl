@@ -55,6 +55,7 @@ interface nsIAccessibilityService : nsIAccessibleRetrieval
   nsIAccessible createXULAlertAccessible(in nsIDOMNode aNode);
   nsIAccessible createHTMLAreaAccessible(in nsIWeakReference aPresShell, in nsIDOMNode aDOMNode, in nsIAccessible aAccParent);
   nsIAccessible createHyperTextAccessible(in nsISupports aFrame);
+  nsIAccessible createHTMLBRAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLButtonAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLButtonAccessibleXBL(in nsIDOMNode aNode);
   nsIAccessible createHTMLAccessibleByMarkup(in nsISupports aFrame, in nsIWeakReference aWeakShell, in nsIDOMNode aDOMNode, in AString aRole);

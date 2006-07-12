@@ -40,6 +40,7 @@
 #define _nsHTMLFormControlAccessible_H_
 
 #include "nsFormControlAccessible.h"
+#include "nsHyperTextAccessible.h"
 
 class nsHTMLCheckboxAccessible : public nsFormControlAccessible
 {
@@ -88,7 +89,7 @@ public:
   NS_IMETHOD DoAction(PRUint8 index);
 };
 
-class nsHTMLTextFieldAccessible : public nsFormControlAccessible
+class nsHTMLTextFieldAccessible : public nsHyperTextAccessible
 {
 
 public:
@@ -96,6 +97,8 @@ public:
 
   nsHTMLTextFieldAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
 
+  NS_IMETHOD Init(); 
+  NS_IMETHOD Shutdown(); 
   NS_IMETHOD GetRole(PRUint32 *_retval); 
   NS_IMETHOD GetValue(nsAString& _retval); 
   NS_IMETHOD GetState(PRUint32 *_retval);
@@ -103,6 +106,13 @@ public:
   NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
   NS_IMETHOD DoAction(PRUint8 index);
   NS_IMETHOD GetExtState(PRUint32 *aExtState); 
+
+protected:
+  // Editor helpers, subclasses of nsHyperTextAccessible may have editor
+  virtual void SetEditor(nsIEditor *aEditor);
+  virtual already_AddRefed<nsIEditor> GetEditor() { nsIEditor *editor = mEditor; NS_IF_ADDREF(editor); return editor; }
+  void CheckForEditor();
+  nsCOMPtr<nsIEditor> mEditor;
 };
 
 class nsHTMLGroupboxAccessible : public nsAccessibleWrap

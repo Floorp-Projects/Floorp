@@ -132,6 +132,29 @@ NS_IMETHODIMP nsHTMLHRAccessible::GetState(PRUint32 *aState)
   return NS_OK;
 }
 
+nsHTMLBRAccessible::nsHTMLBRAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
+nsLeafAccessible(aDomNode, aShell)
+{ 
+}
+
+NS_IMETHODIMP nsHTMLBRAccessible::GetRole(PRUint32 *aRole)
+{
+  *aRole = ROLE_WHITESPACE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLBRAccessible::GetState(PRUint32 *aState)
+{
+  *aState = STATE_READONLY;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLBRAccessible::GetName(nsAString& aName)
+{
+  aName = NS_STATIC_CAST(PRUnichar, '\n');    // Newline char
+  return NS_OK;
+}
+
 nsHTMLLabelAccessible::nsHTMLLabelAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
 nsTextAccessible(aDomNode, aShell)
 { 

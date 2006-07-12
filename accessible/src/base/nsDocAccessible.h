@@ -106,7 +106,7 @@ class nsDocAccessible : public nsHyperTextAccessible,
     void RemoveScrollListener();
     void RefreshNodes(nsIDOMNode *aStartNode, PRUint32 aChangeEvent);
     static void ScrollTimerCallback(nsITimer *aTimer, void *aClosure);
-    virtual void CheckForEditor();
+    void CheckForEditor();
     virtual void SetEditor(nsIEditor *aEditor);
     virtual already_AddRefed<nsIEditor> GetEditor() { nsIEditor *editor = mEditor; NS_IF_ADDREF(editor); return editor; }
 

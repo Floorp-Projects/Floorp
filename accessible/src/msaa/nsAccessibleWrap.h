@@ -193,6 +193,10 @@ protected:
   PRUint16 mEnumVARIANTPosition;  
 
   IDispatch *NativeAccessible(nsIAccessible *aXPAccessible);
+
+  // Should this accessible be allowed to have any MSAA children
+  static PRBool MustPrune(nsIAccessible *accessible)
+    { PRUint32 role; return NS_SUCCEEDED(accessible->GetRole(&role)) && (role == ROLE_ENTRY || role == ROLE_PASSWORD_TEXT); }
 };
 
 // Define unsupported wrap classes here
