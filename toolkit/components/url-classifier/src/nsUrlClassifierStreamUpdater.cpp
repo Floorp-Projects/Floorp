@@ -104,13 +104,25 @@ TableUpdateListener::OnDataAvailable(nsIRequest *request,
 
   LOG(("OnDataAvailable (%d bytes)", aLength));
 
+  // Only update if we got http success header
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(request);
+  NS_ENSURE_STATE(httpChannel);
+
+  PRBool succeeded = PR_FALSE;
+  httpChannel->GetRequestSucceeded(&succeeded);
+  if (!succeeded) {
+    // 404 or other error, give up
+    LOG(("HTTP request returned failure code.  Ignoring."));
+    return NS_ERROR_ABORT;
+  }
+
   nsresult rv;
   // Copy the data into a nsCString
   nsCString chunk;
   rv = NS_ConsumeStream(aIStream, aLength, chunk);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  LOG(("Chunk (%d): %s\n\n", chunk.Length(), chunk.get()));
+  //LOG(("Chunk (%d): %s\n\n", chunk.Length(), chunk.get()));
 
   rv = mDBService->Update(chunk);
   NS_ENSURE_SUCCESS(rv, rv);
