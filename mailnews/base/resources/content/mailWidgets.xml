@@ -1892,6 +1892,12 @@
                   index = box.view.rowCount - 1;
                   break;
                 default:
+                  if (event.charCode > 0 && !event.ctrlKey && !event.metaKey) {
+                    event.preventDefault();
+                    index = tree.keyNavigate(event);
+                    if (index >= 0)
+                      break;
+                  }
                   return;
               }
               box.view.selection.select(index);
