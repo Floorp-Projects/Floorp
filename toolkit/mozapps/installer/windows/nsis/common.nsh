@@ -726,7 +726,7 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
       IntCmp $R8 0 end
       MessageBox MB_OKCANCEL|MB_ICONQUESTION "$R9" IDCANCEL exit 0
       ; Only post this one time.
-      System::Call 'user32::PostMessage(i r1, i ${WM_QUIT}, i 0, i 0)'
+      System::Call 'user32::PostMessage(i r18, i ${WM_QUIT}, i 0, i 0)'
       # The amount of time to wait for the app to shutdown before prompting again
       Sleep 4000
       Goto loop
