@@ -227,7 +227,7 @@
 
   <binding id="menu-button-base"
            extends="chrome://global/content/bindings/button.xml#button-base">
-    <implementation>
+    <implementation implements="nsIDOMEventListener">
       <constructor>
         this.init();
       </constructor>
@@ -239,18 +239,18 @@
           if (!btn)
             throw "XBL binding for <button type=\"menu-button\"/> binding must contain an element with anonid=\"button\"";
           
-          btn._menubuttonParent = this;
+          var menubuttonParent = this;
           btn.addEventListener("mouseover", function() { 
             if (!this.disabled)
-              this._menubuttonParent.buttonover = true; 
+              menubuttonParent.buttonover = true; 
           }, true);
           btn.addEventListener("mouseout", function() {
-            this._menubuttonParent.buttonover = false;
-           }, true);
+            menubuttonParent.buttonover = false;
+          }, true);
           btn.addEventListener("mousedown", function() {
             if (!this.disabled) {
-              this._menubuttonParent.buttondown = true;
-              this._menubuttonParent._captureMouseUp();
+              menubuttonParent.buttondown = true;
+              document.addEventListener("mouseup", menubuttonParent, true);
             }
           }, true);
         ]]>
@@ -295,31 +295,13 @@
       
       <field name="_pendingActive">false</field>
 
-      <method name="_captureMouseUp">
-        <body>
-        <![CDATA[
-          document.__ButtonMenuMouseDown__ = this;
-          document.addEventListener("mouseup", this._onGlobalMouseUp, true);
-        ]]>
-        </body>
-      </method>
-
-      <method name="_onGlobalMouseUp" readonly="true">
-        <body>
-        <![CDATA[
-          var btn = document.__ButtonMenuMouseDown__;
-          btn._onMouseReallyUp();
-          document.removeEventListener("mouseup", btn._onGlobalMouseUp, true);
-          delete document.__ButtonMenuMouseDown__;
-        ]]>
-        </body>
-      </method>
-
-      <method name="_onMouseReallyUp">
+      <method name="handleEvent">
+        <parameter name="aEvent"/>
         <body>
         <![CDATA[
           this._pendingActive = false;
           this.buttondown = false;
+          document.removeEventListener("mouseup", this, true);
         ]]>
         </body>
       </method>
