@@ -74,8 +74,10 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
   virtual nsIAtom* GetType() const;
-  
+
+#ifdef ACCESSIBILITY  
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
+#endif
 
 protected:
   BRFrame(nsStyleContext* aContext) : nsFrame(aContext) {}
