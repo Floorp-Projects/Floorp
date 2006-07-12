@@ -1721,9 +1721,7 @@ nsGlobalWindow::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   }
 
   // Check chrome document capture here.
-  // XXX The chrome can not handle this, see bug 51211
-  // FIXME Fix this for other *LOAD events, bug 329514.
-  if (mChromeEventHandler && msg != NS_IMAGE_LOAD) {
+  if (mChromeEventHandler) {
     aVisitor.mParentTarget = mChromeEventHandler;
     aVisitor.mParentIsChromeHandler = PR_TRUE;
   }
