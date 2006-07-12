@@ -359,10 +359,11 @@ sub packit {
 
     my(@xforms_xpi);
     if ($Settings::BuildXForms) {
-      TinderUtils::run_shell_command("cd $builddir/extensions/xforms; $builddir/build/autoconf/make-makefile -t $builddir -d ../..");
-      TinderUtils::run_shell_command("make -C $builddir/extensions/xforms");
-
-      @xforms_xpi = grep { -f $_ } <${builddir}/dist/xpi-stage/xforms.xpi>;
+      if ($Settings::MacUniversalBinary) {
+        @xforms_xpi = grep { -f $_ } <${builddir}/dist/universal/xpi-stage/xforms.xpi>;
+      } else {
+        @xforms_xpi = grep { -f $_ } <${builddir}/dist/xpi-stage/xforms.xpi>;
+      }
     }
 
     if (is_windows()) {

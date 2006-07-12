@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.327 $ ';
+$::UtilsVersion = '$Revision: 1.328 $ ';
 
 package TinderUtils;
 
@@ -1109,6 +1109,34 @@ sub BuildIt {
                 $build_status = 'busted';
               } else {
                 $build_status = 'success';
+              }
+            }
+
+            # Build XForms extension
+            if ($build_status ne 'busted' and $Settings::BuildXForms) {
+              my $srcdir = "$build_dir/${Settings::Topsrcdir}";
+              my $objdir = $srcdir;
+              if ($Settings::ObjDir ne '') {
+                $objdir .= "/${Settings::ObjDir}";
+                if ($Settings::MacUniversalBinary) {
+                  $objdir .= '/ppc';
+                }
+              }
+
+              TinderUtils::run_shell_command("mkdir $objdir/extensions/xforms && cd $objdir/extensions/xforms && $srcdir/build/autoconf/make-makefile -t $srcdir -d ../..");
+              TinderUtils::run_shell_command("make -C $objdir/extensions/xforms");
+              if ($Settings::MacUniversalBinary) {
+                TinderUtils::run_shell_command("mkdir $objdir/../i386/extensions/xforms && cd $objdir/../i386/extensions/xforms && $srcdir/build/autoconf/make-makefile -t $srcdir -d ../..");
+                TinderUtils::run_shell_command("make -C $objdir/../i386/extensions/xforms");
+
+                mkdir($objdir.'/dist/universal/xpi-stage');
+
+                TinderUtils::run_shell_command("rsync -av --copy-unsafe-links $objdir/dist/xpi-stage/xforms/ $objdir/dist/xpi-stage/xforms.nolinks");
+                TinderUtils::run_shell_command("rsync -av --copy-unsafe-links $objdir/../i386/dist/xpi-stage/xforms/ $objdir/../i386/dist/xpi-stage/xforms.nolinks");
+
+                TinderUtils::run_shell_command("$srcdir/build/macosx/universal/unify $objdir/dist/xpi-stage/xforms.nolinks $objdir/../i386/dist/xpi-stage/xforms.nolinks $objdir/dist/universal/xpi-stage/xforms");
+
+                TinderUtils::run_shell_command("cd $objdir/dist/universal/xpi-stage && zip -qr xforms.xpi xforms");
               }
             }
           } elsif ($build_status ne 'busted' and $Settings::TestOnlyTinderbox) {
