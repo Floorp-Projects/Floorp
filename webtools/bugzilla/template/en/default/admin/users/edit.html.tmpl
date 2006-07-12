@@ -101,7 +101,7 @@
 </table>
 
 <p>
-  <input type="submit" value="Update" />
+  <input type="submit" id="update" value="Update" />
   <input type="hidden" name="userid" value="[% otheruser.id %]" />
   <input type="hidden" name="action" value="update" />
   [% INCLUDE listselectionhiddenfields %]
@@ -128,7 +128,7 @@
 [% IF Param('allowuserdeletion') && editusers %]
   <form method="post" action="editusers.cgi">
   <p>
-    <input type="submit" value="Delete User" />
+    <input type="submit" id="delete" value="Delete User" />
     <input type="hidden" name="action" value="del" />
     <input type="hidden" name="userid" value="[% otheruser.id %]" />
     [% INCLUDE listselectionhiddenfields %]

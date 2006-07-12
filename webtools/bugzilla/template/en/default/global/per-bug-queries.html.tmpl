@@ -22,7 +22,7 @@
         <input type="hidden" name="cmdtype" value="doit">
         <input type="hidden" name="remtype" value="asnamed">
         <input type="hidden" name="add_bugids" value="1">
-        <input type="submit" value="Add"> [% terms.bugs %]
+        <input type="submit" value="Add" id="add"> [% terms.bugs %]
         <input type="text" name="bug_ids" size="8" maxlength="80"> to
         [% foundq = 0 %]
         [% FOREACH q = user.queries %]

@@ -157,7 +157,7 @@ function PutDescription() {
     <input type="hidden" name="chfieldto" value="Now">
     <input type="hidden" name="chfield" value="[Bug creation]">
     <input type="text" name="content" size="40">
-    <input type="submit" value="Search">
+    <input type="submit" id="search" value="Search">
   </form>
 
 <p>
@@ -503,7 +503,7 @@ function PutDescription() {
 <h3>Step 3 of 3 - submit the [% terms.bug %] report</h3>
 
 <p>
-  <input type="submit" value="    Submit [% terms.Bug %] Report    "
+  <input type="submit" id="report" value="    Submit [% terms.Bug %] Report    "
    onclick="if (this.form.comment.value == '')
    { alert('Please enter some details about this [% terms.bug %].');
      this.form.comment.focus();

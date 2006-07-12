@@ -171,7 +171,7 @@
        <input name="maxdepth" type="hidden" value="[% maxdepth %]">
      [% END %]
      <input type="hidden" name="hide_resolved" value="[% hide_resolved ? 0 : 1 %]">
-     <input type="submit" 
+     <input type="submit" id="toggle_visibility"
             value="[% IF hide_resolved %]Show[% ELSE %]Hide[% END %] Resolved">
    </form>
    </td>
@@ -188,7 +188,8 @@
    <form method="get" action="showdependencytree.cgi"
          style="display: inline; margin: 0px;">
      [%# set to one form %]
-     <input type="submit" value="&nbsp;1&nbsp;" 
+     <input type="submit" id="change_maxdepth"
+       value="&nbsp;1&nbsp;" 
        [% "disabled" IF realdepth < 2 || maxdepth == 1 %]>
      <input name="id" type="hidden" value="[% bugid %]">
      <input name="maxdepth" type="hidden" value="1">
@@ -207,7 +208,7 @@
                        : ( maxdepth ? maxdepth - 1 : realdepth - 1 )
      %]">
      <input name="hide_resolved" type="hidden" value="[% hide_resolved %]">
-     <input type="submit" value="&nbsp;&lt;&nbsp;" 
+     <input type="submit" id="decrase_depth" value="&nbsp;&lt;&nbsp;"
        [% "disabled" IF realdepth < 2 || ( maxdepth && maxdepth < 2 ) %]>
    </form>
    </td>
@@ -223,7 +224,8 @@
      <input name="id" type="hidden" value="[% bugid %]">
      <input name="hide_resolved" type="hidden" value="[% hide_resolved %]">
      <noscript>
-       <input type="submit" value="Change" [% "disabled" IF realdepth < 2 %]>
+       <input type="submit" id="change_depth" value="Change"
+              [% "disabled" IF realdepth < 2 %]>
      </noscript>
    </form>
    </td>
@@ -238,7 +240,7 @@
        <input name="maxdepth" type="hidden" value="[% maxdepth + 1 %]">
      [% END %]
      <input name="hide_resolved" type="hidden" value="[% hide_resolved %]">
-     <input type="submit" value="&nbsp;&gt;&nbsp;" 
+     <input type="submit" id="increase_depth" value="&nbsp;&gt;&nbsp;" 
         [% "disabled" IF realdepth < 2 || !maxdepth || maxdepth >= realdepth %]
     %]>
    </form>
@@ -250,7 +252,8 @@
      [%# Unlimited button %]
      <input name="id" type="hidden" value="[% bugid %]">
      <input name="hide_resolved" type="hidden" value="[% hide_resolved %]">
-     <input type="submit" value="&nbsp;Unlimited&nbsp;"
+     <input type="submit" id="remove_limit"
+       value="&nbsp;Unlimited&nbsp;"
        [% "disabled" IF maxdepth == 0 || maxdepth == realdepth %]>
    </form>
    </td>

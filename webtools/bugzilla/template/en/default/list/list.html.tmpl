@@ -143,7 +143,7 @@
             <input type="hidden" name="id" value="[% id FILTER html %]">
           [% END %]
           <input type="hidden" name="format" value="multiple">
-          <input type="submit" value="Long Format">
+          <input type="submit" id="long_format" value="Long Format">
         </form>
         <form method="post" action="show_bug.cgi">
             <input type="hidden" name="ctype" value="xml">
@@ -151,13 +151,13 @@
             <input type="hidden" name="id" value="[% id FILTER html %]">
           [% END %]
             <input type="hidden" name="excludefield" value="attachmentdata">
-            <input type="submit" value="XML">
+            <input type="submit" value="XML" id="xml">
         </form>
 
         [% IF UserInGroup(Param('timetrackinggroup')) %]
           <form method="post" action="summarize_time.cgi">
             <input type="hidden" name="id" value="[% buglist_joined FILTER html %]">
-            <input type="submit" value="Time Summary">
+            <input type="submit" id="timesummary" value="Time Summary">
           </form>
         [% END %]
       </td>
@@ -213,7 +213,7 @@
       
       <td valign="middle">
         <form method="get" action="buglist.cgi">
-          <input type="submit" value="Remember search"> as 
+          <input type="submit" id="remember" value="Remember search"> as 
           <input type="hidden" name="newquery" 
                  value="[% urlquerypart FILTER html %][% "&order=$qorder" FILTER html IF order %]">
           <input type="hidden" name="cmdtype" value="doit">

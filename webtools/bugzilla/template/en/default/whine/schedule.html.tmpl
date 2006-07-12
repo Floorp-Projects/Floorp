@@ -80,7 +80,7 @@
 [%# This hidden submit button must be here to set default behavior when
     the user presses return on a form input field #%]
 <input type="submit" value="Update / Commit" name="commit"
-       style="visibility: hidden">
+       style="visibility: hidden" id="commit">
 <input type="hidden" name="update" value="1">
 
 [% FOREACH event = events %]
@@ -93,7 +93,8 @@
     </th>
     <td align="right">
       <input type="submit" value="Remove Event"
-             name="remove_event_[% event.key %]">
+             name="remove_event_[% event.key %]"
+             id="remove_event_[% event.key %]">
     </td>
   </tr>
 
@@ -133,7 +134,8 @@
       <td align="left" bgcolor="#FFEEEE">
         Not scheduled to run<br>
         <input type="submit" value="Add a new schedule"
-               name="add_schedule_[% event.key %]">
+               name="add_schedule_[% event.key %]"
+               id="add_schedule_[% event.key %]">
       </td>
     </tr>
 
@@ -190,7 +192,8 @@
               </td>
               <td align="left">
                 <input type="submit" value="Remove"
-                       name="remove_schedule_[% schedule.id %]">
+                       name="remove_schedule_[% schedule.id %]"
+                       id="remove_schedule_[% schedule.id %]">
               </td>
             </tr>
           [% END %]
@@ -198,7 +201,8 @@
         <tr>
           <td>
             <input type="submit" value="Add a new schedule"
-                   name="add_schedule_[% event.key %]">
+                   name="add_schedule_[% event.key %]"
+                   id="add_schedule_[% event.key %]">
           </td>
         </tr>
 
@@ -218,10 +222,12 @@
       </td>
       <td align="left" colspan="1">
         No queries <br>
-        <input type="submit" value="Add a new query" name="add_query_[% event.key %]">
+        <input type="submit" value="Add a new query"
+               name="add_query_[% event.key %]"
+               id="add_query_[% event.key %]">
       </td>
       <td align="right" valign="bottom">
-        <input type="submit" value="Update / Commit" name="commit">
+        <input type="submit" value="Update / Commit" name="commit" id="update">
       </td>
     </tr>
 
@@ -271,7 +277,8 @@
               </td>
               <td align="right">
                 <input type="submit" value="Remove"
-                       name="remove_query_[% query.id %]">
+                       name="remove_query_[% query.id %]"
+                       id="remove_query_[% query.id %]">
               </td>
             </tr>
 
@@ -280,7 +287,8 @@
           <tr>
             <td colspan="3">
               <input type="submit" value="Add a new query"
-                     name="add_query_[% event.key %]">
+                     name="add_query_[% event.key %]"
+                     id="add_query_[% event.key %]">
             </td>
           </tr>
 
@@ -288,7 +296,7 @@
 
       </td>
       <td align="right" valign="bottom">
-        <input type="submit" value="Update / Commit" name="commit">
+        <input type="submit" value="Update / Commit" name="commit" id="update">
       </td>
     </tr>
 
@@ -299,7 +307,7 @@
 [% END %]
 
 <p align="left">
-  <input type="submit" value="Add a new event" name="add_event">
+  <input type="submit" value="Add a new event" name="add_event" id="add_event">
 </p>
 
 </form>

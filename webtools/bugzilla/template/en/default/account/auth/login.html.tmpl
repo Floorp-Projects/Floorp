@@ -87,7 +87,7 @@
   [% PROCESS "global/hidden-fields.html.tmpl"
      exclude="^Bugzilla_(login|password|restrictlogin)$" %]
 
-  <input type="submit" name="GoAheadAndLogIn" value="Log in">
+  <input type="submit" name="GoAheadAndLogIn" value="Log in" id="log_in">
   
   <p>
     (Note: you should make sure cookies are enabled for this site. 
@@ -118,7 +118,7 @@
       enter your login name below and submit a request
       to change your password.<br>
       <input size="35" name="loginname">
-      <input type="submit" value="Submit Request">
+      <input type="submit" id="request" value="Submit Request">
     </form>
   [% END %]
 

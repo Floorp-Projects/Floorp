@@ -424,7 +424,7 @@
 
   <form method="post" action="editusers.cgi">
     <p>
-      <input type="submit" value="Yes, delete" />
+      <input type="submit" id="delete" value="Yes, delete"/>
       <input type="hidden" name="action" value="delete" />
       <input type="hidden" name="userid" value="[% otheruser.id %]" />
       [% INCLUDE listselectionhiddenfields %]

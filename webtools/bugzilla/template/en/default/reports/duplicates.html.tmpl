@@ -120,13 +120,14 @@
 
   </table>
 
-  <input type="submit" value="Change">
+  <input type="submit" id="change" value="Change">
 </form>
 
 <form method="post" action="buglist.cgi">
   <input type="hidden" name="bug_id" value="[% bug_ids_string %]">
   <input type="hidden" name="order" value="Reuse same sort as last time">
-  Or just give this to me as a <input type="submit" value="[% terms.bug %] list">.
+  Or just give this to me as a <input type="submit" id="list" 
+                                value="[% terms.bug %] list">.
   (Note: the order may not be the same.)
 </form>
 

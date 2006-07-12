@@ -47,7 +47,8 @@
                                        onchange => "catSelected()" } %]
         <td>
           <noscript>
-            <input type="submit" name="action-edit" value="Update --&gt;">
+            <input type="submit" name="action-edit" value="Update --&gt;"
+                   id="action-edit">
           </noscript>
         </td>
         
@@ -89,7 +90,7 @@
       </td>
       <td></td>
       <td>
-        <input type="submit" name="submit-button" 
+        <input type="submit" name="submit-button" id="submit-button"
                value="[% button_name FILTER html %]">
       </td>
     </tr>

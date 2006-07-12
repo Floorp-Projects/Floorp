@@ -87,7 +87,8 @@ function subcatSelected() {
                                    
         <td>
           <noscript>
-            <input type="submit" name="action-assemble" value="Update --&gt;">
+            <input type="submit" name="action-assemble" value="Update --&gt;"
+                   id="action-assemble">
           </noscript>
         </td>
         
@@ -97,7 +98,8 @@ function subcatSelected() {
                                    
         <td>
           <noscript>
-            <input type="submit" name="action-assemble" value="Update --&gt;">
+            <input type="submit" name="action-assemble" value="Update --&gt;"
+                   id="action-assemble">
           </noscript>
         </td>
         
@@ -116,7 +118,8 @@ function subcatSelected() {
         </td>
 
         <td align="center" valign="middle"> 
-          <input type="submit" name="action-add" value="Add To List"><br>
+          <input type="submit" name="action-add" value="Add To List"
+                 id="action-add"><br>
         </td>
       </tr>
     [% END %]
@@ -225,9 +228,9 @@ function subcatSelected() {
       <tr>
         <td valign="bottom" style="text-align: center;">
           <input type="submit" name="action-sum" value="Sum" 
-                 style="width: 5em;"><br>
+                 style="width: 5em;" id="action-sum"><br>
           <input type="submit" name="action-remove" value="Remove"
-                 style="width: 5em;">
+                 style="width: 5em;" id="action-remove">
         </td>
 
         <td style="text-align: right; vertical-align: bottom;">
@@ -247,7 +250,8 @@ function subcatSelected() {
         </td>
 
         <td style="text-align: right" valign="bottom">
-          <input type="submit" name="action-wrap" value="Chart This List">
+          <input type="submit" name="action-wrap" value="Chart This List"
+                 id="action-wrap">
         </td>
       </tr>
     </table>

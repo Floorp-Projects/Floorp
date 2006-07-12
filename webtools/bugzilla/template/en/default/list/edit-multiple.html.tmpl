@@ -350,10 +350,10 @@
   Reassign [% terms.bugs %] to default assignee of selected component
 </label><br>
 
-<input type="submit" value="Commit">
+<input type="submit" id="commit" value="Commit">
 
 [% IF Param('move-enabled') && user.is_mover %]
-  <input type="submit" name="action" value="[% Param('move-button-text') %]">
+  <input type="submit" name="action" id="action" value="[% Param('move-button-text') %]">
 [% END %]
 
 [%############################################################################%]

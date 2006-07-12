@@ -154,7 +154,7 @@
     [% END %]
   [% END %]
 
-  <input type="submit" value="Commit">
+  <input type="submit" value="Commit" id="commit">
   <p>
     <font size="+1">
       <b>
@@ -173,7 +173,7 @@
 
     [% IF bug.user.canmove %]
       &nbsp; <font size="+1"><b> | </b></font> &nbsp;
-      <input type="submit" name="action"
+      <input type="submit" name="action" id="action"
              value="[% Param("move-button-text") %]">
     [% END %]
   </p>

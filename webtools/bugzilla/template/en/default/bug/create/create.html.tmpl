@@ -456,12 +456,12 @@ function handleWantsAttachment(wants_attachment) {
   <tr>
     <td></td>
     <td colspan="3">
-      <input type="submit" value="    Commit    "
+      <input type="submit" id="commit" value="    Commit    "
              onclick="if (this.form.short_desc.value == '')
              { alert('Please enter a summary sentence for this [% terms.bug %].');
                return false; } return true;">
       &nbsp;&nbsp;&nbsp;&nbsp;
-      <input type="submit" name="maketemplate"
+      <input type="submit" name="maketemplate" id="maketemplate"
              value="Remember values as bookmarkable template">
     </td>
   </tr>

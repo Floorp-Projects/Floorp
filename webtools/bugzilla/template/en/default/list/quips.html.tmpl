@@ -76,7 +76,7 @@
     <input type="hidden" name="action" value="add">
     <input size="80" name="quip">
     <p>
-      <input type="submit" value="Add This Quip">
+      <input type="submit" id="add" value="Add This Quip">
     </p>
   </form>
 [% ELSE %]
@@ -148,7 +148,7 @@
                       +'value="Check All" onclick="SetCheckboxes(true);">');
         //--></script>
 
-      <input type="submit" value="Update">
+      <input type="submit" id="update" value="Update">
     </form>
     <br>
   [% END %]

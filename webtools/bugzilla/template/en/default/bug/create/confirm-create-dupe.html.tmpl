@@ -48,7 +48,7 @@ FILTER bug_link(bugid) FILTER none %].</font></p>
     [% PROCESS "global/hidden-fields.html.tmpl"
                exclude="^(Bugzilla_login|Bugzilla_password|ignore_token)$" %]
     <input type="hidden" name="ignore_token" value="[% bugid FILTER html %]">
-    <input type="submit" value="File [% terms.bug %] again">
+    <input type="submit" value="File [% terms.bug %] again" id="file_bug_again">
   </form>
 [% END %]
 

@@ -107,7 +107,7 @@
   <p>Do you really want to delete this value?</p>
 
   <form method="post" action="editvalues.cgi">
-    <input type="submit" value="Yes, delete">
+    <input type="submit" value="Yes, delete" id="delete">
     <input type="hidden" name="action" value="delete">
     <input type="hidden" name="field" value="[% field FILTER html %]">
     <input type="hidden" name="value" value="[% value FILTER html %]">

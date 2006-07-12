@@ -34,7 +34,8 @@
   <input type="hidden" name="loginname" value="[% login FILTER html %]">
   A [% terms.Bugzilla %] account for <tt>[% login FILTER html %]</tt> already exists. If you
   are the account holder and have forgotten your password,
-  <input type="submit" value="submit a request to change it">.
+  <input type="submit" id="request" 
+         value="submit a request to change it">.
 </form>
 
 [% PROCESS global/footer.html.tmpl %]

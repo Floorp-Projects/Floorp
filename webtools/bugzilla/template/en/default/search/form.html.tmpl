@@ -145,7 +145,8 @@ function doOnSelectProduct(selectmode) {
     </td>
     <td>
       [% IF button_name %]
-        <input type="submit" value="[% button_name FILTER html %]">
+        <input type="submit" id="[% button_name FILTER html %]"
+               value="[% button_name FILTER html %]">
       [% END %]
     </td>
   </tr>

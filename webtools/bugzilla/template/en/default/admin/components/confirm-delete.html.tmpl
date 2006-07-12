@@ -146,7 +146,7 @@
   <p>Do you really want to delete this component?<p>
   
   <form method="post" action="editcomponents.cgi">
-  <input type="submit" value="Yes, delete">
+  <input type="submit" id="delete" value="Yes, delete">
   <input type="hidden" name="action" value="delete">
   <input type="hidden" name="product" value="[% product.name FILTER html %]">
   <input type="hidden" name="component" value="[% comp.name FILTER html %]">
