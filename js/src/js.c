@@ -127,6 +127,8 @@ typedef enum JSShellErrNum {
 
 static const JSErrorFormatString *
 my_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber);
+static JSObject *
+split_setup(JSContext *cx);
 
 #ifdef EDITLINE
 extern char     *readline(const char *prompt);
@@ -375,9 +377,9 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 
         switch (argv[i][1]) {
         case 'v':
-            if (++i == argc) {
+            if (++i == argc)
                 return usage();
-            }
+
             JS_SetVersion(cx, (JSVersion) atoi(argv[i]));
             break;
 
@@ -464,11 +466,15 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             break;
 
         case 'S':
-            if (++i == argc) {
+            if (++i == argc)
                 return usage();
-            }
+
             /* Set maximum stack size. */
             gMaxStackSize = atoi(argv[i]);
+            break;
+
+        case 'z':
+            obj = split_setup(cx);
             break;
 
         default:
@@ -1628,6 +1634,312 @@ ThrowError(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_FALSE;
 }
 
+#define LAZY_STANDARD_CLASSES
+
+/* A class for easily testing the inner/outer object callbacks. */
+typedef struct ComplexObject {
+    JSBool isInner;
+    JSObject *inner;
+    JSObject *outer;
+} ComplexObject;
+
+static JSObject *
+split_create_outer(JSContext *cx);
+
+static JSObject *
+split_create_inner(JSContext *cx, JSObject *outer);
+
+static ComplexObject *
+split_get_private(JSContext *cx, JSObject *obj);
+
+JS_STATIC_DLL_CALLBACK(JSBool)
+split_addProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+    ComplexObject *cpx;
+    jsid asId;
+
+    cpx = split_get_private(cx, obj);
+    if (!cpx)
+        return JS_TRUE;
+    if (!cpx->isInner && cpx->inner) {
+        /* Make sure to define this property on the inner object. */
+        if (!JS_ValueToId(cx, *vp, &asId))
+            return JS_FALSE;
+        return OBJ_DEFINE_PROPERTY(cx, cpx->inner, asId, *vp, NULL, NULL,
+                                   JSPROP_ENUMERATE, NULL);
+    }
+    return JS_TRUE;
+}
+
+JS_STATIC_DLL_CALLBACK(JSBool)
+split_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+    ComplexObject *cpx;
+
+    cpx = split_get_private(cx, obj);
+    if (!cpx)
+        return JS_TRUE;
+    if (!cpx->isInner && cpx->inner) {
+        if (JSVAL_IS_STRING(id)) {
+            JSString *str;
+
+            str = JSVAL_TO_STRING(id);
+            return JS_GetUCProperty(cx, cpx->inner, JS_GetStringChars(str),
+                                    JS_GetStringLength(str), vp);
+        }
+        if (JSVAL_IS_INT(id))
+            return JS_GetElement(cx, cpx->inner, JSVAL_TO_INT(id), vp);
+        return JS_TRUE;
+    }
+
+    return JS_TRUE;
+}
+
+JS_STATIC_DLL_CALLBACK(JSBool)
+split_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+    ComplexObject *cpx;
+
+    cpx = split_get_private(cx, obj);
+    if (!cpx)
+        return JS_TRUE;
+    if (!cpx->isInner && cpx->inner) {
+        if (JSVAL_IS_STRING(id)) {
+            JSString *str;
+
+            str = JSVAL_TO_STRING(id);
+            return JS_SetUCProperty(cx, cpx->inner, JS_GetStringChars(str),
+                                    JS_GetStringLength(str), vp);
+        }
+        if (JSVAL_IS_INT(id))
+            return JS_SetElement(cx, cpx->inner, JSVAL_TO_INT(id), vp);
+        return JS_TRUE;
+    }
+
+    return JS_TRUE;
+}
+
+JS_STATIC_DLL_CALLBACK(JSBool)
+split_delProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+    ComplexObject *cpx;
+    jsid asId;
+
+    cpx = split_get_private(cx, obj);
+    if (!cpx)
+        return JS_TRUE;
+    if (!cpx->isInner && cpx->inner) {
+        /* Make sure to define this property on the inner object. */
+        if (!JS_ValueToId(cx, *vp, &asId))
+            return JS_FALSE;
+        return OBJ_DELETE_PROPERTY(cx, cpx->inner, asId, vp);
+    }
+    return JS_TRUE;
+}
+
+JS_STATIC_DLL_CALLBACK(JSBool)
+split_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
+                  jsval *statep, jsid *idp)
+{
+    ComplexObject *cpx;
+    JSObject *iterator;
+
+    switch (enum_op) {
+      case JSENUMERATE_INIT:
+        cpx = JS_GetPrivate(cx, obj);
+
+        if (!cpx->isInner && cpx->inner)
+            obj = cpx->inner;
+
+        iterator = JS_NewPropertyIterator(cx, obj);
+        if (!iterator)
+            return JS_FALSE;
+
+        *statep = OBJECT_TO_JSVAL(iterator);
+        if (idp)
+            *idp = JSVAL_ZERO;
+        break;
+
+      case JSENUMERATE_NEXT:
+        iterator = (JSObject*)JSVAL_TO_OBJECT(*statep);
+        if (!JS_NextProperty(cx, iterator, idp))
+            return JS_FALSE;
+
+        if (*idp != JSVAL_VOID)
+            break;
+        /* Fall through. */
+
+      case JSENUMERATE_DESTROY:
+        /* Let GC at our iterator object. */
+        *statep = JSVAL_NULL;
+        break;
+    }
+
+    return JS_TRUE;
+}
+
+JS_STATIC_DLL_CALLBACK(JSBool)
+split_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
+                JSObject **objp)
+{
+    ComplexObject *cpx;
+
+    cpx = split_get_private(cx, obj);
+    if (!cpx)
+        return JS_TRUE;
+    if (!cpx->isInner && cpx->inner) {
+        jsid asId;
+        JSProperty *prop;
+
+        if (!JS_ValueToId(cx, id, &asId))
+            return JS_FALSE;
+
+        if (!OBJ_LOOKUP_PROPERTY(cx, cpx->inner, asId, objp, &prop))
+            return JS_FALSE;
+        if (prop)
+            OBJ_DROP_PROPERTY(cx, cpx->inner, prop);
+
+        return JS_TRUE;
+    }
+
+#ifdef LAZY_STANDARD_CLASSES
+    if (!(flags & JSRESOLVE_ASSIGNING)) {
+        JSBool resolved;
+
+        if (!JS_ResolveStandardClass(cx, obj, id, &resolved))
+            return JS_FALSE;
+
+        if (resolved) {
+            *objp = obj;
+            return JS_TRUE;
+        }
+    }
+#endif
+
+    /* XXX For additional realism, let's resolve some random property here. */
+    return JS_TRUE;
+}
+
+JS_STATIC_DLL_CALLBACK(void)
+split_finalize(JSContext *cx, JSObject *obj)
+{
+    JS_free(cx, JS_GetPrivate(cx, obj));
+}
+
+JS_STATIC_DLL_CALLBACK(uint32)
+split_mark(JSContext *cx, JSObject *obj, void *arg)
+{
+    ComplexObject *cpx;
+
+    cpx = JS_GetPrivate(cx, obj);
+
+    if (!cpx->isInner && cpx->inner) {
+        /* Mark the inner object. */
+        JS_MarkGCThing(cx, cpx->inner, "ComplexObject.inner", arg);
+    }
+
+    return 0;
+}
+
+JS_STATIC_DLL_CALLBACK(JSObject *)
+split_outerObject(JSContext *cx, JSObject *obj)
+{
+    ComplexObject *cpx;
+
+    cpx = JS_GetPrivate(cx, obj);
+    return cpx->isInner ? cpx->outer : obj;
+}
+
+JS_STATIC_DLL_CALLBACK(JSObject *)
+split_innerObject(JSContext *cx, JSObject *obj)
+{
+    ComplexObject *cpx;
+
+    cpx = JS_GetPrivate(cx, obj);
+    return !cpx->isInner ? cpx->inner : obj;
+}
+
+static JSExtendedClass split_global_class = {
+    {"split_global",
+    JSCLASS_NEW_RESOLVE | JSCLASS_HAS_PRIVATE | JSCLASS_IS_EXTENDED,
+    split_addProperty, split_delProperty,
+    split_getProperty, split_setProperty,
+    (JSEnumerateOp)split_enumerate,
+    (JSResolveOp)split_resolve,
+    JS_ConvertStub, split_finalize,
+    NULL, NULL, NULL, NULL, NULL, NULL,
+    split_mark, NULL},
+    NULL, split_outerObject, split_innerObject,
+    JSCLASS_NO_RESERVED_MEMBERS
+};
+
+JSObject *
+split_create_outer(JSContext *cx)
+{
+    ComplexObject *cpx;
+    JSObject *obj;
+    
+    cpx = JS_malloc(cx, sizeof *obj);
+    if (!cpx)
+        return NULL;
+    cpx->outer = NULL;
+    cpx->inner = NULL;
+    cpx->isInner = JS_FALSE;
+
+    obj = JS_NewObject(cx, &split_global_class.base, NULL, NULL);
+    if (!obj) {
+        JS_free(cx, cpx);
+        return NULL;
+    }
+
+    JS_ASSERT(!JS_GetParent(cx, obj));
+    if (!JS_SetPrivate(cx, obj, cpx)) {
+        JS_free(cx, cpx);
+        return NULL;
+    }
+
+    return obj;
+}
+
+static JSObject *
+split_create_inner(JSContext *cx, JSObject *outer)
+{
+    ComplexObject *cpx, *outercpx;
+    JSObject *obj;
+
+    JS_ASSERT(JS_GET_CLASS(cx, outer) == &split_global_class.base);
+
+    cpx = JS_malloc(cx, sizeof *cpx);
+    if (!cpx)
+        return NULL;
+    cpx->outer = outer;
+    cpx->inner = NULL;
+    cpx->isInner = JS_TRUE;
+
+    obj = JS_NewObject(cx, &split_global_class.base, NULL, NULL);
+    if (!obj || !JS_SetParent(cx, obj, NULL) || !JS_SetPrivate(cx, obj, cpx)) {
+        JS_free(cx, cpx);
+        return NULL;
+    }
+
+    outercpx = JS_GetPrivate(cx, outer);
+    outercpx->inner = obj;
+
+    return obj;
+}
+
+static ComplexObject *
+split_get_private(JSContext *cx, JSObject *obj)
+{
+    do {
+        if (JS_GET_CLASS(cx, obj) == &split_global_class.base)
+            return JS_GetPrivate(cx, obj);
+        obj = JS_GetParent(cx, obj);
+    } while (obj);
+
+    return NULL;
+}
+
 static JSBool
 sandbox_enumerate(JSContext *cx, JSObject *obj)
 {
@@ -1827,6 +2139,40 @@ static void
 ShowHelpForCommand(uintN n)
 {
     fprintf(gOutFile, "%-14.14s %s\n", shell_functions[n].name, shell_help_messages[n]);
+}
+
+static JSObject *
+split_setup(JSContext *cx)
+{
+    JSObject *outer, *inner, *arguments;
+
+    outer = split_create_outer(cx);
+    if (!outer)
+        return NULL;
+    JS_SetGlobalObject(cx, outer);
+
+    inner = split_create_inner(cx, outer);
+    if (!inner)
+        return NULL;
+
+    if (!JS_DefineFunctions(cx, inner, shell_functions))
+        return NULL;
+    JS_ClearScope(cx, outer);
+
+    /* Create a dummy arguments object. */
+    arguments = JS_NewArrayObject(cx, 0, NULL);
+    if (!arguments ||
+        !JS_DefineProperty(cx, inner, "arguments", OBJECT_TO_JSVAL(arguments),
+                           NULL, NULL, 0)) {
+        return NULL;
+    }
+
+#ifndef LAZY_STANDARD_CLASSES
+    if (!JS_InitStandardClasses(cx, inner))
+        return NULL;
+#endif
+
+    return inner;
 }
 
 static JSBool
@@ -2218,8 +2564,6 @@ Exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 #endif
-
-#define LAZY_STANDARD_CLASSES
 
 static JSBool
 global_enumerate(JSContext *cx, JSObject *obj)
