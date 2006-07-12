@@ -119,17 +119,14 @@
           var evl = this.eventNameLabel;
           var item = this.mOccurrence;
 
-          while (evl.firstChild) {
-            evl.removeChild(evl.firstChild);
-          }
 
           if (item.title && item.title != "") {
-            evl.appendChild(document.createTextNode(item.title));
+            evl.value = item.title;
           } else {
             var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
                                 .getService(Components.interfaces.nsIStringBundleService);
             var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
-            evl.appendChild(document.createTextNode(props.GetStringFromName("eventUntitled")));
+            evl.value = props.GetStringFromName("eventUntitled");
           }
         ]]></body>
       </method>

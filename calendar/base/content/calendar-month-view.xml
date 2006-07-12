@@ -48,12 +48,12 @@
 
   <binding id="calendar-month-day-box-item" extends="chrome://calendar/content/calendar-view-core.xml#calendar-editable-item">
     <content>
-      <xul:hbox>
-        <xul:label anonid="item-label" crop="end" class="calendar-month-day-box-item-label" xbl:inherits="context"/>
+      <xul:hbox flex="1">
+        <xul:label anonid="item-label" class="calendar-month-day-box-item-label" xbl:inherits="context"/>
         <xul:vbox class="calendar-event-box-container" xbl:inherits="context" flex="1" align="left">
-          <xul:label anonid="event-name" style="margin: 0px;" flex="1" crop="right"/>
+          <xul:label anonid="event-name" style="margin: 0px;" flex="1" crop="end"/>
           <xul:textbox class="plain" style="background: transparent !important"
-            anonid="event-name-textbox" crop="right" hidden="true" wrap="true"/>
+            anonid="event-name-textbox" crop="end" hidden="true" wrap="true"/>
           <xul:spacer flex="1"/>
         </xul:vbox>
       </xul:hbox>
@@ -81,9 +81,7 @@
           }
 
           var label = document.getAnonymousElementByAttribute(this, "anonid", "item-label");
-          if (label.firstChild)
-            label.removeChild(label.firstChild);
-          label.appendChild(document.createTextNode(str));
+          label.value = str;
 
           this.setEditableLabel();
           this.setCSSClasses();
