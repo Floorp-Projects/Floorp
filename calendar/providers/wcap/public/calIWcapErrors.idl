@@ -44,6 +44,9 @@
 [scriptable, uuid(2ADC008C-A7A6-4f9a-91C8-A99742B68F3D)]
 interface calIWcapErrors : calIErrors
 {
+    const unsigned long WCAP_NO_ERRNO = WCAP_ERROR_BASE + 0;
+    
+    /* errno: */
     /*  1 */ const unsigned long WCAP_LOGIN_FAILED =
                  WCAP_ERROR_BASE + 1;
     /*  2 */ const unsigned long WCAP_LOGIN_OK_DEFAULT_CALENDAR_NOT_FOUND =
@@ -198,6 +201,22 @@ interface calIWcapErrors : calIErrors
                  WCAP_ERROR_BASE + 80;
     /* 81 */ const unsigned long WCAP_RECURRING_COMPONENT_NOT_FOUND =
                  WCAP_ERROR_BASE + 81;
+    
+    /* new by WCAP 4.0: */
+    /* 82 */ const unsigned long WCAP_BAD_MIME_TYPE =
+                 WCAP_ERROR_BASE + 82;
+    /* 83 */ const unsigned long WCAP_MISSING_BOUNDARY =
+                 WCAP_ERROR_BASE + 83;
+    /* 84 */ const unsigned long WCAP_INVALID_ATTACHMENT =
+                 WCAP_ERROR_BASE + 84;
+    /* 85 */ const unsigned long WCAP_ATTACH_DELETE_SUCCESS =
+                 WCAP_ERROR_BASE + 85;
+    /* 86 */ const unsigned long WCAP_ATTACH_DELETE_PARTIAL =
+                 WCAP_ERROR_BASE + 86;
+    /* 87 */ const unsigned long WCAP_ATTACHMENT_NOT_FOUND =
+                 WCAP_ERROR_BASE + 87;
+    /* / new by WCAP 4.0 */
+    
     /* 11000 */ const unsigned long WCAP_CDWP_ERR_MAX_CONNECTION_REACHED =
                     WCAP_ERROR_BASE + 100;
     /* 11001 */ const unsigned long WCAP_CDWP_ERR_CANNOT_CONNECT =

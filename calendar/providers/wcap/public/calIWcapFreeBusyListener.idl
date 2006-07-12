@@ -45,12 +45,15 @@ interface calIWcapFreeBusyListener : nsISupports
     /**
      * Callback receiving free-busy entries.
      *
+     * @param rc result code,
+     *           e.g. NS_OK or calIWcapErrors.WCAP_CALENDAR_DOES_NOT_EXIST
      * @param requestId request id to distinguish asynchronous requests
      * @param calId a calid or "mailto:rfc822addr"
      * @param count number of free-busy entries
      * @param entries free-busy entries
      */
     void onGetFreeBusyTimes(
+        in nsresult rc,
         in unsigned long requestId,
         in string calId,
         in unsigned long count,

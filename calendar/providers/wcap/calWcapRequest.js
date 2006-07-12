@@ -73,80 +73,95 @@ WcapResponse.prototype = {
     }
 };
 
-function utf8ToIcal( utf8Data, wcapResponse )
+function stringToIcal( data )
 {
-    if (!utf8Data || utf8Data == "")
-        return 1; // assuming session timeout
-    var icalRootComp = getIcsService().parseICS( utf8Data );
-    wcapResponse.data = icalRootComp;
-    return getWcapIcalErrno( icalRootComp );
+    if (!data || data == "") // assuming time-out
+        throw Components.interfaces.calIWcapErrors.WCAP_LOGIN_FAILED;
+    var icalRootComp = getIcsService().parseICS( data );
+    checkWcapIcalErrno( icalRootComp );
+    return icalRootComp;
 }
 
-function utf8ToXml( utf8Data, wcapResponse )
+function stringToXml( data )
 {
-    if (!utf8Data || utf8Data == "")
-        return 1; // assuming session timeout
-    var xml = getDomParser().parseFromString( utf8Data, "text/xml");
-    wcapResponse.data = xml;
-    return getWcapXmlErrno( xml );
+    if (!data || data == "") // assuming time-out
+        throw Components.interfaces.calIWcapErrors.WCAP_LOGIN_FAILED;
+    var xml = getDomParser().parseFromString( data, "text/xml" );
+    checkWcapXmlErrno( xml );
+    return xml;
 }
 
-function Utf8Reader( url, receiverFunc ) {
+function UnicharReader( receiverFunc ) {
     this.wrappedJSObject = this;
-    this.m_url = url;
     this.m_receiverFunc = receiverFunc;
 }
-Utf8Reader.prototype = {
-    m_url: null,
+UnicharReader.prototype = {
     m_receiverFunc: null,
     
     // nsIUnicharStreamLoaderObserver:
     onDetermineCharset:
     function( loader, context, firstSegment, length )
     {
-        return "UTF-8";
+        var charset = loader.channel.contentCharset;
+        if (!charset || charset == "")
+            charset = "UTF-8";
+        return charset;
     },
     
     onStreamComplete:
     function( loader, context, status, /* nsIUnicharInputStream */ unicharData )
     {
         if (status == Components.results.NS_OK) {
+            if (LOG_LEVEL > 2) {
+                logMessage( "issueAsyncRequest( \"" +
+                            loader.channel.URI.spec + "\" )",
+                            "received stream." );
+            }
             var str = "";
-            var str_ = {};
-            while (unicharData.readString( -1, str_ )) {
-                str += str_.value;
+            if (unicharData) {
+                var str_ = {};
+                while (unicharData.readString( -1, str_ )) {
+                    str += str_.value;
+                }
             }
             if (LOG_LEVEL > 1) {
-                logMessage( "issueAsyncUtf8Request( \"" + this.m_url + "\" )",
-                            "request result: " + str );
+                logMessage( "issueAsyncRequest( \"" +
+                            loader.channel.URI.spec + "\" )",
+                            "contentCharset = " + loader.channel.contentCharset+
+                            "\nrequest result:\n" + str );
             }
             this.m_receiverFunc( str );
         }
     }
 };
 
-function issueAsyncUtf8Request( url, receiverFunc )
+function issueAsyncRequest( url, receiverFunc )
 {
     var reader = null;
     if (receiverFunc != null) {
-        reader = new Utf8Reader( url, receiverFunc );
+        reader = new UnicharReader( receiverFunc );
     }
     var loader =
         Components.classes["@mozilla.org/network/unichar-stream-loader;1"]
         .createInstance(Components.interfaces.nsIUnicharStreamLoader);
-    logMessage( "issueAsyncUtf8Request( \"" + url + "\" )", "opening channel.");
+    logMessage( "issueAsyncRequest( \"" + url + "\" )", "opening channel." );
     var channel = getIoService().newChannel(
-        url, "UTF-8" /* charset */, null /* baseURI */ );
+        url, "" /* charset */, null /* baseURI */ );
     loader.init( channel, reader, null /* context */, 0 /* segment size */ );
 }
 
-function streamToUtf8String( inStream )
+function streamToString( inStream, charset )
 {
-    // byte-array to utf8 string:
+    if (LOG_LEVEL > 2) {
+        logMessage( "streamToString()",
+                    "inStream.available() = " + inStream.available() +
+                    ", charset = " + charset );
+    }
+    // byte-array to string:
     var convStream =
         Components.classes["@mozilla.org/intl/converter-input-stream;1"]
         .createInstance(Components.interfaces.nsIConverterInputStream);
-    convStream.init( inStream, "UTF-8", 0, 0x0000 );
+    convStream.init( inStream, charset, 0, 0x0000 );
     var str = "";
     var str_ = {};
     while (convStream.readString( -1, str_ )) {
@@ -155,47 +170,53 @@ function streamToUtf8String( inStream )
     return str;
 }
 
-function issueSyncUtf8Request( url, receiverFunc, bLogging )
+function issueSyncRequest( url, receiverFunc, bLogging )
 {
     if (bLogging == undefined)
         bLogging = true;
     if (bLogging && LOG_LEVEL > 0) {
-        logMessage( "issueSyncUtf8Request( \"" + url + "\" )",
+        logMessage( "issueSyncRequest( \"" + url + "\" )",
                     "opening channel." );
     }
     var channel = getIoService().newChannel(
-        url, "UTF-8" /* charset */, null /* baseURI */ );
+        url, "" /* charset */, null /* baseURI */ );
     var stream = channel.open();
+    if (bLogging && LOG_LEVEL > 1) {
+        logMessage( "issueSyncRequest( \"" + url + "\" )",
+                    "contentCharset = " + channel.contentCharset +
+                    ", contentLength = " + channel.contentLength +
+                    ", contentType = " + channel.contentType );
+    }
     var status = channel.status;
     if (status == Components.results.NS_OK) {
-        var str = streamToUtf8String( stream );
+        var charset = channel.contentCharset;
+        if (!charset || charset == "")
+            charset = "UTF-8";
+        var str = streamToString( stream, charset );
         if (bLogging && LOG_LEVEL > 1) {
-            logMessage( "issueSyncUtf8Request( \"" + url + "\" )",
+            logMessage( "issueSyncRequest( \"" + url + "\" )",
                         "returned: " + str );
         }
-        if (receiverFunc != null) {
+        if (receiverFunc) {
             receiverFunc( str );
         }
         return str;
     }
     else if (bLogging && LOG_LEVEL > 0) {
-        logMessage( "issueSyncUtf8Request( \"" + url + "\" )",
+        logMessage( "issueSyncRequest( \"" + url + "\" )",
                     "failed: " + status );
     }
-    return null;
+    throw status;
 }
 
 function issueSyncXMLRequest( url, receiverFunc, bLogging )
 {
-    var str = issueSyncUtf8Request( url, null, bLogging );
-    if (str != null) {
-        var xml = getDomParser().parseFromString( str, "text/xml" );
-        if (receiverFunc != null) {
-            receiverFunc( xml );
-        }
-        return xml;
+    var str = issueSyncRequest( url, null, bLogging );
+    var xml = getDomParser().parseFromString( str, "text/xml" );
+    if (receiverFunc) {
+        receiverFunc( xml );
     }
-    return null;
+    return xml;
 }
 
 // response object for Calendar.issueRequest()

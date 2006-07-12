@@ -178,7 +178,7 @@ function init()
             }
             CACHE_DIR = cacheDir;
             logMessage( "calendar.wcap.cache_dir", CACHE_DIR.path );
-            if (! CACHE_DIR.exists()) {
+            if (!CACHE_DIR.exists()) {
                 CACHE_DIR.create(
                     Components.interfaces.nsIFile.DIRECTORY_TYPE,
                     0700 /* read, write, execute/search by owner */ );
@@ -308,7 +308,7 @@ function getTime()
 
 function getIcalUTC( dt )
 {
-    if (! dt)
+    if (!dt)
         return "0";
     else {
         var dtz = dt.timezone;
@@ -321,7 +321,7 @@ function getIcalUTC( dt )
 
 function getDatetimeFromIcalProp( prop )
 {
-    if (! prop)
+    if (!prop)
         return null;
     var val = prop.valueAsIcalString;
     if (val.length == 0 || val == "0")

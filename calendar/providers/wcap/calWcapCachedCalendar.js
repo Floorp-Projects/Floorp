@@ -131,7 +131,7 @@ calWcapCachedCalendar.prototype = {
             // xxx todo: better eoncoding?
             var key = this.getCalKey();
             var cal = g_localCals[key];
-            if (! cal) {
+            if (!cal) {
                 this.log( "creating cache calendar for calId " + this.calId );
                 var uri;
                 if (CACHE == "memory") { // in-memory caching

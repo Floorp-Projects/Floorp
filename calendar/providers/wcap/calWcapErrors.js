@@ -37,6 +37,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// Cannot perform operation, because user is offline.
+// This has been taken from netwerk/base/public/nsNetError.h
+// and ought to be defined in IDL. xxx todo
+const NS_ERROR_OFFLINE = ((1<<31) | ((6+0x45)<<16) | 16);
+
 //
 // WCAP error handling helpers
 //
@@ -44,7 +49,7 @@
 const g_wcapErrorCodes = [
     /* -1 */ Components.results.NS_OK, "Logout successful.",
     /*  0 */ Components.results.NS_OK, "Command successful.",
-    /*  1 */ Components.interfaces.calIWcapErrors.WCAP_LOGIN_FAILED, "Login failed, session ID timed out. Invalid session ID.",
+    /*  1 */ Components.interfaces.calIWcapErrors.WCAP_LOGIN_FAILED, "Login failed. Invalid session ID.",
     /*  2 */ Components.interfaces.calIWcapErrors.WCAP_LOGIN_OK_DEFAULT_CALENDAR_NOT_FOUND, "login.wcap was successful, but the default calendar for this user was not found. A new default calendar set to the userid was created.",
     /*  3 */ Components.results.NS_ERROR_INVALID_ARG, "No WCAP error code.",
     /*  4 */ Components.results.NS_ERROR_INVALID_ARG, "No WCAP error code.",
@@ -125,12 +130,20 @@ const g_wcapErrorCodes = [
     /* 79 */ Components.interfaces.calIWcapErrors.WCAP_ATTENDEE_NOT_ALLOWED_TO_REQUEST_ON_MODIFY, "Attendee is not allowed to modify an event with method=request.",
     /* 80 */ Components.interfaces.calIWcapErrors.WCAP_TRANSP_RESOURCE_NOT_ALLOWED, "Resources do not permit the transparency parameter.",
     /* 81 */ Components.interfaces.calIWcapErrors.WCAP_RECURRING_COMPONENT_NOT_FOUND, "Recurring component not found. Only happens when recurring=1 is passed in by fetch commands. This code is returned if part of the recurring series (either the master or an exception) is missing.",
-    /* 82 */ Components.results.NS_ERROR_INVALID_ARG, "No WCAP error code.",
-    /* 83 */ Components.results.NS_ERROR_INVALID_ARG, "No WCAP error code.",
-    /* 84 */ Components.results.NS_ERROR_INVALID_ARG, "No WCAP error code.",
-    /* 85 */ Components.results.NS_ERROR_INVALID_ARG, "No WCAP error code.",
-    /* 86 */ Components.results.NS_ERROR_INVALID_ARG, "No WCAP error code.",
-    /* 87 */ Components.results.NS_ERROR_INVALID_ARG, "No WCAP error code.",
+    /* new by WCAP 4.0: */
+    /* 82 */ Components.interfaces.calIWcapErrors.WCAP_BAD_MIME_TYPE,
+    "The mime headers supplied while storing the attachment using storeevents.wcap/storetodos.wcap is malformatted.",
+    /* 83 */ Components.interfaces.calIWcapErrors.WCAP_MISSING_BOUNDARY,
+    "While supplying attachments to the storeveents/storetodos commands the mime boundary was not found.",
+    /* 84 */ Components.interfaces.calIWcapErrors.WCAP_INVALID_ATTACHMENT,
+    "The attachment supplied to be stored on the server is malformatted.",
+    /* 85 */ Components.interfaces.calIWcapErrors.WCAP_ATTACH_DELETE_SUCCESS,
+    "All the attachments requested to be deleted from the server by supplying deleteattach were deleted successsfully.",
+    /* 86 */ Components.interfaces.calIWcapErrors.WCAP_ATTACH_DELETE_PARTIAL,
+    "Of All attachments requested to be deleted from the server by supplying deleteattach , only few were deleted successfully.",
+    /* 87 */ Components.interfaces.calIWcapErrors.WCAP_ATTACHMENT_NOT_FOUND,
+    "The attachent requested to be fetched or deleted from the server was not found.",
+    /* / new by WCAP 4.0 */
     /* 88 */ Components.results.NS_ERROR_INVALID_ARG, "No WCAP error code.",
     /* 89 */ Components.results.NS_ERROR_INVALID_ARG, "No WCAP error code.",
     /* 90 */ Components.results.NS_ERROR_INVALID_ARG, "No WCAP error code.",
@@ -154,7 +167,47 @@ const g_wcapErrorCodes = [
     /* 11008 */ Components.interfaces.calIWcapErrors.WCAP_CDWP_ERR_CHECKVERSION_FAILED, "DWP version check failed."
     ];
 
-function getWcapErrorIndex( errno )
+function wcapErrorToString( rc )
+{
+    if (rc == Components.interfaces.calIWcapErrors.WCAP_NO_ERRNO)
+        return "No WCAP errno (missing X-NSCP-WCAP-ERRNO).";
+    
+    var index = (rc - Components.interfaces.calIWcapErrors.WCAP_ERROR_BASE + 1);
+    if (index >= 1 && index <= 108 &&
+        g_wcapErrorCodes[index * 2] != Components.results.NS_ERROR_INVALID_ARG)
+    {
+        return g_wcapErrorCodes[(index * 2) + 1];
+    }
+    throw Components.results.NS_ERROR_INVALID_ARG;
+}
+
+function errorToString( err )
+{
+    if (err instanceof Error)
+        return err.message;
+    switch (err) {
+    case NS_ERROR_OFFLINE:
+        return "NS_ERROR_OFFLINE";
+        // xxx todo: there may be a more comprehensive API for these:
+    case Components.results.NS_ERROR_INVALID_ARG:
+        return "NS_ERROR_INVALID_ARG";
+    case Components.results.NS_ERROR_NO_INTERFACE:
+        return "NS_ERROR_NO_INTERFACE";
+    case Components.results.NS_ERROR_NOT_IMPLEMENTED:
+        return "NS_ERROR_NOT_IMPLEMENTED";
+    case Components.results.NS_ERROR_FAILURE:
+        return "NS_ERROR_FAILURE";
+    default: // probe for WCAP error:
+        try {
+            return wcapErrorToString(err);
+        }
+        catch (exc) {
+            return ("[" + err + "] Unknown error code.");
+        }
+    }
+}
+
+function getWcapErrorCode( errno )
 {
     var index = -1;
     if (errno >= -1 && errno <= 81)
@@ -164,72 +217,38 @@ function getWcapErrorIndex( errno )
     if (index >= 0 &&
         g_wcapErrorCodes[index * 2] != Components.results.NS_ERROR_INVALID_ARG)
     {
-        return index;
+        return g_wcapErrorCodes[index * 2];
     }
-    else
-        throw Components.results.NS_ERROR_INVALID_ARG;
-}
-
-function getWcapErrorIndexByErrorCode( rc )
-{
-    var index = (rc - Components.interfaces.calIWcapErrors.WCAP_ERROR_BASE + 1);
-    if (index >= 1 && index <= 108 &&
-        g_wcapErrorCodes[index * 2] != Components.results.NS_ERROR_INVALID_ARG)
-    {
-        return index;
-    }
-    else
-        throw Components.results.NS_ERROR_INVALID_ARG;
-}
-
-function getWcapErrorCodeString( rc )
-{
-    return g_wcapErrorCodes[(getWcapErrorIndexByErrorCode(rc) * 2) + 1];
-}
-
-function getWcapErrorCode( errno )
-{
-    return g_wcapErrorCodes[getWcapErrorIndex(errno) * 2];
+    throw Components.results.NS_ERROR_INVALID_ARG;
 }
 
 function getWcapXmlErrno( xml )
 {
-    if (xml == undefined)
-        throw new Error("no XML!");
-    var item = xml.getElementsByTagName("X-NSCP-WCAP-ERRNO").item(0);
-    if (item)
-        return parseInt(item.textContent);
-    else {
-        // xxx todo: throw new Eror("missing element X-NSCP-WCAP-ERRNO!");
-        //           cs currently may forget to send X-NSCP-WCAP-ERRNO on
-        //           some commands, maybe fixed in later versions. WTF.
-        return 0;
+    var elem = xml.getElementsByTagName( "X-NSCP-WCAP-ERRNO" );
+    if (elem) {
+        elem = elem.item(0);
+        if (elem)
+            return parseInt(elem.textContent);
     }
+    // some commands just respond with an empty calendar, no errno. WTF.
+    throw Components.interfaces.calIWcapErrors.WCAP_NO_ERRNO;
 }
 
 function getWcapIcalErrno( icalRootComp )
 {
-    if (icalRootComp == undefined)
-        throw new Error("no VCALENDAR root component!");
     var prop = icalRootComp.getFirstProperty( "X-NSCP-WCAP-ERRNO" );
     if (prop)
         return parseInt(prop.value);
-    else {
-        // xxx todo: throw new Eror("missing element X-NSCP-WCAP-ERRNO!");
-        //           cs currently may forget to send X-NSCP-WCAP-ERRNO on
-        //           some commands, maybe fixed in later versions. WTF.
-        return 0;
-    }
+    // some commands just respond with an empty calendar, no errno. WTF.
+    throw Components.interfaces.calIWcapErrors.WCAP_NO_ERRNO;
 }
 
 function checkWcapErrno( errno, expectedErrno )
 {
-    if (expectedErrno == undefined) {
-        expectedErrno = 0;
-    }
-    if (errno != expectedErrno) {
+    if (expectedErrno == undefined)
+        expectedErrno = 0; // i.e. Command successful.
+    if (errno != expectedErrno)
         throw getWcapErrorCode(errno);
-    }
 }
 
 function checkWcapXmlErrno( xml, expectedErrno )

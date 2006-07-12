@@ -61,7 +61,7 @@ var calWcapCalendarModule = {
     getClassObject:
     function( compMgr, cid, iid )
     {
-        if (! this.m_scriptsLoaded) {
+        if (!this.m_scriptsLoaded) {
             this.m_scriptsLoaded = true;
             // load scripts:
             const scripts = [ "calWcapUtils.js", "calWcapErrors.js",
@@ -83,9 +83,9 @@ var calWcapCalendarModule = {
             init(); // init first time
         }
         
-        if (! cid.equals( calWcapCalendar.prototype.classID ))
+        if (!cid.equals( calWcapCalendar.prototype.classID ))
             throw Components.results.NS_ERROR_NO_INTERFACE;
-        if (! iid.equals( Components.interfaces.nsIFactory ))
+        if (!iid.equals( Components.interfaces.nsIFactory ))
             throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
         
         return {

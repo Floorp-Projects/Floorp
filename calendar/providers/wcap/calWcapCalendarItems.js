@@ -39,7 +39,7 @@
 
 // xxx todo: just to avoid registration errors, how to do better?
 var calWcapCalendar;
-if (! calWcapCalendar) {
+if (!calWcapCalendar) {
     calWcapCalendar = {};
     calWcapCalendar.prototype = {};
 }
@@ -210,20 +210,22 @@ calWcapCalendar.prototype.getStoreUrl = function( item )
     url += ("&priority=" + item.priority);
     url += "&replace=1"; // (update) don't append to any lists
     url += ("&icsClass="+ ((item.privacy != null && item.privacy != "")
-                           ? item.privacy
-                           : "PUBLIC"));
-    url += "&status=";
-    if (item.status != null) {
+                           ? item.privacy : "PUBLIC"));
+    if (!bIsEvent && item.isCompleted) {
+        url += "&status=4"; // force to COMPLETED
+    }
+    else {
         switch (item.status) {
-        case "CONFIRMED":    url += "0"; break;
-        case "CANCELLED":    url += "1"; break;
-        case "TENTATIVE":    url += "2"; break;
-        case "NEEDS-ACTION": url += "3"; break;
-        case "COMPLETED":    url += "4"; break;
-        case "IN-PROCESS":   url += "5"; break;
-        case "DRAFT":        url += "6"; break;
-        case "FINAL":        url += "7"; break;
+        case "CONFIRMED":    url += "&status=0"; break;
+        case "CANCELLED":    url += "&status=1"; break;
+        case "TENTATIVE":    url += "&status=2"; break;
+        case "NEEDS-ACTION": url += "&status=3"; break;
+        case "COMPLETED":    url += "&status=4"; break;
+        case "IN-PROCESS":   url += "&status=5"; break;
+        case "DRAFT":        url += "&status=6"; break;
+        case "FINAL":        url += "&status=7"; break;
         default:
+            url += "&status=3"; // NEEDS-ACTION
             this.logError( "getStoreUrl(): unexpected item status=" +
                            item.status );
             break;
@@ -322,12 +324,12 @@ calWcapCalendar.prototype.getStoreUrl = function( item )
         // dtstart and due are mandatory for cs, so if those are
         // undefined, assume an allDay todo:
         dtstart = item.entryDate;
-        if (! dtstart) {
+        if (!dtstart) {
             dtstart = getTime();
             dtstart.isDate = true; // => all day
         }
         dtend = item.dueDate;
-        if (! dtend) {
+        if (!dtend) {
             // xxx todo:
             this.logError( "getStoreUrl(): no sensible default for due date!" );
             dtend = dtstart; // is due today
@@ -338,10 +340,18 @@ calWcapCalendar.prototype.getStoreUrl = function( item )
         // xxx todo: missing duration
         if (dtstart.isDate)
             url += "&isAllDay=1";
-        url += ("&percent=" + item.percentComplete);
-        url += "&complete=";
+        if (item.isCompleted)
+            url += "&percent=100";
+        else
+            url += ("&percent=" +
+                    (item.percentComplete ? item.percentComplete : "0"));
+        url += "&completed=";
         if (item.completedDate != null)
             url += getIcalUTC(item.completedDate);
+        else if (item.isCompleted)
+            url += getIcalUTC(getTime()); // repair missing completedDate
+        else
+            url += "0"; // not yet completed
         // xxx todo: sentBy sentUID fields in cs: missing in cal api
     }
     
@@ -419,11 +429,11 @@ calWcapCalendar.prototype.adoptItem_resp = function( wcapResponse, iListener )
             Components.interfaces.calICalendar.ITEM_FILTER_ALL_ITEMS,
             0, null, null );
         if (items.length < 1)
-            throw new Error("no ical data!");
+            throw new Error("empty VCALENDAR returned!");
         if (items.length > 1)
             this.notifyError( "unexpected number of items: " + items.length );
         item = items[0];
-
+        
         this.log( "item.id=" + item.id );        
         if (iListener != null) {
             iListener.onOperationComplete(
@@ -469,7 +479,7 @@ calWcapCalendar.prototype.adoptItem = function( item, iListener )
         
         var this_ = this;
         this.issueAsyncRequest(
-            url + "&fmt-out=text%2Fcalendar", utf8ToIcal,
+            url + "&fmt-out=text%2Fcalendar", stringToIcal,
             function( wcapResponse ) {
                 this_.adoptItem_resp( wcapResponse, iListener );
             } );
@@ -492,9 +502,9 @@ calWcapCalendar.prototype.addItem = function( item, iListener )
 };
 
 calWcapCalendar.prototype.modifyItem_resp = function(
-    wcapResponse, oldItem, iListener )
+    wcapResponse, newItem_, oldItem, iListener )
 {
-    var item = null;
+    var newItem = null;
     try {
         var icalRootComp = wcapResponse.data; // first statement, may throw
         
@@ -504,17 +514,24 @@ calWcapCalendar.prototype.modifyItem_resp = function(
             0, null, null );
         if (items.length > 1)
             this.notifyError( "unexpected number of items: " + items.length );
-        if (items.length < 1)
-            throw new Error("empty VCALENDAR returned!");
-        item = items[0];
+        if (items.length < 1) {
+            // however, sometimes socs just returns an empty calendar when
+            // nothing has changed, although fetch=1.
+            // This also occurs when the event organizer is in the attendees
+            // list and switches its PARTSTAT too often... WTF.
+            this.log( "empty VCALENDAR returned!" );
+            newItem = newItem_; // fallback, assuming item has been written
+        }
+        else
+            newItem = items[0];
         
         if (iListener != null) {
             iListener.onOperationComplete(
                 this.superCalendar, Components.results.NS_OK,
                 Components.interfaces.calIOperationListener.MODIFY,
-                item.id, item );
+                newItem.id, newItem );
         }
-        this.notifyObservers( "onModifyItem", [item, oldItem] );
+        this.notifyObservers( "onModifyItem", [newItem, oldItem] );
         // xxx todo: maybe log request status
     }
     catch (exc) {
@@ -522,7 +539,7 @@ calWcapCalendar.prototype.modifyItem_resp = function(
             iListener.onOperationComplete(
                 this.superCalendar, Components.results.NS_ERROR_FAILURE,
                 Components.interfaces.calIOperationListener.MODIFY,
-                item == null ? null : item.id, exc );
+                newItem == null ? null : newItem.id, exc );
         }
         this.notifyError( exc );
     }
@@ -536,7 +553,7 @@ calWcapCalendar.prototype.modifyItem = function(
         throw Components.interfaces.calIErrors.CAL_IS_READONLY;
     
     try {
-        if (! newItem.id)
+        if (!newItem.id)
             throw new Error("new item has no id!");
         
         var url = this.getStoreUrl( newItem );
@@ -557,9 +574,10 @@ calWcapCalendar.prototype.modifyItem = function(
         
         var this_ = this;
         this.issueAsyncRequest(
-            url + "&fmt-out=text%2Fcalendar", utf8ToIcal,
+            url + "&fmt-out=text%2Fcalendar", stringToIcal,
             function( wcapResponse ) {
-                this_.modifyItem_resp( wcapResponse, oldItem, iListener );
+                this_.modifyItem_resp( wcapResponse,
+                                       newItem, oldItem, iListener );
             } );
     }
     catch (exc) {
@@ -636,7 +654,7 @@ calWcapCalendar.prototype.deleteItem = function( item, iListener )
         
         var this_ = this;
         this.issueAsyncRequest(
-            url + "&fmt-out=text%2Fxml", utf8ToXml,
+            url + "&fmt-out=text%2Fxml", stringToXml,
             function( wcapResponse ) {
                 this_.deleteItem_resp( wcapResponse, item, iListener );
             } );
@@ -709,7 +727,7 @@ calWcapCalendar.prototype.parseItems = function(
                 {
                     case Components.interfaces.calICalendar
                         .ITEM_FILTER_COMPLETED_YES:
-                        if (! item.isCompleted) {
+                        if (!item.isCompleted) {
                             delete item;
                             item = null;
                         }
@@ -825,6 +843,71 @@ calWcapCalendar.prototype.parseItems = function(
     return items;
 };
 
+calWcapCalendar.prototype.getItem = function( id, iListener )
+{
+    // xxx todo: test
+    // xxx todo: howto detect whether to call
+    //           fetchevents_by_id ot fetchtodos_by_id?
+    //           currently drag/drop is implemented for events only,
+    //           try events first, fallback to todos... in the future...
+    this.log( ">>>>>>>>>>>>>>>> getItem() call!");
+    try {
+        var this_ = this;
+        var syncResponseFunc = function( wcapResponse ) {
+            var icalRootComp = wcapResponse.data; // first statement, may throw
+            var items = this_.parseItems(
+                icalRootComp,
+                Components.interfaces.calICalendar.ITEM_FILTER_ALL_ITEMS,
+                1, null, null );
+            if (items.length < 1)
+                throw new Error("no such item!");
+            if (items.length > 1) {
+                this_.notifyError(
+                    "unexpected number of items: " + items.length );
+            }
+            item = items[0];
+            if (iListener != null) {
+                iListener.onGetResult(
+                    this_.superCalendar, Components.results.NS_OK,
+                    Components.interfaces.calIItemBase,
+                    this_.log( "getItems_resp(): success." ),
+                    items.length, items );
+                iListener.onOperationComplete(
+                    this_.superCalendar, Components.results.NS_OK,
+                    Components.interfaces.calIOperationListener.GET,
+                    items.length == 1 ? items[0].id : null, null );
+            }
+            this_.log( "item delivered." );
+        };
+        
+        var params = "&compressed=1&recurring=1&fmt-out=text%2Fcalendar";
+        params += ("&calid=" + encodeURIComponent(this.calId));
+        params += ("&uid=" + id);
+        try {
+            // most common: event
+            this.issueSyncRequest(
+                this.getCommandUrl( "fetchevents_by_id" ) + params,
+                stringToIcal, syncResponseFunc );
+        }
+        catch (exc) {
+            // try again, may be a task:
+            this.issueSyncRequest(
+                this.getCommandUrl( "fetchtodos_by_id" ) + params,
+                stringToIcal, syncResponseFunc );
+        }
+    }
+    catch (exc) {
+        if (iListener != null) {
+            iListener.onOperationComplete(
+                this.superCalendar, Components.results.NS_ERROR_FAILURE,
+                Components.interfaces.calIOperationListener.GET,
+                null, exc );
+        }
+        this.notifyError( exc );
+    }
+    this.log( "getItem() returning." );
+};
+
 calWcapCalendar.prototype.getItems_resp = function(
     wcapResponse,
     itemFilter, maxResult, rangeStart, rangeEnd, iListener )
@@ -858,48 +941,6 @@ calWcapCalendar.prototype.getItems_resp = function(
     }
 };
 
-calWcapCalendar.prototype.getItem = function( id, iListener )
-{
-    // xxx todo: test
-    // xxx todo: howto detect whether to call
-    //           fetchevents_by_id ot fetchtodos_by_id?
-    //           currently drag/drop is implemented for events only,
-    //           try events first, fallback to todos... in the future...
-    this.log( ">>>>>>>>>>>>>>>> getItem() call!");
-    try {
-        var this_ = this;
-        var respFunc = function( wcapResponse ) {
-                           this_.getItems_resp( wcapResponse,
-                                                0, 1, null, null, iListener );
-                       };
-        var params = "&compressed=1&recurring=1&fmt-out=text%2Fcalendar";
-        params += ("&calid=" + encodeURIComponent(this.calId));
-        params += ("&uid=" + id);
-        try {
-            // most common: event
-            this.issueAsyncRequest(
-                this.getCommandUrl( "fetchevents_by_id" ) + params,
-                utf8ToIcal, respFunc );
-        }
-        catch (exc) {
-            // try again, may be a task:
-            this.issueAsyncRequest(
-                this.getCommandUrl( "fetchtodos_by_id" ) + params,
-                utf8ToIcal, respFunc );
-        }
-    }
-    catch (exc) {
-        if (iListener != null) {
-            iListener.onOperationComplete(
-                this.superCalendar, Components.results.NS_ERROR_FAILURE,
-                Components.interfaces.calIOperationListener.GET,
-                null, exc );
-        }
-        this.notifyError( exc );
-    }
-    this.log( "getItem() returning." );
-};
-
 calWcapCalendar.prototype.getItems = function(
     itemFilter, maxResult, rangeStart, rangeEnd, iListener )
 {
@@ -931,6 +972,25 @@ calWcapCalendar.prototype.getItems = function(
             url += "&component-type=event"; break;
         }
         
+        const calIWcapCalendar = Components.interfaces.calIWcapCalendar;
+        var compstate = "";
+        if (itemFilter & calIWcapCalendar.ITEM_FILTER_REPLY_DECLINED)
+            compstate += ";REPLY-DECLINED";
+        if (itemFilter & calIWcapCalendar.ITEM_FILTER_REPLY_ACCEPTED)
+            compstate += ";REPLY-ACCEPTED";
+        if (itemFilter & calIWcapCalendar.ITEM_FILTER_REQUEST_COMPLETED)
+            compstate += ";REQUEST-COMPLETED";
+        if (itemFilter & calIWcapCalendar.ITEM_FILTER_REQUEST_NEEDS_ACTION)
+            compstate += ";REQUEST-NEEDS-ACTION";
+        if (itemFilter & calIWcapCalendar.ITEM_FILTER_REQUEST_NEEDSNOACTION)
+            compstate += ";REQUEST-NEEDSNOACTION";
+        if (itemFilter & calIWcapCalendar.ITEM_FILTER_REQUEST_PENDING)
+            compstate += ";REQUEST-PENDING";
+        if (itemFilter & calIWcapCalendar.ITEM_FILTER_REQUEST_WAITFORREPLY)
+            compstate += ";REQUEST-WAITFORREPLY";
+        if (compstate.length > 0)
+            url += ("&compstate=" + compstate.substr(1));
+        
         if (maxResult > 0)
             url += ("&maxResult=" + maxResult);
         // xxx todo: correctly normalized dates to zulu time?
@@ -939,7 +999,7 @@ calWcapCalendar.prototype.getItems = function(
         
         var this_ = this;
         this.issueAsyncRequest(
-            url + "&fmt-out=text%2Fcalendar", utf8ToIcal,
+            url + "&fmt-out=text%2Fcalendar", stringToIcal,
             function( wcapResponse ) {
                 this_.getItems_resp( wcapResponse,
                                      itemFilter, maxResult,
@@ -953,7 +1013,12 @@ calWcapCalendar.prototype.getItems = function(
                 Components.interfaces.calIOperationListener.GET,
                 null, exc );
         }
-        this.notifyError( exc );
+        if (exc == Components.interfaces.calIWcapErrors.WCAP_LOGIN_FAILED) {
+            // silently ignore login failed, no calIObserver UI:
+            this.log( "getItems_resp() ignored: " + errorToString(exc) );
+        }
+        else
+            this.notifyError( exc );
     }
     this.log( "getItems() returning." );
 };
@@ -980,12 +1045,13 @@ SyncState.prototype = {
         }
     },
     
-    checkAborted: function() { if (this.m_exc) throw this.m_exc; },
+    checkAborted: function() {
+        if (this.m_exc)
+            throw this.m_exc;
+    },
     get hasAborted() { return this.m_exc != null; },
-    abort:
-    function( exc )
-    {
-        if (! this.hasAborted) // store only first error that has occurred
+    abort: function( exc ) {
+        if (!this.hasAborted) // store only first error that has occurred
             this.m_exc = exc;
         this.m_abortFunc( exc );
     }
@@ -1096,9 +1162,9 @@ calWcapCalendar.prototype.syncChangesTo = function(
             syncState.acquire();
             var url = this.getCommandUrl( "fetchcomponents_by_range" );
             url += ("&compressed=1&recurring=1&calid=" +
-                    encodeURIComponent(this.calId));            
+                    encodeURIComponent(this.calId));
             this.issueAsyncRequest(
-                url + "&fmt-out=text%2Fcalendar", utf8ToIcal,
+                url + "&fmt-out=text%2Fcalendar", stringToIcal,
                 function( wcapResponse ) {
                     this_.syncChangesTo_resp(
                         wcapResponse, syncState, iListener,
@@ -1122,7 +1188,7 @@ calWcapCalendar.prototype.syncChangesTo = function(
             syncState.acquire();
             this.issueAsyncRequest(
                 this.getCommandUrl( "fetchcomponents_by_lastmod" ) + params,
-                utf8ToIcal,
+                stringToIcal,
                 function( wcapResponse ) {
                     this_.syncChangesTo_resp(
                         wcapResponse, syncState, iListener,
@@ -1151,7 +1217,7 @@ calWcapCalendar.prototype.syncChangesTo = function(
             syncState.acquire();
             this.issueAsyncRequest(
                 this.getCommandUrl( "fetch_deletedcomponents" ) + params,
-                utf8ToIcal,
+                stringToIcal,
                 function( wcapResponse ) {
                     this_.syncChangesTo_resp(
                         wcapResponse, syncState, iListener,

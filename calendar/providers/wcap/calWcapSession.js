@@ -137,12 +137,10 @@ calWcapSession.prototype = {
             var url = this.uri.spec +
                 "get_all_timezones.wcap?appid=mozilla-lightning" +
                 "&fmt-out=text%2Fcalendar&id=" + this.m_sessionId;
-            var str = issueSyncUtf8Request( url );
-            if (str == null)
-                throw new Error("request failed!");
+            var str = issueSyncRequest( url );
             var icalRootComp = getIcsService().parseICS( str );
             if (icalRootComp == null)
-                throw new Error("invalid data!");
+                throw new Error("invalid data, expected ical!");
             checkWcapIcalErrno( icalRootComp );
             var tzids = [];
             var this_ = this;
@@ -186,12 +184,10 @@ calWcapSession.prototype = {
                 "&fmt-out=text%2Fcalendar&id=" + this.m_sessionId;
             // xxx todo: this is no solution!
             var localTime = getTime();
-            var str = issueSyncUtf8Request( url );
-            if (str == null)
-                throw new Error("request failed!");
+            var str = issueSyncRequest( url );
             var icalRootComp = getIcsService().parseICS( str );
             if (icalRootComp == null)
-                throw new Error("invalid data!");
+                throw new Error("invalid data, expected ical!");
             checkWcapIcalErrno( icalRootComp );
             var serverTime = getDatetimeFromIcalProp(
                 icalRootComp.getFirstProperty( "X-NSCP-WCAPTIME" ) );
@@ -228,11 +224,11 @@ calWcapSession.prototype = {
     {
         if (this.m_bNoLoginsAnymore) {
             this.log( "login has failed, no logins anymore for this user." );
-            return null;
+            throw Components.interfaces.calIWcapErrors.WCAP_LOGIN_FAILED;
         }
         if (getIoService().offline) {
             this.log( "in offline mode." );
-            return null;
+            throw NS_ERROR_OFFLINE;
         }
         
         if (this.m_sessionId == null || this.m_sessionId == timedOutSessionId) {
@@ -257,7 +253,7 @@ calWcapSession.prototype = {
                         this.log( "session timeout; prompting to reconnect." );
                         var prompt = getWindowWatcher().getNewPrompter(null);
                         var bundle = getBundle();
-                        if (! prompt.confirm(
+                        if (!prompt.confirm(
                                 bundle.GetStringFromName(
                                     "reconnectConfirmation.label" ),
                                 bundle.formatStringFromName(
@@ -266,7 +262,7 @@ calWcapSession.prototype = {
                             this.m_bNoLoginsAnymore = true;
                         }
                     }
-                    if (! this.m_bNoLoginsAnymore)
+                    if (!this.m_bNoLoginsAnymore)
                         this.getSessionId_();
                     
                     this.getSupportedTimezones( true /* refresh */ );
@@ -278,6 +274,9 @@ calWcapSession.prototype = {
                 throw exc;
             }
             eventQueueService.popThreadEventQueue( eventQueue );
+        }
+        if (this.m_sessionId == null) {
+            throw Components.interfaces.calIWcapErrors.WCAP_LOGIN_FAILED;
         }
         return this.m_sessionId;
     },
@@ -319,7 +318,7 @@ calWcapSession.prototype = {
                 else {
                     // user has specified a specific port, but no https:
                     // => leave it to her whether to connect...
-                    if (! confirmUnsecureLogin( loginUri )) {
+                    if (!confirmUnsecureLogin( loginUri )) {
                         this.m_bNoLoginsAnymore = true;
                         this.log( "user rejected unsecure login." );
                         return null;
@@ -450,13 +449,11 @@ calWcapSession.prototype = {
         try {
             // currently, xml parsing at an early stage during process startup
             // does not work reliably, so use libical parsing for now:
-            var str = issueSyncUtf8Request(
+            var str = issueSyncRequest(
                 uri.spec + "version.wcap?fmt-out=text%2Fcalendar" );
-            if (str == null)
-                throw new Error("request failed!");
             var icalRootComp = getIcsService().parseICS( str );
             if (icalRootComp == null)
-                throw new Error("invalid data!");
+                throw new Error("invalid data, expected ical!");
             var prop = icalRootComp.getFirstProperty( "PRODID" );
             if (prop == null)
                 throw new Error("missing PRODID!");
@@ -507,12 +504,10 @@ calWcapSession.prototype = {
         }
         // currently, xml parsing at an early stage during process startup
         // does not work reliably, so use libical parsing for now:
-        var str = issueSyncUtf8Request(
+        var str = issueSyncRequest(
             loginUri.spec + "login.wcap?fmt-out=text%2Fcalendar&user=" +
             encodeURIComponent(user) + "&password=" + encodeURIComponent(pw),
             null /* receiverFunc */, false /* no logging */ );
-        if (str == null)
-            throw new Error("request failed!");
         var icalRootComp = getIcsService().parseICS( str );
         checkWcapIcalErrno( icalRootComp );
         var prop = icalRootComp.getFirstProperty( "X-NSCP-WCAP-SESSION-ID" );
@@ -540,7 +535,8 @@ calWcapSession.prototype = {
             var url = (this.uri.spec +
                        "logout.wcap?fmt-out=text%2Fxml&id=" + this.m_sessionId);
             try {
-                checkWcapXmlErrno( issueSyncXMLRequest(url), -1 );
+                checkWcapXmlErrno( issueSyncXMLRequest(url),
+                                   -1 /* logout successfull */ );
                 this.log( "WCAP logout succeeded." );
             }
             catch (exc) {
@@ -583,7 +579,7 @@ g_sessions = {};
 function getSession( uri )
 {
     var session = g_sessions[uri.spec];
-    if (! session) {
+    if (!session) {
         logMessage( "getSession()", "entering session for uri=" + uri.spec );
         var session = new calWcapSession( uri );
         g_sessions[uri.spec] = session;
