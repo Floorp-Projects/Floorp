@@ -141,8 +141,12 @@ nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
         ::PeekMessageW(&msg, NULL, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE) || 
         ::PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
       gotMessage = PR_TRUE;
-      ::TranslateMessage(&msg);
-      ::DispatchMessageW(&msg);
+      if (msg.message == WM_QUIT) {
+        Exit();
+      } else {
+        ::TranslateMessage(&msg);
+        ::DispatchMessageW(&msg);
+      }
     } else if (mayWait) {
       // Block and wait for any posted application message
       ::WaitMessage();
