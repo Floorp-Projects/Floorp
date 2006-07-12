@@ -95,6 +95,12 @@ if (isset($_POST['c_submit'])) {
 
         $db->query($_sql);
 
+        if (!DB::isError($db->record)) {
+            // Calculate the lookup value in main for comment avg if our INSERT was successful.
+            $_ratingSql = "UPDATE `main` SET `Rating` = ROUND((SELECT AVG(`CommentVote`) FROM `feedback` WHERE `ID` = {$_c_id}),2) WHERE `ID` = {$_c_id}";
+            $db->query($_ratingSql);
+        }
+
         // For the template
         $added_comment = true;
     }
