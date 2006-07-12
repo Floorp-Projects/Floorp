@@ -105,6 +105,7 @@
 
 #ifdef NS_DEBUG
 #include "jsgc.h"       // for WAY_TOO_MUCH_GC, if defined for GC debugging
+#include "nsGlobalWindow.h"
 #endif
 
 #ifdef MOZ_JSDEBUGGER
@@ -563,8 +564,6 @@ LocaleCompare(JSContext *cx, JSString *src1, JSString *src2, jsval *rval)
 }
 
 #ifdef DEBUG
-#include "nsGlobalWindow.h"
-
 // A couple of useful functions to call when you're debugging.
 nsGlobalWindow *
 JSObject2Win(JSContext *cx, JSObject *obj)
