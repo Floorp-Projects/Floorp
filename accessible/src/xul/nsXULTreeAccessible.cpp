@@ -415,8 +415,11 @@ NS_IMETHODIMP nsXULTreeAccessible::GetCachedTreeitemAccessible(PRInt32 aRow, nsI
   if (!accessNode)
   {
     accessNode = new nsXULTreeitemAccessibleWrap(this, mDOMNode, mWeakShell, aRow, col);
-    if (! accessNode)
+    nsCOMPtr<nsPIAccessNode> privateAccessNode(do_QueryInterface(accessNode));
+    if (!privateAccessNode)
       return NS_ERROR_OUT_OF_MEMORY;
+    nsresult rv = privateAccessNode->Init();
+    NS_ENSURE_SUCCESS(rv, rv);
     PutCacheEntry(*mAccessNodeCache, (void*)(aRow * kMaxTreeColumns + columnIndex), accessNode);
   }
   nsCOMPtr<nsIAccessible> accessible(do_QueryInterface(accessNode));
@@ -438,7 +441,6 @@ nsresult nsXULTreeAccessible::GetColumnCount(nsITreeBoxObject* aBoxObject, PRInt
 nsXULTreeitemAccessible::nsXULTreeitemAccessible(nsIAccessible *aParent, nsIDOMNode *aDOMNode, nsIWeakReference *aShell, PRInt32 aRow, nsITreeColumn* aColumn)
   : nsLeafAccessible(aDOMNode, aShell)
 {
-  Init(); // Add ourselves to cache using GetUniqueID() override
   mParent = aParent;  // xxx todo: do we need this? We already have mParent on nsAccessible
 
   nsXULTreeAccessible::GetTreeBoxObject(aDOMNode, getter_AddRefs(mTree));
