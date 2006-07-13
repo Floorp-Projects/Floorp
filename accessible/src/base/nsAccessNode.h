@@ -61,6 +61,7 @@ class nsIAccessibleDocument;
 class nsIFrame;
 class nsIDOMNodeList;
 class nsITimer;
+class nsRootAccessible;
 
 #define ACCESSIBLE_BUNDLE_URL "chrome://global-platform/locale/accessible.properties"
 #define PLATFORM_KEYS_BUNDLE_URL "chrome://global-platform/locale/platformKeys.properties"
@@ -97,9 +98,7 @@ class nsAccessNode: public nsIAccessNode, public nsPIAccessNode
     nsAccessNode(nsIDOMNode *, nsIWeakReference* aShell);
     virtual ~nsAccessNode();
 
-    NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
-    NS_IMETHOD_(nsrefcnt) AddRef(void);
-    NS_IMETHOD_(nsrefcnt) Release(void);
+    NS_DECL_ISUPPORTS
     NS_DECL_NSIACCESSNODE
     NS_DECL_NSPIACCESSNODE
 
@@ -139,7 +138,9 @@ class nsAccessNode: public nsIAccessNode, public nsPIAccessNode
               aContent->GetAttr(kNameSpaceID_XHTML, nsAccessibilityAtoms::role, aRole) ||
               aContent->GetAttr(kNameSpaceID_XHTML2_Unofficial, nsAccessibilityAtoms::role, aRole);
     }
-    
+
+    already_AddRefed<nsRootAccessible> GetRootAccessible();
+
     static nsIDOMNode *gLastFocusedNode;
 
 protected:
@@ -150,9 +151,6 @@ protected:
 
     nsCOMPtr<nsIDOMNode> mDOMNode;
     nsCOMPtr<nsIWeakReference> mWeakShell;
-
-    PRInt32 mRefCnt;
-    NS_DECL_OWNINGTHREAD
 
 #ifdef DEBUG
     PRBool mIsInitialized;

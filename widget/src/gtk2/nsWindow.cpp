@@ -4746,8 +4746,6 @@ nsWindow::DispatchAccessibleEvent(nsIAccessible** aAccessible)
 void
 nsWindow::DispatchActivateEvent(void)
 {
-    nsCommonWidget::DispatchActivateEvent();
-
     if (sAccessibilityEnabled) {
         nsCOMPtr<nsIAccessible> rootAcc;
         GetRootAccessible(getter_AddRefs(rootAcc));
@@ -4758,7 +4756,9 @@ nsWindow::DispatchActivateEvent(void)
                          rootAcc, nsnull);
         }
     }
- }
+
+    nsCommonWidget::DispatchActivateEvent();
+}
 
 void
 nsWindow::DispatchDeactivateEvent(void)

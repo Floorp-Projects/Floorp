@@ -88,9 +88,17 @@
 #include "nsIAccessibleHyperText.h"
 #endif
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsRootAccessible, nsDocAccessible,
-                             nsIDOMEventListener)
+// Expanded version of NS_IMPL_ISUPPORTS_INHERITED2 
+// so we can QI directly to concrete nsRootAccessible
+NS_IMPL_QUERY_HEAD(nsRootAccessible)
+NS_IMPL_QUERY_BODY(nsIDOMEventListener)
+if (aIID.Equals(NS_GET_IID(nsRootAccessible)))
+  foundInterface = NS_REINTERPRET_CAST(nsISupports*, this);
+else
+NS_IMPL_QUERY_TAIL_INHERITING(nsDocAccessible)
 
+NS_IMPL_ADDREF_INHERITED(nsRootAccessible, nsDocAccessible) 
+NS_IMPL_RELEASE_INHERITED(nsRootAccessible, nsDocAccessible)
 
 //-----------------------------------------------------
 // construction 
@@ -196,6 +204,25 @@ NS_IMETHODIMP nsRootAccessible::GetState(PRUint32 *aState)
     gLastFocusedNode->GetOwnerDocument(getter_AddRefs(focusedDoc));
     if (rootAccessibleDoc == focusedDoc) {
       *aState |= STATE_FOCUSED;
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsRootAccessible::GetExtState(PRUint32 *aExtState)
+{
+  nsDocAccessibleWrap::GetExtState(aExtState);
+
+  nsCOMPtr<nsIDOMWindow> domWin;
+  GetWindow(getter_AddRefs(domWin));
+  nsCOMPtr<nsPIDOMWindow> privateDOMWindow(do_QueryInterface(domWin));
+  if (privateDOMWindow) {
+    nsIFocusController *focusController =
+      privateDOMWindow->GetRootFocusController();
+    PRBool isActive = PR_FALSE;
+    focusController->GetActive(&isActive);
+    if (isActive) {
+      *aExtState |= EXT_STATE_ACTIVE;
     }
   }
   return NS_OK;
