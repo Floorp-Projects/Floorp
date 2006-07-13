@@ -56,7 +56,7 @@ _cairo_operator_always_opaque (cairo_operator_t op)
 
     case CAIRO_OPERATOR_SOURCE:
 	return FALSE;
-	
+
     case CAIRO_OPERATOR_OVER:
     case CAIRO_OPERATOR_IN:
     case CAIRO_OPERATOR_OUT:
@@ -65,7 +65,7 @@ _cairo_operator_always_opaque (cairo_operator_t op)
 
     case CAIRO_OPERATOR_DEST:
 	return TRUE;
-	
+
     case CAIRO_OPERATOR_DEST_OVER:
     case CAIRO_OPERATOR_DEST_IN:
     case CAIRO_OPERATOR_DEST_OUT:
@@ -94,7 +94,7 @@ _cairo_operator_always_translucent (cairo_operator_t op)
 
     case CAIRO_OPERATOR_SOURCE:
 	return FALSE;
-	
+
     case CAIRO_OPERATOR_OVER:
     case CAIRO_OPERATOR_IN:
     case CAIRO_OPERATOR_OUT:
@@ -103,7 +103,7 @@ _cairo_operator_always_translucent (cairo_operator_t op)
 
     case CAIRO_OPERATOR_DEST:
 	return FALSE;
-	
+
     case CAIRO_OPERATOR_DEST_OVER:
     case CAIRO_OPERATOR_DEST_IN:
     case CAIRO_OPERATOR_DEST_OUT:

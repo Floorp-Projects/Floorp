@@ -85,6 +85,12 @@ cairo_xlib_surface_get_visual (cairo_surface_t *surface);
 cairo_public int
 cairo_xlib_surface_get_depth (cairo_surface_t *surface);
 
+cairo_public int
+cairo_xlib_surface_get_width (cairo_surface_t *surface);
+
+cairo_public int
+cairo_xlib_surface_get_height (cairo_surface_t *surface);
+
 CAIRO_END_DECLS
 
 #else  /* CAIRO_HAS_XLIB_SURFACE */
@@ -92,4 +98,3 @@ CAIRO_END_DECLS
 #endif /* CAIRO_HAS_XLIB_SURFACE */
 
 #endif /* CAIRO_XLIB_H */
-

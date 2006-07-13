@@ -58,4 +58,3 @@ CAIRO_END_DECLS
 #endif /* CAIRO_HAS_QUARTZ_SURFACE */
 
 #endif /* CAIRO_QUARTZ_H */
-

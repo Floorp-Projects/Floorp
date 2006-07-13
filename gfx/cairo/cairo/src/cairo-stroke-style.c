@@ -84,4 +84,3 @@ _cairo_stroke_style_fini (cairo_stroke_style_t *style)
     }
     style->num_dashes = 0;
 }
-

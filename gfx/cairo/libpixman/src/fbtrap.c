@@ -1,5 +1,5 @@
 /*
- * $Id: fbtrap.c,v 1.11 2006/03/17 22:24:10 vladimir%pobox.com Exp $
+ * $Id: fbtrap.c,v 1.15 2007/04/04 01:09:16 vladimir%pobox.com Exp $
  *
  * Copyright © 2004 Keith Packard
  *
@@ -46,14 +46,14 @@ fbAddTraps (PicturePtr	pPicture,
     xFixed	y_off_fixed;
     RenderEdge  l, r;
     xFixed	t, b;
-    
+
     fbGetDrawable (pPicture->pDrawable, buf, stride, bpp, pxoff, pyoff);
 
     width = pPicture->pDrawable->width;
     height = pPicture->pDrawable->height;
     x_off += pxoff;
     y_off += pyoff;
-    
+
     x_off_fixed = IntToxFixed(y_off);
     y_off_fixed = IntToxFixed(y_off);
 
@@ -63,12 +63,12 @@ fbAddTraps (PicturePtr	pPicture,
 	if (t < 0)
 	    t = 0;
 	t = RenderSampleCeilY (t, bpp);
-    
+
 	b = traps->bot.y + y_off_fixed;
 	if (xFixedToInt (b) >= height)
 	    b = IntToxFixed (height) - 1;
 	b = RenderSampleFloorY (b, bpp);
-	
+
 	if (b >= t)
 	{
 	    /* initialize edge walkers */
@@ -77,13 +77,13 @@ fbAddTraps (PicturePtr	pPicture,
 			    traps->top.y + y_off_fixed,
 			    traps->bot.l + x_off_fixed,
 			    traps->bot.y + y_off_fixed);
-	
+
 	    RenderEdgeInit (&r, bpp, t,
 			    traps->top.r + x_off_fixed,
 			    traps->top.y + y_off_fixed,
 			    traps->bot.r + x_off_fixed,
 			    traps->bot.y + y_off_fixed);
-	    
+
 	    fbRasterizeEdges (buf, bpp, width, stride, &l, &r, t, b);
 	}
 	traps++;
@@ -108,14 +108,14 @@ fbRasterizeTrapezoid (PicturePtr    pPicture,
     xFixed	y_off_fixed;
     RenderEdge	l, r;
     xFixed	t, b;
-    
+
     fbGetDrawable (pPicture->pDrawable, buf, stride, bpp, pxoff, pyoff);
 
     width = pPicture->pDrawable->width;
     height = pPicture->pDrawable->height;
     x_off += pxoff;
     y_off += pyoff;
-    
+
     x_off_fixed = IntToxFixed(x_off);
     y_off_fixed = IntToxFixed(y_off);
     t = trap->top + y_off_fixed;
@@ -127,13 +127,13 @@ fbRasterizeTrapezoid (PicturePtr    pPicture,
     if (xFixedToInt (b) >= height)
 	b = IntToxFixed (height) - 1;
     b = RenderSampleFloorY (b, bpp);
-    
+
     if (b >= t)
     {
 	/* initialize edge walkers */
 	RenderLineFixedEdgeInit (&l, bpp, t, &trap->left, x_off, y_off);
 	RenderLineFixedEdgeInit (&r, bpp, t, &trap->right, x_off, y_off);
-	
+
 	fbRasterizeEdges (buf, bpp, width, stride, &l, &r, t, b);
     }
 }
@@ -190,7 +190,7 @@ fbAddTriangles (PicturePtr  pPicture,
 	if (_Clockwise (top, right, left)) {
 	    tmp = right; right = left; left = tmp;
 	}
-	
+
 	/*
 	 * Two cases:
 	 *
@@ -203,7 +203,7 @@ fbAddTriangles (PicturePtr  pPicture,
 	 *    / ---                   --- \
 	 *   +--                         --+
 	 */
-	
+
 	trap.top = top->y;
 	trap.left.p1 = *top;
 	trap.left.p2 = *left;

@@ -40,11 +40,11 @@ typedef struct _cairo_xlib_screen_info cairo_xlib_screen_info_t;
 
 struct _cairo_xlib_screen_info {
     cairo_xlib_screen_info_t *next;
-    
+
     Display *display;
     Screen *screen;
     cairo_bool_t has_render;
-    
+
     cairo_font_options_t font_options;
 };
 

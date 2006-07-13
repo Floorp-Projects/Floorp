@@ -15,7 +15,7 @@
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL SuSE
  * BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN 
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  * Author:  Keith Packard, SuSE, Inc.
@@ -40,7 +40,7 @@ pixman_transform_point (pixman_transform_t	*transform,
 	v = 0;
 	for (i = 0; i < 3; i++)
 	{
-	    partial = ((xFixed_48_16) transform->matrix[j][i] * 
+	    partial = ((xFixed_48_16) transform->matrix[j][i] *
 		       (xFixed_48_16) vector->vector[i]);
 	    v += partial >> 16;
 	}
@@ -61,4 +61,3 @@ pixman_transform_point (pixman_transform_t	*transform,
     vector->vector[2] = xFixed1;
     return 1;
 }
-

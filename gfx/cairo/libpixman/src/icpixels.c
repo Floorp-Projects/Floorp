@@ -65,7 +65,7 @@ FbPixelsCreate (int width, int height, int depth)
 	adjust = 8 - (base & 7);
     buf_size += adjust;
 
-    pixels = malloc(base + buf_size);
+    pixels = calloc(base + buf_size, 1);
     if (!pixels)
 	return NULL;
 
@@ -112,4 +112,3 @@ FbPixelsDestroy (FbPixels *pixels)
 
     free(pixels);
 }
-

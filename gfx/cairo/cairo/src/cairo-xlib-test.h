@@ -45,11 +45,10 @@
 
 CAIRO_BEGIN_DECLS
 
-void
-cairo_xlib_test_disable_render (void);
+cairo_public void
+_cairo_xlib_test_disable_render (void);
 
 CAIRO_END_DECLS
 
 #endif /* CAIRO_HAS_XLIB_SURFACE */
 #endif /* CAIRO_XLIB_H */
-

@@ -37,7 +37,7 @@
  *  Example: srcX = 0 dstX = 8 (FB unit 32 dstBpp 8)
  *
  *	**** **** **** **** **** **** **** ****
- *	^		
+ *	^
  *	********  ********  ********  ********
  *		  ^
  *
@@ -54,9 +54,9 @@
     } else \
 	bits = *src++; \
 }
-    
+
 #ifndef FBNOPIXADDR
-    
+
 #define LaneCases1(n,a)	    case n: (void)FbLaneCase(n,a); break
 #define LaneCases2(n,a)	    LaneCases1(n,a); LaneCases1(n+1,a)
 #define LaneCases4(n,a)	    LaneCases2(n,a); LaneCases2(n+2,a)
@@ -66,15 +66,15 @@
 #define LaneCases64(n,a)    LaneCases32(n,a); LaneCases32(n+32,a)
 #define LaneCases128(n,a)   LaneCases64(n,a); LaneCases64(n+64,a)
 #define LaneCases256(n,a)   LaneCases128(n,a); LaneCases128(n+128,a)
-    
+
 #if FB_SHIFT == 6
 #define LaneCases(a)	    LaneCases256(0,a)
 #endif
-    
+
 #if FB_SHIFT == 5
 #define LaneCases(a)	    LaneCases16(0,a)
 #endif
-							   
+
 #if FB_SHIFT == 6
 static uint8_t const fb8Lane[256] = {
 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
@@ -111,7 +111,7 @@ static uint8_t const fb8Lane[16] = {
 };
 
 static uint8_t const fb16Lane[16] = {
-    0, 3, 12, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+    0, 3, 12, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 };
 
 static uint8_t const fb32Lane[16] = {
@@ -182,7 +182,7 @@ fbBltOne (FbStip    *src,
 	return;
     }
 #endif
-    
+
     /*
      * Number of destination units in FbBits == number of stipple pixels
      * used each time
@@ -190,10 +190,10 @@ fbBltOne (FbStip    *src,
     pixelsPerDst = FB_UNIT / dstBpp;
 
     /*
-     * Number of source stipple patterns in FbStip 
+     * Number of source stipple patterns in FbStip
      */
     unitsPerSrc = FB_STIP_UNIT / pixelsPerDst;
-    
+
     copy = FALSE;
     transparent = FALSE;
     if (bgand == 0 && fgand == 0)
@@ -209,7 +209,7 @@ fbBltOne (FbStip    *src,
     srcX &= FB_STIP_MASK;
     dstX &= FB_MASK;
 
-    FbMaskBitsBytes(dstX, width, copy, 
+    FbMaskBitsBytes(dstX, width, copy,
 		    startmask, startbyte, nmiddle, endmask, endbyte);
 
     /*
@@ -241,23 +241,23 @@ fbBltOne (FbStip    *src,
     if (transparent && fgand == 0 && dstBpp >= 8)
 	fbLane = fbLaneTable(dstBpp);
 #endif
-    
+
     /*
-     * Compute total number of destination words written, but 
-     * don't count endmask 
+     * Compute total number of destination words written, but
+     * don't count endmask
      */
     nDst = nmiddle;
     if (startmask)
 	nDst++;
-    
+
     dstStride -= nDst;
 
     /*
      * Compute total number of source words consumed
      */
-    
+
     srcinc = (nDst + unitsPerSrc - 1) / unitsPerSrc;
-    
+
     if (srcX > dstS)
 	srcinc++;
     if (endmask)
@@ -268,7 +268,7 @@ fbBltOne (FbStip    *src,
     }
 
     srcStride -= srcinc;
-    
+
     /*
      * Copy rectangle
      */
@@ -278,7 +278,7 @@ fbBltOne (FbStip    *src,
 	n = unitsPerSrc;    /* units avail in single stipple */
 	if (n > w)
 	    n = w;
-	
+
 	bitsLeft = 0;
 	if (srcX > dstS)
 	    bitsLeft = *src++;
@@ -300,7 +300,7 @@ fbBltOne (FbStip    *src,
 		else
 #endif
 		    mask = fbBits[FbLeftStipBits(bits,pixelsPerDst)];
-#ifndef FBNOPIXADDR		
+#ifndef FBNOPIXADDR
 		if (fbLane)
 		{
 		    fbTransparentSpan (dst, mask & startmask, fgxor, 1);
@@ -407,7 +407,7 @@ fbBltOne (FbStip    *src,
 #endif
 	    {
 		if (mask || !transparent)
-		    FbDoRightMaskByteStippleRRop (dst, mask, 
+		    FbDoRightMaskByteStippleRRop (dst, mask,
 						  fgand, fgxor, bgand, bgxor,
 						  endbyte, endmask);
 	    }
@@ -549,7 +549,7 @@ static const FbBits fbStipple24Bits[3][1 << FbStip24Len] = {
     fbFirstStipBits(len,stip); \
     stip = FbMergeStip24Bits (0, stip, len); \
 }
-    
+
 #define fbNextStipBits(rot,stip) {\
     int	    __new = FbStip24New(rot); \
     FbStip  __right; \
@@ -593,23 +593,23 @@ fbBltOne24 (FbStip	*srcLine,
     int		firstlen;
     int		rot0, rot;
     int		nDst;
-    
+
     srcLine += srcX >> FB_STIP_SHIFT;
     dst += dstX >> FB_SHIFT;
     srcX &= FB_STIP_MASK;
     dstX &= FB_MASK;
     rot0 = FbFirst24Rot (dstX);
-    
+
     FbMaskBits (dstX, width, leftMask, nlMiddle, rightMask);
-    
+
     dstS = (dstX + 23) / 24;
     firstlen = FbStip24Len - dstS;
-    
+
     nDst = nlMiddle;
     if (leftMask)
 	nDst++;
     dstStride -= nDst;
-    
+
     /* opaque copy */
     if (bgand == 0 && fgand == 0)
     {
@@ -633,7 +633,7 @@ fbBltOne24 (FbStip	*srcLine,
 	    while (nl--)
 	    {
 		mask = fbStipple24Bits[rot>>3][stip];
-		*dst = FbOpaqueStipple (mask, 
+		*dst = FbOpaqueStipple (mask,
 					FbRot24(fgxor, rot),
 					FbRot24(bgxor, rot));
 		dst++;
@@ -739,4 +739,3 @@ fbBltOne24 (FbStip	*srcLine,
     }
 }
 #endif
-

@@ -23,7 +23,7 @@
  *
  * Author:  Søren Sandmann (sandmann@redhat.com)
  *          Lars Knoll (lars@trolltech.com)
- * 
+ *
  * Based on work by Owen Taylor
  */
 #ifdef USE_MMX

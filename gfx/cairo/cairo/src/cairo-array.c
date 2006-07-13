@@ -39,7 +39,7 @@
 
 /**
  * _cairo_array_init:
- * 
+ *
  * Initialize a new cairo_array object to store objects each of size
  * @element_size.
  *
@@ -66,7 +66,7 @@ _cairo_array_init (cairo_array_t *array, int element_size)
  * _cairo_array_init_snapshot:
  * @array: A #cairo_array_t to be initialized as a snapshot
  * @other: The #cairo_array_t from which to create the snapshot
- * 
+ *
  * Initialize @array as an immutable copy of @other. It is an error to
  * call an array-modifying function (other than _cairo_array_fini) on
  * @array after calling this function.
@@ -104,7 +104,7 @@ _cairo_array_fini (cairo_array_t *array)
 
 /**
  * _cairo_array_grow_by:
- * 
+ *
  * Increase the size of @array (if needed) so that there are at least
  * @additional free spaces in the array. The actual size of the array
  * is always increased by doubling as many times as necessary.
@@ -153,7 +153,7 @@ _cairo_array_grow_by (cairo_array_t *array, int additional)
 
 /**
  * _cairo_array_truncate:
- * 
+ *
  * Truncate size of the array to @num_elements if less than the
  * current size. No memory is actually freed. The stored objects
  * beyond @num_elements are simply "forgotten".
@@ -169,7 +169,7 @@ _cairo_array_truncate (cairo_array_t *array, int num_elements)
 
 /**
  * _cairo_array_index:
- * 
+ *
  * Return value: A pointer to object stored at @index. If the
  * resulting value is assigned to a pointer to an object of the same
  * element_size as initially passed to _cairo_array_init() then that
@@ -210,7 +210,7 @@ _cairo_array_index (cairo_array_t *array, int index)
 
 /**
  * _cairo_array_copy_element:
- * 
+ *
  * Copy a single element out of the array from index @index into the
  * location pointed to by @dst.
  **/
@@ -222,7 +222,7 @@ _cairo_array_copy_element (cairo_array_t *array, int index, void *dst)
 
 /**
  * _cairo_array_append:
- * 
+ *
  * Append a single item onto the array by growing the array by at
  * least one element, then copying element_size bytes from @element
  * into the array. The address of the resulting object within the
@@ -245,7 +245,7 @@ _cairo_array_append (cairo_array_t	*array,
 
 /**
  * _cairo_array_append:
- * 
+ *
  * Append one or more items onto the array by growing the array by
  * @num_elements, then copying @num_elements * element_size bytes from
  * @elements into the array.
@@ -275,12 +275,12 @@ _cairo_array_append_multiple (cairo_array_t	*array,
 
 /**
  * _cairo_array_allocate:
- * 
+ *
  * Allocate space at the end of the array for @num_elements additional
  * elements, providing the address of the new memory chunk in
  * @elements. This memory will be unitialized, but will be accounted
  * for in the return value of _cairo_array_num_elements().
- * 
+ *
  * Return value: CAIRO_STATUS_SUCCESS if successful or
  * CAIRO_STATUS_NO_MEMORY if insufficient memory is available for the
  * operation.
@@ -309,7 +309,7 @@ _cairo_array_allocate (cairo_array_t	 *array,
 
 /**
  * _cairo_array_num_elements:
- * 
+ *
  * Return value: The number of elements stored in @array.
  **/
 int
@@ -329,7 +329,7 @@ typedef struct {
 /**
  * _cairo_user_data_array_init:
  * @array: a #cairo_user_data_array_t
- * 
+ *
  * Initializes a #cairo_user_data_array_t structure for future
  * use. After initialization, the array has no keys. Call
  * _cairo_user_data_array_fini() to free any allocated memory
@@ -344,7 +344,7 @@ _cairo_user_data_array_init (cairo_user_data_array_t *array)
 /**
  * _cairo_user_data_array_fini:
  * @array: a #cairo_user_data_array_t
- * 
+ *
  * Destroys all current keys in the user data array and deallocates
  * any memory allocated for the array itself.
  **/
@@ -369,11 +369,11 @@ _cairo_user_data_array_fini (cairo_user_data_array_t *array)
  * @array: a #cairo_user_data_array_t
  * @key: the address of the #cairo_user_data_key_t the user data was
  * attached to
- * 
+ *
  * Returns user data previously attached using the specified
  * key.  If no user data has been attached with the given key this
  * function returns %NULL.
- * 
+ *
  * Return value: the user data previously attached or %NULL.
  **/
 void *
@@ -406,7 +406,7 @@ _cairo_user_data_array_get_data (cairo_user_data_array_t     *array,
  * @destroy: a #cairo_destroy_func_t which will be called when the
  * user data array is destroyed or when new user data is attached using the
  * same key.
- * 
+ *
  * Attaches user data to a user data array.  To remove user data,
  * call this function with the key that was used to set it and %NULL
  * for @data.
@@ -460,4 +460,3 @@ _cairo_user_data_array_set_data (cairo_user_data_array_t     *array,
 
     return CAIRO_STATUS_SUCCESS;
 }
-

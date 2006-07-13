@@ -28,7 +28,6 @@
 #endif
 #include "pixman-xserver-compat.h"
 #include "fbpict.h"
-#include "fbmmx.h"
 
 #ifdef RENDER
 
@@ -225,7 +224,7 @@ fbFetch_r5g6b5 (const FbBits *bits, int x, int width, CARD32 *buffer, miIndexedP
     const CARD16 *end = pixel + width;
     while (pixel < end) {
         CARD32  p = *pixel++;
-        CARD32 r = (((p) << 3) & 0xf8) | 
+        CARD32 r = (((p) << 3) & 0xf8) |
                    (((p) << 5) & 0xfc00) |
                    (((p) << 8) & 0xf80000);
         r |= (r >> 5) & 0x70007;
@@ -568,7 +567,6 @@ fbFetch_c4 (const FbBits *bits, int x, int width, CARD32 *buffer, miIndexedPtr i
         *buffer++ = indexed->rgba[p];
     }
 }
-
 
 static FASTCALL void
 fbFetch_a1 (const FbBits *bits, int x, int width, CARD32 *buffer, miIndexedPtr indexed)
@@ -1003,7 +1001,6 @@ fbFetchPixel_c4 (const FbBits *bits, int offset, miIndexedPtr indexed)
     return indexed->rgba[pixel];
 }
 
-
 static FASTCALL CARD32
 fbFetchPixel_a1 (const FbBits *bits, int offset, miIndexedPtr indexed)
 {
@@ -1085,8 +1082,6 @@ static fetchPixelProc fetchPixelProcForPicture (PicturePtr pict)
         return NULL;
     }
 }
-
-
 
 /*
  * All the store functions
@@ -1471,7 +1466,6 @@ fbStore_g1 (FbBits *bits, const CARD32 *values, int x, int width, miIndexedPtr i
     }
 }
 
-
 static storeProc storeProcForPicture (PicturePtr pict)
 {
     switch(pict->format_code) {
@@ -1522,7 +1516,6 @@ static storeProc storeProcForPicture (PicturePtr pict)
     }
 }
 
-
 /*
  * Combine src and mask
  */
@@ -1553,7 +1546,6 @@ fbCombineSrcU (CARD32 *dest, const CARD32 *src, int width)
 {
     memcpy(dest, src, width*sizeof(CARD32));
 }
-
 
 static FASTCALL void
 fbCombineOverU (CARD32 *dest, const CARD32 *src, int width)
@@ -1968,20 +1960,17 @@ fbCombineConjointOverU (CARD32 *dest, const CARD32 *src, int width)
     fbCombineConjointGeneralU (dest, src, width, CombineAOver);
 }
 
-
 static FASTCALL void
 fbCombineConjointOverReverseU (CARD32 *dest, const CARD32 *src, int width)
 {
     fbCombineConjointGeneralU (dest, src, width, CombineBOver);
 }
 
-
 static FASTCALL void
 fbCombineConjointInU (CARD32 *dest, const CARD32 *src, int width)
 {
     fbCombineConjointGeneralU (dest, src, width, CombineAIn);
 }
-
 
 static FASTCALL void
 fbCombineConjointInReverseU (CARD32 *dest, const CARD32 *src, int width)
@@ -2122,7 +2111,6 @@ fbCombineMaskValueC (CARD32 *src, const CARD32 *mask, int width)
         src[i] = x;
     }
 }
-
 
 static FASTCALL void
 fbCombineMaskAlphaC (const CARD32 *src, CARD32 *mask, int width)
@@ -2687,13 +2675,11 @@ static CombineFuncC fbCombineFuncC[] = {
     fbCombineConjointXorC,
 };
 
-
 FbComposeFunctions composeFunctions = {
     fbCombineFuncU,
     fbCombineFuncC,
     fbCombineMaskU
 };
-
 
 static void fbFetchSolid(PicturePtr pict, int x, int y, int width, CARD32 *buffer, CARD32 *mask, CARD32 maskBits)
 {
@@ -2828,8 +2814,9 @@ static void fbFetchSourcePict(PicturePtr pict, int x, int y, int width, CARD32 *
         xFixed_32_32 l;
         xFixed_48_16 dx, dy, a, b, off;
 
-        v.vector[0] = IntToxFixed(x);
-        v.vector[1] = IntToxFixed(y);
+        /* reference point is the center of the pixel */
+        v.vector[0] = IntToxFixed(x) + xFixed1/2;
+        v.vector[1] = IntToxFixed(y) + xFixed1/2;
         v.vector[2] = xFixed1;
         if (pict->transform) {
             if (!PictureTransformPoint3d (pict->transform, &v))
@@ -2942,8 +2929,9 @@ static void fbFetchSourcePict(PicturePtr pict, int x, int y, int width, CARD32 *
 
         if (pict->transform) {
             PictVector v;
-            v.vector[0] = IntToxFixed(x);
-            v.vector[1] = IntToxFixed(y);
+            /* reference point is the center of the pixel */
+            v.vector[0] = IntToxFixed(x) + xFixed1/2;
+            v.vector[1] = IntToxFixed(y) + xFixed1/2;
             v.vector[2] = xFixed1;
             if (!PictureTransformPoint3d (pict->transform, &v))
                 return;
@@ -3082,8 +3070,9 @@ static void fbFetchTransformed(PicturePtr pict, int x, int y, int width, CARD32 
     x += xoff;
     y += yoff;
 
-    v.vector[0] = IntToxFixed(x);
-    v.vector[1] = IntToxFixed(y);
+    /* reference point is the center of the pixel */
+    v.vector[0] = IntToxFixed(x) + xFixed1/2;
+    v.vector[1] = IntToxFixed(y) + xFixed1/2;
     v.vector[2] = xFixed1;
 
     /* when using convolution filters one might get here without a transform */
@@ -3198,6 +3187,12 @@ static void fbFetchTransformed(PicturePtr pict, int x, int y, int width, CARD32 
             }
         }
     } else if (pict->filter == PIXMAN_FILTER_BILINEAR || pict->filter == PIXMAN_FILTER_GOOD || pict->filter == PIXMAN_FILTER_BEST) {
+        /* adjust vector for maximum contribution at 0.5, 0.5 of each texel. */
+        v.vector[0] -= v.vector[2]/2;
+        v.vector[1] -= v.vector[2]/2;
+        unit.vector[0] -= unit.vector[2]/2;
+        unit.vector[1] -= unit.vector[2]/2;
+
         if (pict->repeat == RepeatNormal) {
             if (PIXREGION_NUM_RECTS(pict->pCompositeClip) == 1) {
                 box = pict->pCompositeClip->extents;
@@ -3538,7 +3533,6 @@ static void fbFetchTransformed(PicturePtr pict, int x, int y, int width, CARD32 
     }
 }
 
-
 static void fbFetchExternalAlpha(PicturePtr pict, int x, int y, int width, CARD32 *buffer, CARD32 *mask, CARD32 maskBits)
 {
     int i;
@@ -3549,10 +3543,10 @@ static void fbFetchExternalAlpha(PicturePtr pict, int x, int y, int width, CARD3
         fbFetchTransformed(pict, x, y, width, buffer, mask, maskBits);
         return;
     }
-    
+
     if (width > SCANLINE_BUFFER_LENGTH)
         alpha_buffer = (CARD32 *) malloc(width*sizeof(CARD32));
-    
+
     fbFetchTransformed(pict, x, y, width, buffer, mask, maskBits);
     fbFetchTransformed(pict->alphaMap, x - pict->alphaOrigin.x,
 		       y - pict->alphaOrigin.y, width, alpha_buffer,
@@ -3635,7 +3629,6 @@ static void fbStoreExternalAlpha(PicturePtr pict, int x, int y, int width, CARD3
     bits       += y*stride;
     alpha_bits += (ay - pict->alphaOrigin.y)*astride;
 
-
     store(bits, buffer, x, width, indexed);
     astore(alpha_bits, buffer, ax - pict->alphaOrigin.x, width, aindexed);
 }
@@ -3653,9 +3646,9 @@ fbCompositeRect (const FbComposeData *data, CARD32 *scanline_buffer)
     scanFetchProc fetchSrc = NULL, fetchMask = NULL, fetchDest = NULL;
     unsigned int srcClass  = SourcePictClassUnknown;
     unsigned int maskClass = SourcePictClassUnknown;
-    FbBits *bits;
-    FbStride stride;
-    int	xoff, yoff;
+    FbBits *bits = NULL;    /* squelch bogus compiler warning */
+    FbStride stride = 0;    /* squelch bogus compiler warning */
+    int	xoff = 0, yoff = 0; /* squelch bogus compiler warning */
 
     if (data->op == PIXMAN_OPERATOR_CLEAR)
         fetchSrc = NULL;
@@ -3762,24 +3755,6 @@ fbCompositeRect (const FbComposeData *data, CARD32 *scanline_buffer)
 	if (!compose)
 	    return;
 
-	/* XXX: The non-MMX version of some of the fbCompose functions
-	 * overwrite the source or mask data (ones that use
-	 * fbCombineMaskC, fbCombineMaskAlphaC, or fbCombineMaskValueC
-	 * as helpers).  This causes problems with the optimization in
-	 * this function that only fetches the source or mask once if
-	 * possible.  If we're on a non-MMX machine, disable this
-	 * optimization as a bandaid fix.
-	 *
-	 * https://bugs.freedesktop.org/show_bug.cgi?id=5777
-	 */
-#ifdef USE_MMX
-	if (!fbHaveMMX())
-#endif
-	{
-	    srcClass = SourcePictClassUnknown;
-	    maskClass = SourcePictClassUnknown;
-	}
-
 	for (i = 0; i < data->height; ++i) {
 	    /* fill first half of scanline with source */
 	    if (fetchSrc)
@@ -3839,7 +3814,8 @@ fbCompositeRect (const FbComposeData *data, CARD32 *scanline_buffer)
     }
     else
     {
-	CARD32 *src_mask_buffer, *mask_buffer = 0;
+	CARD32 *src_mask_buffer = 0; /* squelch bogus compiler warning */
+	CARD32 *mask_buffer = 0;
 	CombineFuncU compose = composeFunctions.combineU[data->op];
 	if (!compose)
 	    return;
@@ -3949,7 +3925,7 @@ pixman_compositeGeneral (pixman_operator_t	op,
     CARD32 _scanline_buffer[SCANLINE_BUFFER_LENGTH*3];
     CARD32 *scanline_buffer = _scanline_buffer;
     FbComposeData compose_data;
-    
+
     if (pSrc->pDrawable)
         srcRepeat = pSrc->repeat == RepeatNormal && !pSrc->transform
                     && (pSrc->pDrawable->width != 1 || pSrc->pDrawable->height != 1);

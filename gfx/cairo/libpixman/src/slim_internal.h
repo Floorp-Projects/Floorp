@@ -12,7 +12,7 @@
  * Richard Henderson makes no representations about the suitability of this
  * software for any purpose.  It is provided "as is" without express
  * or implied warranty.
- * 
+ *
  * RICHARD HENDERSON DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
  * INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN
  * NO EVENT SHALL RICHARD HENDERSON BE LIABLE FOR ANY SPECIAL, INDIRECT OR
@@ -30,7 +30,7 @@
 /* This macro marks a symbol as STV_HIDDEN, which prevents it from being
    added to the dynamic symbol table of the shared library.  This prevents
    users of the library from knowingly or unknowingly accessing library
-   internals that may change in future releases.  It also allows the 
+   internals that may change in future releases.  It also allows the
    compiler to generate slightly more efficient code in some cases.
 
    The macro should be placed either immediately before the return type in

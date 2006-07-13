@@ -193,6 +193,8 @@ typedef struct cairo_xcb_surface {
     cairo_surface_t base;
 
     XCBConnection *dpy;
+    XCBSCREEN *screen;
+
     XCBGCONTEXT gc;
     XCBDRAWABLE drawable;
     int owns_pixmap;
@@ -277,9 +279,9 @@ _cairo_xcb_surface_create_similar (void		       *abstract_src,
 		     d.pixmap, src->drawable,
 		     width <= 0 ? 1 : width,
 		     height <= 0 ? 1 : height);
-    
+
     surface = (cairo_xcb_surface_t *)
-	cairo_xcb_surface_create_with_xrender_format (dpy, d,
+	cairo_xcb_surface_create_with_xrender_format (dpy, d, src->screen,
 						      &xrender_format,
 						      width, height);
     if (surface->base.status) {
@@ -378,9 +380,9 @@ _CAIRO_MASK_FORMAT (cairo_format_masks_t *masks, cairo_format_t *format)
 
 static cairo_status_t
 _get_image_surface (cairo_xcb_surface_t     *surface,
-		    cairo_rectangle_fixed_t *interest_rect,
+		    cairo_rectangle_int16_t *interest_rect,
 		    cairo_image_surface_t  **image_out,
-		    cairo_rectangle_fixed_t *image_rect)
+		    cairo_rectangle_int16_t *image_rect)
 {
     cairo_image_surface_t *image;
     XCBGetImageRep *imagerep;
@@ -396,13 +398,13 @@ _get_image_surface (cairo_xcb_surface_t     *surface,
     y2 = surface->height;
 
     if (interest_rect) {
-	cairo_rectangle_fixed_t rect;
+	cairo_rectangle_int16_t rect;
 
 	rect.x = interest_rect->x;
 	rect.y = interest_rect->y;
 	rect.width = interest_rect->width;
 	rect.height = interest_rect->height;
-    
+
 	if (rect.x > x1)
 	    x1 = rect.x;
 	if (rect.y > y1)
@@ -530,7 +532,7 @@ _get_image_surface (cairo_xcb_surface_t     *surface,
 	image = (cairo_image_surface_t *)
 	    cairo_image_surface_create_for_data (data,
 						 format,
-						 x2 - x1, 
+						 x2 - x1,
 						 y2 - y1,
 						 bytes_per_line);
 	if (image->base.status)
@@ -588,7 +590,7 @@ _draw_image_surface (cairo_xcb_surface_t    *surface,
 	      image->width,
 	      image->height,
 	      dst_x, dst_y,
-	      /* left_pad */ 0, image->depth, 
+	      /* left_pad */ 0, image->depth,
 	      data_len, image->data);
 
     return CAIRO_STATUS_SUCCESS;
@@ -623,9 +625,9 @@ _cairo_xcb_surface_release_source_image (void                   *abstract_surfac
 
 static cairo_status_t
 _cairo_xcb_surface_acquire_dest_image (void                    *abstract_surface,
-				       cairo_rectangle_fixed_t *interest_rect,
+				       cairo_rectangle_int16_t *interest_rect,
 				       cairo_image_surface_t  **image_out,
-				       cairo_rectangle_fixed_t *image_rect_out,
+				       cairo_rectangle_int16_t *image_rect_out,
 				       void                   **image_extra)
 {
     cairo_xcb_surface_t *surface = abstract_surface;
@@ -644,9 +646,9 @@ _cairo_xcb_surface_acquire_dest_image (void                    *abstract_surface
 
 static void
 _cairo_xcb_surface_release_dest_image (void                   *abstract_surface,
-				       cairo_rectangle_fixed_t      *interest_rect,
+				       cairo_rectangle_int16_t      *interest_rect,
 				       cairo_image_surface_t  *image,
-				       cairo_rectangle_fixed_t      *image_rect,
+				       cairo_rectangle_int16_t      *image_rect,
 				       void                   *image_extra)
 {
     cairo_xcb_surface_t *surface = abstract_surface;
@@ -655,6 +657,18 @@ _cairo_xcb_surface_release_dest_image (void                   *abstract_surface,
     _draw_image_surface (surface, image, image_rect->x, image_rect->y);
 
     cairo_surface_destroy (&image->base);
+}
+
+/*
+ * Return whether two xcb surfaces share the same
+ * screen.  Both core and Render drawing require this
+ * when using multiple drawables in an operation.
+ */
+static cairo_bool_t
+_cairo_xcb_surface_same_screen (cairo_xcb_surface_t *dst,
+				cairo_xcb_surface_t *src)
+{
+    return dst->dpy == src->dpy && dst->screen == src->screen;
 }
 
 static cairo_status_t
@@ -668,9 +682,9 @@ _cairo_xcb_surface_clone_similar (void			*abstract_surface,
     if (src->backend == surface->base.backend ) {
 	cairo_xcb_surface_t *xcb_src = (cairo_xcb_surface_t *)src;
 
-	if (xcb_src->dpy == surface->dpy) {
+	if (_cairo_xcb_surface_same_screen(surface, xcb_src)) {
 	    *clone_out = cairo_surface_reference (src);
-	    
+
 	    return CAIRO_STATUS_SUCCESS;
 	}
     } else if (_cairo_surface_is_image (src)) {
@@ -679,20 +693,20 @@ _cairo_xcb_surface_clone_similar (void			*abstract_surface,
 
 	if (surface->base.status)
 	    return surface->base.status;
-    
+
 	clone = (cairo_xcb_surface_t *)
 	    _cairo_xcb_surface_create_similar (surface, content,
 					       image_src->width, image_src->height);
 	if (clone->base.status)
 	    return CAIRO_STATUS_NO_MEMORY;
-	
+
 	_draw_image_surface (clone, image_src, 0, 0);
-	
+
 	*clone_out = &clone->base;
 
 	return CAIRO_STATUS_SUCCESS;
     }
-    
+
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
@@ -727,10 +741,10 @@ _cairo_xcb_surface_set_matrix (cairo_xcb_surface_t *surface,
 
 	if (memcmp (&xtransform, &identity, sizeof (XCBRenderTRANSFORM)) == 0)
 	    return CAIRO_STATUS_SUCCESS;
-	
+
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
-    
+
     XCBRenderSetPictureTransform (surface->dpy, surface->picture, xtransform);
 
     return CAIRO_STATUS_SUCCESS;
@@ -744,15 +758,15 @@ _cairo_xcb_surface_set_filter (cairo_xcb_surface_t *surface,
 
     if (!surface->picture.xid)
 	return CAIRO_STATUS_SUCCESS;
-    
+
     if (!CAIRO_SURFACE_RENDER_HAS_FILTERS (surface))
     {
 	if (filter == CAIRO_FILTER_FAST || filter == CAIRO_FILTER_NEAREST)
 	    return CAIRO_STATUS_SUCCESS;
-	
+
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
-    
+
     switch (filter) {
     case CAIRO_FILTER_FAST:
 	render_filter = "fast";
@@ -803,7 +817,7 @@ _cairo_xcb_surface_set_attributes (cairo_xcb_surface_t	      *surface,
     status = _cairo_xcb_surface_set_matrix (surface, &attributes->matrix);
     if (status)
 	return status;
-    
+
     switch (attributes->extend) {
     case CAIRO_EXTEND_NONE:
 	_cairo_xcb_surface_set_repeat (surface, 0);
@@ -894,7 +908,7 @@ _cairo_xcb_surface_composite (cairo_operator_t		op,
 					      &src_attr, &mask_attr);
     if (status)
 	return status;
-    
+
     status = _cairo_xcb_surface_set_attributes (src, &src_attr);
     if (status == CAIRO_STATUS_SUCCESS)
     {
@@ -917,7 +931,7 @@ _cairo_xcb_surface_composite (cairo_operator_t		op,
 	else
 	{
 	    static XCBRenderPICTURE maskpict = { 0 };
-	    
+
 	    XCBRenderComposite (dst->dpy,
 				_render_operator (op),
 				src->picture,
@@ -933,7 +947,7 @@ _cairo_xcb_surface_composite (cairo_operator_t		op,
 
     if (mask)
 	_cairo_pattern_release_surface (mask_pattern, &mask->base, &mask_attr);
-    
+
     _cairo_pattern_release_surface (src_pattern, &src->base, &src_attr);
 
     return status;
@@ -943,7 +957,7 @@ static cairo_int_status_t
 _cairo_xcb_surface_fill_rectangles (void			     *abstract_surface,
 				     cairo_operator_t	      op,
 				     const cairo_color_t	*     color,
-				     cairo_rectangle_fixed_t *rects,
+				     cairo_rectangle_int16_t *rects,
 				     int			      num_rects)
 {
     cairo_xcb_surface_t *surface = abstract_surface;
@@ -990,14 +1004,14 @@ _cairo_xcb_surface_composite_trapezoids (cairo_operator_t	op,
 
     if (!CAIRO_SURFACE_RENDER_HAS_TRAPEZOIDS (dst))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
-    
+
     status = _cairo_pattern_acquire_surface (pattern, &dst->base,
 					     src_x, src_y, width, height,
 					     (cairo_surface_t **) &src,
 					     &attributes);
     if (status)
 	return status;
-    
+
     if (traps[0].left.p1.y < traps[0].left.p2.y) {
 	render_reference_x = _cairo_fixed_integer_floor (traps[0].left.p1.x);
 	render_reference_y = _cairo_fixed_integer_floor (traps[0].left.p1.y);
@@ -1026,7 +1040,7 @@ _cairo_xcb_surface_composite_trapezoids (cairo_operator_t	op,
 			     _render_operator (op),
 			     src->picture, dst->picture,
 			     render_format.id,
-			     render_src_x + attributes.x_offset, 
+			     render_src_x + attributes.x_offset,
 			     render_src_y + attributes.y_offset,
 			     num_traps, (XCBRenderTRAP *) traps);
 
@@ -1037,7 +1051,7 @@ _cairo_xcb_surface_composite_trapezoids (cairo_operator_t	op,
 
 static cairo_int_status_t
 _cairo_xcb_surface_get_extents (void		        *abstract_surface,
-				cairo_rectangle_fixed_t *rectangle)
+				cairo_rectangle_int16_t *rectangle)
 {
     cairo_xcb_surface_t *surface = abstract_surface;
 
@@ -1078,9 +1092,9 @@ static const cairo_surface_backend_t cairo_xcb_surface_backend = {
 /**
  * _cairo_surface_is_xcb:
  * @surface: a #cairo_surface_t
- * 
+ *
  * Checks if a surface is a #cairo_xcb_surface_t
- * 
+ *
  * Return value: True if the surface is an xcb surface
  **/
 static cairo_bool_t
@@ -1112,6 +1126,7 @@ query_render_version (XCBConnection *c, cairo_xcb_surface_t *surface)
 static cairo_surface_t *
 _cairo_xcb_surface_create_internal (XCBConnection	     *dpy,
 				    XCBDRAWABLE		      drawable,
+				    XCBSCREEN		     *screen,
 				    XCBVISUALTYPE	     *visual,
 				    XCBRenderPICTFORMINFO    *format,
 				    int			      width,
@@ -1130,6 +1145,7 @@ _cairo_xcb_surface_create_internal (XCBConnection	     *dpy,
 			 _xcb_render_format_to_content (format));
 
     surface->dpy = dpy;
+    surface->screen = screen;
 
     surface->gc.xid = 0;
     surface->drawable = drawable;
@@ -1150,30 +1166,25 @@ _cairo_xcb_surface_create_internal (XCBConnection	     *dpy,
     if (format) {
 	surface->depth = format->depth;
     } else if (visual) {
-	XCBSCREENIter roots;
 	XCBDEPTHIter depths;
 	XCBVISUALTYPEIter visuals;
 
 	/* This is ugly, but we have to walk over all visuals
-	 * for the display to find the depth.
+	 * for the screen to find the depth.
 	 */
-        roots = XCBSetupRootsIter(XCBGetSetup(surface->dpy));
-        for(; roots.rem; XCBSCREENNext(&roots))
-        {
-	    depths = XCBSCREENAllowedDepthsIter(roots.data);
-	    for(; depths.rem; XCBDEPTHNext(&depths))
+	depths = XCBSCREENAllowedDepthsIter(screen);
+	for(; depths.rem; XCBDEPTHNext(&depths))
+	{
+	    visuals = XCBDEPTHVisualsIter(depths.data);
+	    for(; visuals.rem; XCBVISUALTYPENext(&visuals))
 	    {
-		visuals = XCBDEPTHVisualsIter(depths.data);
-		for(; visuals.rem; XCBVISUALTYPENext(&visuals))
+		if(visuals.data->visual_id.id == visual->visual_id.id)
 		{
-		    if(visuals.data->visual_id.id == visual->visual_id.id)
-		    {
-			surface->depth = depths.data->depth;
-			goto found;
-		    }
+		    surface->depth = depths.data->depth;
+		    goto found;
 		}
 	    }
-        }
+	}
     found:
 	;
     }
@@ -1207,6 +1218,29 @@ _cairo_xcb_surface_create_internal (XCBConnection	     *dpy,
     return (cairo_surface_t *) surface;
 }
 
+static XCBSCREEN *
+_cairo_xcb_screen_from_visual (XCBConnection *c, XCBVISUALTYPE *visual)
+{
+    XCBSCREENIter s = XCBSetupRootsIter(XCBGetSetup(c));
+    for (; s.rem; XCBSCREENNext(&s))
+    {
+	if (s.data->root_visual.id == visual->visual_id.id)
+	    return s.data;
+
+	XCBDEPTHIter d = XCBSCREENAllowedDepthsIter(s.data);
+	for (; d.rem; XCBDEPTHNext(&d))
+	{
+	    XCBVISUALTYPEIter v = XCBDEPTHVisualsIter(d.data);
+	    for (; v.rem; XCBVISUALTYPENext(&v))
+	    {
+		if (v.data->visual_id.id == visual->visual_id.id)
+		    return s.data;
+	    }
+	}
+    }
+    return NULL;
+}
+
 /**
  * cairo_xcb_surface_create:
  * @c: an XCB connection
@@ -1216,7 +1250,7 @@ _cairo_xcb_surface_create_internal (XCBConnection	     *dpy,
  *          Currently, only TrueColor visuals are fully supported.
  * @width: the current width of @drawable.
  * @height: the current height of @drawable.
- * 
+ *
  * Creates an XCB surface that draws to the given drawable.
  * The way that colors are represented in the drawable is specified
  * by the provided visual.
@@ -1224,7 +1258,7 @@ _cairo_xcb_surface_create_internal (XCBConnection	     *dpy,
  * NOTE: If @drawable is a window, then the function
  * cairo_xcb_surface_set_size must be called whenever the size of the
  * window changes.
- * 
+ *
  * Return value: the newly created surface
  **/
 cairo_surface_t *
@@ -1234,7 +1268,14 @@ cairo_xcb_surface_create (XCBConnection *c,
 			  int		 width,
 			  int		 height)
 {
-    return _cairo_xcb_surface_create_internal (c, drawable,
+    XCBSCREEN	*screen = _cairo_xcb_screen_from_visual (c, visual);
+
+    if (screen == NULL) {
+	_cairo_error (CAIRO_STATUS_INVALID_VISUAL);
+	return (cairo_surface_t*) &_cairo_surface_nil;
+    }
+
+    return _cairo_xcb_surface_create_internal (c, drawable, screen,
 					       visual, NULL,
 					       width, height, 0);
 }
@@ -1243,23 +1284,25 @@ cairo_xcb_surface_create (XCBConnection *c,
  * cairo_xcb_surface_create_for_bitmap:
  * @c: an XCB connection
  * @bitmap: an XCB Pixmap (a depth-1 pixmap)
+ * @screen: an XCB Screen
  * @width: the current width of @bitmap
  * @height: the current height of @bitmap
  *
  * Creates an XCB surface that draws to the given bitmap.
  * This will be drawn to as a CAIRO_FORMAT_A1 object.
- * 
+ *
  * Return value: the newly created surface
  **/
 cairo_surface_t *
 cairo_xcb_surface_create_for_bitmap (XCBConnection     *c,
 				     XCBPIXMAP		bitmap,
+				     XCBSCREEN	       *screen,
 				     int		width,
 				     int		height)
 {
     XCBDRAWABLE drawable;
     drawable.pixmap = bitmap;
-    return _cairo_xcb_surface_create_internal (c, drawable,
+    return _cairo_xcb_surface_create_internal (c, drawable, screen,
 					       NULL, NULL,
 					       width, height, 1);
 }
@@ -1268,29 +1311,31 @@ cairo_xcb_surface_create_for_bitmap (XCBConnection     *c,
  * cairo_xcb_surface_create_with_xrender_format:
  * @c: an XCB connection
  * @drawable: an XCB drawable
+ * @screen: the XCB screen associated with @drawable
  * @format: the picture format to use for drawing to @drawable. The
  *          depth of @format mush match the depth of the drawable.
  * @width: the current width of @drawable
  * @height: the current height of @drawable
- * 
+ *
  * Creates an XCB surface that draws to the given drawable.
  * The way that colors are represented in the drawable is specified
  * by the provided picture format.
  *
  * NOTE: If @drawable is a Window, then the function
- * cairo_xlib_surface_set_size must be called whenever the size of the
+ * cairo_xcb_surface_set_size must be called whenever the size of the
  * window changes.
- * 
- * Return value: the newly created surface. 
+ *
+ * Return value: the newly created surface.
  **/
 cairo_surface_t *
 cairo_xcb_surface_create_with_xrender_format (XCBConnection	    *c,
 					      XCBDRAWABLE	     drawable,
+					      XCBSCREEN		    *screen,
 					      XCBRenderPICTFORMINFO *format,
 					      int		     width,
 					      int		     height)
 {
-    return _cairo_xcb_surface_create_internal (c, drawable,
+    return _cairo_xcb_surface_create_internal (c, drawable, screen,
 					       NULL, format,
 					       width, height, 0);
 }
@@ -1300,7 +1345,7 @@ cairo_xcb_surface_create_with_xrender_format (XCBConnection	    *c,
  * @surface: a #cairo_surface_t for the XCB backend
  * @width: the new width of the surface
  * @height: the new height of the surface
- * 
+ *
  * Informs cairo of the new size of the XCB drawable underlying the
  * surface. For a surface created for a window (rather than a pixmap),
  * this function must be called each time the size of the window
@@ -1326,4 +1371,3 @@ cairo_xcb_surface_set_size (cairo_surface_t *surface,
     xcb_surface->width = width;
     xcb_surface->height = height;
 }
-

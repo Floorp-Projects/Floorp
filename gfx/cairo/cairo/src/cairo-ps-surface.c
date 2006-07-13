@@ -39,10 +39,12 @@
 
 #include "cairoint.h"
 #include "cairo-ps.h"
+#include "cairo-ps-test.h"
 #include "cairo-scaled-font-subsets-private.h"
 #include "cairo-paginated-surface-private.h"
 #include "cairo-meta-surface-private.h"
 #include "cairo-ft-private.h"
+#include "cairo-output-stream-private.h"
 
 #include <time.h>
 #include <zlib.h>
@@ -67,8 +69,6 @@ typedef struct cairo_ps_surface {
     double height;
     double max_width;
     double max_height;
-    double x_dpi;
-    double y_dpi;
 
     int num_pages;
 
@@ -81,31 +81,160 @@ typedef struct cairo_ps_surface {
     cairo_array_t dsc_page_setup_comments;
 
     cairo_array_t *dsc_comment_target;
-    
+
 } cairo_ps_surface_t;
 
-#define PS_SURFACE_DPI_DEFAULT		300.0
 #define PS_SURFACE_MAX_GLYPHS_PER_FONT	256
+
+/* A word wrap stream can be used as a filter to do word wrapping on
+ * top of an existing output stream. The word wrapping is quite
+ * simple, using isspace to determine characters that separate
+ * words. Any word that will cause the column count exceeed the given
+ * max_column will have a '\n' character emitted before it.
+ *
+ * The stream is careful to maintain integrity for words that cross
+ * the boundary from one call to write to the next.
+ *
+ * Note: This stream does not guarantee that the output will never
+ * exceed max_column. In particular, if a single word is larger than
+ * max_column it will not be broken up.
+ */
+typedef struct _word_wrap_stream {
+    cairo_output_stream_t base;
+    cairo_output_stream_t *output;
+    int max_column;
+    int column;
+    cairo_bool_t last_write_was_space;
+} word_wrap_stream_t;
+
+static int
+_count_word_up_to (const unsigned char *s, int length)
+{
+    int word = 0;
+
+    while (length--) {
+	if (! isspace (*s++))
+	    word++;
+	else
+	    return word;
+    }
+
+    return word;
+}
+
+static cairo_status_t
+_word_wrap_stream_write (cairo_output_stream_t  *base,
+			 const unsigned char	*data,
+			 unsigned int		 length)
+{
+    word_wrap_stream_t *stream = (word_wrap_stream_t *) base;
+    cairo_bool_t newline;
+    int word;
+
+    while (length) {
+	if (isspace (*data)) {
+	    newline =  (*data == '\n' || *data == '\r');
+	    if (! newline && stream->column >= stream->max_column) {
+		_cairo_output_stream_printf (stream->output, "\n");
+		stream->column = 0;
+	    }
+	    _cairo_output_stream_write (stream->output, data, 1);
+	    data++;
+	    length--;
+	    if (newline)
+		stream->column = 0;
+	    else
+		stream->column++;
+	    stream->last_write_was_space = TRUE;
+	} else {
+	    word = _count_word_up_to (data, length);
+	    /* Don't wrap if this word is a continuation of a word
+	     * from a previous call to write. */
+	    if (stream->column + word >= stream->max_column &&
+		stream->last_write_was_space)
+	    {
+		_cairo_output_stream_printf (stream->output, "\n");
+		stream->column = 0;
+	    }
+	    _cairo_output_stream_write (stream->output, data, word);
+	    data += word;
+	    length -= word;
+	    stream->column += word;
+	    stream->last_write_was_space = FALSE;
+	}
+    }
+
+    return _cairo_output_stream_get_status (stream->output);
+}
+
+static cairo_status_t
+_word_wrap_stream_close (cairo_output_stream_t *base)
+{
+    word_wrap_stream_t *stream = (word_wrap_stream_t *) base;
+
+    return _cairo_output_stream_get_status (stream->output);
+}
+
+static cairo_output_stream_t *
+_word_wrap_stream_create (cairo_output_stream_t *output, int max_column)
+{
+    word_wrap_stream_t *stream;
+
+    stream = malloc (sizeof (word_wrap_stream_t));
+    if (stream == NULL)
+	return (cairo_output_stream_t *) &cairo_output_stream_nil;
+
+    _cairo_output_stream_init (&stream->base,
+			       _word_wrap_stream_write,
+			       _word_wrap_stream_close);
+    stream->output = output;
+    stream->max_column = max_column;
+    stream->column = 0;
+    stream->last_write_was_space = FALSE;
+
+    return &stream->base;
+}
+
+typedef struct _ps_path_info {
+    cairo_ps_surface_t *surface;
+    cairo_output_stream_t *stream;
+    cairo_line_cap_t line_cap;
+    cairo_point_t last_move_to_point;
+    cairo_bool_t has_sub_path;
+} ps_path_info_t;
 
 static cairo_status_t
 _cairo_ps_surface_path_move_to (void *closure, cairo_point_t *point)
 {
-    cairo_output_stream_t *output_stream = closure;
+    ps_path_info_t *path_info = closure;
 
-    _cairo_output_stream_printf (output_stream,
+    path_info->last_move_to_point = *point;
+    path_info->has_sub_path = FALSE;
+
+    _cairo_output_stream_printf (path_info->stream,
 				 "%f %f moveto ",
 				 _cairo_fixed_to_double (point->x),
 				 _cairo_fixed_to_double (point->y));
-    
+
     return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
 _cairo_ps_surface_path_line_to (void *closure, cairo_point_t *point)
 {
-    cairo_output_stream_t *output_stream = closure;
+    ps_path_info_t *path_info = closure;
 
-    _cairo_output_stream_printf (output_stream,
+    if (path_info->line_cap != CAIRO_LINE_CAP_ROUND &&
+	! path_info->has_sub_path &&
+	point->x == path_info->last_move_to_point.x &&
+	point->y == path_info->last_move_to_point.y)
+    {
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    path_info->has_sub_path = TRUE;
+
+    _cairo_output_stream_printf (path_info->stream,
 				 "%f %f lineto ",
 				 _cairo_fixed_to_double (point->x),
 				 _cairo_fixed_to_double (point->y));
@@ -119,9 +248,11 @@ _cairo_ps_surface_path_curve_to (void          *closure,
 				 cairo_point_t *c,
 				 cairo_point_t *d)
 {
-    cairo_output_stream_t *output_stream = closure;
+    ps_path_info_t *path_info = closure;
 
-    _cairo_output_stream_printf (output_stream,
+    path_info->has_sub_path = TRUE;
+
+    _cairo_output_stream_printf (path_info->stream,
 				 "%f %f %f %f %f %f curveto ",
 				 _cairo_fixed_to_double (b->x),
 				 _cairo_fixed_to_double (b->y),
@@ -129,19 +260,62 @@ _cairo_ps_surface_path_curve_to (void          *closure,
 				 _cairo_fixed_to_double (c->y),
 				 _cairo_fixed_to_double (d->x),
 				 _cairo_fixed_to_double (d->y));
-    
+
     return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
 _cairo_ps_surface_path_close_path (void *closure)
 {
-    cairo_output_stream_t *output_stream = closure;
-    
-    _cairo_output_stream_printf (output_stream,
+    ps_path_info_t *path_info = closure;
+
+    if (path_info->line_cap != CAIRO_LINE_CAP_ROUND &&
+	! path_info->has_sub_path)
+    {
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    _cairo_output_stream_printf (path_info->stream,
 				 "closepath\n");
 
     return CAIRO_STATUS_SUCCESS;
+}
+
+/* The line cap value is needed to workaround the fact that PostScript
+ * semnatics for stroking degenerate sub-paths do not match cairo
+ * semantics. (PostScript draws something for any line cap value,
+ * while cairo draws something only for round caps).
+ *
+ * When using this function to emit a path to be filled, rather than
+ * stroked, simply pass CAIRO_LINE_CAP_ROUND which will guarantee that
+ * the stroke workaround will not modify the path being emitted.
+ */
+static cairo_status_t
+_cairo_ps_surface_emit_path (cairo_ps_surface_t	   *surface,
+			     cairo_output_stream_t *stream,
+			     cairo_path_fixed_t    *path,
+			     cairo_line_cap_t	    line_cap)
+{
+    cairo_output_stream_t *word_wrap;
+    cairo_status_t status;
+    ps_path_info_t path_info;
+
+    word_wrap = _word_wrap_stream_create (stream, 79);
+
+    path_info.surface = surface;
+    path_info.stream = word_wrap;
+    path_info.line_cap = line_cap;
+    status = _cairo_path_fixed_interpret (path,
+					  CAIRO_DIRECTION_FORWARD,
+					  _cairo_ps_surface_path_move_to,
+					  _cairo_ps_surface_path_line_to,
+					  _cairo_ps_surface_path_curve_to,
+					  _cairo_ps_surface_path_close_path,
+					  &path_info);
+
+    _cairo_output_stream_destroy (word_wrap);
+
+    return status;
 }
 
 static void
@@ -211,39 +385,118 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
     }
 }
 
-static void
-_cairo_ps_surface_emit_glyph (cairo_ps_surface_t	*surface,
-			      cairo_scaled_font_t	*scaled_font,
-			      unsigned long		 scaled_font_glyph_index,
-			      unsigned int		 subset_glyph_index)
+static cairo_status_t
+_cairo_ps_surface_emit_type1_font_subset (cairo_ps_surface_t		*surface,
+					  cairo_scaled_font_subset_t	*font_subset)
+
+
 {
-    cairo_scaled_glyph_t    *scaled_glyph;
-    cairo_status_t	    status;
+    cairo_type1_subset_t subset;
+    cairo_status_t status;
+    int length;
+    char name[64];
+
+    snprintf (name, sizeof name, "CairoFont-%d-%d",
+	      font_subset->font_id, font_subset->subset_id);
+    status = _cairo_type1_subset_init (&subset, name, font_subset);
+    if (status)
+	return status;
+
+    /* FIXME: Figure out document structure convention for fonts */
+
+    _cairo_output_stream_printf (surface->final_stream,
+				 "%% _cairo_ps_surface_emit_type1_font_subset\n");
+
+    length = subset.header_length + subset.data_length + subset.trailer_length;
+    _cairo_output_stream_write (surface->final_stream, subset.data, length);
+
+    _cairo_type1_subset_fini (&subset);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_cairo_ps_surface_emit_truetype_font_subset (cairo_ps_surface_t		*surface,
+					     cairo_scaled_font_subset_t	*font_subset)
+
+
+{
+    cairo_truetype_subset_t subset;
+    cairo_status_t status;
+    int i;
+
+    status = _cairo_truetype_subset_init (&subset, font_subset);
+    if (status)
+	return status;
+
+    /* FIXME: Figure out document structure convention for fonts */
+
+    _cairo_output_stream_printf (surface->final_stream,
+				 "%% _cairo_ps_surface_emit_truetype_font_subset\n");
+
+    _cairo_output_stream_printf (surface->final_stream,
+				 "11 dict begin\n"
+				 "/FontType 42 def\n"
+				 "/FontName /CairoFont-%d-%d def\n"
+				 "/PaintType 0 def\n"
+				 "/FontMatrix [ 1 0 0 1 0 0 ] def\n"
+				 "/FontBBox [ 0 0 0 0 ] def\n"
+				 "/Encoding 256 array def\n"
+				 "0 1 255 { Encoding exch /.notdef put } for\n",
+				 font_subset->font_id,
+				 font_subset->subset_id);
+
+    /* FIXME: Figure out how subset->x_max etc maps to the /FontBBox */
+
+    for (i = 1; i < font_subset->num_glyphs; i++)
+	_cairo_output_stream_printf (surface->final_stream,
+				     "Encoding %d /g%d put\n", i, i);
+
+    _cairo_output_stream_printf (surface->final_stream,
+				 "/CharStrings %d dict dup begin\n"
+				 "/.notdef 0 def\n",
+				 font_subset->num_glyphs);
+
+    for (i = 1; i < font_subset->num_glyphs; i++)
+	_cairo_output_stream_printf (surface->final_stream,
+				     "/g%d %d def\n", i, i);
+
+    _cairo_output_stream_printf (surface->final_stream,
+				 "end readonly def\n");
+
+    /* FIXME: We need to break up fonts bigger than 64k so we don't
+     * exceed string size limitation.  At glyph boundaries.  Stupid
+     * postscript. */
+    _cairo_output_stream_printf (surface->final_stream,
+				 "/sfnts [<");
+
+    _cairo_output_stream_write_hex_string (surface->final_stream,
+					   subset.data, subset.data_length);
+
+    _cairo_output_stream_printf (surface->final_stream,
+				 ">] def\n"
+				 "FontName currentdict end definefont pop\n");
+
+    _cairo_truetype_subset_fini (&subset);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_int_status_t
+_cairo_ps_surface_emit_outline_glyph_data (cairo_ps_surface_t	*surface,
+					   cairo_scaled_font_t	*scaled_font,
+					   unsigned long	 glyph_index)
+{
+    cairo_scaled_glyph_t *scaled_glyph;
+    cairo_status_t status;
 
     status = _cairo_scaled_glyph_lookup (scaled_font,
-					 scaled_font_glyph_index,
+					 glyph_index,
 					 CAIRO_SCALED_GLYPH_INFO_METRICS|
 					 CAIRO_SCALED_GLYPH_INFO_PATH,
 					 &scaled_glyph);
-    /*
-     * If that fails, try again but ask for an image instead
-     */
     if (status)
-	status = _cairo_scaled_glyph_lookup (scaled_font,
-					     scaled_font_glyph_index,
-					     CAIRO_SCALED_GLYPH_INFO_METRICS|
-					     CAIRO_SCALED_GLYPH_INFO_SURFACE,
-					     &scaled_glyph);
-    if (status) {
-	_cairo_surface_set_error (&surface->base, status);
-	return;
-    }
-
-    /* XXX: Need to actually use the image not the path if that's all
-     * we could get... */
-
-    _cairo_output_stream_printf (surface->final_stream,
-				 "\t\t{ %% %d\n", subset_glyph_index);
+	return status;
 
     _cairo_output_stream_printf (surface->final_stream,
 				 "0 0 %f %f %f %f setcachedevice\n",
@@ -251,46 +504,142 @@ _cairo_ps_surface_emit_glyph (cairo_ps_surface_t	*surface,
 				 -_cairo_fixed_to_double (scaled_glyph->bbox.p2.y),
 				 _cairo_fixed_to_double (scaled_glyph->bbox.p2.x),
 				 -_cairo_fixed_to_double (scaled_glyph->bbox.p1.y));
-    
-    status = _cairo_path_fixed_interpret (scaled_glyph->path,
-					  CAIRO_DIRECTION_FORWARD,
-					  _cairo_ps_surface_path_move_to,
-					  _cairo_ps_surface_path_line_to,
-					  _cairo_ps_surface_path_curve_to,
-					  _cairo_ps_surface_path_close_path,
-					  surface->final_stream);
-    
+
+    /* We're filling not stroking, so we pass CAIRO_LINE_CAP_ROUND. */
+    status = _cairo_ps_surface_emit_path (surface,
+					  surface->final_stream,
+					  scaled_glyph->path,
+					  CAIRO_LINE_CAP_ROUND);
+
     _cairo_output_stream_printf (surface->final_stream,
 				 "F\n");
-    
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_int_status_t
+_cairo_ps_surface_emit_bitmap_glyph_data (cairo_ps_surface_t	*surface,
+					  cairo_scaled_font_t	*scaled_font,
+					  unsigned long	 glyph_index)
+{
+    cairo_scaled_glyph_t *scaled_glyph;
+    cairo_status_t status;
+    cairo_image_surface_t *image;
+    unsigned char *row, *byte;
+    int rows, cols, bytes_per_row;
+
+    status = _cairo_scaled_glyph_lookup (scaled_font,
+					 glyph_index,
+					 CAIRO_SCALED_GLYPH_INFO_METRICS|
+					 CAIRO_SCALED_GLYPH_INFO_SURFACE,
+					 &scaled_glyph);
+
+    image = scaled_glyph->surface;
+    assert (image->format == CAIRO_FORMAT_A1);
+
     _cairo_output_stream_printf (surface->final_stream,
-				 "\t\t}\n");
+				 "0 0 %f %f %f %f setcachedevice\n",
+				 _cairo_fixed_to_double (scaled_glyph->bbox.p1.x),
+				 - _cairo_fixed_to_double (scaled_glyph->bbox.p2.y),
+				 _cairo_fixed_to_double (scaled_glyph->bbox.p2.x),
+				 - _cairo_fixed_to_double (scaled_glyph->bbox.p1.y));
+
+    _cairo_output_stream_printf (surface->final_stream,
+				 "<<\n"
+				 "   /ImageType 1\n"
+				 "   /Width %d\n"
+				 "   /Height %d\n"
+				 "   /ImageMatrix [%f %f %f %f %f %f]\n"
+				 "   /Decode [1 0]\n"
+				 "   /BitsPerComponent 1\n",
+				 image->width,
+				 image->height,
+				 image->base.device_transform.xx,
+				 image->base.device_transform.yx,
+				 image->base.device_transform.xy,
+				 image->base.device_transform.yy,
+				 image->base.device_transform.x0,
+				 - image->base.device_transform.y0);
+
+    _cairo_output_stream_printf (surface->final_stream,
+				 "   /DataSource   {<");
+    bytes_per_row = (image->width + 7) / 8;
+    for (row = image->data, rows = image->height; rows; row += image->stride, rows--) {
+	for (byte = row, cols = (image->width + 7) / 8; cols; byte++, cols--) {
+	    unsigned char output_byte = CAIRO_BITSWAP8_IF_LITTLE_ENDIAN (*byte);
+	    _cairo_output_stream_printf (surface->final_stream, "%02x ", output_byte);
+	}
+	_cairo_output_stream_printf (surface->final_stream, "\n   ");
+    }
+    _cairo_output_stream_printf (surface->final_stream,
+				 "   >}\n");
+    _cairo_output_stream_printf (surface->final_stream,
+				 ">>\n");
+
+    _cairo_output_stream_printf (surface->final_stream,
+				 "imagemask\n");
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static void
-_cairo_ps_surface_emit_font_subset (cairo_scaled_font_subset_t	*font_subset,
-				    void			*closure)
+_cairo_ps_surface_emit_glyph (cairo_ps_surface_t	*surface,
+			      cairo_scaled_font_t	*scaled_font,
+			      unsigned long		 scaled_font_glyph_index,
+			      unsigned int		 subset_glyph_index)
 {
-    cairo_ps_surface_t *surface = closure;
+    cairo_status_t	    status;
+
+    _cairo_output_stream_printf (surface->final_stream,
+				 "\t\t{ %% %d\n", subset_glyph_index);
+
+    status = _cairo_ps_surface_emit_outline_glyph_data (surface,
+							scaled_font,
+							scaled_font_glyph_index);
+    if (status == CAIRO_INT_STATUS_UNSUPPORTED)
+	status = _cairo_ps_surface_emit_bitmap_glyph_data (surface,
+							   scaled_font,
+							   scaled_font_glyph_index);
+
+    _cairo_output_stream_printf (surface->final_stream,
+				 "\t\t}\n");
+
+    if (status)
+	_cairo_surface_set_error (&surface->base, status);
+}
+
+static cairo_status_t
+_cairo_ps_surface_emit_type3_font_subset (cairo_ps_surface_t		*surface,
+					  cairo_scaled_font_subset_t	*font_subset)
+
+
+{
+    cairo_matrix_t matrix;
     int i;
 
     _cairo_output_stream_printf (surface->final_stream,
-				 "%% _cairo_ps_surface_emit_font_subset\n");
+				 "%% _cairo_ps_surface_emit_type3_font_subset\n");
 
     _cairo_output_stream_printf (surface->final_stream,
 				 "/CairoFont-%d-%d <<\n",
 				 font_subset->font_id,
 				 font_subset->subset_id);
 
+    matrix = font_subset->scaled_font->scale;
+    cairo_matrix_invert (&matrix);
     _cairo_output_stream_printf (surface->final_stream,
 				 "\t/FontType\t3\n"
-				 "\t/FontMatrix\t[1 0 0 1 0 0]\n"
+				 "\t/FontMatrix\t[%f %f %f %f 0 0]\n"
 				 "\t/Encoding\t[0]\n"
 				 "\t/FontBBox\t[0 0 10 10]\n"
-				 "\t/Glyphs [\n");
+				 "\t/Glyphs [\n",
+				 matrix.xx,
+				 matrix.yx,
+				 -matrix.xy,
+				 -matrix.yy);
 
     for (i = 0; i < font_subset->num_glyphs; i++) {
-	_cairo_ps_surface_emit_glyph (surface, 
+	_cairo_ps_surface_emit_glyph (surface,
 				      font_subset->scaled_font,
 				      font_subset->glyphs[i], i);
     }
@@ -302,6 +651,29 @@ _cairo_ps_surface_emit_font_subset (cairo_scaled_font_subset_t	*font_subset,
 				 "\t\texch get exec\n"
 				 "\t}\n"
 				 ">> definefont pop\n");
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+
+static void
+_cairo_ps_surface_emit_font_subset (cairo_scaled_font_subset_t	*font_subset,
+				    void			*closure)
+{
+    cairo_ps_surface_t *surface = closure;
+    cairo_status_t status;
+
+    status = _cairo_ps_surface_emit_type1_font_subset (surface, font_subset);
+    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	return;
+
+    status = _cairo_ps_surface_emit_truetype_font_subset (surface, font_subset);
+    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	return;
+
+    status = _cairo_ps_surface_emit_type3_font_subset (surface, font_subset);
+    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	return;
 }
 
 static cairo_status_t
@@ -326,7 +698,7 @@ _cairo_ps_surface_emit_body (cairo_ps_surface_t *surface)
 {
     char    buf[4096];
     int	    n;
-    
+
     rewind (surface->tmpfile);
     while ((n = fread (buf, 1, sizeof (buf), surface->tmpfile)) > 0)
 	_cairo_output_stream_write (surface->final_stream, buf, n);
@@ -376,8 +748,6 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
     surface->height = height;
     surface->max_width = width;
     surface->max_height = height;
-    surface->x_dpi = PS_SURFACE_DPI_DEFAULT;
-    surface->y_dpi = PS_SURFACE_DPI_DEFAULT;
     surface->paginated_mode = CAIRO_PAGINATED_MODE_ANALYZE;
 
     surface->num_pages = 0;
@@ -392,7 +762,6 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
 					    CAIRO_CONTENT_COLOR_ALPHA,
 					    width, height,
 					    &cairo_ps_surface_paginated_backend);
-
 
  CLEANUP_OUTPUT_STREAM:
     _cairo_output_stream_destroy (surface->stream);
@@ -410,7 +779,7 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
  * @filename: a filename for the PS output (must be writable)
  * @width_in_points: width of the surface, in points (1 point == 1/72.0 inch)
  * @height_in_points: height of the surface, in points (1 point == 1/72.0 inch)
- * 
+ *
  * Creates a PostScript surface of the specified size in points to be
  * written to @filename. See cairo_ps_surface_create_for_stream() for
  * a more flexible mechanism for handling the PostScript output than
@@ -426,6 +795,8 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
  * This function always returns a valid pointer, but it will return a
  * pointer to a "nil" surface if an error such as out of memory
  * occurs. You can use cairo_surface_status() to check for this.
+ *
+ * Since: 1.2
  **/
 cairo_surface_t *
 cairo_ps_surface_create (const char		*filename,
@@ -449,13 +820,13 @@ cairo_ps_surface_create (const char		*filename,
 
 /**
  * cairo_ps_surface_create_for_stream:
- * @write: a #cairo_write_func_t to accept the output data
- * @closure: the closure argument for @write
+ * @write_func: a #cairo_write_func_t to accept the output data
+ * @closure: the closure argument for @write_func
  * @width_in_points: width of the surface, in points (1 point == 1/72.0 inch)
  * @height_in_points: height of the surface, in points (1 point == 1/72.0 inch)
- * 
+ *
  * Creates a PostScript surface of the specified size in points to be
- * written incrementally to the stream represented by @write and
+ * written incrementally to the stream represented by @write_func and
  * @closure. See cairo_ps_surface_create() for a more convenient way
  * to simply direct the PostScript output to a named file.
  *
@@ -469,6 +840,8 @@ cairo_ps_surface_create (const char		*filename,
  * This function always returns a valid pointer, but it will return a
  * pointer to a "nil" surface if an error such as out of memory
  * occurs. You can use cairo_surface_status() to check for this.
+ *
+ * Since: 1.2
  */
 cairo_surface_t *
 cairo_ps_surface_create_for_stream (cairo_write_func_t	write_func,
@@ -521,41 +894,11 @@ _extract_ps_surface (cairo_surface_t	 *surface,
 }
 
 /**
- * cairo_ps_surface_set_dpi:
- * @surface: a PostScript cairo_surface_t
- * @x_dpi: horizontal dpi
- * @y_dpi: vertical dpi
- * 
- * Set the horizontal and vertical resolution for image fallbacks.
- * When the ps backend needs to fall back to image overlays, it will
- * use this resolution. These DPI values are not used for any other
- * purpose, (in particular, they do not have any bearing on the size
- * passed to cairo_ps_surface_create() nor on the CTM).
- **/
-void
-cairo_ps_surface_set_dpi (cairo_surface_t *surface,
-			  double	   x_dpi,
-			  double	   y_dpi)
-{
-    cairo_ps_surface_t *ps_surface;
-    cairo_status_t status;
-
-    status = _extract_ps_surface (surface, &ps_surface);
-    if (status) {
-	_cairo_surface_set_error (surface, status);
-	return;
-    }
-
-    ps_surface->x_dpi = x_dpi;    
-    ps_surface->y_dpi = y_dpi;
-}
-
-/**
  * cairo_ps_surface_set_size:
  * @surface: a PostScript cairo_surface_t
  * @width_in_points: new surface width, in points (1 point == 1/72.0 inch)
  * @height_in_points: new surface height, in points (1 point == 1/72.0 inch)
- * 
+ *
  * Changes the size of a PostScript surface for the current (and
  * subsequent) pages.
  *
@@ -564,6 +907,8 @@ cairo_ps_surface_set_dpi (cairo_surface_t *surface,
  * this is to call this function immediately after creating the
  * surface or immediately after completing a page with either
  * cairo_show_page() or cairo_copy_page().
+ *
+ * Since: 1.2
  **/
 void
 cairo_ps_surface_set_size (cairo_surface_t	*surface,
@@ -587,7 +932,7 @@ cairo_ps_surface_set_size (cairo_surface_t	*surface,
  * cairo_ps_surface_dsc_comment:
  * @surface: a PostScript cairo_surface_t
  * @comment: a comment string to be emitted into the PostScript output
- * 
+ *
  * Emit a comment into the PostScript output for the given surface.
  *
  * The comment is expected to conform to the PostScript Language
@@ -650,26 +995,26 @@ cairo_ps_surface_set_size (cairo_surface_t	*surface,
  *
  * <informalexample><programlisting>
  * cairo_surface_t *surface = cairo_ps_surface_create (filename, width, height);
- *
+ * ...
  * cairo_ps_surface_dsc_comment (surface, "%%Title: My excellent document");
  * cairo_ps_surface_dsc_comment (surface, "%%Copyright: Copyright (C) 2006 Cairo Lover")
- *
+ * ...
  * cairo_ps_surface_dsc_begin_setup (surface);
  * cairo_ps_surface_dsc_comment (surface, "%%IncludeFeature: *MediaColor White");
- *
+ * ...
  * cairo_ps_surface_dsc_begin_page_setup (surface);
  * cairo_ps_surface_dsc_comment (surface, "%%IncludeFeature: *PageSize A3");
  * cairo_ps_surface_dsc_comment (surface, "%%IncludeFeature: *InputSlot LargeCapacity");
  * cairo_ps_surface_dsc_comment (surface, "%%IncludeFeature: *MediaType Glossy");
  * cairo_ps_surface_dsc_comment (surface, "%%IncludeFeature: *MediaColor Blue");
- *
  * ... draw to first page here ..
- *
  * cairo_show_page (cr);
- *
+ * ...
  * cairo_ps_surface_dsc_comment (surface, "%%IncludeFeature: *PageSize A5");
  * ...
  * </programlisting></informalexample>
+ *
+ * Since: 1.2
  **/
 void
 cairo_ps_surface_dsc_comment (cairo_surface_t	*surface,
@@ -714,16 +1059,18 @@ cairo_ps_surface_dsc_comment (cairo_surface_t	*surface,
 /**
  * cairo_ps_surface_dsc_begin_setup:
  * @surface: a PostScript cairo_surface_t
- * 
+ *
  * This function indicates that subsequent calls to
  * cairo_ps_surface_dsc_comment() should direct comments to the Setup
  * section of the PostScript output.
  *
  * This function should be called at most once per surface, and must
- * be called before any call to cairo_ps_surface_dsc_begin_page_setup() 
+ * be called before any call to cairo_ps_surface_dsc_begin_page_setup()
  * and before any drawing is performed to the surface.
  *
  * See cairo_ps_surface_dsc_comment() for more details.
+ *
+ * Since: 1.2
  **/
 void
 cairo_ps_surface_dsc_begin_setup (cairo_surface_t *surface)
@@ -744,9 +1091,9 @@ cairo_ps_surface_dsc_begin_setup (cairo_surface_t *surface)
 }
 
 /**
- * cairo_ps_surface_dsc_begin_setup:
+ * cairo_ps_surface_dsc_begin_page_setup:
  * @surface: a PostScript cairo_surface_t
- * 
+ *
  * This function indicates that subsequent calls to
  * cairo_ps_surface_dsc_comment() should direct comments to the
  * PageSetup section of the PostScript output.
@@ -757,6 +1104,8 @@ cairo_ps_surface_dsc_begin_setup (cairo_surface_t *surface)
  * performed to the surface.
  *
  * See cairo_ps_surface_dsc_comment() for more details.
+ *
+ * Since: 1.2
  **/
 void
 cairo_ps_surface_dsc_begin_page_setup (cairo_surface_t *surface)
@@ -777,117 +1126,6 @@ cairo_ps_surface_dsc_begin_page_setup (cairo_surface_t *surface)
     }
 }
 
-/* A word wrap stream can be used as a filter to do word wrapping on
- * top of an existing output stream. The word wrapping is quite
- * simple, using isspace to determine characters that separate
- * words. Any word that will cause the column count exceeed the given
- * max_column will have a '\n' character emitted before it.
- *
- * The stream is careful to maintain integrity for words that cross
- * the boundary from one call to write to the next.
- *
- * Note: This stream does not guarantee that the output will never
- * exceed max_column. In particular, if a single word is larger than
- * max_column it will not be broken up.
- */
-typedef struct _word_wrap_stream {
-    cairo_output_stream_t *output;
-    int max_column;
-    int column;
-    cairo_bool_t last_write_was_space;
-} word_wrap_stream_t;
-
-static int
-_count_word_up_to (const unsigned char *s, int length)
-{
-    int word = 0;
-
-    while (length--) {
-	if (! isspace (*s++))
-	    word++;
-	else
-	    return word;
-    }
-
-    return word;
-}
-
-static cairo_status_t
-_word_wrap_stream_write (void			*closure,
-			 const unsigned char	*data,
-			 unsigned int		 length)
-{
-    word_wrap_stream_t *stream = closure;
-    cairo_bool_t newline;
-    int word;
-
-    while (length) {
-	if (isspace (*data)) {
-	    newline =  (*data == '\n' || *data == '\r');
-	    if (! newline && stream->column >= stream->max_column) {
-		_cairo_output_stream_printf (stream->output, "\n");
-		stream->column = 0;
-	    }
-	    _cairo_output_stream_write (stream->output, data, 1);
-	    data++;
-	    length--;
-	    if (newline)
-		stream->column = 0;
-	    else
-		stream->column++;
-	    stream->last_write_was_space = TRUE;
-	} else {
-	    word = _count_word_up_to (data, length);
-	    /* Don't wrap if this word is a continuation of a word
-	     * from a previous call to write. */
-	    if (stream->column + word >= stream->max_column &&
-		stream->last_write_was_space)
-	    {
-		_cairo_output_stream_printf (stream->output, "\n");
-		stream->column = 0;
-	    }
-	    _cairo_output_stream_write (stream->output, data, word);
-	    data += word;
-	    length -= word;
-	    stream->column += word;
-	    stream->last_write_was_space = FALSE;
-	}
-    }
-
-    return _cairo_output_stream_get_status (stream->output);
-}
-
-static cairo_status_t
-_word_wrap_stream_close (void *closure)
-{
-    cairo_status_t status;
-    word_wrap_stream_t *stream = closure;
-
-    status = _cairo_output_stream_get_status (stream->output);
-
-    free (stream);
-
-    return status;
-}
-
-static cairo_output_stream_t *
-_word_wrap_stream_create (cairo_output_stream_t *output, int max_column)
-{
-    word_wrap_stream_t *stream;
-
-    stream = malloc (sizeof (word_wrap_stream_t));
-    if (stream == NULL)
-	return (cairo_output_stream_t *) &cairo_output_stream_nil;
-
-    stream->output = output;
-    stream->max_column = max_column;
-    stream->column = 0;
-    stream->last_write_was_space = FALSE;
-
-    return _cairo_output_stream_create (_word_wrap_stream_write,
-					_word_wrap_stream_close, stream);
-}
-
 static cairo_surface_t *
 _cairo_ps_surface_create_similar (void		       *abstract_src,
 				   cairo_content_t	content,
@@ -906,18 +1144,11 @@ _cairo_ps_surface_finish (void *abstract_surface)
 {
     cairo_status_t status;
     cairo_ps_surface_t *surface = abstract_surface;
-    cairo_output_stream_t *final_stream, *word_wrap;
     int i, num_comments;
     char **comments;
 
-    /* Save final_stream to be restored later. */
-    final_stream = surface->final_stream;
-
-    word_wrap = _word_wrap_stream_create (final_stream, 79);
-    surface->final_stream = word_wrap;
-   
     _cairo_ps_surface_emit_header (surface);
-    
+
     _cairo_ps_surface_emit_font_subsets (surface);
 
     _cairo_ps_surface_emit_body (surface);
@@ -929,10 +1160,6 @@ _cairo_ps_surface_finish (void *abstract_surface)
     _cairo_output_stream_destroy (surface->stream);
 
     fclose (surface->tmpfile);
-
-    /* Restore final stream before final cleanup. */
-    _cairo_output_stream_destroy (word_wrap);
-    surface->final_stream = final_stream;
 
     _cairo_output_stream_close (surface->final_stream);
     if (status == CAIRO_STATUS_SUCCESS)
@@ -1065,8 +1292,28 @@ pattern_supported (const cairo_pattern_t *pattern)
 
     if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE)
 	return surface_pattern_supported ((const cairo_surface_pattern_t *) pattern);
-	
+
     return FALSE;
+}
+
+static cairo_bool_t cairo_ps_force_fallbacks = FALSE;
+
+/**
+ * _cairo_ps_test_force_fallbacks
+ *
+ * Force the PS surface backend to use image fallbacks for every
+ * operation.
+ *
+ * <note>
+ * This function is <emphasis>only</emphasis> intended for internal
+ * testing use within the cairo distribution. It is not installed in
+ * any public header file.
+ * </note>
+ **/
+void
+_cairo_ps_test_force_fallbacks (void)
+{
+    cairo_ps_force_fallbacks = TRUE;
 }
 
 static cairo_int_status_t
@@ -1074,6 +1321,9 @@ operation_supported (cairo_ps_surface_t *surface,
 		      cairo_operator_t op,
 		      const cairo_pattern_t *pattern)
 {
+    if (cairo_ps_force_fallbacks)
+	return FALSE;
+
     if (! pattern_supported (pattern))
 	return FALSE;
 
@@ -1110,17 +1360,18 @@ _analyze_operation (cairo_ps_surface_t *surface,
 #define STRING_ARRAY_MAX_COLUMN	     72
 
 typedef struct _string_array_stream {
+    cairo_output_stream_t base;
     cairo_output_stream_t *output;
     int column;
     int string_size;
 } string_array_stream_t;
 
 static cairo_status_t
-_string_array_stream_write (void		*closure,
-			    const unsigned char	*data,
-			    unsigned int	 length)
+_string_array_stream_write (cairo_output_stream_t *base,
+			    const unsigned char   *data,
+			    unsigned int	   length)
 {
-    string_array_stream_t *stream = closure;
+    string_array_stream_t *stream = (string_array_stream_t *) base;
     unsigned char c;
     const unsigned char backslash = '\\';
 
@@ -1141,6 +1392,14 @@ _string_array_stream_write (void		*closure,
 	    _cairo_output_stream_write (stream->output, &backslash, 1);
 	    stream->column++;
 	    stream->string_size++;
+	    break;
+	/* Have to also be careful to never split the final ~> sequence. */
+	case '~':
+	    _cairo_output_stream_write (stream->output, &c, 1);
+	    stream->column++;
+	    stream->string_size++;
+	    length--;
+	    c = *data++;
 	    break;
 	}
 	_cairo_output_stream_write (stream->output, &c, 1);
@@ -1163,16 +1422,14 @@ _string_array_stream_write (void		*closure,
 }
 
 static cairo_status_t
-_string_array_stream_close (void *closure)
+_string_array_stream_close (cairo_output_stream_t *base)
 {
     cairo_status_t status;
-    string_array_stream_t *stream = closure;
+    string_array_stream_t *stream = (string_array_stream_t *) base;
 
     _cairo_output_stream_printf (stream->output, ")\n");
 
     status = _cairo_output_stream_get_status (stream->output);
-
-    free (stream);
 
     return status;
 }
@@ -1200,13 +1457,14 @@ _string_array_stream_create (cairo_output_stream_t *output)
     if (stream == NULL)
 	return (cairo_output_stream_t *) &cairo_output_stream_nil;
 
+    _cairo_output_stream_init (&stream->base,
+			       _string_array_stream_write,
+			       _string_array_stream_close);
     stream->output = output;
     stream->column = 0;
     stream->string_size = 0;
 
-    return _cairo_output_stream_create (_string_array_stream_write,
-					_string_array_stream_close,
-					stream);
+    return &stream->base;
 }
 
 /* PS Output - this section handles output of the parts of the meta
@@ -1224,7 +1482,6 @@ emit_image (cairo_ps_surface_t    *surface,
     cairo_surface_t *opaque;
     cairo_image_surface_t *opaque_image;
     cairo_pattern_union_t pattern;
-    cairo_matrix_t d2i;
     int x, y, i;
     cairo_output_stream_t *base85_stream, *string_array_stream;
 
@@ -1242,9 +1499,9 @@ emit_image (cairo_ps_surface_t    *surface,
 	    status = CAIRO_STATUS_NO_MEMORY;
 	    goto bail0;
 	}
-    
+
 	_cairo_pattern_init_for_surface (&pattern.surface, &image->base);
-    
+
 	_cairo_surface_fill_rectangle (opaque,
 				       CAIRO_OPERATOR_SOURCE,
 				       CAIRO_COLOR_WHITE,
@@ -1259,7 +1516,7 @@ emit_image (cairo_ps_surface_t    *surface,
 				  0, 0,
 				  image->width,
 				  image->height);
-    
+
 	_cairo_pattern_fini (&pattern.base);
 	opaque_image = (cairo_image_surface_t *) opaque;
     } else {
@@ -1311,12 +1568,6 @@ emit_image (cairo_ps_surface_t    *surface,
     _cairo_output_stream_printf (surface->stream,
 				 "/%sDataIndex 0 def\n", name);
 
-    /* matrix transforms from user space to image space.  We need to
-     * transform from device space to image space to compensate for
-     * postscripts coordinate system. */
-    cairo_matrix_init (&d2i, 1, 0, 0, 1, 0, 0);
-    cairo_matrix_multiply (&d2i, &d2i, matrix);
-
     _cairo_output_stream_printf (surface->stream,
 				 "/%s {\n"
 				 "    /DeviceRGB setcolorspace\n"
@@ -1339,9 +1590,9 @@ emit_image (cairo_ps_surface_t    *surface,
 				 opaque_image->width,
 				 opaque_image->height,
 				 name, name, name, name, name, name, name,
-				 d2i.xx, d2i.yx,
-				 d2i.xy, d2i.yy,
-				 d2i.x0, d2i.y0);
+				 matrix->xx, matrix->yx,
+				 matrix->xy, matrix->yy,
+				 0.0, 0.0);
 
     status = CAIRO_STATUS_SUCCESS;
 
@@ -1373,9 +1624,10 @@ emit_solid_pattern (cairo_ps_surface_t *surface,
 
 static void
 emit_surface_pattern (cairo_ps_surface_t *surface,
-		      cairo_surface_pattern_t *pattern)
+		      cairo_surface_pattern_t *pattern,
+		      double x, double y)
 {
-    cairo_rectangle_fixed_t extents;
+    cairo_rectangle_int16_t extents;
 
     if (_cairo_surface_is_meta (pattern->surface)) {
 	_cairo_output_stream_printf (surface->stream, "/MyPattern {\n");
@@ -1387,16 +1639,24 @@ emit_surface_pattern (cairo_ps_surface_t *surface,
 	cairo_image_surface_t	*image;
 	void			*image_extra;
 	cairo_status_t		status;
+	cairo_matrix_t		inverse = pattern->base.matrix;
+
+	cairo_matrix_invert (&inverse);
 
 	status = _cairo_surface_acquire_source_image (pattern->surface,
 						      &image,
 						      &image_extra);
-	_cairo_surface_get_extents (&image->base, &extents);
 	assert (status == CAIRO_STATUS_SUCCESS);
+
+	_cairo_pattern_get_extents (&pattern->base, &extents);
+
 	emit_image (surface, image, &pattern->base.matrix, "MyPattern");
 	_cairo_surface_release_source_image (pattern->surface, image,
 					     image_extra);
     }
+    _cairo_output_stream_printf (surface->stream,
+				 "%f %f translate\n",
+				 x, y);
     _cairo_output_stream_printf (surface->stream,
 				 "<< /PatternType 1\n"
 				 "   /PaintType 1\n"
@@ -1410,6 +1670,9 @@ emit_surface_pattern (cairo_ps_surface_t *surface,
     _cairo_output_stream_printf (surface->stream,
 				 "   /PaintProc { MyPattern } bind\n"
 				 ">> matrix makepattern setpattern\n");
+    _cairo_output_stream_printf (surface->stream,
+				 "-%f -%f translate\n",
+				 x, y);
 }
 
 static void
@@ -1427,19 +1690,20 @@ emit_radial_pattern (cairo_ps_surface_t *surface,
 }
 
 static void
-emit_pattern (cairo_ps_surface_t *surface, cairo_pattern_t *pattern)
+emit_pattern (cairo_ps_surface_t *surface, cairo_pattern_t *pattern,
+	      double x, double y)
 {
     /* FIXME: We should keep track of what pattern is currently set in
      * the postscript file and only emit code if we're setting a
      * different pattern. */
 
     switch (pattern->type) {
-    case CAIRO_PATTERN_TYPE_SOLID:	
+    case CAIRO_PATTERN_TYPE_SOLID:
 	emit_solid_pattern (surface, (cairo_solid_pattern_t *) pattern);
 	break;
 
     case CAIRO_PATTERN_TYPE_SURFACE:
-	emit_surface_pattern (surface, (cairo_surface_pattern_t *) pattern);
+	emit_surface_pattern (surface, (cairo_surface_pattern_t *) pattern, x, y);
 	break;
 
     case CAIRO_PATTERN_TYPE_LINEAR:
@@ -1448,7 +1712,7 @@ emit_pattern (cairo_ps_surface_t *surface, cairo_pattern_t *pattern)
 
     case CAIRO_PATTERN_TYPE_RADIAL:
 	emit_radial_pattern (surface, (cairo_radial_pattern_t *) pattern);
-	break;	    
+	break;
     }
 }
 
@@ -1475,13 +1739,9 @@ _cairo_ps_surface_intersect_clip_path (void		   *abstract_surface,
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    status = _cairo_path_fixed_interpret (path,
-					  CAIRO_DIRECTION_FORWARD,
-					  _cairo_ps_surface_path_move_to,
-					  _cairo_ps_surface_path_line_to,
-					  _cairo_ps_surface_path_curve_to,
-					  _cairo_ps_surface_path_close_path,
-					  stream);
+    /* We're "filling" not stroking, so we pass CAIRO_LINE_CAP_ROUND. */
+    status = _cairo_ps_surface_emit_path (surface, stream, path,
+					  CAIRO_LINE_CAP_ROUND);
 
     switch (fill_rule) {
     case CAIRO_FILL_RULE_WINDING:
@@ -1503,7 +1763,7 @@ _cairo_ps_surface_intersect_clip_path (void		   *abstract_surface,
 
 static cairo_int_status_t
 _cairo_ps_surface_get_extents (void		       *abstract_surface,
-			       cairo_rectangle_fixed_t *rectangle)
+			       cairo_rectangle_int16_t *rectangle)
 {
     cairo_ps_surface_t *surface = abstract_surface;
 
@@ -1537,6 +1797,7 @@ _cairo_ps_surface_paint (void			*abstract_surface,
 {
     cairo_ps_surface_t *surface = abstract_surface;
     cairo_output_stream_t *stream = surface->stream;
+    cairo_rectangle_int16_t extents;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _analyze_operation (surface, op, source);
@@ -1550,17 +1811,25 @@ _cairo_ps_surface_paint (void			*abstract_surface,
     /*
     assert (_operation_supported (op, source));
     */
-    
+
     _cairo_output_stream_printf (stream,
 				 "%% _cairo_ps_surface_paint\n");
 
-    emit_pattern (surface, source);
+    _cairo_pattern_get_extents (source, &extents);
 
-    _cairo_output_stream_printf (stream, "0 0 M\n");
-    _cairo_output_stream_printf (stream, "%f 0 L\n", surface->width);
-    _cairo_output_stream_printf (stream, "%f %f L\n",
-				 surface->width, surface->height);
-    _cairo_output_stream_printf (stream, "0 %f L\n", surface->height);
+    emit_pattern (surface, source, extents.x, extents.y);
+
+    _cairo_output_stream_printf (stream, "%d %d M\n",
+				 extents.x, extents.y);
+    _cairo_output_stream_printf (stream, "%d %d L\n",
+				 extents.x + extents.width,
+				 extents.y);
+    _cairo_output_stream_printf (stream, "%d %d L\n",
+				 extents.x + extents.width,
+				 extents.y + extents.height);
+    _cairo_output_stream_printf (stream, "%d %d L\n",
+				 extents.x,
+				 extents.y + extents.height);
     _cairo_output_stream_printf (stream, "P F\n");
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1611,26 +1880,88 @@ _cairo_ps_surface_stroke (void			*abstract_surface,
     cairo_ps_surface_t *surface = abstract_surface;
     cairo_output_stream_t *stream = surface->stream;
     cairo_int_status_t status;
+    double *dash = style->dash;
+    int num_dashes = style->num_dashes;
+    double dash_offset = style->dash_offset;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _analyze_operation (surface, op, source);
 
     assert (operation_supported (surface, op, source));
-    
+
+
     _cairo_output_stream_printf (stream,
 				 "%% _cairo_ps_surface_stroke\n");
 
-    emit_pattern (surface, source);
+    /* PostScript has "special needs" when it comes to zero-length
+     * dash segments with butt caps. It apparently (at least
+     * according to ghostscript) draws hairlines for this
+     * case. That's not what the cairo semantics want, so we first
+     * touch up the array to eliminate any 0.0 values that will
+     * result in "on" segments.
+     */
+    if (num_dashes && style->line_cap == CAIRO_LINE_CAP_BUTT) {
+	int i;
+
+	/* If there's an odd number of dash values they will each get
+	 * interpreted as both on and off. So we first explicitly
+	 * expand the array to remove the duplicate usage so that we
+	 * can modify some of the values.
+	 */
+	if (num_dashes % 2) {
+	    dash = malloc (2 * num_dashes * sizeof (double));
+	    if (dash == NULL)
+		return CAIRO_STATUS_NO_MEMORY;
+
+	    memcpy (dash, style->dash, num_dashes * sizeof (double));
+	    memcpy (dash + num_dashes, style->dash, num_dashes * sizeof (double));
+
+	    num_dashes *= 2;
+	}
+
+	for (i = 0; i < num_dashes; i += 2) {
+	    if (dash[i] == 0.0) {
+		/* If we're at the front of the list, we first rotate
+		 * two elements from the end of the list to the front
+		 * of the list before folding away the 0.0. Or, if
+		 * there are only two dash elements, then there is
+		 * nothing at all to draw.
+		 */
+		if (i == 0) {
+		    double last_two[2];
+
+		    if (num_dashes == 2) {
+			if (dash != style->dash)
+			    free (dash);
+			return CAIRO_STATUS_SUCCESS;
+		    }
+		    /* The cases of num_dashes == 0, 1, or 3 elements
+		     * cannot exist, so the rotation of 2 elements
+		     * will always be safe */
+		    memcpy (last_two, dash + num_dashes - 2, sizeof (last_two));
+		    memmove (dash + 2, dash, (num_dashes - 2) * sizeof (double));
+		    memcpy (dash, last_two, sizeof (last_two));
+		    dash_offset += dash[0] + dash[1];
+		    i = 2;
+		}
+		dash[i-1] += dash[i+1];
+		num_dashes -= 2;
+		memmove (dash + i, dash + i + 2, (num_dashes - i) * sizeof (double));
+		/* If we might have just rotated, it's possible that
+		 * we rotated a 0.0 value to the front of the list.
+		 * Set i to -2 so it will get incremented to 0. */
+		if (i == 2)
+		    i = -2;
+	    }
+	}
+    }
+
+    emit_pattern (surface, source, 0, 0);
 
     _cairo_output_stream_printf (stream,
 				 "gsave\n");
-    status = _cairo_path_fixed_interpret (path,
-					  CAIRO_DIRECTION_FORWARD,
-					  _cairo_ps_surface_path_move_to,
-					  _cairo_ps_surface_path_line_to,
-					  _cairo_ps_surface_path_curve_to,
-					  _cairo_ps_surface_path_close_path,
-					  stream);
+    status = _cairo_ps_surface_emit_path (surface, stream, path,
+					  style->line_cap);
 
     /*
      * Switch to user space to set line parameters
@@ -1648,14 +1979,18 @@ _cairo_ps_surface_stroke (void			*abstract_surface,
     _cairo_output_stream_printf (stream, "%d setlinejoin\n",
 				 _cairo_ps_line_join (style->line_join));
     /* dashes */
-    if (style->num_dashes) {
+    if (num_dashes) {
 	int d;
+
 	_cairo_output_stream_printf (stream, "[");
-	for (d = 0; d < style->num_dashes; d++)
-	    _cairo_output_stream_printf (stream, " %f", style->dash[d]);
+	for (d = 0; d < num_dashes; d++)
+	    _cairo_output_stream_printf (stream, " %f", dash[d]);
 	_cairo_output_stream_printf (stream, "] %f setdash\n",
-				     style->dash_offset);
+				     dash_offset);
     }
+    if (dash != style->dash)
+	free (dash);
+
     /* miter limit */
     _cairo_output_stream_printf (stream, "%f setmiterlimit\n",
 				 style->miter_limit);
@@ -1684,19 +2019,15 @@ _cairo_ps_surface_fill (void		*abstract_surface,
 	return _analyze_operation (surface, op, source);
 
     assert (operation_supported (surface, op, source));
-    
+
     _cairo_output_stream_printf (stream,
 				 "%% _cairo_ps_surface_fill\n");
 
-    emit_pattern (surface, source);
+    emit_pattern (surface, source, 0, 0);
 
-    status = _cairo_path_fixed_interpret (path,
-					  CAIRO_DIRECTION_FORWARD,
-					  _cairo_ps_surface_path_move_to,
-					  _cairo_ps_surface_path_line_to,
-					  _cairo_ps_surface_path_curve_to,
-					  _cairo_ps_surface_path_close_path,
-					  stream);
+    /* We're filling not stroking, so we pass CAIRO_LINE_CAP_ROUND. */
+    status = _cairo_ps_surface_emit_path (surface, stream, path,
+					  CAIRO_LINE_CAP_ROUND);
 
     switch (fill_rule) {
     case CAIRO_FILL_RULE_WINDING:
@@ -1713,14 +2044,6 @@ _cairo_ps_surface_fill (void		*abstract_surface,
 				 "%s\n", ps_operator);
 
     return status;
-}
-
-static char
-hex_digit (int i)
-{
-    i &= 0xf;
-    if (i < 10) return '0' + i;
-    return 'a' + (i - 10);
 }
 
 static cairo_int_status_t
@@ -1747,7 +2070,7 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
 				 "%% _cairo_ps_surface_show_glyphs\n");
 
     if (num_glyphs)
-	emit_pattern (surface, source);
+	emit_pattern (surface, source, 0, 0);
 
     for (i = 0; i < num_glyphs; i++) {
 	status = _cairo_scaled_font_subsets_map_glyph (surface->font_subsets,
@@ -1758,15 +2081,22 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
 
 	if (subset_id != current_subset_id) {
 	    _cairo_output_stream_printf (surface->stream,
-					 "/CairoFont-%d-%d 1 selectfont\n",
-					 font_id, subset_id);
+					 "/CairoFont-%d-%d findfont\n"
+					 "[ %f %f %f %f 0 0 ] makefont\n"
+					 "setfont\n",
+					 font_id,
+					 subset_id,
+					 scaled_font->scale.xx,
+					 scaled_font->scale.yx,
+					 -scaled_font->scale.xy,
+					 -scaled_font->scale.yy);
 	    current_subset_id = subset_id;
 	}
+
 	_cairo_output_stream_printf (surface->stream,
-				     "%f %f M <%c%c> S\n",
+				     "%f %f M <%02x> S\n",
 				     glyphs[i].x, glyphs[i].y,
-				     hex_digit (subset_glyph_index >> 4),
-				     hex_digit (subset_glyph_index));
+				     subset_glyph_index);
     }
 
     return _cairo_output_stream_get_status (surface->stream);
@@ -1806,7 +2136,7 @@ static const cairo_surface_backend_t cairo_ps_surface_backend = {
     NULL, /* scaled_glyph_fini */
 
     /* Here are the drawing functions */
-    
+
     _cairo_ps_surface_paint, /* paint */
     NULL, /* mask */
     _cairo_ps_surface_stroke,

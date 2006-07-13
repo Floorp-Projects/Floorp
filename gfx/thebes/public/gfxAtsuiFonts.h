@@ -100,7 +100,6 @@ protected:
 };
 
 class THEBES_API gfxAtsuiTextRun : public gfxTextRun {
-    THEBES_DECL_ISUPPORTS_INHERITED
 public:
     gfxAtsuiTextRun(const nsAString& aString, gfxAtsuiFontGroup *aFontGroup);
     ~gfxAtsuiTextRun();

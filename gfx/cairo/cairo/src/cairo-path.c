@@ -482,7 +482,7 @@ _cairo_path_arg_buf_add_points (cairo_path_arg_buf_t *arg_buf,
 
 #define CAIRO_PATH_OP_MAX_ARGS 3
 
-static int const num_args[] = 
+static int const num_args[] =
 {
     1, /* cairo_path_move_to */
     1, /* cairo_path_op_line_to */
@@ -604,13 +604,29 @@ _cairo_path_fixed_offset_and_scale (cairo_path_fixed_t *path,
     }
 }
 
-void
-_cairo_path_fixed_offset (cairo_path_fixed_t *path,
-			  cairo_fixed_t offx,
-			  cairo_fixed_t offy)
-{
-    _cairo_path_fixed_offset_and_scale (path, offx, offy,
-					CAIRO_FIXED_ONE,
-					CAIRO_FIXED_ONE);
-}
 
+/**
+ * _cairo_path_fixed_device_transform:
+ * @path: a #cairo_path_fixed_t to be transformed
+ * @device_transform: a matrix with only scaling/translation (no rotation or shear)
+ *
+ * Transform the fixed-point path according to the scaling and
+ * translation of the given matrix. This function assert()s that the
+ * given matrix has no rotation or shear elements, (that is, xy and yx
+ * are 0.0).
+ **/
+void
+_cairo_path_fixed_device_transform (cairo_path_fixed_t	*path,
+				    cairo_matrix_t	*device_transform)
+{
+    assert (device_transform->yx == 0.0 && device_transform->xy == 0.0);
+    /* XXX: FRAGILE: I'm not really sure whether we're doing the
+     * "right" thing here if there is both scaling and translation in
+     * the matrix. But for now, the internals guarantee that we won't
+     * really ever have both going on. */
+    _cairo_path_fixed_offset_and_scale (path,
+					_cairo_fixed_from_double (device_transform->x0),
+					_cairo_fixed_from_double (device_transform->y0),
+					_cairo_fixed_from_double (device_transform->xx),
+					_cairo_fixed_from_double (device_transform->yy));
+}

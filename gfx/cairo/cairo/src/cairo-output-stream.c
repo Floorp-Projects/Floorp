@@ -1,5 +1,5 @@
-/* cairo_output_stream.c: Output stream abstraction
- * 
+/* cairo-output-stream.c: Output stream abstraction
+ *
  * Copyright © 2005 Red Hat, Inc
  *
  * This library is free software; you can redistribute it and/or
@@ -38,24 +38,35 @@
 #include <locale.h>
 #include <ctype.h>
 #include "cairoint.h"
+#include "cairo-output-stream-private.h"
 
 #ifdef _MSC_VER
 #define snprintf _snprintf
 #endif /* _MSC_VER */
 
-struct _cairo_output_stream {
-    cairo_write_func_t		write_func;
-    cairo_close_func_t		close_func;
-    void			*closure;
-    unsigned long		position;
-    cairo_status_t		status;
-    cairo_bool_t		closed;
-};
+
+cairo_private void
+_cairo_output_stream_init (cairo_output_stream_t            *stream,
+			   cairo_output_stream_write_func_t  write_func,
+			   cairo_output_stream_close_func_t  close_func)
+{
+    stream->write_func = write_func;
+    stream->close_func = close_func;
+    stream->position = 0;
+    stream->status = CAIRO_STATUS_SUCCESS;
+    stream->closed = FALSE;
+}
+
+cairo_private void
+_cairo_output_stream_fini (cairo_output_stream_t *stream)
+{
+    _cairo_output_stream_close (stream);
+}
+
 
 const cairo_output_stream_t cairo_output_stream_nil = {
     NULL, /* write_func */
     NULL, /* close_func */
-    NULL, /* closure */
     0,    /* position */
     CAIRO_STATUS_NO_MEMORY,
     FALSE /* closed */
@@ -64,31 +75,59 @@ const cairo_output_stream_t cairo_output_stream_nil = {
 static const cairo_output_stream_t cairo_output_stream_nil_write_error = {
     NULL, /* write_func */
     NULL, /* close_func */
-    NULL, /* closure */
     0,    /* position */
     CAIRO_STATUS_WRITE_ERROR,
     FALSE /* closed */
 };
+
+typedef struct _cairo_output_stream_with_closure {
+    cairo_output_stream_t	 base;
+    cairo_write_func_t		 write_func;
+    cairo_close_func_t		 close_func;
+    void			*closure;
+} cairo_output_stream_with_closure_t;
+
+
+static cairo_status_t
+closure_write (cairo_output_stream_t *stream,
+	       const unsigned char *data, unsigned int length)
+{
+    cairo_output_stream_with_closure_t *stream_with_closure =
+	(cairo_output_stream_with_closure_t *) stream;
+
+    return stream_with_closure->write_func (stream_with_closure->closure,
+					    data, length);
+}
+
+static cairo_status_t
+closure_close (cairo_output_stream_t *stream)
+{
+    cairo_output_stream_with_closure_t *stream_with_closure =
+	(cairo_output_stream_with_closure_t *) stream;
+
+    if (stream_with_closure->close_func != NULL)
+	return stream_with_closure->close_func (stream_with_closure->closure);
+    else
+	return CAIRO_STATUS_SUCCESS;
+}
 
 cairo_output_stream_t *
 _cairo_output_stream_create (cairo_write_func_t		write_func,
 			     cairo_close_func_t		close_func,
 			     void			*closure)
 {
-    cairo_output_stream_t *stream;
+    cairo_output_stream_with_closure_t *stream;
 
-    stream = malloc (sizeof (cairo_output_stream_t));
+    stream = malloc (sizeof (cairo_output_stream_with_closure_t));
     if (stream == NULL)
 	return (cairo_output_stream_t *) &cairo_output_stream_nil;
 
+    _cairo_output_stream_init (&stream->base, closure_write, closure_close);
     stream->write_func = write_func;
     stream->close_func = close_func;
     stream->closure = closure;
-    stream->position = 0;
-    stream->status = CAIRO_STATUS_SUCCESS;
-    stream->closed = FALSE;
 
-    return stream;
+    return &stream->base;
 }
 
 void
@@ -106,7 +145,7 @@ _cairo_output_stream_close (cairo_output_stream_t *stream)
     }
 
     if (stream->close_func) {
-	status = stream->close_func (stream->closure);
+	status = stream->close_func (stream);
 	if (status)
 	    stream->status = status;
     }
@@ -120,7 +159,7 @@ _cairo_output_stream_destroy (cairo_output_stream_t *stream)
     if (stream == NULL)
 	return;
 
-    _cairo_output_stream_close (stream);
+    _cairo_output_stream_fini (stream);
     free (stream);
 }
 
@@ -134,7 +173,7 @@ _cairo_output_stream_write (cairo_output_stream_t *stream,
     if (stream->status)
 	return;
 
-    stream->status = stream->write_func (stream->closure, data, length);
+    stream->status = stream->write_func (stream, data, length);
     stream->position += length;
 }
 
@@ -180,20 +219,20 @@ _cairo_dtostr (char *buffer, size_t size, double d)
   int decimal_len;
 
   snprintf (buffer, size, "%f", d);
-    
+
   locale_data = localeconv ();
   decimal_point = locale_data->decimal_point;
   decimal_point_len = strlen (decimal_point);
-  
+
   assert (decimal_point_len != 0);
   p = buffer;
-			    
+
   if (*p == '+' || *p == '-')
       p++;
 
   while (isdigit (*p))
       p++;
-					
+
   if (strncmp (p, decimal_point, decimal_point_len) == 0) {
       *p = '.';
       decimal_len = strlen (p + decimal_point_len);
@@ -209,10 +248,9 @@ _cairo_dtostr (char *buffer, size_t size, double d)
 	  p--;
       }
   }
-					        
+
   return p + 1 - buffer;
 }
-
 
 enum {
     LENGTH_MODIFIER_LONG = 0x100
@@ -230,9 +268,9 @@ void
 _cairo_output_stream_vprintf (cairo_output_stream_t *stream,
 			      const char *fmt, va_list ap)
 {
-    char buffer[512];
-    char *p;
-    const char *f;
+    char buffer[512], single_fmt[32];
+    char *p, *end;
+    const char *f, *start;
     int length_modifier;
 
     if (stream->status)
@@ -251,10 +289,16 @@ _cairo_output_stream_vprintf (cairo_output_stream_t *stream,
 	    continue;
 	}
 
+	start = f;
 	f++;
 
-	_cairo_output_stream_write (stream, buffer, p - buffer);
-	p = buffer;
+	if (*f == '0')
+	    f++;
+
+	if (isdigit (*f)) {
+	    strtol (f, &end, 10);
+	    f = end;
+	}
 
 	length_modifier = 0;
 	if (*f == 'l') {
@@ -262,28 +306,40 @@ _cairo_output_stream_vprintf (cairo_output_stream_t *stream,
 	    f++;
 	}
 
+	/* Reuse the format string for this conversion. */
+	memcpy (single_fmt, start, f + 1 - start);
+	single_fmt[f + 1 - start] = '\0';
+
+	/* Flush contents of buffer before snprintf()'ing into it. */
+	_cairo_output_stream_write (stream, buffer, p - buffer);
+	p = buffer;
+
+	/* We group signed and unsigned together in this switch, the
+	 * only thing that matters here is the size of the arguments,
+	 * since we're just passing the data through to sprintf(). */
 	switch (*f | length_modifier) {
 	case '%':
 	    buffer[0] = *f;
 	    buffer[1] = 0;
 	    break;
 	case 'd':
-	    snprintf (buffer, sizeof buffer, "%d", va_arg (ap, int));
+	case 'u':
+	case 'o':
+	case 'x':
+	case 'X':
+	    snprintf (buffer, sizeof buffer, single_fmt, va_arg (ap, int));
 	    break;
 	case 'd' | LENGTH_MODIFIER_LONG:
-	    snprintf (buffer, sizeof buffer, "%ld", va_arg (ap, long int));
-	    break;
-	case 'u':
-	    snprintf (buffer, sizeof buffer, "%u", va_arg (ap, unsigned int));
-	    break;
 	case 'u' | LENGTH_MODIFIER_LONG:
-	    snprintf (buffer, sizeof buffer, "%lu", va_arg (ap, long unsigned int));
-	    break;
-	case 'o':
-	    snprintf (buffer, sizeof buffer, "%o", va_arg (ap, int));
+	case 'o' | LENGTH_MODIFIER_LONG:
+	case 'x' | LENGTH_MODIFIER_LONG:
+	case 'X' | LENGTH_MODIFIER_LONG:
+	    snprintf (buffer, sizeof buffer,
+		      single_fmt, va_arg (ap, long int));
 	    break;
 	case 's':
-	    snprintf (buffer, sizeof buffer, "%s", va_arg (ap, const char *));
+	    snprintf (buffer, sizeof buffer,
+		      single_fmt, va_arg (ap, const char *));
 	    break;
 	case 'f':
 	    _cairo_dtostr (buffer, sizeof buffer, va_arg (ap, double));
@@ -298,7 +354,7 @@ _cairo_output_stream_vprintf (cairo_output_stream_t *stream,
 	p = buffer + strlen (buffer);
 	f++;
     }
-    
+
     _cairo_output_stream_write (stream, buffer, p - buffer);
 }
 
@@ -327,43 +383,49 @@ _cairo_output_stream_get_status (cairo_output_stream_t *stream)
     return stream->status;
 }
 
-
 /* Maybe this should be a configure time option, so embedded targets
  * don't have to pull in stdio. */
 
-static cairo_status_t
-stdio_write (void *closure, const unsigned char *data, unsigned int length)
-{
-    FILE *file = closure;
 
-    if (fwrite (data, 1, length, file) != length)
+typedef struct _stdio_stream {
+    cairo_output_stream_t	 base;
+    FILE			*file;
+} stdio_stream_t;
+
+static cairo_status_t
+stdio_write (cairo_output_stream_t *base,
+	     const unsigned char *data, unsigned int length)
+{
+    stdio_stream_t *stream = (stdio_stream_t *) base;
+
+    if (fwrite (data, 1, length, stream->file) != length)
 	return CAIRO_STATUS_WRITE_ERROR;
 
     return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
-stdio_flush (void *closure)
+stdio_flush (cairo_output_stream_t *base)
 {
-    FILE *file = closure;
+    stdio_stream_t *stream = (stdio_stream_t *) base;
 
-    fflush (file);
+    fflush (stream->file);
 
-    if (ferror (file))
+    if (ferror (stream->file))
 	return CAIRO_STATUS_WRITE_ERROR;
     else
 	return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
-stdio_close (void *closure)
+stdio_close (cairo_output_stream_t *base)
 {
     cairo_status_t status;
-    FILE *file = closure;
+    stdio_stream_t *stream = (stdio_stream_t *) base;
 
-    status = stdio_flush (closure);
+    status = stdio_flush (base);
 
-    fclose (file);
+    fclose (stream->file);
 
     return status;
 }
@@ -371,20 +433,96 @@ stdio_close (void *closure)
 cairo_output_stream_t *
 _cairo_output_stream_create_for_file (FILE *file)
 {
+    stdio_stream_t *stream;
+
     if (file == NULL)
 	return (cairo_output_stream_t *) &cairo_output_stream_nil_write_error;
 
-    return _cairo_output_stream_create (stdio_write, stdio_flush, file);
+    stream = malloc (sizeof *stream);
+    if (stream == NULL)
+	return (cairo_output_stream_t *) &cairo_output_stream_nil;
+
+    _cairo_output_stream_init (&stream->base, stdio_write, stdio_flush);
+    stream->file = file;
+
+    return &stream->base;
 }
 
 cairo_output_stream_t *
 _cairo_output_stream_create_for_filename (const char *filename)
 {
+    stdio_stream_t *stream;
     FILE *file;
 
     file = fopen (filename, "wb");
     if (file == NULL)
 	return (cairo_output_stream_t *) &cairo_output_stream_nil_write_error;
-    
-    return _cairo_output_stream_create (stdio_write, stdio_close, file);
+
+    stream = malloc (sizeof *stream);
+    if (stream == NULL)
+	return (cairo_output_stream_t *) &cairo_output_stream_nil;
+
+    _cairo_output_stream_init (&stream->base, stdio_write, stdio_close);
+    stream->file = file;
+
+    return &stream->base;
+}
+
+
+typedef struct _memory_stream {
+    cairo_output_stream_t	base;
+    cairo_array_t		array;
+} memory_stream_t;
+
+static cairo_status_t
+memory_write (cairo_output_stream_t *base,
+	      const unsigned char *data, unsigned int length)
+{
+    memory_stream_t *stream = (memory_stream_t *) base;
+
+    return _cairo_array_append_multiple (&stream->array, data, length);
+}
+
+static cairo_status_t
+memory_close (cairo_output_stream_t *base)
+{
+    memory_stream_t *stream = (memory_stream_t *) base;
+
+    _cairo_array_fini (&stream->array);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_output_stream_t *
+_cairo_memory_stream_create (void)
+{
+    memory_stream_t *stream;
+
+    stream = malloc (sizeof *stream);
+    if (stream == NULL)
+	return (cairo_output_stream_t *) &cairo_output_stream_nil;
+
+    _cairo_output_stream_init (&stream->base, memory_write, memory_close);
+    _cairo_array_init (&stream->array, 1);
+
+    return &stream->base;
+}
+
+void
+_cairo_memory_stream_copy (cairo_output_stream_t *base,
+			   cairo_output_stream_t *dest)
+{
+    memory_stream_t *stream = (memory_stream_t *) base;
+
+    _cairo_output_stream_write (dest, 
+				_cairo_array_index (&stream->array, 0),
+				_cairo_array_num_elements (&stream->array));
+}
+
+int
+_cairo_memory_stream_length (cairo_output_stream_t *base)
+{
+    memory_stream_t *stream = (memory_stream_t *) base;
+
+    return _cairo_array_num_elements (&stream->array);
 }

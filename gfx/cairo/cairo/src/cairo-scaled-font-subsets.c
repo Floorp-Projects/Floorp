@@ -39,7 +39,6 @@
  *	Keith Packard <keithp@keithp.com>
  */
 
-
 #include "cairoint.h"
 #include "cairo-scaled-font-subsets-private.h"
 
@@ -246,7 +245,7 @@ _cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
 	    sub_font->current_subset++;
 	    sub_font->num_glyphs_in_current_subset = 0;
 	}
-	    
+
 	sub_font_glyph = _cairo_sub_font_glyph_create (scaled_font_glyph_index,
 						       sub_font->current_subset,
 						       sub_font->num_glyphs_in_current_subset++);
@@ -341,7 +340,7 @@ _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
 
     _cairo_sub_font_init_key (&key, scaled_font);
     if (! _cairo_hash_table_lookup (subsets->sub_fonts, &key.base,
-				    (cairo_hash_entry_t **) &sub_font)) 
+				    (cairo_hash_entry_t **) &sub_font))
     {
 	sub_font = _cairo_sub_font_create (subsets, scaled_font,
 					   subsets->num_sub_fonts++,

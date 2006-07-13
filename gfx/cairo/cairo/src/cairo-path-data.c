@@ -369,7 +369,7 @@ _cairo_path_data_create_real (cairo_path_fixed_t *path_fixed,
  * cairo_path_destroy:
  * @path: a path previously returned by either cairo_copy_path() or
  * cairo_copy_path_flat().
- * 
+ *
  * Immediately releases all memory associated with @path. After a call
  * to cairo_path_destroy() the @path pointer is no longer valid and
  * should not be used further.
@@ -394,11 +394,11 @@ cairo_path_destroy (cairo_path_t *path)
  * _cairo_path_data_create:
  * @path: a fixed-point, device-space path to be converted and copied
  * @gstate: the current graphics state
- * 
+ *
  * Creates a user-space #cairo_path_t copy of the given device-space
  * @path. The @gstate parameter provides the inverse CTM for the
  * conversion.
- * 
+ *
  * Return value: the new copy of the path. If there is insufficient
  * memory a pointer to a special static cairo_path_nil will be
  * returned instead with status==CAIRO_STATUS_NO_MEMORY and
@@ -415,12 +415,12 @@ _cairo_path_data_create (cairo_path_fixed_t *path,
  * _cairo_path_data_create_flat:
  * @path: a fixed-point, device-space path to be flattened, converted and copied
  * @gstate: the current graphics state
- * 
+ *
  * Creates a flattened, user-space #cairo_path_t copy of the given
  * device-space @path. The @gstate parameter provide the inverse CTM
  * for the conversion, as well as the tolerance value to control the
  * accuracy of the flattening.
- * 
+ *
  * Return value: the flattened copy of the path. If there is insufficient
  * memory a pointer to a special static cairo_path_nil will be
  * returned instead with status==CAIRO_STATUS_NO_MEMORY and
@@ -437,9 +437,9 @@ _cairo_path_data_create_flat (cairo_path_fixed_t *path,
  * _cairo_path_data_append_to_context:
  * @path: the path data to be appended
  * @cr: a cairo context
- * 
+ *
  * Append @path to the current path within @cr.
- * 
+ *
  * Return value: CAIRO_STATUS_INVALID_PATH_DATA if the data in @path
  * is invalid, and CAIRO_STATUS_SUCCESS otherwise.
  **/

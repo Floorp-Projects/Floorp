@@ -34,14 +34,14 @@ rasterizeEdges (FbBits		*buf,
 {
     xFixed  y = t;
     FbBits  *line;
-    
+
     line = buf + xFixedToInt (y) * stride;
-    
+
     for (;;)
     {
 	xFixed	lx, rx;
 	int	lxi, rxi;
-	
+
 	/* clip X */
 	lx = l->x;
 	if (lx < 0)
@@ -49,7 +49,7 @@ rasterizeEdges (FbBits		*buf,
 	rx = r->x;
 	if (xFixedToInt (rx) >= width)
 	    rx = IntToxFixed (width);
-	
+
 	/* Skip empty (or backwards) sections */
 	if (rx > lx)
 	{

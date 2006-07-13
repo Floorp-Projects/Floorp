@@ -15,7 +15,7 @@
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL SuSE
  * BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN 
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  * Author:  Keith Packard, SuSE, Inc.
@@ -34,7 +34,7 @@ pixman_image_create (pixman_format_t	*format,
     pixels = FbPixelsCreate (width, height, format->depth);
     if (pixels == NULL)
 	return NULL;
-    
+
     image = pixman_image_createForPixels (pixels, format);
     if (image == NULL) {
 	FbPixelsDestroy (pixels);
@@ -152,72 +152,6 @@ pixman_gradient_color (pixman_gradient_stop_t *stop1,
 
     return premultiply (INTERPOLATE_PIXEL_256 (current_color, idist,
 					       next_color, dist));
-}
-
-static int
-pixman_init_gradient_color_table (pixman_gradient_image_t *gradient,
-				  int			  tableSize)
-{
-    int begin_pos, end_pos;
-    xFixed incr, dpos;
-    int pos, current_stop;
-    pixman_gradient_stop_t *stops = gradient->stops;
-    int nstops = gradient->nstops;
-
-    if (gradient->colorTableSize < tableSize)
-    {
-	uint32_t *newColorTable;
-
-	newColorTable = realloc (gradient->colorTable,
-				 tableSize * sizeof (uint32_t));
-	if (!newColorTable)
-	    return 1;
-
-	gradient->colorTable = newColorTable;
-	gradient->colorTableSize = tableSize;
-    }
-
-    gradient->stopRange = tableSize;
-
-    /* The position where the gradient begins and ends */
-    begin_pos = (stops[0].x * gradient->colorTableSize) >> 16;
-    end_pos = (stops[nstops - 1].x * gradient->colorTableSize) >> 16;
-
-    pos = 0; /* The position in the color table. */
-
-    /* Up to first point */
-    while (pos <= begin_pos) {
-	gradient->colorTable[pos] = xRenderColorToCard32(stops[0].color);
-        ++pos;
-    }
-
-    incr =  (1<<16)/ gradient->colorTableSize; /* the double increment. */
-    dpos = incr * pos; /* The position in terms of 0-1. */
-
-    current_stop = 0; /* We always interpolate between current and current + 1. */
-
-    /* Gradient area */
-    while (pos < end_pos) {
-	gradient->colorTable[pos] =
-	    pixman_gradient_color (&stops[current_stop],
-				   &stops[current_stop + 1],
-				   dpos);
-
-        ++pos;
-        dpos += incr;
-
-        if (dpos > stops[current_stop + 1].x)
-            ++current_stop;
-    }
-
-    /* After last point */
-    while (pos < gradient->colorTableSize) {
-	gradient->colorTable[pos] =
-	    xRenderColorToCard32 (stops[nstops - 1].color);
-        ++pos;
-    }
-
-    return 0;
 }
 
 static int
@@ -370,7 +304,7 @@ pixman_image_init (pixman_image_t *image)
     image->subWindowMode = ClipByChildren;
     image->polyEdge = PolyEdgeSharp;
     image->polyMode = PolyModePrecise;
-    /* 
+    /*
      * In the server this was 0 because the composite clip list
      * can be referenced from a window (and often is)
      */
@@ -421,7 +355,6 @@ pixman_image_init (pixman_image_t *image)
     image->filter_params = NULL;
     image->filter_nparams = 0;
 
-
     image->owns_pixels = 0;
 
     image->pSourcePict = NULL;
@@ -448,7 +381,7 @@ pixman_image_set_transform (pixman_image_t		*image,
 
     if (transform && memcmp (transform, &identity, sizeof (pixman_transform_t)) == 0)
 	transform = NULL;
-    
+
     if (transform)
     {
 	if (!image->transform)
@@ -547,7 +480,7 @@ pixman_image_destroy (pixman_image_t *image)
 	pixman_region_destroy (image->pCompositeClip);
 	image->pCompositeClip = NULL;
     }
-    
+
     if (image->freeSourceClip) {
 	pixman_region_destroy (image->pSourceClip);
 	image->pSourceClip = NULL;
@@ -587,7 +520,7 @@ pixman_image_destroyClip (pixman_image_t *image)
     }
     image->clientClip = NULL;
     image->clientClipType = CT_NONE;
-}    
+}
 
 int
 pixman_image_set_clip_region (pixman_image_t	*image,
@@ -603,7 +536,7 @@ pixman_image_set_clip_region (pixman_image_t	*image,
     image->stateChanges |= CPClipMask;
     if (image->pSourcePict)
 	return 0;
-    
+
     if (image->freeCompClip)
 	pixman_region_destroy (image->pCompositeClip);
     image->pCompositeClip = pixman_region_create();
@@ -621,7 +554,7 @@ pixman_image_set_clip_region (pixman_image_t	*image,
 				 image->clipOrigin.x,
 				 image->clipOrigin.y);
     }
-    
+
     return 0;
 }
 
@@ -662,7 +595,7 @@ FbClipImageReg (pixman_region16_t	*region,
     }
     return 1;
 }
-		  
+
 static __inline int
 FbClipImageSrc (pixman_region16_t	*region,
 		pixman_image_t		*image,
@@ -679,11 +612,11 @@ FbClipImageSrc (pixman_region16_t	*region,
 	if (image->compositeClipSource &&
 	    image->clientClipType != CT_NONE)
 	{
-	    pixman_region_translate (region, 
+	    pixman_region_translate (region,
 			   dx - image->clipOrigin.x,
 			   dy - image->clipOrigin.y);
 	    pixman_region_intersect (region, image->clientClip, region);
-	    pixman_region_translate (region, 
+	    pixman_region_translate (region,
 			   - (dx - image->clipOrigin.x),
 			   - (dy - image->clipOrigin.y));
 	}
@@ -720,7 +653,7 @@ pixman_image_change (pixman_image_t		*image,
     BITS32		index2;
     int			error = 0;
     BITS32		maskQ;
-    
+
     maskQ = vmask;
     while (vmask && !error)
     {
@@ -745,7 +678,7 @@ pixman_image_change (pixman_image_t		*image,
 	case CPAlphaMap:
 	    {
 		pixman_image_t *iAlpha;
-		
+
 		iAlpha = NEXT_PTR(pixman_image_t *);
 		if (iAlpha)
 		    iAlpha->refcnt++;
@@ -878,7 +811,7 @@ SetPictureClipRects (PicturePtr	pPicture,
 				 nRect, rects, CT_UNSORTED);
     if (!clientClip)
 	return 1;
-    result =(*ps->ChangePictureClip) (pPicture, CT_REGION, 
+    result =(*ps->ChangePictureClip) (pPicture, CT_REGION,
 				      (void *) clientClip, 0);
     if (result == 0)
     {
@@ -949,7 +882,7 @@ FbComputeCompositeRegion (pixman_region16_t	*region,
 	{
 	    pixman_region_destroy (region);
 	    return 0;
-	}	
+	}
 	if (iMask->alphaMap)
 	{
 	    if (!FbClipImageSrc (region, iMask->alphaMap,
@@ -983,7 +916,7 @@ int
 miIsSolidAlpha (pixman_image_t *src)
 {
     char	line[1];
-    
+
     /* Alpha-only */
     if (PICT_FORMAT_TYPE (src->format_code) != PICT_TYPE_A)
 	return 0;

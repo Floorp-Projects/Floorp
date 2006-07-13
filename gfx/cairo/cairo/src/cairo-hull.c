@@ -105,7 +105,7 @@ _cairo_hull_vertex_compare (const void *av, const void *bv)
 	/*
 	 * Use the point's ids to ensure a total ordering.
 	 * a well-defined ordering, and avoid setting discard on
-	 * both points.          
+	 * both points.
 	 */
 	if (a_dist < b_dist || (a_dist == b_dist && a->id < b->id)) {
 	    a->discard = 1;

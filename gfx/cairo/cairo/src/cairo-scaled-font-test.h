@@ -1,6 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2005 Red Hat, Inc.
+ * Copyright © 2006 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -27,45 +27,23 @@
  *
  * The Original Code is the cairo graphics library.
  *
- * The Initial Developer of the Original Code is Red Hat, Inc.
+ * The Initial Developer of the Original Code is University of Southern
+ * California.
  *
  * Contributor(s):
- *	Carl D. Worth <cworth@redhat.com>
+ *	Carl D. Worth <cworth@cworth.org>
  */
 
-#ifndef CAIRO_GSTATE_PRIVATE_H
-#define CAIRO_GSTATE_PRIVATE_H
+#ifndef CAIRO_SCALED_FONT_TEST_H
+#define CAIRO_SCALED_FONT_TEST_H
 
-#include "cairo-clip-private.h"
+#include <cairo.h>
 
-struct _cairo_gstate {
-    cairo_operator_t op;
+CAIRO_BEGIN_DECLS
 
-    double tolerance;
-    cairo_antialias_t antialias;
+cairo_public void
+_cairo_scaled_font_test_set_max_glyphs_cached_per_font (int max);
 
-    cairo_stroke_style_t stroke_style;
+CAIRO_END_DECLS
 
-    cairo_fill_rule_t fill_rule;
-
-    cairo_font_face_t *font_face;
-    cairo_scaled_font_t *scaled_font;	/* Specific to the current CTM */
-    cairo_matrix_t font_matrix;
-    cairo_font_options_t font_options;
-
-    cairo_clip_t clip;
-
-    cairo_surface_t *target;		/* The target to which all rendering is directed */
-    cairo_surface_t *parent_target;	/* The previous target which was receiving rendering */
-    cairo_surface_t *original_target;	/* The original target the initial gstate was created with */
-
-    cairo_matrix_t ctm;
-    cairo_matrix_t ctm_inverse;
-    cairo_matrix_t source_ctm_inverse; /* At the time ->source was set */
-
-    cairo_pattern_t *source;
-
-    struct _cairo_gstate *next;
-};
-
-#endif /* CAIRO_GSTATE_PRIVATE_H */
+#endif /* CAIRO_SCALED_FONT_TEST_H */

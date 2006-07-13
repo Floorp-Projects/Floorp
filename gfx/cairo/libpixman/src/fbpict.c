@@ -72,20 +72,6 @@ fbIn (CARD32 x, CARD8 y)
     return m|n|o|p;
 }
 
-static CARD32
-fbIn24 (CARD32 x, CARD8 y)
-{
-    CARD16  a = y;
-    CARD16  t;
-    CARD32  m,n,o,p;
-
-    m = FbInU(x,0,a,t);
-    n = FbInU(x,8,a,t);
-    o = FbInU(x,16,a,t);
-    p = (y << 24);
-    return m|n|o|p;
-}
-
 #define genericCombine24(a,b,c,d) (((a)*(c)+(b)*(d)))
 
 /*
@@ -750,8 +736,6 @@ fbCompositeSrc_8888x0565 (pixman_operator_t  op,
     }
 }
 
-
-
 static void
 fbCompositeSrcAdd_8000x8000 (pixman_operator_t	  op,
 			     PicturePtr pSrc,
@@ -1083,8 +1067,6 @@ fbCompositeTrans_0565xnx0565(pixman_operator_t      op,
 	}
 }
 
-
-
 /* macros for "i can't believe it's not fast" packed pixel handling */
 #define alphamaskCombine24(a,b) genericCombine24(a,b,maskAlpha,maskiAlpha)
 static void
@@ -1376,7 +1358,7 @@ pixman_composite (pixman_operator_t	op,
         mmx_setup = TRUE;
     }
 #endif
-        
+
     xDst += pDst->pDrawable->x;
     yDst += pDst->pDrawable->y;
     if (pSrc->pDrawable) {
@@ -1816,6 +1798,9 @@ pixman_composite (pixman_operator_t	op,
 	    }
 	}
 	break;
+    default:
+	/* For any operator not specifically handled above we default out to the general code. */
+	func = NULL;
     }
 
     if (!func) {
@@ -1832,7 +1817,7 @@ pixman_composite (pixman_operator_t	op,
 
     region = pixman_region_create();
     pixman_region_union_rect (region, region, xDst, yDst, width, height);
-    
+
     if (!FbComputeCompositeRegion (region,
 				   pSrc,
 				   pMask,
@@ -1846,7 +1831,7 @@ pixman_composite (pixman_operator_t	op,
 				   width,
 				   height))
 	return;
-    
+
     n = pixman_region_num_rects (region);
     pbox = pixman_region_rects (region);
     while (n--)
@@ -1918,7 +1903,7 @@ slim_hidden_def(pixman_composite);
 enum CPUFeatures {
     NoFeatures = 0,
     MMX = 0x1,
-    MMX_Extensions = 0x2, 
+    MMX_Extensions = 0x2,
     SSE = 0x6,
     SSE2 = 0x8,
     CMOV = 0x10
@@ -1963,9 +1948,9 @@ static unsigned int detectCPUFeatures(void) {
 	     "pop %%ebx\n"
              "1:\n"
              "mov %%edx, %0\n"
-             : "=r" (result), 
-               "=m" (vendor[0]), 
-               "=m" (vendor[4]), 
+             : "=r" (result),
+               "=m" (vendor[0]),
+               "=m" (vendor[4]),
                "=m" (vendor[8])
              :
              : "%eax", "%ecx", "%edx"
@@ -1985,7 +1970,7 @@ static unsigned int detectCPUFeatures(void) {
         if ((result & MMX) && !(result & SSE) && (strcmp(vendor, "AuthenticAMD") == 0)) {
             /* check for AMD MMX extensions */
 
-            unsigned int result;            
+            unsigned int result;
             __asm__("push %%ebx\n"
                     "mov $0x80000000, %%eax\n"
                     "cpuid\n"
@@ -2020,7 +2005,7 @@ fbHaveMMX (void)
 	mmx_present = (features & (MMX|MMX_Extensions)) == (MMX|MMX_Extensions);
         initialized = TRUE;
     }
-    
+
     return mmx_present;
 }
 #endif /* USE_MMX && !amd64 */

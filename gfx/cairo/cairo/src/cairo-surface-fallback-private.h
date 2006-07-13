@@ -99,7 +99,7 @@ cairo_private cairo_status_t
 _cairo_surface_fallback_fill_rectangles (cairo_surface_t         *surface,
 					 cairo_operator_t	 op,
 					 const cairo_color_t	 *color,
-					 cairo_rectangle_fixed_t *rects,
+					 cairo_rectangle_int16_t *rects,
 					 int			 num_rects);
 
 cairo_private cairo_status_t
