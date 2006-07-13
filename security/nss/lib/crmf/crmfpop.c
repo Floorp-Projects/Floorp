@@ -185,8 +185,8 @@ crmf_sign_certreq(PRArenaPool        *poolp,
 		  SECKEYPrivateKey   *inKey,
 		  SECAlgorithmID     *inAlgId)
 {
-    SECItem                      derCertReq;
-    SECItem                      certReqSig;
+    SECItem                      derCertReq = { siBuffer, NULL, 0 };
+    SECItem                      certReqSig = { siBuffer, NULL, 0 };
     SECStatus                    rv = SECSuccess;
 
     rv = crmf_encode_certreq(certReq, &derCertReq);
