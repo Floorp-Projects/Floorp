@@ -77,7 +77,9 @@
 /* The right copysign function is not always named the same thing. */
 #if __GNUC__ >= 4 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)
 #define fd_copysign __builtin_copysign
-#elif defined _WIN32 && !defined WINCE
+#elif defined WINCE
+#define fd_copysign _copysign
+#elif defined _WIN32
 #if _MSC_VER < 1400
 /* Try to work around apparent _copysign bustage in VC6 and VC7. */
 #define fd_copysign js_copysign
