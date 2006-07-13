@@ -140,6 +140,12 @@ public:
     CheckEmpty(nsIRDFResource* aTargetResource,
                PRBool* aIsEmpty);
 
+    /**
+     * Check if a resource is a separator
+     */
+    nsresult
+    CheckIsSeparator(nsIRDFResource* aResource, PRBool* aIsSeparator);
+
     /*
      * Compute the containment properties which are additional arcs which
      * indicate that a node is a container, in additional to the RDF container
@@ -266,6 +272,23 @@ public:
      */
     void RetractElement(const MemoryElement& aMemoryElement);
 
+    /**
+     * Return the index of a result's resource in its RDF container
+     */
+    PRInt32
+    GetContainerIndexOf(nsIXULTemplateResult* aResult);
+
+    /**
+     * Given a result and a predicate to sort on, get the target value of
+     * the triple to use for sorting. The sort predicate is the predicate
+     * with '?sort=true' appended.
+     */
+    nsresult
+    GetSortValue(nsIXULTemplateResult* aResult,
+                 nsIRDFResource* aPredicate,
+                 nsIRDFResource* aSortPredicate,
+                 nsISupports** aResultNode);
+
     nsIRDFDataSource* GetDataSource() { return mDB; }
 
     nsIXULTemplateBuilder* GetBuilder() { return mBuilder; }
@@ -314,6 +337,9 @@ protected:
 
     // fixed size allocator used to allocate rule network structures
     nsFixedSizeAllocator mPool;
+
+    // the reference variable
+    nsCOMPtr<nsIAtom> mRefVariable;
 
     // the last ref that was calculated, used for simple rules
     nsCOMPtr<nsIXULTemplateResult> mLastRef;
@@ -364,6 +390,8 @@ protected:
 public:
     static nsIRDFService*            gRDFService;
     static nsIRDFContainerUtils*     gRDFContainerUtils;
+    static nsIRDFResource*           kNC_BookmarkSeparator;
+    static nsIRDFResource*           kRDF_type;
 
     nsFixedSizeAllocator& GetPool() { return mPool; }
 };

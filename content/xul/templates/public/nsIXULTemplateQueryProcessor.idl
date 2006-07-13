@@ -250,6 +250,10 @@ interface nsIXULTemplateQueryProcessor : nsISupports
    * The comparison should only consider the values for the specified
    * variable.
    *
+   * If the comparison variable is null, the results may be
+   * sorted in a natural order, for instance, based on the order the data in
+   * stored in the datasource.
+   *
    * This method must only be called with results that were created by this
    * query processor.
    *

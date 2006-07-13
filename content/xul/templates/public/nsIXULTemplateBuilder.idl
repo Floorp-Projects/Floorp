@@ -159,7 +159,7 @@ interface nsIXULTemplateQueryProcessor;
  *
  * See http://wiki.mozilla.org/XUL:Templates_Plan for details about templates.
  */
-[scriptable, uuid(e025ef24-d508-11d9-9633-cd2d4a843228)]
+[scriptable, uuid(fd8fe8a1-5dc3-4830-84b7-f75baccb4a9b)]
 interface nsIXULTemplateBuilder : nsISupports
 {
     /**
@@ -180,6 +180,11 @@ interface nsIXULTemplateBuilder : nsISupports
      * with the root node's ref attribute as an argument.
      */
     readonly attribute nsIXULTemplateResult rootResult;
+
+    /**
+     * The query processor used to generate results.
+     */
+    [noscript] readonly attribute nsIXULTemplateQueryProcessor queryProcessor;
 
     /**
      * Force the template builder to rebuild its content. All existing content
@@ -268,6 +273,14 @@ interface nsIXULTemplateBuilder : nsISupports
      * @param aId the id to return the result for
      */
     nsIXULTemplateResult getResultForId(in AString aId);
+
+    /**
+     * Retrieve the result corresponding to a generated element, or null is
+     * there isn't one.
+     *
+     * @param aContent element to result the result of
+     */
+    nsIXULTemplateResult getResultForContent(in nsIDOMElement aElement);
 
     /**
      * Returns true if the node has content generated for it. This method is

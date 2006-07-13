@@ -55,6 +55,7 @@
 #include "nsIXULDocument.h"
 #include "nsUnicharUtils.h"
 #include "nsAttrName.h"
+#include "rdf.h"
 
 #include "nsContentTestNode.h"
 #include "nsRDFConInstanceTestNode.h"
@@ -78,7 +79,8 @@ static NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
 nsrefcnt                  nsXULTemplateQueryProcessorRDF::gRefCnt = 0;
 nsIRDFService*            nsXULTemplateQueryProcessorRDF::gRDFService;
 nsIRDFContainerUtils*     nsXULTemplateQueryProcessorRDF::gRDFContainerUtils;
-
+nsIRDFResource*           nsXULTemplateQueryProcessorRDF::kNC_BookmarkSeparator;
+nsIRDFResource*           nsXULTemplateQueryProcessorRDF::kRDF_type;
 
 NS_IMPL_ISUPPORTS2(nsXULTemplateQueryProcessorRDF,
                    nsIXULTemplateQueryProcessor,
@@ -100,6 +102,8 @@ nsXULTemplateQueryProcessorRDF::~nsXULTemplateQueryProcessorRDF(void)
     if (--gRefCnt == 0) {
         NS_IF_RELEASE(gRDFService);
         NS_IF_RELEASE(gRDFContainerUtils);
+        NS_IF_RELEASE(kNC_BookmarkSeparator);
+        NS_IF_RELEASE(kRDF_type);
     }
 }
 
@@ -122,6 +126,18 @@ nsXULTemplateQueryProcessorRDF::InitGlobals()
             return rv;
     }
   
+    if (!kNC_BookmarkSeparator) {
+        gRDFService->GetResource(
+          NS_LITERAL_CSTRING(NC_NAMESPACE_URI "BookmarkSeparator"),
+                             &kNC_BookmarkSeparator);
+    }
+
+    if (!kRDF_type) {
+        gRDFService->GetResource(
+          NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "type"),
+                             &kRDF_type);
+    }
+
     return NS_OK;
 }
 
@@ -190,6 +206,7 @@ nsXULTemplateQueryProcessorRDF::Done()
 
     mDB = nsnull;
     mBuilder = nsnull;
+    mRefVariable = nsnull;
     mLastRef = nsnull;
 
     mGenerationStarted = PR_FALSE;
@@ -228,8 +245,10 @@ nsXULTemplateQueryProcessorRDF::CompileQuery(nsIXULTemplateBuilder* aBuilder,
         return NS_ERROR_OUT_OF_MEMORY;
 
     query->mRefVariable = aRefVariable;
+    if (!mRefVariable)
+      mRefVariable = aRefVariable;
 
-    if (! aMemberVariable)
+    if (!aMemberVariable)
         query->mMemberVariable = do_GetAtom("?");
     else
         query->mMemberVariable = aMemberVariable;
@@ -428,7 +447,8 @@ nsXULTemplateQueryProcessorRDF::AddBinding(nsIDOMNode* aRuleNode,
     return bindings->AddBinding(aVar, aRef, property);
 }
 
-NS_IMETHODIMP nsXULTemplateQueryProcessorRDF::TranslateRef(nsISupports* aDatasource,
+NS_IMETHODIMP
+nsXULTemplateQueryProcessorRDF::TranslateRef(nsISupports* aDatasource,
                                                            const nsAString& aRefString,
                                                            nsIXULTemplateResult** aRef)
 {
@@ -450,18 +470,63 @@ NS_IMETHODIMP nsXULTemplateQueryProcessorRDF::TranslateRef(nsISupports* aDatasou
     return NS_OK;
 }
 
-NS_IMETHODIMP nsXULTemplateQueryProcessorRDF::CompareResults(nsIXULTemplateResult* aLeft,
+NS_IMETHODIMP
+nsXULTemplateQueryProcessorRDF::CompareResults(nsIXULTemplateResult* aLeft,
                                                              nsIXULTemplateResult* aRight,
                                                              nsIAtom* aVar,
                                                              PRInt32* aResult)
 {
+    NS_ENSURE_ARG_POINTER(aLeft);
+    NS_ENSURE_ARG_POINTER(aRight);
+
     *aResult = 0;
 
-    nsCOMPtr<nsISupports> leftNode;
-    aLeft->GetBindingObjectFor(aVar, getter_AddRefs(leftNode));
+    // for natural order sorting, use the index in the RDF container for the
+    // order. If there is no container, just sort them arbitrarily.
+    if (!aVar) {
+        // if a result has a negative index, just sort it first
+        PRInt32 leftindex = GetContainerIndexOf(aLeft);
+        PRInt32 rightindex = GetContainerIndexOf(aRight);
+        *aResult = leftindex == rightindex ? 0 :
+                   leftindex > rightindex ? 1 :
+                   -1;
+        return NS_OK;
+    }
 
-    nsCOMPtr<nsISupports> rightNode;
+    nsAutoString sortkey;
+    aVar->ToString(sortkey);
+
+    nsCOMPtr<nsISupports> leftNode, rightNode;
+
+    if (!sortkey.IsEmpty() && sortkey[0] != '?' &&
+        !StringBeginsWith(sortkey, NS_LITERAL_STRING("rdf:")) &&
+        mDB) {
+        // if the sort key is not a template variable, it should be an RDF
+        // predicate. Get the targets and compare those instead.
+        nsCOMPtr<nsIRDFResource> predicate;
+        nsresult rv = gRDFService->GetUnicodeResource(sortkey, getter_AddRefs(predicate));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        // create a predicate with '?sort=true' appended. This special
+        // predicate may be used to have a different sort value than the
+        // displayed value
+        sortkey.AppendLiteral("?sort=true");
+
+        nsCOMPtr<nsIRDFResource> sortPredicate;
+        rv = gRDFService->GetUnicodeResource(sortkey, getter_AddRefs(sortPredicate));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = GetSortValue(aLeft, predicate, sortPredicate, getter_AddRefs(leftNode));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = GetSortValue(aRight, predicate, sortPredicate, getter_AddRefs(rightNode));
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+    else {
+        // get the values for the sort key from the results
+        aLeft->GetBindingObjectFor(aVar, getter_AddRefs(leftNode));
     aRight->GetBindingObjectFor(aVar, getter_AddRefs(rightNode));
+    }
 
     {
         // Literals?
@@ -546,6 +611,7 @@ NS_IMETHODIMP nsXULTemplateQueryProcessorRDF::CompareResults(nsIXULTemplateResul
         }
     }
 
+    // if the results are none of the above, just pretend that they are equal
     return NS_OK;
 }
 
@@ -940,6 +1006,13 @@ nsXULTemplateQueryProcessorRDF::CheckEmpty(nsIRDFResource* aResource,
     return NS_OK;
 }
 
+nsresult
+nsXULTemplateQueryProcessorRDF::CheckIsSeparator(nsIRDFResource* aResource,
+                                                 PRBool* aIsSeparator)
+{
+    return mDB->HasAssertion(aResource, kRDF_type, kNC_BookmarkSeparator,
+                             PR_TRUE, aIsSeparator);
+}
 
 //----------------------------------------------------------------------
 
@@ -1639,4 +1712,69 @@ nsXULTemplateQueryProcessorRDF::RetractElement(const MemoryElement& aMemoryEleme
         if (!arr->Count())
             mMemoryElementToResultMap.Remove(hash);
     }
+}
+
+PRInt32
+nsXULTemplateQueryProcessorRDF::GetContainerIndexOf(nsIXULTemplateResult* aResult)
+{
+    // get the reference variable and look up the container in the result
+    nsCOMPtr<nsISupports> ref;
+    nsresult rv = aResult->GetBindingObjectFor(mRefVariable,
+                                               getter_AddRefs(ref));
+    if (NS_FAILED(rv))
+        return -1;
+
+    nsCOMPtr<nsIRDFResource> container = do_QueryInterface(ref);
+    if (container) {
+        // if the container is an RDF Seq, return the index of the result
+        // in the container.
+        PRBool isSequence = PR_FALSE;
+        gRDFContainerUtils->IsSeq(mDB, container, &isSequence);
+        if (isSequence) {
+            nsCOMPtr<nsIRDFResource> resource;
+            aResult->GetResource(getter_AddRefs(resource));
+            if (resource) {
+                PRInt32 index;
+                gRDFContainerUtils->IndexOf(mDB, container, resource, &index);
+                return index;
+            }
+        }
+    }
+
+    // if the container isn't a Seq, or the result isn't in the container,
+    // return -1 indicating no index.
+    return -1;
+}
+
+nsresult
+nsXULTemplateQueryProcessorRDF::GetSortValue(nsIXULTemplateResult* aResult,
+                                             nsIRDFResource* aPredicate,
+                                             nsIRDFResource* aSortPredicate,
+                                             nsISupports** aResultNode)
+{
+    nsCOMPtr<nsIRDFResource> source;
+    nsresult rv = aResult->GetResource(getter_AddRefs(source));
+    if (NS_FAILED(rv))
+        return rv;
+    
+    nsCOMPtr<nsIRDFNode> value;
+    if (source) {
+        // first check predicate?sort=true so that datasources may use a
+        // custom value for sorting
+        rv = mDB->GetTarget(source, aSortPredicate, PR_TRUE,
+                            getter_AddRefs(value));
+        if (NS_FAILED(rv))
+            return rv;
+
+        if (!value) {
+            rv = mDB->GetTarget(source, aPredicate, PR_TRUE,
+                                getter_AddRefs(value));
+            if (NS_FAILED(rv))
+                return rv;
+        }
+    }
+
+    *aResultNode = value;
+    NS_IF_ADDREF(*aResultNode);
+    return NS_OK;
 }
