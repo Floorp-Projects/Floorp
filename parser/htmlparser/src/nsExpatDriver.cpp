@@ -784,8 +784,8 @@ nsExpatDriver::OpenInputStreamFromExternalDTD(const PRUnichar* aFPIStr,
 static nsresult
 CreateErrorText(const PRUnichar* aDescription,
                 const PRUnichar* aSourceURL,
-                const PRInt32 aLineNumber,
-                const PRInt32 aColNumber,
+                const PRUint32 aLineNumber,
+                const PRUint32 aColNumber,
                 nsString& aErrorString)
 {
   aErrorString.Truncate();
@@ -796,7 +796,7 @@ CreateErrorText(const PRUnichar* aDescription,
                                                "XMLParsingError", msg);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // XML Parsing Error: %1$S\nLocation: %2$S\nLine Number %3$d, Column %4$d:
+  // XML Parsing Error: %1$S\nLocation: %2$S\nLine Number %3$u, Column %4$u:
   PRUnichar *message = nsTextFormatter::smprintf(msg.get(), aDescription,
                                                  aSourceURL, aLineNumber,
                                                  aColNumber);
@@ -900,8 +900,8 @@ nsExpatDriver::HandleError()
   }
 
   // Adjust the column number so that it is one based rather than zero based.
-  PRInt32 colNumber = XML_GetCurrentColumnNumber(mExpatParser) + 1;
-  PRInt32 lineNumber = XML_GetCurrentLineNumber(mExpatParser);
+  PRUint32 colNumber = XML_GetCurrentColumnNumber(mExpatParser) + 1;
+  PRUint32 lineNumber = XML_GetCurrentLineNumber(mExpatParser);
 
   nsAutoString errorText;
   CreateErrorText(description.get(), XML_GetBase(mExpatParser), lineNumber,
@@ -1073,14 +1073,14 @@ nsExpatDriver::ConsumeToken(nsScanner& aScanner, PRBool& aFlushTokens)
       // the error occurred).
 
       // The length of the last line that Expat has parsed.
-      PRInt32 lastLineLength = XML_GetCurrentColumnNumber(mExpatParser);
+      XML_Size lastLineLength = XML_GetCurrentColumnNumber(mExpatParser);
 
       if (lastLineLength <= consumed) {
         // The length of the last line was less than what expat consumed, so
         // there was at least one line break in the consumed data. Store the
         // last line until the point where we stopped parsing.
         nsScannerIterator startLastLine = currentExpatPosition;
-        startLastLine.advance(-lastLineLength);
+        startLastLine.advance(-((ptrdiff_t)lastLineLength));
         CopyUnicodeTo(startLastLine, currentExpatPosition, mLastLine);
       }
       else {
