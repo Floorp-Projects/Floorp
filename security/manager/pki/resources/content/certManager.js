@@ -109,29 +109,6 @@ function LoadCerts()
   }
 }
 
-function getSelectedTab()
-{
-  var selTab = document.getElementById('certMgrTabbox').selectedItem;
-  var selTabID = selTab.getAttribute('id');
-  if (selTabID == 'mine_tab') {
-    key = "my_certs";
-  } else if (selTabID == "others_tab") {
-    key = "others_certs";
-  } else if (selTabID == "websites_tab") {
-    key = "web_certs";
-  } else if (selTabID == "ca_tab") {
-    key = "ca_certs";
-  }  
-  return key;
-}
-
-
-function doHelpButton() {
-   var uri = getSelectedTab();
-   openHelp(uri);
-}
-
-
 function getSelectedCerts()
 {
   var ca_tab = document.getElementById("ca_tab");

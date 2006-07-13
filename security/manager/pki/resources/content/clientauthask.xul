@@ -44,18 +44,16 @@
 ]>
 
 
-<dialog id="ssl_warning" title="&clientAuthAsk.title;"
+<dialog id="certAuthAsk" title="&clientAuthAsk.title;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
-#expand buttons="accept,cancel__HELP_BUTTON__"
+  buttons="accept,cancel"
   ondialogaccept="return doOK();"
   ondialogcancel="return doCancel();"
-  ondialoghelp="openHelp('which_cert');"
   onload="onLoad();">
 
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 <script type="application/x-javascript" src="chrome://pippki/content/pippki.js"/>
 <script type="application/x-javascript" src="chrome://pippki/content/clientauthask.js"/>
-<script type="application/x-javascript" src="chrome://help/content/contextHelp.js" />
 
   <groupbox>
     <description style="font-weight: bold;">&clientAuthAsk.message1;</description>

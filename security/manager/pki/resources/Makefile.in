@@ -43,9 +43,3 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
-
-ifdef MOZ_XUL_APP
-DEFINES += -DHELP_BUTTON=
-else
-DEFINES += "-DHELP_BUTTON=,help"
-endif

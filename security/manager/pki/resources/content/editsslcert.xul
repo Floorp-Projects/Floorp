@@ -44,17 +44,14 @@
 <dialog id="editWebsiteCert" 
         title="&certmgr.editsslcert.title;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-#expand buttons="accept,cancel__HELP_BUTTON__"
+        buttons="accept,cancel"
         ondialogaccept="return doSSLOK();"
-        ondialoghelp="openHelp('edit_web_certs');"
         onload="doLoadForSSLCert();"
 >
 
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://pippki/content/pippki.js"/>
   <script type="application/x-javascript" src="chrome://pippki/content/editcerts.js"/>
-  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
-
 
   <description id="certmsg"/>
   <description id="issuer"/>

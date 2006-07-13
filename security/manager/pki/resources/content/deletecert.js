@@ -43,7 +43,6 @@ const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
 
 var certdb;
 var certs = [];
-var helpUrl;
 var gParams;
 
 function setWindowName()
@@ -72,28 +71,24 @@ function setWindowName()
      title = bundle.GetStringFromName("deleteUserCertTitle");
      confirm = bundle.GetStringFromName("deleteUserCertConfirm");
      impact = bundle.GetStringFromName("deleteUserCertImpact");
-     helpUrl = "delete_my_certs"
   }
   else if(typeFlag == bundle.GetStringFromName("deleteSslCertFlag"))
   {
      title = bundle.GetStringFromName("deleteSslCertTitle");
      confirm = bundle.GetStringFromName("deleteSslCertConfirm");
      impact = bundle.GetStringFromName("deleteSslCertImpact");
-     helpUrl = "delete_web_certs"
   }
   else if(typeFlag == bundle.GetStringFromName("deleteCaCertFlag"))
   {
      title = bundle.GetStringFromName("deleteCaCertTitle");
      confirm = bundle.GetStringFromName("deleteCaCertConfirm");
      impact = bundle.GetStringFromName("deleteCaCertImpact");
-     helpUrl = "delete_ca_certs"   
   }
   else if(typeFlag == bundle.GetStringFromName("deleteEmailCertFlag"))
   {
      title = bundle.GetStringFromName("deleteEmailCertTitle");
      confirm = bundle.GetStringFromName("deleteEmailCertConfirm");
      impact = bundle.GetStringFromName("deleteEmailCertImpact");
-     helpUrl = "delete_email_certs"
   }
   else
   {
@@ -149,9 +144,4 @@ function doCancel()
   }
   gParams.SetInt(1, 0); // means CANCEL
   return true;
-}
-
-function doHelp()
-{
-   openHelp(helpUrl);
 }

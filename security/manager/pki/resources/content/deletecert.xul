@@ -44,13 +44,11 @@
   title="&certmgr.deletecert.title;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="setWindowName();"
-#expand buttons="accept,cancel__HELP_BUTTON__"
+  buttons="accept,cancel"
   ondialogaccept="return doOK();"
-  ondialogcancel="return doCancel();"
-  ondialoghelp="doHelp();">
+  ondialogcancel="return doCancel();">
 
   <script type="application/x-javascript" src="chrome://pippki/content/deletecert.js"/>
-  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
   <script type="application/x-javascript" src="chrome://global/content/strres.js" />
   <script type="application/x-javascript" src="pippki.js" />
 
