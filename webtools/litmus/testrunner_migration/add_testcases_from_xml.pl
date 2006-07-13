@@ -1,25 +1,17 @@
 #!/usr/bin/perl -w
 # -*- mode: cperl; c-basic-offset: 8; indent-tabs-mode: nil; -*-
 use strict;
-use diagnostics;
 $|++;
 
-use lib qw(..);
-
+use XML::XPath;
+use XML::XPath::XMLParser;
 use Data::Dumper;
 use Date::Manip;
 use Getopt::Long;
+
+use lib qw(..);
+
 use Litmus;
-use Litmus::Cache;
-use Litmus::DBI;
-use Litmus::DB::Testgroup;
-use Litmus::DB::Subgroup;
-use Litmus::DB::Testcase;
-use Litmus::DB::Product;
-use Litmus::DB::Branch;
-use Litmus::DB::User;
-use XML::XPath;
-use XML::XPath::XMLParser;
 
 my $file;
 my $verbose;
@@ -28,7 +20,13 @@ GetOptions (
 	    "verbose" => \$verbose
 	   );
 
-die if (!$file and ! -e $file);
+if (!$file) {
+  die "File not specified." 
+}
+
+if (! -e $file) {
+  die "File $file not found." 
+}
 
 my $xp = XML::XPath->new(filename => $file);
 
@@ -163,5 +161,3 @@ foreach my $testgroup_node ($testgroups->get_nodelist) {
   }    
 
 }
-
-rebuildCache();
