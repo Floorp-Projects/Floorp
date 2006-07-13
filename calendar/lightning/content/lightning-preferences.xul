@@ -39,8 +39,20 @@
 
 <!DOCTYPE prefwindow 
 [
-    <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/prefs.dtd" > %dtd1;
-    <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/global.dtd" > %dtd2;
+    <!ENTITY % globalDTD SYSTEM "chrome://calendar/locale/global.dtd">
+    <!ENTITY % alarmsDTD SYSTEM "chrome://calendar/locale/preferences/alarms.dtd">
+    <!ENTITY % categoriesDTD SYSTEM "chrome://calendar/locale/preferences/categories.dtd">
+    <!ENTITY % generalDTD SYSTEM "chrome://calendar/locale/preferences/general.dtd">
+    <!ENTITY % calPreferencesDTD SYSTEM "chrome://calendar/locale/preferences/preferences.dtd">
+    <!ENTITY % timezonesDTD SYSTEM "chrome://calendar/locale/preferences/timezones.dtd">
+    <!ENTITY % viewsDTD SYSTEM "chrome://calendar/locale/preferences/views.dtd">
+    %globalDTD;
+    %alarmsDTD;
+    %categoriesDTD;
+    %generalDTD;
+    %calPreferencesDTD;
+    %timezonesDTD;
+    %viewsDTD;
 ]>
 
 <overlay id="LightningPaneOverlay"
@@ -62,9 +74,9 @@
 
     <tabbox id="privacyPrefs" flex="1" onselect="">
       <tabs>
-        <tab label="&calendar.alarms.label;"/>
-        <tab label="&pref.calendar.view.weekview.caption;"/>
-        <tab label="&calendar.timezone.label;"/>
+        <tab label="&paneAlarms.title;"/>
+        <tab label="&paneViews.title;"/>
+        <tab label="&paneTimezones.title;"/>
       </tabs>
       <tabpanels flex="1">
 
@@ -86,7 +98,7 @@
                 <label value="&pref.defaultsnoozelength.label;"/>
                 <hbox>
                   <textbox preference="calendar.alarms.defaultsnoozelength"/>
-                  <label value="&pref.minutes.label;"/>
+                  <label value="&calendar.global.units.minutes;"/>
                   <spacer flex="1"/>
                 </hbox>
               </row>
@@ -104,7 +116,7 @@
 
             <rows>
               <row align="center">
-                <label value="&pref.calendar.view.starttime.label;"/>
+                <label value="&pref.calendar.view.restrict.label;"/>
                 <textbox preference="calendar.view.defaultstarthour"/>
               </row>
               <row align="center">
@@ -131,7 +143,7 @@
 
         <!-- timezones -->
         <tabpanel orient="vertical">
-          <label value="&pref.calendar.timezone.label;"/>
+          <label value="&pref.calendar.timezones.list.caption;"/>
           <listbox id="timezone-listbox" preference="calendar.timezone.local"
                    onselect="document.getElementById('paneLightning').userChangedValue(event.target);"
                    onsynctopreference="return gLightningPane.getTimezoneResult();"

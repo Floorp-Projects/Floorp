@@ -23,7 +23,6 @@ calendar-@AB_CD@.jar:
     locale/@AB_CD@/calendar/global.dtd           (%chrome/calendar/global.dtd)
     locale/@AB_CD@/calendar/menuOverlay.dtd      (%chrome/calendar/menuOverlay.dtd)
     locale/@AB_CD@/calendar/overlay.dtd          (%chrome/calendar/overlay.dtd)
-*   locale/@AB_CD@/calendar/prefs.dtd            (%chrome/calendar/prefs.dtd)
     locale/@AB_CD@/calendar/preferences/alarms.dtd  (%chrome/calendar/preferences/alarms.dtd)
     locale/@AB_CD@/calendar/preferences/categories.dtd  (%chrome/calendar/preferences/categories.dtd)
 *   locale/@AB_CD@/calendar/preferences/connection.dtd  (%chrome/calendar/preferences/connection.dtd)
@@ -32,9 +31,8 @@ calendar-@AB_CD@.jar:
     locale/@AB_CD@/calendar/preferences/timezones.dtd  (%chrome/calendar/preferences/timezones.dtd)
     locale/@AB_CD@/calendar/preferences/views.dtd  (%chrome/calendar/preferences/views.dtd)
 # NOTE:
-# These three files are only used by Sunbird but are included for all so that
+# These files are only used by Sunbird but are included for all so that
 # calendar-ab-CD.jar is the same for all Calendar products.
     locale/@AB_CD@/calendar/connectionPrefs.dtd  (%chrome/calendar/connectionPrefs.dtd)
-    locale/@AB_CD@/calendar/prefutilities.properties  (%chrome/calendar/prefutilities.properties)
     locale/@AB_CD@/calendar/selectAddresses.dtd  (%chrome/calendar/selectAddresses.dtd)
 #includesubst @LOCALE_SRCDIR@/extra-jar.mn

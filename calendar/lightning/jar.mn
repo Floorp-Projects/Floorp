@@ -69,7 +69,12 @@ calendar-en-US.jar:
   locale/en-US/calendar/calendar.properties    (/calendar/locales/en-US/chrome/calendar/calendar.properties)
   locale/en-US/calendar/dateFormat.properties  (/calendar/locales/en-US/chrome/calendar/dateFormat.properties)
   locale/en-US/calendar/menuOverlay.dtd        (/calendar/locales/en-US/chrome/calendar/menuOverlay.dtd)
-* locale/en-US/calendar/prefs.dtd              (/calendar/locales/en-US/chrome/calendar/prefs.dtd)
+  locale/en-US/calendar/preferences/alarms.dtd (/calendar/locales/en-US/chrome/calendar/preferences/alarms.dtd)
+  locale/en-US/calendar/preferences/categories.dtd   (/calendar/locales/en-US/chrome/calendar/preferences/categories.dtd)
+  locale/en-US/calendar/preferences/general.dtd      (/calendar/locales/en-US/chrome/calendar/preferences/general.dtd)
+  locale/en-US/calendar/preferences/preferences.dtd  (/calendar/locales/en-US/chrome/calendar/preferences/preferences.dtd)
+  locale/en-US/calendar/preferences/timezones.dtd    (/calendar/locales/en-US/chrome/calendar/preferences/timezones.dtd)
+  locale/en-US/calendar/preferences/views.dtd  (/calendar/locales/en-US/chrome/calendar/preferences/views.dtd)
 
 classic.jar:
 #expand  skin/classic/lightning/lightning.css	(themes/__THEME__/lightning.css)

@@ -41,7 +41,7 @@
 <!-- DTD File with all strings specific to the file -->
 <!DOCTYPE page
 [
-    <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/prefs.dtd" > %dtd1;
+    <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/preferences/categories.dtd" > %dtd1;
     <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/global.dtd" > %dtd2;
 ]>
 
