@@ -211,6 +211,12 @@ function openUILinkIn( url, where, allowThirdPartyFixup, postData )
 // e.g. onclick="checkForMiddleClick(this, event);"
 function checkForMiddleClick(node, event)
 {
+  // We should be using the disabled property here instead of the attribute,
+  // but some elements that this function is used with don't support it (e.g.
+  // menuitem).
+  if (node.getAttribute("disabled") == "true")
+    return; // Do nothing
+
   if (event.button == 1) {
     /* Execute the node's oncommand.
      *
