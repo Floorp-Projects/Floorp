@@ -800,8 +800,14 @@ pref("security.dialog_enable_delay", 2000);
 // menu access key = alt, accelerator key = control.
 // Use 17 for Ctrl, 18 for Alt, 224 for Meta, 0 for none. Mac settings in macprefs.js
 pref("ui.key.accelKey", 17);
-pref("ui.key.generalAccessKey", 18);
 pref("ui.key.menuAccessKey", 18);
+pref("ui.key.generalAccessKey", -1);
+
+// If generalAccessKey is -1, use the following two prefs instead.
+// Use 0 for disabled, 1 for Shift, 2 for Ctrl, 4 for Alt, 8 for Meta
+// (values can be combined, e.g. 5 for Alt+Shift)
+pref("ui.key.chromeAccess", 4);
+pref("ui.key.contentAccess", 5);
 
 pref("ui.key.menuAccessKeyFocuses", false); // overridden below
 pref("ui.key.saveLink.shift", true); // true = shift, false = meta
@@ -1549,7 +1555,13 @@ pref("ui.key.accelKey", 224);
 // suggests to use command on mac, but this really sucks (imagine someone having a "q"
 // as an access key and not letting you quit the app!). As a result, we've made a 
 // command decision 1 day before tree lockdown to change it to the control key.
-pref("ui.key.generalAccessKey", 17);
+pref("ui.key.generalAccessKey", -1);
+
+// If generalAccessKey is -1, use the following two prefs instead.
+// Use 0 for disabled, 1 for Shift, 2 for Ctrl, 4 for Alt, 8 for Meta
+// (values can be combined, e.g. 3 for Ctrl+Shift)
+pref("ui.key.chromeAccess", 2);
+pref("ui.key.contentAccess", 3);
 
 // print_extra_margin enables platforms to specify an extra gap or margin
 // around the content of the page for Print Preview only
@@ -1827,11 +1839,17 @@ pref("font.size.fixed.zh-HK", 16);
 /**
  * Set default accelKey to "Alt", which is the default under BeOS.
  * The generalAccessKey is used for shortcuts on web pages, set to
- * Ctrl. The menuAccessKey is now the "windows" key.
+ * Ctrl+Shift. The menuAccessKey is now the "windows" key.
  */
 pref("ui.key.accelKey", 18);
-pref("ui.key.generalAccessKey", 17);
 pref("ui.key.menuAccessKey", 17);
+pref("ui.key.generalAccessKey", -1);
+
+// If generalAccessKey is -1, use the following two prefs instead.
+// Use 0 for disabled, 1 for Shift, 2 for Ctrl, 4 for Alt, 8 for Meta
+// (values can be combined, e.g. 3 for Ctrl+Shift)
+pref("ui.key.chromeAccess", 2);
+pref("ui.key.contentAccess", 3);
 
 // xxx toolkit?
 pref("browser.download.dir", "/boot/home/Downloads");
