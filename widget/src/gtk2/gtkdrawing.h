@@ -118,6 +118,9 @@ typedef enum {
   /* Paints a GtkScale thumb. */
   MOZ_GTK_SCALE_THUMB_HORIZONTAL,
   MOZ_GTK_SCALE_THUMB_VERTICAL,
+  /* Paints a GtkSpinButton */
+  MOZ_GTK_SPINBUTTON_UP,
+  MOZ_GTK_SPINBUTTON_DOWN,
   /* Paints the gripper of a GtkHandleBox. */
   MOZ_GTK_GRIPPER,
   /* Paints a GtkEntry. */

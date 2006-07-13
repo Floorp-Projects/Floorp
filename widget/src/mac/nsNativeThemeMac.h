@@ -115,6 +115,9 @@ protected:
   
   void DrawButton ( ThemeButtonKind inKind, const Rect& inBoxRect, PRBool inIsDefault, 
                       PRBool inDisabled, ThemeButtonValue inValue, ThemeButtonAdornment inAdornment, PRInt32 inState ) ;
+  void DrawSpinButtons ( ThemeButtonKind inKind, const Rect& inBoxRect,
+                         PRBool inDisabled, ThemeDrawState inDrawState,
+                         ThemeButtonAdornment inAdornment, PRInt32 inState ) ;
   void DrawCheckboxRadio ( ThemeButtonKind inKind, const Rect& inBoxRect, PRBool inChecked, 
                               PRBool inDisabled, PRInt32 inState ) ;
   void DrawMenu ( const Rect& inBoxRect, PRBool inIsDisabled ) ;

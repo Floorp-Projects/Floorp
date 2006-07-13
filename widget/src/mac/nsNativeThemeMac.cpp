@@ -193,6 +193,23 @@ nsNativeThemeMac::DrawButton ( ThemeButtonKind inKind, const Rect& inBoxRect, PR
 }
 
 void
+nsNativeThemeMac::DrawSpinButtons ( ThemeButtonKind inKind, const Rect& inBoxRect,
+                                    PRBool inDisabled, ThemeDrawState inDrawState, 
+                                    ThemeButtonAdornment inAdornment, PRInt32 inState )
+{
+  ThemeButtonDrawInfo info;
+
+  info.state= inDrawState;
+  info.value = kThemeButtonOff;
+  info.adornment = inAdornment;
+
+  if ( inDisabled )
+    info.state = kThemeStateUnavailableInactive;
+
+  ::DrawThemeButton ( &inBoxRect, inKind, &info, nsnull, mEraseProc, nsnull, 0L );
+}
+
+void
 nsNativeThemeMac::DrawToolbar ( const Rect& inBoxRect )
 {
 #if 0
@@ -441,6 +458,20 @@ nsNativeThemeMac::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* 
       DrawButton ( kThemeMediumBevelButton, macRect, IsDefaultButton(aFrame), IsDisabled(aFrame), 
                     kThemeButtonOff, kThemeAdornmentNone, eventState );
       break;
+    case NS_THEME_SPINNER:
+      {
+        ThemeDrawState state = kThemeStateActive;
+        nsIContent* content = aFrame->GetContent();
+        if (content->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::state,
+                                 NS_LITERAL_STRING("up"), eCaseMatters))
+          state = kThemeStatePressedUp;
+        else if (content->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::state,
+                                      NS_LITERAL_STRING("down"), eCaseMatters))
+          state = kThemeStatePressedDown;
+        DrawSpinButtons ( kThemeIncDecButton, macRect, IsDisabled(aFrame),
+                          state, kThemeAdornmentNone, eventState );
+        break; 
+      }
     case NS_THEME_TOOLBAR_BUTTON:
       DrawButton ( kThemePushButton, macRect, IsDefaultButton(aFrame), IsDisabled(aFrame),
                     kThemeButtonOn, kThemeAdornmentNone, eventState );
@@ -645,6 +676,14 @@ nsNativeThemeMac::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
       break;
     }
     
+    case NS_THEME_SPINNER:
+    {
+      SInt32 buttonHeight = 0;
+      ::GetThemeMetric(kThemeMetricPushButtonHeight, &buttonHeight);
+      aResult->SizeTo(kAquaPushButtonEndcaps, buttonHeight);
+      break;
+    }
+
     case NS_THEME_CHECKBOX:
     {
       SInt32 boxHeight = 0, boxWidth = 0;
@@ -878,6 +917,7 @@ nsNativeThemeMac::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* aFr
     case NS_THEME_BUTTON:
     case NS_THEME_BUTTON_SMALL:
     case NS_THEME_BUTTON_BEVEL:
+    case NS_THEME_SPINNER:
     case NS_THEME_TOOLBAR:
     case NS_THEME_STATUSBAR:
     case NS_THEME_TEXTFIELD:
