@@ -545,6 +545,10 @@
   'comp.bug_count'
 ],
 
+'admin/groups/delete.html.tmpl' => [
+  'shared_queries'
+],
+
 'admin/users/confirm-delete.html.tmpl' => [
   'andstring',
   'responsibilityterms.$responsibility',
@@ -554,7 +558,6 @@
   'flags.requestee',
   'flags.setter',
   'longdescs',
-  'namedqueries',
   'votes',
   'series',
   'watch.watched',
@@ -598,6 +601,10 @@
 'account/prefs/prefs.html.tmpl' => [
   'current_tab.label',
   'current_tab.name',
+],
+
+'account/prefs/saved-searches.html.tmpl' => [
+  'group.id',
 ],
 
 'account/prefs/settings.html.tmpl' => [

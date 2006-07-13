@@ -920,8 +920,14 @@
                 
   [% ELSIF error == "missing_query" %]
     [% title = "Missing Search" %]
-    The search named <em>[% queryname FILTER html %]</em> does not
-    exist.
+    [% docslinks = {'query.html' => "Searching for $terms.bugs",
+                    'list.html'  => "$terms.Bug lists"} %]
+    The search named <em>[% queryname FILTER html %]</em>
+    [% IF sharer_id %]
+      has not been made visible to you.
+    [% ELSE %]
+      does not exist.
+    [% END %]
 
   [% ELSIF error == "move_bugs_disabled" %]
     [% title = BLOCK %][% terms.Bug %] Moving Disabled[% END %]

@@ -79,6 +79,14 @@ sub get_param_list {
   },
 
   {
+   name => 'querysharegroup',
+   type => 's',
+   choices => \&_get_all_group_names,
+   default => 'editbugs',
+   checker => \&check_group
+  },
+  
+  {
    name => 'usevisibilitygroups',
    type => 'b',
    default => 0

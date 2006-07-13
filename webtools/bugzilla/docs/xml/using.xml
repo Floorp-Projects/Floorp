@@ -345,8 +345,20 @@
     returns bugs where the content of the field matches any one of the selected
     values. If none is selected, then the field can take any value.</para>
 
-    <para>Once you've run a search, you can save it as a Saved Search, which 
-    appears in the page footer.</para>
+    <para>
+      Once you've run a search, you can save it as a Saved Search, which
+      appears in the page footer.
+      On the Saved Searches tab of your User Preferences page (the Prefs link
+      in Bugzilla's footer), members of the group defined in the
+      querysharegroup parameter can share such Saved Searches with user groups
+      so that other users may use them.
+      At the same place, you can see Saved Searches other users are sharing, and
+      have them show up in your personal Bugzilla footer along with your own
+      Saved Searches.
+      If somebody is sharing a Search with a group she or he is allowed to
+      <xref linkend="groups">assign users to</a>, it will show up in the
+      group's direct members' footers by default.
+    </para>
 
     <section id="boolean">
       <title>Boolean Charts</title>

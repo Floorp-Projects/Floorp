@@ -31,7 +31,8 @@
   # flags.requestee:          number of flags the viewed user is being asked for
   # flags.setter:             number of flags the viewed user has set
   # longdescs:                number of bug comments the viewed user has written
-  # namedqueries:             number of named queries the user has created
+  # namedqueries:             array of IDs of named queries the user has created
+  # namedquery_group_map:     number of named queries the user has shared
   # profiles_activity:        number of named queries the user has created
   # series:                   number of series the viewed user has created
   # votes:                    number of bugs the viewed user has voted on
@@ -301,17 +302,35 @@
         [% IF namedqueries %]
           <li>
             [% otheruser.login FILTER html %] has
-            [% IF namedqueries == 1 %]
-              a named query
+            [% IF namedqueries.size == 1 %]
+              a [% 'shared' IF namedquery_group_map %] named search
             [% ELSE %]
-              [%+ namedqueries %] named queries
+              [%+ namedqueries.size %] named searches
             [% END %].
-            [% IF namedqueries == 1 %]
-              This named query
+            [% IF namedqueries.size == 1 %]
+              This named search
             [% ELSE %]
-              These named queries
+              These named searches
             [% END %]
             will be deleted along with the user account.
+            [% IF namedquery_group_map %]
+              [% IF namedqueries.size > 1 %]
+                Of these,
+                [% IF namedquery_group_map > 1 %]
+                  [%+ namedquery_group_map FILTER html %] are
+                [% ELSE %]
+                  one is
+                [% END %]
+                shared.
+              [% END %]
+              Other users will not be able to use
+              [% IF namedquery_group_map > 1 %]
+                these shared named searches
+              [% ELSE %]
+                this shared named search
+              [% END %]
+              any more.
+            [% END %]
           </li>
         [% END %]
         [% IF profile_setting %]

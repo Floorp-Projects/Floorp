@@ -418,7 +418,13 @@ CrossCheck("groups", "id",
            ["group_group_map", "grantor_id"],
            ["group_group_map", "member_id"],
            ["group_control_map", "group_id"],
+           ["namedquery_group_map", "group_id"],
            ["user_group_map", "group_id"]);
+
+CrossCheck("namedqueries", "id",
+           ["namedqueries_link_in_footer", "namedquery_id"],
+           ["namedquery_group_map", "namedquery_id"],
+          );
 
 CrossCheck("profiles", "userid",
            ['profiles_activity', 'userid'],
@@ -438,6 +444,7 @@ CrossCheck("profiles", "userid",
            ["longdescs", "who", "bug_id"],
            ["logincookies", "userid"],
            ["namedqueries", "userid"],
+           ["namedqueries_link_in_footer", "user_id"],
            ['series', 'creator', 'series_id', ['0']],
            ["watch", "watcher"],
            ["watch", "watched"],

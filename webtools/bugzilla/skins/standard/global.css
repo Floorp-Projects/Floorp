@@ -128,11 +128,6 @@ body
         display: inline;
     }
 
-    #footer span
-    {
-        display: block;
-    }
-
     #footer .btn, #footer .txt
     {
         font-size: 0.8em;

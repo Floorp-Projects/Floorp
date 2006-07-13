@@ -460,9 +460,18 @@ if ($action eq 'search') {
     $vars->{'longdescs'} = $dbh->selectrow_array(
         'SELECT COUNT(*) FROM longdescs WHERE who = ?',
         undef, $otherUserID);
-    $vars->{'namedqueries'} = $dbh->selectrow_array(
-        'SELECT COUNT(*) FROM namedqueries WHERE userid = ?',
-        undef, $otherUserID);
+    $vars->{'namedqueries'} = $dbh->selectcol_arrayref(
+        'SELECT id FROM namedqueries WHERE userid = ?',
+        undef,
+        $otherUserID);
+    if (@{$vars->{'namedqueries'}}) {
+        $vars->{'namedquery_group_map'} = $dbh->selectrow_array(
+            'SELECT COUNT(*) FROM namedquery_group_map WHERE namedquery_id IN' .
+            ' (' . join(', ', @{$vars->{'namedqueries'}}) . ')');
+    }
+    else {
+        $vars->{'namedquery_group_map'} = 0;
+    }
     $vars->{'profile_setting'} = $dbh->selectrow_array(
         'SELECT COUNT(*) FROM profile_setting WHERE user_id = ?',
         undef, $otherUserID);
@@ -525,6 +534,8 @@ if ($action eq 'search') {
                          'flagtypes READ',
                          'cc WRITE',
                          'namedqueries WRITE',
+                         'namedqueries_link_in_footer WRITE',
+                         'namedquery_group_map WRITE',
                          'tokens WRITE',
                          'votes WRITE',
                          'watch WRITE',
@@ -544,6 +555,12 @@ if ($action eq 'search') {
         && ThrowUserError('user_has_responsibility');
 
     Bugzilla->logout_user($otherUser);
+
+    # Get the named query list so we can delete namedquery_group_map entries.
+    my $namedqueries_as_string = join(', ', $dbh->selectcol_arrayref(
+        'SELECT id FROM namedqueries WHERE userid = ?',
+        undef,
+        $otherUserID));
 
     # Get the timestamp for LogActivityEntry.
     my $timestamp = $dbh->selectrow_array('SELECT NOW()');
@@ -589,6 +606,12 @@ if ($action eq 'search') {
              $otherUserID);
     $dbh->do('DELETE FROM logincookies WHERE userid = ?', undef, $otherUserID);
     $dbh->do('DELETE FROM namedqueries WHERE userid = ?', undef, $otherUserID);
+    $dbh->do('DELETE FROM namedqueries_link_in_footer WHERE user_id = ?', undef,
+             $otherUserID);
+    if ($namedqueries_as_string) {
+        $dbh->do('DELETE FROM namedquery_group_map WHERE namedquery_id IN ' .
+                 "($namedqueries_as_string)");
+    }
     $dbh->do('DELETE FROM profile_setting WHERE user_id = ?', undef,
              $otherUserID);
     $dbh->do('DELETE FROM profiles_activity WHERE userid = ? OR who = ?', undef,

@@ -19,6 +19,13 @@
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #%]
 
+[%# INTERFACE:
+  # queries: list of the named queries visible to the user, both own and shared
+  #          by others. Cleaned-up result of Bugzilla::User::queries.
+  # queryshare_groups: list of groups the user may share queries with
+  #                    (id, name).
+  #%]
+
 <p>Your saved searches are as follows:</p>
 
 <blockquote>
@@ -40,6 +47,17 @@
         Show in
         Footer
       </th>
+      [% querysharegroup_regexp = '^' _ Param('querysharegroup') _ '$' %]
+      [% may_share = user.groups.keys.grep($querysharegroup_regexp).size %]
+      [% IF may_share %]
+        <th>
+          Share With
+          a Group
+          [% UNLESS queryshare_groups.size %]
+            (there are no groups you may share queries with)
+          [% END %]
+        </th>
+      [% END %]
     </tr>
     <tr>
       <td>My Bugs</td>
@@ -59,8 +77,12 @@
                value="1"
                [% " checked" IF user.showmybugslink %]>
       </td>
+      <td>
+        &mdash;
+      </td>
     </tr>
     [% FOREACH q = queries %]
+      [% NEXT UNLESS q.userid == user.id %]
       <tr>
         <td>[% q.name FILTER html %]</td>
         <td>
@@ -79,9 +101,71 @@
         </td>
         <td align="center">
           <input type="checkbox" 
-                 name="linkinfooter_[% q.name FILTER html %]"
+                 name="link_in_footer_[% q.id FILTER html %]"
                  value="1"
-                 [% " checked" IF q.linkinfooter %]>
+                 [% " checked" IF q.link_in_footer %]>
+        </td>
+        <td>
+          [% IF queryshare_groups.size %]
+            <select name="share_[% q.id FILTER html %]">
+              <option value="">Don't share</option>
+              [% FOREACH group = queryshare_groups %]
+                <option value="[% group.id %]"
+                        [% ' selected="selected"' IF q.shared_with_group == group.id %]>[% group.name FILTER html %]</option>
+              [% END %]
+            </select>
+          [% ELSE %]
+            &mdash;
+          [% END %]
+        </td>
+      </tr>
+    [% END %]
+  </table>
+</blockquote>
+
+<p>You may use these searches saved and shared by others:</p>
+
+<blockquote>
+  <table border="1" cellpadding="3">  
+    <tr>
+      <th>
+        Search
+      </th>
+      <th>
+        Shared By
+      </th>
+      <th>
+        Run
+      </th>
+      <th>
+        Show in
+        Footer
+      </th>
+    </tr>
+    [% found_shared_query = 0 %]
+    [% FOREACH q = queries %]
+      [% NEXT IF q.userid == user.id %]
+      [% found_shared_query = 1 %]
+      <tr>
+        <td>[% q.name FILTER html %]</td>
+        <td>[% q.user.identity FILTER html %]</td>
+        <td>
+          <a href="buglist.cgi?cmdtype=dorem&amp;remaction=run&amp;namedcmd=
+                   [% q.name FILTER url_quote %]&amp;sharer_id=
+                   [% q.userid FILTER url_quote %]">Run</a>
+        </td>
+        <td align="center">
+          <input type="checkbox" 
+                 name="link_in_footer_[% q.id FILTER html %]"
+                 value="1"
+                 [% " checked" IF q.link_in_footer %]>
+        </td>
+      </tr>
+    [% END %]
+    [% IF !found_shared_query %]
+      <tr>
+        <td colspan="4" style="text-align: center">
+          &lt;None&gt;
         </td>
       </tr>
     [% END %]

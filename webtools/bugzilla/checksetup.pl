@@ -2319,8 +2319,6 @@ if (!$dbh->bz_index_info('profiles', 'profiles_login_name_idx') ||
 
 $dbh->bz_add_column('profiles', 'mybugslink', {TYPE => 'BOOLEAN', NOTNULL => 1,
                                                DEFAULT => 'TRUE'});
-$dbh->bz_add_column('namedqueries', 'linkinfooter', 
-                    {TYPE => 'BOOLEAN', NOTNULL => 1}, 0);
 
 my $comp_init_owner = $dbh->bz_column_info('components', 'initialowner');
 if ($comp_init_owner && $comp_init_owner->{TYPE} eq 'TINYTEXT') {
@@ -4369,6 +4367,22 @@ if (-e "$datadir/versioncache") {
     unlink "$datadir/versioncache";
 }
 
+# 2006-07-01 wurblzap@gmail.com -- Bug 69000
+$dbh->bz_add_column('namedqueries', 'id',
+                    {TYPE => 'MEDIUMSERIAL', NOTNULL => 1, PRIMARYKEY => 1});
+if ($dbh->bz_column_info("namedqueries", "linkinfooter")) {
+    # Move link-in-footer information into a table of its own.
+    my $sth_read = $dbh->prepare('SELECT id, userid
+                                    FROM namedqueries 
+                                   WHERE linkinfooter = 1');
+    my $sth_write = $dbh->prepare('INSERT INTO namedqueries_link_in_footer
+                                   (namedquery_id, user_id) VALUES (?, ?)');
+    $sth_read->execute();
+    while (my ($id, $userid) = $sth_read->fetchrow_array()) {
+        $sth_write->execute($id, $userid);
+    }
+    $dbh->bz_drop_column("namedqueries", "linkinfooter");    
+}
 
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.

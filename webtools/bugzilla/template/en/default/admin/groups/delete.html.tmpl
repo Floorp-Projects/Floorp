@@ -30,6 +30,7 @@
   # hasbugs: boolean int. True if the group includes bugs in it.
   # hasproduct: boolean int. True if the group is binded to a product.
   # hasflags: boolean int. True if the group is used by a flag type.
+  # shared_queries: int. Number of saved searches being shared with this group.
   # buglist: string. The list of bugs included in this group.
   #%]
 
@@ -90,6 +91,25 @@
     <br><a href="editflagtypes.cgi?action=list&group=[% gid FILTER html %]">Show
     me which types</a> - <input type="checkbox" name="removeflags">Remove all
     flag types from this group for me.</p>
+  [% END %]
+
+  [% IF shared_queries %]
+    <p>
+      <b>There
+      [% IF shared_queries > 1 %]
+        are [% shared_queries %] saved searches
+      [% ELSE %]
+        is a saved search
+      [% END %]
+      being shared with this group.</b>
+      If you delete this group,
+      [% IF shared_queries > 1 %]
+        these saved searches
+      [% ELSE %]
+        this saved search
+      [% END %]
+      will fall back to being private again.
+    </p>
   [% END %]
 
   <h2>Confirmation</h2>

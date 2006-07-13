@@ -203,18 +203,42 @@ sub DiffDate {
 }
 
 sub LookupNamedQuery {
-    my ($name) = @_;
+    my ($name, $sharer_id) = @_;
     my $user = Bugzilla->login(LOGIN_REQUIRED);
     my $dbh = Bugzilla->dbh;
-    # $name is safe -- we only use it below in a SELECT placeholder and then 
-    # in error messages (which are always HTML-filtered).
+    my $owner_id;
+
+    # $name and $sharer_id are safe -- we only use them below in SELECT
+    # placeholders and then in error messages (which are always HTML-filtered).
     $name || ThrowUserError("query_name_missing");
     trick_taint($name);
-    my $result = $dbh->selectrow_array("SELECT query FROM namedqueries" 
-                          . " WHERE userid = ? AND name = ?"
-                          , undef, ($user->id, $name));
+    if ($sharer_id) {
+        trick_taint($sharer_id);
+        $owner_id = $sharer_id;
+    }
+    else {
+        $owner_id = $user->id;
+    }
+
+    my ($id, $result) = $dbh->selectrow_array('SELECT id, query
+                                                 FROM namedqueries
+                                                WHERE userid = ? AND name = ?',
+                                              undef, ($owner_id, $name));
+    defined($result)
+        || ThrowUserError("missing_query", {'queryname' => $name,
+                                            'sharer_id' => $sharer_id});
+
+    if ($sharer_id) {
+        my $group = $dbh->selectrow_array('SELECT group_id
+                                             FROM namedquery_group_map
+                                            WHERE namedquery_id = ?',
+                                          undef, $id);
+        if (!grep {$_ == $group} values(%{$user->groups()})) {
+            ThrowUserError("missing_query", {'queryname' => $name,
+                                             'sharer_id' => $sharer_id});
+        }
+    }
     
-    defined($result) || ThrowUserError("missing_query", {'queryname' => $name});
     $result
        || ThrowUserError("buglist_parameters_required", {'queryname' => $name});
 
@@ -265,7 +289,8 @@ sub InsertNamedQuery {
     # it when we display it to the user.
     trick_taint($query);
 
-    $dbh->bz_lock_tables('namedqueries WRITE');
+    $dbh->bz_lock_tables('namedqueries WRITE',
+                         'namedqueries_link_in_footer WRITE');
 
     my $result = $dbh->selectrow_array("SELECT userid FROM namedqueries"
         . " WHERE userid = ? AND name = ?"
@@ -273,15 +298,22 @@ sub InsertNamedQuery {
     if ($result) {
         $query_existed_before = 1;
         $dbh->do("UPDATE namedqueries"
-            . " SET query = ?, linkinfooter = ?, query_type = ?"
+            . " SET query = ?, query_type = ?"
             . " WHERE userid = ? AND name = ?"
-            , undef, ($query, $link_in_footer, $query_type, $userid, $query_name));
+            , undef, ($query, $query_type, $userid, $query_name));
     } else {
         $query_existed_before = 0;
         $dbh->do("INSERT INTO namedqueries"
-            . " (userid, name, query, linkinfooter, query_type)"
-            . " VALUES (?, ?, ?, ?, ?)"
-            , undef, ($userid, $query_name, $query, $link_in_footer, $query_type));
+            . " (userid, name, query, query_type)"
+            . " VALUES (?, ?, ?, ?)"
+            , undef, ($userid, $query_name, $query, $query_type));
+        if ($link_in_footer) {
+            $dbh->do('INSERT INTO namedqueries_link_in_footer
+                                 (namedquery_id, user_id)
+                          VALUES (?, ?)',
+                     undef,
+                     ($dbh->bz_last_key('namedqueries', 'id'), $userid));
+        }
     }
 
     $dbh->bz_unlock_tables();
@@ -373,9 +405,15 @@ if ($cgi->param('cmdtype') eq "dorem" && $cgi->param('remaction') =~ /^run/) {
 # Take appropriate action based on user's request.
 if ($cgi->param('cmdtype') eq "dorem") {  
     if ($cgi->param('remaction') eq "run") {
-        $buffer = LookupNamedQuery(scalar $cgi->param("namedcmd"));
-        $vars->{'searchname'} = $cgi->param('namedcmd');
-        $vars->{'searchtype'} = "saved";
+        $buffer = LookupNamedQuery(scalar $cgi->param("namedcmd"),
+                                   scalar $cgi->param('sharer_id'));
+        # If this is the user's own query, remember information about it
+        # so that it can be modified easily.
+        if (!$cgi->param('sharer_id') ||
+            $cgi->param('sharer_id') == Bugzilla->user->id) {
+            $vars->{'searchname'} = $cgi->param('namedcmd');
+            $vars->{'searchtype'} = "saved";
+        }
         $params = new Bugzilla::CGI($buffer);
         $order = $params->param('order') || $order;
 
@@ -415,9 +453,24 @@ if ($cgi->param('cmdtype') eq "dorem") {
         }
 
         # If we are here, then we can safely remove the saved search
-        $dbh->do("DELETE FROM namedqueries"
-            . " WHERE userid = ? AND name = ?"
-            , undef, ($user->id, $qname));
+        my ($query_id) = $dbh->selectrow_array('SELECT id FROM namedqueries
+                                                    WHERE userid = ?
+                                                      AND name   = ?',
+                                                  undef, ($user->id, $qname));
+        if (!$query_id) {
+            # The user has no query of this name. Play along.
+        }
+        else {
+            $dbh->do('DELETE FROM namedqueries
+                            WHERE id = ?',
+                     undef, $query_id);
+            $dbh->do('DELETE FROM namedqueries_link_in_footer
+                            WHERE namedquery_id = ?',
+                     undef, $query_id);
+            $dbh->do('DELETE FROM namedquery_group_map
+                            WHERE namedquery_id = ?',
+                     undef, $query_id);
+        }
 
         # Now reset the cached queries
         $user->flush_queries_cache();
@@ -425,7 +478,7 @@ if ($cgi->param('cmdtype') eq "dorem") {
         print $cgi->header();
         # Generate and return the UI (HTML page) from the appropriate template.
         $vars->{'message'} = "buglist_query_gone";
-        $vars->{'namedcmd'} = $cgi->param('namedcmd');
+        $vars->{'namedcmd'} = $qname;
         $vars->{'url'} = "query.cgi";
         $template->process("global/message.html.tmpl", $vars)
           || ThrowTemplateError($template->error());

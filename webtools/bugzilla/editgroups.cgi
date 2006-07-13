@@ -358,6 +358,12 @@ if ($action eq 'del') {
                                WHERE group_id IN ($grouplist) AND isbless = 0 " .
                                $dbh->sql_limit(1)) || 0;
 
+    my ($shared_queries) =
+        $dbh->selectrow_array('SELECT COUNT(*)
+                                 FROM namedquery_group_map
+                                WHERE group_id = ?',
+                              undef, $gid);
+
     my $bug_ids = $dbh->selectcol_arrayref('SELECT bug_id FROM bug_group_map
                                             WHERE group_id = ?', undef, $gid);
 
@@ -372,14 +378,15 @@ if ($action eq 'del') {
                                           $dbh->sql_limit(1),
                                           undef, ($gid, $gid)) || 0;
 
-    $vars->{'gid'}         = $gid;
-    $vars->{'name'}        = $name;
-    $vars->{'description'} = $desc;
-    $vars->{'hasusers'}    = $hasusers;
-    $vars->{'hasbugs'}     = $hasbugs;
-    $vars->{'hasproduct'}  = $hasproduct;
-    $vars->{'hasflags'}    = $hasflags;
-    $vars->{'buglist'}     = $buglist;
+    $vars->{'gid'}            = $gid;
+    $vars->{'name'}           = $name;
+    $vars->{'description'}    = $desc;
+    $vars->{'hasusers'}       = $hasusers;
+    $vars->{'hasbugs'}        = $hasbugs;
+    $vars->{'hasproduct'}     = $hasproduct;
+    $vars->{'hasflags'}       = $hasflags;
+    $vars->{'shared_queries'} = $shared_queries;
+    $vars->{'buglist'}        = $buglist;
 
     print $cgi->header();
     $template->process("admin/groups/delete.html.tmpl", $vars)
@@ -462,6 +469,8 @@ if ($action eq 'delete') {
     $dbh->do('UPDATE flagtypes SET request_group_id = ?
                WHERE request_group_id = ?',
               undef, (undef, $gid));
+    $dbh->do('DELETE FROM namedquery_group_map WHERE group_id = ?',
+              undef, $gid);
     $dbh->do('DELETE FROM user_group_map WHERE group_id = ?',
               undef, $gid);
     $dbh->do('DELETE FROM group_group_map 

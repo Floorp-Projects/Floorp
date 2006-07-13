@@ -666,15 +666,28 @@ use constant ABSTRACT_SCHEMA => {
 
     namedqueries => {
         FIELDS => [
+            id           => {TYPE => 'MEDIUMSERIAL', NOTNULL => 1,
+                             PRIMARYKEY => 1},
             userid       => {TYPE => 'INT3', NOTNULL => 1},
             name         => {TYPE => 'varchar(64)', NOTNULL => 1},
-            linkinfooter => {TYPE => 'BOOLEAN', NOTNULL => 1},
             query        => {TYPE => 'MEDIUMTEXT', NOTNULL => 1},
             query_type   => {TYPE => 'BOOLEAN', NOTNULL => 1},
         ],
         INDEXES => [
             namedqueries_userid_idx => {FIELDS => [qw(userid name)],
                                         TYPE => 'UNIQUE'},
+        ],
+    },
+
+    namedqueries_link_in_footer => {
+        FIELDS => [
+            namedquery_id => {TYPE => 'INT3', NOTNULL => 1},
+            user_id       => {TYPE => 'INT3', NOTNULL => 1},
+        ],
+        INDEXES => [
+            namedqueries_link_in_footer_id_idx => {FIELDS => [qw(namedquery_id user_id)],
+                                                   TYPE => 'UNIQUE'},
+            namedqueries_link_in_footer_userid_idx => ['user_id'],
         ],
     },
 
@@ -803,6 +816,20 @@ use constant ABSTRACT_SCHEMA => {
             bug_group_map_bug_id_idx   =>
                 {FIELDS => [qw(bug_id group_id)], TYPE => 'UNIQUE'},
             bug_group_map_group_id_idx => ['group_id'],
+        ],
+    },
+
+    # This table determines which groups a user must be a member of
+    # in order to see a named query somebody else shares.
+    namedquery_group_map => {
+        FIELDS => [
+            namedquery_id => {TYPE => 'INT3', NOTNULL => 1},
+            group_id      => {TYPE => 'INT3', NOTNULL => 1},
+        ],
+        INDEXES => [
+            namedquery_group_map_namedquery_id_idx   =>
+                {FIELDS => [qw(namedquery_id)], TYPE => 'UNIQUE'},
+            namedquery_group_map_group_id_idx => ['group_id'],
         ],
     },
 

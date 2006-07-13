@@ -204,25 +204,46 @@ sub queries {
     return [] unless $self->id;
 
     my $dbh = Bugzilla->dbh;
-    my $used_in_whine_ref = $dbh->selectcol_arrayref(q{
+    my $used_in_whine_ref = $dbh->selectall_hashref('
                     SELECT DISTINCT query_name
                       FROM whine_events we
                 INNER JOIN whine_queries wq
                         ON we.id = wq.eventid
-                     WHERE we.owner_userid = ?}, undef, $self->{id});
+                     WHERE we.owner_userid = ?',
+                     'query_name', undef, $self->id);
 
-    my $queries_ref = $dbh->selectall_arrayref(q{
-                    SELECT name, query, linkinfooter, query_type
-                      FROM namedqueries 
-                     WHERE userid = ?
-                  ORDER BY UPPER(name)},{'Slice'=>{}}, $self->{id});
+    # If the user is in any group, there may be shared queries to be included.
+    my $or_nqgm_group_id_in_usergroups = '';
+    if ($self->groups_as_string) {
+        $or_nqgm_group_id_in_usergroups =
+            'OR MAX(nqgm.group_id) IN (' . $self->groups_as_string . ') ';
+    }
 
-    foreach my $name (@$used_in_whine_ref) { 
-        foreach my $queries_hash (@$queries_ref) {
-            if ($queries_hash->{name} eq $name) {
-                $queries_hash->{usedinwhine} = 1;
-                last;
-            }
+    my $queries_ref = $dbh->selectall_arrayref('
+                    SELECT nq.id, MAX(userid) AS userid, name, query, query_type,
+                           MAX(nqgm.group_id) AS shared_with_group,
+                           COUNT(nql.namedquery_id) AS link_in_footer
+                      FROM namedqueries AS nq
+                      LEFT JOIN namedquery_group_map nqgm
+                             ON nqgm.namedquery_id = nq.id
+                      LEFT JOIN namedqueries_link_in_footer AS nql
+                             ON nql.namedquery_id = nq.id
+                            AND nql.user_id = ? ' .
+                      $dbh->sql_group_by('nq.id', 'name, query, query_type') .
+                  ' HAVING MAX(nq.userid) = ? ' .
+                           $or_nqgm_group_id_in_usergroups .
+                ' ORDER BY UPPER(name)',
+                {'Slice'=>{}}, $self->id, $self->id);
+
+    foreach my $queries_hash (@$queries_ref) {
+        # For each query, determine whether it's being used in a whine.
+        if (exists($$used_in_whine_ref{$queries_hash->{'name'}})) {
+            $queries_hash->{'usedinwhine'} = 1;
+        }
+
+        # For shared queries, provide the sharer's user object.
+        if ($queries_hash->{'userid'} != $self->id) {
+            $queries_hash->{'user'} = new Bugzilla::User($queries_hash->{'userid'});
         }
     }
     $self->{queries} = $queries_ref;
@@ -660,6 +681,24 @@ sub visible_groups_as_string {
     return join(', ', @{$self->visible_groups_inherited()});
 }
 
+# This function defines the groups a user may share a query with.
+# More restrictive sites may want to build this reference to a list of group IDs
+# from bless_groups instead of mirroring visible_groups_inherited, perhaps.
+sub queryshare_groups {
+    my $self = shift;
+    if ($self->in_group(Bugzilla->params->{'querysharegroup'})) {
+        return $self->visible_groups_inherited();
+    }
+    else {
+        return [];
+    }
+}
+
+sub queryshare_groups_as_string {
+    my $self = shift;
+    return join(', ', @{$self->queryshare_groups()});
+}
+
 sub derive_regexp_groups {
     my ($self) = @_;
 
@@ -734,8 +773,8 @@ sub can_bless {
     }
 
     # Otherwise, we're checking a specific group
-    my $group_name = shift;
-    return (grep {$$_{'name'} eq $group_name} (@{$self->bless_groups})) ? 1 : 0;
+    my $group_id = shift;
+    return (grep {$$_{'id'} eq $group_id} (@{$self->bless_groups})) ? 1 : 0;
 }
 
 sub flatten_group_membership {
@@ -1576,9 +1615,17 @@ Should only be called by C<Bugzilla::Auth::login>, for the most part.
 =item C<queries>
 
 Returns an array of the user's named queries, sorted in a case-insensitive
-order by name. Each entry is a hash with three keys:
+order by name. Each entry is a hash with five keys:
 
 =over
+
+=item *
+
+id - The ID of the query
+
+=item *
+
+userid - The query owner's user ID
 
 =item *
 
@@ -1590,7 +1637,7 @@ query - The text for the query
 
 =item *
 
-linkinfooter - Whether or not the query should be displayed in the footer.
+link_in_footer - Whether or not the query should be displayed in the footer.
 
 =back
 
@@ -1783,7 +1830,7 @@ When called with no arguments:
 Returns C<1> if the user can bless at least one group, returns C<0> otherwise.
 
 When called with one argument:
-Returns C<1> if the user can bless the group with that name, returns
+Returns C<1> if the user can bless the group with that id, returns
 C<0> otherwise.
 
 =item C<wants_bug_mail>

@@ -18,6 +18,7 @@
   #
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #                 Svetlana Harisova <light@rathedg.com>
+  #                 Marc Schumann <wurblzap@gmail.com>
   #%]
 
 [%# Migration note: this whole file corresponds to the old %commandmenu% 
@@ -67,23 +68,40 @@
   <div id="links-saved">
     <div class="label">
       [% IF user.showmybugslink OR user.queries.size %]
-          Saved&nbsp;Searches:
+        Saved&nbsp;Searches:
       [% END %]
     </div>
     <div class="links">
-        [% IF user.showmybugslink %]
-          [% filtered_username = user.login FILTER url_quote %]
-          <a href="[% Param('mybugstemplate').replace('%userid%', filtered_username) %]">My&nbsp;[% terms.Bugs %]</a>
+      [% IF user.showmybugslink %]
+        [% filtered_username = user.login FILTER url_quote %]
+        <a href="[% Param('mybugstemplate').replace('%userid%', filtered_username) %]">My&nbsp;[% terms.Bugs %]</a>
+        [% print_pipe = 1 %]
+      [% END %]
+
+      [% FOREACH q = user.queries %]
+        [% NEXT IF q.userid != user.id %]
+        [% IF q.link_in_footer %]
+          [% " | " IF print_pipe %]
+          <a href="buglist.cgi?cmdtype=dorem&amp;remaction=run&amp;namedcmd=
+                   [% q.name FILTER url_quote %]">[% q.name FILTER html FILTER no_break %]</a>
           [% print_pipe = 1 %]
         [% END %]
+      [% END %]
 
-        [% FOREACH q = user.queries %]
-          [% IF q.linkinfooter %]
-            [% " | " IF print_pipe %]
-            <a href="buglist.cgi?cmdtype=runnamed&amp;namedcmd=[% q.name FILTER url_quote %]">[% q.name FILTER html FILTER no_break %]</a>
-            [% print_pipe = 1 %]
-          [% END %]
+      [% " <br> " IF print_pipe %]
+      [% print_pipe = 0 %]
+      [% FOREACH q = user.queries %]
+        [% NEXT IF q.userid == user.id %]
+        [% IF q.link_in_footer %]
+          [% " | " IF print_pipe %]
+          <a href="buglist.cgi?cmdtype=dorem&amp;remaction=run&amp;namedcmd=
+                   [% q.name FILTER url_quote %]&amp;sharer_id=
+                   [% q.userid FILTER url_quote %]"
+             class="shared"
+             title="Shared by [% q.user.identity FILTER html %]">[% q.name FILTER html FILTER no_break %]</a>
+          [% print_pipe = 1 %]
         [% END %]
+      [% END %]
     </div>
   </div>
 
