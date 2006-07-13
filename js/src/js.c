@@ -1878,7 +1878,7 @@ split_create_outer(JSContext *cx)
 {
     ComplexObject *cpx;
     JSObject *obj;
-    
+
     cpx = JS_malloc(cx, sizeof *obj);
     if (!cpx)
         return NULL;
