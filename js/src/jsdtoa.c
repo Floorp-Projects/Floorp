@@ -1826,6 +1826,7 @@ dig_done:
     }
 #ifdef Avoid_Underflow
     if (scale) {
+        rv0 = 0.;
         set_word0(rv0, Exp_1 - P*Exp_msk1);
         set_word1(rv0, 0);
         if ((word0(rv) & Exp_mask) <= P*Exp_msk1
