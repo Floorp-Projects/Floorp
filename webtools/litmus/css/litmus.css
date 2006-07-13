@@ -706,7 +706,6 @@ td.content ul, td.content ol {
 
 table.tcm td.content {
     background-color: #efefef; 
-    padding-left: 20px;
 }
 
 table.tcmf td { 
@@ -723,6 +722,10 @@ div.dh {
 div.dv { 
     font-weight: normal;
     padding: 2px 2px 10px 5px;
+}
+
+div.dv ol {
+  padding-left: 1em;
 }
 
 div.t_link a {
