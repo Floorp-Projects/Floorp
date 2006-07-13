@@ -3436,11 +3436,7 @@ PresShell::CompleteMove(PRBool aForward, PRBool aExtend)
 
   nsPeekOffsetStruct pos = frame->GetExtremeCaretPosition(!aForward);
 
-  // we 'prefer left' (i.e. prefer the beginning of the next line)
-  // iff we're moving to the end of the content
-  pos.mPreferLeft = aForward;
-  
-  mSelection->HandleClick(pos.mResultContent ,pos.mContentOffset ,pos.mContentOffset/*End*/ ,aExtend, PR_FALSE, pos.mPreferLeft);
+  mSelection->HandleClick(pos.mResultContent ,pos.mContentOffset ,pos.mContentOffset/*End*/ ,aExtend, PR_FALSE, aForward);
   return ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, nsISelectionController::SELECTION_FOCUS_REGION, PR_TRUE);
 }
 

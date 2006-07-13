@@ -1208,8 +1208,8 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
   
   //set data using mLimiter to stop on scroll views.  If we have a limiter then we stop peeking
   //when we hit scrollable views.  If no limiter then just let it go ahead
-  pos.SetData(mShell, desiredX, aAmount, eDirPrevious, offsetused, PR_FALSE,
-              PR_TRUE, PR_TRUE, mLimiter != nsnull, PR_TRUE, visualMovement);
+  pos.SetData(aAmount, eDirPrevious, offsetused, desiredX, 
+              PR_TRUE, mLimiter != nsnull, PR_TRUE, visualMovement);
 
   nsBidiLevel baseLevel = nsBidiPresUtils::GetFrameBaseLevel(frame);
   
@@ -1218,37 +1218,29 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
     case nsIDOMKeyEvent::DOM_VK_RIGHT : 
         InvalidateDesiredX();
         pos.mDirection = (baseLevel & 1) ? eDirPrevious : eDirNext;
-        PostReason(nsISelectionListener::KEYPRESS_REASON);
       break;
     case nsIDOMKeyEvent::DOM_VK_LEFT  : //no break
         InvalidateDesiredX();
         pos.mDirection = (baseLevel & 1) ? eDirNext : eDirPrevious;
-        PostReason(nsISelectionListener::KEYPRESS_REASON);
       break;
     case nsIDOMKeyEvent::DOM_VK_DOWN : 
         pos.mAmount = eSelectLine;
         pos.mDirection = eDirNext;//no break here
-        PostReason(nsISelectionListener::KEYPRESS_REASON);
       break;
     case nsIDOMKeyEvent::DOM_VK_UP : 
         pos.mAmount = eSelectLine;
-        PostReason(nsISelectionListener::KEYPRESS_REASON);
       break;
     case nsIDOMKeyEvent::DOM_VK_HOME :
         InvalidateDesiredX();
         pos.mAmount = eSelectBeginLine;
-        tHint = HINTRIGHT;//stick to opposite of movement
-        PostReason(nsISelectionListener::KEYPRESS_REASON);
       break;
     case nsIDOMKeyEvent::DOM_VK_END :
         InvalidateDesiredX();
         pos.mAmount = eSelectEndLine;
-        tHint = HINTLEFT;//stick to this line
-        PostReason(nsISelectionListener::KEYPRESS_REASON);
      break;
   default :return NS_ERROR_FAILURE;
   }
-  pos.mPreferLeft = tHint;
+  PostReason(nsISelectionListener::KEYPRESS_REASON);
   if (NS_SUCCEEDED(result = frame->PeekOffset(context, &pos)) && pos.mResultContent)
   {
     nsIFrame *theFrame;
@@ -1257,7 +1249,7 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
     if (aKeycode == nsIDOMKeyEvent::DOM_VK_RIGHT ||
         aKeycode == nsIDOMKeyEvent::DOM_VK_LEFT)
     {
-      // For left/right, PeekOffset() sets pos.mResultFrame correctly, but does not set pos.mPreferLeft,
+      // For left/right, PeekOffset() sets pos.mResultFrame correctly, but does not set pos.mAttachForward,
       // so determine the hint here based on the result frame and offset:
       // If we're at the end of a text frame, set the hint to HINTLEFT to indicate that we
       // want the caret displayed at the end of this frame, not at the beginning of the next one.
@@ -1271,7 +1263,7 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
     } else {
       // For up/down and home/end, pos.mResultFrame might not be set correctly, or not at all.
       // In these cases, get the frame based on the content and hint returned by PeekOffset().
-      tHint = (HINT)pos.mPreferLeft;
+      tHint = (HINT)pos.mAttachForward;
       theFrame = GetFrameForNodeOffset(pos.mResultContent, pos.mContentOffset,
                                        tHint, &currentOffset);
       if (!theFrame)
@@ -2286,8 +2278,8 @@ nsFrameSelection::HandleDrag(nsIFrame *aFrame, nsPoint aPoint)
       amount = eSelectEndLine;
 
     nsPeekOffsetStruct pos;
-    pos.SetData(mShell, 0, amount, direction, offsets.offset, PR_FALSE,
-                PR_TRUE, PR_FALSE, mLimiter != nsnull, PR_TRUE, PR_FALSE);
+    pos.SetData(amount, direction, offsets.offset, 0,
+                PR_FALSE, mLimiter != nsnull, PR_FALSE, PR_FALSE);
     nsIFrame* frame = mShell->GetPrimaryFrameFor(offsets.content);
 
     if (NS_SUCCEEDED(result = frame->PeekOffset(mShell->GetPresContext(), &pos)) && pos.mResultContent) {
@@ -2303,8 +2295,8 @@ nsFrameSelection::HandleDrag(nsIFrame *aFrame, nsPoint aPoint)
     nsPeekOffsetStruct pos;
     //set data using mLimiter to stop on scroll views.  If we have a limiter then we stop peeking
     //when we hit scrollable views.  If no limiter then just let it go ahead
-    pos.SetData(mShell, 0, eSelectDir, eDirNext, startPos, PR_FALSE,
-                PR_TRUE, PR_TRUE, mLimiter != nsnull, PR_FALSE);
+    pos.SetData(eSelectDir, eDirNext, startPos, 0,
+                PR_TRUE, mLimiter != nsnull, PR_FALSE, PR_TRUE);
     mHint = HINT(beginOfContent);
     HINT saveHint = mHint;
     if (NS_GET_EMBEDDING_LEVEL(newFrame) & 1)

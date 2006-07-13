@@ -4979,8 +4979,6 @@ TryNextFrame:
       result = NS_ERROR_FAILURE; break;
   }
 
-  aPos->mContentOffsetEnd = aPos->mContentOffset;
-
   if (NS_FAILED(result)){
     aPos->mResultContent = mContent;
     //aPos->mContentOffset = aPos->mStartOffset;
