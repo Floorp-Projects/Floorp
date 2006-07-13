@@ -47,14 +47,11 @@
 #define NS_NO_VTABLE
 #endif
 
-class nsIDOMNode; /* forward declaration */
-
 /* nsIXFormsUtilityService */
-#define NS_IXFORMSUTILITYSERVICE_IID_STR "4a744a59-8771-4065-959d-b8de3dad81da"
-
+#define NS_IXFORMSUTILITYSERVICE_IID_STR "f7276415-bb3e-4170-b746-aa57f68d7006"
 #define NS_IXFORMSUTILITYSERVICE_IID \
-  {0x4a744a59, 0x8771, 0x4065, \
-    { 0x95, 0x9d, 0xb8, 0xde, 0x3d, 0xad, 0x81, 0xda }}
+{ 0xf7276415, 0xbb3e, 0x4170, \
+  { 0xb7, 0x46, 0xaa, 0x57, 0xf6, 0x8d, 0x70, 0x06 } }
 
 /**
  * Private interface implemented by the nsXFormsUtilityService in XForms
@@ -64,87 +61,6 @@ class NS_NO_VTABLE nsIXFormsUtilityService : public nsISupports {
 public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXFORMSUTILITYSERVICE_IID)
-
-  /**
-   * Function to get the corresponding model element from a xforms node or
-   * a xforms instance data node.
-   */
-  /* nsIDOMNode getModelFromNode (in nsIDOMNode node); */
-  NS_IMETHOD GetModelFromNode(nsIDOMNode *node, nsIDOMNode **aModel) = 0;
-
-  /**
-   * Function to see if the given node is associated with the given model.
-   * Right now this function is only called by XPath in the case of the
-   * instance() function.
-   * The provided node can be an instance node from an instance
-   * document and thus be associated to the model in that way (model elements
-   * contain instance elements).  Otherwise the node will be an XForms element
-   * that was used as the context node of the XPath expression (i.e the
-   * XForms control has an attribute that contains an XPath expression).
-   * Form controls are associated with model elements either explicitly through
-   * single-node binding or implicitly (if model cannot by calculated, it
-   * will use the first model element encountered in the document).  The model
-   * can also be inherited from a containing element like xforms:group or
-   * xforms:repeat.
-   */
-  /* PRBool isNodeAssocWithModel (in nsIDOMNode aNode, in nsIDOMNode aModel); */
-  NS_IMETHOD IsNodeAssocWithModel(nsIDOMNode *aNode, nsIDOMNode *aModel,
-                                  PRBool *aModelAssocWithNode) = 0;
-
-  /**
-   * Function to get the instance document root for the instance element with
-   * the given id.  The instance element must be associated with the given
-   * model.
-   */
-  /* nsIDOMNode getInstanceDocumentRoot(in DOMString aID,
-                                        in nsIDOMNode aModelNode); */
-  NS_IMETHOD GetInstanceDocumentRoot(const nsAString& aID,
-                                     nsIDOMNode *aModelNode,
-                                     nsIDOMNode **aInstanceRoot) = 0;
-
-  /**
-   * Function to ensure that aValue is of the schema type aType.  Will basically
-   * be a forwarder to the nsISchemaValidator function of the same name.
-   */
-  /* boolean validateString (in AString aValue, in AString aType,
-                             in AString aNamespace); */
-  NS_IMETHOD ValidateString(const nsAString& aValue, const nsAString& aType,
-                            const nsAString & aNamespace, PRBool *aResult) = 0;
-
-  /**
-   * Function to retrieve the index from the given repeat element.
-   */
-  /* long getRepeatIndex (in nsIDOMNode aRepeat); */
-  NS_IMETHOD GetRepeatIndex(nsIDOMNode *aRepeat, PRInt32 *aIndex) = 0;
-
-  /**
-   * Function to retrieve the number of months represented by the
-   * xsd:duration provided in aValue
-   */
-  /* long getMonths (in DOMString aValue); */
-  NS_IMETHOD GetMonths(const nsAString& aValue, PRInt32 *aMonths) = 0;
-
-  /**
-   * Function to retrieve the number of seconds represented by the
-   * xsd:duration provided in aValue
-   */
-  /* double getSeconds (in DOMString aValue); */
-  NS_IMETHOD GetSeconds(const nsAString& aValue, double *aSeconds) = 0;
-
-  /**
-   * Function to retrieve the number of seconds represented by the
-   * xsd:dateTime provided in aValue
-   */
-  /* double getSecondsFromDateTime (in DOMString aValue); */
-  NS_IMETHOD GetSecondsFromDateTime(const nsAString& aValue,
-                                    double *aSeconds) = 0;
-
-  /**
-   * Function to retrieve the number of days represented by the
-   * xsd:dateTime provided in aValue
-   */
-  /* long getDaysFromDateTime (in DOMString aValue); */
-  NS_IMETHOD GetDaysFromDateTime(const nsAString& aValue, PRInt32 *aDays) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIXFormsUtilityService,

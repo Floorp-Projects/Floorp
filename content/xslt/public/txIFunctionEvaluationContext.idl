@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,15 +12,16 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla XForms support.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * IBM Corporation.
+ * Peter Van der Beken.
  * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Aaron Reed <aaronr@us.ibm.com>
+ *   Peter Van der Beken <peterv@propagandism.org>
+ *
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,49 +37,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef TRANSFRMX_XFORMS_FUNCTIONS_H
-#define TRANSFRMX_XFORMS_FUNCTIONS_H
+#include "domstubs.idl"
 
-#include "txExpr.h"
-#include "nsIDOMNode.h"
+interface txINodeSet;
 
-#define NS_NAMESPACE_XFORMS              "http://www.w3.org/2002/xforms"
-#define NS_NAMESPACE_SCHEMA              "http://www.w3.org/1999/XMLSchema"
-
-/*
- * Represents the XPath XForms Function Calls
- */
-class XFormsFunctionCall : public FunctionCall {
-
-public:
-
-    enum XFormsFunctions {
-        AVG,                  // avg()
-        BOOLEANFROMSTRING,    // boolean-from-string()
-        COUNTNONEMPTY,        // count-non-empty()
-        DAYSFROMDATE,         // days-from-date()
-        IF,                   // if()
-        INDEX,                // index()
-        INSTANCE,             // instance()
-        MAX,                  // max()
-        MIN,                  // min()
-        MONTHS,               // months()
-        NOW,                  // now()
-        PROPERTY,             // property()
-        SECONDS,              // seconds()
-        SECONDSFROMDATETIME   // seconds-from-dateTime()
-    };
-
-    /*
-     * Creates a Number function of the given type
-     */
-    XFormsFunctionCall(XFormsFunctions aType, nsIDOMNode *resolverNode=nsnull);
-
-    TX_DECL_FUNCTION;
-
-private:
-    XFormsFunctions mType;
-    nsCOMPtr<nsIDOMNode> mResolverNode;
+[scriptable, uuid(0ecbb00c-6a78-11d9-9791-000a95dc234c)]
+interface txIFunctionEvaluationContext : nsISupports
+{
+    readonly attribute PRUint32 position;
+    readonly attribute PRUint32 size;
+    readonly attribute nsIDOMNode contextNode;
+    readonly attribute nsISupports state;
 };
-
-#endif

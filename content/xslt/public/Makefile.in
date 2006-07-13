@@ -47,6 +47,7 @@ XPIDL_MODULE = content_xslt
 
 EXPORTS		= \
 		nsIDocumentTransformer.h \
+		txDouble.h \
 		$(NULL)
 
 XPIDLSRCS	= \
@@ -54,6 +55,8 @@ XPIDLSRCS	= \
 		nsIXSLTProcessor.idl  \
 		nsIXSLTProcessorObsolete.idl  \
 		nsIXSLTProcessorPrivate.idl  \
+		txIFunctionEvaluationContext.idl  \
+		txINodeSet.idl  \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

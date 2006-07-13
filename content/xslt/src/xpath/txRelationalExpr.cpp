@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "txExpr.h"
+#include "txDouble.h"
 #include "txNodeSet.h"
 #include "txIXPathContext.h"
 #include "txXPathTreeWalker.h"
@@ -118,14 +119,7 @@ RelationalExpr::compareResults(txIEvalContext* aContext, txAExprResult* aLeft,
                  rtype == txAExprResult::NUMBER) {
             double lval = aLeft->numberValue();
             double rval = aRight->numberValue();
-#if defined(XP_WIN)
-            if (Double::isNaN(lval) || Double::isNaN(rval))
-                result = PR_FALSE;
-            else
-                result = lval == rval;
-#else
-            result = lval == rval;
-#endif
+            result = TX_DOUBLE_COMPARE(lval, ==, rval);
         }
 
         // Otherwise compare as strings. Try to use the stringobject in
@@ -157,27 +151,22 @@ RelationalExpr::compareResults(txIEvalContext* aContext, txAExprResult* aLeft,
 
     double leftDbl = aLeft->numberValue();
     double rightDbl = aRight->numberValue();
-#if defined(XP_WIN)
-    if (Double::isNaN(leftDbl) || Double::isNaN(rightDbl))
-        return PR_FALSE;
-#endif
-
     switch (mOp) {
         case LESS_THAN:
         {
-            return leftDbl < rightDbl;
+            return TX_DOUBLE_COMPARE(leftDbl, <, rightDbl);
         }
         case LESS_OR_EQUAL:
         {
-            return leftDbl <= rightDbl;
+            return TX_DOUBLE_COMPARE(leftDbl, <=, rightDbl);
         }
         case GREATER_THAN:
         {
-            return leftDbl > rightDbl;
+            return TX_DOUBLE_COMPARE(leftDbl, >, rightDbl);
         }
         case GREATER_OR_EQUAL:
         {
-            return leftDbl >= rightDbl;
+            return TX_DOUBLE_COMPARE(leftDbl, >=, rightDbl);
         }
         default:
         {
