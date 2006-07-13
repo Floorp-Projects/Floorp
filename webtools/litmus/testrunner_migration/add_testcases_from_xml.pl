@@ -30,6 +30,8 @@ if (! -e $file) {
 
 my $xp = XML::XPath->new(filename => $file);
 
+my $now = &UnixDate("today","%q");
+
 # Get all testgroups.
 my $testgroups = $xp->find('/litmus/testgroups/testgroup');
 
@@ -145,6 +147,8 @@ foreach my $testgroup_node ($testgroups->get_nodelist) {
 		  steps => $steps_text,
 		  expected_results => $results_text,
 		  format => 1,
+                  creation_date => $now,
+                  last_updated => $now,
 		 );
 
       my $testcase = Litmus::DB::Testcase->create(\%hash);
