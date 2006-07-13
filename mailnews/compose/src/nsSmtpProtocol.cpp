@@ -66,6 +66,7 @@
 #include "prmem.h"
 #include "plbase64.h"
 #include "prnetdb.h"
+#include "prsystem.h"
 #include "nsEscape.h"
 #include "nsMsgUtils.h"
 #include "nsIPipe.h"
@@ -521,10 +522,21 @@ PRInt32 nsSmtpProtocol::ExtensionLoginResponse(nsIInputStream * inputStream, PRU
     return(NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER);
   }
   
-  nsCAutoString domainName;
-  GetUserDomainName(domainName);
+  char hostName[256];
+  PR_GetSystemInfo(PR_SI_HOSTNAME_UNTRUNCATED, hostName, sizeof hostName);
 
-  buffer += domainName;
+  if ((hostName[0] != '\0') && (strchr(hostName, '.') != NULL))
+   {
+      buffer += hostName;
+   }
+  else
+  {
+    nsCAutoString domainName(256);
+    
+    GetUserDomainName(domainName);
+    buffer += domainName;
+    // buffer += " hostname not available";
+  }
   buffer += CRLF;
   
   nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
@@ -643,7 +655,6 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
 PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 length)
 {
     PRInt32 status = 0;
-    nsCAutoString buffer;
     nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
 
     if (m_responseCode != 250)
@@ -658,13 +669,22 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
                 return(NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER);
             }
 
-            buffer = "HELO ";
-            nsCAutoString domainName;
+          nsCAutoString buffer("HELO ");
+          char hostName[256];
+          PR_GetSystemInfo(PR_SI_HOSTNAME_UNTRUNCATED, hostName, sizeof hostName);
+          if ((hostName[0] != '\0') && (strchr(hostName, '.') != NULL))
+          {
+            buffer += hostName;
+          }
+          else
+          {
+            nsCAutoString domainName(256);
+              
             GetUserDomainName(domainName);
-
             buffer += domainName;
-            buffer += CRLF;
-            status = SendData(url, buffer.get());
+          }
+          buffer += CRLF;
+          status = SendData(url, buffer.get());
         }
         // e.g. getting 421 "Server says unauthorized, bye"
         else
