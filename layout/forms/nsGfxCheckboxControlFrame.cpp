@@ -36,62 +36,41 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsGfxCheckboxControlFrame.h"
-#include "nsHTMLAtoms.h"
-#include "nsHTMLParts.h"
-#include "nsIFormControl.h"
 #include "nsIContent.h"
-#include "nsIComponentManager.h"
-#include "nsHTMLAtoms.h"
-#include "nsIPresShell.h"
-#include "nsIDocument.h"
+#include "nsCOMPtr.h"
 #include "nsCSSRendering.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
 #endif
 #include "nsIServiceManager.h"
-#include "nsIDOMNode.h"
 #include "nsIDOMHTMLInputElement.h"
-#include "nsITheme.h"
-#include "imgIRequest.h"
 #include "nsDisplayList.h"
 
 static void
 PaintCheckMark(nsIRenderingContext& aRenderingContext,
-               float aPixelsToTwips, const nsRect& aRect)
+               const nsRect& aRect)
 {
-  const PRUint32 checkpoints = 7;
-  const PRUint32 checksize   = 9; //This is value is determined by added 2 units to the end
-                                  //of the 7X7 pixel rectangle below to provide some white space
-                                  //around the checkmark when it is rendered.
+  // Points come from the coordinates on a 7X7 unit box centered at 0,0
+  const PRInt32 checkPolygonX[] = { -3, -1,  3,  3, -1, -3 };
+  const PRInt32 checkPolygonY[] = { -1,  1, -3, -1,  3,  1 };
+  const PRInt32 checkNumPoints = sizeof(checkPolygonX) / sizeof(PRInt32);
+  const PRInt32 checkSize      = 9; // This is value is determined by adding 2
+                                    // units to pad the 7x7 unit checkmark
 
-    // Points come from the coordinates on a 7X7 pixels 
-    // box with 0,0 at the lower left. 
-  nscoord checkedPolygonDef[] = {0,2, 2,4, 6,0 , 6,2, 2,6, 0,4, 0,2 };
-    // Location of the center point of the checkmark
-  const PRUint32 centerx = 3;
-  const PRUint32 centery = 3;
-  
-  nsPoint checkedPolygon[checkpoints];
-  PRUint32 defIndex = 0;
-  PRUint32 polyIndex = 0;
+  // Scale the checkmark based on the smallest dimension
+  nscoord paintScale = PR_MIN(aRect.width, aRect.height) / checkSize;
+  nsPoint paintCenter(aRect.x + aRect.width  / 2,
+                      aRect.y + aRect.height / 2);
 
-     // Scale the checkmark based on the smallest dimension
-  PRUint32 size = aRect.width / checksize;
-  if (aRect.height < aRect.width) {
-   size = aRect.height / checksize;
+  nsPoint paintPolygon[checkNumPoints];
+  // Convert checkmark for screen rendering
+  for (PRInt32 polyIndex = 0; polyIndex < checkNumPoints; polyIndex++) {
+    paintPolygon[polyIndex] = paintCenter +
+                              nsPoint(checkPolygonX[polyIndex] * paintScale,
+                                      checkPolygonY[polyIndex] * paintScale);
   }
-  
-    // Center and offset each point in the polygon definition.
-  for (defIndex = 0; defIndex < (checkpoints * 2); defIndex++) {
-    checkedPolygon[polyIndex].x =
-      nscoord((((checkedPolygonDef[defIndex]) - centerx) * (size)) + (aRect.width / 2) + aRect.x);
-    defIndex++;
-    checkedPolygon[polyIndex].y =
-      nscoord((((checkedPolygonDef[defIndex]) - centery) * (size)) + (aRect.height / 2) + aRect.y);
-    polyIndex++;
-  }
-  
-  aRenderingContext.FillPolygon(checkedPolygon, checkpoints);
+
+  aRenderingContext.FillPolygon(paintPolygon, checkNumPoints);
 }
 
 //------------------------------------------------------------
@@ -105,14 +84,12 @@ NS_NewGfxCheckboxControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext
 //------------------------------------------------------------
 // Initialize GFX-rendered state
 nsGfxCheckboxControlFrame::nsGfxCheckboxControlFrame(nsStyleContext* aContext)
-: nsFormControlFrame(aContext), mCheckButtonFaceStyle(nsnull)
+: nsFormControlFrame(aContext)
 {
 }
 
 nsGfxCheckboxControlFrame::~nsGfxCheckboxControlFrame()
 {
-  if (mCheckButtonFaceStyle)
-    mCheckButtonFaceStyle->Release();
 }
 
 
@@ -153,7 +130,6 @@ NS_IMETHODIMP
 nsGfxCheckboxControlFrame::SetCheckboxFaceStyleContext(nsStyleContext *aCheckboxFaceStyleContext)
 {
   mCheckButtonFaceStyle = aCheckboxFaceStyleContext;
-  mCheckButtonFaceStyle->AddRef();
   return NS_OK;
 }
 
@@ -180,11 +156,7 @@ nsGfxCheckboxControlFrame::SetAdditionalStyleContext(PRInt32 aIndex,
 {
   switch (aIndex) {
   case NS_GFX_CHECKBOX_CONTROL_FRAME_FACE_CONTEXT_INDEX:
-    if (mCheckButtonFaceStyle)
-      mCheckButtonFaceStyle->Release();
     mCheckButtonFaceStyle = aStyleContext;
-    if (aStyleContext)
-      aStyleContext->AddRef();
     break;
   }
 }
@@ -196,7 +168,7 @@ nsGfxCheckboxControlFrame::OnChecked(nsPresContext* aPresContext,
                                      PRBool aChecked)
 {
   Invalidate(GetOverflowRect(), PR_FALSE);
-  return aChecked;
+  return NS_OK;
 }
 
 static void PaintCheckMarkFromStyle(nsIFrame* aFrame,
@@ -247,9 +219,7 @@ nsGfxCheckboxControlFrame::PaintCheckBox(nsIRenderingContext& aRenderingContext,
   const nsStyleColor* color = GetStyleColor();
   aRenderingContext.SetColor(color->mColor);
 
-  ::PaintCheckMark(aRenderingContext,
-                   GetPresContext()->ScaledPixelsToTwips(),
-                   checkRect);
+  PaintCheckMark(aRenderingContext, checkRect);
 }
 
 //------------------------------------------------------------
@@ -269,21 +239,17 @@ nsGfxCheckboxControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     return NS_OK; // No need to paint the checkmark. The theme will do it.
 
   // Paint the checkmark
-  // REVIEW: this used to check !mCheckButtonFaceStyle, but that's clearly
-  // wrong ... look at the blame diff, it was reversed by accident
   if (mCheckButtonFaceStyle) {
-    const nsStyleBackground* myColor = mCheckButtonFaceStyle->GetStyleBackground();
-    // REVIEW: I'm not sure if this is really sane. We should at least be also
-    // checking for other properties too. But this is what we had.
-    if (myColor->mBackgroundImage)
+    // This code actually works now; not sure how useful it'll be
+    // (The putpose is to allow the UA stylesheet can substitute its own
+    //  checkmark for the default one)
+    const nsStyleBackground* myBackground = mCheckButtonFaceStyle->GetStyleBackground();
+    if (!myBackground->IsTransparent())
       return aLists.Content()->AppendNewToTop(new (aBuilder)
           nsDisplayGeneric(this, PaintCheckMarkFromStyle, "CheckMarkFromStyle"));
   }
 
   return aLists.Content()->AppendNewToTop(new (aBuilder) nsDisplayCheckMark(this));
-  // REVIEW: I'm not really sure why we were painting the outline again
-  // here ... the superclass call at the top should have painted it already.
-  // Just a bug I guess.
 }
 
 void
@@ -292,17 +258,18 @@ nsGfxCheckboxControlFrame::PaintCheckBoxFromStyle(
   const nsStylePadding* myPadding = mCheckButtonFaceStyle->GetStylePadding();
   const nsStylePosition* myPosition = mCheckButtonFaceStyle->GetStylePosition();
   const nsStyleBorder* myBorder = mCheckButtonFaceStyle->GetStyleBorder();
+  const nsStyleBackground* myBackground = mCheckButtonFaceStyle->GetStyleBackground();
 
   nscoord width = myPosition->mWidth.GetCoordValue();
   nscoord height = myPosition->mHeight.GetCoordValue();
-  // Position the button centered within the radio control's rectangle.
+  // Position the button centered within the control's rectangle.
   nscoord x = (mRect.width - width) / 2;
   nscoord y = (mRect.height - height) / 2;
   nsRect rect(aPt.x + x, aPt.y + y, width, height);
 
-  nsCSSRendering::PaintBackground(GetPresContext(), aRenderingContext, this,
-                                  aDirtyRect, rect, *myBorder, *myPadding,
-                                  PR_FALSE);
+  nsCSSRendering::PaintBackgroundWithSC(GetPresContext(), aRenderingContext,
+                                        this, aDirtyRect, rect, *myBackground,
+                                        *myBorder, *myPadding, PR_FALSE);
   nsCSSRendering::PaintBorder(GetPresContext(), aRenderingContext, this,
                               aDirtyRect, rect, *myBorder, mCheckButtonFaceStyle, 0);
 }
@@ -316,24 +283,4 @@ nsGfxCheckboxControlFrame::GetCheckboxState ( )
   elem->GetChecked(&retval);
   return retval;
 }
-
-//------------------------------------------------------------
-// Extra Debug Methods
-//------------------------------------------------------------
-#ifdef DEBUG_rodsXXX
-NS_IMETHODIMP
-nsGfxCheckboxControlFrame::Reflow(nsPresContext*          aPresContext, 
-                                  nsHTMLReflowMetrics&     aDesiredSize,
-                                  const nsHTMLReflowState& aReflowState, 
-                                  nsReflowStatus&          aStatus)
-{
-  DO_GLOBAL_REFLOW_COUNT("nsGfxCheckboxControlFrame", aReflowState.reason);
-  DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
-  nsresult rv = nsFormControlFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
-
-  COMPARE_QUIRK_SIZE("nsGfxCheckboxControlFrame", 13, 13) 
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
-  return rv;
-}
-#endif
 

@@ -79,26 +79,13 @@ public:
   void PaintRadioButtonFromStyle(nsIRenderingContext& aRenderingContext, nsPoint aPt,
                                  const nsRect& aDirtyRect);
 
-  ///XXX: End o the temporary methods
-#ifdef DEBUG_rodsXXX
-  NS_IMETHOD Reflow(nsPresContext*          aCX,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
-#endif
-
 protected:
-
-    //GFX-rendered state variables
-  nsStyleContext* mRadioButtonFaceStyle;
+  nsRefPtr<nsStyleContext> mRadioButtonFaceStyle;
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
   NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
 };
 
-
-
 #endif
-
 

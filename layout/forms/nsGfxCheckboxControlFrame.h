@@ -49,13 +49,9 @@ class nsIAccessible;
 #define NS_GFX_CHECKBOX_CONTROL_FRAME_LAST_CONTEXT_INDEX   0
 
 class nsGfxCheckboxControlFrame : public nsFormControlFrame,
-                                  public nsICheckboxControlFrame//,
-                                  //public nsIAccessible
+                                  public nsICheckboxControlFrame
 {
 public:
-
-  //NS_DECL_NSIACCESSIBLE
-
   nsGfxCheckboxControlFrame(nsStyleContext* aContext);
   virtual ~nsGfxCheckboxControlFrame();
   
@@ -84,13 +80,6 @@ public:
 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-#ifdef DEBUG_rodsXXX
-  NS_IMETHOD Reflow(nsPresContext*          aCX,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
-#endif
-
   void PaintCheckBox(nsIRenderingContext& aRenderingContext,
                      nsPoint aPt, const nsRect& aDirtyRect);
 
@@ -101,9 +90,7 @@ protected:
 
   PRBool GetCheckboxState();
 
-  //GFX-rendered state variables
-  PRBool           mInClickEvent;
-  nsStyleContext*  mCheckButtonFaceStyle;
+  nsRefPtr<nsStyleContext> mCheckButtonFaceStyle;
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
@@ -112,3 +99,4 @@ private:
 };
 
 #endif
+
