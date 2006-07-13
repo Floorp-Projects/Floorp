@@ -302,8 +302,13 @@ nsresult nsRootAccessible::AddEventListeners()
     }
   }
 
-  if (!mCaretAccessible)
+  if (!mCaretAccessible) {
     mCaretAccessible = new nsCaretAccessible(mDOMNode, mWeakShell, this);
+    nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(mCaretAccessible));
+    if (accessNode && NS_FAILED(accessNode->Init())) {
+      mCaretAccessible = nsnull;
+    }
+  }
 
   // Fire accessible focus event for pre-existing focus, but wait until all internal
   // focus events are finished for window initialization.

@@ -155,7 +155,9 @@ nsHTMLTableAccessible::GetCaption(nsIAccessible **aCaption)
   if (*aCaption)
     return NS_OK;
 
-  return accService->CreateHyperTextAccessible(captionNode, aCaption);
+  accService->CreateHyperTextAccessible(captionNode, aCaption);
+  nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(*aCaption));
+  return accessNode ? accessNode->Init() : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -232,14 +234,19 @@ nsHTMLTableAccessible::GetColumnHeader(nsIAccessibleTable **aColumnHeader)
   nsCOMPtr<nsIDOMNode> sectionNode(do_QueryInterface(section));
   if (sectionNode) {
     rv = accService->GetCachedAccessible(sectionNode, mWeakShell,
-                                    getter_AddRefs(accHead));
+                                         getter_AddRefs(accHead));
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (!accHead) {
-    rv = accService->CreateHTMLTableHeadAccessible(section,
-                                                   getter_AddRefs(accHead));
+     accService->CreateHTMLTableHeadAccessible(section,
+                                               getter_AddRefs(accHead));
+                                                   
+    nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(accHead));
+    NS_ENSURE_TRUE(accHead, NS_ERROR_FAILURE);
+    rv = accessNode->Init();
+    NS_ENSURE_SUCCESS(rv, rv);
   }
-  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIAccessibleTable> accTableHead(do_QueryInterface(accHead));
   NS_ENSURE_TRUE(accTableHead, NS_ERROR_FAILURE);
@@ -602,7 +609,6 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLTableHeadAccessible, nsHTMLTableAccessible)
 nsHTMLTableHeadAccessible::nsHTMLTableHeadAccessible(nsIDOMNode *aDomNode, nsIWeakReference *aShell):
 nsHTMLTableAccessible(aDomNode, aShell)
 {
-  Init(); // Make sure this generated accessible of the table is cached
 }
 
 NS_IMETHODIMP
