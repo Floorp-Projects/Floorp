@@ -43,10 +43,10 @@
 
 #define NS_LINEBREAKER_NEED_MORE_TEXT -1
 
-// {E86B3375-BF89-11d2-B3AF-00805F8A6670}
+// {7509772F-770C-44e8-AAFA-8032E5A35370}
 #define NS_ILINEBREAKER_IID \
-{ 0xe86b3375, 0xbf89, 0x11d2, \
-    { 0xb3, 0xaf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 } }
+{ 0x7509772f, 0x770c, 0x44e8, \
+    { 0xaa, 0xfa, 0x80, 0x32, 0xe5, 0xa3, 0x53, 0x70 } }
 
 
 class nsILineBreaker : public nsISupports
@@ -56,6 +56,10 @@ public:
   virtual PRBool BreakInBetween( const PRUnichar* aText1 , PRUint32 aTextLen1,
                                  const PRUnichar* aText2 , 
                                  PRUint32 aTextLen2) = 0;
+
+  virtual PRBool CanBreakBetweenLatin1(PRUnichar aChar1,
+                                       PRUnichar aChar2) = 0; 
+
 
   virtual PRInt32 Next( const PRUnichar* aText, PRUint32 aLen, 
                         PRUint32 aPos) = 0;
