@@ -310,10 +310,8 @@ nsresult NS_NewBoxObject(nsIBoxObject** aResult);
 nsresult NS_NewListBoxObject(nsIBoxObject** aResult);
 nsresult NS_NewScrollBoxObject(nsIBoxObject** aResult);
 nsresult NS_NewMenuBoxObject(nsIBoxObject** aResult);
-nsresult NS_NewEditorBoxObject(nsIBoxObject** aResult);
 nsresult NS_NewPopupBoxObject(nsIBoxObject** aResult);
-nsresult NS_NewBrowserBoxObject(nsIBoxObject** aResult);
-nsresult NS_NewIFrameBoxObject(nsIBoxObject** aResult);
+nsresult NS_NewContainerBoxObject(nsIBoxObject** aResult);
 nsresult NS_NewTreeBoxObject(nsIBoxObject** aResult);
 #endif
 
@@ -378,11 +376,9 @@ MAKE_CTOR(CreateNewBoxObject,           nsIBoxObject,           NS_NewBoxObject)
 MAKE_CTOR(CreateNewListBoxObject,       nsIBoxObject,           NS_NewListBoxObject)
 MAKE_CTOR(CreateNewMenuBoxObject,       nsIBoxObject,           NS_NewMenuBoxObject)
 MAKE_CTOR(CreateNewPopupBoxObject,      nsIBoxObject,           NS_NewPopupBoxObject)
-MAKE_CTOR(CreateNewBrowserBoxObject,    nsIBoxObject,           NS_NewBrowserBoxObject)
-MAKE_CTOR(CreateNewEditorBoxObject,     nsIBoxObject,           NS_NewEditorBoxObject)
-MAKE_CTOR(CreateNewIFrameBoxObject,     nsIBoxObject,           NS_NewIFrameBoxObject)
 MAKE_CTOR(CreateNewScrollBoxObject,     nsIBoxObject,           NS_NewScrollBoxObject)
 MAKE_CTOR(CreateNewTreeBoxObject,       nsIBoxObject,           NS_NewTreeBoxObject)
+MAKE_CTOR(CreateNewContainerBoxObject,  nsIBoxObject,           NS_NewContainerBoxObject)
 #endif // MOZ_XUL
 
 #ifndef MOZ_NO_INSPECTOR_APIS
@@ -787,20 +783,10 @@ static const nsModuleComponentInfo gComponents[] = {
     "@mozilla.org/layout/xul-boxobject-popup;1",
     CreateNewPopupBoxObject },
 
-  { "XUL Browser Box Object",
-    NS_BROWSERBOXOBJECT_CID,
-    "@mozilla.org/layout/xul-boxobject-browser;1",
-    CreateNewBrowserBoxObject },
-
-  { "XUL Editor Box Object",
-    NS_EDITORBOXOBJECT_CID,
-    "@mozilla.org/layout/xul-boxobject-editor;1",
-    CreateNewEditorBoxObject },
-
-  { "XUL Iframe Object",
-    NS_IFRAMEBOXOBJECT_CID,
-    "@mozilla.org/layout/xul-boxobject-iframe;1",
-    CreateNewIFrameBoxObject },
+  { "Container Box Object",
+    NS_CONTAINERBOXOBJECT_CID,
+    "@mozilla.org/layout/xul-boxobject-container;1",
+    CreateNewContainerBoxObject },
 
   { "XUL ScrollBox Object",
     NS_SCROLLBOXOBJECT_CID,

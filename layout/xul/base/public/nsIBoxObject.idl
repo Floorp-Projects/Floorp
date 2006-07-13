@@ -37,18 +37,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-#include "nsIBoxLayoutManager.idl"
-#include "nsIBoxPaintManager.idl"
 
 interface nsIDOMElement;
 
-[scriptable, uuid(CAABF76F-9D35-401f-BEAC-3955817C645C)]
+[scriptable, uuid(21f723fd-7fb9-4e19-bfa8-0a53a26dc242)]
 interface nsIBoxObject : nsISupports
 {
   readonly attribute nsIDOMElement element;
-
-  attribute nsIBoxLayoutManager layoutManager;
-  attribute nsIBoxPaintManager paintManager;
 
   readonly attribute long x;
   readonly attribute long y;

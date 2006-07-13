@@ -36,19 +36,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIBoxObject.idl"
+#include "nsIContainerBoxObject.idl"
 
-interface nsIEditor;
-interface nsIDocShell;
+/**
+ * @deprecated Please consider using nsIContainerBoxObject.
+ */
 
-[scriptable, uuid(14B3B669-3414-4548-AA03-EDF257D889C8)]
-interface nsIEditorBoxObject : nsISupports
+[scriptable, uuid(e3800a23-5b83-49aa-b18c-efa1ac5416e0)]
+interface nsIEditorBoxObject : nsIContainerBoxObject
 {
-  readonly attribute nsIDocShell docShell;
 };
 
-%{C++
-nsresult
-NS_NewEditorBoxObject(nsIBoxObject** aResult);
-
-%}

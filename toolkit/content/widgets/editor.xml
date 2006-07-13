@@ -64,7 +64,7 @@
       <property name="contentDocument" readonly="true"
                 onget="return this.webNavigation.document;"/>
       <property name="docShell"
-                onget="return this.boxObject.QueryInterface(Components.interfaces.nsIEditorBoxObject).docShell;"
+                onget="return this.boxObject.QueryInterface(Components.interfaces.nsIContainerBoxObject).docShell;"
                 readonly="true"/>
       <property name="contentWindow"
                 readonly="true"

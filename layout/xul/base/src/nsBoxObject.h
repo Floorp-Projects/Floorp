@@ -42,8 +42,6 @@
 #include "nsPoint.h"
 #include "nsAutoPtr.h"
 
-class nsIBoxLayoutManager;
-class nsIBoxPaintManager;
 class nsIFrame;
 class nsIDocShell;
 struct nsRect;
@@ -60,6 +58,7 @@ public:
   // nsPIBoxObject
   virtual void Init(nsIContent* aContent);
   virtual void Clear();
+  virtual void ClearCachedValues();
 
   nsIFrame* GetFrame(PRBool aFlushLayout);
   nsIPresShell* GetPresShell(PRBool aFlushLayout);
@@ -72,12 +71,7 @@ public:
                                      nsIDOMElement** aResult);
 
 protected:
-  // Helper for some of the subclasses of nsBoxObject
-  nsresult GetDocShell(nsIDocShell **aDocShell);
 
-// MEMBER VARIABLES
-  nsCOMPtr<nsIBoxLayoutManager> mLayoutManager; // [OWNER]
-  nsCOMPtr<nsIBoxPaintManager> mPaintManager; // [OWNER]
   nsAutoPtr<nsPresState> mPresState; // [OWNER]
 
   nsIContent* mContent; // [WEAK]

@@ -40,7 +40,6 @@
 #include "nsCOMPtr.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
-#include "nsPITreeBoxObject.h"
 #include "nsITreeView.h"
 #include "nsITreeSelection.h"
 #include "nsBoxObject.h"
@@ -52,7 +51,7 @@
 #include "nsContentUtils.h"
 #include "nsDOMError.h"
 
-class nsTreeBoxObject : public nsPITreeBoxObject, public nsBoxObject
+class nsTreeBoxObject : public nsITreeBoxObject, public nsBoxObject
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -65,23 +64,20 @@ public:
 
   //NS_PIBOXOBJECT interfaces
   virtual void Clear();
-
-  // nsPITreeBoxObject
-  virtual void ClearCachedTreeBody();  
+  virtual void ClearCachedValues();
 
 protected:
   nsITreeBoxObject* mTreeBody;
 };
 
 /* Implementation file */
-NS_IMPL_ISUPPORTS_INHERITED2(nsTreeBoxObject, nsBoxObject, nsITreeBoxObject,
-                             nsPITreeBoxObject)
+NS_IMPL_ISUPPORTS_INHERITED1(nsTreeBoxObject, nsBoxObject, nsITreeBoxObject)
 
 
 void
 nsTreeBoxObject::Clear()
 {
-  ClearCachedTreeBody();
+  ClearCachedValues();
 
   // Drop the view's ref to us.
   NS_NAMED_LITERAL_STRING(viewString, "view");
@@ -473,7 +469,7 @@ NS_IMETHODIMP nsTreeBoxObject::ClearStyleAndImageCaches()
 }
 
 void
-nsTreeBoxObject::ClearCachedTreeBody()
+nsTreeBoxObject::ClearCachedValues()
 {
   mTreeBody = nsnull;
 }    

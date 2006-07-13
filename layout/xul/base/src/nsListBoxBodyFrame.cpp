@@ -292,9 +292,9 @@ nsListBoxBodyFrame::Destroy()
       nsCOMPtr<nsIBoxObject> box;
       nsdoc->GetBoxObjectFor(e, getter_AddRefs(box));
 
-      nsCOMPtr<nsPIListBoxObject> piBox = do_QueryInterface(box);
+      nsCOMPtr<nsPIBoxObject> piBox = do_QueryInterface(box);
       if (piBox) {
-        piBox->ClearCachedListBoxBody();
+        piBox->ClearCachedValues();
       }
 
       break;

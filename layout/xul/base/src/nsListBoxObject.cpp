@@ -55,14 +55,13 @@ public:
   NS_DECL_NSILISTBOXOBJECT
 
   // nsPIListBoxObject
-  virtual void ClearCachedListBoxBody();
   virtual nsIListBoxObject* GetListBoxBody();
 
   nsListBoxObject();
-  virtual ~nsListBoxObject();
 
   // nsPIBoxObject
   virtual void Clear();
+  virtual void ClearCachedValues();
   
 protected:
   nsIListBoxObject* mListBoxBody;
@@ -75,11 +74,6 @@ nsListBoxObject::nsListBoxObject()
   : mListBoxBody(nsnull)
 {
 }
-
-nsListBoxObject::~nsListBoxObject()
-{
-}
-
 
 //////////////////////////////////////////////////////////////////////////
 //// nsIListBoxObject
@@ -164,12 +158,6 @@ nsListBoxObject::GetIndexOfItem(nsIDOMElement* aElement, PRInt32 *aResult)
   return NS_OK;
 }
 
-void
-nsListBoxObject::ClearCachedListBoxBody()
-{
-  mListBoxBody = nsnull;
-}
-
 //////////////////////
 
 static void
@@ -240,9 +228,15 @@ nsListBoxObject::GetListBoxBody()
 void
 nsListBoxObject::Clear()
 {
-  ClearCachedListBoxBody();
+  ClearCachedValues();
 
   nsBoxObject::Clear();
+}
+
+void
+nsListBoxObject::ClearCachedValues()
+{
+  mListBoxBody = nsnull;
 }
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////
