@@ -2735,9 +2735,9 @@ nsEventStateManager::DispatchMouseEvent(nsGUIEvent* aEvent, PRUint32 aMessage,
   event.isAlt = ((nsMouseEvent*)aEvent)->isAlt;
   event.isMeta = ((nsMouseEvent*)aEvent)->isMeta;
   event.nativeMsg = ((nsMouseEvent*)aEvent)->nativeMsg;
+  event.relatedTarget = aRelatedContent;
 
   mCurrentTargetContent = aTargetContent;
-  mCurrentRelatedContent = aRelatedContent;
 
   BeforeDispatchEvent();
   nsIFrame* targetFrame = nsnull;
@@ -2761,7 +2761,6 @@ nsEventStateManager::DispatchMouseEvent(nsGUIEvent* aEvent, PRUint32 aMessage,
   AfterDispatchEvent();
 
   mCurrentTargetContent = nsnull;
-  mCurrentRelatedContent = nsnull;
 
   return targetFrame;
 }
@@ -2948,12 +2947,12 @@ nsEventStateManager::GenerateDragDropEnterExit(nsPresContext* aPresContext,
           event.isControl = ((nsMouseEvent*)aEvent)->isControl;
           event.isAlt = ((nsMouseEvent*)aEvent)->isAlt;
           event.isMeta = ((nsMouseEvent*)aEvent)->isMeta;
+          event.relatedTarget = targetContent;
 
           //The frame has change but the content may not have.  Check before dispatching to content
           mLastDragOverFrame->GetContentForEvent(aPresContext, aEvent, getter_AddRefs(lastContent));
 
           mCurrentTargetContent = lastContent;
-          mCurrentRelatedContent = targetContent;
 
           if ( lastContent != targetContent ) {
             //XXX This event should still go somewhere!!
@@ -2982,9 +2981,9 @@ nsEventStateManager::GenerateDragDropEnterExit(nsPresContext* aPresContext,
         event.isControl = ((nsMouseEvent*)aEvent)->isControl;
         event.isAlt = ((nsMouseEvent*)aEvent)->isAlt;
         event.isMeta = ((nsMouseEvent*)aEvent)->isMeta;
+        event.relatedTarget = lastContent;
 
         mCurrentTargetContent = targetContent;
-        mCurrentRelatedContent = lastContent;
 
         //The frame has change but the content may not have.  Check before dispatching to content
         if (lastContent != targetContent) {
@@ -3030,7 +3029,6 @@ nsEventStateManager::GenerateDragDropEnterExit(nsPresContext* aPresContext,
         mLastDragOverFrame->GetContentForEvent(aPresContext, aEvent, getter_AddRefs(lastContent));
 
         mCurrentTargetContent = lastContent;
-        mCurrentRelatedContent = nsnull;
 
         if (lastContent) {
           nsEventDispatcher::Dispatch(lastContent, aPresContext, &event, nsnull,
@@ -3867,14 +3865,6 @@ nsEventStateManager::GetEventTargetContent(nsEvent* aEvent,
     mCurrentTarget->GetContentForEvent(mPresContext, aEvent, aContent);
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsEventStateManager::GetEventRelatedContent(nsIContent** aContent)
-{
-  *aContent = mCurrentRelatedContent;
-  NS_IF_ADDREF(*aContent);
   return NS_OK;
 }
 

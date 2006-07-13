@@ -639,11 +639,13 @@ public:
   }
 
   /// The number of mouse clicks
-  PRUint32        clickCount;          
+  PRUint32              clickCount;
   /// Special return code for MOUSE_ACTIVATE to signal
   /// if the target accepts activation (1), or denies it (0)
-  PRPackedBool    acceptActivation;           
-  reasonType      reason : 8;
+  PRPackedBool          acceptActivation;
+  reasonType            reason : 8;
+  /// The possible related target
+  nsCOMPtr<nsISupports> relatedTarget;
 };
 
 /**
@@ -755,8 +757,10 @@ public:
   {
   }
 
-  PRInt32 scrollFlags;
-  PRInt32 delta;
+  PRInt32               scrollFlags;
+  PRInt32               delta;
+  /// The possible related target
+  nsCOMPtr<nsISupports> relatedTarget;
 };
 
 struct nsReconversionEventReply {
