@@ -136,8 +136,9 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
 
   nsRect caretRect;
   PRBool isCollapsed;
-  caret->GetCaretCoordinates(nsICaret::eTopLevelWindowCoordinates, domSel, &caretRect, &isCollapsed, nsnull);
-  PRBool visible = (caretRect.x >= 0 && caretRect.y >= 0 && caretRect.width >= 0 && caretRect.height >= 0);
+  caret->GetCaretCoordinates(nsICaret::eTopLevelWindowCoordinates, domSel,
+                             &caretRect, &isCollapsed, nsnull);
+  PRBool visible = !caretRect.IsEmpty();
   if (visible)  // Make sure it's visible both by looking at coordinates and visible flag
     caret->GetCaretVisible(&visible);
   if (visible != mVisible) {
@@ -147,39 +148,34 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
                                       nsIAccessibleEvent::EVENT_HIDE, this, nsnull);
 #endif
   }
-  if (!visible) {
-    visible = !isCollapsed; // Selection is visible as far as firing caret events is concerned
-  }
 
 #ifndef MOZ_ACCESSIBILITY_ATK
   // Support old style MSAA caret move events, which utilize screen coodinates
   // rather than position within the text
-  if (visible) {
-    nsPresContext *presContext = presShell->GetPresContext();
-    nsIViewManager* viewManager = presShell->GetViewManager();
-    if (!presContext || !viewManager)
-      return NS_OK;
-    nsIView *view = nsnull;
-    viewManager->GetRootView(view);
-    if (!view)
-      return NS_OK;
-    nsIWidget* widget = view->GetWidget();
-    if (!widget)
-      return NS_OK;
+  nsPresContext *presContext = presShell->GetPresContext();
+  nsIViewManager* viewManager = presShell->GetViewManager();
+  if (!presContext || !viewManager)
+    return NS_OK;
+  nsIView *view = nsnull;
+  viewManager->GetRootView(view);
+  if (!view)
+    return NS_OK;
+  nsIWidget* widget = view->GetWidget();
+  if (!widget)
+    return NS_OK;
 
-    float t2p;
-    t2p = presContext->TwipsToPixels();
-      // Convert to pixels using that scale
-    caretRect.x      = NSTwipsToIntPixels(caretRect.x, t2p);
-    caretRect.y      = NSTwipsToIntPixels(caretRect.y, t2p);
+  float t2p = presContext->TwipsToPixels();
+  
+  // Convert to pixels using that scale
+  caretRect.x      = NSTwipsToIntPixels(caretRect.x, t2p);
+  caretRect.y      = NSTwipsToIntPixels(caretRect.y, t2p);
 
-    caretRect.width  = NSTwipsToIntPixels(caretRect.width, t2p);
-    caretRect.height = NSTwipsToIntPixels(caretRect.height, t2p);
+  caretRect.width  = NSTwipsToIntPixels(caretRect.width, t2p);
+  caretRect.height = NSTwipsToIntPixels(caretRect.height, t2p);
 
-    widget->WidgetToScreen(caretRect, mCaretRect);
+  widget->WidgetToScreen(caretRect, mCaretRect);
 
-    mRootAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_LOCATION_CHANGE, this, nsnull);
-  }
+  mRootAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_LOCATION_CHANGE, this, nsnull);
 #endif
 
   // Get first nnsIAccessibleText in parent chain and fire caret-move, selection-change event for it
@@ -227,8 +223,9 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
 /** Return the caret's bounds */
 NS_IMETHODIMP nsCaretAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height)
 {
-  if (!mVisible)
-    return NS_ERROR_FAILURE;  // When root accessible hasn't yet called SetCaretBounds()
+  if (mCaretRect.IsEmpty()) {
+    return NS_ERROR_FAILURE;
+  }
   *x = mCaretRect.x;
   *y = mCaretRect.y;
   *width = mCaretRect.width;
@@ -248,9 +245,9 @@ NS_IMETHODIMP nsCaretAccessible::GetState(PRUint32 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCaretAccessible::GetParent(nsIAccessible **_retval)
+NS_IMETHODIMP nsCaretAccessible::GetParent(nsIAccessible **aParent)
 {   
-  *_retval = nsnull;
+  NS_ADDREF(*aParent = mRootAccessible);
   return NS_OK;
 }
 NS_IMETHODIMP nsCaretAccessible::GetPreviousSibling(nsIAccessible **_retval)
