@@ -13529,16 +13529,16 @@ fi
 if test "${enable_calendar+set}" = set; then
   enableval="$enable_calendar"
   if test "$enableval" = "yes"; then
-    MOZ_OLD_CALENDAR=1
+    MOZ_CALENDAR=1
   elif test "$enableval" = "no"; then
-    MOZ_OLD_CALENDAR= 
+    MOZ_CALENDAR= 
   else
     { echo "configure: error: Option, calendar, does not take an argument ($enableval)." 1>&2; exit 1; }
   fi
 fi
 
 
-if test "$MOZ_OLD_CALENDAR"; then
+if test "$MOZ_CALENDAR"; then
     echo "configure: warning: Building with the calendar extension is no longer supported." 1>&2
     if test "$MOZ_THUNDERBIRD"; then
         echo "configure: warning: Since you're trying to build mail, you could try adding '--enable-extensions=default,lightning' to your mozconfig and building WITH A FRESH TREE." 1>&2
