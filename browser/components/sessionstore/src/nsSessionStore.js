@@ -357,7 +357,7 @@ SessionStoreService.prototype = {
       break;
     case "timer-callback": // timer call back for delayed saving
       this._saveTimer = null;
-      this.saveStateDelayed(null, -1);
+      this.saveState();
       break;
     }
   },
