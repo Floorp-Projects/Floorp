@@ -37,7 +37,7 @@
 
 
 /*
- *  npupp.h $Revision: 3.21 $
+ *  npupp.h $Revision: 3.22 $
  *  function call mecahnics needed by platform specific glue code.
  */
 
@@ -1673,12 +1673,6 @@ typedef bool (* NP_LOADDS NPN_EnumerateUPP)(NPP npp, NPObject *obj, NPIdentifier
  * The actual plugin function table definitions
  *******************************************************************************************/
 
-#ifdef XP_MAC
-#if PRAGMA_STRUCT_ALIGN
-#pragma options align=mac68k
-#endif
-#endif
-
 typedef struct _NPPluginFuncs {
     uint16 size;
     uint16 version;
@@ -1746,14 +1740,8 @@ typedef struct _NPNetscapeFuncs {
     NPN_EnumerateUPP enumerate;
 } NPNetscapeFuncs;
 
-#ifdef XP_MAC
-#if PRAGMA_STRUCT_ALIGN
-#pragma options align=reset
-#endif
-#endif
 
-
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
 /******************************************************************************************
  * Mac platform-specific plugin glue stuff
  *******************************************************************************************/

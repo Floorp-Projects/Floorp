@@ -79,7 +79,7 @@ typedef NS_4XPLUGIN_CALLBACK(NPError, NP_PLUGINUNIXINIT) (const NPNetscapeFuncs*
 typedef NS_4XPLUGIN_CALLBACK(NPError, NP_PLUGINSHUTDOWN) (void);
 #endif
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
 typedef NS_4XPLUGIN_CALLBACK(NPError, NP_PLUGINSHUTDOWN) (void);
 typedef NS_4XPLUGIN_CALLBACK(NPError, NP_MAIN) (NPNetscapeFuncs* nCallbacks, NPPluginFuncs* pCallbacks, NPP_ShutdownUPP* unloadUpp);
 #endif
@@ -146,9 +146,8 @@ public:
                PRLibrary* aLibrary,
                nsIPlugin** aResult);
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
-  void
-  SetPluginRefNum(short aRefNum);
+#ifdef XP_MACOSX
+  void SetPluginRefNum(short aRefNum);
 #endif
 
 protected:
@@ -158,7 +157,7 @@ protected:
   static void CheckClassInitialized(void);
 
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
   short fPluginRefNum;
 #endif
 

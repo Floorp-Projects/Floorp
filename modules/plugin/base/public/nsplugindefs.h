@@ -49,7 +49,7 @@
 #include "prtypes.h"
 #endif
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
 #   include <Quickdraw.h>
 #   include <Events.h>
 #   include <MacWindows.h>
@@ -115,10 +115,6 @@ RCDATA NS_INFO_ProductName       { "NPAVI32 Dynamic Link Library\0" }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Structures and definitions
-
-#ifdef XP_MAC
-#pragma options align=mac68k
-#endif
 
 typedef const char*     nsMIMEType;
 
@@ -232,7 +228,7 @@ enum nsPluginWindowType {
     nsPluginWindowType_Drawable
 };
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
 
 struct nsPluginPort {
     CGrafPtr     port;   /* Grafport */
@@ -302,7 +298,7 @@ struct nsPluginPrint {
 
 struct nsPluginEvent {
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
     EventRecord*                event;
     nsPluginPlatformWindowRef   window;
 
@@ -328,7 +324,7 @@ struct nsPluginEvent {
  *  (These need to be kept in sync with the events defined in npapi.h.)
  */
 enum nsPluginEventType {
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
     nsPluginEventType_GetFocusEvent = (osEvt + 16),
     nsPluginEventType_LoseFocusEvent,
     nsPluginEventType_AdjustCursorEvent,
@@ -336,7 +332,7 @@ enum nsPluginEventType {
     nsPluginEventType_ClippingChangedEvent,
     nsPluginEventType_ScrollingBeginsEvent,
     nsPluginEventType_ScrollingEndsEvent,
-#endif /* XP_MAC || XP_MACOSX */
+#endif /* XP_MACOSX */
     nsPluginEventType_Idle                 = 0
 };
 
@@ -383,10 +379,6 @@ class nsIPluginInstancePeer;            // parts of nsIPluginInstance implemente
 class nsIWindowlessPluginInstancePeer;  // subclass of nsIPluginInstancePeer for windowless plugins
 class nsIPluginTagInfo;                 // describes html tag (accessible from nsIPluginInstancePeer)
 ////////////////////////////////////////////////////////////////////////////////
-
-#ifdef XP_MAC
-#pragma options align=reset
-#endif
 
 #endif /* RC_INVOKED */
 #ifdef __OS2__
