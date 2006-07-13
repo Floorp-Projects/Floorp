@@ -920,8 +920,6 @@ nsFloatCacheList::Find(nsIFrame* aOutOfFlowFrame)
 nsFloatCache*
 nsFloatCacheList::RemoveAndReturnPrev(nsFloatCache* aElement)
 {
-  NS_ASSERTION(!aElement->mNext, "Can only remove a singleton element");
-
   nsFloatCache* fc = mHead;
   nsFloatCache* prev = nsnull;
   while (fc) {
