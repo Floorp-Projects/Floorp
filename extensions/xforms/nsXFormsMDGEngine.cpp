@@ -380,14 +380,16 @@ nsXFormsMDGEngine::Recalculate(nsCOMArray<nsIDOMNode> *aChangedNodes)
     switch (g->mType) {
     case eModel_calculate:
       if (g->HasExpr()) {
-        nsCOMPtr<nsIDOMXPathResult> xpath_res;
+        nsCOMPtr<nsISupports> result;
         rv = g->mExpression->EvaluateWithContext(g->mContextNode,
                                                  g->mContextPosition,
                                                  g->mContextSize,
                                                  nsIDOMXPathResult::STRING_TYPE,
                                                  nsnull,
-                                                 getter_AddRefs(xpath_res));
+                                                 getter_AddRefs(result));
         NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCOMPtr<nsIDOMXPathResult> xpath_res = do_QueryInterface(result);
         NS_ENSURE_STATE(xpath_res);
         
         nsAutoString nodeval;
@@ -1039,7 +1041,7 @@ nsXFormsMDGEngine::BooleanExpression(nsXFormsMDGNode* aNode, PRBool& state)
   NS_ENSURE_ARG_POINTER(aNode);
   NS_ENSURE_TRUE(aNode->mExpression, NS_ERROR_FAILURE);
   
-  nsISupports* retval;
+  nsCOMPtr<nsISupports> retval;
   nsresult rv;
 
   rv = aNode->mExpression->EvaluateWithContext(aNode->mContextNode,
@@ -1047,7 +1049,7 @@ nsXFormsMDGEngine::BooleanExpression(nsXFormsMDGNode* aNode, PRBool& state)
                                                aNode->mContextSize,
                                                nsIDOMXPathResult::BOOLEAN_TYPE,
                                                nsnull,
-                                               &retval);
+                                               getter_AddRefs(retval));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMXPathResult> xpath_res = do_QueryInterface(retval);

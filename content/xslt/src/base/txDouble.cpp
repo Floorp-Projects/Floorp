@@ -49,81 +49,12 @@
  * Utility class for doubles
  */
 
-//A trick to handle IEEE floating point exceptions on FreeBSD - E.D.
-#ifdef __FreeBSD__
-#include <ieeefp.h>
-#ifdef __alpha__
-fp_except_t allmask = FP_X_INV|FP_X_OFL|FP_X_UFL|FP_X_DZ|FP_X_IMP;
-#else
-fp_except_t allmask = FP_X_INV|FP_X_OFL|FP_X_UFL|FP_X_DZ|FP_X_IMP|FP_X_DNML;
-#endif
-fp_except_t oldmask = fpsetmask(~allmask);
-#endif
-
-/**
- * Macros to workaround math-bugs bugs in various platforms
- */
-
-/**
- * Stefan Hanske <sh990154@mail.uni-greifswald.de> reports:
- *  ARM is a little endian architecture but 64 bit double words are stored
- * differently: the 32 bit words are in little endian byte order, the two words
- * are stored in big endian`s way.
- */
-
-#if defined(__arm) || defined(__arm32__) || defined(_arm26__) || defined(__arm__)
-#define CPU_IS_ARM
-#endif
-
-#if (__GNUC__ == 2 && __GNUC_MINOR__ > 95) || __GNUC__ > 2
-/**
- * This version of the macros is safe for the alias optimizations
- * that gcc does, but uses gcc-specific extensions.
- */
-
-typedef union txdpun {
-    PRFloat64 d;
-    struct {
-#if defined(IS_LITTLE_ENDIAN) && !defined(CPU_IS_ARM)
-        PRUint32 lo, hi;
-#else
-        PRUint32 hi, lo;
-#endif
-    } s;
-} txdpun;
-
-#define TX_DOUBLE_HI32(x) (__extension__ ({ txdpun u; u.d = (x); u.s.hi; }))
-#define TX_DOUBLE_LO32(x) (__extension__ ({ txdpun u; u.d = (x); u.s.lo; }))
-
-#else // __GNUC__
-
-/* We don't know of any non-gcc compilers that perform alias optimization,
- * so this code should work.
- */
-
-#if defined(IS_LITTLE_ENDIAN) && !defined(CPU_IS_ARM)
-#define TX_DOUBLE_HI32(x)        (((PRUint32 *)&(x))[1])
-#define TX_DOUBLE_LO32(x)        (((PRUint32 *)&(x))[0])
-#else
-#define TX_DOUBLE_HI32(x)        (((PRUint32 *)&(x))[0])
-#define TX_DOUBLE_LO32(x)        (((PRUint32 *)&(x))[1])
-#endif
-
-#endif // __GNUC__
-
-#define TX_DOUBLE_HI32_SIGNBIT   0x80000000
-#define TX_DOUBLE_HI32_EXPMASK   0x7ff00000
-#define TX_DOUBLE_HI32_MANTMASK  0x000fffff
-
 //-- Initialize Double related constants
+const PRUint32 nanMask[2] =    TX_DOUBLE_NaN;
 #ifdef IS_BIG_ENDIAN
-const PRUint32 nanMask[2] =    {TX_DOUBLE_HI32_EXPMASK | TX_DOUBLE_HI32_MANTMASK,
-                                0xffffffff};
 const PRUint32 infMask[2] =    {TX_DOUBLE_HI32_EXPMASK, 0};
 const PRUint32 negInfMask[2] = {TX_DOUBLE_HI32_EXPMASK | TX_DOUBLE_HI32_SIGNBIT, 0};
 #else
-const PRUint32 nanMask[2] =    {0xffffffff,
-                                TX_DOUBLE_HI32_EXPMASK | TX_DOUBLE_HI32_MANTMASK};
 const PRUint32 infMask[2] =    {0, TX_DOUBLE_HI32_EXPMASK};
 const PRUint32 negInfMask[2] = {0, TX_DOUBLE_HI32_EXPMASK | TX_DOUBLE_HI32_SIGNBIT};
 #endif
@@ -147,8 +78,7 @@ MBool Double::isInfinite(double aDbl)
  */
 MBool Double::isNaN(double aDbl)
 {
-    return ((TX_DOUBLE_HI32(aDbl) & TX_DOUBLE_HI32_EXPMASK) == TX_DOUBLE_HI32_EXPMASK &&
-            (TX_DOUBLE_LO32(aDbl) || (TX_DOUBLE_HI32(aDbl) & TX_DOUBLE_HI32_MANTMASK)));
+    return TX_DOUBLE_IS_NaN(aDbl);
 }
 
 /*

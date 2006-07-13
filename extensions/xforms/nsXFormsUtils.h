@@ -57,6 +57,10 @@ class nsIURI;
 class nsString;
 class nsIMutableArray;
 class nsIDOMEvent;
+class nsIDOMXPathEvaluator;
+class nsIDOMXPathExpression;
+class nsIDOMXPathNSResolver;
+class nsIXPathEvaluatorInternal;
 
 #define NS_NAMESPACE_XFORMS              "http://www.w3.org/2002/xforms"
 #define NS_NAMESPACE_XHTML               "http://www.w3.org/1999/xhtml"
@@ -65,6 +69,9 @@ class nsIDOMEvent;
 #define NS_NAMESPACE_MOZ_XFORMS_TYPE     "http://www.mozilla.org/projects/xforms/2005/type"
 #define NS_NAMESPACE_SOAP_ENVELOPE       "http://schemas.xmlsoap.org/soap/envelope/"
 #define NS_NAMESPACE_MOZ_XFORMS_LAZY     "http://www.mozilla.org/projects/xforms/2005/lazy"
+
+#define NS_ERROR_XFORMS_CALCULATION_EXCEPTION \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GENERAL, 3001)
 
 /**
  * Error codes
@@ -236,7 +243,7 @@ public:
    * and returned (addrefed) in |aModel|
    *
    * The return value is an XPathResult as returned from
-   * nsIXFormsXPathEvaluator::Evaluate().
+   * nsIDOMXPathEvaluator::Evaluate().
    */
   static NS_HIDDEN_(nsresult)
     EvaluateNodeBinding(nsIDOMElement           *aElement,
@@ -251,10 +258,17 @@ public:
                         nsCOMArray<nsIDOMNode>  *aDeps = nsnull,
                         nsStringArray           *aIndexesUsed = nsnull);
 
+  static NS_HIDDEN_(nsresult)
+    CreateExpression(nsIXPathEvaluatorInternal  *aEvaluator,
+                     const nsAString            &aExpression,
+                     nsIDOMXPathNSResolver      *aResolver,
+                     nsISupports                *aState,
+                     nsIDOMXPathExpression     **aResult);
+
   /**
    * Convenience method for doing XPath evaluations.  This gets a
-   * nsIXFormsXPathEvaluator from |aContextNode|'s ownerDocument, and calls
-   * nsIXFormsXPathEvaluator::Evalute using the given expression, context node,
+   * nsIDOMXPathEvaluator from |aContextNode|'s ownerDocument, and calls
+   * nsIDOMXPathEvaluator::Evaluate using the given expression, context node,
    * namespace resolver, and result type.
    */
   static NS_HIDDEN_(nsresult)
@@ -267,6 +281,18 @@ public:
                   PRInt32                 aContextSize = 1,
                   nsCOMArray<nsIDOMNode> *aSet = nsnull,
                   nsStringArray          *aIndexesUsed = nsnull);
+
+  static NS_HIDDEN_(nsresult)
+    EvaluateXPath(nsIXPathEvaluatorInternal  *aEvaluator,
+                  const nsAString            &aExpression,
+                  nsIDOMNode                 *aContextNode,
+                  nsIDOMXPathNSResolver      *aResolver,
+                  nsISupports                *aState,
+                  PRUint16                    aResultType,
+                  PRInt32                     aContextPosition,
+                  PRInt32                     aContextSize,
+                  nsIDOMXPathResult          *aInResult,
+                  nsIDOMXPathResult         **aResult);
 
   /**
    * Given a node in the instance data, get its string value according
@@ -551,6 +577,63 @@ public:
    */
   static NS_HIDDEN_(nsresult) GetWindowFromDocument(nsIDOMDocument        *aDoc,
                                                     nsIDOMWindowInternal **aWindow);
+
+  /**
+   * Function to get the corresponding model element from a xforms node or
+   * a xforms instance data node.
+   */
+  static NS_HIDDEN_(nsresult) GetModelFromNode(nsIDOMNode *aNode,
+                                               nsIDOMNode **aResult);
+
+  /**
+   * Function to see if the given node is associated with the given model.
+   * Right now this function is only called by XPath in the case of the
+   * instance() function.
+   * The provided node can be an instance node from an instance
+   * document and thus be associated to the model in that way (model elements
+   * contain instance elements).  Otherwise the node will be an XForms element
+   * that was used as the context node of the XPath expression (i.e the
+   * XForms control has an attribute that contains an XPath expression).
+   * Form controls are associated with model elements either explicitly through
+   * single-node binding or implicitly (if model cannot by calculated, it
+   * will use the first model element encountered in the document).  The model
+   * can also be inherited from a containing element like xforms:group or
+   * xforms:repeat.
+   */
+  static NS_HIDDEN_(PRBool) IsNodeAssocWithModel(nsIDOMNode *aNode,
+                                                 nsIDOMNode *aModel);
+
+  /**
+   * Function to get the instance document root for the instance element with
+   * the given id.  The instance element must be associated with the given
+   * model.
+   */
+  static NS_HIDDEN_(nsresult) GetInstanceDocumentRoot(const nsAString &aID,
+                                                      nsIDOMNode *aModelNode,
+                                                      nsIDOMNode **aResult);
+
+  /**
+   * Function to ensure that aValue is of the schema type aType.  Will basically
+   * be a forwarder to the nsISchemaValidator function of the same name.
+   */
+  static NS_HIDDEN_(PRBool) ValidateString(const nsAString &aValue,
+                                             const nsAString & aType,
+                                             const nsAString & aNamespace);
+
+  static NS_HIDDEN_(nsresult) GetRepeatIndex(nsIDOMNode *aRepeat,
+                                             PRInt32 *aIndex);
+
+  static NS_HIDDEN_(nsresult) GetMonths(const nsAString & aValue,
+                                        PRInt32 * aMonths);
+
+  static NS_HIDDEN_(nsresult) GetSeconds(const nsAString & aValue,
+                                         double * aSeconds);
+
+  static NS_HIDDEN_(nsresult) GetSecondsFromDateTime(const nsAString & aValue,
+                                                     double * aSeconds);
+
+  static NS_HIDDEN_(nsresult) GetDaysFromDateTime(const nsAString & aValue,
+                                                  PRInt32 * aDays);
 
 private:
   /**

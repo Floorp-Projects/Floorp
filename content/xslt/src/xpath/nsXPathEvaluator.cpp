@@ -59,16 +59,23 @@
 class nsXPathEvaluatorParseContext : public txIParseContext
 {
 public:
-    nsXPathEvaluatorParseContext(nsIDOMXPathNSResolver *aResolver,
+    nsXPathEvaluatorParseContext(nsXPathEvaluator &aEvaluator,
+                                 nsIDOMXPathNSResolver* aResolver,
+                                 nsTArray<PRInt32> *aNamespaceIDs,
+                                 nsCStringArray *aContractIDs,
+                                 nsCOMArray<nsISupports> *aState,
                                  PRBool aIsCaseSensitive)
-        : mResolver(aResolver),
+        : mEvaluator(aEvaluator),
+          mResolver(aResolver),
+          mNamespaceIDs(aNamespaceIDs),
+          mContractIDs(aContractIDs),
+          mState(aState),
           mLastError(NS_OK),
           mIsCaseSensitive(aIsCaseSensitive)
     {
-    }
-
-    ~nsXPathEvaluatorParseContext()
-    {
+        NS_ASSERTION(mContractIDs ||
+                     (!mNamespaceIDs || mNamespaceIDs->Length() == 0),
+                     "Need contract IDs if there are namespaces.");
     }
 
     nsresult getError()
@@ -83,7 +90,11 @@ public:
     void SetErrorOffset(PRUint32 aOffset);
 
 private:
+    nsXPathEvaluator &mEvaluator;
     nsIDOMXPathNSResolver* mResolver;
+    nsTArray<PRInt32> *mNamespaceIDs;
+    nsCStringArray *mContractIDs;
+    nsCOMArray<nsISupports> *mState;
     nsresult mLastError;
     PRBool mIsCaseSensitive;
 };
@@ -113,38 +124,8 @@ nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
                                    nsIDOMXPathNSResolver *aResolver,
                                    nsIDOMXPathExpression **aResult)
 {
-    nsresult rv = NS_OK;
-    if (!mRecycler) {
-        nsRefPtr<txResultRecycler> recycler = new txResultRecycler;
-        NS_ENSURE_TRUE(recycler, NS_ERROR_OUT_OF_MEMORY);
-        
-        rv = recycler->init();
-        NS_ENSURE_SUCCESS(rv, rv);
-        
-        mRecycler = recycler;
-    }
-
-    nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
-    nsXPathEvaluatorParseContext pContext(aResolver,
-                                          !doc || doc->IsCaseSensitive());
-    nsAutoPtr<Expr> expression;
-    rv = txExprParser::createExpr(PromiseFlatString(aExpression), &pContext,
-                                  getter_Transfers(expression));
-    if (NS_FAILED(rv)) {
-        if (rv == NS_ERROR_DOM_NAMESPACE_ERR) {
-            return NS_ERROR_DOM_NAMESPACE_ERR;
-        }
-
-        return NS_ERROR_DOM_INVALID_EXPRESSION_ERR;
-    }
-
-    *aResult = new nsXPathExpression(expression, mRecycler);
-    if (!*aResult) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    NS_ADDREF(*aResult);
-    return NS_OK;
+    return CreateExpression(aExpression, aResolver, (nsTArray<PRInt32>*)nsnull,
+                            nsnull, nsnull, aResult);
 }
 
 NS_IMETHODIMP
@@ -172,7 +153,6 @@ nsXPathEvaluator::Evaluate(const nsAString & aExpression,
 {
     // XXX Need to check document of aContextNode if created by
     //     QI'ing a document.
-
     nsCOMPtr<nsIDOMXPathExpression> expression;
     nsresult rv = CreateExpression(aExpression, aResolver,
                                    getter_AddRefs(expression));
@@ -186,6 +166,85 @@ NS_IMETHODIMP
 nsXPathEvaluator::SetDocument(nsIDOMDocument* aDocument)
 {
     mDocument = do_GetWeakReference(aDocument);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
+                                   nsIDOMXPathNSResolver *aResolver,
+                                   nsStringArray *aNamespaceURIs,
+                                   nsCStringArray *aContractIDs,
+                                   nsCOMArray<nsISupports> *aState,
+                                   nsIDOMXPathExpression **aResult)
+{
+    nsTArray<PRInt32> namespaceIDs;
+    if (aNamespaceURIs) {
+        PRInt32 count = aNamespaceURIs->Count();
+
+        if (!aContractIDs || aContractIDs->Count() != count) {
+            return NS_ERROR_FAILURE;
+        }
+
+        if (!namespaceIDs.SetLength(count)) {
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        PRInt32 i;
+        for (i = 0; i < count; ++i) {
+            if (aContractIDs->CStringAt(i)->IsEmpty()) {
+                return NS_ERROR_FAILURE;
+            }
+
+            nsContentUtils::NameSpaceManager()->RegisterNameSpace(*aNamespaceURIs->StringAt(i), namespaceIDs[i]);
+        }
+    }
+
+
+    return CreateExpression(aExpression, aResolver, &namespaceIDs, aContractIDs,
+                            aState, aResult);
+}
+
+nsresult
+nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
+                                   nsIDOMXPathNSResolver *aResolver,
+                                   nsTArray<PRInt32> *aNamespaceIDs,
+                                   nsCStringArray *aContractIDs,
+                                   nsCOMArray<nsISupports> *aState,
+                                   nsIDOMXPathExpression **aResult)
+{
+    nsresult rv;
+    if (!mRecycler) {
+        nsRefPtr<txResultRecycler> recycler = new txResultRecycler;
+        NS_ENSURE_TRUE(recycler, NS_ERROR_OUT_OF_MEMORY);
+        
+        rv = recycler->init();
+        NS_ENSURE_SUCCESS(rv, rv);
+        
+        mRecycler = recycler;
+    }
+
+    nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
+    nsXPathEvaluatorParseContext pContext(*this, aResolver, aNamespaceIDs,
+                                          aContractIDs, aState,
+                                          !doc || doc->IsCaseSensitive());
+
+    nsAutoPtr<Expr> expression;
+    rv = txExprParser::createExpr(PromiseFlatString(aExpression), &pContext,
+                                  getter_Transfers(expression));
+    if (NS_FAILED(rv)) {
+        if (rv == NS_ERROR_DOM_NAMESPACE_ERR) {
+            return NS_ERROR_DOM_NAMESPACE_ERR;
+        }
+
+        return NS_ERROR_DOM_INVALID_EXPRESSION_ERR;
+    }
+
+    *aResult = new nsXPathExpression(expression, mRecycler);
+    if (!*aResult) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    NS_ADDREF(*aResult);
     return NS_OK;
 }
 
@@ -226,12 +285,31 @@ nsresult nsXPathEvaluatorParseContext::resolveNamespacePrefix
     return nsContentUtils::NameSpaceManager()->RegisterNameSpace(ns, aID);
 }
 
+extern nsresult
+TX_ResolveFunctionCallXPCOM(const nsCString &aContractID, PRInt32 aNamespaceID,
+                            nsIAtom *aName, nsISupports *aState,
+                            FunctionCall *&aFunction);
+
 nsresult
 nsXPathEvaluatorParseContext::resolveFunctionCall(nsIAtom* aName,
                                                   PRInt32 aID,
                                                   FunctionCall*& aFn)
 {
-    return NS_ERROR_XPATH_UNKNOWN_FUNCTION;
+    nsresult rv = NS_ERROR_XPATH_UNKNOWN_FUNCTION;
+
+    PRUint32 i, count = mNamespaceIDs ? mNamespaceIDs->Length() : 0;
+    for (i = 0; i < count; ++i) {
+        if (mNamespaceIDs->ElementAt(i) == aID) {
+            nsISupports *state = mState ? mState->SafeObjectAt(i) : nsnull;
+            rv = TX_ResolveFunctionCallXPCOM(*mContractIDs->CStringAt(i), aID,
+                                             aName, state, aFn);
+            if (NS_SUCCEEDED(rv)) {
+                break;
+            }
+        }
+    }
+
+    return rv;
 }
 
 PRBool nsXPathEvaluatorParseContext::caseInsensitiveNameTests()

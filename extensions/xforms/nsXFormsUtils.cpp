@@ -45,9 +45,11 @@
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
 #include "nsIDOMNodeList.h"
-#include "nsIXFormsXPathEvaluator.h"
+#include "nsIDOMXPathEvaluator.h"
+#include "nsIDOMXPathExpression.h"
 #include "nsIDOMXPathResult.h"
 #include "nsIDOMXPathNSResolver.h"
+#include "nsIXPathEvaluatorInternal.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMText.h"
 #include "nsIModelElementPrivate.h"
@@ -79,16 +81,20 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIPermissionManager.h"
 #include "nsServiceManagerUtils.h"
-#include "nsIXFormsUtilityService.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOM3Node.h"
 #include "nsIConsoleService.h"
 #include "nsIStringBundle.h"
+#include "nsIXFormsRepeatElement.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIURI.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIParserService.h"
+#include "nsISchemaValidator.h"
+#include "nsISchemaDuration.h"
+#include "nsXFormsSchemaValidator.h"
+#include "prdtoa.h"
 
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
@@ -419,6 +425,26 @@ nsXFormsUtils::GetModel(nsIDOMElement     *aElement,
 }
 
 /* static */ nsresult
+nsXFormsUtils::CreateExpression(nsIXPathEvaluatorInternal  *aEvaluator,
+                                const nsAString            &aExpression,
+                                nsIDOMXPathNSResolver      *aResolver,
+                                nsISupports                *aState,
+                                nsIDOMXPathExpression     **aResult)
+{
+  nsStringArray ns;
+  nsCStringArray contractid;
+  nsCOMArray<nsISupports> state;
+
+  ns.AppendString(EmptyString());
+  contractid.AppendCString(NS_LITERAL_CSTRING("@mozilla.org/xforms-xpath-functions;1"));
+  state.AppendObject(aState);
+
+  nsCOMPtr<nsIDOMXPathExpression> expression;
+  return aEvaluator->CreateExpression(aExpression, aResolver, &ns, &contractid,
+                                      &state, aResult);
+}
+
+/* static */ nsresult
 nsXFormsUtils::EvaluateXPath(const nsAString        &aExpression,
                              nsIDOMNode             *aContextNode,
                              nsIDOMNode             *aResolverNode,
@@ -432,13 +458,21 @@ nsXFormsUtils::EvaluateXPath(const nsAString        &aExpression,
   NS_ENSURE_ARG_POINTER(aResult);
   *aResult = nsnull;
 
-  nsCOMPtr<nsIXFormsXPathEvaluator> eval = 
-           do_CreateInstance("@mozilla.org/dom/xforms-xpath-evaluator;1");
-  NS_ENSURE_STATE(eval);
+  nsCOMPtr<nsIDOMDocument> doc;
+  aContextNode->GetOwnerDocument(getter_AddRefs(doc));
 
-  nsCOMPtr<nsIDOMNSXPathExpression> expression;
-  nsresult rv = eval->CreateExpression(aExpression, aResolverNode,
-                         getter_AddRefs(expression));
+  nsCOMPtr<nsIDOMXPathEvaluator> eval = do_QueryInterface(doc);
+  nsCOMPtr<nsIXPathEvaluatorInternal> evalInternal = do_QueryInterface(eval);
+  NS_ENSURE_STATE(eval && evalInternal);
+
+  nsCOMPtr<nsIDOMXPathNSResolver> resolver;
+  nsresult rv = eval->CreateNSResolver(aResolverNode, getter_AddRefs(resolver));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMXPathExpression> expression;
+  rv = CreateExpression(evalInternal, aExpression, resolver, aResolverNode,
+                        getter_AddRefs(expression));
+
   PRBool throwException = PR_FALSE;
   if (!expression) {
     const nsPromiseFlatString& flat = PromiseFlatString(aExpression);
@@ -447,13 +481,17 @@ nsXFormsUtils::EvaluateXPath(const nsAString        &aExpression,
                                strings, 1, aContextNode, nsnull);
     throwException = PR_TRUE;
   } else {
+    nsCOMPtr<nsIDOMNSXPathExpression> nsExpr =
+      do_QueryInterface(expression, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsCOMPtr<nsISupports> supResult;
-    rv = expression->EvaluateWithContext(aContextNode,
-                                         aContextPosition,
-                                         aContextSize,
-                                         aResultType,
-                                         nsnull,
-                                         getter_AddRefs(supResult));
+    rv = nsExpr->EvaluateWithContext(aContextNode,
+                                     aContextPosition,
+                                     aContextSize,
+                                     aResultType,
+                                     nsnull,
+                                     getter_AddRefs(supResult));
 
     if (NS_SUCCEEDED(rv) && supResult) {
       /// @todo beaufour: This is somewhat "hackish". Hopefully, this will
@@ -461,11 +499,11 @@ nsXFormsUtils::EvaluateXPath(const nsAString        &aExpression,
       /// @see http://bugzilla.mozilla.org/show_bug.cgi?id=265212
       if (aSet) {
         nsXFormsXPathParser parser;
-        nsXFormsXPathAnalyzer analyzer(eval, aResolverNode);
+        nsXFormsXPathAnalyzer analyzer(evalInternal, resolver, aResolverNode);
         nsAutoPtr<nsXFormsXPathNode> xNode(parser.Parse(aExpression));
         rv = analyzer.Analyze(aContextNode,
                               xNode,
-                              expression,
+                              nsExpr,
                               &aExpression,
                               aSet,
                               aContextPosition,
@@ -481,7 +519,7 @@ nsXFormsUtils::EvaluateXPath(const nsAString        &aExpression,
       return NS_OK;
     }
 
-    if (rv == NS_ERROR_XFORMS_CALCUATION_EXCEPTION) {
+    if (rv == NS_ERROR_XFORMS_CALCULATION_EXCEPTION) {
       const nsPromiseFlatString& flat = PromiseFlatString(aExpression);
       const PRUnichar *strings[] = { flat.get() };
       nsXFormsUtils::ReportError(NS_LITERAL_STRING("exprEvaluateError"),
@@ -493,12 +531,43 @@ nsXFormsUtils::EvaluateXPath(const nsAString        &aExpression,
   // Throw xforms-compute-exception
   if (throwException) {
     nsCOMPtr<nsIDOMElement> resolverElement = do_QueryInterface(aResolverNode);
-    nsCOMPtr<nsIModelElementPrivate> modelPriv = nsXFormsUtils::GetModel(resolverElement);
+    nsCOMPtr<nsIModelElementPrivate> modelPriv =
+      nsXFormsUtils::GetModel(resolverElement);
     nsCOMPtr<nsIDOMNode> model = do_QueryInterface(modelPriv);
     DispatchEvent(model, eEvent_ComputeException, nsnull, resolverElement);
   }
 
   return rv;
+}
+
+/* static */ nsresult
+nsXFormsUtils::EvaluateXPath(nsIXPathEvaluatorInternal  *aEvaluator,
+                             const nsAString            &aExpression,
+                             nsIDOMNode                 *aContextNode,
+                             nsIDOMXPathNSResolver      *aResolver,
+                             nsISupports                *aState,
+                             PRUint16                    aResultType,
+                             PRInt32                     aContextPosition,
+                             PRInt32                     aContextSize,
+                             nsIDOMXPathResult          *aInResult,
+                             nsIDOMXPathResult         **aResult)
+{
+  nsCOMPtr<nsIDOMXPathExpression> expression;
+  nsresult rv = CreateExpression(aEvaluator, aExpression, aResolver, aState,
+                                 getter_AddRefs(expression));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMNSXPathExpression> nsExpression =
+    do_QueryInterface(expression, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsISupports> supResult;
+  rv = nsExpression->EvaluateWithContext(aContextNode, aContextPosition,
+                                         aContextSize, aResultType,
+                                         aInResult, getter_AddRefs(supResult));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return CallQueryInterface(supResult, aResult);
 }
 
 /* static */ nsresult
@@ -2231,5 +2300,328 @@ nsXFormsUtils::GetWindowFromDocument(nsIDOMDocument         *aDoc,
   NS_ENSURE_STATE(internal);
 
   NS_ADDREF(*aWindow = internal);
+  return NS_OK;
+}
+
+/* static */ nsresult
+nsXFormsUtils::GetModelFromNode(nsIDOMNode *aNode, nsIDOMNode **aModel)
+{
+  nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aNode);
+  NS_ASSERTION(aModel, "no return buffer, we'll crash soon");
+  *aModel = nsnull;
+
+  nsAutoString namespaceURI;
+  aNode->GetNamespaceURI(namespaceURI);
+
+  // If the node is in the XForms namespace and XTF based, then it should
+  //   be able to be handled by GetModel.  Otherwise it is probably an instance
+  //   node in a instance document.
+  if (!namespaceURI.EqualsLiteral(NS_NAMESPACE_XFORMS)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIModelElementPrivate> modelPriv = nsXFormsUtils::GetModel(element);
+  nsCOMPtr<nsIDOMNode> modelElement = do_QueryInterface(modelPriv);
+  if( modelElement ) {
+    NS_IF_ADDREF(*aModel = modelElement);
+  }
+
+  // No model found
+  NS_ENSURE_TRUE(*aModel, NS_ERROR_FAILURE);
+
+  return NS_OK;
+}
+
+
+/* static */ PRBool
+nsXFormsUtils::IsNodeAssocWithModel(nsIDOMNode *aNode, nsIDOMNode *aModel)
+{
+
+  nsCOMPtr<nsIDOMNode> modelNode;
+
+  nsAutoString namespaceURI;
+  aNode->GetNamespaceURI(namespaceURI);
+
+  // If the node is in the XForms namespace and XTF based, then it should
+  //   be able to be handled by GetModel.  Otherwise it is probably an instance
+  //   node in a instance document.
+  if (namespaceURI.EqualsLiteral(NS_NAMESPACE_XFORMS)) {
+    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aNode);
+    nsCOMPtr<nsIModelElementPrivate> modelPriv = GetModel(element);
+    modelNode = do_QueryInterface(modelPriv);
+  } else {
+    // We are assuming that if the node coming in isn't a proper XForms element,
+    //   then it is an instance element in an instance doc.  Now we just have
+    //   to determine if the given model contains this instance document.
+    nsCOMPtr<nsIDOMNode> instNode;
+    nsresult rv =
+      nsXFormsUtils::GetInstanceNodeForData(aNode, getter_AddRefs(instNode));
+    if (NS_SUCCEEDED(rv) && instNode) {
+      instNode->GetParentNode(getter_AddRefs(modelNode));
+    }
+  }
+
+  return modelNode && (modelNode == aModel);
+}
+
+/* static */ nsresult
+nsXFormsUtils::GetInstanceDocumentRoot(const nsAString &aID,
+                                       nsIDOMNode *aModelNode,
+                                       nsIDOMNode **aInstanceRoot)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+  NS_ASSERTION(aInstanceRoot, "no return buffer, we'll crash soon");
+  *aInstanceRoot = nsnull;
+
+  if (aID.IsEmpty()) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIXFormsModelElement> modelElement = do_QueryInterface(aModelNode);
+  nsCOMPtr<nsIDOMDocument> doc;
+  rv = modelElement->GetInstanceDocument(aID, getter_AddRefs(doc));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMElement> element;
+  rv = doc->GetDocumentElement(getter_AddRefs(element));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_IF_ADDREF(*aInstanceRoot = element);
+
+  return NS_OK;
+}
+
+/* static */ PRBool
+nsXFormsUtils::ValidateString(const nsAString &aValue, const nsAString & aType,
+                              const nsAString & aNamespace)
+{
+  nsXFormsSchemaValidator validator;
+
+  return validator.ValidateString(aValue, aType, aNamespace);
+}
+
+/* static */ nsresult
+nsXFormsUtils::GetRepeatIndex(nsIDOMNode *aRepeat, PRInt32 *aIndex)
+{
+  NS_ASSERTION(aIndex, "no return buffer for index, we'll crash soon");
+  *aIndex = 0;
+
+  nsCOMPtr<nsIXFormsRepeatElement> repeatEle = do_QueryInterface(aRepeat);
+  if (!repeatEle) {
+    // if aRepeat isn't a repeat element, then setting aIndex to -1 to tell
+    // XPath to return NaN.  Per 7.8.5 in the spec (1.0, 2nd edition)
+    *aIndex = -1;
+  } else {
+    PRUint32 retIndex = 0;
+    nsresult rv = repeatEle->GetIndex(&retIndex);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    *aIndex = retIndex;
+  }
+
+  return NS_OK;
+}
+
+/* static */ nsresult
+nsXFormsUtils::GetMonths(const nsAString & aValue, PRInt32 * aMonths)
+{
+  NS_ASSERTION(aMonths, "no return buffer for months, we'll crash soon");
+
+  *aMonths = 0;
+  nsCOMPtr<nsISchemaDuration> duration;
+  nsCOMPtr<nsISchemaValidator> schemaValidator = 
+    do_CreateInstance("@mozilla.org/schemavalidator;1");
+  NS_ENSURE_TRUE(schemaValidator, NS_ERROR_FAILURE);
+
+  nsresult rv = schemaValidator->ValidateBuiltinTypeDuration(aValue, 
+                                                    getter_AddRefs(duration));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 sumMonths;
+  PRUint32 years;
+  PRUint32 months;
+
+  duration->GetYears(&years);
+  duration->GetMonths(&months);
+
+  sumMonths = months + years*12;
+  PRBool negative;
+  duration->GetNegative(&negative);
+  if (negative) {
+    // according to the spec, "the sign of the result will match the sign
+    // of the duration"
+    sumMonths *= -1;
+  }
+
+  *aMonths = sumMonths;
+
+  return NS_OK;
+}
+
+/* static */ nsresult
+nsXFormsUtils::GetSeconds(const nsAString & aValue, double * aSeconds)
+{
+  nsCOMPtr<nsISchemaDuration> duration;
+  nsCOMPtr<nsISchemaValidator> schemaValidator =
+    do_CreateInstance("@mozilla.org/schemavalidator;1");
+  NS_ENSURE_TRUE(schemaValidator, NS_ERROR_FAILURE);
+
+  nsresult rv = schemaValidator->ValidateBuiltinTypeDuration(aValue,
+                                                    getter_AddRefs(duration));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  double sumSeconds;
+  PRUint32 days;
+  PRUint32 hours;
+  PRUint32 minutes;
+  PRUint32 seconds;
+  double fractSecs;
+
+  duration->GetDays(&days);
+  duration->GetHours(&hours);
+  duration->GetMinutes(&minutes);
+  duration->GetSeconds(&seconds);
+  duration->GetFractionSeconds(&fractSecs);
+
+  sumSeconds = seconds + minutes*60 + hours*3600 + days*24*3600 + fractSecs;
+
+  PRBool negative;
+  duration->GetNegative(&negative);
+  if (negative) {
+    // according to the spec, "the sign of the result will match the sign
+    // of the duration"
+    sumSeconds *= -1;
+  }
+
+  *aSeconds = sumSeconds;
+  return NS_OK;
+}
+
+/* static */ nsresult
+nsXFormsUtils::GetSecondsFromDateTime(const nsAString & aValue,
+                                      double * aSeconds)
+{
+  PRTime dateTime;
+  nsCOMPtr<nsISchemaValidator> schemaValidator =
+    do_CreateInstance("@mozilla.org/schemavalidator;1");
+  NS_ENSURE_TRUE(schemaValidator, NS_ERROR_FAILURE);
+
+  nsresult rv = schemaValidator->ValidateBuiltinTypeDateTime(aValue, &dateTime);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRTime secs64 = dateTime, remain64;
+  PRInt64 usecPerSec;
+  PRInt32 secs32, remain32;
+
+  // convert from PRTime (microseconds from epoch) to seconds.
+  LL_I2L(usecPerSec, PR_USEC_PER_SEC);
+  LL_MOD(remain64, secs64, usecPerSec);   /* remainder after conversion */
+  LL_DIV(secs64, secs64, usecPerSec);     /* Conversion in whole seconds */
+
+  // convert whole seconds and remainder to PRInt32
+  LL_L2I(secs32, secs64);
+  LL_L2I(remain32, remain64);
+
+  // ready the result to send back to transformiix land now in case there are
+  // no fractional seconds or we end up having a problem parsing them out.  If
+  // we do, we'll just ignore the fractional seconds.
+  double totalSeconds = secs32;
+  *aSeconds = totalSeconds;
+
+  // We're not getting fractional seconds back in the PRTime we get from
+  // the schemaValidator.  We'll have to figure out the fractions from
+  // the original value.  Since ValidateBuiltinTypeDateTime returned
+  // successful for us to get this far, we know that the value is in
+  // the proper format.
+  int findFractionalSeconds = aValue.FindChar('.');
+  if (findFractionalSeconds < 0) {
+    // no fractions of seconds, so we are good to go as we are
+    return NS_OK;
+  }
+
+  const nsAString& fraction = Substring(aValue, findFractionalSeconds+1,
+                                        aValue.Length());
+
+  PRBool done = PR_FALSE;
+  PRUnichar currentChar;
+  nsCAutoString fractionResult;
+  nsAString::const_iterator start, end, buffStart;
+  fraction.BeginReading(start);
+  fraction.BeginReading(buffStart);
+  fraction.EndReading(end);
+
+  while ((start != end) && !done) {
+    currentChar = *start++;
+
+    // Time is usually terminated with Z or followed by a time zone
+    // (i.e. -05:00).  Time can also be terminated by the end of the string, so
+    // test for that as well.  All of this specified at:
+    // http://www.w3.org/TR/xmlschema-2/#dateTime
+    if ((currentChar == 'Z') || (currentChar == '+') || (currentChar == '-') ||
+        (start == end)) {
+      fractionResult.AssignLiteral("0.");
+      AppendUTF16toUTF8(Substring(buffStart.get(), start.get()-1),
+                        fractionResult);
+    } else if ((currentChar > '9') || (currentChar < '0')) {
+      // has to be a numerical character or else abort.  This should have been
+      // caught by the schemavalidator, but it is worth double checking.
+      done = PR_TRUE;
+    }
+  }
+
+  if (fractionResult.IsEmpty()) {
+    // couldn't successfully parse the fractional seconds, so we'll just return
+    // without them.
+    return NS_OK;
+  }
+
+  // convert the result string that we have to a double and add it to the total
+  totalSeconds += PR_strtod(fractionResult.get(), nsnull);
+  *aSeconds = totalSeconds;
+
+  return NS_OK;
+}
+
+/* static */ nsresult
+nsXFormsUtils::GetDaysFromDateTime(const nsAString & aValue, PRInt32 * aDays)
+{
+  NS_ASSERTION(aDays, "no return buffer for days, we'll crash soon");
+  *aDays = 0;
+
+  PRTime date;
+  nsCOMPtr<nsISchemaValidator> schemaValidator =
+    do_CreateInstance("@mozilla.org/schemavalidator;1");
+  NS_ENSURE_TRUE(schemaValidator, NS_ERROR_FAILURE);
+
+  // aValue could be a xsd:date or a xsd:dateTime.  If it is a dateTime, we
+  // should ignore the hours, minutes, and seconds according to 7.10.2 in
+  // the spec.  So search for such things now.  If they are there, strip 'em.
+  PRInt32 findTime = aValue.FindChar('T');
+
+  nsAutoString dateString;
+  dateString.Assign(aValue);
+  if (findTime >= 0) {
+    dateString.Assign(Substring(dateString, 0, findTime));
+  }
+
+  nsresult rv = schemaValidator->ValidateBuiltinTypeDate(dateString, &date);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRTime secs64 = date;
+  PRInt64 usecPerSec;
+  PRInt32 secs32;
+
+  // convert from PRTime (microseconds from epoch) to seconds.  Shouldn't
+  // have to worry about remainders since input is a date.  Smallest value
+  // is in whole days.
+  LL_I2L(usecPerSec, PR_USEC_PER_SEC);
+  LL_DIV(secs64, secs64, usecPerSec);
+
+  // convert whole seconds to PRInt32
+  LL_L2I(secs32, secs64);
+
+  // convert whole seconds to days.  86400 seconds in a day.
+  *aDays = secs32/86400;
+
   return NS_OK;
 }

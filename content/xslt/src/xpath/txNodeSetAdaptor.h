@@ -12,15 +12,16 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla XForms support.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Peter Van der Beken.
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Aaron Reed <aaronr@us.ibm.com>
+ *   Peter Van der Beken <peterv@propagandism.org>
+ *
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,66 +37,30 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsXFormsXPathEvaluator_h__
-#define nsXFormsXPathEvaluator_h__
+#ifndef txNodeSetAdaptor_h__
+#define txNodeSetAdaptor_h__
 
-#include "nsIXFormsXPathEvaluator.h"
-#include "txIXPathContext.h"
-#include "nsIXPathEvaluatorInternal.h"
-#include "nsIWeakReference.h"
-#include "nsAutoPtr.h"
-#include "txResultRecycler.h"
-
-
-class nsIDOMDocument;
-class nsIDOMXPathExpression;
+#include "txINodeSet.h"
+#include "txNodeSet.h"
 
 /**
- * A class for evaluating an XPath expression string
+ * Implements an XPCOM wrapper around an XPath NodeSet.
  */
-class nsXFormsXPathEvaluator : public nsIXFormsXPathEvaluator
+
+class txNodeSetAdaptor : public txINodeSet 
 {
 public:
-    nsXFormsXPathEvaluator();
-    virtual ~nsXFormsXPathEvaluator();
+    txNodeSetAdaptor();
+    txNodeSetAdaptor(txNodeSet *aNodeSet);
 
-    // nsISupports interface
+    nsresult Init();
+
     NS_DECL_ISUPPORTS
-
-    // nsIXFormsXPathEvaluator interface
-    NS_DECL_NSIXFORMXPATHEVALUATOR
+    NS_DECL_TXINODESET
 
 private:
-    // txIParseContext implementation
-    class XFormsParseContextImpl : public txIParseContext
-    {
-    public:
-        XFormsParseContextImpl(nsIDOMNode* aResolverNode)
-              : mResolverNode(aResolverNode), mLastError(NS_OK)
-        {
-        }
-
-        ~XFormsParseContextImpl()
-        {
-        }
-
-        nsresult getError()
-        {
-            return mLastError;
-        }
-
-        nsresult resolveNamespacePrefix(nsIAtom* aPrefix, PRInt32& aID);
-        nsresult resolveFunctionCall(nsIAtom* aName, PRInt32 aID,
-                                     FunctionCall*& aFunction);
-        PRBool caseInsensitiveNameTests();
-        void SetErrorOffset(PRUint32 aOffset);
-
-    private:
-        nsIDOMNode* mResolverNode;
-        nsresult mLastError;
-    };
-
-    nsRefPtr<txResultRecycler> mRecycler;
+    nsRefPtr<txNodeSet> mNodeSet;
+    PRBool mWritable;
 };
 
-#endif
+#endif // txNodeSetAdaptor_h__

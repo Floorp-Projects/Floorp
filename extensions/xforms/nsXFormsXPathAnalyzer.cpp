@@ -45,9 +45,12 @@
 //#define DEBUG_XF_ANALYZER
 #endif
 
-nsXFormsXPathAnalyzer::nsXFormsXPathAnalyzer(nsIXFormsXPathEvaluator  *aEvaluator,
-                                             nsIDOMNode               *aResolver)
-  : mEvaluator(aEvaluator), mResolver(aResolver)
+nsXFormsXPathAnalyzer::nsXFormsXPathAnalyzer(nsIXPathEvaluatorInternal *aEvaluator,
+                                             nsIDOMXPathNSResolver     *aResolver,
+                                             nsISupports               *aState)
+  : mEvaluator(aEvaluator),
+    mResolver(aResolver),
+    mState(aState)
 {
   MOZ_COUNT_CTOR(nsXFormsXPathAnalyzer);
 }
@@ -174,9 +177,10 @@ nsXFormsXPathAnalyzer::AnalyzeRecursively(nsIDOMNode              *aContextNode,
       xp = Substring(*mCurExprString, aNode->mStartIndex,
                      aNode->mEndIndex - aNode->mStartIndex);
     }
-    rv = mEvaluator->Evaluate(xp, aContextNode, mCurPosition, mCurSize,
-                              mResolver, nsIDOMXPathResult::ANY_TYPE,
-                              nsnull, getter_AddRefs(result));
+    rv = nsXFormsUtils::EvaluateXPath(mEvaluator, xp, aContextNode, mResolver,
+                                      mState, nsIDOMXPathResult::ANY_TYPE,
+                                      mCurPosition, mCurSize, nsnull,
+                                      getter_AddRefs(result));
     if (NS_FAILED(rv)) {
       const PRUnichar *strings[] = { xp.get() };
       nsXFormsUtils::ReportError(NS_LITERAL_STRING("exprEvaluateError"),
@@ -194,10 +198,13 @@ nsXFormsXPathAnalyzer::AnalyzeRecursively(nsIDOMNode              *aContextNode,
       nsDependentSubstring indexExpr = Substring(xp,
                                                  indexSize,
                                                  xp.Length() - indexSize - 1); // remove final ')' too
+
       nsCOMPtr<nsIDOMXPathResult> stringRes;
-      rv = mEvaluator->Evaluate(indexExpr, aContextNode, mCurPosition, mCurSize,
-                                mResolver, nsIDOMXPathResult::STRING_TYPE,
-                                nsnull, getter_AddRefs(stringRes));
+      rv = nsXFormsUtils::EvaluateXPath(mEvaluator, indexExpr, aContextNode,
+                                        mResolver, mState,
+                                        nsIDOMXPathResult::STRING_TYPE,
+                                        mCurPosition, mCurSize, nsnull,
+                                        getter_AddRefs(stringRes));
       NS_ENSURE_SUCCESS(rv, rv);
 
       nsAutoString indexId;

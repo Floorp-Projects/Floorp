@@ -43,8 +43,10 @@
 #include "nsIXPathEvaluatorInternal.h"
 #include "nsIWeakReference.h"
 #include "nsAutoPtr.h"
+#include "nsString.h"
 #include "txResultRecycler.h"
 #include "nsAgg.h"
+#include "nsTArray.h"
 
 /**
  * A class for evaluating an XPath expression string
@@ -68,8 +70,21 @@ public:
 
     // nsIXPathEvaluatorInternal interface
     NS_IMETHOD SetDocument(nsIDOMDocument* aDocument);
+    NS_IMETHOD CreateExpression(const nsAString &aExpression, 
+                                nsIDOMXPathNSResolver *aResolver,
+                                nsStringArray *aNamespaceURIs,
+                                nsCStringArray *aContractIDs,
+                                nsCOMArray<nsISupports> *aState,
+                                nsIDOMXPathExpression **aResult);
 
 private:
+    nsresult CreateExpression(const nsAString & aExpression,
+                              nsIDOMXPathNSResolver *aResolver,
+                              nsTArray<PRInt32> *aNamespaceIDs,
+                              nsCStringArray *aContractIDs,
+                              nsCOMArray<nsISupports> *aState,
+                              nsIDOMXPathExpression **aResult);
+
     nsWeakPtr mDocument;
     nsRefPtr<txResultRecycler> mRecycler;
 };

@@ -42,6 +42,7 @@
 #include "nscore.h"
 #include "nsDebug.h"
 #include "prtypes.h"
+#include "txDouble.h"
 
 class nsAString;
 

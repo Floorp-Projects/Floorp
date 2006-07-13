@@ -60,7 +60,7 @@
 
 class nsIDOMElement;
 class nsIDOMNode;
-class nsIXFormsXPathEvaluator;
+class nsIDOMXPathEvaluator;
 class nsIDOMXPathResult;
 class nsXFormsControl;
 class nsXFormsModelInstanceDocuments;
@@ -310,12 +310,12 @@ private:
   NS_HIDDEN_(nsresult) ConstructDone();
   NS_HIDDEN_(void)     MaybeNotifyCompletion();
 
-  NS_HIDDEN_(nsresult) ProcessBind(nsIXFormsXPathEvaluator   *aEvaluator,
-                                   nsIDOMNode                *aContextNode,
-                                   PRInt32                    aContextPosition,
-                                   PRInt32                    aContextSize,
-                                   nsIDOMElement             *aBindElement,
-                                   PRBool                     aIsOuter = PR_FALSE);
+  NS_HIDDEN_(nsresult) ProcessBind(nsIDOMXPathEvaluator *aEvaluator,
+                                   nsIDOMNode           *aContextNode,
+                                   PRInt32               aContextPosition,
+                                   PRInt32               aContextSize,
+                                   nsIDOMElement        *aBindElement,
+                                   PRBool                aIsOuter = PR_FALSE);
 
   NS_HIDDEN_(void)     RemoveModelFromDocument();
 

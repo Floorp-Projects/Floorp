@@ -55,7 +55,9 @@
 #include "nsIDOMXMLDocument.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMXPathResult.h"
-#include "nsIXFormsXPathEvaluator.h"
+#include "nsIDOMXPathEvaluator.h"
+#include "nsIXPathEvaluatorInternal.h"
+#include "nsIDOMXPathExpression.h"
 #include "nsIDOMXPathNSResolver.h"
 #include "nsIDOMNSXPathExpression.h"
 #include "nsIContent.h"
@@ -1983,10 +1985,10 @@ nsXFormsModelElement::ProcessBindElements()
   firstInstanceDoc->GetDocumentElement(getter_AddRefs(firstInstanceRoot));
 
   nsresult rv;
-  nsCOMPtr<nsIXFormsXPathEvaluator> xpath = 
-           do_CreateInstance("@mozilla.org/dom/xforms-xpath-evaluator;1", &rv);
-  NS_ENSURE_TRUE(xpath, rv);
-  
+  nsCOMPtr<nsIDOMXPathEvaluator> xpath = do_QueryInterface(firstInstanceDoc,
+                                                           &rv);
+  NS_ENSURE_TRUE(rv, rv);
+
   nsCOMPtr<nsIDOMNodeList> children;
   mElement->GetChildNodes(getter_AddRefs(children));
 
@@ -2266,18 +2268,25 @@ nsXFormsModelElement::MaybeNotifyCompletion()
 }
 
 nsresult
-nsXFormsModelElement::ProcessBind(nsIXFormsXPathEvaluator *aEvaluator,
-                                  nsIDOMNode              *aContextNode,
-                                  PRInt32                 aContextPosition,
-                                  PRInt32                 aContextSize,
-                                  nsIDOMElement           *aBindElement,
-                                  PRBool                  aIsOuter)
+nsXFormsModelElement::ProcessBind(nsIDOMXPathEvaluator *aEvaluator,
+                                  nsIDOMNode           *aContextNode,
+                                  PRInt32               aContextPosition,
+                                  PRInt32               aContextSize,
+                                  nsIDOMElement        *aBindElement,
+                                  PRBool                aIsOuter)
 {
   // Get the model item properties specified by this \<bind\>.
-  nsCOMPtr<nsIDOMNSXPathExpression> props[eModel__count];
+  nsCOMPtr<nsIDOMXPathExpression> props[eModel__count];
   nsAutoString propStrings[eModel__count];
-  nsresult rv;
   nsAutoString attrStr;
+
+  nsCOMPtr<nsIDOMXPathNSResolver> resolver;
+  nsresult rv = aEvaluator->CreateNSResolver(aBindElement,
+                                             getter_AddRefs(resolver));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIXPathEvaluatorInternal> eval = do_QueryInterface(aEvaluator, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   for (PRUint32 i = 0; i < eModel__count; ++i) {
     sModelPropsList[i]->ToString(attrStr);
@@ -2286,8 +2295,9 @@ nsXFormsModelElement::ProcessBind(nsIXFormsXPathEvaluator *aEvaluator,
     if (!propStrings[i].IsEmpty() &&
         i != eModel_type &&
         i != eModel_p3ptype) {
-      rv = aEvaluator->CreateExpression(propStrings[i], aBindElement,
-                                        getter_AddRefs(props[i]));
+      rv = nsXFormsUtils::CreateExpression(eval, propStrings[i], resolver,
+                                           aBindElement,
+                                           getter_AddRefs(props[i]));
       if (NS_FAILED(rv)) {
         const PRUnichar *strings[] = { propStrings[i].get() };
         nsXFormsUtils::ReportError(NS_LITERAL_STRING("mipParseError"),
@@ -2301,21 +2311,21 @@ nsXFormsModelElement::ProcessBind(nsIXFormsXPathEvaluator *aEvaluator,
   // Find the nodeset that this bind applies to.
   nsCOMPtr<nsIDOMXPathResult> result;
 
-  nsAutoString expr;
-  aBindElement->GetAttribute(NS_LITERAL_STRING("nodeset"), expr);
-  if (expr.IsEmpty()) {
-    expr = NS_LITERAL_STRING(".");
+  nsAutoString exprString;
+  aBindElement->GetAttribute(NS_LITERAL_STRING("nodeset"), exprString);
+  if (exprString.IsEmpty()) {
+    exprString = NS_LITERAL_STRING(".");
   }
-  rv = aEvaluator->Evaluate(expr, aContextNode, aContextPosition, aContextSize,
-                            aBindElement,
-                            nsIDOMXPathResult::ORDERED_NODE_SNAPSHOT_TYPE,
-                            nsnull, getter_AddRefs(result));
+
+  rv = nsXFormsUtils::EvaluateXPath(eval, exprString, aContextNode, resolver,
+                                    aBindElement,
+                                    nsIDOMXPathResult::ORDERED_NODE_SNAPSHOT_TYPE,
+                                    aContextPosition, aContextSize,
+                                    nsnull, getter_AddRefs(result));
   if (NS_FAILED(rv)) {
     if (rv == NS_ERROR_DOM_INVALID_EXPRESSION_ERR) {
       // the xpath expression isn't valid xpath
-
-      const nsPromiseFlatString& flat = PromiseFlatString(expr);
-      const PRUnichar *strings[] = { flat.get() };
+      const PRUnichar *strings[] = { exprString.get() };
       nsXFormsUtils::ReportError(NS_LITERAL_STRING("exprParseError"),
                                  strings, 1, aBindElement, nsnull);
       nsXFormsUtils::DispatchEvent(mElement, eEvent_ComputeException);
@@ -2323,7 +2333,7 @@ nsXFormsModelElement::ProcessBind(nsIXFormsXPathEvaluator *aEvaluator,
 #ifdef DEBUG
       printf("xforms-binding-exception: XPath Evaluation failed\n");
 #endif
-      const PRUnichar *strings[] = { expr.get() };
+      const PRUnichar *strings[] = { exprString.get() };
       nsXFormsUtils::ReportError(NS_LITERAL_STRING("nodesetEvaluateError"),
                                  strings, 1, aBindElement, aBindElement);
       nsXFormsUtils::DispatchEvent(mElement, eEvent_BindingException);
@@ -2367,7 +2377,7 @@ nsXFormsModelElement::ProcessBind(nsIXFormsXPathEvaluator *aEvaluator,
 
     // Apply MIPs
     nsXFormsXPathParser parser;
-    nsXFormsXPathAnalyzer analyzer(aEvaluator, aBindElement);
+    nsXFormsXPathAnalyzer analyzer(eval, resolver, aBindElement);
     PRBool multiMIP = PR_FALSE;
     for (PRUint32 j = 0; j < eModel__count; ++j) {
       if (propStrings[j].IsEmpty())
@@ -2402,7 +2412,7 @@ nsXFormsModelElement::ProcessBind(nsIXFormsXPathEvaluator *aEvaluator,
         }
       } else {
         // the rest of the MIPs are given to the MDG
-        nsCOMPtr<nsIDOMNSXPathExpression> expr = props[j];
+        nsCOMPtr<nsIDOMNSXPathExpression> expr = do_QueryInterface(props[j]);
 
         // Get node dependencies
         nsAutoPtr<nsXFormsXPathNode> xNode(parser.Parse(propStrings[j]));

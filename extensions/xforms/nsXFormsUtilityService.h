@@ -42,24 +42,4 @@ class nsXFormsUtilityService : public nsIXFormsUtilityService
 {
 public:
   NS_DECL_ISUPPORTS
-
-  // nsIXFormsUtilityService
-  NS_IMETHOD GetModelFromNode(nsIDOMNode *node, nsIDOMNode **aModel);
-
-  NS_IMETHOD IsNodeAssocWithModel(nsIDOMNode *aNode, nsIDOMNode *aModel,
-                                  PRBool *aModelAssocWithNode);
-
-  NS_IMETHOD GetInstanceDocumentRoot(const nsAString& aID,
-                                     nsIDOMNode *aModelNode,
-                                     nsIDOMNode **aInstanceRoot);
-
-  NS_IMETHOD ValidateString(const nsAString& aValue, const nsAString & aType,
-                            const nsAString& aNamespace, PRBool *aResult);
-
-  NS_IMETHOD GetRepeatIndex(nsIDOMNode *aRepeat, PRInt32 *aIndex);
-  NS_IMETHOD GetMonths(const nsAString& aValue, PRInt32 *aMonths);
-  NS_IMETHOD GetSeconds(const nsAString& aValue, double *aSeconds);
-  NS_IMETHOD GetSecondsFromDateTime(const nsAString& aValue, double *aSeconds);
-  NS_IMETHOD GetDaysFromDateTime(const nsAString& aValue, PRInt32 *aDays);
 };
-
