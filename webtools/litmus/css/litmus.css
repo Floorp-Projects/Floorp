@@ -706,6 +706,7 @@ td.content ul, td.content ol {
 
 table.tcm td.content {
     background-color: #efefef; 
+    padding-left: 20px;
 }
 
 table.tcmf td { 
