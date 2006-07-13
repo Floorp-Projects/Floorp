@@ -70,7 +70,7 @@ use Bugzilla::Util;
 
 =over
 
-=item C<@base_columns>
+=item C<BASE_COLUMNS>
 
 basic sets of columns and tables for getting flag types from the
 database.  B<Used by get, match, sqlify_criteria and perlify_record>
@@ -79,22 +79,23 @@ database.  B<Used by get, match, sqlify_criteria and perlify_record>
 
 =cut
 
-my @base_columns = 
-  ("1", "flagtypes.id", "flagtypes.name", "flagtypes.description", 
-   "flagtypes.cc_list", "flagtypes.target_type", "flagtypes.sortkey", 
-   "flagtypes.is_active", "flagtypes.is_requestable", 
-   "flagtypes.is_requesteeble", "flagtypes.is_multiplicable", 
-   "flagtypes.grant_group_id", "flagtypes.request_group_id");
+use constant BASE_COLUMNS => (
+    "1", "flagtypes.id", "flagtypes.name", "flagtypes.description", 
+    "flagtypes.cc_list", "flagtypes.target_type", "flagtypes.sortkey", 
+    "flagtypes.is_active", "flagtypes.is_requestable", 
+    "flagtypes.is_requesteeble", "flagtypes.is_multiplicable", 
+    "flagtypes.grant_group_id", "flagtypes.request_group_id",
+);
 
 =pod
 
 =over
 
-=item C<@base_tables>
+=item C<BASE_TABLES>
 
 Which database(s) is the data coming from?
 
-Note: when adding tables to @base_tables, make sure to include the separator 
+Note: when adding tables to BASE_TABLES, make sure to include the separator 
 (i.e. words like "LEFT OUTER JOIN") before the table name, since tables take
 multiple separators based on the join type, and therefore it is not possible
 to join them later using a single known separator.
@@ -106,7 +107,7 @@ B<Used by get, match, sqlify_criteria and perlify_record>
 
 =cut
 
-my @base_tables = ("flagtypes");
+use constant BASE_TABLES => ("flagtypes");
 
 ######################################################################
 # Public Functions
@@ -128,7 +129,7 @@ sub get {
     my ($id) = @_;
     my $dbh = Bugzilla->dbh;
 
-    my $columns = join(", ", @base_columns);
+    my $columns = join(", ", BASE_COLUMNS);
 
     my @data = $dbh->selectrow_array("SELECT $columns FROM flagtypes
                                       WHERE id = ?", undef, $id);
@@ -227,8 +228,9 @@ and returns the set of matching types.
 sub match {
     my ($criteria, $include_count) = @_;
 
-    my @tables = @base_tables;
-    my @columns = @base_columns;
+    my @tables       = BASE_TABLES;
+    my @base_columns = BASE_COLUMNS;
+    my @columns      = BASE_COLUMNS;
     my $dbh = Bugzilla->dbh;
 
     # Include a count of the number of flags per type if requested.
@@ -279,7 +281,7 @@ sub count {
     my ($criteria) = @_;
     my $dbh = Bugzilla->dbh;
 
-    my @tables = @base_tables;
+    my @tables = BASE_TABLES;
     my @criteria = sqlify_criteria($criteria, \@tables);
     # The way tables are joined is already included in @tables.
     my $tables = join(' ', @tables);
@@ -511,7 +513,7 @@ sub sqlify_criteria {
 =item C<perlify_record()>
 
 Converts data retrieved from the database into a Perl record.  Depends on the
-formatting as described in @base_columns.
+formatting as described in C<BASE_COLUMNS>.
 
 =back
 

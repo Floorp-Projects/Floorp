@@ -49,24 +49,27 @@ use constant BIT_WATCHING  => 2;
 
 # We need these strings for the X-Bugzilla-Reasons header
 # Note: this hash uses "," rather than "=>" to avoid auto-quoting of the LHS.
-my %rel_names = (REL_ASSIGNEE          , "AssignedTo", 
-                 REL_REPORTER          , "Reporter",
-                 REL_QA                , "QAcontact",
-                 REL_CC                , "CC",
-                 REL_VOTER             , "Voter");
+use constant REL_NAMES => {
+    REL_ASSIGNEE, "AssignedTo", 
+    REL_REPORTER, "Reporter",
+    REL_QA      , "QAcontact",
+    REL_CC      , "CC",
+    REL_VOTER   , "Voter"
+};
 
-# This code is really ugly. It was a commandline interface, then it was moved.
-# This really needs to be cleaned at some point.
-
-my %nomail;
-
-# This is run when we load the package
-if (open(NOMAIL, '<', bz_locations->{'datadir'} . "/nomail")) {
-    while (<NOMAIL>) {
-        $nomail{trim($_)} = 1;
+sub _read_nomail {
+    my $nomail = Bugzilla->request_cache->{bugmail_nomail};
+    return $nomail if $nomail;
+    if (open(NOMAIL, '<', bz_locations->{'datadir'} . "/nomail")) {
+        while (<NOMAIL>) {
+            $nomail->{trim($_)} = 1;
+        }
+        close(NOMAIL);
     }
-    close(NOMAIL);
+    Bugzilla->request_cache->{bugmail_nomail} = $nomail;
+    return $nomail;
 }
+
 
 sub FormatTriple {
     my ($a, $b, $c) = (@_);
@@ -462,7 +465,8 @@ sub ProcessOneBug {
 
             # Make sure the user isn't in the nomail list, and the insider and 
             # dep checks passed.
-            if ((!$nomail{$user->login}) &&
+            my $nomail = _read_nomail();
+            if ((!$nomail->{$user->login}) &&
                 $insider_ok &&
                 $dep_ok)
             {
@@ -625,8 +629,8 @@ sub sendMail {
     $substs{"summary"} = $values{'short_desc'};
     my (@headerrel, @watchingrel);
     while (my ($rel, $bits) = each %{$relRef}) {
-        push @headerrel, ($rel_names{$rel}) if ($bits & BIT_DIRECT);
-        push @watchingrel, ($rel_names{$rel}) if ($bits & BIT_WATCHING);
+        push @headerrel, (REL_NAMES->{$rel}) if ($bits & BIT_DIRECT);
+        push @watchingrel, (REL_NAMES->{$rel}) if ($bits & BIT_WATCHING);
     }
     push @headerrel, 'None' if !scalar(@headerrel);
     push @watchingrel, 'None' if !scalar(@watchingrel);

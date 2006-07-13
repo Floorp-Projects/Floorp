@@ -52,26 +52,27 @@ use base qw(Template);
 # traverse the arrays of exported and exportable symbols, pulling out functions
 # (which is how Perl implements constants) and ignoring the rest (which, if
 # Constants.pm exports only constants, as it should, will be nothing else).
-use Bugzilla::Constants ();
-my %constants;
-foreach my $constant (@Bugzilla::Constants::EXPORT,
-                      @Bugzilla::Constants::EXPORT_OK)
-{
-    if (defined &{$Bugzilla::Constants::{$constant}}) {
-        # Constants can be lists, and we can't know whether we're getting
-        # a scalar or a list in advance, since they come to us as the return
-        # value of a function call, so we have to retrieve them all in list
-        # context into anonymous arrays, then extract the scalar ones (i.e.
-        # the ones whose arrays contain a single element) from their arrays.
-        $constants{$constant} = [&{$Bugzilla::Constants::{$constant}}];
-        if (scalar(@{$constants{$constant}}) == 1) {
-            $constants{$constant} = @{$constants{$constant}}[0];
+sub _load_constants {
+    use Bugzilla::Constants ();
+    my %constants;
+    foreach my $constant (@Bugzilla::Constants::EXPORT,
+                          @Bugzilla::Constants::EXPORT_OK)
+    {
+        if (defined &{$Bugzilla::Constants::{$constant}}) {
+            # Constants can be lists, and we can't know whether we're
+            # getting a scalar or a list in advance, since they come to us
+            # as the return value of a function call, so we have to
+            # retrieve them all in list context into anonymous arrays,
+            # then extract the scalar ones (i.e. the ones whose arrays
+            # contain a single element) from their arrays.
+            $constants{$constant} = [&{$Bugzilla::Constants::{$constant}}];
+            if (scalar(@{$constants{$constant}}) == 1) {
+                $constants{$constant} = @{$constants{$constant}}[0];
+            }
         }
     }
+    return \%constants;
 }
-
-# XXX - mod_perl
-my $template_include_path;
 
 # Make an ordered list out of a HTTP Accept-Language header see RFC 2616, 14.4
 # We ignore '*' and <language-range>;q=0
@@ -105,23 +106,22 @@ sub sortAcceptLanguage {
 sub getTemplateIncludePath {
     # Return cached value if available
 
-    # XXXX - mod_perl!
-    if ($template_include_path) {
-        return $template_include_path;
-    }
+    my $include_path = Bugzilla->request_cache->{template_include_path};
+    return $include_path if $include_path;
+
     my $templatedir = bz_locations()->{'templatedir'};
     my $project     = bz_locations()->{'project'};
 
     my $languages = trim(Bugzilla->params->{'languages'});
     if (not ($languages =~ /,/)) {
        if ($project) {
-           $template_include_path = [
+           $include_path = [
                "$templatedir/$languages/$project",
                "$templatedir/$languages/custom",
                "$templatedir/$languages/default"
            ];
        } else {
-           $template_include_path = [
+           $include_path = [
                "$templatedir/$languages/custom",
                "$templatedir/$languages/default"
            ];
@@ -142,7 +142,7 @@ sub getTemplateIncludePath {
     }
     push(@usedlanguages, Bugzilla->params->{'defaultlanguage'});
     if ($project) {
-        $template_include_path = [
+        $include_path = [
            map((
                "$templatedir/$_/$project",
                "$templatedir/$_/custom",
@@ -151,7 +151,7 @@ sub getTemplateIncludePath {
             )
         ];
     } else {
-        $template_include_path = [
+        $include_path = [
            map((
                "$templatedir/$_/custom",
                "$templatedir/$_/default"
@@ -165,7 +165,7 @@ sub getTemplateIncludePath {
     foreach my $extension (@extensions) {
         trick_taint($extension); # since this comes right from the filesystem
                                  # we have bigger issues if it is insecure
-        push(@$template_include_path,
+        push(@$include_path,
             map((
                 $extension."/template/".$_),
                @usedlanguages));
@@ -173,12 +173,12 @@ sub getTemplateIncludePath {
     
     # remove duplicates since they keep popping up:
     my @dirs;
-    foreach my $dir (@$template_include_path) {
+    foreach my $dir (@$include_path) {
         push(@dirs, $dir) unless grep ($dir eq $_, @dirs);
     }
-    $template_include_path = [@dirs];
+    Bugzilla->request_cache->{template_include_path} = \@dirs;
     
-    return $template_include_path;
+    return Bugzilla->request_cache->{template_include_path};
 }
 
 sub put_header {
@@ -520,7 +520,7 @@ sub create {
     # We need a possibility to reset the cache, so that no files from
     # the previous language pollute the action.
     if ($opts{'clean_cache'}) {
-        $template_include_path = undef;
+        delete Bugzilla->request_cache->{template_include_path};
     }
 
     # IMPORTANT - If you make any configuration changes here, make sure to
@@ -765,7 +765,7 @@ sub create {
 
         PLUGIN_BASE => 'Bugzilla::Template::Plugin',
 
-        CONSTANTS => \%constants,
+        CONSTANTS => _load_constants(),
 
         # Default variables for all templates
         VARIABLES => {

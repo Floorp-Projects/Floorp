@@ -60,9 +60,9 @@ use vars qw(@param_list);
 
 # INITIALISATION CODE
 # Perl throws a warning if we use bz_locations() directly after do.
-my $localconfig = bz_locations()->{'localconfig'};
+our $localconfig = bz_locations()->{'localconfig'};
 do $localconfig;
-my %params;
+our %params;
 # Load in the param definitions
 sub _load_params {
     foreach my $module (param_panels()) {

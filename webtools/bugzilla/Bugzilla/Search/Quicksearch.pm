@@ -33,7 +33,8 @@ use base qw(Exporter);
 @Bugzilla::Search::Quicksearch::EXPORT = qw(quicksearch);
 
 # Word renamings
-my %mappings = (# Status, Resolution, Platform, OS, Priority, Severity
+use constant MAPPINGS => {
+                # Status, Resolution, Platform, OS, Priority, Severity
                 "status" => "bug_status",
                 "resolution" => "resolution",  # no change
                 "platform" => "rep_platform",
@@ -83,27 +84,32 @@ my %mappings = (# Status, Resolution, Platform, OS, Priority, Severity
                 "attachmentdata" => "attach_data.thedata",
                 "attachdata" => "attach_data.thedata",
                 "attachmentmimetype" => "attachments.mimetype",
-                "attachmimetype" => "attachments.mimetype");
+                "attachmimetype" => "attachments.mimetype"
+};
 
 # We might want to put this into localconfig or somewhere
-my @platforms = ('pc', 'sun', 'macintosh', 'mac');
-my @productExceptions =   ('row'    # [Browser]
-                                    #   ^^^
-                          ,'new'    # [MailNews]
-                                    #      ^^^
-                          );
-my @componentExceptions = ('hang'   # [Bugzilla: Component/Keyword Changes]
-                                    #                               ^^^^
-                          );
+use constant PLATFORMS => ('pc', 'sun', 'macintosh', 'mac');
+use constant PRODUCT_EXCEPTIONS => (
+    'row',   # [Browser]
+             #   ^^^
+    'new',   # [MailNews]
+             #      ^^^
+);
+use constant COMPONENT_EXCEPTIONS => (
+    'hang'   # [Bugzilla: Component/Keyword Changes]
+             #                               ^^^^
+);
 
 # Quicksearch-wide globals for boolean charts.
-my $chart = 0;
-my $and = 0;
-my $or = 0;
+our ($chart, $and, $or);
 
 sub quicksearch {
     my ($searchstring) = (@_);
     my $cgi = Bugzilla->cgi;
+
+    $chart = 0;
+    $and   = 0;
+    $or    = 0;
 
     # Remove leading and trailing commas and whitespace.
     $searchstring =~ s/(^[\s,]+|[\s,]+$)//g;
@@ -268,8 +274,8 @@ sub quicksearch {
                         my @values = split(/,/, $2);
                         foreach my $field (@fields) {
                             # Be tolerant about unknown fields
-                            next unless defined($mappings{$field});
-                            $field = $mappings{$field};
+                            next unless defined(MAPPINGS->{$field});
+                            $field = MAPPINGS->{$field};
                             foreach (@values) {
                                 addChart($field, 'substring', $_, $negate);
                             }
@@ -282,7 +288,7 @@ sub quicksearch {
                         # by comma, which is another legal boolean OR indicator.
                         foreach my $word (split(/,/, $or_operand)) {
                             # Platform
-                            if (grep({lc($word) eq $_} @platforms)) {
+                            if (grep({lc($word) eq $_} PLATFORMS)) {
                                 addChart('rep_platform', 'substring',
                                          $word, $negate);
                             }
@@ -311,14 +317,14 @@ sub quicksearch {
                             else { # Default QuickSearch word
 
                                 if (!grep({lc($word) eq $_}
-                                          @productExceptions) &&
+                                          PRODUCT_EXCEPTIONS) &&
                                     length($word)>2
                                    ) {
                                     addChart('product', 'substring',
                                              $word, $negate);
                                 }
                                 if (!grep({lc($word) eq $_}
-                                          @componentExceptions) &&
+                                          COMPONENT_EXCEPTIONS) &&
                                     length($word)>2
                                    ) {
                                     addChart('component', 'substring',

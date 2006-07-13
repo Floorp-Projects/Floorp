@@ -41,7 +41,7 @@ use Date::Parse;
 ################################################################################
 
 # The maximum number of days a token will remain valid.
-my $maxtokenage = 3;
+use constant MAX_TOKEN_AGE => 3;
 
 ################################################################################
 # Public Functions
@@ -63,7 +63,7 @@ sub IssueEmailChangeToken {
     $vars->{'oldemailaddress'} = $old_email . $email_suffix;
     $vars->{'newemailaddress'} = $new_email . $email_suffix;
     
-    $vars->{'max_token_age'} = $maxtokenage;
+    $vars->{'max_token_age'} = MAX_TOKEN_AGE;
     $vars->{'token_ts'} = $token_ts;
 
     $vars->{'token'} = $token;
@@ -114,7 +114,7 @@ sub IssuePasswordToken {
     $vars->{'token'} = $token;
     $vars->{'emailaddress'} = $loginname . Bugzilla->params->{'emailsuffix'};
 
-    $vars->{'max_token_age'} = $maxtokenage;
+    $vars->{'max_token_age'} = MAX_TOKEN_AGE;
     $vars->{'token_ts'} = $token_ts;
 
     my $message = "";
@@ -139,7 +139,7 @@ sub CleanTokenTable {
     $dbh->do('DELETE FROM tokens
               WHERE ' . $dbh->sql_to_days('NOW()') . ' - ' .
                         $dbh->sql_to_days('issuedate') . ' >= ?',
-              undef, $maxtokenage);
+              undef, MAX_TOKEN_AGE);
     $dbh->bz_unlock_tables();
 }
 
