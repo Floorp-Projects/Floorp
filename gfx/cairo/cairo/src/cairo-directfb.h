@@ -35,7 +35,7 @@
  */
 
 #ifndef CAIRO_DIRECTFB_H
-#define CAIRO_DIRECTFB_H 
+#define CAIRO_DIRECTFB_H
 
 #include <cairo.h>
 
@@ -43,18 +43,9 @@
 
 CAIRO_BEGIN_DECLS
 
-cairo_surface_t * cairo_directfb_surface_create (IDirectFB *dfb,IDirectFBSurface *surface); 
+cairo_surface_t * cairo_directfb_surface_create (IDirectFB *dfb,IDirectFBSurface *surface);
 
 CAIRO_END_DECLS
 
-
-
 #endif /*CAIRO_HAS_DIRECTFB_SURFACE*/
 #endif /*CAIRO_DIRECTFB_H*/
-
-
-
-
-
-
-

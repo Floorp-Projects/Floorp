@@ -41,15 +41,15 @@
 #define LaneCases64(c,a)    LaneCases32(c,a); LaneCases32(c+32,a)
 #define LaneCases128(c,a)   LaneCases64(c,a); LaneCases64(c+64,a)
 #define LaneCases256(c,a)   LaneCases128(c,a); LaneCases128(c+128,a)
-    
+
 #if FB_SHIFT == 6
 #define LaneCases(a)	    LaneCases256(0,a)
 #endif
-    
+
 #if FB_SHIFT == 5
 #define LaneCases(a)	    LaneCases16(0,a)
 #endif
-							   
+
 /*
  * Repeat a transparent stipple across a scanline n times
  */

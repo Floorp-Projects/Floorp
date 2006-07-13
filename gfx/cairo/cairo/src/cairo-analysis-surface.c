@@ -43,13 +43,13 @@ typedef struct {
     int height;
 
     cairo_surface_t	*target;
-    
+
     cairo_bool_t fallback;
 } cairo_analysis_surface_t;
 
 static cairo_int_status_t
 _cairo_analysis_surface_get_extents (void	 		*abstract_surface,
-				     cairo_rectangle_fixed_t	*rectangle)
+				     cairo_rectangle_int16_t	*rectangle)
 {
     cairo_analysis_surface_t *surface = abstract_surface;
 
@@ -255,5 +255,3 @@ _cairo_analysis_surface_has_unsupported (cairo_surface_t *abstract_surface)
 
     return surface->fallback;
 }
-
-

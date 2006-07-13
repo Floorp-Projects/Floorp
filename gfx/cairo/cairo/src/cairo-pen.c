@@ -79,7 +79,7 @@ _cairo_pen_init (cairo_pen_t	*pen,
     pen->num_vertices = _cairo_pen_vertices_needed (tolerance,
 						    radius,
 						    ctm);
-    
+
     pen->vertices = malloc (pen->num_vertices * sizeof (cairo_pen_vertex_t));
     if (pen->vertices == NULL) {
 	return CAIRO_STATUS_NO_MEMORY;
@@ -165,7 +165,7 @@ We construct the pen by computing points along the circumference
 using equally spaced angles.
 
 We show that this approximation to the ellipse has maximum error at the
-major axis of the ellipse.  
+major axis of the ellipse.
 
 Set
 
@@ -247,26 +247,26 @@ _cairo_pen_vertices_needed (double	    tolerance,
 			    double	    radius,
 			    cairo_matrix_t  *matrix)
 {
-    /* 
+    /*
      * the pen is a circle that gets transformed to an ellipse by matrix.
      * compute major axis length for a pen with the specified radius.
      * we don't need the minor axis length.
      */
-    
+
     double  major_axis = _cairo_matrix_transformed_circle_major_axis(matrix, radius);
 
     /*
      * compute number of vertices needed
      */
     int	    num_vertices;
-    
+
     /* Where tolerance / M is > 1, we use 4 points */
     if (tolerance >= major_axis) {
 	num_vertices = 4;
     } else {
 	double delta = acos (1 - tolerance / major_axis);
 	num_vertices = ceil (M_PI / delta);
-	
+
 	/* number of vertices must be even */
 	if (num_vertices % 2)
 	    num_vertices++;
@@ -377,8 +377,8 @@ _cairo_pen_stroke_spline_half (cairo_pen_t *pen,
 	initial_slope.dx = -initial_slope.dx;
 	initial_slope.dy = -initial_slope.dy;
 	final_slope = spline->initial_slope;
-	final_slope.dx = -final_slope.dx; 
-	final_slope.dy = -final_slope.dy; 
+	final_slope.dx = -final_slope.dx;
+	final_slope.dy = -final_slope.dy;
     }
 
     _cairo_pen_find_active_cw_vertex_index (pen, &initial_slope, &active);
@@ -443,6 +443,6 @@ _cairo_pen_stroke_spline (cairo_pen_t		*pen,
     _cairo_polygon_close (&polygon);
     _cairo_traps_tessellate_polygon (traps, &polygon, CAIRO_FILL_RULE_WINDING);
     _cairo_polygon_fini (&polygon);
-    
+
     return CAIRO_STATUS_SUCCESS;
 }

@@ -111,9 +111,9 @@ _cairo_glitz_surface_create_similar (void	    *abstract_src,
 
 static cairo_status_t
 _cairo_glitz_surface_get_image (cairo_glitz_surface_t   *surface,
-				cairo_rectangle_fixed_t *interest,
+				cairo_rectangle_int16_t *interest,
 				cairo_image_surface_t  **image_out,
-				cairo_rectangle_fixed_t *rect_out)
+				cairo_rectangle_int16_t *rect_out)
 {
     cairo_image_surface_t *image;
     int			  x1, y1, x2, y2;
@@ -318,9 +318,9 @@ _cairo_glitz_surface_release_source_image (void              *abstract_surface,
 
 static cairo_status_t
 _cairo_glitz_surface_acquire_dest_image (void                    *abstract_surface,
-					 cairo_rectangle_fixed_t *interest_rect,
+					 cairo_rectangle_int16_t *interest_rect,
 					 cairo_image_surface_t  **image_out,
-					 cairo_rectangle_fixed_t *image_rect_out,
+					 cairo_rectangle_int16_t *image_rect_out,
 					 void                   **image_extra)
 {
     cairo_glitz_surface_t *surface = abstract_surface;
@@ -340,9 +340,9 @@ _cairo_glitz_surface_acquire_dest_image (void                    *abstract_surfa
 
 static void
 _cairo_glitz_surface_release_dest_image (void                    *abstract_surface,
-					 cairo_rectangle_fixed_t *interest_rect,
+					 cairo_rectangle_int16_t *interest_rect,
 					 cairo_image_surface_t   *image,
-					 cairo_rectangle_fixed_t *image_rect,
+					 cairo_rectangle_int16_t *image_rect,
 					 void                    *image_extra)
 {
     cairo_glitz_surface_t *surface = abstract_surface;
@@ -352,7 +352,6 @@ _cairo_glitz_surface_release_dest_image (void                    *abstract_surfa
 
     cairo_surface_destroy (&image->base);
 }
-
 
 static cairo_status_t
 _cairo_glitz_surface_clone_similar (void	    *abstract_surface,
@@ -921,13 +920,14 @@ static cairo_int_status_t
 _cairo_glitz_surface_fill_rectangles (void		      *abstract_dst,
 				      cairo_operator_t	       op,
 				      const cairo_color_t     *color,
-				      cairo_rectangle_fixed_t *rects,
+				      cairo_rectangle_int16_t *rects,
 				      int		       n_rects)
 {
     cairo_glitz_surface_t *dst = abstract_dst;
+    cairo_glitz_surface_t *src;
 
-    if (op == CAIRO_OPERATOR_SOURCE)
-    {
+    switch (op) {
+    case CAIRO_OPERATOR_SOURCE: {
 	glitz_color_t glitz_color;
 
 	glitz_color.red = color->red_short;
@@ -937,11 +937,14 @@ _cairo_glitz_surface_fill_rectangles (void		      *abstract_dst,
 
 	glitz_set_rectangles (dst->surface, &glitz_color,
 			      (glitz_rectangle_t *) rects, n_rects);
-    }
-    else
-    {
-	cairo_glitz_surface_t *src;
+    } break;
+    case CAIRO_OPERATOR_CLEAR: {
+	static glitz_color_t glitz_color = { 0, 0, 0, 0 };
 
+	glitz_set_rectangles (dst->surface, &glitz_color,
+			      (glitz_rectangle_t *) rects, n_rects);
+    } break;
+    default:
 	if (op == CAIRO_OPERATOR_SATURATE)
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 
@@ -972,6 +975,7 @@ _cairo_glitz_surface_fill_rectangles (void		      *abstract_dst,
 	}
 
 	cairo_surface_destroy (&src->base);
+	break;
     }
 
     if (glitz_surface_get_status (dst->surface) == GLITZ_STATUS_NOT_SUPPORTED)
@@ -1257,7 +1261,7 @@ _cairo_glitz_surface_set_clip_region (void		*abstract_surface,
 
 static cairo_int_status_t
 _cairo_glitz_surface_get_extents (void		          *abstract_surface,
-				  cairo_rectangle_fixed_t *rectangle)
+				  cairo_rectangle_int16_t *rectangle)
 {
     cairo_glitz_surface_t *surface = abstract_surface;
 
@@ -1956,8 +1960,8 @@ _cairo_glitz_surface_old_show_glyphs (cairo_scaled_font_t *scaled_font,
 
 	    if (glyph_private->area->width)
 	    {
-		x_offset = scaled_glyphs[i]->surface->base.device_x_offset;
-		y_offset = scaled_glyphs[i]->surface->base.device_y_offset;
+		x_offset = scaled_glyphs[i]->surface->base.device_transform.x0;
+		y_offset = scaled_glyphs[i]->surface->base.device_transform.y0;
 
 		x1 = floor (glyphs[i].x + 0.5) + x_offset;
 		y1 = floor (glyphs[i].y + 0.5) + y_offset;
@@ -1993,8 +1997,8 @@ _cairo_glitz_surface_old_show_glyphs (cairo_scaled_font_t *scaled_font,
 		glyph_private = scaled_glyphs[i]->surface_private;
 	    }
 
-	    x_offset = scaled_glyphs[i]->surface->base.device_x_offset;
-	    y_offset = scaled_glyphs[i]->surface->base.device_y_offset;
+	    x_offset = scaled_glyphs[i]->surface->base.device_transform.x0;
+	    y_offset = scaled_glyphs[i]->surface->base.device_transform.y0;
 
 	    x1 = floor (glyphs[i].x + 0.5) + x_offset;
 	    y1 = floor (glyphs[i].y + 0.5) + y_offset;
@@ -2149,10 +2153,27 @@ _cairo_glitz_surface_get_backend (void)
     return &cairo_glitz_surface_backend;
 }
 
+static cairo_content_t
+_glitz_format_to_content (glitz_format_t * format)
+{
+    assert (format->color.fourcc == GLITZ_FOURCC_RGB);
+
+    if (format->color.alpha_size != 0) {
+	if (format->color.red_size != 0 &&
+	    format->color.green_size != 0 &&
+	    format->color.blue_size  != 0)
+	    return CAIRO_CONTENT_COLOR_ALPHA;
+	else
+	    return CAIRO_CONTENT_ALPHA;
+    }
+    return CAIRO_CONTENT_COLOR;
+}
+
 cairo_surface_t *
 cairo_glitz_surface_create (glitz_surface_t *surface)
 {
     cairo_glitz_surface_t *crsurface;
+    glitz_format_t *format;
 
     if (surface == NULL)
 	return (cairo_surface_t*) &_cairo_surface_nil;
@@ -2163,14 +2184,14 @@ cairo_glitz_surface_create (glitz_surface_t *surface)
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
-    /* XXX: The content value here might be totally wrong. */
+    format = glitz_surface_get_format (surface);
     _cairo_surface_init (&crsurface->base, &cairo_glitz_surface_backend,
-			 CAIRO_CONTENT_COLOR_ALPHA);
+			 _glitz_format_to_content(format));
 
     glitz_surface_reference (surface);
 
     crsurface->surface = surface;
-    crsurface->format  = glitz_surface_get_format (surface);
+    crsurface->format  = format;
     crsurface->clip    = NULL;
 
     return (cairo_surface_t *) crsurface;

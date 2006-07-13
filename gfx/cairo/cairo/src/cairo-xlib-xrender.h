@@ -53,7 +53,6 @@ cairo_xlib_surface_create_with_xrender_format (Display		 *dpy,
                                                int		  width,
                                                int		  height);
 
-
 CAIRO_END_DECLS
 
 #else  /* CAIRO_HAS_XLIB_SURFACE */

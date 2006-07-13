@@ -45,32 +45,10 @@
 
 CAIRO_BEGIN_DECLS
 
-struct _cairo_path_fixed;
-struct _cairo_traps;
-struct _cairo_trapezoid;
-struct _cairo_clip;
-
-void
-cairo_pdf_test_force_fallbacks (void);
-
-void
-cairo_debug_dump_clip (struct _cairo_clip *clip,
-                       FILE *fp);
-void
-cairo_debug_dump_path (struct _cairo_path_fixed *path,
-                       FILE *fp);
-
-void
-cairo_debug_dump_traps (struct _cairo_traps *traps,
-                        FILE *fp);
-
-void
-cairo_debug_dump_trapezoid_array (struct _cairo_trapezoid *traps,
-                                  int num_traps,
-                                  FILE *fp);
+cairo_public void
+_cairo_pdf_test_force_fallbacks (void);
 
 CAIRO_END_DECLS
 
 #endif /* CAIRO_HAS_PDF_SURFACE */
 #endif /* CAIRO_PDF_TEST_H */
-

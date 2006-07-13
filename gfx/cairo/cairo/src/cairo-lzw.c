@@ -335,7 +335,7 @@ _cairo_lzw_compress (unsigned char *data, unsigned long *size_in_out)
     _lzw_buf_init (&buf, *size_in_out);
 
     _lzw_symbol_table_init (&table);
-    
+
     /* The LZW header is a clear table code. */
     _lzw_buf_store_bits (&buf, LZW_CODE_CLEAR_TABLE, code_bits);
 

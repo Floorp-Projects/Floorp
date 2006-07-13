@@ -59,6 +59,15 @@
 
 static const cairo_surface_backend_t cairo_meta_surface_backend;
 
+/* Currently all meta surfaces do have a size which should be passed
+ * in as the maximum size of any target surface against which the
+ * meta-surface will ever be replayed.
+ *
+ * XXX: The naming of "pixels" in the size here is a misnomer. It's
+ * actually a size in whatever device-space units are desired (again,
+ * according to the intended replay target). This should likely also
+ * be changed to use doubles not ints.
+ */
 cairo_surface_t *
 _cairo_meta_surface_create (cairo_content_t	content,
 			    int			width_pixels,
@@ -128,7 +137,7 @@ _cairo_meta_surface_finish (void *abstract_surface)
 	    _cairo_pattern_fini (&command->mask.mask.base);
 	    free (command);
 	    break;
- 
+
 	case CAIRO_COMMAND_STROKE:
 	    _cairo_pattern_fini (&command->stroke.source.base);
 	    _cairo_path_fixed_fini (&command->stroke.path);
@@ -231,9 +240,9 @@ _cairo_meta_surface_paint (void			*abstract_surface,
     cairo_command_paint_t *command;
 
     /* An optimisation that takes care to not replay what was done
-     * before surface is cleared. We don't erase recorded commands 
+     * before surface is cleared. We don't erase recorded commands
      * since we may have earlier snapshots of this surface. */
-    if (op == CAIRO_OPERATOR_CLEAR && !meta->is_clipped) 
+    if (op == CAIRO_OPERATOR_CLEAR && !meta->is_clipped)
 	meta->replay_start_idx = meta->commands.num_elements;
 
     command = malloc (sizeof (cairo_command_paint_t));
@@ -246,7 +255,7 @@ _cairo_meta_surface_paint (void			*abstract_surface,
     status = _init_pattern_with_snapshot (&command->source.base, source);
     if (status)
 	goto CLEANUP_COMMAND;
-    
+
     status = _cairo_array_append (&meta->commands, &command);
     if (status)
 	goto CLEANUP_SOURCE;
@@ -284,7 +293,7 @@ _cairo_meta_surface_mask (void			*abstract_surface,
     status = _init_pattern_with_snapshot (&command->mask.base, mask);
     if (status)
 	goto CLEANUP_SOURCE;
-    
+
     status = _cairo_array_append (&meta->commands, &command);
     if (status)
 	goto CLEANUP_MASK;
@@ -314,7 +323,7 @@ _cairo_meta_surface_stroke (void			*abstract_surface,
     cairo_status_t status;
     cairo_meta_surface_t *meta = abstract_surface;
     cairo_command_stroke_t *command;
-    
+
     command = malloc (sizeof (cairo_command_stroke_t));
     if (command == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
@@ -537,22 +546,20 @@ _cairo_meta_surface_intersect_clip_path (void		    *dst,
     return CAIRO_STATUS_SUCCESS;
 }
 
-/* A meta-surface is logically unbounded, but when it is used as a
- * source, the drawing code can optimize based on the extents of the
- * surface.
- *
- * XXX: The optimization being attempted here would only actually work
- * if the meta-surface kept track of its extents as commands were
- * added to it.
+/* Currently, we're using as the "size" of a meta surface the largest
+ * surface size against which the meta-surface is expected to be
+ * replayed, (as passed in to _cairo_meta_surface_create).
  */
 static cairo_int_status_t
 _cairo_meta_surface_get_extents (void			 *abstract_surface,
-				 cairo_rectangle_fixed_t *rectangle)
+				 cairo_rectangle_int16_t *rectangle)
 {
+    cairo_meta_surface_t *surface = abstract_surface;
+
     rectangle->x = 0;
     rectangle->y = 0;
-    rectangle->width = CAIRO_MAXSHORT;
-    rectangle->height = CAIRO_MAXSHORT;
+    rectangle->width = surface->width_pixels;
+    rectangle->height = surface->height_pixels;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -560,9 +567,9 @@ _cairo_meta_surface_get_extents (void			 *abstract_surface,
 /**
  * _cairo_surface_is_meta:
  * @surface: a #cairo_surface_t
- * 
+ *
  * Checks if a surface is a #cairo_meta_surface_t
- * 
+ *
  * Return value: TRUE if the surface is a meta surface
  **/
 cairo_bool_t
@@ -598,7 +605,7 @@ static const cairo_surface_backend_t cairo_meta_surface_backend = {
     /* Here are the 5 basic drawing operations, (which are in some
      * sense the only things that cairo_meta_surface should need to
      * implement). */
-    
+
     _cairo_meta_surface_paint,
     _cairo_meta_surface_mask,
     _cairo_meta_surface_stroke,
@@ -621,7 +628,7 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
     meta = (cairo_meta_surface_t *) surface;
     status = CAIRO_STATUS_SUCCESS;
 
-    _cairo_clip_init (&clip, target);    
+    _cairo_clip_init (&clip, target);
 
     num_elements = meta->commands.num_elements;
     elements = _cairo_array_index (&meta->commands, 0);

@@ -65,7 +65,7 @@ static int
 parse_boolean (const char *v)
 {
     char c0, c1;
-  
+
     c0 = *v;
     if (c0 == 't' || c0 == 'T' || c0 == 'y' || c0 == 'Y' || c0 == '1')
 	return 1;
@@ -79,7 +79,7 @@ parse_boolean (const char *v)
 	if (c1 == 'f' || c1 == 'F')
 	    return 0;
     }
-  
+
     return -1;
 }
 
@@ -90,7 +90,7 @@ get_boolean_default (Display       *dpy,
 {
     char *v;
     int i;
-  
+
     v = XGetDefault (dpy, "Xft", option);
     if (v) {
 	i = parse_boolean (v);
@@ -99,7 +99,7 @@ get_boolean_default (Display       *dpy,
 	    return TRUE;
 	}
     }
-  
+
     return FALSE;
 }
 
@@ -110,17 +110,17 @@ get_integer_default (Display    *dpy,
 {
     int i;
     char *v, *e;
-  
+
     v = XGetDefault (dpy, "Xft", option);
     if (v) {
 	if (FcNameConstant ((FcChar8 *) v, value))
 	    return TRUE;
-      
+
 	i = strtol (v, &e, 0);
 	if (e != v)
 	    return TRUE;
     }
-  
+
     return FALSE;
 }
 
@@ -145,23 +145,23 @@ _cairo_xlib_init_screen_font_options (cairo_xlib_screen_info_t *info)
 
     if (!get_boolean_default (info->display, "antialias", &xft_antialias))
 	xft_antialias = TRUE;
-  
+
     if (!get_boolean_default (info->display, "hinting", &xft_hinting))
 	xft_hinting = TRUE;
-  
+
     if (!get_integer_default (info->display, "hintstyle", &xft_hintstyle))
 	xft_hintstyle = FC_HINT_FULL;
 
     if (!get_integer_default (info->display, "rgba", &xft_rgba))
     {
 	xft_rgba = FC_RGBA_UNKNOWN;
-      
+
 #if RENDER_MAJOR > 0 || RENDER_MINOR >= 6
 	if (info->has_render)
 	{
 	    int render_order = XRenderQuerySubpixelOrder (info->display,
 							  XScreenNumberOfScreen (info->screen));
-	  
+
 	    switch (render_order)
 	    {
 	    default:
@@ -208,7 +208,7 @@ _cairo_xlib_init_screen_font_options (cairo_xlib_screen_info_t *info)
     } else {
 	hint_style = CAIRO_HINT_STYLE_NONE;
     }
-    
+
     switch (xft_rgba) {
     case FC_RGBA_RGB:
 	subpixel_order = CAIRO_SUBPIXEL_ORDER_RGB;
@@ -352,7 +352,7 @@ _cairo_xlib_screen_info_get (Display *dpy, Screen *screen)
 	    info = NULL;
 	    goto out;
 	}
-	
+
 	XESetCloseDisplay (dpy, codes->extension, _cairo_xlib_close_display);
     }
 
@@ -360,15 +360,15 @@ _cairo_xlib_screen_info_get (Display *dpy, Screen *screen)
     info->screen = screen;
     info->has_render = (XRenderQueryExtension (dpy, &event_base, &error_base) &&
 			(XRenderFindVisualFormat (dpy, DefaultVisual (dpy, DefaultScreen (dpy))) != 0));
-    
+
     _cairo_xlib_init_screen_font_options (info);
-    
+
     info->next = _cairo_xlib_screen_list;
     _cairo_xlib_screen_list = info;
 
  out:
     CAIRO_MUTEX_UNLOCK (_xlib_screen_mutex);
-    
+
     return info;
 }
 

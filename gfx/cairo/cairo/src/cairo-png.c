@@ -74,7 +74,7 @@ convert_data_to_bytes (png_structp png, png_row_infop row_info, png_bytep data)
         uint32_t pixel;
 
 	memcpy (&pixel, b, sizeof (uint32_t));
-	
+
 	b[0] = (pixel & 0xff0000) >> 16;
 	b[1] = (pixel & 0x00ff00) >>  8;
 	b[2] = (pixel & 0x0000ff) >>  0;
@@ -133,7 +133,7 @@ write_png (cairo_surface_t	*surface,
 	status = CAIRO_STATUS_NO_MEMORY;
 	goto BAIL3;
     }
-    
+
     png_set_write_fn (png, closure, write_func, NULL);
 
     switch (image->format) {
@@ -179,14 +179,14 @@ write_png (cairo_surface_t	*surface,
      * that is needed for the write transformation functions to work.
      */
     png_write_info (png, info);
-    
+
     if (image->format == CAIRO_FORMAT_ARGB32)
 	png_set_write_user_transform_fn (png, unpremultiply_data);
     else if (image->format == CAIRO_FORMAT_RGB24)
 	png_set_write_user_transform_fn (png, convert_data_to_bytes);
     if (image->format == CAIRO_FORMAT_RGB24)
 	png_set_filler (png, 0, PNG_FILLER_AFTER);
-	
+
     png_write_image (png, rows);
     png_write_end (png, info);
 
@@ -214,10 +214,10 @@ stdio_write_func (png_structp png, png_bytep data, png_size_t size)
  * cairo_surface_write_to_png:
  * @surface: a #cairo_surface_t with pixel contents
  * @filename: the name of a file to write to
- * 
+ *
  * Writes the contents of @surface to a new file @filename as a PNG
  * image.
- * 
+ *
  * Return value: CAIRO_STATUS_SUCCESS if the PNG file was written
  * successfully. Otherwise, CAIRO_STATUS_NO_MEMORY if memory could not
  * be allocated for the operation or
@@ -235,7 +235,7 @@ cairo_surface_write_to_png (cairo_surface_t	*surface,
     fp = fopen (filename, "wb");
     if (fp == NULL)
 	return CAIRO_STATUS_WRITE_ERROR;
-  
+
     status = write_png (surface, stdio_write_func, fp);
 
     if (fclose (fp) && status == CAIRO_STATUS_SUCCESS)
@@ -266,9 +266,9 @@ stream_write_func (png_structp png, png_bytep data, png_size_t size)
  * @surface: a #cairo_surface_t with pixel contents
  * @write_func: a #cairo_write_func_t
  * @closure: closure data for the write function
- * 
+ *
  * Writes the image surface to the write function.
- * 
+ *
  * Return value: CAIRO_STATUS_SUCCESS if the PNG file was written
  * successfully.  Otherwise, CAIRO_STATUS_NO_MEMORY is returned if
  * memory could not be allocated for the operation,
@@ -286,7 +286,7 @@ cairo_surface_write_to_png_stream (cairo_surface_t	*surface,
     png_closure.closure = closure;
 
     return write_png (surface, stream_write_func, &png_closure);
-}				     
+}
 
 static INLINE int
 multiply_alpha (int alpha, int color)
@@ -447,15 +447,15 @@ stdio_read_func (png_structp png, png_bytep data, png_size_t size)
 
 /**
  * cairo_image_surface_create_from_png:
- * @filename: name of PNG file to load 
- * 
+ * @filename: name of PNG file to load
+ *
  * Creates a new image surface and initializes the contents to the
  * given PNG file.
- * 
+ *
  * Return value: a new #cairo_surface_t initialized with the contents
  * of the PNG file, or a "nil" surface if any error occurred. A nil
  * surface can be checked for with cairo_surface_status(surface) which
- * may return one of the following values: 
+ * may return one of the following values:
  *
  *	CAIRO_STATUS_NO_MEMORY
  *	CAIRO_STATUS_FILE_NOT_FOUND
@@ -481,7 +481,7 @@ cairo_image_surface_create_from_png (const char *filename)
 	    return (cairo_surface_t*) &_cairo_surface_nil_read_error;
 	}
     }
-  
+
     surface = read_png (stdio_read_func, fp);
 
     fclose (fp);
@@ -510,10 +510,10 @@ stream_read_func (png_structp png, png_bytep data, png_size_t size)
  * cairo_image_surface_create_from_png_stream:
  * @read_func: function called to read the data of the file
  * @closure: data to pass to @read_func.
- * 
+ *
  * Creates a new image surface from PNG data read incrementally
  * via the @read_func function.
- * 
+ *
  * Return value: a new #cairo_surface_t initialized with the contents
  * of the PNG file or %NULL if the data read is not a valid PNG image or
  * memory could not be allocated for the operation.
@@ -529,4 +529,3 @@ cairo_image_surface_create_from_png_stream (cairo_read_func_t	read_func,
 
     return read_png (stream_read_func, &png_closure);
 }
-

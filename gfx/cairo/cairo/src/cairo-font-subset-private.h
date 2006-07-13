@@ -51,7 +51,6 @@ struct cairo_font_subset {
     long ascent, descent;
 };
 
-
 cairo_private int
 _cairo_font_subset_use_glyph (cairo_font_subset_t *font, int glyph);
 

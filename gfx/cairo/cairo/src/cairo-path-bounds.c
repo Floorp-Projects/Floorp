@@ -87,13 +87,13 @@ _cairo_path_bounder_add_point (cairo_path_bounder_t *bounder, cairo_point_t *poi
     if (bounder->has_point) {
 	if (point->x < bounder->min_x)
 	    bounder->min_x = point->x;
-	
+
 	if (point->y < bounder->min_y)
 	    bounder->min_y = point->y;
-	
+
 	if (point->x > bounder->max_x)
 	    bounder->max_x = point->x;
-	
+
 	if (point->y > bounder->max_y)
 	    bounder->max_y = point->y;
     } else {
@@ -104,7 +104,7 @@ _cairo_path_bounder_add_point (cairo_path_bounder_t *bounder, cairo_point_t *poi
 
 	bounder->has_point = 1;
     }
-	
+
     return CAIRO_STATUS_SUCCESS;
 }
 

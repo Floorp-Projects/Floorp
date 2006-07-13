@@ -58,4 +58,3 @@ CAIRO_END_DECLS
 #endif /* CAIRO_HAS_BEOS_SURFACE */
 
 #endif /* CAIRO_BEOS_H */
-

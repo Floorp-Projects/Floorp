@@ -73,8 +73,8 @@ _cairo_traps_init (cairo_traps_t *traps)
 
     traps->traps_size = 0;
     traps->traps = NULL;
-    traps->extents.p1.x = traps->extents.p1.y = CAIRO_MAXSHORT << 16;
-    traps->extents.p2.x = traps->extents.p2.y = CAIRO_MINSHORT << 16;
+    traps->extents.p1.x = traps->extents.p1.y = INT16_MAX << 16;
+    traps->extents.p2.x = traps->extents.p2.y = INT16_MIN << 16;
 }
 
 void
@@ -93,7 +93,7 @@ _cairo_traps_fini (cairo_traps_t *traps)
  * @traps: a #cairo_traps_t
  * @box: a box that will be converted to a single trapezoid
  *       to store in @traps.
- * 
+ *
  * Initializes a cairo_traps_t to contain a single rectangular
  * trapezoid.
  **/
@@ -102,13 +102,13 @@ _cairo_traps_init_box (cairo_traps_t *traps,
 		       cairo_box_t   *box)
 {
   cairo_status_t status;
-  
+
   _cairo_traps_init (traps);
-  
+
   status = _cairo_traps_grow_by (traps, 1);
   if (status)
     return status;
-  
+
   traps->num_traps = 1;
 
   traps->traps[0].top = box->p1.y;
@@ -165,12 +165,12 @@ _cairo_traps_add_trap (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bo
 	traps->extents.p1.x = left->p1.x;
     if (left->p2.x < traps->extents.p1.x)
 	traps->extents.p1.x = left->p2.x;
-    
+
     if (right->p1.x > traps->extents.p2.x)
 	traps->extents.p2.x = right->p1.x;
     if (right->p2.x > traps->extents.p2.x)
 	traps->extents.p2.x = right->p2.x;
-    
+
     traps->num_traps++;
 
     return CAIRO_STATUS_SUCCESS;
@@ -540,7 +540,7 @@ _line_segs_intersect_ceil (cairo_line_t *l1, cairo_line_t *l2, cairo_fixed_t *y_
     dy2 = l2->p1.y - l2->p2.y;
     den_det = _det16_32 (dx1, dy1,
 			 dx2, dy2);
-    
+
     if (_cairo_int64_eq (den_det, _cairo_int32_to_int64(0)))
 	return 0;
 
@@ -549,26 +549,25 @@ _line_segs_intersect_ceil (cairo_line_t *l1, cairo_line_t *l2, cairo_fixed_t *y_
     l2_det = _det16_32 (l2->p1.x, l2->p1.y,
 			l2->p2.x, l2->p2.y);
 
-    
     num_det = _det32_64 (l1_det, _fixed_16_16_to_fixed_32_32 (dy1),
 			 l2_det, _fixed_16_16_to_fixed_32_32 (dy2));
-    
+
     /*
      * Ok, this one is a bit tricky in fixed point, the denominator
      * needs to be left with 32-bits of fraction so that the
      * result of the divide ends up with 32-bits of fraction (64 - 32 = 32)
      */
     qr = _cairo_int128_divrem (num_det, _cairo_int64_to_int128 (den_det));
-    
+
     intersect_32_32 = _cairo_int128_to_int64 (qr.quo);
-    
+
     /*
      * Find the ceiling of the quotient -- divrem returns
      * the quotient truncated towards zero, so if the
      * quotient should be positive (num_den and den_det have same sign)
      * bump the quotient up by one.
      */
-    
+
     if (_cairo_int128_ne (qr.rem, _cairo_int32_to_int128 (0)) &&
 	(_cairo_int128_ge (num_det, _cairo_int32_to_int128 (0)) ==
 	 _cairo_int64_ge (den_det, _cairo_int32_to_int64 (0))))
@@ -576,8 +575,8 @@ _line_segs_intersect_ceil (cairo_line_t *l1, cairo_line_t *l2, cairo_fixed_t *y_
 	intersect_32_32 = _cairo_int64_add (intersect_32_32,
 					    _cairo_int32_to_int64 (1));
     }
-	
-    /* 
+
+    /*
      * Now convert from 32.32 to 48.16 and take the ceiling;
      * this requires adding in 15 1 bits and shifting the result
      */
@@ -585,12 +584,12 @@ _line_segs_intersect_ceil (cairo_line_t *l1, cairo_line_t *l2, cairo_fixed_t *y_
     intersect_32_32 = _cairo_int64_add (intersect_32_32,
 					_cairo_int32_to_int64 ((1 << 16) - 1));
     intersect_48_16 = _cairo_int64_rsa (intersect_32_32, 16);
-    
+
     /*
      * And drop the top bits
      */
     intersect_16_16 = _cairo_int64_to_int32 (intersect_48_16);
-    
+
     *y_intersection = intersect_16_16;
 
     return 1;
@@ -611,7 +610,7 @@ _compute_x (cairo_line_t *line, cairo_fixed_t y)
 static double
 _compute_inverse_slope (cairo_line_t *l)
 {
-    return (_cairo_fixed_to_double (l->p2.x - l->p1.x) / 
+    return (_cairo_fixed_to_double (l->p2.x - l->p1.x) /
 	    _cairo_fixed_to_double (l->p2.y - l->p1.y));
 }
 
@@ -741,7 +740,7 @@ _cairo_traps_tessellate_polygon (cairo_traps_t		*traps,
 	return CAIRO_STATUS_SUCCESS;
 
     qsort (edges, num_edges, sizeof (cairo_edge_t), _compare_cairo_edge_by_top);
-    
+
     y = edges[0].edge.p1.y;
     active = 0;
     inactive = 0;
@@ -809,12 +808,12 @@ static cairo_bool_t
 _cairo_trap_contains (cairo_trapezoid_t *t, cairo_point_t *pt)
 {
     cairo_slope_t slope_left, slope_pt, slope_right;
-    
+
     if (t->top > pt->y)
 	return FALSE;
     if (t->bottom < pt->y)
 	return FALSE;
-    
+
     _cairo_slope_init (&slope_left, &t->left.p1, &t->left.p2);
     _cairo_slope_init (&slope_pt, &t->left.p1, pt);
 
@@ -860,10 +859,10 @@ _cairo_traps_extents (cairo_traps_t *traps, cairo_box_t *extents)
  *          exactly representable as a pixman region, otherwise a
  *          a pointer to such a region, newly allocated.
  *          (free with pixman region destroy)
- * 
+ *
  * Determines if a set of trapezoids are exactly representable as a
  * pixman region, and if so creates such a region.
- * 
+ *
  * Return value: %CAIRO_STATUS_SUCCESS or %CAIRO_STATUS_NO_MEMORY
  **/
 cairo_status_t
@@ -882,7 +881,7 @@ _cairo_traps_extract_region (cairo_traps_t      *traps,
 	    *region = NULL;
 	    return CAIRO_STATUS_SUCCESS;
 	}
-    
+
     *region = pixman_region_create ();
 
     for (i = 0; i < traps->num_traps; i++) {
@@ -897,7 +896,7 @@ _cairo_traps_extract_region (cairo_traps_t      *traps,
 	 */
 	if (width == 0 || height == 0)
 	  continue;
-	
+
 	if (pixman_region_union_rect (*region, *region,
 				      x, y, width, height) != PIXMAN_REGION_STATUS_SUCCESS) {
 	    pixman_region_destroy (*region);

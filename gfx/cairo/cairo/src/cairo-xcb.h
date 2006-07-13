@@ -55,6 +55,7 @@ cairo_xcb_surface_create (XCBConnection *c,
 cairo_public cairo_surface_t *
 cairo_xcb_surface_create_for_bitmap (XCBConnection *c,
 				     XCBPIXMAP	    bitmap,
+				     XCBSCREEN	   *screen,
 				     int	    width,
 				     int	    height);
 

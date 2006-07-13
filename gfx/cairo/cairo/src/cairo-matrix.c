@@ -48,7 +48,7 @@ _cairo_matrix_compute_adjoint (cairo_matrix_t *matrix);
 /**
  * cairo_matrix_init_identity:
  * @matrix: a #cairo_matrix_t
- * 
+ *
  * Modifies @matrix to be an identity transformation.
  **/
 void
@@ -70,7 +70,7 @@ slim_hidden_def(cairo_matrix_init_identity);
  * @yy: yy component of the affine transformation
  * @x0: X translation component of the affine transformation
  * @y0: Y translation component of the affine transformation
- * 
+ *
  * Sets @matrix to be the affine transformation given by
  * @xx, @yx, @xy, @yy, @x0, @y0. The transformation is given
  * by:
@@ -94,14 +94,14 @@ slim_hidden_def(cairo_matrix_init);
 
 /**
  * _cairo_matrix_get_affine:
- * @matrix: a @cairo_matrix_t
+ * @matrix: a #cairo_matrix_t
  * @xx: location to store xx component of matrix
  * @yx: location to store yx component of matrix
  * @xy: location to store xy component of matrix
  * @yy: location to store yy component of matrix
  * @x0: location to store x0 (X-translation component) of matrix, or %NULL
  * @y0: location to store y0 (Y-translation component) of matrix, or %NULL
- * 
+ *
  * Gets the matrix values for the affine tranformation that @matrix represents.
  * See cairo_matrix_init().
  *
@@ -135,7 +135,7 @@ _cairo_matrix_get_affine (const cairo_matrix_t *matrix,
  * @matrix: a cairo_matrix_t
  * @tx: amount to translate in the X direction
  * @ty: amount to translate in the Y direction
- * 
+ *
  * Initializes @matrix to a transformation that translates by @tx and
  * @ty in the X and Y dimensions, respectively.
  **/
@@ -155,7 +155,7 @@ slim_hidden_def(cairo_matrix_init_translate);
  * @matrix: a cairo_matrix_t
  * @tx: amount to translate in the X direction
  * @ty: amount to translate in the Y direction
- * 
+ *
  * Applies a translation by @tx, @ty to the transformation in
  * @matrix. The effect of the new transformation is to first translate
  * the coordinates by @tx and @ty, then apply the original transformation
@@ -176,7 +176,7 @@ cairo_matrix_translate (cairo_matrix_t *matrix, double tx, double ty)
  * @matrix: a cairo_matrix_t
  * @sx: scale factor in the X direction
  * @sy: scale factor in the Y direction
- * 
+ *
  * Initializes @matrix to a transformation that scales by @sx and @sy
  * in the X and Y dimensions, respectively.
  **/
@@ -196,7 +196,7 @@ slim_hidden_def(cairo_matrix_init_scale);
  * @matrix: a #cairo_matrix_t
  * @sx: scale factor in the X direction
  * @sy: scale factor in the Y direction
- * 
+ *
  * Applies scaling by @tx, @ty to the transformation in @matrix. The
  * effect of the new transformation is to first scale the coordinates
  * by @sx and @sy, then apply the original transformation to the coordinates.
@@ -220,7 +220,7 @@ slim_hidden_def(cairo_matrix_scale);
  * the positive X axis toward the positive Y axis. With the default
  * axis orientation of cairo, positive angles rotate in a clockwise
  * direction.
- * 
+ *
  * Initialized @matrix to a transformation that rotates by @radians.
  **/
 void
@@ -242,13 +242,13 @@ slim_hidden_def(cairo_matrix_init_rotate);
 
 /**
  * cairo_matrix_rotate:
- * @matrix: a @cairo_matrix_t
+ * @matrix: a #cairo_matrix_t
  * @radians: angle of rotation, in radians. The direction of rotation
  * is defined such that positive angles rotate in the direction from
  * the positive X axis toward the positive Y axis. With the default
  * axis orientation of cairo, positive angles rotate in a clockwise
  * direction.
- * 
+ *
  * Applies rotation by @radians to the transformation in
  * @matrix. The effect of the new transformation is to first rotate the
  * coordinates by @radians, then apply the original transformation
@@ -266,10 +266,10 @@ cairo_matrix_rotate (cairo_matrix_t *matrix, double radians)
 
 /**
  * cairo_matrix_multiply:
- * @result: a @cairo_matrix_t in which to store the result
- * @a: a @cairo_matrix_t
- * @b: a @cairo_matrix_t
- * 
+ * @result: a #cairo_matrix_t in which to store the result
+ * @a: a #cairo_matrix_t
+ * @b: a #cairo_matrix_t
+ *
  * Multiplies the affine transformations in @a and @b together
  * and stores the result in @result. The effect of the resulting
  * transformation is to first apply the transformation in @a to the
@@ -304,12 +304,12 @@ slim_hidden_def(cairo_matrix_multiply);
 
 /**
  * cairo_matrix_transform_distance:
- * @matrix: a @cairo_matrix_t
+ * @matrix: a #cairo_matrix_t
  * @dx: X component of a distance vector. An in/out parameter
  * @dy: Y component of a distance vector. An in/out parameter
- * 
+ *
  * Transforms the distance vector (@dx,@dy) by @matrix. This is
- * similar to cairo_matrix_transform() except that the translation
+ * similar to cairo_matrix_transform_point() except that the translation
  * components of the transformation are ignored. The calculation of
  * the returned vector is as follows:
  *
@@ -338,10 +338,10 @@ slim_hidden_def(cairo_matrix_transform_distance);
 
 /**
  * cairo_matrix_transform_point:
- * @matrix: a @cairo_matrix_t
+ * @matrix: a #cairo_matrix_t
  * @x: X position. An in/out parameter
  * @y: Y position. An in/out parameter
- * 
+ *
  * Transforms the point (@x, @y) by @matrix.
  **/
 void
@@ -442,13 +442,13 @@ _cairo_matrix_compute_adjoint (cairo_matrix_t *matrix)
 
 /**
  * cairo_matrix_invert:
- * @matrix: a @cairo_matrix_t
- * 
+ * @matrix: a #cairo_matrix_t
+ *
  * Changes @matrix to be the inverse of it's original value. Not
  * all transformation matrices have inverses; if the matrix
  * collapses points together (it is <firstterm>degenerate</firstterm>),
  * then it has no inverse and this function will fail.
- * 
+ *
  * Returns: If @matrix has an inverse, modifies @matrix to
  *  be the inverse matrix and returns %CAIRO_STATUS_SUCCESS. Otherwise,
  *  returns %CAIRO_STATUS_INVALID_MATRIX.
@@ -460,7 +460,7 @@ cairo_matrix_invert (cairo_matrix_t *matrix)
     double det;
 
     _cairo_matrix_compute_determinant (matrix, &det);
-    
+
     if (det == 0)
 	return CAIRO_STATUS_INVALID_MATRIX;
 
@@ -501,7 +501,7 @@ _cairo_matrix_compute_scale_factors (const cairo_matrix_t *matrix,
 	double x = x_major != 0;
 	double y = x == 0;
 	double major, minor;
-	
+
 	cairo_matrix_transform_distance (matrix, &x, &y);
 	major = sqrt(x*x + y*y);
 	/*
@@ -511,7 +511,7 @@ _cairo_matrix_compute_scale_factors (const cairo_matrix_t *matrix,
 	    det = -det;
 	if (major)
 	    minor = det / major;
-	else 
+	else
 	    minor = 0.0;
 	if (x_major)
 	{
@@ -528,7 +528,15 @@ _cairo_matrix_compute_scale_factors (const cairo_matrix_t *matrix,
     return CAIRO_STATUS_SUCCESS;
 }
 
-cairo_bool_t 
+cairo_bool_t
+_cairo_matrix_is_identity (const cairo_matrix_t *matrix)
+{
+    return (matrix->xx == 1.0 && matrix->yx == 0.0 &&
+	    matrix->xy == 0.0 && matrix->yy == 1.0 &&
+	    matrix->x0 == 0.0 && matrix->y0 == 0.0);
+}
+
+cairo_bool_t
 _cairo_matrix_is_integer_translation(const cairo_matrix_t *m,
 				     int *itx, int *ity)
 {
@@ -556,148 +564,113 @@ _cairo_matrix_is_integer_translation(const cairo_matrix_t *m,
     return TRUE;
 }
 
-cairo_bool_t
-_cairo_matrix_is_integer_translation_and_scale(const cairo_matrix_t *m,
-                                               int *itx, int *ity, int *sx, int *sy)
-{
-    cairo_fixed_t x0_fixed, y0_fixed, xx_fixed, yy_fixed;
-
-    if ((m->yx != 0.0) || (m->yy != 0.0))
-        return FALSE;
-
-    x0_fixed = _cairo_fixed_from_double (m->x0);
-    y0_fixed = _cairo_fixed_from_double (m->y0);
-    xx_fixed = _cairo_fixed_from_double (m->xx);
-    yy_fixed = _cairo_fixed_from_double (m->yy);
-
-    if (!_cairo_fixed_is_integer(x0_fixed) ||
-        !_cairo_fixed_is_integer(y0_fixed) ||
-        !_cairo_fixed_is_integer(xx_fixed) ||
-        !_cairo_fixed_is_integer(yy_fixed))
-        return FALSE;
-
-    if (itx)
-        *itx = _cairo_fixed_integer_part(x0_fixed);
-    if (ity)
-        *ity = _cairo_fixed_integer_part(y0_fixed);
-    if (sx)
-        *sx = _cairo_fixed_integer_part(xx_fixed);
-    if (sy)
-        *sy = _cairo_fixed_integer_part(yy_fixed);
-
-    return TRUE;
-}
-
 /*
   A circle in user space is transformed into an ellipse in device space.
 
   The following is a derivation of a formula to calculate the length of the
   major axis for this ellipse; this is useful for error bounds calculations.
-  
+
   Thanks to Walter Brisken <wbrisken@aoc.nrao.edu> for this derivation:
-  
+
   1.  First some notation:
-  
-  All capital letters represent vectors in two dimensions.  A prime ' 
+
+  All capital letters represent vectors in two dimensions.  A prime '
   represents a transformed coordinate.  Matrices are written in underlined
   form, ie _R_.  Lowercase letters represent scalar real values.
-  
-  2.  The question has been posed:  What is the maximum expansion factor 
+
+  2.  The question has been posed:  What is the maximum expansion factor
   achieved by the linear transformation
-  
+
   X' = X _R_
-  
+
   where _R_ is a real-valued 2x2 matrix with entries:
-  
+
   _R_ = [a b]
         [c d]  .
-  
-  In other words, what is the maximum radius, MAX[ |X'| ], reached for any 
+
+  In other words, what is the maximum radius, MAX[ |X'| ], reached for any
   X on the unit circle ( |X| = 1 ) ?
-  
-  
+
   3.  Some useful formulae
-  
+
   (A) through (C) below are standard double-angle formulae.  (D) is a lesser
   known result and is derived below:
-  
+
   (A)  sin²(θ) = (1 - cos(2*θ))/2
   (B)  cos²(θ) = (1 + cos(2*θ))/2
   (C)  sin(θ)*cos(θ) = sin(2*θ)/2
   (D)  MAX[a*cos(θ) + b*sin(θ)] = sqrt(a² + b²)
-  
+
   Proof of (D):
-  
+
   find the maximum of the function by setting the derivative to zero:
-  
+
        -a*sin(θ)+b*cos(θ) = 0
-  
-  From this it follows that 
-  
-       tan(θ) = b/a 
-  
-  and hence 
-  
+
+  From this it follows that
+
+       tan(θ) = b/a
+
+  and hence
+
        sin(θ) = b/sqrt(a² + b²)
-  
-  and 
-  
+
+  and
+
        cos(θ) = a/sqrt(a² + b²)
-  
+
   Thus the maximum value is
-  
+
        MAX[a*cos(θ) + b*sin(θ)] = (a² + b²)/sqrt(a² + b²)
                                    = sqrt(a² + b²)
-  
-  
+
   4.  Derivation of maximum expansion
-  
+
   To find MAX[ |X'| ] we search brute force method using calculus.  The unit
   circle on which X is constrained is to be parameterized by t:
-  
+
        X(θ) = (cos(θ), sin(θ))
-  
-  Thus 
-  
+
+  Thus
+
        X'(θ) = X(θ) * _R_ = (cos(θ), sin(θ)) * [a b]
                                                [c d]
              = (a*cos(θ) + c*sin(θ), b*cos(θ) + d*sin(θ)).
-  
-  Define 
-  
+
+  Define
+
        r(θ) = |X'(θ)|
-  
+
   Thus
-  
+
        r²(θ) = (a*cos(θ) + c*sin(θ))² + (b*cos(θ) + d*sin(θ))²
-             = (a² + b²)*cos²(θ) + (c² + d²)*sin²(θ) 
-                 + 2*(a*c + b*d)*cos(θ)*sin(θ) 
-  
+             = (a² + b²)*cos²(θ) + (c² + d²)*sin²(θ)
+                 + 2*(a*c + b*d)*cos(θ)*sin(θ)
+
   Now apply the double angle formulae (A) to (C) from above:
-  
-       r²(θ) = (a² + b² + c² + d²)/2 
+
+       r²(θ) = (a² + b² + c² + d²)/2
 	     + (a² + b² - c² - d²)*cos(2*θ)/2
   	     + (a*c + b*d)*sin(2*θ)
              = f + g*cos(φ) + h*sin(φ)
-  
+
   Where
-  
+
        f = (a² + b² + c² + d²)/2
        g = (a² + b² - c² - d²)/2
        h = (a*c + d*d)
        φ = 2*θ
-  
+
   It is clear that MAX[ |X'| ] = sqrt(MAX[ r² ]).  Here we determine MAX[ r² ]
   using (D) from above:
-  
+
        MAX[ r² ] = f + sqrt(g² + h²)
-  
+
   And finally
 
        MAX[ |X'| ] = sqrt( f + sqrt(g² + h²) )
 
   Which is the solution to this problem.
-
 
   Walter Brisken
   2004/10/08

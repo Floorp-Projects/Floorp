@@ -49,6 +49,7 @@ CAIRO_BEGIN_DECLS
 cairo_public cairo_surface_t *
 cairo_xcb_surface_create_with_xrender_format (XCBConnection	    *c,
 					      XCBDRAWABLE	     drawable,
+					      XCBSCREEN		    *screen,
 					      XCBRenderPICTFORMINFO *format,
 					      int		     width,
 					      int		     height);

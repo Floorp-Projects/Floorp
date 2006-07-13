@@ -51,7 +51,7 @@ struct _cairo_clip {
     cairo_clip_mode_t mode;
 
     /*
-     * Mask-based clipping for cases where the backend 
+     * Mask-based clipping for cases where the backend
      * clipping isn't sufficiently able.
      *
      * The rectangle here represents the
@@ -61,7 +61,7 @@ struct _cairo_clip {
      * clip paths
      */
     cairo_surface_t *surface;
-    cairo_rectangle_fixed_t surface_rect;
+    cairo_rectangle_int16_t surface_rect;
     /*
      * Surface clip serial number to store
      * in the surface when this clip is set
@@ -105,7 +105,7 @@ _cairo_clip_clip (cairo_clip_t       *clip,
 
 cairo_private cairo_status_t
 _cairo_clip_intersect_to_rectangle (cairo_clip_t            *clip,
-				    cairo_rectangle_fixed_t *rectangle);
+				    cairo_rectangle_int16_t *rectangle);
 
 cairo_private cairo_status_t
 _cairo_clip_intersect_to_region (cairo_clip_t      *clip,
@@ -117,7 +117,7 @@ _cairo_clip_combine_to_surface (cairo_clip_t                  *clip,
 				cairo_surface_t               *dst,
 				int                            dst_x,
 				int                            dst_y,
-				const cairo_rectangle_fixed_t *extents);
+				const cairo_rectangle_int16_t *extents);
 
 cairo_private void
 _cairo_clip_translate (cairo_clip_t  *clip,
@@ -132,10 +132,5 @@ _cairo_clip_extract_rectangles (cairo_clip_t *clip,
                                 int max_rectangles,
                                 cairo_clip_rect_t *rectangles_out,
                                 int *num_rectangles_out);
-
-cairo_private void
-_cairo_clip_translate (cairo_clip_t  *clip,
-                       cairo_fixed_t  tx,
-                       cairo_fixed_t  ty);
 
 #endif /* CAIRO_CLIP_PRIVATE_H */

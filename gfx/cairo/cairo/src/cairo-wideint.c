@@ -113,7 +113,7 @@ cairo_uint64_t
 _cairo_uint32x32_64_mul (uint32_t a, uint32_t b)
 {
     cairo_uint64_t  s;
-    
+
     uint16_t	ah, al, bh, bl;
     uint32_t	r0, r1, r2, r3;
 
@@ -153,7 +153,7 @@ cairo_uint64_t
 _cairo_uint64_mul (cairo_uint64_t a, cairo_uint64_t b)
 {
     cairo_uint64_t	s;
-    
+
     s = _cairo_uint32x32_64_mul (a.lo, b.lo);
     s.hi += a.lo * b.hi + a.hi * b.lo;
     return s;
@@ -262,9 +262,9 @@ _cairo_uint64_divrem (cairo_uint64_t num, cairo_uint64_t den)
     cairo_uquorem64_t	qr;
     cairo_uint64_t	bit;
     cairo_uint64_t	quo;
-    
+
     bit = _cairo_uint32_to_uint64 (1);
-    
+
     /* normalize to make den >= num, but not overflow */
     while (_cairo_uint64_lt (den, num) && (den.hi & 0x80000000) == 0)
     {
@@ -272,7 +272,7 @@ _cairo_uint64_divrem (cairo_uint64_t num, cairo_uint64_t den)
 	den = _cairo_uint64_lsl (den, 1);
     }
     quo = _cairo_uint32_to_uint64 (0);
-    
+
     /* generate quotient, one bit at a time */
     while (bit.hi | bit.lo)
     {
@@ -476,7 +476,7 @@ _cairo_int64x64_128_mul (cairo_int64_t a, cairo_int64_t b)
     s = _cairo_uint64x64_128_mul (_cairo_int64_to_uint64(a),
 				  _cairo_int64_to_uint64(b));
     if (_cairo_int64_negative (a))
-	s.hi = _cairo_uint64_sub (s.hi, 
+	s.hi = _cairo_uint64_sub (s.hi,
 				  _cairo_int64_to_uint64 (b));
     if (_cairo_int64_negative (b))
 	s.hi = _cairo_uint64_sub (s.hi,
@@ -588,9 +588,9 @@ _cairo_uint128_divrem (cairo_uint128_t num, cairo_uint128_t den)
     cairo_uquorem128_t	qr;
     cairo_uint128_t	bit;
     cairo_uint128_t	quo;
-    
+
     bit = _cairo_uint32_to_uint128 (1);
-    
+
     /* normalize to make den >= num, but not overflow */
     while (_cairo_uint128_lt (den, num) && !_cairo_msbset64(den.hi))
     {
@@ -598,7 +598,7 @@ _cairo_uint128_divrem (cairo_uint128_t num, cairo_uint128_t den)
 	den = _cairo_uint128_lsl (den, 1);
     }
     quo = _cairo_uint32_to_uint128 (0);
-    
+
     /* generate quotient, one bit at a time */
     while (_cairo_uint128_ne (bit, _cairo_uint32_to_uint128(0)))
     {

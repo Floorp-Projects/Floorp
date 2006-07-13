@@ -73,11 +73,6 @@ cairo_ps_surface_dsc_begin_setup (cairo_surface_t *surface);
 cairo_public void
 cairo_ps_surface_dsc_begin_page_setup (cairo_surface_t *surface);
 
-cairo_public void
-cairo_ps_surface_set_dpi (cairo_surface_t      *surface,
-			  double		x_dpi,
-			  double		y_dpi);
-
 CAIRO_END_DECLS
 
 #else  /* CAIRO_HAS_PS_SURFACE */

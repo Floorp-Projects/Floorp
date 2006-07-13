@@ -88,7 +88,7 @@ _cairo_gstate_create (cairo_surface_t *target)
     status = _cairo_gstate_init (gstate, target);
     if (status) {
 	free (gstate);
-	return NULL;		
+	return NULL;
     }
 
     return gstate;
@@ -111,11 +111,11 @@ _cairo_gstate_init (cairo_gstate_t  *gstate,
     gstate->scaled_font = NULL;
 
     cairo_matrix_init_scale (&gstate->font_matrix,
-			     CAIRO_GSTATE_DEFAULT_FONT_SIZE, 
+			     CAIRO_GSTATE_DEFAULT_FONT_SIZE,
 			     CAIRO_GSTATE_DEFAULT_FONT_SIZE);
 
     _cairo_font_options_init_default (&gstate->font_options);
-    
+
     _cairo_clip_init (&gstate->clip, target);
 
     gstate->target = cairo_surface_reference (target);
@@ -145,7 +145,7 @@ static cairo_status_t
 _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
 {
     cairo_status_t status;
-    
+
     gstate->op = other->op;
 
     gstate->tolerance = other->tolerance;
@@ -309,8 +309,8 @@ _cairo_gstate_redirect_target (cairo_gstate_t *gstate, cairo_surface_t *child)
     /* The clip is in surface backend coordinates for the previous target;
      * translate it into the child's backend coordinates. */
     _cairo_clip_translate (&gstate->clip,
-                           _cairo_fixed_from_double (child->device_x_offset - gstate->parent_target->device_x_offset),
-                           _cairo_fixed_from_double (child->device_y_offset - gstate->parent_target->device_y_offset));
+                           _cairo_fixed_from_double (child->device_transform.x0 - gstate->parent_target->device_transform.x0),
+                           _cairo_fixed_from_double (child->device_transform.y0 - gstate->parent_target->device_transform.y0));
 }
 
 /**
@@ -394,7 +394,7 @@ _cairo_gstate_set_source (cairo_gstate_t  *gstate,
     cairo_pattern_destroy (gstate->source);
     gstate->source = source;
     gstate->source_ctm_inverse = gstate->ctm_inverse;
-    
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -499,7 +499,7 @@ _cairo_gstate_set_dash (cairo_gstate_t *gstate, double *dash, int num_dashes, do
 
     if (gstate->stroke_style.dash)
 	free (gstate->stroke_style.dash);
-    
+
     gstate->stroke_style.num_dashes = num_dashes;
 
     if (gstate->stroke_style.num_dashes == 0) {
@@ -515,7 +515,7 @@ _cairo_gstate_set_dash (cairo_gstate_t *gstate, double *dash, int num_dashes, do
     }
 
     memcpy (gstate->stroke_style.dash, dash, gstate->stroke_style.num_dashes * sizeof (double));
-    
+
     dash_total = 0.0;
     for (i = 0; i < gstate->stroke_style.num_dashes; i++) {
 	if (gstate->stroke_style.dash[i] < 0)
@@ -567,7 +567,7 @@ _cairo_gstate_translate (cairo_gstate_t *gstate, double tx, double ty)
     cairo_matrix_t tmp;
 
     _cairo_gstate_unset_scaled_font (gstate);
-    
+
     cairo_matrix_init_translate (&tmp, tx, ty);
     cairo_matrix_multiply (&gstate->ctm, &tmp, &gstate->ctm);
 
@@ -586,7 +586,7 @@ _cairo_gstate_scale (cairo_gstate_t *gstate, double sx, double sy)
 	return CAIRO_STATUS_INVALID_MATRIX;
 
     _cairo_gstate_unset_scaled_font (gstate);
-    
+
     cairo_matrix_init_scale (&tmp, sx, sy);
     cairo_matrix_multiply (&gstate->ctm, &tmp, &gstate->ctm);
 
@@ -602,7 +602,7 @@ _cairo_gstate_rotate (cairo_gstate_t *gstate, double angle)
     cairo_matrix_t tmp;
 
     _cairo_gstate_unset_scaled_font (gstate);
-    
+
     cairo_matrix_init_rotate (&tmp, angle);
     cairo_matrix_multiply (&gstate->ctm, &tmp, &gstate->ctm);
 
@@ -619,7 +619,7 @@ _cairo_gstate_transform (cairo_gstate_t	      *gstate,
     cairo_matrix_t tmp;
 
     _cairo_gstate_unset_scaled_font (gstate);
-    
+
     tmp = *matrix;
     cairo_matrix_multiply (&gstate->ctm, &tmp, &gstate->ctm);
 
@@ -636,7 +636,7 @@ _cairo_gstate_set_matrix (cairo_gstate_t       *gstate,
     cairo_status_t status;
 
     _cairo_gstate_unset_scaled_font (gstate);
-    
+
     gstate->ctm = *matrix;
 
     gstate->ctm_inverse = *matrix;
@@ -651,7 +651,7 @@ cairo_status_t
 _cairo_gstate_identity_matrix (cairo_gstate_t *gstate)
 {
     _cairo_gstate_unset_scaled_font (gstate);
-    
+
     cairo_matrix_init_identity (&gstate->ctm);
     cairo_matrix_init_identity (&gstate->ctm_inverse);
 
@@ -696,15 +696,17 @@ void
 _cairo_gstate_user_to_backend (cairo_gstate_t *gstate, double *x, double *y)
 {
     cairo_matrix_transform_point (&gstate->ctm, x, y);
+    cairo_matrix_transform_point (&gstate->target->device_transform, x, y);
 }
 
 void
 _cairo_gstate_backend_to_user (cairo_gstate_t *gstate, double *x, double *y)
 {
+    cairo_matrix_transform_point (&gstate->target->device_transform_inverse, x, y);
     cairo_matrix_transform_point (&gstate->ctm_inverse, x, y);
 }
 
-/* XXX: NYI 
+/* XXX: NYI
 cairo_status_t
 _cairo_gstate_stroke_to_path (cairo_gstate_t *gstate)
 {
@@ -723,7 +725,6 @@ _cairo_gstate_copy_transformed_pattern (cairo_gstate_t  *gstate,
 {
     cairo_surface_pattern_t *surface_pattern;
     cairo_surface_t *surface;
-    cairo_matrix_t offset_matrix;
 
     _cairo_pattern_init_copy (pattern, original);
     _cairo_pattern_transform (pattern, ctm_inverse);
@@ -731,12 +732,8 @@ _cairo_gstate_copy_transformed_pattern (cairo_gstate_t  *gstate,
     if (cairo_pattern_get_type (original) == CAIRO_PATTERN_TYPE_SURFACE) {
         surface_pattern = (cairo_surface_pattern_t *) original;
         surface = surface_pattern->surface;
-        if (_cairo_surface_has_device_offset_or_scale (surface)) {
-            cairo_matrix_init_translate (&offset_matrix,
-                                         surface->device_x_offset,
-                                         surface->device_y_offset);
-            _cairo_pattern_transform (pattern, &offset_matrix);
-        }
+        if (_cairo_surface_has_device_transform (surface))
+            _cairo_pattern_transform (pattern, &surface->device_transform);
     }
 
 }
@@ -787,7 +784,7 @@ _cairo_gstate_paint (cairo_gstate_t *gstate)
 /**
  * _cairo_operator_bounded_by_mask:
  * @op: a #cairo_operator_t
- * 
+ *
  * A bounded operator is one where mask pixel
  * of zero results in no effect on the destination image.
  *
@@ -818,7 +815,7 @@ _cairo_operator_bounded_by_mask (cairo_operator_t op)
     case CAIRO_OPERATOR_DEST_ATOP:
 	return FALSE;
     }
-    
+
     ASSERT_NOT_REACHED;
     return FALSE;
 }
@@ -826,7 +823,7 @@ _cairo_operator_bounded_by_mask (cairo_operator_t op)
 /**
  * _cairo_operator_bounded_by_source:
  * @op: a #cairo_operator_t
- * 
+ *
  * A bounded operator is one where source pixels of zero
  * (in all four components, r, g, b and a) effect no change
  * in the resulting destination image.
@@ -858,7 +855,7 @@ _cairo_operator_bounded_by_source (cairo_operator_t op)
     case CAIRO_OPERATOR_DEST_ATOP:
 	return FALSE;
     }
-    
+
     ASSERT_NOT_REACHED;
     return FALSE;
 }
@@ -923,7 +920,7 @@ _cairo_gstate_stroke (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
 				    gstate->antialias);
 
     _cairo_pattern_fini (&source_pattern.base);
-    
+
     return status;
 
 }
@@ -959,52 +956,6 @@ BAIL:
     return status;
 }
 
-/* XXX We currently have a confusing mix of boxes and rectangles as
- * exemplified by this function.  A cairo_box_t is a rectangular area
- * represented by the coordinates of the upper left and lower right
- * corners, expressed in fixed point numbers.  A cairo_rectangle_fixed_t is
- * also a rectangular area, but represented by the upper left corner
- * and the width and the height, as integer numbers.
- *
- * This function converts a cairo_box_t to a cairo_rectangle_fixed_t by
- * increasing the area to the nearest integer coordinates.  We should
- * standardize on cairo_rectangle_fixed_t and cairo_rectangle_fixed_t, and
- * this function could be renamed to the more reasonable
- * _cairo_rectangle_fixed_round.
- */
-
-void
-_cairo_box_round_to_rectangle (cairo_box_t *box, cairo_rectangle_fixed_t *rectangle)
-{
-    rectangle->x = _cairo_fixed_integer_floor (box->p1.x);
-    rectangle->y = _cairo_fixed_integer_floor (box->p1.y);
-    rectangle->width = _cairo_fixed_integer_ceil (box->p2.x) - rectangle->x;
-    rectangle->height = _cairo_fixed_integer_ceil (box->p2.y) - rectangle->y;
-}
-
-void
-_cairo_rectangle_intersect (cairo_rectangle_fixed_t *dest, cairo_rectangle_fixed_t *src)
-{
-    int x1, y1, x2, y2;
-
-    x1 = MAX (dest->x, src->x);
-    y1 = MAX (dest->y, src->y);
-    x2 = MIN (dest->x + dest->width, src->x + src->width);
-    y2 = MIN (dest->y + dest->height, src->y + src->height);
-
-    if (x1 >= x2 || y1 >= y2) {
-	dest->x = 0;
-	dest->y = 0;
-	dest->width = 0;
-	dest->height = 0;
-    } else {
-	dest->x = x1;
-	dest->y = y1;
-	dest->width = x2 - x1;
-	dest->height = y2 - y1;
-    }	
-}
-
 cairo_status_t
 _cairo_gstate_fill (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
 {
@@ -1013,11 +964,11 @@ _cairo_gstate_fill (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
 
     if (gstate->source->status)
 	return gstate->source->status;
-    
+
     status = _cairo_surface_set_clip (gstate->target, &gstate->clip);
     if (status)
 	return status;
-  
+
     _cairo_gstate_copy_transformed_source (gstate, &pattern.base);
 
     status = _cairo_surface_fill (gstate->target,
@@ -1029,7 +980,7 @@ _cairo_gstate_fill (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
 				  gstate->antialias);
 
     _cairo_pattern_fini (&pattern.base);
-    
+
     return status;
 }
 
@@ -1055,7 +1006,7 @@ _cairo_gstate_in_fill (cairo_gstate_t	  *gstate,
 	goto BAIL;
 
     *inside_ret = _cairo_traps_contain (&traps, x, y);
-    
+
 BAIL:
     _cairo_traps_fini (&traps);
 
@@ -1099,9 +1050,9 @@ _cairo_gstate_stroke_extents (cairo_gstate_t	 *gstate,
     cairo_status_t status;
     cairo_traps_t traps;
     cairo_box_t extents;
-  
+
     _cairo_traps_init (&traps);
-  
+
     status = _cairo_path_fixed_stroke_to_traps (path,
 						&gstate->stroke_style,
 						&gstate->ctm,
@@ -1120,10 +1071,10 @@ _cairo_gstate_stroke_extents (cairo_gstate_t	 *gstate,
 
     _cairo_gstate_backend_to_user (gstate, x1, y1);
     _cairo_gstate_backend_to_user (gstate, x2, y2);
-  
+
 BAIL:
     _cairo_traps_fini (&traps);
-  
+
     return status;
 }
 
@@ -1136,16 +1087,16 @@ _cairo_gstate_fill_extents (cairo_gstate_t     *gstate,
     cairo_status_t status;
     cairo_traps_t traps;
     cairo_box_t extents;
-  
+
     _cairo_traps_init (&traps);
-  
+
     status = _cairo_path_fixed_fill_to_traps (path,
 					      gstate->fill_rule,
 					      gstate->tolerance,
 					      &traps);
     if (status)
 	goto BAIL;
-  
+
     _cairo_traps_extents (&traps, &extents);
 
     *x1 = _cairo_fixed_to_double (extents.p1.x);
@@ -1155,10 +1106,10 @@ _cairo_gstate_fill_extents (cairo_gstate_t     *gstate,
 
     _cairo_gstate_backend_to_user (gstate, x1, y1);
     _cairo_gstate_backend_to_user (gstate, x2, y2);
-  
+
 BAIL:
     _cairo_traps_fini (&traps);
-  
+
     return status;
 }
 
@@ -1176,24 +1127,6 @@ _cairo_gstate_clip (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
 			     gstate->antialias, gstate->target);
 }
 
-cairo_bool_t
-_cairo_gstate_has_clip (cairo_gstate_t *gstate)
-{
-   return _cairo_clip_has_clip (&gstate->clip);
-}
-
-cairo_bool_t
-_cairo_gstate_extract_clip_rectangles (cairo_gstate_t *gstate,
-                                       int max_rectangles,
-                                       cairo_clip_rect_t *rectangles_out,
-                                       int *num_rectangles_out)
-{
-    return _cairo_clip_extract_rectangles (&gstate->clip,
-                                           max_rectangles,
-                                           rectangles_out,
-                                           num_rectangles_out);
-}
-
 static void
 _cairo_gstate_unset_scaled_font (cairo_gstate_t *gstate)
 {
@@ -1204,9 +1137,9 @@ _cairo_gstate_unset_scaled_font (cairo_gstate_t *gstate)
 }
 
 cairo_status_t
-_cairo_gstate_select_font_face (cairo_gstate_t       *gstate, 
-				const char           *family, 
-				cairo_font_slant_t    slant, 
+_cairo_gstate_select_font_face (cairo_gstate_t       *gstate,
+				const char           *family,
+				cairo_font_slant_t    slant,
 				cairo_font_weight_t   weight)
 {
     cairo_font_face_t *font_face;
@@ -1222,7 +1155,7 @@ _cairo_gstate_select_font_face (cairo_gstate_t       *gstate,
 }
 
 cairo_status_t
-_cairo_gstate_set_font_size (cairo_gstate_t *gstate, 
+_cairo_gstate_set_font_size (cairo_gstate_t *gstate,
 			     double          size)
 {
     _cairo_gstate_unset_scaled_font (gstate);
@@ -1233,7 +1166,7 @@ _cairo_gstate_set_font_size (cairo_gstate_t *gstate,
 }
 
 cairo_status_t
-_cairo_gstate_set_font_matrix (cairo_gstate_t	    *gstate, 
+_cairo_gstate_set_font_matrix (cairo_gstate_t	    *gstate,
 			       const cairo_matrix_t *matrix)
 {
     _cairo_gstate_unset_scaled_font (gstate);
@@ -1277,13 +1210,13 @@ _cairo_gstate_get_font_face (cairo_gstate_t     *gstate,
     status = _cairo_gstate_ensure_font_face (gstate);
     if (status)
 	return status;
-    
+
     *font_face = gstate->font_face;
 
     return CAIRO_STATUS_SUCCESS;
 }
 
-/* 
+/*
  * Like everything else in this file, fonts involve Too Many Coordinate Spaces;
  * it is easy to get confused about what's going on.
  *
@@ -1300,7 +1233,7 @@ _cairo_gstate_get_font_face (cairo_gstate_t     *gstate,
  * Metrics are returned in user space, whether they are obtained from
  * the currently selected font in a  #cairo_t or from a #cairo_scaled_font_t
  * which is a font specialized to a particular scale matrix, CTM, and target
- * surface. 
+ * surface.
  *
  * The font's view
  * ---------------
@@ -1334,9 +1267,9 @@ _cairo_gstate_get_font_face (cairo_gstate_t     *gstate,
  * around.
  *
  * In order to perform any action on a font, we must build an object
- * called a cairo_font_scale_t; this contains the central 2x2 matrix 
+ * called a cairo_font_scale_t; this contains the central 2x2 matrix
  * resulting from "font matrix * CTM".
- *  
+ *
  * We pass this to the font when making requests of it, which causes it to
  * reply for a particular [user request, device] combination, under the CTM
  * (to accomodate the "zoom in" == "bigger fonts" issue above).
@@ -1373,31 +1306,31 @@ _cairo_gstate_ensure_font_face (cairo_gstate_t *gstate)
 	else
 	    gstate->font_face = font_face;
     }
-    
+
     return CAIRO_STATUS_SUCCESS;
 }
-    
+
 static cairo_status_t
 _cairo_gstate_ensure_scaled_font (cairo_gstate_t *gstate)
 {
     cairo_status_t status;
     cairo_font_options_t options;
-    
+
     if (gstate->scaled_font)
 	return CAIRO_STATUS_SUCCESS;
-    
+
     status = _cairo_gstate_ensure_font_face (gstate);
     if (status)
 	return status;
 
     cairo_surface_get_font_options (gstate->target, &options);
     cairo_font_options_merge (&options, &gstate->font_options);
-    
+
     gstate->scaled_font = cairo_scaled_font_create (gstate->font_face,
 						    &gstate->font_matrix,
 						    &gstate->ctm,
 						    &options);
-    
+
     if (!gstate->scaled_font)
 	return CAIRO_STATUS_NO_MEMORY;
 
@@ -1405,7 +1338,7 @@ _cairo_gstate_ensure_scaled_font (cairo_gstate_t *gstate)
 }
 
 cairo_status_t
-_cairo_gstate_get_font_extents (cairo_gstate_t *gstate, 
+_cairo_gstate_get_font_extents (cairo_gstate_t *gstate,
 				cairo_font_extents_t *extents)
 {
     cairo_status_t status = _cairo_gstate_ensure_scaled_font (gstate);
@@ -1418,7 +1351,7 @@ _cairo_gstate_get_font_extents (cairo_gstate_t *gstate,
 }
 
 cairo_status_t
-_cairo_gstate_text_to_glyphs (cairo_gstate_t *gstate, 
+_cairo_gstate_text_to_glyphs (cairo_gstate_t *gstate,
 			      const char     *utf8,
 			      double	      x,
 			      double	      y,
@@ -1430,7 +1363,7 @@ _cairo_gstate_text_to_glyphs (cairo_gstate_t *gstate,
     status = _cairo_gstate_ensure_scaled_font (gstate);
     if (status)
 	return status;
-    
+
     status = _cairo_scaled_font_text_to_glyphs (gstate->scaled_font, x, y,
 						utf8, glyphs, num_glyphs);
 
@@ -1441,25 +1374,25 @@ _cairo_gstate_text_to_glyphs (cairo_gstate_t *gstate,
 }
 
 cairo_status_t
-_cairo_gstate_set_font_face (cairo_gstate_t    *gstate, 
+_cairo_gstate_set_font_face (cairo_gstate_t    *gstate,
 			     cairo_font_face_t *font_face)
 {
     if (font_face && font_face->status)
 	return font_face->status;
-    
+
     if (font_face != gstate->font_face) {
 	cairo_font_face_destroy (gstate->font_face);
 	gstate->font_face = cairo_font_face_reference (font_face);
     }
 
     _cairo_gstate_unset_scaled_font (gstate);
-    
+
     return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_status_t
 _cairo_gstate_glyph_extents (cairo_gstate_t *gstate,
-			     cairo_glyph_t *glyphs, 
+			     cairo_glyph_t *glyphs,
 			     int num_glyphs,
 			     cairo_text_extents_t *extents)
 {
@@ -1477,8 +1410,8 @@ _cairo_gstate_glyph_extents (cairo_gstate_t *gstate,
 }
 
 cairo_status_t
-_cairo_gstate_show_glyphs (cairo_gstate_t *gstate, 
-			   cairo_glyph_t *glyphs, 
+_cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
+			   cairo_glyph_t *glyphs,
 			   int num_glyphs)
 {
     cairo_status_t status;
@@ -1500,13 +1433,13 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     transformed_glyphs = malloc (num_glyphs * sizeof(cairo_glyph_t));
     if (transformed_glyphs == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
-    
+
     for (i = 0; i < num_glyphs; ++i)
     {
 	transformed_glyphs[i] = glyphs[i];
-	_cairo_gstate_user_to_backend (gstate,
-				       &transformed_glyphs[i].x, 
-				       &transformed_glyphs[i].y);
+	_cairo_gstate_user_to_device (gstate,
+				      &transformed_glyphs[i].x,
+				      &transformed_glyphs[i].y);
     }
 
     _cairo_gstate_copy_transformed_source (gstate, &source_pattern.base);
@@ -1526,7 +1459,7 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 
 cairo_status_t
 _cairo_gstate_glyph_path (cairo_gstate_t     *gstate,
-			  cairo_glyph_t	     *glyphs, 
+			  cairo_glyph_t	     *glyphs,
 			  int		      num_glyphs,
 			  cairo_path_fixed_t *path)
 {
@@ -1537,16 +1470,16 @@ _cairo_gstate_glyph_path (cairo_gstate_t     *gstate,
     status = _cairo_gstate_ensure_scaled_font (gstate);
     if (status)
 	return status;
-    
+
     transformed_glyphs = malloc (num_glyphs * sizeof(cairo_glyph_t));
     if (transformed_glyphs == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
-    
+
     for (i = 0; i < num_glyphs; ++i)
     {
 	transformed_glyphs[i] = glyphs[i];
 	_cairo_gstate_user_to_backend (gstate,
-				       &(transformed_glyphs[i].x), 
+				       &(transformed_glyphs[i].x),
 				       &(transformed_glyphs[i].y));
     }
 
@@ -1571,4 +1504,22 @@ cairo_antialias_t
 _cairo_gstate_get_antialias (cairo_gstate_t *gstate)
 {
     return gstate->antialias;
+}
+
+cairo_bool_t
+_cairo_gstate_has_clip (cairo_gstate_t *gstate)
+{
+   return _cairo_clip_has_clip (&gstate->clip);
+}
+
+cairo_bool_t
+_cairo_gstate_extract_clip_rectangles (cairo_gstate_t *gstate,
+                                       int max_rectangles,
+                                       cairo_clip_rect_t *rectangles_out,
+                                       int *num_rectangles_out)
+{
+    return _cairo_clip_extract_rectangles (&gstate->clip,
+                                           max_rectangles,
+                                           rectangles_out,
+                                           num_rectangles_out);
 }

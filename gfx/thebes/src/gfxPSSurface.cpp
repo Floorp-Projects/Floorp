@@ -55,7 +55,7 @@ gfxPSSurface::SetDPI(double xDPI, double yDPI)
 {
     mXDPI = xDPI;
     mYDPI = yDPI;
-    cairo_ps_surface_set_dpi(CairoSurface(), xDPI, yDPI);
+    cairo_surface_set_fallback_resolution(CairoSurface(), xDPI, yDPI);
 }
 
 void

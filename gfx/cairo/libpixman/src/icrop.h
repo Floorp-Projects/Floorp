@@ -94,7 +94,7 @@ extern const FbMergeRopRec FbMergeRopBits[16] pixman_private;
 #define fbAndStip(rop,fg,pm)	fbAndT(rop,fg,pm,FbStip)
 
 /*
- * Stippling operations; 
+ * Stippling operations;
  */
 
 /* half of table */
@@ -110,7 +110,7 @@ fbStippleTable(int bits);
 
 #define FbStippleRRopMask(dst, b, fa, fx, ba, bx, m) \
     (FbDoMaskRRop(dst, fa, fx, m) & (b)) | (FbDoMaskRRop(dst, ba, bx, m) & ~(b))
-						       
+
 #define FbDoLeftMaskByteStippleRRop(dst, b, fa, fx, ba, bx, lb, l) { \
     FbBits  __xor = ((fx) & (b)) | ((bx) & ~(b)); \
     FbDoLeftMaskByteRRop(dst, lb, l, ((fa) & (b)) | ((ba) & ~(b)), __xor); \
@@ -122,7 +122,7 @@ fbStippleTable(int bits);
 }
 
 #define FbOpaqueStipple(b, fg, bg) (((fg) & (b)) | ((bg) & ~(b)))
-    
+
 /*
  * Compute rop for using tile code for 1-bit dest stipples; modifies
  * existing rop to flip depending on pixel values

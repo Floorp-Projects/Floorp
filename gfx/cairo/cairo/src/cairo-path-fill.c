@@ -94,7 +94,7 @@ _cairo_filler_move_to (void *closure, cairo_point_t *point)
     status = _cairo_polygon_close (polygon);
     if (status)
 	return status;
-      
+
     status = _cairo_polygon_move_to (polygon, point);
     if (status)
 	return status;
@@ -205,4 +205,3 @@ BAIL:
 
     return status;
 }
-

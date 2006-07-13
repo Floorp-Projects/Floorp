@@ -1,7 +1,7 @@
 /* cairo - a vector graphics library with display and print output
  *
  * cairo-svg.h
- * 
+ *
  * Copyright © 2005 Emmanuel Pacaud <emmanuel.pacaud@univ-poitiers.fr>
  *
  * This library is free software; you can redistribute it and/or
@@ -38,10 +38,17 @@
 
 CAIRO_BEGIN_DECLS
 
+/**
+ * cairo_svg_version_t
+ * @CAIRO_SVG_VERSION_1_1: The version 1.1 of the SVG specification.
+ * @CAIRO_SVG_VERSION_1_2: The version 1.2 of the SVG specification.
+ *
+ * #cairo_svg_version_t is used to describe the version number of the SVG
+ * specification that a generated SVG file will conform to.
+ */
 typedef enum {
-    CAIRO_SVG_VERSION_1_1 = 0,
-    CAIRO_SVG_VERSION_1_2,
-    CAIRO_SVG_VERSION_LAST
+    CAIRO_SVG_VERSION_1_1,
+    CAIRO_SVG_VERSION_1_2
 } cairo_svg_version_t;
 
 cairo_public cairo_surface_t *
@@ -54,11 +61,6 @@ cairo_svg_surface_create_for_stream (cairo_write_func_t	write_func,
 				     void	       *closure,
 				     double		width_in_points,
 				     double		height_in_points);
-
-cairo_public void
-cairo_svg_surface_set_dpi (cairo_surface_t     *surface,
-			   double		x_dpi,
-			   double		y_dpi);
 
 cairo_public void
 cairo_svg_surface_restrict_to_version (cairo_surface_t 		*surface,

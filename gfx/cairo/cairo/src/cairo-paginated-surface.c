@@ -159,7 +159,7 @@ _cairo_paginated_surface_finish (void *abstract_surface)
     cairo_surface_destroy (surface->meta);
 
     cairo_surface_destroy (surface->target);
-    
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -170,14 +170,14 @@ _cairo_paginated_surface_acquire_source_image (void	       *abstract_surface,
 {
     cairo_paginated_surface_t *surface = abstract_surface;
     cairo_surface_t *image;
-    cairo_rectangle_fixed_t extents;
+    cairo_rectangle_int16_t extents;
 
     _cairo_surface_get_extents (surface->target, &extents);
 
     image = _cairo_image_surface_create_with_content (surface->content,
 						      extents.width,
 						      extents.height);
-    
+
     _cairo_meta_surface_replay (surface->meta, image);
 
     *image_out = (cairo_image_surface_t*) image;
@@ -214,16 +214,23 @@ _paint_page (cairo_paginated_surface_t *surface)
 	cairo_surface_destroy (analysis);
 	return status;
     }
-    
+
     if (_cairo_analysis_surface_has_unsupported (analysis))
     {
+	double x_scale = surface->base.x_fallback_resolution / 72.0;
+	double y_scale = surface->base.y_fallback_resolution / 72.0;
+	cairo_matrix_t matrix;
+
 	image = _cairo_image_surface_create_with_content (surface->content,
-							  surface->width,
-							  surface->height);
+							  surface->width * x_scale,
+							  surface->height * y_scale);
+	_cairo_surface_set_device_scale (image, x_scale, y_scale);
 
 	_cairo_meta_surface_replay (surface->meta, image);
 
 	pattern = cairo_pattern_create_for_surface (image);
+	cairo_matrix_init_scale (&matrix, x_scale, y_scale);
+	cairo_pattern_set_matrix (pattern, &matrix);
 
 	_cairo_surface_paint (surface->target, CAIRO_OPERATOR_SOURCE, pattern);
 
@@ -237,7 +244,7 @@ _paint_page (cairo_paginated_surface_t *surface)
     }
 
     cairo_surface_destroy (analysis);
-	
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -317,7 +324,7 @@ _cairo_paginated_surface_intersect_clip_path (void	  *abstract_surface,
 
 static cairo_int_status_t
 _cairo_paginated_surface_get_extents (void	              *abstract_surface,
-				      cairo_rectangle_fixed_t *rectangle)
+				      cairo_rectangle_int16_t *rectangle)
 {
     cairo_paginated_surface_t *surface = abstract_surface;
 
@@ -448,7 +455,7 @@ _cairo_paginated_surface_snapshot (void *abstract_other)
 #if 0
     return _cairo_surface_snapshot (other->meta);
 #else
-    cairo_rectangle_fixed_t extents;
+    cairo_rectangle_int16_t extents;
     cairo_surface_t *surface;
 
     _cairo_surface_get_extents (other->target, &extents);

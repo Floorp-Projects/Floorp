@@ -47,7 +47,7 @@
  * DEAD: Entry had been live in the past. A dead entry can be reused
  *       but does not terminate a search for an exact entry.
  *       Appears in the table as a pointer to DEAD_ENTRY.
- * 
+ *
  * LIVE: Entry is currently being used.
  *       Appears in the table as any non-NULL, non-DEAD_ENTRY pointer.
  */
@@ -130,7 +130,7 @@ struct _cairo_hash_table {
 /**
  * _cairo_hash_table_create:
  * @keys_equal: a function to return TRUE if two keys are equal
- * 
+ *
  * Creates a new hash table which will use the keys_equal() function
  * to compare hash keys. Data is provided to the hash table in the
  * form of user-derived versions of cairo_hash_entry_t. A hash entry
@@ -140,12 +140,12 @@ struct _cairo_hash_table {
  * will be necessary, (as in _cairo_hash_table_insert).
  *
  * See #cairo_hash_entry_t for more details.
- * 
+ *
  * Return value: the new hash table or NULL if out of memory.
  **/
 cairo_hash_table_t *
 _cairo_hash_table_create (cairo_hash_keys_equal_func_t keys_equal)
-{    
+{
     cairo_hash_table_t *hash_table;
 
     hash_table = malloc (sizeof (cairo_hash_table_t));
@@ -172,7 +172,7 @@ _cairo_hash_table_create (cairo_hash_keys_equal_func_t keys_equal)
 /**
  * _cairo_hash_table_destroy:
  * @hash_table: an empty hash table to destroy
- * 
+ *
  * Immediately destroys the given hash table, freeing all resources
  * associated with it.
  *
@@ -196,7 +196,7 @@ _cairo_hash_table_destroy (cairo_hash_table_t *hash_table)
     assert (hash_table->live_entries == 0);
     /* No iterators can be running. Otherwise, halt. */
     assert (hash_table->iterating == 0);
-	
+
     free (hash_table->entries);
     hash_table->entries = NULL;
 
@@ -212,7 +212,7 @@ _cairo_hash_table_destroy (cairo_hash_table_t *hash_table)
  * @key_unique: If TRUE, then caller asserts that no key already
  * exists that will compare equal to #key, so search can be
  * optimized. If unsure, set to FALSE and the code will always work.
- * 
+ *
  * Search the hashtable for a live entry for which
  * hash_table->keys_equal returns true. If no such entry exists then
  * return the first available (free or dead entry).
@@ -231,10 +231,10 @@ static cairo_hash_entry_t **
 _cairo_hash_table_lookup_internal (cairo_hash_table_t *hash_table,
 				   cairo_hash_entry_t *key,
 				   cairo_bool_t	       key_is_unique)
-{    
+{
     cairo_hash_entry_t **entry, **first_available = NULL;
     unsigned long table_size, i, idx, step;
-    
+
     table_size = hash_table->arrangement->size;
 
     idx = key->hash % table_size;
@@ -264,7 +264,7 @@ _cairo_hash_table_lookup_internal (cairo_hash_table_t *hash_table,
 		    return entry;
 	}
 
-	if (step == 0) { 	    
+	if (step == 0) {
 	    step = key->hash % hash_table->arrangement->rehash;
 	    if (step == 0)
 		step = 1;
@@ -275,7 +275,7 @@ _cairo_hash_table_lookup_internal (cairo_hash_table_t *hash_table,
 	    idx -= table_size;
     }
 
-    /* 
+    /*
      * The table should not have permitted you to get here if you were just
      * looking for a free slot: there should have been room.
      */
@@ -287,11 +287,11 @@ _cairo_hash_table_lookup_internal (cairo_hash_table_t *hash_table,
 /**
  * _cairo_hash_table_resize:
  * @hash_table: a hash table
- * 
+ *
  * Resize the hash table if the number of entries has gotten much
  * bigger or smaller than the ideal number of entries for the current
  * size.
- * 
+ *
  * Return value: CAIRO_STATUS_SUCCESS if successful or
  * CAIRO_STATUS_NO_MEMORY if out of memory.
  **/
@@ -328,9 +328,9 @@ _cairo_hash_table_resize  (cairo_hash_table_t *hash_table)
 
     new_size = tmp.arrangement->size;
     tmp.entries = calloc (new_size, sizeof (cairo_hash_entry_t*));
-    if (tmp.entries == NULL) 
+    if (tmp.entries == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
-        
+
     for (i = 0; i < hash_table->arrangement->size; ++i) {
 	if (ENTRY_IS_LIVE (hash_table->entries[i])) {
 	    entry = _cairo_hash_table_lookup_internal (&tmp,
@@ -353,11 +353,11 @@ _cairo_hash_table_resize  (cairo_hash_table_t *hash_table)
  * @hash_table: a hash table
  * @key: the key of interest
  * @entry_return: pointer for return value.
- * 
+ *
  * Performs a lookup in @hash_table looking for an entry which has a
  * key that matches @key, (as determined by the keys_equal() function
  * passed to _cairo_hash_table_create).
- * 
+ *
  * Return value: TRUE if there is an entry in the hash table that
  * matches the given key, (which will now be in *entry_return). FALSE
  * otherwise, (in which case *entry_return will be NULL).
@@ -384,7 +384,7 @@ _cairo_hash_table_lookup (cairo_hash_table_t *hash_table,
  * _cairo_hash_table_random_entry:
  * @hash_table: a hash table
  * @predicate: a predicate function, or NULL for any entry.
- * 
+ *
  * Find a random entry in the hash table satisfying the given
  * @predicate. A NULL @predicate is taken as equivalent to a function
  * which always returns TRUE, (eg. any entry in the table will do).
@@ -424,7 +424,7 @@ _cairo_hash_table_random_entry (cairo_hash_table_t	   *hash_table,
 	    return *entry;
 	}
 
-	if (step == 0) { 	    
+	if (step == 0) {
 	    step = hash % hash_table->arrangement->rehash;
 	    if (step == 0)
 		step = 1;
@@ -442,7 +442,7 @@ _cairo_hash_table_random_entry (cairo_hash_table_t	   *hash_table,
  * _cairo_hash_table_insert:
  * @hash_table: a hash table
  * @key_and_value: an entry to be inserted
- * 
+ *
  * Insert the entry #key_and_value into the hash table.
  *
  * WARNING: It is a fatal error if an entry exists in the hash table
@@ -454,7 +454,7 @@ _cairo_hash_table_random_entry (cairo_hash_table_t	   *hash_table,
  * Instead of using insert to replace an entry, consider just editing
  * the entry obtained with _cairo_hash_table_lookup. Or if absolutely
  * necessary, use _cairo_hash_table_remove first.
- * 
+ *
  * Return value: CAIRO_STATUS_SUCCESS if successful or
  * CAIRO_STATUS_NO_MEMORY if insufficient memory is available.
  **/
@@ -464,13 +464,13 @@ _cairo_hash_table_insert (cairo_hash_table_t *hash_table,
 {
     cairo_status_t status;
     cairo_hash_entry_t **entry;
-    
+
     /* Insert is illegal while an iterator is running. */
     assert (hash_table->iterating == 0);
-    
+
     entry = _cairo_hash_table_lookup_internal (hash_table,
 					       key_and_value, FALSE);
-    
+
     if (ENTRY_IS_LIVE(*entry))
     {
 	/* User is being bad, let's crash. */
@@ -491,7 +491,7 @@ _cairo_hash_table_insert (cairo_hash_table_t *hash_table,
  * _cairo_hash_table_remove:
  * @hash_table: a hash table
  * @key: key of entry to be removed
- * 
+ *
  * Remove an entry from the hash table which has a key that matches
  * @key, if any (as determined by the keys_equal() function passed to
  * _cairo_hash_table_create).
@@ -529,7 +529,7 @@ _cairo_hash_table_remove (cairo_hash_table_t *hash_table,
  * @hash_table: a hash table
  * @hash_callback: function to be called for each live entry
  * @closure: additional argument to be passed to @hash_callback
- * 
+ *
  * Call @hash_callback for each live entry in the hash table, in a
  * non-specified order.
  *
@@ -549,7 +549,7 @@ _cairo_hash_table_foreach (cairo_hash_table_t	      *hash_table,
 
     if (hash_table == NULL)
 	return;
-	
+
     /* Mark the table for iteration */
     ++hash_table->iterating;
     for (i = 0; i < hash_table->arrangement->size; i++) {

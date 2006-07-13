@@ -59,7 +59,6 @@
 #define FbAdd(x,y,i,t)	((t) = FbGet8(x,i) + FbGet8(y,i), \
 			 (CARD32) ((CARD8) ((t) | (0 - ((t) >> 8)))) << (i))
 
-
 #define Alpha(x) ((x) >> 24)
 #define Red(x) (((x) >> 16) & 0xff)
 #define Green(x) (((x) >> 8) & 0xff)
@@ -144,7 +143,7 @@
 		      ((*((CARD16 *) (a)) = (CARD16) (v)),\
 		       (*((a)+2) = (CARD8) ((v) >> 16))))
 #endif
-		      
+
 /*
   The methods below use some tricks to be able to do two color
   components at the same time.

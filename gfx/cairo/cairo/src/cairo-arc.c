@@ -190,7 +190,7 @@ _cairo_arc_in_direction (cairo_t	  *cr,
 	    _cairo_arc_in_direction (cr, xc, yc, radius,
 				     angle_min, angle_mid,
 				     dir);
-	    
+
 	    _cairo_arc_in_direction (cr, xc, yc, radius,
 				     angle_mid, angle_max,
 				     dir);
@@ -238,7 +238,7 @@ _cairo_arc_in_direction (cairo_t	  *cr,
  * @radius: the radius of the arc
  * @angle1: the start angle, in radians
  * @angle2: the end angle, in radians
- * 
+ *
  * Compute a path for the given arc and append it onto the current
  * path within @cr. The arc will be accurate within the current
  * tolerance and given the current transformation.
@@ -267,7 +267,7 @@ _cairo_arc_path (cairo_t *cr,
  * @ctm: the current transformation matrix
  * @tolerance: the current tolerance value
  * @path: the path onto which th earc will be appended
- * 
+ *
  * Compute a path for the given arc (defined in the negative
  * direction) and append it onto the current path within @cr. The arc
  * will be accurate within the current tolerance and given the current

@@ -88,6 +88,7 @@ CSRCS   = \
         cairo-pattern.c \
         cairo-pen.c \
         cairo-polygon.c \
+        cairo-rectangle.c \
         cairo-region.c \
         cairo-scaled-font.c \
         cairo-scaled-font-subsets.c \
@@ -134,7 +135,8 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 CSRCS   += cairo-font-subset.c \
            cairo-base85-stream.c \
            cairo-pdf-surface.c \
-           cairo-ps-surface.c
+           cairo-ps-surface.c \
+	   cairo-type1-subset.c
 EXPORTS += cairo-ps.h cairo-pdf.h
 endif
 

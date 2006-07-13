@@ -32,7 +32,7 @@ RenderSampleCeilY (xFixed y, int n)
 {
     xFixed   f = xFixedFrac(y);
     xFixed   i = xFixedFloor(y);
-    
+
     f = ((f + Y_FRAC_FIRST(n)) / STEP_Y_SMALL(n)) * STEP_Y_SMALL(n) + Y_FRAC_FIRST(n);
     if (f > Y_FRAC_LAST(n))
     {
@@ -53,7 +53,7 @@ RenderSampleFloorY (xFixed y, int n)
 {
     xFixed   f = xFixedFrac(y);
     xFixed   i = xFixedFloor (y);
-    
+
     f = _div(f - Y_FRAC_FIRST(n), STEP_Y_SMALL(n)) * STEP_Y_SMALL(n) + Y_FRAC_FIRST(n);
     if (f < Y_FRAC_FIRST(n))
     {
@@ -72,9 +72,9 @@ RenderEdgeStep (RenderEdge *e, int n)
     xFixed_48_16	ne;
 
     e->x += n * e->stepx;
-    
+
     ne = e->e + n * (xFixed_48_16) e->dx;
-    
+
     if (n >= 0)
     {
 	if (ne > 0)
@@ -104,7 +104,7 @@ _RenderEdgeMultiInit (RenderEdge *e, int n, xFixed *stepx_p, xFixed *dx_p)
 {
     xFixed	stepx;
     xFixed_48_16	ne;
-    
+
     ne = n * (xFixed_48_16) e->dx;
     stepx = n * e->stepx;
     if (ne > 0)
@@ -153,7 +153,7 @@ RenderEdgeInit (RenderEdge	*e,
 	    e->dx = -dx % dy;
 	    e->e = 0;
 	}
-    
+
 	_RenderEdgeMultiInit (e, STEP_Y_SMALL(n), &e->stepx_small, &e->dx_small);
 	_RenderEdgeMultiInit (e, STEP_Y_BIG(n), &e->stepx_big, &e->dx_big);
     }
@@ -192,4 +192,3 @@ RenderLineFixedEdgeInit (RenderEdge *e,
 		    bot->x + x_off_fixed,
 		    bot->y + y_off_fixed);
 }
-

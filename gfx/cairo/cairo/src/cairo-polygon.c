@@ -128,7 +128,7 @@ _cairo_polygon_add_edge (cairo_polygon_t *polygon, cairo_point_t *p1, cairo_poin
     return CAIRO_STATUS_SUCCESS;
 }
 
-cairo_status_t 
+cairo_status_t
 _cairo_polygon_move_to (cairo_polygon_t *polygon, cairo_point_t *point)
 {
     if (! polygon->has_current_point)
