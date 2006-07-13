@@ -832,6 +832,12 @@ WordSplitState::ClassifyCharacter(PRInt32 aIndex, PRBool aRecurse) const
   if (charCategory == 5 || IsIgnorableCharacter(mDOMWordText[aIndex]))
     return CHAR_CLASS_WORD;
 
+  if (mDOMWordText[aIndex] > 255) {
+    // Non-ASCII character so we can't use is* libc functions.
+    // XXX this function needs work to handle general Unicode characters!!!
+    return CHAR_CLASS_WORD;
+  }
+
   // all other whitespace chars, control chars, and most punctuation (with
   // several exceptions) are word separators. These exceptions are for
   // characters that can be considered part of a word if it is surrounded by
