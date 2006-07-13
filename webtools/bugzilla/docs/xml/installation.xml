@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.122 2006/07/11 00:42:58 lpsolit%gmail.com Exp $ -->
+<!-- $Id: installation.xml,v 1.123 2006/07/13 16:55:41 mozilla%colinogilvie.co.uk Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -1466,6 +1466,46 @@ AddType application/rdf+xml .rdf</screen>
     </section>    
   </section>
 
+  <section>
+    <title>Multiple Bugzilla databases with a single installation</title>
+
+    <para>The previous instructions refered to a standard installation, with
+      one unique Bugzilla database. However, you may want to host several
+      distinct installations, without having several copies of the code. This is
+      possible by using the PROJECT environment variable. When accessed,
+      Bugzilla checks for the existence of this variable, and if present, uses
+      its value to check for an alternative configuration file named
+      <filename>localconfig.&lt;PROJECT&gt;</filename> in the same location as
+      the default one (<filename>localconfig</filename>). It also checks for
+      customized templates in a directory named
+      <filename>&lt;PROJECT&gt;</filename> in the same location as the
+      default one (<filename>template/&lt;langcode&gt;</filename>). By default
+      this is <filename>template/en/default</filename> so PROJECT's templates
+      would be located at <filename>template/en/PROJECT</filename>.</para> 
+
+      <para>To set up an alternate installation, just export PROJECT=foo before
+      running <command>checksetup.pl</command> for the first time. It will
+      result in a file called <filename>localconfig.foo</filename> instead of
+      <filename>localconfig</filename>. Edit this file as described above, with
+      reference to a new database, and re-run <command>checksetup.pl</command>
+      to populate it. That's all.</para>
+
+    <para>Now you have to configure the web server to pass this environment
+      variable when accessed via an alternate URL, such as virtual host for
+      instance. The following is an example of how you could do it in Apache,
+      other Webservers may differ.
+<programlisting>
+&lt;VirtualHost 212.85.153.228:80&gt;
+    ServerName foo.bar.baz
+    SetEnv PROJECT foo
+    Alias /bugzilla /var/www/bugzilla
+&lt;/VirtualHost&gt;
+</programlisting>
+    </para>
+
+    <para>Don't forget to also export this variable before accessing Bugzilla
+       by other means, such as cron tasks for instance.</para> 
+  </section>
 
   <section id="os-specific">
     <title>OS-Specific Installation Notes</title>
