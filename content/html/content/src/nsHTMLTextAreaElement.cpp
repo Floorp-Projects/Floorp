@@ -41,6 +41,8 @@
 #include "nsITextControlElement.h"
 #include "nsIDOMNSEditableElement.h"
 #include "nsIControllers.h"
+#include "nsIFocusController.h"
+#include "nsPIDOMWindow.h"
 #include "nsContentCID.h"
 #include "nsCOMPtr.h"
 #include "nsIComponentManager.h"
@@ -251,6 +253,27 @@ nsHTMLTextAreaElement::SetFocus(nsPresContext* aPresContext)
     return;
   }
 
+  // We can't be focus'd if we aren't in a document
+  nsIDocument* doc = GetCurrentDoc();
+  if (!doc)
+    return;
+
+  // If the window is not active, do not allow the focus to bring the
+  // window to the front.  We update the focus controller, but do
+  // nothing else.
+  nsPIDOMWindow* win = doc->GetWindow();
+  if (win) {
+    nsIFocusController *focusController = win->GetRootFocusController();
+    PRBool isActive = PR_FALSE;
+    focusController->GetActive(&isActive);
+    if (!isActive) {
+      focusController->SetFocusedWindow(win);
+      focusController->SetFocusedElement(this);
+
+      return;
+    }
+  }
+
   nsIEventStateManager *esm = aPresContext->EventStateManager();
   if (esm->SetContentState(this, NS_EVENT_STATE_FOCUS)) {
     nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
@@ -269,6 +292,27 @@ nsHTMLTextAreaElement::Select()
   // first see if we are disabled or not. If disabled then do nothing.
   if (HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled)) {
     return rv;
+  }
+
+  // We can't be focus'd if we aren't in a document
+  nsIDocument* doc = GetCurrentDoc();
+  if (!doc)
+    return rv;
+
+  // If the window is not active, do not allow the focus to bring the
+  // window to the front.  We update the focus controller, but do
+  // nothing else.
+  nsPIDOMWindow* win = doc->GetWindow();
+  if (win) {
+    nsIFocusController *focusController = win->GetRootFocusController();
+    PRBool isActive = PR_FALSE;
+    focusController->GetActive(&isActive);
+    if (!isActive) {
+      focusController->SetFocusedWindow(win);
+      focusController->SetFocusedElement(this);
+
+      return rv;
+    }
   }
 
   // XXX Bug?  We have to give the input focus before contents can be
