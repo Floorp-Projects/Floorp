@@ -95,13 +95,6 @@ protected:
     NS_NewXULTreeBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
     nsXULTreeBuilder();
-    virtual ~nsXULTreeBuilder();
-
-    /**
-     * Initialize the template builder
-     */
-    nsresult
-    InitGlobals();
 
     /**
      * Uninitialize the template builder
@@ -274,15 +267,7 @@ protected:
      * The builder observers.
      */
     nsCOMPtr<nsISupportsArray> mObservers;
-    
-    // pseudo-constants
-    static PRInt32 gRefCnt;
-    static nsIRDFResource* kRDF_type;
-    static nsIRDFResource* kNC_BookmarkSeparator;
 };
-PRInt32         nsXULTreeBuilder::gRefCnt = 0;
-nsIRDFResource* nsXULTreeBuilder::kRDF_type;
-nsIRDFResource* nsXULTreeBuilder::kNC_BookmarkSeparator;
 
 //----------------------------------------------------------------------
 
@@ -326,33 +311,6 @@ nsXULTreeBuilder::nsXULTreeBuilder()
     : mSortDirection(eDirection_Natural)
 {
 }
-
-nsresult
-nsXULTreeBuilder::InitGlobals()
-{
-    nsresult rv = nsXULTemplateBuilder::InitGlobals();
-    if (NS_FAILED(rv))
-        return rv;
-
-    if (gRefCnt++ == 0) {
-        gRDFService->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "type"), &kRDF_type);
-        gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "BookmarkSeparator"),
-                                 &kNC_BookmarkSeparator);
-    }
-
-    return rv;
-}
-
-nsXULTreeBuilder::~nsXULTreeBuilder()
-{
-    if (--gRefCnt == 0) {
-        NS_IF_RELEASE(kRDF_type);
-        NS_IF_RELEASE(kNC_BookmarkSeparator);
-    }
-
-    Uninit(PR_TRUE);
-}
-
 
 void
 nsXULTreeBuilder::Uninit(PRBool aIsFinal)
@@ -632,10 +590,11 @@ nsXULTreeBuilder::IsSeparator(PRInt32 aIndex, PRBool* aResult)
     if (aIndex < 0 || aIndex >= mRows.Count())
         return NS_ERROR_INVALID_ARG;
 
-    nsCOMPtr<nsIRDFResource> resource;
-    GetResourceFor(aIndex, getter_AddRefs(resource));
+    nsAutoString type;
+    nsTreeRows::Row& row = *(mRows[aIndex]);
+    row.mMatch->mResult->GetType(type);
 
-    mDB->HasAssertion(resource, kRDF_type, kNC_BookmarkSeparator, PR_TRUE, aResult);
+    *aResult = type.EqualsLiteral("separator");
 
     return NS_OK;
 }

@@ -55,7 +55,7 @@ interface nsIRDFResource;
  * particular variable may be retrieved using the getBindingFor and
  * getBindingObjectFor methods.
  */
-[scriptable, uuid(d035f34f-d8ee-444a-bd46-41163f54ed25)]
+[scriptable, uuid(ebea0230-36fa-41b7-8e31-760806057965)]
 interface nsIXULTemplateResult : nsISupports
 {
   /**
@@ -91,6 +91,13 @@ interface nsIXULTemplateResult : nsISupports
    * must be the same as the ID property.
    */
   readonly attribute nsIRDFResource resource;
+
+  /**
+   * The type of the object. The predefined value 'separator' may be used
+   * for separators. Other values may be used for application specific
+   * purposes.
+   */
+  readonly attribute AString type;
 
   /**
    * Get the string representation of the value of a variable for this

@@ -36,57 +36,30 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-#include "nsIRDFCompositeDataSource.idl"
-#include "nsIRDFResource.idl"
 
-%{C++
-class nsRDFSortState;
-%}
-
-[ptr] native nsRDFSortState(nsRDFSortState);
-
-interface nsIContent;
 interface nsIDOMNode;
 
 /**
  * A service used to sort the contents of a XUL widget.
  */
-[scriptable, uuid(BFD05261-834C-11d2-8EAC-00805F29F371)]
+[scriptable, uuid(F29270C8-3BE5-4046-9B57-945A84DFF132)]
 interface nsIXULSortService : nsISupports
 {
     /**
-     *
      * Sort the contents of the widget containing <code>aNode</code>
-     * using <code>aSortResource</code> as the comparison key, and
+     * using <code>aSortKey</code> as the comparison key, and
      * <code>aSortDirection</code> as the direction.
      *
-     * @param aNode A node in the XUL widget whose children are to be
-     * sorted. <code>sort</code> will traverse upwards to find the
-     * root node at which to begin the actualy sorting. For optimal
-     * results, pass in the root of the widget.
-     *
-     * @param aSortResource The RDF resource to be used as
-     * the comparison key.
-     *
+     * @param aNode A node in the XUL widget whose children are to be sorted.
+     * @param aSortKey The value to be used as the comparison key.
      * @param aSortDirection May be either <b>natural</b> to return
      * the contents to their natural (unsorted) order,
      * <b>ascending</b> to sort the contents in ascending order, or
      * <b>descending</b> to sort the contents in descending order.
      */
     void sort(in nsIDOMNode aNode,
-              in AString aSortResource,
+              in AString aSortKey,
               in AString aSortDirection);
-
-    /**
-     * Used internally for insertion sorting.
-     */
-    [noscript] void insertContainerNode(in nsIRDFCompositeDataSource db,
-                                        in nsRDFSortState sortStatePtr,
-                                        in nsIContent root,
-                                        in nsIContent trueParent,
-                                        in nsIContent container,
-                                        in nsIContent node,
-                                        in boolean aNotify);
 };
 
 %{C++

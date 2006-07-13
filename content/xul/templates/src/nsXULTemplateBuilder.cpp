@@ -261,6 +261,13 @@ nsXULTemplateBuilder::GetDatabase(nsIRDFCompositeDataSource** aResult)
 }
 
 NS_IMETHODIMP
+nsXULTemplateBuilder::GetQueryProcessor(nsIXULTemplateQueryProcessor** aResult)
+{
+    NS_IF_ADDREF(*aResult = mQueryProcessor.get());
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULTemplateBuilder::AddRuleFilter(nsIDOMNode* aRule, nsIXULTemplateRuleFilter* aFilter)
 {
     if (!aRule || !aFilter)
@@ -831,6 +838,14 @@ nsXULTemplateBuilder::GetResultForId(const nsAString& aId,
         }
     }
 
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULTemplateBuilder::GetResultForContent(nsIDOMElement* aContent,
+                                          nsIXULTemplateResult** aResult)
+{
+    *aResult = nsnull;
     return NS_OK;
 }
 

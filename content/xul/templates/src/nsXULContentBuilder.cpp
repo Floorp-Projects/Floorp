@@ -48,12 +48,11 @@
 #include "nsIServiceManager.h"
 #include "nsITextContent.h"
 #include "nsIXULDocument.h"
-#include "nsIXULSortService.h"
 
 #include "nsContentSupportMap.h"
 #include "nsRDFConMemberTestNode.h"
 #include "nsRDFPropertyTestNode.h"
-#include "nsRDFSort.h"
+#include "nsXULSortService.h"
 #include "nsTemplateRule.h"
 #include "nsTemplateMap.h"
 #include "nsVoidArray.h"
@@ -73,10 +72,6 @@
 #include "jsapi.h"
 #include "pldhash.h"
 #include "rdf.h"
-
-//----------------------------------------------------------------------0
-
-static NS_DEFINE_CID(kXULSortServiceCID,         NS_XULSORTSERVICE_CID);
 
 //----------------------------------------------------------------------
 //
@@ -141,6 +136,9 @@ public:
                                    nsIAtom* aTag,
                                    PRBool* aGenerated);
 
+    NS_IMETHOD GetResultForContent(nsIDOMElement* aContent,
+                                   nsIXULTemplateResult** aResult);
+
     // nsIDocumentObserver interface
     virtual void AttributeChanged(nsIDocument* aDocument,
                                   nsIContent*  aContent,
@@ -155,8 +153,6 @@ protected:
     NS_NewXULContentBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
     nsXULContentBuilder();
-    virtual ~nsXULContentBuilder();
-    nsresult InitGlobals();
 
     virtual void Uninit(PRBool aIsFinal);
 
@@ -414,6 +410,26 @@ protected:
     SynchronizeResult(nsIXULTemplateResult* aResult);
 
     /**
+     * Compare a result to a content node. If the generated content for the
+     * result should come before aContent, set aSortOrder to -1. If it should
+     * come after, set sortOrder to 1. If both are equal, set to 0.
+     */
+    nsresult
+    CompareResultToNode(nsIXULTemplateResult* aResult, nsIContent* aContent,
+                        PRInt32* aSortOrder);
+
+    /**
+     * Insert a generated node into the container where it should go according
+     * to the current sort. aNode is the generated content node and aResult is
+     * the result for the generated node.
+     */
+    nsresult
+    InsertSortedNode(nsIContent* aContainer,
+                     nsIContent* aNode,
+                     nsIXULTemplateResult* aResult,
+                     PRBool aNotify);
+
+    /**
      * Maintains a mapping between elements in the DOM and the matches
      * that they support.
      */
@@ -428,15 +444,8 @@ protected:
     /**
      * Information about the currently active sort
      */
-    nsRDFSortState sortState;
-
-    // pseudo-constants
-    static PRInt32 gRefCnt;
-    static nsIXULSortService* gXULSortService;
+    nsSortState mSortState;
 };
-
-PRInt32             nsXULContentBuilder::gRefCnt;
-nsIXULSortService*  nsXULContentBuilder::gXULSortService;
 
 NS_IMETHODIMP
 NS_NewXULContentBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult)
@@ -463,25 +472,7 @@ NS_NewXULContentBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 
 nsXULContentBuilder::nsXULContentBuilder()
 {
-}
-
-nsXULContentBuilder::~nsXULContentBuilder()
-{
-    if (--gRefCnt == 0) {
-        NS_IF_RELEASE(gXULSortService);
-    }
-}
-
-nsresult
-nsXULContentBuilder::InitGlobals()
-{
-    if (gRefCnt++ == 0) {
-        nsresult rv = CallGetService(kXULSortServiceCID, &gXULSortService);
-        if (NS_FAILED(rv))
-            return rv;
-    }
-
-    return nsXULTemplateBuilder::InitGlobals();
+  mSortState.initialized = PR_FALSE;
 }
 
 void
@@ -496,6 +487,8 @@ nsXULContentBuilder::Uninit(PRBool aIsFinal)
     // Nuke the content support map completely.
     mContentSupportMap.Clear();
     mTemplateMap.Clear();
+
+    mSortState.initialized = PR_FALSE;
 
     nsXULTemplateBuilder::Uninit(aIsFinal);
 }
@@ -868,12 +861,8 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             if (! isUnique) {
                 rv = NS_ERROR_UNEXPECTED;
 
-                if (gXULSortService && isGenerationElement) {
-                    rv = gXULSortService->InsertContainerNode(mCompDB, &sortState,
-                                                              mRoot, aResourceNode,
-                                                              aRealNode, realKid,
-                                                              aNotify);
-                }
+                if (isGenerationElement)
+                    rv = InsertSortedNode(aRealNode, realKid, aChild, aNotify);
 
                 if (NS_FAILED(rv)) {
                     rv = aRealNode->AppendChildTo(realKid, aNotify);
@@ -1740,6 +1729,29 @@ nsXULContentBuilder::HasGeneratedContent(nsIRDFResource* aResource,
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXULContentBuilder::GetResultForContent(nsIDOMElement* aElement,
+                                         nsIXULTemplateResult** aResult)
+{
+    NS_ENSURE_ARG_POINTER(aElement);
+    NS_ENSURE_ARG_POINTER(aResult);
+
+    nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
+    if (content == mRoot) {
+        *aResult = mRootResult;
+    }
+    else {
+        nsTemplateMatch *match = nsnull;
+        if (mContentSupportMap.Get(content, &match))
+            *aResult = match->mResult;
+        else
+            *aResult = nsnull;
+    }
+
+    NS_IF_ADDREF(*aResult);
+    return NS_OK;
+}
+
 //----------------------------------------------------------------------
 //
 // nsIDocumentObserver methods
@@ -1765,6 +1777,13 @@ nsXULContentBuilder::AttributeChanged(nsIDocument* aDocument,
             CloseContainer(aContent);
     }
 
+    if ((aNameSpaceID == kNameSpaceID_XUL) &&
+        ((aAttribute == nsXULAtoms::sort) ||
+         (aAttribute == nsXULAtoms::sortDirection) ||
+         (aAttribute == nsXULAtoms::sortResource) ||
+         (aAttribute == nsXULAtoms::sortResource2)))
+        mSortState.initialized = PR_FALSE;
+
     // Pass along to the generic template builder.
     nsXULTemplateBuilder::AttributeChanged(aDocument, aContent, aNameSpaceID,
                                            aAttribute, aModType);
@@ -1784,7 +1803,6 @@ nsXULContentBuilder::NodeWillBeDestroyed(const nsINode* aNode)
 //
 // nsXULTemplateBuilder methods
 //
-
 
 PRBool
 nsXULContentBuilder::GetInsertionLocations(nsIXULTemplateResult* aResult,
@@ -2074,6 +2092,205 @@ nsXULContentBuilder::RebuildAll()
     if (container) {
         nsNodeUtils::ContentAppended(container, newIndex);
     }
+
+    return NS_OK;
+}
+
+/**** Sorting Methods ****/
+
+nsresult
+nsXULContentBuilder::CompareResultToNode(nsIXULTemplateResult* aResult,
+                                         nsIContent* aContent,
+                                         PRInt32* aSortOrder)
+{
+    NS_ASSERTION(aSortOrder, "CompareResultToNode: null out param aSortOrder");
+  
+    *aSortOrder = 0;
+
+    nsTemplateMatch *match = nsnull;
+    if (!mContentSupportMap.Get(aContent, &match)) {
+        *aSortOrder = mSortState.sortStaticsLast ? -1 : 1;
+        return NS_OK;
+    }
+
+    if (!mQueryProcessor)
+        return NS_OK;
+
+    if (mSortState.direction == nsSortState_natural) {
+        // sort in natural order
+        nsresult rv = mQueryProcessor->CompareResults(aResult, match->mResult,
+                                                      nsnull, aSortOrder);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+    else {
+        // iterate over each sort key and compare. If the nodes are equal,
+        // continue to compare using the next sort key. If not equal, stop.
+        PRInt32 length = mSortState.sortKeys.Count();
+        for (PRInt32 t = 0; t < length; t++) {
+            nsresult rv = mQueryProcessor->CompareResults(aResult, match->mResult,
+                                                          mSortState.sortKeys[t], aSortOrder);
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            if (*aSortOrder)
+                break;
+        }
+    }
+
+    // flip the sort order if performing a descending sorting
+    if (mSortState.direction == nsSortState_descending)
+        *aSortOrder = -*aSortOrder;
+
+    return NS_OK;
+}
+
+nsresult
+nsXULContentBuilder::InsertSortedNode(nsIContent* aContainer,
+                                      nsIContent* aNode,
+                                      nsIXULTemplateResult* aResult,
+                                      PRBool aNotify)
+{
+    nsresult rv;
+
+    if (!mSortState.initialized) {
+        nsAutoString sort, sortDirection;
+        mRoot->GetAttr(kNameSpaceID_None, nsGkAtoms::sort, sort);
+        mRoot->GetAttr(kNameSpaceID_None, nsGkAtoms::sortDirection, sortDirection);
+        rv = XULSortServiceImpl::InitializeSortState(mRoot, aContainer,
+                                                     sort, sortDirection, &mSortState);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    // when doing a natural sort, items will typically be sorted according to
+    // the order they appear in the datasource. For RDF, cache whether the
+    // reference parent is an RDF Seq. That way, the items can be sorted in the
+    // order they are in the Seq.
+    mSortState.isContainerRDFSeq = PR_FALSE;
+    if (mSortState.direction == nsSortState_natural) {
+        nsCOMPtr<nsISupports> ref;
+        nsresult rv = aResult->GetBindingObjectFor(mRefVariable, getter_AddRefs(ref));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCOMPtr<nsIRDFResource> container = do_QueryInterface(ref);
+
+        if (container) {
+            rv = gRDFContainerUtils->IsSeq(mDB, container, &mSortState.isContainerRDFSeq);
+            NS_ENSURE_SUCCESS(rv, rv);
+        }
+    }
+
+    PRBool childAdded = PR_FALSE;
+    PRUint32 numChildren = aContainer->GetChildCount();
+
+    if (mSortState.direction != nsSortState_natural ||
+        (mSortState.direction == nsSortState_natural && mSortState.isContainerRDFSeq))
+    {
+        // because numChildren gets modified
+        PRInt32 realNumChildren = numChildren;
+        nsIContent *child = nsnull;
+
+        // rjc says: determine where static XUL ends and generated XUL/RDF begins
+        PRInt32 staticCount = 0;
+
+        nsAutoString staticValue;
+        aContainer->GetAttr(kNameSpaceID_None, nsXULAtoms::staticHint, staticValue);
+        if (!staticValue.IsEmpty())
+        {
+            // found "static" XUL element count hint
+            PRInt32 strErr = 0;
+            staticCount = staticValue.ToInteger(&strErr);
+            if (strErr)
+                staticCount = 0;
+        } else {
+            // compute the "static" XUL element count
+            for (PRUint32 childLoop = 0; childLoop < numChildren; ++childLoop) {
+                child = aContainer->GetChildAt(childLoop);
+                if (nsContentUtils::HasNonEmptyAttr(child, kNameSpaceID_None,
+                                                    nsXULAtoms::_template))
+                    break;
+                else
+                    ++staticCount;
+            }
+
+            if (mSortState.sortStaticsLast) {
+                // indicate that static XUL comes after RDF-generated content by
+                // making negative
+                staticCount = -staticCount;
+            }
+
+            // save the "static" XUL element count hint
+            nsAutoString valueStr;
+            valueStr.AppendInt(staticCount);
+            aContainer->SetAttr(kNameSpaceID_None, nsXULAtoms::staticHint, valueStr, PR_FALSE);
+        }
+
+        if (staticCount <= 0) {
+            numChildren += staticCount;
+            staticCount = 0;
+        } else if (staticCount > (PRInt32)numChildren) {
+            staticCount = numChildren;
+            numChildren -= staticCount;
+        }
+
+        // figure out where to insert the node when a sort order is being imposed
+        if (numChildren > 0) {
+            nsIContent *temp;
+            PRInt32 direction;
+
+            // rjc says: The following is an implementation of a fairly optimal
+            // binary search insertion sort... with interpolation at either end-point.
+
+            if (mSortState.lastWasFirst) {
+                child = aContainer->GetChildAt(staticCount);
+                temp = child;
+                rv = CompareResultToNode(aResult, temp, &direction);
+                if (direction < 0) {
+                    aContainer->InsertChildAt(aNode, staticCount, aNotify);
+                    childAdded = PR_TRUE;
+                } else
+                    mSortState.lastWasFirst = PR_FALSE;
+            } else if (mSortState.lastWasLast) {
+                child = aContainer->GetChildAt(realNumChildren - 1);
+                temp = child;
+                rv = CompareResultToNode(aResult, temp, &direction);
+                if (direction > 0) {
+                    aContainer->InsertChildAt(aNode, realNumChildren, aNotify);
+                    childAdded = PR_TRUE;
+                } else
+                    mSortState.lastWasLast = PR_FALSE;
+            }
+
+            PRInt32 left = staticCount + 1, right = realNumChildren, x;
+            while (!childAdded && right >= left) {
+                x = (left + right) / 2;
+                child = aContainer->GetChildAt(x - 1);
+                temp = child;
+
+                rv = CompareResultToNode(aResult, temp, &direction);
+                if ((x == left && direction < 0) ||
+                    (x == right && direction >= 0) ||
+                    left == right)
+                {
+                    PRInt32 thePos = (direction > 0 ? x : x - 1);
+                    aContainer->InsertChildAt(aNode, thePos, aNotify);
+                    childAdded = PR_TRUE;
+
+                    mSortState.lastWasFirst = (thePos == staticCount);
+                    mSortState.lastWasLast = (thePos >= realNumChildren);
+
+                    break;
+                }
+                if (direction < 0)
+                    right = x - 1;
+                else
+                    left = x + 1;
+            }
+        }
+    }
+
+    // if the child hasn't been inserted yet, just add it at the end. Note
+    // that an append isn't done as there may be static content afterwards.
+    if (!childAdded)
+        aContainer->InsertChildAt(aNode, numChildren, aNotify);
 
     return NS_OK;
 }

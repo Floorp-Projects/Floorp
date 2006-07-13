@@ -47,6 +47,7 @@
 #include "nsIDOMClassInfo.h"
 #include "nsIEventStateManager.h"
 #include "nsINodeInfo.h"
+#include "nsIXULSortService.h"
 
 // A content model view implementation for the tree.
 
@@ -597,6 +598,37 @@ nsTreeContentView::ToggleOpenState(PRInt32 aIndex)
 NS_IMETHODIMP
 nsTreeContentView::CycleHeader(nsITreeColumn* aCol)
 {
+  NS_ENSURE_ARG_POINTER(aCol);
+
+  if (!mRoot)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMElement> element;
+  aCol->GetElement(getter_AddRefs(element));
+  if (element) {
+    nsCOMPtr<nsIContent> column = do_QueryInterface(element);
+    nsAutoString sort;
+    column->GetAttr(kNameSpaceID_None, nsXULAtoms::sort, sort);
+    if (!sort.IsEmpty()) {
+      nsCOMPtr<nsIXULSortService> xs = do_GetService("@mozilla.org/xul/xul-sort-service;1");
+      if (xs) {
+        nsAutoString sortdirection;
+        static nsIContent::AttrValuesArray strings[] =
+          {&nsXULAtoms::ascending, &nsXULAtoms::descending, nsnull};
+        switch (column->FindAttrValueIn(kNameSpaceID_None,
+                                        nsXULAtoms::sortDirection,
+                                        strings, eCaseMatters)) {
+          case 0: sortdirection.AssignLiteral("descending"); break;
+          case 1: sortdirection.AssignLiteral("natural"); break;
+          default: sortdirection.AssignLiteral("ascending"); break;
+        }
+
+        nsCOMPtr<nsIDOMNode> rootnode = do_QueryInterface(mRoot);
+        xs->Sort(rootnode, sort, sortdirection);
+      }
+    }
+  }
+
   return NS_OK;
 }
 

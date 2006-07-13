@@ -120,6 +120,24 @@ nsXULTemplateResultRDF::GetResource(nsIRDFResource** aResource)
 }
 
 NS_IMETHODIMP
+nsXULTemplateResultRDF::GetType(nsAString& aType)
+{
+    aType.Truncate();
+
+    nsresult rv = NS_OK;
+
+    nsXULTemplateQueryProcessorRDF* processor = GetProcessor();
+    if (processor) {
+        PRBool found;
+        rv = processor->CheckIsSeparator(mNode, &found);
+        if (NS_SUCCEEDED(rv) && found)
+            aType.AssignLiteral("separator");
+    }
+
+    return rv;
+}
+
+NS_IMETHODIMP
 nsXULTemplateResultRDF::GetBindingFor(nsIAtom* aVar, nsAString& aValue)
 {
     nsCOMPtr<nsIRDFNode> val;
