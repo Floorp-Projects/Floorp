@@ -42,42 +42,28 @@
 #include <math.h>
 #include <float.h>
 
-#ifndef FLT_EPSILON
-// Not an ANSI compiler... oh, well.  Use an IEEE value.
-#define FLT_EPSILON 1.19209290e-7f
-#endif
 /// handy constants
 #define TWIPS_PER_POINT_INT           20
 #define TWIPS_PER_POINT_FLOAT         20.0f
 #define ROUND_CONST_FLOAT             0.5f
-#define CEIL_CONST_FLOAT              (1.0f - 0.5f*FLT_EPSILON)
-
 
 /*
  * Coord Rounding Functions
  */
 inline nscoord NSToCoordFloor(float aValue)
 {
-#ifdef NS_COORD_IS_FLOAT
-  return floorf(aValue);
-#else
-  return ((0.0f <= aValue) ? nscoord(aValue) : nscoord(aValue - CEIL_CONST_FLOAT));
-#endif
+  return nscoord(floor(aValue));
 }
 
 inline nscoord NSToCoordCeil(float aValue)
 {
-#ifdef NS_COORD_IS_FLOAT
-  return ceilf(aValue);
-#else
-  return ((0.0f <= aValue) ? nscoord(aValue + CEIL_CONST_FLOAT) : nscoord(aValue));
-#endif
+  return nscoord(ceil(aValue));
 }
 
 inline nscoord NSToCoordRound(float aValue)
 {
 #ifdef NS_COORD_IS_FLOAT
-  return floorf(aValue + ROUND_CONST_FLOAT);
+  return float(floor(aValue + ROUND_CONST_FLOAT));
 #else
   return ((0.0f <= aValue) ? nscoord(aValue + ROUND_CONST_FLOAT) : nscoord(aValue - ROUND_CONST_FLOAT));
 #endif
@@ -88,12 +74,12 @@ inline nscoord NSToCoordRound(float aValue)
  */
 inline PRInt32 NSToIntFloor(float aValue)
 {
-  return ((0.0f <= aValue) ? PRInt32(aValue) : PRInt32(aValue - CEIL_CONST_FLOAT));
+  return PRInt32(floor(aValue));
 }
 
 inline PRInt32 NSToIntCeil(float aValue)
 {
-  return ((0.0f <= aValue) ? PRInt32(aValue + CEIL_CONST_FLOAT) : PRInt32(aValue));
+  return PRInt32(ceil(aValue));
 }
 
 inline PRInt32 NSToIntRound(float aValue)

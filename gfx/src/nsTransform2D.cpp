@@ -145,7 +145,7 @@ void nsTransform2D :: TransformNoXLateCoord(nscoord *ptX, nscoord *ptY) const
 
 inline PRIntn NSToIntNFloor(float aValue)
 {
-  return ((0.0f <= aValue) ? PRIntn(aValue) : PRIntn(aValue - CEIL_CONST_FLOAT));
+  return PRIntn(floor(aValue));
 }
 
 void nsTransform2D :: ScaleXCoords(const nscoord* aSrc,
