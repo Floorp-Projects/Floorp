@@ -140,7 +140,7 @@ private:
         nsProxyObject *mDoomed;
     };
 
-    friend nsProxyObjectDestructorEvent;
+    friend class nsProxyObjectDestructorEvent;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsProxyObject, NS_PROXYOBJECT_CLASS_IID)
