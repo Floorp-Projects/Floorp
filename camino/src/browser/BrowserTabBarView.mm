@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Geoff Beier <me@mollyandgeoff.com>
+ *   Aaron Schulman <aschulm@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -56,6 +57,7 @@
 -(void)unregisterTabButtonsForTracking;
 -(void)initOverflowMenu;
 -(NSRect)tabsRect;
+-(BOOL)isMouseInside;
 
 @end
 
@@ -116,6 +118,7 @@ static const int kOverflowButtonMargin = 1;
   [mBackgroundImage release];
   [mButtonDividerImage release];
 
+  [[NSNotificationCenter defaultCenter] removeObserver:self];
   [super dealloc];
 }
 
@@ -351,6 +354,34 @@ static const int kOverflowButtonMargin = 1;
   }
 }
 
+- (void)viewDidMoveToWindow
+{
+  // setup the tab bar to recieve notifications of key window changes
+  NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
+  [nc removeObserver:self name:NSWindowDidBecomeKeyNotification object:[self window]];
+  [nc removeObserver:self name:NSWindowDidResignKeyNotification object:[self window]];
+  if ([self window]) {
+    [nc addObserver:self selector:@selector(handleWindowIsKey:)
+          name:NSWindowDidBecomeKeyNotification object:[self window]];
+    [nc addObserver:self selector:@selector(handleWindowResignKey:)
+          name:NSWindowDidResignKeyNotification object:[self window]];
+  }
+}
+
+- (void)handleWindowIsKey:(NSWindow *)inWindow
+{
+  // set tab bar dirty because the location of the mouse is inside the tab bar
+  if ([self isMouseInside])
+    [self setNeedsDisplay:YES];
+}
+
+- (void)handleWindowResignKey:(NSWindow *)inWindow
+{
+  // set tab bar dirty when the mouse is inside because the window does not respond to mouse hovering events when it is not key
+  if ([self isMouseInside])
+    [self setNeedsDisplay:YES];
+}
+
 // causes tab buttons to stop reacting to mouse events
 -(void)unregisterTabButtonsForTracking
 {
@@ -484,6 +515,13 @@ static const int kOverflowButtonMargin = 1;
   rect.origin.x += kTabBarMargin;
   rect.size.width -= 2 * kTabBarMargin + (mOverflowTabs ? kOverflowButtonWidth : 0.0);
   return rect;
+}
+
+-(BOOL)isMouseInside
+{
+  NSPoint mousePointInWindow = [[self window] convertScreenToBase:[NSEvent mouseLocation]];
+  NSPoint mousePointInView = [[self superview] convertPoint:mousePointInWindow fromView:nil];
+  return NSMouseInRect(mousePointInView, [self frame], NO);
 }
 
 -(BOOL)isVisible

@@ -138,7 +138,7 @@ static NSImage* gTabButtonDividerImage = nil;
   }
   
   NSPoint patternOrigin = [controlView convertPoint:NSMakePoint(0.0f, 0.0f) toView:nil];
-
+  NSWindow *window = [[mTabViewItem tabView] window];
   if ([mTabViewItem tabState] == NSSelectedTab) {
     // move things down a little, to give the impression of being pulled forward
     labelRect.origin.y -= kTabSelectOffset;
@@ -152,7 +152,7 @@ static NSImage* gTabButtonDividerImage = nil;
     [gActiveTabBg drawTiledInRect:rect origin:patternOrigin operation: NSCompositeSourceOver];
     [gTabLeft compositeToPoint:NSMakePoint(rect.origin.x, rect.origin.y) operation:NSCompositeSourceOver];
     [gTabRight compositeToPoint:NSMakePoint(NSMaxX(bgRect), bgRect.origin.y) operation:NSCompositeSourceOver];
-  } else if ([self mouseWithin] && ![self dragTarget]) {
+  } else if ([self mouseWithin] && ![self dragTarget] && [window isKeyWindow]) {
     [gTabMouseOverBg drawTiledInRect:rect origin:patternOrigin operation:NSCompositeSourceOver];
   }
   // TODO: Make this look nicer
