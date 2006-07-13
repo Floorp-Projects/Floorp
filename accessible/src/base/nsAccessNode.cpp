@@ -61,6 +61,7 @@
 #include "nsIServiceManager.h"
 #include "nsIStringBundle.h"
 #include "nsITimer.h"
+#include "nsRootAccessible.h"
 
 /* For documentation of the accessibility architecture, 
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
@@ -84,7 +85,7 @@ nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> nsAccessNode::gGlobalDocAcces
 NS_IMPL_ISUPPORTS2(nsAccessNode, nsIAccessNode, nsPIAccessNode)
 
 nsAccessNode::nsAccessNode(nsIDOMNode *aNode, nsIWeakReference* aShell): 
-  mDOMNode(aNode), mWeakShell(aShell), mRefCnt(0)
+  mDOMNode(aNode), mWeakShell(aShell)
 {
 #ifdef DEBUG
   mIsInitialized = PR_FALSE;
@@ -245,6 +246,33 @@ nsPresContext* nsAccessNode::GetPresContext()
 already_AddRefed<nsIAccessibleDocument> nsAccessNode::GetDocAccessible()
 {
   return GetDocAccessibleFor(mWeakShell); // Addref'd
+}
+
+already_AddRefed<nsRootAccessible> nsAccessNode::GetRootAccessible()
+{
+  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem = 
+    GetDocShellTreeItemFor(mDOMNode);
+  NS_ASSERTION(docShellTreeItem, "No docshell tree item for mDOMNode");
+  if (!docShellTreeItem) {
+    return nsnull;
+  }
+  nsCOMPtr<nsIDocShellTreeItem> root;
+  docShellTreeItem->GetRootTreeItem(getter_AddRefs(root));
+  NS_ASSERTION(root, "No root content tree item");
+  if (!root) {
+    return nsnull;
+  }
+
+  nsCOMPtr<nsIAccessibleDocument> accDoc = GetDocAccessibleFor(root);
+  if (!accDoc) {
+    return nsnull;
+  }
+
+  // nsRootAccessible has a special QI
+  // that let us get that concrete type directly.
+  nsRootAccessible* foo;
+  accDoc->QueryInterface(NS_GET_IID(nsRootAccessible), (void**)&foo); // addrefs
+  return foo;
 }
 
 nsIFrame* nsAccessNode::GetFrame()
