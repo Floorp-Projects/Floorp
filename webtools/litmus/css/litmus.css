@@ -948,7 +948,7 @@ select.testcase-subgroups, select.subgroup-testgroups {
     width: 300px;
 }
 
-select.testcase_id, select.subgroup_id, select.testgroup_id {
+select.testcase, select.testcase_id, select.subgroup_id, select.testgroup_id {
     width: 700px;
 }
 
