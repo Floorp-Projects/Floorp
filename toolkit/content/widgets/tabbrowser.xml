@@ -25,6 +25,7 @@
    -   Mike Connor <mconnor@steelgryphon.com>
    -   Peter Parente <parente@cs.unc.edu>
    -   Giorgio Maone <g.maone@informaction.com>
+   -   Asaf Romano <mozilla.mano@sent.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -192,6 +193,10 @@
       </field>
       <field name="_browsers">
         null
+      </field>
+
+      <field name="_blockDblClick">
+        false
       </field>
 
       <method name="getBrowserAtIndex">
@@ -1456,7 +1461,8 @@
         <parameter name="aEvent"/>
         <body>
           <![CDATA[
-            if (aEvent.button == 0 &&
+            // See hack note in the tabbrowser-close-button binding
+            if (!this._blockDblClick && aEvent.button == 0 &&
                 aEvent.originalTarget.localName == "box") {
               // xxx this needs to check that we're in the empty area of the tabstrip
               var e = document.createEvent("Events");
@@ -2392,9 +2398,7 @@
         <children includes="tab"/>
       </xul:arrowscrollbox>
       <xul:hbox class="tabs-closebutton-box" align="center" pack="end" anonid="tabstrip-closebutton">
-        <xul:toolbarbutton ondblclick="event.stopPropagation();"
-                           class="close-button tabs-closebutton"
-                           oncommand="this.parentNode.parentNode.parentNode.parentNode.parentNode.removeCurrentTab()"/>
+        <xul:toolbarbutton class="close-button tabs-closebutton"/>
       </xul:hbox>
     </content>
     <implementation>
@@ -2580,6 +2584,51 @@
     </handlers>
   </binding>
 
+  <!-- close-tab-button binding
+       This binding relies on the structure of the tabbrowser binding.
+       Therefor it should only be used as a child of the tab or the tabs
+       element (in both cases, when they are anonymous nodes of <tabbrowser>).
+       This binding is exposed as a pseudo-public-API so themes can customize
+       the tabbar appearance without having to be scriptable
+       (see globalBindings.xml in Pinstripe for example).
+  -->
+  <binding id="tabbrowser-close-tab-button"
+           extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
+    <handlers>
+      <handler event="command"><![CDATA[
+        var bindingParent = document.getBindingParent(this);
+        if (bindingParent) {
+          var tabbedBrowser = document.getBindingParent(bindingParent);
+          if (bindingParent.localName == "tab") {
+            tabbedBrowser.removeTab(bindingParent);
+            tabbedBrowser._blockDblClick = true;
+
+            /* XXXmano hack (see bug 343628):
+             * Since we're removing the event target, if the user
+             * double-clicks this button, the dblclick event will be dispatched
+             * with the tabbar as its event target (and explicit/originalTarget),
+             * which treats that as a mouse gesture for opening a new tab.
+             * In this context, there is no way to prevent the dispatching
+             * of the dblclick event, so we're manually blocking it (see
+             * onTabBarDblClick) until the mouse is moved.
+             */
+            function mouseMoveHandler() {
+              tabbedBrowser._blockDblClick = false;
+              tabbedBrowser.removeEventListener("mousemove", mouseMoveHandler, false);
+            }
+            tabbedBrowser.addEventListener("mousemove",  mouseMoveHandler, false);
+          }
+          else // "tabs"
+            tabbedBrowser.removeCurrentTab();
+        }
+      ]]></handler>
+      <handler event="dblclick" phase="capturing">
+        // for the one-close-button case
+        event.stopPropagation();
+      </handler>
+    </handlers>
+  </binding>
+
   <binding id="tabbrowser-tab" display="xul:box"
            extends="chrome://global/content/bindings/tabbox.xml#tab">
     <content chromedir="&locale.dir;"
@@ -2606,13 +2655,6 @@
         var anonid = event.originalTarget.getAttribute("anonid");
         if (anonid == "close-button")
           this.mOverCloseButton = false;
-      </handler>
-      <handler event="command">
-      <![CDATA[
-        var anonid = event.originalTarget.getAttribute("anonid");
-        if (anonid == "close-button")
-          this.parentNode.parentNode.parentNode.parentNode.removeTab(this);
-      ]]>
       </handler>
       <handler event="mousedown" button="0" phase="capturing">
       <![CDATA[

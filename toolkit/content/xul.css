@@ -623,6 +623,11 @@ tab {
   -moz-binding: url("chrome://global/content/bindings/tabbrowser.xml#tabbrowser-tab");
 }
 
+.tabbrowser-tabs > .tabbrowser-tab > .tab-close-button,
+.tabs-closebutton-box > .tabs-closebutton {
+  -moz-binding: url("chrome://global/content/bindings/tabbrowser.xml#tabbrowser-close-tab-button");
+}
+
 .tab-close-button {
   display: none;
 }
@@ -637,10 +642,6 @@ tab {
 
 .tab-close-button-placeholder {
   display: none;
-}
-
-.tabs-closebutton-box > .tab-close-button {
-  display: -moz-box;
 }
 
 .tabbrowser-tabs[disablebackgroundclose="true"] > .tabbrowser-tab:not([selected="true"]) > .tab-close-button {
