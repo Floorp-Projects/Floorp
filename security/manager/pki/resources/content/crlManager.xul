@@ -53,16 +53,13 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         style="width: 30em;"
         onload="onLoad();"
-#ifndef MOZ_XUL_APP
-        buttons="help"
-#endif
-        ondialoghelp="openHelp('validation-crl-manage');"
+        buttons="accept"
+        buttonlabelaccept="&certmgr.close.label;"
         persist="screenX screenY width height">
 
   <stringbundle id="pippki_bundle" src="chrome://pippki/locale/pippki.properties"/>
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://pippki/content/crlManager.js"/>
-  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js" />
 
   <description value="&validation.crlmanager.label;"/>
   <separator class="thin"/>
@@ -86,7 +83,7 @@
   </tree>
   <separator class="thin"/>
 
-  <hbox>
+  <hbox id="dialogButtons">
     <button id="deleteCrl" disabled="true"
             label="&validation.deletecrl.label;"
             accesskey="&validation.deletecrl.accesskey;"
@@ -103,9 +100,7 @@
             label="&certmgr.restore.label;"
             accesskey="&certmgr.restore.accesskey;"
             oncommand="ImportCRL();"/>
-#ifdef MOZ_SUITE
     <spacer flex="2"/>
-    <button dlgtype="help"/>
-#endif
+    <button dlgtype="accept"/>
   </hbox>
 </dialog>

@@ -1,10 +1,38 @@
 help.jar:
+#ifdef MOZ_XUL_APP
+% content help %content/help/ xpcnativewrappers=yes
+% overlay chrome://communicator/content/utilityOverlay.xul chrome://help/content/helpMenuOverlay.xul
+% overlay chrome://pippki/content/certManager.xul chrome://help/content/helpSecurityOverlay.xul
+% overlay chrome://pippki/content/certViewer.xul chrome://help/content/helpSecurityOverlay.xul
+% overlay chrome://pippki/content/changepassword.xul chrome://help/content/helpSecurityOverlay.xul
+% overlay chrome://pippki/content/device_manager.xul chrome://help/content/helpSecurityOverlay.xul
+% overlay chrome://pippki/content/choosetoken.xul chrome://help/content/helpSecurityOverlay.xul
+% overlay chrome://pippki/content/clientauthask.xul chrome://help/content/helpSecurityOverlay.xul
+% overlay chrome://pippki/content/crlImportDialog.xul chrome://help/content/helpSecurityOverlay.xul
+% overlay chrome://pippki/content/deletecert.xul chrome://help/content/helpSecurityOverlay.xul
+% overlay chrome://pippki/content/domainMismatch.xul chrome://help/content/helpSecurityOverlay.xul
+% overlay chrome://pippki/content/editcacert.xul chrome://help/content/helpSecurityOverlay.xul
+% overlay chrome://pippki/content/editemailcert.xul chrome://help/content/helpSecurityOverlay.xul
+% overlay chrome://pippki/content/editsslcert.xul chrome://help/content/helpSecurityOverlay.xul
+% overlay chrome://pippki/content/escrowWarn.xul chrome://help/content/helpSecurityOverlay.xul
+% overlay chrome://pippki/content/getp12password.xul chrome://help/content/helpSecurityOverlay.xul
+% overlay chrome://pippki/content/setp12password.xul chrome://help/content/helpSecurityOverlay.xul
+% overlay chrome://pippki/content/newserver.xul chrome://help/content/helpSecurityOverlay.xul
+% overlay chrome://pippki/content/pref-crlupdate.xul chrome://help/content/helpSecurityOverlay.xul
+% overlay chrome://pippki/content/serverCertExpired.xul chrome://help/content/helpSecurityOverlay.xul
+% overlay chrome://pippki/content/serverCrlNextupdate.xul chrome://help/content/helpSecurityOverlay.xul
+% overlay chrome://pippki/content/crlManager.xul chrome://help/content/helpSecurityOverlay.xul
+% overlay chrome://pippki/content/resetpassword.xul chrome://help/content/helpSecurityOverlay.xul
+% overlay chrome://pippki/content/downloadcert.xul chrome://help/content/helpSecurityOverlay.xul
+#else
+*       content/help/contents.rdf                       (content/contents.rdf)
+#endif
         content/help/help.xul                           (content/help.xul)
         content/help/contextHelp.js                     (content/contextHelp.js)
         content/help/help.js                            (content/help.js)
-*       content/help/contents.rdf                       (content/contents.rdf)
 *       content/help/helpMenuOverlay.xul                (content/helpMenuOverlay.xul)
         content/help/helpContextOverlay.xul             (content/helpContextOverlay.xul)
+        content/help/helpSecurityOverlay.xul            (content/helpSecurityOverlay.xul)
 *       content/help/platformClasses.css                (content/platformClasses.css)
 
 en-US.jar:

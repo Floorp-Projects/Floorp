@@ -47,19 +47,17 @@
 %pippkiDTD;
 ]>
 
-<dialog id="ssl_warning" title="&newserver.title;"
+<dialog id="newServerDialog" title="&newserver.title;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   style="width: 47em;"
   onload="onLoad();"
-#expand buttons="accept,cancel__HELP_BUTTON__"
+  buttons="accept,cancel"
   ondialogaccept="return doOK();"
-  ondialogcancel="return doCancel();"
-  ondialoghelp="openHelp('new_web_cert');">
+  ondialogcancel="return doCancel();">
 
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 <script type="application/x-javascript" src="chrome://pippki/content/pippki.js"/>
 <script type="application/x-javascript" src="chrome://pippki/content/newserver.js"/>
-<script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
 <stringbundle id="newserver_bundle" src="chrome://pippki/locale/newserver.properties"/>
 

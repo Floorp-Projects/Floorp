@@ -115,9 +115,3 @@ function onAccept()
                     "chrome,centerscreen,modal",params);
   return true;
 }
-
-function doHelpButton()
-{
-  openHelp("validation-crl-import");
-}
-

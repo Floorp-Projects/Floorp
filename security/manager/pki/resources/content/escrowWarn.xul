@@ -44,20 +44,17 @@
 <dialog id="escrowWarnDialog" title="&escrowWarn.title;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
   style="width: 40em;"
-  spacerflex="1"
-#expand buttons="accept,cancel__HELP_BUTTON__,extra2"
+  buttons="accept,cancel,extra2"
   buttonlabelextra2="&examineCert.label;"
   buttonaccesskeyextra2="&examineCert.accesskey;"
   ondialogaccept="return doOK();"
   ondialogcancel="return doCancel();"
-  ondialoghelp="openHelp('priv_key_copy');"
   ondialogextra2="viewCert();"
   onload="onLoad();">
 
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 <script type="application/x-javascript" src="chrome://pippki/content/pippki.js"/>
 <script type="application/x-javascript" src="chrome://pippki/content/escrowWarn.js"/>
-<script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
   <description>&escrowWarn.message1;</description>
   <separator/>

@@ -1,0 +1,179 @@
+<?xml version="1.0"?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is SeaMonkey internet suite code.
+   -
+   - The Initial Developer of the Original Code is
+   - Mark Banner <bugzilla@standard8.demon.co.uk>
+   - Portions created by the Initial Developer are Copyright (C) 2006
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<overlay id="securityManagerOverlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
+  <script type="application/x-javascript">
+  <![CDATA[
+    function doCertManagerHelpButton()
+    {
+      var selTab = document.getElementById('certMgrTabbox').selectedItem;
+      var selTabID = selTab.getAttribute('id');
+      switch (selTabID) {
+        case 'mine_tab':
+          openHelp("my_certs");
+          break;
+        case 'others_tab':
+          openHelp("others_certs");
+          break;
+        case 'websites_tab':
+          openHelp("web_certs");
+          break;
+        case 'ca_tab':
+          openHelp("ca_certs");
+          break;
+      }
+    }
+
+    function doDeleteCertificateHelpButton()
+    {
+      var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
+      switch (gParams.GetString(0)) {
+        case bundle.GetStringFromName("deleteUserCertFlag"):
+          openHelp("delete_my_certs");
+          break;
+        case bundle.GetStringFromName("deleteSslCertFlag"):
+          openHelp("delete_web_certs");
+          break;
+        case bundle.GetStringFromName("deleteCaCertFlag"):
+          openHelp("delete_ca_certs");
+          break;
+        case bundle.GetStringFromName("deleteEmailCertFlag"):
+          openHelp("delete_email_certs");
+          break;
+      }
+    }
+  ]]>
+  </script>
+
+  <dialog id="certmanager"
+          buttons="accept,help"
+          ondialoghelp="return doCertManagerHelpButton();"/>
+
+  <dialog id="certDetails"
+          buttons="accept,help"
+          ondialoghelp="openHelp('cert_details');"/>
+
+  <dialog id="set_password"
+          buttons="accept,cancel,help"
+          ondialoghelp="openHelp('change_pwd');"/>
+
+  <dialog id="devicemanager"
+          buttons="accept,help"
+          ondialoghelp="openHelp('sec_devices');"/>
+
+  <dialog id="ssl_warning"
+          buttons="accept,cancel,help"
+          ondialoghelp="openHelp('which_token');"/>
+
+  <dialog id="certAuthAsk"
+          buttons="accept,cancel,help"
+          ondialoghelp="openHelp('which_cert');"/>
+
+  <dialog id="crlImportSuccess"
+          buttons="accept,cancel,help"
+          ondialoghelp="openHelp('validation-crl-import');"/>
+
+  <dialog id="deleteCertificate"
+          buttons="accept,cancel,help"
+          ondialoghelp="doDeleteCertificateHelpButton();"/>
+
+  <dialog id="domainMismatch"
+          spacerflex="1"
+          buttons="accept,cancel,help,extra2"
+          ondialoghelp="openHelp('bad_name_web_cert');"/>
+
+  <dialog id="editCaCert"
+          buttons="accept,cancel,help"
+          ondialoghelp="openHelp('edit_ca_certs');"/>
+
+  <dialog id="editEmailCert"
+          buttons="accept,cancel,help"
+          ondialoghelp="openHelp('edit_email_certs');"/>
+
+  <dialog id="editWebsiteCert"
+          buttons="accept,cancel,help"
+          ondialoghelp="openHelp('edit_web_certs');"/>
+
+  <dialog id="escrowWarnDialog"
+          spacerflex="1"
+          buttons="accept,cancel,help,extra2"
+          ondialoghelp="openHelp('priv_key_copy');"/>
+
+  <dialog id="getp12password"
+          buttons="accept,cancel,help"
+          ondialoghelp="openHelp('my_certs');"/>
+
+  <dialog id="setp12password"
+          buttons="accept,cancel,help"
+          ondialoghelp="openHelp('cert_backup_pwd');"/>
+
+  <dialog id="newServerDialog"
+          buttons="accept,cancel,help"
+          ondialoghelp="openHelp('new_web_cert');"/>
+
+  <dialog id="crlUpdatePref"
+          buttons="accept,cancel,help"
+          ondialoghelp="openHelp('validation-crl-auto-update-prefs');"/>
+
+  <dialog id="serverCertExpired"
+          spacerflex="1"
+          buttons="accept,cancel,help,extra2"
+          ondialoghelp="openHelp('exp_web_cert');"/>
+
+  <dialog id="serverCrlNextupdate"
+          buttons="accept,help"
+          ondialoghelp="openHelp('exp_crl');"/>
+
+  <dialog id="crlviewer"
+          buttons="help"
+          ondialoghelp="openHelp('validation-crl-manage');">
+    <hbox id="dialogButtons">
+      <button dlgtype="help"/>
+    </hbox>
+  </dialog>
+
+  <dialog id="reset_password"
+          buttons="accept,cancel,help"
+          ondialoghelp="openHelp('reset_pwd');"/>
+
+  <dialog id="download_cert"
+          buttons="accept,cancel,help"
+          ondialoghelp="openHelp('new_ca');"/>
+</overlay>

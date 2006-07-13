@@ -44,21 +44,18 @@
 <dialog id="domainMismatch" title="&domainMismatch.title;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
   style="width: 32em;"
-  spacerflex="1"
-#expand buttons="accept,cancel__HELP_BUTTON__,extra2"
+  buttons="accept,cancel,extra2"
   buttonlabelextra2="&examineCert.label;"
   buttonaccesskeyextra2="&examineCert.accesskey;"
   defaultButton="cancel"
   ondialogaccept="return doOK();"
   ondialogcancel="return doCancel();"
-  ondialoghelp="openHelp('bad_name_web_cert');"
   ondialogextra2="viewCert();"
   onload="onLoad();">
 
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 <script type="application/x-javascript" src="chrome://pippki/content/pippki.js"/>
 <script type="application/x-javascript" src="chrome://pippki/content/domainMismatch.js"/>
-<script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
   <description id="message1"/>
   <separator/>

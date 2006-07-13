@@ -16,6 +16,28 @@
   <!-- Declare overlay points used in this package -->
   <RDF:Seq about="urn:mozilla:overlays">
     <RDF:li resource="chrome://communicator/content/utilityOverlay.xul"/>
+    <RDF:li resource="chrome://pippki/content/certViewer.xul"/>
+    <RDF:li resource="chrome://pippki/content/certManager.xul"/>
+    <RDF:li resource="chrome://pippki/content/changepassword.xul"/>
+    <RDF:li resource="chrome://pippki/content/device_manager.xul"/>
+    <RDF:li resource="chrome://pippki/content/choosetoken.xul"/>
+    <RDF:li resource="chrome://pippki/content/clientauthask.xul"/>
+    <RDF:li resource="chrome://pippki/content/crlImportDialog.xul"/>
+    <RDF:li resource="chrome://pippki/content/deletecert.xul"/>
+    <RDF:li resource="chrome://pippki/content/domainMismatch.xul"/>
+    <RDF:li resource="chrome://pippki/content/editcacert.xul"/>
+    <RDF:li resource="chrome://pippki/content/editemailcert.xul"/>
+    <RDF:li resource="chrome://pippki/content/editsslcert.xul"/>
+    <RDF:li resource="chrome://pippki/content/escrowWarn.xul"/>
+    <RDF:li resource="chrome://pippki/content/getp12password.xul"/>
+    <RDF:li resource="chrome://pippki/content/setp12password.xul"/>
+    <RDF:li resource="chrome://pippki/content/newserver.xul"/>
+    <RDF:li resource="chrome://pippki/content/pref-crlupdate.xul"/>
+    <RDF:li resource="chrome://pippki/content/serverCertExpired.xul"/>
+    <RDF:li resource="chrome://pippki/content/serverCrlNextupdate.xul"/>
+    <RDF:li resource="chrome://pippki/content/crlManager.xul"/>
+    <RDF:li resource="chrome://pippki/content/resetpassword.xul"/>
+    <RDF:li resource="chrome://pippki/content/downloadcert.xul"/>
   </RDF:Seq>
 
   <!-- Define the local overlay file(s) for each overlay point -->
@@ -23,4 +45,91 @@
     <RDF:li>chrome://help/content/helpMenuOverlay.xul</RDF:li>
   </RDF:Seq>
 
+  <RDF:Seq about="chrome://pippki/content/certViewer.xul">
+    <RDF:li>chrome://help/content/helpSecurityOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://pippki/content/certManager.xul">
+    <RDF:li>chrome://help/content/helpSecurityOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://pippki/content/changepassword.xul">
+    <RDF:li>chrome://help/content/helpSecurityOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://pippki/content/device_manager.xul">
+    <RDF:li>chrome://help/content/helpSecurityOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://pippki/content/choosetoken.xul">
+    <RDF:li>chrome://help/content/helpSecurityOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://pippki/content/clientauthask.xul">
+    <RDF:li>chrome://help/content/helpSecurityOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://pippki/content/crlImportDialog.xul">
+    <RDF:li>chrome://help/content/helpSecurityOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://pippki/content/deletecert.xul">
+    <RDF:li>chrome://help/content/helpSecurityOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://pippki/content/domainMismatch.xul">
+    <RDF:li>chrome://help/content/helpSecurityOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://pippki/content/editcacert.xul">
+    <RDF:li>chrome://help/content/helpSecurityOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://pippki/content/editemailcert.xul">
+    <RDF:li>chrome://help/content/helpSecurityOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://pippki/content/editsslcert.xul">
+    <RDF:li>chrome://help/content/helpSecurityOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://pippki/content/escrowWarn.xul">
+    <RDF:li>chrome://help/content/helpSecurityOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://pippki/content/getp12password.xul">
+    <RDF:li>chrome://help/content/helpSecurityOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://pippki/content/setp12password.xul">
+    <RDF:li>chrome://help/content/helpSecurityOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://pippki/content/newserver.xul">
+    <RDF:li>chrome://help/content/helpSecurityOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://pippki/content/pref-crlupdate.xul">
+    <RDF:li>chrome://help/content/helpSecurityOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://pippki/content/serverCertExpired.xul">
+    <RDF:li>chrome://help/content/helpSecurityOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://pippki/content/serverCrlNextupdate.xul">
+    <RDF:li>chrome://help/content/helpSecurityOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://pippki/content/crlManager.xul">
+    <RDF:li>chrome://help/content/helpSecurityOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://pippki/content/resetpassword.xul">
+    <RDF:li>chrome://help/content/helpSecurityOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://pippki/content/downloadcert.xul">
+    <RDF:li>chrome://help/content/helpSecurityOverlay.xul</RDF:li>
+  </RDF:Seq>
 </RDF:RDF>

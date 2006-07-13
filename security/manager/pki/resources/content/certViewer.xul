@@ -49,15 +49,13 @@
 <dialog id="certDetails" 
   title="&certmgr.certdetail.title;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-#expand buttons="accept__HELP_BUTTON__"
+  buttons="accept"
   buttonlabelaccept="&certmgr.close.label;"
-  ondialoghelp="openHelp('cert_details');"
   onload="setWindowName();">
 
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 <script type="application/x-javascript" src="chrome://pippki/content/viewCertDetails.js"/>
 <script type="application/x-javascript" src="chrome://pippki/content/pippki.js"/>
-<script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
   <tabbox>
     <tabs>

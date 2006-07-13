@@ -43,16 +43,14 @@
 <dialog id="download_cert" title="&downloadCert.title;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
   style="width: 46em;"
-#expand buttons="accept,cancel__HELP__"
+  buttons="accept,cancel"
   ondialogaccept="return doOK();"
   ondialogcancel="return doCancel();"
-  ondialoghelp="openHelp('new_ca');"
   onload="onLoad();">
 
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 <script type="application/x-javascript" src="chrome://pippki/content/downloadcert.js"/>
 <script type="application/x-javascript" src="chrome://pippki/content/pippki.js"/>
-<script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
 
   <!--  Let 'em know what they're doing -->
