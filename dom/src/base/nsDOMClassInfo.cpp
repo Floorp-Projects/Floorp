@@ -6318,8 +6318,9 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       JSAutoRequest ar(cx);
 
       if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
-                                ::JS_GetStringLength(str), v, nsnull,
-                                nsnull, JSPROP_ENUMERATE)) {
+                                 ::JS_GetStringLength(str), v, nsnull, nsnull,
+                                 JSPROP_READONLY | JSPROP_PERMANENT |
+                                 JSPROP_ENUMERATE)) {
         return NS_ERROR_FAILURE;
       }
       *objp = obj;
