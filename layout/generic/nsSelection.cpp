@@ -2277,12 +2277,13 @@ nsFrameSelection::HandleDrag(nsIFrame *aFrame, nsPoint aPoint)
     if (amount == eSelectBeginLine && direction == eDirNext)
       amount = eSelectEndLine;
 
+    PRInt32 offset;
+    nsIFrame* frame = GetFrameForNodeOffset(offsets.content, offsets.offset, HINTRIGHT, &offset);
     nsPeekOffsetStruct pos;
-    pos.SetData(amount, direction, offsets.offset, 0,
+    pos.SetData(amount, direction, offset, 0,
                 PR_FALSE, mLimiter != nsnull, PR_FALSE, PR_FALSE);
-    nsIFrame* frame = mShell->GetPrimaryFrameFor(offsets.content);
 
-    if (NS_SUCCEEDED(result = frame->PeekOffset(mShell->GetPresContext(), &pos)) && pos.mResultContent) {
+    if (frame && NS_SUCCEEDED(frame->PeekOffset(mShell->GetPresContext(), &pos)) && pos.mResultContent) {
       offsets.content = pos.mResultContent;
       offsets.offset = pos.mContentOffset;
     }
