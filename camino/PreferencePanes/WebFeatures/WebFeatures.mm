@@ -59,6 +59,10 @@ static NSString* XPCOMShutDownNotificationName = @"XPCOMShutDown";
 // needs to match the string in PreferenceManager.mm
 static NSString* const AdBlockingChangedNotificationName = @"AdBlockingChanged";
 
+// for accessibility.tabfocus
+const int kFocusLinks = (1 << 2);
+const int kFocusForms = (1 << 1);
+
 @interface OrgMozillaChimeraPreferenceWebFeatures(PRIVATE)
 -(NSString*)profilePath;
 @end
@@ -68,7 +72,7 @@ static NSString* const AdBlockingChangedNotificationName = @"AdBlockingChanged";
 - (void) dealloc
 {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
-  
+
   NS_IF_RELEASE(mManager);
   [super dealloc];
 }
@@ -93,7 +97,7 @@ static NSString* const AdBlockingChangedNotificationName = @"AdBlockingChanged";
                                              object:nil];
 
   BOOL gotPref = NO;
-    
+
   // Set initial value on Java/JavaScript checkboxes
   BOOL jsEnabled = [self getBooleanPref:"javascript.enabled" withSuccess:&gotPref] && gotPref;
   [mEnableJS setState:jsEnabled];
@@ -105,22 +109,30 @@ static NSString* const AdBlockingChangedNotificationName = @"AdBlockingChanged";
   BOOL enablePopupBlocking = [self getBooleanPref:"dom.disable_open_during_load" withSuccess:&gotPref] && gotPref;  
   [mEnablePopupBlocking setState:enablePopupBlocking];
   [mEditWhitelist setEnabled:enablePopupBlocking];
-  
+
   // set initial value on annoyance blocker checkbox. out of all the prefs,
   // if the "status" capability is turned off, we use that as an indicator
   // to turn them all off.
   BOOL enableAnnoyanceBlocker = [self getBooleanPref:"dom.disable_window_status_change" withSuccess:&gotPref];
   [mEnableAnnoyanceBlocker setState:enableAnnoyanceBlocker];
-  
+
   // set initial value on image-resizing
   BOOL enableImageResize = [self getBooleanPref:"browser.enable_automatic_image_resizing" withSuccess:&gotPref];
   [mImageResize setState:enableImageResize];
 
   BOOL preventAnimation = [[self getStringPref:"image.animation_mode" withSuccess:&gotPref] isEqualToString:@"once"];
   [mPreventAnimation setState:preventAnimation];
-  
+
   BOOL enableAdBlock = [self getBooleanPref:"camino.enable_ad_blocking" withSuccess:&gotPref];
   [mEnableAdBlocking setState:enableAdBlock];
+
+  // Set inital values for tabfocus pref.  Internally, it's a bitwise additive pref:
+  // bit 0 adds focus for text fields (not exposed in the UI, so not given a constant)
+  // bit 1 adds focus for other form elements (kFocusForms)
+  // bit 2 adds links and linked images (kFocusLinks)
+  int tabFocusMask = [self getIntPref:"accessibility.tabfocus" withSuccess:&gotPref];
+  [mTabToLinks setState:((tabFocusMask & kFocusLinks) ? NSOnState : NSOffState)];
+  [mTabToFormElements setState:((tabFocusMask & kFocusForms) ? NSOnState : NSOffState)];
 
   // store permission manager service and cache the enumerator.
   nsCOMPtr<nsIPermissionManager> pm ( do_GetService(NS_PERMISSIONMANAGER_CONTRACTID) );
@@ -233,20 +245,20 @@ static NSString* const AdBlockingChangedNotificationName = @"AdBlockingChanged";
   // build parallel permission list for speed with a lot of blocked sites
   NS_NewISupportsArray(&mCachedPermissions);     // ADDREFs
   [self populatePermissionCache:mCachedPermissions];
-  
-	[NSApp beginSheet:mWhitelistPanel
+
+  [NSApp beginSheet:mWhitelistPanel
         modalForWindow:[mEditWhitelist window]   // any old window accessor
         modalDelegate:self
         didEndSelector:@selector(editWhitelistSheetDidEnd:returnCode:contextInfo:)
         contextInfo:NULL];
-        
+
   // ensure a row is selected (cocoa doesn't do this for us, but will keep
   // us from unselecting a row once one is set; go figure).
   [mWhitelistTable selectRow:0 byExtendingSelection:NO];
-  
+
   [mWhitelistTable setDeleteAction:@selector(removeWhitelistSite:)];
   [mWhitelistTable setTarget:self];
-  
+
   [mAddButton setEnabled:NO];
 
   // we shouldn't need to do this, but the scrollbar won't enable unless we
@@ -259,10 +271,10 @@ static NSString* const AdBlockingChangedNotificationName = @"AdBlockingChanged";
 -(IBAction) editWhitelistDone:(id)aSender
 {
   // save stuff??
-  
+
   [mWhitelistPanel orderOut:self];
   [NSApp endSheet:mWhitelistPanel];
-  
+
   NS_IF_RELEASE(mCachedPermissions);
 }
 
@@ -271,7 +283,7 @@ static NSString* const AdBlockingChangedNotificationName = @"AdBlockingChanged";
   if ( mCachedPermissions && mManager ) {
     // remove from parallel array and cookie permissions list
     int row = [mWhitelistTable selectedRow];
-    
+
     // remove from permission manager (which is done by host, not by row), then 
     // remove it from our parallel array (which is done by row). Since we keep a
     // parallel array, removing multiple items by row is very difficult since after 
@@ -282,7 +294,7 @@ static NSString* const AdBlockingChangedNotificationName = @"AdBlockingChanged";
       nsCAutoString host;
       perm->GetHost(host);
       mManager->Remove(host, "popup");           // could this api _be_ any worse? Come on!
-      
+
       mCachedPermissions->RemoveElementAt(row);
     }
     [mWhitelistTable reloadData];
@@ -302,7 +314,7 @@ static NSString* const AdBlockingChangedNotificationName = @"AdBlockingChanged";
     NSString* url = [[mAddField stringValue] stringByRemovingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
     if ( ![url rangeOfString:@"http://"].length && ![url rangeOfString:@"https://"].length )
       url = [NSString stringWithFormat:@"http://%@", url];
-    
+
     const char* siteURL = [url UTF8String];
     nsCOMPtr<nsIURI> newURI;
     NS_NewURI(getter_AddRefs(newURI), siteURL);
@@ -345,13 +357,44 @@ static NSString* const AdBlockingChangedNotificationName = @"AdBlockingChanged";
       retVal = [NSString stringWithCString:host.get()];
     }
   }
-  
+
   return retVal;
 }
 
 - (void)controlTextDidChange:(NSNotification*)notification
 {
   [mAddButton setEnabled:[[mAddField stringValue] length] > 0];
+}
+
+//
+// clickTabFocusCheckboxes:
+//
+// Enable and disable tabbing to various elements.  Internally, it's a bitwise additive pref:
+// bit 0 adds focus for text fields (not exposed in the UI, so not given a constant)
+// bit 1 adds focus for other form elements (kFocusForms)
+// bit 2 adds links and linked images (kFocusLinks)
+// By default, the pref is set to binary 011 (text fields and forms)
+//
+-(IBAction) clickTabFocusCheckboxes:(id)sender
+{
+  BOOL gotPref;
+  int tabFocusValue = [self getIntPref:"accessibility.tabfocus" withSuccess:&gotPref];
+
+  if (sender == mTabToFormElements)
+  {
+    if ([sender state])
+      tabFocusValue |= kFocusForms; // turn the forms bit on
+    else
+      tabFocusValue &= ~kFocusForms; // turn the forms bit off
+  } 
+  else // sender == mTabToLinks
+  {
+    if ([sender state])
+      tabFocusValue |= kFocusLinks; // turn the links bit on
+    else
+      tabFocusValue &= ~kFocusLinks; // turn the links bit off
+  }
+  [self setPref:"accessibility.tabfocus" toInt:tabFocusValue];
 }
 
 //

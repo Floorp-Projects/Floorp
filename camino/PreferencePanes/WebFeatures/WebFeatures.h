@@ -57,7 +57,7 @@ class nsISupportsArray;
   IBOutlet NSButton *mImageResize;
   IBOutlet NSButton *mPreventAnimation;
   IBOutlet NSButton *mEditWhitelist;
-  
+
   IBOutlet id mWhitelistPanel;
   IBOutlet ExtendedTableView*   mWhitelistTable;
   IBOutlet NSTextField*         mAddField;
@@ -65,8 +65,11 @@ class nsISupportsArray;
 
   nsIPermissionManager* mManager;         // STRONG (should be nsCOMPtr)  
   nsISupportsArray* mCachedPermissions;		// parallel list of permissions for speed, STRONG (should be nsCOMPtr)
-  
+
   IBOutlet NSButton* mEnableAnnoyanceBlocker;
+
+  IBOutlet NSButton* mTabToFormElements;
+  IBOutlet NSButton* mTabToLinks;
 }
 
 -(IBAction) clickEnableJS:(id)sender;
@@ -80,6 +83,8 @@ class nsISupportsArray;
 
 -(IBAction) clickEnableAnnoyanceBlocker:(id)sender;
 -(void) setAnnoyingWindowPrefsTo:(BOOL)inValue;
+
+-(IBAction) clickTabFocusCheckboxes:(id)sender;
 
 // whitelist sheet methods
 -(IBAction) editWhitelistDone:(id)aSender;
