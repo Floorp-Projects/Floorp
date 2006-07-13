@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Benjamin Smedberg <benjamin@smedbergs.us>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -40,9 +41,8 @@
 #include "prmem.h"
 
 #include "nscore.h"
-#include "nsProxyEvent.h"
-#include "nsIProxyObjectManager.h"
 #include "nsProxyEventPrivate.h"
+#include "nsIThreadInternal.h"
 
 #include "nsServiceManagerUtils.h"
 
@@ -53,423 +53,22 @@
 
 #include "nsAutoLock.h"
 
-static NS_DEFINE_IID(kProxyObject_Identity_Class_IID, NS_PROXYEVENT_IDENTITY_CLASS_IID);
-
-////////////////////////////////////////////////////////////////////////////////
-
-class nsProxyEventKey : public nsHashKey
-{
-public:
-    nsProxyEventKey(void* rootObjectKey, void* targetKey, PRInt32 proxyType)
-        : mRootObjectKey(rootObjectKey), mTargetKey(targetKey), mProxyType(proxyType) {
-    }
-  
-    PRUint32 HashCode(void) const {
-        return NS_PTR_TO_INT32(mRootObjectKey) ^ 
-            NS_PTR_TO_INT32(mTargetKey) ^ mProxyType;
-    }
-
-    PRBool Equals(const nsHashKey *aKey) const {
-        const nsProxyEventKey* other = (const nsProxyEventKey*)aKey;
-        return mRootObjectKey == other->mRootObjectKey
-            && mTargetKey == other->mTargetKey
-            && mProxyType == other->mProxyType;
-    }
-
-    nsHashKey *Clone() const {
-        return new nsProxyEventKey(mRootObjectKey, mTargetKey, mProxyType);
-    }
-
-protected:
-    void*       mRootObjectKey;
-    void*       mTargetKey;
-    PRInt32     mProxyType;
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
-#ifdef DEBUG_xpcom_proxy
-static PRMonitor* mon = nsnull;
-static PRUint32 totalProxyObjects = 0;
-static PRUint32 outstandingProxyObjects = 0;
-
-void
-nsProxyEventObject::DebugDump(const char * message, PRUint32 hashKey)
-{
-
-    if (mon == nsnull)
-    {
-        mon = PR_NewMonitor();
-    }
-
-    PR_EnterMonitor(mon);
-
-    if (message)
-    {
-        printf("\n-=-=-=-=-=-=-=-=-=-=-=-=-\n");
-        printf("%s\n", message);
-
-        if(strcmp(message, "Create") == 0)
-        {
-            totalProxyObjects++;
-            outstandingProxyObjects++;
-        }
-        else if(strcmp(message, "Delete") == 0)
-        {
-            outstandingProxyObjects--;
-        }
-    }
-    printf("nsProxyEventObject @ %x with mRefCnt = %d\n", this, mRefCnt);
-
-    PRBool isRoot = mRoot == nsnull;
-    printf("%s wrapper around  @ %x\n", isRoot ? "ROOT":"non-root\n", GetRealObject());
-
-    nsCOMPtr<nsISupports> rootObject = do_QueryInterface(mProxyObject->mRealObject);
-    nsCOMPtr<nsISupports> rootQueue = do_QueryInterface(mProxyObject->mTarget);
-    nsProxyEventKey key(rootObject, rootQueue, mProxyObject->mProxyType);
-    printf("Hashkey: %d\n", key.HashCode());
-        
-    char* name;
-    GetClass()->GetInterfaceInfo()->GetName(&name);
-    printf("interface name is %s\n", name);
-    if(name)
-        nsMemory::Free(name);
-    char * iid = GetClass()->GetProxiedIID().ToString();
-    printf("IID number is %s\n", iid);
-    delete iid;
-    printf("nsProxyEventClass @ %x\n", mClass);
-    
-    if(mNext)
-    {
-        if(isRoot)
-        {
-            printf("Additional wrappers for this object...\n");
-        }
-        mNext->DebugDump(nsnull, 0);
-    }
-
-    printf("[proxyobjects] %d total used in system, %d outstading\n", totalProxyObjects, outstandingProxyObjects);
-
-    if (message)
-        printf("-=-=-=-=-=-=-=-=-=-=-=-=-\n");
-
-    PR_ExitMonitor(mon);
-}
-#endif
-
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////
-//
-//  nsProxyEventObject
-//
-//////////////////////////////////////////////////////////////////////////////////////////////////
-nsProxyEventObject* 
-nsProxyEventObject::GetNewOrUsedProxy(nsIEventTarget *target,
-                                      PRInt32 proxyType, 
-                                      nsISupports *aObj,
-                                      REFNSIID aIID)
-{
-    nsresult rv;
-
-    if (!aObj)
-        return nsnull;
-
-    nsISupports* rawObject = aObj;
-
-    //
-    // make sure that the object pass in is not a proxy...
-    // if the object *is* a proxy, then be nice and build the proxy
-    // for the real object...
-    //
-    nsCOMPtr<nsProxyEventObject> identificationObject;
-
-    rv = rawObject->QueryInterface(kProxyObject_Identity_Class_IID,
-                                   getter_AddRefs(identificationObject));
-    if (NS_SUCCEEDED(rv)) {
-        //
-        // ATTENTION!!!!
-        //
-        // If you are hitting any of the assertions in this block of code, 
-        // please contact dougt@netscape.com.
-        //
-
-        // if you hit this assertion, you might want to check out how 
-        // you are using proxies.  You shouldn't need to be creating
-        // a proxy from a proxy.  -- dougt@netscape.com
-        NS_WARNING("Someone is building a proxy from a proxy");
-        
-        NS_ASSERTION(identificationObject, "where did my identification object go!");
-        if (!identificationObject) {
-            return nsnull;
-        }
-
-        // someone is asking us to create a proxy for a proxy.  Lets get
-        // the real object and build aproxy for that!
-        rawObject = identificationObject->GetRealObject();
-        
-        NS_ASSERTION(rawObject, "where did my real object go!");
-        if (!rawObject) {
-            return nsnull;
-        }
-    }
-
-    //
-    // Get the root nsISupports of the |real| object.
-    //
-    nsCOMPtr<nsISupports> rootObject;
-
-    rootObject = do_QueryInterface(rawObject, &rv);
-    if (NS_FAILED(rv) || !rootObject) {
-        NS_ASSERTION(NS_FAILED(rv), "where did my root object go!");
-        return nsnull;
-    }
-
-    // Get the root nsISupports of the event queue...  This is used later,
-    // as part of the hashtable key...
-    nsCOMPtr<nsISupports> destQRoot = do_QueryInterface(target, &rv);
-    if (NS_FAILED(rv) || !destQRoot) {
-        return nsnull;
-    }
-
-    //
-    // Enter the proxy object creation lock.
-    //
-    // This lock protects thev linked list which chains proxies together 
-    // (ie. mRoot and mNext) and ensures that there is no hashtable contention
-    // between the time that a proxy is looked up (and not found) in the
-    // hashtable and then added...
-    //
-    nsProxyObjectManager *manager = nsProxyObjectManager::GetInstance();
-    if (!manager) {
-        return nsnull;
-    }
-
-    nsAutoMonitor mon(manager->GetMonitor());
-
-    // Get the hash table containing root proxy objects...
-    nsHashtable *realToProxyMap = manager->GetRealObjectToProxyObjectMap();
-    if (!realToProxyMap) {
-        return nsnull;
-    }
-
-    // Now, lookup the root nsISupports of the raw object in the hashtable
-    // The key consists of 3 pieces of information:
-    //    - root nsISupports of the raw object
-    //    - event queue of the current thread
-    //    - type of proxy being constructed...
-    //
-    nsProxyEventKey rootkey(rootObject.get(), destQRoot.get(), proxyType);
-
-    nsCOMPtr<nsProxyEventObject> rootProxy;
-    nsCOMPtr<nsProxyEventObject> proxy;
-    nsProxyEventObject* peo;
-
-    // find in our hash table 
-    rootProxy = (nsProxyEventObject*) realToProxyMap->Get(&rootkey);
-
-    if(rootProxy) {
-        //
-        // At least one proxy has already been created for this raw object...
-        //
-        // Look for the specific interface proxy in the list off of
-        // the root proxy...
-        //
-        peo = rootProxy->LockedFind(aIID);
-
-        if(peo) {
-            // An existing proxy is available... So use it.
-            NS_ADDREF(peo);
-            return peo;  
-        }
-    }
-    else {
-        // build the root proxy
-        nsCOMPtr<nsProxyEventClass> rootClazz;
-
-        rootClazz = dont_AddRef(nsProxyEventClass::GetNewOrUsedClass(
-                                NS_GET_IID(nsISupports)));
-        if (!rootClazz) {
-            return nsnull;
-        }
-
-        peo = new nsProxyEventObject(target, 
-                                     proxyType, 
-                                     rootObject, 
-                                     rootObject, 
-                                     rootClazz, 
-                                     nsnull);
-        if(!peo) {
-            // Ouch... Out of memory!
-            return nsnull;
-        }
-
-        // Add this root proxy into the hash table...
-        realToProxyMap->Put(&rootkey, peo);
-
-        if(aIID.Equals(NS_GET_IID(nsISupports))) {
-            //
-            // Since the requested proxy is for the nsISupports interface of
-            // the raw object, use the new root proxy as the specific proxy
-            // too...
-            //
-            NS_ADDREF(peo);
-            return peo;
-        }
-
-        // This assignment is an owning reference to the new ProxyEventObject.
-        // So, it will automatically get deleted if any subsequent early 
-        // returns are taken...
-        rootProxy = do_QueryInterface(peo);
-    }
-
-    //
-    // at this point we have a proxy for the root nsISupports (ie. rootProxy)
-    // but we need to build the specific proxy for this interface...
-    //
-    NS_ASSERTION(rootProxy, "What happened to the root proxy!");
-
-    // Get a class for this IID.
-    nsCOMPtr<nsProxyEventClass> proxyClazz;
-        
-    proxyClazz = dont_AddRef(nsProxyEventClass::GetNewOrUsedClass(aIID));
-    if(!proxyClazz) {
-        return nsnull;
-    }
-
-    // Get the raw interface for this IID
-    nsCOMPtr<nsISupports> rawInterface;
-
-    rv = rawObject->QueryInterface(aIID, getter_AddRefs(rawInterface));
-    if (NS_FAILED(rv) || !rawInterface) {
-        NS_ASSERTION(NS_FAILED(rv), "where did my rawInterface object go!");
-        return nsnull;
-    }
-
-    peo = new nsProxyEventObject(target,
-                                 proxyType,
-                                 rawInterface,
-                                 rootObject,
-                                 proxyClazz,
-                                 rootProxy);
-    if (!peo) {
-        // Ouch... Out of memory!
-        return nsnull;
-    }
-
-    //
-    // Add the new specific proxy to the head of the list of proxies hanging
-    // off of the rootProxy...
-    //
-    peo->mNext       = rootProxy->mNext;
-    rootProxy->mNext = peo;
-
-    NS_ADDREF(peo);
-    return peo;  
-
-}
-
-nsProxyEventObject* nsProxyEventObject::LockedFind(REFNSIID aIID)
-{
-    if(aIID.Equals(mClass->GetProxiedIID())) {
-        return this;
-    }
-
-    if(aIID.Equals(NS_GET_IID(nsISupports))) {
-        return this;
-    }
-
-    nsProxyEventObject* cur = (mRoot ? mRoot : mNext);
-    while(cur) {
-        if(aIID.Equals(cur->GetClass()->GetProxiedIID())) {
-            return cur;
-        }
-        cur = cur->mNext;
-    }
-
-    return nsnull;
-}
-
-nsProxyEventObject::nsProxyEventObject()
-: mNext(nsnull)
-{
-     NS_WARNING("This constructor should never be called");
-}
-
-nsProxyEventObject::nsProxyEventObject(nsIEventTarget *target,
-                                       PRInt32 proxyType,
-                                       nsISupports* aObj,
-                                       nsISupports* aRootObj,
+nsProxyEventObject::nsProxyEventObject(nsProxyObject *aParent,
                                        nsProxyEventClass* aClass,
-                                       nsProxyEventObject* root)
-    : mClass(aClass),
-      mRoot(root),
+                                       nsISomeInterface* aRealInterface)
+    : mRealInterface(aRealInterface),
+      mClass(aClass),
+      mProxyObject(aParent),
       mNext(nsnull)
 {
-    NS_IF_ADDREF(mRoot);
-
-    // XXX protect against OOM errors
-    mProxyObject = new nsProxyObject(target, proxyType, aObj, aRootObj);
-
-#ifdef DEBUG_xpcom_proxy
-    DebugDump("Create", 0);
-#endif
 }
 
 nsProxyEventObject::~nsProxyEventObject()
 {
-#ifdef DEBUG_xpcom_proxy
-    DebugDump("Delete", 0);
-#endif
-    if (mRoot) {
-        //
-        // This proxy is not the root interface so it must be removed
-        // from the chain of proxies...
-        //
-        nsProxyEventObject* cur = mRoot;
-        while(cur) {
-            if(cur->mNext == this) {
-                cur->mNext = mNext;
-                mNext = nsnull;
-                break;
-            }
-            cur = cur->mNext;
-        }
-        NS_ASSERTION(cur, "failed to find wrapper in its own chain");
-    }
-    else {
-        //
-        // This proxy is for the root interface.  Each proxy in the chain
-        // has a strong reference to the root... So, when its refcount goes
-        // to zero, it safe to remove it because no proxies are in its chain.
-        //
-        if (! nsProxyObjectManager::IsManagerShutdown()) {
-            nsProxyObjectManager* manager = nsProxyObjectManager::GetInstance();
-            nsHashtable *realToProxyMap = manager->GetRealObjectToProxyObjectMap();
+    // This destructor is always called within the POM monitor.
+    // XXX assert this!
 
-            NS_ASSERTION(!mNext, "There are still proxies in the chain!");
-
-            if (realToProxyMap != nsnull) {
-                nsCOMPtr<nsISupports> rootTarget =
-                    do_QueryInterface(mProxyObject->mTarget);
-                nsProxyEventKey key(mProxyObject->mRootObject, rootTarget,
-                                    mProxyObject->mProxyType);
-#ifdef DEBUG_dougt
-                void* value =
-#endif
-                    realToProxyMap->Remove(&key);
-#ifdef DEBUG_dougt
-                NS_ASSERTION(value, "failed to remove from realToProxyMap");
-#endif
-            }
-        }
-    }
-
-    // I am worried about ordering.
-    // do not remove assignments.
-    mProxyObject = nsnull;
-    mClass       = nsnull;
-    NS_IF_RELEASE(mRoot);
+    mProxyObject->LockedRemove(this);
 }
 
 //
@@ -481,13 +80,7 @@ NS_IMPL_THREADSAFE_ADDREF(nsProxyEventObject)
 NS_IMETHODIMP_(nsrefcnt)
 nsProxyEventObject::Release(void)
 {
-    //
-    // Be pessimistic about whether the manager or even the monitor exist...
-    // This is to protect against shutdown issues where a proxy object could
-    // be destroyed after (or while) the Proxy Manager is being destroyed...
-    //
-    nsProxyObjectManager* manager = nsProxyObjectManager::GetInstance();
-    nsAutoMonitor mon(manager ? manager->GetMonitor() : nsnull);
+    nsAutoMonitor mon(nsProxyObjectManager::GetInstance()->GetMonitor());
 
     nsrefcnt count;
     NS_PRECONDITION(0 != mRefCnt, "dup release");
@@ -511,14 +104,14 @@ nsProxyEventObject::Release(void)
 NS_IMETHODIMP
 nsProxyEventObject::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-    if( aIID.Equals(GetIID()) )
+    if( aIID.Equals(GetClass()->GetProxiedIID()) )
     {
         *aInstancePtr = NS_STATIC_CAST(nsISupports*, this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
         
-    return mClass->DelegatedQueryInterface(this, aIID, aInstancePtr);
+    return mProxyObject->QueryInterface(aIID, aInstancePtr);
 }
 
 //
@@ -528,34 +121,146 @@ nsProxyEventObject::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMETHODIMP
 nsProxyEventObject::GetInterfaceInfo(nsIInterfaceInfo** info)
 {
-    NS_ENSURE_ARG_POINTER(info);
-
     *info = mClass->GetInterfaceInfo();
-
     NS_ASSERTION(*info, "proxy class without interface");
-    if (!*info) {
-        return NS_ERROR_UNEXPECTED;
-    }
 
     NS_ADDREF(*info);
     return NS_OK;
 }
 
+nsresult
+nsProxyEventObject::convertMiniVariantToVariant(const nsXPTMethodInfo *methodInfo, 
+                                                nsXPTCMiniVariant * params, 
+                                                nsXPTCVariant **fullParam, 
+                                                uint8 *outParamCount)
+{
+    uint8 paramCount = methodInfo->GetParamCount();
+    *outParamCount = paramCount;
+    *fullParam = nsnull;
+
+    if (!paramCount) return NS_OK;
+        
+    *fullParam = (nsXPTCVariant*)malloc(sizeof(nsXPTCVariant) * paramCount);
+    
+    if (*fullParam == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    
+    for (int i = 0; i < paramCount; i++)
+    {
+        const nsXPTParamInfo& paramInfo = methodInfo->GetParam(i);
+        if ((GetProxyType() & NS_PROXY_ASYNC) && paramInfo.IsDipper())
+        {
+            NS_WARNING("Async proxying of out parameters is not supported"); 
+            free(*fullParam);
+            return NS_ERROR_PROXY_INVALID_OUT_PARAMETER;
+        }
+        uint8 flags = paramInfo.IsOut() ? nsXPTCVariant::PTR_IS_DATA : 0;
+        (*fullParam)[i].Init(params[i], paramInfo.GetType(), flags);
+    }
+    
+    return NS_OK;
+}
+
+class nsProxyThreadFilter : public nsIThreadEventFilter
+{
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSITHREADEVENTFILTER
+};
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsProxyThreadFilter, nsIThreadEventFilter)
+
+NS_DEFINE_IID(kFilterIID, NS_PROXYEVENT_FILTER_IID);
+
+NS_IMETHODIMP_(PRBool)
+nsProxyThreadFilter::AcceptEvent(nsIRunnable *event)
+{
+    PROXY_LOG(("PROXY(%p): filter event [%p]\n", this, event));
+
+    // If we encounter one of our proxy events that is for a synchronous method
+    // call, then we want to put it in our event queue for processing.  Else,
+    // we want to allow the event to be dispatched to the thread's event queue
+    // for processing later once we complete the current sync method call.
+    
+    nsRefPtr<nsProxyObjectCallInfo> poci;
+    event->QueryInterface(kFilterIID, getter_AddRefs(poci));
+    return poci && poci->IsSync();
+}
+
 NS_IMETHODIMP
 nsProxyEventObject::CallMethod(PRUint16 methodIndex,
-                               const nsXPTMethodInfo* info,
+                               const nsXPTMethodInfo* methodInfo,
                                nsXPTCMiniVariant * params)
 {
+    NS_ASSERTION(methodIndex > 2,
+                 "Calling QI/AddRef/Release through CallMethod");
     nsresult rv;
 
-    if (mProxyObject) {
-        rv = mProxyObject->Post(methodIndex,
-                                (nsXPTMethodInfo*)info,
-                                params,
-                                mClass->GetInterfaceInfo());
-    } else {
-        rv = NS_ERROR_NULL_POINTER;
+    if (methodInfo->IsNotXPCOM())
+        return NS_ERROR_PROXY_INVALID_IN_PARAMETER;
+
+    nsXPTCVariant *fullParam;
+    uint8 paramCount;
+    rv = convertMiniVariantToVariant(methodInfo, params,
+                                     &fullParam, &paramCount);
+    if (NS_FAILED(rv))
+        return rv;
+
+    PRBool callDirectly = PR_FALSE;
+    if (GetProxyType() & NS_PROXY_SYNC &&
+        NS_SUCCEEDED(GetTarget()->IsOnCurrentThread(&callDirectly)) &&
+        callDirectly) {
+
+        // invoke directly using xptc
+        rv = XPTC_InvokeByIndex(mRealInterface, methodIndex,
+                                paramCount, fullParam);
+
+        if (fullParam)
+            free(fullParam);
+
+        return rv;
     }
 
+    nsRefPtr<nsProxyObjectCallInfo> proxyInfo =
+        new nsProxyObjectCallInfo(this, methodInfo, methodIndex,
+                                  fullParam, paramCount);
+    if (!proxyInfo)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    if (! (GetProxyType() & NS_PROXY_SYNC)) {
+        return GetTarget()->Dispatch(proxyInfo, NS_DISPATCH_NORMAL);
+    }
+
+    // Post synchronously
+
+    nsIThread *thread = NS_GetCurrentThread();
+    nsCOMPtr<nsIThreadInternal> threadInt = do_QueryInterface(thread);
+    NS_ENSURE_STATE(threadInt);
+
+    // Install  thread filter to limit event processing only to 
+    // nsProxyObjectCallInfo instances.  XXX Add support for sequencing?
+    nsRefPtr<nsProxyThreadFilter> filter = new nsProxyThreadFilter();
+    if (!filter)
+        return NS_ERROR_OUT_OF_MEMORY;
+    threadInt->PushEventQueue(filter);
+
+    proxyInfo->SetCallersTarget(thread);
+    
+    // Dispatch can fail if the thread is shutting down
+    rv = GetTarget()->Dispatch(proxyInfo, NS_DISPATCH_NORMAL);
+    if (NS_SUCCEEDED(rv)) {
+        while (!proxyInfo->GetCompleted()) {
+            if (!NS_ProcessNextEvent(thread)) {
+                rv = NS_ERROR_UNEXPECTED;
+                break;
+            }
+        }
+    } else {
+        NS_WARNING("Failed to dispatch nsProxyCallEvent");
+    }
+
+    threadInt->PopEventQueue();
+
+    PROXY_LOG(("PROXY(%p): PostAndWait exit [%p %x]\n", this, proxyInfo, rv));
     return rv;
 }

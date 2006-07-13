@@ -46,18 +46,51 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
-#include "nsProxyEvent.h"
-#include "nsIProxyObjectManager.h"
 #include "nsProxyEventPrivate.h"
-#include "nsThreadUtils.h"
 
 #include "nsIComponentManager.h"
+#include "nsIProxyObjectManager.h"
 #include "nsIServiceManager.h"
-#include "nsCOMPtr.h"
-
 #include "nsIThread.h"
 
+#include "nsAutoLock.h"
+#include "nsCOMPtr.h"
+#include "nsThreadUtils.h"
+#include "xptiprivate.h"
+
+
+#ifdef PR_LOGGING
+PRLogModuleInfo *nsProxyObjectManager::sLog = PR_NewLogModule("xpcomproxy");
+#endif
+
+class nsProxyEventKey : public nsHashKey
+{
+public:
+    nsProxyEventKey(void* rootObjectKey, void* targetKey, PRInt32 proxyType)
+        : mRootObjectKey(rootObjectKey), mTargetKey(targetKey), mProxyType(proxyType) {
+    }
+  
+    PRUint32 HashCode(void) const {
+        return NS_PTR_TO_INT32(mRootObjectKey) ^ 
+            NS_PTR_TO_INT32(mTargetKey) ^ mProxyType;
+    }
+
+    PRBool Equals(const nsHashKey *aKey) const {
+        const nsProxyEventKey* other = (const nsProxyEventKey*)aKey;
+        return mRootObjectKey == other->mRootObjectKey
+            && mTargetKey == other->mTargetKey
+            && mProxyType == other->mProxyType;
+    }
+
+    nsHashKey *Clone() const {
+        return new nsProxyEventKey(mRootObjectKey, mTargetKey, mProxyType);
+    }
+
+protected:
+    void*       mRootObjectKey;
+    void*       mTargetKey;
+    PRInt32     mProxyType;
+};
 
 /////////////////////////////////////////////////////////////////////////
 // nsProxyObjectManager
@@ -68,23 +101,15 @@ nsProxyObjectManager* nsProxyObjectManager::mInstance = nsnull;
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsProxyObjectManager, nsIProxyObjectManager)
 
 nsProxyObjectManager::nsProxyObjectManager()
-    : mProxyObjectMap(256, PR_TRUE),
-      mProxyClassMap(256, PR_TRUE)
+    : mProxyObjectMap(256, PR_FALSE)
 {
     mProxyCreationMonitor = PR_NewMonitor();
-}
-
-static PRIntn
-PurgeProxyClasses(nsHashKey *aKey, void *aData, void* closure)
-{
-    nsProxyEventClass* ptr = NS_STATIC_CAST(nsProxyEventClass*, aData);
-    NS_RELEASE(ptr);
-    return kHashEnumerateNext;
+    mProxyClassMap.Init(256);
 }
 
 nsProxyObjectManager::~nsProxyObjectManager()
 {
-    mProxyClassMap.Reset(PurgeProxyClasses, nsnull);
+    mProxyClassMap.Clear();
 
     if (mProxyCreationMonitor)
         PR_DestroyMonitor(mProxyCreationMonitor);
@@ -155,12 +180,76 @@ nsProxyObjectManager::GetProxyForObject(nsIEventTarget* aTarget,
             return aObj->QueryInterface(aIID, aProxyObject);
     }
     
-    // check to see if proxy is there or not.
-    *aProxyObject = nsProxyEventObject::GetNewOrUsedProxy(aTarget, proxyType,
-                                                          aObj, aIID);
-    if (!*aProxyObject)
-        return NS_ERROR_UNEXPECTED;
-        
+    nsCOMPtr<nsISupports> realObj = do_QueryInterface(aObj);
+
+    // Make sure the object passed in is not a proxy; if it is, be nice and
+    // build the proxy for the real object.
+    nsCOMPtr<nsProxyObject> po = do_QueryInterface(aObj);
+    if (po) {
+        realObj = po->GetRealObject();
+    }
+
+    nsCOMPtr<nsISupports> realEQ = do_QueryInterface(aTarget);
+
+    nsProxyEventKey rootKey(realObj, realEQ, proxyType);
+
+    // Enter the Grand Monitor here.
+    nsAutoMonitor mon(mProxyCreationMonitor);
+
+    nsCOMPtr<nsProxyObject> root = (nsProxyObject*) mProxyObjectMap.Get(&rootKey);
+    if (!root) {
+        root = new nsProxyObject(aTarget, proxyType, realObj);
+        if (!root)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        mProxyObjectMap.Put(&rootKey, root);
+    }
+    return root->LockedFind(aIID, aProxyObject);
+}
+
+void
+nsProxyObjectManager::Remove(nsProxyObject *aProxy)
+{
+    nsCOMPtr<nsISupports> realEQ = do_QueryInterface(aProxy->GetTarget());
+
+    nsProxyEventKey rootKey(aProxy->GetRealObject(), realEQ, aProxy->GetProxyType());
+
+    nsAutoMonitor mon(mProxyCreationMonitor);
+
+    if (!mProxyObjectMap.Remove(&rootKey)) {
+        NS_ERROR("nsProxyObject not found in global hash.");
+    }
+}
+
+nsresult
+nsProxyObjectManager::GetClass(REFNSIID aIID, nsProxyEventClass **aResult)
+{
+    nsAutoMonitor mon(mProxyCreationMonitor);
+
+    nsProxyEventClass *pec;
+    mProxyClassMap.Get(aIID, &pec);
+    if (!pec) {
+        nsIInterfaceInfoManager *iim =
+            xptiInterfaceInfoManager::GetInterfaceInfoManagerNoAddRef();
+        if (!iim)
+            return NS_ERROR_FAILURE;
+
+        nsCOMPtr<nsIInterfaceInfo> ii;
+        nsresult rv = iim->GetInfoForIID(&aIID, getter_AddRefs(ii));
+        if (NS_FAILED(rv))
+            return rv;
+
+        pec = new nsProxyEventClass(aIID, ii);
+        if (!pec)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        if (!mProxyClassMap.Put(aIID, pec)) {
+            delete pec;
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+    }
+
+    *aResult = pec;
     return NS_OK;
 }
 
