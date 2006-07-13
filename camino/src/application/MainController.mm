@@ -1563,8 +1563,10 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
   NSArray* windows = [NSApp windows];
   NSEnumerator* windowEnum = [windows objectEnumerator];
   NSWindow* curWindow;
+
   while (curWindow = [windowEnum nextObject])
-    [curWindow zoom:aSender];
+    if ([[curWindow windowController] isMemberOfClass:[BrowserWindowController class]])
+      [curWindow zoom:aSender];
 }
 
 -(IBAction) supportLink:(id)aSender;
