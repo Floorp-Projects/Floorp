@@ -36,21 +36,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsGfxRadioControlFrame.h"
-#include "nsHTMLAtoms.h"
-#include "nsHTMLParts.h"
-#include "nsIFormControl.h"
 #include "nsIContent.h"
-#include "nsWidgetsCID.h"
-#include "nsIComponentManager.h"
 #include "nsCOMPtr.h"
 #include "nsCSSRendering.h"
-#include "nsIPresShell.h"
-#include "nsIDocument.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
 #endif
 #include "nsIServiceManager.h"
-#include "nsIDOMNode.h"
 #include "nsITheme.h"
 #include "nsDisplayList.h"
 
@@ -63,14 +55,10 @@ NS_NewGfxRadioControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 nsGfxRadioControlFrame::nsGfxRadioControlFrame(nsStyleContext* aContext):
   nsFormControlFrame(aContext)
 {
-   // Initialize GFX-rendered state
-  mRadioButtonFaceStyle = nsnull;
 }
 
 nsGfxRadioControlFrame::~nsGfxRadioControlFrame()
 {
-  if (mRadioButtonFaceStyle)
-    mRadioButtonFaceStyle->Release();
 }
 
 // Frames are not refcounted, no need to AddRef
@@ -122,11 +110,7 @@ nsGfxRadioControlFrame::SetAdditionalStyleContext(PRInt32 aIndex,
 {
   switch (aIndex) {
   case NS_GFX_RADIO_CONTROL_FRAME_FACE_CONTEXT_INDEX:
-    if (mRadioButtonFaceStyle)
-      mRadioButtonFaceStyle->Release();
     mRadioButtonFaceStyle = aStyleContext;
-    if (aStyleContext)
-      aStyleContext->AddRef();
     break;
   }
 }
@@ -136,7 +120,6 @@ NS_IMETHODIMP
 nsGfxRadioControlFrame::SetRadioButtonFaceStyleContext(nsStyleContext *aRadioButtonFaceStyleContext)
 {
   mRadioButtonFaceStyle = aRadioButtonFaceStyleContext;
-  mRadioButtonFaceStyle->AddRef();
   return NS_OK;
 }
 
@@ -235,9 +218,4 @@ nsGfxRadioControlFrame::OnChecked(nsPresContext* aPresContext,
   Invalidate(GetOverflowRect(), PR_FALSE);
   return NS_OK;
 }
-
-
-//----------------------------------------------------------------------
-// Extra Debug Helper Methods
-//----------------------------------------------------------------------
 
