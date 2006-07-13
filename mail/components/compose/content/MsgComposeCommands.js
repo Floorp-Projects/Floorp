@@ -2795,9 +2795,6 @@ function RemoveSelectedAttachment()
     }
     gContentChanged = true;
   }
-
-  if (!MessageHasAttachments())
-    ChangeAttachmentBucketVisibility(true);
 }
 
 function FocusOnFirstAttachment()
