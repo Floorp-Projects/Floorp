@@ -61,68 +61,105 @@ class nsIPresShell;
 
 enum EWordMovementType { eStartWord, eEndWord, eDefaultBehavior };
 
-/*PeekOffsetStruct
-   *  @param mShell is used to get the PresContext useful for measuring text etc.
-   *  @param mDesiredX is the "desired" location of the new caret
-   *  @param mAmount eWord, eCharacter, eLine
-   *  @param mDirection enum defined in this file to be eForward or eBackward
-   *  @param mStartOffset start offset to start the peek. 0 == beginning -1 = end
-   *  @param mResultContent content that actually is the next/previous
-   *  @param mResultOffset offset for result content
-   *  @param mResultFrame resulting frame for peeking
-   *  @param mEatingWS boolean to tell us the state of our search for Next/Prev
-   *  @param mPreferLeft true = prev line end, false = next line begin
-   *  @param mJumpLines if this is true then it's ok to cross lines while peeking
-   *  @param mScrollViewStop if this is true then stop peeking across scroll view boundary
-   *  @param mWordMovementType an enum that determines whether to prefer the start or end of a word
-   *                                or to use the default beahvior, which is a combination of 
-   *                                direction and the platform-based pref
-   *                                "layout.word_select.eat_space_to_next_word"
-*/
+/** PeekOffsetStruct is used to group various arguments (both input and output)
+ *  that are passed to nsFrame::PeekOffset(). See below for the description of
+ *  individual arguments.
+ */
 struct nsPeekOffsetStruct
 {
-  void SetData(nsIPresShell *aShell,
-               nscoord aDesiredX, 
-               nsSelectionAmount aAmount,
+  void SetData(nsSelectionAmount aAmount,
                nsDirection aDirection,
-               PRInt32 aStartOffset, 
-               PRBool aEatingWS,
-               PRBool aPreferLeft,
+               PRInt32 aStartOffset,
+               nscoord aDesiredX,
                PRBool aJumpLines,
                PRBool aScrollViewStop,
                PRBool aIsKeyboardSelect,
                PRBool aVisual,
-               EWordMovementType aWordMovementType = eDefaultBehavior )
-      {
-       mShell=aShell;
-       mDesiredX=aDesiredX;
-       mAmount=aAmount;
-       mDirection=aDirection;
-       mStartOffset=aStartOffset;
-       mEatingWS=aEatingWS;
-       mPreferLeft=aPreferLeft;
-       mJumpLines = aJumpLines;
-       mScrollViewStop = aScrollViewStop;
-       mIsKeyboardSelect = aIsKeyboardSelect;
-       mVisual = aVisual;
-       mWordMovementType = aWordMovementType;
-      }
-  nsIPresShell *mShell;
-  nscoord mDesiredX;
+               EWordMovementType aWordMovementType = eDefaultBehavior)
+
+  {
+    mAmount = aAmount;
+    mDirection = aDirection;
+    mStartOffset = aStartOffset;
+    mDesiredX = aDesiredX;
+    mJumpLines = aJumpLines;
+    mScrollViewStop = aScrollViewStop;
+    mIsKeyboardSelect = aIsKeyboardSelect;
+    mVisual = aVisual;
+    mWordMovementType = aWordMovementType;
+    mEatingWS = PR_FALSE;
+  }
+
+  // Note: Most arguments (input and output) are only used with certain values
+  // of mAmount. These values are indicated for each argument below.
+  // Arguments with no such indication are used with all values of mAmount.
+
+  /*** Input arguments ***/
+  // Note: The value of some of the input arguments may be changed upon exit.
+
+  // mAmount: The type of movement requested (by character, word, line, etc.)
   nsSelectionAmount mAmount;
+
+  // mDirection: eDirPrevious or eDirNext.
+  //             Used with: eSelectCharacter, eSelectWord, eSelectLine, eSelectParagraph.
   nsDirection mDirection;
+
+  // mStartOffset: Offset into the content of the current frame where the peek starts.
+  //               Used with: eSelectCharacter, eSelectWord
   PRInt32 mStartOffset;
-  nsCOMPtr<nsIContent> mResultContent;
-  PRInt32 mContentOffset;
-  PRInt32 mContentOffsetEnd;
-  nsIFrame *mResultFrame;
-  PRBool mEatingWS;
-  PRBool mPreferLeft;
+  
+  // mDesiredX: The desired x coordinate for the caret.
+  //            Used with: eSelectLine.
+  nscoord mDesiredX;
+
+  // mJumpLines: Whether to allow jumping across line boundaries.
+  //             Used with: eSelectCharacter, eSelectWord.
   PRBool mJumpLines;
+
+  // mScrollViewStop: Whether to stop when reaching a scroll view boundary.
+  //                  Used with: eSelectCharacter, eSelectWord, eSelectLine.
   PRBool mScrollViewStop;
+
+  // mIsKeyboardSelect: Whether the peeking is done in response to a keyboard action.
+  //                    Used with: eSelectWord.
   PRBool mIsKeyboardSelect;
+
+  // mVisual: Whether bidi caret behavior is visual (PR_TRUE) or logical (PR_FALSE).
+  //          Used with: eSelectCharacter, eSelectWord.
   PRBool mVisual;
+
+  // mWordMovementType: An enum that determines whether to prefer the start or end of a word
+  //                    or to use the default beahvior, which is a combination of 
+  //                    direction and the platform-based pref
+  //                    "layout.word_select.eat_space_to_next_word"
   EWordMovementType mWordMovementType;
+
+  /*** Output arguments ***/
+
+  // mResultContent: Content reached as a result of the peek.
+  nsCOMPtr<nsIContent> mResultContent;
+
+  // mContentOffset: Offset into content reached as a result of the peek.
+  PRInt32 mContentOffset;
+
+  // mResultFrame: Frame reached as a result of the peek.
+  //               Used with: eSelectCharacter, eSelectWord.
+  nsIFrame *mResultFrame;
+
+  // mAttachForward: When the result position is between two frames,
+  //                 indicates which of the two frames the caret should be painted in.
+  //                 PR_FALSE means "the end of the frame logically before the caret", 
+  //                 PR_TRUE means "the beginning of the frame logically after the caret".
+  //                 Used with: eSelectLine, eSelectBeginLine, eSelectEndLine.
+  PRBool mAttachForward;
+
+  /*** Arguments only used internally ***/
+
+  // mEatingWS: Used only internally, for recursive calls into PeekOffset.
+  //            Shold be PR_FALSE upon initial call to PeekOffset.
+  //            Used with: eSelectWord.
+  PRBool mEatingWS;
+
 };
 
 struct nsPrevNextBidiLevels

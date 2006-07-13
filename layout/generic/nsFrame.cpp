@@ -1992,8 +1992,7 @@ nsFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
   nsresult rv = GetSelectionController(aPresContext, getter_AddRefs(selcon));
   if (NS_FAILED(rv)) return rv;
 
-  nsIPresShell *shell = aPresContext->GetPresShell();
-  if (!shell || !selcon)
+  if (!selcon)
     return NS_ERROR_NOT_INITIALIZED;
 
   // Use peek offset one way then the other:
@@ -2002,13 +2001,10 @@ nsFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
   nsCOMPtr<nsIContent> endContent;
   nsCOMPtr<nsIDOMNode> endNode;
   nsPeekOffsetStruct startpos;
-  startpos.SetData(shell,
-                   0, 
-                   aAmountBack,
+  startpos.SetData(aAmountBack,
                    eDirPrevious,
-                   aStartPos,
-                   PR_FALSE,
-                   PR_TRUE,
+                   aStartPos, 
+                   0,
                    aJumpLines,
                    PR_TRUE,  //limit on scrolled views
                    PR_FALSE,
@@ -2017,13 +2013,10 @@ nsFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
   if (NS_FAILED(rv))
     return rv;
   nsPeekOffsetStruct endpos;
-  endpos.SetData(shell,
-                 0, 
-                 aAmountForward,
+  endpos.SetData(aAmountForward,
                  eDirNext,
-                 aStartPos,
-                 PR_FALSE,
-                 PR_FALSE,
+                 aStartPos, 
+                 0,
                  aJumpLines,
                  PR_TRUE,  //limit on scrolled views
                  PR_FALSE,
@@ -3823,7 +3816,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
 
   aPos->mResultFrame = nsnull;
   aPos->mResultContent = nsnull;
-  aPos->mPreferLeft = (aPos->mDirection == eDirNext);
+  aPos->mAttachForward = (aPos->mDirection == eDirNext);
 
    nsresult result;
   nsCOMPtr<nsILineIteratorNavigator> it; 
@@ -3951,13 +3944,12 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
                 {
                   aPos->mResultContent = parent;
                   aPos->mContentOffset = parent->IndexOf(content);
-                  aPos->mPreferLeft = PR_FALSE;
+                  aPos->mAttachForward = PR_FALSE;
                   if ((point.x - offset.x+ tempRect.x)>tempRect.width)
                   {
                     aPos->mContentOffset++;//go to end of this frame
-                    aPos->mPreferLeft = PR_TRUE;
+                    aPos->mAttachForward = PR_TRUE;
                   }
-                  aPos->mContentOffsetEnd = aPos->mContentOffset;
                   //result frame is the result frames parent.
                   aPos->mResultFrame = resultFrame->GetParent();
                   return NS_POSITION_BEFORE_TABLE;
@@ -3976,7 +3968,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
               resultFrame->GetContentOffsetsFromPoint(point - offset);
           aPos->mResultContent = offsets.content;
           aPos->mContentOffset = offsets.offset;
-          aPos->mPreferLeft = offsets.associateWithNext;
+          aPos->mAttachForward = offsets.associateWithNext;
           if (offsets.content)
           {
             PRBool selectable;
@@ -4018,7 +4010,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
             resultFrame->GetContentOffsetsFromPoint(point - offset);
         aPos->mResultContent = offsets.content;
         aPos->mContentOffset = offsets.offset;
-        aPos->mPreferLeft = offsets.associateWithNext;
+        aPos->mAttachForward = offsets.associateWithNext;
         if (offsets.content)
         {
           PRBool selectable;
@@ -4027,9 +4019,9 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
           {
             found = PR_TRUE;
             if (resultFrame == farStoppingFrame)
-              aPos->mPreferLeft = PR_FALSE;
+              aPos->mAttachForward = PR_FALSE;
             else
-              aPos->mPreferLeft = PR_TRUE;
+              aPos->mAttachForward = PR_TRUE;
             break;
           }
         }
@@ -4054,7 +4046,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
       aPos->mAmount = eSelectLine;
       aPos->mStartOffset = 0;
       aPos->mEatingWS = PR_FALSE;
-      aPos->mPreferLeft = !(aPos->mDirection == eDirNext);
+      aPos->mAttachForward = !(aPos->mDirection == eDirNext);
       if (aPos->mDirection == eDirPrevious)
         aPos->mStartOffset = -1;//start from end
      return aBlockFrame->PeekOffset(aPresContext, aPos);
@@ -4071,7 +4063,7 @@ nsPeekOffsetStruct nsIFrame::GetExtremeCaretPosition(PRBool aStart)
   FrameContentRange range = GetRangeForFrame(targetFrame.frame);
   result.mResultContent = range.content;
   result.mContentOffset = aStart ? range.start : range.end;
-  result.mPreferLeft = (result.mContentOffset == range.start);
+  result.mAttachForward = (result.mContentOffset == range.start);
   return result;
 }
 
@@ -4208,9 +4200,9 @@ nsFrame::PeekOffsetParagraph(nsPresContext* aPresContext,
 NS_IMETHODIMP
 nsFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 {
-  if (!aPos || !aPos->mShell)
+  if (!aPos)
     return NS_ERROR_NULL_POINTER;
-  nsresult result = NS_ERROR_FAILURE; 
+  nsresult result = NS_ERROR_FAILURE;
   nsPoint point;
   point.x = aPos->mDesiredX;
   point.y = 0;
@@ -4260,16 +4252,13 @@ nsFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
     }//drop into no amount
     case eSelectNoAmount:
     {
-      nsPresContext *context = aPos->mShell->GetPresContext();
-      if (!context)
-        return NS_OK;
       nsIView* view;
       nsPoint offset;
       GetOffsetFromView(offset, &view);
       ContentOffsets offsets = GetContentOffsetsFromPoint(point - offset);
       aPos->mResultContent = offsets.content;
       aPos->mContentOffset = offsets.offset;
-      aPos->mPreferLeft    = offsets.associateWithNext;
+      aPos->mAttachForward    = offsets.associateWithNext;
       result = offsets.content ? NS_OK : NS_ERROR_FAILURE;
     }break;
     case eSelectLine :
@@ -4401,7 +4390,7 @@ nsFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
       FrameContentRange range = GetRangeForFrame(targetFrame.frame);
       aPos->mResultContent = range.content;
       aPos->mContentOffset = endOfLine ? range.end : range.start;
-      aPos->mPreferLeft = (aPos->mContentOffset == range.start);
+      aPos->mAttachForward = (aPos->mContentOffset == range.start);
       if (!range.content)
         return NS_ERROR_FAILURE;
       return NS_OK;
