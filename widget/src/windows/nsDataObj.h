@@ -43,7 +43,6 @@
 #include <objidl.h>
 // The above are required for __MINGW32__
 #include <oleidl.h>
-#include <shldisp.h>
 #include <shlobj.h>
 
 //#include "Ddforw.h"
