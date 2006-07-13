@@ -198,7 +198,7 @@
               </b>
             </td>
             <td>
-              [% resolution_descs.${bug.resolution} FILTER html %]
+              [% get_resolution(bug.resolution) FILTER html %]
               [% IF bug.resolution == "DUPLICATE" %]
                 of [% terms.bug %] [%+ "${bug.dup_id}" FILTER bug_link(bug.dup_id) %]
               [% END %]

@@ -300,8 +300,8 @@
   <select name="resolution" onchange="document.forms.changeform.knob[[% knum %]].checked=true">
     [% FOREACH resolution = resolutions %]
       [% NEXT IF !resolution %]
-      <option value="[% resolution FILTER html %]" [% 'selected="selected"' IF resolution == "FIXED" %]>
-        [% resolution_descs.$resolution FILTER html %]
+      <option value="[% resolution FILTER html %]">
+        [% get_resolution(resolution) FILTER html %]
       </option>
     [% END %]
   </select><br>

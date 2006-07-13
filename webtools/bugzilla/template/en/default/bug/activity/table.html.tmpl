@@ -85,7 +85,7 @@
                 [% ELSIF change.fieldname == 'bug_status' %]
                   [% status_descs.${change.removed} FILTER html %]
                 [% ELSIF change.fieldname == 'resolution' %]
-                  [% resolution_descs.${change.removed} FILTER html %]
+                  [% get_resolution(change.removed) FILTER html %]
                 [% ELSIF change.fieldname == 'blocked' ||
                          change.fieldname == 'dependson' %]
                   [% change.removed FILTER bug_list_link FILTER none %]
@@ -105,7 +105,7 @@
                 [% ELSIF change.fieldname == 'bug_status' %]
                   [% status_descs.${change.added} FILTER html %]
                 [% ELSIF change.fieldname == 'resolution' %]
-                  [% resolution_descs.${change.added} FILTER html %]
+                  [% get_resolution(change.added) FILTER html %]
                 [% ELSIF change.fieldname == 'blocked' ||
                          change.fieldname == 'dependson' %]
                   [% change.added FILTER bug_list_link FILTER none %]

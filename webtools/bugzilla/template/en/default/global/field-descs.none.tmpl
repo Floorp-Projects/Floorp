@@ -88,4 +88,6 @@
                         "---"        => "---",
                         " "          => " " } %]
 
+[% MACRO get_resolution(res) GET resolution_descs.$res || res %]
+
 [% Hook.process("end") %]

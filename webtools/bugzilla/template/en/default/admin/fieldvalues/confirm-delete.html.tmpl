@@ -61,13 +61,13 @@
 
 <h2>Confirmation</h2>
 
-[% IF (Param(param_name) == value) || bug_count || (value_count == 1) %]
+[% IF (param_name.defined && Param(param_name) == value) || bug_count || (value_count == 1) %]
 
   <p>Sorry, but the '[% value FILTER html %]' value cannot be deleted
   from the '[% field FILTER html %]' field for the following reason(s):</p>
 
   <ul class="warningmessages">
-    [% IF Param(param_name) == value %]
+    [% IF param_name.defined && Param(param_name) == value %]
       <li>'[% value FILTER html %]' is the default value for
           the '[% field FILTER html %]' field.
           [% IF user.groups.tweakparams %]

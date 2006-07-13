@@ -193,7 +193,7 @@
       [% ELSIF column == 'bug_status' %]
         [%- status_descs.${bug.$column}.truncate(abbrev.$column.maxlength, abbrev.$column.ellipsis) FILTER html %]
       [% ELSIF column == 'resolution' %]
-        [%- resolution_descs.${bug.$column}.truncate(abbrev.$column.maxlength, abbrev.$column.ellipsis) FILTER html %]
+        [%- get_resolution(bug.$column).truncate(abbrev.$column.maxlength, abbrev.$column.ellipsis) FILTER html %]
       [% ELSE %]
         [%- bug.$column.truncate(abbrev.$column.maxlength, abbrev.$column.ellipsis) FILTER html -%]
       [% END %]

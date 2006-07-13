@@ -228,10 +228,10 @@ sub chart_image_name {
     # is that we have to check the safety of doing this. We can't just require
     # that the fields exist, because what stats were collected could change
     # over time (eg by changing the resolutions available)
-    # Instead, just require that each field name consists only of letters
-    # and number
+    # Instead, just require that each field name consists only of letters,
+    # numbers, underscores and hyphens.
 
-    if ($datasets !~ m/^[A-Za-z0-9:]+$/) {
+    if ($datasets !~ m/^[A-Za-z0-9:_-]+$/) {
         $vars->{'datasets'} = $datasets;
         ThrowUserError('invalid_datasets', $vars);
     }

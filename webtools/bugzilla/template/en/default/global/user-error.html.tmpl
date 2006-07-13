@@ -396,6 +396,16 @@
     The value of a field is limited to 60 characters.
     '[% value FILTER html %]' is too long ([% value.length %] characters).
 
+  [% ELSIF error == "fieldvalue_not_editable" %]
+    [% title = "Field Value Not Editable" %]
+    The value '[% old_value FILTER html %]' cannot be renamed because
+    it plays some special role for the '[% field FILTER html %]' field.
+
+  [% ELSIF error == "fieldvalue_not_deletable" %]
+    [% title = "Field Value Not Deletable" %]
+    The value '[% value FILTER html %]' cannot be removed because
+    it plays some special role for the '[% field FILTER html %]' field.
+
   [% ELSIF error == "fieldvalue_not_specified" %]
     [% title = "Field Value Not Specified" %]
     No field value specified when trying to edit a field value.

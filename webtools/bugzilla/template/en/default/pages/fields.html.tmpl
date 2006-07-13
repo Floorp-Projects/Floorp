@@ -148,7 +148,7 @@ cycle of [% terms.abug %].
     <td>
       <dl>
         <dt>
-          <b>[% resolution_descs.FIXED FILTER html %]</b>
+          <b>[% get_resolution("FIXED") FILTER html %]</b>
         </dt>
         <dd>
           A fix for this [% terms.bug %] is checked into the tree and 
@@ -156,14 +156,14 @@ cycle of [% terms.abug %].
         </dd>
 
         <dt>
-          <b>[% resolution_descs.INVALID FILTER html %]</b>
+          <b>[% get_resolution("INVALID") FILTER html %]</b>
         </dt>
         <dd>
           The problem described is not [% terms.abug %].
         </dd>
 
         <dt>
-          <b>[% resolution_descs.WONTFIX FILTER html %]</b>
+          <b>[% get_resolution("WONTFIX") FILTER html %]</b>
         </dt>
         <dd>
           The problem described is [% terms.abug %] which will never be 
@@ -171,7 +171,7 @@ cycle of [% terms.abug %].
         </dd>
 
         <dt>
-         <b>[% resolution_descs.DUPLICATE FILTER html %]</b>
+         <b>[% get_resolution("DUPLICATE") FILTER html %]</b>
         </dt>
         <dd>
           The problem is a duplicate of an existing [% terms.bug %].
@@ -181,7 +181,7 @@ cycle of [% terms.abug %].
         </dd>
 
         <dt>
-          <b>[% resolution_descs.WORKSFORME FILTER html %]</b>
+          <b>[% get_resolution("WORKSFORME") FILTER html %]</b>
         </dt>
         <dd>
           All attempts at reproducing this [% terms.bug %] were futile, 
@@ -191,7 +191,7 @@ cycle of [% terms.abug %].
         </dd>
 
         <dt>
-          <b>[% resolution_descs.MOVED FILTER html %]</b>
+          <b>[% get_resolution("MOVED") FILTER html %]</b>
         </dt>
         <dd>
           The problem was specific to a related product 

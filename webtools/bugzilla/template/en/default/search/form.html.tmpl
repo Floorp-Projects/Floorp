@@ -628,12 +628,13 @@ function doOnSelectProduct(selectmode) {
         <option value="[% name FILTER html %]"
           [% " selected" IF lsearch(default.${sel.name}, name) != -1 %]>
           [% IF sel.name == "bug_status" %]
-            [% status_descs.${name} FILTER html %]</option>
+            [% status_descs.${name} FILTER html %]
           [% ELSIF sel.name == "resolution" %]
-            [% resolution_descs.${name} FILTER html %]</option>
+            [% get_resolution(name) FILTER html %]
           [% ELSE %]
-            [% name FILTER html %]</option>
+            [% name FILTER html %]
           [% END %]
+        </option>
       [% END %]
     </select>
   </td>

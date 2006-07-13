@@ -28,7 +28,7 @@
   <input type="radio" id="knob-leave" name="knob" value="none" checked="checked">
   <label for="knob-leave">
     Leave as <b>[% status_descs.${bug.bug_status} FILTER html %]&nbsp;
-                [% resolution_descs.${bug.resolution} FILTER html %]</b>
+                [% get_resolution(bug.resolution) FILTER html %]</b>
   </label>
   <br>
 
@@ -185,7 +185,7 @@
   <select name="resolution"
           onchange="document.changeform.knob[[% knum %]].checked=true">
     [% FOREACH r = bug.choices.resolution %]
-      <option value="[% r FILTER html %]">[% resolution_descs.${r} FILTER html %]</option>
+      <option value="[% r FILTER html %]">[% get_resolution(r) FILTER html %]</option>
     [% END %]
   </select>
   <br>
