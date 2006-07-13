@@ -63,9 +63,7 @@
               <children/>
             </xul:arrowscrollbox>
             <xul:hbox class="tabs-closebutton-box" align="center" pack="end" anonid="tabstrip-closebutton">
-              <xul:toolbarbutton ondblclick="event.stopPropagation();"
-                           class="close-button tabs-closebutton"
-                           oncommand="this.parentNode.parentNode.parentNode.parentNode.parentNode.removeCurrentTab()"/>
+              <xul:toolbarbutton class="close-button tabs-closebutton"/>
             </xul:hbox>
           </xul:hbox>
           <xul:spacer class="tabs-bottom-spacer"/>
