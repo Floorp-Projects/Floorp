@@ -209,7 +209,7 @@ sub update_branches() {
     # Failing to delete branches is _not_ fatal when adding a new testgroup.
     my $rv = $self->delete_from_branches();
     my $dbh = __PACKAGE__->db_Main();  
-    my $sql = "INSERT INTO testgroup_branches (testgroup_id,branch_id) VALUES (?,?,?)";
+    my $sql = "INSERT INTO testgroup_branches (testgroup_id,branch_id) VALUES (?,?)";
     foreach my $new_branch_id (@$new_branch_ids) {
       next if (!$new_branch_id);
       # Log any failures/duplicate keys to STDERR.
@@ -224,6 +224,28 @@ sub update_branches() {
         print STDERR $@;
       }
     }
+  }
+}
+
+#########################################################################
+sub add_branch() {
+  my $self = shift;
+  my $new_branch_id = shift;
+  
+  # Failure to insert isn't fatal in the case of a collision, but we do want
+  # to log it.
+  my $dbh = __PACKAGE__->db_Main();  
+  my $sql = "INSERT INTO testgroup_branches (testgroup_id,branch_id) VALUES (?,?)";
+  # Log any failures/duplicate keys to STDERR.
+  eval {
+    my $rows = $dbh->do($sql, 
+                        undef,
+                        $self->testgroup_id,
+                        $new_branch_id,
+                       );
+  };
+  if ($@) {
+    print STDERR $@;
   }
 }
 

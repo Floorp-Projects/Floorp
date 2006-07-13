@@ -1,4 +1,5 @@
 #!/usr/bin/perl -w
+# -*- mode: cperl; c-basic-offset: 8; indent-tabs-mode: nil; -*-
 use strict;
 use diagnostics;
 $|++;
@@ -7,6 +8,7 @@ use lib qw(..);
 
 use Data::Dumper;
 use Date::Manip;
+use Getopt::Long;
 use Litmus;
 use Litmus::Cache;
 use Litmus::DBI;
@@ -19,7 +21,14 @@ use Litmus::DB::User;
 use XML::XPath;
 use XML::XPath::XMLParser;
 
-my $file = shift or die "No file to parse!";
+my $file;
+my $verbose;
+GetOptions (
+	    "file=s"  => \$file,
+	    "verbose" => \$verbose
+	   );
+
+die if (!$file and ! -e $file);
 
 my $xp = XML::XPath->new(filename => $file);
 
@@ -29,26 +38,36 @@ my $testgroups = $xp->find('/litmus/testgroups/testgroup');
 foreach my $testgroup_node ($testgroups->get_nodelist) {
   my $testgroup_name = $testgroup_node->findvalue('/litmus/testgroups/testgroup/name');
   next if (!$testgroup_name);
+
+  if ($verbose) {
+    print "Looking for testgroup: $testgroup_name...\n";
+  }
   
   # Check whether testgroup already exists. Add it if not.
   my ($testgroup) = Litmus::DB::Testgroup->search(name => "$testgroup_name");
   if (!$testgroup) {
+    if ($verbose) {
+      print "Testgroup: $testgroup_name not found. Attempting to add...";
+    }
     my $product_name = $testgroup_node->findvalue('product');
     my ($product) = Litmus::DB::Product->search(name => "$product_name");
     die if (!$product);
-    my $branch_name = $testgroup_node->findvalue('branch'); 
-    my ($branch) = Litmus::DB::Branch->search(name => "$branch_name");
-    die if (!$branch);
     my %hash = (
 		name => $testgroup_name,
 		product_id => $product->product_id,
 	       );
     $testgroup = Litmus::DB::Testgroup->create(\%hash);
     die if (!$testgroup);
-    my @branches;
-    push @branches, $branch->branch_id;
-    $testgroup->update_branches(\@branches);
+    print "Added!\n";
+  } else {
+    if ($verbose) {
+      print "Found existing testgroup: $testgroup_name\n";
+    }
   }
+  my $branch_name = $testgroup_node->findvalue('branch'); 
+  my ($branch) = Litmus::DB::Branch->search(name => "$branch_name");
+  die if (!$branch);
+  $testgroup->add_branch($branch->branch_id);
   
   # Get a list of all subgroups for the current testgroup.
   my $subgroups = $testgroup_node->find('subgroups/subgroup');
@@ -57,10 +76,17 @@ foreach my $testgroup_node ($testgroups->get_nodelist) {
   foreach my $subgroup_node ($subgroups->get_nodelist) {
     my $subgroup_name = $subgroup_node->findvalue('name');
     next if (!$subgroup_name);
+
+    if ($verbose) {
+      print "Looking for subgroup: $subgroup_name...\n";
+    }
     
     # Check whether subgroup already exists. Add it if not.
     my ($subgroup) = Litmus::DB::Subgroup->search(name => "$subgroup_name");
     if (!$subgroup) {
+      if ($verbose) {
+	print "Subgroup: $subgroup_name not found. Attempting to add...";
+      }
       my $product_name = $subgroup_node->findvalue('product');
       my ($product) = Litmus::DB::Product->search(name => "$product_name");
       die if (!$product);
@@ -70,6 +96,11 @@ foreach my $testgroup_node ($testgroups->get_nodelist) {
 		 );
       $subgroup = Litmus::DB::Subgroup->create(\%hash);
       die if (!$subgroup);
+      print "Added!\n";
+    } else {
+      if ($verbose) {
+	print "Found existing subgroup: $subgroup_name\n";
+      }
     }
     
     my $sg_sort_order = $subgroup_node->findvalue('sort_order');
@@ -77,7 +108,7 @@ foreach my $testgroup_node ($testgroups->get_nodelist) {
 	$sg_sort_order = $sg_default_order;
     }
     $subgroup->update_testgroup($testgroup->testgroup_id,$sg_sort_order);
-    $sg_default_order++;    
+    $sg_default_order++;
     
     # Get all testcases for the current subgroup.
     my $testcases = $subgroup_node->find('testcases/testcase');
@@ -88,6 +119,9 @@ foreach my $testgroup_node ($testgroups->get_nodelist) {
       next if (!$testcase_name);
       
       # We assume that all testcases are new.
+      if ($verbose) {
+	print "Attempting to add testcase: $testcase_name...";
+      }
       my $product_name = $testcase_node->findvalue('product');
       my ($product) = Litmus::DB::Product->search(name => "$product_name");
       die if (!$product);
@@ -117,6 +151,7 @@ foreach my $testgroup_node ($testgroups->get_nodelist) {
 
       my $testcase = Litmus::DB::Testcase->create(\%hash);
       die if (!$testcase);	    
+      print "Added!\n";
       my $tc_sort_order = $testcase_node->findvalue('sort_order');
       if (!$tc_sort_order) {
 	$tc_sort_order = $tc_default_order;
