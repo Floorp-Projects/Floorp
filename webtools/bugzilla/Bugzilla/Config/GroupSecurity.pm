@@ -94,6 +94,7 @@ sub get_param_list {
 
 sub _get_all_group_names {
     my @group_names = map {$_->name} Bugzilla::Group::get_all_groups();
+    unshift(@group_names, '');
     return \@group_names;
 }
 1;

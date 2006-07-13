@@ -154,6 +154,7 @@ sub check_opsys {
 
 sub check_group {
     my $group_name = shift;
+    return "" unless $group_name;
     my $group = new Bugzilla::Group({'name' => $group_name});
     unless (defined $group) {
         return "Must be an existing group name";
