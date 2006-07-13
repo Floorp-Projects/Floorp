@@ -690,14 +690,7 @@ nsEventDispatcher::DispatchDOMEvent(nsISupports* aTarget,
 
       if (!trusted) {
         //Check security state to determine if dispatcher is trusted
-        nsIScriptSecurityManager *securityManager =
-          nsContentUtils::GetSecurityManager();
-
-        PRBool enabled;
-        nsresult rv =
-          securityManager->IsCapabilityEnabled("UniversalBrowserWrite",
-                                               &enabled);
-        privEvt->SetTrusted(NS_SUCCEEDED(rv) && enabled);
+        privEvt->SetTrusted(nsContentUtils::IsCallerTrustedForWrite());
       }
 
       return nsEventDispatcher::Dispatch(aTarget, aPresContext, innerEvent,
