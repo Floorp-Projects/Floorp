@@ -318,8 +318,8 @@ nsTreeBodyFrame::Destroy()
 
   // Save off our info into the box object.
   EnsureBoxObject();
-  if (mTreeBoxObject) {
-    nsCOMPtr<nsIBoxObject> box(do_QueryInterface(mTreeBoxObject));
+  nsCOMPtr<nsPIBoxObject> box(do_QueryInterface(mTreeBoxObject));
+  if (box) {
     if (mTopRowIndex > 0) {
       nsAutoString topRowStr; topRowStr.AssignLiteral("topRow");
       nsAutoString topRow;
@@ -328,7 +328,7 @@ nsTreeBodyFrame::Destroy()
     }
 
     // Always null out the cached tree body frame.
-    mTreeBoxObject->ClearCachedTreeBody();
+    box->ClearCachedValues();
 
     mTreeBoxObject = nsnull; // Drop our ref here.
   }
@@ -357,9 +357,10 @@ nsTreeBodyFrame::EnsureBoxObject()
       nsCOMPtr<nsIBoxObject> box;
       nsCOMPtr<nsIDOMElement> domElem = do_QueryInterface(parent);
       nsDoc->GetBoxObjectFor(domElem, getter_AddRefs(box));
-      
-      if (box) {
-        mTreeBoxObject = do_QueryInterface(box);
+      // Ensure that we got a native box object.
+      nsCOMPtr<nsPIBoxObject> pBox = do_QueryInterface(box);
+      if (pBox) {
+        mTreeBoxObject = do_QueryInterface(pBox);
         mColumns->SetTree(mTreeBoxObject);
       }
     }

@@ -3247,12 +3247,10 @@ nsDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
 
   nsCAutoString contractID("@mozilla.org/layout/xul-boxobject");
   if (namespaceID == kNameSpaceID_XUL) {
-    if (tag == nsXULAtoms::browser)
-      contractID += "-browser";
-    else if (tag == nsXULAtoms::editor)
-      contractID += "-editor";
-    else if (tag == nsXULAtoms::iframe)
-      contractID += "-iframe";
+    if (tag == nsXULAtoms::browser ||
+        tag == nsXULAtoms::editor ||
+        tag == nsXULAtoms::iframe)
+      contractID += "-container";
     else if (tag == nsXULAtoms::menu)
       contractID += "-menu";
     else if (tag == nsXULAtoms::popup ||

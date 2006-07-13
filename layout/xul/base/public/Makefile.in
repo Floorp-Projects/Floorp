@@ -55,14 +55,13 @@ EXPORTS		= \
 
 XPIDLSRCS=      nsIBoxObject.idl                  \
                 nsIScrollBoxObject.idl              \
-                nsIBoxLayoutManager.idl              \
-                nsIBoxPaintManager.idl               \
                 nsIScrollBoxObject.idl \
                 nsIPopupBoxObject.idl \
                 nsIMenuBoxObject.idl \
                 nsIBrowserBoxObject.idl \
                 nsIIFrameBoxObject.idl \
                 nsIEditorBoxObject.idl \
+                nsIContainerBoxObject.idl \
                 nsIListBoxObject.idl \
                 $(NULL)
 

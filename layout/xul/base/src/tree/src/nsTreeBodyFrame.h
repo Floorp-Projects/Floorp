@@ -42,7 +42,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsLeafBoxFrame.h"
-#include "nsPITreeBoxObject.h"
 #include "nsITreeView.h"
 #include "nsICSSPseudoComparator.h"
 #include "nsIScrollbarMediator.h"
@@ -377,7 +376,7 @@ protected:
 
 protected: // Data Members
   // The cached box object parent.
-  nsCOMPtr<nsPITreeBoxObject> mTreeBoxObject;
+  nsCOMPtr<nsITreeBoxObject> mTreeBoxObject;
 
   // Cached column information.
   nsRefPtr<nsTreeColumns> mColumns;

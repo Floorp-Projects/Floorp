@@ -37,15 +37,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsBoxObject.h"
-#include "nsIBoxLayoutManager.h"
-#include "nsIBoxPaintManager.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
-#include "nsIFrameFrame.h"
 #include "nsIDocShell.h"
 #include "nsReadableUtils.h"
 #include "nsILookAndFeel.h"
@@ -101,36 +98,6 @@ nsBoxObject::GetElement(nsIDOMElement** aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsBoxObject::GetLayoutManager(nsIBoxLayoutManager** aResult)
-{
-  *aResult = mLayoutManager;
-  NS_IF_ADDREF(*aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBoxObject::SetLayoutManager(nsIBoxLayoutManager* aLayoutManager)
-{
-  mLayoutManager = aLayoutManager;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBoxObject::GetPaintManager(nsIBoxPaintManager** aResult)
-{
-  *aResult = mPaintManager;
-  NS_IF_ADDREF(*aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBoxObject::SetPaintManager(nsIBoxPaintManager* aPaintManager)
-{
-  mPaintManager = aPaintManager;
-  return NS_OK;
-}
-
 // nsPIBoxObject //////////////////////////////////////////////////////////////////////////
 
 void
@@ -144,6 +111,11 @@ nsBoxObject::Clear()
 {
   mPresState = nsnull;
   mContent = nsnull;
+}
+
+void
+nsBoxObject::ClearCachedValues()
+{
 }
 
 nsIFrame*
@@ -529,55 +501,6 @@ nsBoxObject::GetPreviousSibling(nsIFrame* aParentFrame, nsIFrame* aFrame,
   el.swap(*aResult);
   return NS_OK;
 }
-
-nsresult
-nsBoxObject::GetDocShell(nsIDocShell** aResult)
-{
-  *aResult = nsnull;
-
-  nsIFrame *frame = GetFrame(PR_FALSE);
-
-  if (frame) {
-    nsIFrameFrame *frame_frame = nsnull;
-    CallQueryInterface(frame, &frame_frame);
-
-    if (frame_frame) {
-      // Ok, the frame for mContent is a nsIFrameFrame, it knows how
-      // to reach the docshell, so ask it...
-
-      return frame_frame->GetDocShell(aResult);
-    }
-  }
-
-  if (!mContent) {
-    return NS_OK;
-  }
-  
-  // No nsIFrameFrame available for mContent, try if there's a mapping
-  // between mContent's document to mContent's subdocument.
-
-  // XXXbz sXBL/XBL2 issue -- ownerDocument or currentDocument?
-  nsIDocument *doc = mContent->GetDocument();
-
-  if (!doc) {
-    return NS_OK;
-  }
-  
-  nsIDocument *sub_doc = doc->GetSubDocumentFor(mContent);
-
-  if (!sub_doc) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsISupports> container = sub_doc->GetContainer();
-
-  if (!container) {
-    return NS_OK;
-  }
-
-  return CallQueryInterface(container, aResult);
-}
-
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////
 

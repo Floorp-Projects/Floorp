@@ -223,7 +223,7 @@
                 readonly="true"/>
 
       <property name="docShell"
-                onget="return this.boxObject.QueryInterface(Components.interfaces.nsIBrowserBoxObject).docShell;"
+                onget="return this.boxObject.QueryInterface(Components.interfaces.nsIContainerBoxObject).docShell;"
                 readonly="true"/>
 
       <property name="webNavigation"

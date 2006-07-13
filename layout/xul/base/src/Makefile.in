@@ -101,9 +101,7 @@ CPPSRCS		= \
 ifdef MOZ_XUL
 CPPSRCS		+= \
 		nsScrollBoxObject.cpp \
-		nsBrowserBoxObject.cpp \
-		nsIFrameBoxObject.cpp \
-		nsEditorBoxObject.cpp \
+		nsContainerBoxObject.cpp \
 		nsMenuBoxObject.cpp \
 		nsPopupBoxObject.cpp \
 		nsListBoxObject.cpp \

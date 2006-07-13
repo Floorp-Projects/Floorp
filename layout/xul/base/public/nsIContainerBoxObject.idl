@@ -19,11 +19,11 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *     Boris Zbarsky <bzbarsky@mit.edu> (Original Author)
+ *     Olli Pettay <Olli.Pettay@helsinki.fi> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,26 +35,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsPITreeBoxObject_h__
-#define nsPITreeBoxObject_h__
+#include "nsISupports.idl"
 
-#define NS_PITREEBOXOBJECT_IID \
-{ 0xafcd2a82, 0xc484, 0x4f86, \
- { 0x83, 0x77, 0xd9, 0xb8, 0x59, 0x31, 0xef, 0xf0 } }
+interface nsIDocShell;
+interface nsIBoxObject;
 
-#include "nsITreeBoxObject.h"
-
-class nsPITreeBoxObject : public nsITreeBoxObject {
- public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_PITREEBOXOBJECT_IID)
-
-  /**
-   * Clear the cached tree body frame from this box object.  This should be
-   * called when the frame in question is destroyed.
-  */
-  virtual void ClearCachedTreeBody() = 0;
+[scriptable, uuid(35d4c04b-3bd3-4375-92e2-a818b4b4acb6)]
+interface nsIContainerBoxObject : nsISupports
+{
+  readonly attribute nsIDocShell docShell;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsPITreeBoxObject, NS_PITREEBOXOBJECT_IID)
-
-#endif // nsPITreeBoxObject_h__
+%{C++
+nsresult
+NS_NewContainerBoxObject(nsIBoxObject** aResult);
+%}
