@@ -68,6 +68,25 @@ __PACKAGE__->set_sql(EnabledBySubgroup => qq{
 					     ORDER BY tsg.sort_order ASC
 });
 
+__PACKAGE__->set_sql(BySubgroup => qq{
+SELECT t.* 
+FROM testcases t, testcase_subgroups tsg
+WHERE 
+  tsg.subgroup_id=? AND
+  tsg.testcase_id=t.testcase_id
+  ORDER BY tsg.sort_order ASC
+});
+
+__PACKAGE__->set_sql(ByTestgroup => qq{
+SELECT t.* 
+FROM testcases t, testcase_subgroups tsg, subgroup_testgroups sgtg
+WHERE 
+  tsg.testcase_id=t.testcase_id AND
+  tsg.subgroup_id=sgtg.subgroup_id AND
+  sgtg.testgroup_id = ?
+  ORDER BY tsg.sort_order ASC
+});
+
 __PACKAGE__->set_sql(CommunityEnabledBySubgroup => qq{
                                                       SELECT t.* 
                                                       FROM testcases t, testcase_subgroups tsg
@@ -76,6 +95,9 @@ __PACKAGE__->set_sql(CommunityEnabledBySubgroup => qq{
 });
 
 Litmus::DB::Testcase->has_many(test_results => "Litmus::DB::Testresult", {order_by => 'submission_time DESC'});
+
+Litmus::DB::Testcase->has_many(subgroups => 
+	["Litmus::DB::TestcaseSubgroup" => 'subgroup']);
 
 #########################################################################
 # is_completed($$$$$)

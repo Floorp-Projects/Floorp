@@ -2,9 +2,11 @@
     [% IF placeholder %]<option value="">-Testcase ID#[% IF show_summary %]: Summary[% END %]-</option>[% END %]
 [% IF testcases %]
 [% FOREACH testcase=testcases %]
+
     <option[% IF defaults.testcase_id==testcase.testcase_id %] selected[% END %] 
-        value="[% testcase.testcase_id | html %]">
+        value="[% testcase.testcase_id | html %]"
+        id="[%name%]_testcase_[%testcase.testcase_id | html %]">
             [% testcase.testcase_id | html%][% IF show_summary %]: [% testcase.summary %][% END %]</option>
 [% END %]
-[% END %]
 </select>
+[% END %]

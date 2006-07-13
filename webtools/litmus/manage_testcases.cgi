@@ -41,9 +41,6 @@ use Date::Manip;
 
 my $c = Litmus->cgi(); 
 
-# for the moment, you must be an admin to enter tests:
-Litmus::Auth::requireAdmin('manage_testcases.cgi');
-
 my $vars;
 
 my $testcase_id;
@@ -51,6 +48,32 @@ my $edit;
 my $message;
 my $status;
 my $rv;
+
+if ($c->param("searchTestcaseList")) {
+	print $c->header('text/plain');
+	my $product_id = $c->param("product");
+	my $testgroup_id = $c->param("testgroup");
+	my $subgroup_id = $c->param("subgroup");
+	
+	my $tests;
+	
+	if ($subgroup_id) {
+		$tests = Litmus::DB::Testcase->search_BySubgroup($subgroup_id);
+	} elsif ($testgroup_id) {
+		$tests = Litmus::DB::Testcase->search_ByTestgroup($testgroup_id);
+	} elsif ($product_id) {
+		$tests = Litmus::DB::Testcase->search(product => $product_id);
+	}
+	while (my $t = $tests->next) {
+		print $t->testcase_id()."\n";
+	}
+	exit;
+}
+
+# anyone can use this script for its searching capabilities, but if we 
+# get here, then you need to be an admin:
+Litmus::Auth::requireAdmin('manage_testcases.cgi');
+
 if ($c->param("testcase_id")) {
   $testcase_id = $c->param("testcase_id");
   if ($c->param("edit")) {
@@ -172,7 +195,7 @@ if ($rebuild_cache) {
   rebuildCache();
 }
 
-my $testcases = Litmus::FormWidget->getTestcases;
+my $testcases = Litmus::FormWidget->getTestcases();
 my $products = Litmus::FormWidget->getProducts();
 my $authors = Litmus::FormWidget->getAuthors();
 
@@ -190,5 +213,5 @@ $vars->{"show_admin"} = Litmus::Auth::istrusted($cookie);
 print $c->header();
 
 Litmus->template()->process("admin/manage_testcases.tmpl", $vars) || 
-  internalError("Error loading template.");
+  internalError("Error loading template: ".Litmus->template()->error());
 

@@ -54,6 +54,8 @@ use base qw(Template);
 
 my $template_include_path;
 
+$Template::Directive::WHILE_MAX = 30000;
+
 # Returns the path to the templates based on the Accept-Language
 # settings of the user and of the available languages
 # If no Accept-Language is present it uses the defined default
@@ -137,6 +139,7 @@ sub create {
         CONSTANTS => \%constants,
         PRE_PROCESS => "variables.none.tmpl",
         POST_CHOMP => 1,
+        EVAL_PERL => 1,
         
         COMPILE_DIR => $Litmus::Config::datadir,
         

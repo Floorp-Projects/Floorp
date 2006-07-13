@@ -42,15 +42,29 @@ use JSON;
 
 my $c = Litmus->cgi(); 
 
-# for the moment, you must be an admin to enter tests:
-Litmus::Auth::requireAdmin('manage_testgroups.cgi');
-
 my $vars;
 
 my $testgroup_id;
 my $message;
 my $status;
 my $rv;
+
+if ($c->param("searchTestgroupList")) {
+	print $c->header('text/plain');
+	my $product_id = $c->param("product");
+	
+	my $testgroups = Litmus::DB::Testgroup->search(product => $product_id);
+	
+	while (my $tg = $testgroups->next) {
+		print $tg->testgroup_id()."\n";
+	}
+	exit;
+}
+
+# anyone can use this script for its searching capabilities, but if we 
+# get here, then you need to be an admin:
+Litmus::Auth::requireAdmin('manage_testgroups.cgi');
+
 if ($c->param("testgroup_id")) {
   $testgroup_id = $c->param("testgroup_id");
 }

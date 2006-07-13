@@ -1,7 +1,7 @@
 function selects_onload() {
     load_products(getElementByClass("select_product"));
-//    load_testgroups(getElementByClass("select_testgroup"));
-//    load_subgroups(getElementByClass("select_subgroup"));
+    load_testgroups(getElementByClass("select_testgroup"));
+    load_subgroups(getElementByClass("select_subgroup"));
     
     load_platforms(getElementByClass("select_platform"));
     load_opsyses(getElementByClass("select_opsys"));
@@ -184,8 +184,19 @@ function changePlatform(testid) {
 }
 
 function addNullEntry(select) {
-    // add a blank entry to the current select:
-    select.add(new Option("---", "---", false, false), null);
+    // add a blank entry to the current select
+    // if possible, try to make the null entry reflect the select's 
+    // contents based on it's name:
+    
+    if (select.className == 'select_product') {
+    	select.add(new Option("-Product-", "---", false, false), null);
+    } else if (select.className == 'select_testgroup') {
+    	select.add(new Option("-Testgroup-", "---", false, false), null);
+    } else if (select.className == 'select_subgroup') {
+    	select.add(new Option("-Subgroup-", "---", false, false), null);
+    } else {
+    	select.add(new Option("---", "---", false, false), null);
+    }
 }
 
 function clearSelect(select) {

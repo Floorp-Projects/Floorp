@@ -34,6 +34,59 @@
 <script type="text/javascript">
 var testgroup;
 var subgroups=[% IF all_subgroups %][% all_subgroups %][% ELSE %]{}[% END %];
+var filter_req;
+
+var showAll = function(err) {
+	// if they cancelled, then just don't change anything:
+	if (err instanceof CancelledError) { return }
+	toggleMessage('none');
+	
+	var testgroupbox = document.getElementById("testgroup_id");
+	for (var i=0; i<testgroupbox.options.length; i++) {
+		var option = testgroupbox.options[i];
+		option.style.display = '';
+	}
+};
+
+var doFilterList = function(req) {
+	var testgroups = req.responseText.split("\n");
+	var testgroupbox = document.getElementById("testgroup_id");
+	for (var i=0; i<testgroupbox.options.length; i++) {
+		var testgroup = testgroupbox.options[i];
+		var hide = 0;
+		var id = testgroup.value;
+		if (testgroups.indexOf(id) == -1) { hide = 1; }
+		hide == 1 ? testgroup.style.display = 'none' : testgroup.style.display = '';
+	}
+	toggleMessage('none');
+};
+
+// filter the list by various criteria:
+function filterList() {
+	// they just changed the selection, so cancel any pending filter actions:
+	if (filter_req instanceof Deferred && filter_req.fired == -1)
+	filter_req.cancel();
+
+	var productfilter = document.getElementById('product_filter');
+	
+	if (productfilter.options[productfilter.selectedIndex].value == '---') {
+		// nothing to do here
+		showAll();
+		return;
+	}
+	
+	toggleMessage('loading','Filtering testgroup list...');
+	filter_req = doSimpleXMLHttpRequest('manage_testgroups.cgi', {
+	  searchTestgroupList: 1,
+	  product: (productfilter.options[productfilter.selectedIndex].value == '---' ?
+	  		'' : productfilter.options[productfilter.selectedIndex].value)
+	  });
+	// if something went wrong, just show all the tests:
+	filter_req.addErrback(showAll);
+	filter_req.addCallback(doFilterList);
+}
+
+
 
 function enableModeButtons() {
   document.getElementById("edit_testgroup_button").disabled=false;
@@ -185,11 +238,24 @@ function resetTestgroup() {
     <h1 class="firstHeading">[% title %]</h1>
 
     <div class="section-full">
-      <div class="section-header">Existing Testgroups</div>
+      <div class="section-header">Existing Testgroups</div> <br />
 
       <div class="section-content">
 
         <form id="select_testgroup_and_mode_form" name="select_testgroup_and_mode_form" method="post" action="manage_testgroups.cgi">
+	<div class="info">
+	  <b>Filter:</b>
+	  <table border="0">
+	    <tr>
+	      <td>Product:</td>
+	    </tr>
+	    <tr>
+	      <td>
+	        [% INCLUDE productbox onchange="changeProduct('filter'); filterList();" nameextra="_filter" %]
+	      </td>
+	    </tr>
+	  </table>
+	</div>
 	<table border="0" cellspacing="0" cellpadding="5">
 	<tr>
         <td>

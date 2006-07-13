@@ -121,6 +121,7 @@
    #                     (can be either a single object or a list)
    # testcase_id (optional) - the current testcase_id. If given, 
    #    the selname will be testgroup_testcase_id
+   # onchange (optional) - optional js code to run for the onChange event
 %]
 [% BLOCK testgroupbox %]
     [% IF testcase %] [% testidflag = "_$testcase.testcase_id" %] 
@@ -132,8 +133,8 @@
         type="hidden" 
         value="[%default FILTER html%]">
     [% END %]
-    <select name="testgroup[%testidflag FILTER html%]" id="testgroup[%testidflag FILTER html%]" 
-        onchange="changeTestgroup([%testcase.testcase_id FILTER js%])"
+    <select name="testgroup[%testidflag FILTER html%][%nameextra%]" id="testgroup[%testidflag FILTER html%][%nameextra%]" 
+        onchange="[% IF onchange %][% onchange %][% ELSE %]changeTestgroup([%testcase.testcase_id FILTER js%])[%END%]"
         class="select_testgroup">
     </select>
 [% END %]
@@ -143,6 +144,7 @@
    #                     (can be either a single object or a list)
    # testcase_id (optional) - the current testcase_id. If given, 
    #    the selname will be subgroup_testcase_id
+   # onchange (optional) - optional js code to run for the onChange event
 %]
 [% BLOCK subgroupbox %]
     [% IF testcase %] [% testidflag = "_$testcase.testcase_id" %] 
@@ -154,8 +156,9 @@
         type="hidden" 
         value="[%valuelist FILTER html%]">
     [% END %]
-    <select name="subgroup[%testidflag FILTER html%]" id="subgroup[%testidflag FILTER html%]" 
-        class="select_subgroup">
+    <select name="subgroup[%testidflag FILTER html%][%nameextra%]" id="subgroup[%testidflag FILTER html%][%nameextra%]" 
+        class="select_subgroup"
+        [%IF onchange %]onchange="[%onchange%]"[%END%]>
     </select>
 [% END %]
 
@@ -177,7 +180,7 @@
         type="hidden" 
         value="[%valuelist FILTER html%]">
     [% END %]
-    <select name="product[%testidflag FILTER html%]" id="product[%testidflag FILTER html%]" 
+    <select name="product[%testidflag FILTER html%][%nameextra%]" id="product[%testidflag FILTER html%][%nameextra%]" 
         onchange="[% IF onchange %][% onchange %][% ELSE %]changeProduct([%testcase.testcase_id FILTER js%])[% END %]"
         class="select_product"[% IF disabled %] disabled[% END %]>
     </select>

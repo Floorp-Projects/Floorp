@@ -34,6 +34,62 @@
 <script type="text/javascript">
 var subgroup;
 var testcases=[% IF all_testcases %][% all_testcases %][% ELSE %]{}[% END %];
+var filter_req;
+
+var showAll = function(err) {
+	// if they cancelled, then just don't change anything:
+	if (err instanceof CancelledError) { return }
+	toggleMessage('none');
+	
+	var testbox = document.getElementById("subgroup_id");
+	for (var i=0; i<testbox.options.length; i++) {
+		var option = testbox.options[i];
+		option.style.display = '';
+	}
+};
+
+var doFilterList = function(req) {
+	var subgroups = req.responseText.split("\n");
+	var subgroupbox = document.getElementById("subgroup_id");
+	for (var i=0; i<subgroupbox.options.length; i++) {
+		var subgroup = subgroupbox.options[i];
+		var hide = 0;
+		var id = subgroup.value;
+		if (subgroups.indexOf(id) == -1) { hide = 1; }
+		hide == 1 ? subgroup.style.display = 'none' : subgroup.style.display = '';
+	}
+	toggleMessage('none');
+};
+
+// filter the list by various criteria:
+function filterList() {
+	// they just changed the selection, so cancel any pending filter actions:
+	if (filter_req instanceof Deferred && filter_req.fired == -1)
+	filter_req.cancel();
+
+	var productfilter = document.getElementById('product_filter');
+	var testgroupfilter = document.getElementById('testgroup_filter');
+	
+	if (productfilter.options[productfilter.selectedIndex].value == '---' &&
+	    testgroupfilter.options[testgroupfilter.selectedIndex].value == '---') {
+		// nothing to do here
+		showAll();
+		return;
+	}
+	
+	toggleMessage('loading','Filtering subgroup list...');
+	filter_req = doSimpleXMLHttpRequest('manage_subgroups.cgi', {
+	  searchSubgroupList: 1,
+	  product: (productfilter.options[productfilter.selectedIndex].value == '---' ?
+	  		'' : productfilter.options[productfilter.selectedIndex].value),
+	  testgroup: (testgroupfilter.options[testgroupfilter.selectedIndex].value == '---' ? 
+	  		'' : testgroupfilter.options[testgroupfilter.selectedIndex].value)
+	  });
+	// if something went wrong, just show all the tests:
+	filter_req.addErrback(showAll);
+	filter_req.addCallback(doFilterList);
+}
+
 
 function enableModeButtons() {
   document.getElementById("edit_subgroup_button").disabled=false;
@@ -218,11 +274,28 @@ function resetSubgroup() {
     <h1 class="firstHeading">[% title %]</h1>
 
     <div class="section-full">
-      <div class="section-header">Existing Subgroups</div>
+      <div class="section-header">Existing Subgroups</div> <br />
 
       <div class="section-content">
 
         <form id="select_subgroup_and_mode_form" name="select_subgroup_and_mode_form" method="post" action="manage_subgroups.cgi">
+	<div class="info">
+	  <b>Filter:</b>
+	  <table border="0">
+	    <tr>
+	      <td>Product:</td>
+	      <td>Testgroup:</td>
+	    </tr>
+	    <tr>
+	      <td>
+	        [% INCLUDE productbox onchange="changeProduct('filter'); filterList();" nameextra="_filter" %]
+	      </td>
+	      <td>
+	        [% INCLUDE testgroupbox onchange="changeTestgroup('filter'); filterList();" nameextra="_filter" %]
+	      </td>
+	    </tr>
+	  </table>
+	</div>
 	<table border="0" cellspacing="0" cellpadding="5">
 	<tr>
         <td>

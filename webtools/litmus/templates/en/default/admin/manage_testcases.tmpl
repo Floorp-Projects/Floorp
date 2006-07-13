@@ -33,6 +33,65 @@
 
 <script type="text/javascript">
 var testcase;
+var filter_req;
+
+var showAllTests = function(err) {
+	// if they cancelled, then just don't change anything:
+	if (err instanceof CancelledError) { return }
+	toggleMessage('none');
+	
+	var testbox = document.getElementById("testcase_id");
+	for (var i=0; i<testbox.options.length; i++) {
+		var option = testbox.options[i];
+		option.style.display = '';
+	}
+};
+
+var doFilterList = function(req) {
+	var tests = req.responseText.split("\n");
+	var testbox = document.getElementById("testcase_id");
+	for (var i=0; i<testbox.options.length; i++) {
+		var test = testbox.options[i];
+		var hideTest = 0;
+		var id = test.value;
+		if (tests.indexOf(id) == -1) { hideTest = 1; }
+		hideTest == 1 ? test.style.display = 'none' : test.style.display = '';
+	}
+	toggleMessage('none');
+};
+
+// filter the list by various criteria:
+function filterList() {
+	// they just changed the selection, so cancel any pending filter actions:
+	if (filter_req instanceof Deferred && filter_req.fired == -1)
+	filter_req.cancel();
+
+	var productfilter = document.getElementById('product_filter');
+	var testgroupfilter = document.getElementById('testgroup_filter');
+	var subgroupfilter = document.getElementById('subgroup_filter');
+	
+	if (productfilter.options[productfilter.selectedIndex].value == '---' &&
+	    testgroupfilter.options[testgroupfilter.selectedIndex].value == '---' &&
+	    subgroupfilter.options[subgroupfilter.selectedIndex].value == '---') {
+		// nothing to do here
+		showAllTests();
+		return;
+	}
+	
+	toggleMessage('loading','Filtering testcase list...');
+	filter_req = doSimpleXMLHttpRequest('manage_testcases.cgi', {
+	  searchTestcaseList: 1,
+	  product: (productfilter.options[productfilter.selectedIndex].value == '---' ?
+	  		'' : productfilter.options[productfilter.selectedIndex].value),
+	  testgroup: (testgroupfilter.options[testgroupfilter.selectedIndex].value == '---' ? 
+	  		'' : testgroupfilter.options[testgroupfilter.selectedIndex].value),
+	  subgroup: (subgroupfilter.options[subgroupfilter.selectedIndex].value == '---' ? 
+	  		'' : subgroupfilter.options[subgroupfilter.selectedIndex].value),
+	  });
+	// if something went wrong, just show all the tests:
+	filter_req.addErrback(showAllTests);
+	filter_req.addCallback(doFilterList);
+}
 
 function setAuthor(user_id) {
   changeSelectedValue('editform_author_id',user_id);;
@@ -248,11 +307,32 @@ function resetTestcase() {
     <h1 class="firstHeading">[% title %]</h1>
 
     <div class="section-full">
-      <div class="section-header">Existing Testcases</div>
+      <div class="section-header">Existing Testcases</div> <br />
 
       <div class="section-content" style="overflow:hidden;">
 
         <form id="select_testcase_and_mode_form" name="select_testcase_and_mode_form" method="post" action="manage_testcases.cgi">
+	<div class="info">
+	  <b>Filter:</b>
+	  <table border="0">
+	    <tr>
+	      <td>Product:</td>
+	      <td>Testgroup:</td>
+	      <td>Subgroup:</td>
+	    </tr>
+	    <tr>
+	      <td>
+	        [% INCLUDE productbox onchange="changeProduct('filter'); filterList();" nameextra="_filter" %]
+	      </td>
+	      <td>
+	        [% INCLUDE testgroupbox onchange="changeTestgroup('filter'); filterList();" nameextra="_filter" %]
+	      </td>
+	      <td>
+	        [% INCLUDE subgroupbox onchange="filterList();" nameextra="_filter" %]
+	      </td>
+	    </tr>
+	  </table>
+	</div>
 	<table border="0" cellspacing="0" cellpadding="5">
 	<tr>
         <td>
