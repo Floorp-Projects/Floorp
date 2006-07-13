@@ -48,6 +48,9 @@ public:
   nsJISx4051LineBreaker();
   virtual ~nsJISx4051LineBreaker();
 
+  PRBool CanBreakBetweenLatin1(PRUnichar aChar1,
+                               PRUnichar aChar2);
+
   PRBool BreakInBetween( const PRUnichar* aText1 , PRUint32 aTextLen1,
                          const PRUnichar* aText2 , PRUint32 aTextLen2);
 
