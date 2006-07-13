@@ -86,6 +86,10 @@ CSRCS		= \
 		nsPrintdGTK.c \
 		$(NULL)
 
+ifdef ACCESSIBILITY
+CSRCS += maiRedundantObjectFactory.c
+endif
+
 CPPSRCS		= \
 		nsWindow.cpp \
 		nsAppShell.cpp \
