@@ -207,6 +207,8 @@ class THEBES_API gfxTextRun {
     THEBES_INLINE_DECL_REFCOUNTING(gfxTextRun)
 
 public:
+    virtual ~gfxTextRun() {}
+
     virtual void Draw(gfxContext *aContext, gfxPoint pt) = 0;
     // returns length in pixels
     virtual gfxFloat Measure(gfxContext *aContext) = 0;
