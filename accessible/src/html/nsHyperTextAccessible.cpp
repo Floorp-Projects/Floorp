@@ -417,10 +417,6 @@ nsresult nsHyperTextAccessible::DOMPointToOffset(nsIDOMNode* aNode, PRInt32 aNod
 PRInt32 nsHyperTextAccessible::GetRelativeOffset(nsIPresShell *aPresShell, nsIFrame *aFromFrame, PRInt32 aFromOffset,
                                                  nsSelectionAmount aAmount, nsDirection aDirection, PRBool aNeedsStart)
 {
-  const PRBool kIsEatingWS = PR_FALSE;            // XXX This is more of a status than something to init, and
-                                                  // all callers init it to PR_FALSE. I think it should be removed
-                                                  // from SetData() and always init'd to PR_FALSE.
-  const PRBool kIsLeftPreferred = PR_FALSE;       // Another out parameter
   const PRBool kIsJumpLinesOk = PR_TRUE;          // okay to jump lines
   const PRBool kIsScrollViewAStop = PR_FALSE;     // do not stop at scroll views
   const PRBool kIsKeyboardSelect = PR_TRUE;       // is keyboard selection
@@ -433,8 +429,8 @@ PRInt32 nsHyperTextAccessible::GetRelativeOffset(nsIPresShell *aPresShell, nsIFr
     aAmount = (aDirection == eDirNext) ? eSelectEndLine : eSelectBeginLine;
   }
 
-  pos.SetData(aPresShell, 0, aAmount, aDirection, aFromOffset,
-              kIsEatingWS, kIsLeftPreferred, kIsJumpLinesOk,
+  pos.SetData(aAmount, aDirection, aFromOffset, 0,
+              kIsJumpLinesOk,
               kIsScrollViewAStop, kIsKeyboardSelect, kIsVisualBidi,
               wordMovementType);
   nsresult rv = aFromFrame->PeekOffset(aPresShell->GetPresContext(), &pos);
