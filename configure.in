@@ -4761,10 +4761,10 @@ dnl =========================================================
 dnl = Calendar client
 dnl =========================================================
 MOZ_ARG_ENABLE_BOOL(calendar,,
-    MOZ_OLD_CALENDAR=1,
-    MOZ_OLD_CALENDAR= )
+    MOZ_CALENDAR=1,
+    MOZ_CALENDAR= )
 
-if test "$MOZ_OLD_CALENDAR"; then
+if test "$MOZ_CALENDAR"; then
     AC_MSG_WARN([Building with the calendar extension is no longer supported.])
     if test "$MOZ_THUNDERBIRD"; then
         AC_MSG_WARN([Since you're trying to build mail, you could try adding '--enable-extensions=default,lightning' to your mozconfig and building WITH A FRESH TREE.])
