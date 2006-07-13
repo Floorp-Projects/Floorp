@@ -36,6 +36,7 @@ use Bugzilla::Bug;
 use Bugzilla::User;
 use Bugzilla::Field;
 use Bugzilla::Product;
+use Bugzilla::Component;
 use Bugzilla::Keyword;
 use Bugzilla::Token;
 
