@@ -51,6 +51,7 @@ class nsDOMMouseEvent : public nsIDOMMouseEvent,
 {
 public:
   nsDOMMouseEvent(nsPresContext* aPresContext, nsInputEvent* aEvent);
+  virtual ~nsDOMMouseEvent();
 
   NS_DECL_ISUPPORTS_INHERITED
 

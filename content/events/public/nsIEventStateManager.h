@@ -52,10 +52,11 @@ class imgIContainer;
 /*
  * Event state manager interface.
  */
-// {14E5E066-E60A-446b-965F-A9ECAA7098F3}
+// {9d25327a-7a17-4d19-928c-f7f3ac19b763}
 #define NS_IEVENTSTATEMANAGER_IID \
-{ 0x14e5e066, 0xe60a, 0x446b, \
-  { 0x96, 0x5f, 0xa9, 0xec, 0xaa, 0x70, 0x98, 0xf3 } }
+{ 0x9d25327a, 0x7a17, 0x4d19, \
+  { 0x92, 0x8c, 0xf7, 0xf3, 0xac, 0x19, 0xb7, 0x63 } }
+
 
 
 #define NS_EVENT_NEEDS_FRAME(event) (!NS_IS_FOCUS_EVENT(event))
@@ -92,7 +93,6 @@ public:
 
   NS_IMETHOD GetEventTarget(nsIFrame **aFrame) = 0;
   NS_IMETHOD GetEventTargetContent(nsEvent* aEvent, nsIContent** aContent) = 0;
-  NS_IMETHOD GetEventRelatedContent(nsIContent** aContent) = 0;
 
   NS_IMETHOD GetContentState(nsIContent *aContent, PRInt32& aState) = 0;
 

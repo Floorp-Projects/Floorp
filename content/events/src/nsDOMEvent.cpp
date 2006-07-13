@@ -623,6 +623,7 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       isInputEvent = PR_TRUE;
       mouseEvent->clickCount = oldMouseEvent->clickCount;
       mouseEvent->acceptActivation = oldMouseEvent->acceptActivation;
+      mouseEvent->relatedTarget = oldMouseEvent->relatedTarget;
       newEvent = mouseEvent;
       break;
     }
@@ -670,6 +671,7 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
         NS_STATIC_CAST(nsMouseScrollEvent*, mEvent);
       mouseScrollEvent->scrollFlags = oldMouseScrollEvent->scrollFlags;
       mouseScrollEvent->delta = oldMouseScrollEvent->delta;
+      mouseScrollEvent->relatedTarget = oldMouseScrollEvent->relatedTarget;
       newEvent = mouseScrollEvent;
       break;
     }

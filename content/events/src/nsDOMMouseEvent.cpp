@@ -76,6 +76,26 @@ nsDOMMouseEvent::nsDOMMouseEvent(nsPresContext* aPresContext,
   }
 }
 
+nsDOMMouseEvent::~nsDOMMouseEvent()
+{
+  if (mEventIsInternal) {
+    delete mEvent->userType;
+    switch (mEvent->eventStructType)
+    {
+      case NS_MOUSE_EVENT:
+        delete NS_STATIC_CAST(nsMouseEvent*, mEvent);
+        break;
+      case NS_MOUSE_SCROLL_EVENT:
+        delete NS_STATIC_CAST(nsMouseScrollEvent*, mEvent);
+        break;
+      default:
+        delete mEvent;
+        break;
+    }
+    mEvent = nsnull;
+  }
+}
+
 NS_IMPL_ADDREF_INHERITED(nsDOMMouseEvent, nsDOMUIEvent)
 NS_IMPL_RELEASE_INHERITED(nsDOMMouseEvent, nsDOMUIEvent)
 
@@ -99,6 +119,12 @@ nsDOMMouseEvent::InitMouseEvent(const nsAString & aType, PRBool aCanBubble, PRBo
     case NS_MOUSE_EVENT:
     case NS_MOUSE_SCROLL_EVENT:
     {
+       if (mEvent->eventStructType == NS_MOUSE_EVENT) {
+         NS_STATIC_CAST(nsMouseEvent*, mEvent)->relatedTarget = aRelatedTarget;
+       } else {
+         NS_STATIC_CAST(nsMouseScrollEvent*, mEvent)->relatedTarget =
+           aRelatedTarget;
+       }
        nsInputEvent* inputEvent = NS_STATIC_CAST(nsInputEvent*, mEvent);
        inputEvent->isControl = aCtrlKey;
        inputEvent->isAlt = aAltKey;
@@ -193,19 +219,23 @@ nsDOMMouseEvent::GetRelatedTarget(nsIDOMEventTarget** aRelatedTarget)
 {
   NS_ENSURE_ARG_POINTER(aRelatedTarget);
   *aRelatedTarget = nsnull;
-
-  if (!mPresContext) {
-    return NS_OK;
+  nsISupports* relatedTarget = nsnull;
+  switch(mEvent->eventStructType)
+  {
+    case NS_MOUSE_EVENT:
+      relatedTarget = NS_STATIC_CAST(nsMouseEvent*, mEvent)->relatedTarget;
+      break;
+    case NS_MOUSE_SCROLL_EVENT:
+      relatedTarget = NS_STATIC_CAST(nsMouseScrollEvent*, mEvent)->relatedTarget;
+      break;
+    default:
+      break;
   }
 
-  nsCOMPtr<nsIContent> relatedContent;
-  mPresContext->EventStateManager()->
-    GetEventRelatedContent(getter_AddRefs(relatedContent));
-  if (!relatedContent) {
-    return NS_OK;
+  if (relatedTarget) {
+    CallQueryInterface(relatedTarget, aRelatedTarget);
   }
-
-  return CallQueryInterface(relatedContent, aRelatedTarget);
+  return NS_OK;
 }
 
 NS_METHOD nsDOMMouseEvent::GetScreenX(PRInt32* aScreenX)
