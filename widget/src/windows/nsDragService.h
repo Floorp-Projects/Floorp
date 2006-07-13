@@ -48,30 +48,6 @@ class  nsNativeDragTarget;
 class  nsDataObjCollection;
 class  nsString;
 
-// some older versions of MS PSDK do not have definitions for these, even though
-// the functions are there and exported from the shell32.dll,
-// so I had to add them manually. For example if one tries to build without those
-// using VC6 standard libs one will get an error.
-#ifndef SHCNE_RENAMEITEM_DEF
-#define SHCNE_RENAMEITEM_DEF 0x00000001
-
-// Structure
-typedef struct {
-    LPCITEMIDLIST pidl;
-    BOOL fRecursive;
-} SHChangeNotifyStruct;
-#endif // SHCNE_RENAMEITEM_DEF
-
-// Register for shell notifications func ptr
-typedef WINSHELLAPI ULONG (WINAPI *SHCNRegPtr)(HWND hWnd,                      // Ordinal of 2
-                                               int fSources,
-                                               LONG fEvents,
-                                               UINT wMsg,
-                                               int cEntries,
-                                               SHChangeNotifyStruct *pschn);
-// Unregister form from the shell notifications func ptr
-typedef WINSHELLAPI BOOL (WINAPI *SHCNDeregPtr)(ULONG ulID);                   // Ordinal of 4
-
 /**
  * Native Win32 DragService wrapper
  */
@@ -106,23 +82,12 @@ protected:
   // collections
   PRBool IsCollectionObject(IDataObject* inDataObj);
 
-  // Begin monitoring the shell for events (this would allow to figure drop location)
-  PRBool StartWatchingShell(const nsAString& aFileName);
-
-  // Should be called after drag is over to get the drop path (if any)
-  PRBool GetDropPath(nsAString& aDropPath) const;
-
-  // Hidden window procedure - here we shall receive notification from the shell
-  static LRESULT WINAPI HiddenWndProc(HWND aWnd, UINT aMsg, WPARAM awParam, LPARAM alParam);
+  // gets shell version
+  PRUint64 GetShellVersion();
 
   IDropSource * mNativeDragSrc;
   nsNativeDragTarget * mNativeDragTarget;
   IDataObject * mDataObject;
-
-  static PRUnichar *mFileName;    // File name to look for
-  static PRUnichar *mDropPath;    // Drop path
-  HWND            mHiddenWnd;     // Handle to a hidden window for notifications
-  PRInt32         mNotifyHandle;  // Handle to installed hook (SHChangeNotify)
 };
 
 #endif // nsDragService_h__
