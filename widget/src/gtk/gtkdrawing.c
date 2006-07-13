@@ -50,6 +50,7 @@ static GtkWidget* gButtonWidget;
 static GtkWidget* gProtoWindow;
 static GtkWidget* gCheckboxWidget;
 static GtkWidget* gScrollbarWidget;
+static GtkWidget* gSpinWidget;
 static GtkWidget* gHScaleWidget;
 static GtkWidget* gVScaleWidget;
 static GtkWidget* gEntryWidget;
@@ -124,6 +125,16 @@ ensure_scrollbar_widget()
   if (!gScrollbarWidget) {
     gScrollbarWidget = gtk_vscrollbar_new(NULL);
     setup_widget_prototype(gScrollbarWidget);
+  }
+  return MOZ_GTK_SUCCESS;
+}
+
+static gint
+ensure_spin_widget()
+{
+  if (!gSpinWidget) {
+    gSpinWidget = gtk_spin_button_new(NULL, 1, 0);
+    setup_widget_prototype(gSpinWidget);
   }
   return MOZ_GTK_SUCCESS;
 }
@@ -528,6 +539,39 @@ moz_gtk_scrollbar_thumb_paint(GdkDrawable* drawable, GdkRectangle* rect,
                 rect->height);
 
   return MOZ_GTK_SUCCESS;
+}
+
+static gint
+moz_gtk_spin_paint(GdkDrawable* drawable, GdkRectangle* rect, gboolean isDown,
+                   GtkWidgetState* state)
+{
+    GdkRectangle arrow_rect;
+    GtkStateType state_type = ConvertGtkState(state);
+    GtkShadowType shadow_type = state_type == GTK_STATE_ACTIVE ? GTK_SHADOW_IN : GTK_SHADOW_OUT;
+    GtkStyle* style;
+
+    ensure_spin_widget();
+    style = gSpinWidget->style;
+
+    TSOffsetStyleGCs(style, rect->x, rect->y);
+    gtk_paint_box(style, drawable, state_type, shadow_type, NULL, gSpinWidget,
+                  isDown ? "spinbutton_down" : "spinbutton_up",
+                  rect->x, rect->y, rect->width, rect->height);
+
+    /* hard code these values */
+    arrow_rect.width = 6;
+    arrow_rect.height = 6;
+    arrow_rect.x = rect->x + (rect->width - arrow_rect.width) / 2;
+    arrow_rect.y = rect->y + (rect->height - arrow_rect.height) / 2;
+    arrow_rect.y += isDown ? -1 : 1;
+
+    gtk_paint_arrow(style, drawable, state_type, shadow_type, NULL,
+                    gSpinWidget, "spinbutton",
+                    isDown ? GTK_ARROW_DOWN : GTK_ARROW_UP, TRUE,
+                    arrow_rect.x, arrow_rect.y,
+                    arrow_rect.width, arrow_rect.height);
+
+    return MOZ_GTK_SUCCESS;
 }
 
 static gint
@@ -936,6 +980,11 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* xthickness,
     ensure_progress_widget();
     w = gProgressWidget;
     break;
+  case MOZ_GTK_SPINBUTTON_UP:
+  case MOZ_GTK_SPINBUTTON_DOWN:
+    ensure_spin_widget();
+    w = gSpinWidget;
+    break;
   case MOZ_GTK_SCALE_HORIZONTAL:
     ensure_scale_widget();
     w = gHScaleWidget;
@@ -1124,6 +1173,11 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
   case MOZ_GTK_SCALE_THUMB_HORIZONTAL:
   case MOZ_GTK_SCALE_THUMB_VERTICAL:
     return moz_gtk_scale_thumb_paint(drawable, rect, cliprect, state, (GtkOrientation) flags);
+    break;
+  case MOZ_GTK_SPINBUTTON_UP:
+  case MOZ_GTK_SPINBUTTON_DOWN:
+    return moz_gtk_spin_paint(drawable, rect,
+                              (widget == MOZ_GTK_SPINBUTTON_DOWN), state);
     break;
   case MOZ_GTK_GRIPPER:
     return moz_gtk_gripper_paint(drawable, rect, cliprect, state);

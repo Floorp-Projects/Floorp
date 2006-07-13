@@ -124,6 +124,7 @@ private:
   HANDLE mProgressTheme;
   HANDLE mScrollbarTheme;
   HANDLE mScaleTheme;
+  HANDLE mSpinTheme;
   HANDLE mStatusbarTheme;
   HANDLE mTabTheme;
   HANDLE mTreeViewTheme;

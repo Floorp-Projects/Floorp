@@ -35,18 +35,45 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-.up {
-  list-style-image: url("chrome://global/skin/spinbuttons/btn-up.gif");
+spinbuttons {
+  height: 16px;
 }
 
-.up:hover:active {
-  list-style-image: url("chrome://global/skin/spinbuttons/btn-up-act.gif");
+.spinbuttons-button {
+  border: 2px solid;
+  -moz-border-top-colors: #5D616E #B1BBC9;
+  -moz-border-right-colors: #2D3B49 #A7B4C1;
+  -moz-border-bottom-colors: #2D3B49 #9DAAB9;
+  -moz-border-left-colors: #5D616E #B1BBC9;
+  -moz-border-radius: 0;
+  background: #B1BBC5 50% 50% no-repeat;
+  width: 13px;
+  min-width: 13px;
+  margin: 0;
+  -moz-box-flex: 1;
 }
 
-.down {
-  list-style-image: url("chrome://global/skin/spinbuttons/btn-dn.gif");
+.spinbuttons-button:hover:active {
+  -moz-border-top-colors: #8290A5 #899AAC;
+  -moz-border-right-colors: #8290A5 #899AAC;
+  -moz-border-bottom-colors: #8290A5 #899AAC;
+  -moz-border-left-colors: #8290A5 #899AAC;
+  background-color: #90A1B3;
 }
 
-.down:hover:active {
-  list-style-image: url("chrome://global/skin/spinbuttons/btn-dn-act.gif");
+.spinbuttons-button[disabled="true"] {
+  background-color: #B7BFCB;
+  border: 2px solid !important;
+  -moz-border-top-colors: #8290A5 #C6CDD7 !important;
+  -moz-border-right-colors: #8290A5 #A9B5C1 !important;
+  -moz-border-bottom-colors: #8290A5 #A9B5C1 !important;
+  -moz-border-left-colors: #8290A5 #C6CDD7 !important;
+}
+
+.spinbuttons-up {
+  list-style-image: url("chrome://global/skin/scrollbar/mini-btn-up.gif");
+}
+
+.spinbuttons-down {
+  list-style-image: url("chrome://global/skin/scrollbar/mini-btn-dn.gif");
 }

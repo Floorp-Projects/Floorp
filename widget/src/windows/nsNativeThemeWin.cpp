@@ -116,6 +116,10 @@
 #define TKP_THUMB          3
 #define TKP_THUMBVERT      6
 
+// Spin constants
+#define SPNP_UP            1
+#define SPNP_DOWN          2
+
 // Progress bar constants
 #define PP_BAR             1
 #define PP_BARVERT         2
@@ -195,6 +199,7 @@ nsNativeThemeWin::nsNativeThemeWin() {
   mRebarTheme = NULL;
   mProgressTheme = NULL;
   mScrollbarTheme = NULL;
+  mSpinTheme = NULL;
   mScaleTheme = NULL;
   mStatusbarTheme = NULL;
   mTabTheme = NULL;
@@ -331,6 +336,13 @@ nsNativeThemeWin::GetTheme(PRUint8 aWidgetType)
       if (!mScaleTheme)
         mScaleTheme = openTheme(NULL, L"Trackbar");
       return mScaleTheme;
+    }
+    case NS_THEME_SPINNER_UP_BUTTON:
+    case NS_THEME_SPINNER_DOWN_BUTTON:
+    {
+      if (!mSpinTheme)
+        mSpinTheme = openTheme(NULL, L"Spin");
+      return mSpinTheme;
     }
     case NS_THEME_STATUSBAR:
     case NS_THEME_STATUSBAR_PANEL:
@@ -637,6 +649,26 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       }
       return NS_OK;
     }
+    case NS_THEME_SPINNER_UP_BUTTON:
+    case NS_THEME_SPINNER_DOWN_BUTTON: {
+      aPart = (aWidgetType == NS_THEME_SPINNER_UP_BUTTON) ?
+              SPNP_UP : SPNP_DOWN;
+      if (!aFrame)
+        aState = TS_NORMAL;
+      else if (IsDisabled(aFrame)) {
+        aState = TS_DISABLED;
+      }
+      else {
+        PRInt32 eventState = GetContentState(aFrame, aWidgetType);
+        if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
+          aState = TS_ACTIVE;
+        else if (eventState & NS_EVENT_STATE_HOVER)
+          aState = TS_HOVER;
+        else
+          aState = TS_NORMAL;
+      }
+      return NS_OK;    
+    }
     case NS_THEME_TOOLBOX:
     case NS_THEME_STATUSBAR:
     case NS_THEME_SCROLLBAR: {
@@ -938,7 +970,7 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
   // Draw focus rectangles for XP HTML checkboxes and radio buttons
   // XXX it'd be nice to draw these outside of the frame
   if ((aWidgetType == NS_THEME_CHECKBOX || aWidgetType == NS_THEME_RADIO)
-      && aFrame->GetContent()->IsNodeOfType(nsIContent::eHTML) ||
+      && aFrame->GetContent()->IsNodeOfType(nsINode::eHTML) ||
       aWidgetType == NS_THEME_SCALE_HORIZONTAL ||
       aWidgetType == NS_THEME_SCALE_VERTICAL) {
       PRInt32 contentState ;
@@ -1124,11 +1156,17 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
                  // themes.
                  // In our app, we want these widgets to be able to really shrink down,
                  // so use the min-size request value (of 0).
-  
+
   SIZE sz;
   getThemePartSize(theme, hdc, part, state, NULL, sizeReq, &sz);
   aResult->width = sz.cx;
   aResult->height = sz.cy;
+
+  if (aWidgetType == NS_THEME_SPINNER_UP_BUTTON ||
+      aWidgetType == NS_THEME_SPINNER_DOWN_BUTTON) {
+    aResult->width++;
+    aResult->height = aResult->height / 2 + 1;
+  }
 
   return NS_OK;
 }
@@ -1190,6 +1228,10 @@ nsNativeThemeWin::CloseData()
   if (mScaleTheme) {
     closeTheme(mScaleTheme);
     mScaleTheme = NULL;
+  }
+  if (mSpinTheme) {
+    closeTheme(mSpinTheme);
+    mSpinTheme = NULL;
   }
   if (mRebarTheme) {
     closeTheme(mRebarTheme);

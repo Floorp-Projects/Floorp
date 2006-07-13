@@ -320,6 +320,12 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
   case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
     aGtkWidgetType = MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL;
     break;
+  case NS_THEME_SPINNER_UP_BUTTON:
+    aGtkWidgetType = MOZ_GTK_SPINBUTTON_UP;
+    break;
+  case NS_THEME_SPINNER_DOWN_BUTTON:
+    aGtkWidgetType = MOZ_GTK_SPINBUTTON_DOWN;
+    break;
   case NS_THEME_SCALE_HORIZONTAL:
     if (aWidgetFlags)
       *aWidgetFlags = GTK_ORIENTATION_HORIZONTAL;
@@ -869,6 +875,12 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
       aResult->height = border.top + border.bottom;
     }
     break;
+  case NS_THEME_SPINNER_UP_BUTTON:
+  case NS_THEME_SPINNER_DOWN_BUTTON:
+    // hard code these sizes
+    aResult->width = 14;
+    aResult->height = 13;
+    break;
   }
 
   return NS_OK;
@@ -981,8 +993,8 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     case NS_THEME_TAB_PANELS:
   case NS_THEME_TOOLTIP:
     // case NS_THEME_SPINNER:
-    // case NS_THEME_SPINNER_UP_BUTTON:
-    // case NS_THEME_SPINNER_DOWN_BUTTON:
+  case NS_THEME_SPINNER_UP_BUTTON:
+  case NS_THEME_SPINNER_DOWN_BUTTON:
     // case NS_THEME_SCROLLBAR:  (n/a for gtk)
   case NS_THEME_SCROLLBAR_BUTTON_UP:
   case NS_THEME_SCROLLBAR_BUTTON_DOWN:
