@@ -487,20 +487,12 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsISupports *aFrame,
            tag == nsAccessibilityAtoms::h4 ||
            tag == nsAccessibilityAtoms::h5 ||
            tag == nsAccessibilityAtoms::h6 ||
-           tag == nsAccessibilityAtoms::q ||
 #ifndef MOZ_ACCESSIBILITY_ATK
            tag == nsAccessibilityAtoms::tbody ||
            tag == nsAccessibilityAtoms::tfoot ||
            tag == nsAccessibilityAtoms::thead ||
 #endif
-           content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::tabindex) ||
-           content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::describedby) ||
-           content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::labelledby) ||
-           content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::required) ||
-           content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::invalid) ||
-           // The role from a <body> or doc element is already exposed in nsDocAccessible
-           (tag != nsAccessibilityAtoms::body && content->GetParent() &&
-           !aRole.IsEmpty())) {
+           tag == nsAccessibilityAtoms::q) {
     *aAccessible = new nsHyperTextAccessible(aNode, aWeakShell);
   }
   NS_IF_ADDREF(*aAccessible);
@@ -1845,25 +1837,28 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
       return NS_ERROR_FAILURE;
     }
     frame->GetAccessible(getter_AddRefs(newAcc));
+    return InitAccessible(newAcc, aAccessible);
   }
-  else if (!content->IsNodeOfType(nsINode::eHTML)) {
+
+  nsAutoString role;
+  if (nsAccessNode::GetRoleAttribute(content, role) &&
+      StringEndsWith(role, NS_LITERAL_STRING(":presentation")) &&
+      !content->IsFocusable()) {
+    // Only create accessible for role=":presentation" if it is focusable --
+    // in that case we need an accessible in case it gets focused, we
+    // don't want focus ever to be 'lost'
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!content->IsNodeOfType(nsINode::eHTML)) {
     // --- Try creating accessible non-HTML (XUL, etc.) ---
     // XUL elements may implement nsIAccessibleProvider via XBL
     // This allows them to say what kind of accessible to create
     // Non-HTML elements must have an nsIAccessibleProvider, tabindex
     // or role attribute or they're not in the accessible tree.
-    nsAutoString role;
-    if (nsAccessNode::GetRoleAttribute(content, role) &&
-        StringEndsWith(role, NS_LITERAL_STRING(":presentation"))) {
-      return NS_ERROR_FAILURE;
-    }
     nsCOMPtr<nsIAccessibleProvider> accProv(do_QueryInterface(aNode));
     if (accProv) {
       accProv->GetAccessible(getter_AddRefs(newAcc));
-    }
-    else if (!role.IsEmpty() ||
-             content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::tabindex)) {
-      newAcc = new nsAccessibleWrap(aNode, aWeakShell); // Create generic accessible
     }
     else if (content->GetNameSpaceID() == kNameSpaceID_SVG &&
              content->Tag() == nsAccessibilityAtoms::svg) {
@@ -1873,53 +1868,62 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
              content->Tag() == nsAccessibilityAtoms::math) {
       newAcc = new nsEnumRoleAccessible(aNode, aWeakShell, nsIAccessible::ROLE_EQUATION);
     }
-    else {
-      return NS_ERROR_FAILURE;
-    }
   }
-  else {
-    // --- Try creating accessible for HTML ---
-    nsAutoString role;
-    nsAccessNode::GetRoleAttribute(content, role);
-    if (!content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::tabindex)) {
-      // If no tabindex, check for a Presentation role, which 
-      // tells us not to expose this to the accessibility hierarchy.
-      if (StringEndsWith(role, NS_LITERAL_STRING(":presentation"),
-                         nsCaseInsensitiveStringComparator())) {
-        return NS_ERROR_FAILURE;
-      }
-      else {
-        // If we're in table-related subcontent, check for the
-        // Presentation role on the containing table
-        nsIAtom *tag = content->Tag();
-        if (tag == nsAccessibilityAtoms::td ||
-            tag == nsAccessibilityAtoms::th ||
-            tag == nsAccessibilityAtoms::tr ||
-            tag == nsAccessibilityAtoms::tbody ||
-            tag == nsAccessibilityAtoms::tfoot ||
-            tag == nsAccessibilityAtoms::thead) {
-          nsIContent *tableContent = content;
-          nsAutoString tableRole;
-          while ((tableContent = tableContent->GetParent()) != nsnull) {
-            if (tableContent->Tag() == nsAccessibilityAtoms::table) {
-              if (nsAccessNode::GetRoleAttribute(tableContent, tableRole) &&
-                  StringEndsWith(tableRole, NS_LITERAL_STRING(":presentation"),
-                  nsCaseInsensitiveStringComparator())) {
-                // Table that we're a descendant of is presentational
-                return NS_ERROR_FAILURE;
-              }
-              break;
+  else {  // HTML accessibles
+    if (!content->IsFocusable()) { 
+      // If we're in unfocusable table-related subcontent, check for the
+      // Presentation role on the containing table
+      nsIAtom *tag = content->Tag();
+      if (tag == nsAccessibilityAtoms::td ||
+          tag == nsAccessibilityAtoms::th ||
+          tag == nsAccessibilityAtoms::tr ||
+          tag == nsAccessibilityAtoms::tbody ||
+          tag == nsAccessibilityAtoms::tfoot ||
+          tag == nsAccessibilityAtoms::thead) {
+        nsIContent *tableContent = content;
+        nsAutoString tableRole;
+        while ((tableContent = tableContent->GetParent()) != nsnull) {
+          if (tableContent->Tag() == nsAccessibilityAtoms::table) {
+            if (nsAccessNode::GetRoleAttribute(tableContent, tableRole) &&
+                StringEndsWith(tableRole, NS_LITERAL_STRING(":presentation"),
+                nsCaseInsensitiveStringComparator())) {
+              // Table that we're a descendant of is presentational
+              return NS_ERROR_FAILURE;
             }
+            break;
           }
         }
       }
     }
 
-    frame->GetAccessible(getter_AddRefs(newAcc)); // Try using frame to do it
+    // Prefer to use markup (mostly tag name, perhaps attributes) to
+    // decide if and what kind of accessible to create.
+    CreateHTMLAccessibleByMarkup(frame, aWeakShell, aNode, role, getter_AddRefs(newAcc));
     if (!newAcc) {
-      // Use markup (mostly tag name, perhaps attributes) to
-      // decide if and what kind of accessible to create.
-      CreateHTMLAccessibleByMarkup(frame, aWeakShell, aNode, role, getter_AddRefs(newAcc));
+      frame->GetAccessible(getter_AddRefs(newAcc)); // Try using frame to do it
+    }
+  }
+
+  // If no accessible, see if we need to create a generic accessible because
+  // of some property that makes this object interesting
+  if (!newAcc &&
+      (content->IsFocusable() ||
+       content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::describedby) ||
+       content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::labelledby) ||
+       content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::required) ||
+       content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::invalid) ||
+       // The role from a <body> or doc element is already exposed in nsDocAccessible
+       (content->Tag() != nsAccessibilityAtoms::body && content->GetParent() && !role.IsEmpty()))) {
+    // This content is focusable or has an interesting dynamic content accessibility property.
+    // If it's interesting we need it in the accessibility hierarchy so that events or
+    // other accessibles can point to it, or so that it can hold a state, etc.
+    if (content->IsNodeOfType(nsINode::eHTML)) {
+      // Interesting HTML container which may have selectable text and/or embedded objects
+      newAcc = new nsHyperTextAccessible(aNode, aWeakShell);
+    }
+    else {  // XUL, SVG, MathML etc.
+      // Interesting generic non-HTML container
+      newAcc = new nsAccessibleWrap(aNode, aWeakShell);
     }
   }
 
