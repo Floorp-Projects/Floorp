@@ -67,6 +67,7 @@
 #include "nsIDOMHTMLBRElement.h"
 #include "nsIAtom.h"
 #include "nsGUIEvent.h"
+#include "nsIDocShellTreeItem.h"
 
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMXULSelectCntrlEl.h"
@@ -266,10 +267,66 @@ NS_IMETHODIMP nsAccessible::GetDescription(nsAString& aDescription)
   return NS_OK;
 }
 
+// mask values for ui.key.chromeAccess and ui.key.contentAccess
+#define NS_MODIFIER_SHIFT    1
+#define NS_MODIFIER_CONTROL  2
+#define NS_MODIFIER_ALT      4
+#define NS_MODIFIER_META     8
+
+// returns the accesskey modifier mask used in the given node's context
+// (i.e. chrome or content), or 0 if an error occurs
+static PRInt32
+GetAccessModifierMask(nsIDOMElement* aDOMNode)
+{
+  nsCOMPtr<nsIPrefBranch> prefBranch =
+    do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (!prefBranch)
+    return 0;
+
+  // use ui.key.generalAccessKey (unless it is -1)
+  PRInt32 accessKey;
+  nsresult rv = prefBranch->GetIntPref("ui.key.generalAccessKey", &accessKey);
+  if (NS_SUCCEEDED(rv) && accessKey != -1) {
+    switch (accessKey) {
+      case nsIDOMKeyEvent::DOM_VK_SHIFT:   return NS_MODIFIER_SHIFT;
+      case nsIDOMKeyEvent::DOM_VK_CONTROL: return NS_MODIFIER_CONTROL;
+      case nsIDOMKeyEvent::DOM_VK_ALT:     return NS_MODIFIER_ALT;
+      case nsIDOMKeyEvent::DOM_VK_META:    return NS_MODIFIER_META;
+      default:                             return 0;
+    }
+  }
+
+  // get the docShell to this DOMNode, return 0 on failure
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aDOMNode));
+  nsCOMPtr<nsIDocument> document = content->GetCurrentDoc();
+  if (!document)
+    return 0;
+  nsCOMPtr<nsISupports> container = document->GetContainer();
+  if (!container)
+    return 0;
+  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(container));
+  if (!treeItem)
+    return 0;
+
+  // determine the access modifier used in this context
+  PRInt32 itemType, accessModifierMask = 0;
+  treeItem->GetItemType(&itemType);
+  switch (itemType) {
+
+  case nsIDocShellTreeItem::typeChrome:
+    rv = prefBranch->GetIntPref("ui.key.chromeAccess", &accessModifierMask);
+    break;
+
+  case nsIDocShellTreeItem::typeContent:
+    rv = prefBranch->GetIntPref("ui.key.contentAccess", &accessModifierMask);
+    break;
+  }
+
+  return NS_SUCCEEDED(rv) ? accessModifierMask : 0;
+}
+
 NS_IMETHODIMP nsAccessible::GetKeyboardShortcut(nsAString& _retval)
 {
-  static PRInt32 gGeneralAccesskeyModifier = -1;  // magic value of -1 indicates unitialized state
-
   nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mDOMNode));
   if (elt) {
     nsAutoString accesskey;
@@ -285,23 +342,27 @@ NS_IMETHODIMP nsAccessible::GetKeyboardShortcut(nsAString& _retval)
       }
     }
 
-    if (gGeneralAccesskeyModifier == -1) {
-      // Need to initialize cached global accesskey pref
-      gGeneralAccesskeyModifier = 0;
-      nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-      if (prefBranch)
-        prefBranch->GetIntPref("ui.key.generalAccessKey", &gGeneralAccesskeyModifier);
-    }
+    // append the modifiers in reverse order
+    // (result: Control+Alt+Shift+Meta+<key>)
     nsAutoString propertyKey;
-    switch (gGeneralAccesskeyModifier) {
-      case nsIDOMKeyEvent::DOM_VK_CONTROL: propertyKey.AssignLiteral("VK_CONTROL"); break;
-      case nsIDOMKeyEvent::DOM_VK_ALT: propertyKey.AssignLiteral("VK_ALT"); break;
-      case nsIDOMKeyEvent::DOM_VK_META: propertyKey.AssignLiteral("VK_META"); break;
+    PRInt32 modifierMask = GetAccessModifierMask(elt);
+    if (modifierMask & NS_MODIFIER_META) {
+      propertyKey.AssignLiteral("VK_META");
+      nsAccessible::GetFullKeyName(propertyKey, accesskey, accesskey);
     }
-    if (!propertyKey.IsEmpty())
-      nsAccessible::GetFullKeyName(propertyKey, accesskey, _retval);
-    else
-      _retval= accesskey;
+    if (modifierMask & NS_MODIFIER_SHIFT) {
+      propertyKey.AssignLiteral("VK_SHIFT");
+      nsAccessible::GetFullKeyName(propertyKey, accesskey, accesskey);
+    }
+    if (modifierMask & NS_MODIFIER_ALT) {
+      propertyKey.AssignLiteral("VK_ALT");
+      nsAccessible::GetFullKeyName(propertyKey, accesskey, accesskey);
+    }
+    if (modifierMask & NS_MODIFIER_CONTROL) {
+      propertyKey.AssignLiteral("VK_CONTROL");
+      nsAccessible::GetFullKeyName(propertyKey, accesskey, accesskey);
+    }
+    _retval= accesskey;
     return NS_OK;
   }
   return NS_ERROR_FAILURE;

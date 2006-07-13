@@ -215,7 +215,12 @@ protected:
     eAccessKeyProcessingUp,
     eAccessKeyProcessingDown
   } ProcessingAccessKeyState;
-  void HandleAccessKey(nsPresContext* aPresContext, nsKeyEvent* aEvent, nsEventStatus* aStatus, PRInt32 aChildOffset, ProcessingAccessKeyState aAccessKeyState);
+  void HandleAccessKey(nsPresContext* aPresContext,
+                       nsKeyEvent* aEvent,
+                       nsEventStatus* aStatus,
+                       PRInt32 aChildOffset,
+                       ProcessingAccessKeyState aAccessKeyState,
+                       PRInt32 aModifierMask);
 
   //---------------------------------------------
   // DocShell Focus Traversal Methods
