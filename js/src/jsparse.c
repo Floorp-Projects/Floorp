@@ -4512,11 +4512,13 @@ XMLElementOrList(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                 return NULL;
             }
             if (endAtom && startAtom && endAtom != startAtom) {
+                JSString *str = ATOM_TO_STRING(startAtom);
+
                 /* End vs. start tag name mismatch: point to the tag name. */
-                ++pn2->pn_pos.begin.index;
-                js_ReportCompileErrorNumber(cx, pn2,
-                                            JSREPORT_PN | JSREPORT_ERROR,
-                                            JSMSG_XML_TAG_NAME_MISMATCH);
+                js_ReportCompileErrorNumberUC(cx, pn2,
+                                              JSREPORT_PN | JSREPORT_ERROR,
+                                              JSMSG_XML_TAG_NAME_MISMATCH,
+                                              JSSTRING_CHARS(str));
                 return NULL;
             }
 
