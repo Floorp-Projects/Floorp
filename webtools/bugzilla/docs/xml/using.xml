@@ -356,7 +356,7 @@
       have them show up in your personal Bugzilla footer along with your own
       Saved Searches.
       If somebody is sharing a Search with a group she or he is allowed to
-      <xref linkend="groups">assign users to</a>, it will show up in the
+      <link linkend="groups">assign users to</link>, it will show up in the
       group's direct members' footers by default.
     </para>
 
