@@ -100,11 +100,13 @@ Bugzilla->batch(1);
 
 my $debug = 0;
 my $mail  = '';
+my $attach_path = '';
 my $help  = 0;
 
 my $result = GetOptions(
     "verbose|debug+" => \$debug,
     "mail|sendmail!" => \$mail,
+    "attach_path=s"  => \$attach_path,
     "help|?"         => \$help
 );
 
@@ -365,14 +367,24 @@ sub process_attachment() {
     $attachment{'isprivate'}  = $attach->{'att'}->{'isprivate'} || 0;
     $attachment{'filename'}   = $attach->field('filename') || "file";
     # Attachment data is not exported in versions 2.20 and older.
-    if (defined $attach->first_child('data')
-        && defined $attach->first_child('data')->{'att'}->{'encoding'}
-        && $attach->first_child('data')->{'att'}->{'encoding'} =~ /base64/ )
-    {
-        # decode the base64
-        my $data   = $attach->field('data');
-        my $output = decode_base64($data);
-        $attachment{'data'} = $output;
+    if (defined $attach->first_child('data') &&
+            defined $attach->first_child('data')->{'att'}->{'encoding'}) {
+        my $encoding = $attach->first_child('data')->{'att'}->{'encoding'};
+        if ($encoding =~ /base64/) {
+            # decode the base64
+            my $data   = $attach->field('data');
+            my $output = decode_base64($data);
+            $attachment{'data'} = $output;
+        }
+        elsif ($encoding =~ /filename/) {
+            # read the attachment file
+            Error("attach_path is required", undef) unless ($attach_path);
+            my $attach_filename = $attach_path . "/" . $attach->field('data');
+            open(ATTACH_FH, $attach_filename) or
+                Error("cannot open $attach_filename", undef);
+            $attachment{'data'} = do { local $/; <ATTACH_FH> };
+            close ATTACH_FH;
+        }
     }
     else {
         $attachment{'data'} = $attach->field('data');
@@ -1212,6 +1224,8 @@ importxml - Import bugzilla bug data from xml.
        -v --verbose     print error and debug information. 
                         Mulltiple -v increases verbosity
        -m --sendmail    send mail to recipients with log of bugs imported
+       --attach_path    The path to the attachment files.
+                        (Required if encoding="filename" is used for attachments.)
 
 =head1 OPTIONS
 
