@@ -311,16 +311,21 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
   nsCOMPtr<nsICookieManager> cm(do_GetService(NS_COOKIEMANAGER_CONTRACTID));
   mCookieManager = cm.get();
   NS_IF_ADDREF(mCookieManager);
-  
+
   // Keychain checkboxes
   PRBool storePasswords = PR_TRUE;
   mPrefService->GetBoolPref(gUseKeychainPref, &storePasswords);
   [mStorePasswords setState:(storePasswords ? NSOnState : NSOffState)];
-  
+
   PRBool autoFillPasswords = PR_TRUE;
   mPrefService->GetBoolPref(gAutoFillEnabledPref, &autoFillPasswords);
-  [mAutoFillPasswords setState:(autoFillPasswords ? NSOnState : NSOffState)];
-  
+  if(storePasswords)
+    [mAutoFillPasswords setState:(autoFillPasswords ? NSOnState : NSOffState)];
+  else {
+    [mAutoFillPasswords setState:NSOffState];
+    [mAutoFillPasswords setEnabled:NO];
+  }
+
   // set up policy popups
   NSPopUpButtonCell *popupButtonCell = [mPermissionColumn dataCell];
   [popupButtonCell setEditable:YES];
@@ -988,6 +993,12 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
     return;
   mPrefService->SetBoolPref("chimera.store_passwords_with_keychain",
                             ([mStorePasswords state] == NSOnState) ? PR_TRUE : PR_FALSE);
+
+  if([mStorePasswords state] == NSOnState)
+    [mAutoFillPasswords setState:([self getBooleanPref:"chimera.keychain_passwords_autofill" withSuccess:NULL] ? NSOnState : NSOffState)];
+  else
+    [mAutoFillPasswords setState:NSOffState];
+
   [mAutoFillPasswords setEnabled:([mStorePasswords state] == NSOnState)];
 }
 
