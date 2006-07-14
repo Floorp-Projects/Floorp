@@ -1,0 +1,9 @@
+<select id="[% name %]" name="[% name %]"[% IF size %] size="[% size %]"[% END %][% IF disabled %] disabled[% END %][% IF onChange %] onChange="[% onChange %]"[% END %]>
+    [% IF placeholder %]<option value="">-Platform-</option>[% END %]
+[% IF platforms %]
+[% FOREACH platform=platforms %]
+    <option[% IF defaults.platform==platform.name %] selected[% END %] 
+        value="[% platform.platform_id | html %]">[% platform.name | html %] ([% platform.platform_id %])</option>
+[% END %]
+[% END %]
+</select>

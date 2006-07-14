@@ -1,122 +1,195 @@
 <script type="text/javascript">
-function checkAddPlatformForm(f) {
-   return (
-           checkString(f.new_platform_name,"platform name",false) &&
-           checkProduct(f.platform_add_product) &&
-           checkString(f.new_platform_detect_regexp,"detect regexp",false) &&
-           checkString(f.new_platform_icon_path,"icon path",true)
-          );
+function enablePlatformModeButtons() {
+  document.getElementById("edit_platform_button").disabled=false;
+  document.getElementById("delete_platform_button").disabled=false;
 }
 
-function getPlatformByName(platformName) {
-    http.open('get', 'rpc.cgi?action=getPlatformByName&platformName='+platformName);
-    http.onreadystatechange = updatePlatformForm;
-    http.send(null);
+function disablePlatformModeButtons() {
+  document.getElementById("edit_platform_button").disabled=true;
+  document.getElementById("delete_platform_button").disabled=true;
 }
 
-function updatePlatformForm() {
-    if(http.readyState == 4){
-        var response = http.responseText;
-        var update = new Array();
+function loadPlatform() {
+  var platform_select = document.getElementById("platform_id");
 
-        var em = document.getElementById("notification-content")
-        if(response.indexOf('|' != -1)) {
-            update = response.split('|');
-            document.getElementById("modify_platform_id").value = update[0];
-            document.getElementById("modify_platform_name").disabled = false;
-            document.getElementById("modify_platform_name").value = update[1];
-            // lookup product
-            document.getElementById("modify_platform_detect_regexp").disabled = false;
-            document.getElementById("modify_platform_detect_regexp").value = update[2];
-            document.getElementById("modify_platform_icon_path").disabled = false;
-            document.getElementById("modify_platform_icon_path").value = update[3];
-            document.getElementById("delete_platform").disabled = false;
-            document.getElementById("update_platform").disabled = false;
-        } else {
-            document.getElementById("notification").style.display = 'block';
-            em.innerHTML = response;
-        }
-    }
+  if (! platform_select ||
+      platform_select.options[platform_select.selectedIndex].value=="") {
+    disablePlatformModeButtons();
+    document.getElementById('edit_platform_form_div').style.display = 'none';
+    disableForm('edit_platform_form');
+    blankPlatformForm('edit_platform_form');
+    return false;
+  }
+
+  var platform_id = platform_select.options[platform_select.selectedIndex].value;
+
+  disableForm('edit_platform_form');
+  toggleMessage('loading','Loading Platform ID# ' + platform_id + '...');
+  var url = 'json.cgi?platform_id=' + platform_id;
+  fetchJSON(url,populatePlatform);
 }
+
+function populatePlatform(data) {
+  platform=data;
+  document.getElementById('edit_platform_form_platform_id').value = platform.platform_id;
+  document.getElementById('edit_platform_form_platform_id_display').innerHTML = platform.platform_id;
+  document.getElementById('edit_platform_form_name').value = platform.name;
+  document.getElementById('edit_platform_form_detect_regexp').value = platform.detect_regexp;
+  document.getElementById('edit_platform_form_iconpath').value = platform.iconpath;
+
+  var selectBoxProduct = document.getElementById('edit_platform_form_platform_products');
+  selectBoxProduct.options.length = 0;
+  for (var i=0; i<platform.products.length; i++) {
+    var optionText = platform.products[i].name + ' (' + platform.products[i].product_id + ')'; 
+    selectBoxProduct.options[selectBoxProduct.length] = 
+	new Option(optionText,
+		   platform.products[i].product_id);
+  }
+
+  document.getElementById('edit_platform_form_div').style.display = 'block';
+  enablePlatformModeButtons();
+}
+
+function blankPlatformForm(formid) {
+  blankForm(formid);
+  document.getElementById('edit_platform_form_platform_id_display').innerHTML = '';
+
+  var selectBoxProduct = document.getElementById('edit_platform_form_platform_products');
+  selectBoxProduct.options.length = 0;
+  selectBoxProduct.options[selectBoxProduct.length] = new Option("--No platform selected--","");
+  selectBoxProduct.selectedIndex=-1;
+}
+
+function switchPlatformFormToAdd() {
+  disablePlatformModeButtons();
+  blankPlatformForm('edit_platform_form');
+  document.getElementById('edit_platform_form_submit').value = 'Add Platform';
+  document.getElementById('edit_platform_form_mode').value = 'add';
+  enableForm('edit_platform_form');
+  document.getElementById('edit_platform_form_div').style.display = 'block';
+}
+
+function switchPlatformFormToEdit() {
+  document.getElementById('edit_platform_form_submit').value = 'Submit Edits';
+  document.getElementById('edit_platform_form_mode').value = 'edit';
+  enableForm('edit_platform_form');
+  document.getElementById('edit_platform_form_div').style.display = 'block';
+}
+
+
+function checkPlatformForm(f) {
+  return (
+          checkString(f.edit_platform_form_name,"Platform name",false) &&
+          checkString(f.edit_platform_form_iconpath,"Platform icon path",true &&
+	  checkString(f.edit_platform_form_detect_regexp,"Platform detect regexp",true))
+         );
+}
+
+function resetPlatform() {
+  if (document.getElementById('edit_platform_form_platform_id').value != '') {
+    populatePlatform(platform);
+    switchPlatformFormToEdit();   
+  } else {
+    switchPlatformFormToAdd();   
+  }
+}
+
 </script>
 
-<div id="platforms" class="category">
+<h1 id="platforms_header" class="firstHeading"><a name="manage_platforms" class="collapse-link">Manage Platforms&nbsp;&raquo;</a></h1>
 
-<h2>Platforms</h2>
+<div id="manage_platforms_div" class="collapsable">
+<div class="section-full">
+  <div class="section-header">Existing Platforms</div>
 
-<h3 class="display platform_add"><a name="#platform_add">Add&nbsp;&raquo;</a></h3>
-<div id="platform_add" class="collapsable">
-<form name="platform_add_form" id="platform_add_form" action="edit_categories.cgi" method="post" onSubmit="return checkAddPlatformForm(this);">
-<table class="category">
-<tr>
-<td>Name:</td>
-<td><input name="new_platform_name" type="text" size="30"></td>
-</tr>
-<tr>
-<td>Product:</td>
-<td>
-[% INCLUDE form_widgets/select_product.tmpl name="platform_add_product" placeholder=1 %]
-</td>
-</tr>
-<tr>
-<td>Detect Regexp:</td>
-<td><input name="new_platform_detect_regexp" type="text" size="30"></td>
-</tr>
-<tr>
-<td>Icon Path:</td>
-<td><input name="new_platform_icon_path" type="text" size="30"></td>
-</tr>
-<tr>
-<td colspan="2" align="right">
-<input class="category" name="reset" type="reset" value="Reset">&nbsp;<input class="category" name="add_platform" type="submit" value="Add New Platform">
-</td>
-</tr>
-</table>
-</form>
+  <div class="section-content">
+
+    <form id="select_platform_and_mode_form" name="select_platform_and_mode_form" method="post" action="manage_categories.cgi">
+      <table border="0" cellspacing="0" cellpadding="5">
+        <tr>
+        <td>
+        [% INCLUDE form_widgets/select_platform_id.tmpl name="platform_id" placeholder=1 size=5 show_name=1 onChange="loadPlatform();" %]
+        </td>
+        </tr>
+        <tr>
+        <td>
+        <input id="add_platform_button" name="add_platform_button" class="manage" type="button" onClick="switchPlatformFormToAdd();" value="Add new platform">&nbsp;
+        <input id="edit_platform_button" name="edit_platform_button" class="manage" type="button" onClick="switchPlatformFormToEdit();" value="Edit platform" disabled>&nbsp;
+        <input id="delete_platform_button" name="delete_platform_button" class="manage" type="submit" onClick="return confirm('Really delete this platform?')
+;" value="Delete platform" disabled>&nbsp;
+        </td>
+        </tr>
+      </table>
+    </form>
+
+  </div> <!--end section-content-->
+
+  <div style="display: none;" id="edit_platform_form_div">
+  <hr />
+    <div id="platform-title" class="section-header">Platform Info</div>
+    <div class="section-content">
+      <form id="edit_platform_form" name="edit_platform_form" method="post" action="manage_categories.cgi" onSubmit="selectNone('edit_platform_form_all_products');selectAll('edit_platform_form_platform_products');return checkPlatformForm(this);">
+        <input id="edit_platform_form_mode" name="edit_platform_form_mode" type="hidden" value="edit">
+        <input id="edit_platform_form_platform_id" name="edit_platform_form_platform_id" type="hidden" value="">
+
+        <table class="manage">
+          <tr>
+          <td class="headerleft">Platform ID#:</td>
+          <td name="edit_platform_form_platform_id_display" id="edit_platform_form_platform_id_display"></td>
+          </tr>
+          <tr>
+          <td class="headerleft">Name:</td>
+          <td colspan="2"><input name="edit_platform_form_name"
+                                 id="edit_platform_form_name"
+                                 value=""
+                                 size="55"/ disabled></td>
+          </tr>
+          <tr>
+          <td class="headerleft">Detect Regexp:</td>
+          <td colspan="2"><input name="edit_platform_form_detect_regexp"
+                                 id="edit_platform_form_detect_regexp"
+                                 value=""
+                                 size="55"/ disabled></td>
+          </tr>
+          <tr>
+          <td class="headerleft">Icon Path:</td>
+          <td colspan="2"><input name="edit_platform_form_iconpath"
+                                 id="edit_platform_form_iconpath"
+                                 value=""
+                                 size="55"/ disabled></td>
+          </tr>
+          <tr>
+          <td colspan="3"><hr/></td>
+          </tr>
+          <tr>
+          <td class="headerleft" colspan="3">Manage Products for this Platform</td>
+          </tr>
+          <tr>
+          <td colspan="3">
+          <div class="manage">
+            <table border="0" cellspacing="10" cellpadding="0">
+              <tr>
+              <td colspan="2" id="edit_platform_form_all_products_header" name="edit_platform_form_all_products_header" class="headerleft">All Products</td>
+              <td class="headerleft">Products running on this Platform</td>
+              </tr>
+              <tr>
+              <td>[% INCLUDE form_widgets/select_product_id.tmpl name="edit_platform_form_all_products" multiple=1 size=5 placeholder=0 %]</td>
+              <td align="center" valign="middle"><input id="add_product_button" name="add_product_button" type="button" value="&rArr;" onClick="copyToList('edit_platform_form_all_products','edit_platform_form_platform_products');"><br/><br/><input id="remove_product_button" name="remove_product_button" type="button" value="&lArr;" onClick="removeSelectedFromList('edit_platform_form_platform_products',true);"></td>
+              <td><select multiple class="platform-products" id="edit_platform_form_platform_products" name="edit_platform_form_platform_products" size="5">
+              <option value="">--No platform selected--</option>
+              </select></td>
+              </tr>
+            </table>
+            </div>
+          </td>
+          </tr>
+          <tr>
+          <td colspan="3" align="right"><input id="edit_platform_form_reset" class="button" type="button" value="Reset" disabled onClick="resetPlatform();" />&nbsp;<input class="button" type="submit" id="edit_platform_form_submit" name="edit_platform_form_submit" value="Submit Edits" disabled /></td>
+          </tr>
+        </table>
+      </form>
+    </div>
+  </div>
+
+</div> <!--end section-full-->
 </div>
-
-<h3 class="display platform_modify"><a name="#platform_modify">Modify / Delete&nbsp;&raquo;</a></h3>
-<div id="platform_modify" class="collapsable">
-<form id="platform_modify_form" name="platform_modify_form" action="edit_categories.cgi" method="post">
-<input id="modify_platform_id" name="modify_platform_id" type="hidden" value="">
-<table class="category">
-<tr>
-<td colspan="2" align="left">
-Select Existing Platform:<br/>
-[% INCLUDE form_widgets/select_platform.tmpl size=5 name="platform_modify_existing" onChange="getPlatformByName(this.options[this.selectedIndex].value);" %]
-</td>
-</tr>
-<tr>
-<td>Name:</td>
-<td><input disabled name="modify_platform_name" type="text" size="30"></td>
-</tr>
-<tr>
-<td>Product:</td>
-<td>
-[% INCLUDE form_widgets/select_product.tmpl name="platform_modify_product" placeholder=1 disabled=1 %]
-</td>
-</tr>
-<tr>
-<td>Detect Regexp:</td>
-<td><input disabled name="modify_platform_detect_regexp" type="text" size="30"></td>
-</tr>
-<tr>
-<td>Icon Path:</td>
-<td><input disabled name="modify_platform_icon_path" type="text" size="30"></td>
-</tr>
-<tr>
-<td colspan="2" align="right">
-<input disabled class="category" name="delete_platform" type="submit" value="Delete Platform">&nbsp;<input disabled class="category" name="update_platform" type="submit" value="Update Platform">
-</td>
-</tr>
-</table>
-</form>
-
-</div>
-
-</div>
-
-
-
-
-

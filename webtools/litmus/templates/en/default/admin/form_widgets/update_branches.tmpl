@@ -1,112 +1,181 @@
 <script type="text/javascript">
-function checkAddBranchForm(f) {
-   return (
-           checkString(f.new_branch_name,"branch name",false) &&
-           checkProduct(f.branch_add_product) &&
-           checkString(f.new_branch_detect_regexp,"detect regexp",false)
-          );
+function enableBranchModeButtons() {
+  document.getElementById("edit_branch_button").disabled=false;
+  document.getElementById("delete_branch_button").disabled=false;
 }
 
-function getBarnchByName(branchName) {
-    http.open('get', 'rpc.cgi?action=getBranchByName&branchName='+branchName);
-    http.onreadystatechange = updateBranchForm;
-    http.send(null);
+function disableBranchModeButtons() {
+  document.getElementById("edit_branch_button").disabled=true;
+  document.getElementById("delete_branch_button").disabled=true;
 }
 
-function updateBranchForm() {
-    if(http.readyState == 4){
-        var response = http.responseText;
-        var update = new Array();
+function loadBranch() {
+  var branch_select = document.getElementById("branch_id");
 
-        var em = document.getElementById("notification-content")
-        if(response.indexOf('|' != -1)) {
-            update = response.split('|');
-            document.getElementById("modify_branch_id").value = update[0];
-            document.getElementById("modify_branch_name").disabled = false;
-            document.getElementById("modify_branch_name").value = update[1];
-            // lookup product
-            document.getElementById("modify_branch_detect_regexp").disabled = false;
-            document.getElementById("modify_branch_detect_regexp").value = update[2];
-            document.getElementById("delete_branch").disabled = false;
-            document.getElementById("update_branch").disabled = false;
-        } else {
-            document.getElementById("notification").style.display = 'block';
-            em.innerHTML = response;
-        }
+  if (! branch_select ||
+      branch_select.options[branch_select.selectedIndex].value=="") {
+    disableBranchModeButtons();
+    document.getElementById('edit_branch_form_div').style.display = 'none';
+    disableForm('edit_branch_form');
+    blankBranchForm('edit_branch_form');
+    return false;
+  }
+
+  var branch_id = branch_select.options[branch_select.selectedIndex].value;
+
+  disableForm('edit_branch_form');
+  toggleMessage('loading','Loading Branch ID# ' + branch_id + '...');
+  var url = 'json.cgi?branch_id=' + branch_id;
+  fetchJSON(url,populateBranch);
+}
+
+function populateBranch(data) {
+  branch=data;
+  document.getElementById('edit_branch_form_branch_id').value = branch.branch_id;
+  document.getElementById('edit_branch_form_branch_id_display').innerHTML = branch.branch_id;
+  document.getElementById('edit_branch_form_name').value = branch.name;
+  document.getElementById('edit_branch_form_detect_regexp').value = branch.detect_regexp;
+  var product_box = document.getElementById('edit_branch_form_product_id');
+  var options = product_box.getElementsByTagName('option');
+  var found_product = 0;
+  for (var i=0; i<options.length; i++) {
+    if (options[i].value == branch.product_id.product_id) {
+      options[i].selected = true;
+      found_product=1;
+    } else {
+      options[i].selected = false;
     }
+    if (found_product == 0) {
+      options[0].selected = true;
+    }
+  }
+  var enabled_em = document.getElementById('edit_branch_form_enabled')
+  if (branch.enabled == 1) {
+    enabled_em.checked = true;
+  } else {
+    enabled_em.checked = false;
+  }
+
+  document.getElementById('edit_branch_form_div').style.display = 'block';
+  enableBranchModeButtons();
 }
 
+function blankBranchForm(formid) {
+  blankForm(formid);
+  document.getElementById('edit_branch_form_branch_id_display').innerHTML = '';
+}
+
+function switchBranchFormToAdd() {
+  disableBranchModeButtons();
+  blankBranchForm('edit_branch_form');
+  document.getElementById('edit_branch_form_submit').value = 'Add Branch';
+  document.getElementById('edit_branch_form_mode').value = 'add';
+  enableForm('edit_branch_form');
+  document.getElementById('edit_branch_form_div').style.display = 'block';
+}
+
+function switchBranchFormToEdit() {
+  document.getElementById('edit_branch_form_submit').value = 'Submit Edits';
+  document.getElementById('edit_branch_form_mode').value = 'edit';
+  enableForm('edit_branch_form');
+  document.getElementById('edit_branch_form_div').style.display = 'block';
+}
+
+
+function checkBranchForm(f) {
+  return (
+          checkString(f.edit_branch_form_name,"Branch Name",false) &&
+          checkString(f.edit_branch_form_detect_regexp,"Branch Detect Regexp",true) &&
+          verifySelected(f.edit_branch_form_product_id, "Product")
+         );
+}
+
+function resetBranch() {
+  if (document.getElementById('edit_branch_form_branch_id').value != '') {
+    populateBranch(branch);
+    switchBranchFormToEdit();   
+  } else {
+    switchBranchFormToAdd();   
+  }
+}
 </script>
 
-<div id="branches" class="category">
+<h1 id="branches_header" class="firstHeading"><a name="manage_branches" class="collapse-link">Manage Branches&nbsp;&raquo;</a></h1>
 
-<h2>Branches</h2>
+<div id="manage_branches_div" class="collapsable">
+<div class="section-full">
+  <div class="section-header">Existing Branches</div>
 
-<h3 class="display branch_add"><a name="#branch_add">Add&nbsp;&raquo;</a></h3>
-<div id="branch_add" class="collapsable">
-<form id="branch_add_form" name="branch_add_form" action="edit_categories.cgi" method="post" onSubmit="checkAddBranchForm(this);">
-<table class="category">
-<tr>
-<td>Name:</td>
-<td><input id="new_branch_name" name="new_branch_name" type="text" size="30"></td>
-</tr>
-<tr>
-<td>Product:</td>
-<td>
-[% INCLUDE form_widgets/select_product.tmpl name="branch_add_product" placeholder=1 %]
-</td>
-</tr>
-<tr>
-<td>Detect Regexp:</td>
-<td><input id="new_branch_detect_regexp" name="new_branch_detect_regexp" type="text" size="30"></td>
-</tr>
-<tr>
-<td colspan="2" align="right">
-<input class="category" name="reset" type="reset" value="Reset">&nbsp;<input class="category" name="add_branch" type="submit" value="Add New Branch">
-</td>
-</tr>
-</table>
-</form>
+  <div class="section-content">
+
+    <form id="select_branch_and_mode_form" name="select_branch_and_mode_form" method="post" action="manage_categories.cgi">
+      <table border="0" cellspacing="0" cellpadding="5">
+        <tr>
+        <td>
+        [% INCLUDE form_widgets/select_branch_id.tmpl name="branch_id" placeholder=1 size=5 show_name=1 onChange="loadBranch();" %]
+        </td>
+        </tr>
+        <tr>
+        <td>
+        <input id="add_branch_button" name="add_branch_button" class="manage" type="button" onClick="switchBranchFormToAdd();" value="Add new branch">&nbsp;
+        <input id="edit_branch_button" name="edit_branch_button" class="manage" type="button" onClick="switchBranchFormToEdit();" value="Edit branch" disabled>&nbsp;
+        <input id="delete_branch_button" name="delete_branch_button" class="manage" type="submit" onClick="return confirm('Really delete this branch?');" value="Delete branch" disabled>&nbsp;
+        </td>
+        </tr>
+      </table>
+    </form>
+
+  </div> <!--end section-content-->
+
+  <div style="display: none;" id="edit_branch_form_div">
+  <hr />
+    <div id="branch-title" class="section-header">Branch Info</div>
+    <div class="section-content">
+      <form id="edit_branch_form" name="edit_branch_form" method="post" action="manage_categories.cgi" onSubmit="return checkBranchForm(this);">
+        <input id="edit_branch_form_mode" name="edit_branch_form_mode" type="hidden" value="edit">
+        <input id="edit_branch_form_branch_id" name="edit_branch_form_branch_id" type="hidden" value="">
+
+        <table class="manage">
+          <tr>
+          <td class="headerleft">Branch ID#:</td>
+          <td name="edit_branch_form_branch_id_display" id="edit_branch_form_branch_id_display"></td>
+          </tr>
+          <tr>
+          <td class="headerleft">Name:</td>
+          <td colspan="2"><input name="edit_branch_form_name"
+                                 id="edit_branch_form_name"
+                                 value=""
+                                 size="55"/ disabled></td>
+          </tr>
+	  <tr>
+          <td class="headerleft">Product:</td>
+          <td colspan="2">[% INCLUDE form_widgets/select_product_id.tmpl name="edit_branch_form_product_id" placeholder=1 size=1 show_name=1 %]
+          </tr>
+          <tr>
+          <td class="headerleft">Detect Regexp:</td>
+          <td colspan="2"><input name="edit_branch_form_detect_regexp"
+                                 id="edit_branch_form_detect_regexp"
+                                 value=""
+                                 size="55"/ disabled></td>
+          </tr>
+          <tr>
+          <td class="headerleft">Enabled?</td>
+          <td><input name="edit_branch_form_enabled"
+                     id="edit_branch_form_enabled"
+                     type="checkbox"
+                     value="1" disabled>
+          </td>
+          <td>&lArr;&nbsp;Uncheck this to completely disable this branch. <b>NOTE</b>: this will have also disable all associated test runs, test groups, subgroups, and testcases.</td>
+          </tr>
+
+	  <tr>
+          <td colspan="3" align="right"><input id="edit_branch_form_reset" class="button" type="button" value="Reset" disabled onClick="resetBranch();" />&nbsp;<input class="button" type="submit" id="edit_branch_form_submit" name="edit_branch_form_submit" value="Submit Edits" disabled /></div>
+          </td>
+          </tr>
+        </table>
+      </form>
+    </div>
+  </div>
+
+</div> <!--end section-full-->
 </div>
-
-<h3 class="display branch_modify"><a name="#branch_modify">Modify / Delete&nbsp;&raquo;</a></h3>
-<div id="branch_modify" class="collapsable">
-<form id="branch_modify_form" name="branch_modify_form" action="edit_categories.cgi" method="post">
-<input id="modify_branch_id" name="modify_branch_id" type="hidden" value="">
-<table class="category">
-<tr>
-<td colspan="2" align="left">
-Select Existing Branch:<br/>
-[% INCLUDE form_widgets/select_branch.tmpl size=5 name="branch_modify_existing" onChange="getBranchByName(this.options[this.selectedIndex].value);" %]
-</td>
-</tr>
-<tr>
-<td>Name:</td>
-<td><input disabled id="modify_branch_name" name="modify_branch_name" type="text" size="30"></td>
-</tr>
-<tr>
-<td>Product:</td>
-<td>
-[% INCLUDE form_widgets/select_product.tmpl name="branch_modify_product" placeholder=1 disabled=1 %]
-</td>
-</tr>
-<tr>
-<td>Detect Regexp:</td>
-<td><input disabled id="modify_branch_detect_regexp" name="modify_branch_detect_regexp" type="text" size="30"></td>
-</tr>
-<tr>
-<td colspan="2" align="right">
-<input disabled class="category" name="delete_branch" type="submit" value="Delete Branch">&nbsp;<input disabled class="category" name="update_branch" type="submit" value="Update Branch">
-</td>
-</tr>
-</table>
-</form>
-
-</div>
-
-</div>
-
-
-
-
-

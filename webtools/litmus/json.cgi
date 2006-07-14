@@ -74,8 +74,33 @@ if ($c->param("testcase_id")) {
   my $json = JSON->new(skipinvalid => 1, convblessed => 1);
   my $js = $json->objToJson($testgroup);
   print $js;
+} elsif ($c->param("product_id")) {
+  my $product_id = $c->param("product_id");
+  my $product = Litmus::DB::Product->retrieve($product_id);
+  my $json = JSON->new(skipinvalid => 1, convblessed => 1);
+  my $js = $json->objToJson($product);
+  print $js;
+} elsif ($c->param("platform_id")) {
+  my $platform_id = $c->param("platform_id");
+  my $platform = Litmus::DB::Platform->retrieve($platform_id);
+  my @products = Litmus::DB::Product->search_ByPlatform($platform_id);
+  $platform->{'products'} = \@products;
+  my $json = JSON->new(skipinvalid => 1, convblessed => 1);
+  my $js = $json->objToJson($platform);
+  print $js;
+} elsif ($c->param("opsys_id")) {
+  my $opsys_id = $c->param("opsys_id");
+  my $opsys = Litmus::DB::Opsys->retrieve($opsys_id);
+  my $json = JSON->new(skipinvalid => 1, convblessed => 1);
+  my $js = $json->objToJson($opsys);
+  print $js;
+} elsif ($c->param("branch_id")) {
+  my $branch_id = $c->param("branch_id");
+  my $branch = Litmus::DB::Branch->retrieve($branch_id);
+  my $json = JSON->new(skipinvalid => 1, convblessed => 1);
+  my $js = $json->objToJson($branch);
+  print $js;
 }
-
 
 
 

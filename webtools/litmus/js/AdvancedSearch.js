@@ -1,4 +1,4 @@
 function adv_init() {
-    advSearchFormHeight = new fx.FadeSize('advSearchForm', {duration: 1000});
-    advSearchFormHeight.toggle('height');
+    advSearchFormHeight = new fx.Combo('advSearchForm', {opacity: true, height: true, duration: 1000});
+    advSearchFormHeight.toggle();
 }

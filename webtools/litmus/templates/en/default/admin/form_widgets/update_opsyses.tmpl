@@ -1,113 +1,165 @@
 <script type="text/javascript">
-function checkAddOpsysForm(f) {
-   return (
-           checkString(f.new_opsys_name,"operating system name",false) &&
-           checkPlatform(f.opsys_add_platform) &&
-           checkString(f.new_opsys_detect_regexp,"detect regexp",false)
-          );
+function enableOpsysModeButtons() {
+  document.getElementById("edit_opsys_button").disabled=false;
+  document.getElementById("delete_opsys_button").disabled=false;
 }
 
-function getOpsysByName(opsysName) {
-    http.open('get', 'rpc.cgi?action=getOpsysByName&opsysName='+opsysName);
-    http.onreadystatechange = updateOpsysForm;
-    http.send(null);
+function disableOpsysModeButtons() {
+  document.getElementById("edit_opsys_button").disabled=true;
+  document.getElementById("delete_opsys_button").disabled=true;
 }
 
-function updateOpsysForm() {
-    if(http.readyState == 4){
-        var response = http.responseText;
-        var update = new Array();
+function loadOpsys() {
+  var opsys_select = document.getElementById("opsys_id");
 
-        var em = document.getElementById("notification-content")
-        if(response.indexOf('|' != -1)) {
-            update = response.split('|');
-            document.getElementById("modify_opsys_id").value = update[0];
-            document.getElementById("modify_opsys_name").disabled = false;
-            document.getElementById("modify_opsys_name").value = update[1];
-            // lookup platform
-            document.getElementById("modify_opsys_detect_regexp").disabled = false;
-            document.getElementById("modify_opsys_detect_regexp").value = update[2];
-            document.getElementById("modify_opsys_icon_path").disabled = false;
-            document.getElementById("modify_opsys_icon_path").value = update[3];
-            document.getElementById("delete_opsys").disabled = false;
-            document.getElementById("update_opsys").disabled = false;
-        } else {
-            document.getElementById("notification").style.display = 'block';
-            em.innerHTML = response;
-        }
+  if (! opsys_select ||
+      opsys_select.options[opsys_select.selectedIndex].value=="") {
+    disableOpsysModeButtons();
+    document.getElementById('edit_opsys_form_div').style.display = 'none';
+    disableForm('edit_opsys_form');
+    blankOpsysForm('edit_opsys_form');
+    return false;
+  }
+
+  var opsys_id = opsys_select.options[opsys_select.selectedIndex].value;
+
+  disableForm('edit_opsys_form');
+  toggleMessage('loading','Loading Opsys ID# ' + opsys_id + '...');
+  var url = 'json.cgi?opsys_id=' + opsys_id;
+  fetchJSON(url,populateOpsys);
+}
+
+function populateOpsys(data) {
+  opsys=data;
+  document.getElementById('edit_opsys_form_opsys_id').value = opsys.opsys_id;
+  document.getElementById('edit_opsys_form_opsys_id_display').innerHTML = opsys.opsys_id;
+  document.getElementById('edit_opsys_form_name').value = opsys.name;
+  document.getElementById('edit_opsys_form_detect_regexp').value = opsys.detect_regexp;
+  var platform_box = document.getElementById('edit_opsys_form_platform_id');
+  var options = platform_box.getElementsByTagName('option');
+  var found_platform = 0;
+  for (var i=0; i<options.length; i++) {
+    if (options[i].value == opsys.platform_id.platform_id) {
+      options[i].selected = true;
+      found_platform=1;
+    } else {
+      options[i].selected = false;
     }
+    if (found_platform == 0) {
+      options[0].selected = true;
+    }
+  }
+
+  document.getElementById('edit_opsys_form_div').style.display = 'block';
+  enableOpsysModeButtons();
+}
+
+function blankOpsysForm(formid) {
+  blankForm(formid);
+  document.getElementById('edit_opsys_form_opsys_id_display').innerHTML = '';
+}
+
+function switchOpsysFormToAdd() {
+  disableOpsysModeButtons();
+  blankOpsysForm('edit_opsys_form');
+  document.getElementById('edit_opsys_form_submit').value = 'Add Opsys';
+  document.getElementById('edit_opsys_form_mode').value = 'add';
+  enableForm('edit_opsys_form');
+  document.getElementById('edit_opsys_form_div').style.display = 'block';
+}
+
+function switchOpsysFormToEdit() {
+  document.getElementById('edit_opsys_form_submit').value = 'Submit Edits';
+  document.getElementById('edit_opsys_form_mode').value = 'edit';
+  enableForm('edit_opsys_form');
+  document.getElementById('edit_opsys_form_div').style.display = 'block';
+}
+
+
+function checkOpsysForm(f) {
+  return (
+          checkString(f.edit_opsys_form_name,"Operating System Name",false) &&
+          checkString(f.edit_opsys_form_detect_regexp,"Operating System Detect Regexp",true) &&
+          verifySelected(f.edit_opsys_form_platform_id, "Platform")
+         );
+}
+
+function resetOpsys() {
+  if (document.getElementById('edit_opsys_form_opsys_id').value != '') {
+    populateOpsys(opsys);
+    switchOpsysFormToEdit();   
+  } else {
+    switchOpsysFormToAdd();   
+  }
 }
 </script>
 
-<div id="opsyses" class="category">
+<h1 id="opsyses_header" class="firstHeading"><a name="manage_opsyses" class="collapse-link">Manage Operating Sytems&nbsp;&raquo;</a></h1>
 
-<h2>Operating Systems</h2>
+<div id="manage_opsyses_div" class="collapsable">
+<div class="section-full">
+  <div class="section-header">Existing Operating Systems</div>
 
-<h3 class="display opsys_add"><a name="#opsys_add">Add&nbsp;&raquo;</a></h3>
-<div id="opsys_add" class="collapsable">
-<form name="opsys_add_form" id="opsys_add_form" action="edit_categories.cgi" method="post" onSubmit="return checkAddOpsysForm(this);">
-<table class="category">
-<tr>
-<td>Name:</td>
-<td><input d="new_opsys_name" name="new_opsys_name" type="text" size="30"></td>
-</tr>
-<tr>
-<td>Platform:</td>
-<td>
-[% INCLUDE form_widgets/select_platform.tmpl name="opsys_add_platform" placeholder=1 %]
-</td>
-</tr>
-<tr>
-<td>Detect Regexp:</td>
-<td><input id="new_opsys_detect_regexp" name="new_opsys_detect_regexp" type="text" size="30"></td>
-</tr>
-<tr>
-<td colspan="2" align="right">
-<input class="category" name="reset" type="reset" value="Reset">&nbsp;<input class="category" name="add_opsys" type="submit" value="Add New Operating System">
-</td>
-</tr>
-</table>
-</form>
+  <div class="section-content">
+
+    <form id="select_opsys_and_mode_form" name="select_opsys_and_mode_form" method="post" action="manage_categories.cgi">
+      <table border="0" cellspacing="0" cellpadding="5">
+        <tr>
+        <td>
+        [% INCLUDE form_widgets/select_opsys_id.tmpl name="opsys_id" placeholder=1 size=5 show_name=1 onChange="loadOpsys();" %]
+        </td>
+        </tr>
+        <tr>
+        <td>
+        <input id="add_opsys_button" name="add_opsys_button" class="manage" type="button" onClick="switchOpsysFormToAdd();" value="Add new operating system">&nbsp;
+        <input id="edit_opsys_button" name="edit_opsys_button" class="manage" type="button" onClick="switchOpsysFormToEdit();" value="Edit operating system" disabled>&nbsp;
+        <input id="delete_opsys_button" name="delete_opsys_button" class="manage" type="submit" onClick="return confirm('Really delete this operating system?');" value="Delete operating system" disabled>&nbsp;
+        </td>
+        </tr>
+      </table>
+    </form>
+
+  </div> <!--end section-content-->
+
+  <div style="display: none;" id="edit_opsys_form_div">
+  <hr />
+    <div id="opsys-title" class="section-header">Operating System Info</div>
+    <div class="section-content">
+      <form id="edit_opsys_form" name="edit_opsys_form" method="post" action="manage_categories.cgi" onSubmit="return checkOpsysForm(this);">
+        <input id="edit_opsys_form_mode" name="edit_opsys_form_mode" type="hidden" value="edit">
+        <input id="edit_opsys_form_opsys_id" name="edit_opsys_form_opsys_id" type="hidden" value="">
+
+        <table class="manage">
+          <tr>
+          <td class="headerleft">Operating System ID#:</td>
+          <td name="edit_opsys_form_opsys_id_display" id="edit_opsys_form_opsys_id_display"></td>
+          </tr>
+          <tr>
+          <td class="headerleft">Name:</td>
+          <td colspan="2"><input name="edit_opsys_form_name"
+                                 id="edit_opsys_form_name"
+                                 value=""
+                                 size="55"/ disabled></td>
+          </tr>
+	  <tr>
+          <td class="headerleft">Platform:</td>
+          <td colspan="2">[% INCLUDE form_widgets/select_platform_id.tmpl name="edit_opsys_form_platform_id" placeholder=1 size=1 show_name=1 %]
+          </tr>
+          <tr>
+          <td class="headerleft">Detect Regexp:</td>
+          <td colspan="2"><input name="edit_opsys_form_detect_regexp"
+                                 id="edit_opsys_form_detect_regexp"
+                                 value=""
+                                 size="55"/ disabled></td>
+          </tr>
+	  <tr>
+          <td colspan="3" align="right"><input id="edit_opsys_form_reset" class="button" type="button" value="Reset" disabled onClick="resetOpsys();" />&nbsp;<input class="button" type="submit" id="edit_opsys_form_submit" name="edit_opsys_form_submit" value="Submit Edits" disabled /></div>
+          </td>
+          </tr>
+        </table>
+      </form>
+    </div>
+  </div>
+
+</div> <!--end section-full-->
 </div>
-
-<h3 class="display opsys_modify"><a name="#opsys_modify">Modify / Delete&nbsp;&raquo;</a></h3>
-<div id="opsys_modify" class="collapsable">
-<form id="opsys_modify_form" name="opsys_modify_form" action="edit_categories.cgi" method="post">
-<input id="modify_opsys_id" name="modify_opsys_id" type="hidden" value="">
-<table class="category">
-<tr>
-<td colspan="2" align="left">
-Select Existing Operating System:<br/>
-[% INCLUDE form_widgets/select_opsys.tmpl size=5 name="opsys_modify_existing" onChange="getOpsysByName(this.options[this.selectedIndex].value);" %]
-</td>
-</tr>
-<tr>
-<td>Name:</td>
-<td><input disabled id="modify_opsys_name" name="modify_opsys_name" type="text" size="30"></td>
-</tr>
-<tr>
-<td>Platform:</td>
-<td>
-[% INCLUDE form_widgets/select_platform.tmpl name="opsys_modify_platform" placeholder=1 disabled=1 %]
-</td>
-</tr>
-<tr>
-<td>Detect Regexp:</td>
-<td><input disabled id="modify_opsys_detect_regexp" name="modify_opsys_detect_regexp" type="text" size="30"></td>
-</tr>
-<tr>
-<td colspan="2" align="right">
-<input disabled class="category" name="delete_opsys" type="submit" value="Delete Opsys">&nbsp;<input disabled class="category" name="update_opsys" type="submit" value="Update Operating System">
-</td>
-</tr>
-</table>
-</form>
-
-</div>
-
-</div>
-
-
-
-
-

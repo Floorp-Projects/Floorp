@@ -1,0 +1,9 @@
+<select id="[% name %]" name="[% name %]"[% IF size %] size="[% size %]"[% END %][% IF disabled %] disabled[% END %][% IF onChange %] onChange="[% onChange %]"[% END %][% IF multiple %] multiple[% END %]>
+    [% IF placeholder %]<option value="">-Branch-</option>[% END %]
+[% IF branches %]
+[% FOREACH branch=branches %]
+    <option[% IF defaults.branch==branch.name %] selected[% END %] 
+        value="[% branch.branch_id | html %]">[% branch.name | html %] ([% branch.branch_id %])</option>
+[% END %]
+[% END %]
+</select>

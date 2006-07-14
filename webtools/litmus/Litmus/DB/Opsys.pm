@@ -38,6 +38,7 @@ use base 'Litmus::DBI';
 Litmus::DB::Opsys->table('opsyses');
 
 Litmus::DB::Opsys->columns(All => qw/opsys_id platform_id name detect_regexp/);
+Litmus::DB::Opsys->columns(Essential => qw/opsys_id platform_id name detect_regexp/);
 
 Litmus::DB::Opsys->column_alias("platform_id", "platform");
 

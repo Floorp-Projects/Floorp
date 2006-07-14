@@ -92,7 +92,7 @@
   <div class="testcase-head">
     <table cellpadding="0" cellspacing="0">
     <tr>
-    <td class="l"><a name="test_[% i %]" onclick="allStretch.toggle(document.getElementById('t[% i %]-content'), 'height');">[% loop.count %]: [% curtest.summary | html %]&nbsp;&raquo;</a></td>
+    <td class="l"><a name="test_[% i %]" onclick="allStretch.toggle('t[% i %]-content');">[% loop.count %]: [% curtest.summary | html %]&nbsp;&raquo;</a></td>
     <td class="r">[% IF results %]<a title="You have already submitted a result for this testcase." target="test_results" href="single_result.cgi?id=[% results.0.testresult_id %]"><img align="absmiddle" src="images/confirm.png" border="0" /></a>&nbsp;[% END %]
     <a title="View Testcase ID#: [% curtest.testcase_id | html %]" href="show_test.cgi?id=[% curtest.testcase_id | uri | html %]">View</a>[% IF show_admin %]&nbsp;/&nbsp;<a title="Edit Testcase ID#: [% curtest.testcase_id | html %]" href="manage_testcases.cgi?testcase_id=[% curtest.testcase_id | uri | html %]">Edit</a>[% END %]</td>
     </tr>
@@ -125,7 +125,7 @@ var tmp_menub=new Array([% i=1 %][% FOREACH testcase_id=testcase_ids %]"mb[% i %
   <tr>
   <td class="submitall"><div class="v3"><input class="button" type="submit" id="Submit" name="Submit" value="Submit All Results" onclick="findEdited()" /></div></td>
   <td class="r">
-<div class="nav"><a id="bottom_all" href="#" onclick="allStretch.showAll('height'); return false;">Show All</a></div>
+<div class="nav"><a id="bottom_show_all" href="#" onclick="allStretch.showAll('height'); return false;">Show All</a>&nbsp;/&nbsp;<a id="bottom_hide_all" href="#" onclick="allStretch.hideAll('height'); return false;">Hide All</a></div>
   </td>
   </tr>
   </table>

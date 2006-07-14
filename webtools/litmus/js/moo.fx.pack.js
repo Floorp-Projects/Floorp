@@ -2,9 +2,30 @@
 moo.fx pack, effects extensions for moo.fx.
 by Valerio Proietti (http://mad4milk.net) MIT-style LICENSE
 for more info visit (http://moofx.mad4milk.net).
-Wednesday, November 16, 2005
-v1.0.4
+Friday, April 14, 2006
+v 1.2.4
 */
+
+//smooth scroll
+fx.Scroll = Class.create();
+fx.Scroll.prototype = Object.extend(new fx.Base(), {
+	initialize: function(options) {
+		this.setOptions(options);
+	},
+
+	scrollTo: function(el){
+		var dest = Position.cumulativeOffset($(el))[1];
+		var client = window.innerHeight || document.documentElement.clientHeight;
+		var full = document.documentElement.scrollHeight;
+		var top = window.pageYOffset || document.body.scrollTop || document.documentElement.scrollTop;
+		if (dest+client > full) this.custom(top, dest - client + (full-dest));
+		else this.custom(top, dest);
+	},
+
+	increase: function(){
+		window.scrollTo(0, this.now);
+	}
+});
 
 //text size modify, now works with pixels too.
 fx.Text = Class.create();
@@ -20,130 +41,184 @@ fx.Text.prototype = Object.extend(new fx.Base(), {
 	}
 });
 
-//composition effect, calls Width and Height alltogheter
-fx.Resize = Class.create();
-fx.Resize.prototype = {
-	initialize: function(el, options) {
-		this.h = new fx.Height(el, options); 
-		if (options) options.onComplete = null;
-		this.w = new fx.Width(el, options);
-		this.el = $(el);
+//composition effect: widht/height/opacity
+fx.Combo = Class.create();
+fx.Combo.prototype = {
+	setOptions: function(options) {
+		this.options = {
+			opacity: true,
+			height: true,
+			width: false
+		}
+		Object.extend(this.options, options || {});
 	},
 
-	toggle: function(){
-		this.h.toggle();
-		this.w.toggle();
-	},
-
-	modify: function(hto, wto) {
-		this.h.custom(this.el.offsetHeight, this.el.offsetHeight + hto);
-		this.w.custom(this.el.offsetWidth, this.el.offsetWidth + wto);
-	},
-
-	custom: function(hto, wto) {
-		this.h.custom(this.el.offsetHeight, hto);
-		this.w.custom(this.el.offsetWidth, wto);
-	},
-
-	hide: function(){
-		this.h.hide();
-		this.w.hide();
-	}
-}
-
-//composition effect, calls Opacity and (Width and/or Height) alltogheter
-fx.FadeSize = Class.create();
-fx.FadeSize.prototype = {
 	initialize: function(el, options) {
 		this.el = $(el);
-		this.el.o = new fx.Opacity(el, options);
-		if (options) options.onComplete = null;
-		this.el.h = new fx.Height(el, options);
-		this.el.w = new fx.Width(el, options);
+		this.setOptions(options);
+		if (this.options.opacity) {
+			this.o = new fx.Opacity(el, options);
+			options.onComplete = null;
+		}
+		if (this.options.height) {
+			this.h = new fx.Height(el, options);
+			options.onComplete = null;
+		}
+		if (this.options.width) this.w = new fx.Width(el, options);
 	},
+	
+	toggle: function() { this.checkExec('toggle'); },
 
-	toggle: function() {
-		this.el.o.toggle();
-		for (var i = 0; i < arguments.length; i++) {
-			if (arguments[i] == 'height') this.el.h.toggle();
-			if (arguments[i] == 'width') this.el.w.toggle();
+	hide: function(){ this.checkExec('hide'); },
+	
+	clearTimer: function(){ this.checkExec('clearTimer'); },
+	
+	checkExec: function(func){
+		if (this.o) this.o[func]();
+		if (this.h) this.h[func]();
+		if (this.w) this.w[func]();
+	},
+	
+	//only if width+height
+	resizeTo: function(hto, wto) {
+		if (this.h && this.w) {
+			this.h.custom(this.el.offsetHeight, this.el.offsetHeight + hto);
+			this.w.custom(this.el.offsetWidth, this.el.offsetWidth + wto);
 		}
 	},
 
-	hide: function(){
-		this.el.o.hide();
-		for (var i = 0; i < arguments.length; i++) {
-			if (arguments[i] == 'height') this.el.h.hide();
-			if (arguments[i] == 'width') this.el.w.hide();
+	customSize: function(hto, wto) {
+		if (this.h && this.w) {
+			this.h.custom(this.el.offsetHeight, hto);
+			this.w.custom(this.el.offsetWidth, wto);
 		}
 	}
 }
 
-//intended to work with arrays.
-var Multi = new Object();
-Multi = function(){};
-Multi.prototype = {
-	initialize: function(elements, options){
-		this.options = options;
-		this.el = this.getElementsFromArray(elements);
-		for (i=0;i<this.el.length;i++){
-			this.effect(this.el[i]);
-		}
-	},
-
-	getElementsFromArray: function(array) {
-		var elements = new Array();
-		for (i=0;i<array.length;i++) { 
-			elements.push($(array[i])); 
-		}
-		return elements;
-	}
-}
-
-//Fadesize with arrays
 fx.MultiFadeSize = Class.create();
-fx.MultiFadeSize.prototype = Object.extend(new Multi(), {
-	effect: function(el){
-		el.fs = new fx.FadeSize(el, this.options);
-	},
-
-	showThisHideOpen: function(el, delay, mode){
-		for (i=0;i<this.el.length;i++){
-			if (this.el[i].offsetHeight > 0 && this.el[i] != el && this.el[i].h.timer == null && el.h.timer == null){
-				this.el[i].fs.toggle(mode);
-			}
-                        setTimeout(function(){el.fs.toggle(mode);}.bind(el), delay);
-			
+fx.MultiFadeSize.prototype = {
+	setOptions: function(options) {
+		this.options = {
+			delay: 100,
+			opacity: false
 		}
-                showAll=0;
+		Object.extend(this.options, options || {});
 	},
 
-        showAll: function(mode){
-                for (i=0;i<this.el.length;i++){
-                        if (this.el[i].offsetHeight == 0){
-                                this.el[i].fs.toggle(mode);
-                        }
+	initialize: function(elements, options) {
+		this.elements = elements;
+		this.setOptions(options);
+		var options = options || '';
+		this.fxa = [];
+		if (options && options.onComplete) options.onFinish = options.onComplete;
+		elements.each(function(el, i){
+			options.onComplete = function(){
+				if (el.offsetHeight > 0) el.style.height = '1%';
+				if (options.onFinish) options.onFinish(el);
+			}
+			this.fxa[i] = new fx.Combo(el, options);
+			this.fxa[i].hide();
+		}.bind(this));
+
+	},
+
+	showThisHideOpen: function(toShow){
+		this.elements.each(function(el, j){
+			if (el.offsetHeight > 0 && el != toShow) this.clearAndToggle(el, j);
+			if (el == toShow && toShow.offsetHeight == 0) setTimeout(function(){this.clearAndToggle(toShow, j);}.bind(this), this.options.delay);
+		}.bind(this));
+	},
+
+	clearAndToggle: function(el, i){
+		this.fxa[i].clearTimer();
+		this.fxa[i].toggle();
+	},
+
+	showAll: function() {
+            for (i=0;i<this.elements.length;i++){
+                if (this.elements[i].offsetHeight == 0) {
+                    this.clearAndToggle(this.elements[i], i)
                 }
-                showAll=1;
+            }
+            showAll=1;
         },
 
-        hideAll: function(mode){
-                for (i=0;i<this.el.length;i++){
-                        if (this.el[i].offsetHeight > 0){
-                                this.el[i].fs.toggle(mode);
-                        }
+	hideAll: function() {
+            for (i=0;i<this.elements.length;i++){
+                if (this.elements[i].offsetHeight > 0) {
+                    this.clearAndToggle(this.elements[i], i)
                 }
-                showAll=1;
+            }
+            showAll=1;
         },
 
-	toggle: function(el, mode){
-		el.fs.toggle(mode);
-	},	
+	toggle: function(el){
+            el = $(el);
+            for (i=0;i<this.elements.length;i++){
+                if (this.elements[i] == el) {
+                    this.clearAndToggle(this.elements[i], i)          
+                }
+	    }
+        },      
 
-	hide: function(el, mode){
-		el.fs.hide(mode);
+        hide: function(el){
+            el = $(el);
+            for (i=0;i<this.elements.length;i++){
+                if (this.elements[i] == el) {
+                    this.fxa[i].hide();
+                }
+	    }
+        }
+
+}
+
+fx.Accordion = Class.create();
+fx.Accordion.prototype = {
+	setOptions: function(options) {
+		this.options = {
+			delay: 100,
+			opacity: false
+		}
+		Object.extend(this.options, options || {});
+	},
+
+	initialize: function(togglers, elements, options) {
+		this.elements = elements;
+		this.setOptions(options);
+		var options = options || '';
+		this.fxa = [];
+		if (options && options.onComplete) options.onFinish = options.onComplete;
+		elements.each(function(el, i){
+			options.onComplete = function(){
+				if (el.offsetHeight > 0) el.style.height = '1%';
+				if (options.onFinish) options.onFinish(el);
+			}
+			this.fxa[i] = new fx.Combo(el, options);
+			this.fxa[i].hide();
+		}.bind(this));
+
+		togglers.each(function(tog, i){
+			if (typeof tog.onclick == 'function') var exClick = tog.onclick;
+			tog.onclick = function(){
+				if (exClick) exClick();
+				this.showThisHideOpen(elements[i]);
+			}.bind(this);
+		}.bind(this));
+	},
+
+	showThisHideOpen: function(toShow){
+		this.elements.each(function(el, j){
+			if (el.offsetHeight > 0 && el != toShow) this.clearAndToggle(el, j);
+			if (el == toShow && toShow.offsetHeight == 0) setTimeout(function(){this.clearAndToggle(toShow, j);}.bind(this), this.options.delay);
+		}.bind(this));
+	},
+
+	clearAndToggle: function(el, i){
+		this.fxa[i].clearTimer();
+		this.fxa[i].toggle();
 	}
-});
+
+}
 
 var Remember = new Object();
 Remember = function(){};
@@ -171,8 +246,7 @@ Remember.prototype = {
 	readCookie: function() {
 		var nameEQ = this.el+this.el.id+this.prefix + "=";
 		var ca = document.cookie.split(';');
-		for(var i=0;i < ca.length;i++) {
-			var c = ca[i];
+		for(var i=0;c=ca[i];i++) {
 			while (c.charAt(0)==' ') c = c.substring(1,c.length);
 			if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
 		}
@@ -220,45 +294,54 @@ fx.RememberText.prototype = Object.extend(new Remember(), {
 	}
 });
 
+//useful for-replacement
+Array.prototype.iterate = function(func){
+	for(var i=0;i<this.length;i++) func(this[i], i);
+}
+if (!Array.prototype.each) Array.prototype.each = Array.prototype.iterate;
 
-//use to attach effects without using js code, just classnames and rel attributes.
-ParseClassNames = Class.create();
-ParseClassNames.prototype = {
-	initialize: function(options){
-		var babies = document.getElementsByTagName('*') || document.all;
-		for (var i = 0; i < babies.length; i++) {
-			var el = babies[i];
-			//attach the effect, from the classNames;
-			var effects = this.getEffects(el);
-			for (var j = 0; j < effects.length; j++) {
-				if (j == 1 && options) options.onComplete = null;
-				el[effects[j]+"fx"] = new fx[effects[j]](el, options);
-			}
-			//execute methods, from rel
-			if (el.rel) {
-				el.crel = el.rel.split(' ');
-				if (el.crel[0].indexOf("fx_") > -1) {
-					var event = el.crel[0].replace('fx_', '');
-					var tocompute = this.getEffects($(el.crel[1]));
-					el["on"+event] = function(){
-						for (var f = 0; f < tocompute.length; f++) {
-							$(this.crel[1])[tocompute[f]+"fx"][this.crel[2] || "toggle"](this.crel[3] || null, this.crel[4] || null);
-						}
-					}
-				}
-			}
-		}
-	},
+//Easing Equations (c) 2003 Robert Penner, all rights reserved.
+//This work is subject to the terms in http://www.robertpenner.com/easing_terms_of_use.html.
 
-	getEffects: function(el){
-		var effects = new Array();
-		var css = el.className.split(' ');
-		for (var i = 0; i < css.length; i++) {
-			if (css[i].indexOf('fx_') > -1) {
-				var effect = css[i].replace('fx_', '');
-				effects.push(effect);
-			}
-		}
-		return effects;
-	}
+//expo
+fx.expoIn = function(pos){
+	return Math.pow(2, 10 * (pos - 1));
+}
+fx.expoOut = function(pos){
+	return (-Math.pow(2, -10 * pos) + 1);
+}
+
+//quad
+fx.quadIn = function(pos){
+	return Math.pow(pos, 2);
+}
+fx.quadOut = function(pos){
+	return -(pos)*(pos-2);
+}
+
+//circ
+fx.circOut = function(pos){
+	return Math.sqrt(1 - Math.pow(pos-1,2));
+}
+fx.circIn = function(pos){
+	return -(Math.sqrt(1 - Math.pow(pos, 2)) - 1);
+}
+
+//back
+fx.backIn = function(pos){
+	return (pos)*pos*((2.7)*pos - 1.7);
+}
+fx.backOut = function(pos){
+	return ((pos-1)*(pos-1)*((2.7)*(pos-1) + 1.7) + 1);
+}
+
+//sine
+fx.sineOut = function(pos){
+	return Math.sin(pos * (Math.PI/2));
+}
+fx.sineIn = function(pos){
+	return -Math.cos(pos * (Math.PI/2)) + 1;
+}
+fx.sineInOut = function(pos){
+	return -(Math.cos(Math.PI*pos) - 1)/2;
 }

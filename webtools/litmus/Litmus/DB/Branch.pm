@@ -38,6 +38,7 @@ use base 'Litmus::DBI';
 Litmus::DB::Branch->table('branches');
 
 Litmus::DB::Branch->columns(All => qw/branch_id product_id name detect_regexp enabled/);
+Litmus::DB::Branch->columns(Essential => qw/branch_id product_id name detect_regexp enabled/);
 
 Litmus::DB::Branch->column_alias("product_id", "product");
 

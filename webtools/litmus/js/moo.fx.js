@@ -2,40 +2,34 @@
 moo.fx, simple effects library built with prototype.js (http://prototype.conio.net).
 by Valerio Proietti (http://mad4milk.net) MIT-style LICENSE.
 for more info (http://moofx.mad4milk.net).
-10/24/2005
-v(1.0.2)
+Sunday, March 05, 2006
+v 1.2.3
 */
 
-//base
 var fx = new Object();
+//base
 fx.Base = function(){};
 fx.Base.prototype = {
 	setOptions: function(options) {
 	this.options = {
 		duration: 500,
-		onComplete: ''
+		onComplete: '',
+		transition: fx.sinoidal
 	}
 	Object.extend(this.options, options || {});
 	},
 
-	go: function() {
-		this.duration = this.options.duration;
-		this.startTime = (new Date).getTime();
-		this.timer = setInterval (this.step.bind(this), 13);
-	},
-
 	step: function() {
 		var time  = (new Date).getTime();
-		var Tpos   = (time - this.startTime) / (this.duration);
-		if (time >= this.duration+this.startTime) {
+		if (time >= this.options.duration+this.startTime) {
 			this.now = this.to;
 			clearInterval (this.timer);
 			this.timer = null;
 			if (this.options.onComplete) setTimeout(this.options.onComplete.bind(this), 10);
 		}
 		else {
-			this.now = ((-Math.cos(Tpos*Math.PI)/2) + 0.5) * (this.to-this.from) + this.from;
-			//this time-position, sinoidal transition thing is from script.aculo.us
+			var Tpos = (time - this.startTime) / (this.options.duration);
+			this.now = this.options.transition(Tpos) * (this.to-this.from) + this.from;
 		}
 		this.increase();
 	},
@@ -44,7 +38,8 @@ fx.Base.prototype = {
 		if (this.timer != null) return;
 		this.from = from;
 		this.to = to;
-		this.go();
+		this.startTime = (new Date).getTime();
+		this.timer = setInterval (this.step.bind(this), 13);
 	},
 
 	hide: function() {
@@ -63,9 +58,9 @@ fx.Layout = Class.create();
 fx.Layout.prototype = Object.extend(new fx.Base(), {
 	initialize: function(el, options) {
 		this.el = $(el);
-		this.el.style.overflow = "auto";
-		this.el.iniWidth = this.el.offsetWidth;
-		this.el.iniHeight = this.el.offsetHeight;
+		this.el.style.overflow = "hidden";
+		this.iniWidth = this.el.offsetWidth;
+		this.iniHeight = this.el.offsetHeight;
 		this.setOptions(options);
 	}
 });
@@ -90,7 +85,7 @@ Object.extend(Object.extend(fx.Width.prototype, fx.Layout.prototype), {
 
 	toggle: function(){
 		if (this.el.offsetWidth > 0) this.custom(this.el.offsetWidth, 0);
-		else this.custom(0, this.el.iniWidth);
+		else this.custom(0, this.iniWidth);
 	}
 });
 
@@ -105,18 +100,15 @@ fx.Opacity.prototype = Object.extend(new fx.Base(), {
 	},
 
 	increase: function() {
-		// XXX - ZLL: disable opacity effects for now on Mac due to 
-		// gecko bug 328215
-		if (navigator.platform && navigator.platform == "MacPPC") {
-			if (this.now == 1) this.now = 1;
-		} else {
-			if (this.now == 1) this.now = 0.9999;
-		}
-		
-		if (this.now > 0 && this.el.style.visibility == "hidden") this.el.style.visibility = "visible";
-		if (this.now == 0) this.el.style.visibility = "hidden";
-		if (window.ActiveXObject) this.el.style.filter = "alpha(opacity=" + this.now*100 + ")";
-		this.el.style.opacity = this.now;
+		if (this.now == 1 && (/Firefox/.test(navigator.userAgent))) this.now = 0.9999;
+		this.setOpacity(this.now);
+	},
+	
+	setOpacity: function(opacity) {
+		if (opacity == 0 && this.el.style.visibility != "hidden") this.el.style.visibility = "hidden";
+		else if (this.el.style.visibility != "visible") this.el.style.visibility = "visible";
+		if (window.ActiveXObject) this.el.style.filter = "alpha(opacity=" + opacity*100 + ")";
+		this.el.style.opacity = opacity;
 	},
 
 	toggle: function() {
@@ -124,3 +116,18 @@ fx.Opacity.prototype = Object.extend(new fx.Base(), {
 		else this.custom(0, 1);
 	}
 });
+
+//transitions
+fx.sinoidal = function(pos){
+	return ((-Math.cos(pos*Math.PI)/2) + 0.5);
+	//this transition is from script.aculo.us
+}
+fx.linear = function(pos){
+	return pos;
+}
+fx.cubic = function(pos){
+	return Math.pow(pos, 3);
+}
+fx.circ = function(pos){
+	return Math.sqrt(pos);
+}

@@ -25,22 +25,14 @@
   # ***** END LICENSE BLOCK *****
 #%]
   
-[% INCLUDE global/html_header.tmpl js_files=['js/prototype.lite.js','js/moo.fx.js','js/moo.fx.pack.js','js/FormValidation.js','js/EditCategories.js'] %]
+[% INCLUDE global/html_header.tmpl js_files=['js/prototype.lite.js','js/moo.fx.js','js/moo.fx.pack.js','js/FormValidation.js','js/EditCategories.js','js/MochiKit/MochiKit.js','js/json.js','js/Help.js','js/SelectBoxes.js','js/SelectSort.js'] %]
 [% INCLUDE global/litmus_header.tmpl %]
 
 <script type="text/javascript">
-function createRequestObject() {
-    var ro;
-    var browser = navigator.appName;
-    if(browser == "Microsoft Internet Explorer"){
-        ro = new ActiveXObject("Microsoft.XMLHTTP");
-    }else{
-        ro = new XMLHttpRequest();
-    }
-    return ro;
-}
-
-var http = createRequestObject();
+var product;
+var platform;
+var opsys;
+var branch;
 </script>
 
 <div id="page">
@@ -49,32 +41,18 @@ var http = createRequestObject();
 
   <div id="content">
 
-    <h1 class="firstHeading">[% title %]</h1>
-
-    <div id="notification" class="category">
-    <h2>Status</h2>
-    <div id="notification-content">
-    </div>
-    </div>
-
-    <div id="categories">
-
     [% INCLUDE admin/form_widgets/update_products.tmpl %]
     [% INCLUDE admin/form_widgets/update_platforms.tmpl %]
     [% INCLUDE admin/form_widgets/update_opsyses.tmpl %]
     [% INCLUDE admin/form_widgets/update_branches.tmpl %]
-    [% INCLUDE admin/form_widgets/update_log_types.tmpl %]
-
-    </div>
 
   </div> <!--END content-->
 
   <script type="text/javascript">
-    Element.cleanWhitespace('products');
-    Element.cleanWhitespace('platforms');
-    Element.cleanWhitespace('opsyses');
-    Element.cleanWhitespace('branches');
-    Element.cleanWhitespace('log_types');
+    Element.cleanWhitespace('manage_products_div');    
+    Element.cleanWhitespace('manage_platforms_div');    
+    Element.cleanWhitespace('manage_opsyses_div');    
+    Element.cleanWhitespace('manage_branches_div');    
     ec_init();
   </script>
 

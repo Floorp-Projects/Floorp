@@ -129,21 +129,35 @@ sub getUniquePlatforms()
 #########################################################################
 sub getPlatforms()
 {
-    my $sql = "SELECT pl.name AS platform_name, pr.name AS product_name, pl.platform_id AS platform_id FROM platforms pl, products pr WHERE pl.product_id=pr.product_id ORDER BY pl.name, pr.name";
+    my $sql = "SELECT platform_id, name from platforms ORDER BY name ASC";
     return _getValues($sql);
 }
 
 #########################################################################
 sub getBranches()
 {
-    my $sql = "SELECT DISTINCT(name) FROM branches ORDER BY name";
+    my $sql = "SELECT name, branch_id FROM branches ORDER BY name ASC";
+    return _getValues($sql);
+}
+
+#########################################################################
+sub getUniqueBranches()
+{
+    my $sql = "SELECT DISTINCT(name) FROM branches ORDER BY name ASC";
     return _getValues($sql);
 }
 
 #########################################################################
 sub getOpsyses()
 {
-    my $sql = "SELECT DISTINCT(name) FROM opsyses ORDER BY name";
+    my $sql = "SELECT name, opsys_id FROM opsyses ORDER BY name ASC";
+    return _getValues($sql);
+}
+
+#########################################################################
+sub getUniqueOpsyses()
+{
+    my $sql = "SELECT DISTINCT(name) FROM opsyses ORDER BY name ASC";
     return _getValues($sql);
 }
 

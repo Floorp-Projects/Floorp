@@ -1,0 +1,9 @@
+<select id="[% name %]" name="[% name %]"[% IF size %] size="[% size %]"[% END %][% IF disabled %] disabled[% END %][% IF onChange %] onChange="[% onChange %]"[% END %][% IF multiple %] multiple[% END %]>
+    [% IF placeholder %]<option value="">-Operating System-</option>[% END %]
+[% IF opsyses %]
+[% FOREACH opsys=opsyses %]
+    <option[% IF defaults.opsys==opsys.name %] selected[% END %] 
+        value="[% opsys.opsys_id | html %]">[% opsys.name | html %] ([% opsys.opsys_id %])</option>
+[% END %]
+[% END %]
+</select>

@@ -5,7 +5,7 @@
 [% order_num=1 %]
 [% FOREACH curtest=tests %]
 [% results=curtest.is_completed(sysconfig.platform,sysconfig.build_id,sysconfig.locale,defaultemail) %]
-<li class="tcs" id="li[% order_num %]"><a id="a[% order_num %]" href="#" onclick="allStretch.showThisHideOpen($('t[% order_num %]-content'), 100, 'height'); return false;">[% order_num %]. [% IF results %]<strike>[% END %][% curtest.summary | html %][% IF results %]</strike>[% END %]</a>
+<li class="tcs" id="li[% order_num %]"><a id="a[% order_num %]" onclick="window.location.href='#test_[% order_num %]'; allStretch.showThisHideOpen($('t[% order_num %]-content'), 100, 'height'); return false;">[% order_num %]. [% IF results %]<strike>[% END %][% curtest.summary | html %][% IF results %]</strike>[% END %]</a>
 </li>
 [% order_num=order_num+1 %]
 [% END %]
