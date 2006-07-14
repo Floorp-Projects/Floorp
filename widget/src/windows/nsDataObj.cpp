@@ -68,7 +68,6 @@
 #include "nsEscape.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
-#include "nsXPCOMStrings.h"
 
 #if 0
 #define PRNTDEBUG(_x) printf(_x);
@@ -79,186 +78,6 @@
 #define PRNTDEBUG2(_x1, _x2) // printf(_x1, _x2);
 #define PRNTDEBUG3(_x1, _x2, _x3) // printf(_x1, _x2, _x3);
 #endif
-
-//-----------------------------------------------------------------------------
-// CStream implementation
-nsDataObj::CStream::CStream() : mRefCount(1)
-{
-}
-
-//-----------------------------------------------------------------------------
-nsDataObj::CStream::~CStream()
-{
-}
-
-//-----------------------------------------------------------------------------
-// helper - initializes the stream
-nsresult nsDataObj::CStream::Init(nsIURI *pSourceURI)
-{
-  nsresult rv;
-  rv = NS_NewChannel(getter_AddRefs(mChannel), pSourceURI);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mChannel->Open(getter_AddRefs(mInputStream));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-//-----------------------------------------------------------------------------
-// IUnknown
-STDMETHODIMP nsDataObj::CStream::QueryInterface(REFIID refiid, void** ppvResult)
-{
-  *ppvResult = NULL;
-  if (IID_IUnknown == refiid ||
-      refiid == IID_IStream)
-
-  {
-    *ppvResult = this;
-  }
-
-  if (NULL != *ppvResult)
-  {
-    ((LPUNKNOWN)*ppvResult)->AddRef();
-    return S_OK;
-  }
-
-  return ResultFromScode(E_NOINTERFACE);
-}
-
-//-----------------------------------------------------------------------------
-STDMETHODIMP_(ULONG) nsDataObj::CStream::AddRef(void)
-{
-  return ++mRefCount;
-}
-
-//-----------------------------------------------------------------------------
-STDMETHODIMP_(ULONG) nsDataObj::CStream::Release(void)
-{
-  ULONG nCount = --mRefCount;
-  if (nCount == 0)
-  {
-    delete this;
-    return (ULONG)0;
-  }
-
-  return mRefCount;
-}
-
-//-----------------------------------------------------------------------------
-// IStream
-STDMETHODIMP nsDataObj::CStream::Clone(IStream** ppStream)
-{
-  return E_NOTIMPL;
-}
-
-//-----------------------------------------------------------------------------
-STDMETHODIMP nsDataObj::CStream::Commit(DWORD dwFrags)
-{
-  return E_NOTIMPL;
-}
-
-//-----------------------------------------------------------------------------
-STDMETHODIMP nsDataObj::CStream::CopyTo(IStream* pDestStream,
-                                        ULARGE_INTEGER nBytesToCopy,
-                                        ULARGE_INTEGER* nBytesRead,
-                                        ULARGE_INTEGER* nBytesWritten)
-{
-  return E_NOTIMPL;
-}
-
-//-----------------------------------------------------------------------------
-STDMETHODIMP nsDataObj::CStream::LockRegion(ULARGE_INTEGER nStart,
-                                            ULARGE_INTEGER nBytes,
-                                            DWORD dwFlags)
-{
-  return E_NOTIMPL;
-}
-
-//-----------------------------------------------------------------------------
-STDMETHODIMP nsDataObj::CStream::Read(void* pvBuffer,
-                                      ULONG nBytesToRead,
-                                      ULONG* nBytesRead)
-{
-  NS_ENSURE_TRUE(mInputStream, E_FAIL);
-
-  nsresult rv;
-  PRUint32 read = 0;
-  rv = mInputStream->Read((char*)pvBuffer, nBytesToRead, &read);
-  *nBytesRead = read;
-  NS_ENSURE_SUCCESS(rv, S_FALSE);
-
-  return S_OK;
-}
-
-//-----------------------------------------------------------------------------
-STDMETHODIMP nsDataObj::CStream::Revert(void)
-{
-  return E_NOTIMPL;
-}
-
-//-----------------------------------------------------------------------------
-STDMETHODIMP nsDataObj::CStream::Seek(LARGE_INTEGER nMove,
-                                      DWORD dwOrigin,
-                                      ULARGE_INTEGER* nNewPos)
-{
-  return E_NOTIMPL;
-}
-
-//-----------------------------------------------------------------------------
-STDMETHODIMP nsDataObj::CStream::SetSize(ULARGE_INTEGER nNewSize)
-{
-  return E_NOTIMPL;
-}
-
-//-----------------------------------------------------------------------------
-STDMETHODIMP nsDataObj::CStream::Stat(STATSTG* statstg, DWORD dwFlags)
-{
-  return E_NOTIMPL;
-}
-
-//-----------------------------------------------------------------------------
-STDMETHODIMP nsDataObj::CStream::UnlockRegion(ULARGE_INTEGER nStart,
-                                              ULARGE_INTEGER nBytes,
-                                              DWORD dwFlags)
-{
-  return E_NOTIMPL;
-}
-
-//-----------------------------------------------------------------------------
-STDMETHODIMP nsDataObj::CStream::Write(const void* pvBuffer,
-                                       ULONG nBytesToRead,
-                                       ULONG* nBytesRead)
-{
-  return E_NOTIMPL;
-}
-
-//-----------------------------------------------------------------------------
-HRESULT nsDataObj::CreateStream(IStream **outStream)
-{
-  NS_ENSURE_TRUE(outStream, E_INVALIDARG);
-
-  nsresult rv = NS_ERROR_FAILURE;
-  nsAutoString wideFileName;
-  nsCOMPtr<nsIURI> sourceURI;
-
-  rv = GetDownloadDetails(getter_AddRefs(sourceURI),
-                          wideFileName);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsDataObj::CStream *pStream = new nsDataObj::CStream();
-  NS_ENSURE_TRUE(pStream, E_OUTOFMEMORY);
-
-  rv = pStream->Init(sourceURI);
-  if (NS_FAILED(rv))
-  {
-    pStream->Release();
-    return E_FAIL;
-  }
-  *outStream = pStream;
-
-  return S_OK;
-}
 
 ULONG nsDataObj::g_cRef = 0;
 
@@ -294,9 +113,6 @@ nsDataObj::nsDataObj(nsIURI * uri)
     // so it can create a SourceURL for CF_HTML flavour
     uri->GetSpec(mSourceURL);
   }
-
-  mIsAsyncMode = FALSE;
-  mIsInOperation = FALSE;
 }
 //-----------------------------------------------------
 // destruction
@@ -328,12 +144,8 @@ STDMETHODIMP nsDataObj::QueryInterface(REFIID riid, void** ppv)
 	if ( (IID_IUnknown == riid) || (IID_IDataObject	== riid) ) {
 		*ppv = this;
 		AddRef();
-		return S_OK;
-  } else if (IID_IAsyncOperation == riid) {
-    *ppv = static_cast<IAsyncOperation*>(this);
-    AddRef();
-    return S_OK;
-  }
+		return NOERROR;
+	}
 
 	return ResultFromScode(E_NOINTERFACE);
 }
@@ -413,7 +225,11 @@ STDMETHODIMP nsDataObj::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
         case CF_TEXT:
         case CF_UNICODETEXT:
         return GetText(*df, *pFE, *pSTM);
-
+                  
+#ifndef WINCE
+        case CF_HDROP:
+          return GetFile(*df, *pFE, *pSTM);
+#endif
         // Someone is asking for an image
         case CF_DIB:
           return GetDib(*df, *pFE, *pSTM);
@@ -566,48 +382,6 @@ STDMETHODIMP nsDataObj::EnumDAdvise(LPENUMSTATDATA *ppEnum)
 	return ResultFromScode(E_FAIL);
 }
 
-// IAsyncOperation methods
-STDMETHODIMP nsDataObj::EndOperation(HRESULT hResult,
-                                     IBindCtx *pbcReserved,
-                                     DWORD dwEffects)
-{
-  mIsInOperation = FALSE;
-  Release();
-  return S_OK;
-}
-
-STDMETHODIMP nsDataObj::GetAsyncMode(BOOL *pfIsOpAsync)
-{
-  if (!pfIsOpAsync)
-    return E_FAIL;
-
-  *pfIsOpAsync = mIsAsyncMode;
-
-  return S_OK;
-}
-
-STDMETHODIMP nsDataObj::InOperation(BOOL *pfInAsyncOp)
-{
-  if (!pfInAsyncOp)
-    return E_FAIL;
-
-  *pfInAsyncOp = mIsInOperation;
-
-  return S_OK;
-}
-
-STDMETHODIMP nsDataObj::SetAsyncMode(BOOL fDoOpAsync)
-{
-  mIsAsyncMode = fDoOpAsync;
-  return S_OK;
-}
-
-STDMETHODIMP nsDataObj::StartOperation(IBindCtx *pbcReserved)
-{
-  mIsInOperation = TRUE;
-  return S_OK;
-}
-
 //-----------------------------------------------------
 // other methods
 //-----------------------------------------------------
@@ -706,21 +480,12 @@ nsDataObj :: GetFileDescriptor ( FORMATETC& aFE, STGMEDIUM& aSTG, PRBool aIsUnic
   
   // How we handle this depends on if we're dealing with an internet
   // shortcut, since those are done under the covers.
-  if (IsFlavourPresent(kFilePromiseMime) ||
-      IsFlavourPresent(kFileMime))
-  {
-    if (aIsUnicode)
-      return GetFileDescriptor_IStreamW(aFE, aSTG);
-    else
-      return GetFileDescriptor_IStreamA(aFE, aSTG);
-  }
-  else if (IsFlavourPresent(kURLMime))
-  {
+  if ( IsInternetShortcut() ) {
     if ( aIsUnicode )
       res = GetFileDescriptorInternetShortcutW ( aFE, aSTG );
     else
       res = GetFileDescriptorInternetShortcutA ( aFE, aSTG );
-  }
+  } 
   else
     NS_WARNING ( "Not yet implemented\n" );
   
@@ -737,11 +502,8 @@ nsDataObj :: GetFileContents ( FORMATETC& aFE, STGMEDIUM& aSTG )
   
   // How we handle this depends on if we're dealing with an internet
   // shortcut, since those are done under the covers.
-  if (IsFlavourPresent(kFilePromiseMime) ||
-      IsFlavourPresent(kFileMime))
-    return GetFileContents_IStream(aFE, aSTG);
-  else if (IsFlavourPresent(kURLMime))
-    return GetFileContentsInternetShortcut ( aFE, aSTG );
+  if ( IsInternetShortcut() )  
+    res = GetFileContentsInternetShortcut ( aFE, aSTG );
   else
     NS_WARNING ( "Not yet implemented\n" );
 
@@ -892,11 +654,11 @@ nsDataObj :: GetFileDescriptorInternetShortcutA ( FORMATETC& aFE, STGMEDIUM& aST
   // get a valid filename in the following order: 1) from the page title, 
   // 2) localized string for an untitled page, 3) just use "Untitled.URL"
   if (!CreateFilenameFromTextA(title, ".URL", 
-                               fileGroupDescA->fgd[0].cFileName, NS_MAX_FILEDESCRIPTOR)) {
+          fileGroupDescA->fgd[0].cFileName, NS_MAX_FILEDESCRIPTOR)) {
     nsXPIDLString untitled;
     if (!GetLocalizedString(NS_LITERAL_STRING("noPageTitle").get(), untitled) ||
         !CreateFilenameFromTextA(untitled, ".URL", 
-                                 fileGroupDescA->fgd[0].cFileName, NS_MAX_FILEDESCRIPTOR)) {
+            fileGroupDescA->fgd[0].cFileName, NS_MAX_FILEDESCRIPTOR)) {
       strcpy(fileGroupDescA->fgd[0].cFileName, "Untitled.URL");
     }
   }
@@ -938,11 +700,11 @@ nsDataObj :: GetFileDescriptorInternetShortcutW ( FORMATETC& aFE, STGMEDIUM& aST
   // get a valid filename in the following order: 1) from the page title, 
   // 2) localized string for an untitled page, 3) just use "Untitled.URL"
   if (!CreateFilenameFromTextW(title, NS_LITERAL_STRING(".URL").get(), 
-                               fileGroupDescW->fgd[0].cFileName, NS_MAX_FILEDESCRIPTOR)) {
+          fileGroupDescW->fgd[0].cFileName, NS_MAX_FILEDESCRIPTOR)) {
     nsXPIDLString untitled;
     if (!GetLocalizedString(NS_LITERAL_STRING("noPageTitle").get(), untitled) ||
         !CreateFilenameFromTextW(untitled, NS_LITERAL_STRING(".URL").get(), 
-                                 fileGroupDescW->fgd[0].cFileName, NS_MAX_FILEDESCRIPTOR)) {
+            fileGroupDescW->fgd[0].cFileName, NS_MAX_FILEDESCRIPTOR)) {
       wcscpy(fileGroupDescW->fgd[0].cFileName, NS_LITERAL_STRING("Untitled.URL").get());
     }
   }
@@ -1009,28 +771,39 @@ nsDataObj :: GetFileContentsInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG )
 #endif  
 } // GetFileContentsInternetShortcut
 
-// check if specified flavour is present in the transferable
-PRBool nsDataObj :: IsFlavourPresent(const char *inFlavour)
+
+//
+// IsInternetShortcut
+//
+// Is the data that we're handling destined for an internet shortcut if
+// dragged to the desktop? We can tell because there will be a mime type
+// of |kURLMime| present in the transferable
+//
+PRBool
+nsDataObj :: IsInternetShortcut ( )
 {
   PRBool retval = PR_FALSE;
-  NS_ENSURE_TRUE(mTransferable, PR_FALSE);
+  
+  if ( !mTransferable )
+    return PR_FALSE;
   
   // get the list of flavors available in the transferable
   nsCOMPtr<nsISupportsArray> flavorList;
-  mTransferable->FlavorsTransferableCanExport(getter_AddRefs(flavorList));
-  NS_ENSURE_TRUE(flavorList, PR_FALSE);
-
-  // try to find requested flavour
+  mTransferable->FlavorsTransferableCanExport ( getter_AddRefs(flavorList) );
+  if ( !flavorList )
+    return PR_FALSE;
+  
+  // go spelunking for the url flavor
   PRUint32 cnt;
   flavorList->Count(&cnt);
-  for (PRUint32 i = 0; i < cnt; ++i) {
+  for ( PRUint32 i = 0;i < cnt; ++i ) {
     nsCOMPtr<nsISupports> genericFlavor;
     flavorList->GetElementAt (i, getter_AddRefs(genericFlavor));
     nsCOMPtr<nsISupportsCString> currentFlavor (do_QueryInterface(genericFlavor));
     if (currentFlavor) {
       nsCAutoString flavorStr;
       currentFlavor->GetData(flavorStr);
-      if (flavorStr.Equals(inFlavour)) {
+      if ( flavorStr.Equals(kURLMime) ) {
         retval = PR_TRUE;         // found it!
         break;
       }
@@ -1038,7 +811,8 @@ PRBool nsDataObj :: IsFlavourPresent(const char *inFlavour)
   } // for each flavor
 
   return retval;
-}
+  
+} // IsInternetShortcut
 
 HRESULT nsDataObj::GetPreferredDropEffect ( FORMATETC& aFE, STGMEDIUM& aSTG )
 {
@@ -1162,6 +936,93 @@ HRESULT nsDataObj::GetText(const nsACString & aDataFlavor, FORMATETC& aFE, STGME
 }
 
 //-----------------------------------------------------
+HRESULT nsDataObj::GetFile(const nsACString & aDataFlavor, FORMATETC& aFE, STGMEDIUM& aSTG)
+{
+  HRESULT res = S_OK;
+  if (strcmp(PromiseFlatCString(aDataFlavor).get(), kFilePromiseMime) == 0) {
+    // If we have a cached file just pass it to HGLOBAL
+    // otherwise create an empty file in the temp location.
+    // The download will start after the user drops the file.
+    nsresult rv;
+    if (!mCachedTempFile) {
+      // Get system temp directory
+      nsCOMPtr<nsILocalFile> dropDirectory;
+      nsCOMPtr<nsIProperties> directoryService = 
+        do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+      if (!directoryService || NS_FAILED(rv))
+          return ResultFromScode(E_FAIL);
+      directoryService->Get(NS_OS_TEMP_DIR, 
+                            NS_GET_IID(nsIFile), 
+                            getter_AddRefs(dropDirectory));
+
+      nsCOMPtr<nsILocalFile> destFile = do_QueryInterface(dropDirectory);
+      if (!destFile)
+          return E_FAIL;
+
+      // Get the filename form the kFilePromiseURLFlavour
+      nsAutoString wideFileName;
+      nsCOMPtr<nsIURI> sourceURI;
+      rv = nsDataObj::GetDownloadDetails(mTransferable,
+                                         getter_AddRefs(sourceURI),
+                                         wideFileName);
+      if (NS_FAILED(rv))
+          return rv;
+
+      rv = destFile->Append(wideFileName);
+      if (NS_FAILED(rv))
+          return rv;
+
+      // Try to create the file.
+      rv = destFile->Create(nsIFile::NORMAL_FILE_TYPE, 0600);
+      // Bail out if it fails for a reason other than the existence of the file.
+      if (NS_FAILED(rv) && rv != NS_ERROR_FILE_ALREADY_EXISTS)
+          return rv;
+
+      mCachedTempFile = do_QueryInterface(destFile);
+      if (!mCachedTempFile)
+          return ResultFromScode(E_FAIL);
+    }
+
+    // Pass the file name back to the drop target so that it can copy to the drop location
+    nsAutoString path;
+    rv = mCachedTempFile->GetPath(path);
+    if (NS_FAILED(rv)) return ResultFromScode(E_FAIL);
+    // Two null characters are needed to terminate the file name list
+    PRUint32 allocLen = path.Length() + 2;
+    HGLOBAL hGlobalMemory = NULL;
+    aSTG.tymed = TYMED_HGLOBAL;
+    aSTG.pUnkForRelease = NULL;
+    hGlobalMemory = GlobalAlloc(GMEM_MOVEABLE, sizeof(DROPFILES) + allocLen * sizeof(PRUnichar));
+    if (hGlobalMemory) {
+      DROPFILES* pDropFile = NS_REINTERPRET_CAST(DROPFILES*, GlobalLock(hGlobalMemory));
+
+      // First, populate drop file structure
+      pDropFile->pFiles = sizeof(DROPFILES);   // offset to start of file name char array
+      pDropFile->fNC = 0;
+      pDropFile->pt.x = 0;
+      pDropFile->pt.y = 0;
+      pDropFile->fWide = TRUE;
+
+      // Copy the filename right after the DROPFILES structure
+      PRUnichar* dest = NS_REINTERPRET_CAST(PRUnichar*, NS_REINTERPRET_CAST(char*, pDropFile) + pDropFile->pFiles);
+      memcpy(dest, path.get(), (allocLen - 1) * sizeof(PRUnichar));    // copies the null character in path as well
+
+      // Two null characters are needed at the end of the file name.  
+      // Lookup the CF_HDROP shell clipboard format for more info.
+      // Add the second null character right after the first one.
+      dest[allocLen - 1] = L'\0';
+
+      GlobalUnlock(hGlobalMemory);
+    }
+    else {
+      res = E_OUTOFMEMORY;
+    }
+    aSTG.hGlobal = hGlobalMemory;
+  }
+  return res;
+}
+
+//-----------------------------------------------------
 HRESULT nsDataObj::GetMetafilePict(FORMATETC&, STGMEDIUM&)
 {
 	return ResultFromScode(E_NOTIMPL);
@@ -1224,11 +1085,14 @@ void nsDataObj::AddDataFlavor(const char* aDataFlavor, LPFORMATETC aFE)
   // so we will look up data flavor that corresponds to the FE
   // and then ask the transferable for that type of data
 
-  // Just ignore the CF_HDROP here
-  // all file drags are now hangled by CFSTR_FileContents format
+  // Add CF_HDROP to the head of the list so that it is returned first
+  // when the drop target calls EnumFormatEtc to enumerate through the FE list
+  // We use the CF_HDROP format to copy file contents when an image is dragged
+  // from Mozilla to a drop target.
 #ifndef WINCE
   if (aFE->cfFormat == CF_HDROP) {
-    return;
+    mDataFlavors->InsertElementAt(new nsCAutoString(aDataFlavor), 0);
+    m_enumFE->InsertFEAt(aFE, 0);
   }  
   else 
 #endif
@@ -1452,7 +1316,7 @@ HRESULT
 nsDataObj :: GetUniformResourceLocator( FORMATETC& aFE, STGMEDIUM& aSTG, PRBool aIsUnicode )
 {
   HRESULT res = S_OK;
-  if (IsFlavourPresent(kURLMime)) {
+  if ( IsInternetShortcut() ) {
     if ( aIsUnicode )
       res = ExtractUniformResourceLocatorW( aFE, aSTG );
     else
@@ -1520,145 +1384,58 @@ nsDataObj::ExtractUniformResourceLocatorW(FORMATETC& aFE, STGMEDIUM& aSTG )
   return result;
 }
 
-
 // Gets the filename from the kFilePromiseURLMime flavour
-nsresult nsDataObj::GetDownloadDetails(nsIURI **aSourceURI,
+nsresult nsDataObj::GetDownloadDetails(nsITransferable *aTransferable,
+                                       nsIURI **aSourceURI,
                                        nsAString &aFilename)
 {
-  NS_ENSURE_TRUE(mTransferable, NS_ERROR_FAILURE);
+    if (!aTransferable)
+        return NS_ERROR_FAILURE;
 
-  // get the URI from the kFilePromiseURLMime flavor
-  nsCOMPtr<nsISupports> urlPrimitive;
-  PRUint32 dataSize = 0;
-  mTransferable->GetTransferData(kFilePromiseURLMime, getter_AddRefs(urlPrimitive), &dataSize);
-  nsCOMPtr<nsISupportsString> srcUrlPrimitive = do_QueryInterface(urlPrimitive);
-  NS_ENSURE_TRUE(srcUrlPrimitive, NS_ERROR_FAILURE);
-  
-  // Get data for flavor
-  // The format of the data is (URLSTRING\nFILENAME)
-  nsAutoString strData;
-  srcUrlPrimitive->GetData(strData);
-  if (strData.IsEmpty())
-    return NS_ERROR_FAILURE;
+    // get the URI from the kFilePromiseURLMime flavor
+    nsCOMPtr<nsISupports> urlPrimitive;
+    PRUint32 dataSize = 0;
+    aTransferable->GetTransferData(kFilePromiseURLMime, getter_AddRefs(urlPrimitive), &dataSize);
+    nsCOMPtr<nsISupportsString> srcUrlPrimitive = do_QueryInterface(urlPrimitive);
+    if (!srcUrlPrimitive)
+        return NS_ERROR_FAILURE;
 
-  // Now figure if there is a "\n" delimiter in the data string.
-  // If there is, the string after the "\n" is a filename.
-  // If there is no delimiter then just get the filename from the url.
-  nsCAutoString strFileName;
-  nsCOMPtr<nsIURI> sourceURI;
-  // New line char is used as a delimiter (hardcoded)
-  PRInt32 nPos = strData.FindChar('\n');
-  // Store source uri
-  NS_NewURI(aSourceURI, Substring(strData, 0, nPos));
-  if (nPos != -1) {
-    // if there is delimiter
-    CopyUTF16toUTF8(Substring(strData, nPos + 1, strData.Length()), strFileName);
-  } else {
-    // no filename was supplied - try to get it from a URL
-    nsCOMPtr<nsIURL> sourceURL = do_QueryInterface(*aSourceURI);
-    sourceURL->GetFileName(strFileName);
-  }
-  // check for an error; the URL must point to a file
-  if (strFileName.IsEmpty())
-    return NS_ERROR_FAILURE;
+    // Get data for flavor
+    // The format of the data is (URLSTRING\nFILENAME)
+    nsAutoString strData;
+    srcUrlPrimitive->GetData(strData);
+    if (strData.IsEmpty())
+        return NS_ERROR_FAILURE;
 
-  NS_UnescapeURL(strFileName);
-  NS_ConvertUTF8toUTF16 wideFileName(strFileName);
+    // Now figure if there is a "\n" delimiter in the data string.
+    // If there is, the string after the "\n" is a filename.
+    // If there is no delimiter then just get the filename from the url.
+    nsCAutoString strFileName;
+    nsCOMPtr<nsIURI> sourceURI;
+    // New line char is used as a delimiter (hardcoded)
+    PRInt32 nPos = strData.FindChar('\n');
+    // Store source uri
+    NS_NewURI(aSourceURI, Substring(strData, 0, nPos));
+    if (nPos != -1) {
+        // if there is delimiter
+        CopyUTF16toUTF8(Substring(strData, nPos + 1, strData.Length()), strFileName);
+    } else {
+        // no filename was supplied - try to get it from a URL
+        nsCOMPtr<nsIURL> sourceURL = do_QueryInterface(*aSourceURI);
+        sourceURL->GetFileName(strFileName);
+    }
+    // check for an error; the URL must point to a file
+    if (strFileName.IsEmpty())
+        return NS_ERROR_FAILURE;
 
-  // make the name safe for the filesystem
-  MangleTextToValidFilename(wideFileName);
+    NS_UnescapeURL(strFileName);
+    NS_ConvertUTF8toUTF16 wideFileName(strFileName);
 
-  aFilename = wideFileName;
+    // make the name safe for the filesystem
+    MangleTextToValidFilename(wideFileName);
 
-  return NS_OK;
+    aFilename = wideFileName;
+
+    return NS_OK;
 }
 
-HRESULT nsDataObj::GetFileDescriptor_IStreamA(FORMATETC& aFE, STGMEDIUM& aSTG)
-{
-  HGLOBAL fileGroupDescHandle = ::GlobalAlloc(GMEM_ZEROINIT|GMEM_SHARE,sizeof(FILEGROUPDESCRIPTORW));
-  NS_ENSURE_TRUE(fileGroupDescHandle, E_OUTOFMEMORY);
-
-  LPFILEGROUPDESCRIPTORA fileGroupDescA = NS_REINTERPRET_CAST(LPFILEGROUPDESCRIPTORA, 
-                                                              ::GlobalLock(fileGroupDescHandle));
-  if (!fileGroupDescA) {
-    ::GlobalFree(fileGroupDescHandle);
-    return E_OUTOFMEMORY;
-  }
-
-  nsAutoString wideFileName;
-  nsresult rv;
-  nsCOMPtr<nsIURI> sourceURI;
-  rv = GetDownloadDetails(getter_AddRefs(sourceURI),
-                          wideFileName);
-  if (NS_FAILED(rv))
-  {
-    ::GlobalFree(fileGroupDescHandle);
-    return E_FAIL;
-  }
-
-  nsCAutoString nativeFileName;
-  NS_UTF16ToCString(wideFileName, NS_CSTRING_ENCODING_NATIVE_FILESYSTEM, nativeFileName);
-  
-  strncpy(fileGroupDescA->fgd[0].cFileName, nativeFileName.get(), NS_MAX_FILEDESCRIPTOR - 1);
-  fileGroupDescA->fgd[0].cFileName[NS_MAX_FILEDESCRIPTOR - 1] = '\0';
-
-  // one file in the file block
-  fileGroupDescA->cItems = 1;
-  fileGroupDescA->fgd[0].dwFlags = FD_PROGRESSUI;
-
-  ::GlobalUnlock( fileGroupDescHandle );
-  aSTG.hGlobal = fileGroupDescHandle;
-  aSTG.tymed = TYMED_HGLOBAL;
-
-  return S_OK;
-}
-
-HRESULT nsDataObj::GetFileDescriptor_IStreamW(FORMATETC& aFE, STGMEDIUM& aSTG)
-{
-  HGLOBAL fileGroupDescHandle = ::GlobalAlloc(GMEM_ZEROINIT|GMEM_SHARE,sizeof(FILEGROUPDESCRIPTORW));
-  NS_ENSURE_TRUE(fileGroupDescHandle, E_OUTOFMEMORY);
-
-  LPFILEGROUPDESCRIPTORW fileGroupDescW = NS_REINTERPRET_CAST(LPFILEGROUPDESCRIPTORW, 
-                                                              ::GlobalLock(fileGroupDescHandle));
-  if (!fileGroupDescW) {
-    ::GlobalFree(fileGroupDescHandle);
-    return E_OUTOFMEMORY;
-  }
-
-  nsAutoString wideFileName;
-  nsresult rv;
-  nsCOMPtr<nsIURI> sourceURI;
-  rv = GetDownloadDetails(getter_AddRefs(sourceURI),
-                          wideFileName);
-  if (NS_FAILED(rv))
-  {
-    ::GlobalFree(fileGroupDescHandle);
-    return E_FAIL;
-  }
-
-  wcsncpy(fileGroupDescW->fgd[0].cFileName, wideFileName.get(), NS_MAX_FILEDESCRIPTOR - 1);
-  fileGroupDescW->fgd[0].cFileName[NS_MAX_FILEDESCRIPTOR - 1] = '\0';
-  // one file in the file block
-  fileGroupDescW->cItems = 1;
-  fileGroupDescW->fgd[0].dwFlags = FD_PROGRESSUI;
-
-  ::GlobalUnlock(fileGroupDescHandle);
-  aSTG.hGlobal = fileGroupDescHandle;
-  aSTG.tymed = TYMED_HGLOBAL;
-
-  return S_OK;
-}
-
-HRESULT nsDataObj::GetFileContents_IStream(FORMATETC& aFE, STGMEDIUM& aSTG)
-{
-  IStream *pStream = NULL;
-
-  nsDataObj::CreateStream(&pStream);
-  NS_ENSURE_TRUE(pStream, E_FAIL);
-
-  aSTG.tymed = TYMED_ISTREAM;
-  aSTG.pstm = pStream;
-  aSTG.pUnkForRelease = pStream;
-
-  return S_OK;
-}
