@@ -123,6 +123,10 @@ static size_t get_file_length(const char* filename)
 int 
 main(int argc, char **argv)
 {
+    #ifdef XP_OS2   /* Shell does not expand wildcards on OS/2, doesn't work with OW */
+    _wildcard (&argc, &argv);
+    #endif
+
     XPTArena *arena;
     XPTState *state;
     XPTCursor curs, *cursor = &curs;
