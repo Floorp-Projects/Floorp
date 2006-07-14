@@ -34,13 +34,11 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 #include "nsPageFrame.h"
-#include "nsHTMLParts.h"
-#include "nsIContent.h"
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
 #include "nsIRenderingContext.h"
-#include "nsHTMLAtoms.h"
 #include "nsLayoutAtoms.h"
 #include "nsIPresShell.h"
 #include "nsCSSFrameConstructor.h"
@@ -49,40 +47,15 @@
 #include "nsPageContentFrame.h"
 #include "nsDisplayList.h"
 #include "nsLayoutUtils.h" // for function BinarySearchForPosition
-
-#include "nsIView.h" // view flags for clipping
 #include "nsCSSRendering.h"
-
-#include "nsHTMLContainerFrame.h" // view creation
-
 #include "nsSimplePageSequence.h" // for nsSharedPageData
-#include "nsRegion.h"
-#include "nsIViewManager.h"
-
-// for page number localization formatting
-#include "nsTextFormatter.h"
-
+#include "nsTextFormatter.h" // for page number localization formatting
 #ifdef IBMBIDI
 #include "nsBidiUtils.h"
 #include "nsBidiPresUtils.h"
 #endif
-
-// Temporary
 #include "nsIFontMetrics.h"
-
-// Print Options
 #include "nsIPrintSettings.h"
-#include "nsGfxCIID.h"
-#include "nsIServiceManager.h"
-
-// Widget Creation
-#include "nsIWidget.h"
-#include "nsWidgetsCID.h"
-static NS_DEFINE_CID(kCChildCID, NS_CHILD_CID);
-
-#if defined(DEBUG_rods) || defined(DEBUG_dcone)
-//#define DEBUG_PRINTING
-#endif
 
 #include "prlog.h"
 #ifdef PR_LOGGING 
@@ -185,11 +158,6 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsPresContext*          aPresContext,
     // Place and size the child
     FinishReflowChild(frame, aPresContext, &kidReflowState, aDesiredSize, xc, yc, 0);
 
-    // Make sure the child is at least as tall as our max size (the containing window)
-    if (aDesiredSize.height < aReflowState.availableHeight &&
-        aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE) {
-      aDesiredSize.height = aReflowState.availableHeight;
-    }
     NS_ASSERTION(!NS_FRAME_IS_COMPLETE(aStatus) ||
                  !frame->GetNextInFlow(), "bad child flow list");
   }
@@ -230,8 +198,6 @@ nsPageFrame::IsContainingBlock() const
   return PR_TRUE;
 }
 
-// done with static helper functions
-//------------------------------------------------------------------------------
 void 
 nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr)
 {
@@ -324,61 +290,61 @@ nscoord nsPageFrame::GetXPosition(nsIRenderingContext& aRenderingContext,
   return x;
 }
 
-//------------------------------------------------------------------------------
-// Draw a Header or footer text lrft,right or center justified
-// @parm aRenderingContext - rendering content ot draw into
-// @parm aHeaderFooter - indicates whether it is a header or footer
-// @parm aJust - indicates the justification of the text
-// @parm aStr - The string to be drawn
-// @parm aRect - the rect of the page
-// @parm aHeight - the height of the text
-// @parm aUseHalfThePage - indicates whether the text should limited to  the width
-//                         of the entire page or just half the page
+// Draw a header or footer
+// @param aRenderingContext - rendering content ot draw into
+// @param aHeaderFooter - indicates whether it is a header or footer
+// @param aStrLeft - string for the left header or footer; can be empty
+// @param aStrCenter - string for the center header or footer; can be empty
+// @param aStrRight - string for the right header or footer; can be empty
+// @param aRect - the rect of the page
+// @param aAscent - the ascent of the font
+// @param aHeight - the height of the font
 void
-nsPageFrame::DrawHeaderFooter(nsPresContext*      aPresContext,
-                              nsIRenderingContext& aRenderingContext,
-                              nsIFrame *           aFrame,
+nsPageFrame::DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
                               nsHeaderFooterEnum   aHeaderFooter,
-                              PRInt32              aJust,
-                              const nsString&      aStr1,
-                              const nsString&      aStr2,
-                              const nsString&      aStr3,
+                              const nsString&      aStrLeft,
+                              const nsString&      aStrCenter,
+                              const nsString&      aStrRight,
                               const nsRect&        aRect,
                               nscoord              aAscent,
                               nscoord              aHeight)
 {
   PRInt32 numStrs = 0;
-  if (!aStr1.IsEmpty()) numStrs++;
-  if (!aStr2.IsEmpty()) numStrs++;
-  if (!aStr3.IsEmpty()) numStrs++;
+  if (!aStrLeft.IsEmpty()) numStrs++;
+  if (!aStrCenter.IsEmpty()) numStrs++;
+  if (!aStrRight.IsEmpty()) numStrs++;
 
   if (numStrs == 0) return;
   nscoord strSpace = aRect.width / numStrs;
 
-  if (!aStr1.IsEmpty()) {
-    DrawHeaderFooter(aPresContext, aRenderingContext, aFrame, aHeaderFooter, nsIPrintSettings::kJustLeft, aStr1, aRect, aAscent, aHeight, strSpace);
+  if (!aStrLeft.IsEmpty()) {
+    DrawHeaderFooter(aRenderingContext, aHeaderFooter,
+                     nsIPrintSettings::kJustLeft, aStrLeft, aRect, aAscent,
+                     aHeight, strSpace);
   }
-  if (!aStr2.IsEmpty()) {
-    DrawHeaderFooter(aPresContext, aRenderingContext, aFrame, aHeaderFooter, nsIPrintSettings::kJustCenter, aStr2, aRect, aAscent, aHeight, strSpace);
+  if (!aStrCenter.IsEmpty()) {
+    DrawHeaderFooter(aRenderingContext, aHeaderFooter,
+                     nsIPrintSettings::kJustCenter, aStrCenter, aRect, aAscent,
+                     aHeight, strSpace);
   }
-  if (!aStr3.IsEmpty()) {
-    DrawHeaderFooter(aPresContext, aRenderingContext, aFrame, aHeaderFooter, nsIPrintSettings::kJustRight, aStr3, aRect, aAscent, aHeight, strSpace);
+  if (!aStrRight.IsEmpty()) {
+    DrawHeaderFooter(aRenderingContext, aHeaderFooter,
+                     nsIPrintSettings::kJustRight, aStrRight, aRect, aAscent,
+                     aHeight, strSpace);
   }
 }
 
-//------------------------------------------------------------------------------
-// Draw a Header or footer text lrft,right or center justified
-// @parm aRenderingContext - rendering content ot draw into
-// @parm aHeaderFooter - indicates whether it is a header or footer
-// @parm aJust - indicates the justification of the text
-// @parm aStr - The string to be drawn
-// @parm aRect - the rect of the page
-// @parm aHeight - the height of the text
-// @parm aWidth - available width for any one of the strings
+// Draw a header or footer string
+// @param aRenderingContext - rendering content ot draw into
+// @param aHeaderFooter - indicates whether it is a header or footer
+// @param aJust - indicates where the string is located within the header/footer
+// @param aStr - the string to be drawn
+// @param aRect - the rect of the page
+// @param aHeight - the height of the font
+// @param aAscent - the ascent of the font
+// @param aWidth - available width for the string
 void
-nsPageFrame::DrawHeaderFooter(nsPresContext*      aPresContext,
-                              nsIRenderingContext& aRenderingContext,
-                              nsIFrame *           aFrame,
+nsPageFrame::DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
                               nsHeaderFooterEnum   aHeaderFooter,
                               PRInt32              aJust,
                               const nsString&      aStr,
@@ -390,11 +356,8 @@ nsPageFrame::DrawHeaderFooter(nsPresContext*      aPresContext,
 
   nscoord contentWidth = aWidth - (mPD->mEdgePaperMargin.left + mPD->mEdgePaperMargin.right);
 
-  // first make sure we have a vaild string and that the height of the
-  // text will fit in the margin
-  if (!aStr.IsEmpty() && 
-      ((aHeaderFooter == eHeader && aHeight < mMargin.top) ||
-       (aHeaderFooter == eFooter && aHeight < mMargin.bottom))) {
+  if ((aHeaderFooter == eHeader && aHeight < mPD->mReflowMargin.top) ||
+      (aHeaderFooter == eFooter && aHeight < mPD->mReflowMargin.bottom)) {
     nsAutoString str;
     ProcessSpecialCodes(aStr, str);
 
@@ -430,30 +393,30 @@ nsPageFrame::DrawHeaderFooter(nsPresContext*      aPresContext,
     }
 
     // cacl the x and y positions of the text
-    nsRect rect(aRect);
-    nscoord x = GetXPosition(aRenderingContext, rect, aJust, str);
+    nscoord x = GetXPosition(aRenderingContext, aRect, aJust, str);
     nscoord y;
     if (aHeaderFooter == eHeader) {
-      y = rect.y + mPD->mExtraMargin.top + mPD->mEdgePaperMargin.top;
+      y = aRect.y + mPD->mExtraMargin.top + mPD->mEdgePaperMargin.top;
     } else {
-      y = rect.y + rect.height - aHeight - mPD->mExtraMargin.bottom - mPD->mEdgePaperMargin.bottom;
+      y = aRect.YMost() - aHeight - mPD->mExtraMargin.bottom - mPD->mEdgePaperMargin.bottom;
     }
 
     // set up new clip and draw the text
     aRenderingContext.PushState();
     aRenderingContext.SetColor(NS_RGB(0,0,0));
-    aRenderingContext.SetClipRect(rect, nsClipCombine_kReplace);
+    aRenderingContext.SetClipRect(aRect, nsClipCombine_kReplace);
 #ifdef IBMBIDI
     nsresult rv = NS_ERROR_FAILURE;
 
-    if (aPresContext->BidiEnabled()) {
-      nsBidiPresUtils* bidiUtils = aPresContext->GetBidiUtils();
+    nsPresContext* pc = GetPresContext();
+    if (pc->BidiEnabled()) {
+      nsBidiPresUtils* bidiUtils =  pc->GetBidiUtils();
       
       if (bidiUtils) {
         // Base direction is always LTR for now. If bug 139337 is fixed, 
         // that should change.
         rv = bidiUtils->RenderText(str.get(), str.Length(), NSBIDI_LTR,
-                                   aPresContext, aRenderingContext,
+                                   pc, aRenderingContext,
                                    x, y + aAscent);
       }
     }
@@ -461,21 +424,6 @@ nsPageFrame::DrawHeaderFooter(nsPresContext*      aPresContext,
 #endif // IBMBIDI
     aRenderingContext.DrawString(str, x, y + aAscent);
     aRenderingContext.PopState();
-
-#ifdef DEBUG_PRINTING
-    PR_PL(("Page: %p", this));
-    PR_PL((" [%s]", NS_ConvertUTF16toUTF8(str).get()));
-    char justStr[64];
-    switch (aJust) {
-      case nsIPrintSettings::kJustLeft:strcpy(justStr, "Left");break;
-      case nsIPrintSettings::kJustCenter:strcpy(justStr, "Center");break;
-      case nsIPrintSettings::kJustRight:strcpy(justStr, "Right");break;
-    } // switch
-    PR_PL((" HF: %s ", aHeaderFooter==eHeader?"Header":"Footer"));
-    PR_PL((" JST: %s ", justStr));
-    PR_PL((" x,y: %d,%d", x, y));
-    PR_PL((" Hgt: %d \n", aHeight));
-#endif
   }
 }
 
@@ -587,9 +535,6 @@ nsPageFrame::PaintHeaderFooter(nsIRenderingContext& aRenderingContext,
       return;
   }
 
-  // get the current margin
-  mPD->mPrintSettings->GetMarginInTwips(mMargin);
-
   nsRect rect(aPt.x, aPt.y, mRect.width - mPD->mShadowSize.width,
               mRect.height - mPD->mShadowSize.height);
 
@@ -608,24 +553,21 @@ nsPageFrame::PaintHeaderFooter(nsIRenderingContext& aRenderingContext,
   }
 
   // print document headers and footers
-  PRUnichar * headers[3];
-  mPD->mPrintSettings->GetHeaderStrLeft(&headers[0]);   // creates memory
-  mPD->mPrintSettings->GetHeaderStrCenter(&headers[1]); // creates memory
-  mPD->mPrintSettings->GetHeaderStrRight(&headers[2]);  // creates memory
-  DrawHeaderFooter(pc, aRenderingContext, this, eHeader, nsIPrintSettings::kJustLeft, 
-                   nsAutoString(headers[0]), nsAutoString(headers[1]), nsAutoString(headers[2]), 
+  nsXPIDLString headerLeft, headerCenter, headerRight;
+  mPD->mPrintSettings->GetHeaderStrLeft(getter_Copies(headerLeft));
+  mPD->mPrintSettings->GetHeaderStrCenter(getter_Copies(headerCenter));
+  mPD->mPrintSettings->GetHeaderStrRight(getter_Copies(headerRight));
+  DrawHeaderFooter(aRenderingContext, eHeader,
+                   headerLeft, headerCenter, headerRight,
                    rect, ascent, visibleHeight);
-  PRInt32 i;
-  for (i=0;i<3;i++) nsMemory::Free(headers[i]);
 
-  PRUnichar * footers[3];
-  mPD->mPrintSettings->GetFooterStrLeft(&footers[0]);   // creates memory
-  mPD->mPrintSettings->GetFooterStrCenter(&footers[1]); // creates memory
-  mPD->mPrintSettings->GetFooterStrRight(&footers[2]);  // creates memory
-  DrawHeaderFooter(pc, aRenderingContext, this, eFooter, nsIPrintSettings::kJustRight, 
-                   nsAutoString(footers[0]), nsAutoString(footers[1]), nsAutoString(footers[2]), 
+  nsXPIDLString footerLeft, footerCenter, footerRight;
+  mPD->mPrintSettings->GetFooterStrLeft(getter_Copies(footerLeft));
+  mPD->mPrintSettings->GetFooterStrCenter(getter_Copies(footerCenter));
+  mPD->mPrintSettings->GetFooterStrRight(getter_Copies(footerRight));
+  DrawHeaderFooter(aRenderingContext, eFooter,
+                   footerLeft, footerCenter, footerRight,
                    rect, ascent, visibleHeight);
-  for (i=0;i<3;i++) nsMemory::Free(footers[i]);
 }
 
 //------------------------------------------------------------------------------
@@ -664,10 +606,8 @@ nsIFrame*
 NS_NewPageBreakFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   NS_PRECONDITION(aPresShell, "null PresShell");
-#ifdef DEBUG
   //check that we are only creating page break frames when printing
   NS_ASSERTION(aPresShell->GetPresContext()->IsPaginated(), "created a page break frame while not printing");
-#endif
 
   return new (aPresShell) nsPageBreakFrame(aContext);
 }
@@ -686,7 +626,6 @@ nsPageBreakFrame::GetDesiredSize(nsPresContext*          aPresContext,
                                  const nsHTMLReflowState& aReflowState,
                                  nsHTMLReflowMetrics&     aDesiredSize)
 {
-  NS_PRECONDITION(aPresContext, "null pres context");
   nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
 
   aDesiredSize.width  = onePixel;
@@ -714,8 +653,7 @@ nsPageBreakFrame::Reflow(nsPresContext*          aPresContext,
                          const nsHTMLReflowState& aReflowState,
                          nsReflowStatus&          aStatus)
 {
-  NS_PRECONDITION(aPresContext, "null pres context");
-  DO_GLOBAL_REFLOW_COUNT("nsTableFrame", aReflowState.reason);
+  DO_GLOBAL_REFLOW_COUNT("nsPageBreakFrame", aReflowState.reason);
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
   aStatus = NS_FRAME_COMPLETE; 
