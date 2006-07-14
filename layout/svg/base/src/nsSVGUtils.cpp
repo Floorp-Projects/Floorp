@@ -821,20 +821,53 @@ void
 nsSVGUtils::HitTestChildren(nsIFrame *aFrame, float x, float y,
                             nsIFrame **aResult)
 {
+  // XXX: The frame's children are linked in a singly-linked list in document
+  // order. If we were to hit test the children in this order we would need to
+  // hit test *every* SVG frame, since even if we get a hit, later SVG frames
+  // may lie on top of the matching frame. We really want to traverse SVG
+  // frames in reverse order so we can stop at the first match. Since we don't
+  // have a doubly-linked list, for the time being we traverse the
+  // singly-linked list backwards by first reversing the nextSibling pointers
+  // in place, and then restoring them when done.
+  //
+  // Note: While the child list pointers are reversed, any method which walks
+  // the list would only encounter a single child!
+
   *aResult = nsnull;
-  for (nsIFrame* kid = aFrame->GetFirstChild(nsnull); kid;
-       kid = kid->GetNextSibling()) {
+
+  nsIFrame* current = nsnull;
+  nsIFrame* next = aFrame->GetFirstChild(nsnull);
+
+  // reverse sibling pointers
+  while (next) {
+    nsIFrame* temp = next->GetNextSibling();
+    next->SetNextSibling(current);
+    current = next;
+    next = temp;    
+  }
+
+  // now do the backwards traversal
+  while (current) {
     nsISVGChildFrame* SVGFrame;
-    CallQueryInterface(kid, &SVGFrame);
+    CallQueryInterface(current, &SVGFrame);
     if (SVGFrame) {
-      nsIFrame* temp=nsnull;
-      nsresult rv = SVGFrame->GetFrameForPointSVG(x, y, &temp);
-      if (NS_SUCCEEDED(rv) && temp) {
-        *aResult = temp;
-        // return NS_OK; can't return. we need reverse order but only
-        // have a singly linked list...
-      }
+      if (NS_SUCCEEDED(SVGFrame->GetFrameForPointSVG(x, y, aResult)) &&
+          *aResult)
+          break;
     }
+    // restore current frame's sibling pointer
+    nsIFrame* temp = current->GetNextSibling();
+    current->SetNextSibling(next);
+    next = current;
+    current = temp;
+  }
+
+  // restore remaining pointers
+  while (current) {
+    nsIFrame* temp = current->GetNextSibling();
+    current->SetNextSibling(next);
+    next = current;
+    current = temp;
   }
 
   if (*aResult && !HitTestClip(aFrame, x, y))
