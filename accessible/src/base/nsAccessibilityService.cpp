@@ -39,7 +39,6 @@
 // NOTE: alphabetically ordered
 #include "nsAccessibilityAtoms.h"
 #include "nsAccessibilityService.h"
-#include "nsCaretAccessible.h"
 #include "nsCURILoader.h"
 #include "nsDocAccessible.h"
 #include "nsHTMLAreaAccessible.h"
@@ -1215,7 +1214,7 @@ nsAccessibilityService::CreateXULMenupopupAccessible(nsIDOMNode *aNode, nsIAcces
   // then strip out redundant accessibles in the nsAccessibleWrap class for each platform.
   if (content) {
     nsIContent *parent = content->GetParent();
-    if (parent && parent->NodeInfo()->Equals(nsAccessibilityAtoms::menu, kNameSpaceID_XUL)) {
+    if (parent && parent->Tag() == nsAccessibilityAtoms::menu) {
       return NS_OK;
     }
   }
