@@ -199,7 +199,7 @@ $BinaryName = 'sunbird.exe';
 # Release build options
 $ReleaseBuild  = 1;
 #$LocaleProduct = "browser";
-$shiptalkback  = 0;
+$shiptalkback  = 1;
 #$ReleaseToLatest = 1; # Push the release to latest-<milestone>?
 #$ReleaseToDated = 1; # Push the release to YYYY-MM-DD-HH-<milestone>?
 $build_hour    = "6";
