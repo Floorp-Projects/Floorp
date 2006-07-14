@@ -43,8 +43,6 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 endif
 ifeq ($(OS_ARCH),WINNT)
 	cp $(srcdir)/sunbird.ico  $(DIST)/branding/app.ico
-	cp $(srcdir)/Header.bmp   $(DIST)/branding/Header.bmp
-	cp $(srcdir)/Watermrk.bmp $(DIST)/branding/Watermrk.bmp
 	cp $(srcdir)/wizHeader.bmp     $(DIST)/branding/wizHeader.bmp
 	cp $(srcdir)/wizHeaderRTL.bmp  $(DIST)/branding/wizHeaderRTL.bmp
 	cp $(srcdir)/wizWatermark.bmp  $(DIST)/branding/Watermark.bmp
@@ -52,6 +50,4 @@ endif
 ifeq ($(OS_ARCH),OS2)
 	cp $(srcdir)/sunbird-os2.ico  $(DIST)/branding/sunbird.ico
 	cp $(srcdir)/sunbird-os2.ico  $(DIST)/branding/app.ico
-	cp $(srcdir)/Header.bmp   $(DIST)/branding/Header.bmp
-	cp $(srcdir)/Watermrk.bmp $(DIST)/branding/Watermrk.bmp
 endif

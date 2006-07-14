@@ -49,7 +49,6 @@ SFX_MODULE = $(topsrcdir)/other-licenses/7zstub/sunbird/7zSD.sfx
 
 PP_LOCALIZED_FILES = \
 	packages-static \
-	installer.cfg \
 	$(NULL)
 
 INSTALLER_FILES = \
@@ -101,8 +100,6 @@ include $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/makensis.mk
 export::
 ifndef MOZ_USE_OFFICIAL_BRANDING
 	$(NSINSTALL) -D $(DIST)/branding
-	cp $(srcdir)/Header.bmp    $(DIST)/branding/Header.bmp
-	cp $(srcdir)/Watermrk.bmp  $(DIST)/branding/Watermrk.bmp
 	cp $(srcdir)/wizHeader.bmp     $(DIST)/branding/wizHeader.bmp
 	cp $(srcdir)/wizHeaderRTL.bmp  $(DIST)/branding/wizHeaderRTL.bmp
 	cp $(srcdir)/wizWatermark.bmp  $(DIST)/branding/wizWatermark.bmp
