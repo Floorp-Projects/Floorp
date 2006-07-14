@@ -304,7 +304,14 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
       for (int i = 0; i < ida->length && !abortLoad; i++ )
       {
         JS_IdToValue( cx, ida->vector[i], &v );
-        name = NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars( JS_ValueToString( cx, v ) ));
+        JSString * str = JS_ValueToString( cx, v );
+        if (!str)
+        {
+          abortLoad = PR_TRUE;
+          break;
+        }
+
+        name = NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars( str ));
 
         URL = iconURL = nsnull;
         hash = nsnull;
@@ -326,7 +333,7 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
           URL = NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars( JS_ValueToString( cx, v ) ));
         }
 
-        if ( name && URL )
+        if ( URL )
         {
             // Get relative URL to load
             nsAutoString xpiURL(URL);
