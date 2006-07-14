@@ -685,7 +685,7 @@ function onWhoTimeout()
                 net.primServ.LIGHTWEIGHT_WHO = true;
                 net.primServ.sendData("WHO " + chan.encodedName + "\n");
                 net.lastWhoCheckChannel = chan;
-                net.lastWhoCheckTime = Date.now();
+                net.lastWhoCheckTime = Number(new Date());
                 return;
             }
 
@@ -705,7 +705,7 @@ function onWhoTimeout()
         var period = net.prefs["autoAwayPeriod"];
         // The time since the last check, with a 5s error margin to
         // stop us from not checking because the timer fired a tad early:
-        var waited = Date.now() - net.lastWhoCheckTime + 5000;
+        var waited = Number(new Date()) - net.lastWhoCheckTime + 5000;
         if (net.isConnected() && (period != 0) && (period * 60000 < waited))
             checkWho();
     }

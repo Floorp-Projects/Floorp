@@ -184,7 +184,7 @@ function init()
         client.openLogFile(client);
     // kick-start a log-check interval to make sure we change logfiles in time:
     // It will fire 2 seconds past the next full hour.
-    setTimeout("checkLogFiles()", 3602000 - (Date.now() % 3600000));
+    setTimeout("checkLogFiles()", 3602000 - (Number(new Date()) % 3600000));
 
     // Make sure the userlist is on the correct side.
     updateUserlistSide(client.prefs["userlistLeft"]);
@@ -4628,7 +4628,7 @@ function checkLogFiles()
 
     // We use the same line again to make sure we keep a constant offset
     // from the full hour, in case the timers go crazy at some point.
-    setTimeout("checkLogFiles()", 3602000 - (Date.now() % 3600000));
+    setTimeout("checkLogFiles()", 3602000 - (Number(new Date()) % 3600000));
 }
 
 CIRCChannel.prototype.getLCFunction =
