@@ -442,7 +442,7 @@ sub ChangeUser() {
                 $old = EmailToId($old);
                 $new = EmailToId($new);
             }
-            $::db->do("INSERT INTO CHANGES (email, field, oldvalue, newvalue, who) VALUES (?,?,?,?,?)",
+            $::db->do("INSERT INTO changes (email, field, oldvalue, newvalue, who) VALUES (?,?,?,?,?)",
                 undef, $F::orig_email, $row[0], $old, $new, $F::loginname);
         }
         push(@list, "$row[0] = ?");
