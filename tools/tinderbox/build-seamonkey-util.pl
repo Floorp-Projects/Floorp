@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.328 $ ';
+$::UtilsVersion = '$Revision: 1.329 $ ';
 
 package TinderUtils;
 
@@ -1123,7 +1123,11 @@ sub BuildIt {
                 }
               }
 
-              TinderUtils::run_shell_command("mkdir $objdir/extensions/xforms && cd $objdir/extensions/xforms && $srcdir/build/autoconf/make-makefile -t $srcdir -d ../..");
+              # Call 'mkdir' on its own line.  That way, if we are building in
+              # the src tree, and mkdir fails (dir already exists), it won't
+              # affect the other command calls.
+              TinderUtils::run_shell_command("mkdir $objdir/extensions/xforms");
+              TinderUtils::run_shell_command("cd $objdir/extensions/xforms && $srcdir/build/autoconf/make-makefile -t $srcdir -d ../..");
               TinderUtils::run_shell_command("make -C $objdir/extensions/xforms");
               if ($Settings::MacUniversalBinary) {
                 TinderUtils::run_shell_command("mkdir $objdir/../i386/extensions/xforms && cd $objdir/../i386/extensions/xforms && $srcdir/build/autoconf/make-makefile -t $srcdir -d ../..");
