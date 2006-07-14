@@ -323,6 +323,9 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
 	case eColor__moz_mac_menushadow:
 		res = GetMacBrushColor(kThemeBrushBevelActiveDark, aColor, NS_RGB(0x88,0x88,0x88));
 	    break;	        
+	case eColor__moz_mac_menutextdisable:
+		res = GetMacTextColor(kThemeTextColorMenuItemDisabled, aColor, NS_RGB(0x99,0x99,0x99));
+	    break;	    
 	case eColor__moz_mac_menutextselect:
 		//default to white, which is what Platinum uses, if not available		
 		res = GetMacTextColor(kThemeTextColorMenuItemSelected, aColor, NS_RGB(0xFF,0xFF,0xFF));
@@ -538,6 +541,9 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_MenusCanOverlapOSBar:
         // xul popups are not allowed to overlap the menubar.
         aMetric = 0;
+        break;
+    case eMetric_SkipNavigatingDisabledMenuItem:
+        aMetric = 1;
         break;
     case eMetric_DragFullWindow:
         aMetric = 1;

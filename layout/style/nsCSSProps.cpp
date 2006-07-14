@@ -434,6 +434,7 @@ const PRInt32 nsCSSProps::kColorKTable[] = {
   eCSSKeyword__moz_mac_focusring, nsILookAndFeel::eColor__moz_mac_focusring,
   eCSSKeyword__moz_mac_menuselect, nsILookAndFeel::eColor__moz_mac_menuselect,
   eCSSKeyword__moz_mac_menushadow, nsILookAndFeel::eColor__moz_mac_menushadow,
+  eCSSKeyword__moz_mac_menutextdisable, nsILookAndFeel::eColor__moz_mac_menutextdisable,
   eCSSKeyword__moz_mac_menutextselect, nsILookAndFeel::eColor__moz_mac_menutextselect,
   eCSSKeyword__moz_mac_accentlightesthighlight, nsILookAndFeel::eColor__moz_mac_accentlightesthighlight,
   eCSSKeyword__moz_mac_accentregularhighlight, nsILookAndFeel::eColor__moz_mac_accentregularhighlight,

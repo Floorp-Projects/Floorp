@@ -50,7 +50,7 @@ menuitem {
   -moz-appearance: menuitem !important;
   -moz-box-align: center;
   color: MenuText;
-  font: menu;
+  font: -moz-pull-down-menu;
   list-style-image: none;
   -moz-image-region: auto;
 }
@@ -58,7 +58,7 @@ menuitem {
 menu[disabled="true"], menuitem[disabled="true"],
 menu[_moz-menuactive="true"][disabled="true"],
 menuitem[_moz-menuactive="true"][disabled="true"] {
-  color: GrayText;
+  color: -moz-mac-menutextdisable;
 }
 
 /* ..... internal content .... */
@@ -71,20 +71,20 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
 }
 
 .menu-text {
-  margin-left: 20px !important;
+  margin-left: 13px !important;
   font-weight: inherit;
 }
 
 .menu-description {
   font-style: italic;
-  color: GrayText;
+  color: -moz-mac-menutextdisable;
   -moz-margin-start: 1ex !important;
 }
 
 .menu-accel,
 .menu-iconic-accel {
   margin: 0px 2px 0px 7px !important;
-  padding-right: 14px;
+  padding-right: 3px;
   color: inherit;
 }
 
@@ -129,9 +129,9 @@ menupopup > menu,
 popup > menu,
 menupopup > menuitem,
 popup > menuitem {
-  padding: 1px 8px 1px 8px !important;
+  padding: 0px 8px 2px 8px !important;
   max-width: 42em;
-  min-height: 20px;
+  min-height: 19px;
 }
 
 menupopup > menu[_moz-menuactive="true"],
@@ -149,7 +149,7 @@ menulist > menupopup > menuitem,
 menulist > menupopup > menu {
   padding-right: 25px !important;
   max-width: none;
-  font: inherit;
+  font: -moz-pull-down-menu;
   color: -moz-FieldText;
 }
 

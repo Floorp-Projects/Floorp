@@ -53,11 +53,27 @@
 #include "nsCRT.h"
 #include "nsWidgetSupport.h"
 
-#include <CFString.h>
+#include <CoreFoundation/CoreFoundation.h>
+#include <Carbon/Carbon.h>
 
-#include <Gestalt.h>
-#include <Quickdraw.h>
-#include <MacWindows.h>
+#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3
+#define kWindowFadeTransitionEffect 4
+#define kEventWindowTransitionCompleted 89
+
+typedef struct TransitionWindowOptions {
+  UInt32    version;
+  EventTime duration;
+  WindowRef window;
+  void*     userData;
+} TransitionWindowOptions;
+#endif
+
+typedef OSStatus (*TransitionWindowWithOptions_type) (WindowRef,
+                                             WindowTransitionEffect,
+                                             WindowTransitionAction,
+                                             const HIRect*,
+                                             Boolean,
+                                             TransitionWindowOptions*);
 
 static const char sScreenManagerContractID[] = "@mozilla.org/gfx/screenmanager;1";
 
@@ -236,12 +252,6 @@ nsMacWindow::nsMacWindow() : Inherited()
 nsMacWindow::~nsMacWindow()
 {
   if ( mWindowPtr && mWindowMadeHere ) {
-    
-    // cleanup our special defproc if we are a popup
-    if ( mWindowType == eWindowType_popup )
-      RemoveBorderlessDefProc ( mWindowPtr );
-
-      
     // clean up DragManager stuff
     if ( mDragTrackingHandlerUPP ) {
       ::RemoveTrackingHandler ( mDragTrackingHandlerUPP, mWindowPtr );
@@ -593,6 +603,8 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
       // to handle activation
       { kEventClassWindow, kEventWindowActivated },
       { kEventClassWindow, kEventWindowDeactivated },
+      // to clean up after a transition is complete
+      { kEventClassWindow, kEventWindowTransitionCompleted },
     };
 
     static EventHandlerUPP sWindowEventHandlerUPP;
@@ -635,10 +647,14 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
       NS_ASSERTION ( err == noErr, "can't install drag receive handler");
     }
 
-    // If we're a popup, we don't want a border (we want CSS to draw it for us). So
-    // install our own window defProc.
-    if ( mWindowType == eWindowType_popup )
-      InstallBorderlessDefProc(mWindowPtr);
+    if (mWindowType == eWindowType_popup) {
+      // Popup windows are used for contextual menus, pop-up/drop-down menus,
+      // autocomplete dropdowns, and tooltips, all of which have a very slight
+      // transparency when native.  Use 5%, which is almost imperceptible
+      // and matches what Tiger does.
+      const float kPopupWindowAlpha = 0.95;
+      ::SetWindowAlpha(mWindowPtr, kPopupWindowAlpha);
+    }
 
   } // if we created windowPtr
 
@@ -764,6 +780,12 @@ nsMacWindow::WindowEventHandler ( EventHandlerCallRef inHandlerChain, EventRef i
       }
       break;
 
+      case kEventWindowTransitionCompleted: {
+        self->mDeathGripDuringTransition = nsnull;
+        retVal = noErr;
+        break;
+      }
+
     } // case of which event?
   }
   
@@ -789,31 +811,6 @@ NS_IMETHODIMP nsMacWindow::Create(nsNativeWidget aNativeParent,   // this is a w
   return(StandardCreate(nsnull, aRect, aHandleEventFunction,
                           aContext, aAppShell, aToolkit, aInitData,
                             aNativeParent));
-}
-
-
-//
-// InstallBorderlessDefProc
-//
-// For xul popups, we want borderless windows to match win32's borderless windows. Stash
-// our fake WDEF into this window which takes care of not-drawing the borders.
-//
-void 
-nsMacWindow::InstallBorderlessDefProc ( WindowPtr inWindow )
-{
-} // InstallBorderlessDefProc
-
-
-//
-// RemoveBorderlessDefProc
-//
-// Clean up the mess we've made with our fake defproc. Reset it to
-// the system one, just in case someone needs it around after we're
-// through with it.
-//
-void
-nsMacWindow::RemoveBorderlessDefProc ( WindowPtr inWindow )
-{
 }
 
 
@@ -973,8 +970,43 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool aState)
       }
     }
     else {
-      if (mWindowPtr)
-        ::HideWindow(mWindowPtr);
+      if (mWindowPtr) {
+        static TransitionWindowWithOptions_type transitionFunc;
+        if (mWindowType == eWindowType_popup) {
+          // Popups will hide by fading out with TransitionWindowWithOptions,
+          // if available.  It's present in 10.3 and later.  If that SDK or
+          // newer is used, just grab the address of the function, otherwise,
+          // dynamically look it up at runtime.  Fall back to calling
+          // HideWindow if TransitionWindowWithOptions isn't available.
+          static PRBool sChecked;
+          if (!sChecked) {
+            sChecked = PR_TRUE;
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_3
+            transitionFunc = ::TransitionWindowWithOptions;
+#else
+            CFBundleRef carbonBundle =
+             ::CFBundleGetBundleWithIdentifier(CFSTR("com.apple.Carbon"));
+            if (carbonBundle) {
+              transitionFunc = (TransitionWindowWithOptions_type)
+               ::CFBundleGetFunctionPointerForName(carbonBundle,
+                                         CFSTR("TransitionWindowWithOptions"));
+            }
+#endif
+          }
+        }
+        if (mWindowType == eWindowType_popup && transitionFunc) {
+          mDeathGripDuringTransition = this;
+          TransitionWindowOptions transitionOptions = { version  : 0,
+                                                        duration : 0.2,
+                                                        window   : nsnull,
+                                                        userData : nsnull };
+          transitionFunc(mWindowPtr, kWindowFadeTransitionEffect,
+                         kWindowHideTransitionAction, nsnull,
+                         PR_TRUE, &transitionOptions);
+        }
+        else
+          ::HideWindow(mWindowPtr);
+      }
       mShown = PR_FALSE;
     }
   }

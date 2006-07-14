@@ -202,6 +202,7 @@ const char nsXPLookAndFeel::sColorPrefs[][38] =
   "ui.-moz-mac-focusring",
   "ui.-moz-mac-menuselect",
   "ui.-moz-mac-menushadow",
+  "ui.-moz-mac-menutextdisable",
   "ui.-moz-mac-menutextselect",
   "ui.-moz-mac-accentlightesthighlight",
   "ui.-moz-mac-accentregularhighlight",
