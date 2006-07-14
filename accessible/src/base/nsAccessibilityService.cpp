@@ -1214,7 +1214,7 @@ nsAccessibilityService::CreateXULMenupopupAccessible(nsIDOMNode *aNode, nsIAcces
   // then strip out redundant accessibles in the nsAccessibleWrap class for each platform.
   if (content) {
     nsIContent *parent = content->GetParent();
-    if (parent && parent->Tag() == nsAccessibilityAtoms::menu) {
+    if (parent && parent->NodeInfo()->Equals(nsAccessibilityAtoms::menu, kNameSpaceID_XUL)) {
       return NS_OK;
     }
   }
