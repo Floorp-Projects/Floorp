@@ -162,12 +162,13 @@ interface nsISearchEngine : nsISupports
 
 };
 
-[scriptable, uuid(019c7025-0e26-48d0-b2a4-97cc7e0296cf)]
+[scriptable, uuid(0c6164fe-580d-497f-87d3-1bf36006cb7c)]
 interface nsIBrowserSearchService : nsISupports
 {
   /**
-   * Adds a new search engine from the file at the supplied URI and optionally
-   * selects it as the current engine.
+   * Adds a new search engine from the file at the supplied URI, optionally
+   * asking the user for confirmation first.  The confirmation dialog also
+   * offers the option to begin using the newly added engine right away.
    *
    * @param engineURL
    *        The URL to the search engine's description file.
@@ -181,18 +182,20 @@ interface nsIBrowserSearchService : nsISupports
    *        icon. This value may be overridden by an icon specified in the
    *        engine description file.
    *
-   * @param select
-   *        A boolean value indicating whether the newly added engine should
-   *        be selected as the current engine after it finishes loading.
+   * @param confirm
+   *        A boolean value indicating whether the user should be asked for
+   *        confirmation before this engine is added to the list.  If this
+   *        value is false, the engine will be added to the list upon successful
+   *        load, but it will not be selected as the current engine.
    *
    * @throws NS_ERROR_FAILURE if the type is invalid, or if the description
    *         file cannot be successfully loaded.
    */
   void addEngine(in AString engineURL, in long type, in AString iconURL,
-                 in boolean select);
+                 in boolean confirm);
 
   /**
-   * Adds a new search engine.
+   * Adds a new search engine, without asking the user for confirmation.
    *
    * @param name
    *        The search engine's name. Must be unique. Must not be null.

@@ -135,57 +135,6 @@ function (aTitle, aContentURL, aCustomizeURL, aPersist)
                    features, dialogArgs);
 }
 
-nsSidebar.prototype.confirmSearchEngine =
-function (engineURL, suggestedTitle)
-{
-  var stringBundle = srGetStrBundle("chrome://browser/locale/sidebar/sidebar.properties");
-  var titleMessage = stringBundle.GetStringFromName("addEngineConfirmTitle");
-
-  // With tentative title: Add "Somebody's Search" to the list...
-  // With no title:        Add a new search engine to the list...
-  var engineName;
-  if (suggestedTitle)
-    engineName = stringBundle.formatStringFromName("addEngineQuotedEngineName",
-                                                   [suggestedTitle], 1);
-  else
-    engineName = stringBundle.GetStringFromName("addEngineDefaultEngineName");
-
-  // Display only the hostname portion of the URL.
-  try {
-    var ios = Components.classes["@mozilla.org/network/io-service;1"]
-                        .getService(Components.interfaces.nsIIOService);
-    var uri = ios.newURI(engineURL, null, null);
-    engineURL = uri.host;
-  }
-  catch (e) {
-    // If newURI fails, fall back to the full URL.
-  }
-
-  var dialogMessage = stringBundle.formatStringFromName("addEngineConfirmText",
-                                                        [engineName, engineURL], 2);
-  var checkboxMessage = stringBundle.GetStringFromName("addEngineUseNowText");
-  var addButtonLabel = stringBundle.GetStringFromName("addEngineAddButtonLabel");
-
-  const ps = this.promptService;
-  var buttonFlags = (ps.BUTTON_TITLE_IS_STRING * ps.BUTTON_POS_0) +
-                    (ps.BUTTON_TITLE_CANCEL    * ps.BUTTON_POS_1) +
-                     ps.BUTTON_POS_0_DEFAULT;
-
-  var checked = {value: false};
-  // confirmEx returns the index of the button that was pressed.  Since "Add" is
-  // button 0, we want to return the negation of that value.
-  var confirm = !this.promptService.confirmEx(null,
-                                         titleMessage,
-                                         dialogMessage,
-                                         buttonFlags,
-                                         addButtonLabel,
-                                         "", "", // button 1 & 2 names not used
-                                         checkboxMessage,
-                                         checked);
-
-  return {confirmed: confirm, useNow: checked.value};
-}
-
 nsSidebar.prototype.validateSearchEngine =
 function (engineURL, iconURL)
 {
@@ -221,6 +170,8 @@ function (engineURL, iconURL)
   return true;
 }
 
+// The suggestedTitle and suggestedCategory parameters are ignored, but remain
+// for backward compatibility.
 nsSidebar.prototype.addSearchEngine =
 function (engineURL, iconURL, suggestedTitle, suggestedCategory)
 {
@@ -228,10 +179,6 @@ function (engineURL, iconURL, suggestedTitle, suggestedCategory)
         suggestedCategory + ", " + suggestedTitle + ")");
 
   if (!this.validateSearchEngine(engineURL, iconURL))
-    return;
-
-  var confirmation = this.confirmSearchEngine(engineURL, suggestedTitle);
-  if (!confirmation.confirmed)
     return;
 
   // OpenSearch files will likely be far more common than Sherlock files, and
@@ -243,8 +190,7 @@ function (engineURL, iconURL, suggestedTitle, suggestedCategory)
   else
     dataType = Components.interfaces.nsISearchEngine.DATA_XML;
 
-  this.searchService.addEngine(engineURL, dataType, iconURL,
-                               confirmation.useNow);
+  this.searchService.addEngine(engineURL, dataType, iconURL, true);
 }
 
 // This function exists largely to implement window.external.AddSearchProvider(),
@@ -268,13 +214,8 @@ function (aDescriptionURL)
   if (!this.validateSearchEngine(aDescriptionURL, iconURL))
     return;
 
-  var confirmation = this.confirmSearchEngine(aDescriptionURL, "");
-  if (!confirmation.confirmed)
-    return;
-
   const typeXML = Components.interfaces.nsISearchEngine.DATA_XML;
-  this.searchService.addEngine(aDescriptionURL, typeXML, iconURL,
-                               confirmation.useNow);
+  this.searchService.addEngine(aDescriptionURL, typeXML, iconURL, true);
 }
 
 nsSidebar.prototype.addMicrosummaryGenerator =

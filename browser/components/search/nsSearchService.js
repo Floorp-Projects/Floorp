@@ -94,6 +94,7 @@ const MAX_ICON_SIZE   = 10000;
 const DEFAULT_QUERY_CHARSET = "ISO-8859-1";
 
 const SEARCH_BUNDLE = "chrome://browser/locale/search.properties";
+const SIDEBAR_BUNDLE = "chrome://browser/locale/sidebar/sidebar.properties";
 const BRAND_BUNDLE = "chrome://branding/locale/brand.properties";
 
 const OPENSEARCH_NS_10  = "http://a9.com/-/spec/opensearch/1.0/";
@@ -961,9 +962,14 @@ Engine.prototype = {
   // A URL string pointing to the engine's search form.
   _searchForm: null,
   // The URI object from which the engine was retrieved.
-  // This is null for local plugins, and is used for error messages, logging,
-  // and determining whether to start using a newly added engine right away.
+  // This is null for local plugins, and is used for error messages and logging.
   _uri: null,
+  // Whether to obtain user confirmation before adding the engine. This is only
+  // used when the engine is first added to the list.
+  _confirm: false,
+  // Whether to set this as the current engine as soon as it is loaded.  This
+  // is only used when the engine is first added to the list.
+  _useNow: false,
   // Whether the search engine file is in the app dir.
   __isInAppDir: null,
 
@@ -1052,6 +1058,41 @@ Engine.prototype = {
     return null;
   },
 
+  _confirmAddEngine: function SRCH_SVC_confirmAddEngine() {
+    var sbs = Cc["@mozilla.org/intl/stringbundle;1"].
+              getService(Ci.nsIStringBundleService);
+    var stringBundle = sbs.createBundle(SIDEBAR_BUNDLE);
+    var titleMessage = stringBundle.GetStringFromName("addEngineConfirmTitle");
+
+    // Display only the hostname portion of the URL.
+    var dialogMessage =
+        stringBundle.formatStringFromName("addEngineConfirmText",
+                                          [this._name, this._uri.host], 2);
+    var checkboxMessage = stringBundle.GetStringFromName("addEngineUseNowText");
+    var addButtonLabel =
+        stringBundle.GetStringFromName("addEngineAddButtonLabel");
+
+    var ps = Cc["@mozilla.org/embedcomp/prompt-service;1"].
+             getService(Ci.nsIPromptService);
+    var buttonFlags = (ps.BUTTON_TITLE_IS_STRING * ps.BUTTON_POS_0) +
+                      (ps.BUTTON_TITLE_CANCEL    * ps.BUTTON_POS_1) +
+                       ps.BUTTON_POS_0_DEFAULT;
+
+    var checked = {value: false};
+    // confirmEx returns the index of the button that was pressed.  Since "Add"
+    // is button 0, we want to return the negation of that value.
+    var confirm = !ps.confirmEx(null,
+                                titleMessage,
+                                dialogMessage,
+                                buttonFlags,
+                                addButtonLabel,
+                                null, null, // button 1 & 2 names not used
+                                checkboxMessage,
+                                checked);
+
+    return {confirmed: confirm, useNow: checked.value};
+  },
+
   /**
    * Handle the successful download of an engine. Initializes the engine and
    * triggers parsing of the data. The engine is then flushed to disk. Notifies
@@ -1110,6 +1151,19 @@ Engine.prototype = {
       onError();
       return;
     }
+
+    // If requested, confirm the addition now that we have the title.
+    if (aEngine._confirm) {
+      var confirmation = aEngine._confirmAddEngine();
+      LOG("_onLoad: confirm is " + confirmation.confirmed +
+          "; useNow is " + confirmation.useNow);
+      if (!confirmation.confirmed)
+        return;
+      aEngine._useNow = confirmation.useNow;
+    }
+
+    // Since we're coming from a URL, we don't yet have a file.
+    aEngine._file = getSanitizedFile(aEngine.name);
 
     // Write the engine to file
     aEngine._serializeToFile();
@@ -1235,11 +1289,6 @@ Engine.prototype = {
         this._type = SEARCH_TYPE_SHERLOCK;
         this._parseAsSherlock();
     }
-
-    // If we don't yet have a file (i.e. we instantiated an engine object from
-    // passed in URL), get one now
-    if (!this._file)
-      this._file = getSanitizedFile(this.name);
   },
 
   /**
@@ -1843,12 +1892,6 @@ Engine.prototype = {
     return "";
   },
 
-  // This getter is used in SearchService.observe.  It is not intended to be
-  // used (or needed) by callers outside this file.
-  get uri() {
-    return this._uri;
-  },
-
   // The file that the plugin is loaded from is a unique identifier for it.  We
   // use this as the identifier to store data in the sqlite database
   get _id() {
@@ -1993,14 +2036,6 @@ function SearchService() {
 SearchService.prototype = {
   _engines: { },
   _sortedEngines: [],
-
-  // If this is set to the URI of the description of a search engine being added
-  // to the list (typically by calling addEngine()), that engine will be
-  // selected as the current engine when it finishes loading.  If another
-  // engine is added with "start using this one now" before the first selected
-  // engine finishes loading, the second choice will override the first one.
-  // If the selected engine fails to load, this marker will be cleared.
-  _selectNewEngineURI: null,
 
   _init: function() {
     engineMetadataService.init();
@@ -2368,22 +2403,19 @@ SearchService.prototype = {
     this._addEngineToStore(engine);
   },
 
-  // If aSelect is true, the newly added engine will be selected as the current
-  // engine when it finishes loading.
-  addEngine: function SRCH_SVC_addEngine(aEngineURL, aType, aIconURL, aSelect) {
+  addEngine: function SRCH_SVC_addEngine(aEngineURL, aType, aIconURL,
+                                         aConfirm) {
     LOG("addEngine: Adding \"" + aEngineURL + "\".");
     try {
       var uri = makeURI(aEngineURL);
       var engine = new Engine(uri, aType, false);
       engine._initFromURI();
-
-      if (aSelect)
-        this._selectNewEngineURI = uri;
     } catch (ex) {
       LOG("addEngine: Error adding engine:\n" + ex);
       throw Cr.NS_ERROR_FAILURE;
     }
     engine._setIcon(aIconURL, false);
+    engine._confirm = aConfirm;
   },
 
   removeEngine: function SRCH_SVC_removeEngine(aEngine) {
@@ -2482,14 +2514,12 @@ SearchService.prototype = {
       case SEARCH_ENGINE_TOPIC:
         if (aVerb == SEARCH_ENGINE_LOADED) {
           var engine = aEngine.QueryInterface(Ci.nsISearchEngine);
-          LOG("nsISearchEngine::observe: Done installation of " + engine.name
+          LOG("nsSearchService::observe: Done installation of " + engine.name
               + ".");
           this._addEngineToStore(engine.wrappedJSObject);
-          // Optionally start using this engine now.
-          if (this._selectNewEngineURI &&
-              this._selectNewEngineURI == engine.wrappedJSObject.uri) {
+          if (engine.wrappedJSObject._useNow) {
+            LOG("nsSearchService::observe: setting current");
             this.currentEngine = aEngine;
-            this._selectNewEngineURI = null;
           }
         }
         break;
