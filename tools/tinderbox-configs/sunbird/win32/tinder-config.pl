@@ -72,7 +72,7 @@ $VendorName               = 'Mozilla';
 #$BloatTest2               = 0;  # dbaron memory bloat test, require tracemalloc
 #$DomToTextConversionTest  = 0;  
 #$XpcomGlueTest            = 0;
-#$CodesizeTest             = 0;  # Z,  require mozilla/tools/codesighs
+$CodesizeTest              = 1;  # Z,  require mozilla/tools/codesighs
 #$EmbedCodesizeTest        = 0;  # mZ, require mozilla/tools/codesigns
 #$MailBloatTest            = 0;
 #$EmbedTest                = 0;  # Assumes you wanted $BuildEmbed=1
@@ -86,7 +86,7 @@ $VendorName               = 'Mozilla';
 #$CompareLocalesAviary     = 0;  # Should the compare-locales commands use the
                                 # aviary directory structure?
 
-#$TestsPhoneHome           = 0;  # Should test report back to server?
+$TestsPhoneHome            = 1;  # Should test report back to server?
 
 # $results_server
 #----------------------------------------------------------------------------
