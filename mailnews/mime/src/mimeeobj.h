@@ -54,8 +54,9 @@ struct MimeExternalObjectClass {
   MimeLeafClass leaf;
 };
 
-extern MimeExternalObjectClass mimeExternalObjectClass;
-
+extern "C" {
+  extern MimeExternalObjectClass mimeExternalObjectClass;
+}
 struct MimeExternalObject {
   MimeLeaf leaf;
 };
