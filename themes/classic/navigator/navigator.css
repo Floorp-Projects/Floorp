@@ -197,6 +197,7 @@
 
 #urlbar[level="high"] > .autocomplete-textbox-container,
 #urlbar[level="low"] > .autocomplete-textbox-container {
+  -moz-appearance: none;
   background-color: InfoBackground;
   color: InfoText;
 }
