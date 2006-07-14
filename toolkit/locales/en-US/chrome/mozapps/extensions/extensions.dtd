@@ -21,7 +21,7 @@
 <!ENTITY cmd.checkUpdatesAll.accesskey    "F">
 <!ENTITY cmd.checkUpdatesAllAddon.tooltip "Finds Updates to your Add-ons">
 <!ENTITY cmd.checkUpdatesAllTheme.tooltip "Finds Updates to your Themes">
-<!ENTITY cmd.installFile.label            "Install">
+<!ENTITY cmd.installLocalFile.label       "Install...">
 <!ENTITY cmd.installFile.accesskey        "I">
 <!ENTITY cmd.installFileAddon.tooltip     "Install an Add-on">
 <!ENTITY cmd.installFileTheme.tooltip     "Install a Theme">
