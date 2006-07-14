@@ -21,6 +21,10 @@
 #                 Jouni Heikniemi <jouni@heikniemi.net>
 #                 Frédéric Buclin <LpSolit@gmail.com>
 
+use strict;
+
+package Bugzilla::Flag;
+
 =head1 NAME
 
 Bugzilla::Flag - A module to deal with Bugzilla flag values.
@@ -49,16 +53,6 @@ whose names start with _ or a re specifically noted as being private.
 
 =cut
 
-######################################################################
-# Module Initialization
-######################################################################
-
-# Make it harder for us to do dangerous things in Perl.
-use strict;
-
-# This module implements bug and attachment flags.
-package Bugzilla::Flag;
-
 use Bugzilla::FlagType;
 use Bugzilla::User;
 use Bugzilla::Util;
@@ -67,9 +61,11 @@ use Bugzilla::Mailer;
 use Bugzilla::Constants;
 use Bugzilla::Field;
 
-######################################################################
-# Global Variables
-######################################################################
+use base qw(Bugzilla::Object);
+
+###############################
+####    Initialization     ####
+###############################
 
 use constant DB_COLUMNS => qw(
     flags.id
@@ -81,33 +77,88 @@ use constant DB_COLUMNS => qw(
     flags.status
 );
 
-my $columns = join(", ", DB_COLUMNS);
+use constant DB_TABLE => 'flags';
+use constant LIST_ORDER => 'id';
 
-######################################################################
-# Searching/Retrieving Flags
-######################################################################
+###############################
+####      Accessors      ######
+###############################
 
-=head1 PUBLIC FUNCTIONS
+=head2 METHODS
 
 =over
 
-=item C<get($id)>
+=item C<id>
 
-Retrieves and returns a flag from the database.
+Returns the ID of the flag.
+
+=item C<name>
+
+Returns the name of the flagtype the flag belongs to.
+
+=item C<status>
+
+Returns the status '+', '-', '?' of the flag.
 
 =back
 
 =cut
 
-sub get {
-    my ($id) = @_;
-    my $dbh = Bugzilla->dbh;
+sub id     { return $_[0]->{'id'};         }
+sub name   { return $_[0]->type->{'name'}; }
+sub status { return $_[0]->{'status'};     }
 
-    my @flag = $dbh->selectrow_array("SELECT $columns FROM flags
-                                      WHERE id = ?", undef, $id);
+###############################
+####       Methods         ####
+###############################
 
-    return perlify_record(@flag);
+=pod
+
+=over
+
+=item C<type>
+
+Returns the type of the flag, as pseudo Bugzilla::FlagType object.
+
+=item C<setter>
+
+Returns the user who set the flag, as a Bugzilla::User object.
+
+=item C<requestee>
+
+Returns the user who has been requested to set the flag, as a
+Bugzilla::User object.
+
+=back
+
+=cut
+
+sub type {
+    my $self = shift;
+
+    $self->{'type'} ||= Bugzilla::FlagType::get($self->{'type_id'});
+    return $self->{'type'};
 }
+
+sub setter {
+    my $self = shift;
+
+    $self->{'setter'} ||= new Bugzilla::User($self->{'setter_id'});
+    return $self->{'setter'};
+}
+
+sub requestee {
+    my $self = shift;
+
+    if (!defined $self->{'requestee'} && $self->{'requestee_id'}) {
+        $self->{'requestee'} = new Bugzilla::User($self->{'requestee_id'});
+    }
+    return $self->{'requestee'};
+}
+
+################################
+## Searching/Retrieving Flags ##
+################################
 
 =pod
 
@@ -130,15 +181,10 @@ sub match {
     my @criteria = sqlify_criteria($criteria);
     $criteria = join(' AND ', @criteria);
 
-    my $flags = $dbh->selectall_arrayref("SELECT $columns FROM flags
-                                          WHERE $criteria");
+    my $flag_ids = $dbh->selectcol_arrayref("SELECT id FROM flags
+                                             WHERE $criteria");
 
-    my @flags;
-    foreach my $flag (@$flags) {
-        push(@flags, perlify_record(@$flag));
-    }
-
-    return \@flags;
+    return Bugzilla::Flag->new_from_list($flag_ids);
 }
 
 =pod
@@ -230,22 +276,22 @@ sub validate {
     foreach my $id (@ids) {
         my $status = $cgi->param("flag-$id");
         my @requestees = $cgi->param("requestee-$id");
-        
+
         # Make sure the flag exists.
-        my $flag = get($id);
+        my $flag = new Bugzilla::Flag($id);
         $flag || ThrowCodeError("flag_nonexistent", { id => $id });
 
         # Make sure the user chose a valid status.
         grep($status eq $_, qw(X + - ?))
           || ThrowCodeError("flag_status_invalid", 
                             { id => $id, status => $status });
-                
+
         # Make sure the user didn't request the flag unless it's requestable.
         # If the flag was requested before it became unrequestable, leave it
         # as is.
         if ($status eq '?'
-            && $flag->{status} ne '?'
-            && !$flag->{type}->{is_requestable})
+            && $flag->status ne '?'
+            && !$flag->type->{is_requestable})
         {
             ThrowCodeError("flag_status_invalid", 
                            { id => $id, status => $status });
@@ -256,31 +302,29 @@ sub validate {
         # the flag became specifically unrequestable, don't let the user
         # change the requestee, but let the user remove it by entering
         # an empty string for the requestee.
-        if ($status eq '?' && !$flag->{type}->{is_requesteeble}) {
-            my $old_requestee =
-                $flag->{'requestee'} ? $flag->{'requestee'}->login : '';
+        if ($status eq '?' && !$flag->type->{is_requesteeble}) {
+            my $old_requestee = $flag->requestee ? $flag->requestee->login : '';
             my $new_requestee = join('', @requestees);
             if ($new_requestee && $new_requestee ne $old_requestee) {
                 ThrowCodeError("flag_requestee_disabled",
-                               { type => $flag->{type} });
+                               { type => $flag->type });
             }
         }
 
         # Make sure the user didn't enter multiple requestees for a flag
         # that can't be requested from more than one person at a time.
         if ($status eq '?'
-            && !$flag->{type}->{is_multiplicable}
+            && !$flag->type->{is_multiplicable}
             && scalar(@requestees) > 1)
         {
-            ThrowUserError("flag_not_multiplicable", { type => $flag->{type} });
+            ThrowUserError("flag_not_multiplicable", { type => $flag->type });
         }
 
         # Make sure the requestees are authorized to access the bug.
         # (and attachment, if this installation is using the "insider group"
         # feature and the attachment is marked private).
-        if ($status eq '?' && $flag->{type}->{is_requesteeble}) {
-            my $old_requestee =
-                $flag->{'requestee'} ? $flag->{'requestee'}->login : '';
+        if ($status eq '?' && $flag->type->{is_requesteeble}) {
+            my $old_requestee = $flag->requestee ? $flag->requestee->login : '';
             foreach my $login (@requestees) {
                 next if $login eq $old_requestee;
 
@@ -293,7 +337,7 @@ sub validate {
                 # can_see_bug() will refer to old settings.
                 if (!$requestee->can_see_bug($bug_id)) {
                     ThrowUserError("flag_requestee_unauthorized",
-                                   { flag_type  => $flag->{'type'},
+                                   { flag_type  => $flag->type,
                                      requestee  => $requestee,
                                      bug_id     => $bug_id,
                                      attach_id  => $attach_id
@@ -308,7 +352,7 @@ sub validate {
                     && !$requestee->in_group(Bugzilla->params->{"insidergroup"}))
                 {
                     ThrowUserError("flag_requestee_unauthorized_attachment",
-                                   { flag_type  => $flag->{'type'},
+                                   { flag_type  => $flag->type,
                                      requestee  => $requestee,
                                      bug_id     => $bug_id,
                                      attach_id  => $attach_id
@@ -319,24 +363,24 @@ sub validate {
 
         # Make sure the user is authorized to modify flags, see bug 180879
         # - The flag is unchanged
-        next if ($status eq $flag->{status});
+        next if ($status eq $flag->status);
 
         # - User in the $request_gid group can clear pending requests and set flags
         #   and can rerequest set flags.
         next if (($status eq 'X' || $status eq '?')
-                 && (!$flag->{type}->{request_gid}
-                     || $user->in_group_id($flag->{type}->{request_gid})));
+                 && (!$flag->type->{request_gid}
+                     || $user->in_group_id($flag->type->{request_gid})));
 
         # - User in the $grant_gid group can set/clear flags,
         #   including "+" and "-"
-        next if (!$flag->{type}->{grant_gid}
-                 || $user->in_group_id($flag->{type}->{grant_gid}));
+        next if (!$flag->type->{grant_gid}
+                 || $user->in_group_id($flag->type->{grant_gid}));
 
         # - Any other flag modification is denied
         ThrowUserError("flag_update_denied",
-                        { name       => $flag->{type}->{name},
+                        { name       => $flag->type->{name},
                           status     => $status,
-                          old_status => $flag->{status} });
+                          old_status => $flag->status });
     }
 }
 
@@ -347,8 +391,8 @@ sub snapshot {
                         'attach_id' => $attach_id });
     my @summaries;
     foreach my $flag (@$flags) {
-        my $summary = $flag->{'type'}->{'name'} . $flag->{'status'};
-        $summary .= "(" . $flag->{'requestee'}->login . ")" if $flag->{'requestee'};
+        my $summary = $flag->type->{'name'} . $flag->status;
+        $summary .= "(" . $flag->requestee->login . ")" if $flag->requestee;
         push(@summaries, $summary);
     }
     return @summaries;
@@ -474,6 +518,7 @@ sub create {
 
     my $attach_id = $attachment ? $attachment->id : undef;
     my $requestee_id;
+    # Be careful! At this point, $flag is *NOT* yet an object!
     $requestee_id = $flag->{'requestee'}->id if $flag->{'requestee'};
 
     $dbh->do('INSERT INTO flags (type_id, bug_id, attach_id, requestee_id,
@@ -483,14 +528,20 @@ sub create {
                       $attach_id, $requestee_id, $flag->{'setter'}->id,
                       $flag->{'status'}, $timestamp, $timestamp));
 
+    # Now that the new flag has been added to the DB, create a real flag object.
+    # This is required to call notify() correctly.
+    my $flag_id = $dbh->bz_last_key('flags', 'id');
+    $flag = new Bugzilla::Flag($flag_id);
+
     # Send an email notifying the relevant parties about the flag creation.
-    if ($flag->{'requestee'} 
-          && $flag->{'requestee'}->wants_mail([EVT_FLAG_REQUESTED]))
-    {
-        $flag->{'addressee'} = $flag->{'requestee'};
+    if ($flag->requestee && $flag->requestee->wants_mail([EVT_FLAG_REQUESTED])) {
+        $flag->{'addressee'} = $flag->requestee;
     }
 
     notify($flag, $bug, $attachment);
+
+    # Return the new flag object.
+    return $flag;
 }
 
 =pod
@@ -519,7 +570,7 @@ sub modify {
     # those changes.
     my @flags;
     foreach my $id (@ids) {
-        my $flag = get($id);
+        my $flag = new Bugzilla::Flag($id);
 
         my $status = $cgi->param("flag-$id");
 
@@ -531,17 +582,17 @@ sub modify {
         my $requestee_email;
         if ($status eq "?"
             && scalar(@requestees) > 1
-            && $flag->{type}->{is_multiplicable})
+            && $flag->type->{is_multiplicable})
         {
             # The first person, for which we'll reuse the existing flag.
             $requestee_email = shift(@requestees);
 
             # Create new flags like the existing one for each additional person.
             foreach my $login (@requestees) {
-                create({ type      => $flag->{type} ,
+                create({ type      => $flag->type,
                          setter    => $setter, 
                          status    => "?",
-                         requestee => new Bugzilla::User(login_to_id($login)) },
+                         requestee => Bugzilla::User->new_from_login($login) },
                        $bug, $attachment, $timestamp);
             }
         }
@@ -553,7 +604,7 @@ sub modify {
         # either the status changes (trivial) or the requestee changes.
         # Change of either field will cause full update of the flag.
 
-        my $status_changed = ($status ne $flag->{'status'});
+        my $status_changed = ($status ne $flag->status);
 
         # Requestee is considered changed, if all of the following apply:
         # 1. Flag status is '?' (requested)
@@ -561,12 +612,11 @@ sub modify {
         # 3. The requestee specified on the form is different from the 
         #    requestee specified in the db.
 
-        my $old_requestee = 
-          $flag->{'requestee'} ? $flag->{'requestee'}->login : '';
+        my $old_requestee = $flag->requestee ? $flag->requestee->login : '';
 
         my $requestee_changed = 
           ($status eq "?" && 
-           $flag->{'type'}->{'is_requesteeble'} &&
+           $flag->type->{'is_requesteeble'} &&
            $old_requestee ne $requestee_email);
 
         next unless ($status_changed || $requestee_changed);
@@ -580,13 +630,13 @@ sub modify {
                          SET setter_id = ?, requestee_id = NULL,
                              status = ?, modification_date = ?
                        WHERE id = ?',
-                       undef, ($setter->id, $status, $timestamp, $flag->{'id'}));
+                       undef, ($setter->id, $status, $timestamp, $flag->id));
 
             # If the status of the flag was "?", we have to notify
             # the requester (if he wants to).
             my $requester;
-            if ($flag->{'status'} eq '?') {
-                $requester = $flag->{'setter'};
+            if ($flag->status eq '?') {
+                $requester = $flag->setter;
             }
             # Now update the flag object with its new values.
             $flag->{'setter'} = $setter;
@@ -620,23 +670,21 @@ sub modify {
                              status = ?, modification_date = ?
                        WHERE id = ?',
                        undef, ($setter->id, $requestee_id, $status,
-                               $timestamp, $flag->{'id'}));
+                               $timestamp, $flag->id));
 
             # Now update the flag object with its new values.
             $flag->{'setter'} = $setter;
             $flag->{'status'} = $status;
 
             # Send an email notifying the relevant parties about the request.
-            if ($flag->{'requestee'}
-                  && $flag->{'requestee'}->wants_mail([EVT_FLAG_REQUESTED]))
-            {
-                $flag->{'addressee'} = $flag->{'requestee'};
+            if ($flag->requestee && $flag->requestee->wants_mail([EVT_FLAG_REQUESTED])) {
+                $flag->{'addressee'} = $flag->requestee;
             }
 
             notify($flag, $bug, $attachment);
         }
         elsif ($status eq 'X') {
-            clear($flag->{'id'}, $bug, $attachment);
+            clear($flag->id, $bug, $attachment);
         }
 
         push(@flags, $flag);
@@ -661,14 +709,14 @@ sub clear {
     my ($id, $bug, $attachment) = @_;
     my $dbh = Bugzilla->dbh;
 
-    my $flag = get($id);
+    my $flag = new Bugzilla::Flag($id);
     $dbh->do('DELETE FROM flags WHERE id = ?', undef, $id);
 
     # If we cancel a pending request, we have to notify the requester
     # (if he wants to).
     my $requester;
-    if ($flag->{'status'} eq '?') {
-        $requester = $flag->{'setter'};
+    if ($flag->status eq '?') {
+        $requester = $flag->setter;
     }
 
     # Now update the flag object to its new values. The last
@@ -744,11 +792,10 @@ sub FormToNewFlags {
         my @logins = $cgi->param("requestee_type-$type_id");
         if ($status eq "?" && scalar(@logins) > 0) {
             foreach my $login (@logins) {
-                my $requestee = new Bugzilla::User(login_to_id($login));
                 push (@flags, { type      => $flag_type ,
                                 setter    => $setter , 
                                 status    => $status ,
-                                requestee => $requestee });
+                                requestee => Bugzilla::User->new_from_login($login) });
                 last if !$flag_type->{'is_multiplicable'};
             }
         }
@@ -782,7 +829,7 @@ sub notify {
     my $template = Bugzilla->template;
 
     # There is nobody to notify.
-    return unless ($flag->{'addressee'} || $flag->{'type'}->{'cc_list'});
+    return unless ($flag->{'addressee'} || $flag->type->{'cc_list'});
 
     my $attachment_is_private = $attachment ? $attachment->isprivate : undef;
 
@@ -792,7 +839,7 @@ sub notify {
     # not in those groups or email addresses that don't have an account.
     if ($bug->groups || $attachment_is_private) {
         my @new_cc_list;
-        foreach my $cc (split(/[, ]+/, $flag->{'type'}->{'cc_list'})) {
+        foreach my $cc (split(/[, ]+/, $flag->type->{'cc_list'})) {
             my $ccuser = Bugzilla::User->new_from_login($cc) || next;
 
             next if ($bug->groups && !$ccuser->can_see_bug($bug->bug_id));
@@ -801,15 +848,15 @@ sub notify {
               && !$ccuser->in_group(Bugzilla->params->{"insidergroup"});
             push(@new_cc_list, $cc);
         }
-        $flag->{'type'}->{'cc_list'} = join(", ", @new_cc_list);
+        $flag->type->{'cc_list'} = join(", ", @new_cc_list);
     }
 
     # If there is nobody left to notify, return.
-    return unless ($flag->{'addressee'} || $flag->{'type'}->{'cc_list'});
+    return unless ($flag->{'addressee'} || $flag->type->{'cc_list'});
 
     # Process and send notification for each recipient
     foreach my $to ($flag->{'addressee'} ? $flag->{'addressee'}->email : '',
-                    split(/[, ]+/, $flag->{'type'}->{'cc_list'}))
+                    split(/[, ]+/, $flag->type->{'cc_list'}))
     {
         next unless $to;
         my $vars = { 'flag'       => $flag,
@@ -903,38 +950,6 @@ sub sqlify_criteria {
     }
     
     return @criteria;
-}
-
-=pod
-
-=over
-
-=item C<perlify_record($id, $type_id, $bug_id, $attach_id, $requestee_id, $setter_id, $status)>
-
-Converts a row from the database into a Perl record.
-
-=back
-
-=end private
-
-=cut
-
-sub perlify_record {
-    my ($id, $type_id, $bug_id, $attach_id,
-        $requestee_id, $setter_id, $status) = @_;
-
-    return undef unless $id;
-
-    my $flag =
-      {
-        id        => $id ,
-        type      => Bugzilla::FlagType::get($type_id) ,
-        requestee => $requestee_id ? new Bugzilla::User($requestee_id) : undef,
-        setter    => new Bugzilla::User($setter_id) ,
-        status    => $status , 
-      };
-
-    return $flag;
 }
 
 =head1 SEE ALSO

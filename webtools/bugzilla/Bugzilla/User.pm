@@ -978,11 +978,13 @@ sub match_field {
                 # to show up correctly on the confirmation page, we need 
                 # to find out the name of its flag type.
                 if ($field_name =~ /^requestee-(\d+)$/) {
-                    my $flag = Bugzilla::Flag::get($1);
+                    require Bugzilla::Flag;
+                    my $flag = new Bugzilla::Flag($1);
                     $expanded_fields->{$field_name}->{'flag_type'} = 
-                      $flag->{'type'};
+                      $flag->type;
                 }
                 elsif ($field_name =~ /^requestee_type-(\d+)$/) {
+                    require Bugzilla::FlagType;
                     $expanded_fields->{$field_name}->{'flag_type'} = 
                       Bugzilla::FlagType::get($1);
                 }
