@@ -102,7 +102,8 @@ private:
 class nsMacEventHandler
 {
 public:
-		nsMacEventHandler(nsMacWindow* aTopLevelWidget);
+		nsMacEventHandler(nsMacWindow* aTopLevelWidget,
+                                  nsMacEventDispatchHandler* aEventDispatchHandler);
 		virtual ~nsMacEventHandler();
 
 		virtual PRBool	HandleOSEvent(EventRecord& aOSEvent);
@@ -168,6 +169,7 @@ protected:
 	PRPackedBool			mKeyIgnore;
 	PRPackedBool			mKeyHandled;
 	PRPackedBool			mMouseInWidgetHit;
+	PRPackedBool			mOwnEventDispatchHandler;
 };
 
 #endif // MacMacEventHandler_h__

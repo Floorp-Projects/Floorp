@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Mark Mentovai <mark@moxienet.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -321,7 +322,8 @@ void nsMacEventDispatchHandler::SetGlobalPoint(Point inPoint)
 // nsMacEventHandler constructor/destructor
 //
 //-------------------------------------------------------------------------
-nsMacEventHandler::nsMacEventHandler(nsMacWindow* aTopLevelWidget)
+nsMacEventHandler::nsMacEventHandler(nsMacWindow* aTopLevelWidget,
+                                     nsMacEventDispatchHandler* aEventDispatchHandler)
 {
   OSErr err;
   InterfaceTypeList supportedServices;
@@ -352,7 +354,15 @@ nsMacEventHandler::nsMacEventHandler(nsMacWindow* aTopLevelWidget)
   mKeyHandled = PR_FALSE;
 
   mMouseInWidgetHit = PR_FALSE;
-  mEventDispatchHandler = new nsMacEventDispatchHandler();
+
+  if (aEventDispatchHandler) {
+    mEventDispatchHandler = aEventDispatchHandler;
+    mOwnEventDispatchHandler = PR_FALSE;
+  }
+  else {
+    mEventDispatchHandler = new nsMacEventDispatchHandler();
+    mOwnEventDispatchHandler = PR_TRUE;
+  }
 }
 
 
@@ -364,7 +374,9 @@ nsMacEventHandler::~nsMacEventHandler()
 		delete mIMECompositionStr;
 		mIMECompositionStr = nsnull;
 	}
-	delete mEventDispatchHandler;
+
+	if (mOwnEventDispatchHandler)
+		delete mEventDispatchHandler;
 }
 
 

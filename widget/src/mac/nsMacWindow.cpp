@@ -233,7 +233,6 @@ nsMacWindow::nsMacWindow() : Inherited()
   , mNeedsResize(PR_FALSE)
 #endif
 {
-  mMacEventHandler.reset(new nsMacEventHandler(this));
   WIDGET_SET_CLASSNAME("nsMacWindow");  
 
   // create handlers for drag&drop
@@ -301,6 +300,34 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 
   NS_ASSERTION(!aInitData || aInitData->mWindowType != eWindowType_popup ||
                !aParent, "Popups should not be hooked into nsIWidget hierarchy");
+
+  nsMacEventDispatchHandler* eventDispatchHandler = nsnull;
+
+  if (aInitData && aInitData->mWindowType == eWindowType_popup &&
+      aNativeParent) {
+    // For popup windows, use the same event dispatch handler as the
+    // associated top-level window.  This ensures that enter/exit events
+    // will be generated as the mouse moves between the top-level window
+    // and the popup when both are "active."
+
+    // When creating a popup window, aNativeParent is not a WindowPtr but
+    // an nsIWidget, so walk up that tree to the top-level window and get
+    // the dispatch handler.
+    nsIWidget* widget = NS_STATIC_CAST(nsIWidget*, aNativeParent);
+    nsIWidget* topWidget = nsnull;
+
+    while (widget && (widget = widget->GetParent()))
+      topWidget = widget;
+
+    if (topWidget) {
+      nsCOMPtr<nsPIWidgetMac> parentMacWindow = do_QueryInterface(topWidget);
+
+      if (parentMacWindow)
+        parentMacWindow->GetEventDispatchHandler(&eventDispatchHandler);
+    }
+  }
+
+  mMacEventHandler.reset(new nsMacEventHandler(this, eventDispatchHandler));
 
   // build the main native window
   if (!aNativeParent || (aInitData && aInitData->mWindowType == eWindowType_popup))
