@@ -1387,7 +1387,7 @@ enum BWCOpenDest {
     return enable;
   }
   else if (action == @selector(reload:))
-    return (![mBrowserView isBusy] && ![self bookmarkManagerIsVisible]);
+    return ![self bookmarkManagerIsVisible];
   else if (action == @selector(stop:))
     return [mBrowserView isBusy];
   else if (action == @selector(addBookmark:))
