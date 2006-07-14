@@ -36,12 +36,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
-#include "nsISVGGlyphMetricsSource.idl"
+#include "nsISupports.idl"
 
 native nscolor(nscolor);
-
-interface nsISVGRendererGlyphMetrics;
 
 /**
  * \addtogroup rendering_backend_interfaces Rendering Backend Interfaces
@@ -52,30 +49,15 @@ interface nsISVGRendererGlyphMetrics;
  * Abstracts a description of a 'composite glyph' (character string
  * with associated font and styling information) in the SVG rendering
  * backend for use by a rendering engine's nsISVGRendererGlyphGeometry
- * objects. In addition to the attributes of the
- * nsISVGGlyphMetricsSource interface, this interface contains
- * absolute positioning and other information, such as e.g. individual
- * character highlighting, which doesn't affect the actual metrics of
- * the glyph. The metrics of the glyph, as given by the rendering
- * engine-native object implementing nsISVGRendererGlyphMetrics are
- * also provided as an attribute.
- *
- * An engine-native glyph geometry object will be informed of changes
- * in its associated composite glyph with a call to its
- * nsISVGRendererGlyphMetrics::update() method.
+ * objects. This interface contains absolute positioning and other
+ * information, such as e.g. individual character highlighting,
+ * which doesn't affect the actual metrics of the glyph.
  *
  * @nosubgrouping
  */
-[uuid(58c838f4-0831-42bc-a76b-6d511db3d72b)]
-interface nsISVGGlyphGeometrySource : nsISVGGlyphMetricsSource
+[uuid(2d27485b-b147-4601-b0c4-fcd440145cab)]
+interface nsISVGGlyphGeometrySource : nsISupports
 {
-  /**
-   * @name Glyph metrics
-   * @{
-   */
-  readonly attribute nsISVGRendererGlyphMetrics metrics;
-  /** @} */
-
   /**
    * @name Glyph start position
    * @{

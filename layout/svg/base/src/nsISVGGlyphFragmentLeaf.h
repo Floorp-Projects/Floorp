@@ -42,12 +42,13 @@
 #include "nsISVGGlyphFragmentNode.h"
 #include "nsIDOMSVGLengthList.h"
 
-class nsISVGRendererGlyphMetrics;
+class nsIDOMSVGPoint;
+class nsIDOMSVGRect;
 class nsSVGTextPathFrame;
 
-// {bc02467f-f611-4c0f-8d95-e2923d66f775}
+// {2C466AED-CF7B-4479-A807-98151215A645}
 #define NS_ISVGGLYPHFRAGMENTLEAF_IID \
-{ 0xbc02467f, 0xf611, 0x4c0f, { 0x8d, 0x95, 0xe2, 0x92, 0x3d, 0x66, 0xf7, 0x75 } }
+{ 0x2c466aed, 0xcf7b, 0x4479, { 0xa8, 0x7, 0x98, 0x15, 0x12, 0x15, 0xa6, 0x45 } }
 
 class nsISVGGlyphFragmentLeaf : public nsISVGGlyphFragmentNode
 {
@@ -55,8 +56,24 @@ public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGGLYPHFRAGMENTLEAF_IID)
 
+  NS_IMETHOD GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)=0;
+  NS_IMETHOD GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)=0;
+  NS_IMETHOD GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)=0;
+  NS_IMETHOD GetRotationOfChar(PRUint32 charnum, float *_retval)=0;
+
+  enum { BASELINE_ALPHABETIC = 0U };
+  enum { BASELINE_HANGING = 1U };
+  enum { BASELINE_IDEOGRAPHC = 2U };
+  enum { BASELINE_MATHEMATICAL = 3U };
+  enum { BASELINE_CENTRAL = 4U };
+  enum { BASELINE_MIDDLE = 5U };
+  enum { BASELINE_TEXT_BEFORE_EDGE = 6U };
+  enum { BASELINE_TEXT_AFTER_EDGE = 7U };
+
+  NS_IMETHOD_(float) GetBaselineOffset(PRUint16 baselineIdentifier)=0;
+  NS_IMETHOD_(float) GetAdvance()=0;
+
   NS_IMETHOD_(void) SetGlyphPosition(float x, float y)=0;
-  NS_IMETHOD GetGlyphMetrics(nsISVGRendererGlyphMetrics** metrics)=0;
   NS_IMETHOD_(nsSVGTextPathFrame*) FindTextPathParent()=0;
   NS_IMETHOD_(PRBool) IsStartOfChunk()=0; // == is new absolutely positioned chunk.
   NS_IMETHOD_(void) GetAdjustedPosition(/* inout */ float &x, /* inout */ float &y)=0;

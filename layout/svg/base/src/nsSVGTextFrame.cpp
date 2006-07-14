@@ -44,7 +44,6 @@
 #include "nsIDOMSVGAnimatedNumber.h"
 #include "nsISVGGlyphFragmentNode.h"
 #include "nsISVGGlyphFragmentLeaf.h"
-#include "nsISVGRendererGlyphMetrics.h"
 #include "nsSVGOuterSVGFrame.h"
 #include "nsIDOMSVGRect.h"
 #include "nsISVGTextContentMetrics.h"
@@ -277,7 +276,6 @@ nsSVGTextFrame::NotifyRedrawSuspended()
     nsISVGGlyphFragmentNode* fragmentNode = nsnull;
     CallQueryInterface(kid, &fragmentNode);
     if (fragmentNode) {
-      fragmentNode->NotifyMetricsSuspended();
       fragmentNode->NotifyGlyphFragmentTreeSuspended();
     }
   }
@@ -306,15 +304,6 @@ nsSVGTextFrame::NotifyRedrawUnsuspended()
   if (mFragmentTreeDirty)
     UpdateFragmentTree();
   
-  mMetricsState = updating;
-  for (kid = mFrames.FirstChild(); kid; kid = kid->GetNextSibling()) {
-    nsISVGGlyphFragmentNode* node = nsnull;
-    CallQueryInterface(kid, &node);
-    if (node) {
-      node->NotifyMetricsUnsuspended();
-    }
-  }
-
   mMetricsState = unsuspended;
   if (mPositioningDirty)
     UpdateGlyphPositioning();
@@ -451,16 +440,6 @@ nsSVGTextFrame::EnsureFragmentTreeUpToDate()
 
   if (mMetricsState == suspended) {
     resuspend_metrics = PR_TRUE;
-    mMetricsState = updating;
-    nsIFrame* kid = mFrames.FirstChild();
-    while (kid) {
-      nsISVGGlyphFragmentNode* node=nsnull;
-      kid->QueryInterface(NS_GET_IID(nsISVGGlyphFragmentNode), (void**)&node);
-      if (node)
-        node->NotifyMetricsUnsuspended();
-      kid = kid->GetNextSibling();
-    }
-
     mMetricsState = unsuspended;
   }
   
@@ -476,7 +455,6 @@ nsSVGTextFrame::EnsureFragmentTreeUpToDate()
       nsISVGGlyphFragmentNode* fragmentNode=nsnull;
       kid->QueryInterface(NS_GET_IID(nsISVGGlyphFragmentNode), (void**)&fragmentNode);
       if (fragmentNode) {
-        fragmentNode->NotifyMetricsSuspended();
         fragmentNode->NotifyGlyphFragmentTreeSuspended();
       }
       kid = kid->GetNextSibling();
@@ -571,31 +549,31 @@ nsSVGTextFrame::UpdateGlyphPositioning()
   PRUint8 baseline;
   switch(GetStyleSVGReset()->mDominantBaseline) {
     case NS_STYLE_DOMINANT_BASELINE_TEXT_BEFORE_EDGE:
-      baseline = nsISVGRendererGlyphMetrics::BASELINE_TEXT_BEFORE_EDGE;
+      baseline = nsISVGGlyphFragmentLeaf::BASELINE_TEXT_BEFORE_EDGE;
       break;
     case NS_STYLE_DOMINANT_BASELINE_TEXT_AFTER_EDGE:
-      baseline = nsISVGRendererGlyphMetrics::BASELINE_TEXT_AFTER_EDGE;
+      baseline = nsISVGGlyphFragmentLeaf::BASELINE_TEXT_AFTER_EDGE;
       break;
     case NS_STYLE_DOMINANT_BASELINE_MIDDLE:
-      baseline = nsISVGRendererGlyphMetrics::BASELINE_MIDDLE;
+      baseline = nsISVGGlyphFragmentLeaf::BASELINE_MIDDLE;
       break;
     case NS_STYLE_DOMINANT_BASELINE_CENTRAL:
-      baseline = nsISVGRendererGlyphMetrics::BASELINE_CENTRAL;
+      baseline = nsISVGGlyphFragmentLeaf::BASELINE_CENTRAL;
       break;
     case NS_STYLE_DOMINANT_BASELINE_MATHEMATICAL:
-      baseline = nsISVGRendererGlyphMetrics::BASELINE_MATHEMATICAL;
+      baseline = nsISVGGlyphFragmentLeaf::BASELINE_MATHEMATICAL;
       break;
     case NS_STYLE_DOMINANT_BASELINE_IDEOGRAPHIC:
-      baseline = nsISVGRendererGlyphMetrics::BASELINE_IDEOGRAPHC;
+      baseline = nsISVGGlyphFragmentLeaf::BASELINE_IDEOGRAPHC;
       break;
     case NS_STYLE_DOMINANT_BASELINE_HANGING:
-      baseline = nsISVGRendererGlyphMetrics::BASELINE_HANGING;
+      baseline = nsISVGGlyphFragmentLeaf::BASELINE_HANGING;
       break;
     case NS_STYLE_DOMINANT_BASELINE_AUTO:
     case NS_STYLE_DOMINANT_BASELINE_USE_SCRIPT:
     case NS_STYLE_DOMINANT_BASELINE_ALPHABETIC:
     default:
-      baseline = nsISVGRendererGlyphMetrics::BASELINE_ALPHABETIC;
+      baseline = nsISVGGlyphFragmentLeaf::BASELINE_ALPHABETIC;
       break;
   }
 
@@ -635,15 +613,10 @@ nsSVGTextFrame::UpdateGlyphPositioning()
     
       fragment = firstFragment;
       while (fragment) {
-        nsCOMPtr<nsISVGRendererGlyphMetrics> metrics;
-        fragment->GetGlyphMetrics(getter_AddRefs(metrics));
-        if (!metrics) continue;
-
-        float advance, dx = 0.0f;
+        float dx = 0.0f;
         nsCOMPtr<nsIDOMSVGLengthList> list = fragment->GetDx();
         GetSingleValue(fragment, list, &dx);
-        metrics->GetAdvance(&advance);
-        chunkLength += advance + dx;
+        chunkLength += dx + fragment->GetAdvance();
         fragment = fragment->GetNextGlyphFragment();
         if (fragment && fragment->IsAbsolutelyPositioned())
           break;
@@ -659,12 +632,8 @@ nsSVGTextFrame::UpdateGlyphPositioning()
   
     fragment = firstFragment;
     while (fragment) {
-      nsCOMPtr<nsISVGRendererGlyphMetrics> metrics;
-      fragment->GetGlyphMetrics(getter_AddRefs(metrics));
-      if (!metrics) continue;
 
-      float baseline_offset, dx = 0.0f, dy = 0.0f;
-      metrics->GetBaselineOffset(baseline, &baseline_offset);
+      float dx = 0.0f, dy = 0.0f;
       {
         nsCOMPtr<nsIDOMSVGLengthList> list = fragment->GetDx();
         GetSingleValue(fragment, list, &dx);
@@ -674,11 +643,10 @@ nsSVGTextFrame::UpdateGlyphPositioning()
         GetSingleValue(fragment, list, &dy);
       }
 
+      float baseline_offset = fragment->GetBaselineOffset(baseline);
       fragment->SetGlyphPosition(x + dx, y + dy - baseline_offset);
 
-      float advance;
-      metrics->GetAdvance(&advance);
-      x += dx + advance;
+      x += dx + fragment->GetAdvance();
       y += dy;
       fragment = fragment->GetNextGlyphFragment();
       if (fragment && fragment->IsAbsolutelyPositioned())

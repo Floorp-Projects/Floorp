@@ -43,10 +43,11 @@
 #include "nsISupports.h"
 
 class nsISVGGlyphFragmentLeaf;
+class nsIDOMSVGPoint;
 
-// {AEEE492E-AF86-4c6a-AF14-88E224DD10E5}
+// {1C17FF01-92B9-469b-A93D-4FD387F24F5E}
 #define NS_ISVGGLYPHFRAGMENTNODE_IID \
-{ 0xaeee492e, 0xaf86, 0x4c6a, { 0xaf, 0x14, 0x88, 0xe2, 0x24, 0xdd, 0x10, 0xe5 } }
+{ 0x1c17ff01, 0x92b9, 0x469b, { 0xa9, 0x3d, 0x4f, 0xd3, 0x87, 0xf2, 0x4f, 0x5e } }
 
 class nsISVGGlyphFragmentNode : public nsISupports
 {
@@ -61,8 +62,6 @@ public:
   NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetFirstGlyphFragment()=0;
   NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetNextGlyphFragment()=0;
   NS_IMETHOD_(PRUint32) BuildGlyphFragmentTree(PRUint32 charNum, PRBool lastBranch)=0;
-  NS_IMETHOD_(void) NotifyMetricsSuspended()=0;
-  NS_IMETHOD_(void) NotifyMetricsUnsuspended()=0;
   NS_IMETHOD_(void) NotifyGlyphFragmentTreeSuspended()=0;
   NS_IMETHOD_(void) NotifyGlyphFragmentTreeUnsuspended()=0;
 };

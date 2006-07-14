@@ -87,14 +87,13 @@ typedef struct _cairo_surface cairo_surface_t;
 #define NS_STATE_SVG_HAS_MARKERS      0x02000000
 
 #define NS_STATE_SVG_DIRTY            0x04000000
-#define NS_STATE_SVG_METRICS_DIRTY    0x08000000
 
-#define NS_STATE_SVG_FILL_PSERVER     0x10000000
-#define NS_STATE_SVG_STROKE_PSERVER   0x20000000
-#define NS_STATE_SVG_PSERVER_MASK     0x30000000
+#define NS_STATE_SVG_FILL_PSERVER     0x08000000
+#define NS_STATE_SVG_STROKE_PSERVER   0x10000000
+#define NS_STATE_SVG_PSERVER_MASK     0x18000000
 
 /* are we the child of a non-display container? */
-#define NS_STATE_SVG_NONDISPLAY_CHILD 0x40000000
+#define NS_STATE_SVG_NONDISPLAY_CHILD 0x20000000
 
 class nsSVGUtils
 {

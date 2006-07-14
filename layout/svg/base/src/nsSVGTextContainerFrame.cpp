@@ -41,7 +41,6 @@
 #include "nsSVGOuterSVGFrame.h"
 #include "nsIDOMSVGTextElement.h"
 #include "nsIDOMSVGAnimatedLengthList.h"
-#include "nsISVGRendererGlyphMetrics.h"
 #include "nsISVGGlyphFragmentLeaf.h"
 #include "nsDOMError.h"
 
@@ -192,14 +191,7 @@ nsSVGTextContainerFrame::GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint
     return NS_ERROR_FAILURE;
   }
 
-  // query the renderer metrics for the start position of the character
-  nsCOMPtr<nsISVGRendererGlyphMetrics> metrics;
-  fragment->GetGlyphMetrics(getter_AddRefs(metrics));
-  if (!metrics) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return metrics->GetStartPositionOfChar(charnum - offset, _retval);
+  return fragment->GetStartPositionOfChar(charnum - offset, _retval);
 }
 
 NS_IMETHODIMP
@@ -222,14 +214,7 @@ nsSVGTextContainerFrame::GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint *
     return NS_ERROR_FAILURE;
   }
 
-  // query the renderer metrics for the end position of the character
-  nsCOMPtr<nsISVGRendererGlyphMetrics> metrics;
-  fragment->GetGlyphMetrics(getter_AddRefs(metrics));
-  if (!metrics) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return metrics->GetEndPositionOfChar(charnum - offset, _retval);
+  return fragment->GetEndPositionOfChar(charnum - offset, _retval);
 }
 
 NS_IMETHODIMP
@@ -252,14 +237,7 @@ nsSVGTextContainerFrame::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retv
     return NS_ERROR_FAILURE;
   }
 
-  // query the renderer metrics for the bounds of the character
-  nsCOMPtr<nsISVGRendererGlyphMetrics> metrics;
-  fragment->GetGlyphMetrics(getter_AddRefs(metrics));
-  if (!metrics) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return metrics->GetExtentOfChar(charnum - offset, _retval);
+  return fragment->GetExtentOfChar(charnum - offset, _retval);
 }
 
 NS_IMETHODIMP
@@ -282,14 +260,7 @@ nsSVGTextContainerFrame::GetRotationOfChar(PRUint32 charnum, float *_retval)
     return NS_ERROR_FAILURE;
   }
 
-  // query the renderer metrics for the rotation of the character
-  nsCOMPtr<nsISVGRendererGlyphMetrics> metrics;
-  fragment->GetGlyphMetrics(getter_AddRefs(metrics));
-  if (!metrics) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return metrics->GetRotationOfChar(charnum - offset, _retval);
+  return fragment->GetRotationOfChar(charnum - offset, _retval);
 }
 
 NS_IMETHODIMP

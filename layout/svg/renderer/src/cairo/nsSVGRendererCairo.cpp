@@ -42,7 +42,6 @@
 #include "nsCOMPtr.h"
 #include "nsISVGRenderer.h"
 #include "nsSVGCairoGlyphGeometry.h"
-#include "nsSVGCairoGlyphMetrics.h"
 #include "nsSVGCairoCanvas.h"
 #include "nsSVGCairoSurface.h"
 #include <cairo.h>
@@ -99,15 +98,7 @@ NS_IMPL_ISUPPORTS1(nsSVGRendererCairo, nsISVGRenderer)
 //----------------------------------------------------------------------
 // nsISVGRenderer methods
 
-/** Implements nsISVGRendererGlyphMetrics createGlyphMetrics(in nsISVGGlyphMetricsSource src); */
-NS_IMETHODIMP
-nsSVGRendererCairo::CreateGlyphMetrics(nsISVGGlyphMetricsSource *src,
-                                       nsISVGRendererGlyphMetrics **_retval)
-{
-  return NS_NewSVGCairoGlyphMetrics(_retval, src);
-}
-
-/** Implements nsISVGRendererGlyphGeometry createGlyphGeometry(in nsISVGGlyphGeometrySource src); */
+/** Implements nsISVGRendererGlyphGeometry createGlyphGeometry; */
 NS_IMETHODIMP
 nsSVGRendererCairo::CreateGlyphGeometry(nsISVGRendererGlyphGeometry **_retval)
 {

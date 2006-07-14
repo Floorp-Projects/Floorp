@@ -50,7 +50,6 @@
 #include "nsIPresShell.h"
 #include "nsSVGUtils.h"
 #include "nsISVGGlyphFragmentLeaf.h"
-#include "nsISVGRendererGlyphMetrics.h"
 #include "nsNetUtil.h"
 #include "nsIDOMSVGRect.h"
 #include "nsFrameList.h"
