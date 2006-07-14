@@ -150,6 +150,10 @@
 
 [% PROCESS "global/common-links.html.tmpl" %]
 
+[% IF Param('announcehtml') %]
+[% Param('announcehtml') FILTER none %]
+[% END %]
+
 [% IF message %]
 <div id="message">[% message %]</div>
 [% END %]

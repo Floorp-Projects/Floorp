@@ -72,6 +72,19 @@
                   "disabled and this text will be displayed instead of all the " _
                   "$terms.Bugzilla pages.",
 
+  announcehtml => "If this field is non-empty, then $terms.Bugzilla will " _
+                  "display whatever is in this field at the top of every " _
+                  "HTML page.  The HTML you put in this field is not " _
+                  "wrapped or enclosed in anything; you might want to " _
+                  "wrap it inside a <tt>&lt;div&gt;</tt>.  Give the div " _
+                  "<em>id=message</em> to get green text inside a " _
+                  "red box, or <em>class=bz_private</em> for dark " _
+                  "red on a red background.  Anything defined in " _
+                  "<tt>skins/standard/global.css</tt> or " _
+                  "<tt>skins/custom/global.css</tt> will work.  To get " _
+                  "centered text, use <em>style=\"text-align: " _
+                  "center;\"</em>.",
+
   upgrade_notification => "<p>$terms.Bugzilla can inform you when a new release is available. " _
                           "The notification will appear on the $terms.Bugzilla homepage, " _
                           "for administrators only.</p>" _

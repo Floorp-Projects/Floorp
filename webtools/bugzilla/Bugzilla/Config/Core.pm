@@ -106,6 +106,12 @@ sub get_param_list {
   },
 
   {
+   name => 'announcehtml',
+   type => 'l',
+   default => ''
+  },
+
+  {
    name => 'upgrade_notification',
    type => 's',
    choices => ['development_snapshot', 'latest_stable_release',
