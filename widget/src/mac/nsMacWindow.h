@@ -136,9 +136,6 @@ public:
 
 protected:
   
-  void InstallBorderlessDefProc ( WindowPtr inWindow ) ;
-  void RemoveBorderlessDefProc ( WindowPtr inWindow ) ;
-
 	pascal static OSErr DragTrackingHandler ( DragTrackingMessage theMessage, WindowPtr theWindow, 
 										void *handlerRefCon, DragReference theDrag );
 	pascal static OSErr DragReceiveHandler (WindowPtr theWindow,
@@ -168,6 +165,7 @@ protected:
 	Point                           mBoundsOffset;      // offset from window structure to content
 	auto_ptr<nsMacEventHandler>     mMacEventHandler;
 	nsIWidget                      *mOffsetParent;
+        nsCOMPtr<nsIWidget>             mDeathGripDuringTransition;
 	
 #if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_3
 	PRPackedBool                    mNeedsResize;
