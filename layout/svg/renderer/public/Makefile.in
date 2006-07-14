@@ -46,11 +46,9 @@ XPIDL_MODULE = gksvgrenderer
 
 XPIDLSRCS =                                   \
 	nsISVGGlyphGeometrySource.idl             \
-	nsISVGGlyphMetricsSource.idl              \
 	nsISVGRenderer.idl                        \
 	nsISVGRendererCanvas.idl                  \
 	nsISVGRendererGlyphGeometry.idl           \
-	nsISVGRendererGlyphMetrics.idl            \
 	nsISVGRendererSurface.idl                 \
 	$(NULL)
 

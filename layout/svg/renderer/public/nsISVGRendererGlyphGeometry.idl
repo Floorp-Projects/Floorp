@@ -45,7 +45,6 @@ struct nsRect;
 native nsRect(nsRect);
 
 interface nsISVGRendererRegion;
-interface nsISVGRendererGlyphMetrics;
 interface nsISVGRendererCanvas;
 interface nsIDOMSVGRect;
 interface nsSVGGlyphFrame;

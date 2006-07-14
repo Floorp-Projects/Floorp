@@ -43,13 +43,41 @@
 #include "nsISVGGlyphGeometrySource.h"
 #include "nsISVGGlyphFragmentLeaf.h"
 #include "nsISVGChildFrame.h"
+#include "nsISVGRendererGlyphGeometry.h"
 
 class nsSVGTextFrame;
+class nsSVGGlyphFrame;
+
+struct nsSVGCharacterPosition {
+  PRBool draw;
+  float x, y;
+  float angle;
+};
+
+// A helper class to deal with temporary cairo contexts.
+// It destroys the context when it goes out of scope.
+class nsSVGAutoGlyphHelperContext
+{
+public:
+  nsSVGAutoGlyphHelperContext(nsSVGGlyphFrame *aSource);
+  ~nsSVGAutoGlyphHelperContext()
+  {
+    cairo_destroy(mCT);
+  }
+
+  operator cairo_t * ()
+  {
+    return mCT;
+  }
+
+private:
+  cairo_t *mCT;
+};
 
 typedef nsSVGGeometryFrame nsSVGGlyphFrameBase;
 
 class nsSVGGlyphFrame : public nsSVGGlyphFrameBase,
-                        public nsISVGGlyphGeometrySource, // : nsISVGGlyphMetricsSource 
+                        public nsISVGGlyphGeometrySource,
                         public nsISVGGlyphFragmentLeaf, // : nsISVGGlyphFragmentNode
                         public nsISVGChildFrame
 {
@@ -118,15 +146,18 @@ public:
   NS_IMETHOD GetCanvasTM(nsIDOMSVGMatrix * *aCTM);
   virtual nsresult UpdateGraphic(PRBool suppressInvalidation = PR_FALSE);
 
-  // nsISVGGlyphMetricsSource interface:
-  NS_DECL_NSISVGGLYPHMETRICSSOURCE
-
   // nsISVGGlyphGeometrySource interface:
   NS_DECL_NSISVGGLYPHGEOMETRYSOURCE
 
   // nsISVGGlyphFragmentLeaf interface:
+  NS_IMETHOD GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval);
+  NS_IMETHOD GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval);
+  NS_IMETHOD GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval);
+  NS_IMETHOD GetRotationOfChar(PRUint32 charnum, float *_retval);
+  NS_IMETHOD_(float) GetBaselineOffset(PRUint16 baselineIdentifier);
+  NS_IMETHOD_(float) GetAdvance();
+
   NS_IMETHOD_(void) SetGlyphPosition(float x, float y);
-  NS_IMETHOD GetGlyphMetrics(nsISVGRendererGlyphMetrics** metrics);
   NS_IMETHOD_(nsSVGTextPathFrame*) FindTextPathParent();
   NS_IMETHOD_(PRBool) IsStartOfChunk(); // == is new absolutely positioned chunk.
   NS_IMETHOD_(void) GetAdjustedPosition(/* inout */ float &x, /* inout */ float &y);
@@ -146,11 +177,14 @@ public:
   NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetFirstGlyphFragment();
   NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetNextGlyphFragment();
   NS_IMETHOD_(PRUint32) BuildGlyphFragmentTree(PRUint32 charNum, PRBool lastBranch);
-  NS_IMETHOD_(void) NotifyMetricsSuspended();
-  NS_IMETHOD_(void) NotifyMetricsUnsuspended();
   NS_IMETHOD_(void) NotifyGlyphFragmentTreeSuspended();
   NS_IMETHOD_(void) NotifyGlyphFragmentTreeUnsuspended();
   
+  // nsSVGGlyphFrame
+  void GetCharacterData(nsAString & aCharacterData);
+  void SelectFont(cairo_t *ctx);
+  nsresult GetCharacterPosition(cairo_t *ctx, nsSVGCharacterPosition **aCharacterPosition);
+
 protected:
   void UpdateGeometry(PRBool bRedraw, PRBool suppressInvalidation);
   void UpdateMetrics();
@@ -159,7 +193,6 @@ protected:
   
   nsString mCharacterData;
   nsCOMPtr<nsISVGRendererGlyphGeometry> mGeometry;
-  nsCOMPtr<nsISVGRendererGlyphMetrics> mMetrics;
   float mX, mY;
   PRPackedBool mFragmentTreeDirty;
 };

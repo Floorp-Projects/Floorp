@@ -45,9 +45,6 @@ struct nsRect;
 [ref] native nsRectRef(nsRect);
 
 
-interface nsISVGGlyphMetricsSource;
-interface nsISVGGlyphGeometrySource;
-interface nsISVGRendererGlyphMetrics;
 interface nsISVGRendererGlyphGeometry;
 interface nsISVGRendererCanvas;
 interface nsISVGRendererSurface;
@@ -73,21 +70,11 @@ interface nsPresContext;
  * cross-platform libart engine
  * ("@mozilla.org/svg/renderer;1?tech=LIBART").
  */
-[uuid(d5a1f89e-b949-4b2e-8ca7-e574b3f9b549)]
+[uuid(A128A973-FE67-49be-8AEA-2C4FECF3DA34)]
 interface nsISVGRenderer : nsISupports
 {
   // void Init(in nsPresContext presContext);
   
-  /**
-   * Create a rendering engine-native glyph metrics object for the
-   * source object given by 'src'.
-   *
-   * @param src The source object describing the glyph for which
-   * this metrics object is being created.
-   * @return A rendering engine-native glyph metrics object.
-   */
-  nsISVGRendererGlyphMetrics createGlyphMetrics(in nsISVGGlyphMetricsSource src);
-
   /**
    * Create a rendering engine-native glyph geometry object.
    *

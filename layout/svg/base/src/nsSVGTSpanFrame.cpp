@@ -231,32 +231,6 @@ nsSVGTSpanFrame::BuildGlyphFragmentTree(PRUint32 charNum, PRBool lastBranch)
 }
 
 NS_IMETHODIMP_(void)
-nsSVGTSpanFrame::NotifyMetricsSuspended()
-{
-  nsIFrame* kid = mFrames.FirstChild();
-  while (kid) {
-    nsISVGGlyphFragmentNode *node = nsnull;
-    CallQueryInterface(kid, &node);
-    if (node)
-      node->NotifyMetricsSuspended();
-    kid = kid->GetNextSibling();
-  }
-}
-
-NS_IMETHODIMP_(void)
-nsSVGTSpanFrame::NotifyMetricsUnsuspended()
-{
-  nsIFrame* kid = mFrames.FirstChild();
-  while (kid) {
-    nsISVGGlyphFragmentNode *node = nsnull;
-    CallQueryInterface(kid, &node);
-    if (node)
-      node->NotifyMetricsUnsuspended();
-    kid = kid->GetNextSibling();
-  }
-}
-
-NS_IMETHODIMP_(void)
 nsSVGTSpanFrame::NotifyGlyphFragmentTreeSuspended()
 {
   nsIFrame* kid = mFrames.FirstChild();
