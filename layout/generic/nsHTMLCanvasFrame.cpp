@@ -167,13 +167,9 @@ nsHTMLCanvasFrame::PaintCanvas(nsIRenderingContext& aRenderingContext,
   if (!canvas)
     return;
 
-  float t2p = GetPresContext()->TwipsToPixels();
-  float p2t = GetPresContext()->PixelsToTwips();
-
   // XXXvlad clip to aDirtyRect!
 
-  if (inner.width != mCanvasSize.width ||
-      inner.height != mCanvasSize.height)
+  if (inner.Size() != mCanvasSize)
   {
     float sx = inner.width / (float) mCanvasSize.width;
     float sy = inner.height / (float) mCanvasSize.height;

@@ -38,7 +38,6 @@
 #define nsPageFrame_h___
 
 #include "nsContainerFrame.h"
-#include "nsIPrintSettings.h"
 #include "nsLeafFrame.h"
 
 class nsSharedPageData;
@@ -102,9 +101,7 @@ protected:
                        PRInt32              aJust,
                        const nsString&      aStr);
 
-  void DrawHeaderFooter(nsPresContext*      aPresContext,
-                        nsIRenderingContext& aRenderingContext,
-                        nsIFrame *           aFrame,
+  void DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
                         nsHeaderFooterEnum   aHeaderFooter,
                         PRInt32              aJust,
                         const nsString&      sStr,
@@ -113,24 +110,19 @@ protected:
                         nscoord              aAscent,
                         nscoord              aWidth);
 
-  void DrawHeaderFooter(nsPresContext*      aPresContext,
-                        nsIRenderingContext& aRenderingContext,
-                        nsIFrame *           aFrame,
+  void DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
                         nsHeaderFooterEnum   aHeaderFooter,
-                        PRInt32              aJust,
-                        const nsString&      aStr1,
-                        const nsString&      aStr2,
-                        const nsString&      aStr3,
+                        const nsString&      aStrLeft,
+                        const nsString&      aStrRight,
+                        const nsString&      aStrCenter,
                         const nsRect&        aRect,
                         nscoord              aAscent,
                         nscoord              aHeight);
 
   void ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr);
 
-  nsCOMPtr<nsIPrintSettings> mPrintOptions;
   PRInt32     mPageNum;
   PRInt32     mTotNumPages;
-  nsMargin    mMargin;
 
   nsSharedPageData* mPD;
 };
