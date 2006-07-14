@@ -1707,19 +1707,29 @@ private:
 
 class nsWeakFrame {
 public:
-  nsWeakFrame(nsIFrame* aFrame)
+  nsWeakFrame(nsIFrame* aFrame) : mPrev(nsnull), mFrame(nsnull)
   {
-    mPrev = nsnull;
-    mFrame = aFrame;
-    if (mFrame) {
-      nsIPresShell* shell = mFrame->GetPresContext()->GetPresShell();
-      NS_WARN_IF_FALSE(shell, "Null PresShell in nsWeakFrame!");
-      if (shell) {
-        shell->AddWeakFrame(this);
-      } else {
-        mFrame = nsnull;
-      }
-    }
+    Init(aFrame);
+  }
+
+  nsWeakFrame& operator=(nsWeakFrame& aOther) {
+    Init(aOther.GetFrame());
+    return *this;
+  }
+
+  nsWeakFrame& operator=(nsIFrame* aFrame) {
+    Init(aFrame);
+    return *this;
+  }
+
+  nsIFrame* operator->()
+  {
+    return mFrame;
+  }
+
+  operator nsIFrame*()
+  {
+    return mFrame;
   }
 
   void Clear(nsIPresShell* aShell) {
@@ -1743,6 +1753,21 @@ public:
     Clear(mFrame ? mFrame->GetPresContext()->GetPresShell() : nsnull);
   }
 private:
+  void Init(nsIFrame* aFrame)
+  {
+    Clear(mFrame ? mFrame->GetPresContext()->GetPresShell() : nsnull);
+    mFrame = aFrame;
+    if (mFrame) {
+      nsIPresShell* shell = mFrame->GetPresContext()->GetPresShell();
+      NS_WARN_IF_FALSE(shell, "Null PresShell in nsWeakFrame!");
+      if (shell) {
+        shell->AddWeakFrame(this);
+      } else {
+        mFrame = nsnull;
+      }
+    }
+  }
+
   nsWeakFrame*  mPrev;
   nsIFrame*     mFrame;
 };

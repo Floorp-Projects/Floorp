@@ -217,12 +217,6 @@ GetAccessModifierMaskFromPref(PRInt32 aItemType)
   }
 }
 
-static void
-SetFrameExternalReference(nsIFrame* aFrame)
-{
-  aFrame->AddStateBits(NS_FRAME_EXTERNAL_REFERENCE);
-}
-
 class nsMouseWheelTransaction {
 public:
   static nsIFrame* GetTargetFrame() { return sTargetFrame; }
@@ -235,19 +229,18 @@ protected:
   static void Init();
   static nsPoint GetScreenPoint(nsGUIEvent* aEvent);
 
-  static nsIFrame*            sTargetFrame; // weak reference
+  static nsWeakFrame          sTargetFrame;
   static PRUint32             sTime;        // in milliseconds
 };
 
-nsIFrame* nsMouseWheelTransaction::sTargetFrame = nsnull;
-PRUint32  nsMouseWheelTransaction::sTime        = 0;
+nsWeakFrame nsMouseWheelTransaction::sTargetFrame(nsnull);
+PRUint32    nsMouseWheelTransaction::sTime        = 0;
 
 void
 nsMouseWheelTransaction::BeginTransaction(nsIFrame* aTargetFrame,
                                           nsGUIEvent* aEvent)
 {
   NS_ASSERTION(!sTargetFrame, "previous transaction is not finished!");
-  SetFrameExternalReference(aTargetFrame);
   sTargetFrame = aTargetFrame;
   UpdateTransaction();
 }
@@ -591,9 +584,6 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     NS_ASSERTION(mCurrentTarget, "mCurrentTarget is null.  this should not happen.  see bug #13007");
     if (!mCurrentTarget) return NS_ERROR_NULL_POINTER;
   }
-
-  if (mCurrentTarget)
-    SetFrameExternalReference(mCurrentTarget);
 
   *aStatus = nsEventStatus_eIgnore;
 
@@ -1458,8 +1448,6 @@ nsEventStateManager::FireContextClick()
     mCurrentTarget = shell->GetPrimaryFrameFor(mGestureDownFrameOwner);
 
     if ( mCurrentTarget ) {
-      SetFrameExternalReference(mCurrentTarget);
-      
       NS_ASSERTION(mPresContext == mCurrentTarget->GetPresContext(),
                    "a prescontext returned a primary frame that didn't belong to it?");
 
@@ -1653,8 +1641,6 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
       StopTrackingDragGesture();
       return;
     }
-
-    SetFrameExternalReference(mCurrentTarget);
 
     // Check if selection is tracking drag gestures, if so
     // don't interfere!
@@ -2078,8 +2064,6 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 
   NS_ASSERTION(mCurrentTarget, "mCurrentTarget is null");
   if (!mCurrentTarget) return NS_ERROR_NULL_POINTER;
-
-  SetFrameExternalReference(mCurrentTarget);
 
   switch (aEvent->message) {
   case NS_MOUSE_LEFT_BUTTON_DOWN:
@@ -2512,23 +2496,12 @@ nsEventStateManager::SetPresContext(nsPresContext* aPresContext)
 NS_IMETHODIMP
 nsEventStateManager::ClearFrameRefs(nsIFrame* aFrame)
 {
-  if (aFrame == mLastMouseOverFrame)
-    mLastMouseOverFrame = nsnull;
-  if (aFrame == mLastDragOverFrame)
-    mLastDragOverFrame = nsnull;
-  if (aFrame == mCurrentTarget) {
-    if (aFrame) {
-      mCurrentTargetContent = aFrame->GetContent();
-    }
-    mCurrentTarget = nsnull;
+  if (aFrame && aFrame == mCurrentTarget) {
+    mCurrentTargetContent = aFrame->GetContent();
   }
-  if (aFrame == mCurrentFocusFrame)
-    mCurrentFocusFrame = nsnull;
   if (mDOMEventLevel > 0) {
     mClearedFrameRefsDuringEvent = PR_TRUE;
   }
-  if (aFrame == nsMouseWheelTransaction::GetTargetFrame())
-    nsMouseWheelTransaction::EndTransaction();
 
   return NS_OK;
 }
@@ -2823,9 +2796,6 @@ nsEventStateManager::DispatchMouseEvent(nsGUIEvent* aEvent, PRUint32 aMessage,
       // it may not be the same object after event dispatching and handling.
       // So we need to refetch it.
       targetFrame = shell->GetPrimaryFrameFor(aTargetContent);
-      if (targetFrame) {
-        SetFrameExternalReference(targetFrame);
-      }
     }
   }
 
@@ -2849,7 +2819,7 @@ nsEventStateManager::NotifyMouseOut(nsGUIEvent* aEvent, nsIContent* aMovingInto)
     // if the frame is associated with a subdocument,
     // tell the subdocument that we're moving out of it
     nsIFrameFrame* subdocFrame;
-    CallQueryInterface(mLastMouseOverFrame, &subdocFrame);
+    CallQueryInterface(mLastMouseOverFrame.GetFrame(), &subdocFrame);
     if (subdocFrame) {
       nsCOMPtr<nsIDocShell> docshell;
       subdocFrame->GetDocShell(getter_AddRefs(docshell));
@@ -3537,11 +3507,6 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
 #endif
       mCurrentTarget = nextFocusFrame;
 
-      //This may be new frame that hasn't been through the ESM so we
-      //must set its NS_FRAME_EXTERNAL_REFERENCE bit.
-      if (mCurrentTarget)
-        SetFrameExternalReference(mCurrentTarget);
-
       nsCOMPtr<nsIContent> oldFocus(mCurrentFocus);
       ChangeFocusWith(nextFocus, eEventFocusedByKey);
       if (!mCurrentFocus && oldFocus) {
@@ -3562,9 +3527,9 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
 
           return NS_OK;
         }
-        GetFocusedFrame(&mCurrentTarget);
-        if (mCurrentTarget)
-          SetFrameExternalReference(mCurrentTarget);
+        nsIFrame* focusedFrame = nsnull;
+        GetFocusedFrame(&focusedFrame);
+        mCurrentTarget = focusedFrame;
       }
 
       // It's possible that the act of removing focus from our previously
@@ -3880,11 +3845,6 @@ nsEventStateManager::GetEventTarget(nsIFrame **aFrame)
       nsIPresShell *shell = mPresContext->GetPresShell();
       if (shell) {
         mCurrentTarget = shell->GetPrimaryFrameFor(mCurrentTargetContent);
-
-        //This may be new frame that hasn't been through the ESM so we
-        //must set its NS_FRAME_EXTERNAL_REFERENCE bit.
-        if (mCurrentTarget)
-          SetFrameExternalReference(mCurrentTarget);
       }
     }
   }
@@ -3892,12 +3852,9 @@ nsEventStateManager::GetEventTarget(nsIFrame **aFrame)
   if (!mCurrentTarget) {
     nsIPresShell *presShell = mPresContext->GetPresShell();
     if (presShell) {
-      presShell->GetEventTargetFrame(&mCurrentTarget);
-
-      //This may be new frame that hasn't been through the ESM so we
-      //must set its NS_FRAME_EXTERNAL_REFERENCE bit.
-      if (mCurrentTarget)
-        SetFrameExternalReference(mCurrentTarget);
+      nsIFrame* frame = nsnull;
+      presShell->GetEventTargetFrame(&frame);
+      mCurrentTarget = frame;
     }
   }
 
@@ -4622,8 +4579,6 @@ nsEventStateManager::GetFocusedFrame(nsIFrame** aFrame)
       nsIPresShell *shell = doc->GetShellAt(0);
       if (shell) {
         mCurrentFocusFrame = shell->GetPrimaryFrameFor(mCurrentFocus);
-        if (mCurrentFocusFrame)
-          SetFrameExternalReference(mCurrentFocusFrame);
       }
     }
   }

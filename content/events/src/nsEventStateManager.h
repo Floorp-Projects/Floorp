@@ -49,6 +49,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDocument.h"
 #include "nsCOMArray.h"
+#include "nsIFrame.h"
 
 class nsIScrollableView;
 class nsIPresShell;
@@ -287,12 +288,11 @@ protected:
 
   PRInt32     mLockCursor;
 
-  //Any frames here must be checked for validity in ClearFrameRefs
-  nsIFrame* mCurrentTarget;
+  nsWeakFrame mCurrentTarget;
   nsCOMPtr<nsIContent> mCurrentTargetContent;
-  nsIFrame* mLastMouseOverFrame;
+  nsWeakFrame mLastMouseOverFrame;
   nsCOMPtr<nsIContent> mLastMouseOverElement;
-  nsIFrame* mLastDragOverFrame;
+  nsWeakFrame mLastDragOverFrame;
 
   // member variables for the d&d gesture state machine
   nsPoint mGestureDownPoint; // screen coordinates
@@ -318,7 +318,7 @@ protected:
   nsCOMPtr<nsIContent> mURLTargetContent;
   nsCOMPtr<nsIContent> mCurrentFocus;
   nsCOMPtr<nsIContent> mLastFocus;
-  nsIFrame* mCurrentFocusFrame;
+  nsWeakFrame mCurrentFocusFrame;
   PRInt32 mCurrentTabIndex;
   EFocusedWithType mLastFocusedWith;
 
