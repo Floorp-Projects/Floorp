@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.123 2006/07/13 16:55:41 mozilla%colinogilvie.co.uk Exp $ -->
+<!-- $Id: installation.xml,v 1.124 2006/07/14 22:11:34 mozilla%colinogilvie.co.uk Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -410,8 +410,8 @@
 
         <listitem>
           <para>
-            <link linkend="install-modules-xml-parser">XML::Parser</link>
-            (&min-xml-parser-ver;) for the XML interface
+            <link linkend="install-modules-xml-twig">XML::Twig</link>
+            (&min-xml-twig-ver;) for the XML interface
           </para>
         </listitem>
 
@@ -508,15 +508,13 @@
         </para>
       </section>
 
-      <section id="install-modules-xml-parser">
-        <title>XML::Parser (&min-xml-parser-ver;)</title>
+      <section id="install-modules-xml-twig">
+        <title>XML::Twig (&min-xml-twig-ver;)</title>
 
-        <para>The XML::Parser module is only required if you want to import
+        <para>The XML::Twig module is only required if you want to import
         XML bugs using the <filename>importxml.pl</filename>
         script. This is required to use Bugzilla's "move bugs" feature;
         you may also want to use it for migrating from another bug database.
-        XML::Parser requires that the
-        <classname>expat</classname> library is already installed on your machine.
         </para>
       </section>
 
