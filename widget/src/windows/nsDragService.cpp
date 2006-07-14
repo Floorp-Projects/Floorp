@@ -41,7 +41,6 @@
 #include <ole2.h>
 #include <oleidl.h>
 #include <shlobj.h>
-#include <shlwapi.h>
 
 // shellapi.h is needed to build with WIN32_LEAN_AND_MEAN
 #include <shellapi.h>
@@ -72,6 +71,10 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsUnicharUtils.h"
 
+// Static member declaration
+PRUnichar *nsDragService::mDropPath;
+PRUnichar *nsDragService::mFileName;
+
 //-------------------------------------------------------------------------
 //
 // DragService constructor
@@ -89,6 +92,11 @@ nsDragService::nsDragService()
 //-------------------------------------------------------------------------
 nsDragService::~nsDragService()
 {
+  if (mFileName)
+    NS_Free(mFileName);
+  if (mDropPath)
+    NS_Free(mDropPath);
+
   NS_IF_RELEASE(mNativeDragSrc);
   NS_IF_RELEASE(mNativeDragTarget);
   NS_IF_RELEASE(mDataObject);
@@ -158,8 +166,110 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
     }
   } // else dragging a single object
 
+  // Before starting get the file name to monitor if there is any
+  nsAutoString strData;         // holds kFilePromiseURLMime flavour data
+  PRBool bDownload = PR_FALSE;  // Used after drag ends to fugure if the download should start
+
+  nsCOMPtr<nsIURI> sourceURI;
+  nsCOMPtr<nsISupports> urlPrimitive;
+  nsCOMPtr<nsISupports> transSupports;
+  anArrayTransferables->GetElementAt(0, getter_AddRefs(transSupports));
+  nsCOMPtr<nsITransferable> trans = (do_QueryInterface(transSupports));
+  if (trans) {
+    // Get the filename form the kFilePromiseURLFlavour
+    nsAutoString wideFileName;
+    // if this fails there is no kFilePromiseMime flavour or no filename
+    rv = nsDataObj::GetDownloadDetails(trans,
+                                       getter_AddRefs(sourceURI),
+                                       wideFileName);
+    if (SUCCEEDED(rv))
+    {
+      // Start listening to the shell notifications
+      if (StartWatchingShell(wideFileName)) {
+        // Set download flag if all went ok so far
+        bDownload = PR_TRUE;
+      }
+    }
+  }
+
   // Kick off the native drag session
-  return StartInvokingDragSession(itemToDrag, aActionType);
+  rv = StartInvokingDragSession(itemToDrag, aActionType);
+
+  // Check if the download flag was set
+  // if not then we are done
+  if (!bDownload)
+    return rv;
+
+  if (NS_FAILED(rv))  // See if dragsession failed
+  {
+    ::DestroyWindow(mHiddenWnd);
+    return rv;
+  }
+
+  // Construct target URI from nsILocalFile
+  // Init file for the download
+  nsCOMPtr<nsILocalFile> dropLocalFile(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
+  if (!dropLocalFile)
+  {
+    ::DestroyWindow(mHiddenWnd);
+    return NS_ERROR_FAILURE;
+  }
+
+  // init with path we get from GetDropPath
+  // if it fails then there is no target path.
+  // This could happen if the drag operation was cancelled.
+  nsAutoString fileName;
+  if (!GetDropPath(fileName))
+    return NS_OK;
+
+  // hidden window is destroyed by now
+  rv = dropLocalFile->InitWithPath(fileName);
+  if (NS_FAILED(rv))
+    return rv;
+
+  // set the directory promise flavour
+  // if this fails it won't affect the drag so we can just continue
+  trans->SetTransferData(kFilePromiseDirectoryMime,
+                         dropLocalFile,
+                         sizeof(nsILocalFile*));
+
+  // Create a new FileURI to pass to the nsIDownload
+  nsCOMPtr<nsIURI> targetURI;
+
+  nsCOMPtr<nsIFile> file = do_QueryInterface(dropLocalFile);
+  if (!file)
+    return NS_ERROR_FAILURE;
+
+  rv = NS_NewFileURI(getter_AddRefs(targetURI), file);
+  if (NS_FAILED(rv))
+    return rv;
+
+  // Start download
+  nsCOMPtr<nsISupports> fileAsSupports = do_QueryInterface(dropLocalFile);
+
+  nsCOMPtr<nsIWebBrowserPersist> persist = do_CreateInstance(NS_WEBBROWSERPERSIST_CONTRACTID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsITransfer> transfer = do_CreateInstance("@mozilla.org/transfer;1", &rv);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(transfer);
+  rv = persist->SetProgressListener(listener);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsICancelable> cancelable = do_QueryInterface(persist);
+  rv = transfer->Init(sourceURI, targetURI, NS_LITERAL_STRING(""), nsnull, PR_Now(), nsnull, cancelable);
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = persist->SaveURI(sourceURI, nsnull, nsnull, nsnull, nsnull, fileAsSupports);
+  if (NS_FAILED(rv))
+    return rv;
+
+  return rv;
 }
 
 //-------------------------------------------------------------------------
@@ -197,33 +307,8 @@ nsDragService::StartInvokingDragSession(IDataObject * aDataObj,
   // Start dragging
   StartDragSession();
 
-  // check shell32.dll version and do async drag if it is >= 5.0
-  PRUint64 lShellVersion = GetShellVersion();
-  IAsyncOperation *pAsyncOp = NULL;
-  PRBool isAsyncAvailable = LL_UCMP(lShellVersion, >=, LL_INIT(5, 0));
-  if (isAsyncAvailable)
-  {
-    // do async drag
-    if (SUCCEEDED(aDataObj->QueryInterface(IID_IAsyncOperation,
-                                          (void**)&pAsyncOp)))
-      pAsyncOp->SetAsyncMode(TRUE);
-  }
-
   // Call the native D&D method
   HRESULT res = ::DoDragDrop(aDataObj, mNativeDragSrc, effects, &dropRes);
-
-  if (isAsyncAvailable)
-  {
-    // if dragging async
-    // check for async operation
-    BOOL isAsync = FALSE;
-    if (pAsyncOp)
-    {
-      pAsyncOp->InOperation(&isAsync);
-      if (!isAsync)
-        aDataObj->Release();
-    }
-  }
 
   // We're done dragging
   EndDragSession();
@@ -490,37 +575,189 @@ nsDragService::EndDragSession()
   return NS_OK;
 }
 
-// Gets shell version as packed 64 bit int
-PRUint64 nsDragService::GetShellVersion()
+// Start monitoring shell events - when user drops we'll get a notification from shell
+// containing drop location
+// aFileName is a filename to monitor
+// returns true if all went ok 
+// if hidden window was created and shell is watching out for files being created
+PRBool nsDragService::StartWatchingShell(const nsAString& aFileName)
 {
-  PRUint64 lVersion = LL_INIT(0, 0);
+  // init member varable with the file name to watch
+  if (mFileName)
+    NS_Free(mFileName);
 
-  // shell32.dll should be loaded already, so we ae not actually loading the library here
-  PRLibrary *libShell = PR_LoadLibrary("shell32.dll");
-  if (libShell == NULL)
-    return lVersion;
+  mFileName = ToNewUnicode(aFileName);
 
-  do
-  {
-    DLLGETVERSIONPROC versionProc = NULL;
-    versionProc = (DLLGETVERSIONPROC)PR_FindFunctionSymbol(libShell, "DllGetVersion");
-    if (versionProc == NULL)
-      break;
+  // Create hidden window to process shell notifications
+  WNDCLASS wc;
 
-    DLLVERSIONINFO versionInfo;
-    ::ZeroMemory(&versionInfo, sizeof(DLLVERSIONINFO));
-    versionInfo.cbSize = sizeof(DLLVERSIONINFO);
-    if (FAILED(versionProc(&versionInfo)))
-      break;
+  wc.style          = CS_HREDRAW | CS_VREDRAW;
+  wc.lpfnWndProc    = (WNDPROC)HiddenWndProc;
+  wc.cbClsExtra     = 0;
+  wc.cbWndExtra     = 0;
+  wc.hInstance      = NULL;
+  wc.hIcon          = NULL;
+  wc.hCursor        = NULL;
+  wc.hbrBackground  = (HBRUSH)GetStockObject(BLACK_BRUSH);
+  wc.lpszMenuName   = NULL;
+  wc.lpszClassName  = TEXT("DHHidden");
 
-    // why is this?
-    PRUint32 maji64 = versionInfo.dwMajorVersion;
-    PRUint32 mini64 = versionInfo.dwMinorVersion;
-    lVersion = LL_INIT(maj, min);
-  } while (false);
+  unsigned short res = RegisterClass(&wc);
 
-  PR_UnloadLibrary(libShell);
-  libShell = NULL;
+  mHiddenWnd = CreateWindowEx(WS_EX_TOOLWINDOW,
+                              TEXT("DHHidden"),
+                              TEXT("DHHidden"),
+                              WS_POPUP,
+                              0,
+                              0,
+                              100,
+                              100,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL);
+  if (mHiddenWnd == NULL)
+    return PR_FALSE;
 
-  return lVersion;
+  // Now let the explorer know what we want
+  // Get My Computer PIDL
+  LPITEMIDLIST pidl;
+  HRESULT hr = ::SHGetSpecialFolderLocation(NULL, CSIDL_DESKTOP, &pidl);
+
+  if (SUCCEEDED(hr)) {
+    SHChangeNotifyStruct notify;
+    notify.pidl = pidl;
+    notify.fRecursive = TRUE;
+
+    HMODULE hShell32 = ::GetModuleHandleA("SHELL32.DLL");
+
+    if (hShell32 == NULL) {
+      ::DestroyWindow(mHiddenWnd);
+      return PR_FALSE;
+    }
+
+  // Have to use ordinals in the call to GetProcAddress instead of function names.
+  // The reason for this is because on some older systems (prior to WinXP)
+  // this function has no name in shell32.dll.
+  DWORD dwOrdinal = 2;
+  // get reg func
+  SHCNRegPtr reg;
+  reg = (SHCNRegPtr)::GetProcAddress(hShell32, (LPCSTR)dwOrdinal);
+  if (reg == NULL) {
+    ::DestroyWindow(mHiddenWnd);
+    return PR_FALSE;
+  }
+
+  mNotifyHandle = (reg)(mHiddenWnd,
+                        0x2,
+                        0x1,
+                        WM_USER,
+                        1,
+                        &notify);
+  }
+
+  // destroy hidden window if failed to register notification handle
+  if (mNotifyHandle == 0) {
+    ::DestroyWindow(mHiddenWnd);
+  }
+
+  return (mNotifyHandle != 0);
+}
+
+// Get the drop path if there is one:)
+// returns true if there is a drop path
+PRBool nsDragService::GetDropPath(nsAString& aDropPath) const
+{
+  // we failed to create window so there is no drop path
+  if (mHiddenWnd == NULL)
+    return PR_FALSE;
+
+  // If we get 0 for this that means we failed to register notification callback
+  if (mNotifyHandle == 0)
+    return PR_FALSE;
+
+  // Do clean up stuff (reverses all that's been done in Start)
+  HMODULE hShell32 = ::GetModuleHandleA("SHELL32.DLL");
+
+  if (hShell32 == NULL)
+    return PR_FALSE;
+
+  // Have to use ordinals in the call to GetProcAddress instead of function names.
+  // The reason for this is because on some older systems (prior to WinXP)
+  // this function has no name in shell32.dll.
+  DWORD dwOrdinal = 4;
+  SHCNDeregPtr dereg;
+  dereg = (SHCNDeregPtr)::GetProcAddress(hShell32, (LPCSTR)dwOrdinal);
+  if (dereg == NULL)
+      return PR_FALSE;
+  (dereg)(mNotifyHandle);
+
+  ::DestroyWindow(mHiddenWnd);
+
+  // if drop path is too short then there is no drop location
+  if (!mDropPath)
+    return PR_FALSE;
+
+  aDropPath.Assign(mDropPath);
+
+  return PR_TRUE;
+}
+
+// Hidden window procedure - this is where shell sends notifications
+// When notification is received, perform some checking and copy path to the member variable
+LRESULT WINAPI nsDragService::HiddenWndProc(HWND aWnd, UINT aMsg, WPARAM awParam, LPARAM alParam)
+{
+  switch (aMsg) {
+  case WM_USER:
+    if (alParam == SHCNE_RENAMEITEM) {
+      // we got notification from shell
+      // as wParam we get 2 PIDL
+      LPCITEMIDLIST* ppidl = (LPCITEMIDLIST*)awParam;
+      // Get From path (where the file is comming from)
+      WCHAR szPathFrom[MAX_PATH + 1];
+      WCHAR szPathTo[MAX_PATH + 1];
+      ::SHGetPathFromIDListW(ppidl[0], szPathFrom);
+      // Get To path (where the file is going to)
+      ::SHGetPathFromIDListW(ppidl[1], szPathTo);
+
+      // first is from where the file is coming
+      // and the second is where the file is going
+      nsAutoString pathFrom(szPathFrom);  // where the file is comming from
+      nsAutoString pathTo(szPathTo);      // where the file is going to
+      // Get OS Temp directory
+      // Get system temp directory
+      nsresult rv;
+      nsCOMPtr<nsILocalFile> tempDir;
+      nsCOMPtr<nsIProperties> directoryService = 
+          do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+      if (!directoryService || NS_FAILED(rv))
+          return ResultFromScode(E_FAIL);
+      directoryService->Get(NS_OS_TEMP_DIR, 
+                            NS_GET_IID(nsIFile), 
+                            getter_AddRefs(tempDir));
+
+      // append file name to Temp directory string
+      nsAutoString tempPath;
+      tempDir->Append(nsDependentString(mFileName));
+      tempDir->GetPath(tempPath);
+
+      // Now check if there is our filename in the path
+      // and also check for the source directory - it should be OS Temp dir
+      // this way we can ensure that this is the file that we need
+      PRInt32 pathToLength = pathTo.Length();
+      if (Substring(pathTo, pathToLength - NS_strlen(mFileName), pathToLength).Equals(mFileName) &&
+          tempPath.Equals(pathFrom, nsCaseInsensitiveStringComparator()))
+      {
+        // This is what we wanted to get
+        if (mDropPath)
+          NS_Free(mDropPath);
+
+        mDropPath = ToNewUnicode(pathTo);
+      }
+      return 0;
+    }
+    break;
+  }
+
+  return ::DefWindowProc(aWnd, aMsg, awParam, alParam);
 }
