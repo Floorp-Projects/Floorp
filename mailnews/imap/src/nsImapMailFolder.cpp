@@ -4858,7 +4858,8 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                   // if we're showing preview text, update ourselves if we got a new unread
                   // message copied so that we can download the new headers and have a chance
                   // to preview the msg bodies.
-                  if (!folderOpen && showPreviewText && m_copyState->m_unreadCount > 0)
+                  if (!folderOpen && showPreviewText && m_copyState->m_unreadCount > 0
+                      && ! (mFlags & (MSG_FOLDER_FLAG_TRASH | MSG_FOLDER_FLAG_JUNK)))
                     UpdateFolder(msgWindow);
                 }
               }
