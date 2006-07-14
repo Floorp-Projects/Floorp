@@ -34,7 +34,7 @@ $perlbin = "/usr/bin/perl";
 #chop($curdir);
 #$ENV{"CVS_PASSFILE"} = "$curdir/.cvspass";
 $ENV{"CVS_RSH"} = "ssh";    
-$ENV{"CVS_PASSFILE"} = "/usr/local/etc/despot-cvspass";
+$ENV{"CVS_PASSFILE"} = "/etc/despot/cvspass";
 
 $dontcommit = 0;
 $usertoblame = "";
