@@ -348,14 +348,21 @@ nsTextTransformer::ScanNormalAsciiText_F(PRInt32* aWordLen,
     bp2 += mBufferPos;
   }
 
+  PRUnichar prevCh;
+  PRUnichar ch = 0;
   for (; offset < fragLen; offset++) {
-    unsigned char ch = *cp++;
+    prevCh = (ch == ' ') ? CH_NBSP : ch;
+    ch = *cp++;
     if (XP_IS_SPACE(ch)) {
       break;
     }
     if (CH_NBSP == ch) {
       ch = ' ';
       *aWasTransformed = PR_TRUE;
+    }
+    else if (offset != mOffset &&
+             nsContentUtils::LineBreaker()->CanBreakBetweenLatin1(prevCh, ch)) {
+      break;
     }
     else if (IS_DISCARDED(ch)) {
       // Strip discarded characters from the transformed output
