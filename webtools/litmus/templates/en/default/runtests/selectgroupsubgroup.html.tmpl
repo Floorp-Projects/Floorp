@@ -105,8 +105,8 @@ Select Testing Group
       [% selected = "" %]
     [% END %]
 
-    <td><input [% IF personal_completed == 'N/A' %]disabled [% END %] type="radio" name="group" value="[% curgroup.testgroup_id FILTER html %]"
-        onchange="showsubgroup()" [% selected | none %]>
+    <td><input [% IF personal_completed == 'N/A' %]disabled [% END %] type="radio" id="group" name="group" value="[% curgroup.testgroup_id FILTER html %]"
+        onClick="showsubgroup()" [% selected | none %]>
          [% curgroup.name FILTER html %]</td>
     <td align="center">[% personal_completed FILTER html %][% IF personal_completed != 'N/A' %]%[% END %]</td>
     <td align="center">[% community_completed FILTER html %][% IF community_completed != 'N/A' %]%[% END %]</td>

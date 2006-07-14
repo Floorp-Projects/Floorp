@@ -9,21 +9,24 @@ function MM_findObj(n, d) { //v4.01
 function showsubgroup() {
   var groupselect = MM_findObj("group");
 
+  if (!groupselect) {
+    return;
+  }
+
   var selnum;
 
-  if (groupselect instanceof NodeList) {
+  if (groupselect.value) {
+    selnum = groupselect.value;
+  } else {
     for (var i=0; i<groupselect.length; i++) {
       if (groupselect[i].checked) {
         selnum = groupselect[i].value;
       }
     }
-  } else {
-    selnum = groupselect.value;
-  }
-
-  // no selection yet so just keep everything as-is:
-  if (! selnum) {
-      return;
+    if (!selnum) {
+      groupselect[0].checked = true;
+      selnum = groupselect[0].value;
+    }
   }
 
   // object to show
@@ -39,15 +42,19 @@ function showsubgroup() {
 
   var num_subgroups_enabled = 0;
   var subgroupselect = MM_findObj("subgroup_"+selnum);
+
+  if (!subgroupselect) {
+    return;
+  }
   
-  if (subgroupselect instanceof NodeList) {
+  if (subgroupselect.value) {
+    num_subgroups_enabled=1;
+  } else {
     for (var i=0; i<subgroupselect.length; i++) {
       if (!subgroupselect[i].disabled) {
         num_subgroups_enabled++;
-      }
+       }
     }
-  } else if (subgroupselect instanceof HTMLInputElement) {
-    num_subgroups_enabled=1;
   }
 
   obj.style.display = "";
