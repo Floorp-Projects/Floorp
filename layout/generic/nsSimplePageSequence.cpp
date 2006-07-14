@@ -120,19 +120,13 @@ nsSimplePageSequenceFrame::nsSimplePageSequenceFrame(nsStyleContext* aContext) :
   nscoord halfInch = NS_INCHES_TO_TWIPS(0.5);
   mMargin.SizeTo(halfInch, halfInch, halfInch, halfInch);
 
+  // XXX Unsafe to assume successful allocation
   mPageData = new nsSharedPageData();
-  NS_ASSERTION(mPageData != nsnull, "Can't be null!");
-  if (mPageData->mHeadFootFont == nsnull) {
-    mPageData->mHeadFootFont = new nsFont("serif", NS_FONT_STYLE_NORMAL,NS_FONT_VARIANT_NORMAL,
-                               NS_FONT_WEIGHT_NORMAL,0,NSIntPointsToTwips(10));
-  }
+  mPageData->mHeadFootFont = new nsFont(*GetPresContext()->GetDefaultFont(kGenericFont_serif));
+  mPageData->mHeadFootFont->size = NSIntPointsToTwips(10);
 
   nsresult rv;
   mPageData->mPrintOptions = do_GetService(sPrintOptionsContractID, &rv);
-  if (NS_SUCCEEDED(rv) && mPageData->mPrintOptions) {
-    // now get the default font form the print options
-    mPageData->mPrintOptions->GetDefaultFont(*mPageData->mHeadFootFont);
-  }
 
   // Doing this here so we only have to go get these formats once
   SetPageNumberFormat("pagenumber",  "%1$d", PR_TRUE);
@@ -600,38 +594,6 @@ nsSimplePageSequenceFrame::StartPrint(nsPresContext*   aPresContext,
       totalPages = pageNum - 1;
     }
   }
-
-  // XXX - This wouldn't have to be done each time
-  // but it isn't that expensive and this the best place 
-  // to have access to a localized file properties file
-  // 
-  // Note: because this is done here it makes a little bit harder
-  // to have UI for setting the header/footer font name and size
-  //
-  // Get default font name and size to be used for the headers and footers
-  nsXPIDLString fontName;
-  rv = nsContentUtils::GetLocalizedString(nsContentUtils::ePRINTING_PROPERTIES,
-                                         "fontname", fontName);
-  if (NS_FAILED(rv)) {
-    fontName.AssignLiteral("serif");
-  }
-
-  nsXPIDLString fontSizeStr;
-  nscoord      pointSize = 10;;
-  rv = nsContentUtils::GetLocalizedString(nsContentUtils::ePRINTING_PROPERTIES,
-                                          "fontsize", fontSizeStr);
-  if (NS_SUCCEEDED(rv)) {
-    PRInt32 errCode;
-    pointSize = fontSizeStr.ToInteger(&errCode);
-    if (NS_FAILED(errCode)) {
-      pointSize = 10;
-    }
-  }
-  mPageData->mPrintOptions->SetFontNamePointSize(fontName, pointSize);
-
-  // Doing this here so we only have to go get these formats once
-  SetPageNumberFormat("pagenumber",  "%1$d", PR_TRUE);
-  SetPageNumberFormat("pageofpages", "%1$d of %2$d", PR_FALSE);
 
   mPageNum          = 1;
   mCurrentPageFrame = mFrames.FirstChild();
