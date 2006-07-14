@@ -147,12 +147,13 @@ if ($browse_revtag eq 'HEAD') {
     $start_rev = map_tag_to_revision($browse_revtag);
 }
 
-# Handle the "mark" argument
+# Handle the "mark" argument, which expects a revision
 #
 my %mark;
-my $mark_arg = &SanitizeMark($::FORM{'mark'});
+my $mark_arg = $::FORM{'mark'};
 foreach my $rev (split(',',$mark_arg)) {
-    $mark{$rev} = 1 if ($rev =~ m/^\d+$/);
+    $rev = &SanitizeRevision($rev);
+    $mark{$rev} = 1 if ($rev);
 }
 
 
