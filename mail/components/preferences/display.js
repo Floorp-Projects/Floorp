@@ -38,6 +38,7 @@
 
 var gDisplayPane = {
   mInitialized: false,
+  mTagListBox:  null,
 
   init: function ()
   {
@@ -51,6 +52,9 @@ var gDisplayPane = {
                               document.getElementById('mailnews.view_default_charset').value);
 
     this.mInitialized = true;
+    
+    this.mTagListBox = document.getElementById('tagList');    
+    this.buildTagList();
   },
 
   tabSelectionChanged: function ()
@@ -60,27 +64,56 @@ var gDisplayPane = {
               .valueFromPreferences = document.getElementById("displayPrefs").selectedIndex;
   },
 
-  restoreDefaultLabels: function()
-  {
-    for (var index = 1; index <= 5; index++)
-    {
-      // reset throws an exception if the pref value is already the default so
-      // work around that with some try/catch exception handling
-      try {
-        document.getElementById('mailnews.labels.description.' + index ).reset();
-      } catch (ex) {}
-
-      try {
-        document.getElementById('mailnews.labels.color.' + index ).reset();
-      } catch (ex) {}
-    }
-  },
-
   fontOptionsDialog: function()
   {
     document.documentElement.openSubDialog("chrome://messenger/content/preferences/fonts.xul", "", null);  
   },
+  
+  // appends the tag to the tag list box
+  appendTagItem: function(aTagName, aKey, aColor)
+  {
+    var item = this.mTagListBox.appendItem(aTagName, aKey);
+    item.style.color = aColor;
+    return item;
+  },
+   
+  buildTagList: function()
+  {
+    var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"].getService(Components.interfaces.nsIMsgTagService);
+    var allTags = tagService.tagEnumerator;
+    var allKeys = tagService.keyEnumerator;
+    while (allTags.hasMore())
+    {
+      var key = allKeys.getNext();
+      this.appendTagItem(allTags.getNext(), key, tagService.getColorForKey(key));
+    }
+  },
+  
+  removeTag: function()
+  {
+    var tagItemToRemove = this.mTagListBox.getSelectedItem();
+    var index = this.mTagListBox.selectedIndex;
+    if (index >= 0)
+    {
+      var itemToRemove = this.mTagListBox.getItemAtIndex(index);
+      var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"].getService(Components.interfaces.nsIMsgTagService);
+      tagService.deleteKey(itemToRemove.getAttribute("value"));
+      this.mTagListBox.removeItemAt(index);
+      var numItemsInListBox = this.mTagListBox.getRowCount();
+      this.mTagListBox.selectedIndex = index < numItemsInListBox ? index : numItemsInListBox - 1;
+    }
+  },
 
+  addTag: function()
+  {  
+    var args = {result: "", okCallback: addTagCallback};
+    var dialog = window.openDialog(
+			    "chrome://messenger/content/newTagDialog.xul",
+			    "",
+			    "chrome,titlebar,modal",
+			    args);
+  },
+     
   addMenuItem: function(aMenuPopup, aLabel, aValue)
   { 
     var menuItem = document.createElement('menuitem');
@@ -136,3 +169,15 @@ var gDisplayPane = {
     return undefined;
   }
 };
+
+function addTagCallback(aName, aColor)
+{
+  var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"].getService(Components.interfaces.nsIMsgTagService);
+  tagService.addTag(aName, aColor);
+ 
+  var item = gDisplayPane.appendTagItem(aName, tagService.getKeyForTag(aName), aColor);
+  var tagListBox = document.getElementById('tagList');
+  tagListBox.ensureElementIsVisible(item);
+  tagListBox.selectItem(item);
+  tagListBox.focus();
+}

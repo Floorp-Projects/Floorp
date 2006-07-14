@@ -1,5 +1,5 @@
 <!ENTITY itemFormatting.label             "Formatting">
-<!ENTITY itemLabels.label                 "Labels">
+<!ENTITY itemTags.label                   "Tags">
 <!ENTITY itemFonts.label                  "Fonts">
 
 <!ENTITY textBegin.label                  "Quoted plain text appearance">
@@ -33,17 +33,20 @@
 <!ENTITY convertEmoticons.accesskey       "D">
 <!ENTITY htmlColors.label                 "HTML Messages">
 <!ENTITY overrideSender.label             "When displaying HTML messages, use the following:">
-<!ENTITY overrideSender.accesskey         "e"> 
+<!ENTITY overrideSender.accesskey         "n"> 
 <!ENTITY  textColor.label                 "Text Color:">
 <!ENTITY  textColor.accesskey             "T">
 <!ENTITY  backgroundColor.label           "Background Color:">
 <!ENTITY  backgroundColor.accesskey       "b">
 
 <!-- labels -->
-<!ENTITY labelsSettings.label       "Labels">
-<!ENTITY displayLabelsText.label    "Labels can be used to categorize and prioritize your messages.">
-<!ENTITY restoreDefaults.label      "Restore Defaults">
-<!ENTITY restoreDefaults.accesskey  "R">
+<!ENTITY displayTagsText.label    "Tags can be used to categorize and prioritize your messages.">
+<!ENTITY addTagButton.label       "Add">
+<!ENTITY addTagButton.accesskey   "A">
+<!ENTITY editTagButton.label      "Edit">
+<!ENTITY editTagButton.accesskey   "E">
+<!ENTITY removeTagButton.label    "Delete">
+<!ENTITY removeTagButton.accesskey "l">
 
 <!-- Fonts -->
 <!ENTITY fontsDescription.label       "Configure the fonts used by &brandShortName;">

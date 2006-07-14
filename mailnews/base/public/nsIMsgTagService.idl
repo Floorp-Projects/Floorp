@@ -64,7 +64,7 @@ interface nsIMsgTagService : nsISupports {
   void addTagForKey(in ACString key, in AString tag, in ACString color);
   void addTag(in AString tag, in ACString color);
   ACString getColorForKey(in ACString key);
-  void deleteTag(in AString tag);
+  void deleteKey(in ACString key);
   // we need some way to enumerate all tags. Or return a list of all tags.
   readonly attribute nsIStringEnumerator tagEnumerator;
   readonly attribute nsIUTF8StringEnumerator keyEnumerator;

@@ -158,11 +158,17 @@ NS_IMETHODIMP nsMsgTagService::GetColorForKey(const nsACString &key, nsACString 
 }
 
 /* void deleteTag (in wstring tag); */
-NS_IMETHODIMP nsMsgTagService::DeleteTag(const nsAString &tag)
+NS_IMETHODIMP nsMsgTagService::DeleteKey(const nsACString &key)
 {
-  // do we want to set a .deleted pref, or just set the tag
-  // property to "", or clear the pref(s)?
-    return NS_ERROR_NOT_IMPLEMENTED;
+  // clear the associated prefs
+  nsCAutoString prefName("mailnews.tags.");
+  prefName.Append(key);
+  prefName.AppendLiteral(".tag");
+  // this is the rv we're going to return - it's the interesting one.§
+  nsresult rv = m_prefBranch->ClearUserPref(prefName.get());
+  prefName.Replace(prefName.Length() - 3, 3, NS_LITERAL_CSTRING("color"));
+  m_prefBranch->ClearUserPref(prefName.get());
+  return rv;
 }
 
 /* readonly attribute nsIStringEnumerator tagEnumerator; */

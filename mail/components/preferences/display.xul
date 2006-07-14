@@ -81,7 +81,7 @@
     <tabbox id="displayPrefs" flex="1" onselect="gDisplayPane.tabSelectionChanged();">
       <tabs>
         <tab label="&itemFormatting.label;"/>
-        <tab label="&itemLabels.label;"/>
+        <tab label="&itemTags.label;"/>
         <tab label="&itemFonts.label;"/>
       </tabs>
       
@@ -152,54 +152,16 @@
         </tabpanel>
 
         <tabpanel orient="vertical">
-          <groupbox>
-            <caption label="&labelsSettings.label;"/> 
-            <description>&displayLabelsText.label;</description>
-            <hbox align="top">
-              <vbox>
-                <!-- label color: 1 (default red) -->
-                <hbox class="indent" align="center">
-                  <textbox id="label1TextBox" preference="mailnews.labels.description.1" />
-                  <colorpicker class="small-margin" type="button" id="labelColorPicker1"
-                               palettename="standard" preference="mailnews.labels.color.1"/>
-                </hbox>    
-
-                <!-- label color: 2 (default orange) -->
-                <hbox class="indent" align="center">
-                  <textbox id="label2TextBox" preference="mailnews.labels.description.2" />
-                  <colorpicker class="small-margin" type="button" id="labelColorPicker2"
-                               palettename="standard" preference="mailnews.labels.color.2"/>
-                </hbox>    
-
-                <!-- label color: 3 (default green) -->
-                <hbox class="indent" align="center">
-                  <textbox id="label3TextBox" preference="mailnews.labels.description.3" />
-                  <colorpicker class="small-margin" type="button" id="labelColorPicker3"
-                               palettename="standard" preference="mailnews.labels.color.3"/>
-                </hbox>  
-              </vbox>
-
-              <vbox>
-                <!-- label color: 4 (default blue) -->
-                <hbox class="indent" align="center">
-                  <textbox id="label4TextBox" preference="mailnews.labels.description.4" />
-                  <colorpicker class="small-margin" type="button" id="labelColorPicker4"
-                               palettename="standard" preference="mailnews.labels.color.4"/>
-                </hbox>    
-
-                <!-- label color: 5 (default purple) -->
-                <hbox class="indent" align="center">
-                  <textbox id="label5TextBox" preference="mailnews.labels.description.5" />
-                  <colorpicker class="small-margin" type="button" id="labelColorPicker5"
-                               palettename="standard" preference="mailnews.labels.color.5"/>
-                </hbox>   
-              </vbox>
-            </hbox>
-                <hbox pack="end">
-                  <button label="&restoreDefaults.label;" accesskey="&restoreDefaults.accesskey;" 
-                          oncommand="gDisplayPane.restoreDefaultLabels();"/>
-                </hbox> 
-          </groupbox>
+            <description>&displayTagsText.label;</description>
+          <hbox>
+            <listbox id="tagList" flex="1" rows="10"/>
+            <vbox>
+              <button label="&addTagButton.label;" accesskey="&addTagButton.accesskey;"
+                      oncommand="gDisplayPane.addTag();"/>
+              <button label="&removeTagButton.label;" accesskey="&removeTagButton.accesskey;" 
+                      oncommand="gDisplayPane.removeTag();"/>
+            </vbox>
+          </hbox>
         </tabpanel>
 
         <tabpanel orient="vertical">
