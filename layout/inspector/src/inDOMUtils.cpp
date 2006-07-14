@@ -130,13 +130,15 @@ inDOMUtils::GetParentForNode(nsIDOMNode* aNode,
     parent = inLayoutUtils::GetContainerFor(doc);
   } else if (aShowingAnonymousContent) {
     nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-    nsCOMPtr<nsIContent> bparent;
-    nsCOMPtr<nsIBindingManager> bindingManager = inLayoutUtils::GetBindingManagerFor(aNode);
-    if (bindingManager) {
-      bindingManager->GetInsertionParent(content, getter_AddRefs(bparent));
-    }
+    if (content) {
+      nsCOMPtr<nsIContent> bparent;
+      nsCOMPtr<nsIBindingManager> bindingManager = inLayoutUtils::GetBindingManagerFor(aNode);
+      if (bindingManager) {
+        bindingManager->GetInsertionParent(content, getter_AddRefs(bparent));
+      }
     
-    parent = do_QueryInterface(bparent);
+      parent = do_QueryInterface(bparent);
+    }
   }
   
   if (!parent) {
