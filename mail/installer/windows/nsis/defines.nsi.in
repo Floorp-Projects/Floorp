@@ -1,0 +1,10 @@
+#filter substitution
+!define AppVersion            "@MOZ_APP_VERSION@"
+!define GREVersion            @MOZILLA_VERSION@
+!define AB_CD                 "@AB_CD@"
+!define FileInstallerEXE      "@PKG_BASENAME@.installer.exe"
+!define FileInstallerMSI      "@PKG_BASENAME@.installer.msi"
+!define FileInstallerNETRoot  "@PKG_BASENAME@.net-installer"
+
+!define FileMainEXE           "thunderbird.exe"
+!define WindowClass           "ThunderbirdMessageWindow"
