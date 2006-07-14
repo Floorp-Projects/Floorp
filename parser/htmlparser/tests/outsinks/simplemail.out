@@ -1,5 +1,5 @@
 This is a mail with a couple of long lines and 
-then a sig. This is used as test of the format=
+then a sig. This is used as test of the format= 
 flowed output in the nsHTMLToTXTSinkstream. If 
 this test fails and none else, it's likely the 
 spaces at the ends of the lines that are missing. 
