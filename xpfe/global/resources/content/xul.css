@@ -109,6 +109,10 @@ button {
   -moz-binding: url("chrome://global/content/bindings/button.xml#button");
 }
 
+button[type="repeat"] {
+  -moz-binding: url("chrome://global/content/bindings/button.xml#button-repeat");
+}
+
 button[type="menu"] {
   -moz-binding: url("chrome://global/content/bindings/button.xml#menu");
 }

@@ -17,7 +17,7 @@
   </binding>
 
   <binding id="scrollbox" extends="chrome://global/content/bindings/scrollbox.xml#scrollbox-base">
-    <content>
+    <content repeat="hover">
       <xul:box class="box-inherit scrollbox-innerbox" xbl:inherits="orient,align,pack,dir" flex="1">
         <children/>
       </xul:box>

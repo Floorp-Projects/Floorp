@@ -64,7 +64,7 @@
   </binding>
 
   <binding id="autorepeatbutton" extends="chrome://global/content/bindings/scrollbox.xml#scrollbox-base">
-    <content>
+    <content repeat="hover">
       <xul:image class="autorepeatbutton-icon"/>
     </content>
   </binding>
