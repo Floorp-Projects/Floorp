@@ -62,7 +62,6 @@
     <p class="first">QuickTime Player is an easy-to-use application for playing, interacting with or viewing video, audio, VR or graphics files.</p>
     <p><img src="{$config.webpath}/images/faq_small.png" style="float: left;" height=16 width=16 alt="">&nbsp;Visit the <a href="http://www.apple.com/quicktime/download/standalone.html">Quicktime download page</a> to select the latest version for your operating system.</p>
     <h3><img src="{$config.webpath}/images/install.png" height="24" width="24" alt="">&nbsp;Download</h3>
-    <h3><img src="/images/install.png" height="24" width="24" alt="">&nbsp;Download</h3>
     <div style="margin-top: 5px; height: 38px">
         <div class="iconbar"><img src="{$config.webpath}/images/windows_icon.png" height="34" width="34" alt="">&nbsp;For Windows:<br>&nbsp;&nbsp;<a href="http://www.apple.com/quicktime/download/standalone.html">Version 7.1</a></div>
         <div class="iconbar"><img src="{$config.webpath}/images/linux_icon.png" height="34" width="34" alt="">&nbsp;For Linux:<br>&nbsp;&nbsp;Unavailable</div>
