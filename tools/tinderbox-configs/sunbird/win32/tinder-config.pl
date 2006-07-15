@@ -72,7 +72,7 @@ $VendorName               = 'Mozilla';
 #$BloatTest2               = 0;  # dbaron memory bloat test, require tracemalloc
 #$DomToTextConversionTest  = 0;  
 #$XpcomGlueTest            = 0;
-$CodesizeTest              = 1;  # Z,  require mozilla/tools/codesighs
+$CodesizeTest              = 0;  # Z,  require mozilla/tools/codesighs
 #$EmbedCodesizeTest        = 0;  # mZ, require mozilla/tools/codesigns
 #$MailBloatTest            = 0;
 #$EmbedTest                = 0;  # Assumes you wanted $BuildEmbed=1
@@ -199,7 +199,7 @@ $BinaryName = 'sunbird.exe';
 # Release build options
 $ReleaseBuild  = 1;
 #$LocaleProduct = "browser";
-$shiptalkback  = 1;
+$shiptalkback  = 0;
 #$ReleaseToLatest = 1; # Push the release to latest-<milestone>?
 #$ReleaseToDated = 1; # Push the release to YYYY-MM-DD-HH-<milestone>?
 $build_hour    = "6";
