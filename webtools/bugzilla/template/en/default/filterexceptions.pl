@@ -324,6 +324,10 @@
   'depbug FILTER bug_link(depbug)',
   '"${bug.dup_id}" FILTER bug_link(bug.dup_id)',
   '" accesskey=\"$accesskey\"" IF accesskey',
+  'inputname',
+  '" colspan=\"$colspan\"" IF $colspan',
+  '" size=\"$size\"" IF size',
+  '" maxlength=\"$maxlength\"" IF maxlength'
 ],
 
 'bug/knob.html.tmpl' => [

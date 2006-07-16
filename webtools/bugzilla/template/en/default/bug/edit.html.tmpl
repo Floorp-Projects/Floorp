@@ -159,10 +159,7 @@
               <td align="right">
                 <label for="alias" title="a name for the [% terms.bug %] that can be used in place of its ID number, f.e. when adding it to a list of dependencies"><b>Alias</b></label>:
               </td>
-              <td>
-                <input id="alias" name="alias" value="[% bug.alias FILTER html %]"
-                       size="20" maxlength="20">
-              </td>
+              [% PROCESS input inputname => "alias" size => "20" maxlength => "20" %]
             </tr>
           [% END %]
 
@@ -340,13 +337,25 @@
              <label for="qa_contact" accesskey="q"><b><u>Q</u>A Contact</b></label>:
              </td>
              <td colspan="7">
-               [% INCLUDE global/userselect.html.tmpl
-                  id => "qa_contact"
-                  name => "qa_contact"
-                  value => bug.qa_contact.login
-                  size => 60
-                  emptyok => 1
-                %]
+               [% IF bug.check_can_change_field("qa_contact", 0, 1) || !user.id %]
+                 [% INCLUDE global/userselect.html.tmpl
+                    id => "qa_contact"
+                    name => "qa_contact"
+                    value => bug.qa_contact.login
+                    size => 60
+                    emptyok => 1
+                  %]
+               [% ELSE %]
+                 <input type="hidden" name="qa_contact"
+                        value="[% bug.qa_contact.login FILTER html %]">
+                 [% IF bug.qa_contact.login && bug.qa_contact.login.length > 60 %]
+                   <span title="[% bug.qa_contact.login FILTER html %]">
+                     [% bug.qa_contact.login FILTER truncate(60) FILTER html %]
+                   </span>
+                 [% ELSE %]
+                   [% bug.qa_contact.login FILTER html %]
+                 [% END %]
+               [% END %]
              </td>
            </tr>
          [% END %]
@@ -362,21 +371,15 @@
                 [% END %]
               [%%]</b></label>:
             </td>
-            <td colspan="5">
-              <input name="bug_file_loc" id="bug_file_loc"
-                     value="[% bug.bug_file_loc FILTER html %]" size="60">
-            </td>
+            [% PROCESS input inputname => "bug_file_loc" size => "60" colspan => 5 %]
           </tr>
 
           <tr>
             <td align="right">
               <label for="short_desc" accesskey="s"><b><u>S</u>ummary</b></label>:
             </td>
-            <td colspan="5">
-              <input name="short_desc" id="short_desc"
-                     value="[% bug.short_desc FILTER html %]" size="60"
-                     maxlength="255">
-            </td>
+            [% PROCESS input inputname => "short_desc" size => "60" colspan => 5
+                             maxlength => 255 %]
           </tr>
 
           [% IF Param('usestatuswhiteboard') %]
@@ -385,10 +388,8 @@
                 <label for="status_whiteboard" accesskey="w"><b>Status
                 <u>W</u>hiteboard</b></label>:
               </td>
-              <td colspan="5">
-                <input name="status_whiteboard" id="status_whiteboard"
-                       value="[% bug.status_whiteboard FILTER html %]" size="60">
-              </td>
+              [% PROCESS input inputname => "status_whiteboard" size => "60" 
+                               colspan => 5 %]
             </tr>
           [% END %]
 
@@ -396,10 +397,8 @@
             <tr>
               <td align="right">
                 <label for="keywords" accesskey="k"><b><a href="describekeywords.cgi"><u>K</u>eywords</a></b></label>:
-              <td colspan="5">
-                <input name="keywords" id="keywords"
-                       value="[% bug.keywords.join(', ') FILTER html %]" size="60">
-              </td>
+              [% PROCESS input inputname => "keywords" size => 60 colspan => 5
+                               value => bug.keywords.join(', ') %]
             </tr>
           [% END %]
 
@@ -683,8 +682,13 @@
   [% END %]
   </td>
   <td>
-    <input name="[% dep.fieldname %]" id="[% dep.fieldname %]"
-           value="[% bug.${dep.fieldname}.join(', ') %]">
+    [% IF bug.check_can_change_field(dep.fieldname, 0, 1) || !user.id %]
+      <input name="[% dep.fieldname %]" id="[% dep.fieldname %]"
+             value="[% bug.${dep.fieldname}.join(', ') %]">
+    [% ELSE %]
+      <input type="hidden" name="[% dep.fieldname %]"
+             value="[% bug.${dep.fieldname}.join(', ') %]">
+    [% END %]
   </td>
 [% END %]
 
@@ -695,12 +699,46 @@
 
 [% BLOCK select %]
   <td>
-    <select id="[% selname %]" name="[% selname %]">
-      [% FOREACH x = bug.choices.${selname} %]
-        <option value="[% x FILTER html %]"
-          [% " selected" IF x == bug.${selname} %]>[% x FILTER html %]
-        </option>
-      [% END %]
-    </select>
+    [% IF bug.check_can_change_field(selname, 0, 1) || !user.id %]
+      <select id="[% selname %]" name="[% selname %]">
+        [% FOREACH x = bug.choices.${selname} %]
+          <option value="[% x FILTER html %]"
+            [% " selected" IF x == bug.${selname} %]>[% x FILTER html %]
+          </option>
+        [% END %]
+      </select>
+    [% ELSE %]
+      <input type="hidden" name="[% selname %]" value="[% bug.${selname} FILTER html %]">
+      [% bug.${selname} FILTER html %]
+    [% END %]
   </td>
+[% END %]
+
+[%############################################################################%]
+[%# Block for INPUT fields                                                   #%]
+[%############################################################################%]
+
+[% BLOCK input %]
+  <td[% " colspan=\"$colspan\"" IF $colspan %]>
+    [% val = value ? value : bug.$inputname %]
+    [% IF bug.check_can_change_field(inputname, 0, 1) || !user.id %]
+       <input id="[% inputname %]" name="[% inputname %]"
+              value="[% val FILTER html %]"[% " size=\"$size\"" IF size %]
+              [% " maxlength=\"$maxlength\"" IF maxlength %]>
+    [% ELSE %]
+       <input type="hidden" name="[% inputname %]" id="[% inputname %]"
+              value="[% val FILTER html %]">
+      [% IF size && val.length > size %]
+        <span title="[% val FILTER html %]">
+          [% val FILTER truncate(size) FILTER html %]
+        </span>
+      [% ELSE %]
+        [% val FILTER html %]
+      [% END %]
+    [% END %]
+  </td>
+  [% maxlength = 0 %]
+  [% colspan = 0 %]
+  [% size = 0 %]
+  [% value = undef %]
 [% END %]
