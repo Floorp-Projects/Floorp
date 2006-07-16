@@ -108,6 +108,10 @@ function do_check_eq(_left, _right) {
     do_throw(_left + " == " + _right);
 }
 
+function do_check_true(_condition) {
+  do_check_eq(_condition, true);
+}
+
 function do_test_pending() {
   dump("*** test pending\n");
   _tests_pending++;
