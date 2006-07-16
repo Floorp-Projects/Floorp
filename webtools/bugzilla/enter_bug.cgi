@@ -438,24 +438,27 @@ if ( Bugzilla->params->{'usetargetmilestone'} ) {
     }
 }
 
+# Construct the list of allowable statuses.
+#
+# * If the product requires votes to confirm:
+#   users with privs   : NEW + ASSI + UNCO
+#   users with no privs: UNCO
+#
+# * If the product doesn't require votes to confirm:
+#   users with privs   : NEW + ASSI
+#   users with no privs: NEW (as these users cannot reassign
+#                             bugs to them, it doesn't make sense
+#                             to let them mark bugs as ASSIGNED)
 
-# List of status values for drop-down.
 my @status;
-
-# Construct the list of allowable values.  There are three cases:
-# 
-#  case                                 values
-#  product does not have confirmation   NEW
-#  confirmation, user cannot confirm    UNCONFIRMED
-#  confirmation, user can confirm       NEW, UNCONFIRMED.
-
+if ($user->in_group('editbugs') || $user->in_group('canconfirm')) {
+    @status = ('NEW', 'ASSIGNED');
+}
+elsif (!$product->votes_to_confirm) {
+    @status = ('NEW');
+}
 if ($product->votes_to_confirm) {
-    if (UserInGroup("editbugs") || UserInGroup("canconfirm")) {
-        push(@status, "NEW");
-    }
     push(@status, 'UNCONFIRMED');
-} else {
-    push(@status, "NEW");
 }
 
 $vars->{'bug_status'} = \@status; 
