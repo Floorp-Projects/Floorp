@@ -149,8 +149,14 @@ sub have_vers {
 # This is taken straight from Sort::Versions 1.5, which is not included
 # with perl by default.
 sub vers_cmp {
-    my @A = ($_[0] =~ /([-.]|\d+|[^-.\d]+)/g);
-    my @B = ($_[1] =~ /([-.]|\d+|[^-.\d]+)/g);
+    my ($a, $b) = @_;
+
+    # Remove leading zeroes - Bug 344661
+    $a =~ s/^0*(.*)/$1/;
+    $b =~ s/^0*(.*)/$1/;
+
+    my @A = ($a =~ /([-.]|\d+|[^-.\d]+)/g);
+    my @B = ($b =~ /([-.]|\d+|[^-.\d]+)/g);
 
     my ($A, $B);
     while (@A and @B) {
