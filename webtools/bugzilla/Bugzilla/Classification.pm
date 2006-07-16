@@ -31,6 +31,7 @@ use constant DB_COLUMNS => qw(
     classifications.id
     classifications.name
     classifications.description
+    classifications.sortkey
 );
 
 our $columns = join(", ", DB_COLUMNS);
@@ -122,6 +123,7 @@ sub products {
 sub id          { return $_[0]->{'id'};          }
 sub name        { return $_[0]->{'name'};        }
 sub description { return $_[0]->{'description'}; }
+sub sortkey     { return $_[0]->{'sortkey'};     }
 
 ###############################
 ####      Subroutines      ####
@@ -131,7 +133,7 @@ sub get_all_classifications {
     my $dbh = Bugzilla->dbh;
 
     my $ids = $dbh->selectcol_arrayref(q{
-        SELECT id FROM classifications ORDER BY name});
+        SELECT id FROM classifications ORDER BY sortkey, name});
 
     my @classifications;
     foreach my $id (@$ids) {

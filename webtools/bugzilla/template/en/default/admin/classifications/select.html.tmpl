@@ -27,6 +27,7 @@
   <tr bgcolor="#6666ff">
     <th align="left">Edit Classification ...</th>
     <th align="left">Description</th>
+    <th align="left">Sortkey</th>
     <th align="left">Products</th>
     <th align="left">Action</th>
   </tr>
@@ -41,6 +42,7 @@
         <font color="red">none</font>
       [% END %]
       </td>
+      <td valign="top">[% cl.sortkey FILTER html %]</td>
       [% IF (cl.id == 1) %]
         <td valign="top">[% cl.product_count FILTER html %]</td>
       [% ELSE %]
@@ -57,7 +59,7 @@
   [% END %]
 
   <tr>
-    <td valign="top" colspan=3>Add a new classification</td>
+    <td valign="top" colspan=4>Add a new classification</td>
     <td valign="top" align="center"><a href="editclassifications.cgi?action=add">Add</a></td>
   </tr>
 </table>

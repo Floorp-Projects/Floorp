@@ -854,6 +854,7 @@ use constant ABSTRACT_SCHEMA => {
                             PRIMARYKEY => 1},
             name        => {TYPE => 'varchar(64)', NOTNULL => 1},
             description => {TYPE => 'MEDIUMTEXT'},
+            sortkey     => {TYPE => 'INT2', NOTNULL => 1, DEFAULT => '0'},
         ],
         INDEXES => [
             classifications_name_idx => {FIELDS => ['name'],

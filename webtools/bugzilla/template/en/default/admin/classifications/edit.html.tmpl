@@ -41,6 +41,11 @@
         %]
       </td>
     </tr>
+    <tr>
+      <th align="right"><label for="sortkey">Sortkey:</label></th>
+      <td><input id="sortkey" size="20" maxlength="20" name="sortkey" value="
+      [%- classification.sortkey FILTER html %]"></td>
+    </tr>
     <tr valign=top>
       <th align="right">
         <a href="editproducts.cgi?classification=[% classification.name FILTER url_quote %]">

@@ -79,7 +79,9 @@ if ($product_name eq '') {
             $class->{$product->classification_id} ||=
                 new Bugzilla::Classification($product->classification_id);
         }
-        my @classifications = sort {lc($a->name) cmp lc($b->name)} (values %$class);
+        my @classifications = sort {$a->sortkey <=> $b->sortkey
+                                    || lc($a->name) cmp lc($b->name)}
+                                   (values %$class);
 
         # We know there is at least one classification available,
         # else we would have stopped earlier.

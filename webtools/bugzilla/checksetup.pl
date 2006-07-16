@@ -4229,6 +4229,25 @@ if ($dbh->bz_column_info("namedqueries", "linkinfooter")) {
     $dbh->bz_drop_column("namedqueries", "linkinfooter");    
 }
 
+# 2006-07-07 olav@bkor.dhs.org - Bug 277377
+# Add a sortkey to the classifications
+if (!$dbh->bz_column_info('classifications', 'sortkey')) {
+    print "Adding sortkey column to classifications table...\n" unless $silent;
+
+    $dbh->bz_add_column('classifications', 'sortkey',
+                        {TYPE => 'INT2', NOTNULL => 1, DEFAULT => 0});
+
+    my $class_ids = $dbh->selectcol_arrayref('SELECT id FROM classifications ' .
+                                             'ORDER BY name');
+    my $sth = $dbh->prepare('UPDATE classifications SET sortkey = ? ' .
+                            'WHERE id = ?');
+    my $sortkey = 0;
+    foreach my $class_id (@$class_ids) {
+        $sth->execute($sortkey, $class_id);
+        $sortkey += 100;
+    }
+}
+
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
 #

@@ -557,7 +557,8 @@ sub get_selectable_classifications {
         $class->{$product->classification_id} ||= 
             new Bugzilla::Classification($product->classification_id);
     }
-    my @sorted_class = sort {lc($a->name) cmp lc($b->name)} (values %$class);
+    my @sorted_class = sort {$a->sortkey <=> $b->sortkey 
+                             || lc($a->name) cmp lc($b->name)} (values %$class);
     $self->{selectable_classifications} = \@sorted_class;
     return $self->{selectable_classifications};
 }

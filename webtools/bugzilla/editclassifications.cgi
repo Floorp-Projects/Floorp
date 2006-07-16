@@ -108,12 +108,15 @@ if ($action eq 'new') {
     }
     
     my $description = trim($cgi->param('description')  || '');
+    my $sortkey = trim($cgi->param('sortkey') || 0);
+
     trick_taint($description);
     trick_taint($class_name);
+    detaint_natural($sortkey);
 
     # Add the new classification.
-    $dbh->do("INSERT INTO classifications (name, description)
-              VALUES (?, ?)", undef, ($class_name, $description));
+    $dbh->do("INSERT INTO classifications (name, description, sortkey)
+              VALUES (?, ?, ?)", undef, ($class_name, $description, $sortkey));
 
     $vars->{'classification'} = $class_name;
 
@@ -201,6 +204,7 @@ if ($action eq 'update') {
 
     my $class_old_name = trim($cgi->param('classificationold') || '');
     my $description    = trim($cgi->param('description')       || '');
+    my $sortkey        = trim($cgi->param('sortkey')           || 0);
 
     my $class_old =
         Bugzilla::Classification::check_classification($class_old_name);
@@ -228,6 +232,15 @@ if ($action eq 'update') {
                  ($description, $class_old->id));
 
         $vars->{'updated_description'} = 1;
+    }
+
+    if ($sortkey ne $class_old->sortkey) {
+        detaint_natural($sortkey);
+        $dbh->do("UPDATE classifications SET sortkey = ?
+                  WHERE id = ?", undef,
+                 ($sortkey, $class_old->id));
+
+        $vars->{'updated_sortkey'} = 1;
     }
 
     $dbh->bz_unlock_tables();
