@@ -23,6 +23,7 @@
 use Fcntl;
 
 require 'tbglobals.pl';
+require 'showbuilds.pl';
 
 # Process the form arguments
 %form = ();

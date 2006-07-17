@@ -30,6 +30,7 @@
 #
 
 use FileHandle;
+use lib "@TINDERBOX_DIR@";
 
 # A few global variables are used in the program.
 #
@@ -78,8 +79,7 @@ sub usage {
   warn "usage: warnings.pl <tree/logfile>\n";
 }
 
-# This is for gunzip (should add a configure script to handle this).
-$ENV{PATH} .= "/bin:/usr/local/bin";
+$ENV{PATH} = "@SETUID_PATH@";
 
 $debug = 1, shift @ARGV if $ARGV[0] eq '--debug';
 

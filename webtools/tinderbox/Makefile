@@ -47,6 +47,8 @@
 #PERL = /usr/bin/perl
 #UUDECODE = /usr/bin/uudecode
 
+SETUID_PATH = '/usr/bin:/bin'
+
 # End SERVER_CONFIGURATION
 
 ALL_UTILS = GZIP PERL UUDECODE
@@ -59,11 +61,16 @@ EXE_FILES = \
 	clean.pl \
 	doadmin.cgi \
 	fixupimages.pl \
-	handlemail.pl \
-	processbuild.pl	\
 	showbuilds.cgi \
 	showimages.cgi \
 	showlog.cgi \
+	$(NULL)
+
+SETUID_SCRIPTS = \
+	handlemail.pl \
+	processbuild.pl	\
+	scrape.pl \
+	warnings.pl \
 	$(NULL)
 
 FILES = \
@@ -73,6 +80,7 @@ FILES = \
 	ep_windows.pl \
 	header.pl \
 	imagelog.pl \
+	showbuilds.pl \
 	tbglobals.pl \
 	viewvc.pl \
 	Empty.html \
@@ -112,7 +120,7 @@ install:
 	$(foreach u,$(ALL_UTILS),$(if $($u),,$(error $u must be set to the full path of the utility)))
 	mkdir -p $(TINDERBOX_DIR)/examples
 	set -e ; \
-	for I in $(FILES) $(EXE_FILES); do \
+	for I in $(FILES) $(EXE_FILES) $(SETUID_SCRIPTS); do \
 	  echo Installing $$I && \
           sed -e s#/usr/bonsaitools/bin/perl#$(PERL)#g \
               -e s#/tools/ns/bin/perl5#$(PERL)#g \
@@ -121,10 +129,13 @@ install:
               -e s#/tools/ns/bin/uudecode#$(UUDECODE)#g \
               -e s#/d/webdocs/projects/bonsai#$(BONSAI_DIR)#g \
               -e s#\.\./bonsai#$(BONSAI_URL)#g \
+              -e s#@TINDERBOX_DIR@#$(TINDERBOX_DIR)#g \
+              -e s#@SETUID_PATH@#$(SETUID_PATH)#g \
               $$I > $(TINDERBOX_DIR)/$$I && \
 	   chmod 644 $(TINDERBOX_DIR)/$$I; \
 	done
 	chmod 755 $(addprefix $(TINDERBOX_DIR)/,$(EXE_FILES))
+	chmod 4755 $(addprefix $(TINDERBOX_DIR)/,$(SETUID_SCRIPTS))
 	set -e ; \
 	for I in $(PICS); do \
 	  echo Installing $$I && \

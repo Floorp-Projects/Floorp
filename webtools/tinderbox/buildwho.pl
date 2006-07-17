@@ -24,8 +24,11 @@ use FileHandle;
 use File::Copy 'move';
 use Fcntl qw(:DEFAULT :flock);
 
+use lib "@TINDERBOX_DIR@";
 require 'tbglobals.pl';
 $F_DEBUG=1;
+
+$ENV{'PATH'} = "@SETUID_PATH@";
 
 # Process args:
 #   $days: How many days of data to process.
@@ -34,9 +37,9 @@ $days = $tree = undef;
 
 if ($ARGV[0] eq '-days') {
     shift;
-    $days = shift;
+    $days = &trick_taint(shift);
 }
-$tree = shift;
+$tree = &trick_taint(shift);
 
 &usage() if (!defined($tree));
 

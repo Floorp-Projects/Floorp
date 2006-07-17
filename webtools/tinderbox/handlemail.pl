@@ -20,31 +20,11 @@
 #
 # Contributor(s): 
 
-# Figure out which directory tinderbox is in by looking at argv[0].  Unless
-# there is a command line argument; if there is, just use that.
+$ENV{'PATH'} = "@SETUID_PATH@";
 
-$tinderboxdir = $0;
-$tinderboxdir =~ s:/[^/]*$::;      # Remove last word, and slash before it.
-if ($tinderboxdir eq "") {
-    $tinderboxdir = ".";
-}
+$tinderboxdir = "@TINDERBOX_DIR@";
 
-if (@ARGV > 0) {
-    $tinderboxdir = $ARGV[0];
-}
-
-print "tinderbox = $tinderboxdir\n"; 
-
-chdir $tinderboxdir || die "Couldn't chdir to $tinderboxdir"; 
-
-
-open(DF, ">data/tbx.$$") || die "could not open data/tbx.$$";
-while(<STDIN>){
-    print DF $_;
-}
-close(DF);
-
-$err = system("./processbuild.pl", "data/tbx.$$");
+$err = system("cat | $tinderboxdir/processbuild.pl");
 
 if( $err ) {
     die "processbuild.pl returned an error\n";

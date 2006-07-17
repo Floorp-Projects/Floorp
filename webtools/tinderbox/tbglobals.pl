@@ -76,6 +76,13 @@ $display_accurate_build_end_times = 1;
 
 1;
 
+sub trick_taint{
+    my $in = shift;
+    return undef if !defined($in);
+    $in =~ /(.*)/;
+    return $1;
+}
+
 sub lock{
 }
 
@@ -492,13 +499,6 @@ sub tb_find_build_record {
     td          => undef
   };
   return $buildrec;
-}
-
-sub tb_build_static {
-  # Build tinderbox static pages
-  $ENV{QUERY_STRING}="tree=$tree&static=1";
-  $ENV{REQUEST_METHOD}="GET";
-  system("./showbuilds.cgi >/dev/null&");
 }
 
 # end of public functions

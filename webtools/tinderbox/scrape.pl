@@ -31,9 +31,10 @@ sub usage {
 }
 
 use FileHandle;
+use lib "@TINDERBOX_DIR@";
 
 # This is for gunzip (Should add a configure script to handle this).
-$ENV{PATH} .= ":/usr/local/bin";
+$ENV{PATH} = "@SETUID_PATH@";
 
 unless ($#ARGV == 1) {
   &usage;
