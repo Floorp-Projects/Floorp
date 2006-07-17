@@ -310,7 +310,9 @@
         event.stopPropagation();
       </handler>
       <handler event="keypress" keycode="VK_LEFT" phase="target">
-        this.checkAdjacentElement(false);
+        // left arrow goes back when we are ltr, forward when we are rtl
+        this.checkAdjacentElement(document.defaultView.getComputedStyle(
+                                    this, "").direction == "rtl");
         event.stopPropagation();
       </handler>
       <handler event="keypress" keycode="VK_DOWN" phase="target">
@@ -318,7 +320,9 @@
         event.stopPropagation();
       </handler>
       <handler event="keypress" keycode="VK_RIGHT" phase="target">
-        this.checkAdjacentElement(true);
+        // right arrow goes forward when we are ltr, back when we are rtl
+        this.checkAdjacentElement(document.defaultView.getComputedStyle(
+                                    this, "").direction == "ltr");
         event.stopPropagation();
       </handler>
 

@@ -144,11 +144,21 @@
       <handler event="keypress">
       <![CDATA[
         if (event.keyCode == KeyEvent.DOM_VK_UP ||
-            event.keyCode == KeyEvent.DOM_VK_LEFT)
+            (event.keyCode == KeyEvent.DOM_VK_LEFT &&
+              document.defaultView.getComputedStyle(this.parentNode, "")
+                      .direction == "ltr") ||
+            (event.keyCode == KeyEvent.DOM_VK_RIGHT &&
+              document.defaultView.getComputedStyle(this.parentNode, "")
+                      .direction == "rtl"))
           return window.document.commandDispatcher.rewindFocus();
 
         if (event.keyCode == KeyEvent.DOM_VK_DOWN ||
-            event.keyCode == KeyEvent.DOM_VK_RIGHT)
+            (event.keyCode == KeyEvent.DOM_VK_RIGHT &&
+              document.defaultView.getComputedStyle(this.parentNode, "")
+                      .direction == "ltr") ||
+            (event.keyCode == KeyEvent.DOM_VK_LEFT &&
+              document.defaultView.getComputedStyle(this.parentNode, "")
+                      .direction == "rtl"))
           return window.document.commandDispatcher.advanceFocus();
 
         if (event.keyCode || event.charCode <= 32 || event.altKey || 
