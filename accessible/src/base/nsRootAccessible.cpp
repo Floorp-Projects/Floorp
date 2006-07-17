@@ -945,3 +945,59 @@ NS_IMETHODIMP nsRootAccessible::Shutdown()
   return nsDocAccessibleWrap::Shutdown();
 }
 
+already_AddRefed<nsIDocShellTreeItem>
+nsRootAccessible::GetContentDocShell(nsIDocShellTreeItem *aStart)
+{
+  PRInt32 itemType;
+  aStart->GetItemType(&itemType);
+  if (itemType == nsIDocShellTreeItem::typeContent) {
+    nsCOMPtr<nsIAccessibleDocument> accDoc = GetDocAccessibleFor(aStart);
+    nsCOMPtr<nsIAccessible> accessible = do_QueryInterface(accDoc);
+    // If ancestor chain of accessibles is not completely visible,
+    // don't use this one. This happens for example if it's inside
+    // a background tab (tabbed browsing)
+    while (accessible) {
+      if (State(accessible) & STATE_INVISIBLE) {
+        return nsnull;
+      }
+      nsCOMPtr<nsIAccessible> ancestor;
+      accessible->GetParent(getter_AddRefs(ancestor));
+      accessible.swap(ancestor);
+    }
+
+    NS_ADDREF(aStart);
+    return aStart;
+  }
+  nsCOMPtr<nsIDocShellTreeNode> treeNode(do_QueryInterface(aStart));
+  if (treeNode) {
+    PRInt32 subDocuments;
+    treeNode->GetChildCount(&subDocuments);
+    for (PRInt32 count = 0; count < subDocuments; count ++) {
+      nsCOMPtr<nsIDocShellTreeItem> treeItemChild, contentTreeItem;
+      treeNode->GetChildAt(count, getter_AddRefs(treeItemChild));
+      NS_ENSURE_TRUE(treeItemChild, nsnull);
+      contentTreeItem = GetContentDocShell(treeItemChild);
+      if (contentTreeItem) {
+        NS_ADDREF(aStart = contentTreeItem);
+        return aStart;
+      }
+    }
+  }
+  return nsnull;
+}
+
+NS_IMETHODIMP nsRootAccessible::GetAccessibleRelated(PRUint32 aRelationType,
+                                                     nsIAccessible **aRelated)
+{
+  *aRelated = nsnull;
+
+  if (!mDOMNode || aRelationType != RELATION_EMBEDS) {
+    return nsDocAccessibleWrap::GetAccessibleRelated(aRelationType, aRelated);
+  }
+
+  nsCOMPtr<nsIDocShellTreeItem> treeItem = GetDocShellTreeItemFor(mDOMNode);   
+  nsCOMPtr<nsIDocShellTreeItem> contentTreeItem = GetContentDocShell(treeItem);
+  nsCOMPtr<nsIAccessibleDocument> accDoc = GetDocAccessibleFor(contentTreeItem);
+  return accDoc->QueryInterface(NS_GET_IID(nsIAccessible), (void**)aRelated);
+}
+

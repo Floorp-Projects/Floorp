@@ -73,6 +73,8 @@ class nsRootAccessible : public nsDocAccessibleWrap,
     NS_IMETHOD GetRole(PRUint32 *aRole);
     NS_IMETHOD GetState(PRUint32 *aState);
     NS_IMETHOD GetExtState(PRUint32 *aExtState);
+    NS_IMETHOD GetAccessibleRelated(PRUint32 aRelationType,
+                                    nsIAccessible **aRelated);
 
     // ----- nsIDOMEventListener --------------------------
     NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
@@ -102,6 +104,8 @@ class nsRootAccessible : public nsDocAccessibleWrap,
                                   PRBool aForceEvent = PR_FALSE);
     void FireCurrentFocusEvent();
     void GetChromeEventHandler(nsIDOMEventTarget **aChromeTarget);
+    already_AddRefed<nsIDocShellTreeItem>
+           GetContentDocShell(nsIDocShellTreeItem *aStart);
     nsCOMPtr<nsIAccessibilityService> mAccService;
     nsCOMPtr<nsIAccessibleCaret> mCaretAccessible;
     PRPackedBool mIsInDHTMLMenu;
