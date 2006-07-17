@@ -23,6 +23,7 @@
 *
 \************************************************************/
 
+// rename this sometime?
 session_name('CAKEPHP');
 session_start();
 
