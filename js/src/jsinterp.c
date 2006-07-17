@@ -2336,6 +2336,7 @@ interrupt:
             withobj = JSVAL_TO_OBJECT(rval);
             JS_ASSERT(OBJ_GET_CLASS(cx, withobj) == &js_WithClass);
             fp->scopeChain = OBJ_GET_PARENT(cx, withobj);
+            JS_SetPrivate(cx, withobj, NULL);
           END_CASE(JSOP_LEAVEWITH)
 
           BEGIN_CASE(JSOP_SETRVAL)
@@ -5470,10 +5471,14 @@ interrupt:
                  (clasp = OBJ_GET_CLASS(cx, obj)) == &js_WithClass ||
                  clasp == &js_BlockClass;
                  obj = OBJ_GET_PARENT(cx, obj)) {
-                if (OBJ_BLOCK_DEPTH(cx, obj) < i)
+                if (JS_GetPrivate(cx, obj) != fp ||
+                    OBJ_BLOCK_DEPTH(cx, obj) < i) {
                     break;
+                }
                 if (clasp == &js_BlockClass)
                     ok &= js_PutBlockObject(cx, obj);
+                else
+                    JS_SetPrivate(cx, obj, NULL);
             }
 
             fp->scopeChain = obj;
