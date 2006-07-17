@@ -70,7 +70,7 @@ PRUint32 atkRoleMap[] = {
 #ifdef USE_ATK_ROLE_CHART
     ATK_ROLE_CHART,               // nsIAccessible::ROLE_CHART             17
 #else
-    ATK_ROLE_PANE,                // nsIAccessible::ROLE_CHART             17
+    ATK_ROLE_PANEL,               // nsIAccessible::ROLE_CHART             17
 #endif
     ATK_ROLE_DIALOG,              // nsIAccessible::ROLE_DIALOG            18
     ATK_ROLE_UNKNOWN,             // nsIAccessible::ROLE_BORDER            19
@@ -165,8 +165,10 @@ PRUint32 atkRoleMap[] = {
 #else
     ATK_ROLE_COMBO_BOX,           // nsIAccessible::ROLE_AUTOCOMPLETE      102
 #endif
-    ATK_ROLE_EDITBAR,             // nsIAccessible::ROLE_EDITBAR           103
-    ATK_ROLE_EMBEDDED,            // nsIAccessible::ROLE_EMBEDDED          104
+// XXX Need USE_ATK_ROLE_EDITBAR
+    ATK_ROLE_ENTRY,               // nsIAccessible::ROLE_EDITBAR           103
+// XXX Need USE_ATK_ROLE_EMBEDDED
+    ATK_ROLE_UNKNOWN,             // nsIAccessible::ROLE_EMBEDDED          104
 #ifdef USE_ATK_ROLE_ENTRY
     ATK_ROLE_ENTRY,               // nsIAccessible::ROLE_ENTRY             105
 #else
@@ -177,16 +179,20 @@ PRUint32 atkRoleMap[] = {
 #else
     ATK_ROLE_LABEL,               // nsIAccessible::ROLE_CAPTION           106
 #endif
+#ifdef USE_ATK_ROLE_DOCUMENT_FRAME
     ATK_ROLE_DOCUMENT_FRAME,      // nsIAccessible::ROLE_DOCUMENT_FRAME    107
+#else
+    ATK_ROLE_PANEL,               // nsIAccessible::ROLE_DOCUMENT_FRAME    107
+#endif
 #ifdef USE_ATK_ROLE_HEADING
     ATK_ROLE_HEADING,             // nsIAccessible::ROLE_HEADING           108
 #else
-    TK_ROLE_TEXT,                 // nsIAccessible::ROLE_HEADING           108
+    ATK_ROLE_TEXT,                 // nsIAccessible::ROLE_HEADING           108
 #endif
 #ifdef USE_ATK_ROLE_PAGE
     ATK_ROLE_PAGE,                // nsIAccessible::ROLE_PAGE              109
 #else
-    ATK_ROLE_SECTION,             // nsIAccessible::ROLE_PAGE              109
+    ATK_ROLE_TEXT,                // nsIAccessible::ROLE_PAGE              109
 #endif
 #ifdef USE_ATK_ROLE_SECTION
     ATK_ROLE_SECTION,             // nsIAccessible::ROLE_SECTION           110
@@ -196,7 +202,7 @@ PRUint32 atkRoleMap[] = {
 #ifdef USE_ATK_ROLE_REDUNDANT_OBJECT
     ATK_ROLE_REDUNDANT_OBJECT,    // nsIAccessible::ROLE_REDUNDANT_OBJECT  111
 #else
-   ATK_ROLE_INVALD,               // nsIAccessible::ROLE_REDUNDANT_OBJECT  111
+   ATK_ROLE_INVALID,              // nsIAccessible::ROLE_REDUNDANT_OBJECT  111
 #endif
 #ifdef USE_ATK_ROLE_FORM
     ATK_ROLE_FORM,                // nsIAccessible::ROLE_FORM              112
