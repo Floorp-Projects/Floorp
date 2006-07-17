@@ -51,6 +51,23 @@
 #define MAI_LOGGING
 #endif /* #ifdef PR_LOGGING */
 
+// ATK 1.1.1 or later
+#if ATK_MAJOR_VERSION >=2 || \
+    (ATK_MAJOR_VERSION == 1 && ATK_MINOR_VERSION >= 2) || \
+    (ATK_MAJOR_VERSION == 1 && ATK_MINOR_VERSION == 1 && ATK_REV_VERSION >=1)
+#define USE_ATK_ROLE_PARAGRAPH
+#define USE_ATK_ROLE_HEADER
+#define USE_ATK_ROLE_FOOTER
+#define USE_ATK_ROLE_RULER
+#endif
+
+// ATK 1.1.3 or later
+#if ATK_MAJOR_VERSION >=2 || \
+    (ATK_MAJOR_VERSION == 1 && ATK_MINOR_VERSION >= 2) || \
+    (ATK_MAJOR_VERSION == 1 && ATK_MINOR_VERSION == 1 && ATK_REV_VERSION >=3)
+#define USE_ATK_ROLE_APPLICATION
+#endif
+
 // ATK 1.3.3 or later
 #if ATK_MAJOR_VERSION >=2 || \
     (ATK_MAJOR_VERSION == 1 && ATK_MINOR_VERSION >= 4) || \
