@@ -249,8 +249,10 @@ extern JSClass  js_BlockClass;
  *
  * A With object is like a Block object, in that both have one reserved slot
  * telling the stack depth of the relevant slots (the slot whose value is the
- * object named in the with statement; the slots containing the block's local
- * variables).
+ * object named in the with statement, the slots containing the block's local
+ * variables); and both have a private slot referring to the JSStackFrame in
+ * whose activation they were created (or null if the with or block object
+ * outlives the frame).
  */
 #define JSSLOT_BLOCK_DEPTH      (JSSLOT_PRIVATE + 1)
 
@@ -265,6 +267,9 @@ extern JSClass  js_BlockClass;
  * To make sure this slot is well-defined, always call js_NewWithObject to
  * create a With object, don't call js_NewObject directly.  When creating a
  * With object that does not correspond to a stack slot, pass -1 for depth.
+ *
+ * When popping the stack across this object's "with" statement, client code
+ * must call JS_SetPrivate(cx, withobj, NULL).
  */
 extern JSObject *
 js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth);

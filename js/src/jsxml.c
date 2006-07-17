@@ -7935,6 +7935,7 @@ js_FilterXMLList(JSContext *cx, JSObject *obj, jsbytecode *pc, jsval *vp)
     fp = cx->fp;
     fp->flags |= JSFRAME_FILTERING;
     scobj = js_GetScopeChain(cx, fp);
+    withobj = NULL;
     if (!scobj)
         goto bad;
     xml = GetPrivate(cx, obj, "filtering predicate operator");
@@ -7984,7 +7985,10 @@ js_FilterXMLList(JSContext *cx, JSObject *obj, jsbytecode *pc, jsval *vp)
 
 out:
     fp->flags &= ~JSFRAME_FILTERING;
-    fp->scopeChain = scobj;
+    if (withobj) {
+        fp->scopeChain = scobj;
+        JS_SetPrivate(cx, withobj, NULL);
+    }
     js_LeaveLocalRootScopeWithResult(cx, *vp);
     return ok;
 bad:
