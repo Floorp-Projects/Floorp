@@ -168,7 +168,7 @@ PRUint32 atkRoleMap[] = {
 #ifdef USE_ATK_ROLE_EDITBAR
     ATK_ROLE_EDITBAR,             // nsIAccessible::ROLE_EDITBAR           103
 #else
-    ATK_ROLE_ENTRY,               // nsIAccessible::ROLE_EDITBAR           103
+    ATK_ROLE_TEXT,                // nsIAccessible::ROLE_EDITBAR           103
 #endif
 #ifdef USE_ATK_ROLE_EMBEDDED
     ATK_ROLE_EMBEDDED,            // nsIAccessible::ROLE_EMBEDDED          104
