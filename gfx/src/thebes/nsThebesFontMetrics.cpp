@@ -113,7 +113,7 @@ nsThebesFontMetrics::Destroy()
     return NS_OK;
 }
 
-#define ROUND_TO_TWIPS(x) NSToCoordRound((x) * mDev2App)
+#define ROUND_TO_TWIPS(x) (nscoord)floor(((x) * mDev2App) + 0.5)
 
 const gfxFont::Metrics& nsThebesFontMetrics::GetMetrics() const
 {
@@ -267,7 +267,7 @@ nsThebesFontMetrics::GetLeading(nscoord& aLeading)
 NS_IMETHODIMP
 nsThebesFontMetrics::GetNormalLineHeight(nscoord& aLineHeight)
 {
-    const gfxFont::Metrics &m = GetMetrics();
+    const gfxFont::Metrics& m = GetMetrics();
     aLineHeight = ROUND_TO_TWIPS(m.emHeight + m.internalLeading);
     return NS_OK;
 }
@@ -275,7 +275,9 @@ nsThebesFontMetrics::GetNormalLineHeight(nscoord& aLineHeight)
 PRInt32
 nsThebesFontMetrics::GetMaxStringLength()
 {
-    PRInt32 len = (PRInt32)floor(32767.0/GetMetrics().maxAdvance);
+    const gfxFont::Metrics& m = GetMetrics();
+    const double x = 32767.0 / m.maxAdvance;
+    PRInt32 len = (PRInt32)floor(x);
     return PR_MAX(1, len);
 }
 
@@ -287,6 +289,10 @@ nsThebesFontMetrics::GetWidth(const char* aString, PRUint32 aLength, nscoord& aW
         aWidth = 0;
         return NS_OK;
     }
+
+    // callers that hit this should not be so stupid
+    if ((aLength == 1) && (aString[0] == ' '))
+        return GetSpaceWidth(aWidth);
 
     const nsDependentCSubstring& theString = nsDependentCSubstring(aString, aString+aLength);
     nsRefPtr<gfxTextRun> textrun = mFontGroup->MakeTextRun(theString);
@@ -307,6 +313,10 @@ nsThebesFontMetrics::GetWidth(const PRUnichar* aString, PRUint32 aLength,
         aWidth = 0;
         return NS_OK;
     }
+
+    // callers that hit this should not be so stupid
+    if ((aLength == 1) && (aString[0] == ' '))
+        return GetSpaceWidth(aWidth);
 
     const nsDependentSubstring& theString = nsDependentSubstring(aString, aString+aLength);
     nsRefPtr<gfxTextRun> textrun = mFontGroup->MakeTextRun(theString);
@@ -385,7 +395,7 @@ nsThebesFontMetrics::DrawString(const char *aString, PRUint32 aLength,
         textrun->SetSpacing(spacing);
     }
 
-    textrun->Draw(aContext->Thebes(), gfxPoint(NSToIntRound(aX * app2dev), NSToIntRound(aY * app2dev)));
+    aContext->Thebes()->DrawTextRun(textrun, gfxPoint(NSToIntRound(aX * app2dev), NSToIntRound(aY * app2dev)));
 
     return NS_OK;
 }
@@ -420,7 +430,7 @@ nsThebesFontMetrics::DrawString(const PRUnichar* aString, PRUint32 aLength,
         textrun->SetSpacing(spacing);
     }
 
-    textrun->Draw(aContext->Thebes(), gfxPoint(NSToIntRound(aX * app2dev), NSToIntRound(aY * app2dev)));
+    aContext->Thebes()->DrawTextRun(textrun, gfxPoint(NSToIntRound(aX * app2dev), NSToIntRound(aY * app2dev)));
 
     return NS_OK;
 }

@@ -107,7 +107,7 @@ struct THEBES_API gfxPoint {
     gfxPoint operator/(const gfxFloat v) const {
         return gfxPoint(x / v, y / v);
     }
-    gfxPoint& round() {
+    gfxPoint& Round() {
         x = ::floor(x + 0.5);
         y = ::floor(y + 0.5);
         return *this;
