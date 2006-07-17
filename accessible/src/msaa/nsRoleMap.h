@@ -43,6 +43,18 @@
 #define USE_ROLE_STRING 0
 #define ROLE_MSAA_LAST_ENTRY -1
 
+#ifndef ROLE_SYSTEM_SPLITBUTTON
+#define ROLE_SYSTEM_SPLITBUTTON ( 0x3e )    // Not defined in all oleacc.h versions
+#endif
+
+#ifndef ROLE_SYSTEM_IPADDRESS
+#define ROLE_SYSTEM_IPADDRESS ( 0x3f )      // Not defined in all oleacc.h versions
+#endif
+
+#ifndef ROLE_SYSTEM_OUTLINEBUTTON
+#define ROLE_SYSTEM_OUTLINEBUTTON ( 0x40 )  // Not defined in all oleacc.h versions
+#endif
+
 // Map array from cross platform roles to MSAA roles
 PRUint32 msaaRoleMap[] = {
     USE_ROLE_STRING,                 // nsIAccessible::ROLE_NOTHING
