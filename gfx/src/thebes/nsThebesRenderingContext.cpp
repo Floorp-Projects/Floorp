@@ -552,8 +552,8 @@ nsThebesRenderingContext::DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoor
         p0 = mThebes->UserToDevice(p0);
         p1 = mThebes->UserToDevice(p1);
 
-        p0.round();
-        p1.round();
+        p0.Round();
+        p1.Round();
 
         mThebes->IdentityMatrix();
 

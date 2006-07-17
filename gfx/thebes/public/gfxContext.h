@@ -205,7 +205,7 @@ public:
      * Draw the text run at the current point.
      * XXX support drawing subsections of the text run
      */
-    void DrawText(gfxTextRun& text);
+    void DrawTextRun(gfxTextRun *text, gfxPoint pt);
 
     /**
      ** Transformation Matrix manipulation
@@ -257,39 +257,39 @@ public:
      * Converts a point from device to user coordinates using the inverse
      * transformation matrix.
      */
-    gfxPoint DeviceToUser(gfxPoint point) const;
+    gfxPoint DeviceToUser(const gfxPoint& point) const;
 
     /**
      * Converts a size from device to user coordinates. This does not apply
      * translation components of the matrix.
      */
-    gfxSize DeviceToUser(gfxSize size) const;
+    gfxSize DeviceToUser(const gfxSize& size) const;
 
     /**
      * Converts a rectangle from device to user coordinates; this has the
      * same effect as using DeviceToUser on both the rectangle's point and
      * size.
      */
-    gfxRect DeviceToUser(gfxRect rect) const;
+    gfxRect DeviceToUser(const gfxRect& rect) const;
 
     /**
      * Converts a point from user to device coordinates using the inverse
      * transformation matrix.
      */
-    gfxPoint UserToDevice(gfxPoint point) const;
+    gfxPoint UserToDevice(const gfxPoint& point) const;
 
     /**
      * Converts a size from user to device coordinates. This does not apply
      * translation components of the matrix.
      */
-    gfxSize UserToDevice(gfxSize size) const;
+    gfxSize UserToDevice(const gfxSize& size) const;
 
     /**
      * Converts a rectangle from user to device coordinates; this has the
      * same effect as using DeviceToUser on both the rectangle's point and
      * size.
      */
-    gfxRect UserToDevice(gfxRect rect) const;
+    gfxRect UserToDevice(const gfxRect& rect) const;
 
     /**
      * Takes the given rect and tries to align it to device pixels.  If
