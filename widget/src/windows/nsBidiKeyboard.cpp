@@ -45,7 +45,8 @@ NS_IMPL_ISUPPORTS1(nsBidiKeyboard, nsIBidiKeyboard)
 
 nsBidiKeyboard::nsBidiKeyboard() : nsIBidiKeyboard()
 {
-  mDefaultsSet = PR_FALSE;
+  mInitialized = PR_FALSE;
+  mHaveBidiKeyboards = PR_FALSE;
   mLTRKeyboard[0] = '\0';
   mRTLKeyboard[0] = '\0';
   mCurrentLocaleName[0] = '\0';
@@ -57,13 +58,9 @@ nsBidiKeyboard::~nsBidiKeyboard()
 
 NS_IMETHODIMP nsBidiKeyboard::SetLangFromBidiLevel(PRUint8 aLevel)
 {
-  if (!mDefaultsSet) {
-    nsresult result = EnumerateKeyboards();
-    if (NS_SUCCEEDED(result))
-      mDefaultsSet = PR_TRUE;
-    else
-      return result;
-  }
+  nsresult result = SetupBidiKeyboards();
+  if (NS_FAILED(result))
+    return result;
 
   // call LoadKeyboardLayout() only if the target keyboard layout is different from the current
   char currentLocaleName[KL_NAMELENGTH];
@@ -89,6 +86,11 @@ NS_IMETHODIMP nsBidiKeyboard::SetLangFromBidiLevel(PRUint8 aLevel)
 NS_IMETHODIMP nsBidiKeyboard::IsLangRTL(PRBool *aIsRTL)
 {
   *aIsRTL = PR_FALSE;
+
+  nsresult result = SetupBidiKeyboards();
+  if (NS_FAILED(result))
+    return result;
+
   HKL  currentLocale;
  
   currentLocale = ::GetKeyboardLayout(0);
@@ -122,8 +124,11 @@ NS_IMETHODIMP nsBidiKeyboard::IsLangRTL(PRBool *aIsRTL)
 // Get the list of keyboard layouts available in the system
 // Set mLTRKeyboard to the first LTR keyboard in the list and mRTLKeyboard to the first RTL keyboard in the list
 // These defaults will be used unless the user explicitly sets something else.
-nsresult nsBidiKeyboard::EnumerateKeyboards()
+nsresult nsBidiKeyboard::SetupBidiKeyboards()
 {
+  if (mInitialized)
+    return mHaveBidiKeyboards ? NS_OK : NS_ERROR_FAILURE;
+
   int keyboards;
   HKL far* buf;
   HKL locale;
@@ -160,14 +165,18 @@ nsresult nsBidiKeyboard::EnumerateKeyboards()
     }
   }
   PR_Free(buf);
+  mInitialized = PR_TRUE;
+
+  // If there is not at least one keyboard of each directionality, Bidi
+  // keyboard functionality will be disabled.
+  mHaveBidiKeyboards = (isRTLKeyboardSet && isLTRKeyboardSet);
+  if (!mHaveBidiKeyboards)
+    return NS_ERROR_FAILURE;
 
   // Get the current keyboard layout and use it for either mRTLKeyboard or
   // mLTRKeyboard as appropriate. If the user has many keyboard layouts
   // installed this prevents us from arbitrarily resetting the current
   // layout (bug 80274)
-
-  // If one or other keyboard is still not initialized, copy the
-  // initialized keyboard to the uninitialized (bug 85813)
   locale = ::GetKeyboardLayout(0);
   if (!::GetKeyboardLayoutName(localeName))
     return NS_ERROR_FAILURE;
@@ -180,18 +189,10 @@ nsresult nsBidiKeyboard::EnumerateKeyboards()
   if (IsRTLLanguage(locale)) {
     strncpy(mRTLKeyboard, localeName, KL_NAMELENGTH);
     mRTLKeyboard[KL_NAMELENGTH-1] = '\0'; // null terminate
-    if (! isLTRKeyboardSet) {
-      strncpy(mLTRKeyboard, localeName, KL_NAMELENGTH);
-      mLTRKeyboard[KL_NAMELENGTH-1] = '\0'; // null terminate
-    }
   }
   else {
     strncpy(mLTRKeyboard, localeName, KL_NAMELENGTH);
     mLTRKeyboard[KL_NAMELENGTH-1] = '\0'; // null terminate
-    if (! isRTLKeyboardSet) {
-      strncpy(mRTLKeyboard, localeName, KL_NAMELENGTH);
-      mRTLKeyboard[KL_NAMELENGTH-1] = '\0'; // null terminate
-    }
   }
 
   NS_ASSERTION(*mRTLKeyboard, 
@@ -202,18 +203,16 @@ nsresult nsBidiKeyboard::EnumerateKeyboards()
   return NS_OK;
 }
 
-// Test whether the language represented by this locale identifier is a right-to-left language
+// Test whether the language represented by this locale identifier is a
+//  right-to-left language, using bit 123 of the Unicode subset bitfield in
+//  the LOCALESIGNATURE
+// See http://msdn.microsoft.com/library/default.asp?url=/library/en-us/intl/unicode_63ub.asp
 PRBool nsBidiKeyboard::IsRTLLanguage(HKL aLocale)
 {
-  // This macro extracts the primary language id (low 10 bits) from the locale id
-  switch (PRIMARYLANGID(aLocale)){
-    case LANG_ARABIC:
-    case LANG_FARSI:
-    case LANG_HEBREW:
-      return PR_TRUE;
-      break;
-
-    default:
-      return PR_FALSE;
-  }
+  LOCALESIGNATURE localesig;
+  return (::GetLocaleInfoW(PRIMARYLANGID(aLocale),
+                           LOCALE_FONTSIGNATURE,
+                           (LPWSTR)&localesig,
+                           (sizeof(localesig)/sizeof(WCHAR))) &&
+          (localesig.lsUsb[3] & 0x08000000));
 }
