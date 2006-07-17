@@ -18,6 +18,38 @@ class UsersController extends AppController {
         }
         else
         {
+            /**
+             * @todo The captcha stuff should be moved to a component (instead of a vendor
+             * package).  The manual error handling and vendor code was added because
+             * of time constraints (namely, this needs to be done in the next 22
+             * minutes)
+             */
+
+            // They didn't fill in a value
+            if (empty($_SESSION['freecap_word_hash']) || empty($this->params['data']['captcha'][0])) {
+                $form_captcha_error = 'You must enter the code above.  If you are unable to see the code, please <a href="mailto:firefoxsurvey@mozilla.com">email us.</a>';
+                $this->set('form_captcha_error',$form_captcha_error);
+                return;
+            }
+
+            // Just some sanity checking.  If a user messes with their cookie
+            // manually, they could be trying to execute custom functions
+            if (!in_array($_SESSION['hash_func'], array('sha1','md5','crc32'))) {
+                // fail silently?
+                return;
+            }
+
+            // Check the captcha values
+            if( $_SESSION['hash_func'](strtolower($this->params['data']['captcha'][0])) != $_SESSION['freecap_word_hash']) {
+                $form_captcha_error = 'The code you entered did not match the picture.  Please try again.';
+                $this->set('form_captcha_error',$form_captcha_error);
+                return;
+            } else {
+                //reset session values
+                $_SESSION['freecap_attempts'] = 0;
+                $_SESSION['freecap_word_hash'] = false;
+            }
+
             // If they've already signed up, send them another email
             if ($this->User->findByEmail($this->params['data']['User']['email'])) {
                     $mail_params = array(

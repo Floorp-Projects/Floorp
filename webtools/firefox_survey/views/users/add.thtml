@@ -9,6 +9,14 @@
             <?php echo $html->input('User/email', array('size' => '40'))?>
             <?php echo $html->tagErrorMsg('User/email', 'A properly formatted email address is required.') ?>
         </p>
+        
+        <p class="captcha"><?php echo $html->image('freecap.php'); ?></p>
+        <p><label class="captcha-entry" for="captcha">Enter the code above:<span class="required">*</span></label> <?php echo $html->input('captcha', array('size' => '40')); ?>
+            <a href="mailto:firefoxsurvey@mozilla.com"><?php echo $html->image('accessibility.jpg',array('class' => 'captcha-entry'));?></a>
+        </p>
+        <?php if (!empty($form_captcha_error)) : ?>
+        <p class="error_message"><?php echo $form_captcha_error; ?></p>
+        <?php endif; ?>
         <p><?php echo $html->submit('Send') ?></p>
     </form>
 </div>

@@ -6,9 +6,22 @@
 
  div#UsersAdd label {
      float:left;
-     width:12em;
+     width:13em;
  }
 
  .center {
      text-align:center;
+ }
+
+ .captcha {
+     padding-left:13em;
+ }
+
+ .captcha-entry {
+     vertical-align:bottom;
+ }
+
+ .error_message {
+     color:#e11;
+     padding-left:5em;
  }
