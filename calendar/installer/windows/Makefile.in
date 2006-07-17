@@ -49,7 +49,6 @@ SFX_MODULE = $(topsrcdir)/other-licenses/7zstub/sunbird/7zSD.sfx
 
 PP_LOCALIZED_FILES = \
 	packages-static \
-	installer.cfg \
 	$(NULL)
 
 INSTALLER_FILES = \
