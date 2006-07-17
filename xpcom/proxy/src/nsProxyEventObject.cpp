@@ -261,6 +261,6 @@ nsProxyEventObject::CallMethod(PRUint16 methodIndex,
 
     threadInt->PopEventQueue();
 
-    PROXY_LOG(("PROXY(%p): PostAndWait exit [%p %x]\n", this, proxyInfo, rv));
+    PROXY_LOG(("PROXY(%p): PostAndWait exit [%p %x]\n", this, proxyInfo.get(), rv));
     return rv;
 }
