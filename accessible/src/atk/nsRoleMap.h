@@ -165,10 +165,16 @@ PRUint32 atkRoleMap[] = {
 #else
     ATK_ROLE_COMBO_BOX,           // nsIAccessible::ROLE_AUTOCOMPLETE      102
 #endif
-// XXX Need USE_ATK_ROLE_EDITBAR
+#ifdef USE_ATK_ROLE_EDITBAR
+    ATK_ROLE_EDITBAR,             // nsIAccessible::ROLE_EDITBAR           103
+#else
     ATK_ROLE_ENTRY,               // nsIAccessible::ROLE_EDITBAR           103
-// XXX Need USE_ATK_ROLE_EMBEDDED
+#endif
+#ifdef USE_ATK_ROLE_EMBEDDED
+    ATK_ROLE_EMBEDDED,            // nsIAccessible::ROLE_EMBEDDED          104
+#else
     ATK_ROLE_UNKNOWN,             // nsIAccessible::ROLE_EMBEDDED          104
+#endif
 #ifdef USE_ATK_ROLE_ENTRY
     ATK_ROLE_ENTRY,               // nsIAccessible::ROLE_ENTRY             105
 #else
