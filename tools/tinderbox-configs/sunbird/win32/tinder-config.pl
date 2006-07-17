@@ -69,10 +69,10 @@ $VendorName               = 'Mozilla';
 #$JavaTest                 = 0;
 #$ViewerTest               = 0;
 #$BloatTest                = 0;  # warren memory bloat test
-#$BloatTest2               = 0;  # dbaron memory bloat test, require tracemalloc
+$BloatTest2                = 1;  # dbaron memory bloat test, require tracemalloc
 #$DomToTextConversionTest  = 0;  
 #$XpcomGlueTest            = 0;
-$CodesizeTest              = 0;  # Z,  require mozilla/tools/codesighs
+$CodesizeTest              = 1;  # Z,  require mozilla/tools/codesighs
 #$EmbedCodesizeTest        = 0;  # mZ, require mozilla/tools/codesigns
 #$MailBloatTest            = 0;
 #$EmbedTest                = 0;  # Assumes you wanted $BuildEmbed=1
