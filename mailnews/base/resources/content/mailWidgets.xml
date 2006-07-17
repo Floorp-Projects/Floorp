@@ -642,23 +642,24 @@
     <content>
       <xul:hbox class="headerNameBox" align="start" pack="end">
         <xul:image class="addresstwisty" anonid="toggleIcon"
-                   onclick="toggleAddressView();"/>
+                   onclick="toggleWrap();"/>
         <xul:label class="headerName" xbl:inherits="value=label"/>
-        </xul:hbox>
+      </xul:hbox>
 
+      <xul:hbox class="headerValueBox" anonid="longEmailAddresses" flex="1"
+                onoverflow="this.parentNode.toggleIcon.collapsed = false;"
+                onunderflow="this.parentNode.toggleIcon.collapsed = true;">
         <xul:label class="headerValue" anonid="emailAddresses" flex="1"/>
-        <xul:label class="headerValue" anonid="longEmailAddresses" flex="1" collapsed="true"/>
+      </xul:hbox>
     </content>
 
     <implementation>
       <constructor>
         <![CDATA[
-          this.mLongViewCreated = false;
           this.mAddresses = new Array;
         ]]>
       </constructor>
 
-      <field name="mLongViewCreated"/>
       <field name="mAddresses"/>
       <!-- as a perf optimization we are going to keep a cache of email address nodes which we've
            created around for the lifetime of the widget. mSizeOfAddressCache controls how many of these
@@ -693,9 +694,9 @@
               aEmailNode.setAttribute("label", aAddress.fullAddress || aAddress.displayName);
               aEmailNode.removeAttribute("tooltiptext");
             }
-            aEmailNode.setTextAttribute("emailAddress", aAddress.emailAddress);
-            aEmailNode.setTextAttribute("fullAddress", aAddress.fullAddress);
-            aEmailNode.setTextAttribute("displayName", aAddress.displayName);
+            aEmailNode.setAttribute("emailAddress", aAddress.emailAddress);
+            aEmailNode.setAttribute("fullAddress", aAddress.fullAddress);
+            aEmailNode.setAttribute("displayName", aAddress.displayName);
 
             try
             {
@@ -735,22 +736,22 @@
               {
                 commaNode = aAddressesNode.childNodes[index++];
                 if (commaNode)
-                  commaNode.removeAttribute('collapsed');
+                  commaNode.hidden = false;
               }
 
               // get the node pointed to by index
               emailAddressNode = aAddressesNode.childNodes[index++];
               this.updateEmailAddressNode(emailAddressNode, this.mAddresses[numAddressesAdded]);
-              emailAddressNode.removeAttribute('collapsed');
+              emailAddressNode.hidden = false;
               numAddressesAdded++;
             }
 
             // if we have added all of our elements but we still have more cached items in this address node
-            // then make sure the extra cached copies are collapsed...
+            // then make sure the extra cached copies are hidden...
             numExistingCachedAddresses = aAddressesNode.childNodes.length;  // reset
             while (index < numExistingCachedAddresses)
             {
-              aAddressesNode.childNodes[index++].setAttribute('collapsed', true);
+              aAddressesNode.childNodes[index++].hidden = true;
             }
 
             return this.mAddresses.length - numAddressesAdded;
@@ -802,66 +803,24 @@
       <!-- buildView: public method used by callers when they are done adding all the email addresses to the widget
            aNumAddressesToShow: total # of addresses to show in the short view -->
       <method name="buildViews">
-        <parameter name="aNumAddressesToShow"/>
         <body>
           <![CDATA[
-            // always build the short view...its cheap...
-            this.fillAddressesNode(this.emailAddresses, aNumAddressesToShow);
-            // if we are currently toggled to show all the email addresses, build the long one too...
-            if (this.emailAddresses.collapsed)
-              this.buildLongView();
-
-            // make sure the icon is always visible if we have more than the # of addresses to show     
-            this.toggleIcon.collapsed = this.mAddresses.length <= aNumAddressesToShow;
-          ]]> 
-        </body>
-      </method>
-            
-      <!-- buildLongView: private method used for delayed construction of the long view -->
-      <method name="buildLongView">
-        <body>
-          <![CDATA[
-            if (!this.mLongViewCreated)
-            {
-              this.fillAddressesNode(this.longEmailAddresses, -1);
-              this.mLongViewCreated = true;
-            }
+            this.fillAddressesNode(this.emailAddresses, -1);
           ]]> 
         </body>
       </method>
 
-      <method name="toggleAddressView">
+      <method name="toggleWrap">
         <body>
           <![CDATA[
-          var shortNode = this.emailAddresses;
-          var longNode = this.longEmailAddresses;
-          var imageNode = this.toggleIcon;
-          // test to see which if short is already collapsed...
-          if (shortNode.collapsed)
-          {
-            longNode.collapsed = true;
-            shortNode.collapsed = false;
-            imageNode.removeAttribute("open");
-          }
-          else
-          {
-            this.buildLongView();
-            shortNode.collapsed = true;
-            longNode.collapsed = false;
-            imageNode.setAttribute("open", "true");
-
-            if (!this.mLongViewCreated)
-            {
-              // Need to call UpdateMessageHeaders() because this is the first
-              // time the long view is being built.  This is required in order
-              // to update the addresses of the long view that might contain
-              // extra image info.
-              // It should also only be called from toggleAddressView(), not
-              // from buildView().
-              UpdateMessageHeaders();
+            if (this.toggleIcon.hasAttribute("open")) {
+              this.toggleIcon.removeAttribute("open");
+              this.longEmailAddresses.setAttribute("singleline", "true");
+            } else {
+              this.toggleIcon.setAttribute("open", "true");
+              this.longEmailAddresses.removeAttribute("singleline");
             }
-          }
-          ]]>  
+          ]]>
         </body>
       </method>
       
@@ -890,15 +849,12 @@
           <![CDATA[
             // clear out our local state
             this.mAddresses = new Array; 
-            this.mLongViewCreated = false;
+            this.toggleIcon.collapsed = true;
+            this.toggleIcon.removeAttribute("open");
+            this.longEmailAddresses.setAttribute("singleline", "true");
 
             // remove anything inside of each of our labels....
-            var parentLabel = this.emailAddresses;
-            if (parentLabel)
-              this.clearChildNodes(parentLabel);
-            parentLabel = this.longEmailAddresses;
-            if (parentLabel)
-              this.clearChildNodes(parentLabel);             
+            this.clearChildNodes(this.emailAddresses);
           ]]>
         </body>
       </method>       

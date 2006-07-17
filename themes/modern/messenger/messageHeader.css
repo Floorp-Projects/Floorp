@@ -89,16 +89,23 @@
 }
 
 .headerName {
-  margin: 0 .5em 0 0;
-  min-height: 18px;
+  margin: 0 .5em .5em 0;
   font-weight: bold;
   text-align: right;
 }
 
 .headerValue {
-  margin: 0 0 .25em 0;
+  margin: 0;
   min-width: 50px;
   white-space: normal;
+}
+
+.headerValueBox {
+  margin: 0 0 .5em 0;
+}
+
+.headerValueBox[singleline="true"] {
+  overflow: hidden;
 }
 
 .subjectvalue {
