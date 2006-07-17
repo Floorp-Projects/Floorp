@@ -53,26 +53,28 @@ class UsersController extends AppController {
             // If they've already signed up, send them another email
             if ($this->User->findByEmail($this->params['data']['User']['email'])) {
                     $mail_params = array(
-                        'from' => 'nobody@mozilla.com',
+                        'from' => '"Firefox Surveys" <nobody@mozilla.com>',
                         'to'   => $this->params['data']['User']['email'],
                         'subject' => 'Firefox Surveys',
                         'message' => "
-<p>Thanks for signing up for the Firefox Survey, Summer '06 edition. We'll start with
-this profile survey and go from there.  We'll send out a few more surveys in the
-following weeks to certain groups of survey takers.  Thanks again for making the
-browser a better place!</p>
+<p>Thanks for volunteering to be a part of the Firefox Survey!</p>
 
-<p><a href=\"http://is4.instantsurvey.com/FirefoxSurveyNumeroUno?email={$this->params['data']['User']['email']}&first={$this->params['data']['User']['firstname']}&last={$this->params['data']['User']['lastname']}\">Start the first survey</a>
-Survey conducted by Mozilla and hosted by <a href=\"http://www.instantsurvey.com/\">Instant Survey</a></p>
+<p>We'll start with this profile survey and go from there. We'll send out a few more
+surveys in the following weeks to the user panel to help us define the next
+generation of Firefox. Thanks again for making the browser a better place!</p>
 
-<p>Mozilla continues to take security and privacy issues seriously.  Any data or
+<p><a href=\"http://is4.instantsurvey.com/FirefoxSurveyNumeroUno?email={$this->params['data']['User']['email']}&first={$this->params['data']['User']['firstname']}&last={$this->params['data']['User']['lastname']}\">Start the first survey</a></p>
+
+
+<p><small>Survey conducted by Mozilla and hosted by <a href=\"http://www.instantsurvey.com/\">Instant Survey</a></small></p>
+
+<p><small>Mozilla continues to take security and privacy issues seriously.  Any data or
 information provided will never be given or sold to any other outside company for its
-use in marketing or solicitation.</p>
+use in marketing or solicitation.</small></p>
 
-<p>If you choose not to take this survey, you will be automatically unsubscribed from
-the Firefox Survey list.</p>
+<p><small>If you choose not to take this survey, you will be automatically unsubscribed from the Firefox Survey list.</small></p>
 
-<p>If you think you received this in error, please <a href=\"mailto:firefoxsurvey@mozilla.com\">let us know</a>.</p>
+<p><small>If you think you received this in error, please <a href=\"mailto:firefoxsurvey@mozilla.com\">let us know</a>.</small></p>
 "
                     );
 
@@ -98,26 +100,28 @@ the Firefox Survey list.</p>
             }
             if ($this->User->save($this->params['data'])) {
                     $mail_params = array(
-                        'from' => 'nobody@mozilla.com',
+                        'from' => '"Firefox Surveys" <nobody@mozilla.com>',
                         'to'   => $this->params['data']['User']['email'],
                         'subject' => 'Firefox Surveys',
                         'message' => "
-<p>Thanks for signing up for the Firefox Survey, Summer '06 edition. We'll start with
-this profile survey and go from there.  We'll send out a few more surveys in the
-following weeks to certain groups of survey takers.  Thanks again for making the
-browser a better place!</p>
+<p>Thanks for volunteering to be a part of the Firefox Survey!</p>
 
-<p><a href=\"http://is4.instantsurvey.com/FirefoxSurveyNumeroUno?email={$this->params['data']['User']['email']}&first={$this->params['data']['User']['firstname']}&last={$this->params['data']['User']['lastname']}\">Start the first survey</a>
-Survey conducted by Mozilla and hosted by <a href=\"http://www.instantsurvey.com/\">Instant Survey</a></p>
+<p>We'll start with this profile survey and go from there. We'll send out a few more
+surveys in the following weeks to the user panel to help us define the next
+generation of Firefox. Thanks again for making the browser a better place!</p>
 
-<p>Mozilla continues to take security and privacy issues seriously.  Any data or
+<p><a href=\"http://is4.instantsurvey.com/FirefoxSurveyNumeroUno?email={$this->params['data']['User']['email']}&first={$this->params['data']['User']['firstname']}&last={$this->params['data']['User']['lastname']}\">Start the first survey</a></p>
+
+
+<p><small>Survey conducted by Mozilla and hosted by <a href=\"http://www.instantsurvey.com/\">Instant Survey</a></small></p>
+
+<p><small>Mozilla continues to take security and privacy issues seriously.  Any data or
 information provided will never be given or sold to any other outside company for its
-use in marketing or solicitation.</p>
+use in marketing or solicitation.</small></p>
 
-<p>If you choose not to take this survey, you will be automatically unsubscribed from
-the Firefox Survey list.</p>
+<p><small>If you choose not to take this survey, you will be automatically unsubscribed from the Firefox Survey list.</small></p>
 
-<p>If you think you received this in error, please <a href=\"mailto:firefoxsurvey@mozilla.com\">let us know</a>.</p>
+<p><small>If you think you received this in error, please <a href=\"mailto:firefoxsurvey@mozilla.com\">let us know</a>.</small></p>
 "
                     );
 
