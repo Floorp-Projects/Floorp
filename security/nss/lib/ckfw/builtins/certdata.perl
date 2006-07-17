@@ -35,7 +35,7 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
-my $cvs_id = '@(#) $RCSfile: certdata.perl,v $ $Revision: 1.10 $ $Date: 2005/02/02 22:28:12 $';
+my $cvs_id = '@(#) $RCSfile: certdata.perl,v $ $Revision: 1.11 $ $Date: 2006/07/17 16:50:45 $';
 use strict;
 
 my %constants;
@@ -211,7 +211,7 @@ static const char CVS_ID[] = $cvsid;
 EOD
     ;
 
-while(($a,$b) = each(%constants)) {
+foreach $b (sort values(%constants)) {
   print CFILE $b;
 }
 
