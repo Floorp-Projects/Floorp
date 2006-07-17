@@ -37,7 +37,7 @@
 /*
  * CMS recipient list functions
  *
- * $Id: cmsreclist.c,v 1.4 2005/09/16 17:54:31 wtchang%redhat.com Exp $
+ * $Id: cmsreclist.c,v 1.5 2006/07/17 21:57:35 alexei.volkov.bugs%sun.com Exp $
  */
 
 #include "cmslocal.h"
@@ -66,25 +66,33 @@ nss_cms_recipients_traverse(NSSCMSRecipientInfo **recipientinfos, NSSCMSRecipien
 	switch (ri->recipientInfoType) {
 	case NSSCMSRecipientInfoID_KeyTrans:
 	    if (recipient_list) {
+		NSSCMSRecipientIdentifier *recipId =
+		   &ri->ri.keyTransRecipientInfo.recipientIdentifier;
+
+		if (recipId->identifierType != NSSCMSRecipientID_IssuerSN &&
+                    recipId->identifierType != NSSCMSRecipientID_SubjectKeyID) {
+		    PORT_SetError(SEC_ERROR_INVALID_ARGS);
+		    return -1;
+		}                
 		/* alloc one & fill it out */
 		rle = (NSSCMSRecipient *)PORT_ZAlloc(sizeof(NSSCMSRecipient));
-		if (rle == NULL)
+		if (!rle)
 		    return -1;
 		
 		rle->riIndex = i;
 		rle->subIndex = -1;
-		switch (ri->ri.keyTransRecipientInfo.recipientIdentifier.identifierType) {
+		switch (recipId->identifierType) {
 		case NSSCMSRecipientID_IssuerSN:
 		    rle->kind = RLIssuerSN;
-		    rle->id.issuerAndSN = ri->ri.keyTransRecipientInfo.recipientIdentifier.id.issuerAndSN;
+		    rle->id.issuerAndSN = recipId->id.issuerAndSN;
 		    break;
 		case NSSCMSRecipientID_SubjectKeyID:
 		    rle->kind = RLSubjKeyID;
-		    rle->id.subjectKeyID = ri->ri.keyTransRecipientInfo.recipientIdentifier.id.subjectKeyID;
+		    rle->id.subjectKeyID = recipId->id.subjectKeyID;
 		    break;
-		default:
-		    PORT_SetError(SEC_ERROR_INVALID_ARGS);
-		    return -1;
+		default: /* we never get here because of identifierType check
+                            we done before. Leaving it to kill compiler warning */
+		    break;
 		}
 		recipient_list[rlindex++] = rle;
 	    } else {
@@ -99,7 +107,7 @@ nss_cms_recipients_traverse(NSSCMSRecipientInfo **recipientinfos, NSSCMSRecipien
 		    rek = ri->ri.keyAgreeRecipientInfo.recipientEncryptedKeys[j];
 		    /* alloc one & fill it out */
 		    rle = (NSSCMSRecipient *)PORT_ZAlloc(sizeof(NSSCMSRecipient));
-		    if (rle == NULL)
+		    if (!rle)
 			return -1;
 		    
 		    rle->riIndex = i;
