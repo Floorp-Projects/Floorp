@@ -336,7 +336,6 @@ interface nsIAccessible : nsISupports
  * RELATION_DEFAULT_BUTTON:   Part of a form/dialog with a related default button.
  * RELATION_DESCRIBED_BY:     Described by one or more target objects.
  * RELATION_DESCRIPTION_FOR:  Description for one or more target objects.
- * RELATION_LAST_DEFINED:
  */
 
   const unsigned long RELATION_NUL = 0x00;               // ATK_RELATION_NUL
@@ -357,297 +356,139 @@ interface nsIAccessible : nsISupports
   const unsigned long RELATION_DESCRIPTION_FOR = 0x0f;   // ATK_RELATION_DESCRIPTION_FOR
   const unsigned long RELATION_DEFAULT_BUTTON = 0x4000;  // MSAA only, no ATK relation
 
-%{C++
-#ifdef MOZ_ACCESSIBILITY_ATK
-
-  enum { RELATION_LAST_DEFINED = 14U };
-
-/**
- * The following nsIAccessible roles are translated to ATK_ROLE_UNKNOWN
- * 
- *  ROLE_TITLEBAR, ROLE_SOUND, ROLE_CURSOR, ROLE_CARET, ROLE_BORDER,
- *  ROLE_GROUPING, ROLE_EQUATION, ROLE_COLUMN, ROLE_ROW, ROLE_LINK,
- *  ROLE_WHITESPACE, ROLE_CLOCK, ROLE_IPADDRESS, ROLE_NOTHING
- *
- *  ROLE_GRIP
- *    The object represents a special mouse pointer, which allows a user to
- *    manipulate user interface elements such as windows.
- *
- *  ROLE_HELPBALLOON
- *    The object displays a Help topic in the form of a ToolTip or Help balloon.
- *
- *  ROLE_PROPERTYPAGE
- *    The object represents a property sheet.
- *
- *  ROLE_INDICATOR
- *    The object represents an indicator, such as a pointer graphic pointing to
- *    the current item.
- *
- *  ROLE_HOTKEYFIELD
- *    The object represents a hot-key field that allow the user to enter a
- *    sequence of keystroke.
- *
- * The following ATK roles have no corresponding nsIAccessible roles. Perhaps
- * there are not these types of widget/control in Mozilla, so don't need these
- * ATK roles? Or need add some of them?
- *
- *   ATK_ROLE_ARROW
- *     An arrow in one of the four cardinal directions.
- *
- *   ATK_ROLE_INTERNAL_FRAME
- *     A frame-like object that is clipped by a desktop pane.
- * 
- *  ATK_ROLE_ACCEL_LABEL, ATK_ROLE_CANVAS, ATK_ROLE_CHECK_MENU_ITEM,
- *   ATK_ROLE_COLOR_CHOOSER, ATK_ROLE_DATE_EDITOR, ATK_ROLE_DESKTOP_ICON,
- *   ATK_ROLE_DESKTOP_FRAME, ATK_ROLE_DIRECTORY_PANE, ATK_ROLE_FILE_CHOOSER,
- *   ATK_ROLE_FILLER, ATK_ROLE_FONT_CHOOSER, ATK_ROLE_GLASS_PANE,
- *  ATK_ROLE_HTML_CONTAINER, ATK_ROLE_ICON, ATK_ROLE_LAYERED_PANE,
- *   ATK_ROLE_POPUP_MENU, ATK_ROLE_OPTION_PANE, ATK_ROLE_PASSWORD_TEXT,
- *  ATK_ROLE_RADIO_MENU_ITEM, ATK_ROLE_ROOT_PANE, ATK_ROLE_SCROLL_PANE,
- *  ATK_ROLE_SPLIT_PANE, ATK_ROLE_TEAR_OFF_MENU_ITEM, ATK_ROLE_TERMINAL,
- *  ATK_ROLE_TOGGLE_BUTTON, ATK_ROLE_TREE_TABLE, ATK_ROLE_VIEWPORT, ATK_ROLE_LABEL
- *
- * Important:
- * Following value should keep synchronization with the definitions in atk.h
- */
-  enum { ROLE_TITLEBAR = 66U };    // ATK_ROLE_UNKNOWN
-  enum { ROLE_MENUBAR = 33U };     // ATK_ROLE_MENU_BAR
-  enum { ROLE_SCROLLBAR = 47U };   // ATK_ROLE_SCROLL_BAR
-  enum { ROLE_GRIP = 66U };        // ATK_ROLE_UNKNOWN
-  enum { ROLE_SOUND = 66U };       // ATK_ROLE_UNKNOWN
-  enum { ROLE_CURSOR = 66U };      // ATK_ROLE_UNKNOWN
-  enum { ROLE_CARET = 66U };       // ATK_ROLE_UNKNOWN
-  enum { ROLE_ALERT = 2U };        // ATK_ROLE_ALERT
-  enum { ROLE_WINDOW = 68U };      // ATK_ROLE_WINDOW
-  // An object used for drawing custom user interface elements
-  enum { ROLE_CLIENT = 18U };      // ATK_ROLE_DRAWING_AREA
-  enum { ROLE_MENUPOPUP = 32U };   // ATK_ROLE_MENU
-  enum { ROLE_MENUITEM = 34U };    // ATK_ROLE_MENU_ITEM
-  enum { ROLE_TOOLTIP = 63U };     // ATK_ROLE_TOOL_TIP
-  // The object represents a main window for a application
-  enum { ROLE_APPLICATION = 73U }; // ATK_ROLE_APPLICATION
-  // The object represents a document window, only for MDI windows
-  enum { ROLE_DOCUMENT = 80U };    // ATK_ROLE_DOCUMENT_FRAME
-  enum { ROLE_PANE = 38U };        // ATK_ROLE_PANEL
-  enum { ROLE_CHART = 78U };       // ATK_ROLE_CHART
-  enum { ROLE_DIALOG = 16U };      // ATK_ROLE_DIALOG
-  enum { ROLE_BORDER = 66U };      // ATK_ROLE_UNKNOWN
-  enum { ROLE_GROUPING = 38U };    // ATK_ROLE_PANEL
-  enum { ROLE_SEPARATOR = 49U };   // ATK_ROLE_SEPARATOR
-  enum { ROLE_TOOLBAR = 62U };     // ATK_ROLE_TOOL_BAR
-  enum { ROLE_STATUSBAR = 53U };   // ATK_ROLE_STATUSBAR
-  enum { ROLE_TABLE = 54U };       // ATK_ROLE_TABLE
-  // Or ATK_ROLE_TABLE_COLUMN_HEADER?
-  enum { ROLE_COLUMNHEADER = 10U };// ATK_ROLE_COLUMN_HEADER
-  // Or ATK_ROLE_TABLE_ROW_HEADER ?
-  enum { ROLE_ROWHEADER = 46U };   // ATK_ROLE_ROW_HEADER
-  enum { ROLE_COLUMN = 66U };      // ATK_ROLE_UNKNOWN
-  enum { ROLE_ROW = 66U };         // ATK_ROLE_UNKNOWN
-  enum { ROLE_CELL = 55U };        // ATK_ROLE_TABLE_CELL
-  enum { ROLE_HELPBALLOON = 66U }; // ATK_ROLE_UNKNOWN
-  // The object represents a cartoon-like graphic object
-  enum { ROLE_CHARACTER = 26U };   // ATK_ROLE_IMAGE
-  enum { ROLE_LIST = 30U };        // ATK_ROLE_LIST
-  enum { ROLE_LISTITEM = 31U };    // ATK_ROLE_LIST_ITEM
-  // The object represents an outline or tree structure
-  enum { ROLE_OUTLINE = 64U };     // ATK_ROLE_TREE
-  // The object represents an item in an outline or tree structure
-  enum { ROLE_OUTLINEITEM = 31U }; // ATK_ROLE_LIST_ITEM
-  enum { ROLE_PAGETAB = 36U };     // ATK_ROLE_PAGE_TAB
-  enum { ROLE_PROPERTYPAGE = 66U };// ATK_ROLE_UNKNOWN
-  enum { ROLE_INDICATOR = 66U };   // ATK_ROLE_UNKNOWN
-  enum { ROLE_GRAPHIC = 26U };     // ATK_ROLE_IMAGE
-  // Read-only text, can't be modified or selected
-  enum { ROLE_STATICTEXT = 50000U };  // No matching ATK role, we will strip out
-  enum { ROLE_TEXT_LEAF = 50000U };   // No matching ATK role, we will strip out
-  enum { ROLE_TEXT_CONTAINER = 60U }; // ATK_ROLE_TEXT
-  enum { ROLE_PUSHBUTTON = 42U };  // ATK_ROLE_PUSH_BUTTON
-  enum { ROLE_CHECKBUTTON = 7U };  // ATK_ROLE_CHECK_BOX
-  enum { ROLE_RADIOBUTTON = 43U }; // ATK_ROLE_RADIO_BUTTON
-  enum { ROLE_COMBOBOX = 11U };    // ATK_ROLE_COMBO_BOX
-  // Just represents the calender control
-  enum { ROLE_DROPLIST = 5U };     // ATK_ROLE_CALENDAR
-  enum { ROLE_PROGRESSBAR = 41U }; // ATK_ROLE_PROGRESS_BAR
-  enum { ROLE_DIAL = 15U };        // ATK_ROLE_DIAL
-  enum { ROLE_HOTKEYFIELD = 66U }; // ATK_ROLE_UNKNOWN
-  enum { ROLE_SLIDER = 50U };      // ATK_ROLE_SLIDER
-  enum { ROLE_SPINBUTTON = 52U };  // ATK_ROLE_SPIN_BUTTON
-  enum { ROLE_DIAGRAM = 26U };     // ATK_ROLE_IMAGE
-  enum { ROLE_ANIMATION = 3U };    // ATK_ROLE_ANIMATION
-  enum { ROLE_EQUATION = 66U };    // ATK_ROLE_UNKNOWN
-  enum { ROLE_BUTTONDROPDOWN = 42U }; // ATK_ROLE_PUSH_BUTTON
-  enum { ROLE_BUTTONMENU = 42U };  // ATK_ROLE_PUSH_BUTTON
-  // Represents a button that drops down a grid
-  enum { ROLE_BUTTONDROPDOWNGRID = 66U }; // ATK_ROLE_UNKNOWN
-  enum { ROLE_WHITESPACE = 66U };  // ATK_ROLE_UNKNOWN
-  enum { ROLE_PAGETABLIST = 37U }; // ATK_ROLE_PAGE_TAB_LIST
-  enum { ROLE_CLOCK = 66U };       // ATK_ROLE_UNKNOWN
-  // Represents a button on the toolbar that has a drop-down list icon
-  // directly adjacent to the button
-  enum { ROLE_SPLITBUTTON = 42U }; // ATK_ROLE_PUSH_BUTTON
-  enum { ROLE_IPADDRESS = 66U };   // ATK_ROLE_UNKNOWN
-  enum { ROLE_NOTHING = 66U };     // ATK_ROLE_UNKNOWN
-  // Represent top level window
-  enum { ROLE_FRAME = 22U };       // ATK_ROLE_FRAME
-
-  // Other roles from atk.h
-  enum { ROLE_ACCEL_LABEL = 1U };          // ATK_ROLE_ACCEL_LABEL
-  enum { ROLE_ARROW  = 4U };               // ATK_ROLE_ARROW
-  enum { ROLE_CANVAS = 6U };               // ATK_ROLE_CANVAS
-  enum { ROLE_CHECK_MENU_ITEM = 8U };      // ATK_ROLE_CHECK_MENU_ITEM
-  enum { ROLE_COLOR_CHOOSER  = 9U };       // ATK_ROLE_COLOR_CHOOSER
-  enum { ROLE_DATE_EDITOR = 12U };         // ATK_ROLE_DATE_EDITOR
-  enum { ROLE_DESKTOP_ICON = 13U };        // ATK_ROLE_DESKTOP_ICON
-  enum { ROLE_DESKTOP_FRAME = 14U };       // ATK_ROLE_DESKTOP_FRAME
-  enum { ROLE_DIRECTORY_PANE = 17U };      // ATK_ROLE_DIRECTORY_PANE
-  enum { ROLE_FILE_CHOOSER = 19U};         // ATK_ROLE_FILE_CHOOSER
-  enum { ROLE_FILLER = 20U };              // ATK_ROLE_FILLER
-  enum { ROLE_FONT_CHOOSER = 21U };        // ATK_ROLE_FONT_CHOOSER
-  enum { ROLE_GLASS_PANE = 23U };          // ATK_ROLE_GLASS_PANE
-  enum { ROLE_HTML_CONTAINER = 24U };      // ATK_ROLE_HTML_CONTAINER
-  enum { ROLE_ICON = 25U };                // ATK_ROLE_ICON
-  enum { ROLE_INTERNAL_FRAME = 27U };      // ATK_ROLE_INTERNAL_FRAME
-  enum { ROLE_LABEL = 28U };               // ATK_ROLE_LABEL
-  enum { ROLE_LAYERED_PANE = 29U };        // ATK_ROLE_LAYERED_PANE
-  enum { ROLE_OPTION_PANE = 35U };         // ATK_ROLE_OPTION_PANE
-  enum { ROLE_PASSWORD_TEXT = 39U };       // ATK_ROLE_PASSWORD_TEXT
-  enum { ROLE_POPUP_MENU = 40U };          // ATK_ROLE_POPUP_MENU
-  enum { ROLE_RADIO_MENU_ITEM = 44U };     // ATK_ROLE_RADIO_MENU_ITEM
-  enum { ROLE_ROOT_PANE = 45U };           // ATK_ROLE_ROOT_PANE
-  enum { ROLE_SCROLL_PANE = 48U };         // ATK_ROLE_SCROLL_PANE
-  enum { ROLE_SPLIT_PANE = 51U };          // ATK_ROLE_SPLIT_PANE
-  enum { ROLE_TABLE_COLUMN_HEADER = 56U }; // ATK_ROLE_TABLE_COLUMN_HEADER
-  enum { ROLE_TABLE_ROW_HEADER = 57U };    // ATK_ROLE_TABLE_ROW_HEADER
-  enum { ROLE_TEAR_OFF_MENU_ITEM = 58U };  // ATK_ROLE_TEAR_OFF_MENU_ITEM
-  enum { ROLE_TERMINAL = 59U };            // ATK_ROLE_TERMINAL
-  enum { ROLE_TOGGLE_BUTTON = 61U };       // ATK_ROLE_TOGGLE_BUTTON
-  enum { ROLE_TREE_TABLE = 65U };          // ATK_ROLE_TREE_TABLE
-  enum { ROLE_VIEWPORT = 67U };            // ATK_ROLE_VIEWPORT
-  enum { ROLE_HEADER = 69U };              // ATK_ROLE_HEADER
-  enum { ROLE_FOOTER = 70U };              // ATK_ROLE_FOOTER
-  enum { ROLE_PARAGRAPH = 71U };           // ATK_ROLE_PARAGRAPH
-  enum { ROLE_RULER = 72U };               // ATK_ROLE_RULER
-  enum { ROLE_AUTOCOMPLETE = 74U };        // ATK_ROLE_AUTOCOMPLETE
-  enum { ROLE_EDITBAR = 75U };             // ATK_ROLE_EDITBAR
-  enum { ROLE_EMBEDDED = 76U };            // ATK_ROLE_EMBEDDED
-  enum { ROLE_ENTRY = 77U };               // ATK_ROLE_ENTRY
-  enum { ROLE_CAPTION = 79U };             // ATK_ROLE_CAPTION
-  enum { ROLE_DOCUMENT_FRAME = 80U };      // ATK_ROLE_DOCUMENT_FRAME
-  enum { ROLE_HEADING = 81U };             // ATK_ROLE_HEADING
-  enum { ROLE_PAGE = 82U };                // ATK_ROLE_PAGE
-  enum { ROLE_SECTION = 83U };             // ATK_ROLE_SECTION
-  enum { ROLE_REDUNDANT_OBJECT = 84U };    // ATK_ROLE_REDUNDANT_OBJECT
-  enum { ROLE_FORM = 85U };                // ATK_ROLE_FORM
-  enum { ROLE_LINK = 86U };                // ATK_ROLE_LINK
-  enum { ROLE_IME = 87U };                 // ATK_ROLE_INPUT_METHOD_WINDOW
-#else
-// MSAA Roles - only one per nsIAccessible or IAccessible
-  enum { ROLE_TITLEBAR = 1U };
-  enum { ROLE_MENUBAR = 2U };
-  enum { ROLE_SCROLLBAR = 3U };
-  enum { ROLE_GRIP = 4U };
-  enum { ROLE_SOUND = 5U };
-  enum { ROLE_CURSOR = 6U };
-  enum { ROLE_CARET = 7U };
-  enum { ROLE_ALERT = 8U };
-  enum { ROLE_WINDOW = 9U };
-  enum { ROLE_CLIENT = 10U };
-  enum { ROLE_MENUPOPUP = 11U };
-  enum { ROLE_MENUITEM = 12U };
-  enum { ROLE_RADIO_MENU_ITEM = 12U }; // Same as ROLE_MENUITEM
-  enum { ROLE_CHECK_MENU_ITEM = 12U }; // Same as ROLE_MENUITEM
-  enum { ROLE_TOOLTIP = 13U };
-  enum { ROLE_APPLICATION = 14U };
-  enum { ROLE_DOCUMENT = 15U };
-  enum { ROLE_PANE = 16U };
-  enum { ROLE_CHART = 17U };
-  enum { ROLE_DIALOG = 18U };
-  enum { ROLE_BORDER = 19U };
-  enum { ROLE_GROUPING = 20U };
-  enum { ROLE_SEPARATOR = 21U };
-  enum { ROLE_TOOLBAR = 22U };
-  enum { ROLE_STATUSBAR = 23U };
-  enum { ROLE_TABLE = 24U };
-  enum { ROLE_COLUMNHEADER = 25U };
-  enum { ROLE_ROWHEADER = 26U };
-  enum { ROLE_COLUMN = 27U };
-  enum { ROLE_ROW = 28U };
-  enum { ROLE_CELL = 29U };
-  enum { ROLE_LINK = 30U };
-  enum { ROLE_HELPBALLOON = 31U };
-  enum { ROLE_CHARACTER = 32U };
-  enum { ROLE_LIST = 33U };
-  enum { ROLE_LISTITEM = 34U };
-  enum { ROLE_OUTLINE = 35U };
-  enum { ROLE_TREE_TABLE = 35U }; // Same as ROLE_OUTLINE
-  enum { ROLE_OUTLINEITEM = 36U };
-  enum { ROLE_PAGETAB = 37U };
-  enum { ROLE_PROPERTYPAGE = 38U };
-  enum { ROLE_INDICATOR = 39U };
-  enum { ROLE_GRAPHIC = 40U };
-  enum { ROLE_STATICTEXT = 41U };
-  enum { ROLE_TEXT_LEAF = 42U };
-  enum { ROLE_PUSHBUTTON = 43U };
-  enum { ROLE_CHECKBUTTON = 44U };
-  enum { ROLE_RADIOBUTTON = 45U };
-  enum { ROLE_COMBOBOX = 46U };
-  enum { ROLE_DROPLIST = 47U };
-  enum { ROLE_PROGRESSBAR = 48U };
-  enum { ROLE_DIAL = 49U };
-  enum { ROLE_HOTKEYFIELD = 50U };
-  enum { ROLE_SLIDER = 51U };
-  enum { ROLE_SPINBUTTON = 52U };
-  enum { ROLE_DIAGRAM = 53U };
-  enum { ROLE_ANIMATION = 54U };
-  enum { ROLE_EQUATION = 55U };
-  enum { ROLE_BUTTONDROPDOWN = 56U };
-  enum { ROLE_BUTTONMENU = 57U };
-  enum { ROLE_BUTTONDROPDOWNGRID = 58U };
-  enum { ROLE_WHITESPACE = 59U };
-  enum { ROLE_PAGETABLIST = 60U };
-  enum { ROLE_CLOCK = 61U };
-  enum { ROLE_SPLITBUTTON = 62U };
-  enum { ROLE_IPADDRESS = 63U };
-  enum { ROLE_NOTHING = 4294967295U };
-
-// Make up for ATK roles that we don't have in MSAA
-// When in doubt map them to ROLE_NOTHING so that the role string is exposed
-  enum { ROLE_ICON = ROLE_NOTHING };
-  enum { ROLE_PASSWORD_TEXT = 1000U };
-  enum { ROLE_AUTOCOMPLETE = ROLE_COMBOBOX };
-  enum { ROLE_EDITBAR = ROLE_NOTHING };
-  enum { ROLE_EMBEDDED = ROLE_NOTHING };
-  enum { ROLE_ENTRY = 1001U };
-  enum { ROLE_CAPTION = ROLE_NOTHING };
-  enum { ROLE_DOCUMENT_FRAME = ROLE_NOTHING };
-  enum { ROLE_HEADING = ROLE_NOTHING };
-  enum { ROLE_PAGE = ROLE_NOTHING };
-  enum { ROLE_SECTION = ROLE_NOTHING };
-  enum { ROLE_REDUNDANT_OBJECT = ROLE_NOTHING };
-  enum { ROLE_HTML_CONTAINER = ROLE_NOTHING };
-  enum { ROLE_FORM = ROLE_NOTHING };
-  enum { ROLE_PARAGRAPH = ROLE_NOTHING };
-  enum { ROLE_TEXT_CONTAINER = ROLE_NOTHING };
-  enum { ROLE_LABEL = ROLE_STATICTEXT };
+  // Cross Platform Roles
+  // When adding a new role, be sure to also add it to nsRoleMap.h for each platform
+  const unsigned long ROLE_NOTHING = 0;
+  const unsigned long ROLE_TITLEBAR = 1;
+  const unsigned long ROLE_MENUBAR = 2;
+  const unsigned long ROLE_SCROLLBAR = 3;
+  const unsigned long ROLE_GRIP = 4;
+  const unsigned long ROLE_SOUND = 5;
+  const unsigned long ROLE_CURSOR = 6;
+  const unsigned long ROLE_CARET = 7;
+  const unsigned long ROLE_ALERT = 8;
+  const unsigned long ROLE_WINDOW = 9;
+  const unsigned long ROLE_CLIENT = 10;
+  const unsigned long ROLE_MENUPOPUP = 11;
+  const unsigned long ROLE_MENUITEM = 12;
+  const unsigned long ROLE_TOOLTIP = 13;
+  const unsigned long ROLE_APPLICATION = 14;
+  const unsigned long ROLE_DOCUMENT = 15;
+  const unsigned long ROLE_PANE = 16;
+  const unsigned long ROLE_CHART = 17;
+  const unsigned long ROLE_DIALOG = 18;
+  const unsigned long ROLE_BORDER = 19;
+  const unsigned long ROLE_GROUPING = 20;
+  const unsigned long ROLE_SEPARATOR = 21;
+  const unsigned long ROLE_TOOLBAR = 22;
+  const unsigned long ROLE_STATUSBAR = 23;
+  const unsigned long ROLE_TABLE = 24;
+  const unsigned long ROLE_COLUMNHEADER = 25;
+  const unsigned long ROLE_ROWHEADER = 26;
+  const unsigned long ROLE_COLUMN = 27;
+  const unsigned long ROLE_ROW = 28;
+  const unsigned long ROLE_CELL = 29;
+  const unsigned long ROLE_LINK = 30;
+  const unsigned long ROLE_HELPBALLOON = 31;
+  const unsigned long ROLE_CHARACTER = 32;
+  const unsigned long ROLE_LIST = 33;
+  const unsigned long ROLE_LISTITEM = 34;
+  const unsigned long ROLE_OUTLINE = 35;
+  const unsigned long ROLE_OUTLINEITEM = 36;
+  const unsigned long ROLE_PAGETAB = 37;
+  const unsigned long ROLE_PROPERTYPAGE = 38;
+  const unsigned long ROLE_INDICATOR = 39;
+  const unsigned long ROLE_GRAPHIC = 40;
+  const unsigned long ROLE_STATICTEXT = 41;
+  const unsigned long ROLE_TEXT_LEAF = 42;
+  const unsigned long ROLE_PUSHBUTTON = 43;
+  const unsigned long ROLE_CHECKBUTTON = 44;
+  const unsigned long ROLE_RADIOBUTTON = 45;
+  const unsigned long ROLE_COMBOBOX = 46;
+  const unsigned long ROLE_DROPLIST = 47;
+  const unsigned long ROLE_PROGRESSBAR = 48;
+  const unsigned long ROLE_DIAL = 49;
+  const unsigned long ROLE_HOTKEYFIELD = 50;
+  const unsigned long ROLE_SLIDER = 51;
+  const unsigned long ROLE_SPINBUTTON = 52;
+  const unsigned long ROLE_DIAGRAM = 53;
+  const unsigned long ROLE_ANIMATION = 54;
+  const unsigned long ROLE_EQUATION = 55;
+  const unsigned long ROLE_BUTTONDROPDOWN = 56;
+  const unsigned long ROLE_BUTTONMENU = 57;
+  const unsigned long ROLE_BUTTONDROPDOWNGRID = 58;
+  const unsigned long ROLE_WHITESPACE = 59;
+  const unsigned long ROLE_PAGETABLIST = 60;
+  const unsigned long ROLE_CLOCK = 61;
+  const unsigned long ROLE_SPLITBUTTON = 62;
+  const unsigned long ROLE_IPADDRESS = 63;
+  const unsigned long ROLE_ACCEL_LABEL = 64;
+  const unsigned long ROLE_ARROW  = 65;
+  const unsigned long ROLE_CANVAS = 66;
+  const unsigned long ROLE_CHECK_MENU_ITEM = 67;
+  const unsigned long ROLE_COLOR_CHOOSER  = 68;
+  const unsigned long ROLE_DATE_EDITOR = 69;
+  const unsigned long ROLE_DESKTOP_ICON = 70;
+  const unsigned long ROLE_DESKTOP_FRAME = 71;
+  const unsigned long ROLE_DIRECTORY_PANE = 72;
+  const unsigned long ROLE_FILE_CHOOSER = 73;
+  const unsigned long ROLE_FILLER = 74;
+  const unsigned long ROLE_FONT_CHOOSER = 75;
+  const unsigned long ROLE_FRAME = 76;
+  const unsigned long ROLE_GLASS_PANE = 77;
+  const unsigned long ROLE_HTML_CONTAINER = 78;
+  const unsigned long ROLE_ICON = 79;
+  const unsigned long ROLE_INTERNAL_FRAME = 80;
+  const unsigned long ROLE_LABEL = 81;
+  const unsigned long ROLE_LAYERED_PANE = 82;
+  const unsigned long ROLE_OPTION_PANE = 83;
+  const unsigned long ROLE_PASSWORD_TEXT = 84;
+  const unsigned long ROLE_POPUP_MENU = 85;
+  const unsigned long ROLE_RADIO_MENU_ITEM = 86;
+  const unsigned long ROLE_ROOT_PANE = 87;
+  const unsigned long ROLE_SCROLL_PANE = 88;
+  const unsigned long ROLE_SPLIT_PANE = 89;
+  const unsigned long ROLE_TABLE_COLUMN_HEADER = 90;
+  const unsigned long ROLE_TABLE_ROW_HEADER = 91;
+  const unsigned long ROLE_TEAR_OFF_MENU_ITEM = 92;
+  const unsigned long ROLE_TERMINAL =93;
+  const unsigned long ROLE_TEXT_CONTAINER = 94;
+  const unsigned long ROLE_TOGGLE_BUTTON = 95;
+  const unsigned long ROLE_TREE_TABLE = 96;
+  const unsigned long ROLE_VIEWPORT = 97;
+  const unsigned long ROLE_HEADER = 98;
+  const unsigned long ROLE_FOOTER = 99;
+  const unsigned long ROLE_PARAGRAPH = 100;
+  const unsigned long ROLE_RULER = 101;
+  const unsigned long ROLE_AUTOCOMPLETE = 102;
+  const unsigned long ROLE_EDITBAR = 103;
+  const unsigned long ROLE_EMBEDDED = 104;
+  const unsigned long ROLE_ENTRY = 105;
+  const unsigned long ROLE_CAPTION = 106;
+  const unsigned long ROLE_DOCUMENT_FRAME = 107;
+  const unsigned long ROLE_HEADING = 108;
+  const unsigned long ROLE_PAGE = 109;
+  const unsigned long ROLE_SECTION = 110;
+  const unsigned long ROLE_REDUNDANT_OBJECT = 111;
+  const unsigned long ROLE_FORM = 112;
+  const unsigned long ROLE_IME = 113;
+  const unsigned long ROLE_LAST_ENTRY = 114; // Important -- helps ensure nsRoleMap's are synchronized
 
 // MSAA relationship extensions to accNavigate
-  enum { NAVRELATION_CONTROLLED_BY = 0x1000 };
-  enum { NAVRELATION_CONTROLLER_FOR = 0x1001 };
-  enum { NAVRELATION_LABEL_FOR = 0x1002 };
-  enum { NAVRELATION_LABELLED_BY = 0x1003 };
-  enum { NAVRELATION_MEMBER_OF = 0x1004 };
-  enum { NAVRELATION_NODE_CHILD_OF = 0x1005 };
-  enum { NAVRELATION_FLOWS_TO = 0x1006 };
-  enum { NAVRELATION_FLOWS_FROM = 0x1007 };
-  enum { NAVRELATION_SUBWINDOW_OF = 0x1008 };
-  enum { NAVRELATION_EMBEDS = 0x1009 };
-  enum { NAVRELATION_EMBEDDED_BY = 0x100a };
-  enum { NAVRELATION_POPUP_FOR = 0x100b };
-  enum { NAVRELATION_PARENT_WINDOW_OF = 0x100c };
-  enum { NAVRELATION_DEFAULT_BUTTON = 0x100d };
-  enum { NAVRELATION_DESCRIBED_BY = 0x100e };
-  enum { NAVRELATION_DESCRIPTION_FOR = 0x100f };
-
-#endif
-%}
+  const unsigned long NAVRELATION_CONTROLLED_BY = 0x1000;
+  const unsigned long NAVRELATION_CONTROLLER_FOR = 0x1001;
+  const unsigned long NAVRELATION_LABEL_FOR = 0x1002;
+  const unsigned long NAVRELATION_LABELLED_BY = 0x1003;
+  const unsigned long NAVRELATION_MEMBER_OF = 0x1004;
+  const unsigned long NAVRELATION_NODE_CHILD_OF = 0x1005;
+  const unsigned long NAVRELATION_FLOWS_TO = 0x1006;
+  const unsigned long NAVRELATION_FLOWS_FROM = 0x1007;
+  const unsigned long NAVRELATION_SUBWINDOW_OF = 0x1008;
+  const unsigned long NAVRELATION_EMBEDS = 0x1009;
+  const unsigned long NAVRELATION_EMBEDDED_BY = 0x100a;
+  const unsigned long NAVRELATION_POPUP_FOR = 0x100b;
+  const unsigned long NAVRELATION_PARENT_WINDOW_OF = 0x100c;
+  const unsigned long NAVRELATION_DEFAULT_BUTTON = 0x100d;
+  const unsigned long NAVRELATION_DESCRIBED_BY = 0x100e;
+  const unsigned long NAVRELATION_DESCRIPTION_FOR = 0x100f;
 };

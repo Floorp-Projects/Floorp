@@ -44,6 +44,7 @@
 #include "nsAppRootAccessible.h"
 #include "nsString.h"
 #include "prprf.h"
+#include "nsRoleMap.h"
 
 #include "nsMaiInterfaceComponent.h"
 #include "nsMaiInterfaceAction.h"
@@ -793,68 +794,24 @@ getRoleCB(AtkObject *aAtkObj)
         nsAccessibleWrap *accWrap =
             NS_REINTERPRET_CAST(MaiAtkObject*, aAtkObj)->accWrap;
 
-        PRUint32 accRole;
+        PRUint32 accRole = 0, atkRole = 0;
         nsresult rv = accWrap->GetFinalRole(&accRole);
         NS_ENSURE_SUCCESS(rv, ATK_ROLE_INVALID);
 
         //the cross-platform Accessible object returns the same value for
         //both "ROLE_MENUITEM" and "ROLE_MENUPOPUP"
+        // XXX move this logic into nsXULMenuitem::GetRole()
         if (accRole == nsIAccessible::ROLE_MENUITEM) {
             PRInt32 childCount = 0;
             accWrap->GetChildCount(&childCount);
-            if (childCount > 0)
+            if (childCount > 0) {
                 accRole = nsIAccessible::ROLE_MENUPOPUP;
-        }
-#ifndef USE_ATK_ROLE_LINK
-        else if (accRole == nsIAccessible::ROLE_LINK) {
-            //ATK doesn't have role-link now
-            //register it on runtime
-            static AtkRole linkRole = (AtkRole)0;
-            if (linkRole == 0) {
-                linkRole = atk_role_register("hyper link");
             }
-            accRole = linkRole;
         }
-#endif
-        else if (accRole == nsIAccessible::ROLE_TEXT_CONTAINER) {
-          accRole = ATK_ROLE_TEXT;
-        }
-#ifndef USE_ATK_ROLE_AUTOCOMPLETE
-        else if (accRole == nsIAccessible::ROLE_AUTOCOMPLETE) {
-          accRole = ATK_ROLE_COMBO_BOX;
-        }
-#endif
-#ifndef USE_ATK_ROLE_ENTRY
-        else if (accRole == nsIAccessible::ROLE_ENTRY) {
-          accRole = ATK_ROLE_TEXT;
-        }
-#endif
-#ifndef USE_ATK_ROLE_FORM
-        else if (accRole == nsIAccessible::ROLE_FORM) {
-          accRole = ATK_ROLE_PANEL;
-        }
-#endif
-#ifndef USE_ATK_ROLE_HEADING
-        else if (accRole == nsIAccessible::ROLE_HEADING) {
-          accRole = ATK_ROLE_TEXT;
-        }
-#endif
-#ifndef USE_ATK_ROLE_SECTION
-        else if (accRole == nsIAccessible::ROLE_SECTION) {
-          accRole = ATK_ROLE_TEXT;
-        }
-#endif
-#ifndef USE_ATK_ROLE_PARAGRAPH
-        else if (accRole == nsIAccessible::ROLE_PARAGRAPH) {
-          accRole = ATK_ROLE_TEXT;
-        }
-#endif
-#ifndef USE_ATK_ROLE_DOCUMENT_FRAME
-        else if (accRole == nsIAccessible::ROLE_DOCUMENT) {
-          accRole = ATK_ROLE_HTML_CONTAINER;
-        }
-#endif
-        aAtkObj->role = NS_STATIC_CAST(AtkRole, accRole);
+        atkRole = atkRoleMap[accRole]; // map to the actual value
+        NS_ASSERTION(atkRoleMap[nsIAccessible::ROLE_LAST_ENTRY] ==
+                     ROLE_ATK_LAST_ENTRY, "ATK role map skewed");
+        aAtkObj->role = NS_STATIC_CAST(AtkRole, atkRole);
     }
     return aAtkObj->role;
 }
