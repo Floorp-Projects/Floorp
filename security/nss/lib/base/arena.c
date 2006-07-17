@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: arena.c,v $ $Revision: 1.8 $ $Date: 2005/01/20 02:25:45 $";
+static const char CVS_ID[] = "@(#) $RCSfile: arena.c,v $ $Revision: 1.9 $ $Date: 2006/07/17 21:51:32 $";
 #endif /* DEBUG */
 
 /*
@@ -520,12 +520,12 @@ nssArena_Destroy
   }
 #endif /* NSSDEBUG */
 
-  PR_Lock(arena->lock);
   if( (PRLock *)NULL == arena->lock ) {
     /* Just got destroyed */
     nss_SetError(NSS_ERROR_INVALID_ARENA);
     return PR_FAILURE;
   }
+  PR_Lock(arena->lock);
   
 #ifdef DEBUG
   if( PR_SUCCESS != arena_remove_pointer(arena) ) {
@@ -585,12 +585,12 @@ nssArena_Mark
   }
 #endif /* NSSDEBUG */
 
-  PR_Lock(arena->lock);
   if( (PRLock *)NULL == arena->lock ) {
     /* Just got destroyed */
     nss_SetError(NSS_ERROR_INVALID_ARENA);
     return (nssArenaMark *)NULL;
   }
+  PR_Lock(arena->lock);
 
 #ifdef ARENA_THREADMARK
   if( (PRThread *)NULL == arena->marking_thread ) {
@@ -668,12 +668,12 @@ nss_arena_unmark_release
     return PR_FAILURE;
   }
 
-  PR_Lock(arena->lock);
   if( (PRLock *)NULL == arena->lock ) {
     /* Just got destroyed */
     nss_SetError(NSS_ERROR_INVALID_ARENA);
     return PR_FAILURE;
   }
+  PR_Lock(arena->lock);
 
 #ifdef ARENA_THREADMARK
   if( (PRThread *)NULL != arena->marking_thread ) {
@@ -908,12 +908,12 @@ nss_ZAlloc
     }
 #endif /* NSSDEBUG */
 
-    PR_Lock(arenaOpt->lock);
     if( (PRLock *)NULL == arenaOpt->lock ) {
       /* Just got destroyed */
       nss_SetError(NSS_ERROR_INVALID_ARENA);
       return (void *)NULL;
     }
+    PR_Lock(arenaOpt->lock);
 
 #ifdef ARENA_THREADMARK
     if( (PRThread *)NULL != arenaOpt->marking_thread ) {
