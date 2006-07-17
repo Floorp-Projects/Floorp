@@ -58,6 +58,20 @@
 #define USE_ATK_ROLE_AUTOCOMPLETE
 #endif
 
+// ATK 1.5.1 or later
+#if ATK_MAJOR_VERSION >=2 || \
+    (ATK_MAJOR_VERSION == 1 && ATK_MINOR_VERSION >= 6) || \
+    (ATK_MAJOR_VERSION == 1 && ATK_MINOR_VERSION == 5 && ATK_REV_VERSION >=1)
+#define USE_ATK_ROLE_EDITBAR
+#endif
+
+// ATK 1.7.2 or later
+#if ATK_MAJOR_VERSION >=2 || \
+    (ATK_MAJOR_VERSION == 1 && ATK_MINOR_VERSION >= 8) || \
+    (ATK_MAJOR_VERSION == 1 && ATK_MINOR_VERSION == 7 && ATK_REV_VERSION >=2)
+#define USE_ATK_ROLE_EMBEDDED
+#endif
+
 // ATK 1.10.1 or later
 #if ATK_MAJOR_VERSION >=2 || \
     (ATK_MAJOR_VERSION == 1 && ATK_MINOR_VERSION >= 11) || \
