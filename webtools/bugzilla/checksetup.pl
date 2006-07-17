@@ -4232,8 +4232,6 @@ if ($dbh->bz_column_info("namedqueries", "linkinfooter")) {
 # 2006-07-07 olav@bkor.dhs.org - Bug 277377
 # Add a sortkey to the classifications
 if (!$dbh->bz_column_info('classifications', 'sortkey')) {
-    print "Adding sortkey column to classifications table...\n" unless $silent;
-
     $dbh->bz_add_column('classifications', 'sortkey',
                         {TYPE => 'INT2', NOTNULL => 1, DEFAULT => 0});
 
