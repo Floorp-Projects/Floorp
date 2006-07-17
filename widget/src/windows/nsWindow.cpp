@@ -3324,21 +3324,18 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVir
 BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
 {
   gKbdLayout.OnKeyDown (aVirtualKeyCode);
-
-  // Use only DOMKeyCode for XP processing.
-  // Use aVirtualKeyCode for gKbdLayout and native processing.
-  UINT DOMKeyCode = sIMEIsComposing ?
-                      aVirtualKeyCode : MapFromNativeToDOM(aVirtualKeyCode);
+  
+  UINT virtualKeyCode = sIMEIsComposing ? aVirtualKeyCode : MapFromNativeToDOM(aVirtualKeyCode);
 
 #ifdef DEBUG
-  //printf("In OnKeyDown virt: %d  scan: %d\n", DOMKeyCode, aScanCode);
+  //printf("In OnKeyDown virt: %d  scan: %d\n", virtualKeyCode, aScanCode);
 #endif
 
-  BOOL noDefault = DispatchKeyEvent(NS_KEY_DOWN, 0, DOMKeyCode, aKeyData);
+  BOOL noDefault = DispatchKeyEvent(NS_KEY_DOWN, 0, virtualKeyCode, aKeyData);
 
   // If we won't be getting a WM_CHAR, WM_SYSCHAR or WM_DEADCHAR, synthesize a keypress
   // for almost all keys
-  switch (DOMKeyCode) {
+  switch (virtualKeyCode) {
     case NS_VK_SHIFT:
     case NS_VK_CONTROL:
     case NS_VK_ALT:
@@ -3348,21 +3345,25 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
   }
 
   PRUint32 extraFlags = (noDefault ? NS_EVENT_FLAG_NO_DEFAULT : 0);
+
   MSG msg;
   BOOL gotMsg = ::PeekMessageW(&msg, mWnd, WM_KEYFIRST, WM_KEYLAST, PM_NOREMOVE | PM_NOYIELD);
-  PRBool anyCharMessagesRemoved = PR_FALSE;
   // Enter and backspace are always handled here to avoid for example the
   // confusion between ctrl-enter and ctrl-J.
-  if (DOMKeyCode == NS_VK_RETURN || DOMKeyCode == NS_VK_BACK ||
-      ((mIsControlDown || mIsAltDown) &&
-       KeyboardLayout::IsPrintableCharKey(aVirtualKeyCode)))
+  // Ctrl+[Add, Subtract] are always handled here to make text zoom shortcuts work
+  // on different keyboard layouts.
+  if (virtualKeyCode == NS_VK_RETURN || virtualKeyCode == NS_VK_BACK ||
+      (mIsControlDown && !mIsAltDown && !mIsShiftDown &&
+       (virtualKeyCode == NS_VK_ADD || virtualKeyCode == NS_VK_SUBTRACT)) ||
+      ((mIsControlDown || mIsAltDown) && KeyboardLayout::IsPrintableCharKey (aVirtualKeyCode)))
   {
     // Remove a possible WM_CHAR or WM_SYSCHAR messages from the message queue.
     // They can be more than one because of:
     //  * Dead-keys not pairing with base character
     //  * Some keyboard layouts may map up to 4 characters to the single key
 
-
+    PRBool anyCharMessagesRemoved = PR_FALSE;
+    
     while (gotMsg && (msg.message == WM_CHAR || msg.message == WM_SYSCHAR))
     {
       ::GetMessageW(&msg, mWnd, WM_KEYFIRST, WM_KEYLAST);
@@ -3371,7 +3372,7 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
       gotMsg = ::PeekMessageW (&msg, mWnd, WM_KEYFIRST, WM_KEYLAST, PM_NOREMOVE | PM_NOYIELD);
     }
 
-    if (!anyCharMessagesRemoved && DOMKeyCode == NS_VK_BACK) {
+    if (!anyCharMessagesRemoved && virtualKeyCode == NS_VK_BACK) {
       MSG imeStartCompositionMsg, imeCompositionMsg;
       if (::PeekMessageW(&imeStartCompositionMsg, mWnd, WM_IME_STARTCOMPOSITION, WM_IME_STARTCOMPOSITION, PM_NOREMOVE | PM_NOYIELD)
        && ::PeekMessageW(&imeCompositionMsg, mWnd, WM_IME_COMPOSITION, WM_IME_COMPOSITION, PM_NOREMOVE | PM_NOYIELD)
@@ -3434,25 +3435,23 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
   PRUint32 numOfUniChars = 0;
   PRUint32 numOfShiftStates = 0;
 
-  switch (aVirtualKeyCode) {
+  switch (virtualKeyCode) {
     // keys to be sent as characters
-    case VK_ADD:       uniChars [0] = '+';  numOfUniChars = 1;  break;
-    case VK_SUBTRACT:  uniChars [0] = '-';  numOfUniChars = 1;  break;
-    case VK_DIVIDE:    uniChars [0] = '/';  numOfUniChars = 1;  break;
-    case VK_MULTIPLY:  uniChars [0] = '*';  numOfUniChars = 1;  break;
-    case VK_NUMPAD0:
-    case VK_NUMPAD1:
-    case VK_NUMPAD2:
-    case VK_NUMPAD3:
-    case VK_NUMPAD4:
-    case VK_NUMPAD5:
-    case VK_NUMPAD6:
-    case VK_NUMPAD7:
-    case VK_NUMPAD8:
-    case VK_NUMPAD9:
-      uniChars [0] = aVirtualKeyCode - VK_NUMPAD0 + '0';
-      numOfUniChars = 1;
-      break;
+    case NS_VK_ADD:       uniChars [0] = '+';  numOfUniChars = 1;  break;
+    case NS_VK_SUBTRACT:  uniChars [0] = '-';  numOfUniChars = 1;  break;
+    case NS_VK_DIVIDE:    uniChars [0] = '/';  numOfUniChars = 1;  break;
+    case NS_VK_MULTIPLY:  uniChars [0] = '*';  numOfUniChars = 1;  break;
+    case NS_VK_NUMPAD0:
+    case NS_VK_NUMPAD1:
+    case NS_VK_NUMPAD2:
+    case NS_VK_NUMPAD3:
+    case NS_VK_NUMPAD4:
+    case NS_VK_NUMPAD5:
+    case NS_VK_NUMPAD6:
+    case NS_VK_NUMPAD7:
+    case NS_VK_NUMPAD8:
+    case NS_VK_NUMPAD9:   uniChars [0] = virtualKeyCode - NS_VK_NUMPAD0 + '0';  numOfUniChars = 1;  break;
+
     default:
       if (KeyboardLayout::IsPrintableCharKey (aVirtualKeyCode))
         numOfUniChars = numOfShiftStates = gKbdLayout.GetUniChars (uniChars, shiftStates, NS_ARRAY_LENGTH (uniChars));
@@ -3464,34 +3463,19 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
         // numbers 0..9, ignoring the real characters returned by active keyboard layout.
         // This is required to make sure that all shortcut keys (e.g. Ctrl+c, Ctrl+1, Alt+f)
         // work the same way no matter what keyboard layout you are using.
+        // Currently it is impossible to use non-latin characters for keyboard shortcuts.
 
-        if ((NS_VK_0 <= DOMKeyCode && DOMKeyCode <= NS_VK_9) ||
-            (NS_VK_A <= DOMKeyCode && DOMKeyCode <= NS_VK_Z))
+        if ((NS_VK_0 <= virtualKeyCode && virtualKeyCode <= NS_VK_9) ||
+            (NS_VK_A <= virtualKeyCode && virtualKeyCode <= NS_VK_Z))
         {
-          uniChars [0] = DOMKeyCode;
+          uniChars [0] = virtualKeyCode;
           numOfUniChars = 1;
           numOfShiftStates = 0;
-
+          
           // For letters take the Shift state into account
           if (!mIsShiftDown &&
-              NS_VK_A <= DOMKeyCode && DOMKeyCode <= NS_VK_Z)
+              NS_VK_A <= virtualKeyCode && virtualKeyCode <= NS_VK_Z)
             uniChars [0] += 0x20;
-        }
-        else if (!anyCharMessagesRemoved && DOMKeyCode != aVirtualKeyCode) {
-          switch (DOMKeyCode) {
-            case NS_VK_ADD:
-              uniChars [0] = '+'; numOfUniChars = 1; break;
-            case NS_VK_SUBTRACT:
-              uniChars [0] = '-'; numOfUniChars = 1; break;
-            case NS_VK_SEMICOLON:
-              // XXXmnakano I don't know whether this is correct.
-              uniChars [0] = ';';
-              uniChars [1] = ':';
-              numOfUniChars = 2;
-              break;
-            default:
-              NS_ERROR("implement me!");
-          }
         }
       }
   }
@@ -3514,7 +3498,7 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
       DispatchKeyEvent(NS_KEY_PRESS, uniChars [cnt], 0, aKeyData, extraFlags);
     }
   } else
-    DispatchKeyEvent(NS_KEY_PRESS, 0, DOMKeyCode, aKeyData, extraFlags);
+    DispatchKeyEvent(NS_KEY_PRESS, 0, virtualKeyCode, aKeyData, extraFlags);
 
   return noDefault;
 }
