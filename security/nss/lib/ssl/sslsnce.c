@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsnce.c,v 1.37 2006/01/28 02:21:31 nelsonb%netscape.com Exp $ */
+/* $Id: sslsnce.c,v 1.38 2006/07/17 22:14:48 alexei.volkov.bugs%sun.com Exp $ */
 
 /* Note: ssl_FreeSID() in sslnonce.c gets used for both client and server 
  * cache sids!
@@ -892,7 +892,8 @@ CloseCache(cacheDesc *cache)
 	** be) in use by multiple processes.  We do not wish to destroy
 	** the mutexes while they are still in use.  
 	*/
-	if (PR_FALSE == cache->sharedCache->everInherited) {
+	if (cache->sharedCache &&
+            PR_FALSE == cache->sharedCache->everInherited) {
 	    sidCacheLock *pLock = cache->sidCacheLocks;
 	    for (; locks_initialized > 0; --locks_initialized, ++pLock ) {
 		sslMutex_Destroy(&pLock->mutex);
@@ -940,6 +941,12 @@ InitCache(cacheDesc *cache, int maxCacheEntries, PRUint32 ssl2_timeout,
     cache->cacheMem    = cacheMem    = NULL;
     cache->cacheMemMap = cacheMemMap = NULL;
     cache->sharedCache = (cacheDesc *)0;
+
+    cache->numSIDCacheLocksInitialized = 0;
+    cache->nextCertCacheEntry = 0;
+    cache->stopPolling = PR_FALSE;
+    cache->everInherited = PR_FALSE;
+    cache->poller = NULL;
 
     cache->numSIDCacheEntries = maxCacheEntries ? maxCacheEntries 
                                                 : DEF_SID_CACHE_ENTRIES;
