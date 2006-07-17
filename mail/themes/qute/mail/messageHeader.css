@@ -136,24 +136,31 @@ description[selectable="true"]:focus > descriptionitem[selected="true"]
 }
 
 .headerName {
-  margin: 0 .5em 0 0;
-  min-height: 18px;
+  margin: 0 .5em .5em 0;
   font-weight: bold;
   text-align: right;
   background-color: transparent;
 }
 
 .headerValue {
-  margin: 0 0 .25em 0;
+  margin: 0;
   min-width: 50px;
   white-space: normal;
   background-color: transparent;
+}
+
+.headerValueBox {
+  margin: 0 0 .5em 0; 
 }
 
 .headerValueUrl {
   cursor: pointer;
   color: #0000FF;
   text-decoration: underline;
+}
+
+.headerValueBox[singleline="true"] {
+  overflow: hidden;
 }
 
 .subjectvalue {
