@@ -1,0 +1,2 @@
+deny from all
+php_value display_errors off
