@@ -17,6 +17,7 @@
   # Rights Reserved.
   #
   # Contributor(s): Myk Melez <myk@mozilla.org>
+  #                 Max Kanat-Alexander <mkanat@bugzilla.org>
   #%]
 
 [% PROCESS global/variables.none.tmpl %]
@@ -203,6 +204,13 @@
         <input name="status_whiteboard" 
                value="[% dontchange FILTER html %]" size="60">
       </td>
+    </tr>
+  [% END %]
+
+  [% USE Bugzilla %]
+  [% FOREACH field = Bugzilla.get_fields({ obsolete => 0, custom => 1 }) %]
+    <tr>
+      [% PROCESS bug/field.html.tmpl value=dontchange editable=1 %]
     </tr>
   [% END %]
 

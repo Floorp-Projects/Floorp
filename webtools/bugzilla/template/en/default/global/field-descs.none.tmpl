@@ -69,6 +69,17 @@
                    "votes"                => "Votes",
                    "work_time"            => "Hours Worked"} %]
 
+[%# Also include any custom fields or fields which don't have a
+    Description here, by copying their Description from the
+    database. If you want to override this for your language
+    or your installation, just use a hook. %]
+
+[% USE Bugzilla %]
+[% FOREACH field = Bugzilla.get_fields() %]
+  [% SET field_descs.${field.name} = field.description 
+     IF !field_descs.${field_name}.exists %]
+[% END %]
+
 [% status_descs = { "UNCONFIRMED" => "UNCONFIRMED",
                     "NEW"         => "NEW",
                     "ASSIGNED"    => "ASSIGNED",

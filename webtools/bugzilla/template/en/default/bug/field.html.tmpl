@@ -17,20 +17,33 @@
   # Rights Reserved.
   #
   # Contributor(s): Myk Melez <myk@mozilla.org>
+  #                 Max Kanat-Alexander <mkanat@bugzilla.org>
   #%]
 
-<tr>
-  [% SWITCH field.type %]
-  [% CASE constants.FIELD_TYPE_FREETEXT %]
-    <th align="right">
-      <label for="[% field.name FILTER html %]">
-        [% field.description FILTER html %]:
-      </label>
-    </th>
-    <td>
-      <input name="[% field.name FILTER html %]"
-             value="[% value FILTER html %]"
-             size="60">
-    </td>
+[%# INTERFACE:
+  #   field: a Bugzilla::Field object
+  #   value: The value of the field for this bug.
+  #   editable: Whether the field should be displayed as an editable
+  #             <input> or as just the plain text of its value.
+  #%]
+
+<th class="field_label">
+  [% IF editable %]
+    <label for="[% field.name FILTER html %]">
   [% END %]
-</tr>
+    [% field_descs.${field.name} FILTER html %]:
+  [% '</label>' IF editable %]
+</th>
+
+<td class="field_value">
+[% IF editable %]
+  [% SWITCH field.type %]
+    [% CASE constants.FIELD_TYPE_FREETEXT %]
+        <input name="[% field.name FILTER html %]"
+               value="[% value FILTER html %]"
+               size="60">
+  [% END %]
+[% ELSE %]
+  [% value FILTER html %]
+[% END %]
+</td>

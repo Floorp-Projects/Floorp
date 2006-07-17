@@ -18,6 +18,7 @@
   #
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #                 Vaskin Kissoyan <vkissoyan@yahoo.com>
+  #                 Max Kanat-Alexander <mkanat@bugzilla.org>
   #%]
 
 [% PROCESS global/variables.none.tmpl %]
@@ -498,7 +499,9 @@
 [% USE Bugzilla %]
 <table>
   [% FOREACH field = Bugzilla.get_fields({ obsolete => 0, custom => 1 }) %]
-    [% PROCESS bug/field.html.tmpl value=bug.${field.name} %]
+    <tr>
+      [% PROCESS bug/field.html.tmpl value=bug.${field.name} editable=1 %]
+    </tr>
   [% END %]
 </table>
 

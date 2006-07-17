@@ -20,6 +20,7 @@
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Gervase Markham <gerv@gerv.net>
+#                 Max Kanat-Alexander <mkanat@bugzilla.org>
 
 use strict;
 
@@ -76,6 +77,8 @@ if (UserInGroup(Bugzilla->params->{"timetrackinggroup"})) {
 }
 
 push(@masterlist, ("short_desc", "short_short_desc"));
+
+push(@masterlist, Bugzilla->custom_field_names);
 
 $vars->{'masterlist'} = \@masterlist;
 

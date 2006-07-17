@@ -20,6 +20,7 @@
   #                 Gervase Markham <gerv@gerv.net>
   #                 Toms Baugis <toms@myrealbox.com>
   #                 Olav Vitters <olav@bkor.dhs.org>
+  #                 Max Kanat-Alexander <mkanat@bugzilla.org>
   #%]
 
 [% PROCESS "global/field-descs.none.tmpl" %]
@@ -163,6 +164,19 @@
     [% IF Param("usestatuswhiteboard") %]
       [% PROCESS row cell = "status_whiteboard" fullrow = 1 %]
     [% END %]
+
+    [% USE Bugzilla %]
+    [% field_counter = 0 %]
+    [% FOREACH field = Bugzilla.get_fields({ obsolete => 0, custom => 1 }) %]
+        [% field_counter = field_counter + 1 %]
+        [%# Odd-numbered fields get an opening <tr> %]
+        [% '<tr>' IF field_counter % 2 %]
+        [% PROCESS bug/field.html.tmpl value=bug.${field.name} editable=0 %]
+        [%# Even-numbered fields get a closing <tr> %]
+        [% '</tr>' IF !(field_counter % 2) %]
+    [% END %]
+    [%# And we have to finish the row if we ended on an odd number. %]
+    [% '<th></th><td></td></tr>' IF field_counter % 2 %]
 
     [% IF (bug.dependson.size || bug.blocked.size) %]
       [% PROCESS dependencies name = "dependson" %]
