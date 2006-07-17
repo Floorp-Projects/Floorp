@@ -60,7 +60,11 @@ PRUint32 atkRoleMap[] = {
     ATK_ROLE_MENU,                // nsIAccessible::ROLE_MENUPOPUP         11
     ATK_ROLE_MENU_ITEM,           // nsIAccessible::ROLE_MENUITEM          12
     ATK_ROLE_TOOL_TIP,            // nsIAccessible::ROLE_TOOLTIP           13
+#ifdef USE_ATK_ROLE_APPLICATION
     ATK_ROLE_APPLICATION,         // nsIAccessible::ROLE_APPLICATION       14
+#else
+    ATK_ROLE_PANEL,               // nsIAccessible::ROLE_APPLICATION       14
+#endif
 #ifdef USE_ATK_ROLE_DOCUMENT_FRAME 
     ATK_ROLE_DOCUMENT_FRAME,      // nsIAccessible::ROLE_DOCUMENT          15
 #else
@@ -156,10 +160,26 @@ PRUint32 atkRoleMap[] = {
     ATK_ROLE_TOGGLE_BUTTON,       // nsIAccessible::ROLE_TOGGLE_BUTTON     95
     ATK_ROLE_TREE_TABLE,          // nsIAccessible::ROLE_TREE_TABLE        96
     ATK_ROLE_VIEWPORT,            // nsIAccessible::ROLE_VIEWPORT          97
+#ifdef USE_ATK_ROLE_HEADER
     ATK_ROLE_HEADER,              // nsIAccessible::ROLE_HEADER            98
+#else
+    ATK_ROLE_TEXT,                // nsIAccessible::ROLE_HEADER            98
+#endif
+#ifdef USE_ATK_ROLE_FOOTER
     ATK_ROLE_FOOTER,              // nsIAccessible::ROLE_FOOTER            99
+#else
+    ATK_ROLE_TEXT,                // nsIAccessible::ROLE_FOOTER            99
+#endif
+#ifdef USE_ATK_ROLE_PARAGRAPH
     ATK_ROLE_PARAGRAPH,           // nsIAccessible::ROLE_PARAGRAPH         100
+#else
+    ATK_ROLE_TEXT,                // nsIAccessible::ROLE_PARAGRAPH         100
+#endif
+#ifdef USE_ATK_ROLE_RULER
     ATK_ROLE_RULER,               // nsIAccessible::ROLE_RULER             101
+#else
+    ATK_ROLE_UNKNOWN,             // nsIAccessible::ROLE_RULER             101
+#endif
 #ifdef USE_ATK_ROLE_AUTOCOMPLETE
     ATK_ROLE_AUTOCOMPLETE,        // nsIAccessible::ROLE_AUTOCOMPLETE      102
 #else
