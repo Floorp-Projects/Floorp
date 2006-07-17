@@ -50,6 +50,7 @@
 #include "nsIServiceManager.h"
 #include "nsTextFormatter.h"
 #include "nsIView.h"
+#include "nsRoleMap.h"
 
 // for the COM IEnumVARIANT solution in get_AccSelection()
 #define _ATLBASE_IMPL
@@ -433,19 +434,17 @@ STDMETHODIMP nsAccessibleWrap::get_accRole(
   if (!xpAccessible)
     return E_FAIL;
 
-  PRUint32 role = 0;
-  if (NS_FAILED(xpAccessible->GetFinalRole(&role)))
+  PRUint32 xpRole = 0, msaaRole = 0;
+  if (NS_FAILED(xpAccessible->GetFinalRole(&xpRole)))
     return E_FAIL;
-
-  // Begin check for extended roles that need to be mapped to something known
-  if (role == ROLE_ENTRY || role == ROLE_PASSWORD_TEXT) {
-    role = ROLE_TEXT_LEAF;
-  }
+  msaaRole = msaaRoleMap[xpRole];
+  NS_ASSERTION(msaaRoleMap[nsIAccessible::ROLE_LAST_ENTRY] == ROLE_MSAA_LAST_ENTRY,
+               "MSAA role map skewed");
 
   // -- Try enumerated role
-  if (role != ROLE_NOTHING && role != ROLE_CLIENT) {
+  if (msaaRole != USE_ROLE_STRING) {
     pvarRole->vt = VT_I4;
-    pvarRole->lVal = role;  // Normal enumerated role
+    pvarRole->lVal = msaaRole;  // Normal enumerated role
     return S_OK;
   }
 
@@ -460,7 +459,7 @@ STDMETHODIMP nsAccessibleWrap::get_accRole(
   NS_ASSERTION(content, "No content for accessible");
   if (content && content->IsNodeOfType(nsINode::eELEMENT)) {
     nsAutoString roleString;
-    if (role != ROLE_CLIENT && GetRoleAttribute(content, roleString)) {
+    if (msaaRole != ROLE_CLIENT && GetRoleAttribute(content, roleString)) {
       nsINodeInfo *nodeInfo = content->NodeInfo();
       nodeInfo->GetName(roleString);
       nsAutoString nameSpaceURI;
