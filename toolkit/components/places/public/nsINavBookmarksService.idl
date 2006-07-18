@@ -343,6 +343,10 @@ interface nsINavBookmarksService : nsISupports
 
   /**
    * Get the history/bookmark title for the URI.
+   *
+   * If no item title is available (for instance, if the URI doesn't appear 
+   * in the bookmarks or history), it will return a void string (null in JS).
+   *
    *  @param uri   The URI whose title should be retrieved
    *  @returns     The title for the URI.
    */
@@ -356,7 +360,9 @@ interface nsINavBookmarksService : nsISupports
   void setFolderTitle(in PRInt64 folder, in AString title);
 
   /**
-   * Get the title for a bookmark folder.
+   * Get the title for a bookmark folder.  Throws an invalid argument
+   * exception if it can't find a folder with the given ID.
+   *
    *  @param folder     The folder whose title should be retrieved
    *  @returns          The title for the folder
    */
@@ -451,8 +457,8 @@ interface nsINavBookmarksService : nsISupports
   void setKeywordForURI(in nsIURI uri, in AString keyword);
 
   /**
-   * Retrieves the keyword for the given URI. Will be empty if no such
-   * keyword is found.
+   * Retrieves the keyword for the given URI. Will be void string
+   * (null in JS) if no such keyword is found.
    */
   AString getKeywordForURI(in nsIURI uri);
 
