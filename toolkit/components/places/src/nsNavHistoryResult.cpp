@@ -521,12 +521,11 @@ nsNavHistoryResult::TreeIndexForNode(nsINavHistoryResultNode* aNode,
 }
 
 
-// nsNavHistoryResult::GetSourceQuery
+// nsNavHistoryResult::GetSourceQueries
 
 NS_IMETHODIMP
-nsNavHistoryResult::GetSourceQuery(nsINavHistoryQuery*** aQueries,
-                                   PRUint32* aQueryCount,
-                                   nsINavHistoryQueryOptions** aOptions)
+nsNavHistoryResult::GetSourceQueries(PRUint32* aQueryCount, 
+                                     nsINavHistoryQuery*** aQueries)
 {
   *aQueries = nsnull;
   *aQueryCount = 0;
@@ -542,7 +541,14 @@ nsNavHistoryResult::GetSourceQuery(nsINavHistoryQuery*** aQueries,
       NS_ADDREF((*aQueries)[i]);
     }
   }
+  return NS_OK;
+}
 
+// nsNavHistoryResult::GetSourceQueryOptions
+
+NS_IMETHODIMP
+nsNavHistoryResult::GetSourceQueryOptions(nsINavHistoryQueryOptions** aOptions)
+{
   *aOptions = mSourceOptions;
   NS_IF_ADDREF(*aOptions);
   return NS_OK;
