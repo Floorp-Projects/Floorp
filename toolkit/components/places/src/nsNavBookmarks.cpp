@@ -93,65 +93,6 @@ nsNavBookmarks::Init()
   mozIStorageConnection *dbConn = DBConn();
   mozStorageTransaction transaction(dbConn, PR_FALSE);
 
-  PRBool exists = PR_FALSE;
-  dbConn->TableExists(NS_LITERAL_CSTRING("moz_bookmarks"), &exists);
-  if (!exists) {
-    rv = dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_bookmarks ("
-        "item_child INTEGER, "
-        "folder_child INTEGER, "
-        "parent INTEGER, "
-        "position INTEGER)"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // this index will make it faster to determine if a given item is
-    // bookmarked (used by history queries and vacuuming, for example)
-    rv = dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_bookmarks_itemindex ON moz_bookmarks (item_child)"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // the most common operation is to find the children given a parent
-    rv = dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_bookmarks_parentindex ON moz_bookmarks (parent)"));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // moz_bookmarks_folders
-  dbConn->TableExists(NS_LITERAL_CSTRING("moz_bookmarks_folders"), &exists);
-  if (!exists) {
-    rv = dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_bookmarks_folders ("
-        "id INTEGER PRIMARY KEY, "
-        "name LONGVARCHAR, "
-        "type LONGVARCHAR)"));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // moz_bookmarks_roots
-  dbConn->TableExists(NS_LITERAL_CSTRING("moz_bookmarks_roots"), &exists);
-  if (!exists) {
-    rv = dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_bookmarks_roots ("
-        "root_name VARCHAR(16) UNIQUE, "
-        "folder_id INTEGER)"));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // moz_keywords
-  dbConn->TableExists(NS_LITERAL_CSTRING("moz_keywords"), &exists);
-  if (! exists) {
-    rv = dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE TABLE moz_keywords ("
-        "keyword VARCHAR(32) UNIQUE,"
-        "page_id INTEGER)"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // it should be fast to go url->ID and ID->url
-    rv = dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_keywords_keywordindex ON moz_keywords (keyword)"));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_keywords_pageindex ON moz_keywords (page_id)"));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("SELECT id, name, type FROM moz_bookmarks_folders WHERE id = ?1"),
                                getter_AddRefs(mDBGetFolderInfo));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -300,6 +241,84 @@ nsNavBookmarks::Init()
 
   return NS_OK;
 }
+
+
+// nsNavBookmarks::InitTables
+//
+//    All commands that initialize the schema of the DB go in here. This is
+//    called from history init before the dummy DB connection is started that
+//    will prevent us from modifying the schema.
+
+nsresult // static
+nsNavBookmarks::InitTables(mozIStorageConnection* aDBConn)
+{
+  nsresult rv;
+  PRBool exists;
+  rv = aDBConn->TableExists(NS_LITERAL_CSTRING("moz_bookmarks"), &exists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (! exists) {
+    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_bookmarks ("
+        "item_child INTEGER, "
+        "folder_child INTEGER, "
+        "parent INTEGER, "
+        "position INTEGER)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // this index will make it faster to determine if a given item is
+    // bookmarked (used by history queries and vacuuming, for example)
+    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "CREATE INDEX moz_bookmarks_itemindex ON moz_bookmarks (item_child)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // the most common operation is to find the children given a parent
+    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "CREATE INDEX moz_bookmarks_parentindex ON moz_bookmarks (parent)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // moz_bookmarks_folders
+  rv = aDBConn->TableExists(NS_LITERAL_CSTRING("moz_bookmarks_folders"), &exists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (! exists) {
+    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_bookmarks_folders ("
+        "id INTEGER PRIMARY KEY, "
+        "name LONGVARCHAR, "
+        "type LONGVARCHAR)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // moz_bookmarks_roots
+  rv = aDBConn->TableExists(NS_LITERAL_CSTRING("moz_bookmarks_roots"), &exists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!exists) {
+    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_bookmarks_roots ("
+        "root_name VARCHAR(16) UNIQUE, "
+        "folder_id INTEGER)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // moz_keywords
+  rv = aDBConn->TableExists(NS_LITERAL_CSTRING("moz_keywords"), &exists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (! exists) {
+    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "CREATE TABLE moz_keywords ("
+        "keyword VARCHAR(32) UNIQUE,"
+        "page_id INTEGER)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // it should be fast to go url->ID and ID->url
+    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "CREATE INDEX moz_keywords_keywordindex ON moz_keywords (keyword)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "CREATE INDEX moz_keywords_pageindex ON moz_keywords (page_id)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
+}
+
 
 struct RenumberItem {
   PRInt64 folderChild;
