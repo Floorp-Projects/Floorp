@@ -35,22 +35,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certdata.c,v $ $Revision: 1.38 $ $Date: 2006/06/09 21:02:16 $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.38 $ $Date: 2006/06/09 21:02:16 $";
+static const char CVS_ID[] = "@(#) $RCSfile: certdata.c,v $ $Revision: 1.39 $ $Date: 2006/07/18 23:38:14 $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.39 $ $Date: 2006/07/18 23:38:14 $";
 #endif /* DEBUG */
 
 #ifndef BUILTINS_H
 #include "builtins.h"
 #endif /* BUILTINS_H */
 
-static const CK_TRUST ckt_netscape_valid = CKT_NETSCAPE_VALID;
-static const CK_OBJECT_CLASS cko_certificate = CKO_CERTIFICATE;
-static const CK_TRUST ckt_netscape_trusted_delegator = CKT_NETSCAPE_TRUSTED_DELEGATOR;
-static const CK_OBJECT_CLASS cko_netscape_trust = CKO_NETSCAPE_TRUST;
-static const CK_BBOOL ck_true = CK_TRUE;
-static const CK_OBJECT_CLASS cko_data = CKO_DATA;
-static const CK_CERTIFICATE_TYPE ckc_x_509 = CKC_X_509;
 static const CK_BBOOL ck_false = CK_FALSE;
+static const CK_BBOOL ck_true = CK_TRUE;
+static const CK_CERTIFICATE_TYPE ckc_x_509 = CKC_X_509;
+static const CK_OBJECT_CLASS cko_certificate = CKO_CERTIFICATE;
+static const CK_OBJECT_CLASS cko_data = CKO_DATA;
 static const CK_OBJECT_CLASS cko_netscape_builtin_root_list = CKO_NETSCAPE_BUILTIN_ROOT_LIST;
+static const CK_OBJECT_CLASS cko_netscape_trust = CKO_NETSCAPE_TRUST;
+static const CK_TRUST ckt_netscape_trusted_delegator = CKT_NETSCAPE_TRUSTED_DELEGATOR;
+static const CK_TRUST ckt_netscape_valid = CKT_NETSCAPE_VALID;
 #ifdef DEBUG
 static const CK_ATTRIBUTE_TYPE nss_builtins_types_0 [] = {
  CKA_CLASS,  CKA_TOKEN,  CKA_PRIVATE,  CKA_MODIFIABLE,  CKA_LABEL,  CKA_APPLICATION,  CKA_VALUE
@@ -643,7 +643,7 @@ static const NSSItem nss_builtins_items_0 [] = {
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)"CVS ID", (PRUint32)7 },
   { (void *)"NSS", (PRUint32)4 },
-  { (void *)"@(#) $RCSfile: certdata.c,v $ $Revision: 1.38 $ $Date: 2006/06/09 21:02:16 $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.38 $ $Date: 2006/06/09 21:02:16 $", (PRUint32)160 }
+  { (void *)"@(#) $RCSfile: certdata.c,v $ $Revision: 1.39 $ $Date: 2006/07/18 23:38:14 $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.39 $ $Date: 2006/07/18 23:38:14 $", (PRUint32)160 }
 };
 #endif /* DEBUG */
 static const NSSItem nss_builtins_items_1 [] = {
