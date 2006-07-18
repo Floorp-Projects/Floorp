@@ -2974,6 +2974,8 @@ NS_IMETHODIMP
 nsNavHistoryFolderResultNode::OnSeparatorAdded(PRInt64 aParent, PRInt32 aIndex)
 {
   NS_ASSERTION(aParent == mFolderId, "Got wrong bookmark update");
+  if (mOptions->ExcludeItems())
+    return NS_OK; // don't update items when we aren't displaying them
   if (! StartIncrementalUpdate())
     return NS_OK;
 
@@ -2999,6 +3001,8 @@ nsNavHistoryFolderResultNode::OnSeparatorRemoved(PRInt64 aParent,
                                                  PRInt32 aIndex)
 {
   NS_ASSERTION(aParent == mFolderId, "Got wrong bookmark update");
+  if (mOptions->ExcludeItems())
+    return NS_OK; // don't update items when we aren't displaying them
   if (! StartIncrementalUpdate())
     return NS_OK;
 
