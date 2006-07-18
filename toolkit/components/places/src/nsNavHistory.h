@@ -454,6 +454,12 @@ public:
                                   aOptions);
   }
 
+  // well-known annotations used by the history and bookmarks systems
+  static const char kAnnotationTitle[];
+  static const char kAnnotationFavIconName[];
+  static const char kAnnotationFavIconData[];
+  static const char kAnnotationPreviousEncoding[];
+
 private:
   ~nsNavHistory();
 
