@@ -476,6 +476,13 @@ nsNavHistory::InitDB()
     getter_AddRefs(mDBInsertVisit));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // mDBIncrementVisitCount
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "UPDATE moz_history SET visit_count = visit_count + 1 "
+      "WHERE id = ?1"),
+                                getter_AddRefs(mDBIncrementVisitCount));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // mDBVisitToURLResult, should match kGetInfoIndex_* (see GetQueryResults)
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT h.id, h.url, h.title, h.user_title, h.rev_host, h.visit_count, "
@@ -1559,6 +1566,8 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, PRInt64 aReferrer,
                        PRInt32 aTransitionType, PRInt64 aSession,
                        PRInt64* aVisitID)
 {
+  mozStorageTransaction transaction(mDBConn, PR_FALSE);
+
   // look up the page ID
   PRInt64 pageID;
   nsresult rv = GetUrlIdFor(aURI, &pageID, PR_TRUE);
@@ -1569,8 +1578,16 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, PRInt64 aReferrer,
   // from the docshell that will necessitate a rework of all of the visit
   // creation code.)
   PRInt64 referringID; // don't care about this
-  return InternalAddVisit(nsnull, pageID, aTime, aTransitionType, aVisitID,
-                   &referringID);
+  rv = InternalAddVisit(nsnull, pageID, aTime, aTransitionType, aVisitID,
+                        &referringID);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mDBIncrementVisitCount->BindInt64Parameter(0, pageID);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBIncrementVisitCount->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return transaction.Commit();
 }
 
 
