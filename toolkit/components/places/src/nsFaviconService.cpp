@@ -191,24 +191,6 @@ nsFaviconService::InitTables(mozIStorageConnection* aDBConn)
 }
 
 
-// nsFaviconservice::VacuumFavicons
-//
-//    Called by the history service after history entries have been expired.
-//    This will delete all favicon entries that are not referenced.
-//
-//    FIXME: This is very slow, and slows down shutdown. See bug 328598.
-
-nsresult // static
-nsFaviconService::VacuumFavicons(mozIStorageConnection* aDBConn)
-{
-  return aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "DELETE FROM moz_favicon WHERE id IN "
-    "(SELECT f.id FROM moz_favicon f "
-     "LEFT OUTER JOIN moz_history h ON f.id = h.favicon "
-     "WHERE h.favicon IS NULL)"));
-}
-
-
 // nsFaviconService::SetFaviconUrlForPage
 
 NS_IMETHODIMP
