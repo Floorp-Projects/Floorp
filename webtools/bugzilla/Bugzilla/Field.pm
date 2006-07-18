@@ -82,7 +82,8 @@ use constant DB_COLUMNS => (
     'description',
     'type',
     'custom',
-    'obsolete'
+    'obsolete',
+    'enter_bug',
 );
 
 our $columns = join(", ", DB_COLUMNS);
@@ -182,6 +183,19 @@ a boolean specifying whether or not the field is obsolete;
 
 sub obsolete { return $_[0]->{obsolete} }
 
+=over
+
+=item C<enter_bug>
+
+A boolean specifying whether or not this field should appear on 
+enter_bug.cgi
+
+=back
+
+=cut
+
+sub enter_bug { return $_[0]->{enter_bug} }
+
 
 =pod
 
@@ -266,6 +280,9 @@ sub match {
     }
     if (defined $criteria->{obsolete}) {
         push(@terms, "obsolete=" . ($criteria->{obsolete} ? "1" : "0"));
+    }
+    if (defined $criteria->{enter_bug}) {
+        push(@terms, "enter_bug=" . ($criteria->{enter_bug} ? '1' : '0'));
     }
     my $where = (scalar(@terms) > 0) ? "WHERE " . join(" AND ", @terms) : "";
   

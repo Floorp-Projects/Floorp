@@ -4246,6 +4246,9 @@ if (!$dbh->bz_column_info('classifications', 'sortkey')) {
     }
 }
 
+$dbh->bz_add_column('fielddefs', 'enter_bug',
+    {TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => 'FALSE'});
+
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
 #

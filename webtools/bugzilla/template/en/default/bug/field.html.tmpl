@@ -25,6 +25,8 @@
   #   value: The value of the field for this bug.
   #   editable: Whether the field should be displayed as an editable
   #             <input> or as just the plain text of its value.
+  #   value_span: A colspan for the table cell containing
+  #               the field value.
   #%]
 
 <th class="field_label">
@@ -41,6 +43,7 @@
     [% CASE constants.FIELD_TYPE_FREETEXT %]
         <input name="[% field.name FILTER html %]"
                value="[% value FILTER html %]"
+               [% "colspan=\"$value_span\"" FILTER none IF value_span %]
                size="60">
   [% END %]
 [% ELSE %]

@@ -172,10 +172,15 @@ if (!UserInGroup("editbugs") || $cgi->param('assigned_to') eq "") {
                 -value => login_to_id(trim($cgi->param('assigned_to')), THROW_ERROR));
 }
 
+
+my @enter_bug_field_names = map {$_->name} Bugzilla->get_fields({ custom => 1,
+    obsolete => 0, enter_bug => 1});
+
 my @bug_fields = ("version", "rep_platform",
                   "bug_severity", "priority", "op_sys", "assigned_to",
                   "bug_status", "everconfirmed", "bug_file_loc", "short_desc",
-                  "target_milestone", "status_whiteboard");
+                  "target_milestone", "status_whiteboard",
+                  @enter_bug_field_names);
 
 if (Bugzilla->params->{"usebugaliases"}) {
    my $alias = trim($cgi->param('alias') || "");

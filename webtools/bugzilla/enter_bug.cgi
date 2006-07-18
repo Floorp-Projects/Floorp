@@ -336,6 +336,13 @@ $vars->{'cloned_bug_id'}         = $cloned_bug_id;
 
 $vars->{'token'}             = Bugzilla::Token::IssueSessionToken('createbug:');
 
+
+my @enter_bug_fields = Bugzilla->get_fields({ custom => 1, obsolete => 0, 
+                                              enter_bug => 1 });
+foreach my $field (@enter_bug_fields) {
+    $vars->{$field->name} = formvalue($field->name);
+}
+
 if ($cloned_bug_id) {
 
     $default{'component_'}    = $cloned_bug->{'component'};
@@ -355,6 +362,10 @@ if ($cloned_bug_id) {
         $vars->{'cc'}         = join (" ", @{$cloned_bug->cc});
     } else {
         $vars->{'cc'}         = formvalue('cc');
+    }
+
+    foreach my $field (@enter_bug_fields) {
+        $vars->{$field->name} = $cloned_bug->{$field->name};
     }
 
 # We need to ensure that we respect the 'insider' status of

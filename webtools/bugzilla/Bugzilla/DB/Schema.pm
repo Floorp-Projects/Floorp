@@ -464,6 +464,8 @@ use constant ABSTRACT_SCHEMA => {
             sortkey     => {TYPE => 'INT2', NOTNULL => 1},
             obsolete    => {TYPE => 'BOOLEAN', NOTNULL => 1,
                             DEFAULT => 'FALSE'},
+            enter_bug   => {TYPE => 'BOOLEAN', NOTNULL => 1,
+                            DEFAULT => 'FALSE'},
         ],
         INDEXES => [
             fielddefs_name_idx    => {FIELDS => ['name'],

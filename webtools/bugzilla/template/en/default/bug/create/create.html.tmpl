@@ -313,6 +313,15 @@ function handleWantsAttachment(wants_attachment) {
     </td>
   </tr>
 
+  [% USE Bugzilla %]
+  [% FOREACH field = Bugzilla.get_fields({ obsolete => 0, custom => 1, 
+                                           enter_bug => 1 }) %]
+    [% SET value = ${field.name} IF ${field.name}.defined %]
+    <tr>
+      [% PROCESS bug/field.html.tmpl editable=1 value_span=3 %]
+    </tr>
+  [% END %]
+
   <tr>
     <td align="right"><strong>Summary:</strong></td>
     <td colspan="3">
