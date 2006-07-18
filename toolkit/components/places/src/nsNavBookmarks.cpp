@@ -52,10 +52,10 @@ const PRInt32 nsNavBookmarks::kGetFolderInfoIndex_FolderID = 0;
 const PRInt32 nsNavBookmarks::kGetFolderInfoIndex_Title = 1;
 
 // These columns sit to the right of the kGetInfoIndex_* columns.
-const PRInt32 nsNavBookmarks::kGetChildrenIndex_Position = 6;
-const PRInt32 nsNavBookmarks::kGetChildrenIndex_ItemChild = 7;
-const PRInt32 nsNavBookmarks::kGetChildrenIndex_FolderChild = 8;
-const PRInt32 nsNavBookmarks::kGetChildrenIndex_FolderTitle = 9;
+const PRInt32 nsNavBookmarks::kGetChildrenIndex_Position = 7;
+const PRInt32 nsNavBookmarks::kGetChildrenIndex_ItemChild = 8;
+const PRInt32 nsNavBookmarks::kGetChildrenIndex_FolderChild = 9;
+const PRInt32 nsNavBookmarks::kGetChildrenIndex_FolderTitle = 10;
 
 nsNavBookmarks* nsNavBookmarks::sInstance = nsnull;
 
@@ -95,19 +95,29 @@ nsNavBookmarks::Init()
   PRBool exists = PR_FALSE;
   dbConn->TableExists(NS_LITERAL_CSTRING("moz_bookmarks"), &exists);
   if (!exists) {
-    rv = dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_bookmarks (item_child INTEGER, folder_child INTEGER, parent INTEGER, position INTEGER)"));
+    rv = dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_bookmarks ("
+        "item_child INTEGER, "
+        "folder_child INTEGER, "
+        "parent INTEGER, "
+        "position INTEGER)"));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  // moz_bookmarks_folders
   dbConn->TableExists(NS_LITERAL_CSTRING("moz_bookmarks_folders"), &exists);
   if (!exists) {
-    rv = dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_bookmarks_folders (id INTEGER PRIMARY KEY, name LONGVARCHAR)"));
+    rv = dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_bookmarks_folders ("
+        "id INTEGER PRIMARY KEY, "
+        "name LONGVARCHAR)"));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  // moz_bookmarks_roots
   dbConn->TableExists(NS_LITERAL_CSTRING("moz_bookmarks_roots"), &exists);
   if (!exists) {
-    rv = dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_bookmarks_roots (root_name VARCHAR(16) UNIQUE, folder_id INTEGER)"));
+    rv = dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_bookmarks_roots ("
+        "root_name VARCHAR(16) UNIQUE, "
+        "folder_id INTEGER)"));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -139,16 +149,27 @@ nsNavBookmarks::Init()
       getter_AddRefs(mBundle));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("SELECT a.* FROM moz_bookmarks a, moz_history h WHERE h.url = ?1 AND a.item_child = h.id"),
-                               getter_AddRefs(mDBFindURIBookmarks));
+  // mDBFildURIBookmarks
+  rv = dbConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT a.* "
+      "FROM moz_bookmarks a, moz_history h "
+      "WHERE h.url = ?1 AND a.item_child = h.id"),
+    getter_AddRefs(mDBFindURIBookmarks));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Construct a result where the first columns exactly match those returned by
-  // mDBGetVisitPageInfo, and additionally contains columns for position,
+  // mDBGetURLPageInfo, and additionally contains columns for position,
   // item_child, and folder_child from moz_bookmarks.  This selects only
   // _item_ children which are in moz_history.
   NS_NAMED_LITERAL_CSTRING(selectItemChildren,
-                           "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, MAX(fullv.visit_date), a.position, a.item_child, a.folder_child, null FROM moz_bookmarks a JOIN moz_history h ON a.item_child = h.id LEFT JOIN moz_historyvisit v ON h.id = v.page_id LEFT JOIN moz_historyvisit fullv ON h.id = fullv.page_id WHERE a.parent = ?1 AND a.position >= ?2 AND a.position <= ?3 GROUP BY h.id");
+    "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, MAX(fullv.visit_date), f.url, a.position, a.item_child, a.folder_child, null "
+    "FROM moz_bookmarks a "
+    "JOIN moz_history h ON a.item_child = h.id "
+    "LEFT OUTER JOIN moz_favicon f ON h.favicon = f.id "
+    "LEFT JOIN moz_historyvisit v ON h.id = v.page_id "
+    "LEFT JOIN moz_historyvisit fullv ON h.id = fullv.page_id "
+    "WHERE a.parent = ?1 AND a.position >= ?2 AND a.position <= ?3 "
+    "GROUP BY h.id");
 
   // Construct a result where the first columns are padded out to the width
   // of mDBGetVisitPageInfo, containing additional columns for position,
@@ -156,28 +177,31 @@ nsNavBookmarks::Init()
   // moz_bookmarks_folders.  This selects only _folder_ children which are
   // in moz_bookmarks_folders.
   NS_NAMED_LITERAL_CSTRING(selectFolderChildren,
-                           "SELECT null, null, null, null, null, null, a.position, a.item_child, a.folder_child, c.name FROM moz_bookmarks a JOIN moz_bookmarks_folders c ON c.id = a.folder_child WHERE a.parent = ?1 AND a.position >= ?2 AND a.position <= ?3");
+    "SELECT null, null, null, null, null, null, null, a.position, a.item_child, a.folder_child, c.name "
+    "FROM moz_bookmarks a "
+    "JOIN moz_bookmarks_folders c ON c.id = a.folder_child "
+    "WHERE a.parent = ?1 AND a.position >= ?2 AND a.position <= ?3");
 
   NS_NAMED_LITERAL_CSTRING(orderByPosition, " ORDER BY a.position");
 
-  // Select only folder children of a given folder (unsorted)
+  // mDBGetFolderChildren: select only folder children of a given folder (unsorted)
   rv = dbConn->CreateStatement(selectFolderChildren,
                                getter_AddRefs(mDBGetFolderChildren));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Select all children of a given folder, sorted by position
+  // mDBGetChildren: select all children of a given folder, sorted by position
   rv = dbConn->CreateStatement(selectItemChildren +
                                NS_LITERAL_CSTRING(" UNION ALL ") +
                                selectFolderChildren + orderByPosition,
                                getter_AddRefs(mDBGetChildren));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Count all of the children of a given folder
+  // mDBFolderCount: count all of the children of a given folder
   rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("SELECT COUNT(*) FROM moz_bookmarks WHERE parent = ?1"),
                                getter_AddRefs(mDBFolderCount));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Find the position of an item within a folder
+  // mDBIndexOfItem: find the position of an item within a folder
   rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("SELECT position FROM moz_bookmarks WHERE item_child = ?1 AND parent = ?2"),
                                getter_AddRefs(mDBIndexOfItem));
   NS_ENSURE_SUCCESS(rv, rv);
