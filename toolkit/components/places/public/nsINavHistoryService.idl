@@ -42,6 +42,7 @@
 
 interface nsINavHistoryQuery;
 interface nsINavHistoryQueryOptions;
+interface nsITreeColumn;
 
 [scriptable, uuid(acae2b2d-5fcd-4419-b1bc-b7dc92a1836c)]
 interface nsINavHistoryResultNode : nsISupports
@@ -136,6 +137,71 @@ interface nsINavHistoryResultNode : nsISupports
 
 
 /**
+ *  Allows clients of the HistoryResult to define domain specific handling 
+ *  of specific nsITreeView methods that the HistoryResult does not implement.
+ */
+[scriptable, uuid(b34d5ca4-ce8e-49a6-9201-a59ae2128d2c)]
+interface nsINavHistoryResultViewObserver : nsISupports
+{
+  const long DROP_BEFORE = -1;
+  const long DROP_ON = 0;
+  const long DROP_AFTER = 1;
+  /**
+   * Methods used by the drag feedback code to determine if a drag is allowable at
+   * the current location. To get the behavior where drops are only allowed on
+   * items, such as the mailNews folder pane, always return false whe
+   * the orientation is not DROP_ON.
+   */
+  boolean canDrop(in long index, in long orientation);
+
+  /**
+   * Called when the user drops something on this view. The |orientation| param
+   * specifies before/on/after the given |row|.
+   */
+  void onDrop(in long row, in long orientation);
+
+  /** 
+   * Called when an item is opened or closed. 
+   */
+  void onToggleOpenState (in long index);
+
+  /** 
+ * Called when a header is clicked.
+   */
+  void onCycleHeader(in nsITreeColumn column);
+
+  /**
+   * Called when a cell in a non-selectable cycling column (e.g. 
+   * unread/flag/etc.) is clicked.
+   */
+  void onCycleCell(in long row, in nsITreeColumn column);
+
+  /** 
+   * Called when selection in the tree changes
+   */
+  void onSelectionChanged();
+
+  /**
+   * A command API that can be used to invoke commands on the selection.  
+   * The tree will automatically invoke this method when certain keys 
+   * are pressed.  For example, when the DEL key is pressed, performAction 
+   * will be called with the "delete" string. 
+   */
+  void onPerformAction(in wstring action);
+
+  /**
+   * A command API that can be used to invoke commands on a specific row.
+   */
+  void onPerformActionOnRow(in wstring action, in long row);
+
+  /**
+   * A command API that can be used to invoke commands on a specific cell.
+   */
+  void onPerformActionOnCell(in wstring action, in long row, in nsITreeColumn column);
+};
+
+
+/**
  * The result of a history/bookmark query.
  *
  * This class is also a result "node". Use those interfaces to access the
@@ -200,8 +266,18 @@ interface nsINavHistoryResult : nsINavHistoryResultNode
    * This gives you the original options used to display this result.
    */
   readonly attribute nsINavHistoryQueryOptions sourceQueryOptions;
-};
 
+  /**
+   * Add a Tree Builder Observer to handle Tree View methods that the 
+   * HistoryResult object does not implement. 
+   */
+  void addObserver(in nsINavHistoryResultViewObserver observer);
+
+  /**
+   * Remove a tree builder observer.
+   */
+  void removeObserver(in nsINavHistoryResultViewObserver observer);
+};
 
 /**
  * Similar to nsIRDFObserver for history. Note that we don't pass the data
