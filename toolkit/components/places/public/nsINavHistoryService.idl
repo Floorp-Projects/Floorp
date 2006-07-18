@@ -55,7 +55,8 @@ interface nsINavHistoryResultNode : nsISupports
   const PRUint32 RESULT_TYPE_VISIT = 1;
   const PRUint32 RESULT_TYPE_HOST = 2;
   const PRUint32 RESULT_TYPE_DAY = 3;
-  readonly attribute PRUInt32 type;
+  const PRUint32 RESULT_TYPE_FOLDER = 4;
+  readonly attribute PRUint32 type;
 
   /**
    * URL of the web page in question. Empty for all other types, including
@@ -305,6 +306,101 @@ interface nsINavHistoryQuery : nsISupports
   readonly attribute boolean hasDomain;
 };
 
+/**
+ * This object represents the global options for executing a query.
+ */
+[scriptable, uuid(25fd4de4-33b0-475e-a63d-2bcb1d123e0d)]
+interface nsINavHistoryQueryOptions : nsISupports
+{
+  /**
+   * Grouping by day. The results will be an array of nsINavHistoryResults with
+   * type = RESULT_TYPE_DAY, one for each day where there are results. These
+   * will have children of corresponding to the search results of that day.
+   */
+  const PRInt32 GROUP_BY_DAY = 0;
+
+  /**
+   * Groping by exact host. The results will be an array of nsINavHistoryResults
+   * with type = RESULT_TYPE_HOST, one for each unique host (for example,
+   * "bugzilla.mozilla.org" and "www.mozilla.org" will be separate). The
+   * children of these will correspond to the results for each host.
+   */
+  const PRInt32 GROUP_BY_HOST = 1;
+
+  /**
+   * Grouping by toplevel domain. Similar to GROUP_BY_HOST, but there will be
+   * one result for each toplevel domain (mozilla.org will be one entry, and
+   * will contain results including, for example, "bugzilla.mozilla.org" and
+   * "www.mozilla.org").
+   */
+  const PRInt32 GROUP_BY_DOMAIN = 2;
+
+  /**
+   * Group by bookmark folder.
+   * This should only be used for queries which have onlyBookmarked set.
+   */
+  const PRInt32 GROUP_BY_FOLDER = 3;
+
+  /**
+   * You can ask for the results to be pre-sorted. Since the DB has indices
+   * of many items, it can produce sorted results almost for free. These should
+   * be self-explanatory.
+   *
+   * Note: re-sorting is slower, as is sorting by title or when you have a
+   * host name.
+   */
+  const PRInt32 SORT_BY_NONE = 0;
+  const PRInt32 SORT_BY_TITLE_ASCENDING = 1;
+  const PRInt32 SORT_BY_TITLE_DESCENDING = 2;
+  const PRInt32 SORT_BY_DATE_ASCENDING = 3;
+  const PRInt32 SORT_BY_DATE_DESCENDING = 4;
+  const PRInt32 SORT_BY_URL_ASCENDING = 5;
+  const PRInt32 SORT_BY_URL_DESCENDING = 6;
+  const PRInt32 SORT_BY_VISITCOUNT_ASCENDING = 7;
+  const PRInt32 SORT_BY_VISITCOUNT_DESCENDING = 8;
+
+  /**
+   * "URL" results, one for each URL visited in the range.
+   */
+  const PRInt32 RESULT_TYPE_URL = 0;
+
+  /**
+   * "Visit" results, with one for each time a page was visited
+   * (this will often give you multiple results for one URL).
+   */
+  const PRInt32 RESULT_TYPE_VISIT = 1;
+
+  /**
+   * Set the grouping mode to be used for this query.
+   * Grouping mode is an array of GROUP_BY_* values that specifies the structure
+   * of the tree you want. For example, an array consisting of
+   * [GROUP_BY_DAY, GROUP_BY_DOMAIN] will give you a tree whose first level is
+   * a list of days, and whose second level is a list of domains, and whose
+   * third level is a list of pages in those domains. If you don't want a tree,
+   * you can specify an empty array.
+   */
+  void setGroupingMode([const,array,size_is(groupCount)] in PRInt32 groupingMode,
+                       in PRUint32 groupCount);
+
+  /**
+   * Set the sorting mode to be used for this query.
+   * mode is one of SORT_BY_*
+   */
+  void setSortingMode(in PRInt32 mode);
+
+  /**
+   * Sets the result type. One of RESULT_TYPE_*.
+   */
+  void setResultType(in PRInt32 type);
+
+  /**
+   * When set, allows items with "place:" URIs to appear as containers,
+   * with the container's contents filled in from the stored query.
+   * If not set, these will appear as normal items.
+   */
+  void setExpandPlaces(in boolean expand);
+};
+
 [scriptable, uuid(C51F54CB-5E89-4B20-A37C-1343888935B7)]
 interface nsINavHistory : nsISupports
 {
@@ -326,73 +422,22 @@ interface nsINavHistory : nsISupports
   boolean canAddURI(in nsIURI aURI);
 
   /**
-   * Grouping by day. The results will be an array of nsINavHistoryResults with
-   * type = RESULT_TYPE_DAY, one for each day where there are results. These
-   * will have children of corresponding to the search results of that day.
-   */
-  const PRUint32 GROUP_BY_DAY = 0;
-
-  /**
-   * Groping by exact host. The results will be an array of nsINavHistoryResults
-   * with type = RESULT_TYPE_HOST, one for each unique host (for example,
-   * "bugzilla.mozilla.org" and "www.mozilla.org" will be separate). The
-   * children of these will correspond to the results for each host.
-   */
-  const PRUint32 GROUP_BY_HOST = 1;
-
-  /**
-   * Grouping by toplevel domain. Similar to GROUP_BY_HOST, but there will be
-   * one result for each toplevel domain (mozilla.org will be one entry, and
-   * will contain results including, for example, "bugzilla.mozilla.org" and
-   * "www.mozilla.org").
-   */
-  const PRUint32 GROUP_BY_DOMAIN = 2;
-
-
-  /**
-   * You can ask for the results to be pre-sorted. Since the DB has indices
-   * of many items, it can produce sorted results almost for free. These should
-   * be self-explanatory.
-   *
-   * Note: re-sorting is slower, as is sorting by title or when you have a
-   * host name.
-   */
-  const PRUint32 SORT_BY_NONE = 0;
-  const PRUint32 SORT_BY_TITLE_ASCENDING = 1;
-  const PRUint32 SORT_BY_TITLE_DESCENDING = 2;
-  const PRUint32 SORT_BY_DATE_ASCENDING = 3;
-  const PRUint32 SORT_BY_DATE_DESCENDING = 4;
-  const PRUint32 SORT_BY_URL_ASCENDING = 5;
-  const PRUint32 SORT_BY_URL_DESCENDING = 6;
-  const PRUint32 SORT_BY_VISITCOUNT_ASCENDING = 7;
-  const PRUint32 SORT_BY_VISITCOUNT_DESCENDING = 8;
-
-  /**
    * This returns a new query object that you can pass to executeQuer[y/ies].
    * It will be initialized to all empty (so using it will give you all history).
    */
   nsINavHistoryQuery getNewQuery();
 
   /**
+   * This returns a new options object that you can pass to executeQuer[y/ies]
+   * after setting the desired options.
+   */
+  nsINavHistoryQueryOptions getNewQueryOptions();
+
+  /**
    * Executes a single query.
-   *
-   * sortingMode is one of SORT_BY_*
-   *
-   * Grouping mode is an array of GROUP_BY_* values that specifies the structure
-   * of the tree you want. For example, an array consisting of
-   * [GROUP_BY_DAY, GROUP_BY_DOMAIN] will give you a tree whose first level is
-   * a list of days, and whose second level is a list of domains, and whose
-   * third level is a list of pages in those domains. If you don't want a tree,
-   * you can specify an empty array.
-   *
-   * asVisits is what to return for the pages. If false, this will return "URL"
-   * results, one for each URL visited in the range. If true, this will return
-   * "visit" results, with one for each time a page was visited (this will
-   * often give you multiple results for one URL).
    */
   nsINavHistoryResult executeQuery(in nsINavHistoryQuery aQuery,
-    [const,array,size_is(aGroupCount)] in PRInt32 aGroupingMode, in PRUint32 aGroupCount,
-    in PRInt32 aSortingMode, in PRBool aAsVisits);
+                                   in nsINavHistoryQueryOptions options);
 
   /**
    * Executes an array of queries. All of the query objects are ORed
@@ -401,8 +446,7 @@ interface nsINavHistory : nsISupports
    */
   nsINavHistoryResult executeQueries(
     [const,array,size_is(aQueryCount)] in nsINavHistoryQuery aQueries, in PRUint32 aQueryCount,
-    [const,array,size_is(aGroupCount)] in PRInt32 aGroupingMode, in PRUint32 aGroupCount,
-    in PRInt32 aSortingMode, in PRBool aAsVisits);
+    in nsINavHistoryQueryOptions options);
 
   /**
    * Adds a history observer. The history service will keep an owning
