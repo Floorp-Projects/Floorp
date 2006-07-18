@@ -1012,7 +1012,7 @@ nsGenericDOMDataNode::SetText(const PRUnichar* aBuffer,
   }
 
   // Trigger a reflow
-  if (aNotify && document) {
+  if (aNotify) {
     nsNodeUtils::CharacterDataChanged(this, PR_FALSE);
   }
 }
