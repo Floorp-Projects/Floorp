@@ -230,7 +230,9 @@ interface nsINavHistoryContainerResultNode : nsINavHistoryResultNode
    * (adding or removing children, or reordering children), or true if
    * the UI should not allow the list of children to be modified.
    * This is false for bookmark folder nodes unless setFolderReadOnly() has
-   * been called to override it, and true for non-folder nodes.
+   * been called to override it, and true for non-folder nodes. If this
+   * container is a remote container this flag may be redefined by the
+   * remote container provider.
    */
   readonly attribute boolean childrenReadOnly;
 
