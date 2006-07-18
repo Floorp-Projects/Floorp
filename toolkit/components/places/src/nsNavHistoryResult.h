@@ -280,6 +280,9 @@ public:
   PRInt32 mVisibleIndex;
 };
 
+#ifndef MOZILLA_1_8_BRANCH
+NS_DEFINE_STATIC_IID_ACCESSOR(nsNavHistoryResultNode, NS_NAVHISTORYRESULTNODE_IID)
+#endif
 
 // nsNavHistoryVisitResultNode
 
