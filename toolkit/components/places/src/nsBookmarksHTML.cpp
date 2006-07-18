@@ -115,8 +115,8 @@ static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 #define KEY_ICON_LOWER "icon"
 #define KEY_SHORTCUTURL_LOWER "shortcuturl"
 
-#define BOOKMARKS_MENU_ICON_URI "chrome://browser/skin/places/bookmarks_menu.png"
-#define BOOKMARKS_TOOLBAR_ICON_URI "chrome://browser/skin/places/bookmarks_toolbar.png"
+#define BOOKMARKS_MENU_ICON_URI "chrome://browser/skin/places/bookmarksMenu.png"
+#define BOOKMARKS_TOOLBAR_ICON_URI "chrome://browser/skin/places/bookmarksToolbar.png"
 
 static const char kWhitespace[] = " \r\n\t\b";
 
