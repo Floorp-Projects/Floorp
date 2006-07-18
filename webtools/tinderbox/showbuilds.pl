@@ -88,7 +88,7 @@ sub show_tree_selector {
 
     print "<P><TABLE WIDTH=\"100%\">";
     print "<TR><TD ALIGN=CENTER><a href=admintree.cgi>";
-    print "Administer</a> one of the following trees:</TD></TR>";
+    print "Create a new tree</a> or administer one of the following trees:</TD></TR>";
     print "<TR><TD ALIGN=CENTER>\n";
     print " <TABLE><TR><TD><UL>\n";
 

@@ -163,7 +163,7 @@ Tinderbox is configured to show up to $who_days days of log history. Currently, 
 </FORM>
 <hr>
 "   ;
-}
+} else {
 
 #
 # Create a new tinderbox page.
@@ -262,7 +262,7 @@ print "
 </FORM>
 <hr>
 ";
-
+}
 
 #
 # Toggle scraping for builds.
