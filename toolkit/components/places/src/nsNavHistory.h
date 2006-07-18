@@ -80,7 +80,7 @@
 //#define IN_MEMORY_LINKS
 
 // define to enable lazy link adding
-#define LAZY_ADD
+//#define LAZY_ADD
 
 #define QUERYUPDATE_TIME 0
 #define QUERYUPDATE_SIMPLE 1
