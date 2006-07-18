@@ -196,6 +196,9 @@ const PRInt32 nsNavHistory::kAutoCompleteIndex_Typed = 3;
 static nsDataHashtable<nsStringHashKey, int>* gTldTypes;
 static const char* gQuitApplicationMessage = "quit-application";
 
+nsIAtom* nsNavHistory::sMenuRootAtom = nsnull;
+nsIAtom* nsNavHistory::sToolbarRootAtom = nsnull;
+
 nsNavHistory* nsNavHistory::gHistoryService;
 
 
@@ -207,6 +210,9 @@ nsNavHistory::nsNavHistory() : mNowValid(PR_FALSE),
 {
   NS_ASSERTION(! gHistoryService, "YOU ARE CREATING 2 COPIES OF THE HISTORY SERVICE. Everything will break.");
   gHistoryService = this;
+
+  sMenuRootAtom = NS_NewAtom("menu-root");
+  sToolbarRootAtom = NS_NewAtom("toolbar-root");
 }
 
 
@@ -222,6 +228,9 @@ nsNavHistory::~nsNavHistory()
   // in case somebody creates an extra instance of the service.
   NS_ASSERTION(gHistoryService == this, "YOU CREATED 2 COPIES OF THE HISTORY SERVICE.");
   gHistoryService = nsnull;
+
+  NS_IF_RELEASE(sMenuRootAtom);
+  NS_IF_RELEASE(sToolbarRootAtom);
 }
 
 
