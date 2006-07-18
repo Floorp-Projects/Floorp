@@ -88,7 +88,7 @@ nsNavBookmarks::Init()
 
   nsNavHistory *history = History();
   NS_ENSURE_TRUE(history, NS_ERROR_UNEXPECTED);
-  history->AddObserver(this); // allows us to notify on title changes
+  history->AddObserver(this, PR_FALSE); // allows us to notify on title changes
   mozIStorageConnection *dbConn = DBConn();
   mozStorageTransaction transaction(dbConn, PR_FALSE);
 
@@ -354,13 +354,16 @@ nsNavBookmarks::AdjustIndices(PRInt64 aFolder,
   // If we have any observers that want all details, we'll need to notify them
   // about the renumbering.
   nsCOMArray<nsINavBookmarkObserver> detailObservers;
-  PRInt32 i;
-  for (i = 0; i < mObservers.Count(); ++i) {
-    PRBool wantDetails;
-    rv = mObservers[i]->GetWantAllDetails(&wantDetails);
-    if (NS_SUCCEEDED(rv) && wantDetails) {
-      if (!detailObservers.AppendObject(mObservers[i])) {
-        return NS_ERROR_OUT_OF_MEMORY;
+  PRUint32 i;
+  for (i = 0; i < mObservers.Length(); ++i) {
+    const nsCOMPtr<nsINavBookmarkObserver> &obs = mObservers[i];
+    if (obs) {
+      PRBool wantDetails;
+      rv = obs->GetWantAllDetails(&wantDetails);
+      if (NS_SUCCEEDED(rv) && wantDetails) {
+        if (!detailObservers.AppendObject(nsCOMPtr<nsINavBookmarkObserver>(mObservers[i]))) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
       }
     }
   }
@@ -411,16 +414,16 @@ nsNavBookmarks::AdjustIndices(PRInt64 aFolder,
 
   UpdateBatcher batch;
 
-  for (i = 0; i < detailObservers.Count(); ++i) {
-    for (PRInt32 j = 0; j < items->Count(); ++j) {
-      RenumberItem *item = NS_STATIC_CAST(RenumberItem*, (*items)[j]);
+  for (PRInt32 j = 0; j < detailObservers.Count(); ++j) {
+    for (PRInt32 k = 0; k < items->Count(); ++k) {
+      RenumberItem *item = NS_STATIC_CAST(RenumberItem*, (*items)[k]);
       PRInt32 newPosition = item->position;
       PRInt32 oldPosition = newPosition - aDelta;
       if (item->itemURI) {
         nsIURI *uri = item->itemURI;
-        detailObservers[i]->OnItemMoved(uri, aFolder, oldPosition, newPosition);
+        detailObservers[j]->OnItemMoved(uri, aFolder, oldPosition, newPosition);
       } else {
-        detailObservers[i]->OnFolderMoved(item->folderChild,
+        detailObservers[j]->OnFolderMoved(item->folderChild,
                                           aFolder, oldPosition,
                                           aFolder, newPosition);
       }
@@ -481,9 +484,8 @@ nsNavBookmarks::InsertItem(PRInt64 aFolder, nsIURI *aItem, PRInt32 aIndex)
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  for (PRInt32 i = 0; i < mObservers.Count(); ++i) {
-    mObservers[i]->OnItemAdded(aItem, aFolder, index);
-  }
+  ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
+                      OnItemAdded(aItem, aFolder, index))
 
   return NS_OK;
 }
@@ -538,9 +540,8 @@ nsNavBookmarks::RemoveItem(PRInt64 aFolder, nsIURI *aItem)
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  for (PRInt32 i = 0; i < mObservers.Count(); ++i) {
-    mObservers[i]->OnItemRemoved(aItem, aFolder, childIndex);
-  }
+  ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
+                      OnItemRemoved(aItem, aFolder, childIndex))
 
   return NS_OK;
 }
@@ -579,9 +580,8 @@ nsNavBookmarks::ReplaceItem(PRInt64 aFolder, nsIURI *aItem, nsIURI *aNewItem)
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  for (PRInt32 i = 0; i < mObservers.Count(); ++i) {
-    mObservers[i]->OnItemReplaced(aFolder, aItem, aNewItem);
-  }
+  ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
+                      OnItemReplaced(aFolder, aItem, aNewItem))
 
   return NS_OK;
 }
@@ -629,9 +629,8 @@ nsNavBookmarks::CreateFolder(PRInt64 aParent, const nsAString &aName,
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  for (PRInt32 i = 0; i < mObservers.Count(); ++i) {
-    mObservers[i]->OnFolderAdded(child, aParent, index);
-  }
+  ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
+                      OnFolderAdded(child, aParent, index))
 
   *aNewFolder = child;
   return NS_OK;
@@ -709,9 +708,8 @@ nsNavBookmarks::RemoveFolder(PRInt64 aFolder)
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  for (PRInt32 j = 0; j < mObservers.Count(); ++j) {
-    mObservers[j]->OnFolderRemoved(aFolder, parent, index);
-  }
+  ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
+                      OnFolderRemoved(aFolder, parent, index))
 
   return NS_OK;
 }
@@ -799,10 +797,9 @@ nsNavBookmarks::MoveFolder(PRInt64 aFolder, PRInt64 aNewParent, PRInt32 aIndex)
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  for (PRInt32 i = 0; i < mObservers.Count(); ++i) {
-    mObservers[i]->OnFolderMoved(aFolder, parent, oldIndex,
-                                 aNewParent, newIndex);
-  }
+  ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
+                      OnFolderMoved(aFolder, parent, oldIndex,
+                                    aNewParent, newIndex))
 
   return NS_OK;
 }
@@ -880,9 +877,8 @@ nsNavBookmarks::SetFolderTitle(PRInt64 aFolder, const nsAString &aTitle)
   rv = statement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  for (PRInt32 i = 0; i < mObservers.Count(); ++i) {
-    mObservers[i]->OnFolderChanged(aFolder, NS_LITERAL_CSTRING("title"));
-  }
+  ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
+                      OnFolderChanged(aFolder, NS_LITERAL_CSTRING("title")))
 
   return NS_OK;
 }
@@ -1111,9 +1107,8 @@ NS_IMETHODIMP
 nsNavBookmarks::BeginUpdateBatch()
 {
   if (mBatchLevel++ == 0) {
-    for (PRInt32 i = 0; i < mObservers.Count(); ++i) {
-      mObservers[i]->OnBeginUpdateBatch();
-    }
+    ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
+                        OnBeginUpdateBatch())
   }
   return NS_OK;
 }
@@ -1122,25 +1117,23 @@ NS_IMETHODIMP
 nsNavBookmarks::EndUpdateBatch()
 {
   if (--mBatchLevel == 0) {
-    for (PRInt32 i = 0; i < mObservers.Count(); ++i) {
-      mObservers[i]->OnEndUpdateBatch();
-    }
+    ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
+                        OnEndUpdateBatch())
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNavBookmarks::AddObserver(nsINavBookmarkObserver *aObserver)
+nsNavBookmarks::AddObserver(nsINavBookmarkObserver *aObserver,
+                            PRBool aOwnsWeak)
 {
-  NS_ENSURE_TRUE(mObservers.AppendObject(aObserver), NS_ERROR_OUT_OF_MEMORY);
-  return NS_OK;
+  return mObservers.AppendWeakElement(aObserver, aOwnsWeak);
 }
 
 NS_IMETHODIMP
 nsNavBookmarks::RemoveObserver(nsINavBookmarkObserver *aObserver)
 {
-  mObservers.RemoveObject(aObserver);
-  return NS_OK;
+  return mObservers.RemoveWeakElement(aObserver);
 }
 
 // nsNavBookmarks::nsINavHistoryObserver
@@ -1173,9 +1166,8 @@ nsNavBookmarks::OnAddURI(nsIURI *aURI, PRTime aTime)
   PRBool bookmarked;
   IsBookmarked(aURI, &bookmarked);
   if (bookmarked) {
-    for (PRInt32 i = 0; i < mObservers.Count(); ++i) {
-      mObservers[i]->OnItemChanged(aURI, NS_LITERAL_CSTRING("time"));
-    }
+    ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
+                        OnItemChanged(aURI, NS_LITERAL_CSTRING("time")))
   }
   return NS_OK;
 }
@@ -1187,9 +1179,8 @@ nsNavBookmarks::OnDeleteURI(nsIURI *aURI)
   PRBool bookmarked;
   IsBookmarked(aURI, &bookmarked);
   if (bookmarked) {
-    for (PRInt32 i = 0; i < mObservers.Count(); ++i) {
-      mObservers[i]->OnItemChanged(aURI, NS_LITERAL_CSTRING("time"));
-    }
+    ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
+                        OnItemChanged(aURI, NS_LITERAL_CSTRING("time")))
   }
   return NS_OK;
 }
@@ -1206,9 +1197,8 @@ nsNavBookmarks::OnPageChanged(nsIURI *aURI, PRUint32 aWhat,
                               const nsAString &aValue)
 {
   if (aWhat == ATTRIBUTE_TITLE) {
-    for (PRInt32 i = 0; i < mObservers.Count(); ++i) {
-      mObservers[i]->OnItemChanged(aURI, NS_LITERAL_CSTRING("title"));
-    }
+    ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
+                        OnItemChanged(aURI, NS_LITERAL_CSTRING("title")))
   }
 
   return NS_OK;
