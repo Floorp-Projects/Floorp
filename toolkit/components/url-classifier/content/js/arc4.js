@@ -87,7 +87,11 @@ ARC4.prototype.setKey = function(key, opt_length) {
  * @param {int} n is # of bytes to disregard from stream
  */
 ARC4.prototype.discard = function(n) {
-  var devnul = new Array(n);
+  // To avoid strict JS warnings, we fill the array with values.
+  var devnul = [];
+  for (var i = 0; i < n; i++) {
+    devnul[i] = 0;
+  }
   this.crypt(devnul);
 }
 

@@ -95,6 +95,24 @@ PROT_DataProvider.prototype.loadDataProviderPrefs_ = function() {
   this.reportGenericURL_ = this.prefs_.getPref(basePref + "reportGenericURL", "");
   this.reportErrorURL_ = this.prefs_.getPref(basePref + "reportErrorURL", "");
   this.reportPhishURL_ = this.prefs_.getPref(basePref + "reportPhishURL", "");
+
+  // Propogate the changes to the list-manager.
+  this.updateListManager_();
+}
+
+/**
+ * The list manager needs urls to operate.  It needs a url to know where the
+ * table updates are, and it needs a url for decrypting enchash style tables.
+ */
+PROT_DataProvider.prototype.updateListManager_ = function() {
+  var listManager = Cc["@mozilla.org/url-classifier/listmanager;1"]
+                      .getService(Ci.nsIUrlListManager);
+
+  // If we add support for changing local data providers, we need to add a
+  // pref observer that sets the update url accordingly.
+  listManager.setUpdateUrl(this.getUpdateURL());
+
+  listManager.setKeyUrl(this.getKeyURL());
 }
 
 //////////////////////////////////////////////////////////////////////////////

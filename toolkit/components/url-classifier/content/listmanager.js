@@ -160,6 +160,18 @@ PROT_ListManager.prototype.setUpdateUrl = function(url) {
 }
 
 /**
+ * Set the crypto key url.
+ * @param url String
+ */
+PROT_ListManager.prototype.setKeyUrl = function(url) {
+  G_Debug(this, "Set key url: " + url);
+  if (!this.urlCrypto_)
+    this.urlCrypto_ = new PROT_UrlCrypto();
+  
+  this.urlCrypto_.manager_.setKeyUrl(url);
+}
+
+/**
  * Register a new table table
  * @param tableName - the name of the table
  * @param opt_requireMac true if a mac is required on update, false otherwise

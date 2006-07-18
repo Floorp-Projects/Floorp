@@ -55,10 +55,7 @@
 function G_CryptoHasher() {
   this.debugZone = "cryptohasher";
   this.decoder_ = new G_Base64();
-  this.hasher_ = Cc["@mozilla.org/security/hash;1"]
-                 .createInstance(Ci.nsICryptoHash);
-
-  this.initialized_ = false;
+  this.hasher_ = null;
 }
 
 G_CryptoHasher.algorithms = {
@@ -86,7 +83,8 @@ G_CryptoHasher.prototype.init = function(algorithm) {
   if (!validAlgorithm)
     throw new Error("Invalid algorithm: " + algorithm);
 
-  this.initialized_ = true;
+  this.hasher_ = Cc["@mozilla.org/security/hash;1"]
+                 .createInstance(Ci.nsICryptoHash);
   this.hasher_.init(algorithm);
 }
 
@@ -100,7 +98,7 @@ G_CryptoHasher.prototype.init = function(algorithm) {
  * @param input String containing data to hash.
  */ 
 G_CryptoHasher.prototype.updateFromString = function(input) {
-  if (!this.initialized_)
+  if (!this.hasher_)
     throw new Error("You must initialize the hasher first!");
 
   this.hasher_.update(this.decoder_.arrayifyString(input), input.length);
@@ -113,7 +111,7 @@ G_CryptoHasher.prototype.updateFromString = function(input) {
  * @param input Array containing data to hash.
  */ 
 G_CryptoHasher.prototype.updateFromArray = function(input) {
-  if (!this.initialized_)
+  if (!this.hasher_)
     throw new Error("You must initialize the hasher first!");
 
   this.hasher_.update(input, input.length);
@@ -124,7 +122,7 @@ G_CryptoHasher.prototype.updateFromArray = function(input) {
  * called multiple times from incremental hash updates.
  */
 G_CryptoHasher.prototype.updateFromStream = function(stream) {
-  if (!this.initialized_)
+  if (!this.hasher_)
     throw new Error("You must initialize the hasher first!");
 
   this.hasher_.updateFromStream(stream, stream.available());
@@ -134,14 +132,18 @@ G_CryptoHasher.prototype.updateFromStream = function(stream) {
  * @returns The hash value as a string (sequence of 8-bit values)
  */ 
 G_CryptoHasher.prototype.digestRaw = function() {
-  return this.hasher_.finish(false /* not b64 encoded */);
+  var digest = this.hasher_.finish(false /* not b64 encoded */);
+  this.hasher_ = null;
+  return digest;
 }
 
 /**
  * @returns The hash value as a base64-encoded string
  */ 
 G_CryptoHasher.prototype.digestBase64 = function() {
-  return this.hasher_.finish(true /* b64 encoded */);
+  var digest = this.hasher_.finish(true /* b64 encoded */);
+  this.hasher_ = null;
+  return digest;
 }
 
 /**
