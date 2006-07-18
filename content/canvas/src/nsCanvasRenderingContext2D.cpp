@@ -1836,8 +1836,9 @@ nsCanvasRenderingContext2D::SetGlobalCompositeOperation(const nsAString& op)
     else CANVAS_OP_TO_CAIRO_OP("source-atop", ATOP)
     else CANVAS_OP_TO_CAIRO_OP("source-in", IN)
     else CANVAS_OP_TO_CAIRO_OP("source-out", OUT)
-    else CANVAS_OP_TO_CAIRO_OP("source-over", SOURCE)
+    else CANVAS_OP_TO_CAIRO_OP("source-over", OVER)
     else CANVAS_OP_TO_CAIRO_OP("xor", XOR)
+    // not part of spec, kept here for compat
     else CANVAS_OP_TO_CAIRO_OP("over", OVER)
     else return NS_ERROR_NOT_IMPLEMENTED;
 
@@ -1868,9 +1869,8 @@ nsCanvasRenderingContext2D::GetGlobalCompositeOperation(nsAString& op)
     else CANVAS_OP_TO_CAIRO_OP("source-atop", ATOP)
     else CANVAS_OP_TO_CAIRO_OP("source-in", IN)
     else CANVAS_OP_TO_CAIRO_OP("source-out", OUT)
-    else CANVAS_OP_TO_CAIRO_OP("source-over", SOURCE)
+    else CANVAS_OP_TO_CAIRO_OP("source-over", OVER)
     else CANVAS_OP_TO_CAIRO_OP("xor", XOR)
-    else CANVAS_OP_TO_CAIRO_OP("over", OVER)
     else return NS_ERROR_FAILURE;
 
 #undef CANVAS_OP_TO_CAIRO_OP
@@ -2846,6 +2846,10 @@ nsCanvasRenderingContext2D::GetImageData()
     JSObject *dataArray = JS_NewArrayObject(ctx, w*h*4, jsvector.get());
     if (!dataArray)
         return NS_ERROR_OUT_OF_MEMORY;
+
+    nsAutoGCRoot autoGCRoot(&dataArray, &rv);
+    if (NS_FAILED(rv))
+        return rv;
 
     JSObject *result = JS_NewObject(ctx, NULL, NULL, NULL);
     if (!result)
