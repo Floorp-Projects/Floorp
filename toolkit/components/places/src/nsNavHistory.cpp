@@ -322,6 +322,10 @@ nsNavHistory::Init()
   NS_ENSURE_TRUE(mRecentBookmark.Init(128), NS_ERROR_OUT_OF_MEMORY);
   NS_ENSURE_TRUE(mRecentRedirects.Init(128), NS_ERROR_OUT_OF_MEMORY);
 
+  rv = CreateLookupIndexes();
+  if (NS_FAILED(rv))
+    return rv;
+
   // The AddObserver calls must be the last lines in this function, because
   // this function may fail, and thus, this object would be not completely
   // initialized), but the observerservice would still keep a reference to us
@@ -351,7 +355,10 @@ nsNavHistory::Init()
     }
   }
 
-  return CreateLookupIndexes();
+  // Don't add code that can fail here! Do it up above, before we add our
+  // observers.
+
+  return NS_OK;
 }
 
 
@@ -3788,4 +3795,23 @@ nsresult BindStatementURI(mozIStorageStatement* statement, PRInt32 index,
   rv = statement->BindUTF8StringParameter(index, utf8URISpec);
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
+}
+
+NS_METHOD
+nsNavHistory::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+  NS_ENSURE_NO_AGGREGATION(aOuter);
+
+  if (gHistoryService)
+    return gHistoryService->QueryInterface(aIID, aResult);
+
+  nsRefPtr<nsNavHistory> serv(new nsNavHistory());
+  if (!serv)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsresult rv = serv->Init();
+  if (NS_FAILED(rv))
+    return rv;
+
+  return serv->QueryInterface(aIID, aResult);
 }
