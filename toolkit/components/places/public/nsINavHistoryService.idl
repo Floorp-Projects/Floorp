@@ -248,12 +248,6 @@ interface nsINavHistoryResult : nsINavHistoryResultNode
   void recursiveSort(in PRUint32 aSortingMode);
 
   /**
-   * Controls whether the day appears when time columns are requested
-   * through the tree interface. True is the default, meaning the date is shown
-   */
-  attribute boolean timesIncludeDates;
-
-  /**
    * Controls whether duplicate adjacent elements are collapsed into a single
    * item in the tree. This prevents you from seeing multiple entries for
    * things when you have selected to get visits. When you sort by date, the
