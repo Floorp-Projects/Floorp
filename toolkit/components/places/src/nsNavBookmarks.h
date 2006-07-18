@@ -71,6 +71,11 @@ private:
 
   ~nsNavBookmarks();
 
+  nsresult InitRoots();
+  nsresult CreateRoot(mozIStorageStatement* aGetRootStatement,
+                      const nsCString& name, PRInt64* aID,
+                      PRBool* aWasCreated);
+
   nsresult AdjustIndices(PRInt64 aFolder,
                          PRInt32 aStartIndex, PRInt32 aEndIndex,
                          PRInt32 aDelta);
@@ -80,6 +85,7 @@ private:
                                nsNavHistoryResultNode **aNode);
   PRInt32 FolderCount(PRInt64 aFolder);
 
+  // remove me when there is better query initialization
   nsNavHistory* History() { return nsNavHistory::GetHistoryService(); }
 
   mozIStorageStatement* DBGetURLPageInfo()
@@ -113,4 +119,8 @@ private:
   nsCOMPtr<mozIStorageStatement> mDBFolderCount;
 
   nsCOMPtr<nsIStringBundle> mBundle;
+
+  // in nsBookmarksHTML
+  nsresult ImportBookmarksHTMLInternal(nsIURI* aURL,
+                                       PRBool aAllowRootChanges);
 };
