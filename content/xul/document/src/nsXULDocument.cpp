@@ -3282,6 +3282,8 @@ nsXULDocument::ExecuteScript(nsIScriptContext * aContext, void * aScriptObject)
     if (! aScriptObject || ! aContext)
         return NS_ERROR_NULL_POINTER;
 
+    NS_ENSURE_TRUE(mScriptGlobalObject, NS_ERROR_NOT_INITIALIZED);
+
     // Execute the precompiled script with the given version
     nsresult rv;
     void *global = mScriptGlobalObject->GetScriptGlobal(
@@ -3298,6 +3300,7 @@ nsXULDocument::ExecuteScript(nsXULPrototypeScript *aScript)
 {
     NS_PRECONDITION(aScript != nsnull, "null ptr");
     NS_ENSURE_TRUE(aScript, NS_ERROR_NULL_POINTER);
+    NS_ENSURE_TRUE(mScriptGlobalObject, NS_ERROR_NOT_INITIALIZED);
     PRUint32 stid = aScript->mScriptObject.getScriptTypeID();
 
     nsresult rv;
