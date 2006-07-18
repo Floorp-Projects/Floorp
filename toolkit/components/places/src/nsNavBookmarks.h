@@ -56,6 +56,9 @@ public:
   nsNavBookmarks();
   nsresult Init();
 
+  // called by nsNavHistory::Init
+  static nsresult InitTables(mozIStorageConnection* aDBConn);
+
   static nsNavBookmarks* GetBookmarksService() {
     if (!sInstance) {
       nsresult rv;
