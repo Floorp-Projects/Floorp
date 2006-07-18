@@ -291,7 +291,8 @@ protected:
    * @param aCancelSubmit out param where submit observers can specify that the
    *        submit should be cancelled.
    */
-  nsresult NotifySubmitObservers(nsIURI* aActionURL, PRBool* aCancelSubmit);
+  nsresult NotifySubmitObservers(nsIURI* aActionURL, PRBool* aCancelSubmit,
+                                 PRBool aEarlyNotify);
 
   /**
    * Just like GetElementCount(), but doesn't flush
@@ -571,7 +572,11 @@ nsHTMLFormElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       // the second argument is not playing a role at all.
       FlushPendingSubmission();
     }
+    // Don't forget we've notified the password manager already if the
+    // page sets the action/target in the during submit. (bug 343182)
+    PRBool notifiedObservers = mNotifiedObservers;
     ForgetCurrentSubmission();
+    mNotifiedObservers = notifiedObservers;
   }
   return nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
                                        aNotify);
@@ -960,9 +965,18 @@ nsHTMLFormElement::SubmitSubmission(nsIFormSubmission* aFormSubmission)
   if (mNotifiedObservers) {
     cancelSubmit = mNotifiedObserversResult;
   } else {
-    rv = NotifySubmitObservers(actionURI, &cancelSubmit);
+    rv = NotifySubmitObservers(actionURI, &cancelSubmit, PR_TRUE);
     NS_ENSURE_SUBMIT_SUCCESS(rv);
   }
+
+  if (cancelSubmit) {
+    mIsSubmitting = PR_FALSE;
+    return NS_OK;
+  }
+
+  cancelSubmit = PR_FALSE;
+  rv = NotifySubmitObservers(actionURI, &cancelSubmit, PR_FALSE);
+  NS_ENSURE_SUBMIT_SUCCESS(rv);
 
   if (cancelSubmit) {
     mIsSubmitting = PR_FALSE;
@@ -1010,7 +1024,8 @@ nsHTMLFormElement::SubmitSubmission(nsIFormSubmission* aFormSubmission)
 
 nsresult
 nsHTMLFormElement::NotifySubmitObservers(nsIURI* aActionURL,
-                                         PRBool* aCancelSubmit)
+                                         PRBool* aCancelSubmit,
+                                         PRBool  aEarlyNotify)
 {
   // If this is the first form, bring alive the first form submit
   // category observers
@@ -1028,7 +1043,9 @@ nsHTMLFormElement::NotifySubmitObservers(nsIURI* aActionURL,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsISimpleEnumerator> theEnum;
-  rv = service->EnumerateObservers(NS_FORMSUBMIT_SUBJECT,
+  rv = service->EnumerateObservers(aEarlyNotify ?
+                                   NS_EARLYFORMSUBMIT_SUBJECT :
+                                   NS_FORMSUBMIT_SUBJECT,
                                    getter_AddRefs(theEnum));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1323,7 +1340,7 @@ nsHTMLFormElement::OnSubmitClickBegin()
   // Notify observers of submit
   //
   PRBool cancelSubmit = PR_FALSE;
-  rv = NotifySubmitObservers(actionURI, &cancelSubmit);
+  rv = NotifySubmitObservers(actionURI, &cancelSubmit, PR_TRUE);
   if (NS_SUCCEEDED(rv)) {
     mNotifiedObservers = PR_TRUE;
     mNotifiedObserversResult = cancelSubmit;
