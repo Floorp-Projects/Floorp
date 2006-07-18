@@ -487,6 +487,9 @@ nsLivemarkService::SetFeedURI(PRInt64 aContainer, nsIURI *aFeedURI)
   return NS_OK;
 }
 
+#if 0
+// These two container API functions are not currently in the remote container
+// service because they are untested. We do not need them here.
 NS_IMETHODIMP
 nsLivemarkService::OnContainerOpening(
     nsINavHistoryContainerResultNode* container,
@@ -504,6 +507,7 @@ nsLivemarkService::OnContainerClosed(nsINavHistoryContainerResultNode* container
   // Nothing to clean up
   return NS_OK;
 }
+#endif
 
 
 NS_IMETHODIMP
