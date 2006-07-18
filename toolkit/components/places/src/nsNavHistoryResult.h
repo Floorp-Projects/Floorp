@@ -286,7 +286,6 @@ private:
   nsCOMPtr<nsILocale> mLocale;
   nsCOMPtr<nsICollation> mCollation;
   nsCOMPtr<nsIDateTimeFormat> mDateFormatter;
-  PRBool mTimesIncludeDates;
 
   // this is the flattened version of the hierarchy containing everything
   nsVoidArray mAllElements;
@@ -344,6 +343,8 @@ private:
       nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure);
   PR_STATIC_CALLBACK(int) SortComparison_VisitCountGreater(
       nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure);
+
+  nsresult FormatFriendlyTime(PRTime aTime, nsAString& aResult);
 };
 
 #endif // nsNavHistoryResult_h_
