@@ -1,0 +1,46 @@
+Firefox Survey Readme
+
+
+Description
+-----------
+This is a small application that accepts a name and email address after
+captcha verification, and emails the entered address with a link.  It's
+a pretty specific app for the Firefox Survey.
+
+
+Requirements
+------------
+- Cake libraries installed on the server
+- GD libraries installed on the server (if images don't show up, your best bet
+  is to look at the configuration in the captcha lib in /vendors/captcha/)
+
+
+To Install
+----------
+1) Copy config/database.php.default to database.php and fill out appropriate
+values.
+
+2) Copy config/defines.php.default to defines.php and fill out appropriate
+values.
+
+3) If the app isn't installed on the root of the webserver (ie. it's in
+http://server.com/folder and not just http://server.com/) you may have to add
+RewriteBase rules to /.htaccess and /webroot/.htaccess
+
+
+Testing (Verification everything works)
+---------------------------------------
+1) Load / in a browser
+    * Page should have standard rustico look/feel
+    * There should be a captcha image in between the 3rd and 4th input box
+2) Click "Send" with all boxes empty
+    * A red message should appear reminding the user to enter the captcha code.
+3) Fill in all input boxes.
+    * A thank you message should appear
+    * An email should be sent to the entered email address
+        * Should be from "Firefox Surveys"
+        * Reply-to should be "nobody@mozilla.com"
+        * Should have 3 html links
+4) Return to / and fill in all input boxes with the same information
+    * A message should appear saying you've already signed up for the survey
+    * An email should be sent to the entered email address (same email as above)
