@@ -2583,7 +2583,7 @@ nsNavHistory::SetURIGeckoFlags(nsIURI* aURI, PRUint32 aFlags)
 
 // nsIGlobalHistory3 ***********************************************************
 
-// nsNavHistory::AddToplevelRedirect
+// nsNavHistory::AddDocumentRedirect
 //
 //    This adds a redirect mapping from the destination of the redirect to the
 //    source, time, and type. This mapping is used by GetRedirectFor when we
@@ -2600,8 +2600,10 @@ PLDHashOperator PR_CALLBACK nsNavHistory::ExpireNonrecentRedirects(
   return PL_DHASH_NEXT;
 }
 NS_IMETHODIMP
-nsNavHistory::AddToplevelRedirect(nsIChannel *aOldChannel,
-                                  nsIChannel *aNewChannel, PRInt32 aFlags)
+nsNavHistory::AddDocumentRedirect(nsIChannel *aOldChannel,
+                                  nsIChannel *aNewChannel,
+                                  PRInt32 aFlags,
+                                  PRBool aTopLevel)
 {
   nsresult rv;
   nsCOMPtr<nsIURI> oldURI, newURI;
@@ -3180,7 +3182,7 @@ nsNavHistory::ExpireNonrecentEvents(RecentEventHash* hashTable)
 //
 //    HOW REDIRECT TRACKING WORKS
 //    ---------------------------
-//    When we get an AddToplevelRedirect message, we store the redirect in
+//    When we get an AddDocumentRedirect message, we store the redirect in
 //    our mRecentRedirects which maps the destination URI to a source,time pair.
 //    When we get a new URI, we see if there were any redirects to this page
 //    in the hash table. If found, we know that the page came through the given
@@ -3188,8 +3190,8 @@ nsNavHistory::ExpireNonrecentEvents(RecentEventHash* hashTable)
 //
 //    Example: Page S redirects throught R1, then R2, to give page D. Page S
 //    will have been already added to history.
-//    - AddToplevelRedirect(R1, R2)
-//    - AddToplevelRedirect(R2, D)
+//    - AddDocumentRedirect(R1, R2)
+//    - AddDocumentRedirect(R2, D)
 //    - AddURI(uri=D, referrer=S)
 //
 //    When we get the AddURI(D), we see the hash table has a value for D from R2.
@@ -3200,8 +3202,8 @@ nsNavHistory::ExpireNonrecentEvents(RecentEventHash* hashTable)
 //    Alternatively, the user could have typed or followed a bookmark from S.
 //    In this case, with two redirects we'll get:
 //    - MarkPageAsTyped(S)
-//    - AddToplevelRedirect(S, R)
-//    - AddToplevelRedirect(R, D)
+//    - AddDocumentRedirect(S, R)
+//    - AddDocumentRedirect(R, D)
 //    - AddURI(uri=D, referrer=null)
 //    We need to be careful to add a visit to S in this case with an incoming
 //    transition of typed and an outgoing transition of redirect.
