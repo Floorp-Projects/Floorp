@@ -193,7 +193,6 @@ nsLayoutStatics::Shutdown()
 
   txXSLTProcessor::shutdown();
   nsDOMAttribute::Shutdown();
-  nsRange::Shutdown();
   nsDOMEventRTTearoff::Shutdown();
   nsEventListenerManager::Shutdown();
   nsContentList::Shutdown();

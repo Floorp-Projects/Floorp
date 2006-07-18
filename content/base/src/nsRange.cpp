@@ -57,25 +57,12 @@
 
 #include "nsContentUtils.h"
 
-PRMonitor*   nsRange::mMonitor = nsnull;
-nsVoidArray* nsRange::mStartAncestors = nsnull;      
-nsVoidArray* nsRange::mEndAncestors = nsnull;        
-nsVoidArray* nsRange::mStartAncestorOffsets = nsnull; 
-nsVoidArray* nsRange::mEndAncestorOffsets = nsnull;  
-
 nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
 nsresult NS_NewContentSubtreeIterator(nsIContentIterator** aInstancePtrResult);
 
 /******************************************************
  * stack based utilty class for managing monitor
  ******************************************************/
-
-class nsAutoRangeLock
-{
-  public:
-    nsAutoRangeLock()  { nsRange::Lock(); }
-    ~nsAutoRangeLock() { nsRange::Unlock(); }
-};
 
 // NS_ERROR_DOM_NOT_OBJECT_ERR is not the correct one to throw, but spec doesn't say
 // what is
@@ -366,27 +353,6 @@ nsRange::~nsRange()
   // note that "nsCOMPtr<nsIDOMmNode>()" is the moral equivalent of null
 } 
 
-// for layout module destructor
-void nsRange::Shutdown()
-{
-  if (mMonitor) {
-    PR_DestroyMonitor(mMonitor);
-    mMonitor = nsnull;
-  }
-
-  delete mStartAncestors;      
-  mStartAncestors = nsnull;      
-
-  delete mEndAncestors;        
-  mEndAncestors = nsnull;        
-
-  delete mStartAncestorOffsets; 
-  mStartAncestorOffsets = nsnull; 
-
-  delete mEndAncestorOffsets;  
-  mEndAncestorOffsets = nsnull;  
-}
-
 /******************************************************
  * nsISupports
  ******************************************************/
@@ -659,55 +625,34 @@ nsresult nsRange::DoSetRange(nsIDOMNode* aStartN, PRInt32 aStartOffset,
 PRBool nsRange::IsIncreasing(nsIDOMNode* aStartN, PRInt32 aStartOffset,
                              nsIDOMNode* aEndN, PRInt32 aEndOffset)
 {
-  PRInt32 startIdx = 0;
-  PRInt32 endIdx = 0;
-  PRInt32 commonNodeStartOffset = 0;
-  PRInt32 commonNodeEndOffset = 0;
-  
   // no trivial cases please
   if (!aStartN || !aEndN) 
     return PR_FALSE;
   
   // check common case first
-  if (aStartN==aEndN)
+  if (aStartN == aEndN)
   {
-    if (aStartOffset>aEndOffset) 
-      return PR_FALSE;
-    else 
-      return PR_TRUE;
-  }
-  
-  // thread safety - need locks around here to end of routine to protect use of static members
-  nsAutoRangeLock lock;
-  
-  // lazy allocation of static arrays
-  if (!mStartAncestors)
-  {
-    mStartAncestors = new nsAutoVoidArray();
-    if (!mStartAncestors) return NS_ERROR_OUT_OF_MEMORY;
-    mStartAncestorOffsets = new nsAutoVoidArray();
-    if (!mStartAncestorOffsets) return NS_ERROR_OUT_OF_MEMORY;
-    mEndAncestors = new nsAutoVoidArray();
-    if (!mEndAncestors) return NS_ERROR_OUT_OF_MEMORY;
-    mEndAncestorOffsets = new nsAutoVoidArray();
-    if (!mEndAncestorOffsets) return NS_ERROR_OUT_OF_MEMORY;
+    return aStartOffset <= aEndOffset;
   }
 
-  // refresh ancestor data
-  mStartAncestors->Clear();
-  mStartAncestorOffsets->Clear();
-  mEndAncestors->Clear();
-  mEndAncestorOffsets->Clear();
+  nsCOMPtr<nsIContent> startCont = do_QueryInterface(aStartN);
+  nsCOMPtr<nsIContent> endCont = do_QueryInterface(aEndN);
 
-  nsContentUtils::GetAncestorsAndOffsets(aStartN, aStartOffset,
-                                         mStartAncestors, mStartAncestorOffsets);
-
-  nsContentUtils::GetAncestorsAndOffsets(aEndN, aEndOffset,
-                                         mEndAncestors, mEndAncestorOffsets);
-
+  nsAutoVoidArray startAncestors, endAncestors;
+  nsIContent* node = startCont;
+  while (node) {
+    startAncestors.AppendElement(node);
+    node = node->GetParent();
+  }
+  node = endCont;
+  while (node) {
+    endAncestors.AppendElement(node);
+    node = node->GetParent();
+  }
+  
   // Get the number of ancestors, adjusting for zero-based counting.
-  startIdx = mStartAncestors->Count() - 1;
-  endIdx   = mEndAncestors->Count() - 1;
+  PRInt32 startIdx = startAncestors.Count() - 1;
+  PRInt32 endIdx = endAncestors.Count() - 1;
 
   // Ensure that we actually have ancestors to iterate through
   if (startIdx < 0) {
@@ -728,14 +673,22 @@ PRBool nsRange::IsIncreasing(nsIDOMNode* aStartN, PRInt32 aStartOffset,
     // numStartAncestors will only be <0 if one endpoint's node is the
     // common ancestor of the other
   } while (startIdx >= 0 && endIdx >= 0 &&
-           mStartAncestors->ElementAt(startIdx) == mEndAncestors->ElementAt(endIdx));
+           startAncestors.FastElementAt(startIdx) ==
+           endAncestors.FastElementAt(endIdx));
   // now back up one and that's the last common ancestor from the root,
   // or the first common ancestor from the leaf perspective
   ++startIdx;
   ++endIdx;
   // both indexes are now >= 0
-  commonNodeStartOffset = NS_PTR_TO_INT32(mStartAncestorOffsets->ElementAt(startIdx));
-  commonNodeEndOffset   = NS_PTR_TO_INT32(mEndAncestorOffsets->ElementAt(endIdx));
+  
+  
+  PRInt32 commonNodeStartOffset = startIdx == 0 ? aStartOffset :
+    NS_STATIC_CAST(nsIContent*, startAncestors.FastElementAt(startIdx))->IndexOf(
+      NS_STATIC_CAST(nsIContent*, startAncestors.FastElementAt(startIdx - 1)));
+
+  PRInt32 commonNodeEndOffset = endIdx == 0 ? aEndOffset :
+    NS_STATIC_CAST(nsIContent*, endAncestors.FastElementAt(endIdx))->IndexOf(
+      NS_STATIC_CAST(nsIContent*, endAncestors.FastElementAt(endIdx - 1)));
 
   if (commonNodeStartOffset > commonNodeEndOffset) {
     return PR_FALSE;
@@ -749,16 +702,9 @@ PRBool nsRange::IsIncreasing(nsIDOMNode* aStartN, PRInt32 aStartOffset,
   // of both endpoints.  In this case, we compare the depth of the ancestor tree to determine
   // the ordering.
 
-  if (startIdx == endIdx) {
-    // whoa nelly. this shouldn't happen.
-    NS_NOTREACHED("nsRange::IsIncreasing");
-  }
+  NS_ASSERTION(startIdx != endIdx, "whoa nelly. this shouldn't happen");
 
-  if (startIdx < endIdx) {
-    return PR_TRUE;
-  }
-
-  return PR_FALSE;
+  return startIdx < endIdx;
 }
 
 PRInt32 nsRange::IndexOf(nsIDOMNode* aChildNode)
@@ -2416,25 +2362,3 @@ nsRange::SetBeforeAndAfter(PRBool aBefore, PRBool aAfter)
   mBeforeGenContent = aAfter;
   return NS_OK;
 }
-
-nsresult
-nsRange::Lock()
-{
-  if (!mMonitor)
-    mMonitor = ::PR_NewMonitor();
-
-  if (mMonitor)
-    PR_EnterMonitor(mMonitor);
-
-  return NS_OK;
-}
-
-nsresult
-nsRange::Unlock()
-{
-  if (mMonitor)
-    PR_ExitMonitor(mMonitor);
-
-  return NS_OK;
-}
-
