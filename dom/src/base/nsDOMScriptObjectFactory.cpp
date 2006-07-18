@@ -187,6 +187,9 @@ nsDOMScriptObjectFactory::GetScriptRuntimeByID(PRUint32 aLanguageID,
       NS_ERROR("Failed to get the script language");
       return rv;
     }
+
+    // Stash it away in our array for fast lookup by ID.
+    mLanguageArray[NS_STID_INDEX(aLanguageID)] = lang;
     *aLanguage = lang;
   }
   NS_IF_ADDREF(*aLanguage);
