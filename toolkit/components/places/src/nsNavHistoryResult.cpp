@@ -600,7 +600,7 @@ nsNavHistoryQueryNode::CreateNode(nsIURI *aBookmark,
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ASSERTION(results, "item must be in history!");
 
-  return history->RowToResult(statement, PR_FALSE, aNode);
+  return history->RowToResult(statement, mOptions, aNode);
 }
 
 PRBool
