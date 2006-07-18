@@ -906,7 +906,11 @@ nsNavBookmarks::ImportBookmarksHTMLInternal(nsIURI* aURL,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // init parser
+#ifdef MOZILLA_1_8_BRANCH
+  rv = parser->Parse(aURL, nsnull, PR_FALSE);
+#else
   rv = parser->Parse(aURL, nsnull);
+#endif
   NS_ENSURE_SUCCESS(rv, rv);
 
   // feed the parser the data
