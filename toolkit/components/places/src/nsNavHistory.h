@@ -178,9 +178,9 @@ public:
   nsNavHistoryQueryNode() : mQueries(nsnull), mQueryCount(0) {}
 
   // nsINavHistoryResultNode methods
-  NS_IMETHOD GetQueries(nsINavHistoryQueryOptions **aOptions,
-                        PRUint32 *aQueryCount,
+  NS_IMETHOD GetQueries(PRUint32 *aQueryCount,
                         nsINavHistoryQuery ***aQueries);
+  NS_IMETHOD GetQueryOptions(nsINavHistoryQueryOptions **aOptions);
 
   // nsNavHistoryResultNode methods
   virtual nsresult BuildChildren(PRUint32 aOptions);
