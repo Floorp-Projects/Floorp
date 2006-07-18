@@ -298,7 +298,8 @@ nsLivemarkService::OnContainerRemoving(PRInt64 aContainer)
 
   // Find the livemark id in the list of livemarks.
   PRInt32 lmIndex = -1;
-  for (PRInt32 i = 0; i < mLivemarks.Length(); i++) {
+  PRInt32 i;
+  for (i = 0; i < mLivemarks.Length(); i++) {
     if (mLivemarks[i].folderId == aContainer) {
       lmIndex = i;
       break;
