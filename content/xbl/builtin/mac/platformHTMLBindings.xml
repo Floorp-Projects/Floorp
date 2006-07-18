@@ -25,6 +25,7 @@
       <handler event="keypress" keycode="VK_LEFT"  modifiers="accel,shift" command="cmd_selectBeginLine"/>
       <handler event="keypress" keycode="VK_RIGHT" modifiers="accel,shift" command="cmd_selectEndLine"/>
       <handler event="keypress" keycode="VK_BACK" modifiers="alt" command="cmd_deleteWordBackward"/>
+      <handler event="keypress" keycode="VK_DELETE" modifiers="alt" command="cmd_deleteWordForward" /> 
 
       <handler event="keypress" key="a" modifiers="control" command="cmd_beginLine"/>
       <handler event="keypress" key="b" modifiers="control" command="cmd_charPrevious"/>
@@ -72,6 +73,7 @@
       <handler event="keypress" keycode="VK_LEFT"  modifiers="accel,shift" command="cmd_selectBeginLine"/>
       <handler event="keypress" keycode="VK_RIGHT" modifiers="accel,shift" command="cmd_selectEndLine"/>
       <handler event="keypress" keycode="VK_BACK" modifiers="alt" command="cmd_deleteWordBackward"/>
+      <handler event="keypress" keycode="VK_DELETE" modifiers="alt" command="cmd_deleteWordForward" /> 
 
       <handler event="keypress" key="a" modifiers="control" command="cmd_beginLine"/>
       <handler event="keypress" key="b" modifiers="control" command="cmd_charPrevious"/>
@@ -142,6 +144,7 @@
       <handler event="keypress" keycode="VK_UP"   modifiers="accel,shift" command="cmd_selectTop"/>
       <handler event="keypress" keycode="VK_DOWN" modifiers="accel,shift" command="cmd_selectBottom"/>
       <handler event="keypress" keycode="VK_BACK" modifiers="alt" command="cmd_deleteWordBackward"/>
+      <handler event="keypress" keycode="VK_DELETE" modifiers="alt" command="cmd_deleteWordForward" /> 
 
       <handler event="keypress" key="a" modifiers="control" command="cmd_beginLine"/>
       <handler event="keypress" key="b" modifiers="control" command="cmd_charPrevious"/>
