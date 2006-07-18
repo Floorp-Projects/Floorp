@@ -222,7 +222,7 @@ public:
 
 protected:
   nsCOMPtr<nsINavBookmarksService> mBookmarksService;
-  nsCOMPtr<nsINavHistory> mHistoryService;
+  nsCOMPtr<nsINavHistoryService> mHistoryService;
   nsCOMPtr<nsIAnnotationService> mAnnotationService;
 
   // if set, we will move root items to where we find them. This should be
@@ -269,7 +269,7 @@ BookmarkContentSink::Init(PRBool aAllowRootChanges,
 {
   nsresult rv;
   mBookmarksService = bookmarkService;
-  mHistoryService = do_GetService(NS_NAVHISTORY_CONTRACTID, &rv);
+  mHistoryService = do_GetService(NS_NAVHISTORYSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   mAnnotationService = do_GetService(NS_ANNOTATIONSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
