@@ -402,11 +402,21 @@ nsNavHistory::InitDB(PRBool *aDoImport)
   rv = mDBService->OpenDatabase(dbFile, getter_AddRefs(mDBConn));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // create a dummy table that we can keep a transaction open on; the
+  // dummy statement needs something to work on that will always exist.
+  rv = mDBConn->TableExists(NS_LITERAL_CSTRING("moz_dummy_table"), &tableExists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (! tableExists) {
+    rv = mDBConn->ExecuteSimpleSQL(
+        NS_LITERAL_CSTRING("CREATE TABLE moz_dummy_table (id INTEGER PRIMARY KEY)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   // dummy DB (see comment above function) and statement that stays open
   rv = mDBService->OpenDatabase(dbFile, getter_AddRefs(mDummyDBConn));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mDummyDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT rowid FROM sqlite_master LIMIT 1"), getter_AddRefs(mDummyStatement));
+      "SELECT id FROM moz_dummy_table LIMIT 1"), getter_AddRefs(mDummyStatement));
   NS_ENSURE_SUCCESS(rv, rv);
   PRBool dummyHasResults;
   rv = mDummyStatement->ExecuteStep(&dummyHasResults);
