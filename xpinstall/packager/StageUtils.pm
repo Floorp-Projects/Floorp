@@ -445,7 +445,7 @@ sub GetProductMilestoneVersion
   }
 
   #chdir("$aDirMozTopSrc/config");
-  $versionMilestone = `cat $aDirMozTopSrc/xpfe/bootstrap/version.txt`;
+  $versionMilestone = `cat $aDirMozTopSrc/suite/config/version.txt`;
 
   if(defined($ENV{DEBUG_INSTALLER_BUILD}))
   {
