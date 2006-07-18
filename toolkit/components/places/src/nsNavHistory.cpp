@@ -190,10 +190,11 @@ protected:
 const PRInt32 nsNavHistory::kGetInfoIndex_PageID = 0;
 const PRInt32 nsNavHistory::kGetInfoIndex_URL = 1;
 const PRInt32 nsNavHistory::kGetInfoIndex_Title = 2;
-const PRInt32 nsNavHistory::kGetInfoIndex_RevHost = 3;
-const PRInt32 nsNavHistory::kGetInfoIndex_VisitCount = 4;
-const PRInt32 nsNavHistory::kGetInfoIndex_VisitDate = 5;
-const PRInt32 nsNavHistory::kGetInfoIndex_FaviconURL = 6;
+const PRInt32 nsNavHistory::kGetInfoIndex_UserTitle = 3;
+const PRInt32 nsNavHistory::kGetInfoIndex_RevHost = 4;
+const PRInt32 nsNavHistory::kGetInfoIndex_VisitCount = 5;
+const PRInt32 nsNavHistory::kGetInfoIndex_VisitDate = 6;
+const PRInt32 nsNavHistory::kGetInfoIndex_FaviconURL = 7;
 
 const PRInt32 nsNavHistory::kAutoCompleteIndex_URL = 0;
 const PRInt32 nsNavHistory::kAutoCompleteIndex_Title = 1;
@@ -204,7 +205,6 @@ static nsDataHashtable<nsStringHashKey, int>* gTldTypes;
 static const char* gQuitApplicationMessage = "quit-application";
 
 // annotation names
-const char nsNavHistory::kAnnotationTitle[] = "history/title";
 const char nsNavHistory::kAnnotationPreviousEncoding[] = "history/encoding";
 
 nsIAtom* nsNavHistory::sMenuRootAtom = nsnull;
@@ -341,6 +341,7 @@ nsNavHistory::InitDB()
         "id INTEGER PRIMARY KEY, "
         "url LONGVARCHAR, "
         "title LONGVARCHAR, "
+        "user_title LONGVARCHAR, "
         "rev_host LONGVARCHAR, "
         "visit_count INTEGER DEFAULT 0, "
         "hidden INTEGER DEFAULT 0 NOT NULL, "
@@ -391,7 +392,7 @@ nsNavHistory::InitDB()
   // mDBGetVisitPageInfo
   /*
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, v.visit_date "
+      "SELECT h.id, h.url, h.title, h.user_title, h.rev_host, h.visit_count, v.visit_date "
       "FROM moz_historyvisit v, moz_history h "
       "WHERE v.visit_id = ?1 AND h.id = v.page_id"),
     getter_AddRefs(mDBGetVisitPageInfo));
@@ -400,7 +401,7 @@ nsNavHistory::InitDB()
 
   // mDBGetURLPageInfo
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count "
+      "SELECT h.id, h.url, h.title, h.user_title, h.rev_host, h.visit_count "
       "FROM moz_history h "
       "WHERE h.url = ?1"),
     getter_AddRefs(mDBGetURLPageInfo));
@@ -408,7 +409,7 @@ nsNavHistory::InitDB()
 
   // mDBGetURLPageInfoFull
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
+      "SELECT h.id, h.url, h.title, h.user_title, h.rev_host, h.visit_count, "
         "(SELECT MAX(visit_date) FROM moz_historyvisit WHERE page_id = h.id), "
         "f.url "
       "FROM moz_history h "
@@ -419,7 +420,7 @@ nsNavHistory::InitDB()
 
   // mDBGetIdPageInfoFull
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
+      "SELECT h.id, h.url, h.title, h.user_title, h.rev_host, h.visit_count, "
         "(SELECT MAX(visit_date) FROM moz_historyvisit WHERE page_id = h.id), "
         "f.url "
       "FROM moz_history h "
@@ -1084,6 +1085,24 @@ nsNavHistory::GetHasHistoryEntries(PRBool* aHasEntries)
 }
 
 
+// nsNavHistory::SetPageUserTitle
+
+NS_IMETHODIMP
+nsNavHistory::SetPageUserTitle(nsIURI* aURI, const nsAString& aUserTitle)
+{
+  nsCOMPtr<mozIStorageStatement> statement;
+  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "UPDATE moz_history SET user_title = ?2 WHERE url = ?1"),
+    getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = BindStatementURI(statement, 0, aURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindStringParameter(1, aUserTitle);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return statement->Execute();
+}
+
+
 // nsNavHistory::AddPageToSession
 
 /*
@@ -1151,6 +1170,8 @@ NS_IMETHODIMP nsNavHistory::GetNewQuery(nsINavHistoryQuery **_retval)
   NS_ADDREF(*_retval);
   return NS_OK;
 }
+
+// nsNavHistory::GetNewQueryOptions
 
 NS_IMETHODIMP nsNavHistory::GetNewQueryOptions(nsINavHistoryQueryOptions **_retval)
 {
@@ -1249,7 +1270,7 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
     // if we want visits, this is easy, just combine all possible matches
     // between the history and visits table and do our query.
     queryString = NS_LITERAL_CSTRING(
-      "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, v.visit_date, f.url "
+      "SELECT h.id, h.url, h.title, h.user_title, h.rev_host, h.visit_count, v.visit_date, f.url "
       "FROM moz_history h "
       "JOIN moz_historyvisit v ON h.id = v.page_id "
       "LEFT OUTER JOIN moz_favicon f ON h.favicon = f.id "
@@ -1259,7 +1280,7 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
     // GROUP BY clause gives us this. To get the max visit time, we populate
     // one column by using a nested SELECT on the visit table.
     queryString = NS_LITERAL_CSTRING(
-      "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
+      "SELECT h.id, h.url, h.title, h.user_title, h.rev_host, h.visit_count, "
         "(SELECT MAX(visit_date) FROM moz_historyvisit WHERE page_id = h.id), "
         "f.url "
       "FROM moz_history h "
@@ -1325,7 +1346,7 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
     default:
       NS_NOTREACHED("Invalid sorting mode");
   }
-  //printf("Constructed the query: %s\n", PromiseFlatCString(queryString).get());
+  printf("Constructed the query: %s\n", PromiseFlatCString(queryString).get());
 
   // Put this in a transaction. Even though we are only reading, this will
   // speed up the grouped queries to the annotation service for titles and
@@ -1367,12 +1388,12 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
   if (groupCount == 0 && ! hasSearchTerms) {
     // optimize the case where we just want a list with no grouping: this
     // directly fills in the results and we avoid a copy of the whole list
-    rv = ResultsAsList(statement, asVisits, result->GetTopLevel());
+    rv = ResultsAsList(statement, options, result->GetTopLevel());
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     // generate the toplevel results
     nsCOMArray<nsNavHistoryResultNode> toplevel;
-    rv = ResultsAsList(statement, asVisits, &toplevel);
+    rv = ResultsAsList(statement, options, &toplevel);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (hasSearchTerms) {
@@ -2522,11 +2543,12 @@ nsNavHistory::QueryToSelectClause(nsINavHistoryQuery* aQuery, // const
 
   // search terms FIXME
 
+  // only bookmarked
   if (NS_SUCCEEDED(aQuery->GetOnlyBookmarked(&hasIt)) && hasIt) {
     if (! aClause->IsEmpty())
       *aClause += NS_LITERAL_CSTRING(" AND ");
 
-    *aClause += NS_LITERAL_CSTRING("EXISTS (SELECT b.item_child FROM moz_bookmarks b WHERE b.item_child = id)");
+    *aClause += NS_LITERAL_CSTRING("EXISTS (SELECT b.item_child FROM moz_bookmarks b WHERE b.item_child = h.id)");
   }
 
   // domain
@@ -2634,7 +2656,8 @@ nsNavHistory::BindQueryClauseParameters(mozIStorageStatement* statement,
 //
 
 nsresult
-nsNavHistory::ResultsAsList(mozIStorageStatement* statement, PRBool aAsVisits,
+nsNavHistory::ResultsAsList(mozIStorageStatement* statement,
+                            nsNavHistoryQueryOptions* aOptions,
                             nsCOMArray<nsNavHistoryResultNode>* aResults)
 {
   nsresult rv;
@@ -2644,7 +2667,7 @@ nsNavHistory::ResultsAsList(mozIStorageStatement* statement, PRBool aAsVisits,
   PRBool hasMore = PR_FALSE;
   while (NS_SUCCEEDED(statement->ExecuteStep(&hasMore)) && hasMore) {
     nsCOMPtr<nsNavHistoryResultNode> result;
-    rv = RowToResult(row, aAsVisits, getter_AddRefs(result));
+    rv = RowToResult(row, aOptions, getter_AddRefs(result));
     NS_ENSURE_SUCCESS(rv, rv);
     aResults->AppendObject(result);
   }
@@ -2884,7 +2907,8 @@ nsNavHistory::FilterResultSet(const nsCOMArray<nsNavHistoryResultNode>& aSet,
 //
 
 nsresult
-nsNavHistory::RowToResult(mozIStorageValueArray* aRow, PRBool aAsVisits,
+nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
+                          nsNavHistoryQueryOptions* aOptions,
                           nsNavHistoryResultNode** aResult)
 {
   *aResult = nsnull;
@@ -2896,41 +2920,57 @@ nsNavHistory::RowToResult(mozIStorageValueArray* aRow, PRBool aAsVisits,
   nsCOMPtr<nsNavHistoryResultNode> result;
   if (IsQueryURI(spec)) {
     result = new nsNavHistoryQueryNode();
+    if (! result)
+      return NS_ERROR_OUT_OF_MEMORY;
     result->mType = nsINavHistoryResultNode::RESULT_TYPE_QUERY;
   } else {
     result = new nsNavHistoryResultNode();
-    if (aAsVisits) {
+    if (! result)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    // node type
+    if (aOptions->ResultType() == nsNavHistoryQueryOptions::RESULT_TYPE_URL) {
+      result->mType = nsNavHistoryResultNode::RESULT_TYPE_URL;
+    } else if(aOptions->ResultType() == nsNavHistoryQueryOptions::RESULT_TYPE_VISIT) {
       result->mType = nsNavHistoryResultNode::RESULT_TYPE_VISIT;
     } else {
-      result->mType = nsNavHistoryResultNode::RESULT_TYPE_URL;
+      NS_NOTREACHED("The options' requested result type is invalid");
     }
   }
-
-  if (! result)
-    return NS_ERROR_OUT_OF_MEMORY;
 
   // ID
   rv = aRow->GetInt64(kGetInfoIndex_PageID, &result->mID);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = FillURLResult(aRow, result);
+  rv = FillURLResult(aRow, aOptions, result);
   NS_ENSURE_SUCCESS(rv, rv);
 
   result.swap(*aResult);
   return NS_OK;
 }
 
+
+// nsNavHistory::FillURLResult
+
 nsresult
 nsNavHistory::FillURLResult(mozIStorageValueArray *aRow,
-                             nsNavHistoryResultNode *aNode)
+                            nsNavHistoryQueryOptions *aOptions,
+                            nsNavHistoryResultNode *aNode)
 {
   // URL
   nsresult rv = aRow->GetUTF8String(kGetInfoIndex_URL, aNode->mUrl);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // title
-  rv = aRow->GetString(kGetInfoIndex_Title, aNode->mTitle);
-  NS_ENSURE_SUCCESS(rv, rv);
+  aNode->mTitle.Truncate(0);
+  if (! aOptions->ForceOriginalTitle()) {
+    rv = aRow->GetString(kGetInfoIndex_UserTitle, aNode->mTitle);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  if (aNode->mTitle.IsEmpty()) {
+    rv = aRow->GetString(kGetInfoIndex_Title, aNode->mTitle);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   // access count
   rv = aRow->GetInt32(kGetInfoIndex_VisitCount, &aNode->mAccessCount);
@@ -3760,16 +3800,46 @@ NS_IMETHODIMP nsNavHistoryQuery::Clone(nsINavHistoryQuery** _retval)
 NS_IMPL_ISUPPORTS2(nsNavHistoryQueryOptions, nsNavHistoryQueryOptions, nsINavHistoryQueryOptions)
 
 NS_IMETHODIMP
+nsNavHistoryQueryOptions::GetGroupingMode(PRUint32 *aGroupCount,
+                                          PRInt32** aGroupingMode)
+{
+  if (mGroupCount == 0) {
+    *aGroupCount = 0;
+    *aGroupingMode = nsnull;
+    return NS_OK;
+  }
+  *aGroupingMode = NS_STATIC_CAST(PRInt32*,
+                                  nsMemory::Alloc(sizeof(PRInt32) * mGroupCount));
+  if (! aGroupingMode)
+    return NS_ERROR_OUT_OF_MEMORY;
+  for(PRUint32 i = 0; i < mGroupCount; i ++)
+    (*aGroupingMode)[i] = mGroupings[i];
+  *aGroupCount = mGroupCount;
+  return NS_OK;
+}
+NS_IMETHODIMP
 nsNavHistoryQueryOptions::SetGroupingMode(const PRInt32 *aGroupingMode,
                                           PRUint32 aGroupCount)
 {
-  delete[] mGroupings;
-  mGroupCount = 0;
+  // check input
+  PRUint32 i;
+  for (i = 0; i < aGroupCount; i ++) {
+    if (aGroupingMode[i] < 0 || aGroupingMode[i] > GROUP_BY_FOLDER)
+      return NS_ERROR_INVALID_ARG;
+  }
+
+  if (mGroupings) {
+    delete[] mGroupings;
+    mGroupings = nsnull;
+    mGroupCount = 0;
+  }
+  if (! aGroupCount)
+    return NS_OK;
 
   mGroupings = new PRInt32[aGroupCount];
   NS_ENSURE_TRUE(mGroupings, NS_ERROR_OUT_OF_MEMORY);
 
-  for (PRUint32 i = 0; i < aGroupCount; ++i) {
+  for (i = 0; i < aGroupCount; ++i) {
     mGroupings[i] = aGroupingMode[i];
   }
 
@@ -3777,24 +3847,63 @@ nsNavHistoryQueryOptions::SetGroupingMode(const PRInt32 *aGroupingMode,
   return NS_OK;
 }
 
+// sortingMode
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::GetSortingMode(PRInt32* aMode)
+{
+  *aMode = mSort;
+  return NS_OK;
+}
 NS_IMETHODIMP
 nsNavHistoryQueryOptions::SetSortingMode(PRInt32 aMode)
 {
+  if (aMode < 0 || aMode > SORT_BY_VISITCOUNT_DESCENDING)
+    return NS_ERROR_INVALID_ARG;
   mSort = aMode;
   return NS_OK;
 }
 
+// resultType
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::GetResultType(PRInt32* aType)
+{
+  *aType = mResultType;
+  return NS_OK;
+}
 NS_IMETHODIMP
 nsNavHistoryQueryOptions::SetResultType(PRInt32 aType)
 {
+  if (aType < 0 || aType > RESULT_TYPE_VISIT)
+    return NS_ERROR_INVALID_ARG;
   mResultType = aType;
   return NS_OK;
 }
 
+// expandPlaces
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::GetExpandPlaces(PRBool* aExpand)
+{
+  *aExpand = mExpandPlaces;
+  return NS_OK;
+}
 NS_IMETHODIMP
 nsNavHistoryQueryOptions::SetExpandPlaces(PRBool aExpand)
 {
   mExpandPlaces = aExpand;
+  return NS_OK;
+}
+
+// forceOriginalTitle
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::GetForceOriginalTitle(PRBool* aForce)
+{
+  *aForce = mForceOriginalTitle;
+  return NS_OK;
+}
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::SetForceOriginalTitle(PRBool aForce)
+{
+  mForceOriginalTitle = aForce;
   return NS_OK;
 }
 
