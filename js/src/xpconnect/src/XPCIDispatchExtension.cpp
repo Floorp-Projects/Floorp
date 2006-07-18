@@ -38,6 +38,8 @@
 
 static const char* const IDISPATCH_NAME = "IDispatch";
 
+#define XPC_IDISPATCH_CTOR_MAX_ARG_LEN 2000
+
 PRBool XPCIDispatchExtension::mIsEnabled = PR_TRUE;
 
 static JSBool
@@ -76,10 +78,21 @@ CommonConstructor(JSContext *cx, int name, JSObject *obj, uintN argc,
         XPCThrower::Throw(NS_ERROR_XPC_COM_INVALID_CLASS_ID, ccx);
         return JS_FALSE;
     }
-    PRUint32 len;
-    jschar * className = xpc_JSString2String(ccx, argv[0], &len);
+
+    JSString* str = JSVAL_TO_STRING(argv[0]);
+    PRUint32 len = JS_GetStringLength(str);
+
+    // Cap constructor argument length to keep from crashing in string
+    // code.
+    if(len > XPC_IDISPATCH_CTOR_MAX_ARG_LEN)
+    {
+      XPCThrower::Throw(NS_ERROR_XPC_COM_INVALID_CLASS_ID, ccx);
+      return JS_FALSE;
+    }
+
+    jschar * className = JS_GetStringChars(str);
     CComBSTR bstrClassName(len, NS_REINTERPRET_CAST(const WCHAR *, className));
-    if(!className)
+    if(!bstrClassName)
     {
         XPCThrower::Throw(NS_ERROR_XPC_COM_INVALID_CLASS_ID, ccx);
         return JS_FALSE;
