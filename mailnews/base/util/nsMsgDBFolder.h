@@ -136,7 +136,7 @@ protected:
   nsresult OnHdrAddedOrDeleted(nsIMsgDBHdr *hdrChanged, PRBool added);
   nsresult CreateFileSpecForDB(const char *userLeafName, nsFileSpec &baseDir, nsIFileSpec **dbFileSpec);
 
-  nsresult GetFolderCacheKey(nsIFileSpec **aFileSpec);
+  nsresult GetFolderCacheKey(nsIFileSpec **aFileSpec, PRBool createDBIfMissing = PR_FALSE);
   nsresult GetFolderCacheElemFromFileSpec(nsIFileSpec *fileSpec, nsIMsgFolderCacheElement **cacheElement);
   nsresult AddDirectorySeparator(nsFileSpec &path);
   nsresult CheckIfFolderExists(const PRUnichar *newFolderName, nsIMsgFolder *parentFolder, nsIMsgWindow *msgWindow);
