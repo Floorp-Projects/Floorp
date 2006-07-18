@@ -114,6 +114,9 @@ static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 #define KEY_LASTCHARSET_LOWER "last_charset"
 #define KEY_ICON_LOWER "icon"
 
+#define BOOKMARKS_MENU_ICON_URI "chrome://browser/skin/places/bookmarks_menu.png"
+#define BOOKMARKS_TOOLBAR_ICON_URI "chrome://browser/skin/places/bookmarks_toolbar.png"
+
 static const char kWhitespace[] = " \r\n\t\b";
 
 class BookmarkImportFrame
@@ -277,7 +280,8 @@ protected:
   nsresult NewFrame();
   nsresult PopFrame();
 
-  nsresult SetFaviconForURI(nsIURI* aURI, nsCString aData);
+  nsresult SetFaviconForURI(nsIURI* aURI, const nsCString& aData);
+  nsresult SetFaviconForFolder(PRInt64 aFolder, const nsACString& aFavicon);
 };
 
 
@@ -653,15 +657,19 @@ BookmarkContentSink::NewFrame()
       // menu root
       rv = mBookmarksService->GetBookmarksRoot(&ourID);
       NS_ENSURE_SUCCESS(rv, rv);
-      if (mAllowRootChanges)
+      if (mAllowRootChanges) {
         updateFolder = PR_TRUE;
+        SetFaviconForFolder(ourID, NS_LITERAL_CSTRING(BOOKMARKS_MENU_ICON_URI));
+      }
       break;
     case BookmarkImportFrame::Container_Toolbar:
       // toolbar root
       rv = mBookmarksService->GetToolbarRoot(&ourID);
       NS_ENSURE_SUCCESS(rv, rv);
-      if (mAllowRootChanges)
+      if (mAllowRootChanges) {
         updateFolder = PR_TRUE;
+        SetFaviconForFolder(ourID, NS_LITERAL_CSTRING(BOOKMARKS_TOOLBAR_ICON_URI));
+      }
       break;
     default:
       NS_NOTREACHED("Unknown container type");
@@ -704,7 +712,7 @@ BookmarkContentSink::PopFrame()
 //    should get expired when the page no longer references it.
 
 nsresult
-BookmarkContentSink::SetFaviconForURI(nsIURI* aURI, nsCString aData)
+BookmarkContentSink::SetFaviconForURI(nsIURI* aURI, const nsCString& aData)
 {
   nsresult rv;
 
@@ -776,6 +784,33 @@ BookmarkContentSink::SetFaviconForURI(nsIURI* aURI, nsCString aData)
   nsMemory::Free(buffer);
   NS_ENSURE_SUCCESS(rv, rv);
   return faviconService->SetFaviconUrlForPage(aURI, faviconURI);
+}
+
+
+// BookmarkContentSink::SetFaviconForFolder
+//
+//    This sets the given favicon URI for the given folder. It is used to
+//    initialize the favicons for the bookmarks menu and toolbar. We don't
+//    actually set any data here because we assume the URI is a chrome: URI.
+//    These do not have to contain any data for them to work.
+
+nsresult
+BookmarkContentSink::SetFaviconForFolder(PRInt64 aFolder,
+                                         const nsACString& aFavicon)
+{
+  nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
+  NS_ENSURE_TRUE(faviconService, NS_ERROR_OUT_OF_MEMORY);
+
+  nsCOMPtr<nsIURI> folderURI;
+  nsresult rv = mBookmarksService->GetFolderURI(aFolder,
+                                                getter_AddRefs(folderURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIURI> faviconURI;
+  rv = NS_NewURI(getter_AddRefs(faviconURI), aFavicon);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return faviconService->SetFaviconUrlForPage(folderURI, faviconURI);
 }
 
 
