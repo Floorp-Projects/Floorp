@@ -255,6 +255,7 @@ nsProxyEventObject::CallMethod(PRUint16 methodIndex,
                 break;
             }
         }
+        rv = proxyInfo->GetResult();
     } else {
         NS_WARNING("Failed to dispatch nsProxyCallEvent");
     }
