@@ -84,6 +84,10 @@ interface nsIFaviconService : nsISupports
    * This function will also ignore favicons that are data URLs. Icons that
    * fail to load will automatically be added to the failed favicon cache.
    *
+   * This function will not save favicons for non-bookmarked URLs when
+   * history is disabled (expiration time is 0 days). The rest of the functions
+   * here will always store favicons even when history is disabled.
+   *
    * @param aPage
    *        URI of the page whose favicon is being set.
    * @param aFavicon
