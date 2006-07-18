@@ -757,6 +757,20 @@ interface nsINavHistoryObserver : nsISupports
    */
   const PRUint32 ATTRIBUTE_FAVICON = 3; // favicon updated, aString = favicon annotation URI
   void onPageChanged(in nsIURI aURI, in PRUint32 aWhat, in AString aValue);
+
+  /**
+   * Called when a history entry expires. You will recieve notifications that
+   * a specific visit has expired with the time of that visit. When the last
+   * visit for a history entry expires, the history entry itself is deleted
+   * and aWholeEntry is set. (If your observer only cares about URLs and not
+   * specific visits, it needs only to listen for aWholeEntry notifications).
+   *
+   * It is possible for a history entry to be deleted that has no visits if
+   * something is out of sync or after a bookmark is deleted that has no
+   * visits (thus freeing the history entry). In these cases, aVisitTime will
+   * be 0.
+   */
+  void onPageExpired(in nsIURI aURI, in PRTime aVisitTime, in boolean aWholeEntry);
 };
 
 
