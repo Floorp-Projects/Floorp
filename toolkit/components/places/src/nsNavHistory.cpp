@@ -1341,6 +1341,20 @@ nsNavHistory::EndUpdateBatch()
   return NS_OK;
 }
 
+// nsNavHistory::GetTransactionManager
+
+NS_IMETHODIMP
+nsNavHistory::GetTransactionManager(nsITransactionManager** result) 
+{
+  if (!mTransactionManager) {
+    nsresult rv;
+    mTransactionManager = 
+      do_CreateInstance(NS_TRANSACTIONMANAGER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  NS_ADDREF(*result = mTransactionManager);
+  return NS_OK;
+}
 
 // Browser history *************************************************************
 
