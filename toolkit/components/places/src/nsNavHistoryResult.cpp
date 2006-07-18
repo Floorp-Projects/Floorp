@@ -65,8 +65,6 @@
 #include "prtime.h"
 #include "prprf.h"
 
-#define S(x) nsINavHistoryResult::##x
-
 // emulate string comparison (used for sorting) for PRTime and int
 inline PRInt32 ComparePRTime(PRTime a, PRTime b)
 {
@@ -616,6 +614,23 @@ nsNavHistoryResult::GetSourceQueryOptions(nsINavHistoryQueryOptions** aOptions)
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsNavHistoryResult::AddObserver(nsINavHistoryResultViewObserver* aObserver)
+{
+  NS_ENSURE_ARG_POINTER(aObserver);
+
+  if (mObservers.IndexOf(aObserver) != -1)
+    return NS_OK;
+  return mObservers.AppendObject(aObserver) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+NS_IMETHODIMP
+nsNavHistoryResult::RemoveObserver(nsINavHistoryResultViewObserver* aObserver)
+{
+  mObservers.RemoveObject(aObserver);
+  return NS_OK;
+}
+
 
 // nsNavHistoryResult::SetTreeSortingIndicator
 //
@@ -1102,7 +1117,12 @@ NS_IMETHODIMP nsNavHistoryResult::IsSorted(PRBool *_retval)
 NS_IMETHODIMP nsNavHistoryResult::CanDrop(PRInt32 index, PRInt32 orientation,
                                           PRBool *_retval)
 {
-  *_retval = PR_FALSE;
+  PRInt32 count = mObservers.Count();
+  for (PRInt32 i = 0; i < count; ++i) {
+    mObservers[i]->CanDrop(index, orientation, _retval);
+    if (*_retval)
+      break;
+  }
   return NS_OK;
 }
 
@@ -1113,7 +1133,10 @@ NS_IMETHODIMP nsNavHistoryResult::CanDrop(PRInt32 index, PRInt32 orientation,
 
 NS_IMETHODIMP nsNavHistoryResult::Drop(PRInt32 row, PRInt32 orientation)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  PRInt32 count = mObservers.Count();
+  for (PRInt32 i = 0; i < count; ++i)
+    mObservers[i]->OnDrop(row, orientation);
+  return NS_OK;
 }
 
 
@@ -1275,6 +1298,11 @@ NS_IMETHODIMP nsNavHistoryResult::ToggleOpenState(PRInt32 index)
 {
   if (index < 0 || index >= mVisibleElements.Count())
     return NS_ERROR_INVALID_ARG;
+
+  PRInt32 count = mObservers.Count();
+  for (PRInt32 i = 0; i < count; ++i)
+    mObservers[i]->OnToggleOpenState(index);
+
   nsNavHistoryResultNode* curNode = VisibleElementAt(index);
   if (curNode->mExpanded) {
     // collapse
@@ -1313,6 +1341,10 @@ NS_IMETHODIMP nsNavHistoryResult::ToggleOpenState(PRInt32 index)
 
 NS_IMETHODIMP nsNavHistoryResult::CycleHeader(nsITreeColumn *col)
 {
+  PRInt32 count = mObservers.Count();
+  for (PRInt32 i = 0; i < count; ++i)
+    mObservers[i]->OnCycleHeader(col);
+
   PRInt32 colIndex;
   col->GetIndex(&colIndex);
 
@@ -1352,13 +1384,19 @@ NS_IMETHODIMP nsNavHistoryResult::CycleHeader(nsITreeColumn *col)
 /* void selectionChanged (); */
 NS_IMETHODIMP nsNavHistoryResult::SelectionChanged()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  PRInt32 count = mObservers.Count();
+  for (PRInt32 i = 0; i < count; ++i)
+    mObservers[i]->OnSelectionChanged();
+  return NS_OK;
 }
 
 /* void cycleCell (in long row, in nsITreeColumn col); */
 NS_IMETHODIMP nsNavHistoryResult::CycleCell(PRInt32 row, nsITreeColumn *col)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  PRInt32 count = mObservers.Count();
+  for (PRInt32 i = 0; i < count; ++i)
+    mObservers[i]->OnCycleCell(row, col);
+  return NS_OK;
 }
 
 /* boolean isEditable (in long row, in nsITreeColumn col); */
@@ -1382,21 +1420,29 @@ NS_IMETHODIMP nsNavHistoryResult::SetCellText(PRInt32 row, nsITreeColumn *col, c
 /* void performAction (in wstring action); */
 NS_IMETHODIMP nsNavHistoryResult::PerformAction(const PRUnichar *action)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  PRInt32 count = mObservers.Count();
+  for (PRInt32 i = 0; i < count; ++i)
+    mObservers[i]->OnPerformAction(action);
+  return NS_OK;
 }
 
 /* void performActionOnRow (in wstring action, in long row); */
 NS_IMETHODIMP nsNavHistoryResult::PerformActionOnRow(const PRUnichar *action, PRInt32 row)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  PRInt32 count = mObservers.Count();
+  for (PRInt32 i = 0; i < count; ++i)
+    mObservers[i]->OnPerformActionOnRow(action, row);
+  return NS_OK;
 }
 
 /* void performActionOnCell (in wstring action, in long row, in nsITreeColumn col); */
 NS_IMETHODIMP nsNavHistoryResult::PerformActionOnCell(const PRUnichar *action, PRInt32 row, nsITreeColumn *col)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  PRInt32 count = mObservers.Count();
+  for (PRInt32 i = 0; i < count; ++i)
+    mObservers[i]->OnPerformActionOnCell(action, row, col);
+  return NS_OK;
 }
-
 
 // nsNavHistoryResult::GetColumnType
 //
