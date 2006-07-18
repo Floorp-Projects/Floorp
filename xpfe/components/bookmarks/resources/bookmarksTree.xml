@@ -372,12 +372,14 @@
 
       <method name="updateTreeSelection">
         <body><![CDATA[
+          this.treeBoxObject.view.selection.selectEventsSuppressed = true;
           this.treeBoxObject.view.selection.clearSelection();
           for (var i=0; i<this._itemToBeToggled.length; ++i) {
             index = this.treeBuilder.getIndexOfResource(this._itemToBeToggled[i]);
             if (index >=0)
               this.treeBoxObject.view.selection.toggleSelect(index);
           }
+          this.treeBoxObject.view.selection.selectEventsSuppressed = false;
         ]]></body>
       </method>
 
