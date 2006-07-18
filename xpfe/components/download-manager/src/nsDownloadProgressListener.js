@@ -97,7 +97,7 @@ nsDownloadProgressListener.prototype = {
       if (this.doc.getElementById("TimeElapsed").getAttribute("hidden") != "true") {
         elapsedCol = elt.nextSibling.nextSibling.nextSibling.nextSibling.nextSibling.nextSibling;
         // Update elapsed time display.
-        elapsedCol.setAttribute("label", formatSeconds( this.elapsed / 1000, this.doc ));
+        elapsedCol.setAttribute("label", formatSeconds( now / 1000 - aDownload.startTime / 1000000, this.doc ));
       }
       // Calculate percentage.
       var percent;
