@@ -1432,11 +1432,28 @@ ArrayEnumerator.prototype = {
 
 
 
-function LOG(str) {
-  dump(str + "\n");
-  //var css = Cc['@mozilla.org/consoleservice;1'].
-  //          getService(Ci.nsIConsoleService);
-  //css.logStringMessage("MsS: " + str)
+/**
+ * Outputs aText to the JavaScript console as well as to stdout if the
+ * microsummary logging pref (browser.microsummary.log) is set to true.
+ * 
+ * @param aText
+ *        the text to log
+ */
+function LOG(aText) {
+  var shouldLog = false;
+  try {
+    var pb = Cc["@mozilla.org/preferences-service;1"].
+             getService(Ci.nsIPrefBranch);
+    shouldLog = pb.getBoolPref("browser.microsummary.log");
+  }
+  catch (ex) {}
+  
+  if (shouldLog) {
+    dump("*** Microsummaries: " +  aText + "\n");
+    var consoleService = Cc["@mozilla.org/consoleservice;1"].
+                         getService(Ci.nsIConsoleService);
+    consoleService.logStringMessage(aText);
+  }
 }
 
 
