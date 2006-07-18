@@ -81,7 +81,7 @@
 // Size of visit count boost to give to urls which are sites or paths
 #define AUTOCOMPLETE_NONPAGE_VISIT_COUNT_BOOST 5
 // set to use more optimized (in-memory database) link coloring
-#define IN_MEMORY_LINKS
+//#define IN_MEMORY_LINKS
 
 #define QUERYUPDATE_TIME 0
 #define QUERYUPDATE_SIMPLE 1
@@ -327,6 +327,10 @@ protected:
   nsresult InitMemDB();
 #endif
 
+  // this statement is kept open to persist the cache, see InitDB
+  nsCOMPtr<mozIStorageConnection> mDummyDBConn;
+  nsCOMPtr<mozIStorageStatement> mDummyStatement;
+
   nsresult AddVisitChain(nsIURI* aURI, PRBool aToplevel, PRBool aRedirect,
                          nsIURI* aReferrer, PRInt64* aVisitID,
                          PRInt64* aSessionID);
@@ -338,7 +342,7 @@ protected:
   PRBool FindLastVisit(nsIURI* aURI, PRInt64* aVisitID,
                        PRInt64* aSessionID);
   PRBool IsURIStringVisited(const nsACString& url);
-  nsresult VacuumDB(PRTime aTimeAgo, PRBool aCompress);
+  nsresult VacuumDB(PRTime aTimeAgo);
   nsresult LoadPrefs();
 
   // Current time optimization
