@@ -65,6 +65,7 @@ static nsresult ParseQueryTimeString(const nsCString& aString,
 #define QUERYKEY_SORT "sort"
 #define QUERYKEY_RESULT_TYPE "type"
 #define QUERYKEY_EXPAND_PLACES "expandplaces"
+#define QUERYKEY_FORCE_ORIGINAL_TITLE "originalTitle"
 
 inline void AppendAmpersandIfNonempty(nsACString& aString)
 {
@@ -293,6 +294,13 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
     aQueryString += NS_LITERAL_CSTRING(QUERYKEY_RESULT_TYPE);
     aQueryString.Append('=');
     AppendInt32(aQueryString, options->ResultType());
+  }
+
+  // title mode
+  if (options->ForceOriginalTitle()) {
+    AppendAmpersandIfNonempty(aQueryString);
+    aQueryString += NS_LITERAL_CSTRING(QUERYKEY_FORCE_ORIGINAL_TITLE);
+    aQueryString.AppendLiteral("=1");
   }
 
   return NS_OK;
@@ -594,6 +602,17 @@ nsNavHistory::TokensToQueries(const nsVoidArray& aTokens,
         aOptions->SetExpandPlaces(expand);
       } else {
         NS_WARNING("Invalid value for expandplaces");
+      }
+
+    } else if (kvp->key.EqualsLiteral(QUERYKEY_FORCE_ORIGINAL_TITLE)) {
+
+      // force original title
+      PRBool forceOriginal;
+      rv = ParseQueryBooleanString(kvp->value, &forceOriginal);
+      if (NS_SUCCEEDED(rv)) {
+        aOptions->SetForceOriginalTitle(forceOriginal);
+      } else {
+        NS_WARNING("Invalid value for forceOriginal");
       }
 
     } else {
