@@ -222,7 +222,9 @@ public:
   NS_IMETHOD GetViewIndex(PRInt32* aViewIndex) \
     { *aViewIndex = mViewIndex; return NS_OK; } \
   NS_IMETHOD SetViewIndex(PRInt32 aViewIndex) \
-    { mViewIndex = aViewIndex; return NS_OK; }
+    { mViewIndex = aViewIndex; return NS_OK; } \
+  NS_IMETHOD GetBookmarkIndex(PRInt32* aIndex) \
+    { *aIndex = mBookmarkIndex; return NS_OK; }
 
 // This is used by the base classes instead of
 // NS_FORWARD_NSINAVHISTORYRESULTNODE(nsNavHistoryResultNode) because they
@@ -362,6 +364,7 @@ public:
   PRUint32 mAccessCount;
   PRInt64 mTime;
   nsCString mFaviconURI;
+  PRInt32 mBookmarkIndex;
 
   // The indent level of this node. The root node will have a value of -1.  The
   // root's children will have a value of 0, and so on.
@@ -549,6 +552,8 @@ public:
   PRUint32 FindInsertionPoint(nsNavHistoryResultNode* aNode, SortComparator aComparator);
   PRBool DoesChildNeedResorting(PRUint32 aIndex, SortComparator aComparator);
 
+  PR_STATIC_CALLBACK(int) SortComparison_Bookmark(
+      nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure);
   PR_STATIC_CALLBACK(int) SortComparison_TitleLess(
       nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure);
   PR_STATIC_CALLBACK(int) SortComparison_TitleGreater(
@@ -706,10 +711,6 @@ public:
 
   virtual void OnRemoving();
 
-  // Override the sorting implementation to remove separators if we are sorted.
-  virtual void RecursiveSort(nsICollation* aCollation,
-                             SortComparator aComparator);
-
 public:
 
   // this indicates whether the folder contents are valid, they don't go away
@@ -724,6 +725,7 @@ public:
   nsresult Refresh();
 
   PRBool StartIncrementalUpdate();
+  void ReindexRange(PRInt32 aStartIndex, PRInt32 aEndIndex, PRInt32 aDelta);
 };
 
 // nsNavHistorySeparatorResultNode
