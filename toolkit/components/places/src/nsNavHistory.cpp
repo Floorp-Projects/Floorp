@@ -216,7 +216,8 @@ nsNavHistory* nsNavHistory::gHistoryService;
 
 nsNavHistory::nsNavHistory() : mNowValid(PR_FALSE),
                                mExpireNowTimer(nsnull),
-                               mBatchesInProgress(0)
+                               mBatchesInProgress(0),
+                               mAutoCompleteOnlyTyped(PR_FALSE)
 {
 #ifdef LAZY_ADD
   mLazyTimerSet = PR_TRUE;
