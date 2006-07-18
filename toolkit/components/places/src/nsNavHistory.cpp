@@ -333,16 +333,14 @@ nsNavHistory::Init()
   NS_ENSURE_SUCCESS(rv, rv);
 
   // collation
-  static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
   nsCOMPtr<nsICollationFactory> cfact = do_CreateInstance(
-     kCollationFactoryCID, &rv);
+     NS_COLLATIONFACTORY_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = cfact->CreateCollation(mLocale, getter_AddRefs(mCollation));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // date formatter
-  static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
-  mDateFormatter = do_CreateInstance(kDateTimeFormatCID, &rv);
+  mDateFormatter = do_CreateInstance(NS_DATETIMEFORMAT_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // annotation service - just ignore errors
