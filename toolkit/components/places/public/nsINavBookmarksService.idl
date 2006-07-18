@@ -275,6 +275,14 @@ interface nsINavBookmarksService : nsISupports
   AString getFolderTitle(in PRInt64 folder);
 
   /**
+   * Marks a folder as having read-only children.
+   * If this is set to true, UI should not allow the user to add, remove,
+   * or reorder children in this folder.  The default for all folders is false.
+   */
+  void setFolderReadonly(in PRInt64 folder, in boolean readOnly);
+  boolean getFolderReadonly(in PRInt64 folder);
+
+  /**
    * Returns true if the given URI is in any bookmark folder.
    */
   boolean isBookmarked(in nsIURI uri);
