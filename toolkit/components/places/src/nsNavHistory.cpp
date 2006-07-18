@@ -217,6 +217,8 @@ const int nsNavHistory::kAutoCompleteIndex_Typed = 3;
 static nsDataHashtable<nsStringHashKey, int>* gTldTypes;
 static const char* gQuitApplicationMessage = "quit-application";
 
+nsNavHistory* nsNavHistory::gHistoryService;
+
 
 // nsNavHistory::nsNavHistory
 
@@ -224,7 +226,8 @@ nsNavHistory::nsNavHistory() : mNowValid(PR_FALSE),
                                mExpireNowTimer(nsnull),
                                mBatchesInProgress(0)
 {
-
+  NS_ASSERTION(! gHistoryService, "YOU ARE CREATING 2 COPIES OF THE HISTORY SERVICE. Everything will break.");
+  gHistoryService = this;
 }
 
 
@@ -233,6 +236,11 @@ nsNavHistory::nsNavHistory() : mNowValid(PR_FALSE),
 nsNavHistory::~nsNavHistory()
 {
   gObserverService->RemoveObserver(this, gQuitApplicationMessage);
+
+  // remove the static reference to the service. Check to make sure its us
+  // in case somebody creates an extra instance of the service.
+  if (gHistoryService == this)
+    gHistoryService = nsnull;
 }
 
 
@@ -440,6 +448,49 @@ nsNavHistory::SaveExpandItem(const nsAString& aTitle)
 }
 
 
+// nsNavHistory::GetUrlIdFor
+//
+//    Called by the bookmarks and annotation servii, this function returns the
+//    ID of the row for the given URL, optionally creating one if it doesn't
+//    exist. A newly created entry will have no visits.
+//
+//    If aAutoCreate is false and the item doesn't exist, the entry ID will be
+//    zero.
+//
+//    This DOES NOT check for bad URLs other than that they're nonempty.
+
+nsresult
+nsNavHistory::GetUrlIdFor(nsIURI* aURI, PRInt64* aEntryID,
+                          PRBool aAutoCreate)
+{
+  nsresult rv;
+  *aEntryID = 0;
+
+  mozStorageTransaction transaction(mDBConn, PR_FALSE);
+  mozStorageStatementScoper statementResetter(mDBGetURLPageInfo);
+  rv = BindStatementURI(mDBGetURLPageInfo, 0, aURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool hasEntry = PR_FALSE;
+  rv = mDBGetURLPageInfo->ExecuteStep(&hasEntry);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (hasEntry) {
+    return mDBGetURLPageInfo->GetInt64(kGetInfoIndex_PageID, aEntryID);
+  } else if (aAutoCreate) {
+    mDBGetURLPageInfo->Reset();
+    statementResetter.Abandon();
+    rv = InternalAddNewPage(aURI, nsnull, PR_TRUE, PR_FALSE, 0, aEntryID);
+    if (NS_SUCCEEDED(rv))
+      transaction.Commit();
+    return rv;
+  } else {
+    // Doesn't exist: don't do anything, entry ID was already set to 0 above
+    return NS_OK;
+  }
+}
+
+
 // nsNavHistory::SaveCollapseItem
 //
 //    For now, just remove things that should be collapsed. Maybe in the
@@ -484,7 +535,7 @@ nsNavHistory::InternalAdd(nsIURI* aURI, PRUint32 aSessionID,
 #ifdef IN_MEMORY_LINKS
   if (!mMemDBConn)
     InitMemDB();
-  rv = BindURI(mMemDBAddPage, 0, aURI);
+  rv = BindStatementURI(mMemDBAddPage, 0, aURI);
   NS_ENSURE_SUCCESS(rv, rv);
   mMemDBAddPage->Execute();
 #endif
@@ -499,7 +550,7 @@ nsNavHistory::InternalAdd(nsIURI* aURI, PRUint32 aSessionID,
       NS_LITERAL_CSTRING("SELECT id,visit_count,typed,hidden FROM moz_history WHERE url = ?1"),
       getter_AddRefs(dbSelectStatement));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = BindURI(dbSelectStatement, 0, aURI);
+  rv = BindStatementURI(dbSelectStatement, 0, aURI);
   NS_ENSURE_SUCCESS(rv, rv);
   PRBool alreadyVisited = PR_TRUE;
   rv = dbSelectStatement->ExecuteStep(&alreadyVisited);
@@ -631,7 +682,7 @@ nsNavHistory::InternalAddNewPage(nsIURI* aURI, const PRUnichar* aTitle,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // URL
-  rv = BindURI(dbInsertStatement, 0, aURI);
+  rv = BindStatementURI(dbInsertStatement, 0, aURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // title: use NULL if not given to distinguish it from empty titles
@@ -704,24 +755,6 @@ nsresult nsNavHistory::AddVisit(PRInt64 aFromStep, PRInt64 aPageID,
   rv = dbInsertStatement->Execute(); // should reset the statement
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return NS_OK;
-}
-
-
-// nsNavHistory::BindURI
-//
-//    Binds the specified URI as the parameter 'index' for the statment.
-//    URIs are always bound as UTF8
-
-nsresult nsNavHistory::BindURI(mozIStorageStatement* statement, int index,
-                               nsIURI* aURI) const
-{
-  nsCAutoString utf8URISpec;
-  nsresult rv = aURI->GetSpec(utf8URISpec);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = statement->BindUTF8StringParameter(index, utf8URISpec);
-  NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
 
@@ -815,6 +848,10 @@ nsNavHistory::VacuumDB()
   rv = visitDelete->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // FIXME: delete annotations for expiring pages
+
+  // FIXME: delete favicons when no pages reference them
+
   // delete history entries with no visits
   nsCOMPtr<mozIStorageStatement> historyDelete;
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
@@ -830,6 +867,8 @@ nsNavHistory::VacuumDB()
   rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM moz_history"));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM moz_historyvisit"));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM moz_anno"));
   NS_ENSURE_SUCCESS(rv, rv);
   */
 
@@ -1318,7 +1357,7 @@ nsNavHistory::RemovePage(nsIURI *aURI)
       "DELETE FROM moz_historyvisit WHERE page_id IN (SELECT id FROM moz_history WHERE url = ?1)"),
       getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = BindURI(statement, 0, aURI);
+  rv = BindStatementURI(statement, 0, aURI);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = statement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1328,7 +1367,7 @@ nsNavHistory::RemovePage(nsIURI *aURI)
       "DELETE FROM moz_history WHERE url = ?1"),
       getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = BindURI(statement, 0, aURI);
+  rv = BindStatementURI(statement, 0, aURI);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = statement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1561,7 +1600,7 @@ nsNavHistory::HidePage(nsIURI *aURI)
       NS_LITERAL_CSTRING("SELECT id,hidden FROM moz_history WHERE url = ?1"),
       getter_AddRefs(dbSelectStatement));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = BindURI(dbSelectStatement, 0, aURI);
+  rv = BindStatementURI(dbSelectStatement, 0, aURI);
   NS_ENSURE_SUCCESS(rv, rv);
   PRBool alreadyVisited = PR_TRUE;
   rv = dbSelectStatement->ExecuteStep(&alreadyVisited);
@@ -1643,7 +1682,7 @@ nsNavHistory::MarkPageAsTyped(nsIURI *aURI)
       NS_LITERAL_CSTRING("SELECT id,typed FROM moz_history WHERE url = ?1"),
       getter_AddRefs(dbSelectStatement));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = BindURI(dbSelectStatement, 0, aURI);
+  rv = BindStatementURI(dbSelectStatement, 0, aURI);
   NS_ENSURE_SUCCESS(rv, rv);
   PRBool alreadyVisited = PR_TRUE;
   rv = dbSelectStatement->ExecuteStep(&alreadyVisited);
@@ -1757,7 +1796,7 @@ nsNavHistory::SetPageTitle(nsIURI *aURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // url
-  rv = BindURI(dbModStatement, 1, aURI);
+  rv = BindStatementURI(dbModStatement, 1, aURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = dbModStatement->Execute();
@@ -3193,6 +3232,24 @@ void GetSubstringFromNthDot(const nsString& aInput, int aStartingSpot,
     }
   }
   aSubstr = aInput; // no dot found
+}
+
+
+// BindStatementURI
+//
+//    Binds the specified URI as the parameter 'index' for the statment.
+//    URIs are always bound as UTF8
+
+nsresult BindStatementURI(mozIStorageStatement* statement, int index,
+                          nsIURI* aURI)
+{
+  nsCAutoString utf8URISpec;
+  nsresult rv = aURI->GetSpec(utf8URISpec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = statement->BindUTF8StringParameter(index, utf8URISpec);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
 }
 
 
