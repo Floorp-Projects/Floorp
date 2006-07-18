@@ -1801,7 +1801,8 @@ nsNavHistoryQueryResultNode::VerifyQueriesSerialized()
   nsTArray<nsINavHistoryQuery*> flatQueries;
   flatQueries.SetCapacity(mQueries.Count());
   for (PRInt32 i = 0; i < mQueries.Count(); i ++)
-    flatQueries.AppendElement(mQueries.ObjectAt(i));
+    flatQueries.AppendElement(NS_STATIC_CAST(nsINavHistoryQuery*,
+                                             mQueries.ObjectAt(i)));
 
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
