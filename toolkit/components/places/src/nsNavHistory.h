@@ -63,7 +63,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIStringBundle.h"
 #include "nsITimer.h"
-#include "nsITransactionManager.h"
 #include "nsITreeSelection.h"
 #include "nsITreeView.h"
 #include "nsString.h"
@@ -423,9 +422,6 @@ protected:
   nsresult TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
                            nsCOMArray<nsNavHistoryQuery>* aQueries,
                            nsNavHistoryQueryOptions* aOptions);
-
-  // Transaction Manager
-  nsCOMPtr<nsITransactionManager> mTransactionManager;
 };
 
 /**
