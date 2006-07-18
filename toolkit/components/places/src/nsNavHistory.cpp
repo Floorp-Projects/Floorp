@@ -99,7 +99,6 @@
 #define PREF_AUTOCOMPLETE_ONLY_TYPED            "urlbar.matchOnlyTyped"
 #define PREF_AUTOCOMPLETE_MAX_COUNT             "urlbar.autocomplete.maxCount"
 #define PREF_AUTOCOMPLETE_ENABLED               "urlbar.autocomplete.enabled"
-#define PREF_LAST_PAGE_VISITED                  "last_url"
 
 // the value of mLastNow expires every 3 seconds
 #define HISTORY_EXPIRE_NOW_TIMEOUT (3 * PR_MSEC_PER_SEC)
@@ -1572,20 +1571,6 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, PRInt64 aReferringVisit,
   rv = InternalAddVisit(pageID, aReferringVisit, aSessionID, aTime,
                         aTransitionType, aVisitID);
 
-  // Set the most recently visited page, which is necessary when you have
-  // your "new window" page set to the most recent.
-  if (! hidden) {
-    nsCAutoString utf8URISpec;
-    rv = aURI->GetSpec(utf8URISpec);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (mPrefBranch) {
-      rv = mPrefBranch->SetCharPref(PREF_LAST_PAGE_VISITED,
-                                    PromiseFlatCString(utf8URISpec).get());
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-  }
-
   // Notify observers
   // FIXME bug 325241: make a way to observe hidden URLs
   transaction.Commit();
@@ -2001,20 +1986,30 @@ nsNavHistory::AddPageWithDetails(nsIURI *aURI, const PRUnichar *aTitle,
 
 
 // nsNavHistory::GetLastPageVisited
+//
+//    This was once used when the new window is set to "previous page." It
+//    doesn't seem to be used anymore, so we don't spend any time precompiling
+//    the statement.
 
 NS_IMETHODIMP
 nsNavHistory::GetLastPageVisited(nsACString & aLastPageVisited)
 {
-  nsXPIDLCString lastPage;
-  if (! mPrefBranch) {
-    aLastPageVisited.Truncate(0);
-    return NS_OK;
-  }
-
-  nsresult rv = mPrefBranch->GetCharPref(PREF_LAST_PAGE_VISITED,
-                                         getter_Copies(lastPage));
+  nsCOMPtr<mozIStorageStatement> statement;
+  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT h.url "
+      "FROM moz_history h LEFT OUTER JOIN moz_historyvisit v ON h.id = v.page_id "
+      "WHERE v.visit_date IN "
+      "(SELECT MAX(visit_date) "
+       "FROM moz_historyvisit v2 LEFT JOIN moz_history h2 ON v2.page_id = h2.id "
+        "WHERE h2.hidden != 1)"),
+    getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
-  aLastPageVisited = lastPage;
+
+  PRBool hasMatch = PR_FALSE;
+  if (NS_SUCCEEDED(statement->ExecuteStep(&hasMatch)) && hasMatch) {
+    return statement->GetUTF8String(0, aLastPageVisited);
+  }
+  aLastPageVisited.Truncate(0);
   return NS_OK;
 }
 
@@ -2401,8 +2396,7 @@ nsNavHistory::AddURI(nsIURI *aURI, PRBool aRedirect,
     }
   }
 
-  transaction.Commit();
-  return NS_OK;
+  return transaction.Commit();
 }
 
 
