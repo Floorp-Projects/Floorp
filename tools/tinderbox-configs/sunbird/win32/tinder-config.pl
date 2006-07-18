@@ -69,7 +69,7 @@ $VendorName               = 'Mozilla';
 #$JavaTest                 = 0;
 #$ViewerTest               = 0;
 #$BloatTest                = 0;  # warren memory bloat test
-$BloatTest2                = 1;  # dbaron memory bloat test, require tracemalloc
+$BloatTest2                = 0;  # dbaron memory bloat test, require tracemalloc
 #$DomToTextConversionTest  = 0;  
 #$XpcomGlueTest            = 0;
 $CodesizeTest              = 1;  # Z,  require mozilla/tools/codesighs
@@ -199,7 +199,7 @@ $BinaryName = 'sunbird.exe';
 # Release build options
 $ReleaseBuild  = 1;
 #$LocaleProduct = "browser";
-$shiptalkback  = 0;
+$shiptalkback  = 1;
 #$ReleaseToLatest = 1; # Push the release to latest-<milestone>?
 #$ReleaseToDated = 1; # Push the release to YYYY-MM-DD-HH-<milestone>?
 $build_hour    = "6";
