@@ -258,9 +258,9 @@ nsNavHistoryQueryNode::BuildChildren(PRUint32 aOptions)
 
 // nsNavHistoryResult **********************************************************
 
-NS_IMPL_ISUPPORTS2(nsNavHistoryResult,
-                   nsINavHistoryResult,
-                   nsITreeView)
+NS_IMPL_ISUPPORTS_INHERITED2(nsNavHistoryResult, nsNavHistoryResultNode,
+                             nsINavHistoryResult,
+                             nsITreeView);
 
 
 // nsNavHistoryResult::nsNavHistoryResult
@@ -286,6 +286,9 @@ nsNavHistoryResult::nsNavHistoryResult(nsNavHistory* aHistoryService,
   }
   if (aOptions)
     aOptions->Clone(getter_AddRefs(mSourceOptions));
+  mType = RESULT_TYPE_QUERY;
+  mFlatIndex = -1;
+  mVisibleIndex = -1;
 }
 
 // nsNavHistoryResult::~nsNavHistoryResult
@@ -324,15 +327,16 @@ nsNavHistoryResult::Init()
 
 
 // nsNavHistoryResult::FilledAllResults
+//
+//    Note that the toplevel node is not actually displayed in the tree.
+//    This is why we use a starting level of -1. The immediate children
+//    of this result will be at level 0, along the left side of the tree.
 
 void
 nsNavHistoryResult::FilledAllResults()
 {
-  for (PRInt32 i = 0; i < mTopLevelElements.Count(); i ++) {
-    mTopLevelElements[i]->mParent = nsnull;
-    FillTreeStats(mTopLevelElements[i], 0);
-  }
-  RebuildAllListRecurse(mTopLevelElements);
+  FillTreeStats(this, -1),
+  RebuildAllListRecurse(mChildren);
   InitializeVisibleList();
 }
 
@@ -359,42 +363,6 @@ nsNavHistoryResult::BuildChildrenFor(nsNavHistoryResultNode *aNode)
   return NS_OK;
 }
 
-// nsNavHistoryResult::GetTopLevelNodeCount
-
-NS_IMETHODIMP nsNavHistoryResult::GetTopLevelNodeCount(PRInt32* aCount)
-{
-  *aCount = mTopLevelElements.Count();
-  return NS_OK;
-}
-
-
-// nsNavHistoryResult::GetTopLevelNode
-
-NS_IMETHODIMP nsNavHistoryResult::GetTopLevelNode(PRInt32 aIndex,
-                                               nsINavHistoryResultNode** _retval)
-{
-  if (aIndex < 0 || aIndex >= mTopLevelElements.Count())
-    return NS_ERROR_INVALID_ARG;
-  *_retval = mTopLevelElements[aIndex];
-  NS_ADDREF(*_retval);
-  return NS_OK;
-}
-
-
-// nsNavHistoryResult::GetTopLevel
-
-NS_IMETHODIMP
-nsNavHistoryResult::GetTopLevel(nsIArray** aTopLevel)
-{
-  nsCOMPtr<nsIMutableArray> mutableArray;
-  nsresult rv = NS_NewArray(getter_AddRefs(mutableArray), mTopLevelElements);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aTopLevel = mutableArray;
-  NS_ADDREF(*aTopLevel);
-  return NS_OK;
-}
-
 
 // nsNavHistoryResult::RecursiveSort
 
@@ -405,7 +373,7 @@ nsNavHistoryResult::RecursiveSort(PRUint32 aSortingMode)
     return NS_ERROR_INVALID_ARG;
 
   mCurrentSort = aSortingMode;
-  RecursiveSortArray(mTopLevelElements, aSortingMode);
+  RecursiveSortArray(mChildren, aSortingMode);
 
   // This sorting function is called from two contexts. First, when everything
   // is being built, executeQueries will do a sort and then call
@@ -510,7 +478,7 @@ nsNavHistoryResult::RecursiveSortArray(
 void nsNavHistoryResult::ApplyTreeState(
     const nsDataHashtable<nsStringHashKey, int>& aExpanded)
 {
-  RecursiveApplyTreeState(mTopLevelElements, aExpanded);
+  RecursiveApplyTreeState(mChildren, aExpanded);
 
   // If the list has been build yet, we need to redo the visible list.
   // Normally, this function is called during object creation, and we don't
@@ -547,7 +515,7 @@ nsNavHistoryResult::RecursiveApplyTreeState(
 NS_IMETHODIMP
 nsNavHistoryResult::ExpandAll()
 {
-  RecursiveExpandCollapse(mTopLevelElements, PR_TRUE);
+  RecursiveExpandCollapse(mChildren, PR_TRUE);
   RebuildList();
   return NS_OK;
 }
@@ -558,7 +526,7 @@ nsNavHistoryResult::ExpandAll()
 NS_IMETHODIMP
 nsNavHistoryResult::CollapseAll()
 {
-  RecursiveExpandCollapse(mTopLevelElements, PR_FALSE);
+  RecursiveExpandCollapse(mChildren, PR_FALSE);
   RebuildList();
   return NS_OK;
 }
@@ -847,6 +815,8 @@ nsNavHistoryResult::FillTreeStats(nsNavHistoryResultNode* aResult, PRInt32 aLeve
 
 
 // nsNavHistoryResult::InitializeVisibleList
+//
+//    The root keeps its visible index of -1, since it is never visible
 
 void
 nsNavHistoryResult::InitializeVisibleList()
@@ -857,7 +827,7 @@ nsNavHistoryResult::InitializeVisibleList()
   // positions. We fill directly into the result list, so we need to manually
   // set the visible indices on those elements (normally this is done by
   // InsertVisibleSection)
-  BuildVisibleSection(mTopLevelElements, &mVisibleElements);
+  BuildVisibleSection(mChildren, &mVisibleElements);
   for (PRInt32 i = 0; i < mVisibleElements.Count(); i ++)
     VisibleElementAt(i)->mVisibleIndex = i;
 }
@@ -875,7 +845,7 @@ nsNavHistoryResult::RebuildList()
 
   mAllElements.Clear();
   mVisibleElements.Clear();
-  RebuildAllListRecurse(mTopLevelElements);
+  RebuildAllListRecurse(mChildren);
   InitializeVisibleList();
 
   // We need to update the tree to tell it about the new list
