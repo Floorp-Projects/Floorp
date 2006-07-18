@@ -677,7 +677,7 @@ BookmarkContentSink::HandleLinkEnd()
                                      -1,
                                      &folderId);
   }
-  else if (! frame.mPreviousText.IsEmpty() && frame.mPreviousLink) {
+  else if (frame.mPreviousLink) {
     mHistoryService->SetPageUserTitle(frame.mPreviousLink,
                                       frame.mPreviousText);
   }
