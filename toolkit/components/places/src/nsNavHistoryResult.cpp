@@ -350,12 +350,13 @@ nsNavHistoryContainerResultNode::SetContainerOpen(PRBool aContainerOpen)
 nsresult
 nsNavHistoryContainerResultNode::OpenContainer()
 {
-  nsresult rv;
   NS_ASSERTION(! mExpanded, "Container must be expanded to close it");
   mExpanded = PR_TRUE;
 
+  /* Untested container API functions
   if (! mRemoteContainerType.IsEmpty()) {
     // remote container API may want to fill us
+    nsresult rv;
     nsCOMPtr<nsIRemoteContainer> remote = do_GetService(mRemoteContainerType.get(), &rv);
     if (NS_SUCCEEDED(rv)) {
       remote->OnContainerOpening(this, GetGeneratingOptions());
@@ -367,6 +368,7 @@ nsNavHistoryContainerResultNode::OpenContainer()
     FillStats();
     ReverseUpdateStats(mAccessCount - oldAccessCount);
   }
+  */
 
   nsNavHistoryResult* result = GetResult();
   NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
@@ -396,6 +398,7 @@ nsNavHistoryContainerResultNode::CloseContainer(PRBool aUpdateView)
 
   mExpanded = PR_FALSE;
 
+  /* Untested remote container functions
   nsresult rv;
   if (! mRemoteContainerType.IsEmpty()) {
     // notify remote containers that we are closing
@@ -403,6 +406,7 @@ nsNavHistoryContainerResultNode::CloseContainer(PRBool aUpdateView)
     if (NS_SUCCEEDED(rv))
       remote->OnContainerClosed(this);
   }
+  */
 
   if (aUpdateView) {
     nsNavHistoryResult* result = GetResult();
@@ -1355,6 +1359,7 @@ nsNavHistoryContainerResultNode::GetRemoteContainerType(
 
 // nsNavHistoryContainerResultNode::AppendURINode
 
+#if 0 // UNTESTED, commented out until it can be tested
 NS_IMETHODIMP
 nsNavHistoryContainerResultNode::AppendURINode(
     const nsACString& aURI, const nsACString& aTitle, PRUint32 aAccessCount,
@@ -1374,10 +1379,12 @@ nsNavHistoryContainerResultNode::AppendURINode(
   NS_ADDREF(*_retval = result);
   return NS_OK;
 }
+#endif
 
 
 // nsNavHistoryContainerResultNode::AppendVisitNode
 
+#if 0 // UNTESTED, commented out until it can be tested
 NS_IMETHODIMP
 nsNavHistoryContainerResultNode::AppendVisitNode(
     const nsACString& aURI, const nsACString& aTitle, PRUint32 aAccessCount,
@@ -1399,10 +1406,12 @@ nsNavHistoryContainerResultNode::AppendVisitNode(
   NS_ADDREF(*_retval = result);
   return NS_OK;
 }
+#endif
 
 
 // nsNavHistoryContainerResultNode::AppendFullVisitNode
 
+#if 0 // UNTESTED, commented out until it can be tested
 NS_IMETHODIMP
 nsNavHistoryContainerResultNode::AppendFullVisitNode(
     const nsACString& aURI, const nsACString& aTitle, PRUint32 aAccessCount,
@@ -1426,10 +1435,12 @@ nsNavHistoryContainerResultNode::AppendFullVisitNode(
   NS_ADDREF(*_retval = result);
   return NS_OK;
 }
+#endif
 
 
 // nsNavHistoryContainerResultNode::AppendContainerNode
 
+#if 0 // UNTESTED, commented out until it can be tested
 NS_IMETHODIMP
 nsNavHistoryContainerResultNode::AppendContainerNode(
     const nsACString& aTitle, const nsACString& aIconURI,
@@ -1484,10 +1495,12 @@ nsNavHistoryContainerResultNode::AppendQueryNode(
   NS_ADDREF(*_retval = result);
   return NS_OK;
 }
+#endif
 
 
 // nsNavHistoryContainerResultNode::AppendFolderNode
 
+#if 0 // UNTESTED, commented out until it can be tested
 NS_IMETHODIMP
 nsNavHistoryContainerResultNode::AppendFolderNode(
     PRInt64 aFolderId, nsINavHistoryFolderResultNode** _retval)
@@ -1512,12 +1525,14 @@ nsNavHistoryContainerResultNode::AppendFolderNode(
   NS_ADDREF(*_retval = result->GetAsFolder());
   return NS_OK;
 }
+#endif
 
 
 // nsNavHistoryContainerResultNode::ClearContents
 //
 //    Used by the remote container API to clear this container
 
+#if 0 // UNTESTED, commented out until it can be tested
 NS_IMETHODIMP
 nsNavHistoryContainerResultNode::ClearContents()
 {
@@ -1536,6 +1551,7 @@ nsNavHistoryContainerResultNode::ClearContents()
   ReverseUpdateStats(-PRInt32(oldAccessCount));
   return NS_OK;
 }
+#endif
 
 
 // nsNavHistoryQueryResultNode *************************************************
@@ -2420,6 +2436,8 @@ nsNavHistoryFolderResultNode::OpenContainer()
 {
   NS_ASSERTION(! mExpanded, "Container must be expanded to close it");
   nsresult rv;
+
+  /* Untested container API functions
   if (! mRemoteContainerType.IsEmpty()) {
     // remote container API may want to change the bookmarks for this folder.
     nsCOMPtr<nsIRemoteContainer> remote = do_GetService(mRemoteContainerType.get(), &rv);
@@ -2431,6 +2449,7 @@ nsNavHistoryFolderResultNode::OpenContainer()
       NS_WARNING(mRemoteContainerType.get());
     }
   }
+  */
 
   if (! mContentsValid) {
     rv = FillChildren();
