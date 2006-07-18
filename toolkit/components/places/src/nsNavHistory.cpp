@@ -196,6 +196,12 @@ const PRInt32 nsNavHistory::kAutoCompleteIndex_Typed = 3;
 static nsDataHashtable<nsStringHashKey, int>* gTldTypes;
 static const char* gQuitApplicationMessage = "quit-application";
 
+// annotation names
+const char nsNavHistory::kAnnotationTitle[] = "history/title";
+const char nsNavHistory::kAnnotationFavIconName[] = "history/iconurl";
+const char nsNavHistory::kAnnotationFavIconData[] = "history/icondata";
+const char nsNavHistory::kAnnotationPreviousEncoding[] = "history/encoding";
+
 nsIAtom* nsNavHistory::sMenuRootAtom = nsnull;
 nsIAtom* nsNavHistory::sToolbarRootAtom = nsnull;
 
