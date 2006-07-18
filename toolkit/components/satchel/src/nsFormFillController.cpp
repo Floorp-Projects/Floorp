@@ -216,6 +216,17 @@ nsFormFillController::SetPopupOpen(PRBool aPopupOpen)
 {
   if (mFocusedPopup) {
     if (aPopupOpen) {
+      // make sure input field is visible before showing popup (bug 320938)
+      nsCOMPtr<nsIContent> content = do_QueryInterface(mFocusedInput);
+      nsCOMPtr<nsIDocShell> docShell = GetDocShellForInput(mFocusedInput);
+      nsCOMPtr<nsIPresShell> presShell;
+      docShell->GetPresShell(getter_AddRefs(presShell));
+      nsIFrame *frame = presShell->GetPrimaryFrameFor(content.get());
+      if (frame)
+        presShell->ScrollFrameIntoView(frame,
+                                       NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE,
+                                       NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE);
+
       nsRect popupRect = GetScreenOrigin(mFocusedInput);
       mFocusedPopup->OpenPopup(this, popupRect.x, popupRect.y+popupRect.height, popupRect.width);
     } else
