@@ -322,7 +322,8 @@ protected:
   nsresult QueryToSelectClause(nsINavHistoryQuery* aQuery,
                                PRInt32 aStartParameter,
                                nsCString* aClause,
-                               PRInt32* aParamCount);
+                               PRInt32* aParamCount,
+                               const nsACString& aCommonConditions);
   nsresult BindQueryClauseParameters(mozIStorageStatement* statement,
                                      PRInt32 aStartParameter,
                                      nsINavHistoryQuery* aQuery,
