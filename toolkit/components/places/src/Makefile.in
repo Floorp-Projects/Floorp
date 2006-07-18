@@ -69,6 +69,7 @@ REQUIRES = xpcom \
 LOCAL_INCLUDES = -I$(DEPTH)/toolkit/components/autocomplete/src
 
 CPPSRCS = \
+          nsAnnotationService.cpp \
           nsNavHistory.cpp \
           $(NULL)
 
