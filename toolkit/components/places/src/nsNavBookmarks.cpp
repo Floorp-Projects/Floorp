@@ -1104,7 +1104,7 @@ nsNavBookmarks::GetFolderURI(PRInt64 aFolder, nsIURI **aURI)
   nsCOMPtr<nsINavHistoryQueryOptions> queryOptions;
   rv = history->GetNewQueryOptions(getter_AddRefs(queryOptions));
   NS_ENSURE_SUCCESS(rv, rv);
-  PRInt32 groupByFolder = nsINavHistoryQueryOptions::GROUP_BY_FOLDER;
+  PRUint32 groupByFolder = nsINavHistoryQueryOptions::GROUP_BY_FOLDER;
   rv = queryOptions->SetGroupingMode(&groupByFolder, 1);
   NS_ENSURE_SUCCESS(rv, rv);
 
