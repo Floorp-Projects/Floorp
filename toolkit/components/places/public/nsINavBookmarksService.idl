@@ -162,6 +162,20 @@ interface nsINavBookmarkObserver : nsISupports
    *  @param property   The property that was changed.
    */
   void onFolderChanged(in PRInt64 folder, in ACString property);
+
+  /**
+   * Notify this observer that a separator has been added.
+   *  @param parent     The id of the separator's parent.
+   *  @param index      The separator's index inside its parent.
+   */
+  void onSeparatorAdded(in PRInt64 parent, in PRInt32 index);
+
+  /**
+   * Notify this observer that a separator has been removed.
+   *  @param parent     The id of the separator's parent.
+   *  @param index      The separator's old index in its parent.
+   */
+  void onSeparatorRemoved(in PRInt64 parent, in PRInt32 index);
 };
 
 /**
@@ -262,6 +276,21 @@ interface nsINavBookmarksService : nsISupports
    *  @param subFolder Name of the folder to search for in folder
    */
   PRInt64 getChildFolder(in PRInt64 folder, in AString subFolder);
+
+  /**
+   * Inserts a bookmark separator into the given folder at the given index.
+   * The separator can be removed using removeChildAt().
+   *  @param folder    Parent folder of the separator
+   *  @param index     The separator's index under folder, or -1 to append
+   */
+  void insertSeparator(in PRInt64 folder, in PRInt32 index);
+
+  /**
+   * Removes any type of child (item, folder, or separator) at the given index.
+   *  @param folder    The folder to remove a child from
+   *  @param index     The index of the child to remove
+   */
+  void removeChildAt(in PRInt64 folder, in PRInt32 index);
 
   /**
    * Set the history/bookmark title for a URI.  The new title will be used
