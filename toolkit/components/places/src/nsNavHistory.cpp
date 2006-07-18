@@ -532,6 +532,15 @@ nsNavHistory::InitDB(PRBool *aDoImport)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  // This must be outside of the visit creation above because the alpha1 shipped
+  // without this index. This makes a big difference in startup time for
+  // large profiles because of finding bookmark redirects using the referring
+  // page. For final release, if we think everybody running alpha1 has run
+  // alpha2 or later, we can put it in the if statement above for faster
+  // startup time (same as above for the moz_history_faviconindex)
+  mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "CREATE INDEX moz_historyvisit_fromindex ON moz_historyvisit (from_visit)"));
+
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2956,6 +2965,7 @@ nsNavHistory::LazyTimerCallback(nsITimer* aTimer, void* aClosure)
 void
 nsNavHistory::CommitLazyMessages()
 {
+  mozStorageTransaction transaction(mDBConn, PR_TRUE);
   for (PRUint32 i = 0; i < mLazyMessages.Length(); i ++) {
     LazyMessage& message = mLazyMessages[i];
     switch (message.type) {
