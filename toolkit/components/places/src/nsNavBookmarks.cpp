@@ -713,10 +713,6 @@ nsNavBookmarks::CreateContainer(PRInt64 aParent, const nsAString &aName,
   nsresult rv = CreateFolder(aParent, aName, aIndex, aNewFolder);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Make sure the container is read-only
-  rv = SetFolderReadonly(*aNewFolder, PR_TRUE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // Set the type.
   nsCOMPtr<mozIStorageStatement> statement;
   rv = DBConn()->CreateStatement(NS_LITERAL_CSTRING("UPDATE moz_bookmarks_folders SET type = ?2 WHERE id = ?1"),
@@ -1126,59 +1122,22 @@ nsNavBookmarks::GetFolderURI(PRInt64 aFolder, nsIURI **aURI)
 NS_IMETHODIMP
 nsNavBookmarks::GetFolderReadonly(PRInt64 aFolder, PRBool *aResult)
 {
-  // We store readonly-ness as an annotation on the place: URI of the folder
-  nsresult rv;
-  nsCOMPtr<nsIAnnotationService> anno =
-    do_GetService(NS_ANNOTATIONSERVICE_CONTRACTID, &rv);
+  // Ask the folder's nsIBookmarksContainer for the readonly property.
+  *aResult = PR_FALSE;
+  nsAutoString type;
+  nsresult rv = GetFolderType(aFolder, type);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // For efficiency, we construct the URI here rather than going through
-  // query object construction.
-  nsCAutoString spec;
-  spec.AssignLiteral("place:folder=");
-  spec.AppendInt(aFolder);
-  spec.AppendLiteral("&group=3");
-  nsCOMPtr<nsIURI> uri;
-  rv = NS_NewURI(getter_AddRefs(uri), spec);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRInt32 readonly;
-  rv = anno->GetAnnotationInt32(uri,
-                                NS_LITERAL_CSTRING(ANNO_FOLDER_READONLY),
-                                &readonly);
-  *aResult = (NS_SUCCEEDED(rv) && readonly);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNavBookmarks::SetFolderReadonly(PRInt64 aFolder, PRBool aReadonly)
-{
-  // We store readonly-ness as an annotation on the place: URI of the folder
-  nsresult rv;
-  nsCOMPtr<nsIAnnotationService> anno =
-    do_GetService(NS_ANNOTATIONSERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // For efficiency, we construct the URI here rather than going through
-  // query object construction.
-  nsCAutoString spec;
-  spec.AssignLiteral("place:folder=");
-  spec.AppendInt(aFolder);
-  spec.AppendLiteral("&group=3");
-  nsCOMPtr<nsIURI> uri;
-  rv = NS_NewURI(getter_AddRefs(uri), spec);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (aReadonly) {
-    rv = anno->SetAnnotationInt32(uri,
-                                  NS_LITERAL_CSTRING(ANNO_FOLDER_READONLY), 1,
-                                  0, nsIAnnotationService::EXPIRE_NEVER);
-  } else {
-    rv = anno->RemoveAnnotation(uri,
-                                NS_LITERAL_CSTRING(ANNO_FOLDER_READONLY));
+  if (!type.IsEmpty()) {
+    nsCOMPtr<nsIBookmarksContainer> container =
+      do_GetService(NS_ConvertUTF16toUTF8(type).get(), &rv);
+    if (NS_SUCCEEDED(rv)) {
+      rv = container->GetChildrenReadOnly(aResult);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
-  return rv;
+  return NS_OK;
 }
 
 nsresult
