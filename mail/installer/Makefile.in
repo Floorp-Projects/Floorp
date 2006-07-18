@@ -93,7 +93,22 @@ ifdef BUILD_STATIC_LIBS
 ifeq (WINNT,$(OS_ARCH))
 MOZ_PKG_MANIFEST_P = $(srcdir)/windows/packages-static
 endif
+else
+$(error you need a "--enable-static --disable-shared" build to create an installer)
 endif
+
+MOZ_NONLOCALIZED_PKG_LIST = \
+	xpcom \
+	mail \
+	newsblog \
+	offline \
+	$(NULL)
+
+MOZ_LOCALIZED_PKG_LIST = $(AB_CD)
+
+MOZ_OPTIONAL_PKG_LIST = \
+	talkback \
+	$(NULL)
 
 DEFINES += -DAB_CD=$(AB_CD)
 
