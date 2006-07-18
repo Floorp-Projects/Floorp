@@ -912,6 +912,40 @@ void nsNavHistory::expireNowTimerCallback(nsITimer* aTimer,
 }
 
 
+// nsNavHistory::NormalizeTime
+//
+//    Converts a nsINavHistoryQuery reference+offset time into a PRTime
+//    relative to the epoch.
+
+PRTime
+nsNavHistory::NormalizeTime(PRUint32 aRelative, PRTime aOffset)
+{
+  PRTime ref;
+  switch (aRelative)
+  {
+    case nsINavHistoryQuery::TIME_RELATIVE_EPOCH:
+      return aOffset;
+    case nsINavHistoryQuery::TIME_RELATIVE_TODAY: {
+      // round to midnight this morning
+      PRExplodedTime explodedTime;
+      PR_ExplodeTime(GetNow(), PR_LocalTimeParameters, &explodedTime);
+      explodedTime.tm_min =
+        explodedTime.tm_hour =
+        explodedTime.tm_sec =
+        explodedTime.tm_usec = 0;
+      ref = PR_ImplodeTime(&explodedTime);
+      break;
+    }
+    case nsINavHistoryQuery::TIME_RELATIVE_NOW:
+      ref = GetNow();
+      break;
+    default:
+      NS_NOTREACHED("Invalid relative time");
+      return 0;
+  }
+  return ref + aOffset;
+}
+
 // Nav history *****************************************************************
 
 
@@ -2360,6 +2394,9 @@ nsNavHistory::BindQueryClauseParameters(mozIStorageStatement* statement,
   if (NS_SUCCEEDED(aQuery->GetHasBeginTime(&hasIt)) && hasIt) {
     PRTime time;
     aQuery->GetBeginTime(&time);
+    PRUint32 timeReference;
+    aQuery->GetBeginTimeReference(&timeReference);
+    time = NormalizeTime(timeReference, time);
     rv = statement->BindInt64Parameter(aStartParameter + *aParamCount, time);
     NS_ENSURE_SUCCESS(rv, rv);
     (*aParamCount) ++;
@@ -2369,6 +2406,9 @@ nsNavHistory::BindQueryClauseParameters(mozIStorageStatement* statement,
   if (NS_SUCCEEDED(aQuery->GetHasEndTime(&hasIt)) && hasIt) {
     PRTime time;
     aQuery->GetEndTime(&time);
+    PRUint32 timeReference;
+    aQuery->GetEndTimeReference(&timeReference);
+    time = NormalizeTime(timeReference, time);
     rv = statement->BindInt64Parameter(aStartParameter + *aParamCount, time);
     NS_ENSURE_SUCCESS(rv, rv);
     (*aParamCount) ++;
@@ -3289,8 +3329,9 @@ NS_IMPL_ISUPPORTS1(nsNavHistoryQuery, nsINavHistoryQuery)
 //    just set the things it's interested in.
 
 nsNavHistoryQuery::nsNavHistoryQuery()
-  : mBeginTime(0), mEndTime(0), mOnlyBookmarked(PR_FALSE),
-    mDomainIsHost(PR_FALSE)
+  : mBeginTime(0), mBeginTimeReference(TIME_RELATIVE_EPOCH),
+    mEndTime(0), mEndTimeReference(TIME_RELATIVE_EPOCH),
+    mOnlyBookmarked(PR_FALSE), mDomainIsHost(PR_FALSE)
 {
 }
 
@@ -3305,16 +3346,26 @@ NS_IMETHODIMP nsNavHistoryQuery::SetBeginTime(PRTime aBeginTime)
   mBeginTime = aBeginTime;
   return NS_OK;
 }
-NS_IMETHODIMP nsNavHistoryQuery::GetHasBeginTime(PRBool* _retval)
+
+/* attribute long beginTimeReference; */
+NS_IMETHODIMP nsNavHistoryQuery::GetBeginTimeReference(PRUint32* _retval)
 {
-  *_retval = (mBeginTime > 0);
+  *_retval = mBeginTimeReference;
   return NS_OK;
 }
-NS_IMETHODIMP nsNavHistoryQuery::SetBeginDate(PRInt32 year, PRInt32 month,
-                                              PRInt32 day)
+NS_IMETHODIMP nsNavHistoryQuery::SetBeginTimeReference(PRUint32 aReference)
 {
-  // FIXME
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (aReference > TIME_RELATIVE_NOW)
+    return NS_ERROR_INVALID_ARG;
+  mBeginTimeReference = aReference;
+  return NS_OK;
+}
+
+/* readonly attribute boolean hasBeginTime; */
+NS_IMETHODIMP nsNavHistoryQuery::GetHasBeginTime(PRBool* _retval)
+{
+  *_retval = ! (mBeginTimeReference == TIME_RELATIVE_EPOCH && mBeginTime == 0);
+  return NS_OK;
 }
 
 /* attribute PRTime endTime; */
@@ -3328,16 +3379,26 @@ NS_IMETHODIMP nsNavHistoryQuery::SetEndTime(PRTime aEndTime)
   mEndTime = aEndTime;
   return NS_OK;
 }
-NS_IMETHODIMP nsNavHistoryQuery::GetHasEndTime(PRBool* _retval)
+
+/* attribute long endTimeReference; */
+NS_IMETHODIMP nsNavHistoryQuery::GetEndTimeReference(PRUint32* _retval)
 {
-  *_retval = (mEndTime > 0);
+  *_retval = mEndTimeReference;
   return NS_OK;
 }
-NS_IMETHODIMP nsNavHistoryQuery::SetEndDate(PRInt32 year, PRInt32 month,
-                                            PRInt32 day)
+NS_IMETHODIMP nsNavHistoryQuery::SetEndTimeReference(PRUint32 aReference)
 {
-  // FIXME
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (aReference > TIME_RELATIVE_NOW)
+    return NS_ERROR_INVALID_ARG;
+  mEndTimeReference = aReference;
+  return NS_OK;
+}
+
+/* readonly attribute boolean hasEndTime; */
+NS_IMETHODIMP nsNavHistoryQuery::GetHasEndTime(PRBool* _retval)
+{
+  *_retval = ! (mEndTimeReference == TIME_RELATIVE_EPOCH && mEndTime == 0);
+  return NS_OK;
 }
 
 /* attribute string searchTerms; */
