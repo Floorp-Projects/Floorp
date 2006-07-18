@@ -318,7 +318,7 @@ sub execute_tests {
             # test was terminated due to timeout
             &report_failure ($test, "TIMED OUT ($opt_timeout seconds)\n");
         }
-        elsif ($got_exit != $expected_exit) {
+        elsif ($got_exit != $expected_exit || $exit_signal != 0) {
             # full testcase output dumped on mismatched exit codes,
             &report_failure ($test, "Expected exit code " .
                              "$expected_exit, got $got_exit\n" .
@@ -393,6 +393,15 @@ sub write_results {
        "Tests completed on $completion_date.<br><br>\n");
 
     if ($failures_reported > 0) {
+        my $output_file_failures = $opt_output_file;
+        $output_file_failures =~ s/(.*)\.html$/$1-failures.txt/;
+        open (OUTPUTFAILURES, "> $output_file_failures") ||
+            die ("Could not create failure output file $output_file_failures");
+        print OUTPUTFAILURES (join ("\n", @failed_tests));
+        close OUTPUTFAILURES;
+
+        &status ("Wrote failures to '$output_file_failures'.");
+
         print OUTPUT
           ("[ <a href='#fail_detail'>Failure Details</a> | " .
            "<a href='#retest_list'>Retest List</a> | " .
