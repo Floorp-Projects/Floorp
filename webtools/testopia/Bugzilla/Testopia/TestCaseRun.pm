@@ -163,7 +163,7 @@ sub store {
     $dbh->do("INSERT INTO test_case_runs ($columns)
               VALUES (?,?,?,?,?,?,?,?,?,?,?,?)", undef,
               (undef, $self->{'run_id'}, $self->{'case_id'}, $self->{'assignee'},
-               $self->{'testedby'}, IDLE, $self->{'case_text_version'}, 
+               undef, IDLE, $self->{'case_text_version'}, 
                $self->{'build_id'}, $self->{'notes'}, undef, 1, 0));
 
     my $key = $dbh->bz_last_key( 'test_case_runs', 'case_run_id' );
@@ -181,11 +181,35 @@ sub clone {
     my ($fields) = @_;
     my $dbh = Bugzilla->dbh;
     $self->{'build_id'} = $fields->{'build_id'};
-    $self->{'case_run_status_id'} = IDLE;
-    $self->{'notes'} = '';    
     my $entry = $self->store;
     $self->set_as_current($entry);
     return $entry;
+}
+
+=head2 check_exists
+
+Checks for an existing entry with the same build for this case and run
+and returns the id if it is found
+
+=cut
+
+sub check_exists {
+   my $self = shift;
+   my ($run_id, $case_id, $build_id) = @_;
+
+   $run_id ||= $self->{'run_id'};
+   $case_id ||= $self->{'case_id'};
+   $build_id ||= $self->{'build_id'};
+
+   my $dbh = Bugzilla->dbh;     
+   my ($is) = $dbh->selectrow_array(
+        "SELECT case_run_id 
+           FROM test_case_runs 
+          WHERE run_id = ? AND case_id = ? AND build_id = ?",
+          undef, ($run_id, $case_id, $build_id));
+
+   return $is;
+
 }
 
 =head2 update
@@ -203,13 +227,17 @@ sub update {
     if ($self->is_closed_status($fields->{'case_run_status_id'})){
         $fields->{'close_date'} = Bugzilla::Testopia::Util::get_time_stamp();
     }
-    if ($fields->{'build_id'} != $self->{'build_id'} && $self->{'case_run_status_id'} != IDLE){
-        return $self->clone($fields);
+    my ($is) = $self->check_exists($self->run_id, $self->case_id, $fields->{'build_id'});
+
+    if ($fields->{'build_id'} != $self->{'build_id'}){
+        if ($is){
+            return $is;
+        }
+        if ($self->{'case_run_status_id'} != IDLE){
+            return $self->clone($fields);
+        }
     }
-    else {
-        return $self->_update_fields($fields);
-    }
-    
+    return $self->_update_fields($fields);
 }
 
 =head2 _update_fields
@@ -223,6 +251,13 @@ sub _update_fields{
     my $self = shift;
     my ($newvalues) = @_;
     my $dbh = Bugzilla->dbh;
+
+    if ($newvalues->{'case_run_status_id'} && $newvalues->{'case_run_status_id'} == FAILED){
+        $self->_update_deps(BLOCKED);
+    }
+    elsif ($newvalues->{'case_run_status_id'} && $newvalues->{'case_run_status_id'} == PASSED){
+        $self->_update_deps(IDLE);
+    }
 
     $dbh->bz_lock_tables('test_case_runs WRITE');
     foreach my $field (keys %{$newvalues}){
@@ -302,9 +337,9 @@ sub set_status {
         $self->_update_fields({'close_date' => $timestamp});
         $self->_update_fields({'testedby' => Bugzilla->user->id});
         $self->{'close_date'} = $timestamp;
-        $self->{'tested_by'} = Bugzilla->user;
+        $self->{'testedby'} = Bugzilla->user->id;
     }
-        
+
     $self->{'case_run_status_id'} = $status_id;
     $self->{'status'} = undef;
 }
@@ -335,6 +370,43 @@ sub set_note {
     }
     $self->_update_fields({'notes' => $note});
     $self->{'notes'} = $note;
+}
+
+=head2 _update_deps
+
+Private method for updating blocked test cases. If the pre-requisite 
+case fails, the blocked test cases in a run get a status of BLOCKED
+if it passes they are set back to IDLE. This only happens to the
+current case run and only if it doesn't already have a closed status.
+=cut
+ 
+sub _update_deps {
+    my $self = shift;
+    my ($status) = @_;
+    my $deplist = $self->case->get_dep_tree;
+    return unless $deplist;
+    
+    my $dbh = Bugzilla->dbh;    
+    $dbh->bz_lock_tables("test_case_runs WRITE");
+    my $caseruns = $dbh->selectcol_arrayref(
+       "SELECT case_run_id 
+          FROM test_case_runs    
+         WHERE iscurrent = 1 
+           AND run_id = ? 
+           AND case_run_status_id IN(". join(',', (IDLE,RUNNING,PAUSED,BLOCKED)) .") 
+           AND case_id IN (". join(',', @$deplist) .")",
+           undef, $self->{'run_id'});
+    my $sth = $dbh->prepare_cached(
+        "UPDATE test_case_runs 
+         SET case_run_status_id = ?
+       WHERE case_run_id = ?");
+    
+    foreach my $id (@$caseruns){
+        $sth->execute($status, $id);
+    }
+    $dbh->bz_unlock_tables;
+    
+    $self->{'updated_deps'} = $caseruns;
 }
 
 =head2 get_case_run_list
@@ -379,7 +451,8 @@ Attaches the specified bug to this test case-run
 
 sub attach_bug {
     my $self = shift;
-    my ($bug) = @_;
+    my ($bug, $caserun_id) = @_;
+    $caserun_id ||= $self->{'case_run_id'};
     my $dbh = Bugzilla->dbh;
 
     $dbh->bz_lock_tables('test_case_bugs WRITE');
@@ -388,7 +461,7 @@ sub attach_bug {
                FROM test_case_bugs 
               WHERE case_run_id=?
                 AND bug_id=?", 
-             undef, ($self->{'case_run_id'}, $bug));
+             undef, ($caserun_id, $bug));
     if ($is) {
         $dbh->bz_unlock_tables();
         return;
@@ -396,6 +469,24 @@ sub attach_bug {
     $dbh->do("INSERT INTO test_case_bugs (bug_id, case_run_id)
               VALUES(?,?)", undef, ($bug, $self->{'case_run_id'}));
     $dbh->bz_unlock_tables();
+}
+
+=head2 detach_bug
+
+Removes the association of the specified bug from this test case-run
+
+=cut
+
+sub detach_bug {
+    my $self = shift;
+    my ($bug) = @_;
+    my $dbh = Bugzilla->dbh;
+
+    $dbh->do("DELETE FROM test_case_bugs 
+               WHERE bug_id = ? 
+                 AND case_run_id = ?", 
+             undef, ($bug, $self->{'case_run_id'}));
+
 }
 
 =head2 get_buglist
@@ -466,6 +557,12 @@ Returns the true if this case-run is private.
 
 =cut
 
+=head2 updated_deps
+
+Returns a reference to a list of dependent caseruns that were updated 
+
+=cut
+
 sub id                { return $_[0]->{'case_run_id'};          }
 sub case_id           { return $_[0]->{'case_id'};          }
 sub run_id            { return $_[0]->{'run_id'};          }
@@ -478,6 +575,7 @@ sub iscurrent         { return $_[0]->{'iscurrent'};   }
 sub status_id         { return $_[0]->{'case_run_status_id'};   }
 sub sortkey           { return $_[0]->{'sortkey'};   }
 sub isprivate         { return $_[0]->{'isprivate'};   }
+sub updated_deps      { return $_[0]->{'updated_deps'};   }
 
 =head2 run
 
@@ -520,7 +618,7 @@ sub build {
     return $self->{'build'};
 }
 
-=head2 run
+=head2 status
 
 Looks up the status name of the associated status_id for this object
 
@@ -612,10 +710,10 @@ sub is_open_status {
     my $self = shift;
     my $status = shift;
     my @open_status_list = (IDLE, RUNNING, PAUSED);
-    return 1 if lsearch(\@open_status_list, $status) > 0;
+    return 1 if lsearch(\@open_status_list, $status) > -1;
 }
 
-=head2 is_open_status
+=head2 is_closed_status
 
 Returns true if the status of this case-run is a closed status
 
@@ -625,7 +723,7 @@ sub is_closed_status {
     my $self = shift;
     my $status = shift;
     my @closed_status_list = (PASSED, FAILED, BLOCKED);
-    return 1 if lsearch(\@closed_status_list, $status) > 0;
+    return 1 if lsearch(\@closed_status_list, $status) > -1;
 }
 
 =head2 canview
@@ -705,13 +803,13 @@ Returns true if the logged in user has rights to edit this case-run.
 
 sub canedit {
     my $self = shift;
-    return $self->canview 
+    return !$self->run->stop_date && $self->canview 
     && (UserInGroup('managetestplans') 
       || UserInGroup('edittestcases')
         || UserInGroup('runtests'));
 }
 
-=head2 canedit
+=head2 candelete
 
 Returns true if the logged in user has rights to delete this case-run.
 

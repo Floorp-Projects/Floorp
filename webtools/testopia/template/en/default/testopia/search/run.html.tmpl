@@ -1,3 +1,4 @@
+[%# 1.0@bugzilla.org %]
 [%# The contents of this file are subject to the Mozilla Public
   # License Version 1.1 (the "License"); you may not use this file
   # except in compliance with the License. You may obtain a copy of
@@ -24,25 +25,49 @@
 <table>
   <tr class="bz_row_header">
     <th>Status</th>
+    <th>Product</th>
+    <th>Version</th>
     <th>Build</th>
-    <th>Environment</th>
     <th>Milestone</th>
+    <th>Environment</th>
   </tr>
   <tr>
     <td style="padding-right: 30px;">
-  	[% PROCESS select sel = { name  => 'run_status',
-            				  accesskey => 's', 
-            				  list      => run.get_status_list
-            				  elements  => 5,
-            				  mult      => 1 } %]
-	</td>
-	<td style="padding-right: 30px;">
-  	[% PROCESS select sel = { name  => 'build',
-            				  accesskey => 't', 
-            				  list      => run.get_distinct_builds,
-            				  elements  => 5,
-            				  mult      => 1 } %]	
-	</td>
+    [% PROCESS select sel = { name  => 'run_status',
+                              accesskey => 's', 
+                              list      => run.get_status_list
+                              elements  => 5,
+                              mult      => 1 } %]
+    </td>
+    <td style="padding-right: 30px;">
+    [% PROCESS select sel = { name  => 'product_id',
+                              accesskey => 'p', 
+                              list      => plan.get_available_products,
+                              elements  => 5,
+                              mult      => 1  
+                              events    => 'onChange="onProductSelection()"' } %]
+    </td>
+    <td style="padding-right: 30px;">
+    [% PROCESS select sel = { name  => 'default_product_version',
+                              accesskey => 'v', 
+                              list      => product_versions,
+                              elements  => 5,
+                              mult      => 1 } %]   
+    </td>
+    <td style="padding-right: 30px;">
+    [% PROCESS select sel = { name  => 'build',
+                              accesskey => 't', 
+                              list      => run.get_distinct_builds,
+                              elements  => 5,
+                              mult      => 1 } %]   
+    </td>
+    <td style="padding-right: 30px;">
+    [% PROCESS select sel = { name  => 'milestone',
+                              accesskey => 'm', 
+                              list      => run.get_distinct_milestones,
+                              elements  => 5,
+                              mult      => 1 } %] 
+    </td>
     <td style="padding-right: 30px;">
     [% PROCESS select sel = { name  => 'environment_id',
                               accesskey => 'e', 
@@ -50,13 +75,6 @@
                               elements  => 5,
                               mult      => 1 } %] 
     </td>  
-    <td style="padding-right: 30px;">
-    [% PROCESS select sel = { name  => 'milestone',
-                              accesskey => 'm', 
-                              list      => run.get_distinct_milestones,
-                              elements  => 5,
-                              mult      => 1 } %] 
-  </td>
 
   </tr>
 </table>
@@ -68,36 +86,36 @@
     <th align="right">Summary:</th>
     <td>
     [% PROCESS select sel = { name => 'summary_type',
-				              list => query_variants } %]</td>
-	<td><input name="summary"></td>
+                              list => query_variants } %]</td>
+    <td><input name="summary"></td>
   </tr>
   <tr>
     <th align="right">Notes</th>
     <td>
     [% PROCESS select sel = { name => 'notes_type',
-	    			          list => query_variants } %]</td>
-	<td><input name="notes"></td>
+                              list => query_variants } %]</td>
+    <td><input name="notes"></td>
   </tr>
   <tr>
     <th align="right">Environment XML:</th>
     <td>
     [% PROCESS select sel = { name => 'environment_type',
-	    			          list => query_variants } %]</td>
-	<td><input name="environment"></td>
+                              list => query_variants } %]</td>
+    <td><input name="environment"></td>
   </tr>
   <tr>
     <th align="right">Tags:</th>
     <td>
     [% PROCESS select sel = { name => 'tags_type',
-				              list => tag_variants } %]</td>
-	<td><input name="tags"></td>
+                              list => tag_variants } %]</td>
+    <td><input name="tags"></td>
   </tr>
   <tr>
     <th align="right">Manager:</th>
     <td>
     [% PROCESS select sel = { name => 'manager_type',
-				              list => email_variants } %]</td>
-	<td><input name="manager"></td>
+                              list => email_variants } %]</td>
+    <td><input name="manager"></td>
   </tr>
 </table>
 </fieldset>
@@ -115,11 +133,11 @@
   </dd>
   <dt>where one or more of the following changed:</dt>
   <dd>
-  	[% PROCESS select sel = { name  => 'chfield_type',
-				  accesskey => 'p', 
-				  list      => run.get_fields
-				  elements  => 5,
-				  mult      => 1 } %]
+    [% PROCESS select sel = { name  => 'chfield_type',
+                  accesskey => 'p', 
+                  list      => run.get_fields
+                  elements  => 5,
+                  mult      => 1 } %]
   </dd>
   <dt>and the new value was:</dt>
   <dd>

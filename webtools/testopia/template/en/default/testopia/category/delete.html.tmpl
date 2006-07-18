@@ -1,3 +1,4 @@
+[%# 1.0@bugzilla.org %]
 [%# The contents of this file are subject to the Mozilla Public
   # License Version 1.1 (the "License"); you may not use this file
   # except in compliance with the License. You may obtain a copy of
@@ -24,15 +25,15 @@
 
 <form method="POST" action="tr_categories.cgi">
 <input type="HIDDEN" name="action" value="do_delete">
-<input type="HIDDEN" name="category_id" value="[% category.id %]">
+<input type="HIDDEN" name="category_id" value="[% category.id FILTER none %]">
 <input type="hidden" name="plan_id" value="[% plan.id FILTER none %]">
   
 [% IF category.case_count %]
   <table style="border-collapse:collapse;" border="1" bordercolor="red" width="100%" cellspacing="0" cellpadding="6"><tr><td>
   <font color="red">
 
-	This category is used by [% category.casecount FILTER html %] test cases.<br>
-	Please move all test cases to other categories first.
+    This category is used by [% category.casecount FILTER html %] test cases.<br>
+    Please move all test cases to other categories first.
   [% tr_error %]</font>
   </td></tr></table>
 [% ELSE %]

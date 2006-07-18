@@ -263,7 +263,7 @@ sub do_update{
 
     ThrowUserError('testopia-missing-required-field', {'field' => 'summary'})  if $summary  eq '';
     ThrowUserError('testopia-missing-required-field', {'field' => 'Case Action'}) if $newtcaction eq '';
-    ThrowUserError('testopia-missing-required-field', {'field' => 'Case Effect'}) if $newtceffect eq '';
+    ThrowUserError('testopia-missing-required-field', {'field' => 'Case Expected Results'}) if $newtceffect eq '';
     
     detaint_natural($status);
     detaint_natural($category);
@@ -314,10 +314,9 @@ sub do_update{
 
 sub display {
     my $case = shift;    
-
-    $cgi->delete('build');
-    $cgi->delete('isautomated');
-    $cgi->delete('category');
+    $cgi->delete_all;
+    $cgi->param('case_id', $case->id);
+    $cgi->param('isactive', 1);
     $cgi->param('current_tab', 'case_run');
     my $search = Bugzilla::Testopia::Search->new($cgi);
     my $table = Bugzilla::Testopia::Table->new('case_run', 'tr_show_case.cgi', $cgi, undef, $search->query);

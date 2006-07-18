@@ -27,6 +27,7 @@ use Bugzilla::Constants;
 use Bugzilla::Error;
 use Bugzilla::Util;
 use Bugzilla::Testopia::Util;
+use Bugzilla::Testopia::Table;
 use Bugzilla::Testopia::TestRun;
 use Bugzilla::Testopia::TestCase;
 use Bugzilla::Testopia::TestCaseRun;
@@ -59,8 +60,10 @@ if ($action eq 'Commit'){
     my $status   = $cgi->param('status');
     my $notes    = $cgi->param('notes');
     my $build    = $cgi->param('caserun_build');
+    my $confirm  = $cgi->param('confirm');
     my $assignee = DBNameToIdAndCheck(trim($cgi->param('assignee')));
     
+    validate_test_id($build, 'build');
     my @buglist;
     foreach my $bug (split(/[\s,]+/, $cgi->param('bugs'))){
         ValidateBugID($bug);
@@ -71,10 +74,6 @@ if ($action eq 'Commit'){
     detaint_natural($status);
     trick_taint($notes);
 
-    foreach my $bug (@buglist){
-        $caserun->attach_bug($bug);
-    }
-
     my %newfields = (
         'assignee' => $assignee,
         'testedby' => Bugzilla->user->id,
@@ -83,10 +82,43 @@ if ($action eq 'Commit'){
         'notes'    => $notes,
     );
     
+    my $is = $caserun->check_exists($caserun->run_id, $caserun->case_id, $build);
+    my $existing = Bugzilla::Testopia::TestCaseRun->new($is) if $is;
+    if ($build != $caserun->build->id 
+        && $is 
+          && $existing->status ne 'IDLE' 
+            && !$confirm){
+        my $statuslist = $caserun->get_status_list;
+        my $status;
+        foreach my $stat (@$statuslist){
+            if ($stat->{'id'} == $cgi->param('status')){
+                $status = $stat->{'name'};
+                last;
+            }
+        }
+#        $notes =~ s/"/\\"/g;
+        $vars->{'existing'} = $existing;
+        $vars->{'assignee'} = $cgi->param('assignee');
+        $vars->{'status_name'}   = $status;
+        $vars->{'status'}   = $cgi->param('status');
+        $vars->{'notes'}    = $notes;
+        if ($caserun->is_closed_status($cgi->param('status'))){
+            $vars->{'close_date'} = get_time_stamp();
+            $vars->{'testedby'} = Bugzilla->user->login;
+        }
+        $vars->{'bugs'} = $cgi->param('bugs');
+        $template->process("testopia/caserun/confirm.html.tmpl", $vars) ||
+            ThrowTemplateError($template->error());
+     
+        exit;   
+    }
+
+    foreach my $bug (@buglist){
+        $caserun->attach_bug($bug);
+    }
+    
     $caserun = Bugzilla::Testopia::TestCaseRun->new($caserun->update(\%newfields));
-    $vars->{'caserun'} = $caserun;
-    $template->process("testopia/caserun/show.html.tmpl", $vars) ||
-        ThrowTemplateError($template->error());
+    display($caserun);
 }
 ####################
 ### Ajax Actions ###
@@ -94,29 +126,33 @@ if ($action eq 'Commit'){
 elsif ($action eq 'update_build'){
     Bugzilla->login(LOGIN_REQUIRED);
     my $caserun = Bugzilla::Testopia::TestCaseRun->new($caserun_id);
-    print "Error - You don't have permission" if !$caserun->canedit;
+    if (!$caserun->canedit) { 
+        print "Error - You don't have permission";
+        exit;
+    }
     my $build_id = $cgi->param('build_id');
     detaint_natural($build_id);
-
-    my $cid;
-    if ($caserun->status ne 'IDLE'){
-        my ($is) = $dbh->selectrow_array(
-                "SELECT case_run_id 
-                   FROM test_case_runs 
-                  WHERE run_id = ? AND build_id = ?",
-                  undef, ($caserun->run->id, $build_id));
-        if ($is){
-            $caserun = Bugzilla::Testopia::TestCaseRun->new($is);
-        }
-        else { 
-            $cid = $caserun->clone({'build_id' => $build_id });
-            $caserun = Bugzilla::Testopia::TestCaseRun->new($cid);
-        }
+    validate_test_id($build_id, 'build');
+    my $is = $caserun->check_exists($caserun->run_id, $caserun->case_id, $build_id);
+    if ($is){
+        $caserun = Bugzilla::Testopia::TestCaseRun->new($is);
+    }
+    elsif ($caserun->status ne 'IDLE'){
+        my $cid = $caserun->clone({'build_id' => $build_id });
+        $caserun = Bugzilla::Testopia::TestCaseRun->new($cid);
     }
     else {
         $caserun->set_build($build_id );
     }
-    print $caserun->status ."|". $caserun->close_date ."|". $caserun->testedby->login;
+    my $body_data;
+    my $head_data;
+    $vars->{'caserun'} = $caserun;
+    $vars->{'index'}   = $cgi->param('index');
+    $template->process("testopia/caserun/short-form-header.html.tmpl", $vars, \$head_data) ||
+        ThrowTemplateError($template->error());
+    $template->process("testopia/caserun/short-form.html.tmpl", $vars, \$body_data) ||
+        ThrowTemplateError($template->error());
+    print $head_data . "|~+" . $body_data;
 }
 elsif ($action eq 'update_status'){
     Bugzilla->login(LOGIN_REQUIRED);
@@ -128,8 +164,10 @@ elsif ($action eq 'update_status'){
     my $status_id = $cgi->param('status_id');
     detaint_natural($status_id);
     $caserun->set_status($status_id);
-    $caserun = Bugzilla::Testopia::TestCaseRun->new($caserun_id);
     print $caserun->status ."|". $caserun->close_date ."|". $caserun->testedby->login;
+    if ($caserun->updated_deps) {
+        print "|". join(',', @{$caserun->updated_deps});
+    }
 }
 elsif ($action eq 'update_note'){
     Bugzilla->login(LOGIN_REQUIRED);
@@ -171,9 +209,32 @@ elsif ($action eq 'attach_bug'){
         print &::GetBugLink($bug->bug_id, $bug->bug_id) ." ";
     }
 }
-else {
+elsif ($action eq 'detach_bug'){
+    Bugzilla->login(LOGIN_REQUIRED);
     my $caserun = Bugzilla::Testopia::TestCaseRun->new($caserun_id);
+    if (!$caserun->canedit){
+        print "Error - You don't have permission";
+        exit;
+    }
+    my @buglist;
+    foreach my $bug (split(/[\s,]+/, $cgi->param('bug_id'))){
+        ValidateBugID($bug);
+        push @buglist, $bug;
+    }
+    foreach my $bug (@buglist){
+        $caserun->detach_bug($bug);
+    }
+    display(Bugzilla::Testopia::TestCaseRun->new($caserun_id));
+}
+else {
+    display(Bugzilla::Testopia::TestCaseRun->new($caserun_id));
+}
+
+sub display {
+    my $caserun = shift;
     ThrowUserError('insufficient-view-perms') if !$caserun->canview;
+    my $table = Bugzilla::Testopia::Table->new('case_run');
+    $vars->{'table'} = $table;
     $vars->{'caserun'} = $caserun;
     $vars->{'action'} = 'tr_show_caserun.cgi';
     $template->process("testopia/caserun/show.html.tmpl", $vars) ||

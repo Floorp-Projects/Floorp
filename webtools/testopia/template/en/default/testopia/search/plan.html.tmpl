@@ -1,3 +1,4 @@
+[%# 1.0@bugzilla.org %]
 [%# The contents of this file are subject to the Mozilla Public
   # License Version 1.1 (the "License"); you may not use this file
   # except in compliance with the License. You may obtain a copy of
@@ -29,26 +30,27 @@
   </tr>
   <tr>
     <td style="padding-right: 30px;">
-  	[% PROCESS select sel = { name  => 'product_id',
-				  accesskey => 'p', 
-				  list      => plan.get_available_products,
-				  elements  => 5,
-				  mult      => 1 } %]
-	</td>
-	<td style="padding-right: 30px;">
-  	[% PROCESS select sel = { name  => 'default_product_version',
-				  accesskey => 'v', 
-				  list      => product_versions,
-				  elements  => 5,
-				  mult      => 1 } %]	
-	</td>
-	<td style="padding-right: 30px;">
-  	[% PROCESS select sel = { name  => 'type_id',
-				  accesskey => 'p', 
-				  list      => plan.get_plan_types
-				  elements  => 5,
-				  mult      => 1 } %]
-	</td>
+    [% PROCESS select sel = { name  => 'product_id',
+                  accesskey => 'p', 
+                  list      => plan.get_available_products,
+                  elements  => 5,
+                  mult      => 1  
+                  events    => 'onChange="onProductSelection()"'  } %]
+    </td>
+    <td style="padding-right: 30px;">
+    [% PROCESS select sel = { name  => 'default_product_version',
+                  accesskey => 'v', 
+                  list      => product_versions,
+                  elements  => 5,
+                  mult      => 1 } %]   
+    </td>
+    <td style="padding-right: 30px;">
+    [% PROCESS select sel = { name  => 'type_id',
+                  accesskey => 'p', 
+                  list      => plan.get_plan_types
+                  elements  => 5,
+                  mult      => 1 } %]
+    </td>
   </tr>
 </table>
 </fieldset>
@@ -59,36 +61,39 @@
     <th align="right">Name:</tH>
     <td>
     [% PROCESS select sel = { name => 'name_type',
-				              list => query_variants } %]</td>
-	<td><input name="name"></td>
+                              list => query_variants } %]</td>
+    <td><input name="name"></td>
   </tr>
   <tr>
     <th align="right">Text:</tH>
     <td>
     [% PROCESS select sel = { name => 'plan_text_type',
-	    			          list => query_variants } %]</td>
-	<td><input name="plan_text"></td>
+                              list => query_variants } %]</td>
+    <td><input name="plan_text"></td>
   </tr>
   <tr>
     <th align="right">Tags:</tH>
     <td>
     [% PROCESS select sel = { name => 'tags_type',
-				              list => tag_variants } %]</td>
-	<td><input name="tags"></td>
+                              list => tag_variants } %]</td>
+    <td><input name="tags"></td>
   </tr>
   <tr>
     <th align="right">Author:</tH>
     <td>
     [% PROCESS select sel = { name => 'author_type',
-				              list => email_variants } %]</td>
-	<td><input name="author"></td>
+                              list => email_variants } %]</td>
+    <td><input name="author"></td>
+    <th><input type="radio" name="andor" value="1"/>AND
+        <input type="radio" name="andor" value="0"  checked="checked"/>OR</th>
+
   </tr>
   <tr>
     <th align="right">Editor:</tH>
     <td>
     [% PROCESS select sel = { name => 'editor_type',
-				              list => email_variants } %]</td>
-	<td><input name="editor"></td>
+                              list => email_variants } %]</td>
+    <td><input name="editor"></td>
   </tr>  
 </table>
 </fieldset>
@@ -106,11 +111,11 @@
   </dd>
   <dt>where one or more of the following changed:</dt>
   <dd>
-  	[% PROCESS select sel = { name  => 'chfield_type',
-				  accesskey => 'p', 
-				  list      => plan.get_fields
-				  elements  => 5,
-				  mult      => 1 } %]
+    [% PROCESS select sel = { name  => 'chfield_type',
+                  accesskey => 'p', 
+                  list      => plan.get_fields
+                  elements  => 5,
+                  mult      => 1 } %]
   </dd>
   <dt>and the new value was:</dt>
   <dd>
@@ -127,7 +132,7 @@
   <input name="plan_id" id="plan_id">
   <br/><br/>
   <label for="archived">
-  	Include Archived Plans:
+    Include Archived Plans:
   </label>
   <input type="checkbox" name="isactive" id="isactive" value="1" />
 </p>

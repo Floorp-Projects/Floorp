@@ -1,3 +1,4 @@
+[%# 1.0@bugzilla.org %]
 [%# The contents of this file are subject to the Mozilla Public
   # License Version 1.1 (the "License"); you may not use this file
   # except in compliance with the License. You may obtain a copy of
@@ -59,7 +60,7 @@
   <th align="left">Tested by</th>
   <th align="left">Component</th>
   <th align="left">Group</th>
-  <th align="right">Reported<br/>bug IDs</th>
+  <th align="right">Reported<br/>[% terms.bug %] IDs</th>
 </tr>
 [% FOREACH log = caseslogs %]
 [% IF log.notes %]
@@ -69,9 +70,9 @@
 [% END %]
 <tr>
   <td [% td_class %] align="left">[% log.closed_date %]</td>
-  <td [% td_class %] align="right">[% log.id %]</td>
+  <td [% td_class %] align="right">[% log.id FILTER none %]</td>
   <td [% td_class %] align="left">[% log.summary %]</td>
-  <td [% td_class %] align="right">[% log.case_id %]</td>
+  <td [% td_class %] align="right">[% log.case_id FILTER none %]</td>
   <td [% td_class %] align="left">[% log.testedby %]</td>
   <td [% td_class %] align="left">[% log.component %]</td>
   <td [% td_class %] align="left">[% log.group %]</td>
@@ -92,7 +93,7 @@
 
 <h3>Total: [% caseslogs.size %]</h3>
 
-<h2>Reported bugs:</h2>
+<h2>Reported [% terms.bugs %]:</h2>
 
 [% IF bugs.size > 0 %]
 <table>
@@ -106,7 +107,7 @@
 </tr>
 [% FOREACH bug = bugs %]
 <tr>
-  <td class="sep" align="right">[% bug.id %]</td>
+  <td class="sep" align="right">[% bug.id FILTER none %]</td>
   <td class="sep" align="left">[% bug.short_desc %]</td>
   <td class="sep" align="left">[% bug.severity %]</td>
   <td class="sep" align="left">[% bug.status %]</td>

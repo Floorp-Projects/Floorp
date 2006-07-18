@@ -1,3 +1,4 @@
+[%# 1.0@bugzilla.org %]
 [%# The contents of this file are subject to the Mozilla Public
   # License Version 1.1 (the "License"); you may not use this file
   # except in compliance with the License. You may obtain a copy of
@@ -43,21 +44,21 @@ Select:
     <th>Bugs</th>
   </tr>
 [% FOREACH caserun = table.list %]
-  <tr class="[% loop.count % 2 == 0 ? "bz_row_odd" : "bz_row_even" %]" [% IF NOT dotweak %]style="cursor:pointer;" onclick="location='tr_show_caserun.cgi?caserun_id=[% caserun.id %]'" [% END%]>
-  [% IF dotweak %]<td align="center"><input type="checkbox" id="r_[% caserun.id %]" name="r_[% caserun.id %]" /></td> [% END %]
-  [% IF dotweak %]<td align="center"><a href="tr_show_case.cgi?case_id=[% caserun.case.id %]" title="[% caserun.case.summary FILTER html %]">[% caserun.case.id FILTER html %]</a></td>[% END %]
-    <td align="center"><a href="tr_show_run.cgi?run_id=[% caserun.run.id %]&case_id=[% caserun.case.id %]"
+  <tr class="[% loop.count % 2 == 0 ? "bz_row_odd" : "bz_row_even" %]" [% IF NOT dotweak %]style="cursor:pointer;" onclick="location='tr_show_caserun.cgi?caserun_id=[% caserun.id FILTER none %]'" [% END%]>
+  [% IF dotweak %]<td align="center"><input type="checkbox" id="r_[% caserun.id FILTER none %]" name="r_[% caserun.id FILTER none %]" /></td> [% END %]
+  [% IF dotweak %]<td align="center"><a href="tr_show_case.cgi?case_id=[% caserun.case.id FILTER none %]" title="[% caserun.case.summary FILTER html %]">[% caserun.case.id FILTER html %]</a></td>[% END %]
+    <td align="center"><a href="tr_show_run.cgi?run_id=[% caserun.run.id FILTER none %]&case_id=[% caserun.case.id FILTER none %]"
       title="[% caserun.run.summary FILTER html %]">[% caserun.run.id FILTER html %]</a></td>
     <td>[% caserun.build.name FILTER html %]</td>
     <td>[% caserun.assignee.login FILTER html %]</td>
     <td>[% caserun.testedby.login FILTER html %]</td>
     <td>[% caserun.close_date FILTER html %]</td>
     <td align="center">
-    <a href="tr_show_caserun.cgi?caserun_id=[% caserun.id %]">
+    <a href="tr_show_caserun.cgi?caserun_id=[% caserun.id FILTER none %]">
     <img src="testopia/img/[% caserun.status FILTER none %]_small.gif" 
         title="[% caserun.status FILTER none %]" 
         alt="[% caserun.status FILTER none %]"
-		width="14" height="14"
+        width="14" height="14"
         border="0" /></a></td>
     <td>[% caserun.case.category.name FILTER html %]</td>
     <td align="center">

@@ -22,28 +22,11 @@
 
 # Test Runner params:
 
-sub check_image_converter {
-    my ($value, $hash) = @_;
-    if ($value == 1){
-       eval "require Image::Magick";
-       return "Error requiring Image::Magick: '$@'" if $@;
-    } 
-    return "";
-}
+use strict;
+use vars qw(@param_list);
 
 push @param_list,
 (
-  # This is already in Bugzilla 2.22
-  {
-   name => 'convert_uncompressed_images',
-   desc => 'If this option is on, attachments with content type image/bmp ' .
-           'will be converted to image/png and compressed before uploading to'.
-           'the database to conserve disk space.',
-   type => 'b',
-   default => 0,
-   checker => \&check_image_converter
-  },
-  
   {
    name    => 'private-cases-log', 
    desc    => "If this option is on, the tester cannot view other testers' cases",

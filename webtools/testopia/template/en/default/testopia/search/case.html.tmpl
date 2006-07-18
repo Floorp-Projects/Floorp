@@ -1,3 +1,4 @@
+[%# 1.0@bugzilla.org %]
 [%# The contents of this file are subject to the Mozilla Public
   # License Version 1.1 (the "License"); you may not use this file
   # except in compliance with the License. You may obtain a copy of
@@ -24,49 +25,58 @@
 <table>
   <tr class="bz_row_header">
     <th>Status</th>
+    <th>Product</th>
+    <th>Components</th>
     <th>Category</th>
     <th>Priority</th>
-    <th>Components</th>
     <th>Automatic</th>
   </tr>
   <tr>
     <td style="padding-right: 30px;">
-  	[% PROCESS select sel = { name  => 'case_status_id',
-				  accesskey => 'c', 
-				  list      => case.get_status_list,
-				  elements  => 5,
-				  mult      => 1 } %]
-	</td>
-	<td style="padding-right: 30px;">
-  	[% PROCESS select sel = { name  => 'category',
-				  accesskey => 't', 
-				  list      => case.get_distinct_categories,
-				  elements  => 5,
-				  mult      => 1 } %]	
-	</td>
-	<td style="padding-right: 30px;">
-  	[% PROCESS select sel = { name  => 'priority_id',
-				  accesskey => 'p', 
-				  list      => case.get_priority_list
-				  elements  => 5,
-				  mult      => 1 } %]
-	</td>
-	<td style="padding-right: 30px;">
-  	[% PROCESS select sel = { name  => 'component',
-				  accesskey => 'm', 
-				  list      => case.get_available_components
-				  elements  => 5,
-				  mult      => 1 } %]
-	</td>
-	<td style="padding-right: 30px;">
-  	[% PROCESS select sel = { name  => 'isautomated',
-				  accesskey => 'a', 
-				  list      => 
-				  	[	{ id => "0", name => "Manual" },
-						{ id => "1", name => "Automatic" }  ]
-				  elements  => 5,
-				  mult      => 1 } %]
-	</td>
+    [% PROCESS select sel = { name  => 'case_status_id',
+                  accesskey => 'c', 
+                  list      => case.get_status_list,
+                  elements  => 5,
+                  mult      => 1 } %]
+    </td>
+    <td style="padding-right: 30px;">
+    [% PROCESS select sel = { name  => 'product_id',
+                  accesskey => 'p', 
+                  list      => plan.get_available_products,
+                  elements  => 5,
+                  mult      => 1  
+                  events    => 'onChange="onProductSelection()"' } %]
+    </td>
+    <td style="padding-right: 30px;">
+    [% PROCESS select sel = { name  => 'component',
+                  accesskey => 'm', 
+                  list      => case.get_available_components
+                  elements  => 5,
+                  mult      => 1 } %]
+    </td>
+    <td style="padding-right: 30px;">
+    [% PROCESS select sel = { name  => 'category',
+                  accesskey => 't', 
+                  list      => case.get_distinct_categories,
+                  elements  => 5,
+                  mult      => 1 } %]   
+    </td>
+    <td style="padding-right: 30px;">
+    [% PROCESS select sel = { name  => 'priority_id',
+                  accesskey => 'p', 
+                  list      => case.get_priority_list
+                  elements  => 5,
+                  mult      => 1 } %]
+    </td>
+    <td style="padding-right: 30px;">
+    [% PROCESS select sel = { name  => 'isautomated',
+                  accesskey => 'a', 
+                  list      => 
+                    [   { id => "0", name => "Manual" },
+                        { id => "1", name => "Automatic" }  ]
+                  elements  => 5,
+                  mult      => 1 } %]
+    </td>
   </tr>
 </table>
 </fieldset>
@@ -77,50 +87,53 @@
     <th align="right">Summary:</tH>
     <td>
     [% PROCESS select sel = { name => 'summary_type',
-				              list => query_variants } %]</td>
-	<td><input name="summary"></td>
+                              list => query_variants } %]</td>
+    <td><input name="summary"></td>
   </tr>
   <tr>
     <th align="right">Action:</tH>
     <td>
     [% PROCESS select sel = { name => 'tcaction_type',
-	    			          list => query_variants } %]</td>
-	<td><input name="tcaction"></td>
+                              list => query_variants } %]</td>
+    <td><input name="tcaction"></td>
   </tr>
   <tr>
-    <th align="right">Effect:</tH>
+    <th align="right">Expected Results:</tH>
     <td>
     [% PROCESS select sel = { name => 'tceffect_type',
-	    			          list => query_variants } %]</td>
-	<td><input name="tceffect"></td>
+                              list => query_variants } %]</td>
+    <td><input name="tceffect"></td>
   </tr>
   <tr>
     <th align="right">Script:</tH>
     <td>
     [% PROCESS select sel = { name => 'script_type',
-	    			          list => query_variants } %]</td>
-	<td><input name="script"></td>
+                              list => query_variants } %]</td>
+    <td><input name="script"></td>
   </tr>
   <tr>
     <th align="right">Requirement:</tH>
     <td>
     [% PROCESS select sel = { name => 'requirement_type',
-	    			          list => query_variants } %]</td>
-	<td><input name="requirement"></td>
+                              list => query_variants } %]</td>
+    <td><input name="requirement"></td>
   </tr>
   <tr>
     <th align="right">Tags:</tH>
     <td>
     [% PROCESS select sel = { name => 'tags_type',
-				              list => tag_variants } %]</td>
-	<td><input name="tags"></td>
+                              list => tag_variants } %]</td>
+    <td><input name="tags"></td>
   </tr>
   <tr>
     <th align="right">Author:</tH>
     <td>
     [% PROCESS select sel = { name => 'author_type',
-				              list => email_variants } %]</td>
-	<td><input name="author"></td>
+                              list => email_variants } %]</td>
+    <td><input name="author"></td>
+    <th><input type="radio" name="andor" value="1"/>AND
+        <input type="radio" name="andor" value="0"  checked="checked"/>OR</th>
+  </tr>
   <tr>
     <th align="right">Default Tester:</th>
     <td>
@@ -145,11 +158,11 @@
   </dd>
   <dt>where one or more of the following changed:</dt>
   <dd>
-  	[% PROCESS select sel = { name  => 'chfield_type',
-				  accesskey => 'p', 
-				  list      => case.get_fields
-				  elements  => 5,
-				  mult      => 1 } %]
+    [% PROCESS select sel = { name  => 'chfield_type',
+                  accesskey => 'p', 
+                  list      => case.get_fields
+                  elements  => 5,
+                  mult      => 1 } %]
   </dd>
   <dt>and the new value was:</dt>
   <dd>

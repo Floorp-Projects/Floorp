@@ -1,3 +1,4 @@
+[%# 1.0@bugzilla.org %]
 [%# The contents of this file are subject to the Mozilla Public
   # License Version 1.1 (the "License"); you may not use this file
   # except in compliance with the License. You may obtain a copy of
@@ -32,48 +33,52 @@
     }
     function getProdVers(product, plan){
         document.getElementById("prod_version").disabled = true;
-	    dojo.io.bind({
-			url:   "[% form_action %]",
-			content: {  prod_id: product, plan_id: plan, action: "getversions" },
-			load:  function(type, data, evt){
-			         var prodvers = document.getElementById("prod_version");
-			         prodvers.options.length = 0;
-			         var vers = data.split("|");
-			         for (i=0; i < vers.length; i++){
-			           var myOp = new Option(vers[i], vers[i]);
+        dojo.io.bind({
+            url:   "[% form_action %]",
+            content: {  product_id: product, plan_id: plan, action: "getversions" },
+            load:  function(type, data, evt){
+                     var prodvers = document.getElementById("prod_version");
+                     prodvers.options.length = 0;
+                     var vers = data.split("|");
+                     for (i=0; i < vers.length; i++){
+                       var myOp = new Option(vers[i], vers[i]);
                        addOption(prodvers, myOp);
                        if (vers[i] == '[% plan.product_version FILTER none %]'){
                           prodvers.options[i].selected = true;
                        }
-			         }
-			         document.getElementById("prod_version").disabled = false;
-			       },
-			error: function(type, error){ alert("ERROR");},
-			mimetype: "text/plain"
-    	});
+                     }
+                     document.getElementById("prod_version").disabled = false;
+                   },
+            error: function(type, error){ alert("ERROR");},
+            mimetype: "text/plain"
+        });
     }
     
 </script>
-
+<a name="attributes"></a>
 <input type="hidden" name="plan_id" value="[% plan.id FILTER none %]">
 <!--input type="hidden" name="action" value="[% action FILTER none %]"-->
 
 <table width="100%">
   <tr>
-	<th class="bz_row_header" align="right" width="100">Name</th>
-	<td><input name="plan_name" value="[% plan.name FILTER none %]" style="width:300px;"></td>
+    <th class="bz_row_header" align="right" width="100">Name</th>
+    <td><input name="plan_name" value="[% plan.name FILTER none %]" style="width:300px;"></td>
     <th class="bz_row_header" align="right" width="100">Product</th>
-    <td>[% PROCESS select sel = { name      => 'prod_id',
+    <td>[% IF plan.test_case_count OR plan.test_run_count %]
+        <input type="hidden" name='product_id' value="[% plan.product_id FILTER none %]" />
+        [% plan.product_name FILTER html %]
+        [% ELSE %]
+        [% PROCESS select sel = { name      => 'product_id',
                                   list      =>  plan.get_available_products,
                                   accesskey => 'p' 
                                   default   => plan.product_id 
                                   events    => "onChange='getProdVers(this.value, $plan.id)'"} %]</td>
-
+        [% END %]
   </tr>
   <tr>
     <th class="bz_row_header" align="right" width="100">Type</th>
     <td>[% PROCESS select sel = { name      => 'type',
-								  list      =>  plan.get_plan_types,
+                                  list      =>  plan.get_plan_types,
                                   accesskey => 't' 
                                   default   => plan.type } %]</td>
 
@@ -85,11 +90,11 @@
 
   </tr>
 </table>
-
+[% UNLESS plan.test_case_count OR plan.test_run_count %]
 <script type="text/javascript">
-  getProdVers(document.getElementById('prod_id').value, [% plan.id %]);
+  getProdVers(document.getElementById('product_id').value, [% plan.id FILTER none %]);
 </script>
-
+[% END %]
 <br><br>
 <h3>Plan Document</h3>
 <div id="plan_doc" style="border: 1px solid #000000;  padding-bottom: 5px;">

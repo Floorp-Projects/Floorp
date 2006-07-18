@@ -243,7 +243,6 @@ sub do_update {
 sub display {
     my $run = shift;
 
-    $cgi->delete('build');
     $cgi->param('current_tab', 'case_run');
     my $search = Bugzilla::Testopia::Search->new($cgi);
     my $table = Bugzilla::Testopia::Table->new('case_run', 'tr_show_run.cgi', $cgi, undef, $search->query);

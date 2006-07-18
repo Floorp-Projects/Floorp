@@ -326,17 +326,19 @@ specified, use the plan product
 sub get_product_versions {
     my $self = shift;
     my ($product) = @_;
-    detaint_natural($product);
-    $product = $self->{'product_id'} unless ($product);
-    
+    $product = $self->{'product_id'} unless $product;
+    $product ||= 0;
     my $dbh = Bugzilla->dbh;
     #TODO: 2.22 use product->versions
+    # Can't use placeholders as this could be a single id (integer)
+    # or a comma separated list (string)
     my $versions = $dbh->selectall_arrayref(
-            "SELECT value AS id, value AS name
+            "SELECT DISTINCT value AS id, value AS name
                FROM versions
-              WHERE product_id = ?
+              WHERE product_id IN($product)
            ORDER BY name", 
-             {'Slice'=>{}}, $product);
+             {'Slice'=>{}});
+             
     return $versions;
 }
 
@@ -354,11 +356,80 @@ sub get_product_milestones {
     $product_id ||= $self->{'product_id'};
     my $dbh = Bugzilla->dbh;
     my $ref = $dbh->selectall_arrayref(
-            "SELECT value AS id, value AS name 
+            "SELECT DISTINCT value AS id, value AS name 
                FROM milestones
-              WHERE product_id = ?
+              WHERE product_id IN($product_id)
            ORDER BY sortkey",
-           {'Slice'=>{}}, $product_id);
+           {'Slice'=>{}});
+           
+    return $ref;
+}
+
+=head2 get_product_builds
+
+Returns al list of builds for the given product. If one
+is not specified, use the plan product.
+
+=cut
+
+sub get_product_builds {
+#TODO: 2.22 use product.pm
+    my $self = shift;
+    my ($product_id) = @_;
+    $product_id ||= $self->{'product_id'};
+    my $dbh = Bugzilla->dbh;
+    my $ref = $dbh->selectall_arrayref(
+            "SELECT DISTINCT name AS id, name 
+               FROM test_builds
+              WHERE product_id IN($product_id)
+           ORDER BY name",
+           {'Slice'=>{}});
+           
+    return $ref;
+}
+
+=head2 get_product_categories
+
+Returns a list of product categories for the given product. If one
+is not specified, use the plan product.
+
+=cut
+
+sub get_product_categories {
+#TODO: 2.22 use product.pm
+    my $self = shift;
+    my ($product_id) = @_;
+    $product_id ||= $self->{'product_id'};
+    my $dbh = Bugzilla->dbh;
+    my $ref = $dbh->selectall_arrayref(
+            "SELECT DISTINCT name AS id, name 
+               FROM test_case_categories
+              WHERE product_id IN($product_id)
+           ORDER BY name",
+           {'Slice'=>{}});
+           
+    return $ref;
+}
+
+=head2 get_product_components
+
+Returns a list of product components for the given product. If one
+is not specified, use the plan product.
+
+=cut
+
+sub get_product_components {
+#TODO: 2.22 use product.pm
+    my $self = shift;
+    my ($product_id) = @_;
+    $product_id ||= $self->{'product_id'};
+    my $dbh = Bugzilla->dbh;
+    my $ref = $dbh->selectall_arrayref(
+            "SELECT DISTINCT name AS id, name 
+               FROM components
+              WHERE product_id IN($product_id)
+           ORDER BY name",
+           {'Slice'=>{}});
            
     return $ref;
 }

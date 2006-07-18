@@ -1,3 +1,4 @@
+[%# 1.0@bugzilla.org %]
 [%# The contents of this file are subject to the Mozilla Public
   # License Version 1.1 (the "License"); you may not use this file
   # except in compliance with the License. You may obtain a copy of
@@ -15,7 +16,7 @@
   # Maciej Maczynski. All Rights Reserved.
   #
   # Contributor(s): Ed Fuentetaja <efuentetaja@acm.org>
-  #					Greg Hendricks <ghendricks@novell.com>
+  #                 Greg Hendricks <ghendricks@novell.com>
   #%]
 
 [%# INTERFACE:
@@ -45,22 +46,22 @@
 <script src="testopia/js/tags.js" type="text/javascript"></script>
 <script src="testopia/dojo-ajax/dojo.js" type="text/javascript"></script>
 <script type="text/javascript">
-	function getSelected (ccbox){
-		var ccselected = new Array();
-	    for (j=0; j < ccbox.options.length; j++){
-	    	if (ccbox.options[j].selected != 0)
-	    	    ccselected.push(ccbox.options[j].value);
-	    	
-	    }
-	    var sel = ccselected.toString();
-	    return sel;
-	}
+    function getSelected (ccbox){
+        var ccselected = new Array();
+        for (j=0; j < ccbox.options.length; j++){
+            if (ccbox.options[j].selected != 0)
+                ccselected.push(ccbox.options[j].value);
+            
+        }
+        var sel = ccselected.toString();
+        return sel;
+    }
 
-	function fillcc (data){
+    function fillcc (data){
          var xmldocroot = data.documentElement;
          var newcc = xmldocroot.getElementsByTagName('user');
-		 var cc = document.getElementById("cc");
-		 cc.options.length = 0;
+         var cc = document.getElementById("cc");
+         cc.options.length = 0;
          for (i=0; i< newcc.length; i++){
            var id = newcc[i].childNodes[0].firstChild.nodeValue;
            var name = newcc[i].childNodes[1].firstChild.nodeValue;
@@ -71,19 +72,19 @@
          document.getElementById("addCC").disabled = false;
          document.getElementById("deleteCC").disabled = false;
 
-	}
+    }
     function updateCC(cctext, action){
-		if (cctext == '')
-		  return;
+        if (cctext == '')
+          return;
         document.getElementById("addCC").disabled = true;
         document.getElementById("deleteCC").disabled = true;
-	    dojo.io.bind({
-			url:     "tr_show_run.cgi",
-			content: {  cc: cctext, run_id: [% run.id %], action: action },
-			load:    function(type, data, evt){ fillcc(data);},
-			error:   function(type, error){ alert("ERROR");},
-			mimetype: "text/xml"
-    	});
+        dojo.io.bind({
+            url:     "tr_show_run.cgi",
+            content: {  cc: cctext, run_id: [% run.id FILTER none %], action: action },
+            load:    function(type, data, evt){ fillcc(data);},
+            error:   function(type, error){ alert("ERROR");},
+            mimetype: "text/xml"
+        });
     }
     
 </script>
@@ -96,7 +97,9 @@
 </style>
 [% END %]
 
-[% ##### Overview ##### %]
+[% PROCESS testopia/run/navigate.html.tmpl %]
+
+[%##### Overview #####%]
 <form method="post" action="tr_show_run.cgi">
 <div id="run_overview">
 <h3>Overview</h3>
@@ -146,16 +149,17 @@
     <tr class="bz_row_data">
       <td colspan="3"><div align="right">
       <table>
-      	<tr>
+        <tr>
           <!-- 
           <td><a href="tr_testrun_regression.cgi?run_id=[% run.id FILTER none %]">Create regression test cases</a></td> -->
+          <td><a href="#attributes">Edit Run Attributes</a></td>
           <td><input type="submit" name="action" value="Commit"></td>
           <td><input type="submit" name="action" value="History"></td>
-	      [% IF run.candelete %]
+          [% IF run.candelete %]
           <td><input type="submit" name="action" value="Delete"></td>
           [% END %]
-		  <td><input type="submit" name="action" value="Clone"></td>	      
-		</tr>      
+          <td><input type="submit" name="action" value="Clone"></td>          
+        </tr>      
       </table>
       </div></td>
     </tr>
@@ -164,12 +168,12 @@
 </div>
 
 <br><br>
-[% ##### Categories and Tags ##### %]
+[%##### Categories and Tags #####%]
 <h3>CC, Coverage, Tags</h3>
 <div id="run_categories">
 <table width="100%" border="0">
   <tr class="bz_row_header">
-	<th>CC List</th>
+    <th>CC List</th>
     <th>Case Run Status</th>
     <th><a href="tr_tags.cgi?id=[% run.id FILTER none %]&amp;type=run">Tags</a></th>
   </tr>
@@ -178,38 +182,38 @@
     <table>
       <tr>
         <td>
-		  <input name="newcc" id="newcc">
-	      <input type="button" id="addCC" value="Add" onclick="updateCC(document.getElementById('newcc').value, 'addcc')">
-	    </td>
-	  </tr>
-	  <tr>
-	    <td>
-	      <select name="cc" id="cc" size="5" multiple="multiple">
-	      [% FOREACH cc = run.cc %]
-	        <option value="[% cc.id FILTER none %]">[% cc.login FILTER html %]</option>
-	      [% END %]
+          <input name="newcc" id="newcc">
+          <input type="button" id="addCC" value="Add" onclick="updateCC(document.getElementById('newcc').value, 'addcc')">
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <select name="cc" id="cc" size="5" multiple="multiple">
+          [% FOREACH cc = run.cc %]
+            <option value="[% cc.id FILTER none %]">[% cc.login FILTER html %]</option>
+          [% END %]
           </select>
           <br>
-          <input type="button" id="deleteCC" value="Remove" onclick="updateCC(getSelected(document.getElementById('cc')), 'removecc')">				
+          <input type="button" id="deleteCC" value="Remove" onclick="updateCC(getSelected(document.getElementById('cc')), 'removecc')">             
         </td>
       </tr>
     </table>
     </td>
-	<td>
-	<table align="center">
-	  <tr>
-	    <th align="right">Idle:</th>
-	    <td class="number_cell"><b>[% run.idle_count FILTER html %]</b></td>
-	  </tr>
-	  <tr>
-	    <th align="right">Passed:</th>
-	    <td class="number_cell"><b>[% run.passed_count FILTER html %]</b></td>
-	  </tr>
-	  <tr>
-	    <th align="right">Failed:</th>
-	    <td class="number_cell"><b>[% run.failed_count FILTER html %]</b></td>
-	    </td>
-	  </tr>
+    <td>
+    <table align="center">
+      <tr>
+        <th align="right">Idle:</th>
+        <td class="number_cell"><b>[% run.idle_count FILTER html %]</b></td>
+      </tr>
+      <tr>
+        <th align="right">Passed:</th>
+        <td class="number_cell"><b>[% run.passed_count FILTER html %]</b></td>
+      </tr>
+      <tr>
+        <th align="right">Failed:</th>
+        <td class="number_cell"><b>[% run.failed_count FILTER html %]</b></td>
+        </td>
+      </tr>
       <tr>
         <th align="right">Running:</th>
         <td class="number_cell"><b>[% run.running_count FILTER html %]</b></td>
@@ -223,12 +227,12 @@
         <td class="number_cell"><b>[% run.blocked_count FILTER html %]</b></td>
         </td>
       </tr>
-	  <tr>
-	    <th align="right">Total:</th>
-	    <td class="number_cell"><b>[% run.case_count FILTER html %]</b></td>
-	  </tr>
+      <tr>
+        <th align="right">Total:</th>
+        <td class="number_cell"><b>[% run.case_count FILTER html %]</b></td>
+      </tr>
     </table>
-	</td>
+    </td>
   
     <td valign="top" align="center">
 
@@ -243,27 +247,23 @@
   </tr>
 </table>
 </div>
-<br><br>
-<h3>Test Case Run Logs</h3>
-Filter: 
-<a href="tr_show_run.cgi?run_id=[% run.id FILTER none %]">Show All</a>&nbsp;|&nbsp;
-<a href="tr_show_run.cgi?run_id=[% run.id FILTER none %]&assignee=[% user.login FILTER url_quote %]&assignee_type=exact">Assigned to Me</a>&nbsp;|&nbsp;
-<a href="tr_show_run.cgi?run_id=[% run.id FILTER none %]&testedby=[% user.login FILTER url_quote %]&testedby_type=exact">Tested by Me</a>&nbsp;|&nbsp;
-<a href="tr_show_run.cgi?run_id=[% run.id FILTER none %]&close_date=0">Open</a>&nbsp;|&nbsp;
-<a href="tr_show_run.cgi?run_id=[% run.id FILTER none %]&close_date=1">Closed</a>
+<br/><br/>
+<h3>Test Case Run Logs</h3><a name="table" />
+[% PROCESS testopia/caserun/filter.html.tmpl %]
 <br/>
 [% PROCESS testopia/caserun/table.html.tmpl 
    caseruns = run.current_caseruns %]
-<a href="tr_list_cases.cgi?current_tab=case&plan_id=[% run.plan.id %]&exclude=[% run.case_id_list %]&addrun=[% run.id FILTER none %]">Add Cases</a>&nbsp;
+<a href="tr_list_cases.cgi?current_tab=case&plan_id=[% run.plan.id FILTER none %]&exclude=[% run.case_id_list FILTER none %]&addrun=[% run.id FILTER none %]">Add Cases</a>&nbsp;
 <a href="tr_list_caseruns.cgi?run_id=[% run.id FILTER none %]">Update Multiple</a>
 <!-- 
 <form action="tr_list_cases.cgi" method="POST">
-  <input type="hidden" name="exclude" value="[% run.case_id_list %]" />
+  <input type="hidden" name="exclude" value="[% run.case_id_list FILTER none %]" />
   <input type="hidden" name="current_tab" value="case" />
-  <input type="hidden" name="plan_id" value="[% run.plan.id %]" />
+  <input type="hidden" name="plan_id" value="[% run.plan.id FILTER none %]" />
   <input type="submit" value="Add Cases" />
 </form>
  -->
+
 <br><br>
 <h3>Attributes</h3>
 

@@ -1,3 +1,4 @@
+[%# 1.0@bugzilla.org %]
 [%# The contents of this file are subject to the Mozilla Public
   # License Version 1.1 (the "License"); you may not use this file
   # except in compliance with the License. You may obtain a copy of
@@ -15,27 +16,27 @@
   # Maciej Maczynski. All Rights Reserved.
   #
   # Contributor(s): Ed Fuentetaja <efuentetaja@acm.org>
-  #					Greg Hendricks <ghendricks@novell.com>
+  #                 Greg Hendricks <ghendricks@novell.com>
   #%]
   
-
-  <input type="hidden" name="run_id" value="[% run.id %]"> 
+<a name="attributes"></a>
+  <input type="hidden" name="run_id" value="[% run.id FILTER none %]"> 
   <table border="0" cellpadding="2" cellspacing="0">
     <tr>
       <th align="right">Product Version</td>
 
       <td>
         [% PROCESS select sel = { name => "product_version", 
-        						  list => run.plan.get_product_versions, 
-        						  default => run.product_version ? run.product_version : run.plan.product_version }
+                                  list => run.plan.get_product_versions, 
+                                  default => run.product_version ? run.product_version : run.plan.product_version }
          %]
       </td>
 
       <th align="right">Plan Version</td>
       <td>
         [% PROCESS select sel = { name => "plan_version", 
-        						  list => run.plan.get_plan_versions, 
-        						  default => run.plan_text_version }
+                                  list => run.plan.get_plan_versions, 
+                                  default => run.plan_text_version }
          %]
       </td>
     </tr>
@@ -58,15 +59,15 @@
       <td>
         [% SET statuslist = [{ id => 1, name => 'Running'}, {id => 0, name=> 'Stopped'}] %]
         [% PROCESS select sel = { name => "status", 
-        						  list => statuslist, 
-        						  default => run.stop_date ? 0 : 1 }
+                                  list => statuslist, 
+                                  default => run.stop_date ? 0 : 1 }
         %]
 
       </td>
-      <th align="right">Build</td>
+      <th align="right"><a href="tr_builds.cgi?plan_id=[% run.plan.id FILTER none %]">Build</a></td>
       <td>
         [% PROCESS select sel = { name => "build", 
-        						  list => run.plan.builds,
+                                  list => run.plan.builds,
                                   default => run.build.id }
          %]
       </td>

@@ -184,7 +184,7 @@ sub validate_test_id {
 
     $res
       || ThrowUserError("invalid-test-id-non-existent", 
-                            {'id' => $id, 'type' => $type});
+                            {'id' => $alias, 'type' => $type});
     return $res;
 }
 

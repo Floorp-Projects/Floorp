@@ -323,19 +323,23 @@ sub SetupPermissions_unix {
   `chmod 750 testopia/tr_*`;
   `chmod -R 750 testopia/doc`;
   `chmod -R 750 testopia/img`;
-  `chmod -R 750 testopia/htmlarea30b`;
+  `chmod -R 750 testopia/css`;
+  `chmod -R 750 testopia/js`;
+  `chmod -R 750 testopia/dojo-ajax`;
   `chmod -R 750 testopia/scripts`;
   `chmod 770 testopia/temp`;
-  if (defined $webservergroup && ($webservergroup ne '')) {
-    print "  Webserver group: $webservergroup\n";
-    `chown :$webservergroup tr_*`;
-    `chown :$webservergroup testopia`;
-    `chown :$webservergroup testopia/tr_*`;
-    `chown -R :$webservergroup testopia/doc`;
-    `chown -R :$webservergroup testopia/img`;
-    `chown -R :$webservergroup testopia/htmlarea30b`;
-    `chown -R :$webservergroup testopia/scripts`;
-    `chown :$webservergroup testopia/temp`;
+  if (defined $::webservergroup && ($::webservergroup ne '')) {
+    print "  Webserver group: $::webservergroup\n";
+    `chown :$::webservergroup tr_*`;
+    `chown :$::webservergroup testopia`;
+    `chown :$::webservergroup testopia/tr_*`;
+    `chown -R :$::webservergroup testopia/doc`;
+    `chown -R :$::webservergroup testopia/img`;
+    `chown -R :$::webservergroup testopia/css`;
+    `chown -R :$::webservergroup testopia/js`;
+    `chown -R :$::webservergroup testopia/dojo-ajax`;
+    `chown -R :$::webservergroup testopia/scripts`;
+    `chown :$::webservergroup testopia/temp`;
   }
 }
 

@@ -1,3 +1,4 @@
+[%# 1.0@bugzilla.org %]
 [%# The contents of this file are subject to the Mozilla Public
   # License Version 1.1 (the "License"); you may not use this file
   # except in compliance with the License. You may obtain a copy of
@@ -49,33 +50,33 @@
     <td colspan="3"><input name="description" value="[% attachment.description %]" size="30" /></td>
   </tr>
   <tr>
-	<th class="bz_row_header" align="right">Filename:</th>
-	<td><input name="filename" value="[% attachment.filename %]" size="30" /></td>
+    <th class="bz_row_header" align="right">Filename:</th>
+    <td><input name="filename" value="[% attachment.filename %]" size="30" /></td>
     <th class="bz_row_header" align="right">Mime Type:</th>
     <td><input name="mime_type" value="[% attachment.mime_type %]" size="30" /></td>
   </tr>
   <tr>
     <td colspan="4">
       <table  width="100%">       
-	    <tr class="bz_row_header">
-  	      <th>Submitter</th>
-	      <th>Created</th>
-	      <th>Size</th>
-	    </tr>
-	    <tr>
-	      <td>[% attachment.submitter.identity FILTER html %]</td>
-	      <td>[% attachment.creation_ts FILTER time %]</td>
-	      <td>[% attachment.datasize FILTER unitconvert %]</td>
-	    </tr>
-	  </table>
-	</td>
+        <tr class="bz_row_header">
+          <th>Submitter</th>
+          <th>Created</th>
+          <th>Size</th>
+        </tr>
+        <tr>
+          <td>[% attachment.submitter.identity FILTER html %]</td>
+          <td>[% attachment.creation_ts FILTER time %]</td>
+          <td>[% attachment.datasize FILTER unitconvert %]</td>
+        </tr>
+      </table>
+    </td>
   </tr>
   <tr>  
 [% IF isviewable %]
     <td colspan="4" width="75%">
-      <iframe id="viewFrame" src="tr_attachment.cgi?attach_id=[% attachment.id %]&action=view" style="height: 400px; width: 100%;">
+      <iframe id="viewFrame" src="tr_attachment.cgi?attach_id=[% attachment.id FILTER none %]&action=view" style="height: 400px; width: 100%;">
         <b>You cannot view the attachment while editing it because your browser does not support IFRAMEs.
-        <a href="tr_attachment.cgi?attach_id=[% attachment.id %]&action=view">View the attachment on a separate page</a>.</b>
+        <a href="tr_attachment.cgi?attach_id=[% attachment.id FILTER none %]&action=view">View the attachment on a separate page</a>.</b>
       </iframe>
     [% ELSE %]
     <td colspan="4" >
@@ -84,7 +85,7 @@
         (<span style="color: #990000;">[% attachment.mime_type FILTER html %]</span>) 
         is not one that your browser is able to display.
       <p>
-        You can however, <a href="tr_attachment.cgi?attach_id=[% attachment.id %]&action=view">download the attachment</a>.
+        You can however, <a href="tr_attachment.cgi?attach_id=[% attachment.id FILTER none %]&action=view">download the attachment</a>.
       </p>
       </div>
     </td>

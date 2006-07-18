@@ -29,7 +29,7 @@ function exal() {
 function _cset(newstate) {
   var myform = document.getElementById('table');
   for(i=0;i<myform.length;i++) {
-    if(myform[i].type == 'checkbox'){
+    if(myform[i].type == 'checkbox' && myform[i].name != 'togglearch'){
 	  myform[i].checked = newstate;
 	}
   }

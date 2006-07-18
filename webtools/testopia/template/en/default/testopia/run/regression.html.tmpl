@@ -1,3 +1,4 @@
+[%# 1.0@bugzilla.org %]
 [%# The contents of this file are subject to the Mozilla Public
   # License Version 1.1 (the "License"); you may not use this file
   # except in compliance with the License. You may obtain a copy of
@@ -46,22 +47,22 @@
 
 [% IF bugs.size == 0 %]
 
-<p>There are no bugs reported in this test run.</p>
+<p>There are no [% terms.bugs %] reported in this test run.</p>
 
 [% ELSE %]
 
 <form method="POST" action="tr_testrun_regression.cgi">
 <input type="HIDDEN" name="form_action" value="do_create"/>
-<input type="HIDDEN" name="run_id" value="[% run_id %]"/>
+<input type="HIDDEN" name="run_id" value="[% run_id FILTER none %]"/>
 
-<p>Bugs reported in this test run:</p>
+<p>[% terms.Bugs %] reported in this test run:</p>
 
 [% DECORATIVE_BORDER_BEGIN %]
 
 <table class="resultsTable">
 
 <tr>
-  <th align="right">Bug ID</th>
+  <th align="right">[% terms.Bug %] ID</th>
   <th align="left">Summary</th>
   <th align="left">Severity</th>
   <th align="left">Status</th>
@@ -78,13 +79,13 @@
     style="color:grey;"
   [% END %]
 >
-  <td align="right"><input type="CHECKBOX" name="b[% bug.bug_id %]"
+  <td align="right"><input type="CHECKBOX" name="b[% bug.bug_id FILTER none %]"
   [% IF bug.enabled %]
     checked="TRUE" onclick="ck(this.checked);" 
   [% ELSE %]
     disabled="true"
   [% END %]
-  />&nbsp;[% bug.bug_id %]</td>
+  />&nbsp;[% bug.bug_id FILTER none %]</td>
   <td align="left">[% bug.summary %]</td>
   <td align="left">[% bug.severity %]</td>
   <td align="left">[% bug.status %]</td>
@@ -104,7 +105,7 @@
 [% DECORATIVE_BORDER_END %]
 
 <p>
-Create regression test cases for each checked bug?
+Create regression test cases for each checked [% terms.bug %]?
 &nbsp;<input id="bb" type="SUBMIT" value="Yes, please. Continue &gt;&gt;"/>
 </p>
 
@@ -132,14 +133,14 @@ function ck(f) {
 
 <p>
 <i>Regression test cases are added to the test plan and will be available for future test runs.
-Bugs reported to products other than the plan's product cannot be selected.
+[% terms.Bugs %] reported to products other than the plan's product cannot be selected.
 </i>
 </p>
 
 [% END %]
 
 <p>
-<a href="tr_testruns.cgi?action=view&amp;run_id=[% run_id %]">Go back to the test run page</a>.
+<a href="tr_testruns.cgi?action=view&amp;run_id=[% run_id FILTER none %]">Go back to the test run page</a>.
 </p>
 <p></p>
 

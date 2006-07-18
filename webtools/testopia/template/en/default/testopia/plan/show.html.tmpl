@@ -1,3 +1,4 @@
+[%# 1.0@bugzilla.org %]
 [%# The contents of this file are subject to the Mozilla Public
   # License Version 1.1 (the "License"); you may not use this file
   # except in compliance with the License. You may obtain a copy of
@@ -57,18 +58,18 @@
         selectElement.add(newOption,selectElement.length);
       }
     }
-	function fillSelects (data, item){
+    function fillSelects (data, item){
          var xmldocroot = data.documentElement;
          var err = xmldocroot.getElementsByTagName('error');
          if (err.length > 0){
-         	alert(err[0].childNodes[0].firstChild.nodeValue);
+            alert(err[0].childNodes[0].firstChild.nodeValue);
             document.getElementById("remBuild").disabled = false;
-	        document.getElementById("remCat").disabled = false;
-	        exit;
+            document.getElementById("remCat").disabled = false;
+            exit;
          }
          var selected = xmldocroot.getElementsByTagName(item);
-		 var comps = document.getElementById(item);
-		 comps.options.length = 0;
+         var comps = document.getElementById(item);
+         comps.options.length = 0;
 
          for (i=0; i< selected.length; i++){
            var id = selected[i].childNodes[0].firstChild.nodeValue;
@@ -80,48 +81,51 @@
          document.getElementById("remBuild").disabled = false;
          document.getElementById("remCat").disabled = false;
 
-	}
+    }
     function removeCatBuild(id,item){
-		if (id == 0)
-		  return;
+        if (id == 0)
+          return;
         var choice = confirm("You are about to delete this " + item + ". Continue?");
         if (choice == 0)
           return;
-		var myURL = (item == 'category' ? 'tr_categories.cgi' : 'tr_builds.cgi');
+        var myURL = (item == 'category' ? 'tr_categories.cgi' : 'tr_builds.cgi');
         document.getElementById("remBuild").disabled = true;
         document.getElementById("remCat").disabled = true;
-	    dojo.io.bind({
-			url:     myURL,
-			content: {  category_id: id, build_id: id, plan_id: [% plan.id %], action: 'do_delete', ajax: 1 },
-			load:    function(type, data, evt){ fillSelects(data, item);},
-			error:   function(type, error){ alert("ERROR Removing Category or Build " + String(error));},
-			mimetype: "text/xml"
-    		});
+        dojo.io.bind({
+            url:     myURL,
+            content: {  category_id: id, build_id: id, plan_id: [% plan.id FILTER none %], action: 'do_delete', ajax: 1 },
+            load:    function(type, data, evt){ fillSelects(data, item);},
+            error:   function(type, error){ alert("ERROR Removing Category or Build " + String(error));},
+            mimetype: "text/xml"
+            });
     }
 [% END %]
     function updateCaseList(order, direction){
-	    dojo.io.bind({
-			url:     'tr_show_plan.cgi',
-			content: {  direction: direction, getlist: [% getlist ||'null' %], viewall: [% viewall || 'null'%], order: order, plan_id: [% plan.id %], action: 'caselist', ajax: 1 },
-			load:    function(type, data, evt){ document.getElementById('plan_cases').innerHTML = data; },
-			error:   function(type, error){ alert("ERROR Error updating case list" + String(error));},
-			mimetype: "text/html"
-    		});
+        dojo.io.bind({
+            url:     'tr_show_plan.cgi',
+            content: {  direction: direction, getlist: [% getlist ||'null' %], viewall: [% viewall || 'null'%], order: order, plan_id: [% plan.id FILTER none %], action: 'caselist', ajax: 1 },
+            load:    function(type, data, evt){ document.getElementById('plan_cases').innerHTML = data; },
+            error:   function(type, error){ alert("ERROR Error updating case list" + String(error));},
+            mimetype: "text/html"
+            });
     }
     function page(pagenum, viewall){
-	    dojo.io.bind({
-			url:     'tr_show_plan.cgi',
-			content: {  getlist: [% getlist ||'null' %], viewall: viewall, plan_id: [% plan.id %], action: 'caselist', ajax: 1 },
-			load:    function(type, data, evt){ document.getElementById('plan_cases').innerHTML = data; },
-			error:   function(type, error){ alert("ERROR Getting Page" + String(error));},
-			mimetype: "text/html"
-    		});
+        dojo.io.bind({
+            url:     'tr_show_plan.cgi',
+            content: {  getlist: [% getlist ||'null' %], viewall: viewall, plan_id: [% plan.id FILTER none %], action: 'caselist', ajax: 1 },
+            load:    function(type, data, evt){ document.getElementById('plan_cases').innerHTML = data; },
+            error:   function(type, error){ alert("ERROR Getting Page" + String(error));},
+            mimetype: "text/html"
+            });
     }  
 </script>
 
 
 [% END %]
-[% ##### Overview ##### %]
+
+[% PROCESS testopia/plan/navigate.html.tmpl %]
+
+[%##### Overview #####%]
 
 <form name="planform" action="[% form_action FILTER none %]" method="POST" enctype="multipart/form-data">
 <div id="plan_overview">
@@ -144,12 +148,13 @@
       <th>Type</th>
       </tr>
     <tr class="bz_row_data">
-      <td><a href="mailto:[% plan.author.email FILTER html %]">[% plan.author.identity FILTER html %]</td>
+      <td><a href="mailto:[% plan.author.email FILTER html %]">[% plan.author.identity FILTER html %]</a></td>
       <td>[% plan.version FILTER html %]</td>
       <td>[% plan.type FILTER html %]</td>
     </tr>
     <tr class="bz_row_data">
       <td colspan="3"><div align="right">
+        <a href="#attributes">Edit Plan Attributes</a>
         <input type="hidden" name="plan_id" value="[% plan.id FILTER none %]">
         <input type="submit" name="action" value="Commit">
         <input type="submit" name="action" value="[% plan.isactive ? "Archive" : "Unarchive" %]">
@@ -162,7 +167,7 @@
 </table>
 </div>
 
-[% ##### Categories and Tags ##### %]
+[%##### Categories and Tags #####%]
 <h3>Categories and Tags</h3>
 <div id="plan_categories">
 <table width="100%" border="0">
@@ -210,19 +215,19 @@
 </table>
 </div>
 
-[% ##### Test Cases ##### %]
+[%##### Test Cases #####%]
 <br><br>
 <h3>Test Cases</h3>
 <div id="plan_cases">
 [% IF case_table.list_count >0 %]
-  <a href="tr_new_case.cgi?plan_id=[% plan.id FILTER none %]">Create a New Test Case</a>
+  <a href="tr_new_case.cgi?plan_id=[% plan.id FILTER none %]">Create a New Test Case</a> 
 [% END %]
 [% PROCESS testopia/case/table.html.tmpl
    table = case_table %]
   <a href="tr_new_case.cgi?plan_id=[% plan.id FILTER none %]">Create a New Test Case</a>
 </div>
 
-[% ##### Test Runs ##### %]
+[%##### Test Runs #####%]
 <br><br>
 <h3>Test Runs</h3>
 <div id="plan_runs">
@@ -233,7 +238,7 @@
    table = run_table %]
   <a href="tr_new_run.cgi?plan_id=[% plan.id FILTER none %]">Create a New Test Run</a>
 </div>
-[% ##### Attachments ##### %]
+[%##### Attachments #####%]
 <br><br>
 <h3>Attachments</h3>
 <div id="attachment">
@@ -242,11 +247,11 @@
    type = "plan"   
 %]
 </div>
-[% ### Reports ### %]
+[%### Reports ###%]
 <br><br>
 <h3>Reports</h3>
-<a href="tr_plan_reports.cgi?plan_id=[% plan.id %]">Build Coverage</a>
-[% ##### Edit Plan ##### %]
+<a href="tr_plan_reports.cgi?plan_id=[% plan.id FILTER none %]">Build Coverage</a>
+[%##### Edit Plan #####%]
 <br><br>
 [% IF plan.canedit %]
 <h3>Attributes</h3>
@@ -254,13 +259,13 @@
     [% PROCESS testopia/plan/form.html.tmpl %]
 </div>
 [% ELSE %]
-[% ##### Plan Document ##### %]
+[%##### Plan Document #####%]
 <div id="plan_doc">
     [% plan.text %]
 </div>
 
 [% END %]
 </form>
-[% ##### Footer ##### %]
+[%##### Footer #####%]
 
 [% PROCESS global/footer.html.tmpl %]

@@ -335,7 +335,7 @@ Returns true if the logged in user has rights to edit this attachment
 sub canedit {
 }
 
-=head2 canview
+=head2 candelete
 
 Returns true if the logged in user has rights to delete this attachment
 

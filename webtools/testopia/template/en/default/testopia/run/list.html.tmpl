@@ -1,3 +1,4 @@
+[%# 1.0@bugzilla.org %]
 [%# The contents of this file are subject to the Mozilla Public
   # License Version 1.1 (the "License"); you may not use this file
   # except in compliance with the License. You may obtain a copy of
@@ -15,7 +16,7 @@
   # Maciej Maczynski. All Rights Reserved.
   #
   # Contributor(s): Ed Fuentetaja <efuentetaja@acm.org>
-  #					Greg Hendricks <ghendricks@novell.com>
+  #                 Greg Hendricks <ghendricks@novell.com>
   #%]
 
 [%# INTERFACE:
@@ -53,7 +54,7 @@ No test runs
   [% IF table.list_count == 1 %]
     One test run
   [% ELSE %]
-    [% table.list_count %] test runs
+    [% table.list_count FILTER none %] test runs
   [% END %]
 [% END %]
 found.
@@ -99,7 +100,7 @@ found.
     </td>
 [% END %]
   </tr>
-</table>	    
+</table>        
 
 <p>
   <input TYPE="SUBMIT" name="action" class="tr_button" VALUE="Commit">

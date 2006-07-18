@@ -1,3 +1,4 @@
+[%# 1.0@bugzilla.org %]
 [%# The contents of this file are subject to the Mozilla Public
   # License Version 1.1 (the "License"); you may not use this file
   # except in compliance with the License. You may obtain a copy of
@@ -69,9 +70,9 @@
 [% END %]
 <tr>
   <td [% td_class %] align="left">[% log.closed_date %]</td>
-  <td [% td_class %] align="right">[% log.id %]</td>
+  <td [% td_class %] align="right">[% log.id FILTER none %]</td>
   <td [% td_class %] align="left">[% log.summary %]</td>
-  <td [% td_class %] align="right">[% log.case_id %]</td>
+  <td [% td_class %] align="right">[% log.case_id FILTER none %]</td>
   <td [% td_class %] align="left">[% log.testedby %]</td>
   <td [% td_class %] align="left">[% log.component %]</td>
   <td [% td_class %] align="left">[% log.group %]</td>
@@ -103,9 +104,9 @@
 </tr>
 [% FOREACH log = idlecaseslogs %]
 <tr>
-  <td class="sep" align="right">[% log.id %]</td>
+  <td class="sep" align="right">[% log.id FILTER none %]</td>
   <td class="sep" align="left">[% log.summary %]</td>
-  <td class="sep" align="right">[% log.case_id %]</td>
+  <td class="sep" align="right">[% log.case_id FILTER none %]</td>
   <td class="sep" align="left">[% log.component %]</td>
   <td class="sep" align="left">[% log.group %]</td>
 </tr>

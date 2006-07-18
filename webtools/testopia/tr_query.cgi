@@ -43,48 +43,66 @@ Bugzilla->login();
 print $cgi->header;
 
 my $action = $cgi->param('action');
-
+    
 if ($action eq 'getversions'){
-    my @prod_ids = $cgi->param('prod_ids');
+    my @prod_ids = split(",", $cgi->param('prod_ids'));
+    my $tab = $cgi->param('current_tab') || '';
     my $plan = Bugzilla::Testopia::TestPlan->new({'plan_id'    => 0});
-    my @versions;
+    my @validated;
     foreach my $p (@prod_ids){
         detaint_natural($p);
-        push @versions, $plan->get_product_versions($p);
+        validate_selection($p,'id','products');
+        push @validated, $p if can_view_product($p);
     }
-    # Weed out duplicates
-    my %seen;
-    foreach my $v (@versions){
-        $seen{$v->{'id'}} = 1;
+    my $prodlist = join(",", @validated);
+    my $versions   = $plan->get_product_versions($prodlist) if ($tab eq 'run' || $tab eq 'plan');
+    my $milestones = $plan->get_product_milestones($prodlist) if ($tab eq 'run');
+    my $builds     = $plan->get_product_builds($prodlist) if ($tab eq 'run');
+    my $components = $plan->get_product_components($prodlist) if ($tab eq 'case' || '');
+    my $categories = $plan->get_product_categories($prodlist) if ($tab eq 'case' || '');
+
+    my $ret = "<product>";
+    foreach my $value (@$versions){
+        $ret .= "<version>". xml_quote($value->{'name'}) ."</version>";
     }
-    my $ret;
-    foreach my $v (keys %seen){
-        $ret .= $v . "|";
+    foreach my $value (@$milestones){
+        $ret .= "<milestone>". xml_quote($value->{'name'}) ."</milestone>";
     }
-    chop($ret);
+    foreach my $value (@$builds){
+        $ret .= "<build>". xml_quote($value->{'name'}) ."</build>";
+    }
+    foreach my $value (@$components){
+        $ret .= "<component>". xml_quote($value->{'name'}) ."</component>";
+    }
+    foreach my $value (@$categories){
+        $ret .= "<category>". xml_quote($value->{'name'}) ."</category>";
+    }
+    $ret .= "</product>";
+    
     print $ret;
 }
 else{
+    my $plan = Bugzilla::Testopia::TestPlan->new({ 'plan_id' => 0 });
+    my @allversions;
+    foreach my $p (@{$plan->get_available_products}){
+        push @allversions, @{$plan->get_product_versions($p->{'id'})};
+    }
+    # weed out any repeats
+    my %versions;
+    foreach my $v (@allversions){
+        $versions{$v->{'id'}} = 1;
+    }
+    @allversions = ();
+    foreach my $k (keys %versions){
+        push @allversions, { 'id' => $k,  'name' => $k };
+    }
+    $vars->{'plan'} = $plan;
+    $vars->{'product_versions'} = \@allversions;
+    
     #TODO: Support default query
     my $tab = $cgi->param('current_tab') || '';
     if ($tab eq 'plan'){
-        my $plan = Bugzilla::Testopia::TestPlan->new({ 'plan_id' => 0 });
-        my @allversions;
-        foreach my $p (@{$plan->get_available_products}){
-            push @allversions, @{$plan->get_product_versions($p->{'id'})};
-        }
-        # weed out any repeats
-        my %versions;
-        foreach my $v (@allversions){
-            $versions{$v->{'id'}} = 1;
-        }
-        @allversions = ();
-        foreach my $k (keys %versions){
-            push @allversions, { 'id' => $k,  'name' => $k };
-        }
-        $vars->{'plan'} = $plan;
         $vars->{'title'} = "Search For Test Plans";
-        $vars->{'product_versions'} = \@allversions;
     }
     elsif ($tab eq 'run'){
         my $run = Bugzilla::Testopia::TestRun->new({ 'run_id' => 0 });
@@ -103,4 +121,3 @@ else{
     $template->process("testopia/search/advanced.html.tmpl", $vars)
         || ThrowTemplateError($template->error()); 
 }
-    

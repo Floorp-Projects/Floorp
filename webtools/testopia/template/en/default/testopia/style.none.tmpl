@@ -1,3 +1,4 @@
+[%# 1.0@bugzilla.org %]
 [%# The contents of this file are subject to the Mozilla Public
   # License Version 1.1 (the "License"); you may not use this file
   # except in compliance with the License. You may obtain a copy of
@@ -21,6 +22,24 @@
   # ...
   #%]
 
-[% DECORATIVE_BORDER_BEGIN = "<table style=\"border-width:1px;border-bottom-width:3px;border-style:solid;border-collapse:collapse;border-color:black;border-spacing:0px;\"><tr><td style=\"margin:0;padding:0;\"><table style=\"border-collapse:collapse;border-width:0px;\"><tr><td>" %]
-[% DECORATIVE_BORDER_100_BEGIN = "<table width=\"100%\" style=\"border-width:1px;border-bottom-width:3px;border-style:solid;border-collapse:collapse;border-color:black;border-spacing:0px;\"><tr><td style=\"margin:0;padding:0;\"><table width=\"100%\" style=\"border-collapse:collapse;border-width:0px;\"><tr><td>" %]
-[% DECORATIVE_BORDER_END = "</td></tr></table></td></tr></table>" %]
+[% DECORATIVE_BORDER_BEGIN = "<div style=\"margin-top:4px;\"><table style=\"border-width:1px;border-bottom-width:3px;border-style:solid;border-collapse:collapse;border-color:black;border-spacing:0px;\"><tr><td style=\"margin:0;padding:0;\"><table style=\"border-collapse:collapse;border-width:0px;\"><tr><td>" %]
+[% DECORATIVE_BORDER_100_BEGIN = "<div style=\"margin-top:4px;\"><table width=\"100%\" style=\"border-width:1px;border-bottom-width:3px;border-style:solid;border-collapse:collapse;border-color:black;border-spacing:0px;\"><tr><td style=\"margin:0;padding:0;\"><table width=\"100%\" style=\"border-collapse:collapse;border-width:0px;\"><tr><td>" %]
+[% DECORATIVE_BORDER_END = "</td></tr></table></td></tr></table></div>" %]
+<style>
+.bz_row_odd
+{
+    background-color: #F7F7F7;
+    color: #000000;
+}
+
+.bz_row_even
+{
+    background-color: #FFFFFF;
+    color: #000000;
+}
+
+.bz_row_header { background-color: #e0e0e0;
+                font-weight: bold;
+              }
+.bz_row_data { padding-bottom: 5px;}
+</style>

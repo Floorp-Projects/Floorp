@@ -1,3 +1,4 @@
+[%# 1.0@bugzilla.org %]
 [%# The contents of this file are subject to the Mozilla Public
   # License Version 1.1 (the "License"); you may not use this file
   # except in compliance with the License. You may obtain a copy of
@@ -31,6 +32,50 @@
 
 <table width="100%">
   <tr>
+  [% IF NOT dotweak %]
+    <td align="center" valign="top" width="50%">
+      [% IF caserun.bugs.size > 0 %]
+      <table>
+        <tr class="bz_row_header">
+          <th colspan="3" >[% terms.Bugs %]</th>
+        </tr>
+        <tr class="bz_row_header">
+          <th>ID</th><th>Summary</th><th>Remove</th>
+        </tr>
+      [% FOREACH bug = caserun.bugs %]
+        <tr>
+          <td>[% bug.bug_id FILTER bug_link(bug.bug_id) %] </td>
+          <td>[% bug.short_desc FILTER html %]</td>
+          <td><a href="tr_show_caserun.cgi?caserun_id=[% caserun.id FILTER none %]&bug_id=[% bug.bug_id FILTER none %]&action=detach_bug"><img src="testopia/img/del.gif" alt="detach bug" /></a>
+        </tr>
+      [% END %]
+      </table>
+      [% END %]
+      </td>
+      <td align="center" valign="top" width="50%">
+     [% IF caserun.case.bugs.size > 0 %]
+      <table>
+        <tr class="bz_row_header">
+          <th colspan="3" >[% terms.Bugs %] in all runs</th>
+        </tr>
+        <tr class="bz_row_header">
+          <th>ID</th><th>Summary</th>
+        </tr>
+      [% FOREACH bug = caserun.case.bugs %]
+        <tr>
+          <td>[% bug.bug_id FILTER bug_link(bug.bug_id) %] </td>
+          <td>[% bug.short_desc FILTER html %]</td>
+        </tr>
+      [% END %]
+      </table>
+      [% END %]
+    </td>
+  [% END %]
+  </tr>
+
+</table>
+<table width="100%">
+  <tr>
     <th align="right">Build</th>
     <td>
   [% PROCESS select sel = { name => "caserun_build", 
@@ -40,19 +85,11 @@
     </td>
     <th align="right">Assignee</th>
     <td><input name="assignee" value="[% dotweak ? "--Do Not Change--" : caserun.assignee.login FILTER html %]"></td>
+    <th align="right" valign="top" colspan="2">Attach [% terms.Bugs %]</th>
+    <td><input name="bugs">&nbsp;<a href="enter_bug.cgi?product=[% caserun.run.plan.product_name FILTER url_quote %]&caserun_id=[% caserun.id FILTER none %]">Log a New [% terms.Bug %]</a></td>
+    
   </tr>
-  <tr>
-    <th align="right">Attach Bugs</th>
-    <td><input name="bugs">&nbsp;<a href="enter_bug.cgi?product=[% caserun.run.plan.product_name FILTER url_quote %]&caserun_id=[% caserun.id FILTER none %]">Log a New Bug</a></td>
-  [% IF NOT dotweak %]
-    <th align="right">Bugs</th>
-    <td>
-      [% FOREACH bug = caserun.bugs %]
-        [% bug.bug_id FILTER bug_link(bug.bug_id) %]
-      [% END %]
-    </td>
-  [% END %]
-  </tr>
+</table>
 <table width="100%">
   <tr>  
     <td colspan="2">
@@ -82,7 +119,7 @@
         <th class="bz_row_header">Notes</th>
       </tr>
       <tr>
-    <td><textarea name="notes" cols=80 rows=15>[% caserun.notes %]</textarea></td>
+    <td><textarea name="notes" cols="80" rows="15">[% caserun.notes %]</textarea></td>
     </tr>
   </table>
   </td>

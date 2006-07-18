@@ -1,4 +1,4 @@
-[%# The contents of this file are subject to the Mozilla Public
+[%# 1.0@bugzilla.org %][%# The contents of this file are subject to the Mozilla Public
   # License Version 1.1 (the "License"); you may not use this file
   # except in compliance with the License. You may obtain a copy of
   # the License at http://www.mozilla.org/MPL/
@@ -15,7 +15,7 @@
   # Maciej Maczynski. All Rights Reserved.
   #
   # Contributor(s): Ed Fuentetaja <efuentetaja@acm.org>
-  #					Greg Hendricks <ghendricks@novell.com>
+  #                 Greg Hendricks <ghendricks@novell.com>
   #%]
 
 [%# We need to do this again since this may be called from ajax %]
@@ -32,7 +32,7 @@ Select:
 <a href="javascript:snone()">None</a>
   [% END %]
   [% SET nav = { curr  => page,
-  	 	       last  => pagecount }
+               last  => pagecount }
   %]
 
   [% IF table.ajax %] 
@@ -58,22 +58,22 @@ Select:
     <th align="left"><a href="[% link %]case_status[% paren %]">Status[% table.arrow IF table.last_sort == 'status' %]</a></th>
   </tr>
   [% FOREACH case = table.list %] 
-  [% index = case.id %] 
-  <tr id="trr[% index %]" class="[% loop.count % 2 == 0 ? "bz_row_odd" : "bz_row_even" %]" onclick="sr([% loop.count %]);" style="cursor:pointer;">
+  [% index = loop.count %] 
+  <tr id="trr[% index FILTER none %]" class="[% loop.count % 2 == 0 ? "bz_row_odd" : "bz_row_even" %]" onclick="sr([% loop.count %]);" style="cursor:pointer;">
     <td class="cc_trg" valign="top" width="24">
       <table style="border-spacing:0px;border-collapse:collapse;" width="24">
         <tr>
-          <td style="padding:0;border-width:0;">[% IF dotweak %]<input type="checkbox" id="c_[% index %]" name="c_[% index %]" onclick="[% IF canedit %]ck(this);[% ELSE %]_disable_sr=true;[% END %]">[% END %]</td>
-          <td style="padding:0;border-width:0;"><img id="id[% index %]" src="testopia/img/tr.gif" width="11" height="11"></td>
+          <td style="padding:0;border-width:0;">[% IF dotweak %]<input type="checkbox" id="c_[% case.id FILTER none %]" name="c_[% case.id FILTER none %]" onclick="[% IF canedit %]ck(this);[% ELSE %]_disable_sr=true;[% END %]">[% END %]</td>
+          <td style="padding:0;border-width:0;"><img id="id[% index FILTER none %]" src="testopia/img/tr.gif" width="11" height="11"></td>
         </tr>
       </table>
     </td>
 
-    <td align="right" valign="top"><a onclick="_disable_sr=true;" href="tr_show_case.cgi?case_id=[% case.case_id %]">[% case.id %]</a></td>
+    <td align="right" valign="top"><a onclick="_disable_sr=true;" href="tr_show_case.cgi?case_id=[% case.case_id FILTER none %]">[% case.id FILTER none %]</a></td>
     <td align="left" valign="top">[% case.alias %]</td>
     <td align="left" valign="top">[% case.summary %]</td>
     <td align="left" valign="top">[% case.requirement %]</td>
-    <td align="left" valign="top"><a href="mailto:[% case.username %]">[% case.author.login %]</a></td>	
+    <td align="left" valign="top"><a href="mailto:[% case.username %]">[% case.author.login %]</a></td> 
     <td align="left" valign="top">[% case.creation_date FILTER time %]</td>
     <td align="left" valign="top">[% case.category.name FILTER html %]</td>
     <td align="left" valign="top">[% case.priority FILTER html %]</td>
@@ -96,7 +96,7 @@ Select:
             <td style="width:10px">
             </td>
 
-            <td valign="top" class="ae_e"><b>Effect:</b><br>
+            <td valign="top" class="ae_e"><b>Expected Results:</b><br>
             [% case.text.effect %]</td>
           </tr>
         </table>
@@ -105,8 +105,8 @@ Select:
           <div style="float:left;">
             <b>Found in Plans:</b>
             [% FOREACH p = case.plans %]
-		      <a href="tr_show_plan.cgi?plan_id=[% p.id FILTER none %]">[% p.id %]</a>
-		    [% END %]
+              <a href="tr_show_plan.cgi?plan_id=[% p.id FILTER none %]">[% p.id FILTER none %]</a>
+            [% END %]
           </div>
         </div>
       </div>

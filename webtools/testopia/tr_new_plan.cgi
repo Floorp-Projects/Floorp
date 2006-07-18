@@ -45,7 +45,7 @@ my $cgi = Bugzilla->cgi;
 push @{$::vars->{'style_urls'}}, 'testopia/css/default.css';
 
 my $action = $cgi->param('action');
-my $product = $cgi->param('prod_id');
+my $product = $cgi->param('product_id');
 
 detaint_natural($product);
 

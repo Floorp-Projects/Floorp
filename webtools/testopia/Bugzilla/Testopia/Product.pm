@@ -20,6 +20,8 @@
 
 package Bugzilla::Testopia::Product;
 
+use strict;
+
 # Extends Bugzilla::Product;
 use base "Bugzilla::Product";
 

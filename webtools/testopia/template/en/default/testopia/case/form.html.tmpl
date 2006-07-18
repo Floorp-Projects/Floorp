@@ -1,3 +1,4 @@
+[%# 1.0@bugzilla.org %]
 [%# The contents of this file are subject to the Mozilla Public
   # License Version 1.1 (the "License"); you may not use this file
   # except in compliance with the License. You may obtain a copy of
@@ -41,21 +42,20 @@
     dojo.require("dojo.widget.Editor");    
 </script>
 [% END %]
-
-
+<a name="attributes"></a>
   <input type="hidden" name="case_id" value="[% case.id FILTER none %]"/>
-  [% IF form_action == 'tr_new_case.cgi' %]
-  <input type="hidden" name="plan_id" value="[% case.plans.0.id FILTER none %]"/> 
-  [% END %]
-  
+<table border="0">
+<tr><td>  
   <table border="0">
     <tr>
       <td valign="top" align="right"><b>Summary</b></td>
       <td colspan="3"><input name="summary" size="80" value="[% case.summary FILTER none %]"></td>
     </tr>
     <tr>
-      <th align="right"><b>Default Tester</b></th>
-      <td colspan="3"><input name="tester" size="30" value="[% case.default_tester.login ? case.default_tester.login : user.login FILTER html %]"></td>      
+      <td align="right"><b>Default Tester</b></td>
+      <td><input name="tester" size="30" value="[% case.default_tester.login ? case.default_tester.login : user.login FILTER html %]" /></td>
+      <td align="right"><b>Add Tags</b></td>
+      <td><input name="addtags" size="30" /></td>
     </tr>
     
     <tr>
@@ -80,8 +80,8 @@
       </td>
       <td align="right"><b>Automatic</b></td>
       <td><select name="isautomated" id="isautomated" onchange="updateScript();">
-      		<option value="0">Manual</option>
-      		<option value="1" [% 'selected' IF case.isautomated %]>Automatic</option>
+            <option value="0">Manual</option>
+            <option value="1" [% 'selected' IF case.isautomated %]>Automatic</option>
           </select>
       </td>
     </tr>
@@ -100,7 +100,7 @@
     </tr>
 
     <tr>
-      <td align="right"><b>Category<b></b></b></td>
+      <td align="right"><b><a href="tr_categories.cgi?plan_id=[% case.plans.0.id %]">Category</a></b></td>
       <td>
         [% PROCESS select sel = { name      => 'category',
                                   accesskey => 'c', 
@@ -112,6 +112,25 @@
     </tr>
   
   </table> 
+ </td>
+[% IF action == "Add" %]
+  <td valign="top"><b>Components</b><br/>
+  [% comps = [] %]
+  [% FOREACH c = case.components %]
+    [% comps.push(c.id) %]
+  [% END %]
+  
+    [% PROCESS select sel = { name      => 'components',
+                              accesskey => 'c', 
+                              list      => case.get_selectable_components(1)
+                              default   => comps
+                              mult      => 1
+                              deflist   => 1
+                              elements  => 7 } %]
+   </td>
+[% END %]
+</tr> 
+</table>
   <p align="right">
     <input type="SUBMIT" name="action" class="tr_button" value="[% action FILTER html %]">
   </p>
@@ -136,24 +155,24 @@
       </td>
     </tr>
     <tr>
-      <th> <input name="tcdependson" size="30" value="[% case.dependson_list %]"> </th>
-      <th> <input name="tcblocks" size="30" value="[% case.blocked_list %]"> </th>
+      <td> <input name="tcdependson" size="30" value="[% case.dependson_list %]"> </td>
+      <td> <input name="tcblocks" size="30" value="[% case.blocked_list %]"> </td>
     </tr>
     <tr>
       <td>
 <!-- 
-        <a href="tr_showdependencytree.cgi?case_id=[% case.id %]">Show dependency tree</a>
+        <a href="tr_showdependencytree.cgi?case_id=[% case.id FILTER none %]">Show dependency tree</a>
 -->
       </td>
       <td>
 <!-- 
         [% IF Param('webdotbase') %]
-          <a href="tr_showdependencygraph.cgi?case_id=[% case.id %]">Show dependency graph</a>
+          <a href="tr_showdependencygraph.cgi?case_id=[% case.id FILTER none %]">Show dependency graph</a>
         [% END %]
 -->
       </td>
     </tr>
-  </table>	    
+  </table>      
 
 [%# action, effect %]
   <h3>Action</h3>
@@ -164,7 +183,7 @@
 [% case.text.action %]</textarea>     
   </div>
   <br><br>
-  <h3>Effect</h3>
+  <h3>Expected Results</h3>
   <div style="border: 1px solid #000000;  padding-bottom: 5px;">
   <textarea cols="80" rows="25" dojotype="Editor" 
             items="blockGroup;|;textGroup;|;justifyGroup;|;colorGroup;|;listGroup;|;indentGroup;|;linkGroup;"

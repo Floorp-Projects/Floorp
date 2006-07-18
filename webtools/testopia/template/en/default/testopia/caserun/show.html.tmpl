@@ -1,3 +1,4 @@
+[%# 1.0@bugzilla.org %]
 [%# The contents of this file are subject to the Mozilla Public
   # License Version 1.1 (the "License"); you may not use this file
   # except in compliance with the License. You may obtain a copy of
@@ -15,7 +16,7 @@
   # Maciej Maczynski. All Rights Reserved.
   #
   # Contributor(s): Ed Fuentetaja <efuentetaja@acm.org>
-  #					Greg Hendricks <ghendricks@novell.com>
+  #                 Greg Hendricks <ghendricks@novell.com>
   #%]
 
 [%# INTERFACE:
@@ -40,22 +41,23 @@
 
 [% PROCESS testopia/messages.html.tmpl %]
 
+[% PROCESS testopia/caserun/navigate.html.tmpl %]
 
-[% ##### Overview ##### %]
+[%##### Overview #####%]
 
 <div id="run_overview">
 <h3>Overview</h3>
 <table border="0" cellpadding="1" width="100%">
   <tbody align="left">
     <tr class="bz_row_header">
-      <th>Test Case</th>
-      <th>Test Run</th>
-      <th>Test Plan</th>
+      <th width="33%">Test Case</th>
+      <th width="33%">Test Run</th>
+      <th width="33%">Test Plan</th>
       </tr>
     <tr class="bz_row_data">
-      <td><a href="tr_show_case.cgi?case_id=[% caserun.case.id FILTER html %]">[% caserun.case.id FILTER html %]</a></td>
-      <td><a href="tr_show_run.cgi?run_id=[% caserun.run.id FILTER html %]">[% caserun.run.id FILTER html %]</a></td>
-      <td><a href="tr_show_plan.cgi?plan_id=[% caserun.run.plan.id FILTER html %]">[% caserun.run.plan.id FILTER html %]</a></td>
+      <td><a href="tr_show_case.cgi?case_id=[% caserun.case.id FILTER html %]">[% caserun.case.id FILTER html %]: [% caserun.case.summary FILTER html %]</a></td>
+      <td><a href="tr_show_run.cgi?run_id=[% caserun.run.id FILTER html %]">[% caserun.run.id FILTER html %]: [% caserun.run.summary FILTER html %]</a></td>
+      <td><a href="tr_show_plan.cgi?plan_id=[% caserun.run.plan.id FILTER html %]">[% caserun.run.plan.id FILTER html %]: [% caserun.run.plan.name %]</a></td>
       </tr>
     <tr class="bz_row_header">
       <th>Test Case Version</th>
@@ -73,22 +75,22 @@
       <th>Tested By</th>
       </tr>
     <tr class="bz_row_data">
-      <td><a href="mailto:[% caserun.assignee.email FILTER html %]">[% caserun.assignee.identity FILTER html %]</td>
+      <td><a href="mailto:[% caserun.assignee.email FILTER html %]">[% caserun.assignee.identity FILTER html %]</a></td>
       <td align="center"><img src="testopia/img/[% caserun.status FILTER html %].gif" alt="[% caserun.status FILTER html %]" title="[% caserun.status FILTER html %]"></td>
-      <td><a href="mailto:[% caserun.testedby.email FILTER html %]">[% caserun.testedby.identity FILTER html %]</td>
+      <td><a href="mailto:[% caserun.testedby.email FILTER html %]">[% caserun.testedby.identity FILTER html %]</a></td>
     </tr>
   </tbody>
 </table>
 </div>
 
 <br><br>
-[% ##### Case Action & Effect ##### %]
-<h3>Case Action & Effect</h3>
+[%##### Case Action & Expected Results #####%]
+<h3>Case Action & Expected Results</h3>
 <div style="width:800">
 <table width="100%">
   <tr class="bz_row_header">
     <th colspan="2">Action</th>
-    <th colspan="2">Effect</th>
+    <th colspan="2">Expected Results</th>
   </tr>
   <tr>
     <td colspan="2" class="ae_a">[% caserun.case.text.action FILTER none %]</td>
@@ -100,3 +102,4 @@
 [% PROCESS testopia/caserun/form.html.tmpl %]
 </form>
 [% PROCESS global/footer.html.tmpl %]
+

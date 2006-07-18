@@ -37,7 +37,7 @@ Bugzilla::Testopia::Search - A module to support searches in Testopis
 =head1 DESCRIPTION
 
 Testopia::Search is based heavilly on Bugzilla::Search. It takes a 
-CGI instance and parses its paramaters to generate an SQL query that
+CGI instance and parses its parameters to generate an SQL query that
 can be used to get a result set from the database. The query is 
 usually passed to Table.pm to execute and display the results.
 Search.pm supports searching for all major objects in the Testopia
@@ -218,15 +218,22 @@ sub init {
     my @funcdefs =
     (
          "^category," => sub {
+               if ($obj eq 'case_run'){
+                   push(@supptables,
+                          "INNER JOIN test_cases " .
+                          "ON test_case_runs.case_id = test_cases.case_id");
+               }                   
                push(@supptables,
                       "INNER JOIN test_case_categories AS categories " .
                       "ON test_cases.category_id = categories.category_id");
                $f = "categories.name";
          },
          "^build," => sub {
+               my $str = '';
+               $str = 'case_' if ($obj eq 'case_run');
                push(@supptables,
                       "INNER JOIN test_builds AS builds " .
-                      "ON test_runs.build_id = builds.build_id");
+                      "ON test_". $str ."runs.build_id = builds.build_id");
                $f = "builds.name";
          },
          "^(tcaction|tceffect)," => sub {
@@ -295,6 +302,27 @@ sub init {
          },
          "^run_plan_id," => sub {
                $f = "test_runs.plan_id";
+         },
+         "^case_prod," => sub {
+               push(@supptables,
+                      "INNER JOIN test_case_plans AS case_plans " .
+                      "ON test_cases.case_id = case_plans.case_id");
+               push(@supptables,
+                      "INNER JOIN test_plans " .
+                      "ON case_plans.plan_id = test_plans.plan_id");
+               push(@supptables,
+                      "INNER JOIN products " .
+                      "ON test_plans.product_id = products.id");
+               $f = "test_plans.product_id";
+         },
+         "^run_prod," => sub {
+               push(@supptables,
+                      "INNER JOIN test_plans " .
+                      "ON test_runs.plan_id = test_plans.plan_id");
+               push(@supptables,
+                      "INNER JOIN products " .
+                      "ON test_plans.product_id = products.id");
+               $f = "test_plans.product_id";
          },
          "^(author|editor|manager|default_tester)," => sub {
                push(@supptables,
@@ -422,9 +450,24 @@ sub init {
         }
         push(@specialchart, ["bug", $type, join(',', $cgi->param('bug_id'))]);
     }
+    if ($cgi->param("product_id")){
+        my $type = "anyexact";
+        if ($cgi->param('prodidtype') && $cgi->param('prodidtype') eq 'exclude') {
+            $type = "nowords";
+        }
+        if ($obj eq 'run'){
+            push(@specialchart, ["run_prod", $type, join(',', $cgi->param('product_id'))]);
+        }
+        elsif ($obj eq 'case'){
+            push(@specialchart, ["case_prod", $type, join(',', $cgi->param('product_id'))]);
+        }
+        else{
+            push(@specialchart, ["product_id", $type, join(',', $cgi->param('product_id'))]);
+        }
+    }        
     # Check the Multi select fields and add them to the chart
     my @legal_fields = ("case_status_id", "category", "priority_id",
-                        "component", "isautomated", "product_id",  
+                        "component", "isautomated", "case_run_status_id",
                         "default_product_version", "type_id", 
                         "build", "environment_id", "milestone");
 
@@ -465,7 +508,7 @@ sub init {
         push(@specialchart, ["tags", $t, $cgi->param('tags')]);
     }
     # Check for author
-
+    my @clist;
     foreach my $profile ("author", "editor", "manager", "default_tester", 
                          "assignee", "testedby"){
         $t = $cgi->param($profile . "_type") || '';
@@ -479,9 +522,18 @@ sub init {
             }
         }
         if ($cgi->param($profile)){
-            push(@specialchart, [$profile, $t, $cgi->param($profile)]);
+            if ($cgi->param('andor')){
+                push(@specialchart, [$profile, $t, trim($cgi->param($profile))]);
+            }
+            else{
+                push(@clist, $profile, $t, trim($cgi->param($profile)));
+            }
         }
     }
+    if (@clist) {
+        push(@specialchart, \@clist);
+    }
+    
     # check static text fields
     foreach my $f ("summary", "tcaction", "tceffect", "script",
                    "requirement", "name", "plan_text", "environment",

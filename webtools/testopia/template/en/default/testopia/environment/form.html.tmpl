@@ -1,3 +1,4 @@
+[%# 1.0@bugzilla.org %]
 [%# The contents of this file are subject to the Mozilla Public
   # License Version 1.1 (the "License"); you may not use this file
   # except in compliance with the License. You may obtain a copy of
@@ -33,14 +34,14 @@
   <tr>
     <th class="bz_row_header" align="right">OS:</th>
     <td>
-	[% PROCESS select sel = { name      => 'op_sys',
+    [% PROCESS select sel = { name      => 'op_sys',
                               list      =>  environment.get_op_sys_list,
                               accesskey => 'o' 
                               default   => environment.op_sys } %]
     </td>
     <th class="bz_row_header" align="right">Platform:</th>
     <td>
-	[% PROCESS select sel = { name      => 'rep_platform',
+    [% PROCESS select sel = { name      => 'rep_platform',
                               list      =>  environment.get_rep_platform_list,
                               accesskey => 'f' 
                               default   => environment.rep_platform } %]

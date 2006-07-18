@@ -191,11 +191,14 @@ associated with this case.
 #TODO: This can be done with a single query
 sub get_selectable_components {
     my $self = shift;
+    my ($byid) = @_;
     my $dbh = Bugzilla->dbh;
     my @compids;
     my @exclusions;
-    foreach my $e (@{$self->components}){
-        push @exclusions, $e->{'id'};
+    unless ($byid) {
+        foreach my $e (@{$self->components}){
+            push @exclusions, $e->{'id'};
+        }
     }
     my $query = "SELECT id FROM components
                  WHERE product_id = ?";
@@ -214,7 +217,7 @@ sub get_selectable_components {
     @compids = keys %compseen;
     #TODO: 2.22 use Bugzilla::Component
     my @comps;
-    push @comps, {'id' => '0', 'name' => '--Please Select--'};
+    push @comps, {'id' => '0', 'name' => '--Please Select--'} unless $byid;
     foreach my $id (@compids){
         my $ref = $dbh->selectrow_hashref(
             "SELECT id, name FROM components
@@ -946,6 +949,36 @@ sub update_deps {
     }  
 }
 
+=head2 get_dep_tree
+
+Returns a list of test case dependencies 
+
+=cut
+
+sub get_dep_tree {
+    my $self = shift;
+    $self->{'dep_list'} = ();
+    $self->_generate_dep_tree($self->{'case_id'});
+    return $self->{'dep_list'};
+}
+
+=head2 _generate_dep_tree
+
+Private method that recursivly gets a list of the test cases this blocks
+
+=cut
+
+sub _generate_dep_tree {
+    my $self = shift;
+    my ($case_id) = @_;
+    my $deps = _get_dep_lists("dependson", "blocked", $case_id);
+    return unless scalar @$deps;
+    foreach my $id (@$deps){
+        #print "ID $id";
+        $self->_generate_dep_tree($id);
+        push @{$self->{'dep_list'}}, $id
+    }
+}
 =head2 canedit
 
 Returns true if the logged in user has rights to edit this test case.
@@ -1230,7 +1263,7 @@ sub plans {
     return $self->{'plans'};
 }
 
-=head2 plans
+=head2 bugs
 
 Returns a reference to a list of Bugzilla::Bug objects 
 associated with this case.
@@ -1241,12 +1274,12 @@ sub bugs {
     my $self = shift;
     my $dbh = Bugzilla->dbh;
     return $self->{'bugs'} if exists $self->{'bugs'};
-    my $ref = $dbh->selectcol_arrayref("SELECT bug_id
-                                       FROM test_case_bugs b
-                                       JOIN  test_case_runs r
-                                       ON r.case_run_id = b.case_run_id
-                                       WHERE case_id = ?", 
-                                       undef, $self->{'case_id'});
+    my $ref = $dbh->selectcol_arrayref(
+        "SELECT DISTINCT bug_id
+           FROM test_case_bugs b
+           JOIN  test_case_runs r ON r.case_run_id = b.case_run_id
+          WHERE case_id = ?", 
+         undef, $self->{'case_id'});
     my @bugs;
     foreach my $id (@{$ref}){
         push @bugs, Bugzilla::Bug->new($id, Bugzilla->user->id);

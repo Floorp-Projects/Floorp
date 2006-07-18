@@ -1,3 +1,4 @@
+[%# 1.0@bugzilla.org %]
 [%# The contents of this file are subject to the Mozilla Public
   # License Version 1.1 (the "License"); you may not use this file
   # except in compliance with the License. You may obtain a copy of
@@ -40,7 +41,95 @@
 [% tabs = [ { name => 'case', description => "Find Test Cases" },
             { name => 'run',  description => "Find Test Runs"  },
             { name => 'plan', description => "Find Test Plans" } ] %]
+<script src="testopia/dojo-ajax/dojo.js" type="text/javascript"></script>
+<script type="text/javascript">
+    function addOption(selectElement,newOption) {
+      try {
+        selectElement.add(newOption,null);
+      }
+      
+      catch (e) {
+        selectElement.add(newOption,selectElement.length);
+      }
+    }
 
+    function fillSelects (data){
+        var xmldocroot = data.documentElement;
+        var tab = '[% current_tab FILTER none %]';
+        
+        if (tab == 'run' || tab == 'plan'){
+          var versions   = xmldocroot.getElementsByTagName('version');
+          var selVersion = document.getElementById("default_product_version");
+          selVersion.options.length = 0;
+          for (i=0; i< versions.length; i++){
+            var id = versions[i].firstChild.nodeValue;
+            var name = versions[i].firstChild.nodeValue;
+            var myOp = new Option(name, id);
+            addOption(selVersion,myOp);
+          }
+        }
+        if (tab == 'run'){
+          var milestones = xmldocroot.getElementsByTagName('milestone');
+          var builds     = xmldocroot.getElementsByTagName('build');
+          var selMilestone = document.getElementById("milestone");
+          var selBuild     = document.getElementById("build");
+          selBuild.options.length = 0;
+          selMilestone.options.length = 0;
+          for (i=0; i< milestones.length; i++){
+            var id = milestones[i].firstChild.nodeValue;
+            var name = milestones[i].firstChild.nodeValue;
+            var myOp = new Option(name, id);
+            addOption(selMilestone,myOp);
+          }
+          for (i=0; i< builds.length; i++){
+            var id = builds[i].firstChild.nodeValue;
+            var name = builds[i].firstChild.nodeValue;
+            var myOp = new Option(name, id);
+            addOption(selBuild,myOp);
+          }
+
+        }
+        if (tab == 'case' || tab == ''){
+          var components = xmldocroot.getElementsByTagName('component');
+          var categories = xmldocroot.getElementsByTagName('category');
+          var selComponent = document.getElementById("component");
+          var selCategory  = document.getElementById("category");
+          selComponent.options.length = 0;
+          selCategory.options.length = 0;
+          for (i=0; i< components.length; i++){
+            var id = components[i].firstChild.nodeValue;
+            var name = components[i].firstChild.nodeValue;
+            var myOp = new Option(name, id);
+            addOption(selComponent,myOp);
+          }
+          for (i=0; i< categories.length; i++){
+            var id = categories[i].firstChild.nodeValue;
+            var name = categories[i].firstChild.nodeValue;
+            var myOp = new Option(name, id);
+            addOption(selCategory,myOp);
+          }
+        }
+    }
+
+  function onProductSelection(){
+    var prod = document.getElementById("product_id");
+    var ids = new Array;
+    for (var i=0; i<prod.options.length; i++){
+      if (prod.options[i].selected == true)
+        ids.push(prod.options[i].value);
+    }
+    
+    dojo.io.bind({
+        url:     "tr_query.cgi",
+        content: {  current_tab: "[% current_tab FILTER none %]", prod_ids: ids.join(","), action: "getversions" },
+        load:    function(type, data, evt){ fillSelects(data);},
+        error:   function(type, error){ alert("ERROR");},
+        mimetype: "text/xml"
+    });
+
+  }
+  
+</script>
 <table cellspacing="0" cellpadding="10" border="0" width="100%">
   <tr>
     <td class="spacer">&nbsp;</td>

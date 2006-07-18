@@ -1,3 +1,4 @@
+[%# 1.0@bugzilla.org %]
 [%# The contents of this file are subject to the Mozilla Public
   # License Version 1.1 (the "License"); you may not use this file
   # except in compliance with the License. You may obtain a copy of
@@ -15,7 +16,7 @@
   # Maciej Maczynski. All Rights Reserved.
   #
   # Contributor(s): Ed Fuentetaja <efuentetaja@acm.org>
-  #					Greg Hendricks <ghendricks@novell.com>
+  #         Greg Hendricks <ghendricks@novell.com>
   #%]
 
 [%# INTERFACE:
@@ -102,10 +103,10 @@ found.
   <tr>
     <td align="right"><b>Type</b></td>
     <td>
-	[% PROCESS select sel = { name  => 'plan_type',
-    						  accesskey => 't', 
-    						  list      => type_list
-    						  default   => "--Do Not Change--"  } %]
+    [% PROCESS select sel = { name  => 'plan_type',
+                              accesskey => 't', 
+                              list      => type_list
+                              default   => "--Do Not Change--"  } %]
     </td>
     <td align="right"><b>Product<b></td>
     <td>
@@ -132,8 +133,8 @@ found.
   </tr>
   
 
-</table>	    
-
+</table>        
+<a href="tr_new_case.cgi?plan_id=[% table.id_list FILTER none %]">Create a new test case linked to plans listed here</a>
 <p>
   <input TYPE="SUBMIT" name="action" class="tr_button" VALUE="Commit">
 </p>

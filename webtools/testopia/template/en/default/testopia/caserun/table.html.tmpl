@@ -1,3 +1,4 @@
+[%# 1.0@bugzilla.org %]
 [%# The contents of this file are subject to the Mozilla Public
   # License Version 1.1 (the "License"); you may not use this file
   # except in compliance with the License. You may obtain a copy of
@@ -15,7 +16,7 @@
   # Maciej Maczynski. All Rights Reserved.
   #
   # Contributor(s): Ed Fuentetaja <efuentetaja@acm.org>
-  #					Greg Hendricks <ghendricks@novell.com>
+  #                 Greg Hendricks <ghendricks@novell.com>
   #%]
 
 [%# INTERFACE:
@@ -33,28 +34,33 @@
 <div id="caserun_table">
 [% DECORATIVE_BORDER_100_BEGIN %]
 
-[% ##### TABLE HEADER ##### %]
+[%##### TABLE HEADER #####%]
   [% link = "${table.get_order_url}&order=" %]
 <table width="100%">
   <tr class="bz_row_header">
-	<th width="24" colspan="2">
+    <th width="24" colspan="2">
         <a href="[% link %]case_id">Case&nbsp;ID</a></th>
-	<th><a href="[% link %]build">Build</a></th>
-	<th><a href="[% link %]assignee">Assigned</a></th>
-	<th><a href="[% link %]testedby">Tested by</a></th>
-	<th><a href="[% link %]close_date">Close&nbsp;date</a></th>
-	<th><a href="[% link %]case_run_status">Status</a></th>
-	<th><a href="[% link %]category">Category</a></th>
-	<th>Bugs</th>
+    <th><a href="[% link %]build">Build</a></th>
+    <th><a href="[% link %]assignee">Assigned</a></th>
+    <th><a href="[% link %]testedby">Tested by</a></th>
+    <th><a href="[% link %]close_date">Close&nbsp;date</a></th>
+    <th><a href="[% link %]case_run_status">Status</a></th>
+    <th><a href="[% link %]category">Category</a></th>
+    <th>Bugs</th>
   </tr>
 
 
-[% ##### Loop start ##### %]
+[%##### Loop start #####%]
 [% FOREACH caserun = table.list %]
   [% index = loop.count %]
-  <div id="caserun_[% index %]">
-  [% PROCESS "testopia/caserun/short-form.html.tmpl" %]
-  </div>
+  <!-- START HEADER FOR [% index %]: CASE [% caserun.case.id %] -->
+  <tr id="head_caserun_[% index %]" class="[% loop.count % 2 == 0 ? "bz_row_odd" : "bz_row_even" %]">
+    [% PROCESS "testopia/caserun/short-form-header.html.tmpl" %]
+  </tr>
+  <!-- ### START BODY FOR CASE [% caserun.case.id %] ### -->
+  <tr id="body_caserun_[% index %]" class="[% loop.count % 2 == 0 ? "bz_row_odd" : "bz_row_even" %]">
+    [% PROCESS "testopia/caserun/short-form.html.tmpl" %]
+  </tr>
 [% END %]
 
 [% IF NOT table.viewall %]

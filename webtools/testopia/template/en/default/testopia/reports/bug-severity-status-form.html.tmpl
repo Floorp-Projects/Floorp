@@ -1,3 +1,4 @@
+[%# 1.0@bugzilla.org %]
 [%# The contents of this file are subject to the Mozilla Public
   # License Version 1.1 (the "License"); you may not use this file
   # except in compliance with the License. You may obtain a copy of
@@ -65,7 +66,7 @@
 </TR>
 
 <TR>
-  <TH ALIGN="right">Bug severity:</TH>  
+  <TH ALIGN="right">[% terms.Bug %] severity:</TH>  
       [% PROCESS select sel = {    name => "severity",
                                    list => bug_severity 
                                    mult => 1 } %]
@@ -84,7 +85,7 @@
 </tr>
 
 <tr>
-<TH ALIGN="right">Links to Bugs:</TH>
+<TH ALIGN="right">Links to [% terms.Bugs %]:</TH>
 <td><INPUT TYPE=checkbox NAME="links_to_bugs" value="1" CHECKED></td>
 </tr>
 

@@ -1,3 +1,4 @@
+[%# 1.0@bugzilla.org %]
 [%# The contents of this file are subject to the Mozilla Public
   # License Version 1.1 (the "License"); you may not use this file
   # except in compliance with the License. You may obtain a copy of
@@ -40,6 +41,17 @@
 
 [% PROCESS testopia/messages.html.tmpl %]
 <form method="POST" action="[% form_action %]">
+<h3>Link to Selected Plans</h3>
+<table>
+[% FOREACH plan = case.plans %]
+  <tr>
+    <td><input type="checkbox" name="plan_id" value="[% plan.id FILTER none %]" checked="checked"></td>
+    <td>[% plan.name FILTER html %]</td>
+  </tr>
+[% END %]
+</table>
+<br/>
+<h3>Attributes</h3>
 [% PROCESS testopia/case/form.html.tmpl %]
 </form>
 [% PROCESS global/footer.html.tmpl %]

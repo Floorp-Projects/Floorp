@@ -24,7 +24,7 @@ Bugzilla::Testopia::Environment - A test environment
 
 =head1 DESCRIPTION
 
-Environments are a set of paramaters dictating what conditions 
+Environments are a set of parameters dictating what conditions 
 a test was conducted in. Each test run must have an environment. 
 Environments can be very simple or very complex. Since there is 
 no easy way of defining a limit for an environment, the bulk of 

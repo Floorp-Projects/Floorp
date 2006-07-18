@@ -85,10 +85,8 @@ textarea {
 /* tr_showcaselog */
 
 .ae_dv {
-  width:100%;
   display:none;
   margin-left:15px;
-  margin-right:40px;
   border-width:0px;
 }
 
@@ -97,7 +95,7 @@ textarea {
   border:0;
   margin:0;
   margin-right:30px;
-  margin-down:10px;
+  margin-bottom:10px;
   border-collapse:collapse;
   border-spacing: 0px;
 }

@@ -1,3 +1,4 @@
+[%# 1.0@bugzilla.org %]
 [%# The contents of this file are subject to the Mozilla Public
   # License Version 1.1 (the "License"); you may not use this file
   # except in compliance with the License. You may obtain a copy of
@@ -59,7 +60,7 @@
 [% IF $run_id %]
     Back to <A HREF="tr_testrun_regression.cgi?run_id=[% run_id FILTER none %]">test run regression test cases</a>
 [% ELSE %]
-    Back to <A HREF="buglist.cgi?regetlastlist=1">bug list</a>
+    Back to <A HREF="buglist.cgi?regetlastlist=1">[% terms.bug  %] list</a>
 [% END %]
 </p>
 [% PROCESS global/footer.html.tmpl %]

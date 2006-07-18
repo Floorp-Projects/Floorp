@@ -1,3 +1,4 @@
+[%# 1.0@bugzilla.org %]
 [%# The contents of this file are subject to the Mozilla Public
   # License Version 1.1 (the "License"); you may not use this file
   # except in compliance with the License. You may obtain a copy of
@@ -42,7 +43,7 @@
     Please move the test cases to another category first.
   [% ELSIF error == "testopia-non-zero-run-count" %]
     [% title = "$object Has Test Runs" %]
-    You have attempted to delete a [% object %] that has test runs 
+    You have attempted to delete a [% object FILTER html %] that has test runs 
     associated with it.
   [% ELSIF error == "testopia-non-zero-case-run-count" %]
     [% title = "Build Has Case Runs" %]
@@ -60,7 +61,11 @@
     The test case you entered does not exist.
   [% ELSIF error == "invalid-test-id-non-existent" %]
     [% title = "Invalid ID" %]
-    Test [% type FILTER html %] #[% id FILTER html %] does not exist.
+    [% IF type == 'case_run' %]
+      The specified case-run does not exist.
+    [% ELSE %]
+      Test [% type FILTER html %]&nbsp;[% id FILTER html %] does not exist.
+    [% END %]
   [% ELSIF error == "testopia-name-not-unique" %]
     [% title = "Name Must be Unique" %]
     The name you chose, [% name FILTER html %], for this 
@@ -86,7 +91,7 @@
     You can create environments <a href="tr_environment.cgi">here</a>.
   [% ELSIF error == "testopia-missing-required-field" %]
     [% title = "Missing Required Field" %]
-    It seems there was no value entered for [% field %].
+    It seems there was no value entered for [% field FILTER none %].
   [% ELSIF error == "testopia-missing-plans-list" %]
     [% title = "Plan list missing" %]
     Somehow the list of plans associated with the test case to be cloned is missing. 

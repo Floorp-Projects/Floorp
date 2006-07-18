@@ -1,3 +1,4 @@
+[%# 1.0@bugzilla.org %]
 [%# The contents of this file are subject to the Mozilla Public
   # License Version 1.1 (the "License"); you may not use this file
   # except in compliance with the License. You may obtain a copy of
@@ -25,12 +26,12 @@
 [% BLOCK select %]
     <label for="[% sel.name %]" accesskey="[% sel.accesskey %]"></label>
       <select name="[% sel.name %]" id="[% sel.name %]" 
-      [%- "multiple=\"multiple\"" IF sel.mult %]
-      [%- "size=\"$sel.elements\"" IF sel.elements %]
-      [%- sel.events IF sel.events %]
+      [%- "multiple=\"multiple\"" IF sel.mult %] 
+      [%- "size=\"$sel.elements\"" IF sel.elements %] 
+      [%- sel.events IF sel.events %] 
       [%- sel.style IF sel.style %]>
       [% FOREACH item = sel.list %]
-        <option value="[% item.id FILTER html %]"[% " selected" IF (sel.default == item.name) || (sel.default == item.id || sel.default == 'all') %]>
+        <option value="[% item.id FILTER html %]" [% 'selected="selected"' IF (sel.default == item.name) || (sel.default == item.id || sel.default == 'all') %][% 'selected="selected"' IF (sel.deflist == 1 AND lsearch(sel.default, item.id)> -1) %]>
           [% item.name FILTER html %]</option>
       [% END %]
       </select>
@@ -41,9 +42,9 @@
 [% IF ajax %]
    [% url = "javascript:page(" %]
    [% pc  = ")" %]
-[% ELSE %]	
-   [% url = "$table.get_page_url&page="	%]
-   [%# url = "$table.url_loc?direction=$direction&getlist=1&page="	%]
+[% ELSE %]
+   [% url = "$table.get_page_url&page="%]
+   [%# url = "$table.url_loc?direction=$direction&getlist=1&page="%]
 [% END %]
 <table align="center">
   <tr>

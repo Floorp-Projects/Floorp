@@ -78,10 +78,16 @@ if ($action eq 'Commit'){
         foreach my $bug (@buglist){
             $caserun->attach_bug($bug);
         }
-    
+        my $testedby;
+        my $close_date;
+        if ($caserun->is_closed_status($status)){
+            $testedby = Bugzilla->user->id;
+            $close_date = get_time_stamp();
+        }
         my %newfields = (
             'assignee' => $assignee,
-            'testedby' => Bugzilla->user->id,
+            'testedby' => $testedby,
+            'close_date' => $close_date,
             'case_run_status_id' => $status,
             'build_id' => $build,
         );

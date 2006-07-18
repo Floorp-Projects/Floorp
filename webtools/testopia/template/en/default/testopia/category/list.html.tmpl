@@ -1,3 +1,4 @@
+[%# 1.0@bugzilla.org %]
 [%# The contents of this file are subject to the Mozilla Public
   # License Version 1.1 (the "License"); you may not use this file
   # except in compliance with the License. You may obtain a copy of
@@ -21,36 +22,31 @@
 [% PROCESS global/header.html.tmpl
   title = "Test Categories for $plan.product_name"
 %]
-
-
-[% FOREACH cat = plan.categories %]
 <table>
-  
-<tr>
-  <th class="bz_row_header" align="right">Name</th>
-  <td valign="top">[% cat.name FILTER html %]</td>
-</tr>
-<tr>
-  <th class="bz_row_header" align="right">Description</th>
-  <td valign="top">[% cat.description FILTER html %]</td>
-</tr>
-  <th class="bz_row_header" align="right">Actions</th>
-  <td valign="top">
-  <a href="tr_categories.cgi?action=edit&amp;category_id=[% cat.id FILTER none %]&amp;plan_id=[% plan.id FILTER none %]">Edit</a>  
-    [% IF plan.candelete %]
-    &nbsp;|&nbsp;
-    <a href="tr_categories.cgi?action=delete&amp;category_id=[% cat.id %]&amp;plan_id=[% plan.id FILTER none %]">Delete</a>
-    [% END %]
-  </td>
-<tr></tr>
+  <tr>
+    <th class="bz_row_header" align="right">Name</th>  
+    <th class="bz_row_header" align="right">Description</th>
+    <th class="bz_row_header" align="right">Actions</th>
+  </tr>    
+[% FOREACH cat = plan.categories %]
+  <tr>
+    <td valign="top">[% cat.name FILTER html %]</td>
+    <td valign="top">[% cat.description FILTER html %]</td>
+    <td valign="top">
+    <a href="tr_categories.cgi?action=edit&amp;category_id=[% cat.id FILTER none %]&amp;plan_id=[% plan.id FILTER none %]">Edit</a>  
+      [% IF plan.candelete %]
+      &nbsp;|&nbsp;
+      <a href="tr_categories.cgi?action=delete&amp;category_id=[% cat.id FILTER none %]&amp;plan_id=[% plan.id FILTER none %]">Delete</a>
+      [% END %]
+    </td>
+  </tr>
+[% END %]
 </table>
 <br>
-[% END %]
   [% IF plan.canedit %]
-  <a href="tr_categories.cgi?action=add&amp;plan_id=[% plan.id %]">Add new</a>
+  <a href="tr_categories.cgi?action=add&amp;plan_id=[% plan.id FILTER none %]">Add new</a>
   [% END %]
-  
 <p>  
-<a href="tr_show_plan.cgi?plan_id=[% plan.id %]">Back</a> to test plan
+<a href="tr_show_plan.cgi?plan_id=[% plan.id FILTER none %]">Back</a> to test plan
 </p>
 [% PROCESS global/footer.html.tmpl %]

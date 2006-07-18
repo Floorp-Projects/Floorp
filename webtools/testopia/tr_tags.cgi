@@ -91,7 +91,7 @@ elsif ($action eq 'addtag'){
     }
     else{
         if ($cgi->param('method')){
-            $vars->{'tr_message'} = "Added tag" . $tag->name;
+            $vars->{'tr_message'} = "Added tag " . $tag->name;
             display();
             exit;
         }

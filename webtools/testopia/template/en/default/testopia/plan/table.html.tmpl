@@ -1,3 +1,4 @@
+[%# 1.0@bugzilla.org %]
 [%# The contents of this file are subject to the Mozilla Public
   # License Version 1.1 (the "License"); you may not use this file
   # except in compliance with the License. You may obtain a copy of
@@ -46,7 +47,7 @@ Select:
 [% FOREACH  plan = table.list %]
   
 <tr class="[% loop.count % 2 == 1 ? "bz_row_odd" : "bz_row_even" %]">
-    [% IF dotweak %]<td align="center"><input type="checkbox" id="p_[% plan.id %]" name="p_[% plan.id %]"</td> [% END %]
+    [% IF dotweak %]<td align="center"><input type="checkbox" id="p_[% plan.id FILTER none %]" name="p_[% plan.id FILTER none %]"</td> [% END %]
   
   <td><a href="tr_show_plan.cgi?plan_id=[% plan.plan_id FILTER none %]">[% plan.name FILTER html %]</a></td>
   <td>[% plan.author.login FILTER html %]</td>
@@ -58,7 +59,7 @@ Select:
     <a href="tr_list_cases.cgi?plan_id=[% plan.plan_id FILTER none %]">[% plan.test_case_count FILTER html %]</a>
   </td>
   <td align="center">
-    <a href="tr_list_runs.cgi?plan_id=[% plan.plan_id %]">[% plan.test_run_count FILTER html %]</a>
+    <a href="tr_list_runs.cgi?plan_id=[% plan.plan_id FILTER none %]">[% plan.test_run_count FILTER html %]</a>
   </td>
     
   <td align="center">   

@@ -1,4 +1,3 @@
-#!/usr/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -105,13 +104,9 @@ sub init {
     $self->{'type'} = $type ||   ThrowCodeError('bad_arg',
                                    {argument => 'type',
                                     function => 'Testopia::Table::_init'});
-    $self->{'url_loc'} = $url || ThrowCodeError('bad_arg',
-                                   {argument => 'url',
-                                    function => 'Testopia::Table::_init'});
-    $self->{'cgi'} = $cgi ||     ThrowCodeError('bad_arg',
-                                   {argument => 'cgi',
-                                    function => 'Testopia::Table::_init'});
-    my $debug = $cgi->param('debug');                                        
+    $self->{'url_loc'} = $url;
+    $self->{'cgi'} = $cgi;
+    my $debug = $cgi->param('debug') if $cgi;
     my @list;
     if ($query){
         print "$query" if $debug;
@@ -120,11 +115,11 @@ sub init {
         my $countquery = $query;
         $countquery =~ s/ LIMIT.*$//;
         print "<br> $countquery" if $debug;
-        my $count = $dbh->selectcol_arrayref($countquery);
-        $count = scalar @$count;
+        my $count_res = $dbh->selectcol_arrayref($countquery);
+        my $count = scalar @$count_res;
         print "<br> total rows: $count" if $debug;
         $self->{'list_count'} = $count;
-        
+        my @ids;
         my $list = $dbh->selectcol_arrayref($query);
         foreach my $id (@$list){
             my $o;
@@ -140,12 +135,16 @@ sub init {
             elsif ($type eq 'case_run'){
                 $o = Bugzilla::Testopia::TestCaseRun->new($id);
             }
+            push (@ids, $id);
             push (@list, $o);
         }
         $self->{'list'} = \@list;
+        $self->{'id_list'} = join(",", @$count_res);
     }
-    $self->{'viewall'} = $cgi->param('viewall');
-    $self->{'page'} = $cgi->param('page') || 0;
+    if ($cgi){
+        $self->{'viewall'} = $cgi->param('viewall');
+        $self->{'page'} = $cgi->param('page') || 0;
+    }
             
 #    elsif (!$query && !$list){
 #        my @list;
@@ -206,9 +205,9 @@ sub init {
 #        $self->{'reverse_sort'} = ($self->{'reverse_sort'} ? 1 : 0);
 #    }
 #    
-#    #### SAVE ####
-#    # Save the list of testcases for use in paginating and sorting
-#    $self->save_list;
+    #### SAVE ####
+    # Save the list of testcases for use in paginating and sorting
+    $self->save_list;
 #
 #    #### SPLICE ####
 #    # If we are using a paged view of the data we split it up here 
@@ -228,31 +227,32 @@ Used only in list context
 =cut
 
 sub save_list {
-	my $self = shift;
-    my @ids;
-    foreach my $i (@{$self->{'list'}}){
-    	    push @ids, $i->id;
-    } 
-    my $list = join(",", @ids);
+    my $self = shift;
+    return if ($self->{'user'}->id == 0);
+#    my @ids;
+#    foreach my $i (@{$self->{'list'}}){
+#            push @ids, $i->id;
+#    } 
+#    my $list = join(",", @ids);
     my $dbh = Bugzilla->dbh;
-
-    $dbh->bz_lock_tables('test_named_queries WRITE');
-    my ($is) = $dbh->selectrow_array(
-            "SELECT 1 FROM test_named_queries 
-             WHERE userid = ? AND name = ?", undef,
-             ($self->{'user'}->id, "__". $self->{'type'} ."__"));
-
-    if ($is) {
-        $dbh->do("UPDATE test_named_queries SET query = ?
-                  WHERE userid = ? AND name = ?", undef,
-                  ($list, $self->{'user'}->id, "__". $self->{'type'} ."__"));
+    if ($self->{'id_list'}){
+        $dbh->bz_lock_tables('test_named_queries WRITE');
+        my ($is) = $dbh->selectrow_array(
+                "SELECT 1 FROM test_named_queries 
+                 WHERE userid = ? AND name = ?", undef,
+                 ($self->{'user'}->id, "__". $self->{'type'} ."__"));
+    
+        if ($is) {
+            $dbh->do("UPDATE test_named_queries SET query = ?
+                      WHERE userid = ? AND name = ?", undef,
+                      (join(",", $self->{'id_list'}), $self->{'user'}->id, "__". $self->{'type'} ."__"));
+        }
+        else {
+            $dbh->do("INSERT INTO test_named_queries VALUES(?,?,?,?)", undef,
+                      ($self->{'user'}->id, "__". $self->{'type'} ."__", 0, join(",", $self->{'id_list'})));
+        }
+        $dbh->bz_unlock_tables();
     }
-    else {
-        $dbh->do("INSERT INTO test_named_queries VALUES(?,?,?,?)", undef,
-                  ($self->{'user'}->id, "__". $self->{'type'} ."__", 0, $list));
-    }
-    $dbh->bz_unlock_tables();
-
 #    $self->{'list_count'} = scalar @ids unless $self->{'query'};
 }
 
@@ -264,13 +264,16 @@ Used only in list context
 =cut
 
 sub get_saved_list {
-	my $self = shift;
+    my $self = shift;
+    return undef if ($self->{'user'}->id == 0);
+    my $type = shift || $self->{'type'};
     my $dbh = Bugzilla->dbh;
     my ($list) = $dbh->selectrow_array(
             "SELECT query FROM test_named_queries 
              WHERE userid = ? AND name = ?", undef,
-             ($self->{'user'}->id, "__". $self->{'type'} ."__"));
-    return $list;
+             ($self->{'user'}->id, "__". $type ."__"));
+    my @list = split(',', $list);
+    return \@list;
 }
 
 # used by the sort function to check which field to sort on
@@ -305,28 +308,37 @@ sub sort_fields {
 }
 
 sub sort_list {
-	my $self = shift;
-	$field = shift;
-	$reverse = $self->{'reverse_sort'};
-	my @list = sort sort_fields @{$self->{'list'}};
-	$self->{'list'} = \@list; 
-	return $self->{'list'};
+    my $self = shift;
+    $field = shift;
+    $reverse = $self->{'reverse_sort'};
+    my @list = sort sort_fields @{$self->{'list'}};
+    $self->{'list'} = \@list; 
+    return $self->{'list'};
 }
 
 sub get_page {
-	my $self = shift; 
-	if ($self->{'viewall'}){
-	    return $self->{'list'};
-	}
-	my $pagenum = shift || $self->{'page'};
-	$self->{'page'} = $pagenum;
-	my $offset = $pagenum * $self->page_size;
-	my @list = @{$self->{'list'}};
+    my $self = shift; 
+    if ($self->{'viewall'}){
+        return $self->{'list'};
+    }
+    my $pagenum = shift || $self->{'page'};
+    $self->{'page'} = $pagenum;
+    my $offset = $pagenum * $self->page_size;
+    my @list = @{$self->{'list'}};
     @list = splice(@list, $offset, $self->page_size);
     $self->{'list'} = \@list;
     return $self->{'list'};
 }
 
+sub get_next{
+    my $self = shift; 
+    my ($curr) = @_;
+    
+    my $list = $self->get_list;
+    my $ref = lsearch($curr, $list);
+    return undef if $ref == -1;
+    return $list->[$ref];
+}
 ###############################
 ####      Accessors        ####
 ###############################
@@ -341,11 +353,11 @@ Returns an ineger representing how many items should appear on a page
 
 =cut
 
-sub page_size	 {
+sub page_size    {
     my $self = shift;
     my $cgi = $self->{'cgi'};
     return $cgi->param('pagesize') if $cgi->param('pagesize');
-	return 25;  #TODO: make this a user setting
+    return 25;  #TODO: make this a user setting
 }
 
 =head2 get_order_url
@@ -376,19 +388,19 @@ sub get_url {
     my $self = shift;
     my $regxp = shift;
     my $cgi = $self->{'cgi'};
-   	my @keys = $cgi->param;
-	my $qstring;
-	foreach my $key (@keys){
-	    if ($key =~ /$regxp/){
+    my @keys = $cgi->param;
+    my $qstring;
+    foreach my $key (@keys){
+        if ($key =~ /$regxp/){
             next;
-	    }
-	    my @vals = $cgi->param($key);
+        }
+        my @vals = $cgi->param($key);
         foreach my $val (@vals){
             $qstring .= $key ."=". $val ."&";
         }
-	}
-	chop $qstring;
-	$qstring = $self->{'url_loc'} ."?". $qstring;
+    }
+    chop $qstring;
+    $qstring = $self->{'url_loc'} ."?". $qstring;
     $self->{'url'} = $qstring;
     return $self->{'url'};
 }
@@ -406,7 +418,7 @@ sub page_count {
         use integer;
         return ($self->list_count / $self->page_size) + 1;
     }
-	return $self->list_count/$self->page_size;
+    return $self->list_count/$self->page_size;
 }
 
 sub reverse_sort {

@@ -53,7 +53,7 @@ function edt_attch(index) {
 function fillrow(data, idx){
 	//document.write(data);
 	if (data.substring(0,5) == 'Error'){
-		displayMsg('pp'+_index, 2, data);
+		displayMsg('pp'+idx, 2, data);
 		return;
 	}
 	if (data.substring(0,9) == '<!DOCTYPE'){
@@ -65,29 +65,24 @@ function fillrow(data, idx){
 }
 //chBld Updates the caserun build 
 function chBld(idx, bid, sid, cid){
-	if (sid != 'IDLE') 
-		var ret = confirm("You are changing the build of a statused test case. This will reset the testcase. Are you sure?");
-	if (ret == true || sid == 'IDLE'){
-		disableAllButtons(true);
-		dojo.io.bind({
-			url:     "tr_show_caserun.cgi",
-			content: {  caserun_id: cid, index: idx, build_id: bid, action: 'update_build'},
-			load:    function(type, data, evt){ fillrow(data, idx); sr(idx);
-					var fields = data.split("|");
-					var status = fields[0];
-					var closed = fields[1];
-					var tested = fields[2];
-					document.getElementById('xs'+idx).src="testopia/img/"+status+"_small.gif";
-					document.getElementById('tdb'+idx).innerHTML = tested;
-					document.getElementById('cld'+idx).innerHTML = closed;
-					displayMsg('pp'+ idx, 1, MSG_TESTLOG_UPDATED);
-		            setTimeout("clearMsg('pp"+ idx +"')",OK_TIMEOUT);
-					disableAllButtons(false);
-			},
-			error:   function(type, error){ alert("ERROR");},
-			mimetype: "text/plain"
-    	});
-    }
+	disableAllButtons(true);
+	dojo.io.bind({
+		url:     "tr_show_caserun.cgi",
+		content: {  caserun_id: cid, index: idx, build_id: bid, action: 'update_build'},
+		load:    function(type, data, evt){ 
+				fillrow(data, idx);
+				var fields = data.split("|~+");
+				document.getElementById('head_caserun_'+idx).innerHTML = fields[0];
+				document.getElementById('body_caserun_'+idx).innerHTML = fields[1];
+				document.getElementById('ra'+idx).style.display='block'; 
+				document.getElementById('id'+idx).src='testopia/img/td.gif';
+				displayMsg('pp'+ idx, 1, MSG_TESTLOG_UPDATED);
+	            setTimeout("clearMsg('pp"+ idx +"')",OK_TIMEOUT);
+				disableAllButtons(false);
+		},
+		error:   function(type, error){ alert("ERROR");},
+		mimetype: "text/plain"
+	});
 }
 //chStat updates the status
 function chStat(idx, sid, cid){
@@ -101,7 +96,18 @@ function chStat(idx, sid, cid){
 					var status = fields[0];
 					var closed = fields[1];
 					var tested = fields[2];
-					document.getElementById('xs'+idx).src="testopia/img/"+status+"_small.gif";
+					try{
+						var deps = fields[3];
+						ids = deps.split(",");
+						for (var i=0; i<ids.length; i++){
+							if (status == 'FAILED')
+								document.getElementById('xs'+ids[i]).src="testopia/img/BLOCKED_small.gif";
+							else
+								document.getElementById('xs'+ids[i]).src="testopia/img/IDLE_small.gif";
+						}
+					}
+					catch (e){}
+					document.getElementById('xs'+cid).src="testopia/img/"+status+"_small.gif";
 					document.getElementById('tdb'+idx).innerHTML = tested;
 					document.getElementById('cld'+idx).innerHTML = closed;
 		            displayMsg('pp'+ idx, 1, MSG_TESTLOG_UPDATED);

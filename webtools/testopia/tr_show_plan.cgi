@@ -213,7 +213,9 @@ elsif ($action eq 'import'){
 elsif ($action eq 'getversions'){
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
     ThrowUserError("testopia-permission-denied", {'object' => 'plan'}) unless $plan->canview;
-    my $versions = $plan->get_product_versions($cgi->param("prod_id"));
+    my $prod_id = $cgi->param("product_id");
+    detaint_natural($prod_id);
+    my $versions = $plan->get_product_versions($prod_id);
     my $ret;
     if ($cgi->param("product_id") == -1){
         # For update multiple from tr_list_plans
@@ -228,14 +230,14 @@ elsif ($action eq 'getversions'){
     print $ret;
 }
 elsif ($action eq 'caselist'){
-	my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
-	ThrowUserError("testopia-permission-denied", {'object' => 'plan'}) unless $plan->canview;
+    my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
+    ThrowUserError("testopia-permission-denied", {'object' => 'plan'}) unless $plan->canview;
     my $table = Bugzilla::Testopia::Table->new('case', 'tr_list_cases.cgi', $cgi, $plan->test_cases);
-	$table->{'ajax'} = 1;
-	$vars->{'table'} = $table;
+    $table->{'ajax'} = 1;
+    $vars->{'table'} = $table;
     $template->process("testopia/case/table.html.tmpl", $vars)
         || ThrowTemplateError($template->error()); 
-    	
+        
 }
 ####################
 ### Just show it ###
@@ -253,7 +255,7 @@ sub do_update {
 
     my $newdoc = $cgi->param("plandoc");
     my $plan_name = trim($cgi->param('plan_name')) || '';
-    my $product = $cgi->param('prod_id') || '';
+    my $product = $cgi->param('product_id') || '';
     my $prodver = $cgi->param('prod_version') || '';
     my $type = $cgi->param('type');
 
@@ -302,24 +304,28 @@ sub display {
     my $casequery = new Bugzilla::CGI($cgi);
     my $runquery  = new Bugzilla::CGI($cgi);
 
-    if ($cgi->param('order') && $cgi->param('current_tab') eq 'case'){
+    if (($cgi->param('order') || $cgi->param('page') || $cgi->param('viewall')) && $cgi->param('current_tab') eq 'case'){
         my $search = Bugzilla::Testopia::Search->new($cgi);
         my $table = Bugzilla::Testopia::Table->new('case', 'tr_show_plan.cgi', $cgi, undef, $search->query);
         $vars->{'case_table'} = $table;
 
         $runquery->delete('order');
+        $runquery->delete('page');
+        $runquery->delete('viewall');
         $runquery->param('current_tab', 'run');
         $search = Bugzilla::Testopia::Search->new($runquery);
         $table = Bugzilla::Testopia::Table->new('run', 'tr_show_plan.cgi', $runquery, undef, $search->query);
         $vars->{'run_table'} = $table;    
 
     }
-    elsif ($cgi->param('order') && $cgi->param('current_tab') eq 'run'){
+    elsif (($cgi->param('order') || $cgi->param('page') || $cgi->param('viewall')) && $cgi->param('current_tab') eq 'run'){
         my $search = Bugzilla::Testopia::Search->new($cgi);
         my $table = Bugzilla::Testopia::Table->new('run', 'tr_show_plan.cgi', $cgi, undef, $search->query);
         $vars->{'run_table'} = $table;
 
         $casequery->delete('order');
+        $casequery->delete('page');
+        $casequery->delete('viewall');
         $casequery->param('current_tab', 'case');
         $search = Bugzilla::Testopia::Search->new($casequery);
         $table = Bugzilla::Testopia::Table->new('case', 'tr_show_plan.cgi', $casequery, undef, $search->query);

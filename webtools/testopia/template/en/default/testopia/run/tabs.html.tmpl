@@ -40,7 +40,7 @@
           </td>
         [% ELSE %]
           <td align="center" bgcolor="#BBBBEE" class="unselected_tab">
-            <A HREF="tr_testruns.cgi?action=view&what_table=[% tab.name %]&run_id=[% run.id %]">
+            <A HREF="tr_testruns.cgi?action=view&what_table=[% tab.name %]&run_id=[% run.id FILTER none %]">
               [% tab.description %]
             </a>
           </td>

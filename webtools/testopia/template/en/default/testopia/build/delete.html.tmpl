@@ -1,3 +1,4 @@
+[%# 1.0@bugzilla.org %]
 [%# The contents of this file are subject to the Mozilla Public
   # License Version 1.1 (the "License"); you may not use this file
   # except in compliance with the License. You may obtain a copy of
@@ -24,15 +25,15 @@
 
 <form method="POST" action="tr_builds.cgi">
 <input type="HIDDEN" name="action" value="do_delete">
-<input type="HIDDEN" name="build_id" value="[% build.id %]">
+<input type="HIDDEN" name="build_id" value="[% build.id FILTER none %]">
 <input type="hidden" name="plan_id" value="[% plan.id FILTER none %]">
 
 [% IF build.case_run_count %]
   <table style="border-collapse:collapse;" border="1" bordercolor="red" width="100%" cellspacing="0" cellpadding="6"><tr><td>
   <font color="red">
     This build is used by [% build.case_run_count FILTER html %] test case runs.<br>.
-	It cannot be deleted.<br>
-	<p>Please press your browsers back button to return to your test plan.</p>
+    It cannot be deleted.<br>
+    <p>Please press your browsers back button to return to your test plan.</p>
   [% tr_error %]</font>
   </td></tr></table>
 [% ELSE %]

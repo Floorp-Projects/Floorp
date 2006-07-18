@@ -1,3 +1,4 @@
+[%# 1.0@bugzilla.org %]
 [%# The contents of this file are subject to the Mozilla Public
   # License Version 1.1 (the "License"); you may not use this file
   # except in compliance with the License. You may obtain a copy of
@@ -21,8 +22,8 @@
   # ...
   #%]
 
-<input id="newtag"><input type="button" id="doAdd" onclick="addTag([% item.id %],'[% type FILTER none %]')" value="Add"></a><br>
-<div id="message"></div>
+<input id="newtag"><input type="button" id="doAdd" onclick="addTag([% item.id FILTER none %],'[% type FILTER none %]')" value="Add"></a><br>
+<div id="message"  style="border: none"></div>
   
 <table border="0">
   <tr>

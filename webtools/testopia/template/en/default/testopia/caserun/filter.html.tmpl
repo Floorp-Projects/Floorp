@@ -1,0 +1,43 @@
+<script type="text/javascript">
+function filterTable(type){
+  if (type == 1){
+    if (document.getElementById("ftr_case_run_status_id").value == 0 )
+      return;
+    document.location="[% form_action FILTER none %]?run_id=[% run.id FILTER none %]&case_run_status_id=" + document.getElementById("ftr_case_run_status_id").value + "#table";
+  }
+  else if (type == 2){
+    if (document.getElementById("ftr_category_id").value == 0 )
+      return;
+    document.location="[% form_action FILTER none %]?run_id=[% run.id FILTER none %]&category=" + document.getElementById("ftr_category_id").value + "#table";    
+  }
+  else if (type == 3){
+    if (document.getElementById("ftr_build_id").value == 0 )
+      return;
+    document.location="[% form_action FILTER none %]?run_id=[% run.id FILTER none %]&build=" + document.getElementById("ftr_build_id").value + "#table";
+  }
+}
+</script>
+Filter: 
+<a href="[% form_action FILTER none %]?run_id=[% run.id FILTER none %]#table">Show All</a>&nbsp;|&nbsp;
+<a href="[% form_action FILTER none %]?run_id=[% run.id FILTER none %]&assignee=[% user.login FILTER url_quote %]&assignee_type=exact#table">Assigned to Me</a>&nbsp;|&nbsp;
+<a href="[% form_action FILTER none %]?run_id=[% run.id FILTER none %]&testedby=[% user.login FILTER url_quote %]&testedby_type=exact#table">Tested by Me</a>&nbsp;|&nbsp;
+<a href="[% form_action FILTER none %]?run_id=[% run.id FILTER none %]&close_date=0#table">Open</a>&nbsp;|&nbsp;
+<a href="[% form_action FILTER none %]?run_id=[% run.id FILTER none %]&close_date=1#table">Closed</a>&nbsp;|&nbsp;
+[% statuslist = run.current_caseruns.0.get_status_list %]
+[% statuslist.unshift({id => 0, name => '--Status--'}) %]
+[% PROCESS select sel = { name => "ftr_case_run_status_id", 
+                          list => statuslist,
+                          events => 'onchange="filterTable(1)"' }
+%]&nbsp;|&nbsp;
+[% categorylist = run.plan.get_product_categories %]
+[% categorylist.unshift({id => 0, name => '--Category--'}) %]
+[% PROCESS select sel = { name => "ftr_category_id", 
+                          list => categorylist,
+                          events => 'onchange="filterTable(2)"' }
+%]&nbsp;|&nbsp;
+[% buildlist = run.plan.get_product_builds %]
+[% buildlist.unshift({id => 0, name => '--Build--'}) %]
+[% PROCESS select sel = { name => "ftr_build_id", 
+                          list => buildlist,
+                          events => 'onchange="filterTable(3)"' }
+%]
