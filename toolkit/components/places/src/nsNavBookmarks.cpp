@@ -156,7 +156,7 @@ nsNavBookmarks::Init()
       getter_AddRefs(mBundle));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // mDBFildURIBookmarks
+  // mDBFindURIBookmarks
   rv = dbConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT a.* "
       "FROM moz_bookmarks a, moz_history h "
@@ -1068,38 +1068,58 @@ nsNavBookmarks::GetFolderType(PRInt64 aFolder, nsAString &aType)
   return mDBGetFolderInfo->GetString(kGetFolderInfoIndex_Type, aType);
 }
 
+nsresult
+nsNavBookmarks::ResultNodeForFolder(PRInt64 aID,
+                                    nsNavHistoryQueryOptions *aOptions,
+                                    nsNavHistoryResultNode **aNode)
+{
+  mozStorageStatementScoper scope(mDBGetFolderInfo);
+  mDBGetFolderInfo->BindInt64Parameter(0, aID);
+
+  PRBool results;
+  nsresult rv = mDBGetFolderInfo->ExecuteStep(&results);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ASSERTION(results, "ResultNodeForFolder expects a valid folder id");
+
+  // type (empty for normal ones, nonempty for container providers)
+  nsCAutoString folderType;
+  rv = mDBGetFolderInfo->GetUTF8String(kGetFolderInfoIndex_Type, folderType);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // title
+  nsCAutoString title;
+  rv = mDBGetFolderInfo->GetUTF8String(kGetFolderInfoIndex_Title, title);
+
+  if (folderType.IsEmpty()) {
+    *aNode = new nsNavHistoryFolderResultNode(title, 0, 0, aOptions, aID);
+    if (! *aNode)
+      return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(*aNode);
+  } else {
+    // a container API thing
+    // FIXME(brettw)
+    //NS_NOTREACHED("FIXME: Not implemented");
+    *aNode = nsnull;
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsNavBookmarks::GetFolderURI(PRInt64 aFolder, nsIURI **aURI)
 {
-  // Create a query for the folder; the URI is the querystring
-  // from that query.
-  nsresult rv;
-  nsNavHistory *history = History();
-  nsCOMPtr<nsINavHistoryQuery> query;
-  rv = history->GetNewQuery(getter_AddRefs(query));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = query->SetFolders(&aFolder, 1);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsINavHistoryQueryOptions> queryOptions;
-  rv = history->GetNewQueryOptions(getter_AddRefs(queryOptions));
-  NS_ENSURE_SUCCESS(rv, rv);
-  PRUint32 groupByFolder = nsINavHistoryQueryOptions::GROUP_BY_FOLDER;
-  rv = queryOptions->SetGroupingMode(&groupByFolder, 1);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCString folderURI;
-  rv = history->QueriesToQueryString((nsINavHistoryQuery **)&query,
-                                     1,
-                                     queryOptions,
-                                     folderURI);
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  // Create a uri from the folder string.
-  rv = NS_NewURI(aURI, folderURI);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  // Create a query for the folder; the URI is the querystring from that
+  // query. We could create a proper query and serialize it, which might
+  // make it less prone to breakage since we'd only have one code path.
+  // However, this gets called a lot (every time we make a folder node)
+  // and constructing fake queries and options each time just to
+  // serialize them would be a waste. Therefore, we just synthesize the
+  // correct string here.
+  nsCAutoString spec("place:folders=");
+  spec.AppendInt(aFolder);
+  spec.AppendLiteral("&group=3"); // GROUP_BY_FOLDER
+  return NS_NewURI(aURI, spec);
 }
 
 NS_IMETHODIMP
@@ -1124,144 +1144,53 @@ nsNavBookmarks::GetFolderReadonly(PRInt64 aFolder, PRBool *aResult)
 }
 
 nsresult
-nsNavBookmarks::ResultNodeForFolder(PRInt64 aID,
-                                    nsINavHistoryQuery *aQuery,
-                                    nsINavHistoryQueryOptions *aOptions,
-                                    nsNavHistoryResultNode **aNode)
-{
-  // Create Query and QueryOptions objects to generate this folder's children
-  nsresult rv;
-  nsCOMPtr<nsINavHistoryQuery> query;
-  rv = aQuery->Clone(getter_AddRefs(query));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  query->SetFolders(&aID, 1);
-
-  nsCOMPtr<nsINavHistoryQueryOptions> options;
-  rv = aOptions->Clone(getter_AddRefs(options));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsRefPtr<nsNavHistoryQueryNode> node = new nsNavHistoryQueryNode();
-  NS_ENSURE_TRUE(node, NS_ERROR_OUT_OF_MEMORY);
-
-  node->mType = nsINavHistoryResultNode::RESULT_TYPE_QUERY;
-  node->mQueries = NS_STATIC_CAST(nsINavHistoryQuery**,
-                                  nsMemory::Alloc(sizeof(nsINavHistoryQuery*)));
-  NS_ENSURE_TRUE(node->mQueries, NS_ERROR_OUT_OF_MEMORY);
-  node->mQueries[0] = nsnull;
-  query.swap(node->mQueries[0]);
-  node->mQueryCount = 1;
-  node->mOptions = do_QueryInterface(options);
-
-  rv = FillFolderNode(aID, node);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  NS_ADDREF(*aNode = node);
-  return NS_OK;
-}
-
-nsresult
-nsNavBookmarks::FillFolderNode(PRInt64 aID,
-                               nsNavHistoryQueryNode *aNode)
-{
-  mozStorageStatementScoper scope(mDBGetFolderInfo);
-  mDBGetFolderInfo->BindInt64Parameter(0, aID);
-
-  PRBool results;
-  nsresult rv = mDBGetFolderInfo->ExecuteStep(&results);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ASSERTION(results, "ResultNodeForFolder expects a valid folder id");
-
-  // Fill in the folder type
-  // aNode->mFolderType should get set to the empty string
-  // if the folder type is null.
-  rv = mDBGetFolderInfo->GetString(kGetFolderInfoIndex_Type, aNode->mFolderType);
-  if (NS_FAILED(rv)) return rv;
-  // Fill in the folder title
-  return mDBGetFolderInfo->GetString(kGetFolderInfoIndex_Title, aNode->mTitle);
-}
-
-nsresult
-nsNavBookmarks::QueryFolderChildren(nsINavHistoryQuery *aQuery,
-                                    nsINavHistoryQueryOptions *aOptions,
+nsNavBookmarks::QueryFolderChildren(PRInt64 aFolderId,
+                                    nsNavHistoryQueryOptions *aOptions,
                                     nsCOMArray<nsNavHistoryResultNode> *aChildren)
 {
   mozStorageTransaction transaction(DBConn(), PR_FALSE);
 
-  PRUint32 itemTypes;
-  aQuery->GetItemTypes(&itemTypes);
-
-  PRBool includeQueries = (itemTypes & nsINavHistoryQuery::INCLUDE_QUERIES) != 0;
-  PRBool includeItems = (itemTypes & nsINavHistoryQuery::INCLUDE_ITEMS) != 0;
-
   nsresult rv;
-  nsCOMArray<nsNavHistoryResultNode> folderChildren;
-  {
-    mozStorageStatementScoper scope(mDBGetChildren);
+  mozStorageStatementScoper scope(mDBGetChildren);
 
-    PRInt64 *folders;
-    PRUint32 folderCount;
-    aQuery->GetFolders(&folderCount, &folders);
-    NS_ASSERTION(folderCount == 1, "querying > 1 folder not yet implemented");
+  rv = mDBGetChildren->BindInt64Parameter(0, aFolderId);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mDBGetChildren->BindInt64Parameter(0, folders[0]);
-    nsMemory::Free(folders);
-    NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBGetChildren->BindInt32Parameter(1, 0);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mDBGetChildren->BindInt32Parameter(1, 0);
-    NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBGetChildren->BindInt32Parameter(2, PR_INT32_MAX);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mDBGetChildren->BindInt32Parameter(2, PR_INT32_MAX);
-    NS_ENSURE_SUCCESS(rv, rv);
+  PRBool results;
 
-    PRBool results;
-    while (NS_SUCCEEDED(mDBGetChildren->ExecuteStep(&results)) && results) {
-      PRBool isFolder = !mDBGetChildren->IsNull(kGetChildrenIndex_FolderChild);
-      nsCOMPtr<nsNavHistoryResultNode> node;
-      if (isFolder) {
-        PRInt64 folder = mDBGetChildren->AsInt64(kGetChildrenIndex_FolderChild);
-        rv = ResultNodeForFolder(folder, aQuery,
-                                 aOptions, getter_AddRefs(node));
-      } else {
-        // need the concrete options for RowToResult
-        nsCOMPtr<nsNavHistoryQueryOptions> options =
-          do_QueryInterface(aOptions, &rv);
-        rv = History()->RowToResult(mDBGetChildren, options,
-                                    getter_AddRefs(node));
-        PRBool isQuery = IsQueryURI(node->URL());
-        if ((isQuery && !includeQueries) || (!isQuery && !includeItems)) {
-          continue;
-        }
-      }
-
+  nsCOMPtr<nsNavHistoryQueryOptions> options = do_QueryInterface(aOptions, &rv);
+  while (NS_SUCCEEDED(mDBGetChildren->ExecuteStep(&results)) && results) {
+    PRBool isFolder = !mDBGetChildren->IsNull(kGetChildrenIndex_FolderChild);
+    nsCOMPtr<nsNavHistoryResultNode> node;
+    if (isFolder) {
+      PRInt64 folder = mDBGetChildren->AsInt64(kGetChildrenIndex_FolderChild);
+      rv = ResultNodeForFolder(folder, aOptions, getter_AddRefs(node));
+      if (NS_FAILED(rv))
+        continue;
+    } else {
+      rv = History()->RowToResult(mDBGetChildren, options,
+                                  getter_AddRefs(node));
       NS_ENSURE_SUCCESS(rv, rv);
-      if (isFolder) {
-        NS_ENSURE_TRUE(folderChildren.AppendObject(node),
-                       NS_ERROR_OUT_OF_MEMORY);
+
+      PRUint32 nodeType;
+      node->GetType(&nodeType);
+      if ((nodeType == nsINavHistoryResultNode::RESULT_TYPE_QUERY &&
+           aOptions->ExcludeQueries()) ||
+          (nodeType != nsINavHistoryResultNode::RESULT_TYPE_QUERY &&
+           nodeType != nsINavHistoryResultNode::RESULT_TYPE_FOLDER &&
+           aOptions->ExcludeItems())) {
+        continue;
       }
-      NS_ENSURE_TRUE(aChildren->AppendObject(node), NS_ERROR_OUT_OF_MEMORY);
     }
+
+    NS_ENSURE_TRUE(aChildren->AppendObject(node), NS_ERROR_OUT_OF_MEMORY);
   }
-
-  // Now build children for any folder children we just created.  This is
-  // pretty cheap (only go down 1 level) and allows us to know whether
-  // to draw a twisty.
-  static PRBool queryingChildren = PR_FALSE;
-
-  if (!queryingChildren) {
-    queryingChildren = PR_TRUE; // don't return before resetting to false
-    for (PRInt32 i = 0; i < folderChildren.Count(); ++i) {
-      PRBool built;
-      rv = folderChildren[i]->BuildChildren(&built);
-      if (NS_FAILED(rv)) {
-        break;
-      }
-      NS_ASSERTION(built, "new folder should not have already built children");
-    }
-    queryingChildren = PR_FALSE;
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   return transaction.Commit();
 }
 
@@ -1297,11 +1226,11 @@ nsNavBookmarks::IsBookmarked(nsIURI *aURI, PRBool *aBookmarked)
 }
 
 NS_IMETHODIMP
-nsNavBookmarks::GetBookmarkCategories(nsIURI *aURI, PRUint32 *aCount,
-                                      PRInt64 **aCategories)
+nsNavBookmarks::GetBookmarkFolders(nsIURI *aURI, PRUint32 *aCount,
+                                   PRInt64 **aFolders)
 {
   *aCount = 0;
-  *aCategories = nsnull;
+  *aFolders = nsnull;
 
   mozStorageStatementScoper scope(mDBFindURIBookmarks);
   mozStorageTransaction transaction(DBConn(), PR_FALSE);
@@ -1309,34 +1238,25 @@ nsNavBookmarks::GetBookmarkCategories(nsIURI *aURI, PRUint32 *aCount,
   nsresult rv = BindStatementURI(mDBFindURIBookmarks, 0, aURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRUint32 arraySize = 8;
-  PRInt64 *categories = NS_STATIC_CAST(PRInt64*,
-                                       nsMemory::Alloc(arraySize * sizeof(PRInt64)));
-  NS_ENSURE_TRUE(categories, NS_ERROR_OUT_OF_MEMORY);
-
-  PRUint32 count = 0;
+  nsTArray<PRInt64> folders;
   PRBool more;
-
   while (NS_SUCCEEDED((rv = mDBFindURIBookmarks->ExecuteStep(&more))) && more) {
-    if (count >= arraySize) {
-      arraySize <<= 1;
-      PRInt64 *res = NS_STATIC_CAST(PRInt64*, nsMemory::Realloc(categories,
-                                                 arraySize * sizeof(PRInt64)));
-      if (!res) {
-        delete categories;
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      categories = res;
-    }
-    categories[count++] =
-      mDBFindURIBookmarks->AsInt64(kFindBookmarksIndex_Parent);
+    if (! folders.AppendElement(
+        mDBFindURIBookmarks->AsInt64(kFindBookmarksIndex_Parent)))
+      return NS_ERROR_OUT_OF_MEMORY;
   }
 
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *aCount = count;
-  *aCategories = categories;
-
+  if (folders.Length()) {
+    *aFolders = NS_STATIC_CAST(PRInt64*,
+                           nsMemory::Alloc(sizeof(PRInt64) * folders.Length()));
+    if (! aFolders)
+      return NS_ERROR_OUT_OF_MEMORY;
+    for (PRUint32 i = 0; i < folders.Length(); i ++)
+      (*aFolders)[i] = folders[i];
+  }
+  *aCount = folders.Length();
   return transaction.Commit();
 }
 
@@ -1448,7 +1368,7 @@ nsNavBookmarks::OnVisit(nsIURI *aURI, PRInt64 aVisitID, PRTime aTime,
   IsBookmarked(aURI, &bookmarked);
   if (bookmarked) {
     ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
-                        OnItemVisited(aURI, aTime))
+                        OnItemVisited(aURI, aVisitID, aTime))
   }
   return NS_OK;
 }
