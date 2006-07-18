@@ -181,14 +181,17 @@ interface nsINavHistoryResult : nsISupports
   PRUint32 treeIndexForNode(in nsINavHistoryResultNode aNode);
 
   /**
-   * This gives you the original queries and options that generated this result.
+   * This gives you the original queries that generated this result.
    * Note that these are copies of the originals. These results should be
    * treated as read-only: they belong to the result object.
    */
-  void getSourceQuery(
-    [array, size_is(aResultCount)] out nsINavHistoryQuery aQueries,
-    out PRUint32 aResultCount,
-    out nsINavHistoryQueryOptions aOptions);
+  void getSourceQueries(out PRUint32 aResultCount, 
+    [retval, array, size_is(aResultCount)] out nsINavHistoryQuery aQueries);
+  
+  /**
+   * This gives you the original options used to display this result.
+   */
+  readonly attribute nsINavHistoryQueryOptions sourceQueryOptions;
 };
 
 
