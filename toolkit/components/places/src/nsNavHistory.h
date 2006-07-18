@@ -333,7 +333,7 @@ protected:
 
   nsresult AddVisitChain(nsIURI* aURI, PRBool aToplevel, PRBool aRedirect,
                          nsIURI* aReferrer, PRInt64* aVisitID,
-                         PRInt64* aSessionID);
+                         PRInt64* aSessionID, PRInt64* aRedirectBookmark);
   nsresult InternalAddNewPage(nsIURI* aURI, PRBool aHidden, PRBool aTyped,
                               PRInt32 aVisitCount, PRInt64* aPageID);
   nsresult InternalAddVisit(PRInt64 aPageID, PRInt64 aReferringVisit,
