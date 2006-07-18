@@ -250,6 +250,17 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
         aState->maxpos = CheckIntAttr(tmpFrame, nsWidgetAtoms::maxpos);
       }
 
+      // In order to simulate native GTK scrollbar click behavior, we set the
+      // active attribute on the element to true if it's pressed with any mouse
+      // button. This allows us to show that it's active without setting :active
+      if (aWidgetType == NS_THEME_SCROLLBAR_BUTTON_UP ||
+          aWidgetType == NS_THEME_SCROLLBAR_BUTTON_DOWN ||
+          aWidgetType == NS_THEME_SCROLLBAR_BUTTON_LEFT ||
+          aWidgetType == NS_THEME_SCROLLBAR_BUTTON_RIGHT) {
+          if (CheckBooleanAttr(aFrame, nsWidgetAtoms::active))
+            aState->active = PR_TRUE;
+      }
+
       // menu item state is determined by the attribute "_moz-menuactive",
       // and not by the mouse hovering (accessibility).  as a special case,
       // menus which are children of a menu bar are only marked as prelight
