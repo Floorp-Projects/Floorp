@@ -340,12 +340,10 @@ nsLocalMoveCopyMsgTxn::UndoTransactionInternal()
               localFolder->MarkMsgsOnPop3Server(srcMessages, POP3_NONE /*deleteMsgs*/);
         }
         srcDB->SetSummaryValid(PR_TRUE);
-        srcDB->Commit(nsMsgDBCommitType::kLargeCommit);
     }
 
     dstDB->DeleteMessages(&m_dstKeyArray, nsnull);
     dstDB->SetSummaryValid(PR_TRUE);
-    dstDB->Commit(nsMsgDBCommitType::kLargeCommit);
 
     return rv;
 }
@@ -401,7 +399,6 @@ nsLocalMoveCopyMsgTxn::RedoTransaction()
         }
     }
     dstDB->SetSummaryValid(PR_TRUE);
-    dstDB->Commit(nsMsgDBCommitType::kLargeCommit);
 
     if (m_isMove)
     {
@@ -425,7 +422,6 @@ nsLocalMoveCopyMsgTxn::RedoTransaction()
 
             rv = srcDB->DeleteMessages(&m_srcKeyArray, nsnull);
             srcDB->SetSummaryValid(PR_TRUE);
-            srcDB->Commit(nsMsgDBCommitType::kLargeCommit);
         }
     }
 

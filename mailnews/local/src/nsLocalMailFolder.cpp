@@ -1637,7 +1637,6 @@ nsMsgLocalMailFolder::OnCopyCompleted(nsISupports *srcSupport, PRBool moveCopySu
   if (moveCopySucceeded && mDatabase)
   {
     mDatabase->SetSummaryValid(PR_TRUE);
-    mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
     (void) CloseDBIfFolderNotOpen();
   }
 

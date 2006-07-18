@@ -62,12 +62,25 @@ nsImapMailDatabase::~nsImapMailDatabase()
 NS_IMETHODIMP	nsImapMailDatabase::GetSummaryValid(PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = PR_TRUE;
+  if (m_dbFolderInfo)
+  {
+    PRUint32 version;
+    m_dbFolderInfo->GetVersion(&version);
+    *aResult = (GetCurVersion() == version);
+  }
+  else
+      *aResult = PR_FALSE;
+
   return NS_OK;
 }
 
-NS_IMETHODIMP	nsImapMailDatabase::SetSummaryValid(PRBool /* valid */)
+NS_IMETHODIMP	nsImapMailDatabase::SetSummaryValid(PRBool valid)
 {
+  if (m_dbFolderInfo)
+  {
+    m_dbFolderInfo->SetVersion(valid ? GetCurVersion() : 0);
+    Commit(nsMsgDBCommitType::kLargeCommit);
+  }
   return NS_OK;
 }
 

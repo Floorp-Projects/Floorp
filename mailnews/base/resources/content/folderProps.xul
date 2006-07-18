@@ -99,6 +99,12 @@
                   label="&folderCheckForNewMessages.label;"
                   accesskey="&folderCheckForNewMessages.accesskey;"/>
       </vbox>
+      <hbox>
+        <button iscontrolcontainer="true" label="&folderRebuildSummaryFile.label;" 
+               oncommand="RebuildSummaryInformation();" accesskey="&folderRebuildSummaryFile.accesskey;" 
+                tooltiptext="&folderRebuildSummaryFileTip.label;"
+               align="center"/>
+      </hbox>
     </vbox>
  
     <vbox align="start">  

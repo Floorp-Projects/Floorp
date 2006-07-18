@@ -269,7 +269,19 @@ function MsgFolderProperties()
               {preselectedURI:preselectedURI, serverType:serverType,
               msgWindow:msgWindow, title:windowTitle,
               okCallback:FolderProperties, 
-              tabID:"", tabIndex:0, name:name});
+              tabID:"", tabIndex:0, name:name, rebuildSummaryCallback:RebuildSummaryFile});
+}
+
+function RebuildSummaryFile(msgFolder)
+{
+  var msgDB = msgFolder.getMsgDatabase(msgWindow);
+  msgDB.summaryValid = false;
+  msgFolder.ForceDBClosed();
+  // these two lines will cause the thread pane to get reloaded
+  // when the download/reparse are finised.
+  gRerootOnFolderLoad = true;
+  gCurrentFolderToReroot = msgFolder.URI;
+  msgFolder.updateFolder(msgWindow);
 }
 
 function FolderProperties(name, oldName, uri)

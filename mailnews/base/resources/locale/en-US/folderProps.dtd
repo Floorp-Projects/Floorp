@@ -45,6 +45,9 @@
 <!ENTITY folderCharsetTab.accesskey              "E">
 <!ENTITY folderCharsetOverride.label             "Apply default to all messages in the folder (individual message character encoding settings and auto-detection will be ignored)">
 <!ENTITY folderCharsetOverride.accesskey         "A">
+<!ENTITY folderRebuildSummaryFile.label          "Rebuild Summary File">
+<!ENTITY folderRebuildSummaryFile.accesskey      "R">
+<!ENTITY folderRebuildSummaryFileTip.label       "Rebuild Summary File">
 
 <!ENTITY retention.label "Retention Policy">
 <!ENTITY retentionUseDefault.label "Use server defaults">

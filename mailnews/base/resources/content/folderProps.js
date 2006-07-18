@@ -44,6 +44,8 @@ var gOldName;
 var gOkButton;
 var gLockedPref = null;
 
+var gRebuildSummaryFileCallback;
+
 // services used
 var RDF;
 
@@ -201,6 +203,8 @@ function folderPropsOnLoad()
     if ( window.arguments[0].okCallback ) {
       top.okCallback = window.arguments[0].okCallback;
     }
+    if (window.arguments[0].rebuildSummaryCallback)
+      gRebuildSummaryFileCallback = window.arguments[0].rebuildSummaryCallback;
   }
 
   // fill in folder name, based on what they selected in the folder pane
@@ -405,4 +409,9 @@ function onUseDefaultRetentionSettings()
 {
   var useDefault = document.getElementById("retention.useDefault").checked;
   document.getElementById('retention.keepMsg').disabled = useDefault;
+}
+
+function RebuildSummaryInformation()
+{
+  gRebuildSummaryFileCallback(gMsgFolder);
 }

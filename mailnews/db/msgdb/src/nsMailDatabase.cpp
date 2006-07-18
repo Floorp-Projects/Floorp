@@ -166,7 +166,6 @@ NS_IMETHODIMP nsMailDatabase::EndBatch()
     m_ownFolderStream = PR_FALSE;
   }
   SetSummaryValid(PR_TRUE);
-  Commit(nsMsgDBCommitType::kLargeCommit);
   return NS_OK;
 }
 
@@ -500,12 +499,14 @@ NS_IMETHODIMP nsMailDatabase::SetSummaryValid(PRBool valid)
       
       m_dbFolderInfo->SetFolderSize(m_folderSpec->GetFileSize());
       m_dbFolderInfo->SetFolderDate(actualFolderTimeStamp);
+      m_dbFolderInfo->SetVersion(GetCurVersion());
     }
     else
     {
       m_dbFolderInfo->SetVersion(0);	// that ought to do the trick.
     }
   }
+  Commit(nsMsgDBCommitType::kLargeCommit);
   return ret;
 }
 

@@ -92,7 +92,6 @@ NS_IMETHODIMP nsMsgQuickSearchDBView::DoCommand(nsMsgViewCommandTypeValue aComma
                                       m_keys.GetSize(), nsnull);
 
     m_db->SetSummaryValid(PR_TRUE);
-    m_db->Commit(nsMsgDBCommitType::kLargeCommit);
     return rv;
   }
   else

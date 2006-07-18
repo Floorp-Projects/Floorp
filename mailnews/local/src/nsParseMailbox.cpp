@@ -318,22 +318,19 @@ int nsMsgMailboxParser::ProcessMailboxInputStream(nsIURI* aURL, nsIInputStream *
 
 void nsMsgMailboxParser::DoneParsingFolder(nsresult status)
 {
-	/* End of file.  Flush out any partial line remaining in the buffer. */
-	FlushLastLine();
-	PublishMsgHeader(nsnull);
+  /* End of file.  Flush out any partial line remaining in the buffer. */
+  FlushLastLine();
+  PublishMsgHeader(nsnull);
 
-	// only mark the db valid if we've succeeded.
-	if (NS_SUCCEEDED(status) && m_mailDB)	// finished parsing, so flush db folder info 
-		UpdateDBFolderInfo();
-	else if (m_mailDB)
-	{
-		m_mailDB->SetSummaryValid(PR_FALSE);
-		m_mailDB->Commit(nsMsgDBCommitType::kLargeCommit);
-	}
+  // only mark the db valid if we've succeeded.
+  if (NS_SUCCEEDED(status) && m_mailDB)	// finished parsing, so flush db folder info 
+    UpdateDBFolderInfo();
+  else if (m_mailDB)
+    m_mailDB->SetSummaryValid(PR_FALSE);
 
-//	if (m_folder != nsnull)
-//		m_folder->SummaryChanged();
-	FreeBuffers();
+  //	if (m_folder != nsnull)
+  //		m_folder->SummaryChanged();
+  FreeBuffers();
 }
 
 void nsMsgMailboxParser::FreeBuffers()
@@ -352,8 +349,7 @@ void nsMsgMailboxParser::UpdateDBFolderInfo()
 // update folder info in db so we know not to reparse.
 void nsMsgMailboxParser::UpdateDBFolderInfo(nsIMsgDatabase *mailDB)
 {
-	mailDB->SetSummaryValid(PR_TRUE);
-	mailDB->Commit(nsMsgDBCommitType::kLargeCommit);
+  mailDB->SetSummaryValid(PR_TRUE);
 }
 
 // Tell the world about the message header (add to db, and view, if any)
@@ -1680,7 +1676,7 @@ PRInt32 nsParseNewMailState::PublishMsgHeader(nsIMsgWindow *msgWindow)
         
         m_mailDB->AddNewHdrToDB(m_newMsgHdr, PR_TRUE);
       }
-    }		// if it was moved by imap filter, m_parseMsgState->m_newMsgHdr == nsnull
+    } // if it was moved by imap filter, m_parseMsgState->m_newMsgHdr == nsnull
     m_newMsgHdr = nsnull;
   }
   return 0;
