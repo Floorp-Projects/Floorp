@@ -199,6 +199,10 @@ public:
     eMetric_ScrollArrowStyle,                             // position of scroll arrows in a scrollbar
     eMetric_ScrollSliderStyle,                            // is scroll thumb proportional or fixed?
 
+    eMetric_ScrollButtonLeftMouseButtonAction,            // each button can take one of four values:
+    eMetric_ScrollButtonMiddleMouseButtonAction,          // 0 - scrolls one  line, 1 - scrolls one page
+    eMetric_ScrollButtonRightMouseButtonAction,           // 2 - scrolls to end, 3 - button ignored
+ 
     eMetric_TreeOpenDelay,                                // delay for opening spring loaded folders
     eMetric_TreeCloseDelay,                               // delay for closing spring loaded folders
     eMetric_TreeLazyScrollDelay,                          // delay for triggering the tree scrolling
