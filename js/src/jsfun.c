@@ -2231,7 +2231,7 @@ js_ReportIsNotFunction(JSContext *cx, jsval *vp, uintN flags)
     JSString *fallback;
     JSString *str;
     JSTempValueRooter tvr;
-    const char *bytes;
+    const char *bytes, *source;
 
     /*
      * We provide the typename as the fallback to handle the case when
@@ -2253,10 +2253,12 @@ js_ReportIsNotFunction(JSContext *cx, jsval *vp, uintN flags)
         JS_PUSH_SINGLE_TEMP_ROOT(cx, str, &tvr);
         bytes = JS_GetStringBytes(str);
         if (flags & JSV2F_ITERATOR) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_BAD_ITERATOR,
-                                 bytes, js_iterator_str,
-                                 js_ValueToPrintableSource(cx, *vp));
+            source = js_ValueToPrintableSource(cx, *vp);
+            if (source) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                     JSMSG_BAD_ITERATOR,
+                                     bytes, js_iterator_str, source);
+            }
         } else {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  (uintN)((flags & JSV2F_CONSTRUCT)
