@@ -340,6 +340,8 @@ function onInputKeyPress (e)
         case 13: /* CR */
             e.line = e.target.value;
             e.target.value = "";
+            if (e.ctrlKey)
+                e.line = client.COMMAND_CHAR + "say " + e.line;
             if (e.line.search(/\S/) == -1)
                 return;
             onInputCompleteLine (e);
