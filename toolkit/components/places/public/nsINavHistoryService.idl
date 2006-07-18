@@ -447,11 +447,30 @@ interface nsINavHistoryQuery : nsISupports
   /**
    * This is the host or domain name (controlled by domainIsHost). When
    * domainIsHost, domain only does exact matching on host names. Otherwise,
-   * it will return anything whose host name ends in 'domain'. Empty string
-   * means ignore.
+   * it will return anything whose host name ends in 'domain'.
+   *
+   * This one is a little different than most. Setting it to an empty string
+   * is a real query and will match any URI that has no host name (local files
+   * and such). Set this to NULL (in C++ use SetIsVoid) if you don't want
+   * domain matching.
    */
-  attribute AString domain;
+  attribute AUTF8String domain;
   readonly attribute boolean hasDomain;
+
+  /**
+   * Controls the interpretation of 'uri'. When unset (default), the URI will
+   * request an exact match of the specified URI. When set, any history entry
+   * beginning in 'uri' will match. For example "http://bar.com/foo" will match
+   * "http://bar.com/foo" as well as "http://bar.com/foo/baz.gif".
+   */
+  attribute boolean uriIsPrefix;
+
+  /**
+   * This is a URI to match, to, for example, find out every time you visited
+   * a given URI. Use uriIsPrefix to control whether this is an exact match.
+   */
+  attribute nsIURI uri;
+  readonly attribute boolean hasUri;
 
   /**
    * Limit results to items that are in all of the given folders.
@@ -493,7 +512,7 @@ interface nsINavHistoryQueryOptions : nsISupports
    * type = RESULT_TYPE_DAY, one for each day where there are results. These
    * will have children of corresponding to the search results of that day.
    */
-  const PRInt32 GROUP_BY_DAY = 0;
+  const PRUint32 GROUP_BY_DAY = 0;
 
   /**
    * Groping by exact host. The results will be an array of nsINavHistoryResults
@@ -501,7 +520,7 @@ interface nsINavHistoryQueryOptions : nsISupports
    * "bugzilla.mozilla.org" and "www.mozilla.org" will be separate). The
    * children of these will correspond to the results for each host.
    */
-  const PRInt32 GROUP_BY_HOST = 1;
+  const PRUint32 GROUP_BY_HOST = 1;
 
   /**
    * Grouping by toplevel domain. Similar to GROUP_BY_HOST, but there will be
@@ -509,7 +528,7 @@ interface nsINavHistoryQueryOptions : nsISupports
    * will contain results including, for example, "bugzilla.mozilla.org" and
    * "www.mozilla.org").
    */
-  const PRInt32 GROUP_BY_DOMAIN = 2;
+  const PRUint32 GROUP_BY_DOMAIN = 2;
 
   /**
    * Group by bookmark folder.  Since this determines the entire subtree
@@ -519,7 +538,7 @@ interface nsINavHistoryQueryOptions : nsISupports
    * If all of the top-level results belong to a single folder, the folder will
    * be omitted and its children will become the toplevel result nodes.
    */
-  const PRInt32 GROUP_BY_FOLDER = 3;
+  const PRUint32 GROUP_BY_FOLDER = 3;
 
   /**
    * You can ask for the results to be pre-sorted. Since the DB has indices
@@ -529,26 +548,26 @@ interface nsINavHistoryQueryOptions : nsISupports
    * Note: re-sorting is slower, as is sorting by title or when you have a
    * host name.
    */
-  const PRInt32 SORT_BY_NONE = 0;
-  const PRInt32 SORT_BY_TITLE_ASCENDING = 1;
-  const PRInt32 SORT_BY_TITLE_DESCENDING = 2;
-  const PRInt32 SORT_BY_DATE_ASCENDING = 3;
-  const PRInt32 SORT_BY_DATE_DESCENDING = 4;
-  const PRInt32 SORT_BY_URL_ASCENDING = 5;
-  const PRInt32 SORT_BY_URL_DESCENDING = 6;
-  const PRInt32 SORT_BY_VISITCOUNT_ASCENDING = 7;
-  const PRInt32 SORT_BY_VISITCOUNT_DESCENDING = 8;
+  const PRUint32 SORT_BY_NONE = 0;
+  const PRUint32 SORT_BY_TITLE_ASCENDING = 1;
+  const PRUint32 SORT_BY_TITLE_DESCENDING = 2;
+  const PRUint32 SORT_BY_DATE_ASCENDING = 3;
+  const PRUint32 SORT_BY_DATE_DESCENDING = 4;
+  const PRUint32 SORT_BY_URL_ASCENDING = 5;
+  const PRUint32 SORT_BY_URL_DESCENDING = 6;
+  const PRUint32 SORT_BY_VISITCOUNT_ASCENDING = 7;
+  const PRUint32 SORT_BY_VISITCOUNT_DESCENDING = 8;
 
   /**
    * "URL" results, one for each URL visited in the range.
    */
-  const PRInt32 RESULT_TYPE_URL = 0;
+  const PRUint32 RESULT_TYPE_URL = 0;
 
   /**
    * "Visit" results, with one for each time a page was visited
    * (this will often give you multiple results for one URL).
    */
-  const PRInt32 RESULT_TYPE_VISIT = 1;
+  const PRUint32 RESULT_TYPE_VISIT = 1;
 
   /**
    * The grouping mode to be used for this query.
@@ -560,20 +579,20 @@ interface nsINavHistoryQueryOptions : nsISupports
    * you can specify an empty array.
    */
   void getGroupingMode(out PRUint32 groupCount,
-                       [retval,array,size_is(groupCount)] out PRInt32 groupingMode);
-  void setGroupingMode([const,array,size_is(groupCount)] in PRInt32 groupingMode,
+                       [retval,array,size_is(groupCount)] out PRUint32 groupingMode);
+  void setGroupingMode([const,array,size_is(groupCount)] in PRUint32 groupingMode,
                        in PRUint32 groupCount);
 
   /**
    * The sorting mode to be used for this query.
    * mode is one of SORT_BY_*
    */
-  attribute PRInt32 sortingMode;
+  attribute PRUint32 sortingMode;
 
   /**
    * Sets the result type. One of RESULT_TYPE_*.
    */
-  attribute PRInt32 resultType;
+  attribute PRUint32 resultType;
 
   /**
    * When set, allows items with "place:" URIs to appear as containers,
