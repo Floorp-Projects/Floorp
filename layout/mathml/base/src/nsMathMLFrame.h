@@ -105,9 +105,11 @@ public:
   }
 
   NS_IMETHOD
-  Place(nsIRenderingContext& aRenderingContext,
-        PRBool               aPlaceOrigin,
-        nsHTMLReflowMetrics& aDesiredSize)
+  Place(nsIRenderingContext&     aRenderingContext,
+        PRBool                   aPlaceOrigin,
+        nsHTMLReflowMetrics&     aDesiredSize,
+        const nsHTMLReflowState& aReflowState,
+        nsReflowStatus&          aStatus)
   {
     return NS_OK;
   }

@@ -210,7 +210,7 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   if (2 != count) {
     // report an error, encourage people to get their markups in order
     NS_WARNING("invalid markup");
-    return ReflowError(renderingContext, aDesiredSize);
+    return ReflowError(renderingContext, aDesiredSize, aReflowState, aStatus);
   }
 
   ////////////

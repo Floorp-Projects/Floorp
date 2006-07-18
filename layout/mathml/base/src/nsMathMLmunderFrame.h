@@ -52,9 +52,11 @@ public:
   friend nsIFrame* NS_NewMathMLmunderFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   NS_IMETHOD
-  Place(nsIRenderingContext& aRenderingContext,
-        PRBool               aPlaceOrigin,
-        nsHTMLReflowMetrics& aDesiredSize);
+  Place(nsIRenderingContext&     aRenderingContext,
+        PRBool                   aPlaceOrigin,
+        nsHTMLReflowMetrics&     aDesiredSize,
+        const nsHTMLReflowState& aReflowState,
+        nsReflowStatus&          aStatus);
 
   NS_IMETHOD
   InheritAutomaticData(nsIFrame* aParent);

@@ -55,18 +55,22 @@ public:
   TransmitAutomaticData();
 
   NS_IMETHOD
-  Place(nsIRenderingContext& aRenderingContext,
-        PRBool               aPlaceOrigin,
-        nsHTMLReflowMetrics& aDesiredSize);
+  Place(nsIRenderingContext&     aRenderingContext,
+        PRBool                   aPlaceOrigin,
+        nsHTMLReflowMetrics&     aDesiredSize,
+        const nsHTMLReflowState& aReflowState,
+        nsReflowStatus&          aStatus);
 
   static nsresult
-  PlaceSubScript (nsPresContext*      aPresContext,
-                  nsIRenderingContext& aRenderingContext,
-                  PRBool               aPlaceOrigin,
-                  nsHTMLReflowMetrics& aDesiredSize,
-                  nsIFrame*            aForFrame,
-                  nscoord              aUserSubScriptShift = 0,
-                  nscoord              aScriptSpace = NSFloatPointsToTwips(0.5f));
+  PlaceSubScript (nsPresContext*           aPresContext,
+                  nsIRenderingContext&     aRenderingContext,
+                  PRBool                   aPlaceOrigin,
+                  nsHTMLReflowMetrics&     aDesiredSize,
+                  const nsHTMLReflowState& aReflowState,
+                  nsReflowStatus&          aStatus,
+                  nsIFrame*                aForFrame,
+                  nscoord                  aUserSubScriptShift = 0,
+                  nscoord                  aScriptSpace = NSFloatPointsToTwips(0.5f));
 
  protected:
   nsMathMLmsubFrame(nsStyleContext* aContext) : nsMathMLContainerFrame(aContext) {}
