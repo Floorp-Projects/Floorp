@@ -3046,7 +3046,8 @@ nsNavHistoryFolderResultNode::RecursiveSort(
 // Separator nodes do not hold any data
 
 nsNavHistorySeparatorResultNode::nsNavHistorySeparatorResultNode()
-  : nsNavHistoryResultNode(EmptyCString(), 0, 0, EmptyCString())
+  : nsNavHistoryResultNode(EmptyCString(), EmptyCString(),
+                           0, 0, EmptyCString())
 {
 }
 
