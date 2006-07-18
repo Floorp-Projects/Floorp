@@ -1626,8 +1626,24 @@ nsNavHistoryQueryResultNode::nsNavHistoryQueryResultNode(
                                                &mHasSearchTerms);
 
   // queries have special icons if not otherwise set
-  if (mFaviconURI.IsEmpty())
+  if (mFaviconURI.IsEmpty()) {
     mFaviconURI.AppendLiteral(ICONURI_QUERY);
+
+    // see if there's a favicon explicitly set on this query
+    nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
+    if (! faviconService)
+      return;
+    nsresult rv = VerifyQueriesSerialized();
+    if (NS_FAILED(rv)) return;
+
+    nsCOMPtr<nsIURI> queryURI;
+    rv = NS_NewURI(getter_AddRefs(queryURI), mURI);
+    if (NS_FAILED(rv)) return;
+    nsCOMPtr<nsIURI> favicon;
+    rv = faviconService->GetFaviconForPage(queryURI, getter_AddRefs(favicon));
+    if (NS_FAILED(rv)) return;
+    favicon->GetSpec(mFaviconURI);
+  }
 }
 
 
