@@ -70,10 +70,10 @@ public:
                                nsINavHistoryQueryOptions *aOptions,
                                nsNavHistoryResultNode **aNode);
 
-  // Fills in a ResultNode for a folder, using the given result row.
+  // Fills in a ResultNode for the given folder.
   // The node's type and queries must already be set.
-  nsresult FillFolderNode(mozIStorageValueArray *aRow,
-                          nsNavHistoryResultNode *aNode);
+  nsresult FillFolderNode(PRInt64 aID,
+                          nsNavHistoryQueryNode *aNode);
 
   // Find all the children of a folder, using the given query and options.
   // For each child, a ResultNode is created and added to |children|.
@@ -87,6 +87,7 @@ public:
   // constants for the above statement
   static const PRInt32 kGetFolderInfoIndex_FolderID;
   static const PRInt32 kGetFolderInfoIndex_Title;
+  static const PRInt32 kGetFolderInfoIndex_Type;
 
 private:
   static nsNavBookmarks *sInstance;
@@ -102,6 +103,7 @@ private:
                          PRInt32 aStartIndex, PRInt32 aEndIndex,
                          PRInt32 aDelta);
   PRInt32 FolderCount(PRInt64 aFolder);
+  nsresult GetFolderType(PRInt64 aFolder, nsAString &aType);
 
   // remove me when there is better query initialization
   nsNavHistory* History() { return nsNavHistory::GetHistoryService(); }
