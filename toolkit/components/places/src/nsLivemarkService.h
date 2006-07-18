@@ -61,8 +61,6 @@ public:
 
   // These functions are called by the livemarks feed loader
   // to set the livemark children.
-  nsresult BeginUpdateBatch();
-  nsresult EndUpdateBatch();
   nsresult DeleteLivemarkChildren(PRInt64 aLivemarkFolderId);
   nsresult InsertLivemarkChild(PRInt64 aLivemarkFolderId, 
                                nsIURI *aURI,
