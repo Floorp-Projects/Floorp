@@ -350,9 +350,16 @@ nsNavHistory::InitDB()
   PRBool tableExists;
 
   // init DB
+  nsCOMPtr<nsIFile> dbFile;
+  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                              getter_AddRefs(dbFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = dbFile->Append(NS_LITERAL_STRING("bookmarks_history.sqlite"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   mDBService = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBService->OpenSpecialDatabase("profile", getter_AddRefs(mDBConn));
+  rv = mDBService->OpenDatabase(dbFile, getter_AddRefs(mDBConn));
   NS_ENSURE_SUCCESS(rv, rv);
 
   
