@@ -237,13 +237,12 @@ const char js_finally_block_str[]  = "finally block";
 const char js_script_str[]         = "script";
 
 static const char *statementName[] = {
-    "block",                 /* BLOCK */
     "label statement",       /* LABEL */
     "if statement",          /* IF */
     "else statement",        /* ELSE */
     "switch statement",      /* SWITCH */
+    "block",                 /* BLOCK */
     js_with_statement_str,   /* WITH */
-    "block scope",           /* BLOCK_SCOPE */
     "catch block",           /* CATCH */
     "try block",             /* TRY */
     js_finally_block_str,    /* FINALLY */
@@ -1230,12 +1229,7 @@ js_PushStatement(JSTreeContext *tc, JSStmtInfo *stmt, JSStmtType type,
     stmt->label = NULL;
     stmt->down = tc->topStmt;
     tc->topStmt = stmt;
-    if (STMT_TYPE_IS_SCOPE(type)) {
-        stmt->downScope = tc->topScopeStmt;
-        tc->topScopeStmt = stmt;
-    } else {
-        stmt->downScope = NULL;
-    }
+    stmt->downScope = NULL;
     stmt->blockObj = NULL;
 }
 
@@ -1243,8 +1237,11 @@ void
 js_PushBlockScope(JSTreeContext *tc, JSStmtInfo *stmt, JSObject *blockObj,
                   ptrdiff_t top)
 {
-    js_PushStatement(tc, stmt, STMT_BLOCK_SCOPE, top);
+    js_PushStatement(tc, stmt, STMT_BLOCK, top);
+    stmt->flags |= SIF_SCOPE;
     blockObj->slots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(tc->blockChain);
+    stmt->downScope = tc->topScopeStmt;
+    tc->topScopeStmt = stmt;
     tc->blockChain = stmt->blockObj = blockObj;
 }
 
@@ -1365,9 +1362,11 @@ EmitNonLocalJumpFixup(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *toStmt,
                 return JS_FALSE;
             break;
 
+          default:;
+        }
+
 #if JS_HAS_BLOCK_SCOPE
-          case STMT_BLOCK_SCOPE:
-          {
+        if (stmt->flags & SIF_SCOPE) {
             uintN i;
 
             /* There is a Block object with locals on the stack to pop. */
@@ -1376,11 +1375,8 @@ EmitNonLocalJumpFixup(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *toStmt,
             i = OBJ_BLOCK_COUNT(cx, stmt->blockObj);
             EMIT_UINT16_IMM_OP(JSOP_LEAVEBLOCK, i);
             break;
-          }
-#endif
-
-          default:;
         }
+#endif
     }
 
     cg->stackDepth = depth;
@@ -1441,14 +1437,12 @@ void
 js_PopStatement(JSTreeContext *tc)
 {
     JSStmtInfo *stmt;
-    JSStmtType type;
 
     stmt = tc->topStmt;
     tc->topStmt = stmt->down;
-    type = stmt->type;
-    if (STMT_TYPE_IS_SCOPE(type)) {
+    if (STMT_IS_SCOPE(stmt)) {
         tc->topScopeStmt = stmt->downScope;
-        if (type == STMT_BLOCK_SCOPE) {
+        if (stmt->flags & SIF_SCOPE) {
             tc->blockChain =
                 JSVAL_TO_OBJECT(stmt->blockObj->slots[JSSLOT_PARENT]);
         }
@@ -1523,7 +1517,7 @@ LexicalLookup(JSContext *cx, JSTreeContext *tc, JSAtom *atom, jsint *slotp)
             continue;
         }
 
-        JS_ASSERT(stmt->type == STMT_BLOCK_SCOPE);
+        JS_ASSERT(stmt->flags & SIF_SCOPE);
         obj = stmt->blockObj;
         if (!js_LookupProperty(cx, obj, ATOM_TO_JSID(atom), &pobj, &prop))
             return NULL;
@@ -1880,7 +1874,7 @@ BindNameToSlot(JSContext *cx, JSTreeContext *tc, JSParseNode *pn)
             return JS_TRUE;
         }
 
-        JS_ASSERT(stmt->type == STMT_BLOCK_SCOPE);
+        JS_ASSERT(stmt->flags & SIF_SCOPE);
         JS_ASSERT(slot >= 0);
         op = pn->pn_op;
         switch (op) {

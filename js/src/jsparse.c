@@ -2049,13 +2049,13 @@ ReturnOrYield(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 #if JS_HAS_BLOCK_SCOPE
 
 static JSStmtInfo *
-FindBlockStatement(JSTreeContext *tc)
+FindMaybeScopeStatement(JSTreeContext *tc)
 {
     JSStmtInfo *stmt;
 
     stmt = tc->topStmt;
     while (stmt) {
-        if (stmt->type == STMT_BLOCK || stmt->type == STMT_BLOCK_SCOPE)
+        if (STMT_MAYBE_SCOPE(stmt))
             return stmt;
         stmt = stmt->down;
     }
@@ -2907,73 +2907,84 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         JSObject *obj;
         JSAtom *atom;
 
+        /* Check for a let statement or let expression. */
         if (js_PeekToken(cx, ts) == TOK_LP) {
             pn = LetBlock(cx, ts, tc, JS_TRUE);
             if (!pn || !(pn->pn_extra & PNX_BLOCKEXPR))
                 return pn;
-        } else {
-            /* Set up the block object. */
-            stmt = FindBlockStatement(tc);
-            if (stmt && stmt->type == STMT_BLOCK_SCOPE) {
-                JS_ASSERT(stmt->blockObj);
-                obj = stmt->blockObj;
-            } else {
-                if (stmt) {
-                    /* Convert the block statement into a scope statement. */
-                    obj = js_NewBlockObject(cx);
-                    if (!obj)
-                        return NULL;
-                    JS_ASSERT(stmt->type == STMT_BLOCK);
-                    JS_ASSERT(stmt->downScope == NULL);
-                    stmt->type = STMT_BLOCK_SCOPE;
-                    stmt->downScope = tc->topScopeStmt;
-                    tc->topScopeStmt = stmt;
-                    obj->slots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(tc->blockChain);
-                    tc->blockChain = stmt->blockObj = obj;
-                } else {
-                    /*
-                     * XXX This is a hard case that requires more work. In
-                     * particular, in many cases, we're trying to emit code as
-                     * we go. However, this means that we haven't necessarily
-                     * finished processing all let declarations in the
-                     * implicit top-level block when we emit a reference to
-                     * one of them.  For now, punt on this and pretend this is
-                     * a var declaration.
-                     */
-                    CURRENT_TOKEN(ts).type = TOK_VAR;
-                    CURRENT_TOKEN(ts).t_op = JSOP_DEFVAR;
-
-                    pn = Variables(cx, ts, tc);
-                    if (!pn)
-                        return NULL;
-                    pn->pn_extra |= PNX_POPVAR;
-                    break;
-                }
-            }
-
-            pn1 = tc->blockNode;
-            if (!pn1 || pn1->pn_type != TOK_LEXICALSCOPE) {
-                /* Create a new lexical scope node for these statements. */
-                pn1 = NewParseNode(cx, ts, PN_NAME, tc);
-                if (!pn1)
-                    return NULL;
-
-                atom = js_AtomizeObject(cx, obj, 0);
-                if (!atom)
-                    return NULL;
-                pn1->pn_type = TOK_LEXICALSCOPE;
-                pn1->pn_atom = atom;
-                pn1->pn_expr = tc->blockNode;
-                pn1->pn_extra = 0;
-                tc->blockNode = pn1;
-            }
-
-            pn = Variables(cx, ts, tc);
-            if (!pn)
-                return NULL;
-            pn->pn_extra = PNX_POPVAR;
+            /* Let expressions require automatic semicolon insertion. */
+            break;
         }
 
+        /*
+         * This is a let declaration. We must convert the nearest JSStmtInfo
+         * to be our scope statement. Further let declarations in this block
+         * will find this scope statement and use the same block object. If we
+         * are the first let declaration in this block (i.e., when the nearest
+         * maybe-scope JSStmtInfo isn't a scope statement) then we also need
+         * to set tc->blockNode to be our TOK_LEXICALSCOPE.
+         */
+        stmt = FindMaybeScopeStatement(tc);
+        if (stmt && (stmt->flags & SIF_SCOPE)) {
+            JS_ASSERT(stmt->blockObj);
+            obj = stmt->blockObj;
+        } else {
+            if (!stmt) {
+                /*
+                 * XXX This is a hard case that requires more work. In
+                 * particular, in many cases, we're trying to emit code as
+                 * we go. However, this means that we haven't necessarily
+                 * finished processing all let declarations in the
+                 * implicit top-level block when we emit a reference to
+                 * one of them.  For now, punt on this and pretend this is
+                 * a var declaration.
+                 */
+                CURRENT_TOKEN(ts).type = TOK_VAR;
+                CURRENT_TOKEN(ts).t_op = JSOP_DEFVAR;
+
+                pn = Variables(cx, ts, tc);
+                if (!pn)
+                    return NULL;
+                pn->pn_extra |= PNX_POPVAR;
+                break;
+            }
+
+            /* Convert the block statement into a scope statement. */
+            obj = js_NewBlockObject(cx);
+            if (!obj)
+                return NULL;
+            JS_ASSERT(stmt->downScope == NULL);
+            stmt->flags |= SIF_SCOPE;
+            stmt->downScope = tc->topScopeStmt;
+            tc->topScopeStmt = stmt;
+            obj->slots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(tc->blockChain);
+            tc->blockChain = stmt->blockObj = obj;
+
+            pn1 = tc->blockNode;
+            JS_ASSERT(!tc->blockNode ||
+                      tc->blockNode->pn_type != TOK_LEXICALSCOPE);
+
+            /* Create a new lexical scope node for these statements. */
+            pn1 = NewParseNode(cx, ts, PN_NAME, tc);
+            if (!pn1)
+                return NULL;
+
+            atom = js_AtomizeObject(cx, obj, 0);
+            if (!atom)
+                return NULL;
+            pn1->pn_type = TOK_LEXICALSCOPE;
+            pn1->pn_pos = tc->blockNode->pn_pos;
+            pn1->pn_atom = atom;
+            pn1->pn_expr = tc->blockNode;
+            pn1->pn_extra = 0;
+            tc->blockNode = pn1;
+        }
+
+
+        pn = Variables(cx, ts, tc);
+        if (!pn)
+            return NULL;
+        pn->pn_extra = PNX_POPVAR;
         break;
       }
 #endif
@@ -3172,7 +3183,7 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                            : JSPROP_PERMANENT;
     } else {
         args.obj = tc->topScopeStmt->blockObj;
-        args.u.let.index = 0;
+        args.u.let.index = OBJ_BLOCK_COUNT(cx, args.obj);
         args.u.let.overflow = JSMSG_TOO_MANY_FUN_VARS;
     }
 
