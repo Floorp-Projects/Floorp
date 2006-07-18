@@ -581,7 +581,6 @@ nsLivemarkLoadListener::TryParseAsSimpleRSS ()
 
   // Go through the <channel>/<feed> and do what we need
   // with <item> or <entry> nodes
-  int numMarksAdded = 0;
 
   rv = chElement->GetFirstChild(getter_AddRefs(node));
   if (!node) return NS_ERROR_UNEXPECTED;
@@ -680,8 +679,6 @@ nsLivemarkLoadListener::TryParseAsSimpleRSS ()
                                                      linkURI,
                                                      nsDependentString(titleStr));
           if (NS_FAILED(rv)) return rv;
-
-          numMarksAdded++;
         }
       }
     }
@@ -692,14 +689,6 @@ nsLivemarkLoadListener::TryParseAsSimpleRSS ()
     node = temp;
   }
 
-
-  if (numMarksAdded > 0) {
-    // if no items were found, return NS_ERROR_FAILURE so that
-    // the RDF parser can be tried.
-    return NS_ERROR_FAILURE;
-  }
-
-  // return NS_OK if items were found so that the RDF parser isn't tried.
   return NS_OK;
 }
 
