@@ -82,28 +82,53 @@ static nsresult TokenizeQueryString(const nsACString& aQuery,
 static nsresult ParseQueryBooleanString(const nsCString& aString,
                                         PRBool* aValue);
 
+// query getters
+typedef NS_STDCALL_FUNCPROTO(nsresult, BoolQueryGetter, nsINavHistoryQuery,
+                             GetOnlyBookmarked, PRBool*);
+typedef NS_STDCALL_FUNCPROTO(nsresult, Uint32QueryGetter, nsINavHistoryQuery,
+                             GetBeginTimeReference, PRUint32*);
+typedef NS_STDCALL_FUNCPROTO(nsresult, Int64QueryGetter, nsINavHistoryQuery,
+                             GetBeginTime, PRInt64*);
 static void AppendBoolKeyValueIfTrue(nsACString& aString,
                                      const nsCString& aName,
                                      nsINavHistoryQuery* aQuery,
-                                     nsresult (nsINavHistoryQuery::*getter)(PRBool*));
+                                     BoolQueryGetter getter);
 static void AppendUint32KeyValueIfNonzero(nsACString& aString,
                                           const nsCString& aName,
                                           nsINavHistoryQuery* aQuery,
-                                          nsresult (nsINavHistoryQuery::*getter)(PRUint32*));
+                                          Uint32QueryGetter getter);
 static void AppendInt64KeyValueIfNonzero(nsACString& aString,
                                          const nsCString& aName,
                                          nsINavHistoryQuery* aQuery,
-                                         nsresult (nsINavHistoryQuery::*getter)(PRInt64*));
+                                         Int64QueryGetter getter);
 
-template<class T> static
-void SetQueryKeyBool(const nsCString& aValue, T* aStruct,
-                     nsresult (T::*setter)(PRBool));
-template<class T> static
-void SetQueryKeyUint32(const nsCString& aValue, T* aStruct,
-                       nsresult (T::*setter)(PRUint32));
-template<class T> static
-void SetQueryKeyInt64(const nsCString& aValue, T* aStruct,
-                      nsresult (T::*setter)(PRInt64));
+// query setters
+typedef NS_STDCALL_FUNCPROTO(nsresult, BoolQuerySetter, nsINavHistoryQuery,
+                             SetOnlyBookmarked, PRBool);
+typedef NS_STDCALL_FUNCPROTO(nsresult, Uint32QuerySetter, nsINavHistoryQuery,
+                             SetBeginTimeReference, PRUint32);
+typedef NS_STDCALL_FUNCPROTO(nsresult, Int64QuerySetter, nsINavHistoryQuery,
+                             SetBeginTime, PRInt64);
+static void SetQueryKeyBool(const nsCString& aValue, nsINavHistoryQuery* aQuery,
+                            BoolQuerySetter setter);
+static void SetQueryKeyUint32(const nsCString& aValue, nsINavHistoryQuery* aQuery,
+                              Uint32QuerySetter setter);
+static void SetQueryKeyInt64(const nsCString& aValue, nsINavHistoryQuery* aQuery,
+                             Int64QuerySetter setter);
+
+// options setters
+typedef NS_STDCALL_FUNCPROTO(nsresult, BoolOptionsSetter,
+                             nsINavHistoryQueryOptions,
+                             SetExpandPlaces, PRBool);
+typedef NS_STDCALL_FUNCPROTO(nsresult, Uint32OptionsSetter,
+                             nsINavHistoryQueryOptions,
+                             SetResultType, PRUint32);
+static void SetOptionsKeyBool(const nsCString& aValue,
+                              nsINavHistoryQueryOptions* aOptions,
+                              BoolOptionsSetter setter);
+static void SetOptionsKeyUint32(const nsCString& aValue,
+                                nsINavHistoryQueryOptions* aOptions,
+                                Uint32OptionsSetter setter);
 
 // components of a query string
 #define QUERYKEY_BEGIN_TIME "beginTime"
@@ -418,23 +443,19 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
 
     // begin time
     if (kvp.key.EqualsLiteral(QUERYKEY_BEGIN_TIME)) {
-      SetQueryKeyInt64<nsINavHistoryQuery>(kvp.value, query,
-          &nsINavHistoryQuery::SetBeginTime);
+      SetQueryKeyInt64(kvp.value, query, &nsINavHistoryQuery::SetBeginTime);
 
     // begin time reference
     } else if (kvp.key.EqualsLiteral(QUERYKEY_BEGIN_TIME_REFERENCE)) {
-      SetQueryKeyUint32<nsINavHistoryQuery>(kvp.value, query,
-          &nsINavHistoryQuery::SetBeginTimeReference);
+      SetQueryKeyUint32(kvp.value, query, &nsINavHistoryQuery::SetBeginTimeReference);
 
     // end time
     } else if (kvp.key.EqualsLiteral(QUERYKEY_END_TIME)) {
-      SetQueryKeyInt64<nsINavHistoryQuery>(kvp.value, query,
-          &nsINavHistoryQuery::SetEndTime);
+      SetQueryKeyInt64(kvp.value, query, &nsINavHistoryQuery::SetEndTime);
 
     // end time reference
     } else if (kvp.key.EqualsLiteral(QUERYKEY_END_TIME_REFERENCE)) {
-      SetQueryKeyUint32<nsINavHistoryQuery>(kvp.value, query,
-          &nsINavHistoryQuery::SetEndTimeReference);
+      SetQueryKeyUint32(kvp.value, query, &nsINavHistoryQuery::SetEndTimeReference);
 
     // search terms
     } else if (kvp.key.EqualsLiteral(QUERYKEY_SEARCH_TERMS)) {
@@ -445,13 +466,11 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
 
     // onlyBookmarked flag
     } else if (kvp.key.EqualsLiteral(QUERYKEY_ONLY_BOOKMARKED)) {
-      SetQueryKeyBool<nsINavHistoryQuery>(kvp.value, query,
-          &nsINavHistoryQuery::SetOnlyBookmarked);
+      SetQueryKeyBool(kvp.value, query, &nsINavHistoryQuery::SetOnlyBookmarked);
 
     // domainIsHost flag
     } else if (kvp.key.EqualsLiteral(QUERYKEY_DOMAIN_IS_HOST)) {
-      SetQueryKeyBool<nsINavHistoryQuery>(kvp.value, query,
-          &nsINavHistoryQuery::SetDomainIsHost);
+      SetQueryKeyBool(kvp.value, query, &nsINavHistoryQuery::SetDomainIsHost);
 
     // domain string
     } else if (kvp.key.EqualsLiteral(QUERYKEY_DOMAIN)) {
@@ -483,8 +502,7 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
 
     // URI is prefix
     } else if (kvp.key.EqualsLiteral(QUERYKEY_URIISPREFIX)) {
-      SetQueryKeyBool<nsINavHistoryQuery>(kvp.value, query,
-          &nsINavHistoryQuery::SetUriIsPrefix);
+      SetQueryKeyBool(kvp.value, query, &nsINavHistoryQuery::SetUriIsPrefix);
 
     // new query component
     } else if (kvp.key.EqualsLiteral(QUERYKEY_SEPARATOR)) {
@@ -511,33 +529,33 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
 
     // sorting mode
     } else if (kvp.key.EqualsLiteral(QUERYKEY_SORT)) {
-      SetQueryKeyUint32<nsINavHistoryQueryOptions>(kvp.value, aOptions,
-          &nsINavHistoryQueryOptions::SetSortingMode);
+      SetOptionsKeyUint32(kvp.value, aOptions,
+                          &nsINavHistoryQueryOptions::SetSortingMode);
 
     // result type
     } else if (kvp.key.EqualsLiteral(QUERYKEY_RESULT_TYPE)) {
-      SetQueryKeyUint32<nsINavHistoryQueryOptions>(kvp.value, aOptions,
-          &nsINavHistoryQueryOptions::SetResultType);
+      SetOptionsKeyUint32(kvp.value, aOptions,
+                          &nsINavHistoryQueryOptions::SetResultType);
 
     // expand places
     } else if (kvp.key.EqualsLiteral(QUERYKEY_EXPAND_PLACES)) {
-      SetQueryKeyBool<nsINavHistoryQueryOptions>(kvp.value, aOptions,
-          &nsINavHistoryQueryOptions::SetExpandPlaces);
+      SetOptionsKeyBool(kvp.value, aOptions,
+                        &nsINavHistoryQueryOptions::SetExpandPlaces);
 
     // force original title
     } else if (kvp.key.EqualsLiteral(QUERYKEY_FORCE_ORIGINAL_TITLE)) {
-      SetQueryKeyBool<nsINavHistoryQueryOptions>(kvp.value, aOptions,
-          &nsINavHistoryQueryOptions::SetForceOriginalTitle);
+      SetOptionsKeyBool(kvp.value, aOptions,
+                        &nsINavHistoryQueryOptions::SetForceOriginalTitle);
 
     // include hidden
     } else if (kvp.key.EqualsLiteral(QUERYKEY_INCLUDE_HIDDEN)) {
-      SetQueryKeyBool<nsINavHistoryQueryOptions>(kvp.value, aOptions,
-          &nsINavHistoryQueryOptions::SetIncludeHidden);
+      SetOptionsKeyBool(kvp.value, aOptions,
+                        &nsINavHistoryQueryOptions::SetIncludeHidden);
 
     // max results
     } else if (kvp.key.EqualsLiteral(QUERYKEY_MAX_RESULTS)) {
-      SetQueryKeyUint32<nsINavHistoryQueryOptions>(kvp.value, aOptions,
-          &nsINavHistoryQueryOptions::SetMaxResults);
+      SetOptionsKeyUint32(kvp.value, aOptions,
+                          &nsINavHistoryQueryOptions::SetMaxResults);
 
     // unknown key
     } else {
@@ -991,7 +1009,7 @@ nsNavHistoryQueryOptions::Clone(nsNavHistoryQueryOptions **aResult)
 void // static
 AppendBoolKeyValueIfTrue(nsACString& aString, const nsCString& aName,
                          nsINavHistoryQuery* aQuery,
-                         nsresult (nsINavHistoryQuery::*getter)(PRBool*))
+                         BoolQueryGetter getter)
 {
   PRBool value;
   nsresult rv = (aQuery->*getter)(&value);
@@ -1010,7 +1028,7 @@ void // static
 AppendUint32KeyValueIfNonzero(nsACString& aString,
                               const nsCString& aName,
                               nsINavHistoryQuery* aQuery,
-                              nsresult (nsINavHistoryQuery::*getter)(PRUint32*))
+                              Uint32QueryGetter getter)
 {
   PRUint32 value;
   nsresult rv = (aQuery->*getter)(&value);
@@ -1033,7 +1051,7 @@ void // static
 AppendInt64KeyValueIfNonzero(nsACString& aString,
                              const nsCString& aName,
                              nsINavHistoryQuery* aQuery,
-                             nsresult (nsINavHistoryQuery::*getter)(PRInt64*))
+                             Int64QueryGetter getter)
 {
   PRInt64 value;
   nsresult rv = (aQuery->*getter)(&value);
@@ -1048,16 +1066,31 @@ AppendInt64KeyValueIfNonzero(nsACString& aString,
 }
 
 
-// SetQueryKeyBool
+// SetQuery/OptionsKeyBool
 
-template<class T> // static
-void SetQueryKeyBool(const nsCString& aValue, T* aStruct,
-                     nsresult (T::*setter)(PRBool))
+void // static
+SetQueryKeyBool(const nsCString& aValue, nsINavHistoryQuery* aQuery,
+                BoolQuerySetter setter)
 {
   PRBool value;
   nsresult rv = ParseQueryBooleanString(aValue, &value);
   if (NS_SUCCEEDED(rv)) {
-    rv = (aStruct->*setter)(value);
+    rv = (aQuery->*setter)(value);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Error setting boolean key value");
+    }
+  } else {
+    NS_WARNING("Invalid boolean key value in query string.");
+  }
+}
+void // static
+SetOptionsKeyBool(const nsCString& aValue, nsINavHistoryQueryOptions* aOptions,
+                 BoolOptionsSetter setter)
+{
+  PRBool value;
+  nsresult rv = ParseQueryBooleanString(aValue, &value);
+  if (NS_SUCCEEDED(rv)) {
+    rv = (aOptions->*setter)(value);
     if (NS_FAILED(rv)) {
       NS_WARNING("Error setting boolean key value");
     }
@@ -1067,16 +1100,31 @@ void SetQueryKeyBool(const nsCString& aValue, T* aStruct,
 }
 
 
-// SetQueryKeyUint32
+// SetQuery/OptionsKeyUint32
 
-template<class T> // static
-void SetQueryKeyUint32(const nsCString& aValue, T* aStruct,
-                         nsresult (T::*setter)(PRUint32))
+void // static
+SetQueryKeyUint32(const nsCString& aValue, nsINavHistoryQuery* aQuery,
+                  Uint32QuerySetter setter)
 {
   nsresult rv;
   PRUint32 value = aValue.ToInteger(NS_REINTERPRET_CAST(PRInt32*, &rv));
   if (NS_SUCCEEDED(rv)) {
-    rv = (aStruct->*setter)(value);
+    rv = (aQuery->*setter)(value);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Error setting Int32 key value");
+    }
+  } else {
+    NS_WARNING("Invalid Int32 key value in query string.");
+  }
+}
+void // static
+SetOptionsKeyUint32(const nsCString& aValue, nsINavHistoryQueryOptions* aOptions,
+                  Uint32OptionsSetter setter)
+{
+  nsresult rv;
+  PRUint32 value = aValue.ToInteger(NS_REINTERPRET_CAST(PRInt32*, &rv));
+  if (NS_SUCCEEDED(rv)) {
+    rv = (aOptions->*setter)(value);
     if (NS_FAILED(rv)) {
       NS_WARNING("Error setting Int32 key value");
     }
@@ -1088,14 +1136,13 @@ void SetQueryKeyUint32(const nsCString& aValue, T* aStruct,
 
 // SetQueryKeyInt64
 
-template<class T> // static
-void SetQueryKeyInt64(const nsCString& aValue, T* aStruct,
-                      nsresult (T::*setter)(PRInt64))
+void SetQueryKeyInt64(const nsCString& aValue, nsINavHistoryQuery* aQuery,
+                      Int64QuerySetter setter)
 {
   nsresult rv;
   PRInt64 value;
   if (PR_sscanf(aValue.get(), "%lld", &value) == 1) {
-    rv = (aStruct->*setter)(value);
+    rv = (aQuery->*setter)(value);
     if (NS_FAILED(rv)) {
       NS_WARNING("Error setting Int64 key value");
     }
