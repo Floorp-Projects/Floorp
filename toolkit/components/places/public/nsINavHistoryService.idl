@@ -42,6 +42,7 @@
 
 interface nsINavHistoryQuery;
 interface nsINavHistoryQueryOptions;
+interface nsITransactionManager;
 interface nsITreeColumn;
 
 [scriptable, uuid(acae2b2d-5fcd-4419-b1bc-b7dc92a1836c)]
@@ -634,4 +635,10 @@ interface nsINavHistory : nsISupports
    * done changing. Should match beginUpdateBatch or bad things will happen.
    */
   void endUpdateBatch();
+
+  /**
+   * The Transaction Manager for edit operations performed on History and 
+   * Bookmark items.
+   */
+  readonly attribute nsITransactionManager transactionManager;
 };
