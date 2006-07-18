@@ -182,26 +182,6 @@ interface nsINavBookmarksService : nsISupports
   readonly attribute PRInt64 toolbarRoot;
 
   /**
-   * A query result containing the bookmarks folder tree.
-   * XXX get rid of me
-   */
-  readonly attribute nsINavHistoryResult bookmarks;
-
-  /**
-   * These flags can be OR'd together and passed to getFolderChildren to
-   * specify the types of children returned.
-   */
-  const PRUint32 ALL_CHILDREN = 0;
-  const PRUint32 ITEM_CHILDREN = 1;
-  const PRUint32 FOLDER_CHILDREN = 2;
-  const PRUint32 QUERY_CHILDREN = 4;
-
-  /**
-   * A query result containing only the children of the given folder.
-   */
-  nsINavHistoryResult getFolderChildren(in PRInt64 folder, in PRUint32 flags);
-
-  /**
    * Inserts a child item into the given folder.
    *  @param folder     The id of the parent folder
    *  @param item       The URI to insert
