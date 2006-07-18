@@ -550,8 +550,6 @@ public:
 
   // well-known annotations used by the history and bookmarks systems
   static const char kAnnotationTitle[];
-  static const char kAnnotationFavIconName[];
-  static const char kAnnotationFavIconData[];
   static const char kAnnotationPreviousEncoding[];
 
 private:
@@ -605,7 +603,7 @@ protected:
   nsresult AddVisit(PRInt64 aFromStep, PRInt64 aPageID, PRTime aTime,
                     PRInt32 aTransitionType, PRInt64 aSessionID);
   PRBool IsURIStringVisited(const nsACString& url);
-  nsresult VacuumDB();
+  nsresult VacuumDB(PRTime aTimeAgo, PRBool aCompress);
   nsresult LoadPrefs();
 
   // Current time optimization
