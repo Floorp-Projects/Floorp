@@ -574,7 +574,7 @@ nsNavBookmarks::ReplaceItem(PRInt64 aFolder, nsIURI *aItem, nsIURI *aNewItem)
   NS_ASSERTION(newChildID != 0, "must have an item id");
 
   nsCAutoString buffer;
-  buffer.AssignLiteral("UPDATE moz_bookmarks_assoc SET item_child = ");
+  buffer.AssignLiteral("UPDATE moz_bookmarks SET item_child = ");
   buffer.AppendInt(newChildID);
   buffer.AppendLiteral(" WHERE item_child = ");
   buffer.AppendInt(childID);
