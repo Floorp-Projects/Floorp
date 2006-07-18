@@ -461,7 +461,15 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
             rv = si->GetCallback()->
                      PostCreate(wrapper, ccx, wrapper->GetFlatJSObject());
             if(NS_FAILED(rv))
+            {
+                {   // scoped lock
+                    XPCAutoLock lock(mapLock);
+                    map->Remove(wrapper);
+                }
+
+                wrapper->Release();
                 return rv;
+            }
         }
     }
 
