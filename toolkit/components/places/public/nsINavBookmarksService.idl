@@ -39,7 +39,6 @@
 #include "nsISupports.idl"
 
 interface nsIURI;
-interface nsINavHistoryResult;
 
 /**
  * Observer for bookmark changes.
@@ -117,7 +116,7 @@ interface nsINavBookmarkObserver : nsISupports
    * @see onItemChanged properth = "cleartime" for when all visit dates are
    * deleted for the URI.
    */
-  void onItemVisited(in nsIURI bookmark, in PRTime time);
+  void onItemVisited(in nsIURI bookmark, in PRInt64 aVisitID, in PRTime time);
 
   /**
    * Notify this observer that a bookmark has been replaced.
@@ -294,7 +293,12 @@ interface nsINavBookmarksService : nsISupports
   AString getFolderTitle(in PRInt64 folder);
 
   /**
-   * Get the place: url for a bookmark folder.
+   * Get the place: url for a bookmark folder. You can use this value to
+   * get/set the icon for a folder or to associate other data with it using
+   * the annotation service. Its important that you use this function instead
+   * of just serializing the query/options for a given folder because you
+   * may have different options or query parameters. This function will give
+   * the canonical value.
    * @param folder      The folder whose URI should be retrieved
    * @returns           The URI for the folder
    */
@@ -316,8 +320,8 @@ interface nsINavBookmarksService : nsISupports
   /**
    * Returns the list of folder ids that contain the given URI.
    */
-  void getBookmarkCategories(in nsIURI uri, out PRUint32 count,
-                             [array, retval, size_is(count)] out PRInt64 categories);
+  void getBookmarkFolders(in nsIURI uri, out PRUint32 count,
+                          [array, retval, size_is(count)] out PRInt64 folders);
 
   /**
    * Returns the index of the given item in the given folder.
