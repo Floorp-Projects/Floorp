@@ -37,6 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsIRDFService.h"
 #include "nsLivemarkService.h"
 #include "nsIServiceManager.h"
 #include "nsNavBookmarks.h"
@@ -45,7 +46,6 @@
 #include "nsFaviconService.h"
 #include "nsNetUtil.h"
 #include "rdf.h"
-#include "nsIRDFService.h"
 #include "nsRDFCID.h"
 #include "nsIObserverService.h"
 #include "nsCRT.h"
@@ -70,16 +70,6 @@ static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 #define DC_NAMESPACE_URI "http://purl.org/dc/elements/1.1/"
 #endif 
 
-nsIRDFResource       *kLMRDF_type;
-nsIRDFResource       *kLMRSS09_channel;
-nsIRDFResource       *kLMRSS09_item;
-nsIRDFResource       *kLMRSS09_title;
-nsIRDFResource       *kLMRSS09_link;
-nsIRDFResource       *kLMRSS10_channel;
-nsIRDFResource       *kLMRSS10_items;
-nsIRDFResource       *kLMRSS10_title;
-nsIRDFResource       *kLMRSS10_link;
-nsIRDFResource       *kLMDC_date;
 
 nsLivemarkService* nsLivemarkService::sInstance = nsnull;
 
@@ -159,27 +149,27 @@ nsLivemarkService::Init()
   pRDF = do_GetService(kRDFServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
   pRDF->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "type"),
-                    &kLMRDF_type);
+                    getter_AddRefs(mLMRDF_type));
   pRDF->GetResource(NS_LITERAL_CSTRING(RSS09_NAMESPACE_URI "channel"),
-                    &kLMRSS09_channel);
+                    getter_AddRefs(mLMRSS09_channel));
   pRDF->GetResource(NS_LITERAL_CSTRING(RSS09_NAMESPACE_URI "item"),
-                    &kLMRSS09_item);
+                    getter_AddRefs(mLMRSS09_item));
   pRDF->GetResource(NS_LITERAL_CSTRING(RSS09_NAMESPACE_URI "title"),
-                    &kLMRSS09_title);
+                    getter_AddRefs(mLMRSS09_title));
   pRDF->GetResource(NS_LITERAL_CSTRING(RSS09_NAMESPACE_URI "link"),
-                    &kLMRSS09_link);
+                    getter_AddRefs(mLMRSS09_link));
 
   pRDF->GetResource(NS_LITERAL_CSTRING(RSS10_NAMESPACE_URI "channel"),
-                    &kLMRSS10_channel);
+                    getter_AddRefs(mLMRSS10_channel));
   pRDF->GetResource(NS_LITERAL_CSTRING(RSS10_NAMESPACE_URI "items"),
-                    &kLMRSS10_items);
+                    getter_AddRefs(mLMRSS10_items));
   pRDF->GetResource(NS_LITERAL_CSTRING(RSS10_NAMESPACE_URI "title"),
-                    &kLMRSS10_title);
+                    getter_AddRefs(mLMRSS10_title));
   pRDF->GetResource(NS_LITERAL_CSTRING(RSS10_NAMESPACE_URI "link"),
-                    &kLMRSS10_link);
+                    getter_AddRefs(mLMRSS10_link));
 
   pRDF->GetResource(NS_LITERAL_CSTRING(DC_NAMESPACE_URI "date"),
-                    &kLMDC_date);
+                    getter_AddRefs(mLMDC_date));
   
   // Initialize the list of livemarks from the list of URIs
   // that have a feed uri annotation.
