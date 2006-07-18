@@ -78,10 +78,11 @@ ifdef MOZ_ENABLE_GLITZ
 EXTRA_DSO_LDOPTS += -lmozglitzagl -framework OpenGL -framework AGL
 endif
 endif
-ifeq ($(MOZ_GFX_TOOLKIT),gtk2)
+endif # MOZ_ENABLE_CAIRO_GFX
+
+ifdef MOZ_ENABLE_PANGO
 EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS)
 endif
-endif # MOZ_ENABLE_CAIRO_GFX
 
 ifneq (,$(MOZ_ENABLE_CANVAS)$(MOZ_SVG))
 EXTRA_DSO_LDOPTS += $(MOZ_CAIRO_LIBS)
