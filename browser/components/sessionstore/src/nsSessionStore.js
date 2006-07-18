@@ -690,7 +690,7 @@ SessionStoreService.prototype = {
       this._openWindowWithState({ windows: this._closedWindows.splice(aIx, 1) });
     }
     else {
-      Components.returnCode = -1; //zeniko: or should we rather fail silently?
+      Components.returnCode = Cr.NS_ERROR_INVALID_ARG;
     }
   },
 
@@ -719,7 +719,7 @@ SessionStoreService.prototype = {
 
       // wrap it
       for (var i = 0; i < closedTabData.length; i++)
-        wrappedData.setValue(i, {wrappedJSObject: closedTabData[i]});
+        wrappedData.setValue(i, { wrappedJSObject: closedTabData[i] });
 
       return wrappedData;
     } catch(ex) { debug("getClosedTabData: " + ex); }
@@ -764,7 +764,7 @@ SessionStoreService.prototype = {
       return data[aKey] || "";
     }
     else {
-      Components.returnCode = -1; //zeniko: or should we rather fail silently?
+      Components.returnCode = Cr.NS_ERROR_INVALID_ARG;
     }
   },
 
@@ -777,7 +777,7 @@ SessionStoreService.prototype = {
       this.saveStateDelayed(aWindow);
     }
     else {
-      Components.returnCode = -1; //zeniko: or should we rather fail silently?
+      Components.returnCode = Cr.NS_ERROR_INVALID_ARG;
     }
   },
 
@@ -785,7 +785,7 @@ SessionStoreService.prototype = {
     if (this._windows[aWindow.__SSi].extData[aKey])
       delete this._windows[aWindow.__SSi].extData[aKey];
     else
-      Components.returnCode = -1; //zeniko: or should we rather fail silently?
+      Components.returnCode = Cr.NS_ERROR_INVALID_ARG;
   },
 
   getTabValue: function sss_getTabValue(aTab, aKey) {
@@ -805,7 +805,7 @@ SessionStoreService.prototype = {
     if (aTab.__SS_extdata[aKey])
       delete aTab.__SS_extdata[aKey];
     else
-      Components.returnCode = -1; //zeniko: or should we rather fail silently?
+      Components.returnCode = Cr.NS_ERROR_INVALID_ARG;
   },
 
 
@@ -922,12 +922,10 @@ SessionStoreService.prototype = {
         var stream = Cc["@mozilla.org/scriptableinputstream;1"].
                      createInstance(Ci.nsIScriptableInputStream);
         stream.init(aEntry.postData);
-        // Warning: LiveHTTPHeaders crashes around here!
         var postdata = stream.read(stream.available());
         if (prefPostdata == -1 || postdata.replace(/^(Content-.*\r\n)+(\r\n)*/, "").length <= prefPostdata) {
           entry.postdata = postdata;
         }
-        //zeniko: should we close the stream here (since we never really opened it)?
       }
     }
     catch (ex) { debug(ex); } // POSTDATA is tricky - especially since some extensions don't get it right
@@ -959,7 +957,7 @@ SessionStoreService.prototype = {
   _saveTextData: function sss_saveTextData(aPanel, aTextarea) {
     var id = aTextarea.id ? "#" + aTextarea.id : aTextarea.name;
     if (!id
-      || !(aTextarea instanceof Ci.nsIDOMHTMLTextAreaElement 
+      || !(aTextarea instanceof Ci.nsIDOMHTMLTextAreaElement
       || aTextarea instanceof Ci.nsIDOMHTMLInputElement)) {
       return false; // nothing to save
     }
@@ -1067,7 +1065,7 @@ SessionStoreService.prototype = {
                       getService(Ci.nsICookieManager).enumerator;
     // collect the cookies per window
     for (var i = 0; i < aWindows.length; i++) {
-      aWindows[i].Cookies = { count: 0 };
+      aWindows[i].cookies = { count: 0 };
     }
     
     var _this = this;
@@ -1090,7 +1088,7 @@ SessionStoreService.prototype = {
             if (value) {
               // in order to not unnecessarily bloat the session file,
               // all window cookies are saved into one JS object
-              var cookies = aWindow.Cookies;
+              var cookies = aWindow.cookies;
               cookies["domain" + ++cookies.count] = url;
               cookies["value" + cookies.count] = value;
             }
@@ -1101,8 +1099,8 @@ SessionStoreService.prototype = {
     
     // don't include empty cookie sections
     for (i = 0; i < aWindows.length; i++) {
-      if (aWindows[i].Cookies.count == 0) {
-        aWindows[i].Cookies = null;
+      if (aWindows[i].cookies.count == 0) {
+        delete aWindows[i].cookies;
       }
     }
   },
@@ -1136,7 +1134,7 @@ SessionStoreService.prototype = {
     if (this._loadState == STATE_RUNNING) {
       // update the data for all windows with activities since the last save operation
       this._forEachBrowserWindow(function(aWindow) {
-        if (this._dirty|| this._dirtyWindows[aWindow.__SSi] || aWindow == activeWindow) {
+        if (this._dirty || this._dirtyWindows[aWindow.__SSi] || aWindow == activeWindow) {
           this._collectWindowData(aWindow);
         }
         else { // always update the window features (whose change alone never triggers a save operation)
@@ -1250,8 +1248,8 @@ SessionStoreService.prototype = {
     if (aOverwriteTabs) {
       this.restoreWindowFeatures(aWindow, winData, root.opener || null);
     }
-    if (winData.Cookies) {
-      this.restoreCookies(winData.Cookies);
+    if (winData.cookies) {
+      this.restoreCookies(winData.cookies);
     }
     if (winData.extData) {
       if (!this._windows[aWindow.__SSi].extData) {
@@ -1502,7 +1500,8 @@ SessionStoreService.prototype = {
     }
     
     var content = XPCNativeWrapper(aEvent.originalTarget).defaultView;
-    if (this.currentURI.spec == "about:config") { //zeniko: why ever this doesn't work with an XPCNativeWrapper...
+    if (this.currentURI.spec == "about:config") {
+      //XXXzeniko why ever this doesn't work with an XPCNativeWrapper...
       content = aEvent.originalTarget.defaultView;
     }
     restoreTextDataAndScrolling(content, this.__SS_restore_data, "");
@@ -1703,7 +1702,7 @@ SessionStoreService.prototype = {
   saveState: function sss_saveState(aUpdateAll) {
     this._dirty = aUpdateAll;
     var oState = this._getCurrentState();
-    oState.session = {state: ((this._loadState == STATE_RUNNING) ? STATE_RUNNING_STR : STATE_STOPPED_STR) };
+    oState.session = { state: ((this._loadState == STATE_RUNNING) ? STATE_RUNNING_STR : STATE_STOPPED_STR) };
     this._writeFile(this._getSessionFile(), oState.toSource());
     this._lastSaveTime = Date.now();
   },
@@ -1780,7 +1779,7 @@ SessionStoreService.prototype = {
                     createInstance(Ci.nsISupportsString);
     argString.data = "";
 
-    //zeniko: why isn't it possible to set the window's dimensions here (as feature)?
+    //XXXzeniko shouldn't it be possible to set the window's dimensions here (as feature)?
     var window = Cc["@mozilla.org/embedcomp/window-watcher;1"].
                  getService(Ci.nsIWindowWatcher).
                  openWindow(null, this._getPref("chromeURL", null), "_blank", "chrome,dialog=no,all", argString);
@@ -1962,35 +1961,6 @@ SessionStoreService.prototype = {
   },
 
   /**
-   * reads a file into a string
-   * @param aFile
-   *        nsIFile
-   * @returns string
-   */
-  _readFile: function sss_readFile(aFile) {
-    try {
-      var stream = Cc["@mozilla.org/network/file-input-stream;1"].
-                   createInstance(Ci.nsIFileInputStream);
-      stream.init(aFile, 0x01, 0, 0);
-      var cvstream = Cc["@mozilla.org/intl/converter-input-stream;1"].
-                     createInstance(Ci.nsIConverterInputStream);
-      cvstream.init(stream, "UTF-8", 1024, Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
-      
-      var content = "";
-      var data = {};
-      while (cvstream.readString(4096, data)) {
-        content += data.value;
-      }
-      cvstream.close();
-      
-      return content.replace(/\r\n?/g, "\n");
-    }
-    catch (ex) { } // inexisting file?
-    
-    return null;
-  },
-
-  /**
    * write file to disk
    * @param aFile
    *        nsIFile
@@ -1998,10 +1968,25 @@ SessionStoreService.prototype = {
    *        String data
    */
   _writeFile: function sss_writeFile(aFile, aData) {
-    // save the file in the current thread
-    // (making sure we don't get killed at shutdown)
-    (new FileWriter(aFile, aData)).run();
-    return;
+    // init stream
+    var stream = Cc["@mozilla.org/network/safe-file-output-stream;1"].
+                 createInstance(Ci.nsIFileOutputStream);
+    stream.init(aFile, 0x02 | 0x08 | 0x20, 0600, 0);
+
+    // convert to UTF-8
+    var converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
+                    createInstance(Ci.nsIScriptableUnicodeConverter);
+    converter.charset = "UTF-8";
+    var convertedData = converter.ConvertFromUnicode(aData);
+    convertedData += converter.Finish();
+
+    // write and close stream
+    stream.write(convertedData, convertedData.length);
+    if (stream instanceof Ci.nsISafeOutputStream) {
+      stream.finish();
+    } else {
+      stream.close();
+    }
   },
 
 /* ........ QueryInterface .............. */
@@ -2018,38 +2003,6 @@ SessionStoreService.prototype = {
     
     return this;
   }
-};
-
-/* :::::::::: FileWriter :::::::::::::: */
-
-// a threaded file writer for somewhat better performance in the UI thread
-function FileWriter(aFile, aData) {
-  this._file = aFile;
-  this._data = aData;
-}
-
-FileWriter.prototype = {
-  run: function FileWriter_run() {
-    // init stream
-    var stream = Cc["@mozilla.org/network/safe-file-output-stream;1"].
-                 createInstance(Ci.nsIFileOutputStream);
-    stream.init(this._file, 0x02 | 0x08 | 0x20, 0600, 0);
-
-    // convert to UTF-8
-    var converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
-                    createInstance(Ci.nsIScriptableUnicodeConverter);
-    converter.charset = "UTF-8";
-    var convertedData = converter.ConvertFromUnicode(this._data);
-    convertedData += converter.Finish();
-
-    // write and close stream
-    stream.write(convertedData, convertedData.length);
-    if (stream instanceof Ci.nsISafeOutputStream) {
-      stream.finish();
-    } else {
-      stream.close();
-    }
-  },
 };
 
 /* :::::::::: Asynchronous File Downloader :::::::::::::: */
