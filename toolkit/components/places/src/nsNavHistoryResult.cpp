@@ -67,6 +67,8 @@
 #include "prprf.h"
 #include "mozStorageHelper.h"
 
+#define ICONURI_QUERY "chrome://browser/skin/places/query.png"
+
 // emulate string comparison (used for sorting) for PRTime and int
 inline PRInt32 ComparePRTime(PRTime a, PRTime b)
 {
@@ -170,6 +172,12 @@ NS_IMETHODIMP nsNavHistoryResultNode::GetTime(PRTime *aTime)
 /* attribute nsIURI con; */
 NS_IMETHODIMP nsNavHistoryResultNode::GetIcon(nsIURI** aURI)
 {
+  PRInt64 folderId;
+  GetFolderId(&folderId);
+
+  if (mType == nsINavHistoryResult::RESULT_TYPE_QUERY && folderId == 0)
+    return NS_NewURI(aURI, ICONURI_QUERY);
+
   nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
   NS_ENSURE_TRUE(faviconService, NS_ERROR_NO_INTERFACE);
   return faviconService->GetFaviconLinkForIconString(mFaviconURL, aURI);
@@ -1947,7 +1955,7 @@ NS_IMETHODIMP nsNavHistoryResult::GetCellProperties(PRInt32 row, nsITreeColumn *
     properties->AppendElement(nsNavHistory::sMenuRootAtom);
   else if (toolbarRootId == folderId)
     properties->AppendElement(nsNavHistory::sToolbarRootAtom);
-
+  
   if (mShowSessions && node->mSessionID != 0) {
     if (row == 0 ||
         node->mSessionID != VisibleElementAt(row - 1)->mSessionID) {
@@ -2129,8 +2137,13 @@ NS_IMETHODIMP nsNavHistoryResult::GetImageSrc(PRInt32 row, nsITreeColumn *col,
   nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
   NS_ENSURE_TRUE(faviconService, NS_ERROR_NO_INTERFACE);
 
+  nsCOMPtr<nsIURI> iconURI;
+  nsresult rv = VisibleElementAt(row)->GetIcon(getter_AddRefs(iconURI));
+  if (NS_FAILED(rv))
+    return rv;
+
   nsCAutoString spec;
-  faviconService->GetFaviconSpecForIconString(VisibleElementAt(row)->mFaviconURL, spec);
+  iconURI->GetSpec(spec);
 //  _retval = NS_ConvertUTF8toUTF16(spec);
   CopyUTF8toUTF16(spec, _retval);
   return NS_OK;
