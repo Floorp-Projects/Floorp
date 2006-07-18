@@ -1071,7 +1071,6 @@ nsNavHistoryResult::nsNavHistoryResult(nsNavHistory* aHistoryService,
                                        nsNavHistoryQueryOptions* aOptions)
   : mBundle(aHistoryBundle), mHistoryService(aHistoryService),
     mCollapseDuplicates(PR_TRUE),
-    mTimesIncludeDates(PR_TRUE),
     mCurrentSort(nsINavHistoryQueryOptions::SORT_BY_NONE)
 {
   NS_ASSERTION(aOptions, "must have options!");
@@ -1216,20 +1215,6 @@ nsNavHistoryResult::RecursiveSort(PRUint32 aSortingMode)
   // update the UI on the tree columns
   if (mTree)
     SetTreeSortingIndicator();
-  return NS_OK;
-}
-
-
-// nsNavHistoryResult::Get/SetTimesIncludeDates
-
-NS_IMETHODIMP nsNavHistoryResult::SetTimesIncludeDates(PRBool aValue)
-{
-  mTimesIncludeDates = aValue;
-  return NS_OK;
-}
-NS_IMETHODIMP nsNavHistoryResult::GetTimesIncludeDates(PRBool* aValue)
-{
-  *aValue = mTimesIncludeDates;
   return NS_OK;
 }
 
@@ -1588,6 +1573,85 @@ PRInt32 PR_CALLBACK nsNavHistoryResult::SortComparison_VisitCountGreater(
   if (value == 0)
     return -ComparePRTime(a->mTime, b->mTime);
   return value;
+}
+
+
+// nsNavHistoryResult::FormatFriendlyTime
+
+nsresult
+nsNavHistoryResult::FormatFriendlyTime(PRTime aTime, nsAString& aResult)
+{
+  // use navHistory's GetNow function for performance
+  nsNavHistory* history = nsNavHistory::GetHistoryService();
+  NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
+  PRTime now = history->GetNow();
+
+  const PRInt64 ago = now - aTime;
+
+  /*
+   * This code generates strings like "X minutes ago" when the time is very
+   * recent. This looks much nicer, but we will have to redraw the list
+   * periodically. I also found it a little strange watching the numbers in
+   * the list change as I browse. For now, I'll leave this commented out,
+   * perhaps we can revisit whether it is a good idea to do this and put in
+   * the proper auto-refresh code so the numbers stay correct.
+   *
+   * To enable, you'll need to put these in places.properties:
+   *   0MinutesAgo=<1 minute ago
+   *   1MinutesAgo=1 minute ago
+   *   XMinutesAgo=%s minutes ago
+
+  static const PRInt64 minuteThreshold = (PRInt64)1000000 * 60 * 60;
+  if (ago > -10000000 && ago < minuteThreshold) {
+    // show "X minutes ago"
+    PRInt64 minutesAgo = NSToIntFloor(
+              NS_STATIC_CAST(float, (ago / 1000000)) / 60.0);
+
+    nsXPIDLString resultString;
+    if (minutesAgo == 0) {
+      nsresult rv = mBundle->GetStringFromName(
+          NS_LITERAL_STRING("0MinutesAgo").get(), getter_Copies(resultString));
+      NS_ENSURE_SUCCESS(rv, rv);
+    } else if (minutesAgo == 1) {
+      nsresult rv = mBundle->GetStringFromName(
+          NS_LITERAL_STRING("1MinutesAgo").get(), getter_Copies(resultString));
+      NS_ENSURE_SUCCESS(rv, rv);
+    } else {
+      nsAutoString minutesAgoString;
+      minutesAgoString.AppendInt(minutesAgo);
+      const PRUnichar* stringPtr = minutesAgoString.get();
+      nsresult rv = mBundle->FormatStringFromName(
+          NS_LITERAL_STRING("XMinutesAgo").get(),
+          &stringPtr, 1, getter_Copies(resultString));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    aResult = resultString;
+    return NS_OK;
+  } */
+
+  // Check if it is today and only display the time.  Only bother checking for
+  // today if it's within the last 24 hours, since computing midnight is not
+  // really cheap. Sometimes we may get dates in the future, so always show
+  // those. Note the 10s slop in case the cached GetNow value in NavHistory is
+  // out-of-date.
+  nsDateFormatSelector dateFormat = nsIScriptableDateFormat::dateFormatShort;
+  if (ago > -10000000 && ago < (PRInt64)1000000 * 24 * 60 * 60) {
+    PRExplodedTime explodedTime;
+    PR_ExplodeTime(aTime, PR_LocalTimeParameters, &explodedTime);
+    explodedTime.tm_min =
+      explodedTime.tm_hour =
+      explodedTime.tm_sec =
+      explodedTime.tm_usec = 0;
+    PRTime midnight = PR_ImplodeTime(&explodedTime);
+    if (aTime > midnight)
+      dateFormat = nsIScriptableDateFormat::dateFormatNone;
+  }
+  nsAutoString resultString;
+  mDateFormatter->FormatPRTime(mLocale, dateFormat,
+                               nsIScriptableDateFormat::timeFormatNoSeconds,
+                               aTime, resultString);
+  aResult = resultString;
+  return NS_OK;
 }
 
 
@@ -2074,16 +2138,7 @@ NS_IMETHODIMP nsNavHistoryResult::GetCellText(PRInt32 rowIndex,
         // information I know how to use. Only show this for URLs and visits
         _retval.Truncate(0);
       } else {
-        nsDateFormatSelector dateFormat;
-        if (mTimesIncludeDates)
-          dateFormat = nsIScriptableDateFormat::dateFormatShort;
-        else
-          dateFormat = nsIScriptableDateFormat::dateFormatNone;
-        nsAutoString realString; // stupid function won't take an nsAString
-        mDateFormatter->FormatPRTime(mLocale, dateFormat,
-                                     nsIScriptableDateFormat::timeFormatNoSeconds,
-                                     elt->mTime, realString);
-        _retval = realString;
+        return FormatFriendlyTime(elt->mTime, _retval);
       }
       break;
     }
