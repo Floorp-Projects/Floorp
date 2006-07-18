@@ -265,9 +265,9 @@ protected:
   nsresult InternalAddNewPage(nsIURI* aURI, const PRUnichar* aTitle,
                               PRBool aHidden, PRBool aTyped,
                               PRInt32 aVisitCount, PRInt64* aPageID);
-  nsresult AddVisit(nsIURI* aReferrer, PRInt64 aPageID, PRTime aTime,
-                    PRInt32 aTransitionType, PRInt64* aVisitID,
-                    PRInt64* aReferringID);
+  nsresult InternalAddVisit(nsIURI* aReferrer, PRInt64 aPageID, PRTime aTime,
+                            PRInt32 aTransitionType, PRInt64* aVisitID,
+                            PRInt64* aReferringID);
   PRBool IsURIStringVisited(const nsACString& url);
   nsresult VacuumDB(PRTime aTimeAgo, PRBool aCompress);
   nsresult LoadPrefs();
