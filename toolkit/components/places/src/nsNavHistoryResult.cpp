@@ -2595,7 +2595,7 @@ nsNavHistoryFolderResultNode::StartIncrementalUpdate()
   if (! mOptions->ExcludeItems() && ! mOptions->ExcludeQueries()) {
 
     // easy case: we are visible, always do incremental update
-    if (AreChildrenVisible())
+    if (mExpanded || AreChildrenVisible())
       return PR_TRUE;
 
     nsNavHistoryResult* result = GetResult();
@@ -2640,8 +2640,16 @@ nsNavHistoryFolderResultNode::OnItemAdded(nsIURI* aBookmark, PRInt64 aFolder,
   NS_ASSERTION(aFolder == mFolderId, "Got wrong bookmark update");
   if (mOptions->ExcludeItems())
     return NS_OK; // don't update items when we aren't displaying them
-  if (aIndex < 0 || aIndex > mChildren.Count())
-    return NS_ERROR_INVALID_ARG;
+
+  // here, try to do something reasonable if the bookmark service gives us
+  // a bogus index.
+  if (aIndex < 0) {
+    NS_NOTREACHED("Invalid index for item adding: <0");
+    aIndex = 0;
+  } else if (aIndex > mChildren.Count()) {
+    NS_NOTREACHED("Invalid index for item adding: greater than count");
+    aIndex = mChildren.Count();
+  }
   if (! StartIncrementalUpdate())
     return NS_OK;
 
