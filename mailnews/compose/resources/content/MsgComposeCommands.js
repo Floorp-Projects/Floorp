@@ -227,6 +227,10 @@ var gComposeRecyclingListener = {
     disableEditableFields();
     ReleaseGlobalVariables();
 
+    // Clear the focus
+    if (top.awInputElement.getAttribute('focused') != '')
+      top.awInputElement.removeAttribute('focused');
+
     //Reset Boxes size    
     document.getElementById("headers-box").removeAttribute("height");
     document.getElementById("appcontent").removeAttribute("height");
