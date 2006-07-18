@@ -43,6 +43,7 @@
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
 #include "nsIAnnotationService.h"
+#include "nsIBookmarksContainer.h"
 
 const PRInt32 nsNavBookmarks::kFindBookmarksIndex_ItemChild = 0;
 const PRInt32 nsNavBookmarks::kFindBookmarksIndex_FolderChild = 1;
@@ -51,6 +52,7 @@ const PRInt32 nsNavBookmarks::kFindBookmarksIndex_Position = 3;
 
 const PRInt32 nsNavBookmarks::kGetFolderInfoIndex_FolderID = 0;
 const PRInt32 nsNavBookmarks::kGetFolderInfoIndex_Title = 1;
+const PRInt32 nsNavBookmarks::kGetFolderInfoIndex_Type = 2;
 
 // These columns sit to the right of the kGetInfoIndex_* columns.
 const PRInt32 nsNavBookmarks::kGetChildrenIndex_Position = 8;
@@ -112,7 +114,8 @@ nsNavBookmarks::Init()
   if (!exists) {
     rv = dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_bookmarks_folders ("
         "id INTEGER PRIMARY KEY, "
-        "name LONGVARCHAR)"));
+        "name LONGVARCHAR, "
+        "type LONGVARCHAR)"));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -125,7 +128,7 @@ nsNavBookmarks::Init()
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("SELECT id, name FROM moz_bookmarks_folders WHERE id = ?1"),
+  rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("SELECT id, name, type FROM moz_bookmarks_folders WHERE id = ?1"),
                                getter_AddRefs(mDBGetFolderInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -662,7 +665,7 @@ nsNavBookmarks::CreateFolder(PRInt64 aParent, const nsAString &aName,
 
   {
     nsCOMPtr<mozIStorageStatement> statement;
-    rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("INSERT INTO moz_bookmarks_folders (name) VALUES (?1)"),
+    rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("INSERT INTO moz_bookmarks_folders (name, type) VALUES (?1, null)"),
                                  getter_AddRefs(statement));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -698,10 +701,55 @@ nsNavBookmarks::CreateFolder(PRInt64 aParent, const nsAString &aName,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsNavBookmarks::CreateContainer(PRInt64 aParent, const nsAString &aName,
+                                PRInt32 aIndex, const nsAString &aType,
+                                PRInt64 *aNewFolder)
+{
+  // Containers are wrappers around read-only folders, with a specific type.
+  nsresult rv = CreateFolder(aParent, aName, aIndex, aNewFolder);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Make sure the container is read-only
+  rv = SetFolderReadonly(*aNewFolder, PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Set the type.
+  nsCOMPtr<mozIStorageStatement> statement;
+  rv = DBConn()->CreateStatement(NS_LITERAL_CSTRING("UPDATE moz_bookmarks_folders SET type = ?2 WHERE id = ?1"),
+                                 getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = statement->BindInt64Parameter(0, *aNewFolder);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindStringParameter(1, aType);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = statement->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsNavBookmarks::RemoveFolder(PRInt64 aFolder)
 {
+  // If this is a container bookmark, try to notify its service.
+  nsresult rv;
+  nsAutoString folderType;
+  rv = GetFolderType(aFolder, folderType);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (folderType.Length() > 0) {
+    // There is a type associated with this folder; it's a livemark.
+    nsCOMPtr<nsIBookmarksContainer> bmcServ = do_GetService(NS_ConvertUTF16toUTF8(folderType).get());
+    if (bmcServ) {
+      rv = bmcServ->OnContainerRemoving(aFolder);
+      if (NS_FAILED(rv))
+        NS_WARNING("Remove folder container notification failed.");
+    }
+  }
+
   mozIStorageConnection *dbConn = DBConn();
   mozStorageTransaction transaction(dbConn, PR_FALSE);
 
@@ -709,7 +757,6 @@ nsNavBookmarks::RemoveFolder(PRInt64 aFolder)
   buffer.AssignLiteral("SELECT parent, position FROM moz_bookmarks WHERE folder_child = ");
   buffer.AppendInt(aFolder);
 
-  nsresult rv;
   PRInt64 parent;
   PRInt32 index;
   {
@@ -727,6 +774,41 @@ nsNavBookmarks::RemoveFolder(PRInt64 aFolder)
     parent = statement->AsInt64(0);
     index = statement->AsInt32(1);
   }
+
+  // Remove all of the folder's children
+  RemoveFolderChildren(aFolder);
+
+  // Remove the folder from its parent
+  buffer.AssignLiteral("DELETE FROM moz_bookmarks WHERE folder_child = ");
+  buffer.AppendInt(aFolder);
+  rv = dbConn->ExecuteSimpleSQL(buffer);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // And remove the folder from the folder table
+  buffer.AssignLiteral("DELETE FROM moz_bookmarks_folders WHERE id = ");
+  buffer.AppendInt(aFolder);
+  rv = dbConn->ExecuteSimpleSQL(buffer);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = AdjustIndices(parent, index + 1, PR_INT32_MAX, -1);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = transaction.Commit();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
+                      OnFolderRemoved(aFolder, parent, index))
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsNavBookmarks::RemoveFolderChildren(PRInt64 aFolder)
+{
+  nsresult rv;
+  nsCAutoString buffer;
+  mozIStorageConnection *dbConn = DBConn();
 
   // Now locate all of the folder children, so we can recursively remove them.
   nsTArray<PRInt64> folderChildren;
@@ -754,30 +836,6 @@ nsNavBookmarks::RemoveFolder(PRInt64 aFolder)
   buffer.AppendInt(aFolder);
   rv = dbConn->ExecuteSimpleSQL(buffer);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  buffer.AssignLiteral("DELETE FROM moz_bookmarks WHERE folder_child = ");
-  // Remove the folder from its parent
-  buffer.AssignLiteral("DELETE FROM moz_bookmarks WHERE folder_child = ");
-  buffer.AppendInt(aFolder);
-  rv = dbConn->ExecuteSimpleSQL(buffer);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // And remove the folder from the folder table
-  buffer.AssignLiteral("DELETE FROM moz_bookmarks_folders WHERE id = ");
-  buffer.AppendInt(aFolder);
-  rv = dbConn->ExecuteSimpleSQL(buffer);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = AdjustIndices(parent, index + 1, PR_INT32_MAX, -1);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = transaction.Commit();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
-                      OnFolderRemoved(aFolder, parent, index))
-
-  return NS_OK;
 }
 
 
@@ -968,6 +1026,59 @@ nsNavBookmarks::GetFolderTitle(PRInt64 aFolder, nsAString &aTitle)
   return mDBGetFolderInfo->GetString(kGetFolderInfoIndex_Title, aTitle);
 }
 
+
+nsresult
+nsNavBookmarks::GetFolderType(PRInt64 aFolder, nsAString &aType)
+{
+  mozStorageStatementScoper scope(mDBGetFolderInfo);
+  nsresult rv = mDBGetFolderInfo->BindInt64Parameter(0, aFolder);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool results;
+  rv = mDBGetFolderInfo->ExecuteStep(&results);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!results) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  return mDBGetFolderInfo->GetString(kGetFolderInfoIndex_Type, aType);
+}
+
+NS_IMETHODIMP
+nsNavBookmarks::GetFolderURI(PRInt64 aFolder, nsIURI **aURI)
+{
+  // Create a query for the folder; the URI is the querystring
+  // from that query.
+  nsresult rv;
+  nsNavHistory *history = History();
+  nsCOMPtr<nsINavHistoryQuery> query;
+  rv = history->GetNewQuery(getter_AddRefs(query));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = query->SetFolders(&aFolder, 1);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsINavHistoryQueryOptions> queryOptions;
+  rv = history->GetNewQueryOptions(getter_AddRefs(queryOptions));
+  NS_ENSURE_SUCCESS(rv, rv);
+  PRInt32 groupByFolder = nsINavHistoryQueryOptions::GROUP_BY_FOLDER;
+  rv = queryOptions->SetGroupingMode(&groupByFolder, 1);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCString folderURI;
+  rv = history->QueriesToQueryString((nsINavHistoryQuery **)&query,
+                                     1,
+                                     queryOptions,
+                                     folderURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  // Create a uri from the folder string.
+  rv = NS_NewURI(aURI, folderURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsNavBookmarks::GetFolderReadonly(PRInt64 aFolder, PRBool *aResult)
 {
@@ -1032,15 +1143,8 @@ nsNavBookmarks::ResultNodeForFolder(PRInt64 aID,
                                     nsINavHistoryQueryOptions *aOptions,
                                     nsNavHistoryResultNode **aNode)
 {
-  mozStorageStatementScoper scope(mDBGetFolderInfo);
-  mDBGetFolderInfo->BindInt64Parameter(0, aID);
-
-  PRBool results;
-  nsresult rv = mDBGetFolderInfo->ExecuteStep(&results);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ASSERTION(results, "ResultNodeForFolder expects a valid folder id");
-
   // Create Query and QueryOptions objects to generate this folder's children
+  nsresult rv;
   nsCOMPtr<nsINavHistoryQuery> query;
   rv = aQuery->Clone(getter_AddRefs(query));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1063,7 +1167,7 @@ nsNavBookmarks::ResultNodeForFolder(PRInt64 aID,
   node->mQueryCount = 1;
   node->mOptions = do_QueryInterface(options);
 
-  rv = FillFolderNode(mDBGetFolderInfo, node);
+  rv = FillFolderNode(aID, node);
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ADDREF(*aNode = node);
@@ -1071,10 +1175,24 @@ nsNavBookmarks::ResultNodeForFolder(PRInt64 aID,
 }
 
 nsresult
-nsNavBookmarks::FillFolderNode(mozIStorageValueArray *aRow,
-                               nsNavHistoryResultNode *aNode)
+nsNavBookmarks::FillFolderNode(PRInt64 aID,
+                               nsNavHistoryQueryNode *aNode)
 {
-  return aRow->GetString(kGetFolderInfoIndex_Title, aNode->mTitle);
+  mozStorageStatementScoper scope(mDBGetFolderInfo);
+  mDBGetFolderInfo->BindInt64Parameter(0, aID);
+
+  PRBool results;
+  nsresult rv = mDBGetFolderInfo->ExecuteStep(&results);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ASSERTION(results, "ResultNodeForFolder expects a valid folder id");
+
+  // Fill in the folder type
+  // aNode->mFolderType should get set to the empty string
+  // if the folder type is null.
+  rv = mDBGetFolderInfo->GetString(kGetFolderInfoIndex_Type, aNode->mFolderType);
+  if (NS_FAILED(rv)) return rv;
+  // Fill in the folder title
+  return mDBGetFolderInfo->GetString(kGetFolderInfoIndex_Title, aNode->mTitle);
 }
 
 nsresult
