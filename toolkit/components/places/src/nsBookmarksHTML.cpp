@@ -208,7 +208,24 @@ public:
   virtual nsISupports *GetTarget() { return nsnull; }
 
   // nsIHTMLContentSink
+#ifdef MOZILLA_1_8_BRANCH
+  NS_IMETHOD SetTitle(const nsString& aValue) { return NS_OK; }
+  NS_IMETHOD OpenHTML(const nsIParserNode& aNode) { return NS_OK; }
+  NS_IMETHOD CloseHTML() { return NS_OK; }
+  NS_IMETHOD OpenHead(const nsIParserNode& aNode) { return NS_OK; }
+  NS_IMETHOD CloseHead() { return NS_OK; }
+  NS_IMETHOD OpenBody(const nsIParserNode& aNode) { return NS_OK; }
+  NS_IMETHOD CloseBody() { return NS_OK; }
+  NS_IMETHOD OpenForm(const nsIParserNode& aNode) { return NS_OK; }
+  NS_IMETHOD CloseForm() { return NS_OK; }
+  NS_IMETHOD OpenMap(const nsIParserNode& aNode) { return NS_OK; }
+  NS_IMETHOD CloseMap() { return NS_OK; }
+  NS_IMETHOD OpenFrameset(const nsIParserNode& aNode) { return NS_OK; }
+  NS_IMETHOD CloseFrameset() { return NS_OK; }
+  NS_IMETHOD AddHeadContent(const nsIParserNode& aNode) { return NS_OK; }
+#else
   NS_IMETHOD OpenHead() { return NS_OK; }
+#endif
   NS_IMETHOD BeginContext(PRInt32 aPosition) { return NS_OK; }
   NS_IMETHOD EndContext(PRInt32 aPosition) { return NS_OK; }
   NS_IMETHOD IsEnabled(PRInt32 aTag, PRBool* aReturn)
