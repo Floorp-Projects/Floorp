@@ -226,6 +226,7 @@ protected:
   PRInt32 mAccessCount;
   PRTime mTime;
   nsString mHost;
+  nsCString mFaviconURL;
 
   // Filled in by the result type generator in nsNavHistory
   nsCOMArray<nsNavHistoryResultNode> mChildren;
@@ -498,8 +499,8 @@ public:
   static const PRInt32 kGetInfoIndex_PageID;
   static const PRInt32 kGetInfoIndex_URL;
   static const PRInt32 kGetInfoIndex_Title;
-  static const PRInt32 kGetInfoIndex_VisitCount;
   static const PRInt32 kGetInfoIndex_RevHost;
+  static const PRInt32 kGetInfoIndex_VisitCount;
 
   // select a history row by URL, with visit date info (extra work)
   mozIStorageStatement* DBGetURLPageInfoFull()
@@ -512,6 +513,7 @@ public:
   // Constants for the columns returned by the above statement
   // (in addition to the ones above).
   static const PRInt32 kGetInfoIndex_VisitDate;
+  static const PRInt32 kGetInfoIndex_FaviconURL;
 
   static nsIAtom* sMenuRootAtom;
   static nsIAtom* sToolbarRootAtom;
@@ -534,6 +536,15 @@ public:
   {
     return new nsNavHistoryResult(this, mBundle, aQueries, aQueryCount,
                                   aOptions);
+  }
+
+  // used by other places components to send history notifications (for example,
+  // when the favicon has changed)
+  void SendPageChangedNotification(nsIURI* aURI, PRUint32 aWhat,
+                                   const nsAString& aValue)
+  {
+    ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver,
+                        OnPageChanged(aURI, aWhat, aValue));
   }
 
   // well-known annotations used by the history and bookmarks systems
@@ -564,7 +575,7 @@ protected:
   nsCOMPtr<mozIStorageService> mDBService;
   nsCOMPtr<mozIStorageConnection> mDBConn;
 
-  nsCOMPtr<mozIStorageStatement> mDBGetVisitPageInfo; // kGetInfoIndex_* results
+  //nsCOMPtr<mozIStorageStatement> mDBGetVisitPageInfo; // kGetInfoIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBGetURLPageInfo;   // kGetInfoIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBGetURLPageInfoFull; // kGetInfoIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBGetIdPageInfoFull; // kGetInfoIndex_* results
