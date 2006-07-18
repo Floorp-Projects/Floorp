@@ -309,7 +309,7 @@ protected:
   nsCOMPtr<mozIStorageStatement> mDBVisitToVisitResult; // kGetInfoIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBUrlToUrlResult; // kGetInfoIndex_* results
 
-  nsresult InitDB();
+  nsresult InitDB(PRBool *aDoImport);
 
   // this is the cache DB in memory used for storing visited URLs
   nsCOMPtr<mozIStorageConnection> mMemDBConn;
