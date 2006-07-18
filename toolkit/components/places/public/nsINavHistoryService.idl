@@ -508,8 +508,8 @@ interface nsINavHistoryResult : nsISupports
    * This is the root of the results.  It will either be a
    * nsINavHistoryFolderResultNode (if the query is for bookmarks matching a
    * single folder) or just a nsINavHistoryQueryResultNode (for everything
-   * else).  The root node is open by default. Remember that you need to open
-   * all other containers for their contents to be valid.
+   * else). Remember that you need to open all containers for their contents 
+   * to be valid.
    */
   readonly attribute nsINavHistoryQueryResultNode root;
 };
