@@ -56,6 +56,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
+#include "nsServiceManagerUtils.h"
 #include "nsIStringBundle.h"
 #include "nsITimer.h"
 #include "nsITreeSelection.h"
@@ -292,11 +293,52 @@ public:
 
   nsresult Init();
 
+  /**
+   * Used by other components in the places directory such as the annotation
+   * service to get a reference to this history object. Returns a pointer to
+   * the service if it exists. Otherwise creates one. Returns NULL on error.
+   */
+  static nsNavHistory* GetHistoryService()
+  {
+    if (gHistoryService)
+      return gHistoryService;
+
+    // don't want the return value, since that's the interface. We want the
+    // pointer to the implementation.
+    do_GetService("@mozilla.org/browser/nav-history;1");
+
+    // our constructor should have set the static variable. If it didn't,
+    // something is wrong.
+    NS_ASSERTION(gHistoryService, "History service creation failed");
+    return gHistoryService;
+  }
+
+  nsresult GetUrlIdFor(nsIURI* aURI, PRInt64* aEntryID,
+                       PRBool aAutoCreate);
+
+  /**
+   * Returns a pointer to the storage connection used by history. This connection
+   * object is also used by the annotation service and bookmarks, so that
+   * things can be grouped into transactions across these components.
+   *
+   * This connection can only be used in the thread that created it the
+   * history service!
+   */
+  mozIStorageConnection* GetStorageConnection()
+  {
+    return mDBConn;
+  }
+
+  // remember tree state
+
   void SaveExpandItem(const nsAString& aTitle);
   void SaveCollapseItem(const nsAString& aTitle);
 
 private:
   ~nsNavHistory();
+
+  // used by GetHistoryService
+  static nsNavHistory* gHistoryService;
 
 protected:
 
@@ -346,7 +388,6 @@ protected:
                               int aVisitCount, PRInt64* aPageID);
   nsresult AddVisit(PRInt64 aFromStep, PRInt64 aPageID, PRTime aTime,
                     PRInt32 aTransitionType, PRInt64 aSessionID);
-  nsresult BindURI(mozIStorageStatement* statement, int index, nsIURI* aURI) const;
   PRBool IsURIStringVisited(const nsACString& url);
   nsresult VacuumDB();
   nsresult LoadPrefs();
@@ -439,3 +480,10 @@ protected:
 
   nsresult ImportFromMork();
 };
+
+/**
+ * Shared between the places components, this function binds the given URI as
+ * UTF8 to the given parameter for the statement.
+ */
+nsresult BindStatementURI(mozIStorageStatement* statement, int index,
+                          nsIURI* aURI);
