@@ -1028,6 +1028,8 @@ Microsummary.prototype = {
       generator.initFromXML(resource.content);
     else if (resource.contentType == "text/plain")
       generator.initFromText(resource.content);
+    else if (resource.contentType == "text/html")
+      generator.initFromText(resource.content.body.textContent);
     else
       throw("generator is neither XML nor plain text");
 
