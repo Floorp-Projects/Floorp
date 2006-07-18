@@ -1260,7 +1260,7 @@ nsNavHistory::GetUpdateRequirements(const nsCOMArray<nsNavHistoryQuery>& aQuerie
 PRBool
 nsNavHistory::EvaluateQueryForNode(const nsCOMArray<nsNavHistoryQuery>& aQueries,
                                    nsNavHistoryQueryOptions* aOptions,
-                                   nsNavHistoryURIResultNode* aNode)
+                                   nsNavHistoryResultNode* aNode)
 {
   // lazily created from the node's string when we need to match URIs
   nsCOMPtr<nsIURI> nodeUri;
@@ -2798,10 +2798,9 @@ nsNavHistory::GroupByHost(const nsCOMArray<nsNavHistoryResultNode>& aSource,
     }
 
     // get the host name
-    nsNavHistoryURIResultNode* uriNode = aSource[i]->GetAsURI();
     nsCOMPtr<nsIURI> uri;
     nsCAutoString fullHostName;
-    if (NS_FAILED(NS_NewURI(getter_AddRefs(uri), uriNode->mURI)) ||
+    if (NS_FAILED(NS_NewURI(getter_AddRefs(uri), aSource[i]->mURI)) ||
         NS_FAILED(uri->GetHost(fullHostName))) {
       // invalid host name, just drop it in the top level
       aDest->AppendObject(aSource[i]);
@@ -2822,8 +2821,9 @@ nsNavHistory::GroupByHost(const nsCOMArray<nsNavHistoryResultNode>& aSource,
       nsCAutoString title;
       TitleForDomain(curHostName, title);
 
-      curTopGroup = new nsNavHistoryContainerResultNode(title, EmptyCString(),
-          nsNavHistoryResultNode::RESULT_TYPE_HOST, PR_TRUE, EmptyCString());
+      curTopGroup = new nsNavHistoryContainerResultNode(EmptyCString(), title,
+          EmptyCString(), nsNavHistoryResultNode::RESULT_TYPE_HOST, PR_TRUE,
+          EmptyCString());
       if (! curTopGroup)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -2893,7 +2893,7 @@ nsNavHistory::FilterResultSet(const nsCOMArray<nsNavHistoryResultNode>& aSet,
                                         NS_ConvertUTF8toUTF16(aSet[nodeIndex]->mTitle)) ||
           (aSet[nodeIndex]->IsURI() &&
            CaseInsensitiveFindInReadable(*terms[termIndex],
-                                  NS_ConvertUTF8toUTF16(aSet[nodeIndex]->GetAsURI()->mURI))))
+                                  NS_ConvertUTF8toUTF16(aSet[nodeIndex]->mURI))))
         termFound = PR_TRUE;
       // searchable annotations
       /*if (! termFound) {
@@ -3010,8 +3010,8 @@ nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
     // special case "place:" URIs: turn them into containers
     return QueryRowToResult(url, title, accessCount, time, favicon, aResult);
   } else if (aOptions->ResultType() == nsNavHistoryQueryOptions::RESULTS_AS_URI) {
-    *aResult = new nsNavHistoryURIResultNode(title, accessCount, time,
-                                             favicon, url);
+    *aResult = new nsNavHistoryResultNode(url, title, accessCount, time,
+                                          favicon);
     if (! *aResult)
       return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(*aResult);
@@ -3023,8 +3023,8 @@ nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
   PRInt64 session = aRow->AsInt64(kGetInfoIndex_SessionId);
 
   if (aOptions->ResultType() == nsNavHistoryQueryOptions::RESULTS_AS_VISIT) {
-    *aResult = new nsNavHistoryVisitResultNode(title, accessCount, time,
-                                               favicon, url, session);
+    *aResult = new nsNavHistoryVisitResultNode(url, title, accessCount, time,
+                                               favicon, session);
     if (! *aResult)
       return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(*aResult);
@@ -3082,7 +3082,7 @@ nsNavHistory::QueryRowToResult(const nsACString& aURI, const nsACString& aTitle,
     // make a query node with the query as a string. This way we have a valid
     // node for the user to manipulate that will look like a query, but it will
     // never populate since the query string is invalid.
-    *aNode = new nsNavHistoryQueryResultNode(aTitle, aFavicon, aURI);
+    *aNode = new nsNavHistoryQueryResultNode(aURI, aTitle, aFavicon);
     if (! *aNode)
       return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(*aNode);
