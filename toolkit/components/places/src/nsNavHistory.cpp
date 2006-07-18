@@ -108,6 +108,19 @@
 #define HISTORY_URI_LENGTH_MAX 65536
 #define HISTORY_TITLE_LENGTH_MAX 4096
 
+// Lazy adding
+
+#ifdef LAZY_ADD
+
+// time that we'll wait before committing messages
+#define LAZY_MESSAGE_TIMEOUT (3 * PR_MSEC_PER_SEC)
+
+// the maximum number of times we'll postpone a lazy timer before committing
+// See StartLazyTimer()
+#define MAX_LAZY_TIMER_DEFERMENTS 2
+
+#endif // LAZY_ADD
+
 NS_IMPL_ADDREF(nsNavHistory)
 NS_IMPL_RELEASE(nsNavHistory)
 
@@ -205,6 +218,10 @@ nsNavHistory::nsNavHistory() : mNowValid(PR_FALSE),
                                mExpireNowTimer(nsnull),
                                mBatchesInProgress(0)
 {
+#ifdef LAZY_ADD
+  mLazyTimerSet = PR_TRUE;
+  mLazyTimerDeferments = 0;
+#endif
   NS_ASSERTION(! gHistoryService, "YOU ARE CREATING 2 COPIES OF THE HISTORY SERVICE. Everything will break.");
   gHistoryService = this;
 
@@ -952,6 +969,17 @@ PRBool nsNavHistory::IsURIStringVisited(const nsACString& aURIString)
   mMemDBGetPage->Reset();
   return hasPage;
 #else
+
+#ifdef LAZY_ADD
+  // check the lazy list to see if this has recently been added
+  for (PRUint32 i = 0; i < mLazyMessages.Length(); i ++) {
+    if (mLazyMessages[i].type == LazyMessage::Type_AddURI) {
+      if (aURIString.Equals(mLazyMessages[i].uriSpec))
+        return PR_TRUE;
+    }
+  }
+#endif
+
   // check the main DB
   nsresult rv;
   mozStorageStatementScoper statementResetter(mDBGetURLPageInfo);
@@ -1123,8 +1151,7 @@ nsNavHistory::GetNow()
 
 // nsNavHistory::expireNowTimerCallback
 
-void nsNavHistory::expireNowTimerCallback(nsITimer* aTimer,
-                                                 void* aClosure)
+void nsNavHistory::expireNowTimerCallback(nsITimer* aTimer, void* aClosure)
 {
   nsNavHistory* history = NS_STATIC_CAST(nsNavHistory*, aClosure);
   history->mNowValid = PR_FALSE;
@@ -2497,11 +2524,37 @@ nsNavHistory::AddURI(nsIURI *aURI, PRBool aRedirect,
   if (mExpireDays == 0)
     return NS_OK;
 
+#ifdef LAZY_ADD
+  LazyMessage message;
+  nsresult rv = message.Init(LazyMessage::Type_AddURI, aURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+  message.isRedirect = aRedirect;
+  message.isToplevel = aToplevel;
+  if (aReferrer) {
+    rv = aReferrer->Clone(getter_AddRefs(message.referrer));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  message.time = PR_Now();
+  return AddLazyMessage(message);
+#else
+  return AddURIInternal(aURI, PR_Now(), aRedirect, aToplevel, aReferrer);
+#endif
+}
+
+
+// nsNavHistory::AddURIInternal
+//
+//    This does the work of AddURI so it can be done lazily.
+
+nsresult
+nsNavHistory::AddURIInternal(nsIURI* aURI, PRTime aTime, PRBool aRedirect,
+                             PRBool aToplevel, nsIURI* aReferrer)
+{
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
   PRInt64 redirectBookmark = 0;
   PRInt64 visitID, sessionID;
-  nsresult rv = AddVisitChain(aURI, aToplevel, aRedirect, aReferrer,
+  nsresult rv = AddVisitChain(aURI, aTime, aToplevel, aRedirect, aReferrer,
                               &visitID, &sessionID, &redirectBookmark);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2548,7 +2601,8 @@ nsNavHistory::AddURI(nsIURI *aURI, PRBool aRedirect,
 //    hashtable.
 
 nsresult
-nsNavHistory::AddVisitChain(nsIURI* aURI, PRBool aToplevel, PRBool aIsRedirect,
+nsNavHistory::AddVisitChain(nsIURI* aURI, PRTime aTime,
+                            PRBool aToplevel, PRBool aIsRedirect,
                             nsIURI* aReferrer, PRInt64* aVisitID,
                             PRInt64* aSessionID, PRInt64* aRedirectBookmark)
 {
@@ -2576,8 +2630,12 @@ nsNavHistory::AddVisitChain(nsIURI* aURI, PRBool aToplevel, PRBool aIsRedirect,
       GetUrlIdFor(redirectURI, aRedirectBookmark, PR_FALSE);
     }
 
-    // Find the visit for the source
-    rv = AddVisitChain(redirectURI, aToplevel, PR_TRUE, aReferrer,
+    // Find the visit for the source. Note that we decrease the time counter,
+    // which will ensure that the referrer and this page will appear in history
+    // in the correct order. Since the times are in microseconds, it should not
+    // normally be possible to get two pages within one microsecond of each
+    // other so the referrer won't appear before a previous page viewed.
+    rv = AddVisitChain(redirectURI, aTime - 1, aToplevel, PR_TRUE, aReferrer,
                        &referringVisit, aSessionID, aRedirectBookmark);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2676,7 +2734,16 @@ nsNavHistory::SetPageTitle(nsIURI *aURI,
 {
   if (aTitle.IsEmpty())
     return NS_OK;
+
+#ifdef LAZY_ADD
+  LazyMessage message;
+  nsresult rv = message.Init(LazyMessage::Type_Title, aURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+  message.title = aTitle;
+  return AddLazyMessage(message);
+#else
   return SetPageTitleInternal(aURI, PR_FALSE, aTitle);
+#endif
 }
 
 
@@ -2812,6 +2879,123 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
 
   return NS_OK;
 }
+
+
+// Lazy stuff ******************************************************************
+
+#ifdef LAZY_ADD
+
+// nsNavHistory::AddLazyLoadFaviconMessage
+
+nsresult
+nsNavHistory::AddLazyLoadFaviconMessage(nsIURI* aPage, nsIURI* aFavicon,
+                                        PRBool aForceReload)
+{
+  LazyMessage message;
+  nsresult rv = message.Init(LazyMessage::Type_Favicon, aPage);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = aFavicon->Clone(getter_AddRefs(message.favicon));
+  NS_ENSURE_SUCCESS(rv, rv);
+  message.alwaysLoadFavicon = aForceReload;
+  return AddLazyMessage(message);
+}
+
+
+// nsNavHistory::StartLazyTimer
+//
+//    This schedules flushing of the lazy message queue for the future.
+//
+//    If we already have timer set, we canel it and schedule a new timer in
+//    the future. This saves you from having to wait if you open a bunch of
+//    pages in a row. However, we don't want to defer too long, so we'll only
+//    push it back MAX_LAZY_TIMER_DEFERMENTS times. After that we always
+//    let the timer go the next time.
+
+nsresult
+nsNavHistory::StartLazyTimer()
+{
+  if (! mLazyTimer) {
+    mLazyTimer = do_CreateInstance("@mozilla.org/timer;1");
+    if (! mLazyTimer)
+      return NS_ERROR_OUT_OF_MEMORY;
+  } else {
+    if (mLazyTimerSet) {
+      if (mLazyTimerDeferments >= MAX_LAZY_TIMER_DEFERMENTS) {
+        // already set and we don't want to push it back any later, use that one
+        return NS_OK;
+      } else {
+        // push back the active timer
+        mLazyTimer->Cancel();
+        mLazyTimerDeferments ++;
+      }
+    }
+  }
+  nsresult rv = mLazyTimer->InitWithFuncCallback(LazyTimerCallback, this,
+                                                 LAZY_MESSAGE_TIMEOUT,
+                                                 nsITimer::TYPE_ONE_SHOT);
+  NS_ENSURE_SUCCESS(rv, rv);
+  mLazyTimerSet = PR_TRUE;
+  return NS_OK;
+}
+
+
+// nsNavHistory::AddLazyMessage
+
+nsresult
+nsNavHistory::AddLazyMessage(const LazyMessage& aMessage)
+{
+  if (! mLazyMessages.AppendElement(aMessage))
+    return NS_ERROR_OUT_OF_MEMORY;
+  return StartLazyTimer();
+}
+
+
+// nsNavHistory::LazyTimerCallback
+
+void // static
+nsNavHistory::LazyTimerCallback(nsITimer* aTimer, void* aClosure)
+{
+  nsNavHistory* that = NS_STATIC_CAST(nsNavHistory*, aClosure);
+  that->mLazyTimerSet = PR_FALSE;
+  that->mLazyTimerDeferments = 0;
+  that->CommitLazyMessages();
+}
+
+
+// nsNavHistory::CommitLazyMessages
+
+void
+nsNavHistory::CommitLazyMessages()
+{
+  for (PRUint32 i = 0; i < mLazyMessages.Length(); i ++) {
+    LazyMessage& message = mLazyMessages[i];
+    switch (message.type) {
+      case LazyMessage::Type_AddURI:
+        AddURIInternal(message.uri, message.time, message.isRedirect,
+                       message.isToplevel, message.referrer);
+        break;
+      case LazyMessage::Type_Title:
+        SetPageTitleInternal(message.uri, PR_FALSE, message.title);
+        break;
+      case LazyMessage::Type_Favicon: {
+        nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
+        if (faviconService) {
+          nsCString spec;
+          message.uri->GetSpec(spec);
+          faviconService->DoSetAndLoadFaviconForPage(message.uri,
+                                                     message.favicon,
+                                                     message.alwaysLoadFavicon);
+        }
+        break;
+      }
+      default:
+        NS_NOTREACHED("Invalid lazy message type");
+    }
+  }
+  mLazyMessages.Clear();
+}
+#endif // LAZY_ADD
+
 
 // Query stuff *****************************************************************
 
