@@ -142,6 +142,8 @@ static void SetOptionsKeyUint32(const nsCString& aValue,
 #define QUERYKEY_DOMAIN_IS_HOST "domainIsHost"
 #define QUERYKEY_DOMAIN "domain"
 #define QUERYKEY_FOLDERS "folders"
+#define QUERYKEY_NOTANNOTATION "!annotation"
+#define QUERYKEY_ANNOTATION "annotation"
 #define QUERYKEY_URI "uri"
 #define QUERYKEY_URIISPREFIX "uriIsPrefix"
 #define QUERYKEY_SEPARATOR "OR"
@@ -323,6 +325,24 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
 
       AppendAmpersandIfNonempty(aQueryString);
       aQueryString.Append(NS_LITERAL_CSTRING(QUERYKEY_URI "="));
+      aQueryString.Append(escaped);
+    }
+
+    // annotation
+    query->GetHasAnnotation(&hasIt);
+    if (hasIt) {
+      AppendAmpersandIfNonempty(aQueryString);
+      PRBool annotationIsNot;
+      query->GetAnnotationIsNot(&annotationIsNot);
+      if (annotationIsNot)
+        aQueryString.AppendLiteral(QUERYKEY_NOTANNOTATION "=");
+      else
+        aQueryString.AppendLiteral(QUERYKEY_ANNOTATION "=");
+      nsCAutoString annot;
+      query->GetAnnotation(annot);
+      nsCAutoString escaped;
+      PRBool success = NS_Escape(annot, escaped, url_XAlphas);
+      NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
       aQueryString.Append(escaped);
     }
 
@@ -526,6 +546,20 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
     } else if (kvp.key.EqualsLiteral(QUERYKEY_URIISPREFIX)) {
       SetQueryKeyBool(kvp.value, query, &nsINavHistoryQuery::SetUriIsPrefix);
 
+    // not annotation
+    } else if (kvp.key.EqualsLiteral(QUERYKEY_NOTANNOTATION)) {
+      nsCAutoString unescaped(kvp.value);
+      NS_UnescapeURL(unescaped); // modifies input
+      query->SetAnnotationIsNot(PR_TRUE);
+      query->SetAnnotation(unescaped);
+
+    // annotation
+    } else if (kvp.key.EqualsLiteral(QUERYKEY_ANNOTATION)) {
+      nsCAutoString unescaped(kvp.value);
+      NS_UnescapeURL(unescaped); // modifies input
+      query->SetAnnotationIsNot(PR_FALSE);
+      query->SetAnnotation(unescaped);
+
     // new query component
     } else if (kvp.key.EqualsLiteral(QUERYKEY_SEPARATOR)) {
 
@@ -636,7 +670,7 @@ nsNavHistoryQuery::nsNavHistoryQuery()
   : mBeginTime(0), mBeginTimeReference(TIME_RELATIVE_EPOCH),
     mEndTime(0), mEndTimeReference(TIME_RELATIVE_EPOCH),
     mOnlyBookmarked(PR_FALSE), mDomainIsHost(PR_FALSE),
-    mUriIsPrefix(PR_FALSE)
+    mUriIsPrefix(PR_FALSE), mAnnotationIsNot(PR_FALSE)
 {
   // differentiate not set (IsVoid) from empty string (local files)
   mDomain.SetIsVoid(PR_TRUE);
@@ -794,6 +828,35 @@ NS_IMETHODIMP nsNavHistoryQuery::SetUri(nsIURI* aUri)
 NS_IMETHODIMP nsNavHistoryQuery::GetHasUri(PRBool* aHasUri)
 {
   *aHasUri = (mUri != nsnull);
+  return NS_OK;
+}
+
+/* attribute boolean annotationIsNot; */
+NS_IMETHODIMP nsNavHistoryQuery::GetAnnotationIsNot(PRBool* aIsNot)
+{
+  *aIsNot = mAnnotationIsNot;
+  return NS_OK;
+}
+NS_IMETHODIMP nsNavHistoryQuery::SetAnnotationIsNot(PRBool aIsNot)
+{
+  mAnnotationIsNot = aIsNot;
+  return NS_OK;
+}
+
+/* attribute AUTF8String annotation; */
+NS_IMETHODIMP nsNavHistoryQuery::GetAnnotation(nsACString& aAnnotation)
+{
+  aAnnotation = mAnnotation;
+  return NS_OK;
+}
+NS_IMETHODIMP nsNavHistoryQuery::SetAnnotation(const nsACString& aAnnotation)
+{
+  mAnnotation = aAnnotation;
+  return NS_OK;
+}
+NS_IMETHODIMP nsNavHistoryQuery::GetHasAnnotation(PRBool* aHasIt)
+{
+  *aHasIt = ! mAnnotation.IsEmpty();
   return NS_OK;
 }
 
