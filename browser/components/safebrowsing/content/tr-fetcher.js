@@ -63,6 +63,16 @@ function PROT_TRFetcher(opt_noCrypto) {
 PROT_TRFetcher.TRY_REKEYING_RESPONSE = "pleaserekey";
 
 /**
+ * Query params we'll send. Don't touch unless you know what you're
+ * doing and are prepared to carefully test. 
+ */
+PROT_TRFetcher.prototype.extraQueryParams = {
+  sourceid: "firefox-antiphish",
+  features: "TrustRank",
+  client: "navclient-auto-ffox2"
+};
+
+/**
  * Get the URL of the request that will fetch us TR for the argument URL
  *
  * @param url String containing the URL we'd like to fetch info about
@@ -79,6 +89,9 @@ PROT_TRFetcher.prototype.getRequestURL_ = function(url) {
   var requestURL = gDataProvider.getLookupURL();
   if (!requestURL)
     return null;
+
+  for (var param in this.extraQueryParams) 
+    requestURL += param + "=" + this.extraQueryParams[param] + "&";
 
   if (this.useCrypto_) {
     var maybeCryptedParams = this.urlCrypto_.maybeCryptParams({ "q": url});
