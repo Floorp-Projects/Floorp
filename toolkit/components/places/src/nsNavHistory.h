@@ -261,6 +261,7 @@ public:
   // nsINavHistoryResultNode methods
   NS_IMETHOD GetFolderId(PRInt64 *aId)
   { *aId = nsNavHistoryQueryNode::GetFolderId(); return NS_OK; }
+  NS_IMETHOD GetFolderType(nsAString& aFolderType);
   NS_IMETHOD GetQueries(PRUint32 *aQueryCount,
                         nsINavHistoryQuery ***aQueries);
   NS_IMETHOD GetQueryOptions(nsINavHistoryQueryOptions **aOptions);
@@ -284,6 +285,7 @@ protected:
   PRUint32 mQueryCount;
   nsCOMPtr<nsNavHistoryQueryOptions> mOptions;
   PRBool mBuiltChildren;
+  nsString mFolderType;
 
   friend class nsNavBookmarks;
 };
