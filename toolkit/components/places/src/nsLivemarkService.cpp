@@ -46,6 +46,9 @@
 #include "rdf.h"
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
+#include "nsIObserverService.h"
+#include "nsCRT.h"
+#include "nsXPCOM.h"
 
 #define LIVEMARK_TIMEOUT          15000       // fire every 15 seconds
 #define PLACES_STRING_BUNDLE_URI  "chrome://browser/locale/places/places.properties"
@@ -65,6 +68,7 @@ static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 #ifndef DC_NAMESPACE_URI
 #define DC_NAMESPACE_URI "http://purl.org/dc/elements/1.1/"
 #endif 
+
 nsIRDFResource       *kLMRDF_type;
 nsIRDFResource       *kLMRSS09_channel;
 nsIRDFResource       *kLMRSS09_item;
@@ -90,25 +94,12 @@ nsLivemarkService::~nsLivemarkService()
 {
   NS_ASSERTION(sInstance == this, "Expected sInstance == this");
   sInstance = nsnull;
-  if (mTimer)
-  {
-      // be sure to cancel the timer, as it holds a
-      // weak reference back to nsLivemarkService
-      mTimer->Cancel();
-      mTimer = nsnull;
-  }
-  // Cancel any pending loads
-  for (PRUint32 i = 0; i < mLivemarks.Length(); ++i) {
-    LivemarkInfo *li = mLivemarks[i];
-    if (li->loadGroup) {
-      li->loadGroup->Cancel(NS_BINDING_ABORTED);
-    }
-  }
 }
 
-NS_IMPL_ISUPPORTS2(nsLivemarkService,
+NS_IMPL_ISUPPORTS3(nsLivemarkService,
                    nsILivemarkService,
-                   nsIRemoteContainer)
+                   nsIRemoteContainer,
+                   nsIObserver)
 
 nsresult
 nsLivemarkService::Init()
@@ -142,6 +133,11 @@ nsLivemarkService::Init()
   if (NS_FAILED(rv)) {
     mLivemarkFailed.Assign(NS_LITERAL_STRING("Live Bookmark feed failed to load."));
   }
+
+  nsCOMPtr<nsIObserverService> observerService =
+    do_GetService("@mozilla.org/observer-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
 
   // Create timer to check whether to update livemarks
   if (!mTimer) {
@@ -230,6 +226,40 @@ nsLivemarkService::Init()
     nsMemory::Free(pLivemarks);
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsLivemarkService::Observe(nsISupports *aSubject, const char *aTopic,
+                           const PRUnichar *aData)
+{
+  if (!nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
+    nsresult rv;
+    
+    // Clear timer and pending loads to prevent leaks of the livemark service 
+    // during shutdown.
+    if (mTimer) {
+        // be sure to cancel the timer, as it holds a
+        // weak reference back to nsLivemarkService
+        mTimer->Cancel();
+        mTimer = nsnull;
+    }
+    // Cancel any pending loads
+    for (PRUint32 i = 0; i < mLivemarks.Length(); ++i) {
+      LivemarkInfo *li = mLivemarks[i];
+      if (li->loadGroup) {
+        li->loadGroup->Cancel(NS_BINDING_ABORTED);
+      }
+    }
+
+    // Remove our xpcom-shutdown observer so we don't leak the observer 
+    // service.
+    nsCOMPtr<nsIObserverService> observerService =
+      do_GetService("@mozilla.org/observer-service;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+  }
+
+  return NS_OK;
 }
 
 
