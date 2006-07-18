@@ -286,7 +286,7 @@ nsNavBookmarks::InitRoots()
                    NS_LITERAL_CSTRING("chrome://browser/locale/places/default_places.html"),
                    nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = ImportBookmarksHTMLInternal(defaultPlaces, PR_TRUE);
+    rv = ImportBookmarksHTMLInternal(defaultPlaces, PR_TRUE, 0);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // migrate the user's old bookmarks
@@ -305,7 +305,7 @@ nsNavBookmarks::InitRoots()
         rv = ioservice->NewFileURI(bookmarksFile,
                                    getter_AddRefs(bookmarksFileURI));
         NS_ENSURE_SUCCESS(rv, rv);
-        rv = ImportBookmarksHTMLInternal(bookmarksFileURI, PR_FALSE);
+        rv = ImportBookmarksHTMLInternal(bookmarksFileURI, PR_FALSE, 0);
         NS_ENSURE_SUCCESS(rv, rv);
       }
     }
