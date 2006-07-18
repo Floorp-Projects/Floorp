@@ -406,6 +406,9 @@ nsNavHistory::InitDB(PRBool *aDoImport)
   // dummy statement needs something to work on that will always exist.
   // This table must have something in it or the statement will be
   // automatically closed because there is no data.
+
+  /* FIXME(brettw) This is commented out until a better table creation
+   * scheme can be created.
   rv = mDBConn->TableExists(NS_LITERAL_CSTRING("moz_dummy_table"), &tableExists);
   NS_ENSURE_SUCCESS(rv, rv);
   if (! tableExists) {
@@ -416,12 +419,14 @@ nsNavHistory::InitDB(PRBool *aDoImport)
   rv = mDBConn->ExecuteSimpleSQL(
       NS_LITERAL_CSTRING("INSERT OR IGNORE INTO moz_dummy_table VALUES (1)"));
   NS_ENSURE_SUCCESS(rv, rv);
+  */
 
   // dummy DB (see comment above function) and statement that stays open
   rv = mDBService->OpenDatabase(dbFile, getter_AddRefs(mDummyDBConn));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mDummyDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT id FROM moz_dummy_table LIMIT 1"), getter_AddRefs(mDummyStatement));
+      "SELECT rowid FROM sqlite_master LIMIT 1"), getter_AddRefs(mDummyStatement));
+      //"SELECT id FROM moz_dummy_table LIMIT 1"), getter_AddRefs(mDummyStatement));
   NS_ENSURE_SUCCESS(rv, rv);
   PRBool dummyHasResults;
   rv = mDummyStatement->ExecuteStep(&dummyHasResults);
