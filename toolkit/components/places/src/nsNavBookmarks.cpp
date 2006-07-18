@@ -1358,7 +1358,6 @@ nsNavBookmarks::RemoveFolderChildren(PRInt64 aFolder)
     PRBool hasMore;
     while (NS_SUCCEEDED(mDBGetChildren->ExecuteStep(&hasMore)) && hasMore) {
       PRBool isFolder = ! mDBGetChildren->IsNull(kGetChildrenIndex_FolderChild);
-      nsCOMPtr<nsNavHistoryResultNode> node;
       if (isFolder) {
         // folder
         folderChildren.AppendElement(
@@ -1766,7 +1765,15 @@ nsNavBookmarks::QueryFolderChildren(PRInt64 aFolderId,
   PRBool results;
 
   nsCOMPtr<nsNavHistoryQueryOptions> options = do_QueryInterface(aOptions, &rv);
+  PRInt32 index = -1;
   while (NS_SUCCEEDED(mDBGetChildren->ExecuteStep(&results)) && results) {
+
+    // The results will be in order of index. Even if we don't add a node
+    // because it was excluded, we need to count it's index, so do that
+    // before doing anything else. Index was initialized to -1 above, so
+    // it will start counting at 0 the first time through the loop.
+    index ++;
+
     PRBool isFolder = !mDBGetChildren->IsNull(kGetChildrenIndex_FolderChild);
     nsCOMPtr<nsNavHistoryResultNode> node;
     if (isFolder) {
@@ -1805,6 +1812,10 @@ nsNavBookmarks::QueryFolderChildren(PRInt64 aFolderId,
         continue;
       }
     }
+
+    // this method fills all bookmark queries, so we store the index of the
+    // item in its parent
+    node->mBookmarkIndex = index;
 
     NS_ENSURE_TRUE(aChildren->AppendObject(node), NS_ERROR_OUT_OF_MEMORY);
   }
