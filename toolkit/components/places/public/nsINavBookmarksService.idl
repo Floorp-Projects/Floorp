@@ -62,24 +62,6 @@ interface nsINavBookmarkObserver : nsISupports
   void onEndUpdateBatch();
 
   /**
-   * True requests that you want to get called for all updates, false if you
-   * don't necessarily care about which exact things changed during a batch
-   * update. If false, this will sometimes not call you for things in between
-   * onBeginUpdateBatch and onEndUpdateBatch. You'll still get the begin and
-   * end, so you'll know something changed.
-   *
-   * Lots of observers don't care about what changes, only that something
-   * changed so they can update their UI. This allows delete operations to
-   * avoid iterating over every item, and just doing a single bulk SQL DELETE
-   * command, which is much more efficient.
-   *
-   * Note that you still might get called if you say false in some situations.
-   * This only skips certain time-consuming notifications if NO observers
-   * want the information.
-   */
-  readonly attribute boolean wantAllDetails;
-
-  /**
    * Notify this observer that the bookmark was added.
    * Called after the actual add took place.
    *
