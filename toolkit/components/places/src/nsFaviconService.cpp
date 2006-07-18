@@ -607,7 +607,7 @@ nsFaviconService::GetFaviconSpecForIconString(const nsCString& aSpec, nsACString
 NS_IMPL_ISUPPORTS3(FaviconLoadListener,
                    nsIStreamListener, // is a nsIRequestObserver
                    nsIInterfaceRequestor,
-                   nsIChannelEventSink);
+                   nsIChannelEventSink)
 
 // FaviconLoadListener::FaviconLoadListener
 
