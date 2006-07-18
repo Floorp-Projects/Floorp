@@ -4214,7 +4214,8 @@ nsGlobalWindow::FireAbuseEvents(PRBool aBlocked, PRBool aWindow,
 
   nsCOMPtr<nsIURI> requestingURI;
   nsCOMPtr<nsIURI> popupURI;
-  nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(topWindow));
+  nsCOMPtr<nsIWebNavigation> webNav =
+    do_GetInterface((nsIScriptGlobalObject *)this);
   if (webNav)
     webNav->GetCurrentURI(getter_AddRefs(requestingURI));
 
