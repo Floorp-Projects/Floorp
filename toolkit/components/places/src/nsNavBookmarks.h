@@ -96,7 +96,7 @@ private:
                          PRInt32 aStartIndex, PRInt32 aEndIndex,
                          PRInt32 aDelta);
   PRInt32 FolderCount(PRInt64 aFolder);
-  nsresult GetFolderType(PRInt64 aFolder, nsAString &aType);
+  nsresult GetFolderType(PRInt64 aFolder, nsACString &aType);
 
   // remove me when there is better query initialization
   nsNavHistory* History() { return nsNavHistory::GetHistoryService(); }
