@@ -2791,7 +2791,7 @@ NS_IMETHODIMP
 nsNavHistoryFolderResultNode::OnFolderAdded(PRInt64 aFolder, PRInt64 aParent,
                                             PRInt32 aIndex)
 {
-  NS_ASSERTION(aFolder == mFolderId, "Got wrong bookmark update");
+  NS_ASSERTION(aParent == mFolderId, "Got wrong bookmark update");
   if (! StartIncrementalUpdate())
     return NS_OK;
 
