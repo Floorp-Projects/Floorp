@@ -135,7 +135,8 @@ private:
 
   // in nsBookmarksHTML
   nsresult ImportBookmarksHTMLInternal(nsIURI* aURL,
-                                       PRBool aAllowRootChanges);
+                                       PRBool aAllowRootChanges,
+                                       PRInt64 aFolder);
 };
 
 #endif // nsNavBookmarks_h_
