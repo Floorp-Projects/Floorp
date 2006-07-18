@@ -121,6 +121,18 @@ interface nsINavHistoryResultNode : nsISupports
   readonly attribute PRTime time;
 
   /**
+   * This URI can be used as an image source URL and will give you the favicon
+   * for the page. It is *not* the URL of the favicon, but rather something
+   * that will resolve to the actual image.
+   *
+   * In most cases, this is an annotation URI that will query the favicon
+   * service. If the entry has no favicon, this is the chrome URL of the
+   * default favicon. If the favicon originally lived in chrome, this will
+   * be the original chrome URI of the icon.
+   */
+  readonly attribute nsIURI icon;
+
+  /**
    * This is the number of levels between this node and the top of the
    * hierarchy. The members of result.children have indentLevel = 0, their
    * children have indentLevel = 1, etc.
@@ -344,6 +356,7 @@ interface nsINavHistoryObserver : nsISupports
   const PRUint32 ATTRIBUTE_TITLE = 0; // aString = new title
   const PRUint32 ATTRIBUTE_HIDDEN = 1; // aString = empty
   const PRUint32 ATTRIBUTE_TYPED = 2; // aString = empty
+  const PRUint32 ATTRIBUTE_FAVICON = 3; // favicon updated, aString = favicon annotation URI
   void onPageChanged(in nsIURI aURI, in PRUint32 aWhat, in AString aValue);
 };
 
