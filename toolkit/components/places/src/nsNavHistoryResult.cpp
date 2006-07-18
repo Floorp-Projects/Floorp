@@ -2058,6 +2058,18 @@ nsNavHistoryQueryResultNode::OnVisit(nsIURI* aURI, PRInt64 aVisitId,
       return Refresh();
   }
 
+  // NOTE: The dynamic updating never deletes any nodes. Sometimes it replaces
+  // URI nodes or adds visits, but never deletes old ones.
+  //
+  // The only time this might happen in the current implementation is if the
+  // title changes and it no longer matches a keyword search. This is not
+  // important enough to handle given that we don't do any other deleting. It
+  // is arguably more useful behavior anyway, since you're searching your
+  // history and the page used to match.
+  //
+  // When more queries are possible (show pages I've visited less than 5 times)
+  // this will be important to add.
+
   PRUint32 groupCount;
   const PRUint32* groupings = mOptions->GroupingMode(&groupCount);
   nsCOMArray<nsNavHistoryResultNode> grouped;
@@ -4379,15 +4391,39 @@ nsNavHistoryResult::RowsRemoved(PRInt32 aVisibleIndex, PRUint32 aCount)
     NS_NOTREACHED("RowsRemoved should only be called when there is a tree");
     return;
   }
-  if (aVisibleIndex < 0 || aVisibleIndex + aCount >
-      mVisibleElements.Length()) {
-    NS_NOTREACHED("Trying to remove invalid row");
-    return;
+
+  // We really want tail recursion here, since we sometimes do another remove
+  // after this when duplicates are being collapsed. This loop emulates that.
+  while (PR_TRUE) {
+    if (aVisibleIndex < 0 || aVisibleIndex + aCount >
+        mVisibleElements.Length()) {
+      NS_NOTREACHED("Trying to remove invalid row");
+      return;
+    }
+    mVisibleElements.RemoveElementsAt(aVisibleIndex, aCount);
+    for (PRUint32 i = aVisibleIndex; i < mVisibleElements.Length(); i ++)
+      mVisibleElements[i]->mVisibleIndex = i;
+    mTree->RowCountChanged(aVisibleIndex, -PRInt32(aCount));
+
+    // the removal might have put two things together that should be collapsed
+    if (aVisibleIndex > 0 &&
+        aVisibleIndex < NS_STATIC_CAST(PRInt32, mVisibleElements.Length())) {
+      PRUint32 showThisOne;
+      if (CanCollapseDuplicates(mVisibleElements[aVisibleIndex - 1],
+                                mVisibleElements[aVisibleIndex], &showThisOne))
+      {
+        // Fake-tail-recurse to the beginning of this function to remove the
+        // collapsed row. Note that we need to set the visible index to -1
+        // before looping because we can never touch the row we're removing
+        // (callers may have already destroyed it).
+        aVisibleIndex = aVisibleIndex - 1 + showThisOne;
+        mVisibleElements[aVisibleIndex]->mVisibleIndex = -1;
+        aCount = 1;
+        continue;
+      }
+    }
+    break; // normal path: just remove once
   }
-  mVisibleElements.RemoveElementsAt(aVisibleIndex, aCount);
-  for (PRUint32 i = aVisibleIndex; i < mVisibleElements.Length(); i ++)
-    mVisibleElements[i]->mVisibleIndex = i;
-  mTree->RowCountChanged(aVisibleIndex, -PRInt32(aCount));
 }
 
 
