@@ -67,6 +67,10 @@ REQUIRES = xpcom \
            htmlparser \
            content \
            txmgr \
+           xmlextras \
+           caps \
+           xpconnect \
+           js \
            nkcache \
            $(NULL)
 
@@ -81,6 +85,8 @@ CPPSRCS = \
           nsNavHistoryQuery.cpp \
           nsNavHistoryResult.cpp \
           nsNavBookmarks.cpp \
+          nsLivemarkService.cpp \
+          nsBookmarksFeedHandler.cpp \
           nsMaybeWeakPtr.cpp \
           $(NULL)
 
