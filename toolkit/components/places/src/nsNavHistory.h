@@ -584,6 +584,9 @@ protected:
   static const PRInt32 kAutoCompleteIndex_VisitCount;
   static const PRInt32 kAutoCompleteIndex_Typed;
 
+  nsCOMPtr<mozIStorageStatement> mDBRecentVisitOfURL; // converts URL into most recent visit ID
+  nsCOMPtr<mozIStorageStatement> mDBInsertVisit; // used by AddVisit
+
   nsresult InitDB();
 
   // this is the cache DB in memory used for storing visited URLs
@@ -593,14 +596,14 @@ protected:
 
   nsresult InitMemDB();
 
-  nsresult InternalAdd(nsIURI* aURI, PRInt64 aSessionID,
+  nsresult InternalAdd(nsIURI* aURI, nsIURI* aReferrer, PRInt64 aSessionID,
                        PRUint32 aTransitionType, const PRUnichar* aTitle,
                        PRTime aVisitDate, PRBool aRedirect,
                        PRBool aToplevel, PRInt64* aPageID);
   nsresult InternalAddNewPage(nsIURI* aURI, const PRUnichar* aTitle,
                               PRBool aHidden, PRBool aTyped,
                               PRInt32 aVisitCount, PRInt64* aPageID);
-  nsresult AddVisit(PRInt64 aFromStep, PRInt64 aPageID, PRTime aTime,
+  nsresult AddVisit(nsIURI* aReferrer, PRInt64 aPageID, PRTime aTime,
                     PRInt32 aTransitionType, PRInt64 aSessionID);
   PRBool IsURIStringVisited(const nsACString& url);
   nsresult VacuumDB(PRTime aTimeAgo, PRBool aCompress);
