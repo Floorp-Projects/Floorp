@@ -167,6 +167,7 @@ const PRInt32 nsNavHistory::kGetInfoIndex_RevHost = 4;
 const PRInt32 nsNavHistory::kGetInfoIndex_VisitCount = 5;
 const PRInt32 nsNavHistory::kGetInfoIndex_VisitDate = 6;
 const PRInt32 nsNavHistory::kGetInfoIndex_FaviconURL = 7;
+const PRInt32 nsNavHistory::kGetInfoIndex_SessionId = 8;
 
 const PRInt32 nsNavHistory::kAutoCompleteIndex_URL = 0;
 const PRInt32 nsNavHistory::kAutoCompleteIndex_Title = 1;
@@ -181,6 +182,8 @@ const char nsNavHistory::kAnnotationPreviousEncoding[] = "history/encoding";
 
 nsIAtom* nsNavHistory::sMenuRootAtom = nsnull;
 nsIAtom* nsNavHistory::sToolbarRootAtom = nsnull;
+nsIAtom* nsNavHistory::sSessionStartAtom = nsnull;
+nsIAtom* nsNavHistory::sSessionContinueAtom = nsnull;
 
 nsNavHistory* nsNavHistory::gHistoryService;
 
@@ -195,6 +198,8 @@ nsNavHistory::nsNavHistory() : mNowValid(PR_FALSE),
 
   sMenuRootAtom = NS_NewAtom("menu-root");
   sToolbarRootAtom = NS_NewAtom("toolbar-root");
+  sSessionStartAtom = NS_NewAtom("session-start");
+  sSessionContinueAtom = NS_NewAtom("session-continue");
 }
 
 
@@ -1329,7 +1334,8 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
     // if we want visits, this is easy, just combine all possible matches
     // between the history and visits table and do our query.
     queryString = NS_LITERAL_CSTRING(
-      "SELECT h.id, h.url, h.title, h.user_title, h.rev_host, h.visit_count, v.visit_date, f.url "
+      "SELECT h.id, h.url, h.title, h.user_title, h.rev_host, h.visit_count, "
+             "v.visit_date, f.url, v.session "
       "FROM moz_history h "
       "JOIN moz_historyvisit v ON h.id = v.page_id "
       "LEFT OUTER JOIN moz_favicon f ON h.favicon = f.id "
@@ -1337,11 +1343,12 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
   } else {
     // For URLs, it is more complicated, because we want each URL once. The
     // GROUP BY clause gives us this. To get the max visit time, we populate
-    // one column by using a nested SELECT on the visit table.
+    // one column by using a nested SELECT on the visit table. Also, ignore
+    // session information.
     queryString = NS_LITERAL_CSTRING(
       "SELECT h.id, h.url, h.title, h.user_title, h.rev_host, h.visit_count, "
         "(SELECT MAX(visit_date) FROM moz_historyvisit WHERE page_id = h.id), "
-        "f.url "
+        "f.url, null "
       "FROM moz_history h "
       "JOIN moz_historyvisit v ON h.id = v.page_id "
       "LEFT OUTER JOIN moz_favicon f ON h.favicon = f.id "
@@ -2727,7 +2734,11 @@ nsNavHistory::FillURLResult(mozIStorageValueArray *aRow,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // favicon
-  aRow->GetUTF8String(kGetInfoIndex_FaviconURL, aNode->mFaviconURL);
+  rv = aRow->GetUTF8String(kGetInfoIndex_FaviconURL, aNode->mFaviconURL);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // session
+  rv = aRow->GetInt64(kGetInfoIndex_SessionId, &aNode->mSessionID);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
