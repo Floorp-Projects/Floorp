@@ -239,7 +239,11 @@ public:
     GetType(&type);
     return IsTypeQuery(type);
   }
-
+  PRBool IsSeparator() {
+    PRUint32 type;
+    GetType(&type);
+    return (type == nsINavHistoryResultNode::RESULT_TYPE_SEPARATOR);
+  }
   nsNavHistoryContainerResultNode* GetAsContainer() {
     NS_ASSERTION(IsContainer(), "Not a container");
     return NS_REINTERPRET_CAST(nsNavHistoryContainerResultNode*, this);
@@ -431,7 +435,8 @@ public:
   typedef nsCOMArray<nsNavHistoryResultNode>::nsCOMArrayComparatorFunc SortComparator;
   virtual PRUint32 GetSortType();
   static SortComparator GetSortingComparator(PRUint32 aSortType);
-  void RecursiveSort(nsICollation* aCollation, SortComparator aComparator);
+  virtual void RecursiveSort(nsICollation* aCollation,
+                             SortComparator aComparator);
   PRUint32 FindInsertionPoint(nsNavHistoryResultNode* aNode, SortComparator aComparator);
   PRBool DoesChildNeedResorting(PRUint32 aIndex, SortComparator aComparator);
 
@@ -589,6 +594,10 @@ public:
 
   virtual void OnRemoving();
 
+  // Override the sorting implementation to remove separators if we are sorted.
+  virtual void RecursiveSort(nsICollation* aCollation,
+                             SortComparator aComparator);
+
 public:
 
   // this indicates whether the folder contents are valid, they don't go away
@@ -604,6 +613,17 @@ public:
   PRBool StartIncrementalUpdate();
 };
 
+// nsNavHistorySeparatorResultNode
+//
+// Separator result nodes do not hold any data.
+class nsNavHistorySeparatorResultNode : public nsNavHistoryResultNode
+{
+public:
+  nsNavHistorySeparatorResultNode();
+
+  NS_IMETHOD GetType(PRUint32* type)
+    { *type = nsNavHistoryResultNode::RESULT_TYPE_SEPARATOR; return NS_OK; }
+};
 
 // nsNavHistoryResult
 //
