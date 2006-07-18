@@ -216,6 +216,7 @@ nsNavHistory* nsNavHistory::gHistoryService;
 
 nsNavHistory::nsNavHistory() : mNowValid(PR_FALSE),
                                mExpireNowTimer(nsnull),
+                               mExpire(this),
                                mBatchesInProgress(0),
                                mAutoCompleteOnlyTyped(PR_FALSE)
 {
@@ -447,6 +448,15 @@ nsNavHistory::InitDB(PRBool *aDoImport)
         NS_LITERAL_CSTRING("CREATE INDEX moz_history_urlindex ON moz_history (url)"));
     NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  // FIXME: this should be moved inside the moz_history table creation block.
+  // It is left outside and the return value is ignored because alpha 1 did not
+  // have this index. When it is likely that all alpha users have run a more
+  // recent build, we can move this to only happen on init so that startup time
+  // is faster. This index is used for favicon expiration, see
+  // nsNavHistoryExpire::ExpireItems
+  mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "CREATE INDEX moz_history_faviconindex ON moz_history (favicon)"));
 
   // moz_historyvisit
   rv = mDBConn->TableExists(NS_LITERAL_CSTRING("moz_historyvisit"), &tableExists);
@@ -1002,105 +1012,6 @@ PRBool nsNavHistory::IsURIStringVisited(const nsACString& aURIString)
 
   return visitCount > 0;
 #endif
-}
-
-
-// nsNavHistory::VacuumDB
-//
-//    Deletes everything from the database that is old. It is called on app
-//    shutdown and when you clear history.
-//
-//    "Old" is anything older than now - aTimeAgo. On app shutdown, aTimeAgo is
-//    the time in preferences for history expiration. If aTimeAgo is 0
-//    (everything older than now), all history will be deleted (everything
-//    older than now).
-//
-//    We DO NOT notify observers that the items are being deleted. I can't think
-//    of any reason why anybody would need to know (we are shutting down, after
-//    all), and if there is an observer still attached, it could significantly
-//    prolong shutdown.
-//
-//    The statement:
-//      DELETE FROM a WHERE a.id in (SELECT id FROM a LEFT OUTER JOIN b ON a.id = b.bar WHERE b.bid IS NULL);
-//    matches the visits and history entries. An outer join means that we
-//    generate a row for every item in the left-hand table (in this case, the
-//    history table), even when there is no corresponding right-hand table.
-//    Then we just pick those items where there was no corresponding right-hand
-//    one (i.e., a moz_history entry with no visits), and delete it.
-//
-//    We never delete "place:" URIs. These are used to associate information
-//    with queries and bookmark folders that are never technically visited.
-//    In some cases, you can get dangling ones, (referencing a folder that
-//    was deleted, for example) but that should be rare and insignificant.
-//
-//    Some times we may want to vacuum which will defragment the database and
-//    return any unused space to the filesystem. This operation can be
-//    extremely slow (sometimes 1 minute) and we don't do it now. Deleted data
-//    is overwritten with 0s by sqlite since we use SQLITE_SECURE_DELETE
-//    (in the sqlite makefile). Perhaps we should expose a way to do that.
-//
-//    Implementation note if we do a vacuum: There can not be any active
-//    statements for the vacuuming to work. This includes the dummy database.
-//    To make this work you would have to complete the dummy statement (and
-//    possibly detach the connection), do the vacuum, and then re-attach
-//    everything.
-
-nsresult
-nsNavHistory::VacuumDB(PRTime aTimeAgo)
-{
-  nsresult rv;
-
-  // go ahead and commit on error, only some things will get deleted, which,
-  // if you are trying to clear your history, is probably better than nothing.
-  mozStorageTransaction transaction(mDBConn, PR_TRUE);
-
-  if (aTimeAgo) {
-    // find the threshold for deleting old visits
-    PRTime now = GetNow();
-    PRInt64 expirationTime = now - aTimeAgo;
-    if (expirationTime < 0)
-      expirationTime = 0;
-
-    // delete expired visits
-    nsCOMPtr<mozIStorageStatement> visitDelete;
-    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-        "DELETE FROM moz_historyvisit WHERE visit_date < ?1"),
-        getter_AddRefs(visitDelete));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = visitDelete->BindInt64Parameter(0, expirationTime);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = visitDelete->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    // delete all visits
-    nsCOMPtr<mozIStorageStatement> visitDelete;
-    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-        "DELETE FROM moz_historyvisit"), getter_AddRefs(visitDelete));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = visitDelete->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // delete history entries with no visits that are not bookmarked
-  // also never delete any "place:" URIs (see function header comment)
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_history WHERE id IN (SELECT id FROM moz_history h "
-      "LEFT OUTER JOIN moz_historyvisit v ON h.id = v.page_id "
-      "LEFT OUTER JOIN moz_bookmarks b ON h.id = b.item_child "
-      "WHERE v.visit_id IS NULL "
-      "AND b.item_child IS NULL "
-      "AND SUBSTR(url,0,6) <> 'place:')"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // FIXME: delete annotations for expiring pages
-
-  // delete favicons that no pages reference
-  rv = nsFaviconService::VacuumFavicons(mDBConn);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  transaction.Commit();
-
-  return NS_OK;
 }
 
 
@@ -2395,20 +2306,17 @@ NS_IMETHODIMP
 nsNavHistory::RemoveAllPages()
 {
   // expire everything
-  VacuumDB(0);
+  mExpire.ClearHistory();
 
-  // compress DB (compression is slow, but since the user requested it, they
-  // either want the disk space or to cover their tracks). The dummy statement
-  // must be stopped because vacuuming will change everything and invalidate
-  // the cache.
+  // Compress DB. Currently commented out because compression is very slow.
+  // Deleted data will be overwritten with 0s by sqlite. Note that we have to
+  // stop the dummy statement before doing this.
+#if 0
   StopDummyStatement();
   nsresult rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM"));
   StartDummyStatement();
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // notify observers
-  ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver, OnClearHistory())
-
+#endif
   return NS_OK;
 }
 
@@ -2536,9 +2444,12 @@ nsNavHistory::AddURI(nsIURI *aURI, PRBool aRedirect,
   if (mExpireDays == 0)
     return NS_OK;
 
+  PRTime now = PR_Now();
+
+  nsresult rv;
 #ifdef LAZY_ADD
   LazyMessage message;
-  nsresult rv = message.Init(LazyMessage::Type_AddURI, aURI);
+  rv = message.Init(LazyMessage::Type_AddURI, aURI);
   NS_ENSURE_SUCCESS(rv, rv);
   message.isRedirect = aRedirect;
   message.isToplevel = aToplevel;
@@ -2546,11 +2457,17 @@ nsNavHistory::AddURI(nsIURI *aURI, PRBool aRedirect,
     rv = aReferrer->Clone(getter_AddRefs(message.referrer));
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  message.time = PR_Now();
-  return AddLazyMessage(message);
+  message.time = now;
+  rv = AddLazyMessage(message);
+  NS_ENSURE_SUCCESS(rv, rv);
 #else
-  return AddURIInternal(aURI, PR_Now(), aRedirect, aToplevel, aReferrer);
+  rv = AddURIInternal(aURI, now, aRedirect, aToplevel, aReferrer);
+  NS_ENSURE_SUCCESS(rv, rv);
 #endif
+
+  mExpire.OnAddURI(now);
+
+  return NS_OK;
 }
 
 
@@ -2862,22 +2779,8 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     if (NS_SUCCEEDED(rv))
       prefService->SavePrefFile(nsnull);
 
-    // Prevent Int64 overflow for people that type in huge numbers.
-    // This number is 2^63 / 24 / 60 / 60 / 1000000 (reversing the math below)
-    PRInt64 expireDays = mExpireDays;
-    const PRInt64 maxDays = 106751991;
-    if (mExpireDays > maxDays)
-      expireDays = maxDays;
-
-    // compute how long ago to expire from
-    const PRInt64 secsPerDay = 24*60*60;
-    const PRInt64 usecsPerSec = 1000000;
-    const PRInt64 usecsPerDay = secsPerDay * usecsPerSec;
-    const PRInt64 expireUsecsAgo = expireDays * usecsPerDay;
-
-    // FIXME: should we compress sometimes? It's slow, so we shouldn't do it
-    // every time.
-    VacuumDB(expireUsecsAgo);
+    // notify expiring system that we're quitting, it may want to do stuff
+    mExpire.OnQuit();
   } else if (nsCRT::strcmp(aTopic, gXpcomShutdown) == 0) {
     nsresult rv;
     nsCOMPtr<nsIObserverService> observerService =
@@ -2886,7 +2789,10 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     observerService->RemoveObserver(this, gXpcomShutdown);
     observerService->RemoveObserver(this, gQuitApplicationMessage);
   } else if (nsCRT::strcmp(aTopic, "nsPref:changed") == 0) {
+    PRInt32 oldDays = mExpireDays;
     LoadPrefs();
+    if (oldDays != mExpireDays)
+      mExpire.OnExpirationChanged();
   }
 
   return NS_OK;
