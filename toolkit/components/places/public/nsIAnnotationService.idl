@@ -37,8 +37,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-#include "nsIURI.idl"
-#include "nsIVariant.idl"
+
+interface nsIURI;
+interface nsIVariant;
 
 [scriptable, uuid(05537263-9bb4-45c8-ae96-461817f53972)]
 interface nsIAnnotationService : nsISupports
@@ -47,7 +48,7 @@ interface nsIAnnotationService : nsISupports
      * Valid values for aExpiration, which sets the expiration policy for your
      * annotation. These times are measured since the last visit date of the
      * page in question. This means that if you set an annotation with anything
-     * but session expiratin, it will not expire so long as the user keeps
+     * but session expiration, it will not expire so long as the user keeps
      * visiting the page from time to time.
      */
 
@@ -55,24 +56,24 @@ interface nsIAnnotationService : nsISupports
        expiration policy. May be changed. Currently, use 0 for expiration.
      */
       // For temporary stuff that can be discarded when the user exists
-    const long EXPIRE_SESSION = 0;
+    const PRInt32 EXPIRE_SESSION = 0;
 
       // for short-lived temporary data that you still want to outlast a session
-    const long EXPIRE_DAYS = 1;
+    const PRInt32 EXPIRE_DAYS = 1;
 
       // for general page settings, things the user is interested in seeing
       // if they come back to this page some time in the future.
-    const long EXPIRE_WEEKS = 2;
+    const PRInt32 EXPIRE_WEEKS = 2;
 
       // Something that the user will be interested in seeing in their
       // history like favicons. If they haven't visited a page in a couple
       // of months, they probably aren't interested in much other annotation,
       // the positions of things, or other stuff you create, so put that in
       // the weeks policy.
-    const long EXPIRE_MONTHS = 3;
+    const PRInt32 EXPIRE_MONTHS = 3;
 
       // For small, user-entered data like notes that should never expire.
-    const long EXPIRE_NEVER = 5;
+    const PRInt32 EXPIRE_NEVER = 4;
 
     /**
      * Sets an annotation, overwriting any previous annotation with the same
@@ -87,23 +88,23 @@ interface nsIAnnotationService : nsISupports
      * flags will be defined in the future.
      */
     void setAnnotation(in nsIURI aURI, in ACString aName, in nsIVariant aValue,
-                       in long aFlags, in long aExpiration);
+                       in PRInt32 aFlags, in PRInt32 aExpiration);
 
     /**
      * Sets an annotation just like setAnnotation, but takes a string as
      * input, which will be more convenient for C++.
      */
     void setAnnotationString(in nsIURI aURI, in ACString aName,
-                             in AString aValue, in long aFlags,
-                             in long aExpiration);
+                             in AString aValue, in PRInt32 aFlags,
+                             in PRInt32 aExpiration);
 
     /**
      * Sets an annotation just like setAnnotation, but takes an Int32 as input
      * for convenience.
      */
     void setAnnotationInt32(in nsIURI aURI, in ACString aName,
-                            in PRInt32 aValue, in long aFlags,
-                            in long aExpiration);
+                            in PRInt32 aValue, in PRInt32 aFlags,
+                            in PRInt32 aExpiration);
 
     /*
      * Sets an annotation just like setAnnotation, but takes binary data as
@@ -111,8 +112,8 @@ interface nsIAnnotationService : nsISupports
      */
     void setAnnotationBinary(in nsIURI aURI, in ACString aName,
                              [const,array,size_is(aDataLen)] in octet aData,
-                             in unsigned long aDataLen, in ACString aMimeType,
-                             in long aFlags, in long aExpiration);
+                             in PRUint32 aDataLen, in ACString aMimeType,
+                             in PRInt32 aFlags, in PRInt32 aExpiration);
 
     /**
      * Retrieves the value of an existing annotation. Throws if the annotation
@@ -139,7 +140,7 @@ interface nsIAnnotationService : nsISupports
      */
     void getAnnotationBinary(in nsIURI aURI, in ACString aName,
                              [array,size_is(aDataLen)] out octet aData,
-                             out unsigned long aDataLen,
+                             out PRUint32 aDataLen,
                              out ACString aMimeType);
 
     /**
@@ -156,8 +157,8 @@ interface nsIAnnotationService : nsISupports
      *   // now you can use 'exp.value' and 'flags.value'
      */
     void getAnnotationInfo(in nsIURI aURI, in ACString aName,
-                           out long aFlags, out long aExpiration,
-                           out ACString aMimeType, out long aStorageType);
+                           out PRInt32 aFlags, out PRInt32 aExpiration,
+                           out ACString aMimeType, out PRInt32 aStorageType);
 
     /**
      * Get the names of all annotations for this URI.
@@ -166,7 +167,7 @@ interface nsIAnnotationService : nsISupports
      *   var annotations = annotator.getAnnotations(myURI, {});
      */
     // IMPLEMENT ME
-    //void getAnnotations(in AString aURI, out unsigned long count,
+    //void getAnnotations(in AString aURI, out unsigned PRInt32 count,
     //  [retval, array, size_is(count)] out wstring result);
 
     /**
@@ -183,8 +184,8 @@ interface nsIAnnotationService : nsISupports
      */
     /* IMPLEMENT ME?
     void getMultipleAnnotations([array, size_is(aCount)] in nsIURI aURIList,
-      [array, size_is(aCount)] in wstring aNameList, in unsigned long aCount,
-      out unsigned long aResultCount,
+      [array, size_is(aCount)] in wstring aNameList, in unsigned PRInt32 aCount,
+      out unsigned PRInt32 aResultCount,
       [retval, array, size_is(aResultCount)] out wstring aResultList);
     */
 
