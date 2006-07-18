@@ -4203,9 +4203,6 @@ nsFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
   if (!aPos)
     return NS_ERROR_NULL_POINTER;
   nsresult result = NS_ERROR_FAILURE;
-  nsPoint point;
-  point.x = aPos->mDesiredX;
-  point.y = 0;
   switch (aPos->mAmount){
   case eSelectCharacter : case eSelectWord:
     {
@@ -4249,18 +4246,15 @@ nsFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
         }
       }
       break;
-    }//drop into no amount
+    }
     case eSelectNoAmount:
     {
-      nsIView* view;
-      nsPoint offset;
-      GetOffsetFromView(offset, &view);
-      ContentOffsets offsets = GetContentOffsetsFromPoint(point - offset);
-      aPos->mResultContent = offsets.content;
-      aPos->mContentOffset = offsets.offset;
-      aPos->mAttachForward    = offsets.associateWithNext;
-      result = offsets.content ? NS_OK : NS_ERROR_FAILURE;
-    }break;
+      FrameContentRange range = GetRangeForFrame(this);
+      aPos->mResultContent = range.content;
+      aPos->mContentOffset = range.start;
+      result = range.content ? NS_OK : NS_ERROR_FAILURE;
+      break;
+    }
     case eSelectLine :
     {
       nsCOMPtr<nsILineIteratorNavigator> iter; 
