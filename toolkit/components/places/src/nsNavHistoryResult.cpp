@@ -1120,8 +1120,13 @@ nsNavHistoryContainerResultNode::RemoveChildAt(PRInt32 aIndex,
   if (AreChildrenVisible() && childVisibleIndex >= 0)
     result->RowsRemoved(childVisibleIndex, visibleRows);
 
-  if (! aIsTemporary)
+  if (! aIsTemporary) {
     ReverseUpdateStats(mAccessCount - oldAccessCount);
+
+    // update our row (the twisty might have changed)
+    if (mVisibleIndex >= 0)
+      result->RowChanged(mVisibleIndex);
+  }
   return NS_OK;
 }
 
@@ -4329,7 +4334,7 @@ nsNavHistoryResult::RowsRemoved(PRInt32 aVisibleIndex, PRUint32 aCount)
     NS_NOTREACHED("RowsRemoved should only be called when there is a tree");
     return;
   }
-  if (aVisibleIndex < 0 || aVisibleIndex + aCount >=
+  if (aVisibleIndex < 0 || aVisibleIndex + aCount >
       mVisibleElements.Length()) {
     NS_NOTREACHED("Trying to remove invalid row");
     return;
