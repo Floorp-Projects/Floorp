@@ -1498,19 +1498,26 @@ PRInt32 PR_CALLBACK nsNavHistoryResult::SortComparison_TitleGreater(
 
 // nsNavHistoryResult::SortComparison_Date*
 //
-//    Don't bother doing conflict resolution. Since dates are stored in
-//    microseconds, it will be very difficult to get collisions. This would be
-//    most likely for imported history, which I'm not too worried about.
+//    Equal times will be very unusual, but it is important that there is some
+//    deterministic ordering of the results so they don't move around. Use URLs
+//    for conflict resolution. If those are the same, we probably don't care
+//    about the relative ordering.
 
 PRInt32 PR_CALLBACK nsNavHistoryResult::SortComparison_DateLess(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
-  return ComparePRTime(a->mTime, b->mTime);
+  PRInt32 value = ComparePRTime(a->mTime, b->mTime);
+  if (value == 0)
+    return a->mUrl.Compare(b->mUrl.get());
+  return value;
 }
 PRInt32 PR_CALLBACK nsNavHistoryResult::SortComparison_DateGreater(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
-  return -ComparePRTime(a->mTime, b->mTime);
+  PRInt32 value = -ComparePRTime(a->mTime, b->mTime);
+  if (value == 0)
+    return -a->mUrl.Compare(b->mUrl.get());
+  return value;
 }
 
 
