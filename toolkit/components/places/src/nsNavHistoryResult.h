@@ -495,6 +495,17 @@ public:
   nsresult RemoveChildAt(PRInt32 aIndex, PRBool aIsTemporary = PR_FALSE);
 
   PRBool CanRemoteContainersChange();
+
+  void RecursiveFindURIs(PRBool aOnlyOne,
+                         nsNavHistoryContainerResultNode* aContainer,
+                         const nsCString& aSpec,
+                         nsCOMArray<nsNavHistoryResultNode>* aMatches);
+  void UpdateURIs(PRBool aRecursive, PRBool aOnlyOne, PRBool aUpdateSort,
+                  const nsCString& aSpec,
+                  void (*aCallback)(nsNavHistoryURIResultNode*,void*),
+                  void* aClosure);
+  nsresult ChangeTitles(nsIURI* aURI, const nsACString& aNewTitle,
+                        PRBool aRecursive, PRBool aOnlyOne);
 };
 
 
@@ -556,13 +567,6 @@ public:
   nsresult Refresh();
 
   virtual PRUint32 GetSortType();
-  void UpdateURIs(PRBool aOnlyOne, PRBool aUpdateSort, const nsCString& aSpec,
-                  void (*aCallback)(nsNavHistoryURIResultNode*,void*),
-                  void* aClosure);
-  void RecursiveFindURIs(PRBool aOnlyOne,
-                         nsNavHistoryContainerResultNode* aContainer,
-                         const nsCString& aSpec,
-                         nsCOMArray<nsNavHistoryResultNode>* aMatches);
 };
 
 
@@ -612,7 +616,6 @@ public:
   nsresult FillChildren();
   void ClearChildren(PRBool aUnregister);
 
-  virtual PRUint32 GetSortType();
   PRBool StartIncrementalUpdate();
 };
 
