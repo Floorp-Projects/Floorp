@@ -1336,7 +1336,10 @@ nsNavHistoryQueryResultNode::VerifyQueriesParsed()
       getter_AddRefs(options));
   NS_ENSURE_SUCCESS(rv, rv);
   mOptions = do_QueryInterface(options, &rv); // need concrete pointer
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    nsMemory::Free(queries);
+    return rv;
+  }
 
   // Copy the individual queries into our array. At the same time, note if
   // we have any bookmark components so we know whether to pay attention to
