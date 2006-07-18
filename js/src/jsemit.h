@@ -61,28 +61,30 @@ JS_BEGIN_EXTERN_C
  * Also remember to keep the statementName array in jsemit.c in sync.
  */
 typedef enum JSStmtType {
-    STMT_BLOCK        = 0,      /* compound statement: { s1[;... sN] } */
-    STMT_LABEL        = 1,      /* labeled statement:  L: s */
-    STMT_IF           = 2,      /* if (then) statement */
-    STMT_ELSE         = 3,      /* else clause of if statement */
-    STMT_SWITCH       = 4,      /* switch statement */
-    STMT_WITH         = 5,      /* with statement */
-    STMT_BLOCK_SCOPE  = 6,      /* let block/expr or array comprehension */
-    STMT_CATCH        = 7,      /* catch block */
-    STMT_TRY          = 8,      /* try block */
-    STMT_FINALLY      = 9,      /* finally block */
-    STMT_SUBROUTINE   = 10,     /* gosub-target subroutine body */
-    STMT_DO_LOOP      = 11,     /* do/while loop statement */
-    STMT_FOR_LOOP     = 12,     /* for loop statement */
-    STMT_FOR_IN_LOOP  = 13,     /* for/in loop statement */
-    STMT_WHILE_LOOP   = 14      /* while loop statement */
+    STMT_LABEL,                 /* labeled statement:  L: s */
+    STMT_IF,                    /* if (then) statement */
+    STMT_ELSE,                  /* else clause of if statement */
+    STMT_SWITCH,                /* switch statement */
+    STMT_BLOCK,                 /* compound statement: { s1[;... sN] } */
+    STMT_WITH,                  /* with statement */
+    STMT_CATCH,                 /* catch block */
+    STMT_TRY,                   /* try block */
+    STMT_FINALLY,               /* finally block */
+    STMT_SUBROUTINE,            /* gosub-target subroutine body */
+    STMT_DO_LOOP,               /* do/while loop statement */
+    STMT_FOR_LOOP,              /* for loop statement */
+    STMT_FOR_IN_LOOP,           /* for/in loop statement */
+    STMT_WHILE_LOOP             /* while loop statement */
 } JSStmtType;
 
-#define STMT_TYPE_IS_SCOPE(type) \
-    ((uintN)((type) - STMT_WITH) <= (uintN)(STMT_CATCH - STMT_WITH))
+#define STMT_TYPE_MAYBE_SCOPE(type) \
+    ((type) >= STMT_BLOCK && (type) <= STMT_FINALLY)
 #define STMT_TYPE_IS_LOOP(type) ((type) >= STMT_DO_LOOP)
 
-#define STMT_IS_SCOPE(stmt)     STMT_TYPE_IS_SCOPE((stmt)->type)
+#define STMT_MAYBE_SCOPE(stmt) STMT_TYPE_MAYBE_SCOPE((stmt)->type)
+#define STMT_IS_SCOPE(stmt) \
+    ((uintN)(((stmt)->type) - STMT_WITH) <= (uintN)(STMT_CATCH - STMT_WITH) ||\
+     ((stmt)->flags & SIF_SCOPE))
 #define STMT_IS_LOOP(stmt)      STMT_TYPE_IS_LOOP((stmt)->type)
 
 typedef struct JSStmtInfo JSStmtInfo;
@@ -102,6 +104,7 @@ struct JSStmtInfo {
 };
 
 #define SIF_BODY_BLOCK  0x0001      /* STMT_BLOCK type is a function body */
+#define SIF_SCOPE       0x0002      /* This statement contains a scope. */
 
 #define AT_TOP_LEVEL(tc)                                                      \
     (!(tc)->topStmt || ((tc)->topStmt->flags & SIF_BODY_BLOCK))
