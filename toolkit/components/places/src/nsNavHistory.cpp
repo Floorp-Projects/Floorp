@@ -42,7 +42,7 @@
 #include "nsMorkHistoryImporter.h"
 #include "nsAnnotationService.h"
 
-#include "nsArray.h"
+#include "nsIArray.h"
 #include "nsArrayEnumerator.h"
 #include "nsCollationCID.h"
 #include "nsCOMPtr.h"
