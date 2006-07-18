@@ -84,8 +84,8 @@ inline nscoord CalcSideFor(const nsIFrame* aFrame, const nsStyleCoord& aCoord,
     case eStyleUnit_Percent:
       {
         nscoord baseWidth = 0;
-        nsIFrame* frame =
-          nsHTMLReflowState::GetContainingBlockFor(aFrame);
+        nsIFrame* frame = aFrame ?
+            nsHTMLReflowState::GetContainingBlockFor(aFrame) : nsnull;
         if (frame) {
           baseWidth = frame->GetSize().width;
           // subtract border of containing block
