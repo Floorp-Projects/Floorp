@@ -272,6 +272,7 @@ protected:
   void HandleHeadEnd();
   void HandleLinkBegin(const nsIParserNode& node);
   void HandleLinkEnd();
+  void HandleSeparator();
 
   // This is a list of frames. We really want a recursive parser, but the HTML
   // parser gives us tags as a stream. This implements all the state on a stack
@@ -410,9 +411,16 @@ BookmarkContentSink::CloseContainer(const nsHTMLTag aTag)
 NS_IMETHODIMP
 BookmarkContentSink::AddLeaf(const nsIParserNode& aNode)
 {
-  // save any text we find
-  if (aNode.GetNodeType() == eHTMLTag_text) {
-    CurFrame().mPreviousText += aNode.GetText();
+  switch (aNode.GetNodeType()) {
+  case eHTMLTag_text:
+    // save any text we find
+    if (aNode.GetNodeType() == eHTMLTag_text) {
+      CurFrame().mPreviousText += aNode.GetText();
+    }
+    break;
+  case eHTMLTag_hr:
+    HandleSeparator();
+    break;
   }
 
   return NS_OK;
@@ -637,6 +645,24 @@ BookmarkContentSink::HandleLinkEnd()
                                       frame.mPreviousText);
   }
   frame.mPreviousText.Truncate(0);
+}
+
+
+// BookmarkContentSink::HandleSeparator
+//
+//    Inserts a separator into the current container
+void
+BookmarkContentSink::HandleSeparator()
+{
+  BookmarkImportFrame& frame = CurFrame();
+
+  // bookmarks.html contains a separator between the toolbar menu and the
+  // rest of the items.  Since we pull the toolbar menu out into the top level,
+  // we want to skip over this separator since it looks out of place.
+  if (frame.mLastContainerType != BookmarkImportFrame::Container_Toolbar) {
+    // create the separator
+    mBookmarksService->InsertSeparator(frame.mContainerID, -1);
+  }
 }
 
 
