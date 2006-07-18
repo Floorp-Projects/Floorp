@@ -212,10 +212,6 @@ nsNavHistory::nsNavHistory() : mNowValid(PR_FALSE),
 
 nsNavHistory::~nsNavHistory()
 {
-  if (gObserverService) {
-    gObserverService->RemoveObserver(this, gQuitApplicationMessage);
-  }
-
   // remove the static reference to the service. Check to make sure its us
   // in case somebody creates an extra instance of the service.
   NS_ASSERTION(gHistoryService == this, "YOU CREATED 2 COPIES OF THE HISTORY SERVICE.");
@@ -276,12 +272,11 @@ nsNavHistory::Init()
   }
 
   // prefs
-  if (!gPrefService || !gPrefBranch) {
-    gPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = gPrefService->GetBranch(PREF_BRANCH_BASE, getter_AddRefs(gPrefBranch));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  nsCOMPtr<nsIPrefService> prefService =
+    do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = prefService->GetBranch(PREF_BRANCH_BASE, getter_AddRefs(mPrefBranch));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // string bundle for localization
   nsCOMPtr<nsIStringBundleService> bundleService =
@@ -331,17 +326,18 @@ nsNavHistory::Init()
   // initialized), but the observerservice would still keep a reference to us
   // and notify us about shutdown, which may cause crashes.
 
-  gObserverService = do_GetService("@mozilla.org/observer-service;1", &rv);
+  nsCOMPtr<nsIObserverService> observerService =
+    do_GetService("@mozilla.org/observer-service;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIPrefBranch2> pbi = do_QueryInterface(gPrefBranch);
+  nsCOMPtr<nsIPrefBranch2> pbi = do_QueryInterface(mPrefBranch);
   if (pbi) {
     pbi->AddObserver(PREF_AUTOCOMPLETE_ONLY_TYPED, this, PR_FALSE);
     pbi->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_DAYS, this, PR_FALSE);
     pbi->AddObserver(PREF_AUTOCOMPLETE_MAX_COUNT, this, PR_FALSE);
   }
 
-  gObserverService->AddObserver(this, gQuitApplicationMessage, PR_FALSE);
+  observerService->AddObserver(this, gQuitApplicationMessage, PR_FALSE);
 
   if (doImport) {
     nsCOMPtr<nsIMorkHistoryImporter> importer = new nsMorkHistoryImporter();
@@ -958,10 +954,13 @@ nsNavHistory::VacuumDB(PRTime aTimeAgo, PRBool aCompress)
 nsresult
 nsNavHistory::LoadPrefs()
 {
-  gPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS, &mExpireDays);
-  gPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_ONLY_TYPED,
+  if (! mPrefBranch)
+    return NS_OK;
+
+  mPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS, &mExpireDays);
+  mPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_ONLY_TYPED,
                            &mAutoCompleteOnlyTyped);
-  if (NS_FAILED(gPrefBranch->GetIntPref(PREF_AUTOCOMPLETE_MAX_COUNT, &mAutoCompleteMaxCount))) {
+  if (NS_FAILED(mPrefBranch->GetIntPref(PREF_AUTOCOMPLETE_MAX_COUNT, &mAutoCompleteMaxCount))) {
     mAutoCompleteMaxCount = 2000; // FIXME: add this to default prefs.js
   }
   return NS_OK;
@@ -1538,9 +1537,11 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, PRInt64 aReferringVisit,
     rv = aURI->GetSpec(utf8URISpec);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = gPrefBranch->SetCharPref(PREF_LAST_PAGE_VISITED,
-                                  PromiseFlatCString(utf8URISpec).get());
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (mPrefBranch) {
+      rv = mPrefBranch->SetCharPref(PREF_LAST_PAGE_VISITED,
+                                    PromiseFlatCString(utf8URISpec).get());
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   // Notify observers
@@ -1963,7 +1964,12 @@ NS_IMETHODIMP
 nsNavHistory::GetLastPageVisited(nsACString & aLastPageVisited)
 {
   nsXPIDLCString lastPage;
-  nsresult rv = gPrefBranch->GetCharPref(PREF_LAST_PAGE_VISITED,
+  if (! mPrefBranch) {
+    aLastPageVisited.Truncate(0);
+    return NS_OK;
+  }
+
+  nsresult rv = mPrefBranch->GetCharPref(PREF_LAST_PAGE_VISITED,
                                          getter_Copies(lastPage));
   NS_ENSURE_SUCCESS(rv, rv);
   aLastPageVisited = lastPage;
@@ -2554,7 +2560,11 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
       delete gTldTypes;
       gTldTypes = nsnull;
     }
-    gPrefService->SavePrefFile(nsnull);
+    nsresult rv;
+    nsCOMPtr<nsIPrefService> prefService =
+      do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv))
+      prefService->SavePrefFile(nsnull);
 
     // compute how long ago to expire from
     const PRInt64 secsPerDay = 24*60*60;
@@ -3795,23 +3805,4 @@ nsresult BindStatementURI(mozIStorageStatement* statement, PRInt32 index,
   rv = statement->BindUTF8StringParameter(index, utf8URISpec);
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
-}
-
-NS_METHOD
-nsNavHistory::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-  NS_ENSURE_NO_AGGREGATION(aOuter);
-
-  if (gHistoryService)
-    return gHistoryService->QueryInterface(aIID, aResult);
-
-  nsRefPtr<nsNavHistory> serv(new nsNavHistory());
-  if (!serv)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  nsresult rv = serv->Init();
-  if (NS_FAILED(rv))
-    return rv;
-
-  return serv->QueryInterface(aIID, aResult);
 }
