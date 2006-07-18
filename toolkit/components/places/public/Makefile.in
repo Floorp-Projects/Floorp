@@ -47,6 +47,7 @@ MODULE = places
 XPIDL_MODULE = places
 
 XPIDLSRCS  = \
+  nsIAnnotationService.idl \
   nsINavHistory.idl \
   $(NULL)
 
