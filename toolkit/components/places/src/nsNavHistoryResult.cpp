@@ -1685,7 +1685,7 @@ nsNavHistoryResult::ComputeShowSessions()
     return; // not date sorting
 
   PRUint32 groupCount;
-  const PRInt32* groups = mOptions->GroupingMode(&groupCount);
+  const PRUint32* groups = mOptions->GroupingMode(&groupCount);
   for (PRUint32 i = 0; i < groupCount; i ++) {
     if (groups[i] != nsINavHistoryQueryOptions::GROUP_BY_DAY)
       return; // non-time-based grouping
