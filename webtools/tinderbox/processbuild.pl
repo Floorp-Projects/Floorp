@@ -286,7 +286,6 @@ sub compress_log_file {
 
     # Decompress the log using the logcompression variable to determine
     # the type of compression used.
-    my $cmd = undef;
     if ($tbx->{logcompression} eq 'gzip') {
       my $comp_gz = gzopen($decoded, "rb") or
           die ("$decoded: $!\n");
