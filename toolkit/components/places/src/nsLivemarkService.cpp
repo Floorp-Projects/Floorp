@@ -356,6 +356,9 @@ nsLivemarkService::OnContainerRemoving(PRInt64 aContainer)
   // Take the annotation out of the list of annotations.
   mLivemarks.RemoveElementAt(lmIndex);
 
+  // Get rid of the children for this feed, clearing their annotations.
+  DeleteLivemarkChildren(aContainer);
+
   return NS_OK;
 }
 
@@ -444,17 +447,59 @@ nsLivemarkService::FireTimer(nsITimer* aTimer, void* aClosure)
 nsresult
 nsLivemarkService::DeleteLivemarkChildren(PRInt64 aLivemarkFolderId)
 {
+  nsresult rv;
   nsNavBookmarks *bookmarks = nsNavBookmarks::GetBookmarksService();
+  nsNavHistory* history = History();
+  
+  nsCOMPtr<nsINavHistoryQuery> query;
+  rv = history->GetNewQuery(getter_AddRefs(query));
+  NS_ENSURE_TRUE(query, NS_ERROR_OUT_OF_MEMORY);
+
+  rv = query->SetFolders(&aLivemarkFolderId, 1);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsINavHistoryQueryOptions> options;
+  rv = history->GetNewQueryOptions(getter_AddRefs(options));
+  NS_ENSURE_TRUE(options, NS_ERROR_OUT_OF_MEMORY);
+  PRUint32 mode = nsINavHistoryQueryOptions::GROUP_BY_FOLDER;
+  rv = options->SetGroupingMode(&mode, 1);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsINavHistoryResult> result;
+  rv = history->ExecuteQuery(query, options, getter_AddRefs(result));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsINavHistoryQueryResultNode> root;
+  rv = result->GetRoot(getter_AddRefs(root));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 cc;
+  rv = root->GetChildCount(&cc);
+  for (PRUint32 i = 0; i < cc; i++) {
+    nsCOMPtr<nsINavHistoryResultNode> node;
+    rv = root->GetChild(i, getter_AddRefs(node));
+    if (NS_FAILED(rv)) continue;
+    nsCOMPtr<nsINavHistoryURIResultNode> uriNode = do_QueryInterface(node, &rv);
+    if (NS_FAILED(rv)) continue;
+    nsCAutoString spec;
+    rv = uriNode->GetUri(spec);
+    if (NS_FAILED(rv)) continue;
+    nsCOMPtr<nsIURI> uri;
+    rv = NS_NewURI(getter_AddRefs(uri), spec, nsnull);
+    if (NS_FAILED(rv)) continue;
+    rv = mAnnotationService->RemoveAnnotation(uri,
+                                              NS_LITERAL_CSTRING(LMANNO_BMANNO));
+    if (NS_FAILED(rv)) continue;
+  }
 
   // Get the folder children.
-  nsresult rv = bookmarks->RemoveFolderChildren(aLivemarkFolderId);
+  rv = bookmarks->RemoveFolderChildren(aLivemarkFolderId);
   return rv;
 }
 
 nsresult
 nsLivemarkService::InsertLivemarkChild(PRInt64 aLivemarkFolderId, 
                                        nsIURI *aURI,
-                                       const nsAString &aTitle)
+                                       const nsAString &aTitle,
+                                       const nsAString &aFeedURI)
 {
   nsresult rv;
   nsNavBookmarks *bookmarks = nsNavBookmarks::GetBookmarksService();
@@ -462,6 +507,12 @@ nsLivemarkService::InsertLivemarkChild(PRInt64 aLivemarkFolderId,
   NS_ENSURE_SUCCESS(rv, rv);
   rv = bookmarks->SetItemTitle(aURI, aTitle);
   NS_ENSURE_SUCCESS(rv, rv);
+  
+  mAnnotationService->SetAnnotationString(aURI,
+                                          NS_LITERAL_CSTRING(LMANNO_BMANNO),
+                                          aFeedURI,
+                                          0,
+                                          nsIAnnotationService::EXPIRE_NEVER);
   return NS_OK;
 }
 
