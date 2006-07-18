@@ -367,6 +367,12 @@ public:
    */
   nsresult WordMove(PRBool aForward, PRBool aExtend);
 
+  /** WordExtendForDelete extends the selection backward or forward (logically) to the
+   *  next word boundary, so that the selected word can be deleted.
+   * @param aForward select forward in document.
+   */
+  nsresult WordExtendForDelete(PRBool aForward);
+  
   /** LineMove will generally be called from the nsiselectioncontroller implementations.
    *  the effect being the selection will move one line up or down.
    * @param aForward move forward in document.

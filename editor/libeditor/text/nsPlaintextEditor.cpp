@@ -637,34 +637,20 @@ NS_IMETHODIMP nsPlaintextEditor::DeleteSelection(nsIEditor::EDirection aAction)
   if (aAction == eNextWord || aAction == ePreviousWord
       || aAction == eToBeginningOfLine || aAction == eToEndOfLine)
   {
-    if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
-    nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-    if (!ps) return NS_ERROR_NOT_INITIALIZED;
-
-    PRUint8 caretBidiLevel;
-    result = ps->GetCaretBidiLevel(&caretBidiLevel);
-    if (NS_FAILED(result)) return result;
-    
     nsCOMPtr<nsISelectionController> selCont (do_QueryReferent(mSelConWeak));
     if (!selCont)
       return NS_ERROR_NO_INTERFACE;
 
     switch (aAction)
     {
-        // if caret has odd Bidi level, i.e. text is right-to-left,
-        // reverse the effect of ePreviousWord and eNextWord
         case eNextWord:
-          result = (caretBidiLevel & 1) ?
-                   selCont->WordMove(PR_FALSE, PR_TRUE) :
-                   selCont->WordMove(PR_TRUE, PR_TRUE);
+          result = selCont->WordExtendForDelete(PR_TRUE);
           // DeleteSelectionImpl doesn't handle these actions
           // because it's inside batching, so don't confuse it:
           aAction = eNone;
           break;
         case ePreviousWord:
-          result = (caretBidiLevel & 1) ?
-                   selCont->WordMove(PR_TRUE, PR_TRUE) :
-                   selCont->WordMove(PR_FALSE, PR_TRUE);
+          result = selCont->WordExtendForDelete(PR_FALSE);
           aAction = eNone;
           break;
         case eToBeginningOfLine:

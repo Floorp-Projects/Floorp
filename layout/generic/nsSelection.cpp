@@ -1203,9 +1203,12 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
   nsCOMPtr<nsIDOMNode> parentNode;
   nsPeekOffsetStruct pos;
 
-  PRBool visualMovement = mCaretMovementStyle == 1 ||
-    (mCaretMovementStyle == 2 && !aContinueSelection); 
-  
+  PRBool visualMovement = 
+    (aKeycode == nsIDOMKeyEvent::DOM_VK_BACK_SPACE || 
+     aKeycode == nsIDOMKeyEvent::DOM_VK_DELETE) ?
+    PR_FALSE : // Delete operations are always logical
+    mCaretMovementStyle == 1 || (mCaretMovementStyle == 2 && !aContinueSelection);
+
   //set data using mLimiter to stop on scroll views.  If we have a limiter then we stop peeking
   //when we hit scrollable views.  If no limiter then just let it go ahead
   pos.SetData(aAmount, eDirPrevious, offsetused, desiredX, 
@@ -1219,16 +1222,25 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
         InvalidateDesiredX();
         pos.mDirection = (baseLevel & 1) ? eDirPrevious : eDirNext;
       break;
-    case nsIDOMKeyEvent::DOM_VK_LEFT  : //no break
+    case nsIDOMKeyEvent::DOM_VK_LEFT :
         InvalidateDesiredX();
         pos.mDirection = (baseLevel & 1) ? eDirNext : eDirPrevious;
       break;
+    case nsIDOMKeyEvent::DOM_VK_DELETE :
+        InvalidateDesiredX();
+        pos.mDirection = eDirNext;
+      break;
+    case nsIDOMKeyEvent::DOM_VK_BACK_SPACE : 
+        InvalidateDesiredX();
+        pos.mDirection = eDirPrevious;
+      break;
     case nsIDOMKeyEvent::DOM_VK_DOWN : 
         pos.mAmount = eSelectLine;
-        pos.mDirection = eDirNext;//no break here
+        pos.mDirection = eDirNext;
       break;
     case nsIDOMKeyEvent::DOM_VK_UP : 
         pos.mAmount = eSelectLine;
+        pos.mDirection = eDirPrevious;
       break;
     case nsIDOMKeyEvent::DOM_VK_HOME :
         InvalidateDesiredX();
@@ -1237,7 +1249,7 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
     case nsIDOMKeyEvent::DOM_VK_END :
         InvalidateDesiredX();
         pos.mAmount = eSelectEndLine;
-     break;
+      break;
   default :return NS_ERROR_FAILURE;
   }
   PostReason(nsISelectionListener::KEYPRESS_REASON);
@@ -1246,8 +1258,7 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
     nsIFrame *theFrame;
     PRInt32 currentOffset, frameStart, frameEnd;
 
-    if (aKeycode == nsIDOMKeyEvent::DOM_VK_RIGHT ||
-        aKeycode == nsIDOMKeyEvent::DOM_VK_LEFT)
+    if (aAmount == eSelectCharacter || aAmount == eSelectWord)
     {
       // For left/right, PeekOffset() sets pos.mResultFrame correctly, but does not set pos.mAttachForward,
       // so determine the hint here based on the result frame and offset:
@@ -2758,6 +2769,15 @@ nsFrameSelection::WordMove(PRBool aForward, PRBool aExtend)
     return MoveCaret(nsIDOMKeyEvent::DOM_VK_RIGHT,aExtend,eSelectWord);
   else
     return MoveCaret(nsIDOMKeyEvent::DOM_VK_LEFT,aExtend,eSelectWord);
+}
+
+nsresult
+nsFrameSelection::WordExtendForDelete(PRBool aForward)
+{
+  if (aForward)
+    return MoveCaret(nsIDOMKeyEvent::DOM_VK_DELETE, PR_TRUE, eSelectWord);
+  else
+    return MoveCaret(nsIDOMKeyEvent::DOM_VK_BACK_SPACE, PR_TRUE, eSelectWord);
 }
 
 nsresult
