@@ -269,6 +269,7 @@ nsNavHistoryQueryNode::BuildChildren()
     NS_STATIC_CAST(nsNavHistoryResult*, NS_STATIC_CAST(nsINavHistoryResult*,
                                                        iResult));
 
+  mChildren.Clear();
   NS_ENSURE_TRUE(mChildren.AppendObjects(*(result->GetTopLevel())),
                  NS_ERROR_OUT_OF_MEMORY);
 
