@@ -114,12 +114,7 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
 {
   nsresult rv;
   nsCOMPtr<nsIArray> iargv;
-  PRInt32 argc = 0;
   nsAutoString eventString;
-  // XXX This doesn't seem like the correct context on which to execute
-  // the event handler. Might need to get one from the JS thread context
-  // stack.
-  JSContext* cx = (JSContext*)mContext->GetNativeContext();
   nsCOMPtr<nsIAtom> atomName;
 
   if (!mEventName) {
@@ -206,6 +201,9 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
     iargv = do_QueryInterface(tempargv);
   }
 
+  // XXX [The JSContext inside mContext] doesn't seem like the correct
+  // context on which to execute the event handler. Might need to get one
+  // from the JS thread context stack.
   nsCOMPtr<nsIVariant> vrv;
   rv = mContext->CallEventHandler(mTarget, mScopeObject, funcval, iargv,
                                   getter_AddRefs(vrv));
