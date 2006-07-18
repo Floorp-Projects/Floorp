@@ -251,6 +251,8 @@ protected:
   nsCOMArray<nsINavHistoryQuery> mSourceQueries;
   nsCOMPtr<nsINavHistoryQueryOptions> mSourceOptions;
 
+  nsCOMArray<nsINavHistoryResultViewObserver> mObservers;
+
   // for locale-specific date formatting and string sorting
   nsCOMPtr<nsILocale> mLocale;
   nsCOMPtr<nsICollation> mCollation;
