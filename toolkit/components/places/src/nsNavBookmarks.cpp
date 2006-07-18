@@ -527,10 +527,18 @@ nsNavBookmarks::CreateFolder(PRInt64 aParent, const nsAString &aName,
   nsresult rv = AdjustIndices(aParent, index, PR_INT32_MAX, 1);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("INSERT INTO moz_bookmarks_containers (name) VALUES (\"") +
-                                NS_ConvertUTF16toUTF8(aName) +
-                                NS_LITERAL_CSTRING("\")"));
-  NS_ENSURE_SUCCESS(rv, rv);
+  {
+    nsCOMPtr<mozIStorageStatement> statement;
+    rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("INSERT INTO moz_bookmarks_containers (name) VALUES (?1)"),
+                                 getter_AddRefs(statement));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = statement->BindStringParameter(0, aName);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = statement->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   PRInt64 child;
   rv = dbConn->GetLastInsertRowID(&child);
@@ -751,13 +759,17 @@ nsNavBookmarks::GetItemTitle(nsIURI *aURI, nsAString &aTitle)
 NS_IMETHODIMP
 nsNavBookmarks::SetFolderTitle(PRInt64 aFolder, const nsAString &aTitle)
 {
-  nsCAutoString buffer;
-  buffer.AssignLiteral("UPDATE moz_bookmarks_container SET title = ");
-  AppendUTF16toUTF8(aTitle, buffer);
-  buffer.AppendLiteral(" WHERE id = ");
-  buffer.AppendInt(aFolder);
+  nsCOMPtr<mozIStorageStatement> statement;
+  nsresult rv = DBConn()->CreateStatement(NS_LITERAL_CSTRING("UPDATE moz_bookmarks_containers SET title = ?2 WHERE id = ?1"),
+                                 getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsresult rv = DBConn()->ExecuteSimpleSQL(buffer);
+  rv = statement->BindInt64Parameter(0, aFolder);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindStringParameter(1, aTitle);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = statement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
   for (PRInt32 i = 0; i < mObservers.Count(); ++i) {
