@@ -1,15 +1,24 @@
 <?php
+
+// Used to send mail
 vendor('mail/mail');
+
 class UsersController extends AppController {
 
     var $name = 'Users';
 
     var $helpers = array('html');
 
+    /**
+     * Nothing to see here
+     */
     function index() 
     {
     }
 
+    /**
+     * Adding users to the database
+     */
     function add()
     {
         if (empty($this->params['data']))

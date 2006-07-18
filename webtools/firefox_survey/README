@@ -23,7 +23,9 @@ values.
 2) Copy config/defines.php.default to defines.php and fill out appropriate
 values.
 
-3) If the app isn't installed on the root of the webserver (ie. it's in
+3) Run config/sql/init.php
+
+4) If the app isn't installed on the root of the webserver (ie. it's in
 http://server.com/folder and not just http://server.com/) you may have to add
 RewriteBase rules to /.htaccess and /webroot/.htaccess
 
