@@ -441,7 +441,7 @@ nsNavBookmarks::AdjustIndices(PRInt64 aFolder,
         rv = NS_NewURI(getter_AddRefs(item->itemURI), spec, nsnull);
         NS_ENSURE_SUCCESS(rv, rv);
       }
-      item->position = mDBGetChildren->AsInt32(2);
+      item->position = mDBGetChildren->AsInt32(kGetChildrenIndex_Position);
       if (!items->AppendElement(item)) {
         delete item;
         return NS_ERROR_OUT_OF_MEMORY;
@@ -706,6 +706,10 @@ nsNavBookmarks::RemoveFolder(PRInt64 aFolder)
   {
     mozStorageStatementScoper scope(mDBGetFolderChildren);
     rv = mDBGetChildren->BindInt64Parameter(0, aFolder);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBGetChildren->BindInt32Parameter(1, 0);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBGetChildren->BindInt32Parameter(2, PR_INT32_MAX);
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRBool more;
@@ -1073,10 +1077,10 @@ nsNavBookmarks::QueryFolderChildren(nsINavHistoryQuery *aQuery,
     nsMemory::Free(folders);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mDBGetChildren->BindInt64Parameter(1, 0);
+    rv = mDBGetChildren->BindInt32Parameter(1, 0);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mDBGetChildren->BindInt64Parameter(2, PR_INT32_MAX);
+    rv = mDBGetChildren->BindInt32Parameter(2, PR_INT32_MAX);
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRBool results;
