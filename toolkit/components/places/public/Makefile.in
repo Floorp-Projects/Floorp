@@ -49,6 +49,7 @@ XPIDL_MODULE = places
 XPIDLSRCS  = \
   nsIAnnotationService.idl \
   nsINavHistory.idl \
+  nsINavBookmarksService.idl \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
