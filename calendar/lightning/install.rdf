@@ -21,6 +21,9 @@
       </Description>
     </em:targetApplication>
 
+    <!-- We only allow installation of Lightning into Firefox for ease of
+       - development. You can edit the JS and then click reload in Firefox as
+       - opposed to having to restart Thunderbird after each edit. -->
     <em:targetApplication>
       <Description>
         <!-- firefox -->
