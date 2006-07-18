@@ -207,7 +207,6 @@ nsIAtom* nsNavHistory::sToolbarRootAtom = nsnull;
 
 nsNavHistory* nsNavHistory::gHistoryService;
 
-
 // nsNavHistory::nsNavHistory
 
 nsNavHistory::nsNavHistory() : mNowValid(PR_FALSE),
@@ -652,8 +651,8 @@ nsNavHistory::InternalAdd(nsIURI* aURI, PRInt64 aSessionID,
   // Notify observers. Note that we finish the transaction before doing this in
   // case they need to use the DB
   transaction.Commit();
-  for (PRInt32 i = 0; i < mObservers.Count(); i ++)
-    mObservers[i]->OnAddURI(aURI, aVisitDate);
+  ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver,
+                      OnAddURI(aURI, aVisitDate))
 
   return NS_OK;
 }
@@ -1298,13 +1297,9 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
 // nsNavHistory::AddObserver
 
 NS_IMETHODIMP
-nsNavHistory::AddObserver(nsINavHistoryObserver* aObserver)
+nsNavHistory::AddObserver(nsINavHistoryObserver* aObserver, PRBool aOwnsWeak)
 {
-  if (mObservers.IndexOfObject(aObserver) >= 0)
-    return NS_ERROR_INVALID_ARG; // already registered
-  if (!mObservers.AppendObject(aObserver))
-    return NS_ERROR_OUT_OF_MEMORY;
-  return NS_OK;
+  return mObservers.AppendWeakElement(aObserver, aOwnsWeak);
 }
 
 
@@ -1313,9 +1308,7 @@ nsNavHistory::AddObserver(nsINavHistoryObserver* aObserver)
 NS_IMETHODIMP
 nsNavHistory::RemoveObserver(nsINavHistoryObserver* aObserver)
 {
-  if (!mObservers.RemoveObject(aObserver))
-    return NS_ERROR_INVALID_ARG;
-  return NS_OK;
+  return mObservers.RemoveWeakElement(aObserver);
 }
 
 
@@ -1326,8 +1319,7 @@ nsNavHistory::BeginUpdateBatch()
 {
   mBatchesInProgress ++;
   if (mBatchesInProgress == 1) {
-    for(PRInt32 i = 0; i < mObservers.Count(); i ++)
-      mObservers[i]->OnBeginUpdateBatch();
+    ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver, OnBeginUpdateBatch())
   }
   return NS_OK;
 }
@@ -1340,10 +1332,8 @@ nsNavHistory::EndUpdateBatch()
 {
   if (mBatchesInProgress == 0)
     return NS_ERROR_FAILURE;
-  mBatchesInProgress --;
-  if (mBatchesInProgress == 0) {
-    for(PRInt32 i = 0; i < mObservers.Count(); i ++)
-      mObservers[i]->OnEndUpdateBatch();
+  if (--mBatchesInProgress == 0) {
+    ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver, OnEndUpdateBatch())
   }
   return NS_OK;
 }
@@ -1485,9 +1475,7 @@ nsNavHistory::RemovePage(nsIURI *aURI)
   // that we always call the observers even though we aren't sure something
   // actually got deleted.
   transaction.Commit();
-  for (PRInt32 i = 0; i < mObservers.Count(); i ++)
-    mObservers[i]->OnDeleteURI(aURI);
-
+  ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver, OnDeleteURI(aURI))
   return NS_OK;
 }
 
@@ -1544,19 +1532,23 @@ nsNavHistory::RemovePagesFromHost(const nsACString& aHost, PRBool aEntireDomain)
   revHostSlash.Append(NS_LITERAL_STRING("/"));
 
   // see if we have to pass all deletes to the observers
-  PRBool sendObserversEverything = PR_FALSE;
-  PRInt32 i;
-  for (i = 0; i < mObservers.Count(); i ++) {
-    PRBool thisObserver = PR_FALSE;
-    mObservers[i]->GetWantAllDetails(&thisObserver);
-    sendObserversEverything |= thisObserver;
+  nsCOMArray<nsINavHistoryObserver> detailObservers;
+  for (PRUint32 i = 0; i < mObservers.Length(); ++i) {
+    const nsCOMPtr<nsINavHistoryObserver> &obs = mObservers[i];
+    if (obs) {
+      PRBool allDetails = PR_FALSE;
+      obs->GetWantAllDetails(&allDetails);
+      if (allDetails && !detailObservers.AppendObject(obs)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
   }
 
   // Tell the observers about everything we are about to delete. Since this is a
   // two-step process, if we get an error, we may tell them we will delete
   // something but then not actually delete it. Too bad.
   nsCOMPtr<mozIStorageStatement> statement;
-  if (sendObserversEverything) {
+  if (detailObservers.Count() != 0) {
     // create statement depending on delete type
     if (aEntireDomain) {
       rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
@@ -1585,8 +1577,8 @@ nsNavHistory::RemovePagesFromHost(const nsACString& aHost, PRBool aEntireDomain)
       if (NS_FAILED(NS_NewURI(getter_AddRefs(thisURI), thisURIString,
                               nsnull, nsnull)))
         continue; // bad URI
-      for (i = 0; i < mObservers.Count(); i ++)
-        mObservers[i]->OnDeleteURI(thisURI);
+      for (PRInt32 j = 0; j < detailObservers.Count(); ++j)
+        detailObservers[j]->OnDeleteURI(thisURI);
     }
   }
 
@@ -1681,8 +1673,7 @@ nsNavHistory::RemoveAllPages()
   transaction.Commit();
 
   // notify observers
-  for (PRInt32 i = 0; i < mObservers.Count(); i ++)
-    mObservers[i]->OnClearHistory();
+  ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver, OnClearHistory())
 
   return NS_OK;
 }
@@ -1759,9 +1750,10 @@ nsNavHistory::HidePage(nsIURI *aURI)
 
   // notify observers, finish transaction first
   transaction.Commit();
-  for (PRInt32 i = 0; i < mObservers.Count(); i ++)
-    mObservers[i]->OnPageChanged(aURI, nsINavHistoryObserver::ATTRIBUTE_HIDDEN,
-                                 NS_LITERAL_STRING(""));
+  ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver,
+                      OnPageChanged(aURI,
+                                    nsINavHistoryObserver::ATTRIBUTE_HIDDEN,
+                                    EmptyString()))
 
   return NS_OK;
 }
@@ -1843,9 +1835,10 @@ nsNavHistory::MarkPageAsTyped(nsIURI *aURI)
 
   // observers, be sure to finish transaction first
   transaction.Commit();
-  for (PRInt32 i = 0; i < mObservers.Count(); i ++)
-    mObservers[i]->OnPageChanged(aURI, nsINavHistoryObserver::ATTRIBUTE_TYPED,
-                                 NS_LITERAL_STRING(""));
+  ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver,
+                      OnPageChanged(aURI,
+                                    nsINavHistoryObserver::ATTRIBUTE_TYPED,
+                                    EmptyString()))
 
   return NS_OK;
 }
@@ -1913,9 +1906,10 @@ nsNavHistory::SetPageTitle(nsIURI *aURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // observers
-  for (PRInt32 i = 0; i < mObservers.Count(); i ++) 
-    mObservers[i]->OnPageChanged(aURI, nsINavHistoryObserver::ATTRIBUTE_TITLE,
-                                 aTitle);
+  ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver,
+                      OnPageChanged(aURI,
+                                    nsINavHistoryObserver::ATTRIBUTE_TITLE,
+                                    aTitle))
 
   return NS_OK;
 }
