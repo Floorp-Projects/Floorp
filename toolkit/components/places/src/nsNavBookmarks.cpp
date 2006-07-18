@@ -589,7 +589,8 @@ nsNavBookmarks::MoveFolder(PRInt64 aFolder, PRInt64 aNewParent, PRInt32 aIndex)
 
   nsresult rv;
   PRInt64 parent;
-  PRInt32 index;
+
+  PRInt32 oldIndex;
 
   {
     nsCOMPtr<mozIStorageStatement> statement;
@@ -604,32 +605,44 @@ nsNavBookmarks::MoveFolder(PRInt64 aFolder, PRInt64 aNewParent, PRInt32 aIndex)
     }
 
     parent = statement->AsInt64(0);
-    index = statement->AsInt32(1);
+    oldIndex = statement->AsInt32(1);
   }
 
-  if (aNewParent == parent && aIndex == index) {
+  PRInt32 newIndex;
+  if (aIndex == -1) {
+    newIndex = FolderCount(parent);
+    // If the parent remains the same, then the folder is really being moved
+    // to count - 1 (since it's being removed from the old position)
+    if (parent == aNewParent) {
+      --newIndex;
+    }
+  } else {
+    newIndex = aIndex;
+  }
+
+  if (aNewParent == parent && newIndex == oldIndex) {
     // Nothing to do!
     return NS_OK;
   }
 
   if (parent == aNewParent) {
     // We can optimize the updates if moving within the same container
-    if (index > aIndex) {
-      rv = AdjustIndices(parent, aIndex, index - 1, 1);
+    if (oldIndex > newIndex) {
+      rv = AdjustIndices(parent, newIndex, oldIndex - 1, 1);
     } else {
-      rv = AdjustIndices(parent, index + 1, aIndex, -1);
+      rv = AdjustIndices(parent, oldIndex + 1, newIndex, -1);
     }
   } else {
-    rv = AdjustIndices(parent, index + 1, PR_INT32_MAX, -1);
+    rv = AdjustIndices(parent, oldIndex + 1, PR_INT32_MAX, -1);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = AdjustIndices(aNewParent, aIndex, PR_INT32_MAX, 1);
+    rv = AdjustIndices(aNewParent, newIndex, PR_INT32_MAX, 1);
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
   buffer.AssignLiteral("UPDATE moz_bookmarks_assoc SET parent = ");
   buffer.AppendInt(aNewParent);
   buffer.AppendLiteral(", position = ");
-  buffer.AppendInt(aIndex);
+  buffer.AppendInt(newIndex);
   buffer.AppendLiteral(" WHERE folder_child = ");
   buffer.AppendInt(aFolder);
 
@@ -640,7 +653,8 @@ nsNavBookmarks::MoveFolder(PRInt64 aFolder, PRInt64 aNewParent, PRInt32 aIndex)
   NS_ENSURE_SUCCESS(rv, rv);
 
   for (PRInt32 i = 0; i < mObservers.Count(); ++i) {
-    mObservers[i]->OnFolderMoved(aFolder, parent, index, aNewParent, aIndex);
+    mObservers[i]->OnFolderMoved(aFolder, parent, oldIndex,
+                                 aNewParent, newIndex);
   }
 
   return NS_OK;
