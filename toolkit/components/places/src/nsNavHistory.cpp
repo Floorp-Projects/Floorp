@@ -1079,6 +1079,39 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
     return NS_ERROR_INVALID_ARG;
   }
 
+  // In the simple case where we're just querying children of a single bookmark
+  // folder, we can avoid the complexity of the grouper and just hand back
+  // the results.
+  do {
+    if (aQueryCount != 1) break;
+    
+    nsINavHistoryQuery *query = aQueries[0];
+    PRUint32 folderCount;
+    query->GetFolderCount(&folderCount);
+    if (folderCount != 1) break;
+
+    PRBool hasIt;
+    query->GetHasBeginTime(&hasIt);
+    if (hasIt) break;
+    query->GetHasEndTime(&hasIt);
+    if (hasIt) break;
+    query->GetHasDomain(&hasIt);
+    if (hasIt) break;
+
+    nsRefPtr<nsNavHistoryResult> result = NewHistoryResult(aQueries,
+                                                           aQueryCount,
+                                                           options);
+    NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
+
+    rv = nsNavBookmarks::GetBookmarksService()->
+      QueryFolderChildren(aQueries[0], options, result->GetTopLevel());
+
+    NS_ENSURE_SUCCESS(rv, rv);
+    result->FilledAllResults();
+    NS_STATIC_CAST(nsRefPtr<nsINavHistoryResult>, result).swap(*_retval);
+    return NS_OK;
+  } while (0);
+
   PRBool asVisits = options->ResultType() == nsINavHistoryQueryOptions::RESULT_TYPE_VISIT;
 
   // conditions we want on all history queries, this just selects history
@@ -1099,7 +1132,7 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
     // For URLs, it is more complicated. Because we want each URL once. The
     // GROUP BY clause gives us this. However, we also want the most recent
     // visit time, so we add ANOTHER join with the visit table (this one does
-    // not have any restrictions on if from the query) and do MAX() to get the
+    // not have any restrictions on it from the query) and do MAX() to get the
     // max visit time.
     queryString = NS_LITERAL_CSTRING("SELECT h.id, h.url, h.title, h.visit_count, MAX(fullv.visit_date), h.rev_host"
       " FROM moz_history h JOIN moz_historyvisit v ON h.id = v.page_id JOIN moz_historyvisit fullv ON h.id = fullv.page_id WHERE ");
@@ -1112,8 +1145,8 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
   for (i = 0; i < aQueryCount; i ++) {
     nsCString queryClause;
     PRInt32 clauseParameters = 0;
-    rv = QueryToSelectClause(NS_CONST_CAST(nsINavHistoryQuery*, aQueries[i]),
-                             numParameters, &queryClause, &clauseParameters);
+    rv = QueryToSelectClause(aQueries[i], numParameters,
+                             &queryClause, &clauseParameters);
     NS_ENSURE_SUCCESS(rv, rv);
     if (! queryClause.IsEmpty()) {
       if (! conditions.IsEmpty()) // exists previous clause: multiple ones are ORed
@@ -1187,7 +1220,7 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
 
   // run query and put into result object
   nsRefPtr<nsNavHistoryResult> result(
-                             NewHistoryResult(aQueries, aQueryCount, aOptions));
+                             NewHistoryResult(aQueries, aQueryCount, options));
   if (! result)
     return NS_ERROR_OUT_OF_MEMORY;
   rv = result->Init();
@@ -3146,8 +3179,8 @@ PRBool IsNumericHostName(const nsString& aHost)
 {
   PRInt32 periodCount = 0;
   for (PRUint32 i = 0; i < aHost.Length(); i ++) {
-    char cur = aHost[i];
-    if (cur == '.')
+    PRUnichar cur = aHost[i];
+    if (cur == PRUnichar('.'))
       periodCount ++;
     else if (cur < PRUnichar('0') || cur > PRUnichar('9'))
       return PR_FALSE;
@@ -3340,7 +3373,8 @@ NS_IMPL_ISUPPORTS1(nsNavHistoryQuery, nsINavHistoryQuery)
 nsNavHistoryQuery::nsNavHistoryQuery()
   : mBeginTime(0), mBeginTimeReference(TIME_RELATIVE_EPOCH),
     mEndTime(0), mEndTimeReference(TIME_RELATIVE_EPOCH),
-    mOnlyBookmarked(PR_FALSE), mDomainIsHost(PR_FALSE)
+    mOnlyBookmarked(PR_FALSE), mDomainIsHost(PR_FALSE),
+    mItemTypes(PR_UINT32_MAX) // default to include all item types
 {
 }
 
@@ -3468,12 +3502,59 @@ NS_IMETHODIMP nsNavHistoryQuery::GetHasDomain(PRBool* _retval)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsNavHistoryQuery::GetFolders(PRUint32 *aCount,
+                                            PRInt64 **aFolders)
+{
+  PRUint32 count = mFolders.Length();
+  PRInt64 *folders =
+    NS_STATIC_CAST(PRInt64*, nsMemory::Alloc(count * sizeof(PRInt64)));
+  NS_ENSURE_TRUE(folders, NS_ERROR_OUT_OF_MEMORY);
+
+  for (PRUint32 i = 0; i < count; ++i) {
+    folders[i] = mFolders[i];
+  }
+  *aCount = count;
+  *aFolders = folders;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsNavHistoryQuery::GetFolderCount(PRUint32 *aCount)
+{
+  *aCount = mFolders.Length();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsNavHistoryQuery::SetFolders(const PRInt64 *aFolders,
+                                            PRUint32 aFolderCount)
+{
+  if (!mFolders.ReplaceElementsAt(0, mFolders.Length(),
+                                  aFolders, aFolderCount)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsNavHistoryQuery::GetItemTypes(PRUint32 *aTypes)
+{
+  *aTypes = mItemTypes;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsNavHistoryQuery::SetItemTypes(PRUint32 aTypes)
+{
+  mItemTypes = aTypes;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsNavHistoryQuery::Clone(nsINavHistoryQuery** _retval)
 {
-  *_retval = new nsNavHistoryQuery(*this);
-  if (! (*_retval))
-    return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(*_retval);
+  *_retval = nsnull;
+
+  nsNavHistoryQuery *clone = new nsNavHistoryQuery(*this);
+  NS_ENSURE_TRUE(clone, NS_ERROR_OUT_OF_MEMORY);
+
+  NS_ADDREF(*_retval = clone);
   return NS_OK;
 }
 
@@ -3523,8 +3604,17 @@ nsNavHistoryQueryOptions::SetExpandPlaces(PRBool aExpand)
 NS_IMETHODIMP
 nsNavHistoryQueryOptions::Clone(nsINavHistoryQueryOptions** aResult)
 {
+  nsNavHistoryQueryOptions *clone = nsnull;
+  nsresult rv = Clone(&clone);
+  *aResult = clone;
+  return rv;
+}
+
+nsresult
+nsNavHistoryQueryOptions::Clone(nsNavHistoryQueryOptions **aResult)
+{
   *aResult = nsnull;
-  nsNavHistoryQueryOptions* result = new nsNavHistoryQueryOptions();
+  nsRefPtr<nsNavHistoryQueryOptions> result = new nsNavHistoryQueryOptions();
   if (! result)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -3534,7 +3624,6 @@ nsNavHistoryQueryOptions::Clone(nsINavHistoryQueryOptions** aResult)
   if (mGroupCount) {
     result->mGroupings = new PRInt32[mGroupCount];
     if (! result->mGroupings) {
-      delete result;
       return NS_ERROR_OUT_OF_MEMORY;
     }
     for (PRUint32 i = 0; i < mGroupCount; i ++)
@@ -3544,7 +3633,6 @@ nsNavHistoryQueryOptions::Clone(nsINavHistoryQueryOptions** aResult)
   }
   result->mExpandPlaces = mExpandPlaces;
 
-  *aResult = result;
-  NS_ADDREF(*aResult);
+  result.swap(*aResult);
   return NS_OK;
 }
