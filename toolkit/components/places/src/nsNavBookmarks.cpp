@@ -42,9 +42,10 @@
 #include "mozStorageHelper.h"
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
-#include "nsIAnnotationService.h"
 #include "nsIRemoteContainer.h"
 #include "nsUnicharUtils.h"
+#include "nsFaviconService.h"
+#include "nsAnnotationService.h"
 
 const PRInt32 nsNavBookmarks::kFindBookmarksIndex_ItemChild = 0;
 const PRInt32 nsNavBookmarks::kFindBookmarksIndex_FolderChild = 1;
@@ -67,7 +68,7 @@ nsNavBookmarks* nsNavBookmarks::sInstance = nsnull;
 #define ANNO_FOLDER_READONLY BOOKMARKS_ANNO_PREFIX "readonly"
 
 nsNavBookmarks::nsNavBookmarks()
-  : mRoot(0), mBookmarksRoot(0), mToolbarRoot(0), mBatchLevel(0),
+  : mRoot(0), mBookmarksRoot(0), mToolbarRoot(0), mTagRoot(0), mBatchLevel(0),
     mBatchHasTransaction(PR_FALSE)
 {
   NS_ASSERTION(!sInstance, "Multiple nsNavBookmarks instances!");
@@ -383,6 +384,10 @@ nsNavBookmarks::InitRoots()
 
   getRootStatement->Reset();
   rv = CreateRoot(getRootStatement, NS_LITERAL_CSTRING("toolbar"), &mToolbarRoot, nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  getRootStatement->Reset();
+  rv = CreateRoot(getRootStatement, NS_LITERAL_CSTRING("tags"), &mTagRoot, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (importDefaults) {
@@ -777,6 +782,13 @@ NS_IMETHODIMP
 nsNavBookmarks::GetToolbarRoot(PRInt64 *aRoot)
 {
   *aRoot = mToolbarRoot;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavBookmarks::GetTagRoot(PRInt64 *aRoot)
+{
+  *aRoot = mTagRoot;
   return NS_OK;
 }
 
@@ -1779,28 +1791,124 @@ nsNavBookmarks::GetBookmarkedURIFor(nsIURI* aURI, nsIURI** _retval)
 }
 
 NS_IMETHODIMP
-nsNavBookmarks::GetBookmarkFolders(nsIURI *aURI, PRUint32 *aCount,
-                                   PRInt64 **aFolders)
+nsNavBookmarks::ChangeBookmarkURI(nsIURI *aOldURI, nsIURI *aNewURI)
 {
-  *aCount = 0;
-  *aFolders = nsnull;
+  nsresult rv;
 
+  if (!aOldURI || !aNewURI)
+    return NS_ERROR_NULL_POINTER;
+
+  // This method is only meaningful if oldURI is actually bookmarked.
+  PRBool bookmarked = PR_FALSE;
+  rv = IsBookmarked(aOldURI, &bookmarked);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!bookmarked)
+    return NS_ERROR_INVALID_ARG;
+
+  PRBool equal = PR_FALSE;
+  rv = aOldURI->Equals(aNewURI, &equal);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (equal) // no-op
+    return NS_OK;
+
+  // Now that we're satisfied with the quality of our input, the
+  // actual work starts here.
+
+  nsTArray<PRInt64> folders;
+  rv = GetBookmarkFoldersTArray(aOldURI, &folders);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // The bookmark operations within the area in which "batch" is in scope
+  // will be within a batched operation.  This allows the batch to be
+  // closed properly if we exit early due to an error condition.
+  nsBookmarksUpdateBatcher batch;
+
+  // in folders, replace all instances of old URI with new URI
+  for (PRUint32 i = 0; i < folders.Length(); i++) {
+    rv = ReplaceItem(folders[i], aOldURI, aNewURI);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // copy title from old URI to new URI
+  nsAutoString title;
+  rv = GetItemTitle(aOldURI, title);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!title.IsEmpty()) {
+    rv = SetItemTitle(aNewURI, title);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // copy keyword (shortcut) from old URI to new URI
+  nsAutoString keyword;
+  rv = GetKeywordForURI(aOldURI, keyword);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!keyword.IsEmpty()) {
+    rv = SetKeywordForURI(aNewURI, keyword);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // copy annotations from old URI to new URI
+  nsAnnotationService* annoService =
+    nsAnnotationService::GetAnnotationService();
+  NS_ENSURE_TRUE(annoService, NS_ERROR_UNEXPECTED);
+  rv = annoService->CopyAnnotations(aOldURI, aNewURI, PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // associate favicon from old URI (if present) with new URI (if none already)
+  nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
+  NS_ENSURE_TRUE(faviconService, NS_ERROR_UNEXPECTED);
+  nsCOMPtr<nsIURI> sourceFaviconURI;
+  rv = faviconService->GetFaviconForPage(aOldURI, 
+                                         getter_AddRefs(sourceFaviconURI));
+  if (NS_SUCCEEDED(rv)) { // oldURI has favicon
+    nsCOMPtr<nsIURI> destFaviconURI;
+    rv = faviconService->GetFaviconForPage(aNewURI,
+                                           getter_AddRefs(destFaviconURI));
+    if (NS_FAILED(rv)) {  // newURI has no favicon
+      rv = faviconService->SetFaviconUrlForPage(aNewURI, sourceFaviconURI);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavBookmarks::GetBookmarkFoldersTArray(nsIURI *aURI,
+                                         nsTArray<PRInt64> *aResult)
+{
   mozStorageStatementScoper scope(mDBFindURIBookmarks);
   mozStorageTransaction transaction(DBConn(), PR_FALSE);
 
   nsresult rv = BindStatementURI(mDBFindURIBookmarks, 0, aURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsTArray<PRInt64> folders;
   PRBool more;
   while (NS_SUCCEEDED((rv = mDBFindURIBookmarks->ExecuteStep(&more))) && more) {
-    if (! folders.AppendElement(
+    if (! aResult->AppendElement(
         mDBFindURIBookmarks->AsInt64(kFindBookmarksIndex_Parent)))
       return NS_ERROR_OUT_OF_MEMORY;
   }
 
   NS_ENSURE_SUCCESS(rv, rv);
 
+  return transaction.Commit();
+}
+
+NS_IMETHODIMP
+nsNavBookmarks::GetBookmarkFolders(nsIURI *aURI, PRUint32 *aCount,
+                                   PRInt64 **aFolders)
+{
+  *aCount = 0;
+  *aFolders = nsnull;
+  nsresult rv;
+  nsTArray<PRInt64> folders;
+
+  // Get the information from the DB as a TArray
+  rv = GetBookmarkFoldersTArray(aURI, &folders);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Copy the results into a new array for output
   if (folders.Length()) {
     *aFolders = NS_STATIC_CAST(PRInt64*,
                            nsMemory::Alloc(sizeof(PRInt64) * folders.Length()));
@@ -1810,7 +1918,8 @@ nsNavBookmarks::GetBookmarkFolders(nsIURI *aURI, PRUint32 *aCount,
       (*aFolders)[i] = folders[i];
   }
   *aCount = folders.Length();
-  return transaction.Commit();
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
