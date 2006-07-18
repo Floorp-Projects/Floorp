@@ -106,6 +106,12 @@ nsLookAndFeelIntPref nsXPLookAndFeel::sIntPrefs[] =
     eMetric_TreeScrollLinesMax, PR_FALSE, nsLookAndFeelTypeInt, 0 },
   { "accessibility.tabfocus",
     eMetric_TabFocusModel, PR_FALSE, nsLookAndFeelTypeInt, 0 },
+  { "ui.scrollbarButtonLeftMouseButtonAction",
+    eMetric_ScrollButtonLeftMouseButtonAction, PR_FALSE, nsLookAndFeelTypeInt, 0 },
+  { "ui.scrollbarButtonMiddleMouseButtonAction",
+    eMetric_ScrollButtonMiddleMouseButtonAction, PR_FALSE, nsLookAndFeelTypeInt, 3 },
+  { "ui.scrollbarButtonRightMouseButtonAction",
+    eMetric_ScrollButtonRightMouseButtonAction, PR_FALSE, nsLookAndFeelTypeInt, 3 },
 };
 
 nsLookAndFeelFloatPref nsXPLookAndFeel::sFloatPrefs[] =

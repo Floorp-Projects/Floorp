@@ -492,6 +492,15 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_ScrollSliderStyle:
         aMetric = eMetric_ScrollThumbStyleProportional;
         break;
+    case eMetric_ScrollButtonLeftMouseButtonAction:
+        aMetric = 0;
+        break;
+    case eMetric_ScrollButtonMiddleMouseButtonAction:
+        aMetric = 1;
+        break;
+    case eMetric_ScrollButtonRightMouseButtonAction:
+        aMetric = 2;
+        break;
     case eMetric_TreeOpenDelay:
         aMetric = 1000;
         break;

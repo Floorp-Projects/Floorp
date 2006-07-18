@@ -60,7 +60,7 @@ public:
   // Overrides
   virtual void Destroy();
 
-  friend nsIFrame* NS_NewScrollBarButtonFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  friend nsIFrame* NS_NewScrollbarButtonFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
@@ -70,7 +70,7 @@ public:
                                   nsIAtom* atom, nsIFrame* start, nsIFrame*& result);
   static nsresult GetParentWithTag(nsIAtom* atom, nsIFrame* start, nsIFrame*& result);
 
-  NS_IMETHOD HandlePress(nsPresContext* aPresContext,
+  PRBool HandleButtonPress(nsPresContext* aPresContext,
                          nsGUIEvent *    aEvent,
                          nsEventStatus*  aEventStatus);
 
@@ -95,7 +95,8 @@ public:
 
 protected:
   virtual void MouseClicked(nsPresContext* aPresContext, nsGUIEvent* aEvent);
-  virtual void MouseClicked();
+  void DoButtonAction(PRBool aSmoothScroll);
+  PRInt32 mIncrement;
 
   
 }; // class nsTabFrame

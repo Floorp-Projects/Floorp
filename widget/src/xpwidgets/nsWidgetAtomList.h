@@ -55,6 +55,7 @@
  ******/
 
 WIDGET_ATOM(accesskey, "accesskey") // The shortcut key for a menu or menu item
+WIDGET_ATOM(active, "active")
 WIDGET_ATOM(ascending, "ascending")
 WIDGET_ATOM(autocheck, "autocheck")
 WIDGET_ATOM(checkbox, "checkbox")

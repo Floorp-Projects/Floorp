@@ -55,6 +55,7 @@
 #include "nsIScrollbarMediator.h"
 #include "nsRepeatService.h"
 #include "nsGUIEvent.h"
+#include "nsILookAndFeel.h"
 
 //
 // NS_NewToolbarFrame
@@ -85,21 +86,106 @@ nsScrollbarButtonFrame::HandleEvent(nsPresContext* aPresContext,
                                     nsEventStatus* aEventStatus)
 {  
   // XXX hack until handle release is actually called in nsframe.
-  if (aEvent->message == NS_MOUSE_EXIT_SYNTH|| aEvent->message == NS_MOUSE_RIGHT_BUTTON_UP || aEvent->message == NS_MOUSE_LEFT_BUTTON_UP)
+  if (aEvent->message == NS_MOUSE_EXIT_SYNTH || 
+      aEvent->message == NS_MOUSE_RIGHT_BUTTON_UP || 
+      aEvent->message == NS_MOUSE_LEFT_BUTTON_UP || 
+      aEvent->message == NS_MOUSE_MIDDLE_BUTTON_UP)
      HandleRelease(aPresContext, aEvent, aEventStatus);
   
-  return nsButtonBoxFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+  // if we didn't handle the press ourselves, pass it on to the superclass
+  if (!HandleButtonPress(aPresContext, aEvent, aEventStatus))
+    return nsButtonBoxFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
 
-NS_IMETHODIMP
-nsScrollbarButtonFrame::HandlePress(nsPresContext* aPresContext, 
+PRBool
+nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext, 
                                     nsGUIEvent*     aEvent,
                                     nsEventStatus*  aEventStatus)
 {
-  MouseClicked();
-  nsRepeatService::GetInstance()->Start(this);
-  return NS_OK;
+  // Get the desired action for the scrollbar button.
+  nsILookAndFeel::nsMetricID tmpAction;
+  if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) 
+    tmpAction = nsILookAndFeel::eMetric_ScrollButtonLeftMouseButtonAction;
+  else if (aEvent->message == NS_MOUSE_MIDDLE_BUTTON_DOWN)
+    tmpAction = nsILookAndFeel::eMetric_ScrollButtonMiddleMouseButtonAction;
+  else if (aEvent->message == NS_MOUSE_RIGHT_BUTTON_DOWN)
+    tmpAction = nsILookAndFeel::eMetric_ScrollButtonRightMouseButtonAction;
+  else
+    return PR_FALSE;
+
+  // Get the button action metric from the pres. shell.
+  PRInt32 pressedButtonAction;
+  if (NS_FAILED(aPresContext->LookAndFeel()->GetMetric(tmpAction,
+                                                       pressedButtonAction)))
+    return PR_FALSE;
+
+  // get the scrollbar control
+  nsIFrame* scrollbar;
+  GetParentWithTag(nsXULAtoms::scrollbar, this, scrollbar);
+
+  if (scrollbar == nsnull)
+    return PR_FALSE;
+
+  // get the scrollbars content node
+  nsIContent* content = scrollbar->GetContent();
+
+  static nsIContent::AttrValuesArray strings[] = { &nsXULAtoms::increment,
+                                                   &nsXULAtoms::decrement,
+                                                   nsnull };
+  PRInt32 index = mContent->FindAttrValueIn(kNameSpaceID_None,
+                                            nsHTMLAtoms::type,
+                                            strings, eCaseMatters);
+  PRInt32 direction;
+  if (index == 0) 
+    direction = 1;
+  else if (index == 1)
+    direction = -1;
+  else
+    return PR_FALSE;
+
+  // Whether or not to repeat the click action.
+  PRBool repeat = PR_TRUE;
+  // Use smooth scrolling by default.
+  PRBool smoothScroll = PR_TRUE;
+  switch (pressedButtonAction) {
+    case 0:
+#ifdef MOZ_WIDGET_COCOA
+      // Emulate the Mac IE behavior of scrolling 2 lines instead of 1
+      // on a button press.  This makes scrolling appear smoother and
+      // keeps us competitive with IE.
+      mIncrement = direction * nsSliderFrame::GetIncrement(content) * 2;
+#else
+      mIncrement = direction * nsSliderFrame::GetIncrement(content);
+#endif
+      break;
+    case 1:
+      mIncrement = direction * nsSliderFrame::GetPageIncrement(content);
+      break;
+    case 2:
+      if (direction == -1)
+        mIncrement = -nsSliderFrame::GetCurrentPosition(content);
+      else
+        mIncrement = nsSliderFrame::GetMaxPosition(content) - 
+                     nsSliderFrame::GetCurrentPosition(content);
+      // Don't repeat or use smooth scrolling if scrolling to beginning or end
+      // of a page.
+      repeat = smoothScroll = PR_FALSE;
+      break;
+    case 3:
+    default:
+      // We were told to ignore this click, or someone assigned a non-standard
+      // value to the button's action.
+      return PR_FALSE;
+      break;
+  }
+  // set this attribute so we can style it later
+  mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::active, NS_LITERAL_STRING("true"), PR_TRUE);
+
+  DoButtonAction(smoothScroll);
+  if (repeat)
+    nsRepeatService::GetInstance()->Start(this);
+  return PR_TRUE;
 }
 
 NS_IMETHODIMP 
@@ -107,6 +193,8 @@ nsScrollbarButtonFrame::HandleRelease(nsPresContext* aPresContext,
                                       nsGUIEvent*     aEvent,
                                       nsEventStatus*  aEventStatus)
 {
+  // we're not active anymore
+  mContent->UnsetAttr(kNameSpaceID_None, nsXULAtoms::active, PR_TRUE);
   nsRepeatService::GetInstance()->Stop();
   return NS_OK;
 }
@@ -114,7 +202,9 @@ nsScrollbarButtonFrame::HandleRelease(nsPresContext* aPresContext,
 
 NS_IMETHODIMP nsScrollbarButtonFrame::Notify(nsITimer *timer)
 {
-  MouseClicked();
+  // Since this is only going to get called if we're scrolling a page length
+  // or a line increment, we will always use smooth scrolling.
+  DoButtonAction(PR_TRUE);
   return NS_OK;
 }
 
@@ -126,71 +216,54 @@ nsScrollbarButtonFrame::MouseClicked(nsPresContext* aPresContext, nsGUIEvent* aE
 }
 
 void
-nsScrollbarButtonFrame::MouseClicked() 
+nsScrollbarButtonFrame::DoButtonAction(PRBool aSmoothScroll) 
 {
-   // when we are clicked either increment or decrement the slider position.
+  // get the scrollbar control
+  nsIFrame* scrollbar;
+  GetParentWithTag(nsXULAtoms::scrollbar, this, scrollbar);
 
-   // get the scrollbar control
-   nsIFrame* scrollbar;
-   GetParentWithTag(nsXULAtoms::scrollbar, this, scrollbar);
+  if (scrollbar == nsnull)
+    return;
 
-   if (scrollbar == nsnull)
-       return;
+  // get the scrollbars content node
+  nsIContent* content = scrollbar->GetContent();
 
-   // get the scrollbars content node
-   nsIContent* content = scrollbar->GetContent();
+  // get the current pos
+  PRInt32 curpos = nsSliderFrame::GetCurrentPosition(content);
+  PRInt32 oldpos = curpos;
 
-   // get the current pos
-   PRInt32 curpos = nsSliderFrame::GetCurrentPosition(content);
-   PRInt32 oldpos = curpos;
+  // get the max pos
+  PRInt32 maxpos = nsSliderFrame::GetMaxPosition(content);
 
-   // get the max pos
-   PRInt32 maxpos = nsSliderFrame::GetMaxPosition(content);
+  // increment the given amount
+  if (mIncrement)
+    curpos += mIncrement;
 
-   // get the increment amount
-   PRInt32 increment = nsSliderFrame::GetIncrement(content);
-#ifdef MOZ_WIDGET_COCOA
-   // Emulate the Mac IE behavior of scrolling 2 lines instead of 1
-   // on a button press.  This makes scrolling appear smoother and
-   // keeps us competitive with IE.
-   increment *= 2;
-#endif
+  // make sure the current position is between the current and max positions
+  if (curpos < 0)
+    curpos = 0;
+  else if (curpos > maxpos)
+    curpos = maxpos;
 
-   nsString value;
-   mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, value);
-   if (!value.IsEmpty())
-   {
-     // if our class is DecrementButton subtract the current pos by increment amount
-     // if our class is IncrementButton increment the current pos by the decrement amount
-     if (value.EqualsLiteral("decrement"))
-         curpos -= increment;
-     else if (value.EqualsLiteral("increment"))
-         curpos += increment;
-
-      // make sure the current position is between the current and max positions
-    if (curpos < 0)
-       curpos = 0;
-    else if (curpos > maxpos)
-       curpos = maxpos;
-
-    nsCOMPtr<nsIScrollbarFrame> sb(do_QueryInterface(scrollbar));
-    if (sb) {
-      nsCOMPtr<nsIScrollbarMediator> m;
-      sb->GetScrollbarMediator(getter_AddRefs(m));
-      if (m) {
-        m->ScrollbarButtonPressed(sb, oldpos, curpos);
-        return;
-      }
+  nsCOMPtr<nsIScrollbarFrame> sb(do_QueryInterface(scrollbar));
+  if (sb) {
+    nsCOMPtr<nsIScrollbarMediator> m;
+    sb->GetScrollbarMediator(getter_AddRefs(m));
+    if (m) {
+      m->ScrollbarButtonPressed(sb, oldpos, curpos);
+      return;
     }
-
-    // set the current position of the slider.
-    nsAutoString curposStr;
-    curposStr.AppendInt(curpos);
-
-    content->SetAttr(kNameSpaceID_None, nsXULAtoms::smooth, NS_LITERAL_STRING("true"), PR_FALSE);
-    content->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, curposStr, PR_TRUE);
-    content->UnsetAttr(kNameSpaceID_None, nsXULAtoms::smooth, PR_FALSE);
   }
+
+  // set the current position of the slider.
+  nsAutoString curposStr;
+  curposStr.AppendInt(curpos);
+
+  if (aSmoothScroll)
+    content->SetAttr(kNameSpaceID_None, nsXULAtoms::smooth, NS_LITERAL_STRING("true"), PR_FALSE);
+  content->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, curposStr, PR_TRUE);
+  if (aSmoothScroll)
+    content->UnsetAttr(kNameSpaceID_None, nsXULAtoms::smooth, PR_FALSE);
 }
 
 nsresult
