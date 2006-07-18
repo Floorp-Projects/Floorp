@@ -368,6 +368,13 @@ interface nsINavBookmarksService : nsISupports
    */
   void importBookmarksHTML(in nsIURI url);
 
+
+  /**
+   * Loads the given bookmarks.html file and puts it in the given folder
+   */
+  void importBookmarksHTMLToFolder(in nsIURI url, in PRInt64 folder);
+
+
   /**
    * Saves the current bookmarks hierarchy to a bookmarks.html file.
    */
