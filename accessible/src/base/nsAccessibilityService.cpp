@@ -1883,9 +1883,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
         nsAutoString tableRole;
         while ((tableContent = tableContent->GetParent()) != nsnull) {
           if (tableContent->Tag() == nsAccessibilityAtoms::table) {
-            if (nsAccessNode::GetRoleAttribute(tableContent, tableRole) &&
-                StringEndsWith(tableRole, NS_LITERAL_STRING(":presentation"),
-                nsCaseInsensitiveStringComparator())) {
+            if (nsAccessNode::HasRoleAttribute(tableContent)) {
               // Table that we're a descendant of is presentational
               return NS_ERROR_FAILURE;
             }
