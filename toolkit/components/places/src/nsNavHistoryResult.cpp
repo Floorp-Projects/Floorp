@@ -52,6 +52,7 @@
 #include "nsILocale.h"
 #include "nsILocaleService.h"
 #include "nsILocalFile.h"
+#include "nsIRemoteContainer.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsPrimitives.h"
 #include "nsITreeColumns.h"
@@ -162,6 +163,45 @@ nsNavHistoryResultNode::GetResult()
 }
 
 
+// nsNavHistoryResultNode::GetGeneratingOptions
+//
+//    Searches up the tree for the closest node that has an options structure.
+//    This will tell us the options that were used to generate this node.
+//
+//    Be careful, this function walks up the tree, so it can not be used when
+//    result nodes are created because they have no parent. Only call this
+//    function after the tree has been built.
+
+nsNavHistoryQueryOptions*
+nsNavHistoryResultNode::GetGeneratingOptions()
+{
+  if (! mParent) {
+    // When we have no parent, it either means we haven't built the tree yet,
+    // in which case calling this function is a bug, or this node is the root
+    // of the tree. When we are the root of the tree, our own options are the
+    // generating options, and we know we are either a query of a folder node.
+    if (IsFolder())
+      return GetAsFolder()->mOptions;
+    else if (IsQuery())
+      return GetAsQuery()->mOptions;
+    NS_NOTREACHED("Can't find a generating node for this container, perhaps FillStats has not been called on this tree yet?");
+    return nsnull;
+  }
+
+  nsNavHistoryContainerResultNode* cur = mParent;
+  while (cur) {
+    if (cur->IsFolder())
+      return cur->GetAsFolder()->mOptions;
+    else if (cur->IsQuery())
+      return cur->GetAsQuery()->mOptions;
+    cur = cur->mParent;
+  }
+  // we should always find a folder or query node as an ancestor
+  NS_NOTREACHED("Can't find a generating node for this container, the tree seemes corrupted.");
+  return nsnull;
+}
+
+
 // nsNavHistoryURIResultNode ***************************************************
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsNavHistoryURIResultNode,
@@ -217,31 +257,16 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsNavHistoryContainerResultNode,
                              nsINavHistoryContainerResultNode)
 
 nsNavHistoryContainerResultNode::nsNavHistoryContainerResultNode(
-    const nsACString& aTitle, PRUint32 aAccessCount, PRTime aTime,
-    const nsACString& aIconURI, PRUint32 aContainerType, PRBool aReadOnly) :
-  nsNavHistoryResultNode(aTitle, aAccessCount, aTime, aIconURI),
-  mResult(nsnull),
-  mContainerType(aContainerType),
-  mExpanded(PR_FALSE),
-  mChildrenReadOnly(aReadOnly)
-{
-}
-
-nsNavHistoryContainerResultNode::nsNavHistoryContainerResultNode(
     const nsACString& aTitle, const nsACString& aIconURI,
-    PRUint32 aContainerType) :
+    PRUint32 aContainerType, PRBool aReadOnly,
+    const nsACString& aRemoteContainerType) :
   nsNavHistoryResultNode(aTitle, 0, 0, aIconURI),
   mResult(nsnull),
   mContainerType(aContainerType),
   mExpanded(PR_FALSE),
-  mChildrenReadOnly(PR_TRUE)
+  mChildrenReadOnly(aReadOnly),
+  mRemoteContainerType(aRemoteContainerType)
 {
-  // The container type must be a host or day. This constructor is used when
-  // we are grouping and want to create host or day containers. Therefore, you
-  // can't use it with folder or query containers.
-  NS_ASSERTION(aContainerType == nsINavHistoryResultNode::RESULT_TYPE_HOST ||
-               aContainerType == nsINavHistoryResultNode::RESULT_TYPE_DAY,
-               "You are passing in a container type that isn't valid");
 }
 
 
@@ -312,6 +337,9 @@ nsNavHistoryContainerResultNode::SetContainerOpen(PRBool aContainerOpen)
 
 
 // nsNavHistoryContainerResultNode::OpenContainer
+//
+//    This handles the generic container case. Other container types should
+//    override this to do their own handling.
 
 nsresult
 nsNavHistoryContainerResultNode::OpenContainer()
@@ -319,6 +347,20 @@ nsNavHistoryContainerResultNode::OpenContainer()
   nsresult rv;
   NS_ASSERTION(! mExpanded, "Container must be expanded to close it");
   mExpanded = PR_TRUE;
+
+  if (! mRemoteContainerType.IsEmpty()) {
+    // remote container API may want to fill us
+    nsCOMPtr<nsIRemoteContainer> remote = do_GetService(mRemoteContainerType.get(), &rv);
+    if (NS_SUCCEEDED(rv)) {
+      remote->OnContainerOpening(this, GetGeneratingOptions());
+    } else {
+      NS_WARNING("Unable to get remote container for ");
+      NS_WARNING(mRemoteContainerType.get());
+    }
+    PRInt32 oldAccessCount = mAccessCount;
+    FillStats();
+    ReverseUpdateStats(mAccessCount - oldAccessCount);
+  }
 
   nsNavHistoryResult* result = GetResult();
   NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
@@ -336,9 +378,17 @@ nsNavHistoryContainerResultNode::CloseContainer()
   NS_ASSERTION(mExpanded, "Container must be expanded to close it");
   mExpanded = PR_FALSE;
 
+  nsresult rv;
+  if (! mRemoteContainerType.IsEmpty()) {
+    // notify remote containers that we are closing
+    nsCOMPtr<nsIRemoteContainer> remote = do_GetService(mRemoteContainerType.get(), &rv);
+    if (NS_SUCCEEDED(rv))
+      remote->OnContainerClosed(this);
+  }
+
   nsNavHistoryResult* result = GetResult();
   NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
-  nsresult rv = result->RefreshVisibleSection(this);
+  rv = result->RefreshVisibleSection(this);
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
@@ -691,9 +741,6 @@ PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_URILess(
     nsNavHistoryURIResultNode* aURI = a->GetAsURI();
     nsNavHistoryURIResultNode* bURI = b->GetAsURI();
     value = aURI->mURI.Compare(bURI->mURI.get());
-  }  else if (aType == nsINavHistoryResultNode::RESULT_TYPE_DAY) {
-    // date nodes use date (skip conflict resolution because it uses date too)
-    return ComparePRTime(a->mTime, b->mTime);
   } else {
     // for everything else, use title (= host name)
     nsICollation* collation = NS_STATIC_CAST(nsICollation*, closure);
@@ -1079,6 +1126,20 @@ nsNavHistoryContainerResultNode::RemoveChildAt(PRInt32 aIndex,
 }
 
 
+// nsNavHistoryContainerResultNode::CanRemoteContainersChange
+//
+//    Returns true if remote containers can manipulate the contents of this
+//    container. This is false for folders and queries, true for everything
+//    else.
+
+PRBool
+nsNavHistoryContainerResultNode::CanRemoteContainersChange()
+{
+  return (mContainerType != nsINavHistoryResultNode::RESULT_TYPE_FOLDER &&
+          mContainerType != nsINavHistoryResultNode::RESULT_TYPE_QUERY);
+}
+
+
 // nsNavHistoryContainerResultNode::GetHasChildren
 //
 //    Complex containers (folders and queries) will override this. Here, we
@@ -1131,27 +1192,233 @@ nsNavHistoryContainerResultNode::GetChildrenReadOnly(PRBool *aChildrenReadOnly)
   return NS_OK;
 }
 
+
+// nsNavHistoryContainerResultNode::GetRemoteContainerType
+
+NS_IMETHODIMP
+nsNavHistoryContainerResultNode::GetRemoteContainerType(
+    nsACString& aRemoteContainerType)
+{
+  aRemoteContainerType = mRemoteContainerType;
+  return NS_OK;
+}
+
+
+// nsNavHistoryContainerResultNode::AppendURINode
+
+NS_IMETHODIMP
+nsNavHistoryContainerResultNode::AppendURINode(
+    const nsACString& aTitle, PRUint32 aAccessCount, PRTime aTime,
+    const nsACString& aIconURI, const nsACString& aURI,
+    nsINavHistoryURIResultNode** _retval)
+{
+  *_retval = nsnull;
+  if (mRemoteContainerType.IsEmpty() || ! CanRemoteContainersChange())
+    return NS_ERROR_INVALID_ARG; // we must be a remote container
+
+  nsRefPtr<nsNavHistoryURIResultNode> result =
+      new nsNavHistoryURIResultNode(aTitle, aAccessCount, aTime, aIconURI, aURI);
+  NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
+
+  // append to our list
+  if (! mChildren.AppendObject(result))
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(*_retval = result);
+  return NS_OK;
+}
+
+
+// nsNavHistoryContainerResultNode::AppendVisitNode
+
+NS_IMETHODIMP
+nsNavHistoryContainerResultNode::AppendVisitNode(
+    const nsACString& aTitle, PRUint32 aAccessCount, PRTime aTime,
+    const nsACString& aIconURI, const nsACString& aURI, PRInt64 aSession,
+    nsINavHistoryVisitResultNode** _retval)
+{
+  *_retval = nsnull;
+  if (mRemoteContainerType.IsEmpty() || ! CanRemoteContainersChange())
+    return NS_ERROR_INVALID_ARG; // we must be a remote container
+
+  nsRefPtr<nsNavHistoryVisitResultNode> result =
+      new nsNavHistoryVisitResultNode(aTitle, aAccessCount, aTime,
+                                      aIconURI, aURI, aSession);
+  NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
+
+  // append to our list
+  if (! mChildren.AppendObject(result))
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(*_retval = result);
+  return NS_OK;
+}
+
+
+// nsNavHistoryContainerResultNode::AppendFullVisitNode
+
+NS_IMETHODIMP
+nsNavHistoryContainerResultNode::AppendFullVisitNode(
+    const nsACString& aTitle, PRUint32 aAccessCount, PRTime aTime,
+    const nsACString& aIconURI, const nsACString& aURI, PRInt64 aSession,
+    PRInt64 aVisitId, PRInt64 aReferringVisitId, PRInt32 aTransitionType,
+    nsINavHistoryFullVisitResultNode** _retval)
+{
+  *_retval = nsnull;
+  if (mRemoteContainerType.IsEmpty() || ! CanRemoteContainersChange())
+    return NS_ERROR_INVALID_ARG; // we must be a remote container
+
+  nsRefPtr<nsNavHistoryFullVisitResultNode> result =
+      new nsNavHistoryFullVisitResultNode(aTitle, aAccessCount, aTime,
+                                          aIconURI, aURI, aSession,
+                                          aVisitId, aReferringVisitId,
+                                          aTransitionType);
+  NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
+
+  // append to our list
+  if (! mChildren.AppendObject(result))
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(*_retval = result);
+  return NS_OK;
+}
+
+
+// nsNavHistoryContainerResultNode::AppendContainerNode
+
+NS_IMETHODIMP
+nsNavHistoryContainerResultNode::AppendContainerNode(
+    const nsACString& aTitle, const nsACString& aIconURI,
+    PRUint32 aContainerType, const nsACString& aRemoteContainerType,
+    nsINavHistoryContainerResultNode** _retval)
+{
+  *_retval = nsnull;
+  if (mRemoteContainerType.IsEmpty() || ! CanRemoteContainersChange())
+    return NS_ERROR_INVALID_ARG; // we must be a remote container
+  if (! IsTypeContainer(aContainerType) || IsTypeFolder(aContainerType) ||
+      IsTypeQuery(aContainerType))
+    return NS_ERROR_INVALID_ARG; // not proper container type
+  if (aContainerType == nsINavHistoryResultNode::RESULT_TYPE_REMOTE_CONTAINER &&
+      aRemoteContainerType.IsEmpty())
+    return NS_ERROR_INVALID_ARG; // remote containers must have r.c. type
+  if (aContainerType != nsINavHistoryResultNode::RESULT_TYPE_REMOTE_CONTAINER &&
+      ! aRemoteContainerType.IsEmpty())
+    return NS_ERROR_INVALID_ARG; // non-remote containers must NOT have r.c. type
+
+  nsRefPtr<nsNavHistoryContainerResultNode> result =
+      new nsNavHistoryContainerResultNode(aTitle, aIconURI, aContainerType,
+                                          PR_TRUE, aRemoteContainerType);
+  NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
+
+  // append to our list
+  if (! mChildren.AppendObject(result))
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(*_retval = result);
+  return NS_OK;
+}
+
+
+// nsNavHistoryContainerResultNode::AppendQueryNode
+
+NS_IMETHODIMP
+nsNavHistoryContainerResultNode::AppendQueryNode(
+    const nsACString& aTitle, const nsACString& aIconURI,
+    const nsACString& aQueryString, nsINavHistoryQueryResultNode** _retval)
+{
+  *_retval = nsnull;
+  if (mRemoteContainerType.IsEmpty() || ! CanRemoteContainersChange())
+    return NS_ERROR_INVALID_ARG; // we must be a remote container
+
+  nsRefPtr<nsNavHistoryQueryResultNode> result =
+      new nsNavHistoryQueryResultNode(aTitle, aIconURI, aQueryString);
+  NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
+
+  // append to our list
+  if (! mChildren.AppendObject(result))
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(*_retval = result);
+  return NS_OK;
+}
+
+
+// nsNavHistoryContainerResultNode::AppendFolderNode
+
+NS_IMETHODIMP
+nsNavHistoryContainerResultNode::AppendFolderNode(
+    PRInt64 aFolderId, nsINavHistoryFolderResultNode** _retval)
+{
+  *_retval = nsnull;
+  if (mRemoteContainerType.IsEmpty() || ! CanRemoteContainersChange())
+    return NS_ERROR_INVALID_ARG; // we must be a remote container
+
+  nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+  NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
+
+  // create the node, it will be addrefed for us
+  nsRefPtr<nsNavHistoryResultNode> result;
+  nsresult rv = bookmarks->ResultNodeForFolder(aFolderId,
+                                               GetGeneratingOptions(),
+                                               getter_AddRefs(result));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // append to our list
+  if (! mChildren.AppendObject(result))
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(*_retval = result->GetAsFolder());
+  return NS_OK;
+}
+
+
+// nsNavHistoryContainerResultNode::ClearContents
+//
+//    Used by the remote container API to clear this container
+
+NS_IMETHODIMP
+nsNavHistoryContainerResultNode::ClearContents()
+{
+  if (mRemoteContainerType.IsEmpty() || ! CanRemoteContainersChange())
+    return NS_ERROR_INVALID_ARG; // we must be a remote container
+
+  // we know if CanRemoteContainersChange() then we are a regular container
+  // and not a query or folder, so clearing doesn't need anything else to
+  // happen (like unregistering observers). Also, since this should only
+  // happen when the container is closed, we don't need to redraw the screen.
+  mChildren.Clear();
+
+  PRUint32 oldAccessCount = mAccessCount;
+  mAccessCount = 0;
+  mTime = 0;
+  ReverseUpdateStats(-oldAccessCount);
+  return NS_OK;
+}
+
+
 // nsNavHistoryQueryResultNode *************************************************
 //
 //    HOW QUERY UPDATING WORKS
 //
 //    Queries are different than bookmark folders in that we can not always
-//    do dynamic updates (easily) and updates are more expensive.
+//    do dynamic updates (easily) and updates are more expensive. Therefore,
+//    we do NOT query if we are not open and want to see if we have any children
+//    (for drawing a twisty) and always assume we will.
 //
-//    
+//    When the container is opened, we execute the query and register the
+//    listeners. Like bookmark folders, we stay registered even when closed,
+//    and clear ourselves as soon as a message comes in. This lets us respond
+//    quickly if the user closes and reopens the container.
+//
+//    We try to handle the most common notifications for the most common query
+//    types dynamically, that is, figuring out what should happen in response
+//    to a message without doing a requery. For complex changes or complex
+//    queries, we give up and requery.
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsNavHistoryQueryResultNode,
                              nsNavHistoryContainerResultNode,
                              nsINavHistoryQueryResultNode)
 
 nsNavHistoryQueryResultNode::nsNavHistoryQueryResultNode(
-    nsNavHistoryQueryOptions* aGeneratingOptions,
-    const nsACString& aTitle, PRUint32 aAccessCount, PRTime aTime,
-    const nsACString& aIconURI, const nsACString& aQueryURI) :
-  nsNavHistoryContainerResultNode(aTitle, aAccessCount, aTime, aIconURI,
+    const nsACString& aTitle, const nsACString& aIconURI,
+    const nsACString& aQueryURI) :
+  nsNavHistoryContainerResultNode(aTitle, aIconURI,
                                   nsINavHistoryResultNode::RESULT_TYPE_QUERY,
-                                  PR_TRUE),
-  mGeneratingOptions(aGeneratingOptions),
+                                  PR_TRUE, EmptyCString()),
   mQueryURI(aQueryURI),
   mHasSearchTerms(PR_FALSE),
   mContentsValid(PR_FALSE),
@@ -1163,26 +1430,27 @@ nsNavHistoryQueryResultNode::nsNavHistoryQueryResultNode(
 }
 
 nsNavHistoryQueryResultNode::nsNavHistoryQueryResultNode(
-    nsNavHistoryQueryOptions* aGeneratingOptions,
-    const nsACString& aTitle, PRUint32 aAccessCount, PRTime aTime,
-    const nsACString& aIconURI, nsINavHistoryQuery** aQueries,
-    PRUint32 aQueryCount, nsNavHistoryQueryOptions* aOptions) :
-  nsNavHistoryContainerResultNode(aTitle, aAccessCount, aTime, aIconURI,
+    const nsACString& aTitle, const nsACString& aIconURI,
+    const nsCOMArray<nsNavHistoryQuery>& aQueries,
+    nsNavHistoryQueryOptions* aOptions) :
+  nsNavHistoryContainerResultNode(aTitle, aIconURI,
                                   nsINavHistoryResultNode::RESULT_TYPE_QUERY,
-                                  PR_TRUE),
-  mGeneratingOptions(aGeneratingOptions),
+                                  PR_TRUE, EmptyCString()),
+  mQueries(aQueries),
+  mOptions(aOptions),
   mContentsValid(PR_FALSE),
   mBatchInProgress(PR_FALSE)
 {
-  NS_ASSERTION(aQueryCount > 0, "Must have at least one query");
+  NS_ASSERTION(aQueries.Count() > 0, "Must have at least one query");
+  /*
   for (PRUint32 i = 0; i < aQueryCount; i ++)
     mQueries.AppendObject(aQueries[i]);
   aOptions->Clone(getter_AddRefs(mOptions));
-
+*/
 
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ASSERTION(history, "History service missing");
-  mLiveUpdate = history->GetUpdateRequirements(&mQueries, mOptions,
+  mLiveUpdate = history->GetUpdateRequirements(mQueries, mOptions,
                                                &mHasSearchTerms);
 
   // queries have special icons if not otherwise set
@@ -1200,7 +1468,8 @@ nsNavHistoryQueryResultNode::nsNavHistoryQueryResultNode(
 PRBool
 nsNavHistoryQueryResultNode::CanExpand()
 {
-  if (mGeneratingOptions->ExpandQueries())
+  nsNavHistoryQueryOptions* options = GetGeneratingOptions();
+  if (options && options->ExpandQueries())
     return PR_TRUE;
   if (mResult && mResult->mRootNode == this)
     return PR_TRUE;
@@ -1233,13 +1502,18 @@ nsNavHistoryQueryResultNode::OnRemoving()
 nsresult
 nsNavHistoryQueryResultNode::OpenContainer()
 {
+  NS_ASSERTION(! mExpanded, "Container must be expanded to close it");
   if (! CanExpand())
     return NS_OK;
   if (! mContentsValid) {
     nsresult rv = FillChildren();
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  return nsNavHistoryContainerResultNode::OpenContainer();
+
+  mExpanded = PR_TRUE;
+  nsNavHistoryResult* result = GetResult();
+  NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
+  return result->RefreshVisibleSection(this);
 }
 
 
@@ -1329,31 +1603,11 @@ nsNavHistoryQueryResultNode::VerifyQueriesParsed()
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
 
-  nsINavHistoryQuery** queries;
-  PRUint32 queryCount;
-  nsCOMPtr<nsINavHistoryQueryOptions> options;
-  nsresult rv = history->QueryStringToQueries(mQueryURI, &queries, &queryCount,
-      getter_AddRefs(options));
+  nsresult rv = history->QueryStringToQueryArray(mQueryURI, &mQueries,
+                                                 getter_AddRefs(mOptions));
   NS_ENSURE_SUCCESS(rv, rv);
-  mOptions = do_QueryInterface(options, &rv); // need concrete pointer
-  if (NS_FAILED(rv)) {
-    nsMemory::Free(queries);
-    return rv;
-  }
 
-  // Copy the individual queries into our array. At the same time, note if
-  // we have any bookmark components so we know whether to pay attention to
-  // bookmark notifications.
-  for (PRUint32 i = 0; i < queryCount; i ++) {
-    if (! mQueries.AppendObject(queries[i])) {
-      nsMemory::Free(queries);
-      mQueries.Clear();
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-  nsMemory::Free(queries);
-
-  mLiveUpdate = history->GetUpdateRequirements(&mQueries, mOptions,
+  mLiveUpdate = history->GetUpdateRequirements(mQueries, mOptions,
                                                &mHasSearchTerms);
   return NS_OK;
 }
@@ -1726,7 +1980,7 @@ nsNavHistoryQueryResultNode::OnVisit(nsIURI* aURI, PRInt64 aVisitId,
       rv = history->VisitIdToResultNode(aVisitId, mOptions,
                                         getter_AddRefs(addition));
       NS_ENSURE_SUCCESS(rv, rv);
-      if (! history->EvaluateQueryForNode(&mQueries, mOptions,
+      if (! history->EvaluateQueryForNode(mQueries, mOptions,
                                           addition->GetAsURI()))
         return NS_OK; // don't need to include in our query
       break;
@@ -2051,11 +2305,11 @@ NS_IMPL_ISUPPORTS_INHERITED2(nsNavHistoryFolderResultNode,
                              nsINavHistoryFolderResultNode)
 
 nsNavHistoryFolderResultNode::nsNavHistoryFolderResultNode(
-    const nsACString& aTitle, PRUint32 aAccessCount, PRTime aTime,
-    nsNavHistoryQueryOptions* aOptions, PRInt64 aFolderId) :
-  nsNavHistoryContainerResultNode(aTitle, aAccessCount, aTime, EmptyCString(),
+    const nsACString& aTitle, nsNavHistoryQueryOptions* aOptions,
+    PRInt64 aFolderId, const nsACString& aRemoteContainerType) :
+  nsNavHistoryContainerResultNode(aTitle, EmptyCString(),
                                   nsINavHistoryResultNode::RESULT_TYPE_FOLDER,
-                                  PR_FALSE),
+                                  PR_FALSE, aRemoteContainerType),
   mContentsValid(PR_FALSE),
   mOptions(aOptions),
   mFolderId(aFolderId)
@@ -2104,11 +2358,28 @@ nsNavHistoryFolderResultNode::OnRemoving()
 nsresult
 nsNavHistoryFolderResultNode::OpenContainer()
 {
+  NS_ASSERTION(! mExpanded, "Container must be expanded to close it");
+  nsresult rv;
+  if (! mRemoteContainerType.IsEmpty()) {
+    // remote container API may want to change the bookmarks for this folder.
+    nsCOMPtr<nsIRemoteContainer> remote = do_GetService(mRemoteContainerType.get(), &rv);
+    if (NS_SUCCEEDED(rv)) {
+      remote->OnContainerOpening(NS_STATIC_CAST(nsINavHistoryFolderResultNode*, this),
+                                 mOptions);
+    } else {
+      NS_WARNING("Unable to get remote container for ");
+      NS_WARNING(mRemoteContainerType.get());
+    }
+  }
+
   if (! mContentsValid) {
-    nsresult rv = FillChildren();
+    rv = FillChildren();
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  return nsNavHistoryContainerResultNode::OpenContainer();
+  mExpanded = PR_TRUE;
+  nsNavHistoryResult* result = GetResult();
+  NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
+  return result->RefreshVisibleSection(this);
 }
 
 
@@ -2734,11 +3005,9 @@ nsNavHistoryResult::ComputeShowSessions()
     return; // not date sorting
 
   PRUint32 groupCount;
-  const PRUint32* groups = mOptions->GroupingMode(&groupCount);
-  for (PRUint32 i = 0; i < groupCount; i ++) {
-    if (groups[i] != nsINavHistoryQueryOptions::GROUP_BY_DAY)
-      return; // non-time-based grouping
-  }
+  mOptions->GroupingMode(&groupCount);
+  if (groupCount > 0)
+    return;
 
   mShowSessions = PR_TRUE;
 }
