@@ -200,7 +200,7 @@ public:
 
   // this actually executes a query and gives you results, it is used by
   // nsNavHistoryQueryResultNode
-  nsresult GetQueryResults(const nsCOMArray<nsINavHistoryQuery>& aQueries,
+  nsresult GetQueryResults(const nsCOMArray<nsNavHistoryQuery>& aQueries,
                            nsNavHistoryQueryOptions *aOptions,
                            nsCOMArray<nsNavHistoryResultNode>* aResults);
 
@@ -209,6 +209,10 @@ public:
   nsresult RowToResult(mozIStorageValueArray* aRow,
                        nsNavHistoryQueryOptions* aOptions,
                        nsNavHistoryResultNode** aResult);
+  nsresult QueryRowToResult(const nsACString& aURI, const nsACString& aTitle,
+                            PRUint32 aAccessCount, PRTime aTime,
+                            const nsACString& aFavicon,
+                            nsNavHistoryResultNode** aNode);
 
   nsresult VisitIdToResultNode(PRInt64 visitId,
                                nsNavHistoryQueryOptions* aOptions,
@@ -233,10 +237,10 @@ public:
   static const char kAnnotationPreviousEncoding[];
 
   // used by query result nodes to update: see comment on body of CanLiveUpdateQuery
-  static PRUint32 GetUpdateRequirements(nsCOMArray<nsINavHistoryQuery>* aQueries,
+  static PRUint32 GetUpdateRequirements(const nsCOMArray<nsNavHistoryQuery>& aQueries,
                                         nsNavHistoryQueryOptions* aOptions,
                                         PRBool* aHasSearchTerms);
-  PRBool EvaluateQueryForNode(nsCOMArray<nsINavHistoryQuery>* aQueries,
+  PRBool EvaluateQueryForNode(const nsCOMArray<nsNavHistoryQuery>& aQueries,
                               nsNavHistoryQueryOptions* aOptions,
                               nsNavHistoryURIResultNode* aNode);
 
@@ -248,6 +252,11 @@ public:
   nsresult RecursiveGroup(const nsCOMArray<nsNavHistoryResultNode>& aSource,
                           const PRUint32* aGroupingMode, PRUint32 aGroupCount,
                           nsCOMArray<nsNavHistoryResultNode>* aDest);
+
+  // better alternative to QueryStringToQueries (in nsNavHistoryQuery.cpp)
+  nsresult QueryStringToQueryArray(const nsACString& aQueryString,
+                                   nsCOMArray<nsNavHistoryQuery>* aQueries,
+                                   nsNavHistoryQueryOptions** aOptions);
 
 private:
   ~nsNavHistory();
@@ -319,14 +328,14 @@ protected:
   nsCOMPtr<nsITimer> mExpireNowTimer;
   static void expireNowTimerCallback(nsITimer* aTimer, void* aClosure);
 
-  nsresult QueryToSelectClause(nsINavHistoryQuery* aQuery,
+  nsresult QueryToSelectClause(nsNavHistoryQuery* aQuery,
                                PRInt32 aStartParameter,
                                nsCString* aClause,
                                PRInt32* aParamCount,
                                const nsACString& aCommonConditions);
   nsresult BindQueryClauseParameters(mozIStorageStatement* statement,
                                      PRInt32 aStartParameter,
-                                     nsINavHistoryQuery* aQuery,
+                                     nsNavHistoryQuery* aQuery,
                                      PRInt32* aParamCount);
 
   nsresult ResultsAsList(mozIStorageStatement* statement,
@@ -337,8 +346,6 @@ protected:
   nsresult SetPageTitleInternal(nsIURI* aURI, PRBool aIsUserTitle,
                                 const nsAString& aTitle);
 
-  nsresult GroupByDay(const nsCOMArray<nsNavHistoryResultNode>& aSource,
-                      nsCOMArray<nsNavHistoryResultNode>* aDest);
   nsresult GroupByHost(const nsCOMArray<nsNavHistoryResultNode>& aSource,
                        nsCOMArray<nsNavHistoryResultNode>* aDest,
                        PRBool aIsDomain);
@@ -413,7 +420,7 @@ protected:
 
   // in nsNavHistoryQuery.cpp
   nsresult TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
-                           nsCOMArray<nsINavHistoryQuery>* aQueries,
+                           nsCOMArray<nsNavHistoryQuery>* aQueries,
                            nsNavHistoryQueryOptions* aOptions);
 
   // Transaction Manager
