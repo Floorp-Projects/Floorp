@@ -189,7 +189,7 @@ nsMorkHistoryImporter::AddToHistoryCB(const nsACString &aRowID,
       // page already.
 
       PRInt64 visitID;
-      history->AddVisit(uri, date, 0, transition, 0, &visitID);
+      history->AddVisit(uri, date, 0, transition, PR_FALSE, 0, &visitID);
     }
   }
   return PL_DHASH_NEXT;
