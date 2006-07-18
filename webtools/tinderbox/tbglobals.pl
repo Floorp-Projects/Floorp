@@ -21,6 +21,7 @@
 
 # Reading the log backwards saves time when we only want the tail.
 use Backwards;
+use Digest::MD5 qw(md5_hex);
 
 #
 # Global variabls and functions for tinderbox
@@ -429,10 +430,7 @@ sub tb_check_password {
   }
   $form{password} =~ s/\s+$//;      # Strip trailing whitespace.
   if ($form{password} ne '') {
-    open(TRAPDOOR, "../bonsai/data/trapdoor $form{'password'} |") 
-      or die "Can't run trapdoor func!";
-    my $encoded = <TRAPDOOR>;
-    close TRAPDOOR;
+    my $encoded = md5_hex($form{password});
     $encoded =~ s/\s+$//;   # Strip trailing whitespace.
     if ($encoded eq $correct) {
       if ($form{rememberpassword} ne '') {

@@ -6,28 +6,32 @@
 This is a quick guide for installing the tinderbox server.
 
 
-1) If you want to track checkins with tinderbox, you will need to
-   install bonsai first.
+1) 
+   If you want to track checkins with tinderbox, you will need to
+   install Bonsai or ViewVC first.
 
-2) In order to tighten access to the tinderbox files, you will need to
+2) 
+   In order to tighten access to the tinderbox files, you will need to
    create a tinderbox user & group for exclusive use by the tinderbox server.
-   Add the mail user to your tinderbox group so that build logs can be
-   processed.
 
-3) Checkout the latest copy of the tinderbox server:
+3) 
+   Checkout the latest copy of the tinderbox server:
 	cd /builds/cvs && cvs -z3 co mozilla/webtools/tinderbox
 
-4) Edit the tinderbox Makefile and set the variables in the
+4) 
+   Edit the tinderbox Makefile and set the variables in the
    SERVER_CONFIGURATION as appropriate.  Let's assume that you set:
      TINDERBOX_DIR=/var/www/html/tinderbox
      TINDERBOX_USER=tinderbox
      TINDERBOX_GROUP=tinderbox
 	vi mozilla/webtools/tinderbox/Makefile
 
-5) Install the tinderbox server into the system directory
+5) 
+   Install the tinderbox server into the system directory
 	sudo make -C mozilla/webtools/tinderbox install
 
-6) Edit your webserver configuration file and setup the virtual server
+6) 
+   Edit your webserver configuration file and setup the virtual server
    for your tinderbox as well as limit permissions to certain sensitive files.
 	vi /etc/httpd/conf/httpd.conf
 
@@ -66,7 +70,8 @@ This is a quick guide for installing the tinderbox server.
 </VirtualHost>	
 # End tinderbox apache configuration
 
-7) Add an email alias for 'tinderbox-daemon' on the local server and pipe
+7) 
+   Add an email alias for 'tinderbox-daemon' on the local server and pipe
    all mail through the handemail.pl script.
    Assuming that you're using sendmail, add the following line to /etc/aliases
 
@@ -75,9 +80,16 @@ tinderbox-daemon:  "|/var/www/html/tinderbox/handlemail.pl /var/www/html/tinderb
    If sendmail uses smrsh, you may need to create a symlink under /etc/smrsh.
 	ln -sf /var/www/html/tinderbox/handlemail.pl /etc/smrsh/handlemail.pl
 
-8) Restart apache and go to http://tinderbox.company.com/tinderbox/ .
-   Click on 'Administer' and enter the information for your new tinderbox tree.
+8)
+   Generate an admin password to be used to setup new trees
+	sudo make -C mozilla/webtools/tinderbox genpasswd
 
-9) pull the tinderbox client source and start sending build reports
+9) 
+   Restart apache and go to http://tinderbox.company.com/tinderbox/ .
+   Click on 'Create new tree' and enter the information for your 
+      new tinderbox tree.
+
+10) 
+   Pull the tinderbox client source and start sending build reports
    to tinderbox-daemon@<tinderbox.server>
 	(cd /builds/cvs && cvs -z3 co mozilla/tools/tinderbox )

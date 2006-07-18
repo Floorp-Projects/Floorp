@@ -148,3 +148,22 @@ install:
 	chmod 755 $(TINDERBOX_DIR)
 	chmod 770 $(TINDERBOX_DIR)/data
 	chmod 770 $(TINDERBOX_DIR)/examples
+
+define READPASS
+$(PERL) -e ' \
+use Digest::MD5 qw(md5_hex); \
+use Term::ReadKey; \
+open(PASSWD, ">$1") or die "$1:$$!\n"; \
+print "Enter the new admin password: "; \
+ReadMode("noecho"); \
+chomp($$pass = ReadLine(0)); \
+print "\n"; \
+ReadMode(0); \
+print PASSWD md5_hex($$pass); \
+close(PASSWD);'
+endef
+
+genpasswd:
+	@$(call READPASS,$(TINDERBOX_DIR)/data/passwd)
+	@chown $(TINDERBOX_USER) $(TINDERBOX_DIR)/data/passwd
+	@chgrp $(TINDERBOX_USER) $(TINDERBOX_DIR)/data/passwd
