@@ -237,6 +237,15 @@ interface nsINavBookmarksService : nsISupports
   void moveFolder(in PRInt64 folder, in PRInt64 newParent, in PRInt32 index);
 
   /**
+   * Returns the ID of a child folder with the given name. This does not
+   * recurse, you have to give it an immediate sibling of the given folder.
+   * If the given subfolder doesn't exist, it will return 0.
+   *  @param folder    Parent folder whose children we will search
+   *  @param subFolder Name of the folder to search for in folder
+   */
+  PRInt64 getChildFolder(in PRInt64 folder, in AString subFolder);
+
+  /**
    * Set the history/bookmark title for a URI.  The new title will be used
    * anywhere the URI is shown in bookmarks or history.
    *  @param uri   The URI whose name should be set
@@ -299,4 +308,16 @@ interface nsINavBookmarksService : nsISupports
    * done changing. Should match beginUpdateBatch or bad things will happen.
    */
   void endUpdateBatch();
+
+
+  /**
+   * Loads the given bookmarks.html file and merges it with the current
+   * bookmarks hierarchy.
+   */
+  void importBookmarksHTML(in nsIURI url);
+
+  /**
+   * Saves the current bookmarks hierarchy to a bookmarks.html file.
+   */
+  void exportBookmarksHTML(in nsIURI url);
 };
