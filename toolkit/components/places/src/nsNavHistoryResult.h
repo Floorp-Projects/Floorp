@@ -495,8 +495,6 @@ public:
   nsresult RemoveChildAt(PRInt32 aIndex, PRBool aIsTemporary = PR_FALSE);
 
   PRBool CanRemoteContainersChange();
-  void ChangeTitles(nsIURI* aURI, const nsACString& aNewTitle,
-                    PRBool aRecursive, PRBool aOnlyOne);
 };
 
 
