@@ -1987,7 +1987,7 @@ nsXFormsModelElement::ProcessBindElements()
   nsresult rv;
   nsCOMPtr<nsIDOMXPathEvaluator> xpath = do_QueryInterface(firstInstanceDoc,
                                                            &rv);
-  NS_ENSURE_TRUE(rv, rv);
+  NS_ENSURE_TRUE(xpath, rv);
 
   nsCOMPtr<nsIDOMNodeList> children;
   mElement->GetChildNodes(getter_AddRefs(children));
