@@ -68,11 +68,6 @@
 // server updates.
 const kKeyFilename = "kf.txt";
 
-// If we don't have a key, we can get one at this url.
-// XXX We shouldn't be referencing browser.safebrowsing. from here.  This
-// should be an constructor param or settable some other way.
-const kGetKeyUrl = "browser.safebrowsing.provider.0.keyURL";
-
 /**
  * A key manager for UrlCrypto. There should be exactly one of these
  * per appplication, and all UrlCrypto's should share it. This is
@@ -80,6 +75,7 @@ const kGetKeyUrl = "browser.safebrowsing.provider.0.keyURL";
  * UrlCrypto's prototype at startup. We could've opted for a global
  * instead, but I like this better, even though it is spooky action
  * at a distance.
+ * XXX: Should be an XPCOM service
  *
  * @param opt_keyFilename String containing the name of the 
  *                        file we should serialize keys to/from. Used
@@ -101,6 +97,9 @@ function PROT_UrlCryptoKeyManager(opt_keyFilename, opt_testing) {
   this.wrappedKey_ = null;         // Opaque websafe base64-encoded server key
   this.rekeyTries_ = 0;
 
+  // Don't do anything until keyUrl_ is set.
+  this.keyUrl_ = null;
+
   this.keyFilename_ = opt_keyFilename ? 
                       opt_keyFilename : kKeyFilename;
 
@@ -115,7 +114,6 @@ function PROT_UrlCryptoKeyManager(opt_keyFilename, opt_testing) {
     PROT_UrlCrypto.prototype.manager_ = this;
 
     this.maybeLoadOldKey();
-    this.reKey();
   }
 }
 
@@ -148,6 +146,20 @@ PROT_UrlCryptoKeyManager.prototype.getWrappedKey = function() {
 }
 
 /**
+ * Change the key url.  When we do this, we go ahead and rekey.
+ * @param keyUrl String
+ */
+PROT_UrlCryptoKeyManager.prototype.setKeyUrl = function(keyUrl) {
+  // If it's the same key url, do nothing.
+  if (keyUrl == this.keyUrl_)
+    return;
+
+  this.keyUrl_ = keyUrl;
+  this.rekeyTries_ = 0;
+  this.reKey();
+}
+
+/**
  * Tell the manager to re-key. For safety, this method still obeys the
  * max-tries limit. Clients should generally use maybeReKey() if they
  * want to try a re-keying: it's an error to call reKey() after we've
@@ -162,9 +174,9 @@ PROT_UrlCryptoKeyManager.prototype.reKey = function() {
 
   G_Debug(this, "Attempting to re-key");
   var prefs = new G_Preferences();
-  var url = prefs.getPref(kGetKeyUrl, null);
-  if (!this.testing_ && url)
-    (new PROT_XMLFetcher()).get(url, 
+  // If the keyUrl isn't set, we don't do anything.
+  if (!this.testing_ && this.keyUrl_)
+    (new PROT_XMLFetcher()).get(this.keyUrl_,
                                 BindToObject(this.onGetKeyResponse, this));
 }
 
