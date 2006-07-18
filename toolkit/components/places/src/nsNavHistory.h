@@ -70,6 +70,7 @@
 #include "nsVoidArray.h"
 #include "nsWeakReference.h"
 #include "nsTArray.h"
+#include "nsINavBookmarksService.h"
 #include "nsMaybeWeakPtr.h"
 
 // Number of prefixes used in the autocomplete sort comparison function
@@ -156,6 +157,19 @@ private:
 #define NS_NAVHISTORYRESULTNODE_IID \
 {0x54b61d38, 0x57c1, 0x11da, {0x95, 0xb8, 0x00, 0x13, 0x21, 0xc9, 0xf6, 0x9e}}
 
+// Declare methods for implementing nsINavBookmarkObserver
+// and nsINavHistoryObserver (some methods overlap)
+
+#define NS_DECL_BOOKMARK_HISTORY_OBSERVER                               \
+  NS_DECL_NSINAVBOOKMARKOBSERVER                                        \
+  NS_IMETHOD OnAddURI(nsIURI *aURI, PRTime aTime);                      \
+  NS_IMETHOD OnDeleteURI(nsIURI *aURI);                                 \
+  NS_IMETHOD OnClearHistory();                                          \
+  NS_IMETHOD OnPageChanged(nsIURI *aURI, PRUint32 aWhat,                \
+                           const nsAString &aValue);
+
+class nsNavHistoryResult;
+
 class nsNavHistoryResultNode : public nsINavHistoryResultNode
 {
 public:
@@ -166,16 +180,38 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSINAVHISTORYRESULTNODE
 
+  // History/bookmark notifications.  Note that we don't actually inherit
+  // these interfaces since multiple-inheritance breaks nsCOMArray.
+  NS_DECL_BOOKMARK_HISTORY_OBSERVER
+
   // Generate the children for this node.
-  virtual nsresult BuildChildren() { return NS_OK; }
+  virtual nsresult BuildChildren(PRBool *aBuilt) {
+    *aBuilt = PR_FALSE;
+    return NS_OK;;
+  }
+
+  // Rebuild the node's data.  This only applies to nodes which have
+  // a URL or a folder ID, and does _not_ rebuild the node's children.
+  virtual nsresult Rebuild();
 
   // Non-XPCOM member accessors
   PRInt32 Type() const { return mType; }
   const nsCString& URL() const { return mUrl; }
   virtual PRInt64 GetFolderId() const { return 0; }
+  PRInt32 VisibleIndex() const { return mVisibleIndex; }
+  void SetVisibleIndex(PRInt32 aIndex) { mVisibleIndex = aIndex; }
+  PRInt32 IndentLevel() const { return mIndentLevel; }
+  void SetIndentLevel(PRInt32 aLevel) { mIndentLevel = aLevel; }
+  nsNavHistoryResultNode* Parent() { return mParent; }
+  void SetParent(nsNavHistoryResultNode *aParent) { mParent = aParent; }
+
+  nsNavHistoryResultNode* ChildAt(PRInt32 aIndex) { return mChildren[aIndex]; }
 
 protected:
   virtual ~nsNavHistoryResultNode() {}
+
+  // Find the top-level NavHistoryResult for this node
+  nsNavHistoryResult* GetResult();
 
   // parent of this element, NULL if no parent. Filled in by FilledAllResults
   // in the result set.
@@ -197,13 +233,6 @@ protected:
   // filled in by FillledAllResults in the result set.
   PRInt32 mIndentLevel;
 
-  // Index of this element into the flat mAllElements array in the result set.
-  // Filled in by FilledAllResults. DANGER, this does not necessarily mean that
-  // mAllElements[mFlatIndex] = this, because we could be collapsed.
-  // mAllElements[mFlatIndex] could be a duplicate of us. ALSO NOTE that the
-  // root element, although it is a node, has no flat index.
-  PRInt32 mFlatIndex;
-
   // index of this element into the mVisibleElements array in the result set
   PRInt32 mVisibleIndex;
 
@@ -222,7 +251,7 @@ class nsNavHistoryQueryNode : public nsNavHistoryResultNode
 {
 public:
   nsNavHistoryQueryNode()
-    : mQueries(nsnull), mQueryCount(0) {}
+    : mQueries(nsnull), mQueryCount(0), mBuiltChildren(PR_FALSE) {}
 
   // nsINavHistoryResultNode methods
   NS_IMETHOD GetFolderId(PRInt64 *aId)
@@ -231,17 +260,24 @@ public:
                         nsINavHistoryQuery ***aQueries);
   NS_IMETHOD GetQueryOptions(nsINavHistoryQueryOptions **aOptions);
 
+  NS_DECL_BOOKMARK_HISTORY_OBSERVER
+
   // nsNavHistoryResultNode methods
-  virtual nsresult BuildChildren();
+  virtual nsresult BuildChildren(PRBool *aBuilt);
   virtual PRInt64 GetFolderId() const;
+  virtual nsresult Rebuild();
 
 protected:
   virtual ~nsNavHistoryQueryNode();
   nsresult ParseQueries();
+  nsresult CreateNode(nsIURI *aURI, nsNavHistoryResultNode **aNode);
+  nsresult UpdateQuery();
+  PRBool HasFilteredChildren() const;
 
   nsINavHistoryQuery **mQueries;
   PRUint32 mQueryCount;
   nsCOMPtr<nsNavHistoryQueryOptions> mOptions;
+  PRBool mBuiltChildren;
 
   friend class nsNavBookmarks;
 };
@@ -255,8 +291,11 @@ class nsIDateTimeFormat;
 //    object initialization.
 
 class nsNavHistoryResult : public nsNavHistoryQueryNode,
+                           public nsSupportsWeakReference,
                            public nsINavHistoryResult,
-                           public nsITreeView
+                           public nsITreeView,
+                           public nsINavBookmarkObserver,
+                           public nsINavHistoryObserver
 {
 public:
   nsNavHistoryResult(nsNavHistory* aHistoryService,
@@ -274,16 +313,43 @@ public:
 
   nsresult BuildChildrenFor(nsNavHistoryResultNode *aNode);
 
+  // These methods are typically called by child nodes from one of the
+  // history or bookmark observer notifications.
+
+  // Notify the result that the entire contents of the tree have changed.
+  void Invalidate();
+
+  // Notify the result that a row has been added at index aIndex relative
+  // to aParent.
+  void RowAdded(nsNavHistoryResultNode* aParent, PRInt32 aIndex);
+
+  // Notify the result that the row with visible index aVisibleIndex has been
+  // removed from the tree.
+  void RowRemoved(PRInt32 aVisibleIndex);
+
+  // Notify the result that the contents of the row at visible index
+  // aVisibleIndex has been modified.
+  void RowChanged(PRInt32 aVisibleIndex);
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSINAVHISTORYRESULT
   NS_DECL_NSITREEVIEW
+  NS_FORWARD_NSINAVBOOKMARKOBSERVER(nsNavHistoryQueryNode::)
+  NS_IMETHOD OnAddURI(nsIURI *aURI, PRTime aTime)
+  { return nsNavHistoryQueryNode::OnAddURI(aURI, aTime); }
+  NS_IMETHOD OnDeleteURI(nsIURI *aURI)
+  { return nsNavHistoryQueryNode::OnDeleteURI(aURI); }
+  NS_IMETHOD OnClearHistory()
+  { return nsNavHistoryQueryNode::OnClearHistory(); }
+  NS_IMETHOD OnPageChanged(nsIURI *aURI, PRUint32 aWhat,
+                           const nsAString &aValue)
+  { return nsNavHistoryQueryNode::OnPageChanged(aURI, aWhat, aValue); }
 
   NS_FORWARD_NSINAVHISTORYRESULTNODE(nsNavHistoryQueryNode::)
 
 private:
   ~nsNavHistoryResult();
 
-protected:
   nsCOMPtr<nsIStringBundle> mBundle;
   nsCOMPtr<nsITreeBoxObject> mTree; // may be null if no tree has bound itself
   nsCOMPtr<nsITreeSelection> mSelection; // may be null
@@ -433,16 +499,29 @@ public:
   static const PRInt32 kGetInfoIndex_URL;
   static const PRInt32 kGetInfoIndex_Title;
   static const PRInt32 kGetInfoIndex_VisitCount;
-  static const PRInt32 kGetInfoIndex_VisitDate;
   static const PRInt32 kGetInfoIndex_RevHost;
+
+  // select a history row by URL, with visit date info (extra work)
+  mozIStorageStatement* DBGetURLPageInfoFull()
+  { return mDBGetURLPageInfoFull; }
+
+  // Constants for the columns returned by the above statement
+  // (in addition to the ones above).
+  static const PRInt32 kGetInfoIndex_VisitDate;
 
   static nsIAtom* sMenuRootAtom;
   static nsIAtom* sToolbarRootAtom;
 
-  // Take a result returned from DBGetURLPageInfo and construct a
-  // ResultNode.
+  // Take a row of kGetInfoIndex_* columns and construct a ResultNode.
+  // The row must contain the full set of columns.
   nsresult RowToResult(mozIStorageValueArray* aRow, PRBool aAsVisits,
                        nsNavHistoryResultNode** aResult);
+
+  // Take a row of kGetInfoIndex_* columns and fill in an existing ResultNode.
+  // The node's type must already be set, and the row must contain the full
+  // set of columns.
+  nsresult FillURLResult(mozIStorageValueArray* aRow,
+                         nsNavHistoryResultNode *aNode);
 
   // Construct a new HistoryResult object. You can give it null query/options.
   nsNavHistoryResult* NewHistoryResult(nsINavHistoryQuery** aQueries,
@@ -483,6 +562,7 @@ protected:
 
   nsCOMPtr<mozIStorageStatement> mDBGetVisitPageInfo; // kGetInfoIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBGetURLPageInfo;   // kGetInfoIndex_* results
+  nsCOMPtr<mozIStorageStatement> mDBGetURLPageInfoFull; // kGetInfoIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBFullAutoComplete; // kAutoCompleteIndex_* results, 1 arg (max # results)
   static const PRInt32 kAutoCompleteIndex_URL;
   static const PRInt32 kAutoCompleteIndex_Title;
