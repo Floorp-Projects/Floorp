@@ -680,7 +680,7 @@ FaviconLoadListener::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
     nsCOMPtr<nsIContentSniffer> sniffer = do_GetService(snifferCID.get(), &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    sniffer->GetMIMETypeFromContent(
+    sniffer->GetMIMETypeFromContent(aRequest,
                NS_REINTERPRET_CAST(PRUint8*, NS_CONST_CAST(char*, mData.get())),
                mData.Length(), mimeType);
     // ignore errors: mime type will be left empty and we'll try the next sniffer
