@@ -452,7 +452,11 @@ nsLivemarkLoadListener::ParseHTMLFragment(nsAString &aFragString,
   
   // parse the fragment
   parser->SetContentSink(sink);
+#ifdef MOZILLA_1_8_BRANCH
   parser->Parse(aFragString, (void*)0, NS_LITERAL_CSTRING("text/html"), PR_FALSE, PR_TRUE, eDTDMode_fragment);
+#else
+  parser->Parse(aFragString, (void*)0, NS_LITERAL_CSTRING("text/html"), PR_TRUE, eDTDMode_fragment);
+#endif
   // get the fragment node
   nsCOMPtr<nsIDOMDocumentFragment> contextfrag;
   rv = fragSink->GetFragment(getter_AddRefs(contextfrag));
