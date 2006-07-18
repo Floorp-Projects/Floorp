@@ -440,6 +440,23 @@ nsNavHistory::InitDB()
     getter_AddRefs(mDBFullAutoComplete));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // mDBRecentVisitOfURL
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT v.visit_id "
+      "FROM moz_history h JOIN moz_historyvisit v ON h.id = v.page_id "
+      "WHERE h.url = ?1 "
+      "ORDER BY v.visit_date DESC "
+      "LIMIT 1"),
+    getter_AddRefs(mDBRecentVisitOfURL));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // mDBInsertVisit
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "INSERT INTO moz_historyvisit "
+      "(from_visit, page_id, visit_date, visit_type, session) "
+      "VALUES (?1, ?2, ?3, ?4, ?5)"),
+    getter_AddRefs(mDBInsertVisit));
+  NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
 
@@ -581,7 +598,7 @@ nsNavHistory::SaveCollapseItem(const nsAString& aTitle)
 //    added to the history.
 
 nsresult
-nsNavHistory::InternalAdd(nsIURI* aURI, PRInt64 aSessionID,
+nsNavHistory::InternalAdd(nsIURI* aURI, nsIURI* aReferrer, PRInt64 aSessionID,
                           PRUint32 aTransitionType, const PRUnichar* aTitle,
                           PRTime aVisitDate, PRBool aRedirect,
                           PRBool aToplevel, PRInt64* aPageID)
@@ -686,7 +703,7 @@ nsNavHistory::InternalAdd(nsIURI* aURI, PRInt64 aSessionID,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  rv = AddVisit(0, pageID, aVisitDate, aTransitionType, aSessionID);
+  rv = AddVisit(aReferrer, pageID, aVisitDate, aTransitionType, aSessionID);
 
   if (aPageID)
     *aPageID = pageID;
@@ -784,31 +801,47 @@ nsNavHistory::InternalAddNewPage(nsIURI* aURI, const PRUnichar* aTitle,
 // nsNavHistory::AddVisit
 //
 //    Just a wrapper for inserting a new visit in the DB.
+//
+//    If you give it a referrer, it will try to find a "good" visit to attach
+//    as the created visit's source. Unfortunately, we can't track where links
+//    come from precisely, so we find the most recent visit for the referring
+//    page and use it as the parent. This will get messed up if one page is
+//    open in more than one tab/window at once, but should be good enough for
+//    most cases.
 
-nsresult nsNavHistory::AddVisit(PRInt64 aFromStep, PRInt64 aPageID,
+nsresult nsNavHistory::AddVisit(nsIURI* aReferrer, PRInt64 aPageID,
                                 PRTime aTime, PRInt32 aTransitionType,
                                 PRInt64 aSessionID)
 {
-  nsCOMPtr<mozIStorageStatement> dbInsertStatement;
-  nsresult rv = mDBConn->CreateStatement(
-    NS_LITERAL_CSTRING("INSERT INTO moz_historyvisit (from_visit, page_id, visit_date, visit_type, session) VALUES ( ?1, ?2, ?3, ?4, ?5 )"),
-    getter_AddRefs(dbInsertStatement));
+  nsresult rv;
+  PRInt64 fromStep = 0;
+  if (aReferrer) {
+    mozStorageStatementScoper scoper(mDBRecentVisitOfURL);
+    rv = BindStatementURI(mDBRecentVisitOfURL, 0, aReferrer);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRBool hasMore;
+    rv = mDBRecentVisitOfURL->ExecuteStep(&hasMore);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (hasMore)
+      fromStep = mDBRecentVisitOfURL->AsInt64(0);
+  }
+
+  mozStorageStatementScoper scoper(mDBInsertVisit);
+
+  rv = mDBInsertVisit->BindInt64Parameter(0, fromStep);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBInsertVisit->BindInt64Parameter(1, aPageID);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBInsertVisit->BindInt64Parameter(2, aTime);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBInsertVisit->BindInt32Parameter(3, aTransitionType);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBInsertVisit->BindInt64Parameter(4, aSessionID);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = dbInsertStatement->BindInt64Parameter(0, aFromStep);
+  rv = mDBInsertVisit->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = dbInsertStatement->BindInt64Parameter(1, aPageID);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = dbInsertStatement->BindInt64Parameter(2, aTime);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = dbInsertStatement->BindInt32Parameter(3, aTransitionType);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = dbInsertStatement->BindInt64Parameter(4, aSessionID);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = dbInsertStatement->Execute(); // should reset the statement
-  NS_ENSURE_SUCCESS(rv, rv);
-
   return NS_OK;
 }
 
@@ -1457,7 +1490,7 @@ nsNavHistory::AddPageWithDetails(nsIURI *aURI, const PRUnichar *aTitle,
                                  PRInt64 aLastVisited)
 {
   PRInt64 pageid;
-  nsresult rv = InternalAdd(aURI, 0, 0, aTitle, aLastVisited,
+  nsresult rv = InternalAdd(aURI, nsnull, 0, 0, aTitle, aLastVisited,
                             PR_FALSE, PR_TRUE, &pageid);
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
@@ -1933,8 +1966,8 @@ nsNavHistory::AddURI(nsIURI *aURI, PRBool aRedirect,
   // add to main DB
   PRInt64 pageid = 0;
   PRTime now = GetNow();
-  nsresult rv = InternalAdd(aURI, 0, 0, nsnull, now, aRedirect, aToplevel,
-                            &pageid);
+  nsresult rv = InternalAdd(aURI, aReferrer, 0, 0, nsnull, now,
+                            aRedirect, aToplevel, &pageid);
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
