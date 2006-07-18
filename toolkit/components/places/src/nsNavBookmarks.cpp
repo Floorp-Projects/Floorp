@@ -43,7 +43,7 @@
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
 #include "nsIAnnotationService.h"
-#include "nsIBookmarksContainer.h"
+#include "nsIRemoteContainer.h"
 
 const PRInt32 nsNavBookmarks::kFindBookmarksIndex_ItemChild = 0;
 const PRInt32 nsNavBookmarks::kFindBookmarksIndex_FolderChild = 1;
@@ -719,12 +719,12 @@ nsNavBookmarks::RemoveFolder(PRInt64 aFolder)
 {
   // If this is a container bookmark, try to notify its service.
   nsresult rv;
-  nsAutoString folderType;
+  nsCAutoString folderType;
   rv = GetFolderType(aFolder, folderType);
   NS_ENSURE_SUCCESS(rv, rv);
   if (folderType.Length() > 0) {
     // There is a type associated with this folder; it's a livemark.
-    nsCOMPtr<nsIBookmarksContainer> bmcServ = do_GetService(NS_ConvertUTF16toUTF8(folderType).get());
+    nsCOMPtr<nsIRemoteContainer> bmcServ = do_GetService(folderType.get());
     if (bmcServ) {
       rv = bmcServ->OnContainerRemoving(aFolder);
       if (NS_FAILED(rv))
@@ -796,16 +796,16 @@ nsNavBookmarks::RemoveFolderChildren(PRInt64 aFolder)
   nsTArray<PRInt64> folderChildren;
   {
     mozStorageStatementScoper scope(mDBGetFolderChildren);
-    rv = mDBGetChildren->BindInt64Parameter(0, aFolder);
+    rv = mDBGetFolderChildren->BindInt64Parameter(0, aFolder);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBGetChildren->BindInt32Parameter(1, 0);
+    rv = mDBGetFolderChildren->BindInt32Parameter(1, 0);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBGetChildren->BindInt32Parameter(2, PR_INT32_MAX);
+    rv = mDBGetFolderChildren->BindInt32Parameter(2, PR_INT32_MAX);
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRBool more;
-    while (NS_SUCCEEDED(rv = mDBGetChildren->ExecuteStep(&more)) && more) {
-      folderChildren.AppendElement(mDBGetChildren->AsInt64(kGetChildrenIndex_FolderChild));
+    while (NS_SUCCEEDED(rv = mDBGetFolderChildren->ExecuteStep(&more)) && more) {
+      folderChildren.AppendElement(mDBGetFolderChildren->AsInt64(kGetChildrenIndex_FolderChild));
     }
   }
 
@@ -944,10 +944,23 @@ nsNavBookmarks::MoveFolder(PRInt64 aFolder, PRInt64 aNewParent, PRInt32 aIndex)
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // notify bookmark observers
   ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
                       OnFolderMoved(aFolder, parent, oldIndex,
                                     aNewParent, newIndex))
 
+  // notify remote container provider if there is one
+  nsCAutoString type;
+  rv = GetFolderType(aFolder, type);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (! type.IsEmpty()) {
+    nsCOMPtr<nsIRemoteContainer> container =
+      do_GetService(type.get(), &rv);
+    if (NS_SUCCEEDED(rv)) {
+      rv = container->OnContainerMoved(aFolder, aNewParent, newIndex);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
   return NS_OK;
 }
 
@@ -1051,7 +1064,7 @@ nsNavBookmarks::GetFolderTitle(PRInt64 aFolder, nsAString &aTitle)
 
 
 nsresult
-nsNavBookmarks::GetFolderType(PRInt64 aFolder, nsAString &aType)
+nsNavBookmarks::GetFolderType(PRInt64 aFolder, nsACString &aType)
 {
   mozStorageStatementScoper scope(mDBGetFolderInfo);
   nsresult rv = mDBGetFolderInfo->BindInt64Parameter(0, aFolder);
@@ -1065,7 +1078,7 @@ nsNavBookmarks::GetFolderType(PRInt64 aFolder, nsAString &aType)
     return NS_ERROR_INVALID_ARG;
   }
 
-  return mDBGetFolderInfo->GetString(kGetFolderInfoIndex_Type, aType);
+  return mDBGetFolderInfo->GetUTF8String(kGetFolderInfoIndex_Type, aType);
 }
 
 nsresult
@@ -1090,19 +1103,10 @@ nsNavBookmarks::ResultNodeForFolder(PRInt64 aID,
   nsCAutoString title;
   rv = mDBGetFolderInfo->GetUTF8String(kGetFolderInfoIndex_Title, title);
 
-  if (folderType.IsEmpty()) {
-    *aNode = new nsNavHistoryFolderResultNode(title, 0, 0, aOptions, aID);
-    if (! *aNode)
-      return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(*aNode);
-  } else {
-    // a container API thing
-    // FIXME(brettw)
-    //NS_NOTREACHED("FIXME: Not implemented");
-    *aNode = nsnull;
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
+  *aNode = new nsNavHistoryFolderResultNode(title, aOptions, aID, folderType);
+  if (! *aNode)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(*aNode);
   return NS_OK;
 }
 
@@ -1118,7 +1122,7 @@ nsNavBookmarks::GetFolderURI(PRInt64 aFolder, nsIURI **aURI)
   // correct string here.
   //
   // If you change this, change IsSimpleFolderURI which detects this string.
-  nsCAutoString spec("place:folders=");
+  nsCAutoString spec("place:folder=");
   spec.AppendInt(aFolder);
   spec.AppendLiteral("&group=3"); // GROUP_BY_FOLDER
   return NS_NewURI(aURI, spec);
@@ -1127,15 +1131,15 @@ nsNavBookmarks::GetFolderURI(PRInt64 aFolder, nsIURI **aURI)
 NS_IMETHODIMP
 nsNavBookmarks::GetFolderReadonly(PRInt64 aFolder, PRBool *aResult)
 {
-  // Ask the folder's nsIBookmarksContainer for the readonly property.
+  // Ask the folder's nsIRemoteContainer for the readonly property.
   *aResult = PR_FALSE;
-  nsAutoString type;
+  nsCAutoString type;
   nsresult rv = GetFolderType(aFolder, type);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!type.IsEmpty()) {
-    nsCOMPtr<nsIBookmarksContainer> container =
-      do_GetService(NS_ConvertUTF16toUTF8(type).get(), &rv);
+    nsCOMPtr<nsIRemoteContainer> container =
+      do_GetService(type.get(), &rv);
     if (NS_SUCCEEDED(rv)) {
       rv = container->GetChildrenReadOnly(aResult);
       NS_ENSURE_SUCCESS(rv, rv);
