@@ -3624,7 +3624,7 @@ nsNavHistoryQueryOptions::Clone(nsNavHistoryQueryOptions **aResult)
   if (! result)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  nsRefPtr<nsNavHistoryResult> resultHolder(result);
+  nsRefPtr<nsNavHistoryQueryOptions> resultHolder(result);
   result->mSort = mSort;
   result->mResultType = mResultType;
   result->mGroupCount = mGroupCount;
