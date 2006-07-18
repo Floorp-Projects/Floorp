@@ -62,9 +62,31 @@ public:
     return sInstance;
   }
 
+  // Creates a new result node for the given folder.
+  // The query and options are cloned, and the folder's id is set on the
+  // new node's query.
+  nsresult ResultNodeForFolder(PRInt64 aFolder,
+                               nsINavHistoryQuery *aQuery,
+                               nsINavHistoryQueryOptions *aOptions,
+                               nsNavHistoryResultNode **aNode);
+
+  // Fills in a ResultNode for a folder, using the given result row.
+  // The node's type and queries must already be set.
+  nsresult FillFolderNode(mozIStorageValueArray *aRow,
+                          nsNavHistoryResultNode *aNode);
+
+  // Find all the children of a folder, using the given query and options.
+  // For each child, a ResultNode is created and added to |children|.
+  // The results are ordered by folder position.
   nsresult QueryFolderChildren(nsINavHistoryQuery *aQuery,
                                nsINavHistoryQueryOptions *aOptions,
                                nsCOMArray<nsNavHistoryResultNode> *children);
+
+  // Returns a statement to get information about a folder id
+  mozIStorageStatement* DBGetFolderInfo() { return mDBGetFolderInfo; }
+  // constants for the above statement
+  static const PRInt32 kGetFolderInfoIndex_FolderID;
+  static const PRInt32 kGetFolderInfoIndex_Title;
 
 private:
   static nsNavBookmarks *sInstance;
@@ -79,10 +101,6 @@ private:
   nsresult AdjustIndices(PRInt64 aFolder,
                          PRInt32 aStartIndex, PRInt32 aEndIndex,
                          PRInt32 aDelta);
-  nsresult ResultNodeForFolder(PRInt64 aFolder,
-                               nsINavHistoryQuery *aQuery,
-                               nsINavHistoryQueryOptions *aOptions,
-                               nsNavHistoryResultNode **aNode);
   PRInt32 FolderCount(PRInt64 aFolder);
 
   // remove me when there is better query initialization
@@ -100,8 +118,6 @@ private:
   PRInt32 mBatchLevel;
 
   nsCOMPtr<mozIStorageStatement> mDBGetFolderInfo;    // kGetFolderInfoIndex_* results
-  static const PRInt32 kGetFolderInfoIndex_FolderID;
-  static const PRInt32 kGetFolderInfoIndex_Title;
 
   nsCOMPtr<mozIStorageStatement> mDBGetChildren;       // kGetInfoIndex_* results + kGetChildrenIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBGetFolderChildren;
@@ -117,6 +133,9 @@ private:
   static const PRInt32 kFindBookmarksIndex_Position;
 
   nsCOMPtr<mozIStorageStatement> mDBFolderCount;
+
+  nsCOMPtr<mozIStorageStatement> mDBIndexOfItem;
+  nsCOMPtr<mozIStorageStatement> mDBIndexOfFolder;
 
   nsCOMPtr<nsIStringBundle> mBundle;
 
