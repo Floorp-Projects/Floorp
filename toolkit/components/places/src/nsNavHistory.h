@@ -70,6 +70,7 @@
 #include "nsVoidArray.h"
 #include "nsWeakReference.h"
 #include "nsTArray.h"
+#include "nsMaybeWeakPtr.h"
 
 // Number of prefixes used in the autocomplete sort comparison function
 #define AUTOCOMPLETE_PREFIX_LIST_COUNT 6
@@ -291,7 +292,7 @@ protected:
 
   PRBool mCollapseDuplicates;
 
-  nsCOMArray<nsINavHistoryResultViewObserver> mObservers;
+  nsMaybeWeakPtrArray<nsINavHistoryResultViewObserver> mObservers;
 
   // for locale-specific date formatting and string sorting
   nsCOMPtr<nsILocale> mLocale;
@@ -547,7 +548,7 @@ protected:
                            const nsString& aSearch);
 
   // observers
-  nsCOMArray<nsINavHistoryObserver> mObservers;
+  nsMaybeWeakPtrArray<nsINavHistoryObserver> mObservers;
   PRInt32 mBatchesInProgress;
 
   // string bundles
