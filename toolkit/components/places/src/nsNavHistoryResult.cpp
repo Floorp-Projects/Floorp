@@ -118,12 +118,16 @@ NS_IMETHODIMP nsNavHistoryResultNode::GetFolderId(PRInt64 *aID)
   return NS_OK;
 }
 
-/* void getQueries(out nsINavHistoryQueryOptions options,
-                   out unsigned long queryCount,
+/* void getQueries(out unsigned long queryCount,
                    [retval,array,size_is(queryCount)] out nsINavHistoryQuery queries); */
-NS_IMETHODIMP nsNavHistoryResultNode::GetQueries(nsINavHistoryQueryOptions **aOptions,
-                                                 PRUint32 *aQueryCount,
+NS_IMETHODIMP nsNavHistoryResultNode::GetQueries(PRUint32 *aQueryCount,
                                                  nsINavHistoryQuery ***aQueries)
+{
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+/* readonly attribute nsINavHistoryQueryOptions options */                   
+NS_IMETHODIMP nsNavHistoryResultNode::GetQueryOptions(nsINavHistoryQueryOptions **aOptions)
 {
   return NS_ERROR_NOT_AVAILABLE;
 }
@@ -193,8 +197,7 @@ nsNavHistoryQueryNode::ParseQueries()
 }
 
 NS_IMETHODIMP
-nsNavHistoryQueryNode::GetQueries(nsINavHistoryQueryOptions **aOptions,
-                                  PRUint32 *aQueryCount,
+nsNavHistoryQueryNode::GetQueries(PRUint32 *aQueryCount,
                                   nsINavHistoryQuery ***aQueries)
 {
   if (!mOptions) {
@@ -211,9 +214,20 @@ nsNavHistoryQueryNode::GetQueries(nsINavHistoryQueryOptions **aOptions,
     NS_ADDREF(queries[i] = mQueries[i]);
   }
 
-  NS_ADDREF(*aOptions = mOptions);
   *aQueryCount = mQueryCount;
   *aQueries = queries;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavHistoryQueryNode::GetQueryOptions(nsINavHistoryQueryOptions **aOptions) 
+{
+  if (!mOptions) {
+    nsresult rv = ParseQueries();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  NS_ADDREF(*aOptions = mOptions);
   return NS_OK;
 }
 
