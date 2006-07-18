@@ -83,7 +83,8 @@ inline PRInt32 CompareIntegers(PRUint32 a, PRUint32 b)
 // nsNavHistoryResultNode ******************************************************
 
 
-NS_IMPL_ISUPPORTS1(nsNavHistoryResultNode, nsINavHistoryResultNode)
+NS_IMPL_ISUPPORTS2(nsNavHistoryResultNode,
+                   nsNavHistoryResultNode, nsINavHistoryResultNode)
 
 nsNavHistoryResultNode::nsNavHistoryResultNode() : mID(0), mExpanded(PR_FALSE)
 {
@@ -115,6 +116,16 @@ NS_IMETHODIMP nsNavHistoryResultNode::GetFolderId(PRInt64 *aID)
 {
   *aID = mType == RESULT_TYPE_FOLDER ? mID : 0;
   return NS_OK;
+}
+
+/* void getQueries(out nsINavHistoryQueryOptions options,
+                   out unsigned long queryCount,
+                   [retval,array,size_is(queryCount)] out nsINavHistoryQuery queries); */
+NS_IMETHODIMP nsNavHistoryResultNode::GetQueries(nsINavHistoryQueryOptions **aOptions,
+                                                 PRUint32 *aQueryCount,
+                                                 nsINavHistoryQuery ***aQueries)
+{
+  return NS_ERROR_NOT_AVAILABLE;
 }
 
 /* attribute string title; */
@@ -162,6 +173,74 @@ NS_IMETHODIMP nsNavHistoryResultNode::GetChild(PRInt32 aIndex,
   return NS_OK;
 }
 
+// nsNavHistoryQueryNode ******************************************************
+
+nsNavHistoryQueryNode::~nsNavHistoryQueryNode()
+{
+  for (PRUint32 i = 0; i < mQueryCount; ++i) {
+    NS_RELEASE(mQueries[i]);
+  }
+  nsMemory::Free(mQueries);
+}
+
+nsresult
+nsNavHistoryQueryNode::ParseQueries()
+{
+  nsNavHistory *history = nsNavHistory::GetHistoryService();
+  return history->QueryStringToQueries(QueryURIToQuery(mUrl),
+                                       &mQueries, &mQueryCount,
+                                       getter_AddRefs(mOptions));
+}
+
+NS_IMETHODIMP
+nsNavHistoryQueryNode::GetQueries(nsINavHistoryQueryOptions **aOptions,
+                                  PRUint32 *aQueryCount,
+                                  nsINavHistoryQuery ***aQueries)
+{
+  if (!mOptions) {
+    nsresult rv = ParseQueries();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  nsINavHistoryQuery **queries =
+    NS_STATIC_CAST(nsINavHistoryQuery**,
+                   nsMemory::Alloc(mQueryCount * sizeof(nsINavHistoryQuery*)));
+  NS_ENSURE_TRUE(queries, NS_ERROR_OUT_OF_MEMORY);
+
+  for (PRUint32 i = 0; i < mQueryCount; ++i) {
+    NS_ADDREF(queries[i] = mQueries[i]);
+  }
+
+  NS_ADDREF(*aOptions = mOptions);
+  *aQueryCount = mQueryCount;
+  *aQueries = queries;
+  return NS_OK;
+}
+
+nsresult
+nsNavHistoryQueryNode::BuildChildren(PRUint32 aOptions)
+{
+  nsresult rv;
+  if (!mOptions) {
+    rv = ParseQueries();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  nsCOMPtr<nsINavHistoryResult> iResult;
+  nsNavHistory *history = nsNavHistory::GetHistoryService();
+  rv = history->ExecuteQueries(mQueries, mQueryCount, mOptions,
+                               getter_AddRefs(iResult));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsNavHistoryResult *result =
+    NS_STATIC_CAST(nsNavHistoryResult*, NS_STATIC_CAST(nsINavHistoryResult*,
+                                                       iResult));
+
+  NS_ENSURE_TRUE(mChildren.AppendObjects(*(result->GetTopLevel())),
+                 NS_ERROR_OUT_OF_MEMORY);
+
+  return NS_OK;
+}
 
 // nsNavHistoryResult **********************************************************
 
@@ -174,7 +253,7 @@ NS_IMPL_ISUPPORTS2(nsNavHistoryResult,
 
 nsNavHistoryResult::nsNavHistoryResult(nsNavHistory* aHistoryService,
                                        nsIStringBundle* aHistoryBundle,
-                                       const nsINavHistoryQuery** aQueries,
+                                       nsINavHistoryQuery** aQueries,
                                        PRUint32 aQueryCount,
                                        nsINavHistoryQueryOptions* aOptions)
   : mBundle(aHistoryBundle), mHistoryService(aHistoryService),
@@ -187,9 +266,8 @@ nsNavHistoryResult::nsNavHistoryResult(nsNavHistory* aHistoryService,
   // change their original objects, and we always want to reflect the source
   // parameters).
   for (PRUint32 i = 0; i < aQueryCount; i ++) {
-    nsINavHistoryQuery* query = NS_CONST_CAST(nsINavHistoryQuery*, aQueries[i]);
     nsCOMPtr<nsINavHistoryQuery> queryClone;
-    if (NS_SUCCEEDED(query->Clone(getter_AddRefs(queryClone))))
+    if (NS_SUCCEEDED(aQueries[i]->Clone(getter_AddRefs(queryClone))))
       mSourceQueries.AppendObject(queryClone);
   }
   if (aOptions)
@@ -970,7 +1048,8 @@ NS_IMETHODIMP nsNavHistoryResult::IsContainer(PRInt32 index, PRBool *_retval)
 
   nsNavHistoryResultNode *node = VisibleElementAt(index);
   *_retval = (node->mChildren.Count() > 0 ||
-              node->mType == nsINavHistoryResultNode::RESULT_TYPE_FOLDER);
+              node->mType == nsINavHistoryResultNode::RESULT_TYPE_FOLDER ||
+              node->mType == nsINavHistoryResultNode::RESULT_TYPE_QUERY);
   return NS_OK;
 }
 
