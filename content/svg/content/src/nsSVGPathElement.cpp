@@ -47,6 +47,7 @@
 #include "nsISVGValueUtils.h"
 #include "nsSVGUtils.h"
 #include "nsSVGAnimatedNumber.h"
+#include "nsSVGPoint.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Path)
 
@@ -130,7 +131,23 @@ nsSVGPathElement::GetTotalLength(float *_retval)
 NS_IMETHODIMP
 nsSVGPathElement::GetPointAtLength(float distance, nsIDOMSVGPoint **_retval)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsAutoPtr<nsSVGFlattenedPath> flat(GetFlattenedPath());
+  if (!flat)
+    return NS_ERROR_FAILURE;
+
+  float totalLength = flat->GetLength();
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::pathLength)) {
+    float pathLength;
+    mPathLength->GetAnimVal(&pathLength);
+    distance *= totalLength / pathLength;
+  }
+  distance = PR_MAX(0,           distance);
+  distance = PR_MIN(totalLength, distance);
+  
+  float x, y, angle;
+  flat->FindPoint(0, distance, 0, &x, &y, &angle);
+
+  return NS_NewSVGPoint(_retval, x, y);
 }
 
 /* unsigned long getPathSegAtLength (in float distance); */
@@ -1006,7 +1023,7 @@ nsSVGFlattenedPath::FindPoint(float aAdvance, float aXOffset, float aYOffset,
     float sublength = CalcSubLengthAndAdvance(&mPath->data[i],
                                               &sx, &sy, &x, &y);
 
-    if (length + sublength > midpoint) {
+    if (sublength != 0 && length + sublength >= midpoint) {
       float ratio = (aXOffset - length) / sublength;
       *aX = prevX * (1.0f - ratio) + x * ratio;
       *aY = prevY * (1.0f - ratio) + y * ratio;
