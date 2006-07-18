@@ -461,14 +461,16 @@ sub sqlify_criteria {
     my @criteria = ("1=1");
 
     if ($criteria->{name}) {
-        push(@criteria, "flagtypes.name = " . $dbh->quote($criteria->{name}));
+        my $name = $dbh->quote($criteria->{name});
+        trick_taint($name); # Detaint data as we have quoted it.
+        push(@criteria, "flagtypes.name = $name");
     }
     if ($criteria->{target_type}) {
         # The target type is stored in the database as a one-character string
         # ("a" for attachment and "b" for bug), but this function takes complete
         # names ("attachment" and "bug") for clarity, so we must convert them.
-        my $target_type = $dbh->quote(substr($criteria->{target_type}, 0, 1));
-        push(@criteria, "flagtypes.target_type = $target_type");
+        my $target_type = $criteria->{target_type} eq 'bug'? 'b' : 'a';
+        push(@criteria, "flagtypes.target_type = '$target_type'");
     }
     if (exists($criteria->{is_active})) {
         my $is_active = $criteria->{is_active} ? "1" : "0";
