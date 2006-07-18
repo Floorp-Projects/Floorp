@@ -93,7 +93,7 @@ private:
 
   mozIStorageConnection* DBConn() { return History()->GetStorageConnection(); }
 
-  nsCOMArray<nsINavBookmarkObserver> mObservers;
+  nsMaybeWeakPtrArray<nsINavBookmarkObserver> mObservers;
   PRInt64 mRoot;
   PRInt64 mBookmarksRoot;
   PRInt64 mToolbarRoot;
