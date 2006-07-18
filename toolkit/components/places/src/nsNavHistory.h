@@ -655,6 +655,10 @@ protected:
                                      nsINavHistoryQuery* aQuery,
                                      PRInt32* aParamCount);
 
+  nsresult FillSimpleBookmarksQuery(nsINavHistoryQuery** aQueries,
+                                    PRUint32 aQueryCount,
+                                    nsNavHistoryQueryOptions* aOptions,
+                                    nsINavHistoryResult** _retval);
   nsresult ResultsAsList(mozIStorageStatement* statement,
                          nsNavHistoryQueryOptions* aOptions,
                          nsCOMArray<nsNavHistoryResultNode>* aResults);
