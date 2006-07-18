@@ -154,6 +154,7 @@ public:
   nsNavHistoryResultNode(const nsACString& aURI, const nsACString& aTitle,
                          PRUint32 aAccessCount, PRTime aTime,
                          const nsACString& aIconURI);
+  virtual ~nsNavHistoryResultNode() {}
 
 #ifdef MOZILLA_1_8_BRANCH
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_NAVHISTORYRESULTNODE_IID)
