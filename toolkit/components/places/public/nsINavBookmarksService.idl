@@ -121,6 +121,15 @@ interface nsINavBookmarkObserver : nsISupports
   void onItemChanged(in nsIURI bookmark, in ACString property);
 
   /**
+   * Notify this observer that a bookmark has been replaced.
+   *
+   * @param folder   The folder in which the bookmark was replaced
+   * @param item     The item which was replaced
+   * @param newItem  The new item which replaced item
+   */
+  void onItemReplaced(in PRInt64 folder, in nsIURI item, in nsIURI newItem);
+
+  /**
    * Notify this observer that a bookmark folder has been added.
    *  @param folder     The id of the folder that was added.
    *  @param parent     The id of the folder's parent.
@@ -195,6 +204,14 @@ interface nsINavBookmarksService : nsISupports
    *  @param item       The child item to remove
    */
   void removeItem(in PRInt64 folder, in nsIURI child);
+
+  /**
+   * Replace an item with a different item.
+   *  @param folder     The folder which contains the item to replace
+   *  @param item       The item which should be replaced
+   *  @param newItem    The new item
+   */
+  void replaceItem(in PRInt64 folder, in nsIURI item, in nsIURI newItem);
 
   /**
    * Creates a new child folder and inserts it under the given parent.
