@@ -63,6 +63,7 @@ private:
 
 protected:
   nsresult ParseAnnoURI(nsIURI* aURI, nsIURI** aResultURI, nsCString& aName);
+  nsresult GetDefaultIcon(nsIChannel** aChannel);
 };
 
 #endif /* nsAnnoProtocolHandler_h___ */
