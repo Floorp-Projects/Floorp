@@ -222,14 +222,6 @@ nsNavHistoryResultNode::OnEndUpdateBatch()
   return NS_OK;
 }
 
-/* readonly attribute boolean wantAllDetails; */
-NS_IMETHODIMP
-nsNavHistoryResultNode::GetWantAllDetails(PRBool *aResult)
-{
-  *aResult = PR_TRUE;
-  return NS_OK;
-}
-
 /* void onItemAdded(in nsIURI bookmark, in PRInt64 folder, in PRInt32 index); */
 NS_IMETHODIMP
 nsNavHistoryResultNode::OnItemAdded(nsIURI *aBookmark,
@@ -560,14 +552,6 @@ NS_IMETHODIMP
 nsNavHistoryQueryNode::OnEndUpdateBatch()
 {
   // TODO(bryner): Batch updates
-  return NS_OK;
-}
-
-/* readonly attribute boolean wantAllDetails; */
-NS_IMETHODIMP
-nsNavHistoryQueryNode::GetWantAllDetails(PRBool *aResult)
-{
-  *aResult = PR_TRUE;
   return NS_OK;
 }
 
