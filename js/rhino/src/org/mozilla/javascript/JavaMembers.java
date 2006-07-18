@@ -95,6 +95,8 @@ class JavaMembers
         try {
             if (member instanceof BeanProperty) {
                 BeanProperty bp = (BeanProperty) member;
+                if (bp.getter == null)
+                    return Scriptable.NOT_FOUND;
                 rval = bp.getter.invoke(javaObject, Context.emptyArgs);
                 type = bp.getter.method().getReturnType();
             } else {
@@ -430,11 +432,13 @@ class JavaMembers
                 // Is this a getter?
                 String name = (String) e.nextElement();
                 boolean memberIsGetMethod = name.startsWith("get");
+                boolean memberIsSetMethod = name.startsWith("set");
                 boolean memberIsIsMethod = name.startsWith("is");
-                if (memberIsGetMethod || memberIsIsMethod) {
+                if (memberIsGetMethod || memberIsIsMethod 
+                        || memberIsSetMethod) {
                     // Double check name component.
                     String nameComponent
-                        = name.substring(memberIsGetMethod ? 3 : 2);
+                        = name.substring(memberIsIsMethod ? 2 : 3);
                     if (nameComponent.length() == 0)
                         continue;
 
@@ -463,33 +467,41 @@ class JavaMembers
                     if (!(member instanceof NativeJavaMethod))
                         continue;
 
+                    // getter
                     NativeJavaMethod njmGet = (NativeJavaMethod)member;
                     MemberBox getter
                         = extractGetMethod(njmGet.methods, isStatic);
-                    if (getter != null) {
-                        // We have a getter.  Now, do we have a setter?
-                        NativeJavaMethod njmSet = null;
-                        MemberBox setter = null;
-                        NativeJavaMethod setters = null;
-                        String setterName = "set".concat(nameComponent);
-                        if (ht.containsKey(setterName)) {
-                            // Is this value a method?
-                            member = ht.get(setterName);
-                            if (member instanceof NativeJavaMethod) {
-                                njmSet = (NativeJavaMethod)member;
+                    
+                    // setter
+                    MemberBox setter = null;
+                    NativeJavaMethod setters = null;
+                    String setterName = "set".concat(nameComponent);
+
+                    if (ht.containsKey(setterName)) {
+                        // Is this value a method?
+                        member = ht.get(setterName);
+                        if (member instanceof NativeJavaMethod) {
+                            NativeJavaMethod njmSet = (NativeJavaMethod)member;
+                            if (getter != null) {
+                                // We have a getter. Now, do we have a matching 
+                                // setter?
                                 Class type = getter.method().getReturnType();
                                 setter = extractSetMethod(type, njmSet.methods,
-                                                          isStatic);
-                                if (njmSet.methods.length > 1) {
-                                    setters = njmSet;
-                                }
+                                                            isStatic);
+                            } else {
+                                // No getter, find any set method
+                                setter = extractSetMethod(njmSet.methods, 
+                                                            isStatic);
+                            }
+                            if (njmSet.methods.length > 1) {
+                                setters = njmSet;
                             }
                         }
-                        // Make the property.
-                        BeanProperty bp = new BeanProperty(getter, setter,
-                                                           setters);
-                        toAdd.put(beanPropertyName, bp);
                     }
+                    // Make the property.
+                    BeanProperty bp = new BeanProperty(getter, setter,
+                                                       setters);
+                    toAdd.put(beanPropertyName, bp);
                 }
             }
 
@@ -560,6 +572,23 @@ class JavaMembers
                                 }
                             }
                         }
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    private static MemberBox extractSetMethod(MemberBox[] methods,
+                                              boolean isStatic)
+    {
+
+        for (int i = 0; i < methods.length; ++i) {
+            MemberBox method = methods[i];
+            if (!isStatic || method.isStatic()) {
+                if (method.method().getReturnType() == Void.TYPE) {
+                    if (method.argTypes.length == 1) {
+                        return method;
                     }
                 }
             }
