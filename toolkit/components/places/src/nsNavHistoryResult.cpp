@@ -108,6 +108,10 @@ nsNavHistoryResultNode::GetIcon(nsIURI** aURI)
 {
   nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
   NS_ENSURE_TRUE(faviconService, NS_ERROR_NO_INTERFACE);
+  if (mFaviconURI.IsEmpty()) {
+    *aURI = nsnull;
+    return NS_OK;
+  }
   return faviconService->GetFaviconLinkForIconString(mFaviconURI, aURI);
 }
 
