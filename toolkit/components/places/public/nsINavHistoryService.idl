@@ -449,6 +449,22 @@ interface nsINavHistory : nsISupports
     in nsINavHistoryQueryOptions options);
 
   /**
+   * Converts a query URI-like string to an array of actual query objects for
+   * use to executeQueries().
+   */
+  void queryStringToQueries(in AUTF8String aQueryString,
+    [array, size_is(aResultCount)] out nsINavHistoryQuery aQueries, out PRUint32 aResultCount,
+    out nsINavHistoryQueryOptions options);
+
+  /**
+   * Converts a query into an equivalent string that can be persisted. Inverse
+   * of queryStringToQueries()
+   */
+  AUTF8String queriesToQueryString(
+    [const, array, size_is(aQueryCount)] in nsINavHistoryQuery aQueries, in PRUint32 aQueryCount,
+    in nsINavHistoryQueryOptions options);
+
+  /**
    * Adds a history observer. The history service will keep an owning
    * reference to the observer.
    */
