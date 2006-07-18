@@ -61,6 +61,8 @@ public:
 
   // These functions are called by the livemarks feed loader
   // to set the livemark children.
+  nsresult BeginUpdateBatch();
+  nsresult EndUpdateBatch();
   nsresult DeleteLivemarkChildren(PRInt64 aLivemarkFolderId);
   nsresult InsertLivemarkChild(PRInt64 aLivemarkFolderId, 
                                nsIURI *aURI,
@@ -104,6 +106,8 @@ private:
   nsCOMPtr<nsIStringBundle> mBundle;
   nsXPIDLString mLivemarkLoading;
   nsXPIDLString mLivemarkFailed;
+
+  nsCOMPtr<nsIURI> mIconURI;
 
   nsCOMPtr<nsIAnnotationService> mAnnotationService;
   nsCOMPtr<nsINavBookmarksService> mBookmarksService;
