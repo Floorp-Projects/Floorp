@@ -116,23 +116,6 @@ nsAnnotationService::Init()
 }
 
 
-// nsAnnotationService::SetAnnotation
-
-NS_IMETHODIMP
-nsAnnotationService::SetAnnotation(nsIURI* aURI,
-                                   const nsACString& aName,
-                                   nsIVariant *aValue,
-                                   PRInt32 aFlags, PRInt32 aExpiration)
-{
-  if (! aValue)
-    return NS_ERROR_INVALID_ARG;
-  nsAutoString stringValue;
-  nsresult rv = aValue->GetAsAString(stringValue);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return SetAnnotationString(aURI, aName, stringValue, aFlags, aExpiration);
-}
-
-
 // nsAnnotationService::SetAnnotationString
 
 NS_IMETHODIMP
@@ -229,6 +212,38 @@ nsAnnotationService::SetAnnotationInt64(nsIURI* aURI,
 }
 
 
+// nsAnnotationService::SetAnnotationDouble
+
+NS_IMETHODIMP
+nsAnnotationService::SetAnnotationDouble(nsIURI* aURI,
+                                         const nsACString& aName,
+                                         double aValue,
+                                         PRInt32 aFlags, PRInt32 aExpiration)
+{
+  mozStorageTransaction transaction(mDBConn, PR_FALSE);
+  mozIStorageStatement* statement; // class var, not owned by this function
+  nsresult rv = StartSetAnnotation(aURI, aName, aFlags, aExpiration, &statement);
+  NS_ENSURE_SUCCESS(rv, rv);
+  mozStorageStatementScoper statementResetter(statement);
+
+  rv = statement->BindDoubleParameter(kAnnoIndex_Content, aValue);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindNullParameter(kAnnoIndex_MimeType);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = statement->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+  transaction.Commit();
+
+  // should reset the statement; observers may call our service back to get
+  // annotation values!
+  statement->Reset();
+  statementResetter.Abandon();
+  CallSetObservers(aURI, aName);
+  return NS_OK;
+}
+
+
 // nsAnnotationService::SetAnnotationBinary
 
 NS_IMETHODIMP
@@ -262,29 +277,6 @@ nsAnnotationService::SetAnnotationBinary(nsIURI* aURI,
   statement->Reset();
   statementResetter.Abandon();
   CallSetObservers(aURI, aName);
-  return NS_OK;
-}
-
-
-// nsAnnotationService::GetAnnotation
-
-NS_IMETHODIMP
-nsAnnotationService::GetAnnotation(nsIURI* aURI,
-                                   const nsACString& aName,
-                                   nsIVariant** _retval)
-{
-  nsAutoString stringValue;
-  nsresult rv = GetAnnotationString(aURI, aName, stringValue);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIWritableVariant> var = do_CreateInstance("@mozilla.org/variant;1",
-                                                       &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = var->SetAsAString(stringValue);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *_retval = var;
-  NS_ADDREF(*_retval);
   return NS_OK;
 }
 
@@ -332,6 +324,22 @@ nsAnnotationService::GetAnnotationInt64(nsIURI* aURI,
   if (NS_FAILED(rv))
     return rv;
   *_retval = mDBGetAnnotationFromURI->AsInt64(kAnnoIndex_Content);
+  mDBGetAnnotationFromURI->Reset();
+  return NS_OK;
+}
+
+
+// nsAnnotationService::GetAnnotationDouble
+
+NS_IMETHODIMP
+nsAnnotationService::GetAnnotationDouble(nsIURI* aURI,
+                                         const nsACString& aName,
+                                         double *_retval)
+{
+  nsresult rv = StartGetAnnotationFromURI(aURI, aName);
+  if (NS_FAILED(rv))
+    return rv;
+  *_retval = mDBGetAnnotationFromURI->AsDouble(kAnnoIndex_Content);
   mDBGetAnnotationFromURI->Reset();
   return NS_OK;
 }
