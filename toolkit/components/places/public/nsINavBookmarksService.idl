@@ -286,15 +286,17 @@ interface nsINavBookmarksService : nsISupports
                              [array, retval, size_is(count)] out PRInt64 categories);
 
   /**
-   * Adds a bookmark observer. The bookmark service will keep an owning
-   * reference to the observer.
+   * Adds a bookmark observer. If ownsWeak is false, the bookmark service will
+   * keep an owning reference to the observer.  If ownsWeak is true, then
+   * aObserver must implement nsISupportsWeakReference, and the bookmark
+   * service will keep a weak reference to the observer.
    */
-  void addObserver(in nsINavBookmarkObserver aObserver);
+  void addObserver(in nsINavBookmarkObserver observer, in boolean ownsWeak);
 
   /**
    * Removes a bookmark observer.
    */
-  void removeObserver(in nsINavBookmarkObserver aObserver);
+  void removeObserver(in nsINavBookmarkObserver observer);
 
   /**
    * Causes observers to be notified of a beginUpdateBatch when a lot of things
