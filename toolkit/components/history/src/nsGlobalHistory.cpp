@@ -4329,6 +4329,9 @@ nsGlobalHistory::AutoCompleteTypedSearch(nsIAutoCompleteMdbResult2 **aResult)
   result->SetTokens(kToken_URLColumn, nsIAutoCompleteMdbResult2::kCharType, kToken_NameColumn, nsIAutoCompleteMdbResult2::kUnicharType);
   result->SetReverseByteOrder(mReverseByteOrder);
 
+  // Store hits in an nsIArray initially
+  nsCOMArray<nsIMdbRow> resultArray;
+
   nsCOMPtr<nsIMdbRow> row;
   mdb_pos pos;
   do {
@@ -4336,9 +4339,20 @@ nsGlobalHistory::AutoCompleteTypedSearch(nsIAutoCompleteMdbResult2 **aResult)
     if (!row) break;
     
     if (HasCell(mEnv, row, kToken_TypedColumn)) {
-      result->AddRow(row);
+      resultArray.AppendObject(row);
     }
   } while (row);
+
+  // sort it
+  AutoCompleteSortClosure closure;
+  closure.history = this;
+  resultArray.Sort(TypedSortComparison, NS_STATIC_CAST(void*, &closure));
+
+  // place the sorted array into the autocomplete results
+  count = resultArray.Count();
+  for (PRUint32 i = 0; i < count; ++i) {
+    result->AddRow(resultArray[i]);
+  }
 
   // Determine the result of the search
   PRUint32 matchCount;
@@ -4570,6 +4584,30 @@ nsGlobalHistory::AutoCompleteCompare(nsAString& aHistoryURL,
   AutoCompleteCutPrefix(aHistoryURL, aExclude);
   
   return Substring(aHistoryURL, 0, aUserURL.Length()).Equals(aUserURL);
+}
+
+int PR_CALLBACK 
+nsGlobalHistory::TypedSortComparison(nsIMdbRow *row1, nsIMdbRow *row2, 
+                                            void *closureVoid) 
+{
+  // cast our function parameters back into their real form
+  AutoCompleteSortClosure* closure = 
+      NS_STATIC_CAST(AutoCompleteSortClosure*, closureVoid);
+
+  PRInt64 lastVisitedTime1, lastVisitedTime2, diff;
+  closure->history->GetRowValue(row1,
+                                closure->history->kToken_LastVisitDateColumn,
+               &lastVisitedTime1);
+  closure->history->GetRowValue(row2,
+                                closure->history->kToken_LastVisitDateColumn,
+               &lastVisitedTime2);
+
+  LL_SUB(diff, lastVisitedTime2, lastVisitedTime1);
+  if(LL_CMP(diff, >, 0))
+    return 1;
+  else  if(LL_CMP(diff, <, 0))
+    return -1;
+  return 0;
 }
 
 int PR_CALLBACK 
