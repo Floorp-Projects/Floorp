@@ -73,6 +73,7 @@ CPPSRCS = \
           nsAnnotationService.cpp \
           nsNavHistory.cpp \
           nsNavHistoryQuery.cpp \
+          nsNavHistoryResult.cpp \
           nsNavBookmarks.cpp \
           $(NULL)
 
