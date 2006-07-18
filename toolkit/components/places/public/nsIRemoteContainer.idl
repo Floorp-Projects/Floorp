@@ -88,9 +88,12 @@ interface nsIRemoteContainer : nsISupports
    *                    whether to expand queries, etc. Implementations should
    *                    use this when possible if adding query and folder nodes
    *                    to the container. DO NOT MODIFY THIS VALUE.
+   *
+   * UNTESTED container API functions are commented out until they can be
+   * adequately tested.
    */
-  void onContainerOpening(in nsINavHistoryContainerResultNode container,
-                          in nsINavHistoryQueryOptions options);
+  /*void onContainerOpening(in nsINavHistoryContainerResultNode container,
+                          in nsINavHistoryQueryOptions options);*/
 
   /**
    * Called when the given container has just been hidden so that the service
@@ -105,8 +108,11 @@ interface nsIRemoteContainer : nsISupports
    *                    service need not worry about removing any created nodes,
    *                    they will be automatically removed when this call
    *                    completes.
+   *
+   * UNTESTED container API functions are commented out until they can be
+   * adequately tested.
    */
-  void onContainerClosed(in nsINavHistoryContainerResultNode container);
+  /*void onContainerClosed(in nsINavHistoryContainerResultNode container);*/
 
   /**
    * Called when the given container is about to be deleted, so
