@@ -51,7 +51,6 @@
 #include "nsINavHistoryService.h"
 #include "nsIAutoCompleteSearch.h"
 #include "nsIAutoCompleteResult.h"
-#include "nsIAutoCompleteResultTypes.h"
 #include "nsIAutoCompleteSimpleResult.h"
 #include "nsIBrowserHistory.h"
 #include "nsICollation.h"
@@ -385,8 +384,6 @@ protected:
   nsresult TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
                            nsCOMArray<nsINavHistoryQuery>* aQueries,
                            nsNavHistoryQueryOptions* aOptions);
-
-  nsresult ImportFromMork();
 
   // Transaction Manager
   nsCOMPtr<nsITransactionManager> mTransactionManager;
