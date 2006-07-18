@@ -48,6 +48,7 @@ XPIDL_MODULE = places
 
 XPIDLSRCS  = \
   nsIAnnotationService.idl \
+  nsIFaviconService.idl \
   nsINavHistory.idl \
   nsINavBookmarksService.idl \
   $(NULL)
