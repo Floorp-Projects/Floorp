@@ -86,9 +86,6 @@ public:
   nsRange();
   virtual ~nsRange();
 
-  // for layout module destructor
-  static void Shutdown();
-
   // nsIDOMRange interface
   NS_DECL_NSIDOMRANGE
 
@@ -140,12 +137,6 @@ protected:
   nsCOMPtr<nsIDOMNode> mStartParent;
   nsCOMPtr<nsIDOMNode> mEndParent;
 
-  static PRMonitor    *mMonitor;              // monitor to protect the following statics
-  static nsVoidArray  *mStartAncestors;       // just keeping these static to avoid reallocing the arrays.
-  static nsVoidArray  *mEndAncestors;         // the contents of these arrays are discarded across calls.
-  static nsVoidArray  *mStartAncestorOffsets; // this also makes nsRange objects lighter weight.
-  static nsVoidArray  *mEndAncestorOffsets;   // 
-
   // no copy's or assigns
   nsRange(const nsRange&);
   nsRange& operator=(const nsRange&);
@@ -155,8 +146,6 @@ public:
   
   static PRInt32       IndexOf(nsIDOMNode* aNode);
   static nsresult      PopRanges(nsIDOMNode* aDestNode, PRInt32 aOffset, nsIContent* aSourceNode);
-  static nsresult      Lock();
-  static nsresult      Unlock();
 
   static nsresult CloneParentsBetween(nsIDOMNode* aAncestor, 
                                       nsIDOMNode* aNode,
