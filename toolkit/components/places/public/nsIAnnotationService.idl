@@ -38,8 +38,15 @@
 
 #include "nsISupports.idl"
 
+%{C++
+#include "nsTArray.h"
+#include "nsString.h"
+%}
+
 interface nsIURI;
 interface nsIVariant;
+
+[ptr] native CStringArray(nsTArray<nsCString>);
 
 [scriptable, uuid(4ff680af-643e-4144-809f-dc53f71d7def)]
 interface nsIAnnotationObserver : nsISupports
@@ -58,7 +65,7 @@ interface nsIAnnotationObserver : nsISupports
     void onAnnotationRemoved(in nsIURI aURI, in AUTF8String aName);
 };
 
-[scriptable, uuid(05537263-9bb4-45c8-ae96-461817f53972)]
+[scriptable, uuid(6c170b7c-b4d4-4068-8c5b-53827b10557c)]
 interface nsIAnnotationService : nsISupports
 {
     /**
@@ -227,30 +234,17 @@ interface nsIAnnotationService : nsISupports
      * Get the names of all annotations for this URI.
      *
      * example JS:
-     *   var annotations = annotator.getAnnotations(myURI, {});
+     *   var annotations = annotator.getPageAnnotations(myURI, {});
+     * You probably don't want to use this from C++, use
+     * GetPageAnnotationsTArray instead.
      */
-    // IMPLEMENT ME
-    //void getAnnotations(in AString aURI, out unsigned PRInt32 count,
-    //  [retval, array, size_is(count)] out wstring result);
+    void getPageAnnotationNames(in nsIURI aURI, out PRUint32 count,
+      [retval, array, size_is(count)] out nsIVariant result);
 
     /**
-     * Get the values of several annotations with arbitrary URI/name pairs.
-     * There is some latency associated with each annotation query, so it is
-     * a good idea to use this function if it is possible for you to batch
-     * your requests together.
-     *
-     * This will return an array with the same number of values you requested.
-     * If the requested URI/name pair does not exist, the corresponding result
-     * element will be NULL.
-     *
-     * @param aURIList The list of URIs
+     * TArray version of getPageAnnotationNames for ease of use in C++ code.
      */
-    /* IMPLEMENT ME?
-    void getMultipleAnnotations([array, size_is(aCount)] in nsIURI aURIList,
-      [array, size_is(aCount)] in wstring aNameList, in unsigned PRInt32 aCount,
-      out unsigned PRInt32 aResultCount,
-      [retval, array, size_is(aResultCount)] out wstring aResultList);
-    */
+    [noscript] void GetPageAnnotationNamesTArray(in nsIURI aURI, in CStringArray aResult);
 
     /**
      * Test for annotation existance.
@@ -268,7 +262,7 @@ interface nsIAnnotationService : nsISupports
      * We may want some other similar functions to get annotations with given
      * flags (once we have flags defined).
      */
-    //void removePageAnnotations(in nsIURI aURI);
+    void removePageAnnotations(in nsIURI aURI);
 
 
     /**
