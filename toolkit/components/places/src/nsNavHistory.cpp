@@ -120,8 +120,8 @@ static PRInt32 GetTLDType(const nsCString& aHostTail);
 static void GetUnreversedHostname(const nsString& aBackward,
                                   nsAString& aForward);
 static PRBool IsNumericHostName(const nsCString& aHost);
-static PRInt64 GetSimpleBookmarksQueryFolder(nsINavHistoryQuery** aQueries,
-                                             PRUint32 aQueryCount);
+static PRInt64 GetSimpleBookmarksQueryFolder(
+    const nsCOMArray<nsNavHistoryQuery>& aQueries);
 static void ParseSearchQuery(const nsString& aQuery, nsStringArray* aTerms);
 
 inline void ReverseString(const nsString& aInput, nsAString& aReversed)
@@ -1192,16 +1192,16 @@ nsNavHistory::NormalizeTime(PRUint32 aRelative, PRTime aOffset)
 //    change operations as simple instead of complex.
 
 PRUint32
-nsNavHistory::GetUpdateRequirements(nsCOMArray<nsINavHistoryQuery>* aQueries,
+nsNavHistory::GetUpdateRequirements(const nsCOMArray<nsNavHistoryQuery>& aQueries,
                                     nsNavHistoryQueryOptions* aOptions,
                                     PRBool* aHasSearchTerms)
 {
-  NS_ASSERTION(aQueries->Count() > 0, "Must have at least one query");
+  NS_ASSERTION(aQueries.Count() > 0, "Must have at least one query");
 
   // first check if there are search terms
   *aHasSearchTerms = PR_FALSE;
-  for (PRInt32 i = 0; i < aQueries->Count(); i ++) {
-    (*aQueries)[i]->GetHasSearchTerms(aHasSearchTerms);
+  for (PRInt32 i = 0; i < aQueries.Count(); i ++) {
+    aQueries[i]->GetHasSearchTerms(aHasSearchTerms);
     if (*aHasSearchTerms)
       break;
   }
@@ -1213,13 +1213,8 @@ nsNavHistory::GetUpdateRequirements(nsCOMArray<nsINavHistoryQuery>* aQueries,
     return QUERYUPDATE_COMPLEX;
 
   PRBool nonTimeBasedItems = PR_FALSE;
-  for (PRInt32 i = 0; i < aQueries->Count(); i ++) {
-    nsresult rv;
-    nsCOMPtr<nsNavHistoryQuery> query = do_QueryInterface((*aQueries)[i], &rv);
-    if (NS_FAILED(rv)) {
-      NS_NOTREACHED("Query is not one of our query objects!");
-      return QUERYUPDATE_COMPLEX;
-    }
+  for (PRInt32 i = 0; i < aQueries.Count(); i ++) {
+    nsNavHistoryQuery* query = aQueries[i];
 
     if (query->Folders().Length() > 0 || query->OnlyBookmarked()) {
       return QUERYUPDATE_COMPLEX_WITH_BOOKMARKS;
@@ -1232,7 +1227,7 @@ nsNavHistory::GetUpdateRequirements(nsCOMArray<nsINavHistoryQuery>* aQueries,
       nonTimeBasedItems = PR_TRUE;
   }
 
-  if (aQueries->Count() == 1 && ! nonTimeBasedItems)
+  if (aQueries.Count() == 1 && ! nonTimeBasedItems)
     return QUERYUPDATE_TIME;
   return QUERYUPDATE_SIMPLE;
 }
@@ -1253,21 +1248,16 @@ nsNavHistory::GetUpdateRequirements(nsCOMArray<nsINavHistoryQuery>* aQueries,
 //    Returns true if node matches the query, false if not.
 
 PRBool
-nsNavHistory::EvaluateQueryForNode(nsCOMArray<nsINavHistoryQuery>* aQueries,
+nsNavHistory::EvaluateQueryForNode(const nsCOMArray<nsNavHistoryQuery>& aQueries,
                                    nsNavHistoryQueryOptions* aOptions,
                                    nsNavHistoryURIResultNode* aNode)
 {
   // lazily created from the node's string when we need to match URIs
   nsCOMPtr<nsIURI> nodeUri;
 
-  nsresult rv;
-  for (PRInt32 i = 0; i < aQueries->Count(); i ++) {
+  for (PRInt32 i = 0; i < aQueries.Count(); i ++) {
     PRBool hasIt;
-    nsCOMPtr<nsNavHistoryQuery> query = do_QueryInterface((*aQueries)[i], &rv);
-    if (NS_FAILED(rv)) {
-      NS_NOTREACHED("Query is not one of ours.");
-      return PR_FALSE;
-    }
+    nsCOMPtr<nsNavHistoryQuery> query = aQueries[i];
 
     // --- begin time ---
     query->GetHasBeginTime(&hasIt);
@@ -1294,7 +1284,7 @@ nsNavHistory::EvaluateQueryForNode(nsCOMArray<nsINavHistoryQuery>* aQueries,
       nsCOMArray<nsNavHistoryResultNode> inputSet;
       inputSet.AppendObject(aNode);
       nsCOMArray<nsNavHistoryResultNode> filteredSet;
-      rv = FilterResultSet(inputSet, &filteredSet, query->SearchTerms());
+      nsresult rv = FilterResultSet(inputSet, &filteredSet, query->SearchTerms());
       if (NS_FAILED(rv))
         continue;
       if (! filteredSet.Count())
@@ -1336,7 +1326,7 @@ nsNavHistory::EvaluateQueryForNode(nsCOMArray<nsINavHistoryQuery>* aQueries,
       if (! query->UriIsPrefix()) {
         // easy case: the URI is an exact match
         PRBool equals;
-        rv = query->Uri()->Equals(nodeUri, &equals);
+        nsresult rv = query->Uri()->Equals(nodeUri, &equals);
         NS_ENSURE_SUCCESS(rv, rv);
         if (! equals)
           continue;
@@ -1640,21 +1630,33 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
   nsCOMPtr<nsNavHistoryQueryOptions> options = do_QueryInterface(aOptions);
   NS_ENSURE_TRUE(options, NS_ERROR_INVALID_ARG);
 
+  // concrete queries array
+  nsCOMArray<nsNavHistoryQuery> queries;
+  for (PRUint32 i = 0; i < aQueryCount; i ++) {
+    nsCOMPtr<nsNavHistoryQuery> query = do_QueryInterface(aQueries[i], &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    queries.AppendObject(query);
+  }
+
   // root node
   nsRefPtr<nsNavHistoryContainerResultNode> rootNode;
-  PRInt64 folderId = GetSimpleBookmarksQueryFolder(aQueries, aQueryCount);
+  PRInt64 folderId = GetSimpleBookmarksQueryFolder(queries);
   if (folderId) {
     // In the simple case where we're just querying children of a single bookmark
     // folder, we can more efficiently generate results.
-    rootNode = new nsNavHistoryFolderResultNode(EmptyCString(), 0, 0,
-                                                options, folderId);
+    nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+    NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
+    nsCOMPtr<nsNavHistoryResultNode> tempRootNode;
+    rv = bookmarks->ResultNodeForFolder(folderId, options,
+                                        getter_AddRefs(tempRootNode));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rootNode = tempRootNode->GetAsContainer();
   } else {
     // complex query
-    rootNode = new nsNavHistoryQueryResultNode(options,
-                                               EmptyCString(), 0, 0, EmptyCString(),
-                                               aQueries, aQueryCount, options);
+    rootNode = new nsNavHistoryQueryResultNode(EmptyCString(), EmptyCString(),
+                                               queries, options);
+    NS_ENSURE_TRUE(rootNode, NS_ERROR_OUT_OF_MEMORY);
   }
-  NS_ENSURE_TRUE(rootNode, NS_ERROR_OUT_OF_MEMORY);
 
   // result object
   nsRefPtr<nsNavHistoryResult> result;
@@ -1688,7 +1690,7 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
 //    it ANDed with the all the rest of the queries.
 
 nsresult
-nsNavHistory::GetQueryResults(const nsCOMArray<nsINavHistoryQuery>& aQueries,
+nsNavHistory::GetQueryResults(const nsCOMArray<nsNavHistoryQuery>& aQueries,
                               nsNavHistoryQueryOptions *aOptions,
                               nsCOMArray<nsNavHistoryResultNode>* aResults)
 {
@@ -1843,15 +1845,13 @@ nsNavHistory::GetQueryResults(const nsCOMArray<nsINavHistoryQuery>& aQueries,
   for (i = 0; i < aQueries.Count(); i ++) {
     PRInt32 clauseParameters = 0;
     rv = BindQueryClauseParameters(statement, numParameters,
-                                   NS_CONST_CAST(nsINavHistoryQuery*, aQueries[i]),
-                                   &clauseParameters);
+                                   aQueries[i], &clauseParameters);
     NS_ENSURE_SUCCESS(rv, rv);
     numParameters += clauseParameters;
   }
 
   PRBool hasSearchTerms;
-  rv = NS_CONST_CAST(nsINavHistoryQuery*,
-                     aQueries[0])->GetHasSearchTerms(&hasSearchTerms);
+  rv = aQueries[0]->GetHasSearchTerms(&hasSearchTerms);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRUint32 groupCount;
@@ -1868,36 +1868,25 @@ nsNavHistory::GetQueryResults(const nsCOMArray<nsINavHistoryQuery>& aQueries,
     rv = ResultsAsList(statement, aOptions, &toplevel);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    /* FIXME(brettw)
     if (hasSearchTerms) {
       // keyword search
-      nsAutoString searchTerms;
-      NS_CONST_CAST(nsINavHistoryQuery*, aQueries[0])
-        ->GetSearchTerms(searchTerms);
       if (groupCount == 0) {
-        FilterResultSet(toplevel, result->GetTopLevel(), searchTerms);
+        // keyword search with no grouping: can filter directly into the result
+        FilterResultSet(toplevel, aResults, aQueries[0]->SearchTerms());
       } else {
+        // keyword searching with grouping: need intermediate filtered results
         nsCOMArray<nsNavHistoryResultNode> filteredResults;
-        FilterResultSet(toplevel, &filteredResults, searchTerms);
+        FilterResultSet(toplevel, &filteredResults, aQueries[0]->SearchTerms());
         rv = RecursiveGroup(filteredResults, groupings, groupCount,
-                            result->GetTopLevel());
+                            aResults);
         NS_ENSURE_SUCCESS(rv, rv);
       }
-    } else */{
+    } else {
       // group unfiltered results
       rv = RecursiveGroup(toplevel, groupings, groupCount, aResults);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
-
-  /*
-  nsNavHistoryContainerResultNode::SortComparator comparator =
-    nsNavHistoryContainerResultNode::GetSortingComparator(
-        sortingMode);
-  if (sortingMode)
-    nsNavHistoryContainerResultNode::RecursiveSortArray(
-        aResults, mCollation, comparator);
-        */
 
   // automatically expand things that were expanded before
   // FIXME(brettw)
@@ -2526,7 +2515,7 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
 //    no way for those to fail.
 
 nsresult
-nsNavHistory::QueryToSelectClause(nsINavHistoryQuery* aQuery, // const
+nsNavHistory::QueryToSelectClause(nsNavHistoryQuery* aQuery, // const
                                   PRInt32 aStartParameter,
                                   nsCString* aClause,
                                   PRInt32* aParamCount,
@@ -2559,7 +2548,7 @@ nsNavHistory::QueryToSelectClause(nsINavHistoryQuery* aQuery, // const
   // search terms FIXME
 
   // only bookmarked
-  if (NS_SUCCEEDED(aQuery->GetOnlyBookmarked(&hasIt)) && hasIt) {
+  if (aQuery->OnlyBookmarked()) {
     if (! aClause->IsEmpty())
       *aClause += NS_LITERAL_CSTRING(" AND ");
 
@@ -2602,15 +2591,12 @@ nsNavHistory::QueryToSelectClause(nsINavHistoryQuery* aQuery, // const
     if (! aClause->IsEmpty())
       *aClause += NS_LITERAL_CSTRING(" AND ");
 
-    PRBool uriIsPrefix;
-    aQuery->GetUriIsPrefix(&uriIsPrefix);
-
     nsCAutoString paramString;
     parameterString(aStartParameter + *aParamCount, paramString);
     (*aParamCount) ++;
 
     nsCAutoString match;
-    if (uriIsPrefix) {
+    if (aQuery->UriIsPrefix()) {
       // Prefix: want something of the form SUBSTR(h.url, 0, length(?1)) = ?1
       *aClause += NS_LITERAL_CSTRING("SUBSTR(h.url, 0, LENGTH(") +
         paramString + NS_LITERAL_CSTRING(")) = ") + paramString;
@@ -2625,14 +2611,11 @@ nsNavHistory::QueryToSelectClause(nsINavHistoryQuery* aQuery, // const
   if (! aClause->IsEmpty())
     *aClause += NS_LITERAL_CSTRING(" AND ");
   if (hasIt) {
-    PRBool notAnnotation;
-    aQuery->GetAnnotationIsNot(&notAnnotation);
-
     nsCAutoString paramString;
     parameterString(aStartParameter + *aParamCount, paramString);
     (*aParamCount) ++;
 
-    if (notAnnotation)
+    if (aQuery->AnnotationIsNot())
       aClause->AppendLiteral("NOT ");
     aClause->AppendLiteral("EXISTS (SELECT anno_id FROM moz_anno anno WHERE anno.page = h.id AND anno.name = ");
     aClause->Append(paramString);
@@ -2655,7 +2638,7 @@ nsNavHistory::QueryToSelectClause(nsINavHistoryQuery* aQuery, // const
 nsresult
 nsNavHistory::BindQueryClauseParameters(mozIStorageStatement* statement,
                                         PRInt32 aStartParameter,
-                                        nsINavHistoryQuery* aQuery, // const
+                                        nsNavHistoryQuery* aQuery, // const
                                         PRInt32* aParamCount)
 {
   nsresult rv;
@@ -2665,11 +2648,8 @@ nsNavHistory::BindQueryClauseParameters(mozIStorageStatement* statement,
 
   // begin time
   if (NS_SUCCEEDED(aQuery->GetHasBeginTime(&hasIt)) && hasIt) {
-    PRTime time;
-    aQuery->GetBeginTime(&time);
-    PRUint32 timeReference;
-    aQuery->GetBeginTimeReference(&timeReference);
-    time = NormalizeTime(timeReference, time);
+    PRTime time = NormalizeTime(aQuery->BeginTimeReference(),
+                                aQuery->BeginTime());
     rv = statement->BindInt64Parameter(aStartParameter + *aParamCount, time);
     NS_ENSURE_SUCCESS(rv, rv);
     (*aParamCount) ++;
@@ -2677,11 +2657,8 @@ nsNavHistory::BindQueryClauseParameters(mozIStorageStatement* statement,
 
   // end time
   if (NS_SUCCEEDED(aQuery->GetHasEndTime(&hasIt)) && hasIt) {
-    PRTime time;
-    aQuery->GetEndTime(&time);
-    PRUint32 timeReference;
-    aQuery->GetEndTimeReference(&timeReference);
-    time = NormalizeTime(timeReference, time);
+    PRTime time = NormalizeTime(aQuery->EndTimeReference(),
+                                aQuery->EndTime());
     rv = statement->BindInt64Parameter(aStartParameter + *aParamCount, time);
     NS_ENSURE_SUCCESS(rv, rv);
     (*aParamCount) ++;
@@ -2693,14 +2670,10 @@ nsNavHistory::BindQueryClauseParameters(mozIStorageStatement* statement,
 
   // domain (see GetReversedHostname for more info on reversed host names)
   if (NS_SUCCEEDED(aQuery->GetHasDomain(&hasIt)) && hasIt) {
-    nsCAutoString domain;
-    aQuery->GetDomain(domain);
     nsString revDomain;
-    GetReversedHostname(NS_ConvertUTF8toUTF16(domain), revDomain);
+    GetReversedHostname(NS_ConvertUTF8toUTF16(aQuery->Domain()), revDomain);
 
-    PRBool domainIsHost = PR_FALSE;
-    aQuery->GetDomainIsHost(&domainIsHost);
-    if (domainIsHost) {
+    if (aQuery->DomainIsHost()) {
       rv = statement->BindStringParameter(aStartParameter + *aParamCount, revDomain);
       NS_ENSURE_SUCCESS(rv, rv);
       (*aParamCount) ++;
@@ -2722,21 +2695,15 @@ nsNavHistory::BindQueryClauseParameters(mozIStorageStatement* statement,
 
   // URI
   if (NS_SUCCEEDED(aQuery->GetHasUri(&hasIt)) && hasIt) {
-    nsCOMPtr<nsIURI> uri;
-    rv = aQuery->GetUri(getter_AddRefs(uri));
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE); // if (hasUri) then it should be valid
-    BindStatementURI(statement, aStartParameter + *aParamCount, uri);
+    BindStatementURI(statement, aStartParameter + *aParamCount, aQuery->Uri());
     (*aParamCount) ++;
   }
 
   // annotation
   aQuery->GetHasAnnotation(&hasIt);
   if (hasIt) {
-    nsCAutoString annotationName;
-    aQuery->GetAnnotation(annotationName);
     rv = statement->BindUTF8StringParameter(aStartParameter + *aParamCount,
-                                            annotationName);
+                                            aQuery->Annotation());
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -2791,9 +2758,6 @@ nsNavHistory::RecursiveGroup(const nsCOMArray<nsNavHistoryResultNode>& aSource,
 
   nsresult rv;
   switch (aGroupingMode[0]) {
-    case nsINavHistoryQueryOptions::GROUP_BY_DAY:
-      rv = GroupByDay(aSource, aDest);
-      break;
     case nsINavHistoryQueryOptions::GROUP_BY_HOST:
       rv = GroupByHost(aSource, aDest, PR_FALSE);
       break;
@@ -2822,18 +2786,6 @@ nsNavHistory::RecursiveGroup(const nsCOMArray<nsNavHistoryResultNode>& aSource,
     }
   }
   return NS_OK;
-}
-
-
-// nsNavHistory::GroupByDay
-//
-//    FIXME TODO IMPLEMENT ME (or maybe we don't care about this?)
-
-nsresult
-nsNavHistory::GroupByDay(const nsCOMArray<nsNavHistoryResultNode>& aSource,
-                         nsCOMArray<nsNavHistoryResultNode>* aDest)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
@@ -2892,7 +2844,7 @@ nsNavHistory::GroupByHost(const nsCOMArray<nsNavHistoryResultNode>& aSource,
       TitleForDomain(curHostName, title);
 
       curTopGroup = new nsNavHistoryContainerResultNode(title, EmptyCString(),
-          nsNavHistoryResultNode::RESULT_TYPE_HOST);
+          nsNavHistoryResultNode::RESULT_TYPE_HOST, PR_TRUE, EmptyCString());
       if (! curTopGroup)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -2955,29 +2907,28 @@ nsNavHistory::FilterResultSet(const nsCOMArray<nsNavHistoryResultNode>& aSet,
     }
     */
 
-    /* FIXME(brettw)
     for (PRInt32 termIndex = 0; termIndex < terms.Count(); termIndex ++) {
       PRBool termFound = PR_FALSE;
       // title and URL
       if (CaseInsensitiveFindInReadable(*terms[termIndex],
                                         NS_ConvertUTF8toUTF16(aSet[nodeIndex]->mTitle)) ||
-          CaseInsensitiveFindInReadable(*terms[termIndex],
-                                        NS_ConvertUTF8toUTF16(aSet[nodeIndex]->mUrl)))
+          (aSet[nodeIndex]->IsURI() &&
+           CaseInsensitiveFindInReadable(*terms[termIndex],
+                                  NS_ConvertUTF8toUTF16(aSet[nodeIndex]->GetAsURI()->mURI))))
         termFound = PR_TRUE;
       // searchable annotations
-      if (! termFound) {
+      /*if (! termFound) {
         for (PRInt32 annotIndex = 0; annotIndex < curAnnotations.Count(); annotIndex ++) {
           if (CaseInsensitiveFindInReadable(*terms[termIndex],
                                             *curAnnotations[annotIndex]))
             termFound = PR_TRUE;
         }
-      }
+      }*/
       if (! termFound) {
         allTermsFound = PR_FALSE;
         break;
       }
     }
-    */
     if (allTermsFound)
       aFiltered->AppendObject(aSet[nodeIndex]);
   }
@@ -3077,41 +3028,8 @@ nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (IsQueryURI(url)) {
-    nsINavHistoryQuery** queries;
-    PRUint32 queryCount;
-    nsCOMPtr<nsINavHistoryQueryOptions> subIOptions;
-    rv = QueryStringToQueries(url, &queries, &queryCount,
-                              getter_AddRefs(subIOptions));
-    if (NS_FAILED(rv)) {
-      // This was a query that did not parse, what do we do? We don't want to
-      // return failure since that will kill the whole query process. Instead
-      // make a query node with the query as a string. This way we have a valid
-      // node for the user to manipulate, but it will never populate since the
-      // query string is invalid.
-      *aResult = new nsNavHistoryQueryResultNode(aOptions, title, accessCount,
-                                                 time, favicon, url);
-    } else {
-      nsCOMPtr<nsNavHistoryQueryOptions> subOptions =
-        do_QueryInterface(subIOptions, &rv);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "Options must be our concrete ones");
-      PRInt64 folderId = GetSimpleBookmarksQueryFolder(queries, queryCount);
-      if (folderId) {
-        // simple bookmarks folder, magically generate a bookmarks folder node
-        *aResult = new nsNavHistoryFolderResultNode(title, 0, 0,
-                                                    subOptions, folderId);
-      } else {
-        // regular query
-        *aResult = new nsNavHistoryQueryResultNode(subOptions, title, 0,
-                                                   0, EmptyCString(),
-                                                   queries, queryCount,
-                                                   subOptions);
-      }
-      nsMemory::Free(queries);
-    }
-    if (! *aResult)
-      return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(*aResult);
-    return NS_OK;
+    // special case "place:" URIs: turn them into containers
+    return QueryRowToResult(url, title, accessCount, time, favicon, aResult);
   } else if (aOptions->ResultType() == nsNavHistoryQueryOptions::RESULTS_AS_URI) {
     *aResult = new nsNavHistoryURIResultNode(title, accessCount, time,
                                              favicon, url);
@@ -3160,6 +3078,54 @@ nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
   if (! *aResult)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(*aResult);*/
+  return NS_OK;
+}
+
+
+// nsNavHistory::QueryRowToResult
+//
+//    Called by RowToResult when the URI is a place: URI to generate the proper
+//    folder or query node.
+
+nsresult
+nsNavHistory::QueryRowToResult(const nsACString& aURI, const nsACString& aTitle,
+                               PRUint32 aAccessCount, PRTime aTime,
+                               const nsACString& aFavicon,
+                               nsNavHistoryResultNode** aNode)
+{
+  nsCOMArray<nsNavHistoryQuery> queries;
+  nsCOMPtr<nsNavHistoryQueryOptions> options;
+  nsresult rv = QueryStringToQueryArray(aURI, &queries,
+                                        getter_AddRefs(options));
+  if (NS_FAILED(rv)) {
+    // This was a query that did not parse, what do we do? We don't want to
+    // return failure since that will kill the whole query process. Instead
+    // make a query node with the query as a string. This way we have a valid
+    // node for the user to manipulate that will look like a query, but it will
+    // never populate since the query string is invalid.
+    *aNode = new nsNavHistoryQueryResultNode(aTitle, aFavicon, aURI);
+    if (! *aNode)
+      return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(*aNode);
+  } else {
+    PRInt64 folderId = GetSimpleBookmarksQueryFolder(queries);
+    if (folderId) {
+      // simple bookmarks folder, magically generate a bookmarks folder node
+      nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+      NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
+
+      // this addrefs for us
+      rv = bookmarks->ResultNodeForFolder(folderId, options, aNode);
+      NS_ENSURE_SUCCESS(rv, rv);
+    } else {
+      // regular query
+      *aNode = new nsNavHistoryQueryResultNode(aTitle, EmptyCString(),
+                                               queries, options);
+      if (! *aNode)
+        return NS_ERROR_OUT_OF_MEMORY;
+      NS_ADDREF(*aNode);
+    }
+  }
   return NS_OK;
 }
 
@@ -3473,13 +3439,12 @@ PRBool IsNumericHostName(const nsCString& aHost)
 //    Returns the folder ID if it is a simple folder query, 0 if not.
 
 static PRInt64
-GetSimpleBookmarksQueryFolder(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount)
+GetSimpleBookmarksQueryFolder(const nsCOMArray<nsNavHistoryQuery>& aQueries)
 {
-  if (aQueryCount != 1)
+  if (aQueries.Count() != 1)
     return 0;
 
-  nsresult rv;
-  nsCOMPtr<nsNavHistoryQuery> query = do_QueryInterface(aQueries[0], &rv);
+  nsNavHistoryQuery* query = aQueries[0];
   if (query->Folders().Length() != 1)
     return 0;
 
