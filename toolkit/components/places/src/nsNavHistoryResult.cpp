@@ -1508,6 +1508,7 @@ nsresult
 nsNavHistoryQueryResultNode::OpenContainer()
 {
   NS_ASSERTION(! mExpanded, "Container must be expanded to close it");
+  mExpanded = PR_TRUE;
   if (! CanExpand())
     return NS_OK;
   if (! mContentsValid) {
@@ -1515,7 +1516,6 @@ nsNavHistoryQueryResultNode::OpenContainer()
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  mExpanded = PR_TRUE;
   nsNavHistoryResult* result = GetResult();
   NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
   return result->RefreshVisibleSection(this);
