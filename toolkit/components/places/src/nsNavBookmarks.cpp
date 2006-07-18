@@ -799,12 +799,18 @@ nsNavBookmarks::QueryFolderChildren(PRInt64 aFolder, PRUint32 aOptions,
   aOptions &= ~BUILD_CHILDREN_NO_RECURSE;
 
   mozIStorageStatement *statement;
-  if (aOptions == ALL_CHILDREN ||
-      aOptions == (ITEM_CHILDREN | FOLDER_CHILDREN)) {
+  if (aOptions == ALL_CHILDREN) {
+    aOptions = PR_UINT32_MAX;
+  }
+  PRBool includeQueries = (aOptions & QUERY_CHILDREN) != 0;
+  PRBool includeItems = (aOptions & ITEM_CHILDREN) != 0;
+  PRBool includeFolders = (aOptions & FOLDER_CHILDREN) != 0;
+
+  if (includeFolders && (includeQueries || includeItems)) {
     statement = mDBGetChildren;
-  } else if (aOptions == ITEM_CHILDREN) {
+  } else if (includeItems || includeQueries) {
     statement = mDBGetItemChildren;
-  } else if (aOptions == FOLDER_CHILDREN) {
+  } else if (includeFolders) {
     statement = mDBGetFolderChildren;
   } else {
     return NS_ERROR_INVALID_ARG;
@@ -832,6 +838,10 @@ nsNavBookmarks::QueryFolderChildren(PRInt64 aFolder, PRUint32 aOptions,
         rv = ResultNodeForFolder(folder, getter_AddRefs(node));
       } else {
         rv = History()->RowToResult(statement, PR_FALSE, getter_AddRefs(node));
+        PRBool isQuery = IsQueryURI(node->URL());
+        if ((isQuery && !includeQueries) || (!isQuery && !includeItems)) {
+          continue;
+        }
       }
 
       NS_ENSURE_SUCCESS(rv, rv);
