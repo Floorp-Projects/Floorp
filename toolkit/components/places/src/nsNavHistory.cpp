@@ -3312,6 +3312,13 @@ NS_IMETHODIMP nsNavHistoryResultNode::GetUrl(nsACString& aUrl)
   return NS_OK;
 }
 
+/* attribute PRInt64 folderId; */
+NS_IMETHODIMP nsNavHistoryResultNode::GetFolderId(PRInt64 *aID)
+{
+  *aID = mType == RESULT_TYPE_FOLDER ? mID : 0;
+  return NS_OK;
+}
+
 /* attribute string title; */
 NS_IMETHODIMP nsNavHistoryResultNode::GetTitle(nsAString& aTitle)
 {
@@ -3491,7 +3498,9 @@ nsNavHistoryResult::nsNavHistoryResult(nsNavHistory* aHistoryService,
                                        nsIStringBundle* aHistoryBundle)
   : mBundle(aHistoryBundle), mHistoryService(aHistoryService),
     mCollapseDuplicates(PR_TRUE),
-    mTimesIncludeDates(PR_TRUE), mCurrentSort(nsINavHistoryQueryOptions::SORT_BY_NONE)
+    mTimesIncludeDates(PR_TRUE),
+    mCurrentSort(nsINavHistoryQueryOptions::SORT_BY_NONE),
+    mBookmarkOptions(nsINavBookmarksService::ALL_CHILDREN)
 {
 }
 
@@ -3548,16 +3557,21 @@ nsNavHistoryResult::FilledAllResults()
 nsresult
 nsNavHistoryResult::BuildChildrenFor(nsNavHistoryResultNode *aNode)
 {
-  nsresult rv = aNode->BuildChildren();
+  nsresult rv = aNode->BuildChildren(mBookmarkOptions);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  FillTreeStats(aNode, aNode->mIndentLevel);
-
+  PRInt32 flatIndex = aNode->mFlatIndex + 1;
   for (PRInt32 i = 0; i < aNode->mChildren.Count(); ++i) {
-    // XXX inefficient, need to be able to InsertElementsAt from nsCOMArray!
-    mAllElements.InsertElementAt(aNode->mChildren[i],
-                                 aNode->mFlatIndex + 1 + i);
+    nsNavHistoryResultNode *child = aNode->mChildren[i];
+
+    // XXX inefficient, need to be able to insert multiple items at once
+    mAllElements.InsertElementAt(child, flatIndex++);
+    for (PRInt32 j = 0; j < child->mChildren.Count(); ++j) {
+      mAllElements.InsertElementAt(child->mChildren[j], flatIndex++);
+    }
   }
+
+  FillTreeStats(aNode, aNode->mIndentLevel);
   return NS_OK;
 }
 
@@ -4235,9 +4249,7 @@ NS_IMETHODIMP nsNavHistoryResult::IsContainerEmpty(PRInt32 index, PRBool *_retva
   if (index < 0 || index >= mVisibleElements.Count())
     return NS_ERROR_INVALID_ARG;
 
-  nsNavHistoryResultNode *node = VisibleElementAt(index);
-  *_retval = (node->mType != nsINavHistoryResultNode::RESULT_TYPE_FOLDER &&
-              node->mChildren.Count() == 0);
+  *_retval = (VisibleElementAt(index)->mChildren.Count() == 0);
   return NS_OK;
 }
 
