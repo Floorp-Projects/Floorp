@@ -51,8 +51,8 @@ XPIDLSRCS  = \
   nsIFaviconService.idl \
   nsINavHistoryService.idl \
   nsINavBookmarksService.idl \
-  nsIBookmarksContainer.idl \
   nsILivemarkService.idl \
+  nsIRemoteContainer.idl \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
