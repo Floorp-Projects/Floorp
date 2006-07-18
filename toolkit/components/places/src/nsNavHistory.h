@@ -205,6 +205,9 @@ public:
   nsIDateTimeFormat* GetDateFormatter()
     { return mDateFormatter; }
 
+  // returns true if history has been disabled
+  PRBool IsHistoryDisabled() { return mExpireDays == 0; }
+
   // remember tree state
   void SaveExpandItem(const nsAString& aTitle);
   void SaveCollapseItem(const nsAString& aTitle);
