@@ -56,6 +56,7 @@
 #include "nsICollation.h"
 #include "nsIDateTimeFormat.h"
 #include "nsIGlobalHistory.h"
+#include "nsIGlobalHistory3.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIObserver.h"
@@ -97,6 +98,7 @@ class nsNavHistory : public nsSupportsWeakReference,
                      public nsINavHistoryService,
                      public nsIObserver,
                      public nsIBrowserHistory,
+                     public nsIGlobalHistory3,
                      public nsIAutoCompleteSearch
 {
   friend class AutoCompleteIntermediateResultSet;
@@ -107,6 +109,7 @@ public:
 
   NS_DECL_NSINAVHISTORYSERVICE
   NS_DECL_NSIGLOBALHISTORY2
+  NS_DECL_NSIGLOBALHISTORY3
   NS_DECL_NSIBROWSERHISTORY
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIAUTOCOMPLETESEARCH
@@ -297,7 +300,9 @@ protected:
 
   nsCOMPtr<mozIStorageStatement> mDBRecentVisitOfURL; // converts URL into most recent visit ID/session ID
   nsCOMPtr<mozIStorageStatement> mDBInsertVisit; // used by AddVisit
-  nsCOMPtr<mozIStorageStatement> mDBIncrementVisitCount;
+  nsCOMPtr<mozIStorageStatement> mDBGetPageVisitStats; // used by AddVisit
+  nsCOMPtr<mozIStorageStatement> mDBUpdatePageVisitStats; // used by AddVisit
+  nsCOMPtr<mozIStorageStatement> mDBAddNewPage; // used by InternalAddNewPage
 
   // these are used by VisitIdToResultNode for making new result nodes from IDs
   nsCOMPtr<mozIStorageStatement> mDBVisitToURLResult; // kGetInfoIndex_* results
@@ -313,16 +318,16 @@ protected:
 
   nsresult InitMemDB();
 
-  nsresult InternalAdd(nsIURI* aURI, nsIURI* aReferrer, PRInt64 aSessionID,
-                       PRUint32 aTransitionType, const PRUnichar* aTitle,
-                       PRTime aVisitDate, PRBool aRedirect,
-                       PRBool aToplevel, PRInt64* aPageID);
-  nsresult InternalAddNewPage(nsIURI* aURI, const PRUnichar* aTitle,
-                              PRBool aHidden, PRBool aTyped,
+  nsresult AddVisitChain(nsIURI* aURI, PRBool aToplevel, PRBool aRedirect,
+                         nsIURI* aReferrer, PRInt64* aVisitID,
+                         PRInt64* aSessionID);
+  nsresult InternalAddNewPage(nsIURI* aURI, PRBool aHidden, PRBool aTyped,
                               PRInt32 aVisitCount, PRInt64* aPageID);
-  nsresult InternalAddVisit(nsIURI* aReferrer, PRInt64 aPageID, PRTime aTime,
-                            PRInt32 aTransitionType, PRInt64* aVisitID,
-                            PRInt64* aReferringID);
+  nsresult InternalAddVisit(PRInt64 aPageID, PRInt64 aReferringVisit,
+                            PRInt64 aSessionID, PRTime aTime,
+                            PRInt32 aTransitionType, PRInt64* aVisitID);
+  PRBool FindLastVisit(nsIURI* aURI, PRInt64* aVisitID,
+                       PRInt64* aSessionID);
   PRBool IsURIStringVisited(const nsACString& url);
   nsresult VacuumDB(PRTime aTimeAgo, PRBool aCompress);
   nsresult LoadPrefs();
@@ -381,8 +386,22 @@ protected:
                             const nsACString& url);
   void ExpireNonrecentEvents(RecentEventHash* hashTable);
 
+  // redirect tracking. See GetRedirectFor for a description of how this works.
+  struct RedirectInfo {
+    nsCString mSourceURI;
+    PRTime mTimeCreated;
+    PRUint32 mType; // one of TRANSITION_REDIRECT_[TEMPORARY,PERMANENT]
+  };
+  typedef nsDataHashtable<nsCStringHashKey, RedirectInfo> RedirectHash;
+  RedirectHash mRecentRedirects;
+  PR_STATIC_CALLBACK(PLDHashOperator) ExpireNonrecentRedirects(
+      nsCStringHashKey::KeyType aKey, RedirectInfo& aData, void* aUserArg);
+  PRBool GetRedirectFor(const nsACString& aDestination, nsACString& aSource,
+                        PRTime* aTime, PRUint32* aRedirectType);
+
   // session tracking
   PRInt64 mLastSessionID;
+  PRInt64 GetNewSessionID() { mLastSessionID ++; return mLastSessionID; }
 
   //
   // AutoComplete stuff
