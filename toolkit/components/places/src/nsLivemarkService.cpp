@@ -488,10 +488,8 @@ nsLivemarkService::DeleteLivemarkChildren(PRInt64 aLivemarkFolderId)
     nsCOMPtr<nsINavHistoryResultNode> node;
     rv = root->GetChild(i, getter_AddRefs(node));
     if (NS_FAILED(rv)) continue;
-    nsCOMPtr<nsINavHistoryURIResultNode> uriNode = do_QueryInterface(node, &rv);
-    if (NS_FAILED(rv)) continue;
     nsCAutoString spec;
-    rv = uriNode->GetUri(spec);
+    rv = node->GetUri(spec);
     if (NS_FAILED(rv)) continue;
     nsCOMPtr<nsIURI> uri;
     rv = NS_NewURI(getter_AddRefs(uri), spec, nsnull);
