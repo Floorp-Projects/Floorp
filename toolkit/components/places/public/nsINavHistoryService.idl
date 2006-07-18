@@ -146,6 +146,15 @@ interface nsINavHistoryResultNode : nsISupports
    */
   readonly attribute PRInt32 childCount;
   nsINavHistoryResultNode getChild(in PRInt32 index);
+
+  /**
+   * Returns false if this node's list of children can be modified
+   * (adding or removing children, or reordering children), or true if
+   * the UI should not allow the list of children to be modified.
+   * This is false for bookmark folder nodes unless setFolderReadOnly() has
+   * been called to override it, and true for non-folder nodes.
+   */
+  readonly attribute boolean childrenReadOnly;
 };
 
 
