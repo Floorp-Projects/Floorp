@@ -603,7 +603,6 @@ nsNavHistory::InitDB(PRBool *aDoImport)
 nsresult
 nsNavHistory::InitMemDB()
 {
-  printf("Initializing history in-memory DB\n");
   nsresult rv = mDBService->OpenSpecialDatabase("memory", getter_AddRefs(mMemDBConn));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -644,7 +643,6 @@ nsNavHistory::InitMemDB()
   }
   transaction.Commit();
 
-  printf("DONE initializing history in-memory DB\n");
   return NS_OK;
 }
 #endif
@@ -1413,10 +1411,20 @@ nsNavHistory::SetPageDetails(nsIURI* aURI, const nsAString& aTitle,
   NS_ENSURE_SUCCESS(rv, rv);
   rv = statement->BindInt64Parameter(0, pageID);
   NS_ENSURE_SUCCESS(rv, rv);
-  statement->BindStringParameter(1, aTitle);
+
+  // for the titles, be careful to interpret isVoid as NULL SQL command so that
+  // we can tell the difference between "set to empty" and "unset"
+  if (aTitle.IsVoid())
+    statement->BindNullParameter(1);
+  else
+    statement->BindStringParameter(1, aTitle);
   NS_ENSURE_SUCCESS(rv, rv);
-  statement->BindStringParameter(2, aUserTitle);
+  if (aUserTitle.IsVoid())
+    statement->BindNullParameter(2);
+  else
+    statement->BindStringParameter(2, aUserTitle);
   NS_ENSURE_SUCCESS(rv, rv);
+
   statement->BindInt32Parameter(3, aVisitCount);
   NS_ENSURE_SUCCESS(rv, rv);
   statement->BindInt32Parameter(4, aHidden ? 1 : 0);
@@ -1836,7 +1844,7 @@ nsNavHistory::GetQueryResults(const nsCOMArray<nsNavHistoryQuery>& aQueries,
     queryString.AppendLiteral(" ");
   }
 
-  printf("Constructed the query: %s\n", PromiseFlatCString(queryString).get());
+  //printf("Constructed the query: %s\n", PromiseFlatCString(queryString).get());
 
   // Put this in a transaction. Even though we are only reading, this will
   // speed up the grouped queries to the annotation service for titles and
