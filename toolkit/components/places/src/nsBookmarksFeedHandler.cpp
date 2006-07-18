@@ -491,7 +491,8 @@ nsLivemarkLoadListener::HandleRDFItem (nsIRDFDataSource *aDS, nsIRDFResource *aI
   rv = NS_NewURI(getter_AddRefs(linkURI), NS_ConvertUTF16toUTF8(linkStr));
   rv = mLivemarkService->InsertLivemarkChild(mLivemark->folderId,
                                              linkURI,
-                                             nsDependentString(titleStr));
+                                             nsDependentString(titleStr),
+                                             nsDependentString(linkStr));
   if (NS_FAILED(rv)) return rv;
 
   return NS_OK;
@@ -696,7 +697,8 @@ nsLivemarkLoadListener::TryParseAsSimpleRSS ()
           if (NS_FAILED(rv)) return rv;
           rv = mLivemarkService->InsertLivemarkChild(mLivemark->folderId,
                                                      linkURI,
-                                                     nsDependentString(titleStr));
+                                                     nsDependentString(titleStr),
+                                                     nsDependentString(linkStr));
           if (NS_FAILED(rv)) return rv;
         }
       }
