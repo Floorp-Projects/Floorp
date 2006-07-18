@@ -2221,14 +2221,16 @@ nsNavHistoryQueryResultNode::OnItemChanged(nsIURI* aBookmark,
                                             const nsACString& aProperty,
                                             const nsAString& aValue)
 {
-  NS_NOTREACHED("Everything observers should not get OnItemChanged, but should get the corresponding history notifications instead");
+  if (mLiveUpdate == QUERYUPDATE_COMPLEX_WITH_BOOKMARKS)
+    return Refresh();
   return NS_OK;
 }
 NS_IMETHODIMP
 nsNavHistoryQueryResultNode::OnItemVisited(nsIURI* aBookmark, PRInt64 aVisitId,
                                             PRTime aTime)
 {
-  NS_NOTREACHED("Everything observers should not get OnItemVisited, but should get OnVisit instead");
+  if (mLiveUpdate == QUERYUPDATE_COMPLEX_WITH_BOOKMARKS)
+    return Refresh();
   return NS_OK;
 }
 NS_IMETHODIMP
@@ -2759,24 +2761,8 @@ nsNavHistoryFolderResultNode::OnItemVisited(nsIURI* aBookmark, PRInt64 aVisitId,
     mTime = aTime;
   ReverseUpdateStats(mAccessCount - oldAccessCount);
 
-  // update sorting if necessary
-  PRUint32 sortType = GetSortType();
-  if (sortType == nsINavHistoryQueryOptions::SORT_BY_VISITCOUNT_ASCENDING ||
-      sortType == nsINavHistoryQueryOptions::SORT_BY_VISITCOUNT_DESCENDING ||
-      sortType == nsINavHistoryQueryOptions::SORT_BY_DATE_ASCENDING ||
-      sortType == nsINavHistoryQueryOptions::SORT_BY_DATE_DESCENDING) {
-    PRInt32 childIndex = FindChild(node);
-    NS_ASSERTION(childIndex >= 0, "Could not find child we just got a reference to");
-    if (childIndex >= 0) {
-      SortComparator comparator = GetSortingComparator(GetSortType()); 
-      nsCOMPtr<nsINavHistoryURIResultNode> nodeLock(node);
-      RemoveChildAt(childIndex, PR_TRUE);
-      InsertChildAt(node, FindInsertionPoint(node, comparator), PR_TRUE);
-    }
-  } else if (mVisibleIndex >= 0) {
-    // no sorting changed, just redraw the row if visible
+  if (mVisibleIndex >= 0)
     result->RowChanged(node->mVisibleIndex);
-  }
   return NS_OK;
 }
 
@@ -4436,7 +4422,6 @@ nsNavHistoryResult::RowReplaced(PRInt32 aVisibleIndex,
 NS_IMETHODIMP
 nsNavHistoryResult::OnBeginUpdateBatch()
 {
-  ENUMERATE_HISTORY_OBSERVERS(OnBeginUpdateBatch());
   return NS_OK;
 }
 
@@ -4446,7 +4431,6 @@ nsNavHistoryResult::OnBeginUpdateBatch()
 NS_IMETHODIMP
 nsNavHistoryResult::OnEndUpdateBatch()
 {
-  ENUMERATE_HISTORY_OBSERVERS(OnEndUpdateBatch());
   return NS_OK;
 }
 
@@ -4460,7 +4444,6 @@ nsNavHistoryResult::OnItemAdded(nsIURI *aBookmark,
 {
   ENUMERATE_BOOKMARK_OBSERVERS_FOR_FOLDER(aFolder,
       OnItemAdded(aBookmark, aFolder, aIndex));
-  ENUMERATE_HISTORY_OBSERVERS(OnItemAdded(aBookmark, aFolder, aIndex));
   return NS_OK;
 }
 
@@ -4473,7 +4456,6 @@ nsNavHistoryResult::OnItemRemoved(nsIURI *aBookmark,
 {
   ENUMERATE_BOOKMARK_OBSERVERS_FOR_FOLDER(aFolder,
       OnItemRemoved(aBookmark, aFolder, aIndex));
-  ENUMERATE_HISTORY_OBSERVERS(OnItemRemoved(aBookmark, aFolder, aIndex));
   return NS_OK;
 }
 
@@ -4486,7 +4468,6 @@ nsNavHistoryResult::OnItemMoved(nsIURI *aBookmark, PRInt64 aFolder,
 {
   ENUMERATE_BOOKMARK_OBSERVERS_FOR_FOLDER(aFolder,
       OnItemMoved(aBookmark, aFolder, aOldIndex, aNewIndex));
-  ENUMERATE_HISTORY_OBSERVERS(OnItemMoved(aBookmark, aFolder, aOldIndex, aNewIndex));
   return NS_OK;
 
 }
@@ -4513,11 +4494,6 @@ nsNavHistoryResult::OnItemChanged(nsIURI *aBookmark,
   }
   if (folders)
     nsMemory::Free(folders);
-
-  // Note: we do NOT call history observers in this case. This notification is
-  // the same as other history notification, except that here we know the item
-  // is a bookmark. History observers will handle the history notification
-  // instead.
   return NS_OK;
 }
 
@@ -4532,7 +4508,6 @@ nsNavHistoryResult::OnItemVisited(nsIURI* aBookmark, PRInt64 aVisitId,
   nsNavBookmarks* bookmarkService = nsNavBookmarks::GetBookmarksService();
   NS_ENSURE_TRUE(bookmarkService, NS_ERROR_OUT_OF_MEMORY);
 
-  // find all the folders to notify about this item
   PRUint32 folderCount;
   PRInt64* folders;
   rv = bookmarkService->GetBookmarkFolders(aBookmark, &folderCount, &folders);
@@ -4543,10 +4518,6 @@ nsNavHistoryResult::OnItemVisited(nsIURI* aBookmark, PRInt64 aVisitId,
   }
   if (folders)
     nsMemory::Free(folders);
-
-  // Note: we do NOT call history observers in this case. This notification is
-  // the same as OnVisit, except that here we know the item is a bookmark.
-  // History observers will handle the history notification instead.
   return NS_OK;
 }
 
@@ -4559,7 +4530,6 @@ nsNavHistoryResult::OnItemReplaced(PRInt64 aFolder,
 {
   ENUMERATE_BOOKMARK_OBSERVERS_FOR_FOLDER(aFolder,
       OnItemReplaced(aFolder, aItem, aNewItem));
-  ENUMERATE_HISTORY_OBSERVERS(OnItemReplaced(aFolder, aItem, aNewItem));
   return NS_OK;
 }
 
@@ -4572,7 +4542,6 @@ nsNavHistoryResult::OnFolderAdded(PRInt64 aFolder,
 {
   ENUMERATE_BOOKMARK_OBSERVERS_FOR_FOLDER(aParent,
       OnFolderAdded(aFolder, aParent, aIndex));
-  ENUMERATE_HISTORY_OBSERVERS(OnFolderAdded(aFolder, aParent, aIndex));
   return NS_OK;
 }
 
@@ -4585,7 +4554,6 @@ nsNavHistoryResult::OnFolderRemoved(PRInt64 aFolder,
 {
   ENUMERATE_BOOKMARK_OBSERVERS_FOR_FOLDER(aParent,
       OnFolderRemoved(aFolder, aParent, aIndex));
-  ENUMERATE_HISTORY_OBSERVERS(OnFolderRemoved(aFolder, aParent, aIndex));
   return NS_OK;
 }
 
@@ -4608,8 +4576,6 @@ nsNavHistoryResult::OnFolderMoved(PRInt64 aFolder,
     ENUMERATE_BOOKMARK_OBSERVERS_FOR_FOLDER(aNewParent,
         OnFolderMoved(aFolder, aOldParent, aOldIndex, aNewParent, aNewIndex));
   }
-  ENUMERATE_HISTORY_OBSERVERS(OnFolderMoved(aFolder, aOldParent, aOldIndex,
-                                            aNewParent, aNewIndex));
   return NS_OK;
 }
 
@@ -4622,7 +4588,6 @@ nsNavHistoryResult::OnFolderChanged(PRInt64 aFolder,
 {
   ENUMERATE_BOOKMARK_OBSERVERS_FOR_FOLDER(aFolder,
       OnFolderChanged(aFolder, aProperty));
-  ENUMERATE_HISTORY_OBSERVERS(OnFolderChanged(aFolder, aProperty));
   return NS_OK;
 }
 
