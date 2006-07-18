@@ -58,10 +58,10 @@ const PRInt32 nsNavBookmarks::kGetChildrenIndex_FolderTitle = 9;
 
 nsNavBookmarks* nsNavBookmarks::sInstance = nsnull;
 
-class UpdateBatcher()
+struct UpdateBatcher
 {
-  UpdateBatcher() { nsNavBookmarks::sInstance->BeginUpdateBatch(); }
-  ~UpdateBatcher() { nsNavBookmarks::sInstance->EndUpdateBatch(); }
+  UpdateBatcher() { nsNavBookmarks::GetBookmarksService()->BeginUpdateBatch(); }
+  ~UpdateBatcher() { nsNavBookmarks::GetBookmarksService()->EndUpdateBatch(); }
 };
 
 nsNavBookmarks::nsNavBookmarks()
