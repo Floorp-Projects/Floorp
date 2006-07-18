@@ -13962,29 +13962,29 @@ fi
   else
      PKG_CONFIG_MIN_VERSION=0.9.0
      if $PKG_CONFIG --atleast-pkgconfig-version $PKG_CONFIG_MIN_VERSION; then
-        echo $ac_n "checking for pango >= 1.6.0 pangoft2 >= 1.6.0""... $ac_c" 1>&6
-echo "configure:13967: checking for pango >= 1.6.0 pangoft2 >= 1.6.0" >&5
+        echo $ac_n "checking for pangoxft >= 1.6.0""... $ac_c" 1>&6
+echo "configure:13967: checking for pangoxft >= 1.6.0" >&5
 
-        if $PKG_CONFIG --exists "pango >= 1.6.0 pangoft2 >= 1.6.0" ; then
+        if $PKG_CONFIG --exists "pangoxft >= 1.6.0" ; then
             echo "$ac_t""yes" 1>&6
             succeeded=yes
 
             echo $ac_n "checking MOZ_PANGO_CFLAGS""... $ac_c" 1>&6
 echo "configure:13974: checking MOZ_PANGO_CFLAGS" >&5
-            MOZ_PANGO_CFLAGS=`$PKG_CONFIG --cflags "pango >= 1.6.0 pangoft2 >= 1.6.0"`
+            MOZ_PANGO_CFLAGS=`$PKG_CONFIG --cflags "pangoxft >= 1.6.0"`
             echo "$ac_t""$MOZ_PANGO_CFLAGS" 1>&6
 
             echo $ac_n "checking MOZ_PANGO_LIBS""... $ac_c" 1>&6
 echo "configure:13979: checking MOZ_PANGO_LIBS" >&5
             ## Remove evil flags like -Wl,--export-dynamic
-            MOZ_PANGO_LIBS="`$PKG_CONFIG --libs \"pango >= 1.6.0 pangoft2 >= 1.6.0\" |sed s/-Wl,--export-dynamic//g`"
+            MOZ_PANGO_LIBS="`$PKG_CONFIG --libs \"pangoxft >= 1.6.0\" |sed s/-Wl,--export-dynamic//g`"
             echo "$ac_t""$MOZ_PANGO_LIBS" 1>&6
         else
             MOZ_PANGO_CFLAGS=""
             MOZ_PANGO_LIBS=""
             ## If we have a custom action on failure, don't print errors, but 
             ## do set a variable so people can do so.
-            MOZ_PANGO_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "pango >= 1.6.0 pangoft2 >= 1.6.0"`
+            MOZ_PANGO_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "pangoxft >= 1.6.0"`
             echo $MOZ_PANGO_PKG_ERRORS
         fi
 
@@ -13999,7 +13999,7 @@ echo "configure:13979: checking MOZ_PANGO_LIBS" >&5
   if test $succeeded = yes; then
      :
   else
-     { echo "configure: error: Library requirements (pango >= 1.6.0 pangoft2 >= 1.6.0) not met; consider adjusting the PKG_CONFIG_PATH environment variable if your libraries are in a nonstandard prefix so pkg-config can find them." 1>&2; exit 1; }
+     { echo "configure: error: Library requirements (pangoxft >= 1.6.0) not met; consider adjusting the PKG_CONFIG_PATH environment variable if your libraries are in a nonstandard prefix so pkg-config can find them." 1>&2; exit 1; }
   fi
 
 
