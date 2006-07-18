@@ -404,6 +404,8 @@ nsNavHistory::InitDB(PRBool *aDoImport)
 
   // create a dummy table that we can keep a transaction open on; the
   // dummy statement needs something to work on that will always exist.
+  // This table must have something in it or the statement will be
+  // automatically closed because there is no data.
   rv = mDBConn->TableExists(NS_LITERAL_CSTRING("moz_dummy_table"), &tableExists);
   NS_ENSURE_SUCCESS(rv, rv);
   if (! tableExists) {
@@ -411,6 +413,9 @@ nsNavHistory::InitDB(PRBool *aDoImport)
         NS_LITERAL_CSTRING("CREATE TABLE moz_dummy_table (id INTEGER PRIMARY KEY)"));
     NS_ENSURE_SUCCESS(rv, rv);
   }
+  rv = mDBConn->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("INSERT OR IGNORE INTO moz_dummy_table VALUES (1)"));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // dummy DB (see comment above function) and statement that stays open
   rv = mDBService->OpenDatabase(dbFile, getter_AddRefs(mDummyDBConn));
