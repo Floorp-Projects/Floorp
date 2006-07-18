@@ -5652,7 +5652,7 @@ MOZILLA_VERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir`
 FIREFOX_VERSION=`cat $topsrcdir/browser/config/version.txt`
 THUNDERBIRD_VERSION=`cat $topsrcdir/mail/config/version.txt`
 SUNBIRD_VERSION=`cat $topsrcdir/calendar/sunbird/config/version.txt`
-SEAMONKEY_VERSION=`cat $topsrcdir/xpfe/bootstrap/version.txt`
+SEAMONKEY_VERSION=`cat $topsrcdir/suite/config/version.txt`
 
 cat >> confdefs.h <<EOF
 #define MOZILLA_VERSION "$MOZILLA_VERSION"
