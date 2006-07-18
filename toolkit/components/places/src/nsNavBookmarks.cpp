@@ -751,26 +751,6 @@ nsNavBookmarks::AdjustIndices(PRInt64 aFolder,
 
   nsBookmarksUpdateBatcher batch;
 
-  for (PRUint32 j = 0; j < mObservers.Length(); ++j) {
-    const nsCOMPtr<nsINavBookmarkObserver> &obs = mObservers[j];
-    if (!obs) {
-      continue;
-    }
-
-    for (PRInt32 k = 0; k < items->Count(); ++k) {
-      RenumberItem *item = NS_STATIC_CAST(RenumberItem*, (*items)[k]);
-      PRInt32 newPosition = item->position;
-      PRInt32 oldPosition = newPosition - aDelta;
-      if (item->itemURI) {
-        nsIURI *uri = item->itemURI;
-        obs->OnItemMoved(uri, aFolder, oldPosition, newPosition);
-      } else if (item->folderChild) {
-        obs->OnFolderMoved(item->folderChild, aFolder, oldPosition,
-                           aFolder, newPosition);
-      }
-    }
-  }
-
   return NS_OK;
 }
 
