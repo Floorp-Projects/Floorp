@@ -536,7 +536,8 @@ nsFocusController::SetActive(PRBool aActive)
       UpdateWWActiveWindow();
     else
       mUpdateWindowWatcher = PR_TRUE;
-  }
+  } else
+    mUpdateWindowWatcher = PR_FALSE;
 
   return NS_OK;
 }
