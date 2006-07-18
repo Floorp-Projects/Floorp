@@ -39,6 +39,7 @@
 #include <stdio.h>
 #include "nsNavHistory.h"
 #include "nsNavBookmarks.h"
+#include "nsMorkHistoryImporter.h"
 
 #include "nsArray.h"
 #include "nsArrayEnumerator.h"
@@ -70,12 +71,7 @@
 #include "mozIStorageFunction.h"
 #include "mozStorageCID.h"
 #include "mozStorageHelper.h"
-
-// mork
-#include "mdb.h"
-#include "nsMorkCID.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsIMdbFactoryFactory.h"
 
 // Microsecond timeout for "recent" events such as typed and bookmark following.
 // If you typed it more than this time ago, it's not recent.
@@ -234,7 +230,6 @@ nsNavHistory::Init()
 
   rv = InitDB();
   NS_ENSURE_SUCCESS(rv, rv);
-  //ImportFromMork();
 
   // commonly used prefixes that should be chopped off all history and input
   // urls before comparison
@@ -332,9 +327,11 @@ nsNavHistory::InitDB()
   }
 
   // moz_history
+  PRBool doImport = PR_FALSE;
   rv = mDBConn->TableExists(NS_LITERAL_CSTRING("moz_history"), &tableExists);
   NS_ENSURE_SUCCESS(rv, rv);
   if (! tableExists) {
+    doImport = PR_TRUE;
     rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_history ("
         "id INTEGER PRIMARY KEY, "
         "url LONGVARCHAR, "
@@ -456,6 +453,19 @@ nsNavHistory::InitDB()
       "VALUES (?1, ?2, ?3, ?4, ?5)"),
     getter_AddRefs(mDBInsertVisit));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (doImport) {
+    nsCOMPtr<nsIMorkHistoryImporter> importer = new nsMorkHistoryImporter();
+    NS_ENSURE_TRUE(importer, NS_ERROR_OUT_OF_MEMORY);
+
+    nsCOMPtr<nsIFile> historyFile;
+    rv = NS_GetSpecialDirectory(NS_APP_HISTORY_50_FILE,
+                                getter_AddRefs(historyFile));
+    if (NS_SUCCEEDED(rv) && historyFile) {
+      importer->ImportHistory(historyFile, this);
+    }
+  }
+
   return NS_OK;
 }
 
@@ -2877,228 +2887,6 @@ nsNavHistory::SetPageTitleInternal(nsIURI* aURI, PRBool aIsUserTitle,
 
 }
 
-
-// nsNavHistory::ImportFromMork
-//
-//    FIXME: this is basically a hack, but it works.
-//
-//    This is for development/testing purposes only. Uncomment the call to it
-//    from nsNavHistory::Init, run the app, and recomment the call. If you call
-//    this more than once, you'll get duplicate entries. Also, this assumes you
-//    have no history. If there is a URL that already exists, you'll get
-//    a duplicate entry and everything will break.
-//
-//    This will be replaced by an importer that does not depend on the Mork
-//    library for release (since the library is very large).
-
-nsresult nsNavHistory::ImportFromMork()
-{
-  nsresult rv;
-
-  nsCOMPtr<nsIFile> historyFile;
-  rv = NS_GetSpecialDirectory(NS_APP_HISTORY_50_FILE, getter_AddRefs(historyFile));
-
-  static NS_DEFINE_CID(kMorkCID, NS_MORK_CID);
-  nsIMdbFactory* mdbFactory;
-  nsCOMPtr<nsIMdbFactoryFactory> factoryfactory =
-      do_CreateInstance(kMorkCID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = factoryfactory->GetMdbFactory(&mdbFactory);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mdb_err err;
-
-  nsIMdbEnv* env;
-  err = mdbFactory->MakeEnv(nsnull, &env);
-  env->SetAutoClear(PR_TRUE);
-  NS_ASSERTION((err == 0), "unable to create mdb env");
-  NS_ENSURE_TRUE(err == 0, NS_ERROR_FAILURE);
-
-  // MDB requires native file paths
-  nsCAutoString filePath;
-  rv = historyFile->GetNativePath(filePath);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRBool exists = PR_TRUE;
-  historyFile->Exists(&exists);
-  if (! exists) {
-    printf("No MDB file, not importing\n");
-    return NS_ERROR_FAILURE;
-  }
-
-  mdb_bool canopen = 0;
-  mdbYarn outfmt = { nsnull, 0, 0, 0, 0, nsnull };
-
-  nsIMdbHeap* dbHeap = 0;
-  mdb_bool dbFrozen = mdbBool_kFalse; // not readonly, we want modifiable
-  nsCOMPtr<nsIMdbFile> oldFile; // ensures file is released
-  err = mdbFactory->OpenOldFile(env, dbHeap, PromiseFlatCString(filePath).get(),
-                                dbFrozen, getter_AddRefs(oldFile));
-  if ((err !=0) || !oldFile) {
-    printf("Some error, not importing.\n");
-    return NS_ERROR_FAILURE;
-  }
-
-  err = mdbFactory->CanOpenFilePort(env, oldFile, // the file to investigate
-                                    &canopen, &outfmt);
-  if ((err !=0) || !canopen) {
-    printf("Some error 2, not importing.\n");
-    return NS_ERROR_FAILURE;
-  }
-
-  nsIMdbThumb* thumb = nsnull;
-  mdbOpenPolicy policy = { { 0, 0 }, 0, 0 };
-
-  err = mdbFactory->OpenFileStore(env, dbHeap, oldFile, &policy, &thumb);
-  if ((err !=0) || !thumb) return NS_ERROR_FAILURE;
-
-  mdb_count total;
-  mdb_count current;
-  mdb_bool done;
-  mdb_bool broken;
-
-  do {
-    err = thumb->DoMore(env, &total, &current, &done, &broken);
-  } while ((err == 0) && !broken && !done);
-
-  nsIMdbStore* store;
-  if ((err == 0) && done) {
-    err = mdbFactory->ThumbToOpenStore(env, thumb, &store);
-  }
-
-  NS_IF_RELEASE(thumb);
-
-  NS_ENSURE_TRUE(err == 0, NS_ERROR_FAILURE);
-
-  //rv = CreateTokens();
-  //NS_ENSURE_SUCCESS(rv, rv);
-
-  mdb_scope  kToken_HistoryRowScope;
-  err = store->StringToToken(env, "ns:history:db:row:scope:history:all", &kToken_HistoryRowScope);
-
-  mdbOid oid = { kToken_HistoryRowScope, 1 };
-  nsIMdbTable* table;
-  err = store->GetTable(env, &oid, &table);
-  NS_ENSURE_TRUE(err == 0, NS_ERROR_FAILURE);
-  if (!table) {
-    NS_WARNING("Your history file is somehow corrupt.. deleting it.");
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIMdbRow> metaRow;
-  err = table->GetMetaRow(env, &oid, nsnull, getter_AddRefs(metaRow));
-  NS_ENSURE_TRUE(err == 0, NS_ERROR_FAILURE);
-  if (err != 0) {
-    printf("Some error 3, not importing\n");
-    return NS_ERROR_FAILURE;
-  }
-
-  // FIXME: init byte order, may need to swap strings
-
-  nsIMdbTableRowCursor* cursor;
-  table->GetTableRowCursor(env, -1, &cursor);
-  NS_ENSURE_TRUE(err == 0, NS_ERROR_FAILURE);
-
-  nsIMdbRow* currentRow;
-  mdb_pos pos;
-
-  mdb_column urlColumn, hiddenColumn, typedColumn, titleColumn,
-             visitCountColumn, visitDateColumn;
-  err = store->StringToToken(env, "URL", &urlColumn);
-  err = store->StringToToken(env, "Hidden", &hiddenColumn);
-  err = store->StringToToken(env, "Typed", &typedColumn);
-  err = store->StringToToken(env, "Name", &titleColumn);
-  err = store->StringToToken(env, "VisitCount", &visitCountColumn);
-  err = store->StringToToken(env, "LastVisitDate", &visitDateColumn);
-
-  nsCOMPtr<mozIStorageStatement> insertHistory, insertVisit;
-  rv = mDBConn->CreateStatement(
-      NS_LITERAL_CSTRING("INSERT INTO moz_history (url, title, rev_host, visit_count, hidden, typed) VALUES (?1, ?2, ?3, ?4, ?5, ?6)"),
-      getter_AddRefs(insertHistory));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBConn->CreateStatement(
-      NS_LITERAL_CSTRING("INSERT INTO moz_historyvisit (from_visit, page_id, visit_date, visit_type, session) VALUES (0, ?1, ?2, 0, 0)"),
-      getter_AddRefs(insertVisit));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mDBConn->BeginTransaction();
-
-  PRInt32 insertCount = 0;
-  while(1) {
-    cursor->NextRow(env, &currentRow, &pos);
-    NS_ENSURE_TRUE(err == 0, NS_ERROR_FAILURE);
-    if (! currentRow)
-      break;
-
-    // url
-    mdbYarn yarn;
-    err = currentRow->AliasCellYarn(env, urlColumn, &yarn);
-    if (err != 0 || !yarn.mYarn_Buf) continue;
-    nsCString urlString((char*)yarn.mYarn_Buf);
-
-    // typed
-    PRBool typed = PR_TRUE;
-    currentRow->AliasCellYarn(env, typedColumn, &yarn);
-    if (err != 0 || !yarn.mYarn_Buf) typed = PR_FALSE;
-
-    // hidden
-    PRBool hidden = PR_TRUE;
-    currentRow->AliasCellYarn(env, hiddenColumn, &yarn);
-    if (err != 0 || !yarn.mYarn_Buf) hidden = PR_FALSE;
-
-    // title
-    nsAutoString title;
-    err = currentRow->AliasCellYarn(env, titleColumn, &yarn);
-    if (err == 0 && yarn.mYarn_Buf)
-      title = nsString((PRUnichar*)yarn.mYarn_Buf);
-
-    // visit count
-    PRInt32 visitCount = 0;
-    currentRow->AliasCellYarn(env, visitCountColumn, &yarn);
-    if (err == 0 && yarn.mYarn_Buf)
-      sscanf((char*)yarn.mYarn_Buf, "%d", &visitCount);
-    if (visitCount == 0)
-      continue;
-
-    // last visit date (if none, don't add to history
-    PRTime visitDate;
-    currentRow->AliasCellYarn(env, visitDateColumn, &yarn);
-    if (err != 0 || ! yarn.mYarn_Buf)
-      continue;
-    sscanf((char*)yarn.mYarn_Buf, "%lld", &visitDate);
-
-    NS_RELEASE(currentRow);
-
-    nsCOMPtr<nsIURI> uri;
-    NS_NewURI(getter_AddRefs(uri), PromiseFlatCString(urlString).get());
-    nsAutoString revhost;
-    rv = GetReversedHostname(uri, revhost);
-
-    insertHistory->BindUTF8StringParameter(0, urlString);
-    insertHistory->BindStringParameter(1, title);
-    insertHistory->BindStringParameter(2, revhost);
-    insertHistory->BindInt32Parameter(3, visitCount);
-    insertHistory->BindInt32Parameter(4, hidden);
-    insertHistory->BindInt32Parameter(5, typed);
-    rv = insertHistory->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    PRInt64 pageid;
-    rv = mDBConn->GetLastInsertRowID(&pageid);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    insertVisit->BindInt64Parameter(0, pageid);
-    insertVisit->BindInt64Parameter(1, visitDate);
-    rv = insertVisit->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    insertCount ++;
-  }
-  mDBConn->CommitTransaction();
-  printf("INSERTED %d ROWS FROM MORK\n", insertCount);
-  return NS_OK;
-}
 
 // Local function **************************************************************
 
