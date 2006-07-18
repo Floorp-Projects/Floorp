@@ -286,6 +286,18 @@ interface nsINavBookmarksService : nsISupports
                              [array, retval, size_is(count)] out PRInt64 categories);
 
   /**
+   * Returns the index of the given item in the given folder.
+   * Returns -1 if the item is not present in the folder.
+   */
+  PRInt32 indexOfItem(in PRInt64 folder, in nsIURI uri);
+
+  /**
+   * Returns the index of the given subfolder in its parent.
+   * Returns -1 if the subfolder is not present in the parent folder.
+   */
+  PRInt32 indexOfFolder(in PRInt64 parent, in PRInt64 folder);
+
+  /**
    * Adds a bookmark observer. If ownsWeak is false, the bookmark service will
    * keep an owning reference to the observer.  If ownsWeak is true, then
    * aObserver must implement nsISupportsWeakReference, and the bookmark
