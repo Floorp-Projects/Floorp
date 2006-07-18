@@ -1768,26 +1768,30 @@ PRBool
 nsHTMLDocument::MatchLinks(nsIContent *aContent, PRInt32 aNamespaceID,
                            nsIAtom* aAtom, const nsAString& aData)
 {
-  NS_ASSERTION(aContent->IsInDoc(),
-               "This method should never be called on content nodes that "
-               "are not in a document!");
+  nsIDocument* doc = aContent->GetCurrentDoc();
+
+  if (doc) {
+    NS_ASSERTION(aContent->IsInDoc(),
+                 "This method should never be called on content nodes that "
+                 "are not in a document!");
 #ifdef DEBUG
-  {
-    nsCOMPtr<nsIHTMLDocument> htmldoc =
-      do_QueryInterface(aContent->GetCurrentDoc());
-    NS_ASSERTION(htmldoc,
-                 "Huh, how did this happen? This should only be used with "
-                 "HTML documents!");
-  }
+    {
+      nsCOMPtr<nsIHTMLDocument> htmldoc =
+        do_QueryInterface(aContent->GetCurrentDoc());
+      NS_ASSERTION(htmldoc,
+                   "Huh, how did this happen? This should only be used with "
+                   "HTML documents!");
+    }
 #endif
 
-  nsINodeInfo *ni = aContent->NodeInfo();
-  PRInt32 namespaceID = aContent->GetCurrentDoc()->GetDefaultNamespaceID();
+    nsINodeInfo *ni = aContent->NodeInfo();
+    PRInt32 namespaceID = doc->GetDefaultNamespaceID();
 
-  nsIAtom *localName = ni->NameAtom();
-  if (ni->NamespaceID() == namespaceID &&
-      (localName == nsHTMLAtoms::a || localName == nsHTMLAtoms::area)) {
-    return aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::href);
+    nsIAtom *localName = ni->NameAtom();
+    if (ni->NamespaceID() == namespaceID &&
+        (localName == nsHTMLAtoms::a || localName == nsHTMLAtoms::area)) {
+      return aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::href);
+    }
   }
 
   return PR_FALSE;
