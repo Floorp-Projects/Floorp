@@ -277,11 +277,16 @@ nsNavBookmarks::InitTables(mozIStorageConnection* aDBConn)
   }
 
   // moz_bookmarks_folders
+  // Note the use of AUTOINCREMENT for the primary key. This ensures that each
+  // new primary key is unique, reducing the chance that stale references to
+  // bookmark folders will reference a random folder. This slows down inserts
+  // a little bit, which is why we don't always use it, but bookmark folders
+  // are not created very often.
   rv = aDBConn->TableExists(NS_LITERAL_CSTRING("moz_bookmarks_folders"), &exists);
   NS_ENSURE_SUCCESS(rv, rv);
   if (! exists) {
     rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_bookmarks_folders ("
-        "id INTEGER PRIMARY KEY, "
+        "id INTEGER PRIMARY KEY AUTOINCREMENT, "
         "name LONGVARCHAR, "
         "type LONGVARCHAR)"));
     NS_ENSURE_SUCCESS(rv, rv);
