@@ -1439,6 +1439,10 @@ nsNavHistory::SetPageUserTitle(nsIURI* aURI, const nsAString& aUserTitle)
 NS_IMETHODIMP
 nsNavHistory::MarkPageAsFollowedBookmark(nsIURI* aURI)
 {
+  // if history expiration is set to 0 days it is disabled, so don't add
+  if (mExpireDays == 0)
+    return NS_OK;
+
   nsCAutoString uriString;
   aURI->GetSpec(uriString);
 
@@ -2459,6 +2463,10 @@ nsNavHistory::HidePage(nsIURI *aURI)
 NS_IMETHODIMP
 nsNavHistory::MarkPageAsTyped(nsIURI *aURI)
 {
+  // if history expiration is set to 0 days it is disabled, so don't add
+  if (mExpireDays == 0)
+    return NS_OK;
+
   nsCAutoString uriString;
   aURI->GetSpec(uriString);
 
@@ -2485,6 +2493,10 @@ NS_IMETHODIMP
 nsNavHistory::AddURI(nsIURI *aURI, PRBool aRedirect,
                      PRBool aToplevel, nsIURI *aReferrer)
 {
+  // if history expiration is set to 0 days it is disabled, so don't add
+  if (mExpireDays == 0)
+    return NS_OK;
+
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
   PRInt64 redirectBookmark = 0;
@@ -2628,6 +2640,12 @@ nsNavHistory::AddVisitChain(nsIURI* aURI, PRBool aToplevel, PRBool aIsRedirect,
 NS_IMETHODIMP
 nsNavHistory::IsVisited(nsIURI *aURI, PRBool *_retval)
 {
+  // if history expiration is set to 0 days it is disabled, we can optimize
+  if (mExpireDays == 0) {
+    *_retval = PR_FALSE;
+    return NS_OK;
+  }
+
   nsCAutoString utf8URISpec;
   nsresult rv = aURI->GetSpec(utf8URISpec);
   NS_ENSURE_SUCCESS(rv, rv);
