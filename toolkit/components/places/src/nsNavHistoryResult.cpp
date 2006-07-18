@@ -1101,6 +1101,8 @@ nsNavHistoryContainerResultNode::RemoveChildAt(PRInt32 aIndex,
       isContainerOpen = mChildren[aIndex]->GetAsContainer()->mExpanded;
       if (isContainerOpen)
         visibleRows = result->CountVisibleRowsForItem(mChildren[aIndex]);
+      else // visible but closed containers take one row (their own)
+        visibleRows = 1;
     } else {
       visibleRows = 1;
     }
