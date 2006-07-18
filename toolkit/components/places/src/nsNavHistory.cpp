@@ -184,9 +184,9 @@ protected:
 const PRInt32 nsNavHistory::kGetInfoIndex_PageID = 0;
 const PRInt32 nsNavHistory::kGetInfoIndex_URL = 1;
 const PRInt32 nsNavHistory::kGetInfoIndex_Title = 2;
-const PRInt32 nsNavHistory::kGetInfoIndex_VisitCount = 3;
-const PRInt32 nsNavHistory::kGetInfoIndex_VisitDate = 4;
-const PRInt32 nsNavHistory::kGetInfoIndex_RevHost = 5;
+const PRInt32 nsNavHistory::kGetInfoIndex_RevHost = 3;
+const PRInt32 nsNavHistory::kGetInfoIndex_VisitCount = 4;
+const PRInt32 nsNavHistory::kGetInfoIndex_VisitDate = 5;
 
 const PRInt32 nsNavHistory::kAutoCompleteIndex_URL = 0;
 const PRInt32 nsNavHistory::kAutoCompleteIndex_Title = 1;
@@ -358,11 +358,15 @@ nsNavHistory::InitDB()
 
   // functions (must happen after table creation)
 
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("SELECT h.id, h.url, h.title, h.visit_count, v.visit_date FROM moz_historyvisit v, moz_history h WHERE v.visit_id = ?1 AND h.id = v.page_id"),
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, v.visit_date FROM moz_historyvisit v, moz_history h WHERE v.visit_id = ?1 AND h.id = v.page_id"),
                                getter_AddRefs(mDBGetVisitPageInfo));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("SELECT h.id, h.url, h.title, h.visit_count FROM moz_history h WHERE h.url = ?1"),
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("SELECT h.id, h.url, h.title, h.rev_host, h.visit_count FROM moz_history h WHERE h.url = ?1"),
                                getter_AddRefs(mDBGetURLPageInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, MAX(fullv.visit_date)"
+      " FROM moz_history h LEFT JOIN moz_historyvisit v ON h.id = v.page_id LEFT JOIN moz_historyvisit fullv ON h.id = fullv.page_id WHERE h.url = ?1 GROUP BY h.id"),
+                                getter_AddRefs(mDBGetURLPageInfoFull));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("SELECT h.url, h.title, h.visit_count, h.typed FROM moz_history h JOIN moz_historyvisit v ON h.id = v.page_id WHERE h.hidden <> 1 GROUP BY h.id ORDER BY h.visit_count LIMIT ?1"),
                                 getter_AddRefs(mDBFullAutoComplete));
@@ -1138,7 +1142,7 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
   if (asVisits) {
     // if we want visits, this is easy, just combine all possible matches
     // between the history and visits table and do our query.
-    queryString = NS_LITERAL_CSTRING("SELECT h.id, h.url, h.title, h.visit_count, v.visit_date, h.rev_host"
+    queryString = NS_LITERAL_CSTRING("SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, v.visit_date,"
       " FROM moz_history h JOIN moz_historyvisit v ON h.id = v.page_id WHERE ");
   } else {
     // For URLs, it is more complicated. Because we want each URL once. The
@@ -1146,7 +1150,7 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
     // visit time, so we add ANOTHER join with the visit table (this one does
     // not have any restrictions on it from the query) and do MAX() to get the
     // max visit time.
-    queryString = NS_LITERAL_CSTRING("SELECT h.id, h.url, h.title, h.visit_count, MAX(fullv.visit_date), h.rev_host"
+    queryString = NS_LITERAL_CSTRING("SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, MAX(fullv.visit_date)"
       " FROM moz_history h JOIN moz_historyvisit v ON h.id = v.page_id JOIN moz_historyvisit fullv ON h.id = fullv.page_id WHERE ");
     groupBy = NS_LITERAL_CSTRING(" GROUP BY h.id");
   }
@@ -1319,7 +1323,8 @@ nsNavHistory::BeginUpdateBatch()
 {
   mBatchesInProgress ++;
   if (mBatchesInProgress == 1) {
-    ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver, OnBeginUpdateBatch())
+    ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver,
+                        OnBeginUpdateBatch())
   }
   return NS_OK;
 }
@@ -2796,31 +2801,40 @@ nsNavHistory::RowToResult(mozIStorageValueArray* aRow, PRBool aAsVisits,
   rv = aRow->GetInt64(kGetInfoIndex_PageID, &result->mID);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = FillURLResult(aRow, result);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  result.swap(*aResult);
+  return NS_OK;
+}
+
+nsresult
+nsNavHistory::FillURLResult(mozIStorageValueArray *aRow,
+                             nsNavHistoryResultNode *aNode)
+{
   // URL
-  result->mUrl = spec;
+  nsresult rv = aRow->GetUTF8String(kGetInfoIndex_URL, aNode->mUrl);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // title
-  rv = aRow->GetString(kGetInfoIndex_Title, result->mTitle);
+  rv = aRow->GetString(kGetInfoIndex_Title, aNode->mTitle);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // access count
-  rv = aRow->GetInt32(kGetInfoIndex_VisitCount, &result->mAccessCount);
+  rv = aRow->GetInt32(kGetInfoIndex_VisitCount, &aNode->mAccessCount);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // access time
-  rv = aRow->GetInt64(kGetInfoIndex_VisitDate, &result->mTime);
+  rv = aRow->GetInt64(kGetInfoIndex_VisitDate, &aNode->mTime);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // reversed hostname
   nsAutoString revHost;
   rv = aRow->GetString(kGetInfoIndex_RevHost, revHost);
   if (!revHost.IsEmpty()) {
-    GetUnreversedHostname(revHost, result->mHost);
+    GetUnreversedHostname(revHost, aNode->mHost);
   }
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  result.swap(*aResult);
-  return NS_OK;
+  return rv;
 }
 
 
