@@ -46,6 +46,7 @@
 #include "nsCOMPtr.h"
 #include "nsDateTimeFormatCID.h"
 #include "nsDebug.h"
+#include "nsFaviconService.h"
 #include "nsIComponentManager.h"
 #include "nsIDateTimeFormat.h"
 #include "nsIDOMElement.h"
@@ -152,6 +153,14 @@ NS_IMETHODIMP nsNavHistoryResultNode::GetTime(PRTime *aTime)
 {
   *aTime = mTime;
   return NS_OK;
+}
+
+/* attribute nsIURI con; */
+NS_IMETHODIMP nsNavHistoryResultNode::GetIcon(nsIURI** aURI)
+{
+  nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
+  NS_ENSURE_TRUE(faviconService, NS_ERROR_NO_INTERFACE);
+  return faviconService->GetFaviconLinkForIconString(mFaviconURL, aURI);
 }
 
 /* attribute pRInt32 indentLevel; */
@@ -1844,7 +1853,7 @@ NS_IMETHODIMP nsNavHistoryResult::GetLevel(PRInt32 index, PRInt32 *_retval)
 {
   if (index < 0 || index >= mVisibleElements.Count())
     return NS_ERROR_INVALID_ARG;
-  *_retval = ((nsNavHistoryResultNode*)mVisibleElements[index])->mIndentLevel;
+  *_retval = VisibleElementAt(index)->mIndentLevel;
   return NS_OK;
 }
 
@@ -1854,7 +1863,34 @@ NS_IMETHODIMP nsNavHistoryResult::GetLevel(PRInt32 index, PRInt32 *_retval)
 NS_IMETHODIMP nsNavHistoryResult::GetImageSrc(PRInt32 row, nsITreeColumn *col,
                                               nsAString& _retval)
 {
-  _retval.Truncate(0);
+  if (row < 0 || row >= mVisibleElements.Count())
+    return NS_ERROR_INVALID_ARG;
+
+  // only the first column has an image
+  PRInt32 colIndex;
+  col->GetIndex(&colIndex);
+  if (colIndex != 0) {
+    _retval.Truncate(0);
+    return NS_OK;
+  }
+
+  // Don't set the favicon for containers, we will use the default folder icon
+  // The special icons for the bookmarks menu and toolbar are set in CSS from
+  // attributes defined by GetCellProperties.
+  PRBool isContainer;
+  IsContainer(row, &isContainer);
+  if (isContainer) {
+    _retval.Truncate(0);
+    return NS_OK;
+  }
+
+  nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
+  NS_ENSURE_TRUE(faviconService, NS_ERROR_NO_INTERFACE);
+
+  nsCAutoString spec;
+  faviconService->GetFaviconSpecForIconString(VisibleElementAt(row)->mFaviconURL, spec);
+//  _retval = NS_ConvertUTF8toUTF16(spec);
+  CopyUTF8toUTF16(spec, _retval);
   return NS_OK;
 }
 
