@@ -131,6 +131,7 @@ protected:
   PRTime mTime;
   nsString mHost;
   nsCString mFaviconURL;
+  PRInt64 mSessionID;
 
   // Filled in by the result type generator in nsNavHistory
   nsCOMArray<nsNavHistoryResultNode> mChildren;
@@ -299,6 +300,12 @@ private:
   {
     return (nsNavHistoryResultNode*)mVisibleElements[index];
   }
+
+  // This value indicates whether we should try to compute session boundaries.
+  // It is cached so we don't have to compute it every time we want to get a
+  // row style.
+  PRBool mShowSessions;
+  void ComputeShowSessions();
 
   void FillTreeStats(nsNavHistoryResultNode* aResult, PRInt32 aLevel);
   void InitializeVisibleList();
