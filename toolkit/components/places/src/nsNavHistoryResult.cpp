@@ -576,7 +576,7 @@ nsNavHistoryContainerResultNode::GetSortingComparator(PRUint32 aSortType)
 
 // nsNavHistoryContainerResultNode::RecursiveSort
 //
-//    This is used by Result::SortAll and QueryResultNode::FillChildren to sort
+//    This is used by Result::SetSortingMode and QueryResultNode::FillChildren to sort
 //    the child list.
 //
 //    This does NOT update any visibility or tree information. The caller will
@@ -2572,7 +2572,11 @@ NS_IMETHODIMP
 nsNavHistoryFolderResultNode::GetQueryOptions(
                                       nsINavHistoryQueryOptions** aQueryOptions)
 {
-  return mOptions->Clone(aQueryOptions);
+  NS_ASSERTION(mOptions, "Options invalid");
+
+  *aQueryOptions = mOptions;
+  NS_ADDREF(*aQueryOptions);
+  return NS_OK;
 }
 
 
@@ -3374,11 +3378,19 @@ nsNavHistoryResult::BookmarkObserversForId(PRInt64 aFolderId, PRBool aCreate)
   return list;
 }
 
-
-// nsNavHistoryResult::SortAll (nsINavHistoryResult)
+// nsNavHistoryResult::GetSortingMode (nsINavHistoryResult)
 
 NS_IMETHODIMP
-nsNavHistoryResult::SortAll(PRUint32 aSortingMode)
+nsNavHistoryResult::GetSortingMode(PRUint32* aSortingMode)
+{
+  *aSortingMode = mSortingMode;
+  return NS_OK;
+}
+
+// nsNavHistoryResult::SetSortingMode (nsINavHistoryResult)
+
+NS_IMETHODIMP
+nsNavHistoryResult::SetSortingMode(PRUint32 aSortingMode)
 {
   if (aSortingMode > nsINavHistoryQueryOptions::SORT_BY_VISITCOUNT_DESCENDING)
     return NS_ERROR_INVALID_ARG;
@@ -3387,6 +3399,7 @@ nsNavHistoryResult::SortAll(PRUint32 aSortingMode)
 
   // keep everything in sync
   NS_ASSERTION(mOptions, "Options should always be present for a root query");
+
   mSortingMode = aSortingMode;
 
   // actually do sorting
@@ -5107,7 +5120,7 @@ nsNavHistoryResultTreeViewer::CycleHeader(nsITreeColumn* col)
     default:
       return NS_ERROR_INVALID_ARG;
   }
-  return mResult->SortAll(newSort);
+  return mResult->SetSortingMode(newSort);
 }
 
 
