@@ -57,9 +57,6 @@ public:
   // called by nsNavHistory::Init
   static nsresult InitTables(mozIStorageConnection* aDBConn);
 
-  // called by nsNavHistory::VacuumDB
-  static nsresult VacuumFavicons(mozIStorageConnection* aDBConn);
-
   /**
    * Returns a cached pointer to the favicon service for consumers in the
    * places directory.
