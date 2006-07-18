@@ -212,9 +212,18 @@ void txXMLOutput::startDocument()
         // XXX We should "cache" content until we have a 
         //     document element
     }
-    *mOut << PI_START << XML_DECL << DOUBLE_QUOTE;
-    *mOut << XML_VERSION;
-    *mOut << DOUBLE_QUOTE << " encoding=\"UTF-8\"" << PI_END << endl;
+    if (mOutputFormat.mMethod == eXMLOutput &&
+        mOutputFormat.mOmitXMLDeclaration != eTrue) {
+      *mOut << PI_START << XML_DECL << DOUBLE_QUOTE;
+      *mOut << XML_VERSION;
+      *mOut << DOUBLE_QUOTE << " encoding=\"UTF-8\"";
+      if (mOutputFormat.mStandalone != eNotSet) {
+        *mOut << " standalone=\"";
+        *mOut << (mOutputFormat.mStandalone == eFalse ? "no" : "yes") << "\"";
+      }
+      *mOut << PI_END << endl;
+      
+    }
 }
 
 void txXMLOutput::startElement(const nsAString& aName,
