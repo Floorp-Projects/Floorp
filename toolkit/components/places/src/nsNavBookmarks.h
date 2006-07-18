@@ -98,6 +98,7 @@ private:
   static const PRInt32 kGetFolderInfoIndex_Title;
 
   nsCOMPtr<mozIStorageStatement> mDBGetChildren;       // kGetInfoIndex_* results + kGetChildrenIndex_* results
+  nsCOMPtr<mozIStorageStatement> mDBGetFolderChildren;
   static const PRInt32 kGetChildrenIndex_Position;
   static const PRInt32 kGetChildrenIndex_ItemChild;
   static const PRInt32 kGetChildrenIndex_FolderChild;
