@@ -970,30 +970,36 @@ NS_IMETHODIMP
 nsNavBookmarks::CreateFolder(PRInt64 aParent, const nsAString &aName,
                              PRInt32 aIndex, PRInt64 *aNewFolder)
 {
-  return CreateFolderWithID(-1, aParent, aName, aIndex, aNewFolder);
+  // CreateFolderWithID returns the index of the new folder, but that's not
+  // used here.  To avoid any risk of corrupting data should this function
+  // be changed, we'll use a local variable to hold it.  The PR_TRUE argument
+  // will cause notifications to be sent to bookmark observers.
+  PRInt32 localIndex = aIndex;
+  return CreateFolderWithID(-1, aParent, aName, PR_TRUE, &localIndex, aNewFolder);
 }
 
 NS_IMETHODIMP
 nsNavBookmarks::CreateContainer(PRInt64 aParent, const nsAString &aName,
-                                PRInt32 aIndex, const nsAString &aType,
+                                const nsAString &aType, PRInt32 aIndex,
                                 PRInt64 *aNewFolder)
 {
-  return CreateContainerWithID(-1, aParent, aName, aIndex, aType, aNewFolder);
+  return CreateContainerWithID(-1, aParent, aName, aType, aIndex, aNewFolder);
 }
 
 nsresult
 nsNavBookmarks::CreateFolderWithID(PRInt64 aFolder, PRInt64 aParent,
-                                   const nsAString& aName, PRInt32 aIndex,
-                                   PRInt64* aNewFolder)
+                                   const nsAString& aName,
+                                   PRBool aSendNotifications,
+                                   PRInt32* aIndex, PRInt64* aNewFolder)
 {
   // You can pass -1 to indicate append, but no other negative number is allowed
-  if (aIndex < -1)
+  if (*aIndex < -1)
     return NS_ERROR_INVALID_ARG;
 
   mozIStorageConnection *dbConn = DBConn();
   mozStorageTransaction transaction(dbConn, PR_FALSE);
 
-  PRInt32 index = (aIndex == -1) ? FolderCount(aParent) : aIndex;
+  PRInt32 index = (*aIndex == -1) ? FolderCount(aParent) : *aIndex;
 
   nsresult rv = AdjustIndices(aParent, index, PR_INT32_MAX, 1);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1040,20 +1046,31 @@ nsNavBookmarks::CreateFolderWithID(PRInt64 aFolder, PRInt64 aParent,
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
-                      OnFolderAdded(child, aParent, index))
+  // When creating a livemark container, we need to delay sending notifications
+  // until the container type has been set.  In that case, they'll be sent by
+  // CreateContainerWithID rather than here.
+  if (aSendNotifications) {
+    ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
+                        OnFolderAdded(child, aParent, index))
+  }
 
+  *aIndex = index;
   *aNewFolder = child;
   return NS_OK;
 }
 
 nsresult 
 nsNavBookmarks::CreateContainerWithID(PRInt64 aFolder, PRInt64 aParent, 
-                                      const nsAString &aName, PRInt32 aIndex,
-                                      const nsAString &aType, PRInt64 *aNewFolder)
+                                      const nsAString &aName, const nsAString &aType, 
+                                      PRInt32 aIndex, PRInt64 *aNewFolder)
 {
   // Containers are wrappers around read-only folders, with a specific type.
-  nsresult rv = CreateFolderWithID(aFolder, aParent, aName, aIndex, aNewFolder);
+  // CreateFolderWithID will return the index of the newly created folder,
+  // which we will need later on in order to send notifications.  The PR_FALSE
+  // argument disables sending notifiactions, since we need to defer that until
+  // the folder type has been set.
+  PRInt32 localIndex = aIndex;
+  nsresult rv = CreateFolderWithID(aFolder, aParent, aName, PR_FALSE, &localIndex, aNewFolder);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Set the type.
@@ -1069,6 +1086,10 @@ nsNavBookmarks::CreateContainerWithID(PRInt64 aFolder, PRInt64 aParent,
 
   rv = statement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Send notifications after folder type has been set.
+  ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
+                      OnFolderAdded(*aNewFolder, aParent, localIndex))
 
   return NS_OK;
 }
