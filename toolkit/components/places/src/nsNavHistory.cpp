@@ -109,6 +109,19 @@ Extra:
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIMdbFactoryFactory.h"
 
+// Microsecond timeout for "recent" events such as typed and bookmark following.
+// If you typed it more than this time ago, it's not recent.
+// This is 15 minutes           m    s/m  us/s
+#define RECENT_EVENT_THRESHOLD (15 * 60 * 1000000)
+
+// The maximum number of things that we will store in the recent events list
+// before calling ExpireNonrecentEvents. This number should be big enough so it
+// is very difficult to get that many unconsumed events (for example, typed but
+// never visited) in the RECENT_EVENT_THRESHOLD. Otherwise, we'll start
+// checking each one for every page visit, which will be somewhat slower.
+#define RECENT_EVENT_QUEUE_MAX_LENGTH 128
+
+// set to use more optimized (in-memory database) link coloring
 #define IN_MEMORY_LINKS
 
 // preference ID strings
@@ -130,9 +143,6 @@ NS_IMPL_ISUPPORTS6(nsNavHistory,
                    nsISupportsWeakReference,
                    nsIAutoCompleteSearch)
 
-static PRInt32 ComputeAutoCompletePriority(const nsAString& aUrl,
-                                           PRInt32 aVisitCount,
-                                           PRBool aWasTyped);
 static nsresult GetReversedHostname(nsIURI* aURI, nsAString& host);
 static void GetReversedHostname(const nsString& aForward, nsAString& aReversed);
 static void GetSubstringFromNthDot(const nsString& aInput, PRInt32 aStartingSpot,
@@ -142,9 +152,6 @@ static PRInt32 GetTLDCharCount(const nsString& aHost);
 static PRInt32 GetTLDType(const nsString& aHostTail);
 static void GetUnreversedHostname(const nsString& aBackward,
                                   nsAString& aForward);
-static PRBool GetUpdatedHiddenState(nsIURI* aURI, PRBool aOldHiddenState,
-                             PRBool aOldTypedState,
-                             PRBool aRedirect, PRBool aToplevel);
 static PRBool IsNumericHostName(const nsString& aHost);
 static void ParseSearchQuery(const nsString& aQuery, nsStringArray* aTerms);
 
@@ -260,6 +267,20 @@ nsNavHistory::Init()
   mIgnoreHostnames.AppendString(NS_LITERAL_STRING("www."));
   mIgnoreHostnames.AppendString(NS_LITERAL_STRING("ftp."));
 
+  // extract the last session ID so we know where to pick up
+  {
+    nsCOMPtr<mozIStorageStatement> selectSession;
+    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+        "SELECT MAX(session) FROM moz_historyvisit"),
+      getter_AddRefs(selectSession));
+    NS_ENSURE_SUCCESS(rv, rv);
+    PRBool hasSession;
+    if (NS_SUCCEEDED(selectSession->ExecuteStep(&hasSession)) && hasSession)
+      mLastSessionID = selectSession->AsInt64(0);
+    else
+      mLastSessionID = 1;
+  }
+
   // prefs
   if (!gPrefService || !gPrefBranch) {
     gPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
@@ -282,6 +303,10 @@ nsNavHistory::Init()
 
   // prefs
   LoadPrefs();
+
+  // recent events hash tables
+  NS_ENSURE_TRUE(mRecentTyped.Init(128), NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(mRecentBookmark.Init(128), NS_ERROR_OUT_OF_MEMORY);
 
   // The AddObserver calls must be the last lines in this function, because
   // this function may fail, and thus, this object would be not completely
@@ -439,7 +464,7 @@ nsNavHistory::InitDB()
 
   // mDBRecentVisitOfURL
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT v.visit_id "
+      "SELECT v.visit_id, v.session "
       "FROM moz_history h JOIN moz_historyvisit v ON h.id = v.page_id "
       "WHERE h.url = ?1 "
       "ORDER BY v.visit_date DESC "
@@ -678,9 +703,10 @@ nsNavHistory::InternalAdd(nsIURI* aURI, nsIURI* aReferrer, PRInt64 aSessionID,
     rv = dbUpdateStatement->BindInt32Parameter(0, oldVisitCount + 1);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = dbUpdateStatement->BindInt32Parameter(1,
-        GetUpdatedHiddenState(aURI, oldHiddenState, oldTypedState,
-                              aRedirect, aToplevel));
+    // embedded links will be hidden, but don't hide pages that are already
+    // unhidden
+    dbUpdateStatement->BindInt32Parameter(1, oldHiddenState &&
+             aTransitionType == nsINavHistoryService::TRANSITION_EMBED ? 1 : 0);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = dbUpdateStatement->BindInt64Parameter(3, pageID);
@@ -692,15 +718,16 @@ nsNavHistory::InternalAdd(nsIURI* aURI, nsIURI* aReferrer, PRInt64 aSessionID,
 
     // must free the previous statement before we can make a new one
     dbSelectStatement = nsnull;
-    PRBool hidden = GetUpdatedHiddenState(aURI, PR_TRUE, PR_FALSE,
-                                          aRedirect, aToplevel);
+
+    // hide embedded links, everything else is visible
+    PRBool hidden = (aTransitionType == TRANSITION_EMBED);
 
     // set as not typed, visited once
     rv = InternalAddNewPage(aURI, aTitle, hidden, PR_FALSE, 1, &pageID);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  rv = AddVisit(aReferrer, pageID, aVisitDate, aTransitionType, aSessionID);
+  rv = AddVisit(aReferrer, pageID, aVisitDate, aTransitionType);
 
   if (aPageID)
     *aPageID = pageID;
@@ -807,12 +834,13 @@ nsNavHistory::InternalAddNewPage(nsIURI* aURI, const PRUnichar* aTitle,
 //    most cases.
 
 nsresult nsNavHistory::AddVisit(nsIURI* aReferrer, PRInt64 aPageID,
-                                PRTime aTime, PRInt32 aTransitionType,
-                                PRInt64 aSessionID)
+                                PRTime aTime, PRInt32 aTransitionType)
 {
   nsresult rv;
   PRInt64 fromStep = 0;
+  PRInt64 sessionID = 0;
   if (aReferrer) {
+    // try to find the parent visit
     mozStorageStatementScoper scoper(mDBRecentVisitOfURL);
     rv = BindStatementURI(mDBRecentVisitOfURL, 0, aReferrer);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -820,8 +848,15 @@ nsresult nsNavHistory::AddVisit(nsIURI* aReferrer, PRInt64 aPageID,
     PRBool hasMore;
     rv = mDBRecentVisitOfURL->ExecuteStep(&hasMore);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (hasMore)
+    if (hasMore) {
       fromStep = mDBRecentVisitOfURL->AsInt64(0);
+      sessionID = mDBRecentVisitOfURL->AsInt64(1);
+    }
+  }
+  if (! sessionID) {
+    // need to create a new session
+    mLastSessionID ++;
+    sessionID = mLastSessionID;
   }
 
   mozStorageStatementScoper scoper(mDBInsertVisit);
@@ -834,7 +869,7 @@ nsresult nsNavHistory::AddVisit(nsIURI* aReferrer, PRInt64 aPageID,
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mDBInsertVisit->BindInt32Parameter(3, aTransitionType);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBInsertVisit->BindInt64Parameter(4, aSessionID);
+  rv = mDBInsertVisit->BindInt64Parameter(4, sessionID);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mDBInsertVisit->Execute();
@@ -1096,6 +1131,29 @@ nsNavHistory::SetPageUserTitle(nsIURI* aURI, const nsAString& aUserTitle)
   rv = statement->BindStringParameter(1, aUserTitle);
   NS_ENSURE_SUCCESS(rv, rv);
   return statement->Execute();
+}
+
+
+// nsNavHistory::MarkPageAsFollowedBookmark
+//
+//    @see MarkPageAsTyped
+
+NS_IMETHODIMP
+nsNavHistory::MarkPageAsFollowedBookmark(nsIURI* aURI)
+{
+  nsCAutoString uriString;
+  aURI->GetSpec(uriString);
+
+  // if URL is already in the typed queue, then we need to remove the old one
+  PRInt64 unusedEventTime;
+  if (mRecentBookmark.Get(uriString, &unusedEventTime))
+    mRecentBookmark.Remove(uriString);
+
+  if (mRecentBookmark.Count() > RECENT_EVENT_QUEUE_MAX_LENGTH)
+    ExpireNonrecentEvents(&mRecentBookmark);
+
+  mRecentTyped.Put(uriString, GetNow());
+  return NS_OK;
 }
 
 
@@ -1808,11 +1866,8 @@ nsNavHistory::RemoveAllPages()
 
 // nsNavHistory::HidePage
 //
-//    Sets the 'hidden' column to true.
-//
-//    If the page doesn't exist in our DB, add it and mark it as hidden. We are
-//    probably in the process of loading it (AddURI will only get called when
-//    the page actually starts loading OK).
+//    Sets the 'hidden' column to true. If we've not heard of the page, we
+//    succeed and do nothing.
 
 NS_IMETHODIMP
 nsNavHistory::HidePage(nsIURI *aURI)
@@ -1834,46 +1889,38 @@ nsNavHistory::HidePage(nsIURI *aURI)
   rv = dbSelectStatement->ExecuteStep(&alreadyVisited);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!alreadyVisited) {
-    // need to add a new page, marked as hidden, never visited
+  // don't need to do anything if we've never heard of this page
+  if (!alreadyVisited)
+    return NS_OK;
+ 
+  // modify the existing page if necessary
 
-    // need to clear the old statement before we create a new one
-    dbSelectStatement = nsnull;
+  PRInt32 oldHiddenState = 0;
+  rv = dbSelectStatement->GetInt32(1, &oldHiddenState);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    // add the URL, not typed, hidden, never visited
-    rv = InternalAddNewPage(aURI, nsnull, PR_TRUE, PR_FALSE, 0, nsnull);
-    NS_ENSURE_SUCCESS(rv, rv);
+  if (!oldHiddenState)
+    return NS_OK; // already marked as hidden, we're done
 
-  } else {
-    // modify the existing page if necessary
+  // find the old ID, which can be found faster than long URLs
+  PRInt32 entryid = 0;
+  rv = dbSelectStatement->GetInt32(0, &entryid);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    PRInt32 oldHiddenState = 0;
-    rv = dbSelectStatement->GetInt32(1, &oldHiddenState);
-    NS_ENSURE_SUCCESS(rv, rv);
+  // need to clear the old statement before we create a new one
+  dbSelectStatement = nsnull;
 
-    if (!oldHiddenState)
-      return NS_OK; // already marked as hidden, we're done
+  nsCOMPtr<mozIStorageStatement> dbModStatement;
+  rv = mDBConn->CreateStatement(
+      NS_LITERAL_CSTRING("UPDATE moz_history SET hidden = 1 WHERE id = ?1"),
+      getter_AddRefs(dbModStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    // find the old ID, which can be found faster than long URLs
-    PRInt32 entryid = 0;
-    rv = dbSelectStatement->GetInt32(0, &entryid);
-    NS_ENSURE_SUCCESS(rv, rv);
+  dbModStatement->BindInt32Parameter(0, entryid);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    // need to clear the old statement before we create a new one
-    dbSelectStatement = nsnull;
-
-    nsCOMPtr<mozIStorageStatement> dbModStatement;
-    nsresult rv = mDBConn->CreateStatement(
-        NS_LITERAL_CSTRING("UPDATE moz_history SET hidden = 1 WHERE id = ?1"),
-        getter_AddRefs(dbModStatement));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    dbModStatement->BindInt32Parameter(0, entryid);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = dbModStatement->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  rv = dbModStatement->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // notify observers, finish transaction first
   transaction.Commit();
@@ -1897,76 +1944,24 @@ nsNavHistory::HidePage(nsIURI *aURI)
 //    one for this page, marking it as typed but hidden, with a 0 visit count.
 //    This will get updated when AddURI is called, and it will clear the hidden
 //    flag for typed URLs.
+//
+//    @see MarkPageAsFollowedBookmark
 
 NS_IMETHODIMP
 nsNavHistory::MarkPageAsTyped(nsIURI *aURI)
 {
-  mozStorageTransaction transaction(mDBConn, PR_FALSE,
-                                  mozIStorageConnection::TRANSACTION_EXCLUSIVE);
+  nsCAutoString uriString;
+  aURI->GetSpec(uriString);
 
-  // We need to do a query anyway to see if this URL is already in the DB.
-  // Might as well ask for the typed column to save updates in some cases.
-  nsCOMPtr<mozIStorageStatement> dbSelectStatement;
-  nsresult rv = mDBConn->CreateStatement(
-      NS_LITERAL_CSTRING("SELECT id,typed FROM moz_history WHERE url = ?1"),
-      getter_AddRefs(dbSelectStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = BindStatementURI(dbSelectStatement, 0, aURI);
-  NS_ENSURE_SUCCESS(rv, rv);
-  PRBool alreadyVisited = PR_TRUE;
-  rv = dbSelectStatement->ExecuteStep(&alreadyVisited);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // if URL is already in the typed queue, then we need to remove the old one
+  PRInt64 unusedEventTime;
+  if (mRecentTyped.Get(uriString, &unusedEventTime))
+    mRecentTyped.Remove(uriString);
 
-  if (!alreadyVisited) {
-    // we don't have this URL in the history yet, add it...
+  if (mRecentTyped.Count() > RECENT_EVENT_QUEUE_MAX_LENGTH)
+    ExpireNonrecentEvents(&mRecentTyped);
 
-    // need to clear the old statement before we create a new one
-    dbSelectStatement->Reset();
-    dbSelectStatement = nsnull;
-
-    // add the URL, typed but hidden, never visited
-    rv = InternalAddNewPage(aURI, nsnull, PR_TRUE, PR_TRUE, 0, nsnull);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-  } else {
-    // we already have this URL, update it if necessary.
-
-    PRInt32 oldTypedState = 0;
-    rv = dbSelectStatement->GetInt32(1, &oldTypedState);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!oldTypedState)
-      return NS_OK; // already marked as typed, we're done
-
-    // find the old ID, which can be found faster than long URLs
-    PRInt32 entryid = 0;
-    rv = dbSelectStatement->GetInt32(0, &entryid);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // need to clear the old statement before we create a new one
-    dbSelectStatement->Reset();
-    dbSelectStatement = nsnull;
-
-    nsCOMPtr<mozIStorageStatement> dbModStatement;
-    nsresult rv = mDBConn->CreateStatement(
-        NS_LITERAL_CSTRING("UPDATE moz_history SET typed = 1 WHERE id = ?1"),
-        getter_AddRefs(dbModStatement));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    dbModStatement->BindInt32Parameter(0, entryid);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = dbModStatement->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // observers, be sure to finish transaction first
-  transaction.Commit();
-  ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver,
-                      OnPageChanged(aURI,
-                                    nsINavHistoryObserver::ATTRIBUTE_TYPED,
-                                    EmptyString()))
-
+  mRecentTyped.Put(uriString, GetNow());
   return NS_OK;
 }
 
@@ -1974,6 +1969,10 @@ nsNavHistory::MarkPageAsTyped(nsIURI *aURI)
 
 
 // nsNavHistory::AddURI
+//
+//    This is the main method of adding history entries. It can't change for
+//    legacy reasons, so we infer most of the information necessary to connect
+//    the visits properly.
 
 NS_IMETHODIMP
 nsNavHistory::AddURI(nsIURI *aURI, PRBool aRedirect,
@@ -1982,7 +1981,41 @@ nsNavHistory::AddURI(nsIURI *aURI, PRBool aRedirect,
   // add to main DB
   PRInt64 pageid = 0;
   PRTime now = GetNow();
-  nsresult rv = InternalAdd(aURI, aReferrer, 0, 0, nsnull, now,
+
+  // check for transition types
+  PRUint32 transitionType = 0;
+  if (aReferrer) {
+    // If there is a referrer, we know you came from somewhere, either manually
+    // or automatically. For toplevel windows, assume its manual and you want
+    // to see this in history. For other things, it's some kind of embedded
+    // navigation. This is true of images and other content the user doesn't
+    // want to see in their history, but also of embedded frames that the user
+    // navigated manually and probably DOES want to see in history.
+    // Unfortunately, there isn't any easy way to distinguish these.
+    //
+    // Generally, it boils down to the problem of detecting whether a frame
+    // content change is the result of a user action, which isn't well defined
+    // since script could change a frame's source as a result of user request,
+    // or just because it feels like loading a new ad. The "back" button will
+    // undo either of these actions.
+    if (aToplevel)
+      transitionType = nsINavHistoryService::TRANSITION_LINK;
+    else
+      transitionType = nsINavHistoryService::TRANSITION_EMBED;
+  } else {
+    // When there is no referrer, we know the user must have gotten the link
+    // from somewhere, so check our sources to see if it was recently typed or
+    // has a bookmark selected. We don't handle drag-and-drop operations.
+    nsCAutoString urlString;
+    if (NS_SUCCEEDED(aURI->GetSpec(urlString))) {
+      if (CheckIsRecentEvent(&mRecentTyped, urlString))
+        transitionType = nsINavHistoryService::TRANSITION_TYPED;
+      else if (CheckIsRecentEvent(&mRecentBookmark, urlString))
+        transitionType = nsINavHistoryService::TRANSITION_BOOKMARK;
+    }
+  }
+
+  nsresult rv = InternalAdd(aURI, aReferrer, 0, transitionType, nsnull, now,
                             aRedirect, aToplevel, &pageid);
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
@@ -2482,6 +2515,60 @@ nsNavHistory::FilterResultSet(const nsCOMArray<nsNavHistoryResultNode>& aSet,
 }
 
 
+// nsNavHistory::CheckIsRecentEvent
+//
+//    Sees if this URL happened "recently."
+//
+//    It is always removed from our recent list no matter what. It only counts
+//    as "recent" if the event happend more recently than our event
+//    threshold ago.
+
+PRBool
+nsNavHistory::CheckIsRecentEvent(RecentEventHash* hashTable,
+                                 const nsACString& url)
+{
+  PRTime eventTime;
+  if (hashTable->Get(url, &eventTime)) {
+    hashTable->Remove(url);
+    if (eventTime > GetNow() - RECENT_EVENT_THRESHOLD)
+      return PR_TRUE;
+    return PR_FALSE;
+  }
+  return PR_FALSE;
+}
+
+
+// nsNavHistory::ExpireNonrecentEvents
+//
+//    This goes through our
+
+struct ExpireEventsCallbackInfo
+{
+  nsDataHashtable<nsCStringHashKey, PRInt64>* mHashTable;
+  PRTime mThreshold;
+};
+PR_STATIC_CALLBACK(PLDHashOperator)
+ExpireNonrecentEventsCallback(nsCStringHashKey::KeyType aKey,
+                              PRInt64& aData,
+                              void* userArg)
+{
+  ExpireEventsCallbackInfo* info =
+    NS_REINTERPRET_CAST(ExpireEventsCallbackInfo*, userArg);
+  if (aData < info->mThreshold)
+    return PL_DHASH_REMOVE;
+  return PL_DHASH_NEXT;
+}
+void
+nsNavHistory::ExpireNonrecentEvents(RecentEventHash* hashTable)
+{
+  ExpireEventsCallbackInfo info;
+  info.mHashTable = hashTable;
+  info.mThreshold = GetNow() - RECENT_EVENT_THRESHOLD;
+  hashTable->Enumerate(ExpireNonrecentEventsCallback,
+                       NS_REINTERPRET_CAST(void*, &info));
+}
+
+
 // nsNavHistory::RowToResult
 //
 
@@ -2898,46 +2985,6 @@ GetUnreversedHostname(const nsString& aBackward, nsAString& aForward)
     NS_WARNING("Malformed reversed host name: no trailing dot");
     ReverseString(aBackward, aForward);
   }
-}
-
-
-// GetUpdatedHiddenState
-//
-//    Computes what the new hidden state for a new/updated URL with the given
-//    properties. For new URLs, pass aOldHiddenState = PR_TRUE and
-//    aOldTypedState = PR_FALSE
-//
-//    If this is a JS url, or a redirected URI or in a frame, hide it in global
-//    history so that it doesn't show up in the autocomplete dropdown.  Adding
-//    an existing page above unhides pages that were typed regardless of
-//    Javascript, etc. disposition. Typed URIs are always existing because the
-//    "typed" notification comes *before* the AddURI, which is called only if
-//    the page actually is loadeing. See bug 197127 and bug 161531 for details.
-
-PRBool GetUpdatedHiddenState(nsIURI* aURI, PRBool aOldHiddenState,
-                             PRBool aOldTypedState,
-                             PRBool aRedirect, PRBool aToplevel)
-{
-  // never hide things that were already unhidden
-  if (! aOldHiddenState)
-    return aOldHiddenState;
-
-  // things that are typed should always be displayed (When you type something,
-  // it will be marked as typed hidden. When you visit the page, we go to
-  // InternalAdd, and we should unhide it now that we know its valid.)
-  if (aOldTypedState)
-    return PR_FALSE;
-
-  PRBool isJavascript;
-  if (NS_SUCCEEDED(aURI->SchemeIs("javascript", &isJavascript)) && isJavascript)
-    return PR_TRUE;
-
-  // FIXME: redirects???
-
-  if (! aToplevel)
-    return PR_TRUE;
-
-  return PR_FALSE;
 }
 
 
