@@ -135,23 +135,16 @@ interface nsINavHistoryResultNode : nsISupports
 };
 
 
+/**
+ * The result of a history/bookmark query.
+ *
+ * This class is also a result "node". Use those interfaces to access the
+ * toplevel children of this result.
+ */
+
 [scriptable, uuid(25b45a94-3323-4c7b-910a-315f2c59bfb4)]
-interface nsINavHistoryResult : nsISupports
+interface nsINavHistoryResult : nsINavHistoryResultNode
 {
-  /**
-   * This gives you the children of the nodes. It is preferrable to use this
-   * interface over the array one, since it avoids creating an nsIArray object
-   * and the interface is already the correct type.
-   */
-  readonly attribute PRInt32 topLevelNodeCount;
-  nsINavHistoryResultNode getTopLevelNode(in PRInt32 index);
-
-  /**
-   * This is an array of nsINavHistoryResultNode objects that are the top-level
-   * result of the query.
-   */
-  readonly attribute nsIArray topLevel;
-
   /**
    * Sorts all nodes recursively by the given parameter, one of
    * nsINavHistory.SORT_BY_*
@@ -300,29 +293,37 @@ interface nsINavHistoryObserver : nsISupports
 interface nsINavHistoryQuery : nsISupports
 {
   /**
-   * Time range for results (INCLUSIVE). Set to 0 to ignore and return any
-   * page. Note: PRTime is in MICROseconds since 1 Jan 1970. Javascript date
-   * objects are expressed in MILLIseconds since 1 Jan 1970.
+   * Time range for results (INCLUSIVE). The *TimeReference is one of the
+   * constants TIME_RELATIVE_* which indicates how to interpret the
+   * corresponding time value.
+   *   TIME_RELATIVE_EPOCH (default):
+   *     The time is relative to Jan 1 1970 GMT, (this is a normal PRTime)
+   *   TIME_RELATIVE_TODAY:
+   *     The time is relative to this morning at midnight. Normally used for
+   *     queries relative to today. For example, a "past week" query would be
+   *     today-6 days -> today+1 day
+   *   TIME_RELATIVE_NOW:
+   *     The time is relative to right now.
    *
-   * The has* functions return whether the corresponding time is non-zero and
-   * should be considered for the query.
+   * Note: PRTime is in MICROseconds since 1 Jan 1970. Javascript date objects
+   * are expressed in MILLIseconds since 1 Jan 1970.
+   *
+   * As a special case, a 0 time relative to TIME_RELATIVE_EPOCH indicates that
+   * the time is not part of the query. This is the default, so an empty query
+   * will match any time. The has* functions return whether the corresponding
+   * time is considered.
    */
-  attribute PRTime beginTime;
-  readonly attribute boolean hasBeginTime;
-  attribute PRTime endTime;
-  readonly attribute boolean hasEndTime;
+  const PRUint32 TIME_RELATIVE_EPOCH = 0;
+  const PRUint32 TIME_RELATIVE_TODAY = 1;
+  const PRUint32 TIME_RELATIVE_NOW = 2;
 
-  /**
-   * These are helper functions for setting begin and end time for a specific
-   * day.
-   *   year: 4 digit year, i.e. "2005"
-   *   month: 0-11 month index
-   *   day: 1-31 day number
-   * These days are inclusive, so setting begin and end with these functions
-   * to the same day gives you all visits during that day.
-   */
-  void setBeginDate(in PRInt32 year, in PRInt32 month, in PRInt32 day);
-  void setEndDate(in PRInt32 year, in PRInt32 month, in PRInt32 day);
+  attribute PRTime beginTime;
+  attribute PRUint32 beginTimeReference;
+  readonly attribute boolean hasBeginTime;
+
+  attribute PRTime endTime;
+  attribute PRUint32 endTimeReference;
+  readonly attribute boolean hasEndTime;
 
   /**
    * Text search terms.
