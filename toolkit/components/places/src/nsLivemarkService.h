@@ -47,6 +47,7 @@
 #define LMANNO_FEEDURI     "livemark/feedURI"
 #define LMANNO_SITEURI     "livemark/siteURI"
 #define LMANNO_EXPIRATION  "livemark/expiration"
+#define LMANNO_BMANNO      "livemark/bookmarkFeedURI"
 
 class nsLivemarkService : public nsILivemarkService
 {
@@ -63,7 +64,8 @@ public:
   nsresult DeleteLivemarkChildren(PRInt64 aLivemarkFolderId);
   nsresult InsertLivemarkChild(PRInt64 aLivemarkFolderId, 
                                nsIURI *aURI,
-                               const nsAString &aTitle);
+                               const nsAString &aTitle,
+                               const nsAString &aFeedURI);
   nsresult InsertLivemarkLoadingItem(PRInt64 aFolder);
   nsresult InsertLivemarkFailedItem(PRInt64 aFolder);
 
