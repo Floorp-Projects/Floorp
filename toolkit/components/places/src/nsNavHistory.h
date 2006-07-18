@@ -85,6 +85,7 @@ class AutoCompleteIntermediateResultSet;
 class mozIAnnotationService;
 class nsNavHistory;
 class nsNavBookmarks;
+class QueryKeyValuePair;
 
 
 // nsNavHistory
@@ -301,7 +302,7 @@ protected:
                                 const nsAString& aTitle);
 
   nsresult RecursiveGroup(const nsCOMArray<nsNavHistoryResultNode>& aSource,
-                          const PRInt32* aGroupingMode, PRUint32 aGroupCount,
+                          const PRUint32* aGroupingMode, PRUint32 aGroupCount,
                           nsCOMArray<nsNavHistoryResultNode>* aDest);
   nsresult GroupByDay(const nsCOMArray<nsNavHistoryResultNode>& aSource,
                       nsCOMArray<nsNavHistoryResultNode>* aDest);
@@ -376,9 +377,9 @@ protected:
                              void *navHistoryVoid);
 
   // in nsNavHistoryQuery.cpp
-  nsresult TokensToQueries(const nsVoidArray& aTokens,
-                              nsCOMArray<nsINavHistoryQuery>* aQueries,
-                              nsNavHistoryQueryOptions* aOptions);
+  nsresult TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
+                           nsCOMArray<nsINavHistoryQuery>* aQueries,
+                           nsNavHistoryQueryOptions* aOptions);
 
   nsresult ImportFromMork();
 
