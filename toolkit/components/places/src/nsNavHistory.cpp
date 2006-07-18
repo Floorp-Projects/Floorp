@@ -3620,10 +3620,11 @@ nsresult
 nsNavHistoryQueryOptions::Clone(nsNavHistoryQueryOptions **aResult)
 {
   *aResult = nsnull;
-  nsRefPtr<nsNavHistoryQueryOptions> result = new nsNavHistoryQueryOptions();
+  nsNavHistoryQueryOptions *result = new nsNavHistoryQueryOptions();
   if (! result)
     return NS_ERROR_OUT_OF_MEMORY;
 
+  nsRefPtr<nsNavHistoryResult> resultHolder(result);
   result->mSort = mSort;
   result->mResultType = mResultType;
   result->mGroupCount = mGroupCount;
@@ -3639,6 +3640,6 @@ nsNavHistoryQueryOptions::Clone(nsNavHistoryQueryOptions **aResult)
   }
   result->mExpandPlaces = mExpandPlaces;
 
-  result.swap(*aResult);
+  resultHolder.swap(*aResult);
   return NS_OK;
 }
