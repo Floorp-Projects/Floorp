@@ -50,15 +50,29 @@
 //    This class encapsulates the parameters for basic history queries for
 //    building UI, trees, lists, etc.
 
+#define NS_NAVHISTORYQUERY_IID \
+{ 0xb10185e0, 0x86eb, 0x4612, { 0x95, 0x7c, 0x09, 0x34, 0xf2, 0xb1, 0xce, 0xd7 } }
+
 class nsNavHistoryQuery : public nsINavHistoryQuery
 {
 public:
   nsNavHistoryQuery();
   // note: we use a copy constructor in Clone(), the default is good enough
 
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_NAVHISTORYQUERY_IID)
   NS_DECL_ISUPPORTS
   NS_DECL_NSINAVHISTORYQUERY
 
+  PRTime BeginTime() { return mBeginTime; }
+  PRUint32 BeginTimeReference() { return mBeginTimeReference; }
+  PRTime EndTime() { return mEndTime; }
+  PRUint32 EndTimeReference() { return mEndTimeReference; }
+  const nsString& SearchTerms() { return mSearchTerms; }
+  PRBool OnlyBookmarked() { return mOnlyBookmarked; }
+  PRBool DomainIsHost() { return mDomainIsHost; }
+  const nsCString& Domain() { return mDomain; }
+  PRBool UriIsPrefix() { return mUriIsPrefix; }
+  nsIURI* Uri() { return mUri; } // NOT AddRef-ed!
   const nsTArray<PRInt64>& Folders() const { return mFolders; }
 
 private:
@@ -77,7 +91,6 @@ protected:
   PRBool mUriIsPrefix;
   nsCOMPtr<nsIURI> mUri;
   nsTArray<PRInt64> mFolders;
-  PRUint32 mItemTypes;
 };
 
 
@@ -91,7 +104,9 @@ class nsNavHistoryQueryOptions : public nsINavHistoryQueryOptions
 public:
   nsNavHistoryQueryOptions() : mSort(0), mResultType(0),
                                mGroupCount(0), mGroupings(nsnull),
-                               mExpandPlaces(PR_FALSE),
+                               mExcludeItems(PR_FALSE),
+                               mExcludeQueries(PR_FALSE),
+                               mExpandQueries(PR_FALSE),
                                mForceOriginalTitle(PR_FALSE),
                                mIncludeHidden(PR_FALSE),
                                mMaxResults(0)
@@ -111,7 +126,9 @@ public:
   const PRUint32* GroupingMode(PRUint32 *count) const {
     *count = mGroupCount; return mGroupings;
   }
-  PRBool ExpandPlaces() const { return mExpandPlaces; }
+  PRBool ExcludeItems() const { return mExcludeItems; }
+  PRBool ExcludeQueries() const { return mExcludeQueries; }
+  PRBool ExpandQueries() const { return mExpandQueries; }
   PRBool ForceOriginalTitle() const { return mForceOriginalTitle; }
   PRBool IncludeHidden() const { return mIncludeHidden; }
   PRUint32 MaxResults() const { return mMaxResults; }
@@ -123,11 +140,19 @@ private:
 
   ~nsNavHistoryQueryOptions() { delete[] mGroupings; }
 
+  // IF YOU ADD MORE ITEMS:
+  //  * Add a new getter for C++ above if it makes sense
+  //  * Add to the serialization code
+  //  * Add to the deserialization code
+  //  * Add to the nsNavHistoryQueryOptions::Clone() function
+  //  * Add to the nsNavHistory.cpp:IsSimpleBookmarksQuery function if applicable
   PRUint32 mSort;
   PRUint32 mResultType;
   PRUint32 mGroupCount;
   PRUint32 *mGroupings;
-  PRBool mExpandPlaces;
+  PRBool mExcludeItems;
+  PRBool mExcludeQueries;
+  PRBool mExpandQueries;
   PRBool mForceOriginalTitle;
   PRBool mIncludeHidden;
   PRUint32 mMaxResults;
