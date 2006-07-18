@@ -82,6 +82,10 @@ public:
     return gFaviconService;
   }
 
+  // internal version called by history when done lazily
+  nsresult DoSetAndLoadFaviconForPage(nsIURI* aPage, nsIURI* aFavicon,
+                                      PRBool aForceReload);
+
   // addition to API for strings to prevent excessive parsing of URIs
   nsresult GetFaviconLinkForIconString(const nsCString& aIcon, nsIURI** aOutput);
   void GetFaviconSpecForIconString(const nsCString& aIcon, nsACString& aOutput);
