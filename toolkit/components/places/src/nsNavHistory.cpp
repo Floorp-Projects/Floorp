@@ -1068,6 +1068,9 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
                              nsINavHistoryQueryOptions *aOptions,
                              nsINavHistoryResult** _retval)
 {
+  NS_ENSURE_ARG_POINTER(aQueries);
+  NS_ENSURE_ARG_POINTER(aOptions);
+
   nsresult rv;
 
   nsCOMPtr<nsNavHistoryQueryOptions> options = do_QueryInterface(aOptions);
@@ -3506,12 +3509,15 @@ NS_IMETHODIMP nsNavHistoryQuery::GetFolders(PRUint32 *aCount,
                                             PRInt64 **aFolders)
 {
   PRUint32 count = mFolders.Length();
-  PRInt64 *folders =
-    NS_STATIC_CAST(PRInt64*, nsMemory::Alloc(count * sizeof(PRInt64)));
-  NS_ENSURE_TRUE(folders, NS_ERROR_OUT_OF_MEMORY);
+  PRInt64 *folders = nsnull;
+  if (count > 0) {
+    folders = NS_STATIC_CAST(PRInt64*,
+                             nsMemory::Alloc(count * sizeof(PRInt64)));
+    NS_ENSURE_TRUE(folders, NS_ERROR_OUT_OF_MEMORY);
 
-  for (PRUint32 i = 0; i < count; ++i) {
-    folders[i] = mFolders[i];
+    for (PRUint32 i = 0; i < count; ++i) {
+      folders[i] = mFolders[i];
+    }
   }
   *aCount = count;
   *aFolders = folders;
