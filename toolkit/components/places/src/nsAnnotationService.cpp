@@ -86,15 +86,13 @@ nsAnnotationService::Init()
 {
   nsresult rv;
 
+  // The history service will normally already be created and will call our
+  // static InitTables function. It will get autocreated here if it hasn't
+  // already been created.
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   if (! history)
     return NS_ERROR_FAILURE;
   mDBConn = history->GetStorageConnection();
-
-  // create the database
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_anno (anno_id INTEGER PRIMARY KEY, page INTEGER NOT NULL, name VARCHAR(32) NOT NULL, mime_type VARCHAR(32) DEFAULT NULL, content LONGVARCHAR, flags INTEGER DEFAULT 0, expiration INTEGER DEFAULT 0)"));
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE INDEX moz_anno_pageindex ON moz_anno (page)"));
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE INDEX moz_anno_nameindex ON moz_anno (name)"));
 
   // annotation statements
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("UPDATE moz_anno SET mime_type = ?4, content = ?5, flags = ?6, expiration = ?7 WHERE anno_id = ?1"),
@@ -116,6 +114,42 @@ nsAnnotationService::Init()
                                 getter_AddRefs(mDBRemoveAnnotation));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  return NS_OK;
+}
+
+
+// nsAnnotationService::InitTables
+//
+//    All commands that initialize the schema of the DB go in here. This is
+//    called from history init before the dummy DB connection is started that
+//    will prevent us from modifying the schema.
+//
+//    The history service will always be created before us (we get it at the
+//    beginning of the init function which covers us if it's not).
+
+nsresult // static
+nsAnnotationService::InitTables(mozIStorageConnection* aDBConn)
+{
+  nsresult rv;
+  PRBool exists;
+  rv = aDBConn->TableExists(NS_LITERAL_CSTRING("moz_anno"), &exists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (! exists) {
+    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_anno ("
+        "anno_id INTEGER PRIMARY KEY,"
+        "page INTEGER NOT NULL,"
+        "name VARCHAR(32) NOT NULL,"
+        "mime_type VARCHAR(32) DEFAULT NULL,"
+        "content LONGVARCHAR, flags INTEGER DEFAULT 0,"
+        "expiration INTEGER DEFAULT 0)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "CREATE INDEX moz_anno_pageindex ON moz_anno (page)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "CREATE INDEX moz_anno_nameindex ON moz_anno (name)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
   return NS_OK;
 }
 
