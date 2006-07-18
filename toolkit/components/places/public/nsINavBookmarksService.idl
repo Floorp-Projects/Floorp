@@ -381,6 +381,14 @@ interface nsINavBookmarksService : nsISupports
    * Causes observers to be notified of a beginUpdateBatch when a lot of things
    * are about to change. Calls can be nested, observers will only be
    * notified when all batches begin/end.
+   *
+   * It is EXTREMELY IMPORTANT that you call EndUpdateBatch for each call to
+   * beginUpdateBatch. If you don't do this, certain parts of the UI will not
+   * get updated and any changes to bookmarks will not get written to disk.
+   * From C++ code inside the places component, use nsBookmarksUpdateBatcher
+   * defined in nsNavBookmarks.h to scope batches. For JS or from other
+   * components, just please be very careful to close the batch, especially
+   * when encountering an error and returning early.
    */
   void beginUpdateBatch();
 
