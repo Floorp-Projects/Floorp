@@ -256,19 +256,6 @@ interface nsINavHistoryResult : nsINavHistoryResultNode
   PRUint32 treeIndexForNode(in nsINavHistoryResultNode aNode);
 
   /**
-   * This gives you the original queries that generated this result.
-   * Note that these are copies of the originals. These results should be
-   * treated as read-only: they belong to the result object.
-   */
-  void getSourceQueries(out PRUint32 aResultCount, 
-    [retval, array, size_is(aResultCount)] out nsINavHistoryQuery aQueries);
-  
-  /**
-   * This gives you the original options used to display this result.
-   */
-  readonly attribute nsINavHistoryQueryOptions sourceQueryOptions;
-
-  /**
    * Add a Tree Builder Observer to handle Tree View methods that the 
    * HistoryResult object does not implement. 
    */
