@@ -98,7 +98,15 @@ sub show_tree_selector {
     print "</UL></TD></TR></TABLE></TD></TR></TABLE>";
 }
 
+sub require_only_one_tree {
+    my @treelist = &make_tree_list();
+    $::tree = '' if (!grep {$::tree eq $_} @treelist);
+    &show_tree_selector, exit if $::tree eq '';
+}
+
 sub do_static {
+    &require_only_one_tree;
+
     local *OUT;
 
     $form{legend}=0;
@@ -133,6 +141,7 @@ sub do_static {
 }
 
 sub do_tinderbox {
+    &require_only_one_tree;
     my $tinderbox_data = &tb_load_data;
     &print_page_head;
     &print_table_header;
@@ -923,6 +932,8 @@ __ENDJS
 }
 
 sub do_express {
+    &require_only_one_tree;
+
     print "Content-type: text/html\nRefresh: 900\n\n<HTML>\n";
 
     my (%build, %times);
@@ -946,11 +957,13 @@ sub do_express {
 
 # This is essentially do_express but it outputs a different format
 sub do_panel {
+    &require_only_one_tree;
+
     print "Content-type: text/html\n\n<HTML>\n" unless $form{static};
 
     my (%build, %times);
     &tb_loadquickparseinfo($::tree, \%build, \%times);
-  
+
     print q(
     <head>
       <META HTTP-EQUIV="Refresh" CONTENT="300">
@@ -989,6 +1002,8 @@ sub do_panel {
 }
 
 sub do_flash {
+    &require_only_one_tree;
+
     print "Content-type: text/rdf\n\n" unless $form{static};
 
     my (%build, %times);
@@ -1055,8 +1070,10 @@ sub do_flash {
 sub do_quickparse {
     print "Content-type: text/plain\n\n";
 
-    my @treelist = split /,/, $::tree;
-    foreach my $tt (@treelist) {
+    my @treelist = &make_tree_list();
+    my @requestedtreelist = split /,/, $::tree;
+    foreach my $tt (@requestedtreelist) {
+        next unless grep {$tt eq $_} @treelist;
         if (&is_tree_state_available($tt)) {
             my $state = &is_tree_open($tt) ? 'open' : 'closed';
             print "State|$tt|$bonsai_tree|$state\n";
@@ -1071,6 +1088,8 @@ sub do_quickparse {
 }
 
 sub do_rdf {
+    &require_only_one_tree;
+
     print "Content-type: text/plain\n\n";
 
     my $mainurl = "http://$ENV{SERVER_NAME}$ENV{SCRIPT_NAME}?tree=$::tree";
@@ -1123,6 +1142,8 @@ sub do_rdf {
 
 # This is for Sprint phones
 sub do_hdml {
+    &require_only_one_tree;
+
     print "Content-type: text/hdml\n\n" unless $form{static};
 
     print q{<hdml public=true version=2.0 ttl=0>
@@ -1155,6 +1176,8 @@ sub do_hdml {
 }
 
 sub do_vxml {
+    &require_only_one_tree;
+
     print "Content-type: text/vxml\n\n";
     print '<?xml version="1.0"?><!DOCTYPE vxml PUBLIC "-//Tellme Networks//Voice Markup Language 1.0//EN" "http://resources.tellme.com/toolbox/vxml-tellme.dtd">';
 
@@ -1219,6 +1242,8 @@ sub do_vxml {
 }
 
 sub do_wml {
+    &require_only_one_tree;
+
     print "Content-type: text/vnd.wap.wml\n";
     print "Pragma: No-Cache\n\n";
 
