@@ -4930,6 +4930,7 @@ NS_IMETHODIMP nsNavHistoryResultTreeViewer::SetTree(nsITreeBoxObject* tree)
     // reference cycle between us and the result.
     mResult->SetViewer(nsnull);
   }
+  return NS_OK;
 }
 
 
