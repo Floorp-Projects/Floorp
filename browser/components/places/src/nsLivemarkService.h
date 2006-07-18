@@ -40,7 +40,7 @@
 #include "nsIStringBundle.h"
 #include "nsIAnnotationService.h"
 #include "nsNavHistory.h"
-#include "nsBrowserCompsCID.h"
+#include "nsToolkitCompsCID.h"
 #include "nsILoadGroup.h"
 #include "nsIObserver.h"
 

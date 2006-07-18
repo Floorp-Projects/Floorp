@@ -88,7 +88,7 @@
  * both require the content (= title) before actually creating it.
  */
 
-#include "nsBrowserCompsCID.h"
+#include "nsToolkitCompsCID.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsEscape.h"

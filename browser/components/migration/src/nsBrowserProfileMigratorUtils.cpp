@@ -40,6 +40,7 @@
 #ifdef MOZ_PLACES
 #include "nsINavBookmarksService.h"
 #include "nsBrowserCompsCID.h"
+#include "nsToolkitCompsCID.h"
 #else
 #include "nsIBookmarksService.h"
 #endif
@@ -298,7 +299,7 @@ ImportBookmarksHTML(nsIFile* aBookmarksFile,
 
   // Import the bookmarks into the folder.
   rv = bms->ImportBookmarksHTMLToFolder(fileURI, folder);
-  NS_ENSURE_SUCCESS(rv, rv);
+  return rv;
 #else
   nsCOMPtr<nsIRDFResource> folder;
   bms->CreateFolderInContainer(importedBookmarksTitle.get(), root, -1,

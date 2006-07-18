@@ -187,8 +187,12 @@ DEFINES += -DMOZ_FILEVIEW
 endif
 
 ifdef MOZ_PLACES
-COMPONENT_LIBS += storagecomps
 STATIC_LIBS += morkreader_s
+
+COMPONENT_LIBS += \
+	storagecomps \
+	places \
+	$(NULL)
 else
 ifdef MOZ_MORK
 COMPONENT_LIBS += \

@@ -228,7 +228,8 @@
 
 #ifdef MOZ_PLACES
 #define PLACES_MODULES \
-    MODULE(mozStorageModule)
+    MODULE(mozStorageModule)                 \
+    MODULE(nsPlacesModule)
 #else
 #ifdef MOZ_MORK
 #define PLACES_MODULES \
