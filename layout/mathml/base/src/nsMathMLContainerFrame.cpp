@@ -84,8 +84,10 @@ NS_IMPL_QUERY_INTERFACE_INHERITED1(nsMathMLContainerFrame, nsHTMLContainerFrame,
 // error handlers
 // provide a feedback to the user when a frame with bad markup can not be rendered
 nsresult
-nsMathMLContainerFrame::ReflowError(nsIRenderingContext& aRenderingContext,
-                                    nsHTMLReflowMetrics& aDesiredSize)
+nsMathMLContainerFrame::ReflowError(nsIRenderingContext&     aRenderingContext,
+                                    nsHTMLReflowMetrics&     aDesiredSize,
+                                    const nsHTMLReflowState& aReflowState,
+                                    nsReflowStatus&          aStatus)
 {
   nsresult rv;
 
@@ -106,6 +108,8 @@ nsMathMLContainerFrame::ReflowError(nsIRenderingContext& aRenderingContext,
     NS_WARNING("GetBoundingMetrics failed");
     aDesiredSize.width = aDesiredSize.height = 0;
     aDesiredSize.ascent = aDesiredSize.descent = 0;
+    aStatus = NS_FRAME_COMPLETE;
+    NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
     return NS_OK;
   }
 
@@ -123,6 +127,8 @@ nsMathMLContainerFrame::ReflowError(nsIRenderingContext& aRenderingContext,
   // Also return our bounding metrics
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
 
+  aStatus = NS_FRAME_COMPLETE;
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
 }
 

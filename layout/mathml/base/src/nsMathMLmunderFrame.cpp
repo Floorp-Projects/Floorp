@@ -246,9 +246,11 @@ i.e.,:
 */
 
 NS_IMETHODIMP
-nsMathMLmunderFrame::Place(nsIRenderingContext& aRenderingContext,
-                           PRBool               aPlaceOrigin,
-                           nsHTMLReflowMetrics& aDesiredSize)
+nsMathMLmunderFrame::Place(nsIRenderingContext&     aRenderingContext,
+                           PRBool                   aPlaceOrigin,
+                           nsHTMLReflowMetrics&     aDesiredSize,
+                           const nsHTMLReflowState& aReflowState,
+                           nsReflowStatus&          aStatus)
 {
   if ( NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(mEmbellishData.flags) &&
       !NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) {
@@ -257,6 +259,8 @@ nsMathMLmunderFrame::Place(nsIRenderingContext& aRenderingContext,
                                              aRenderingContext,
                                              aPlaceOrigin,
                                              aDesiredSize,
+                                             aReflowState,
+                                             aStatus,
                                              this);
   }
 
@@ -273,7 +277,7 @@ nsMathMLmunderFrame::Place(nsIRenderingContext& aRenderingContext,
   if (!baseFrame || !underFrame || underFrame->GetNextSibling()) {
     // report an error, encourage people to get their markups in order
     NS_WARNING("invalid markup");
-    return ReflowError(aRenderingContext, aDesiredSize);
+    return ReflowError(aRenderingContext, aDesiredSize, aReflowState, aStatus);
   }
   GetReflowAndBoundingMetricsFor(baseFrame, baseSize, bmBase);
   GetReflowAndBoundingMetricsFor(underFrame, underSize, bmUnder);

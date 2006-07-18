@@ -82,9 +82,11 @@ nsMathMLmsupFrame::TransmitAutomaticData()
 }
 
 NS_IMETHODIMP
-nsMathMLmsupFrame::Place(nsIRenderingContext& aRenderingContext,
-                         PRBool               aPlaceOrigin,
-                         nsHTMLReflowMetrics& aDesiredSize)
+nsMathMLmsupFrame::Place(nsIRenderingContext&     aRenderingContext,
+                         PRBool                   aPlaceOrigin,
+                         nsHTMLReflowMetrics&     aDesiredSize,
+                         const nsHTMLReflowState& aReflowState,
+                         nsReflowStatus&          aStatus)
 {
   // extra spacing after sup/subscript
   nscoord scriptSpace = NSFloatPointsToTwips(0.5f); // 0.5pt as in plain TeX
@@ -105,6 +107,8 @@ nsMathMLmsupFrame::Place(nsIRenderingContext& aRenderingContext,
                                              aRenderingContext,
                                              aPlaceOrigin,
                                              aDesiredSize,
+                                             aReflowState,
+                                             aStatus,
                                              this,
                                              supScriptShift,
                                              scriptSpace);
@@ -113,13 +117,15 @@ nsMathMLmsupFrame::Place(nsIRenderingContext& aRenderingContext,
 // exported routine that both mover and msup share.
 // mover uses this when movablelimits is set.
 nsresult
-nsMathMLmsupFrame::PlaceSuperScript(nsPresContext*      aPresContext,
-                                    nsIRenderingContext& aRenderingContext,
-                                    PRBool               aPlaceOrigin,
-                                    nsHTMLReflowMetrics& aDesiredSize,
-                                    nsIFrame*            aFrame,
-                                    nscoord              aUserSupScriptShift,
-                                    nscoord              aScriptSpace)
+nsMathMLmsupFrame::PlaceSuperScript(nsPresContext*           aPresContext,
+                                    nsIRenderingContext&     aRenderingContext,
+                                    PRBool                   aPlaceOrigin,
+                                    nsHTMLReflowMetrics&     aDesiredSize,
+                                    const nsHTMLReflowState& aReflowState,
+                                    nsReflowStatus&          aStatus,
+                                    nsIFrame*                aFrame,
+                                    nscoord                  aUserSupScriptShift,
+                                    nscoord                  aScriptSpace)
 {
   // the caller better be a mathml frame
   nsIMathMLFrame* mathMLFrame;
@@ -145,7 +151,9 @@ nsMathMLmsupFrame::PlaceSuperScript(nsPresContext*      aPresContext,
     NS_WARNING("invalid markup");
     return NS_STATIC_CAST(nsMathMLContainerFrame*, 
                           aFrame)->ReflowError(aRenderingContext, 
-                                               aDesiredSize);
+                                               aDesiredSize, 
+                                               aReflowState, 
+                                               aStatus);
   }
   GetReflowAndBoundingMetricsFor(baseFrame, baseSize, bmBase);
   GetReflowAndBoundingMetricsFor(supScriptFrame, supScriptSize, bmSupScript);

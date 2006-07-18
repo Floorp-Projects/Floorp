@@ -264,9 +264,11 @@ nsMathMLmfracFrame::FixInterFrameSpacing(nsHTMLReflowMetrics& aDesiredSize)
 }
 
 NS_IMETHODIMP
-nsMathMLmfracFrame::Place(nsIRenderingContext& aRenderingContext,
-                          PRBool               aPlaceOrigin,
-                          nsHTMLReflowMetrics& aDesiredSize)
+nsMathMLmfracFrame::Place(nsIRenderingContext&     aRenderingContext,
+                          PRBool                   aPlaceOrigin,
+                          nsHTMLReflowMetrics&     aDesiredSize,
+                          const nsHTMLReflowState& aReflowState,
+                          nsReflowStatus&          aStatus)
 {
   ////////////////////////////////////
   // Get the children's desired sizes
@@ -280,7 +282,7 @@ nsMathMLmfracFrame::Place(nsIRenderingContext& aRenderingContext,
   if (!frameNum || !frameDen || frameDen->GetNextSibling()) {
     // report an error, encourage people to get their markups in order
     NS_WARNING("invalid markup");
-    return ReflowError(aRenderingContext, aDesiredSize);
+    return ReflowError(aRenderingContext, aDesiredSize, aReflowState, aStatus);
   }
   GetReflowAndBoundingMetricsFor(frameNum, sizeNum, bmNum);
   GetReflowAndBoundingMetricsFor(frameDen, sizeDen, bmDen);

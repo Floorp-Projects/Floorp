@@ -202,8 +202,10 @@ public:
   // error handlers to provide a visual feedback to the user when an error
   // (typically invalid markup) was encountered during reflow.
   virtual nsresult
-  ReflowError(nsIRenderingContext& aRenderingContext,
-              nsHTMLReflowMetrics& aDesiredSize);
+  ReflowError(nsIRenderingContext&     aRenderingContext,
+              nsHTMLReflowMetrics&     aDesiredSize,
+              const nsHTMLReflowState& aReflowState,
+              nsReflowStatus&          aStatus);
 
   // helper method to reflow a child frame. We are inline frames, and we don't
   // know our positions until reflow is finished. That's why we ask the

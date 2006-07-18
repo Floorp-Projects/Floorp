@@ -45,12 +45,11 @@ struct nsPresentationData;
 struct nsEmbellishData;
 struct nsHTMLReflowMetrics;
 
-// IID for the nsIMathMLFrame interface (the IID was taken from IIDS.h) 
-/* a6cf9113-15b3-11d2-932e-00805f8add32 */
-#define NS_IMATHMLFRAME_IID   \
-{ 0xa6cf9113, 0x15b3, 0x11d2, \
-  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } }
-
+// a781ed45-4338-43cb-9739-a7a8f8418ff3
+#define NS_IMATHMLFRAME_IID \
+{ 0xa781ed45, 0x4338, 0x43cb, \
+  { 0x97, 0x39, 0xa7, 0xa8, 0xf8, 0x41, 0x8f, 0xf3 } }
+  
 static NS_DEFINE_IID(kIMathMLFrameIID, NS_IMATHMLFRAME_IID);
 
 // Abstract base class that provides additional methods for MathML frames
@@ -137,11 +136,17 @@ public:
   *        desired size and your ascent/descent info. Compute your desired size 
   *        using the information in your children's rectangles, and include any
   *        space you want for border/padding in the desired size you return.  
+  *
+  * @param aReflowState [out] forwarded argument from Reflow()
+  *
+  * @param aStatus [out] forwarded argument from Reflow()
   */
   NS_IMETHOD
-  Place(nsIRenderingContext& aRenderingContext,
-        PRBool               aPlaceOrigin,
-        nsHTMLReflowMetrics& aDesiredSize) = 0;
+  Place(nsIRenderingContext&     aRenderingContext,
+        PRBool                   aPlaceOrigin,
+        nsHTMLReflowMetrics&     aDesiredSize,
+        const nsHTMLReflowState& aReflowState,
+        nsReflowStatus&          aStatus) = 0;
 
  /* GetEmbellishData/SetEmbellishData :
   * Get/Set the mEmbellishData member variable.
