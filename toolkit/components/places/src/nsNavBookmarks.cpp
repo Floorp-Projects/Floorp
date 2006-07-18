@@ -217,6 +217,11 @@ nsNavBookmarks::Init()
 
   NS_NAMED_LITERAL_CSTRING(orderByPosition, " ORDER BY a.position");
 
+  // Select only folder children of a given folder (unsorted)
+  rv = dbConn->CreateStatement(selectFolderChildren,
+                               getter_AddRefs(mDBGetFolderChildren));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Select all children of a given folder, sorted by position
   rv = dbConn->CreateStatement(selectItemChildren +
                                NS_LITERAL_CSTRING(" UNION ALL ") +
@@ -583,12 +588,37 @@ nsNavBookmarks::RemoveFolder(PRInt64 aFolder)
     index = statement->AsInt32(1);
   }
 
-  buffer.AssignLiteral("DELETE FROM moz_bookmarks_containers WHERE id = ");
+  // Now locate all of the folder children, so we can recursively remove them.
+  nsTArray<PRInt64> folderChildren;
+  {
+    mozStorageStatementScoper scope(mDBGetFolderChildren);
+    rv = mDBGetChildren->BindInt64Parameter(0, aFolder);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRBool more;
+    while (NS_SUCCEEDED(rv = mDBGetChildren->ExecuteStep(&more)) && more) {
+      folderChildren.AppendElement(mDBGetChildren->AsInt64(kGetChildrenIndex_FolderChild));
+    }
+  }
+
+  for (PRUint32 i = 0; i < folderChildren.Length(); ++i) {
+    RemoveFolder(folderChildren[i]);
+  }
+
+  // Now remove the remaining items
+  buffer.AssignLiteral("DELETE FROM moz_bookmarks_assoc WHERE parent = ");
   buffer.AppendInt(aFolder);
   rv = dbConn->ExecuteSimpleSQL(buffer);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Remove the folder from its parent
   buffer.AssignLiteral("DELETE FROM moz_bookmarks_assoc WHERE folder_child = ");
+  buffer.AppendInt(aFolder);
+  rv = dbConn->ExecuteSimpleSQL(buffer);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // And remove the folder from the folder table
+  buffer.AssignLiteral("DELETE FROM moz_bookmarks_containers WHERE id = ");
   buffer.AppendInt(aFolder);
   rv = dbConn->ExecuteSimpleSQL(buffer);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -599,8 +629,8 @@ nsNavBookmarks::RemoveFolder(PRInt64 aFolder)
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  for (PRInt32 i = 0; i < mObservers.Count(); ++i) {
-    mObservers[i]->OnFolderRemoved(aFolder, parent, index);
+  for (PRInt32 j = 0; j < mObservers.Count(); ++j) {
+    mObservers[j]->OnFolderRemoved(aFolder, parent, index);
   }
 
   return NS_OK;
