@@ -85,6 +85,53 @@ sub bug_count {
     return $self->{'bug_count'};
 }
 
+sub remove_from_db {
+    my $self = shift;
+    my $dbh = Bugzilla->dbh;
+
+    # The version cannot be removed if there are bugs
+    # associated with it.
+    if ($self->bug_count) {
+        ThrowUserError("version_has_bugs", { nb => $self->bug_count });
+    }
+
+    $dbh->do(q{DELETE FROM versions WHERE product_id = ? AND value = ?},
+              undef, ($self->product_id, $self->name));
+}
+
+sub update {
+    my $self = shift;
+    my ($name, $product) = @_;
+    my $dbh = Bugzilla->dbh;
+
+    $name || ThrowUserError('version_not_specified');
+
+    # Remove unprintable characters
+    $name = clean_text($name);
+
+    return 0 if ($name eq $self->name);
+    my $version = new Bugzilla::Version($self->product_id, $name);
+
+    if ($version) {
+        ThrowUserError('version_already_exists',
+                       {'name' => $version->name,
+                        'product' => $product->name});
+    }
+
+    trick_taint($name);
+    $dbh->do("UPDATE bugs SET version = ?
+              WHERE version = ? AND product_id = ?", undef,
+              ($name, $self->name, $self->product_id));
+
+    $dbh->do("UPDATE versions SET value = ?
+              WHERE product_id = ? AND value = ?", undef,
+              ($name, $self->product_id, $self->name));
+
+    $self->{'value'} = $name;
+
+    return 1;
+}
+
 ###############################
 #####     Accessors        ####
 ###############################
@@ -109,6 +156,32 @@ sub check_version {
     return $version;
 }
 
+sub create {
+    my ($name, $product) = @_;
+    my $dbh = Bugzilla->dbh;
+
+    # Cleanups and validity checks
+    $name || ThrowUserError('version_blank_name');
+
+    # Remove unprintable characters
+    $name = clean_text($name);
+
+    my $version = new Bugzilla::Version($product->id, $name);
+    if ($version) {
+        ThrowUserError('version_already_exists',
+                       {'name' => $version->name,
+                        'product' => $product->name});
+    }
+
+    # Add the new version
+    trick_taint($name);
+    $dbh->do(q{INSERT INTO versions (value, product_id)
+               VALUES (?, ?)}, undef, ($name, $product->id));
+
+    $version = new Bugzilla::Version($product->id, $name);
+    return $version;
+}
+
 1;
 
 __END__
@@ -126,10 +199,16 @@ Bugzilla::Version - Bugzilla product version class.
     my $product_id = $version->product_id;
     my $value = $version->value;
 
+    $version->remove_from_db;
+
+    my $updated = $version->update($version_name, $product);
+
     my $version = $hash_ref->{'version_value'};
 
     my $version = Bugzilla::Version::check_version($product_obj,
                                                    'acme_version');
+
+    my $version = Bugzilla::Version::create($version_name, $product);
 
 =head1 DESCRIPTION
 
@@ -157,6 +236,23 @@ Version.pm represents a Product Version object.
 
  Returns:     Integer with the number of bugs.
 
+=item C<remove_from_db()>
+
+ Description: Removes the version from the database.
+
+ Params:      none.
+
+ Retruns:     none.
+
+=item C<update($name, $product)>
+
+ Description: Update the value of the version.
+
+ Params:      $name - String with the new version value.
+              $product - Bugzilla::Product object the version belongs to.
+
+ Returns:     An integer - 1 if the version has been updated, else 0.
+
 =back
 
 =head1 SUBROUTINES
@@ -171,6 +267,15 @@ Version.pm represents a Product Version object.
               $version_name - String with a version name.
 
  Returns:     Bugzilla::Version object.
+
+=item C<create($version_name, $product)>
+
+ Description: Create a new version for the given product.
+
+ Params:      $version_name - String with a version value.
+              $product - A Bugzilla::Product object.
+
+ Returns:     A Bugzilla::Version object.
 
 =back
 

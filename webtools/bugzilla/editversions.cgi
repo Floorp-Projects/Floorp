@@ -92,8 +92,7 @@ $user->can_see_product($product->name)
 unless ($action) {
     $vars->{'showbugcounts'} = $showbugcounts;
     $vars->{'product'} = $product;
-    $template->process("admin/versions/list.html.tmpl",
-                       $vars)
+    $template->process("admin/versions/list.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
 
     exit;
@@ -111,8 +110,7 @@ unless ($action) {
 if ($action eq 'add') {
 
     $vars->{'product'} = $product;
-    $template->process("admin/versions/create.html.tmpl",
-                       $vars)
+    $template->process("admin/versions/create.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
 
     exit;
@@ -126,29 +124,11 @@ if ($action eq 'add') {
 
 if ($action eq 'new') {
 
-    # Cleanups and validity checks
-    $version_name || ThrowUserError('version_blank_name');
+    my $version = Bugzilla::Version::create($version_name, $product);
 
-    # Remove unprintable characters
-    $version_name = clean_text($version_name);
-
-    my $version = new Bugzilla::Version($product->id, $version_name);
-    if ($version) {
-        ThrowUserError('version_already_exists',
-                       {'name' => $version->name,
-                        'product' => $product->name});
-    }
-
-    # Add the new version
-    trick_taint($version_name);
-    $dbh->do("INSERT INTO versions (value, product_id)
-              VALUES (?, ?)", undef, ($version_name, $product->id));
-
-    $version = new Bugzilla::Version($product->id, $version_name);
     $vars->{'version'} = $version;
     $vars->{'product'} = $product;
-    $template->process("admin/versions/created.html.tmpl",
-                       $vars)
+    $template->process("admin/versions/created.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
 
     exit;
@@ -165,13 +145,11 @@ if ($action eq 'new') {
 
 if ($action eq 'del') {
 
-    my $version = Bugzilla::Version::check_version($product,
-                                                   $version_name);
+    my $version = Bugzilla::Version::check_version($product, $version_name);
 
     $vars->{'version'} = $version;
     $vars->{'product'} = $product;
-    $template->process("admin/versions/confirm-delete.html.tmpl",
-                       $vars)
+    $template->process("admin/versions/confirm-delete.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
 
     exit;
@@ -185,24 +163,15 @@ if ($action eq 'del') {
 
 if ($action eq 'delete') {
 
-    my $version = Bugzilla::Version::check_version($product,
-                                                   $version_name);
-
-    # The version cannot be removed if there are bugs
-    # associated with it.
-    if ($version->bug_count) {
-        ThrowUserError("version_has_bugs",
-                       { nb => $version->bug_count });
-    }
-
-    $dbh->do("DELETE FROM versions WHERE product_id = ? AND value = ?",
-              undef, ($product->id, $version->name));
+    my $version = Bugzilla::Version::check_version($product, $version_name);
+    $version->remove_from_db;
 
     $vars->{'version'} = $version;
     $vars->{'product'} = $product;
 
     $template->process("admin/versions/deleted.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
+
     exit;
 }
 
@@ -216,14 +185,12 @@ if ($action eq 'delete') {
 
 if ($action eq 'edit') {
 
-    my $version = Bugzilla::Version::check_version($product,
-                                                   $version_name);
+    my $version = Bugzilla::Version::check_version($product, $version_name);
 
     $vars->{'version'} = $version;
     $vars->{'product'} = $product;
 
-    $template->process("admin/versions/edit.html.tmpl",
-                       $vars)
+    $template->process("admin/versions/edit.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
 
     exit;
@@ -237,55 +204,19 @@ if ($action eq 'edit') {
 
 if ($action eq 'update') {
 
-    $version_name || ThrowUserError('version_not_specified');
-
-    # Remove unprintable characters
-    $version_name = clean_text($version_name);
-
     my $version_old_name = trim($cgi->param('versionold') || '');
-    my $version_old =
-        Bugzilla::Version::check_version($product,
-                                         $version_old_name);
-
-    # Note that the order of this tests is important. If you change
-    # them, be sure to test for WHERE='$version' or WHERE='$versionold'
+    my $version =
+        Bugzilla::Version::check_version($product, $version_old_name);
 
     $dbh->bz_lock_tables('bugs WRITE', 'versions WRITE');
 
-    if ($version_name ne $version_old->name) {
-        
-        my $version = new Bugzilla::Version($product->id,
-                                            $version_name);
+    $vars->{'updated'} = $version->update($version_name, $product);
 
-        if ($version) {
-            ThrowUserError('version_already_exists',
-                           {'name' => $version->name,
-                            'product' => $product->name});
-        }
-        
-        trick_taint($version_name);
-        $dbh->do("UPDATE bugs
-                  SET version = ?
-                  WHERE version = ? AND product_id = ?", undef,
-                  ($version_name, $version_old->name, $product->id));
-        
-        $dbh->do("UPDATE versions
-                  SET value = ?
-                  WHERE product_id = ? AND value = ?", undef,
-                  ($version_name, $product->id, $version_old->name));
+    $dbh->bz_unlock_tables();
 
-        $vars->{'updated_name'} = 1;
-    }
-
-    $dbh->bz_unlock_tables(); 
-
-    my $version =
-        Bugzilla::Version::check_version($product,
-                                         $version_name);
     $vars->{'version'} = $version;
     $vars->{'product'} = $product;
-    $template->process("admin/versions/updated.html.tmpl",
-                       $vars)
+    $template->process("admin/versions/updated.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
 
     exit;
