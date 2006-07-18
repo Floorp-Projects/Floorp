@@ -141,6 +141,13 @@ NS_IMETHODIMP nsNavHistoryResultNode::GetTitle(nsAString& aTitle)
   return NS_OK;
 }
 
+/* attribute string folderType; */
+NS_IMETHODIMP nsNavHistoryResultNode::GetFolderType(nsAString& aFolderType)
+{
+  aFolderType.Truncate(0);
+  return NS_OK;
+}
+
 /* attribute PRInt32 accessCount; */
 NS_IMETHODIMP nsNavHistoryResultNode::GetAccessCount(PRInt32 *aAccessCount)
 {
@@ -412,6 +419,14 @@ nsNavHistoryQueryNode::GetFolderId() const
     id = 0;
   }
   return id;
+}
+
+/* attribute string folderType; */
+NS_IMETHODIMP 
+nsNavHistoryQueryNode::GetFolderType(nsAString& aFolderType)
+{
+  aFolderType = mFolderType;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -951,16 +966,7 @@ nsNavHistoryQueryNode::Rebuild()
   PRInt64 folderId = GetFolderId();
   if (folderId != 0) {
     nsNavBookmarks *bookmarks = nsNavBookmarks::GetBookmarksService();
-    mozIStorageStatement *statement = bookmarks->DBGetFolderInfo();
-    mozStorageStatementScoper scope(statement);
-
-    nsresult rv = statement->BindInt64Parameter(0, folderId);
-    NS_ENSURE_SUCCESS(rv, rv);
-    PRBool results;
-    rv = statement->ExecuteStep(&results);
-    NS_ASSERTION(results, "folder must be in db");
-
-    return bookmarks->FillFolderNode(statement, this);
+    return bookmarks->FillFolderNode(folderId, this);
   }
   return NS_OK;
 }
@@ -1007,6 +1013,12 @@ nsNavHistoryResult::nsNavHistoryResult(nsNavHistory* aHistoryService,
   }
   if (aOptions)
     aOptions->Clone(getter_AddRefs(mOptions));
+
+  PRInt64 folderId = 0;
+  GetFolderId(&folderId);
+  if (folderId != 0) {
+    nsNavBookmarks::GetBookmarksService()->FillFolderNode(folderId, this);
+  }
 
   mType = nsINavHistoryResult::RESULT_TYPE_QUERY;
   mVisibleIndex = -1;
