@@ -557,9 +557,12 @@ nsAnnotationService::GetPagesWithAnnotationCOMArray(
     rv = statement->GetUTF8String(0, uristring);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    // convert to a URI, in case of some invalid URI, just ignore this row
+    // so we can mostly continue.
     nsCOMPtr<nsIURI> uri;
     rv = NS_NewURI(getter_AddRefs(uri), uristring);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv))
+      continue;
     PRBool added = aResults->AppendObject(uri);
     NS_ENSURE_TRUE(added, NS_ERROR_OUT_OF_MEMORY);
   }
