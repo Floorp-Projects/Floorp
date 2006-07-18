@@ -2999,11 +2999,12 @@ nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
 
   // title
   nsCAutoString title;
+  title.SetIsVoid(PR_TRUE);
   if (! aOptions->ForceOriginalTitle()) {
     rv = aRow->GetUTF8String(kGetInfoIndex_UserTitle, title);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  if (title.IsEmpty()) {
+  if (title.IsVoid()) {
     rv = aRow->GetUTF8String(kGetInfoIndex_Title, title);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -3244,25 +3245,12 @@ nsNavHistory::SetPageTitleInternal(nsIURI* aURI, PRBool aIsUserTitle,
     }
 
     // page title
-    PRInt32 titleType;
-    rv = mDBGetURLPageInfo->GetTypeOfIndex(kGetInfoIndex_Title, &titleType);
+    rv = mDBGetURLPageInfo->GetString(kGetInfoIndex_Title, title);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (titleType == mozIStorageValueArray::VALUE_TYPE_NULL) {
-      title.SetIsVoid(PR_TRUE);
-    } else {
-      rv = mDBGetURLPageInfo->GetString(kGetInfoIndex_Title, title);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
 
     // user title
-    rv = mDBGetURLPageInfo->GetTypeOfIndex(kGetInfoIndex_UserTitle, &titleType);
+    rv = mDBGetURLPageInfo->GetString(kGetInfoIndex_UserTitle, userTitle);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (titleType == mozIStorageValueArray::VALUE_TYPE_NULL) {
-      userTitle.SetIsVoid(PR_TRUE);
-    } else {
-      rv = mDBGetURLPageInfo->GetString(kGetInfoIndex_UserTitle, userTitle);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
   }
 
   // It is actually common to set the title to be the same thing it used to
