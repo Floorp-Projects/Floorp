@@ -74,6 +74,7 @@ REQUIRES = xpcom \
            nkcache \
            widget \
            url-classifier \
+           microsummaries \
            $(NULL)
 
 LOCAL_INCLUDES = -I$(srcdir)/../../build
