@@ -35,7 +35,8 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY  pageInfo.securityTab    "Security">
-<!ENTITY  pageInfo.securityHeader "Security information for this page">
-<!ENTITY  pageInfo.view.label     "View">
-<!ENTITY  pageInfo.view.accesskey "V">
+<!ENTITY pageInfo.securityTab           "Security">
+<!ENTITY pageInfo.securityTab.accesskey "S">
+<!ENTITY pageInfo.securityHeader        "Security information for this page">
+<!ENTITY pageInfo.view.label            "View">
+<!ENTITY pageInfo.view.accesskey        "V">
