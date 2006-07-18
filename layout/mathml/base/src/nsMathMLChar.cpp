@@ -1191,7 +1191,7 @@ InitGlobals(nsPresContext* aPresContext)
   if (NS_FAILED(rv)) return rv;
 
   // Get the default list of mathfonts to be used for stretchy characters
-  nsFont font(nsnull, 0, 0, 0, 0, 0);
+  nsFont font("", 0, 0, 0, 0, 0);
   NS_NAMED_LITERAL_CSTRING(defaultKey, "font.mathfont-family");
   if (!GetPrefValue(prefBranch, defaultKey.get(), font.name)) {
     // fallback to the internal default list
