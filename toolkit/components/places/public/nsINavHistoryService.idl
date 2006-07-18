@@ -65,6 +65,12 @@ interface nsINavHistoryResultNode : nsISupports
   readonly attribute AUTF8String url;
 
   /**
+   * ID of the folder corresponding to this node.
+   * Only valid for RESULT_TYPE_FOLDER nodes, 0 for all other types.
+   */
+  readonly attribute PRInt64 folderId;
+
+  /**
    * Title of the web page, or name of the host.
    */
   readonly attribute AString title;
@@ -304,6 +310,12 @@ interface nsINavHistoryQuery : nsISupports
    */
   attribute AString domain;
   readonly attribute boolean hasDomain;
+
+  /**
+   * Limit results to items that are in all of the given folders.
+   */
+  //  void setFolders([const,array, size_is(folderCount)] in PRInt64 folders,
+  //                  in PRUint32 folderCount);
 };
 
 /**
