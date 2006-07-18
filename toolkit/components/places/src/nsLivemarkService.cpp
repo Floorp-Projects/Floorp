@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Annie Sullivan <annie.sullivan@gmail.com> (original author)
+ *   Joe Hughes <joe@retrovirus.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -321,6 +322,170 @@ nsLivemarkService::CreateLivemark(PRInt64 aFolder,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsLivemarkService::IsLivemark(PRInt64 aFolder, PRBool *aResult)
+{
+  nsresult rv;
+  *aResult = PR_FALSE;
+
+  nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+  NS_ENSURE_TRUE(bookmarks, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIURI> folderURI;
+  rv = bookmarks->GetFolderURI(aFolder, getter_AddRefs(folderURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mAnnotationService->HasAnnotation(
+      folderURI, NS_LITERAL_CSTRING(LMANNO_FEEDURI), aResult);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLivemarkService::GetSiteURI(PRInt64 aContainer, nsIURI **aURI)
+{
+  nsresult rv;
+
+  // First off, make sure we're dealing with a livemark ID.
+  PRBool isLivemark = PR_FALSE;
+  rv = IsLivemark(aContainer, &isLivemark);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!isLivemark)
+    return NS_ERROR_INVALID_ARG;
+
+  // Now convert the container ID to a container URI for annotation operations
+  nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+  NS_ENSURE_TRUE(bookmarks, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIURI> containerURI;
+  rv = bookmarks->GetFolderURI(aContainer, getter_AddRefs(containerURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // If there's no site URI annotation, return null
+  nsAutoString siteURIString;
+  rv = mAnnotationService->GetAnnotationString(
+      containerURI, NS_LITERAL_CSTRING(LMANNO_SITEURI), siteURIString);
+  if (NS_FAILED(rv)) {
+    *aURI = nsnull;
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIURI> siteURI;
+  rv = NS_NewURI(getter_AddRefs(siteURI), NS_ConvertUTF16toUTF8(siteURIString));
+  NS_ENSURE_SUCCESS(rv, rv);
+  *aURI = siteURI.get();
+  NS_IF_ADDREF(*aURI);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLivemarkService::SetSiteURI(PRInt64 aContainer, nsIURI *aSiteURI)
+{
+  nsresult rv;
+
+  // First off, make sure we're dealing with a livemark ID.
+  PRBool isLivemark = PR_FALSE;
+  rv = IsLivemark(aContainer, &isLivemark);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!isLivemark)
+    return NS_ERROR_INVALID_ARG;
+
+  // Now convert the container ID to a container URI for annotation operations
+  nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+  NS_ENSURE_TRUE(bookmarks, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIURI> containerURI;
+  rv = bookmarks->GetFolderURI(aContainer, getter_AddRefs(containerURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!aSiteURI) { // clear any existing site URI
+    rv = mAnnotationService->RemoveAnnotation(
+        containerURI, NS_LITERAL_CSTRING(LMANNO_SITEURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
+  }
+
+  nsCAutoString siteURISpec;
+  rv = aSiteURI->GetSpec(siteURISpec);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mAnnotationService->SetAnnotationString(
+      containerURI,
+      NS_LITERAL_CSTRING(LMANNO_SITEURI),
+      NS_ConvertUTF8toUTF16(siteURISpec),
+      0,
+      nsIAnnotationService::EXPIRE_NEVER);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLivemarkService::GetFeedURI(PRInt64 aContainer, nsIURI **aURI)
+{
+  nsresult rv;
+
+  // Convert the container ID to a container URI for annotation operations
+  nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+  NS_ENSURE_TRUE(bookmarks, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIURI> containerURI;
+  rv = bookmarks->GetFolderURI(aContainer, getter_AddRefs(containerURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // If there's no feed URI annotation, that means this isn't a livemark
+  nsAutoString feedURIString;
+  rv = mAnnotationService->GetAnnotationString(
+      containerURI, NS_LITERAL_CSTRING(LMANNO_FEEDURI), feedURIString);
+  if (NS_FAILED(rv))
+    return NS_ERROR_INVALID_ARG;
+
+  nsCOMPtr<nsIURI> feedURI;
+  rv = NS_NewURI(getter_AddRefs(feedURI), NS_ConvertUTF16toUTF8(feedURIString));
+  NS_ENSURE_SUCCESS(rv, rv);
+  *aURI = feedURI.get();
+  NS_IF_ADDREF(*aURI);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLivemarkService::SetFeedURI(PRInt64 aContainer, nsIURI *aFeedURI)
+{
+  nsresult rv;
+
+  if (!aFeedURI) // a livemark folder with no feed URI is an illegal state
+    return NS_ERROR_NULL_POINTER;
+
+  // Convert the container ID to a container URI for annotation operations
+  nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+  NS_ENSURE_TRUE(bookmarks, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIURI> containerURI;
+  rv = bookmarks->GetFolderURI(aContainer, getter_AddRefs(containerURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCAutoString feedURISpec;
+  rv = aFeedURI->GetSpec(feedURISpec);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mAnnotationService->SetAnnotationString(
+      containerURI,
+      NS_LITERAL_CSTRING(LMANNO_FEEDURI),
+      NS_ConvertUTF8toUTF16(feedURISpec),
+      0,
+      nsIAnnotationService::EXPIRE_NEVER);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Now update our internal table
+  PRInt32 livemarkIndex = GetLivemarkIndex(aContainer);
+  NS_ENSURE_TRUE(livemarkIndex == -1, NS_ERROR_FAILURE);
+
+  mLivemarks[livemarkIndex]->feedURI = aFeedURI;
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsLivemarkService::OnContainerOpening(
@@ -451,16 +616,20 @@ nsLivemarkService::OnContainerMoved(PRInt64 aContainer,
   rv = mAnnotationService->GetAnnotationString(oldURI,
                                                NS_LITERAL_CSTRING(LMANNO_SITEURI),
                                                siteURIString);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mAnnotationService->RemoveAnnotation(oldURI,
-                                            NS_LITERAL_CSTRING(LMANNO_SITEURI));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mAnnotationService->SetAnnotationString(newURI,
-                                               NS_LITERAL_CSTRING(LMANNO_SITEURI),
-                                               siteURIString,
-                                               0,
-                                               nsIAnnotationService::EXPIRE_NEVER);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // rv will be failure if no site URI annotation is present
+  if (NS_SUCCEEDED(rv)) {
+    rv = mAnnotationService->RemoveAnnotation(
+        oldURI,
+        NS_LITERAL_CSTRING(LMANNO_SITEURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mAnnotationService->SetAnnotationString(
+        newURI,
+        NS_LITERAL_CSTRING(LMANNO_SITEURI),
+        siteURIString,
+        0,
+        nsIAnnotationService::EXPIRE_NEVER);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
   return NS_OK;
 }
 
@@ -597,12 +766,23 @@ nsLivemarkService::ReloadAllLivemarks()
 NS_IMETHODIMP
 nsLivemarkService::ReloadLivemarkFolder(PRInt64 aFolderId)
 {
-  nsresult rv = NS_OK;
+  PRInt32 folderIndex = GetLivemarkIndex(aFolderId);
+  if (folderIndex == -1)
+    return NS_ERROR_INVALID_ARG;
+
+  return UpdateLivemarkChildren(folderIndex, PR_TRUE);
+}
+
+// Returns the index into mLivemarks that corresponds to the given
+// folder ID, or -1 if not found.
+PRInt32
+nsLivemarkService::GetLivemarkIndex(PRInt64 aFolderId)
+{
   for (PRUint32 i = 0; i < mLivemarks.Length(); i++) {
     if (mLivemarks[i]->folderId == aFolderId) {
-      rv = UpdateLivemarkChildren(i, PR_TRUE);
-      break;
+      return i;
     }
   }
-  return rv;
+
+  return -1;
 }
