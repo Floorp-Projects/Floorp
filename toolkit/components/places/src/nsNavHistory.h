@@ -300,16 +300,15 @@ public:
    */
   static nsNavHistory* GetHistoryService()
   {
-    if (gHistoryService)
-      return gHistoryService;
+    if (! gHistoryService) {
+      // don't want the return value, since that's the interface. We want the
+      // pointer to the implementation.
+      do_GetService("@mozilla.org/browser/nav-history;1");
 
-    // don't want the return value, since that's the interface. We want the
-    // pointer to the implementation.
-    do_GetService("@mozilla.org/browser/nav-history;1");
-
-    // our constructor should have set the static variable. If it didn't,
-    // something is wrong.
-    NS_ASSERTION(gHistoryService, "History service creation failed");
+      // our constructor should have set the static variable. If it didn't,
+      // something is wrong.
+      NS_ASSERTION(gHistoryService, "History service creation failed");
+    }
     return gHistoryService;
   }
 
