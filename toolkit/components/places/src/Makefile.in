@@ -64,6 +64,7 @@ REQUIRES = xpcom \
            autocomplete \
            storage \
            uconv \
+           txmgr \
            $(NULL)
 
 LOCAL_INCLUDES = -I$(srcdir)/../../build
