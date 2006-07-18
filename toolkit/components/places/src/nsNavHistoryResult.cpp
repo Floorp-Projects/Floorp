@@ -644,6 +644,10 @@ nsNavHistoryQueryNode::OnItemRemoved(nsIURI *aBookmark,
                                      PRInt64 aFolder, PRInt32 aIndex)
 {
   if (FolderId() == aFolder) {
+    if (aIndex < 0 || aIndex >= mChildren.Count()) {
+      return NS_ERROR_INVALID_ARG;
+    }
+
     // If we're not expanded, we can just invalidate our child list
     // and rebuild it the next time we're opened.
     if (!mExpanded) {
@@ -817,6 +821,10 @@ nsNavHistoryQueryNode::OnFolderRemoved(PRInt64 aFolder,
                                        PRInt64 aParent, PRInt32 aIndex)
 {
   if (FolderId() == aParent) {
+    if (aIndex < 0 || aIndex >= mChildren.Count()) {
+      return NS_ERROR_INVALID_ARG;
+    }
+
     // If we're not expanded, we can just invalidate our child list
     // and rebuild it the next time we're opened.
     if (!mExpanded) {
