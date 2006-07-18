@@ -1029,6 +1029,8 @@ nsNavHistory::VacuumDB(PRTime aTimeAgo)
     // find the threshold for deleting old visits
     PRTime now = GetNow();
     PRInt64 expirationTime = now - aTimeAgo;
+    if (expirationTime < 0)
+      expirationTime = 0;
 
     // delete expired visits
     nsCOMPtr<mozIStorageStatement> visitDelete;
@@ -2781,11 +2783,18 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     if (NS_SUCCEEDED(rv))
       prefService->SavePrefFile(nsnull);
 
+    // Prevent Int64 overflow for people that type in huge numbers.
+    // This number is 2^63 / 24 / 60 / 60 / 1000000 (reversing the math below)
+    PRInt64 expireDays = mExpireDays;
+    const PRInt64 maxDays = 106751991;
+    if (mExpireDays > maxDays)
+      expireDays = maxDays;
+
     // compute how long ago to expire from
     const PRInt64 secsPerDay = 24*60*60;
     const PRInt64 usecsPerSec = 1000000;
     const PRInt64 usecsPerDay = secsPerDay * usecsPerSec;
-    const PRInt64 expireUsecsAgo = mExpireDays * usecsPerDay;
+    const PRInt64 expireUsecsAgo = expireDays * usecsPerDay;
 
     // FIXME: should we compress sometimes? It's slow, so we shouldn't do it
     // every time.
