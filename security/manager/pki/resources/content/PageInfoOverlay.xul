@@ -236,7 +236,8 @@
   ]]>
   </script>
   <tabs id="tabs">
-    <tab id="securityTab" label="&pageInfo.securityTab;"/>
+    <tab id="securityTab" label="&pageInfo.securityTab;"
+         accesskey="&pageInfo.securityTab.accesskey;"/>
   </tabs>
   <tabpanels id="tabpanels">
     <vbox id="securityPanel" flex="1">
