@@ -342,9 +342,22 @@ interface nsINavBookmarksService : nsISupports
   boolean getFolderReadonly(in PRInt64 folder);
 
   /**
-   * Returns true if the given URI is in any bookmark folder.
+   * Returns true if the given URI is in any bookmark folder. If you want the
+   * results to be redirect-aware, use getBookmarkedURIFor()
    */
   boolean isBookmarked(in nsIURI uri);
+
+  /**
+   * Used to see if the given URI is bookmarked, or any page that redirected to
+   * it is bookmarked. For example, if I bookmark "mozilla.org" by manually
+   * typing it in, and follow the bookmark, I will get redirected to
+   * "www.mozilla.org". Logically, this new page is also bookmarked. This
+   * function, if given "www.mozilla.org", will return the URI of the bookmark,
+   * in this case "mozilla.org".
+   *
+   * If there is no bookmarked page found, it will return NULL.
+   */
+  nsIURI getBookmarkedURIFor(in nsIURI uri);
 
   /**
    * Returns the list of folder ids that contain the given URI.
