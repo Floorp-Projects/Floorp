@@ -1070,8 +1070,7 @@ nsNavHistoryResult::nsNavHistoryResult(nsNavHistory* aHistoryService,
                                        PRUint32 aQueryCount,
                                        nsNavHistoryQueryOptions* aOptions)
   : mBundle(aHistoryBundle), mHistoryService(aHistoryService),
-    mCollapseDuplicates(PR_TRUE),
-    mCurrentSort(nsINavHistoryQueryOptions::SORT_BY_NONE)
+    mCollapseDuplicates(PR_TRUE)
 {
   NS_ASSERTION(aOptions, "must have options!");
   // Fill saved source queries with copies of the original (the caller might
@@ -1091,8 +1090,7 @@ nsNavHistoryResult::nsNavHistoryResult(nsNavHistory* aHistoryService,
     }
     mQueryCount = aQueryCount;
   }
-  if (aOptions)
-    aOptions->Clone(getter_AddRefs(mOptions));
+  aOptions->Clone(getter_AddRefs(mOptions));
 
   PRInt64 folderId = 0;
   GetFolderId(&folderId);
@@ -1197,7 +1195,9 @@ nsNavHistoryResult::RecursiveSort(PRUint32 aSortingMode)
   if (aSortingMode > nsINavHistoryQueryOptions::SORT_BY_VISITCOUNT_DESCENDING)
     return NS_ERROR_INVALID_ARG;
 
-  mCurrentSort = aSortingMode;
+  NS_ASSERTION(mOptions, "Options should always be present for a root query");
+  mOptions->SetSortingMode(aSortingMode);
+
   RecursiveSortArray(mChildren, aSortingMode);
 
   // This sorting function is called from two contexts. First, when everything
@@ -1436,10 +1436,11 @@ nsNavHistoryResult::SetTreeSortingIndicator()
   }
 
   // set new sorting indicator by looking through all columns for ours
-  if (mCurrentSort == nsINavHistoryQueryOptions::SORT_BY_NONE)
+  NS_ASSERTION(mOptions, "Options should always be present for a root query");
+  if (mOptions->SortingMode() == nsINavHistoryQueryOptions::SORT_BY_NONE)
     return;
   PRBool desiredIsDescending;
-  ColumnType desiredColumn = SortTypeToColumnType(mCurrentSort,
+  ColumnType desiredColumn = SortTypeToColumnType(mOptions->SortingMode(),
                                                   &desiredIsDescending);
   PRInt32 colCount;
   rv = columns->GetCount(&colCount);
@@ -2222,29 +2223,31 @@ NS_IMETHODIMP nsNavHistoryResult::CycleHeader(nsITreeColumn *col)
   PRInt32 colIndex;
   col->GetIndex(&colIndex);
 
+  NS_ASSERTION(mOptions, "Options should always be present for a root query");
+  PRInt32 oldSort = mOptions->SortingMode();
   PRInt32 newSort;
   switch (GetColumnType(col)) {
     case Column_Title:
-      if (mCurrentSort == nsINavHistoryQueryOptions::SORT_BY_TITLE_ASCENDING)
+      if (oldSort == nsINavHistoryQueryOptions::SORT_BY_TITLE_ASCENDING)
         newSort = nsINavHistoryQueryOptions::SORT_BY_TITLE_DESCENDING;
       else
         newSort = nsINavHistoryQueryOptions::SORT_BY_TITLE_ASCENDING;
       break;
     case Column_URL:
-      if (mCurrentSort == nsINavHistoryQueryOptions::SORT_BY_URL_ASCENDING)
+      if (oldSort == nsINavHistoryQueryOptions::SORT_BY_URL_ASCENDING)
         newSort = nsINavHistoryQueryOptions::SORT_BY_URL_DESCENDING;
       else
         newSort = nsINavHistoryQueryOptions::SORT_BY_URL_ASCENDING;
       break;
     case Column_Date:
-      if (mCurrentSort == nsINavHistoryQueryOptions::SORT_BY_DATE_ASCENDING)
+      if (oldSort == nsINavHistoryQueryOptions::SORT_BY_DATE_ASCENDING)
         newSort = nsINavHistoryQueryOptions::SORT_BY_DATE_DESCENDING;
       else
         newSort = nsINavHistoryQueryOptions::SORT_BY_DATE_ASCENDING;
       break;
     case Column_VisitCount:
       // visit count default is unusual because it is descending
-      if (mCurrentSort == nsINavHistoryQueryOptions::SORT_BY_VISITCOUNT_DESCENDING)
+      if (oldSort == nsINavHistoryQueryOptions::SORT_BY_VISITCOUNT_DESCENDING)
         newSort = nsINavHistoryQueryOptions::SORT_BY_VISITCOUNT_ASCENDING;
       else
         newSort = nsINavHistoryQueryOptions::SORT_BY_VISITCOUNT_DESCENDING;
