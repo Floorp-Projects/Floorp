@@ -1095,11 +1095,17 @@ nsNavHistoryContainerResultNode::RemoveChildAt(PRInt32 aIndex,
 
   PRBool isContainer = mChildren[aIndex]->IsContainer();
   PRBool isContainerOpen = PR_FALSE;
-  PRInt32 visibleRows = 1;
-  if (isContainer) {
-    isContainerOpen = mChildren[aIndex]->GetAsContainer()->mExpanded;
-    if (isContainerOpen)
-      visibleRows = result->CountVisibleRowsForItem(mChildren[aIndex]);
+  PRInt32 visibleRows;
+  if (AreChildrenVisible()) {
+    if (isContainer) {
+      isContainerOpen = mChildren[aIndex]->GetAsContainer()->mExpanded;
+      if (isContainerOpen)
+        visibleRows = result->CountVisibleRowsForItem(mChildren[aIndex]);
+    } else {
+      visibleRows = 1;
+    }
+  } else {
+    visibleRows = 0;
   }
   PRInt32 childVisibleIndex = mChildren[aIndex]->mVisibleIndex;
 
@@ -1115,7 +1121,7 @@ nsNavHistoryContainerResultNode::RemoveChildAt(PRInt32 aIndex,
 
   // remove from our list and notify the tree
   mChildren.RemoveObjectAt(aIndex);
-  if (AreChildrenVisible() && childVisibleIndex >= 0)
+  if (visibleRows && childVisibleIndex >= 0)
     result->RowsRemoved(childVisibleIndex, visibleRows);
 
   if (! aIsTemporary) {
