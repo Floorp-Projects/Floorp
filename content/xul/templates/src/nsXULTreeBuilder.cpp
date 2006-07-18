@@ -1587,11 +1587,15 @@ nsXULTreeBuilder::OpenSubtreeForQuerySet(nsTreeRows::Subtree* aSubtree,
     rv = results->HasMoreElements(&hasMoreResults);
 
     for (; NS_SUCCEEDED(rv) && hasMoreResults;
-           rv = results->HasMoreElements(&hasMoreResults)){
-        nsCOMPtr<nsIXULTemplateResult> nextresult;
-        rv = results->GetNext(getter_AddRefs(nextresult));
+           rv = results->HasMoreElements(&hasMoreResults)) {
+        nsCOMPtr<nsISupports> nr;
+        rv = results->GetNext(getter_AddRefs(nr));
         if (NS_FAILED(rv))
             return rv;
+
+        nsCOMPtr<nsIXULTemplateResult> nextresult = do_QueryInterface(nr);
+        if (!nextresult)
+            return NS_ERROR_UNEXPECTED;
 
         nsCOMPtr<nsIRDFResource> resultid;
         rv = GetResultResource(nextresult, getter_AddRefs(resultid));
