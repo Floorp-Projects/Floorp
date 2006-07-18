@@ -197,6 +197,13 @@ nsMorkHistoryImporter::ImportHistory(nsIFile *aFile,
 {
   NS_ENSURE_TRUE(aFile && aHistory, NS_ERROR_NULL_POINTER);
 
+  // Check that the file exists before we try to open it
+  PRBool exists;
+  aFile->Exists(&exists);
+  if (!exists) {
+    return NS_OK;
+  }
+  
   // Read in the mork file
   nsMorkReader reader;
   nsresult rv = reader.Init();
