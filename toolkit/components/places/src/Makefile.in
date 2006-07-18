@@ -66,11 +66,12 @@ REQUIRES = xpcom \
            uconv \
            $(NULL)
 
-LOCAL_INCLUDES = -I$(DEPTH)/toolkit/components/autocomplete/src
+LOCAL_INCLUDES = -I$(srcdir)/../../build
 
 CPPSRCS = \
           nsAnnotationService.cpp \
           nsNavHistory.cpp \
+          nsNavBookmarks.cpp \
           $(NULL)
 
 include $(topsrcdir)/config/rules.mk
