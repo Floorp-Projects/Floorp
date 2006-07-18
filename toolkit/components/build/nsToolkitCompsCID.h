@@ -82,6 +82,27 @@
 
 #define NS_SCRIPTABLEUNESCAPEHTML_CONTRACTID "@mozilla.org/feed-unescapehtml;1"
 
+#define NS_NAVHISTORYSERVICE_CONTRACTID \
+  "@mozilla.org/browser/nav-history-service;1"
+
+#define NS_NAVHISTORYRESULTTREEVIEWER_CONTRACTID \
+  "@mozilla.org/browser/nav-history/result-tree-viewer;1"
+
+#define NS_ANNOTATIONSERVICE_CONTRACTID \
+  "@mozilla.org/browser/annotation-service;1"
+
+#define NS_NAVBOOKMARKSSERVICE_CONTRACTID \
+  "@mozilla.org/browser/nav-bookmarks-service;1"
+
+#define NS_LIVEMARKSERVICE_CONTRACTID \
+  "@mozilla.org/browser/livemark-service;1"
+
+#define NS_MORKHISTORYIMPORTER_CONTRACTID \
+  "@mozilla.org/browser/history-importer;1"
+
+#define NS_FAVICONSERVICE_CONTRACTID \
+  "@mozilla.org/browser/favicon-service;1"
+
 /////////////////////////////////////////////////////////////////////////////
 
 // {A0CCAAF8-09DA-44D8-B250-9AC3E93C8117}
@@ -122,7 +143,7 @@
 // {e7f70966-9a37-48d7-8aeb-35998f31090e}
 #define NS_TYPEAHEADFIND_CID \
 { 0xe7f70966, 0x9a37, 0x48d7, { 0x8a, 0xeb, 0x35, 0x99, 0x8f, 0x31, 0x09, 0x0e} }
-
+  
 // {5eb7c3c1-ec1f-4007-87cc-eefb37d68ce6}
 #define NS_URLCLASSIFIERDBSERVICE_CID \
 { 0x5eb7c3c1, 0xec1f, 0x4007, { 0x87, 0xcc, 0xee, 0xfb, 0x37, 0xd6, 0x8c, 0xe6} }
@@ -134,3 +155,24 @@
 // {10f2f5f0-f103-4901-980f-ba11bd70d60d}
 #define NS_SCRIPTABLEUNESCAPEHTML_CID  \
 { 0x10f2f5f0, 0xf103, 0x4901, { 0x98, 0x0f, 0xba, 0x11, 0xbd, 0x70, 0xd6, 0x0d} }
+
+#define NS_NAVHISTORYSERVICE_CID \
+{ 0x88cecbb7, 0x6c63, 0x4b3b, { 0x8c, 0xd4, 0x84, 0xf3, 0xb8, 0x22, 0x8c, 0x69 } }
+
+#define NS_NAVHISTORYRESULTTREEVIEWER_CID \
+{ 0x2ea8966f, 0x0671, 0x4c02, { 0x9c, 0x70, 0x94, 0x59, 0x56, 0xd4, 0x54, 0x34 } }
+
+#define NS_ANNOTATIONSERVICE_CID \
+{ 0x5e8d4751, 0x1852, 0x434b, { 0xa9, 0x92, 0x2c, 0x6d, 0x2a, 0x25, 0xfa, 0x46 } }
+
+#define NS_NAVBOOKMARKSSERVICE_CID \
+{ 0x9de95a0c, 0x39a4, 0x4d64, {0x9a, 0x53, 0x17, 0x94, 0x0d, 0xd7, 0xca, 0xbb}}
+
+#define NS_LIVEMARKSERVICE_CID \
+{ 0xb1257934, 0x86cf, 0x4143, { 0x83, 0x86, 0x73, 0x4a, 0xc3, 0x52, 0xb6, 0xba } }
+
+#define NS_MORKHISTORYIMPORTER_CID \
+{ 0x428e6d12, 0x9c6d, 0x436f, {0xb7, 0xa3, 0x6c, 0xa5, 0xf4, 0x80, 0x92, 0x12}}
+
+#define NS_FAVICONSERVICE_CID \
+{ 0x984e3259, 0x9266, 0x49cf, { 0xb6, 0x05, 0x60, 0xb0, 0x22, 0xa0, 0x07, 0x56 } }

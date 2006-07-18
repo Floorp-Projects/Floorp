@@ -44,7 +44,7 @@
 #include "nsITransaction.h"
 #include "nsNavHistory.h"
 #include "nsNavHistoryResult.h" // need for Int64 hashtable
-#include "nsBrowserCompsCID.h"
+#include "nsToolkitCompsCID.h"
 
 class nsIOutputStream;
 

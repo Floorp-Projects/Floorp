@@ -901,6 +901,7 @@ browser/components/history/Makefile
 browser/components/migration/Makefile
 browser/components/migration/public/Makefile
 browser/components/migration/src/Makefile
+browser/components/places/Makefile
 browser/components/preferences/Makefile
 browser/components/search/Makefile
 browser/components/sidebar/Makefile
@@ -975,6 +976,9 @@ toolkit/components/history/src/Makefile
 toolkit/components/passwordmgr/Makefile
 toolkit/components/passwordmgr/base/Makefile
 toolkit/components/passwordmgr/resources/Makefile
+toolkit/components/places/Makefile
+toolkit/components/places/public/Makefile
+toolkit/components/places/src/Makefile
 toolkit/components/printing/Makefile
 toolkit/components/satchel/Makefile
 toolkit/components/satchel/public/Makefile
