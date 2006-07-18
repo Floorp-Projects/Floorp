@@ -83,22 +83,6 @@
 #include "nsNavBookmarks.h"
 
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
-
-// These are defined in nsLivemarkService.cpp
-extern nsIRDFResource       *kLMRDF_type;
-
-extern nsIRDFResource       *kLMRSS09_channel;
-extern nsIRDFResource       *kLMRSS09_item;
-extern nsIRDFResource       *kLMRSS09_title;
-extern nsIRDFResource       *kLMRSS09_link;
-
-extern nsIRDFResource       *kLMRSS10_channel;
-extern nsIRDFResource       *kLMRSS10_items;
-extern nsIRDFResource       *kLMRSS10_title;
-extern nsIRDFResource       *kLMRSS10_link;
-
-extern nsIRDFResource       *kLMDC_date;
-
 static NS_DEFINE_CID(kRDFContainerCID,            NS_RDFCONTAINER_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,   NS_RDFINMEMORYDATASOURCE_CID);
 
@@ -360,20 +344,20 @@ nsLivemarkLoadListener::TryParseAsRDF ()
 
   nsCOMPtr<nsIRDFResource> channelResource = nsnull;
 
-  rv = ds->GetSource(kLMRDF_type, kLMRSS10_channel, PR_TRUE, getter_AddRefs(channelResource));
+  rv = ds->GetSource(mLivemarkService->mLMRDF_type, mLivemarkService->mLMRSS10_channel, PR_TRUE, getter_AddRefs(channelResource));
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
   if (rv == NS_OK) {
-    RSS_items = kLMRSS10_items;
-    RSS_title = kLMRSS10_title;
-    RSS_link = kLMRSS10_link;
+    RSS_items = mLivemarkService->mLMRSS10_items;
+    RSS_title = mLivemarkService->mLMRSS10_title;
+    RSS_link = mLivemarkService->mLMRSS10_link;
   } else {
     // try RSS 0.9
-    rv = ds->GetSource(kLMRDF_type, kLMRSS09_channel, PR_TRUE, getter_AddRefs(channelResource));
+    rv = ds->GetSource(mLivemarkService->mLMRDF_type, mLivemarkService->mLMRSS09_channel, PR_TRUE, getter_AddRefs(channelResource));
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
     if (rv == NS_OK) {
       RSS_items = nsnull;
-      RSS_title = kLMRSS09_title;
-      RSS_link = kLMRSS09_link;
+      RSS_title = mLivemarkService->mLMRSS09_title;
+      RSS_link = mLivemarkService->mLMRSS09_link;
     }
   }
 
@@ -405,7 +389,7 @@ nsLivemarkLoadListener::TryParseAsRDF ()
     // and found a channel, then it's possibly RSS 0.9.  For RSS 0.9,
     // we know that each item will be an <item ...>, so we get everything
     // that has a type of item.
-    rv = ds->GetSources(kLMRDF_type, kLMRSS09_item, PR_TRUE, getter_AddRefs(itemsEnumerator));
+    rv = ds->GetSources(mLivemarkService->mLMRDF_type, mLivemarkService->mLMRSS09_item, PR_TRUE, getter_AddRefs(itemsEnumerator));
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
   }
 
@@ -524,7 +508,7 @@ nsLivemarkLoadListener::HandleRDFItem (nsIRDFDataSource *aDS, nsIRDFResource *aI
   nsCOMPtr<nsIRDFNode> titleNode;
   rv = aDS->GetTarget (aItem, aTitleResource, PR_TRUE, getter_AddRefs(titleNode));
   if (rv == NS_RDF_NO_VALUE) {
-    rv = aDS->GetTarget (aItem, kLMDC_date, PR_TRUE, getter_AddRefs(titleNode));
+    rv = aDS->GetTarget (aItem, mLivemarkService->mLMDC_date, PR_TRUE, getter_AddRefs(titleNode));
   }
   if (NS_FAILED(rv) || rv == NS_RDF_NO_VALUE) return NS_ERROR_FAILURE;
 
