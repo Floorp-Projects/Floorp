@@ -66,6 +66,8 @@ static nsresult ParseQueryTimeString(const nsCString& aString,
 #define QUERYKEY_RESULT_TYPE "type"
 #define QUERYKEY_EXPAND_PLACES "expandplaces"
 #define QUERYKEY_FORCE_ORIGINAL_TITLE "originalTitle"
+#define QUERYKEY_INCLUDE_HIDDEN "includeHidden"
+#define QUERYKEY_MAX_RESULTS "maxResults"
 
 inline void AppendAmpersandIfNonempty(nsACString& aString)
 {
@@ -301,6 +303,19 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
     AppendAmpersandIfNonempty(aQueryString);
     aQueryString += NS_LITERAL_CSTRING(QUERYKEY_FORCE_ORIGINAL_TITLE);
     aQueryString.AppendLiteral("=1");
+  }
+
+  // include hidden
+  if (options->IncludeHidden()) {
+    AppendAmpersandIfNonempty(aQueryString);
+    aQueryString += NS_LITERAL_CSTRING(QUERYKEY_INCLUDE_HIDDEN "=1");
+  }
+
+  // max results
+  if (options->MaxResults()) {
+    AppendAmpersandIfNonempty(aQueryString);
+    aQueryString += NS_LITERAL_CSTRING(QUERYKEY_MAX_RESULTS "=");
+    AppendInt32(aQueryString, options->MaxResults());
   }
 
   return NS_OK;
@@ -613,6 +628,27 @@ nsNavHistory::TokensToQueries(const nsVoidArray& aTokens,
         aOptions->SetForceOriginalTitle(forceOriginal);
       } else {
         NS_WARNING("Invalid value for forceOriginal");
+      }
+
+    } else if (kvp->key.EqualsLiteral(QUERYKEY_INCLUDE_HIDDEN)) {
+
+      // include hidden
+      PRBool includeHidden;
+      rv = ParseQueryBooleanString(kvp->value, &includeHidden);
+      if (NS_SUCCEEDED(rv)) {
+        aOptions->SetIncludeHidden(includeHidden);
+      } else {
+        NS_WARNING("Invalid value for includeHidden");
+      }
+
+    } else if (kvp->key.EqualsLiteral(QUERYKEY_MAX_RESULTS)) {
+
+      // max results
+      PRUint32 max = kvp->value.ToInteger((PRInt32*)&rv);
+      if (NS_SUCCEEDED(rv)) {
+        aOptions->SetMaxResults(max);
+      } else {
+        NS_WARNING("Max number of results is not a valid number, ignoring");
       }
 
     } else {
