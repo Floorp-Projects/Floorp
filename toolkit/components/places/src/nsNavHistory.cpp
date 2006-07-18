@@ -82,6 +82,10 @@
 // This is 15 minutes           m    s/m  us/s
 #define RECENT_EVENT_THRESHOLD (15 * 60 * 1000000)
 
+// Microseconds ago to look for redirects when updating bookmarks. Used to
+// compute the threshold for nsNavBookmarks::AddBookmarkToHash
+#define BOOKMARK_REDIRECT_TIME_THRESHOLD (2 * 60 * 100000)
+
 // The maximum number of things that we will store in the recent events list
 // before calling ExpireNonrecentEvents. This number should be big enough so it
 // is very difficult to get that many unconsumed events (for example, typed but
@@ -2360,10 +2364,29 @@ nsNavHistory::AddURI(nsIURI *aURI, PRBool aRedirect,
 {
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
+  PRInt64 redirectBookmark = 0;
   PRInt64 visitID, sessionID;
   nsresult rv = AddVisitChain(aURI, aToplevel, aRedirect, aReferrer,
-                              &visitID, &sessionID);
+                              &visitID, &sessionID, &redirectBookmark);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // The bookmark cache of redirects may be out-of-date with this addition, so
+  // we need to update it. The issue here is if they bookmark "mozilla.org" by
+  // typing it in without ever having visited "www.mozilla.org". They will then
+  // get redirected to the latter, and we need to add mozilla.org ->
+  // www.mozilla.org to the bookmark hashtable.
+  //
+  // AddVisitChain will put the spec of a bookmarked URI if it encounters one
+  // into bookmarkURI. If this is non-empty, we know that something has happened
+  // with a bookmark and we should probably go update it.
+  if (redirectBookmark) {
+    nsNavBookmarks* bookmarkService = nsNavBookmarks::GetBookmarksService();
+    if (bookmarkService) {
+      PRTime now = GetNow();
+      bookmarkService->AddBookmarkToHash(redirectBookmark,
+                                         now - BOOKMARK_REDIRECT_TIME_THRESHOLD);
+    }
+  }
 
   transaction.Commit();
   return NS_OK;
@@ -2383,11 +2406,17 @@ nsNavHistory::AddURI(nsIURI *aURI, PRBool aRedirect,
 //    save them in mRecentRedirects. This function will add all of them for a
 //    given destination page when that page is actually visited.)
 //    See GetRedirectFor for more information about how redirects work.
+//
+//    aRedirectBookmark should be empty when this function is first called. If
+//    there are any redirects that are bookmarks the specs will be placed in
+//    this buffer. The caller can then determine if any bookmarked items were
+//    visited so it knows whether to update the bookmark service's redirect
+//    hashtable.
 
 nsresult
 nsNavHistory::AddVisitChain(nsIURI* aURI, PRBool aToplevel, PRBool aIsRedirect,
                             nsIURI* aReferrer, PRInt64* aVisitID,
-                            PRInt64* aSessionID)
+                            PRInt64* aSessionID, PRInt64* aRedirectBookmark)
 {
   PRUint32 transitionType = 0;
   PRInt64 referringVisit = 0;
@@ -2400,13 +2429,22 @@ nsNavHistory::AddVisitChain(nsIURI* aURI, PRBool aToplevel, PRBool aIsRedirect,
   nsCAutoString redirectSource;
   if (GetRedirectFor(spec, redirectSource, &visitTime, &transitionType)) {
     // this was a redirect: See GetRedirectFor for info on how this works
-
-    // Find the visit for the source
     nsCOMPtr<nsIURI> redirectURI;
     rv = NS_NewURI(getter_AddRefs(redirectURI), redirectSource);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    // remember if any redirect sources were bookmarked
+    nsNavBookmarks* bookmarkService = nsNavBookmarks::GetBookmarksService();
+    PRBool isBookmarked;
+    if (bookmarkService &&
+        NS_SUCCEEDED(bookmarkService->IsBookmarked(redirectURI, &isBookmarked))
+        && isBookmarked) {
+      GetUrlIdFor(redirectURI, aRedirectBookmark, PR_FALSE);
+    }
+
+    // Find the visit for the source
     rv = AddVisitChain(redirectURI, aToplevel, PR_TRUE, aReferrer,
-                       &referringVisit, aSessionID);
+                       &referringVisit, aSessionID, aRedirectBookmark);
     NS_ENSURE_SUCCESS(rv, rv);
 
   } else if (aReferrer) {
