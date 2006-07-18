@@ -310,7 +310,7 @@ nsNavHistory::InitDB()
   // init DB
   mDBService = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBService->GetProfileStorage("profile", getter_AddRefs(mDBConn));
+  rv = mDBService->OpenSpecialDatabase("profile", getter_AddRefs(mDBConn));
   NS_ENSURE_SUCCESS(rv, rv);
 
 // REMOVE ME FIXME TODO XXX
@@ -377,7 +377,7 @@ nsresult
 nsNavHistory::InitMemDB()
 {
   printf("Initializing history in-memory DB\n");
-  nsresult rv = mDBService->GetProfileStorage("memory", getter_AddRefs(mMemDBConn));
+  nsresult rv = mDBService->OpenSpecialDatabase("memory", getter_AddRefs(mMemDBConn));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // create our table and index
@@ -414,7 +414,7 @@ nsNavHistory::InitMemDB()
   mozStorageTransaction transaction(mMemDBConn, PR_FALSE);
   nsCString url;
   while(NS_SUCCEEDED(rv = selectStatement->ExecuteStep(&hasMore)) && hasMore) {
-    rv = selectRow->GetAsUTF8String(0, url);
+    rv = selectRow->GetUTF8String(0, url);
     if (NS_SUCCEEDED(rv) && ! url.IsEmpty()) {
       rv = mMemDBAddPage->BindUTF8StringParameter(0, url);
       if (NS_SUCCEEDED(rv))
@@ -509,19 +509,19 @@ nsNavHistory::InternalAdd(nsIURI* aURI, PRUint32 aSessionID,
   if (alreadyVisited) {
     // Update the existing entry...
 
-    rv = dbSelectStatement->GetAsInt64(0, &pageID);
+    rv = dbSelectStatement->GetInt64(0, &pageID);
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRInt32 oldVisitCount = 0;
-    rv = dbSelectStatement->GetAsInt32(1, &oldVisitCount);
+    rv = dbSelectStatement->GetInt32(1, &oldVisitCount);
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRInt32 oldTypedState = 0;
-    rv = dbSelectStatement->GetAsInt32(2, &oldTypedState);
+    rv = dbSelectStatement->GetInt32(2, &oldTypedState);
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRInt32 oldHiddenState = 0;
-    rv = dbSelectStatement->GetAsInt32(3, &oldHiddenState);
+    rv = dbSelectStatement->GetInt32(3, &oldHiddenState);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // must free the previous statement before we can make a new one
@@ -636,7 +636,8 @@ nsNavHistory::InternalAddNewPage(nsIURI* aURI, const PRUnichar* aTitle,
 
   // title: use NULL if not given to distinguish it from empty titles
   if (aTitle) {
-    rv = dbInsertStatement->BindWStringParameter(1, aTitle);
+    nsAutoString title(aTitle);
+    rv = dbInsertStatement->BindStringParameter(1, title);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     rv = dbInsertStatement->BindNullParameter(1);
@@ -647,7 +648,7 @@ nsNavHistory::InternalAddNewPage(nsIURI* aURI, const PRUnichar* aTitle,
   nsAutoString revHost;
   rv = GetReversedHostname(aURI, revHost);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = dbInsertStatement->BindWStringParameter(2, revHost.get());
+  rv = dbInsertStatement->BindStringParameter(2, revHost);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // hidden
@@ -761,7 +762,7 @@ PRBool nsNavHistory::IsURIStringVisited(const nsACString& aURIString)
       mDBGetURLPageInfo, &rv);
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
   PRInt32 visitCount;
-  rv = row->GetAsInt32(kGetInfoIndex_VisitCount, &visitCount);
+  rv = row->GetInt32(kGetInfoIndex_VisitCount, &visitCount);
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
   return visitCount > 0;
@@ -1287,7 +1288,7 @@ nsNavHistory::GetCount(PRUint32 *aCount)
   }
 
   PRInt32 countSigned;
-  rv = dbSelectStatement->GetAsInt32(0, &countSigned);
+  rv = dbSelectStatement->GetInt32(0, &countSigned);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (countSigned < 0)
@@ -1429,7 +1430,7 @@ nsNavHistory::RemovePagesFromHost(const nsACString& aHost, PRBool aEntireDomain)
     nsCOMPtr<nsIURI> thisURI;
     while ((statement->ExecuteStep(&hasMore) == NS_OK) && hasMore) {
       nsAutoString thisURIString;
-      if (NS_FAILED(dbRow->GetAsString(0, thisURIString)) || 
+      if (NS_FAILED(dbRow->GetString(0, thisURIString)) || 
           thisURIString.IsEmpty() == 0)
         continue; // no URI
       if (NS_FAILED(NS_NewURI(getter_AddRefs(thisURI), thisURIString,
@@ -1580,7 +1581,7 @@ nsNavHistory::HidePage(nsIURI *aURI)
     // modify the existing page if necessary
 
     PRInt32 oldHiddenState = 0;
-    rv = dbSelectStatement->GetAsInt32(1, &oldHiddenState);
+    rv = dbSelectStatement->GetInt32(1, &oldHiddenState);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!oldHiddenState)
@@ -1588,7 +1589,7 @@ nsNavHistory::HidePage(nsIURI *aURI)
 
     // find the old ID, which can be found faster than long URLs
     PRInt32 entryid = 0;
-    rv = dbSelectStatement->GetAsInt32(0, &entryid);
+    rv = dbSelectStatement->GetInt32(0, &entryid);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // need to clear the old statement before we create a new one
@@ -1663,7 +1664,7 @@ nsNavHistory::MarkPageAsTyped(nsIURI *aURI)
     // we already have this URL, update it if necessary.
 
     PRInt32 oldTypedState = 0;
-    rv = dbSelectStatement->GetAsInt32(1, &oldTypedState);
+    rv = dbSelectStatement->GetInt32(1, &oldTypedState);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!oldTypedState)
@@ -1671,7 +1672,7 @@ nsNavHistory::MarkPageAsTyped(nsIURI *aURI)
 
     // find the old ID, which can be found faster than long URLs
     PRInt32 entryid = 0;
-    rv = dbSelectStatement->GetAsInt32(0, &entryid);
+    rv = dbSelectStatement->GetInt32(0, &entryid);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // need to clear the old statement before we create a new one
@@ -1963,8 +1964,8 @@ nsresult nsNavHistory::AutoCompleteTypedSearch(
   PRBool hasMore = PR_FALSE;
   while (NS_SUCCEEDED(dbSelectStatement->ExecuteStep(&hasMore)) && hasMore) {
     nsAutoString entryURL, entryTitle;
-    dbSelectStatement->GetAsString(0, entryURL);
-    dbSelectStatement->GetAsString(1, entryTitle);
+    dbSelectStatement->GetString(0, entryURL);
+    dbSelectStatement->GetString(1, entryTitle);
 
     rv = result->AppendMatch(entryURL, entryTitle);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2006,10 +2007,10 @@ nsNavHistory::AutoCompleteFullHistorySearch(const nsAString& aSearchString,
     }
 
     nsAutoString entryurl;
-    mDBFullAutoComplete->GetAsString(kAutoCompleteIndex_URL, entryurl);
+    mDBFullAutoComplete->GetString(kAutoCompleteIndex_URL, entryurl);
     if (AutoCompleteCompare(entryurl, aSearchString, exclude)) {
       nsAutoString entrytitle;
-      rv = mDBFullAutoComplete->GetAsString(kAutoCompleteIndex_Title, entrytitle);
+      rv = mDBFullAutoComplete->GetString(kAutoCompleteIndex_Title, entrytitle);
       NS_ENSURE_SUCCESS(rv, rv);
       PRInt32 priority = ComputeAutoCompletePriority(entryurl,
                     mDBFullAutoComplete->AsInt32(kAutoCompleteIndex_VisitCount),
@@ -2622,28 +2623,28 @@ nsNavHistory::RowToResult(mozIStorageValueArray* aRow, PRBool aAsVisits,
     return NS_ERROR_OUT_OF_MEMORY;
 
   // ID
-  nsresult rv = aRow->GetAsInt64(kGetInfoIndex_PageID, &result->mID);
+  nsresult rv = aRow->GetInt64(kGetInfoIndex_PageID, &result->mID);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // url
-  rv = aRow->GetAsUTF8String(kGetInfoIndex_URL, result->mUrl);
+  rv = aRow->GetUTF8String(kGetInfoIndex_URL, result->mUrl);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // title
-  rv = aRow->GetAsString(kGetInfoIndex_Title, result->mTitle);
+  rv = aRow->GetString(kGetInfoIndex_Title, result->mTitle);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // access count
-  rv = aRow->GetAsInt32(kGetInfoIndex_VisitCount, &result->mAccessCount);
+  rv = aRow->GetInt32(kGetInfoIndex_VisitCount, &result->mAccessCount);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // access time
-  rv = aRow->GetAsInt64(kGetInfoIndex_VisitDate, &result->mTime);
+  rv = aRow->GetInt64(kGetInfoIndex_VisitDate, &result->mTime);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // reversed hostname
   nsAutoString revHost;
-  rv = aRow->GetAsString(kGetInfoIndex_RevHost, revHost);
+  rv = aRow->GetString(kGetInfoIndex_RevHost, revHost);
   GetUnreversedHostname(revHost, result->mHost);
   NS_ENSURE_SUCCESS(rv, rv);
 
