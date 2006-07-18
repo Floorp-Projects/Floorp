@@ -365,6 +365,30 @@ interface nsINavBookmarksService : nsISupports
   PRInt32 indexOfFolder(in PRInt64 parent, in PRInt64 folder);
 
   /**
+   * Associates the given keyword with the given URI.
+   *
+   * Use an empty keyword to clear the keyword associated with the URI. Use an
+   * empty URI to clear the URI associated with that keyword. In both of these
+   * cases, succeeds but does nothing if the URL/keyword is not found.
+   *
+   * When setting a keyword (both URI and keyword are specified), the URI must
+   * be bookmarked for the keyword to be persistent.
+   */
+  void setKeywordForURI(in nsIURI uri, in AString keyword);
+
+  /**
+   * Retrieves the keyword for the given URI. Will be empty if no such
+   * keyword is found.
+   */
+  AString getKeywordForURI(in nsIURI uri);
+
+  /**
+   * Returns the URI associated with the given keyword. Empty if no such
+   * keyword is found.
+   */
+  nsIURI getURIForKeyword(in AString keyword);
+
+  /**
    * Adds a bookmark observer. If ownsWeak is false, the bookmark service will
    * keep an owning reference to the observer.  If ownsWeak is true, then
    * aObserver must implement nsISupportsWeakReference, and the bookmark
