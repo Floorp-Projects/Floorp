@@ -1684,12 +1684,6 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
                                             getter_AddRefs(result));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Query result roots are open by default, but this needs to be done AFTER the result
-  // has been constructed. This step will actually run the query/populate the bookmark
-  // folder results.
-  rv = rootNode->OpenContainer();
-  NS_ENSURE_SUCCESS(rv, rv);
-
   NS_ADDREF(*_retval = result);
   return NS_OK;
 }
