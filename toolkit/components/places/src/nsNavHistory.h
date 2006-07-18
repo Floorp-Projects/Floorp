@@ -122,7 +122,9 @@ class nsNavHistoryQueryOptions : public nsINavHistoryQueryOptions
 {
 public:
   nsNavHistoryQueryOptions() : mSort(0), mResultType(0),
-                               mGroupCount(0), mGroupings(nsnull), mExpandPlaces(PR_FALSE)
+                               mGroupCount(0), mGroupings(nsnull),
+                               mExpandPlaces(PR_FALSE),
+                               mForceOriginalTitle(PR_FALSE)
   { }
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_NAVHISTORYQUERYOPTIONS_IID)
@@ -136,6 +138,7 @@ public:
     *count = mGroupCount; return mGroupings;
   }
   PRBool ExpandPlaces() const { return mExpandPlaces; }
+  PRBool ForceOriginalTitle() const { return mForceOriginalTitle; }
 
   nsresult Clone(nsNavHistoryQueryOptions **aResult);
 
@@ -149,6 +152,7 @@ private:
   PRUint32 mGroupCount;
   PRInt32 *mGroupings;
   PRBool mExpandPlaces;
+  PRBool mForceOriginalTitle;
 };
 
 
@@ -500,6 +504,7 @@ public:
   static const PRInt32 kGetInfoIndex_PageID;
   static const PRInt32 kGetInfoIndex_URL;
   static const PRInt32 kGetInfoIndex_Title;
+  static const PRInt32 kGetInfoIndex_UserTitle;
   static const PRInt32 kGetInfoIndex_RevHost;
   static const PRInt32 kGetInfoIndex_VisitCount;
 
@@ -521,13 +526,15 @@ public:
 
   // Take a row of kGetInfoIndex_* columns and construct a ResultNode.
   // The row must contain the full set of columns.
-  nsresult RowToResult(mozIStorageValueArray* aRow, PRBool aAsVisits,
+  nsresult RowToResult(mozIStorageValueArray* aRow,
+                       nsNavHistoryQueryOptions* aOptions,
                        nsNavHistoryResultNode** aResult);
 
   // Take a row of kGetInfoIndex_* columns and fill in an existing ResultNode.
   // The node's type must already be set, and the row must contain the full
   // set of columns.
   nsresult FillURLResult(mozIStorageValueArray* aRow,
+                         nsNavHistoryQueryOptions* aOptions,
                          nsNavHistoryResultNode *aNode);
 
   // Construct a new HistoryResult object. You can give it null query/options.
@@ -549,7 +556,6 @@ public:
   }
 
   // well-known annotations used by the history and bookmarks systems
-  static const char kAnnotationTitle[];
   static const char kAnnotationPreviousEncoding[];
 
 private:
@@ -581,6 +587,7 @@ protected:
   nsCOMPtr<mozIStorageStatement> mDBFullAutoComplete; // kAutoCompleteIndex_* results, 1 arg (max # results)
   static const PRInt32 kAutoCompleteIndex_URL;
   static const PRInt32 kAutoCompleteIndex_Title;
+  static const PRInt32 kAutoCompleteIndex_UserTitle;
   static const PRInt32 kAutoCompleteIndex_VisitCount;
   static const PRInt32 kAutoCompleteIndex_Typed;
 
@@ -626,7 +633,8 @@ protected:
                                      nsINavHistoryQuery* aQuery,
                                      PRInt32* aParamCount);
 
-  nsresult ResultsAsList(mozIStorageStatement* statement, PRBool aAsVisits,
+  nsresult ResultsAsList(mozIStorageStatement* statement,
+                         nsNavHistoryQueryOptions* aOptions,
                          nsCOMArray<nsNavHistoryResultNode>* aResults);
 
   void TitleForDomain(const nsString& domain, nsAString& aTitle);
