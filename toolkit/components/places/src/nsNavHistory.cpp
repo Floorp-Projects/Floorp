@@ -253,7 +253,8 @@ nsNavHistory::Init()
 
   gExpandedItems.Init(128);
 
-  InitDB();
+  rv = InitDB();
+  NS_ENSURE_SUCCESS(rv, rv);
   //ImportFromMork();
 
   // commonly used prefixes that should be chopped off all history and input
