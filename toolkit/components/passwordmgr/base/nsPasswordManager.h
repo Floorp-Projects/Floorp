@@ -45,7 +45,6 @@
 #include "nsIFormSubmitObserver.h"
 #include "nsIWebProgressListener.h"
 #include "nsIDOMFocusListener.h"
-#include "nsIDOMLoadListener.h"
 #include "nsIStringBundle.h"
 #include "nsIPrefBranch.h"
 
@@ -69,7 +68,6 @@ class nsPasswordManager : public nsIPasswordManager,
                           public nsIFormSubmitObserver,
                           public nsIWebProgressListener,
                           public nsIDOMFocusListener,
-                          public nsIDOMLoadListener,
                           public nsSupportsWeakReference
 {
 public:
@@ -130,13 +128,6 @@ public:
   // nsIDOMEventListener
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
 
-  // nsIDOMLoadListener
-  NS_IMETHOD Load(nsIDOMEvent* aEvent);
-  NS_IMETHOD Unload(nsIDOMEvent* aEvent);
-  NS_IMETHOD BeforeUnload(nsIDOMEvent* aEvent);
-  NS_IMETHOD Abort(nsIDOMEvent* aEvent);
-  NS_IMETHOD Error(nsIDOMEvent* aEvent);
-
   // Autocomplete
   PRBool AutoCompleteSearch(const nsAString& aSearchString,
                             nsIAutoCompleteResult* aPreviousResult,
@@ -154,7 +145,7 @@ protected:
                                      const nsAString&  aUserField,
                                      SignonDataEntry** aResult);
 
-
+  nsresult FillDocument(nsIDOMDocument* aDomDoc);
   nsresult FillPassword(nsIDOMEvent* aEvent);
   void AttachToInput(nsIDOMHTMLInputElement* aElement);
   PRBool GetPasswordRealm(nsIURI* aURI, nsACString& aRealm);
