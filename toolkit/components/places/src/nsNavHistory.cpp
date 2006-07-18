@@ -89,9 +89,6 @@
 // checking each one for every page visit, which will be somewhat slower.
 #define RECENT_EVENT_QUEUE_MAX_LENGTH 128
 
-// set to use more optimized (in-memory database) link coloring
-#define IN_MEMORY_LINKS
-
 // preference ID strings
 #define PREF_BRANCH_BASE                        "browser."
 #define PREF_BROWSER_HISTORY_EXPIRE_DAYS        "history_expire_days"
@@ -244,6 +241,10 @@ nsNavHistory::Init()
   PRBool doImport;
   rv = InitDB(&doImport);
   NS_ENSURE_SUCCESS(rv, rv);
+#ifdef IN_MEMORY_LINKS
+  rv = InitMemDB();
+  NS_ENSURE_SUCCESS(rv, rv);
+#endif
 
   // commonly used prefixes that should be chopped off all history and input
   // urls before comparison
@@ -350,7 +351,7 @@ nsNavHistory::Init()
     }
   }
 
-  return rv;
+  return CreateLookupIndexes();
 }
 
 
@@ -407,12 +408,6 @@ nsNavHistory::InitDB(PRBool *aDoImport)
     rv = mDBConn->ExecuteSimpleSQL(
         NS_LITERAL_CSTRING("CREATE INDEX moz_history_urlindex ON moz_history (url)"));
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBConn->ExecuteSimpleSQL(
-        NS_LITERAL_CSTRING("CREATE INDEX moz_history_hostindex ON moz_history (rev_host)"));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBConn->ExecuteSimpleSQL(
-        NS_LITERAL_CSTRING("CREATE INDEX moz_history_visitcount ON moz_history (visit_count)"));
-    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // moz_historyvisit
@@ -429,13 +424,7 @@ nsNavHistory::InitDB(PRBool *aDoImport)
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = mDBConn->ExecuteSimpleSQL(
-        NS_LITERAL_CSTRING("CREATE INDEX moz_historyvisit_fromindex ON moz_historyvisit (from_visit)"));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBConn->ExecuteSimpleSQL(
         NS_LITERAL_CSTRING("CREATE INDEX moz_historyvisit_pageindex ON moz_historyvisit (page_id)"));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBConn->ExecuteSimpleSQL(
-        NS_LITERAL_CSTRING("CREATE INDEX moz_historyvisit_dateindex ON moz_historyvisit (visit_date)"));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -580,6 +569,7 @@ nsNavHistory::InitDB(PRBool *aDoImport)
 }
 
 
+#ifdef IN_MEMORY_LINKS
 // nsNavHistory::InitMemDB
 //
 //    Should be called after InitDB
@@ -594,9 +584,6 @@ nsNavHistory::InitMemDB()
   // create our table and index
   rv = mMemDBConn->ExecuteSimpleSQL(
       NS_LITERAL_CSTRING("CREATE TABLE moz_memhistory (url LONGVARCHAR UNIQUE)"));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mMemDBConn->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE INDEX moz_memhistory_index ON moz_memhistory (url)"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // prepackaged statements
@@ -634,6 +621,7 @@ nsNavHistory::InitMemDB()
   printf("DONE initializing history in-memory DB\n");
   return NS_OK;
 }
+#endif
 
 
 // nsNavHistory::SaveExpandItem
@@ -824,8 +812,6 @@ PRBool nsNavHistory::IsURIStringVisited(const nsACString& aURIString)
 {
 #ifdef IN_MEMORY_LINKS
   // check the memory DB
-  if (!mMemDBConn)
-    InitMemDB();
   nsresult rv = mMemDBGetPage->BindUTF8StringParameter(0, aURIString);
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
   PRBool hasPage = PR_FALSE;
@@ -1448,8 +1434,6 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, PRInt64 aReferringVisit,
 
   // in-memory version
 #ifdef IN_MEMORY_LINKS
-  if (!mMemDBConn)
-    InitMemDB();
   rv = BindStatementURI(mMemDBAddPage, 0, aURI);
   NS_ENSURE_SUCCESS(rv, rv);
   mMemDBAddPage->Execute();
@@ -3450,6 +3434,43 @@ nsNavHistory::SetPageTitleInternal(nsIURI* aURI, PRBool aIsUserTitle,
 
 }
 
+
+// nsNavHistory::CreateLookupIndexes
+//
+// This creates some indexes on the history tables which are expensive to
+// update when we're doing many insertions, as with history import.  Instead,
+// we defer creation of the index until import is finished.
+
+nsresult
+nsNavHistory::CreateLookupIndexes()
+{
+  nsresult rv;
+
+  // History table indexes
+  rv = mDBConn->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("CREATE INDEX moz_history_hostindex ON moz_history (rev_host)"));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBConn->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("CREATE INDEX moz_history_visitcount ON moz_history (visit_count)"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Visit table indexes
+  rv = mDBConn->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("CREATE INDEX moz_historyvisit_fromindex ON moz_historyvisit (from_visit)"));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBConn->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("CREATE INDEX moz_historyvisit_dateindex ON moz_historyvisit (visit_date)"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+#ifdef IN_MEMORY_LINKS
+  // In-memory links indexes
+  rv = mMemDBConn->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("CREATE INDEX moz_memhistory_index ON moz_memhistory (url)"));
+  NS_ENSURE_SUCCESS(rv, rv);
+#endif
+
+  return NS_OK;
+}
 
 // Local function **************************************************************
 
