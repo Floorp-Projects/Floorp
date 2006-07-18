@@ -77,7 +77,7 @@
 [% USE Bugzilla %]
 [% FOREACH field = Bugzilla.get_fields() %]
   [% SET field_descs.${field.name} = field.description 
-     IF !field_descs.${field_name}.exists %]
+     IF !field_descs.${field.name}.defined %]
 [% END %]
 
 [% status_descs = { "UNCONFIRMED" => "UNCONFIRMED",
