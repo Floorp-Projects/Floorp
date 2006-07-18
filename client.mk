@@ -194,6 +194,7 @@ BOOTSTRAP_core :=                               \
   mozilla/browser/config/version.txt            \
   mozilla/mail/config/version.txt               \
   mozilla/calendar/sunbird/config/version.txt   \
+  mozilla/suite/config/version.txt              \
   $(NULL)
 
 MODULES_NS_toolkit :=                           \
