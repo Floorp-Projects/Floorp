@@ -45,12 +45,14 @@ class nsAnnotationService : public nsIAnnotationService
 {
 public:
   nsAnnotationService();
-  virtual ~nsAnnotationService();
 
   nsresult Init();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIANNOTATIONSERVICE
+
+private:
+  ~nsAnnotationService();
 
 protected:
   nsCOMPtr<mozIStorageService> mDBService;
