@@ -1020,24 +1020,28 @@ nsNavBookmarks::GetWantAllDetails(PRBool *aWant)
 NS_IMETHODIMP
 nsNavBookmarks::OnAddURI(nsIURI *aURI, PRTime aTime)
 {
-  // A new URI won't yet be bookmarked, so don't notify.
-#ifdef DEBUG
+  // If the page is bookmarked, we need to notify observers
   PRBool bookmarked;
   IsBookmarked(aURI, &bookmarked);
-  NS_ASSERTION(!bookmarked, "New URI shouldn't be bookmarked!");
-#endif
+  if (bookmarked) {
+    for (PRInt32 i = 0; i < mObservers.Count(); ++i) {
+      mObservers[i]->OnItemChanged(aURI, NS_LITERAL_CSTRING("time"));
+    }
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNavBookmarks::OnDeleteURI(nsIURI *aURI)
 {
-  // A deleted URI shouldn't be bookmarked.
-#ifdef DEBUG
+  // If the page is bookmarked, we need to notify observers
   PRBool bookmarked;
   IsBookmarked(aURI, &bookmarked);
-  NS_ASSERTION(!bookmarked, "Deleted URI shouldn't be bookmarked!");
-#endif
+  if (bookmarked) {
+    for (PRInt32 i = 0; i < mObservers.Count(); ++i) {
+      mObservers[i]->OnItemChanged(aURI, NS_LITERAL_CSTRING("time"));
+    }
+  }
   return NS_OK;
 }
 
