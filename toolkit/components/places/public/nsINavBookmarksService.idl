@@ -53,7 +53,7 @@ interface nsITransaction;
  * Observer for bookmark changes.
  */
 
-[scriptable, uuid(c4159523-bedb-4e3f-a163-087e6d89e8a6)]
+[scriptable, uuid(b13edc57-b427-4abc-b1e3-dea577489596)]
 interface nsINavBookmarkObserver : nsISupports
 {
   /**
@@ -70,10 +70,9 @@ interface nsINavBookmarkObserver : nsISupports
   void onEndUpdateBatch();
 
   /**
-   * Notify this observer that the bookmark was added.
-   * Called after the actual add took place.
-   * If other bookmarks in the folder shift due to the item being added, 
-   * no additional onItemMoved notifications are sent.
+   * Notify this observer that the bookmark was added.  Called after the actual
+   * add took place. The rest of the bookmarks will be shifted down, but no
+   * additional notifications will be sent.
    *
    * @param bookmark   The bookmark item that was added.
    * @param folder     The folder that the item was added to.
@@ -82,31 +81,15 @@ interface nsINavBookmarkObserver : nsISupports
   void onItemAdded(in nsIURI bookmark, in PRInt64 folder, in PRInt32 index);
 
   /**
-   * Notify this observer that the bookmark was removed.
-   * Called after the actual remove took place.
-   * If other bookmarks in the folder shift due to the item being removed, 
-   * no additional onItemMoved notifications are sent.
+   * Notify this observer that the bookmark was removed.  Called after the
+   * actual remove took place. The bookmarks following the index will be
+   * shifted up, but no additional notifications will be sent.
    *
    * @param bookmark   The bookmark item will be removed.
    * @param folder     The folder that the item was removed from.
    * @param index      The bookmark's index in the folder.
    */
   void onItemRemoved(in nsIURI bookmark, in PRInt64 folder, in PRInt32 index);
-
-  /**
-   * Notify this observer that an item has changed position in a folder.
-   * Note that items can exist in more than one folder, but may only occur once
-   * within a given folder.
-   * If other bookmarks in the folder shift due to the item being moved, 
-   * no additional onItemMoved notifications are sent.
-   * 
-   * @param bookmark   The bookmark item that changed position.
-   * @param folder     The folder where the item changed position.
-   * @param oldIndex   The old index of the item in the folder.
-   * @param newIndex   The new index of the item in the folder.
-   */
-  void onItemMoved(in nsIURI bookmark, in PRInt64 folder,
-                   in PRInt32 oldIndex, in PRInt32 newIndex);
 
   /**
    * Notify this observer that a bookmark's information has changed.  This
