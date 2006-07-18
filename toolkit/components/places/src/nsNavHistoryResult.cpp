@@ -87,8 +87,12 @@ inline PRInt32 CompareIntegers(PRUint32 a, PRUint32 b)
 NS_IMPL_ISUPPORTS2(nsNavHistoryResultNode,
                    nsNavHistoryResultNode, nsINavHistoryResultNode)
 
-nsNavHistoryResultNode::nsNavHistoryResultNode() : mID(0), mExpanded(PR_FALSE), 
-  mParent(nsnull), mAccessCount(0), mTime(0)
+nsNavHistoryResultNode::nsNavHistoryResultNode() :
+    mParent(nsnull),
+    mID(0),
+    mAccessCount(0),
+    mTime(0),
+    mExpanded(PR_FALSE)
 {
 }
 
@@ -252,12 +256,20 @@ nsNavHistoryResultNode::OnItemMoved(nsIURI *aBookmark, PRInt64 aFolder,
 
 }
 
-/* void onItemChanged(in nsIURI bookmark, in ACString property); */
+/* void onItemChanged(in nsIURI bookmark, in ACString property, in AString value); */
 NS_IMETHODIMP
 nsNavHistoryResultNode::OnItemChanged(nsIURI *aBookmark,
-                                      const nsACString &aProperty)
+                                      const nsACString &aProperty,
+                                      const nsAString &aValue)
 {
   // We let OnPageChanged handle this case
+  return NS_OK;
+}
+
+/* void onItemVisited(in nsIURI bookmark, in PRTime time); */
+NS_IMETHODIMP
+nsNavHistoryResultNode::OnItemVisited(nsIURI* aBookmark, PRTime aVisitTime)
+{
   return NS_OK;
 }
 
@@ -306,9 +318,23 @@ nsNavHistoryResultNode::OnFolderChanged(PRInt64 aFolder,
 
 // nsINavHistoryObserver implementation
 
-/* void onAddURI(in nsiURI aURI, in PRTime aTime); */
+/* void onVisit(in nsIURI aURI, in PRInt64 aVisitID, in PRTime aTime,
+                in PRInt64 aSessionID, in PRInt64 aReferringID,
+                in PRUint32 aTransitionType); */
 NS_IMETHODIMP
-nsNavHistoryResultNode::OnAddURI(nsIURI *aURI, PRTime aTime)
+nsNavHistoryResultNode::OnVisit(nsIURI* aURI, PRInt64 aVisitID, PRTime aTime,
+               PRInt64 aSessionID, PRInt64 aReferringID,
+               PRUint32 aTransitionType)
+{
+  return NS_OK;
+}
+
+/* void onTitleChanged(in nsIURI aURI, in AString aPageTitle,
+                       in AString aUserTitle, in PRBool aUserTitleChanged); */
+NS_IMETHODIMP
+nsNavHistoryResultNode::OnTitleChanged(nsIURI* aURI, const nsAString& aPageTitle,
+                                      const nsAString& aUserTitle,
+                                      PRBool aIsUserTitleChanged)
 {
   return NS_OK;
 }
@@ -336,10 +362,17 @@ nsNavHistoryResultNode::OnPageChanged(nsIURI *aURI,
   // matches ours, and rebuild the row if so.
   nsCAutoString spec;
   aURI->GetSpec(spec);
-  if (spec.Equals(mUrl)) {
-    // TODO(bryner): only rebuild if aProperty is being shown
-    Rebuild();
+  if (! spec.Equals(mUrl))
+    return NS_OK; // not ours
+
+  // TODO(bryner): only rebuild if aProperty is being shown
+
+  if (aWhat == nsINavHistoryObserver::ATTRIBUTE_FAVICON) {
+    mFaviconURL = NS_ConvertUTF16toUTF8(aValue);
+    return NS_OK;
   }
+
+  Rebuild();
   return NS_OK;
 }
 
@@ -408,7 +441,7 @@ nsNavHistoryQueryNode::ParseQueries()
 }
 
 PRInt64
-nsNavHistoryQueryNode::GetFolderId() const
+nsNavHistoryQueryNode::FolderId() const
 {
   PRInt64 id;
   if (mQueryCount > 0) {
@@ -540,7 +573,7 @@ nsNavHistoryQueryNode::GetWantAllDetails(PRBool *aResult)
 NS_IMETHODIMP
 nsNavHistoryQueryNode::GetChildrenReadOnly(PRBool *aResult)
 {
-  PRInt64 folderId = GetFolderId();
+  PRInt64 folderId = FolderId();
   if (folderId == 0) {
     *aResult = PR_TRUE;
     return NS_OK;
@@ -588,7 +621,7 @@ nsNavHistoryQueryNode::OnItemAdded(nsIURI *aBookmark,
                                    PRInt64 aFolder, PRInt32 aIndex)
 {
   nsresult rv;
-  if (GetFolderId() == aFolder) {
+  if (FolderId() == aFolder) {
     // If we're not expanded, we can just invalidate our child list
     // and rebuild it the next time we're opened.
     if (!mExpanded) {
@@ -625,7 +658,7 @@ NS_IMETHODIMP
 nsNavHistoryQueryNode::OnItemRemoved(nsIURI *aBookmark,
                                      PRInt64 aFolder, PRInt32 aIndex)
 {
-  if (GetFolderId() == aFolder) {
+  if (FolderId() == aFolder) {
     // If we're not expanded, we can just invalidate our child list
     // and rebuild it the next time we're opened.
     if (!mExpanded) {
@@ -658,7 +691,7 @@ NS_IMETHODIMP
 nsNavHistoryQueryNode::OnItemMoved(nsIURI *aBookmark, PRInt64 aFolder,
                                    PRInt32 aOldIndex, PRInt32 aNewIndex)
 {
-  if (GetFolderId() == aFolder) {
+  if (FolderId() == aFolder) {
     // If we're not expanded, we can just invalidate our child list
     // and rebuild it the next time we're opened.
     if (!mExpanded) {
@@ -690,12 +723,22 @@ nsNavHistoryQueryNode::OnItemMoved(nsIURI *aBookmark, PRInt64 aFolder,
   return NS_OK;
 }
 
-/* void onItemChanged(in nsIURI bookmark, in ACString property); */
+/* void onItemChanged(in nsIURI bookmark, in ACString property, in AStirng value); */
 NS_IMETHODIMP
 nsNavHistoryQueryNode::OnItemChanged(nsIURI *aBookmark,
-                                     const nsACString &aProperty)
+                                     const nsACString &aProperty,
+                                     const nsAString &aValue)
 {
-  // We let OnPageChanged handle this case.
+  // We let OnPageChanged handle this case. FIXME: This should be able to do
+  // all the work necessary from bookmark callbacks, so this needs to handle
+  // all bookmark cases.
+  return NS_OK;
+}
+
+/* void onItemVisited(in nsIURI bookmark, in PRTime time); */
+NS_IMETHODIMP
+nsNavHistoryQueryNode::OnItemVisited(nsIURI* aBookmark, PRTime aVisitTime)
+{
   return NS_OK;
 }
 
@@ -705,7 +748,7 @@ nsNavHistoryQueryNode::OnItemReplaced(PRInt64 aFolder,
                                       nsIURI *aItem, nsIURI *aNewItem)
 {
   nsresult rv;
-  if (GetFolderId() == aFolder) {
+  if (FolderId() == aFolder) {
     // If we're not expanded, we can just invalidate our child list
     // and rebuild it the next time we're opened.
     if (!mExpanded) {
@@ -750,7 +793,7 @@ nsNavHistoryQueryNode::OnFolderAdded(PRInt64 aFolder,
                                      PRInt64 aParent, PRInt32 aIndex)
 {
   nsresult rv;
-  if (GetFolderId() == aParent) {
+  if (FolderId() == aParent) {
     // If we're not expanded, we can just invalidate our child list
     // and rebuild it the next time we're opened.
     if (!mExpanded) {
@@ -788,7 +831,7 @@ NS_IMETHODIMP
 nsNavHistoryQueryNode::OnFolderRemoved(PRInt64 aFolder,
                                        PRInt64 aParent, PRInt32 aIndex)
 {
-  if (GetFolderId() == aParent) {
+  if (FolderId() == aParent) {
     // If we're not expanded, we can just invalidate our child list
     // and rebuild it the next time we're opened.
     if (!mExpanded) {
@@ -824,7 +867,7 @@ nsNavHistoryQueryNode::OnFolderMoved(PRInt64 aFolder,
                                      PRInt64 aNewParent, PRInt32 aNewIndex)
 {
   nsresult rv;
-  PRInt64 nodeFolder = GetFolderId();
+  PRInt64 nodeFolder = FolderId();
 
   if (aOldParent == aNewParent && aOldParent == nodeFolder) {
     // If we're not expanded, we can just invalidate our child list
@@ -868,7 +911,7 @@ NS_IMETHODIMP
 nsNavHistoryQueryNode::OnFolderChanged(PRInt64 aFolder,
                                        const nsACString &aProperty)
 {
-  if (GetFolderId() == aFolder) {
+  if (FolderId() == aFolder) {
     // TODO(bryner): only rebuild if aProperty is being shown
     Rebuild();
   } else {
@@ -883,17 +926,30 @@ nsNavHistoryQueryNode::OnFolderChanged(PRInt64 aFolder,
 
 // nsINavHistoryObserver implementation
 
-/* void onAddURI(in nsiURI aURI, in PRTime aTime); */
+/* void onVisit(in nsIURI aURI, in PRInt64 aVisitID, in PRTime aTime,
+                in PRInt64 aSessionID, in PRInt64 aReferringID,
+                in PRUint32 aTransitionType); */
 NS_IMETHODIMP
-nsNavHistoryQueryNode::OnAddURI(nsIURI *aURI, PRTime aTime)
+nsNavHistoryQueryNode::OnVisit(nsIURI* aURI, PRInt64 aVisitID, PRTime aTime,
+               PRInt64 aSessionID, PRInt64 aReferringID,
+               PRUint32 aTransitionType)
 {
   nsresult rv;
-  if (GetFolderId() == 0) {
+
+  // embedded transitions are not visible in queries unless you want to include
+  // hidden ones, so we can ignore these notifications (which comprise the bulk
+  // of history)
+  if (aTransitionType == nsINavHistoryService::TRANSITION_EMBED &&
+      ! mOptions->IncludeHidden())
+    return NS_OK;
+
+  if (FolderId() == 0) {
     // We're a non-folder query, so we need to requery.
     return UpdateQuery();
   } else {
     for (PRInt32 i = 0; i < mChildren.Count(); ++i) {
-      rv = mChildren[i]->OnAddURI(aURI, aTime);
+      rv = mChildren[i]->OnVisit(aURI, aVisitID, aTime, aSessionID,
+                                 aReferringID, aTransitionType);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
@@ -901,12 +957,37 @@ nsNavHistoryQueryNode::OnAddURI(nsIURI *aURI, PRTime aTime)
   return NS_OK;
 }
 
+/* void onTitleChange */
+NS_IMETHODIMP
+nsNavHistoryQueryNode::OnTitleChanged(nsIURI* aURI, const nsAString& aPageTitle,
+                                      const nsAString& aUserTitle,
+                                      PRBool aIsUserTitleChanged)
+{
+  nsresult rv;
+  PRInt64 folder = nsNavHistoryQueryNode::FolderId();
+  if (folder == 0) {
+    // If we're a query node (other than a folder), we need to re-execute
+    // our queries in case aBookmark should be added/removed from the
+    // results.
+    return UpdateQuery();
+  } else {
+    // We're a bookmark folder.  Run through our children and notify them.
+    for (PRInt32 i = 0; i < mChildren.Count(); ++i) {
+      rv = mChildren[i]->OnTitleChanged(aURI, aPageTitle, aUserTitle, aIsUserTitleChanged);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+
+  return NS_OK;
+}
+
+
 /* void onDeleteURI(in nsIURI aURI); */
 NS_IMETHODIMP
 nsNavHistoryQueryNode::OnDeleteURI(nsIURI *aURI)
 {
   nsresult rv;
-  if (GetFolderId() == 0) {
+  if (FolderId() == 0) {
     // We're a non-folder query, so we need to requery.
     return UpdateQuery();
   } else {
@@ -924,7 +1005,7 @@ NS_IMETHODIMP
 nsNavHistoryQueryNode::OnClearHistory()
 {
   nsresult rv;
-  if (GetFolderId() == 0) {
+  if (FolderId() == 0) {
     // We're a non-folder query, so we need to requery.
     return UpdateQuery();
   } else {
@@ -943,7 +1024,7 @@ nsNavHistoryQueryNode::OnPageChanged(nsIURI *aURI,
                                      PRUint32 aWhat, const nsAString &aValue)
 {
   nsresult rv;
-  PRInt64 folder = nsNavHistoryQueryNode::GetFolderId();
+  PRInt64 folder = nsNavHistoryQueryNode::FolderId();
   if (folder == 0) {
     // If we're a query node (other than a folder), we need to re-execute
     // our queries in case aBookmark should be added/removed from the
@@ -963,7 +1044,7 @@ nsNavHistoryQueryNode::OnPageChanged(nsIURI *aURI,
 nsresult
 nsNavHistoryQueryNode::Rebuild()
 {
-  PRInt64 folderId = GetFolderId();
+  PRInt64 folderId = FolderId();
   if (folderId != 0) {
     nsNavBookmarks *bookmarks = nsNavBookmarks::GetBookmarksService();
     return bookmarks->FillFolderNode(folderId, this);
@@ -1773,7 +1854,7 @@ NS_IMETHODIMP nsNavHistoryResult::IsContainer(PRInt32 index, PRBool *_retval)
   nsNavHistoryResultNode *node = VisibleElementAt(index);
   *_retval = (node->mChildren.Count() > 0 ||
               (node->mType == nsINavHistoryResult::RESULT_TYPE_QUERY &&
-               (node->GetFolderId() > 0 ||
+               (node->FolderId() > 0 ||
                 (mOptions && mOptions->ExpandPlaces()))));
   return NS_OK;
 }
