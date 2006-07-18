@@ -553,23 +553,44 @@ function SetMenuItemLabel(menuItemId, customLabel)
         menuItem.setAttribute('label', customLabel);
 }
 
-function TagCurMessage(key)
+function ToggleMessageTagCmd(target)
 {
-  // ###need to do all selected messsages
-  var msgHdr = gDBView.hdrForFirstSelectedMessage;
-  var messages = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
-  messages.AppendElement(msgHdr);
-  msgHdr.folder.addKeywordToMessages(messages, key);
-  onTagsChange();
+  var key    = target.getAttribute("value");
+  var addKey = target.getAttribute("checked") == "true";
+  ToggleMessageTag(key, addKey);
 }
 
-function UnTagCurMessage(key)
+function ToggleMessageTag(key, addKey)
 {
-  // ###need to do all selected messsages
   var msgHdr = gDBView.hdrForFirstSelectedMessage;
-  var messages = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
-  messages.AppendElement(msgHdr);
-  msgHdr.folder.removeKeywordFromMessages(messages, key);
+  var messages = Components.classes["@mozilla.org/supports-array;1"]
+                           .createInstance(Components.interfaces.nsISupportsArray);
+  var selectedMsgUris = GetSelectedMessages();
+     
+  var toggler = addKey ? "addKeywordToMessages" : "removeKeywordFromMessages";
+  var prevHdrFolder;
+  var msgHdr; 
+  // this crudely handles cross-folder virtual folders with selected messages
+  // that spans folders, by coalescing consecutive msgs in the selection
+  // that happen to be in the same folder. nsMsgSearchDBView does this
+  // better, but nsIMsgDBView doesn't handle commands with arguments,
+  // and (un)tag takes a key argument.
+  for (var i = 0; i < selectedMsgUris.length; ++i)
+  {
+    msgHdr = messenger.msgHdrFromURI(selectedMsgUris[i]);
+    if (prevHdrFolder && prevHdrFolder != msgHdr.folder)
+    {
+      prevHdrFolder.folder[toggler](messages, key);
+      messages.Clear();
+    }
+    else
+    {
+        messages.AppendElement(msgHdr);
+    }
+    prevHdrFolder = msgHdr.folder;
+  }
+
+  msgHdr.folder[toggler](messages, key);
   onTagsChange();
 }
 
@@ -587,7 +608,14 @@ function AddTagCallback(name, color)
 {
   var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"].getService(Components.interfaces.nsIMsgTagService);
   tagService.addTag(name, color);
-  TagCurMessage(tagService.getKeyForTag(name));
+  try
+  {
+    ToggleMessageTag(tagService.getKeyForTag(name), true);
+  }
+  catch(ex)
+  {
+    return false;
+  }
   return true;
 }
 
@@ -623,19 +651,9 @@ function InitMessageTags(menuPopup)
     newMenuItem.setAttribute('type', 'checkbox');
     newMenuItem.style.color = tagService.getColorForKey(key);
     
-    var keySet = false;
-    for ( var index = 0; index < curMsgHdrKeyArray.length; index++ )
-    {
-      if (key == curMsgHdrKeyArray[index])
-      {
-        keySet = true;
-        break;
-      }
-    }
-    // if we already have this tag, we should change the command to "UnTag"
-    var command = ((keySet) ? "Un" : "") + "TagCurMessage(" + "'" + key + "');";
-    newMenuItem.setAttribute('oncommand', command);
-    newMenuItem.setAttribute('checked', keySet);
+    var removeKey = (" " + curKeys + " ").indexOf(" " + key + " ") > -1;
+    newMenuItem.setAttribute('checked', removeKey);
+    newMenuItem.setAttribute('oncommand', 'ToggleMessageTagCmd(event.target)');
     menuPopup.insertBefore(newMenuItem, menuSeparatorNode);
   }
 }
