@@ -408,23 +408,23 @@ nsNavHistory::InitDB()
 
   // mDBGetURLPageInfoFull
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, MAX(fullv.visit_date), f.url "
+      "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
+        "(SELECT MAX(visit_date) FROM moz_historyvisit WHERE page_id = h.id), "
+        "f.url "
       "FROM moz_history h "
-      "LEFT JOIN moz_historyvisit v ON h.id = v.page_id "
-      "LEFT JOIN moz_historyvisit fullv ON h.id = fullv.page_id "
       "LEFT OUTER JOIN moz_favicon f ON h.favicon = f.id "
-      "WHERE h.url = ?1 "
-      "GROUP BY h.id"),
+      "WHERE h.url = ?1 "),
     getter_AddRefs(mDBGetURLPageInfoFull));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // mDBGetIdPageInfoFull
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, MAX(fullv.visit_date), f.url "
-      "FROM moz_history h LEFT JOIN moz_historyvisit v ON h.id = v.page_id "
-      "LEFT JOIN moz_historyvisit fullv ON h.id = fullv.page_id "
+      "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
+        "(SELECT MAX(visit_date) FROM moz_historyvisit WHERE page_id = h.id), "
+        "f.url "
+      "FROM moz_history h "
       "LEFT OUTER JOIN moz_favicon f ON h.favicon = f.id "
-      "WHERE h.id = ?1 GROUP BY h.id"),
+      "WHERE h.id = ?1"),
     getter_AddRefs(mDBGetIdPageInfoFull));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1255,16 +1255,15 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
       "LEFT OUTER JOIN moz_favicon f ON h.favicon = f.id "
       "WHERE ");
   } else {
-    // For URLs, it is more complicated. Because we want each URL once. The
-    // GROUP BY clause gives us this. However, we also want the most recent
-    // visit time, so we add ANOTHER join with the visit table (this one does
-    // not have any restrictions on it from the query) and do MAX() to get the
-    // max visit time.
+    // For URLs, it is more complicated, because we want each URL once. The
+    // GROUP BY clause gives us this. To get the max visit time, we populate
+    // one column by using a nested SELECT on the visit table.
     queryString = NS_LITERAL_CSTRING(
-      "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, MAX(fullv.visit_date), f.url "
+      "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
+        "(SELECT MAX(visit_date) FROM moz_historyvisit WHERE page_id = h.id), "
+        "f.url "
       "FROM moz_history h "
       "JOIN moz_historyvisit v ON h.id = v.page_id "
-      "JOIN moz_historyvisit fullv ON h.id = fullv.page_id "
       "LEFT OUTER JOIN moz_favicon f ON h.favicon = f.id "
       "WHERE ");
     groupBy = NS_LITERAL_CSTRING(" GROUP BY h.id");
