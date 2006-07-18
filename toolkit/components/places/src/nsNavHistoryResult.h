@@ -459,7 +459,8 @@ public:
   NS_IMETHOD GetChild(PRUint32 index, nsINavHistoryResultNode **_retval) \
     { return nsNavHistoryContainerResultNode::GetChild(index, _retval); } \
   NS_IMETHOD GetRemoteContainerType(nsACString& aRemoteContainerType) \
-    { return nsNavHistoryContainerResultNode::GetRemoteContainerType(aRemoteContainerType); } \
+    { return nsNavHistoryContainerResultNode::GetRemoteContainerType(aRemoteContainerType); }
+/* Untested container API functions
   NS_IMETHOD AppendURINode(const nsACString& aURI, const nsACString& aTitle, PRUint32 aAccessCount, PRTime aTime, const nsACString& aIconURI, nsINavHistoryResultNode **_retval) \
     { return nsNavHistoryContainerResultNode::AppendURINode(aURI, aTitle, aAccessCount, aTime, aIconURI, _retval); } \
   NS_IMETHOD AppendVisitNode(const nsACString& aURI, const nsACString & aTitle, PRUint32 aAccessCount, PRTime aTime, const nsACString & aIconURI, PRInt64 aSession, nsINavHistoryVisitResultNode **_retval) \
@@ -474,6 +475,7 @@ public:
     { return nsNavHistoryContainerResultNode::AppendFolderNode(aFolderId, _retval); } \
   NS_IMETHOD ClearContents() \
     { return nsNavHistoryContainerResultNode::ClearContents(); }
+*/
 
 #define NS_NAVHISTORYCONTAINERRESULTNODE_IID \
   { 0x6e3bf8d3, 0x22aa, 0x4065, { 0x86, 0xbc, 0x37, 0x46, 0xb5, 0xb3, 0x2c, 0xe8 } }
