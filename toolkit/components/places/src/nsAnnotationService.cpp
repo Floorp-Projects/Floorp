@@ -262,7 +262,8 @@ nsAnnotationService::GetAnnotationString(nsIURI* aURI,
                                          nsAString& _retval)
 {
   nsresult rv = StartGetAnnotationFromURI(aURI, aName);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv))
+    return rv;
   rv = mDBGetAnnotationFromURI->GetString(kAnnoIndex_Content, _retval);
   mDBGetAnnotationFromURI->Reset();
   return rv;
@@ -277,7 +278,8 @@ nsAnnotationService::GetAnnotationInt32(nsIURI* aURI,
                                         PRInt32 *_retval)
 {
   nsresult rv = StartGetAnnotationFromURI(aURI, aName);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv))
+    return rv;
   *_retval = mDBGetAnnotationFromURI->AsInt32(kAnnoIndex_Content);
   mDBGetAnnotationFromURI->Reset();
   return NS_OK;
@@ -293,7 +295,8 @@ nsAnnotationService::GetAnnotationBinary(nsIURI* aURI,
                                          nsACString& aMimeType)
 {
   nsresult rv = StartGetAnnotationFromURI(aURI, aName);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv))
+    return rv;
   rv = mDBGetAnnotationFromURI->GetBlob(kAnnoIndex_Content, aDataLen, aData);
   if (NS_FAILED(rv)) {
     mDBGetAnnotationFromURI->Reset();
@@ -315,7 +318,8 @@ nsAnnotationService::GetAnnotationInfo(nsIURI* aURI,
                                        PRInt32 *aStorageType)
 {
   nsresult rv = StartGetAnnotationFromURI(aURI, aName);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv))
+    return rv;
   mozStorageStatementScoper resetter(mDBGetAnnotationFromURI);
 
   *aFlags = mDBGetAnnotationFromURI->AsInt32(kAnnoIndex_Flags);
