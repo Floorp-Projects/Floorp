@@ -152,6 +152,7 @@ static void SetOptionsKeyUint32(const nsCString& aValue,
 #define QUERYKEY_RESULT_TYPE "type"
 #define QUERYKEY_EXCLUDE_ITEMS "excludeItems"
 #define QUERYKEY_EXCLUDE_QUERIES "excludeQueries"
+#define QUERYKEY_EXCLUDE_READ_ONLY_FOLDERS "excludeReadOnlyFolders"
 #define QUERYKEY_EXPAND_QUERIES "expandQueries"
 #define QUERYKEY_FORCE_ORIGINAL_TITLE "originalTitle"
 #define QUERYKEY_INCLUDE_HIDDEN "includeHidden"
@@ -416,6 +417,12 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
     aQueryString += NS_LITERAL_CSTRING(QUERYKEY_EXCLUDE_QUERIES "=1");
   }
 
+  // exclude read only folders
+  if (options->ExcludeReadOnlyFolders()) {
+    AppendAmpersandIfNonempty(aQueryString);
+    aQueryString += NS_LITERAL_CSTRING(QUERYKEY_EXCLUDE_READ_ONLY_FOLDERS "=1");
+  }
+
   // expand queries
   if (options->ExpandQueries()) {
     AppendAmpersandIfNonempty(aQueryString);
@@ -626,6 +633,11 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
     } else if (kvp.key.EqualsLiteral(QUERYKEY_EXCLUDE_QUERIES)) {
       SetOptionsKeyBool(kvp.value, aOptions,
                         &nsINavHistoryQueryOptions::SetExcludeQueries);
+
+    // exclude read only folders
+    } else if (kvp.key.EqualsLiteral(QUERYKEY_EXCLUDE_READ_ONLY_FOLDERS)) {
+      SetOptionsKeyBool(kvp.value, aOptions,
+                        &nsINavHistoryQueryOptions::SetExcludeReadOnlyFolders);
 
     // expand queries
     } else if (kvp.key.EqualsLiteral(QUERYKEY_EXPAND_QUERIES)) {
@@ -1055,6 +1067,20 @@ NS_IMETHODIMP
 nsNavHistoryQueryOptions::SetExcludeQueries(PRBool aExclude)
 {
   mExcludeQueries = aExclude;
+  return NS_OK;
+}
+
+// excludeReadOnlyFolders
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::GetExcludeReadOnlyFolders(PRBool* aExclude)
+{
+  *aExclude = mExcludeReadOnlyFolders;
+  return NS_OK;
+}
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::SetExcludeReadOnlyFolders(PRBool aExclude)
+{
+  mExcludeReadOnlyFolders = aExclude;
   return NS_OK;
 }
 
