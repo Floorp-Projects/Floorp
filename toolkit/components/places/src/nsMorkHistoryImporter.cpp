@@ -195,6 +195,8 @@ NS_IMETHODIMP
 nsMorkHistoryImporter::ImportHistory(nsIFile *aFile,
                                      nsINavHistoryService *aHistory)
 {
+  NS_ENSURE_TRUE(aFile && aHistory, NS_ERROR_NULL_POINTER);
+
   // Read in the mork file
   nsMorkReader reader;
   nsresult rv = reader.Init();
@@ -223,6 +225,7 @@ nsMorkHistoryImporter::ImportHistory(nsIFile *aFile,
   // Now add the results to history
   nsNavHistory *history = NS_STATIC_CAST(nsNavHistory*, aHistory);
   mozIStorageConnection *conn = history->GetStorageConnection();
+  NS_ENSURE_TRUE(conn, NS_ERROR_NOT_INITIALIZED);
   mozStorageTransaction transaction(conn, PR_FALSE);
 
   reader.EnumerateRows(AddToHistoryCB, &data);
