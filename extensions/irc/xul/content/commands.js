@@ -381,6 +381,21 @@ function dispatch(text, e, isInteractive, flags)
 
         case 1:
             /* one match, good for you */
+            var cm = client.commandManager;
+
+            if (cm.currentDispatchDepth >= cm.maxDispatchDepth)
+            {
+                /* We've reatched the max dispatch depth, so we need to unwind
+                 * the entire stack of commands.
+                 */
+                cm.dispatchUnwinding = true;
+            }
+            // Don't start any new commands while unwinding.
+            if (cm.dispatchUnwinding)
+                break;
+
+            cm.currentDispatchDepth++;
+
             var ex;
             try
             {
@@ -395,6 +410,19 @@ function dispatch(text, e, isInteractive, flags)
                     dd(formatException(ex) + "\n" + ex.stack);
                 else
                     dd(formatException(ex), MT_ERROR);
+            }
+
+            cm.currentDispatchDepth--;
+            if (cm.dispatchUnwinding && (cm.currentDispatchDepth == 0))
+            {
+                /* Last level to unwind, and this is where we display the
+                 * message. We need to leave it until here because displaying
+                 * a message invokes a couple of commands itself, and we need
+                 * to not be right on the dispatch limit for that.
+                 */
+                cm.dispatchUnwinding = false;
+                display(getMsg(MSG_ERR_MAX_DISPATCH_DEPTH, ary[0].name),
+                        MT_ERROR);
             }
             break;
 

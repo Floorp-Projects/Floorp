@@ -172,6 +172,9 @@ function CommandManager (defaultBundle)
 {
     this.commands = new Object();
     this.defaultBundle = defaultBundle;
+    this.currentDispatchDepth = 0;
+    this.maxDispatchDepth = 10;
+    this.dispatchUnwinding = false;
 }
 
 CommandManager.prototype.defaultFlags = 0;
