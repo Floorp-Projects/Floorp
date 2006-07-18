@@ -63,7 +63,7 @@
  * Bookmark comment := dd
  *   This affects the previosly added bookmark
  * Separator := hr
- *   Insert a separator into the current container (FIXME TODO)
+ *   Insert a separator into the current container
  * The folder hierarchy is defined by <dl>/<ul>/<menu> (the old importing code
  *     handles all these cases, when we write, use <dl>).
  *
@@ -616,28 +616,37 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
   lastCharset.Trim(kWhitespace);
   keyword.Trim(kWhitespace);
 
-  // ignore <a> tags that have no href: we don't know what to do with them
-  if (href.IsEmpty()) {
-    frame.mPreviousLink = nsnull;
-    return;
+  // For feeds, get the feed URL. If it is invalid, it will leave mPreviousFeed
+  // NULL and we'll continue trying to create it as a normal bookmark.
+  if (! feedUrl.IsEmpty()) {
+    NS_NewURI(getter_AddRefs(frame.mPreviousFeed),
+              NS_ConvertUTF16toUTF8(feedUrl), nsnull);
   }
 
-  // save this so the link text and descriptions can be associated with it
-  nsresult rv = NS_NewURI(getter_AddRefs(frame.mPreviousLink),
-                 NS_ConvertUTF16toUTF8(href), nsnull);
-  if (NS_FAILED(rv)) {
+  // Ignore <a> tags that have no href: we don't know what to do with them.
+  if (href.IsEmpty()) {
     frame.mPreviousLink = nsnull;
-    return; // invalid link
+
+    // The exception is for feeds, where the href is an optional component
+    // indicating the source web site.
+    if (! frame.mPreviousFeed)
+      return;
+  } else {
+    // Save this so the link text and descriptions can be associated with it.
+    // Note that we ignore errors if this is a feed: URLs aren't strictly
+    // necessary in these cases.
+    nsresult rv = NS_NewURI(getter_AddRefs(frame.mPreviousLink),
+                   href, nsnull);
+    if (NS_FAILED(rv) && ! frame.mPreviousFeed) {
+      frame.mPreviousLink = nsnull;
+      return; // invalid link
+    }
   }
-  
+
   // if there is a feedURL, this is a livemark, which is a special case
-  // that we handle in HandleLinkBegin()
-  if (!feedUrl.IsEmpty() &&
-      NS_SUCCEEDED(NS_NewURI(getter_AddRefs(frame.mPreviousFeed),
-                    NS_ConvertUTF16toUTF8(feedUrl), nsnull)))
-  {
+  // that we handle in HandleLinkBegin(): don't create normal bookmarks
+  if (frame.mPreviousFeed)
     return;
-  }
 
   // create the bookmarks
   mBookmarksService->InsertItem(frame.mContainerID, frame.mPreviousLink, -1);
