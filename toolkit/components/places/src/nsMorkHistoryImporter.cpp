@@ -169,6 +169,14 @@ nsMorkHistoryImporter::AddToHistoryCB(const nsACString &aRowID,
   if (uri) {
     PRBool isTyped = values[kTypedColumn].EqualsLiteral("1");
     nsINavHistoryService *history = data->history;
+
+    if (date != -1 && count != 0) {
+      // We have a last visit date, so we'll be adding a visit on that date.
+      // Since that will increment the visit count by 1, we need to initially
+      // add the entry with count - 1 visits.
+      --count;
+    }
+
     history->SetPageDetails(uri, nsDependentString(title, titleLength),
                             data->voidString, count,
                             values[kHiddenColumn].EqualsLiteral("1"), isTyped);
