@@ -353,7 +353,7 @@ public:
 
 // derived classes each provide their own implementation of has children and
 // forward the rest to us using this macro
-#define NS_FORWARD_CONTAINERNODE_EXCEPT_HASCHILDREN \
+#define NS_FORWARD_CONTAINERNODE_EXCEPT_HASCHILDREN_AND_READONLY \
   NS_IMETHOD GetContainerOpen(PRBool *aContainerOpen) \
     { return nsNavHistoryContainerResultNode::GetContainerOpen(aContainerOpen); } \
   NS_IMETHOD SetContainerOpen(PRBool aContainerOpen) \
@@ -362,8 +362,6 @@ public:
     { return nsNavHistoryContainerResultNode::GetChildCount(aChildCount); } \
   NS_IMETHOD GetChild(PRUint32 index, nsINavHistoryResultNode **_retval) \
     { return nsNavHistoryContainerResultNode::GetChild(index, _retval); } \
-  NS_IMETHOD GetChildrenReadOnly(PRBool *aChildrenReadOnly) \
-    { return nsNavHistoryContainerResultNode::GetChildrenReadOnly(aChildrenReadOnly); } \
   NS_IMETHOD GetRemoteContainerType(nsACString& aRemoteContainerType) \
     { return nsNavHistoryContainerResultNode::GetRemoteContainerType(aRemoteContainerType); } \
   NS_IMETHOD AppendURINode(const nsACString& aURI, const nsACString& aTitle, PRUint32 aAccessCount, PRTime aTime, const nsACString& aIconURI, nsINavHistoryResultNode **_retval) \
@@ -525,8 +523,10 @@ public:
   NS_IMETHOD GetType(PRUint32* type)
     { *type = nsNavHistoryResultNode::RESULT_TYPE_QUERY; return NS_OK; }
   NS_IMETHOD GetUri(nsACString& aURI); // does special lazy creation
-  NS_FORWARD_CONTAINERNODE_EXCEPT_HASCHILDREN
+  NS_FORWARD_CONTAINERNODE_EXCEPT_HASCHILDREN_AND_READONLY
   NS_IMETHOD GetHasChildren(PRBool* aHasChildren);
+  NS_IMETHOD GetChildrenReadOnly(PRBool *aChildrenReadOnly)
+    { return nsNavHistoryContainerResultNode::GetChildrenReadOnly(aChildrenReadOnly); }
   NS_DECL_NSINAVHISTORYQUERYRESULTNODE
 
   PRBool CanExpand();
@@ -582,8 +582,9 @@ public:
   NS_IMETHOD GetType(PRUint32* type)
     { *type = nsNavHistoryResultNode::RESULT_TYPE_FOLDER; return NS_OK; }
   NS_IMETHOD GetUri(nsACString& aURI);
-  NS_FORWARD_CONTAINERNODE_EXCEPT_HASCHILDREN
+  NS_FORWARD_CONTAINERNODE_EXCEPT_HASCHILDREN_AND_READONLY
   NS_IMETHOD GetHasChildren(PRBool* aHasChildren);
+  NS_IMETHOD GetChildrenReadOnly(PRBool *aChildrenReadOnly);
   NS_DECL_NSINAVHISTORYQUERYRESULTNODE
 
   NS_IMETHOD GetFolderId(PRInt64* aFolderId)
