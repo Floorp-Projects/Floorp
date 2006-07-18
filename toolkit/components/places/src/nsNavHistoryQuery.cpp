@@ -36,6 +36,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/**
+ * This file contains the definitions of nsNavHistoryQuery,
+ * nsNavHistoryQueryOptions, and those functions in nsINavHistory that directly
+ * support queries (specifically QueryStringToQueries and QueriesToQueryString).
+ */
+
 #include "nsNavHistory.h"
 #include "nsEscape.h"
 #include "nsCOMArray.h"
@@ -695,4 +701,384 @@ ParseQueryBooleanString(const nsCString& aString, PRBool* aValue)
     return NS_OK;
   }
   return NS_ERROR_INVALID_ARG;
+}
+
+
+// nsINavHistoryQuery **********************************************************
+
+NS_IMPL_ISUPPORTS1(nsNavHistoryQuery, nsINavHistoryQuery)
+
+// nsINavHistoryQuery::nsNavHistoryQuery
+//
+//    This must initialize the object such that the default values will cause
+//    all history to be returned if this query is used. Then the caller can
+//    just set the things it's interested in.
+
+nsNavHistoryQuery::nsNavHistoryQuery()
+  : mBeginTime(0), mBeginTimeReference(TIME_RELATIVE_EPOCH),
+    mEndTime(0), mEndTimeReference(TIME_RELATIVE_EPOCH),
+    mOnlyBookmarked(PR_FALSE), mDomainIsHost(PR_FALSE),
+    mItemTypes(PR_UINT32_MAX) // default to include all item types
+{
+}
+
+/* attribute PRTime beginTime; */
+NS_IMETHODIMP nsNavHistoryQuery::GetBeginTime(PRTime *aBeginTime)
+{
+  *aBeginTime = mBeginTime;
+  return NS_OK;
+}
+NS_IMETHODIMP nsNavHistoryQuery::SetBeginTime(PRTime aBeginTime)
+{
+  mBeginTime = aBeginTime;
+  return NS_OK;
+}
+
+/* attribute long beginTimeReference; */
+NS_IMETHODIMP nsNavHistoryQuery::GetBeginTimeReference(PRUint32* _retval)
+{
+  *_retval = mBeginTimeReference;
+  return NS_OK;
+}
+NS_IMETHODIMP nsNavHistoryQuery::SetBeginTimeReference(PRUint32 aReference)
+{
+  if (aReference > TIME_RELATIVE_NOW)
+    return NS_ERROR_INVALID_ARG;
+  mBeginTimeReference = aReference;
+  return NS_OK;
+}
+
+/* readonly attribute boolean hasBeginTime; */
+NS_IMETHODIMP nsNavHistoryQuery::GetHasBeginTime(PRBool* _retval)
+{
+  *_retval = ! (mBeginTimeReference == TIME_RELATIVE_EPOCH && mBeginTime == 0);
+  return NS_OK;
+}
+
+/* attribute PRTime endTime; */
+NS_IMETHODIMP nsNavHistoryQuery::GetEndTime(PRTime *aEndTime)
+{
+  *aEndTime = mEndTime;
+  return NS_OK;
+}
+NS_IMETHODIMP nsNavHistoryQuery::SetEndTime(PRTime aEndTime)
+{
+  mEndTime = aEndTime;
+  return NS_OK;
+}
+
+/* attribute long endTimeReference; */
+NS_IMETHODIMP nsNavHistoryQuery::GetEndTimeReference(PRUint32* _retval)
+{
+  *_retval = mEndTimeReference;
+  return NS_OK;
+}
+NS_IMETHODIMP nsNavHistoryQuery::SetEndTimeReference(PRUint32 aReference)
+{
+  if (aReference > TIME_RELATIVE_NOW)
+    return NS_ERROR_INVALID_ARG;
+  mEndTimeReference = aReference;
+  return NS_OK;
+}
+
+/* readonly attribute boolean hasEndTime; */
+NS_IMETHODIMP nsNavHistoryQuery::GetHasEndTime(PRBool* _retval)
+{
+  *_retval = ! (mEndTimeReference == TIME_RELATIVE_EPOCH && mEndTime == 0);
+  return NS_OK;
+}
+
+/* attribute string searchTerms; */
+NS_IMETHODIMP nsNavHistoryQuery::GetSearchTerms(nsAString& aSearchTerms)
+{
+  aSearchTerms = mSearchTerms;
+  return NS_OK;
+}
+NS_IMETHODIMP nsNavHistoryQuery::SetSearchTerms(const nsAString& aSearchTerms)
+{
+  mSearchTerms = aSearchTerms;
+  return NS_OK;
+}
+NS_IMETHODIMP nsNavHistoryQuery::GetHasSearchTerms(PRBool* _retval)
+{
+  *_retval = (! mSearchTerms.IsEmpty());
+  return NS_OK;
+}
+
+/* attribute boolean onlyBookmarked; */
+NS_IMETHODIMP nsNavHistoryQuery::GetOnlyBookmarked(PRBool *aOnlyBookmarked)
+{
+  *aOnlyBookmarked = mOnlyBookmarked;
+  return NS_OK;
+}
+NS_IMETHODIMP nsNavHistoryQuery::SetOnlyBookmarked(PRBool aOnlyBookmarked)
+{
+  mOnlyBookmarked = aOnlyBookmarked;
+  return NS_OK;
+}
+
+/* attribute boolean domainIsHost; */
+NS_IMETHODIMP nsNavHistoryQuery::GetDomainIsHost(PRBool *aDomainIsHost)
+{
+  *aDomainIsHost = mDomainIsHost;
+  return NS_OK;
+}
+NS_IMETHODIMP nsNavHistoryQuery::SetDomainIsHost(PRBool aDomainIsHost)
+{
+  mDomainIsHost = aDomainIsHost;
+  return NS_OK;
+}
+
+/* attribute string domain; */
+NS_IMETHODIMP nsNavHistoryQuery::GetDomain(nsAString& aDomain)
+{
+  aDomain = mDomain;
+  return NS_OK;
+}
+NS_IMETHODIMP nsNavHistoryQuery::SetDomain(const nsAString& aDomain)
+{
+  mDomain = aDomain;
+  return NS_OK;
+}
+NS_IMETHODIMP nsNavHistoryQuery::GetHasDomain(PRBool* _retval)
+{
+  *_retval = (! mDomain.IsEmpty());
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsNavHistoryQuery::GetFolders(PRUint32 *aCount,
+                                            PRInt64 **aFolders)
+{
+  PRUint32 count = mFolders.Length();
+  PRInt64 *folders = nsnull;
+  if (count > 0) {
+    folders = NS_STATIC_CAST(PRInt64*,
+                             nsMemory::Alloc(count * sizeof(PRInt64)));
+    NS_ENSURE_TRUE(folders, NS_ERROR_OUT_OF_MEMORY);
+
+    for (PRUint32 i = 0; i < count; ++i) {
+      folders[i] = mFolders[i];
+    }
+  }
+  *aCount = count;
+  *aFolders = folders;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsNavHistoryQuery::GetFolderCount(PRUint32 *aCount)
+{
+  *aCount = mFolders.Length();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsNavHistoryQuery::SetFolders(const PRInt64 *aFolders,
+                                            PRUint32 aFolderCount)
+{
+  if (!mFolders.ReplaceElementsAt(0, mFolders.Length(),
+                                  aFolders, aFolderCount)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsNavHistoryQuery::GetItemTypes(PRUint32 *aTypes)
+{
+  *aTypes = mItemTypes;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsNavHistoryQuery::SetItemTypes(PRUint32 aTypes)
+{
+  mItemTypes = aTypes;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsNavHistoryQuery::Clone(nsINavHistoryQuery** _retval)
+{
+  *_retval = nsnull;
+
+  nsNavHistoryQuery *clone = new nsNavHistoryQuery(*this);
+  NS_ENSURE_TRUE(clone, NS_ERROR_OUT_OF_MEMORY);
+
+  clone->mRefCnt = 0; // the clone doesn't inherit our refcount
+  NS_ADDREF(*_retval = clone);
+  return NS_OK;
+}
+
+
+// nsNavHistoryQueryOptions
+NS_IMPL_ISUPPORTS2(nsNavHistoryQueryOptions, nsNavHistoryQueryOptions, nsINavHistoryQueryOptions)
+
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::GetGroupingMode(PRUint32 *aGroupCount,
+                                          PRInt32** aGroupingMode)
+{
+  if (mGroupCount == 0) {
+    *aGroupCount = 0;
+    *aGroupingMode = nsnull;
+    return NS_OK;
+  }
+  *aGroupingMode = NS_STATIC_CAST(PRInt32*,
+                                  nsMemory::Alloc(sizeof(PRInt32) * mGroupCount));
+  if (! aGroupingMode)
+    return NS_ERROR_OUT_OF_MEMORY;
+  for(PRUint32 i = 0; i < mGroupCount; i ++)
+    (*aGroupingMode)[i] = mGroupings[i];
+  *aGroupCount = mGroupCount;
+  return NS_OK;
+}
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::SetGroupingMode(const PRInt32 *aGroupingMode,
+                                          PRUint32 aGroupCount)
+{
+  // check input
+  PRUint32 i;
+  for (i = 0; i < aGroupCount; i ++) {
+    if (aGroupingMode[i] < 0 || aGroupingMode[i] > GROUP_BY_FOLDER)
+      return NS_ERROR_INVALID_ARG;
+  }
+
+  if (mGroupings) {
+    delete[] mGroupings;
+    mGroupings = nsnull;
+    mGroupCount = 0;
+  }
+  if (! aGroupCount)
+    return NS_OK;
+
+  mGroupings = new PRInt32[aGroupCount];
+  NS_ENSURE_TRUE(mGroupings, NS_ERROR_OUT_OF_MEMORY);
+
+  for (i = 0; i < aGroupCount; ++i) {
+    mGroupings[i] = aGroupingMode[i];
+  }
+
+  mGroupCount = aGroupCount;
+  return NS_OK;
+}
+
+// sortingMode
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::GetSortingMode(PRInt32* aMode)
+{
+  *aMode = mSort;
+  return NS_OK;
+}
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::SetSortingMode(PRInt32 aMode)
+{
+  if (aMode < 0 || aMode > SORT_BY_VISITCOUNT_DESCENDING)
+    return NS_ERROR_INVALID_ARG;
+  mSort = aMode;
+  return NS_OK;
+}
+
+// resultType
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::GetResultType(PRInt32* aType)
+{
+  *aType = mResultType;
+  return NS_OK;
+}
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::SetResultType(PRInt32 aType)
+{
+  if (aType < 0 || aType > RESULT_TYPE_VISIT)
+    return NS_ERROR_INVALID_ARG;
+  mResultType = aType;
+  return NS_OK;
+}
+
+// expandPlaces
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::GetExpandPlaces(PRBool* aExpand)
+{
+  *aExpand = mExpandPlaces;
+  return NS_OK;
+}
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::SetExpandPlaces(PRBool aExpand)
+{
+  mExpandPlaces = aExpand;
+  return NS_OK;
+}
+
+// forceOriginalTitle
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::GetForceOriginalTitle(PRBool* aForce)
+{
+  *aForce = mForceOriginalTitle;
+  return NS_OK;
+}
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::SetForceOriginalTitle(PRBool aForce)
+{
+  mForceOriginalTitle = aForce;
+  return NS_OK;
+}
+
+// includeHidden
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::GetIncludeHidden(PRBool* aIncludeHidden)
+{
+  *aIncludeHidden = mIncludeHidden;
+  return NS_OK;
+}
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::SetIncludeHidden(PRBool aIncludeHidden)
+{
+  mIncludeHidden = aIncludeHidden;
+  return NS_OK;
+}
+
+// maxResults
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::GetMaxResults(PRUint32* aMaxResults)
+{
+  *aMaxResults = mMaxResults;
+  return NS_OK;
+}
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::SetMaxResults(PRUint32 aMaxResults)
+{
+  mMaxResults = aMaxResults;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::Clone(nsINavHistoryQueryOptions** aResult)
+{
+  nsNavHistoryQueryOptions *clone = nsnull;
+  nsresult rv = Clone(&clone);
+  *aResult = clone;
+  return rv;
+}
+
+nsresult
+nsNavHistoryQueryOptions::Clone(nsNavHistoryQueryOptions **aResult)
+{
+  *aResult = nsnull;
+  nsNavHistoryQueryOptions *result = new nsNavHistoryQueryOptions();
+  if (! result)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsRefPtr<nsNavHistoryQueryOptions> resultHolder(result);
+  result->mSort = mSort;
+  result->mResultType = mResultType;
+  result->mGroupCount = mGroupCount;
+  if (mGroupCount) {
+    result->mGroupings = new PRInt32[mGroupCount];
+    if (! result->mGroupings) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    for (PRUint32 i = 0; i < mGroupCount; i ++)
+      result->mGroupings[i] = mGroupings[i];
+  } else {
+    result->mGroupCount = nsnull;
+  }
+  result->mExpandPlaces = mExpandPlaces;
+
+  resultHolder.swap(*aResult);
+  return NS_OK;
 }
