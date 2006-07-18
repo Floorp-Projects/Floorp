@@ -117,10 +117,9 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSINAVHISTORYRESULTNODE
 
-private:
+protected:
   virtual ~nsNavHistoryResultNode() {}
 
-protected:
   // parent of this element, NULL if no parent. Filled in by FillAllElements
   // in the result set.
   nsNavHistoryResultNode* mParent;
