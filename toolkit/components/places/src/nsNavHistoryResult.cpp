@@ -1243,12 +1243,13 @@ NS_IMETHODIMP nsNavHistoryResult::GetCellText(PRInt32 rowIndex,
     }
     case Column_Date:
     {
-      if (elt->mType == nsINavHistoryResult::RESULT_TYPE_HOST ||
-          elt->mType == nsINavHistoryResult::RESULT_TYPE_DAY) {
+      if (elt->mTime == 0 ||
+          (elt->mType != nsINavHistoryResult::RESULT_TYPE_URL &&
+           elt->mType != nsINavHistoryResult::RESULT_TYPE_VISIT)) {
         // hosts and days shouldn't have a value for the date column. Actually,
         // you could argue this point, but looking at the results, seeing the
         // most recently visited date is not what I expect, and gives me no
-        // information I know how to use.
+        // information I know how to use. Only show this for URLs and visits
         _retval.Truncate(0);
       } else {
         nsDateFormatSelector dateFormat;
