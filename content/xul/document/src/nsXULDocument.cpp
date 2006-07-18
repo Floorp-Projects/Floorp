@@ -947,11 +947,6 @@ nsXULDocument::AttributeChanged(nsIDocument* aDocument,
         }
     }
 
-    // Now notify external observers
-    NS_DOCUMENT_NOTIFY_OBSERVERS(AttributeChanged,
-                                 (this, aElement, aNameSpaceID,
-                                  aAttribute, aModType));
-
     // See if there is anything we need to persist in the localstore.
     //
     // XXX Namespace handling broken :-(
