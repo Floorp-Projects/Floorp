@@ -1,3 +1,4 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -59,6 +60,7 @@ interface nsINavHistoryResultNode : nsISupports
   const PRUint32 RESULT_TYPE_HOST = 2;
   const PRUint32 RESULT_TYPE_DAY = 3;
   const PRUint32 RESULT_TYPE_FOLDER = 4;
+  const PRUint32 RESULT_TYPE_QUERY = 5;
   readonly attribute PRUint32 type;
 
   /**
@@ -72,6 +74,14 @@ interface nsINavHistoryResultNode : nsISupports
    * Only valid for RESULT_TYPE_FOLDER nodes, 0 for all other types.
    */
   readonly attribute PRInt64 folderId;
+
+  /**
+   * Get the queries which build this node's children.
+   * Only valid for RESULT_TYPE_QUERY nodes.
+   */
+  void getQueries(out nsINavHistoryQueryOptions options,
+                  out unsigned long queryCount,
+                  [retval,array,size_is(queryCount)] out nsINavHistoryQuery queries);
 
   /**
    * Title of the web page, or name of the host.
@@ -491,7 +501,7 @@ interface nsINavHistory : nsISupports
    * executeQuery. See executeQuery()
    */
   nsINavHistoryResult executeQueries(
-    [const,array,size_is(aQueryCount)] in nsINavHistoryQuery aQueries, in PRUint32 aQueryCount,
+    [array,size_is(aQueryCount)] in nsINavHistoryQuery aQueries, in PRUint32 aQueryCount,
     in nsINavHistoryQueryOptions options);
 
   /**
@@ -507,7 +517,7 @@ interface nsINavHistory : nsISupports
    * of queryStringToQueries()
    */
   AUTF8String queriesToQueryString(
-    [const, array, size_is(aQueryCount)] in nsINavHistoryQuery aQueries, in PRUint32 aQueryCount,
+    [array, size_is(aQueryCount)] in nsINavHistoryQuery aQueries, in PRUint32 aQueryCount,
     in nsINavHistoryQueryOptions options);
 
   /**
