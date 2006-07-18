@@ -50,6 +50,7 @@
 #include "nsDebug.h"
 #include "nsEnumeratorUtils.h"
 #include "nsFaviconService.h"
+#include "nsIChannelEventSink.h"
 #include "nsIComponentManager.h"
 #include "nsILocaleService.h"
 #include "nsILocalFile.h"
@@ -102,13 +103,19 @@
 // the value of mLastNow expires every 3 seconds
 #define HISTORY_EXPIRE_NOW_TIMEOUT (3 * PR_MSEC_PER_SEC)
 
-NS_IMPL_ISUPPORTS6(nsNavHistory,
-                   nsINavHistoryService,
-                   nsIGlobalHistory2,
-                   nsIBrowserHistory,
-                   nsIObserver,
-                   nsISupportsWeakReference,
-                   nsIAutoCompleteSearch)
+NS_IMPL_ADDREF(nsNavHistory)
+NS_IMPL_RELEASE(nsNavHistory)
+
+NS_INTERFACE_MAP_BEGIN(nsNavHistory)
+  NS_INTERFACE_MAP_ENTRY(nsINavHistoryService)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIGlobalHistory2, nsIGlobalHistory3)
+  NS_INTERFACE_MAP_ENTRY(nsIGlobalHistory3)
+  NS_INTERFACE_MAP_ENTRY(nsIBrowserHistory)
+  NS_INTERFACE_MAP_ENTRY(nsIObserver)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY(nsIAutoCompleteSearch)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsINavHistoryService)
+NS_INTERFACE_MAP_END
 
 static nsresult GetReversedHostname(nsIURI* aURI, nsAString& host);
 static void GetReversedHostname(const nsString& aForward, nsAString& aReversed);
@@ -245,11 +252,18 @@ nsNavHistory::Init()
   mIgnoreHostnames.AppendString(NS_LITERAL_STRING("www."));
   mIgnoreHostnames.AppendString(NS_LITERAL_STRING("ftp."));
 
-  // extract the last session ID so we know where to pick up
+  // extract the last session ID so we know where to pick up. There is no index
+  // over sessions so the naive statement "SELECT MAX(session) FROM
+  // moz_historyvisit" won't have good performance. Instead we select the
+  // session of the last visited page because we do have indices over dates.
+  // We still do MAX(session) in case there are duplicate sessions for the same
+  // date, but there will generally be very few (1) of these.
   {
     nsCOMPtr<mozIStorageStatement> selectSession;
     rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-        "SELECT MAX(session) FROM moz_historyvisit"),
+        "SELECT MAX(session) FROM "
+        "(SELECT MAX(visit_date) AS visit_date FROM moz_historyvisit) maxvd "
+        "JOIN moz_historyvisit v ON maxvd.visit_date = v.visit_date"),
       getter_AddRefs(selectSession));
     NS_ENSURE_SUCCESS(rv, rv);
     PRBool hasSession;
@@ -304,6 +318,7 @@ nsNavHistory::Init()
   // recent events hash tables
   NS_ENSURE_TRUE(mRecentTyped.Init(128), NS_ERROR_OUT_OF_MEMORY);
   NS_ENSURE_TRUE(mRecentBookmark.Init(128), NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(mRecentRedirects.Init(128), NS_ERROR_OUT_OF_MEMORY);
 
   // The AddObserver calls must be the last lines in this function, because
   // this function may fail, and thus, this object would be not completely
@@ -402,9 +417,6 @@ nsNavHistory::InitDB()
     rv = mDBConn->ExecuteSimpleSQL(
         NS_LITERAL_CSTRING("CREATE INDEX moz_historyvisit_dateindex ON moz_historyvisit (visit_date)"));
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBConn->ExecuteSimpleSQL(
-        NS_LITERAL_CSTRING("CREATE INDEX moz_historyvisit_sessionindex ON moz_historyvisit (session)"));
-    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // functions (must happen after table creation)
@@ -486,11 +498,28 @@ nsNavHistory::InitDB()
     getter_AddRefs(mDBInsertVisit));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // mDBIncrementVisitCount
+  // mDBGetPageVisitStats (see InternalAdd)
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "UPDATE moz_history SET visit_count = visit_count + 1 "
+      "SELECT id, visit_count, typed, hidden "
+      "FROM moz_history "
+      "WHERE url = ?1"),
+    getter_AddRefs(mDBGetPageVisitStats));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // mDBUpdatePageVisitStats (see InternalAdd)
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "UPDATE moz_history "
+      "SET visit_count = ?2, hidden = ?3 "
       "WHERE id = ?1"),
-                                getter_AddRefs(mDBIncrementVisitCount));
+    getter_AddRefs(mDBUpdatePageVisitStats));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // mDBAddNewPage (see InternalAddNewPage)
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "INSERT INTO moz_history "
+      "(url, rev_host, hidden, typed, visit_count) "
+      "VALUES (?1, ?2, ?3, ?4, ?5)"),
+    getter_AddRefs(mDBAddNewPage));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // mDBVisitToURLResult, should match kGetInfoIndex_* (see GetQueryResults)
@@ -629,12 +658,11 @@ nsresult
 nsNavHistory::GetUrlIdFor(nsIURI* aURI, PRInt64* aEntryID,
                           PRBool aAutoCreate)
 {
-  nsresult rv;
   *aEntryID = 0;
 
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
   mozStorageStatementScoper statementResetter(mDBGetURLPageInfo);
-  rv = BindStatementURI(mDBGetURLPageInfo, 0, aURI);
+  nsresult rv = BindStatementURI(mDBGetURLPageInfo, 0, aURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool hasEntry = PR_FALSE;
@@ -644,9 +672,10 @@ nsNavHistory::GetUrlIdFor(nsIURI* aURI, PRInt64* aEntryID,
   if (hasEntry) {
     return mDBGetURLPageInfo->GetInt64(kGetInfoIndex_PageID, aEntryID);
   } else if (aAutoCreate) {
+    // create a new hidden, untyped, unvisited entry
     mDBGetURLPageInfo->Reset();
     statementResetter.Abandon();
-    rv = InternalAddNewPage(aURI, nsnull, PR_TRUE, PR_FALSE, 0, aEntryID);
+    rv = InternalAddNewPage(aURI, PR_TRUE, PR_FALSE, 0, aEntryID);
     if (NS_SUCCEEDED(rv))
       transaction.Commit();
     return rv;
@@ -671,154 +700,6 @@ nsNavHistory::SaveCollapseItem(const nsAString& aTitle)
 }
 
 
-// nsNavHistory::InternalAdd
-//
-//    Adds or updates a page with the given URI. The ID of the new/updated
-//    page will be put into aPageID (can be NULL).
-//
-//    THE RETURNED NEW PAGE ID MAY BE 0 indicating that this page should not be
-//    added to the history.
-
-nsresult
-nsNavHistory::InternalAdd(nsIURI* aURI, nsIURI* aReferrer, PRInt64 aSessionID,
-                          PRUint32 aTransitionType, const PRUnichar* aTitle,
-                          PRTime aVisitDate, PRBool aRedirect,
-                          PRBool aToplevel, PRInt64* aPageID)
-{
-  nsresult rv;
-
-  // Filter out unwanted URIs, silently failing
-  PRBool canAdd = PR_FALSE;
-  rv = CanAddURI(aURI, &canAdd);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!canAdd) {
-    if (aPageID)
-      *aPageID = 0;
-    return NS_OK;
-  }
-
-  // in-memory version
-#ifdef IN_MEMORY_LINKS
-  if (!mMemDBConn)
-    InitMemDB();
-  rv = BindStatementURI(mMemDBAddPage, 0, aURI);
-  NS_ENSURE_SUCCESS(rv, rv);
-  mMemDBAddPage->Execute();
-#endif
-
-  // this will prevent corruption since we have to do a two-phase add
-  mozStorageTransaction transaction(mDBConn, PR_FALSE,
-                                  mozIStorageConnection::TRANSACTION_EXCLUSIVE);
-
-  // see if this is an update (revisit) or a new page
-  nsCOMPtr<mozIStorageStatement> dbSelectStatement;
-  rv = mDBConn->CreateStatement(
-      NS_LITERAL_CSTRING("SELECT id,visit_count,typed,hidden FROM moz_history WHERE url = ?1"),
-      getter_AddRefs(dbSelectStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = BindStatementURI(dbSelectStatement, 0, aURI);
-  NS_ENSURE_SUCCESS(rv, rv);
-  PRBool alreadyVisited = PR_TRUE;
-  rv = dbSelectStatement->ExecuteStep(&alreadyVisited);
-
-  PRInt64 pageID = 0;
-
-  if (alreadyVisited) {
-    // Update the existing entry...
-
-    rv = dbSelectStatement->GetInt64(0, &pageID);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    PRInt32 oldVisitCount = 0;
-    rv = dbSelectStatement->GetInt32(1, &oldVisitCount);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    PRInt32 oldTypedState = 0;
-    rv = dbSelectStatement->GetInt32(2, &oldTypedState);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    PRInt32 oldHiddenState = 0;
-    rv = dbSelectStatement->GetInt32(3, &oldHiddenState);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // must free the previous statement before we can make a new one
-    dbSelectStatement = nsnull;
-
-    // update visit count and last visit date for the URL
-    // (only update the title if we have one, usually we don't)
-    nsCOMPtr<mozIStorageStatement> dbUpdateStatement;
-    if (aTitle) {
-      // UNTESTED CODE PATH
-      rv = mDBConn->CreateStatement(
-          NS_LITERAL_CSTRING("UPDATE moz_history SET visit_count = ?1, hidden = ?2, title = ?3 WHERE id = ?4"),
-          getter_AddRefs(dbUpdateStatement));
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = dbUpdateStatement->BindInt64Parameter(2, aVisitDate);
-    } else {
-      rv = mDBConn->CreateStatement(
-          NS_LITERAL_CSTRING("UPDATE moz_history SET visit_count = ?1, hidden = ?2 WHERE id = ?4"),
-          getter_AddRefs(dbUpdateStatement));
-    }
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = dbUpdateStatement->BindInt32Parameter(0, oldVisitCount + 1);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // embedded links will be hidden, but don't hide pages that are already
-    // unhidden
-    dbUpdateStatement->BindInt32Parameter(1, oldHiddenState &&
-             aTransitionType == nsINavHistoryService::TRANSITION_EMBED ? 1 : 0);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = dbUpdateStatement->BindInt64Parameter(3, pageID);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = dbUpdateStatement->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    // New page
-
-    // must free the previous statement before we can make a new one
-    dbSelectStatement = nsnull;
-
-    // hide embedded links, everything else is visible
-    PRBool hidden = (aTransitionType == TRANSITION_EMBED);
-
-    // set as not typed, visited once
-    rv = InternalAddNewPage(aURI, aTitle, hidden, PR_FALSE, 1, &pageID);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  PRInt64 visitID, referringID;
-  rv = InternalAddVisit(aReferrer, pageID, aVisitDate, aTransitionType,
-                        &visitID, &referringID);
-
-  if (aPageID)
-    *aPageID = pageID;
-
-  // Set the most recently visited page, which is necessary when you have
-  // your "new window" page set to the most recent.
-  if (aToplevel) {
-    nsCAutoString utf8URISpec;
-    rv = aURI->GetSpec(utf8URISpec);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = gPrefBranch->SetCharPref(PREF_LAST_PAGE_VISITED,
-                                  PromiseFlatCString(utf8URISpec).get());
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // Notify observers. Note that we finish the transaction before doing this in
-  // case they need to use the DB
-  transaction.Commit();
-  if (aToplevel) {
-    ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver,
-                        OnVisit(aURI, visitID, aVisitDate, aSessionID,
-                                referringID, aTransitionType));
-  }
-
-  return NS_OK;
-}
-
-
 // nsNavHistory::InternalAddNewPage
 //
 //    Adds a new page to the DB. THIS SHOULD BE THE ONLY PLACE NEW ROWS ARE
@@ -827,54 +708,37 @@ nsNavHistory::InternalAdd(nsIURI* aURI, nsIURI* aReferrer, PRInt64 aSessionID,
 //    If non-null, the new page ID will be placed into aPageID.
 
 nsresult
-nsNavHistory::InternalAddNewPage(nsIURI* aURI, const PRUnichar* aTitle,
-                                 PRBool aHidden, PRBool aTyped,
+nsNavHistory::InternalAddNewPage(nsIURI* aURI, PRBool aHidden, PRBool aTyped,
                                  PRInt32 aVisitCount, PRInt64* aPageID)
 {
-  nsCOMPtr<mozIStorageStatement> dbInsertStatement;
-  nsresult rv = mDBConn->CreateStatement(
-      NS_LITERAL_CSTRING("INSERT INTO moz_history (url, title, rev_host, hidden, typed, visit_count) VALUES ( ?1, ?2, ?3, ?4, ?5, ?6 )"),
-      getter_AddRefs(dbInsertStatement));
+  mozStorageStatementScoper scoper(mDBAddNewPage);
+  nsresult rv = BindStatementURI(mDBAddNewPage, 0, aURI);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // URL
-  rv = BindStatementURI(dbInsertStatement, 0, aURI);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // title: use NULL if not given to distinguish it from empty titles
-  if (aTitle) {
-    nsAutoString title(aTitle);
-    rv = dbInsertStatement->BindStringParameter(1, title);
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    rv = dbInsertStatement->BindNullParameter(1);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
 
   // host (reversed with trailing period)
   nsAutoString revHost;
   rv = GetReversedHostname(aURI, revHost);
   // Not all URI types have hostnames, so this is optional.
   if (NS_SUCCEEDED(rv)) {
-    rv = dbInsertStatement->BindStringParameter(2, revHost);
+    rv = mDBAddNewPage->BindStringParameter(1, revHost);
   } else {
-    rv = dbInsertStatement->BindNullParameter(2);
+    rv = mDBAddNewPage->BindNullParameter(1);
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
   // hidden
-  rv = dbInsertStatement->BindInt32Parameter(3, aHidden);
+  rv = mDBAddNewPage->BindInt32Parameter(2, aHidden);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // typed
-  rv = dbInsertStatement->BindInt32Parameter(4, aTyped);
+  rv = mDBAddNewPage->BindInt32Parameter(3, aTyped);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // visit count
-  rv = dbInsertStatement->BindInt32Parameter(5, aVisitCount);
+  rv = mDBAddNewPage->BindInt32Parameter(4, aVisitCount);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = dbInsertStatement->Execute();
+  rv = mDBAddNewPage->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // If the caller wants the page ID, go get it
@@ -890,48 +754,16 @@ nsNavHistory::InternalAddNewPage(nsIURI* aURI, const PRUnichar* aTitle,
 // nsNavHistory::InternalAddVisit
 //
 //    Just a wrapper for inserting a new visit in the DB.
-//
-//    If you give it a referrer, it will try to find a "good" visit to attach
-//    as the created visit's source. Unfortunately, we can't track where links
-//    come from precisely, so we find the most recent visit for the referring
-//    page and use it as the parent. This will get messed up if one page is
-//    open in more than one tab/window at once, but should be good enough for
-//    most cases.
-//
-//    The visit ID of the referrer that this function computes will be put
-//    into referringID.
 
-nsresult nsNavHistory::InternalAddVisit(nsIURI* aReferrer, PRInt64 aPageID,
-                                        PRTime aTime, PRInt32 aTransitionType,
-                                        PRInt64* visitID, PRInt64 *referringID)
+nsresult
+nsNavHistory::InternalAddVisit(PRInt64 aPageID, PRInt64 aReferringVisit,
+                               PRInt64 aSessionID, PRTime aTime,
+                               PRInt32 aTransitionType, PRInt64* visitID)
 {
   nsresult rv;
-  PRInt64 fromStep = 0;
-  PRInt64 sessionID = 0;
-  if (aReferrer) {
-    // try to find the parent visit
-    mozStorageStatementScoper scoper(mDBRecentVisitOfURL);
-    rv = BindStatementURI(mDBRecentVisitOfURL, 0, aReferrer);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    PRBool hasMore;
-    rv = mDBRecentVisitOfURL->ExecuteStep(&hasMore);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (hasMore) {
-      fromStep = mDBRecentVisitOfURL->AsInt64(0);
-      sessionID = mDBRecentVisitOfURL->AsInt64(1);
-    }
-  }
-  if (! sessionID) {
-    // need to create a new session
-    mLastSessionID ++;
-    sessionID = mLastSessionID;
-  }
-  *referringID = fromStep;
-
   mozStorageStatementScoper scoper(mDBInsertVisit);
 
-  rv = mDBInsertVisit->BindInt64Parameter(0, fromStep);
+  rv = mDBInsertVisit->BindInt64Parameter(0, aReferringVisit);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mDBInsertVisit->BindInt64Parameter(1, aPageID);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -939,13 +771,41 @@ nsresult nsNavHistory::InternalAddVisit(nsIURI* aReferrer, PRInt64 aPageID,
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mDBInsertVisit->BindInt32Parameter(3, aTransitionType);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBInsertVisit->BindInt64Parameter(4, sessionID);
+  rv = mDBInsertVisit->BindInt64Parameter(4, aSessionID);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mDBInsertVisit->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
   return mDBConn->GetLastInsertRowID(visitID);
+}
+
+
+// nsNavHistory::FindLastVisit
+//
+//    This finds the most recent visit to the given URL. If found, it will put
+//    that visit's ID and session into the respective out parameters and return
+//    true. Returns false if no visit is found.
+//
+//    This is used to compute the referring visit.
+
+PRBool
+nsNavHistory::FindLastVisit(nsIURI* aURI, PRInt64* aVisitID,
+                            PRInt64* aSessionID)
+{
+  mozStorageStatementScoper scoper(mDBRecentVisitOfURL);
+  nsresult rv = BindStatementURI(mDBRecentVisitOfURL, 0, aURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool hasMore;
+  rv = mDBRecentVisitOfURL->ExecuteStep(&hasMore);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (hasMore) {
+    *aVisitID = mDBRecentVisitOfURL->AsInt64(0);
+    *aSessionID = mDBRecentVisitOfURL->AsInt64(1);
+    return PR_TRUE;
+  }
+  return PR_FALSE;
 }
 
 
@@ -1456,7 +1316,7 @@ nsNavHistory::MarkPageAsFollowedBookmark(nsIURI* aURI)
   nsCAutoString uriString;
   aURI->GetSpec(uriString);
 
-  // if URL is already in the typed queue, then we need to remove the old one
+  // if URL is already in the queue, then we need to remove the old one
   PRInt64 unusedEventTime;
   if (mRecentBookmark.Get(uriString, &unusedEventTime))
     mRecentBookmark.Remove(uriString);
@@ -1467,18 +1327,6 @@ nsNavHistory::MarkPageAsFollowedBookmark(nsIURI* aURI)
   mRecentTyped.Put(uriString, GetNow());
   return NS_OK;
 }
-
-
-// nsNavHistory::AddPageToSession
-
-/*
-nsresult
-nsNavHistory::AddPageToSession(nsIURI* aURI)
-{
-  // FIXME
-  return NS_OK;
-}
-*/
 
 
 // nsNavHistory::CanAddURI
@@ -1570,34 +1418,156 @@ nsNavHistory::SetPageDetails(nsIURI* aURI, const nsAString& aTitle,
 
 
 // nsNavHistory::AddVisit
+//
+//    Adds or updates a page with the given URI. The ID of the new visit will
+//    be put into aVisitID.
+//
+//    THE RETURNED NEW VISIT ID MAY BE 0 indicating that this page should not be
+//    added to the history.
 
 NS_IMETHODIMP
-nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, PRInt64 aReferrer,
-                       PRInt32 aTransitionType, PRInt64 aSession,
-                       PRInt64* aVisitID)
+nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, PRInt64 aReferringVisit,
+                       PRInt32 aTransitionType, PRBool aIsRedirect,
+                       PRInt64 aSessionID, PRInt64* aVisitID)
 {
-  mozStorageTransaction transaction(mDBConn, PR_FALSE);
+  nsresult rv;
 
-  // look up the page ID
-  PRInt64 pageID;
-  nsresult rv = GetUrlIdFor(aURI, &pageID, PR_TRUE);
+  // Filter out unwanted URIs, silently failing
+  PRBool canAdd = PR_FALSE;
+  rv = CanAddURI(aURI, &canAdd);
   NS_ENSURE_SUCCESS(rv, rv);
+  if (!canAdd) {
+    *aVisitID = 0;
+    return NS_OK;
+  }
 
-  // FIXME(brettw) we ignore the referrer ID, this should be hooked up. (This
-  // is pending a redo of the way sessions and referrers are handled coming
-  // from the docshell that will necessitate a rework of all of the visit
-  // creation code.)
-  PRInt64 referringID; // don't care about this
-  rv = InternalAddVisit(nsnull, pageID, aTime, aTransitionType, aVisitID,
-                        &referringID);
+  // in-memory version
+#ifdef IN_MEMORY_LINKS
+  if (!mMemDBConn)
+    InitMemDB();
+  rv = BindStatementURI(mMemDBAddPage, 0, aURI);
   NS_ENSURE_SUCCESS(rv, rv);
+  mMemDBAddPage->Execute();
+#endif
 
-  rv = mDBIncrementVisitCount->BindInt64Parameter(0, pageID);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBIncrementVisitCount->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
+  // This will prevent corruption since we have to do a two-phase add.
+  // Generally this won't do anything because AddURI has its own transaction.
+  mozStorageTransaction transaction(mDBConn, PR_FALSE,
+                                  mozIStorageConnection::TRANSACTION_EXCLUSIVE);
 
-  return transaction.Commit();
+  // see if this is an update (revisit) or a new page
+  mozStorageStatementScoper scoper(mDBGetPageVisitStats);
+  rv = BindStatementURI(mDBGetPageVisitStats, 0, aURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+  PRBool alreadyVisited = PR_TRUE;
+  rv = mDBGetPageVisitStats->ExecuteStep(&alreadyVisited);
+
+  PRInt64 pageID = 0;
+  PRBool hidden;
+  PRBool newItem = PR_FALSE; // used to send out notifications at the end
+  if (alreadyVisited) {
+    // Update the existing entry...
+
+    rv = mDBGetPageVisitStats->GetInt64(0, &pageID);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRInt32 oldVisitCount = 0;
+    rv = mDBGetPageVisitStats->GetInt32(1, &oldVisitCount);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRInt32 oldTypedState = 0;
+    rv = mDBGetPageVisitStats->GetInt32(2, &oldTypedState);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRInt32 oldHiddenState = 0;
+    rv = mDBGetPageVisitStats->GetInt32(3, &oldHiddenState);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // free the previous statement before we make a new one
+    mDBGetPageVisitStats->Reset();
+    scoper.Abandon();
+
+    // embedded links and redirects will be hidden, but don't hide pages that
+    // are already unhidden.
+    //
+    // Note that we test the redirect flag and not for the redirect transition
+    // type. The transition type refers to how we got here, and whether a page
+    // is shown does not depend on whether you got to it through a redirect.
+    // Rather, we want to hide pages that do not themselves redirect somewhere
+    // else, which is what the redirect flag means.
+    hidden = oldHiddenState;
+    if (hidden && ! aIsRedirect &&
+        aTransitionType != nsINavHistoryService::TRANSITION_EMBED)
+      hidden = PR_FALSE; // unhide
+
+    // some items may have a visit count of 0 which will not count for link
+    // visiting, so be sure to note this transition
+    if (oldVisitCount == 0)
+      newItem = PR_TRUE;
+
+    // update with new stats
+    mozStorageStatementScoper updateScoper(mDBUpdatePageVisitStats);
+    rv = mDBUpdatePageVisitStats->BindInt64Parameter(0, pageID);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBUpdatePageVisitStats->BindInt32Parameter(1, oldVisitCount + 1);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBUpdatePageVisitStats->BindInt32Parameter(2, hidden);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBUpdatePageVisitStats->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    // New page
+    newItem = PR_TRUE;
+
+    // free the previous statement before we make a new one
+    mDBGetPageVisitStats->Reset();
+    scoper.Abandon();
+
+    // hide embedded links and redirects, everything else is visible,
+    // See the hidden computation code above for a little more explanation.
+    hidden = (aTransitionType == TRANSITION_EMBED || aIsRedirect);
+
+    // set as not typed, visited once
+    rv = InternalAddNewPage(aURI, hidden, PR_FALSE, 1, &pageID);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  rv = InternalAddVisit(pageID, aReferringVisit, aSessionID, aTime,
+                        aTransitionType, aVisitID);
+
+  // Set the most recently visited page, which is necessary when you have
+  // your "new window" page set to the most recent.
+  if (! hidden) {
+    nsCAutoString utf8URISpec;
+    rv = aURI->GetSpec(utf8URISpec);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = gPrefBranch->SetCharPref(PREF_LAST_PAGE_VISITED,
+                                  PromiseFlatCString(utf8URISpec).get());
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Notify observers
+  // FIXME bug 325241: make a way to observe hidden URLs
+  transaction.Commit();
+  if (! hidden) {
+    ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver,
+                        OnVisit(aURI, *aVisitID, aTime, aSessionID,
+                                aReferringVisit, aTransitionType));
+  }
+
+  // Normally docshell send the link visited observer notification for us (this
+  // will tell all the documents to update their visited link coloring).
+  // However, for redirects (since we implement nsIGlobalHistory3) this will
+  // not happen and we need to send it ourselves.
+  if (newItem && aIsRedirect) {
+    nsCOMPtr<nsIObserverService> obsService =
+      do_GetService("@mozilla.org/observer-service;1");
+    if (obsService)
+      obsService->NotifyObservers(aURI, NS_LINK_VISITED_EVENT_TOPIC, nsnull);
+  }
+
+  return NS_OK;
 }
 
 
@@ -1982,11 +1952,12 @@ NS_IMETHODIMP
 nsNavHistory::AddPageWithDetails(nsIURI *aURI, const PRUnichar *aTitle,
                                  PRInt64 aLastVisited)
 {
-  PRInt64 pageid;
-  nsresult rv = InternalAdd(aURI, nsnull, 0, 0, aTitle, aLastVisited,
-                            PR_FALSE, PR_TRUE, &pageid);
+  PRInt64 visitID;
+  nsresult rv = AddVisit(aURI, aLastVisited, 0, TRANSITION_LINK, PR_FALSE,
+                         0, &visitID);
   NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
+
+  return SetPageTitleInternal(aURI, PR_FALSE, nsString(aTitle));
 }
 
 
@@ -2354,24 +2325,64 @@ nsNavHistory::MarkPageAsTyped(nsIURI *aURI)
 
 // nsNavHistory::AddURI
 //
-//    This is the main method of adding history entries. It can't change for
-//    legacy reasons, so we infer most of the information necessary to connect
-//    the visits properly.
+//    This is the main method of adding history entries.
 
 NS_IMETHODIMP
 nsNavHistory::AddURI(nsIURI *aURI, PRBool aRedirect,
                      PRBool aToplevel, nsIURI *aReferrer)
 {
-  // Note that here we should NOT use the GetNow function. That function caches
-  // the value of "now" until next time the event loop runs. This gives better
-  // performance, but here we may get many notifications without running the
-  // event loop. We must preserve these events' ordering. This most commonly
-  // happens on redirects.
-  PRTime now = PR_Now();
+  mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
-  // check for transition types
+  PRInt64 visitID, sessionID;
+  nsresult rv = AddVisitChain(aURI, aToplevel, aRedirect, aReferrer,
+                              &visitID, &sessionID);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  transaction.Commit();
+  return NS_OK;
+}
+
+
+// nsNavHistory::AddVisitChain
+//
+//    This function is sits between AddURI (which is called when a page is
+//    visited) and AddVisit (which creates the DB entries) to figure out what
+//    we should add and what are the detailed parameters that should be used
+//    (like referring visit ID and typed/bookmarked state).
+//
+//    This function walks up the referring chain and recursively calls itself,
+//    each time calling InternalAdd to create a new history entry. (When we
+//    get notified of redirects, we don't actually add any history entries, just
+//    save them in mRecentRedirects. This function will add all of them for a
+//    given destination page when that page is actually visited.)
+//    See GetRedirectFor for more information about how redirects work.
+
+nsresult
+nsNavHistory::AddVisitChain(nsIURI* aURI, PRBool aToplevel, PRBool aIsRedirect,
+                            nsIURI* aReferrer, PRInt64* aVisitID,
+                            PRInt64* aSessionID)
+{
   PRUint32 transitionType = 0;
-  if (aReferrer) {
+  PRInt64 referringVisit = 0;
+  PRTime visitTime = 0;
+
+  nsCAutoString spec;
+  nsresult rv = aURI->GetSpec(spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCAutoString redirectSource;
+  if (GetRedirectFor(spec, redirectSource, &visitTime, &transitionType)) {
+    // this was a redirect: See GetRedirectFor for info on how this works
+
+    // Find the visit for the source
+    nsCOMPtr<nsIURI> redirectURI;
+    rv = NS_NewURI(getter_AddRefs(redirectURI), redirectSource);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = AddVisitChain(redirectURI, aToplevel, PR_TRUE, aReferrer,
+                       &referringVisit, aSessionID);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+  } else if (aReferrer) {
     // If there is a referrer, we know you came from somewhere, either manually
     // or automatically. For toplevel windows, assume its manual and you want
     // to see this in history. For other things, it's some kind of embedded
@@ -2389,24 +2400,35 @@ nsNavHistory::AddURI(nsIURI *aURI, PRBool aRedirect,
       transitionType = nsINavHistoryService::TRANSITION_LINK;
     else
       transitionType = nsINavHistoryService::TRANSITION_EMBED;
+
+    // Note that here we should NOT use the GetNow function. That function
+    // caches the value of "now" until next time the event loop runs. This
+    // gives better performance, but here we may get many notifications without
+    // running the event loop. We must preserve these events' ordering. This
+    // most commonly happens on redirects.
+    visitTime = PR_Now();
+
+    // try to turn the referrer into a visit
+    if (! FindLastVisit(aReferrer, &referringVisit, aSessionID)) {
+      // we couldn't find a visit for the referrer, don't set it
+      *aSessionID = GetNewSessionID();
+    }
   } else {
     // When there is no referrer, we know the user must have gotten the link
     // from somewhere, so check our sources to see if it was recently typed or
     // has a bookmark selected. We don't handle drag-and-drop operations.
-    nsCAutoString urlString;
-    if (NS_SUCCEEDED(aURI->GetSpec(urlString))) {
-      if (CheckIsRecentEvent(&mRecentTyped, urlString))
-        transitionType = nsINavHistoryService::TRANSITION_TYPED;
-      else if (CheckIsRecentEvent(&mRecentBookmark, urlString))
-        transitionType = nsINavHistoryService::TRANSITION_BOOKMARK;
-    }
+    if (CheckIsRecentEvent(&mRecentTyped, spec))
+      transitionType = nsINavHistoryService::TRANSITION_TYPED;
+    else if (CheckIsRecentEvent(&mRecentBookmark, spec))
+      transitionType = nsINavHistoryService::TRANSITION_BOOKMARK;
+
+    visitTime = PR_Now();
+    *aSessionID = GetNewSessionID();
   }
 
-  PRInt64 pageid = 0;
-  nsresult rv = InternalAdd(aURI, aReferrer, 0, transitionType, nsnull, now,
-                            aRedirect, aToplevel, &pageid);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
+  // this call will create the visit and create/update the page entry
+  return AddVisit(aURI, visitTime, referringVisit, transitionType,
+                  aIsRedirect, *aSessionID, aVisitID);
 }
 
 
@@ -2463,6 +2485,67 @@ nsNavHistory::SetURIGeckoFlags(nsIURI* aURI, PRUint32 aFlags)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 #endif
+
+// nsIGlobalHistory3 ***********************************************************
+
+// nsNavHistory::AddToplevelRedirect
+//
+//    This adds a redirect mapping from the destination of the redirect to the
+//    source, time, and type. This mapping is used by GetRedirectFor when we
+//    get a page added to reconstruct the redirects that happened when a page
+//    is visited. See GetRedirectFor for more information
+
+// this is the expiration callback function that deletes stale entries
+PLDHashOperator PR_CALLBACK nsNavHistory::ExpireNonrecentRedirects(
+    nsCStringHashKey::KeyType aKey, RedirectInfo& aData, void* aUserArg)
+{
+  PRInt64* threshold = NS_REINTERPRET_CAST(PRInt64*, aUserArg);
+  if (aData.mTimeCreated < *threshold)
+    return PL_DHASH_REMOVE;
+  return PL_DHASH_NEXT;
+}
+NS_IMETHODIMP
+nsNavHistory::AddToplevelRedirect(nsIChannel *aOldChannel,
+                                  nsIChannel *aNewChannel, PRInt32 aFlags)
+{
+  nsresult rv;
+  nsCOMPtr<nsIURI> oldURI, newURI;
+  rv = aOldChannel->GetURI(getter_AddRefs(oldURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = aNewChannel->GetURI(getter_AddRefs(newURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCString oldSpec, newSpec;
+  rv = oldURI->GetSpec(oldSpec);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = newURI->GetSpec(newSpec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (mRecentRedirects.Count() > RECENT_EVENT_QUEUE_MAX_LENGTH) {
+    // expire out-of-date ones
+    PRInt64 threshold = PR_Now() - RECENT_EVENT_THRESHOLD;
+    mRecentRedirects.Enumerate(ExpireNonrecentRedirects,
+                               NS_REINTERPRET_CAST(void*, &threshold));
+  }
+
+  RedirectInfo info;
+
+  // remove any old entries for this redirect destination
+  if (mRecentRedirects.Get(newSpec, &info))
+    mRecentRedirects.Remove(newSpec);
+
+  // save the new redirect info
+  info.mSourceURI = oldSpec;
+  info.mTimeCreated = PR_Now();
+  if (aFlags & nsIChannelEventSink::REDIRECT_TEMPORARY)
+    info.mType = TRANSITION_REDIRECT_TEMPORARY;
+  else
+    info.mType = TRANSITION_REDIRECT_PERMANENT;
+  mRecentRedirects.Put(newSpec, info);
+
+  return NS_OK;
+}
+
 
 // nsIObserver *****************************************************************
 
@@ -2952,30 +3035,91 @@ nsNavHistory::CheckIsRecentEvent(RecentEventHash* hashTable,
 //
 //    This goes through our
 
-struct ExpireEventsCallbackInfo
-{
-  nsDataHashtable<nsCStringHashKey, PRInt64>* mHashTable;
-  PRTime mThreshold;
-};
 PR_STATIC_CALLBACK(PLDHashOperator)
 ExpireNonrecentEventsCallback(nsCStringHashKey::KeyType aKey,
                               PRInt64& aData,
                               void* userArg)
 {
-  ExpireEventsCallbackInfo* info =
-    NS_REINTERPRET_CAST(ExpireEventsCallbackInfo*, userArg);
-  if (aData < info->mThreshold)
+  PRInt64* threshold = NS_REINTERPRET_CAST(PRInt64*, userArg);
+  if (aData < *threshold)
     return PL_DHASH_REMOVE;
   return PL_DHASH_NEXT;
 }
 void
 nsNavHistory::ExpireNonrecentEvents(RecentEventHash* hashTable)
 {
-  ExpireEventsCallbackInfo info;
-  info.mHashTable = hashTable;
-  info.mThreshold = GetNow() - RECENT_EVENT_THRESHOLD;
+  PRInt64 threshold = GetNow() - RECENT_EVENT_THRESHOLD;
   hashTable->Enumerate(ExpireNonrecentEventsCallback,
-                       NS_REINTERPRET_CAST(void*, &info));
+                       NS_REINTERPRET_CAST(void*, &threshold));
+}
+
+
+// nsNavHistory::GetRedirectFor
+//
+//    Given a destination URI, this finds a recent redirect that resulted in
+//    this URI. If it finds one, it will put the redirect source info into
+//    the out params and return true. If there is no matching redirect, it will
+//    return false.
+//
+//    @param aDestination The destination URI spec of the redirect to look for.
+//    @param aSource      Will be filled with the redirect source URI when a
+//                        redirect is found.
+//    @param aTime        Will be filled with the time the redirect happened
+//                         when a redirect is found.
+//    @param aRedirectType Will be filled with the redirect type when a redirect
+//                         is found. Will be either
+//                         TRANSITION_REDIRECT_PERMANENT or
+//                         TRANSITION_REDIRECT_TEMPORARY
+//    @returns True if the redirect is found.
+//
+//    HOW REDIRECT TRACKING WORKS
+//    ---------------------------
+//    When we get an AddToplevelRedirect message, we store the redirect in
+//    our mRecentRedirects which maps the destination URI to a source,time pair.
+//    When we get a new URI, we see if there were any redirects to this page
+//    in the hash table. If found, we know that the page came through the given
+//    redirect and add it.
+//
+//    Example: Page S redirects throught R1, then R2, to give page D. Page S
+//    will have been already added to history.
+//    - AddToplevelRedirect(R1, R2)
+//    - AddToplevelRedirect(R2, D)
+//    - AddURI(uri=D, referrer=S)
+//
+//    When we get the AddURI(D), we see the hash table has a value for D from R2.
+//    We have to recursively check that source since there could be more than
+//    one redirect, as in this case. Here we see there was a redirect to R2 from
+//    R1. The referrer for D is S, so we know S->R1->R2->D.
+//
+//    Alternatively, the user could have typed or followed a bookmark from S.
+//    In this case, with two redirects we'll get:
+//    - MarkPageAsTyped(S)
+//    - AddToplevelRedirect(S, R)
+//    - AddToplevelRedirect(R, D)
+//    - AddURI(uri=D, referrer=null)
+//    We need to be careful to add a visit to S in this case with an incoming
+//    transition of typed and an outgoing transition of redirect.
+//
+//    Note that this can get confused in some cases where you have a page
+//    open in more than one window loading at the same time. This should be rare,
+//    however, and should not affect much.
+
+PRBool
+nsNavHistory::GetRedirectFor(const nsACString& aDestination,
+                             nsACString& aSource, PRTime* aTime,
+                             PRUint32* aRedirectType)
+{
+  RedirectInfo info;
+  if (mRecentRedirects.Get(aDestination, &info)) {
+    mRecentRedirects.Remove(aDestination);
+    if (info.mTimeCreated < GetNow() - RECENT_EVENT_THRESHOLD)
+      return PR_FALSE; // too long ago, probably invalid
+    aSource = info.mSourceURI;
+    *aTime = info.mTimeCreated;
+    *aRedirectType = info.mType;
+    return PR_TRUE;
+  }
+  return PR_FALSE;
 }
 
 
