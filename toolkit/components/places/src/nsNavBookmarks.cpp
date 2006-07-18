@@ -507,27 +507,18 @@ nsNavBookmarks::GetFolderTitle(PRInt64 aFolder, nsAString &aTitle)
   return mDBGetFolderInfo->GetString(kGetFolderInfoIndex_Title, aTitle);
 }
 
-NS_IMETHODIMP
-nsNavFolderResultNode::GetChildCount(PRInt32 *aChildCount)
+nsresult
+nsNavFolderResultNode::BuildChildren()
 {
-  if (!mQueriedChildren) {
-    nsresult rv = nsNavBookmarks::sInstance->FillFolderChildren(this);
-    NS_ENSURE_SUCCESS(rv, rv);
+  if (mBuiltChildren) {
+    return NS_OK;
   }
 
-  return nsNavHistoryResultNode::GetChildCount(aChildCount);
-}
+  nsresult rv = nsNavBookmarks::sInstance->FillFolderChildren(this);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-NS_IMETHODIMP
-nsNavFolderResultNode::GetChild(PRInt32 aIndex,
-                                nsINavHistoryResultNode **aChild)
-{
-  if (!mQueriedChildren) {
-    nsresult rv = nsNavBookmarks::sInstance->FillFolderChildren(this);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  return nsNavHistoryResultNode::GetChild(aIndex, aChild);
+  mBuiltChildren = PR_TRUE;
+  return NS_OK;
 }
 
 nsresult
@@ -563,7 +554,8 @@ nsNavBookmarks::GetBookmarks(nsINavHistoryResult **aResult)
 
   // Fill the result with a single result node for the bookmarks root.
   nsCOMPtr<nsNavHistoryResultNode> topNode;
-  rv = ResultNodeForFolder(mRoot, EmptyString(), getter_AddRefs(topNode));
+  rv = ResultNodeForFolder(mRoot, NS_LITERAL_STRING("Bookmarks"),
+                           getter_AddRefs(topNode));
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ENSURE_TRUE(result->GetTopLevel()->AppendObject(topNode), 
@@ -578,7 +570,6 @@ nsNavBookmarks::GetBookmarks(nsINavHistoryResult **aResult)
 nsresult
 nsNavBookmarks::FillFolderChildren(nsNavFolderResultNode *aNode)
 {
-  NS_ASSERTION(!aNode->mQueriedChildren, "children already queried");
   NS_ASSERTION(aNode->mChildren.Count() == 0, "already have child nodes");
 
   mozStorageStatementScoper scope(mDBGetChildren);
@@ -605,7 +596,6 @@ nsNavBookmarks::FillFolderChildren(nsNavFolderResultNode *aNode)
     NS_ENSURE_TRUE(children->AppendObject(node), NS_ERROR_OUT_OF_MEMORY);
   }
 
-  aNode->mQueriedChildren = PR_TRUE;
   return transaction.Commit();
 }
 
