@@ -976,7 +976,8 @@ interface nsINavHistoryService : nsISupports
    * Call to manually add a visit for a specific page. This will probably not
    * be commonly used other than for backup/restore type operations. If the URI
    * does not have an entry in the history database already, one will be created
-   * with no visits, no title, hidden, not typed.
+   * with no visits, no title, hidden, not typed.  Adding a visit will
+   * automatically increment the visit count for the visited page.
    *
    * @param aURI             Visited page
    * @param aTime            Time page was visited (microseconds)
