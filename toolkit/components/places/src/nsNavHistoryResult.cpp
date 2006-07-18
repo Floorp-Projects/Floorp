@@ -1483,10 +1483,16 @@ nsNavHistoryQueryResultNode::CanExpand()
 
 
 // nsNavHistoryQueryResultNode::OnRemoving
+//
+//    Here we do not want to call ContainerResultNode::OnRemoving since our own
+//    ClearChildren will do the same thing and more (unregister the observers).
+//    The base ResultNode::OnRemoving will clear some regular node stats, so it
+//    is OK.
 
 void
 nsNavHistoryQueryResultNode::OnRemoving()
 {
+  nsNavHistoryResultNode::OnRemoving();
   ClearChildren(PR_TRUE);
 }
 
@@ -1701,13 +1707,13 @@ nsNavHistoryQueryResultNode::ClearChildren(PRBool aUnregister)
   for (PRInt32 i = 0; i < mChildren.Count(); i ++)
     mChildren[i]->OnRemoving();
   mChildren.Clear();
-  mContentsValid = PR_FALSE;
 
-  if (aUnregister) {
+  if (aUnregister && mContentsValid) {
     nsNavHistoryResult* result = GetResult();
     if (result)
       result->RemoveEverythingObserver(this);
   }
+  mContentsValid = PR_FALSE;
 }
 
 
@@ -2348,10 +2354,16 @@ nsNavHistoryFolderResultNode::nsNavHistoryFolderResultNode(
 
 
 // nsNavHistoryFolderResultNode::OnRemoving
+//
+//    Here we do not want to call ContainerResultNode::OnRemoving since our own
+//    ClearChildren will do the same thing and more (unregister the observers).
+//    The base ResultNode::OnRemoving will clear some regular node stats, so it
+//    is OK.
 
 void
 nsNavHistoryFolderResultNode::OnRemoving()
 {
+  nsNavHistoryResultNode::OnRemoving();
   ClearChildren(PR_TRUE);
 }
 
@@ -2522,13 +2534,13 @@ nsNavHistoryFolderResultNode::ClearChildren(PRBool unregister)
   for (PRInt32 i = 0; i < mChildren.Count(); i ++)
     mChildren[i]->OnRemoving();
   mChildren.Clear();
-  mContentsValid = PR_FALSE;
 
-  if (unregister) {
+  if (unregister && mContentsValid) {
     nsNavHistoryResult* result = GetResult();
     if (result)
       result->RemoveBookmarkObserver(this, mFolderId);
   }
+  mContentsValid = PR_FALSE;
 }
 
 
