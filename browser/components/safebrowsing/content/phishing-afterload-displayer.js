@@ -201,7 +201,6 @@ PROT_PhishMsgDisplayerBase.prototype.browserSelected = function() {
   // the warning.
   if (this.messageShowing_ === undefined) {
     this.messageShouldShow_ = true;
-    this.ensureNavBarShowing_();
   }
 
   this.hideLockIcon_();        // Comes back when we are unselected or unloaded
@@ -324,47 +323,14 @@ PROT_PhishMsgDisplayerBase.prototype.removeIfExists_ = function(orig,
 }
 
 /**
- * Our message is displayed relative to an icon in the urlbar. However
- * it could be the case that the urlbar isn't showing, in which case
- * we would show the warning message some place crazy, such as
- * offscreen. So here we put it back if it's not there. This is a
- * good thing anyway: the user should be able to see the URL of the
- * site if we think it is suspicious.
- */
-PROT_PhishMsgDisplayerBase.prototype.ensureNavBarShowing_ = function() {
-  // Could be that the navbar was unselected in the Toolbars menu; fix it
-  var navbar = this.doc_.getElementById("nav-bar");
-  navbar.setAttribute("collapsed", false);
-
-  // Now for the more complicated case: a popup window with toolbar=no. This
-  // adds toolbar and location (among other things) to the chromhidden 
-  // attribute on the window. We need to undo this, and manually fill in the
-  // location.
-  var win = this.doc_.getElementById("main-window");
-  var hidden = win.getAttribute("chromehidden");
-  G_Debug(this, "Old chromehidden string: " + hidden);
-
-  var newHidden = this.removeIfExists_(hidden, "toolbar");
-  newHidden = this.removeIfExists_(newHidden, "location");
-
-  if (newHidden != hidden) {
-    G_Debug(this, "New chromehidden string: " + newHidden);
-    win.setAttribute("chromehidden", newHidden);
-
-    // Now manually reflect the location
-    var urlbar = this.doc_.getElementById("urlbar");
-    urlbar.value = this.doc_.getElementById("content")
-                   .contentDocument.location.href;
-  }
-}
-
-/**
  * We don't want to confuse users if they land on a phishy page that uses
  * SSL, so ensure that the lock icon never shows when we're showing our 
  * warning.
  */
 PROT_PhishMsgDisplayerBase.prototype.hideLockIcon_ = function() {
   var lockIcon = this.doc_.getElementById("lock-icon");
+  if (!lockIcon)
+    return;
   lockIcon.hidden = true;
 }
 
@@ -373,6 +339,8 @@ PROT_PhishMsgDisplayerBase.prototype.hideLockIcon_ = function() {
  */
 PROT_PhishMsgDisplayerBase.prototype.unhideLockIcon_ = function() {
   var lockIcon = this.doc_.getElementById("lock-icon");
+  if (!lockIcon)
+    return;
   lockIcon.hidden = false;
 }
 
@@ -383,6 +351,8 @@ PROT_PhishMsgDisplayerBase.prototype.unhideLockIcon_ = function() {
  */
 PROT_PhishMsgDisplayerBase.prototype.addWarningInUrlbar_ = function() {
   var urlbarIcon = this.doc_.getElementById(this.urlbarIconId_);
+  if (!urlbarIcon)
+    return;
   urlbarIcon.setAttribute('level', 'warn');
 }
 
@@ -391,6 +361,8 @@ PROT_PhishMsgDisplayerBase.prototype.addWarningInUrlbar_ = function() {
  */
 PROT_PhishMsgDisplayerBase.prototype.removeWarningInUrlbar_ = function() {
   var urlbarIcon = this.doc_.getElementById(this.urlbarIconId_);
+  if (!urlbarIcon)
+    return;
   urlbarIcon.setAttribute('level', 'safe');
 }
 
@@ -415,7 +387,6 @@ PROT_PhishMsgDisplayerBase.prototype.hideMessage_ = function() { };
 PROT_PhishMsgDisplayerBase.prototype.adjustLocation_ = function(message,
                                                                 tail,
                                                                 refElement) {
-
   var refX = refElement.boxObject.x;
   var refY = refElement.boxObject.y;
   var refHeight = refElement.boxObject.height;
@@ -429,7 +400,8 @@ PROT_PhishMsgDisplayerBase.prototype.adjustLocation_ = function(message,
   var tailPixelsIntoRefX = Math.round(refWidth / 2);
   var tailX = refX - tailPixelsLeftOfRefX + tailPixelsIntoRefX;
 
-  var messageY = tailY + tail.boxObject.height + 3;
+  // Move message up a couple pixels so the tail overlaps it.
+  var messageY = tailY + tail.boxObject.height - 2;
   var messagePixelsLeftOfRefX = 375;
   var messageX = refX - messagePixelsLeftOfRefX;
   G_Debug(this, "Message is at [window-relative] (" + messageX + ", " + 
@@ -439,6 +411,25 @@ PROT_PhishMsgDisplayerBase.prototype.adjustLocation_ = function(message,
 
   tail.style.top = tailY + "px";
   tail.style.left = tailX + "px";
+  message.style.top = messageY + "px";
+  message.style.left = messageX + "px";
+}
+
+/**
+ * Position the warning bubble with no reference element.  In this case we
+ * just center the warning bubble at the top of the users window.
+ * @param message XULElement message bubble XUL container.
+ */
+PROT_PhishMsgDisplayerBase.prototype.adjustLocationFloating_ = function(message) {
+  // Compute X offset
+  var browserX = this.browser_.boxObject.x;
+  var browserXCenter = browserX + this.browser_.boxObject.width / 2;
+  var messageX = browserXCenter - (message.boxObject.width / 2);
+
+  // Compute Y offset (top of the browser window)
+  var messageY = this.browser_.boxObject.y;
+
+  // Position message
   message.style.top = messageY + "px";
   message.style.left = messageX + "px";
 }
@@ -611,14 +602,7 @@ PROT_PhishMsgDisplayerCanvas.prototype.showMessageAfterOverlay_ = function() {
   this.repainter_ = new PROT_PhishMsgCanvasRepainter(repaint);
 
   // (5)
-  var refElement = this.doc_.getElementById(this.refElementId_);
-  var message = this.doc_.getElementById(this.messageId_);
-  var tail = this.doc_.getElementById(this.messageTailId_);
-  message.hidden = false;
-  message.style.display = "block";
-  tail.hidden = false;
-  tail.style.display = "block";
-  this.adjustLocation_(message, tail, refElement);
+  this.showAndPositionWarning_();
 
   // (6)
   var link = this.doc_.getElementById('safebrowsing-palm-falsepositive-link');
@@ -628,6 +612,48 @@ PROT_PhishMsgDisplayerCanvas.prototype.showMessageAfterOverlay_ = function() {
 
   // (7)
   this.doc_.getElementById(this.messageContentId_).focus();
+}
+
+/**
+ * Show and position the warning message.  We position the waring message
+ * relative to the icon in the url bar, but if the element doesn't exist,
+ * (e.g., the user remove the url bar from her/his chrome), we anchor at the
+ * top of the window.
+ */
+PROT_PhishMsgDisplayerCanvas.prototype.showAndPositionWarning_ = function() {
+  var refElement = this.doc_.getElementById(this.refElementId_);
+  var message = this.doc_.getElementById(this.messageId_);
+  var tail = this.doc_.getElementById(this.messageTailId_);
+
+  message.hidden = false;
+  message.style.display = "block";
+
+  // Determine if the refElement is visible.
+  if (this.isVisibleElement_(refElement)) {
+    // Show tail and position warning relative to refElement.
+    tail.hidden = false;
+    tail.style.display = "block";
+    this.adjustLocation_(message, tail, refElement);
+  } else {
+    // No ref element, position in the top center of window.
+    tail.hidden = true;
+    tail.style.display = "none";
+    this.adjustLocationFloating_(message);
+  }
+}
+
+/**
+ * @return Boolean true if elt is a visible XUL element.
+ */
+PROT_PhishMsgDisplayerCanvas.prototype.isVisibleElement_ = function(elt) {
+  if (!elt)
+    return false;
+  
+  // If it's on a collapsed/hidden toolbar, the x position is set to 0.
+  if (elt.boxObject.x == 0)
+    return false;
+
+  return true;
 }
 
 /**
