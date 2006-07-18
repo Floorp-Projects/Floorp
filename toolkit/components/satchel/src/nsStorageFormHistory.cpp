@@ -180,7 +180,7 @@ nsFormHistory::Init()
 
   nsCOMPtr<nsIObserverService> service = do_GetService("@mozilla.org/observer-service;1");
   if (service)
-    service->AddObserver(this, NS_FORMSUBMIT_SUBJECT, PR_TRUE);
+    service->AddObserver(this, NS_EARLYFORMSUBMIT_SUBJECT, PR_TRUE);
 
   return NS_OK;
 }

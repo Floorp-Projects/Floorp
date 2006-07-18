@@ -278,7 +278,7 @@ nsPasswordManager::Init()
   nsCOMPtr<nsIObserverService> obsService = do_GetService("@mozilla.org/observer-service;1");
   NS_ASSERTION(obsService, "No observer service");
 
-  obsService->AddObserver(this, NS_FORMSUBMIT_SUBJECT, PR_TRUE);
+  obsService->AddObserver(this, NS_EARLYFORMSUBMIT_SUBJECT, PR_TRUE);
 
   nsCOMPtr<nsIWebProgress> progress = do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID);
   NS_ASSERTION(progress, "No web progress service");

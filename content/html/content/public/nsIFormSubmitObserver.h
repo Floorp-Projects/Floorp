@@ -57,6 +57,8 @@ class nsIURI;
 { 0xa6cf9106, 0x15b3, 0x11d2, {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
 
 #define NS_FORMSUBMIT_SUBJECT "formsubmit"
+// used when actionURL is not needed and accuracy of form data is more important
+#define NS_EARLYFORMSUBMIT_SUBJECT "earlyformsubmit"
 #define NS_FIRST_FORMSUBMIT_CATEGORY "firstformsubmit"
 #define NS_PASSWORDMANAGER_CATEGORY "passwordmanager"
 

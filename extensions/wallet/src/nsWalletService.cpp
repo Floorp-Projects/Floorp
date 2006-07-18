@@ -299,7 +299,7 @@ nsresult nsWalletlibService::Init()
            do_GetService("@mozilla.org/observer-service;1", &rv);
   if (NS_SUCCEEDED(rv) && svc) {
     // Register as an observer of form submission
-    svc->AddObserver(this, NS_FORMSUBMIT_SUBJECT, PR_TRUE);
+    svc->AddObserver(this, NS_EARLYFORMSUBMIT_SUBJECT, PR_TRUE);
     // Register as an observer of profile changes
     svc->AddObserver(this, "profile-before-change", PR_TRUE);
     // Register as an observer for login
