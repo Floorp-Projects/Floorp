@@ -187,6 +187,13 @@ NS_IMETHODIMP nsNavHistoryResultNode::GetChild(PRInt32 aIndex,
   return NS_OK;
 }
 
+/* readonly attribute boolean childrenReadOnly; */
+NS_IMETHODIMP nsNavHistoryResultNode::GetChildrenReadOnly(PRBool *aResult)
+{
+  *aResult = PR_TRUE;
+  return NS_OK;
+}
+
 // nsINavBookmarkObserver implementation
 
 /* void onBeginUpdateBatch(); */
@@ -506,6 +513,19 @@ nsNavHistoryQueryNode::GetWantAllDetails(PRBool *aResult)
 {
   *aResult = PR_TRUE;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavHistoryQueryNode::GetChildrenReadOnly(PRBool *aResult)
+{
+  PRInt64 folderId = GetFolderId();
+  if (folderId == 0) {
+    *aResult = PR_TRUE;
+    return NS_OK;
+  }
+
+  return nsNavBookmarks::GetBookmarksService()->GetFolderReadonly(folderId,
+                                                                  aResult);
 }
 
 nsresult
