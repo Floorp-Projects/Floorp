@@ -210,13 +210,13 @@ protected:
 
   // this is the flattened version of the hierarchy containing everything
   nsVoidArray mAllElements;
-  nsNavHistoryResultNode* AllElementAt(int index)
+  nsNavHistoryResultNode* AllElementAt(PRInt32 index)
   {
     return (nsNavHistoryResultNode*)mAllElements[index];
   }
 
   nsVoidArray mVisibleElements;
-  nsNavHistoryResultNode* VisibleElementAt(int index)
+  nsNavHistoryResultNode* VisibleElementAt(PRInt32 index)
   {
     return (nsNavHistoryResultNode*)mVisibleElements[index];
   }
@@ -224,14 +224,14 @@ protected:
   // keep track of sorting state
   PRUint32 mCurrentSort;
 
-  void FillTreeStats(nsNavHistoryResultNode* aResult, int aLevel);
+  void FillTreeStats(nsNavHistoryResultNode* aResult, PRInt32 aLevel);
   void InitializeVisibleList();
   void RebuildList();
   void RebuildAllListRecurse(const nsCOMArray<nsNavHistoryResultNode>& aSource);
   void BuildVisibleSection(const nsCOMArray<nsNavHistoryResultNode>& aSources,
                            nsVoidArray* aVisible);
-  void InsertVisibleSection(const nsVoidArray& aAddition, int aInsertHere);
-  int DeleteVisibleChildrenOf(int aIndex);
+  void InsertVisibleSection(const nsVoidArray& aAddition, PRInt32 aInsertHere);
+  PRInt32 DeleteVisibleChildrenOf(PRInt32 aIndex);
 
   void RecursiveSortArray(nsCOMArray<nsNavHistoryResultNode>& aSources,
                           PRUint32 aSortingMode);
@@ -358,16 +358,16 @@ protected:
   nsCOMPtr<mozIStorageStatement> mDBGetVisitPageInfo; // kGetInfoIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBGetURLPageInfo;   // kGetInfoIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBFullAutoComplete; // kAutoCompleteIndex_* results, 1 arg (max # results)
-  static const int kGetInfoIndex_PageID;
-  static const int kGetInfoIndex_URL;
-  static const int kGetInfoIndex_Title;
-  static const int kGetInfoIndex_VisitCount;
-  static const int kGetInfoIndex_VisitDate;
-  static const int kGetInfoIndex_RevHost;
-  static const int kAutoCompleteIndex_URL;
-  static const int kAutoCompleteIndex_Title;
-  static const int kAutoCompleteIndex_VisitCount;
-  static const int kAutoCompleteIndex_Typed;
+  static const PRInt32 kGetInfoIndex_PageID;
+  static const PRInt32 kGetInfoIndex_URL;
+  static const PRInt32 kGetInfoIndex_Title;
+  static const PRInt32 kGetInfoIndex_VisitCount;
+  static const PRInt32 kGetInfoIndex_VisitDate;
+  static const PRInt32 kGetInfoIndex_RevHost;
+  static const PRInt32 kAutoCompleteIndex_URL;
+  static const PRInt32 kAutoCompleteIndex_Title;
+  static const PRInt32 kAutoCompleteIndex_VisitCount;
+  static const PRInt32 kAutoCompleteIndex_Typed;
 
   nsresult InitDB();
 
@@ -384,7 +384,7 @@ protected:
                        PRBool aToplevel, PRInt64* aPageID);
   nsresult InternalAddNewPage(nsIURI* aURI, const PRUnichar* aTitle,
                               PRBool aHidden, PRBool aTyped,
-                              int aVisitCount, PRInt64* aPageID);
+                              PRInt32 aVisitCount, PRInt64* aPageID);
   nsresult AddVisit(PRInt64 aFromStep, PRInt64 aPageID, PRTime aTime,
                     PRInt32 aTransitionType, PRInt64 aSessionID);
   PRBool IsURIStringVisited(const nsACString& url);
@@ -399,13 +399,13 @@ protected:
   static void expireNowTimerCallback(nsITimer* aTimer, void* aClosure);
 
   nsresult QueryToSelectClause(nsINavHistoryQuery* aQuery,
-                               int aStartParameter,
+                               PRInt32 aStartParameter,
                                nsCString* aClause,
-                               int* aParamCount);
+                               PRInt32* aParamCount);
   nsresult BindQueryClauseParameters(mozIStorageStatement* statement,
-                                     int aStartParameter,
+                                     PRInt32 aStartParameter,
                                      nsINavHistoryQuery* aQuery,
-                                     int* aParamCount);
+                                     PRInt32* aParamCount);
 
   nsresult ResultsAsList(mozIStorageStatement* statement, PRBool aAsVisits,
                          nsCOMArray<nsNavHistoryResultNode>* aResults);
@@ -484,5 +484,5 @@ protected:
  * Shared between the places components, this function binds the given URI as
  * UTF8 to the given parameter for the statement.
  */
-nsresult BindStatementURI(mozIStorageStatement* statement, int index,
+nsresult BindStatementURI(mozIStorageStatement* statement, PRInt32 index,
                           nsIURI* aURI);
