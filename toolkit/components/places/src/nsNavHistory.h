@@ -124,7 +124,9 @@ public:
   nsNavHistoryQueryOptions() : mSort(0), mResultType(0),
                                mGroupCount(0), mGroupings(nsnull),
                                mExpandPlaces(PR_FALSE),
-                               mForceOriginalTitle(PR_FALSE)
+                               mForceOriginalTitle(PR_FALSE),
+                               mIncludeHidden(PR_FALSE),
+                               mMaxResults(0)
   { }
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_NAVHISTORYQUERYOPTIONS_IID)
@@ -139,6 +141,8 @@ public:
   }
   PRBool ExpandPlaces() const { return mExpandPlaces; }
   PRBool ForceOriginalTitle() const { return mForceOriginalTitle; }
+  PRBool IncludeHidden() const { return mIncludeHidden; }
+  PRUint32 MaxResults() const { return mMaxResults; }
 
   nsresult Clone(nsNavHistoryQueryOptions **aResult);
 
@@ -153,6 +157,8 @@ private:
   PRInt32 *mGroupings;
   PRBool mExpandPlaces;
   PRBool mForceOriginalTitle;
+  PRBool mIncludeHidden;
+  PRUint32 mMaxResults;
 };
 
 
@@ -162,11 +168,16 @@ private:
 {0x54b61d38, 0x57c1, 0x11da, {0x95, 0xb8, 0x00, 0x13, 0x21, 0xc9, 0xf6, 0x9e}}
 
 // Declare methods for implementing nsINavBookmarkObserver
-// and nsINavHistoryObserver (some methods overlap)
+// and nsINavHistoryObserver (some methods, such as BeginUpdateBatch overlap)
 
 #define NS_DECL_BOOKMARK_HISTORY_OBSERVER                               \
   NS_DECL_NSINAVBOOKMARKOBSERVER                                        \
-  NS_IMETHOD OnAddURI(nsIURI *aURI, PRTime aTime);                      \
+  NS_IMETHOD OnVisit(nsIURI* aURI, PRInt64 aVisitID, PRTime aTime,      \
+                     PRInt64 aSessionID, PRInt64 aReferringID,          \
+                     PRUint32 aTransitionType);                         \
+  NS_IMETHOD OnTitleChanged(nsIURI* aURI, const nsAString& aPageTitle,  \
+                            const nsAString& aUserTitle,                \
+                            PRBool aIsUserTitleChanged);                \
   NS_IMETHOD OnDeleteURI(nsIURI *aURI);                                 \
   NS_IMETHOD OnClearHistory();                                          \
   NS_IMETHOD OnPageChanged(nsIURI *aURI, PRUint32 aWhat,                \
@@ -201,7 +212,7 @@ public:
   // Non-XPCOM member accessors
   PRInt32 Type() const { return mType; }
   const nsCString& URL() const { return mUrl; }
-  virtual PRInt64 GetFolderId() const { return 0; }
+  virtual PRInt64 FolderId() const { return 0; }
   PRInt32 VisibleIndex() const { return mVisibleIndex; }
   void SetVisibleIndex(PRInt32 aIndex) { mVisibleIndex = aIndex; }
   PRInt32 IndentLevel() const { return mIndentLevel; }
@@ -260,7 +271,7 @@ public:
 
   // nsINavHistoryResultNode methods
   NS_IMETHOD GetFolderId(PRInt64 *aId)
-  { *aId = nsNavHistoryQueryNode::GetFolderId(); return NS_OK; }
+  { *aId = nsNavHistoryQueryNode::FolderId(); return NS_OK; }
   NS_IMETHOD GetFolderType(nsAString& aFolderType);
   NS_IMETHOD GetQueries(PRUint32 *aQueryCount,
                         nsINavHistoryQuery ***aQueries);
@@ -271,7 +282,7 @@ public:
 
   // nsNavHistoryResultNode methods
   virtual nsresult BuildChildren(PRBool *aBuilt);
-  virtual PRInt64 GetFolderId() const;
+  virtual PRInt64 FolderId() const;
   virtual nsresult Rebuild();
 
 protected:
@@ -343,12 +354,20 @@ public:
   NS_DECL_NSINAVHISTORYRESULT
   NS_DECL_NSITREEVIEW
   NS_FORWARD_NSINAVBOOKMARKOBSERVER(nsNavHistoryQueryNode::)
-  NS_IMETHOD OnAddURI(nsIURI *aURI, PRTime aTime)
-  { return nsNavHistoryQueryNode::OnAddURI(aURI, aTime); }
+  NS_IMETHOD OnVisit(nsIURI* aURI, PRInt64 aVisitID, PRTime aTime,
+                     PRInt64 aSessionID, PRInt64 aReferringID,
+                     PRUint32 aTransitionType)
+  { return nsNavHistoryQueryNode::OnVisit(aURI, aVisitID, aTime, aSessionID,
+                                          aReferringID, aTransitionType); }
   NS_IMETHOD OnDeleteURI(nsIURI *aURI)
   { return nsNavHistoryQueryNode::OnDeleteURI(aURI); }
   NS_IMETHOD OnClearHistory()
   { return nsNavHistoryQueryNode::OnClearHistory(); }
+  NS_IMETHOD OnTitleChanged(nsIURI* aURI, const nsAString& aPageTitle,
+                            const nsAString& aUserTitle,
+                            PRBool aIsUserTitleChanged)
+  { return nsNavHistoryQueryNode::OnTitleChanged(aURI, aPageTitle, aUserTitle,
+                                                 aIsUserTitleChanged); }
   NS_IMETHOD OnPageChanged(nsIURI *aURI, PRUint32 aWhat,
                            const nsAString &aValue)
   { return nsNavHistoryQueryNode::OnPageChanged(aURI, aWhat, aValue); }
@@ -613,7 +632,8 @@ protected:
                               PRBool aHidden, PRBool aTyped,
                               PRInt32 aVisitCount, PRInt64* aPageID);
   nsresult AddVisit(nsIURI* aReferrer, PRInt64 aPageID, PRTime aTime,
-                    PRInt32 aTransitionType);
+                    PRInt32 aTransitionType, PRInt64* aVisitID,
+                    PRInt64* aReferringID);
   PRBool IsURIStringVisited(const nsACString& url);
   nsresult VacuumDB(PRTime aTimeAgo, PRBool aCompress);
   nsresult LoadPrefs();
@@ -640,6 +660,8 @@ protected:
                          nsCOMArray<nsNavHistoryResultNode>* aResults);
 
   void TitleForDomain(const nsString& domain, nsAString& aTitle);
+  nsresult SetPageTitleInternal(nsIURI* aURI, PRBool aIsUserTitle,
+                                const nsAString& aTitle);
 
   nsresult RecursiveGroup(const nsCOMArray<nsNavHistoryResultNode>& aSource,
                           const PRInt32* aGroupingMode, PRUint32 aGroupCount,
