@@ -59,6 +59,10 @@ function PROT_ListWarden() {
                       .getService(Ci.nsIUrlListManager);
   this.listManager_ = listManager;
 
+  // If we add support for changing local data providers, we need to add a
+  // pref observer that sets the update url accordingly.
+  this.listManager_.setUpdateUrl(gDataProvider.getUpdateURL());
+
   // Once we register tables, their respective names will be listed here.
   this.blackTables_ = [];
   this.whiteTables_ = [];
