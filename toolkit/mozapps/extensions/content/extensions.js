@@ -340,7 +340,7 @@ function showView(aView) {
                                                       : PREF_EXTENSIONS_GETMOREEXTENSIONSURL,
                                              Components.interfaces.nsIPrefLocalizedString).data;
       getMoreURL = getMoreURL.replace(/%APPID%/g, gAppID);
-      getMore.setAttribute('href', getMoreURL);
+      getMore.setAttribute("onclick", "openURL(\"" + getMoreURL + "\");");
       if (getMore.hidden)
         getMore.hidden = false;
     }
@@ -434,7 +434,13 @@ function openURL(aURL)
   protocolSvc.loadUrl(uri);
 # If we're a browser, open a new browser window instead.    
 #else
-  openDialog("chrome://browser/content/browser.xul", "_blank", "chrome,all,dialog=no", aURL, null, null);
+  // bug 262575
+  if (window.opener && window.opener.openUILinkIn) {
+    var newWindowPref = gPref.getIntPref("browser.link.open_newwindow");
+    var where = newWindowPref == 3 ? "tab" : "window";
+    window.opener.openUILinkIn(aURL, where);
+  } else
+    openDialog("chrome://browser/content/browser.xul", "_blank", "chrome,all,dialog=no", aURL, null, null);
 #endif
 }
 
