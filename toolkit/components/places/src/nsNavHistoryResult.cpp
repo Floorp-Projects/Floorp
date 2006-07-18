@@ -342,7 +342,7 @@ nsNavHistoryResultNode::Rebuild()
   }
 
   nsNavHistory *history = nsNavHistory::GetHistoryService();
-  mozIStorageStatement *statement = history->DBGetURLPageInfo();
+  mozIStorageStatement *statement = history->DBGetIdPageInfoFull();
   mozStorageStatementScoper scope(statement);
 
   nsresult rv = statement->BindInt64Parameter(0, mID);
