@@ -632,7 +632,7 @@ sub get_enterable_products {
     }
 
     my @products;
-    foreach my $product (Bugzilla::Product::get_all_products()) {
+    foreach my $product (Bugzilla::Product->get_all) {
         if ($self->can_enter_product($product->name)) {
             push(@products, $product);
         }

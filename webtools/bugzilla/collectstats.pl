@@ -68,7 +68,7 @@ if ($#ARGV >= 0 && $ARGV[0] eq "--regenerate") {
 
 my $datadir = bz_locations()->{'datadir'};
 
-my @myproducts = map {$_->name} Bugzilla::Product::get_all_products();
+my @myproducts = map {$_->name} Bugzilla::Product->get_all;
 unshift(@myproducts, "-All-");
 
 # As we can now customize the list of resolutions, looking at the actual list

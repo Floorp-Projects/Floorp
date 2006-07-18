@@ -517,7 +517,7 @@ sub deactivate {
 sub get_products_and_components {
     my $vars = shift;
 
-    my @products = Bugzilla::Product::get_all_products();
+    my @products = Bugzilla::Product->get_all;
     # We require all unique component names.
     my %components;
     foreach my $product (@products) {

@@ -25,11 +25,15 @@ use Bugzilla::Util;
 use Bugzilla::Group;
 use Bugzilla::Error;
 
+use base qw(Bugzilla::Object);
+
 use constant DEFAULT_CLASSIFICATION_ID => 1;
 
 ###############################
 ####    Initialization     ####
 ###############################
+
+use constant DB_TABLE => 'products';
 
 use constant DB_COLUMNS => qw(
    products.id
@@ -44,52 +48,6 @@ use constant DB_COLUMNS => qw(
    products.defaultmilestone
 );
 
-my $columns = join(", ", DB_COLUMNS);
-
-sub new {
-    my $invocant = shift;
-    my $class = ref($invocant) || $invocant;
-    my $self = {};
-    bless($self, $class);
-    return $self->_init(@_);
-}
-
-sub _init {
-    my $self = shift;
-    my ($param) = @_;
-    my $dbh = Bugzilla->dbh;
-
-    my $id = $param unless (ref $param eq 'HASH');
-    my $product;
-
-    if (defined $id) {
-        detaint_natural($id)
-          || ThrowCodeError('param_must_be_numeric',
-                            {function => 'Bugzilla::Product::_init'});
-
-        $product = $dbh->selectrow_hashref(qq{
-            SELECT $columns FROM products
-            WHERE id = ?}, undef, $id);
-
-    } elsif (defined $param->{'name'}) {
-
-        trick_taint($param->{'name'});
-        $product = $dbh->selectrow_hashref(qq{
-            SELECT $columns FROM products
-            WHERE name = ?}, undef, $param->{'name'});
-    } else {
-        ThrowCodeError('bad_arg',
-            {argument => 'param',
-             function => 'Bugzilla::Product::_init'});
-    }
-
-    return undef unless (defined $product);
-
-    foreach my $field (keys %$product) {
-        $self->{$field} = $product->{$field};
-    }
-    return $self;
-}
 
 ###############################
 ####       Methods         ####
@@ -211,8 +169,6 @@ sub bug_ids {
 ####      Accessors      ######
 ###############################
 
-sub id                { return $_[0]->{'id'};                }
-sub name              { return $_[0]->{'name'};              }
 sub description       { return $_[0]->{'description'};       }
 sub milestone_url     { return $_[0]->{'milestoneurl'};      }
 sub disallow_new      { return $_[0]->{'disallownew'};       }
@@ -225,19 +181,6 @@ sub classification_id { return $_[0]->{'classification_id'}; }
 ###############################
 ####      Subroutines    ######
 ###############################
-
-sub get_all_products {
-    my $dbh = Bugzilla->dbh;
-
-    my $ids = $dbh->selectcol_arrayref(q{
-        SELECT id FROM products ORDER BY name});
-
-    my @products;
-    foreach my $id (@$ids) {
-        push @products, new Bugzilla::Product($id);
-    }
-    return @products;
-}
 
 sub check_product {
     my ($product_name) = @_;
@@ -266,7 +209,7 @@ Bugzilla::Product - Bugzilla product class.
     use Bugzilla::Product;
 
     my $product = new Bugzilla::Product(1);
-    my $product = new Bugzilla::Product('AcmeProduct');
+    my $product = new Bugzilla::Product({ name => 'AcmeProduct' });
 
     my @components      = $product->components();
     my $groups_controls = $product->group_controls();
@@ -288,24 +231,16 @@ Bugzilla::Product - Bugzilla product class.
 
 =head1 DESCRIPTION
 
-Product.pm represents a product object.
+Product.pm represents a product object. It is an implementation
+of L<Bugzilla::Object>, and thus provides all methods that
+L<Bugzilla::Object> provides.
+
+The methods that are specific to C<Bugzilla::Product> are listed 
+below.
 
 =head1 METHODS
 
 =over
-
-=item C<new($param)>
-
- Description: The constructor is used to load an existing product
-              by passing a product id or a hash.
-
- Params:      $param - If you pass an integer, the integer is the
-                       product id from the database that we want to
-                       read in. If you pass in a hash with 'name' key,
-                       then the value of the name key is the name of a
-                       product from the DB.
-
- Returns:     A Bugzilla::Product object.
 
 =item C<components()>
 
@@ -365,14 +300,6 @@ Product.pm represents a product object.
 
 =over
 
-=item C<get_all_products()>
-
- Description: Returns all products from the database.
-
- Params:      none.
-
- Returns:     Bugzilla::Product object list.
-
 =item C<check_product($product_name)>
 
  Description: Checks if the product name was passed in and if is a valid
@@ -383,5 +310,9 @@ Product.pm represents a product object.
  Returns:     Bugzilla::Product object.
 
 =back
+
+=head1 SEE ALSO
+
+L<Bugzilla::Object>
 
 =cut
