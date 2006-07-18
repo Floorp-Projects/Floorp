@@ -1205,6 +1205,7 @@ public:
 
   NS_IMETHOD CharacterMove(PRBool aForward, PRBool aExtend);
   NS_IMETHOD WordMove(PRBool aForward, PRBool aExtend);
+  NS_IMETHOD WordExtendForDelete(PRBool aForward);
   NS_IMETHOD LineMove(PRBool aForward, PRBool aExtend);
   NS_IMETHOD IntraLineMove(PRBool aForward, PRBool aExtend);
   NS_IMETHOD PageMove(PRBool aForward, PRBool aExtend);
@@ -3291,6 +3292,12 @@ NS_IMETHODIMP
 PresShell::WordMove(PRBool aForward, PRBool aExtend)
 {
   return mSelection->WordMove(aForward, aExtend);  
+}
+
+NS_IMETHODIMP 
+PresShell::WordExtendForDelete(PRBool aForward)
+{
+  return mSelection->WordExtendForDelete(aForward);  
 }
 
 NS_IMETHODIMP 
