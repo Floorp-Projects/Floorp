@@ -190,6 +190,10 @@ NS_IMETHODIMP nsImapIncomingServer::SetKey(const char * aKey)  // override nsMsg
   if (otherUsersNamespace && PL_strlen(otherUsersNamespace))
       hostSession->SetNamespaceFromPrefForHost(aKey, otherUsersNamespace,
                                                kOtherUsersNamespace);
+  PRInt32 capability;
+  rv = GetCapabilityPref(&capability);
+  NS_ENSURE_SUCCESS(rv, rv);
+  hostSession->SetCapabilityForHost(aKey, capability);
   return rv;
 }
 

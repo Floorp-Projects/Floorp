@@ -367,7 +367,8 @@ private:
   PRBool       m_imapThreadIsRunning;
   void ImapThreadMainLoop(void);
   PRInt32     m_connectionStatus;
-  
+  nsCString   m_connectionType;
+
   PRBool      m_nextUrlReadyToRun;
   nsWeakPtr   m_server;
   
