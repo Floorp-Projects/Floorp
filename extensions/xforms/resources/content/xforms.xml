@@ -268,7 +268,48 @@
 
       <property name="nodeValue" readonly="true"
                 onget="return this.control.nodeValue;"/>
+
+      <!-- Advance focus to parent form control -->
+      <method name="advanceFocusToParent">
+        <body>
+          var parent = this.parentNode;
+          if (parent.namespaceURI != this.XFORMS_NS)
+            return;
+
+          switch (parent.localName) {
+            case "input":
+              // XXX: probably we should check base type (see a bug 316691)
+              switch (parent.getAttribute("type")) {
+                case "http://www.w3.org/2001/XMLSchema#boolean":
+                  var value = parent.accessors.getValue();
+                  if (value == "true" || value == "1") {
+                    parent.accessors.setValue("false");
+                  } else {
+                    parent.accessors.setValue("true");
+                  }
+              }
+            case "secret":
+            case "textarea":
+            case "output":
+            case "upload":
+            case "range":
+            case "trigger":
+            case "submit":
+            case "select":
+            case "select1":
+              parent.focus();
+              break;
+          }
+        </body>
+      </method>
+
     </implementation>
+
+    <handlers>
+      <handler event="click">
+        this.advanceFocusToParent();
+      </handler>
+    </handlers>
   </binding>
 
 
