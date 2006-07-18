@@ -938,7 +938,6 @@ nsNavBookmarks::ResultNodeForFolder(PRInt64 aID,
   nsRefPtr<nsNavHistoryQueryNode> node = new nsNavHistoryQueryNode();
   NS_ENSURE_TRUE(node, NS_ERROR_OUT_OF_MEMORY);
 
-  node->mID = aID;
   node->mTitle = title;
   node->mType = nsINavHistoryResultNode::RESULT_TYPE_QUERY;
   node->mQueries = NS_STATIC_CAST(nsINavHistoryQuery**,
