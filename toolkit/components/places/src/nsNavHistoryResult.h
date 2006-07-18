@@ -53,6 +53,7 @@ class nsNavHistory;
 class nsNavHistoryResult;
 class nsIDateTimeFormat;
 class nsIWritablePropertyBag;
+class nsNavHistoryQuery;
 class nsNavHistoryQueryOptions;
 
 class nsNavHistoryContainerResultNode;
@@ -167,13 +168,14 @@ public:
 public:
 
   nsNavHistoryResult* GetResult();
+  nsNavHistoryQueryOptions* GetGeneratingOptions();
 
   // These functions test the type. We don't use a virtual function since that
   // would take a vtable slot for every one of (potentially very many) nodes.
   // Note that GetType() already has a vtable slot because its on the iface.
   PRBool IsTypeContainer(PRUint32 type) {
     return (type == nsINavHistoryResultNode::RESULT_TYPE_HOST ||
-            type == nsINavHistoryResultNode::RESULT_TYPE_DAY ||
+            type == nsINavHistoryResultNode::RESULT_TYPE_REMOTE_CONTAINER ||
             type == nsINavHistoryResultNode::RESULT_TYPE_QUERY ||
             type == nsINavHistoryResultNode::RESULT_TYPE_FOLDER);
   }
@@ -184,10 +186,10 @@ public:
   }
   static PRBool IsTypeQuerySubcontainer(PRUint32 type) {
     // Tests containers that are inside queries that really belong to the query
-    // itself, and is used when recursively updating a query. This include host
-    // and day containers, but doesn't include other queries and folders.
-    return (type == nsINavHistoryResultNode::RESULT_TYPE_HOST ||
-            type == nsINavHistoryResultNode::RESULT_TYPE_DAY);
+    // itself, and is used when recursively updating a query. This currently
+    // includes only host containers, but may be extended to support things
+    // like days or other criteria. It doesn't include other queries and folders.
+    return (type == nsINavHistoryResultNode::RESULT_TYPE_HOST);
   }
   PRBool IsQuerySubcontainer() {
     PRUint32 type;
@@ -371,17 +373,31 @@ public:
   NS_IMETHOD GetChild(PRUint32 index, nsINavHistoryResultNode **_retval) \
     { return nsNavHistoryContainerResultNode::GetChild(index, _retval); } \
   NS_IMETHOD GetChildrenReadOnly(PRBool *aChildrenReadOnly) \
-    { return nsNavHistoryContainerResultNode::GetChildrenReadOnly(aChildrenReadOnly); }
+    { return nsNavHistoryContainerResultNode::GetChildrenReadOnly(aChildrenReadOnly); } \
+  NS_IMETHOD GetRemoteContainerType(nsACString& aRemoteContainerType) \
+    { return nsNavHistoryContainerResultNode::GetRemoteContainerType(aRemoteContainerType); } \
+  NS_IMETHOD AppendURINode(const nsACString& aTitle, PRUint32 aAccessCount, PRTime aTime, const nsACString& aIconURI, const nsACString & aURI, nsINavHistoryURIResultNode **_retval) \
+    { return nsNavHistoryContainerResultNode::AppendURINode(aTitle, aAccessCount, aTime, aIconURI, aURI, _retval); } \
+  NS_IMETHOD AppendVisitNode(const nsACString & aTitle, PRUint32 aAccessCount, PRTime aTime, const nsACString & aIconURI, const nsACString & aURI, PRInt64 aSession, nsINavHistoryVisitResultNode **_retval) \
+    { return nsNavHistoryContainerResultNode::AppendVisitNode(aTitle, aAccessCount, aTime, aIconURI, aURI, aSession, _retval); } \
+  NS_IMETHOD AppendFullVisitNode(const nsACString & aTitle, PRUint32 aAccessCount, PRTime aTime, const nsACString & aIconURI, const nsACString & aURI, PRInt64 aSession, PRInt64 aVisitId, PRInt64 aReferringVisitId, PRInt32 aTransitionType, nsINavHistoryFullVisitResultNode **_retval) \
+    { return nsNavHistoryContainerResultNode::AppendFullVisitNode(aTitle, aAccessCount, aTime, aIconURI, aURI, aSession, aVisitId, aReferringVisitId, aTransitionType, _retval); } \
+  NS_IMETHOD AppendContainerNode(const nsACString & aTitle, const nsACString & aIconURI, PRUint32 aContainerType, const nsACString & aRemoteContainerType, nsINavHistoryContainerResultNode **_retval) \
+    { return nsNavHistoryContainerResultNode::AppendContainerNode(aTitle, aIconURI, aContainerType, aRemoteContainerType, _retval); } \
+  NS_IMETHOD AppendQueryNode(const nsACString & aTitle, const nsACString & aIconURI, const nsACString & aQueryString, nsINavHistoryQueryResultNode **_retval) \
+    { return nsNavHistoryContainerResultNode::AppendQueryNode(aTitle, aIconURI, aQueryString, _retval); } \
+  NS_IMETHOD AppendFolderNode(PRInt64 aFolderId, nsINavHistoryFolderResultNode **_retval) \
+    { return nsNavHistoryContainerResultNode::AppendFolderNode(aFolderId, _retval); } \
+  NS_IMETHOD ClearContents() \
+    { return nsNavHistoryContainerResultNode::ClearContents(); }
 
 class nsNavHistoryContainerResultNode : public nsNavHistoryResultNode,
                                         public nsINavHistoryContainerResultNode
 {
 public:
-  nsNavHistoryContainerResultNode(const nsACString& aTitle, PRUint32 aAccessCount,
-    PRTime aTime, const nsACString& aIconURI, PRUint32 aContainerType,
-    PRBool aReadOnly);
   nsNavHistoryContainerResultNode(const nsACString& aTitle,
-    const nsACString& aIconURI, PRUint32 aContainerType);
+    const nsACString& aIconURI, PRUint32 aContainerType,
+    PRBool aReadOnly, const nsACString& aRemoteContainerType);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_FORWARD_RESULTNODE_TO_BASE_EXCEPT_GETTYPE
@@ -397,7 +413,7 @@ public:
 
   // overridded by descendents to populate
   virtual nsresult OpenContainer();
-  virtual nsresult CloseContainer();
+  nsresult CloseContainer();
 
   // this points to the result that owns this container. All containers have
   // their result pointer set so we can quickly get to the result without having
@@ -405,8 +421,8 @@ public:
   // for every leaf node to the result.
   nsNavHistoryResult* mResult;
 
-  // for example, RESULT_TYPE_HOST or RESULT_TYPE_DAY. Query and Folder results
-  // override GetType so this is not used, but is still kept in sync.
+  // for example, RESULT_TYPE_HOST. Query and Folder results override GetType
+  // so this is not used, but is still kept in sync.
   PRUint32 mContainerType;
 
   // when there are children, this stores the open state in the tree
@@ -417,6 +433,11 @@ public:
   nsCOMArray<nsNavHistoryResultNode> mChildren;
 
   PRBool mChildrenReadOnly;
+
+  // ID of a remote container interface that we can use GetService to get.
+  // This is empty to indicate there is no remote container service for this
+  // container (the common case).
+  nsCString mRemoteContainerType;
 
   void FillStats();
   void ReverseUpdateStats(PRInt32 aAccessCountChange);
@@ -472,6 +493,8 @@ public:
   nsresult ReplaceChildURIAt(PRUint32 aIndex,
                              nsNavHistoryURIResultNode* aNode);
   nsresult RemoveChildAt(PRInt32 aIndex, PRBool aIsTemporary = PR_FALSE);
+
+  PRBool CanRemoteContainersChange();
 };
 
 
@@ -485,14 +508,12 @@ class nsNavHistoryQueryResultNode : public nsNavHistoryContainerResultNode,
                                     public nsINavHistoryQueryResultNode
 {
 public:
-  nsNavHistoryQueryResultNode(nsNavHistoryQueryOptions* aGeneratingOptions,
-                              const nsACString& aTitle, PRUint32 aAccessCount,
-                              PRTime aTime, const nsACString& aIconURI,
+  nsNavHistoryQueryResultNode(const nsACString& aTitle,
+                              const nsACString& aIconURI,
                               const nsACString& aQueryURI);
-  nsNavHistoryQueryResultNode(nsNavHistoryQueryOptions* aGeneratingOptions,
-                              const nsACString& aTitle, PRUint32 aAccessCount,
-                              PRTime aTime, const nsACString& aIconURI,
-                              nsINavHistoryQuery** aQueries, PRUint32 aQueryCount,
+  nsNavHistoryQueryResultNode(const nsACString& aTitle,
+                              const nsACString& aIconURI,
+                              const nsCOMArray<nsNavHistoryQuery>& aQueries,
                               nsNavHistoryQueryOptions* aOptions);
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -511,13 +532,6 @@ public:
   virtual void OnRemoving();
 
 public:
-  // These are the options that caused this node to be generated. For just
-  // running queries directly, this node will be the root of the result and
-  // mGeneratingOptions will be the same as mOptions. When queries are in
-  // bookmark folders, this it the options structure used to generate the
-  // bookmarks tree. It tells us, for example, if we should expand ourselves.
-  nsCOMPtr<nsNavHistoryQueryOptions> mGeneratingOptions;
-
   // this may be constructedlazily from mQueries and mOptions, call VerifyQueriesSerialized
   // either this or mQueries/mOptions should be valid
   nsCString mQueryURI;
@@ -525,7 +539,7 @@ public:
 
   // these may be constructed lazily from mQueryURI, call VerifyQueriesParsed
   // either this or mQueryURI should be valid
-  nsCOMArray<nsINavHistoryQuery> mQueries;
+  nsCOMArray<nsNavHistoryQuery> mQueries;
   nsCOMPtr<nsNavHistoryQueryOptions> mOptions;
   PRUint32 mLiveUpdate; // one of QUERYUPDATE_* in nsNavHistory.h
   PRBool mHasSearchTerms;
@@ -561,9 +575,10 @@ class nsNavHistoryFolderResultNode : public nsNavHistoryContainerResultNode,
                                      public nsINavHistoryFolderResultNode
 {
 public:
-  nsNavHistoryFolderResultNode(const nsACString& aTitle, PRUint32 aAccessCount,
-                               PRTime aTime, nsNavHistoryQueryOptions* options,
-                               PRInt64 aFolderId);
+  nsNavHistoryFolderResultNode(const nsACString& aTitle,
+                               nsNavHistoryQueryOptions* options,
+                               PRInt64 aFolderId,
+                               const nsACString& aRemoteContainerType);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_FORWARD_RESULTNODE_TO_BASE_EXCEPT_GETTYPE
