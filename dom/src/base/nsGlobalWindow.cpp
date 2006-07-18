@@ -6596,8 +6596,11 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
       // If the next interval timeout is already supposed to have
       // happened then run the timeout as soon as we can (meaning
       // after DOM_MIN_TIMEOUT_VALUE time has passed).
-      if (delay < ((PRTime)DOM_MIN_TIMEOUT_VALUE * PR_USEC_PER_MSEC)) {
-        delay = (PRTime)DOM_MIN_TIMEOUT_VALUE * PR_USEC_PER_MSEC;
+
+      // Note: We must cast the rhs expression to PRTime to work
+      // around what looks like a compiler bug on x86_64.
+      if (delay < (PRTime)(DOM_MIN_TIMEOUT_VALUE * PR_USEC_PER_MSEC)) {
+        delay = DOM_MIN_TIMEOUT_VALUE * PR_USEC_PER_MSEC;
       }
 
       if (timeout->mTimer) {
