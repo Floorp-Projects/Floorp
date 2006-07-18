@@ -1062,7 +1062,8 @@ nsNavHistory::ExecuteQueries(const nsINavHistoryQuery** aQueries, PRUint32 aQuer
 
   PRInt32 numParameters = 0;
   nsCAutoString conditions;
-  for (PRUint32 i = 0; i < aQueryCount; i ++) {
+  PRUint32 i;
+  for (i = 0; i < aQueryCount; i ++) {
     nsCString queryClause;
     PRInt32 clauseParameters = 0;
     rv = QueryToSelectClause(NS_CONST_CAST(nsINavHistoryQuery*, aQueries[i]),
@@ -1139,7 +1140,8 @@ nsNavHistory::ExecuteQueries(const nsINavHistoryQuery** aQueries, PRUint32 aQuer
   }
 
   // run query and put into result object
-  nsRefPtr<nsNavHistoryResult> result(new nsNavHistoryResult(this, mBundle));
+  nsRefPtr<nsNavHistoryResult> result(
+                             NewHistoryResult(aQueries, aQueryCount, aOptions));
   if (! result)
     return NS_ERROR_OUT_OF_MEMORY;
   rv = result->Init();
@@ -3380,6 +3382,15 @@ NS_IMETHODIMP nsNavHistoryQuery::GetHasDomain(PRBool* _retval)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsNavHistoryQuery::Clone(nsINavHistoryQuery** _retval)
+{
+  *_retval = new nsNavHistoryQuery(*this);
+  if (! (*_retval))
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(*_retval);
+  return NS_OK;
+}
+
 
 // nsNavHistoryQueryOptions
 NS_IMPL_ISUPPORTS2(nsNavHistoryQueryOptions, nsNavHistoryQueryOptions, nsINavHistoryQueryOptions)
@@ -3420,5 +3431,34 @@ NS_IMETHODIMP
 nsNavHistoryQueryOptions::SetExpandPlaces(PRBool aExpand)
 {
   mExpandPlaces = aExpand;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::Clone(nsINavHistoryQueryOptions** aResult)
+{
+  *aResult = nsnull;
+  nsNavHistoryQueryOptions* result = new nsNavHistoryQueryOptions();
+  if (! result)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  result->mSort = mSort;
+  result->mResultType = mResultType;
+  result->mGroupCount = mGroupCount;
+  if (mGroupCount) {
+    result->mGroupings = new PRInt32[mGroupCount];
+    if (! result->mGroupings) {
+      delete result;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    for (PRUint32 i = 0; i < mGroupCount; i ++)
+      result->mGroupings[i] = mGroupings[i];
+  } else {
+    result->mGroupCount = nsnull;
+  }
+  result->mExpandPlaces = mExpandPlaces;
+
+  *aResult = result;
+  NS_ADDREF(*aResult);
   return NS_OK;
 }
