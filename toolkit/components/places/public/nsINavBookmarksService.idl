@@ -87,7 +87,7 @@ interface nsINavBookmarkObserver : nsISupports
    * @param folder     The folder that the item was added to.
    * @param index      The item's index in the folder.
    */
-  void onItemAdded(in nsIURI bookmark, in PRInt64 folder, in long index);
+  void onItemAdded(in nsIURI bookmark, in PRInt64 folder, in PRInt32 index);
 
   /**
    * Notify this observer that the bookmark was removed.
@@ -97,7 +97,19 @@ interface nsINavBookmarkObserver : nsISupports
    * @param folder     The folder that the item was removed from.
    * @param index      The bookmark's index in the folder.
    */
-  void onItemRemoved(in nsIURI bookmark, in PRInt64 container, in long index);
+  void onItemRemoved(in nsIURI bookmark, in PRInt64 folder, in PRInt32 index);
+
+  /**
+   * Notify this observer that an item has changed position in a folder.
+   * Note that items can exist in more than one folder, but may only occur once
+   * within a given folder.
+   * @param bookmark   The bookmark item that changed position.
+   * @param folder     The folder where the item changed position.
+   * @param oldIndex   The old index of the item in the folder.
+   * @param newIndex   The new index of the item in the folder.
+   */
+  void onItemMoved(in nsIURI bookmark, in PRInt64 folder,
+                   in PRInt32 oldIndex, in PRInt32 newIndex);
 
   /**
    * Notify this observer that a bookmark's information has changed.  This
@@ -114,7 +126,7 @@ interface nsINavBookmarkObserver : nsISupports
    *  @param parent     The id of the folder's parent.
    *  @param index      The folder's index inside its parent.
    */
-  void onFolderAdded(in PRInt64 folder, in PRInt64 parent, in long index);
+  void onFolderAdded(in PRInt64 folder, in PRInt64 parent, in PRInt32 index);
 
   /**
    * Notify this observer that a bookmark folder has been removed.
@@ -122,15 +134,19 @@ interface nsINavBookmarkObserver : nsISupports
    *  @param parent     The id of the folder's old parent.
    *  @param index      The folder's old index in its parent.
    */
-  void onFolderRemoved(in PRInt64 folder, in PRInt64 parent, in long index);
+  void onFolderRemoved(in PRInt64 folder, in PRInt64 parent, in PRInt32 index);
 
   /**
    * Notify this observer that a bookmark folder has been moved.
    *  @param folder     The id of the folder that was moved.
-   *  @param newParent  The id of the folder's new paremt.
-   *  @param index      The folder's index inside newParent.
+   *  @param oldParent  The id of the folder's old parent.
+   *  @param oldIndex   The folder's old index inside oldParent.
+   *  @param newParent  The id of the folder's new parent.
+   *  @param newIndex   The folder's index inside newParent.
    */
-  void onFolderMoved(in PRInt64 folder, in PRInt64 newParent, in long index);
+  void onFolderMoved(in PRInt64 folder,
+                     in PRInt64 oldParent, in PRInt32 oldIndex,
+                     in PRInt64 newParent, in PRInt32 newIndex);
 
   /**
    * Notify this observer that a bookmark folder's information has changed.
