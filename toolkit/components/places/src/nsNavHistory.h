@@ -96,15 +96,15 @@ private:
 protected:
 
   PRTime mBeginTime;
+  PRUint32 mBeginTimeReference;
   PRTime mEndTime;
+  PRUint32 mEndTimeReference;
   nsString mSearchTerms;
   PRBool mOnlyBookmarked;
   PRBool mDomainIsHost;
   nsString mDomain;
   PRInt32 mGroupingMode;
   PRInt32 mSortingMode;
-  PRBool mAsVisits;
-  PRBool mExpandPlaces;
 };
 
 
@@ -133,7 +133,7 @@ public:
 protected:
   virtual ~nsNavHistoryResultNode() {}
 
-  // parent of this element, NULL if no parent. Filled in by FillAllElements
+  // parent of this element, NULL if no parent. Filled in by FilledAllResults
   // in the result set.
   nsNavHistoryResultNode* mParent;
 
@@ -150,13 +150,14 @@ protected:
   // Filled in by the result type generator in nsNavHistory
   nsCOMArray<nsNavHistoryResultNode> mChildren;
 
-  // filled in by FillAllElements in the result set.
+  // filled in by FillledAllResults in the result set.
   PRInt32 mIndentLevel;
 
   // Index of this element into the flat mAllElements array in the result set.
-  // Filled in by FillAllElements. DANGER, this does not necessarily mean that
+  // Filled in by FilledAllResults. DANGER, this does not necessarily mean that
   // mAllElements[mFlatIndex] = this, because we could be collapsed.
-  // mAllElements[mFlatIndex] could be a duplicate of us.
+  // mAllElements[mFlatIndex] could be a duplicate of us. ALSO NOTE that the
+  // root element, although it is a node, has no flat index.
   PRInt32 mFlatIndex;
 
   // index of this element into the mVisibleElements array in the result set
@@ -203,6 +204,7 @@ class nsIDateTimeFormat;
 //    object initialization.
 
 class nsNavHistoryResult : public nsINavHistoryResult,
+                           public nsNavHistoryResultNode,
                            public nsITreeView
 {
 public:
@@ -215,7 +217,7 @@ public:
   // Two-stage init, MUST BE CALLED BEFORE ANYTHING ELSE
   nsresult Init();
 
-  nsCOMArray<nsNavHistoryResultNode>* GetTopLevel() { return &mTopLevelElements; }
+  nsCOMArray<nsNavHistoryResultNode>* GetTopLevel() { return &mChildren; }
   void ApplyTreeState(
       const nsDataHashtable<nsStringHashKey, int>& aExpanded);
   void FilledAllResults();
@@ -227,6 +229,8 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSINAVHISTORYRESULT
   NS_DECL_NSITREEVIEW
+
+  NS_FORWARD_NSINAVHISTORYRESULTNODE(nsNavHistoryResultNode::)
 
 private:
   ~nsNavHistoryResult();
@@ -249,11 +253,6 @@ protected:
   nsCOMPtr<nsICollation> mCollation;
   nsCOMPtr<nsIDateTimeFormat> mDateFormatter;
   PRBool mTimesIncludeDates;
-
-  // these are the roots of the hierarchy. This array is filled in externally
-  // (use GetTopLevel). This contains the owning references. Everything else
-  // uses void arrays to avoid AddRef overhead and to get better functionality.
-  nsCOMArray<nsNavHistoryResultNode> mTopLevelElements;
 
   // this is the flattened version of the hierarchy containing everything
   nsVoidArray mAllElements;
@@ -500,6 +499,7 @@ protected:
   nsCOMPtr<nsITimer> mExpireNowTimer;
   PRTime GetNow();
   static void expireNowTimerCallback(nsITimer* aTimer, void* aClosure);
+  PRTime NormalizeTime(PRUint32 aRelative, PRTime aOffset);
 
   nsresult QueryToSelectClause(nsINavHistoryQuery* aQuery,
                                PRInt32 aStartParameter,
