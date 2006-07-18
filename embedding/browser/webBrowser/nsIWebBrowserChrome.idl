@@ -101,7 +101,12 @@ interface nsIWebBrowserChrome : nsISupports
     const unsigned long CHROME_WINDOW_RAISED    = 0x02000000;
     const unsigned long CHROME_WINDOW_LOWERED   = 0x04000000;
     const unsigned long CHROME_CENTER_SCREEN    = 0x08000000;
+
+    // Make the new window dependent on the parent.  This flag is only
+    // meaningful if CHROME_OPENAS_CHROME is set; content windows should not be
+    // dependent.
     const unsigned long CHROME_DEPENDENT        = 0x10000000;
+
     // Note: The modal style bit just affects the way the window looks and does
     //       mean it's actually modal.
     const unsigned long CHROME_MODAL            = 0x20000000; 
