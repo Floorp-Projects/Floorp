@@ -798,6 +798,10 @@ nsNavBookmarks::GetTagRoot(PRInt64 *aRoot)
 NS_IMETHODIMP
 nsNavBookmarks::InsertItem(PRInt64 aFolder, nsIURI *aItem, PRInt32 aIndex)
 {
+  // You can pass -1 to indicate append, but no other negative number is allowed
+  if (aIndex < -1)
+    return NS_ERROR_INVALID_ARG;
+
   mozIStorageConnection *dbConn = DBConn();
   mozStorageTransaction transaction(dbConn, PR_FALSE);
 
@@ -978,10 +982,14 @@ nsNavBookmarks::CreateContainer(PRInt64 aParent, const nsAString &aName,
 }
 
 nsresult
-nsNavBookmarks::CreateFolderWithID(PRInt64 aFolder, PRInt64 aParent, 
+nsNavBookmarks::CreateFolderWithID(PRInt64 aFolder, PRInt64 aParent,
                                    const nsAString& aName, PRInt32 aIndex,
                                    PRInt64* aNewFolder)
 {
+  // You can pass -1 to indicate append, but no other negative number is allowed
+  if (aIndex < -1)
+    return NS_ERROR_INVALID_ARG;
+
   mozIStorageConnection *dbConn = DBConn();
   mozStorageTransaction transaction(dbConn, PR_FALSE);
 
@@ -1068,6 +1076,10 @@ nsNavBookmarks::CreateContainerWithID(PRInt64 aFolder, PRInt64 aParent,
 NS_IMETHODIMP
 nsNavBookmarks::InsertSeparator(PRInt64 aParent, PRInt32 aIndex)
 {
+  // You can pass -1 to indicate append, but no other negative number is allowed
+  if (aIndex < -1)
+    return NS_ERROR_INVALID_ARG;
+
   mozIStorageConnection *dbConn = DBConn();
   mozStorageTransaction transaction(dbConn, PR_FALSE);
 
@@ -1375,6 +1387,10 @@ nsNavBookmarks::RemoveFolderChildren(PRInt64 aFolder)
 NS_IMETHODIMP
 nsNavBookmarks::MoveFolder(PRInt64 aFolder, PRInt64 aNewParent, PRInt32 aIndex)
 {
+  // You can pass -1 to indicate append, but no other negative number is allowed
+  if (aIndex < -1)
+    return NS_ERROR_INVALID_ARG;
+
   mozIStorageConnection *dbConn = DBConn();
   mozStorageTransaction transaction(dbConn, PR_FALSE);
 
