@@ -732,7 +732,7 @@ nsresult nsMsgNewsFolder::AbbreviatePrettyName(PRUnichar ** prettyName, PRInt32 
   PRInt32    newword = 0;     // == 2 if done with all abbreviated words
   
   fullwords = 0;
-  char currentChar;
+  PRUnichar currentChar;
   for (PRInt32 i = 1; i < length; i++) {
     // this temporary assignment is needed to fix an intel mac compiler bug.
     // See Bug #327037 for details.
