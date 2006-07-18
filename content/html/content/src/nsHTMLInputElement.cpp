@@ -141,7 +141,7 @@ static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
 #define NS_CONTROL_TYPE(bits)  ((bits) & ~( \
   NS_OUTER_ACTIVATE_EVENT | NS_ORIGINAL_CHECKED_VALUE | NS_NO_CONTENT_DISPATCH))
 
-static const char* kWhitespace = "\n\r\t\b";
+static const char kWhitespace[] = "\n\r\t\b";
 
 class nsHTMLInputElement : public nsGenericHTMLFormElement,
                            public nsImageLoadingContent,
