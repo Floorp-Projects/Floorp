@@ -103,23 +103,27 @@ interface nsIFaviconService : nsISupports
    * You can set the data even if you haven't called SetFaviconUrlForPage
    * yet. It will be stored but will not be associated with any page.
    * However, any favicons not associated with a visited web page, bookmark,
-   * or "place:" URI will be expired when history cleanup is done (typically
-   * at app shutdown, but also possibly if the user clears their cache or
-   * history). It is best to call this function first for notification purposes.
+   * or "place:" URI will be expired when history cleanup is done. This might
+   * be done at any time on a timer, so you should not let the message loop
+   * run between calls or your icon may get deleted.
+   *
+   * It is best to set the favicon data, and then associate it with a page.
+   * This will make the notifications more efficient since the icon will
+   * already have data when the set favicon observer messages goes out.
    *
    * The expiration time is stored. This will be used if you call
    * SetAndLoadFaviconForPage to see whether the data needs reloading.
    *
-   * Do not use this function for chrome: URLs. You should reference the chrome
-   * image yourself. The GetFaviconLinkForIcon/Page will ignore any associated
-   * data if the favicon URI is "chrome:" and just return the same chrome URI.
+   * Do not use this function for chrome: icon URLs. You should reference the
+   * chrome image yourself. The GetFaviconLinkForIcon/Page will ignore any
+   * associated data if the favicon URI is "chrome:" and just return the same
+   * chrome URI.
    *
    * This function does NOT send out notifications that the data has changed.
    * Potentially, many pages could be referencing the favicon and they could
    * be visible in a history view or toolbar. But sending out those
    * notifications is very intensive. Those pages will keep the old icon
-   * until they have been refreshed by other means. Favicons don't change much
-   * anyway.
+   * until they have been refreshed by other means.
    *
    * @param aFavicon
    *        URI of the favicon whose data is being set.
