@@ -48,7 +48,7 @@
 #include "nsIAutoCompleteSearch.h"
 #include "nsIAutoCompleteResult.h"
 #include "nsIAutoCompleteResultTypes.h"
-#include "nsAutoCompleteStorageResult.h"
+#include "nsIAutoCompleteSimpleResult.h"
 #include "nsIBrowserHistory.h"
 #include "nsICollation.h"
 #include "nsIGlobalHistory.h"
@@ -268,6 +268,7 @@ protected:
 };
 
 
+
 // nsNavHistory
 
 class nsNavHistory : nsSupportsWeakReference,
@@ -276,6 +277,7 @@ class nsNavHistory : nsSupportsWeakReference,
                      public nsIBrowserHistory,
                      public nsIAutoCompleteSearch
 {
+  friend struct AutoCompleteIntermediateResultSet;
 public:
   nsNavHistory();
 
@@ -416,12 +418,12 @@ protected:
     PRInt32 postPrefixOffset;
   };
 
-  nsresult AutoCompleteTypedSearch(nsIAutoCompleteStorageResult* result);
+  nsresult AutoCompleteTypedSearch(nsIAutoCompleteSimpleResult* result);
   nsresult AutoCompleteFullHistorySearch(const nsAString& aSearchString,
-                                         nsIAutoCompleteStorageResult* result);
+                                         nsIAutoCompleteSimpleResult* result);
   nsresult AutoCompleteRefineHistorySearch(const nsAString& aSearchString,
-                                   nsIAutoCompleteStorageResult* aPreviousResult,
-                                   nsIAutoCompleteStorageResult* aNewResult);
+                                   nsIAutoCompleteResult* aPreviousResult,
+                                   nsIAutoCompleteSimpleResult* aNewResult);
   void AutoCompleteCutPrefix(nsString* aURL,
                              const AutoCompleteExclude* aExclude);
   void AutoCompleteGetExcludeInfo(const nsAString& aURL,
@@ -430,8 +432,8 @@ protected:
                              const nsAString& aUserURL,
                              const AutoCompleteExclude& aExclude);
   PR_STATIC_CALLBACK(int) AutoCompleteSortComparison(
-                             nsIAutoCompleteStorageMatch* match1,
-                             nsIAutoCompleteStorageMatch* match2,
+                             const void* match1Void,
+                             const void* match2Void,
                              void *navHistoryVoid);
 
   nsresult ImportFromMork();
