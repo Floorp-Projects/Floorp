@@ -36,10 +36,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef nsNavHistory_h_
+#define nsNavHistory_h_
 
 #include "mozIStorageService.h"
 #include "mozIStorageConnection.h"
 #include "mozIStorageValueArray.h"
+#include "mozIStorageStatement.h"
 #include "nsAutoPtr.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
@@ -71,7 +74,7 @@
 #define AUTOCOMPLETE_NONPAGE_VISIT_COUNT_BOOST 5
 
 class mozIAnnotationService;
-
+class nsNavHistory;
 
 // nsNavHistoryQuery
 //
@@ -100,6 +103,7 @@ protected:
   PRInt32 mGroupingMode;
   PRInt32 mSortingMode;
   PRBool mAsVisits;
+  PRBool mExpandPlaces;
 };
 
 
@@ -114,7 +118,7 @@ public:
   NS_DECL_NSINAVHISTORYRESULTNODE
 
 private:
-  ~nsNavHistoryResultNode() {}
+  virtual ~nsNavHistoryResultNode() {}
 
 protected:
   // parent of this element, NULL if no parent. Filled in by FillAllElements
@@ -150,12 +154,14 @@ protected:
   // this is set to the default in the constructor
   PRBool mExpanded;
 
+  // for bookmark folders, stores whether we've queried for the child list yet
+  PRBool mQueriedChildren;
+
   friend class nsNavHistory;
   friend class nsNavHistoryResult;
 };
 
 class nsIDateTimeFormat;
-class nsNavHistory;
 
 // nsNavHistoryResult
 //
@@ -271,9 +277,41 @@ protected:
 
 class AutoCompleteIntermediateResultSet;
 
+#define NS_NAVHISTORYQUERYOPTIONS_IID \
+{0x95f8ba3b, 0xd681, 0x4d89, {0xab, 0xd1, 0xfd, 0xae, 0xf2, 0xa3, 0xde, 0x18}}
+
+class nsNavHistoryQueryOptions : public nsINavHistoryQueryOptions
+{
+public:
+  nsNavHistoryQueryOptions() : mSort(0), mResultType(0),
+                               mGroupCount(0), mGroupings(nsnull), mExpandPlaces(PR_FALSE)
+  { }
+
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_INAVHISTORYQUERYOPTIONS_IID)
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSINAVHISTORYQUERYOPTIONS
+
+  PRInt32 SortingMode() const { return mSort; }
+  PRInt32 ResultType() const { return mResultType; }
+  const PRInt32* GroupingMode(PRUint32 *count) const {
+    *count = mGroupCount; return mGroupings;
+  }
+  PRBool ExpandPlaces() const { return mExpandPlaces; }
+
+private:
+  ~nsNavHistoryQueryOptions() { delete[] mGroupings; }
+
+  PRInt32 mSort;
+  PRInt32 mResultType;
+  PRUint32 mGroupCount;
+  PRInt32 *mGroupings;
+  PRBool mExpandPlaces;
+};
+
 // nsNavHistory
 
-class nsNavHistory : nsSupportsWeakReference,
+class nsNavHistory : public nsSupportsWeakReference,
                      public nsINavHistory,
                      public nsIObserver,
                      public nsIBrowserHistory,
@@ -301,9 +339,9 @@ public:
   static nsNavHistory* GetHistoryService()
   {
     if (! gHistoryService) {
-      // don't want the return value, since that's the interface. We want the
-      // pointer to the implementation.
-      do_GetService("@mozilla.org/browser/nav-history;1");
+      nsresult rv;
+      nsCOMPtr<nsINavHistory> serv(do_GetService("@mozilla.org/browser/nav-history;1", &rv));
+      NS_ENSURE_SUCCESS(rv, nsnull);
 
       // our constructor should have set the static variable. If it didn't,
       // something is wrong.
@@ -333,6 +371,26 @@ public:
   void SaveExpandItem(const nsAString& aTitle);
   void SaveCollapseItem(const nsAString& aTitle);
 
+  // get the statement for selecting a history row by id
+  mozIStorageStatement* DBGetURLPageInfo() { return mDBGetURLPageInfo; }
+
+  // Constants for the columns returned by the above statement.
+  static const PRInt32 kGetInfoIndex_PageID;
+  static const PRInt32 kGetInfoIndex_URL;
+  static const PRInt32 kGetInfoIndex_Title;
+  static const PRInt32 kGetInfoIndex_VisitCount;
+  static const PRInt32 kGetInfoIndex_VisitDate;
+  static const PRInt32 kGetInfoIndex_RevHost;
+
+  // Take a result returned from DBGetURLPageInfo and construct a
+  // ResultNode.
+  nsresult RowToResult(mozIStorageValueArray* aRow, PRBool aAsVisits,
+                       nsNavHistoryResultNode** aResult);
+
+  // Construct a new HistoryResult object.
+  nsNavHistoryResult* NewHistoryResult()
+  { return new nsNavHistoryResult(this, mBundle); }
+
 private:
   ~nsNavHistory();
 
@@ -358,12 +416,6 @@ protected:
   nsCOMPtr<mozIStorageStatement> mDBGetVisitPageInfo; // kGetInfoIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBGetURLPageInfo;   // kGetInfoIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBFullAutoComplete; // kAutoCompleteIndex_* results, 1 arg (max # results)
-  static const PRInt32 kGetInfoIndex_PageID;
-  static const PRInt32 kGetInfoIndex_URL;
-  static const PRInt32 kGetInfoIndex_Title;
-  static const PRInt32 kGetInfoIndex_VisitCount;
-  static const PRInt32 kGetInfoIndex_VisitDate;
-  static const PRInt32 kGetInfoIndex_RevHost;
   static const PRInt32 kAutoCompleteIndex_URL;
   static const PRInt32 kAutoCompleteIndex_Title;
   static const PRInt32 kAutoCompleteIndex_VisitCount;
@@ -378,7 +430,7 @@ protected:
 
   nsresult InitMemDB();
 
-  nsresult InternalAdd(nsIURI* aURI, PRUint32 aSessionID,
+  nsresult InternalAdd(nsIURI* aURI, PRInt64 aSessionID,
                        PRUint32 aTransitionType, const PRUnichar* aTitle,
                        PRTime aVisitDate, PRBool aRedirect,
                        PRBool aToplevel, PRInt64* aPageID);
@@ -410,8 +462,6 @@ protected:
   nsresult ResultsAsList(mozIStorageStatement* statement, PRBool aAsVisits,
                          nsCOMArray<nsNavHistoryResultNode>* aResults);
 
-  nsresult RowToResult(mozIStorageValueArray* aRow, PRBool aAsVisits,
-                       nsNavHistoryResultNode** aResult);
   void TitleForDomain(const nsString& domain, nsAString& aTitle);
 
   nsresult RecursiveGroup(const nsCOMArray<nsNavHistoryResultNode>& aSource,
@@ -486,3 +536,5 @@ protected:
  */
 nsresult BindStatementURI(mozIStorageStatement* statement, PRInt32 index,
                           nsIURI* aURI);
+
+#endif // nsNavHistory_h_
