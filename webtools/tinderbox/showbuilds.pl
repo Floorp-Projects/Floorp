@@ -600,7 +600,7 @@ sub who_menu {
   require "$tree/treedata.pl";
 
   my $qr = '';
-  my $ret = "<a href='$qr' onclick=\"return who(event);\">";
+  my $ret = "<a href=\"$qr\" onclick=\"return who(event);\">";
   if ($use_viewvc) {
       $qr = "${viewvc_url}?view=query&who_match=exact&who=" . 
           &url_encode($who) . "&querysort=date&date=explicit" .
@@ -695,6 +695,7 @@ sub print_javascript {
     #popup {
       position: absolute;
       margin: -5em 0 0 -5em;
+      opacity: 0.9;
       }
     .who#popup{
       border: 0px;

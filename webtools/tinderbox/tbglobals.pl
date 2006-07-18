@@ -268,10 +268,14 @@ sub format_time_difference {
   return $formatted_diff;
 }
 
+# This should really adhere to:
+# http://www.blooberry.com/indexdot/html/topics/urlencoding.htm
 sub url_encode {
   my ($s) = @_;
 
+  # First change all percent signs since later encodings use them as escapes.
   $s =~ s/\%/\%25/g;
+
   $s =~ s/\=/\%3d/g;
   $s =~ s/\?/\%3f/g;
   $s =~ s/ /\%20/g;
