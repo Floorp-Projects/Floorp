@@ -241,7 +241,8 @@ nsNavHistory::Init()
 
   gExpandedItems.Init(128);
 
-  rv = InitDB();
+  PRBool doImport;
+  rv = InitDB(&doImport);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // commonly used prefixes that should be chopped off all history and input
@@ -337,6 +338,18 @@ nsNavHistory::Init()
 
   gObserverService->AddObserver(this, gQuitApplicationMessage, PR_FALSE);
 
+  if (doImport) {
+    nsCOMPtr<nsIMorkHistoryImporter> importer = new nsMorkHistoryImporter();
+    NS_ENSURE_TRUE(importer, NS_ERROR_OUT_OF_MEMORY);
+
+    nsCOMPtr<nsIFile> historyFile;
+    rv = NS_GetSpecialDirectory(NS_APP_HISTORY_50_FILE,
+                                getter_AddRefs(historyFile));
+    if (NS_SUCCEEDED(rv) && historyFile) {
+      importer->ImportHistory(historyFile, this);
+    }
+  }
+
   return rv;
 }
 
@@ -344,10 +357,11 @@ nsNavHistory::Init()
 // nsNavHistory::InitDB
 
 nsresult
-nsNavHistory::InitDB()
+nsNavHistory::InitDB(PRBool *aDoImport)
 {
   nsresult rv;
   PRBool tableExists;
+  *aDoImport = PR_FALSE;
 
   // init DB
   nsCOMPtr<nsIFile> dbFile;
@@ -374,11 +388,10 @@ nsNavHistory::InitDB()
   }
 
   // moz_history
-  PRBool doImport = PR_FALSE;
   rv = mDBConn->TableExists(NS_LITERAL_CSTRING("moz_history"), &tableExists);
   NS_ENSURE_SUCCESS(rv, rv);
   if (! tableExists) {
-    doImport = PR_TRUE;
+    *aDoImport = PR_TRUE;
     rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_history ("
         "id INTEGER PRIMARY KEY, "
         "url LONGVARCHAR, "
@@ -563,18 +576,6 @@ nsNavHistory::InitDB()
     getter_AddRefs(mDBUrlToUrlResult));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (doImport) {
-    nsCOMPtr<nsIMorkHistoryImporter> importer = new nsMorkHistoryImporter();
-    NS_ENSURE_TRUE(importer, NS_ERROR_OUT_OF_MEMORY);
-
-    nsCOMPtr<nsIFile> historyFile;
-    rv = NS_GetSpecialDirectory(NS_APP_HISTORY_50_FILE,
-                                getter_AddRefs(historyFile));
-    if (NS_SUCCEEDED(rv) && historyFile) {
-      importer->ImportHistory(historyFile, this);
-    }
-  }
-
   return NS_OK;
 }
 
@@ -615,16 +616,13 @@ nsNavHistory::InitMemDB()
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("SELECT url FROM moz_history WHERE visit_count > 0 ORDER BY url"),
                                 getter_AddRefs(selectStatement));
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<mozIStorageValueArray> selectRow = do_QueryInterface(selectStatement);
-  if (!selectRow)
-    return NS_ERROR_FAILURE;
 
   PRBool hasMore = PR_FALSE;
   //rv = mMemDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("BEGIN TRANSACTION"));
   mozStorageTransaction transaction(mMemDBConn, PR_FALSE);
   nsCString url;
   while(NS_SUCCEEDED(rv = selectStatement->ExecuteStep(&hasMore)) && hasMore) {
-    rv = selectRow->GetUTF8String(0, url);
+    rv = selectStatement->GetUTF8String(0, url);
     if (NS_SUCCEEDED(rv) && ! url.IsEmpty()) {
       rv = mMemDBAddPage->BindUTF8StringParameter(0, url);
       if (NS_SUCCEEDED(rv))
