@@ -260,6 +260,7 @@ public:
   NS_IMETHOD GetQueries(PRUint32 *aQueryCount,
                         nsINavHistoryQuery ***aQueries);
   NS_IMETHOD GetQueryOptions(nsINavHistoryQueryOptions **aOptions);
+  NS_IMETHOD GetChildrenReadOnly(PRBool *aResult);
 
   NS_DECL_BOOKMARK_HISTORY_OBSERVER
 
