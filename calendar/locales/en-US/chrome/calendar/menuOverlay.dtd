@@ -210,6 +210,10 @@
 
 <!ENTITY helpMenu.label                         "Help">
 <!ENTITY helpMenu.accesskey                     "H">
+<!-- LOCALIZATION NOTE some localizations of Windows use "?"
+           for the help button in the menubar but Gnome does not.   -->
+<!ENTITY helpMenuWin.label                      "Help"> 
+<!ENTITY helpMenuWin.accesskey                  "H">
 
 <!ENTITY walletPasswordManager.label            "Password Manager">
 <!ENTITY walletPasswordManager.accesskey        "p">

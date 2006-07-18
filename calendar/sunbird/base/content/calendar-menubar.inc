@@ -428,9 +428,15 @@
        </menu>
 #endif
 
-       <menu id="menu_Help"
-             label="&helpMenu.label;"
-             accesskey="&helpMenu.accesskey;">
+#ifdef XP_WIN
+   <menu id="menu_Help"
+         label="&helpMenuWin.label;"
+         accesskey="&helpMenuWin.accesskey;">
+#else
+   <menu id="menu_Help"
+         label="&helpMenu.label;"
+         accesskey="&helpMenu.accesskey;">
+#endif
          <menupopup id="menu_HelpPopup">
            <!-- XXX lilmatt: Finish this!  oncommand="openTopWin('&helpURL;');" -->
            <menuitem label="&calendar.help.label;"
