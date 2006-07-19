@@ -72,7 +72,6 @@
 #include "nsIScriptRuntime.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIServiceManager.h"
-#include "nsITextContent.h"
 #include "nsIURL.h"
 #include "nsIViewManager.h"
 #include "nsIXULContentSink.h"

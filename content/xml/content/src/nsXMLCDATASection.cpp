@@ -108,7 +108,6 @@ nsXMLCDATASection::~nsXMLCDATASection()
 
 // QueryInterface implementation for nsXMLCDATASection
 NS_INTERFACE_MAP_BEGIN(nsXMLCDATASection)
-  NS_INTERFACE_MAP_ENTRY(nsITextContent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCharacterData)
   NS_INTERFACE_MAP_ENTRY(nsIDOMText)
@@ -123,7 +122,7 @@ NS_IMPL_RELEASE_INHERITED(nsXMLCDATASection, nsGenericDOMDataNode)
 PRBool
 nsXMLCDATASection::IsNodeOfType(PRUint32 aFlags) const
 {
-  return !(aFlags & ~(eCONTENT | eTEXT));
+  return !(aFlags & ~(eCONTENT | eTEXT | eDATA_NODE));
 }
 
 NS_IMETHODIMP

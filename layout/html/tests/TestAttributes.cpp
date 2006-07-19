@@ -40,7 +40,6 @@
 #include "nsCRT.h"
 #include "nsHTMLParts.h"
 #include "nsGenericHTMLElement.h"
-#include "nsITextContent.h"
 #include "nsString.h"
 #include "nsIDocument.h"
 #include "nsISupportsArray.h"
@@ -271,11 +270,11 @@ int main(int argc, char** argv)
   }
 
 #if 0
-  // Query ITextContent interface
-  nsITextContent* textContent;
-  rv = text->QueryInterface(NS_GET_IID(nsITextContent),(void **)&textContent);
+  // Query IContent interface
+  nsIContent* textContent;
+  rv = text->QueryInterface(NS_GET_IID(nsIContent),(void **)&textContent);
   if (NS_OK != rv) {
-    printf("Created text content does not have the ITextContent interface.\n");
+    printf("Created text content does not have the IContent interface.\n");
     return -1;
   }
 

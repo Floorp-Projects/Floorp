@@ -58,11 +58,12 @@ class nsICSSStyleRule;
 class nsRuleWalker;
 class nsAttrValue;
 class nsAttrName;
+class nsTextFragment;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x6aea736c, 0xe909, 0x43b7, \
-  { 0x9c, 0x55, 0xb0, 0xda, 0x9e, 0x37, 0x16, 0x45 } }
+{ 0x98f87249, 0x4cc8, 0x407d, \
+  { 0x80, 0xb6, 0xfe, 0x12, 0x91, 0xd1, 0x4d, 0xc9 } }
 
 // hack to make egcs / gcc 2.95.2 happy
 class nsIContent_base : public nsINode {
@@ -373,6 +374,49 @@ public:
    * @return the number of attributes
    */
   virtual PRUint32 GetAttrCount() const = 0;
+
+  /**
+   * Get direct access (but read only) to the text in the text content.
+   * NOTE: For elements this is *not* the concatenation of all text children,
+   * it is simply null;
+   */
+  virtual const nsTextFragment *GetText() = 0;
+
+  /**
+   * Get the length of the text content.
+   * NOTE: This should not be called on elements.
+   */
+  virtual PRUint32 TextLength() = 0;
+
+  /**
+   * Set the text to the given value. If aNotify is PR_TRUE then
+   * the document is notified of the content change.
+   * NOTE: For elements this always ASSERTS and returns NS_ERROR_FAILURE
+   */
+  virtual nsresult SetText(const PRUnichar* aBuffer, PRUint32 aLength,
+                           PRBool aNotify) = 0;
+
+  /**
+   * Set the text to the given value. If aNotify is PR_TRUE then
+   * the document is notified of the content change.
+   * NOTE: For elements this always asserts and returns NS_ERROR_FAILURE
+   */
+  nsresult SetText(const nsAString& aStr, PRBool aNotify)
+  {
+    return SetText(aStr.BeginReading(), aStr.Length(), aNotify);
+  }
+
+  /**
+   * Query method to see if the frame is nothing but whitespace
+   * NOTE: Always returns PR_FALSE for elements
+   */
+  virtual PRBool TextIsOnlyWhitespace() = 0;
+
+  /**
+   * Append the text content to aResult.
+   * NOTE: This asserts and returns for elements
+   */
+  virtual void AppendTextTo(nsAString& aResult) = 0;
 
   /**
    * Set the focus on this content.  This is generally something for the event

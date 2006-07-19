@@ -40,7 +40,6 @@
 #ifdef IBMBIDI
 
 #include "nsBidiPresUtils.h"
-#include "nsITextContent.h"
 #include "nsTextFragment.h"
 #include "nsLayoutAtoms.h"
 #include "nsPresContext.h"
@@ -330,7 +329,6 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
   nsIFrame*                frame = nsnull;
   nsIFrame*                nextBidi;
   nsIContent*              content = nsnull;
-  nsCOMPtr<nsITextContent> textContent;
   const nsTextFragment*    fragment;
   nsIAtom*                 frameType = nsnull;
 
@@ -357,11 +355,7 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
           mSuccess = NS_OK;
           break;
         }
-        textContent = do_QueryInterface(content, &mSuccess);
-        if (NS_FAILED(mSuccess) || (!textContent) ) {
-          break;
-        }
-        fragment = textContent->Text();
+        fragment = content->GetText();
         if (!fragment) {
           mSuccess = NS_ERROR_FAILURE;
           break;
@@ -574,7 +568,6 @@ nsBidiPresUtils::CreateBlockBuffer(nsPresContext* aPresContext)
 
   nsIFrame*                 frame;
   nsIContent*               prevContent = nsnull;
-  nsCOMPtr<nsITextContent>  textContent;
   PRUint32                  i;
   PRUint32                  count = mLogicalFrames.Count();
 
@@ -592,11 +585,7 @@ nsBidiPresUtils::CreateBlockBuffer(nsPresContext* aPresContext)
         continue;
       }
       prevContent = content;
-      textContent = do_QueryInterface(content, &mSuccess);
-      if ( (NS_FAILED(mSuccess) ) || (!textContent) ) {
-        break;
-      }
-      textContent->Text()->AppendTo(mBuffer);
+      content->AppendTextTo(mBuffer);
     }
     else if (nsLayoutAtoms::brFrame == frameType) { // break frame
       // Append line separator

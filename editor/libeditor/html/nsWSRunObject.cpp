@@ -707,8 +707,8 @@ nsWSRunObject::GetWSNodes()
   // first look backwards to find preceding ws nodes
   if (mHTMLEditor->IsTextNode(mNode))
   {
-    nsCOMPtr<nsITextContent> textNode(do_QueryInterface(mNode));
-    const nsTextFragment *textFrag = textNode->Text();
+    nsCOMPtr<nsIContent> textNode(do_QueryInterface(mNode));
+    const nsTextFragment *textFrag = textNode->GetText();
     
     res = PrependNodeToList(mNode);
     NS_ENSURE_SUCCESS(res, res);
@@ -767,9 +767,11 @@ nsWSRunObject::GetWSNodes()
       {
         res = PrependNodeToList(priorNode);
         NS_ENSURE_SUCCESS(res, res);
-        nsCOMPtr<nsITextContent> textNode(do_QueryInterface(priorNode));
-        if (!textNode) return NS_ERROR_NULL_POINTER;
-        const nsTextFragment *textFrag = textNode->Text();
+        nsCOMPtr<nsIContent> textNode(do_QueryInterface(priorNode));
+        const nsTextFragment *textFrag;
+        if (!textNode || !(textFrag = textNode->GetText())) {
+          return NS_ERROR_NULL_POINTER;
+        }
         PRUint32 len = textNode->TextLength();
 
         if (len < 1)
@@ -839,8 +841,8 @@ nsWSRunObject::GetWSNodes()
   if (mHTMLEditor->IsTextNode(mNode))
   {
     // don't need to put it on list. it already is from code above
-    nsCOMPtr<nsITextContent> textNode(do_QueryInterface(mNode));
-    const nsTextFragment *textFrag = textNode->Text();
+    nsCOMPtr<nsIContent> textNode(do_QueryInterface(mNode));
+    const nsTextFragment *textFrag = textNode->GetText();
 
     PRUint32 len = textNode->TextLength();
     if (mOffset<len)
@@ -899,9 +901,11 @@ nsWSRunObject::GetWSNodes()
       {
         res = AppendNodeToList(nextNode);
         NS_ENSURE_SUCCESS(res, res);
-        nsCOMPtr<nsITextContent> textNode(do_QueryInterface(nextNode));
-        if (!textNode) return NS_ERROR_NULL_POINTER;
-        const nsTextFragment *textFrag = textNode->Text();
+        nsCOMPtr<nsIContent> textNode(do_QueryInterface(nextNode));
+        const nsTextFragment *textFrag;
+        if (!textNode || !(textFrag = textNode->GetText())) {
+          return NS_ERROR_NULL_POINTER;
+        }
         PRUint32 len = textNode->TextLength();
 
         if (len < 1)
@@ -1442,6 +1446,11 @@ nsWSRunObject::PrepareToDeleteRangePriv(nsWSRunObject* aEndObject)
                                address_of(wsEndNode), &wsEndOffset);
         NS_ENSURE_SUCCESS(res, res);
         point.mTextNode = do_QueryInterface(wsStartNode);
+        if (!point.mTextNode->IsNodeOfType(nsINode::eDATA_NODE)) {
+          // Not sure if this is needed, but it'll maintain the same
+          // functionality
+          point.mTextNode = nsnull;
+        }
         point.mOffset = wsStartOffset;
         res = ConvertToNBSP(point, eOutsideUserSelectAll);
         NS_ENSURE_SUCCESS(res, res);
@@ -1493,6 +1502,11 @@ nsWSRunObject::PrepareToSplitAcrossBlocksPriv()
                              address_of(wsEndNode), &wsEndOffset);
       NS_ENSURE_SUCCESS(res, res);
       point.mTextNode = do_QueryInterface(wsStartNode);
+      if (!point.mTextNode->IsNodeOfType(nsINode::eDATA_NODE)) {
+        // Not sure if this is needed, but it'll maintain the same
+        // functionality
+        point.mTextNode = nsnull;
+      }
       point.mOffset = wsStartOffset;
       res = ConvertToNBSP(point);
       NS_ENSURE_SUCCESS(res, res);
@@ -1675,6 +1689,11 @@ nsWSRunObject::GetCharAfter(WSPoint &aPoint, WSPoint *outPoint)
     nsIDOMNode* node = mNodeArray[idx+1];
     if (!node) return NS_ERROR_FAILURE;
     outPoint->mTextNode = do_QueryInterface(node);
+    if (!outPoint->mTextNode->IsNodeOfType(nsINode::eDATA_NODE)) {
+      // Not sure if this is needed, but it'll maintain the same
+      // functionality
+      outPoint->mTextNode = nsnull;
+    }
     outPoint->mOffset = 0;
     outPoint->mChar = GetCharAt(outPoint->mTextNode, 0);
   }
@@ -1900,19 +1919,17 @@ nsWSRunObject::FindRun(nsIDOMNode *aNode, PRInt32 aOffset, WSFragment **outRun, 
 }
 
 PRUnichar 
-nsWSRunObject::GetCharAt(nsITextContent *aTextNode, PRInt32 aOffset)
+nsWSRunObject::GetCharAt(nsIContent *aTextNode, PRInt32 aOffset)
 {
   // return 0 if we can't get a char, for whatever reason
   if (!aTextNode)
     return 0;
-    
-  const nsTextFragment *textFrag = aTextNode->Text();
-  
-  PRUint32 len = textFrag->GetLength();
-  if (aOffset < 0 || aOffset>=len) 
+
+  PRUint32 len = aTextNode->TextLength();
+  if (aOffset < 0 || aOffset >= len) 
     return 0;
     
-  return textFrag->CharAt(aOffset);
+  return aTextNode->GetText()->CharAt(aOffset);
 }
 
 nsresult 
@@ -1957,7 +1974,7 @@ nsWSRunObject::GetWSPointAfter(nsIDOMNode *aNode, PRInt32 aOffset, WSPoint *outP
     lastNum = savedCur;
   }
   
-  nsCOMPtr<nsITextContent> textNode(do_QueryInterface(curNode));
+  nsCOMPtr<nsIContent> textNode(do_QueryInterface(curNode));
   
   if (cmp < 0)
   {
@@ -2015,7 +2032,7 @@ nsWSRunObject::GetWSPointBefore(nsIDOMNode *aNode, PRInt32 aOffset, WSPoint *out
     lastNum = savedCur;
   }
   
-  nsCOMPtr<nsITextContent> textNode(do_QueryInterface(curNode));
+  nsCOMPtr<nsIContent> textNode(do_QueryInterface(curNode));
   
   if (cmp > 0)
   {

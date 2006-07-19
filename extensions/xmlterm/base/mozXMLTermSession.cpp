@@ -52,8 +52,6 @@
 #include "nsILocalFile.h"
 #include "nsNetUtil.h"
 
-#include "nsITextContent.h"
-
 #include "nsIDOMElement.h"
 #include "nsISelection.h"
 #include "nsIDOMText.h"

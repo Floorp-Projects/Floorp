@@ -45,7 +45,6 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMCharacterData.h"
-#include "nsITextContent.h"
 #include "nsRuleNode.h"
 #include "nsIStyleRule.h"
 #include "nsICSSStyleRule.h"
@@ -79,10 +78,10 @@ inDOMUtils::IsIgnorableWhitespace(nsIDOMCharacterData *aDataNode,
 
   *aReturn = PR_FALSE;
 
-  nsCOMPtr<nsITextContent> textContent = do_QueryInterface(aDataNode);
-  NS_ASSERTION(textContent, "Does not implement nsITextContent!");
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aDataNode);
+  NS_ASSERTION(content, "Does not implement nsIContent!");
 
-  if (!textContent->IsOnlyWhitespace()) {
+  if (!content->TextIsOnlyWhitespace()) {
     return NS_OK;
   }
 
@@ -102,7 +101,6 @@ inDOMUtils::IsIgnorableWhitespace(nsIDOMCharacterData *aDataNode,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aDataNode);
   nsIFrame* frame = presShell->GetPrimaryFrameFor(content);
   if (frame) {
     const nsStyleText* text = frame->GetStyleText();

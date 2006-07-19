@@ -155,7 +155,10 @@ public:
     /** svg elements */
     eSVG                 = 1 << 10,
     /** document fragments */
-    eDOCUMENT_FRAGMENT   = 1 << 11
+    eDOCUMENT_FRAGMENT   = 1 << 11,
+    /** data nodes (comments, PIs, text). Nodes of this type always
+     returns a non-null value for nsIContent::GetText() */
+    eDATA_NODE           = 1 << 12
   };
 
   /**

@@ -46,7 +46,6 @@
 #include "nsIFontMetrics.h"
 
 #include "nsIDOMText.h"
-#include "nsITextContent.h"
 #include "nsFrameManager.h"
 #include "nsLayoutAtoms.h"
 #include "nsStyleChangeList.h"
@@ -84,12 +83,12 @@ CompressWhitespace(nsIContent* aContent)
 {
   PRUint32 numKids = aContent->GetChildCount();
   for (PRUint32 kid = 0; kid < numKids; kid++) {
-    nsCOMPtr<nsITextContent> tc(do_QueryInterface(aContent->GetChildAt(kid)));
-    if (tc && tc->IsNodeOfType(nsINode::eTEXT)) {
+    nsIContent* cont = aContent->GetChildAt(kid);
+    if (cont && cont->IsNodeOfType(nsINode::eTEXT)) {
       nsAutoString text;
-      tc->AppendTextTo(text);
+      cont->AppendTextTo(text);
       text.CompressWhitespace();
-      tc->SetText(text, PR_FALSE); // not meant to be used if notify is needed
+      cont->SetText(text, PR_FALSE); // not meant to be used if notify is needed
     }
   }
 }
@@ -357,14 +356,8 @@ SetQuote(nsPresContext* aPresContext,
   } while (textFrame);
   if (textFrame) {
     nsIContent* quoteContent = textFrame->GetContent();
-    if (quoteContent) {
-      nsCOMPtr<nsIDOMText> domText(do_QueryInterface(quoteContent));
-      if (domText) {
-        nsCOMPtr<nsITextContent> tc(do_QueryInterface(quoteContent));
-        if (tc) {
-          tc->SetText(aValue, PR_FALSE); // no notify since we don't want a reflow yet
-        }
-      }
+    if (quoteContent && quoteContent->IsNodeOfType(nsINode::eTEXT)) {
+      quoteContent->SetText(aValue, PR_FALSE); // no notify since we don't want a reflow yet
     }
   }
 }

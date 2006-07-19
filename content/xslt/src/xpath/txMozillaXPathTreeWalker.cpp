@@ -46,7 +46,6 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMProcessingInstruction.h"
 #include "nsINodeInfo.h"
-#include "nsITextContent.h"
 #include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
@@ -546,8 +545,7 @@ static void appendTextContent(nsIContent* aElement, nsAString& aResult)
             appendTextContent(content, aResult);
         }
         else if (content->IsNodeOfType(nsINode::eTEXT)) {
-            nsCOMPtr<nsITextContent> textContent = do_QueryInterface(content);
-            textContent->AppendTextTo(aResult);
+            content->AppendTextTo(aResult);
         }
         content = aElement->GetChildAt(++i);
     }
@@ -582,37 +580,16 @@ txXPathNodeUtils::appendNodeValue(const txXPathNode& aNode, nsAString& aResult)
         return;
     }
 
-    if (aNode.mContent->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {
-        nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aNode.mContent);
-
-        nsAutoString result;
-        node->GetNodeValue(result);
-        aResult.Append(result);
-
-        return;
-    }
-
-    nsCOMPtr<nsITextContent> textContent = do_QueryInterface(aNode.mContent);
-    if (!textContent) {
-        NS_ERROR("Unexpected nodetype.");
-
-        return;
-    }
-
-    textContent->AppendTextTo(aResult);
+    aNode.mContent->AppendTextTo(aResult);
 }
 
 /* static */
 PRBool
 txXPathNodeUtils::isWhitespace(const txXPathNode& aNode)
 {
-    NS_ASSERTION(aNode.isContent(), "Wrong type!");
+    NS_ASSERTION(aNode.isContent() && isText(aNode), "Wrong type!");
 
-    nsCOMPtr<nsITextContent> textCont = do_QueryInterface(aNode.mContent);
-    if (!textCont) {
-        return PR_TRUE;
-    }
-    return textCont->IsOnlyWhitespace();
+    return aNode.mContent->TextIsOnlyWhitespace();
 }
 
 /* static */

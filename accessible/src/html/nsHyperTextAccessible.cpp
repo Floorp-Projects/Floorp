@@ -54,7 +54,6 @@
 #include "nsIFrame.h"
 #include "nsIPlaintextEditor.h"
 #include "nsIServiceManager.h"
-#include "nsITextContent.h"
 #include "nsTextFragment.h"
 
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
@@ -225,17 +224,13 @@ nsIFrame* nsHyperTextAccessible::GetPosAndText(PRInt32& aStartOffset, PRInt32& a
     nsIFrame *frame = accessNode->GetFrame();
     if (Role(accessible) == ROLE_TEXT_LEAF) {
       if (frame) {
-        // Avoid string copiesn
-        nsITextContent *textContent = NS_STATIC_CAST(nsITextContent*, frame->GetContent());
-        NS_ASSERTION(textContent, "No text content for text accessible!");
-        PRInt32 textContentLength = textContent->TextLength();
+        // Avoid string copies
+        PRInt32 textContentLength = frame->GetContent()->TextLength();
         if (startOffset < textContentLength) {
           // XXX Can we somehow optimize further by getting the nsTextFragment and use
           // CopyTo to a PRUnichar buffer to copy it directly to the string?
           nsAutoString newText;
-          if (aText) {
-            textContent->AppendTextTo(newText);
-          }
+          frame->GetContent()->AppendTextTo(newText);
           if (startOffset > 0 || endOffset < textContentLength) {
             // XXX the Substring operation is efficient, but does the reassignment
             // to the original nsAutoString cause a copy?
@@ -324,8 +319,7 @@ NS_IMETHODIMP nsHyperTextAccessible::GetCharacterCount(PRInt32 *aCharacterCount)
       nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(accessible));
       nsIFrame *frame = accessNode->GetFrame();
       if (frame) {
-        nsITextContent *textContent = NS_STATIC_CAST(nsITextContent*, frame->GetContent());
-        *aCharacterCount += textContent->TextLength();
+        *aCharacterCount += frame->GetContent()->TextLength();
       }
     }
     else {
@@ -400,9 +394,7 @@ nsresult nsHyperTextAccessible::DOMPointToOffset(nsIDOMNode* aNode, PRInt32 aNod
 
     if (Role(accessible) == ROLE_TEXT_LEAF) {
       if (frame) {
-        nsITextContent *textContent = NS_STATIC_CAST(nsITextContent*, content);
-        NS_ASSERTION(textContent, "No text content for a ROLE_TEXT?");
-        *aResult += textContent->TextLength();
+        *aResult += content->TextLength();
       }
     }
     else {
@@ -520,8 +512,9 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
   case BOUNDARY_ATTRIBUTE_RANGE:
     {
       // XXX We should merge identically formatted frames
-      nsITextContent *textContent = NS_STATIC_CAST(nsITextContent*, startFrame->GetContent());
+      nsIContent *textContent = startFrame->GetContent();
       // If not text, then it's represented by an embedded object char (length of 1)
+      // XXX did this mean to check for eTEXT?
       PRInt32 textLength = textContent ? textContent->TextLength() : 1;
       *aStartOffset = aOffset - startOffset;
       *aEndOffset = *aStartOffset + textLength;
@@ -597,9 +590,7 @@ NS_IMETHODIMP nsHyperTextAccessible::GetAttributeRange(PRInt32 aOffset, PRInt32 
       nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(accessible));
       nsIFrame *frame = accessNode->GetFrame();
       if (frame) {
-        nsITextContent *textContent = NS_STATIC_CAST(nsITextContent*, frame->GetContent());
-        NS_ASSERTION(textContent, "No text content for a ROLE_TEXT?");
-        length = textContent->TextLength();
+        length = frame->GetContent()->TextLength();
       }
       else {
         break;
@@ -764,13 +755,12 @@ NS_IMETHODIMP nsHyperTextAccessible::GetOffsetAtPoint(PRInt32 aX, PRInt32 aY, ns
     nsIFrame *frame = accessNode->GetFrame();
     if (Role(accessible) == ROLE_TEXT_LEAF) {
       if (frame) {
-        nsITextContent *textContent = NS_STATIC_CAST(nsITextContent*, frame->GetContent());
         if (finished) {
           nsCOMPtr<nsIRenderingContext> rc;
           shell->CreateRenderingContext(frame, getter_AddRefs(rc));
           NS_ENSURE_TRUE(rc, NS_ERROR_FAILURE);
-          const nsTextFragment *textFrag = textContent->Text();
-          // For each character in textContent, add to totalWidth
+          const nsTextFragment *textFrag = frame->GetContent()->GetText();
+          // For each character in frame->GetContent(), add to totalWidth
           // until it is wider than the x coordinate we are looking for
           PRInt32 length = textFrag->GetLength();
           PRInt32 totalWidth = 0;
@@ -787,7 +777,7 @@ NS_IMETHODIMP nsHyperTextAccessible::GetOffsetAtPoint(PRInt32 aX, PRInt32 aY, ns
           }
           return NS_ERROR_FAILURE;
         }
-        *aOffset += textContent->TextLength();
+        *aOffset += frame->GetContent()->TextLength();
       }
     }
     else if (finished) {
@@ -853,8 +843,7 @@ NS_IMETHODIMP nsHyperTextAccessible::GetLinkIndex(PRInt32 aCharIndex, PRInt32 *a
       nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(accessible));
       nsIFrame *frame = accessNode->GetFrame();
       if (frame) {
-        nsITextContent *textContent = NS_STATIC_CAST(nsITextContent*, frame->GetContent());
-        characterCount += textContent->TextLength();
+        characterCount += frame->GetContent()->TextLength();
       }
     }
     else {
@@ -1001,9 +990,9 @@ NS_IMETHODIMP nsHyperTextAccessible::DidInsertNode(nsIDOMNode *aNode, nsIDOMNode
   AtkTextChange textData;
 
   textData.add = PR_TRUE;
-  nsCOMPtr<nsITextContent> textContent(do_QueryInterface(aNode));
-  if (textContent) {
-    textData.length = textContent->TextLength();
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
+  if (content && content->IsNodeOfType(nsINode::eTEXT)) {
+    textData.length = content->TextLength();
     if (!textData.length) {
       return NS_OK;
     }
@@ -1033,9 +1022,9 @@ NS_IMETHODIMP nsHyperTextAccessible::WillDeleteNode(nsIDOMNode *aChild)
   AtkTextChange textData;
 
   textData.add = PR_FALSE;
-  nsCOMPtr<nsITextContent> textContent(do_QueryInterface(aChild));
-  if (textContent) {
-    textData.length = textContent->TextLength();
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aChild));
+  if (content && content->IsNodeOfType(nsINode::eTEXT)) {
+    textData.length = content->TextLength();
     if (!textData.length) {
       return NS_OK;
     }

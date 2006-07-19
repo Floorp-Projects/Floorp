@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISVGRenderer.h"
-#include "nsITextContent.h"
 #include "nsSVGOuterSVGFrame.h"
 #include "nsSVGTextFrame.h"
 #include "nsILookAndFeel.h"
@@ -65,8 +64,8 @@ NS_NewSVGGlyphFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* pa
   CallQueryInterface(parentFrame, &metrics);
   NS_ASSERTION(metrics, "trying to construct an SVGGlyphFrame for an invalid container");
   
-  nsCOMPtr<nsITextContent> tc = do_QueryInterface(aContent);
-  NS_ASSERTION(tc, "trying to construct an SVGGlyphFrame for wrong content element");
+  NS_ASSERTION(aContent->IsNodeOfType(nsINode::eTEXT),
+               "trying to construct an SVGGlyphFrame for wrong content element");
 
   return new (aPresShell) nsSVGGlyphFrame(aContext);
 }
@@ -537,12 +536,10 @@ nsSVGGlyphFrame::GetHighlight(PRUint32 *charnum, PRUint32 *nchars, nscolor *fore
 
   nsPresContext *presContext = GetPresContext();
 
-  nsCOMPtr<nsITextContent> tc = do_QueryInterface(mContent);
-  NS_ASSERTION(tc, "no textcontent interface");
-
   // The selection ranges are relative to the uncompressed text in
   // the content element. We'll need the text fragment:
-  const nsTextFragment *fragment = tc->Text();
+  const nsTextFragment *fragment = mContent->GetText();
+  NS_ASSERTION(fragment, "no text");
   
   // get the selection details 
   SelectionDetails *details = nsnull;
@@ -1112,11 +1109,7 @@ NS_IMETHODIMP_(PRUint32)
 nsSVGGlyphFrame::BuildGlyphFragmentTree(PRUint32 charNum, PRBool lastBranch)
 {
   // XXX actually we should be building a new fragment for each chunk here...
-
-
-  nsCOMPtr<nsITextContent> tc = do_QueryInterface(mContent);
-
-  if (tc->TextLength() == 0) {
+  if (mContent->TextLength() == 0) {
 #ifdef DEBUG
     printf("Glyph frame with zero length text\n");
 #endif
@@ -1125,7 +1118,7 @@ nsSVGGlyphFrame::BuildGlyphFragmentTree(PRUint32 charNum, PRBool lastBranch)
   }
 
   mCharacterData.Truncate();
-  tc->AppendTextTo(mCharacterData);
+  mContent->AppendTextTo(mCharacterData);
   mCharacterData.CompressWhitespace(charNum == 0, lastBranch);
 
   return charNum + mCharacterData.Length();

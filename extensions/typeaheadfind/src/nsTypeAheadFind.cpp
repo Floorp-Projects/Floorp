@@ -78,7 +78,6 @@
 #include "nsISelectionPrivate.h"
 #include "nsISelectElement.h"
 #include "nsILink.h"
-#include "nsITextContent.h"
 #include "nsTextFragment.h"
 #include "nsILookAndFeel.h"
 
@@ -1598,12 +1597,9 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
     }
   }
   else if (startOffset > 0) {
-    nsCOMPtr<nsITextContent> textContent(do_QueryInterface(startContent));
-
-    if (textContent) {
+    const nsTextFragment *textFrag = textContent->GetText();
+    if (textFrag) {
       // look for non whitespace character before start offset
-      const nsTextFragment *textFrag = textContent->Text();
-
       for (PRInt32 index = 0; index < startOffset; index++) {
         if (!XP_IS_SPACE(textFrag->CharAt(index))) {
           *aIsStartingLink = PR_FALSE;  // not at start of a node
@@ -1652,11 +1648,8 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
     nsCOMPtr<nsIContent> parent = startContent->GetParent();
     if (parent) {
       nsIContent *parentsFirstChild = parent->GetChildAt(0);
-      nsCOMPtr<nsITextContent> textContent =
-        do_QueryInterface(parentsFirstChild);
-
       // We don't want to look at a whitespace-only first child
-      if (textContent && textContent->IsOnlyWhitespace())
+      if (parentsFirstChild->TextIsOnlyWhitespace())
         parentsFirstChild = parent->GetChildAt(1);
 
       if (parentsFirstChild != startContent) {

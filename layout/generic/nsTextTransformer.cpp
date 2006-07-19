@@ -47,7 +47,6 @@
 #include "nsContentUtils.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
-#include "nsITextContent.h"
 #include "nsStyleConsts.h"
 #include "nsILineBreaker.h"
 #include "nsIWordBreaker.h"
@@ -235,11 +234,8 @@ nsTextTransformer::Init(nsIFrame* aFrame,
   }
 
   // Get the contents text content
-  nsresult rv;
-  nsCOMPtr<nsITextContent> tc = do_QueryInterface(aContent, &rv);
-  if (tc.get()) {
-    mFrag = tc->Text();
-
+  mFrag = aContent->GetText();
+  if (mFrag) {
     // Sanitize aStartingOffset
     if (aStartingOffset < 0) {
       NS_WARNING("bad starting offset");
@@ -274,7 +270,7 @@ nsTextTransformer::Init(nsIFrame* aFrame,
     else 
       SetLeaveAsAscii(PR_FALSE);
   }
-  return rv;
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------

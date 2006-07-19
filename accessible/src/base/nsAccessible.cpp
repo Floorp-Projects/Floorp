@@ -61,7 +61,6 @@
 #include "nsXPIDLString.h"
 #include "prdtoa.h"
 #include "nsIDOMComment.h"
-#include "nsITextContent.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLBRElement.h"
@@ -1256,8 +1255,6 @@ nsresult nsAccessible::AppendNameFromAccessibleFor(nsIContent *aContent,
 nsresult nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent, nsAString *aFlatString)
 {
   if (aContent->IsNodeOfType(nsINode::eTEXT)) {
-    nsCOMPtr<nsITextContent> textContent(do_QueryInterface(aContent));
-    NS_ASSERTION(textContent, "No text content for text content type");
     // If it's a text node, append the text
     PRBool isHTMLBlock = PR_FALSE;
     nsCOMPtr<nsIPresShell> shell = GetPresShell();
@@ -1283,9 +1280,9 @@ nsresult nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent, nsA
         }
       }
     }
-    if (textContent->TextLength() > 0) {
+    if (aContent->TextLength() > 0) {
       nsAutoString text;
-      textContent->AppendTextTo(text);
+      aContent->AppendTextTo(text);
       if (!text.IsEmpty())
         aFlatString->Append(text);
       if (isHTMLBlock && !aFlatString->IsEmpty())
@@ -2606,9 +2603,7 @@ nsresult nsAccessible::GetLinkOffset(PRInt32* aStartOffset, PRInt32* aEndOffset)
       nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(accessible));
       nsIFrame *frame = accessNode->GetFrame();
       if (frame) {
-        nsITextContent *textContent = NS_STATIC_CAST(nsITextContent*, frame->GetContent());
-        NS_ASSERTION(textContent, "No text content for a ROLE_TEXT?");
-        characterCount += textContent->TextLength();
+        characterCount += frame->GetContent()->TextLength();
       }
     }
     else if (accessible == this) {

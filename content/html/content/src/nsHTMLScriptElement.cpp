@@ -41,7 +41,6 @@
 #include "nsHTMLAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
-#include "nsITextContent.h"
 #include "nsIDocument.h"
 #include "nsIScriptLoader.h"
 #include "nsIScriptLoaderObserver.h"

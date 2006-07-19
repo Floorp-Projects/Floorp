@@ -54,7 +54,6 @@
 #include "nsHTMLURIRefObject.h"
 
 #include "nsIDOMText.h"
-#include "nsITextContent.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMAttr.h"
@@ -122,7 +121,6 @@
 // Misc
 #include "TextEditorTest.h"
 #include "nsEditorUtils.h"
-#include "nsITextContent.h"
 #include "nsWSRunObject.h"
 #include "nsHTMLObjectResizer.h"
 
@@ -1107,7 +1105,7 @@ nsHTMLEditor::IsPrevCharWhitespace(nsIDOMNode *aParentNode,
         textNode->GetLength(&strLength);
         if (strLength)
         {
-          // you could use nsITextContent::IsOnlyWhitespace here
+          // you could use nsIContent::TextIsOnlyWhitespace here
           textNode->SubstringData(strLength-1,strLength,tempString);
           *outIsSpace = nsCRT::IsAsciiSpace(tempString.First());
           *outIsNBSP = (tempString.First() == nbsp);
@@ -5098,9 +5096,9 @@ nsHTMLEditor::IsVisTextNode( nsIDOMNode *aNode,
   *outIsEmptyNode = PR_TRUE;
   nsresult res = NS_OK;
 
-  nsCOMPtr<nsITextContent> textContent = do_QueryInterface(aNode);
+  nsCOMPtr<nsIContent> textContent = do_QueryInterface(aNode);
   // callers job to only call us with text nodes
-  if (!textContent) 
+  if (!textContent || !textContent->IsNodeOfType(nsINode::eTEXT)) 
     return NS_ERROR_NULL_POINTER;
   PRUint32 length = textContent->TextLength();
   if (aSafeToAskFrames)
@@ -5125,7 +5123,7 @@ nsHTMLEditor::IsVisTextNode( nsIDOMNode *aNode,
   }
   else if (length)
   {
-    if (textContent->IsOnlyWhitespace())
+    if (textContent->TextIsOnlyWhitespace())
     {
       nsWSRunObject wsRunObj(this, aNode, 0);
       nsCOMPtr<nsIDOMNode> visNode;

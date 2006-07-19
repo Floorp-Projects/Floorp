@@ -55,6 +55,7 @@
 #include "nsHTMLAtoms.h"
 // MouseEvent suppression in PP
 #include "nsGUIEvent.h"
+#include "nsContentCreatorFunctions.h"
 
 #include "nsNodeInfoManager.h"
 #include "nsIDOMHTMLInputElement.h"
@@ -115,7 +116,7 @@ nsGfxButtonControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
   GetLabel(label);
   
   // Add a child text content node for the label
-  nsCOMPtr<nsITextContent> labelContent;
+  nsCOMPtr<nsIContent> labelContent;
   NS_NewTextNode(getter_AddRefs(labelContent),
                  mContent->NodeInfo()->NodeInfoManager());
   if (labelContent) {
@@ -140,8 +141,7 @@ nsGfxButtonControlFrame::CreateFrameFor(nsPresContext*   aPresContext,
   if (aFrame) 
     *aFrame = nsnull; 
 
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mTextContent));
-  if (aContent == content.get()) {
+  if (aContent == mTextContent) {
     nsIFrame * parentFrame = mFrames.FirstChild();
     nsStyleContext* styleContext = parentFrame->GetStyleContext();
 
@@ -157,7 +157,7 @@ nsGfxButtonControlFrame::CreateFrameFor(nsPresContext*   aPresContext,
       }
     
       // initialize the text frame
-      newFrame->Init(content, parentFrame, nsnull);
+      newFrame->Init(mTextContent, parentFrame, nsnull);
       newFrame->SetInitialChildList(nsnull, nsnull);
       rv = NS_OK;
     }

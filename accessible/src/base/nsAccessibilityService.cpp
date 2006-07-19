@@ -69,7 +69,6 @@
 #include "nsIPluginInstance.h"
 #include "nsIPresShell.h"
 #include "nsISupportsUtils.h"
-#include "nsITextContent.h"
 #include "nsIWebNavigation.h"
 #include "nsObjectFrame.h"
 #include "nsOuterDocAccessible.h"

@@ -51,7 +51,6 @@
 #include "nsIDOMCDATASection.h"
 #include "nsIDOMElement.h"
 #include "nsINameSpaceManager.h"
-#include "nsITextContent.h"
 #include "nsTextFragment.h"
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
@@ -306,26 +305,25 @@ nsPlainTextSerializer::AppendText(nsIDOMText* aText,
   PRInt32 length = 0;
   nsAutoString textstr;
 
-  nsCOMPtr<nsITextContent> content = do_QueryInterface(aText);
-  if (!content) return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aText);
+  const nsTextFragment* frag;
+  if (!content || !(frag = content->GetText())) {
+    return NS_ERROR_FAILURE;
+  }
   
-  const nsTextFragment* frag = content->Text();
+  PRInt32 endoffset = (aEndOffset == -1) ? frag->GetLength() : aEndOffset;
+  NS_ASSERTION(aStartOffset <= endoffset, "A start offset is beyond the end of the text fragment!");
 
-  if (frag) {
-    PRInt32 endoffset = (aEndOffset == -1) ? frag->GetLength() : aEndOffset;
-    NS_ASSERTION(aStartOffset <= endoffset, "A start offset is beyond the end of the text fragment!");
+  length = endoffset - aStartOffset;
+  if (length <= 0) {
+    return NS_OK;
+  }
 
-    length = endoffset - aStartOffset;
-    if (length <= 0) {
-      return NS_OK;
-    }
-
-    if (frag->Is2b()) {
-      textstr.Assign(frag->Get2b() + aStartOffset, length);
-    }
-    else {
-      textstr.AssignWithConversion(frag->Get1b()+aStartOffset, length);
-    }
+  if (frag->Is2b()) {
+    textstr.Assign(frag->Get2b() + aStartOffset, length);
+  }
+  else {
+    textstr.AssignWithConversion(frag->Get1b()+aStartOffset, length);
   }
 
   mOutputString = &aStr;

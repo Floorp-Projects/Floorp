@@ -68,7 +68,6 @@
 #include "nsIContent.h"
 
 #include "nsGenericHTMLElement.h"
-#include "nsITextContent.h"
 
 #include "nsIDOMText.h"
 #include "nsIDOMComment.h"
@@ -608,7 +607,7 @@ private:
 public:
   HTMLContentSink* mSink;
   PRInt32 mNotifyLevel;
-  nsCOMPtr<nsITextContent> mLastTextNode;
+  nsCOMPtr<nsIContent> mLastTextNode;
   PRInt32 mLastTextNodeSize;
 
   struct Node {
@@ -1716,7 +1715,7 @@ SinkContext::FlushText(PRBool* aDidFlush, PRBool aReleaseLast)
         }
       }
     } else {
-      nsCOMPtr<nsITextContent> textContent;
+      nsCOMPtr<nsIContent> textContent;
       rv = NS_NewTextNode(getter_AddRefs(textContent),
                           mSink->mNodeInfoManager);
       NS_ENSURE_SUCCESS(rv, rv);

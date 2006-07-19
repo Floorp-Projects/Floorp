@@ -66,7 +66,7 @@
 #include "nsIDOMDocument.h"
 #include "nsICharsetConverterManager.h"
 #include "nsHTMLAtoms.h"
-#include "nsITextContent.h"
+#include "nsIContent.h"
 #include "nsIEnumerator.h"
 #include "nsISelectionPrivate.h"
 #include "nsISupportsArray.h"
@@ -1724,12 +1724,8 @@ nsHTMLCopyEncoder::IsLastNode(nsIDOMNode *aNode)
 PRBool
 nsHTMLCopyEncoder::IsEmptyTextContent(nsIDOMNode* aNode)
 {
-  PRBool result = PR_FALSE;
-  nsCOMPtr<nsITextContent> tc(do_QueryInterface(aNode));
-  if (tc) {
-    result = tc->IsOnlyWhitespace();
-  }
-  return result;
+  nsCOMPtr<nsIContent> cont = do_QueryInterface(aNode);
+  return cont && cont->TextIsOnlyWhitespace();
 }
 
 nsresult NS_NewHTMLCopyTextEncoder(nsIDocumentEncoder** aResult); // make mac compiler happy

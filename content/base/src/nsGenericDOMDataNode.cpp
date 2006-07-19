@@ -83,7 +83,7 @@ nsGenericDOMDataNode::nsDataSlots::~nsDataSlots()
 }
 
 nsGenericDOMDataNode::nsGenericDOMDataNode(nsINodeInfo *aNodeInfo)
-  : nsITextContent(aNodeInfo)
+  : nsIContent(aNodeInfo)
 {
 }
 
@@ -111,7 +111,6 @@ NS_INTERFACE_MAP_BEGIN(nsGenericDOMDataNode)
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMNSEventTarget,
                                  nsDOMEventRTTearoff::Create(this))
   NS_INTERFACE_MAP_ENTRY(nsIContent)
-  // No nsITextContent since all subclasses might not want that.
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3Node, new nsNode3Tearoff(this))
   NS_INTERFACE_MAP_ENTRY(nsINode)
 NS_INTERFACE_MAP_END
@@ -353,8 +352,6 @@ nsGenericDOMDataNode::SetData(const nsAString& aData)
   if (rangeList) {
     nsRange::TextOwnerChanged(this, rangeList, 0, mText.GetLength(), 0);
   }
-
-  nsCOMPtr<nsITextContent> textContent = do_QueryInterface(this);
 
   SetText(aData, PR_TRUE);
 
@@ -857,7 +854,7 @@ nsGenericDOMDataNode::GetBindingParent() const
 PRBool
 nsGenericDOMDataNode::IsNodeOfType(PRUint32 aFlags) const
 {
-  return !(aFlags & ~eCONTENT);
+  return !(aFlags & ~(eCONTENT | eDATA_NODE));
 }
 
 
@@ -931,7 +928,7 @@ nsGenericDOMDataNode::SplitText(PRUint32 aOffset, nsIDOMText** aReturn)
    * as this node!
    */
 
-  nsCOMPtr<nsITextContent> newContent = Clone(mNodeInfo, PR_FALSE);
+  nsCOMPtr<nsIContent> newContent = Clone(mNodeInfo, PR_FALSE);
   if (!newContent) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -956,10 +953,10 @@ nsGenericDOMDataNode::SplitText(PRUint32 aOffset, nsIDOMText** aReturn)
 
 //----------------------------------------------------------------------
 
-// Implementation of the nsITextContent interface
+// Implementation of the nsIContent interface text functions
 
 const nsTextFragment *
-nsGenericDOMDataNode::Text()
+nsGenericDOMDataNode::GetText()
 {
   return &mText;
 }
@@ -970,7 +967,7 @@ nsGenericDOMDataNode::TextLength()
   return mText.GetLength();
 }
 
-void
+nsresult
 nsGenericDOMDataNode::SetText(const PRUnichar* aBuffer,
                               PRUint32 aLength,
                               PRBool aNotify)
@@ -978,7 +975,7 @@ nsGenericDOMDataNode::SetText(const PRUnichar* aBuffer,
   if (!aBuffer) {
     NS_ERROR("Null buffer passed to SetText()!");
 
-    return;
+    return NS_ERROR_NULL_POINTER;
   }
 
   nsIDocument *document = GetCurrentDoc();
@@ -993,6 +990,7 @@ nsGenericDOMDataNode::SetText(const PRUnichar* aBuffer,
     oldValue = GetCurrentValueAtom();
   }
     
+  // XXX Add OOM checking to this
   mText.SetTo(aBuffer, aLength);
 
   SetBidiStatus();
@@ -1015,10 +1013,12 @@ nsGenericDOMDataNode::SetText(const PRUnichar* aBuffer,
   if (aNotify) {
     nsNodeUtils::CharacterDataChanged(this, PR_FALSE);
   }
+
+  return NS_OK;
 }
 
 PRBool
-nsGenericDOMDataNode::IsOnlyWhitespace()
+nsGenericDOMDataNode::TextIsOnlyWhitespace()
 {
   if (mText.Is2b()) {
     // The fragment contains non-8bit characters and such characters

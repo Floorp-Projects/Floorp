@@ -43,7 +43,6 @@
 #ifndef nsGenericDOMDataNode_h___
 #define nsGenericDOMDataNode_h___
 
-#include "nsITextContent.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsTextFragment.h"
@@ -61,7 +60,7 @@ class nsIDOMText;
 class nsINodeInfo;
 class nsURI;
 
-class nsGenericDOMDataNode : public nsITextContent
+class nsGenericDOMDataNode : public nsIContent
 {
 public:
   NS_DECL_ISUPPORTS
@@ -222,6 +221,17 @@ public:
   virtual PRBool HasAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute) const;
   virtual const nsAttrName* GetAttrNameAt(PRUint32 aIndex) const;
   virtual PRUint32 GetAttrCount() const;
+  virtual const nsTextFragment *GetText();
+  virtual PRUint32 TextLength();
+  virtual nsresult SetText(const PRUnichar* aBuffer, PRUint32 aLength,
+                           PRBool aNotify);
+  // Need to implement this here too to avoid hiding.
+  nsresult SetText(const nsAString& aStr, PRBool aNotify)
+  {
+    return SetText(aStr.BeginReading(), aStr.Length(), aNotify);
+  }
+  virtual PRBool TextIsOnlyWhitespace();
+  virtual void AppendTextTo(nsAString& aResult);
 #ifdef DEBUG
   virtual void List(FILE* out, PRInt32 aIndent) const;
   virtual void DumpContent(FILE* out, PRInt32 aIndent, PRBool aDumpAll) const;
@@ -251,19 +261,6 @@ public:
                                               PRInt32 aModType) const;
   virtual nsIAtom *GetClassAttributeName() const;
 
-
-  // nsITextContent
-  virtual const nsTextFragment *Text();
-  virtual PRUint32 TextLength();
-  virtual void SetText(const PRUnichar* aBuffer, PRUint32 aLength,
-                       PRBool aNotify);
-  // Need to implement this here too to avoid hiding.
-  void SetText(const nsAString& aStr, PRBool aNotify)
-  {
-    SetText(aStr.BeginReading(), aStr.Length(), aNotify);
-  }
-  virtual PRBool IsOnlyWhitespace();
-  virtual void AppendTextTo(nsAString& aResult);
 
   //----------------------------------------
 

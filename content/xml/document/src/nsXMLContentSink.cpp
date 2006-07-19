@@ -50,7 +50,6 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIContent.h"
-#include "nsITextContent.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
@@ -784,7 +783,7 @@ nsXMLContentSink::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
   PRBool didFlush = PR_FALSE;
   if (0 != mTextLength) {
     if (aCreateTextNode) {
-      nsCOMPtr<nsITextContent> textContent;
+      nsCOMPtr<nsIContent> textContent;
       rv = NS_NewTextNode(getter_AddRefs(textContent), mNodeInfoManager);
       NS_ENSURE_SUCCESS(rv, rv);
 

@@ -43,7 +43,7 @@
 #include "nsIDOMNSXBLFormControl.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMEventReceiver.h"
-#include "nsITextContent.h"
+#include "nsContentCreatorFunctions.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsStyleConsts.h"
@@ -1126,7 +1126,7 @@ nsHTMLSelectElement::SetLength(PRUint32 aLength)
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    nsCOMPtr<nsITextContent> text;
+    nsCOMPtr<nsIContent> text;
     rv = NS_NewTextNode(getter_AddRefs(text), mNodeInfo->NodeInfoManager());
     NS_ENSURE_SUCCESS(rv, rv);
 

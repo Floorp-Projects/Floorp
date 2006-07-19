@@ -78,7 +78,6 @@
 #include "nsIRDFRemoteDataSource.h"
 #include "nsIRDFService.h"
 #include "nsIStreamListener.h"
-#include "nsITextContent.h"
 #include "nsITimer.h"
 #include "nsIDocShell.h"
 #include "nsXULAtoms.h"
@@ -2862,7 +2861,7 @@ nsXULDocument::ResumeWalk()
                     // and attach them to the parent node.
                     NS_ASSERTION(element, "no element on context stack");
 
-                    nsCOMPtr<nsITextContent> text;
+                    nsCOMPtr<nsIContent> text;
                     rv = NS_NewTextNode(getter_AddRefs(text),
                                         mNodeInfoManager);
                     NS_ENSURE_SUCCESS(rv, rv);
@@ -2871,12 +2870,8 @@ nsXULDocument::ResumeWalk()
                         NS_REINTERPRET_CAST(nsXULPrototypeText*, childproto);
                     text->SetText(textproto->mValue, PR_FALSE);
 
-                    nsCOMPtr<nsIContent> child = do_QueryInterface(text);
-                    if (! child)
-                        return NS_ERROR_UNEXPECTED;
-
-                    rv = element->AppendChildTo(child, PR_FALSE);
-                    if (NS_FAILED(rv)) return rv;
+                    rv = element->AppendChildTo(text, PR_FALSE);
+                    NS_ENSURE_SUCCESS(rv, rv);
                 }
             }
             break;

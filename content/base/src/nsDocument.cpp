@@ -2584,7 +2584,7 @@ nsDocument::CreateTextNode(const nsAString& aData, nsIDOMText** aReturn)
 {
   *aReturn = nsnull;
 
-  nsCOMPtr<nsITextContent> text;
+  nsCOMPtr<nsIContent> text;
   nsresult rv = NS_NewTextNode(getter_AddRefs(text), mNodeInfoManager);
 
   if (NS_SUCCEEDED(rv)) {

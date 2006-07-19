@@ -60,7 +60,6 @@
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIComponentManager.h"
-#include "nsITextContent.h"
 #include "nsHTMLParts.h"
 #include "nsLinebreakConverter.h"
 #include "nsILinkHandler.h"
@@ -200,7 +199,7 @@ nsIsIndexFrame::CreateAnonymousContent(nsPresContext* aPresContext,
 
   // Add a child text content node for the label
   if (NS_SUCCEEDED(result)) {
-    nsCOMPtr<nsITextContent> labelContent;
+    nsCOMPtr<nsIContent> labelContent;
     NS_NewTextNode(getter_AddRefs(labelContent), nimgr);
     if (labelContent) {
       // set the value of the text node and add it to the child list

@@ -53,7 +53,6 @@
 #include "nsIDOMRange.h"
 #include "nsIDOMText.h"
 #include "nsIDOMEventReceiver.h"
-#include "nsITextContent.h"
 #include "nsIContentIterator.h"
 #include "nsRange.h"
 #include "nsIEventListenerManager.h"
@@ -115,6 +114,7 @@
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMUserDataHandler.h"
 #include "nsEventDispatcher.h"
+#include "nsContentCreatorFunctions.h"
 
 #ifdef MOZ_SVG
 PRBool NS_SVG_TestFeature(const nsAString &fstr);
@@ -428,9 +428,7 @@ nsNode3Tearoff::GetTextContent(nsIContent *aContent,
   while (!iter->IsDone()) {
     nsIContent *content = iter->GetCurrentNode();
     if (content->IsNodeOfType(nsINode::eTEXT)) {
-      nsCOMPtr<nsITextContent> textContent(do_QueryInterface(iter->GetCurrentNode()));
-      if (textContent)
-        textContent->AppendTextTo(aTextContent);
+      content->AppendTextTo(aTextContent);
     }
     iter->Next();
   }
@@ -473,7 +471,7 @@ nsNode3Tearoff::SetTextContent(nsIContent* aContent,
   }
 
   if (!aTextContent.IsEmpty()) {
-    nsCOMPtr<nsITextContent> textContent;
+    nsCOMPtr<nsIContent> textContent;
     nsresult rv = NS_NewTextNode(getter_AddRefs(textContent),
                                  aContent->NodeInfo()->NodeInfoManager());
     NS_ENSURE_SUCCESS(rv, rv);
@@ -3661,6 +3659,45 @@ nsGenericElement::GetAttrCount() const
   return mAttrsAndChildren.AttrCount();
 }
 
+const nsTextFragment*
+nsGenericElement::GetText()
+{
+  return nsnull;
+}
+
+PRUint32
+nsGenericElement::TextLength()
+{
+  // We can remove this assertion if it turns out to be useful to be able
+  // to depend on this returning 0
+  NS_NOTREACHED("called nsGenericElement::TextLength");
+
+  return 0;
+}
+
+nsresult
+nsGenericElement::SetText(const PRUnichar* aBuffer, PRUint32 aLength,
+                          PRBool aNotify)
+{
+  NS_ERROR("called nsGenericElement::SetText");
+
+  return NS_ERROR_FAILURE;
+}
+
+PRBool
+nsGenericElement::TextIsOnlyWhitespace()
+{
+  return PR_FALSE;
+}
+
+void
+nsGenericElement::AppendTextTo(nsAString& aResult)
+{
+  // We can remove this assertion if it turns out to be useful to be able
+  // to depend on this appending nothing.
+  NS_NOTREACHED("called nsGenericElement::TextLength");
+}
+
 #ifdef DEBUG
 void
 nsGenericElement::List(FILE* out, PRInt32 aIndent) const
@@ -3799,16 +3836,12 @@ nsGenericElement::GetContentsAsText(nsAString& aText)
   aText.Truncate();
   PRInt32 children = GetChildCount();
 
-  nsCOMPtr<nsITextContent> tc;
-
   PRInt32 i;
   for (i = 0; i < children; ++i) {
     nsIContent *child = GetChildAt(i);
 
     if (child->IsNodeOfType(eTEXT)) {
-      tc = do_QueryInterface(child);
-
-      tc->AppendTextTo(aText);
+      child->AppendTextTo(aText);
     }
   }
 }

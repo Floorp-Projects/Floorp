@@ -132,6 +132,21 @@ NS_INTERFACE_MAP_END_INHERITING(nsGenericDOMDataNode)
 NS_IMPL_ADDREF_INHERITED(nsDOMDocumentType, nsGenericDOMDataNode)
 NS_IMPL_RELEASE_INHERITED(nsDOMDocumentType, nsGenericDOMDataNode)
 
+PRBool
+nsDOMDocumentType::IsNodeOfType(PRUint32 aFlags) const
+{
+  // Don't claim to be eDATA_NODE since we're just inheriting
+  // nsGenericDOMDataNode for convinience. Doctypes aren't really
+  // data nodes (they have a null .nodeValue and don't implement
+  // nsIDOMCharacterData)
+  return !(aFlags & ~eCONTENT);
+}
+
+const nsTextFragment*
+nsDOMDocumentType::GetText()
+{
+  return nsnull;
+}
 
 NS_IMETHODIMP    
 nsDOMDocumentType::GetName(nsAString& aName)

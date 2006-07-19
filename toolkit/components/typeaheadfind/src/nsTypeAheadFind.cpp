@@ -76,7 +76,6 @@
 #include "nsISelection.h"
 #include "nsISelectElement.h"
 #include "nsILink.h"
-#include "nsITextContent.h"
 #include "nsTextFragment.h"
 #include "nsIDOMNSEditableElement.h"
 #include "nsIDOMNSHTMLElement.h"
@@ -813,12 +812,9 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
     }
   }
   else if (startOffset > 0) {
-    nsCOMPtr<nsITextContent> textContent(do_QueryInterface(startContent));
-
-    if (textContent) {
+    const nsTextFragment *textFrag = startContent->GetText();
+    if (textFrag) {
       // look for non whitespace character before start offset
-      const nsTextFragment *textFrag = textContent->Text();
-
       for (PRInt32 index = 0; index < startOffset; index++) {
         if (!XP_IS_SPACE(textFrag->CharAt(index))) {
           *aIsStartingLink = PR_FALSE;  // not at start of a node
@@ -838,7 +834,7 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
   nsCOMPtr<nsIAtom> typeAtom(do_GetAtom("type"));
 
   while (PR_TRUE) {
-    // Keep testing while textContent is equal to something,
+    // Keep testing while startContent is equal to something,
     // eventually we'll run out of ancestors
 
     if (startContent->IsNodeOfType(nsINode::eHTML)) {
@@ -869,12 +865,10 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
       break;
 
     nsIContent *parentsFirstChild = parent->GetChildAt(0);
-    nsCOMPtr<nsITextContent> textContent (do_QueryInterface(parentsFirstChild));
 
-    if (textContent) {
-      // We don't want to look at a whitespace-only first child
-      if (textContent->IsOnlyWhitespace())
-        parentsFirstChild = parent->GetChildAt(1);
+    // We don't want to look at a whitespace-only first child
+    if (parentsFirstChild->TextIsOnlyWhitespace()) {
+      parentsFirstChild = parent->GetChildAt(1);
     }
 
     if (parentsFirstChild != startContent) {

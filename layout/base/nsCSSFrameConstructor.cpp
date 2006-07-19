@@ -84,7 +84,6 @@
 #include "nsICheckboxControlFrame.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMHTMLImageElement.h"
-#include "nsITextContent.h"
 #include "nsPlaceholderFrame.h"
 #include "nsTableRowGroupFrame.h"
 #include "nsStyleChangeList.h"
@@ -2237,7 +2236,7 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIFrame*             aParentFram
     if (!content) {
       // Create a text content node
       nsIFrame* textFrame = nsnull;
-      nsCOMPtr<nsITextContent> textContent;
+      nsCOMPtr<nsIContent> textContent;
       NS_NewTextNode(getter_AddRefs(textContent),
                      mDocument->NodeInfoManager());
       if (textContent) {
@@ -2481,16 +2480,10 @@ nsCSSFrameConstructor::CreateHTMLImageFrame(nsIContent* aContent,
 }
 
 static PRBool
-IsOnlyWhitespace(nsIContent* aContent)
+TextIsOnlyWhitespace(nsIContent* aContent)
 {
-  PRBool onlyWhiteSpace = PR_FALSE;
-  if (aContent->IsNodeOfType(nsINode::eTEXT)) {
-    nsCOMPtr<nsITextContent> textContent = do_QueryInterface(aContent);
-
-    onlyWhiteSpace = textContent->IsOnlyWhitespace();
-  }
-
-  return onlyWhiteSpace;
+  return aContent->IsNodeOfType(nsINode::eTEXT) &&
+         aContent->TextIsOnlyWhitespace();
 }
     
 /****************************************************
@@ -4068,7 +4061,7 @@ MustGeneratePseudoParent(nsIContent* aContent, nsStyleContext*  aStyleContext)
   }
     
   if (aContent->IsNodeOfType(nsINode::eTEXT)) {
-    return !IsOnlyWhitespace(aContent);
+    return !TextIsOnlyWhitespace(aContent);
   }
 
   return !aContent->IsNodeOfType(nsINode::eCOMMENT);
@@ -4144,7 +4137,7 @@ NeedFrameFor(nsIFrame*   aParentFrame,
 {
   // don't create a whitespace frame if aParentFrame doesn't want it
   if ((NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE & aParentFrame->GetStateBits())
-      && IsOnlyWhitespace(aChildContent)) {
+      && TextIsOnlyWhitespace(aChildContent)) {
     return PR_FALSE;
   }
   return PR_TRUE;
@@ -5482,7 +5475,7 @@ nsCSSFrameConstructor::ConstructTextFrame(nsFrameConstructorState& aState,
 {
   // process pending pseudo frames. whitespace doesn't have an effect.
   if (!aPseudoParent && !aState.mPseudoFrames.IsEmpty() &&
-      !IsOnlyWhitespace(aContent))
+      !TextIsOnlyWhitespace(aContent))
     ProcessPseudoFrames(aState, aFrameItems);
 
   nsIFrame* newFrame = nsnull;
@@ -10374,24 +10367,21 @@ nsCSSFrameConstructor::CharacterDataChanged(nsIContent* aContent,
     // CharacterDataChanged into a ReinsertContent when we are changing text
     // that is part of a first-letter situation.
     PRBool doCharacterDataChanged = PR_TRUE;
-    nsCOMPtr<nsITextContent> textContent(do_QueryInterface(aContent));
-    if (textContent) {
-      // Ok, it's text content. Now do some real work...
-      nsIFrame* block = GetFloatContainingBlock(frame);
-      if (block) {
-        // See if the block has first-letter style applied to it.
-        nsIContent* blockContent = block->GetContent();
-        nsStyleContext* blockSC = block->GetStyleContext();
-        PRBool haveFirstLetterStyle =
-          HaveFirstLetterStyle(blockContent, blockSC);
-        if (haveFirstLetterStyle) {
-          // The block has first-letter style. Use content-replaced to
-          // repair the blocks frame structure properly.
-          nsCOMPtr<nsIContent> container = aContent->GetParent();
-          if (container) {
-            doCharacterDataChanged = PR_FALSE;
-            rv = ReinsertContent(container, aContent);
-          }
+    // Ok, it's text content. Now do some real work...
+    nsIFrame* block = GetFloatContainingBlock(frame);
+    if (block) {
+      // See if the block has first-letter style applied to it.
+      nsIContent* blockContent = block->GetContent();
+      nsStyleContext* blockSC = block->GetStyleContext();
+      PRBool haveFirstLetterStyle =
+        HaveFirstLetterStyle(blockContent, blockSC);
+      if (haveFirstLetterStyle) {
+        // The block has first-letter style. Use content-replaced to
+        // repair the blocks frame structure properly.
+        nsCOMPtr<nsIContent> container = aContent->GetParent();
+        if (container) {
+          doCharacterDataChanged = PR_FALSE;
+          rv = ReinsertContent(container, aContent);
         }
       }
     }
@@ -12183,9 +12173,8 @@ NeedFirstLetterContinuation(nsIContent* aContent)
 
   PRBool result = PR_FALSE;
   if (aContent) {
-    nsCOMPtr<nsITextContent> tc(do_QueryInterface(aContent));
-    if (tc) {
-      const nsTextFragment* frag = tc->Text();
+    const nsTextFragment* frag = aContent->GetText();
+    if (frag) {
       PRInt32 flc = FirstLetterCount(frag);
       PRInt32 tl = frag->GetLength();
       if (flc < tl) {
@@ -12198,14 +12187,8 @@ NeedFirstLetterContinuation(nsIContent* aContent)
 
 static PRBool IsFirstLetterContent(nsIContent* aContent)
 {
-  PRBool result = PR_FALSE;
-
-  nsCOMPtr<nsITextContent> textContent = do_QueryInterface(aContent);
-  if (textContent && textContent->TextLength()) {
-    result = !textContent->IsOnlyWhitespace();
-  }
-
-  return result;
+  return aContent->TextLength() &&
+         !aContent->TextIsOnlyWhitespace();
 }
 
 /**

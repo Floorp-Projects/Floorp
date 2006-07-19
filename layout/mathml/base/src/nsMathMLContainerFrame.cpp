@@ -52,7 +52,6 @@
 #include "nsIFontMetrics.h"
 
 #include "nsIDOMText.h"
-#include "nsITextContent.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsFrameManager.h"
 #include "nsStyleChangeList.h"

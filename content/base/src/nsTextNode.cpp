@@ -90,7 +90,7 @@ public:
     NS_DECL_NSIDOMEVENTLISTENER
   
     nsAttrChangeListener(PRInt32 aNameSpaceID, nsIAtom* aAttrName,
-                         nsITextContent* aContent) :
+                         nsIContent* aContent) :
       mNameSpaceID(aNameSpaceID),
       mAttrName(aAttrName),
       mContent(aContent)
@@ -109,7 +109,7 @@ public:
     friend class nsAttributeTextNode;
     PRInt32 mNameSpaceID;
     nsCOMPtr<nsIAtom> mAttrName;
-    nsITextContent* mContent;  // Weak ref; it owns us
+    nsIContent* mContent;  // Weak ref; it owns us
   };
 
   nsAttributeTextNode(nsINodeInfo *aNodeInfo) : nsTextNode(aNodeInfo)
@@ -142,7 +142,7 @@ private:
 };
 
 nsresult
-NS_NewTextNode(nsITextContent** aInstancePtrResult,
+NS_NewTextNode(nsIContent** aInstancePtrResult,
                nsNodeInfoManager *aNodeInfoManager)
 {
   NS_PRECONDITION(aNodeInfoManager, "Missing nodeInfoManager");
@@ -154,7 +154,7 @@ NS_NewTextNode(nsITextContent** aInstancePtrResult,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsITextContent *instance = new nsTextNode(ni);
+  nsIContent *instance = new nsTextNode(ni);
   if (!instance) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -179,7 +179,6 @@ NS_IMPL_RELEASE_INHERITED(nsTextNode, nsGenericDOMDataNode)
 
 // QueryInterface implementation for nsTextNode
 NS_INTERFACE_MAP_BEGIN(nsTextNode)
-  NS_INTERFACE_MAP_ENTRY(nsITextContent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
   NS_INTERFACE_MAP_ENTRY(nsIDOMText)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCharacterData)
@@ -215,7 +214,7 @@ nsTextNode::GetNodeType(PRUint16* aNodeType)
 PRBool
 nsTextNode::IsNodeOfType(PRUint32 aFlags) const
 {
-  return !(aFlags & ~(eCONTENT | eTEXT));
+  return !(aFlags & ~(eCONTENT | eTEXT | eDATA_NODE));
 }
 
 nsGenericDOMDataNode*

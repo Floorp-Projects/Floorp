@@ -48,7 +48,6 @@
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIListControlFrame.h"
 #include "nsIServiceManager.h"
-#include "nsITextContent.h"
 #include "nsIMutableArray.h"
 
 /**
@@ -485,8 +484,8 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetName(nsAString& aName)
   mDOMNode->GetFirstChild(getter_AddRefs(child));
 
   if (child) {
-    nsCOMPtr<nsITextContent> text(do_QueryInterface(child));
-    if (text) {
+    nsCOMPtr<nsIContent> text = do_QueryInterface(child);
+    if (text && text->IsNodeOfType(nsINode::eTEXT)) {
       nsAutoString txtValue;
       rv = AppendFlatStringFromContentNode(text, &txtValue);
       if (NS_SUCCEEDED(rv)) {

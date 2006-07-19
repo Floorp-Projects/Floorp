@@ -70,7 +70,6 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIComponentManager.h"
 #include "nsContentUtils.h"
-#include "nsITextContent.h"
 #include "nsTextFragment.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsIDocument.h"
@@ -1778,7 +1777,7 @@ nsComboboxControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
 
   nsNodeInfoManager *nimgr = mContent->NodeInfo()->NodeInfoManager();
 
-  nsCOMPtr<nsITextContent> labelContent;
+  nsCOMPtr<nsIContent> labelContent;
   NS_NewTextNode(getter_AddRefs(labelContent), nimgr);
 
   if (labelContent) {
@@ -1832,7 +1831,7 @@ nsComboboxControlFrame::CreateFrameFor(nsPresContext*   aPresContext,
   *aFrame = nsnull;
   NS_ASSERTION(mDisplayContent, "mDisplayContent can't be null!");
 
-  if (!SameCOMIdentity(mDisplayContent, aContent)) {
+  if (mDisplayContent == aContent) {
     // We only handle the frames for mDisplayContent here
     return NS_ERROR_FAILURE;
   }
