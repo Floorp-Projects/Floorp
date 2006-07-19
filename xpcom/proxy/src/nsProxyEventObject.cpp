@@ -54,8 +54,8 @@
 #include "nsAutoLock.h"
 
 nsProxyEventObject::nsProxyEventObject(nsProxyObject *aParent,
-                                       nsProxyEventClass* aClass,
-                                       nsISomeInterface* aRealInterface)
+                            nsProxyEventClass* aClass,
+                            already_AddRefed<nsISomeInterface> aRealInterface)
     : mRealInterface(aRealInterface),
       mClass(aClass),
       mProxyObject(aParent),

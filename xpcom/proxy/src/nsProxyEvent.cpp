@@ -338,18 +338,22 @@ nsProxyObject::nsProxyObject(nsIEventTarget *target, PRInt32 proxyType,
   mRealObject(realObject),
   mFirst(nsnull)
 {
+    MOZ_COUNT_CTOR(nsProxyObject);
+
     nsProxyObjectManager *pom = nsProxyObjectManager::GetInstance();
     NS_ASSERTION(pom, "Creating a proxy without a global proxy-object-manager.");
     pom->AddRef();
 }
 
 nsProxyObject::~nsProxyObject()
-{   
+{
     // Proxy the release of mRealObject to protect against it being deleted on
     // the wrong thread.
     nsISupports *doomed = nsnull;
     mRealObject.swap(doomed);
     NS_ProxyRelease(mTarget, doomed);
+
+    MOZ_COUNT_DTOR(nsProxyObject);
 }
 
 NS_IMPL_THREADSAFE_ADDREF(nsProxyObject)
@@ -369,6 +373,7 @@ nsProxyObject::Release()
 
     pom->Remove(this);
     pom->Release();
+    delete this;
 
     return 0;
 }
@@ -422,7 +427,8 @@ nsProxyObject::LockedFind(REFNSIID aIID, void **aResult)
     if (NS_FAILED(rv))
         return rv;
 
-    peo = new nsProxyEventObject(this, pec, newInterface);
+    peo = new nsProxyEventObject(this, pec, 
+                        already_AddRefed<nsISomeInterface>(newInterface));
     if (!peo)
         return NS_ERROR_OUT_OF_MEMORY;
 
