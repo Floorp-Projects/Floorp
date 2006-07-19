@@ -1337,7 +1337,7 @@ NS_IMETHODIMP nsXULWindow::LoadWindowClassFromXUL()
                                 windowType);
 
   if (!windowType.IsEmpty()) {
-    mWindow->SetWindowClass(NS_LITERAL_STRING("Mozilla"), windowType);
+    mWindow->SetWindowClass(windowType);
   }
 
   return NS_OK;

@@ -973,7 +973,7 @@ class nsIWidget : public nsISupports {
     /**
      * Classify the window for the window manager. Mostly for X11.
      */
-    NS_IMETHOD SetWindowClass(const nsAString& aName, const nsAString& xulWinType) = 0;
+    NS_IMETHOD SetWindowClass(const nsAString& xulWinType) = 0;
 
     /**
      * Enables/Disables system capture of any and all events that would cause a
