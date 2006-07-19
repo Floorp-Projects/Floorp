@@ -371,9 +371,11 @@ void nsDocAccessible::CheckForEditor()
   if (!editingSession)
     return; // No editing session interface
 
+  nsCOMPtr<nsIEditor> editor;
   editingSession->GetEditorForWindow(mDocument->GetWindow(),
-                                     getter_AddRefs(mEditor));
-  if (mEditor) {
+                                     getter_AddRefs(editor));
+  SetEditor(editor);
+  if (editor) {
     // State readonly is now clear
 #ifdef MOZ_ACCESSIBILITY_ATK
     AtkStateChange stateData;

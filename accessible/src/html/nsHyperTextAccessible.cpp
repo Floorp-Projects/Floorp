@@ -47,7 +47,6 @@
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentView.h"
-#include "nsIDOMHTMLBRElement.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMXULDocument.h"
@@ -1001,14 +1000,32 @@ NS_IMETHODIMP nsHyperTextAccessible::DidInsertNode(nsIDOMNode *aNode, nsIDOMNode
 {
   AtkTextChange textData;
 
+  textData.add = PR_TRUE;
   nsCOMPtr<nsITextContent> textContent(do_QueryInterface(aNode));
   if (textContent) {
-    textData.add = PR_TRUE;
     textData.length = textContent->TextLength();
-    DOMPointToOffset(aNode, 0, &textData.start);
-    FireTextChangeEvent(&textData);
+    if (!textData.length) {
+      return NS_OK;
+    }
   }
-  return NS_OK;
+  else {
+    // Don't fire event for the first br
+    nsCOMPtr<nsIEditor> editor = GetEditor();
+    if (editor) {
+      PRBool isEmpty;
+      editor->GetDocumentIsEmpty(&isEmpty);
+      if (isEmpty) {
+        return NS_OK;
+      }
+    }
+    
+    textData.length = 1;
+  }
+
+  if (NS_FAILED(DOMPointToOffset(aNode, aPosition, &textData.start))) {
+    return NS_OK;
+  }
+  return FireTextChangeEvent(&textData);
 }
 
 NS_IMETHODIMP nsHyperTextAccessible::WillDeleteNode(nsIDOMNode *aChild)
@@ -1019,18 +1036,25 @@ NS_IMETHODIMP nsHyperTextAccessible::WillDeleteNode(nsIDOMNode *aChild)
   nsCOMPtr<nsITextContent> textContent(do_QueryInterface(aChild));
   if (textContent) {
     textData.length = textContent->TextLength();
+    if (!textData.length) {
+      return NS_OK;
+    }
   }
   else {
-    // XXX, don't fire event for the last br
-    // Should we use editor->DocumentIsEmpty() instead?
-    nsCOMPtr<nsIDOMHTMLBRElement> br(do_QueryInterface(aChild));
-    if (br)
-      textData.length = 1;
-    else
-      return NS_OK;
+    // Don't fire event for the last br
+    nsCOMPtr<nsIEditor> editor = GetEditor();
+    if (editor) {
+      PRBool isEmpty;
+      editor->GetDocumentIsEmpty(&isEmpty);
+      if (isEmpty) {
+        return NS_OK;
+      }
+    }
   }
 
-  DOMPointToOffset(aChild, 0, &textData.start);
+  if (NS_FAILED(DOMPointToOffset(aChild, 0, &textData.start))) {
+    return NS_OK;
+  }
   return FireTextChangeEvent(&textData);
 }
 
@@ -1075,7 +1099,9 @@ NS_IMETHODIMP nsHyperTextAccessible::DidInsertText(nsIDOMCharacterData *aTextNod
 
   textData.add = PR_TRUE;
   textData.length = aString.Length();
-  DOMPointToOffset(aTextNode, aOffset, &textData.start);
+  if (NS_FAILED(DOMPointToOffset(aTextNode, aOffset, &textData.start))) {
+    return NS_OK;
+  }
   return FireTextChangeEvent(&textData);
 }
 
@@ -1086,7 +1112,9 @@ NS_IMETHODIMP nsHyperTextAccessible::WillDeleteText(nsIDOMCharacterData *aTextNo
 
   textData.add = PR_FALSE;
   textData.length = aLength;
-  DOMPointToOffset(aTextNode, aOffset, &textData.start);
+  if (NS_FAILED(DOMPointToOffset(aTextNode, aOffset, &textData.start))) {
+    return NS_OK;
+  }
   return FireTextChangeEvent(&textData);
 }
 
@@ -1100,10 +1128,11 @@ NS_IMETHODIMP nsHyperTextAccessible::WillDeleteSelection(nsISelection *aSelectio
 // <input> & <textarea> fires this event while deleting text
 // <editor> fires WillDeleteText/WillDeleteNode instead
 // XXX Deal with > 1 selections
+// XXX selectionStart is too large for backspace presses, it should be 1 smaller,
+//     however that must be fixed in the editor code
 {
   PRInt32 selectionStart, selectionEnd;
   nsresult rv = GetSelectionBounds(0, &selectionStart, &selectionEnd);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   AtkTextChange textData;
 

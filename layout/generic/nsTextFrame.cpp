@@ -1386,7 +1386,7 @@ nsTextPaintStyle::GetResolvedForeColor(nscolor aColor,
 #ifdef ACCESSIBILITY
 NS_IMETHODIMP nsTextFrame::GetAccessible(nsIAccessible** aAccessible)
 {
-  if (mRect.width > 0 || mRect.height > 0 || GetNextInFlow()) {
+  if (!IsEmpty() || GetNextInFlow()) {
 
     nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
 

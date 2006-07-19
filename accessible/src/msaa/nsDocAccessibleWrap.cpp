@@ -184,6 +184,7 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent, nsIAccessib
     nsIAccessibleEvent::EVENT_STATE_CHANGE,
     nsIAccessibleEvent::EVENT_NAME_CHANGE,
     nsIAccessibleEvent::EVENT_DESCRIPTIONCHANGE,
+    nsIAccessibleEvent::EVENT_LOCATION_CHANGE,
     nsIAccessibleEvent::EVENT_VALUE_CHANGE,
     nsIAccessibleEvent::EVENT_SELECTION,
     nsIAccessibleEvent::EVENT_SELECTION_ADD,
