@@ -228,8 +228,6 @@ protected:
                              AutocompleteExclude* aExclude);
   PR_STATIC_CALLBACK(int)
   AutoCompleteSortComparison(nsIMdbRow *row1, nsIMdbRow *row2, void *closureVoid);
-  PR_STATIC_CALLBACK(int)
-  TypedSortComparison(nsIMdbRow *row1, nsIMdbRow *row2, void *closureVoid);
 
   // AutoCompleteSortClosure - used to pass info into 
   // AutoCompleteSortComparison from the NS_QuickSort() function
