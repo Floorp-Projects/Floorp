@@ -145,8 +145,8 @@ public:
   void RemoveListener();
 
   enum ResizeType { Closest, Farthest, Grow };
-  enum State { Open, Collapsed, Dragging };
-  enum CollapseDirection { Before, After, None };
+  enum State { Open, CollapsedBefore, CollapsedAfter, Dragging };
+  enum CollapseDirection { Before, After };
 
   ResizeType GetResizeBefore();
   ResizeType GetResizeAfter();
@@ -155,7 +155,7 @@ public:
   //nsresult CaptureMouse(nsPresContext* aPresContext, PRBool aGrabMouseEvents);
   //PRBool IsMouseCaptured(nsPresContext* aPresContext);
   void Reverse(nsSplitterInfo*& aIndexes, PRInt32 aCount);
-  CollapseDirection GetCollapseDirection();
+  PRBool SupportsCollapseDirection(CollapseDirection aDirection);
 
   void MoveSplitterBy(nsPresContext* aPresContext, nscoord aDiff);
   void EnsureOrient();
@@ -216,11 +216,24 @@ nsSplitterFrameInner::GetState()
 {
   static nsIContent::AttrValuesArray strings[] =
     {&nsXULAtoms::dragging, &nsXULAtoms::collapsed, nsnull};
+  static nsIContent::AttrValuesArray strings_substate[] =
+    {&nsXULAtoms::before, &nsXULAtoms::after, nsnull};
   switch (mOuter->GetContent()->FindAttrValueIn(kNameSpaceID_None,
                                                 nsXULAtoms::state,
                                                 strings, eCaseMatters)) {
     case 0: return Dragging;
-    case 1: return Collapsed;
+    case 1:
+      switch (mOuter->GetContent()->FindAttrValueIn(kNameSpaceID_None,
+                                                    nsXULAtoms::substate,
+                                                    strings_substate,
+                                                    eCaseMatters)) {
+        case 0: return CollapsedBefore;
+        case 1: return CollapsedAfter;
+        default:
+          if (SupportsCollapseDirection(After))
+            return CollapsedAfter;
+          return CollapsedBefore;
+      }
   }
   return Open;
 }
@@ -537,27 +550,39 @@ nsSplitterFrameInner::MouseDrag(nsPresContext* aPresContext, nsGUIEvent* aEvent)
     ResizeChildTo(aPresContext, pos, mChildInfosBefore, mChildInfosAfter, mChildInfosBeforeCount, mChildInfosAfterCount, bounded);
 
     State currentState = GetState();
-    CollapseDirection dir = GetCollapseDirection();
+    PRBool supportsBefore = SupportsCollapseDirection(Before);
+    PRBool supportsAfter = SupportsCollapseDirection(After);
 
     // if we are in a collapsed position
-    if (realTimeDrag && ((oldPos > 0 && oldPos > pos && dir == After) || (oldPos < 0 && oldPos < pos && dir == Before)))
+    if (realTimeDrag && ((oldPos > 0 && oldPos > pos && supportsAfter) ||
+                         (oldPos < 0 && oldPos < pos && supportsBefore)))
     {
       // and we are not collapsed then collapse
       if (currentState == Dragging) {
         if (oldPos > 0 && oldPos > pos)
         {
           //printf("Collapse right\n");
-          if (GetCollapseDirection() == After) 
+          if (supportsAfter) 
           {
-            mOuter->mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::state, NS_LITERAL_STRING("collapsed"), PR_TRUE);
+            mOuter->mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::substate,
+                                      NS_LITERAL_STRING("after"),
+                                      PR_TRUE);
+            mOuter->mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::state,
+                                      NS_LITERAL_STRING("collapsed"),
+                                      PR_TRUE);
           }
 
         } else if (oldPos < 0 && oldPos < pos)
         {
           //printf("Collapse left\n");
-          if (GetCollapseDirection() == Before) 
+          if (supportsBefore)
           {
-            mOuter->mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::state, NS_LITERAL_STRING("collapsed"), PR_TRUE);
+            mOuter->mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::substate,
+                                      NS_LITERAL_STRING("before"),
+                                      PR_TRUE);
+            mOuter->mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::state,
+                                      NS_LITERAL_STRING("collapsed"),
+                                      PR_TRUE);
           }
         }
       }
@@ -884,31 +909,43 @@ nsSplitterFrameInner::Reverse(nsSplitterInfo*& aChildInfos, PRInt32 aCount)
     aChildInfos = infos;
 }
 
-nsSplitterFrameInner::CollapseDirection
-nsSplitterFrameInner::GetCollapseDirection()
+PRBool
+nsSplitterFrameInner::SupportsCollapseDirection
+(
+  nsSplitterFrameInner::CollapseDirection aDirection
+)
 {
   static nsIContent::AttrValuesArray strings[] =
-    {&nsXULAtoms::before, &nsXULAtoms::after, nsnull};
+    {&nsXULAtoms::before, &nsXULAtoms::after, &nsXULAtoms::both, nsnull};
+
   switch (mOuter->mContent->FindAttrValueIn(kNameSpaceID_None,
                                             nsXULAtoms::collapse,
                                             strings, eCaseMatters)) {
-    case 0: return Before;
-    case 1: return After;
+    case 0:
+      return (aDirection == Before);
+    case 1:
+      return (aDirection == After);
+    case 2:
+      return PR_TRUE;
   }
 
-  return None;
+  return PR_FALSE;
 }
 
 void
 nsSplitterFrameInner::UpdateState()
 {
   // State Transitions:
-  //   Open      -> Dragging
-  //   Open      -> Collapsed
-  //   Collapsed -> Open
-  //   Collapsed -> Dragging
-  //   Dragging  -> Open
-  //   Dragging  -> Collapsed (auto collapse)
+  //   Open            -> Dragging
+  //   Open            -> CollapsedBefore
+  //   Open            -> CollapsedAfter
+  //   CollapsedBefore -> Open
+  //   CollapsedBefore -> Dragging
+  //   CollapsedAfter  -> Open
+  //   CollapsedAfter  -> Dragging
+  //   Dragging        -> Open
+  //   Dragging        -> CollapsedBefore (auto collapse)
+  //   Dragging        -> CollapsedAfter (auto collapse)
 
   State newState = GetState(); 
 
@@ -917,25 +954,28 @@ nsSplitterFrameInner::UpdateState()
     return;
   }
 
-  CollapseDirection direction = GetCollapseDirection();
-  if (direction != None) {
+  if (SupportsCollapseDirection(Before) || SupportsCollapseDirection(After)) {
     nsIBox* splitter = mOuter;
     // Find the splitter's immediate sibling.
     nsIBox* splitterSibling =
       nsFrameNavigator::GetChildBeforeAfter(mOuter->GetPresContext(), splitter,
-                                            (direction == Before));
+                                            (newState == CollapsedBefore ||
+                                             mState == CollapsedBefore));
     if (splitterSibling) {
       nsIContent* sibling = splitterSibling->GetContent();
       if (sibling) {
-        if (mState == Collapsed) {
-          // Collapsed -> Open
-          // Collapsed -> Dragging
+        if (mState == CollapsedBefore || mState == CollapsedAfter) {
+          // CollapsedBefore -> Open
+          // CollapsedBefore -> Dragging
+          // CollapsedAfter -> Open
+          // CollapsedAfter -> Dragging
           sibling->UnsetAttr(kNameSpaceID_None, nsXULAtoms::collapsed,
                              PR_TRUE);
-        } else if ((mState == Open || mState == Dragging) 
-                   && newState == Collapsed) {
-          // Open -> Collapsed
-          // Dragging -> Collapsed
+        } else if ((mState == Open || mState == Dragging)
+                   && (newState == CollapsedBefore ||
+                       newState == CollapsedAfter)) {
+          // Open -> CollapsedBefore / CollapsedAfter
+          // Dragging -> CollapsedBefore / CollapsedAfter
           sibling->SetAttr(kNameSpaceID_None, nsXULAtoms::collapsed,
                            NS_LITERAL_STRING("true"), PR_TRUE);
         }
