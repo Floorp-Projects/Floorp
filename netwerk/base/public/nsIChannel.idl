@@ -172,10 +172,26 @@ interface nsIChannel : nsIRequest
      * Asynchronously open this channel.  Data is fed to the specified stream
      * listener as it becomes available.  The stream listener's methods are
      * called on the thread that calls asyncOpen and are not called until
-     * after asyncOpen returns.
+     * after asyncOpen returns.  If asyncOpen returns successfully, the
+     * channel promises to call at least onStartRequest and onStopRequest.
+     *
+     * If the nsIRequest object passed to the stream listener's methods is not
+     * this channel, an appropriate onChannelRedirect notification needs to be
+     * sent to the notification callbacks before onStartRequest is called.
+     * Once onStartRequest is called, all following method calls on aListener
+     * will get the request that was passed to onStartRequest.
+     *
+     * If the channel's and loadgroup's notification callbacks do not provide
+     * an nsIChannelEventSink when onChannelRedirect would be called, that's
+     * equivalent to having called onChannelRedirect.
+     *
+     * If asyncOpen returns successfully, the channel is responsible for
+     * keeping itself alive until it has called onStopRequest on aListener or
+     * called onChannelRedirect.
      *
      * @param aListener the nsIStreamListener implementation
      * @param aContext an opaque parameter forwarded to aListener's methods
+     * @see nsIChannelEventSink for onChannelRedirect
      */
     void asyncOpen(in nsIStreamListener aListener, in nsISupports aContext);
 

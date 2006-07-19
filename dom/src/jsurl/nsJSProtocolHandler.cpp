@@ -332,7 +332,8 @@ nsresult nsJSThunk::BringUpConsole(nsIDOMWindow *aDomWindow)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsJSChannel : public nsIChannel
+class nsJSChannel : public nsIChannel,
+                    public nsIStreamListener
 {
 public:
     nsJSChannel();
@@ -340,6 +341,8 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUEST
     NS_DECL_NSICHANNEL
+    NS_DECL_NSIREQUESTOBSERVER
+    NS_DECL_NSISTREAMLISTENER
 
     nsresult Init(nsIURI *aURI);
 
@@ -353,6 +356,7 @@ protected:
 
 protected:
     nsCOMPtr<nsIChannel>    mStreamChannel;
+    nsCOMPtr<nsIStreamListener> mListener;  // Our final listener
 
     nsLoadFlags             mLoadFlags;
 
@@ -426,6 +430,8 @@ NS_INTERFACE_MAP_BEGIN(nsJSChannel)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIChannel)
     NS_INTERFACE_MAP_ENTRY(nsIRequest)
     NS_INTERFACE_MAP_ENTRY(nsIChannel)
+    NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
+    NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
 NS_INTERFACE_MAP_END
 
 //
@@ -510,7 +516,12 @@ nsJSChannel::Open(nsIInputStream **aResult)
 NS_IMETHODIMP
 nsJSChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
 {
-    return InternalOpen(PR_TRUE, aListener, aContext, nsnull);
+    mListener = aListener;
+    nsresult rv = InternalOpen(PR_TRUE, this, aContext, nsnull);
+    if (NS_FAILED(rv)) {
+        mListener = nsnull;
+    }
+    return rv;
 }
 
 nsresult
@@ -714,6 +725,40 @@ nsJSChannel::SetContentLength(PRInt32 aContentLength)
     return mStreamChannel->SetContentLength(aContentLength);
 }
 
+NS_IMETHODIMP
+nsJSChannel::OnStartRequest(nsIRequest* aRequest,
+                            nsISupports* aContext)
+{
+    NS_ENSURE_TRUE(aRequest == mStreamChannel, NS_ERROR_UNEXPECTED);
+
+    return mListener->OnStartRequest(this, aContext);    
+}
+
+NS_IMETHODIMP
+nsJSChannel::OnDataAvailable(nsIRequest* aRequest,
+                             nsISupports* aContext, 
+                             nsIInputStream* aInputStream,
+                             PRUint32 aOffset,
+                             PRUint32 aCount)
+{
+    NS_ENSURE_TRUE(aRequest == mStreamChannel, NS_ERROR_UNEXPECTED);
+
+    return mListener->OnDataAvailable(this, aContext, aInputStream, aOffset,
+                                      aCount);
+}
+
+NS_IMETHODIMP
+nsJSChannel::OnStopRequest(nsIRequest* aRequest,
+                           nsISupports* aContext,
+                           nsresult aStatus)
+{
+    // Make sure to drop our ref to mListener
+    nsCOMPtr<nsIStreamListener> listener;
+    listener.swap(mListener);
+    
+    NS_ENSURE_TRUE(aRequest == mStreamChannel, NS_ERROR_UNEXPECTED);
+    return listener->OnStopRequest(this, aContext, aStatus);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
