@@ -4,7 +4,6 @@
 .tabbrowser-tabs {
   padding-top: 0px;
   border: none;
-  text-align: center;
 }
 
 tab:not([selected="true"]) > .tab-image-middle > .tab-icon {
@@ -153,7 +152,8 @@ tab:not([selected="true"]) > .tab-image-middle > .tab-icon > .tab-icon-image  {
 }
 
 .tabbrowser-tab {
-	min-width: 1px !important;
+  min-width: 1px !important;
+  text-align: center;
 }
 
 .tabs-bottom {
@@ -238,3 +238,35 @@ tabbrowser > tabbox > tabpanels {
   border: none !important;
   padding: 0px;
 }
+
+/**
+ * All Tabs Button
+ */
+
+.tabs-alltabs-box[flash="true"] {
+  background-color: orange;
+}
+
+.tabs-alltabs-button {
+  list-style-image: url("chrome://global/skin/icons/alltabs.png");
+  -moz-image-region: rect(0px, 16px, 16px, 0px); 
+}
+
+.tabs-alltabs-button[open="true"] {
+  -moz-image-region: rect(0px, 64px, 16px, 48px);
+}
+
+/**
+ * All Tabs Menupopup 
+ */
+
+.alltabs-item > .menu-iconic-left > .menu-iconic-icon {
+  width: 16px;
+  height: 16px;
+  list-style-image: url("chrome://global/skin/icons/small-globe-sunken.png");
+}
+
+.alltabs-item[selected="true"] {
+  font-weight: bold;
+}
+
