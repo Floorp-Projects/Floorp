@@ -123,6 +123,7 @@ public:
 
   nsIDOMDocumentRange* GetDocumentRange() const { return mDOMDocumentRange; }
   nsIDocument* GetDocument() const { return mDocument; }
+  nsIDOMNode* GetRootNode() { return mRootNode; }
 
 private:
 

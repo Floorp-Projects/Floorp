@@ -1091,6 +1091,24 @@ nsresult mozInlineSpellChecker::SaveCurrentSelectionPosition()
   return NS_OK;
 }
 
+// This is a copy of nsContentUtils::ContentIsDescendantOf. Another crime
+// for XPCOM's rap sheet
+static PRBool
+ContentIsDescendantOf(nsINode* aPossibleDescendant,
+                      nsINode* aPossibleAncestor)
+{
+  NS_PRECONDITION(aPossibleDescendant, "The possible descendant is null!");
+  NS_PRECONDITION(aPossibleAncestor, "The possible ancestor is null!");
+
+  do {
+    if (aPossibleDescendant == aPossibleAncestor)
+      return PR_TRUE;
+    aPossibleDescendant = aPossibleDescendant->GetNodeParent();
+  } while (aPossibleDescendant);
+
+  return PR_FALSE;
+}
+
 // mozInlineSpellChecker::HandleNavigationEvent
 //
 //    Acts upon mouse clicks and keyboard navigation changes, spell checking
@@ -1129,6 +1147,12 @@ mozInlineSpellChecker::HandleNavigationEvent(nsIDOMEvent* aEvent,
   rv = wordUtil.Init(mEditor);
   if (NS_FAILED(rv))
     return NS_OK; // editor doesn't like us
+
+  // mCurrentSelectionAnchorNode might not be in the DOM anymore! check
+  nsCOMPtr<nsINode> root = do_QueryInterface(wordUtil.GetRootNode());
+  nsCOMPtr<nsINode> currentAnchor = do_QueryInterface(currentAnchorNode);
+  if (root && currentAnchor && !ContentIsDescendantOf(currentAnchor, root))
+    return NS_OK;
 
   // expand the old selection into a range for the nearest word boundary
   nsCOMPtr<nsIDOMRange> currentWordRange;
