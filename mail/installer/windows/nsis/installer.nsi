@@ -84,6 +84,7 @@ Var AddQuickLaunchSC
 Var AddDesktopSC
 Var fhInstallLog
 Var fhUninstallLog
+Var ShortPathNameToExe
 
 !include branding.nsi
 !include defines.nsi
@@ -473,6 +474,19 @@ Section "-Application" Section1
     ${LogUninstall} "DLLReg: \AccessibleMarshal.dll"
     ${LogMsg} "Registered: $INSTDIR\AccessibleMarshal.dll"
   ${EndIf}
+  
+  ; MapiProxy.dll can be used by multiple applications but
+  ; is only registered for the last application installed. When the last
+  ; application installed is uninstalled MapiProxy.dll will no longer be
+  ; registered. 
+  ClearErrors
+  RegDLL "$INSTDIR\MapiProxy.dll"
+  ${If} ${Errors}
+    ${LogMsg} "** ERROR Registering: $INSTDIR\MapiProxy.dll **"
+  ${Else}
+    ${LogUninstall} "DLLReg: \MapiProxy.dll"
+    ${LogMsg} "Registered: $INSTDIR\MapiProxy.dll"
+  ${EndIf}    
 
   ; Write extra files created by the application to the uninstall.log so they
   ; will be removed when the application is uninstalled. To remove an empty
@@ -574,14 +588,17 @@ Section "-Application" Section1
   StrCpy $0 "Software\Mozilla\${BrandFullNameInternal}"
   ${WriteRegStr2} $TmpVal "$0" "" "${GREVersion}" 0
   ${WriteRegStr2} $TmpVal "$0" "CurrentVersion" "${AppVersion} (${AB_CD})" 0
-
+ 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ; Add the Mail registry keys
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  GetFullPathName /SHORT $ShortPathNameToExe "$INSTDIR\${FileMainEXE}"    
   
   StrCpy $0 "Software\Clients\Mail\${BrandFullNameInternal}"
   ${WriteRegStr2} $TmpVal "$0" "" "${BrandFullNameInternal}" 0
-
+  GetFullPathName /SHORT $1 "$INSTDIR\mozMapi32.dll"
+  ${WriteRegStr2} $TmpVal "$0" "DLLPath" "$1" 0
+    
   StrCpy $0 "Software\Clients\Mail\${BrandFullNameInternal}\DefaultIcon"
   StrCpy $1 "$\"$INSTDIR\${FileMainEXE}$\",0"
   ${WriteRegStr2} $TmpVal "$0" "" "$1" 0
@@ -600,23 +617,23 @@ Section "-Application" Section1
 
   ; shell/open/command
   StrCpy $0 "Software\Clients\Mail\${BrandFullNameInternal}\shell\open\command"
-  ${WriteRegStr2} $TmpVal "$0" "" "$INSTDIR\${FileMainEXE}" 0
+  ${WriteRegStr2} $TmpVal "$0" "" "$ShortPathNameToExe" 0
   
   ; shell/properties/command
   StrCpy $0 "Software\Clients\Mail\${BrandFullNameInternal}\shell\properties"
   ${WriteRegStr2} $TmpVal "$0" "" "Thunderbird &Options" 0  
   StrCpy $0 "Software\Clients\Mail\${BrandFullNameInternal}\shell\properties\command"
-  ${WriteRegStr2} $TmpVal "$0" "" "$INSTDIR\${FileMainEXE} -options" 0
+  ${WriteRegStr2} $TmpVal "$0" "" "$ShortPathNameToExe -options" 0
   
   ; protocols/mailto
   StrCpy $0 "Software\Clients\Mail\${BrandFullNameInternal}\protocols\mailto"
   ${WriteRegStr2} $TmpVal "$0" "" "URL:MailTo Protocol" 0
   ${WriteRegStr2} $TmpVal "$0" "URL Protocol" "" 0
   StrCpy $0 "Software\Clients\Mail\${BrandFullNameInternal}\protocols\mailto\DefaultIcon"
-  StrCpy $1 "$\"$INSTDIR\${FileMainEXE}$\",0"
+  StrCpy $1 "$\"$ShortPathNameToExe$\",0"
   ${WriteRegStr2} $TmpVal "$0" "" "$1" 0
   StrCpy $0 "Software\Clients\Mail\${BrandFullNameInternal}\protocols\mailto\shell\open\command"
-  StrCpy $1 "$INSTDIR\${FileMainEXE} -compose $\"%1$\""
+  StrCpy $1 "$ShortPathNameToExe -compose $\"%1$\""
   ${WriteRegStr2} $TmpVal "$0" "" "$1" 0
        
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
