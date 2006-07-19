@@ -36,10 +36,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gFinalHeight = 50;
+// Copied from nsILookAndFeel.h, see comments on eMetric_AlertNotificationOrigin
+const NS_ALERT_HORIZONTAL = 1;
+const NS_ALERT_LEFT = 2;
+const NS_ALERT_TOP = 4;
+
+var gFinalSize;
+var gCurrentSize = 1;
+
 var gSlideIncrement = 1;
 var gSlideTime = 10;
 var gOpenTime = 3000; // total time the alert should stay up once we are done animating.
+var gOrigin = 0; // Default value: alert from bottom right, sliding in vertically.
 
 var gAlertListener = null;
 var gAlertTextClickable = false;
@@ -53,24 +61,36 @@ function prefillAlertInfo()
   // arguments[2] --> the alert text
   // arguments[3] --> is the text clickable? 
   // arguments[4] --> the alert cookie to be passed back to the listener
-  // arguments[5] --> an optional callback listener (nsIObserver)
+  // arguments[5] --> the alert origin reported by the look and feel
+  // arguments[6] --> an optional callback listener (nsIObserver)
 
-  document.getElementById('alertImage').setAttribute('src', window.arguments[0]);
-  document.getElementById('alertTitleLabel').setAttribute('value', window.arguments[1]);
-  document.getElementById('alertTextLabel').setAttribute('value', window.arguments[2]);
-  gAlertTextClickable = window.arguments[3];
-  gAlertCookie = window.arguments[4];
-
-  if (gAlertTextClickable)
-    document.getElementById('alertTextLabel').setAttribute('clickable', true);
-  
-  // the 5th argument is optional
-  gAlertListener = window.arguments[5];
+  switch (window.arguments.length)
+  {
+    default:
+    case 7:
+      gAlertListener = window.arguments[6];
+    case 6:
+      gOrigin = window.arguments[5];
+    case 5:
+      gAlertCookie = window.arguments[4];
+    case 4:
+      gAlertTextClickable = window.arguments[3];
+      if (gAlertTextClickable)
+        document.getElementById('alertTextLabel').setAttribute('clickable', true);
+    case 3:
+      document.getElementById('alertTextLabel').setAttribute('value', window.arguments[2]);
+    case 2:
+      document.getElementById('alertTitleLabel').setAttribute('value', window.arguments[1]);
+    case 1:
+      document.getElementById('alertImage').setAttribute('src', window.arguments[0]);
+    case 0:
+      break;
+  }
 }
 
 function onAlertLoad()
 {
-  // read out our initial settings from prefs.
+  // Read out our initial settings from prefs.
   try 
   {
     var prefService = Components.classes["@mozilla.org/preferences-service;1"].getService();
@@ -79,32 +99,102 @@ function onAlertLoad()
     gSlideIncrement = prefBranch.getIntPref("alerts.slideIncrement");
     gSlideTime = prefBranch.getIntPref("alerts.slideIncrementTime");
     gOpenTime = prefBranch.getIntPref("alerts.totalOpenTime");
-  } catch (ex) {}
+  }
+  catch (ex)
+  {
+  }
+
+  // Make sure that the contents are fixed at the window edge facing the
+  // screen's center so that the window looks like "sliding in" and not
+  // like "unfolding". The default packing of "start" only works for
+  // vertical-bottom and horizontal-right positions, so we change it here.
+  if (gOrigin & NS_ALERT_HORIZONTAL)
+  {
+    if (gOrigin & NS_ALERT_LEFT)
+      document.documentElement.pack = "end";
+
+    // Additionally, change the orientation so the packing works as intended
+    document.documentElement.orient = "horizontal";
+  }
+  else
+  {
+    if (gOrigin & NS_ALERT_TOP)
+      document.documentElement.pack = "end";
+  }
+
+  var alertBox = document.getElementById("alertBox");
+  alertBox.orient = (gOrigin & NS_ALERT_HORIZONTAL) ? "vertical" : "horizontal";
+
+  // The above doesn't cause the labels in alertTextBox to reflow,
+  // see bug 311557. As the theme's -moz-box-align css rule gets ignored,
+  // we work around the bug by setting the align property.
+  if (gOrigin & NS_ALERT_HORIZONTAL)
+  {
+    document.getElementById("alertTextBox").align = "center";
+  }
 
   sizeToContent();
 
-  // work around a bug where sizeToContent() leaves a border outside of the content
+  // Work around a bug where sizeToContent() leaves a border outside of the content
   var contentDim = document.getElementById("alertBox").boxObject;
   if (window.innerWidth == contentDim.width + 1)
     --window.innerWidth;
 
-  gFinalHeight = window.outerHeight;
+  // Start with a 1px width/height, because 0 causes trouble with gtk1/2
+  gCurrentSize = 1;
 
-  // start with a 1px height, because 0 causes trouble with gtk1/2
-  window.outerHeight = 1;
+  // Determine final size
+  if (gOrigin & NS_ALERT_HORIZONTAL)
+  {
+    gFinalSize = window.outerWidth;
+    window.outerWidth = gCurrentSize;
+  }
+  else
+  {
+    gFinalSize = window.outerHeight;
+    window.outerHeight = gCurrentSize;
+  }
 
-  // be sure to offset the alert by 10 pixels from the far right edge of the screen
-  window.moveTo( (screen.availLeft + screen.availWidth - window.outerWidth) - 10, screen.availTop + screen.availHeight - window.outerHeight);
+  // Determine position
+  var x = gOrigin & NS_ALERT_LEFT ? screen.availLeft :
+          screen.availLeft + screen.availWidth - window.outerWidth;
+  var y = gOrigin & NS_ALERT_TOP ? screen.availTop :
+          screen.availTop + screen.availHeight - window.outerHeight;
+
+  // Offset the alert by 10 pixels from the edge of the screen
+  if (gOrigin & NS_ALERT_HORIZONTAL)
+    y += gOrigin & NS_ALERT_TOP ? 10 : -10;
+  else
+    x += gOrigin & NS_ALERT_LEFT ? 10 : -10;
+
+  window.moveTo(x, y);
 
   setTimeout(animateAlert, gSlideTime);
 }
 
+function animate(step)
+{
+  gCurrentSize += step;
+
+  if (gOrigin & NS_ALERT_HORIZONTAL)
+  {
+    if (!(gOrigin & NS_ALERT_LEFT))
+      window.screenX -= step;
+    window.outerWidth = gCurrentSize;
+  }
+  else
+  {
+    if (!(gOrigin & NS_ALERT_TOP))
+      window.screenY -= step;
+    window.outerHeight = gCurrentSize;
+  }
+}
+
 function animateAlert()
 {
-  if (window.outerHeight < gFinalHeight)
+  if (gCurrentSize < gFinalSize)
   {
-    window.screenY -= gSlideIncrement;
-    window.outerHeight += gSlideIncrement;
+    animate(gSlideIncrement);
     setTimeout(animateAlert, gSlideTime);
   }
   else
@@ -113,10 +203,9 @@ function animateAlert()
 
 function closeAlert()
 {
-  if (window.outerHeight > 1)
+  if (gCurrentSize > 1)
   {
-    window.screenY += gSlideIncrement;
-    window.outerHeight -= gSlideIncrement;
+    animate(-gSlideIncrement);
     setTimeout(closeAlert, gSlideTime);
   }
   else

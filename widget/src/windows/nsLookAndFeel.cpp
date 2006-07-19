@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Michael Lowe <michael.lowe@bigfoot.com>
+ *   Jens Bannmann <jens.b@web.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,6 +40,7 @@
 #include "nsLookAndFeel.h"
 #include "nsXPLookAndFeel.h"
 #include <windows.h>
+#include <shellapi.h>
 #include "nsWindow.h"
 
 // Constants only found in new (98+, 2K+, XP+, etc.) Windows.
@@ -49,12 +51,34 @@
 #define SPI_GETFLATMENU      0x1022
 #endif
 
+#ifndef WINCE
+typedef UINT (CALLBACK *SHAppBarMessagePtr)(DWORD, PAPPBARDATA);
+SHAppBarMessagePtr gSHAppBarMessage = NULL;
+static HINSTANCE gShell32DLLInst = NULL;
+#endif
+
 nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel()
 {
+#ifndef WINCE
+  gShell32DLLInst = LoadLibrary("Shell32.dll");
+  if (gShell32DLLInst)
+  {
+      gSHAppBarMessage = (SHAppBarMessagePtr) GetProcAddress(gShell32DLLInst,
+                                                             "SHAppBarMessage");
+  }
+#endif
 }
 
 nsLookAndFeel::~nsLookAndFeel()
 {
+#ifndef WINCE
+   if (gShell32DLLInst)
+   {
+       FreeLibrary(gShell32DLLInst);
+       gShell32DLLInst = NULL;
+       gSHAppBarMessage = NULL;
+   }
+#endif
 }
 
 nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
@@ -460,6 +484,43 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_TreeScrollLinesMax:
         aMetric = 3;
         break;
+#ifndef WINCE
+    case eMetric_AlertNotificationOrigin:
+        aMetric = 0;
+        if (gSHAppBarMessage)
+        {
+          // Get task bar window handle
+          HWND shellWindow = FindWindow("Shell_TrayWnd", NULL);
+
+          if (shellWindow != NULL)
+          {
+            // Determine position
+            APPBARDATA appBarData;
+            appBarData.hWnd = shellWindow;
+            appBarData.cbSize = sizeof(appBarData);
+            if (gSHAppBarMessage(ABM_GETTASKBARPOS, &appBarData))
+            {
+              // Set alert origin as a bit field - see nsILookAndFeel.h
+              // 0 represents bottom right, sliding vertically.
+              switch(appBarData.uEdge)
+              {
+                case ABE_LEFT:
+                  aMetric = NS_ALERT_HORIZONTAL | NS_ALERT_LEFT;
+                  break;
+                case ABE_RIGHT:
+                  aMetric = NS_ALERT_HORIZONTAL;
+                  break;
+                case ABE_TOP:
+                  aMetric = NS_ALERT_TOP;
+                  break;
+                case ABE_BOTTOM:
+                  break;
+              }
+            }
+          }
+        }
+        break;
+#endif
 
     default:
         aMetric = 0;
