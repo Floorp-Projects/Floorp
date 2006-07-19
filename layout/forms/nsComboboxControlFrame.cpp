@@ -1831,7 +1831,7 @@ nsComboboxControlFrame::CreateFrameFor(nsPresContext*   aPresContext,
   *aFrame = nsnull;
   NS_ASSERTION(mDisplayContent, "mDisplayContent can't be null!");
 
-  if (mDisplayContent == aContent) {
+  if (mDisplayContent != aContent) {
     // We only handle the frames for mDisplayContent here
     return NS_ERROR_FAILURE;
   }
