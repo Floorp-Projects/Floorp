@@ -67,6 +67,17 @@
   
   <wizardpage id="dummy" pageid="dummy"/>
   
+  <wizardpage id="offline" pageid="offline" next="versioninfo"
+              label="&offline.title;"
+              onpageadvanced="return gOfflinePage.onPageAdvanced();">
+    <description>&offline.description;</description>
+    <checkbox id="toggleOffline"
+              checked="true"
+              label="&offline.toggleOffline.label;"
+              accesskey="&offline.toggleOffline.accesskey;"
+              oncommand="gOfflinePage.toggleOffline();"/>
+  </wizardpage>
+  
   <wizardpage id="versioninfo" pageid="versioninfo" next="mismatch"
               label="&compatCheck.title;"
               onpageshow="gVersionInfoPage.onPageShow();">

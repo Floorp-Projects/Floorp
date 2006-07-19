@@ -89,8 +89,14 @@ var gUpdateWizard = {
     }
     catch (e) {
     }
-    document.documentElement.currentPage = 
-      document.getElementById("versioninfo");
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                              .getService(Components.interfaces.nsIIOService);
+    if (ioService.offline)
+      document.documentElement.currentPage = 
+        document.getElementById("offline");
+    else
+      document.documentElement.currentPage = 
+        document.getElementById("versioninfo");
   },
   
   onWizardFinish: function ()
@@ -160,6 +166,22 @@ var gUpdateWizard = {
     return true;
   }
 };
+
+var gOfflinePage = {
+  onPageAdvanced: function ()
+  {
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                              .getService(Components.interfaces.nsIIOService);
+    ioService.offline = false;
+    return true;
+  },
+  
+  toggleOffline: function ()
+  {
+    var nextbtn = document.documentElement.getButton("next");
+    nextbtn.disabled = !nextbtn.disabled;
+  }
+}
 
 var gVersionInfoPage = {
   _completeCount: 0,
