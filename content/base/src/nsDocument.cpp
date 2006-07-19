@@ -5020,7 +5020,7 @@ nsDocument::OnPageShow(PRBool aPersisted)
   mVisible = PR_TRUE;
   UpdateLinkMap();
   
-  if (aPersisted) {
+  if (aPersisted && mRootContent) {
     // Send out notifications that our <link> elements are attached.
     nsRefPtr<nsContentList> links = NS_GetContentList(mRootContent,
                                                       nsHTMLAtoms::link,
@@ -5046,7 +5046,7 @@ nsDocument::OnPageHide(PRBool aPersisted)
 {
   // Send out notifications that our <link> elements are detached,
   // but only if this is not a full unload.
-  if (aPersisted) {
+  if (aPersisted && mRootContent) {
     nsRefPtr<nsContentList> links = NS_GetContentList(mRootContent,
                                                       nsHTMLAtoms::link,
                                                       kNameSpaceID_Unknown);
