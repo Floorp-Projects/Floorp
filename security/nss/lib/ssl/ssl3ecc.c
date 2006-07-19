@@ -40,7 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* ECC code moved here from ssl3con.c */
-/* $Id: ssl3ecc.c,v 1.14 2006/06/28 21:15:04 julien.pierre.bugs%sun.com Exp $ */
+/* $Id: ssl3ecc.c,v 1.15 2006/07/19 01:40:17 nelson%bolyard.com Exp $ */
 
 #include "nssrenam.h"
 #include "nss.h"
@@ -957,6 +957,8 @@ static const ssl3CipherSuite ecSuites[] = {
 SECStatus
 ssl3_DisableECCSuites(sslSocket * ss, const ssl3CipherSuite * suite)
 {
+    if (!suite)
+    	suite = ecSuites;
     for (; *suite; ++suite) {
 	SECStatus rv      = ssl3_CipherPrefSet(ss, *suite, PR_FALSE);
 
