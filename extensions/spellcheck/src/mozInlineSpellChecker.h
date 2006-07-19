@@ -169,6 +169,7 @@ public:
   // spell check  the text contained within aRange
   nsresult DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
                         nsIDOMRange *aRange, nsIDOMRange* aNoCheckRange,
+                        nsIDOMRange *aCreatedRange,
                         nsISelection *aSpellCheckSelection);
 
   // helper routine to determine if a point is inside of a the passed in selection.
