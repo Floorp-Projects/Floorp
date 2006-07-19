@@ -1558,10 +1558,10 @@ pref("ui.key.accelKey", 224);
 pref("ui.key.generalAccessKey", -1);
 
 // If generalAccessKey is -1, use the following two prefs instead.
-// Use 0 for disabled, 1 for Shift, 2 for Ctrl, 4 for Alt, 8 for Meta
+// Use 0 for disabled, 1 for Shift, 2 for Ctrl, 4 for Alt, 8 for Meta (Cmd)
 // (values can be combined, e.g. 3 for Ctrl+Shift)
 pref("ui.key.chromeAccess", 2);
-pref("ui.key.contentAccess", 3);
+pref("ui.key.contentAccess", 2);
 
 // print_extra_margin enables platforms to specify an extra gap or margin
 // around the content of the page for Print Preview only
