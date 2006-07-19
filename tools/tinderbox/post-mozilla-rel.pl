@@ -724,6 +724,12 @@ sub packit_l10n {
   TinderUtils::print_log("Starting l10n builds\n");
 
   foreach my $wgeturl (keys(%Settings::WGetFiles)) {
+    if (defined($Settings::LocalizationVersionFile)) {
+      my $l10nVersion = read_file("$Settings::TopsrcdirFull/$Settings::LocalizationVersionFile");
+      chomp($l10nVersion);
+      $wgeturl =~ s/%version%/$l10nVersion/g;
+    }
+
     my $status = TinderUtils::run_shell_command_with_timeout("wget -nv --output-document \"$Settings::WGetFiles{$wgeturl}\" $wgeturl",
                                                              $Settings::WGetTimeout);
     if ($status->{exit_value} != 0) {

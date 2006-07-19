@@ -43,6 +43,10 @@ $WGetTimeout       = 360; # Wget timeout, in seconds
 $BuildLocalesArgs  = "";  # Extra attributes to add to the makefile command
                           # which builds the "installers-<locale>" target.
                           # Typically used to set ZIP_IN and WIN32_INSTALLER_IN
+# If defined, the version file used in the local l10n build tree to construct
+# a URL to download for l10n repackaging (makes it so %WGetFiles doesn't need
+# to be modified every release).
+# $LocalizationVersionFile = "browser/config/version.txt";
 
 # Tests
 $CleanProfile             = 0;
