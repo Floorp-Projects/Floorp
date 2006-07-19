@@ -52,8 +52,7 @@ toolbox {
 /* ::::: toolbar & menubar ::::: */
 
 toolbar,
-toolbarpalette,
-menubar {
+toolbarpalette {
   min-width: 1px;
   min-height: 20px !important;
   color: #000000;
@@ -61,6 +60,10 @@ menubar {
   background: url("chrome://global/skin/toolbar/toolbar-pinstripe-overlay.png") repeat;
 }
 
+menubar {
+  -moz-appearance: toolbar;
+  min-width: 1px;
+}
 
 .toolbar-holder {
  min-width: 1px;

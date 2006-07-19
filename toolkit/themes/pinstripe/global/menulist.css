@@ -49,7 +49,7 @@
 menulist {
   -moz-appearance: menulist;
   margin: 2px 4px;
-  height: 20px !important;
+  min-height: 20px !important;
 }
 
 .menulist-label-box {
