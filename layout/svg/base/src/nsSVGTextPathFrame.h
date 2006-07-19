@@ -43,6 +43,7 @@
 #include "nsIDOMSVGAnimatedString.h"
 #include "nsIDOMSVGPathSegList.h"
 #include "nsSVGLengthList.h"
+#include "nsIDOMSVGLength.h"
 
 class nsSVGFlattenedPath;
 
