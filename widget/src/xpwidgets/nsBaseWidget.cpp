@@ -685,8 +685,7 @@ void nsBaseWidget::OnDestroy()
   NS_IF_RELEASE(mToolkit);
 }
 
-NS_METHOD nsBaseWidget::SetWindowClass(const nsAString& aName,
-                                       const nsAString& xulWinType)
+NS_METHOD nsBaseWidget::SetWindowClass(const nsAString& xulWinType)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

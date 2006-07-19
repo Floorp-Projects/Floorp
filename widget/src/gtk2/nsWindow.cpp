@@ -65,6 +65,7 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIServiceManager.h"
+#include "nsIStringBundle.h"
 #include "nsGfxCIID.h"
 
 #ifdef ACCESSIBILITY
@@ -2568,6 +2569,27 @@ nsWindow::OnDragEnter(nscoord aX, nscoord aY)
     DispatchEvent(&event, status);
 }
 
+static void
+GetBrandName(nsXPIDLString& brandName)
+{
+    nsCOMPtr<nsIStringBundleService> bundleService = 
+        do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+
+    nsCOMPtr<nsIStringBundle> bundle;
+    if (bundleService)
+        bundleService->CreateBundle(
+            "chrome://branding/locale/brand.properties",
+            getter_AddRefs(bundle));
+
+    if (bundle)
+        bundle->GetStringFromName(
+            NS_LITERAL_STRING("brandShortName").get(),
+            getter_Copies(brandName));
+
+    if (brandName.IsEmpty())
+        brandName.Assign(NS_LITERAL_STRING("Mozilla"));
+}
+
 nsresult
 nsWindow::NativeCreate(nsIWidget        *aParent,
                        nsNativeWidget    aNativeParent,
@@ -2688,9 +2710,15 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
     case eWindowType_toplevel:
     case eWindowType_invisible: {
         mIsTopLevel = PR_TRUE;
+
+        nsXPIDLString brandName;
+        GetBrandName(brandName);
+        NS_ConvertUTF16toUTF8 cBrand(brandName);
+
         if (mWindowType == eWindowType_dialog) {
             mShell = gtk_window_new(GTK_WINDOW_TOPLEVEL);
             SetDefaultIcon();
+            gtk_window_set_wmclass(GTK_WINDOW(mShell), "Dialog", cBrand.get());
             gtk_window_set_type_hint(GTK_WINDOW(mShell),
                                      GDK_WINDOW_TYPE_HINT_DIALOG);
             gtk_window_set_transient_for(GTK_WINDOW(mShell),
@@ -2719,7 +2747,8 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
         }
         else if (mWindowType == eWindowType_popup) {
             mShell = gtk_window_new(GTK_WINDOW_POPUP);
-            gtk_window_set_wmclass(GTK_WINDOW(mShell), "Popup", "Mozilla");
+            gtk_window_set_wmclass(GTK_WINDOW(mShell), "Popup", cBrand.get());
+
             if (topLevelParent) {
                 gtk_window_set_transient_for(GTK_WINDOW(mShell),
                                             topLevelParent);
@@ -2735,7 +2764,7 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
         else { // must be eWindowType_toplevel
             mShell = gtk_window_new(GTK_WINDOW_TOPLEVEL);
             SetDefaultIcon();
-            gtk_window_set_wmclass(GTK_WINDOW(mShell), "Toplevel", "Mozilla");
+            gtk_window_set_wmclass(GTK_WINDOW(mShell), "Toplevel", cBrand.get());
 
             // each toplevel window gets its own window group
             mWindowGroup = gtk_window_group_new();
@@ -2942,11 +2971,13 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
 }
 
 NS_IMETHODIMP
-nsWindow::SetWindowClass(const nsAString& aName,
-                         const nsAString &xulWinType)
+nsWindow::SetWindowClass(const nsAString &xulWinType)
 {
   if (!mShell)
     return NS_ERROR_FAILURE;
+
+  nsXPIDLString brandName;
+  GetBrandName(brandName);
 
   XClassHint *class_hint = XAllocClassHint();
   if (!class_hint)
@@ -2957,7 +2988,7 @@ nsWindow::SetWindowClass(const nsAString& aName,
     XFree(class_hint);
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  class_hint->res_class = ToNewCString(aName);
+  class_hint->res_class = ToNewCString(brandName);
   if (!class_hint->res_class) {
     nsMemory::Free(class_hint->res_name);
     XFree(class_hint);
