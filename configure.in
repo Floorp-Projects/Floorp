@@ -4098,7 +4098,7 @@ MOZ_ARG_ENABLE_STRING(application,
                             mail (Thunderbird)
                             minimo
                             composer
-                            calendar
+                            calendar (Sunbird)
                             xulrunner
                             macbrowser (Camino)
                             content/xslt (Standalone Transformiix XSLT)
@@ -4833,7 +4833,7 @@ mail)
     ;;
 
 *)]
-    AC_MSG_ERROR([Official branding is only available for Firefox, Sunbird, and Thunderbird.])
+    AC_MSG_ERROR([Official branding is only available for Firefox Sunbird and Thunderbird.])
 esac
 )
 
