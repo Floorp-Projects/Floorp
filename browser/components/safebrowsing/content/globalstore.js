@@ -53,6 +53,8 @@
 const kDataProviderIdPref = 'browser.safebrowsing.dataProvider';
 const kProviderBasePref = 'browser.safebrowsing.provider.';
 
+const MOZ_PARAM_LOCALE   = /\{moz:locale\}/g;
+
 /**
  * Information regarding the data provider.
  */
@@ -73,8 +75,8 @@ function PROT_DataProvider() {
 PROT_DataProvider.prototype.loadDataProviderPrefs_ = function() {
   // Currently, there's no UI for changing local list provider so we
   // hard code the value for provider 0.
-  this.updateURL_ = this.prefs_.getPref(
-        'browser.safebrowsing.provider.0.updateURL', "");
+  this.updateURL_ = this.getUrlPref_(
+        'browser.safebrowsing.provider.0.updateURL');
 
   var id = this.prefs_.getPref(kDataProviderIdPref, null);
 
@@ -87,14 +89,14 @@ PROT_DataProvider.prototype.loadDataProviderPrefs_ = function() {
   this.name_ = this.prefs_.getPref(basePref + "name", "");
 
   // Urls used to get data from a provider
-  this.lookupURL_ = this.prefs_.getPref(basePref + "lookupURL", "");
-  this.keyURL_ = this.prefs_.getPref(basePref + "keyURL", "");
-  this.reportURL_ = this.prefs_.getPref(basePref + "reportURL", "");
+  this.lookupURL_ = this.getUrlPref_(basePref + "lookupURL");
+  this.keyURL_ = this.getUrlPref_(basePref + "keyURL");
+  this.reportURL_ = this.getUrlPref_(basePref + "reportURL");
 
   // Urls to HTML report pages
-  this.reportGenericURL_ = this.prefs_.getPref(basePref + "reportGenericURL", "");
-  this.reportErrorURL_ = this.prefs_.getPref(basePref + "reportErrorURL", "");
-  this.reportPhishURL_ = this.prefs_.getPref(basePref + "reportPhishURL", "");
+  this.reportGenericURL_ = this.getUrlPref_(basePref + "reportGenericURL");
+  this.reportErrorURL_ = this.getUrlPref_(basePref + "reportErrorURL");
+  this.reportPhishURL_ = this.getUrlPref_(basePref + "reportPhishURL");
 
   // Propogate the changes to the list-manager.
   this.updateListManager_();
@@ -113,6 +115,46 @@ PROT_DataProvider.prototype.updateListManager_ = function() {
   listManager.setUpdateUrl(this.getUpdateURL());
 
   listManager.setKeyUrl(this.getKeyURL());
+}
+
+/**
+ * Lookup the value of a URL from prefs file and do parameter substitution.
+ */
+PROT_DataProvider.prototype.getUrlPref_ = function(prefName) {
+  var url = this.prefs_.getPref(prefName);
+
+  // Parameter substitution
+  url = url.replace(MOZ_PARAM_LOCALE, this.getLocale_());
+  return url;
+}
+
+/**
+ * @return String the browser locale (similar code is in nsSearchService.js)
+ */
+PROT_DataProvider.prototype.getLocale_ = function() {
+  const localePref = "general.useragent.locale";
+  var locale = this.getLocalizedPref_(localePref);
+  if (locale)
+    return locale;
+
+  // Not localized
+  var prefs = new G_Preferences();
+  return prefs.getPref(localePref, "");
+}
+
+/**
+ * @return String name of the localized pref, null if none exists.
+ */
+PROT_DataProvider.prototype.getLocalizedPref_ = function(aPrefName) {
+  // G_Preferences doesn't know about complex values, so we use the
+  // xpcom object directly.
+  var prefs = Cc["@mozilla.org/preferences-service;1"]
+              .getService(Ci.nsIPrefBranch);
+  try {
+    return prefs.getComplexValue(aPrefName, Ci.nsIPrefLocalizedString).data;
+  } catch (ex) {
+  }
+  return "";
 }
 
 //////////////////////////////////////////////////////////////////////////////

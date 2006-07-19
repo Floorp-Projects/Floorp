@@ -487,7 +487,7 @@ pref("browser.safebrowsing.provider.0.keyURL", "https://www.google.com/safebrows
 pref("browser.safebrowsing.provider.0.reportURL", "http://sb.google.com/safebrowsing/report?");
 
 // HTML report pages
-pref("browser.safebrowsing.provider.0.reportGenericURL", "http://www.google.com/safebrowsing/report_general/?continue=http%3A%2F%2Fwww.google.com%2Ftools%2Ffirefox%2Fsafebrowsing%2Fsubmit_success.html");
-pref("browser.safebrowsing.provider.0.reportErrorURL", "http://www.google.com/safebrowsing/report_error/?continue=http%3A%2F%2Fwww.google.com%2Ftools%2Ffirefox%2Fsafebrowsing%2Fsubmit_success.html");
-pref("browser.safebrowsing.provider.0.reportPhishURL", "http://www.google.com/safebrowsing/report_phish/?continue=http%3A%2F%2Fwww.google.com%2Ftools%2Ffirefox%2Fsafebrowsing%2Fsubmit_success.html");
+pref("browser.safebrowsing.provider.0.reportGenericURL", "http://www.google.com/safebrowsing/report_general/?hl={moz:locale}&continue=http%3A%2F%2Fwww.google.com%2Ftools%2Ffirefox%2Fsafebrowsing%2Fsubmit_success.html");
+pref("browser.safebrowsing.provider.0.reportErrorURL", "http://www.google.com/safebrowsing/report_error/?hl={moz:locale}&continue=http%3A%2F%2Fwww.google.com%2Ftools%2Ffirefox%2Fsafebrowsing%2Fsubmit_success.html");
+pref("browser.safebrowsing.provider.0.reportPhishURL", "http://www.google.com/safebrowsing/report_phish/?hl={moz:locale}&continue=http%3A%2F%2Fwww.google.com%2Ftools%2Ffirefox%2Fsafebrowsing%2Fsubmit_success.html");
 #endif
