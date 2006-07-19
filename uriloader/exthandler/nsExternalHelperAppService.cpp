@@ -1434,6 +1434,22 @@ void nsExternalAppHandler::RetargetLoadNotifications(nsIRequest *request)
   if (!aChannel)
     return;
 
+  // we need to store off the original (pre redirect!) channel that initiated the load. We do
+  // this so later on, we can pass any refresh urls associated with the original channel back to the 
+  // window context which started the whole process. More comments about that are listed below....
+  // HACK ALERT: it's pretty bogus that we are getting the document channel from the doc loader. 
+  // ideally we should be able to just use mChannel (the channel we are extracting content from) or
+  // the default load channel associated with the original load group. Unfortunately because
+  // a redirect may have occurred, the doc loader is the only one with a ptr to the original channel 
+  // which is what we really want....
+
+  // Note that we need to do this before removing aChannel from the loadgroup,
+  // since that would mess with the original channel on the loader.
+  nsCOMPtr<nsIDocumentLoader> origContextLoader =
+    do_GetInterface(mWindowContext);
+  if (origContextLoader)
+    origContextLoader->GetDocumentChannel(getter_AddRefs(mOriginalChannel));
+
   nsCOMPtr<nsILoadGroup> oldLoadGroup;
   aChannel->GetLoadGroup(getter_AddRefs(oldLoadGroup));
 
@@ -1443,18 +1459,6 @@ void nsExternalAppHandler::RetargetLoadNotifications(nsIRequest *request)
   aChannel->SetLoadGroup(nsnull);
   aChannel->SetNotificationCallbacks(nsnull);
 
-  // we need to store off the original (pre redirect!) channel that initiated the load. We do
-  // this so later on, we can pass any refresh urls associated with the original channel back to the 
-  // window context which started the whole process. More comments about that are listed below....
-  // HACK ALERT: it's pretty bogus that we are getting the document channel from the doc loader. 
-  // ideally we should be able to just use mChannel (the channel we are extracting content from) or
-  // the default load channel associated with the original load group. Unfortunately because
-  // a redirect may have occurred, the doc loader is the only one with a ptr to the original channel 
-  // which is what we really want....
-  nsCOMPtr<nsIDocumentLoader> origContextLoader =
-    do_GetInterface(mWindowContext);
-  if (origContextLoader)
-    origContextLoader->GetDocumentChannel(getter_AddRefs(mOriginalChannel));
 }
 
 #define SALT_SIZE 8
