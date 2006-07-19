@@ -2066,6 +2066,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
                uintN flags, JSObject *parent, JSAtom *atom)
 {
     JSFunction *fun;
+    JSTempValueRooter tvr;
 
     /* If funobj is null, allocate an object for it. */
     if (funobj) {
@@ -2076,13 +2077,16 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
             return NULL;
     }
 
+    /* Protect fun from any potential GC callback. */
+    JS_PUSH_SINGLE_TEMP_ROOT(cx, OBJECT_TO_JSVAL(funobj), &tvr);
+
     /*
      * Allocate fun after allocating funobj so slot allocation in js_NewObject
      * does not wipe out fun from cx->newborn[GCX_PRIVATE].
      */
     fun = (JSFunction *) js_NewGCThing(cx, GCX_PRIVATE, sizeof(JSFunction));
     if (!fun)
-        return NULL;
+        goto out;
 
     /* Initialize all function members. */
     fun->object = NULL;
@@ -2097,8 +2101,11 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
     /* Link fun to funobj and vice versa. */
     if (!js_LinkFunctionObject(cx, fun, funobj)) {
         cx->newborn[GCX_OBJECT] = NULL;
-        return NULL;
+        fun = NULL;
     }
+
+out:
+    JS_POP_TEMP_ROOT(cx, &tvr);
     return fun;
 }
 
