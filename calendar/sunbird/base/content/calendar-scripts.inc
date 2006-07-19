@@ -77,11 +77,6 @@
   <script type="application/x-javascript" src="chrome://calendar/content/unifinder.js"/>
   <script type="application/x-javascript" src="chrome://calendar/content/unifinderToDo.js"/>
 
-<!--  <script type="application/x-javascript" src="chrome://calendar/content/email.js"/>-->
-
-  <!-- NEEDED ALARMS ERIC -->
-  <script type="application/x-javascript" src="chrome://calendar/content/calendarOverlay.js"/>
-
   <!-- NEEDED FOR APPLICATION SUPPORT -->
   <script type="application/x-javascript" src="chrome://calendar/content/applicationUtil.js"/>
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>

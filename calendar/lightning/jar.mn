@@ -78,7 +78,6 @@ calendar-en-US.jar:
 
 classic.jar:
 #expand  skin/classic/lightning/lightning.css	(themes/__THEME__/lightning.css)
-#expand  skin/classic/calendar/calendar-views.css	(/calendar/sunbird/themes/__THEME__/sunbird/calendar-views.css)
 #expand  skin/classic/calendar/prevnextarrow.png	(/calendar/sunbird/themes/__THEME__/sunbird/prevnextarrow.png)
 #expand  skin/classic/calendar/pageupdown.png	(/calendar/sunbird/themes/__THEME__/sunbird/pageupdown.png)
 #expand  skin/classic/calendar/calendar-toolbar.css	(/calendar/base/themes/__THEME__/calendar-toolbar.css)
@@ -93,7 +92,6 @@ classic.jar:
 #expand  skin/classic/calendar/all_day_event.png	(/calendar/resources/skin/classic/all_day_event.png)
 #expand  skin/classic/calendar/all_day_event_hover.png	(/calendar/resources/skin/classic/all_day_event_hover.png)
 #expand  skin/classic/calendar/all_day_event_down.png	(/calendar/resources/skin/classic/all_day_event_down.png)
-#expand  skin/classic/calendar/week-view-corner.png	(/calendar/resources/skin/classic/week-view-corner.png)
 #expand  skin/classic/calendar/datetimepickers/datetimepickers.css (/calendar/resources/skin/classic/datetimepickers/datetimepickers.css)
 #expand  skin/classic/calendar/datetimepickers/minimonth.css (/calendar/resources/skin/classic/datetimepickers/minimonth.css)
 #expand  skin/classic/calendar/datetimepickers/left-arrow-hover.gif (/calendar/resources/skin/classic/datetimepickers/left-arrow-hover.gif)

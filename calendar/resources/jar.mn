@@ -1,13 +1,7 @@
 #filter substitution
 
 calendar.jar:
-%   content calendar %content/calendar/
-#ifndef MOZ_SUNBIRD
-%   overlay chrome://communicator/content/tasksOverlay.xul chrome://calendar/content/calendarOverlay.xul
-%   overlay chrome://communicator/content/pref/preftree.xul chrome://calendar/content/pref/prefOverlay.xul
-%   overlay chrome://communicator/content/pref/pref-appearance.xul chrome://calendar/content/pref/prefOverlay.xul
-#endif
-%   skin calendar classic/1.0 %skin/classic/calendar/
+% content calendar %content/calendar/
 *   content/calendar/applicationUtil.js (content/applicationUtil.js)
     content/calendar/attachFile.js (content/attachFile.js)
     content/calendar/calendar.js (content/calendar.js)
@@ -35,8 +29,6 @@ calendar.jar:
     content/calendar/calendarUtils.js (content/calendarUtils.js)
     content/calendar/calendarMail.js (content/calendarMail.js)
     content/calendar/calendarManagement.js (content/calendarManagement.js)
-    content/calendar/calendarOverlay.js  (content/calendarOverlay.js)
-    content/calendar/calendarOverlay.xul (content/calendarOverlay.xul) 
     content/calendar/calendarSelection.js (content/calendarSelection.js) 
     content/calendar/calendarWindow.js (content/calendarWindow.js)
     content/calendar/calErrorPrompt.xul (/calendar/base/content/calErrorPrompt.xul)
@@ -87,11 +79,7 @@ calendar.jar:
     content/calendar/preferences/timezones.js     (/calendar/base/content/preferences/timezones.js)
     content/calendar/preferences/timezones.xul    (/calendar/base/content/preferences/timezones.xul)
     content/calendar/preferences/views.xul        (/calendar/base/content/preferences/views.xul)
-#ifndef MOZ_SUNBIRD
-    skin/classic/calendar/calendar.css (skin/classic/calendar.css)
-    skin/classic/calendar/prevnextarrow.png (skin/classic/prevnextarrow.png)
-    skin/classic/calendar/datetimepickers/minimonth.css (skin/classic/datetimepickers/minimonth.css)
-#endif
+% skin calendar classic/1.0 %skin/classic/calendar/
 #ifdef XP_MACOSX
     skin/classic/calendar/calendar-views.css  (/calendar/base/themes/pinstripe/calendar-views.css)
     skin/classic/calendar/preferences/Options.png  (/calendar/base/themes/pinstripe/preferences/Options.png)
@@ -105,7 +93,6 @@ calendar.jar:
     skin/classic/calendar/calendartoolbar.png (skin/classic/calendartoolbar.png)
     skin/classic/calendar/calendartoolbar_small.png (skin/classic/calendartoolbar_small.png)
     skin/classic/calendar/dialogOverlay.css (skin/classic/dialogOverlay.css)
-    skin/classic/calendar/overlay.css (skin/classic/overlay.css)
     skin/classic/calendar/synch_animated.gif (skin/classic/synch_animated.gif)
     skin/classic/calendar/datetimepickers/datetimepickers.css (skin/classic/datetimepickers/datetimepickers.css)
     skin/classic/calendar/datetimepickers/left-arrow-hover.gif (skin/classic/datetimepickers/left-arrow-hover.gif)
@@ -117,11 +104,3 @@ calendar.jar:
     skin/classic/calendar/unifinder/priority_header.png (skin/classic/unifinder/priority_header.png)
     skin/classic/calendar/unifinder/priority_high.png (skin/classic/unifinder/priority_high.png)
     skin/classic/calendar/unifinder/priority_low.png (skin/classic/unifinder/priority_low.png)   
-#ifndef MOZ_SUNBIRD
-    skin/classic/calendar/btn1.png (skin/classic/btn1.png)
-    skin/classic/calendar/calendar-16.gif (skin/classic/calendar-16.gif)
-    skin/classic/calendar/taskbar-cal.gif (skin/classic/taskbar-cal.gif)
-    skin/classic/calendar/taskbar-cal-act.gif (skin/classic/taskbar-cal-act.gif)
-    skin/classic/calendar/taskbar-calalarm.gif (skin/classic/taskbar-calalarm.gif)
-    skin/classic/calendar/taskbar-calalarm-act.gif (skin/classic/taskbar-calalarm-act.gif)
-#endif

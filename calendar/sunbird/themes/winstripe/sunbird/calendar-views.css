@@ -882,15 +882,6 @@
    border-bottom             : 1px solid #1D7AB5;
 }
 
-#weekview-daynumber-spacer-mid
-{
-   background-color        : #FAFCFB;
-   background-image        : url("chrome://calendar/skin/week-view-corner.png");
-   background-position     : 100% 0%;
-   background-repeat       : no-repeat;
-   width                   : 43px;
-}
-
 .weekview-daynumber-class
 {
    -moz-box-align       : center;
