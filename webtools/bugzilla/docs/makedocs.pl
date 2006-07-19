@@ -20,6 +20,7 @@
 #
 # Contributor(s): Matthew Tuck <matty@chariot.net.au>
 #                 Jacob Steenhagen <jake@bugzilla.org>
+#                 Colin Ogilvie <colin.ogilvie@gmail.com>
 
 # This script compiles all the documentation.
 
@@ -27,6 +28,44 @@ use diagnostics;
 use strict;
 
 use File::Basename;
+use lib("..");
+use Bugzilla::Install::Requirements qw (REQUIRED_MODULES OPTIONAL_MODULES);
+use Bugzilla::Constants qw (DB_MODULE);
+chdir dirname($0);
+
+###############################################################################
+# Generate minimum version list
+###############################################################################
+
+my $modules = REQUIRED_MODULES;
+my $opt_modules = OPTIONAL_MODULES;
+
+open(ENTITIES, '>', 'xml/bugzilla.ent') or die('Could not open xml/bugzilla.ent: ' . $!);
+print ENTITIES '<?xml version="1.0"?>' ."\n\n";
+print ENTITIES '<!-- Module Versions -->' . "\n";
+foreach my $module (@$modules, @$opt_modules)
+{
+    my $name = $module->{'name'};
+    $name =~ s/::/-/g;
+    $name = lc($name);
+    #This needs to be a string comparison, due to the modules having
+    #version numbers like 0.9.4
+    my $version = $module->{'version'} eq 0 ? 'any' : $module->{'version'};
+    print ENTITIES '<!ENTITY min-' . $name . '-ver "'.$version.'">' . "\n";
+}
+print ENTITIES "\n <!-- Database Versions --> \n";
+
+my $db_modules = DB_MODULE;
+foreach my $db (keys %$db_modules) {
+    my $name = $db_modules->{$db}->{'dbd'};
+    $name =~ s/::/-/g;
+    $name = lc($name);
+    my $version = $db_modules->{$db}->{'dbd_version'} eq 0 ? 'any' : $db_modules->{$db}->{'dbd_version'};
+    my $db_version = $db_modules->{$db}->{'db_version'};
+    print ENTITIES '<!ENTITY min-' . $name . '-ver "'.$version.'">' . "\n";
+    print ENTITIES '<!ENTITY min-' . lc($db) . '-ver "'.$db_version.'">' . "\n";
+}
+close(ENTITIES);
 
 ###############################################################################
 # Environment Variable Checking
@@ -66,8 +105,6 @@ sub MakeDocs {
 ###############################################################################
 # Make the docs ...
 ###############################################################################
-
-chdir dirname($0);
 
 if (!-d 'html') {
     unlink 'html';
