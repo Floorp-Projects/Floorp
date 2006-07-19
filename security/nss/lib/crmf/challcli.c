@@ -122,54 +122,39 @@ CMMF_POPODecKeyChallContDecryptChallenge(CMMFPOPODecKeyChallContent *inChalCont,
 {
     CMMFChallenge  *challenge;
     SECItem        *decryptedRand=NULL;
+    PRArenaPool    *poolp  = NULL;
     SECAlgorithmID *owf;
-    PK11SlotInfo   *slot;
-    PK11SymKey     *symKey = NULL;
     SECStatus       rv     = SECFailure;
+    SECOidTag       tag;
     CMMFRand        randStr;
     SECItem         hashItem;
-    SECOidTag       tag;
     unsigned char   hash[HASH_LENGTH_MAX]; 
-    PRArenaPool    *poolp  = NULL;
 
     PORT_Assert(inChalCont != NULL && inPrivKey != NULL);
     if (inChalCont == NULL || inIndex <0 || inIndex > inChalCont->numChallenges
 	|| inPrivKey == NULL){
         return SECFailure;
     }
-    challenge = inChalCont->challenges[inIndex];
-    decryptedRand = PORT_ZNew(SECItem);
-    if (decryptedRand == NULL) {
-        goto loser;
-    }
-    decryptedRand->data = 
-        PORT_NewArray(unsigned char, challenge->challenge.len);
-    if (decryptedRand->data == NULL) {
-        goto loser;
-    }
-    slot = inPrivKey->pkcs11Slot;
-    symKey = PK11_PubUnwrapSymKey(inPrivKey, &challenge->challenge, 
-				  CKM_RSA_PKCS, CKA_VALUE, 0);
-    if (symKey == NULL) {
-      rv = SECFailure;
-      goto loser;
-    }
-    rv = PK11_ExtractKeyValue(symKey);
-    if (rv != SECSuccess) {
-      goto loser;
-    }
-    decryptedRand = PK11_GetKeyData(symKey);
 
     poolp = PORT_NewArena(CRMF_DEFAULT_ARENA_SIZE);
     if (poolp == NULL) {
         goto loser;
     }
+
+    challenge = inChalCont->challenges[inIndex];
+    decryptedRand = SECITEM_AllocItem(poolp, NULL, challenge->challenge.len);
+    if (decryptedRand == NULL) {
+        goto loser;
+    }
+    rv = PK11_PrivDecryptPKCS1(inPrivKey, decryptedRand->data, 
+    			&decryptedRand->len, decryptedRand->len, 
+			challenge->challenge.data, challenge->challenge.len);
+    if (rv != SECSuccess) {
+        goto loser;
+    }
+
     rv = SEC_ASN1DecodeItem(poolp, &randStr, CMMFRandTemplate,
 			    decryptedRand); 
-    /* The decryptedRand returned points to a member within the symKey 
-     * structure, so we don't want to free it. Let the symKey destruction 
-     * function deal with freeing that memory.
-     */
     if (rv != SECSuccess) {
         goto loser;
     }
@@ -196,6 +181,7 @@ CMMF_POPODecKeyChallContDecryptChallenge(CMMFPOPODecKeyChallContent *inChalCont,
         /* The hash for the data we decrypted doesn't match the hash provided
 	 * in the challenge.  Bail out.
 	 */
+	PORT_SetError(SEC_ERROR_BAD_DATA);
         rv = SECFailure;
 	goto loser;
     }
@@ -208,6 +194,7 @@ CMMF_POPODecKeyChallContDecryptChallenge(CMMFPOPODecKeyChallContent *inChalCont,
         /* The hash for the data we decrypted doesn't match the hash provided
 	 * in the challenge.  Bail out.
 	 */
+	PORT_SetError(SEC_ERROR_BAD_DATA);
         rv = SECFailure;
 	goto loser;
     }
@@ -215,9 +202,6 @@ CMMF_POPODecKeyChallContDecryptChallenge(CMMFPOPODecKeyChallContent *inChalCont,
     rv = SECITEM_CopyItem(inChalCont->poolp, &challenge->randomNumber,
 			  &randStr.integer);
  loser:
-    if (symKey != NULL) {
-        PK11_FreeSymKey(symKey);
-    }
     if (poolp) {
     	PORT_FreeArena(poolp, PR_FALSE);
     }
@@ -275,7 +259,10 @@ CMMF_EncodePOPODecKeyRespContent(long                     *inDecodedRand,
 	if (currItem == NULL) {
 	    goto loser;
 	}
-	SEC_ASN1EncodeInteger(poolp, currItem,inDecodedRand[i]);
+	currItem = SEC_ASN1EncodeInteger(poolp, currItem, inDecodedRand[i]);
+	if (currItem == NULL) {
+	    goto loser;
+	}
     }
     rv = cmmf_user_encode(response, inCallback, inArg,
 			  CMMFPOPODecKeyRespContentTemplate);
