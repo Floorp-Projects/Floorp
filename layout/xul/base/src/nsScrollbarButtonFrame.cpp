@@ -95,13 +95,14 @@ nsScrollbarButtonFrame::HandleEvent(nsPresContext* aPresContext,
   // if we didn't handle the press ourselves, pass it on to the superclass
   if (!HandleButtonPress(aPresContext, aEvent, aEventStatus))
     return nsButtonBoxFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+  return NS_OK;
 }
 
 
 PRBool
 nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext, 
-                                    nsGUIEvent*     aEvent,
-                                    nsEventStatus*  aEventStatus)
+                                          nsGUIEvent*     aEvent,
+                                          nsEventStatus*  aEventStatus)
 {
   // Get the desired action for the scrollbar button.
   nsILookAndFeel::nsMetricID tmpAction;
@@ -177,7 +178,6 @@ nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
       // We were told to ignore this click, or someone assigned a non-standard
       // value to the button's action.
       return PR_FALSE;
-      break;
   }
   // set this attribute so we can style it later
   mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::active, NS_LITERAL_STRING("true"), PR_TRUE);
