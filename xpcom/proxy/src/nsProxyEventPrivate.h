@@ -173,7 +173,7 @@ public:
 
     nsProxyEventObject(nsProxyObject *aParent,
                        nsProxyEventClass *aClass,
-                       nsISomeInterface *aRealInterface);
+                       already_AddRefed<nsISomeInterface> aRealInterface);
 
     friend class nsProxyObject;
 
