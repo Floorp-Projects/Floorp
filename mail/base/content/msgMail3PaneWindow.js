@@ -869,6 +869,8 @@ function OnUnloadMessenger()
   // FIX ME - later we will be able to use onload from the overlay
   OnUnloadMsgHeaderPane();
 
+  OnUnloadFolderPane();
+
   OnMailWindowUnload();
 }
 
@@ -1151,6 +1153,12 @@ function OnLoadFolderPane()
   folderTreeBuilder.addObserver(folderObserver);
   folderTree.addEventListener("click",FolderPaneOnClick,true);
   folderTree.addEventListener("mousedown",TreeOnMouseDown,true);
+}
+
+function OnUnloadFolderPane()
+{
+  var folderTreeBuilder = GetFolderTree().builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
+  folderTreeBuilder.removeObserver(folderObserver);
 }
 
 // builds prior to 12-08-2001 did not have the labels column
