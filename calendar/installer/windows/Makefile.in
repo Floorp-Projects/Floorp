@@ -57,6 +57,7 @@ INSTALLER_FILES = \
 	$(NULL)
 
 BRANDING_FILES = \
+	branding.nsi \
 	wizHeader.bmp \
 	wizHeaderRTL.bmp \
 	wizWatermark.bmp \
@@ -102,6 +103,7 @@ ifndef MOZ_USE_OFFICIAL_BRANDING
 	$(NSINSTALL) -D $(DIST)/branding
 	cp $(srcdir)/Header.bmp    $(DIST)/branding/Header.bmp
 	cp $(srcdir)/Watermrk.bmp  $(DIST)/branding/Watermrk.bmp
+	cp $(srcdir)/nsis/branding.nsi $(DIST)/branding/branding.nsi
 	cp $(srcdir)/wizHeader.bmp     $(DIST)/branding/wizHeader.bmp
 	cp $(srcdir)/wizHeaderRTL.bmp  $(DIST)/branding/wizHeaderRTL.bmp
 	cp $(srcdir)/wizWatermark.bmp  $(DIST)/branding/wizWatermark.bmp
