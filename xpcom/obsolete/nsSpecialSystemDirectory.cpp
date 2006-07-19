@@ -295,28 +295,19 @@ static void GetCurrentProcessDirectory(nsFileSpec& aFileSpec)
 
 #elif defined(XP_BEOS)
 
-    char *moz5 = getenv("MOZILLA_FIVE_HOME");
-    if (moz5)
+    static char buf[MAXPATHLEN];
+    int32 cookie = 0;
+    image_info info;
+    char *p;
+    *buf = 0;
+    if(get_next_image_info(0, &cookie, &info) == B_OK)
     {
-        aFileSpec = moz5;
-        return;
-    }
-    else
-    {
-      static char buf[MAXPATHLEN];
-      int32 cookie = 0;
-      image_info info;
-      char *p;
-      *buf = 0;
-      if(get_next_image_info(0, &cookie, &info) == B_OK)
+      strcpy(buf, info.name);
+      if((p = strrchr(buf, '/')) != 0)
       {
-        strcpy(buf, info.name);
-        if((p = strrchr(buf, '/')) != 0)
-        {
-          *p = 0;
-          aFileSpec = buf;
-          return;
-        }
+        *p = 0;
+        aFileSpec = buf;
+        return;
       }
     }
 
