@@ -64,6 +64,7 @@ public:
                   ~nsMacCommandLine();
 
   nsresult        Initialize(int& argc, char**& argv);
+  void            SetupCommandLine(int& argc, char**& argv);
   
   nsresult        AddToCommandLine(const char* inArgText);
   nsresult        AddToCommandLine(const char* inOptionString, const FSSpec& inFileSpec);
@@ -105,7 +106,7 @@ private:
 extern "C" {
 #endif
 
-nsresult InitializeMacCommandLine(int& argc, char**& argv);
+void SetupMacCommandLine(int& argc, char**& argv);
 
 #ifdef __cplusplus
 }
