@@ -133,6 +133,16 @@ private:
   void Render(nsISVGRendererCanvas *aCanvas);
   void GeneratePath(cairo_t *ctx, nsISVGCairoCanvas* aCanvas);
 
+  /*
+   * Check for what cairo returns for the fill extents of a degenerate path
+   */
+  static PRBool
+  IsDegeneratePath(double xmin, double ymin, double xmax, double ymax)
+  {
+    return (xmin ==  32767 && ymin ==  32767 &&
+            xmax == -32768 && ymax == -32768);
+  }
+
   nsSVGMarkerProperty *GetMarkerProperty();
   void GetMarkerFromStyle(nsSVGMarkerFrame   **aResult,
                           nsSVGMarkerProperty *property,
