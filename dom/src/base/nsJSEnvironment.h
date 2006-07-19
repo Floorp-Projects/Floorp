@@ -154,7 +154,7 @@ public:
 
   virtual void WillInitializeContext();
   virtual void DidInitializeContext();
-  virtual void DidSetDocument(nsIDOMDocument *aDocdoc, void *aGlobal) {;}
+  virtual void DidSetDocument(nsISupports *aDocdoc, void *aGlobal) {;}
 
   virtual nsresult Serialize(nsIObjectOutputStream* aStream, void *aScriptObject);
   virtual nsresult Deserialize(nsIObjectInputStream* aStream,
