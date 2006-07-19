@@ -51,6 +51,7 @@
 #include "nsSVGAnimatedPreserveAspectRatio.h"
 #include "nsSVGPreserveAspectRatio.h"
 #include "nsSVGPatternElement.h"
+#include "nsIFrame.h"
 
 //--------------------- Patterns ------------------------
 
@@ -77,6 +78,7 @@ NS_INTERFACE_MAP_BEGIN(nsSVGPatternElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGFitToViewBox)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGURIReference)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGPatternElement)
+  NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGPatternElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGPatternElementBase)
 
@@ -86,6 +88,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGPatternElementBase)
 nsSVGPatternElement::nsSVGPatternElement(nsINodeInfo* aNodeInfo)
   : nsSVGPatternElementBase(aNodeInfo)
 {
+  AddMutationObserver(this);
 }
 
 nsresult
@@ -291,4 +294,71 @@ nsSVGPatternElement::GetLengthInfo()
 {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               NS_ARRAY_LENGTH(sLengthInfo));
+}
+
+//----------------------------------------------------------------------
+// nsIMutationObserver methods
+
+void
+nsSVGPatternElement::PushUpdate()
+{
+  nsIFrame *frame = GetPrimaryFrame();
+
+  if (frame) {
+    nsISVGValue *value = nsnull;
+    CallQueryInterface(frame, &value);
+    if (value) {
+      value->BeginBatchUpdate();
+      value->EndBatchUpdate();
+    }
+  }
+}
+
+void
+nsSVGPatternElement::CharacterDataChanged(nsIDocument *aDocument,
+                                          nsIContent *aContent,
+                                          PRBool aAppend)
+{
+  PushUpdate();
+}
+
+void
+nsSVGPatternElement::AttributeChanged(nsIDocument *aDocument,
+                                      nsIContent *aContent,
+                                      PRInt32 aNameSpaceID,
+                                      nsIAtom *aAttribute,
+                                      PRInt32 aModType)
+{
+  PushUpdate();
+}
+
+void
+nsSVGPatternElement::ContentAppended(nsIDocument *aDocument,
+                                     nsIContent *aContainer,
+                                     PRInt32 aNewIndexInContainer)
+{
+  PushUpdate();
+}
+
+void
+nsSVGPatternElement::ContentInserted(nsIDocument *aDocument,
+                                     nsIContent *aContainer,
+                                     nsIContent *aChild,
+                                     PRInt32 aIndexInContainer)
+{
+  PushUpdate();
+}
+
+void
+nsSVGPatternElement::ContentRemoved(nsIDocument *aDocument,
+                                    nsIContent *aContainer,
+                                    nsIContent *aChild,
+                                    PRInt32 aIndexInContainer)
+{
+  PushUpdate();
+}
+
+void
+nsSVGPatternElement::NodeWillBeDestroyed(const nsINode *aNode)
+{
 }
