@@ -51,7 +51,7 @@ interface nsIDOMNode;
 interface nsISelection;
 interface nsISelectionDisplay;
 
-[scriptable, uuid(93AAA4A9-B78E-42eb-9D67-5DE77EE2F54B)]
+[scriptable, uuid(39429306-4c81-4d8b-9421-eb7d9f43bfd0)]
 interface nsISelectionController : nsISelectionDisplay
 {
    const short SELECTION_NONE=0;
