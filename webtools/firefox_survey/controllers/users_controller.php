@@ -66,14 +66,13 @@ class UsersController extends AppController {
                         'to'   => $this->params['data']['User']['email'],
                         'subject' => 'Firefox Surveys',
                         'message' => "
-<p>Thanks for volunteering to be a part of the Firefox Survey!</p>
+<p>Thanks for volunteering to be a part of the Firefox User Panel!</p>
 
-<p>We'll start with this profile survey and go from there. We'll send out a few more
-surveys in the following weeks to the user panel to help us define the next
-generation of Firefox. Thanks again for making the browser a better place!</p>
+<p>Please start by taking this initial survey.  We'll send out a few more surveys in
+the following weeks to the user panel to help us define the next generation of
+Firefox.  thanks again for making the browser a better place!</p>
 
-<p><a href=\"http://is4.instantsurvey.com/FirefoxSurveyNumeroUno?email={$this->params['data']['User']['email']}&first={$this->params['data']['User']['firstname']}&last={$this->params['data']['User']['lastname']}\">Start the first survey</a></p>
-
+<p><a href=\"https://is4.instantsurvey.com/take?i=105856&h=kJmDQyn7m0vnkkljO8G3MQ&email={$this->params['data']['User']['email']}&first={$this->params['data']['User']['firstname']}&last={$this->params['data']['User']['lastname']}\">Join the User Panel</a></p>
 
 <p><small>Survey conducted by Mozilla and hosted by <a href=\"http://www.instantsurvey.com/\">Instant Survey</a></small></p>
 
@@ -113,14 +112,13 @@ use in marketing or solicitation.</small></p>
                         'to'   => $this->params['data']['User']['email'],
                         'subject' => 'Firefox Surveys',
                         'message' => "
-<p>Thanks for volunteering to be a part of the Firefox Survey!</p>
+<p>Thanks for volunteering to be a part of the Firefox User Panel!</p>
 
-<p>We'll start with this profile survey and go from there. We'll send out a few more
-surveys in the following weeks to the user panel to help us define the next
-generation of Firefox. Thanks again for making the browser a better place!</p>
+<p>Please start by taking this initial survey.  We'll send out a few more surveys in
+the following weeks to the user panel to help us define the next generation of
+Firefox.  thanks again for making the browser a better place!</p>
 
-<p><a href=\"http://is4.instantsurvey.com/FirefoxSurveyNumeroUno?email={$this->params['data']['User']['email']}&first={$this->params['data']['User']['firstname']}&last={$this->params['data']['User']['lastname']}\">Start the first survey</a></p>
-
+<p><a href=\"https://is4.instantsurvey.com/take?i=105856&h=kJmDQyn7m0vnkkljO8G3MQ&email={$this->params['data']['User']['email']}&first={$this->params['data']['User']['firstname']}&last={$this->params['data']['User']['lastname']}\">Join the User Panel</a></p>
 
 <p><small>Survey conducted by Mozilla and hosted by <a href=\"http://www.instantsurvey.com/\">Instant Survey</a></small></p>
 
@@ -142,7 +140,7 @@ use in marketing or solicitation.</small></p>
                     // rather than just flash a screen, we want to show a page with
                     // some content.  We do a little trickery here, but it gets the
                     // job done.  content is in /views/layouts/flash.thtml
-                    $this->Session->setFlash('Thanks for helping to make a better browsing experience.<br />Continue to the <a href="http://google.com/firefox/">Firefox Start Page</a>');
+                    $this->Session->setFlash('Thanks for helping to make a better browsing experience! Be sure to check your email for a link to the first survey.<br />Continue to the <a href="http://google.com/firefox/">Firefox Start Page</a>');
                     $this->flash(null,null,0);
             }
         }
