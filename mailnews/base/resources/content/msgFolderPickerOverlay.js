@@ -105,7 +105,7 @@ function SetFolderPickerElement(uri, picker)
      serverName = "???";
     }
 
-  switch (picker) {
+  switch (picker.id) {
     case "runFiltersFolder":
       selectedValue = msgfolder.name;
       break;
