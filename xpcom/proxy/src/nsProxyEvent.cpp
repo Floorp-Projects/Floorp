@@ -360,7 +360,7 @@ nsProxyObject::Release()
     nsrefcnt count;
     NS_PRECONDITION(0 != mRefCnt, "dup release");
     count = PR_AtomicDecrement((PRInt32*) &mRefCnt);
-    NS_LOG_RELEASE(this, count, "nsProxyRelease");
+    NS_LOG_RELEASE(this, count, "nsProxyObject");
     if (count)
         return count;
 
