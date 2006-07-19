@@ -223,7 +223,7 @@ $::root = ($^O =~ /MSWin32/i ? 'Administrator' : 'root');
 my %missing = ();
 
 foreach my $module (@{$modules}) {
-    unless (have_vers($module->{name}, $module->{version})) { 
+    unless (have_vers($module->{name}, $module->{version}, $silent)) { 
         $missing{$module->{name}} = $module->{version};
     }
 }
@@ -234,20 +234,22 @@ print "\nYou need one of the following DBD modules installed, depending on\n"
 my $have_one_dbd = 0;
 my $db_modules = DB_MODULE;
 foreach my $db (keys %$db_modules) {
-    if (have_vers($db_modules->{$db}->{dbd}, $db_modules->{$db}->{dbd_version})) {
+    if (have_vers($db_modules->{$db}->{dbd}, 
+                  $db_modules->{$db}->{dbd_version}, $silent)) 
+    {
         $have_one_dbd = 1;
     }
 }
 
 print "\nThe following Perl modules are optional:\n" unless $silent;
-my $gd          = have_vers("GD","1.20");
-my $chartbase   = have_vers("Chart::Base","1.0");
-my $xmlparser   = have_vers("XML::Twig",0);
-my $lwp_ua      = have_vers("LWP::UserAgent",0);
-my $gdgraph     = have_vers("GD::Graph",0);
-my $gdtextalign = have_vers("GD::Text::Align",0);
-my $patchreader = have_vers("PatchReader","0.9.4");
-my $imagemagick = have_vers("Image::Magick",0);
+my $gd          = have_vers("GD","1.20", $silent);
+my $chartbase   = have_vers("Chart::Base","1.0", $silent);
+my $xmlparser   = have_vers("XML::Twig",0, $silent);
+my $lwp_ua      = have_vers("LWP::UserAgent",0, $silent);
+my $gdgraph     = have_vers("GD::Graph",0, $silent);
+my $gdtextalign = have_vers("GD::Text::Align",0, $silent);
+my $patchreader = have_vers("PatchReader","0.9.4", $silent);
+my $imagemagick = have_vers("Image::Magick",0, $silent);
 
 print "\n" unless $silent;
 
@@ -760,7 +762,7 @@ if ($my_db_check) {
     my $actual_dbd_ver = DB_MODULE->{lc($my_db_driver)}->{dbd_version};
     my $sql_server     = DB_MODULE->{lc($my_db_driver)}->{name};
     my $sql_want       = DB_MODULE->{lc($my_db_driver)}->{db_version};
-    unless (have_vers($actual_dbd, $actual_dbd_ver)) {
+    unless (have_vers($actual_dbd, $actual_dbd_ver, $silent)) {
         print "For $sql_server, Bugzilla requires that perl's"
               . " $actual_dbd be installed.\nTo install this module,"
               . " you can do:\n   " . install_command($actual_dbd) . "\n";
@@ -1517,7 +1519,7 @@ import Bugzilla::Bug qw(is_open_state);
 
 for my $verifymethod (split /,\s*/, Bugzilla->params->{'user_verify_class'}) {
     if ($verifymethod eq 'LDAP') {
-        my $netLDAP = have_vers("Net::LDAP", 0);
+        my $netLDAP = have_vers("Net::LDAP", 0, $silent);
         if (!$netLDAP && !$silent) {
             print "If you wish to use LDAP authentication, then you must install Net::LDAP\n\n";
         }

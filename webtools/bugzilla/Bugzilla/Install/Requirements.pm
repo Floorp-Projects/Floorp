@@ -106,11 +106,11 @@ use constant WIN32_MODULE_NAMES => {
 # This was originally clipped from the libnet Makefile.PL, adapted here to
 # use the above vers_cmp routine for accurate version checking.
 sub have_vers {
-    my ($pkg, $wanted) = @_;
+    my ($pkg, $wanted, $silent) = @_;
     my ($msg, $vnum, $vstr);
     no strict 'refs';
     printf("Checking for %15s %-9s ", $pkg, !$wanted?'(any)':"(v$wanted)") 
-        unless $::silent;
+        unless $silent;
 
     # Modules may change $SIG{__DIE__} and $SIG{__WARN__}, so localise them here
     # so that later errors display 'normally'
@@ -142,7 +142,7 @@ sub have_vers {
     }
 
     my $vok = (vers_cmp($vnum,$wanted) > -1);
-    print ((($vok) ? "ok: " : " "), "$vstr\n") unless $::silent;
+    print ((($vok) ? "ok: " : " "), "$vstr\n") unless $silent;
     return $vok ? 1 : 0;
 }
 
@@ -245,7 +245,7 @@ represent the name of the module and the version that we require.
  Returns:     -1 if $a is less than $b, 0 if they are equal, and
               1 if $a is greater than $b.
 
-=item C<have_vers($pkg, $wanted)>
+=item C<have_vers($pkg, $wanted, $silent)>
 
  Description: Tells you whether or not you have the appropriate
               version of the module requested. It also prints
@@ -256,12 +256,11 @@ represent the name of the module and the version that we require.
               C<$wanted> - The version of the package you require.
                            Set this to 0 if you don't require any
                            particular version.
+              C<$silent> - Set to true if you don't want this function
+                           to print out anything.
 
  Returns:   C<1> if you have the module installed and you have the
             appropriate version. C<0> otherwise.
-
- Notes:     If you set C<$main::silent> to a true value, this function
-            won't print out anything.
 
 =item C<install_command($module)>
 
