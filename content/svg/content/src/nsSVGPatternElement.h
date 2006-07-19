@@ -44,6 +44,7 @@
 #include "nsIDOMSVGFitToViewBox.h"
 #include "nsIDOMSVGPatternElement.h"
 #include "nsSVGLength2.h"
+#include "nsIMutationObserver.h"
 
 //--------------------- Patterns ------------------------
 
@@ -52,7 +53,8 @@ typedef nsSVGStylableElement nsSVGPatternElementBase;
 class nsSVGPatternElement : public nsSVGPatternElementBase,
                             public nsIDOMSVGURIReference,
                             public nsIDOMSVGFitToViewBox,
-                            public nsIDOMSVGPatternElement
+                            public nsIDOMSVGPatternElement,
+                            public nsIMutationObserver
 {
   friend class nsSVGPatternFrame;
 
@@ -75,6 +77,9 @@ public:
   // FitToViewbox
   NS_DECL_NSIDOMSVGFITTOVIEWBOX
 
+  // Mutation Observer
+  NS_DECL_NSIMUTATIONOBSERVER
+
   NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGElement::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGElement::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGElement::)
@@ -83,6 +88,8 @@ public:
   NS_IMETHODIMP_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
 
 protected:
+
+  void PushUpdate();
 
   virtual LengthAttributesInfo GetLengthInfo();
   
