@@ -35,9 +35,9 @@
 # ***** END LICENSE BLOCK *****
 
 # NSIS defines for nightly builds.
-# The release build branding.nsi is located in other-license/branding/sunbird/
-!define BrandShortName        "Sunbird"
-!define BrandFullName         "Mozilla Sunbird"
+# The release build branding.nsi is located in other-licenses/branding/sunbird/
+!define BrandShortName        "Calendar"
+!define BrandFullName         "Calendar"
 # BrandFullNameInternal is used for some registry and file system values that
 # should not contain release that may be in the BrandFullName (e.g. Beta 1, etc.)
 !define BrandFullNameInternal "Mozilla Sunbird"
