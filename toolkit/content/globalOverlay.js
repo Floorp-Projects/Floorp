@@ -256,3 +256,5 @@ function FillInTooltip ( tipElement )
   }
   return retVal;
 }
+
+#include debug.js
