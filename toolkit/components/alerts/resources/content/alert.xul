@@ -44,14 +44,14 @@
         xmlns:xhtml2="http://www.w3.org/TR/xhtml2"
         xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#"
         xhtml2:role="wairole:alert"
-        align="start"
+        pack="start"
         onload="onAlertLoad()">
   
   <script type="application/x-javascript" src="chrome://global/content/alerts/alert.js"/>
 
-  <hbox id="alertBox" class="alertBox">
+  <box id="alertBox" class="alertBox">
     
-    <hbox class="alertImageBox" align="center" valign="center">
+    <hbox class="alertImageBox" align="center" pack="center">
       <image id="alertImage"/>
     </hbox>
 
@@ -60,7 +60,7 @@
       <label id="alertTextLabel" class="alertText plain" onclick="onAlertClick();"/>
     </vbox>
 
-  </hbox>
+  </box>
 
   <!-- This method is called inline because we want to make sure we establish the width
        and height of the alert before we fire the onload handler. -->

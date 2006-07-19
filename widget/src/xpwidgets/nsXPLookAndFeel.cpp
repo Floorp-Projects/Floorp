@@ -112,6 +112,8 @@ nsLookAndFeelIntPref nsXPLookAndFeel::sIntPrefs[] =
     eMetric_ScrollButtonMiddleMouseButtonAction, PR_FALSE, nsLookAndFeelTypeInt, 3 },
   { "ui.scrollbarButtonRightMouseButtonAction",
     eMetric_ScrollButtonRightMouseButtonAction, PR_FALSE, nsLookAndFeelTypeInt, 3 },
+  { "ui.alertNotificationOrigin",
+    eMetric_AlertNotificationOrigin, PR_FALSE, nsLookAndFeelTypeInt, 0 },
 };
 
 nsLookAndFeelFloatPref nsXPLookAndFeel::sFloatPrefs[] =
