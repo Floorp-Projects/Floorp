@@ -2151,7 +2151,7 @@ SearchService.prototype = {
   },
 
   _saveSortedEngineList: function SRCH_SVC_saveSortedEngineList() {
-    var engines = this._getSortedEngines(false);
+    var engines = this._getSortedEngines(true);
     var values = []; 
     var names = [];
   
@@ -2170,7 +2170,13 @@ SearchService.prototype = {
 
     for each (engine in this._engines) {
       var orderNumber = engineMetadataService.getAttr(engine, "order");
-      if (orderNumber) {
+
+      // Since the DB isn't regularly cleared, and engine files may disappear
+      // without us knowing, we may already have an engine in this slot. If
+      // that happens, we just skip it - it will be added later on as an
+      // unsorted engine. This problem will sort itself out when we call
+      // _saveSortedEngineList at shutdown.
+      if (orderNumber && !this._sortedEngines[orderNumber-1]) {
         this._sortedEngines[orderNumber-1] = engine;
         addedEngines[engine.name] = engine;
       }
