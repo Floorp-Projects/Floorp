@@ -55,6 +55,22 @@ nsSVGGeometryFrame::nsSVGGeometryFrame(nsStyleContext* aContext)
 {
 }
 
+void
+nsSVGGeometryFrame::Destroy()
+{
+  // Remove the properties before the frame goes away, since we need it for QI
+  RemovePaintServerProperties();
+  nsSVGGeometryFrameBase::Destroy();
+}
+
+void
+nsSVGGeometryFrame::RemovePaintServerProperties()
+{
+  DeleteProperty(nsGkAtoms::fill);
+  DeleteProperty(nsGkAtoms::stroke);
+  RemoveStateBits(NS_STATE_SVG_PSERVER_MASK);
+}
+
 nsSVGPaintServerFrame *
 nsSVGGeometryFrame::GetPaintServer(const nsStyleSVGPaint *aPaint)
 {
@@ -101,9 +117,7 @@ nsSVGGeometryFrame::DidSetStyleContext()
 {
   // One of the styles that might have been changed are the urls that
   // point to gradients, etc.  Drop our cached values to those
-  DeleteProperty(nsGkAtoms::fill);
-  DeleteProperty(nsGkAtoms::stroke);
-  RemoveStateBits(NS_STATE_SVG_PSERVER_MASK);
+  RemovePaintServerProperties();
 
   return NS_OK;
 }
