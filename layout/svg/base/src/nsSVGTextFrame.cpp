@@ -580,6 +580,10 @@ nsSVGTextFrame::UpdateGlyphPositioning()
   nsISVGGlyphFragmentLeaf *fragment, *firstFragment;
 
   firstFragment = node->GetFirstGlyphFragment();
+  if (!firstFragment) {
+    mPositioningDirty = PR_FALSE;
+    return;
+  }
 
   float x = 0, y = 0;
 
