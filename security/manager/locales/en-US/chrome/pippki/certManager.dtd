@@ -51,7 +51,9 @@
 <!ENTITY certmgr.cas                          "You have certificates on file that identify these certificate authorities:">
 
 <!ENTITY certmgr.detail.general_tab.title     "General">
+<!ENTITY certmgr.detail.general_tab.accesskey "G">
 <!ENTITY certmgr.detail.prettyprint_tab.title "Details">
+<!ENTITY certmgr.detail.prettyprint_tab.accesskey "D">
 
 <!ENTITY certmgr.subjectinfo.label            "Issued To">
 <!ENTITY certmgr.issuerinfo.label             "Issued By">

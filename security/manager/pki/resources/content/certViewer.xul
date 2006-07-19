@@ -51,6 +51,7 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   buttons="accept"
   buttonlabelaccept="&certmgr.close.label;"
+  buttonaccesskeyaccept="&certmgr.close.accesskey;"
   onload="setWindowName();">
 
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
@@ -59,8 +60,10 @@
 
   <tabbox>
     <tabs>
-      <tab id="general_tab" label="&certmgr.detail.general_tab.title;"/>
-      <tab id="prettyprint_tab" label="&certmgr.detail.prettyprint_tab.title;"/>
+      <tab id="general_tab" label="&certmgr.detail.general_tab.title;"
+           accesskey="&certmgr.detail.general_tab.accesskey;"/>
+      <tab id="prettyprint_tab" label="&certmgr.detail.prettyprint_tab.title;"
+           accesskey="&certmgr.detail.prettyprint_tab.accesskey;"/>
     </tabs>
     <tabpanels>
       <vbox id="general_info"/>
