@@ -102,11 +102,5 @@ function PROT_Application() {
  * @return String the report phishing URL (localized).
  */
 PROT_Application.prototype.getReportPhishingURL = function() {
-  var prefs = new G_Preferences();
-  var reportUrl = gDataProvider.getReportPhishURL();
-
-  // Append locale data.
-  reportUrl += "&hl=" + prefs.getPref("general.useragent.locale");
-
-  return reportUrl;
+  return gDataProvider.getReportPhishURL();
 }
