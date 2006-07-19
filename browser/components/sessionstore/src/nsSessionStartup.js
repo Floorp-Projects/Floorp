@@ -40,12 +40,12 @@
  * Session Storage and Restoration
  * 
  * Overview
- * This service user's session file at startup, and makes a determination as to
- * whether the session should be restored. It fill restore the session under 
- * the circumstances described below.
+ * This service reads user's session file at startup, and makes a determination 
+ * as to whether the session should be restored. It will restore the session 
+ * under the circumstances described below.
  * 
  * Crash Detection
- * The initial segment of the INI file is has a single field, "state", that 
+ * The session file stores a session.state property, that 
  * indicates whether the browser is currently running. When the browser shuts 
  * down, the field is changed to "stopped". At startup, this field is read, and
  * if it's value is "running", then it's assumed that the browser had previously
@@ -58,8 +58,8 @@
  * and the session will be restored the next time the browser starts.
  * 
  * Always Resume
- * This service will always resume the session if the boolean pref 
- * browser.sessionstore.resume_session is set to true.
+ * This service will always resume the session if the integer pref 
+ * browser.startup.page is set to 3.
  */
 
 /* :::::::: Constants and Helpers ::::::::::::::: */
@@ -83,9 +83,6 @@ const STATE_RUNNING_STR = "running";
 
 // whether the service is enabled
 const DEFAULT_ENABLED = true;
-
-// resume the current session at startup (otherwise just recover)
-const DEFAULT_RESUME_SESSION = false;
 
 // resume the current session at startup just this once
 const DEFAULT_RESUME_SESSION_ONCE = false;
@@ -222,17 +219,12 @@ SessionStartup.prototype = {
 /* ........ Auxiliary Functions .............. */
 
   /**
-   * Whether or not to resume session, if not recovering from a crash
-   * Returns true if:
-   * - pref is set to always resume sessions
-   * - pref is set to resume session once
-   * - user configured startup page to be the last-visited page
+   * Whether or not to resume session, if not recovering from a crash.
    * @returns bool
    */
   _doResumeSession: function sss_doResumeSession() {
-    return this._getPref("sessionstore.resume_session", DEFAULT_RESUME_SESSION) || 
-      this._getPref("sessionstore.resume_session_once", DEFAULT_RESUME_SESSION_ONCE) || 
-      this._getPref("startup.page", 1) == 2;
+    return this._getPref("startup.page", 1) == 3 ||
+      this._getPref("sessionstore.resume_session_once", DEFAULT_RESUME_SESSION_ONCE);
   },
 
   /**

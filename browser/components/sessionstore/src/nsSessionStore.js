@@ -89,9 +89,6 @@ const DEFAULT_POSTDATA = 0;
 // (0 = everywhere, 1 = unencrypted sites, 2 = nowhere)
 const DEFAULT_PRIVACY_LEVEL = PRIVACY_ENCRYPTED;
 
-// resume the current session at startup (otherwise just recover)
-const DEFAULT_RESUME_SESSION = false;
-
 // resume the current session at startup just this once
 const DEFAULT_RESUME_SESSION_ONCE = false;
 
@@ -1810,22 +1807,18 @@ SessionStoreService.prototype = {
   },
 
   /**
-   * Whether or not to resume session, if not recovering from a crash
-   * Returns true if:
-   * - pref is set to always resume sessions
-   * - pref is set to resume session once
-   * - user configured startup page to be the last-visited page
+   * Whether or not to resume session, if not recovering from a crash.
    * @returns bool
    */
   _doResumeSession: function sss_doResumeSession() {
-    return this._getPref("sessionstore.resume_session", DEFAULT_RESUME_SESSION)
-      || this._getPref("sessionstore.resume_session_once", DEFAULT_RESUME_SESSION_ONCE)
-      || this._getPref("startup.page", 1) == 2;
+    return this._getPref("startup.page", 1) == 3 ||
+      this._getPref("sessionstore.resume_session_once", DEFAULT_RESUME_SESSION_ONCE);
   },
 
   /**
    * whether the user wants to load any other page at startup
    * (except the homepage) - needed for determining whether to overwrite the current tabs
+   * C.f.: nsBrowserContentHandler's defaultArgs implementation.
    * @returns bool
    */
   _isCmdLineEmpty: function sss_isCmdLineEmpty(aWindow) {
@@ -1836,6 +1829,7 @@ SessionStoreService.prototype = {
     var homepage = null;
     switch (this._getPref("startup.page", 1)) {
     case 0:
+    case 3:
       homepage = "about:blank";
       break;
     case 1:
