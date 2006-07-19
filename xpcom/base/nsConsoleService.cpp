@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Simon Bünzli <zeniko@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -318,4 +319,24 @@ nsConsoleService::GetProxyForListener(nsIConsoleListener* aListener,
                                 aListener,
                                 NS_PROXY_ASYNC | NS_PROXY_ALWAYS,
                                 (void**) aProxy);
+}
+
+NS_IMETHODIMP
+nsConsoleService::Reset()
+{
+    /*
+     * Make sure nobody trips into the buffer while it's being reset
+     */
+    nsAutoLock lock(mLock);
+
+    mCurrent = 0;
+    mFull = PR_FALSE;
+
+    /*
+     * Free all messages stored so far (cf. destructor)
+     */
+    for (PRUint32 i = 0; i < mBufferSize && mMessages[i] != nsnull; i++)
+        NS_RELEASE(mMessages[i]);
+
+    return NS_OK;
 }

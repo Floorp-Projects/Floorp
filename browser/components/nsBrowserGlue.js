@@ -63,6 +63,13 @@ BrowserGlue.prototype = {
       case "final-ui-startup":
         this._onProfileStartup();
         break;
+      case "browser:purge-session-history":
+        // reset the console service's error buffer
+        const cs = Components.classes["@mozilla.org/consoleservice;1"]
+                             .getService(Components.interfaces.nsIConsoleService);
+        cs.logStringMessage(null); // clear the console (in case it's open)
+        cs.reset();
+        break;
     }
   }
 , 
@@ -75,6 +82,7 @@ BrowserGlue.prototype = {
     osvr.addObserver(this, "profile-change-teardown", false);
     osvr.addObserver(this, "xpcom-shutdown", false);
     osvr.addObserver(this, "final-ui-startup", false);
+    osvr.addObserver(this, "browser:purge-session-history", false);
   },
 
   // cleanup (called on application shutdown)
@@ -86,6 +94,7 @@ BrowserGlue.prototype = {
     osvr.removeObserver(this, "profile-change-teardown");
     osvr.removeObserver(this, "xpcom-shutdown");
     osvr.removeObserver(this, "final-ui-startup");
+    osvr.removeObserver(this, "browser:purge-session-history");
   },
 
   // profile startup handler (contains profile initialization routines)

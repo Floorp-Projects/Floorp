@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Simon Bünzli <zeniko@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -39,7 +40,7 @@
 #include "nsIConsoleListener.idl"
 #include "nsIConsoleMessage.idl"
 
-[scriptable, uuid(a647f184-1dd1-11b2-a9d1-8537b201161b)]
+[scriptable, uuid(883472a0-ea9b-11da-8ad9-0800200c9a66)]
 interface nsIConsoleService : nsISupports
 {
     void logMessage(in nsIConsoleMessage message);
@@ -70,7 +71,11 @@ interface nsIConsoleService : nsISupports
      * Each registered listener should also be unregistered.
      */
     void unregisterListener(in nsIConsoleListener listener);
-   
+
+    /**
+     * Clear the message buffer (e.g. for privacy reasons).
+     */
+    void reset();
 };
 
 
