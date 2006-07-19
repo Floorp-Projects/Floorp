@@ -63,7 +63,6 @@
 #include "nsIDocument.h"
 #include "nsIHTMLDocument.h"
 #include "nsIContent.h"
-#include "nsITextContent.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsHTMLAtoms.h"
@@ -1034,15 +1033,13 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
         pfd->SetFlag(PFD_ISNONEMPTYTEXTFRAME, PR_TRUE);
         nsIContent* content = pfd->mFrame->GetContent();
 
-        nsCOMPtr<nsITextContent> textContent
-          = do_QueryInterface(content);
-        if (textContent) {
+        const nsTextFragment* frag = content->GetText();
+        if (frag) {
           pfd->SetFlag(PFD_ISNONWHITESPACETEXTFRAME,
-                       !textContent->IsOnlyWhitespace());
+                       !content->TextIsOnlyWhitespace());
 // fix for bug 40882
 #ifdef IBMBIDI
           if (mPresContext->BidiEnabled()) {
-            const nsTextFragment* frag = textContent->Text();
             if (frag->Is2b()) {
               //PRBool isVisual;
               //mPresContext->IsVisualMode(isVisual);

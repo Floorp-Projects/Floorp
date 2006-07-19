@@ -86,7 +86,6 @@
 
 #include "nsICSSStyleSheet.h"
 #include "nsIDocumentStateListener.h"
-#include "nsITextContent.h"
 
 #include "nsIContent.h"
 #include "nsServiceManagerUtils.h"
@@ -3839,8 +3838,10 @@ nsEditor::IsEditable(nsIDOMNode *aNode)
     nsIFrame *resultFrame = shell->GetPrimaryFrameFor(content);
     if (!resultFrame)   // if it has no frame, it is not editable
       return PR_FALSE;
-    nsCOMPtr<nsITextContent> text(do_QueryInterface(content));
-    if (!text)
+    NS_ASSERTION(content->IsNodeOfType(nsINode::eTEXT) ||
+                 content->IsNodeOfType(nsINode::eELEMENT),
+                 "frame for non element-or-text?");
+    if (!content->IsNodeOfType(nsINode::eTEXT))
       return PR_TRUE;  // not a text node; has a frame
     if (resultFrame->GetStateBits() & NS_FRAME_IS_DIRTY) // we can only trust width data for undirty frames
     {
@@ -3874,17 +3875,6 @@ nsEditor::IsMozEditorBogusNode(nsIDOMNode *aNode)
   }
     
   return PR_FALSE;
-}
-
-PRBool
-nsEditor::IsEmptyTextContent(nsIContent* aContent)
-{
-  PRBool result = PR_FALSE;
-  nsCOMPtr<nsITextContent> tc(do_QueryInterface(aContent));
-  if (tc) {
-    result = tc->IsOnlyWhitespace();
-  }
-  return result;
 }
 
 nsresult

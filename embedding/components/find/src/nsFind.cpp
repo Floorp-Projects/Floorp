@@ -43,7 +43,6 @@ c-basic-offset: 2 -*- */
 #include "nsFind.h"
 #include "nsContentCID.h"
 #include "nsIEnumerator.h"
-#include "nsITextContent.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocumentRange.h"
@@ -505,11 +504,11 @@ static void DumpNode(nsIDOMNode* aNode)
   }
   nsAutoString nodeName;
   aNode->GetNodeName(nodeName);
-  nsCOMPtr<nsITextContent> textContent (do_QueryInterface(aNode));
+  nsCOMPtr<nsIContent> textContent (do_QueryInterface(aNode));
   if (textContent)
   {
     nsAutoString newText;
-    textContent->CopyText(newText);
+    textContent->AppendTextTo(newText);
     printf(">>>> Text node (node name %s): '%s'\n",
            NS_LossyConvertUTF16toASCII(nodeName).get(),
            NS_LossyConvertUTF16toASCII(newText).get());
@@ -634,7 +633,6 @@ nsFind::NextNode(nsIDOMRange* aSearchRange,
   nsresult rv;
 
   nsIContent *content = nsnull;
-  nsCOMPtr<nsITextContent> tc;
 
   if (!mIterator || aContinueOk)
   {
@@ -701,8 +699,7 @@ nsFind::NextNode(nsIDOMRange* aSearchRange,
     nsCOMPtr<nsIDOMNode> dnode (do_QueryInterface(content));
     printf(":::::: Got the first node "); DumpNode(dnode);
 #endif
-    tc = do_QueryInterface(content);
-    if (tc && !SkipNode(content))
+    if (content->IsNodeOfType(nsINode::eTEXT) && !SkipNode(content))
     {
       mIterNode = do_QueryInterface(content);
       // Also set mIterOffset if appropriate:
@@ -760,8 +757,7 @@ nsFind::NextNode(nsIDOMRange* aSearchRange,
     if (SkipNode(content))
       continue;
 
-    tc = do_QueryInterface(content);
-    if (tc)
+    if (content->IsNodeOfType(nsINode::eTEXT))
       break;
 #ifdef DEBUG_FIND
     dnode = do_QueryInterface(content);
@@ -808,11 +804,11 @@ PRBool nsFind::IsBlockNode(nsIContent* aContent)
 
 PRBool nsFind::IsTextNode(nsIDOMNode* aNode)
 {
-  // Can't just QI for nsITextContent, because nsCommentNode
-  // also implements that interface.
-  nsCOMPtr<nsIContent> content (do_QueryInterface(aNode));
+  PRUint16 nodeType;
+  aNode->GetNodeType(&nodeType);
 
-  return content && content->IsNodeOfType(nsINode::eTEXT);
+  return nodeType == nsIDOMNode::TEXT_NODE ||
+         nodeType == nsIDOMNode::CDATA_SECTION_NODE;
 }
 
 PRBool nsFind::IsVisibleNode(nsIDOMNode *aDOMNode)
@@ -963,7 +959,7 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
   // Direction to move pindex and ptr*
   int incr = (mFindBackward ? -1 : 1);
 
-  nsCOMPtr<nsITextContent> tc;
+  nsCOMPtr<nsIContent> tc;
   const nsTextFragment *frag = nsnull;
   PRInt32 fragLen = 0;
 
@@ -1038,15 +1034,13 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
  
       // Get the text content:
       tc = do_QueryInterface(mIterNode);
-      if (!tc)         // Out of nodes
+      if (!tc || !(frag = tc->GetText())) // Out of nodes
       {
         mIterator = nsnull;
         mLastBlockParent = 0;
         ResetAll();
         return NS_OK;
       }
-
-      frag = tc->Text();
 
       fragLen = frag->GetLength();
 

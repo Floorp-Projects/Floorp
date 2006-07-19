@@ -76,6 +76,10 @@ public:
   // nsIDOMDocumentType
   NS_DECL_NSIDOMDOCUMENTTYPE
 
+  // nsIContent overrides
+  virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
+  virtual const nsTextFragment* GetText();
+
 protected:
   nsCOMPtr<nsIAtom> mName;
   nsCOMPtr<nsIDOMNamedNodeMap> mEntities;

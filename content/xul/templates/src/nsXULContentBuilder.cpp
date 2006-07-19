@@ -46,7 +46,6 @@
 #include "nsIDOMXULDocument.h"
 #include "nsINodeInfo.h"
 #include "nsIServiceManager.h"
-#include "nsITextContent.h"
 #include "nsIXULDocument.h"
 
 #include "nsContentSupportMap.h"
@@ -746,7 +745,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 rv = SubstituteText(aChild, attrValue, value);
                 if (NS_FAILED(rv)) return rv;
 
-                nsCOMPtr<nsITextContent> content;
+                nsCOMPtr<nsIContent> content;
                 rv = NS_NewTextNode(getter_AddRefs(content),
                                     mRoot->NodeInfo()->NodeInfoManager());
                 if (NS_FAILED(rv)) return rv;
@@ -1051,9 +1050,7 @@ nsXULContentBuilder::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
                     nsAutoString value;
                     rv = SubstituteText(aResult, attrValue, value);
                     if (NS_FAILED(rv)) return rv;
-                    nsCOMPtr<nsITextContent> textcontent = do_QueryInterface(realKid);
-                    if (textcontent)
-                        textcontent->SetText(value, PR_TRUE);
+                    realKid->SetText(value, PR_TRUE);
                 }
             }
 

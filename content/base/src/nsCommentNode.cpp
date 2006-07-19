@@ -113,7 +113,6 @@ nsCommentNode::~nsCommentNode()
 
 // QueryInterface implementation for nsCommentNode
 NS_INTERFACE_MAP_BEGIN(nsCommentNode)
-  NS_INTERFACE_MAP_ENTRY(nsITextContent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCharacterData)
   NS_INTERFACE_MAP_ENTRY(nsIDOMComment)
@@ -135,7 +134,7 @@ nsCommentNode::MayHaveFrame() const
 PRBool
 nsCommentNode::IsNodeOfType(PRUint32 aFlags) const
 {
-  return !(aFlags & ~(eCONTENT | eCOMMENT));
+  return !(aFlags & ~(eCONTENT | eCOMMENT | eDATA_NODE));
 }
 
 NS_IMETHODIMP

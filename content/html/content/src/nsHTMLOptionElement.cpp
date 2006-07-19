@@ -49,7 +49,6 @@
 #include "nsIFormControl.h"
 #include "nsIForm.h"
 #include "nsIDOMText.h"
-#include "nsITextContent.h"
 #include "nsIDOMNode.h"
 #include "nsGenericElement.h"
 #include "nsIDOMHTMLCollection.h"
@@ -69,6 +68,7 @@
 #include "nsIEventStateManager.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsContentCreatorFunctions.h"
 
 /**
  * Implementation of &lt;option&gt;
@@ -414,7 +414,7 @@ nsHTMLOptionElement::SetText(const nsAString& aText)
   }
 
   if (!usedExistingTextNode) {
-    nsCOMPtr<nsITextContent> text;
+    nsCOMPtr<nsIContent> text;
     rv = NS_NewTextNode(getter_AddRefs(text), mNodeInfo->NodeInfoManager());
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -525,7 +525,7 @@ nsHTMLOptionElement::Initialize(JSContext* aContext,
     JSString* jsstr = JS_ValueToString(aContext, argv[0]);
     if (jsstr) {
       // Create a new text node and append it to the option
-      nsCOMPtr<nsITextContent> textContent;
+      nsCOMPtr<nsIContent> textContent;
       result = NS_NewTextNode(getter_AddRefs(textContent),
                               mNodeInfo->NodeInfoManager());
       if (NS_FAILED(result)) {

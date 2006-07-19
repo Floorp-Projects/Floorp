@@ -45,7 +45,6 @@
 #include "nsLineLayout.h"
 #include "prprf.h"
 #include "nsBlockFrame.h"
-#include "nsITextContent.h"
 #include "nsLayoutAtoms.h"
 #include "nsFrameManager.h"
 #ifdef IBMBIDI

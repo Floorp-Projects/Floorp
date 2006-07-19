@@ -54,7 +54,6 @@ class nsIHTMLContentSink;
 class nsIFragmentContentSink;
 class nsPresContext;
 class nsStyleContext;
-class nsITextContent;
 class nsIURI;
 class nsString;
 class nsIPresShell;

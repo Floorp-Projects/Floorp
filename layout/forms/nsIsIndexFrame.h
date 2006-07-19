@@ -117,7 +117,7 @@ public:
   NS_IMETHOD RestoreState(nsPresState* aState);
 
 protected:
-  nsCOMPtr<nsITextContent> mTextContent;
+  nsCOMPtr<nsIContent> mTextContent;
   nsCOMPtr<nsIContent> mInputContent;
 
 private:

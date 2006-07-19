@@ -55,7 +55,6 @@
 #include "nsDOMAttributeMap.h"
 
 class nsDOMAttribute;
-class nsITextContent;
 
 // bogus child list for an attribute
 class nsAttributeChildList : public nsGenericDOMNodeList
@@ -134,7 +133,7 @@ private:
   nsString mValue;
   // XXX For now, there's only a single child - a text
   // element representing the value
-  nsCOMPtr<nsITextContent> mChild;
+  nsCOMPtr<nsIContent> mChild;
   nsAttributeChildList* mChildList;
 
   nsIContent *GetContentInternal() const

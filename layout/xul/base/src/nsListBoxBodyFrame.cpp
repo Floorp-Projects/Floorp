@@ -48,7 +48,6 @@
 #include "nsXULAtoms.h"
 #include "nsHTMLAtoms.h"
 #include "nsIContent.h"
-#include "nsITextContent.h"
 #include "nsINameSpaceManager.h"
 #include "nsIDocument.h"
 #include "nsIBindingManager.h"
@@ -802,9 +801,7 @@ nsListBoxBodyFrame::ComputeIntrinsicWidth(nsBoxLayoutState& aBoxLayoutState)
           nsAutoString value;
           PRUint32 textCount = child->GetChildCount();
           for (PRUint32 j = 0; j < textCount; ++j) {
-            nsCOMPtr<nsITextContent> text =
-              do_QueryInterface(child->GetChildAt(j));
-
+            nsIContent* text = child->GetChildAt(j);
             if (text && text->IsNodeOfType(nsINode::eTEXT)) {
               text->AppendTextTo(value);
             }

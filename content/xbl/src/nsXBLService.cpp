@@ -62,7 +62,6 @@
 #include "nsContentCID.h"
 #include "nsXMLDocument.h"
 #include "nsHTMLAtoms.h"
-#include "nsITextContent.h"
 #include "nsIMemory.h"
 #include "nsIObserverService.h"
 #include "nsIDOMNodeList.h"

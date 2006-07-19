@@ -51,7 +51,7 @@
 #include "nsParserCIID.h"
 #include "nsNetUtil.h"
 #include "plstr.h"
-#include "nsITextContent.h"
+#include "nsContentCreatorFunctions.h"
 #include "nsIDocument.h"
 #include "nsIXMLContentSink.h"
 #include "nsContentCID.h"
@@ -516,7 +516,7 @@ nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute,
           nsAutoString value;
           aChangedElement->GetAttr(aNameSpaceID, aAttribute, value);
           if (!value.IsEmpty()) {
-            nsCOMPtr<nsITextContent> textContent;
+            nsCOMPtr<nsIContent> textContent;
             NS_NewTextNode(getter_AddRefs(textContent),
                            realElement->NodeInfo()->NodeInfoManager());
             if (!textContent) {
@@ -884,7 +884,7 @@ PRBool PR_CALLBACK SetAttrs(nsHashKey* aKey, void* aData, void* aClosure)
                                              kNameSpaceID_XUL) &&
              dst == nsHTMLAtoms::value && !value.IsEmpty())) {
 
-          nsCOMPtr<nsITextContent> textContent;
+          nsCOMPtr<nsIContent> textContent;
           NS_NewTextNode(getter_AddRefs(textContent),
                          realElement->NodeInfo()->NodeInfoManager());
           if (!textContent) {

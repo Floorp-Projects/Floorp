@@ -66,7 +66,6 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsCSSAnonBoxes.h"
-#include "nsITextContent.h"
 #include "nsRuleWalker.h"
 #include "nsRuleData.h"
 #include "nsContentErrors.h"

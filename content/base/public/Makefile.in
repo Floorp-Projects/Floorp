@@ -63,7 +63,6 @@ nsINodeInfo.h \
 nsIRangeUtils.h \
 nsIScriptElement.h \
 nsIStyleSheetLinkingElement.h \
-nsITextContent.h \
 nsIPrivateDOMImplementation.h \
 nsIContentSerializer.h \
 nsIHTMLToTextSink.h \

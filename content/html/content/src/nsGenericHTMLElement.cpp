@@ -135,7 +135,6 @@
 #include "nsContentCID.h"
 
 #include "nsIDOMText.h"
-#include "nsITextContent.h"
 #include "nsCOMArray.h"
 #include "nsNodeInfoManager.h"
 
@@ -143,6 +142,7 @@
 #include "nsIEditorIMESupport.h"
 #include "nsEventDispatcher.h"
 #include "nsLayoutUtils.h"
+#include "nsContentCreatorFunctions.h"
 
 // XXX todo: add in missing out-of-memory checks
 
@@ -2735,7 +2735,7 @@ nsGenericHTMLElement::ReplaceContentsWithText(const nsAString& aText,
   if (textChild) {
     rv = textChild->SetData(aText);
   } else {
-    nsCOMPtr<nsITextContent> text;
+    nsCOMPtr<nsIContent> text;
     rv = NS_NewTextNode(getter_AddRefs(text), mNodeInfo->NodeInfoManager());
     NS_ENSURE_SUCCESS(rv, rv);
 

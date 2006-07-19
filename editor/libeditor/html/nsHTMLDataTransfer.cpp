@@ -1059,7 +1059,7 @@ nsHTMLEditor::StripFormattingNodes(nsIDOMNode *aNode, PRBool aListOnly)
 
   nsresult res = NS_OK;
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-  if (IsEmptyTextContent(content))
+  if (content->TextIsOnlyWhitespace())
   {
     nsCOMPtr<nsIDOMNode> parent, ignored;
     aNode->GetParentNode(getter_AddRefs(parent));

@@ -60,7 +60,6 @@
 #include "nsIRollupListener.h"
 #include "nsPresState.h"
 #include "nsCSSFrameConstructor.h"
-#include "nsITextContent.h"
 #include "nsIScrollableViewProvider.h"
 #include "nsIStatefulFrame.h"
 #include "nsIDOMMouseListener.h"
@@ -240,7 +239,7 @@ protected:
                       PRBool                   aCheckHeight = PR_FALSE);
 
   nsFrameList              mPopupFrames;             // additional named child list
-  nsCOMPtr<nsITextContent> mDisplayContent;          // Anonymous content used to display the current selection
+  nsCOMPtr<nsIContent>     mDisplayContent;          // Anonymous content used to display the current selection
   nsIFrame*                mDisplayFrame;            // frame to display selection
   nsIFrame*                mButtonFrame;             // button frame
   nsIFrame*                mDropdownFrame;           // dropdown list frame

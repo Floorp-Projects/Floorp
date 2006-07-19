@@ -54,7 +54,6 @@
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
-#include "nsITextContent.h"
 #include "nsTextFragment.h"
 #include "nsString.h"
 #include "prprf.h"
@@ -108,10 +107,11 @@ nsXMLContentSerializer::AppendTextData(nsIDOMNode* aNode,
                                        PRBool aTranslateEntities,
                                        PRBool aIncrColumn)
 {
-  nsCOMPtr<nsITextContent> content(do_QueryInterface(aNode));
-  if (!content) return NS_ERROR_FAILURE;
-
-  const nsTextFragment* frag = content->Text();
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
+  const nsTextFragment* frag;
+  if (!content || !(frag = content->GetText())) {
+    return NS_ERROR_FAILURE;
+  }
 
   PRInt32 endoffset = (aEndOffset == -1) ? frag->GetLength() : aEndOffset;
   PRInt32 length = endoffset - aStartOffset;

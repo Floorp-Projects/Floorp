@@ -107,7 +107,6 @@
 #include "nsIDOMNodeList.h" //for selection setting helper func
 #include "nsIDOMRange.h" //for selection setting helper func
 #include "nsPIDOMWindow.h" //needed for notify selection changed to update the menus ect.
-#include "nsITextContent.h" //needed to create initial text control content
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
 #endif

@@ -64,7 +64,6 @@
 #include "nsITableLayout.h"
 #include "nsITableCellLayout.h"
 #include "nsIDOMNodeList.h"
-#include "nsITextContent.h"
 
 #include "nsISelectionListener.h"
 #include "nsIContentIterator.h"

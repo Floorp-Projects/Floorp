@@ -497,9 +497,6 @@ public:
   /** returns PR_TRUE if aNode is a MozEditorBogus node */
   PRBool IsMozEditorBogusNode(nsIDOMNode *aNode);
 
-  /** returns PR_TRUE if content is an merely formatting whitespacce */
-  PRBool IsEmptyTextContent(nsIContent* aContent);
-
   /** counts number of editable child nodes */
   nsresult CountEditableChildren(nsIDOMNode *aNode, PRUint32 &outCount);
   

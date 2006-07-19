@@ -42,7 +42,6 @@
 #include "nsHTMLButtonControlFrame.h"
 #include "nsCOMPtr.h"
 #include "nsIAnonymousContentCreator.h"
-#include "nsITextContent.h"
 
 #ifdef ACCESSIBILITY
 class nsIAccessible;
@@ -115,7 +114,7 @@ private:
   NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
 
   nsSize mSuggestedSize;
-  nsCOMPtr<nsITextContent> mTextContent;
+  nsCOMPtr<nsIContent> mTextContent;
 };
 
 

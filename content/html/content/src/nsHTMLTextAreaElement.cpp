@@ -70,7 +70,6 @@
 #include "nsPresState.h"
 #include "nsIDOMText.h"
 #include "nsReadableUtils.h"
-#include "nsITextContent.h"
 #include "nsEventDispatcher.h"
 #include "nsLayoutUtils.h"
 

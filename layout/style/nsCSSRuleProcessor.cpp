@@ -67,7 +67,7 @@
 #include "nsDOMError.h"
 #include "nsRuleWalker.h"
 #include "nsCSSPseudoClasses.h"
-#include "nsITextContent.h"
+#include "nsIContent.h"
 #include "nsCOMPtr.h"
 #include "nsHashKeys.h"
 #include "nsStyleUtil.h"
@@ -931,19 +931,9 @@ static PRBool IsSignificantChild(nsIContent* aChild, PRBool aTextIsSignificant, 
     return PR_TRUE;
   }
 
-  if (aTextIsSignificant && isText) {
-    if (!aWhitespaceIsSignificant) {
-       nsCOMPtr<nsITextContent> text = do_QueryInterface(aChild);
-      
-       if (text && !text->IsOnlyWhitespace())
-         return PR_TRUE;
-    }
-    else {
-      return PR_TRUE;
-    }
-  }
-
-  return PR_FALSE;
+  return aTextIsSignificant && isText &&
+         (aWhitespaceIsSignificant ||
+          !aChild->TextIsOnlyWhitespace());
 }
 
 // This function is to be called once we have fetched a value for an attribute

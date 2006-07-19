@@ -69,7 +69,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsIRDFService.h"
 #include "nsIServiceManager.h"
-#include "nsITextContent.h"
 #include "nsIURL.h"
 #include "nsXULContentUtils.h"
 #include "nsIXULPrototypeCache.h"

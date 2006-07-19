@@ -70,7 +70,6 @@
 #include "nsGenericHTMLElement.h"
 #include "prprf.h"
 #include "nsLayoutAtoms.h"
-#include "nsITextContent.h"
 #include "nsStyleChangeList.h"
 #include "nsFrameSelection.h"
 #include "nsSpaceManager.h"

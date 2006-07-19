@@ -49,7 +49,6 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsVoidArray.h"
-#include "nsITextContent.h"
 #include "nsINameSpaceManager.h"
 #include "nsIDocument.h"
 #include "nsINodeInfo.h"
@@ -725,7 +724,7 @@ nsHTMLFragmentContentSink::AddTextToContent(nsIContent* aContent, const nsAStrin
 
   if(aContent) {
     if (!aText.IsEmpty()) {
-      nsCOMPtr<nsITextContent> text;
+      nsCOMPtr<nsIContent> text;
       result = NS_NewTextNode(getter_AddRefs(text), mNodeInfoManager);
       if (NS_SUCCEEDED(result)) {
         text->SetText(aText, PR_TRUE);
@@ -744,7 +743,7 @@ nsHTMLFragmentContentSink::FlushText()
     return NS_OK;
   }
 
-  nsCOMPtr<nsITextContent> content;
+  nsCOMPtr<nsIContent> content;
   nsresult rv = NS_NewTextNode(getter_AddRefs(content), mNodeInfoManager);
   NS_ENSURE_SUCCESS(rv, rv);
 

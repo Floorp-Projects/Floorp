@@ -41,7 +41,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMNode.h"
 #include "nsCOMArray.h"
-#include "nsITextContent.h"
+#include "nsIContent.h"
 #include "nsIEditor.h"
 #include "nsEditorUtils.h"
 
@@ -228,14 +228,21 @@ class nsWSRunObject
     // stored in the struct.
     struct WSPoint
     {
-      nsCOMPtr<nsITextContent> mTextNode;
+      nsCOMPtr<nsIContent> mTextNode;
       PRInt16 mOffset;
       PRUnichar mChar;
       
       WSPoint() : mTextNode(0),mOffset(0),mChar(0) {}
       WSPoint(nsIDOMNode *aNode, PRInt32 aOffset, PRUnichar aChar) : 
-                     mTextNode(do_QueryInterface(aNode)),mOffset(aOffset),mChar(aChar) {}
-      WSPoint(nsITextContent *aTextNode, PRInt32 aOffset, PRUnichar aChar) : 
+                     mTextNode(do_QueryInterface(aNode)),mOffset(aOffset),mChar(aChar)
+      {
+        if (!mTextNode->IsNodeOfType(nsINode::eDATA_NODE)) {
+          // Not sure if this is needed, but it'll maintain the same
+          // functionality
+          mTextNode = nsnull;
+        }
+      }
+      WSPoint(nsIContent *aTextNode, PRInt32 aOffset, PRUnichar aChar) : 
                      mTextNode(aTextNode),mOffset(aOffset),mChar(aChar) {}
     };    
 
@@ -287,7 +294,7 @@ class nsWSRunObject
                                 nsCOMPtr<nsIDOMNode> *outStartNode, PRInt32 *outStartOffset,
                                 nsCOMPtr<nsIDOMNode> *outEndNode, PRInt32 *outEndOffset);
     nsresult FindRun(nsIDOMNode *aNode, PRInt32 aOffset, WSFragment **outRun, PRBool after);
-    PRUnichar GetCharAt(nsITextContent *aTextNode, PRInt32 aOffset);
+    PRUnichar GetCharAt(nsIContent *aTextNode, PRInt32 aOffset);
     nsresult GetWSPointAfter(nsIDOMNode *aNode, PRInt32 aOffset, WSPoint *outPoint);
     nsresult GetWSPointBefore(nsIDOMNode *aNode, PRInt32 aOffset, WSPoint *outPoint);
     nsresult CheckTrailingNBSPOfRun(WSFragment *aRun);

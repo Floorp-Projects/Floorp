@@ -366,6 +366,17 @@ public:
                              PRBool aNotify);
   virtual const nsAttrName* GetAttrNameAt(PRUint32 aIndex) const;
   virtual PRUint32 GetAttrCount() const;
+  virtual const nsTextFragment *GetText();
+  virtual PRUint32 TextLength();
+  virtual nsresult SetText(const PRUnichar* aBuffer, PRUint32 aLength,
+                           PRBool aNotify);
+  // Need to implement this here too to avoid hiding.
+  nsresult SetText(const nsAString& aStr, PRBool aNotify)
+  {
+    return SetText(aStr.BeginReading(), aStr.Length(), aNotify);
+  }
+  virtual PRBool TextIsOnlyWhitespace();
+  virtual void AppendTextTo(nsAString& aResult);
   virtual void SetFocus(nsPresContext* aContext);
   virtual nsIContent *GetBindingParent() const;
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
