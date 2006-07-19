@@ -31,26 +31,44 @@
   }
 
 /* Vertical enabled */
-.autorepeatbutton-up,
+.autorepeatbutton-up
+ {
+   list-style-image      : url("chrome://global/skin/scrollbox/autorepeat-arrow-up.gif");
+   padding-bottom: 5px;
+ }
+
+.autorepeatbutton-down
+ {
+   list-style-image     : url("chrome://global/skin/scrollbox/autorepeat-arrow-dn.gif");
+   padding-top: 5px;
+ }
+
 .scrollbutton-up
  {
    list-style-image      : url("chrome://global/skin/arrow/arrow-up-sharp.gif");
  }
- 
-.autorepeatbutton-down,
+
 .scrollbutton-down
   {
     list-style-image     : url("chrome://global/skin/arrow/arrow-dn-sharp.gif");
   }
 
 /* Vertical disabled */
-.autorepeatbutton-up[disabled="true"],
+.autorepeatbutton-up[disabled="true"]
+ {
+   list-style-image      : url("chrome://global/skin/scrollbox/autorepeat-arrow-up-dis.gif");
+ }
+
+.autorepeatbutton-down[disabled="true"]
+ {
+   list-style-image      : url("chrome://global/skin/scrollbox/autorepeat-arrow-dn-dis.gif");
+ }
+
 .scrollbutton-up[disabled="true"]
  {
    list-style-image      : url("chrome://global/skin/arrow/arrow-up-dis.gif");
  }
- 
-.autorepeatbutton-down[disabled="true"],
+
 .scrollbutton-down[disabled="true"]
   {
     list-style-image     : url("chrome://global/skin/arrow/arrow-dn-dis.gif");
@@ -61,6 +79,6 @@ autorepeatbutton
   {
     -moz-box-align       : center;
     -moz-box-pack        : center;
-    margin               : 1px 2px 2px 1px;
-    padding              : 4px;
+    padding: 1px;
+    margin: 1px 2px;
   }
