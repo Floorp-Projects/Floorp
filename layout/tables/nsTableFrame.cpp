@@ -1073,8 +1073,10 @@ void nsTableFrame::RemoveCell(nsTableCellFrame* aCellFrame,
         cellMap->AddColsAtEnd(numColsNotRemoved);
       }
     }
-    else NS_ASSERTION(numColsInCache == numColsInMap, "cell map has too many cols");
-
+    else if (numColsInCache < numColsInMap) {
+      // this sets the child list, updates the col cache and cell map
+      CreateAnonymousColFrames(numColsInMap - numColsInCache, eColAnonymousCell, PR_TRUE);
+    }
     if (IsBorderCollapse()) {
       SetBCDamageArea(damageArea);
     }
