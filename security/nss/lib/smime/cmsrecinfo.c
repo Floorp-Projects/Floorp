@@ -37,7 +37,7 @@
 /*
  * CMS recipientInfo methods.
  *
- * $Id: cmsrecinfo.c,v 1.18 2006/03/03 04:00:49 nelson%bolyard.com Exp $
+ * $Id: cmsrecinfo.c,v 1.19 2006/07/19 00:36:38 nelson%bolyard.com Exp $
  */
 
 #include "cmslocal.h"
@@ -189,24 +189,6 @@ nss_cmsrecipientinfo_create(NSSCMSMessage *cmsg,
 	} else {
 	    PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	    rv = SECFailure;
-	}
-	break;
-    case SEC_OID_MISSI_KEA_DSS_OLD:
-    case SEC_OID_MISSI_KEA_DSS:
-    case SEC_OID_MISSI_KEA:
-	PORT_Assert(type == NSSCMSRecipientID_IssuerSN);
-	if (type != NSSCMSRecipientID_IssuerSN) {
-	    rv = SECFailure;
-	    break;
-	}
-	/* backward compatibility - this is not really a keytrans operation */
-	ri->recipientInfoType = NSSCMSRecipientInfoID_KeyTrans;
-	/* hardcoded issuerSN choice for now */
-	ri->ri.keyTransRecipientInfo.recipientIdentifier.identifierType = NSSCMSRecipientID_IssuerSN;
-	ri->ri.keyTransRecipientInfo.recipientIdentifier.id.issuerAndSN = CERT_GetCertIssuerAndSN(poolp, cert);
-	if (ri->ri.keyTransRecipientInfo.recipientIdentifier.id.issuerAndSN == NULL) {
-	    rv = SECFailure;
-	    break;
 	}
 	break;
     case SEC_OID_X942_DIFFIE_HELMAN_KEY: /* dh-public-number */
@@ -533,20 +515,6 @@ NSS_CMSRecipientInfo_WrapBulkKey(NSSCMSRecipientInfo *ri, PK11SymKey *bulkkey,
 	}
 
 	rv = SECOID_SetAlgorithmID(poolp, &(ri->ri.keyTransRecipientInfo.keyEncAlg), certalgtag, NULL);
-	break;
-    case SEC_OID_MISSI_KEA_DSS_OLD:
-    case SEC_OID_MISSI_KEA_DSS:
-    case SEC_OID_MISSI_KEA:
-	rv = NSS_CMSUtil_EncryptSymKey_MISSI(poolp, cert, bulkkey,
-					bulkalgtag,
-					&ri->ri.keyTransRecipientInfo.encKey,
-					&params, ri->cmsg->pwfn_arg);
-	if (rv != SECSuccess)
-	    break;
-
-	/* here, we DO need to pass the params to the wrap function because, with
-	 * RSA, there is no funny stuff going on with generation of IV vectors or so */
-	rv = SECOID_SetAlgorithmID(poolp, &(ri->ri.keyTransRecipientInfo.keyEncAlg), certalgtag, params);
 	break;
     case SEC_OID_X942_DIFFIE_HELMAN_KEY: /* dh-public-number */
 	rek = ri->ri.keyAgreeRecipientInfo.recipientEncryptedKeys[0];
