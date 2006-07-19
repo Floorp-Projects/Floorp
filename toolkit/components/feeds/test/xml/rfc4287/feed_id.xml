@@ -2,7 +2,7 @@
 <!--
 
 Description: atom author name works
-Expect: feed.fields.getProperty('atom:id') == 'urn:uuid:60a76c80-d399-11d9-b93C-0003939e0af6'
+Expect: feed.fields.getProperty('atom:id') == 'urn:uuid:60a76c80-d399-11d9-b93C-0003939e0af6' && feed.id == 'urn:uuid:60a76c80-d399-11d9-b93C-0003939e0af6'
 
 -->
 
