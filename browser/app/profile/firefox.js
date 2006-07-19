@@ -476,13 +476,13 @@ pref("browser.safebrowsing.enabled", true);
 pref("browser.safebrowsing.remoteLookups", false);
 
 // Non-enhanced mode (local url lists) URL list to check for updates
-pref("browser.safebrowsing.provider.0.updateURL", "http://sb.google.com/safebrowsing/update?");
+pref("browser.safebrowsing.provider.0.updateURL", "http://sb.google.com/safebrowsing/update?client=navclient-auto-ffox2&");
 
 pref("browser.safebrowsing.dataProvider", 0);
 
 // Does the provider name need to be localizable?
 pref("browser.safebrowsing.provider.0.name", "Google");
-pref("browser.safebrowsing.provider.0.lookupURL", "http://sb.google.com/safebrowsing/lookup?");
+pref("browser.safebrowsing.provider.0.lookupURL", "http://sb.google.com/safebrowsing/lookup?sourceid=firefox-antiphish&features=TrustRank&client=navclient-auto-ffox2&");
 pref("browser.safebrowsing.provider.0.keyURL", "https://www.google.com/safebrowsing/getkey?");
 pref("browser.safebrowsing.provider.0.reportURL", "http://sb.google.com/safebrowsing/report?");
 
