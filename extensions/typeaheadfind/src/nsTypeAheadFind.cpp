@@ -1597,7 +1597,7 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
     }
   }
   else if (startOffset > 0) {
-    const nsTextFragment *textFrag = textContent->GetText();
+    const nsTextFragment *textFrag = startContent->GetText();
     if (textFrag) {
       // look for non whitespace character before start offset
       for (PRInt32 index = 0; index < startOffset; index++) {
