@@ -94,6 +94,9 @@ nsSVGMarkerFrame::~nsSVGMarkerFrame()
 NS_IMETHODIMP
 nsSVGMarkerFrame::InitSVG()
 {
+  nsresult rv = nsSVGMarkerFrameBase::InitSVG();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsIDOMSVGMarkerElement> marker = do_QueryInterface(mContent);
   NS_ASSERTION(marker, "wrong content element");
 
