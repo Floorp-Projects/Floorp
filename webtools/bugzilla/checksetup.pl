@@ -303,12 +303,12 @@ if ( (!$have_mod{'GD'} || !$have_mod{'GD::Graph'}
 if (!$have_mod{'PatchReader'} && !$silent) {
     print "If you want to see pretty HTML views of patches, you should ";
     print "install the \nPatchReader module:\n";
-    print "PatchReader: " . install_command("PatchReader") . "\n";
+    print "PatchReader: " . install_command("PatchReader") . "\n\n";
 }
 if (!$have_mod{'Net::LDAP'} && !$silent) {
     print "If you wish to use LDAP authentication, then you must",
           " install Net::LDAP:\n",
-          "Net::LDAP: " . install_command('Net::LDAP') . "\n";
+          "Net::LDAP: " . install_command('Net::LDAP') . "\n\n";
 }
 
 if (!$have_one_dbd) {
