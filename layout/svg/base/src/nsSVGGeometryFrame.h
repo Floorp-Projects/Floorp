@@ -59,6 +59,7 @@ class nsSVGGeometryFrame : public nsSVGGeometryFrameBase,
 {
 public:
   nsSVGGeometryFrame(nsStyleContext *aContext);
+  virtual void Destroy();
 
   // nsIFrame interface:
   NS_IMETHOD DidSetStyleContext();
@@ -111,6 +112,7 @@ protected:
 private:
   nsresult GetStrokeDashArray(double **arr, PRUint32 *count);
   float GetStrokeDashoffset();
+  void RemovePaintServerProperties();
 };
 
 #endif // __NS_SVGGEOMETRYFRAME_H__
