@@ -752,11 +752,12 @@ nsJSChannel::OnStopRequest(nsIRequest* aRequest,
                            nsISupports* aContext,
                            nsresult aStatus)
 {
+    NS_ENSURE_TRUE(aRequest == mStreamChannel, NS_ERROR_UNEXPECTED);
+
     // Make sure to drop our ref to mListener
     nsCOMPtr<nsIStreamListener> listener;
     listener.swap(mListener);
     
-    NS_ENSURE_TRUE(aRequest == mStreamChannel, NS_ERROR_UNEXPECTED);
     return listener->OnStopRequest(this, aContext, aStatus);
 }
 
