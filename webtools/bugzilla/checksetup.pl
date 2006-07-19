@@ -242,14 +242,12 @@ foreach my $db (keys %$db_modules) {
 }
 
 print "\nThe following Perl modules are optional:\n" unless $silent;
-my $gd          = have_vers("GD","1.20", $silent);
-my $chartbase   = have_vers("Chart::Base","1.0", $silent);
-my $xmlparser   = have_vers("XML::Twig",0, $silent);
-my $lwp_ua      = have_vers("LWP::UserAgent",0, $silent);
-my $gdgraph     = have_vers("GD::Graph",0, $silent);
-my $gdtextalign = have_vers("GD::Text::Align",0, $silent);
-my $patchreader = have_vers("PatchReader","0.9.4", $silent);
-my $imagemagick = have_vers("Image::Magick",0, $silent);
+my $opt_modules = OPTIONAL_MODULES;
+my %have_mod;
+foreach my $module (@$opt_modules) {
+    $have_mod{$module->{name}} = 
+        have_vers($module->{name}, $module->{version}, $silent);
+}
 
 print "\n" unless $silent;
 
@@ -260,27 +258,28 @@ if ($^O =~ /MSWin32/i && !$silent) {
     print "    ppm rep add bugzilla http://landfill.bugzilla.org/ppm/\n\n";
 }
 
-if ((!$gd || !$chartbase) && !$silent) {
+if ((!$have_mod{'GD'} || !$have_mod{'Chart::Base'}) && !$silent) {
     print "If you you want to see graphical bug charts (plotting historical ";
     print "data over \ntime), you should install libgd and the following Perl ";
     print "modules:\n\n";
-    print "GD:          " . install_command("GD") ."\n" if !$gd;
-    print "Chart:       " . install_command("Chart::Base") . "\n" if !$chartbase;
+    print "GD:          " . install_command("GD") ."\n" if !$have_mod{'GD'};
+    print "Chart:       " . install_command("Chart::Base") . "\n" 
+        if !$have_mod{'Chart::Base'};
     print "\n";
 }
-if (!$xmlparser && !$silent) {
+if (!$have_mod{'XML::Twig'} && !$silent) {
     print "If you want to use the bug import/export feature to move bugs to\n",
           "or from other bugzilla installations, you will need to install\n",
           "the XML::Twig module by running (as $::root):\n\n",
     "   " . install_command("XML::Twig") . "\n\n";
 }
-if (!$lwp_ua && !$silent) {
+if (!$have_mod{'LWP::UserAgent'} && !$silent) {
     print "If you want to use the automatic update notification feature\n",
           "you will need to install the LWP::UserAgent module by running\n",
           "(as $::root):\n\n",
     "   " . install_command("LWP::UserAgent") . "\n\n";
 }
-if (!$imagemagick && !$silent) {
+if (!$have_mod{'Image::Magick'} && !$silent) {
     print "If you want to convert BMP image attachments to PNG to conserve\n",
           "disk space, you will need to install the ImageMagick application\n",
           "Available from http://www.imagemagick.org, and the Image::Magick\n",
@@ -288,21 +287,28 @@ if (!$imagemagick && !$silent) {
     "   " . install_command("Image::Magick") . "\n\n";
 
 }
-if ((!$gd || !$gdgraph || !$gdtextalign) && !$silent) {
-    print "If you you want to see graphical bug reports (bar, pie and line ";
+if ( (!$have_mod{'GD'} || !$have_mod{'GD::Graph'} 
+      || !$have_mod{'GD::Text::Align'}) && !$silent)
+{
+    print "If you want to see graphical bug reports (bar, pie and line ";
     print "charts of \ncurrent data), you should install libgd and the ";
     print "following Perl modules:\n\n";
-    print "GD:              " . install_command("GD") . "\n" if !$gd;
+    print "GD:              " . install_command("GD") . "\n" if !$have_mod{'GD'};
     print "GD::Graph:       " . install_command("GD::Graph") . "\n" 
-        if !$gdgraph;
+        if !$have_mod{'GD::Graph'};
     print "GD::Text::Align: " . install_command("GD::Text::Align") . "\n"
-        if !$gdtextalign;
+        if !$have_mod{'GD::Text::Align'};
     print "\n";
 }
-if (!$patchreader && !$silent) {
+if (!$have_mod{'PatchReader'} && !$silent) {
     print "If you want to see pretty HTML views of patches, you should ";
     print "install the \nPatchReader module:\n";
     print "PatchReader: " . install_command("PatchReader") . "\n";
+}
+if (!$have_mod{'Net::LDAP'} && !$silent) {
+    print "If you wish to use LDAP authentication, then you must",
+          " install Net::LDAP:\n",
+          "Net::LDAP: " . install_command('Net::LDAP') . "\n";
 }
 
 if (!$have_one_dbd) {
@@ -1512,19 +1518,6 @@ import Bugzilla::User qw(insert_new_user);
 
 require Bugzilla::Bug;
 import Bugzilla::Bug qw(is_open_state);
-
-###########################################################################
-# Check for LDAP
-###########################################################################
-
-for my $verifymethod (split /,\s*/, Bugzilla->params->{'user_verify_class'}) {
-    if ($verifymethod eq 'LDAP') {
-        my $netLDAP = have_vers("Net::LDAP", 0, $silent);
-        if (!$netLDAP && !$silent) {
-            print "If you wish to use LDAP authentication, then you must install Net::LDAP\n\n";
-        }
-    }
-}
 
 ###########################################################################
 # Check GraphViz setup

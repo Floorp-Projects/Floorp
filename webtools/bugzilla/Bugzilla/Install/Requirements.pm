@@ -27,6 +27,7 @@ use strict;
 use base qw(Exporter);
 our @EXPORT = qw(
     REQUIRED_MODULES
+    OPTIONAL_MODULES
 
     vers_cmp
     have_vers
@@ -87,6 +88,45 @@ use constant REQUIRED_MODULES => [
     {
         name => 'Storable',
         version => '0'
+    },
+];
+
+use constant OPTIONAL_MODULES => [
+    {
+        name => 'GD',
+        version => '1.20'
+    },
+    {
+        name => 'Chart::Base',
+        version => '1.0'
+    },
+    {
+        name => 'GD::Graph',
+        version => 0
+    },
+    { 
+        name => 'GD::Text::Align',
+        version => 0
+    },
+    {
+        name => 'XML::Twig',
+        version => 0
+    },
+    {
+        name => 'LWP::UserAgent',
+        version => 0
+    },
+    {
+        name => 'PatchReader',
+        version => '0.9.4'
+    },
+    {
+        name => 'Image::Magick',
+        version => 0
+    },
+    {
+        name => 'Net::LDAP',
+        version => 0
     },
 ];
 
