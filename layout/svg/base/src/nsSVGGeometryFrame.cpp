@@ -173,8 +173,10 @@ nsSVGGeometryFrame::DidModifySVGObservable(nsISVGValue* observable,
 float
 nsSVGGeometryFrame::GetStrokeWidth()
 {
-  return nsSVGUtils::CoordToFloat(GetPresContext(),
-                                  mContent, GetStyleSVG()->mStrokeWidth);
+  return
+    nsSVGUtils::CoordToFloat(GetPresContext(),
+      GetType() == nsGkAtoms::svgGlyphFrame ? mContent->GetParent() : mContent,
+      GetStyleSVG()->mStrokeWidth);
 }
 
 nsresult
