@@ -224,6 +224,20 @@ html|*:root input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] html|inp
   background-repeat: no-repeat !important;
 }
 
+xul|*:root input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] xul|toolbarbutton[anonid="dropmarker"] {
+  min-width:27px;
+  min-height: 1.3em;
+  list-style-image: url('chrome://xforms/content/calendar.png');
+}
+
+xul|*:root input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] {
+  -moz-binding: url('chrome://xforms/content/input-xul.xml#xformswidget-input-date');
+}
+
+xul|*:root input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] xul|box[mozType|calendar] {
+  -moz-binding: url('chrome://xforms/content/widgets-xul.xml#calendar-full');
+}
+
   /* input type="xsd:date", appearance="full" */
 html|*:root input[mozType|type="http://www.w3.org/2001/XMLSchema#date"][appearance="full"] {
   -moz-binding: url('chrome://xforms/content/input-xhtml.xml#xformswidget-input-date-full');
@@ -231,10 +245,6 @@ html|*:root input[mozType|type="http://www.w3.org/2001/XMLSchema#date"][appearan
 
 xul|*:root input[mozType|type="http://www.w3.org/2001/XMLSchema#date"][appearance="full"] {
   -moz-binding: url('chrome://xforms/content/input-xul.xml#xformswidget-input-date-full');
-}
-xul|*:root input[mozType|type="http://www.w3.org/2001/XMLSchema#date"][appearance="full"]
-    xul|box[mozType|calendar] {
-  -moz-binding: url('chrome://xforms/content/widgets-xul.xml#calendar-full');
 }
 
   /* input type="xsd:gMonth" */

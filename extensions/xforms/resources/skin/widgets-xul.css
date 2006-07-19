@@ -61,8 +61,18 @@ box[mozType|calendar] toolbarbutton:focus {
 
 /* calendar-full styles */
 
-menulist[anonid="months-list"] {
-  margin-right: 0px;
+.list {
+  -moz-box-pack: center;
+  -moz-box-align: center;
+
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
+  -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+  margin: 2px 4px;
 }
 
 .toolbarbutton-dn {

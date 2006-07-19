@@ -207,19 +207,25 @@
     <content orient="vertical">
       <xul:hbox>
         <!-- month selection section -->
-        <xul:menulist anonid="months-list">
-          <xul:menupopup/>
-        </xul:menulist>
-        <xul:vbox class="control-month-buttons-box">
-          <xul:toolbarbutton anonid="prevmonth-btn" class="toolbarbutton-up"
-            tooltiptext="&xforms.datepicker.prevMonth.title;"/>
-          <xul:toolbarbutton anonid="nextmonth-btn" class="toolbarbutton-dn"
-            tooltiptext="&xforms.datepicker.nextMonth.title;"/>
-        </xul:vbox>
+        <xul:hbox class="list" flex="1">
+          <xul:description anonid="months-label" readonly="true" flex="1"/>
+          <xul:vbox class="control-buttons-box">
+            <xul:toolbarbutton anonid="prevmonth-btn" class="toolbarbutton-up"
+                               tooltiptext="&xforms.datepicker.prevMonth.title;"/>
+            <xul:toolbarbutton anonid="nextmonth-btn" class="toolbarbutton-dn"
+                               tooltiptext="&xforms.datepicker.nextMonth.title;"/>
+          </xul:vbox>
+        </xul:hbox>
         <!-- year selection section -->
-        <xul:menulist editable="true" anonid="years-list">
-          <xul:menupopup/>
-        </xul:menulist>
+        <xul:hbox class="list">
+          <xul:description anonid="years-label"/>
+          <xul:vbox class="control-buttons-box">
+            <xul:toolbarbutton anonid="prevyear-btn" class="toolbarbutton-up"
+                               tooltiptext="&xforms.datepicker.prevYear.title;"/>
+            <xul:toolbarbutton anonid="nextyear-btn" class="toolbarbutton-dn"
+                               tooltiptext="&xforms.datepicker.nextYear.title;"/>
+          </xul:vbox>
+        </xul:hbox>
       </xul:hbox>
 
       <!-- calendar days container-->
@@ -247,55 +253,14 @@
         <body>
           this.refreshInternal(aCurrentDay, aDaysRefreshOnly);
 
-          this.monthsList.value = this.month;
+          this.monthsLabel.value =
+            new Date(this.year, this.month - 1).toLocaleFormat("%B");
 
-          this.yearsList.value = this.year;
-          if (!this.yearsList.selectedItem)
-            this.yearsList.label = this.year;
+          this.yearsLabel.value = this.year;
         </body>
       </method>
 
     <!-- private -->
-      <method name="buildUI">
-        <body>
-        <![CDATA[
-          this.buildUIInternal();
-
-          var items = this.monthsList.menupopup.childNodes;
-          for (var index = 0; index < 12; index++) {
-            this.monthsList.appendItem(
-              new Date(this.year, index).toLocaleFormat("%B"), index + 1);
-          }
-
-          var year = new Date().getFullYear();
-          for (var index = -5; index < 1; index++) {
-            this.yearsList.appendItem(year + index, year + index);
-          }
-        ]]>
-        </body>
-      </method>
-
-      <property name="monthsList" readonly="true">
-        <getter>
-          if (!this._monthsList) {
-            this._monthsList = this.ownerDocument.
-              getAnonymousElementByAttribute(this, "anonid", "months-list");
-          }
-          return this._monthsList;
-        </getter>
-      </property>
-      <field name="_monthsList">null</field>
-
-      <property name="yearsList" readonly="true">
-        <getter>
-          if (!this._yearsList) {
-            this._yearsList = this.ownerDocument.
-              getAnonymousElementByAttribute(this, "anonid", "years-list");
-          }
-          return this._yearsList;
-        </getter>
-      </property>
-      <field name="_yearsList">null</field>
 
       <property name="prevmonthButton" readonly="true">
         <getter>
@@ -318,24 +283,73 @@
         </getter>
       </property>
       <field name="_nextmonthButton">null</field>
+
+      <property name="prevyearButton" readonly="true">
+        <getter>
+          if (!this._prevyearButton) {
+            this._prevyearButton = this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", "prevyear-btn");
+          }
+          return this._prevyearButton;
+        </getter>
+      </property>
+      <field name="_prevyearButton">null</field>
+
+      <property name="nextyearButton" readonly="true">
+        <getter>
+          if (!this._nextyearButton) {
+            this._nextyearButton = this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", "nextyear-btn");
+          }
+          return this._nextyearButton;
+        </getter>
+      </property>
+      <field name="_nextyearButton">null</field>
+
+      <property name="monthsLabel" readonly="true">
+        <getter>
+          if (!this._monthsLabel) {
+            this._monthsLabel = this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", "months-label");
+          }
+          return this._monthsLabel;
+        </getter>
+      </property>
+      <field name="_monthsLabel">null</field>
+
+      <property name="yearsLabel" readonly="true">
+        <getter>
+          if (!this._yearsLabel) {
+            this._yearsLabel = this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", "years-label");
+          }
+          return this._yearsLabel;
+        </getter>
+      </property>
+      <field name="_yearsLabel">null</field>
     </implementation>
 
     <handlers>
       <handler event="command">
         var target = event.originalTarget;
-        if (target == this.prevmonthButton) {
-          this.processAction("prevMonth", null, true);
-        } else if (target == this.nextmonthButton) {
-          this.processAction("nextMonth", null, true);
-        } else if (target.parentNode.parentNode == this.monthsList) {
-          this.month = this.monthsList.value;
-        } else if (target.parentNode.parentNode == this.yearsList) {
-          this.year = this.yearsList.value;
+        switch (target) {
+          case this.prevmonthButton:
+            this.processAction("prevMonth", null, true);
+            break;
+          case this.nextmonthButton:
+            this.processAction("nextMonth", null, true);
+            break;
+          case this.prevyearButton:
+            this.year--;
+            break;
+          case this.nextyearButton:
+            this.year++;
+            break;
         }
       </handler>
 
       <handler event="change">
-        this.year = this.yearsList.value;
+        this.year = this.yearsLabel.value;
       </handler>
     </handlers>
   </binding>

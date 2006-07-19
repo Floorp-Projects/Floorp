@@ -65,3 +65,5 @@
 <!ENTITY xforms.datepicker.title "Show Date Picker">
 <!ENTITY xforms.datepicker.prevMonth.title "Previous Month">
 <!ENTITY xforms.datepicker.nextMonth.title "Next Month">
+<!ENTITY xforms.datepicker.prevYear.title "Previous Year">
+<!ENTITY xforms.datepicker.nextYear.title "Next Year">

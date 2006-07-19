@@ -104,7 +104,7 @@
            extends="#xformswidget-input-base">
     <content>
       <children includes="label"/>
-      <xul:textbox class="xf-value" anonid="control" 
+      <xul:textbox class="xf-value" anonid="control"
                    xbl:inherits="accesskey" flex="1"/>
       <children/>
     </content>
@@ -171,7 +171,78 @@
   </binding>
 
 
-  <!-- INPUT: <DATE, APPEARANCE='FULL' -->
+  <!-- INPUT: <DATE> -->
+  <binding id="xformswidget-input-date"
+           extends="#xformswidget-input-base">
+
+    <content>
+      <children includes="label"/>
+      <xul:textbox anonid="control" xbl:inherits="accesskey" flex="1"/>
+      <xul:toolbarbutton anonid="dropmarker"/>
+      <xul:popup anonid="popup" ignorekeys="true">
+        <xul:box mozType:calendar="true" anonid="picker"/>
+      </xul:popup>
+      <children/>
+    </content>
+
+    <implementation>
+      <constructor>
+        var pickerChangeHandler = {
+          inputControl: this,
+          handleEvent: function(aEvent) {
+            this.inputControl.control.value = this.inputControl.picker.value;
+            this.inputControl.popup.hidePopup();
+          }
+        };
+        this.picker.addEventListener("change", pickerChangeHandler, false);
+      </constructor>
+
+      <property name="dropmarker" readonly="true">
+        <getter>
+          if (!this._dropmarker)
+            this._dropmarker = this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", "dropmarker");
+          return this._dropmarker;
+        </getter>
+      </property>
+      <field name="_dropmarker">null</field>
+
+      <property name="picker" readonly="true">
+        <getter>
+          if (!this._picker)
+            this._picker = this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", "picker");
+          return this._picker;
+        </getter>
+      </property>
+      <field name="_picker">null</field>
+
+      <property name="popup" readonly="true">
+        <getter>
+          if (!this._popup)
+            this._popup = this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", "popup");
+          return this._popup;
+        </getter>
+      </property>
+      <field name="_popup">null</field>
+    </implementation>
+
+    <handlers>
+      <handler event="command">
+        if (event.originalTarget == this.dropmarker) {
+          this.popup.showPopup(this.dropmarker, -1, -1, "popup",
+                               "bottomleft", "topleft");
+        }
+      </handler>
+
+      <handler event="popupshowing">
+        this.picker.value = this.control.value;
+      </handler>
+    </handlers>
+  </binding>
+
+  <!-- INPUT: <DATE, APPEARANCE='FULL'> -->
   <binding id="xformswidget-input-date-full"
            extends="chrome://xforms/content/input.xml#xformswidget-input-base">
     <content>
