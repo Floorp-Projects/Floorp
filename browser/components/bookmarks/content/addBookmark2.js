@@ -108,7 +108,6 @@ function Startup()
   initServices();
   initBMService();
   gName = document.getElementById("name");
-  gRequiredFields.push(gName);
   gKeywordRow = document.getElementById("keywordRow");
   gKeyword = document.getElementById("keyword");
   gExpander = document.getElementById("expander");
