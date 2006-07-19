@@ -258,7 +258,19 @@
     <implementation implements="nsIXFormsUIWidget">
       <method name="refresh">
         <body>
-          this.control.value = this.accessors.getValue();
+          // the label control hides/unhides anonymous content based on the
+          // the value we set it to.  The control assumes that if the value
+          // comes from a binding or linking attribute that the value we are
+          // setting it to will be null
+          var externalValue = this.hasAttribute("ref") ||
+                              this.hasAttribute("bind") ||
+                              this.hasAttribute("src");
+
+          if (externalValue) {
+            this.control.value = this.accessors.getValue();
+          } else {
+            this.control.value = null;
+          }
           return true;
         </body>
       </method>
