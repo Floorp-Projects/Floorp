@@ -811,7 +811,7 @@ NS_IMETHODIMP nsHyperTextAccessible::GetLinks(PRInt32 *aLinks)
   nsCOMPtr<nsIAccessible> accessible;
 
   while (NextChild(accessible)) {
-    if (!IsEmbeddedObject(accessible)) {
+    if (IsEmbeddedObject(accessible)) {
       ++*aLinks;
     }
   }
@@ -829,7 +829,7 @@ NS_IMETHODIMP nsHyperTextAccessible::GetLink(PRInt32 aIndex, nsIAccessibleHyperL
   nsCOMPtr<nsIAccessible> accessible;
 
   while (NextChild(accessible)) {
-    if (!IsEmbeddedObject(accessible) && aIndex-- == 0) {
+    if (IsEmbeddedObject(accessible) && aIndex-- == 0) {
       CallQueryInterface(accessible, aLink);
       return NS_OK;
     }
