@@ -143,7 +143,10 @@
             try {
               // Try to QI it to a console message
               var msg = aObject.QueryInterface(Components.interfaces.nsIConsoleMessage);
-              this.appendMessage(msg.message);
+              if (msg.message)
+                this.appendMessage(msg.message);
+              else // observed a null/"clear" message
+                this.clearConsole();
             } catch (ex2) {
               // Give up and append the object itself as a string
               this.appendMessage(aObject);
@@ -201,12 +204,9 @@
       
       <method name="clear">
         <body><![CDATA[
+          // add a "clear" message (mainly for other listeners)
           this.mCService.logStringMessage(null);
-          this.mCount = 0;
-          
-          var newRows = this.mConsoleRowBox.cloneNode(false);
-          this.mConsoleRowBox.parentNode.replaceChild(newRows, this.mConsoleRowBox);
-          this.mConsoleRowBox = newRows;
+          this.mCService.reset();
         ]]></body>
       </method>
             
@@ -250,6 +250,18 @@
         ]]></body>
       </method>
             
+      <method name="clearConsole">
+        <body><![CDATA[
+          if (this.mCount == 0) // already clear
+            return;
+          this.mCount = 0;
+          
+          var newRows = this.mConsoleRowBox.cloneNode(false);
+          this.mConsoleRowBox.parentNode.replaceChild(newRows, this.mConsoleRowBox);
+          this.mConsoleRowBox = newRows;
+        ]]></body>
+      </method>
+      
       <!-- UTILITY FUNCTIONS -->
       
       <method name="repeatChar">
