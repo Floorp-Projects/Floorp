@@ -183,24 +183,23 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
   // Get accessible from selection's focus node or its parent
   nsCOMPtr<nsIDOMNode> focusNode;
   domSel->GetFocusNode(getter_AddRefs(focusNode));
-  nsCOMPtr<nsINode> internalNode = do_QueryInterface(focusNode);
-  if (!internalNode) {
+  if (!focusNode) {
     return NS_OK; // No selection
   }
   nsCOMPtr<nsIAccessibleText> textAcc;
-  while (internalNode) {
-    nsCOMPtr<nsIDOMNode> caretNode = do_QueryInterface(internalNode);
-    if (PR_FALSE == internalNode->IsNodeOfType(nsINode::eTEXT)) {
-      nsCOMPtr<nsIContent> content = do_QueryInterface(internalNode);
-      if (PR_FALSE == content->IsNativeAnonymous()) { // Don't want anonymous nodes inside a form control
-        accService->GetAccessibleInShell(caretNode, presShell,  getter_AddRefs(accessible));
-        textAcc = do_QueryInterface(accessible);
-        if (textAcc) {
-          break;
-        }
+  while (focusNode) {
+    nsCOMPtr<nsIContent> content = do_QueryInterface(focusNode);
+    if (!content || (PR_FALSE == content->IsNodeOfType(nsINode::eTEXT) && 
+        PR_FALSE == content->IsNativeAnonymous())) { // Don't want anonymous nodes inside a form control
+      accService->GetAccessibleInShell(focusNode, presShell,  getter_AddRefs(accessible));
+      textAcc = do_QueryInterface(accessible);
+      if (textAcc) {
+        break;
       }
     }
-    internalNode = internalNode->GetParent();
+    nsCOMPtr<nsIDOMNode> parentNode;
+    focusNode->GetParentNode(getter_AddRefs(parentNode));
+    focusNode.swap(parentNode);
   }
   NS_ASSERTION(textAcc, "No nsIAccessibleText for caret move event!"); // No nsIAccessibleText for caret move event!
   NS_ENSURE_TRUE(textAcc, NS_ERROR_FAILURE);
