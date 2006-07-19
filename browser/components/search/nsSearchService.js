@@ -94,7 +94,6 @@ const MAX_ICON_SIZE   = 10000;
 const DEFAULT_QUERY_CHARSET = "ISO-8859-1";
 
 const SEARCH_BUNDLE = "chrome://browser/locale/search.properties";
-const SIDEBAR_BUNDLE = "chrome://browser/locale/sidebar/sidebar.properties";
 const BRAND_BUNDLE = "chrome://branding/locale/brand.properties";
 
 const OPENSEARCH_NS_10  = "http://a9.com/-/spec/opensearch/1.0/";
@@ -1061,12 +1060,12 @@ Engine.prototype = {
   _confirmAddEngine: function SRCH_SVC_confirmAddEngine() {
     var sbs = Cc["@mozilla.org/intl/stringbundle;1"].
               getService(Ci.nsIStringBundleService);
-    var stringBundle = sbs.createBundle(SIDEBAR_BUNDLE);
+    var stringBundle = sbs.createBundle(SEARCH_BUNDLE);
     var titleMessage = stringBundle.GetStringFromName("addEngineConfirmTitle");
 
     // Display only the hostname portion of the URL.
     var dialogMessage =
-        stringBundle.formatStringFromName("addEngineConfirmText",
+        stringBundle.formatStringFromName("addEngineConfirmation",
                                           [this._name, this._uri.host], 2);
     var checkboxMessage = stringBundle.GetStringFromName("addEngineUseNowText");
     var addButtonLabel =
