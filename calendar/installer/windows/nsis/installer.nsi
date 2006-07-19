@@ -67,14 +67,15 @@ CRCCheck on
 !insertmacro GetTime
 !insertmacro LineFind
 !insertmacro un.LineFind
-!insertmacro Locate
 !insertmacro StrFilter
-!insertmacro TextCompare
 !insertmacro TrimNewLines
 !insertmacro un.TrimNewLines
 !insertmacro WordFind
 !insertmacro WordReplace
 !insertmacro GetSize
+!insertmacro GetParameters
+!insertmacro un.GetParameters
+!insertmacro GetOptions
 
 ; Use the pre-processor where ever possible
 ; Remember that !define's create smaller packages than Var's!
@@ -87,6 +88,7 @@ Var AddDesktopSC
 Var fhInstallLog
 Var fhUninstallLog
 
+!include branding.nsi
 !include defines.nsi
 !include common.nsh
 !include locales.nsi
@@ -104,9 +106,13 @@ Var fhUninstallLog
 !insertmacro CreateRegKey
 !insertmacro un.GetSecondInstallPath
 
+!include overrides.nsh
+!insertmacro LocateNoDetails
+!insertmacro TextCompareNoDetails
+
 Name "${BrandFullName}"
 OutFile "setup.exe"
-InstallDirRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${BrandFullName} (${AppVersion})" "InstallLocation"
+InstallDirRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${BrandFullNameInternal} (${AppVersion})" "InstallLocation"
 InstallDir "$PROGRAMFILES\${BrandFullName}"
 
 ShowInstDetails nevershow
@@ -165,7 +171,7 @@ Page custom preShortcuts ChangeShortcuts
 !define MUI_PAGE_CUSTOMFUNCTION_PRE preCheckStartMenu
 !define MUI_STARTMENUPAGE_NODISABLE
 !define MUI_STARTMENUPAGE_REGISTRY_ROOT "HKLM"
-!define MUI_STARTMENUPAGE_REGISTRY_KEY "Software\Mozilla\${BrandFullName}\${AppVersion} (${AB_CD})\Main"
+!define MUI_STARTMENUPAGE_REGISTRY_KEY "Software\Mozilla\${BrandFullNameInternal}\${AppVersion} (${AB_CD})\Main"
 !define MUI_STARTMENUPAGE_REGISTRY_VALUENAME "Start Menu Folder"
 !insertmacro MUI_PAGE_STARTMENU Application $StartMenuDir
 
@@ -176,7 +182,8 @@ Page custom preShortcuts ChangeShortcuts
 ; Finish Page
 !define MUI_FINISHPAGE_NOREBOOTSUPPORT
 !define MUI_FINISHPAGE_TITLE_3LINES
-!define MUI_FINISHPAGE_RUN $INSTDIR\${FileMainEXE}
+!define MUI_FINISHPAGE_RUN
+!define MUI_FINISHPAGE_RUN_FUNCTION LaunchApp
 !define MUI_FINISHPAGE_RUN_TEXT $(LAUNCH_TEXT)
 !define MUI_PAGE_CUSTOMFUNCTION_PRE disableCancel
 !insertmacro MUI_PAGE_FINISH
@@ -225,7 +232,7 @@ Function un.checkIfAppIsLoaded
   ${EndIf}
   ${If} ${Errors}
     ClearErrors
-    ${un.CloseApp} $(WARN_APP_RUNNING_UNINSTALL)
+    ${un.CloseApp} "true" $(WARN_APP_RUNNING_UNINSTALL)
     ; Try to delete it again to prevent launching the app while we are
     ; installing.
     ${DeleteFile} "$INSTDIR\${FileMainEXE}"
@@ -233,46 +240,11 @@ Function un.checkIfAppIsLoaded
   ${EndIf}
 FunctionEnd
 
-Function un.GetParameters
-   Push $R0
-   Push $R1
-   Push $R2
-   Push $R3
-
-   StrCpy $R2 1
-   StrLen $R3 $CMDLINE
-
-   ;Check for quote or space
-   StrCpy $R0 $CMDLINE $R2
-   StrCmp $R0 '"' 0 +3
-     StrCpy $R1 '"'
-     Goto loop
-   StrCpy $R1 " "
-
-   loop:
-     IntOp $R2 $R2 + 1
-     StrCpy $R0 $CMDLINE 1 $R2
-     StrCmp $R0 $R1 get
-     StrCmp $R2 $R3 get
-     Goto loop
-
-   get:
-     IntOp $R2 $R2 + 1
-     StrCpy $R0 $CMDLINE 1 $R2
-     StrCmp $R0 " " get
-     StrCpy $R0 $CMDLINE "" $R2
-
-   Pop $R3
-   Pop $R2
-   Pop $R1
-   Exch $R0
-FunctionEnd
-
 ; Setup the survey controls, functions, etc. except when the application has
 ; defined NO_UNINSTALL_SURVEY
 !ifndef NO_UNINSTALL_SURVEY
 Function un.survey
-  Exec "$\"$TmpVal$\" $\"${SurveyURL}$\""
+  ExecShell "open" "${SurveyURL}"
 FunctionEnd
 !endif
 
@@ -339,12 +311,15 @@ Function FinishInstall
   FileClose $fhUninstallLog
   ; Diff and add missing entries from the previous file log if it exists
   ${If} ${FileExists} "$INSTDIR\uninstall\uninstall.bak"
+    SetDetailsPrint textonly
+    DetailPrint $(STATUS_CLEANUP)
+    SetDetailsPrint none
     ${LogHeader} "Updating Uninstall Log With Previous Uninstall Log"
     StrCpy $R0 "$INSTDIR\uninstall\uninstall.log"
     StrCpy $R1 "$INSTDIR\uninstall\uninstall.bak"
     GetTempFileName $R2
     FileOpen $R3 $R2 w
-    ${TextCompare} "$R1" "$R0" "SlowDiff" "GetDiff"
+    ${TextCompareNoDetails} "$R1" "$R0" "SlowDiff" "GetDiff"
     FileClose $R3
     ${Unless} ${Errors}
       ${FileJoin} "$INSTDIR\uninstall\uninstall.log" "$R2" "$INSTDIR\uninstall\uninstall.log"
@@ -361,6 +336,9 @@ FunctionEnd
 
 Section "-Application" Section1
   SectionIn 1 RO
+  SetDetailsPrint textonly
+  DetailPrint $(STATUS_CLEANUP)
+  SetDetailsPrint none
   SetOutPath $INSTDIR
   ; For a "Standard" upgrade without talkback installed add the InstallDisabled
   ; file to the talkback source files so it will be disabled by the extension
@@ -388,7 +366,7 @@ Section "-Application" Section1
   ${EndIf}
   ${If} ${Errors}
     ClearErrors
-    ${CloseApp} $(WARN_APP_RUNNING_INSTALL)
+    ${CloseApp} "true" $(WARN_APP_RUNNING_INSTALL)
     ; Try to delete it again to prevent launching the app while we are
     ; installing.
     ${DeleteFile} "$INSTDIR\${FileMainEXE}"
@@ -404,7 +382,7 @@ Section "-Application" Section1
     StrCpy $R1 "$INSTDIR\uninstall\cleanup.log"
     GetTempFileName $R2
     FileOpen $R3 $R2 w
-    ${TextCompare} "$R1" "$R0" "SlowDiff" "GetDiff"
+    ${TextCompareNoDetails} "$R1" "$R0" "SlowDiff" "GetDiff"
     FileClose $R3
 
     ${Unless} ${Errors}
@@ -442,6 +420,9 @@ Section "-Application" Section1
   ${DeleteFile} "$INSTDIR\install_wizard.log"
   ${DeleteFile} "$INSTDIR\install_status.log"
 
+  SetDetailsPrint textonly
+  DetailPrint $(STATUS_INSTALL_APP)
+  SetDetailsPrint none
   ${LogHeader} "Installing Main Files"
   StrCpy $R0 "$EXEDIR\nonlocalized"
   StrCpy $R1 "$INSTDIR"
@@ -475,6 +456,9 @@ Section "-Application" Section1
   ${LogUninstall} "File: \install_wizard.log"
   ${LogUninstall} "File: \updates.xml"
 
+  SetDetailsPrint textonly
+  DetailPrint $(STATUS_INSTALL_LANG)
+  SetDetailsPrint none
   ${LogHeader} "Installing Localized Files"
   StrCpy $R0 "$EXEDIR\localized"
   StrCpy $R1 "$INSTDIR"
@@ -534,7 +518,7 @@ Section "-Application" Section1
   ; will be empty when the key is deleted. This allows the uninstaller to
   ; specify that only empty keys will be deleted.
 
-  StrCpy $0 "Software\Mozilla\${BrandFullName}\${AppVersion} (${AB_CD})\Main"
+  StrCpy $0 "Software\Mozilla\${BrandFullNameInternal}\${AppVersion} (${AB_CD})\Main"
   ${WriteRegStr2} $TmpVal "$0" "Install Directory" "$INSTDIR" 0
   ${WriteRegStr2} $TmpVal "$0" "PathToExe" "$INSTDIR\${FileMainEXE}" 0
   ${WriteRegStr2} $TmpVal "$0" "Program Folder Path" "$SMPROGRAMS\$StartMenuDir" 0
@@ -542,24 +526,24 @@ Section "-Application" Section1
   ${WriteRegDWORD2} $TmpVal "$0" "Create Desktop Shortcut" $AddDesktopSC 0
   ${WriteRegDWORD2} $TmpVal "$0" "Create Start Menu Shortcut" $AddStartMenuSC 0
 
-  StrCpy $0 "Software\Mozilla\${BrandFullName}\${AppVersion} (${AB_CD})\Uninstall"
+  StrCpy $0 "Software\Mozilla\${BrandFullNameInternal}\${AppVersion} (${AB_CD})\Uninstall"
   ${WriteRegStr2} $TmpVal "$0" "Uninstall Log Folder" "$INSTDIR\uninstall" 0
-  ${WriteRegStr2} $TmpVal "$0" "Description" "${BrandFullName} (${AppVersion})" 0
+  ${WriteRegStr2} $TmpVal "$0" "Description" "${BrandFullNameInternal} (${AppVersion})" 0
 
-  StrCpy $0 "Software\Mozilla\${BrandFullName}\${AppVersion} (${AB_CD})"
+  StrCpy $0 "Software\Mozilla\${BrandFullNameInternal}\${AppVersion} (${AB_CD})"
   ${WriteRegStr2} $TmpVal  "$0" "" "${AppVersion} (${AB_CD})" 0
 
-  StrCpy $0 "Software\Mozilla\${BrandFullName} ${AppVersion}\bin"
+  StrCpy $0 "Software\Mozilla\${BrandFullNameInternal} ${AppVersion}\bin"
   ${WriteRegStr2} $TmpVal "$0" "PathToExe" "$INSTDIR\${FileMainEXE}" 0
 
-  StrCpy $0 "Software\Mozilla\${BrandFullName} ${AppVersion}\extensions"
+  StrCpy $0 "Software\Mozilla\${BrandFullNameInternal} ${AppVersion}\extensions"
   ${WriteRegStr2} $TmpVal "$0" "Components" "$INSTDIR\components" 0
   ${WriteRegStr2} $TmpVal "$0" "Plugins" "$INSTDIR\plugins" 0
 
-  StrCpy $0 "Software\Mozilla\${BrandFullName} ${AppVersion}"
+  StrCpy $0 "Software\Mozilla\${BrandFullNameInternal} ${AppVersion}"
   ${WriteRegStr2} $TmpVal "$0" "GeckoVer" "${GREVersion}" 0
 
-  StrCpy $0 "Software\Mozilla\${BrandFullName}"
+  StrCpy $0 "Software\Mozilla\${BrandFullNameInternal}"
   ${WriteRegStr2} $TmpVal "$0" "" "${GREVersion}" 0
   ${WriteRegStr2} $TmpVal "$0" "CurrentVersion" "${AppVersion} (${AB_CD})" 0
 
@@ -622,12 +606,12 @@ Section "-Application" Section1
   ${WriteRegStr2} $TmpVal "$0" "Path" "$INSTDIR" 0
 
   ; Write the uninstall registry keys
-  StrCpy $0 "Software\Microsoft\Windows\CurrentVersion\Uninstall\${BrandFullName} (${AppVersion})"
+  StrCpy $0 "Software\Microsoft\Windows\CurrentVersion\Uninstall\${BrandFullNameInternal} (${AppVersion})"
   StrCpy $1 "$\"$INSTDIR\uninstall\uninstaller.exe$\" $\"/ua ${AppVersion} (${AB_CD})$\""
 
-  ${WriteRegStr2} $TmpVal "$0" "Comments" "${BrandFullName}" 0
+  ${WriteRegStr2} $TmpVal "$0" "Comments" "${BrandFullNameInternal}" 0
   ${WriteRegStr2} $TmpVal "$0" "DisplayIcon" "$INSTDIR\${FileMainEXE},0" 0
-  ${WriteRegStr2} $TmpVal "$0" "DisplayName" "${BrandFullName} (${AppVersion})" 0
+  ${WriteRegStr2} $TmpVal "$0" "DisplayName" "${BrandFullNameInternal} (${AppVersion})" 0
   ${WriteRegStr2} $TmpVal "$0" "DisplayVersion" "${AppVersion} (${AB_CD})" 0
   ${WriteRegStr2} $TmpVal "$0" "InstallLocation" "$INSTDIR" 0
   ${WriteRegStr2} $TmpVal "$0" "Publisher" "Mozilla" 0
@@ -642,10 +626,10 @@ Section "-Application" Section1
   ${LogHeader} "Adding Shortcuts"
   ${If} $AddStartMenuSC == 1
     CreateDirectory "$SMPROGRAMS\$StartMenuDir"
-    CreateShortCut "$SMPROGRAMS\$StartMenuDir\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
-    ${LogUninstall} "File: $SMPROGRAMS\$StartMenuDir\${BrandFullName}.lnk"
-    CreateShortCut "$SMPROGRAMS\$StartMenuDir\${BrandFullName} ($(SAFE_MODE)).lnk" "$INSTDIR\${FileMainEXE}" "-safe-mode" "$INSTDIR\${FileMainEXE}" 0
-    ${LogUninstall} "File: $SMPROGRAMS\$StartMenuDir\${BrandFullName} ($(SAFE_MODE)).lnk"
+    CreateShortCut "$SMPROGRAMS\$StartMenuDir\${BrandFullNameInternal}.lnk" "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
+    ${LogUninstall} "File: $SMPROGRAMS\$StartMenuDir\${BrandFullNameInternal}.lnk"
+    CreateShortCut "$SMPROGRAMS\$StartMenuDir\${BrandFullNameInternal} ($(SAFE_MODE)).lnk" "$INSTDIR\${FileMainEXE}" "-safe-mode" "$INSTDIR\${FileMainEXE}" 0
+    ${LogUninstall} "File: $SMPROGRAMS\$StartMenuDir\${BrandFullNameInternal} ($(SAFE_MODE)).lnk"
   ${EndIf}
 
   ; perhaps use the uninstall keys
@@ -679,6 +663,9 @@ SectionEnd
 
 Function install_inspector
   ${If} ${FileExists} "$EXEDIR\optional\extensions\inspector@mozilla.org"
+    SetDetailsPrint textonly
+    DetailPrint $(STATUS_INSTALL_OPTIONAL)
+    SetDetailsPrint none
     ${RemoveDir} "$INSTDIR\extensions\extensions\inspector@mozilla.org"
     ClearErrors
     ${LogHeader} "Installing Developer Tools"
@@ -691,6 +678,9 @@ FunctionEnd
 Function install_talkback
   StrCpy $R0 "$EXEDIR\optional\extensions\talkback@mozilla.org"
   ${If} ${FileExists} "$R0"
+    SetDetailsPrint textonly
+    DetailPrint $(STATUS_INSTALL_OPTIONAL)
+    SetDetailsPrint none
     StrCpy $R1 "$INSTDIR\extensions\talkback@mozilla.org"
     ${If} ${FileExists} "$R1"
       ; If there is an existing InstallDisabled file copy it to the source dir.
@@ -723,6 +713,9 @@ Function install_talkback
 FunctionEnd
 
 Section "Uninstall"
+  SetDetailsPrint textonly
+  DetailPrint $(STATUS_UNINSTALL_MAIN)
+  SetDetailsPrint none
   ; Remove registry entries for non-existent apps and for apps that point to our
   ; install location in the Software\Mozilla key.
   SetShellVarContext current  ; Sets SHCTX to HKCU
@@ -837,24 +830,6 @@ Function un.disableCancel
   ; defined NO_UNINSTALL_SURVEY
   !ifdef NO_UNINSTALL_SURVEY
     !insertmacro MUI_INSTALLOPTIONS_WRITE "ioSpecial.ini" "settings" "NumFields" "3"
-  !else
-    StrCpy $TmpVal "SOFTWARE\Microsoft\IE Setup\Setup"
-    ClearErrors
-    ReadRegStr $0 HKLM $TmpVal "Path"
-    ${If} ${Errors}
-      !insertmacro MUI_INSTALLOPTIONS_WRITE "ioSpecial.ini" "settings" "NumFields" "3"
-    ${Else}
-      ExpandEnvStrings $0 "$0" ; this value will usually contain %programfiles%
-      ${If} $0 != "\"
-        StrCpy $0 "$0\"
-      ${EndIf}
-      StrCpy $0 "$0\iexplore.exe"
-      ClearErrors
-      GetFullPathName $TmpVal $0
-      ${If} ${Errors}
-        !insertmacro MUI_INSTALLOPTIONS_WRITE "ioSpecial.ini" "settings" "NumFields" "3"
-      ${EndIf}
-    ${EndIf}
   !endif
 FunctionEnd
 
@@ -879,7 +854,7 @@ FunctionEnd
 
 Function DoCopyFiles
   StrLen $R2 $R0
-  ${Locate} "$R0" "/L=FD" "CopyFile"
+  ${LocateNoDetails} "$R0" "/L=FD" "CopyFile"
 FunctionEnd
 
 Function CopyFile
@@ -1064,7 +1039,7 @@ Function DiffOldLogFiles
   StrCpy $R1 "$1"
   GetTempFileName $R2
   FileOpen $R3 $R2 w
-  ${TextCompare} "$R1" "$TmpVal" "SlowDiff" "GetDiff"
+  ${TextCompareNoDetails} "$R1" "$TmpVal" "SlowDiff" "GetDiff"
   FileClose $R3
   ${FileJoin} "$TmpVal" "$R2" "$TmpVal"
   ${DeleteFile} "$R2"
@@ -1163,7 +1138,117 @@ Function preComponents
   ${EndUnless}
 FunctionEnd
 
+Function LaunchApp
+  ${CloseApp} "true" $(WARN_APP_RUNNING_INSTALL)
+  Exec "$INSTDIR\${FileMainEXE}"
+FunctionEnd
+
 Function .onInit
+  ${GetParameters} $R0
+  ${If} $R0 != ""
+    ; Command line argument found
+    ${GetOptions} "$R0" "-ms" $R1
+    ${If} ${Errors}
+      ; Default install type
+      StrCpy $InstallType "1"
+      ; Support for specifying an installation configuration file.
+      ClearErrors
+      ${GetOptions} "$R0" "/INI=" $R1
+      ${Unless} ${Errors}
+        ; The configuration file must also exist
+        ${If} ${FileExists} "$R1"
+          SetSilent silent
+          ReadINIStr $0 $R1 "Install" "InstallDirectoryName"
+          ${If} $0 != ""
+            StrCpy $INSTDIR "$PROGRAMFILES\$0"
+          ${Else}
+            ReadINIStr $0 $R1 "Install" "InstallDirectoryPath"
+            ${If} $$0 != ""
+              StrCpy $INSTDIR "$0"
+            ${EndIf}
+          ${EndIf}
+
+          ${If} $INSTDIR == ""
+            ; Check if there is an existing uninstall registry entry for this
+            ; version of the application and if present install into that location
+            ReadRegStr $0 HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${BrandFullNameInternal} (${AppVersion})" "InstallLocation"
+            ${If} $0 == ""
+              StrCpy $INSTDIR "$PROGRAMFILES\${BrandFullName}"
+            ${Else}
+              GetFullPathName $INSTDIR "$0"
+              ${Unless} ${FileExists} "$INSTDIR"
+                StrCpy $INSTDIR "$PROGRAMFILES\${BrandFullName}"
+              ${EndUnless}
+            ${EndIf}
+          ${EndIf}
+
+          ; Quit if we are unable to create the installation directory or we are
+          ; unable to write to a file in the installation directory.
+          ClearErrors
+          ${If} ${FileExists} "$INSTDIR"
+            GetTempFileName $R2 "$INSTDIR"
+            FileOpen $R3 $R2 w
+            FileWrite $R3 "Write Access Test"
+            FileClose $R3
+            Delete $R2
+            ${If} ${Errors}
+              Quit
+            ${EndIf}
+          ${Else}
+            CreateDirectory "$INSTDIR"
+            ${If} ${Errors}
+              Quit
+            ${EndIf}
+          ${EndIf}
+
+          ReadINIStr $0 $R1 "Install" "CloseAppNoPrompt"
+          ${If} $0 == "true"
+            ClearErrors
+            ${If} ${FileExists} "$INSTDIR\${FileMainEXE}"
+              ${DeleteFile} "$INSTDIR\${FileMainEXE}"
+            ${EndIf}
+            ${If} ${Errors}
+              ClearErrors
+              ${CloseApp} "false" ""
+              ${DeleteFile} "$INSTDIR\${FileMainEXE}"
+            ${EndIf}
+          ${EndIf}
+
+          ReadINIStr $0 $R1 "Install" "QuickLaunchShortcut"
+          ${If} $0 == "false"
+            StrCpy $AddQuickLaunchSC "0"
+          ${Else}
+            StrCpy $AddQuickLaunchSC "1"
+          ${EndIf}
+
+          ReadINIStr $0 $R1 "Install" "DesktopShortcut"
+          ${If} $0 == "false"
+            StrCpy $AddDesktopSC "0"
+          ${Else}
+            StrCpy $AddDesktopSC "1"
+          ${EndIf}
+
+          ReadINIStr $0 $R1 "Install" "StartMenuShortcuts"
+          ${If} $0 == "false"
+            StrCpy $AddStartMenuSC "0"
+          ${Else}
+            StrCpy $AddStartMenuSC "1"
+          ${EndIf}
+
+          ReadINIStr $0 $R1 "Install" "StartMenuDirectoryName"
+          ${If} $0 != ""
+            StrCpy $StartMenuDir "$0"
+          ${EndIf}
+        ${EndIf}
+      ${EndUnless}
+    ${Else}
+      ; Support for the deprecated -ms command line argument. The new command
+      ; line arguments are not supported when -ms is used.
+      SetSilent silent
+    ${EndIf}
+  ${EndIf}
+  ClearErrors
+
   StrCpy $LANGUAGE 0
   !insertmacro MUI_INSTALLOPTIONS_EXTRACT "options.ini"
   !insertmacro MUI_INSTALLOPTIONS_EXTRACT "shortcuts.ini"
