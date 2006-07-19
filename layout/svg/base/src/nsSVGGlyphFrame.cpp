@@ -1202,9 +1202,11 @@ void nsSVGGlyphFrame::SelectFont(cairo_t *ctx)
   // (Ctrl++,Ctrl+-)
   nsPresContext *presContext = GetPresContext();
   float pxPerTwips = presContext->TwipsToPixels();
+  float pixelScale;
+  presContext->DeviceContext()->GetCanonicalPixelScale(pixelScale);
   float textZoom = presContext->TextZoom();
 
-  cairo_set_font_size(ctx, font.size * pxPerTwips / textZoom);
+  cairo_set_font_size(ctx, font.size * pxPerTwips / pixelScale / textZoom);
 }
 
 void nsSVGGlyphFrame::UpdateGeometry(PRBool bRedraw,
