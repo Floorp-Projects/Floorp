@@ -26,6 +26,7 @@
    -   Peter Parente <parente@cs.unc.edu>
    -   Giorgio Maone <g.maone@informaction.com>
    -   Asaf Romano <mozilla.mano@sent.com>
+   -   Seth Spitzer <sspitzer@mozilla.org>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1033,6 +1034,9 @@
             }
             if (!bgLoad)
               this.selectedTab = tab;
+            else
+              this.mTabContainer._notifyBackgroundTab(tab);
+            
             return tab;
          ]]>
         </body>
@@ -1092,7 +1096,8 @@
             if (this.mCurrentTab.owner)
               this.mCurrentTab.owner = null;
 
-            var t = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+            var t = document.createElementNS(
+              "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                              "tab");
 
             var blank = (aURI == "about:blank");
@@ -1131,7 +1136,8 @@
               }
             }
 
-            var b = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+            var b = document.createElementNS(
+              "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                              "browser");
             b.setAttribute("type", "content-targetable");
             b.setAttribute("message", "true");
@@ -1191,13 +1197,14 @@
               b.loadURIWithFlags(aURI, flags, aReferrerURI, aCharset, aPostData);
             }
 
+            this.mTabContainer.adjustTabstrip(false);
+
             // Dispatch a new tab notification.  We do this once we're
             // entirely done, so that things are in a consistent state
             // even if the event listener opens or closes tabs.
             var evt = document.createEvent("Events");
             evt.initEvent("TabOpen", true, false);
             t.dispatchEvent(evt);
-
             return t;
           ]]>
         </body>
@@ -1564,7 +1571,6 @@
       <property name="selectedBrowser"
                 onget="return this.mCurrentBrowser;"
                 readonly="true"/>
-
 
       <property name="browsers" readonly="true">
        <getter>
@@ -2397,16 +2403,25 @@
       <xul:arrowscrollbox anonid="arrowscrollbox" orient="horizontal" flex="1" style="min-width: 1px;" clicktoscroll="true">
         <children includes="tab"/>
       </xul:arrowscrollbox>
+      <xul:hbox class="tabs-alltabs-box" align="center" pack="end" 
+                anonid="alltabs-box">
+        <xul:toolbarbutton class="tabs-alltabs-button" type="menu">
+          <xul:menupopup class="tabs-alltabs-popup"
+                         anonid="alltabs-popup" 
+                         position="after_end"/>
+        </xul:toolbarbutton>
+      </xul:hbox>
       <xul:hbox class="tabs-closebutton-box" align="center" pack="end" anonid="tabstrip-closebutton">
         <xul:toolbarbutton class="close-button tabs-closebutton"/>
       </xul:hbox>
     </content>
-    <implementation>
+    <implementation implements="nsITimerCallback">
       <constructor>
         <![CDATA[
           var pb2 =
               Components.classes['@mozilla.org/preferences-service;1'].
               getService(Components.interfaces.nsIPrefBranch2);
+
           try {
             this.mTabMinWidth = pb2.getIntPref("browser.tabs.tabMinWidth");
             this.mTabClipWidth = pb2.getIntPref("browser.tabs.tabClipWidth");
@@ -2419,8 +2434,10 @@
           this._updateDisableBackgroundClose();
           this.adjustTabstrip(false);
 
-          pb2.addObserver("browser.tabs.disableBackgroundClose", this._prefObserver, true);
-          pb2.addObserver("browser.tabs.closeButtons", this._prefObserver, true);
+          pb2.addObserver("browser.tabs.disableBackgroundClose", 
+                          this._prefObserver, true);
+          pb2.addObserver("browser.tabs.closeButtons", 
+                          this._prefObserver, true);
 
           var self = this;
           function onResize() {
@@ -2436,6 +2453,16 @@
           window.addEventListener("resize", onResize, false);
         ]]>
       </constructor>
+
+      <destructor>
+        <![CDATA[
+          // Release timer to avoid reference cycles.
+          if (this.mFlashTimer) {
+            this.mFlashTimer.cancel();
+            this.mFlashTimer = null;
+          }
+        ]]>
+      </destructor>
 
       <field name="mTabstripWidth">0</field>
 
@@ -2571,22 +2598,173 @@
         
       <method name="_handleTabSelect">
         <body><![CDATA[
-          this.mTabstrip.scrollBoxObject.ensureElementIsVisible(this.selectedItem);
+          this.mTabstrip.scrollBoxObject
+                        .ensureElementIsVisible(this.selectedItem);
         ]]></body>
       </method>
         
-    </implementation>
+      <field name="mAllTabsPopup">
+        document.getAnonymousElementByAttribute(this, 
+                                                "anonid", "alltabs-popup");
+      </field>
 
+      <field name="mAllTabsBox">
+        document.getAnonymousElementByAttribute(this, 
+                                                "anonid", "alltabs-box");
+      </field>
+
+      <field name="mFlashTimer">null</field>
+      <field name="mFlashStage">0</field>
+      <field name="mFlashStart">6</field>
+      <field name="mFlashDelay">150</field>
+
+      <method name="_notifyBackgroundTab">
+        <parameter name="aTab"/>
+        <body><![CDATA[
+          if (this.mFlashStage)
+            return;
+
+          var tsbo = this.mTabstrip.scrollBoxObject;
+          var tsboStart = tsbo.screenX;
+          var tsboEnd = tsboStart + tsbo.width;
+
+          var ctbo = aTab.boxObject;
+          var ctboStart = ctbo.screenX;
+          var ctboEnd = ctboStart + ctbo.width;
+
+          // only start the flash timer if the new tab (which was loaded in
+          // the background) is not completely visible
+          if (tsboStart > ctboStart || ctboEnd > tsboEnd) {
+            this.mFlashStage = this.mFlashStart;
+
+            if (!this.mFlashTimer) 
+              this.mFlashTimer =
+                Components.classes["@mozilla.org/timer;1"]
+                          .createInstance(Components.interfaces.nsITimer);
+            else
+               this.mFlashTimer.cancel();
+
+            this.mFlashTimer.initWithCallback(this,
+                         this.mFlashDelay,
+                         Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
+          }
+        ]]></body>
+      </method>
+      
+      <method name="notify">
+        <parameter name="aTimer"/>
+        <body><![CDATA[
+          if (!document)
+            aTimer.cancel();
+
+          this.mFlashStage--;
+
+          this.mAllTabsBox.setAttribute("flash",
+            (this.mFlashStage % 2) ? "true" : "false");
+
+          if (!this.mFlashStage)
+            aTimer.cancel();
+        ]]></body>
+      </method>
+    </implementation>
     <handlers>
-      <handler event="TabOpen"   action="this.adjustTabstrip(false);"/>
       <handler event="TabClose"  action="this.adjustTabstrip(true);"/>
       <handler event="TabSelect" action="this._handleTabSelect();"/>
     </handlers>
   </binding>
 
+  <!-- alltabs-popup binding
+       This binding relies on the structure of the tabbrowser binding.
+       Therefore it should only be used as a child of the tabs element.
+       This binding is exposed as a pseudo-public-API so themes can customize
+       the tabbar appearance without having to be scriptable
+       (see globalBindings.xml in Pinstripe for example).
+  -->
+  <binding id="tabbrowser-alltabs-popup"
+           extends="chrome://global/content/bindings/popup.xml#popup">
+    <implementation>
+      <field name="_allTabsMenuItemCommandHandler" readonly="true">
+      <![CDATA[({
+        mOuter: this,
+        handleEvent: function handleEvent(aEvent) {
+          if (!aEvent.isTrusted) {
+            // Don't let untrusted events mess with tabs.
+            return;
+          }
+
+          // note, the tab may not be valid (if after we built the popup
+          // the tab was closed.  but selectedItem setter handles that
+          // gracefully.
+          var tabcontainer = document.getBindingParent(this.mOuter);
+          tabcontainer.selectedItem = aEvent.target.tab;
+        }
+      })]]>
+      </field>
+
+      <method name="_onHidingAllTabsPopup">
+        <body><![CDATA[
+          // clear out the menu popup and remove the listeners
+          while (this.hasChildNodes()) {
+            var menuItem = this.lastChild;
+            menuItem.removeEventListener("command", 
+                                         this._allTabsMenuItemCommandHandler, 
+                                         false);
+            this.removeChild(menuItem);
+          }
+        ]]></body>
+      </method>
+
+      <method name="_onShowingAllTabsPopup">
+        <body><![CDATA[
+          // set up the menu popup
+          var tabcontainer = document.getBindingParent(this);
+          var tabs = tabcontainer.childNodes;
+
+          for (var i = 0; i < tabs.length; i++) {
+            var menuItem = document.createElementNS(
+              "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", 
+              "menuitem");
+            var curTab = tabs[i];
+
+            if (curTab.selected)
+              menuItem.setAttribute("selected", "true");
+            menuItem.setAttribute("class", "menuitem-iconic alltabs-item");
+
+            // XXX todo
+            // what if uri, image/favicon, title change 
+            // while this popup is open?
+            // mano warns:  "be careful of leaks when addressing this."
+            menuItem.setAttribute("label", curTab.label);
+            menuItem.setAttribute("image", curTab.getAttribute("image"));
+            var URI = curTab.linkedBrowser.currentURI.spec;
+            // XXX todo
+            // statustext not working yet, since I don't have a menubar
+            // reuse the menubar statustext logic
+            menuItem.setAttribute("statustext", URI);
+            menuItem.tab = curTab;
+            menuItem.addEventListener("command", 
+                                      this._allTabsMenuItemCommandHandler, 
+                                      false);
+            this.appendChild(menuItem);
+          }
+        ]]></body>
+      </method>
+    </implementation>
+    <handlers>
+      <handler event="popupshowing"><![CDATA[
+        if (event.target == this)
+          this._onShowingAllTabsPopup();
+      ]]></handler>
+      <handler event="popuphiding"><![CDATA[
+        if (event.target == this)
+          this._onHidingAllTabsPopup();
+      ]]></handler>
+    </handlers>
+  </binding>
+
   <!-- close-tab-button binding
        This binding relies on the structure of the tabbrowser binding.
-       Therefor it should only be used as a child of the tab or the tabs
+       Therefore it should only be used as a child of the tab or the tabs
        element (in both cases, when they are anonymous nodes of <tabbrowser>).
        This binding is exposed as a pseudo-public-API so themes can customize
        the tabbar appearance without having to be scriptable

@@ -661,6 +661,11 @@ tabpanels {
   display: -moz-deck;
 }
 
+.tabs-alltabs-popup {
+  -moz-binding: url("chrome://global/content/bindings/tabbrowser.xml#tabbrowser-alltabs-popup");
+}
+
+
 /********** progressmeter **********/
 
 progressmeter {

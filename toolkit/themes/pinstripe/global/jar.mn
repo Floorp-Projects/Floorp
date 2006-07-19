@@ -86,6 +86,7 @@ classic.jar:
 +  skin/classic/global/console/console-error-caret.gif                (console/console-error-caret.gif)
 +  skin/classic/global/console/console-error-dash.gif                 (console/console-error-dash.gif)
 +  skin/classic/global/console/console.css                            (console/console.css)
++  skin/classic/global/icons/alltabs.png                              (icons/alltabs.png)
 +  skin/classic/global/icons/alert-error.gif                          (icons/alert-error.gif)
 +  skin/classic/global/icons/alert-message.gif                        (icons/alert-message.gif)
 +  skin/classic/global/icons/alert-question.gif                       (icons/alert-question.gif)

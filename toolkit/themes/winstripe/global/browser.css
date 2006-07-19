@@ -132,3 +132,36 @@ tab {
   -moz-padding-start: 1px;
   margin-bottom: 1px;
 }
+
+/**
+ * All Tabs Button
+ */
+
+.tabs-alltabs-box[flash="true"] {
+  background-color: orange;
+}
+
+.tabs-alltabs-button {
+  list-style-image: url("chrome://global/skin/icons/alltabs.png");
+  -moz-image-region: rect(0px, 16px, 16px, 0px); 
+}
+
+.tabs-alltabs-button:hover {
+  -moz-image-region: rect(0px, 48px, 16px, 32px);
+}
+
+/**
+ * All Tabs Menupopup 
+ */
+
+.alltabs-item > .menu-iconic-left > .menu-iconic-icon {
+  width: 16px;
+  height: 16px;
+  list-style-image: url("chrome://global/skin/icons/folder-item.png");
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+
+.alltabs-item[selected="true"] {
+  font-weight: bold;
+}
+

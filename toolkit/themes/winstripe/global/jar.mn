@@ -72,6 +72,7 @@ classic.jar:
         skin/classic/global/Filepicker.png                          (filepicker/Filepicker.png)
         skin/classic/global/icons/Close.gif                         (icons/Close.gif)
         skin/classic/global/icons/close.png                         (icons/close.png)
+        skin/classic/global/icons/alltabs.png                       (icons/alltabs.png)
         skin/classic/global/icons/Error.png                         (icons/Error.png)
         skin/classic/global/icons/find.png                          (icons/find.png)
         skin/classic/global/icons/folder-item.png                   (icons/folder-item.png)
