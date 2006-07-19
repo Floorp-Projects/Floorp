@@ -433,12 +433,13 @@ nsSVGPathGeometryFrame::UpdateCoveredRegion()
     } else
       cairo_fill_extents(ctx, &xmin, &ymin, &xmax, &ymax);
 
-    cairo_user_to_device(ctx, &xmin, &ymin);
-    cairo_user_to_device(ctx, &xmax, &ymax);
+    if (!IsDegeneratePath(xmin, ymin, xmax, ymax)) {
+      cairo_user_to_device(ctx, &xmin, &ymin);
+      cairo_user_to_device(ctx, &xmax, &ymax);
 
+      mRect = nsSVGUtils::ToBoundingPixelRect(xmin, ymin, xmax, ymax);
+    }
     cairo_destroy(ctx);
-
-    mRect = nsSVGUtils::ToBoundingPixelRect(xmin, ymin, xmax, ymax);
   }
 
   // Add in markers
@@ -503,11 +504,7 @@ nsSVGPathGeometryFrame::GetBBox(nsIDOMSVGRect **_retval)
 
   cairo_fill_extents(ctx, &xmin, &ymin, &xmax, &ymax);
 
-  /* cairo_fill_extents doesn't work on degenerate paths */
-  if (xmin ==  32767 &&
-      ymin ==  32767 &&
-      xmax == -32768 &&
-      ymax == -32768) {
+  if (IsDegeneratePath(xmin, ymin, xmax, ymax)) {
     /* cairo_stroke_extents doesn't work with stroke width zero, fudge */
     cairo_set_line_width(ctx, 0.0001);
     cairo_stroke_extents(ctx, &xmin, &ymin, &xmax, &ymax);
