@@ -1,5 +1,12 @@
 <!ENTITY  updateWizard.title              "&brandShortName; Update">
 
+<!ENTITY  offline.title                   "&brandShortName; is working offline">
+<!ENTITY  offline.description             "&brandShortName; needs to go online in order to see if updates
+                                           are available for your add-ons to make them compatible with this
+                                           version.">
+<!ENTITY  offline.toggleOffline.label     "Go online now.">
+<!ENTITY  offline.toggleOffline.accesskey "G">
+
 <!ENTITY  mismatch.win.title              "Incompatible Add-ons">
 <!ENTITY  mismatch.introduction1.label    "The following add-ons are not compatible with this version
                                            of &brandShortName;:">
