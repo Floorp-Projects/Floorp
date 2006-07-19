@@ -59,7 +59,12 @@ const XMLNS = "http://www.w3.org/XML/1998/namespace";
 /***** Some general utils *****/
 function strToURI(link, base) {
   var base = base || null;
-  return gIoService.newURI(link, null, base);
+  try {
+    return gIoService.newURI(link, null, base);
+  }
+  catch(e) {
+    return null;
+  }
 }
 
 function isArray(a) {
@@ -177,6 +182,19 @@ function bagHasKey(bag, key) {
     return false;
   }
 }
+
+function makePropGetter(key) {
+  return function FeedPropGetter(bag) {
+    try {
+      return value = bag.getProperty(key);
+    }
+    catch(e) {
+    }
+    return null;
+  }
+}
+
+
 
 /**
  * XXX Thunderbird's W3C-DTF function
@@ -325,6 +343,7 @@ function Feed() {
   this._title = null;
   this.items = [];
   this.link = null;
+  this.id = null;
   this.baseURI = null;
 }
 Feed.prototype = {
@@ -349,6 +368,7 @@ Feed.prototype = {
     _sub: ["description","dc:description","rss1:description",
            "atom03:tagline","atom:subtitle"],
     items: ["items","atom03_entries","entries"],
+    id: ["atom:id","rdf:about"],
     _title: ["title","rss1:title", "atom03:title","atom:title"],
     link:  [["link",strToURI],["rss1:link",strToURI]],
     categories: ["categories", "dc:subject"],
@@ -390,7 +410,7 @@ Feed.prototype = {
       }
     }
   },
-
+  
   QueryInterface: function Feed_QI(iid) {
     if (iid.equals(Ci.nsIFeed) ||
         iid.equals(Ci.nsIFeedContainer) ||
@@ -407,6 +427,7 @@ function Entry() {
   this.fields = Cc["@mozilla.org/hash-property-bag;1"].
                 createInstance(Ci.nsIWritablePropertyBag2);
   this.link = null;
+  this.id = null;
   this.baseURI = null;
 }
 
@@ -444,8 +465,10 @@ Entry.prototype = {
   mediaContent: null,
 
   searchLists: {
-    _title: ["title","rss1:title","atom03:title","atom:title"],
+    _title: ["title", "rss1:title", "atom03:title", "atom:title"],
     link: [["link",strToURI],["rss1:link",strToURI]],
+    id: [["guid", makePropGetter("guid")], "rdf:about",
+         "atom03:id", "atom:id"],
     _summary: ["description", "rss1:description", "dc:description",
                "atom03:summary", "atom:summary"],
     _content: ["content:encoded","atom03:content","atom:content"]
@@ -453,9 +476,20 @@ Entry.prototype = {
 
   normalize: function Entry_normalize() {
     fieldsToObj(this, this.searchLists);
+
     // Assign Atom link if needed
     if (bagHasKey(this.fields, "links"))
       this._atomLinksToURI();
+
+    // The link might be a guid w/ permalink=true
+    if (!this.link && bagHasKey(this.fields, "guid")) {
+      var guid = this.fields.getProperty("guid");
+      if (bagHasKey(guid, "isPermaLink")) {
+        var isPermaLink = new Boolean(guid.getProperty("isPermaLink"));
+        if (isPermaLink)
+          this.link = strToURI(guid.getProperty("guid"));
+      }
+    }
   },
 
   QueryInterface: function(iid) {
@@ -1134,6 +1168,7 @@ FeedProcessor.prototype = {
       this._state = "IN_" + elementInfo.fieldName.toUpperCase();
       this._docVerified(elementInfo.feedVersion);
       this._stack.push([this._feed, this._state]);
+      this._mapAttributes(this._feed, attributes);
     }
     else {
       this._state = this._processComplexElement(elementInfo, attributes);
@@ -1193,7 +1228,7 @@ FeedProcessor.prototype = {
   function FP__processComplexElement(elementInfo, attributes) {
     var obj, props, key, prefix;
 
-    // If the container is a feed or entry, it'll need to have its 
+    // If the container is an entry/item, it'll need to have its 
     // more esoteric properties put in the 'fields' property bag, and set its
     // parent.
     if (elementInfo.containerClass) {
@@ -1208,15 +1243,7 @@ FeedProcessor.prototype = {
       props = obj;
     }
 
-    // Cycle through the attributes, and set our properties using the
-    // prefix:localNames we find in our namespace dictionary.
-    for (var i = 0; i < attributes.length; ++i) {
-      prefix = gNamespaces[attributes.getURI(i)] ? 
-        gNamespaces[attributes.getURI(i)] + ":" : "";
-      key = prefix + attributes.getLocalName(i);
-      var val = attributes.getValue(i);
-      props.setPropertyAsAString(key, val);
-    }
+    this._mapAttributes(props, attributes);
 
     // We should have a container/propertyBag that's had its
     // attributes processed. Now we need to attach it to its
@@ -1300,6 +1327,19 @@ FeedProcessor.prototype = {
       container.replaceElementAt(element, container.length - 1, false);
   },
   
+
+  _mapAttributes: function FP__mapAttributes(bag, attributes) {
+    // Cycle through the attributes, and set our properties using the
+    // prefix:localNames we find in our namespace dictionary.
+    for (var i = 0; i < attributes.length; ++i) {
+      prefix = gNamespaces[attributes.getURI(i)] ? 
+        gNamespaces[attributes.getURI(i)] + ":" : "";
+      key = prefix + attributes.getLocalName(i);
+      var val = attributes.getValue(i);
+      bag.setPropertyAsAString(key, val);
+    }
+  },
+
   // unknown element values are returned here. See startElement above
   // for how this works.
   returnFromExtHandler:

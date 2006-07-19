@@ -45,14 +45,14 @@ interface nsIArray;
 * but they have some divergent attributes and require
 * different convenience methods.
 */ 
-[scriptable, uuid(c7e65344-df1f-4a75-9615-d58357c1554b)]
+[scriptable, uuid(b7e7b6b9-a461-4817-9003-3e6b9005945f)]
 interface nsIFeedContainer : nsISupports 
 {
   /**
   * Many feeds contain an ID distinct from their URI, and
   * entries have standard fields for this in all major formats.
   */
-  attribute AString identifier;
+  attribute AString id;
 
   /**
    * The baseURI for the Entry or Feed.
