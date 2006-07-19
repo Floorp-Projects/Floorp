@@ -609,7 +609,7 @@ SessionStoreService.prototype = {
    *        Event obj
    */
   onTabInput: function sss_onTabInput(aWindow, aPanel, aEvent) {
-    if (this._saveTextData(aPanel, XPCNativeWrapper(aEvent.originalTarget))) {
+    if (this._saveTextData(aPanel, aEvent.originalTarget)) {
       this.saveStateDelayed(aWindow, 3000);
     }
   },
@@ -952,18 +952,31 @@ SessionStoreService.prototype = {
    * @param aPanel
    *        TabPanel reference
    * @param aTextarea
+   *        HTML content element (without an XPCNativeWrapper applied)
    * @returns bool
    */
   _saveTextData: function sss_saveTextData(aPanel, aTextarea) {
-    var id = aTextarea.id ? "#" + aTextarea.id : aTextarea.name;
+    var wrappedTextarea = XPCNativeWrapper(aTextarea);
+    var id = wrappedTextarea.id ? "#" + wrappedTextarea.id :
+                                  wrappedTextarea.name;
     if (!id
-      || !(aTextarea instanceof Ci.nsIDOMHTMLTextAreaElement
-      || aTextarea instanceof Ci.nsIDOMHTMLInputElement)) {
+      || !(wrappedTextarea instanceof Ci.nsIDOMHTMLTextAreaElement 
+      || wrappedTextarea instanceof Ci.nsIDOMHTMLInputElement)) {
       return false; // nothing to save
     }
     
+    if (!aPanel.__SS_text) {
+      aPanel.__SS_text = {};
+    }
+    else if (aPanel.__SS_text[aTextarea] &&
+             !aPanel.__SS_text[aTextarea].cache) {
+      // we've already marked this text element for saving (the cache is
+      // added during save operations and would have to be updated here)
+      return false;
+    }
+    
     // determine the frame we're in and encode it into the textarea's ID
-    var content = aTextarea.ownerDocument.defaultView;
+    var content = wrappedTextarea.ownerDocument.defaultView;
     while (content != content.top) {
       var frames = content.parent.frames;
       for (var i = 0; i < frames.length && frames[i] != content; i++);
@@ -971,10 +984,8 @@ SessionStoreService.prototype = {
       content = content.parent;
     }
     
-    if (!aPanel.__SS_text) {
-      aPanel.__SS_text = {};
-    }
-    aPanel.__SS_text[id] = aTextarea.value;
+    // mark this element for saving
+    aPanel.__SS_text[aTextarea] = { id: id, element: wrappedTextarea };
     
     return true;
   },
@@ -1012,8 +1023,13 @@ SessionStoreService.prototype = {
         
         var text = [];
         if (aBrowser.parentNode.__SS_text && this._checkPrivacyLevel(aBrowser.currentURI.schemeIs("https"))) {
-          for (var id in aBrowser.parentNode.__SS_text) {
-            text.push(id + "=" + encodeURI(aBrowser.parentNode.__SS_text[id]));
+          for (var key in aBrowser.parentNode.__SS_text) {
+            var data = aBrowser.parentNode.__SS_text[key];
+            if (!data.cache) {
+              // update the text element's value before adding it to the data structure
+              data.cache = encodeURI(data.element.value);
+            }
+            text.push(data.id + "=" + data.cache);
           }
         }
         if (aBrowser.currentURI.spec == "about:config") {
