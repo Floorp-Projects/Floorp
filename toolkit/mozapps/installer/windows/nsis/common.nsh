@@ -706,8 +706,12 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
  * message window's class.
  * @param   _MSG
  *          The message text to display in the message box.
+ * @param   _PROMPT
+ *          If false don't prompt the user and automatically exit the
+ *          application if it is running.
  *
- * $R8 = value returned from FindWindow
+ * $R7 = value returned from FindWindow
+ * $R8 = _PROMPT
  * $R9 = _MSG
  */
 !macro CloseApp
@@ -719,14 +723,17 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
 
     Function ${_MOZFUNC_UN}CloseApp
       Exch $R9
-      Push $R8
+      Exch 1
+      Exch $R8
+      Push $R7
 
       loop:
-      FindWindow $R8 "${WindowClass}"
-      IntCmp $R8 0 end
+      FindWindow $R7 "${WindowClass}"
+      IntCmp $R7 0 end
+      StrCmp $R8 "false" +2 0
       MessageBox MB_OKCANCEL|MB_ICONQUESTION "$R9" IDCANCEL exit 0
-      ; Only post this one time.
-      System::Call 'user32::PostMessage(i r18, i ${WM_QUIT}, i 0, i 0)'
+
+      System::Call 'user32::PostMessage(i r17, i ${WM_QUIT}, i 0, i 0)'
       # The amount of time to wait for the app to shutdown before prompting again
       Sleep 4000
       Goto loop
@@ -736,7 +743,9 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
 
       end:
 
-      Pop $R8
+      Pop $R7
+      Exch $R8
+      Exch 1
       Exch $R9
     FunctionEnd
 
@@ -744,10 +753,11 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
   !endif
 !macroend
 
-!macro CloseAppCall _MSG
+!macro CloseAppCall _MSG _PROMPT
   !verbose push
   !verbose ${_MOZFUNC_VERBOSE}
   Push "${_MSG}"
+  Push "${_PROMPT}"
   Call CloseApp
   !verbose pop
 !macroend
@@ -767,10 +777,11 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
   !endif
 !macroend
 
-!macro un.CloseAppCall _MSG
+!macro un.CloseAppCall _MSG _PROMPT
   !verbose push
   !verbose ${_MOZFUNC_VERBOSE}
   Push "${_MSG}"
+  Push "${_PROMPT}"
   Call un.CloseApp
   !verbose pop
 !macroend
@@ -829,7 +840,7 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
       Exch 3
       Exch $R7
       Exch 2
-      Exch $R7
+      Exch $R8
       Exch 1
       Exch $R9
     FunctionEnd
