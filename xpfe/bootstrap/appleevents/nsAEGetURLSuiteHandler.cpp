@@ -141,14 +141,25 @@ void AEGetURLSuiteHandler::HandleGetURLEvent(const AppleEvent *appleEvent, Apple
 	directParameter.GetCString(urlString, dataSize + 1);
 
 	// bail if it is a chrome URL for security reasons (bug 305374)
-	nsCOMPtr<nsIURI> uri;
-	PRBool isBlockedScheme = PR_FALSE;
-	if (NS_FAILED(NS_NewURI(getter_AddRefs(uri), urlString)) ||
-	    NS_FAILED(uri->SchemeIs("chrome", &isBlockedScheme)) ||
-	    isBlockedScheme) {
-		nsMemory::Free(urlString);
-		return;
-	}
+        // Don't use nsIURI because xpcom may not be running
+        CFURLRef url = ::CFURLCreateWithBytes(nsnull, (UInt8*)urlString,
+                                              dataSize,
+                                              kCFStringEncodingUTF8,
+                                              nsnull);
+        if (!url)
+          return;
+
+        CFStringRef scheme = ::CFURLCopyScheme(url);
+        ::CFRelease(url);
+        if (!scheme)
+          return;
+
+        CFComparisonResult isChrome = ::CFStringCompare(scheme, CFSTR("chrome"),
+                                                        kCFCompareCaseInsensitive);
+        ::CFRelease(scheme);
+
+        if (isChrome == kCFCompareEqualTo)
+          return;
 
 	// get the destination window, if applicable
 	StAEDesc		openInWindowDesc;

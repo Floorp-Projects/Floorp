@@ -1181,6 +1181,8 @@ static nsresult LaunchChild(nsINativeAppSupport* aNative,
     gRestartArgv[gRestartArgc] = nsnull;
   }
 
+  PR_SetEnv("MOZ_LAUNCHED_CHILD=1");
+
 #if defined(XP_MACOSX)
   LaunchChildMac(gRestartArgc, gRestartArgv);
 #else
@@ -1318,6 +1320,10 @@ ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
     rv |= xpcom.SetWindowCreator(aNative);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
+#ifdef XP_MACOSX
+    SetupMacCommandLine(gRestartArgc, gRestartArgv);
+#endif
+
     { //extra scoping is needed so we release these components before xpcom shutdown
       nsCOMPtr<nsIWindowWatcher> windowWatcher
         (do_GetService(NS_WINDOWWATCHER_CONTRACTID));
@@ -1390,6 +1396,10 @@ ImportProfiles(nsIToolkitProfileService* aPService,
     if (NS_SUCCEEDED(rv)) {
       xpcom.DoAutoreg();
       xpcom.RegisterProfileService(aPService);
+
+#ifdef XP_MACOSX
+      SetupMacCommandLine(gRestartArgc, gRestartArgv);
+#endif
 
       nsCOMPtr<nsIProfileMigrator> migrator
         (do_GetService(NS_PROFILEMIGRATOR_CONTRACTID));
@@ -1916,19 +1926,43 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
   if (gBinaryPath && !*gBinaryPath)
     gBinaryPath = nsnull;
+
+  if (PR_GetEnv("MOZ_LAUNCHED_CHILD")) {
+    // When the app relaunches, the original process exits.  This causes
+    // the dock tile to stop bouncing, lose the "running" triangle, and
+    // if the tile does not permanently reside in the Dock, even disappear.
+    // This can be confusing to the user, who is expecting the app to launch.
+    // Calling ReceiveNextEvent without requesting any event is enough to
+    // cause a dock tile for the child process to appear.
+    const EventTypeSpec kFakeEventList[] = { { INT_MAX, INT_MAX } };
+    EventRef event;
+    ::ReceiveNextEvent(GetEventTypeCount(kFakeEventList), kFakeEventList,
+                       kEventDurationNoWait, PR_FALSE, &event);
+  }
+
+  if (CheckArg("foreground")) {
+    // The original process communicates that it was in the foreground by
+    // adding this argument.  This new process, which is taking over for
+    // the old one, should make itself the active application.
+    ProcessSerialNumber psn;
+    if (::GetCurrentProcess(&psn) == noErr)
+      ::SetFrontProcess(&psn);
+  }
 #endif
+
+  PR_SetEnv("MOZ_LAUNCHED_CHILD=");
 
   gAppData = aAppData;
 
-  gRestartArgc = argc;
-  gRestartArgv = (char**) malloc(sizeof(char*) * (argc + 1));
+  gRestartArgc = gArgc;
+  gRestartArgv = (char**) malloc(sizeof(char*) * (gArgc + 1));
   if (!gRestartArgv) return 1;
 
   int i;
-  for (i = 0; i < argc; ++i) {
-    gRestartArgv[i] = argv[i];
+  for (i = 0; i < gArgc; ++i) {
+    gRestartArgv[i] = gArgv[i];
   }
-  gRestartArgv[argc] = nsnull;
+  gRestartArgv[gArgc] = nsnull;
 
 #if defined(XP_OS2)
   PRBool StartOS2App(int aArgc, char **aArgv);
@@ -2318,8 +2352,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           cmdLine = do_CreateInstance("@mozilla.org/toolkit/command-line;1");
           NS_ENSURE_TRUE(cmdLine, 1);
 
-          rv = InitializeMacCommandLine(gArgc, gArgv);
-          NS_ENSURE_SUCCESS(rv, 1);
+          SetupMacCommandLine(gArgc, gArgv);
 
           rv = cmdLine->Init(gArgc, gArgv,
                              workingDir, nsICommandLine::STATE_INITIAL_LAUNCH);
@@ -2378,6 +2411,10 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           // resolution for Extensions is different than for the component 
           // registry - major milestone vs. build id. 
           needsRestart = PR_TRUE;
+
+#ifdef XP_MACOSX
+          SetupMacCommandLine(gRestartArgc, gRestartArgv);
+#endif
         }
       }
 

@@ -52,6 +52,10 @@
 #include "prproces.h"
 #include "prlog.h"
 
+#ifdef XP_MACOSX
+#include "nsCommandLineServiceMac.h"
+#endif
+
 #if defined(XP_WIN)
 # include <direct.h>
 # include <process.h>
@@ -354,7 +358,8 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsILocalFile *statusFile,
   pid.AppendInt((PRInt32) getpid());
 #endif
 
-  char **argv = new char*[5 + appArgc];
+  int argc = appArgc + 4;
+  char **argv = new char*[argc + 1];
   if (!argv)
     return;
   argv[0] = (char*) updaterPath.get();
@@ -368,6 +373,7 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsILocalFile *statusFile,
     argv[4 + appArgc] = nsnull;
   } else {
     argv[3] = nsnull;
+    argc = 3;
   }
 
   LOG(("spawning updater process [%s]\n", updaterPath.get()));
@@ -392,6 +398,10 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsILocalFile *statusFile,
   status = PR_ProcessAttrSetCurrentDirectory(attr, applyToDir.get());
   if (status != PR_SUCCESS)
     goto end;
+
+#ifdef XP_MACOSX
+  SetupMacCommandLine(argc, argv);
+#endif
 
   PR_CreateProcessDetached(updaterPath.get(), argv, nsnull, attr);
   exit(0);

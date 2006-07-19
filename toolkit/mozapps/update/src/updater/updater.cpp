@@ -987,6 +987,7 @@ static void
 LaunchCallbackApp(const char *workingDir, int argc, char **argv)
 {
   putenv("NO_EM_RESTART=");
+  putenv("MOZ_LAUNCHED_CHILD=1");
 
   // Run from the specified working directory (see bug 312360).
   chdir(workingDir);

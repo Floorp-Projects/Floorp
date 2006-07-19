@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Simon Fraser   <sfraser@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Mark Mentovai <mark@moxienet.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -101,6 +102,33 @@ static PRInt32 ReadLine(FILE* inStream, char* buf, PRInt32 bufSize)
   return (c == EOF && !charsRead) ? -1 : charsRead; 
 }
 
+static PRUint32
+ProcessAppleEvents()
+{
+  // Dispatch all of the Apple Events waiting in the event queue.
+
+  PRUint32 processed = 0;
+
+  const EventTypeSpec kAppleEventList[] = {
+    { kEventClassAppleEvent, kEventAppleEvent },
+  };
+
+  EventRef carbonEvent;
+  while (::ReceiveNextEvent(GetEventTypeCount(kAppleEventList),
+                            kAppleEventList,
+                            kEventDurationNoWait,
+                            PR_TRUE,
+                            &carbonEvent) == noErr) {
+    EventRecord eventRecord;
+    ::ConvertEventRefToEventRecord(carbonEvent, &eventRecord);
+    ::AEProcessAppleEvent(&eventRecord);
+    ::ReleaseEvent(carbonEvent);
+    processed++;
+  }
+
+  return processed;
+}
+
 //----------------------------------------------------------------------------------------
 nsMacCommandLine::nsMacCommandLine()
 : mArgs(NULL)
@@ -153,20 +181,9 @@ nsresult nsMacCommandLine::Initialize(int& argc, char**& argv)
   // 2. If they are any other kind of document, convert them into -url command-line
   //    parameters or -print parameters, with file URLs.
 
-  EventRecord anEvent;
-  for (short i = 1; i < 5; i++)
-    ::WaitNextEvent(0, &anEvent, 0, nsnull);
-
-  while (::EventAvail(highLevelEventMask, &anEvent))
-  {
-    ::WaitNextEvent(highLevelEventMask, &anEvent, 0, nsnull);
-    if (anEvent.what == kHighLevelEvent)
-    {
-      // here we process startup odoc/pdoc events, which can 
-      // add items to the command line.
-      err = ::AEProcessAppleEvent(&anEvent);
-    }
-  }
+  // Spin a native event loop to allow AE handlers for waiting events to be
+  // called
+  ProcessAppleEvents();
 
   // we've started up now
   mStartedUp = PR_TRUE;
@@ -178,10 +195,46 @@ nsresult nsMacCommandLine::Initialize(int& argc, char**& argv)
 }
 
 //----------------------------------------------------------------------------------------
+void nsMacCommandLine::SetupCommandLine(int& argc, char**& argv)
+//----------------------------------------------------------------------------------------
+{
+  // Initializes the command line from Apple Events and other sources,
+  // as appropriate for OS X.
+  //
+  // IMPORTANT: This must be done before XPCOM shutdown if the app is to
+  // relaunch (i.e. before the ScopedXPCOMStartup object goes out of scope).
+  // XPCOM shutdown can cause other things to process native events, and
+  // native event processing can cause the waiting Apple Events to be
+  // discarded.
+
+  // Process Apple Events and put them into the arguments.
+  Initialize(argc, argv);
+
+  Boolean isForeground = PR_FALSE;
+  ProcessSerialNumber psnSelf, psnFront;
+
+  // If the process will be relaunched, the child should be in the foreground
+  // if the parent is in the foreground.  This will be communicated in a
+  // command-line argument to the child.  Adding this argument is harmless
+  // if not relaunching.
+  if (::GetCurrentProcess(&psnSelf) == noErr &&
+      ::GetFrontProcess(&psnFront) == noErr &&
+      ::SameProcess(&psnSelf, &psnFront, &isForeground) == noErr &&
+      isForeground) {
+    // The process is currently in the foreground.  The relaunched
+    // process should come to the front, too.
+    AddToCommandLine("-foreground");
+  }
+
+  argc = mArgsUsed;
+  argv = mArgs;
+}
+
+//----------------------------------------------------------------------------------------
 nsresult nsMacCommandLine::AddToCommandLine(const char* inArgText)
 //----------------------------------------------------------------------------------------
 {
-  if (mArgsUsed >= mArgsAllocated) {
+  if (mArgsUsed >= mArgsAllocated - 1) {
     // realloc does not free the given pointer if allocation fails.
     char **temp = static_cast<char **>(realloc(mArgs, (mArgsAllocated + kArgsGrowSize) * sizeof(char *)));
     if (!temp)
@@ -193,6 +246,7 @@ nsresult nsMacCommandLine::AddToCommandLine(const char* inArgText)
   if (!temp2)
     return NS_ERROR_OUT_OF_MEMORY;
   mArgs[mArgsUsed++] = temp2;
+  mArgs[mArgsUsed] = nsnull;
   return NS_OK;
 }
 
@@ -201,18 +255,42 @@ nsresult nsMacCommandLine::AddToCommandLine(const char* inArgText)
 nsresult nsMacCommandLine::AddToCommandLine(const char* inOptionString, const FSSpec& inFileSpec)
 //----------------------------------------------------------------------------------------
 {
-  // Convert the filespec to a URL
-  FSSpec nonConstSpec = inFileSpec;
-  nsCOMPtr<nsILocalFileMac> inFile;
-  nsresult rv = NS_NewLocalFileWithFSSpec(&nonConstSpec, PR_TRUE, getter_AddRefs(inFile));
-  if (NS_FAILED(rv))
-    return rv;
-  nsCAutoString specBuf;
-  rv = NS_GetURLSpecFromFile(inFile, specBuf);
-  if (NS_FAILED(rv))
-    return rv;
+  // Convert the filespec to a URL.  Avoid using xpcom because this may be
+  // called before xpcom startup.
+  FSRef fsRef;
+  if (::FSpMakeFSRef(&inFileSpec, &fsRef) != noErr)
+    return NS_ERROR_FAILURE;
+
+  CFURLRef url = ::CFURLCreateFromFSRef(nsnull, &fsRef);
+  if (!url)
+    return NS_ERROR_FAILURE;
+
+  CFStringRef string = ::CFURLGetString(url);
+  if (!string) {
+    ::CFRelease(url);
+    return NS_ERROR_FAILURE;
+  }
+
+  CFIndex length = ::CFStringGetLength(string);
+  CFIndex bufLen = 0;
+  ::CFStringGetBytes(string, CFRangeMake(0, length), kCFStringEncodingUTF8,
+                     0, PR_FALSE, nsnull, 0, &bufLen);
+
+  UInt8 buffer[bufLen + 1];
+  if (!buffer) {
+    ::CFRelease(url);
+    return NS_ERROR_FAILURE;
+  }
+
+  ::CFStringGetBytes(string, CFRangeMake(0, length), kCFStringEncodingUTF8,
+                     0, PR_FALSE, buffer, bufLen, nsnull);
+  buffer[bufLen] = 0;
+
+  ::CFRelease(url);
+
   AddToCommandLine(inOptionString);  
-  AddToCommandLine(specBuf.get());
+  AddToCommandLine((char*)buffer);
+
   return NS_OK;
 }
 
@@ -392,19 +470,12 @@ OSErr nsMacCommandLine::Quit(TAskSave askSave)
   return noErr;
 }
 
-
-//========================================================================================
-//      InitializeMacCommandLine
-//      The only external entry point to this file.
-//========================================================================================
-
 #pragma mark -
 
 //----------------------------------------------------------------------------------------
-nsresult InitializeMacCommandLine(int& argc, char**& argv)
+void SetupMacCommandLine(int& argc, char**& argv)
 //----------------------------------------------------------------------------------------
 {
-
-  nsMacCommandLine&  cmdLine = nsMacCommandLine::GetMacCommandLine();
-  return cmdLine.Initialize(argc, argv);
-} // InitializeMac
+  nsMacCommandLine& cmdLine = nsMacCommandLine::GetMacCommandLine();
+  return cmdLine.SetupCommandLine(argc, argv);
+}
