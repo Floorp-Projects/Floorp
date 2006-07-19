@@ -54,7 +54,6 @@ class nsIVariant;
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
 class nsScriptObjectHolder;
-class nsIDOMDocument;
 
 typedef void (*nsScriptTerminationFunc)(nsISupports* aRef);
 
@@ -443,9 +442,10 @@ public:
 
   /**
    * Tell the context our global has a new document, and the scope
-   * used by it.
+   * used by it.  Use nsISupports to avoid dependency issues - but expect
+   * a QI for nsIDOMDocument and/or nsIDocument.
    */
-  virtual void DidSetDocument(nsIDOMDocument *aDoc, void *aGlobal) = 0;
+  virtual void DidSetDocument(nsISupports *aDoc, void *aGlobal) = 0;
 
   /* Memory managment for script objects.  Used by the implementation of
    * nsScriptObjectHolder to manage the lifetimes of the held script objects.

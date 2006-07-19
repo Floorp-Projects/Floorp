@@ -288,7 +288,7 @@ nsPythonContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
 }
 
 void
-nsPythonContext::DidSetDocument(nsIDOMDocument *aDoc, void *aGlobal)
+nsPythonContext::DidSetDocument(nsISupports *aSupDoc, void *aGlobal)
 {
   NS_TIMELINE_MARK_FUNCTION("nsPythonContext::DidSetDocument");
   NS_ASSERTION(mDelegate != NULL, "No delegate");
@@ -298,9 +298,12 @@ nsPythonContext::DidSetDocument(nsIDOMDocument *aDoc, void *aGlobal)
 
   CEnterLeavePython _celp;
   PyObject *obDoc;
-  if (aDoc) {
-    obDoc = PyObject_FromNSDOMInterface(mDelegate, aDoc,
-                                        NS_GET_IID(nsIDOMDocument));
+  if (aSupDoc) {
+    nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(aSupDoc));
+    NS_ASSERTION(nsnull != doc, "not an nsIDOMDocument!?");
+    if (nsnull != doc)
+      obDoc = PyObject_FromNSDOMInterface(mDelegate, aSupDoc,
+                                          NS_GET_IID(nsIDOMDocument));
     if (!obDoc) {
       HandlePythonError();
       return;
