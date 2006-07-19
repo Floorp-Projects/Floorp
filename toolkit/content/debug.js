@@ -42,7 +42,6 @@
 # This file contains functions that are useful for debugging purposes from
 # within JavaScript code.
 
-const NS_ASSERT_ENVIRONMENT_VARIABLE_NAME = "XUL_ASSERT_PROMPT";
 var gTraceOnAssert = true;
 
 /**
@@ -89,8 +88,8 @@ function NS_ASSERT(condition, message) {
 
   var environment = Components.classes["@mozilla.org/process/environment;1"].
                     getService(Components.interfaces.nsIEnvironment);
-  if (environment.exists(NS_ASSERT_ENVIRONMENT_VARIABLE_NAME) &&
-      !parseInt(environment.get(NS_ASSERT_ENVIRONMENT_VARIABLE_NAME)))
+  if (environment.exists("XUL_ASSERT_PROMPT") &&
+      !parseInt(environment.get("XUL_ASSERT_PROMPT")))
     return;
 
   var source = null;

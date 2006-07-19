@@ -6676,7 +6676,6 @@ var BrowserController = {
 window.controllers.appendController(BrowserController);
 
 #include browser-places.js
-#include ../../../toolkit/content/debug.js
 
 #endif
 
