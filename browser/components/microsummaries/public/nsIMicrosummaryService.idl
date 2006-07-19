@@ -70,6 +70,18 @@ interface nsIMicrosummaryGenerator : nsISupports
      *
      */
     AString generateMicrosummary(in nsIDOMNode aPageContent);
+
+    /**
+     * Calculate the interval until the microsummary should be updated for
+     * the next time, depending on the page content. If the generator doesn't
+     * specify an interval, null is returned.
+     *
+     * @param   pageContent
+     *          the content of the page being summarized
+     * @returns the interval in milliseconds until the next update request
+     *
+     */
+    long calculateUpdateInterval(in nsIDOMNode aPageContent);
 };
 
 
@@ -90,6 +102,10 @@ interface nsIMicrosummary : nsISupports
     // Since generators and pages can be remote resources, and we need them
     // to generate the content, this may not always be available.
     readonly attribute AString content;
+
+    // The minimum interval after which this microsummary would like to be refreshed
+    // (or null if it doesn't care).
+    readonly attribute long updateInterval;
 
     /**
      * Add a microsummary observer to this microsummary.
