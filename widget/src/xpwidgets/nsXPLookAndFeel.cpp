@@ -106,12 +106,6 @@ nsLookAndFeelIntPref nsXPLookAndFeel::sIntPrefs[] =
     eMetric_TreeScrollLinesMax, PR_FALSE, nsLookAndFeelTypeInt, 0 },
   { "accessibility.tabfocus",
     eMetric_TabFocusModel, PR_FALSE, nsLookAndFeelTypeInt, 0 },
-  { "ui.scrollbarButtonLeftMouseButtonAction",
-    eMetric_ScrollButtonLeftMouseButtonAction, PR_FALSE, nsLookAndFeelTypeInt, 0 },
-  { "ui.scrollbarButtonMiddleMouseButtonAction",
-    eMetric_ScrollButtonMiddleMouseButtonAction, PR_FALSE, nsLookAndFeelTypeInt, 3 },
-  { "ui.scrollbarButtonRightMouseButtonAction",
-    eMetric_ScrollButtonRightMouseButtonAction, PR_FALSE, nsLookAndFeelTypeInt, 3 },
   { "ui.alertNotificationOrigin",
     eMetric_AlertNotificationOrigin, PR_FALSE, nsLookAndFeelTypeInt, 0 },
 };
@@ -550,6 +544,20 @@ nsXPLookAndFeel::GetMetric(const nsMetricID aID, PRInt32& aMetric)
 {
   if (!sInitialized)
     Init();
+
+  // Set the default values for these prefs. but allow different platforms
+  // to override them in their nsLookAndFeel if desired.
+  switch (aID) {
+    case eMetric_ScrollButtonLeftMouseButtonAction:
+      aMetric = 0;
+      return NS_OK;
+    case eMetric_ScrollButtonMiddleMouseButtonAction:
+      aMetric = 3;
+      return NS_OK;
+    case eMetric_ScrollButtonRightMouseButtonAction:
+      aMetric = 3;
+      return NS_OK;
+  }
 
   for (unsigned int i = 0; i < ((sizeof (sIntPrefs) / sizeof (*sIntPrefs))); ++i)
     if (sIntPrefs[i].isSet && (sIntPrefs[i].id == aID))

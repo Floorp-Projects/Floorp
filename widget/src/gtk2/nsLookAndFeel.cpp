@@ -332,6 +332,19 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 {
     nsresult res = NS_OK;
 
+    // Set these before they can get overrided in the nsXPLookAndFeel. 
+    switch (aID) {
+    case eMetric_ScrollButtonLeftMouseButtonAction:
+        aMetric = 0;
+        return NS_OK;
+    case eMetric_ScrollButtonMiddleMouseButtonAction:
+        aMetric = 1;
+        return NS_OK;
+    case eMetric_ScrollButtonRightMouseButtonAction:
+        aMetric = 2;
+        return NS_OK;
+    }
+
     res = nsXPLookAndFeel::GetMetric(aID, aMetric);
     if (NS_SUCCEEDED(res))
         return res;
@@ -491,15 +504,6 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         break;
     case eMetric_ScrollSliderStyle:
         aMetric = eMetric_ScrollThumbStyleProportional;
-        break;
-    case eMetric_ScrollButtonLeftMouseButtonAction:
-        aMetric = 0;
-        break;
-    case eMetric_ScrollButtonMiddleMouseButtonAction:
-        aMetric = 1;
-        break;
-    case eMetric_ScrollButtonRightMouseButtonAction:
-        aMetric = 2;
         break;
     case eMetric_TreeOpenDelay:
         aMetric = 1000;
