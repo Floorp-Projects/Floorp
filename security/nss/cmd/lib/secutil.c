@@ -3012,25 +3012,6 @@ loser:
 
 }
 
-
-SECItem *
-SECU_GetPBEPassword(void *arg)
-{
-    char *p = NULL;
-    SECItem *pwitem = NULL;
-
-    p = SECU_GetPasswordString(arg,"Password: ");
-
-    /* NOTE: This function is obviously unfinished. */
-
-    if ( pwitem == NULL ) {
-	fprintf(stderr, "Error hashing password\n");
-	return NULL;
-    }
-    
-    return pwitem;
-}
-
 SECStatus
 SECU_ParseCommandLine(int argc, char **argv, char *progName, secuCommand *cmd)
 {

@@ -289,8 +289,6 @@ extern void SECU_PrintName(FILE *out, CERTName *name, char *msg, int level);
 extern SECKEYLowPublicKey *SECU_ConvHighToLow(SECKEYPublicKey *pubHighKey);
 #endif
 
-extern SECItem *SECU_GetPBEPassword(void *arg);
-
 extern char *SECU_GetModulePassword(PK11SlotInfo *slot, PRBool retry, void *arg);
 
 extern SECStatus DER_PrettyPrint(FILE *out, SECItem *it, PRBool raw);
