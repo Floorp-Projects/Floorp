@@ -20,7 +20,7 @@
  * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):Matthew Willis <mattwillis@gmail.com>
+ * Contributor(s): Matthew Willis <mattwillis@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -43,7 +43,7 @@
 
  #clientBox {
    background-color: #FFFFFF;
-   background-image: url("chrome://calendar/content/about-sunbird.png");
+   background-image: url("chrome://branding/content/about.png");
    background-repeat: no-repeat;
    padding-top: 203px;
    color: #000000;
@@ -99,3 +99,4 @@
  button[dlgtype="accept"] {
    margin-right: 13px;
  }
+

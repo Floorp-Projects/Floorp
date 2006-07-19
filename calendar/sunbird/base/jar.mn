@@ -1,13 +1,18 @@
 calendar.jar:
 % content calendar %content/calendar/
-   content/calendar/about-sunbird.png            (content/about-sunbird.png)
-   content/calendar/aboutCredits.png             (content/aboutCredits.png)
 *  content/calendar/aboutDialog.css              (content/aboutDialog.css)
 *  content/calendar/aboutDialog.js               (content/aboutDialog.js)
 *  content/calendar/aboutDialog.xul              (content/aboutDialog.xul)
-   content/calendar/aboutFooter.png              (content/aboutFooter.png)
 *  content/calendar/calendar.xul                 (content/calendar.xul)
 *  content/calendar/credits.xhtml                (content/credits.xhtml)
 *  content/calendar/customizeToolbar.xul         (content/customizeToolbar.xul)
 *  content/calendar/hiddenWindow.xul             (content/hiddenWindow.xul)
 *  content/calendar/hiddenWindow.js              (content/hiddenWindow.js)
+#ifdef MOZ_USE_GENERIC_BRANDING
+#   NOTE: xpcnativewrappers=yes became the default in Gecko 1.8.1
+% content branding %content/branding/ xpcnativewrappers=yes
+    content/branding/about.png                   (branding/about.png)
+    content/branding/aboutCredits.png            (branding/aboutCredits.png)
+    content/branding/aboutFooter.png             (branding/aboutFooter.png)
+    content/branding/icon64.png                  (branding/icon64.png)
+#endif

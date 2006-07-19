@@ -48,3 +48,8 @@ DEFINES += -DAPP_VERSION="$(APP_VERSION)"
 include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
+
+ifndef MOZ_BRANDING_DIRECTORY
+DEFINES += -DMOZ_USE_GENERIC_BRANDING
+endif
+

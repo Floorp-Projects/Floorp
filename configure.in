@@ -4316,7 +4316,7 @@ composer)
 
 calendar)
   MOZ_APP_NAME=sunbird
-  MOZ_APP_DISPLAYNAME=Sunbird
+  MOZ_APP_DISPLAYNAME=Calendar
   MOZ_XUL_APP=1
   MOZ_UPDATER=1
   MOZ_SUNBIRD=1
@@ -4823,12 +4823,17 @@ browser)
     MOZ_APP_DISPLAYNAME=Firefox
     ;;
 
+calendar)
+    MOZ_BRANDING_DIRECTORY=other-licenses/branding/sunbird
+    MOZ_APP_DISPLAYNAME=Sunbird
+    ;;
+
 mail)
     MOZ_BRANDING_DIRECTORY=other-licenses/branding/thunderbird
     ;;
 
 *)]
-    AC_MSG_ERROR([Official branding is only available for Firefox and Thunderbird.])
+    AC_MSG_ERROR([Official branding is only available for Firefox, Sunbird, and Thunderbird.])
 esac
 )
 

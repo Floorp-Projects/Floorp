@@ -20,6 +20,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Matthew Willis <mattwillis@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -98,13 +99,14 @@ ifdef MOZ_BRANDING_DIRECTORY
 	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales AB_CD=$* XPI_NAME=locale-$*
 endif
 
-# Re-enable when using split branding
-#ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-#MOZ_PKG_MAC_DSSTORE=$(_ABS_DIST)/branding/dsstore
-#MOZ_PKG_MAC_BACKGROUND=$(_ABS_DIST)/branding/background.png
-#MOZ_PKG_MAC_ICON=$(_ABS_DIST)/branding/disk.icns
-#MOZ_PKG_MAC_RSRC=$(_ABS_DIST)/branding/license.r
-#endif
+ifdef MOZ_BRANDING_DIRECTORY
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+MOZ_PKG_MAC_DSSTORE=$(_ABS_DIST)/branding/dsstore
+MOZ_PKG_MAC_BACKGROUND=$(_ABS_DIST)/branding/background.png
+MOZ_PKG_MAC_ICON=$(_ABS_DIST)/branding/disk.icns
+MOZ_PKG_MAC_RSRC=$(_ABS_DIST)/branding/license.r
+endif
+endif
 
 PACKAGER_NO_LIBS = 1
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk

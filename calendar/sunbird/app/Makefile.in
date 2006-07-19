@@ -19,10 +19,10 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  Brian Ryner <bryner@brianryner.com>
-#  Jonathan Wilson <jonwil@tpgi.com.au>
-#  Dan Mosedale <dmose@mozilla.org>
-#  Matthew Willis <mattwillis@gmail.com>
+#   Brian Ryner <bryner@brianryner.com>
+#   Jonathan Wilson <jonwil@tpgi.com.au>
+#   Dan Mosedale <dmose@mozilla.org>
+#   Matthew Willis <mattwillis@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -270,6 +270,21 @@ GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/, sunbird.js)
 
 endif
 
+ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
+ICON_FILES = \
+    $(DIST)/branding/mozicon128.png \
+    $(DIST)/branding/mozicon50.xpm \
+    $(DIST)/branding/mozicon16.xpm \
+    $(DIST)/branding/document.png \
+    $(NULL)
+
+libs:: $(ICON_FILES)
+	$(INSTALL) $^ $(DIST)/bin/icons
+
+install::
+	$(SYSINSTALL) $(IFLAGS1) $(ICON_FILES) $(DESTDIR)$(mozappdir)/icons
+endif
+
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 libs::
 	$(INSTALL) $(DIST)/branding/default.xpm $(DIST)/bin/chrome/icons/default
@@ -279,18 +294,18 @@ install::
 endif
 
 export::
-ifndef MOZ_USE_OFFICIAL_BRANDING
+ifndef MOZ_BRANDING_DIRECTORY
 	$(NSINSTALL) -D $(DIST)/branding
 ifeq ($(OS_ARCH),WINNT)
-	cp $(srcdir)/sunbird.ico   $(DIST)/branding/sunbird.ico
-	cp $(srcdir)/sunbird.ico   $(DIST)/branding/app.ico
+	cp $(srcdir)/sunbird.ico  $(DIST)/branding/sunbird.ico
+	cp $(srcdir)/sunbird.ico  $(DIST)/branding/app.ico
 	cp $(srcdir)/sunbird.ico  $(DIST)/branding/document.ico
 endif
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 	cp $(srcdir)/macbuild/sunbird.icns  $(DIST)/branding/sunbird.icns
 endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-	cp $(srcdir)/default.xpm   $(DIST)/branding/default.xpm	
+	cp $(srcdir)/default.xpm   $(DIST)/branding/default.xpm
 endif
 ifeq ($(OS_ARCH),OS2)
 	cp $(srcdir)/sunbird-os2.ico  $(DIST)/branding/sunbird.ico
@@ -325,6 +340,14 @@ libs repackage:: $(PROGRAM)
 	mkdir -p $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj
 	rsync -a --exclude CVS $(srcdir)/macbuild/Contents/Resources/English.lproj/ $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj
 	sed -e "s/@APP_VERSION@/$(APP_VERSION)/" -e "s/@APP_NAME@/$(APP_NAME)/" -e "s/@MAC_CREATOR_CODE@/$(MAC_CREATOR_CODE)/" $(srcdir)/macbuild/Contents/Info.plist.in > $(DIST)/$(APP_NAME).app/Contents/Info.plist
+# The application name shown in the upper left is found in the UTF-16 file:
+# MyApp.app/Contents/Resources/English.lproj/InfoPlist.strings
+# We use iconv to do the charset conversion to UTF-8, pipe it through sed for the
+# find and replace, and then use iconv once more to convert it back to UTF-16.
+# Since all future Macs are Intel-based, we make the file UTF-16LE with a BOM.
+	iconv -f UTF-16LE -t UTF-8 $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | \
+	  sed -e "s/@APP_NAME@/$(APP_NAME)/" | \
+	  iconv -f UTF-8 -t UTF-16LE > $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj/InfoPlist.strings
 	rsync -a $(DIST)/bin/ $(DIST)/$(APP_NAME).app/Contents/MacOS
 	rm -f $(DIST)/$(APP_NAME).app/Contents/MacOS/$(PROGRAM) $(DIST)/$(APP_NAME).app/Contents/MacOS/mangle $(DIST)/$(APP_NAME).app/Contents/MacOS/shlibsign
 	rsync -aL $(PROGRAM) $(DIST)/$(APP_NAME).app/Contents/MacOS

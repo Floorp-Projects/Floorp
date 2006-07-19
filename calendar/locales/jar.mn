@@ -6,10 +6,12 @@
 # all Calendar products.
 
 #ifdef MOZ_SUNBIRD
+#ifdef MOZ_USE_GENERIC_BRANDING
 @AB_CD@.jar:
 % locale branding @AB_CD@ %locale/branding/
 +   locale/branding/brand.dtd                    (%chrome/branding/brand.dtd)
 +   locale/branding/brand.properties             (%chrome/branding/brand.properties)
+#endif
 #endif
 
 calendar-@AB_CD@.jar:
