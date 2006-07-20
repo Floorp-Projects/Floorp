@@ -19,12 +19,12 @@
 
 .console-msg-text {
   white-space: -moz-pre-wrap;
-}  
+}
 
 .console-error-source {
   -moz-binding: url("chrome://global/content/consoleBindings.xml#console-error-source");
 }
-  
+
 .console-dots {
   width: 1px;
 }
@@ -37,16 +37,16 @@
     > .console-row[type="error"]
 {
   display: none;
-}  
-  
+}
+
 .console-box[mode="Errors"] > .console-box-internal > .console-rows 
     > .console-row[type="warning"],
 .console-box[mode="Messages"] > .console-box-internal > .console-rows 
     > .console-row[type="warning"]
 {
   display: none;
-}  
-  
+}
+
 .console-box[mode="Errors"] > .console-box-internal > .console-rows 
     > .console-row[type="message"],
 .console-box[mode="Warnings"] > .console-box-internal > .console-rows 
@@ -59,4 +59,3 @@
 .lineNumberRow[line="0"] {
   display: none;
 }
-
