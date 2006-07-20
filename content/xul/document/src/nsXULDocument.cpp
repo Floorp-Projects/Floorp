@@ -3934,6 +3934,9 @@ nsXULDocument::FindBroadcaster(nsIContent* aElement,
             *aListener = nsnull;
 
         aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::element, aBroadcasterID);
+        if (aBroadcasterID.IsEmpty()) {
+            return NS_FINDBROADCASTER_NOT_FOUND;
+        }
         aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::attribute, aAttribute);
     }
     else {
