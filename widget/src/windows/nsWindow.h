@@ -354,6 +354,9 @@ protected:
 
   LPARAM lParamToScreen(LPARAM lParam);
   LPARAM lParamToClient(LPARAM lParam);
+
+  PRBool CanTakeFocus();
+
 private:
 
 
