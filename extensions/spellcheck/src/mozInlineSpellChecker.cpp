@@ -313,7 +313,6 @@ mozInlineSpellChecker::SpellCheckAfterEditorChange(
   rv = wordUtil.Init(mEditor);
   if (NS_FAILED(rv))
     return NS_OK; // editor doesn't like us
-  wordUtil.GetDocument()->FlushPendingNotifications(Flush_Style);
 
   nsCOMPtr<nsIDOMRange> wordRange;
   rv = wordUtil.GetRangeForWord(anchorNode, anchorOffset,
