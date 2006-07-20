@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-$handcoded = <<END_OF_HANDCODED;
+$header = <<END_OF_HEADER;
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -83,6 +83,9 @@ entity.169=(c)
 #
 # Here are the windows-1252 characters from the range 0x80 - 0x9F
 #
+END_OF_HEADER
+
+$handcoded = <<END_OF_HANDCODED;
 # EURO SIGN
 entity.8364=EUR
 # SINGLE LOW-9 QUOTATION MARK
@@ -145,7 +148,7 @@ entity.8290=
 entity.8518=d
 # U+2212, MINUS SIGN, official Unicode minus sign
 entity.8722=-
-## Hebrew punctuation
+# Hebrew punctuation
 # U+05BE HEBREW PUNCTUATION MAQAF
 entity.1470=-
 # U+05C0 HEBREW PUNCTUATION PASEQ
@@ -251,7 +254,7 @@ sub output
 sub decomposeIntoNonASCII
 {
   my ($dec) = (@_);
-  return $dec =~ /([1-9A-F][0-9A-F][0-9A-F]|[0-9A-F][1-9A-F][0-9A-F]|00[8-9A-F])[0-9A-F]/;
+  return $dec =~ /\\u([1-9A-F][0-9A-F][0-9A-F]|[0-9A-F][1-9A-F][0-9A-F]|00[8-9A-F])[0-9A-F]/;
 }
 
 sub foldcombining
@@ -345,6 +348,10 @@ open ( UNICODATA2 , "< UnicodeData-Latest.txt")
 open ( OUT , "> ../tables/transliterate.properties") 
   || die "cannot open output ../tables/transliterate.properties file";
 
+print OUT $header;
+
+# remove comments from $handcoded
+$handcoded =~ s/^#[^#].*\n//mg;
 print OUT $handcoded;
 
 ######################################################################
@@ -506,7 +513,8 @@ while(<UNICODATA>) {
            # circled
            output($u,$cmt,$udec,"(".$d2.")");
          } else {
-           warning($_);
+           # others, use [ ]
+           output($u,$cmt,$udec,"[".$d2."]");
          }
        } elsif ($d3 ne "") {
          if($cmt =~ /CIRCLED/) {
