@@ -484,15 +484,6 @@ nsMsgCompose::ConvertAndLoadComposeWindow(nsString& aPrefix,
   PRBool sigOnTop = (reply_on_top == 1 && !sig_bottom);
   if ( (aQuoted) )
   {
-    if (!aSignature.IsEmpty() && sigOnTop)
-    {
-      if (aHTMLEditor && htmlEditor)
-        htmlEditor->InsertHTML(aSignature);
-      else if (textEditor)
-        textEditor->InsertText(aSignature);
-      m_editor->EndOfDocument();
-    }
-
     if (!aPrefix.IsEmpty())
     {
       if (!aHTMLEditor)
@@ -523,13 +514,20 @@ nsMsgCompose::ConvertAndLoadComposeWindow(nsString& aPrefix,
 
     (void)TagEmbeddedObjects(mailEditor);
 
-    if (!aSignature.IsEmpty() && !sigOnTop)
+    if (!aSignature.IsEmpty() )
     {
+      //we cannot add it on top earlier, because TagEmbeddedObjects will mark all images in the signature as "moz-do-not-send"
+      if( sigOnTop )
+        m_editor->BeginningOfDocument();
+
       if (aHTMLEditor && htmlEditor)
         htmlEditor->InsertHTML(aSignature);
       else if (textEditor)
         textEditor->InsertText(aSignature);
-    }
+
+      if( sigOnTop )
+        m_editor->EndOfDocument();
+	}
   }
   else
   {
