@@ -1281,7 +1281,8 @@ typedef enum _cairo_surface_type {
     CAIRO_SURFACE_TYPE_WIN32,
     CAIRO_SURFACE_TYPE_BEOS,
     CAIRO_SURFACE_TYPE_DIRECTFB,
-    CAIRO_SURFACE_TYPE_SVG
+    CAIRO_SURFACE_TYPE_SVG,
+    CAIRO_SURFACE_TYPE_QUARTZ2
 } cairo_surface_type_t;
 
 cairo_public cairo_surface_type_t
