@@ -179,6 +179,7 @@ freetype/ftglyph.h
 freetype/ftoutln.h
 freetype/ttnameid.h
 freetype/tttables.h
+freetype/t1tables.h
 fribidi/fribidi.h
 FSp_fopen.h
 fstream.h
