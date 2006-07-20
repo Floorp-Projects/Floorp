@@ -718,10 +718,11 @@ protected:
    * isn't a relative URI the value of the attribute is returned as is. Only
    * works for attributes in null namespace.
    *
-   * @param aAttr    name of attribute.
-   * @param aResult  result value [out]
+   * @param aAttr      name of attribute.
+   * @param aBaseAttr  name of base attribute.
+   * @param aResult    result value [out]
    */
-  NS_HIDDEN_(nsresult) GetURIAttr(nsIAtom* aAttr, nsAString& aResult);
+  NS_HIDDEN_(nsresult) GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr, nsAString& aResult);
 
   /**
    * This method works like GetURIAttr, except that it supports multiple
@@ -982,12 +983,24 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
   NS_IMETHODIMP                                                     \
   _class::Get##_method(nsAString& aValue)                           \
   {                                                                 \
-    return GetURIAttr(nsHTMLAtoms::_atom, aValue);                  \
+    return GetURIAttr(nsHTMLAtoms::_atom, nsnull, aValue);          \
   }                                                                 \
   NS_IMETHODIMP                                                     \
   _class::Set##_method(const nsAString& aValue)                     \
   {                                                                 \
     return SetAttrHelper(nsHTMLAtoms::_atom, aValue);               \
+  }
+
+#define NS_IMPL_URI_ATTR_WITH_BASE(_class, _method, _atom, _base_atom)       \
+  NS_IMETHODIMP                                                              \
+  _class::Get##_method(nsAString& aValue)                                    \
+  {                                                                          \
+    return GetURIAttr(nsHTMLAtoms::_atom, nsHTMLAtoms::_base_atom, aValue);  \
+  }                                                                          \
+  NS_IMETHODIMP                                                              \
+  _class::Set##_method(const nsAString& aValue)                              \
+  {                                                                          \
+    return SetAttrHelper(nsHTMLAtoms::_atom, aValue);                        \
   }
 
 /**
