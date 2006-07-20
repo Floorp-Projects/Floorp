@@ -2627,6 +2627,9 @@ FindCanvasBackground(nsIFrame* aForFrame,
       topFrame = firstChild->GetFirstChild(nsnull);
       NS_ASSERTION(topFrame,
                    "nsPageContentFrame is missing a normal flow child");
+      if (!topFrame) {
+        return PR_FALSE;
+      }
       NS_ASSERTION(topFrame->GetContent(),
                    "nsPageContentFrame child without content");
       result = topFrame->GetStyleBackground();
