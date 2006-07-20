@@ -475,11 +475,12 @@
           }
 
           // Always open in a new tab on a middle-click; otherwise examine the
-          // preference and the alt key.
-          var newTab = (aEvent.button == 1);
+          // preference and the alt key.  If the user chose an autocomplete
+          // entry with the mouse, aEvent will be null, so treat it as no alt key.
+          var newTab = (aEvent && aEvent.button == 1);
           if (!newTab) {
             var newTabPref = textBox._prefBranch.getBoolPref("browser.search.openintab");
-            newTab = (aEvent.altKey ^ newTabPref);
+            newTab = ((aEvent && aEvent.altKey) ^ newTabPref);
           }
           this.doSearch(textValue, newTab);
         ]]></body>
@@ -656,6 +657,7 @@
         <body><![CDATA[
           var evt = aEvent || this.mEnterEvent;
           this._getParentSearchbar().handleSearchCommand(evt);
+          this.mEnterEvent = null;
         ]]></body>
       </method>
 
@@ -739,7 +741,6 @@
         var searchService = Components.classes[contractID]
                                       .getService(nsIACSearch);
         searchService.stopSearch();
-        this.mEnterEvent = null;
         this.onTextEntered(event);        
       ]]></handler>
 
