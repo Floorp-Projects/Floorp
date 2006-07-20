@@ -263,6 +263,10 @@ nsHttpChannel::Connect(PRBool firstTime)
 
     LOG(("nsHttpChannel::Connect [this=%x]\n", this));
 
+    // ensure that we are using a valid hostname
+    if (!net_IsValidHostName(nsDependentCString(mConnectionInfo->Host())))
+        return NS_ERROR_UNKNOWN_HOST;
+
     // true when called from AsyncOpen
     if (firstTime) {
         PRBool delayed = PR_FALSE;
