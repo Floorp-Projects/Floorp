@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.94 2006/07/19 01:40:17 nelson%bolyard.com Exp $ */
+/* $Id: ssl3con.c,v 1.95 2006/07/20 00:17:23 nelson%bolyard.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -3507,7 +3507,7 @@ ssl3_SendClientHello(sslSocket *ss)
 	if (total_exten_len > 0)
 	    total_exten_len += 2;
     }
-#ifndef NSS_ECC_MORE_THAN_SUITE_B
+#if defined(NSS_ENABLE_ECC) && !defined(NSS_ECC_MORE_THAN_SUITE_B)
     else { /* SSL3 only */
     	ssl3_DisableECCSuites(ss, NULL); /* disable all ECC suites */
     }
