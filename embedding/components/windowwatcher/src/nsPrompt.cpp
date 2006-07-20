@@ -237,6 +237,7 @@ nsPrompt::AlertCheck(const PRUnichar* dialogTitle,
   nsAutoWindowStateHelper windowStateHelper(mParent);
 
   if (!windowStateHelper.DefaultEnabled()) {
+    // checkValue is an inout parameter, so we don't have to set it
     return NS_OK;
   }
 
@@ -252,6 +253,8 @@ nsPrompt::Confirm(const PRUnichar* dialogTitle,
   nsAutoWindowStateHelper windowStateHelper(mParent);
 
   if (!windowStateHelper.DefaultEnabled()) {
+    // Default to cancel
+    *_retval = PR_FALSE;
     return NS_OK;
   }
 
@@ -268,6 +271,8 @@ nsPrompt::ConfirmCheck(const PRUnichar* dialogTitle,
   nsAutoWindowStateHelper windowStateHelper(mParent);
 
   if (!windowStateHelper.DefaultEnabled()) {
+    // Default to cancel. checkValue is an inout parameter, so we don't have to set it
+    *_retval = PR_FALSE;
     return NS_OK;
   }
 
@@ -289,6 +294,10 @@ nsPrompt::ConfirmEx(const PRUnichar *dialogTitle,
   nsAutoWindowStateHelper windowStateHelper(mParent);
 
   if (!windowStateHelper.DefaultEnabled()) {
+    // Return 1 to match what happens when the dialog is closed by the window
+    // manager (This is indeed independent of what the default button is).
+    // checkValue is an inout parameter, so we don't have to set it.
+    *buttonPressed = 1;
     return NS_OK;
   }
 
@@ -308,6 +317,9 @@ nsPrompt::Prompt(const PRUnichar *dialogTitle,
   nsAutoWindowStateHelper windowStateHelper(mParent);
 
   if (!windowStateHelper.DefaultEnabled()) {
+    // Default to cancel. answer and checkValue are inout parameters, so we
+    // don't have to set them.
+    *_retval = PR_FALSE;
     return NS_OK;
   }
 
@@ -327,6 +339,9 @@ nsPrompt::PromptUsernameAndPassword(const PRUnichar *dialogTitle,
   nsAutoWindowStateHelper windowStateHelper(mParent);
 
   if (!windowStateHelper.DefaultEnabled()) {
+    // Default to cancel. username, password and checkValue are inout
+    // parameters, so we don't have to set them.
+    *_retval = PR_FALSE;
     return NS_OK;
   }
 
@@ -347,6 +362,9 @@ nsPrompt::PromptPassword(const PRUnichar *dialogTitle,
   nsAutoWindowStateHelper windowStateHelper(mParent);
 
   if (!windowStateHelper.DefaultEnabled()) {
+    // Default to cancel. password and checkValue are inout parameters, so we
+    // don't have to touch them.
+    *_retval = PR_FALSE;
     return NS_OK;
   }
 
@@ -365,6 +383,9 @@ nsPrompt::Select(const PRUnichar *dialogTitle,
   nsAutoWindowStateHelper windowStateHelper(mParent);
 
   if (!windowStateHelper.DefaultEnabled()) {
+    // Default to cancel and item 0
+    *outSelection = 0;
+    *_retval = PR_FALSE;
     return NS_OK;
   }
 
@@ -390,6 +411,9 @@ nsPrompt::Prompt(const PRUnichar* dialogTitle,
   nsAutoWindowStateHelper windowStateHelper(mParent);
 
   if (!windowStateHelper.DefaultEnabled()) {
+    // Default to cancel
+    *result = nsnull;
+    *_retval = PR_FALSE;
     return NS_OK;
   }
 
@@ -418,6 +442,10 @@ nsPrompt::PromptUsernameAndPassword(const PRUnichar* dialogTitle,
   nsAutoWindowStateHelper windowStateHelper(mParent);
 
   if (!windowStateHelper.DefaultEnabled()) {
+    // Default to cancel
+    *user = nsnull;
+    *pwd = nsnull;
+    *_retval = PR_FALSE;
     return NS_OK;
   }
 
@@ -438,6 +466,9 @@ nsPrompt::PromptPassword(const PRUnichar* dialogTitle,
   nsAutoWindowStateHelper windowStateHelper(mParent);
 
   if (!windowStateHelper.DefaultEnabled()) {
+    // Default to cancel
+    *pwd = nsnull;
+    *_retval = PR_FALSE;
     return NS_OK;
   }
 
@@ -445,3 +476,4 @@ nsPrompt::PromptPassword(const PRUnichar* dialogTitle,
   return mPromptService->PromptPassword(mParent, dialogTitle, text, pwd,
                                         nsnull, nsnull, _retval);
 }
+
