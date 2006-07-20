@@ -350,19 +350,12 @@ nsJISx4051LineBreaker::~nsJISx4051LineBreaker()
 
 NS_IMPL_ISUPPORTS1(nsJISx4051LineBreaker, nsILineBreaker)
 
-#define U_PERIOD    PRUnichar('.')
-#define U_COMMA     PRUnichar(',')
-#define U_COLON     PRUnichar(':')
-#define U_SEMICOLON PRUnichar(';')
-#define U_SLASH     PRUnichar('/')
-#define U_SPACE     PRUnichar(' ')
-#define U_NULL      PRUnichar(0x0000)
-#define U_RIGHT_SINGLE_QUOTATION_MARK PRUnichar(0x2019)
+#define U_PERIOD ((PRUnichar) '.')
+#define U_COMMA ((PRUnichar) ',')
+#define U_SPACE ((PRUnichar) ' ')
+#define U_RIGHT_SINGLE_QUOTATION_MARK ((PRUnichar) 0x2019)
 #define NEED_CONTEXTUAL_ANALYSIS(c) ((c) == U_PERIOD || \
                                      (c) == U_COMMA || \
-                                     (c) == U_COLON || \
-                                     (c) == U_SEMICOLON || \
-                                     (c) == U_SLASH || \
                                      (c) == U_RIGHT_SINGLE_QUOTATION_MARK)
 #define NUMERIC_CLASS  6 // JIS x4051 class 15 is now map to simplified class 6
 #define CHARACTER_CLASS  8 // JIS x4051 class 18 is now map to simplified class 8
@@ -372,17 +365,17 @@ PRInt8  nsJISx4051LineBreaker::ContextualAnalysis(
   PRUnichar prev, PRUnichar cur, PRUnichar next
 )
 {
-   if(U_COMMA == cur || U_COLON == cur || U_SEMICOLON == cur)
+   if(U_COMMA == cur)
    {
-     if((IS_ASCII_DIGIT(prev) || prev == U_NULL) && IS_ASCII_DIGIT(next))
+     if(IS_ASCII_DIGIT (prev) && IS_ASCII_DIGIT (next))
        return NUMERIC_CLASS;
    }
    else if(U_PERIOD == cur)
    {
-     if((IS_ASCII_DIGIT(prev) || prev == U_SPACE || prev == U_NULL) &&
-        IS_ASCII_DIGIT(next))
+     if((IS_ASCII_DIGIT (prev) || (0x0020 == prev)) && 
+         IS_ASCII_DIGIT (next))
        return NUMERIC_CLASS;
-
+ 
      // By assigning a full stop  character class only when it's followed by
      // class 6 (numeric), 7, and 8 (character). Note that class 9 (Thai) 
      // doesn't matter, either way, we prevent lines from breaking around 
@@ -394,12 +387,6 @@ PRInt8  nsJISx4051LineBreaker::ContextualAnalysis(
      if((pc > 5 || pc == 0)  && GetClass(next) > 5)
        return CHARACTER_CLASS;
    }
-   else if(U_SLASH == cur)
-   {
-     // We don't need to check prev character. Because SLASH breaks only after.
-     if (IS_ASCII_DIGIT(next))
-       return NUMERIC_CLASS;
-   }
    else if(U_RIGHT_SINGLE_QUOTATION_MARK == cur)
    {
      // somehow people use this as ' in "it's" sometimes...
@@ -407,25 +394,6 @@ PRInt8  nsJISx4051LineBreaker::ContextualAnalysis(
        return CHARACTER_CLASS;
    }
    return this->GetClass(cur);
-}
-
-PRBool nsJISx4051LineBreaker::CanBreakBetweenLatin1(PRUnichar aChar1,
-                                                    PRUnichar aChar2)
-{
-  NS_ASSERTION(aChar1 < 256 && aChar2 < 256, "invalid input");
-
-  PRInt8 c1, c2;
-  if(NEED_CONTEXTUAL_ANALYSIS(aChar1))
-    c1 = this->ContextualAnalysis(U_NULL, aChar1, aChar2);
-  else 
-    c1 = this->GetClass(aChar1); 
-
-  if(NEED_CONTEXTUAL_ANALYSIS(aChar2))
-    c2 = this->ContextualAnalysis(aChar1, aChar2, U_NULL); 
-  else 
-    c2 = this->GetClass(aChar2); 
-
-  return GetPair(c1, c2);
 }
 
 
@@ -440,9 +408,34 @@ PRBool nsJISx4051LineBreaker::BreakInBetween(
      return PR_FALSE;
   }
 
+  //search for CJK characters until a space is found. 
+  //if CJK char is found before space, use 4051, otherwise western
+  PRInt32 cur;
+
+  for (cur= aTextLen1-1; cur>=0; cur--)
+  {
+    if (IS_SPACE(aText1[cur]))
+      break;
+    if (IS_CJK_CHAR(aText1[cur]))
+      goto ROUTE_CJK_BETWEEN;
+  }
+
+  for (cur= 0; cur < (PRInt32)aTextLen2; cur++)
+  {
+    if (IS_SPACE(aText2[cur]))
+      break;
+    if (IS_CJK_CHAR(aText2[cur]))
+      goto ROUTE_CJK_BETWEEN;
+  }
+
+  //now apply western rule.
+  return IS_SPACE(aText1[aTextLen1-1]) || IS_SPACE(aText2[0]);
+
+ROUTE_CJK_BETWEEN:
+
   PRInt8 c1, c2;
   if(NEED_CONTEXTUAL_ANALYSIS(aText1[aTextLen1-1]))
-    c1 = this->ContextualAnalysis((aTextLen1>1)?aText1[aTextLen1-2]:U_NULL,
+    c1 = this->ContextualAnalysis((aTextLen1>1)?aText1[aTextLen1-2]:0,
                                   aText1[aTextLen1-1],
                                   aText2[0]);
   else 
@@ -451,7 +444,7 @@ PRBool nsJISx4051LineBreaker::BreakInBetween(
   if(NEED_CONTEXTUAL_ANALYSIS(aText2[0]))
     c2 = this->ContextualAnalysis(aText1[aTextLen1-1],
                                   aText2[0],
-                                  (aTextLen2>1)?aText2[1]:U_NULL);
+                                  (aTextLen2>1)?aText2[1]:0);
   else 
     c2 = this->GetClass(aText2[0]);
 
@@ -473,13 +466,26 @@ PRInt32 nsJISx4051LineBreaker::Next(
   NS_ASSERTION(aText, "aText shouldn't be null");
   NS_ASSERTION(aLen > aPos, "Illegal value (length > position)");
 
+  //forward check for CJK characters until a space is found. 
+  //if CJK char is found before space, use 4051, otherwise western
+  PRUint32 cur;
+  for (cur = aPos; cur < aLen; ++cur)
+  {
+    if (IS_SPACE(aText[cur]))
+      return cur;
+    if (IS_CJK_CHAR(aText[cur]))
+      goto ROUTE_CJK_NEXT;
+  }
+  return NS_LINEBREAKER_NEED_MORE_TEXT; // Need more text
+
+ROUTE_CJK_NEXT:
   PRInt8 c1, c2;
-  PRUint32 cur = aPos;
+  cur = aPos;
   if(NEED_CONTEXTUAL_ANALYSIS(aText[cur]))
   {
-    c1 = this->ContextualAnalysis((cur>0)?aText[cur-1]:U_NULL,
+    c1 = this->ContextualAnalysis((cur>0)?aText[cur-1]:0,
                                   aText[cur],
-                                  (cur<(aLen-1)) ?aText[cur+1]:U_NULL);
+                                  (cur<(aLen-1)) ?aText[cur+1]:0);
   } else  {
     c1 = this->GetClass(aText[cur]);
   }
@@ -491,9 +497,9 @@ PRInt32 nsJISx4051LineBreaker::Next(
   {
      if(NEED_CONTEXTUAL_ANALYSIS(aText[cur]))
      {
-       c2= this->ContextualAnalysis((cur>0)?aText[cur-1]:U_NULL,
+       c2= this->ContextualAnalysis((cur>0)?aText[cur-1]:0,
                                   aText[cur],
-                                  (cur<(aLen-1)) ?aText[cur+1]:U_NULL);
+                                  (cur<(aLen-1)) ?aText[cur+1]:0);
      } else {
        c2 = this->GetClass(aText[cur]);
      }
@@ -511,13 +517,31 @@ PRInt32 nsJISx4051LineBreaker::Prev(
 {
   NS_ASSERTION(aText, "aText shouldn't be null");
 
-  PRUint32 cur = aPos;
+  //backward check for CJK characters until a space is found. 
+  //if CJK char is found before space, use 4051, otherwise western
+  PRUint32 cur;
+  for (cur = aPos - 1; cur > 0; --cur)
+  {
+    if (IS_SPACE(aText[cur]))
+    {
+      if (cur != aPos - 1) // XXXldb Why?
+        ++cur;
+      return cur;
+    }
+    if (IS_CJK_CHAR(aText[cur]))
+      goto ROUTE_CJK_PREV;
+  }
+
+  return NS_LINEBREAKER_NEED_MORE_TEXT; // Need more text
+
+ROUTE_CJK_PREV:
+  cur = aPos;
   PRInt8 c1, c2;
   if(NEED_CONTEXTUAL_ANALYSIS(aText[cur-1]))
   {
-    c2 = this->ContextualAnalysis(((cur-1)>0)?aText[cur-2]:U_NULL,
+    c2 = this->ContextualAnalysis(((cur-1)>0)?aText[cur-2]:0,
                                   aText[cur-1],
-                                  (cur<aLen) ?aText[cur]:U_NULL);
+                                  (cur<aLen) ?aText[cur]:0);
   } else  {
     c2 = this->GetClass(aText[cur-1]);
   }
@@ -529,9 +553,9 @@ PRInt32 nsJISx4051LineBreaker::Prev(
   {
      if(NEED_CONTEXTUAL_ANALYSIS(aText[cur-1]))
      {
-       c1= this->ContextualAnalysis(((cur-1)>0)?aText[cur-2]:U_NULL,
+       c1= this->ContextualAnalysis(((cur-1)>0)?aText[cur-2]:0,
                                   aText[cur-1],
-                                  (cur<aLen) ?aText[cur]:U_NULL);
+                                  (cur<aLen) ?aText[cur]:0);
      } else {
        c1 = this->GetClass(aText[cur-1]);
      }
