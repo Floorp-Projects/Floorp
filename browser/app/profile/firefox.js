@@ -229,6 +229,12 @@ pref("browser.search.openintab", false);
 // send ping to the server to update
 pref("browser.search.update", true);
 
+// disable logging for the search service update system by default
+pref("browser.search.update.log", false);
+
+// Check whether we need to perform engine updates every 6 hours
+pref("browser.search.updateinterval", 6);
+
 // enable search suggestions by default
 pref("browser.search.suggest.enabled", true);
 

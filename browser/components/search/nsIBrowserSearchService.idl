@@ -173,7 +173,7 @@ interface nsIBrowserSearchService : nsISupports
    * @param engineURL
    *        The URL to the search engine's description file.
    *
-   * @param type
+   * @param dataType
    *        An integer representing the plugin file format. Must be one
    *        of the supported search engine data types defined above.
    *
@@ -191,7 +191,7 @@ interface nsIBrowserSearchService : nsISupports
    * @throws NS_ERROR_FAILURE if the type is invalid, or if the description
    *         file cannot be successfully loaded.
    */
-  void addEngine(in AString engineURL, in long type, in AString iconURL,
+  void addEngine(in AString engineURL, in long dataType, in AString iconURL,
                  in boolean confirm);
 
   /**
