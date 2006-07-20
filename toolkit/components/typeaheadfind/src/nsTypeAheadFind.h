@@ -105,7 +105,6 @@ protected:
                                nsISelectionController *aSelectionController,
                                PRBool aIsRepeatingSameChar,
                                PRBool aIsFirstVisiblePreferred, 
-                               PRBool aCanUseDocSelection,
                                nsIPresShell **aPresShell, 
                                nsPresContext **aPresContext);
 
