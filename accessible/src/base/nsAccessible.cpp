@@ -1398,7 +1398,7 @@ nsIContent *nsAccessible::GetLabelContent(nsIContent *aForNode)
 nsIContent* nsAccessible::GetXULLabelContent(nsIContent *aForNode, nsIAtom *aLabelType)
 {
   nsAutoString controlID;
-  nsIContent *labelContent = GetContentPointingTo(&controlID, aForNode, nsnull,
+  nsIContent *labelContent = GetContentPointingTo(&controlID, aForNode, nsnull, nsnull,
                                                   kNameSpaceID_None, aLabelType);
   if (labelContent) {
     return labelContent;
@@ -1422,11 +1422,14 @@ nsIContent* nsAccessible::GetXULLabelContent(nsIContent *aForNode, nsIAtom *aLab
   // Look for label in subtrees of nearby ancestors
   static const PRUint32 kAncestorLevelsToSearch = 5;
   PRUint32 count = 0;
+  nsIContent *prevSearched = nsnull;
   while (!labelContent && ++count <= kAncestorLevelsToSearch && 
          (aForNode = aForNode->GetParent()) != nsnull) {
     labelContent = GetContentPointingTo(&controlID, aForNode,
                                         nsAccessibilityAtoms::control,
+                                        prevSearched,
                                         kNameSpaceID_None, aLabelType);
+    prevSearched = aForNode;
   }
 
   return labelContent;
@@ -1516,6 +1519,7 @@ nsresult nsAccessible::GetTextFromRelationID(nsIAtom *aIDAttrib, nsString &aName
 nsIContent *nsAccessible::GetContentPointingTo(const nsAString *aId,
                                                nsIContent *aLookContent,
                                                nsIAtom *aForAttrib,
+                                               nsIContent *aExcludeContent,
                                                PRUint32 aForAttribNameSpace,
                                                nsIAtom *aTagType)
 {
@@ -1534,10 +1538,13 @@ nsIContent *nsAccessible::GetContentPointingTo(const nsAString *aId,
   // Recursively search descendents for labels
   PRUint32 count  = 0;
   nsIContent *child;
+  nsIContent *labelContent = nsnull;
 
   while ((child = aLookContent->GetChildAt(count++)) != nsnull) {
-    nsIContent *labelContent = GetContentPointingTo(aId, child, aForAttrib,
-                                                    aForAttribNameSpace, aTagType);
+    if (child != aExcludeContent) {
+      labelContent = GetContentPointingTo(aId, child, aForAttrib, aExcludeContent,
+                                          aForAttribNameSpace, aTagType);
+    }
     if (labelContent) {
       return labelContent;
     }
@@ -1702,6 +1709,7 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
   // XXX Should we store attribute names in this table as atoms instead of strings?
   // Definition of nsRoleMapEntry and nsStateMapEntry contains comments explaining this table.
   {"alert", ROLE_ALERT, eNameOkFromChildren, eNoValue, eNoReqStates, END_ENTRY},
+  {"alertdialog", ROLE_ALERT, eNameOkFromChildren, eNoValue, eNoReqStates, END_ENTRY},
   {"application", ROLE_APPLICATION, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
   {"button", ROLE_PUSHBUTTON, eNameOkFromChildren, eNoValue, eNoReqStates,
             {"pressed", BOOL_STATE, STATE_PRESSED},
@@ -1725,9 +1733,11 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
   {"description", ROLE_TEXT_CONTAINER, eNameOkFromChildren, eNoValue, eNoReqStates, END_ENTRY},
   {"dialog", ROLE_DIALOG, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
   {"document", ROLE_DOCUMENT, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"icon", ROLE_ICON, eNameOkFromChildren, eNoValue, eNoReqStates, END_ENTRY},
   {"label", ROLE_LABEL, eNameOkFromChildren, eNoValue, eNoReqStates, END_ENTRY},
   {"list", ROLE_LIST, eNameLabelOrTitle, eNoValue, eNoReqStates,
+            {"readonly", BOOL_STATE, STATE_READONLY},
+            {"multiselect", BOOL_STATE, STATE_MULTISELECTABLE | STATE_EXTSELECTABLE}, END_ENTRY},
+  {"listbox", ROLE_LIST, eNameLabelOrTitle, eNoValue, eNoReqStates,
             {"readonly", BOOL_STATE, STATE_READONLY},
             {"multiselect", BOOL_STATE, STATE_MULTISELECTABLE | STATE_EXTSELECTABLE}, END_ENTRY},
   {"listitem", ROLE_LISTITEM, eNameOkFromChildren, eNoValue, eNoReqStates,
@@ -1740,12 +1750,14 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
   {"menuitem", ROLE_MENUITEM, eNameOkFromChildren, eNoValue, eNoReqStates,
             {"haspopup", BOOL_STATE, STATE_HASPOPUP},
             {"checked", BOOL_STATE, STATE_CHECKED | STATE_CHECKABLE},
+            {"checked", "mixed", STATE_MIXED},
             {"checked", "false", STATE_CHECKABLE}, END_ENTRY},
-  {"menuitemcheckable", ROLE_MENUITEM, eNameOkFromChildren, eNoValue, STATE_CHECKABLE,
+  {"menuitemcheckbox", ROLE_MENUITEM, eNameOkFromChildren, eNoValue, STATE_CHECKABLE,
             {"checked", BOOL_STATE, STATE_CHECKED }, END_ENTRY},
   {"menuitemradio", ROLE_MENUITEM, eNameOkFromChildren, eNoValue, STATE_CHECKABLE,
             {"checked", BOOL_STATE, STATE_CHECKED }, END_ENTRY},
   {"grid", ROLE_TABLE, eNameLabelOrTitle, eNoValue, STATE_FOCUSABLE,
+            {"multiselectable", BOOL_STATE, STATE_MULTISELECTABLE | STATE_EXTSELECTABLE},
             {"readonly", BOOL_STATE, STATE_READONLY}, END_ENTRY},
   {"gridcell", ROLE_CELL, eNameOkFromChildren, eNoValue, eNoReqStates,
             {"selected", BOOL_STATE, STATE_SELECTED | STATE_SELECTABLE},
@@ -1753,6 +1765,11 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
             {"readonly", BOOL_STATE, STATE_READONLY}, END_ENTRY},
   {"group", ROLE_GROUPING, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
   {"link", ROLE_LINK, eNameLabelOrTitle, eNoValue, STATE_LINKED, END_ENTRY},
+  {"option", ROLE_LISTITEM, eNameOkFromChildren, eNoValue, eNoReqStates,
+            {"selected", BOOL_STATE, STATE_SELECTED | STATE_SELECTABLE},
+            {"selected", "false", STATE_SELECTABLE},
+            {"checked", BOOL_STATE, STATE_CHECKED | STATE_CHECKABLE},
+            {"checked", "false", STATE_CHECKABLE}, END_ENTRY},
   {"progressbar", ROLE_PROGRESSBAR, eNameLabelOrTitle, eHasValueMinMax, STATE_READONLY,
             {"valuenow", "unknown", STATE_MIXED}, END_ENTRY},
   {"radio", ROLE_RADIOBUTTON, eNameOkFromChildren, eNoValue, eNoReqStates,
@@ -1770,8 +1787,11 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
   {"spinbutton", ROLE_SPINBUTTON, eNameLabelOrTitle, eHasValueMinMax, eNoReqStates,
             {"readonly", BOOL_STATE, STATE_READONLY}, END_ENTRY},
   {"spreadsheet", ROLE_TABLE, eNameLabelOrTitle, eNoValue, STATE_MULTISELECTABLE | STATE_EXTSELECTABLE | STATE_FOCUSABLE,
-            {"readonly", BOOL_STATE, STATE_READONLY}, END_ENTRY},
+            {"readonly", BOOL_STATE, STATE_READONLY}, END_ENTRY}, // Still supported, but deprecated in favor of grid
   {"tab", ROLE_PAGETAB, eNameOkFromChildren, eNoValue, eNoReqStates, END_ENTRY},
+  {"table", ROLE_TABLE, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
+  {"td", ROLE_CELL, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
+  {"th", ROLE_CELL, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
   {"tablist", ROLE_PAGETABLIST, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
   {"tabpanel", ROLE_PROPERTYPAGE, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
   {"textarea", ROLE_ENTRY, eNameLabelOrTitle, eHasValueMinMax, eNoReqStates,
@@ -1789,7 +1809,8 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
             {"expanded", BOOL_STATE, STATE_EXPANDED},
             {"expanded", "false", STATE_COLLAPSED},
             {"checked", BOOL_STATE, STATE_CHECKED | STATE_CHECKABLE},
-            {"checked", "false", STATE_CHECKABLE}, END_ENTRY},
+            {"checked", "mixed", STATE_MIXED},
+            {"checked", "false", STATE_CHECKABLE},},
   {nsnull, ROLE_NOTHING, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY} // Last item
 };
 
@@ -2080,6 +2101,43 @@ NS_IMETHODIMP nsAccessible::GetAccessibleBelow(nsIAccessible **_retval)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+already_AddRefed<nsIDOMNode> nsAccessible::GetInverseRelatedNode(nsIAtom *aRelationAttr,
+                                                                 PRUint32 aAncestorLevelsToSearch)
+{
+  // aAncestorLevelsToSearch is an optimization used for label and description searches.
+  // We expect the control to be relatively near the label/description in the DOM tree,
+  // so to optimize we don't search the entire DOM tree.
+  nsIContent *content = GetRoleContent(mDOMNode);
+  if (!content) {
+    return nsnull; // Node shut down
+  }
+  nsAutoString controlID;
+  content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::id, controlID);
+  if (controlID.IsEmpty()) {
+    return nsnull;
+  }
+  nsIDOMNode *relatedNode = nsnull;
+  // Something might be pointing to us
+  PRUint32 count = 0;
+  nsIContent *start = content;
+  nsIContent *prevSearched = nsnull;
+  while ((!aAncestorLevelsToSearch || ++count <= aAncestorLevelsToSearch) && 
+        (start = start->GetParent()) != nsnull) {
+    nsIContent *description = GetContentPointingTo(&controlID, start,
+                                                   aRelationAttr, prevSearched,
+                                                   kNameSpaceID_WAIProperties,
+                                                   nsnull);
+    if (description) {
+      nsIDOMNode *relatedNode;
+      CallQueryInterface(description, &relatedNode);
+      return relatedNode;
+    }
+    prevSearched = start;
+  }
+  return nsnull;
+}
+
+
 /* nsIAccessible getAccessibleRelated(); */
 NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAccessible **aRelated)
 {
@@ -2104,15 +2162,20 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
         nsIAtom *relatedIDAttr = content->IsNodeOfType(nsINode::eHTML) ?
           nsAccessibilityAtoms::_for : nsAccessibilityAtoms::control;
         content->GetAttr(kNameSpaceID_None, relatedIDAttr, relatedID);
-        if (relatedID.IsEmpty()) {
-          // Check first child for form control
-        }
+      }
+      if (relatedID.IsEmpty()) {
+        const PRUint32 kAncestorLevelsToSearch = 3;
+        relatedNode = GetInverseRelatedNode(nsAccessibilityAtoms::labelledby, kAncestorLevelsToSearch);
       }
       break;
     }
   case RELATION_LABELLED_BY:
     {
-      relatedNode = do_QueryInterface(GetLabelContent(content));
+      content->GetAttr(kNameSpaceID_WAIProperties,
+                       nsAccessibilityAtoms::labelledby, relatedID);
+      if (relatedID.IsEmpty()) {
+        relatedNode = do_QueryInterface(GetLabelContent(content));
+      }
       break;
     }
   case RELATION_DESCRIBED_BY:
@@ -2128,24 +2191,8 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
     }
   case RELATION_DESCRIPTION_FOR:
     {
-      nsAutoString controlID;
-      content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::id, controlID);
-      if (!controlID.IsEmpty()) {
-        // Something might be pointing to us
-        PRUint32 count = 0;
-        nsIContent *start = content;
-        static const PRUint32 kAncestorLevelsToSearch = 3;
-        while (!relatedNode && ++count <= kAncestorLevelsToSearch && 
-              (start = start->GetParent()) != nsnull) {
-          nsIContent *description = GetContentPointingTo(&controlID, start,
-                                                         nsAccessibilityAtoms::describedby,
-                                                         kNameSpaceID_WAIProperties,
-                                                         nsnull);
-          relatedNode = do_QueryInterface(description);
-        }
-      }
-
-      GetXULLabelContent(content, nsAccessibilityAtoms::description);
+      const PRUint32 kAncestorLevelsToSearch = 3;
+      relatedNode = GetInverseRelatedNode(nsAccessibilityAtoms::describedby, kAncestorLevelsToSearch);
       if (!relatedNode && content->Tag() == nsAccessibilityAtoms::description &&
           content->IsNodeOfType(nsINode::eXUL)) {
         // This affectively adds an optional control attribute to xul:description,
@@ -2156,6 +2203,29 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
       }
       break;
     }
+  case RELATION_CONTROLLED_BY: 
+    {
+      relatedNode = GetInverseRelatedNode(nsAccessibilityAtoms::controls);
+      break;
+    }
+  case RELATION_CONTROLLER_FOR:
+    {
+      content->GetAttr(kNameSpaceID_WAIProperties,
+                       nsAccessibilityAtoms::controls, relatedID);
+      break;
+    }
+  case RELATION_FLOWS_TO:
+    {
+      content->GetAttr(kNameSpaceID_WAIProperties,
+                       nsAccessibilityAtoms::flowto, relatedID);
+      break;
+    }
+  case RELATION_FLOWS_FROM:
+    {
+      relatedNode = GetInverseRelatedNode(nsAccessibilityAtoms::flowto);
+      break;
+    }
+
   case RELATION_DEFAULT_BUTTON:
     {
       if (content->IsNodeOfType(nsINode::eHTML)) {

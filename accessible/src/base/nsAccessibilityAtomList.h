@@ -125,8 +125,10 @@ ACCESSIBILITY_ATOM(tr, "tr")
 ACCESSIBILITY_ATOM(ul, "ul")
 
   // DHTML accessibility relationship attributes
-ACCESSIBILITY_ATOM(labelledby, "labelledby")
+ACCESSIBILITY_ATOM(controls, "controls")
 ACCESSIBILITY_ATOM(describedby, "describedby")
+ACCESSIBILITY_ATOM(flowto, "flowto")
+ACCESSIBILITY_ATOM(labelledby, "labelledby")
 
   // Alphabetical list of attributes
 ACCESSIBILITY_ATOM(acceltext, "acceltext")
