@@ -38,13 +38,14 @@
 
 #include "nsISupports.idl"
 interface nsIURI;
+interface nsIRequest;
 interface nsIFeedResult;
 
 /**
  * nsIFeedResultService provides a globally-accessible object for retreiving
  * the results of feed processing.
  */
-[scriptable, uuid(76d751fa-ad21-4a21-bc0b-405abbaf3fa1)]
+[scriptable, uuid(96dadf57-6a1d-44d3-83fa-6af22f6cae31)]
 interface nsIFeedResultService : nsISupports
 {
   /**
@@ -56,10 +57,12 @@ interface nsIFeedResultService : nsISupports
   /**
    * Adds a URI to the user's specified external feed handler, or live 
    * bookmarks. 
+   * @param   request
+   *          The request for the feed document
    * @param   uri
    *          The uri of the feed to add.
    */
-  void addToClientReader(in AString uri);
+  void addToClientReader(in nsIRequest request, in AString uri);
 
   /**
    * Registers a Feed Result object with a globally accessible service
