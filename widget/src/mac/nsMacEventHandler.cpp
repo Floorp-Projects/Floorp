@@ -1269,9 +1269,27 @@ PRBool nsMacEventHandler::ResizeEvent ( WindowRef inWindow )
 // Called from a mouseWheel carbon event, tell Gecko to scroll.
 // 
 PRBool
-nsMacEventHandler::Scroll(EventMouseWheelAxis inAxis, PRInt32 inDelta,
-                          const Point& inMouseLoc, nsWindow* inWindow,
-                          PRUint32 inModifiers) {
+nsMacEventHandler::Scroll(PRInt32 aDeltaY, PRInt32 aDeltaX,
+                          PRBool aIsPixels, const Point& aMouseLoc,
+                          nsWindow* aWindow, PRUint32 aModifiers) {
+  PRBool resY = ScrollAxis(nsMouseScrollEvent::kIsVertical, aDeltaY,
+                           aIsPixels, aMouseLoc, aWindow, aModifiers);
+  PRBool resX = ScrollAxis(nsMouseScrollEvent::kIsHorizontal, aDeltaX,
+                           aIsPixels, aMouseLoc, aWindow, aModifiers);
+
+  return resY || resX;
+} // Scroll
+
+
+//
+// ScrollAxis
+//
+PRBool
+nsMacEventHandler::ScrollAxis(nsMouseScrollEvent::nsMouseScrollFlags aAxis,
+                              PRInt32 aDelta, PRBool aIsPixels,
+                              const Point& aMouseLoc, nsWindow* aWindow,
+                              PRUint32 aModifiers)
+{
   // Only scroll active windows.  Treat popups as active.
   WindowRef windowRef = NS_STATIC_CAST(WindowRef,
                          mTopLevelWidget->GetNativeData(NS_NATIVE_DISPLAY));
@@ -1281,15 +1299,20 @@ nsMacEventHandler::Scroll(EventMouseWheelAxis inAxis, PRInt32 inDelta,
     return PR_FALSE;
 
   // Figure out which widget should be scrolled by traversing the widget
-  // hierarchy beginning at the root nsWindow.  inMouseLoc should be
+  // hierarchy beginning at the root nsWindow.  aMouseLoc should be
   // relative to the origin of this nsWindow.  If the scroll event came
-  // from an nsMacWindow, then inWindow should refer to that nsMacWindow.
-  nsIWidget* widgetToScroll = inWindow->FindWidgetHit(inMouseLoc);
+  // from an nsMacWindow, then aWindow should refer to that nsMacWindow.
+  nsIWidget* widgetToScroll = aWindow->FindWidgetHit(aMouseLoc);
 
   // Not all scroll events for the window are over a widget.  Consider
   // the title bar.
   if (!widgetToScroll)
     return PR_FALSE;
+
+  if (aDelta == 0) {
+    // Don't need to do anything, but eat the event anyway.
+    return PR_TRUE;
+  }
 
   if (gRollupListener && gRollupWidget) {
     // Roll up the rollup widget if the scroll isn't targeted at it
@@ -1316,22 +1339,23 @@ nsMacEventHandler::Scroll(EventMouseWheelAxis inAxis, PRInt32 inDelta,
 
   // The direction we get from the carbon event is opposite from the way
   // mozilla looks at it.  Reverse the direction.
-  scrollEvent.delta = -inDelta;
+  scrollEvent.delta = -aDelta;
 
   // If the scroll event comes from a mouse that only has a scroll wheel for
   // the vertical axis, and the shift key is held down, the system presents
   // it as a horizontal scroll and doesn't clear the shift key bit from
-  // inModifiers.  The Mac is supposed to scroll horizontally in such a case.
+  // aModifiers.  The Mac is supposed to scroll horizontally in such a case.
   //
   // If the scroll event comes from a mouse that can scroll both axes, the
   // system doesn't apply any of this shift-key fixery.
-  scrollEvent.scrollFlags =
-    (inAxis == kEventMouseWheelAxisX) ? nsMouseScrollEvent::kIsHorizontal :
-    nsMouseScrollEvent::kIsVertical;
+  scrollEvent.scrollFlags = aAxis;
+
+  if (aIsPixels)
+    scrollEvent.scrollFlags |= nsMouseScrollEvent::kIsPixels;
 
   // convert window-relative (local) mouse coordinates to widget-relative
   // coords for Gecko.
-  nsPoint mouseLocRelativeToWidget(inMouseLoc.h, inMouseLoc.v);
+  nsPoint mouseLocRelativeToWidget(aMouseLoc.h, aMouseLoc.v);
   nsRect bounds;
   widgetToScroll->GetBounds(bounds);
   nsPoint widgetOrigin(bounds.x, bounds.y);
@@ -1343,16 +1367,16 @@ nsMacEventHandler::Scroll(EventMouseWheelAxis inAxis, PRInt32 inDelta,
   scrollEvent.time = PR_IntervalNow();
 
   // Translate OS event modifiers into Gecko event modifiers
-  scrollEvent.isShift   = ((inModifiers & shiftKey)   != 0);
-  scrollEvent.isControl = ((inModifiers & controlKey) != 0);
-  scrollEvent.isAlt     = ((inModifiers & optionKey)  != 0);
-  scrollEvent.isMeta    = ((inModifiers & cmdKey)     != 0);
+  scrollEvent.isShift   = ((aModifiers & shiftKey)   != 0);
+  scrollEvent.isControl = ((aModifiers & controlKey) != 0);
+  scrollEvent.isAlt     = ((aModifiers & optionKey)  != 0);
+  scrollEvent.isMeta    = ((aModifiers & cmdKey)     != 0);
 
   nsEventStatus status;
   widgetToScroll->DispatchEvent(&scrollEvent, status);
 
   return nsWindow::ConvertStatus(status);
-} // Scroll
+} // ScrollAxis
 
 
 //-------------------------------------------------------------------------

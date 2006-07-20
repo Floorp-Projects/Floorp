@@ -66,6 +66,21 @@ typedef struct TransitionWindowOptions {
   WindowRef window;
   void*     userData;
 } TransitionWindowOptions;
+
+#define kEventParamWindowPartCode 'wpar'
+#define typeWindowPartCode        'wpar'
+#endif
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED <= MAC_OS_X_VERSION_10_4
+// http://developer.apple.com/qa/qa2005/qa1453.html
+// These are not defined in early versions of the 10.4/10.4u SDK (as of Xcode
+// 2.2), but they may appear in later releases.  Since we can't check which
+// version of the SDK is in use beyond knowing that it's "10.4", define these
+// on 10.4.  #defines should override what's present in the SDK when defined,
+// because the system headers use enums.
+#define kEventParamMouseWheelSmoothVerticalDelta   'saxy'
+#define kEventParamMouseWheelSmoothHorizontalDelta 'saxx'
+#define kEventMouseScroll 11
 #endif
 
 typedef OSStatus (*TransitionWindowWithOptions_type) (WindowRef,
@@ -228,6 +243,7 @@ nsMacWindow::nsMacWindow() : Inherited()
   , mResizeIsFromUs(PR_FALSE)
   , mShown(PR_FALSE)
   , mSheetNeedsShow(PR_FALSE)
+  , mInPixelMouseScroll(PR_FALSE)
   , mMacEventHandler(nsnull)
 #if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_3
   , mNeedsResize(PR_FALSE)
@@ -600,6 +616,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
          mWindowType != eWindowType_java) {
       const EventTypeSpec kScrollEventList[] = {
         { kEventClassMouse, kEventMouseWheelMoved },
+        { kEventClassMouse, kEventMouseScroll },
       };
 
       static EventHandlerUPP sScrollEventHandlerUPP;
@@ -693,37 +710,121 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 
 
 pascal OSStatus
-nsMacWindow::ScrollEventHandler ( EventHandlerCallRef inHandlerChain, EventRef inEvent, void* userData )
+nsMacWindow::ScrollEventHandler(EventHandlerCallRef aHandlerCallRef,
+                                EventRef            aEvent,
+                                void*               aUserData)
 {
   OSStatus retVal = eventNotHandledErr;
-  EventMouseWheelAxis axis = kEventMouseWheelAxisY;
-  SInt32 delta = 0;
+
   Point mouseLoc;
   UInt32 modifiers = 0;
-  if (::GetEventParameter(inEvent, kEventParamMouseWheelAxis,
-                          typeMouseWheelAxis, NULL,
-                          sizeof(EventMouseWheelAxis), NULL, &axis) == noErr &&
-      ::GetEventParameter(inEvent, kEventParamMouseWheelDelta,
-                          typeLongInteger, NULL,
-                          sizeof(SInt32), NULL, &delta) == noErr &&
-      ::GetEventParameter(inEvent, kEventParamMouseLocation,
+  if (::GetEventParameter(aEvent, kEventParamMouseLocation,
                           typeQDPoint, NULL,
-                          sizeof(Point), NULL, &mouseLoc) == noErr &&
-      ::GetEventParameter(inEvent, kEventParamKeyModifiers,
+                          sizeof(Point), NULL, &mouseLoc) != noErr ||
+      ::GetEventParameter(aEvent, kEventParamKeyModifiers,
                           typeUInt32, NULL,
-                          sizeof(UInt32), NULL, &modifiers) == noErr) {
-    nsMacWindow* self = NS_REINTERPRET_CAST(nsMacWindow*, userData);
-    NS_ENSURE_TRUE(self->mMacEventHandler.get(), eventNotHandledErr);
-    if (self) {
-      // Convert mouse to local coordinates since that's how the event handler 
-      // wants them
-      StPortSetter portSetter(self->mWindowPtr);
-      StOriginSetter originSetter(self->mWindowPtr);
-      ::GlobalToLocal(&mouseLoc);
-      self->mMacEventHandler->Scroll(axis, delta, mouseLoc, self, modifiers);
-      retVal = noErr;
+                          sizeof(UInt32), NULL, &modifiers) != noErr) {
+    // Need both of these params regardless of event kind.
+    return retVal;
+  }
+
+  SInt32 deltaY = 0, deltaX = 0;
+  PRBool isPixels = PR_FALSE;
+
+  nsMacWindow* self = NS_REINTERPRET_CAST(nsMacWindow*, aUserData);
+
+  EventKind kind = ::GetEventKind(aEvent);
+
+  switch (kind) {
+    case kEventMouseWheelMoved: {
+      // Notchy scrolling hardware, like conventional wheel mice, scroll
+      // a line at a time.
+
+      if (self->mInPixelMouseScroll) {
+        // A smooth scroll was already done by pixels.  Don't scroll again by
+        // lines.
+        return noErr; 
+      }
+
+      EventMouseWheelAxis axis = kEventMouseWheelAxisY;
+      SInt32 delta = 0;
+      if (::GetEventParameter(aEvent, kEventParamMouseWheelAxis,
+                              typeMouseWheelAxis, NULL,
+                              sizeof(EventMouseWheelAxis), NULL,
+                              &axis) != noErr ||
+          ::GetEventParameter(aEvent, kEventParamMouseWheelDelta,
+                              typeLongInteger, NULL,
+                              sizeof(SInt32), NULL, &delta) != noErr) {
+        // Need both of these params.
+        return retVal;
+      }
+
+      if (axis == kEventMouseWheelAxisY)
+        deltaY = delta;
+      else
+        deltaX = delta;
+
+      break;
+    }
+
+    case kEventMouseScroll: {
+      // On Tiger or later, smooth scrolling hardware, like Apple touchpads
+      // and Mighty Mice, scroll a pixel at a time.  Handling this event means
+      // that the system won't send a kEventMouseWheelMoved event.
+      isPixels = PR_TRUE;
+      OSErr errY, errX;
+      errY = ::GetEventParameter(aEvent,
+                                 kEventParamMouseWheelSmoothVerticalDelta,
+                                 typeSInt32, NULL,
+                                 sizeof(SInt32), NULL, &deltaY);
+      errX = ::GetEventParameter(aEvent,
+                                 kEventParamMouseWheelSmoothHorizontalDelta,
+                                 typeSInt32, NULL,
+                                 sizeof(SInt32), NULL, &deltaX);
+      if (errY != noErr && errX != noErr) {
+        // Need at least one of these params.
+        return retVal;
+      }
+      if ((errY != noErr && errY != eventParameterNotFoundErr) ||
+          (errX != noErr && errX != eventParameterNotFoundErr)) {
+        // eventParameterNotFoundErr is the only permissible "error",
+        // in that case, leave the delta set to 0.
+        return retVal;
+      }
+      break;
+    }
+
+    default: {
+      // What?
+      return retVal;
+      break;
     }
   }
+
+  {
+    // Convert mouse to local coordinates since that's how the event handler 
+    // wants them
+    StPortSetter portSetter(self->mWindowPtr);
+    StOriginSetter originSetter(self->mWindowPtr);
+    ::GlobalToLocal(&mouseLoc);
+    self->mMacEventHandler->Scroll(deltaY, deltaX, isPixels, mouseLoc,
+                                   self, modifiers);
+    retVal = noErr;
+  }
+
+  if (kind == kEventMouseScroll && (deltaX != 0 || deltaY != 0)) {
+    // Plug-ins might depend on kEventMouseWheelMoved, so if the event was
+    // kEventMouseScroll, call to the next handler to give the system the
+    // chance to turn one event into the other.  See
+    // http://developer.apple.com/qa/qa2005/qa1453.html .  When the
+    // new event reaches this handler, mInPixelMouseScroll will prevent
+    // double-scrolling.
+    PRBool lastInPixelMouseScroll = self->mInPixelMouseScroll;
+    self->mInPixelMouseScroll = PR_TRUE;
+    ::CallNextEventHandler(aHandlerCallRef, aEvent);
+    self->mInPixelMouseScroll = lastInPixelMouseScroll;
+  }
+
   return retVal;
 } // ScrollEventHandler
 
@@ -1930,8 +2031,9 @@ nsMacWindow::Scroll ( PRBool aVertical, PRInt16 aNumLines, PRInt16 aMouseLocalX,
   *_retval = PR_FALSE;
   NS_ENSURE_TRUE(mMacEventHandler.get(), NS_ERROR_FAILURE);
   Point localPoint = {aMouseLocalY, aMouseLocalX};
-  *_retval = mMacEventHandler->Scroll(aVertical ? kEventMouseWheelAxisY : kEventMouseWheelAxisX,
-                                      aNumLines, localPoint, this, 0);
+  *_retval = mMacEventHandler->Scroll(aVertical ? aNumLines : 0,
+                                      aVertical ? 0 : aNumLines,
+                                      PR_FALSE, localPoint, this, 0);
   return NS_OK;
 }
 

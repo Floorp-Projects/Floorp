@@ -468,6 +468,19 @@ NS_IMETHODIMP nsScrollPortView::ScrollByWhole(PRBool aTop)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsScrollPortView::ScrollByPixels(PRInt32 aNumPixelsX,
+                                               PRInt32 aNumPixelsY)
+{
+  nsCOMPtr<nsIDeviceContext> dev;
+  mViewManager->GetDeviceContext(*getter_AddRefs(dev));
+  float p2t = dev->DevUnitsToAppUnits(); 
+
+  nscoord dx = NSIntPixelsToTwips(aNumPixelsX, p2t);
+  nscoord dy = NSIntPixelsToTwips(aNumPixelsY, p2t);
+
+  return ScrollTo(mOffsetX + dx, mOffsetY + dy, 0);
+}
+
 NS_IMETHODIMP nsScrollPortView::CanScroll(PRBool aHorizontal,
                                           PRBool aForward,
                                           PRBool &aResult)
