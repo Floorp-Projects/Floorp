@@ -574,22 +574,33 @@ mozInlineSpellChecker::SpellCheckSelection(nsISelection* aSelection)
   PRInt32 startOffset, endOffset;
   nsCOMPtr<nsIDOMRange> checkRange;
 
+  // We have saved the ranges above. Clearing the spellcheck selection here
+  // isn't necessary (rechecking each word will modify it as necessary) but
+  // provides better performance. By ensuring that no ranges need to be
+  // removed in DoSpellCheck, we can save checking range inclusion which is
+  // slow.
+  spellCheckSelection->RemoveAllRanges();
+
+  mozInlineSpellWordUtil wordUtil;
+  rv = wordUtil.Init(mEditor);
+  if (NS_FAILED(rv))
+    return NS_OK; // editor doesn't like us
+
   for (index = 0; index < count; index++)
   {
     checkRange = do_QueryElementAt(ranges, index); 
     if (checkRange)
     {
-      checkRange->GetStartContainer(getter_AddRefs(startNode));
-      checkRange->GetEndContainer(getter_AddRefs(endNode));
-      checkRange->GetStartOffset(&startOffset);
-      checkRange->GetEndOffset(&endOffset);
-
-      rv |= SpellCheckBetweenNodes(startNode, startOffset, endNode,
-                                   endOffset, spellCheckSelection);
+      // We can consider this word as "added" since we know it has no spell
+      // check range over it that needs to be deleted. All the old ranges
+      // were cleared above.
+      rv = DoSpellCheck(wordUtil, checkRange, nsnull, checkRange,
+                        spellCheckSelection);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
   }
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP mozInlineSpellChecker::WillCreateNode(const nsAString & aTag, nsIDOMNode *aParent, PRInt32 aPosition)
