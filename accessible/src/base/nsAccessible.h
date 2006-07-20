@@ -162,6 +162,7 @@ protected:
   static nsIContent *GetContentPointingTo(const nsAString *aId,
                                           nsIContent *aLookContent,
                                           nsIAtom *forAttrib,
+                                          nsIContent *aExcludeContent = nsnull,
                                           PRUint32 aForAttribNamespace = kNameSpaceID_None,
                                           nsIAtom *aTagType = nsAccessibilityAtoms::label);
   static nsIContent *GetXULLabelContent(nsIContent *aForNode,
@@ -199,6 +200,10 @@ protected:
   // For accessibles that have actions
   static void DoCommandCallback(nsITimer *aTimer, void *aClosure);
   nsresult DoCommand(nsIContent *aContent = nsnull);
+
+  // Relation helpers
+  already_AddRefed<nsIDOMNode> GetInverseRelatedNode(nsIAtom *aRelationAttr,
+                                                     PRUint32 aAncestorLevelsToSearch = 0);
 
   // Data Members
   nsCOMPtr<nsIAccessible> mParent;
