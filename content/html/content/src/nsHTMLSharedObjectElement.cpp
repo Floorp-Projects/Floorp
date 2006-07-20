@@ -394,17 +394,10 @@ nsHTMLSharedObjectElement::StartObjectLoad(PRBool aNotify)
 
   nsAutoString uri;
   if (!GetAttr(kNameSpaceID_None, URIAttrName(), uri)) {
-    if (mNodeInfo->Equals(nsGkAtoms::applet)) {
-      // The constructor set the type to eType_Loading; but if we have no code
-      // attribute, then we aren't really a plugin
-      Fallback(aNotify);
-    }
-    else {
-      // Be sure to call the nsIURI version if we have no attribute
-      // That handles the case where no URI is specified. An empty string would
-      // get interpreted as the page itself, instead of absence of URI.
-      LoadObject(nsnull, aNotify, type);
-    }
+    // Be sure to call the nsIURI version if we have no attribute
+    // That handles the case where no URI is specified. An empty string would
+    // get interpreted as the page itself, instead of absence of URI.
+    LoadObject(nsnull, aNotify, type);
   }
   else {
     LoadObject(uri, aNotify, type);
