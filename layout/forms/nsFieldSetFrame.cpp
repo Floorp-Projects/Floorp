@@ -632,6 +632,9 @@ nsFieldSetFrame::InsertFrames(nsIAtom*       aListName,
   aFrameList = MaybeSetLegend(aFrameList, aListName);
   if (aFrameList) {
     ReParentFrameList(aFrameList);
+    if (NS_UNLIKELY(aPrevFrame == mLegendFrame)) {
+      aPrevFrame = nsnull;
+    }
     return mContentFrame->InsertFrames(aListName, aPrevFrame, aFrameList);
   }
   return NS_OK;
