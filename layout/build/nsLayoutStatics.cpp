@@ -105,16 +105,12 @@ static nsrefcnt sLayoutStaticRefcnt;
 nsresult
 nsLayoutStatics::Initialize()
 {
-#ifdef NS_BUILD_REFCNT_LOGGING
-  NS_LogCtor(&sLayoutStaticRefcnt, "nsLayoutStatics", 1);
-#endif
-
   NS_ASSERTION(sLayoutStaticRefcnt == 0,
                "nsLayoutStatics isn't zero!");
 
   sLayoutStaticRefcnt = 1;
   NS_LOG_ADDREF(&sLayoutStaticRefcnt, sLayoutStaticRefcnt,
-                "nsLayoutStatics", 0);
+                "nsLayoutStatics", 1);
 
   nsresult rv;
 
@@ -187,10 +183,6 @@ nsLayoutStatics::Initialize()
 void
 nsLayoutStatics::Shutdown()
 {
-#ifdef NS_BUILD_REFCNT_LOGGING
-  NS_LogDtor(&sLayoutStaticRefcnt, "nsLayoutStatics", 1);
-#endif
-
   txXSLTProcessor::shutdown();
   nsDOMAttribute::Shutdown();
   nsDOMEventRTTearoff::Shutdown();
