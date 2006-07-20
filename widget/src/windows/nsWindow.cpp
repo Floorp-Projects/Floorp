@@ -1694,7 +1694,7 @@ nsWindow* nsWindow::GetParent(PRBool aStopOnFirstTopLevel)
 //
 //-------------------------------------------------------------------------
 #ifndef WINCE
-bool gWindowsVisible;
+PRBool gWindowsVisible;
 
 static BOOL CALLBACK gEnumWindowsProc(HWND hwnd, LPARAM lParam)
 {
@@ -1702,12 +1702,36 @@ static BOOL CALLBACK gEnumWindowsProc(HWND hwnd, LPARAM lParam)
   ::GetWindowThreadProcessId(hwnd, &pid);
   if (pid == _getpid() && ::IsWindowVisible(hwnd))
   {
-    gWindowsVisible = true;
+    gWindowsVisible = PR_TRUE;
     return FALSE;
   }
   return TRUE;
 }
 #endif
+
+PRBool nsWindow::CanTakeFocus()
+{
+#ifndef WINCE
+  gWindowsVisible = PR_FALSE;
+  EnumWindows(gEnumWindowsProc, 0);
+  if (!gWindowsVisible) {
+    return PR_TRUE;
+  } else {
+    HWND fgWnd = ::GetForegroundWindow();
+    if (!fgWnd) {
+      return PR_TRUE;
+    }
+    DWORD pid;
+    GetWindowThreadProcessId(fgWnd, &pid);
+    if (pid == _getpid()) {
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+#else
+  return PR_TRUE;
+#endif
+}
 
 NS_METHOD nsWindow::Show(PRBool bState)
 {
@@ -1723,31 +1747,17 @@ NS_METHOD nsWindow::Show(PRBool bState)
             ::ShowWindow(mWnd, SW_SHOWMINIMIZED);
 #endif
             break;
-          default :
-#ifndef WINCE
-            // If none of our windows is visible, allow taking of focus
-            gWindowsVisible = false;
-            EnumWindows(gEnumWindowsProc, 0);
-            if (!gWindowsVisible)
-            {
+          default:
+            if (CanTakeFocus()) {
               ::ShowWindow(mWnd, SW_SHOWNORMAL);
-            }
-            else
-            {
-              // Don't take focus if the active window is not one of ours (e.g. bug 259816)
-              HWND fgWnd = ::GetForegroundWindow();
-              DWORD pid;
-              GetWindowThreadProcessId(fgWnd, &pid);
-              if (fgWnd && pid != _getpid())
-              {
-                ::ShowWindow(mWnd, SW_SHOWNOACTIVATE);
-                GetAttention(2);
-              }
-              else
-#endif
-              {
-                ::ShowWindow(mWnd, SW_SHOWNORMAL);
-              }
+            } else {
+              // Place the window behind the foreground window
+              HWND wndAfter = ::GetForegroundWindow();
+              if (!wndAfter)
+                wndAfter = HWND_BOTTOM;
+              ::SetWindowPos(mWnd, wndAfter, 0, 0, 0, 0, SWP_SHOWWINDOW | SWP_NOSIZE | 
+                             SWP_NOMOVE | SWP_NOACTIVATE);
+              GetAttention(2);
             }
         }
       } else {
@@ -1812,6 +1822,15 @@ NS_METHOD nsWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
   UINT flags = SWP_NOMOVE | SWP_NOREPOSITION | SWP_NOSIZE;
   if (!aActivate)
     flags |= SWP_NOACTIVATE;
+
+  if (!CanTakeFocus() && behind == HWND_TOP)
+  {
+    // Can't place the window to top so place it behind the foreground window
+    behind = ::GetForegroundWindow();
+    if (!behind)
+      behind = HWND_BOTTOM;
+    flags |= SWP_NOACTIVATE;
+  }
 
   ::SetWindowPos(mWnd, behind, 0, 0, 0, 0, flags);
   return NS_OK;
