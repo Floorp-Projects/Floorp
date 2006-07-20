@@ -252,7 +252,8 @@ nsTypeAheadFind::CollapseSelection()
   nsCOMPtr<nsISelection> selection;
   selectionController->GetSelection(nsISelectionController::SELECTION_NORMAL,
                                      getter_AddRefs(selection));
-  selection->CollapseToStart();
+  if (selection)
+    selection->CollapseToStart();
 
   return NS_OK;
 }
@@ -391,10 +392,12 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell,
   // ------------ Get ranges ready ----------------
   nsCOMPtr<nsIDOMRange> returnRange;
   nsCOMPtr<nsIPresShell> focusedPS;
-  if (NS_FAILED(GetSearchContainers(currentContainer, selectionController,
+  if (NS_FAILED(GetSearchContainers(currentContainer,
+                                    (!aIsFirstVisiblePreferred ||
+                                     mStartFindRange) ?
+                                    selectionController : nsnull,
                                     aIsRepeatingSameChar,
                                     aIsFirstVisiblePreferred, 
-                                    !aIsFirstVisiblePreferred || mStartFindRange,
                                     getter_AddRefs(presShell),
                                     getter_AddRefs(presContext)))) {
     return NS_ERROR_FAILURE;
@@ -613,9 +616,9 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell,
 
     if (continueLoop) {
       if (NS_FAILED(GetSearchContainers(currentContainer,
-                                        selectionController,
+                                        nsnull,
                                         aIsRepeatingSameChar,
-                                        aIsFirstVisiblePreferred, PR_FALSE,
+                                        aIsFirstVisiblePreferred,
                                         getter_AddRefs(presShell),
                                         getter_AddRefs(presContext)))) {
         continue;
@@ -679,7 +682,6 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
                                      nsISelectionController *aSelectionController,
                                      PRBool aIsRepeatingSameChar,
                                      PRBool aIsFirstVisiblePreferred,
-                                     PRBool aCanUseDocSelection,                                     
                                      nsIPresShell **aPresShell,
                                      nsPresContext **aPresContext)
 {
@@ -734,8 +736,8 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
   // Consider current selection as null if
   // it's not in the currently focused document
   nsCOMPtr<nsIDOMRange> currentSelectionRange;
-  nsCOMPtr<nsIPresShell> selectionPresShell (GetPresShell());
-  if (aCanUseDocSelection && selectionPresShell && selectionPresShell == presShell) {
+  nsCOMPtr<nsIPresShell> selectionPresShell = GetPresShell();
+  if (aSelectionController && selectionPresShell && selectionPresShell == presShell) {
     nsCOMPtr<nsISelection> selection;
     aSelectionController->GetSelection(
       nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
@@ -1045,9 +1047,9 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, PRBool aLinksOnly,
     // If you can see the selection (not collapsed or thru caret browsing),
     // or if already focused on a page element, start there.
     // Otherwise we're going to start at the first visible element
-    NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
-    PRBool isSelectionCollapsed;
-    selection->GetIsCollapsed(&isSelectionCollapsed);
+    PRBool isSelectionCollapsed = PR_TRUE;
+    if (selection)
+      selection->GetIsCollapsed(&isSelectionCollapsed);
 
     // If true, we will scan from top left of visible area
     // If false, we will scan from start of selection
@@ -1097,11 +1099,12 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, PRBool aLinksOnly,
       // (mStartFindRange)
 
       mStartFindRange = nsnull;
-      nsCOMPtr<nsIDOMRange> startFindRange;
-      selection->GetRangeAt(0, getter_AddRefs(startFindRange));
-
-      if (startFindRange)
-        startFindRange->CloneRange(getter_AddRefs(mStartFindRange));
+      if (selection) {
+        nsCOMPtr<nsIDOMRange> startFindRange;
+        selection->GetRangeAt(0, getter_AddRefs(startFindRange));
+        if (startFindRange)
+          startFindRange->CloneRange(getter_AddRefs(mStartFindRange));
+      }
     }
   }
   else {
