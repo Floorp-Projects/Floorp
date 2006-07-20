@@ -49,8 +49,8 @@ struct nsSize;
 
 // IID for the nsIScrollableView interface
 #define NS_ISCROLLABLEVIEW_IID    \
-{ 0x36083bcf, 0x61d7, 0x4c24, \
-{ 0xa6, 0xd4, 0x2f, 0x05, 0xba, 0x2c, 0x1b, 0x51 } }
+{ 0x1fcd151c, 0x5e26, 0x4c9d, \
+{ 0xa5, 0x2c, 0x87, 0x43, 0x7d, 0x7b, 0x1c, 0xe8 } }
 
 /**
  * A scrolling view allows an arbitrary view that you supply to be scrolled
@@ -174,6 +174,16 @@ public:
    * @return error status
    */
   NS_IMETHOD ScrollByWhole(PRBool aTop) = 0;
+
+  /**
+   * Scroll the view left or right by aNumLinesX pixels.  Positive values move 
+   * right.  Scroll the view up or down by aNumLinesY pixels.  Positive values
+   * move down.  Prevents scrolling off the end of the view.
+   * @param aNumLinesX number of lines to scroll the view horizontally
+   * @param aNumLinesY number of lines to scroll the view vertically
+   * @return error status
+   */
+  NS_IMETHOD ScrollByPixels(PRInt32 aNumPixelsX, PRInt32 aNumPixelsY) = 0;
 
   /**
    * Check the view can scroll from current offset.

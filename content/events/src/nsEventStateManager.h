@@ -245,12 +245,18 @@ protected:
                                   nsPresContext* aPresContext,
                                   nsIFrame* &targetOuterFrame,
                                   nsPresContext* &presCtxOuter);
+
+  typedef enum {
+    eScrollByPixel,
+    eScrollByLine,
+    eScrollByPage
+  } ScrollQuantity;
   nsresult DoScrollText(nsPresContext* aPresContext,
                         nsIFrame* aTargetFrame,
                         nsInputEvent* aEvent,
                         PRInt32 aNumLines,
                         PRBool aScrollHorizontal,
-                        PRBool aScrollPage);
+                        ScrollQuantity aScrollQuantity);
   void ForceViewUpdate(nsIView* aView);
   void DoScrollHistory(PRInt32 direction);
   void DoScrollTextsize(nsIFrame *aTargetFrame, PRInt32 adjustment);

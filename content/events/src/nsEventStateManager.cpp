@@ -172,7 +172,8 @@ enum {
  MOUSE_SCROLL_N_LINES,
  MOUSE_SCROLL_PAGE,
  MOUSE_SCROLL_HISTORY,
- MOUSE_SCROLL_TEXTSIZE
+ MOUSE_SCROLL_TEXTSIZE,
+ MOUSE_SCROLL_PIXELS
 };
 
 // mask values for ui.key.chromeAccess and ui.key.contentAccess
@@ -1817,7 +1818,7 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
                                   nsInputEvent* aEvent,
                                   PRInt32 aNumLines,
                                   PRBool aScrollHorizontal,
-                                  PRBool aScrollPage)
+                                  ScrollQuantity aScrollQuantity)
 {
   nsCOMPtr<nsIContent> targetContent = aTargetFrame->GetContent();
   if (!targetContent)
@@ -1838,7 +1839,7 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
     nsCOMPtr<nsIDOMAbstractView> view;
     docView->GetDefaultView(getter_AddRefs(view));
 
-    if (aScrollPage) {
+    if (aScrollQuantity == eScrollByPage) {
       if (aNumLines > 0) {
         aNumLines = nsIDOMNSUIEvent::SCROLL_PAGE_DOWN;
       } else {
@@ -1963,7 +1964,7 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
     PRInt32 scrollX = 0;
     PRInt32 scrollY = aNumLines;
 
-    if (aScrollPage)
+    if (aScrollQuantity == eScrollByPage)
       scrollY = (scrollY > 0) ? 1 : -1;
       
     if (aScrollHorizontal) {
@@ -1971,8 +1972,10 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
       scrollY = 0;
     }
     
-    if (aScrollPage)
+    if (aScrollQuantity == eScrollByPage)
       scrollView->ScrollByPages(scrollX, scrollY);
+    else if (aScrollQuantity == eScrollByPixel)
+      scrollView->ScrollByPixels(scrollX, scrollY);
     else
       scrollView->ScrollByLines(scrollX, scrollY);
 
@@ -1986,7 +1989,7 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
                                 *getter_AddRefs(newPresContext));
     if (NS_SUCCEEDED(rv) && newFrame)
       return DoScrollText(newPresContext, newFrame, aEvent, aNumLines,
-                          aScrollHorizontal, aScrollPage);
+                          aScrollHorizontal, aScrollQuantity);
   }
 
   return NS_OK;
@@ -2219,6 +2222,8 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         numLines = msEvent->delta;
         if (msEvent->scrollFlags & nsMouseScrollEvent::kIsFullPage)
           action = MOUSE_SCROLL_PAGE;
+        else if (msEvent->scrollFlags & nsMouseScrollEvent::kIsPixels)
+          action = MOUSE_SCROLL_PIXELS;
       }
       else
         {
@@ -2253,13 +2258,27 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 
       switch (action) {
       case MOUSE_SCROLL_N_LINES:
+        {
+          DoScrollText(presContext, aTargetFrame, msEvent, numLines,
+                       (msEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal),
+                       eScrollByLine);
+        }
+        break;
+
       case MOUSE_SCROLL_PAGE:
         {
           DoScrollText(presContext, aTargetFrame, msEvent, numLines,
                        (msEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal),
-                       (action == MOUSE_SCROLL_PAGE));
+                       eScrollByPage);
         }
+        break;
 
+      case MOUSE_SCROLL_PIXELS:
+        {
+          DoScrollText(presContext, aTargetFrame, msEvent, numLines,
+                       (msEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal),
+                       eScrollByPixel);
+        }
         break;
 
       case MOUSE_SCROLL_HISTORY:

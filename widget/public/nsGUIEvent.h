@@ -748,7 +748,8 @@ public:
   enum nsMouseScrollFlags {
     kIsFullPage =   1 << 0,
     kIsVertical =   1 << 1,
-    kIsHorizontal = 1 << 2
+    kIsHorizontal = 1 << 2,
+    kIsPixels =     1 << 3
   };
 
   nsMouseScrollEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w)

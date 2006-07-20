@@ -132,7 +132,10 @@ public:
 		// not have to rely on hacking up EventRecords to fake it.
 		//
 		virtual PRBool ResizeEvent ( WindowRef inWindow ) ;
-		virtual PRBool Scroll ( EventMouseWheelAxis inAxis, PRInt32 inDelta, const Point& inMouseLoc, nsWindow* inWindow, PRUint32 inModifiers );
+		virtual PRBool Scroll (PRInt32 aDeltaY, PRInt32 aDeltaX,
+                                       PRBool aIsPixels,
+                                       const Point& aMouseLoc,
+                                       nsWindow* aWindow, PRUint32 aModifiers);
 		 
 		virtual void	HandleActivateEvent(EventRef aEvent);
 		inline nsMacEventDispatchHandler* GetEventDispatchHandler() { return mEventDispatchHandler; }
@@ -157,6 +160,11 @@ protected:
 		virtual nsresult	HandleStartComposition(void);
 		virtual nsresult	HandleEndComposition(void);
 		virtual nsresult  HandleTextEvent(PRUint32 textRangeCount, nsTextRangeArray textRangeArray);
+		virtual PRBool ScrollAxis (nsMouseScrollEvent::nsMouseScrollFlags aAxis,
+		                           PRInt32 aDelta, PRBool aIsPixels,
+		                           const Point& aMouseLoc,
+		                           nsWindow* aWindow,
+		                           PRUint32 aModifiers);
 
 protected:
 	nsMacEventDispatchHandler* mEventDispatchHandler;
