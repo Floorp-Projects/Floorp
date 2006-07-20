@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslcon.c,v 1.32 2006/07/19 01:40:17 nelson%bolyard.com Exp $ */
+/* $Id: sslcon.c,v 1.33 2006/07/20 00:17:23 nelson%bolyard.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -3120,7 +3120,7 @@ ssl2_BeginClientHandshake(sslSocket *ss)
 
 	return rv;
     }
-#ifndef NSS_ECC_MORE_THAN_SUITE_B
+#if defined(NSS_ENABLE_ECC) && !defined(NSS_ECC_MORE_THAN_SUITE_B)
     /* ensure we don't neogtiate ECC cipher suites with SSL2 hello */
     ssl3_DisableECCSuites(ss, NULL); /* disable all ECC suites */
 #endif
