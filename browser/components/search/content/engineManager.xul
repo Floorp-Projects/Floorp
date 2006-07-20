@@ -106,6 +106,12 @@
     </vbox>
   </hbox>
   <hbox>
+    <checkbox id="enableSuggest"
+              label="&enableSuggest.label;"
+              accesskey="&enableSuggest.accesskey;"/>
+    <spacer flex="1"/>
+  </hbox>
+  <hbox>
     <label id="addEngines" class="text-link" value="&addEngine.label;"
            onclick="gEngineManagerDialog.loadAddEngines();"/>
     <spacer flex="1"/>

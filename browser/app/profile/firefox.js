@@ -229,6 +229,9 @@ pref("browser.search.openintab", false);
 // send ping to the server to update
 pref("browser.search.update", true);
 
+// enable search suggestions by default
+pref("browser.search.suggest.enabled", true);
+
 pref("browser.history.grouping", "day");
 pref("browser.sessionhistory.max_entries", 50);
 
