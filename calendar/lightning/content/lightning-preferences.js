@@ -46,9 +46,11 @@ var gLightningPane = {
         var itemToSelect;
         while (timezones.hasMore()) {
             var tzid = timezones.getNext();
-            var listItem = tzListBox.appendItem(tzid, tzid);
-            if (tzid == prefValue) {
-                itemToSelect = listItem;
+            if (tzid.indexOf("/mozilla.org/") == 0) {
+                var listItem = tzListBox.appendItem(tzid, tzid);
+                if (tzid == prefValue) {
+                    itemToSelect = listItem;
+                }
             }
         }
         if (itemToSelect) {
