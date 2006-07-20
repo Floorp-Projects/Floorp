@@ -62,6 +62,9 @@ public:
 
   nsITreeBoxObject* GetTreeBody();
 
+  // Override SetPropertyAsSupports for security check
+  NS_IMETHOD SetPropertyAsSupports(const PRUnichar* aPropertyName, nsISupports* aValue);
+
   //NS_PIBOXOBJECT interfaces
   virtual void Clear();
   virtual void ClearCachedValues();
@@ -168,16 +171,37 @@ NS_IMETHODIMP nsTreeBoxObject::GetView(nsITreeView * *aView)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsTreeBoxObject::SetView(nsITreeView * aView)
+static PRBool
+CanTrustView(nsISupports* aValue)
 {
   // Untrusted content is only allowed to specify known-good views
-  if (!nsContentUtils::IsCallerTrustedForWrite()) {
-    nsCOMPtr<nsINativeTreeView> nativeTreeView = do_QueryInterface(aView);
-    if (!nativeTreeView || NS_FAILED(nativeTreeView->EnsureNative()))
-      // XXX ERRMSG need a good error here for developers
-      return NS_ERROR_DOM_SECURITY_ERR;
+  if (nsContentUtils::IsCallerTrustedForWrite())
+    return PR_TRUE;
+  nsCOMPtr<nsINativeTreeView> nativeTreeView = do_QueryInterface(aValue);
+  if (!nativeTreeView || NS_FAILED(nativeTreeView->EnsureNative())) {
+    // XXX ERRMSG need a good error here for developers
+    return PR_FALSE;
   }
+  return PR_TRUE;
+}
 
+NS_IMETHODIMP
+nsTreeBoxObject::SetPropertyAsSupports(const PRUnichar* aPropertyName, nsISupports* aValue)
+{
+  NS_ENSURE_ARG(aPropertyName);
+  
+  if (nsDependentString(aPropertyName).EqualsLiteral("view") &&
+      !CanTrustView(aValue))
+    return NS_ERROR_DOM_SECURITY_ERR;
+
+  return nsBoxObject::SetPropertyAsSupports(aPropertyName, aValue);
+}
+
+NS_IMETHODIMP nsTreeBoxObject::SetView(nsITreeView * aView)
+{
+  if (!CanTrustView(aView))
+    return NS_ERROR_DOM_SECURITY_ERR;
+  
   nsITreeBoxObject* body = GetTreeBody();
   if (body) {
     body->SetView(aView);
