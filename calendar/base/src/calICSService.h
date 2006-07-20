@@ -39,7 +39,7 @@
 #include "nsCOMPtr.h"
 #include "calIICSService.h"
 
-#include "nsInterfaceHashtable.h"
+#include "nsClassHashtable.h"
 
 extern "C" {
 #   include "ical.h"
@@ -47,6 +47,18 @@ extern "C" {
 
 class calIIcalComponent;
 class calIcalComponent;
+
+struct TimezoneEntry
+{
+    nsCString const mLatitude;
+    nsCString const mLongitude;
+    nsCOMPtr<calIIcalComponent> const mTzCal;
+    
+    TimezoneEntry(nsACString const& latitude,
+                  nsACString const& longitude,
+                  nsCOMPtr<calIIcalComponent> const& tzCal)
+        : mLatitude(latitude), mLongitude(longitude), mTzCal(tzCal) {}
+};
 
 class calICSService : public calIICSService
 {
@@ -57,7 +69,8 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_CALIICSSERVICE
 protected:
-    nsInterfaceHashtable<nsCStringHashKey, calIIcalComponent> mTzHash;
+    nsClassHashtable<nsCStringHashKey, TimezoneEntry> mTzHash;
+    TimezoneEntry const* getTimezoneEntry(nsACString const& tzid);
 };
 
 class calIcalProperty : public calIIcalProperty

@@ -279,8 +279,11 @@ calDateTime::SubtractDate(calIDateTime *aDate, calIDuration **aDuration)
     ToIcalTime(&itt1);
     aDate->ToIcalTime(&itt2);
 
-    struct icaldurationtype idt;
-    idt = icaltime_subtract(itt1, itt2);
+    // same as icaltime_subtract(), but minding timezones:
+    icaltimezone * utc = icaltimezone_get_utc_timezone();
+    time_t t1t = icaltime_as_timet_with_zone(itt1, utc);
+    time_t t2t = icaltime_as_timet_with_zone(itt2, utc);
+    icaldurationtype idt = icaldurationtype_from_int((int)(t1t-t2t));
 
     nsCOMPtr<calIDuration> result(do_CreateInstance("@mozilla.org/calendar/duration;1"));
     if (!result)
@@ -554,28 +557,18 @@ calDateTime::FromIcalTime(icaltimetype *icalt)
     else
         mTimezone.AssignLiteral("floating");
 
-    // reconstruct nativetime
-    //
-    // Gross hack alert: the reason that we muck with mIsDate here is
-    // because we don't want icaltime_as_timet_with_zone() to force the
-    // hours/mins/seconds to UTC-based 0: since we're not moving the 
-    // existing date to UTC, but merely representing it a UTC-based way.
-    if (mIsDate) {
-        icalt->is_date = 0;
-    }
-    time_t tt = icaltime_as_timet_with_zone(*icalt, icaltimezone_get_utc_timezone());
-    if (mIsDate) {
-        icalt->is_date = 1;
-    }
+    mWeekday = icaltime_day_of_week(t) - 1;
+    mYearday = icaltime_day_of_year(t);
+    
+    // mNativeTime: not moving the existing date to UTC,
+    // but merely representing it a UTC-based way.
+    t.is_date = 0;
+    time_t tt = icaltime_as_timet_with_zone(t, icaltimezone_get_utc_timezone());
     PRInt64 temp, million;
     LL_I2L(million, PR_USEC_PER_SEC);
     LL_I2L(temp, tt);
     LL_MUL(temp, temp, million);
     mNativeTime = temp;
-
-    // reconstruct weekday/yearday
-    mWeekday = icaltime_day_of_week(*icalt) - 1;
-    mYearday = icaltime_day_of_year(*icalt);
 }
 
 NS_IMETHODIMP

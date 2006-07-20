@@ -366,7 +366,10 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_CALIICALCOMPONENT
 protected:
-
+    
+    nsresult GetDateTimeAttribute(icalproperty_kind kind, calIDateTime ** dtp);
+    nsresult SetDateTimeAttribute(icalproperty_kind kind, calIDateTime * dt);
+    
     nsresult SetPropertyValue(icalproperty_kind kind, icalvalue *val);
     nsresult SetProperty(icalproperty_kind kind, icalproperty *prop);
 
@@ -421,52 +424,66 @@ protected:
     nsInterfaceHashtable<nsCStringHashKey, calIIcalComponent> mTimezones;
 };
 
-NS_IMETHODIMP
-calIcalComponent::AddTimezoneReference(calIIcalComponent *aTimezone)
+static nsresult unwrapVTimeZoneComponent(
+    calIIcalComponent *tzcal, nsCOMPtr<calIIcalComponent> & rtz)
 {
-    NS_ENSURE_ARG_POINTER(aTimezone);
-
+    NS_ENSURE_ARG_POINTER(tzcal);
+    
     nsresult rv;
 
     // verify that we're dealing with a VTIMEZONE in a VCALENDAR
     nsCAutoString s;
     nsCOMPtr<calIIcalComponent> comp;
 
-    rv = aTimezone->GetComponentType(s);
+    rv = tzcal->GetComponentType(s);
     if (NS_FAILED(rv) || !s.EqualsLiteral("VCALENDAR")) {
-        NS_WARNING("calIcalComponent::AddTimezoneReference - component given is not a VCALENDAR");
+        NS_WARNING("unwrapVTimeZoneComponent() - "
+                   "component given is not a VCALENDAR");
         return NS_ERROR_FAILURE;
     }
-
-    rv = aTimezone->GetFirstSubcomponent(NS_LITERAL_CSTRING("ANY"), getter_AddRefs(comp));
-    if (NS_FAILED(rv) || !comp) {
-        NS_WARNING("calIcalComponent::AddTimezoneReference - component given has no subcomps");
+    rv = tzcal->GetFirstSubcomponent(NS_LITERAL_CSTRING("VTIMEZONE"),
+                                     getter_AddRefs(rtz));
+    if (NS_FAILED(rv) || !rtz) {
+        NS_WARNING("unwrapVTimeZoneComponent - "
+                   "no VTIMEZONE subcomponent");
         return NS_ERROR_FAILURE;
     }
+    return NS_OK;
+}
 
-    rv = comp->GetComponentType(s);
-    if (NS_FAILED(rv) || !s.EqualsLiteral("VTIMEZONE")) {
-        NS_WARNING("calIcalComponent::AddTimezoneReference - subcomponent is not a VTIMEZONE");
-        return NS_ERROR_FAILURE;
-    }
-
+static nsresult unwrapVTimeZoneComponentWithId(
+    calIIcalComponent *tzcal,
+    nsACString & rtzid, nsCOMPtr<calIIcalComponent> & rtz)
+{
+    nsresult rv = unwrapVTimeZoneComponent(tzcal, rtz);
+    if (NS_FAILED(rv))
+        return rv;
     // fetch the tzid
     nsCOMPtr<calIIcalProperty> tzidProp;
-    rv = comp->GetFirstProperty(NS_LITERAL_CSTRING("TZID"), getter_AddRefs(tzidProp));
+    rv = rtz->GetFirstProperty(NS_LITERAL_CSTRING("TZID"),
+                               getter_AddRefs(tzidProp));
     if (NS_FAILED(rv) || !tzidProp) {
-        NS_WARNING("calIcalComponent::AddTimezoneReference - failed to get TZID");
+        NS_WARNING("unwrapVTimeZoneComponentWithId - failed to get TZID");
         return NS_ERROR_FAILURE;
-    }
+    }    
+    return tzidProp->GetValue(rtzid);
+}
 
+NS_IMETHODIMP
+calIcalComponent::AddTimezoneReference(calIIcalComponent *aTimezone)
+{
     nsCAutoString tzid;
-    rv = tzidProp->GetValue(tzid);
-    NS_ENSURE_SUCCESS(rv, rv);
-
+    nsCOMPtr<calIIcalComponent> tz;
+    nsresult rv = unwrapVTimeZoneComponentWithId(aTimezone, tzid, tz);
+    if (NS_FAILED(rv))
+        return rv;
+    
     // figure out if we already have this tzid 
     if (mTimezones.Get(tzid, nsnull))
         return NS_OK;
 
-    mTimezones.Put(tzid, aTimezone);
+    if (!mTimezones.Put(tzid, aTimezone))
+        return NS_ERROR_OUT_OF_MEMORY;
 
     return NS_OK;
 }
@@ -661,43 +678,140 @@ calIcalComponent::Set##Attrname(PRInt32 val)                    \
     return SetProperty(ICAL_##ICALNAME##_PROPERTY, prop);       \
 }                                                               \
 
+nsresult calIcalComponent::GetDateTimeAttribute(
+    icalproperty_kind kind, calIDateTime ** dtp)
+{
+    icalproperty *prop = icalcomponent_get_first_property(mComponent, kind);
+    calDateTime *dt;
+    if (!prop) {
+        *dtp = nsnull;  /* invalid date */
+        return NS_OK;
+    }
+    struct icaltimetype itt =
+        icalvalue_get_datetime(icalproperty_get_value(prop));
+    const char *tzid = icalproperty_get_parameter_as_string(prop, "TZID");
+    if (tzid) {
+        // look up tz in ics service, which btw caches commonly used tzones.
+        // this hides errors from incorrect ics files, which could state
+        // a TZID that is not present in the ics file.
+        // The other way round, it makes this product more error tolerant.
+        nsCOMPtr<calIICSService> ics = do_GetService(kCalICSService);
+        nsCOMPtr<calIIcalComponent> tzcal;
+        nsresult rv = ics->GetTimezone(nsDependentCString(tzid),
+                                       getter_AddRefs(tzcal));
+        if (NS_FAILED(rv) || !tzcal) {
+            /* Now, see, libical sucks.
+               We have to walk up to our parent VCALENDAR and try to find
+               this tzid */
+            icalcomponent *vcalendar = mComponent;
+            while (vcalendar && icalcomponent_isa(vcalendar) !=
+                   ICAL_VCALENDAR_COMPONENT)
+                vcalendar = icalcomponent_get_parent(vcalendar);
+            if (!vcalendar) {
+                NS_WARNING("VCALENDAR not found while looking for VTIMEZONE!");
+                return NS_ERROR_FAILURE;
+            }
+            icaltimezone *zone = icalcomponent_get_timezone(vcalendar, tzid);
+            if (!zone) {
+                NS_WARNING("Can't find specified VTIMEZONE in VCALENDAR!");
+                return NS_ERROR_FAILURE;
+            }
+            icalcomponent * tzcomp = icaltimezone_get_component(zone);
+            if (tzcomp == nsnull) {
+                NS_WARNING("Can't get VTIMEZONE!");
+                return NS_ERROR_FAILURE;
+            }
+            
+            // create new VCALENDAR out of VTIMEZONE and publish to ics service.
+            // calDateTime works on ics service's timezones.
+            rv = ics->CreateIcalComponent(nsDependentCString("VCALENDAR"),
+                                          getter_AddRefs(tzcal));
+            if (NS_FAILED(rv))
+                return rv;
+            // VTIMEZONE:
+            tzcomp = icalcomponent_new_clone(tzcomp);
+            nsCOMPtr<calIIcalComponent> subComp(
+                new calIcalComponent(tzcomp, nsnull) );
+            if (!subComp) {
+                icalcomponent_free(tzcomp);
+                return NS_ERROR_OUT_OF_MEMORY;
+            }
+            rv = tzcal->AddSubcomponent(subComp);
+            if (NS_FAILED(rv))
+                return rv;
+            
+            // publish to ics service:
+            nsCOMPtr<calIIcalComponent> const tzcal_(tzcal);
+            rv = ics->AddTimezone(
+                tzcal_, // unknown latitude, longitude:
+                nsDependentCString(""), nsDependentCString(""),
+                getter_AddRefs(tzcal));
+            if (NS_FAILED(rv))
+                return rv;
+        }
+        // assure timezone is referenced in component:
+        AddTimezoneReference(tzcal);
+        // correct itt which would else appear floating:
+        itt.zone = icalcomponent_get_timezone(tzcal->GetIcalComponent(), tzid);
+        itt.is_utc = 0;
+    }
+    dt = new calDateTime(&itt);
+    if (!dt)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(*dtp = dt);
+    return NS_OK;
+}
+
+nsresult calIcalComponent::SetDateTimeAttribute(
+    icalproperty_kind kind, calIDateTime * dt)
+{
+    ClearAllProperties(kind);
+    PRBool isValid, wantTz = PR_FALSE;
+    if (!dt || NS_FAILED(dt->GetIsValid(&isValid)) || !isValid) {
+        return NS_OK;
+    }
+    struct icaltimetype itt;
+    dt->ToIcalTime(&itt);
+    nsCAutoString tzid;
+    if (NS_SUCCEEDED(dt->GetTimezone(tzid))) {
+        if (!tzid.IsEmpty() && !tzid.EqualsLiteral("UTC") &&
+            !tzid.EqualsLiteral("floating")) {
+            wantTz = PR_TRUE;
+            nsCOMPtr<calIICSService> ics = do_GetService(kCalICSService);
+            nsCOMPtr<calIIcalComponent> tz;
+            ics->GetTimezone(tzid, getter_AddRefs(tz));
+            if (!tz) {
+                /* Uh, we didn't find this timezone.
+                   This should somehow be bad. */
+                NS_WARNING("Timezone was not found in database!");
+                wantTz = PR_FALSE;
+            } else {
+                AddTimezoneReference(tz);
+            }
+        }
+    }
+    icalvalue *val = icalvalue_new_datetime(itt);
+    if (!val)
+        return NS_ERROR_OUT_OF_MEMORY;
+    icalproperty *prop = icalproperty_new(kind);
+    if (!prop) {
+        icalvalue_free(val);
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    icalproperty_set_value(prop, val);
+    if (wantTz) {
+        icalproperty_set_parameter_from_string(
+            prop, "TZID", nsPromiseFlatCString(tzid).get());
+    }
+    icalcomponent_add_property(mComponent, prop);
+    return NS_OK;
+}
 
 #define RO_COMP_DATE_ATTRIBUTE(Attrname, ICALNAME)                      \
 NS_IMETHODIMP                                                           \
 calIcalComponent::Get##Attrname(calIDateTime **dtp)                     \
 {                                                                       \
-    icalproperty *prop =                                                \
-        icalcomponent_get_first_property(mComponent,                    \
-                                         ICAL_##ICALNAME##_PROPERTY);   \
-    calDateTime *dt;                                                    \
-    if (!prop) {                                                        \
-        *dtp = nsnull;  /* invalid date */                              \
-        return NS_OK;                                                   \
-    }                                                                   \
-    struct icaltimetype itt =                                           \
-        icalvalue_get_datetime(icalproperty_get_value(prop));           \
-    const char *tzid = icalproperty_get_parameter_as_string(prop, "TZID"); \
-    if (tzid) {                                                         \
-        /* Now, see, libical sucks.  We have to walk up to our parent VCALENDAR and try to find this tzid */ \
-        icalcomponent *vcalendar = mComponent;                          \
-        while (vcalendar && icalcomponent_isa(vcalendar) != ICAL_VCALENDAR_COMPONENT) \
-            vcalendar = icalcomponent_get_parent(vcalendar);            \
-        if (!vcalendar) {                                               \
-            NS_WARNING("VCALENDAR not found while looking for VTIMEZONE!"); \
-            return NS_ERROR_FAILURE;                                    \
-        }                                                               \
-        icaltimezone *zone = icalcomponent_get_timezone(vcalendar, tzid); \
-        if (!zone) {                                                    \
-            NS_WARNING("Can't find specified VTIMEZONE in VCALENDAR!"); \
-            return NS_ERROR_FAILURE;                                    \
-        }                                                               \
-        itt.zone = zone;                                                \
-    }                                                                   \
-    dt = new calDateTime(&itt);                                         \
-    if (!dt)                                                            \
-        return NS_ERROR_OUT_OF_MEMORY;                                  \
-    NS_ADDREF(*dtp = dt);                                               \
-    return NS_OK;                                                       \
+    return GetDateTimeAttribute(ICAL_##ICALNAME##_PROPERTY, dtp);       \
 }
 
 #define COMP_DATE_ATTRIBUTE(Attrname, ICALNAME)                         \
@@ -706,44 +820,7 @@ RO_COMP_DATE_ATTRIBUTE(Attrname, ICALNAME)                              \
 NS_IMETHODIMP                                                           \
 calIcalComponent::Set##Attrname(calIDateTime *dt)                       \
 {                                                                       \
-    struct icaltimetype itt;                                            \
-    PRBool isValid, wantTz = PR_FALSE;                                  \
-    if (!dt || NS_FAILED(dt->GetIsValid(&isValid)) || !isValid) {       \
-        ClearAllProperties(ICAL_##ICALNAME##_PROPERTY);                 \
-        return NS_OK;                                                   \
-    }                                                                   \
-    dt->ToIcalTime(&itt);                                               \
-    nsCAutoString tzid;                                                 \
-    if (NS_SUCCEEDED(dt->GetTimezone(tzid))) {                          \
-        if (!tzid.IsEmpty() && !tzid.EqualsLiteral("UTC") &&            \
-            !tzid.EqualsLiteral("floating")) {                          \
-            wantTz = PR_TRUE;                                           \
-            nsCOMPtr<calIICSService> ics = do_GetService(kCalICSService); \
-            nsCOMPtr<calIIcalComponent> tz;                             \
-            ics->GetTimezone(tzid, getter_AddRefs(tz));                 \
-            if (!tz) {                                                  \
-                /* Uh, we didn't find this timezone.  This should somehow be bad. */ \
-                NS_WARNING("Timezone was not found in database!");      \
-                wantTz = PR_FALSE;                                      \
-            } else {                                                    \
-                AddTimezoneReference(tz);                               \
-            }                                                           \
-        }                                                               \
-    }                                                                   \
-    icalvalue *val = icalvalue_new_datetime(itt);                       \
-    if (!val)                                                           \
-        return NS_ERROR_OUT_OF_MEMORY;                                  \
-    icalproperty *prop = icalproperty_new(ICAL_##ICALNAME##_PROPERTY);  \
-    if (!prop) {                                                        \
-        icalvalue_free(val);                                            \
-        return NS_ERROR_OUT_OF_MEMORY;                                  \
-    }                                                                   \
-    icalproperty_set_value(prop, val);                                  \
-    if (wantTz) {                                                       \
-        icalproperty_set_parameter_from_string(prop, "TZID", nsPromiseFlatCString(tzid).get()); \
-    }                                                                   \
-    icalcomponent_add_property(mComponent, prop);                       \
-    return NS_OK;                                                       \
+    return SetDateTimeAttribute(ICAL_##ICALNAME##_PROPERTY, dt);        \
 }
 
 #define RO_COMP_DURATION_ATTRIBUTE(Attrname, ICALNAME)                  \
@@ -932,6 +1009,21 @@ calIcalComponent::Serialize(char **icalstr)
         return calIErrors::ICS_ERROR_BASE + icalerrno;
     }
 
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+calIcalComponent::Clone(calIIcalComponent **_retval)
+{
+    icalcomponent * cloned = icalcomponent_new_clone(mComponent);
+    if (cloned == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    calIcalComponent *comp = new calIcalComponent(cloned, nsnull);
+    if (comp == nsnull) {
+        icalcomponent_free(cloned);
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    NS_ADDREF(*_retval = comp);
     return NS_OK;
 }
 
@@ -1168,81 +1260,122 @@ calICSService::CreateIcalProperty(const nsACString &kind,
 // include tzdata, to get ical_timezone_data_struct
 #include "tzdata.c"
 
-static const ical_timezone_data_struct*
-get_timezone_data_struct_for_tzid(const char *tzid)
+#define MOZCAL_TZID_PREFIX "/mozilla.org/20050126_1/"
+#define STRLEN_ARGS(x) x, sizeof(x) - 1
+
+TimezoneEntry const* calICSService::getTimezoneEntry(nsACString const& tzid)
 {
-    for (int i = 0; ical_timezone_data[i].tzid != NULL; i++) {
-        if (strcmp(tzid, ical_timezone_data[i].tzid) == 0)
-            return &ical_timezone_data[i];
+    TimezoneEntry * pEntry = nsnull;
+    PRBool const bFound = mTzHash.Get(tzid, &pEntry);
+    if ((!bFound || pEntry == nsnull) &&
+        StringBeginsWith(tzid,
+                         nsDependentCString(STRLEN_ARGS(MOZCAL_TZID_PREFIX)))) {
+        // not found, look up in static tab:
+        for (PRUint32 i = 0; ical_timezone_data[i].tzid != nsnull; ++i) {
+            if (tzid.Equals(ical_timezone_data[i].tzid)) {
+                ical_timezone_data_struct const& tzdata = ical_timezone_data[i];
+                nsCOMPtr<calIIcalComponent> icalComp;
+                if (NS_FAILED(
+                        ParseICS(nsDependentCString(tzdata.icstimezone),
+                                 getter_AddRefs(icalComp) )))
+                    return 0;
+                
+                nsAutoPtr<TimezoneEntry> entry(
+                    new TimezoneEntry(nsDependentCString(tzdata.latitude),
+                                      nsDependentCString(tzdata.longitude),
+                                      icalComp) );
+                if (!mTzHash.Put(tzid, entry.get()))
+                    return 0;
+                pEntry = entry.forget();
+                break;
+            }
+        }
     }
-    return nsnull;
+    return pEntry;
 }
 
-NS_IMETHODIMP
-calICSService::GetTimezoneIds(nsIUTF8StringEnumerator **aTzids)
+NS_IMETHODIMP calICSService::AddTimezone(
+    calIIcalComponent * tzCal, const nsACString & tzLatitude,
+    const nsACString & tzLongitude, calIIcalComponent **_retval)
 {
-    NS_ENSURE_ARG_POINTER(aTzids);
-
-    PRUint32 length = sizeof(ical_timezone_data) / sizeof(ical_timezone_data[0]);
-    nsCStringArray *array = new nsCStringArray(length);
-    if (!array)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    for (int i = 0; ical_timezone_data[i].tzid != NULL; i++) {
-        array->AppendCString(nsDependentCString(ical_timezone_data[i].tzid));
+    NS_ENSURE_ARG_POINTER(_retval);
+    
+    nsCAutoString tzid;
+    nsCOMPtr<calIIcalComponent> tz;
+    nsresult rv = unwrapVTimeZoneComponentWithId(tzCal, tzid, tz);
+    if (NS_FAILED(rv))
+        return rv;
+    
+    TimezoneEntry const* pEntry = getTimezoneEntry(tzid);
+    if (pEntry == nsnull) {
+        nsAutoPtr<TimezoneEntry> entry(
+            new TimezoneEntry(tzLatitude, tzLongitude, tzCal) );
+        if (!mTzHash.Put(tzid, entry.get()))
+            return NS_ERROR_OUT_OF_MEMORY;
+        pEntry = entry.forget();
     }
-    array->Sort();
-    return NS_NewAdoptingUTF8StringEnumerator(aTzids, array);
+    NS_ADDREF(*_retval = pEntry->mTzCal);
+    return NS_OK;
 }
-
 
 NS_IMETHODIMP
 calICSService::GetTimezone(const nsACString& tzid,
                            calIIcalComponent **_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);
-    PRBool isFound = mTzHash.Get(tzid, _retval);
-    if (isFound)
-        return NS_OK;
-
-    // not found, we need to locate it
-    const ical_timezone_data_struct *tzdata = get_timezone_data_struct_for_tzid(nsPromiseFlatCString(tzid).get());
-    if (!tzdata)
+    TimezoneEntry const* pEntry = getTimezoneEntry(tzid);
+    if (pEntry == nsnull)
         return calIErrors::INVALID_TIMEZONE;
-
-    // found it
-    nsresult rv;
-
-    nsCOMPtr<calIIcalComponent> comp;
-    rv = ParseICS(nsDependentCString(tzdata->icstimezone), getter_AddRefs(comp));
-    if (NS_FAILED(rv)) return rv;
-
-    PRBool success = mTzHash.Put(tzid, comp);
-    if (!success)
-        return NS_ERROR_FAILURE;
-
-    NS_ADDREF(*_retval = comp);
+    NS_ADDREF(*_retval = pEntry->mTzCal);
     return NS_OK;
+}
+
+PR_STATIC_CALLBACK(PLDHashOperator) TimezoneEntryHashToTimezoneIdArray(
+    const nsACString& aTzid, TimezoneEntry * pEntry, void * aArg)
+{
+    nsCStringArray * pArray = NS_STATIC_CAST(nsCStringArray *, aArg);
+    // ignore static ones, those are added nevertheless:
+    if (!StringBeginsWith(
+            aTzid, nsDependentCString(STRLEN_ARGS(MOZCAL_TZID_PREFIX))))
+        pArray->AppendCString(aTzid);
+    return PL_DHASH_NEXT;
+}
+
+NS_IMETHODIMP
+calICSService::GetTimezoneIds(nsIUTF8StringEnumerator **aTzids)
+{
+    NS_ENSURE_ARG_POINTER(aTzids);
+    PRUint32 const arlen =
+        sizeof(ical_timezone_data) / sizeof(ical_timezone_data[0]);
+    nsCStringArray * pArray = new nsCStringArray(mTzHash.Count() + arlen);
+    if (pArray == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    // add added ones:
+    mTzHash.EnumerateRead(TimezoneEntryHashToTimezoneIdArray, pArray);
+    // add static ones:
+    for (PRUint32 i = 0; ical_timezone_data[i].tzid != nsnull; ++i) {
+        pArray->AppendCString(nsDependentCString(ical_timezone_data[i].tzid));
+    }
+    pArray->Sort();
+    return NS_NewAdoptingUTF8StringEnumerator(aTzids, pArray);
 }
 
 NS_IMETHODIMP
 calICSService::GetTimezoneLatitude(const nsACString& tzid, nsACString& _retval)
 {
-    const ical_timezone_data_struct *tzdata = get_timezone_data_struct_for_tzid(nsPromiseFlatCString(tzid).get());
-    if (!tzdata)
+    TimezoneEntry const* pEntry = getTimezoneEntry(tzid);
+    if (pEntry == nsnull)
         return NS_ERROR_FAILURE;
-
-    _retval.Assign(tzdata->latitude);
+    _retval = pEntry->mLatitude;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 calICSService::GetTimezoneLongitude(const nsACString& tzid, nsACString& _retval)
 {
-    const ical_timezone_data_struct *tzdata = get_timezone_data_struct_for_tzid(nsPromiseFlatCString(tzid).get());
-    if (!tzdata)
+    TimezoneEntry const* pEntry = getTimezoneEntry(tzid);
+    if (pEntry == nsnull)
         return NS_ERROR_FAILURE;
-
-    _retval.Assign(tzdata->longitude);
+    _retval = pEntry->mLongitude;
     return NS_OK;
 }

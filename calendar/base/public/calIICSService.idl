@@ -170,6 +170,12 @@ interface calIIcalComponent : nsISupports
     void getReferencedTimezones(out PRUint32 aCount,
                                 [array,size_is(aCount),retval] out calIIcalComponent aTimezones);
 
+    /**
+     * Clones the component. The cloned component is decoupled from any parent.
+     * @return cloned component
+     */
+    calIIcalComponent clone();
+    
     [noscript,notxpcom] icalcomponentptr getIcalComponent();
 };
 
@@ -239,5 +245,19 @@ interface calIICSService : nsISupports
     AUTF8String getTimezoneLatitude(in AUTF8String tzid);
     AUTF8String getTimezoneLongitude(in AUTF8String tzid);
 
+    /**
+     * Adds and takes over ownership of a timezone record.
+     * Record will be ignored if there is already an existing one with the
+     * same id.
+     * 
+     * @param tzCal VCALENDAR with a VTIMEZONE child
+     * @param tzLatitude timzeone latitude, empty string if unknown
+     * @param tzLongitude timzeone longitude, empty string if unknown
+     * @return present VCALENDAR with a VTIMEZONE child
+     */
+    calIIcalComponent addTimezone(in calIIcalComponent tzCal,
+                                  in AUTF8String tzLatitude,
+                                  in AUTF8String tzLongitude);
+    
     readonly attribute nsIUTF8StringEnumerator timezoneIds;
 };
