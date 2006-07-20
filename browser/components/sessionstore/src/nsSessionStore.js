@@ -172,10 +172,7 @@ SessionStoreService.prototype = {
    * Initialize the component
    */
   init: function sss_init(aWindow) {
-    if (!aWindow || aWindow == null)
-      return;
-
-    if (this._loadState == STATE_RUNNING)
+    if (!aWindow || this._loadState == STATE_RUNNING)
       return;
 
     this._prefBranch = Cc["@mozilla.org/preferences-service;1"].
@@ -246,10 +243,7 @@ SessionStoreService.prototype = {
     }
 
     // As this is called at delayedStartup, restoration must be initiated here
-    var windowLoad = function(self) {
-      self.onLoad(this);
-    }
-    aWindow.setTimeout(windowLoad, 0, this);
+    this.onLoad(aWindow);
   },
 
   /**
@@ -274,9 +268,6 @@ SessionStoreService.prototype = {
    * Handle notifications
    */
   observe: function sss_observe(aSubject, aTopic, aData) {
-    var observerService = Cc["@mozilla.org/observer-service;1"].
-                          getService(Ci.nsIObserverService);
-
     // for event listeners
     var _this = this;
 
@@ -1822,38 +1813,13 @@ SessionStoreService.prototype = {
    * @returns bool
    */
   _isCmdLineEmpty: function sss_isCmdLineEmpty(aWindow) {
-    if (!aWindow.arguments) {
-      return true;
-    }
-    
-    var homepage = null;
-    switch (this._getPref("startup.page", 1)) {
-    case 0:
-    case 3:
-      homepage = "about:blank";
-      break;
-    case 1:
-      try {
-        homepage = this._prefBranch.getComplexValue("startup.homepage", Ci.nsIPrefLocalizedString).data;
-      }
-      catch (ex) {
-        homepage = this._getPref("startup.homepage", "");
-      }
-      break;
-    case 2:
-      homepage = Cc["@mozilla.org/browser/global-history;2"].
-                 getService(Ci.nsIBrowserHistory).lastPageVisited;
-      break;
-    }
-    
-    for (var i = 0; i < aWindow.arguments.length; i++) {
-      var url = aWindow.arguments[i].split("\n")[0];
-      if (!url || url == homepage) {
-        aWindow.arguments.splice(i--, 1);
-      }
-    }
-    
-    return (aWindow.arguments.length == 0);
+    var defaultArgs = Cc["@mozilla.org/browser/clh;1"].
+                      getService(Ci.nsIBrowserHandler).defaultArgs;
+    if (aWindow.arguments && aWindow.arguments[0] &&
+        aWindow.arguments[0] == defaultArgs)
+      aWindow.arguments[0] = null;
+
+    return !aWindow.arguments || !aWindow.arguments[0];
   },
 
   /**

@@ -121,9 +121,6 @@ SessionStartup.prototype = {
     if (!this._getPref("sessionstore.enabled", DEFAULT_ENABLED))
       return;
 
-    var observerService = Cc["@mozilla.org/observer-service;1"].
-                          getService(Ci.nsIObserverService);
-    
     // get file references
     var dirService = Cc["@mozilla.org/file/directory_service;1"].
                      getService(Ci.nsIProperties);
@@ -166,6 +163,13 @@ SessionStartup.prototype = {
     if (this._getPref("sessionstore.resume_session_once", DEFAULT_RESUME_SESSION_ONCE)) {
       this._prefBranch.setBoolPref("sessionstore.resume_session_once", false);
     }
+    
+    if (this.doRestore()) {
+      // wait for the first browser window to open
+      var observerService = Cc["@mozilla.org/observer-service;1"].
+                            getService(Ci.nsIObserverService);
+      observerService.addObserver(this, "domwindowopened", true);
+    }
   },
 
   /**
@@ -186,7 +190,35 @@ SessionStartup.prototype = {
       observerService.removeObserver(this, "final-ui-startup");
       this.init();
       break;
+    case "domwindowopened":
+      var window = aSubject;
+      var self = this;
+      window.addEventListener("load", function() {
+        self._onWindowOpened(window);
+        window.removeEventListener("load", arguments.callee, false);
+      }, false);
+      break;
     }
+  },
+
+  /**
+   * Removes the default arguments from the first browser window
+   * (and removes the "domwindowopened" observer afterwards)
+   */
+  _onWindowOpened: function sss_onWindowOpened(aWindow) {
+    var wType = aWindow.document.documentElement.getAttribute("windowtype");
+    if (wType != "navigator:browser")
+      return;
+    
+    var defaultArgs = Cc["@mozilla.org/browser/clh;1"].
+                      getService(Ci.nsIBrowserHandler).defaultArgs;
+    if (aWindow.arguments && aWindow.arguments[0] &&
+        aWindow.arguments[0] == defaultArgs)
+      aWindow.arguments[0] = null;
+    
+    var observerService = Cc["@mozilla.org/observer-service;1"].
+                          getService(Ci.nsIObserverService);
+    observerService.removeObserver(this, "domwindowopened");
   },
 
 /* ........ Public API ................*/
