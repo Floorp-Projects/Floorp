@@ -1019,10 +1019,14 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool aState)
       ComeToFront();
       mShown = PR_TRUE;
     }
+
     if (mZoomOnShow) {
       SetSizeMode(nsSizeMode_Maximized);
       mZoomOnShow = PR_FALSE;
     }
+
+    if (::IsWindowCollapsed(mWindowPtr))
+      ::CollapseWindow(mWindowPtr, false);
   }
   else {
     // when a toplevel window goes away, make sure we rollup any popups that
