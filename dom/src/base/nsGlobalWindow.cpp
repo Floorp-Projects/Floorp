@@ -6537,7 +6537,11 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
       // indicates timeout lateness in milliseconds
       PRTime lateness = now - timeout->mWhen;
 
-      handler->SetLateness((PRIntervalTime)(lateness / PR_USEC_PER_MSEC));
+      // Make sure to cast the unsigned PR_USEC_PER_MSEC to signed
+      // PRTime to make the division do the right thing on 64-bit
+      // platforms whether lateness is positive or negative.
+      handler->SetLateness((PRIntervalTime)(lateness /
+                                            (PRTime)PR_USEC_PER_MSEC));
 
       nsCOMPtr<nsIVariant> dummy;
       nsCOMPtr<nsISupports> me(NS_STATIC_CAST(nsIDOMWindow *, this));
@@ -6612,9 +6616,15 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
         // codes if this fails since the callers of this method
         // doesn't care about them nobody who cares about them
         // anyways.
+
+        // Make sure to cast the unsigned PR_USEC_PER_MSEC to signed
+        // PRTime to make the division do the right thing on 64-bit
+        // platforms whether delay is positive or negative (which we
+        // know is always positive here, but cast anyways for
+        // consistency).
         nsresult rv = timeout->mTimer->
           InitWithFuncCallback(TimerCallback, timeout,
-                               (PRInt32)(delay / PR_USEC_PER_MSEC),
+                               (PRInt32)(delay / (PRTime)PR_USEC_PER_MSEC),
                                nsITimer::TYPE_ONE_SHOT);
 
         if (NS_FAILED(rv)) {
@@ -7247,8 +7257,13 @@ nsGlobalWindow::ResumeTimeouts()
   nsresult rv;
 
   for (nsTimeout *t = mTimeouts; t; t = t->mNext) {
+    // Make sure to cast the unsigned PR_USEC_PER_MSEC to signed
+    // PRTime to make the division do the right thing on 64-bit
+    // platforms whether t->mWhen is positive or negative (which is
+    // likely to always be positive here, but cast anyways for
+    // consistency).
     PRUint32 delay =
-      PR_MAX(((PRUint32)(t->mWhen / PR_USEC_PER_MSEC)),
+      PR_MAX(((PRUint32)(t->mWhen / (PRTime)PR_USEC_PER_MSEC)),
               DOM_MIN_TIMEOUT_VALUE);
 
     // Set mWhen back to the time when the timer is supposed to
