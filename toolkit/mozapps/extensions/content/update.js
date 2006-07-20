@@ -20,6 +20,7 @@
 # 
 # Contributor(s):
 #   Ben Goodger <ben@bengoodger.com>
+#   Robert Strong <robert.bugzilla@gmail.com>
 # 
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,41 +36,25 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-//
-// This UI can be opened from the following places, and in the following modes:
-//
-// - from the Version Compatibility Checker at startup
-//    as the application starts a check is done to see if the application being
-//    started is the same version that was started last time. If it isn't, a
-//    list of UpdateItems that are incompatible with the verison being 
-//    started is generated and this UI opened with that list. This UI then
-//    offers to check for updates to those UpdateItems that are compatible
-//    with the version of the application being started. 
-//    
-//    In this mode, the wizard is opened to panel 'mismatch'. 
+// This UI is only opened from the Extension Manager when the app is upgraded.
 
 const nsIUpdateItem = Components.interfaces.nsIUpdateItem;
 const nsIAUCL = Components.interfaces.nsIAddonUpdateCheckListener;
 
 const PREF_UPDATE_EXTENSIONS_ENABLED            = "extensions.update.enabled";
-const PREF_UPDATE_EXTENSIONS_AUTOUPDATEENABLED  = "extensions.update.autoUpdateEnabled";
 const PREF_XPINSTALL_ENABLED                    = "xpinstall.enabled";
 
-var gShowMismatch = null;
-
 var gUpdateWizard = {
-  // The items to check for updates for (e.g. an extension, some subset of extensions, 
-  // all extensions, a list of compatible extensions, etc...)
+  // When synchronizing app compatibility info this contains all installed
+  // add-ons. When checking for compatible versions this contains only
+  // incompatible add-ons.
   items: [],
   // The items that we found updates available for
   itemsToUpdate: [],
-  // The items that we successfully installed updates for
-  updatedCount: 0,
   shouldSuggestAutoChecking: false,
   shouldAutoCheck: false,
   xpinstallEnabled: false,
   xpinstallLocked: false,
-  remainingExtensionUpdateCount: 0,
   
   init: function ()
   {
@@ -80,9 +65,14 @@ var gUpdateWizard = {
     var pref = 
         Components.classes["@mozilla.org/preferences-service;1"].
         getService(Components.interfaces.nsIPrefBranch);
-    this.shouldSuggestAutoChecking = 
-      gShowMismatch && 
-      !pref.getBoolPref(PREF_UPDATE_EXTENSIONS_AUTOUPDATEENABLED);
+
+    try {
+      this.shouldSuggestAutoChecking = 
+        !pref.getBoolPref(PREF_UPDATE_EXTENSIONS_ENABLED);
+    }
+    catch (e) {
+    }
+
     try {
       this.xpinstallEnabled = pref.getBoolPref(PREF_XPINSTALL_ENABLED);
       this.xpinstallLocked = pref.prefIsLocked(PREF_XPINSTALL_ENABLED);
@@ -104,7 +94,7 @@ var gUpdateWizard = {
     var pref = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefBranch);
     if (this.shouldSuggestAutoChecking)
-      pref.setBoolPref(PREF_UPDATE_EXTENSIONS_ENABLED, this.shouldAutoCheck); 
+      pref.setBoolPref(PREF_UPDATE_EXTENSIONS_ENABLED, this.shouldAutoCheck);
   },
   
   _setUpButton: function (aButtonID, aButtonKey, aDisabled)
@@ -140,18 +130,20 @@ var gUpdateWizard = {
                "modal", { state: aState, errors: aErrors });
   },
   
+  // Displays a list of items that had an error during the update check. We
+  // don't display the actual error that occured since
+  // nsIAddonUpdateCheckListener doesn't return the error details.
   showUpdateCheckErrors: function ()
   {
     var errors = [];
     for (var i = 0; i < this.errorItems.length; ++i)
-      errors.push({ name: this.errorItems[i].name, error: true, 
-                    item: this.errorItems[i] });
+      errors.push({ name: this.errorItems[i].name, error: true });
     this.showErrors("checking", errors);
   },
 
   checkForErrors: function (aElementIDToShow)
   {
-    if (this.errorOnGeneric || this.errorItems.length > 0)
+    if (this.errorItems.length > 0)
       document.getElementById(aElementIDToShow).hidden = false;
   },
   
@@ -275,6 +267,7 @@ var gMismatchPage = {
 };
 
 var gUpdatePage = {
+  _totalCount: 0,
   _completeCount: 0,
   onPageShow: function ()
   {
@@ -290,9 +283,10 @@ var gUpdatePage = {
 
     gUpdateWizard.errorItems = [];
     
+    this._totalCount = gUpdateWizard.items.length;
     var em = Components.classes["@mozilla.org/extensions/manager;1"]
                        .getService(Components.interfaces.nsIExtensionManager);
-    em.update(gUpdateWizard.items, gUpdateWizard.items.length, false, this);
+    em.update(gUpdateWizard.items, this._totalCount, false, this);
   },
 
   /////////////////////////////////////////////////////////////////////////////
@@ -325,7 +319,7 @@ var gUpdatePage = {
     status.setAttribute("value", statusString);
 
     var progress = document.getElementById("checking.progress");
-    progress.value = Math.ceil((this._completeCount / gUpdateWizard.items.length) * 100);
+    progress.value = Math.ceil((this._completeCount / this._totalCount) * 100);
   },
   
   /////////////////////////////////////////////////////////////////////////////
@@ -339,69 +333,39 @@ var gUpdatePage = {
 };
  
 var gFoundPage = {
-  _nonAppItems: [],
-  
-  _newestInfo: null,
-
-  buildAddons: function ()
-  {
-    var hasExtensions = false;
-    var foundAddonsList = document.getElementById("found.addons.list");
-    var uri = Components.classes["@mozilla.org/network/standard-url;1"]
-                        .createInstance(Components.interfaces.nsIURI);
-    var itemCount = gUpdateWizard.itemsToUpdate.length;
-    for (var i = 0; i < itemCount; ++i) {
-      var item = gUpdateWizard.itemsToUpdate[i];
-      var checkbox = document.createElement("checkbox");
-      foundAddonsList.appendChild(checkbox);
-      checkbox.setAttribute("type", "update");
-      checkbox.label        = item.name + " " + item.version;
-      checkbox.setAttribute("URL", item.xpiURL);
-      checkbox.setAttribute("hash", item.xpiHash);
-      checkbox.infoURL      = "";
-      checkbox.internalName = "";
-      uri.spec              = item.xpiURL;
-      checkbox.setAttribute("source", uri.host);
-      checkbox.checked      = true;
-      hasExtensions         = true;
-    }
-
-    if (hasExtensions) {
-      var addonsHeader = document.getElementById("addons");
-      var strings = document.getElementById("updateStrings");
-      addonsHeader.label = strings.getFormattedString("updateTypeAddons", [itemCount]);
-      addonsHeader.collapsed = false;
-    }
-  },
-
-  _initialized: false,
   onPageShow: function ()
   {
     gUpdateWizard.setButtonLabels(null, true, 
                                   "installButtonText", false, 
                                   null, false);
+
+    var foundUpdates = document.getElementById("found.updates");
+    var itemCount = gUpdateWizard.itemsToUpdate.length;
+    for (var i = 0; i < itemCount; ++i) {
+      var item = gUpdateWizard.itemsToUpdate[i];
+      var listItem = foundUpdates.appendItem(item.name + " " + item.version,
+                                             item.xpiURL);
+      listItem.setAttribute("type", "checkbox");
+      listItem.setAttribute("checked", "true");
+      listItem.setAttribute("URL", item.xpiURL);
+      listItem.setAttribute("hash", item.xpiHash);
+    }
+
     if (!gUpdateWizard.xpinstallEnabled) {
-      document.documentElement.getButton("next").disabled = true;
       document.getElementById("xpinstallDisabledAlert").hidden = false;
       document.getElementById("enableXPInstall").focus();
     }
-    else
+    else {
+      //XXXrstrong - this string should be set in update.xul from update.dtd
+      // for Gecko Version 1.9.
+      var strings = document.getElementById("updateStrings");
+      var text = strings.getString("foundInstructions");
+      var foundInstructions = document.getElementById("foundInstructions");
+      foundInstructions.hidden = false;
+      foundInstructions.appendChild(document.createTextNode(text));
       document.documentElement.getButton("next").focus();
-    
-    var updates = document.getElementById("found.updates");
-    if (!this._initialized) {
-      this._initialized = true;
-      updates.computeSizes();
-      this.buildAddons();
     }
-        
-    var kids = updates._getRadioChildren();
-    for (var i = 0; i < kids.length; ++i) {
-      if (kids[i].collapsed == false) {
-        updates.selectedIndex = i;
-        break;
-      }
-    }
+    this.updateNextButton();
   },
     
   toggleXPInstallEnable: function(aEvent)
@@ -411,44 +375,39 @@ var gFoundPage = {
     var pref = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefBranch);
     pref.setBoolPref(PREF_XPINSTALL_ENABLED, enabled);
-    document.documentElement.getButton("next").disabled = !enabled;
+    this.updateNextButton();
   },
 
-  onSelect: function (aEvent)
+  updateNextButton: function ()
   {
-    if (!gUpdateWizard.xpinstallEnabled)
+    if (!gUpdateWizard.xpinstallEnabled) {
+      document.documentElement.getButton("next").disabled = true;
       return;
-
-    var updates = document.getElementById("found.updates");
-    var oneChecked = false;
-    var items = updates.selectedItem.getElementsByTagName("checkbox");
-    for (var i = 0; i < items.length; ++i) {  
-      if (items[i].checked) {
-        oneChecked = true;
-        break;
-      }
     }
 
-    var strings = document.getElementById("updateStrings");
+    var oneChecked = false;
+    var foundUpdates = document.getElementById("found.updates");
+    var updates = foundUpdates.getElementsByTagName("listitem");;
+    for (var i = 0; i < updates.length; ++i) {
+      if (!updates[i].checked)
+        continue;
+      oneChecked = true;
+      break;
+    }
+
     gUpdateWizard.setButtonLabels(null, true, 
                                   "installButtonText", true, 
                                   null, false);
-    var text = strings.getString("foundInstructions");
     document.getElementById("found").setAttribute("next", "installing"); 
     document.documentElement.getButton("next").disabled = !oneChecked;
-
-    var foundInstructions = document.getElementById("foundInstructions");
-    while (foundInstructions.hasChildNodes())
-      foundInstructions.removeChild(foundInstructions.firstChild);
-    foundInstructions.appendChild(document.createTextNode(text));
   }
 };
 
 var gInstallingPage = {
   _installing       : false,
-  _restartRequired  : false,
   _objs             : [],
-  
+  _errors           : [],
+
   onPageShow: function ()
   {
     gUpdateWizard.setButtonLabels(null, true, 
@@ -460,19 +419,16 @@ var gInstallingPage = {
     var items = [];
     var hashes = [];
     this._objs = [];
-    
-    this._restartRequired = false;
-    
-    gUpdateWizard.remainingExtensionUpdateCount = gUpdateWizard.itemsToUpdate.length;
+    this._errors = [];
 
-    var updates = document.getElementById("found.updates");
-    var checkboxes = updates.selectedItem.getElementsByTagName("checkbox");
-    for (var i = 0; i < checkboxes.length; ++i) {
-      if (checkboxes[i].type == "update" && checkboxes[i].checked) {
-        items.push(checkboxes[i].URL);
-        hashes.push(checkboxes[i].hash ? checkboxes[i].hash : null);
-        this._objs.push({ name: checkboxes[i].label });
-      }
+    var foundUpdates = document.getElementById("found.updates");
+    var updates = foundUpdates.getElementsByTagName("listitem");;
+    for (var i = 0; i < updates.length; ++i) {
+      if (!updates[i].checked)
+        continue;
+      items.push(updates[i].value);
+      hashes.push(updates[i].getAttribute("hash") ? updates[i].getAttribute("hash") : null);
+      this._objs.push({ name: updates[i].label });
     }
     
     var xpimgr = Components.classes["@mozilla.org/xpinstall/install-manager;1"]
@@ -502,25 +458,21 @@ var gInstallingPage = {
       break;
     case nsIXPIProgressDialog.INSTALL_DONE:
       switch (aValue) {
-      case 999: 
-        this._restartRequired = true;
+      case 999:
+      case 0:
         break;
-      case 0: 
-        --gUpdateWizard.remainingExtensionUpdateCount;
-        break;
+      default:
+        this._errors.push({ name: this._objs[aIndex].name, error: aValue });
       }
       break;
     case nsIXPIProgressDialog.DIALOG_CLOSE:
       this._installing = false;
-      var nextPage = this._errors ? "errors" : (this._restartRequired ? "restart" : "finished");
+      var nextPage = this._errors.length > 0 ? "errors" : "finished";
       document.getElementById("installing").setAttribute("next", nextPage);
       document.documentElement.advance();
       break;
     }
   },
-  
-  _objs: [],
-  _errors: false,
   
   onProgress: function (aIndex, aValue, aMaxValue)
   {
@@ -537,7 +489,7 @@ var gErrorsPage = {
   
   onShowErrors: function ()
   {
-    gUpdateWizard.showErrors("install", gInstallingPage._objs);
+    gUpdateWizard.showErrors("install", gInstallingPage._errors);
   }  
 };
 
@@ -547,23 +499,20 @@ var gFinishedPage = {
     gUpdateWizard.setButtonLabels(null, true, null, true, null, true);
     document.documentElement.getButton("finish").focus();
     
-    if (gUpdateWizard.xpinstallLocked)
-    {
+    if (gUpdateWizard.xpinstallLocked) {
       document.getElementById("adminDisabled").hidden = false;
       document.getElementById("incompatibleRemainingLocked").hidden = false;
+      document.getElementById("finishedMismatch").hidden = false;
+      document.getElementById("incompatibleAlert").hidden = false;
     }
     else {
       document.getElementById("updated").hidden = false;
       document.getElementById("incompatibleRemaining").hidden = false;
       if (gUpdateWizard.shouldSuggestAutoChecking) {
+        document.getElementById("finishedEnableCheckingDesc").hidden = false;
         document.getElementById("finishedEnableChecking").hidden = false;
         document.getElementById("finishedEnableChecking").click();
       }
-    }
-    
-    if (gShowMismatch || gUpdateWizard.xpinstallLocked) {
-      document.getElementById("finishedMismatch").hidden = false;
-      document.getElementById("incompatibleAlert").hidden = false;
     }
   }
 };
@@ -573,16 +522,15 @@ var gNoUpdatesPage = {
   {
     gUpdateWizard.setButtonLabels(null, true, null, true, null, true);
     document.documentElement.getButton("finish").focus();
-    if (gShowMismatch) {
-      document.getElementById("introUser").hidden = true;
-      document.getElementById("introMismatch").hidden = false;
-      document.getElementById("mismatchNoUpdates").hidden = false;
+    document.getElementById("introUser").hidden = true;
+    document.getElementById("introMismatch").hidden = false;
+    document.getElementById("mismatchNoUpdates").hidden = false;
         
-      if (gUpdateWizard.shouldSuggestAutoChecking) {
-        document.getElementById("mismatchIncompatibleRemaining").hidden = true;
-        document.getElementById("mismatchIncompatibleRemaining2").hidden = false;
-        document.getElementById("mismatchFinishedEnableChecking").hidden = false;
-      }
+    if (gUpdateWizard.shouldSuggestAutoChecking) {
+      document.getElementById("mismatchIncompatibleRemaining").hidden = true;
+      document.getElementById("mismatchIncompatibleRemaining2").hidden = false;
+      document.getElementById("mismatchFinishedEnableChecking").hidden = false;
+      document.getElementById("mismatchFinishedEnableChecking").click();
     }
 
     gUpdateWizard.checkForErrors("updateCheckErrorNotFound");

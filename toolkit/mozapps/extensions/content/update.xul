@@ -38,7 +38,6 @@
 # ***** END LICENSE BLOCK *****
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
-<?xml-stylesheet href="chrome://mozapps/content/extensions/update.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://mozapps/skin/extensions/update.css" type="text/css"?> 
 
 <!DOCTYPE wizard [
@@ -55,7 +54,6 @@
         onload="gUpdateWizard.init();"
         onwizardfinish="gUpdateWizard.onWizardFinish();"
         onclose="return gUpdateWizard.onWizardClose(event);"
-        style="width: 47em; min-height: 35em;"
         buttons="accept,cancel">
 
   <script type="application/x-javascript" src="chrome://mozapps/content/extensions/update.js"/>
@@ -161,25 +159,17 @@
 
     <label>&found.intro.label;</label>
     <separator class="thin"/>
-    <radiogroup type="update-types" id="found.updates" flex="1" _uninitialized="true"
-                onselect="gFoundPage.onSelect(event);">
-      <radio type="update-type" id="addons" accesskey="&updateFound.addons.accesskey;" collapsed="true">
-        <description>&foundUpdates.addons.label;</description>
-        <separator class="thin"/>        
-        <vbox id="found.addons.list"/>
-        <label>.</label>
-      </radio>
-    </radiogroup>
+    <listbox id="found.updates" flex="1" seltype="multiple"
+             onclick="gFoundPage.updateNextButton();"/>
     <separator class="thin"/>
-    <vbox align="left" id="xpinstallDisabledAlert">
+    <vbox align="left" id="xpinstallDisabledAlert" hidden="true">
       <description flex="1">&found.disabledXPinstall.label;</description>
       <checkbox label="&found.enableXPInstall.label;"
                 id="enableXPInstall"
                 accesskey="&found.enableXPInstall.accesskey;"
                 oncommand="gFoundPage.toggleXPInstallEnable(event);"/>
-      <separator class="thin"/>
     </vbox>
-    <label id="foundInstructions"/>
+    <label id="foundInstructions" hidden="true"/>
   </wizardpage>
 
   <wizardpage id="installing" pageid="installing" next="finished"
@@ -219,13 +209,16 @@
       <description id="incompatibleRemainingLocked" hidden="true"
                    flex="1">&finished.xpinstallLocked.label;</description>
     </hbox>
+    <description id="finishedEnableCheckingDesc" flex="1" hidden="true">
+      &noupdates.intro3.mismatch.label;
+    </description>
     <vbox align="left">
-      <checkbox class="indent" label="&finished.enableChecking.label;" id="finishedEnableChecking"
+      <checkbox label="&finished.enableChecking.label;" id="finishedEnableChecking"
                 oncommand="gUpdateWizard.shouldAutoCheck = this.checked;" hidden="true"/>
     </vbox>
     <separator flex="1"/>
     <label id="finishedMismatch" hidden="true">&finished.mismatch.label;</label>
-
+    <spacer flex="1"/>
   </wizardpage>
   
 </wizard>
