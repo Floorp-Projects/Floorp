@@ -147,7 +147,7 @@ function misMatchedHostWithLinkText(aLinkNode, aHrefURL, aLinkTextURL)
      if (linkNodeText.search(/(^http:|^https:)/) != -1)
      {
        var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-       linkTextURL  = ioService.newURI(linkNodeText, null, null);
+       var linkTextURL  = ioService.newURI(linkNodeText, null, null);
        aLinkTextURL.value = linkTextURL;
        return aHrefURL.host != linkTextURL.host;
      }
@@ -176,7 +176,6 @@ function hostNameIsIPAddress(aHostName, aUnobscuredHostName)
   {
     // Convert to a binary to test for possible DWORD.
     var binaryDword = parseInt(aHostName).toString(2);
-
     if (isNaN(binaryDword))
       return false;
 
@@ -191,7 +190,7 @@ function hostNameIsIPAddress(aHostName, aUnobscuredHostName)
   }
   else
   {
-    for (index = 0; index < ipComponents.length; index++)
+    for (index = 0; index < ipComponents.length; ++index)
     {
       // by leaving the radix parameter blank, we can handle IP addresses
       // where one component is hex, another is octal, etc.
@@ -200,7 +199,7 @@ function hostNameIsIPAddress(aHostName, aUnobscuredHostName)
   }
 
   // make sure each part of the IP address is in fact a number
-  for (index = 0; index < ipComponents.length; index++)
+  for (index = 0; index < ipComponents.length; ++index)
     if (isNaN(ipComponents[index])) // if any part of the IP address is not a number, then we can safely return
       return false;
 
@@ -227,7 +226,7 @@ function confirmSuspiciousURL(aPhishingType, aSuspiciousHostName)
 {
   var brandShortName = gBrandBundle.getString("brandShortName");
   var titleMsg = gMessengerBundle.getString("confirmPhishingTitle");
-  var dialogMsg = null;
+  var dialogMsg;
 
   switch (aPhishingType)
   {
