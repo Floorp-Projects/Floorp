@@ -12,7 +12,7 @@
         
         <p class="captcha"><?php echo $html->image('freecap.php'); ?></p>
         <p><label class="captcha-entry" for="captcha">Enter the code above:<span class="required">*</span></label> <?php echo $html->input('captcha', array('size' => '40')); ?>
-            <a href="mailto:firefoxsurvey@mozilla.com"><?php echo $html->image('accessibility.jpg',array('class' => 'captcha-entry'));?></a>
+            <a href="mailto:firefoxsurvey@mozilla.com"><?php echo $html->image('accessibility.jpg',array('alt'=>'If you have trouble viewing the image, email us', 'class' => 'captcha-entry'));?></a>
         </p>
         <?php if (!empty($form_captcha_error)) : ?>
         <p class="error_message"><?php echo $form_captcha_error; ?></p>
