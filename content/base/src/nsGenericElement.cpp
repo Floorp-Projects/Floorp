@@ -1674,21 +1674,15 @@ nsGenericElement::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
                                          const nsAString& aLocalName,
                                          nsIDOMNodeList** aReturn)
 {
-  PRInt32 nameSpaceId = kNameSpaceID_Unknown;
+  PRInt32 nameSpaceId = kNameSpaceID_Wildcard;
 
   nsContentList *list = nsnull;
 
-  nsIDocument* document = GetCurrentDoc();
   if (!aNamespaceURI.EqualsLiteral("*")) {
-    nameSpaceId =
-      nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI);
-
-    if (nameSpaceId == kNameSpaceID_Unknown) {
-      // Unknown namespace means no matches, we create an empty list...
-      list = NS_GetContentList(document, nsnull,
-                               kNameSpaceID_None).get();
-      NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
-    }
+    nsresult rv =
+      nsContentUtils::NameSpaceManager()->RegisterNameSpace(aNamespaceURI,
+                                                            nameSpaceId);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (!list) {

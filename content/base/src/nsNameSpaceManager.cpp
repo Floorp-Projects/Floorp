@@ -196,12 +196,16 @@ NameSpaceManagerImpl::RegisterNameSpace(const nsAString& aURI,
     }
   }
 
+  NS_POSTCONDITION(aNameSpaceID >= -1, "Bogus namespace ID");
+  
   return rv;
 }
 
 nsresult
 NameSpaceManagerImpl::GetNameSpaceURI(PRInt32 aNameSpaceID, nsAString& aURI)
 {
+  NS_PRECONDITION(aNameSpaceID >= 0, "Bogus namespace ID");
+  
   PRInt32 index = aNameSpaceID - 1; // id is index + 1
   if (index < 0 || index >= mURIArray.Count()) {
     aURI.Truncate();
@@ -223,8 +227,12 @@ NameSpaceManagerImpl::GetNameSpaceID(const nsAString& aURI)
 
   PRInt32 nameSpaceID;
 
-  return mURIToIDTable.Get(&aURI, &nameSpaceID) ? nameSpaceID :
-                                                  kNameSpaceID_Unknown;
+  if (mURIToIDTable.Get(&aURI, &nameSpaceID)) {
+    NS_POSTCONDITION(nameSpaceID >= 0, "Bogus namespace ID");
+    return nameSpaceID;
+  }
+
+  return kNameSpaceID_Unknown;
 }
 
 nsresult
@@ -285,6 +293,11 @@ NameSpaceManagerImpl::HasElementCreator(PRInt32 aNameSpaceID)
 nsresult NameSpaceManagerImpl::AddNameSpace(const nsAString& aURI,
                                             const PRInt32 aNameSpaceID)
 {
+  if (aNameSpaceID < 0) {
+    // We've wrapped...  Can't do anything else here; just bail.
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  
   NS_ASSERTION(aNameSpaceID - 1 == mURIArray.Count(),
                "BAD! AddNameSpace not called in right order!");
 
