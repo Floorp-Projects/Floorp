@@ -2811,7 +2811,7 @@ nsGenericHTMLElement::SetIntAttr(nsIAtom* aAttr, PRInt32 aValue)
 }
 
 nsresult
-nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsAString& aResult)
+nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr, nsAString& aResult)
 {
   nsAutoString attrValue;
   if (!GetAttr(kNameSpaceID_None, aAttr, attrValue)) {
@@ -2821,11 +2821,29 @@ nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsAString& aResult)
   }
 
   nsCOMPtr<nsIURI> baseURI = GetBaseURI();
+  nsresult rv;
+
+  if (aBaseAttr) {
+    nsAutoString baseAttrValue;
+    if (GetAttr(kNameSpaceID_None, aBaseAttr, baseAttrValue)) {
+      nsCOMPtr<nsIURI> baseAttrURI;
+      rv = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(baseAttrURI),
+                                                     baseAttrValue, GetOwnerDoc(),
+                                                     baseURI);
+      if (NS_FAILED(rv)) {
+        // Just use the attr value as the result...
+        aResult = attrValue;
+
+        return NS_OK;
+      }
+      baseURI.swap(baseAttrURI);
+    }
+  }
+
   nsCOMPtr<nsIURI> attrURI;
-  nsresult rv =
-    nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(attrURI),
-                                              attrValue, GetOwnerDoc(),
-                                              baseURI);
+  rv = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(attrURI),
+                                                 attrValue, GetOwnerDoc(),
+                                                 baseURI);
   if (NS_FAILED(rv)) {
     // Just use the attr value as the result...
     aResult = attrValue;

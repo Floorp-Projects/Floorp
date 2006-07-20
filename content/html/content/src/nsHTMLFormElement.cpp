@@ -595,7 +595,7 @@ nsHTMLFormElement::GetAction(nsAString& aValue)
     // Avoid resolving action="" to the base uri, bug 297761.
     return NS_OK;
   }
-  return GetURIAttr(nsHTMLAtoms::action, aValue);
+  return GetURIAttr(nsHTMLAtoms::action, nsnull, aValue);
 }
 
 NS_IMETHODIMP
