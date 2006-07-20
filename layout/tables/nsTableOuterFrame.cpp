@@ -72,18 +72,19 @@ nsTableCaptionFrame::~nsTableCaptionFrame()
 {
 }
 
-void
-nsTableOuterFrame::Destroy()
-{
-  mCaptionFrames.DestroyFrames();
-  nsHTMLContainerFrame::Destroy();
-}
-
 nsIAtom*
 nsTableCaptionFrame::GetType() const
 {
   return nsLayoutAtoms::tableCaptionFrame;
 }
+
+#ifdef NS_DEBUG
+NS_IMETHODIMP
+nsTableCaptionFrame::GetFrameName(nsAString& aResult) const
+{
+  return MakeFrameName(NS_LITERAL_STRING("Caption"), aResult);
+}
+#endif
 
 nsIFrame* 
 NS_NewTableCaptionFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -158,6 +159,13 @@ nsTableOuterFrame::Init(
   mState |= NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE;
 
   return rv;
+}
+
+void
+nsTableOuterFrame::Destroy()
+{
+  mCaptionFrames.DestroyFrames();
+  nsHTMLContainerFrame::Destroy();
 }
 
 nsIFrame*

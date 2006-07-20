@@ -56,6 +56,10 @@ public:
   virtual nsIAtom* GetType() const;
   friend nsIFrame* NS_NewTableCaptionFrame(nsIPresShell* aPresShell, nsStyleContext*  aContext);
 
+#ifdef NS_DEBUG
+  NS_IMETHOD GetFrameName(nsAString& aResult) const;
+#endif
+
 protected:
   nsTableCaptionFrame(nsStyleContext*  aContext);
   virtual ~nsTableCaptionFrame();
