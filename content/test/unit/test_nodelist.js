@@ -12,6 +12,7 @@ function run_test()
   test_getElementsByAttribute();
 
   // What else should we test?
+  // XXXbz we need more tests here to test liveness!
 
 }  
 
@@ -86,13 +87,9 @@ function test_getElementsByTagNameNS()
   do_check_eq(doc.getElementById("test2")
                  .getElementsByTagNameNS("", "test").length,
               1);
-  /* XXXbz this test is currently failing because getElementsByTagNameNS("*",
-     "tagname" is actually broken.  See bug 343307. 
-     
   do_check_eq(doc.getElementById("test2")
                  .getElementsByTagNameNS("*", "test").length,
               7);
-  */
 
   // Check that the first element of getElementsByTagNameNS on the document is
   // the right thing.
@@ -102,19 +99,14 @@ function test_getElementsByTagNameNS()
   // Check that we get the right things in the right order
 
      
-  /*   XXXbz this test is currently failing because getElementsByTagNameNS("*",
-     "tagname" is actually broken.  See bug 343307. 
-
   var numTests = doc.getElementsByTagNameNS("*", "test").length;
   do_check_eq(numTests, 14);
 
   for (var i = 1; i <= numTests; ++i) {
     do_check_true(doc.getElementById("test" + i) instanceof nsIDOMElement);
     do_check_eq(doc.getElementById("test" + i),
-                doc.getElementsByTagName("test").item(i-1));
+                doc.getElementsByTagNameNS("*", "test").item(i-1));
   }
-
-  */
 
   // Check general proper functioning of having a non-wildcard namespace.
   var test2 = doc.getElementById("test2");
@@ -141,29 +133,37 @@ function test_getElementsByTagNameNS()
   do_check_eq(doc.getElementsByTagNameNS(null, "foo:test").length, 0);
   do_check_eq(doc.getElementsByTagNameNS("foo", "foo:test").length, 0);
   do_check_eq(doc.getElementsByTagNameNS("bar", "foo:test").length, 0);
-  /*   XXXbz this test is currently failing because getElementsByTagNameNS("*",
-     "tagname" is actually broken.  See bug 343307. 
   do_check_eq(doc.getElementsByTagNameNS("*", "foo:test").length, 0);
-  */
   
   do_check_true(doc.getElementsByTagNameNS(null, "foo2:test")
                 instanceof nsIDOMNodeList);
   do_check_eq(doc.getElementsByTagNameNS(null, "foo2:test").length, 0);
   do_check_eq(doc.getElementsByTagNameNS("foo2", "foo2:test").length, 0);
   do_check_eq(doc.getElementsByTagNameNS("bar", "foo2:test").length, 0);
-  /*   XXXbz this test is currently failing because getElementsByTagNameNS("*",
-     "tagname" is actually broken.  See bug 343307. 
   do_check_eq(doc.getElementsByTagNameNS("*", "foo2:test").length, 0);
-  */
   
   do_check_true(doc.getElementsByTagNameNS(null, "bar:test")
                 instanceof nsIDOMNodeList);
   do_check_eq(doc.getElementsByTagNameNS(null, "bar:test").length, 0);
   do_check_eq(doc.getElementsByTagNameNS("bar", "bar:test").length, 0);
-  /*   XXXbz this test is currently failing because getElementsByTagNameNS("*",
-     "tagname" is actually broken.  See bug 343307. 
   do_check_eq(doc.getElementsByTagNameNS("*", "bar:test").length, 0);
-  */
+
+  // Check that previously-unknown namespaces are handled right.  Note that we
+  // can just hardcode the strings, since we're running only once in XPCshell.
+  // If someone wants to run these in a browser, some use of Math.random() may
+  // be in order.
+  list1 = doc.getElementsByTagNameNS("random-bogus-namespace", "foo");
+  list2 = doc.documentElement.getElementsByTagNameNS("random-bogus-namespace2",
+                                                     "foo");
+  do_check_neq(list1, list2);
+  do_check_eq(list1.length, 0);
+  do_check_eq(list2.length, 0);
+  var newNode = doc.createElementNS("random-bogus-namespace", "foo");
+  doc.documentElement.appendChild(newNode);
+  var newNode = doc.createElementNS("random-bogus-namespace2", "foo");
+  doc.documentElement.appendChild(newNode);
+  do_check_eq(list1.length, 1);  
+  do_check_eq(list2.length, 1);  
 }
 
 function test_getElementsByAttribute()

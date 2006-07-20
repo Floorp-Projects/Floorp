@@ -686,6 +686,10 @@ nsContentList::Match(nsIContent *aContent)
       return (mMatchAll || ni->QualifiedNameEquals(mMatchAtom));
     }
 
+    if (mMatchNameSpaceId == kNameSpaceID_Wildcard) {
+      return (mMatchAll || ni->Equals(mMatchAtom));
+    }
+
     return ((mMatchAll && ni->NamespaceEquals(mMatchNameSpaceId)) ||
             ni->Equals(mMatchAtom, mMatchNameSpaceId));
   }

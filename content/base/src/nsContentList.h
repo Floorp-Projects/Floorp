@@ -53,6 +53,10 @@
 #include "nsIAtom.h"
 #include "nsINameSpaceManager.h"
 
+// Magic namespace id that means "match all namespaces".  This is
+// negative so it won't collide with actual namespace constants.
+#define kNameSpaceID_Wildcard PR_INT32_MIN
+
 // This is a callback function type that can be used to implement an
 // arbitrary matching algorithm.  aContent is the content that may
 // match the list, while aNamespaceID, aAtom, and aData are whatever
@@ -163,11 +167,16 @@ public:
 
   /**
    * @param aRootNode The node under which to limit our search.
-   * @param aMatchAtom an atom whose meaning depends on aMatchNameSpaceId
-   * @param aMatchNameSpaceId if kNameSpaceID_Unknown then aMatchAtom is the
-   *                          tagName to match.  Otherwise we match nodes with
-   *                          aMatchNameSpaceId and a localName equal to
-   *                          aMatchAtom
+   * @param aMatchAtom An atom whose meaning depends on aMatchNameSpaceId.
+   *                   The special value "*" always matches whatever aMatchAtom
+   *                   is matched against.
+   * @param aMatchNameSpaceId If kNameSpaceID_Unknown, then aMatchAtom is the
+   *                          tagName to match.
+   *                          If kNameSpaceID_Wildcard, then aMatchAtom is the
+   *                          localName to match.
+   *                          Otherwise we match nodes whose namespace is
+   *                          aMatchNameSpaceId and localName matches
+   *                          aMatchAtom.
    * @param aDeep If false, then look only at children of the root, nothing
    *              deeper.  If true, then look at the whole subtree rooted at
    *              our root.
