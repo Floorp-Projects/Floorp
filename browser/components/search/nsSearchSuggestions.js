@@ -21,6 +21,7 @@
  *   Ben Goodger <beng@google.com>
  *   Mike Connor <mconnor@mozilla.com>
  *   Joe Hughes  <joe@retrovirus.com>
+ *   Pamela Greene <pamg.bugs@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,6 +38,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 const SEARCH_RESPONSE_SUGGESTION_JSON = "application/x-suggestions+json";
+
+const BROWSER_SUGGEST_PREF = "browser.search.suggest.enabled";
+const XPCOM_SHUTDOWN_TOPIC              = "xpcom-shutdown";
+const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed";
 
 /**
  * Metadata describing the Web Search suggest mode
@@ -219,8 +224,15 @@ SuggestAutoCompleteResult.prototype = {
  * the logic for two providers is identical.
  * @constructor
  */
-function SuggestAutoComplete() {}
+function SuggestAutoComplete() {
+  this._init();
+}
 SuggestAutoComplete.prototype = {
+
+  _init: function() {
+    this._addObservers();
+    this._loadSuggestPref();
+  },
 
   /**
    * this._strings is the string bundle for message internationalization.
@@ -235,6 +247,16 @@ SuggestAutoComplete.prototype = {
     return this.__strings;
   },
   __strings: null,
+
+  /**
+   * Search suggestions will be shown if this._suggestEnabled is true.
+   */
+  _loadSuggestPref: function SAC_loadSuggestPref() {
+    var prefService = Cc["@mozilla.org/preferences-service;1"].
+                      getService(Ci.nsIPrefBranch);
+    this._suggestEnabled = prefService.getBoolPref(BROWSER_SUGGEST_PREF);
+  },
+  _suggestEnabled: null,
 
   /*************************************************************************
    * Server request backoff implementation fields below
@@ -607,11 +629,13 @@ SuggestAutoComplete.prototype = {
     this._checkForEngineSwitch(engine);
 
     if (!searchString ||
+        !this._suggestEnabled ||
         !engine.supportsResponseType(SEARCH_RESPONSE_SUGGESTION_JSON) ||
         !this._okToRequest()) {
       // We have an empty search string (user pressed down arrow to see
-      // history), or the current engine has no suggest functionality,
-      // or we're in backoff mode; so just use local history.
+      // history), or search suggestions are disabled, or the current engine
+      // has no suggest functionality, or we're in backoff mode; so just use
+      // local history.
       this._sentSuggestRequest = false;
       this._startHistorySearch(searchString, searchParam, previousResult);
       return;
@@ -651,6 +675,40 @@ SuggestAutoComplete.prototype = {
   },
 
   /**
+   * nsIObserver
+   */
+  observe: function SAC_observe(aSubject, aTopic, aData) {
+    switch (aTopic) {
+      case NS_PREFBRANCH_PREFCHANGE_TOPIC_ID:
+        this._loadSuggestPref();
+        break;
+      case XPCOM_SHUTDOWN_TOPIC:
+        this._removeObservers();
+        break;
+    }
+  },
+
+  _addObservers: function SAC_addObservers() {
+    var prefService2 = Cc["@mozilla.org/preferences-service;1"].
+                       getService(Ci.nsIPrefBranch2);
+    prefService2.addObserver(BROWSER_SUGGEST_PREF, this, false);
+
+    var os = Cc["@mozilla.org/observer-service;1"].
+             getService(Ci.nsIObserverService);
+    os.addObserver(this, XPCOM_SHUTDOWN_TOPIC, false);
+  },
+
+  _removeObservers: function SAC_removeObservers() {
+    var prefService2 = Cc["@mozilla.org/preferences-service;1"].
+                       getService(Ci.nsIPrefBranch2);
+    prefService2.removeObserver(BROWSER_SUGGEST_PREF, this);
+
+    var os = Cc["@mozilla.org/observer-service;1"].
+             getService(Ci.nsIObserverService);
+    os.removeObserver(this, XPCOM_SHUTDOWN_TOPIC);
+  },
+
+  /**
    * Part of nsISupports implementation.
    * @param   iid     requested interface identifier
    * @return  this object (XPConnect handles the magic of telling the caller that
@@ -671,6 +729,9 @@ SuggestAutoComplete.prototype = {
  * @constructor
  */
 function SearchSuggestAutoComplete() {
+  // This calls _init() in the parent class (SuggestAutoComplete) via the
+  // prototype, below.
+  this._init();
 }
 SearchSuggestAutoComplete.prototype = {
   __proto__: SuggestAutoComplete.prototype,

@@ -124,7 +124,7 @@
 
       <destructor><![CDATA[
         var os = Components.classes["@mozilla.org/observer-service;1"]
-                   .getService(Components.interfaces.nsIObserverService);
+                           .getService(Components.interfaces.nsIObserverService);
         os.removeObserver(this, "browser-search-engine-modified");
 
         // Make sure to break the cycle from _texbox to us.  Otherwise we leak
@@ -548,7 +548,7 @@
 
   <binding id="searchbar-textbox"
       extends="chrome://global/content/bindings/autocomplete.xml#autocomplete">
-    <implementation>
+    <implementation implements="nsIObserver">
       <constructor><![CDATA[
         if (this._getParentSearchbar().parentNode.parentNode.localName ==
             "toolbarpaletteitem")
@@ -557,6 +557,10 @@
       ]]></constructor>
 
       <destructor><![CDATA[
+          var ps2 = Components.classes["@mozilla.org/preferences-service;1"]
+                              .getService(Components.interfaces.nsIPrefBranch2);
+          ps2.removeObserver("browser.search.suggest.enabled", this);
+
         // Because XBL and the customize toolbar code interacts poorly,
         // there may not be anything to remove here
         try {
@@ -567,9 +571,12 @@
       <field name="_stringBundle"/>
       <field name="_formHistSvc"/>
       <field name="_prefBranch"/>
+      <field name="_suggestMenuItem"/>
+      <field name="_suggestEnabled"/>
 
       <method name="initialize">
         <body><![CDATA[
+          // Initialize fields
           this._stringBundle = this._getParentSearchbar()._stringBundle;
           this._formHistSvc =
                    Components.classes["@mozilla.org/satchel/form-history;1"]
@@ -577,10 +584,13 @@
           this._prefBranch =
                     Components.classes["@mozilla.org/preferences-service;1"]
                               .getService(Components.interfaces.nsIPrefBranch);
+          this._suggestEnabled =
+              this._prefBranch.getBoolPref("browser.search.suggest.enabled");
 
           if (this._prefBranch.getBoolPref("browser.urlbar.clickSelectsAll"))
             this.setAttribute("clickSelectsAll", true);
 
+          // Add items to context menu and attach controller to handle them
           var textBox = document.getAnonymousElementByAttribute(this,
                                                 "anonid", "textbox-input-box");
           var cxmenu = document.getAnonymousElementByAttribute(textBox,
@@ -589,15 +599,47 @@
           var element = document.createElementNS(XUL_NS, "menuseparator");
           cxmenu.appendChild(element);
           element = document.createElementNS(XUL_NS, "menuitem");
-          const label = this._stringBundle.getString("cmd_clearHistory");
-          const akey = this._stringBundle.getString("cmd_clearHistory_accesskey");
+          var label = this._stringBundle.getString("cmd_clearHistory");
+          var akey = this._stringBundle.getString("cmd_clearHistory_accesskey");
           element.setAttribute("label", label);
           element.setAttribute("accesskey", akey);
           element.setAttribute("cmd", "cmd_clearhistory");
 
           cxmenu.appendChild(element);
 
+          element = document.createElementNS(XUL_NS, "menuitem");
+          label = this._stringBundle.getString("cmd_showSuggestions");
+          akey = this._stringBundle.getString("cmd_showSuggestions_accesskey");
+          element.setAttribute("anonid", "toggle-suggest-item");
+          element.setAttribute("label", label);
+          element.setAttribute("accesskey", akey);
+          element.setAttribute("cmd", "cmd_togglesuggest");
+          element.setAttribute("type", "checkbox");
+          element.setAttribute("checked", this._suggestEnabled);
+          element.setAttribute("autocheck", "false");
+
+          this._suggestMenuItem = element;
+          cxmenu.appendChild(element);
+
           this.controllers.appendController(this.searchbarController);
+
+          // Add observer for suggest preference
+          var ps2 = Components.classes["@mozilla.org/preferences-service;1"]
+                              .getService(Components.interfaces.nsIPrefBranch2);
+          ps2.addObserver("browser.search.suggest.enabled", this, false);
+        ]]></body>
+      </method>
+
+      <method name="observe">
+        <parameter name="aSubject"/>
+        <parameter name="aTopic"/>
+        <parameter name="aData"/>
+        <body><![CDATA[
+          if (aTopic == "nsPref:changed") {
+            this._suggestEnabled =
+              this._prefBranch.getBoolPref("browser.search.suggest.enabled");
+            this._suggestMenuItem.setAttribute("checked", this._suggestEnabled);
+          }
         ]]></body>
       </method>
 
@@ -665,18 +707,34 @@
       <field name="searchbarController" readonly="true"><![CDATA[({
         _self: this,
         supportsCommand: function(aCommand) {
-          return aCommand == "cmd_clearhistory";
+          return aCommand == "cmd_clearhistory" ||
+                 aCommand == "cmd_togglesuggest";
         },
 
         isCommandEnabled: function(aCommand) {
-          return this._self._formHistSvc.nameExists(
-                 this._self.getAttribute("autocompletesearchparam"));
+          if (aCommand == "cmd_clearhistory") {
+            var param = this._self.getAttribute("autocompletesearchparam");
+            return this._self._formHistSvc.nameExists(param);
+          }
+          return true;
         },
 
         doCommand: function (aCommand) {
-          this._self._formHistSvc.removeEntriesForName(
-              this._self.getAttribute("autocompletesearchparam"));
-          this._self.value = "";
+          switch (aCommand) {
+            case "cmd_clearhistory":
+              var param = this._self.getAttribute("autocompletesearchparam");
+              this._self._formHistSvc.removeEntriesForName(param);
+              this._self.value = "";
+              break;
+            case "cmd_togglesuggest":
+              // The pref observer will update _suggestEnabled and the menu
+              // checkmark.
+              this._self._prefBranch.setBoolPref("browser.search.suggest.enabled",
+                                                 !this._self._suggestEnabled);
+              break;
+            default:
+              // do nothing with unrecognized command
+          }
         }
       })]]></field>
 

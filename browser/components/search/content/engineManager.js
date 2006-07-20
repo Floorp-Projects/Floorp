@@ -21,6 +21,7 @@
 # Contributor(s):
 #   Ben Goodger <beng@google.com> (Original author)
 #   Gavin Sharp <gavin@gavinsharp.com>
+#   Pamela Greene <pamg.bugs@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,11 +42,18 @@ const Cc = Components.classes;
 
 const ENGINE_FLAVOR = "text/x-moz-search-engine";
 
+const BROWSER_SUGGEST_PREF = "browser.search.suggest.enabled";
+
 var gEngineView = null;
 
 var gEngineManagerDialog = {
   init: function engineManager_init() {
     gEngineView = new EngineView(new EngineStore());
+
+    var prefService = Cc["@mozilla.org/preferences-service;1"].
+                      getService(Ci.nsIPrefBranch);
+    var suggestEnabled = prefService.getBoolPref(BROWSER_SUGGEST_PREF);
+    document.getElementById("enableSuggest").checked = suggestEnabled;
 
     var tree = document.getElementById("engineList");
     tree.view = gEngineView;
@@ -80,6 +88,12 @@ var gEngineManagerDialog = {
     var os = Cc["@mozilla.org/observer-service;1"].
              getService(Ci.nsIObserverService);
     os.removeObserver(this, "browser-search-engine-modified");
+
+    // Set the preference
+    var newSuggestEnabled = document.getElementById("enableSuggest").checked;
+    var prefService = Cc["@mozilla.org/preferences-service;1"].
+                      getService(Ci.nsIPrefBranch);
+    prefService.setBoolPref(BROWSER_SUGGEST_PREF, newSuggestEnabled);
 
     // Commit the changes
     gEngineView._engineStore.commit();

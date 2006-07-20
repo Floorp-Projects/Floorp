@@ -12,3 +12,6 @@
 
 <!ENTITY  addEngine.label           "Get more search engines...">
 <!ENTITY  addEngine.accesskey       "A">
+
+<!ENTITY  enableSuggest.label       "Show search suggestions">
+<!ENTITY  enableSuggest.accesskey   "S">
