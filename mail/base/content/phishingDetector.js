@@ -249,11 +249,11 @@ function confirmSuspiciousURL(aPhishingType, aSuspiciousHostName)
 }
 
 // returns true if the IP address is a local address.
-function isLocalIPAddress(unobscuredHostName) 
+function isLocalIPAddress(unobscuredHostName)
 {
   var ipComponents = unobscuredHostName.value.split(".");
-  
-  return ipComponents[0] == 10 || 
+
+  return ipComponents[0] == 10 ||
          (ipComponents[0] == 192 && ipComponents[1] == 168) ||
          (ipComponents[0] == 169 && ipComponents[1] == 254) ||
          (ipComponents[0] == 172 && ipComponents[1] >= 16 && ipComponents[1] < 32);
