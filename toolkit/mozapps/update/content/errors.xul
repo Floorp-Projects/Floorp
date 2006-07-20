@@ -46,7 +46,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&errors.title;"
         onload="init()"
-        style="width: 28em;"
+        style="width: 40em;"
         buttons="cancel">
 
   <script type="application/x-javascript">
@@ -64,7 +64,7 @@
       var state = window.arguments[0].state;
       var brandShortName = document.getElementById("brandStrings").getString("brandShortName");
       var updateStrings = document.getElementById("updateStrings");
-      var str = updateStrings.getFormattedString(state + "ErrorDescription", [brandShortName]);
+      var str = updateStrings.getFormattedString(state + "ErrorDesc", [brandShortName]);
       document.getElementById("intro").appendChild(document.createTextNode(str));
       
       var xpinstallStrings = document.getElementById("xpinstallStrings");
@@ -104,9 +104,9 @@
   </stringbundleset>
 
   <description id="intro"/>
-  <separator/>
+  <separator class="thin"/>
   <listbox id="extensions" rows="7"/>
-  <separator/>
+  <separator class="thin"/>
 
 </dialog>
 
