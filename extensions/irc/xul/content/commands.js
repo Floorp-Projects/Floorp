@@ -354,6 +354,12 @@ function dispatch(text, e, isInteractive, flags)
 
     /* split command from arguments */
     var ary = text.match(/(\S+) ?(.*)/);
+    if (!ary)
+    {
+        display(getMsg(MSG_ERR_NO_COMMAND, ""));
+        return null;
+    }
+
     e.commandText = ary[1];
     if (ary[2])
         e.inputData = stringTrim(ary[2]);
