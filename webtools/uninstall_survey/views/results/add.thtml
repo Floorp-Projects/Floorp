@@ -1,5 +1,9 @@
 <?php echo $html->formTag('/results/add'); ?>
 
+<div class="special_note">
+Please note that all data entered on this page may be viewable by the public.
+</div>
+
 <?php if(!empty($intentions)): ?>
     <h2>How did you intend to use <?php echo $intentions[0]['applications']['name']; ?> when you installed it?</h2>
     <?php foreach ($intentions as $var => $val) : ?>
