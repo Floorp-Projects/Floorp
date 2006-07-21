@@ -536,7 +536,7 @@ AddEffectProperties(nsIFrame *aFrame)
   }
 
   if (style->mClipPath && !(aFrame->GetStateBits() & NS_STATE_SVG_CLIPPED_MASK)) {
-    nsISVGClipPathFrame *clip;
+    nsSVGClipPathFrame *clip;
     NS_GetSVGClipPathFrame(&clip, style->mClipPath, aFrame->GetContent());
     if (clip) {
       aFrame->SetProperty(nsGkAtoms::clipPath, clip);
@@ -569,8 +569,8 @@ GetComplexClipSurface(nsISVGRendererCanvas *aCanvas, nsIFrame *aFrame)
     nsISVGChildFrame *svgChildFrame;
     CallQueryInterface(aFrame, &svgChildFrame);
 
-    nsISVGClipPathFrame *clip;
-    clip = NS_STATIC_CAST(nsISVGClipPathFrame *,
+    nsSVGClipPathFrame *clip;
+    clip = NS_STATIC_CAST(nsSVGClipPathFrame *,
                           aFrame->GetProperty(nsGkAtoms::clipPath));
 
     nsSVGUtils::GetSurface(nsSVGUtils::GetOuterSVGFrame(aFrame),
@@ -683,8 +683,8 @@ nsSVGUtils::PaintChildWithEffects(nsISVGRendererCanvas *aCanvas,
    * we can just do normal painting and get it clipped appropriately.
    */
   if (state & NS_STATE_SVG_CLIPPED_TRIVIAL) {
-    nsISVGClipPathFrame *clip;
-    clip = NS_STATIC_CAST(nsISVGClipPathFrame *,
+    nsSVGClipPathFrame *clip;
+    clip = NS_STATIC_CAST(nsSVGClipPathFrame *,
                           aFrame->GetProperty(nsGkAtoms::clipPath));
 
     aCanvas->PushClip();
@@ -807,8 +807,8 @@ nsSVGUtils::HitTestClip(nsIFrame *aFrame, float x, float y)
   CallQueryInterface(aFrame, &SVGFrame);
 
   if (aFrame->GetStateBits() & NS_STATE_SVG_CLIPPED_MASK) {
-    nsISVGClipPathFrame *clip;
-    clip = NS_STATIC_CAST(nsISVGClipPathFrame *,
+    nsSVGClipPathFrame *clip;
+    clip = NS_STATIC_CAST(nsSVGClipPathFrame *,
                           aFrame->GetProperty(nsGkAtoms::clipPath));
     nsCOMPtr<nsIDOMSVGMatrix> matrix = GetCanvasTM(aFrame);
     clip->ClipHitTest(SVGFrame, matrix, x, y, &clipHit);
