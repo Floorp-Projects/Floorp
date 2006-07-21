@@ -62,17 +62,18 @@ class UsersController extends AppController {
             // If they've already signed up, send them another email
             if ($this->User->findByEmail($this->params['data']['User']['email'])) {
                     $mail_params = array(
-                        'from' => '"Firefox Surveys" <nobody@mozilla.com>',
+                        'from' => '"Firefox User Panel" <nobody@mozilla.com>',
                         'to'   => $this->params['data']['User']['email'],
-                        'subject' => 'Firefox Surveys',
+                        'subject' => 'Firefox User Panel',
                         'message' => "
 <p>Thanks for volunteering to be a part of the Firefox User Panel!</p>
 
-<p>Please start by taking this initial survey.  We'll send out a few more surveys in
-the following weeks to the user panel to help us define the next generation of
-Firefox.  thanks again for making the browser a better place!</p>
+<p>Please start by taking this initial survey by August 1st.  
+We're anxious to get your feedback on a variety of areas, so we'll send out a few
+more surveys in the following weeks to the user panel to help us define the next
+generation of Firefox.  Thanks again for making the browser a better place!</p>
 
-<p><a href=\"https://is4.instantsurvey.com/take?i=105856&h=kJmDQyn7m0vnkkljO8G3MQ&email={$this->params['data']['User']['email']}&first={$this->params['data']['User']['firstname']}&last={$this->params['data']['User']['lastname']}\">Join the User Panel</a></p>
+<p><a href=\"https://is4.instantsurvey.com/take?i=105913&h=0yU72vyhajHZpq6bAu_RGQ&email={$this->params['data']['User']['email']}&first={$this->params['data']['User']['firstname']}&last={$this->params['data']['User']['lastname']}\">Join the User Panel</a></p>
 
 <p><small>Survey conducted by Mozilla and hosted by <a href=\"http://www.instantsurvey.com/\">Instant Survey</a></small></p>
 
@@ -100,7 +101,10 @@ use in marketing or solicitation.</small></p>
                     within 24 hours, please <a href="mailto:firefoxsurvey@mozilla.com?subject=invalid email - firefox survey">let us know</a> 
                     and we\'ll send another copy.</p>
 
-                    <p>Continue to the <a href="http://google.com/firefox/">Firefox Start Page</a></p> 
+                    <p>Continue to <a href="http://www.mozilla.com/firefox/central/">Firefox Central</a></p> 
+
+                    <p class="subtext">If you don\'t receive an email with a link to
+                    the survey within 24 hours, please check your junk mail.</p>
                     ');
                     $this->flash(null,null,0);
                     return;
@@ -108,17 +112,18 @@ use in marketing or solicitation.</small></p>
             }
             if ($this->User->save($this->params['data'])) {
                     $mail_params = array(
-                        'from' => '"Firefox Surveys" <nobody@mozilla.com>',
+                        'from' => '"Firefox User Panel" <nobody@mozilla.com>',
                         'to'   => $this->params['data']['User']['email'],
-                        'subject' => 'Firefox Surveys',
+                        'subject' => 'Firefox User Panel',
                         'message' => "
 <p>Thanks for volunteering to be a part of the Firefox User Panel!</p>
 
-<p>Please start by taking this initial survey.  We'll send out a few more surveys in
-the following weeks to the user panel to help us define the next generation of
-Firefox.  thanks again for making the browser a better place!</p>
+<p>Please start by taking this initial survey by August 1st.  
+We're anxious to get your feedback on a variety of areas, so we'll send out a few
+more surveys in the following weeks to the user panel to help us define the next
+generation of Firefox.  Thanks again for making the browser a better place!</p>
 
-<p><a href=\"https://is4.instantsurvey.com/take?i=105856&h=kJmDQyn7m0vnkkljO8G3MQ&email={$this->params['data']['User']['email']}&first={$this->params['data']['User']['firstname']}&last={$this->params['data']['User']['lastname']}\">Join the User Panel</a></p>
+<p><a href=\"https://is4.instantsurvey.com/take?i=105913&h=0yU72vyhajHZpq6bAu_RGQ&email={$this->params['data']['User']['email']}&first={$this->params['data']['User']['firstname']}&last={$this->params['data']['User']['lastname']}\">Join the User Panel</a></p>
 
 <p><small>Survey conducted by Mozilla and hosted by <a href=\"http://www.instantsurvey.com/\">Instant Survey</a></small></p>
 
@@ -140,7 +145,13 @@ use in marketing or solicitation.</small></p>
                     // rather than just flash a screen, we want to show a page with
                     // some content.  We do a little trickery here, but it gets the
                     // job done.  content is in /views/layouts/flash.thtml
-                    $this->Session->setFlash('Thanks for helping to make a better browsing experience! Be sure to check your email for a link to the first survey.<br />Continue to the <a href="http://google.com/firefox/">Firefox Start Page</a>');
+                    $this->Session->setFlash('
+                    <p>Thanks for helping to make a better browsing experience!</p>
+                    <p>Be sure to check your email for a link to the first survey.<br />Continue to <a href="http://www.mozilla.com/firefox/central/">Firefox Central</a></p>
+                    <p class="subtext">If you don\'t receive an email with a link to
+                    the survey within 24 hours, please check your junk mail or let us
+                    know and we\'ll send another copy.</p>
+                    ');
                     $this->flash(null,null,0);
             }
         }
