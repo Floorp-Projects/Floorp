@@ -7,6 +7,7 @@ class mail
     var $to;
     var $subject;
     var $message;
+    var $envelope;
 
     /**
      * Everything coming in via $params should be validated already
@@ -24,6 +25,9 @@ class mail
         }
         if (array_key_exists('message', $params)) {
             $this->message = $params['message'];
+        }
+        if (array_key_exists('envelope', $params)) {
+            $this->envelope = $params['envelope'];
         }
     }
 
@@ -53,6 +57,11 @@ class mail
     }
     function send() 
     {
+        echo '<pre>';
+        echo $this->make_headers();
+        echo '<hr />';
+        echo $this->make_additional_parameters();
+        echo '</pre>';
         mail($this->to, $this->subject, $this->message, $this->make_headers(), $this->make_additional_parameters());
     }
 }
