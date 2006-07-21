@@ -1893,28 +1893,47 @@ function cmdDescribe(e)
 
 function cmdMode(e)
 {
-    // get our canonical channel name, so we know what channel we talk about
-    var chan = fromUnicode(e.target, e.server);
+    var chan;
 
     // Make sure the user can leave the channel name out from a channel view.
-    if (e.channel && /^[\+\-].+/.test(e.target) && 
-        !(e.server.toLowerCase(chan) in e.server.channels))
+    if ((!e.target || /^[\+\-].+/.test(e.target)) &&
+        !(chan && e.server.getChannel(chan)))
     {
-        chan = e.channel.canonicalName;
-        if (e.param && e.modestr)
+        if (e.channel)
         {
-            e.paramList.unshift(e.modestr);
+            chan = e.channel.canonicalName;
+            if (e.param && e.modestr)
+            {
+                e.paramList.unshift(e.modestr);
+            }
+            else if (e.modestr)
+            {
+                e.paramList = [e.modestr];
+                e.param = e.modestr;
+            }
+            e.modestr = e.target;
         }
-        else if (e.modestr)
+        else
         {
-            e.paramList = [e.modestr];
-            e.param = e.modestr;
+            display(getMsg(MSG_ERR_REQUIRED_PARAM, "target"), MT_ERROR);
+            return;
         }
-        e.modestr = e.target;
+    }
+    else
+    {
+        chan = fromUnicode(e.target, e.server);
     }
 
     // Check whether our mode string makes sense
-    if (!(/^([+-][a-z]+)+$/i).test(e.modestr))
+    if (!e.modestr)
+    {
+        e.modestr = "";
+        if (!e.channel && arrayContains(e.server.channelTypes, chan[0]))
+            e.channel = new CIRCChannel(e.server, null, chan);
+        if (e.channel)
+            e.channel.pendingModeReply = true;
+    }
+    else if (!(/^([+-][a-z]+)+$/i).test(e.modestr))
     {
         display(getMsg(MSG_ERR_INVALID_MODE, e.modestr), MT_ERROR);
         return;
@@ -1923,7 +1942,6 @@ function cmdMode(e)
     var params = (e.param) ? " " + e.paramList.join(" ") : "";
     e.server.sendData("MODE " + chan + " " + fromUnicode(e.modestr, e.server) +
                       params + "\n");
-
 }
 
 function cmdMotif(e)

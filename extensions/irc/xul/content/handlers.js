@@ -2202,6 +2202,12 @@ function my_endofexcepts(e)
     this.display(getMsg(MSG_EXCEPTLIST_END, this.unicodeName), "EXCEPT");
 }
 
+CIRCChannel.prototype.on482 =
+function my_needops(e)
+{
+    this.display(getMsg(MSG_CHANNEL_NEEDOPS, this.unicodeName), MT_ERROR);
+}
+
 CIRCChannel.prototype.onNotice =
 function my_notice (e)
 {
@@ -2392,14 +2398,25 @@ function my_ckick (e)
 CIRCChannel.prototype.onChanMode =
 function my_cmode (e)
 {
-    if ("user" in e)
+    if (e.code == "MODE")
     {
         var msg = e.decodeParam(1);
         for (var i = 2; i < e.params.length; i++)
             msg += " " + e.decodeParam(i);
 
-        this.display (getMsg(MSG_MODE_CHANGED, [msg, e.user.unicodeName]),
-                      "MODE", e.user, this);
+        var source = e.user ? e.user.unicodeName : e.source;
+        this.display(getMsg(MSG_MODE_CHANGED, [msg, source]),
+                     "MODE", (e.user || null), this);
+    }
+    else if ("pendingModeReply" in this)
+    {
+        var msg = e.decodeParam(3);
+        for (var i = 4; i < e.params.length; i++)
+            msg += " " + e.decodeParam(i);
+
+        var view = ("messages" in this && this.messages) ? this : e.network;
+        view.display(getMsg(MSG_MODE_ALL, [this.unicodeName, msg]), "MODE");
+        delete this.pendingModeReply;
     }
 
     var updates = new Array();
