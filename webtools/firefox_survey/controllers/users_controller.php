@@ -62,7 +62,8 @@ class UsersController extends AppController {
             // If they've already signed up, send them another email
             if ($this->User->findByEmail($this->params['data']['User']['email'])) {
                     $mail_params = array(
-                        'from' => '"Firefox User Panel" <nobody@mozilla.com>',
+                        'from' => 'Firefox User Panel <nobody@mozilla.com>',
+                        'envelope' => 'nobody@mozilla.com',
                         'to'   => $this->params['data']['User']['email'],
                         'subject' => 'Firefox User Panel',
                         'message' => "
@@ -110,8 +111,9 @@ use in marketing or solicitation.</small></p>
             }
             if ($this->User->save($this->params['data'])) {
                     $mail_params = array(
-                        'from' => '"Firefox User Panel" <nobody@mozilla.com>',
+                        'from' => 'Firefox User Panel <nobody@mozilla.com>',
                         'to'   => $this->params['data']['User']['email'],
+                        'envelope' => 'nobody@mozilla.com',
                         'subject' => 'Firefox User Panel',
                         'message' => "
 <p>Thanks for volunteering to be a part of the Firefox User Panel!</p>

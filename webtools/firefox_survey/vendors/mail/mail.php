@@ -47,8 +47,8 @@ class mail
     }
     function make_additional_parameters()
     {
-        if (!empty($this->from)) {
-            return '-f'.$this->from;
+        if (!empty($this->envelope)) {
+            return '-f'.$this->envelope;
         }
     }
     function send() 
