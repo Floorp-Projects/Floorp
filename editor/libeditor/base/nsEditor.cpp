@@ -155,6 +155,7 @@ nsEditor::nsEditor()
 ,  mInIMEMode(PR_FALSE)
 ,  mIsIMEComposing(PR_FALSE)
 ,  mShouldTxnSetSelection(PR_TRUE)
+,  mDidPreDestroy(PR_FALSE)
 ,  mActionListeners(nsnull)
 ,  mEditorObservers(nsnull)
 ,  mDocDirtyState(-1)
@@ -216,9 +217,6 @@ nsEditor::~nsEditor()
   delete mEditorObservers;   // no need to release observers; we didn't addref them
   mEditorObservers = 0;
   
-  if (mInlineSpellChecker)
-    mInlineSpellChecker->Cleanup();
-
   if (mActionListeners)
   {
     PRInt32 i;
@@ -455,11 +453,21 @@ nsEditor::RemoveEventListeners()
 NS_IMETHODIMP
 nsEditor::PreDestroy()
 {
-  // tell our listeners that the doc is going away
-  NotifyDocumentListeners(eDocumentToBeDestroyed);
+  if (!mDidPreDestroy) {
+    // Let spellchecker clean up its observers etc.
+    if (mInlineSpellChecker) {
+      mInlineSpellChecker->Cleanup();
+      mInlineSpellChecker = nsnull;
+    }
 
-  // Unregister event listeners
-  RemoveEventListeners();
+    // tell our listeners that the doc is going away
+    NotifyDocumentListeners(eDocumentToBeDestroyed);
+
+    // Unregister event listeners
+    RemoveEventListeners();
+
+    mDidPreDestroy = PR_TRUE;
+  }
 
   return NS_OK;
 }
@@ -1258,17 +1266,27 @@ NS_IMETHODIMP nsEditor::GetInlineSpellChecker(PRBool autoCreate,
                                               nsIInlineSpellChecker ** aInlineSpellChecker)
 {
   NS_ENSURE_ARG_POINTER(aInlineSpellChecker);
-  nsresult rv;
+
+  if (mDidPreDestroy) {
+    // Don't allow people to get or create the spell checker once the editor
+    // is going away.
+    *aInlineSpellChecker = nsnull;
+    return autoCreate ? NS_ERROR_NOT_AVAILABLE : NS_OK;
+  }
 
   if (!mInlineSpellChecker && autoCreate) {
+    nsresult rv;
     mInlineSpellChecker = do_CreateInstance(MOZ_INLINESPELLCHECKER_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = mInlineSpellChecker->Init(this);
+    if (NS_FAILED(rv))
+      mInlineSpellChecker = nsnull;
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  NS_IF_ADDREF(*aInlineSpellChecker = mInlineSpellChecker);  
+  NS_IF_ADDREF(*aInlineSpellChecker = mInlineSpellChecker);
+
   return NS_OK;
 }
 
