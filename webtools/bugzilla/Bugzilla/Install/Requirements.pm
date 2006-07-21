@@ -28,6 +28,7 @@ use base qw(Exporter);
 our @EXPORT = qw(
     REQUIRED_MODULES
     OPTIONAL_MODULES
+    MOD_PERL_MODULES
 
     vers_cmp
     have_vers
@@ -127,6 +128,26 @@ use constant OPTIONAL_MODULES => [
     {
         name => 'Net::LDAP',
         version => 0
+    },
+];
+
+# These are only required if you want to use Bugzilla with
+# mod_perl.
+use constant MOD_PERL_MODULES => [
+    {
+        name => 'mod_perl2', 
+        version => '1.999022'
+    },
+    # Even very new releases of perl (5.8.5) don't come with this version,
+    # so I didn't want to make it a general requirement just for
+    # running under mod_cgi.
+    {
+        name => 'CGI',
+        version => '3.11'
+    },
+    {
+        name => 'Apache::DBI',
+        version => '0.96'
     },
 ];
 

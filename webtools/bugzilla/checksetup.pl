@@ -249,6 +249,14 @@ foreach my $module (@$opt_modules) {
         have_vers($module->{name}, $module->{version}, $silent);
 }
 
+print "\nThe following modules are required for mod_perl support:\n" 
+    unless $silent;
+my $mp_modules = MOD_PERL_MODULES;
+foreach my $module (@$mp_modules) {
+    $have_mod{$module->{name}} =
+       have_vers($module->{name}, $module->{version}, $silent);
+}
+
 print "\n" unless $silent;
 
 if ($^O =~ /MSWin32/i && !$silent) {
@@ -311,8 +319,26 @@ if (!$have_mod{'Net::LDAP'} && !$silent) {
           "Net::LDAP: " . install_command('Net::LDAP') . "\n\n";
 }
 
+if (!$have_mod{'mod_perl2'} && !$silent) {
+    print "If you would like mod_perl support, you must install at least\n",
+          "the minimum required version of mod_perl. You can download",
+          " mod_perl from:\n",
+          "    http://perl.apache.org/download/binaries.html\n",
+          "Make sure that you get the 2.0 version, not the 1.0 version.\n\n";
+}
+
+if ((!$have_mod{'Apache::DBI'} || !$have_mod{'CGI'}) && !$silent) {
+    print "For mod_perl support, you must install the following perl",
+          " module(s):\n";
+    print "    Apache::DBI: " . install_command('Apache::DBI') . "\n" 
+        if !$have_mod{'Apache::DBI'};
+    print "    CGI:         " . install_command('CGI') . "\n" 
+        if !$have_mod{'CGI'};
+    print "\n";
+}
+
 if (!$have_one_dbd) {
-    print "\n\n";
+    print "\n";
     print "Bugzilla requires that at least one DBD module be installed in\n",
           "order to access a database. You can install the correct one by\n",
           "picking the command listed below for your database:\n";
