@@ -971,8 +971,14 @@ FeedProcessor.prototype = {
     catch (e) {
       LOG("FIXME: " + e);
     }
-    if (this.listener != null) { 
-      this.listener.handleResult(this._result);
+
+    try {
+      if (this.listener != null)
+        this.listener.handleResult(this._result);
+    }
+    finally {
+      this._result = null;
+      this._reader = null;
     }
   },
 
