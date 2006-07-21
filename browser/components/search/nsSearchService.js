@@ -1484,8 +1484,7 @@ Engine.prototype = {
           this._updateURL = child.textContent;
           break;
         case "UpdateInterval":
-          this._updateInterval = parseInt(child.textContent) ||
-                                 SEARCH_DEFAULT_UPDATE_INTERVAL;
+          this._updateInterval = parseInt(child.textContent);
           break;
       }
     }
@@ -1766,8 +1765,7 @@ Engine.prototype = {
     this._queryCharset = searchSection["querycharset"] ||
                          queryCharsetFromCode(searchSection["queryencoding"]);
 
-    this._updateInterval = parseInt(browserSection["updatecheckdays"]) ||
-                           SEARCH_DEFAULT_UPDATE_INTERVAL;
+    this._updateInterval = parseInt(browserSection["updatecheckdays"]);
 
     this._updateURL = browserSection["update"];
     this._iconUpdateURL = browserSection["updateicon"];
@@ -1986,6 +1984,11 @@ Engine.prototype = {
     return this.__isInAppDir;
   },
 
+  get _hasUpdates() {
+    // Whether or not the engine has an update URL
+    return !!(this._updateURL || this._iconUpdateURL);
+  },
+
   get name() {
     return this._name;
   },
@@ -2179,18 +2182,20 @@ SearchService.prototype = {
       notifyAction(aEngine, SEARCH_ENGINE_ADDED);
     }
 
-    // Schedule the engine's next update, if it isn't already.
-    if (!engineMetadataService.getAttr(aEngine, "updateexpir"))
-      engineUpdateService.scheduleNextUpdate(aEngine);
-
-    // We need to save the engine's _dataType, if this is the first time the
-    // engine is added to the dataStore, since ._dataType isn't persisted
-    // and will change on the next startup (since the engine will then be XML).
-    // We need this so that we know how to load any future updates from this
-    // engine.
-    if (!engineMetadataService.getAttr(aEngine, "updatedatatype"))
-      engineMetadataService.setAttr(aEngine, "updatedatatype",
-                                    aEngine._dataType);
+    if (aEngine._hasUpdates) {
+      // Schedule the engine's next update, if it isn't already.
+      if (!engineMetadataService.getAttr(aEngine, "updateexpir"))
+        engineUpdateService.scheduleNextUpdate(aEngine);
+  
+      // We need to save the engine's _dataType, if this is the first time the
+      // engine is added to the dataStore, since ._dataType isn't persisted
+      // and will change on the next startup (since the engine will then be
+      // XML). We need this so that we know how to load any future updates from
+      // this engine.
+      if (!engineMetadataService.getAttr(aEngine, "updatedatatype"))
+        engineMetadataService.setAttr(aEngine, "updatedatatype",
+                                      aEngine._dataType);
+    }
   },
 
   _loadEngines: function SRCH_SVC_loadEngines(aDir) {
@@ -2815,9 +2820,7 @@ var engineUpdateService = {
   },
 
   scheduleNextUpdate: function eus_scheduleNextUpdate(aEngine) {
-    var interval = aEngine._updateInterval;
-    ENSURE_WARN(interval, "engine has no interval?", Cr.NS_ERROR_UNEXPECTED);
-
+    var interval = aEngine._updateInterval || SEARCH_DEFAULT_UPDATE_INTERVAL;
     var milliseconds = interval * 86400000; // |interval| is in days
     engineMetadataService.setAttr(aEngine, "updateexpir",
                                   Date.now() + milliseconds);
@@ -2837,6 +2840,9 @@ var engineUpdateService = {
     ULOG("currentTime: " + currentTime);
     for each (engine in searchService.getEngines({})) {
       engine = engine.wrappedJSObject;
+      if (!engine._hasUpdates)
+        continue;
+
       ULOG("checking " + engine.name);
 
       var expirTime = engineMetadataService.getAttr(engine, "updateexpir");
@@ -2846,9 +2852,8 @@ var engineUpdateService = {
            "\niconUpdateURL: " + iconUpdateURL);
 
       var engineExpired = expirTime <= currentTime;
-      var hasUpdateURLs = !!(updateURL || iconUpdateURL);
 
-      if (!expirTime || !engineExpired || !hasUpdateURLs) {
+      if (!expirTime || !engineExpired) {
         ULOG("skipping engine");
         continue;
       }
