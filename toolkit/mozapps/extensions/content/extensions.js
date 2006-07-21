@@ -340,7 +340,7 @@ function showView(aView) {
                                                       : PREF_EXTENSIONS_GETMOREEXTENSIONSURL,
                                              Components.interfaces.nsIPrefLocalizedString).data;
       getMoreURL = getMoreURL.replace(/%APPID%/g, gAppID);
-      getMore.setAttribute("onclick", "openURL(\"" + getMoreURL + "\");");
+      getMore.setAttribute("getMoreURL", getMoreURL);
       if (getMore.hidden)
         getMore.hidden = false;
     }

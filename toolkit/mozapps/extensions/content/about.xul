@@ -62,7 +62,8 @@
     <label id="extensionCreatorLabel" class="sectionTitle">&creator.label;</label>
     <hbox id="creatorBox" class="indent">
       <label id="extensionCreator" flex="1" crop="right"/>
-      <label id="extensionHomepage" class="text-link" value="&homepage.label;"/>
+      <label id="extensionHomepage" onclick="loadHomepage(event);"
+             class="text-link" value="&homepage.label;"/>
     </hbox>
       
     <label id="extensionDevelopers" class="sectionTitle">&developers.label;</label>
