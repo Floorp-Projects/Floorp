@@ -1649,9 +1649,9 @@ calStorageCalendar.prototype = {
 
         var tmp;
 
-        if (tmp = item.getUnproxiedProperty("CREATED"))
+        if ((tmp = item.getUnproxiedProperty("CREATED")))
             ip.time_created = tmp.nativeTime;
-        if (tmp = item.getUnproxiedProperty("LAST-MODIFIED"))
+        if ((tmp = item.getUnproxiedProperty("LAST-MODIFIED")))
             ip.last_modified = tmp.nativeTime;
 
         ip.title = item.getUnproxiedProperty("SUMMARY");
