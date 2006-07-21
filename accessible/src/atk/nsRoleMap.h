@@ -236,9 +236,9 @@ PRUint32 atkRoleMap[] = {
     ATK_ROLE_PANEL,               // nsIAccessible::ROLE_FORM              112
 #endif
 #ifdef USE_ATK_ROLE_INPUT_METHOD_WINDOW
-    ATK_ROLE_INPUT_METHOD_WINDOW  // nsIAccessible::ROLE_IME               113
+    ATK_ROLE_INPUT_METHOD_WINDOW, // nsIAccessible::ROLE_IME               113
 #else
-    ATK_ROLE_INVALID              // nsIAccessible::ROLE_IME               113
+    ATK_ROLE_INVALID,             // nsIAccessible::ROLE_IME               113
 #endif
     ROLE_ATK_LAST_ENTRY          // nsIAccessible::ROLE_LAST_ENTRY
 };
