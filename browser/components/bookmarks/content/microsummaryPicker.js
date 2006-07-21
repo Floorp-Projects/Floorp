@@ -207,8 +207,8 @@ var MicrosummaryPicker = {
       if (microsummary.content != null)
         menuItem.setAttribute("label", microsummary.content);
       else {
-        menuItem.setAttribute("label", microsummary.generator ? microsummary.generator.name
-                                                               : microsummary.generatorURI.spec);
+        menuItem.setAttribute("label", microsummary.generator.name ?
+                                         microsummary.generator.name : microsummary.generator.uri.spec);
         microsummary.update();
       }
 

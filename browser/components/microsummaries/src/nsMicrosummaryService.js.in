@@ -465,8 +465,7 @@ MicrosummaryService.prototype = {
       var generator = this._localGenerators[genURISpec];
 
       if (generator.appliesToURI(pageURI)) {
-        var microsummary = new Microsummary(pageURI, generator.uri);
-        microsummary.generator = generator;
+        var microsummary = new Microsummary(pageURI, generator);
 
         // If this is the current microsummary for this bookmark, load the content
         // from the datastore so it shows up immediately in microsummary picking UI.
@@ -754,9 +753,11 @@ MicrosummaryService.prototype = {
     var pageURI = this._getPageForBookmark(bookmarkID);
     var generatorURI = this._uri(this._getField(bookmarkID, FIELD_MICSUM_GEN_URI));
     
-    var microsummary = new Microsummary(pageURI, generatorURI);
-    if (this._localGenerators[generatorURI.spec])
-      microsummary.generator = this._localGenerators[generatorURI.spec];
+    var localGenerator = this._localGenerators[generatorURI.spec];
+
+    var microsummary = new Microsummary(pageURI, localGenerator);
+    if (!localGenerator)
+      microsummary.generator.uri = generatorURI;
 
     return microsummary;
   },
@@ -772,7 +773,7 @@ MicrosummaryService.prototype = {
    *
    */
   setMicrosummary: function MSS_setMicrosummary(bookmarkID, microsummary) {
-    this._setField(bookmarkID, FIELD_MICSUM_GEN_URI, microsummary.generatorURI.spec);
+    this._setField(bookmarkID, FIELD_MICSUM_GEN_URI, microsummary.generator.uri.spec);
     if (microsummary.content)
       this._updateMicrosummary(bookmarkID, microsummary);
     else
@@ -833,7 +834,7 @@ MicrosummaryService.prototype = {
 
     var currentGen = this._getField(bookmarkID, FIELD_MICSUM_GEN_URI);
 
-    if (microsummary.generatorURI.equals(this._uri(currentGen)))
+    if (microsummary.generator.uri.equals(this._uri(currentGen)))
       return true;
 
     return false
@@ -863,9 +864,12 @@ MicrosummaryService.prototype = {
 
     var pageURI = this._getPageForBookmark(bookmarkID);
     var generatorURI = this._uri(this._getField(bookmarkID, FIELD_MICSUM_GEN_URI));
-    var microsummary = new Microsummary(pageURI, generatorURI);
-    if (this._localGenerators[generatorURI.spec])
-      microsummary.generator = this._localGenerators[generatorURI.spec];
+
+    var localGenerator = this._localGenerators[generatorURI.spec];
+
+    var microsummary = new Microsummary(pageURI, localGenerator);
+    if (!localGenerator)
+      microsummary.generator.uri = generatorURI;
 
     // A microsummary observer that calls the microsummary service
     // to update the datastore when the microsummary finishes loading.
@@ -897,10 +901,10 @@ MicrosummaryService.prototype = {
 
 
 
-function Microsummary(pageURI, generatorURI) {
+function Microsummary(pageURI, generator) {
   this._observers = [];
   this.pageURI = pageURI;
-  this.generatorURI = generatorURI;
+  this.generator = generator ? generator : new MicrosummaryGenerator();
 }
 
 Microsummary.prototype = {
@@ -922,7 +926,7 @@ Microsummary.prototype = {
   get content() {
     // If we have everything we need to generate the content, generate it.
     if (this._content == null &&
-        this.generator &&
+        this.generator.loaded &&
         (this.pageContent || !this.generator.needsPageContent)) {
       this._content = this.generator.generateMicrosummary(this.pageContent);
       this.updateInterval = this.generator.calculateUpdateInterval(this.pageContent);
@@ -936,10 +940,6 @@ Microsummary.prototype = {
     return this._content;
   },
   set content(newValue) { this._content = newValue },
-
-  _generatorURI: null,
-  get generatorURI()         { return this._generatorURI },
-  set generatorURI(newValue) { this._generatorURI = newValue },
 
   _generator: null,
   get generator()            { return this._generator },
@@ -996,20 +996,20 @@ Microsummary.prototype = {
    */
   update: function MS_update() {
     LOG("microsummary.update called for page:\n  " + this.pageURI.spec +
-        "\nwith generator:\n  " + this.generatorURI.spec);
+        "\nwith generator:\n  " + this.generator.uri.spec);
 
     var t = this;
 
     // If we don't have the generator, download it now.  After it downloads,
     // we'll re-call this method to continue updating the microsummary.
-    if (!this.generator) {
+    if (!this.generator.loaded) {
       LOG("generator not yet loaded; downloading it");
       var generatorCallback =
         function MS_generatorCallback(resource) {
           try     { t._handleGeneratorLoad(resource) }
           finally { resource.destroy() }
         };
-      var resource = new MicrosummaryResource(this.generatorURI);
+      var resource = new MicrosummaryResource(this.generator.uri);
       resource.load(generatorCallback);
       return;
     }
@@ -1042,20 +1042,19 @@ Microsummary.prototype = {
   },
 
   _handleGeneratorLoad: function MS__handleGeneratorLoad(resource) {
-    var generator = new MicrosummaryGenerator();
-    generator.uri = resource.uri;
-    LOG(generator.uri.spec + " microsummary generator downloaded");
+    LOG(this.generator.uri.spec + " microsummary generator downloaded");
     if (resource.isXML)
-      generator.initFromXML(resource.content);
+      this.generator.initFromXML(resource.content);
     else if (resource.contentType == "text/plain")
-      generator.initFromText(resource.content);
+      this.generator.initFromText(resource.content);
     else if (resource.contentType == "text/html")
-      generator.initFromText(resource.content.body.textContent);
+      this.generator.initFromText(resource.content.body.textContent);
     else
       throw("generator is neither XML nor plain text");
 
-    this.generator = generator;
-    this.update();
+    // Only trigger a [content] update if we were able to init the generator. 
+    if (this.generator.loaded)
+      this.update();
   },
 
   _handlePageLoad: function MS__handlePageLoad(resource) {
@@ -1125,6 +1124,10 @@ MicrosummaryGenerator.prototype = {
   get content() { return this._content },
   set content(newValue) { this._content = newValue },
 
+  _loaded: false,
+  get loaded() { return this._loaded },
+  set loaded(newValue) { this._loaded = newValue },
+
   _rules: null,
 
   /**
@@ -1181,6 +1184,7 @@ MicrosummaryGenerator.prototype = {
    */
   initFromText: function(text) {
     this.content = text;
+    this.loaded = true;
   },
 
   /**
@@ -1273,6 +1277,8 @@ MicrosummaryGenerator.prototype = {
                       || templateNode.getElementsByTagNameNS(XSLT_NS, "stylesheet")[0];
     }
       // XXX Make sure the template is a valid XSL transform sheet.
+
+    this.loaded = true;
   },
 
   generateMicrosummary: function MSD_generateMicrosummary(pageContent) {
@@ -1426,6 +1432,10 @@ MicrosummarySet.prototype = {
         continue;
 
 
+      // Look for a TITLE attribute to give the generator a nice name in the UI.
+      var linkTitle = link.getAttribute("title");
+
+
       // Unlike the "href" attribute, the "href" property contains
       // an absolute URI spec, so we use it here to create the URI.
       var generatorURI = this._ios.newURI(link.href,
@@ -1445,7 +1455,9 @@ MicrosummarySet.prototype = {
         continue;
       }
 
-      var microsummary = new Microsummary(resource.uri, generatorURI);
+      var microsummary = new Microsummary(resource.uri, null);
+      microsummary.generator.name = linkTitle;
+      microsummary.generator.uri  = generatorURI;
       this.AppendElement(microsummary);
     }
   },
