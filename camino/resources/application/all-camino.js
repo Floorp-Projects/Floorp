@@ -126,3 +126,6 @@ pref("browser.download.progressDnldDialog.bringToFront", true);
 //  multi/single line controls
 pref("layout.spellcheckDefault", 1);
 
+// enable the tab jumpback feature
+pref("camino.enable_tabjumpback", true);
+
