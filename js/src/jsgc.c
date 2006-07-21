@@ -2511,7 +2511,7 @@ js_GC(JSContext *cx, uintN gcflags)
     memset(cx->thread->gcFreeLists, 0, sizeof cx->thread->gcFreeLists);
     iter = NULL;
     while ((acx = js_ContextIterator(rt, JS_FALSE, &iter)) != NULL) {
-        if (acx->thread == cx->thread)
+        if (!acx->thread || acx->thread == cx->thread)
             continue;
         memset(acx->thread->gcFreeLists, 0, sizeof acx->thread->gcFreeLists);
     }
