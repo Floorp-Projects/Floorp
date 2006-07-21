@@ -171,7 +171,7 @@
             <splitter class="tree-splitter"/>
             <treecol id="flaggedCol" persist="hidden ordinal" fixed="true" cycler="true" hidden="true"
                      class="treecol-image flagColumnHeader"
-                     display="&flagColumn.label;" tooltiptext="&flagColumn.tooltip;"/>
+                     display="&starredColumn.label;" tooltiptext="&starredColumn.tooltip;"/>
             <splitter class="tree-splitter"/>
             <treecol id="tagsCol" persist="hidden ordinal width" flex="1" hidden="true"
                      label="&tagsColumn.label;" tooltiptext="&tagsColumn.tooltip;"/>

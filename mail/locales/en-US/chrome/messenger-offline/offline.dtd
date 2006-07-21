@@ -6,8 +6,8 @@
 <!ENTITY settingsOfflineCmd.accesskey "e">
 <!ENTITY downloadSelectedCmd.label "Get Selected Messages">
 <!ENTITY downloadSelectedCmd.accesskey "M">
-<!ENTITY downloadFlaggedCmd.label "Get Flagged Messages">
-<!ENTITY downloadFlaggedCmd.accesskey "F">
+<!ENTITY downloadStarredCmd.label "Get Starred Messages">
+<!ENTITY downloadStarredCmd.accesskey "a">
 
 <!ENTITY prefOfflineConnection.label "Offline and Connection Settings">
 <!ENTITY prefOfflineDesc.label "Manage offline settings.">

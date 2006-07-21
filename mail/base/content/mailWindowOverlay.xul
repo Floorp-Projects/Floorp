@@ -333,7 +333,7 @@
   <key id="key_selectThread" key="&selectThreadCmd.key;"             oncommand="goDoCommand('cmd_selectThread');" modifiers="accel, shift"/>
   
   <key id="key_toggleRead" key="&markAsReadCmd.key;"                 oncommand="goDoCommand('cmd_markAsRead');"/>
-  <key id="key_toggleFlagged" key="&markFlaggedCmd.key;"             oncommand="goDoCommand('cmd_markAsFlagged');"/>
+  <key id="key_toggleFlagged" key="&markStarredCmd.key;"             oncommand="goDoCommand('cmd_markAsFlagged');"/>
   <key id="key_markJunk" key="&markAsJunkCmd.key;"                   oncommand="goDoCommand('cmd_markAsJunk');"/>
   <key id="key_markNotJunk" key="&markAsNotJunkCmd.key;"             oncommand="goDoCommand('cmd_markAsNotJunk');"
        modifiers="shift"/>
@@ -632,8 +632,8 @@
         <menuseparator/>
         <menuitem id="threadPaneContext-markFlagged"
                   type="checkbox"
-                  label="&markFlaggedCmd.label;"
-                  accesskey="&markFlaggedCmd.accesskey;"
+                  label="&markStarredCmd.label;"
+                  accesskey="&markStarredCmd.accesskey;"
                   observes="cmd_markAsFlagged"/>
         <menuseparator/>
         <menuitem label="&markAsJunkCmd.label;"
@@ -945,8 +945,8 @@
         <menuseparator/>
         <menuitem id="threadPaneContext-markFlagged"
                   type="checkbox"
-                  label="&markFlaggedCmd.label;"
-                  accesskey="&markFlaggedCmd.accesskey;"
+                  label="&markStarredCmd.label;"
+                  accesskey="&markStarredCmd.accesskey;"
                   observes="cmd_markAsFlagged"/>
         <menuseparator/>
         <menuitem label="&markAsJunkCmd.label;" 
@@ -1222,7 +1222,7 @@
           <menu id="viewSortMenu" accesskey="&sortMenu.accesskey;" label="&sortMenu.label;">
             <menupopup onpopupshowing="InitViewSortByMenu()">
               <menuitem id="sortByDateMenuitem" type="radio" name="sortby" label="&sortByDateCmd.label;" accesskey="&sortByDateCmd.accesskey;" oncommand="MsgSortByDate()"/>
-              <menuitem id="sortByFlagMenuitem" type="radio" name="sortby" label="&sortByFlagCmd.label;" accesskey="&sortByFlagCmd.accesskey;" oncommand="MsgSortByFlagged()"/>
+              <menuitem id="sortByFlagMenuitem" type="radio" name="sortby" label="&sortByStarCmd.label;" accesskey="&sortByStarCmd.accesskey;" oncommand="MsgSortByFlagged()"/>
               <menuitem id="sortByOrderReceivedMenuitem" type="radio" name="sortby" label="&sortByOrderReceivedCmd.label;"  accesskey="&sortByOrderReceivedCmd.accesskey;" oncommand="MsgSortByOrderReceived()"/>
               <menuitem id="sortByPriorityMenuitem" type="radio" name="sortby" label="&sortByPriorityCmd.label;" accesskey="&sortByPriorityCmd.accesskey;" oncommand="MsgSortByPriority()"/>
               <menuitem id="sortBySenderMenuitem" type="radio" name="sortby" label="&sortBySenderCmd.label;" accesskey="&sortBySenderCmd.accesskey;" oncommand="MsgSortBySender()"/>
@@ -1346,7 +1346,7 @@
                         key="key_nextUnreadMsg"
 #endif
               />
-              <menuitem label="&nextFlaggedMsgCmd.label;" accesskey="&nextFlaggedMsgCmd.accesskey;" observes="cmd_nextFlaggedMsg"/>
+              <menuitem label="&nextStarredMsgCmd.label;" accesskey="&nextStarredMsgCmd.accesskey;" observes="cmd_nextFlaggedMsg"/>
               <menuseparator/>
               <menuitem label="&nextUnreadThread.label;" accesskey="&nextUnreadThreadCmd.accesskey;" observes="cmd_nextUnreadThread"
 #ifndef XP_MACOSX
@@ -1367,7 +1367,7 @@
                         key="key_previousUnreadMsg"
 #endif
               />
-              <menuitem label="&prevFlaggedMsgCmd.label;" accesskey="&previousFlaggedMsgCmd.accesskey;" observes="cmd_previousFlaggedMsg"/>
+              <menuitem label="&prevStarredMsgCmd.label;" accesskey="&prevStarredMsgCmd.accesskey;" observes="cmd_previousFlaggedMsg"/>
             </menupopup>
           </menu>
           <menuseparator id="goNextSeparator"/>
@@ -1577,8 +1577,8 @@
                 <menuseparator/>
                 <menuitem id="markFlaggedMenuItem" 
                           type="checkbox" 
-                          label="&markFlaggedCmd.label;" 
-                          accesskey="&markFlaggedCmd.accesskey;" 
+                          label="&markStarredCmd.label;" 
+                          accesskey="&markStarredCmd.accesskey;" 
                           observes="cmd_markAsFlagged"
 #ifndef XP_MACOSX
                       key="key_toggleFlagged"
@@ -1862,7 +1862,8 @@
                 <menuitem label="&markReadByDateCmd.label;" key="key_markReadByDate" accesskey="&markReadByDateCmd.accesskey;" command="cmd_markReadByDate"/>
                 <menuitem label="&markAllReadCmd.label;" key="key_markAllRead" accesskey="&markAllReadCmd.accesskey;" observes="cmd_markAllRead"/>
                 <menuseparator/>
-                <menuitem type="checkbox" id="markFlaggedToolbarItem" label="&markFlaggedCmd.label;" accesskey="&markFlaggedCmd.accesskey;" observes="cmd_markAsFlagged"/>
+                <menuitem type="checkbox" id="markFlaggedToolbarItem" label="&markStarredCmd.label;" accesskey="&markStarredCmd.accesskey;" 
+                          key="key_toggleFlagged" observes="cmd_markAsFlagged"/>
             </menupopup>
       </toolbarbutton>
 

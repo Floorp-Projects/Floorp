@@ -95,7 +95,7 @@
 <!ENTITY forwardTo.label "Forward Message to">
 <!ENTITY replyWithTemplate.label "Reply with Template">
 <!ENTITY markMessageRead.label "Mark As Read">
-<!ENTITY markMessageFlagged.label "Mark As Flagged">
+<!ENTITY markMessageStarred.label "Mark As Flagged">
 <!ENTITY labelMessage.label "Label Message As">
 <!ENTITY setPriority.label "Set Priority to">
 <!ENTITY addTag.label "Tag Message">

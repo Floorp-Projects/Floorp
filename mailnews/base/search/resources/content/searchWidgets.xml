@@ -69,7 +69,7 @@
             <xul:menuitem label="&replyWithTemplate.label;" value="replytomessage" enablefornews="false"/>         
             <xul:menuseparator/>
             <xul:menuitem label="&markMessageRead.label;" value="markasread"/>
-            <xul:menuitem label="&markMessageFlagged.label;" value="markasflagged"/>
+            <xul:menuitem label="&markMessageStarred.label;" value="markasflagged"/>
             <xul:menuitem label="&setPriority.label;"  value="setpriorityto"/>
             <xul:menuitem label="&addTag.label;"  value="addtagtomessage"/>
             <xul:menuitem label="&setJunkScore.label;" value="setjunkscore" enablefornews="false"/>
