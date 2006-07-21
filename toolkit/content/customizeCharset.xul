@@ -62,7 +62,7 @@
       <label value="&additional.label;" control="available_charsets"/>
       <!-- Available Charsets Tree -->
       <listbox id="available_charsets" flex="1" seltype="multiple"
-            onfocus = "document.getElementById('active_charsets').clearSelection();"
+            onfocus = "document.getElementById('active_charsets').clearSelection(); this.selectItem(this.currentItem || this.getItemAtIndex(0));"
             onselect="update_buttons();"
             ondblclick="AddAvailableCharset();"/>
       
@@ -79,7 +79,7 @@
     <vbox flex="1">
       <label value="&current.label;" control="active_charsets"/>
       <listbox id="active_charsets" flex="1" seltype="multiple"
-            onfocus = "document.getElementById('available_charsets').clearSelection();"
+            onfocus = "document.getElementById('available_charsets').clearSelection(); this.selectItem(this.currentItem || this.getItemAtIndex(0));"
             onselect="update_buttons();"
             ondblclick="RemoveActiveCharset();"/>
       
