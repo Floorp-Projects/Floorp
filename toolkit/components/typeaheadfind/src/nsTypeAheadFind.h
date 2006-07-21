@@ -58,16 +58,6 @@
 #define TYPEAHEADFIND_NOTFOUND_WAV_URL \
         "chrome://global/content/notfound.wav"
 
-enum {
-  eRepeatingNone,
-  eRepeatingChar,
-  eRepeatingCharReverse,
-  eRepeatingForward,
-  eRepeatingReverse
-}; 
-
-const int kMaxBadCharsBeforeCancel = 3;
-
 class nsTypeAheadFind : public nsITypeAheadFind,
                         public nsIObserver,
                         public nsSupportsWeakReference
@@ -85,7 +75,6 @@ protected:
 
   void SaveFind();
   void PlayNotFoundSound(); 
-  nsresult FindInternal(PRBool aFindBackwards, PRBool aHasFocus, PRUint16* aResult);
   nsresult GetWebBrowserFind(nsIDocShell *aDocShell,
                              nsIWebBrowserFind **aWebBrowserFind);
 
@@ -98,17 +87,14 @@ protected:
                         nsIDOMRange *aRange, PRBool aMustBeVisible, 
                         PRBool aGetTopVisibleLeaf, nsIDOMRange **aNewRange,
                         PRBool *aUsesIndependentSelection);
-  nsresult FindItNow(nsIPresShell *aPresShell, PRBool aIsRepeatingSameChar, 
-                     PRBool aIsLinksOnly, PRBool aIsFirstVisiblePreferred, 
-                     PRBool aFindNext, PRBool aHasFocus, PRUint16* aResult);
+  nsresult FindItNow(nsIPresShell *aPresShell, PRBool aIsLinksOnly,
+                     PRBool aIsFirstVisiblePreferred, PRBool aFindPrev,
+                     PRBool aHasFocus, PRUint16* aResult);
   nsresult GetSearchContainers(nsISupports *aContainer,
                                nsISelectionController *aSelectionController,
-                               PRBool aIsRepeatingSameChar,
-                               PRBool aIsFirstVisiblePreferred, 
-                               nsIPresShell **aPresShell, 
+                               PRBool aIsFirstVisiblePreferred,
+                               PRBool aFindPrev, nsIPresShell **aPresShell,
                                nsPresContext **aPresContext);
-
-  nsresult Cancel();
 
   // Get the pres shell from mPresShell and return it only if it is still
   // attached to the DOM window.
@@ -128,12 +114,6 @@ protected:
   nsCOMPtr<nsIDOMElement> mFoundLink;     // Most recent elem found, if a link
   nsCOMPtr<nsIDOMElement> mFoundEditable; // Most recent elem found, if editable
   nsCOMPtr<nsIDOMWindow> mCurrentWindow;
-  PRPackedBool mLiteralTextSearchOnly;
-  PRPackedBool mDontTryExactMatch;
-  // mAllTheSame Char starts out PR_TRUE, becomes false when 
-  // at least 2 different chars typed
-  PRPackedBool mAllTheSameChar;
-  PRInt32 mRepeatingMode;
   // mLastFindLength is the character length of the last find string.  It is used for
   // disabling the "not found" sound when using backspace or delete
   PRUint32 mLastFindLength;

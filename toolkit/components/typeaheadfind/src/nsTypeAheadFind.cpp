@@ -114,17 +114,13 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 
 nsTypeAheadFind::nsTypeAheadFind():
   mLinksOnlyPref(PR_FALSE), mStartLinksOnlyPref(PR_FALSE),
-  mLinksOnly(PR_FALSE), mCaretBrowsingOn(PR_FALSE),
-  mLiteralTextSearchOnly(PR_FALSE), mDontTryExactMatch(PR_FALSE), 
-  mAllTheSameChar(PR_TRUE), mRepeatingMode(eRepeatingNone), 
-  mLastFindLength(0), mIsSoundInitialized(PR_FALSE)
+  mLinksOnly(PR_FALSE), mCaretBrowsingOn(PR_FALSE), mLastFindLength(0),
+  mIsSoundInitialized(PR_FALSE)
 {
 }
 
 nsTypeAheadFind::~nsTypeAheadFind()
 {
-  Cancel();
-
   nsCOMPtr<nsIPrefBranch2> prefInternal(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (prefInternal) {
     prefInternal->RemoveObserver("accessibility.typeaheadfind", this);
@@ -272,7 +268,7 @@ void
 nsTypeAheadFind::SaveFind()
 {
   if (mWebBrowserFind)
-    mWebBrowserFind->SetSearchString(PromiseFlatString(mTypeAheadBuffer).get());
+    mWebBrowserFind->SetSearchString(mTypeAheadBuffer.get());
   
   // save the length of this find for "not found" sound
   mLastFindLength = mTypeAheadBuffer.Length();
@@ -308,9 +304,8 @@ nsTypeAheadFind::PlayNotFoundSound()
 }
 
 nsresult
-nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell,
-                           PRBool aIsRepeatingSameChar, PRBool aIsLinksOnly,
-                           PRBool aIsFirstVisiblePreferred, PRBool aFindNext,
+nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, PRBool aIsLinksOnly,
+                           PRBool aIsFirstVisiblePreferred, PRBool aFindPrev,
                            PRBool aHasFocus, PRUint16* aResult)
 {
   *aResult = FIND_NOTFOUND;
@@ -396,8 +391,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell,
                                     (!aIsFirstVisiblePreferred ||
                                      mStartFindRange) ?
                                     selectionController : nsnull,
-                                    aIsRepeatingSameChar,
-                                    aIsFirstVisiblePreferred, 
+                                    aIsFirstVisiblePreferred,  aFindPrev,
                                     getter_AddRefs(presShell),
                                     getter_AddRefs(presContext)))) {
     return NS_ERROR_FAILURE;
@@ -408,21 +402,15 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell,
   // No need to wrap find in doc if starting at beginning
   PRBool hasWrapped = (rangeCompareResult < 0);
 
-  nsAutoString findBuffer;
-  if (aIsRepeatingSameChar)
-    findBuffer = mTypeAheadBuffer.First();
-  else
-    findBuffer = PromiseFlatString(mTypeAheadBuffer);
-
-  if (findBuffer.IsEmpty())
+  if (mTypeAheadBuffer.IsEmpty())
     return NS_ERROR_FAILURE;
 
-  mFind->SetFindBackwards(mRepeatingMode == eRepeatingCharReverse || mRepeatingMode == eRepeatingReverse);
+  mFind->SetFindBackwards(aFindPrev);
 
   while (PR_TRUE) {    // ----- Outer while loop: go through all docs -----
     while (PR_TRUE) {  // === Inner while loop: go through a single doc ===
-      mFind->Find(findBuffer.get(), mSearchRange, mStartPointRange,
-                  mEndPointRange, getter_AddRefs(returnRange));            
+      mFind->Find(mTypeAheadBuffer.get(), mSearchRange, mStartPointRange,
+                  mEndPointRange, getter_AddRefs(returnRange));
       
       if (!returnRange)
         break;  // Nothing found in this doc, go to outer loop (try next doc)
@@ -441,7 +429,6 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell,
                           aIsFirstVisiblePreferred, PR_FALSE,
                           getter_AddRefs(mStartPointRange), 
                           &usesIndependentSelection) ||
-          (aIsRepeatingSameChar && !isStartingLink) ||
           (aIsLinksOnly && !isInsideLink) ||
           (mStartLinksOnlyPref && aIsLinksOnly && !isStartingLink)) {
         // ------ Failure ------
@@ -449,7 +436,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell,
         returnRange->CloneRange(getter_AddRefs(mStartPointRange));
 
         // Collapse to end
-        mStartPointRange->Collapse(mRepeatingMode == eRepeatingReverse || mRepeatingMode == eRepeatingCharReverse);
+        mStartPointRange->Collapse(aFindPrev);
 
         continue;
       }
@@ -615,16 +602,14 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell,
     }
 
     if (continueLoop) {
-      if (NS_FAILED(GetSearchContainers(currentContainer,
-                                        nsnull,
-                                        aIsRepeatingSameChar,
-                                        aIsFirstVisiblePreferred,
+      if (NS_FAILED(GetSearchContainers(currentContainer, nsnull,
+                                        aIsFirstVisiblePreferred, aFindPrev,
                                         getter_AddRefs(presShell),
                                         getter_AddRefs(presContext)))) {
         continue;
       }
 
-      if (mRepeatingMode == eRepeatingCharReverse || mRepeatingMode == eRepeatingReverse) {
+      if (aFindPrev) {
         // Reverse mode: swap start and end points, so that we start
         // at end of document and go to beginning
         nsCOMPtr<nsIDOMRange> tempRange;
@@ -680,8 +665,8 @@ nsTypeAheadFind::GetCurrentWindow(nsIDOMWindow** aCurrentWindow)
 nsresult
 nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
                                      nsISelectionController *aSelectionController,
-                                     PRBool aIsRepeatingSameChar,
                                      PRBool aIsFirstVisiblePreferred,
+                                     PRBool aFindPrev,
                                      nsIPresShell **aPresShell,
                                      nsPresContext **aPresContext)
 {
@@ -756,14 +741,12 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
   else {
     PRInt32 startOffset;
     nsCOMPtr<nsIDOMNode> startNode;
-    if ((aIsRepeatingSameChar && mRepeatingMode != eRepeatingCharReverse) || 
-        mRepeatingMode == eRepeatingForward) {
-      currentSelectionRange->GetEndContainer(getter_AddRefs(startNode));
-      currentSelectionRange->GetEndOffset(&startOffset);
-    }
-    else {
+    if (aFindPrev) {
       currentSelectionRange->GetStartContainer(getter_AddRefs(startNode));
       currentSelectionRange->GetStartOffset(&startOffset);
+    } else {
+      currentSelectionRange->GetEndContainer(getter_AddRefs(startNode));
+      currentSelectionRange->GetEndOffset(&startOffset);
     }
     if (!startNode)
       startNode = rootNode;    
@@ -888,58 +871,21 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
 NS_IMETHODIMP
 nsTypeAheadFind::FindPrevious(PRBool aHasFocus, PRUint16* aResult)
 {
-  return FindInternal(PR_TRUE, aHasFocus, aResult);
+  *aResult = FIND_NOTFOUND;
+
+  if (!mTypeAheadBuffer.IsEmpty())
+    FindItNow(nsnull, mLinksOnly, PR_FALSE, PR_TRUE, aHasFocus, aResult);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsTypeAheadFind::FindNext(PRBool aHasFocus, PRUint16* aResult)
 {
-  return FindInternal(PR_FALSE, aHasFocus, aResult); 
-}
-
-nsresult
-nsTypeAheadFind::FindInternal(PRBool aFindBackwards, PRBool aHasFocus,
-                              PRUint16* aResult)
-{
   *aResult = FIND_NOTFOUND;
 
-  if (mTypeAheadBuffer.IsEmpty())
-    return NS_OK;
-
-  PRBool repeatingSameChar = PR_FALSE;
-
-  if (mRepeatingMode == eRepeatingChar || 
-      mRepeatingMode == eRepeatingCharReverse) {
-    mRepeatingMode = aFindBackwards? eRepeatingCharReverse: eRepeatingChar;
-    repeatingSameChar = PR_TRUE;
-  }
-  else {
-    mRepeatingMode = aFindBackwards? eRepeatingReverse: eRepeatingForward;
-  }
-  mLiteralTextSearchOnly = PR_TRUE;
-
-  if (NS_FAILED(FindItNow(nsnull, repeatingSameChar, mLinksOnly, PR_FALSE,
-                          !aFindBackwards, aHasFocus, aResult)))
-    mRepeatingMode = eRepeatingNone;
-
-  return NS_OK;
-}
-
-nsresult
-nsTypeAheadFind::Cancel()
-{
-  if (mRepeatingMode != eRepeatingNone)
-    mTypeAheadBuffer.Truncate();  
-
-  // These will be initialized to their true values after
-  // the first character is typed
-  mCaretBrowsingOn = PR_FALSE;
-  mLiteralTextSearchOnly = PR_FALSE;
-  mDontTryExactMatch = PR_FALSE;
-  mStartFindRange = nsnull;
-  mAllTheSameChar = PR_TRUE; // Until at least 2 different chars are typed
-
-  mSelectionController = nsnull;
+  if (!mTypeAheadBuffer.IsEmpty())
+    FindItNow(nsnull, mLinksOnly, PR_FALSE, PR_FALSE, aHasFocus, aResult);
 
   return NS_OK;
 }
@@ -974,9 +920,15 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, PRBool aLinksOnly,
     selection->CollapseToStart();
 
   if (aSearchString.IsEmpty()) {
-    mTypeAheadBuffer = aSearchString;
+    mTypeAheadBuffer.Truncate();
+
+    // These will be initialized to their true values after the first character
+    // is typed
+    mStartFindRange = nsnull;
+    mSelectionController = nsnull;
+
     *aResult = FIND_FOUND;
-    return Cancel();
+    return NS_OK;
   }
 
   PRBool atEnd = PR_FALSE;    
@@ -1017,20 +969,6 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, PRBool aLinksOnly,
 
   PRInt32 bufferLength = mTypeAheadBuffer.Length();
 
-  // --------- New char in repeated char mode ---------
-  if ((mRepeatingMode == eRepeatingChar ||
-           mRepeatingMode == eRepeatingCharReverse) && 
-           bufferLength > 1/* && aChar != mTypeAheadBuffer.First()*/) {
-    // If they repeat the same character and then change, such as aaaab
-    // start over with new char as a repeated char find
-    //mTypeAheadBuffer = aChar;
-  }
-  // ------- Set repeating mode ---------
-  else if (bufferLength > 0) /*mTypeAheadBuffer.First() != aChar*/ {
-    mRepeatingMode = eRepeatingNone;
-    mAllTheSameChar = PR_FALSE; 
-  }
-
   mTypeAheadBuffer = aSearchString;
 
   PRBool isFirstVisiblePreferred = PR_FALSE;
@@ -1042,8 +980,6 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, PRBool aLinksOnly,
     if (!mLinksOnly)
       mLinksOnly = mLinksOnlyPref;
  
-    mRepeatingMode = eRepeatingNone;
-
     // If you can see the selection (not collapsed or thru caret browsing),
     // or if already focused on a page element, start there.
     // Otherwise we're going to start at the first visible element
@@ -1072,25 +1008,8 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, PRBool aLinksOnly,
   }
 
   // ----------- Find the text! ---------------------
-  nsresult rv = NS_ERROR_FAILURE;
-
-  if (!mDontTryExactMatch) {
-    // Regular find, not repeated char find
-
-    // Prefer to find exact match
-    rv = FindItNow(nsnull, PR_FALSE, mLinksOnly, isFirstVisiblePreferred,
-                   PR_FALSE, aHasFocus, aResult);
-  }
-
-#ifndef NO_LINK_CYCLE_ON_SAME_CHAR
-  if (NS_FAILED(rv) && !mLiteralTextSearchOnly && mAllTheSameChar && 
-      mTypeAheadBuffer.Length() > 1) {
-    mRepeatingMode = eRepeatingChar;
-    mDontTryExactMatch = PR_TRUE;  // Repeated character find mode
-    rv = FindItNow(nsnull, PR_TRUE, PR_TRUE, isFirstVisiblePreferred, PR_FALSE,
-                   aHasFocus, aResult);
-  }
-#endif
+  nsresult rv = FindItNow(nsnull, mLinksOnly, isFirstVisiblePreferred,
+                          PR_FALSE, aHasFocus, aResult);
 
   // ---------Handle success or failure ---------------
   if (NS_SUCCEEDED(rv)) {
@@ -1108,8 +1027,6 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, PRBool aLinksOnly,
     }
   }
   else {
-    mRepeatingMode = eRepeatingNone;
-
     // Error sound
     if (mTypeAheadBuffer.Length() > mLastFindLength)
       PlayNotFoundSound();
