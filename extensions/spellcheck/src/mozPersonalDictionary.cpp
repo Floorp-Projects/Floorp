@@ -50,6 +50,7 @@
 #include "nsCRT.h"
 #include "nsNetUtil.h"
 #include "nsStringEnumerator.h"
+#include "nsUnicharInputStream.h"
 
 #define MOZ_PERSONAL_DICT_NAME "persdict.dat"
 
@@ -120,8 +121,10 @@ NS_IMETHODIMP mozPersonalDictionary::Load()
   
   nsCOMPtr<nsIInputStream> inStream;
   NS_NewLocalFileInputStream(getter_AddRefs(inStream), theFile);
+
   nsCOMPtr<nsIUnicharInputStream> convStream;
-  res = NS_NewUTF8ConverterStream(getter_AddRefs(convStream), inStream, 0);
+  res = nsSimpleUnicharStreamFactory::GetInstance()->
+    CreateInstanceFromUTF8Stream(inStream, getter_AddRefs(convStream));
   if(NS_FAILED(res)) return res;
   
   // we're rereading to get rid of the old data  -- we shouldn't have any, but...

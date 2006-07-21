@@ -117,6 +117,7 @@ NS_DECL_CLASSINFO(nsStringInputStream)
 
 #include "nsHashPropertyBag.h"
 
+#include "nsUnicharInputStream.h"
 #include "nsVariant.h"
 
 #include "nsUUIDGenerator.h"
@@ -155,6 +156,7 @@ extern void _FreeAutoLockStatics();
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kMemoryCID, NS_MEMORY_CID);
 static NS_DEFINE_CID(kINIParserFactoryCID, NS_INIPARSERFACTORY_CID);
+static NS_DEFINE_CID(kSimpleUnicharStreamFactoryCID, NS_SIMPLE_UNICHAR_STREAM_FACTORY_CID);
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsProcess)
 
@@ -627,6 +629,12 @@ NS_InitXPCOM3(nsIServiceManager* *result,
                                        "nsINIParserFactory",
                                        NS_INIPARSERFACTORY_CONTRACTID, 
                                        iniParserFactory);
+
+        registrar->
+          RegisterFactory(kSimpleUnicharStreamFactoryCID,
+                          "nsSimpleUnicharStreamFactory",
+                          NS_SIMPLE_UNICHAR_STREAM_FACTORY_CONTRACTID,
+                          nsSimpleUnicharStreamFactory::GetInstance());
     }
 
     // Pay the cost at startup time of starting this singleton.

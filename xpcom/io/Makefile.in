@@ -137,6 +137,7 @@ XPIDLSRCS	= \
 		nsILocalFileWin.idl \
 		nsILineInputStream.idl \
 		nsIUnicharLineInputStream.idl \
+		nsISimpleUnicharStreamFactory.idl \
 		nsIMultiplexInputStream.idl \
 		nsIObjectInputStream.idl \
 		nsIObjectOutputStream.idl \

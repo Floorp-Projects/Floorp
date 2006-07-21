@@ -86,4 +86,7 @@ EXTRA_DSO_LDOPTS = \
 
 include $(topsrcdir)/config/rules.mk
 
+LOCAL_INCLUDES += \
+	-I$(topsrcdir)/xpcom/io \
+	$(NULL)
 

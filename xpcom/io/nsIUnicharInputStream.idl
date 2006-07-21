@@ -38,6 +38,7 @@
 #include "nsISupports.idl"
 
 interface nsIUnicharInputStream;
+interface nsIInputStream;
 
 %{C++
 /**
@@ -125,31 +126,3 @@ interface nsIUnicharInputStream : nsISupports {
   */
   void close();
 };
-
-%{C++
-#include "nsStringFwd.h"
-class nsIInputStream;
-
-/**
- * Create a nsIUnicharInputStream that wraps up a string. Data is fed
- * from the string out until the done. When this object is destroyed
- * it destroys the string by calling |delete| on the pointer if
- * aTakeOwnership is set.  If aTakeOwnership is not set, you must
- * ensure that the string outlives the stream!
- */
-extern NS_COM nsresult
-  NS_NewStringUnicharInputStream(nsIUnicharInputStream** aInstancePtrResult,
-                                 const nsAString* aString,
-                                 PRBool aTakeOwnership);
-
-/**
- * Create a new nsUnicharInputStream that provides a converter for the
- * byte input stream aStreamToWrap. If no converter can be found then
- * nsnull is returned and the error code is set to
- * NS_INPUTSTREAM_NO_CONVERTER.
- */
-extern NS_COM nsresult
-  NS_NewUTF8ConverterStream(nsIUnicharInputStream** aInstancePtrResult,
-                            nsIInputStream* aStreamToWrap,
-                            PRInt32 aBufferSize = 0);
-%}
