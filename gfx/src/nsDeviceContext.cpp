@@ -55,11 +55,13 @@ NS_IMPL_ISUPPORTS3(DeviceContextImpl, nsIDeviceContext, nsIObserver, nsISupports
 
 DeviceContextImpl::DeviceContextImpl()
 {
-  mFontCache = nsnull;
+
   mDevUnitsToAppUnits = 1.0f;
   mAppUnitsToDevUnits = 1.0f;
+  mTwipsToPixels = 1.0f;
+  mPixelsToTwips = 1.0f;
+  mFontCache = nsnull;
   mCPixelScale = 1.0f;
-  mZoom = 1.0f;
   mWidget = nsnull;
   mFontAliasTable = nsnull;
 
@@ -339,18 +341,6 @@ NS_IMETHODIMP DeviceContextImpl::GetMetricsFor(const nsFont& aFont, nsIFontMetri
     GetLocaleLangGroup();
   }
   return mFontCache->GetMetricsFor(aFont, mLocaleLangGroup, aMetrics);
-}
-
-NS_IMETHODIMP DeviceContextImpl::SetZoom(float aZoom)
-{
-  mZoom = aZoom;
-  return NS_OK;
-}
-
-NS_IMETHODIMP DeviceContextImpl::GetZoom(float &aZoom) const
-{
-  aZoom = mZoom;
-  return NS_OK;
 }
 
 NS_IMETHODIMP DeviceContextImpl::GetDepth(PRUint32& aDepth)

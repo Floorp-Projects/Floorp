@@ -1530,36 +1530,14 @@ NS_IMETHODIMP
 nsDocShell::GetZoom(float *zoom)
 {
     NS_ENSURE_ARG_POINTER(zoom);
-    NS_ENSURE_SUCCESS(EnsureDeviceContext(), NS_ERROR_FAILURE);
-
-    NS_ENSURE_SUCCESS(mDeviceContext->GetZoom(*zoom), NS_ERROR_FAILURE);
-
+    *zoom = 1.0f;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDocShell::SetZoom(float zoom)
 {
-    NS_ENSURE_SUCCESS(EnsureDeviceContext(), NS_ERROR_FAILURE);
-    mDeviceContext->SetZoom(zoom);
-
-    // get the pres shell
-    nsCOMPtr<nsIPresShell> presShell;
-    NS_ENSURE_SUCCESS(GetPresShell(getter_AddRefs(presShell)),
-                      NS_ERROR_FAILURE);
-    NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
-
-    // get the view manager
-    nsIViewManager* vm = presShell->GetViewManager();
-    NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
-
-    // get the root view
-    nsIView *rootView = nsnull; // views are not ref counted
-    vm->GetRootView(rootView);
-    if (rootView)
-        vm->UpdateView(rootView, 0);
-
-    return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

@@ -137,15 +137,10 @@ protected:
     PRUint32 mDepth;
 
 private:
-    nsNativeWidget mWidget;
-
     nsCOMPtr<nsIScreenManager> mScreenManager;
 
-    float mWidthFloat;
-    float mHeightFloat;
     PRInt32 mWidth;
     PRInt32 mHeight;
-    PRInt32 mDpi;
 
     PRBool mPrinter;
 

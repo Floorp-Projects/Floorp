@@ -106,14 +106,10 @@ nsThebesDeviceContext::nsThebesDeviceContext()
 
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("#### Creating DeviceContext %p\n", this));
 
-    mDevUnitsToAppUnits = 1.0f;
-    mAppUnitsToDevUnits = 1.0f;
-    mCPixelScale = 1.0f;
-    mZoom = 1.0f;
     mDepth = 0;
-    mDpi = -1;
+    mWidth = 0;
+    mHeight = 0;
 
-    mWidget = nsnull;
     mPrinter = PR_FALSE;
 
     mWidgetSurfaceCache.Init();
@@ -140,7 +136,7 @@ nsThebesDeviceContext::SetDPI(PRInt32 aPrefDPI)
     PRInt32 OSVal;
     PRBool do_round = PR_TRUE;
 
-    mDpi = 96;
+    PRInt32 dpi = 96;
 
 #if defined(MOZ_ENABLE_GTK2)
     float screenWidthIn = float(::gdk_screen_width_mm()) / 25.4f;
@@ -149,22 +145,22 @@ nsThebesDeviceContext::SetDPI(PRInt32 aPrefDPI)
     if (aPrefDPI > 0) {
         // If there's a valid pref value for the logical resolution,
         // use it.
-        mDpi = aPrefDPI;
+        dpi = aPrefDPI;
     } else if ((aPrefDPI == 0) || (OSVal > 96)) {
         // Either if the pref is 0 (force use of OS value) or the OS
         // value is bigger than 96, use the OS value.
-        mDpi = OSVal;
+        dpi = OSVal;
     } else {
         // if we couldn't get the pref or it's negative, and the OS
         // value is under 96ppi, then use 96.
-        mDpi = 96;
+        dpi = 96;
     }
 
     if (mPrinter) {
         // cairo printing doesn't really have the
         // notion of DPI so we have to use 72...
         // XXX is this an issue? we force everything else to be 96+
-        mDpi = 72;
+        dpi = 72;
         do_round = PR_FALSE;
     }
 
@@ -180,13 +176,13 @@ nsThebesDeviceContext::SetDPI(PRInt32 aPrefDPI)
         ReleaseDC((HWND)nsnull, dc);
 
     if (OSVal != 0)
-        mDpi = OSVal;
+        dpi = OSVal;
 #endif
 
     int in2pt = 72;
 
     // make p2t a nice round number - this prevents rounding problems
-    mPixelsToTwips = float(NSIntPointsToTwips(in2pt)) / float(mDpi);
+    mPixelsToTwips = float(NSIntPointsToTwips(in2pt)) / float(dpi);
     if (do_round)
         mPixelsToTwips = float(NSToIntRound(mPixelsToTwips));
     mTwipsToPixels = 1.0f / mPixelsToTwips;

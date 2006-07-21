@@ -401,11 +401,6 @@ public:
    */
   NS_IMETHOD  GetMetricsFor(const nsFont& aFont, nsIFontMetrics*& aMetrics) = 0;
 
-  //get and set the document zoom value used for display-time
-  //scaling. default is 1.0 (no zoom)
-  NS_IMETHOD  SetZoom(float aZoom) = 0;
-  NS_IMETHOD  GetZoom(float &aZoom) const = 0;
-
   /**
    * Check to see if a particular named font exists.
    * @param aFontName character string of font face name
