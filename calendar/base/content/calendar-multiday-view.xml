@@ -1351,6 +1351,9 @@
           this.mainbox.appendChild(itemBox);
           itemBox.calendarView = this.calendarView;
           itemBox.occurrence = aItem;
+          var ctxt = this.calendarView.getAttribute("item-context") ||
+                     this.calendarView.getAttribute("context");
+          itemBox.setAttribute("context", ctxt);
 
           this.mItemBoxes.push(itemBox);
         ]]></body>
