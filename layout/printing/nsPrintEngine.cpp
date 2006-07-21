@@ -931,9 +931,7 @@ nsPrintEngine::PrintPreview(nsIPrintSettings* aPrintSettings,
   // Check to see if we need to transfer any of our old values
   // over to the new PrintData object
   if (mOldPrtPreview) {
-    mPrt->mOrigZoom     = mOldPrtPreview->mOrigZoom;
     mPrt->mOrigDCScale  = mOldPrtPreview->mOrigDCScale;
-
   } else {
     // Get the Original PixelScale in case we need to start changing it
     mDeviceContext->GetCanonicalPixelScale(mPrt->mOrigDCScale);
@@ -1083,10 +1081,6 @@ nsPrintEngine::PrintPreview(nsIPrintSettings* aPrintSettings,
   mPrt->mPrintSettings->SetPrintRange(nsIPrintSettings::kRangeAllPages);
 
   mPrt->mPrintDC = mDeviceContext;
-
-  // Cache original Zoom value and then set it to 1.0
-  mPrt->mPrintDC->GetZoom(mPrt->mOrigZoom);
-  mPrt->mPrintDC->SetZoom(1.0f);
 
   if (mDeviceContext) {
     mDeviceContext->SetUseAltDC(kUseAltDCFor_FONTMETRICS, PR_TRUE);
