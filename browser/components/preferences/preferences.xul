@@ -93,6 +93,10 @@
               src="chrome://browser/content/preferences/tabs.xul"/>
     <prefpane id="paneContent" label="&paneContent.title;"
               src="chrome://browser/content/preferences/content.xul"/>
+#ifdef MOZ_FEEDS
+    <prefpane id="paneFeeds" label="&paneFeeds.title;"
+              src="chrome://browser/content/preferences/feeds.xul"/>
+#endif
     <prefpane id="panePrivacy" label="&panePrivacy.title;"
               src="chrome://browser/content/preferences/privacy.xul"/>
     <prefpane id="paneSecurity" label="&paneSecurity.title;"

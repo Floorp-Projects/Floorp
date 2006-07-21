@@ -66,7 +66,6 @@
       <preference id="privacy.item.cache"                 name="privacy.item.cache"                 type="bool"/>
       <preference id="privacy.item.sessions"              name="privacy.item.sessions"              type="bool"/>
 
-      <preference id="privacy.sanitize.sanitizeOnShutdown" name="privacy.sanitize.sanitizeOnShutdown" type="bool"/>
       <preference id="privacy.sanitize.promptOnSanitize"   name="privacy.sanitize.promptOnSanitize"   type="bool"/>
     </preferences>
 
@@ -86,9 +85,7 @@
     
     <groupbox orient="vertical" align="start">
       <caption label="&settings.label;"/>
-      <checkbox label="&sanitizeOnShutDown.label;"
-                accesskey="&sanitizeOnShutDown.accesskey;"
-                preference="privacy.sanitize.sanitizeOnShutdown"/>
+<!-- XXX remove groupbox? -->
       <checkbox id="promptOnSanitize" label="&promptOnSanitize.label;"
                 accesskey="&promptOnSanitize.accesskey;"
                 preference="privacy.sanitize.promptOnSanitize"/>

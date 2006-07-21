@@ -5,29 +5,30 @@
 
 <!ENTITY  loadImages.label            "Load images automatically">
 <!ENTITY  loadImages.accesskey        "I">
-<!ENTITY  imageExceptions.label       "Exceptions">
-<!ENTITY  imageExceptions.accesskey   "x">
+<!ENTITY  exceptions.label            "Exceptions...">
+<!ENTITY  exceptions.accesskey        "x">
 
 <!ENTITY  enableJavaScript.label      "Enable JavaScript">
 <!ENTITY  enableJavaScript.accesskey  "J">
 <!ENTITY  advancedJS.label            "Advanced...">
 <!ENTITY  advancedJS.accesskey        "v">
 
-<!ENTITY  fontsColors.label           "Change default fonts and colors:">
+<!ENTITY  enableJava.label            "Enable Java">
+<!ENTITY  enableJava.accesskey        "n">
 
-<!ENTITY  fontsBtn.label              "Fonts...">
-<!ENTITY  fontsBtn.accesskey          "F">
 
-<!ENTITY  colors.label                "Colors...">
-<!ENTITY  colors.accesskey            "C">
+<!ENTITY  fontsAndColors.label        "Fonts &amp; Colors">
 
-<!ENTITY  font.label                  "Default font:">
-<!ENTITY  font.accesskey              "u">
+<!ENTITY  defaultFont.label                       "Default font:">
+<!ENTITY  defaultFont.accesskey                   "D">
+<!ENTITY  defaultSize.label                       "Size:">
+<!ENTITY  defaultSize.accesskey                   "i">
+
 <!ENTITY  advancedFonts.label         "Advanced...">
 <!ENTITY  advancedFonts.accesskey     "d">
 
-<!ENTITY  defaultSize.label           "Default size:">
-<!ENTITY  defaultSize.accesskey       "s">
+<!ENTITY  colors.label                "Colors...">
+<!ENTITY  colors.accesskey            "C">
 
 
 <!ENTITY  feeds.label                 "Feeds">

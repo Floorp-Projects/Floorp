@@ -91,6 +91,9 @@
                 accesskey="&addonExceptions.accesskey;"
                 oncommand="gSecurityPane.showAddonExceptions();"/>
       </hbox>
+
+      <separator class="thin"/>
+
       <checkbox id="checkMaybePhish"
                 label="&checkMaybePhish.label;"
                 accesskey="&checkMaybePhish.accesskey;"
@@ -143,7 +146,9 @@
                   oncommand="gSecurityPane.updateMasterPasswordButton();"
                   label="&useMasterPassword.label;"
                   accesskey="&useMasterPassword.accesskey;"/>
-        <button id="masterPassword"
+        <button id="changeMasterPassword"
+                label="&changeMasterPassword.label;"
+                accesskey="&changeMasterPassword.accesskey;"
                 oncommand="gSecurityPane.changeMasterPassword();"/>
       </hbox>
 

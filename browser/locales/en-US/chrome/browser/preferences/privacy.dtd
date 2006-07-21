@@ -36,10 +36,13 @@
 <!ENTITY  showCookies.accesskey         "S">
 
 
-<!ENTITY  clearPrivateData.label         "Clear Private Data">
+<!ENTITY  privateData.label             "Private Data">
 
 <!ENTITY  alwaysClear.label              "Always clear my private data when I close &brandShortName;">
 <!ENTITY  alwaysClear.accesskey          "w">
 
 <!ENTITY  clearDataSettings.label        "Settings...">
 <!ENTITY  clearDataSettings.accesskey    "t">
+
+<!ENTITY  clearDataNow.label             "Clear Now...">
+<!ENTITY  clearDataNow.accesskey         "N">

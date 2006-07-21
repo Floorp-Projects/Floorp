@@ -1,4 +1,4 @@
-<!ENTITY linksOpenIn.label            "When a link opens a new window, open it in:">
+<!ENTITY newPagesIn.label             "New pages should be opened in:">
 <!ENTITY inNewWindow.label            "a new window">
 <!ENTITY inNewWindow.accesskey        "w">
 <!ENTITY inNewTab.label               "a new tab">

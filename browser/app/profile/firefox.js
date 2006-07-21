@@ -477,6 +477,8 @@ pref("browser.contentHandlers.types.1.type", "application/vnd.mozilla.maybe.feed
 pref("browser.contentHandlers.types.2.title", "My Yahoo");
 pref("browser.contentHandlers.types.2.uri", "http://add.my.yahoo.com/rss?url=%s");
 pref("browser.contentHandlers.types.2.type", "application/vnd.mozilla.maybe.feed");
+
+pref("browser.feeds.handler", "ask");
 #endif
 
 #ifdef MOZ_SAFE_BROWSING
