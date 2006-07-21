@@ -47,12 +47,15 @@
       xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="searchbar">
+  <binding id="searchbar-base">
     <resources>
       <stylesheet src="chrome://browser/content/search/searchbarBindings.css"/>
       <stylesheet src="chrome://browser/skin/searchbar.css"/>
     </resources>
+  </binding>
 
+  <binding id="searchbar"
+           extends="chrome://browser/content/search/search.xml#searchbar-base">
     <content>
       <xul:stringbundle src="chrome://browser/locale/search.properties"
                         anonid="searchbar-stringbundle"/>
@@ -71,32 +74,24 @@
                        showcommentcolumn="true"
                        tabscrolling="true"
                        xbl:inherits="disableautocomplete,searchengine,src">
-            <xul:image align="center"
-                       class="searchbar-engine-image"
-                       anonid="searchbar-engine-image"
-                       xbl:inherits="src"/>
+            <xul:button class="searchbar-engine-button"
+                        type="menu"
+                        anonid="searchbar-engine-button"
+                        popup="_child"
+                        xbl:inherits="src">
+              <xul:menupopup class="searchbar-popup"
+                             anonid="searchbar-popup"
+                             position="after_start">
+                <xul:menuseparator/>
+                <xul:menuitem class="open-engine-manager"
+                              anonid="open-engine-manager"
+                              label="&cmd_engineManager.label;"
+                              accesskey="&cmd_engineManager.accesskey;"/>
+              </xul:menupopup>
+            </xul:button>
             <xul:hbox class="search-go-button-container">
-# XXX We'd like to add a context="_child" property to this toolbarbutton, but doing
-# so causes the context menu to show up for the textbox too, and subsequently crashes
-# the app on shutdown.  See bug 336662.
-#
-# XXX We'd also like to specify the menupopup position as after_end, as well as
-# probably adjusting its length to match that of the searchbar so the search
-# engine icons line up, but that's prevented by inconsistent behavior of the
-# popup position within a toolbarbutton.  See bug 336868.
               <xul:toolbarbutton class="search-go-button"
-                                 anonid="search-go-button"
-                                 type="menu-button">
-                <xul:menupopup class="searchbar-popup"
-                               anonid="searchbar-popup"
-                               position="after_start">
-                  <xul:menuseparator/>
-                  <xul:menuitem class="open-engine-manager"
-                                anonid="open-engine-manager"
-                                label="&cmd_engineManager.label;"
-                                accesskey="&cmd_engineManager.accesskey;"/>
-                </xul:menupopup>
-              </xul:toolbarbutton>
+                                 anonid="search-go-button" />
             </xul:hbox>
           </xul:textbox>
         </xul:box>
@@ -516,24 +511,19 @@
       <handler event="click"><![CDATA[
         const target = event.originalTarget;
         var anonid = target.getAttribute("anonid");
-        if (anonid == "searchbar-engine-image") {
-          this._textbox.focus();
-          this._textbox.select();
-        }
         /* We can't use checkForMiddleClick() from utilityOverlay.js here
            because the button is using a command handler rather than an oncommand
            attribute.  The middle-click behavior itself (i.e., opening the search 
            in a new tab) is handled in handleSearchCommand().
         */
-        else if (anonid == "button" && event.button == 1) {
+        if (anonid == "search-go-button" && event.button == 1)
           this.handleSearchCommand(event);
-        }
       ]]></handler>
 
       <handler event="command"><![CDATA[
         const target = event.originalTarget;
         var anonid = target.getAttribute("anonid");
-        if (anonid == "button")
+        if (anonid == "search-go-button")
           this.handleSearchCommand(event);
         else if (anonid == "open-engine-manager")
           this.openManager(event);
@@ -821,5 +811,18 @@
       ]]></handler>
 
     </handlers>
+  </binding>
+
+  <binding id="searchbar-engine-button"
+           extends="chrome://browser/content/search/search.xml#searchbar-base">
+    <content>
+      <xul:stack flex="1">
+        <xul:hbox align="center" class="searchbar-engine-image-container">
+          <xul:image class="searchbar-engine-image" xbl:inherits="src"/>
+        </xul:hbox>
+        <xul:image class="searchbar-dropmarker-image"/>
+      </xul:stack>
+      <children/>
+    </content>
   </binding>
 </bindings>

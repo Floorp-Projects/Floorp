@@ -2972,9 +2972,9 @@ const BrowserSearch = {
         searchRelRegex.test(erel) && searchHrefRegex.test(ehref))
     {
       const targetDoc = target.ownerDocument;
-      // Set the attribute of the (first) search button.
+      // Set the attribute of the (first) search-engine button.
       var searchButton = document.getAnonymousElementByAttribute(this.getSearchBar(),
-                                  "anonid", "search-go-button");
+                                  "anonid", "searchbar-engine-button");
       if (searchButton) {
         var browser = gBrowser.getBrowserForDocument(targetDoc);
          // Append the URI and an appropriate title to the browser data.
@@ -3028,7 +3028,7 @@ const BrowserSearch = {
    */
   updateSearchButton: function() {
     var searchButton = document.getAnonymousElementByAttribute(this.getSearchBar(),
-                                "anonid", "search-go-button");
+                                "anonid", "searchbar-engine-button");
     if (!searchButton)
       return;
     var engines = gBrowser.mCurrentBrowser.engines;
