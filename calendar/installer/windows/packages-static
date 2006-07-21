@@ -214,6 +214,7 @@ bin\components\calOutlookCSVImportExport.js
 bin\components\calRecurrenceInfo.js
 bin\components\calStorageCalendar.js
 bin\components\calTodo.js
+bin\components\calUtils.js
 bin\components\calWeekTitleService.js
 bin\components\FeedProcessor.js
 bin\components\pluginGlue.js
