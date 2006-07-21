@@ -3703,6 +3703,14 @@ NS_IMETHODIMP
 nsDocShell::GetPositionAndSize(PRInt32 * x, PRInt32 * y, PRInt32 * cx,
                                PRInt32 * cy)
 {
+    // We should really consider just getting this information from
+    // our window instead of duplicating the storage and code...
+    nsCOMPtr<nsIDOMDocument> document(do_GetInterface(GetAsSupports(mParent)));
+    nsCOMPtr<nsIDocument> doc(do_QueryInterface(document));
+    if (doc) {
+        doc->FlushPendingNotifications(Flush_Layout);
+    }
+    
     if (x)
         *x = mBounds.x;
     if (y)
