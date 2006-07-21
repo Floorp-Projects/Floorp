@@ -197,14 +197,11 @@ function getOccurrenceOrParent(occurrence) {
     var promptService = 
              Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                        .getService(Components.interfaces.nsIPromptService);
-    var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                        .getService(Components.interfaces.nsIStringBundleService);
-    var props =  sbs.createBundle("chrome://calendar/locale/calendar.properties");
 
-    var promptTitle = props.GetStringFromName("editRecurTitle");
-    var promptMessage = props.GetStringFromName("editRecurMessage");
-    var buttonLabel1 = props.GetStringFromName("editRecurAll");
-    var buttonLabel2 = props.GetStringFromName("editRecurSingle");
+    var promptTitle = calGetString("calendar", "editRecurTitle");
+    var promptMessage = calGetString("calendar", "editRecurMessage");
+    var buttonLabel1 = calGetString("calendar", "editRecurAll");
+    var buttonLabel2 = calGetString("calendar", "editRecurSingle");
 
     var flags = promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0 +
                 promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1 +

@@ -40,6 +40,8 @@
    - ***** END LICENSE BLOCK *****
 -->
 
+<!-- Note that this file depends on helper functions in calendarUtils.js-->
+
 <bindings id="calendar-month-view-bindings"
   xmlns="http://www.mozilla.org/xbl"
   xmlns:html="http://www.w3.org/1999/xhtml"
@@ -231,10 +233,7 @@
           var daylabel = document.getAnonymousElementByAttribute(this, "anonid", "day-label");
 
           if (val) {
-            var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                                .getService(Components.interfaces.nsIStringBundleService);
-            var props = sbs.createBundle("chrome://calendar/locale/dateFormat.properties");
-            var monthName = props.GetStringFromName("month." + (this.mDate.month+1) + ".Mmm");
+            var monthName = calGetString("dateFormat", "month." + (this.mDate.month+1) + ".Mmm");
             daylabel.setAttribute("value", this.mDate.day + " " + monthName);
           } else {
             daylabel.setAttribute("value", aDate.day);
@@ -263,10 +262,7 @@
 
           if (this.mShowMonthLabel)
           {
-            var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                                .getService(Components.interfaces.nsIStringBundleService);
-            var props = sbs.createBundle("chrome://calendar/locale/dateFormat.properties");
-            var monthName = props.GetStringFromName("month." + (aDate.month+1) + ".Mmm");
+            var monthName = calGetString("dateFormat", "month." + (aDate.month+1) + ".Mmm");
             daylabel.setAttribute("value", aDate.day + " " + monthName);
           } else {
             daylabel.setAttribute("value", aDate.day);
@@ -597,12 +593,9 @@
         <getter>return this.mIndex;</getter>
         <setter><![CDATA[
           this.mIndex = val % 7;
-          var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                              .getService(Components.interfaces.nsIStringBundleService);
-          var props = sbs.createBundle("chrome://calendar/locale/dateFormat.properties");
 
           var label = document.getAnonymousElementByAttribute(this, "anonid", "label");
-          var dayName = props.GetStringFromName("day." + (this.mIndex+1) + ".name");
+          var dayName = calGetString("dateFormat", "day." + (this.mIndex+1) + ".name");
           label.setAttribute("value", dayName);
 
           return this.mIndex;

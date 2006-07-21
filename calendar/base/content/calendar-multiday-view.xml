@@ -41,6 +41,8 @@
    - ***** END LICENSE BLOCK *****
 -->
 
+<!-- Note that this file depends on helper functions in calendarUtils.js-->
+
 <bindings id="calendar-multiday-view-bindings"
   xmlns="http://www.mozilla.org/xbl"
   xmlns:html="http://www.w3.org/1999/xhtml"
@@ -1582,10 +1584,7 @@
         this.mResizeHandler = function resizeHandler() { self.onResize(); };
         window.addEventListener("resize", this.mResizeHandler, true);
         var rButton = document.getAnonymousElementByAttribute(this, "anonid", "rotate-button");
-        var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                            .getService(Components.interfaces.nsIStringBundleService);
-        var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
-        rButton.label = props.GetStringFromName("rotate");
+        rButton.label = calGetString("calendar", "rotate");
 
         // set the flex attribute at the scrollbox-innerbox
         // (this can be removed, after Bug 343555 is fixed)
@@ -1594,7 +1593,7 @@
         document.getAnonymousElementByAttribute(
             childbox, "class", "box-inherit scrollbox-innerbox").flex = "1";
 
-	this.reorient();
+        this.reorient();
       ]]></constructor>
 
       <field name="mLastSize">0</field>
@@ -2460,14 +2459,11 @@
               }
 
               var labelbox;
-              var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                                  .getService(Components.interfaces.nsIStringBundleService);
-              var props = sbs.createBundle("chrome://calendar/locale/dateFormat.properties");
 
               if (counter < labelboxkids.length) {
                   labelbox = labelboxkids[counter];
                   labelbox.firstChild.setAttribute("value", (d.month + 1) + "/" + d.day);
-                  labelbox.childNodes[1].setAttribute("value", props.GetStringFromName("day."+ (d.weekday+1)+ ".Mmm"));
+                  labelbox.childNodes[1].setAttribute("value", calGetString("dateFormat", "day."+ (d.weekday+1)+ ".Mmm"));
               } else {
                   labelbox = createXULElement("box");
                   labelbox.setAttribute("flex", "1");
@@ -2480,7 +2476,7 @@
                   labeldaybox.appendChild(labelbox);
 
                   label = createXULElement("label");
-                  label.setAttribute("value", props.GetStringFromName("day."+ (d.weekday+1)+ ".Mmm"));
+                  label.setAttribute("value", calGetString("dateFormat", "day."+ (d.weekday+1)+ ".Mmm"));
                   label.setAttribute("class", "calendar-day-label-name");
                   labelbox.appendChild(label);
               

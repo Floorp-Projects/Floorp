@@ -49,13 +49,9 @@ var agendaTreeView = {
 agendaTreeView.init =
 function initAgendaTree()
 {
-    var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                        .getService(Components.interfaces.nsIStringBundleService);
-    var props = sbs.createBundle("chrome://lightning/locale/lightning.properties");
-
-    this.today = new Synthetic(props.GetStringFromName("agendaToday"), true);
-    this.tomorrow = new Synthetic(props.GetStringFromName("agendaTomorrow"), false);
-    this.soon = new Synthetic(props.GetStringFromName("agendaSoon"), false);
+    this.today = new Synthetic(ltnGetString("lightning", "agendaToday"), true);
+    this.tomorrow = new Synthetic(ltnGetString("lightning", "agendaTomorrow"), false);
+    this.soon = new Synthetic(ltnGetString("lightning", "agendaSoon"), false);
     this.periods = [this.today, this.tomorrow, this.soon];
 }
 

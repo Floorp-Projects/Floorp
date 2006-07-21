@@ -38,6 +38,8 @@
    - ***** END LICENSE BLOCK *****
 -->
 
+<!-- Note that this file depends on helper functions in calendarUtils.js-->
+
 <bindings id="calendar-specific-view-bindings"
     xmlns="http://www.mozilla.org/xbl"
     xmlns:html="http://www.w3.org/1999/xhtml"
@@ -56,21 +58,12 @@
 
         <implementation implements="calIDecoratedView">
 	    <constructor><![CDATA[
-                var pb2 = Components.classes
-                          ["@mozilla.org/preferences-service;1"]
-                          .getService(Components.interfaces.nsIPrefBranch2);
-
                 // get default start/end times from prefs and set on the
-                // view.  if we hit an error (eg because sunbird's pref
-                // infrastructure hasn't created the pref yet), the
-                // defaults will do
-                try {
-                    this.mStartMin = pb2.getIntPref(
-                                     "calendar.view.defaultstarthour") * 60;
-                    this.mEndMin = pb2.getIntPref(
-                                   "calendar.view.defaultendhour") * 60;
-                } catch (ex) {
-                }
+                // view.
+                this.mStartMin = getPrefSafe(
+                                 "calendar.view.defaultstarthour", 8) * 60;
+                this.mEndMin = getPrefSafe(
+                               "calendar.view.defaultendhour", 17) * 60;
 
                 var viewElement = document.getAnonymousElementByAttribute(
                                   this, "anonid", "view-element");
@@ -80,6 +73,9 @@
                 viewElement.daysOffArray = [];
 
                 // add a preference observer to monitor changes
+                var pb2 = Components.classes
+                          ["@mozilla.org/preferences-service;1"]
+                          .getService(Components.interfaces.nsIPrefBranch2);
                 pb2.addObserver("calendar.view.", this.mPrefObserver, false);
                 return;
             ]]></constructor>
@@ -109,7 +105,7 @@
                                       this.calView, "anonid", "view-element");
                        viewElem.setStartEndMinutes(this.calView.mStartMin,
                                                    this.calView.mEndMin);
-		       break;
+                       break;
 
                    case "calendar.view.defaultendhour":
                        this.calView.mEndMin = subj.getIntPref(pref) * 60;
@@ -117,7 +113,7 @@
                                   this.calView, "anonid", "view-element");
                        viewElem.setStartEndMinutes(this.calView.mStartMin, 
                                                    this.calView.mEndMin);
-		       break;
+                       break;
                    case "calendar.timezone.local":
                        var viewElem = document.getAnonymousElementByAttribute(
                                       this.calView, "anonid", "view-element");
@@ -169,14 +165,10 @@
             <method name="setNavLabels">
                 <parameter name="aDate"/>
                 <body><![CDATA[
-                    var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                                        .getService(Components.interfaces.nsIStringBundleService);
-                    var props = sbs.createBundle("chrome://calendar/locale/dateFormat.properties");
-
                     var nameArray = new Array();
                     for (var i = -2; i < 3; i++) {
                         var index = ((aDate.weekday + i + 7) % 7) + 1;
-                        nameArray.push(props.GetStringFromName("day."+index+".name"));
+                        nameArray.push(calGetString("dateFormat", "day."+index+".name"));
                     }
                     document.getAnonymousElementByAttribute(this, "anonid", "nav-control").setNames(nameArray);
                 ]]></body>

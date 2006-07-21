@@ -82,12 +82,9 @@ function publishEntireCalendar(cal)
             // publishEntireCalendar() will be called again if OK is pressed
             // in the dialog and the selected calendar will be passed in. 
             // Therefore return after openDialog().
-            var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                                .getService(Components.interfaces.nsIStringBundleService);
-            var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
             var args = new Object();
             args.onOk = publishEntireCalendar;
-            args.promptText = props.GetStringFromName("publishPrompt");
+            args.promptText = calGetString("calendar", "publishPrompt");
             openDialog("chrome://calendar/content/chooseCalendarDialog.xul", 
                        "_blank", "chrome,titlebar,modal,resizable", args);
             return;

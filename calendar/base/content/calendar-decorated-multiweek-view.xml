@@ -37,6 +37,8 @@
    - ***** END LICENSE BLOCK *****
 -->
 
+<!-- Note that this file depends on helper functions in calendarUtils.js-->
+
 <bindings id="calendar-specific-view-bindings"
     xmlns="http://www.mozilla.org/xbl"
     xmlns:html="http://www.w3.org/1999/xhtml"
@@ -55,23 +57,19 @@
 
         <implementation implements="calIDecoratedView">
 	    <constructor><![CDATA[
-                var pb2 = Components.classes
-                          ["@mozilla.org/preferences-service;1"]
-                          .getService(Components.interfaces.nsIPrefBranch2);
                 // Set the preference for the default start of the week
                 var viewElem = document.getAnonymousElementByAttribute(
                                  this, "anonid", "view-element");
-                try {
-                    viewElem.weekStartOffset = pb2.getIntPref("calendar.week.start");
-                } catch (ex) {}
+                viewElem.weekStartOffset = getPrefSafe("calendar.week.start", 0);
 
-                try {
-                    this.mWeeksInView = pb2.getIntPref("calendar.weeks.inview");
-                } catch (ex) {}
+                this.mWeeksInView = getPrefSafe("calendar.weeks.inview", 4);
 
                 this.updateDaysOffPrefs();
 
                 // add a preference observer to monitor changes
+                var pb2 = Components.classes
+                          ["@mozilla.org/preferences-service;1"]
+                          .getService(Components.interfaces.nsIPrefBranch2);
                 pb2.addObserver("calendar.", this.mPrefObserver, false);
                 return;
             ]]></constructor>
@@ -176,18 +174,12 @@
 
                     aDate = aDate.getInTimezone(viewElement.timezone);
 
-                    // Set up the preferences we're going to need to read
-                    var prefService = Components.classes[
-                                      "@mozilla.org/preferences-service;1"]
-                                      .getService(Components.interfaces.nsIPrefService);
-                    var calBranch = prefService.getBranch("calendar.");
-
                     // Get the first date that should be shown.  This is the
                     // start of the week of the day that we're centering around
                     // adjusted for the day the week starts on and the number
                     // of previous weeks we're supposed to display.
                     var d1 = aDate.startOfWeek.clone();
-                    d1.day -= 7*calBranch.getIntPref("previousweeks.inview");
+                    d1.day -= 7*getPrefSafe("calendar.previousweeks.inview", 4);
                     if (aDate.weekday < viewElement.weekStartOffset) {
                         d1.day -= 7;
                     }
@@ -196,7 +188,7 @@
                     // The variable firstWeekDate is a definitely showed date
                     // in the first week of the view (needed for setNavLabels).
                     var firstWeekDate = aDate.clone();
-                    firstWeekDate.day -= 7*calBranch.getIntPref("previousweeks.inview");
+                    firstWeekDate.day -= 7*getPrefSafe("calendar.previousweeks.inview");
                     firstWeekDate.normalize();
 
                     // The last day we're supposed to show
@@ -272,24 +264,21 @@
 
             <method name="updateDaysOffPrefs">
                 <body><![CDATA[
-                    try {
-                        var prefService = Components.classes[
-                                          "@mozilla.org/preferences-service;1"]
-                                          .getService(Components.interfaces.nsIPrefService);
-                        var weekBranch = prefService.getBranch("calendar.week.");
-                        var prefNames = ["d0sundaysoff", "d1mondaysoff", "d2tuesdaysoff",
-                                         "d3wednesdaysoff", "d4thursdaysoff",
-                                         "d5fridaysoff", "d6saturdaysoff"];
-                        var daysOff = new Array();
-                        for (var i in prefNames) {
-                            if (weekBranch.getBoolPref(prefNames[i])) {
-                                daysOff.push(Number(i));
-                            }
+                    const weekPrefix = "calendar.week.";
+                    const prefNames = ["d0sundaysoff", "d1mondaysoff", "d2tuesdaysoff",
+                                       "d3wednesdaysoff", "d4thursdaysoff",
+                                       "d5fridaysoff", "d6saturdaysoff"];
+                    const defaults = ["true", "false", "false", "false",
+                                      "false", "false", "true"];
+                    var daysOff = new Array();
+                    for (var i in prefNames) {
+                        if (getPrefSafe(weekPrefix+prefNames[i], defaults[i])) {
+                            daysOff.push(Number(i));
                         }
-                        var viewElem = document.getAnonymousElementByAttribute(
-                                                this, "anonid", "view-element");
-                        viewElem.daysOffArray = daysOff;
-                    } catch (ex) {}
+                    }
+                    var viewElem = document.getAnonymousElementByAttribute(
+                                            this, "anonid", "view-element");
+                    viewElem.daysOffArray = daysOff;
                 ]]></body>
             </method>
         </implementation>

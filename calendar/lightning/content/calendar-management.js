@@ -167,10 +167,7 @@ var ltnCalendarViewController = {
             var event = createEvent();
             event.startDate = aStartTime;
             event.endDate = aEndTime;
-            var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                                .getService(Components.interfaces.nsIStringBundleService);
-            var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
-            event.title = props.GetStringFromName("newEvent");
+            event.title = calGetString("calendar", "newEvent");
             setDefaultAlarmValues(event);
             doTransaction('add', event, aCalendar, null, null);
         } else if (aStartTime && aStartTime.isDate) {
@@ -269,12 +266,7 @@ function getCalendarManager()
                            makeURL("moz-profile-calendar://"));
         activeCalendarManager.registerCalendar(homeCalendar);
 
-        var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                            .getService(
-                             Components.interfaces.nsIStringBundleService);
-        var props = sbs.createBundle(
-                    "chrome://calendar/locale/calendar.properties");
-        homeCalendar.name = props.GetStringFromName("homeCalendarName");
+        homeCalendar.name = calGetString("calendar", "homeCalendarName");
 
         var composite = getCompositeCalendar();
         composite.addCalendar(homeCalendar);

@@ -56,10 +56,7 @@ calViewController.prototype.createNewEvent = function (aCalendar, aStartTime, aE
         var event = createEvent();
         event.startDate = aStartTime;
         event.endDate = aEndTime;
-        var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                            .getService(Components.interfaces.nsIStringBundleService);
-        var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
-        event.title = props.GetStringFromName("newEvent");
+        event.title = calGetString("calendar", "newEvent");
         setDefaultAlarmValues(event);
         doTransaction('add', event, aCalendar, null, null);
     } else if (aStartTime && aStartTime.isDate) {

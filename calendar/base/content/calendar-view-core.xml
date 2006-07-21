@@ -37,6 +37,8 @@
    - ***** END LICENSE BLOCK *****
 -->
 
+<!-- Note that this file depends on helper functions in calendarUtils.js-->
+
 <bindings id="calendar-core-view-bindings"
     xmlns="http://www.mozilla.org/xbl"
     xmlns:html="http://www.w3.org/1999/xhtml"
@@ -123,10 +125,7 @@
           if (item.title && item.title != "") {
             evl.value = item.title;
           } else {
-            var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                                .getService(Components.interfaces.nsIStringBundleService);
-            var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
-            evl.value = props.GetStringFromName("eventUntitled");
+            evl.value = calGetString("calendar", "eventUntitled")
           }
         ]]></body>
       </method>

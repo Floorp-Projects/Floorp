@@ -37,6 +37,8 @@
    - ***** END LICENSE BLOCK *****
 -->
 
+<!-- Note that this file depends on helper functions in calendarUtils.js-->
+
 <bindings id="calendar-specific-view-bindings"
     xmlns="http://www.mozilla.org/xbl"
     xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -54,19 +56,17 @@
 
         <implementation implements="calIDecoratedView">
 	    <constructor><![CDATA[
-                var pb2 = Components.classes
-                          ["@mozilla.org/preferences-service;1"]
-                          .getService(Components.interfaces.nsIPrefBranch2);
                 // Set the preference for the default start of the week
                 var viewElem = document.getAnonymousElementByAttribute(
                                 this, "anonid", "view-element");
-                try {
-                    viewElem.weekStartOffset = pb2.getIntPref("calendar.week.start");
-                } catch (ex) {}
+                viewElem.weekStartOffset = getPrefSafe("calendar.week.start", 0);
 
                 this.updateDaysOffPrefs();
 
                 // add a preference observer to monitor changes
+                var pb2 = Components.classes
+                          ["@mozilla.org/preferences-service;1"]
+                          .getService(Components.interfaces.nsIPrefBranch2);
                 pb2.addObserver("calendar.", this.mPrefObserver, false);
                 return;
             ]]></constructor>
@@ -161,54 +161,51 @@
             <method name="moveView">
                 <parameter name="aNumber"/>
                 <body><![CDATA[
-		    var monthViewElement = document.getAnonymousElementByAttribute(this, "anonid", "view-element");
+                    var monthViewElement = document.getAnonymousElementByAttribute(this, "anonid", "view-element");
                     var dates = monthViewElement.getDateList({});
                     monthViewElement.displayDaysOff = !this.mWorkdaysOnly;
 		    
-		    // The first few dates in this list are likely in the month
-		    // prior to the one actually being shown (since the month
-		    // probably doesn't start on a Sunday).  The 7th item must
-		    // be in correct month though.
-		    var date = dates[6].clone();
+                    // The first few dates in this list are likely in the month
+                    // prior to the one actually being shown (since the month
+                    // probably doesn't start on a Sunday).  The 7th item must
+                    // be in correct month though.
+                    var date = dates[6].clone();
 		    
-		    date.month += aNumber;
-		    date.normalize();
+                    date.month += aNumber;
+                    date.normalize();
 
                     // Need to store this before we move
                     var oldSelectedDay = this.selectedDay;
 
-		    this.goToDay(date);
+                    this.goToDay(date);
 		    
-		    // Most of the time we want to select the date with the
-		    // same day number in the next month
-		    var newSelectedDay = oldSelectedDay.clone();
-		    newSelectedDay.month += aNumber;
-		    newSelectedDay.normalize();
+                    // Most of the time we want to select the date with the
+                    // same day number in the next month
+                    var newSelectedDay = oldSelectedDay.clone();
+                    newSelectedDay.month += aNumber;
+                    newSelectedDay.normalize();
 
-		    // correct for accidental rollover into the next month
+                    // correct for accidental rollover into the next month
                     if ((newSelectedDay.month - aNumber + 12)%12 != oldSelectedDay.month) {
-		        newSelectedDay.month -= 1;
-			newSelectedDay.day = newSelectedDay.endOfMonth.day;
-			newSelectedDay.normalize();
-		    }
+                        newSelectedDay.month -= 1;
+                        newSelectedDay.day = newSelectedDay.endOfMonth.day;
+                        newSelectedDay.normalize();
+                    }
 
-		    monthViewElement.selectedDay = newSelectedDay;
+                    monthViewElement.selectedDay = newSelectedDay;
                 ]]></body>
             </method>
 
             <method name="setNavLabels">
                 <parameter name="aDate"/>
                 <body><![CDATA[
-                    var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                                        .getService(Components.interfaces.nsIStringBundleService);
-                    var props = sbs.createBundle("chrome://calendar/locale/dateFormat.properties");
                     var nameArray = new Array();
                     for (var i = -2; i < 3; i++) {
                         var index = ((aDate.month + i + 12) % 12) + 1;
                         if (0 == i) {
-                            nameArray.push(props.GetStringFromName("month."+index+".name") + " " + aDate.year);
+                            nameArray.push(calGetString("dateFormat", "month."+index+".name") + " " + aDate.year);
                         } else {
-                            nameArray.push(props.GetStringFromName("month."+index+".name"));
+                            nameArray.push(calGetString("dateFormat", "month."+index+".name"));
                         }
                     }
                     document.getAnonymousElementByAttribute(this, "anonid", "nav-control").setNames(nameArray);
@@ -223,25 +220,22 @@
 
             <method name="updateDaysOffPrefs">
                 <body><![CDATA[
-                    try {
-                        var prefService = Components.classes[
-                                          "@mozilla.org/preferences-service;1"]
-                                          .getService(Components.interfaces.nsIPrefService);
-                        var weekBranch = prefService.getBranch("calendar.week.");
-                        var prefNames = ["d0sundaysoff", "d1mondaysoff", "d2tuesdaysoff",
-                                         "d3wednesdaysoff", "d4thursdaysoff",
-                                         "d5fridaysoff", "d6saturdaysoff"];
-                        var daysOff = new Array();
-                        for (var i in prefNames) {
-                            if (weekBranch.getBoolPref(prefNames[i])) {
-                                daysOff.push(Number(i));
-                            }
+                    const weekPrefix = "calendar.week.";
+                    const prefNames = ["d0sundaysoff", "d1mondaysoff", "d2tuesdaysoff",
+                                       "d3wednesdaysoff", "d4thursdaysoff",
+                                       "d5fridaysoff", "d6saturdaysoff"];
+                    const defaults = ["true", "false", "false", "false",
+                                      "false", "false", "true"];
+                    var daysOff = new Array();
+                    for (var i in prefNames) {
+                        if (getPrefSafe(weekPrefix+prefNames[i])) {
+                            daysOff.push(Number(i));
                         }
-                        var viewElem = document.getAnonymousElementByAttribute(
-                                                this, "anonid", "view-element");
+                    }
+                    var viewElem = document.getAnonymousElementByAttribute(
+                                            this, "anonid", "view-element");
 
-                        viewElem.daysOffArray = daysOff;
-                    } catch (ex) {}
+                    viewElem.daysOffArray = daysOff;
                 ]]></body>
             </method>
         </implementation>

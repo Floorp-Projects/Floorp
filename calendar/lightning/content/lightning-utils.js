@@ -55,3 +55,18 @@ function uncollapseElement(element) {
 function updateUndoRedoMenu() {
     //XXX give Lightning some undo/redo UI!
 }
+
+/**
+ * Gets the value of a string in a .properties file
+ *
+ * @param aBundleName  the name of the properties file.  It is assumed that the
+ *                     file lives in chrome://lightning/locale/
+ * @param aStringName the name of the string within the properties file
+ */
+function ltnGetString(aBundleName, aStringName)
+{
+    var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                        .getService(Components.interfaces.nsIStringBundleService);
+    var props = sbs.createBundle("chrome://lightning/locale/"+aBundleName+".properties");
+    return props.GetStringFromName(aStringName);
+}
