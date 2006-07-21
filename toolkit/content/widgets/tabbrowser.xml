@@ -1197,7 +1197,18 @@
               b.loadURIWithFlags(aURI, flags, aReferrerURI, aCharset, aPostData);
             }
 
-            this.mTabContainer.adjustTabstrip(false);
+            // |setTimeout| here to ensure we're post reflow
+            var _delayedUpdate = function(aTabContainer) {
+              aTabContainer.adjustTabstrip(false);
+
+              // XXXmano: this is a temporary workaround to bug 343585
+              // We need to manually update the scroll buttons disabled state
+              // if a tab was inserted to the overflow area or removed from it
+              // without any scrolling and when the tabbar has already
+              // overflowed.
+              aTabContainer.mTabstrip._updateScrollButtonsDisabledState();
+            }
+            setTimeout(_delayedUpdate, 0, this.mTabContainer);
 
             // Dispatch a new tab notification.  We do this once we're
             // entirely done, so that things are in a consistent state
@@ -1317,6 +1328,13 @@
             var ds = this.getBrowserForTab(aTab).docShell;
             if (ds.contentViewer && !ds.contentViewer.permitUnload())
               return;
+
+            // see notes in addTab
+            var _delayedUpdate = function(aTabContainer) {
+              aTabContainer.adjustTabstrip(true);
+              aTabContainer.mTabstrip._updateScrollButtonsDisabledState();
+            }
+            setTimeout(_delayedUpdate, 0, this.mTabContainer);
 
             // We're committed to closing the tab now.  
             // Dispatch a notification.
@@ -2536,10 +2554,7 @@
           // 3 - closeatend = close button at the end of the tabstrip
           switch (this.mCloseButtons) {
           case 0:
-            // TabClose fires before the tab closes, so if we have two tabs
-            // and we're removing the tab we should go to no closebutton
-            if ((aRemovingTab && this.childNodes.length == 2) ||
-                this.childNodes.length == 1)
+            if (this.childNodes.length == 1)
               this.setAttribute("closebuttons", "noclose");
             else
               this.setAttribute("closebuttons", "activetab");
@@ -2547,8 +2562,7 @@
           case 1:
             try {
               // if we have only one tab, hide the closebutton
-              if ((aRemovingTab && this.childNodes.length == 2) ||
-                  this.childNodes.length == 1)
+              if (this.childNodes.length == 1)
                 this.setAttribute("closebuttons", "noclose");
               else {
                 var width = this.firstChild.boxObject.width;
@@ -2668,7 +2682,6 @@
       </method>
     </implementation>
     <handlers>
-      <handler event="TabClose"  action="this.adjustTabstrip(true);"/>
       <handler event="TabSelect" action="this._handleTabSelect();"/>
     </handlers>
   </binding>
