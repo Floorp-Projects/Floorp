@@ -40,7 +40,7 @@ Testing (Verification everything works)
 3) Fill in all input boxes.
     * A thank you message should appear
     * An email should be sent to the entered email address
-        * Should be from "Firefox Surveys"
+        * Should be from "Firefox User Panel"
         * Reply-to should be "nobody@mozilla.com"
         * Should have 3 html links
 4) Return to / and fill in all input boxes with the same information
