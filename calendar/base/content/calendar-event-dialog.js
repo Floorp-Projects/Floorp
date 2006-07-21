@@ -758,7 +758,8 @@ function setItemProperty(item, propertyName, value)
         if ((value && !item.entryDate) ||
             (!value && item.entryDate) ||
             (value.timezone != item.entryDate.timezone) ||
-            (value.compare(item.entryDate) != 0))
+            (value.compare(item.entryDate) != 0) ||
+            (value.isDate != item.entryDate.isDate))
             item.entryDate = value;
         break;
     case "dueDate":
@@ -767,7 +768,8 @@ function setItemProperty(item, propertyName, value)
         if ((value && !item.dueDate) ||
             (!value && item.dueDate) ||
             (value.timezone != item.dueDate.timezone) ||
-            (value.compare(item.dueDate) != 0))
+            (value.compare(item.dueDate) != 0) ||
+            (value.isDate != item.dueDate.isDate))
             item.dueDate = value;
         break;
     case "isCompleted":
