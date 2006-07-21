@@ -47,17 +47,6 @@ function getCalendarManager()
     return calendarManager;
 }
 
-var gDisplayComposite = null;
-function getDisplayComposite()
-{
-    if (!gDisplayComposite) {
-       gDisplayComposite = Components.classes["@mozilla.org/calendar/calendar;1?type=composite"]
-                                     .createInstance(Components.interfaces.calICompositeCalendar);
-       gDisplayComposite.prefPrefix = 'calendar-main';
-    }
-    return gDisplayComposite;
-}
-
 function openCalendarWizard(callback)
 {
     openDialog("chrome://calendar/content/calendarCreation.xul", "caEditServer", "chrome,titlebar,modal", callback);

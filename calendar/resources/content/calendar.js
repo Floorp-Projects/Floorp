@@ -224,7 +224,7 @@ function deleteCalendar(event)
         result);
    
     if (ok) {
-        getDisplayComposite().removeCalendar(calendar.uri);
+        getCompositeCalendar().removeCalendar(calendar.uri);
         var calMgr = getCalendarManager();
         calMgr.unregisterCalendar(calendar);
         // Delete file?
@@ -589,7 +589,7 @@ function openLocalCalendar() {
     
     var url = fp.fileURL.spec;
     var calMgr = getCalendarManager();
-    var composite = getDisplayComposite();
+    var composite = getCompositeCalendar();
     var openCalendar = calMgr.createCalendar("ics", makeURL(url));
     calMgr.registerCalendar(openCalendar);
      

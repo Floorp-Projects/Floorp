@@ -60,7 +60,7 @@ var calCalendarManagerObserver = {
 
     onCalendarRegistered: function(aCalendar) {
         // Enable new calendars by default
-        getDisplayComposite().addCalendar(aCalendar);
+        getCompositeCalendar().addCalendar(aCalendar);
         setCalendarManagerUI();
         document.getElementById("new_command").removeAttribute("disabled");
         document.getElementById("new_todo_command").removeAttribute("disabled");
@@ -190,9 +190,9 @@ function onCalendarCheckboxClick(event) {
 
         var cal = event.target.calendar;
         if (checkElem.getAttribute('checked') == "true") {
-            getDisplayComposite().removeCalendar(cal.uri);
+            getCompositeCalendar().removeCalendar(cal.uri);
         } else {
-            getDisplayComposite().addCalendar(cal);
+            getCompositeCalendar().addCalendar(cal);
         }
 
         event.preventDefault();
@@ -207,7 +207,7 @@ function setCalendarManagerUI()
         calendarList.removeChild(child);
     }
 
-    var composite = getDisplayComposite();
+    var composite = getCompositeCalendar();
     var calmgr = getCalendarManager();
     var calendars = calmgr.getCalendars({});
     var hasRefreshableCal = false;
@@ -256,13 +256,13 @@ function onCalendarListSelect() {
     if (!selectedCalendar) {
         return;
     }
-    getDisplayComposite().defaultCalendar = selectedCalendar;
+    getCompositeCalendar().defaultCalendar = selectedCalendar;
 }
 
 function initCalendarManager()
 {
     var calMgr = getCalendarManager();
-    var composite = getDisplayComposite();
+    var composite = getCompositeCalendar();
     if (calMgr.getCalendars({}).length == 0) {
         var homeCalendar = calMgr.createCalendar("storage", makeURL("moz-profile-calendar://"));
         calMgr.registerCalendar(homeCalendar);
@@ -314,7 +314,7 @@ function getDefaultCalendar()
 
 function reloadCalendars()
 {
-    getDisplayComposite().refresh();
+    getCompositeCalendar().refresh();
 }
 
 function getCalendarStyleSheet() {
@@ -410,6 +410,17 @@ var categoryPrefObserver =
        name = name.substr(24, aPrefName.length - 24);
        updateStyleSheetForObject(name);
    }
+}
+
+var gCompositeCalendar = null;
+function getCompositeCalendar()
+{
+    if (!gCompositeCalendar) {
+       gCompositeCalendar = Components.classes["@mozilla.org/calendar/calendar;1?type=composite"]
+                                     .createInstance(Components.interfaces.calICompositeCalendar);
+       gCompositeCalendar.prefPrefix = 'calendar-main';
+    }
+    return gCompositeCalendar;
 }
 
 var calPrefObserver =

@@ -76,6 +76,7 @@
   <script type="application/x-javascript" src="chrome://calendar/content/mouseoverPreviews.js"/>
   <script type="application/x-javascript" src="chrome://calendar/content/unifinder.js"/>
   <script type="application/x-javascript" src="chrome://calendar/content/unifinderToDo.js"/>
+  <script type="application/x-javascript" src="chrome://calendar/content/calendar-views.js"/>
 
   <!-- NEEDED FOR APPLICATION SUPPORT -->
   <script type="application/x-javascript" src="chrome://calendar/content/applicationUtil.js"/>

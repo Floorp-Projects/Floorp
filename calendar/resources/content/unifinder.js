@@ -259,7 +259,7 @@ function prepareCalendarUnifinder( )
    
    // set up our calendar event observer
    
-   var ccalendar = getDisplayComposite();
+   var ccalendar = getCompositeCalendar();
    ccalendar.addObserver(unifinderObserver);
 
    kDefaultTimezone = calendarDefaultTimezone();
@@ -277,7 +277,7 @@ function prepareCalendarUnifinder( )
 
 function finishCalendarUnifinder( )
 {
-   var ccalendar = getDisplayComposite();
+   var ccalendar = getCompositeCalendar();
    ccalendar.removeObserver(unifinderObserver);
 }
 
@@ -681,7 +681,7 @@ function refreshEventTree( eventArray )
    var StartDate = new Date( Today.getFullYear(), Today.getMonth(), Today.getDate(), 0, 0, 0 );
    var EndDate;
 
-   var ccalendar = getDisplayComposite();
+   var ccalendar = getCompositeCalendar();
    var filter = 0;
 
    filter |= ccalendar.ITEM_FILTER_TYPE_EVENT;

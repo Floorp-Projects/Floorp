@@ -41,90 +41,6 @@
 *  C A L E N D A R     C L A S S E S
 */
 
-function calViewController() {}
-
-calViewController.prototype.QueryInterface = function(aIID) {
-    if (!aIID.equals(Components.interfaces.nsISupports) &&
-        !aIID.equals(Components.interfaces.calICalendarViewController)) {
-        throw Components.results.NS_ERROR_NO_INTERFACE;
-    }
-    return this;
-}
-
-calViewController.prototype.createNewEvent = function (aCalendar, aStartTime, aEndTime) {
-    if (aStartTime && aEndTime && !aStartTime.isDate && !aEndTime.isDate) {
-        var event = createEvent();
-        event.startDate = aStartTime;
-        event.endDate = aEndTime;
-        event.title = calGetString("calendar", "newEvent");
-        setDefaultAlarmValues(event);
-        doTransaction('add', event, aCalendar, null, null);
-    } else if (aStartTime && aStartTime.isDate) {
-        var event = createEvent();
-        event.startDate = aStartTime;
-        setDefaultAlarmValues(event);
-        doTransaction('add', event, aCalendar, null, null);
-    } else {
-        newEvent();
-    }
-}
-
-calViewController.prototype.modifyOccurrence = function (aOccurrence, aNewStartTime, aNewEndTime) {
-    if (aNewStartTime && aNewEndTime && !aNewStartTime.isDate 
-        && !aNewEndTime.isDate) {
-        var itemToEdit = getOccurrenceOrParent(aOccurrence);
-        if (!itemToEdit) {
-            return;
-        }
-        var instance = itemToEdit.clone();
-        
-        var newStartTime = aNewStartTime;
-        var newEndTime = aNewEndTime;
-
-        // if we're about to modify the parentItem, we need to account
-        // for the possibility that the item passed as argument was
-        // some other occurrence, but the user said she would like to
-        // modify all occurrences instead.
-        if (instance.parentItem == instance) {
-            var instanceStart = instance.startDate || instance.entryDate;
-            var occurrenceStart = aOccurrence.startDate || aOccurrence.entryDate;
-            var startDiff = instanceStart.subtractDate(occurrenceStart);
-            aNewStartTime.addDuration(startDiff);
-            var instanceEnd = instance.endDate || instance.dueDate;
-            var occurrenceEnd = aOccurrence.endDate || aOccurrence.dueDate;
-            var endDiff = instanceEnd.subtractDate(occurrenceEnd);
-            aNewEndTime.addDuration(endDiff);
-        }
-
-        if (instance instanceof Components.interfaces.calIEvent) {
-            instance.startDate = aNewStartTime;
-            instance.endDate = aNewEndTime;
-        } else {
-            instance.entryDate = aNewStartTime;
-            instance.dueDate = aNewEndTime;
-        }
-        doTransaction('modify', instance, instance.calendar, itemToEdit, null);
-    } else {
-        editEvent();
-    }
-}
-
-calViewController.prototype.deleteOccurrence = function (aOccurrence) {
-    var itemToDelete = getOccurrenceOrParent(aOccurrence);
-    if (!itemToDelete) {
-        return;
-    }
-    if (itemToDelete.parentItem != itemToDelete) {
-        var event = itemToDelete.parentItem.clone();
-        event.recurrenceInfo.removeOccurrenceAt(itemToDelete.recurrenceId);
-        doTransaction('modify', event, event.calendar, itemToDelete.parentItem, null);
-    } else {
-        doTransaction('delete', itemToDelete, itemToDelete.calendar, null, null);
-    }
-}
-
-var gViewController = new calViewController();
-
 /*-----------------------------------------------------------------
 *   CalendarWindow Class
 *
@@ -148,7 +64,11 @@ function CalendarWindow( )
 {
    //setup the calendar event selection
    this.EventSelection = new CalendarEventSelection( this );
-   gViewController.selectionManager = this.EventSelection;
+   calendarViewController.selectionManager = this.EventSelection;
+
+   // Extension authors can tweak this array to make gCalendarWindow.switchToView 
+   // play nicely with any additional views
+   this.availableViews = ["day", "week", "multiweek", "month"];
 
    /** This object only exists to keep too many things from breaking during the
     *   switch to the new views
@@ -203,81 +123,19 @@ function CalendarWindow( )
    switch( SelectedIndex )
    {
       case "1":
-         this.switchToWeekView();
+         this.switchToView('week');
          break;
       case "2":
-         this.switchToMultiweekView();
+         this.switchToView('multiweek');
          break;
       case "3":
-         this.switchToMonthView();
+         this.switchToView('month');
          break;
       case "0":
       default:
-         this.switchToDayView();
+         this.switchToView('day');
          break;
    }
-}
-
-/** PUBLIC
-*
-*   Switch to the day view if it isn't already the current view
-*/
-
-CalendarWindow.prototype.switchToDayView = function calWin_switchToDayView( )
-{
-    document.getElementById("month_view_command").removeAttribute("checked");
-    document.getElementById("multiweek_view_command").removeAttribute("checked");
-    document.getElementById("week_view_command").removeAttribute("checked");
-    document.getElementById("day_view_command").setAttribute("checked", true);
-    document.getElementById("menu-numberofweeks-inview").setAttribute("disabled", true);
-    this.switchToView('day-view');
-}
-
-
-/** PUBLIC
-*
-*   Switch to the week view if it isn't already the current view
-*/
-
-CalendarWindow.prototype.switchToWeekView = function calWin_switchToWeekView( )
-{
-    document.getElementById("month_view_command").removeAttribute("checked");
-    document.getElementById("multiweek_view_command").removeAttribute("checked");
-    document.getElementById("day_view_command").removeAttribute("checked");
-    document.getElementById("week_view_command").setAttribute("checked", true);
-    document.getElementById("menu-numberofweeks-inview").setAttribute("disabled", true);
-    this.switchToView('week-view');
-}
-
-
-/** PUBLIC
-*
-*   Switch to the month view if it isn't already the current view
-*/
-
-CalendarWindow.prototype.switchToMonthView = function calWin_switchToMonthView( )
-{
-    document.getElementById("week_view_command").removeAttribute("checked");
-    document.getElementById("multiweek_view_command").removeAttribute("checked");
-    document.getElementById("day_view_command").removeAttribute("checked");
-    document.getElementById("month_view_command").setAttribute("checked", true);
-    document.getElementById("menu-numberofweeks-inview").setAttribute("disabled", true);
-    this.switchToView('month-view');
-}
-
-/** PUBLIC
-*
-*   Switch to the multiweek view if it isn't already the current view
-*/
-
-CalendarWindow.prototype.switchToMultiweekView = function calWin_switchToMultiweekView( )
-{
-    document.getElementById("month_view_command").removeAttribute("checked");
-    document.getElementById("week_view_command").removeAttribute("checked");
-    document.getElementById("day_view_command").removeAttribute("checked");
-    document.getElementById("multiweek_view_command").setAttribute("checked", true);
-    document.getElementById("menu-numberofweeks-inview").removeAttribute("disabled");
-    this.switchToView('multiweek-view');
 }
 
 /** PUBLIC
@@ -308,28 +166,6 @@ CalendarWindow.prototype.pickAndGoToDate = function calWin_pickAndGoToDate( )
              "GoToDateDialog", // target= window name
              "chrome,modal", args);
 }
-
-/** PUBLIC
-*
-*   Go to the next period in the current view
-*/
-
-CalendarWindow.prototype.goToNext = function calWin_goToNext( value )
-{
-    document.getElementById("view-deck").selectedPanel.moveView(value);
-}
-
-
-/** PUBLIC
-*
-*   Go to the previous period in the current view
-*/
-
-CalendarWindow.prototype.goToPrevious = function calWin_goToPrevious( value )
-{   
-    document.getElementById("view-deck").selectedPanel.moveView(-1*value);
-}
-
 
 /** PUBLIC
 *
@@ -373,33 +209,31 @@ CalendarWindow.prototype.getSelectedDate = function calWin_getSelectedDate( )
 
 CalendarWindow.prototype.switchToView = function calWin_switchToView( newView )
 {
-    var viewElement = document.getElementById(newView);
-
-    // If this is the first time we've shown the view, (or if someone changed
-    // our composite), then we need to set all this stuff.
-    if (viewElement.displayCalendar != getDisplayComposite()) {
-        viewElement.controller = gViewController;
-        viewElement.displayCalendar = getDisplayComposite();
-        viewElement.timezone = calendarDefaultTimezone();
-        this.EventSelection.addObserver(viewElement.selectionObserver);
+    // Set up the commands
+    for each (var view in this.availableViews) {
+        var command = document.getElementById(view+"_view_command");
+        if (view == newView) {
+            command.setAttribute("checked", true);
+        } else {
+            command.removeAttribute("checked");
+        }
     }
 
-    var deck = document.getElementById("view-deck");
-    var day;
-    try {
-        day = deck.selectedPanel.selectedDay;
-    } catch(ex) {} // Fails if no view has ever been shown this session
+    var mwWeeksCommand = document.getElementById("menu-numberofweeks-inview")
+    if (newView == "multiweek") {
+        mwWeeksCommand.removeAttribute("disabled");
+    } else {
+        mwWeeksCommand.setAttribute("disabled", true);
+    }
 
-    // Should only happen on first startup
-    if (!day)
-        day = now();
-    deck.selectedPanel = viewElement;
-    deck.selectedPanel.goToDay(day);
+    // Call the common view switching code in calendar-views.js
+    switchToView(newView);
 
+    var labelAttribute = "label-"+newView+"-view";
     var prevCommand = document.getElementById("calendar-go-menu-previous");
-    prevCommand.setAttribute("label", prevCommand.getAttribute("label-"+newView));
+    prevCommand.setAttribute("label", prevCommand.getAttribute(labelAttribute));
     var nextCommand = document.getElementById("calendar-go-menu-next");
-    nextCommand.setAttribute("label", nextCommand.getAttribute("label-"+newView));
+    nextCommand.setAttribute("label", nextCommand.getAttribute(labelAttribute));
 }
 
 CalendarWindow.prototype.onMouseUpCalendarSplitter = function calWinOnMouseUpCalendarSplitter()

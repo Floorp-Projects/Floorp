@@ -176,12 +176,6 @@ function ltnOnLoad(event)
     return;
 }
 
-function currentView()
-{
-    var calendarViewBox = document.getElementById("calendar-view-box");
-    return calendarViewBox.selectedPanel;
-}
-
 function showCalendarView(type)
 {
     // If we got this call while a mail-view is being shown, we need to
@@ -207,28 +201,8 @@ function showCalendarView(type)
         gMsgFolderSelected = null;
         msgWindow.openFolder = null;
     }
-
     document.getElementById("displayDeck").selectedPanel =  calendarViewBox;
-    var calendarViewBox = document.getElementById("calendar-view-box");
-
-    var selectedDay;
-    try {
-        var selectedDay = calendarViewBox.selectedPanel.selectedDay;
-    } catch(ex) {} // This dies if no view has even been chosen this session
-
-    if (!selectedDay)
-        selectedDay = today();
-
-    calendarViewBox.selectedPanel = document.getElementById(type+"-view");
-    var view = calendarViewBox.selectedPanel;
-
-    if (view.displayCalendar != getCompositeCalendar()) {
-        view.displayCalendar = getCompositeCalendar();
-        view.timezone = calendarDefaultTimezone();
-        view.controller = ltnCalendarViewController;
-    }
-
-    view.goToDay(selectedDay);
+    switchToView(type);
 
     // Set the labels for the context-menu
     var nextCommand = document.getElementById("context_next");
@@ -300,15 +274,15 @@ function ltnFinish() {
 }
 
 function ltnEditSelectedItem() {
-    ltnCalendarViewController.modifyOccurrence(currentView().selectedItem);
+    calendarViewController.modifyOccurrence(currentView().selectedItem);
 }
 
 function ltnDeleteSelectedItem() {
-    ltnCalendarViewController.deleteOccurrence(currentView().selectedItem);
+    calendarViewController.deleteOccurrence(currentView().selectedItem);
 }
 
 function ltnCreateEvent() {
-    ltnCalendarViewController.createNewEvent(ltnSelectedCalendar());
+    calendarViewController.createNewEvent(ltnSelectedCalendar());
 }
 
 // Preference observer, watches for changes to any 'calendar.' pref

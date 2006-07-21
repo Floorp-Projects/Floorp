@@ -120,7 +120,7 @@ var unifinderToDoDataSourceObserver =
 
 function prepareCalendarToDoUnifinder()
 {
-    var ccalendar = getDisplayComposite();
+    var ccalendar = getCompositeCalendar();
     ccalendar.addObserver(unifinderToDoDataSourceObserver);
     toDoUnifinderRefresh();
 }
@@ -131,7 +131,7 @@ function prepareCalendarToDoUnifinder()
 
 function finishCalendarToDoUnifinder()
 {
-    var ccalendar = getDisplayComposite();
+    var ccalendar = getCompositeCalendar();
     ccalendar.removeObserver(unifinderToDoDataSourceObserver);
 }
 
@@ -173,7 +173,7 @@ function toDoUnifinderRefresh()
        }
    };
 
-   var ccalendar = getDisplayComposite();
+   var ccalendar = getCompositeCalendar();
    var filter = 0;
    if (hideCompleted)
        filter |= ccalendar.ITEM_FILTER_COMPLETED_NO;
