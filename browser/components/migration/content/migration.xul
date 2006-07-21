@@ -47,6 +47,7 @@
         onunload="MigrationWizard.uninit()"
         style="width: 40em;"
         buttons="accept,cancel"
+        branded="true"
         xmlns:xhtml2="http://www.w3.org/TR/xhtml2"
         xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#">
 
