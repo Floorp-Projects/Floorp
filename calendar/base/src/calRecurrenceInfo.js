@@ -321,7 +321,7 @@ calRecurrenceInfo.prototype = {
         }
 
         var proxy = this.mBaseItem.createProxy();
-        proxy.setRecurrenceId(earliestDate);
+        proxy.recurrenceId = earliestDate.clone();
 
         proxy.setProperty("DTSTART", startDate);
         if (endDate)
