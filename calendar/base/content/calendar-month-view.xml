@@ -446,9 +446,6 @@
           shadowStart.day -= this.monthView.mShadowIndex;
           shadowStart.normalize();
           for (var i = 0; i < this.monthView.mShadowLength; i++) {
-              shadowStart.day += i;
-              shadowStart.normalize();
-
               var dropbox =  document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "box");
               dropbox.setAttribute("dropbox", "true");
               dropbox.setAttribute("flex", "1");
@@ -456,6 +453,9 @@
               var box = this.monthView.findBoxForDate(shadowStart).box;
               box.dayitems.insertBefore(dropbox, box.dayitems.firstChild);
               this.monthView.mDropShadows.push(dropbox);
+
+              shadowStart.day += 1;
+              shadowStart.normalize();
           }
         ]]></body>
       </method>
