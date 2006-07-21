@@ -1630,13 +1630,33 @@
         </body>
       </method>
 
+      <method name="canDrop">
+        <parameter name="aEvent"/>
+        <parameter name="aDragSession"/>
+        <body>
+          <![CDATA[
+            if (aDragSession.sourceNode.parentNode == this.mTabContainer &&
+                (aEvent.screenX >= aDragSession.sourceNode.boxObject.screenX &&
+                 aEvent.screenX <= (aDragSession.sourceNode.boxObject.screenX +
+                                    aDragSession.sourceNode.boxObject.width)))
+                return false;
+            return true;
+          ]]>
+        </body>
+      </method>
+
       <method name="onDragOver">
         <parameter name="aEvent"/>
         <parameter name="aFlavour"/>
         <parameter name="aDragSession"/>
         <body>
           <![CDATA[
-            if (aDragSession.canDrop && aDragSession.sourceNode) {
+            if (aDragSession.sourceNode) {
+              if (!aDragSession.canDrop) {
+                this.mTabDropIndicatorBar.setAttribute('dragging','false');
+                return;
+              }
+
               var tabStrip = this.mTabContainer.mTabstrip;
 
               // autoscroll the tab strip if we drag over the scroll
@@ -1814,6 +1834,15 @@
         <parameter name="aDragSession"/>
         <body>
           <![CDATA[
+            if (aDragSession.sourceNode &&
+                aDragSession.sourceNode.parentNode == this.mTabContainer &&
+                aDragSession.canDrop) {
+              var target = aEvent.relatedTarget;
+              while (target && target != this.mStrip)
+                target = target.parentNode;
+              if (target)
+                return;
+            }
             this.mTabDropIndicatorBar.setAttribute('dragging','false');
           ]]>
         </body>
