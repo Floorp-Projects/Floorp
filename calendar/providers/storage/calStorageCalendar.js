@@ -48,21 +48,6 @@ const kStorageServiceIID = Components.interfaces.mozIStorageService;
 
 const kCalICalendar = Components.interfaces.calICalendar;
 
-const kCalCalendarManagerContractID = "@mozilla.org/calendar/manager;1";
-const kCalICalendarManager = Components.interfaces.calICalendarManager;
-
-const kCalEventContractID = "@mozilla.org/calendar/event;1";
-const kCalIEvent = Components.interfaces.calIEvent;
-var CalEvent;
-
-const kCalTodoContractID = "@mozilla.org/calendar/todo;1";
-const kCalITodo = Components.interfaces.calITodo;
-var CalTodo;
-
-const kCalDateTimeContractID = "@mozilla.org/calendar/datetime;1";
-const kCalIDateTime = Components.interfaces.calIDateTime;
-var CalDateTime;
-
 const kCalAttendeeContractID = "@mozilla.org/calendar/attendee;1";
 const kCalIAttendee = Components.interfaces.calIAttendee;
 var CalAttendee;
@@ -105,9 +90,6 @@ const CAL_ITEM_FLAG_HAS_EXCEPTIONS = 32;
 const USECS_PER_SECOND = 1000000;
 
 function initCalStorageCalendarComponent() {
-    CalEvent = new Components.Constructor(kCalEventContractID, kCalIEvent);
-    CalTodo = new Components.Constructor(kCalTodoContractID, kCalITodo);
-    CalDateTime = new Components.Constructor(kCalDateTimeContractID, kCalIDateTime);
     CalAttendee = new Components.Constructor(kCalAttendeeContractID, kCalIAttendee);
     CalRecurrenceInfo = new Components.Constructor(kCalRecurrenceInfoContractID, kCalIRecurrenceInfo);
     CalRecurrenceRule = new Components.Constructor(kCalRecurrenceRuleContractID, kCalIRecurrenceRule);
@@ -196,7 +178,7 @@ function dateToText(d) {
 //
 
 function newDateTime(aNativeTime, aTimezone) {
-    var t = new CalDateTime();
+    var t = createDateTime();
     t.nativeTime = aNativeTime;
     if (aTimezone && aTimezone != "floating") {
         t = t.getInTimezone(aTimezone);
@@ -210,16 +192,6 @@ function newDateTime(aNativeTime, aTimezone) {
 //
 // calStorageCalendar
 //
-
-var activeCalendarManager = null;
-function getCalendarManager()
-{
-    if (!activeCalendarManager) {
-        activeCalendarManager = 
-            Components.classes[kCalCalendarManagerContractID].getService(kCalICalendarManager);
-    }
-    return activeCalendarManager;
-}
 
 function calStorageCalendar() {
     this.wrappedJSObject = this;
@@ -518,10 +490,10 @@ calStorageCalendar.prototype = {
         }
 
         var item_iid = null;
-        if (item instanceof kCalIEvent)
-            item_iid = kCalIEvent;
-        else if (item instanceof kCalITodo)
-            item_iid = kCalITodo;
+        if (item instanceof Ci.calIEvent)
+            item_iid = Ci.calIEvent;
+        else if (item instanceof Ci.calITodo)
+            item_iid = Ci.calITodo;
         else {
             aListener.onOperationComplete (this,
                                            Components.results.NS_ERROR_FAILURE,
@@ -707,7 +679,7 @@ calStorageCalendar.prototype = {
 
             // process the events
             for each (var evitem in resultItems) {
-                count += handleResultItem(evitem.item, evitem.flags, kCalIEvent);
+                count += handleResultItem(evitem.item, evitem.flags, Ci.calIEvent);
                 if (checkCount())
                     return;
             }
@@ -765,7 +737,7 @@ calStorageCalendar.prototype = {
                     var itemIsCompleted = false;
                     if (item.todo_complete == 100 ||
                         item.todo_completed != null ||
-                        item.ical_status == kCalITodo.CAL_TODO_STATUS_COMPLETED)
+                        item.ical_status == Ci.calITodo.CAL_TODO_STATUS_COMPLETED)
                         itemIsCompleted = true;
 
                     if (!itemIsCompleted && !wantNotCompletedItems)
@@ -780,7 +752,7 @@ calStorageCalendar.prototype = {
 
             // process the todos
             for each (var todoitem in resultItems) {
-                count += handleResultItem(todoitem.item, todoitem.flags, kCalITodo);
+                count += handleResultItem(todoitem.item, todoitem.flags, Ci.calITodo);
                 if (checkCount())
                     return;
             }
@@ -1296,7 +1268,7 @@ calStorageCalendar.prototype = {
     },
 
     getEventFromRow: function (row, flags) {
-        var item = new CalEvent();
+        var item = createEvent();
 
         this.getItemBaseFromRow (row, flags, item);
 
@@ -1315,7 +1287,7 @@ calStorageCalendar.prototype = {
     },
 
     getTodoFromRow: function (row, flags) {
-        var item = new CalTodo();
+        var item = createTodo();
 
         this.getItemBaseFromRow (row, flags, item);
 
@@ -1466,7 +1438,7 @@ calStorageCalendar.prototype = {
 
             var exceptions = [];
 
-            if (item instanceof kCalIEvent) {
+            if (item instanceof Ci.calIEvent) {
                 this.mSelectEventExceptions.params.id = item.id;
                 while (this.mSelectEventExceptions.step()) {
                     var row = this.mSelectEventExceptions.row;
@@ -1475,7 +1447,7 @@ calStorageCalendar.prototype = {
                     exceptions.push({item: exc, flags: flags.value});
                 }
                 this.mSelectEventExceptions.reset();
-            } else if (item instanceof kCalITodo) {
+            } else if (item instanceof Ci.calITodo) {
                 this.mSelectTodoExceptions.params.id = item.id;
                 while (this.mSelectTodoExceptions.step()) {
                     var row = this.mSelectTodoExceptions.row;
@@ -1589,9 +1561,9 @@ calStorageCalendar.prototype = {
     deleteOldItem: function (item, olditem) {
         if (olditem) {
             var oldItemDeleteStmt;
-            if (olditem instanceof kCalIEvent)
+            if (olditem instanceof Ci.calIEvent)
                 oldItemDeleteStmt = this.mDeleteEvent;
-            else if (olditem instanceof kCalITodo)
+            else if (olditem instanceof Ci.calITodo)
                 oldItemDeleteStmt = this.mDeleteTodo;
 
             oldItemDeleteStmt.params.id = olditem.id;
@@ -1623,9 +1595,9 @@ calStorageCalendar.prototype = {
         flags |= this.writeProperties(item, olditem);
         flags |= this.writeAttachments(item, olditem);
 
-        if (item instanceof kCalIEvent)
+        if (item instanceof Ci.calIEvent)
             this.writeEvent(item, olditem, flags);
-        else if (item instanceof kCalITodo)
+        else if (item instanceof Ci.calITodo)
             this.writeTodo(item, olditem, flags);
         else
             throw Components.results.NS_ERROR_UNEXPECTED;
@@ -1875,6 +1847,37 @@ calStorageCalendar.prototype = {
 var calStorageCalendarModule = {
     mCID: Components.ID("{b3eaa1c4-5dfe-4c0a-b62a-b3a514218461}"),
     mContractID: "@mozilla.org/calendar/calendar;1?type=storage",
+
+    mUtilsLoaded: false,
+    loadUtils: function storageLoadUtils() {
+        if (this.mUtilsLoaded)
+            return;
+
+        const jssslContractID = "@mozilla.org/moz/jssubscript-loader;1";
+        const jssslIID = Components.interfaces.mozIJSSubScriptLoader;
+
+        const iosvcContractID = "@mozilla.org/network/io-service;1";        const iosvcIID = Components.interfaces.nsIIOService;
+
+        var loader = Components.classes[jssslContractID].getService(jssslIID);
+        var iosvc = Components.classes[iosvcContractID].getService(iosvcIID);
+
+        // Utils lives in the same directory we're in
+        var appdir = __LOCATION__.parent;
+        var scriptName = "calUtils.js";
+
+        var f = appdir.clone();
+        f.append(scriptName);
+
+        try {
+            var fileurl = iosvc.newFileURI(f);
+            loader.loadSubScript(fileurl.spec, this.__parent__.__parent__);
+        } catch (e) {
+            dump("Error while loading " + fileurl.spec + "\n");
+            throw e;
+        }
+
+        this.mUtilsLoaded = true;
+    },
     
     registerSelf: function (compMgr, fileSpec, location, type) {
         compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
@@ -1896,7 +1899,9 @@ var calStorageCalendarModule = {
         if (!kStorageServiceIID)
             throw Components.results.NS_ERROR_NOT_INITIALIZED;
 
-        if (!CalEvent) {
+        this.loadUtils();
+
+        if (!CalAttendee) {
             initCalStorageCalendarComponent();
         }
 

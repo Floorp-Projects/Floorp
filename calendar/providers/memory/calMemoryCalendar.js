@@ -45,16 +45,6 @@ const calICalendarManager = Components.interfaces.calICalendarManager;
 
 const USECS_PER_SECOND = 1000000;
 
-var activeCalendarManager = null;
-function getCalendarManager()
-{
-    if (!activeCalendarManager) {
-        activeCalendarManager = 
-            Components.classes[calCalendarManagerContractID].getService(calICalendarManager);
-    }
-    return activeCalendarManager;
-}
-
 function calMemoryCalendar() {
     this.wrappedJSObject = this;
     this.calendarToReturn = this,
@@ -319,10 +309,10 @@ calMemoryCalendar.prototype = {
         var item = this.mItems[aId];
         var iid = null;
 
-        if (item instanceof Components.interfaces.calIEvent) {
-            iid = Components.interfaces.calIEvent;
-        } else if (item instanceof Components.interfaces.calITodo) {
-            iid = Components.interfaces.calITodo;
+        if (item instanceof Ci.calIEvent) {
+            iid = Ci.calIEvent;
+        } else if (item instanceof Ci.calITodo) {
+            iid = Ci.calITodo;
         } else {
             aListener.onOperationComplete (this.calendarToReturn,
                                            Components.results.NS_ERROR_FAILURE,
@@ -355,9 +345,6 @@ calMemoryCalendar.prototype = {
             return;
 
         const calICalendar = Components.interfaces.calICalendar;
-        const calIItemBase = Components.interfaces.calIItemBase;
-        const calIEvent = Components.interfaces.calIEvent;
-        const calITodo = Components.interfaces.calITodo;
         const calIRecurrenceInfo = Components.interfaces.calIRecurrenceInfo;
 
         var itemsFound = Array();
@@ -395,14 +382,14 @@ calMemoryCalendar.prototype = {
         // figure out the return interface type
         var typeIID = null;
         if (itemReturnOccurrences) {
-            typeIID = calIItemBase;
+            typeIID = Ci.calIItemBase;
         } else {
             if (wantEvents && wantTodos) {
-                typeIID = calIItemBase;
+                typeIID = Ci.calIItemBase;
             } else if (wantEvents) {
-                typeIID = calIEvent;
+                typeIID = Ci.calIEvent;
             } else if (wantTodos) {
-                typeIID = calITodo;
+                typeIID = Ci.calITodo;
             }
         }
 
@@ -417,15 +404,15 @@ calMemoryCalendar.prototype = {
             var itemEndTime = 0;
 
             var tmpitem = item;
-            if (wantEvents && (item instanceof calIEvent)) {
-                tmpitem = item.QueryInterface(calIEvent);
+            if (wantEvents && (item instanceof Ci.calIEvent)) {
+                tmpitem = item.QueryInterface(Ci.calIEvent);
                 itemStartTime = (item.startDate
                                  ? item.startDate.nativeTime
                                  : START_OF_TIME);
                 itemEndTime = (item.endDate
                                ? item.endDate.nativeTime
                                : END_OF_TIME);
-            } else if (wantTodos && (item instanceof calITodo)) {
+            } else if (wantTodos && (item instanceof Ci.calITodo)) {
                 // if it's a todo, also filter based on completeness
                 if (item.isCompleted && !itemCompletedFilter)
                     continue;
@@ -509,7 +496,7 @@ calMemoryCalendar.prototype = {
     observeDeleteItem: function (aDeletedItem) {
         for each (obs in this.mObservers)
             obs.onDeleteItem (aDeletedItem);
-    },
+    }
 }
 
 /****
@@ -519,6 +506,38 @@ calMemoryCalendar.prototype = {
 var calMemoryCalendarModule = {
     mCID: Components.ID("{bda0dd7f-0a2f-4fcf-ba08-5517e6fbf133}"),
     mContractID: "@mozilla.org/calendar/calendar;1?type=memory",
+
+    mUtilsLoaded: false,
+    loadUtils: function memoryLoadUtils() {
+        if (this.mUtilsLoaded)
+            return;
+
+        const jssslContractID = "@mozilla.org/moz/jssubscript-loader;1";
+        const jssslIID = Components.interfaces.mozIJSSubScriptLoader;
+
+        const iosvcContractID = "@mozilla.org/network/io-service;1";        const iosvcIID = Components.interfaces.nsIIOService;
+
+        var loader = Components.classes[jssslContractID].getService(jssslIID);
+        var iosvc = Components.classes[iosvcContractID].getService(iosvcIID);
+
+        // Utils lives in the same directory we're in
+        var appdir = __LOCATION__.parent;
+        var scriptName = "calUtils.js";
+
+        var f = appdir.clone();
+        f.append(scriptName);
+
+        try {
+            var fileurl = iosvc.newFileURI(f);
+            loader.loadSubScript(fileurl.spec, this.__parent__.__parent__);
+        } catch (e) {
+            dump("Error while loading " + fileurl.spec + "\n");
+            throw e;
+        }
+
+        this.mUtilsLoaded = true;
+    },
+
     
     registerSelf: function (compMgr, fileSpec, location, type) {
         compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
@@ -536,6 +555,8 @@ var calMemoryCalendarModule = {
 
         if (!iid.equals(Components.interfaces.nsIFactory))
             throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+
+        this.loadUtils();
 
         return this.mFactory;
     },

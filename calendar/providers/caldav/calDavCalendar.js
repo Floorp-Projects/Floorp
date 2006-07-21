@@ -58,13 +58,6 @@
 
 const xmlHeader = '<?xml version="1.0" encoding="UTF-8"?>\n';
 
-function debug(s) {
-    const debugging = true;
-    if (debugging) {
-        dump(s);
-    }
-}
-
 function calDavCalendar() {
     this.wrappedJSObject = this;
     this.mObservers = Array();
@@ -75,14 +68,6 @@ const nsIWebDAVOperationListener =
     Components.interfaces.nsIWebDAVOperationListener;
 const calICalendar = Components.interfaces.calICalendar;
 const nsISupportsCString = Components.interfaces.nsISupportsCString;
-const calIEvent = Components.interfaces.calIEvent;
-const calIItemBase = Components.interfaces.calIItemBase;
-const calITodo = Components.interfaces.calITodo;
-const calEventClass = Components.classes["@mozilla.org/calendar/event;1"];
-
-const kCalCalendarManagerContractID = "@mozilla.org/calendar/manager;1";
-const kCalICalendarManager = Components.interfaces.calICalendarManager;
-
 
 function makeOccurrence(item, start, end)
 {
@@ -92,16 +77,6 @@ function makeOccurrence(item, start, end)
     occ.endDate = end;
 
     return occ;
-}
-
-var activeCalendarManager = null;
-function getCalendarManager()
-{
-    if (!activeCalendarManager) {
-        activeCalendarManager = 
-            Components.classes[kCalCalendarManagerContractID].getService(kCalICalendarManager);
-    }
-    return activeCalendarManager;
 }
   
 // END_OF_TIME needs to be the max value a PRTime can be
@@ -219,7 +194,7 @@ calDavCalendar.prototype = {
         var locationPath = aItem.id + ".ics";
         var itemUri = this.mCalendarUri.clone();
         itemUri.spec = itemUri.spec + locationPath;
-        debug("itemUri.spec = " + itemUri.spec + "\n");
+        LOG("itemUri.spec = " + itemUri.spec);
         var eventResource = new WebDavResource(itemUri);
 
         var listener = new WebDavListener();
@@ -230,16 +205,16 @@ calDavCalendar.prototype = {
             // 201 = HTTP "Created"
             //
             if (aStatusCode == 201) {
-                debug("Item added successfully\n");
+                LOG("Item added successfully");
 
                 var retVal = Components.results.NS_OK;
 
             } else if (aStatusCode == 200) {
                 // XXXdmose once we get etag stuff working, this should
                 // 
-                debug("200 received from clients, until we have etags working"
+                LOG("200 received from clients, until we have etags working"
                       + " this probably means a collision; after that it'll"
-                      + " mean server malfunction/n");
+                      + " mean server malfunction");
                 retVal = Components.results.NS_ERROR_FAILURE;
             } else {
                 if (aStatusCode > 999) {
@@ -247,7 +222,7 @@ calDavCalendar.prototype = {
                 }
 
                 // XXX real error handling
-                debug("Error adding item: " + aStatusCode + "\n");
+                LOG("Error adding item: " + aStatusCode);
                 retVal = Components.results.NS_ERROR_FAILURE;
             }
 
@@ -260,8 +235,8 @@ calDavCalendar.prototype = {
                                                   aItem.id,
                                                   aItem);
                 } catch (ex) {
-                    debug("addItem's onOperationComplete threw an exception "
-                          + ex + "; ignoring\n");
+                    LOG("addItem's onOperationComplete threw an exception "
+                          + ex + "; ignoring");
                 }
             }
 
@@ -276,7 +251,7 @@ calDavCalendar.prototype = {
         aItem.setProperty("X-MOZ-LOCATIONPATH", locationPath);
         aItem.makeImmutable();
 
-        debug("icalString = " + aItem.icalString + "\n");
+        LOG("icalString = " + aItem.icalString);
 
         // XXX use if not exists
         // do WebDAV put
@@ -306,8 +281,8 @@ calDavCalendar.prototype = {
                                                   aItem.id,
                                                   "ID for modifyItem doesn't exist or is null");
                 } catch (ex) {
-                    debug("modifyItem's onOperationComplete threw an"
-                          + " exception " + ex + "; ignoring\n");
+                    LOG("modifyItem's onOperationComplete threw an"
+                          + " exception " + ex + "; ignoring");
                 }
             }
 
@@ -317,7 +292,7 @@ calDavCalendar.prototype = {
         var eventUri = this.mCalendarUri.clone();
         try {
             eventUri.spec = this.mCalendarUri.spec + aNewItem.getProperty("X-MOZ-LOCATIONPATH");
-            debug("using X-MOZ-LOCATIONPATH: " + eventUri.spec + "\n");
+            LOG("using X-MOZ-LOCATIONPATH: " + eventUri.spec);
         } catch (ex) {
             // XXX how are we REALLY supposed to figure this out?
             eventUri.spec = eventUri.spec + aNewItem.id + ".ics";
@@ -334,14 +309,14 @@ calDavCalendar.prototype = {
             // 204 = HTTP "No Content"
             //
             if (aStatusCode == 204 || aStatusCode == 201) {
-                debug("Item modified successfully.\n");
+                LOG("Item modified successfully.");
                 var retVal = Components.results.NS_OK;
 
             } else {
                 if (aStatusCode > 999) {
                     aStatusCode = "0x " + aStatusCode.toString(16);
                 }
-                debug("Error modifying item: " + aStatusCode + "\n");
+                LOG("Error modifying item: " + aStatusCode);
 
                 // XXX deal with non-existent item here, other
                 // real error handling
@@ -360,8 +335,8 @@ calDavCalendar.prototype = {
                                                   aListener.MODIFY,
                                                   aNewItem.id, aNewItem);
                 } catch (ex) {
-                    debug("modifyItem's onOperationComplete threw an"
-                          + " exception " + ex + "; ignoring\n");
+                    LOG("modifyItem's onOperationComplete threw an"
+                          + " exception " + ex + "; ignoring");
                 }
             }
 
@@ -376,8 +351,7 @@ calDavCalendar.prototype = {
         // XXX use if-exists stuff here
         // XXX use etag as generation
         // do WebDAV put
-        debug("modifyItem: aNewItem.icalString = " + aNewItem.icalString 
-              + "\n");
+        LOG("modifyItem: aNewItem.icalString = " + aNewItem.icalString);
         var webSvc = Components.classes['@mozilla.org/webdav/service;1']
             .getService(Components.interfaces.nsIWebDAVService);
         webSvc.putFromString(eventResource, "text/calendar",
@@ -418,10 +392,10 @@ calDavCalendar.prototype = {
             // 204 = HTTP "No content"
             //
             if (aStatusCode == 204) {
-                debug("Item deleted successfully.\n");
+                LOG("Item deleted successfully.");
                 var retVal = Components.results.NS_OK;
             } else {
-                debug("Error deleting item: " + aStatusCode + "\n");
+                LOG("Error deleting item: " + aStatusCode);
                 // XXX real error handling here
                 retVal = Components.results.NS_ERROR_FAILURE;
             }
@@ -435,8 +409,8 @@ calDavCalendar.prototype = {
                                                   aItem.id,
                                                   null);
                 } catch (ex) {
-                    debug("deleteItem's onOperationComplete threw an"
-                          + " exception " + ex + "; ignoring\n");
+                    LOG("deleteItem's onOperationComplete threw an"
+                          + " exception " + ex + "; ignoring");
                 }
             }
 
@@ -548,7 +522,7 @@ calDavCalendar.prototype = {
 
                 // create a local event item
                 // XXX not just events
-                var item = calEventClass.createInstance(calIEvent);
+                var item = createEvent();
 
                 // cause returned data to be parsed into the event item
                 var calData = responseElement..C::["calendar-data"];
@@ -559,7 +533,7 @@ calDavCalendar.prototype = {
                     ">; ignoring");
                   return;
                 }
-                debug("item result = \n" + calData + "\n");
+                LOG("item result = \n" + calData);
                 // XXX try-catch
                 item.icalString = calData;
                 item.calendar = thisCalendar;
@@ -568,16 +542,16 @@ calDavCalendar.prototype = {
                 var locationPath = decodeURIComponent(aResource.path)
                     .substr(thisCalendar.mCalendarUri.path.length);
                 item.setProperty("X-MOZ-LOCATIONPATH", locationPath);
-                debug("X-MOZ-LOCATIONPATH = " + locationPath + "\n");
+                LOG("X-MOZ-LOCATIONPATH = " + locationPath);
                 item.makeImmutable();
 
                 // figure out what type of item to return
                 var iid;
                 if(aOccurrences) {
-                    iid = calIItemBase;
+                    iid = Ci.calIItemBase;
                     if (item.recurrenceInfo) {
-                        debug("ITEM has recurrence: " + item + " (" + item.title + ")\n");
-                        debug("rangestart: " + aRangeStart.jsDate + " -> " + aRangeEnd.jsDate + "\n");
+                        LOG("ITEM has recurrence: " + item + " (" + item.title + ")");
+                        LOG("rangestart: " + aRangeStart.jsDate + " -> " + aRangeEnd.jsDate);
                         // XXX does getOcc call makeImmutable?
                         items = item.recurrenceInfo.getOccurrences(aRangeStart,
                                                                    aRangeEnd,
@@ -587,12 +561,12 @@ calDavCalendar.prototype = {
                         items = [ item ];
                     }
                     rv = Components.results.NS_OK;
-                } else if (item.QueryInterface(calIEvent)) {
-                    iid = calIEvent;
+                } else if (item.QueryInterface(Ci.calIEvent)) {
+                    iid = Ci.calIEvent;
                     rv = Components.results.NS_OK;
                     items = [ item ];
-                } else if (item.QueryInterface(calITodo)) {
-                    iid = calITodo;
+                } else if (item.QueryInterface(Ci.calITodo)) {
+                    iid = Ci.calITodo;
                     rv = Components.results.NS_OK;
                     items = [ item ];
                 } else {
@@ -602,14 +576,14 @@ calDavCalendar.prototype = {
 
             } else { 
                 // XXX
-                debug("aStatusCode = " + aStatusCode + "\n");
+                LOG("aStatusCode = " + aStatusCode);
                 errString = "XXX";
                 rv = Components.results.NS_ERROR_FAILURE;
             }
 
             // XXX  handle aCount
             if (errString) {
-                debug("errString = " + errString + "\n");
+                LOG("errString = " + errString);
             }
 
             try {
@@ -617,8 +591,8 @@ calDavCalendar.prototype = {
                                       items ? items.length : 0,
                                       errString ? errString : items);
             } catch (ex) {
-                    debug("reportInternal's onGetResult threw an"
-                          + " exception " + ex + "; ignoring\n");
+                    LOG("reportInternal's onGetResult threw an"
+                          + " exception " + ex + "; ignoring");
             }
             return;
         };
@@ -648,8 +622,8 @@ calDavCalendar.prototype = {
                                                   errString);
                 }
             } catch (ex) {
-                    debug("reportInternal's onOperationComplete threw an"
-                          + " exception " + ex + "; ignoring\n");
+                    LOG("reportInternal's onOperationComplete threw an"
+                          + " exception " + ex + "; ignoring");
             }
 
             return;
@@ -662,7 +636,7 @@ calDavCalendar.prototype = {
 
         // construct the resource we want to search against
         var calendarDirUri = this.mCalendarUri.clone();
-        debug("report uri = " + calendarDirUri.spec + "\n");
+        LOG("report uri = " + calendarDirUri.spec);
         var calendarDirResource = new WebDavResource(calendarDirUri);
 
         var webSvc = Components.classes['@mozilla.org/webdav/service;1']
@@ -720,7 +694,7 @@ calDavCalendar.prototype = {
         }
 
         if (filterTypes < 1) {
-            debug("No item types specified\n");
+            LOG("No item types specified");
             // XXX should we just quietly call back the completion method?
             throw NS_ERROR_FAILURE;
         }
@@ -749,8 +723,7 @@ calDavCalendar.prototype = {
         }
 
         var queryString = xmlHeader + queryXml.toXMLString();
-        debug("getItems(): querying CalDAV server for events: \n" + 
-              queryString + "\n");
+        LOG("getItems(): querying CalDAV server for events: \n" + queryString);
 
         var occurrences = (aItemFilter &
                            calICalendar.ITEM_FILTER_CLASS_OCCURRENCES) != 0; 
@@ -793,15 +766,15 @@ calDavCalendar.prototype = {
                 try {
                     obs.onStartBatch();
                 } catch (ex) {
-                    debug("observer's onStartBatch threw an exception " + ex 
-                          + "; ignoring\n");
+                    LOG("observer's onStartBatch threw an exception " + ex 
+                          + "; ignoring");
                 }
             } else {
                 try {
                     obs.onEndBatch();
                 } catch (ex) {
-                    debug("observer's onEndBatch threw an exception " + ex 
-                          + "; ignoring\n");
+                    LOG("observer's onEndBatch threw an exception " + ex 
+                          + "; ignoring");
                 }
             }
         }
@@ -814,8 +787,8 @@ calDavCalendar.prototype = {
                 try {
                     obs.onAddItem(aItem);
                 } catch (ex) {
-                    debug("observer's onAddItem threw an exception " + ex 
-                          + "; ignoring\n");
+                    LOG("observer's onAddItem threw an exception " + ex 
+                          + "; ignoring");
                 }
             }
             return;
@@ -827,8 +800,8 @@ calDavCalendar.prototype = {
                 try {
                     obs.onModifyItem(aNewItem, aOldItem);
                 } catch (ex) {
-                    debug("observer's onModifyItem threw an exception " + ex 
-                          + "; ignoring\n");
+                    LOG("observer's onModifyItem threw an exception " + ex 
+                          + "; ignoring");
                 }
             }
             return;
@@ -840,8 +813,8 @@ calDavCalendar.prototype = {
                 try {
                     obs.onDeleteItem(aDeletedItem);
                 } catch (ex) {
-                    debug("observer's onDeleteItem threw an exception " + ex 
-                          + "; ignoring\n");
+                    LOG("observer's onDeleteItem threw an exception " + ex 
+                          + "; ignoring");
                 }
             }
             return;
@@ -888,13 +861,13 @@ WebDavListener.prototype = {
         // aClosure is the listener
         aClosure.onOperationComplete(this, aStatusCode, 0, null, null);
 
-        debug("WebDavListener.onOperationComplete() called\n");
+        LOG("WebDavListener.onOperationComplete() called");
         return;
     },
 
     onOperationDetail: function(aStatusCode, aResource, aOperation, aDetail,
                                 aClosure) {
-        debug("WebDavListener.onOperationDetail() called\n");
+        LOG("WebDavListener.onOperationDetail() called");
         return;
     }
 }
@@ -906,6 +879,37 @@ WebDavListener.prototype = {
 var calDavCalendarModule = {
     mCID: Components.ID("{a35fc6ea-3d92-11d9-89f9-00045ace3b8d}"),
     mContractID: "@mozilla.org/calendar/calendar;1?type=caldav",
+
+    mUtilsLoaded: false,
+    loadUtils: function storageLoadUtils() {
+        if (this.mUtilsLoaded)
+            return;
+
+        const jssslContractID = "@mozilla.org/moz/jssubscript-loader;1";
+        const jssslIID = Components.interfaces.mozIJSSubScriptLoader;
+
+        const iosvcContractID = "@mozilla.org/network/io-service;1";        const iosvcIID = Components.interfaces.nsIIOService;
+
+        var loader = Components.classes[jssslContractID].getService(jssslIID);
+        var iosvc = Components.classes[iosvcContractID].getService(iosvcIID);
+
+        // Utils lives in the same directory we're in
+        var appdir = __LOCATION__.parent;
+        var scriptName = "calUtils.js";
+
+        var f = appdir.clone();
+        f.append(scriptName);
+
+        try {
+            var fileurl = iosvc.newFileURI(f);
+            loader.loadSubScript(fileurl.spec, this.__parent__.__parent__);
+        } catch (e) {
+            dump("Error while loading " + fileurl.spec + "\n");
+            throw e;
+        }
+
+        this.mUtilsLoaded = true;
+    },
     
     registerSelf: function (compMgr, fileSpec, location, type) {
         compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
@@ -923,6 +927,8 @@ var calDavCalendarModule = {
 
         if (!iid.equals(Components.interfaces.nsIFactory))
             throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+
+        this.loadUtils();
 
         return this.mFactory;
     },

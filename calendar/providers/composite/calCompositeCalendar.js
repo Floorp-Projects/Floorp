@@ -130,15 +130,6 @@ calCompositeCalendar.prototype = {
     mPrefPrefix: null,
     mDefaultPref: null,
     mActivePref: null,
-    _mCalMgr: null,
-    get mCalMgr () {
-        if (!this._mCalMgr) {
-            this._mCalMgr = Components.
-                classes["@mozilla.org/calendar/manager;1"].
-                getService(Components.interfaces.calICalendarManager);
-        }
-        return this._mCalMgr;
-    },
     
     set prefPrefix (aPrefPrefix) {
         if (this.mPrefPrefix) {
@@ -147,7 +138,7 @@ calCompositeCalendar.prototype = {
         this.mPrefPrefix = aPrefPrefix;
         this.mActivePref = aPrefPrefix + "-in-composite";
         this.mDefaultPref = aPrefPrefix + "-default";
-        var mgr = this.mCalMgr;
+        var mgr = getCalendarManager();
         var cals = mgr.getCalendars({});
 
         cals.forEach(function (c) {
@@ -176,7 +167,7 @@ calCompositeCalendar.prototype = {
 
         this.mCalendars.push(aCalendar);
         if (this.mPrefPrefix) {
-            this.mCalMgr.setCalendarPref(aCalendar, this.mActivePref,
+            getCalendarManager().setCalendarPref(aCalendar, this.mActivePref,
                                          "true");
         }
         this.notifyObservers("onCalendarAdded", [aCalendar]);
@@ -199,9 +190,9 @@ calCompositeCalendar.prototype = {
         if (calToRemove) {
             this.mCalendars = newCalendars;
             if (this.mPrefPrefix) {
-                this.mCalMgr.deleteCalendarPref(calToRemove,
+                getCalendarManager().deleteCalendarPref(calToRemove,
                                                 this.mActivePref);
-                this.mCalMgr.deleteCalendarPref(calToRemove,
+                getCalendarManager().deleteCalendarPref(calToRemove,
                                                 this.mDefaultPref);
             }   
             calToRemove.removeObserver(this.mObserverHelper);
@@ -233,10 +224,10 @@ calCompositeCalendar.prototype = {
             return;
         if (usePref && this.mPrefPrefix) {
             if (this.mDefaultCalendar) {
-                this.mCalMgr.deleteCalendarPref(this.mDefaultCalendar,
+                getCalendarManager().deleteCalendarPref(this.mDefaultCalendar,
                                                 this.mDefaultPref);
             }
-            this.mCalMgr.setCalendarPref(cal, this.mDefaultPref,
+            getCalendarManager().setCalendarPref(cal, this.mDefaultPref,
                                          "true");
         }
         this.mDefaultCalendar = cal;
@@ -469,6 +460,37 @@ calCompositeGetListenerHelper.prototype = {
 var calCompositeCalendarModule = {
     mCID: Components.ID("{aeff788d-63b0-4996-91fb-40a7654c6224}"),
     mContractID: "@mozilla.org/calendar/calendar;1?type=composite",
+
+    mUtilsLoaded: false,
+    loadUtils: function compositeLoadUtils() {
+        if (this.mUtilsLoaded)
+            return;
+
+        const jssslContractID = "@mozilla.org/moz/jssubscript-loader;1";
+        const jssslIID = Components.interfaces.mozIJSSubScriptLoader;
+
+        const iosvcContractID = "@mozilla.org/network/io-service;1";        const iosvcIID = Components.interfaces.nsIIOService;
+
+        var loader = Components.classes[jssslContractID].getService(jssslIID);
+        var iosvc = Components.classes[iosvcContractID].getService(iosvcIID);
+
+        // Utils lives in the same directory we're in
+        var appdir = __LOCATION__.parent;
+        var scriptName = "calUtils.js";
+
+        var f = appdir.clone();
+        f.append(scriptName);
+
+        try {
+            var fileurl = iosvc.newFileURI(f);
+            loader.loadSubScript(fileurl.spec, this.__parent__.__parent__);
+        } catch (e) {
+            dump("Error while loading " + fileurl.spec + "\n");
+            throw e;
+        }
+
+        this.mUtilsLoaded = true;
+    },
     
     registerSelf: function (compMgr, fileSpec, location, type) {
         compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
@@ -486,6 +508,8 @@ var calCompositeCalendarModule = {
 
         if (!iid.equals(Components.interfaces.nsIFactory))
             throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+
+        this.loadUtils();
 
         return this.mFactory;
     },

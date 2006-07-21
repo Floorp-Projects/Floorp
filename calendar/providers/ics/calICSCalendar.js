@@ -50,25 +50,11 @@
 const CI = Components.interfaces;
 const calIOperationListener = Components.interfaces.calIOperationListener;
 const calICalendar = Components.interfaces.calICalendar;
-const calCalendarManagerContractID = "@mozilla.org/calendar/manager;1";
-const calICalendarManager = Components.interfaces.calICalendarManager;
 const calIErrors = Components.interfaces.calIErrors;
 
 var appInfo = Components.classes["@mozilla.org/xre/app-info;1"].
                          getService(Components.interfaces.nsIXULAppInfo);
 var isOnBranch = appInfo.platformVersion.indexOf("1.8") == 0;
-
-
-var activeCalendarManager = null;
-function getCalendarManager()
-{
-    if (!activeCalendarManager) {
-        activeCalendarManager = 
-            Components.classes[calCalendarManagerContractID].getService(calICalendarManager);
-    }
-    return activeCalendarManager;
-}
-
 
 function calICSCalendar () {
     this.wrappedJSObject = this;
@@ -252,7 +238,7 @@ calICSCalendar.prototype = {
                 while (prop) {
                     if (!this.calendarPromotedProps[prop.propertyName]) {
                         this.unmappedProperties.push(prop);
-                        dump(prop.propertyName+"\n");
+                        LOG(prop.propertyName);
                     }
                     prop = calComp.getNextProperty("ANY");
                 }
@@ -265,12 +251,10 @@ calICSCalendar.prototype = {
                         var item = null;
                         switch (subComp.componentType) {
                         case "VEVENT":
-                            item = Components.classes["@mozilla.org/calendar/event;1"]
-                                             .createInstance(Components.interfaces.calIEvent);
+                            item = createEvent();
                             break;
                         case "VTODO":
-                            item = Components.classes["@mozilla.org/calendar/todo;1"]
-                                             .createInstance(Components.interfaces.calITodo);
+                            item = createTodo();
                             break;
                         case "VTIMEZONE":
                             // this should already be attached to the relevant
@@ -279,7 +263,7 @@ calICSCalendar.prototype = {
                             break;
                         default:
                             this.unmappedComponents.push(subComp);
-                            dump(subComp.componentType+"\n");
+                            LOG(subComp.componentType);
                         }
                         if (item != null) {
                             item.icalComponent = subComp;
@@ -323,7 +307,7 @@ calICSCalendar.prototype = {
             }
             
         } catch(e) {
-            dump("Parsing the file failed:"+e+"\n");
+            LOG("Parsing the file failed:"+e);
             this.mObserver.onError(e.result, e.toString());
         }
         this.mObserver.onEndBatch();
@@ -405,11 +389,11 @@ calICSCalendar.prototype = {
 
         var i;
         for (i in this.unmappedComponents) {
-             dump("Adding a "+this.unmappedComponents[i].componentType+"\n");
+             LOG("Adding a "+this.unmappedComponents[i].componentType);
              calComp.addSubcomponent(this.unmappedComponents[i]);
         }
         for (i in this.unmappedProperties) {
-             dump("Adding "+this.unmappedProperties[i].propertyName+"\n");
+             LOG("Adding "+this.unmappedProperties[i].propertyName);
              calComp.addProperty(this.unmappedProperties[i]);
         }
 
@@ -427,7 +411,7 @@ calICSCalendar.prototype = {
         var channel;
         try {
             channel = request.QueryInterface(Components.interfaces.nsIHttpChannel);
-            dump(channel.requestSucceeded+"\n");
+            LOG(channel.requestSucceeded);
         } catch(e) {
         }
 
@@ -682,7 +666,7 @@ calICSCalendar.prototype = {
         } catch(e) {
             // Backup dir wasn't found. Likely because we are running in
             // xpcshell. Don't die, but continue the upload.
-            dump("Backup failed, no backupdir:"+e+"\n");
+            LOG("Backup failed, no backupdir:"+e);
             aCallback.call(this);
             return;
         }
@@ -696,7 +680,7 @@ calICSCalendar.prototype = {
         } catch(e) {
             // calendarmgr not found. Likely because we are running in
             // xpcshell. Don't die, but continue the upload.
-            dump("Backup failed, no calendarmanager:"+e+"\n");
+            LOG("Backup failed, no calendarmanager:"+e);
             aCallback.call(this);
             return;
         }
@@ -757,7 +741,7 @@ calICSCalendar.prototype = {
         } catch(e) {
             // For local files, asyncOpen throws on new (calendar) files
             // No problem, go and upload something
-            dump("Backup failed in asyncOpen:"+e+"\n");
+            LOG("Backup failed in asyncOpen:"+e);
             aCallback.call(this);
             return;
         }
@@ -1011,6 +995,37 @@ var calICSCalendarModule = {
 
     mCID: Components.ID("{f8438bff-a3c9-4ed5-b23f-2663b5469abf}"),
     mContractID: "@mozilla.org/calendar/calendar;1?type=ics",
+
+    mUtilsLoaded: false,
+    loadUtils: function icsLoadUtils() {
+        if (this.mUtilsLoaded)
+            return;
+
+        const jssslContractID = "@mozilla.org/moz/jssubscript-loader;1";
+        const jssslIID = Components.interfaces.mozIJSSubScriptLoader;
+
+        const iosvcContractID = "@mozilla.org/network/io-service;1";        const iosvcIID = Components.interfaces.nsIIOService;
+
+        var loader = Components.classes[jssslContractID].getService(jssslIID);
+        var iosvc = Components.classes[iosvcContractID].getService(iosvcIID);
+
+        // Utils lives in the same directory we're in
+        var appdir = __LOCATION__.parent;
+        var scriptName = "calUtils.js";
+
+        var f = appdir.clone();
+        f.append(scriptName);
+
+        try {
+            var fileurl = iosvc.newFileURI(f);
+            loader.loadSubScript(fileurl.spec, this.__parent__.__parent__);
+        } catch (e) {
+            dump("Error while loading " + fileurl.spec + "\n");
+            throw e;
+        }
+
+        this.mUtilsLoaded = true;
+    },
     
     registerSelf: function (compMgr, fileSpec, location, type) {
         compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
@@ -1028,6 +1043,8 @@ var calICSCalendarModule = {
 
         if (!iid.equals(Components.interfaces.nsIFactory))
             throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+
+        this.loadUtils();
 
         return this.mFactory;
     },
