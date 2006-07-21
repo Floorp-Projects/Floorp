@@ -38,6 +38,7 @@
 #   Jesse Ruderman <jruderman@gmail.com>
 #   Joe Hughes <joe@retrovirus.com>
 #   Pamela Greene <pamg.bugs@gmail.com>
+#   Michael Ventnor <ventnors_dogs234@yahoo.com.au>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -6720,7 +6721,7 @@ var AugmentTabs = {
     undoCloseTabItem.setAttribute("id", "tabContextUndoCloseTab");
     undoCloseTabItem.setAttribute("label", menuLabel);
     undoCloseTabItem.setAttribute("accesskey", menuAccessKey);
-    undoCloseTabItem.addEventListener("command", function() { undoCloseTab(0); }, false);
+    undoCloseTabItem.setAttribute("command", "History:UndoCloseTab");
 
     // add to tab context menu
     var insertPos = this.tabContextMenu.lastChild.previousSibling;
@@ -6813,5 +6814,7 @@ HistoryMenu.populateUndoSubmenu = function PHM_populateUndoSubmenu() {
 function undoCloseTab(aIndex) {
   var ss = Cc["@mozilla.org/browser/sessionstore;1"].
            getService(Ci.nsISessionStore);
+  if (ss.getClosedTabCount(window) == 0)
+    return;
   ss.undoCloseTab(window, aIndex || 0);
 }
