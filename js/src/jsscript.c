@@ -1018,6 +1018,9 @@ js_FreeRuntimeScriptState(JSRuntime *rt)
 {
     ScriptFilenamePrefix *sfp;
 
+    if (!rt->scriptFilenameTable)
+        return;
+
     while (!JS_CLIST_IS_EMPTY(&rt->scriptFilenamePrefixes)) {
         sfp = (ScriptFilenamePrefix *) rt->scriptFilenamePrefixes.next;
         JS_REMOVE_LINK(&sfp->links);
