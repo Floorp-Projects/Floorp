@@ -660,7 +660,7 @@ generator_mark(JSContext *cx, JSObject *obj, void *arg)
     JSGenerator *gen;
 
     gen = (JSGenerator *) JS_GetPrivate(cx, obj);
-    if (gen && gen->state == JSGEN_RUNNING)
+    if (gen && gen->state != JSGEN_CLOSED)
         js_MarkStackFrame(cx, &gen->frame);
     return 0;
 }
