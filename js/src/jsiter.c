@@ -694,7 +694,7 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     nargs = JS_MAX(argc, fp->fun->nargs);
     nvars = fp->nvars;
     depth = fp->script->depth;
-    nslots = nargs + nvars + 2 * depth;
+    nslots = 2 + nargs + nvars + 2 * depth;
 
     /* Allocate obj's private data struct. */
     gen = (JSGenerator *)
@@ -724,6 +724,8 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     JS_END_MACRO
 
     /* Copy argv, rval, and vars. */
+    *newsp++ = fp->argv[-2];
+    *newsp++ = fp->argv[-1];
     COPY_STACK_ARRAY(argv, argc, nargs);
     gen->frame.rval = fp->rval;
     COPY_STACK_ARRAY(vars, nvars, nvars);
