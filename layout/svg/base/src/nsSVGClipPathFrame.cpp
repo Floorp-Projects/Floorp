@@ -41,70 +41,9 @@
 #include "nsISVGRendererCanvas.h"
 #include "nsIDOMSVGAnimatedEnum.h"
 #include "nsISVGRendererSurface.h"
-#include "nsSVGContainerFrame.h"
 #include "nsSVGAtoms.h"
 #include "nsSVGUtils.h"
 #include "nsSVGGraphicElement.h"
-
-typedef nsSVGContainerFrame nsSVGClipPathFrameBase;
-
-class nsSVGClipPathFrame : public nsSVGClipPathFrameBase,
-                           public nsISVGClipPathFrame
-{
-  friend nsIFrame*
-  NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
-
-  virtual ~nsSVGClipPathFrame();
-  NS_IMETHOD InitSVG();
-
- public:
-  nsSVGClipPathFrame(nsStyleContext* aContext) : nsSVGClipPathFrameBase(aContext) {}
-
-  // nsISupports interface:
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
-  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
-
-  // nsISVGClipPathFrame interface:
-  NS_IMETHOD ClipPaint(nsISVGRendererCanvas* canvas,
-                       nsISVGRendererSurface* aClipSurface,
-                       nsISVGChildFrame* aParent,
-                       nsCOMPtr<nsIDOMSVGMatrix> aMatrix);
-
-  NS_IMETHOD ClipHitTest(nsISVGChildFrame* aParent,
-                         nsCOMPtr<nsIDOMSVGMatrix> aMatrix,
-                         float aX, float aY, PRBool *aHit);
-
-  NS_IMETHOD IsTrivial(PRBool *aTrivial);
-
-  /**
-   * Get the "type" of the frame
-   *
-   * @see nsLayoutAtoms::svgClipPathFrame
-   */
-  virtual nsIAtom* GetType() const;
-
-#ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsAString& aResult) const
-  {
-    return MakeFrameName(NS_LITERAL_STRING("SVGClipPath"), aResult);
-  }
-#endif
-
- private:
-  nsISVGChildFrame *mClipParent;
-  nsCOMPtr<nsIDOMSVGMatrix> mClipParentMatrix;
-
-  // nsSVGContainerFrame methods:
-  virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
-
-  // recursion prevention flag
-  PRPackedBool mInUse;
-};
-
-NS_INTERFACE_MAP_BEGIN(nsSVGClipPathFrame)
-  NS_INTERFACE_MAP_ENTRY(nsISVGClipPathFrame)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGClipPathFrameBase)
 
 //----------------------------------------------------------------------
 // Implementation
@@ -124,7 +63,7 @@ NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleCo
 }
 
 nsresult
-NS_GetSVGClipPathFrame(nsISVGClipPathFrame **aResult,
+NS_GetSVGClipPathFrame(nsSVGClipPathFrame **aResult,
                        nsIURI *aURI, nsIContent *aContent)
 {
   *aResult = nsnull;
@@ -152,10 +91,6 @@ NS_GetSVGClipPathFrame(nsISVGClipPathFrame **aResult,
 
   *aResult = (nsSVGClipPathFrame *)cpframe;
   return NS_OK;
-}
-
-nsSVGClipPathFrame::~nsSVGClipPathFrame()
-{
 }
 
 NS_IMETHODIMP
