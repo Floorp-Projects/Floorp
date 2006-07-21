@@ -235,6 +235,8 @@ var gPrivacyPane = {
    * privacy.sanitize.sanitizeOnShutdown
    * - true if the user's private data is cleared on startup according to the
    *   Clear Private Data settings, false otherwise
+   * privacy.sanitize.promptOnSanitize
+   * - true if sanitizing forces the user to accept a dialog, false otherwise
    */
 
   /**
@@ -244,6 +246,20 @@ var gPrivacyPane = {
   {
     document.documentElement.openSubDialog("chrome://browser/content/preferences/sanitize.xul",
                                            "", null);
+  },
+
+  /**
+   * Either displays a dialog from which individual parts of private data may be
+   * cleared, or automatically clears private data according to current
+   * CPD settings.  The former happens if privacy.sanitize.promptOnSanitize is
+   * true, and the latter happens otherwise.
+   */
+  clearPrivateDataNow: function ()
+  {
+    const Cc = Components.classes, Ci = Components.interfaces;
+    var glue = Cc["@mozilla.org/browser/browserglue;1"]
+                 .getService(Ci.nsIBrowserGlue);
+    glue.sanitize(window || null);
   }
 
 };

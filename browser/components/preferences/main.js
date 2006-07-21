@@ -46,6 +46,10 @@ var gMainPane = {
   init: function ()
   {
     this._pane = document.getElementById("paneMain");
+
+    // set up the "use current page" label-changing listener
+    this._updateUseCurrentButton();
+    window.addEventListener("focus", this._updateUseCurrentButton, false);
   },
 
   // HOME PAGE
@@ -54,180 +58,9 @@ var gMainPane = {
    * Preferences:
    *
    * browser.startup.homepage
-   * - the user's home page, as a string
+   * - the user's home page, as a string; if the home page is a set of tabs,
+   *   this will be those URLs separated by the pipe character "|"
    */
-
-  /**
-   * Reads the homepage preference and returns the value of the radio
-   * corresponding to the type of the current home page, handling the case where
-   * a radio which requires further action has been selected but that further
-   * action has not been made ("bookmark" requires selecting one, "other"
-   * requires typing one).
-   */
-  readHomePage: function ()
-  {
-    var useCurrent = document.getElementById("useCurrent");
-    var chooseBookmark = document.getElementById("chooseBookmark");
-    var bookmarkName = document.getElementById("bookmarkName");
-    var otherURL = document.getElementById("otherURL");
-
-    // handle selection of "bookmark" radio when there's nothing there: in this
-    // case, the value in preferences is the most recent value stored in the
-    // preference (to be applied now or later as needed), and the uri attribute
-    // on bookmarkName == "(none)" -- if prefs are written with "bookmark"
-    // selected but with no set uri attribute or the attribute is equal to
-    // "(none)", then the previous value is stored to preferences
-    if (bookmarkName.getAttribute("uri") == "(none)") {
-      useCurrent.disabled = otherURL.disabled = true;
-      bookmarkName.disabled = chooseBookmark.disabled = false;
-
-      return "bookmark";
-    }
-
-    var homePage = document.getElementById("browser.startup.homepage");
-    if (homePage.value == homePage.defaultValue) {
-      useCurrent.disabled = otherURL.disabled = true;
-      bookmarkName.disabled = chooseBookmark.disabled = true;
-      return "default";
-    }
-    else {
-      var bookmarkTitle = null;
-
-      if (homePage.value.indexOf("|") >= 0) {
-        // multiple tabs -- XXX dangerous "|" character!
-        // don't bother treating this as a bookmark, because the level of
-        // discernment needed to determine that these actually represent a
-        // folder is probably more trouble than it's worth
-      } else {
-#ifdef MOZ_PLACES
-        // XXX this also retrieves titles of pages that are only in history and
-        //     not only in bookmarks, but there's nothing that can be done about
-        //     that without more fine-grained APIs
-        const Cc = Components.classes, Ci = Components.interfaces;
-        try {
-          var ios = Cc["@mozilla.org/network/io-service;1"]
-                      .getService(Ci.nsIIOService);
-          var uri = ios.newURI(homePage.value, "UTF-8", null);
-
-          var bmSvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"]
-                        .getService(Ci.nsINavBookmarksService);
-          bookmarkTitle = bmSvc.getItemTitle(uri);
-        } catch (e) {
-          bookmarkTitle = null;
-        }
-#else
-        // determining this without Places == great pain and suffering in the
-        // general case, so check if the bookmark field has a uri attribute
-        // and see if it's equal to the current home page -- this means that if
-        // you choose a bookmark and set it as home page on any instant-apply
-        // platform (i.e., not Windows), you can do that and switch back and
-        // forth between the three radio options and things will work correctly,
-        // but once the window's closed and reopened it'll just appear as a
-        // normal "other URL"
-        if (bookmarkName.getAttribute("uri") == homePage.value)
-          bookmarkTitle = bookmarkName.value;
-#endif
-      }
-
-      if (bookmarkTitle) {
-        useCurrent.disabled = otherURL.disabled = true;
-        bookmarkName.disabled = chooseBookmark.disabled = false;
-
-        bookmarkName.value = bookmarkTitle;
-        // in case this isn't the result of the user choosing a bookmark
-        bookmarkName.setAttribute("uri", homePage.value);
-
-        return "bookmark";
-      } else {
-        useCurrent.disabled = otherURL.disabled = false;
-        bookmarkName.disabled = chooseBookmark.disabled = true;
-
-        if (homePage.value == "about:blank") {
-          otherURL.value = document.getElementById("bundlePreferences")
-                                   .getString("blankpage");
-        } else {
-          otherURL.value = homePage.value;
-        }
-        return "other";
-      }
-    }
-  },
-
-  /**
-   * Returns the homepage preference value as reflected in the current UI.
-   * This function also ensures that radio buttons whose results require
-   * further action ("bookmark" requires selecting one, "other" requires
-   * choosing a URL) may be selected even though no associated value
-   * was selected by the user.
-   */
-  writeHomePage: function()
-  {
-    var bsp = document.getElementById("browserStartPage");
-    var homePage = document.getElementById("browser.startup.homepage");
-    
-    var useCurrent = document.getElementById("useCurrent");
-    var chooseBookmark = document.getElementById("chooseBookmark");
-    var bookmarkName = document.getElementById("bookmarkName");
-    var otherURL = document.getElementById("otherURL");
-
-    switch (bsp.selectedItem.value) {
-      case "default":
-        useCurrent.disabled = otherURL.disabled = true;
-        chooseBookmark.disabled = bookmarkName.disabled = true;
-
-        // remove any uri="(none)" on the bookmark name field, because it's
-        // interpreted as meaning that that radio should be focused, not
-        // "default"
-        if (bookmarkName.getAttribute("uri") == "(none)")
-          bookmarkName.removeAttribute("uri");
-
-        return homePage.defaultValue;
-        break;
-
-      case "bookmark":
-        useCurrent.disabled = otherURL.disabled = true;
-        chooseBookmark.disabled = bookmarkName.disabled = false;
-
-        // the following code allows selection of the "bookmark" option even
-        // when there's no bookmark selected yet -- in this case, we save the
-        // previous value to preferences and set the uri attribute on the
-        // bookmark name field to "(none)", which is interpreted here and the
-        // current value of the preference is returned so as not to store a
-        // bogus value in preferences
-        var bmURI = bookmarkName.getAttribute("uri");
-        if (bmURI && bmURI != "(none)") {
-          return bmURI;
-        } else {
-          bookmarkName.setAttribute("uri", "(none)");
-          return homePage.value;
-        }
-        break;
-
-      case "other":
-        useCurrent.disabled = otherURL.disabled = false;
-        chooseBookmark.disabled = bookmarkName.disabled = true;
-
-        // remove any uri="(none)" on the bookmark name field, because it's
-        // interpreted as meaning that that radio should be focused, not
-        // "other"
-        if (bookmarkName.getAttribute("uri") == "(none)")
-          bookmarkName.removeAttribute("uri");
-
-        // special-case display of "about:blank" in UI to make it more
-        // user-friendly
-        if (otherURL.value == document.getElementById("bundlePreferences")
-                                      .getString("blankpage")) {
-          return "about:blank";
-        } else {
-          return otherURL.value;
-        }
-        break;
-
-      default:
-        throw "Unhandled browserStartPage value!";
-    }
-    return homePage.value; // quell erroneous JS strict warning
-  },
 
   /**
    * Sets the home page to the current displayed page (or frontmost tab, if the
@@ -247,15 +80,17 @@ var gMainPane = {
       win = window.opener;
 
     if (win) {
-      var otherURL = document.getElementById("otherURL");
-      var bsp = document.getElementById("browserStartPage");
+      var homePage = document.getElementById("browser.startup.homepage");
+      var browser = win.document.getElementById("content");
 
-      otherURL.value = win.document.getElementById("content").currentURI.spec;
+      var newVal = browser.browsers[0].currentURI.spec;
+      if (browser.browsers.length > 1) {
+        // XXX using dangerous "|" joiner!
+        for (var i = 1; i < browser.browsers.length; i++)
+          newVal += "|" + browser.browsers[i].currentURI.spec;
+      }
 
-      // select the "other" radio
-      bsp.value = "other";
-
-      this._pane.userChangedValue(otherURL);
+      homePage.value = newVal;
     }
   },
 
@@ -274,27 +109,54 @@ var gMainPane = {
 #endif
                                            "resizable", rv);  
     if (rv.urls && rv.names) {
-      var bookmarkName = document.getElementById("bookmarkName");
-      var bsp = document.getElementById("browserStartPage");
+      var homePage = document.getElementById("browser.startup.homepage");
 
       // XXX still using dangerous "|" joiner!
-      bookmarkName.setAttribute("uri", rv.urls.join("|"));
-
-      // make at least an attempt to display multiple bookmarks correctly in UI
-      if (rv.names.length == 1) {
-        bookmarkName.value = rv.names[0];
-      } else {
-        var bundle = document.getElementById("bundlePreferences");
-        bookmarkName.value = rv.names.join(bundle.getString("bookmarkjoiner"));
-      }
-
-      // select the "bookmark" radio
-      bsp.value = "bookmark";
-
-      this._pane.userChangedValue(bookmarkName);
+      homePage.value = rv.urls.join("|");
     }
   },
-  
+
+  /**
+   * Switches the "Use Current Page" button between its singular and plural
+   * forms.
+   */
+  _updateUseCurrentButton: function () {
+    var useCurrent = document.getElementById("useCurrent");
+
+    var win;
+    if (document.documentElement.instantApply) {
+      const Cc = Components.classes, Ci = Components.interfaces;
+      // If we're in instant-apply mode, use the most recent browser window
+      var wm = Cc["@mozilla.org/appshell/window-mediator;1"]
+                 .getService(Ci.nsIWindowMediator);
+      win = wm.getMostRecentWindow("navigator:browser");
+    }
+    else
+      win = window.opener;
+
+    if (win && win.document.documentElement
+                  .getAttribute("windowtype") == "navigator:browser") {
+      useCurrent.disabled = false;
+
+      var tabbrowser = win.document.getElementById("content");
+      if (tabbrowser.browsers.length > 1)
+        useCurrent.label = useCurrent.getAttribute("label2");
+      else
+        useCurrent.label = useCurrent.getAttribute("label1");
+    }
+    else
+      useCurrent.disabled = true;
+  },
+
+  /**
+   * Restores the default home page as the user's home page.
+   */
+  restoreDefaultHomePage: function ()
+  {
+    var homePage = document.getElementById("browser.startup.homepage");
+    homePage.value = homePage.defaultValue;
+  },
+
   // DOWNLOADS
 
   /*

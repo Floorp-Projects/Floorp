@@ -389,11 +389,7 @@ var gSecurityPane = {
   {
     var noMP = !this._masterPasswordSet();
 
-    var bundle = document.getElementById("bundlePreferences");
-    var button = document.getElementById("masterPassword");
-    button.label = bundle.getString(noMP ? "setMasterPassword" : "changeMasterPassword");
-    button.setAttribute("accesskey",
-                        bundle.getString(noMP ? "setMasterPassword_accesskey" : "changeMasterPassword_accesskey"));
+    var button = document.getElementById("changeMasterPassword");
     button.disabled = noMP;
 
     var checkbox = document.getElementById("useMasterPassword");
@@ -428,21 +424,26 @@ var gSecurityPane = {
   updateMasterPasswordButton: function ()
   {
     var checkbox = document.getElementById("useMasterPassword");
-    var button = document.getElementById("masterPassword");
+    var button = document.getElementById("changeMasterPassword");
     button.disabled = !checkbox.checked;
 
-    // in instant-apply mode, we'd like flipping this to try to immediately
-    // remove the master password
-    if (!checkbox.checked &&
-        this._masterPasswordSet()) {
+    // unchecking the checkbox should try to immediately remove the master
+    // password, because it's impossible to non-destructively remove the master
+    // password used to encrypt all the passwords without providing it (by
+    // design), and it would be extremely odd to pop up that dialog when the
+    // user closes the prefwindow and saves his settings
+    if (!checkbox.checked)
       this._removeMasterPassword();
-      this._initMasterPasswordUI();
-    }
+    else
+      this.changeMasterPassword();
+
+    this._initMasterPasswordUI();
   },
 
   /**
    * Displays the "remove master password" dialog to allow the user to remove
-   * the current master password.
+   * the current master password.  When the dialog is dismissed, master password
+   * UI is automatically updated.
    */
   _removeMasterPassword: function ()
   {
@@ -458,6 +459,7 @@ var gSecurityPane = {
       document.documentElement.openSubDialog("chrome://mozapps/content/preferences/removemp.xul",
                                              "", null);
     }
+    this._initMasterPasswordUI();
   },
 
   /**

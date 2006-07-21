@@ -149,9 +149,9 @@
       </hbox>
     </groupbox>
 
-    <!-- Clear Private Data -->
-    <groupbox id="clearDataGroup">
-      <caption label="&clearPrivateData.label;"/>
+    <!-- Private Data -->
+    <groupbox id="privateDataGroup">
+      <caption label="&privateData.label;"/>
 
       <hbox id="clearDataBox" align="center">
         <checkbox id="alwaysClear" flex="1"
@@ -161,6 +161,12 @@
         <button id="clearDataSettings" label="&clearDataSettings.label;"
                 accesskey="&clearDataSettings.accesskey;"
                 oncommand="gPrivacyPane.showClearPrivateDataSettings();"/>
+      </hbox>
+      <hbox align="right">
+        <button id="clearDataNow"
+                label="&clearDataNow.label;"
+                accesskey="&clearDataNow.accesskey;"
+                oncommand="gPrivacyPane.clearPrivateDataNow();"/>
       </hbox>
     </groupbox>
 

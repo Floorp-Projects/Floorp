@@ -41,14 +41,15 @@
 
 <!ENTITY  rememberPasswords.label       "Remember passwords for sites">
 <!ENTITY  rememberPasswords.accesskey   "R">
-<!ENTITY  useMasterPassword.label       "Use a master password">
-<!ENTITY  useMasterPassword.accesskey   "U">
-
 <!ENTITY  passwordExceptions.label      "Exceptions...">
 <!ENTITY  passwordExceptions.accesskey  "x">
 
+<!ENTITY  useMasterPassword.label        "Use a master password">
+<!ENTITY  useMasterPassword.accesskey    "U">
+<!ENTITY  changeMasterPassword.label     "Change Master Password...">
+<!ENTITY  changeMasterPassword.accesskey "M">
 
-<!ENTITY  showPasswords.label            "Show Saved Passwords...">
+<!ENTITY  showPasswords.label            "Show Passwords...">
 <!ENTITY  showPasswords.accesskey        "P">
 
 

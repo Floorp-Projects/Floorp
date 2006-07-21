@@ -62,37 +62,33 @@
     
     <script type="application/x-javascript" src="chrome://browser/content/preferences/tabs.js"/>
 
-    <groupbox id="tabsGroup" orient="vertical">
+    <vbox id="linksOpenInBox">
+      <label control="linkTargeting">&newPagesIn.label;</label>
+      <radiogroup id="linkTargeting" class="indent"
+                  preference="browser.link.open_external"
+                  onsyncfrompreference="return gTabsPane.readLinkTarget();"
+                  onsynctopreference="return gTabsPane.writeLinkTarget();">
+        <radio label="&inNewWindow.label;" accesskey="&inNewWindow.accesskey;" value="2"/>
+        <radio label="&inNewTab.label;" accesskey="&inNewTab.accesskey;" value="3"/>
+      </radiogroup>
+    </vbox>
 
-      <vbox id="linksOpenInBox">
-        <label control="linkTargeting">&linksOpenIn.label;</label>
-        <radiogroup id="linkTargeting" class="indent"
-                    preference="browser.link.open_external"
-                    onsyncfrompreference="return gTabsPane.readLinkTarget();"
-                    onsynctopreference="return gTabsPane.writeLinkTarget();">
-          <radio label="&inNewWindow.label;" accesskey="&inNewWindow.accesskey;" value="2"/>
-          <radio label="&inNewTab.label;" accesskey="&inNewTab.accesskey;" value="3"/>
-        </radiogroup>
-      </vbox>
+    <separator id="tabsSeparator"/>
 
-      <separator id="tabsSeparator"/>
-
-      <vbox id="tabPrefsBox" align="start">
-        <checkbox id="warnCloseMultiple" label="&warnCloseMultiple.label;"
-                  accesskey="&warnCloseMultiple.accesskey;"
-                  preference="browser.tabs.warnOnClose"/>
-        <checkbox id="warnOpenMany" label="&warnOpenMany.label;"
-                  accesskey="&warnOpenMany.accesskey;"
-                  preference="browser.tabs.warnOnOpen"/>
-        <checkbox id="showTabBar" label="&showTabBar.label;"
-                  accesskey="&showTabBar.accesskey;"
-                  preference="browser.tabs.autoHide"/>
-        <checkbox id="switchToNewTabs" label="&switchToNewTabs.label;"
-                  accesskey="&switchToNewTabs.accesskey;"
-                  preference="browser.tabs.loadInBackground"/>
-      </vbox>
-
-    </groupbox>
+    <vbox id="tabPrefsBox" align="start">
+      <checkbox id="warnCloseMultiple" label="&warnCloseMultiple.label;"
+                accesskey="&warnCloseMultiple.accesskey;"
+                preference="browser.tabs.warnOnClose"/>
+      <checkbox id="warnOpenMany" label="&warnOpenMany.label;"
+                accesskey="&warnOpenMany.accesskey;"
+                preference="browser.tabs.warnOnOpen"/>
+      <checkbox id="showTabBar" label="&showTabBar.label;"
+                accesskey="&showTabBar.accesskey;"
+                preference="browser.tabs.autoHide"/>
+      <checkbox id="switchToNewTabs" label="&switchToNewTabs.label;"
+                accesskey="&switchToNewTabs.accesskey;"
+                preference="browser.tabs.loadInBackground"/>
+    </vbox>
 
   </prefpane>
 

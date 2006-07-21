@@ -108,42 +108,28 @@
     <groupbox id="homePageGroup">
       <caption label="&homePage.label;"/>
 
-      <radiogroup id="browserStartPage"
-                  preference="browser.startup.homepage"
-                  onsyncfrompreference="return gMainPane.readHomePage();"
-                  onsynctopreference="return gMainPane.writeHomePage();">
-        <radio id="useDefaultHome"
-               label="&useDefaultHome.label;"
-               accesskey="&useDefaultHome.accesskey;"
-               value="default"/>
-        <hbox id="bookmarkRow">
-          <radio id="useABookmark"
-                 label="&useABookmark.label;"
-                 accesskey="&useABookmark.accesskey;"
-                 value="bookmark"/>
-          <textbox id="bookmarkName"
-                   class="padded"
-                   flex="1"
-                   readonly="true"/>
-          <button id="chooseBookmark"
-                  label="&choose.label;"
-                  accesskey="&choose.accesskey;"
-                  oncommand="gMainPane.setHomePageToBookmark();"/>
-        </hbox>
-        <hbox id="otherRow">
-          <radio id="useOther"
-                 label="&useOther.label;"
-                 accesskey="&useOther.accesskey;"
-                 value="other"/>
-          <textbox id="otherURL"
-                   class="padded"
-                   flex="1"/>
-          <button id="useCurrent"
-                  label="&useCurrent.label;"
-                  accesskey="&useCurrent.accesskey;"
-                  oncommand="gMainPane.setHomePageToCurrent();"/>
-        </hbox>
-      </radiogroup>
+      <hbox align="center">
+        <label value="&location.label;" accesskey="&location.accesskey;" control="browserStartupHomepage"/>
+        <textbox id="browserHomePage" class="padded" flex="1"
+                 type="autocomplete" autocompletesearch="history"
+                 preference="browser.startup.homepage"/>
+      </hbox>
+      <hbox align="center" pack="end">
+        <button label="" accesskey="&useCurrentPage.accesskey;"
+                label1="&useCurrentPage.label;"
+                label2="&useMultiple.label;"
+                oncommand="gMainPane.setHomePageToCurrent();"
+                id="useCurrent"
+                prefstring="pref.browser.homepage.disable_button.current_page"/>
+        <button label="&useBookmark.label;" accesskey="&useBookmark.accesskey;"
+                oncommand="gMainPane.setHomePageToBookmark();"
+                id="useBookmark"
+                prefstring="pref.browser.homepage.disable_button.bookmark_page"/>
+        <button label="&restoreDefault.label;" accesskey="&restoreDefault.accesskey;"
+                oncommand="gMainPane.restoreDefaultHomePage();"
+                id="restoreDefaultHomePage"
+                prefstring="pref.browser.homepage.disable_button.restore_default"/>
+      </hbox>
     </groupbox>
 
     <!-- Downloads -->

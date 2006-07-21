@@ -1,16 +1,14 @@
 <!ENTITY homePage.label            "Home Page">
 
-<!ENTITY useDefaultHome.label      "&brandShortName; Start">
-<!ENTITY useDefaultHome.accesskey  "S">
-<!ENTITY useABookmark.label        "Use a Bookmark">
-<!ENTITY useABookmark.accesskey    "B">
-<!ENTITY choose.label              "Choose...">
-<!ENTITY choose.accesskey          "h">
-<!ENTITY useOther.label            "Use this page">
-<!ENTITY useOther.accesskey        "p">
-<!ENTITY useCurrent.label          "Use Current">
-<!ENTITY useCurrent.accesskey      "C">
-
+<!ENTITY location.label            "Location:">
+<!ENTITY location.accesskey        "L">
+<!ENTITY useCurrentPage.label      "Use Current Page">
+<!ENTITY useCurrentPage.accesskey  "C">
+<!ENTITY useMultiple.label         "Use Current Pages">
+<!ENTITY useBookmark.label         "Use Bookmark">
+<!ENTITY useBookmark.accesskey     "B">
+<!ENTITY restoreDefault.label      "Restore to Default">
+<!ENTITY restoreDefault.accesskey  "R">
 
 <!ENTITY downloads.label     "Downloads">
 

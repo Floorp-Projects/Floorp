@@ -49,7 +49,7 @@
 <overlay id="ContentPaneOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <prefpane id="paneContent"
+  <prefpane id="paneContent" onpaneload="gContentPane.init();"
             helpTopic="prefs-content" helpURI="chrome://browser/locale/help/help.rdf">
 
     <preferences id="contentPreferences">
@@ -59,6 +59,7 @@
       <preference id="dom.disable_open_during_load"   name="dom.disable_open_during_load"   type="bool"/>
       <preference id="permissions.default.image"      name="permissions.default.image"      type="int"/>
       <preference id="javascript.enabled"             name="javascript.enabled"             type="bool"/>
+      <preference id="security.enable_java"           name="security.enable_java"           type="bool"/>
 
       <preference id="pref.advanced.images.disable_button.view_image"
                   name="pref.advanced.images.disable_button.view_image"
@@ -73,14 +74,14 @@
                   type="wstring"
                   onchange="gContentPane._rebuildFonts();"/>
 
-      <!-- FEEDS -->
-
       <!-- FILE TYPES -->
 
     </preferences>
     
     <script type="application/x-javascript" src="chrome://mozapps/content/preferences/fontbuilder.js"/>
     <script type="application/x-javascript" src="chrome://browser/content/preferences/content.js"/>
+
+    <stringbundle id="bundlePreferences" src="chrome://browser/locale/preferences/preferences.properties"/>
 
     <!-- various checkboxes, font-fu -->
     <groupbox id="miscGroup">
@@ -111,8 +112,8 @@
                         onsynctopreference="return gContentPane.writeLoadImages();"/>
             </vbox>
             <vbox>
-              <button label="&imageExceptions.label;"
-                      accesskey="&imageExceptions.accesskey;"
+              <button label="&exceptions.label;"
+                      accesskey="&exceptions.accesskey;"
                       oncommand="gContentPane.showImageExceptions();"
                       preference="pref.advanced.images.disable_button.view_image"/>
             </vbox>
@@ -131,55 +132,78 @@
                       preference="pref.advanced.javascript.disable_button.advanced"/>
             </vbox>
           </row>
-
-          <separator class="thin"/>
-
-          <hbox id="fontsColorsRow" align="center">
-            <description flex="1">&fontsColors.label;</description>
-            <button id="fontsButton"
-                    icon="select-font"
-                    label="&fontsBtn.label;"
-                    accesskey="&fontsBtn.accesskey;"
-                    oncommand="gContentPane.configureFonts();"/>
-            <button id="colorsButton"
-                    label="&colors.label;"
-                    accesskey="&colors.accesskey;"
-                    oncommand="gContentPane.configureColors();"/>
-          </hbox>
-
+          <row id="enableJavaRow">
+            <vbox align="start">
+              <checkbox id="enableJava"
+                        label="&enableJava.label;"
+                        accesskey="&enableJava.accesskey;"
+                        preference="security.enable_java"/>
+            </vbox>
+          </row>
         </rows>
       </grid>
     </groupbox>
 
-#ifdef MOZ_FEEDS
-    <!-- Feeds -->
-    <groupbox id="feedsGroup">
-      <caption label="&feeds.label;"/>
+    <!-- Fonts and Colors -->
+    <groupbox>
+      <caption label="&fontsAndColors.label;"/>
 
-      <hbox id="chooseReaderBox" align="center">
-        <label control="chooseFeedReader"
-               accesskey="&feedReader.accesskey;">&feedReader.label;</label>
-        <menulist id="chooseFeedReader">
-          <menupopup>
-            <menuitem value="foo" label="XXX"/>
-          </menupopup>
-        </menulist>
-      </hbox>
-
-      <separator class="thin"/>
-
-      <label id="feedClickLabel"
-             control="feedClick">&feedClick.label;</label>
-      <radiogroup id="feedClick" class="indent"
-                  preference="XXX"
-                  onsyncfrompreference="throw 'XXX';"
-                  onsynctopreference="throw 'XXX';">
-        <radio label="&ask.label;" accesskey="&ask.accesskey;" value="XXX"/>
-        <radio label="&subLiveBookmark.label;" accesskey="&subLiveBookmark.accesskey;" value="XXX"/>
-        <radio label="&subReader.label;" accesskey="&subReader.accesskey;" value="XXX"/>
-      </radiogroup>
+      <grid id="fontsGrid">
+        <columns>
+          <column flex="1"/>
+          <column/>
+        </columns>
+        <rows id="fontsRows">
+          <row id="fontRow">
+            <hbox align="center">
+              <label control="defaultFont" accesskey="&defaultFont.accesskey;">&defaultFont.label;</label>
+              <menulist id="defaultFont" flex="1"/>
+              <label control="defaultFontSize" accesskey="&defaultSize.accesskey;">&defaultSize.label;</label>
+              <menulist id="defaultFontSize">
+                <menupopup>
+                  <menuitem value="9" label="9"/>
+                  <menuitem value="10" label="10"/>
+                  <menuitem value="11" label="11"/>
+                  <menuitem value="12" label="12"/>
+                  <menuitem value="13" label="13"/>
+                  <menuitem value="14" label="14"/>
+                  <menuitem value="15" label="15"/>
+                  <menuitem value="16" label="16"/>
+                  <menuitem value="17" label="17"/>
+                  <menuitem value="18" label="18"/>
+                  <menuitem value="20" label="20"/>
+                  <menuitem value="22" label="22"/>
+                  <menuitem value="24" label="24"/>
+                  <menuitem value="26" label="26"/>
+                  <menuitem value="28" label="28"/>
+                  <menuitem value="30" label="30"/>
+                  <menuitem value="32" label="32"/>
+                  <menuitem value="34" label="34"/>
+                  <menuitem value="36" label="36"/>
+                  <menuitem value="40" label="40"/>
+                  <menuitem value="44" label="44"/>
+                  <menuitem value="48" label="48"/>
+                  <menuitem value="56" label="56"/>
+                  <menuitem value="64" label="64"/>
+                  <menuitem value="72" label="72"/>
+                </menupopup>
+              </menulist>
+            </hbox>
+            <button id="advancedFonts" icon="select-font"
+                    label="&advancedFonts.label;"
+                    accesskey="&advancedFonts.accesskey;"
+                    oncommand="gContentPane.configureFonts();"/>
+          </row>
+          <row id="colorsRow">
+            <hbox/>
+            <button id="colors" icon="select-color"
+                    label="&colors.label;"
+                    accesskey="&colors.accesskey;"
+                    oncommand="gContentPane.configureColors();"/>
+          </row>
+        </rows>
+      </grid>
     </groupbox>
-#endif
 
     <!-- File Types -->
     <groupbox id="fileTypesGroup">
