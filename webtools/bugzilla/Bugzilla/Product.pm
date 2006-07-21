@@ -164,6 +164,19 @@ sub bug_ids {
     return $self->{'bug_ids'};
 }
 
+sub user_has_access {
+    my ($self, $user) = @_;
+
+    return Bugzilla->dbh->selectrow_array(
+        'SELECT CASE WHEN group_id IS NULL THEN 1 ELSE 0 END
+           FROM products LEFT JOIN group_control_map
+                ON group_control_map.product_id = products.id
+                   AND group_control_map.entry != 0
+                   AND group_id NOT IN (' . $user->groups_as_string . ')
+          WHERE products.id = ? ' . Bugzilla->dbh->sql_limit(1),
+          undef, $self->id);
+}
+
 
 ###############################
 ####      Accessors      ######
@@ -217,6 +230,7 @@ Bugzilla::Product - Bugzilla product class.
     my @versions        = $product->versions();
     my $bugcount        = $product->bug_count();
     my $bug_ids         = $product->bug_ids();
+    my $has_access      = $product->user_has_access($user);
 
     my $id               = $product->id;
     my $name             = $product->name;
@@ -293,6 +307,18 @@ below.
  Params:      none.
 
  Returns:     An array of integer.
+
+=item C<user_has_access()>
+
+ Description: Tells you whether or not the user is allowed to enter
+              bugs into this product, based on the C<entry> group
+              control. To see whether or not a user can actually
+              enter a bug into a product, use C<$user-&gt;can_enter_product>.
+
+ Params:      C<$user> - A Bugzilla::User object.
+
+ Returns      C<1> If this user's groups allow him C<entry> access to
+              this Product, C<0> otherwise.
 
 =back
 

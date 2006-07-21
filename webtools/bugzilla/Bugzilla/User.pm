@@ -535,11 +535,7 @@ sub get_selectable_products {
     $query .= "ORDER BY name";
 
     my $prod_ids = $dbh->selectcol_arrayref($query, undef, @params);
-    my @products;
-    foreach my $prod_id (@$prod_ids) {
-        push(@products, new Bugzilla::Product($prod_id));
-    }
-    $self->{selectable_products} = \@products;
+    $self->{selectable_products} = Bugzilla::Product->new_from_list($prod_ids);
     return $self->{selectable_products};
 }
 
@@ -568,76 +564,73 @@ sub can_enter_product {
     my $dbh = Bugzilla->dbh;
 
     if (!defined($product_name)) {
-        return unless $warn;
+        return unless $warn == THROW_ERROR;
         ThrowUserError('no_products');
     }
     trick_taint($product_name);
+    my $can_enter =
+        grep($_->name eq $product_name, @{$self->get_enterable_products});
 
-    # Checks whether the user has access to the product.
-    my $has_access = $dbh->selectrow_array('SELECT CASE WHEN group_id IS NULL
-                                                        THEN 1 ELSE 0 END
-                                              FROM products
-                                         LEFT JOIN group_control_map
-                                                ON group_control_map.product_id = products.id
-                                               AND group_control_map.entry != 0
-                                               AND group_id NOT IN (' . $self->groups_as_string . ')
-                                             WHERE products.name = ? ' .
-                                             $dbh->sql_limit(1),
-                                            undef, $product_name);
+    return 1 if $can_enter;
 
-    if (!$has_access) {
-        return unless $warn;
-        ThrowUserError('entry_access_denied', { product => $product_name });
+    return 0 unless $warn == THROW_ERROR;
+
+    # Check why access was denied. These checks are slow,
+    # but that's fine, because they only happen if we fail.
+
+    my $product = new Bugzilla::Product({name => $product_name});
+
+    # The product could not exist or you could be denied...
+    if (!$product || !$product->user_has_access($self)) {
+        ThrowUserError('entry_access_denied', {product => $product_name});
+    }
+    # It could be closed for bug entry...
+    elsif ($product->disallow_new) {
+        ThrowUserError('product_disabled', {product => $product->name});
+    }
+    # It could have no components...
+    elsif (!@{$product->components}) {
+        ThrowUserError('missing_component', {product => $product->name});
+    }
+    # It could have no versions...
+    elsif (!@{$product->versions}) {
+        ThrowUserError ('missing_version', {product => $product->name});
     }
 
-    # Checks whether the product is open for new bugs and
-    # has at least one component and one version.
-    my ($is_open, $has_version) = 
-        $dbh->selectrow_array('SELECT CASE WHEN disallownew = 0
-                                           THEN 1 ELSE 0 END,
-                                      CASE WHEN versions.value IS NOT NULL
-                                           THEN 1 ELSE 0 END
-                                 FROM products
-                           INNER JOIN components
-                                   ON components.product_id = products.id
-                            LEFT JOIN versions
-                                   ON versions.product_id = products.id
-                                WHERE products.name = ? ' .
-                               $dbh->sql_limit(1), undef, $product_name);
-
-    # Returns undef if the product has no components
-    # Returns 0 if the product has no versions, or is closed for bug entry
-    # Returns 1 if the user can enter bugs into the product
-    return ($is_open && $has_version) unless $warn;
-
-    # (undef, undef): the product has no components,
-    # (0,     ?)    : the product is closed for new bug entry,
-    # (?,     0)    : the product has no versions,
-    # (1,     1)    : the user can enter bugs into the product,
-    if (!defined $is_open) {
-        ThrowUserError('missing_component', { product => $product_name });
-    } elsif (!$is_open) {
-        ThrowUserError('product_disabled', { product => $product_name });
-    } elsif (!$has_version) {
-        ThrowUserError('missing_version', { product => $product_name });
-    }
-    return 1;
+    die "can_enter_product reached an unreachable location.";
 }
 
 sub get_enterable_products {
     my $self = shift;
+    my $dbh = Bugzilla->dbh;
 
     if (defined $self->{enterable_products}) {
         return $self->{enterable_products};
     }
 
-    my @products;
-    foreach my $product (Bugzilla::Product->get_all) {
-        if ($self->can_enter_product($product->name)) {
-            push(@products, $product);
-        }
+     # All products which the user has "Entry" access to.
+     my @enterable_ids =@{$dbh->selectcol_arrayref(
+           'SELECT products.id FROM products
+         LEFT JOIN group_control_map
+                   ON group_control_map.product_id = products.id
+                      AND group_control_map.entry != 0
+                      AND group_id NOT IN (' . $self->groups_as_string . ')
+            WHERE group_id IS NULL
+                  AND products.disallownew = 0') || []};
+
+    if (@enterable_ids) {
+        # And all of these products must have at least one component
+        # and one version.
+        @enterable_ids = @{$dbh->selectcol_arrayref(
+               'SELECT DISTINCT products.id FROM products
+            INNER JOIN components ON components.product_id = products.id
+            INNER JOIN versions ON versions.product_id = products.id
+                 WHERE products.id IN (' . (join(',', @enterable_ids)) .
+            ')') || []};
     }
-    $self->{enterable_products} = \@products;
+
+    $self->{enterable_products} =
+         Bugzilla::Product->new_from_list(\@enterable_ids);
     return $self->{enterable_products};
 }
 
