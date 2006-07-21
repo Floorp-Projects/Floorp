@@ -90,17 +90,6 @@ function isIID(a, iid) {
   return rv;
 }
 
-function isIFeedTextConstruct(a) {
-  var rv = false;
-  try {
-    a.QueryInterface(Ci.nsIFeedTextConstruct);
-    rv = true;
-  }
-  catch(e) {
-  }
-  return rv;
-}
-
 function isIArray(a) {
   return isIID(a, Ci.nsIArray);
 }
@@ -111,20 +100,6 @@ function isIFeedContainer(a) {
 
 function stripTags(someHTML) {
   return someHTML.replace(/<[^>]+>/g,"");
-}
-
-function plainTextFromTextConstruct(textConstruct) {
-  if (textConstruct != null && 
-      isIFeedTextConstruct(textConstruct)) {
-    var text = textConstruct.text;
-    if (textConstruct.type != "text") {
-      text = gUnescapeHTML.unescape(stripTags(text));
-    }
-    return text;
-  }
-
-  // it was not a textConstruct, just a string
-  return textConstruct;
 }
 
 /**
@@ -339,37 +314,21 @@ FeedResult.prototype = {
 }  
 
 function Feed() {
-  this._sub = null;
-  this._title = null;
+  this.subtitle = null;
+  this.title = null;
   this.items = [];
   this.link = null;
   this.id = null;
   this.baseURI = null;
 }
+
 Feed.prototype = {
-  subtitle: function Feed_subtitle(doStripTags) {
-    if (this._sub == null)
-      return null;
-
-    if (doStripTags)
-      return plainTextFromTextConstruct(this._sub);
-
-    if (isIID(this._sub, Ci.nsIFeedTextConstruct))
-      return this._sub.text;
-
-    return this._sub;
-  },
-
-  get title() {
-    return plainTextFromTextConstruct(this._title);
-  },
-
   searchLists: {
-    _sub: ["description","dc:description","rss1:description",
-           "atom03:tagline","atom:subtitle"],
+    subtitle: ["description","dc:description","rss1:description",
+               "atom03:tagline","atom:subtitle"],
     items: ["items","atom03_entries","entries"],
     id: ["atom:id","rdf:about"],
-    _title: ["title","rss1:title", "atom03:title","atom:title"],
+    title: ["title","rss1:title", "atom03:title","atom:title"],
     link:  [["link",strToURI],["rss1:link",strToURI]],
     categories: ["categories", "dc:subject"],
     cloud: ["cloud"],
@@ -389,6 +348,9 @@ Feed.prototype = {
     // Assign Atom link if needed
     if (bagHasKey(this.fields, "links"))
       this._atomLinksToURI();
+
+    this._resetBagMembersToRawText([this.searchLists.subtitle, 
+                                    this.searchLists.title]);
   },
 
   _atomLinksToURI: function Feed_linkToURI() {
@@ -410,7 +372,20 @@ Feed.prototype = {
       }
     }
   },
-  
+
+  // reset the bag to raw contents, not text constructs
+  _resetBagMembersToRawText: function Feed_resetBagMembers(fieldLists) {
+    for (var i=0; i<fieldLists.length; i++) {      
+      for (var j=0; j<fieldLists[i].length; j++) {
+        if (bagHasKey(this.fields, fieldLists[i][j])) {
+          var textConstruct = this.fields.getProperty(fieldLists[i][j]);
+          this.fields.setPropertyAsAString(fieldLists[i][j],
+                                           textConstruct.text);
+        }
+      }
+    }
+  },
+   
   QueryInterface: function Feed_QI(iid) {
     if (iid.equals(Ci.nsIFeed) ||
         iid.equals(Ci.nsIFeedContainer) ||
@@ -421,88 +396,68 @@ Feed.prototype = {
 }
 
 function Entry() {
-  this._summary = null;
-  this._content = null;
-  this._title = null;
+  this.summary = null;
+  this.content = null;
+  this.title = null;
   this.fields = Cc["@mozilla.org/hash-property-bag;1"].
-                createInstance(Ci.nsIWritablePropertyBag2);
+    createInstance(Ci.nsIWritablePropertyBag2);
   this.link = null;
   this.id = null;
   this.baseURI = null;
 }
-
+  
 Entry.prototype = {
   fields: null,
-  get title() {
-    return plainTextFromTextConstruct(this._title);
-  },
-  summary: function Entry_summary(doStripTags) {
-    if (this._summary == null)
-      return null;
-
-    if (doStripTags)
-      return plainTextFromTextConstruct(this._summary);
-
-    if (isIID(this._summary, Ci.nsIFeedTextConstruct))
-      return this._summary.text;
-  
-    return this._summary;
-  },
-  content: function Entry_content(doStripTags) {
-
-    if (this._content == null)
-      return null;
-
-    if (doStripTags)
-      return plainTextFromTextConstruct(this._content);
-
-    if (isIID(this._content, Ci.nsIFeedTextConstruct))
-      return this._content.text;
-    
-    return this._content;
-  },
   enclosures: null,
   mediaContent: null,
-
+  
   searchLists: {
-    _title: ["title", "rss1:title", "atom03:title", "atom:title"],
+    title: ["title", "rss1:title", "atom03:title", "atom:title"],
     link: [["link",strToURI],["rss1:link",strToURI]],
     id: [["guid", makePropGetter("guid")], "rdf:about",
          "atom03:id", "atom:id"],
-    _summary: ["description", "rss1:description", "dc:description",
-               "atom03:summary", "atom:summary"],
-    _content: ["content:encoded","atom03:content","atom:content"]
+    summary: ["description", "rss1:description", "dc:description",
+                 "atom03:summary", "atom:summary"],
+    content: ["content:encoded","atom03:content","atom:content"]
   },
-
+  
   normalize: function Entry_normalize() {
     fieldsToObj(this, this.searchLists);
-
+ 
     // Assign Atom link if needed
     if (bagHasKey(this.fields, "links"))
       this._atomLinksToURI();
-
+ 
     // The link might be a guid w/ permalink=true
     if (!this.link && bagHasKey(this.fields, "guid")) {
       var guid = this.fields.getProperty("guid");
-      if (bagHasKey(guid, "isPermaLink")) {
-        var isPermaLink = new Boolean(guid.getProperty("isPermaLink"));
-        if (isPermaLink)
-          this.link = strToURI(guid.getProperty("guid"));
-      }
+      var isPermaLink = true;
+      
+      if (bagHasKey(guid, "isPermaLink"))
+        isPermaLink = new Boolean(guid.getProperty("isPermaLink"));
+      
+      if (guid && isPermaLink)
+        this.link = strToURI(guid.getProperty("guid"));
     }
-  },
 
+    this._resetBagMembersToRawText([this.searchLists.content, 
+                                    this.searchLists.summary, 
+                                    this.searchLists.title]);
+  },
+  
   QueryInterface: function(iid) {
     if (iid.equals(Ci.nsIFeedEntry) ||
         iid.equals(Ci.nsIFeedContainer) ||
         iid.equals(Ci.nsISupports))
     return this;
-    
+
     throw Cr.NS_ERROR_NOINTERFACE;
   }
 }
 
 Entry.prototype._atomLinksToURI = Feed.prototype._atomLinksToURI;
+Entry.prototype._resetBagMembersToRawText = 
+   Feed.prototype._resetBagMembersToRawText;
 
 // TextConstruct represents and element that could contain (X)HTML
 function TextConstruct() {
@@ -513,6 +468,13 @@ function TextConstruct() {
 }
 
 TextConstruct.prototype = {
+  plainText: function TC_plainText() {
+    if (this.type != "text") {
+      return gUnescapeHTML.unescape(stripTags(this.text));
+    }
+    return this.text;
+  },
+ 
   QueryInterface: function(iid) {
     if (iid.equals(Ci.nsIFeedTextConstruct) ||
         iid.equals(Ci.nsISupports))
@@ -875,7 +837,10 @@ function FeedProcessor() {
                           "atom:subtitle":"text",
                           "description":"html",
                           "rss1:description":"html",
+                          "dc:description":"html",
                           "content:encoded":"html",
+                          "title":"text",
+                          "rss1:title":"text",
                           "atom03:title":"text",
                           "atom03:tagline":"text",
                           "atom03:summary":"text",
@@ -1374,9 +1339,8 @@ FeedProcessor.prototype = {
 
     // But, it could be something containing HTML. If so,
     // we need to know about that.
-    if (this._textConstructs[propName] != null && 
-        (this._result.version.indexOf("rss") == -1 ||
-         this._handlerStack[this._depth].containerClass != null)) {
+    if (this._textConstructs[propName] != null &&
+        this._handlerStack[this._depth].containerClass !== null) {
       var newProp = Cc[TEXTCONSTRUCT_CONTRACTID].
                     createInstance(Ci.nsIFeedTextConstruct);
       newProp.text = chars;
@@ -1398,6 +1362,12 @@ FeedProcessor.prototype = {
         }
       }
       
+      // If it's rss feed-level description, it's not supposed to have html
+      if (this._result.version.indexOf("rss") >= 0 &&
+          this._handlerStack[this._depth].containerClass != ENTRY_CONTRACTID) {
+        type = "text";
+      }
+
       newProp.type = type;
       container.setPropertyAsInterface(propName, newProp);
     }

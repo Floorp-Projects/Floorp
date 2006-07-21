@@ -2,7 +2,7 @@
 <!--
 
 Description: atom entry summary xhtml works
-Expect: feed.items.queryElementAt(1, Components.interfaces.nsIFeedEntry).summary(true) == "test summary";
+Expect: feed.items.queryElementAt(1, Components.interfaces.nsIFeedEntry).summary.plainText() == "test summary";
 
 -->
 <feed xmlns="http://www.w3.org/2005/Atom"

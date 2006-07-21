@@ -40,9 +40,11 @@
 interface nsIArray;
 
 /**
- * An nsIFeedEntry represents an Atom or RSS entry/item.
+ * An nsIFeedEntry represents an Atom or RSS entry/item. Summary
+ * and/or full-text content may be available, but callers will have to
+ * check both.
  */
-[scriptable, uuid(ef51d60c-cad1-42ea-9f6c-c1811f733d90)]
+[scriptable, uuid(364dc1e5-20fe-4315-bff7-33d2efcf2541)]
 interface nsIFeedEntry : nsIFeedContainer {
 
   /**
@@ -54,17 +56,15 @@ interface nsIFeedEntry : nsIFeedContainer {
   * Uses description, subtitle, summary, content and extensions
   * to generate a summary. 
   * 
-  * @param stripTags If true, remove HTML markup.
   */
-  AString summary(in boolean stripTags);
+  attribute nsIFeedTextConstruct summary;
 
   /**
-  * Uses description, summary, content and extensions to provide
+  * Uses atom:content and content:encoded to provide
   * a 'full text' view of an entry.
   *
-  * @param stripTags If true, remove HTML markup.
   */
-  AString content(in boolean stripTags);
+  attribute nsIFeedTextConstruct content;
 
   /**
   * Enclosures are podcasts, photocasts, etc.

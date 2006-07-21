@@ -2,7 +2,7 @@
 <!--
 
 Description: item desc encoded, double-escaped entity
-Expect: var summary = feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).summary(true); summary == "test D\u00e9sol\u00e9e";
+Expect: var summary = feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).summary; summary.plainText() == "test D\u00e9sol\u00e9e";
 
 -->
 <rss version="2.0" >

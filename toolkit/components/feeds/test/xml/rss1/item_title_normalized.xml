@@ -2,7 +2,7 @@
 <!--
 
 Description: RSS1 feed w/ item title normalized
-Expect: feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).title == 'XML: A Disruptive Technology'
+Expect: feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).title.text == 'XML: A Disruptive Technology'
 
 -->
 <rdf:RDF 

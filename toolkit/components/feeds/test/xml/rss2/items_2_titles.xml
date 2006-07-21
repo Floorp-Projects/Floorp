@@ -2,7 +2,7 @@
 <!--
 
 Description: 2 items title works
-Expect: ((feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).fields.getProperty('title') == 'test') && (feed.items.queryElementAt(1, Components.interfaces.nsIFeedEntry).fields.getProperty('title') == 'test #2'))
+Expect: ((feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).title.text == 'test') && (feed.items.queryElementAt(1, Components.interfaces.nsIFeedEntry).title.text == 'test #2'))
 
 -->
 <rss version="2.0" >

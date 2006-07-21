@@ -2,7 +2,7 @@
 <!--
 
 Description: channel title works
-Expect:      feed.title == 'test title'
+Expect:      feed.title.plainText() == 'test title'
 
 -->
 <rss version="2.0" >

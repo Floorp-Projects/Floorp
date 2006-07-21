@@ -2,7 +2,7 @@
 <!--
 
 Description: atom entry title normalized
-Expect: feed.items.queryElementAt(1, Components.interfaces.nsIFeedEntry).title == "test";
+Expect: feed.items.queryElementAt(1, Components.interfaces.nsIFeedEntry).title.text == "test";
 
 -->
 <feed xmlns="http://www.w3.org/2005/Atom"

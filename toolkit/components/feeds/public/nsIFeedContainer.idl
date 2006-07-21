@@ -37,16 +37,17 @@
 #include "nsISupports.idl"
 
 interface nsIURI;
-interface nsIPropertyBag2;
+interface nsIWritablePropertyBag2;
 interface nsIArray;
+interface nsIFeedTextConstruct;
 
 /**
 * A shared base for feeds and items, which are pretty similar,
 * but they have some divergent attributes and require
 * different convenience methods.
 */ 
-[scriptable, uuid(b7e7b6b9-a461-4817-9003-3e6b9005945f)]
-interface nsIFeedContainer : nsISupports 
+[scriptable, uuid(56877da5-598b-41dd-bf3e-72fe713c7820)]
+interface nsIFeedContainer : nsISupports
 {
   /**
   * Many feeds contain an ID distinct from their URI, and
@@ -69,16 +70,13 @@ interface nsIFeedContainer : nsISupports
   * Common namespaces are accessed using prefixes, like get("dc:subject");.
   * See nsIFeedResult::registerExtensionPrefix.
   */
-  attribute nsIPropertyBag2 fields;
+  attribute nsIWritablePropertyBag2 fields;
 
   /**
-  * Sometimes there's no title, or the title contains markup.
-  *
-  * @returns A plain text title string gleaned from whatever 
-  *          the publisher has included in the feed. In most
-  *          cases, this is the contents of the <title>.
-  */
-  attribute AString title;
+   * Sometimes there's no title, or the title contains markup, so take
+   * care in decoding the attribute.
+   */
+  attribute nsIFeedTextConstruct title;
 
   /**
   * Returns the primary link for the feed or entry.

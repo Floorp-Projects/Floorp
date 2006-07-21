@@ -2,7 +2,7 @@
 <!--
 
 Description: RSS1 feed title works normalized
-Expect: feed.title == 'Test'
+Expect: feed.title.plainText() == 'Test'
 
 -->
 <rdf:RDF 

@@ -2,7 +2,7 @@
 <!--
 
 Description: RSS1 feed w/ item desc normalized
-Expect: feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).summary(true) == 'XML is placing increasingly heavy loads on the existing technical infrastructure of the Internet.'
+Expect: feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).summary.plainText() == 'XML is placing increasingly heavy loads on the existing technical infrastructure of the Internet.'
 
 -->
 <rdf:RDF 

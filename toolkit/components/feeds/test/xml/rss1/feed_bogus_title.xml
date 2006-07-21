@@ -2,7 +2,7 @@
 <!--
 
 Description: RSS1 feed w/ bogus title element
-Expect: feed.fields.getProperty('rss1:title') == 'Correct Title'
+Expect: feed.title.text == 'Correct Title'
 
 -->
 <rdf:RDF 

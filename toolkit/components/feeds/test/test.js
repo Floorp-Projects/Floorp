@@ -55,7 +55,7 @@ TestListener.prototype = {
     var feed = result.doc;    
     // QI to something
     (isIID(feed, Components.interfaces.nsIFeed));
-    try { 
+    try {
       if(!eval(testcase.expect)){
         print(testcase.path + ": \n");
         print("FAILED! Test was: \"" + testcase.desc + "\" |\n" + testcase.expect + '|\n');
@@ -64,8 +64,10 @@ TestListener.prototype = {
       }
     }
     catch(e) {
+      print(testcase.path + ": \n");
       print("FAILED! Test was: " + testcase.expect + "\nex: " + e.message + "\n");
     }
+
     ran += 1;
   }
 }
@@ -74,7 +76,6 @@ var startDate = new Date();
 
 for(var i=0; i<tests.length; i++){
   var testcase = tests[i];
-  
   var uri;
   if (testcase.base == null)
     uri = ioService.newURI('http://example.org/'+testcase.path, null,null);
@@ -87,7 +88,6 @@ for(var i=0; i<tests.length; i++){
                          .createInstance(Components.interfaces.nsIFileInputStream);
   var listener = new TestListener();
   try{
-    //print('Start: ' + testcase.path);
     stream.init(testcase.file, 0x01, 0444, 0);
     parser.listener = listener;
     parser.parseFromStream(stream, uri);
