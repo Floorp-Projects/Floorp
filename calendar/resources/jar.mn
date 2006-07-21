@@ -26,6 +26,7 @@ calendar.jar:
     content/calendar/calendar-recurrence-dialog.js (/calendar/base/content/calendar-recurrence-dialog.js)
     content/calendar/calendar-recurrence-dialog.xul (/calendar/base/content/calendar-recurrence-dialog.xul)
     content/calendar/calendar-view-core.xml (/calendar/base/content/calendar-view-core.xml)
+    content/calendar/calendar-views.js (/calendar/base/content/calendar-views.js)
     content/calendar/calendarUtils.js (content/calendarUtils.js)
     content/calendar/calendarMail.js (content/calendarMail.js)
     content/calendar/calendarManagement.js (content/calendarManagement.js)
