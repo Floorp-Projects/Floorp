@@ -94,7 +94,7 @@ var calendarViewController = {
         // if we can modify this thing directly (e.g. just the time changed),
         // then do so; otherwise pop up the dialog
         var itemToEdit = getOccurrenceOrParent(aOccurrence);
-        if (aNewStartTime && aNewEndTime && !aNewStartTime.isDate && !aNewEndTime.isDate) {
+        if (aNewStartTime && aNewEndTime) {
         
             var instance = itemToEdit.clone();
 
