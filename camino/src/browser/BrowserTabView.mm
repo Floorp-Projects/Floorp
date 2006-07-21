@@ -39,6 +39,7 @@
 
 #import "NSString+Utils.h"
 #import "NSPasteboard+Utils.h"
+#import "PreferenceManager.h"
 
 #import "BrowserTabView.h"
 #import "BrowserWrapper.h"
