@@ -106,7 +106,7 @@ function init()
   
   var extensionHomepage = document.getElementById("extensionHomepage");
   if (homepage) {
-    extensionHomepage.setAttribute("onclick", "loadHomepage(\"" + homepage + "\");");
+    extensionHomepage.setAttribute("homepageURL", homepage);
     extensionHomepage.setAttribute("tooltiptext", homepage);
   }
   else
@@ -137,8 +137,8 @@ function init()
   acceptButton.label = extensionsStrings.getString("aboutWindowCloseButton");
 }
 
-function loadHomepage(aURI) {
+function loadHomepage(aEvent) {
   window.close();
-  window.opener.openURL(aURI);
+  window.opener.openURL(aEvent.target.getAttribute("homepageURL"));
 }
 

@@ -219,6 +219,7 @@
               tooltiptext="&cmd.continue.tooltip;"
               command="cmd_restartApp"/>
       <label id="getMore" class="text-link"
+             onclick="openURL(this.getAttribute('getMoreURL'));"
              valuethemes="&getThemes.label;"
              valueextensions="&getExtensions.label;"
              tooltiptextthemes="&getThemes.tooltip;"
