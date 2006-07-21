@@ -72,6 +72,25 @@ nsThebesImage::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequi
     mWidth = aWidth;
     mHeight = aHeight;
 
+    /* reject over-wide or over-tall images */
+    const PRInt32 k64KLimit = 0x0000FFFF;
+    if (aWidth > k64KLimit || aHeight > k64KLimit ){
+        NS_ERROR("image too big");
+        return NS_ERROR_FAILURE;
+    }
+
+    /* check to make sure we don't overflow a 32-bit */
+    PRInt32 tmp = aWidth * aHeight;
+    if (tmp / aHeight != aWidth) {
+        NS_ASSERTION(0, "width or height too large\n");
+        return NS_ERROR_FAILURE;
+    }
+    tmp = tmp * 4;
+    if (tmp / 4 != aWidth * aHeight) {
+        NS_ASSERTION(0, "width or height too large\n");
+        return NS_ERROR_FAILURE;
+    }
+
     gfxImageSurface::gfxImageFormat format;
     switch(aMaskRequirements)
     {
@@ -393,4 +412,3 @@ nsThebesImage::DrawToImage(nsIImage* aDstImage, PRInt32 aDX, PRInt32 aDY, PRInt3
 
     return NS_OK;
 }
-
