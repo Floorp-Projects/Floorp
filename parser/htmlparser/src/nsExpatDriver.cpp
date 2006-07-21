@@ -46,6 +46,7 @@
 #include "nsParserMsgUtils.h"
 #include "nsIURL.h"
 #include "nsIUnicharInputStream.h"
+#include "nsISimpleUnicharStreamFactory.h"
 #include "nsNetUtil.h"
 #include "prprf.h"
 #include "prmem.h"
@@ -54,6 +55,8 @@
 #include "nsCRT.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
+#include "nsXPCOMCIDInternal.h"
+#include "nsUnicharInputStream.h"
 
 #define kExpatSeparatorChar 0xFFFF
 
@@ -705,7 +708,8 @@ nsExpatDriver::HandleExternalEntityRef(const PRUnichar *openEntityNames,
   NS_ENSURE_SUCCESS(rv, 1);
 
   nsCOMPtr<nsIUnicharInputStream> uniIn;
-  rv = NS_NewUTF8ConverterStream(getter_AddRefs(uniIn), in, 4096);
+  rv = nsSimpleUnicharStreamFactory::GetInstance()->
+    CreateInstanceFromUTF8Stream(in, getter_AddRefs(uniIn));
   NS_ENSURE_SUCCESS(rv, 1);
 
   int result = 1;

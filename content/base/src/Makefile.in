@@ -168,6 +168,7 @@ INCLUDES	+= \
 		-I$(srcdir)/../../../layout/style \
 		-I$(srcdir)/../../../dom/src/base \
 		-I$(srcdir)/../../xml/document/src \
+		-I$(topsrcdir)/xpcom/io \
 		$(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT

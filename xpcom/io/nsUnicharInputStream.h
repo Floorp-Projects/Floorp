@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -13,14 +11,16 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla code.
+ * The Original Code is Mozilla XPCOM.
  *
- * The Initial Developer of the Original Code is Google Inc.
+ * The Initial Developer of the Original Code is
+ * the Mozilla Foundation <http://www.mozilla.org/>.
+ *
  * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Darin Fisher <darin@meer.net>
+ * Benjamin Smedberg <benjamin@smedbergs.us> (Initial author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,45 +36,29 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsXPCOMCIDInternal_h__
-#define nsXPCOMCIDInternal_h__
+#ifndef nsUnicharInputStream_h__
+#define nsUnicharInputStream_h__
 
-#include "nsXPCOMCID.h"
+#include "nsISimpleUnicharStreamFactory.h"
+#include "nsIUnicharInputStream.h"
+#include "nsIFactory.h"
 
-/**
- * A hashtable-based property bag component.
- * @implements nsIWritablePropertyBag, nsIWritablePropertyBag2
- */
-#define NS_HASH_PROPERTY_BAG_CID \
-{ 0x678c50b8, 0x6bcb, 0x4ad0, \
-{ 0xb9, 0xb8, 0xc8, 0x11, 0x75, 0x95, 0x51, 0x99 } }
-#define NS_HASH_PROPERTY_BAG_CONTRACTID "@mozilla.org/hash-property-bag;1"
+// {428DCA6F-1A0F-4cda-B516-0D5244745A6A}
+#define NS_SIMPLE_UNICHAR_STREAM_FACTORY_CID \
+{ 0x428dca6f, 0x1a0f, 0x4cda, { 0xb5, 0x16, 0xd, 0x52, 0x44, 0x74, 0x5a, 0x6a } }
 
-/**
- * Factory for creating nsIUnicharInputStream
- * @implements nsIUnicharInputStreamFactory
- * @note nsIUnicharInputStream instances cannot be created via
- *       createInstance. Code must use one of the custom factory methods.
- */
-#define NS_SIMPLE_UNICHAR_STREAM_FACTORY_CONTRACTID \
-  "@mozilla.org/xpcom/simple-unichar-stream-factory;1"
+class nsSimpleUnicharStreamFactory :
+  public nsIFactory, nsISimpleUnicharStreamFactory
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIFACTORY
+  NS_DECL_NSISIMPLEUNICHARSTREAMFACTORY
 
-/**
- * The global thread manager service.  This component is a singleton.
- * @implements nsIThreadManager
- */
-#define NS_THREADMANAGER_CONTRACTID "@mozilla.org/thread-manager;1"
+  static NS_COM nsSimpleUnicharStreamFactory* GetInstance();
 
-/**
- * A thread pool component.
- * @implements nsIThreadPool
- */
-#define NS_THREADPOOL_CONTRACTID "@mozilla.org/thread-pool;1"
+private:
+  static const nsSimpleUnicharStreamFactory kInstance;
+};
 
-/**
- * The global proxy object manager.  This component is a singleton.
- * @implement nsIProxyObjectManager
- */
-#define NS_XPCOMPROXY_CONTRACTID "@mozilla.org/xpcomproxy;1"
-
-#endif  // nsXPCOMCIDInternal_h__
+#endif // nsUnicharInputStream_h__

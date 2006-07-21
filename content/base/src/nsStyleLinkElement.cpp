@@ -55,10 +55,13 @@
 #include "nsIDOMStyleSheet.h"
 #include "nsIDOMText.h"
 #include "nsIUnicharInputStream.h"
+#include "nsISimpleUnicharStreamFactory.h"
 #include "nsNetUtil.h"
 #include "nsUnicharUtils.h"
 #include "nsVoidArray.h"
 #include "nsCRT.h"
+#include "nsXPCOMCIDInternal.h"
+#include "nsUnicharInputStream.h"
 
 nsStyleLinkElement::nsStyleLinkElement()
   : mDontLoadStyle(PR_FALSE)
@@ -297,11 +300,9 @@ nsStyleLinkElement::UpdateStyleSheet(nsIDocument *aOldDocument,
       content.Append(tcString);
     }
 
-    // Use of the stream will be done before parsing returns.  So it will go
-    // out of scope before |content| does.
     nsCOMPtr<nsIUnicharInputStream> uin;
-    rv = NS_NewStringUnicharInputStream(getter_AddRefs(uin), &content,
-                                        PR_FALSE);
+    rv = nsSimpleUnicharStreamFactory::GetInstance()->
+      CreateInstanceFromString(content, getter_AddRefs(uin));
     if (NS_FAILED(rv)) {
       return rv;
     }

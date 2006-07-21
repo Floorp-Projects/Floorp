@@ -164,5 +164,6 @@ FORCE_USE_PIC	= 1
 
 include $(topsrcdir)/config/rules.mk
 
+LOCAL_INCLUDES += -I$(srcdir)/../io
 
 DEFINES		+= -D_IMPL_NS_COM

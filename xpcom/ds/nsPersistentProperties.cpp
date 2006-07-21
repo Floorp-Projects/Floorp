@@ -40,7 +40,7 @@
 #include "nsCRT.h"
 #include "nsReadableUtils.h"
 #include "nsIInputStream.h"
-#include "nsIUnicharInputStream.h"
+#include "nsUnicharInputStream.h"
 #include "pratom.h"
 #include "nsEnumeratorUtils.h"
 #include "nsReadableUtils.h"
@@ -147,7 +147,8 @@ NS_IMETHODIMP
 nsPersistentProperties::Load(nsIInputStream *aIn)
 {
   PRInt32  c;
-  nsresult ret = NS_NewUTF8ConverterStream(&mIn, aIn, 0);
+  nsresult ret = nsSimpleUnicharStreamFactory::GetInstance()->
+    CreateInstanceFromUTF8Stream(aIn, &mIn);
 
   if (ret != NS_OK) {
     NS_WARNING("NS_NewUTF8ConverterStream failed");
