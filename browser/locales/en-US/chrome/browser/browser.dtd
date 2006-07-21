@@ -184,7 +184,7 @@
 
 <!-- XXX historyMenu entities are used with or without places (bug 336058) -->
 <!ENTITY historyMenu.label "History">
-<!ENTITY historyMenu.accesskey "i">
+<!ENTITY historyMenu.accesskey "s">
 <!ENTITY historyUndoMenu.label "Recently Closed Tabs">
 <!ENTITY historyUndoMenu.accesskey "R">
 
