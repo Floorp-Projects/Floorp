@@ -1541,7 +1541,7 @@ nsPasswordManager::LoadPasswords()
   nsCAutoString path;
   mSignonFile->GetNativePath(path);
 
-  if (NS_SUCCEEDED(ReadPasswords(mSignonFile)));
+  if (NS_SUCCEEDED(ReadPasswords(mSignonFile)))
     sPasswordsLoaded = PR_TRUE;
 }
 
