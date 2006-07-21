@@ -2,7 +2,7 @@
 <!--
 
 Description: channel title works w/ nested title
-Expect:      feed.title == 'test title'
+Expect:      feed.title.text == 'test title'
 
 -->
 <rss version="2.0" >

@@ -2,7 +2,7 @@
 <!--
 
 Description: item title works
-Expect: feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).title == 'test'
+Expect: feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).title.text == 'test'
 
 -->
 <rss version="2.0" >

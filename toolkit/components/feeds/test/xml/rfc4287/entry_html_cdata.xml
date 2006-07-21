@@ -2,7 +2,7 @@
 <!--
 
 Description: HTML title w/ CDATA
-Expect: var title = feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).title; title == "<title>";
+Expect: var title = feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).title.plainText(); title == "<title>";
 
 -->
 <feed xmlns="http://www.w3.org/2005/Atom">

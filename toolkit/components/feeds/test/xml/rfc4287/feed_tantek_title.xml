@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
 Description: XHTML title with apos
-Expect: feed.title == "Tantek's Updates"
+Expect: feed.title.plainText() == "Tantek's Updates"
 -->
 <feed xml:lang="en-US"
       xmlns="http://www.w3.org/2005/Atom">

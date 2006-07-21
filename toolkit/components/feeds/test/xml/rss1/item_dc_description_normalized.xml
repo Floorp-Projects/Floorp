@@ -2,7 +2,7 @@
 <!--
 
 Description: RSS1 feed w/ item dc:description
-Expect: feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).summary(true) == 'XML is...'
+Expect: feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).summary.plainText() == 'XML is...'
 
 -->
 <rdf:RDF 

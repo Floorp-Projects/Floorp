@@ -70,5 +70,12 @@ interface nsIFeedTextConstruct : nsISupports
    * The content of the text construct.
    */
   attribute AString text;
+
+  /**
+   * Returns the text of the text construct, with all markup stripped 
+   * and all entities decoded. If the type attribute's value is "text",
+   * this function returns the value of the text attribute unchanged.
+   */
+  AString plainText();
 };
  

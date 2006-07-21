@@ -2,7 +2,7 @@
 <!--
 
 Description: atom summary with entities works
-Expect: feed.subtitle(false) == '&quot;test&quot; &amp; &apos;title&apos; &amp; &lt;ok&gt;'
+Expect: feed.subtitle.text == '&quot;test&quot; &amp; &apos;title&apos; &amp; &lt;ok&gt;'
 
 -->
 <feed xmlns="http://www.w3.org/2005/Atom">

@@ -2,7 +2,7 @@
 <!--
 
 Description: atom title works
-Expect:      feed.title == 'test title'
+Expect:      feed.title.plainText() == 'test title'
 
 -->
 <feed xmlns="http://www.w3.org/2005/Atom">

@@ -44,16 +44,14 @@ interface nsIArray;
 /**
  * An nsIFeed represents a single Atom or RSS feed.
  */
-[scriptable, uuid(29884967-afaa-43ce-ad10-8234deebea15)]
+[scriptable, uuid(9472ff5b-10dc-4aed-a861-7619d7a4b5bf)]
 interface nsIFeed : nsIFeedContainer
 {
   /** 
   * Uses description, subtitle, and extensions
   * to generate a summary. 
-  * 
-  * @param stripTags remove HTML if true.
   */
-  AString subtitle(in boolean stripTags);
+  attribute nsIFeedTextConstruct subtitle;
 
   // All content classifies as a "feed" - it is the transport.
   const unsigned long TYPE_FEED = 0;
@@ -82,13 +80,13 @@ interface nsIFeed : nsIFeedContainer
   * It supposedly enables some sort of interaction with an XML-RPC or
   * SOAP service.
   */
-  attribute nsIPropertyBag2 cloud;
+  attribute nsIWritablePropertyBag2 cloud;
 
   /**
   * An image url and some metadata (as defined by RSS2).
   *
   */
-  attribute nsIPropertyBag2 image;
+  attribute nsIWritablePropertyBag2 image;
 
   /**
   * No one really knows what textInput is for.
@@ -97,7 +95,7 @@ interface nsIFeed : nsIFeedContainer
   * <http://www.cadenhead.org/workbench/news/2894/rss-joy-textinput>
   * for more details.
   */
-  attribute nsIPropertyBag2 textInput;
+  attribute nsIWritablePropertyBag2 textInput;
 
   /**
   * Days to skip fetching. This field was supposed to designate

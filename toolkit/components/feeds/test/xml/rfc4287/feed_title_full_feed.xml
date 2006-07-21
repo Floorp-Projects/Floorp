@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!--
 Description: Feed title works with full entry
-Expect: feed.title == 'ongoing'
+Expect: feed.title.text == 'ongoing'
 -->
 <feed xmlns='http://www.w3.org/2005/Atom'
       xml:base='http://www.tbray.org/ongoing/ongoing.atom'
