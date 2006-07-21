@@ -469,6 +469,8 @@ enum BWCOpenDest {
 - (BrowserTabViewItem*)tabForBrowser:(BrowserWrapper*)inWrapper;
 - (BookmarkViewController*)bookmarkViewControllerForCurrentTab;
 - (void)bookmarkableTitle:(NSString **)outTitle URL:(NSString**)outURLString forWrapper:(BrowserWrapper*)inWrapper;
+- (void)sessionHistoryItemAtRelativeOffset:(int)indexOffset forWrapper:(BrowserWrapper*)inWrapper title:(NSString**)outTitle URL:(NSString**)outURLString;
+- (NSString *)locationToolTipWithFormat:(NSString *)format title:(NSString *)backTitle URL:(NSString *)backURL;
 
 - (void)whitelistURL:(nsIURI*)URL;
 - (void)whitelistAndShowPopup:(nsIDOMPopupBlockedEvent*)aBlockedPopup;
@@ -1116,7 +1118,6 @@ enum BWCOpenDest {
     NSButton* button = [self createToolbarPopupButton:toolbarItem];
     [toolbarItem setLabel:NSLocalizedString(@"Back", @"Back")];
     [toolbarItem setPaletteLabel:NSLocalizedString(@"Go Back", @"Go Back")];
-    [toolbarItem setToolTip:NSLocalizedString(@"BackToolTip", @"Go back one page")];
 
     NSSize size = NSMakeSize(32., 32.);
     NSImage* icon = [NSImage imageNamed:@"back"];
@@ -1154,7 +1155,6 @@ enum BWCOpenDest {
     NSButton* button = [self createToolbarPopupButton:toolbarItem];
     [toolbarItem setLabel:NSLocalizedString(@"Forward", @"Forward")];
     [toolbarItem setPaletteLabel:NSLocalizedString(@"Go Forward", @"Go Forward")];
-    [toolbarItem setToolTip:NSLocalizedString(@"ForwardToolTip", @"Go forward one page")];
 
     NSSize size = NSMakeSize(32., 32.);
     NSImage* icon = [NSImage imageNamed:@"forward"];
@@ -1371,12 +1371,21 @@ enum BWCOpenDest {
     // we have to handle all the enabling/disabling ourselves because this
     // toolbar button is a view item. Note the return value is ignored.
     [theItem setEnabled:enable];
-    return enable;
-  }
-  else if (action == @selector(manageBookmarks:)) {
-    BOOL enable = [[mBrowserView getBrowserView] canGoBack];
-    if (!enable && ![self bookmarkManagerIsVisible])
-      enable = true;
+
+    // set the tooltip to the previous URL and title
+    NSString* toolTipString = nil;
+    if ([theItem isEnabled]) { // if there is a previous URL
+      NSString* backTitle = nil;
+      NSString* backURL   = nil;
+      [self sessionHistoryItemAtRelativeOffset:-1 forWrapper:[self getBrowserWrapper] title:&backTitle URL:&backURL];
+      toolTipString = [self locationToolTipWithFormat:@"BackToolTipFormat" title:backTitle URL:backURL];
+    }
+
+    if (toolTipString)
+      [theItem setToolTip:toolTipString];
+    else  // there's no previous URL or something was nil during the setup, give it a stock tooltip
+      [theItem setToolTip:NSLocalizedString(@"BackToolTip", nil)];
+
     return enable;
   }
   else if (action == @selector(forward:)) {
@@ -1384,8 +1393,25 @@ enum BWCOpenDest {
     // toolbar button is a view item. Note the return value is ignored.
     BOOL enable = [[mBrowserView getBrowserView] canGoForward];
     [theItem setEnabled:enable];
+
+    // set the tooltip to the next URL and title
+    NSString* toolTipString = nil;
+    if ([theItem isEnabled]) { // if there is a previous URL
+      NSString* forwardTitle = nil;
+      NSString* forwardURL   = nil;
+      [self sessionHistoryItemAtRelativeOffset:1 forWrapper:[self getBrowserWrapper] title:&forwardTitle URL:&forwardURL];
+      toolTipString = [self locationToolTipWithFormat:@"ForwardToolTipFormat" title:forwardTitle URL:forwardURL];
+    }
+
+    if (toolTipString)
+      [theItem setToolTip:toolTipString];
+    else  // there's no next URL or something was nil during the setup, give it a stock tooltip
+      [theItem setToolTip:NSLocalizedString(@"ForwardToolTip", nil)];
+
     return enable;
   }
+  else if (action == @selector(manageBookmarks:))
+    return [[mBrowserView getBrowserView] canGoBack] || (![self bookmarkManagerIsVisible]);
   else if (action == @selector(reload:))
     return ![self bookmarkManagerIsVisible];
   else if (action == @selector(stop:))
@@ -1411,6 +1437,22 @@ enum BWCOpenDest {
   }
   else
     return YES;
+}
+
+//
+// Helper method for setting formatted tooltips with a title and url (like the back/forward tooltips)
+//
+- (NSString *)locationToolTipWithFormat:(NSString *)format title:(NSString *)backTitle URL:(NSString *)backURL
+{
+  if (backTitle && backURL) {
+    NSString* toolTipString = [NSString stringWithFormat:NSLocalizedString(format, nil), backTitle, backURL];
+    // using "\n\n" as a tooltip string causes Cocoa to hang when displaying the tooltip,
+    // so be paranoid about not doing that
+    if (![toolTipString isEqualToString:@"\n\n"])
+      return toolTipString;
+  }
+
+  return nil;
 }
 
 //
@@ -1748,7 +1790,7 @@ enum BWCOpenDest {
 }
 
 // this gets the previous entry in session history if bookmarks are showing
-- (void)bookmarkableTitle:(NSString **)outTitle URL:(NSString**)outURLString forWrapper:(BrowserWrapper*)inWrapper
+- (void)bookmarkableTitle:(NSString**)outTitle URL:(NSString**)outURLString forWrapper:(BrowserWrapper*)inWrapper
 {
   *outTitle = nil;
   *outURLString = nil;
@@ -1761,40 +1803,55 @@ enum BWCOpenDest {
   if ([[curURL lowercaseString] isEqualToString:@"about:bookmarks"] ||
       [[curURL lowercaseString] isEqualToString:@"about:history"])
   {
-    nsCOMPtr<nsIWebBrowser> webBrowser = getter_AddRefs([[inWrapper getBrowserView] getWebBrowser]);
-    if (webBrowser)
-    {
-      nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(webBrowser));
+    // get the previous title and URL from the session history
+    [self sessionHistoryItemAtRelativeOffset:-1 forWrapper:inWrapper title:&curTitle URL:&curURL ];
+  }
 
-      nsCOMPtr<nsISHistory> sessionHistory;
-      webNav->GetSessionHistory(getter_AddRefs(sessionHistory));
-      if (sessionHistory)
-      {
-        PRInt32 curEntryIndex;
-        sessionHistory->GetIndex(&curEntryIndex);
-        if (curEntryIndex > 0)
-        {
-          nsCOMPtr<nsIHistoryEntry> entry;
-          sessionHistory->GetEntryAtIndex(curEntryIndex - 1, PR_FALSE, getter_AddRefs(entry));
-          
-          nsCAutoString uriSpec;
-          nsCOMPtr<nsIURI> entryURI;
-          entry->GetURI(getter_AddRefs(entryURI));
-          if (entryURI)
-            entryURI->GetSpec(uriSpec);
-          
-          nsXPIDLString textStr;
-          entry->GetTitle(getter_Copies(textStr));
-          
-          curTitle = [NSString stringWith_nsAString:textStr];
-          curURL = [NSString stringWithUTF8String:uriSpec.get()];
-        }
+  *outTitle = curTitle;
+  *outURLString = curURL;
+}
+
+// indexOffset denotes the number of entries forward or back in session history to look
+- (void)sessionHistoryItemAtRelativeOffset:(int)indexOffset forWrapper:(BrowserWrapper*)inWrapper title:(NSString**)outTitle URL:(NSString**)outURLString
+{
+  NSString* curTitle = nil;
+  NSString* curURL = nil;
+
+  nsCOMPtr<nsIWebBrowser> webBrowser = getter_AddRefs([[inWrapper getBrowserView] getWebBrowser]);
+  if (webBrowser) {
+    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(webBrowser));
+
+    nsCOMPtr<nsISHistory> sessionHistory;
+    webNav->GetSessionHistory(getter_AddRefs(sessionHistory));
+    if (sessionHistory) {
+      PRInt32 curEntryIndex;
+      sessionHistory->GetIndex(&curEntryIndex);
+      PRInt32 count;
+      sessionHistory->GetCount(&count);
+
+      PRInt32 targetIndex = (curEntryIndex + indexOffset);
+      // if the place we're looking for in session history exists
+      if ((targetIndex >= 0) && (targetIndex < count)) {
+        nsCOMPtr<nsIHistoryEntry> entry;
+        sessionHistory->GetEntryAtIndex(targetIndex, PR_FALSE, getter_AddRefs(entry));
+
+        nsCAutoString uriSpec;
+        nsCOMPtr<nsIURI> entryURI;
+        entry->GetURI(getter_AddRefs(entryURI));
+        if (entryURI)
+          entryURI->GetSpec(uriSpec);
+
+        nsXPIDLString textStr;
+        entry->GetTitle(getter_Copies(textStr));
+
+        curTitle = [NSString stringWith_nsAString:textStr];
+        curURL = [NSString stringWithUTF8String:uriSpec.get()];
       }
     }
   }
 
   *outTitle = curTitle;
-  *outURLString = curURL;  
+  *outURLString = curURL;
 }
 
 - (void)performAppropriateLocationAction
