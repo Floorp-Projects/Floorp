@@ -88,7 +88,8 @@ function loadDialog()
     document.getElementById("monthly-nth-day").label = str;
 
     // Set label to 'second week of the month'
-    var monthWeekNum = Math.floor(window.startDate.day / 7) + 1;
+    // Note that the date here needs to be 0 based to work properly
+    var monthWeekNum = Math.floor((window.startDate.day - 1) / 7) + 1;
     nthstr = props.GetStringFromName("ordinal.name."+monthWeekNum);
     var daystr = props.GetStringFromName("day."+(window.startDate.weekday+1)+".name");
     str = props.formatStringFromName("recurNthWeek", [nthstr, daystr], 2);
