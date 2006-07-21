@@ -607,7 +607,8 @@ protected:
                                                    // This is different from mInIMEMode. see Bug 98434.
 
   PRPackedBool                  mShouldTxnSetSelection;  // turn off for conservative selection adjustment by txns
-  // various listeners
+  PRPackedBool                  mDidPreDestroy;    // whether PreDestroy has been called
+   // various listeners
   nsVoidArray*                  mActionListeners;  // listens to all low level actions on the doc
   nsVoidArray*                  mEditorObservers;   // just notify once per high level change
   nsCOMPtr<nsISupportsArray>    mDocStateListeners;// listen to overall doc state (dirty or not, just created, etc)
