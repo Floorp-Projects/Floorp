@@ -40,7 +40,19 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 
 function LOG(str) {
-  dump("*** " + str + "\n");
+  var prefB = 
+    Cc["@mozilla.org/preferences-service;1"].
+    getService(Ci.nsIPrefBranch);
+
+  var shouldLog = false;
+  try {
+    shouldLog = prefB.getBoolPref("feeds.log");
+  } 
+  catch (ex) {
+  }
+
+  if (shouldLog)
+    dump("*** Feeds: " + str + "\n");
 }
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
