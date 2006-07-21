@@ -2,9 +2,12 @@
 
 .wizard-header {
   border-bottom: 2px groove ThreeDFace;
-  padding: 10px 0px 10px 0px;
   background-color: Window;
   color: WindowText;
+}
+
+.wizard-header-box-1 {
+  padding: 5px 0px 5px 0px;
 }
 
 wizard[description=""] .wizard-header-description {
@@ -20,8 +23,8 @@ wizard[description=""] .wizard-header-description {
   -moz-margin-start: 44px;
 }
 
-.wizard-header-icon {
-  list-style-image: url("chrome://branding/content/icon64.png");
+wizard[branded="true"] .wizard-header-icon {
+  list-style-image: url("chrome://branding/content/icon48.png");
   -moz-margin-end: 5px;
 }
 

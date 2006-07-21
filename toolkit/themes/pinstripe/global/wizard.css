@@ -31,8 +31,8 @@ wizard {
   margin: 3px 20px 0 3px;
 }
 
-.wizard-header-icon {
-  list-style-image: url("chrome://branding/content/icon64.png");
+wizard[branded="true"] .wizard-header-icon {
+  list-style-image: url("chrome://branding/content/icon48.png");
 }
 
 .wizard-page-box {
