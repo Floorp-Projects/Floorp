@@ -1932,9 +1932,9 @@ nsIEProfileMigrator::CopySecurityPrefs(nsIPrefBranch* aPrefs)
     PRUint32 value;
     if (NS_SUCCEEDED(regKey->ReadIntValue(NS_LITERAL_STRING("SecureProtocols"),
                                           &value))) { 
-      aPrefs->SetBoolPref("security.enable_ssl2", value & 0x08);
-      aPrefs->SetBoolPref("security.enable_ssl3", value & 0x20);
-      aPrefs->SetBoolPref("security.enable_tls",  value & 0x80);
+      aPrefs->SetBoolPref("security.enable_ssl2", (value >> 3) & PR_TRUE);
+      aPrefs->SetBoolPref("security.enable_ssl3", (value >> 5) & PR_TRUE);
+      aPrefs->SetBoolPref("security.enable_tls",  (value >> 7) & PR_TRUE);
     }
   }
 
