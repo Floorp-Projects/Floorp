@@ -1246,7 +1246,7 @@ importxml - Import bugzilla bug data from xml.
 =back
 
 =head1 DESCRIPTION
-    
+
      This script is used to import bugs from another installation of bugzilla.
      It can be used in two ways.
      First using the move function of bugzilla
@@ -1256,14 +1256,14 @@ importxml - Import bugzilla bug data from xml.
      run by this script and imported into your database.  Run 'newaliases'
      after adding this alias to your aliases file. Make sure your sendmail
      installation is configured to allow mail aliases to execute code. 
-    
+
      bugzilla-import: "|/usr/bin/perl /opt/bugzilla/importxml.pl --mail"
-    
+
      Second it can be run from the command line with any xml file from 
      STDIN that conforms to the bugzilla DTD. In this case you can pass 
      an argument to set whether you want to send the
      mail that will be sent to the exporter and maintainer normally.
-    
+
      importxml.pl [options] bugsfile.xml
 
 =cut
