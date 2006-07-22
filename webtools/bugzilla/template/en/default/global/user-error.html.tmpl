@@ -1244,7 +1244,8 @@
       [% ELSE %]
         dependencies
       [% END %]. Show
-      <a href="showdependencytree.cgi?id=[% dependencies.0.bug_id FILTER none %]">Dependency Tree</a>.
+      <a href="showdependencytree.cgi?id=[% dependencies.0.bug_id FILTER none %]&amp;hide_resolved=1">Dependency
+      Tree</a>.
     [% ELSE %]
       There are [% dependency_count FILTER none %] open [% terms.bugs %] which
       have unresolved dependencies.
@@ -1257,7 +1258,8 @@
         [% ELSE %]
           dependencies.
         [% END %]
-        (<a href="showdependencytree.cgi?id=[% bug.bug_id FILTER none %]">Dependency Tree</a>)<br>
+        (<a href="showdependencytree.cgi?id=[% bug.bug_id FILTER none %]&amp;hide_resolved=1">Dependency
+        Tree</a>)<br>
       [% END %]
     [% END %]
 

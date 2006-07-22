@@ -521,7 +521,7 @@
     [% PROCESS dependencies
        dep = { title => "depends on", fieldname => "dependson" } %]
       <td rowspan="2">
-        <a href="showdependencytree.cgi?id=[% bug.bug_id %]">Show
+        <a href="showdependencytree.cgi?id=[% bug.bug_id %]&amp;hide_resolved=1">Show
         dependency tree</a>
 
         [% IF Param('webdotbase') %]
