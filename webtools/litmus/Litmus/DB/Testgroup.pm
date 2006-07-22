@@ -140,10 +140,9 @@ sub clone() {
   }  
 
   # Propagate testgroup membership;
-  my $dbh = __PACKAGE__->db_Main();
-  my $sql = "INSERT INTO subgroup_testgroups (subgroup_id,testgroup_id,sort_order) SELECT subgroup_id,?,sort_order FROM subgroup_testgroups WHERE testgroup_id=?";
+  $sql = "INSERT INTO subgroup_testgroups (subgroup_id,testgroup_id,sort_order) SELECT subgroup_id,?,sort_order FROM subgroup_testgroups WHERE testgroup_id=?";
 
-  my $rows = $dbh->do($sql,
+  $rows = $dbh->do($sql,
 		      undef,
 		      $new_testgroup->testgroup_id,
 		      $self->testgroup_id
