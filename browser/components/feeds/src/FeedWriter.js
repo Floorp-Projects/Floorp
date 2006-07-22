@@ -140,10 +140,17 @@ FeedWriter.prototype = {
    *          The feed container
    */
   _setTitleText: function FW__setTitleText(container) {
-    this._setContentText("feedTitleText", container.title);
-    this._setContentText("feedSubtitleText", 
-                         this._getPropertyAsString(container, "description"));
-    this._document.title = container.title;
+    
+    LOG(container);
+
+    if(container.title) {
+      this._setContentText("feedTitleText", container.title.plainText());
+      this._document.title = container.title.plainText();
+    }
+    
+    var feed = container.QueryInterface(Ci.nsIFeed);
+    if(feed && feed.subtitle)
+      this._setContentText("feedSubtitleText", container.subtitle.plainText());
   },
   
   /**
@@ -201,25 +208,43 @@ FeedWriter.prototype = {
       var entryContainer = this._document.createElementNS(HTML_NS, "div");
       entryContainer.className = "entry";
       
-      var a = this._document.createElementNS(HTML_NS, "a");
-      a.appendChild(this._document.createTextNode(entry.title));
+      // If the entry has a title, make it a like
+      if (entry.title) {
+        var a = this._document.createElementNS(HTML_NS, "a");
+        a.appendChild(this._document.createTextNode(entry.title.plainText()));
       
-      // Entries are not required to have links, so entry.link can be null.
-      if (entry.link)
-        this._safeSetURIAttribute(a, "href", entry.link.spec);
+        // Entries are not required to have links, so entry.link can be null.
+        if (entry.link)
+          this._safeSetURIAttribute(a, "href", entry.link.spec);
 
-      var title = this._document.createElementNS(HTML_NS, "h3");
-      title.appendChild(a);
-      entryContainer.appendChild(title);
+        var title = this._document.createElementNS(HTML_NS, "h3");
+        title.appendChild(a);
+        entryContainer.appendChild(title);
+      }
+
       
+
       var body = this._document.createElementNS(HTML_NS, "p");
-      var summary = entry.summary(true)
+      var summary = entry.summary || entry.content;
+      if (summary) 
+        summary = summary.plainText();
       if (summary && summary.length > MAX_CHARS)
         summary = summary.substring(0, MAX_CHARS) + "...";
-      
+
       // XXXben - Change to use innerHTML
       body.appendChild(this._document.createTextNode(summary));
       body.className = "feedEntryContent";
+
+      // If the entry doesn't have a title, append a # permalink
+      // See http://scripting.com/rss.xml for an example
+      if (!entry.title && entry.link) {
+        var a = this._document.createElementNS(HTML_NS, "a");
+        a.appendChild(this._document.createTextNode("#"));
+        this._safeSetURIAttribute(a, "href", entry.link.spec);
+        body.appendChild(this._document.createTextNode(" "));
+        body.appendChild(a);
+      }
+
       entryContainer.appendChild(body);
       
       feedContent.appendChild(entryContainer);
@@ -412,7 +437,7 @@ FeedWriter.prototype = {
     var container = this._getContainer();
     if (!container)
       return;
-    
+
     this._setTitleText(container);
     
     this._setTitleImage(container);
