@@ -1089,9 +1089,11 @@ NS_IMETHODIMP nsMsgDBView::SelectionChanged()
     m_currentlyDisplayedViewIndex = nsMsgViewIndex_None;
 
     // if we used to have one item selected, and now we have more than one, we should clear the message pane.
-    nsCOMPtr <nsIMsgMessagePaneController> controller;
-    if ((mNumSelectedRows == 1) && (numSelected > 1) && mMsgWindow && NS_SUCCEEDED(mMsgWindow->GetMessagePaneController(getter_AddRefs(controller))) && controller) {
-      controller->ClearMsgPane();
+    nsCOMPtr <nsIMsgWindowCommands> windowCommands;
+    if ((mNumSelectedRows == 1) && (numSelected > 1) && mMsgWindow 
+        && NS_SUCCEEDED(mMsgWindow->GetWindowCommands(getter_AddRefs(windowCommands))) 
+        && windowCommands) {
+      windowCommands->ClearMsgPane();
     }
   }
 

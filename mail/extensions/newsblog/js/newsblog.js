@@ -468,7 +468,7 @@ var progressNotifier = {
       
       // Nice touch: select the folder that now contains the newly subscribed feed...this is particularly nice 
       // if we just finished subscribing to a feed URL that the operating system gave us.
-      this.mMsgWindow.SelectFolder(feed.folder.URI);
+      this.mMsgWindow.windowCommands.selectFolder(feed.folder.URI);
     } 
     else if (feed.folder)
       feed.folder.setMsgDatabase(null);

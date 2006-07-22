@@ -5048,7 +5048,10 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                   if (msgFolder)
                   {
                     msgFolder->GetURI(getter_Copies(uri));
-                    msgWindow->SelectFolder(uri.get());
+                    nsCOMPtr<nsIMsgWindowCommands> windowCommands;
+                    msgWindow->GetWindowCommands(getter_AddRefs(windowCommands));
+                    if (windowCommands)
+                      windowCommands->SelectFolder(uri.get());
                   }
                 }
               }

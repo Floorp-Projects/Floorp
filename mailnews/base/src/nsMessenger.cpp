@@ -107,8 +107,6 @@
 #include "nsIMsgIncomingServer.h"
 
 #include "nsIMsgMessageService.h"
-
-#include "nsIMsgStatusFeedback.h"
 #include "nsMsgRDFUtils.h"
 
 #include "nsIMsgHdr.h"
@@ -341,82 +339,62 @@ nsMessenger::~nsMessenger()
 NS_IMPL_ISUPPORTS3(nsMessenger, nsIMessenger, nsIObserver, nsISupportsWeakReference)
 NS_IMPL_GETSET(nsMessenger, SendingUnsentMsgs, PRBool, mSendingUnsentMsgs)
 
-NS_IMETHODIMP    
-nsMessenger::SetWindow(nsIDOMWindowInternal *aWin, nsIMsgWindow *aMsgWindow)
+NS_IMETHODIMP nsMessenger::SetWindow(nsIDOMWindowInternal *aWin, nsIMsgWindow *aMsgWindow)
 {
-  nsCOMPtr<nsIPrefBranch2> pbi = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  nsresult rv;
 
-  if(!aWin)
+  nsCOMPtr<nsIPrefBranch2> pbi = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  if (aWin)
+  {
+    mMsgWindow = aMsgWindow;
+    mWindow = aWin;
+    
+    nsCOMPtr<nsPIDOMWindow> win( do_QueryInterface(aWin) );
+    NS_ENSURE_TRUE(win, NS_ERROR_FAILURE);
+
+    nsIDocShell *docShell = win->GetDocShell();
+    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
+    NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
+    
+    nsCOMPtr<nsIDocShellTreeItem> rootDocShellAsItem;
+    docShellAsItem->GetSameTypeRootTreeItem(getter_AddRefs(rootDocShellAsItem));
+    
+    nsCOMPtr<nsIDocShellTreeNode> rootDocShellAsNode(do_QueryInterface(rootDocShellAsItem));
+    if (rootDocShellAsNode) 
+    {
+      nsCOMPtr<nsIDocShellTreeItem> childAsItem;
+      rv = rootDocShellAsNode->FindChildWithName(NS_LITERAL_STRING("messagepane").get(),
+                                                 PR_TRUE, PR_FALSE, nsnull, nsnull, getter_AddRefs(childAsItem));
+      
+      mDocShell = do_QueryInterface(childAsItem);    
+      if (NS_SUCCEEDED(rv) && mDocShell) {
+        mCurrentDisplayCharset = ""; // Important! Clear out mCurrentDisplayCharset so we reset a default charset on mDocshell the next time we try to load something into it.
+        
+        if (aMsgWindow) 
+        {
+          aMsgWindow->GetTransactionManager(getter_AddRefs(mTxnMgr));        
+          // Add pref observer
+          pbi->AddObserver(MAILNEWS_ALLOW_PLUGINS_PREF_NAME, this, PR_TRUE);
+          SetDisplayProperties();
+        }
+      }
+    }
+    
+    // we don't always have a message pane, like in the addressbook
+    // so if we don't have a docshell, use the one for the xul window.
+    // we do this so OpenURL() will work.
+    if (!mDocShell)
+      mDocShell = docShell;
+  } // if aWin
+  else
   {
     // it isn't an error to pass in null for aWin, in fact it means we are shutting
     // down and we should start cleaning things up...
-    
-    if (mMsgWindow)
-    {
-      nsCOMPtr<nsIMsgStatusFeedback> aStatusFeedback;
-      
-      mMsgWindow->GetStatusFeedback(getter_AddRefs(aStatusFeedback));
-      if (aStatusFeedback)
-        aStatusFeedback->SetDocShell(nsnull, nsnull);
-      
-      // Remove pref observer
-      if (pbi)
-        pbi->RemoveObserver(MAILNEWS_ALLOW_PLUGINS_PREF_NAME, this);
-    }
-    
-    return NS_OK;
+    // Remove pref observer
+    pbi->RemoveObserver(MAILNEWS_ALLOW_PLUGINS_PREF_NAME, this);   
   }
-  
-  mMsgWindow = aMsgWindow;
-  
-  mWindow = aWin;
-  
-  nsCOMPtr<nsPIDOMWindow> win( do_QueryInterface(aWin) );
-  NS_ENSURE_TRUE(win, NS_ERROR_FAILURE);
-
-  nsIDocShell *docShell = win->GetDocShell();
-  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
-  NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
-  
-  nsCOMPtr<nsIDocShellTreeItem> rootDocShellAsItem;
-  docShellAsItem->GetSameTypeRootTreeItem(getter_AddRefs(rootDocShellAsItem));
-  
-  nsCOMPtr<nsIDocShellTreeNode> rootDocShellAsNode(do_QueryInterface(rootDocShellAsItem));
-
-  if (rootDocShellAsNode) 
-  {
-    nsCOMPtr<nsIDocShellTreeItem> childAsItem;
-    nsresult rv = rootDocShellAsNode->FindChildWithName(NS_LITERAL_STRING("messagepane").get(),
-      PR_TRUE, PR_FALSE, nsnull, nsnull, getter_AddRefs(childAsItem));
-    
-    mDocShell = do_QueryInterface(childAsItem);
-    
-    if (NS_SUCCEEDED(rv) && mDocShell) {
-      mCurrentDisplayCharset = ""; // Important! Clear out mCurrentDisplayCharset so we reset a default charset on mDocshell the next time we try to load something into it.
-      
-      if (aMsgWindow) 
-      {
-        nsCOMPtr<nsIMsgStatusFeedback> aStatusFeedback;
-        
-        aMsgWindow->GetStatusFeedback(getter_AddRefs(aStatusFeedback));
-        if (aStatusFeedback)
-          aStatusFeedback->SetDocShell(mDocShell, mWindow);
-
-        aMsgWindow->GetTransactionManager(getter_AddRefs(mTxnMgr));
-        
-        // Add pref observer
-        if (pbi)
-          pbi->AddObserver(MAILNEWS_ALLOW_PLUGINS_PREF_NAME, this, PR_TRUE);
-        SetDisplayProperties();
-      }
-    }
-  }
-  
-  // we don't always have a message pane, like in the addressbook
-  // so if we don't havea docshell, use the one for the xul window.
-  // we do this so OpenURL() will work.
-  if (!mDocShell)
-    mDocShell = docShell;
   
   return NS_OK;
 }
@@ -2672,9 +2650,12 @@ void nsDelAttachListener::SelectNewMessage()
   if (displayUri.Equals(messageUri))
   {
     mMessageFolder->GenerateMessageURI(mNewMessageKey, getter_Copies(displayUri));
-    if (displayUri)
+    if (displayUri && mMsgWindow)
     {
-      mMsgWindow->SelectMessage(displayUri);
+      nsCOMPtr<nsIMsgWindowCommands> windowCommands;
+      mMsgWindow->GetWindowCommands(getter_AddRefs(windowCommands));
+      if (windowCommands)
+        windowCommands->SelectMessage(displayUri);
     }
   }
   mNewMessageKey = PR_UINT32_MAX;

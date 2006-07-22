@@ -39,7 +39,6 @@
 #define _nsMsgStatusFeedback_h
 
 #include "nsIWebProgressListener.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsIObserver.h"
 #include "nsITimer.h"
 #include "nsCOMPtr.h"
@@ -64,18 +63,16 @@ public:
   NS_DECL_NSIPROGRESSEVENTSINK
 
 protected:
-  nsIDOMWindow     *mWindow;
   PRBool           m_meteorsSpinning;
   PRInt32          m_lastPercent;
   PRInt64          m_lastProgressTime;
-
 
   void BeginObserving();
   void EndObserving();
 
   // the JS status feedback implementation object...eventually this object
   // will replace this very C++ class you are looking at.
-  nsCOMPtr<nsIMsgStatusFeedback> mStatusFeedback;
+  nsWeakPtr mJSStatusFeedbackWeak;
 
   nsCOMPtr<nsIStringBundle> mBundle;
   nsCOMPtr <nsIAtom> m_msgLoadedAtom;

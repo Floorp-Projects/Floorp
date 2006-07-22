@@ -95,7 +95,7 @@ function onLoad()
 {
     gFilterListMsgWindow = Components.classes["@mozilla.org/messenger/msgwindow;1"].createInstance(Components.interfaces.nsIMsgWindow);
     gFilterListMsgWindow.statusFeedback = gStatusFeedback;
-    gFilterListMsgWindow.SetDOMWindow(window); 
+    gFilterListMsgWindow.domWindow = window; 
 
     gFilterBundle = document.getElementById("bundle_filter");
     gFilterTree = document.getElementById("filterTree");

@@ -125,7 +125,7 @@ function selectCancelButton()
 function selectOnLoad()
 {
     gMsgWindow = Components.classes[msgWindowContractID].createInstance(Components.interfaces.nsIMsgWindow);
-    gMsgWindow.SetDOMWindow(window);
+    gMsgWindow.domWindow = window;
 
     gAccountManager = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
     gSynchronizeTree = document.getElementById('synchronizeTree');

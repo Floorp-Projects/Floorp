@@ -81,27 +81,24 @@
 
 static void openMailWindow(const PRUnichar * aMailWindowName, const char * aFolderUri)
 {
-  nsCOMPtr<nsIWindowMediator> mediator ( do_GetService(NS_WINDOWMEDIATOR_CONTRACTID) );
-  if (!mediator)
+  nsCOMPtr<nsIMsgMailSession> mailSession ( do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv));
+  if (NS_FAILED(rv))
     return;
 
-  nsCOMPtr<nsIDOMWindowInternal> domWindow;
-  mediator->GetMostRecentWindow(aMailWindowName, getter_AddRefs(domWindow));
-  if (domWindow)
+  nsCOMPtr<nsIMsgWindow> topMostMsgWindow;
+  rv = mailSession->GetTopmostMsgWindow(getter_AddRefs(topMostMsgWindow));
+  if (topMostMsgWindow)
   {
     if (aFolderUri)
     {
-      nsCOMPtr<nsPIDOMWindow> piDOMWindow(do_QueryInterface(domWindow));
-      if (piDOMWindow)
-      {
-        nsCOMPtr<nsISupports> xpConnectObj;
-        piDOMWindow->GetObjectProperty(NS_LITERAL_STRING("MsgWindowCommands").get(), getter_AddRefs(xpConnectObj));
-        nsCOMPtr<nsIMsgWindowCommands> msgWindowCommands = do_QueryInterface(xpConnectObj);
-        if (msgWindowCommands)
-          msgWindowCommands->SelectFolder(aFolderUri);
-      }
+      nsCOMPtr<nsIMsgWindowCommands> windowCommands;
+      topMostMsgWindow->GetWindowCommands(getter_AddRefs(windowCommands));
+      if (windowCommands)
+        windowCommands->SelectFolder(aFolderUri);
     }
-
+    
+    nsCOMPtr<nsIDOMWindowInternal> domWindow;
+    topMostMsgWindow->GetDomWindow(getter_AddRefs(domWindow));
     domWindow->Focus();
   }
   else

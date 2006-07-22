@@ -345,14 +345,7 @@ NS_IMETHODIMP nsMsgProgress::ShowProgress(PRInt32 percent)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* [noscript] void setDocShell (in nsIDocShell shell, in nsIDOMWindowInternal window); */
-NS_IMETHODIMP nsMsgProgress::SetDocShell(nsIDocShell *shell, nsIDOMWindow *window)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* void closeWindow (); */
-NS_IMETHODIMP nsMsgProgress::CloseWindow()
+NS_IMETHODIMP nsMsgProgress::SetWrappedStatusFeedback(nsIMsgStatusFeedback * aJSStatusFeedback)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

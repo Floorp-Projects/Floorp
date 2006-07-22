@@ -1867,7 +1867,7 @@ function GenericSendMessage( msgType )
           progress.registerListener(progressListener);
           gSendOrSaveOperationInProgress = true;
         }
-        msgWindow.SetDOMWindow(window);
+        msgWindow.domWindow = window;
         msgWindow.rootDocShell.allowAuth = true;
         gMsgCompose.SendMsg(msgType, getCurrentIdentity(), currentAccountKey, msgWindow, progress);
       }

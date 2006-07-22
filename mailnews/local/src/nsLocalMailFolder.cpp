@@ -3133,7 +3133,10 @@ NS_IMETHODIMP nsMsgLocalMailFolder::SelectDownloadMsg()
   {
     nsCAutoString newuri;
     nsBuildLocalMessageURI(mBaseMessageURI, mDownloadSelectKey, newuri);
-    mDownloadWindow->SelectMessage(newuri.get());
+    nsCOMPtr<nsIMsgWindowCommands> windowCommands;
+    mDownloadWindow->GetWindowCommands(getter_AddRefs(windowCommands));
+    if (windowCommands)
+      windowCommands->SelectMessage(newuri.get());
     mDownloadState = DOWNLOAD_STATE_DIDSEL;
   }
   return NS_OK;
@@ -3327,9 +3330,12 @@ nsMsgLocalMailFolder::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
             if (NS_SUCCEEDED(rv))
             {
               pop3sink->GetMessageUri(getter_Copies(newMessageUri));
-              if(msgWindow)
+              if (msgWindow)
               {
-                msgWindow->SelectMessage(newMessageUri);
+                nsCOMPtr<nsIMsgWindowCommands> windowCommands;
+                msgWindow->GetWindowCommands(getter_AddRefs(windowCommands));
+                if (windowCommands)
+                  windowCommands->SelectMessage(newMessageUri);
               }
             }
           }

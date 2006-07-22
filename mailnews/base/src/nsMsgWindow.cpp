@@ -135,19 +135,6 @@ void nsMsgWindow::GetMessageWindowDocShell(nsIDocShell ** aDocShell)
   NS_IF_ADDREF(*aDocShell);
 }
 
-/* void SelectFolder (in string folderUri); */
-NS_IMETHODIMP nsMsgWindow::SelectFolder(const char *folderUri)
-{
-  return mMsgWindowCommands->SelectFolder(folderUri);
-}
-
-/* void SelectMessage (in string messasgeUri); */
-NS_IMETHODIMP nsMsgWindow::SelectMessage(const char *messageUri)
-{
-    return (mMsgWindowCommands) ? mMsgWindowCommands->SelectMessage(messageUri)
-      : NS_ERROR_NULL_POINTER;;
-}
-
 NS_IMETHODIMP nsMsgWindow::CloseWindow()
 {
   nsresult rv = NS_OK;
@@ -155,13 +142,8 @@ NS_IMETHODIMP nsMsgWindow::CloseWindow()
   if (NS_SUCCEEDED(rv)) 
     rv = dispatcher->UnRegisterContentListener(this);
 
-  // make sure the status feedback object
-  // knows the window is going away...
-
-  if (mStatusFeedback)
-    mStatusFeedback->CloseWindow(); 
-
-  mMsgPaneController = nsnull;
+  mMsgWindowCommands = nsnull;
+  mStatusFeedback = nsnull;
 
   StopUrls();
 
@@ -187,20 +169,18 @@ NS_IMETHODIMP nsMsgWindow::GetStatusFeedback(nsIMsgStatusFeedback * *aStatusFeed
   if(!aStatusFeedback)
     return NS_ERROR_NULL_POINTER;
 
-  *aStatusFeedback = mStatusFeedback;
-  NS_IF_ADDREF(*aStatusFeedback);
+  NS_IF_ADDREF(*aStatusFeedback = mStatusFeedback);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgWindow::SetStatusFeedback(nsIMsgStatusFeedback * aStatusFeedback)
 {
+  mStatusFeedback = aStatusFeedback;
   nsCOMPtr<nsIDocShell> messageWindowDocShell; 
   GetMessageWindowDocShell(getter_AddRefs(messageWindowDocShell));
 
+  // register our status feedback object as a web progress listener
   nsCOMPtr<nsIWebProgress> webProgress(do_GetInterface(messageWindowDocShell));
-  mStatusFeedback = aStatusFeedback;
-
-  // register our status feedback object
   if (webProgress && mStatusFeedback && messageWindowDocShell)
   {
     nsCOMPtr<nsIWebProgressListener> webProgressListener = do_QueryInterface(mStatusFeedback);
@@ -210,18 +190,16 @@ NS_IMETHODIMP nsMsgWindow::SetStatusFeedback(nsIMsgStatusFeedback * aStatusFeedb
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgWindow::GetMessagePaneController(nsIMsgMessagePaneController * * aMsgPaneController)
+NS_IMETHODIMP nsMsgWindow::SetWindowCommands(nsIMsgWindowCommands * aMsgWindowCommands)
 {
-  NS_ENSURE_ARG(aMsgPaneController);
-
-  *aMsgPaneController = mMsgPaneController;
-  NS_IF_ADDREF(*aMsgPaneController);
+  mMsgWindowCommands = aMsgWindowCommands;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgWindow::SetMessagePaneController(nsIMsgMessagePaneController * aMsgPaneController)
+NS_IMETHODIMP nsMsgWindow::GetWindowCommands(nsIMsgWindowCommands **aMsgWindowCommands)
 {
-  mMsgPaneController = aMsgPaneController;
+  NS_ENSURE_ARG_POINTER(aMsgWindowCommands);
+  NS_IF_ADDREF(*aMsgWindowCommands = mMsgWindowCommands);
   return NS_OK;
 }
 
@@ -338,12 +316,20 @@ NS_IMETHODIMP nsMsgWindow::SetCharsetOverride(PRBool aCharsetOverride)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgWindow::SetDOMWindow(nsIDOMWindowInternal *aWindow)
+NS_IMETHODIMP nsMsgWindow::GetDomWindow(nsIDOMWindowInternal **aWindow)
 {
-  if (!aWindow)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(aWindow);
+  if (mDomWindow)
+    CallQueryReferent(mDomWindow.get(), aWindow);
+  else
+    *aWindow = nsnull;
+  return NS_OK;
+}
 
-  nsresult rv = NS_OK;
+NS_IMETHODIMP nsMsgWindow::SetDomWindow(nsIDOMWindowInternal * aWindow)
+{
+  NS_ENSURE_ARG_POINTER(aWindow);
+  mDomWindow = do_GetWeakReference(aWindow);
 
   nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(aWindow));
   nsIDocShell *docShell = nsnull;
@@ -363,19 +349,9 @@ NS_IMETHODIMP nsMsgWindow::SetDOMWindow(nsIDOMWindowInternal *aWindow)
     // force ourselves to figure out the message pane
     nsCOMPtr<nsIDocShell> messageWindowDocShell; 
     GetMessageWindowDocShell(getter_AddRefs(messageWindowDocShell));
-    SetStatusFeedback(mStatusFeedback);
   }
 
-  //Get nsIMsgWindowCommands object 
-  nsCOMPtr<nsISupports> xpConnectObj;
-  nsCOMPtr<nsPIDOMWindow> piDOMWindow(do_QueryInterface(aWindow));
-  if (piDOMWindow)
-  {
-    piDOMWindow->GetObjectProperty(NS_LITERAL_STRING("MsgWindowCommands").get(), getter_AddRefs(xpConnectObj));
-    mMsgWindowCommands = do_QueryInterface(xpConnectObj);
-  }
-
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgWindow::StopUrls()
@@ -505,8 +481,8 @@ nsMsgWindow::DisplayHTMLInMessagePane(const PRUnichar *title, const PRUnichar *b
 {
   nsresult rv;
 
-  if (clearMsgHdr && mMsgPaneController)
-    mMsgPaneController->ClearMsgPane();
+  if (clearMsgHdr && mMsgWindowCommands)
+    mMsgWindowCommands->ClearMsgPane();
 
   nsString htmlStr;
   htmlStr.Append(NS_LITERAL_STRING("<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head><body>").get());

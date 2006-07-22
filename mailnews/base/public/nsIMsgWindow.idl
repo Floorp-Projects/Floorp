@@ -46,25 +46,17 @@ interface nsIMsgHeaderSink;
 interface nsIPrompt;
 interface nsIAuthPrompt;
 
-/*
- *  This interface can be used to set data specific to a window.
- */
-
-/* nsIMsgMessagePaneController is used to control the visiblity of the message pane
-   including the header overlay and the body. 
-*/
-
-[scriptable, uuid(923DE63D-EEB9-4574-850B-322C1A4667ED)]
-interface nsIMsgMessagePaneController : nsISupports {
-    void clearMsgPane();
+[scriptable, uuid(0A5C52F3-D1F3-4b6b-AE71-2B95C48BBC6B)]
+interface nsIMsgWindowCommands : nsISupports {
+  void selectFolder(in string folderUri);
+  void selectMessage(in string messageUri);
+  void clearMsgPane();
 };
 
-
-[scriptable, uuid(BCE0AB71-11FF-428E-9EDC-69ABAD73b697)]
+[scriptable, uuid(C4A53DDE-1502-40f1-8D00-71F636D545BE)]
 interface nsIMsgWindow : nsISupports {
-
-  attribute nsIMsgMessagePaneController messagePaneController;
   attribute nsIMsgStatusFeedback statusFeedback;
+  attribute nsIMsgWindowCommands windowCommands;
   attribute nsIMsgHeaderSink msgHeaderSink;
   attribute nsITransactionManager transactionManager;
   attribute nsIMsgFolder openFolder;
@@ -81,12 +73,11 @@ interface nsIMsgWindow : nsISupports {
       there's no convenient place to clear it.
   */
   attribute boolean stopped;
-  	
-  void SetDOMWindow(in nsIDOMWindowInternal window);
+
+  attribute nsIDOMWindowInternal domWindow;
+
   void StopUrls();
 
-  void SelectFolder(in string folderUri);
-  void SelectMessage(in string messageUri);
   /* when the msg window is being unloaded from the content window,
    * we can use this notification to force a flush on anything the 
    * msg window hangs on too. For some reason xpconnect is still hanging
@@ -94,11 +85,4 @@ interface nsIMsgWindow : nsISupports {
    * this forces a release...
    */
   void closeWindow();
-};
-
-[scriptable, uuid(FAD93C80-1AC6-11d4-A8F6-006097222B83)]
-interface nsIMsgWindowCommands : nsISupports {
-
-    void SelectFolder(in string folderUri);
-    void SelectMessage(in string messageUri);
 };

@@ -52,7 +52,6 @@ var messenger;
 var pref;
 var prefServices;
 var statusFeedback;
-var messagePaneController;
 var msgWindow;
 
 var msgComposeService;
@@ -122,8 +121,6 @@ function OnMailWindowUnload()
 
   msgDS = accountManagerDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
   msgDS.window = null;
-
-
   msgWindow.closeWindow();
 }
 
@@ -154,6 +151,7 @@ function CreateMailWindowGlobals()
 
   statusFeedback = Components.classes[statusFeedbackContractID].createInstance();
   statusFeedback = statusFeedback.QueryInterface(Components.interfaces.nsIMsgStatusFeedback);
+  statusFeedback.setWrappedStatusFeedback(window.MsgStatusFeedback);
 
   /*
     not in use unless we want the lock button back
@@ -207,10 +205,10 @@ function CreateMailWindowGlobals()
 
 function InitMsgWindow()
 {
-  msgWindow.messagePaneController = new nsMessagePaneController();
+  msgWindow.windowCommands = new nsMsgWindowCommands();
   msgWindow.statusFeedback = statusFeedback;
   msgWindow.msgHeaderSink = messageHeaderSink;
-  msgWindow.SetDOMWindow(window);
+  msgWindow.domWindow = window;
   mailSession.AddMsgWindow(msgWindow);
 
   var messagepane = document.getElementById("messagepane");
@@ -362,6 +360,7 @@ nsMsgStatusFeedback.prototype =
     {
       if (iid.equals(Components.interfaces.nsIMsgStatusFeedback) ||
           iid.equals(Components.interfaces.nsIXULBrowserWindow) ||
+          iid.equals(Components.interfaces.nsISupportsWeakReference) ||
           iid.equals(Components.interfaces.nsISupports))
         return this;
       throw Components.results.NS_NOINTERFACE;
@@ -468,10 +467,7 @@ nsMsgStatusFeedback.prototype =
         this.statusBar.value = percentage;
         this.statusBar.label = Math.round(percentage) + "%";
       }
-    },
-  closeWindow : function(percent)
-    {
-  }
+    }
 }
 
 
@@ -488,29 +484,17 @@ nsMsgWindowCommands.prototype =
       return this;
     throw Components.results.NS_NOINTERFACE;
   },
-  SelectFolder: function(folderUri)
+  
+  selectFolder: function(folderUri)
   {
     SelectFolder(folderUri);
   },
-  SelectMessage: function(messageUri)
+  
+  selectMessage: function(messageUri)
   {
     SelectMessage(messageUri);
-  }
-}
-
-function nsMessagePaneController()
-{
-}
-
-nsMessagePaneController.prototype =
-{
-  QueryInterface : function(iid)
-  {
-    if (iid.equals(Components.interfaces.nsIMsgMessagePaneController) ||
-        iid.equals(Components.interfaces.nsISupports))
-      return this;
-    throw Components.results.NS_NOINTERFACE;
   },
+  
   clearMsgPane: function()
   {
     if (gDBView)
@@ -518,7 +502,7 @@ nsMessagePaneController.prototype =
     else
       setTitleFromFolder(null,null);
     ClearMessagePane();
-  }
+  }  
 }
 
 function StopUrls()

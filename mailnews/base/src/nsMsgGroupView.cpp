@@ -749,9 +749,9 @@ NS_IMETHODIMP nsMsgGroupView::LoadMessageByViewIndex(nsMsgViewIndex aViewIndex)
   if (m_flags[aViewIndex] & MSG_VIEW_FLAG_DUMMY)
   {
     // if we used to have one item selected, and now we have more than one, we should clear the message pane.
-    nsCOMPtr <nsIMsgMessagePaneController> controller;
-    if (mMsgWindow && NS_SUCCEEDED(mMsgWindow->GetMessagePaneController(getter_AddRefs(controller))) && controller)
-      controller->ClearMsgPane();
+    nsCOMPtr <nsIMsgWindowCommands> windowCommands;
+    if (mMsgWindow && NS_SUCCEEDED(mMsgWindow->GetWindowCommands(getter_AddRefs(windowCommands))) && windowCommands)
+      windowCommands->ClearMsgPane();
     return NS_OK;
   }
   else
