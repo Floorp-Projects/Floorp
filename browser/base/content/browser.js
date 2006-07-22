@@ -6812,9 +6812,22 @@ HistoryMenu.populateUndoSubmenu = function PHM_populateUndoSubmenu() {
  *        The index of the tab (via nsSessionStore.getClosedTabData)
  */
 function undoCloseTab(aIndex) {
+  // wallpaper patch to prevent an unnecessary blank tab (bug 343895)
+  var tabbrowser = getBrowser();
+  var blankTabToRemove = null;
+  if (tabbrowser.tabContainer.childNodes.length == 1 &&
+      !gPrefService.getBoolPref("browser.tabs.autoHide") &&
+      tabbrowser.selectedBrowser.sessionHistory.count < 2 &&
+      tabbrowser.selectedBrowser.currentURI.spec == "about:blank" &&
+      !tabbrowser.selectedBrowser.contentDocument.body.hasChildNodes())
+    blankTabToRemove = tabbrowser.selectedTab;
+
   var ss = Cc["@mozilla.org/browser/sessionstore;1"].
            getService(Ci.nsISessionStore);
   if (ss.getClosedTabCount(window) == 0)
     return;
   ss.undoCloseTab(window, aIndex || 0);
+
+  if (blankTabToRemove)
+    tabbrowser.removeTab(blankTabToRemove);
 }
