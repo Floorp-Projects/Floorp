@@ -2,10 +2,9 @@
 <!ENTITY about.copy.link1Title        "contributors">
 <!ENTITY about.copy.beforeLink2       "to the">
 <!ENTITY about.copy.link2Title        "Mozilla Project">
+<!ENTITY about.copy.afterLink2        ".">
 
 <!ENTITY about.license.beforeLink     "Read the">
-<!-- LOCALIZATION NOTE (about.license.link): This has to be either "about:license" or "about:licence". -->
-<!ENTITY about.license.link           "about:license">
 <!ENTITY about.license.linkTitle      "licensing information">
 <!ENTITY about.license.afterLink      "for this product.">
 
