@@ -660,8 +660,16 @@ generator_mark(JSContext *cx, JSObject *obj, void *arg)
     JSGenerator *gen;
 
     gen = (JSGenerator *) JS_GetPrivate(cx, obj);
-    if (gen && gen->state != JSGEN_CLOSED)
+    if (gen && gen->state != JSGEN_CLOSED) {
+        /*
+         * We must mark argv[-2], as js_MarkStackFrame will not.  Note that
+         * js_MarkStackFrame will mark thisp (argv[-1]) and actual arguments,
+         * plus any missing formals and local GC roots.
+         */
+        JS_ASSERT(!JSVAL_IS_PRIMITIVE(gen->frame.argv[-2]));
+        GC_MARK(cx, JSVAL_TO_GCTHING(gen->frame.argv[-2]), "generator");
         js_MarkStackFrame(cx, &gen->frame);
+    }
     return 0;
 }
 
