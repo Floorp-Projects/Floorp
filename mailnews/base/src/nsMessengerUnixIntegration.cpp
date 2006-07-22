@@ -81,6 +81,7 @@
 
 static void openMailWindow(const PRUnichar * aMailWindowName, const char * aFolderUri)
 {
+  nsresult rv;
   nsCOMPtr<nsIMsgMailSession> mailSession ( do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv));
   if (NS_FAILED(rv))
     return;
