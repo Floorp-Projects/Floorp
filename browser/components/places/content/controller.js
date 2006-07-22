@@ -1399,10 +1399,19 @@ var PlacesController = {
       node.containerOpen = true;
       var cc = node.childCount;
 
+      // we can't just use |cc| as that might include
+      // folders, separators, deleted bookmarks, etc.
+      var numTabsToOpen = 0;
+      for (var i = 0; i < cc; ++i) {
+        var childNode = node.getChild(i);
+        if (this.nodeIsURI(childNode))
+          ++numTabsToOpen;
+      }
+
       // restore the original state (temporarily) so that if we prompt
       // the user, the will not see a change to the open state.
       node.containerOpen = wasOpen;
-      if (!this._confirmOpenTabs(cc))
+      if (!this._confirmOpenTabs(numTabsToOpen))
         return;
       // ensure the container is open, we'll restore it again
       // to the original state when we are done
@@ -1450,7 +1459,15 @@ var PlacesController = {
     else {
       var nodes = this._activeView.getSelectionNodes();
 
-      if (!this._confirmOpenTabs(nodes.length))
+      // we can't just use |nodes.length| as that might include
+      // folders, separators, deleted bookmarks, etc.
+      var numTabsToOpen = 0;
+      for (var i = 0; i < nodes.length; ++i) {
+        if (this.nodeIsURI(nodes[i]))
+          ++numTabsToOpen;
+      }
+
+      if (!this._confirmOpenTabs(numTabsToOpen))
         return;
 
       for (var i = 0; i < nodes.length; ++i) {
