@@ -699,7 +699,8 @@ nsFind::NextNode(nsIDOMRange* aSearchRange,
     nsCOMPtr<nsIDOMNode> dnode (do_QueryInterface(content));
     printf(":::::: Got the first node "); DumpNode(dnode);
 #endif
-    if (content->IsNodeOfType(nsINode::eTEXT) && !SkipNode(content))
+    if (content && content->IsNodeOfType(nsINode::eTEXT) &&
+        !SkipNode(content))
     {
       mIterNode = do_QueryInterface(content);
       // Also set mIterOffset if appropriate:
