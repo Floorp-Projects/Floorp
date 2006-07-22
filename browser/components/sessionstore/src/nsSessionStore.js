@@ -76,9 +76,6 @@ const DEFAULT_ENABLED = true;
 // minimal interval between two save operations (in milliseconds)
 const DEFAULT_INTERVAL = 10000;
 
-// maximum number of closed windows remembered
-const DEFAULT_MAX_WINDOWS_UNDO = 10;
-
 // maximum number of closed tabs remembered (per window)
 const DEFAULT_MAX_TABS_UNDO = 10;
 
@@ -154,9 +151,6 @@ SessionStoreService.prototype = {
   // states for all currently opened windows
   _windows: {},
 
-  // storage for Undo Close Window
-  _closedWindows: [],
-
   // in case the last closed window ain't a navigator:browser one
   _lastWindowClosed: null,
 
@@ -195,7 +189,6 @@ SessionStoreService.prototype = {
     this._prefBranch.addObserver("sessionstore.interval", this, true);
     
     // observe prefs changes so we can modify stored data to match
-    this._prefBranch.addObserver("sessionstore.max_windows_undo", this, true);
     this._prefBranch.addObserver("sessionstore.max_tabs_undo", this, true);
 
     // get file references
@@ -306,8 +299,7 @@ SessionStoreService.prototype = {
         });
       });
       this._clearDisk();
-      // also clear all data about closed windows and tabs
-      this._closedWindows = [];
+      // also clear all data about closed tabs
       for (ix in this._windows) {
         this._windows[ix]._closedTabs = [];
       }
@@ -320,11 +312,6 @@ SessionStoreService.prototype = {
       break;
     case "nsPref:changed": // catch pref changes
       switch (aData) {
-      // if the user decreases the max number of windows they want preserved
-      // update our internal state to match that max
-      case "sessionstore.max_windows_undo":
-        this._closedWindows.splice(this._getPref("sessionstore.max_windows_undo", DEFAULT_MAX_WINDOWS_UNDO));
-        break;
       // if the user decreases the max number of closed tabs they want
       // preserved update our internal states to match that max
       case "sessionstore.max_tabs_undo":
@@ -475,10 +462,6 @@ SessionStoreService.prototype = {
       this._lastWindowClosed = this._windows[aWindow.__SSi];
       this._lastWindowClosed.title = aWindow.content.document.title;
       this._updateCookies([this._lastWindowClosed]);
-      
-      // add the window to the list of recently closed windows
-      this._closedWindows.unshift(this._lastWindowClosed);
-      this._closedWindows.splice(this._getPref("sessionstore.max_windows_undo", DEFAULT_MAX_WINDOWS_UNDO));
       
       // clear this window from the list
       delete this._windows[aWindow.__SSi];
@@ -646,40 +629,14 @@ SessionStoreService.prototype = {
     this.restoreWindow(window, aState, true);
   },
 
+// * get/set the opaque state of a closed window (for persisting it over sessions)
+
   getOpaqueWindowState: function sss_getOpaqueWindowState(aWindow) {
     return this._getWindowState(aWindow);
   },
 
   setOpaqueWindowState: function sss_setOpaqueWindowState(aWindow, aState) {
     this.restoreWindow(aWindow, aState, true);
-  },
-
-// * allow to reopen closed windows
-// * get/set the opaque state of a closed window (for persisting it over sessions)
-
-  get closedWindowCount() {
-    return this._closedWindows.length;
-  },
-
-  closedWindowNameAt: function sss_closedWindowNameAt(aIx) {
-    return aIx in this._closedWindows ? this._closedWindows[aIx].title : null;
-  },
-
-  get closedWindowData() {
-    return this._closedWindows;
-  },
-
-  set closedWindowData(aData) {
-    this._closedWindows = aData;
-  },
-
-  undoCloseWindow: function sss_undoCloseWindow(aIx) {
-    if (aIx in this._closedWindows) {
-      this._openWindowWithState({ windows: this._closedWindows.splice(aIx, 1) });
-    }
-    else {
-      Components.returnCode = Cr.NS_ERROR_INVALID_ARG;
-    }
   },
 
 // * allow to reopen closed tabs
