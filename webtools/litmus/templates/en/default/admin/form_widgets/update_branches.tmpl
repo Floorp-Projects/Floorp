@@ -45,10 +45,11 @@ function populateBranch(data) {
     } else {
       options[i].selected = false;
     }
-    if (found_product == 0) {
-      options[0].selected = true;
-    }
   }
+  if (found_product == 0) {
+    options[0].selected = true;
+  }
+
   var enabled_em = document.getElementById('edit_branch_form_enabled')
   if (branch.enabled == 1) {
     enabled_em.checked = true;

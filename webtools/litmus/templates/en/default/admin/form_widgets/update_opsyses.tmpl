@@ -45,9 +45,9 @@ function populateOpsys(data) {
     } else {
       options[i].selected = false;
     }
-    if (found_platform == 0) {
-      options[0].selected = true;
-    }
+  }
+  if (found_platform == 0) {
+    options[0].selected = true;
   }
 
   document.getElementById('edit_opsys_form_div').style.display = 'block';

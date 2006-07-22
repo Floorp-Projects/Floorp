@@ -39,7 +39,7 @@ BEGIN {
     $VERSION     = 0.01;
     @ISA         = qw (Exporter);
     #Give a hoot don't pollute, do not export more than needed by default
-    @EXPORT      = qw ( getProducts );
+    @EXPORT      = qw ();
     @EXPORT_OK   = qw ();
     %EXPORT_TAGS = ();
 }
@@ -200,7 +200,7 @@ sub getTestcases()
 #########################################################################
 sub getSubgroups()
 {
-    my $sql = "SELECT subgroup_id, name, product_id FROM subgroups ORDER BY name, subgroup_id";
+    my $sql = "SELECT s.subgroup_id, s.name, s.product_id, tgb.branch_id FROM subgroups s, subgroup_testgroups sgtg, testgroup_branches tgb WHERE s.enabled=1 AND s.subgroup_id=sgtg.subgroup_id AND sgtg.testgroup_id=tgb.testgroup_id ORDER BY s.name ASC, s.subgroup_id DESC";
     return _getValues($sql);
 }
 

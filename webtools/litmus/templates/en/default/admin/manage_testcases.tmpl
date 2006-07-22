@@ -152,10 +152,10 @@ function populateTestcase(data) {
       found_product=1;
     } else {
       options[i].selected = false;
-    }      
-    if (found_product == 0) {
-      options[0].selected = true;
     }
+  }
+  if (found_product == 0) {
+    options[0].selected = true;
   }
   changeProduct();
   var found_testgroup = 0;
@@ -307,7 +307,7 @@ function resetTestcase() {
     <h1 class="firstHeading">[% title %]</h1>
 
     <div class="section-full">
-      <div class="section-header">Existing Testcases</div> <br />
+      <div class="section-header">Existing Testcases</div>
 
       <div class="section-content" style="overflow:hidden;">
 

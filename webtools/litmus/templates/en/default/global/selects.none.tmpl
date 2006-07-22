@@ -91,7 +91,7 @@
         type="hidden" 
         value="[%valuelist FILTER html%]">
     [% END %]
-    <select name="branch[%testidflag FILTER html%]" id="branch[%testidflag FILTER html%]" 
+    <select name="branch[%testidflag FILTER html%]" id="branch[%testidflag FILTER html%]"[% IF multiple %] multiple[% END %][% IF size %] size="[% size %]"[% END %][% IF onchange %] onchange="[% onchange %]"[% END %]
         class="select_branch">
     </select>
 [% END %]

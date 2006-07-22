@@ -45,4 +45,12 @@ Litmus::DB::Branch->column_alias("product_id", "product");
 Litmus::DB::Branch->has_many(test_results => "Litmus::DB::Testresult");
 Litmus::DB::Branch->has_a(product => "Litmus::DB::Product");
 
+__PACKAGE__->set_sql(ByTestgroup => qq{
+                                       SELECT b.* 
+                                       FROM branches b, testgroup_branches tgb 
+                                       WHERE tgb.testgroup_id=? AND tgb.branch_id=b.branch_id
+                                       ORDER BY b.name ASC
+});
+
+
 1;

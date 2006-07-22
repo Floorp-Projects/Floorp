@@ -189,13 +189,15 @@ function addNullEntry(select) {
     // contents based on it's name:
     
     if (select.className == 'select_product') {
-    	select.add(new Option("-Product-", "---", false, false), null);
+    	select.add(new Option("-Product-", "", false, false), null);
     } else if (select.className == 'select_testgroup') {
-    	select.add(new Option("-Testgroup-", "---", false, false), null);
+    	select.add(new Option("-Testgroup-", "", false, false), null);
     } else if (select.className == 'select_subgroup') {
-    	select.add(new Option("-Subgroup-", "---", false, false), null);
+    	select.add(new Option("-Subgroup-", "", false, false), null);
+    } else if (select.className == 'select_branch') {
+    	select.add(new Option("-Branch-", "", false, false), null);
     } else {
-    	select.add(new Option("---", "---", false, false), null);
+    	select.add(new Option("---", "", false, false), null);
     }
 }
 

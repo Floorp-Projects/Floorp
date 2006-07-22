@@ -126,6 +126,19 @@ sub clone() {
     return undef;
   }
 
+  # Propagate branch membership;
+  my $dbh = __PACKAGE__->db_Main();
+  my $sql = "INSERT INTO testgroup_branches (testgroup_id,branch_id) SELECT ?,branch_id FROM testgroup_branches WHERE testgroup_id=?";
+
+  my $rows = $dbh->do($sql,
+		      undef,
+		      $new_testgroup->testgroup_id,
+		      $self->testgroup_id
+		     );
+  if (! $rows) {
+    # XXX: Do we need to throw a warning here?
+  }  
+
   # Propagate testgroup membership;
   my $dbh = __PACKAGE__->db_Main();
   my $sql = "INSERT INTO subgroup_testgroups (subgroup_id,testgroup_id,sort_order) SELECT subgroup_id,?,sort_order FROM subgroup_testgroups WHERE testgroup_id=?";
@@ -155,10 +168,27 @@ sub delete_from_subgroups() {
 }
 
 #########################################################################
+sub delete_from_branches() {
+  my $self = shift;
+
+  my $dbh = __PACKAGE__->db_Main();  
+  my $sql = "DELETE from testgroup_branches WHERE testgroup_id=?";
+  my $rows = $dbh->do($sql,
+                      undef,
+                      $self->testgroup_id
+                     );
+}
+
+#########################################################################
 sub delete_from_test_runs() {
   my $self = shift;
 
-  # XXX: Placeholder for test runs.
+  my $dbh = __PACKAGE__->db_Main();  
+  my $sql = "DELETE from test_run_testgroups WHERE testgroup_id=?";
+  my $rows = $dbh->do($sql,
+                      undef,
+                      $self->testgroup_id
+                     );
   return;
 }
 
@@ -166,6 +196,7 @@ sub delete_from_test_runs() {
 sub delete_with_refs() {
   my $self = shift;
   $self->delete_from_subgroups();
+  $self->delete_from_branches();
   $self->delete_from_test_runs();
   return $self->delete;
 }

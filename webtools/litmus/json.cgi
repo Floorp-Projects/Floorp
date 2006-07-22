@@ -71,6 +71,8 @@ if ($c->param("testcase_id")) {
   my $testgroup = Litmus::DB::Testgroup->retrieve($testgroup_id);
   my @subgroups = Litmus::DB::Subgroup->search_EnabledByTestgroup($testgroup_id);
   $testgroup->{'subgroups'} = \@subgroups;
+  my @branches = Litmus::DB::Branch->search_ByTestgroup($testgroup_id);
+  $testgroup->{'branches'} = \@branches;
   my $json = JSON->new(skipinvalid => 1, convblessed => 1);
   my $js = $json->objToJson($testgroup);
   print $js;

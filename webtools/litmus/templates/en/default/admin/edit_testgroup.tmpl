@@ -33,7 +33,8 @@
 function checkFormContents(f) {
   return (
           checkString(f.editform_name, 'Name') &&
-          verifySelected(f.product, 'Product')
+          verifySelected(f.product, 'Product') &&
+          verifySelected(f.editform_branches, 'Branch')
          );
 }
 
@@ -74,9 +75,12 @@ var manageTestgroupsHelpText="<p>The select box on the left contains all the sub
         </tr>
 	<tr>
 	<td class="headerleft">Product:</td>
-	<td>[% INCLUDE productbox onchange="changeProduct();populateAllSubgroups();" %]</td>
+	<td>[% INCLUDE productbox onchange="changeProduct();populateBranches(document.getElementById('product'));populateAllSubgroups();" %]</td>
 	</tr>
-	<!-- XXX: Placeholder for test runs. -->
+        <tr>
+	<td class="headerleft">Branch(es):</td>
+	<td>[% INCLUDE form_widgets/select_branch_id.tmpl name="editform_branches" placeholder=1 multiple=1 size=5 onChange="populateAllSubgroups();" %]</td>
+	</tr>
         <tr>
           <td class="headerleft">Enabled?</td>
           <td>
@@ -103,7 +107,7 @@ var manageTestgroupsHelpText="<p>The select box on the left contains all the sub
 	<div class="manage">
           <table border="0" cellspacing="10" cellpadding="0">
             <tr>
-            <td id="editform_subgroups_for_product_header" name="editform_subgroups_for_product_header" class="headerleft">All Subgroups For Product</td>
+            <td id="editform_subgroups_for_product_header" name="editform_subgroups_for_product_header" class="headerleft">All Subgroups For Product/Branch</td>
             <td></td>
             <td class="headerleft">Subgroups in Testgroup</td>
             </tr>

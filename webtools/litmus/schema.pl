@@ -243,45 +243,43 @@ $table{test_results} =
          index(validated_timestamp),
          index(vetted_timestamp)';
 
-$table{test_run_branches} = 
+$table{test_run_criteria} = 
 	'test_run_id int(11) not null,
-         branch_id smallint(6) not null,
+         build_id int(10) unsigned not null,
+         platform_id smallint(6) not null default "0",
+         opsys_id smallint(6) not null default "0",
 
-         primary key(test_run_id, branch_id)';
+         primary key(test_run_id,build_id,platform_id,opsys_id)';
 
-$table{test_run_build_ids} = 
+$table{test_run_testgroups} = 
 	'test_run_id int(11) not null,
-         build_id int(10) not null,
+         testgroup_id smallint(6) not null,
 
-         primary key(test_run_id, build_id)';
-
-$table{test_run_opsyses} = 
-	'test_run_id int(11) not null,
-         opsys_id smallint(6) not null,
-
-         primary key(test_run_id, opsys_id)';
-
-$table{test_run_platforms} = 
-	'test_run_id int(11) not null,
-         platform_id smallint(6) not null,
-
-         primary key(test_run_id, platform_id)';
+         primary key(test_run_id,testgroup_id)';
 
 $table{test_runs} = 
 	'test_run_id int(11) not null primary key auto_increment,
-         testgroup_id smallint(6) not null,
          name varchar(64) not null,
          description varchar(255),
          start_timestamp datetime not null,
          finish_timestamp datetime not null,
          enabled tinyint(1) not null default "1",
+         product_id tinyint(4) not null,
+         branch_id smallint(6) not null,
+         creation_date datetime not null,
+         last_updated datetime not null,
+         author_id int(11) not null,
 
-         index(testgroup_id),
          index(name),
          index(description),
          index(start_timestamp),
          index(finish_timestamp),
-         index(enabled)';
+         index(enabled),
+         index(product_id),
+         index(branch_id),
+         index(creation_date),
+         index(last_updated),
+         index(author_id)';
 
 $table{testcase_subgroups} =
         'testcase_id int(11) not null,
