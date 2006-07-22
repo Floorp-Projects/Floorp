@@ -154,5 +154,6 @@ $problemTypes[4] = 'Other content missing';
 $problemTypes[5] = 'Behavior wrong';
 $problemTypes[6] = 'Appearance wrong';
 $problemTypes[7] = 'Other problem';
+$problemTypes[8] = 'Disability access';
 
 ?>
