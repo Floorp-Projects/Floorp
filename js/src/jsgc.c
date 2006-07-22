@@ -2289,10 +2289,39 @@ js_MarkStackFrame(JSContext *cx, JSStackFrame *fp)
             GC_MARK_JSVALS(cx, nslots, fp->spbase, "operand");
         }
     }
+
+    /* Allow for primitive this parameter due to JSFUN_THISP_* flags. */
     JS_ASSERT(JSVAL_IS_OBJECT((jsval)fp->thisp) ||
               (fp->fun && JSFUN_THISP_FLAGS(fp->fun->flags)));
     if (JSVAL_IS_GCTHING((jsval)fp->thisp))
-        GC_MARK(cx, fp->thisp, "this");
+        GC_MARK(cx, JSVAL_TO_GCTHING((jsval)fp->thisp), "this");
+
+    /*
+     * Mark fp->argv, even though in the common case it will be marked via our
+     * caller's frame, or via a JSStackHeader if fp was pushed by an external
+     * invocation.
+     *
+     * The hard case is when there is not enough contiguous space in the stack
+     * arena for actual, missing formal, and local root (JSFunctionSpec.extra)
+     * slots.  In this case, fp->argv points to new space in a new arena, and
+     * marking the caller's operand stack, or an external caller's allocated
+     * stack tracked by a JSStackHeader, will not mark all the values stored
+     * and addressable via fp->argv.
+     *
+     * But note that fp->argv[-2] will be marked via the caller, even when the
+     * arg-vector moves.  And fp->argv[-1] will be marked as well, and we mark
+     * it redundantly just above this comment.
+     *
+     * So in summary, solely for the hard case of moving argv due to missing
+     * formals and extra roots, we must mark actuals, missing formals, and any
+     * local roots arrayed at fp->argv here.
+     *
+     * It would be good to avoid redundant marking of the same reference, in
+     * the case where fp->argv does point into caller-allocated space tracked
+     * by fp->down->spbase or cx->stackHeaders.  This would allow callbacks
+     * such as the forthcoming rt->gcThingCallback (bug 333078) to compute JS
+     * reference counts.  So this comment deserves a FIXME bug to cite.
+     */
     if (fp->argv) {
         nslots = fp->argc;
         if (fp->fun) {
