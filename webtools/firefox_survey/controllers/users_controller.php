@@ -51,6 +51,7 @@ class UsersController extends AppController {
             // Check the captcha values
             if( $_SESSION['hash_func'](strtolower($this->params['data']['captcha'][0])) != $_SESSION['freecap_word_hash']) {
                 $form_captcha_error = 'The code you entered did not match the picture.  Please try again.';
+
                 $this->set('form_captcha_error',$form_captcha_error);
                 return;
             } else {
@@ -82,7 +83,7 @@ generation of Firefox.  Thanks again for making the browser a better place!</p>
 information provided will never be given or sold to any other outside company for its
 use in marketing or solicitation.</small></p>
 
-<p><small>If you choose not to take this survey, you will be automatically unsubscribed from the Firefox Survey list.</small></p>
+<p><small>If you choose not to take this survey, you will be automatically unsubscribed from the Firefox User Panel.</small></p>
 
 <p><small>If you think you received this in error, please <a href=\"mailto:firefoxsurvey@mozilla.com\">let us know</a>.</small></p>
 "
@@ -131,7 +132,7 @@ generation of Firefox.  Thanks again for making the browser a better place!</p>
 information provided will never be given or sold to any other outside company for its
 use in marketing or solicitation.</small></p>
 
-<p><small>If you choose not to take this survey, you will be automatically unsubscribed from the Firefox Survey list.</small></p>
+<p><small>If you choose not to take this survey, you will be automatically unsubscribed from the Firefox User Panel.</small></p>
 
 <p><small>If you think you received this in error, please <a href=\"mailto:firefoxsurvey@mozilla.com\">let us know</a>.</small></p>
 "

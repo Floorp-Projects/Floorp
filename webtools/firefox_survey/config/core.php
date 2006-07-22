@@ -1,5 +1,5 @@
 <?php
-/* SVN FILE: $Id: core.php,v 1.1 2006/07/07 18:09:28 wclouser%mozilla.com Exp $ */
+/* SVN FILE: $Id: core.php,v 1.2 2006/07/22 00:38:22 wclouser%mozilla.com Exp $ */
 
 /**
  * This is core configuration file.
@@ -22,9 +22,9 @@
  * @package      cake
  * @subpackage   cake.app.config
  * @since        CakePHP v 0.2.9
- * @version      $Revision: 1.1 $
+ * @version      $Revision: 1.2 $
  * @modifiedby   $LastChangedBy: phpnut $
- * @lastmodified $Date: 2006/07/07 18:09:28 $
+ * @lastmodified $Date: 2006/07/22 00:38:22 $
  * @license      http://www.opensource.org/licenses/mit-license.php The MIT License
  */
 
@@ -83,12 +83,12 @@ define('CAKE_SESSION_SAVE', 'php');
  * Set a random string of used in session.
  *
  */
-define('CAKE_SESSION_STRING', 'DYhG93b0qyJfIxfs2guVoUubWwvniR2G0FgaC9mi');
+define('CAKE_SESSION_STRING', 'DYhGjsi3834g1bKJAHGFI9348i18AHGA22knaAAi');
 /**
  * Set the name of session cookie
  *
  */
-define('CAKE_SESSION_COOKIE', 'CAKEPHP');
+define('CAKE_SESSION_COOKIE', 'moz_userpanel');
 
 /**
  * Set level of Cake security.

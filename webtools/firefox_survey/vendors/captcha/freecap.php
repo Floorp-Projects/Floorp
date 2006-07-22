@@ -24,7 +24,7 @@
 \************************************************************/
 
 // rename this sometime?
-session_name('CAKEPHP');
+session_name('moz_userpanel');
 session_start();
 
 //////////////////////////////////////////////////////
@@ -375,8 +375,6 @@ if($use_dict==1)
 // hence, even if attackers can read the session file, they can't get the freeCap word
 // (though most hashes are easy to brute force for simple strings)
 $_SESSION['freecap_word_hash'] = $hash_func($word);
-
-
 
 
 //////////////////////////////////////////////////////
