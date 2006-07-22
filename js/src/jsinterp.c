@@ -5956,7 +5956,8 @@ interrupt:
                 STORE_OPND(0, JSVAL_VOID);
                 sp++;
             }
-            JS_ASSERT(OBJ_GET_PARENT(cx, obj) == fp->blockChain);
+            JS_ASSERT(!fp->blockChain ||
+                      OBJ_GET_PARENT(cx, obj) == fp->blockChain);
             fp->blockChain = obj;
           END_LITOPX_CASE(JSOP_ENTERBLOCK)
 
