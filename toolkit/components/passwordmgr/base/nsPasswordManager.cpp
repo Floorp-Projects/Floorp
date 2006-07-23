@@ -1792,6 +1792,32 @@ nsPasswordManager::FillDocument(nsIDOMDocument* aDomDoc)
 
         temp->GetValue(oldUserValue);
         userField = temp;
+      } else if ((e->passField).IsEmpty()) {
+        // Happens sometimes when we import passwords from IE since
+        // their form name match is case insensitive. In this case,
+        // we'll just have to do a case insensitive search for the
+        // userField and hope we get something.
+        PRUint32 count;
+        form->GetElementCount(&count);
+        PRUint32 i;
+        nsCOMPtr<nsIFormControl> formControl;
+        for (i = 0; i < count; i++) {
+          form->GetElementAt(i, getter_AddRefs(formControl));
+
+          if (formControl &&
+              formControl->GetType() == NS_FORM_INPUT_TEXT) {
+            nsCOMPtr<nsIDOMHTMLInputElement> inputField = do_QueryInterface(formControl);
+            nsAutoString name;
+            inputField->GetName(name);
+            if (name.EqualsIgnoreCase(NS_ConvertUTF16toUTF8(e->userField).get())) {
+              inputField->GetValue(oldUserValue);
+              userField = inputField;
+              foundNode = inputField;
+              e->userField.Assign(name);
+              break;
+            }
+          }
+        }
       }
 
       if (!(e->passField).IsEmpty()) {
@@ -1846,6 +1872,8 @@ nsPasswordManager::FillDocument(nsIDOMDocument* aDomDoc)
 
         temp->GetValue(oldPassValue);
         passField = temp;
+        if ((e->passField).IsEmpty())
+          passField->GetName(e->passField);
       } else {
         continue;
       }
