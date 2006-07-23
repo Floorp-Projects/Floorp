@@ -65,8 +65,7 @@
 ; must not have additional arguments.
 ; To create a shortcut a shortcut must not already exist with the same name.
 Function un.SetAccess
-  Call un.GetParameters
-  Pop $R0
+  ${un.GetParameters} $R0
 
   StrCpy $R1 "Software\Clients\StartMenuInternet\${FileMainEXE}\InstallInfo"
   SetShellVarContext all  ; Set $DESKTOP to All Users
