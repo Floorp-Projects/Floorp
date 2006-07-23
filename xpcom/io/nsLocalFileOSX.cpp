@@ -1355,6 +1355,13 @@ NS_IMETHODIMP nsLocalFile::SetPersistentDescriptor(const nsACString& aPersistent
   if (aPersistentDescriptor.IsEmpty())
     return NS_ERROR_INVALID_ARG;
 
+  // Support pathnames as user-supplied descriptors if they begin with '/'
+  // or '~'.  These characters do not collide with the base64 set used for
+  // encoding alias records.
+  char first = aPersistentDescriptor.First();
+  if (first == '/' || first == '~')
+    return InitWithNativePath(aPersistentDescriptor);
+
   nsresult rv = NS_OK;
   
   PRUint32 dataSize = aPersistentDescriptor.Length();    
