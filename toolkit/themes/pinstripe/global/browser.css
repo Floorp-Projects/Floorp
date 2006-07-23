@@ -272,3 +272,6 @@ tabbrowser > tabbox > tabpanels {
   font-weight: bold;
 }
 
+.alltabs-item[busy] > .menu-iconic-left > .menu-iconic-icon {
+  list-style-image: url("chrome://global/skin/icons/loading_16_grey.gif") !important;
+}
