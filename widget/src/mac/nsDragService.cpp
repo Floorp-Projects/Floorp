@@ -236,7 +236,7 @@ nsDragService::ComputeGlobalRectFromFrame ( nsIDOMNode* aDOMNode, Rect & outScre
 
 
 //
-// StartDragSession
+// InvokeDragSession
 //
 // Do all the work to kick it off.
 //
@@ -326,7 +326,7 @@ nsDragService::InvokeDragSession (nsIDOMNode *aDOMNode, nsISupportsArray * aTran
 
   return NS_OK; 
 
-} // StartDragSession
+} // InvokeDragSession
 
 
 //
@@ -1161,26 +1161,6 @@ nsDragService::ExtractDataFromOS ( DragReference inDragRef, ItemReference inItem
   return retval;
 
 } // ExtractDataFromOS
-
-
-//
-// StartDragSession
-// EndDragSession
-//
-// Override the defaults to disable/enable the watch cursor while we're dragging
-//
-
-nsresult
-nsDragService::StartDragSession ( )
-{
-  return nsBaseDragService::StartDragSession();
-}
-
-nsresult
-nsDragService::EndDragSession ( )
-{
-  return nsBaseDragService::EndDragSession();
-}
 
 
 //

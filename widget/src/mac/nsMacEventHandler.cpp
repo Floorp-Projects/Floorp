@@ -574,7 +574,7 @@ PRBool nsMacEventHandler::DragEvent(unsigned int aMessage,
         // done when aMessage == NS_DRAGDROP_EXIT, because that indicates
         // that the drag is leaving the window.
 
-        nsMouseEvent enterEvent(PR_TRUE, NS_DRAGDROP_EXIT, widgetHit,
+        nsMouseEvent enterEvent(PR_TRUE, NS_DRAGDROP_ENTER, widgetHit,
                                 nsMouseEvent::eReal);
         InitializeMouseEvent(enterEvent, widgetHitPoint, aKeyModifiers, 1);
         widgetHit->DispatchMouseEvent(enterEvent);
