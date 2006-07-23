@@ -2271,36 +2271,50 @@ function serv_invite(e)
 CIRCServer.prototype.onNotice =
 function serv_notice (e)
 {
-    if (!("user" in e))
+    var targetName = e.params[1];
+
+    // Strip off one (and only one) user mode prefix.
+    for (var i = 0; i < this.userModes.length; i++)
+    {
+        if (targetName[0] == this.userModes[i].symbol)
+        {
+            targetName = targetName.substr(1);
+            break;
+        }
+    }
+
+    if (arrayIndexOf(this.channelTypes, targetName[0]) != -1)
+    {
+        e.channel = new CIRCChannel(this, null, targetName);
+        if ("user" in e)
+            e.user = new CIRCChanUser(e.channel, e.user.unicodeName);
+        e.replyTo = e.channel;
+        e.set = "channel";
+    }
+    else if (!("user" in e))
     {
         e.set = "network";
         e.destObject = this.parent;
         return true;
     }
-
-    if (arrayIndexOf(this.channelTypes, e.params[1][0]) != -1)
+    else
     {
-        e.channel = new CIRCChannel(this, null, e.params[1]);
-        e.user = new CIRCChanUser(e.channel, e.user.unicodeName);
-        e.replyTo = e.channel;
-        e.set = "channel";
+        e.set = "user";
+        e.replyTo = e.user; /* send replies to the user who sent the message */
     }
-    else if (e.params[2].search (/\x01.*\x01/i) != -1)
+
+    if (e.params[2].search (/\x01.*\x01/i) != -1)
     {
         e.type = "ctcp-reply";
         e.destMethod = "onCTCPReply";
         e.set = "server";
         e.destObject = this;
-        return true;
     }
     else
     {
-        e.set = "user";
-        e.replyTo = e.user; /* send replys to the user who sent the message */
+        e.msg = e.decodeParam(2, e.replyTo);
+        e.destObject = e.replyTo;
     }
-
-    e.msg = e.decodeParam(2, e.replyTo);
-    e.destObject = e.replyTo;
 
     return true;
 }
@@ -2308,11 +2322,23 @@ function serv_notice (e)
 CIRCServer.prototype.onPrivmsg =
 function serv_privmsg (e)
 {
-    /* setting replyTo provides a standard place to find the target for     */
-    /* replys associated with this event.                                   */
-    if (arrayIndexOf(this.channelTypes, e.params[1][0]) != -1)
+    var targetName = e.params[1];
+
+    // Strip off one (and only one) user mode prefix.
+    for (var i = 0; i < this.userModes.length; i++)
     {
-        e.channel = new CIRCChannel(this, null, e.params[1]);
+        if (targetName[0] == this.userModes[i].symbol)
+        {
+            targetName = targetName.substr(1);
+            break;
+        }
+    }
+
+    /* setting replyTo provides a standard place to find the target for     */
+    /* replies associated with this event.                                  */
+    if (arrayIndexOf(this.channelTypes, targetName[0]) != -1)
+    {
+        e.channel = new CIRCChannel(this, null, targetName);
         e.user = new CIRCChanUser(e.channel, e.user.unicodeName);
         e.replyTo = e.channel;
         e.set = "channel";
