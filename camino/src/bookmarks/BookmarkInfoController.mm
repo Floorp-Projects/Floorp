@@ -58,6 +58,7 @@ enum EBookmarkInfoViewType {
 - (void)commitChanges:(id)sender;
 - (void)configureWindowForView:(EBookmarkInfoViewType)inViewType;
 - (void)updateUI;
+- (void)dockMenuChanged:(NSNotification *)aNote;
 
 @end;
 
@@ -111,6 +112,8 @@ static BookmarkInfoController* gSharedBookmarkInfoController = nil;
   // Generic notifications for Bookmark Client - only care if there's a deletion
   NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
   [nc addObserver:self selector:@selector(bookmarkRemoved:) name:BookmarkFolderDeletionNotification object:nil];
+  // Listen for Dock Menu changes
+  [nc addObserver:self selector:@selector(dockMenuChanged:) name:BookmarkFolderDockMenuChangeNotificaton object:nil];
 }
 
 -(void)dealloc
@@ -242,7 +245,6 @@ static BookmarkInfoController* gSharedBookmarkInfoController = nil;
 {
   if ([mBookmarkItem isKindOfClass:[BookmarkFolder class]]) {
     [(BookmarkFolder *)mBookmarkItem setIsDockMenu:([sender state] == NSOnState)];
-    [mDockMenuCheckbox setEnabled:NO];
   }
 }
 
@@ -324,14 +326,11 @@ static BookmarkInfoController* gSharedBookmarkInfoController = nil;
     [mFolderKeywordField setStringValue:[mBookmarkItem keyword]];
     [mFolderDescField setString:[mBookmarkItem itemDescription]];
 
-    // we can't just unselect dock menu - we have to pick a new one
-    if ([(BookmarkFolder *)mBookmarkItem isDockMenu]) {
+    // we can unselect dock menu - we have a fallback default
+    if ([(BookmarkFolder *)mBookmarkItem isDockMenu])
       [mDockMenuCheckbox setState:NSOnState];
-      [mDockMenuCheckbox setEnabled:NO];
-    } else {
+    else
       [mDockMenuCheckbox setState:NSOffState];
-      [mDockMenuCheckbox setEnabled:YES];
-    }
   }
   else
   {
@@ -399,6 +398,13 @@ static BookmarkInfoController* gSharedBookmarkInfoController = nil;
   if ([item isKindOfClass:[Bookmark class]]) {
     [mNumberVisitsField setIntValue:[(Bookmark *)item numberOfVisits]];
     [mLastVisitField setStringValue: [[(Bookmark *)item lastVisit] descriptionWithCalendarFormat:[[mLastVisitField formatter] dateFormat] timeZone:[NSTimeZone localTimeZone] locale:nil]];
+  }
+}
+
+- (void)dockMenuChanged:(NSNotification *)aNote {
+  BookmarkItem *bookmark = [self bookmark];
+  if([bookmark isKindOfClass:[BookmarkFolder class]]) {
+    [mDockMenuCheckbox setState:([(BookmarkFolder *)bookmark isDockMenu] ? NSOnState : NSOffState)];
   }
 }
 

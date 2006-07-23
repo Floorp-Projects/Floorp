@@ -113,6 +113,7 @@ const long kOpenInTabsTag = 0xBEEF;
 {
   [mFolder autorelease];
   mFolder = [inFolder retain];
+  mDirty = YES;
 }
 
 - (BookmarkFolder*)bookmarkFolder

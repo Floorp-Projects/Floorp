@@ -348,7 +348,7 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
 
 -(BOOL) isSpecial
 {
-  return ([self isToolbar] || [self isRoot] || [self isSmartFolder] || [self isDockMenu]);
+  return ([self isToolbar] || [self isRoot] || [self isSmartFolder]);
 }
 
 -(BOOL) isToolbar
@@ -421,6 +421,11 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
     NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
     [nc postNotificationName:BookmarkFolderDockMenuChangeNotificaton object:self];
     [nc addObserver:self selector:@selector(dockMenuChanged:) name:BookmarkFolderDockMenuChangeNotificaton object:nil];
+  } else if ((oldFlag & kBookmarkDockMenuFolder) != 0) {
+    // when resigning dock menu, notify
+    NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
+    [nc removeObserver:self name:BookmarkFolderDockMenuChangeNotificaton object:nil];
+    [nc postNotificationName:BookmarkFolderDockMenuChangeNotificaton object:self];
   }
 }
 
@@ -902,6 +907,8 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
   [[undoManager prepareWithInvocationTarget:self] insertChild:aChild atIndex:[[self childArray] indexOfObjectIdenticalTo:aChild] isMove:NO];
   [undoManager endUndoGrouping];
 
+  if([aChild isDockMenu])
+    [aChild setIsDockMenu:NO];
   [aChild setParent:nil];
   [[aChild retain] autorelease];   // let it live for the notifications (don't rely on undo manager to keep it alive)
   [[self childArray] removeObject:aChild];
