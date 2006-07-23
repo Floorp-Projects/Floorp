@@ -132,8 +132,10 @@ calItemBase.prototype = {
 
         if (this.mOrganizer)
             this.mOrganizer.makeImmutable();
-        for (var i = 0; i < this.mAttendees.length; i++)
-            this.mAttendees[i].makeImmutable();
+        if (this.mAttendees) {
+            for (var i = 0; i < this.mAttendees.length; i++)
+                this.mAttendees[i].makeImmutable();
+        }
 
         var e = this.mProperties.enumerator;
         while (e.hasMoreElements()) {
@@ -174,7 +176,7 @@ calItemBase.prototype = {
         this.setProperty("LAST-MODIFIED", NewCalDateTime(now));
         this.setProperty("DTSTAMP", NewCalDateTime(now));
 
-        this.mAttendees = [];
+        this.mAttendees = null;
 
         this.mRecurrenceInfo = null;
 
@@ -200,9 +202,13 @@ calItemBase.prototype = {
             m.mOrganizer = this.mOrganizer.clone();
         }
 
-        m.mAttendees = [];
-        for (var i = 0; i < this.mAttendees.length; i++)
-            m.mAttendees[i] = this.mAttendees[i].clone();
+        if (this.mAttendees) {
+            m.mAttendees = new Array(this.mAttendees.length);
+            for (var i = 0; i < this.mAttendees.length; i++)
+                m.mAttendees[i] = this.mAttendees[i].clone();
+        }
+        else
+            m.mAttendees = null;
 
         m.mProperties = Components.classes["@mozilla.org/hash-property-bag;1"].
                         createInstance(Components.interfaces.nsIWritablePropertyBag);
@@ -381,23 +387,34 @@ calItemBase.prototype = {
     },
 
     getAttendees: function (countObj) {
-        countObj.value = this.mAttendees.length;
-        return this.mAttendees.concat([]); // clone
+        if (!this.mAttendees && this.mIsProxy && this.mParentItem) {
+            this.mAttendees = this.mParentItem.getAttendees(countObj);
+        }
+        if (this.mAttendees) {
+            countObj.value = this.mAttendees.length;
+            return this.mAttendees.concat([]); // clone
+        }
+        else {
+            countObj.value = 0;
+            return [];
+        }
     },
 
     getAttendeeById: function (id) {
-        for (var i = 0; i < this.mAttendees.length; i++)
-            if (this.mAttendees[i].id == id)
-                return this.mAttendees[i];
+        var attendees = this.getAttendees({});
+        for (var i = 0; i < attendees.length; i++)
+            if (this.attendees[i].id == id)
+                return attendees[i];
         return null;
     },
 
     removeAttendee: function (attendee) {
         this.modify();
         var found = false, newAttendees = [];
-        for (var i = 0; i < this.mAttendees.length; i++) {
-            if (this.mAttendees[i] != attendee)
-                newAttendees.push(this.mAttendees[i]);
+        var attendees = this.getAttendees({});
+        for (var i = 0; i < attendees.length; i++) {
+            if (attendees[i].id != attendee.id)
+                newAttendees.push(attendees[i]);
             else
                 found = true;
         }
@@ -414,6 +431,7 @@ calItemBase.prototype = {
 
     addAttendee: function (attendee) {
         this.modify();
+        this.mAttendees = this.getAttendees({});
         this.mAttendees.push(attendee);
     },
 
@@ -430,7 +448,11 @@ calItemBase.prototype = {
 
     mOrganizer: null,
     get organizer() {
-        return this.mOrganizer;
+        if (!this.mOrganizer && this.mIsProxy && this.mParentItem) {
+            return this.mParentItem.organizer;
+        }
+        else
+            return this.mOrganizer;
     },
 
     set organizer(v) {
@@ -618,8 +640,10 @@ calItemBase.prototype = {
 
         if (this.mOrganizer)
             icalcomp.addProperty(this.mOrganizer.icalProperty);
-        for (var i = 0; i < this.mAttendees.length; i++)
-            icalcomp.addProperty(this.mAttendees[i].icalProperty);
+        if (this.mAttendees) {
+            for (var i = 0; i < this.mAttendees.length; i++)
+                icalcomp.addProperty(this.mAttendees[i].icalProperty);
+        }
 
         if (this.mGeneration) {
             var genprop = icalProp("X-MOZILLA-GENERATION");
