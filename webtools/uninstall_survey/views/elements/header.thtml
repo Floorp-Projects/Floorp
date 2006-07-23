@@ -23,15 +23,15 @@
                     <?php 
                         echo $html->link(
                                     $html->image('moz-com-logo.png', array('alt'=>'Mozilla Corporation', 'height'=>38,'width'=>89)), 
-                                    'http://mozilla.com/', array('title'=>'Return to home page', 'accesskey'=>'1'),false,false
+                                    'http://www.mozilla.com/', array('title'=>'Return to home page', 'accesskey'=>'1'),false,false
                                 ); 
                     ?>
                 </h1>
                 <ul>
-                    <li id="menu-products"><a href="http://mozilla.com/products/">Products</a></li>
-                    <li id="menu-extensions"><a href="http://mozilla.com/extensions/">Extensions</a></li>
-                    <li id="menu-support"><a href="http://mozilla.com/support/">Support</a></li>
-                    <li id="menu-developers"><a href="http://mozilla.com/developers/">Developers</a></li>
+                    <li id="menu-products"><a href="http://www.mozilla.com/products/">Products</a></li>
+                    <li id="menu-extensions"><a href="http://www.mozilla.com/add-ons/">Add-Ons</a></li>
+                    <li id="menu-support"><a href="http://www.mozilla.com/support/">Support</a></li>
+                    <li id="menu-developers"><a href="http://www.mozilla.com/developers/">Developers</a></li>
 
                 </ul>
             </div>
