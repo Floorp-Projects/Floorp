@@ -1610,10 +1610,10 @@ calStorageCalendar.prototype = {
         var tmp;
 
         tmp = item.getUnproxiedProperty("DTSTART");
-        //if (tmp instanceof kCalIDateTime) {}
+        //if (tmp instanceof Ci.calIDateTime) {}
         this.setDateParamHelper(ip, "event_start", tmp);
         tmp = item.getUnproxiedProperty("DTEND");
-        //if (tmp instanceof kCalIDateTime) {}
+        //if (tmp instanceof Ci.calIDateTime) {}
         this.setDateParamHelper(ip, "event_end", tmp);
 
         if (item.startDate.isDate)
@@ -1710,7 +1710,7 @@ calStorageCalendar.prototype = {
 
             pp.key = prop.name;
             var pval = prop.value;
-            if (pval instanceof kCalIDateTime) {
+            if (pval instanceof Ci.calIDateTime) {
                 pp.value = pval.nativeTime;
             } else {
                 pp.value = pval;
