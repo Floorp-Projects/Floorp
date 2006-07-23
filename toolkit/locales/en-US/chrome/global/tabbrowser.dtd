@@ -10,3 +10,4 @@
 <!ENTITY  reloadTab.label        "Reload Tab">
 <!ENTITY  reloadTab.accesskey         "r">
 <!ENTITY  newTabButton.tooltip   "Open a new tab">
+<!ENTITY  listAllTabs.label      "List all tabs">
