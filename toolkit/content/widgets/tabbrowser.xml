@@ -1065,8 +1065,13 @@
           else
             firstTabAdded = gBrowser.addTab(aURIs[0], null, null, null, owner, false);
 
-          for (var i = 1; i < aURIs.length; ++i)
-            gBrowser.addTab(aURIs[i]);
+          var tabNum = this.mTabContainer.selectedIndex;
+          for (var i = 1; i < aURIs.length; ++i) {
+            var tab = gBrowser.addTab(aURIs[i]);
+            if (aReplace)
+              this.moveTabTo(tab, ++tabNum);
+          }
+
           if (!aLoadInBackground) {
             if (firstTabAdded) {
               // .selectedTab setter focuses the content area
