@@ -186,6 +186,12 @@ sub execute_tests {
         my $bug_number;
         my $status_lines;
 
+        # Allow the test to declare multiple possible success exit codes.
+        # This is useful in situations where the test fails if a 
+        # crash occurs but passes if no crash occurs even if an 
+        # out of memory error occurs.
+        my @expected_exit_list = ($expected_exit);
+
         # user selected [Q]uit from ^C handler.
         if ($user_exit) {
             return;
@@ -286,6 +292,7 @@ sub execute_tests {
             # produce (0 by default)
             if ($line =~ /expect(ed)?\s*exit\s*code\s*\:?\s*(\d+)/i) {
                 $expected_exit = $2;
+                push @expected_exit_list, ($expected_exit);
                 &dd ("Test case expects exit code $expected_exit");
             }
 
@@ -318,7 +325,8 @@ sub execute_tests {
             # test was terminated due to timeout
             &report_failure ($test, "TIMED OUT ($opt_timeout seconds)\n");
         }
-        elsif ($got_exit != $expected_exit || $exit_signal != 0) {
+        elsif (index(join(',', @expected_exit_list), $got_exit) == -1 || 
+               $exit_signal != 0) {
             # full testcase output dumped on mismatched exit codes,
             &report_failure ($test, "Expected exit code " .
                              "$expected_exit, got $got_exit\n" .
