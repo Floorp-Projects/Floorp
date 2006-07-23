@@ -239,10 +239,6 @@ nsDragHelperService::Drop(DragReference inDragRef, nsIEventSink *inSink,
         result = dragNotAcceptedErr;
   } // if a valid drag session
 
-  // we don't need the drag session anymore, the user has released the
-  // mouse and the event has already gone to gecko.
-  mDragService->EndDragSession();
-
   // if there was any kind of error, the drag wasn't accepted
   *outAccepted = (result == noErr);
 

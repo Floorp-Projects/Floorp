@@ -79,9 +79,6 @@ public:
 
 private:
 
-  NS_IMETHOD StartDragSession ( ) ;
-  NS_IMETHOD EndDragSession ( ) ;
-  
   char* LookupMimeMappingsForItem ( DragReference inDragRef, ItemReference itemRef ) ;
 
   void RegisterDragItemsAndFlavors ( nsISupportsArray * inArray, RgnHandle inDragRgn ) ;
