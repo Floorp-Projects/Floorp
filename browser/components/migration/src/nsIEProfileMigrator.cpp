@@ -78,6 +78,7 @@
 #include "nsIGlobalHistory.h"
 #include "nsIRDFRemoteDataSource.h"
 #include "nsIURI.h"
+#include "nsIPasswordManager.h"
 #include "nsIPasswordManagerInternal.h"
 #include "nsIFormHistory.h"
 #include "nsIRDFService.h"
@@ -692,7 +693,7 @@ nsIEProfileMigrator::CopyHistory(PRBool aReplace)
 //
 // <USER_ID> is a long string that uniquely identifies the current user
 // <IE_PSS_GUID> is a GUID that identifies a subsection of the Protected Storage
-// System specific to MSIE. This GUID is defined below ("IEPStoreGUID").
+// System specific to MSIE. This GUID is defined below ("IEPStoreAutocompGUID").
 //
 // Data is stored in the Protected Strage System ("PStore") in the following
 // format:
@@ -745,12 +746,16 @@ struct SignonData {
   char*      realm;
 };
 
-// The IEPStore GUID is the registry key under which IE Protected Store data lives. 
-// {e161255a-37c3-11d2-bcaa-00c04fd929db}
-static GUID IEPStoreGUID = { 0xe161255a, 0x37c3, 0x11d2, { 0xbc, 0xaa, 0x00, 0xc0, 0x4f, 0xd9, 0x29, 0xdb } };
+// IE PStore Type GUIDs
+// {e161255a-37c3-11d2-bcaa-00c04fd929db} Autocomplete Password & Form Data
+//                                        Subtype has same GUID
+// {5e7e8100-9138-11d1-945a-00c04fc308ff} HTTP/FTP Auth Login Data
+//                                        Subtype has a zero GUID
+static GUID IEPStoreAutocompGUID = { 0xe161255a, 0x37c3, 0x11d2, { 0xbc, 0xaa, 0x00, 0xc0, 0x4f, 0xd9, 0x29, 0xdb } };
+static GUID IEPStoreSiteAuthGUID = { 0x5e7e8100, 0x9138, 0x11d1, { 0x94, 0x5a, 0x00, 0xc0, 0x4f, 0xc3, 0x08, 0xff } };
 
 ///////////////////////////////////////////////////////////////////////////////
-// IMPORTING PASSWORDS
+// IMPORTING AUTOCOMPLETE PASSWORDS
 //
 // This is tricky, and requires 2 passes through the subkeys in IE's PStore 
 // section.
@@ -822,6 +827,76 @@ nsIEProfileMigrator::CopyPasswords(PRBool aReplace)
   if (NS_SUCCEEDED(rv))
     ResolveAndMigrateSignons(PStore, &signonsFound);
 
+  MigrateSiteAuthSignons(PStore);
+  return NS_OK;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// IMPORTING SITE AUTHENTICATION PASSWORDS
+//
+// This is simple and straightforward. We iterate through the part of the 
+// PStore that matches the type GUID defined in IEPStoreSiteAuthGUID and
+// a zero subtype GUID. For each item, we check the data for a ':' that
+// separates the username and password parts. If there is no ':', we give up.
+// After that, we check to see if the name of the item starts with "DPAPI:".
+// We bail out if that's the case, because we can't handle those yet.
+// However, if everything is all and well, we convert the itemName to a realm
+// string that the password manager can work with and save this login
+// via AddUser.
+
+nsresult
+nsIEProfileMigrator::MigrateSiteAuthSignons(IPStore* aPStore)
+{
+  HRESULT hr;
+
+  NS_ENSURE_ARG_POINTER(aPStore);
+
+  nsCOMPtr<nsIPasswordManager> pwmgr(do_GetService("@mozilla.org/passwordmanager;1"));
+  if (!pwmgr)
+    return NS_OK;
+
+  GUID mtGuid = {0};
+  IEnumPStoreItemsPtr enumItems = NULL;
+  hr = aPStore->EnumItems(0, &IEPStoreSiteAuthGUID, &mtGuid, 0, &enumItems);
+  if (SUCCEEDED(hr) && enumItems != NULL) {
+    LPWSTR itemName = NULL;
+    while ((enumItems->Next(1, &itemName, 0) == S_OK) && itemName) {
+      unsigned long count = 0;
+      unsigned char* data = NULL;
+
+      hr = aPStore->ReadItem(0, &IEPStoreSiteAuthGUID, &mtGuid, itemName, &count, &data, NULL, 0);
+      if (SUCCEEDED(hr) && data) {
+        unsigned long i;
+        unsigned char* password = NULL;
+        for (i = 0; i < count; i++)
+          if (data[i] == ':') {
+            data[i] = '\0';
+            if (i + 1 < count)
+              password = &data[i + 1];
+            break;
+          }
+
+        nsAutoString tmp(itemName);
+        tmp.Truncate(6);
+        if (tmp.Equals(NS_LITERAL_STRING("DPAPI:"))) // often FTP logins
+          password = NULL; // We can't handle these yet
+
+        if (password) {
+          int idx;
+          nsAutoString realm(itemName);
+          idx = realm.FindChar('/');
+          if (idx) {
+            realm.Replace(idx, 1, NS_LITERAL_STRING(" ("));
+            realm.Append(NS_LITERAL_STRING(")"));
+          }
+          pwmgr->AddUser(NS_ConvertUTF16toUTF8(realm),
+                         NS_ConvertUTF8toUTF16((char *)data),
+                         NS_ConvertUTF8toUTF16((char *)password));
+        }
+        ::CoTaskMemFree(data);
+      }
+    }
+  }
   return NS_OK;
 }
 
@@ -833,7 +908,7 @@ nsIEProfileMigrator::GetSignonsListFromPStore(IPStore* aPStore, nsVoidArray* aSi
   NS_ENSURE_ARG_POINTER(aPStore);
 
   IEnumPStoreItemsPtr enumItems = NULL;
-  hr = aPStore->EnumItems(0, &IEPStoreGUID, &IEPStoreGUID, 0, &enumItems);
+  hr = aPStore->EnumItems(0, &IEPStoreAutocompGUID, &IEPStoreAutocompGUID, 0, &enumItems);
   if (SUCCEEDED(hr) && enumItems != NULL) {
     LPWSTR itemName = NULL;
     while ((enumItems->Next(1, &itemName, 0) == S_OK) && itemName) {
@@ -842,7 +917,7 @@ nsIEProfileMigrator::GetSignonsListFromPStore(IPStore* aPStore, nsVoidArray* aSi
 
       // We are responsible for freeing |data| using |CoTaskMemFree|!!
       // But we don't do it here... 
-      hr = aPStore->ReadItem(0, &IEPStoreGUID, &IEPStoreGUID, itemName, &count, &data, NULL, 0);
+      hr = aPStore->ReadItem(0, &IEPStoreAutocompGUID, &IEPStoreAutocompGUID, itemName, &count, &data, NULL, 0);
       if (SUCCEEDED(hr) && data) {
         nsAutoString itemNameString(itemName);
         nsAutoString suffix;
@@ -915,14 +990,14 @@ nsIEProfileMigrator::ResolveAndMigrateSignons(IPStore* aPStore, nsVoidArray* aSi
   HRESULT hr;
 
   IEnumPStoreItemsPtr enumItems = NULL;
-  hr = aPStore->EnumItems(0, &IEPStoreGUID, &IEPStoreGUID, 0, &enumItems);
+  hr = aPStore->EnumItems(0, &IEPStoreAutocompGUID, &IEPStoreAutocompGUID, 0, &enumItems);
   if (SUCCEEDED(hr) && enumItems != NULL) {
     LPWSTR itemName = NULL;
     while ((enumItems->Next(1, &itemName, 0) == S_OK) && itemName) {
       unsigned long count = 0;
       unsigned char* data = NULL;
 
-      hr = aPStore->ReadItem(0, &IEPStoreGUID, &IEPStoreGUID, itemName, &count, &data, NULL, 0);
+      hr = aPStore->ReadItem(0, &IEPStoreAutocompGUID, &IEPStoreAutocompGUID, itemName, &count, &data, NULL, 0);
       if (SUCCEEDED(hr) && data) {
         nsAutoString itemNameString(itemName);
         nsAutoString suffix;
@@ -1042,7 +1117,7 @@ nsIEProfileMigrator::CopyFormData(PRBool aReplace)
     return NS_OK;
 
   IEnumPStoreItemsPtr enumItems = NULL;
-  hr = PStore->EnumItems(0, &IEPStoreGUID, &IEPStoreGUID, 0, &enumItems);
+  hr = PStore->EnumItems(0, &IEPStoreAutocompGUID, &IEPStoreAutocompGUID, 0, &enumItems);
   if (SUCCEEDED(hr) && enumItems != NULL) {
     LPWSTR itemName = NULL;
     while ((enumItems->Next(1, &itemName, 0) == S_OK) && itemName) {
@@ -1050,7 +1125,7 @@ nsIEProfileMigrator::CopyFormData(PRBool aReplace)
       unsigned char* data = NULL;
 
       // We are responsible for freeing |data| using |CoTaskMemFree|!!
-      hr = PStore->ReadItem(0, &IEPStoreGUID, &IEPStoreGUID, itemName, &count, &data, NULL, 0);
+      hr = PStore->ReadItem(0, &IEPStoreAutocompGUID, &IEPStoreAutocompGUID, itemName, &count, &data, NULL, 0);
       if (SUCCEEDED(hr) && data) {
         nsAutoString itemNameString(itemName);
         nsAutoString suffix;

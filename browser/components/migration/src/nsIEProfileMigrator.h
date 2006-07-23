@@ -79,6 +79,7 @@ protected:
   PRBool   KeyIsURI(const nsAString& aKey, char** aRealm);
 
   nsresult CopyPasswords(PRBool aReplace);
+  nsresult MigrateSiteAuthSignons(IPStore* aPStore);
   nsresult GetSignonsListFromPStore(IPStore* aPStore, nsVoidArray* aSignonsFound);
   nsresult ResolveAndMigrateSignons(IPStore* aPStore, nsVoidArray* aSignonsFound);
   void     EnumerateUsernames(const nsAString& aKey, PRUnichar* aData, unsigned long aCount, nsVoidArray* aSignonsFound);
