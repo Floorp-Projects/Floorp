@@ -91,7 +91,42 @@ var gAdvancedPane = {
    * general.smoothScroll
    * - set to true to enable finer page scrolling than line-by-line on page-up,
    *   page-down, and other such page movements
+   * layout.spellcheckDefault
+   * - an integer:
+   *     0  disables spellchecking
+   *     1  enables spellchecking, but only for multiline text fields
+   *     2  enables spellchecking for all text fields
    */
+
+  /**
+   * Stores the original value of the spellchecking preference to enable proper
+   * restoration if unchanged (since we're mapping a tristate onto a checkbox).
+   */
+  _storedSpellCheck: 0,
+
+  /**
+   * Returns true if any spellchecking is enabled and false otherwise, caching
+   * the current value to enable proper pref restoration if the checkbox is
+   * never changed.
+   */
+  readCheckSpelling: function ()
+  {
+    var pref = document.getElementById("layout.spellcheckDefault");
+    this._storedSpellCheck = pref.value;
+
+    return (pref.value != 0);
+  },
+
+  /**
+   * Returns the value of the spellchecking preference represented by UI,
+   * preserving the preference's "hidden" value if the preference is
+   * unchanged and represents a value not strictly allowed in UI.
+   */
+  writeCheckSpelling: function ()
+  {
+    var checkbox = document.getElementById("checkSpelling");
+    return checkbox.checked ? (this._storedSpellCheck == 2 ? 2 : 1) : 0;
+  },
 
   /**
    * Shows a dialog in which the preferred language for web content may be set.
