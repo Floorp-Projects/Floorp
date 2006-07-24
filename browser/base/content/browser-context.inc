@@ -122,11 +122,10 @@
                 label="&setDesktopBackgroundCmd.label;"
                 accesskey="&setDesktopBackgroundCmd.accesskey;"
                 oncommand="gContextMenu.setDesktopBackground();"/>
-
-<!--XXXBlake XUL sucks! We need autocheck for menuitems. -->
-      <menuitem id="context-blockimage" class="menuitem-iconic"
+      <menuitem id="context-blockimage"
+                type="checkbox"
                 accesskey="&blockImageCmd.accesskey;"
-                oncommand="gContextMenu.toggleImageBlocking(this.getAttribute('checked') != 'true');"/>
+                oncommand="gContextMenu.toggleImageBlocking(this.getAttribute('checked') == 'true');"/>
       <menuitem id="context-back"
                 label="&backCmd.label;"
                 accesskey="&backCmd.accesskey;"
