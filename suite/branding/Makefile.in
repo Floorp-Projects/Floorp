@@ -63,7 +63,6 @@ DESKTOP_ICONS = \
 	addressbookWindow \
 	bmPropsWindow \
 	bookmark-window \
-	calendar-window \
 	chatzilla-window \
 	downloadManager \
 	editorWindow \

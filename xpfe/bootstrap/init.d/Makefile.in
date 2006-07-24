@@ -69,16 +69,6 @@ install:: S02solaris_patchchecker.sh
 	$(SYSINSTALL) $(IFLAGS2) $< $(DESTDIR)$(mozappdir)/init.d
 endif
 
-ifdef MOZ_CALENDAR
-libs:: S80calendar_fix_permissions_bug_230617
-	chmod a+x $<
-	$(INSTALL) $(IFLAGS2) $< $(DIST)/bin/init.d
-install:: S80calendar_fix_permissions_bug_230617
-	chmod a+x $<
-	$(SYSINSTALL) $(IFLAGS2) $< $(DESTDIR)$(mozappdir)/init.d
-endif
-
-
 libs:: README
 	$(INSTALL) $< $(DIST)/bin/init.d
 install:: README
