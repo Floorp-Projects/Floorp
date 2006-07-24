@@ -1,5 +1,5 @@
 <!-- Note: due to bug 143065, the only remaining accesskeys available to be used
-     in the Advanced pane are: "b", "i", "j", "q", "z" -->
+     in the Advanced pane are: "b", "j", "q", "z" -->
 
 <!ENTITY generalTab.label                "General">
 
@@ -16,6 +16,8 @@
 <!ENTITY useAutoScroll.accesskey         "a">
 <!ENTITY useSmoothScrolling.label        "Use smooth scrolling">
 <!ENTITY useSmoothScrolling.accesskey    "m">
+<!ENTITY checkSpelling.label             "Check my spelling as I type">
+<!ENTITY checkSpelling.accesskey         "t">
 
 <!ENTITY languages.label                 "Languages">
 
@@ -77,12 +79,12 @@
 <!ENTITY certs.auto                      "Select one automatically">
 <!ENTITY certs.auto.accesskey            "l">
 <!ENTITY certs.ask                       "Ask me every time">
-<!ENTITY certs.ask.accesskey             "t">
+<!ENTITY certs.ask.accesskey             "i">
 <!ENTITY viewCerts.label                 "View Certificates">
 <!ENTITY viewCerts.accesskey             "V">
 <!ENTITY viewCRLs.label                  "Revocation Lists">
 <!ENTITY viewCRLs.accesskey              "R">
 <!ENTITY verify.label                    "Verification">
-<!ENTITY verify.accesskey                "i">
+<!ENTITY verify.accesskey                "n">
 <!ENTITY viewSecurityDevices.label       "Security Devices">
 <!ENTITY viewSecurityDevices.accesskey   "y">

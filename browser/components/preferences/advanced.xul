@@ -68,6 +68,7 @@
 
       <preference id="general.autoScroll"              name="general.autoScroll"              type="bool"/>
       <preference id="general.smoothScroll"            name="general.smoothScroll"            type="bool"/>
+      <preference id="layout.spellcheckDefault"        name="layout.spellcheckDefault"        type="int"/>
 
 
       <!-- Network tab -->
@@ -154,6 +155,12 @@
                       label="&useSmoothScrolling.label;"
                       accesskey="&useSmoothScrolling.accesskey;"
                       preference="general.smoothScroll"/>
+            <checkbox id="checkSpelling"
+                      label="&checkSpelling.label;"
+                      accesskey="&checkSpelling.accesskey;"
+                      onsyncfrompreference="return gAdvancedPane.readCheckSpelling();"
+                      onsynctopreference="return gAdvancedPane.writeCheckSpelling();"
+                      preference="layout.spellcheckDefault"/>
           </groupbox>
 
           <!-- Languages -->
