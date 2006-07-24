@@ -40,6 +40,9 @@ if (array_key_exists('password', $_POST)
 
     if ($bad_input === false) {
         $user->setPassword($_POST['password']);
+        if ($user->UserMode == 'D' && !empty($user->ConfirmationCode)) {
+            $user->confirm($user->ConfirmationCode);
+        }
         $success = true;
     }
 }
