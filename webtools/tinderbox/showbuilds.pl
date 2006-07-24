@@ -58,16 +58,6 @@ sub tb_build_static {
     &do_static;
 }
 
-sub make_tree_list {
-    my @result;
-    while(<*>) {
-        if( -d $_ && $_ ne 'data' && $_ ne 'CVS' && -f "$_/treedata.pl") {
-            push @result, $_;
-        }
-    }
-    return @result;
-}
-
 sub show_tree_selector {
 
     print "Content-type: text/html\n\n";
@@ -96,12 +86,6 @@ sub show_tree_selector {
         print "<LI><a href=admintree.cgi?tree=$_>$_</a>\n";
     }
     print "</UL></TD></TR></TABLE></TD></TR></TABLE>";
-}
-
-sub require_only_one_tree {
-    my @treelist = &make_tree_list();
-    $::tree = '' if (!grep {$::tree eq $_} @treelist);
-    &show_tree_selector, exit if $::tree eq '';
 }
 
 sub do_static {

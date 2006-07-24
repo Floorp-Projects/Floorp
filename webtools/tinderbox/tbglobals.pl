@@ -66,9 +66,6 @@ $build_table = [];
 $who_list = [];
 @note_array = ();
 
-$gzip = '/usr/bin/gzip';
-$bzip2 = '/usr/bin/bzip2';
-
 $data_dir='data';
 
 # Set this to show real end times for builds instead of just using
@@ -82,6 +79,24 @@ sub trick_taint{
     return undef if !defined($in);
     $in =~ /(.*)/;
     return $1;
+}
+
+sub make_tree_list {
+    my @result;
+    while(<*>) {
+        if( -d $_ && $_ ne 'data' && $_ ne 'CVS' && -f "$_/treedata.pl") {
+            push @result, $_;
+        }
+    }
+    return @result;
+}
+
+sub require_only_one_tree {
+    my ($t) = @_;
+    my @treelist = &make_tree_list();
+    $t = $::tree if !defined($t);
+    $t = '' if (!grep {$t eq $_} @treelist);
+    &show_tree_selector, exit if $t eq '';
 }
 
 sub lock{

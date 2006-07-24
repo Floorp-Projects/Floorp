@@ -43,15 +43,13 @@
 #TINDERBOX_GROUP = tinderbox
 
 #CVSROOT = /cvsroot
-#GZIP = /usr/bin/gzip
 #PERL = /usr/bin/perl
-#UUDECODE = /usr/bin/uudecode
 
 SETUID_PATH = '/usr/bin:/bin'
 
 # End SERVER_CONFIGURATION
 
-ALL_UTILS = GZIP PERL UUDECODE
+ALL_UTILS = PERL
 
 EXE_FILES = \
 	addimage.cgi \
@@ -125,8 +123,6 @@ install:
           sed -e s#/usr/bonsaitools/bin/perl#$(PERL)#g \
               -e s#/tools/ns/bin/perl5#$(PERL)#g \
               -e s#/m/src#$(CVSROOT)#g \
-              -e s#/usr/local/bin/gzip#$(GZIP)#g \
-              -e s#/tools/ns/bin/uudecode#$(UUDECODE)#g \
               -e s#/d/webdocs/projects/bonsai#$(BONSAI_DIR)#g \
               -e s#\.\./bonsai#$(BONSAI_URL)#g \
               -e s#@TINDERBOX_DIR@#$(TINDERBOX_DIR)#g \
