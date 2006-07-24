@@ -174,6 +174,11 @@ elsif( $::query_date_type eq 'explicit' ){
     if ($::FORM{'maxdate'}) {
         $::query_date_max = parse_date($::FORM{'maxdate'});
     }
+    if (defined($::query_date_min) && defined($::query_date_max) &&
+        ($::query_date_max < $::query_date_min)) {
+        ($::query_date_min, $::query_date_max) = 
+            ($::query_date_max, $::query_date_min);
+    }
 }
 else {
     $::query_date_min = time-60*60*2;
