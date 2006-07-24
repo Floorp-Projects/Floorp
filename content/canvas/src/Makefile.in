@@ -105,4 +105,9 @@ ifneq (,$(filter mac cocoa,$(MOZ_GFX_TOOLKIT)))
 CXXFLAGS += -I$(topsrcdir)/gfx/src/mac
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT), os2)
+# needed for nsDrawingSurfaceOS2.h
+CXXFLAGS += -I$(topsrcdir)/gfx/src/os2
+endif
+
 DEFINES += -D_IMPL_NS_LAYOUT
