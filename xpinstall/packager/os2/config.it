@@ -177,6 +177,7 @@ C10=Component Uninstaller
 ; this component can easily remove it.
 ;C11=Component QFA
 C11=Component RPT
+C12=Component SRoaming
 
 [Setup Type2]
 ;*** LOCALIZE ME BABY ***
@@ -204,6 +205,7 @@ C10=Component Uninstaller
 ; this component can easily remove it.
 ;C11=Component QFA
 C11=Component RPT
+C12=Component SRoaming
 
 
 
@@ -520,6 +522,16 @@ $InstallSize$:inspector
 $InstallSizeArchive$:inspector.xpi
 Attributes=SELECTED|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\Chrome\inspector.jar
+
+[Component SRoaming]
+Description Short=Roaming
+;*** LOCALIZE ME BABY ***
+Description Long=Profile Roaming
+Archive=sroaming.xpi
+$InstallSize$:sroaming
+$InstallSizeArchive$:sroaming.xpi
+Attributes=SELECTED|FORCE_UPGRADE
+Force Upgrade File0=[SETUP PATH]\Chrome\sroaming.jar
 
 [Component US English Profile Defaults]
 Description Short=US English profile defaults
