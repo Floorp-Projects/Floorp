@@ -1157,6 +1157,11 @@ nsIBox::AddCSSFlex(nsBoxLayoutState& aState, nsIBox* aBox, nscoord& aFlex)
         }
     }
 
+    if (aFlex < 0)
+      aFlex = 0;
+    if (aFlex >= nscoord_MAX)
+      aFlex = nscoord_MAX - 1;
+
     return flexSet;
 }
 
