@@ -81,7 +81,7 @@
         ]]></getter>
       </property>
 
-      <field name="_isLTRScollbox">
+      <field name="_isLTRScrollbox">
         window.getComputedStyle(this._scrollbox, "").direction == "ltr";
       </field>
 
@@ -104,7 +104,7 @@
         <body><![CDATA[
           if (this.getAttribute("orient") == "horizontal") {
             // if not ltr, we want to scroll the other direction
-            var actualPx = this._isLTRScollbox ? px : (-1 * px);
+            var actualPx = this._isLTRScrollbox ? px : (-1 * px);
             this.scrollBoxObject.scrollBy(actualPx, 0);
           }
           else
@@ -125,7 +125,7 @@
             if (xPos.value == 0) {
               // In the RTL case, this means the _last_ element in the
               // scrollbox is visible
-              if (this._isLTRScollbox) 
+              if (this._isLTRScrollbox) 
                 disableUpButton = true;
               else
                 disableDownButton = true;
@@ -133,7 +133,7 @@
             else if (this._scrollbox.boxObject.width + xPos.value == width.value) {
               // In the RTL case, this means the _first_ element in the
               // scrollbox is visible
-              if (this._isLTRScollbox)
+              if (this._isLTRScrollbox)
                 disableDownButton = true;
               else
                 disableUpButton = true;
