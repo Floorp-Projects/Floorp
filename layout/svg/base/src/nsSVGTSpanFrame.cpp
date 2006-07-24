@@ -227,7 +227,7 @@ nsSVGTSpanFrame::GetNextGlyphFragment()
 NS_IMETHODIMP_(void)
 nsSVGTSpanFrame::SetWhitespaceHandling(PRUint8 aWhitespaceHandling)
 {
-  return nsSVGTSpanFrameBase::SetWhitespaceHandling();
+  nsSVGTSpanFrameBase::SetWhitespaceHandling();
 }
 
 NS_IMETHODIMP_(void)
