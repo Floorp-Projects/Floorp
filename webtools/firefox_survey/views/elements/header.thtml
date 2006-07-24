@@ -47,5 +47,4 @@
         <hr class="hide" />
 
         <div id="content">
-            <?php echo $html->image('firefox-survey-title2.gif', array('alt'=>'Firefox Survey')); ?>
 
