@@ -29,7 +29,7 @@ require 'header.pl';
 
 $|=1;
 
-print "Content-type: text/html\n\n<HTML>\n";
+print "Content-type: text/html\n\n";
 
 $form{noignore} = 1;            # Force us to load all build info, not
                                 # paying any attention to ignore_builds stuff.
@@ -327,4 +327,4 @@ the tinderbox URL to override.<br>
 <hr>
 ";
 }
-
+print "</BODY></HTML>\n";
