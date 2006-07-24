@@ -1405,13 +1405,23 @@ sub SanitizeRevision {
 
     return "" if (!defined($rev) || $rev eq "");
     if ($rev =~ /^[A-Za-z]+/) {
-        $rev =~ s/^([\w-]+).*/$1/;
+        $rev =~ s/^([\w\-]+).*/$1/;
     } elsif ($rev =~ /^\d+\.\d+/) {
         $rev =~ s/^(\d+[\.\d+]+).*/$1/;
     } else {
         die "Invalid revision format.\n";
     }
     return $rev;
+}
+
+# Allow regular expressions per http://bonsai.mozilla.org/cvsregexp.html
+# Explicitly allow: alphanumeric . * + [ ] { } , : = | ^ $ < > ? \
+sub SanitizeRegexp {
+    my ($exp) = @_;
+
+    return "" if (!defined($exp));
+    $exp =~ m/([\w\-\.\*\+\[\]\{\}\,\:\=\|\^\$\<\>\?\\]+)/;
+    return $1;
 }
 
 # Allow alphanumeric usernames that start with alphas

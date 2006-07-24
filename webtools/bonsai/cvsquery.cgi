@@ -182,9 +182,13 @@ else {
 #
 # who
 #
-$::query_who = &SanitizeUsernames($::FORM{'who'});
+$::query_who = $::FORM{'who'};
 $::query_whotype = &ExpectMatchtype($::FORM{'whotype'});
-
+if ($::query_whotype eq 'notregexp' || $::query_whotype eq 'regexp') {
+    $::query_who = &SanitizeRegexp($::query_who);
+} else {
+    $::query_who = &SanitizeUsernames($::query_who);
+}
 
 #
 # branch
@@ -193,7 +197,7 @@ $::query_branch = $::FORM{'branch'};
 $::query_branchtype = &ExpectMatchtype($::FORM{'branchtype'});
 $::query_branch = 'HEAD' if !defined($::query_branch);
 if ($::query_branchtype eq 'notregexp' || $::query_branchtype eq 'regexp') {
-    $::query_branch =~ s/\W*([\w-]+).*/$1/;
+    $::query_branch = &SanitizeRegexp($::query_branch);
 } else {
     $::query_branch = &SanitizeRevision($::query_branch);
 }
