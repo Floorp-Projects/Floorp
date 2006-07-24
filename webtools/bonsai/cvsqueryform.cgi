@@ -85,7 +85,7 @@ if ($::TreeID eq 'default' || $Module eq 'default' || $Module eq 'all') {
 
 print "<OPTION $module_selection{'all'} VALUE='all'>All Files in the Repository\n";
 if( $bMultiRepos ){
-    print "<OPTION $module_selection{'allreps'} VALUE='allrepositories'>All Files in all Repositories\n";
+    print "<OPTION $module_selection{'allrepos'} VALUE='allrepositories'>All Files in all Repositories\n";
 }
 
 if (defined($module_selection{'custom'})) {
