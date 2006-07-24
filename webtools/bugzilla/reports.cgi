@@ -47,8 +47,9 @@ $@ && ThrowCodeError("gd_not_installed");
 eval "use Chart::Lines";
 $@ && ThrowCodeError("chart_lines_not_installed");
 
-local our $dir = bz_locations()->{'datadir'} . "/mining";
-local our $graph_dir = bz_locations()->{'libpath'} . "/graphs";
+local our $dir       = bz_locations()->{'datadir'} . "/mining";
+local our $graph_url = 'graphs';
+local our $graph_dir = bz_locations()->{'libpath'} . '/' .$graph_url;
 
 # If we're using bug groups for products, we should apply those restrictions
 # to viewing reports, as well.  Time to check the login in that case.
@@ -198,7 +199,8 @@ FIN
     my $type = chart_image_type();
     my $data_file = daily_stats_filename($product);
     my $image_file = chart_image_name($data_file, $type, $datasets);
-    my $url_image = "$graph_dir/" . url_quote($image_file);
+    my $url_image = correct_urlbase() . "$graph_url/" 
+                    . url_quote($image_file);
 
     if (! -e "$graph_dir/$image_file") {
         generate_chart("$dir/$data_file", "$graph_dir/$image_file", $type,

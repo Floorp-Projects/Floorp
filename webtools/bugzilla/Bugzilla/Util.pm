@@ -34,7 +34,7 @@ use base qw(Exporter);
                              detaint_signed
                              html_quote url_quote value_quote xml_quote
                              css_class_quote
-                             i_am_cgi get_netaddr
+                             i_am_cgi get_netaddr correct_urlbase
                              lsearch
                              diff_arrays diff_strings
                              trim wrap_comment find_wrap_point
@@ -144,6 +144,22 @@ sub i_am_cgi {
     # I use SERVER_SOFTWARE because it's required to be
     # defined for all requests in the CGI spec.
     return exists $ENV{'SERVER_SOFTWARE'} ? 1 : 0;
+}
+
+sub correct_urlbase {
+    my $ssl = Bugzilla->params->{'ssl'};
+    return Bugzilla->params->{'urlbase'} if $ssl eq 'never';
+
+    my $sslbase = Bugzilla->params->{'sslbase'};
+    if ($sslbase) {
+        return $sslbase if $ssl eq 'always';
+        # Authenticated Sessions
+        return $sslbase if Bugzilla->user->id;
+    }
+
+    # Set to "authenticated sessions" but nobody's logged in, or
+    # sslbase isn't set.
+    return Bugzilla->params->{'urlbase'};
 }
 
 sub lsearch {
@@ -429,8 +445,9 @@ Bugzilla::Util - Generic utility functions for bugzilla
   $rv = url_decode($var);
 
   # Functions that tell you about your environment
-  my $is_cgi = i_am_cgi();
-  $net_addr = get_netaddr($ip_addr);
+  my $is_cgi   = i_am_cgi();
+  my $net_addr = get_netaddr($ip_addr);
+  my $urlbase  = correct_urlbase();
 
   # Functions for searching
   $loc = lsearch(\@arr, $val);
@@ -564,6 +581,11 @@ Given an IP address, this returns the associated network address, using
 C<Bugzilla->params->{'loginnetmask'}> as the netmask. This can be used
 to obtain data in order to restrict weak authentication methods (such as
 cookies) to only some addresses.
+
+=item C<correct_urlbase()>
+
+Returns either the C<sslbase> or C<urlbase> parameter, depending on the
+current setting for the C<ssl> parameter.
 
 =back
 
