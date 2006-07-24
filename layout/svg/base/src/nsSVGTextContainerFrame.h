@@ -91,10 +91,9 @@ protected:
   GetNextGlyphFragmentChildNode(nsISVGGlyphFragmentNode *node);
 
   /*
-   * Build the glyph fragment tree
+   * Set Whitespace handling
    */
-  PRUint32
-  BuildGlyphFragmentTree(PRUint32 charNum, PRBool lastBranch);
+  void SetWhitespaceHandling();
 
   /*
    * Returns the number of characters in a string

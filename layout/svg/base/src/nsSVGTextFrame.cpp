@@ -467,7 +467,7 @@ nsSVGTextFrame::UpdateFragmentTree()
 {
   NS_ASSERTION(mFragmentTreeState == unsuspended, "updating during suspension!");
 
-  BuildGlyphFragmentTree(0, PR_TRUE);
+  SetWhitespaceHandling();
 
   mFragmentTreeDirty = PR_FALSE;
   

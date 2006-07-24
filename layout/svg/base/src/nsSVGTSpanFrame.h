@@ -96,7 +96,7 @@ public:
   NS_IMETHOD_(PRInt32) GetCharNumAtPosition(nsIDOMSVGPoint *point);
   NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetFirstGlyphFragment();
   NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetNextGlyphFragment();
-  NS_IMETHOD_(PRUint32) BuildGlyphFragmentTree(PRUint32 charNum, PRBool lastBranch);
+  NS_IMETHOD_(void) SetWhitespaceHandling(PRUint8 aWhitespaceHandling);
   NS_IMETHOD_(void) NotifyGlyphFragmentTreeSuspended();
   NS_IMETHOD_(void) NotifyGlyphFragmentTreeUnsuspended();
 
