@@ -49,6 +49,7 @@
 #include "nsSVGElement.h"
 #include "nsSVGUtils.h"
 #include "nsSVGOuterSVGFrame.h"
+#include "nsIImage.h" /* for MOZ_PLATFORM_IMAGES_BOTTOM_TO_TOP */
 
 #define NS_GET_BIT(rowptr, x) (rowptr[(x)>>3] &  (1<<(7-(x)&0x7)))
 
