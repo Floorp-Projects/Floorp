@@ -600,7 +600,7 @@ sub who_menu {
   require "$tree/treedata.pl";
 
   my $qr = '';
-  my $ret = "<a href=\"$qr\" onclick=\"return who(event);\">";
+  my $ret = '';
   if ($use_viewvc) {
       $qr = "${viewvc_url}?view=query&who_match=exact&who=" . 
           &url_encode($who) . "&querysort=date&date=explicit" .
@@ -612,6 +612,7 @@ sub who_menu {
       $qr = "${rel_path}../registry/who.cgi?email=". &url_encode($who)
           . "&d=$td->{cvs_module}|$treeflag|$td->{cvs_root}|$mindate";
       $qr = $qr . "|$maxdate" if defined($maxdate);
+      $ret = "<a href=\"$qr\" onclick=\"return who(event);\">";
   }
   return $ret;
 
