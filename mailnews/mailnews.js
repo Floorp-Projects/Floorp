@@ -521,8 +521,6 @@ pref("mail.forward_message_mode", 0); // 0=default as attachment 2=forward as in
 
 pref("mail.startup.enabledMailCheckOnce", false);
 
-pref("mailnews.max_header_display_length",3); // number of addresses to show
-
 pref("messenger.throbber.url","chrome://messenger-region/locale/region.properties");
 pref("compose.throbber.url","chrome://messenger-region/locale/region.properties");
 pref("addressbook.throbber.url","chrome://messenger-region/locale/region.properties");

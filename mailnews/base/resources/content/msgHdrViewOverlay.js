@@ -53,7 +53,6 @@ var msgHeaderParserContractID		   = "@mozilla.org/messenger/headerparser;1";
 var abAddressCollectorContractID	 = "@mozilla.org/addressbook/services/addressCollecter;1";
 
 var gViewAllHeaders = false;
-var gNumAddressesToShow = 3;
 var gShowOrganization = false;
 var gShowUserAgent = false;
 var gCollectIncoming = false;
@@ -230,7 +229,6 @@ function OnLoadMsgHeaderPane()
   
   // load any preferences that at are global with regards to 
   // displaying a message...
-  gNumAddressesToShow = pref.getIntPref("mailnews.max_header_display_length");
   gCollectIncoming = pref.getBoolPref("mail.collect_email_address_incoming");
   gCollectNewsgroup = pref.getBoolPref("mail.collect_email_address_newsgroup");
   gCollectOutgoing = pref.getBoolPref("mail.collect_email_address_outgoing");
@@ -823,7 +821,7 @@ function OutputEmailAddresses(headerEntry, emailAddresses)
     }
     
     if (headerEntry.useToggle)
-      headerEntry.enclosingBox.buildViews(gNumAddressesToShow);
+      headerEntry.enclosingBox.buildViews();
   } // if msgheader parser
 }
 
@@ -875,9 +873,9 @@ function updateEmailAddressNode(emailAddressNode, address)
 {
   emailAddressNode.setAttribute("label", address.fullAddress || address.displayName);
   emailAddressNode.removeAttribute("tooltiptext");
-  emailAddressNode.setTextAttribute("emailAddress", address.emailAddress);
-  emailAddressNode.setTextAttribute("fullAddress", address.fullAddress);
-  emailAddressNode.setTextAttribute("displayName", address.displayName);
+  emailAddressNode.setAttribute("emailAddress", address.emailAddress);
+  emailAddressNode.setAttribute("fullAddress", address.fullAddress);
+  emailAddressNode.setAttribute("displayName", address.displayName);
   
   if ("AddExtraAddressProcessing" in this)
     AddExtraAddressProcessing(address.emailAddress, emailAddressNode);

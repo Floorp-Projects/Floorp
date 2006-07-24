@@ -59,7 +59,6 @@ const kLargeIcon = 32;
 const kSmallIcon = 16;
 
 var gViewAllHeaders = false;
-var gNumAddressesToShow = 3;
 var gShowOrganization = false;
 var gShowLargeAttachmentView = false;
 var gShowUserAgent = false;
@@ -236,7 +235,6 @@ function OnLoadMsgHeaderPane()
   
   // load any preferences that at are global with regards to 
   // displaying a message...
-  gNumAddressesToShow = pref.getIntPref("mailnews.max_header_display_length");
   gShowUserAgent = pref.getBoolPref("mailnews.headers.showUserAgent");
   gMinNumberOfHeaders = pref.getIntPref("mailnews.headers.minNumHeaders");
   gShowOrganization = pref.getBoolPref("mailnews.headers.showOrganization");
@@ -903,7 +901,7 @@ function OutputEmailAddresses(headerEntry, emailAddresses)
     }
     
     if (headerEntry.useToggle)
-      headerEntry.enclosingBox.buildViews(gNumAddressesToShow);
+      headerEntry.enclosingBox.buildViews();
   } // if msgheader parser
 }
 
@@ -911,12 +909,11 @@ function updateEmailAddressNode(emailAddressNode, address)
 {
   emailAddressNode.setAttribute("label", address.fullAddress || address.displayName);
   emailAddressNode.removeAttribute("tooltiptext");
-  emailAddressNode.setTextAttribute("emailAddress", address.emailAddress);
-  emailAddressNode.setTextAttribute("fullAddress", address.fullAddress);
-  emailAddressNode.setTextAttribute("displayName", address.displayName);
-  
-  if ("AddExtraAddressProcessing" in this)
-    AddExtraAddressProcessing(address.emailAddress, emailAddressNode);
+  emailAddressNode.setAttribute("emailAddress", address.emailAddress);
+  emailAddressNode.setAttribute("fullAddress", address.fullAddress);
+  emailAddressNode.setAttribute("displayName", address.displayName);
+
+  AddExtraAddressProcessing(address.emailAddress, emailAddressNode);
 }
 
 // thunderbird has smart logic for determining if we should show just the display name.
@@ -926,8 +923,8 @@ function updateEmailAddressNode(emailAddressNode, address)
 
 function AddExtraAddressProcessing(emailAddress, addressNode)
 {
-  var displayName = addressNode.getTextAttribute("displayName");  
-  var mailAddress = addressNode.getTextAttribute("emailAddress");
+  var displayName = addressNode.getAttribute("displayName");  
+  var mailAddress = addressNode.getAttribute("emailAddress");
 
   // always show the address for the from and reply-to fields
   var parentElementId = addressNode.parentNode.id;
@@ -948,7 +945,7 @@ function AddExtraAddressProcessing(emailAddress, addressNode)
 function fillEmailAddressPopup(emailAddressNode)
 {
   var emailAddressPlaceHolder = document.getElementById('emailAddressPlaceHolder');
-  var emailAddress = emailAddressNode.getTextAttribute('emailAddress');
+  var emailAddress = emailAddressNode.getAttribute('emailAddress');
 
   emailAddressPlaceHolder.setAttribute('label', emailAddress);
 }
@@ -957,7 +954,7 @@ function fillEmailAddressPopup(emailAddressNode)
 // Public method called to generate a tooltip over a condensed display name
 function fillInEmailAddressTooltip(addressNode)
 {
-  var emailAddress = addressNode.getTextAttribute('emailAddress');
+  var emailAddress = addressNode.getAttribute('emailAddress');
   var tooltipNode = document.getElementById("attachmentListTooltip");
   tooltipNode.setAttribute("label", attachmentName);
   return true;

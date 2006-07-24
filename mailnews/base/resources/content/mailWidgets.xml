@@ -887,29 +887,6 @@
           return document.getAnonymousElementByAttribute(this, "anonid", aPartId);
         ]]></body>
       </method>
-
-      <method name="setTextAttribute">
-        <parameter name="attributeName"/>
-        <parameter name="attributeValue"/>
-        <body><![CDATA[
-          this.setAttribute(attributeName, attributeValue);
-          this.getPart("emailImage").setAttribute(attributeName, attributeValue);          
-          this.getPart("emailValue").setAttribute(attributeName, attributeValue);          
-        ]]></body>
-      </method>
-
-      <method name="getTextAttribute">
-        <parameter name="attributeName"/>
-        <body><![CDATA[   
-          return this.getPart("emailValue").getAttribute(attributeName);
-        ]]></body>
-      </method>
-
-      <method name="GetIconNode">
-        <body><![CDATA[
-          return this.getPart("emailImage");
-        ]]></body>
-      </method>
     </implementation>
   </binding>
 
