@@ -21,10 +21,9 @@
 
 <script type="text/javascript">
 <!-- 
-  var stored_onload = window.onload;
   // Enables or disables a requestee field depending on whether or not
   // the user is requesting the corresponding flag.
-  function toggleRequesteeField(flagField)
+  function toggleRequesteeField(flagField, no_focus)
   {
     // Convert the ID of the flag field into the ID of its corresponding
     // requestee field and then use the ID to get the field.
@@ -36,7 +35,7 @@
     // of the flag field.
     if (flagField.value == "?") {
         requesteeField.disabled = false;
-        requesteeField.focus();
+        if (!no_focus) requesteeField.focus();
     } else                         
         requesteeField.disabled = true;
   }
@@ -59,9 +58,6 @@
         if (flagField && flagField.value != "?")
             inputElement.disabled = true;
       }
-    }
-    if (stored_onload) {
-        stored_onload();
     }
   }
   window.onload = disableRequesteeFields;

@@ -1412,6 +1412,13 @@
   [% END %]
 [% END %]
 
+[%# If we are in batch mode, we want the error message to be plain text, not HTML %]
+[% USE Bugzilla %]
+[% IF Bugzilla.batch %]
+  [% error_message FILTER none %]
+  [% RETURN %]
+[% END %]
+
 [% UNLESS header_done %]
   [% PROCESS global/header.html.tmpl %]
 [% END %]
@@ -1438,8 +1445,7 @@
 [%# If a saved search fails, people want the ability to edit or delete it. 
   # This is the best way of getting information about that possible saved
   # search from any error call location. %]
-  
-[% USE Bugzilla %]
+
 [% namedcmd = Bugzilla.cgi.param("namedcmd") %]
 [% IF namedcmd AND error != "missing_query" 
                AND error != "saved_search_used_by_whines" %]

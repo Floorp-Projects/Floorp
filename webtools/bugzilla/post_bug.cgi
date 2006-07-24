@@ -536,11 +536,13 @@ $dbh->do("UPDATE bugs SET creation_ts = ? WHERE bug_id = ?",
 
 $dbh->bz_unlock_tables();
 
+my $bug = new Bugzilla::Bug($id, $user->id);
+
 # Add an attachment if requested.
 if (defined($cgi->upload('data')) || $cgi->param('attachurl')) {
     $cgi->param('isprivate', $cgi->param('commentprivacy'));
     Bugzilla::Attachment->insert_attachment_for_bug(!THROW_ERROR,
-                                                    $id, $user, $timestamp,
+                                                    $bug, $user, $timestamp,
                                                     \$vars)
         || ($vars->{'message'} = 'attachment_creation_failed');
 
@@ -551,11 +553,30 @@ if (defined($cgi->upload('data')) || $cgi->param('attachurl')) {
     };
 }
 
+# Add flags, if any. To avoid dying if something goes wrong
+# while processing flags, we will eval() flag validation.
+# This requires to be in batch mode.
+# XXX: this can go away as soon as flag validation is able to
+#      fail without dying.
+Bugzilla->batch(1);
+eval {
+    # Make sure no flags have already been set for this bug.
+    # Impossible? - Well, depends if you hack the URL or not.
+    # Passing a bug ID of 0 will make it complain if it finds one.
+    Bugzilla::Flag::validate($cgi, 0);
+    Bugzilla::FlagType::validate($cgi, $id);
+    Bugzilla::Flag::process($bug, undef, $timestamp, $cgi);
+};
+Bugzilla->batch(0);
+if ($@) {
+    $vars->{'message'} = 'flag_creation_failed';
+    $vars->{'flag_creation_error'} = $@;
+}
+
 # Email everyone the details of the new bug 
 $vars->{'mailrecipients'} = {'changer' => $user->login};
 
 $vars->{'id'} = $id;
-my $bug = new Bugzilla::Bug($id, $user->id);
 $vars->{'bug'} = $bug;
 
 ThrowCodeError("bug_error", { bug => $bug }) if $bug->error;

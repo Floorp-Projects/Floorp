@@ -13,7 +13,7 @@
 # The Original Code is the Bugzilla Bug Tracking System.
 #
 # Contributor(s): Tiago R. Mello <timello@async.com.br>
-#
+#                 Frédéric Buclin <LpSolit@gmail.com>
 
 use strict;
 
@@ -22,6 +22,7 @@ package Bugzilla::Component;
 use Bugzilla::Util;
 use Bugzilla::Error;
 use Bugzilla::User;
+use Bugzilla::FlagType;
 
 ###############################
 ####    Initialization     ####
@@ -135,6 +136,24 @@ sub default_qa_contact {
     return $self->{'default_qa_contact'};
 }
 
+sub flag_types {
+    my $self = shift;
+
+    if (!defined $self->{'flag_types'}) {
+        $self->{'flag_types'} = {};
+        $self->{'flag_types'}->{'bug'} =
+          Bugzilla::FlagType::match({ 'target_type'  => 'bug',
+                                      'product_id'   => $self->product_id,
+                                      'component_id' => $self->id });
+
+        $self->{'flag_types'}->{'attachment'} =
+          Bugzilla::FlagType::match({ 'target_type'  => 'attachment',
+                                      'product_id'   => $self->product_id,
+                                      'component_id' => $self->id });
+    }
+    return $self->{'flag_types'};
+}
+
 ###############################
 ####      Accessors        ####
 ###############################
@@ -193,6 +212,8 @@ Bugzilla::Component - Bugzilla product component class.
     my $product_id         = $component->product_id;
     my $default_assignee   = $component->default_assignee;
     my $default_qa_contact = $component->default_qa_contact;
+    my $bug_flag_types     = $component->flag_types->{'bug'};
+    my $attach_flag_types  = $component->flag_types->{'attachment'};
 
     my $component  = Bugzilla::Component::check_component($product, 'AcmeComp');
 
@@ -251,6 +272,15 @@ Component.pm represents a Product Component object.
  Params:      none.
 
  Returns:     A Bugzilla::User object.
+
+=item C<flag_types()>
+
+  Description: Returns all bug and attachment flagtypes available for
+               the component.
+
+  Params:      none.
+
+  Returns:     Two references to an array of flagtype objects.
 
 =back
 

@@ -51,7 +51,8 @@ use Bugzilla::Constants;
 use Bugzilla::Error;
 use Bugzilla::Flag;
 use Bugzilla::User;
-use Bugzilla::Util qw(trick_taint);
+use Bugzilla::Util;
+use Bugzilla::Field;
 
 sub get {
     my $invocant = shift;
@@ -594,12 +595,89 @@ sub validate_content_type {
 
 =pod
 
-=item C<insert_attachment_for_bug($throw_error, $bug_id, $user, $timestamp, $hr_vars)>
+=item C<validate_can_edit()>
+
+Description: validates if the user is allowed to edit the attachment.
+             Only the submitter or someone with editbugs privs can edit it.
+
+Returns:     1 on success. Else an error is thrown.
+
+=cut
+
+sub validate_can_edit {
+    my ($class, $attach_id) = @_;
+    my $dbh = Bugzilla->dbh;
+    my $user = Bugzilla->user;
+
+    # People in editbugs can edit all attachments
+    return if $user->in_group('editbugs');
+
+    # Bug 97729 - the submitter can edit their attachments
+    my ($ref) = $dbh->selectrow_array('SELECT attach_id FROM attachments
+                                       WHERE attach_id = ? AND submitter_id = ?',
+                                       undef, ($attach_id, $user->id));
+
+    $ref || ThrowUserError('illegal_attachment_edit', { attach_id => $attach_id });
+}
+
+=item C<validate_obsolete($bug_id)>
+
+Description: validates if attachments the user wants to mark as obsolete
+             really belong to the given bug and are not already obsolete.
+
+Params:      $bug_id - The bug ID obsolete attachments should belong to.
+
+Returns:     1 on success. Else an error is thrown.
+
+=cut
+
+sub validate_obsolete {
+    my ($class, $bug_id) = @_;
+    my $cgi = Bugzilla->cgi;
+
+    # Make sure the attachment id is valid and the user has permissions to view
+    # the bug to which it is attached.
+    my @obsolete_attachments;
+    foreach my $attachid ($cgi->param('obsolete')) {
+        my $vars = {};
+        $vars->{'attach_id'} = $attachid;
+
+        detaint_natural($attachid)
+          || ThrowCodeError('invalid_attach_id_to_obsolete', $vars);
+
+        my $attachment = Bugzilla::Attachment->get($attachid);
+
+        # Make sure the attachment exists in the database.
+        ThrowUserError('invalid_attach_id', $vars) unless $attachment;
+
+        $vars->{'description'} = $attachment->description;
+
+        if ($attachment->bug_id != $bug_id) {
+            $vars->{'my_bug_id'} = $bug_id;
+            $vars->{'attach_bug_id'} = $attachment->bug_id;
+            ThrowCodeError('mismatched_bug_ids_on_obsolete', $vars);
+        }
+
+        if ($attachment->isobsolete) {
+          ThrowCodeError('attachment_already_obsolete', $vars);
+        }
+
+        # Check that the user can modify this attachment.
+        $class->validate_can_edit($attachid);
+        push(@obsolete_attachments, $attachment);
+    }
+    return @obsolete_attachments;
+}
+
+
+=pod
+
+=item C<insert_attachment_for_bug($throw_error, $bug, $user, $timestamp, $hr_vars)>
 
 Description: inserts an attachment from CGI input for the given bug.
 
-Params:     C<$bug_id> - integer - the ID of the bug for which
-            to insert the attachment.
+Params:     C<$bug> - Bugzilla::Bug object - the bug for which to insert
+            the attachment.
             C<$user> - Bugzilla::User object - the user we're inserting an
             attachment for.
             C<$timestamp> - scalar - timestamp of the insert as returned
@@ -614,7 +692,7 @@ Returns:    the ID of the new attachment.
 =cut
 
 sub insert_attachment_for_bug {
-    my ($class, $throw_error, $bug_id, $user, $timestamp, $hr_vars) = @_;
+    my ($class, $throw_error, $bug, $user, $timestamp, $hr_vars) = @_;
 
     my $cgi = Bugzilla->cgi;
     my $dbh = Bugzilla->dbh;
@@ -671,8 +749,8 @@ sub insert_attachment_for_bug {
     # Setting the third param to -1 will force this function to check this
     # point.
     # XXX needs $throw_error treatment
-    Bugzilla::Flag::validate($cgi, $bug_id, -1);
-    Bugzilla::FlagType::validate($cgi, $bug_id, -1);
+    Bugzilla::Flag::validate($cgi, $bug->bug_id, -1);
+    Bugzilla::FlagType::validate($cgi, $bug->bug_id, -1);
 
     # Escape characters in strings that will be used in SQL statements.
     my $description = $cgi->param('description');
@@ -684,7 +762,7 @@ sub insert_attachment_for_bug {
         "INSERT INTO attachments
             (bug_id, creation_ts, filename, description,
              mimetype, ispatch, isurl, isprivate, submitter_id)
-         VALUES (?,?,?,?,?,?,?,?,?)", undef, ($bug_id, $timestamp, $filename,
+         VALUES (?,?,?,?,?,?,?,?,?)", undef, ($bug->bug_id, $timestamp, $filename,
               $description, $contenttype, $cgi->param('ispatch'),
               $isurl, $isprivate, $user->id));
     # Retrieve the ID of the newly created attachment record.
@@ -724,6 +802,36 @@ sub insert_attachment_for_bug {
         close AH;
         close $fh;
     }
+
+    # Now handle flags.
+    my @obsolete_attachments;
+    if ($cgi->param('obsolete')) {
+        @obsolete_attachments = $class->validate_obsolete($bug->bug_id);
+    }
+
+    # Make existing attachments obsolete.
+    my $fieldid = get_field_id('attachments.isobsolete');
+
+    foreach my $obsolete_attachment (@obsolete_attachments) {
+        # If the obsolete attachment has request flags, cancel them.
+        # This call must be done before updating the 'attachments' table.
+        Bugzilla::Flag::CancelRequests($bug, $obsolete_attachment, $timestamp);
+
+        $dbh->do('UPDATE attachments SET isobsolete = 1 WHERE attach_id = ?',
+                 undef, $obsolete_attachment->id);
+
+        $dbh->do('INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when,
+                                             fieldid, removed, added)
+                       VALUES (?,?,?,?,?,?,?)',
+                  undef, ($bug->bug_id, $obsolete_attachment->id, $user->id,
+                          $timestamp, $fieldid, 0, 1));
+    }
+
+    # Create flags.
+    my $attachment = Bugzilla::Attachment->get($attachid);
+    Bugzilla::Flag::process($bug, $attachment, $timestamp, $cgi);
+
+    # Return the ID of the new attachment.
     return $attachid;
 }
 

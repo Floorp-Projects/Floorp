@@ -163,6 +163,11 @@
     [%+ new_email FILTER html %] has been cancelled.
    Your old account settings have been reinstated.
 
+  [% ELSIF message_tag == "flag_creation_failed" %]
+    [% title = "Flag Creation Failure" %]
+    An error occured while validating flags:
+    [%+ flag_creation_error FILTER none %]
+
   [% ELSIF message_tag == "logged_out" %]
     [% title = "Logged Out" %]
     [% url = "index.cgi?GoAheadAndLogIn=1" %]

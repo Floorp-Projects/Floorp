@@ -386,6 +386,13 @@
   [% END %]
 [% END %]
 
+[%# If we are in batch mode, we want the error message to be plain text, not HTML %]
+[% USE Bugzilla %]
+[% IF Bugzilla.batch %]
+  [% error_message FILTER none %]
+  [% RETURN %]
+[% END %]
+
 [% UNLESS header_done %]
   [% PROCESS global/header.html.tmpl %]
 [% END %]

@@ -177,6 +177,24 @@ sub user_has_access {
           undef, $self->id);
 }
 
+sub flag_types {
+    my $self = shift;
+
+    if (!defined $self->{'flag_types'}) {
+        $self->{'flag_types'} = {};
+        foreach my $type ('bug', 'attachment') {
+            my %flagtypes;
+            foreach my $component (@{$self->components}) {
+                foreach my $flagtype (@{$component->flag_types->{$type}}) {
+                    $flagtypes{$flagtype->{'id'}} ||= $flagtype;
+                }
+            }
+            $self->{'flag_types'}->{$type} = [sort { $a->{'sortkey'} <=> $b->{'sortkey'}
+                                                    || $a->{'name'} cmp $b->{'name'} } values %flagtypes];
+        }
+    }
+    return $self->{'flag_types'};
+}
 
 ###############################
 ####      Accessors      ######
@@ -231,6 +249,7 @@ Bugzilla::Product - Bugzilla product class.
     my $bugcount        = $product->bug_count();
     my $bug_ids         = $product->bug_ids();
     my $has_access      = $product->user_has_access($user);
+    my $flag_types      = $product->flag_types();
 
     my $id               = $product->id;
     my $name             = $product->name;
@@ -319,6 +338,15 @@ below.
 
  Returns      C<1> If this user's groups allow him C<entry> access to
               this Product, C<0> otherwise.
+
+=item C<flag_types()>
+
+ Description: Returns flag types available for at least one of
+              its components.
+
+ Params:      none.
+
+ Returns:     Two references to an array of flagtype objects.
 
 =back
 

@@ -78,7 +78,7 @@ sub _throw_error {
         my $message;
         $template->process($name, $vars, \$message)
           || ThrowTemplateError($template->error());
-        die("$message");
+        die("$message\n");
     } else {
         print Bugzilla->cgi->header();
         $template->process($name, $vars)

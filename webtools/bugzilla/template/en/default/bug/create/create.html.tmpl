@@ -37,6 +37,7 @@
 var initialowners = new Array([% product.components.size %]);
 var last_initialowner;
 var components = new Array([% product.components.size %]);
+var flags = new Array([% product.components.size %]);
 [% IF Param("useqacontact") %]
     var initialqacontacts = new Array([% product.components.size %]);
     var last_initialqacontact;
@@ -45,6 +46,17 @@ var components = new Array([% product.components.size %]);
 [%- FOREACH c = product.components %]
     components[[% count %]] = "[% c.name FILTER js %]";
     initialowners[[% count %]] = "[% c.default_assignee.login FILTER js %]";
+    var flag_list = new Array([% c.flag_types.bug.size + c.flag_types.attachment.size %]);
+    [% flag_count = 0 %]
+    [% FOREACH f = c.flag_types.bug %]
+      flag_list[[% flag_count %]] = "[% f.id %]";
+      [% flag_count = flag_count + 1 %]
+    [% END %]
+    [% FOREACH f = c.flag_types.attachment %]
+      flag_list[[% flag_count %]] = "[% f.id %]";
+      [% flag_count = flag_count + 1 %]
+    [% END %]
+    flags[[% count %]] = flag_list;
     [% IF Param("useqacontact") %]
         initialqacontacts[[% count %]] = "[% c.default_qa_contact.login FILTER js %]";
     [% END %]
@@ -53,8 +65,8 @@ var components = new Array([% product.components.size %]);
 
 function set_assign_to() {
     // Based on the selected component, fill the "Assign To:" field
-    // with the default component owner, and the the "QA Contact:" field
-    // with the default QA Contact.
+    // with the default component owner, and the "QA Contact:" field
+    // with the default QA Contact. It also selectively enables flags.
     var form = document.Create;
     var assigned_to = form.assigned_to.value;
 
@@ -87,6 +99,31 @@ function set_assign_to() {
                   last_initialqacontact = contact;
             }
         [% END %]
+
+        // First, we disable all flags. Then we re-enable those
+        // which are available for the selected component.
+        var inputElements = document.getElementsByTagName("select");
+        var inputElement, flagField;
+        for ( var i=0 ; i<inputElements.length ; i++ ) {
+            inputElement = inputElements.item(i);
+            if (inputElement.name.search(/^flag_type-(\d+)$/) != -1) {
+                var id = inputElement.name.replace(/^flag_type-(\d+)$/, "$1");
+                inputElement.disabled = true;
+                // Also disable the requestee field, if it exists.
+                inputElement = document.getElementById("requestee_type-" + id);
+                if (inputElement) inputElement.disabled = true;
+            }
+        }
+        // Now enable flags available for the selected component.
+        for (var i = 0; i < flags[index].length; i++) {
+            flagField = document.getElementById("flag_type-" + flags[index][i]);
+            if (flagField) {
+                flagField.disabled = false;
+                // Re-enabling the requestee field depends on the status
+                // of the flag.
+                toggleRequesteeField(flagField, 1);
+            }
+        }
     }
 }
 
@@ -113,11 +150,7 @@ function handleWantsAttachment(wants_attachment) {
 <table cellspacing="2" cellpadding="0" border="0">
 
   <tr>
-    <td><br></td>
-  </tr>
-
-  <tr>
-    <td></td>
+    <td>&nbsp;</td>
     <td colspan="3">
     [%# Migration note: The following file corresponds to the old Param
       # 'entryheaderhtml'
@@ -127,7 +160,8 @@ function handleWantsAttachment(wants_attachment) {
   </tr>
 
   <tr>
-    <td><br></td>
+    <td>&nbsp;</td>
+    <td colspan="3">&nbsp;</td>
   </tr>
 
   <tr>
@@ -173,7 +207,7 @@ function handleWantsAttachment(wants_attachment) {
 
   <tr>
     <td>&nbsp;</td>
-    <td colspan="3"></td>
+    <td colspan="3">&nbsp;</td>
   </tr>
 
   <tr>
@@ -185,29 +219,30 @@ function handleWantsAttachment(wants_attachment) {
   </tr>
 
   <tr>
-  [% IF Param('letsubmitterchoosepriority') %]
-    [% sel = { description => 'Priority', name => 'priority' } %]
-    [% INCLUDE select %]
-  [% ELSE %]
-    <input type="hidden" name="priority"
-           value="[% default.priority FILTER html %]">
-  [% END %]
+    [% IF Param('letsubmitterchoosepriority') %]
+      [% sel = { description => 'Priority', name => 'priority' } %]
+      [% INCLUDE select %]
+    [% ELSE %]
+      <td colspan="2">
+        <input type="hidden" name="priority" value="[% default.priority FILTER html %]">
+      </td>
+    [% END %]
 
-  [% sel = { description => 'Severity', name => 'bug_severity' } %]
-  [% INCLUDE select %]
+    [% sel = { description => 'Severity', name => 'bug_severity' } %]
+    [% INCLUDE select %]
   </tr>
 
   [% IF Param('usetargetmilestone') && Param('letsubmitterchoosemilestone') %]
     <tr>
-    [% sel = { description => 'Target Milestone', name => 'target_milestone' } %]
-    [% INCLUDE select %]
-    <td colspan="2"></td>
+      [% sel = { description => 'Target Milestone', name => 'target_milestone' } %]
+      [% INCLUDE select %]
+      <td colspan="2">&nbsp;</td>
     </tr>
   [% END %]
 
   <tr>
     <td>&nbsp;</td>
-    <td colspan="3"></td>
+    <td colspan="3">&nbsp;</td>
   </tr>
 
   <tr>
@@ -220,7 +255,19 @@ function handleWantsAttachment(wants_attachment) {
     [% sel = { description => 'Initial State', name => 'bug_status' } %]
     [% INCLUDE select %]
 [% END %]
-    <td colspan="2"></td>
+    <td>&nbsp;</td>
+    [%# Calculate the number of rows we can use for flags %]
+    [% num_rows = 6 + (Param("useqacontact") ? 1 : 0) +
+                      (UserInGroup(Param('timetrackinggroup')) ? 3 : 0) +
+                      (Param("usebugaliases") ? 1 : 0)
+    %]
+    <td rowspan="[% num_rows FILTER html %]" valign="top">
+      [% IF product.flag_types.bug.size > 0 %]
+        [% PROCESS "flag/list.html.tmpl" flag_types = product.flag_types.bug
+                                         any_flags_requesteeble = 1
+        %]
+      [% END %]
+    </td>
   </tr>
 
   <tr>
@@ -229,7 +276,7 @@ function handleWantsAttachment(wants_attachment) {
         <a href="page.cgi?id=fields.html#assigned_to">Assign To</a>:
       </strong>
     </td>
-    <td colspan="3">
+    <td colspan="2">
       [% INCLUDE global/userselect.html.tmpl
          name => "assigned_to"
          value => assigned_to
@@ -244,7 +291,7 @@ function handleWantsAttachment(wants_attachment) {
 [% IF Param("useqacontact") %]
     <tr>
       <td align="right"><strong>QA Contact:</strong></td>
-      <td colspan="3">
+      <td colspan="2">
       [% INCLUDE global/userselect.html.tmpl
          name => "qa_contact"
          value => qa_contact
@@ -259,7 +306,7 @@ function handleWantsAttachment(wants_attachment) {
 
   <tr>
     <td align="right"><strong>Cc:</strong></td>
-    <td colspan="3">
+    <td colspan="2">
       [% INCLUDE global/userselect.html.tmpl
          name => "cc"
          value => cc
@@ -272,19 +319,19 @@ function handleWantsAttachment(wants_attachment) {
   
   <tr>
     <td>&nbsp;</td>
-    <td colspan="3"></td>
+    <td colspan="2"></td>
   </tr>
 
 [% IF UserInGroup(Param('timetrackinggroup')) %]
   <tr>
     <td align="right"><strong>Estimated Hours:</strong></td>
-    <td colspan="3">
+    <td colspan="2">
       <input name="estimated_time" size="6" maxlength="6" value="0.0">
     </td>
   </tr>
   <tr>
     <td align="right"><strong>Deadline:</strong></td>
-    <td colspan="3">
+    <td colspan="2">
       <input name="deadline" size="10" maxlength="10" value="[% deadline FILTER html %]">
       <small>(YYYY-MM-DD)</small>
     </td>
@@ -292,14 +339,14 @@ function handleWantsAttachment(wants_attachment) {
 
   <tr>
     <td>&nbsp;</td>
-    <td colspan="3"></td>
+    <td colspan="2"></td>
   </tr>
 [% END %]
 
 [% IF Param("usebugaliases") %]
   <tr>
     <td align="right"><strong>Alias:</strong></td>
-    <td colspan="3">
+    <td colspan="2">
       <input name="alias" size="20">
     </td>
   </tr>
@@ -307,7 +354,7 @@ function handleWantsAttachment(wants_attachment) {
 
   <tr>
     <td align="right"><strong>URL:</strong></td>
-    <td colspan="3">
+    <td colspan="2">
       <input name="bug_file_loc" size="60"
              value="[% bug_file_loc FILTER html %]">
     </td>
@@ -324,7 +371,7 @@ function handleWantsAttachment(wants_attachment) {
 
   <tr>
     <td align="right"><strong>Summary:</strong></td>
-    <td colspan="3">
+    <td colspan="2">
       <input name="short_desc" size="60" value="[% short_desc FILTER html %]"
              maxlength="255">
     </td>
@@ -389,7 +436,8 @@ function handleWantsAttachment(wants_attachment) {
         <fieldset>
           <legend>Add an attachment</legend>
           <table class="attachment_entry">
-            [% PROCESS attachment/createformcontents.html.tmpl %]
+            [% PROCESS attachment/createformcontents.html.tmpl
+                       flag_types = product.flag_types.attachment %]
           </table>
         </fieldset>
       <script type="text/javascript">
