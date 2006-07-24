@@ -61,6 +61,9 @@ class AddOn extends AMO_Object {
     // History of releases
     var $History;
 
+    // Review body, for when this add-on has a review.
+    var $ReviewBody;
+
     /**
     * Class constructor.
     * 
@@ -438,6 +441,7 @@ class AddOn extends AMO_Object {
             `applications`.`appname`,
             `version`.`URI`,
             `version`.`Size`,
+            `version`.`hash`,
             `os`.`OSName`
           FROM 
             `version` 
@@ -466,12 +470,46 @@ class AddOn extends AMO_Object {
                 'AppName'   => $val['appname'],
                 'URI'       => $val['URI'],
                 'Size'      => $val['Size'],
+                'hash'      => $val['hash'],
                 'OSName'    => $val['OSName'],
                 'Version'   => $this->Version
             );
         }
 
         $this->setVar('OsVersions',$_final);
+    }
+
+    /**
+     * Get the review information for this addon (if it exists) 
+     * @return array
+     */
+    function getReview() {
+        $this->db->query("
+            SELECT
+                body
+            FROM
+                reviews
+            WHERE
+                id = {$this->ID} AND
+                featured = 'yes'
+            LIMIT 1
+        ", SQL_INIT, SQL_ASSOC);
+
+        return $this->db->record;
+    }
+
+    /**
+     * Set the ReviewBody for this addon.
+     * @param string $body
+     * @return boolean
+     */
+    function setReview($body=null) {
+        if (empty($body)) {
+            $buf = $this->getReview();
+            $body = $buf['body'];
+        }
+
+       return $this->setVar('ReviewBody',$body); 
     }
 }
 ?>
