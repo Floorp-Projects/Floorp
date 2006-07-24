@@ -2,6 +2,7 @@
 
 <bindings id="textBindings"
    xmlns="http://www.mozilla.org/xbl"
+   xmlns:xbl="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:html="http://www.w3.org/1999/xhtml">
 
@@ -276,93 +277,17 @@
                                      var controlElement;
                                      if (controlElementID)
                                        controlElement = document.getElementById(controlElementID);
-                                     if(controlElement)
+                                     if (controlElement)
                                        controlElement.focus();
                                     "/>
     </handlers>
   </binding>
 
-  <binding id="text-link" extends="chrome://global/content/bindings/text.xml#text-label">
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            return Components.interfaces.nsIAccessibleProvider.XULLink;
-          ]]>
-        </getter>
-      </property>
-      <property name="href" onget="return this.getAttribute('href');"
-                            onset="this.setAttribute('href', val); return val;" />
-      <method name="open">
-        <parameter name="aEvent"/>
-        <body>
-        <![CDATA[
-          var href = this.href;
-          if (!href || this.disabled || aEvent.getPreventDefault())
-            return;
-
-          var uri = null;
-          try {
-            const nsISSM = Components.interfaces.nsIScriptSecurityManager;
-            const secMan =
-                     Components.classes["@mozilla.org/scriptsecuritymanager;1"]
-                               .getService(nsISSM);
-
-            const ioService =
-                     Components.classes["@mozilla.org/network/io-service;1"]
-                               .getService(Components.interfaces.nsIIOService);
-
-            uri = ioService.newURI(href, null, null);
-            var safeURI = ioService.newURI("about:blank", null, null);
-
-            try {
-              secMan.checkLoadURI(safeURI, uri, nsISSM.DISALLOW_SCRIPT_OR_DATA)
-            } catch (ex) {
-              var msg = "Error: Cannot open a " + uri.scheme + ": link using \
-                         the text-link binding.";
-              Components.utils.reportError(msg);
-              return;
-            }
-
-            const cID = "@mozilla.org/uriloader/external-protocol-service;1";
-            const nsIEPS = Components.interfaces.nsIExternalProtocolService;
-            var protocolSvc = Components.classes[cID].getService(nsIEPS);
-
-            // if the scheme is not an exposed protocol, then opening this link
-            // should be deferred to the system's external protocol handler
-            if (!protocolSvc.isExposedProtocol(uri.scheme)) {
-              protocolSvc.loadUrl(uri);
-              aEvent.preventDefault()
-              return;
-            }
-
-          } catch (ex) {}
-
-          // otherwise, fall back to opening the anchor directly
-          var win = window;
-          if (window instanceof Components.interfaces.nsIDOMChromeWindow) {
-            while (win.opener && !win.opener.closed)
-              win = win.opener;
-          }
-
-          if (uri)
-            win.open(uri.spec);
-          else
-            win.open(href);
-
-          aEvent.preventDefault();
-
-        ]]>
-        </body>
-      </method>
-    </implementation>
-
-    <handlers>
-      <handler event="click" phase="capturing" button="0" action="this.open(event)"/>
-      <handler event="keypress" preventdefault="true" keycode="VK_ENTER"  action="this.click()" />
-      <handler event="keypress" preventdefault="true" keycode="VK_RETURN" action="this.click()" />
-    </handlers>
+  <binding id="text-link" display="xul:box"
+           extends="chrome://global/content/bindings/text.xml#text-label">
+    <content>
+      <xul:label class="text-link-inner"><html:a xbl:inherits="xbl:text=value,href" html:target="_blank"/></xul:label>
+    </content>
   </binding>
 
 </bindings>
-
