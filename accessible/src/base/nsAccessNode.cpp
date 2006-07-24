@@ -52,6 +52,7 @@
 #include "nsIDOMNSHTMLElement.h"
 #include "nsIDOMViewCSS.h"
 #include "nsIDOMWindow.h"
+#include "nsPIDOMWindow.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIFrame.h"
 #include "nsIPrefService.h"
@@ -446,19 +447,39 @@ NS_IMETHODIMP
 nsAccessNode::GetComputedStyleValue(const nsAString& aPseudoElt, const nsAString& aPropertyName, nsAString& aValue)
 {
   nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(mDOMNode));
-  nsPresContext *presContext = GetPresContext();
-  NS_ENSURE_TRUE(domElement && presContext, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsISupports> container = presContext->GetContainer();
-  nsCOMPtr<nsIDOMWindow> domWin(do_GetInterface(container));
-  nsCOMPtr<nsIDOMViewCSS> viewCSS(do_QueryInterface(domWin));
-  NS_ENSURE_TRUE(viewCSS, NS_ERROR_FAILURE);
-
+  if (!domElement) {
+    return NS_ERROR_FAILURE;
+  }
   nsCOMPtr<nsIDOMCSSStyleDeclaration> styleDecl;
-  viewCSS->GetComputedStyle(domElement, aPseudoElt, getter_AddRefs(styleDecl));
+  GetComputedStyleDeclaration(aPseudoElt, domElement, getter_AddRefs(styleDecl));
   NS_ENSURE_TRUE(styleDecl, NS_ERROR_FAILURE);
   
   return styleDecl->GetPropertyValue(aPropertyName, aValue);
+}
+
+void nsAccessNode::GetComputedStyleDeclaration(const nsAString& aPseudoElt,
+                                               nsIDOMElement *aElement,
+                                               nsIDOMCSSStyleDeclaration **aCssDecl)
+{
+  *aCssDecl = nsnull;
+  // Returns number of items in style declaration
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
+  if (!content) {
+    return;
+  }
+  nsCOMPtr<nsIDocument> doc = content->GetDocument();
+  if (!doc) {
+    return;
+  }
+
+  nsCOMPtr<nsIDOMViewCSS> viewCSS(do_QueryInterface(doc->GetWindow()));
+  if (!viewCSS) {
+    return;
+  }
+
+  nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
+  viewCSS->GetComputedStyle(aElement, aPseudoElt, getter_AddRefs(cssDecl));
+  NS_IF_ADDREF(*aCssDecl = cssDecl);
 }
 
 /***************** Hashtable of nsIAccessNode's *****************/
@@ -563,3 +584,5 @@ void nsAccessNode::ClearCache(nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode>
 {
   aCache.Enumerate(ClearCacheEntry, nsnull);
 }
+
+
