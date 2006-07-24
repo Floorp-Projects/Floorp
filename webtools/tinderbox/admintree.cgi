@@ -148,7 +148,7 @@ if (defined($tree)) {
     } elsif ($trim_bytes < $size_G){
         $trim_size = int($trim_bytes / $size_M) . " Mb";
     } else {
-        $trim_size = int($trim_bytes / $size_G) . " Gb";
+        $trim_size = (int($trim_bytes / $size_G * 1000)/1000) . " Gb";
     }
 
     print "
