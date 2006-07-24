@@ -1124,7 +1124,7 @@ Engine.prototype = {
      * Handle an error during the load of an engine by prompting the user to
      * notify him that the load failed.
      */
-    function onError(aErrorString, aTitleString) {
+    function onError() {
       if (aEngine._engineToUpdate) {
         // We're in an update, so just fail quietly
         LOG("updating " + aEngine._engineToUpdate.name + " failed");
@@ -1132,15 +1132,11 @@ Engine.prototype = {
       }
       var sbs = Cc["@mozilla.org/intl/stringbundle;1"].
                 getService(Ci.nsIStringBundleService);
-
+      var searchBundle = sbs.createBundle(SEARCH_BUNDLE);
       var brandBundle = sbs.createBundle(BRAND_BUNDLE);
       var brandName = brandBundle.GetStringFromName("brandShortName");
-
-      var searchBundle = sbs.createBundle(SEARCH_BUNDLE);
-      var msgStringName = aErrorString || "error_loading_engine_msg2";
-      var titleStringName = aTitleString || "error_loading_engine_title";
-      var title = searchBundle.GetStringFromName(titleStringName);
-      var text = searchBundle.formatStringFromName(msgStringName,
+      var title = searchBundle.GetStringFromName("error_loading_engine_title");
+      var text = searchBundle.formatStringFromName("error_loading_engine_msg2",
                                                    [brandName, aEngine._location],
                                                    2);
 
@@ -1193,18 +1189,6 @@ Engine.prototype = {
       LOG("_onLoad: Failed to init engine!\n" + ex);
       // Report an error to the user
       onError();
-      return;
-    }
-
-    // Check to see if this is a duplicate engine. If we're confirming the
-    // engine load, then we display a "this is a duplicate engine" prompt,
-    // otherwise we fail silently.
-    var ss = Cc["@mozilla.org/browser/search-service;1"].
-             getService(Ci.nsIBrowserSearchService);
-    if (ss.getEngineByName(aEngine.name)) {
-      if (aEngine._confirm)
-        onError("error_duplicate_engine_msg", "error_invalid_engine_title");
-      LOG("_onLoad: duplicate engine found, bailing");
       return;
     }
 
