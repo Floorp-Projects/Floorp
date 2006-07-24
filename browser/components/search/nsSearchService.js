@@ -1223,6 +1223,7 @@ Engine.prototype = {
     if (ss.getEngineByName(aEngine.name)) {
       if (aEngine._confirm)
         onError("error_duplicate_engine_msg", "error_invalid_engine_title");
+
       LOG("_onLoad: duplicate engine found, bailing");
       return;
     }
