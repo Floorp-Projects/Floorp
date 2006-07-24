@@ -933,6 +933,7 @@ nsFloatCacheList::RemoveAndReturnPrev(nsFloatCache* aElement)
     prev = fc;
     fc = fc->mNext;
   }
+  return nsnull;
 }
 
 //----------------------------------------------------------------------
