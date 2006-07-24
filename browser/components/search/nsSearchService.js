@@ -320,6 +320,7 @@ loadListener.prototype = {
         aIID.equals(Ci.nsIStreamListener)     ||
         aIID.equals(Ci.nsIChannelEventSink)   ||
         aIID.equals(Ci.nsIInterfaceRequestor) ||
+        aIID.equals(Ci.nsIBadCertListener)    ||
         // See FIXME comment below
         aIID.equals(Ci.nsIHttpEventSink)      ||
         aIID.equals(Ci.nsIProgressEventSink)  ||
@@ -373,6 +374,24 @@ loadListener.prototype = {
   // nsIInterfaceRequestor
   getInterface: function SRCH_load_GI(aIID) {
     return this.QueryInterface(aIID);
+  },
+
+  // nsIBadCertListener
+  confirmUnknownIssuer: function SRCH_load_CUI(aSocketInfo, aCert,
+                                               aCertAddType) {
+    return false;
+  },
+
+  confirmMismatchDomain: function SRCH_load_CMD(aSocketInfo, aTargetURL,
+                                                aCert) {
+    return false;
+  },
+
+  confirmCertExpired: function SRCH_load_CCE(aSocketInfo, aCert) {
+    return false;
+  },
+
+  notifyCrlNextupdate: function SRCH_load_NCN(aSocketInfo, aTargetURL, aCert) {
   },
 
   // FIXME: bug 253127
