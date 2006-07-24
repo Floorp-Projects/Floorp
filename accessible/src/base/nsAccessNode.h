@@ -139,6 +139,10 @@ class nsAccessNode: public nsIAccessNode, public nsPIAccessNode
               aContent->GetAttr(kNameSpaceID_XHTML2_Unofficial, nsAccessibilityAtoms::role, aRole);
     }
 
+    static void GetComputedStyleDeclaration(const nsAString& aPseudoElt,
+                                            nsIDOMElement *aElement,
+                                            nsIDOMCSSStyleDeclaration **aCssDecl);
+
     already_AddRefed<nsRootAccessible> GetRootAccessible();
 
     static nsIDOMNode *gLastFocusedNode;

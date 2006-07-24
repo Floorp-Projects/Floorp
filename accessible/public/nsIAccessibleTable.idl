@@ -79,4 +79,9 @@ interface nsIAccessibleTable : nsISupports
   boolean isColumnSelected (in long column);
   boolean isRowSelected (in  long row);
   boolean isCellSelected (in long row, in long column);
+
+  /**
+    * Use heuristics to determine if table is most likely used for layout
+    */
+  boolean isProbablyForLayout();
 };

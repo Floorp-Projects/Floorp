@@ -361,16 +361,11 @@ nsAccessibleWrap::CreateMaiInterfaces(void)
     }
 
     //nsIAccessibleTable
-    if (accRole == nsIAccessible::ROLE_TREE_TABLE) {
-      // In most cases, html table is used as container to arrange the webpage,
-      // not to represent a "real" table with practical colum, colum heaer, row.
-      // So, only add maiInterfaceTable for XUL table.
-      nsCOMPtr<nsIAccessibleTable> accessInterfaceTable;
-      QueryInterface(NS_GET_IID(nsIAccessibleTable),
-                     getter_AddRefs(accessInterfaceTable));
-      if (accessInterfaceTable) {
-          interfacesBits |= 1 << MAI_INTERFACE_TABLE;
-      }
+    nsCOMPtr<nsIAccessibleTable> accessInterfaceTable;
+    QueryInterface(NS_GET_IID(nsIAccessibleTable),
+                   getter_AddRefs(accessInterfaceTable));
+    if (accessInterfaceTable) {
+        interfacesBits |= 1 << MAI_INTERFACE_TABLE;
     }
 
     return interfacesBits;

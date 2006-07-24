@@ -41,6 +41,7 @@
 #include "nsIDOMElement.h"
 #include "nsINameSpaceManager.h"
 #include "nsIAccessibilityService.h"
+#include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDOMHTMLTableCaptionElem.h"
 #include "nsIDOMHTMLTableCellElement.h"
@@ -48,6 +49,7 @@
 #include "nsIDOMHTMLTableRowElement.h"
 #include "nsIDOMHTMLTableSectionElem.h"
 #include "nsIDocument.h"
+#include "nsIDOMDocument.h"
 #include "nsIPresShell.h"
 #include "nsIServiceManager.h"
 #include "nsITableLayout.h"
@@ -601,6 +603,190 @@ nsHTMLTableAccessible::GetCellAt(PRInt32        aRowIndex,
                                     isSelected);
 }
 
+#ifdef SHOW_LAYOUT_HEURISTIC
+NS_IMETHODIMP nsHTMLTableAccessible::GetDescription(nsAString& aDescription)
+{
+  // Helpful for debugging layout vs. data tables
+  aDescription.Truncate();
+  PRBool isProbablyForLayout;
+  IsProbablyForLayout(&isProbablyForLayout);
+  aDescription = mLayoutHeuristic;
+#ifdef DEBUG
+  printf("\nTABLE: %s\n", NS_ConvertUTF16toUTF8(mLayoutHeuristic).get());
+#endif
+  return NS_OK;
+}
+#endif
+
+PRBool nsHTMLTableAccessible::HasDescendant(char *aTagName)
+{
+  nsCOMPtr<nsIDOMElement> tableElt(do_QueryInterface(mDOMNode));
+  NS_ENSURE_TRUE(tableElt, PR_FALSE);
+
+  nsCOMPtr<nsIDOMNodeList> nodeList;
+  nsAutoString tagName;
+  tagName.AssignWithConversion(aTagName);
+  tableElt->GetElementsByTagName(tagName, getter_AddRefs(nodeList));
+  NS_ENSURE_TRUE(nodeList, NS_ERROR_FAILURE);
+  PRUint32 length;
+  nodeList->GetLength(&length);
+  
+  if (length == 1) {
+    // Make sure it's not the table itself
+    nsCOMPtr<nsIDOMNode> firstItem;
+    nodeList->Item(0, getter_AddRefs(firstItem));
+    return firstItem != mDOMNode;
+  }
+
+  return length > 0;
+}
+
+NS_IMETHODIMP nsHTMLTableAccessible::IsProbablyForLayout(PRBool *aIsProbablyForLayout)
+{
+  // Implement a heuristic to determine if table is most likely used for layout
+  // XXX do we want to look for rowspan or colspan, especialy that span all but a couple cells
+  // at the beginning or end of a row/col, and especially when they occur at the edge of a table?
+  // XXX expose this info via object attributes to AT-SPI
+
+  // XXX For now debugging descriptions are always on via SHOW_LAYOUT_HEURISTIC
+  // This will allow release trunk builds to be used by testers to refine the algorithm
+  // Change to |#define SHOW_LAYOUT_HEURISTIC DEBUG| before final release
+#ifdef SHOW_LAYOUT_HEURISTIC
+#define RETURN_LAYOUT_ANSWER(isLayout, heuristic) \
+  { *aIsProbablyForLayout = isLayout; \
+    mLayoutHeuristic = isLayout ? NS_LITERAL_STRING("layout table: ") : NS_LITERAL_STRING("data table: "); \
+    mLayoutHeuristic += NS_LITERAL_STRING(heuristic); return NS_OK; }
+#else
+#define RETURN_LAYOUT_ANSWER(isLayout, heuristic) { *aIsProbablyForLayout = isLayout; return NS_OK; }
+#endif
+
+  *aIsProbablyForLayout = PR_FALSE;
+  
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (!content) {
+    return NS_ERROR_FAILURE; // Table shut down
+  }
+
+  // Check role and role attribute
+  PRBool hasNonTableRole = (Role(this) != ROLE_TABLE);
+  if (hasNonTableRole) {
+    RETURN_LAYOUT_ANSWER(PR_FALSE, "Has role attribute");
+  }
+
+  if (HasRoleAttribute(content)) {
+    RETURN_LAYOUT_ANSWER(PR_TRUE, "Has role attribute, and role is table");
+  }
+  
+  // Check for legitimate data table elements or attributes
+  if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::summary) || HasDescendant("summary") || 
+      HasDescendant("th") || HasDescendant("thead") || HasDescendant("tfoot") || HasDescendant("colgroup")) {
+    RETURN_LAYOUT_ANSWER(PR_FALSE, "Has caption, summary, th, thead, tfoot or colgroup -- legitimate table structures");
+  }
+  if (HasDescendant("table")) {
+    RETURN_LAYOUT_ANSWER(PR_TRUE, "Has a nested table within it");
+  }
+  
+  // If only 1 column or only 1 row, it's for layout
+  PRInt32 columns, rows;
+  GetColumns(&columns);
+  if (columns <=1) {
+    RETURN_LAYOUT_ANSWER(PR_TRUE, "Has only 1 column");
+  }
+  GetRows(&rows);
+  if (rows <=1) {
+    RETURN_LAYOUT_ANSWER(PR_TRUE, "Has only 1 row");
+  }
+
+  // Check for many columns
+  if (columns >= 5) {
+    RETURN_LAYOUT_ANSWER(PR_FALSE, ">=5 columns");
+  }
+  
+  // Now we know there are 2-4 columns and 2 or more rows
+  // Check to see if there are visible borders on the cells
+  // XXX currently, we just check the first cell -- do we really need to do more?
+  nsCOMPtr<nsIDOMElement> cellElement;
+  GetCellAt(0, 0, *getter_AddRefs(cellElement));
+  nsCOMPtr<nsIContent> cellContent(do_QueryInterface(cellElement));
+  NS_ENSURE_TRUE(cellContent, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIPresShell> shell(GetPresShell());
+  nsIFrame *cellFrame = shell->GetPrimaryFrameFor(cellContent);
+  NS_ENSURE_TRUE(cellFrame, NS_ERROR_FAILURE);
+  nsMargin border;
+  cellFrame->GetBorder(border);
+  if (border.top && border.bottom && border.left && border.right) {
+    RETURN_LAYOUT_ANSWER(PR_FALSE, "Has nonzero border-width on table cell");
+  }
+
+  /**
+   * Rules for non-bordered tables with 2-4 columns and 2+ rows from here on forward
+   */
+
+  // Check for styled background color across the row
+  // Alternating background color is a common way 
+  nsCOMPtr<nsIDOMNodeList> nodeList;
+  nsCOMPtr<nsIDOMElement> tableElt(do_QueryInterface(mDOMNode));    
+  tableElt->GetElementsByTagName(NS_LITERAL_STRING("tr"), getter_AddRefs(nodeList));
+  NS_ENSURE_TRUE(nodeList, NS_ERROR_FAILURE);
+  PRUint32 length;
+  nodeList->GetLength(&length);
+  nsAutoString color, lastRowColor;
+  for (PRInt32 rowCount = 0; rowCount < rows; rowCount ++) {
+    nsCOMPtr<nsIDOMNode> rowNode;
+    nodeList->Item(rowCount, getter_AddRefs(rowNode));
+    nsCOMPtr<nsIDOMElement> rowElement = do_QueryInterface(rowNode);
+    nsCOMPtr<nsIDOMCSSStyleDeclaration> styleDecl;
+    GetComputedStyleDeclaration(EmptyString(), rowElement, getter_AddRefs(styleDecl));
+    NS_ENSURE_TRUE(styleDecl, NS_ERROR_FAILURE);
+    lastRowColor = color;
+    styleDecl->GetPropertyValue(NS_LITERAL_STRING("background-color"), color);
+    if (rowCount > 0 && PR_FALSE == lastRowColor.Equals(color)) {
+      RETURN_LAYOUT_ANSWER(PR_FALSE, "2 styles of row background color, non-bordered");
+    }
+  }
+
+  // Check for many rows
+  const PRInt32 kMaxLayoutRows = 20;
+  if (rows > kMaxLayoutRows) { // A ton of rows, this is probably for data
+    RETURN_LAYOUT_ANSWER(PR_TRUE, ">= kMaxLayoutRows (20) and non-bordered");
+  }
+
+  // Check for very wide table
+  nsAutoString styledWidth;
+  GetComputedStyleValue(EmptyString(), NS_LITERAL_STRING("width"), styledWidth);
+  if (styledWidth.EqualsLiteral("100%")) {
+    RETURN_LAYOUT_ANSWER(PR_TRUE, "<=4 columns and 100% width");
+  }
+  if (styledWidth.Find(NS_LITERAL_STRING("px"))) { // Hardcoded in pixels
+    nsIFrame *tableFrame = GetFrame();
+    NS_ENSURE_TRUE(tableFrame , NS_ERROR_FAILURE);
+    nsSize tableSize  = tableFrame->GetSize();
+    nsCOMPtr<nsIAccessibleDocument> docAccessible = GetDocAccessible();
+    nsCOMPtr<nsPIAccessNode> docAccessNode(do_QueryInterface(docAccessible));
+    NS_ENSURE_TRUE(docAccessNode, NS_ERROR_FAILURE);
+    nsIFrame *docFrame = docAccessNode->GetFrame();
+    NS_ENSURE_TRUE(docFrame , NS_ERROR_FAILURE);
+    nsSize docSize = docFrame->GetSize();
+    PRInt32 percentageOfDocWidth = (100 * tableSize.width) / docSize.width;
+    if (percentageOfDocWidth > 95) {
+      // 3-4 columns, no borders, not a lot of rows, and 95% of the doc's width
+      // Probably for layout
+      RETURN_LAYOUT_ANSWER(PR_TRUE, "<=4 columns, width hardcoded in pixels and 95% of document width");
+    }
+  }
+
+  // Two column rules
+  if (rows * columns <= 10) {
+    RETURN_LAYOUT_ANSWER(PR_TRUE, "2-4 columns, 10 cells or less, non-bordered");
+  }
+
+  if (HasDescendant("embed") || HasDescendant("object") || HasDescendant("applet") || HasDescendant("iframe")) {
+    RETURN_LAYOUT_ANSWER(PR_TRUE, "Has no borders, and has iframe, object, applet or iframe, typical of advertisements");
+  }
+
+  RETURN_LAYOUT_ANSWER(PR_FALSE, "no layout factor strong enough, so will guess data");
+}
+
 // --------------------------------------------------------
 // nsHTMLTableHeadAccessible Accessible
 // --------------------------------------------------------
@@ -662,3 +848,4 @@ nsHTMLTableHeadAccessible::GetRows(PRInt32 *aRows)
 
   return rows->GetLength((PRUint32 *)aRows);
 }
+

@@ -54,6 +54,11 @@ public:
 
 class nsITableLayout;
 
+// XXX For now debugging descriptions are always on via SHOW_LAYOUT_HEURISTIC
+// This will allow release trunk builds to be used by testers to refine the algorithm
+// Change to |#define SHOW_LAYOUT_HEURISTIC DEBUG| before final release
+#define SHOW_LAYOUT_HEURISTIC
+
 class nsHTMLTableAccessible : public nsAccessibleWrap
 {
 public:
@@ -64,6 +69,9 @@ public:
   NS_IMETHOD GetRole(PRUint32 *aResult); 
   NS_IMETHOD GetState(PRUint32 *aResult); 
   NS_IMETHOD GetName(nsAString& aResult);
+#ifdef SHOW_LAYOUT_HEURISTIC
+  NS_IMETHOD GetDescription(nsAString& aDescription);
+#endif
 
 protected:
   nsresult GetTableNode(nsIDOMNode **_retval);
@@ -71,8 +79,11 @@ protected:
   nsresult GetCellAt(PRInt32        aRowIndex,
                      PRInt32        aColIndex,
                      nsIDOMElement* &aCell);
+  PRBool HasDescendant(char *aTagName);
+#ifdef SHOW_LAYOUT_HEURISTIC
+  nsAutoString mLayoutHeuristic;
+#endif
 };
-
 
 class nsHTMLTableHeadAccessible : public nsHTMLTableAccessible
 {

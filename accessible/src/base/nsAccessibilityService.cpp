@@ -1694,7 +1694,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   // Please leave this in for now, it's a convenient debugging method
   nsAutoString name;
   aNode->GetLocalName(name);
-  if (name.LowerCaseEqualsLiteral("wizardpage")) 
+  if (name.LowerCaseEqualsLiteral("table")) 
     printf("## aaronl debugging tag name\n");
 
   nsAutoString attrib;
@@ -1868,6 +1868,11 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     }
   }
   else {  // HTML accessibles
+    // Prefer to use markup (mostly tag name, perhaps attributes) to
+    // decide if and what kind of accessible to create.
+    CreateHTMLAccessibleByMarkup(frame, aWeakShell, aNode, role, getter_AddRefs(newAcc));
+
+    PRBool tryFrame = (newAcc == nsnull);
     if (!content->IsFocusable()) { 
       // If we're in unfocusable table-related subcontent, check for the
       // Presentation role on the containing table
@@ -1882,20 +1887,22 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
         nsAutoString tableRole;
         while ((tableContent = tableContent->GetParent()) != nsnull) {
           if (tableContent->Tag() == nsAccessibilityAtoms::table) {
-            if (nsAccessNode::HasRoleAttribute(tableContent)) {
-              // Table that we're a descendant of is presentational
-              return NS_ERROR_FAILURE;
+            nsIFrame *tableFrame = aPresShell->GetPrimaryFrameFor(tableContent);
+            if (!tableFrame || tableFrame->GetType() != nsAccessibilityAtoms::tableOuterFrame ||
+                nsAccessNode::HasRoleAttribute(tableContent)) {
+              // Table that we're a descendant of is not styled as a table,
+              // and has no table accessible for an ancestor, or
+              // table that we're a descendant of is presentational
+              tryFrame = PR_FALSE;
             }
+
             break;
           }
         }
       }
     }
 
-    // Prefer to use markup (mostly tag name, perhaps attributes) to
-    // decide if and what kind of accessible to create.
-    CreateHTMLAccessibleByMarkup(frame, aWeakShell, aNode, role, getter_AddRefs(newAcc));
-    if (!newAcc) {
+    if (tryFrame) {
       frame->GetAccessible(getter_AddRefs(newAcc)); // Try using frame to do it
     }
   }

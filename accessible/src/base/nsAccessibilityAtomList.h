@@ -69,6 +69,7 @@ ACCESSIBILITY_ATOM(_true, "true")
 ACCESSIBILITY_ATOM(headerContentLanguage, "content-language")
 
   // Alphabetical list of frame types
+ACCESSIBILITY_ATOM(areaFrame, "AreaFrame")
 ACCESSIBILITY_ATOM(blockFrame, "BlockFrame")
 ACCESSIBILITY_ATOM(brFrame, "BRFrame")
 ACCESSIBILITY_ATOM(inlineBlockFrame, "InlineBlockFrame")
@@ -76,7 +77,7 @@ ACCESSIBILITY_ATOM(inlineFrame, "InlineFrame")
 ACCESSIBILITY_ATOM(objectFrame, "ObjectFrame")
 ACCESSIBILITY_ATOM(textFrame, "TextFrame")
 ACCESSIBILITY_ATOM(tableCellFrame, "TableCellFrame")
-ACCESSIBILITY_ATOM(areaFrame, "AreaFrame")
+ACCESSIBILITY_ATOM(tableOuterFrame, "TableOuterFrame")
 
   // Alphabetical list of tag names
 ACCESSIBILITY_ATOM(a, "a")
