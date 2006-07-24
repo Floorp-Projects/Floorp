@@ -76,6 +76,12 @@ private:
   nsIContent* FindContentForDocShell(nsIPresShell* aPresShell, nsIContent* aContent, nsIDocShell*  aDocShell);
   static nsAccessibilityService *gAccessibilityService;
   nsresult InitAccessible(nsIAccessible *aAccessibleIn, nsIAccessible **aAccessibleOut);
+
+  /**
+   * Return accessible object for elements implementing nsIAccessibleProvider
+   * interface.
+   */
+  nsresult GetAccessibleByType(nsIDOMNode *aNode, nsIAccessible **aAccessible);
 };
 
 #endif /* __nsIAccessibilityService_h__ */

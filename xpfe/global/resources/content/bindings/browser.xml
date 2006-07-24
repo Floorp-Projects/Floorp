@@ -43,11 +43,10 @@
 
   <binding id="browser" extends="xul:browser">
     <implementation type="application/x-javascript" implements="nsIAccessibleProvider">
-      <property name="accessible">
+      <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
-            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return accService.createOuterDocAccessible(this);
+            return Components.interfaces.nsIAccessibleProvider.OuterDoc;
           ]]>
         </getter>
       </property>

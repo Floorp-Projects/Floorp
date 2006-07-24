@@ -19,15 +19,10 @@
     </content>
 
     <implementation implements="nsIDOMXULPopupElement, nsIAccessibleProvider">
-      <property name="accessible">
+      <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
-            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            if (this.localName == "popup" || this.localName == "menupopup")
-              return accService.createXULMenupopupAccessible(this);
-            else if (this.localName == "tooltip")
-              return accService.createXULTooltipAccessible(this);
-            return null;
+            return Components.interfaces.nsIAccessibleProvider.XULMenupopup;
           ]]>
         </getter>
       </property>
@@ -167,7 +162,13 @@
       </children>
     </content>
     
-    <implementation>
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XULTooltip;
+        </getter>
+      </property>
+
       <field name="_mouseOutCount">0</field>
       <field name="_isMouseOver">false</field>
       

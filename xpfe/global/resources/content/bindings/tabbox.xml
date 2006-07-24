@@ -225,11 +225,10 @@
       ]]>
       </constructor>
       
-      <property name="accessible">
+      <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
-            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return accService.createXULTabsAccessible(this);
+            return Components.interfaces.nsIAccessibleProvider.XULTabs;
           ]]>
         </getter>
       </property>
@@ -442,11 +441,10 @@
   <binding id="tabpanels"
            extends="chrome://global/content/bindings/tabbox.xml#tab-base">
     <implementation implements="nsIAccessibleProvider">
-      <property name="accessible">
+      <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
-            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return accService.createXULTabPanelsAccessible(this);
+            return Components.interfaces.nsIAccessibleProvider.XULTabPanels;
           ]]>
         </getter>
       </property>
@@ -507,11 +505,10 @@
     </content>
     
     <implementation implements="nsIDOMXULSelectControlItemElement, nsIAccessibleProvider">
-      <property name="accessible">
+      <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
-            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return accService.createXULTabAccessible(this);
+            return Components.interfaces.nsIAccessibleProvider.XULTab;
           ]]>
         </getter>
       </property>

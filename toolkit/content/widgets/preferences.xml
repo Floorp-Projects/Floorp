@@ -1243,12 +1243,11 @@
       <xul:image class="paneButtonIcon" xbl:inherits="src"/>
       <xul:label class="paneButtonLabel" xbl:inherits="value=label"/>
     </content>
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessible">
+    <implementation implements="nsIAccessible">
+      <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
-            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return accService.createXULListitemAccessible(this);
+            return Components.interfaces.nsIAccessibleProvider.XULListitem;
           ]]>
         </getter>
       </property>

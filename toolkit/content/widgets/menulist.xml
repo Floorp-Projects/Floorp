@@ -259,11 +259,10 @@
         </body>
       </method>
 
-      <property name="accessible">
+      <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
-            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return accService.createXULComboboxAccessible(this);
+            return Components.interfaces.nsIAccessibleProvider.XULCombobox;
           ]]>
         </getter>
       </property>
