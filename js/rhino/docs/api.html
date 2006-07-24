@@ -18,53 +18,53 @@ These APIs provide methods for controlling the actions of JavaScript in
 a host environment.
 <ul>
 <li>
-<a href="apidocs/org/mozilla/javascript/Context.html">Context</a> - Represents
+<a href="org/mozilla/javascript/Context.html">Context</a> - Represents
 the runtime context of an executing script. Has methods to associate the
 JavaScript evaluation engine with a Java thread, set attributes of the
 engine, and compile and evaluate scripts.</li>
 
 <li>
-<a href="apidocs/org/mozilla/javascript/ContextFactory.html">ContextFactory</a> 
+<a href="org/mozilla/javascript/ContextFactory.html">ContextFactory</a> 
 - Allows embeddings to customize creation of Context instances and monitor entering and releasing of Contexts. </li>
 
 <li>
-<a href="apidocs/org/mozilla/javascript/Script.html">Script</a> - The result of
+<a href="org/mozilla/javascript/Script.html">Script</a> - The result of
 compiling a JavaScript script. Also encapsulates script execution.</li>
 
 <li>
-<a href="apidocs/org/mozilla/javascript/ErrorReporter.html">ErrorReporter</a> -
+<a href="org/mozilla/javascript/ErrorReporter.html">ErrorReporter</a> -
 This interface can be implemented to control the actions the JavaScript
 engine takes when it encounters errors.</li>
 
 <li>
-<a href="apidocs/org/mozilla/javascript/SecurityController.html">SecurityController</a>
+<a href="org/mozilla/javascript/SecurityController.html">SecurityController</a>
 - Optional support routines that must be provided by embeddings implementing
 security controls on scripts.</li>
 
 <li>
-<a href="apidocs/org/mozilla/javascript/ClassShutter.html">ClassShutter</a>
+<a href="org/mozilla/javascript/ClassShutter.html">ClassShutter</a>
 - Embeddings that wish to filter Java classes that are visible to scripts
 through the LiveConnect, should implement this interface.</li>
 
 <li>
-<a href="apidocs/org/mozilla/javascript/Wrapper.html">Wrapper</a> - Interface implemented
+<a href="org/mozilla/javascript/Wrapper.html">Wrapper</a> - Interface implemented
 by objects wrapping other objects. Provides a method for recovering the
 wrapped value.</li>
 
 <li>
-<a href="apidocs/org/mozilla/javascript/WrapFactory.html">WrapFactory</a> - Class 
+<a href="org/mozilla/javascript/WrapFactory.html">WrapFactory</a> - Class 
 embedders can extend in order to control the way Java objects are wrapped
 for use by JavaScript.</li>
 
 <li>
-<a href="apidocs/org/mozilla/javascript/optimizer/ClassCompiler.html">ClassCompiler</a> - Class that provies API for compiling scripts into JVM class files.</li>
+<a href="org/mozilla/javascript/optimizer/ClassCompiler.html">ClassCompiler</a> - Class that provies API for compiling scripts into JVM class files.</li>
 
 <li>
-<a href="apidocs/org/mozilla/javascript/serialize/ScriptableOutputStream.html">ScriptableOutputStream</a> - This stream can be used to serialize JavaScript objects and functions.
+<a href="org/mozilla/javascript/serialize/ScriptableOutputStream.html">ScriptableOutputStream</a> - This stream can be used to serialize JavaScript objects and functions.
 </li>
 
 <li>
-<a href="apidocs/org/mozilla/javascript/serialize/ScriptableInputStream.html">ScriptableInputStream</a> - This stream can be used to deserialize JavaScript objects and functions.
+<a href="org/mozilla/javascript/serialize/ScriptableInputStream.html">ScriptableInputStream</a> - This stream can be used to deserialize JavaScript objects and functions.
 </li>
 
 </ul>
@@ -77,29 +77,29 @@ to script existing Java classes, you should just use <a href="http://developer.m
 It is also helpful to understand some of the implementation of the <a href="runtime.html">runtime</a>.
 <ul>
 <li>
-<a href="apidocs/org/mozilla/javascript/Scriptable.html">Scriptable</a> - All JavaScript
+<a href="org/mozilla/javascript/Scriptable.html">Scriptable</a> - All JavaScript
 objects must implement this interface. Provides methods to access properties
 and attributes of those properties, as well as other services required
 of JavaScript objects.</li>
 
 <li>
-<a href="apidocs/org/mozilla/javascript/Function.html">Function</a> - All JavaScript
+<a href="org/mozilla/javascript/Function.html">Function</a> - All JavaScript
 functions must implement this interface. Extends Scriptable, adding methods
 to support invocation.</li>
 
 <li>
-<a href="apidocs/org/mozilla/javascript/ScriptableObject.html">ScriptableObject</a>
+<a href="org/mozilla/javascript/ScriptableObject.html">ScriptableObject</a>
 - A default implementation of Scriptable that may be extended. Implements
 property and attribute storage and lookup and other default JavaScript
 object behavior.</li>
 
 <li>
-<a href="apidocs/org/mozilla/javascript/FunctionObject.html">FunctionObject</a>
+<a href="org/mozilla/javascript/FunctionObject.html">FunctionObject</a>
 - An implementation of Function that allows Java methods and constructors
 to be used as JavaScript function objects.</li>
 
 <li>
-<a href="apidocs/org/mozilla/javascript/ImporterTopLevel.html">ImporterTopLevel</a>
+<a href="org/mozilla/javascript/ImporterTopLevel.html">ImporterTopLevel</a>
 - Allows embeddings to use the JavaImporter constructor.</li>
 </ul>
 
@@ -108,22 +108,22 @@ Exceptions</h4>
 These exceptions are thrown by JavaScript.
 <ul>
 <li>
-<a href="apidocs/org/mozilla/javascript/RhinoException.html">RhinoException</a>
+<a href="org/mozilla/javascript/RhinoException.html">RhinoException</a>
 - Common root for all exception explicitly thrown by Rhino engine.</li>
 
-<a href="apidocs/org/mozilla/javascript/JavaScriptException.html">JavaScriptException</a>
+<a href="org/mozilla/javascript/JavaScriptException.html">JavaScriptException</a>
 - Thrown from within JavaScript by the JavaScript 'throw' statement. It wrapps the JavaScript value from 'throw' statement.</li>
 
 <li>
-<a href="apidocs/org/mozilla/javascript/WrappedException.html">EcmaError</a>
+<a href="org/mozilla/javascript/WrappedException.html">EcmaError</a>
 - Thrown by Rhino runtime when particular runtime operation a scripts tries to execute is not allowed. The exception is thrown, for example, when a script attempts to check properties of <tt>undefined</tt>or <tt>null</tt> or refer to a name that can not be found in the current scope chain.</li>
 
 <li>
-<a href="apidocs/org/mozilla/javascript/WrappedException.html">WrappedException</a>
+<a href="org/mozilla/javascript/WrappedException.html">WrappedException</a>
 - Thrown by LiveConnect implementation from JavaScript when called Java method exits with an exception. It wraps the original Java exception.</li>
 
 <li>
-<a href="apidocs/org/mozilla/javascript/EvaluatorException.html">EvaluatorException</a>
+<a href="org/mozilla/javascript/EvaluatorException.html">EvaluatorException</a>
 - An exception thrown when an error is detected during the compilation or execution of
 a script. The default error reporter will throw EvaluatorExceptions when
 an error is encountered.</li>
