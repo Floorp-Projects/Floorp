@@ -963,7 +963,12 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
 
 -(IBAction) downloadsWindow:(id)aSender
 {
-	[[ProgressDlgController sharedDownloadController] showWindow:aSender];
+  ProgressDlgController* dlgController = [ProgressDlgController sharedDownloadController];
+  // If the frontmost window is the downloads window, close it.  Otherwise open or bring downloads window to front.
+  if ([[dlgController window] isMainWindow])
+    [[dlgController window] performClose:self];
+  else
+    [dlgController showWindow:aSender];
 }
 
 - (void)menuWillDisplay:(NSNotification*)inNotification

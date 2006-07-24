@@ -47,6 +47,8 @@
 #import "BookmarkToolbar.h"
 #import "BookmarkViewController.h"
 #import "BookmarkManager.h"
+#import "BookmarkFolder.h"
+#import "Bookmark.h"
 #import "AddBookmarkDialogController.h"
 #import "ProgressDlgController.h"
 #import "PageInfoWindowController.h"
@@ -1419,9 +1421,9 @@ enum BWCOpenDest {
   else if (action == @selector(addBookmark:))
     return ![mBrowserView isEmpty];
   else if (action == @selector(biggerTextSize:))
-    return ![mBrowserView isEmpty] && [[mBrowserView getBrowserView] canMakeTextBigger];
+    return ![mBrowserView isEmpty] && [[mBrowserView getBrowserView] canMakeTextBigger] && ![self bookmarkManagerIsVisible];
   else if ( action == @selector(smallerTextSize:))
-    return ![mBrowserView isEmpty] && [[mBrowserView getBrowserView] canMakeTextSmaller];
+    return ![mBrowserView isEmpty] && [[mBrowserView getBrowserView] canMakeTextSmaller] && ![self bookmarkManagerIsVisible];
   else if (action == @selector(newTab:))
     return YES;
   else if (action == @selector(closeCurrentTab:))
@@ -4035,15 +4037,31 @@ enum BWCOpenDest {
 //
 // -loadBookmarkBarIndex:
 //
-// Load the item in the bookmark bar given by |inIndex| using the given behavior.
-// Uses the top-level |-loadBookmark:...| in order to get the right behavior with folders and
+// Load the nth loadable item (bookmarks or tab groups) in the bookmark bar given by |inIndex| using 
+// the given behavior.  Uses the top-level |-loadBookmark:...| in order to get the right behavior with 
 // tab groups.
 //
 - (BOOL)loadBookmarkBarIndex:(unsigned short)inIndex openBehavior:(EBookmarkOpenBehavior)inBehavior
 {
-  BookmarkItem* item = [[[BookmarkManager sharedBookmarkManager] toolbarFolder] objectAtIndex:inIndex];
+  NSArray* bookmarkBarChildren     = [[[BookmarkManager sharedBookmarkManager] toolbarFolder] childArray];
+  unsigned int loadableItemIndex   = 0; // holds the number of loadable items we've cycled through
+  NSEnumerator* enumerator         = [bookmarkBarChildren objectEnumerator];
+  id item;
+
+  // We cycle through all the toolbar items.  When we've skipped enough loadable items
+  // (ie loadableItemIndex > inIndex), we've gotten there and |item| is the bookmark we want to load.
+  while ((loadableItemIndex <= inIndex) && (item = [enumerator nextObject])) {
+    // Only if it's a real non-seperator bookmark, or a tab group
+    if (([item isKindOfClass:[Bookmark class]] && ![(Bookmark *)item isSeparator]) || 
+        ([item isKindOfClass:[BookmarkFolder class]] && [(BookmarkFolder *)item isGroup]))
+      ++loadableItemIndex;
+  }
+
   if (item)
     [[NSApp delegate] loadBookmark:item withWindowController:self openBehavior:inBehavior];
+  else // We ran out of toolbar items before finding the nth loadable one
+    NSBeep();
+
   return YES;
 }
 
