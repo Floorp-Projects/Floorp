@@ -7,7 +7,7 @@ class UsersController extends AppController {
 
     var $name = 'Users';
 
-    var $helpers = array('html');
+    var $helpers = array('html','javascript');
 
     /**
      * Nothing to see here

@@ -8,6 +8,7 @@
       <?php echo $html->css('rustico/template'); ?>
       <?php echo $html->css('rustico/content'); ?>
       <?php echo $html->css('screen'); ?>
+      <?php echo $javascript->link('__utm'); ?>
     </head>
     <body>
         <div id="header">
