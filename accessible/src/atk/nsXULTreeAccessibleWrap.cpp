@@ -385,6 +385,12 @@ NS_IMETHODIMP nsXULTreeAccessibleWrap::ChangeSelection(PRInt32 aIndex, PRUint8 a
   return NS_OK;
 }
 
+NS_IMETHODIMP nsXULTreeAccessibleWrap::IsProbablyForLayout(PRBool *aIsProbablyForLayout)
+{
+  *aIsProbablyForLayout = PR_FALSE;
+  return NS_OK;
+}
+
 // --------------------------------------------------------
 // nsXULTreeAccessibleWrap Accessible
 // --------------------------------------------------------
@@ -549,4 +555,10 @@ NS_IMETHODIMP nsXULTreeColumnsAccessibleWrap::IsCellSelected(PRInt32 aRow, PRInt
 {
   // Header can not be selected.
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsXULTreeColumnsAccessibleWrap::IsProbablyForLayout(PRBool *aIsProbablyForLayout)
+{
+  *aIsProbablyForLayout = PR_FALSE;
+  return NS_OK;
 }
