@@ -24,7 +24,7 @@
 
 sub add_imagelog {
     local($url,$quote,$width,$height) = @_;
-    open( IMAGELOG, ">>$data_dir/imagelog.txt" ) || die "Oops; can't open imagelog.txt";
+    open( IMAGELOG, ">>", "$data_dir/imagelog.txt" ) || die "Oops; can't open imagelog.txt";
     print IMAGELOG "$url`$width`$height`$quote\n";
     close( IMAGELOG );
 }
@@ -32,7 +32,7 @@ sub add_imagelog {
 sub get_image{
     local(@log,@ret,$i);
 
-    open( IMAGELOG, "<$data_dir/imagelog.txt" );
+    open( IMAGELOG, "<", "$data_dir/imagelog.txt" );
     @log = <IMAGELOG>;
 
     # return a random line

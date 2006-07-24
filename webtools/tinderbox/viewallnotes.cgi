@@ -56,7 +56,7 @@ if ($form{terse}) {
     my $first = str2timeAndCheck($start);
     my $last = str2timeAndCheck($end);
     if ($first > 0 && $last > 0) {
-        if (open(IN, "<$tree/notes.txt")) {
+        if (open(IN, "<", "$tree/notes.txt")) {
             my %stats;
             while (<IN>) {
                 chop;
@@ -88,7 +88,7 @@ my $header = "<PRE>\nBuild Time\t\tBuild Name\t\t\tWho\t\t\tNote Time\t\t\tNote\
     my $first = str2timeAndCheck($start);
     my $last = str2timeAndCheck($end);
     if ($first > 0 && $last > 0) {
-        if (open(IN, "<$tree/notes.txt")) {
+        if (open(IN, "<", "$tree/notes.txt")) {
             print "<PRE>Notes for $tree\n\nfrom " .
                 time2str($TIMEFORMAT, $first) . " to " .
                     time2str($TIMEFORMAT, $last) . "\n</PRE>";
@@ -126,7 +126,7 @@ my $header = "<table border=1><th>Build time</th><th>Build name</th><th>Who</th>
     my $first = str2timeAndCheck($start);
     my $last = str2timeAndCheck($end);
     if ($first > 0 && $last > 0) {
-        if (open(IN, "<$tree/notes.txt")) {
+        if (open(IN, "<", "$tree/notes.txt")) {
             print "<hr><center><h1>Notes for $tree</H1><H3>from " .
                 time2str($TIMEFORMAT, $first) . " to " .
                     time2str($TIMEFORMAT, $last) . "</H3></center>\n";

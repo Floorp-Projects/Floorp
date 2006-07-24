@@ -112,7 +112,7 @@ sub do_static {
         my ($page, $call) = @{$pair};
         my $outfile = "$::tree/$page";
 
-        open(OUT,">$outfile.$$");
+        open(OUT, ">", "$outfile.$$");
         select OUT;
 
         eval "$call";
@@ -645,7 +645,7 @@ BEGIN {
         warn "No BatchID in /d/webdocs/projects/bonsai/data/$bonsai_tree/batchid.pl\n";
         return;
     }
-    open(BATCH, "</d/webdocs/projects/bonsai/data/$bonsai_tree/batch-$::BatchID.pl")
+    open(BATCH, "<", "/d/webdocs/projects/bonsai/data/$bonsai_tree/batch-$::BatchID.pl")
         or print "can't open batch-$::BatchID.pl<br>";
     while (<BATCH>) { 
         if (/^\$::TreeOpen = '(\d+)';/) {

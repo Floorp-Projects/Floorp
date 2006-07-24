@@ -193,7 +193,7 @@ sub split_cgi_args {
 #    local($file)= @_;
 #
 #    #first try to open the file
-#    if( !open(STREAM, "<$file") ){
+#    if( !open(STREAM, "<", $file) ){
 #        Error "Can't open IMG $file"; 
 ##        $size="";
 #    } else {

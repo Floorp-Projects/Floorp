@@ -44,7 +44,7 @@ $mail_file = shift;
 if (!defined($mail_file)) {
     $mail_file = "data/tbx.$$";
 
-    open(DF, ">$mail_file") || die "could not open $mail_file";
+    open(DF, ">", $mail_file) || die "could not open $mail_file";
     while(<STDIN>){
         print DF $_;
     }
@@ -56,7 +56,7 @@ if (!defined($mail_file)) {
 
 # Scan the logfile once to get mail header and build variables
 #
-open LOG, "<$mail_file" or die "Can't open $!";
+open(LOG, "<", $mail_file) or die "Can't open $!";
 
 parse_mail_header(*LOG, \%MAIL_HEADER);
 parse_log_variables(*LOG, \%tinderbox);
@@ -230,7 +230,7 @@ sub check_required_variables {
 sub write_build_data {
   my $tbx = $_[0];
   $process_time = time;
-  open BUILDDATA, ">>$tbx->{tree}/build.dat" 
+  open(BUILDDATA, ">>", "$tbx->{tree}/build.dat")
     or die "can't open $! for writing";
   print BUILDDATA "$process_time|$tbx->{builddate}|$tbx->{build}|$tbx->{errorparser}|$tbx->{status}|$tbx->{logfile}|$tbx->{binaryurl}\n";
   close BUILDDATA;
@@ -240,7 +240,7 @@ sub compress_log_file {
   my ($tbx, $maillog) = @_;
   local *LOG2;
 
-  open(LOG2, "<$maillog") or die "cant open $!";
+  open(LOG2, "<", $maillog) or die "cant open $!";
 
   # Skip past the the RFC822.HEADER
   #
@@ -268,7 +268,7 @@ sub compress_log_file {
     my $decoded = "$tbx->{tree}/$tbx->{logfile}.uncomp";
     if ($tbx->{logencoding} eq 'base64') {
       eval "use MIME::Base64 ();";
-      open DECODED, ">$decoded"
+      open(DECODED, ">", $decoded)
         or die "Can't open $decoded for writing: $!";
       while (<LOG2>) {
         print DECODED MIME::Base64::decode($_);
@@ -276,7 +276,7 @@ sub compress_log_file {
       close DECODED;
     }
     elsif ($tbx->{logencoding} eq 'uuencode') {
-      open DECODED, ">$decoded"
+      open(DECODED, ">", $decoded)
         or die "Can't open $decoded for writing: $!";
       while (<LOG2>) {
         print DECODED unpack("u*", $_);

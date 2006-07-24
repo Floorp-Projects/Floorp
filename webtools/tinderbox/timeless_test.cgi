@@ -345,7 +345,7 @@ sub print_table_header {
       warn "No BatchID in ../bonsai/data/$bonsai_tree/batchid.pl\n";
       return;
     }
-    open(BATCH, "<../bonsai/data/$bonsai_tree/batch-$::BatchID.pl")
+    open(BATCH, "<", "../bonsai/data/$bonsai_tree/batch-$::BatchID.pl")
       or print "can't open batch-$::BatchID.pl<br>";
     while (<BATCH>) { 
       if (/^\$::TreeOpen = '(\d+)';/) {

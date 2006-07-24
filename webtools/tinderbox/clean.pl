@@ -50,7 +50,7 @@ sub log_files_to_trim {
   my $range_start = 0;
   my $line = 1;
   my $ed_cmds = '';
-  open LOG, "$file";
+  open LOG, "<", $file;
   while (<LOG>) {
     $log_time = (split /\|/)[0];
     if ($log_time =~ /(\d+)\.\d+\.gz/) {

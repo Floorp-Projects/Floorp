@@ -184,13 +184,13 @@ $total_ignored_count = 0;
 
   # Write the warnings indexed by who
   #
-  $fh->open(">$warn_file") or die "Unable to open $warn_file: $!\n";
+  $fh->open($warn_file, ">") or die "Unable to open $warn_file: $!\n";
   my $time_str = print_html_by_who($fh, $br);
   $fh->close;
 
   # Write the warnings indexed by file
   #
-#  $fh->open(">$warn_file_by_file")
+#  $fh->open($warn_file_by_file, ">")
 #    or die "Unable to open $warn_file_by_file: $!\n";
 #  print_html_by_file($fh, $br);
 #  $fh->close;
@@ -201,7 +201,7 @@ if ($total_unignored_warnings > 0) {
   # Add an entry to the warning log
   #
   my $warn_log = "$tree/warnings.dat";
-  $fh->open(">>$warn_log") or die "Unable to open $warn_log: $!\n";
+  $fh->open($warn_log, ">>") or die "Unable to open $warn_log: $!\n";
   print $fh "$log_file|$total_unignored_warnings\n";
   $fh->close;
 }
@@ -249,7 +249,7 @@ sub build_file_hash {
 sub read_cvs_modules_file
 {
   local $_;
-  open MODULES, "$cvs_root/CVSROOT/modules" 
+  open(MODULES, "<", "$cvs_root/CVSROOT/modules")
     or die "Unable to open modules file: $cvs_root/CVSROOT/modules\n";
   while (<MODULES>) {
     if (/ -a /) {

@@ -438,7 +438,7 @@ sub tb_check_password {
     $form{password} = $cookie_jar{tinderbox_password};
   }
   my $correct = '';
-  if (open(REAL, '<data/passwd')) {
+  if (open(REAL, "<", "data/passwd")) {
     $correct = <REAL>;
     close REAL;
     $correct =~ s/\s+$//;   # Strip trailing whitespace.
@@ -609,7 +609,7 @@ sub load_who {
   my ($treedata, $who_list) = @_;
   local $_;
   
-  open(WHOLOG, "<$treedata->{name}/who.dat");
+  open(WHOLOG, "<", "$treedata->{name}/who.dat");
   while (<WHOLOG>) {
     chomp;
     my ($checkin_time, $email) = split /\|/;
@@ -643,7 +643,7 @@ sub load_scrape {
 
   my $scrape = {};
   
-  open(SCRAPELOG, "<$treedata->{name}/scrape.dat");
+  open(SCRAPELOG, "<", "$treedata->{name}/scrape.dat");
   while (<SCRAPELOG>) {
     chomp;
     my @list =  split /\|/;
@@ -665,7 +665,7 @@ sub load_warnings {
 
   my $warnings = {};
 
-  open(WARNINGLOG, "<$treedata->{name}/warnings.dat");
+  open(WARNINGLOG, "<", "$treedata->{name}/warnings.dat");
   while (<WARNINGLOG>) {
     chomp;
     my ($logfile, $warning_count) = split /\|/;
@@ -811,7 +811,7 @@ sub make_build_table {
 sub load_notes {
   my $treedata = $_[0];
 
-  open(NOTES,"<$treedata->{name}/notes.txt") 
+  open(NOTES, "<", "$treedata->{name}/notes.txt") 
     or print "<h2>warning: Couldn't open $treedata->{name}/notes.txt </h2>\n";
   while (<NOTES>) {
     chop;

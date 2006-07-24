@@ -77,7 +77,7 @@ if ($form{note}) {
   # Save comment to the notes.txt file.
   #
   my $err = 0;
-  open NOTES, ">>$tree/notes.txt" or $err++;
+  open NOTES, ">>", "$tree/notes.txt" or $err++;
   if ($err) {
       print "<title>Error</title>\n";
       print "<h1>Could not open $tree/notes.txt for writing.</h1>\n";

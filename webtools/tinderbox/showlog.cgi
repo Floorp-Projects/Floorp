@@ -111,12 +111,12 @@ else
   $brief_filename =~ s/.gz$/.brief.html/;
   if (-T "$tree/$brief_filename" and -M _ > -M $tree/$logfile) 
   {
-    open(BRIEFFILE, "<$tree/$brief_filename");
+    open(BRIEFFILE, "<", "$tree/$brief_filename");
     print while (<BRIEFFILE>)
   }
   else
   {
-    open(BRIEFFILE, ">$tree/$brief_filename");
+    open(BRIEFFILE, ">", "$tree/$brief_filename");
 
     my $errors = print_summary();
     print_log($errors);
@@ -198,7 +198,7 @@ sub print_notes {
   # Print notes
   #
   $found_note = 0;
-  open(NOTES,"<$tree/notes.txt") 
+  open(NOTES,"<", "$tree/notes.txt") 
     or print "<h2>warning: Couldn't open $tree/notes.txt </h2>\n";
   print "$buildtime, $buildname<br>\n";
   while (<NOTES>) {

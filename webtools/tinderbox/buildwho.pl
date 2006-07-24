@@ -137,7 +137,7 @@ sub build_who {
 
     my $who_file = "$tree/who.dat";
     my $temp_who_file = "$who_file.$$";
-    open(WHOLOG, ">$temp_who_file");
+    open(WHOLOG, ">", "$temp_who_file");
 
     if ($use_bonsai) {
         chdir "../bonsai";

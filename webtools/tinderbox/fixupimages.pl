@@ -30,8 +30,8 @@ $SIG{ALRM} = sub { die "timeout" };
 
 # Move an old imagelog to a new one
 
-open( IMAGELOG, "<$data_dir/imagelog.txt" ) || die "can't open file";
-open (OUT, ">$data_dir/newimagelog.txt") || die "can't open output file";
+open( IMAGELOG, "<", "$data_dir/imagelog.txt" ) || die "can't open file";
+open (OUT, ">", "$data_dir/newimagelog.txt") || die "can't open output file";
 select(OUT); $| = 1; select(STDOUT);
 
 while( <IMAGELOG> ){
@@ -80,7 +80,7 @@ sub imgsize {
     local($file)= @_;
 
     #first try to open the file
-    if( !open(STREAM, "<$file") ){
+    if( !open(STREAM, "<", $file) ){
         print "Can't open IMG $file"; 
         $size="";
     } else {

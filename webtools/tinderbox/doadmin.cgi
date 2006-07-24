@@ -97,8 +97,8 @@ sub trim_logs {
     # Trim build.dat
     #
     $builds_removed = 0;
-    open(BD, "<$tree/build.dat");
-    open(NBD, ">$tree/build.dat.new");
+    open(BD, "<", "$tree/build.dat");
+    open(NBD, ">", "$tree/build.dat.new");
     while( <BD> ){
         ($mailtime,$buildtime,$buildname) = split( /\|/ );
         if( $buildtime >= $min_date ){
@@ -155,7 +155,7 @@ sub create_tree {
     else {
         mkdir( $treename, oct($dir_perm)) || die "<h1> Cannot mkdir $treename</h1>";
     }
-    open( F, ">$treename/treedata.pl" );
+    open( F, ">", "$treename/treedata.pl" );
     print F "\$who_days=$who_days;\n";
     print F "\$use_bonsai=$use_bonsai;\n";
     print F "\$use_viewvc=$use_viewvc;\n";
@@ -176,16 +176,16 @@ sub create_tree {
     print F "1;\n";
     close( F );
 
-    open( F, ">$treename/build.dat" );
+    open( F, ">", "$treename/build.dat" );
     close( F );
     
-    open( F, ">$treename/who.dat" );
+    open( F, ">", "$treename/who.dat" );
     close( F );
 
-    open( F, ">$treename/notes.txt" );
+    open( F, ">", "$treename/notes.txt" );
     close( F );
 
-    open( F, ">$treename/index.html");
+    open( F, ">", "$treename/index.html");
     print F "<HTML>\n";
     print F "<HEAD><META HTTP-EQUIV=\"refresh\" content=\"0,url=../showbuilds.cgi?tree=$treename\"></HEAD>\n";
     print F "<BODY></BODY>\n";
@@ -203,7 +203,7 @@ sub disable_builds {
     my $i,%buildnames;
 
     # Read build.dat
-    open(BD, "<$tree/build.dat");
+    open(BD, "<", "$tree/build.dat");
     while( <BD> ){
         ($mailtime,$buildtime,$bname) = split( /\|/ );
         $buildnames{$bname} = 0;
@@ -217,7 +217,7 @@ sub disable_builds {
         }
     }
 
-    open(IGNORE, ">$tree/ignorebuilds.pl");
+    open(IGNORE, ">", "$tree/ignorebuilds.pl");
     print IGNORE '$ignore_builds = {' . "\n";
     for $i ( sort keys %buildnames ){
         if( $buildnames{$i} == 0 ){
@@ -235,7 +235,7 @@ sub scrape_builds {
     my $i,%buildnames;
 
     # Read build.dat
-    open(BD, "<$tree/build.dat");
+    open(BD, "<", "$tree/build.dat");
     while( <BD> ){
         ($mailtime,$buildtime,$bname) = split( /\|/ );
         $buildnames{$bname} = 1;
@@ -249,7 +249,7 @@ sub scrape_builds {
         }
     }
 
-    open(SCRAPE, ">$tree/scrapebuilds.pl");
+    open(SCRAPE, ">", "$tree/scrapebuilds.pl");
     print SCRAPE '$scrape_builds = {' . "\n";
     for $i ( sort keys %buildnames ){
         if( $buildnames{$i} == 0 ){
@@ -266,7 +266,7 @@ sub scrape_builds {
 sub set_sheriff {
     $m = $form{'sheriff'};
     $m =~ s/\'/\\\'/g;
-    open(SHERIFF, ">$tree/sheriff.pl");
+    open(SHERIFF, ">", "$tree/sheriff.pl");
     print SHERIFF "\$current_sheriff = '$m';\n1;";
     close(SHERIFF);
     chmod( oct($perm), "$tree/sheriff.pl");
@@ -277,7 +277,7 @@ sub set_sheriff {
 sub set_status_message {
     $m = $form{'status'};
     $m =~ s/\'/\\\'/g;
-    open(TREESTATUS, ">$tree/status.pl");
+    open(TREESTATUS, ">", "$tree/status.pl");
     print TREESTATUS "\$status_message = \'$m\'\;\n1;";
     close(TREESTATUS);
     chmod( oct($perm), "$tree/status.pl");
@@ -288,7 +288,7 @@ sub set_status_message {
 sub set_rules_message {
     $m = $form{'rules'};
     $m =~ s/\'/\\\'/g;
-    open(RULES, ">$tree/rules.pl");
+    open(RULES, ">", "$tree/rules.pl");
     print RULES "\$rules_message = \'$m\';\n1;";
     close(RULES);
     chmod( oct($perm), "$tree/rules.pl");

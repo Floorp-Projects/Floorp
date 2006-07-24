@@ -58,7 +58,7 @@ die "No scrape data found in log.\n" unless @scrape_data;
 
 # Save the scrape data to 'scrape.dat'
 #
-open SCRAPE, ">>$tree/scrape.dat" or die "Unable to open $tree/scrape.dat";
+open(SCRAPE, ">>", $tree/scrape.dat") or die "Unable to open $tree/scrape.dat";
 print SCRAPE "$logfile|".join('|', @scrape_data)."\n";
 close SCRAPE;
 

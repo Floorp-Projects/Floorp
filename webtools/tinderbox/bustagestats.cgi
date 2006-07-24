@@ -56,7 +56,7 @@ if (defined $tree && defined $start && defined $end) {
     my $first = str2timeAndCheck($start);
     my $last = str2timeAndCheck($end);
     if ($first > 0 && $last > 0) {
-        if (open(IN, "<$tree/build.dat")) {
+        if (open(IN, "<", "$tree/build.dat")) {
             print "<hr><center><h1>Bustage stats for $tree</H1><H3>from " .
                 time2str($TIMEFORMAT, $first) . " to " .
                     time2str($TIMEFORMAT, $last) . "</H3></center>\n";
