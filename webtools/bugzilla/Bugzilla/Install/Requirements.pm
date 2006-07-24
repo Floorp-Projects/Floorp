@@ -55,7 +55,7 @@ use constant REQUIRED_MODULES => [
     },
     {
         name => 'DBI',
-        version => '1.38'
+        version => '1.41'
     },
     {
         name => 'File::Spec',
