@@ -87,7 +87,8 @@ sub RecursiveModify
             if(($entry =~ /\.dll/i) || ($entry =~ /\.exe/i))
             {
                 # Make sure it is not read only
-                system("chmod 755 $entry");
+                # we already are in xpinstall/packager/os2, call without path
+                system("strip.cmd \"$entry\"");
             }
         }
 
@@ -152,17 +153,17 @@ $saveCwdir = cwd();
 
 system("cp $inComponentName.js $inStagePath\\$inComponentName\\install.js");
 
-# DLLRNAME and possibly LXLITE DLLs
-print "Modifying DLLs in $inStagePath/$inComponentName...\n";
+# set permissions and possibly lxLite-strip binaries
+print "Modifying EXEs and DLLs in $inStagePath/$inComponentName...\n";
 RecursiveModify("$inStagePath\\$inComponentName");
 
 # change directory to where the files are, else zip will store
 # unwanted path information.
 chdir("$inStagePath\\$inComponentName");
-if(system("zip -r $inDestPath\\$inComponentName.xpi *"))
+if(system("zip -rD $inDestPath\\$inComponentName.xpi *"))
 {
   chdir("$saveCwdir");
-  die "\n Error: zip -r $inDestPath\\$inComponentName.xpi *\n";
+  die "\n Error: zip -rD $inDestPath\\$inComponentName.xpi *\n";
 }
 chdir("$saveCwdir");
 

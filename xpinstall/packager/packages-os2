@@ -284,10 +284,6 @@ bin/components/websrvcs.xpt
 bin/components/xulappinfo.js
 bin/components/xulappinfo.xpt
 
-; Roaming
-bin/components/sroaming.dll
-bin/chrome/sroaming.jar
-
 ; LDAP components need to be in the browser for AutoConfig
 bin/components/mozldap.dll
 bin/components/mozldap.xpt
@@ -485,6 +481,10 @@ bin/dictionaries/*
 
 [reporter]
 bin/chrome/reporter.jar
+
+[sroaming]
+bin/components/sroaming.dll
+bin/chrome/sroaming.jar
 
 ;Things that aren't packaged and why (or not why)
 ;accproxy.dll - I don't know
