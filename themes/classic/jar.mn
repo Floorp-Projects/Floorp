@@ -277,7 +277,7 @@ classic.jar:
   skin/classic/global/tree.css                                (global/win/tree.css)
   skin/classic/global/wizard.css                              (global/win/wizard.css)
 #ifdef XP_OS2
-* skin/classic/global/menu.css                                (global/os2/menu.css)
+  skin/classic/global/menu.css                                (global/os2/menu.css)
   skin/classic/global/menu/menu-check.gif                     (global/os2/menu/menu-check.gif)
   skin/classic/global/menu/menu-arrow.gif                     (global/os2/menu/menu-arrow.gif)
   skin/classic/global/toolbar.css                             (global/os2/toolbar.css)
