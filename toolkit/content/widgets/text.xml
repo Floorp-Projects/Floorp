@@ -8,11 +8,10 @@
   <!-- bound to <description>s -->
   <binding id="text-base" extends="chrome://global/content/bindings/general.xml#basecontrol">
     <implementation implements="nsIDOMXULDescriptionElement, nsIAccessibleProvider">
-      <property name="accessible">
+      <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
-            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return accService.createXULTextAccessible(this);
+            return Components.interfaces.nsIAccessibleProvider.XULText;
           ]]>
         </getter>
       </property>
@@ -285,11 +284,10 @@
 
   <binding id="text-link" extends="chrome://global/content/bindings/text.xml#text-label">
     <implementation implements="nsIAccessibleProvider">
-      <property name="accessible">
+      <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
-            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return accService.createXULLinkAccessible(this);
+            return Components.interfaces.nsIAccessibleProvider.XULLink;
           ]]>
         </getter>
       </property>

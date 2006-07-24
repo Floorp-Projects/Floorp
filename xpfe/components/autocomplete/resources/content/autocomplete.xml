@@ -250,14 +250,14 @@
       ]]></field>
 
       <!-- nsIAccessibleProvider --> 
-      <property name="accessible">
+      <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
             // disablehistory="false": dropmarker shows up, so expose as a combobox.
             // disablehistory="true" (default): no dropmarker, so expose as a textfield.
-            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return (this.getAttribute("disablehistory") == 'true') ? accService.createXULTextBoxAccessible(this) : 
-                                                                     accService.createXULComboboxAccessible(this);
+            return (this.getAttribute("disablehistory") == 'true') ?
+              Components.interfaces.nsIAccessibleProvider.XULTextBox :
+              Components.interfaces.nsIAccessibleProvider.XULCombobox;
           ]]>
         </getter>
       </property>
@@ -1717,11 +1717,10 @@
     </content>
       
     <implementation implements="nsIAccessibleProvider">
-      <property name="accessible">
+      <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
-            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return accService.createXULDropmarkerAccessible(this);
+            return Components.interfaces.nsIAccessibleProvider.XULDropmarker;
           ]]>
         </getter>
       </property>

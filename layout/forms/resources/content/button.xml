@@ -55,18 +55,6 @@
         </xul:description>
       </xul:hbox>
     </content>
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessible">
-        <getter>
-          <![CDATA[
-            netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");  // Temporary, until bug 104907 is fixed
-            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return accService.createHTMLButtonAccessibleXBL(this);
-          ]]>
-        </getter>
-      </property>
-
-    </implementation>
   </binding>
 
   <binding id="inputButton" extends="chrome://global/content/bindings/general.xml#basetext"

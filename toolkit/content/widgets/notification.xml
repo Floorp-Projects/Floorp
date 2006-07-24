@@ -245,11 +245,10 @@
       <stylesheet src="chrome://global/skin/notification.css"/>
     </resources>
     <implementation implements="nsIAccessibleProvider">
-      <property name="accessible" readonly="true">
+      <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
-            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return accService.createXULAlertAccessible(this);
+            return Components.interfaces.nsIAccessibleProvider.XULAlert;
           ]]>
         </getter>
       </property>

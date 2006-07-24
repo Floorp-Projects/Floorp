@@ -415,11 +415,10 @@
     </content>
     
     <implementation implements="nsIAccessibleProvider, nsIDOMXULControlElement">
-      <property name="accessible">
+      <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
-            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return accService.createXULColorPickerAccessible(this);
+            return Components.interfaces.nsIAccessibleProvider.XULColorPicker;
           ]]>
         </getter>
       </property>
@@ -534,12 +533,11 @@
   </binding>
 
   <binding id="colorpickertile">
-    <implementation implements="nsIAccessibleProvider" >
-      <property name="accessible">
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
-            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return accService.createXULColorPickerTileAccessible(this);
+            return Components.interfaces.nsIAccessibleProvider.XULColorPickerTile;
           ]]>
         </getter>
       </property>

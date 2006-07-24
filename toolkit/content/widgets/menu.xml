@@ -15,13 +15,12 @@
       <stylesheet src="chrome://global/skin/menu.css"/>
     </resources>
     <implementation implements="nsIDOMXULSelectControlItemElement, nsIAccessibleProvider">
-      <property name="accessible">
+      <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
-            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
             if (this.localName == "menuseparator")
-              return accService.createXULMenuSeparatorAccessible(this);
-            return accService.createXULMenuitemAccessible(this);
+              return Components.interfaces.nsIAccessibleProvider.XULMenuSeparator;
+            return Components.interfaces.nsIAccessibleProvider.XULMenuitem;
           ]]>
         </getter>
       </property>

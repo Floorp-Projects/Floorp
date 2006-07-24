@@ -190,8 +190,7 @@
             </xul:hbox>
             <xul:hbox flex="1" class="blocklistedBox attention" align="center">
               <xul:label value="&blocklisted.label;" crop="end"/>
-              <xul:label anonid="blocklistMoreInfo" class="text-link" value="&moreInfo.label;"
-                         onclick="openURL(this.getAttribute('moreInfoURL'));"/>
+              <xul:label anonid="blocklistMoreInfo" class="text-link" value="&moreInfo.label;"/>
             </xul:hbox>
           </xul:vbox>
           <xul:hbox anonid="selectedButtons" flex="1" class="selectedButtons">
@@ -233,8 +232,8 @@
               var blocklistMoreInfo = document.getAnonymousElementByAttribute(this, "anonid", "blocklistMoreInfo");
               var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                                     .getService(Components.interfaces.nsIPrefBranch);
-              var url = prefs.getCharPref("extensions.blocklist.detailsURL");
-              blocklistMoreInfo.setAttribute("moreInfoURL", url);
+              blocklistMoreInfo.setAttribute("onclick", "openURL(\"" +
+                                                        prefs.getCharPref("extensions.blocklist.detailsURL") + "\");");
             } catch(e) {
               blocklistMoreInfo.hidden = true;
             }
@@ -497,12 +496,10 @@
       <xul:label class="viewButtonLabel" xbl:inherits="value=label"/>
     </content>
     <implementation implements="nsIAccessibleProvider">
-      <property name="accessible">
+      <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
-            var accService = Components.classes["@mozilla.org/accessibilityService;1"]
-                                       .getService(Components.interfaces.nsIAccessibilityService);
-            return accService.createXULListitemAccessible(this);
+            return Components.interfaces.nsIAccessibleProvider.XULListitem;
           ]]>
         </getter>
       </property>
@@ -531,12 +528,10 @@
       </xul:hbox>
     </content>
     <implementation implements="nsIAccessibleProvider">
-      <property name="accessible">
+      <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
-            var accService = Components.classes["@mozilla.org/accessibilityService;1"]
-                                       .getService(Components.interfaces.nsIAccessibilityService);
-            return accService.createXULAlertAccessible(this);
+            return Components.interfaces.nsIAccessibleProvider.XULAlert;
           ]]>
         </getter>
       </property>

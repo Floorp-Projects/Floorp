@@ -79,11 +79,10 @@
         ]]>
       </destructor>
 
-      <property name="accessible">
+      <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
-            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return accService.createXULListboxAccessible(this);
+            return Components.interfaces.nsIAccessibleProvider.XULListbox;
           ]]>
         </getter>
       </property>
@@ -505,11 +504,10 @@
       </destructor>
 
       <!-- ///////////////// nsIAccessibleProvider ///////////////// -->
-      <property name="accessible">
+      <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
-            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return accService.createXULListitemAccessible(this);
+            return Components.interfaces.nsIAccessibleProvider.XULListitem;
           ]]>
         </getter>
       </property>
@@ -531,8 +529,10 @@
                                               'label');
               var numLabels = labels.length;
               for (count = 0; count < numLabels; count ++) {
-                if (labels[count].className != 'text-link') {
-                  labelText += labels[count].value + ' ';
+                var label = labels[count];
+                if (!label.collapsed && !label.hidden &&
+                    label.className != 'text-link') {
+                  labelText += label.value + ' ';
                 }
               }
             }

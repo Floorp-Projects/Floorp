@@ -74,11 +74,10 @@
 
       <!-- ///////////////// nsIAccessibleProvider ///////////////// -->
 
-      <property name="accessible">
+      <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
-            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return accService.createXULTreeAccessible(this);
+            return Components.interfaces.nsIAccessibleProvider.XULTree;
           ]]>
         </getter>
       </property>
@@ -813,11 +812,10 @@
       <xul:treecolpicker class="treecol-image" fixed="true" xbl:inherits="tooltiptext=pickertooltiptext"/>
     </content>
     <implementation implements="nsIAccessibleProvider">
-      <property name="accessible">
+      <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
-            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return accService.createXULTreeColumnsAccessible(this);
+            return Components.interfaces.nsIAccessibleProvider.XULTreeColumns;
           ]]>
         </getter>
       </property>
@@ -1236,11 +1234,10 @@
       <xul:image class="treecol-sortdirection" xbl:inherits="sortDirection,hidden=hideheader"/>
     </content>
     <implementation implements="nsIAccessibleProvider">
-      <property name="accessible">
+      <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
-            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return accService.createXULTreeColumnitemAccessible(this);
+            return Components.interfaces.nsIAccessibleProvider.XULTreeColumnitem;
           ]]>
         </getter>
       </property>

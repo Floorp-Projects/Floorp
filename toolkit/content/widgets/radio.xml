@@ -11,11 +11,10 @@
     </resources>
 
     <implementation implements="nsIDOMXULSelectControlElement, nsIAccessibleProvider">
-      <property name="accessible">
+      <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
-            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return accService.createXULRadioGroupAccessible(this);
+            return Components.interfaces.nsIAccessibleProvider.XULRadioGroup;
           ]]>
         </getter>
       </property>
@@ -389,11 +388,10 @@
           }
         ]]>
       </destructor>
-      <property name="accessible">
+      <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
-            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return accService.createXULRadioButtonAccessible(this);
+            return Components.interfaces.nsIAccessibleProvider.XULRadioButton;
           ]]>
         </getter>
       </property>

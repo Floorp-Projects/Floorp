@@ -419,25 +419,6 @@ nsAccessibilityService::CreateHTMLButtonAccessible(nsISupports *aFrame, nsIAcces
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsAccessibilityService::CreateHTMLButtonAccessibleXBL(nsIDOMNode *aNode, nsIAccessible **_retval)
-{
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
-  // reusing the HTML accessible widget and enhancing for XUL
-  *_retval = new nsHTML4ButtonAccessible(aNode, weakShell);
-  if (! *_retval) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-#else
-  *_retval = nsnull;
-#endif // MOZ_XUL
-  return NS_OK;
-}
-
 nsresult
 nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsISupports *aFrame,
                                                      nsIWeakReference *aWeakShell,
@@ -553,25 +534,6 @@ nsAccessibilityService::CreateHTMLCheckboxAccessible(nsISupports *aFrame, nsIAcc
     return NS_ERROR_OUT_OF_MEMORY;
 
   NS_ADDREF(*_retval);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAccessibilityService::CreateHTMLCheckboxAccessibleXBL(nsIDOMNode *aNode, nsIAccessible **_retval)
-{
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
-  // reusing the HTML accessible widget and enhancing for XUL
-  *_retval = new nsHTMLCheckboxAccessible(aNode, weakShell);
-  if (! *_retval) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-#else
-  *_retval = nsnull;
-#endif // MOZ_XUL
   return NS_OK;
 }
 
@@ -732,25 +694,6 @@ nsAccessibilityService::CreateHTMLRadioButtonAccessible(nsISupports *aFrame, nsI
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsAccessibilityService::CreateHTMLRadioButtonAccessibleXBL(nsIDOMNode *aNode, nsIAccessible **_retval)
-{
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
-  // reusing the HTML accessible widget and enhancing for XUL
-  *_retval = new nsHTMLRadioButtonAccessible(aNode, weakShell);
-  if (! *_retval) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-#else
-  *_retval = nsnull;
-#endif // MOZ_XUL
-  return NS_OK;
-}
-
 NS_IMETHODIMP 
 nsAccessibilityService::CreateHTMLSelectOptionAccessible(nsIDOMNode* aDOMNode, 
                                                          nsIAccessible *aParent, 
@@ -868,25 +811,6 @@ nsAccessibilityService::CreateHTMLTextFieldAccessible(nsISupports *aFrame, nsIAc
 }
 
 NS_IMETHODIMP
-nsAccessibilityService::CreateXULTextBoxAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
-{
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
-  *_retval = new nsXULTextFieldAccessible(aNode, weakShell);
-
-  if (! *_retval)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-#else
-  *_retval = nsnull;
-#endif // MOZ_XUL
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsAccessibilityService::CreateHTMLLabelAccessible(nsISupports *aFrame, nsIAccessible **_retval)
 {
   nsIFrame* frame;
@@ -940,386 +864,6 @@ nsAccessibilityService::CreateHTMLBRAccessible(nsISupports *aFrame, nsIAccessibl
   return NS_OK;
 }
 
- /**
-   * XUL widget creation
-   *  we can't ifdef this whole block because there is no way to exclude
-   *  these methods from the idl definition conditionally (MOZ_XUL).
-   *  XXXjgaunt what needs to happen is all of the CreateFooAcc() methods get re-written
-   *  into a single method.
-   */
-
-NS_IMETHODIMP nsAccessibilityService::CreateXULButtonAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
-{
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
-  // reusing the HTML accessible widget and enhancing for XUL
-  *_retval = new nsXULButtonAccessible(aNode, weakShell);
-  if (! *_retval) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-#else
-  *_retval = nsnull;
-#endif // MOZ_XUL
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAccessibilityService::CreateXULCheckboxAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
-{
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
-  // reusing the HTML accessible widget and enhancing for XUL
-  *_retval = new nsXULCheckboxAccessible(aNode, weakShell);
-  if (! *_retval) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-#else
-  *_retval = nsnull;
-#endif // MOZ_XUL
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAccessibilityService::CreateXULColorPickerAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
-{
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
-  *_retval = new nsXULColorPickerAccessible(aNode, weakShell);
-  if (! *_retval) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-#else
-  *_retval = nsnull;
-#endif // MOZ_XUL
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAccessibilityService::CreateXULColorPickerTileAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
-{
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
-  *_retval = new nsXULColorPickerTileAccessible(aNode, weakShell);
-  if (! *_retval) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-#else
-  *_retval = nsnull;
-#endif // MOZ_XUL
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsAccessibilityService::CreateXULComboboxAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
-{
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
-  *_retval = new nsXULComboboxAccessible(aNode, weakShell);
-  if (! *_retval) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-#else
-  *_retval = nsnull;
-#endif // MOZ_XUL
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsAccessibilityService::CreateXULDropmarkerAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
-{
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
-  *_retval = new nsXULDropmarkerAccessible(aNode, weakShell);
-  if (! *_retval) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-#else
-  *_retval = nsnull;
-#endif // MOZ_XUL
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAccessibilityService::CreateXULGroupboxAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
-{
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
-  *_retval = new nsXULGroupboxAccessible(aNode, weakShell);
-  if (! *_retval)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-#else
-  *_retval = nsnull;
-#endif // MOZ_XUL
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAccessibilityService::CreateXULImageAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
-{
-#ifdef MOZ_XUL
-  // Don't include nameless images in accessible tree
-  *_retval = nsnull;
-
-  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(aNode));
-  if (!elt)
-    return NS_ERROR_FAILURE;
-  PRBool hasTextEquivalent;
-  elt->HasAttribute(NS_LITERAL_STRING("tooltiptext"), &hasTextEquivalent); // Prefer value over tooltiptext
-  if (!hasTextEquivalent) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
-  *_retval = new nsHTMLImageAccessible(aNode, weakShell);
-  if (! *_retval) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-
-#else
-  *_retval = nsnull;
-#endif // MOZ_XUL
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAccessibilityService::CreateXULLinkAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
-{
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
-  *_retval = new nsXULLinkAccessible(aNode, weakShell);
-  if (! *_retval)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-#else
-  *_retval = nsnull;
-#endif // MOZ_XUL
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP 
-nsAccessibilityService::CreateXULListboxAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
-{
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
-  *_retval = new nsXULListboxAccessible(aNode, weakShell);
-  if (! *_retval) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-#else
-  *_retval = nsnull;
-#endif // MOZ_XUL
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsAccessibilityService::CreateXULListitemAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
-{
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
-  *_retval = new nsXULListitemAccessible(aNode, weakShell);
-  if (! *_retval) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-#else
-  *_retval = nsnull;
-#endif // MOZ_XUL
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAccessibilityService::CreateXULMenubarAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
-{
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
-  *_retval = new nsXULMenubarAccessible(aNode, weakShell);
-  if (! *_retval) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-#else
-  *_retval = nsnull;
-#endif // MOZ_XUL
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAccessibilityService::CreateXULMenuitemAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
-{
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
-  *_retval = new nsXULMenuitemAccessibleWrap(aNode, weakShell);
-  if (! *_retval) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-#else
-  *_retval = nsnull;
-#endif // MOZ_XUL
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAccessibilityService::CreateXULMenupopupAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
-{
-  *_retval = nsnull;
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-#ifdef MOZ_ACCESSIBILITY_ATK
-  // ATK considers this node to be redundant when within menubars, and it makes menu
-  // navigation with assistive technologies more difficult
-  // XXX In the future we will should this for consistency across the nsIAccessible
-  // implementations on each platform for a consistent scripting environment, but
-  // then strip out redundant accessibles in the nsAccessibleWrap class for each platform.
-  if (content) {
-    nsIContent *parent = content->GetParent();
-    if (parent && parent->NodeInfo()->Equals(nsAccessibilityAtoms::menu, kNameSpaceID_XUL)) {
-      return NS_OK;
-    }
-  }
-#endif
- 
-  *_retval = new nsXULMenupopupAccessible(aNode, weakShell);
-  if (! *_retval) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-#else
-  *_retval = nsnull;
-#endif // MOZ_XUL
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAccessibilityService::CreateXULMenuSeparatorAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
-{
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
-  *_retval = new nsXULMenuSeparatorAccessible(aNode, weakShell);
-  if (! *_retval) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-#else
-  *_retval = nsnull;
-#endif // MOZ_XUL
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAccessibilityService::CreateXULAlertAccessible(nsIDOMNode *aNode, nsIAccessible **aAccessible)
-{
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
-  *aAccessible = new nsXULAlertAccessible(aNode, weakShell);
-  if (! *aAccessible)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*aAccessible);
-#else
-  *_retval = nsnull;
-#endif
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAccessibilityService::CreateXULProgressMeterAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
-{
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
-  *_retval = new nsXULProgressMeterAccessible(aNode, weakShell);
-  if (! *_retval)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-#else
-  *_retval = nsnull;
-#endif // MOZ_XUL
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsAccessibilityService::CreateXULRadioButtonAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
-{
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
-  *_retval = new nsXULRadioButtonAccessible(aNode, weakShell);
-  if (! *_retval) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-#else
-  *_retval = nsnull;
-#endif // MOZ_XUL
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsAccessibilityService::CreateXULRadioGroupAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
-{
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
-  *_retval = new nsXULRadioGroupAccessible(aNode, weakShell);
-  if (! *_retval) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-#else
-  *_retval = nsnull;
-#endif // MOZ_XUL
-  return NS_OK;
-}
-
 NS_IMETHODIMP 
 nsAccessibilityService::CreateXULSelectListAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
 {
@@ -1355,222 +899,6 @@ nsAccessibilityService::CreateXULSelectOptionAccessible(nsIDOMNode *aNode, nsIAc
 #endif // MOZ_XUL
   return NS_OK;
 }
-
-NS_IMETHODIMP 
-nsAccessibilityService::CreateXULStatusBarAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
-{
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
-  *_retval = new nsXULStatusBarAccessible(aNode, weakShell);
-  if (! *_retval) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-#else
-  *_retval = nsnull;
-#endif // MOZ_XUL
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAccessibilityService::CreateXULTextAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
-{
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
-  // reusing the HTML accessible widget and enhancing for XUL
-  *_retval = new nsXULTextAccessible(aNode, weakShell);
-  if (! *_retval)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-#else
-  *_retval = nsnull;
-#endif // MOZ_XUL
-  return NS_OK;
-}
-
-/** The single tab in a dialog or tabbrowser/editor interface */
-NS_IMETHODIMP nsAccessibilityService::CreateXULTabAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
-{
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
-  *_retval = new nsXULTabAccessible(aNode, weakShell);
-  if (! *_retval) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-#else
-  *_retval = nsnull;
-#endif // MOZ_XUL
-  return NS_OK;
-}
-
-/** A combination of a tabs object and a tabpanels object */
-NS_IMETHODIMP nsAccessibilityService::CreateXULTabBoxAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
-{
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
-  *_retval = new nsXULTabBoxAccessible(aNode, weakShell);
-  if (! *_retval) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-#else
-  *_retval = nsnull;
-#endif // MOZ_XUL
-  return NS_OK;
-}
-
-/** The display area for a dialog or tabbrowser interface */
-NS_IMETHODIMP nsAccessibilityService::CreateXULTabPanelsAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
-{
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
-  *_retval = new nsXULTabPanelsAccessible(aNode, weakShell);
-  if (! *_retval) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-#else
-  *_retval = nsnull;
-#endif // MOZ_XUL
-  return NS_OK;
-}
-
-/** The collection of tab objects, useable in the TabBox and independant of as well */
-NS_IMETHODIMP nsAccessibilityService::CreateXULTabsAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
-{
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
-  *_retval = new nsXULTabsAccessible(aNode, weakShell);
-  if (! *_retval) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-#else
-  *_retval = nsnull;
-#endif // MOZ_XUL
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsAccessibilityService::CreateXULToolbarAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
-{
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
-  *_retval = new nsXULToolbarAccessible(aNode, weakShell);
-  if (! *_retval) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-#else
-  *_retval = nsnull;
-#endif // MOZ_XUL
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsAccessibilityService::CreateXULToolbarSeparatorAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
-{
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
-  *_retval = new nsXULToolbarSeparatorAccessible(aNode, weakShell);
-  if (! *_retval) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-#else
-  *_retval = nsnull;
-#endif // MOZ_XUL
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsAccessibilityService::CreateXULTooltipAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
-{
-#ifdef MOZ_XUL
-#ifndef MOZ_ACCESSIBILITY_ATK
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
-  *_retval = new nsXULTooltipAccessible(aNode, weakShell);
-  if (! *_retval) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-#else
-  *_retval = nsnull;
-#endif // MOZ_ACCESSIBILITY_ATK
-#else
-  *_retval = nsnull;
-#endif // MOZ_XUL
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsAccessibilityService::CreateXULTreeAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
-{
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
-  *_retval = new nsXULTreeAccessibleWrap(aNode, weakShell);
-  if (! *_retval) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-#else
-  *_retval = nsnull;
-#endif // MOZ_XUL
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsAccessibilityService::CreateXULTreeColumnsAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
-{
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
-  *_retval = new nsXULTreeColumnsAccessibleWrap(aNode, weakShell);
-  if (! *_retval) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-#else
-  *_retval = nsnull;
-#endif // MOZ_XUL
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsAccessibilityService::CreateXULTreeColumnitemAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
-{
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
-  *_retval = new nsXULTreeColumnitemAccessible(aNode, weakShell);
-  if (! *_retval) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-#else
-  *_retval = nsnull;
-#endif // MOZ_XUL
-  return NS_OK;
-}
-
 
 NS_IMETHODIMP nsAccessibilityService::GetCachedAccessible(nsIDOMNode *aNode, 
                                                           nsIWeakReference *aWeakShell,
@@ -1854,17 +1182,19 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     // This allows them to say what kind of accessible to create
     // Non-HTML elements must have an nsIAccessibleProvider, tabindex
     // or role attribute or they're not in the accessible tree.
-    nsCOMPtr<nsIAccessibleProvider> accProv(do_QueryInterface(aNode));
-    if (accProv) {
-      accProv->GetAccessible(getter_AddRefs(newAcc));
-    }
-    else if (content->GetNameSpaceID() == kNameSpaceID_SVG &&
-             content->Tag() == nsAccessibilityAtoms::svg) {
-      newAcc = new nsEnumRoleAccessible(aNode, aWeakShell, nsIAccessible::ROLE_DIAGRAM);
-    }
-    else if (content->GetNameSpaceID() == kNameSpaceID_MathML &&
-             content->Tag() == nsAccessibilityAtoms::math) {
-      newAcc = new nsEnumRoleAccessible(aNode, aWeakShell, nsIAccessible::ROLE_EQUATION);
+
+    nsresult rv = GetAccessibleByType(aNode, getter_AddRefs(newAcc));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (newAcc) {
+      if (content->GetNameSpaceID() == kNameSpaceID_SVG &&
+               content->Tag() == nsAccessibilityAtoms::svg) {
+        newAcc = new nsEnumRoleAccessible(aNode, aWeakShell, nsIAccessible::ROLE_DIAGRAM);
+      }
+      else if (content->GetNameSpaceID() == kNameSpaceID_MathML &&
+               content->Tag() == nsAccessibilityAtoms::math) {
+        newAcc = new nsEnumRoleAccessible(aNode, aWeakShell, nsIAccessible::ROLE_EQUATION);
+      }
     }
   }
   else {  // HTML accessibles
@@ -1931,6 +1261,171 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   }
 
   return InitAccessible(newAcc, aAccessible);
+}
+
+nsresult nsAccessibilityService::GetAccessibleByType(nsIDOMNode *aNode,
+                                                     nsIAccessible **aAccessible)
+{
+  NS_ENSURE_ARG(aNode);
+  NS_ENSURE_ARG_POINTER(aAccessible);
+
+  *aAccessible = nsnull;
+
+  nsCOMPtr<nsIAccessibleProvider> node(do_QueryInterface(aNode));
+  if (!node)
+    return NS_ERROR_FAILURE;
+
+  PRInt32 type;
+  nsresult rv = node->GetAccessibleType(&type);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (type == nsIAccessibleProvider::OuterDoc)
+    return CreateOuterDocAccessible(aNode, aAccessible);
+
+#ifdef MOZ_XUL
+  nsCOMPtr<nsIWeakReference> weakShell;
+  GetShellFromNode(aNode, getter_AddRefs(weakShell));
+
+  switch (type)
+  {
+    // XUL controls
+    case nsIAccessibleProvider::XULAlert:
+      *aAccessible = new nsXULAlertAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XULButton:
+      *aAccessible = new nsXULButtonAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XULCheckbox:
+      *aAccessible = new nsXULCheckboxAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XULColorPicker:
+      *aAccessible = new nsXULColorPickerAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XULColorPickerTile:
+      *aAccessible = new nsXULColorPickerTileAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XULCombobox:
+      *aAccessible = new nsXULComboboxAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XULDropmarker:
+      *aAccessible = new nsXULDropmarkerAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XULGroupbox:
+      *aAccessible = new nsXULGroupboxAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XULImage:
+    {
+      // Don't include nameless images in accessible tree
+      nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(aNode));
+      if (!elt)
+        return NS_ERROR_FAILURE;
+
+      PRBool hasTextEquivalent;
+      // Prefer value over tooltiptext
+      elt->HasAttribute(NS_LITERAL_STRING("tooltiptext"), &hasTextEquivalent);
+      if (!hasTextEquivalent)
+        return NS_OK;
+
+      *aAccessible = new nsHTMLImageAccessible(aNode, weakShell);
+      break;
+    }
+    case nsIAccessibleProvider::XULLink:
+      *aAccessible = new nsXULLinkAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XULListbox:
+      *aAccessible = new nsXULListboxAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XULListitem:
+      *aAccessible = new nsXULListitemAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XULMenubar:
+      *aAccessible = new nsXULMenubarAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XULMenuitem:
+      *aAccessible = new nsXULMenuitemAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XULMenupopup:
+    {
+#ifdef MOZ_ACCESSIBILITY_ATK
+      // ATK considers this node to be redundant when within menubars, and it makes menu
+      // navigation with assistive technologies more difficult
+      // XXX In the future we will should this for consistency across the nsIAccessible
+      // implementations on each platform for a consistent scripting environment, but
+      // then strip out redundant accessibles in the nsAccessibleWrap class for each platform.
+      nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
+      if (content) {
+        nsIContent *parent = content->GetParent();
+        if (parent && parent->NodeInfo()->Equals(nsAccessibilityAtoms::menu, kNameSpaceID_XUL)) {
+          return NS_OK;
+        }
+      }
+#endif
+      *aAccessible = new nsXULMenupopupAccessible(aNode, weakShell);
+      break;
+    }
+    case nsIAccessibleProvider::XULMenuSeparator:
+      *aAccessible = new nsXULMenuSeparatorAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XULProgressMeter:
+      *aAccessible = new nsXULProgressMeterAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XULStatusBar:
+      *aAccessible = new nsXULStatusBarAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XULRadioButton:
+      *aAccessible = new nsXULRadioButtonAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XULRadioGroup:
+      *aAccessible = new nsXULRadioGroupAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XULTab:
+      *aAccessible = new nsXULTabAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XULTabBox:
+      *aAccessible = new nsXULTabBoxAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XULTabPanels:
+      *aAccessible = new nsXULTabPanelsAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XULTabs:
+      *aAccessible = new nsXULTabsAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XULText:
+      *aAccessible = new nsXULTextAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XULTextBox:
+      *aAccessible = new nsXULTextFieldAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XULTree:
+      *aAccessible = new nsXULTreeAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XULTreeColumns:
+      *aAccessible = new nsXULTreeColumnsAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XULTreeColumnitem:
+      *aAccessible = new nsXULTreeColumnitemAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XULToolbar:
+      *aAccessible = new nsXULToolbarAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XULToolbarSeparator:
+      *aAccessible = new nsXULToolbarSeparatorAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XULTooltip:
+      *aAccessible = new nsXULTooltipAccessible(aNode, weakShell);
+      break;
+    default:
+      return NS_OK;
+  }
+
+  if (!*aAccessible)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*aAccessible);
+
+#endif // MOZ_XUL
+
+  return NS_OK;
 }
 
 // Called from layout when the frame tree owned by a node changes significantly

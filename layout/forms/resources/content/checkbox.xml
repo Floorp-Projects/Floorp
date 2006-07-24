@@ -40,20 +40,7 @@
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="checkbox" extends="xul:image">
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessible">
-        <getter>
-          <![CDATA[
-            netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");  // Temporary, until bug 104907 is fixed
-            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return accService.createHTMLCheckboxAccessibleXBL(this);
-          ]]>
-        </getter>
-      </property>
-
-    </implementation>
-  </binding>
+  <binding id="checkbox" extends="xul:image"/>
   
 </bindings>
 
