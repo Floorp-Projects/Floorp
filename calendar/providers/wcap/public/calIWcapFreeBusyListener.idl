@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "calIWcapFreeBusyEntry.idl"
+#include "calIWcapCalendar.idl"
 
 [scriptable, uuid(4498E0D0-04EC-43a3-92E0-560667696CF3)]
 interface calIWcapFreeBusyListener : nsISupports

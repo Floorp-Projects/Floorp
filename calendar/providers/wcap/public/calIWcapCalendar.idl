@@ -38,9 +38,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "calICalendar.idl"
-#include "calIWcapFreeBusyListener.idl"
 #include "calIDateTime.idl"
-#include "calIICSService.idl"
+interface calIWcapSession;
 
 /** Adds WCAP specific capabilities.
  */
@@ -48,164 +47,46 @@
 interface calIWcapCalendar : calICalendar
 {
     /**
-     * Current userId; if the user is not logged in, a dialog will prompt for.
+     * User session this calendar instance belongs to.
      */
-    readonly attribute string userId;
+    readonly attribute calIWcapSession session;
+    
+    /**
+     * Calendar description.
+     */
+    readonly attribute string description;
     
     /**
      * Current calId the calendar instance acts on; defaults to userId.
      */
-    attribute string calId;
+    /*readonly xxx todo*/ attribute string calId;
     
     /**
      * Whether the currently selected calendar belongs to user.
      */
     readonly attribute boolean isOwnedCalendar;
     
+//     /**
+//      * Gets or sets this calendar's (calId) default timezone.
+//      */
+//     attribute string defaultTimezone;
+    
     /**
-     * Gets or sets this calendar's (calId) default timezone.
-     */
-    readonly attribute string defaultTimezone;    
-
-    /**
-     * Gets calendar properties for specified calId.
+     * Gets calendar properties.
      * An error is notified to all registered calIObservers, then thrown.
      *
      * @param propName property name (e.g. X-S1CS-CALPROPS-COMMON-NAME)
-     * @param calId a calid, "mailto:rfc822addr" or
-     *              empty string (=> current user's calId)
      * @return array of property values
      */
     void getCalendarProperties(
         in string propName,
-        in string calId,
         out unsigned long count,
         [array, size_is(count), retval] out string properties );
     
-    /**
-     * Gets a text for an error code.
-     *
-     * @param rc error code defined in calIWcapErrors
-     * @return error string
-     * @exception NS_ERROR_INVALID_ARG
-     */
-    string getWcapErrorString( in unsigned long rc );
-    
-    /**
-     * Creates a new calendar for user.
-     * An error is notified to all registered calIObservers, then thrown.
-     *
-     * @param calId calendar's calId (portion);
-     *        without user's id, e.g. "test-cal".
-     *        valid characters for the calId parameter are:
-     *        - Alphabet characters (A-Z, a-z)
-     *        - Numeric characters (0-9)
-     *        - Three special characters
-     *        - Dash (-)
-     *        - Underscore (_)
-     *        - Period (.)
-     * @param name calendar's name, e.g. "My Work Cal"
-     * @param bAllowDoubleBooking whether double booking (events/todos) is
-     *                            allowed
-     * @param bSetCalProps whether properties of the new calendar are set
-     * @param bAddToSubscribed allows a user to specify if the newly
-     *                         created calendar should be added to the
-     *                         user’s subscribed calendar list
-     * @return calId of created calendar
-     */
-    string createCalendar(
-        in string calId,
-        in string name,
-        in boolean bAllowDoubleBooking,
-        in boolean bSetCalProps,
-        in boolean bAddToSubscribed );
-    
-    /**
-     * Deletes a calendar.
-     * An error is notified to all registered calIObservers, then thrown.
-     *
-     * @param calId full calId (incl. "<user>:")
-     * @param bRemoveFromSubscribed whether calendar ought to be removed
-     *                              from subscription list
-     */
-    void deleteCalendar(
-        in string calId,
-        in boolean bRemoveFromSubscribed );
-    
-    /**
-     * Gets own calendars.
-     * An error is notified to all registered calIObservers, then thrown.
-     *
-     * @return owned calendars (string array of "calId1$Description1", ...)
-     */
-    void getOwnedCalendars(
-        out unsigned long count,
-        [array, size_is(count), retval] out string ownCalendars );
-    
-    /**
-     * Gets subscribed calendars.
-     * An error is notified to all registered calIObservers, then thrown.
-     *
-     * @return subscribed calendars (string array of "calId1$Description1",...)
-     */
-    void getSubscribedCalendars(
-        out unsigned long count,
-        [array, size_is(count), retval] out string subscribedCalendars );
-    
-    /**
-     * Subscribe to calendar(s).
-     * An error is notified to all registered calIObservers, then thrown.
-     *
-     * @param count number of calIds
-     * @param calIds array of calIds (calid or "mailto:rfc822addr")
-     */
-    void subscribeToCalendars(
-        in unsigned long count,
-        [array, size_is(count)] in string calIds );
-    
-    /**
-     * Unsubscribe from calendar(s).
-     * An error is notified to all registered calIObservers, then thrown.
-     *
-     * @param count number of calIds
-     * @param calIds array of calIds (calid or "mailto:rfc822addr")
-     */
-    void unsubscribeFromCalendars(
-        in unsigned long count,
-        [array, size_is(count)] in string calIds );
-    
-    /**
-     * Gets free-busy entries for calid.
-     * Results are notifies to passed listener instance.
-     * An error is notified to all registered calIObservers and
-     * to calIWcapFreeBusyListener::onGetFreeBusyTimes with rc != NS_OK.
-     * Additionally, when an error occurs within getFreeBusyTimes,
-     * the error is also thrown.
-     *
-     * @param calId a calid or "mailto:rfc822addr"
-     * @param dtRangeStart start time of free-busy search
-     * @param dtRangeEnd end time of free-busy search
-     * @param bBusyOnly whether to return busy entries only
-     * @param iListener listener receiving results
-     * @param bAsync whether the listener receives results asynchronously
-     * @param requestId request id to distinguish asynchronous requests
-     */
-    void getFreeBusyTimes(
-        in string calId,
-        in calIDateTime dtRangeStart,
-        in calIDateTime dtRangeEnd,
-        in boolean bBusyOnly,
-        in calIWcapFreeBusyListener iListener,
-        in boolean bAsync,
-        in unsigned long requestId );
-    
-    /** xxx todo: to be moved to calIOperationListener?
-     */
-    const unsigned long SYNC = 5;
-
     /* xxx todo: additional filters sensible for calICalendar, too?
                  claiming bits 24-30 for now.
     */
+    
     /**
      * Scope: Attendee
      * The event or todo is an invitation from another
@@ -249,7 +130,13 @@ interface calIWcapCalendar : calICalendar
      * user to other invitees, and is currently awaiting.
      */
     const unsigned long ITEM_FILTER_REQUEST_WAITFORREPLY = 1 << 30;
+
     
+    /* xxx todo sync feature: separate into own interface? */
+    /** xxx todo: to be moved to calIOperationListener?
+     */
+    const unsigned long SYNC = 5;
+
     /**
      * Syncs in changes since time <code>dtFrom</code>.
      * The passed <code>iListener</code> receives a

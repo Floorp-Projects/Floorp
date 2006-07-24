@@ -37,9 +37,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-function calWcapCalendar() {
+function calWcapCalendar( calId, session ) {
     this.wrappedJSObject = this;
-    this.m_observers = [];
+    this.m_calId = calId;
+    this.m_session = session;
 }
 calWcapCalendar.prototype = {
     m_ifaces: [ Components.interfaces.calIWcapCalendar,
@@ -99,15 +100,9 @@ calWcapCalendar.prototype = {
     toString:
     function()
     {
-        var str;
-        if (this.m_session == null) {
-            str = "no session";
-        }
-        else {
-            str = this.session.toString();
-            if (this.m_calId != null && this.m_calId != this.userId)
-                str += (", calId=" + this.m_calId);
-        }
+        var str = this.session.toString();
+        if (this.calId != this.session.userId)
+            str += (", calId=" + this.calId);
         return str;
     },
     log:
@@ -149,65 +144,31 @@ calWcapCalendar.prototype = {
     get readOnly() { return (this.m_bReadOnly || !this.isOwnedCalendar); },
     set readOnly( bReadOnly ) { this.m_bReadOnly = bReadOnly; },
     
-    m_uri: null,
-    get uri() { return this.m_uri },
-    set uri( thatUri )
-    {
-        if (this.m_uri == null || thatUri == null ||
-            !this.m_uri.equals(thatUri))
-        {
-            if (this.m_session != null) {
-                this.m_session.logout();
-                this.m_session = null;
-            }
-            this.m_uri = null;
-            this.m_calId = null;
-            if (thatUri != null) {
-                this.m_uri = thatUri.clone();
-                this.m_calId = decodeURIComponent( thatUri.username );
-                if (this.m_calId == "") {
-                    this.m_calId = null;
-                }
-            }
-            this.refresh();
-        }
+    // xxx todo: will potentially vanish from calICalendar:
+    get uri() { return this.session.uri; },
+    set uri( thatUri ) {
+        this.session.uri = thatUri;
+        this.m_calProps = null;
     },
-    
-    m_observers: null,
     notifyObservers:
-    function( func, args )
-    {
-        this.m_observers.forEach(
-            function( obj ) {
-                try {
-                    obj[func].apply( obj, args );
-                }
-                catch (exc) {
-                    // don't call notifyError() here:
-                    Components.utils.reportError( exc );
-                }
-            } );
+    function( func, args ) {
+        this.session.notifyObservers( func, args );
     },
-    
     addObserver:
-    function( observer )
-    {
-        if (this.m_observers.indexOf( observer ) == -1) {
-            this.m_observers.push( observer );
-        }
+    function( observer ) {
+        this.session.addObserver( observer );
     },
-    
     removeObserver:
-    function( observer )
-    {
-        this.m_observers = this.m_observers.filter(
-            function(x) { return x != observer; } );
+    function( observer ) {
+        this.session.removeObserver( observer );
     },
     
     // xxx todo: batch currently not used
     startBatch: function() { this.notifyObservers( "onStartBatch", [] ); },
     endBatch: function() { this.notifyObservers( "onEndBatch", [] ); },
     
+    // xxx todo: rework like in
+    //           https://bugzilla.mozilla.org/show_bug.cgi?id=257428
     m_bSuppressAlarms: true /* xxx todo:
                                off for now until all problems are solved */,
     get suppressAlarms() {
@@ -218,345 +179,85 @@ calWcapCalendar.prototype = {
     },
     
     get canRefresh() { return false; },
-    
-    refresh:
-    function()
-    {
+    refresh: function() {
         // no-op
         this.log("refresh()");
     },
     
-    getCommandUrl:
-    function( wcapCommand )
-    {
-        if (this.uri == null)
-            throw new Error("no URI!");
-        var session = this.session;
-        // ensure established session, so userId is set;
-        // (calId defaults to userId) if not set:
-        session.getSessionId();
-        return (session.uri.spec + wcapCommand +
-                ".wcap?appid=mozilla-lightning");
-    },
-    
-    issueRequest:
-    function( url, issueFunc, dataConvFunc, receiverFunc )
-    {
-        var sessionId = this.session.getSessionId();
-        
-        var this_ = this;
-        issueFunc(
-            url + ("&id=" + sessionId),
-            function( data ) {
-                var wcapResponse = new WcapResponse();
-                try {
-                    try {
-                        wcapResponse.data = dataConvFunc(
-                            data, wcapResponse );
-                    }
-                    catch (exc) {
-                        if (exc == Components.interfaces.
-                            calIWcapErrors.WCAP_LOGIN_FAILED) /* timeout */ {
-                            // getting a new session will throw any exception in
-                            // this block, thus it is notified into receiverFunc
-                            this_.session.getSessionId(
-                                sessionId /* (old) timed-out session */ );
-                            // try again:
-                            this_.issueRequest(
-                                url, issueFunc, dataConvFunc, receiverFunc );
-                            return;
-                        }
-                        throw exc; // rethrow
-                    }
-                }
-                catch (exc) {
-                    // setting the request's exception will rethrow exception
-                    // when request's data is retrieved.
-                    wcapResponse.exception = exc;
-                }
-                receiverFunc( wcapResponse );
-            } );
-    },
-    issueAsyncRequest:
-    function( url, dataConvFunc, receiverFunc )
-    {
-        this.issueRequest(
-            url, issueAsyncRequest, dataConvFunc, receiverFunc );
-    },
-    issueSyncRequest:
-    function( url, dataConvFunc, receiverFunc )
-    {
-        var ret = null;
-        this.issueRequest(
-            url, issueSyncRequest,
-            dataConvFunc,
-            function( wcapResponse ) {
-                if (receiverFunc) {
-                    receiverFunc( wcapResponse );
-                }
-                ret = wcapResponse.data; // may throw
-            } );
-        return ret;
-    },
-    
-    m_session: null,
-    get session() {
-        if (this.m_session == null) {
-            this.m_session = getSession( this.uri );
-        }
-        return this.m_session;
-    },
-    
     // calIWcapCalendar:
     
-    getWcapErrorString:
-    function( rc )
-    {
-        return wcapErrorToString(rc);
-    },
+    m_session: null,
+    get session() { return this.m_session; },
     
-    // xxx todo: which userId is used when for offline scheduling?
-    //           if not logged in, no calId/userId is known... => UI
     m_calId: null,
     get calId() {
-        var userId = this.userId; // assure being logged in
+        var userId = this.session.userId; // assure being logged in
         return this.m_calId || userId;
     },
+    // xxx todo: for now to make subscriptions context menu work,
+    //           will vanish when UI has been revised and every subscribed
+    //           calendar has its own calICalendar object...
+    //           poking calId, so default calendar will then behave
+    //           like a subscribed one...
     set calId( id ) {
         this.log( "setting calId to " + id );
         this.m_calId = id;
     },
-    get userId() { return this.session.userId; },
+    
+    get description() {
+        var ar = this.getCalendarProperties("X-NSCP-CALPROPS-DESCRIPTION", {});
+        if (ar.length < 1) {
+            return this.calId; // fallback
+        }
+        return ar[0];
+    },
     
     get isOwnedCalendar() {
-        return (this.calId == this.userId ||
-                this.calId.indexOf(this.userId + ":") == 0);
-    },
-    
-    createCalendar:
-    function( calId, name, bAllowDoubleBooking, bSetCalProps, bAddToSubscribed )
-    {
-        try {
-            var url = this.getCommandUrl( "createcalendar" );
-            url += ("&allowdoublebook=" + (bAllowDoubleBooking ? "1" : "0"));
-            url += ("&set_calprops=" + (bSetCalProps ? "1" : "0"));
-            url += ("&subscribe=" + (bAddToSubscribed ? "1" : "0"));
-            url += ("&calid=" + encodeURIComponent(calId));
-            // xxx todo: name undocumented!
-            url += ("&name=" + encodeURIComponent(name));
-            // xxx todo: what about categories param???
-            this.issueSyncRequest( url + "&fmt-out=text%2Fxml", stringToXml );
-            return (this.userId + ":" + calId);
-        }
-        catch (exc) {
-            this.notifyError( exc );
-            throw exc;
-        }
-    },
-    
-    deleteCalendar:
-    function( calId, bRemoveFromSubscribed )
-    {
-        try {
-            var url = this.getCommandUrl( "deletecalendar" );
-            url += ("&unsubscribe=" + (bRemoveFromSubscribed ? "1" : "0"));
-            url += ("&calid=" + encodeURIComponent(calId));
-            this.issueSyncRequest( url + "&fmt-out=text%2Fxml", stringToXml );
-        }
-        catch (exc) {
-            this.notifyError( exc );
-            throw exc;
-        }
-    },
-    
-    getCalIds:
-    function( out_count, bGetOwnedCals )
-    {
-        try {
-            var url = this.getCommandUrl(
-                bGetOwnedCals ? "list" : "list_subscribed" );
-            var ret = [];
-            var xml = this.issueSyncRequest(
-                url + "&fmt-out=text%2Fxml", stringToXml );
-            var nodeList = xml.getElementsByTagName(
-                bGetOwnedCals ? "X-S1CS-CALPROPS-OWNED-CALENDAR"
-                              : "X-S1CS-CALPROPS-SUBSCRIBED-CALENDAR" );
-            for ( var i = 0; i < nodeList.length; ++i ) {
-                ret.push( nodeList.item(i).textContent );
-            }
-            out_count.value = ret.length;
-            return ret;
-        }
-        catch (exc) {
-            this.notifyError( exc );
-            throw exc;
-        }
-    },
-    
-    getOwnedCalendars:
-    function( out_count )
-    {
-        return this.getCalIds( out_count, true );
-    },
-    
-    getSubscribedCalendars:
-    function( out_count )
-    {
-        return this.getCalIds( out_count, false );
-    },
-    
-    modifyCalendarSubscriptions:
-    function( calIds, bSubscribe )
-    {
-        try {
-            var url = this.getCommandUrl(
-                bSubscribe ? "subscribe_calendars" : "unsubscribe_calendars" );
-            var calId = "";
-            for ( var i = 0; i < calIds.length; ++i ) {
-                if (i > 0)
-                    calId += ";";
-                calId += encodeURIComponent(calIds[i]);
-            }
-            url += ("&calid=" + calId);
-            this.issueSyncRequest( url + "&fmt-out=text%2Fxml", stringToXml );
-        }
-        catch (exc) {
-            this.notifyError( exc );
-            throw exc;
-        }
-    },
-    
-    subscribeToCalendars:
-    function( count, calIds )
-    {
-        this.modifyCalendarSubscriptions( calIds, true );
-    },
-    
-    unsubscribeFromCalendars:
-    function( count, calIds )
-    {
-        this.modifyCalendarSubscriptions( calIds, false );
-    },
-    
-    getFreeBusyTimes_resp:
-    function( wcapResponse, calId, iListener, requestId )
-    {
-        try {
-            var xml = wcapResponse.data; // first statement, may throw
-            if (iListener != null) {
-                var ret = [];
-                var nodeList = xml.getElementsByTagName("FB");
-                for ( var i = 0; i < nodeList.length; ++i ) {
-                    var item = nodeList.item(i);
-                    var str = item.textContent;
-                    var slash = str.indexOf( '/' );
-                    var start = new CalDateTime();
-                    start.icalString = str.substr( 0, slash );
-                    var end = new CalDateTime();
-                    end.icalString = str.substr( slash + 1 );
-                    var entry = {
-                        isBusyEntry:
-                        (item.attributes.getNamedItem("FBTYPE").nodeValue
-                         == "BUSY"),
-                        dtRangeStart: start,
-                        dtRangeEnd: end
-                    };
-                    ret.push( entry );
-                }
-                iListener.onGetFreeBusyTimes(
-                    Components.results.NS_OK,
-                    requestId, calId, ret.length, ret );
-            }
-            if (LOG_LEVEL > 0) {
-                this.log( "getFreeBusyTimes_resp() calId=" + calId + ", " +
-                          getWcapRequestStatusString(xml) );
-            }
-        }
-        catch (exc) {
-            const calIWcapErrors = Components.interfaces.calIWcapErrors;
-            switch (exc) {
-            case calIWcapErrors.WCAP_NO_ERRNO: // workaround
-            case calIWcapErrors.WCAP_ACCESS_DENIED_TO_CALENDAR:
-            case calIWcapErrors.WCAP_CALENDAR_DOES_NOT_EXIST:
-                this.log( "getFreeBusyTimes_resp() ignored: " +
-                          errorToString(exc) ); // no error
-                break;
-            default:
-                this.notifyError( exc );
-                break;
-            }
-            if (iListener != null)
-                iListener.onGetFreeBusyTimes( exc, requestId, calId, 0, [] );
-        }
-    },
-    
-    getFreeBusyTimes:
-    function( calId, rangeStart, rangeEnd, bBusyOnly, iListener,
-              bAsync, requestId )
-    {
-        try {
-            // assure DATETIMEs:
-            if (rangeStart != null && rangeStart.isDate) {
-                rangeStart = rangeStart.clone();
-                rangeStart.isDate = false;
-            }
-            if (rangeEnd != null && rangeEnd.isDate) {
-                rangeEnd = rangeEnd.clone();
-                rangeEnd.isDate = false;
-            }
-            var zRangeStart = getIcalUTC(rangeStart);
-            var zRangeEnd = getIcalUTC(rangeEnd);
-            this.log( "getFreeBusyTimes():\n\trangeStart=" + zRangeStart +
-                      ",\n\trangeEnd=" + zRangeEnd );
-            
-            var url = this.getCommandUrl( "get_freebusy" );
-            url += ("&calid=" + encodeURIComponent(calId));
-            url += ("&busyonly=" + (bBusyOnly ? "1" : "0"));
-            url += ("&dtstart=" + zRangeStart);
-            url += ("&dtend=" + zRangeEnd);
-            url += "&fmt-out=text%2Fxml";
-            
-            var this_ = this;
-            function resp( wcapResponse ) {
-                this_.getFreeBusyTimes_resp(
-                    wcapResponse, calId, iListener, requestId );
-            }
-            if (bAsync)
-                this.issueAsyncRequest( url, stringToXml, resp );
-            else
-                this.issueSyncRequest( url, stringToXml, resp );
-        }
-        catch (exc) {
-            this.notifyError( exc );
-            if (iListener != null)
-                iListener.onGetFreeBusyTimes( exc, requestId, calId, 0, [] );
-            throw exc;
-        }
+        var userId = this.session.userId;
+        return (this.calId == userId ||
+                this.calId.indexOf(userId + ":") == 0);
     },
     
     m_calProps: null,
-    m_calPropsCalid: null,
     getCalendarProperties:
-    function( propName, calId, out_count )
+    function( propName, out_count )
+    {
+        this.getCalProps_(false /* !async: waits for response */);
+        var ret = [];
+        if (this.m_calProps != null) {
+            var nodeList = this.m_calProps.getElementsByTagName(propName);
+            for ( var i = 0; i < nodeList.length; ++i ) {
+                ret.push( trimString(nodeList.item(i).textContent) );
+            }
+        }
+        out_count.value = ret.length;
+        return ret;
+    },
+    getCalProps_:
+    function( bAsync )
     {
         try {
-            if (calId.length == 0) {
-                calId = this.calId;
+            if (this.m_calProps == null) {
+                var url = this.session.getCommandUrl( "get_calprops" );
+                url += ("&calid=" + encodeURIComponent(this.calId));
+                url += "&fmt-out=text%2Fxml";
+                var this_ = this;
+                function resp( wcapResponse ) {
+                    try {
+                        // first statement, may throw:
+                        var xml = wcapResponse.data;
+                        if (this_.m_calProps == null)
+                            this_.m_calProps = xml;
+                    }
+                    catch (exc) {
+                        this_.notifyError( exc );
+                    }
+                }
+                if (bAsync)
+                    this.session.issueAsyncRequest( url, stringToXml, resp );
+                else
+                    this.session.issueSyncRequest( url, stringToXml, resp );
             }
-            if (this.m_calPropsCalid != calId) {
-                var url = this.getCommandUrl( "get_calprops" );
-                url += ("&calid=" + encodeURIComponent(calId));
-                this.m_calProps = this.issueSyncRequest(
-                    url + "&fmt-out=text%2Fxml", stringToXml );
-                this.m_calPropsCalid = calId;
-            }
-            var ret = [];
-            var nodeList = this.m_calProps.getElementsByTagName( propName );
-            for ( var i = 0; i < nodeList.length; ++i ) {
-                ret.push( nodeList.item(i).textContent );
-            }
-            out_count.value = ret.length;
-            return ret;
         }
         catch (exc) {
             this.notifyError( exc );
@@ -565,13 +266,12 @@ calWcapCalendar.prototype = {
     },
     
     get defaultTimezone() {
-        var tzid = this.getCalendarProperties("X-NSCP-CALPROPS-TZID", "", {});
+        var tzid = this.getCalendarProperties("X-NSCP-CALPROPS-TZID", {});
         if (tzid.length < 1) {
             return "UTC"; // fallback
         }
         return tzid[0];
     },
-    
 //     set defaultTimezone( tzid ) {
 //         if (this.readOnly)
 //             throw Components.interfaces.calIErrors.CAL_IS_READONLY;
@@ -590,6 +290,6 @@ calWcapCalendar.prototype = {
         }
         else // is ok (supported):
             return tzid;
-    }
+    }    
 };
 

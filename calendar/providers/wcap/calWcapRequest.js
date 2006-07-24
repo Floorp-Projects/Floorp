@@ -147,6 +147,7 @@ function issueAsyncRequest( url, receiverFunc )
     logMessage( "issueAsyncRequest( \"" + url + "\" )", "opening channel." );
     var channel = getIoService().newChannel(
         url, "" /* charset */, null /* baseURI */ );
+    channel.loadFlags |= Components.interfaces.nsIRequest.LOAD_BYPASS_CACHE;
     loader.init( channel, reader, null /* context */, 0 /* segment size */ );
 }
 
@@ -180,6 +181,7 @@ function issueSyncRequest( url, receiverFunc, bLogging )
     }
     var channel = getIoService().newChannel(
         url, "" /* charset */, null /* baseURI */ );
+    channel.loadFlags |= Components.interfaces.nsIRequest.LOAD_BYPASS_CACHE;
     var stream = channel.open();
     if (bLogging && LOG_LEVEL > 1) {
         logMessage( "issueSyncRequest( \"" + url + "\" )",

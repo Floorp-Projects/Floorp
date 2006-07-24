@@ -194,8 +194,8 @@ calWcapCalendar.prototype.getRecurrenceParams = function(
 calWcapCalendar.prototype.getStoreUrl = function( item )
 {
     var bIsEvent = isEvent(item);
-    var url = this.getCommandUrl( bIsEvent ? "storeevents"
-                                           : "storetodos" );
+    var url = this.session.getCommandUrl( bIsEvent ? "storeevents"
+                                                   : "storetodos" );
     url += "&fetch=1&compressed=1&recurring=1";
     url += ("&calid=" + encodeURIComponent(this.calId));
     
@@ -292,7 +292,7 @@ calWcapCalendar.prototype.getStoreUrl = function( item )
                 forceRSVP = true;
             }
             else {
-                var userId = this.userId;
+                var userId = this.session.userId;
                 if (userId == null)
                     userId = this.calId; // fallback
                 var i = 0;
@@ -478,7 +478,7 @@ calWcapCalendar.prototype.adoptItem = function( item, iListener )
         url += "&storetype=1";
         
         var this_ = this;
-        this.issueAsyncRequest(
+        this.session.issueAsyncRequest(
             url + "&fmt-out=text%2Fcalendar", stringToIcal,
             function( wcapResponse ) {
                 this_.adoptItem_resp( wcapResponse, iListener );
@@ -573,7 +573,7 @@ calWcapCalendar.prototype.modifyItem = function(
         }
         
         var this_ = this;
-        this.issueAsyncRequest(
+        this.session.issueAsyncRequest(
             url + "&fmt-out=text%2Fcalendar", stringToIcal,
             function( wcapResponse ) {
                 this_.modifyItem_resp( wcapResponse,
@@ -634,7 +634,7 @@ calWcapCalendar.prototype.deleteItem = function( item, iListener )
         if (item.id == null)
             throw new Error("no item id!");
         
-        var url = this.getCommandUrl(
+        var url = this.session.getCommandUrl(
             isEvent(item) ? "deleteevents_by_id" : "deletetodos_by_id" );
         url += ("&calid=" + encodeURIComponent(this.calId));
         url += ("&uid=" + item.id);
@@ -653,7 +653,7 @@ calWcapCalendar.prototype.deleteItem = function( item, iListener )
         }
         
         var this_ = this;
-        this.issueAsyncRequest(
+        this.session.issueAsyncRequest(
             url + "&fmt-out=text%2Fxml", stringToXml,
             function( wcapResponse ) {
                 this_.deleteItem_resp( wcapResponse, item, iListener );
@@ -885,14 +885,14 @@ calWcapCalendar.prototype.getItem = function( id, iListener )
         params += ("&uid=" + id);
         try {
             // most common: event
-            this.issueSyncRequest(
-                this.getCommandUrl( "fetchevents_by_id" ) + params,
+            this.session.issueSyncRequest(
+                this.session.getCommandUrl( "fetchevents_by_id" ) + params,
                 stringToIcal, syncResponseFunc );
         }
         catch (exc) {
             // try again, may be a task:
-            this.issueSyncRequest(
-                this.getCommandUrl( "fetchtodos_by_id" ) + params,
+            this.session.issueSyncRequest(
+                this.session.getCommandUrl( "fetchtodos_by_id" ) + params,
                 stringToIcal, syncResponseFunc );
         }
     }
@@ -960,7 +960,7 @@ calWcapCalendar.prototype.getItems = function(
               ",\n\trangeStart=" + zRangeStart +
               ",\n\trangeEnd=" + zRangeEnd );
     try {
-        var url = this.getCommandUrl( "fetchcomponents_by_range" );
+        var url = this.session.getCommandUrl( "fetchcomponents_by_range" );
         url += ("&calid=" + encodeURIComponent(this.calId));
         url += "&compressed=1&recurring=1";
         
@@ -998,7 +998,7 @@ calWcapCalendar.prototype.getItems = function(
         url += ("&dtend=" + zRangeEnd);
         
         var this_ = this;
-        this.issueAsyncRequest(
+        this.session.issueAsyncRequest(
             url + "&fmt-out=text%2Fcalendar", stringToIcal,
             function( wcapResponse ) {
                 this_.getItems_resp( wcapResponse,
@@ -1160,10 +1160,10 @@ calWcapCalendar.prototype.syncChangesTo = function(
         if (dtFrom == null) {
             this.log( "syncChangesTo(): doing initial sync." );
             syncState.acquire();
-            var url = this.getCommandUrl( "fetchcomponents_by_range" );
+            var url = this.session.getCommandUrl( "fetchcomponents_by_range" );
             url += ("&compressed=1&recurring=1&calid=" +
                     encodeURIComponent(this.calId));
-            this.issueAsyncRequest(
+            this.session.issueAsyncRequest(
                 url + "&fmt-out=text%2Fcalendar", stringToIcal,
                 function( wcapResponse ) {
                     this_.syncChangesTo_resp(
@@ -1186,8 +1186,8 @@ calWcapCalendar.prototype.syncChangesTo = function(
                           encodeURIComponent(this.calId));
             params += ("&fmt-out=text%2Fcalendar&dtstart=" + zdtFrom);
             syncState.acquire();
-            this.issueAsyncRequest(
-                this.getCommandUrl( "fetchcomponents_by_lastmod" ) + params,
+            this.session.issueAsyncRequest(
+                this.session.getCommandUrl("fetchcomponents_by_lastmod")+params,
                 stringToIcal,
                 function( wcapResponse ) {
                     this_.syncChangesTo_resp(
@@ -1215,8 +1215,8 @@ calWcapCalendar.prototype.syncChangesTo = function(
             var deleteItemListener = new FinishListener(
                 Components.interfaces.calIOperationListener.DELETE, syncState );
             syncState.acquire();
-            this.issueAsyncRequest(
-                this.getCommandUrl( "fetch_deletedcomponents" ) + params,
+            this.session.issueAsyncRequest(
+                this.session.getCommandUrl("fetch_deletedcomponents") + params,
                 stringToIcal,
                 function( wcapResponse ) {
                     this_.syncChangesTo_resp(

@@ -299,6 +299,11 @@ function forEachIcalComponent( icalRootComp, componentType, func, maxResult )
     }
 }
 
+function trimString( str )
+{
+    return str.replace( /(^\s+|\s+$)/g, "" );
+}
+
 function getTime()
 {
     var ret = new CalDateTime();

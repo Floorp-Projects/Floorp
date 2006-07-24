@@ -45,6 +45,12 @@ var calWcapCalendarModule = {
         classID: Components.ID("{CF4D93E5-AF79-451a-95F3-109055B32EF0}")
     },
     
+    WcapSessionInfo: {
+        classDescription: "Sun Java System Calendar Server WCAP Session",
+        contractID: "@mozilla.org/calendar/session;1?type=wcap",
+        classID: Components.ID("{CBF803FD-4469-4999-AE39-367AF1C7B077}")
+    },
+    
     registerSelf:
     function( compMgr, fileSpec, location, type )
     {
@@ -54,6 +60,11 @@ var calWcapCalendarModule = {
             this.WcapCalendarInfo.classID,
             this.WcapCalendarInfo.classDescription,
             this.WcapCalendarInfo.contractID,
+            fileSpec, location, type );
+        compMgr.registerFactoryLocation(
+            this.WcapSessionInfo.classID,
+            this.WcapSessionInfo.classDescription,
+            this.WcapSessionInfo.contractID,
             fileSpec, location, type );
     },
     
@@ -95,12 +106,16 @@ var calWcapCalendarModule = {
                     throw Components.results.NS_ERROR_NO_AGGREGATION;
                 var cal;
                 switch (CACHE) {
-                case "memory":
-                case "storage":
-                    cal = new calWcapCachedCalendar();
-                    break;
+// unsupported until fixed:
+//                 case "memory":
+//                 case "storage":
+//                     cal = new calWcapCachedCalendar();
+//                     break;
                 default:
-                    cal = new calWcapCalendar();
+                    cal = new calWcapCalendar(
+                        null /* calId: indicates default calendar */,
+                        new calWcapSession() );
+                    cal.session.defaultCalendar = cal;
                     break;
                 }
                 return cal.QueryInterface( iid );

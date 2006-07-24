@@ -51,6 +51,7 @@ XPIDLSRCS       = calIWcapCalendar.idl \
                   calIWcapErrors.idl \
                   calIWcapFreeBusyEntry.idl \
                   calIWcapFreeBusyListener.idl \
+                  calIWcapSession.idl \
                   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
