@@ -45,9 +45,14 @@
 class nsISVGGlyphFragmentLeaf;
 class nsIDOMSVGPoint;
 
-// {1C17FF01-92B9-469b-A93D-4FD387F24F5E}
+#define PRESERVE_WHITESPACE       0x00
+#define COMPRESS_WHITESPACE       0x01
+#define TRIM_LEADING_WHITESPACE   0x02
+#define TRIM_TRAILING_WHITESPACE  0x04
+
+// {9C7406A8-86F0-45e2-85DF-74BB63BE6F4A}
 #define NS_ISVGGLYPHFRAGMENTNODE_IID \
-{ 0x1c17ff01, 0x92b9, 0x469b, { 0xa9, 0x3d, 0x4f, 0xd3, 0x87, 0xf2, 0x4f, 0x5e } }
+{ 0x9c7406a8, 0x86f0, 0x45e2, { 0x85, 0xdf, 0x74, 0xbb, 0x63, 0xbe, 0x6f, 0x4a } }
 
 class nsISVGGlyphFragmentNode : public nsISupports
 {
@@ -61,7 +66,7 @@ public:
   NS_IMETHOD_(PRInt32) GetCharNumAtPosition(nsIDOMSVGPoint *point)=0;
   NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetFirstGlyphFragment()=0;
   NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetNextGlyphFragment()=0;
-  NS_IMETHOD_(PRUint32) BuildGlyphFragmentTree(PRUint32 charNum, PRBool lastBranch)=0;
+  NS_IMETHOD_(void) SetWhitespaceHandling(PRUint8 aWhitespaceHandling)=0;
   NS_IMETHOD_(void) NotifyGlyphFragmentTreeSuspended()=0;
   NS_IMETHOD_(void) NotifyGlyphFragmentTreeUnsuspended()=0;
 };

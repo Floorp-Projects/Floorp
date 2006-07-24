@@ -72,6 +72,7 @@ NS_NewSVGGlyphFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* pa
 
 nsSVGGlyphFrame::nsSVGGlyphFrame(nsStyleContext* aContext)
     : nsSVGGlyphFrameBase(aContext),
+      mWhitespaceHandling(COMPRESS_WHITESPACE),
       mFragmentTreeDirty(PR_FALSE)
 {
 }
@@ -376,7 +377,17 @@ nsSVGGlyphFrame::GetCanvasTM(nsIDOMSVGMatrix * *aCTM)
 void
 nsSVGGlyphFrame::GetCharacterData(nsAString & aCharacterData)
 {
-  aCharacterData = mCharacterData;
+  nsAutoString characterData;
+  mContent->AppendTextTo(characterData);
+
+  if (mWhitespaceHandling & COMPRESS_WHITESPACE) {
+    PRBool trimLeadingWhitespace, trimTrailingWhitespace;
+    trimLeadingWhitespace = ((mWhitespaceHandling & TRIM_LEADING_WHITESPACE) != 0);
+    trimTrailingWhitespace = ((mWhitespaceHandling & TRIM_TRAILING_WHITESPACE) != 0);
+    characterData.CompressWhitespace(trimLeadingWhitespace, 
+                                     trimTrailingWhitespace);
+  }
+  aCharacterData = characterData;
 }
 
 nsresult
@@ -970,7 +981,12 @@ nsSVGGlyphFrame::IsAbsolutelyPositioned()
 NS_IMETHODIMP_(PRUint32)
 nsSVGGlyphFrame::GetNumberOfChars()
 {
-  return mCharacterData.Length();
+  if (mWhitespaceHandling == PRESERVE_WHITESPACE)
+    return mContent->TextLength();
+
+  nsAutoString text;
+  GetCharacterData(text);
+  return text.Length();
 }
 
 NS_IMETHODIMP_(float)
@@ -1105,23 +1121,10 @@ nsSVGGlyphFrame::GetNextGlyphFragment()
   return node ? node->GetNextGlyphFragment() : nsnull;
 }
 
-NS_IMETHODIMP_(PRUint32)
-nsSVGGlyphFrame::BuildGlyphFragmentTree(PRUint32 charNum, PRBool lastBranch)
+NS_IMETHODIMP_(void)
+nsSVGGlyphFrame::SetWhitespaceHandling(PRUint8 aWhitespaceHandling)
 {
-  // XXX actually we should be building a new fragment for each chunk here...
-  if (mContent->TextLength() == 0) {
-#ifdef DEBUG
-    printf("Glyph frame with zero length text\n");
-#endif
-    mCharacterData.AssignLiteral("");
-    return charNum;
-  }
-
-  mCharacterData.Truncate();
-  mContent->AppendTextTo(mCharacterData);
-  mCharacterData.CompressWhitespace(charNum == 0, lastBranch);
-
-  return charNum + mCharacterData.Length();
+  mWhitespaceHandling = aWhitespaceHandling;
 }
 
 NS_IMETHODIMP_(void)

@@ -304,20 +304,25 @@ nsSVGTextContainerFrame::GetNextGlyphFragmentChildNode(nsISVGGlyphFragmentNode *
   return retval;
 }
 
-PRUint32
-nsSVGTextContainerFrame::BuildGlyphFragmentTree(PRUint32 charNum,
-                                                PRBool lastBranch)
+void
+nsSVGTextContainerFrame::SetWhitespaceHandling()
 {
   // init children:
   nsISVGGlyphFragmentNode* node = GetFirstGlyphFragmentChildNode();
   nsISVGGlyphFragmentNode* next;
+
+  // XXX should inspect xml:space
+  PRUint8 whitespaceHandling = (COMPRESS_WHITESPACE | TRIM_LEADING_WHITESPACE);
+
   while (node) {
     next = GetNextGlyphFragmentChildNode(node);
-    charNum = node->BuildGlyphFragmentTree(charNum, lastBranch && !next);
+    if (!next && (whitespaceHandling & COMPRESS_WHITESPACE)) {
+      whitespaceHandling |= TRIM_TRAILING_WHITESPACE;
+    }
+    node->SetWhitespaceHandling(whitespaceHandling);
     node = next;
+    whitespaceHandling &= ~TRIM_LEADING_WHITESPACE;
   }
-   
-  return charNum;
 }
 
 PRUint32

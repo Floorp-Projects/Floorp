@@ -224,10 +224,10 @@ nsSVGTSpanFrame::GetNextGlyphFragment()
   return node ? node->GetNextGlyphFragment() : nsnull;
 }
 
-NS_IMETHODIMP_(PRUint32)
-nsSVGTSpanFrame::BuildGlyphFragmentTree(PRUint32 charNum, PRBool lastBranch)
+NS_IMETHODIMP_(void)
+nsSVGTSpanFrame::SetWhitespaceHandling(PRUint8 aWhitespaceHandling)
 {
-  return nsSVGTSpanFrameBase::BuildGlyphFragmentTree(charNum, lastBranch);
+  return nsSVGTSpanFrameBase::SetWhitespaceHandling();
 }
 
 NS_IMETHODIMP_(void)
