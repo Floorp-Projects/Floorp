@@ -28,6 +28,12 @@
 
                 </ul>
             </div>
+            <?php
+                // Tracking image for statistics
+                if (isset($tracking_image)) {
+                    echo $html->image($tracking_image, array('alt'=>'', 'width'=>1, 'height'=>1));
+                }
+            ?>
         </div>
         <div id="breadcrumbs">
             <?php if (isset($breadcrumb) && isset($breadcrumbs)): ?>
@@ -40,4 +46,5 @@
         <hr class="hide" />
 
         <div id="content">
+            <?php echo $html->image('firefox-survey-title2.gif', array('alt'=>'Firefox Survey')); ?>
 

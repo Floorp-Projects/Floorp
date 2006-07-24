@@ -23,6 +23,7 @@ class UsersController extends AppController {
     {
         if (empty($this->params['data']))
         {
+            $this->set('tracking_image','userpanel1-form.gif');
             $this->render();
         }
         else
@@ -93,20 +94,19 @@ use in marketing or solicitation.</small></p>
 
                     $mail->send();
 
-                    // rather than just flash a screen, we want to show a page with
-                    // some content.  We do a little trickery here, but it gets the
-                    // job done.  content is in /views/layouts/flash.thtml
-                    $this->Session->setFlash('
-                    <p>You are already signed up for the Firefox User Panel!</p>
+                    $this->layout = 'submit';
+                    $this->set('content','
+                        <p>You are already signed up for the Firefox User Panel!</p>
 
-                    <p>If you don\'t receive an email with a link to the survey within 24 hours, please check
-                    your junk mail.  If you still haven\'t received an email with a link to the survey
-                    please <a href="mailto:firefoxsurvey@mozilla.com?subject=invalid email - firefox user panel">let us know</a> 
-                    and we\'ll send another copy.</p>
+                        <p>If you don\'t receive an email with a link to the survey within 24 hours, please check
+                        your junk mail.  If you still haven\'t received an email with a link to the survey
+                        please <a href="mailto:firefoxsurvey@mozilla.com?subject=invalid email - firefox user panel">let us know</a> 
+                        and we\'ll send another copy.</p>
 
-                    <p>Continue to <a href="http://www.mozilla.com/firefox/central/">Firefox Central</a>.</p> 
+                        <p>Continue to <a href="http://www.mozilla.com/firefox/central/">Firefox Central</a>.</p> 
                     ');
-                    $this->flash(null,null,0);
+                    $this->set('tracking_image','userpanel3-alreadysignedup.gif');
+                    $this->render();
                     return;
 
             }
@@ -143,20 +143,19 @@ use in marketing or solicitation.</small></p>
 
                     $mail->send();
 
-                    // rather than just flash a screen, we want to show a page with
-                    // some content.  We do a little trickery here, but it gets the
-                    // job done.  content is in /views/layouts/flash.thtml
-                    $this->Session->setFlash('
-                    <p>Thanks for helping to make a better browsing experience!</p>
+                    $this->layout = 'submit';
+                    $this->set('content','
+                        <p>Thanks for helping us make a better browser!</p>
 
-                    <p>Be sure to check your email for a link to the first survey.<br />
-                    Continue to <a href="http://www.mozilla.com/firefox/central/">Firefox Central</a>.</p>
+                        <p>Be sure to check your email for a link to the first survey.<br />
+                        Continue to <a href="http://www.mozilla.com/firefox/central/">Firefox Central</a>.</p>
 
-                    <p class="subtext">If you don\'t receive an email with a link to
-                    the survey within 24 hours, please check your junk mail or let us
-                    know and we\'ll send another copy.</p>
+                        <p class="subtext">If you don\'t receive an email with a link to
+                        the survey within 24 hours, please check your junk mail or let us
+                        know and we\'ll send another copy.</p>
                     ');
-                    $this->flash(null,null,0);
+                    $this->set('tracking_image','userpanel2-response.gif');
+                    $this->render();
             }
         }
 

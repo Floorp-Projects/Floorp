@@ -1,4 +1,3 @@
-<?php echo $html->image('firefox-survey-title.png', array('alt'=>'Firefox Survey')); ?>
 <p>You're on your way to being part of the future of Firefox!</p>
 <p>After you supply your name (optional) and email address (required) we'll send you a survey and you'll be on your way to helping to guide Firefox.</p>
 <div id="UsersAdd">
