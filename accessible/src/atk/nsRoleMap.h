@@ -41,7 +41,7 @@
 #include <atk/atk.h>
 #include "nsAccessibleWrap.h"
 
-#define ROLE_ATK_LAST_ENTRY -1
+const PRUint32 ROLE_ATK_LAST_ENTRY = 0xffffffff;
 
 // Map array from cross platform roles to  ATK roles
 PRUint32 atkRoleMap[] = {
