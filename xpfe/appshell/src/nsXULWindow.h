@@ -148,7 +148,6 @@ protected:
    void       SetContentScrollbarVisibility(PRBool aVisible);
    PRBool     GetContentScrollbarVisibility();
    void       PersistentAttributesDirty(PRUint32 aDirtyFlags);
-   nsresult   ApplyChromeFlags();
 
    nsChromeTreeOwner*      mChromeTreeOwner;
    nsContentTreeOwner*     mContentTreeOwner;

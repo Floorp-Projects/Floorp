@@ -2012,20 +2012,27 @@ void nsXULWindow::PersistentAttributesDirty(PRUint32 aDirtyFlags)
   mPersistentAttributesDirty |= aDirtyFlags & mPersistentAttributesMask;
 }
 
-nsresult nsXULWindow::ApplyChromeFlags()
+NS_IMETHODIMP nsXULWindow::ApplyChromeFlags()
 {
   nsCOMPtr<nsIDOMElement> window;
   GetWindowDOMElement(getter_AddRefs(window));
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
-  // menubar has its own special treatment
-  mWindow->ShowMenuBar(mChromeFlags & nsIWebBrowserChrome::CHROME_MENUBAR ? 
-                       PR_TRUE : PR_FALSE);
+  if (mChromeLoaded) {
+    // The two calls in this block don't need to happen early because they
+    // don't cause a global restyle on the document.  Not only that, but the
+    // scrollbar stuff needs a content area to toggle the scrollbars on anyway.
+    // So just don't do these until mChromeLoaded is true.
+    
+    // menubar has its own special treatment
+    mWindow->ShowMenuBar(mChromeFlags & nsIWebBrowserChrome::CHROME_MENUBAR ? 
+                         PR_TRUE : PR_FALSE);
 
-  // Scrollbars have their own special treatment.
-  SetContentScrollbarVisibility(mChromeFlags &
+    // Scrollbars have their own special treatment.
+    SetContentScrollbarVisibility(mChromeFlags &
                                   nsIWebBrowserChrome::CHROME_SCROLLBARS ?
-                                PR_TRUE : PR_FALSE);
+                                    PR_TRUE : PR_FALSE);
+  }
 
   /* the other flags are handled together. we have style rules
      in navigator.css that trigger visibility based on
@@ -2050,14 +2057,9 @@ nsresult nsXULWindow::ApplyChromeFlags()
   if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_EXTRA))
     newvalue.AppendLiteral("extrachrome ");
 
-
-  // Get the old value, to avoid useless style reflows if we're just
-  // setting stuff to the exact same thing.
-  nsAutoString oldvalue;
-  window->GetAttribute(NS_LITERAL_STRING("chromehidden"), oldvalue);
-
-  if (oldvalue != newvalue)
-    window->SetAttribute(NS_LITERAL_STRING("chromehidden"), newvalue);
+  // Note that if we're not actually changing the value this will be a no-op,
+  // so no need to compare to the old value.
+  window->SetAttribute(NS_LITERAL_STRING("chromehidden"), newvalue);
 
   return NS_OK;
 }
