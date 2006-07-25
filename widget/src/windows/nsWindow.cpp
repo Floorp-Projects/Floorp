@@ -1766,10 +1766,14 @@ NS_METHOD nsWindow::Show(PRBool bState)
           flags |= SWP_NOZORDER;
 
         if (mWindowType == eWindowType_popup) {
-          // ensure popups are the topmost of the TOPMOST layer. Remember
-          // not to set the SWP_NOZORDER flag as that might allow the taskbar
-          // to overlap the popup.
+#ifndef WINCE
+          // ensure popups are the topmost of the TOPMOST
+          // layer. Remember not to set the SWP_NOZORDER
+          // flag as that might allow the taskbar to overlap
+          // the popup.  However on windows ce, we need to
+          // activate the popup or clicks will not be sent.
           flags |= SWP_NOACTIVATE;
+#endif
           ::SetWindowPos(mWnd, HWND_TOPMOST, 0, 0, 0, 0, flags);
         } else {
           ::SetWindowPos(mWnd, HWND_TOP, 0, 0, 0, 0, flags);
@@ -7796,6 +7800,7 @@ nsWindow :: DealWithPopups ( HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inL
         } // if rollup listener knows about menus
       }
 
+#ifndef WINCE
       if (inMsg == WM_MOUSEACTIVATE) {
         // Prevent the click inside the popup from causing a change in window
         // activation. Since the popup is shown non-activated, we need to eat
@@ -7822,7 +7827,9 @@ nsWindow :: DealWithPopups ( HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inL
         }
       }
       // if we've still determined that we should still rollup everything, do it.
-      else if ( rollup ) {
+      else
+#endif
+      if ( rollup ) {
         gRollupListener->Rollup();
 
         // Tell hook to stop processing messages
