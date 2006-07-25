@@ -28,6 +28,7 @@ use Bugzilla::Constants;
 use Bugzilla::Keyword;
 use Bugzilla::Bug;
 use Bugzilla::Field;
+use Bugzilla::Util;
 
 use base qw(Exporter);
 @Bugzilla::Search::Quicksearch::EXPORT = qw(quicksearch);
@@ -106,6 +107,7 @@ our ($chart, $and, $or);
 sub quicksearch {
     my ($searchstring) = (@_);
     my $cgi = Bugzilla->cgi;
+    my $urlbase = correct_urlbase();
 
     $chart = 0;
     $and   = 0;
@@ -123,8 +125,7 @@ sub quicksearch {
 
         if (index($searchstring, ',') < $[) {
             # Single bug number; shortcut to show_bug.cgi.
-            print $cgi->redirect(-uri => Bugzilla->params->{'urlbase'} .
-                                         "show_bug.cgi?id=$searchstring");
+            print $cgi->redirect(-uri => "${urlbase}show_bug.cgi?id=$searchstring");
             exit;
         }
         else {
@@ -143,8 +144,7 @@ sub quicksearch {
                                                   WHERE alias = ?},
                                                undef,
                                                $1)) {
-                print $cgi->redirect(-uri => Bugzilla->params->{'urlbase'} .
-                                             "show_bug.cgi?id=$1");
+                print $cgi->redirect(-uri => "${urlbase}show_bug.cgi?id=$1");
                 exit;
             }
         }
@@ -387,8 +387,7 @@ sub quicksearch {
 
     if ($cgi->param('load')) {
         # Param 'load' asks us to display the query in the advanced search form.
-        print $cgi->redirect(-uri => Bugzilla->params->{'urlbase'} 
-                             . "query.cgi?format=advanced&amp;"
+        print $cgi->redirect(-uri => "${urlbase}query.cgi?format=advanced&amp;"
                              . $modified_query_string);
     }
 
