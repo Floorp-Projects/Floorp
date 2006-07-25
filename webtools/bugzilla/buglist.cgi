@@ -863,7 +863,7 @@ foreach my $fragment (split(/,/, $order)) {
         # LASTORDER cookies (or bookmarks) may contain full names.
         # Convert them to an ID here.
         if ($fragment =~ / AS (\w+)/) {
-            $fragment = $columns->{$1}->{'id'};
+            $fragment = $1;
         }
 
         $fragment =~ tr/a-zA-Z\.0-9\-_//cd;
