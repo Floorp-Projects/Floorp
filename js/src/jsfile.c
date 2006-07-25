@@ -44,6 +44,7 @@
 #if JS_HAS_FILE_OBJECT
 
 #include "jsstddef.h"
+#include "jsfile.h"
 
 /* ----------------- Platform-specific includes and defines ----------------- */
 #if defined(XP_WIN) || defined(XP_OS2)
@@ -239,7 +240,6 @@ typedef struct JSFile {
 } JSFile;
 
 /* a few forward declarations... */
-static JSClass file_class;
 JS_PUBLIC_API(JSObject*) js_NewFileObject(JSContext *cx, char *filename);
 static JSBool file_open(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 static JSBool file_close(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
@@ -782,7 +782,7 @@ js_FileOpen(JSContext *cx, JSObject *obj, JSFile *file, char *mode){
 
 /* Buffered version of PR_Read. Used by js_FileRead */
 static int32
-js_BufferedRead(JSFile * f, char *buf, int32 len)
+js_BufferedRead(JSFile *f, unsigned char *buf, int32 len)
 {
     int32 count = 0;
 
@@ -796,7 +796,7 @@ js_BufferedRead(JSFile * f, char *buf, int32 len)
         count++;
     }
 
-    if (len>0) {
+    if (len > 0) {
         count += (!f->isNative)
                  ? PR_Read(f->handle, buf, len)
                  : fread(buf, 1, len, f->nativehandle);
@@ -870,7 +870,7 @@ js_FileRead(JSContext *cx, JSFile *file, jschar *buf, int32 len, int32 mode)
         break;
 
       case UCS2:
-        count = js_BufferedRead(file, (char*)buf, len*2) >> 1;
+        count = js_BufferedRead(file, (unsigned char *)buf, len * 2) >> 1;
         if (count == -1)
             return 0;
 
@@ -1201,7 +1201,7 @@ js_name(JSContext *cx, JSFile *file, jsval *vp)
 static JSBool
 file_open(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    JSFile      *file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
+    JSFile      *file = JS_GetInstancePrivate(cx, obj, &js_FileClass, NULL);
     JSString	*strmode, *strtype;
     char        *ctype, *mode;
     int32       mask, type;
@@ -1386,7 +1386,7 @@ out:
 static JSBool
 file_close(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    JSFile  *file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
+    JSFile  *file = JS_GetInstancePrivate(cx, obj, &js_FileClass, NULL);
 
     SECURITY_CHECK(cx, NULL, "close", file);
 
@@ -1428,7 +1428,7 @@ out:
 static JSBool
 file_remove(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-	JSFile  *file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
+	JSFile  *file = JS_GetInstancePrivate(cx, obj, &js_FileClass, NULL);
 
     SECURITY_CHECK(cx, NULL, "remove", file);
     JSFILE_CHECK_NATIVE("remove");
@@ -1453,7 +1453,7 @@ out:
 static JSBool
 file_copyTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    JSFile      *file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
+    JSFile      *file = JS_GetInstancePrivate(cx, obj, &js_FileClass, NULL);
     char        *dest = NULL;
     PRFileDesc  *handle = NULL;
     char        *buffer;
@@ -1548,7 +1548,7 @@ out:
 static JSBool
 file_renameTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    JSFile  *file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
+    JSFile  *file = JS_GetInstancePrivate(cx, obj, &js_FileClass, NULL);
     char    *dest;
 
     SECURITY_CHECK(cx, NULL, "renameTo", file); /* may need a second argument!*/
@@ -1577,7 +1577,7 @@ out:
 static JSBool
 file_flush(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    JSFile *file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
+    JSFile *file = JS_GetInstancePrivate(cx, obj, &js_FileClass, NULL);
 
     SECURITY_CHECK(cx, NULL, "flush", file);
     JSFILE_CHECK_NATIVE("flush");
@@ -1599,7 +1599,7 @@ out:
 static JSBool
 file_write(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    JSFile      *file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
+    JSFile      *file = JS_GetInstancePrivate(cx, obj, &js_FileClass, NULL);
     JSString    *str;
     int32       count;
     uintN       i;
@@ -1627,7 +1627,7 @@ out:
 static JSBool
 file_writeln(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    JSFile      *file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
+    JSFile      *file = JS_GetInstancePrivate(cx, obj, &js_FileClass, NULL);
     JSString    *str;
 
     SECURITY_CHECK(cx, NULL, "writeln", file);
@@ -1658,7 +1658,7 @@ out:
 static JSBool
 file_writeAll(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    JSFile      *file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
+    JSFile      *file = JS_GetInstancePrivate(cx, obj, &js_FileClass, NULL);
     jsuint      i;
     jsuint      limit;
     JSObject    *array;
@@ -1695,7 +1695,7 @@ out:
 static JSBool
 file_read(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    JSFile      *file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
+    JSFile      *file = JS_GetInstancePrivate(cx, obj, &js_FileClass, NULL);
     JSString    *str;
     int32       want, count;
     jschar      *buf;
@@ -1733,7 +1733,7 @@ out:
 static JSBool
 file_readln(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    JSFile      *file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
+    JSFile      *file = JS_GetInstancePrivate(cx, obj, &js_FileClass, NULL);
     JSString    *str;
     jschar      *buf = NULL, *tmp;
     int32       offset, read;
@@ -1818,7 +1818,7 @@ out:
 static JSBool
 file_readAll(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    JSFile      *file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
+    JSFile      *file = JS_GetInstancePrivate(cx, obj, &js_FileClass, NULL);
     JSObject    *array;
     jsint       len;
     jsval       line;
@@ -1847,7 +1847,7 @@ out:
 static JSBool
 file_seek(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    JSFile      *file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
+    JSFile      *file = JS_GetInstancePrivate(cx, obj, &js_FileClass, NULL);
     int32       toskip;
     int32       pos;
 
@@ -1889,7 +1889,7 @@ file_list(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     PRDir       *dir;
     PRDirEntry  *entry;
-    JSFile      *file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
+    JSFile      *file = JS_GetInstancePrivate(cx, obj, &js_FileClass, NULL);
     JSObject    *array;
     JSObject    *eachFile;
     jsint       len;
@@ -1989,7 +1989,7 @@ out:
 static JSBool
 file_mkdir(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    JSFile      *file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
+    JSFile      *file = JS_GetInstancePrivate(cx, obj, &js_FileClass, NULL);
 
     SECURITY_CHECK(cx, NULL, "mkdir", file);
     JSFILE_CHECK_ONE_ARG("mkdir");
@@ -2031,30 +2031,43 @@ out:
 static JSBool
 file_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval*rval)
 {
-    JSFile *file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
+    JSFile *file = JS_GetInstancePrivate(cx, obj, &js_FileClass, NULL);
+    JSString *str;
 
-    *rval = STRING_TO_JSVAL(JS_NewStringCopyZ(cx, file->path));
+    str = JS_NewStringCopyZ(cx, file->path);
+    if (!str)
+        return JS_FALSE;
+    *rval = STRING_TO_JSVAL(str);
     return JS_TRUE;
 }
 
 static JSBool
 file_toURL(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    JSFile *file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
+    JSFile *file = JS_GetInstancePrivate(cx, obj, &js_FileClass, NULL);
     char url[MAX_PATH_LENGTH];
     jschar *urlChars;
+    size_t len;
+    JSString *str;
 
-	JSFILE_CHECK_NATIVE("toURL");
+    JSFILE_CHECK_NATIVE("toURL");
 
     sprintf(url, "file://%s", file->path);
+
+    len = strlen(url);
+    urlChars = js_InflateString(cx, url, &len);
+    if (!urlChars)
+        return JS_FALSE;
+    str = js_NewString(cx, urlChars, len, 0);
+    if (!str) {
+        JS_free(cx, urlChars);
+        return JS_FALSE;
+    }
+    *rval = STRING_TO_JSVAL(str);
+
     /* TODO: js_escape in jsstr.h may go away at some point */
+    return js_str_escape(cx, obj, 0, rval, rval);
 
-    urlChars = js_InflateString(cx, url, strlen(url));
-    if (urlChars == NULL) return JS_FALSE;
-    *rval = STRING_TO_JSVAL(js_NewString(cx, urlChars, strlen(url), 0));
-    if (!js_str_escape(cx, obj, 0, rval, rval)) return JS_FALSE;
-
-    return JS_TRUE;
 out:
     *rval = JSVAL_VOID;
     return JS_FALSE;
@@ -2064,7 +2077,7 @@ out:
 static void
 file_finalize(JSContext *cx, JSObject *obj)
 {
-    JSFile *file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
+    JSFile *file = JS_GetInstancePrivate(cx, obj, &js_FileClass, NULL);
 
     if(file) {
         /* Close the file before exiting. */
@@ -2114,7 +2127,7 @@ js_NewFileObject(JSContext *cx, char *filename)
     JSObject    *obj;
     JSFile      *file;
 
-    obj = JS_NewObject(cx, &file_class, NULL, NULL);
+    obj = JS_NewObject(cx, &js_FileClass, NULL, NULL);
     if (!obj){
         JS_ReportErrorNumber(cx, JSFile_GetErrorMessage, NULL,
             JSFILEMSG_OBJECT_CREATION_FAILED, "js_NewFileObject");
@@ -2133,7 +2146,7 @@ js_NewFileObjectFromFILE(JSContext *cx, FILE *nativehandle, char *filename,
     JSObject *obj;
     JSFile   *file;
 
-    obj = JS_NewObject(cx, &file_class, NULL, NULL);
+    obj = JS_NewObject(cx, &js_FileClass, NULL, NULL);
     if (!obj){
         JS_ReportErrorNumber(cx, JSFile_GetErrorMessage, NULL,
             JSFILEMSG_OBJECT_CREATION_FAILED, "js_NewFileObjectFromFILE");
@@ -2169,7 +2182,7 @@ file_constructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     if (!(cx->fp->flags & JSFRAME_CONSTRUCTING)) {
         /* Replace obj with a new File object. */
-        obj = JS_NewObject(cx, &file_class, NULL, NULL);
+        obj = JS_NewObject(cx, &js_FileClass, NULL, NULL);
         if (!obj)
             return JS_FALSE;
         *rval = OBJECT_TO_JSVAL(obj);
@@ -2270,7 +2283,7 @@ static JSPropertySpec file_props[] = {
 static JSBool
 file_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-    JSFile      *file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
+    JSFile      *file = JS_GetInstancePrivate(cx, obj, &js_FileClass, NULL);
     char        *bytes;
     JSString    *str;
     jsint       tiny;
@@ -2561,7 +2574,7 @@ out:
 static JSBool
 file_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-    JSFile  *file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
+    JSFile  *file = JS_GetInstancePrivate(cx, obj, &js_FileClass, NULL);
     jsint   slot;
 
     if (JSVAL_IS_STRING(id)){
@@ -2621,11 +2634,11 @@ file_currentDirSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     JSFile   *file;
 
-    file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
+    file = JS_GetInstancePrivate(cx, obj, &js_FileClass, NULL);
 
     /* Look at the rhs and extract a file object from it */
     if (JSVAL_IS_OBJECT(*vp)) {
-        if (JS_InstanceOf(cx, obj, &file_class, NULL)) {
+        if (JS_InstanceOf(cx, obj, &js_FileClass, NULL)) {
             /* Braindamaged rhs -- just return the old value */
             if (file && (!js_exists(cx, file) || !js_isDirectory(cx, file))) {
                 JS_GetProperty(cx, obj, CURRENTDIR_PROPERTY, vp);
@@ -2658,8 +2671,8 @@ file_currentDirSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 }
 
 /* Declare class */
-static JSClass file_class = {
-    FILE_CONSTRUCTOR, JSCLASS_HAS_PRIVATE,
+JSClass js_FileClass = {
+    "File", JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_File),
     JS_PropertyStub,  JS_PropertyStub,  file_getProperty,  file_setProperty,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,    file_finalize
 };
@@ -2673,7 +2686,7 @@ js_InitFileClass(JSContext *cx, JSObject* obj)
     char     *currentdir;
     char     separator[2];
 
-    file = JS_InitClass(cx, obj, NULL, &file_class, file_constructor, 1,
+    file = JS_InitClass(cx, obj, NULL, &js_FileClass, file_constructor, 1,
         file_props, file_functions, NULL, NULL);
     if (!file) {
         JS_ReportErrorNumber(cx, JSFile_GetErrorMessage, NULL,
