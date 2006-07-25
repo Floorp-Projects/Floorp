@@ -1801,6 +1801,7 @@ nsPasswordManager::FillDocument(nsIDOMDocument* aDomDoc)
         form->GetElementCount(&count);
         PRUint32 i;
         nsCOMPtr<nsIFormControl> formControl;
+        userField = nsnull;
         for (i = 0; i < count; i++) {
           form->GetElementAt(i, getter_AddRefs(formControl));
 
@@ -1819,6 +1820,10 @@ nsPasswordManager::FillDocument(nsIDOMDocument* aDomDoc)
           }
         }
       }
+
+      // Bail out if we should be seeing a userField but we're not
+      if (!userField && !(e->userField).IsEmpty())
+        continue;
 
       if (!(e->passField).IsEmpty()) {
         form->ResolveName(e->passField, getter_AddRefs(foundNode));
