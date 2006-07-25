@@ -2634,7 +2634,10 @@ nsresult VirtualFolderChangeListener::Init()
     rv = tempFilter->GetSearchTerms(getter_AddRefs(searchTerms));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    m_searchSession->AddScopeTerm(nsMsgSearchScope::offlineMail, m_folderWatching);
+    // we add the search scope right before we match the header,
+    // because we don't want the search scope caching the body input
+    // stream, because that holds onto the mailbox file, breaking
+    // compaction.
 
     // add each item in termsArray to the search session
     PRUint32 numTerms;
@@ -2661,19 +2664,22 @@ NS_IMETHODIMP VirtualFolderChangeListener::OnHdrChange(nsIMsgDBHdr *aHdrChanged,
 
   nsresult rv = m_folderWatching->GetMsgDatabase(nsnull, getter_AddRefs(msgDB));
   PRBool oldMatch = PR_FALSE, newMatch = PR_FALSE;
+  // we don't want any early returns from this function, until we've 
+  // called ClearScopes 0n the search session.
+  m_searchSession->AddScopeTerm(nsMsgSearchScope::offlineMail, m_folderWatching);
   rv = m_searchSession->MatchHdr(aHdrChanged, msgDB, &newMatch);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (m_searchOnMsgStatus)
+  if (NS_SUCCEEDED(rv) && m_searchOnMsgStatus)
   {
     // if status is a search criteria, check if the header matched before
     // it changed, in order to determine if we need to bump the counts. 
     aHdrChanged->SetFlags(aOldFlags);
     rv = m_searchSession->MatchHdr(aHdrChanged, msgDB, &oldMatch);
     aHdrChanged->SetFlags(aNewFlags); // restore new flags even on match failure.
-    NS_ENSURE_SUCCESS(rv, rv);
   }
   else
     oldMatch = newMatch;
+  m_searchSession->ClearScopes();
+  NS_ENSURE_SUCCESS(rv, rv);
   // we don't want to change the total counts if this virtual folder is open in a view,
   // because we won't remove the header from view while it's open. On the other hand,
   // it's hard to fix the count when the user clicks away to another folder, w/o re-running
@@ -2732,7 +2738,9 @@ NS_IMETHODIMP VirtualFolderChangeListener::OnHdrDeleted(nsIMsgDBHdr *aHdrDeleted
   nsresult rv = m_folderWatching->GetMsgDatabase(nsnull, getter_AddRefs(msgDB));
   NS_ENSURE_SUCCESS(rv, rv);
   PRBool match = PR_FALSE;
+  m_searchSession->AddScopeTerm(nsMsgSearchScope::offlineMail, m_folderWatching);
   rv = m_searchSession->MatchHdr(aHdrDeleted, msgDB, &match);
+  m_searchSession->ClearScopes();
   if (match)
   {
     nsCOMPtr <nsIMsgDatabase> virtDatabase;
@@ -2767,7 +2775,9 @@ NS_IMETHODIMP VirtualFolderChangeListener::OnHdrAdded(nsIMsgDBHdr *aNewHdr, nsMs
   nsresult rv = m_folderWatching->GetMsgDatabase(nsnull, getter_AddRefs(msgDB));
   NS_ENSURE_SUCCESS(rv, rv);
   PRBool match = PR_FALSE;
+  m_searchSession->AddScopeTerm(nsMsgSearchScope::offlineMail, m_folderWatching);
   rv = m_searchSession->MatchHdr(aNewHdr, msgDB, &match);
+  m_searchSession->ClearScopes();
   if (match)
   {
     nsCOMPtr <nsIMsgDatabase> virtDatabase;
