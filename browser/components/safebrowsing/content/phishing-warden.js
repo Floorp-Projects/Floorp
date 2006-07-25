@@ -180,24 +180,11 @@ PROT_PhishingWarden.prototype.maybeToggleUpdateChecking = function() {
     return;
 
   // We update and save to disk all tables if we don't have remote checking
-  // enabled.  However, as long as the warden is enabled we always update the
-  // whitelist, even if remote checking is disabled.  This gives a performance
-  // benefit since we use the WL to suppress BL lookups.
-  // 
-  // phishEnabled remote WLupdates BLupdates
-  // T            T      T         F
-  // T            F      T         T
-  // F            T      F         F
-  // F            F      F         F
-
-  if (phishWardenEnabled === true) {
+  // enabled.
+  if (phishWardenEnabled === true && this.checkRemote_ === false) {
+    this.enableBlacklistTableUpdates();
     this.enableWhitelistTableUpdates();
-    if (this.checkRemote_ === true) {
-      this.disableBlacklistTableUpdates();
-    } else if (this.checkRemote_ === false) {
-      this.enableBlacklistTableUpdates();
-    }
-  } else if (phishWardenEnabled === false) {
+  } else {
     this.disableBlacklistTableUpdates();
     this.disableWhitelistTableUpdates();
   }

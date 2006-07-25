@@ -66,6 +66,10 @@ function PROT_DataProvider() {
   // Watch for changes in the data provider and update accordingly.
   this.prefs_.addObserver(kDataProviderIdPref,
                           BindToObject(this.loadDataProviderPrefs_, this));
+
+  // Watch for when anti-phishing is toggled on or off.
+  this.prefs_.addObserver(kPhishWardenEnabledPref,
+                          BindToObject(this.loadDataProviderPrefs_, this));
 }
 
 /**
@@ -114,7 +118,13 @@ PROT_DataProvider.prototype.updateListManager_ = function() {
   // pref observer that sets the update url accordingly.
   listManager.setUpdateUrl(this.getUpdateURL());
 
-  listManager.setKeyUrl(this.getKeyURL());
+  // setKeyUrl has the side effect of fetching a key from the server.
+  // This shouldn't happen if anti-phishing is disabled, so we need to
+  // check for that.
+  var isEnabled = this.prefs_.getPref(kPhishWardenEnabledPref, false);
+  if (isEnabled) {
+    listManager.setKeyUrl(this.getKeyURL());
+  }
 }
 
 /**
