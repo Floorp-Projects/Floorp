@@ -72,7 +72,7 @@ calendar.jar:
     content/calendar/preferences/categories.xul   (/calendar/base/content/preferences/categories.xul)
     content/calendar/preferences/categories.js    (/calendar/base/content/preferences/categories.js)
 *   content/calendar/preferences/connection.xul   (/calendar/base/content/preferences/connection.xul)
-    content/calendar/preferences/connection.js    (/calendar/base/content/preferences/connection.js)
+*   content/calendar/preferences/connection.js    (/calendar/base/content/preferences/connection.js)
     content/calendar/preferences/editCategory.xul (/calendar/base/content/preferences/editCategory.xul)
     content/calendar/preferences/general.js       (/calendar/base/content/preferences/general.js)
 *   content/calendar/preferences/general.xul      (/calendar/base/content/preferences/general.xul)
