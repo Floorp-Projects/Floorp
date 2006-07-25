@@ -43,61 +43,6 @@
 #include "nsSVGMaskElement.h"
 #include "nsIDOMSVGMatrix.h"
 
-typedef nsSVGContainerFrame nsSVGMaskFrameBase;
-
-class nsSVGMaskFrame : public nsSVGMaskFrameBase,
-                       public nsISVGMaskFrame
-{
-  friend nsIFrame*
-  NS_NewSVGMaskFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
-
-  NS_IMETHOD InitSVG();
-
- public:
-  nsSVGMaskFrame(nsStyleContext* aContext) : nsSVGMaskFrameBase(aContext) {}
- 
-  // nsISupports interface:
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
-  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
-
-  // nsISVGMaskFrame interface:
-  NS_IMETHOD MaskPaint(nsISVGRendererCanvas* aCanvas,
-                       nsISVGRendererSurface* aSurface,
-                       nsISVGChildFrame* aParent,
-                       nsCOMPtr<nsIDOMSVGMatrix> aMatrix,
-                       float aOpacity = 1.0f);
-
-  /**
-   * Get the "type" of the frame
-   *
-   * @see nsLayoutAtoms::svgMaskFrame
-   */
-  virtual nsIAtom* GetType() const;
-
-#ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsAString& aResult) const
-  {
-    return MakeFrameName(NS_LITERAL_STRING("SVGMask"), aResult);
-  }
-#endif
-
- private:
-  PRUint16 GetMaskUnits();
-  PRUint16 GetMaskContentUnits();
-
-  nsISVGChildFrame *mMaskParent;
-  nsCOMPtr<nsIDOMSVGMatrix> mMaskParentMatrix;
-
-  // nsSVGContainerFrame methods:
-  virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
-};
-
-NS_INTERFACE_MAP_BEGIN(nsSVGMaskFrame)
-  NS_INTERFACE_MAP_ENTRY(nsISVGMaskFrame)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGMaskFrameBase)
-
-
 //----------------------------------------------------------------------
 // Implementation
 
@@ -108,7 +53,7 @@ NS_NewSVGMaskFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContex
 }
 
 nsresult
-NS_GetSVGMaskFrame(nsISVGMaskFrame **aResult,
+NS_GetSVGMaskFrame(nsSVGMaskFrame **aResult,
                    nsIURI *aURI, nsIContent *aContent)
 {
   *aResult = nsnull;
@@ -190,7 +135,7 @@ static unsigned char rgb2lin[256] = {
 239, 241, 243, 245, 248, 250, 252, 255
 };
 
-NS_IMETHODIMP
+nsresult
 nsSVGMaskFrame::MaskPaint(nsISVGRendererCanvas* aCanvas,
                           nsISVGRendererSurface* aSurface,
                           nsISVGChildFrame* aParent,

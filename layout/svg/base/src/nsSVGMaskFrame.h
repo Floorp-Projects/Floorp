@@ -37,33 +37,56 @@
 #ifndef __NS_SVGMASKFRAME_H__
 #define __NS_SVGMASKFRAME_H__
 
-#include "nsISupports.h"
+#include "nsSVGContainerFrame.h"
 
-class nsISVGRendererCanvas;
 class nsISVGRendererSurface;
-class nsISVGChildFrame;
-class nsIDOMSVGMatrix;
-class nsIURI;
-class nsIContent;
 
-#define NS_ISVGMASKFRAME_IID \
-{0x122fe62b, 0xa4cb, 0x49d4, {0xbf, 0xd7, 0x26, 0x67, 0x58, 0x28, 0xff, 0x02}}
+typedef nsSVGContainerFrame nsSVGMaskFrameBase;
 
-class nsISVGMaskFrame : public nsISupports {
-public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGMASKFRAME_IID)
+class nsSVGMaskFrame : public nsSVGMaskFrameBase
+{
+  friend nsIFrame*
+  NS_NewSVGMaskFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 
-  NS_IMETHOD MaskPaint(nsISVGRendererCanvas* aCanvas,
-                       nsISVGRendererSurface* aSurface,
-                       nsISVGChildFrame* aParent,
-                       nsCOMPtr<nsIDOMSVGMatrix> aMatrix,
-                       float aOpacity = 1.0f) = 0;
+  NS_IMETHOD InitSVG();
+
+ public:
+  nsSVGMaskFrame(nsStyleContext* aContext) : nsSVGMaskFrameBase(aContext) {}
+
+  // nsSVGMaskFrame method:
+  nsresult MaskPaint(nsISVGRendererCanvas* aCanvas,
+                     nsISVGRendererSurface* aSurface,
+                     nsISVGChildFrame* aParent,
+                     nsCOMPtr<nsIDOMSVGMatrix> aMatrix,
+                     float aOpacity = 1.0f);
+
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::svgMaskFrame
+   */
+  virtual nsIAtom* GetType() const;
+
+#ifdef DEBUG
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
+  {
+    return MakeFrameName(NS_LITERAL_STRING("SVGMask"), aResult);
+  }
+#endif
+
+ private:
+  PRUint16 GetMaskUnits();
+  PRUint16 GetMaskContentUnits();
+
+  nsISVGChildFrame *mMaskParent;
+  nsCOMPtr<nsIDOMSVGMatrix> mMaskParentMatrix;
+
+  // nsSVGContainerFrame methods:
+  virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGMaskFrame, NS_ISVGMASKFRAME_IID)
-
 nsresult
-NS_GetSVGMaskFrame(nsISVGMaskFrame **aResult,
+NS_GetSVGMaskFrame(nsSVGMaskFrame **aResult,
                    nsIURI *aURI, nsIContent *aContent);
 
 #endif

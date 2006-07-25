@@ -551,7 +551,7 @@ AddEffectProperties(nsIFrame *aFrame)
   }
 
   if (style->mMask && !(aFrame->GetStateBits() & NS_STATE_SVG_MASKED)) {
-    nsISVGMaskFrame *mask;
+    nsSVGMaskFrame *mask;
     NS_GetSVGMaskFrame(&mask, style->mMask, aFrame->GetContent());
     if (mask) {
       aFrame->SetProperty(nsGkAtoms::mask, mask);
@@ -597,8 +597,8 @@ GetMaskSurface(nsISVGRendererCanvas *aCanvas, nsIFrame *aFrame, float opacity)
     nsISVGChildFrame *svgChildFrame;
     CallQueryInterface(aFrame, &svgChildFrame);
 
-    nsISVGMaskFrame *mask;
-    mask = NS_STATIC_CAST(nsISVGMaskFrame *,
+    nsSVGMaskFrame *mask;
+    mask = NS_STATIC_CAST(nsSVGMaskFrame *,
                           aFrame->GetProperty(nsGkAtoms::mask));
 
     nsSVGUtils::GetSurface(nsSVGUtils::GetOuterSVGFrame(aFrame),
