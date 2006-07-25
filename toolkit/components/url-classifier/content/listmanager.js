@@ -268,12 +268,13 @@ PROT_ListManager.prototype.maybeToggleUpdateChecking = function() {
   // are no tables that want to be updated - we dont need to check anything.
   if (this.requireTableUpdates() === true) {
     G_Debug(this, "Starting managing lists");
+    this.startUpdateChecker();
+
     // Multiple warden can ask us to reenable updates at the same time, but we
     // really just need to schedule a single update.
     if (!this.currentUpdateChecker_)
       this.currentUpdateChecker_ =
         new G_Alarm(BindToObject(this.checkForUpdates, this), 3000);
-    this.startUpdateChecker();
   } else {
     G_Debug(this, "Stopping managing lists (if currently active)");
     this.stopUpdateChecker();                    // Cancel pending updates
@@ -300,6 +301,11 @@ PROT_ListManager.prototype.stopUpdateChecker = function() {
   if (this.updateChecker_) {
     this.updateChecker_.cancel();
     this.updateChecker_ = null;
+  }
+  // Cancel the oneoff check from maybeToggleUpdateChecking.
+  if (this.currentUpdateChecker_) {
+    this.currentUpdateChecker_.cancel();
+    this.currentUpdateChecker_ = null;
   }
 }
 
