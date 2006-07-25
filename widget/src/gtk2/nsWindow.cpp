@@ -2274,8 +2274,11 @@ nsWindow::OnDragMotionEvent(GtkWidget *aWidget,
       event.type = GDK_BUTTON_RELEASE;
       event.button.time = mLastButtonReleaseTime;
       event.button.button = 1;
-      g_signal_emit_by_name(widget, "button_release_event", &event, &retval);
-      return TRUE;
+      mLastButtonReleaseTime = 0;
+      if (widget) {
+        g_signal_emit_by_name(widget, "button_release_event", &event, &retval);
+        return TRUE;
+      }
     }
 
     sIsDraggingOutOf = PR_FALSE;
