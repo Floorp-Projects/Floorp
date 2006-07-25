@@ -1,0 +1,112 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <title>Testcase #2 for bug 305705</title>
+    <style type="text/css">
+
+        html,body {
+            color:black; background-color:white; font-size:16px; padding:0; margin:0;
+        }
+	
+        option {
+            background-color:lime;
+        }
+
+    </style>
+</head>
+<body>
+
+
+</head>
+<body>
+
+<pre>Test1: SELECT has width:175px, OPTIONs are unconstrained</pre>
+    <select style="width:175px" size="1">
+        <option value="1">All North America and Latin America Sites</option>
+        <option value="2">Chicago, IL, USA</option>
+        <option value="3">Grand Rapids, MI, USA</option>
+        <option value="4">Dallas, TX, USA</option>
+    </select>
+
+<pre>Test2: SELECT unconstrained, OPTIONs are unconstrained</pre>
+    <select size="1">
+        <option value="1">All North America and Latin America Sites</option>
+        <option value="2">Chicago, IL, USA</option>
+        <option value="3">Grand Rapids, MI, USA</option>
+        <option value="4">Dallas, TX, USA</option>
+    </select>
+
+<pre>Test3: SELECT has width:175px, First OPTION has width:200px, rest of the OPTIONs are unconstrained</pre>
+    <select style="width:175px" size="1">
+        <option style="width:200px" value="1">All North America and Latin America Sites</option>
+        <option value="2">Chicago, IL, USA</option>
+        <option value="3">Grand Rapids, MI, USA</option>
+        <option value="4">Dallas, TX, USA</option>
+    </select>
+
+<pre>Test4: SELECT has width:175px, First OPTION has width:600px, rest of the OPTIONs are unconstrained</pre>
+    <select style="width:175px" size="1">
+        <option style="width:600px" value="1">All North America and Latin America Sites</option>
+        <option value="2">Chicago, IL, USA</option>
+        <option value="3">Grand Rapids, MI, USA</option>
+        <option value="4">Dallas, TX, USA</option>
+    </select>
+
+<pre>Test5: SELECT has width:175px, Second OPTION has width:600px, rest of the OPTIONs are unconstrained</pre>
+    <select style="width:175px" size="1">
+        <option value="1">All North America and Latin America Sites</option>
+        <option style="width:600px" value="2">Chicago, IL, USA</option>
+        <option value="3">Grand Rapids, MI, USA</option>
+        <option value="4">Dallas, TX, USA</option>
+    </select>
+
+<pre>Test6: SELECT is unconstrained, First OPTION has width:200px, rest of the OPTIONs are unconstrained</pre>
+    <select size="1">
+        <option style="width:200px" value="1">All North America and Latin America Sites</option>
+        <option value="2">Chicago, IL, USA</option>
+        <option value="3">Grand Rapids, MI, USA</option>
+        <option value="4">Dallas, TX, USA</option>
+    </select>
+
+<pre>Test7: SELECT is unconstrained, Second OPTION has width:600px, rest of the OPTIONs are unconstrained</pre>
+    <select size="1">
+        <option value="1">All North America and Latin America Sites</option>
+        <option style="width:600px" value="2">Chicago, IL, USA</option>
+        <option value="3">Grand Rapids, MI, USA</option>
+        <option value="4">Dallas, TX, USA</option>
+    </select>
+
+<pre>Test8: SELECT has width:600px, Second OPTION has width:200px, rest of the OPTIONs are unconstrained</pre>
+    <select style="width:600px" size="1">
+        <option value="1">All North America and Latin America Sites</option>
+        <option style="width:200px" value="2">Chicago, IL, USA</option>
+        <option value="3">Grand Rapids, MI, USA</option>
+        <option value="4">Dallas, TX, USA</option>
+    </select>
+
+<pre>Test9: same as Test6 but with min-width instead of width</pre>
+    <select size="1">
+        <option style="min-width:200px" value="1">All North America and Latin America Sites</option>
+        <option value="2">Chicago, IL, USA</option>
+        <option value="3">Grand Rapids, MI, USA</option>
+        <option value="4">Dallas, TX, USA</option>
+    </select>
+
+<pre>Test10: same as Test7 but with min-width instead of width</pre>
+    <select size="1">
+        <option value="1">All North America and Latin America Sites</option>
+        <option style="min-width:600px" value="2">Chicago, IL, USA</option>
+        <option value="3">Grand Rapids, MI, USA</option>
+        <option value="4">Dallas, TX, USA</option>
+    </select>
+
+<pre>Test11: same as Test8 but with min-width instead of width</pre>
+    <select style="min-width:600px" size="1">
+        <option value="1">All North America and Latin America Sites</option>
+        <option style="min-width:200px" value="2">Chicago, IL, USA</option>
+        <option value="3">Grand Rapids, MI, USA</option>
+        <option value="4">Dallas, TX, USA</option>
+    </select>
+
+</body>
+</html>
