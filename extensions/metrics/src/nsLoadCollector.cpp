@@ -520,8 +520,9 @@ nsLoadCollector::EndUpdate(nsIDocument *document, nsUpdateType updateType)
 }
 
 void
-nsLoadCollector::DocumentWillBeDestroyed(nsIDocument *document)
+nsLoadCollector::NodeWillBeDestroyed(const nsINode *node)
 {
+  const nsIDocument* document = NS_STATIC_CAST(const nsIDocument*, node);
   // Look up the document to get its id.
   DocumentEntry entry;
   if (!mDocumentMap.Get(document, &entry)) {
