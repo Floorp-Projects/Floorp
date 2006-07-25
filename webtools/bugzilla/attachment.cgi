@@ -713,8 +713,7 @@ sub enter
                                               'product_id'   => $product_id,
                                               'component_id' => $component_id});
   $vars->{'flag_types'} = $flag_types;
-  $vars->{'any_flags_requesteeble'} = grep($_->{'is_requesteeble'},
-                                           @$flag_types);
+  $vars->{'any_flags_requesteeble'} = grep($_->is_requesteeble, @$flag_types);
 
   print $cgi->header();
 
@@ -835,11 +834,11 @@ sub edit {
                                                'product_id'   => $product_id ,
                                                'component_id' => $component_id });
   foreach my $flag_type (@$flag_types) {
-    $flag_type->{'flags'} = Bugzilla::Flag::match({ 'type_id'   => $flag_type->{'id'},
+    $flag_type->{'flags'} = Bugzilla::Flag::match({ 'type_id'   => $flag_type->id,
                                                     'attach_id' => $attachment->id });
   }
   $vars->{'flag_types'} = $flag_types;
-  $vars->{'any_flags_requesteeble'} = grep($_->{'is_requesteeble'}, @$flag_types);
+  $vars->{'any_flags_requesteeble'} = grep($_->is_requesteeble, @$flag_types);
   $vars->{'attachment'} = $attachment;
   $vars->{'bugsummary'} = $bugsummary; 
   $vars->{'isviewable'} = $isviewable; 

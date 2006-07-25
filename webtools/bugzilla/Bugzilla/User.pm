@@ -980,7 +980,7 @@ sub match_field {
                 elsif ($field_name =~ /^requestee_type-(\d+)$/) {
                     require Bugzilla::FlagType;
                     $expanded_fields->{$field_name}->{'flag_type'} = 
-                      Bugzilla::FlagType::get($1);
+                      new Bugzilla::FlagType($1);
                 }
             }
         }

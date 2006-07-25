@@ -192,7 +192,7 @@
       <td>
         the group allowed to grant/deny flags of this type
         (to allow all users to grant/deny these flags, select no group)<br>
-        [% PROCESS select selname = "grant_gid" %]
+        [% PROCESS select selname = "grant_group" %]
       </td>
     </tr>
 
@@ -202,7 +202,7 @@
         if flags of this type are requestable, the group allowed to request them
         (to allow all users to request these flags, select no group)<br>
         Note that the request group alone has no effect if the grant group is not defined!<br>
-        [% PROCESS select selname = "request_gid" %]
+        [% PROCESS select selname = "request_group" %]
       </td>
     </tr>
 
@@ -232,7 +232,8 @@
     <option value="">(no group)</option>
     [% FOREACH group = groups %]
       <option value="[% group.name FILTER html %]"
-        [% " selected" IF type.${selname} == group.name %]>[% group.name FILTER html %]
+        [% " selected" IF (type.${selname} && type.${selname}.name == group.name) %]>
+      [%- group.name FILTER html %]
       </option>
     [% END %]
   </select>

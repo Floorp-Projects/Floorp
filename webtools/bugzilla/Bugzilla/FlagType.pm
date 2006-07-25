@@ -20,6 +20,10 @@
 # Contributor(s): Myk Melez <myk@mozilla.org>
 #                 Frédéric Buclin <LpSolit@gmail.com>
 
+use strict;
+
+package Bugzilla::FlagType;
+
 =head1 NAME
 
 Bugzilla::FlagType - A module to deal with Bugzilla flag types.
@@ -44,25 +48,16 @@ whose names start with _ or are specifically noted as being private.
 
 =cut
 
-######################################################################
-# Module Initialization
-######################################################################
-
-# Make it harder for us to do dangerous things in Perl.
-use strict;
-
-# This module implements flag types for the flag tracker.
-package Bugzilla::FlagType;
-
-# Use Bugzilla's User module which contains utilities for handling users.
 use Bugzilla::User;
-
 use Bugzilla::Error;
 use Bugzilla::Util;
+use Bugzilla::Group;
 
-######################################################################
-# Global Variables
-######################################################################
+use base qw(Bugzilla::Object);
+
+###############################
+####    Initialization     ####
+###############################
 
 =begin private
 
@@ -70,36 +65,42 @@ use Bugzilla::Util;
 
 =over
 
-=item C<BASE_COLUMNS>
+=item C<DB_COLUMNS>
 
 basic sets of columns and tables for getting flag types from the
-database.  B<Used by get, match, sqlify_criteria and perlify_record>
+database.
 
 =back
 
 =cut
 
-use constant BASE_COLUMNS => (
-    "1", "flagtypes.id", "flagtypes.name", "flagtypes.description", 
-    "flagtypes.cc_list", "flagtypes.target_type", "flagtypes.sortkey", 
-    "flagtypes.is_active", "flagtypes.is_requestable", 
-    "flagtypes.is_requesteeble", "flagtypes.is_multiplicable", 
-    "flagtypes.grant_group_id", "flagtypes.request_group_id",
+use constant DB_COLUMNS => qw(
+    flagtypes.id
+    flagtypes.name
+    flagtypes.description
+    flagtypes.cc_list
+    flagtypes.target_type
+    flagtypes.sortkey
+    flagtypes.is_active
+    flagtypes.is_requestable
+    flagtypes.is_requesteeble
+    flagtypes.is_multiplicable
+    flagtypes.grant_group_id
+    flagtypes.request_group_id
 );
 
 =pod
 
 =over
 
-=item C<BASE_TABLES>
+=item C<DB_TABLE>
 
 Which database(s) is the data coming from?
 
-Note: when adding tables to BASE_TABLES, make sure to include the separator 
+Note: when adding tables to DB_TABLE, make sure to include the separator
 (i.e. words like "LEFT OUTER JOIN") before the table name, since tables take
 multiple separators based on the join type, and therefore it is not possible
 to join them later using a single known separator.
-B<Used by get, match, sqlify_criteria and perlify_record>
 
 =back
 
@@ -107,71 +108,161 @@ B<Used by get, match, sqlify_criteria and perlify_record>
 
 =cut
 
-use constant BASE_TABLES => ("flagtypes");
+use constant DB_TABLE => 'flagtypes';
+use constant LIST_ORDER => 'flagtypes.sortkey, flagtypes.name';
+
+###############################
+####      Accessors      ######
+###############################
+
+=head2 METHODS
+
+=over
+
+=item C<id>
+
+Returns the ID of the flagtype.
+
+=item C<name>
+
+Returns the name of the flagtype.
+
+=item C<description>
+
+Returns the description of the flagtype.
+
+=item C<cc_list>
+
+Returns the concatenated CC list for the flagtype, as a single string.
+
+=item C<target_type>
+
+Returns whether the flagtype applies to bugs or attachments.
+
+=item C<is_active>
+
+Returns whether the flagtype is active or disabled. Flags being
+in a disabled flagtype are not deleted. It only prevents you from
+adding new flags to it.
+
+=item C<is_requestable>
+
+Returns whether you can request for the given flagtype
+(i.e. whether the '?' flag is available or not).
+
+=item C<is_requesteeble>
+
+Returns whether you can ask someone specifically or not.
+
+=item C<is_multiplicable>
+
+Returns whether you can have more than one flag for the given
+flagtype in a given bug/attachment.
+
+=item C<sortkey>
+
+Returns the sortkey of the flagtype.
+
+=back
+
+=cut
+
+sub id               { return $_[0]->{'id'};               }
+sub name             { return $_[0]->{'name'};             }
+sub description      { return $_[0]->{'description'};      }
+sub cc_list          { return $_[0]->{'cc_list'};          }
+sub target_type      { return $_[0]->{'target_type'} eq 'b' ? 'bug' : 'attachment'; }
+sub is_active        { return $_[0]->{'is_active'};        }
+sub is_requestable   { return $_[0]->{'is_requestable'};   }
+sub is_requesteeble  { return $_[0]->{'is_requesteeble'};  }
+sub is_multiplicable { return $_[0]->{'is_multiplicable'}; }
+sub sortkey          { return $_[0]->{'sortkey'};          }
+
+###############################
+####       Methods         ####
+###############################
+
+=pod
+
+=over
+
+=item C<grant_group>
+
+Returns the group (as a Bugzilla::Group object) in which a user
+must be in order to grant or deny a request.
+
+=item C<request_group>
+
+Returns the group (as a Bugzilla::Group object) in which a user
+must be in order to request or clear a flag.
+
+=item C<flag_count>
+
+Returns the number of flags belonging to the flagtype.
+
+=item C<inclusions>
+
+Return a hash of product/component IDs and names
+explicitly associated with the flagtype.
+
+=item C<exclusions>
+
+Return a hash of product/component IDs and names
+explicitly excluded from the flagtype.
+
+=back
+
+=cut
+
+sub grant_group {
+    my $self = shift;
+
+    if (!defined $self->{'grant_group'} && $self->{'grant_group_id'}) {
+        $self->{'grant_group'} = new Bugzilla::Group($self->{'grant_group_id'});
+    }
+    return $self->{'grant_group'};
+}
+
+sub request_group {
+    my $self = shift;
+
+    if (!defined $self->{'request_group'} && $self->{'request_group_id'}) {
+        $self->{'request_group'} = new Bugzilla::Group($self->{'request_group_id'});
+    }
+    return $self->{'request_group'};
+}
+
+sub flag_count {
+    my $self = shift;
+
+    if (!defined $self->{'bug_count'}) {
+        $self->{'bug_count'} =
+            Bugzilla->dbh->selectrow_array('SELECT COUNT(*) FROM flags
+                                            WHERE type_id = ?', undef, $self->{'id'});
+    }
+}
+
+sub inclusions {
+    my $self = shift;
+
+    $self->{'inclusions'} ||= get_clusions($self->id, 'in');
+    return $self->{'inclusions'};
+}
+
+sub exclusions {
+    my $self = shift;
+
+    $self->{'exclusions'} ||= get_clusions($self->id, 'ex');
+    return $self->{'exclusions'};
+}
 
 ######################################################################
 # Public Functions
 ######################################################################
 
+=pod
+
 =head1 PUBLIC FUNCTIONS/METHODS
-
-=over
-
-=item C<get($id)>
-
-Returns a hash of information about a flag type.
-
-=back
-
-=cut
-
-sub get {
-    my ($id) = @_;
-    my $dbh = Bugzilla->dbh;
-
-    my $columns = join(", ", BASE_COLUMNS);
-
-    my @data = $dbh->selectrow_array("SELECT $columns FROM flagtypes
-                                      WHERE id = ?", undef, $id);
-
-    return perlify_record(@data);
-}
-
-=pod
-
-=over
-
-=item C<get_inclusions($id)>
-
-Someone please document this
-
-=back
-
-=cut
-
-sub get_inclusions {
-    my ($id) = @_;
-    return get_clusions($id, "in");
-}
-
-=pod
-
-=over
-
-=item C<get_exclusions($id)>
-
-Someone please document this
-
-=back
-
-=cut
-
-sub get_exclusions {
-    my ($id) = @_;
-    return get_clusions($id, "ex");
-}
-
-=pod
 
 =over
 
@@ -216,53 +307,28 @@ sub get_clusions {
 
 =over
 
-=item C<match($criteria, $include_count)>
+=item C<match($criteria)>
 
 Queries the database for flag types matching the given criteria
-and returns the set of matching types.
+and returns a list of matching flagtype objects.
 
 =back
 
 =cut
 
 sub match {
-    my ($criteria, $include_count) = @_;
-
-    my @tables       = BASE_TABLES;
-    my @base_columns = BASE_COLUMNS;
-    my @columns      = BASE_COLUMNS;
+    my ($criteria) = @_;
     my $dbh = Bugzilla->dbh;
 
-    # Include a count of the number of flags per type if requested.
-    if ($include_count) { 
-        push(@columns, "COUNT(flags.id)");
-        push(@tables, "LEFT OUTER JOIN flags ON flagtypes.id = flags.type_id");
-    }
-    
-    # Generate the SQL WHERE criteria.
-    my @criteria = sqlify_criteria($criteria, \@tables);
-    
-    # Build the query, grouping the types if we are counting flags.
-    # DISTINCT is used in order to count flag types only once when
-    # they appear several times in the flaginclusions table.
-    my $select_clause = "SELECT DISTINCT " . join(", ", @columns);
-    my $from_clause = "FROM " . join(" ", @tables);
-    my $where_clause = "WHERE " . join(" AND ", @criteria);
-    
-    my $query = "$select_clause $from_clause $where_clause";
-    $query .= " " . $dbh->sql_group_by('flagtypes.id',
-              join(', ', @base_columns[2..$#base_columns]))
-                    if $include_count;
-    $query .= " ORDER BY flagtypes.sortkey, flagtypes.name";
+    # Depending on the criteria, we may have to append additional tables.
+    my $tables = [DB_TABLE];
+    my @criteria = sqlify_criteria($criteria, $tables);
+    $tables = join(' ', @$tables);
+    $criteria = join(' AND ', @criteria);
 
-    my $flagtypes = $dbh->selectall_arrayref($query);
+    my $flagtype_ids = $dbh->selectcol_arrayref("SELECT id FROM $tables WHERE $criteria");
 
-    my @types;
-    foreach my $flagtype (@$flagtypes) {
-        push(@types, perlify_record(@$flagtype));
-    }
-
-    return \@types;
+    return Bugzilla::FlagType->new_from_list($flagtype_ids);
 }
 
 =pod
@@ -281,15 +347,14 @@ sub count {
     my ($criteria) = @_;
     my $dbh = Bugzilla->dbh;
 
-    my @tables = BASE_TABLES;
-    my @criteria = sqlify_criteria($criteria, \@tables);
-    # The way tables are joined is already included in @tables.
-    my $tables = join(' ', @tables);
+    # Depending on the criteria, we may have to append additional tables.
+    my $tables = [DB_TABLE];
+    my @criteria = sqlify_criteria($criteria, $tables);
+    $tables = join(' ', @$tables);
     $criteria = join(' AND ', @criteria);
 
-    my $count = $dbh->selectrow_array("SELECT COUNT(flagtypes.id) FROM $tables
-                                       WHERE $criteria");
-
+    my $count = $dbh->selectrow_array("SELECT COUNT(flagtypes.id)
+                                       FROM $tables WHERE $criteria");
     return $count;
 }
 
@@ -345,7 +410,7 @@ sub validate {
         next if $status eq "X";
 
         # Make sure the flag type exists.
-        my $flag_type = get($id);
+        my $flag_type = new Bugzilla::FlagType($id);
         $flag_type 
           || ThrowCodeError("flag_type_nonexistent", { id => $id });
 
@@ -355,15 +420,15 @@ sub validate {
                             { id => $id , status => $status });
 
         # Make sure the user didn't request the flag unless it's requestable.
-        if ($status eq '?' && !$flag_type->{is_requestable}) {
+        if ($status eq '?' && !$flag_type->is_requestable) {
             ThrowCodeError("flag_status_invalid", 
                            { id => $id , status => $status });
         }
-        
+
         # Make sure the user didn't specify a requestee unless the flag
         # is specifically requestable.
         if ($status eq '?'
-            && !$flag_type->{is_requesteeble}
+            && !$flag_type->is_requesteeble
             && scalar(@requestees) > 0)
         {
             ThrowCodeError("flag_requestee_disabled", { type => $flag_type });
@@ -372,7 +437,7 @@ sub validate {
         # Make sure the user didn't enter multiple requestees for a flag
         # that can't be requested from more than one person at a time.
         if ($status eq '?'
-            && !$flag_type->{is_multiplicable}
+            && !$flag_type->is_multiplicable
             && scalar(@requestees) > 1)
         {
             ThrowUserError("flag_not_multiplicable", { type => $flag_type });
@@ -381,7 +446,7 @@ sub validate {
         # Make sure the requestees are authorized to access the bug
         # (and attachment, if this installation is using the "insider group"
         # feature and the attachment is marked private).
-        if ($status eq '?' && $flag_type->{is_requesteeble}) {
+        if ($status eq '?' && $flag_type->is_requesteeble) {
             foreach my $login (@requestees) {
                 # We know the requestee exists because we ran
                 # Bugzilla::User::match_field before getting here.
@@ -413,18 +478,18 @@ sub validate {
         }
 
         # Make sure the user is authorized to modify flags, see bug 180879
-        # - User in the $grant_gid group can set flags, including "+" and "-"
-        next if (!$flag_type->{grant_gid}
-                 || $user->in_group_id($flag_type->{grant_gid}));
+        # - User in the grant_group can set flags, including "+" and "-".
+        next if (!$flag_type->grant_group
+                 || $user->in_group_id($flag_type->grant_group->id));
 
-        # - User in the $request_gid group can request flags
+        # - User in the request_group can request flags.
         next if ($status eq '?'
-                 && (!$flag_type->{request_gid}
-                     || $user->in_group_id($flag_type->{request_gid})));
+                 && (!$flag_type->request_group
+                     || $user->in_group_id($flag_type->request_group->id)));
 
         # - Any other flag modification is denied
         ThrowUserError("flag_update_denied",
-                        { name       => $flag_type->{name},
+                        { name       => $flag_type->name,
                           status     => $status,
                           old_status => "X" });
     }
@@ -508,40 +573,6 @@ sub sqlify_criteria {
     return @criteria;
 }
 
-=pod
-
-=over
-
-=item C<perlify_record()>
-
-Converts data retrieved from the database into a Perl record.  Depends on the
-formatting as described in C<BASE_COLUMNS>.
-
-=back
-
-=cut
-
-sub perlify_record {
-    my $type = {};
-    
-    $type->{'exists'} = $_[0];
-    $type->{'id'} = $_[1];
-    $type->{'name'} = $_[2];
-    $type->{'description'} = $_[3];
-    $type->{'cc_list'} = $_[4];
-    $type->{'target_type'} = $_[5] eq "b" ? "bug" : "attachment";
-    $type->{'sortkey'} = $_[6];
-    $type->{'is_active'} = $_[7];
-    $type->{'is_requestable'} = $_[8];
-    $type->{'is_requesteeble'} = $_[9];
-    $type->{'is_multiplicable'} = $_[10];
-    $type->{'grant_gid'} = $_[11];
-    $type->{'request_gid'} = $_[12];
-    $type->{'flag_count'} = $_[13];
-        
-    return $type;
-}
-
 1;
 
 =end private
@@ -561,6 +592,8 @@ sub perlify_record {
 =item Myk Melez <myk@mozilla.org>
 
 =item Kevin Benton <kevin.benton@amd.com>
+
+=item Frédéric Buclin <LpSolit@gmail.com>
 
 =back
 

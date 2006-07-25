@@ -238,24 +238,24 @@ sub flag_handler {
     # If this is the case, we will only match the first one.
     my $ftype;
     foreach my $f ( @{$flag_types} ) {
-        if ( $f->{'name'} eq $name) {
+        if ( $f->name eq $name) {
             $ftype = $f;
             last;
         }
     }
 
     if ($ftype) {    # We found the flag in the list
-        my $grant_gid = $ftype->{'grant_gid'};
+        my $grant_group = $ftype->grant_group;
         if (( $status eq '+' || $status eq '-' ) 
-            && $grant_gid && !$setter->in_group_id($grant_gid)) {
+            && $grant_group && !$setter->in_group_id($grant_group->id)) {
             $err = "Setter $setter_login on $type flag $name ";
             $err .= "is not in the Grant Group\n";
             $err .= "   Dropping flag $name\n";
             return $err;
         }
-        my $request_gid = $ftype->{'request_gid'};
-        if ($request_gid 
-            && $status eq '?' && !$setter->in_group_id($request_gid)) {
+        my $request_group = $ftype->request_group;
+        if ($request_group
+            && $status eq '?' && !$setter->in_group_id($request_group->id)) {
             $err = "Setter $setter_login on $type flag $name ";
             $err .= "is not in the Request Group\n";
             $err .= "   Dropping flag $name\n";
@@ -263,9 +263,7 @@ sub flag_handler {
         }
 
         # Take the first flag_type that matches
-        my $ftypeid   = $ftype->{'id'};
-        my $is_active = $ftype->{'is_active'};
-        unless ($is_active) {
+        unless ($ftype->is_active) {
             $err = "Flag $name is not active in this database\n";
             $err .= "   Dropping flag $name\n";
             return $err;
@@ -275,7 +273,7 @@ sub flag_handler {
                  (type_id, status, bug_id, attach_id, creation_date, 
                   setter_id, requestee_id)
                   VALUES (?, ?, ?, ?, ?, ?, ?)", undef,
-            ($ftypeid, $status, $bugid, $attachid, $timestamp,
+            ($ftype->id, $status, $bugid, $attachid, $timestamp,
             $setter_id, $requestee_id));
     }
     else {

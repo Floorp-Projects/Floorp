@@ -104,9 +104,9 @@ Returns the status '+', '-', '?' of the flag.
 
 =cut
 
-sub id     { return $_[0]->{'id'};         }
-sub name   { return $_[0]->type->{'name'}; }
-sub status { return $_[0]->{'status'};     }
+sub id     { return $_[0]->{'id'};     }
+sub name   { return $_[0]->type->name; }
+sub status { return $_[0]->{'status'}; }
 
 ###############################
 ####       Methods         ####
@@ -118,7 +118,7 @@ sub status { return $_[0]->{'status'};     }
 
 =item C<type>
 
-Returns the type of the flag, as pseudo Bugzilla::FlagType object.
+Returns the type of the flag, as a Bugzilla::FlagType object.
 
 =item C<setter>
 
@@ -136,7 +136,7 @@ Bugzilla::User object.
 sub type {
     my $self = shift;
 
-    $self->{'type'} ||= Bugzilla::FlagType::get($self->{'type_id'});
+    $self->{'type'} ||= new Bugzilla::FlagType($self->{'type_id'});
     return $self->{'type'};
 }
 
@@ -291,7 +291,7 @@ sub validate {
         # as is.
         if ($status eq '?'
             && $flag->status ne '?'
-            && !$flag->type->{is_requestable})
+            && !$flag->type->is_requestable)
         {
             ThrowCodeError("flag_status_invalid", 
                            { id => $id, status => $status });
@@ -302,7 +302,7 @@ sub validate {
         # the flag became specifically unrequestable, don't let the user
         # change the requestee, but let the user remove it by entering
         # an empty string for the requestee.
-        if ($status eq '?' && !$flag->type->{is_requesteeble}) {
+        if ($status eq '?' && !$flag->type->is_requesteeble) {
             my $old_requestee = $flag->requestee ? $flag->requestee->login : '';
             my $new_requestee = join('', @requestees);
             if ($new_requestee && $new_requestee ne $old_requestee) {
@@ -314,7 +314,7 @@ sub validate {
         # Make sure the user didn't enter multiple requestees for a flag
         # that can't be requested from more than one person at a time.
         if ($status eq '?'
-            && !$flag->type->{is_multiplicable}
+            && !$flag->type->is_multiplicable
             && scalar(@requestees) > 1)
         {
             ThrowUserError("flag_not_multiplicable", { type => $flag->type });
@@ -323,7 +323,7 @@ sub validate {
         # Make sure the requestees are authorized to access the bug.
         # (and attachment, if this installation is using the "insider group"
         # feature and the attachment is marked private).
-        if ($status eq '?' && $flag->type->{is_requesteeble}) {
+        if ($status eq '?' && $flag->type->is_requesteeble) {
             my $old_requestee = $flag->requestee ? $flag->requestee->login : '';
             foreach my $login (@requestees) {
                 next if $login eq $old_requestee;
@@ -365,20 +365,19 @@ sub validate {
         # - The flag is unchanged
         next if ($status eq $flag->status);
 
-        # - User in the $request_gid group can clear pending requests and set flags
+        # - User in the request_group can clear pending requests and set flags
         #   and can rerequest set flags.
         next if (($status eq 'X' || $status eq '?')
-                 && (!$flag->type->{request_gid}
-                     || $user->in_group_id($flag->type->{request_gid})));
+                 && (!$flag->type->request_group
+                     || $user->in_group_id($flag->type->request_group->id)));
 
-        # - User in the $grant_gid group can set/clear flags,
-        #   including "+" and "-"
-        next if (!$flag->type->{grant_gid}
-                 || $user->in_group_id($flag->type->{grant_gid}));
+        # - User in the grant_group can set/clear flags, including "+" and "-".
+        next if (!$flag->type->grant_group
+                 || $user->in_group_id($flag->type->grant_group->id));
 
         # - Any other flag modification is denied
         ThrowUserError("flag_update_denied",
-                        { name       => $flag->type->{name},
+                        { name       => $flag->type->name,
                           status     => $status,
                           old_status => $flag->status });
     }
@@ -391,7 +390,7 @@ sub snapshot {
                         'attach_id' => $attach_id });
     my @summaries;
     foreach my $flag (@$flags) {
-        my $summary = $flag->type->{'name'} . $flag->status;
+        my $summary = $flag->type->name . $flag->status;
         $summary .= "(" . $flag->requestee->login . ")" if $flag->requestee;
         push(@summaries, $summary);
     }
@@ -524,7 +523,7 @@ sub create {
     $dbh->do('INSERT INTO flags (type_id, bug_id, attach_id, requestee_id,
                                  setter_id, status, creation_date, modification_date)
               VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-              undef, ($flag->{'type'}->{'id'}, $bug->bug_id,
+              undef, ($flag->{'type'}->id, $bug->bug_id,
                       $attach_id, $requestee_id, $flag->{'setter'}->id,
                       $flag->{'status'}, $timestamp, $timestamp));
 
@@ -571,6 +570,8 @@ sub modify {
     my @flags;
     foreach my $id (@ids) {
         my $flag = new Bugzilla::Flag($id);
+        # If the flag no longer exists, ignore it.
+        next unless $flag;
 
         my $status = $cgi->param("flag-$id");
 
@@ -582,7 +583,7 @@ sub modify {
         my $requestee_email;
         if ($status eq "?"
             && scalar(@requestees) > 1
-            && $flag->type->{is_multiplicable})
+            && $flag->type->is_multiplicable)
         {
             # The first person, for which we'll reuse the existing flag.
             $requestee_email = shift(@requestees);
@@ -616,7 +617,7 @@ sub modify {
 
         my $requestee_changed = 
           ($status eq "?" && 
-           $flag->type->{'is_requesteeble'} &&
+           $flag->type->is_requesteeble &&
            $old_requestee ne $requestee_email);
 
         next unless ($status_changed || $requestee_changed);
@@ -770,7 +771,7 @@ sub FormToNewFlags {
 
     my @flags;
     foreach my $flag_type (@$flag_types) {
-        my $type_id = $flag_type->{'id'};
+        my $type_id = $flag_type->id;
 
         # We are only interested in flags the user tries to create.
         next unless scalar(grep { $_ == $type_id } @type_ids);
@@ -784,7 +785,7 @@ sub FormToNewFlags {
 
         # Do not create a new flag of this type if this flag type is
         # not multiplicable and already has a flag set.
-        next if (!$flag_type->{'is_multiplicable'} && $has_flags);
+        next if (!$flag_type->is_multiplicable && $has_flags);
 
         my $status = $cgi->param("flag_type-$type_id");
         trick_taint($status);
@@ -796,7 +797,7 @@ sub FormToNewFlags {
                                 setter    => $setter , 
                                 status    => $status ,
                                 requestee => Bugzilla::User->new_from_login($login) });
-                last if !$flag_type->{'is_multiplicable'};
+                last unless $flag_type->is_multiplicable;
             }
         }
         else {
@@ -829,7 +830,7 @@ sub notify {
     my $template = Bugzilla->template;
 
     # There is nobody to notify.
-    return unless ($flag->{'addressee'} || $flag->type->{'cc_list'});
+    return unless ($flag->{'addressee'} || $flag->type->cc_list);
 
     my $attachment_is_private = $attachment ? $attachment->isprivate : undef;
 
@@ -839,7 +840,7 @@ sub notify {
     # not in those groups or email addresses that don't have an account.
     if ($bug->groups || $attachment_is_private) {
         my @new_cc_list;
-        foreach my $cc (split(/[, ]+/, $flag->type->{'cc_list'})) {
+        foreach my $cc (split(/[, ]+/, $flag->type->cc_list)) {
             my $ccuser = Bugzilla::User->new_from_login($cc) || next;
 
             next if ($bug->groups && !$ccuser->can_see_bug($bug->bug_id));
@@ -852,11 +853,11 @@ sub notify {
     }
 
     # If there is nobody left to notify, return.
-    return unless ($flag->{'addressee'} || $flag->type->{'cc_list'});
+    return unless ($flag->{'addressee'} || $flag->type->cc_list);
 
     # Process and send notification for each recipient
     foreach my $to ($flag->{'addressee'} ? $flag->{'addressee'}->email : '',
-                    split(/[, ]+/, $flag->type->{'cc_list'}))
+                    split(/[, ]+/, $flag->type->cc_list))
     {
         next unless $to;
         my $vars = { 'flag'       => $flag,

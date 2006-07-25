@@ -527,7 +527,7 @@
 ],
 
 'admin/flag-type/confirm-delete.html.tmpl' => [
-  'flag_count', 
+  'flag_type.flag_count',
   'flag_type.id', 
 ],
 

@@ -51,7 +51,7 @@
 <p>
   You can restrict the list of flag types to those available for a given product
   and component. If a product is selected with no component, only flag types
-  which are available to ALL components of the product are shown.
+  which are available to at least one component of the product are shown.
 </p>
 
 <form action="editflagtypes.cgi" method="get">
@@ -59,8 +59,8 @@
     <tr>
       <th><label for="product">Product:</label></th>
       <td>
-        <select name="product" onchange="selectProduct(this.form, 'product', 'component', '__All__');">
-          <option value="">__All__</option>
+        <select name="product" onchange="selectProduct(this.form, 'product', 'component', '__Any__');">
+          <option value="">__Any__</option>
           [% FOREACH prod = products %]
             <option value="[% prod.name FILTER html %]"
                     [% " selected" IF selected_product == prod.name %]>
@@ -71,7 +71,7 @@
       <th><label for="component">Component:</label></th>
       <td>
         <select name="component">
-          <option value="">__All__</option>
+          <option value="">__Any__</option>
           [% FOREACH comp = components %]
             <option value="[% comp FILTER html %]"
                     [% " selected" IF selected_component == comp %]>
@@ -152,8 +152,8 @@
             <span class="multiplicable">multiplicable</span>
           [% END %]
         </td>
-        <td>[% type.grant_group_name FILTER html %]</td>
-        <td>[% type.request_group_name FILTER html %]</td>
+        <td>[% IF type.grant_group %][% type.grant_group.name FILTER html %][% END %]</td>
+        <td>[% IF type.request_group %][% type.request_group.name FILTER html %][% END %]</td>
         <td>
           <a href="editflagtypes.cgi?action=copy&amp;id=[% type.id %]">Copy</a>
           | <a href="editflagtypes.cgi?action=confirmdelete&amp;id=[% type.id %]"

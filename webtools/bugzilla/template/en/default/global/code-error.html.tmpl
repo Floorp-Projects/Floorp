@@ -227,10 +227,6 @@
     [% END %]
     is invalid.
 
-  [% ELSIF error == "flag_type_id_invalid" %]
-    The flag type ID <em>[% id FILTER html %]</em> is not
-    a positive integer.
-
   [% ELSIF error == "flag_type_inactive" %]
     [% title = "Inactive Flag Types" %]
     Some flag types are inactive and cannot be used to create new flags.

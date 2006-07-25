@@ -198,14 +198,10 @@ sub queue {
     if (defined $form_type && !grep($form_type eq $_, ("", "all"))) {
         # Check if any matching types are for attachments.  If not, don't show
         # the attachment column in the report.
-        my $types = Bugzilla::FlagType::match({ 'name' => $form_type });
-        my $has_attachment_type = 0;
-        foreach my $type (@$types) {
-            if ($type->{'target_type'} eq "attachment") {
-                $has_attachment_type = 1;
-                last;
-            }
-        }
+        my $has_attachment_type =
+            Bugzilla::FlagType::count({ 'name' => $form_type,
+                                        'target_type' => 'attachment' });
+
         if (!$has_attachment_type) { push(@excluded_columns, 'attachment') }
 
         my $quoted_form_type = $dbh->quote($form_type);
