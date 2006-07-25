@@ -13,7 +13,7 @@
 <!ENTITY enbJsCheckMailNews.accesskey  "J">
 
 <!-- Junk Mail Controls -->
-<!ENTITY junkMail.intro "Goto Account Settings to configure account specific junk mail settings.">
+<!ENTITY junkMail.intro "Set your default junk mail settings. Account specific junk mail settings can be configured in Account Settings.">
 <!ENTITY manualMark.label "When I mark messages as junk:">
 <!ENTITY manualMark.accesskey "W">
 <!ENTITY manualMarkModeMove.label "Move them to the account's &quot;Junk&quot; folder">
