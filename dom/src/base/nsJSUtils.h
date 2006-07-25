@@ -65,9 +65,6 @@ public:
   static jsval ConvertStringToJSVal(const nsString& aProp,
                                     JSContext* aContext);
 
-  static PRBool ConvertJSValToXPCObject(nsISupports** aSupports, REFNSIID aIID,
-                                        JSContext* aContext, jsval aValue);
-
   static void ConvertJSValToString(nsAString& aString,
                                    JSContext* aContext, jsval aValue);
 

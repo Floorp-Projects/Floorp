@@ -108,26 +108,6 @@ nsJSUtils::ConvertStringToJSVal(const nsString& aProp, JSContext* aContext)
   return STRING_TO_JSVAL(jsstring);
 }
 
-PRBool
-nsJSUtils::ConvertJSValToXPCObject(nsISupports** aSupports, REFNSIID aIID,
-                                   JSContext* aContext, jsval aValue)
-{
-  *aSupports = nsnull;
-  if (JSVAL_IS_NULL(aValue)) {
-    return JS_TRUE;
-  }
-
-  if (JSVAL_IS_OBJECT(aValue)) {
-    // WrapJS does all the work to recycle an existing wrapper and/or do a QI
-    nsresult rv = nsContentUtils::XPConnect()->
-      WrapJS(aContext, JSVAL_TO_OBJECT(aValue), aIID, (void**)aSupports);
-
-    return NS_SUCCEEDED(rv);
-  }
-
-  return JS_FALSE;
-}
-
 void
 nsJSUtils::ConvertJSValToString(nsAString& aString, JSContext* aContext,
                                 jsval aValue)

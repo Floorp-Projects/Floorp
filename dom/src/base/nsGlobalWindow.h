@@ -232,8 +232,6 @@ public:
 
   // nsPIDOMWindow
   virtual NS_HIDDEN_(nsPIDOMWindow*) GetPrivateRoot();
-  virtual NS_HIDDEN_(nsresult) GetObjectProperty(const PRUnichar* aProperty,
-                                                 nsISupports** aObject);
   virtual NS_HIDDEN_(nsresult) Activate();
   virtual NS_HIDDEN_(nsresult) Deactivate();
   virtual NS_HIDDEN_(nsIFocusController*) GetRootFocusController();
