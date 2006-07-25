@@ -133,8 +133,6 @@
           "anonid", "searchbar-textbox");</field>
       <field name="_popup">document.getAnonymousElementByAttribute(this, 
           "anonid", "searchbar-popup");</field>
-      <field name="_button">document.getAnonymousElementByAttribute(this, 
-          "anonid", "search-go-button");</field>
       <field name="_ss">null</field>
       <field name="_engines">null</field>
 
@@ -638,7 +636,7 @@
           <![CDATA[
             // Don't open search popup if history popup is open
             if (!this.popupOpen) {
-              this._getParentSearchbar()._button.open = true;
+              this._getParentSearchbar()._popup.click();
               return false;
             }
             return true;
