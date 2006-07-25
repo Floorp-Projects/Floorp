@@ -98,6 +98,12 @@ use constant OPTIONAL_MODULES => [
         version => '1.20'
     },
     {
+        # This module tells us whether or not Template-GD is installed
+        # on Template-Toolkits after 2.14, and still works with 2.14 and lower.
+        name => 'Template::Plugin::GD::Image',
+        version => 0
+    },
+    {
         name => 'Chart::Base',
         version => '1.0'
     },
@@ -162,10 +168,13 @@ use constant WIN32_MODULE_NAMES => {
     'GD::Graph'         => 'GDGraph',
     'GD::Text::Align'   => 'GDTextUtil',
     'Mail::Mailer'      => 'MailTools',
+    # We provide Template 2.14 or lower for Win32, so it still includes
+    # the GD plugin.
+    'Template::Plugin::GD' => 'Template',
 };
 
 # This was originally clipped from the libnet Makefile.PL, adapted here to
-# use the above vers_cmp routine for accurate version checking.
+# use the below vers_cmp routine for accurate version checking.
 sub have_vers {
     my ($pkg, $wanted, $silent) = @_;
     my ($msg, $vnum, $vstr);

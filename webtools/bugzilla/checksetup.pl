@@ -296,7 +296,9 @@ if (!$have_mod{'Image::Magick'} && !$silent) {
 
 }
 if ( (!$have_mod{'GD'} || !$have_mod{'GD::Graph'} 
-      || !$have_mod{'GD::Text::Align'}) && !$silent)
+      || !$have_mod{'GD::Text::Align'} 
+      || !$have_mod{'Template::Plugin::GD::Image'}) 
+     && !$silent)
 {
     print "If you want to see graphical bug reports (bar, pie and line ";
     print "charts of \ncurrent data), you should install libgd and the ";
@@ -306,6 +308,8 @@ if ( (!$have_mod{'GD'} || !$have_mod{'GD::Graph'}
         if !$have_mod{'GD::Graph'};
     print "GD::Text::Align: " . install_command("GD::Text::Align") . "\n"
         if !$have_mod{'GD::Text::Align'};
+    print "Template::Plugin::GD: " . install_command('Template::Plugin::GD')
+          . "\n" if !$have_mod{'Template::Plugin::GD::Image'};
     print "\n";
 }
 if (!$have_mod{'PatchReader'} && !$silent) {

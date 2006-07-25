@@ -203,6 +203,14 @@ if ($@ eq '') {
             print "TEST-FAILED Chart returned: $@\n";
         }
     }
+
+    eval 'use Template::Plugin::GD::Image';
+    if ($@) {
+        print "TEST-FAILED Template::Plugin::GD is not installed.\n";
+    }
+    else {
+        print "TEST-OK Template::Plugin::GD is installed.\n";
+    }
 }
 
 sub fetch {

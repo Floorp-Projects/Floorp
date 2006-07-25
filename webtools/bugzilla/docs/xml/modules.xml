@@ -149,6 +149,16 @@
     </para>
 
     <para>
+      Template::Plugin::GD:
+      <literallayout>
+       CPAN Download Page: <ulink url="http://search.cpan.org/dist/Template-GD/" />
+       PPM Download Link:  (Just install Template-Toolkit using the instructions below)
+
+       Documentation: <ulink url="http://www.template-toolkit.org/docs/aqua/Modules/index.html" />
+      </literallayout>
+    </para>
+
+    <para>
       MIME::Base64:
       <literallayout>
         CPAN Download Page: <ulink url="http://search.cpan.org/dist/MIME-Base64/"/>
