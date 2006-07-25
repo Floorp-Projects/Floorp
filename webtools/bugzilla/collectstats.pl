@@ -79,7 +79,7 @@ my $old_resolutions =
     $dbh->selectcol_arrayref('SELECT bugs_activity.added
                                 FROM bugs_activity
                           INNER JOIN fielddefs
-                                  ON fielddefs.fieldid = bugs_activity.fieldid
+                                  ON fielddefs.id = bugs_activity.fieldid
                            LEFT JOIN resolution
                                   ON resolution.value = bugs_activity.added
                                WHERE fielddefs.name = ?
@@ -90,7 +90,7 @@ my $old_resolutions =
                               SELECT bugs_activity.removed
                                 FROM bugs_activity
                           INNER JOIN fielddefs
-                                  ON fielddefs.fieldid = bugs_activity.fieldid
+                                  ON fielddefs.id = bugs_activity.fieldid
                            LEFT JOIN resolution
                                   ON resolution.value = bugs_activity.removed
                                WHERE fielddefs.name = ?
@@ -449,7 +449,7 @@ FIN
             $query = qq{SELECT bugs_activity.removed 
                           FROM bugs_activity 
                     INNER JOIN fielddefs 
-                            ON bugs_activity.fieldid = fielddefs.fieldid 
+                            ON bugs_activity.fieldid = fielddefs.id 
                          WHERE fielddefs.name = ? 
                            AND bugs_activity.bug_id = ? 
                            AND bugs_activity.bug_when >= } . 

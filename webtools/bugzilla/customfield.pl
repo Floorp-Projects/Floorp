@@ -75,7 +75,7 @@ $name =~ /^cf_/
   or $name = "cf_" . $name;
 
 # Exit gracefully if there is already a field with the given name.
-if (scalar(Bugzilla::Field::match({ name=>$name })) > 0) {
+if ( new Bugzilla::Field({name => $name}) ) {
     print "There is already a field named $name.  Please choose " .
           "a different name.\n";
     exit;

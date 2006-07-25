@@ -755,7 +755,7 @@ if ($action eq 'search') {
                 profiles_activity.newvalue AS added
          FROM profiles_activity
          INNER JOIN profiles ON profiles_activity.who = profiles.userid
-         INNER JOIN fielddefs ON fielddefs.fieldid = profiles_activity.fieldid
+         INNER JOIN fielddefs ON fielddefs.id = profiles_activity.fieldid
          WHERE profiles_activity.userid = ?
          ORDER BY profiles_activity.profiles_when",
         {'Slice' => {}},

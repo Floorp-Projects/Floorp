@@ -391,7 +391,7 @@ CrossCheck('classifications', 'id',
 CrossCheck("keyworddefs", "id",
            ["keywords", "keywordid"]);
 
-CrossCheck("fielddefs", "fieldid",
+CrossCheck("fielddefs", "id",
            ["bugs_activity", "fieldid"],
            ['profiles_activity', 'fieldid']);
 

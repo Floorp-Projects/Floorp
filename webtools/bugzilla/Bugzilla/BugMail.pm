@@ -224,7 +224,7 @@ sub ProcessOneBug {
                    bugs_activity.added, bugs_activity.attach_id, fielddefs.name
               FROM bugs_activity
         INNER JOIN fielddefs
-                ON fielddefs.fieldid = bugs_activity.fieldid
+                ON fielddefs.id = bugs_activity.fieldid
         INNER JOIN profiles
                 ON profiles.userid = bugs_activity.who
              WHERE bugs_activity.bug_id = ?
@@ -277,7 +277,7 @@ sub ProcessOneBug {
         INNER JOIN dependencies
                 ON bugs_activity.bug_id = dependencies.dependson
         INNER JOIN fielddefs
-                ON fielddefs.fieldid = bugs_activity.fieldid
+                ON fielddefs.id = bugs_activity.fieldid
              WHERE dependencies.blocked = ?
                AND (fielddefs.name = 'bug_status'
                     OR fielddefs.name = 'resolution')

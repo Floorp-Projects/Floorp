@@ -302,12 +302,13 @@ sub switch_to_main_db {
 sub get_fields {
     my $class = shift;
     my $criteria = shift;
-    return Bugzilla::Field::match($criteria);
+    return @{Bugzilla::Field->match($criteria)};
 }
 
 sub custom_field_names {
     # Get a list of custom fields and convert it into a list of their names.
-    return map($_->{name}, Bugzilla::Field::match({ custom=>1, obsolete=>0 }));
+    return map($_->{name}, 
+               @{Bugzilla::Field->match({ custom=>1, obsolete=>0 })});
 }
 
 sub request_cache {

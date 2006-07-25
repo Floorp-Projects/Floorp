@@ -451,7 +451,7 @@ use constant ABSTRACT_SCHEMA => {
 
     fielddefs => {
         FIELDS => [
-            fieldid     => {TYPE => 'MEDIUMSERIAL', NOTNULL => 1,
+            id          => {TYPE => 'MEDIUMSERIAL', NOTNULL => 1,
                             PRIMARYKEY => 1},
             name        => {TYPE => 'varchar(64)', NOTNULL => 1},
             type        => {TYPE => 'INT2', NOTNULL => 1,

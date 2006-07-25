@@ -38,18 +38,18 @@ Bugzilla::Field - a particular piece of information about bugs
   use Bugzilla::Field;
 
   # Display information about non-obsolete custom fields.
-  # Bugzilla->get_fields() is a wrapper around Bugzilla::Field::match(),
+  # Bugzilla->get_fields() is a wrapper around Bugzilla::Field->match(),
   # so both methods take the same arguments.
-  print Dumper(Bugzilla::Field::match({ obsolete => 1, custom => 1 }));
+  print Dumper(Bugzilla::Field->match({ obsolete => 1, custom => 1 }));
 
   # Create a custom field.
   my $field = Bugzilla::Field::create("hilarity", "Hilarity");
-  print "$field->{description} is a custom field\n";
+  print $field->description . " is a custom field\n";
 
   # Instantiate a Field object for an existing field.
-  my $field = new Bugzilla::Field('qacontact_accessible');
-  if ($field->{obsolete}) {
-      print "$field->{description} is obsolete\n";
+  my $field = new Bugzilla::Field({name => 'qacontact_accessible'});
+  if ($field->obsolete) {
+      print $field->description . " is obsolete\n";
   }
 
   # Validation Routines
@@ -63,21 +63,28 @@ of information that Bugzilla stores about bugs.
 
 This package also provides functions for dealing with CGI form fields.
 
+C<Bugzilla::Field> is an implementation of L<Bugzilla::Object>, and
+so provides all of the methods available in L<Bugzilla::Object>,
+in addition to what is documented here.
+
 =cut
 
 package Bugzilla::Field;
 
 use strict;
 
-use base qw(Exporter);
+use base qw(Exporter Bugzilla::Object);
 @Bugzilla::Field::EXPORT = qw(check_field get_field_id get_legal_field_values);
 
 use Bugzilla::Util;
 use Bugzilla::Constants;
 use Bugzilla::Error;
 
+use constant DB_TABLE   => 'fielddefs';
+use constant LIST_ORDER => 'sortkey, name';
+
 use constant DB_COLUMNS => (
-    'fieldid AS id',
+    'id',
     'name',
     'description',
     'type',
@@ -86,35 +93,9 @@ use constant DB_COLUMNS => (
     'enter_bug',
 );
 
-our $columns = join(", ", DB_COLUMNS);
-
-sub new {
-    my $invocant = shift;
-    my $name = shift;
-    my $self = shift || Bugzilla->dbh->selectrow_hashref(
-                            "SELECT $columns FROM fielddefs WHERE name = ?",
-                            undef,
-                            $name
-                        );
-    bless($self, $invocant);
-    return $self;
-}
-
 =pod
 
 =head2 Instance Properties
-
-=over
-
-=item C<id>
-
-the unique identifier for the field;
-
-=back
-
-=cut
-
-sub id { return $_[0]->{id} }
 
 =over
 
@@ -123,14 +104,6 @@ sub id { return $_[0]->{id} }
 the name of the field in the database; begins with "cf_" if field
 is a custom field, but test the value of the boolean "custom" property
 to determine if a given field is a custom field;
-
-=back
-
-=cut
-
-sub name { return $_[0]->{name} }
-
-=over
 
 =item C<description>
 
@@ -242,7 +215,7 @@ sub create {
               );
     $sth->execute($name, $desc, $sortkey, $type, $custom);
 
-    return new Bugzilla::Field($name);
+    return new Bugzilla::Field({name => $name});
 }
 
 
@@ -262,14 +235,14 @@ Params:    C<$criteria> - hash reference - the criteria to match against.
            Note: Bugzilla->get_fields() and Bugzilla->custom_field_names
            wrap this method for most callers.
 
-Returns:   a list of field objects.
+Returns:   A reference to an array of C<Bugzilla::Field> objects.
 
 =back
 
 =cut
 
 sub match {
-    my ($criteria) = @_;
+    my ($class, $criteria) = @_;
   
     my @terms;
     if (defined $criteria->{name}) {
@@ -286,13 +259,10 @@ sub match {
     }
     my $where = (scalar(@terms) > 0) ? "WHERE " . join(" AND ", @terms) : "";
   
-    my $records = Bugzilla->dbh->selectall_arrayref(
-                      "SELECT $columns FROM fielddefs $where ORDER BY sortkey",
-                      { Slice => {}}
-                  );
-    # Generate a array of field objects from the array of field records.
-    my @fields = map( new Bugzilla::Field(undef, $_), @$records );
-    return @fields;
+    my $ids = Bugzilla->dbh->selectcol_arrayref(
+        "SELECT id FROM fielddefs $where", {Slice => {}});
+
+    return $class->new_from_list($ids);
 }
 
 =pod
@@ -371,7 +341,7 @@ sub check_field {
         return 0 if $no_warn; # We don't want an error to be thrown; return.
         trick_taint($name);
 
-        my $field = new Bugzilla::Field($name);
+        my $field = new Bugzilla::Field({ name => $name });
         my $field_desc = $field ? $field->description : $name;
         ThrowCodeError('illegal_field', { field => $field_desc });
     }
@@ -401,7 +371,7 @@ sub get_field_id {
     my $dbh = Bugzilla->dbh;
 
     trick_taint($name);
-    my $id = $dbh->selectrow_array('SELECT fieldid FROM fielddefs
+    my $id = $dbh->selectrow_array('SELECT id FROM fielddefs
                                     WHERE name = ?', undef, $name);
 
     ThrowCodeError('invalid_field_name', {field => $name}) unless $id;

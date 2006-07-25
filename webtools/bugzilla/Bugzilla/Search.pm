@@ -1276,7 +1276,7 @@ sub init {
 
     # get a list of field names to verify the user-submitted chart fields against
     %chartfields = @{$dbh->selectcol_arrayref(
-        q{SELECT name, fieldid FROM fielddefs}, { Columns=>[1,2] })};
+        q{SELECT name, id FROM fielddefs}, { Columns=>[1,2] })};
 
     $row = 0;
     for ($chart=-1 ;

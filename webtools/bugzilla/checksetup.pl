@@ -1627,7 +1627,7 @@ my $headernum = 1;
 sub AddFDef {
     my ($name, $description, $mailhead) = (@_);
 
-    my $sth = $dbh->prepare("SELECT fieldid FROM fielddefs " .
+    my $sth = $dbh->prepare("SELECT id FROM fielddefs " .
                             "WHERE name = ?");
     $sth->execute($name);
     my ($fieldid) = ($sth->fetchrow_array());
@@ -1640,12 +1640,16 @@ sub AddFDef {
         $dbh->do(q{UPDATE fielddefs
                       SET name = ?, description = ?,
                           mailhead = ?, sortkey = ?
-                    WHERE fieldid = ?}, undef,
+                    WHERE id = ?}, undef,
                  $name, $description, $mailhead, $headernum, $fieldid);
     }
     $headernum++;
 }
 
+# Change the name of the fieldid column to id, so that fielddefs
+# can use Bugzilla::Object easily. We have to do this up here, because
+# otherwise adding these field definitions will fail.
+$dbh->bz_rename_column('fielddefs', 'fieldid', 'id');
 
 # Note that all of these entries are unconditional, from when get_field_id
 # used to create an entry if it wasn't found. New fielddef columns should
@@ -1718,7 +1722,7 @@ my $new_field_name = 'days_elapsed';
 my $field_description = 'Days since bug changed';
 
 my ($old_field_id, $old_field_name) =
-    $dbh->selectrow_array('SELECT fieldid, name
+    $dbh->selectrow_array('SELECT id, name
                            FROM fielddefs
                            WHERE description = ?',
                            undef, $field_description);
@@ -1765,7 +1769,7 @@ if ($old_field_id && ($old_field_name ne $new_field_name)) {
     # Now that saved searches have been fixed, we can fix the field name.
     print "Fixing the 'fielddefs' table...\n";
     print "New field name: " . $new_field_name . "\n";
-    $dbh->do('UPDATE fielddefs SET name = ? WHERE fieldid = ?',
+    $dbh->do('UPDATE fielddefs SET name = ? WHERE id = ?',
               undef, ($new_field_name, $old_field_id));
 }
 AddFDef($new_field_name, $field_description, 0);
@@ -2107,13 +2111,13 @@ if ($dbh->bz_column_info('bugs_activity', 'field')) {
     while (my ($f) = ($sth->fetchrow_array())) {
         my $q = $dbh->quote($f);
         my $s2 =
-            $dbh->prepare("SELECT fieldid FROM fielddefs WHERE name = $q");
+            $dbh->prepare("SELECT id FROM fielddefs WHERE name = $q");
         $s2->execute();
         my ($id) = ($s2->fetchrow_array());
         if (!$id) {
             $dbh->do("INSERT INTO fielddefs (name, description) VALUES " .
                      "($q, $q)");
-            $id = $dbh->bz_last_key('fielddefs', 'fieldid');
+            $id = $dbh->bz_last_key('fielddefs', 'id');
         }
         $dbh->do("UPDATE bugs_activity SET fieldid = $id WHERE field = $q");
     }
@@ -2546,10 +2550,10 @@ if ($dbh->bz_column_info('bugs_activity', 'oldvalue')) {
     $dbh->bz_add_column("bugs_activity", "removed", {TYPE => "TINYTEXT"});
     $dbh->bz_add_column("bugs_activity", "added", {TYPE => "TINYTEXT"});
 
-    # Need to get fieldid's for the fields that have multiple values
+    # Need to get field id's for the fields that have multiple values
     my @multi = ();
     foreach my $f ("cc", "dependson", "blocked", "keywords") {
-        my $sth = $dbh->prepare("SELECT fieldid " .
+        my $sth = $dbh->prepare("SELECT id " .
                                 "FROM fielddefs " .
                                 "WHERE name = '$f'");
         $sth->execute();
@@ -2960,13 +2964,13 @@ if ($dbh->bz_column_info("profiles", "groupset")) {
     # Replace old activity log groupset records with lists of names of groups.
     # Start by defining the bug_group field and getting its id.
     AddFDef("bug_group", "Group", 0);
-    $sth = $dbh->prepare("SELECT fieldid " .
+    $sth = $dbh->prepare("SELECT id " .
                            "FROM fielddefs " .
                           "WHERE name = " . $dbh->quote('bug_group'));
     $sth->execute();
     my ($bgfid) = $sth->fetchrow_array;
     # Get the field id for the old groupset field
-    $sth = $dbh->prepare("SELECT fieldid " .
+    $sth = $dbh->prepare("SELECT id " .
                            "FROM fielddefs " .
                           "WHERE name = " . $dbh->quote('groupset'));
     $sth->execute();
@@ -3108,10 +3112,10 @@ if ($dbh->bz_table_info("attachstatuses")
     
     # Get IDs for the old attachment status and new flag fields.
     my ($old_field_id) = $dbh->selectrow_array(
-        "SELECT fieldid FROM fielddefs WHERE name='attachstatusdefs.name'")
+        "SELECT id FROM fielddefs WHERE name='attachstatusdefs.name'")
         || 0;
     
-    $sth = $dbh->prepare("SELECT fieldid FROM fielddefs " . 
+    $sth = $dbh->prepare("SELECT id FROM fielddefs " . 
                          "WHERE name='flagtypes.name'");
     $sth->execute();
     my $new_field_id = $sth->fetchrow_arrayref()->[0];

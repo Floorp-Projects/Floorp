@@ -876,7 +876,7 @@ sub GetBugActivity {
           FROM bugs_activity
                $suppjoins
      LEFT JOIN fielddefs
-            ON bugs_activity.fieldid = fielddefs.fieldid
+            ON bugs_activity.fieldid = fielddefs.id
     INNER JOIN profiles
             ON profiles.userid = bugs_activity.who
          WHERE bugs_activity.bug_id = ?
