@@ -4945,6 +4945,38 @@ nsContextMenu.prototype = {
 
       permissionmanager.add(uri, "image",
                             aBlock ? nsIPermissionManager.DENY_ACTION : nsIPermissionManager.ALLOW_ACTION);
+
+      var savedmenu = this;
+      function undoImageBlock() {
+        savedmenu.toggleImageBlocking(!aBlock);
+      }
+
+      var bundle_browser = document.getElementById("bundle_browser");
+      var message;
+      if (aBlock)
+        message = bundle_browser.getString("imageWarningBlocked");
+      else 
+        message = bundle_browser.getString("imageWarningAllowed");
+
+      var notificationBox = gBrowser.getNotificationBox();
+      var notification = notificationBox.getNotificationWithValue("images-blocked");
+
+      if (notification)
+        notification.label = message;
+      else {
+        var buttons = [{
+          label: bundle_browser.getString("undo"),
+          accesskey: bundle_browser.getString("undo.accessKey"),
+          callback: undoImageBlock
+         }];
+         const priority = notificationBox.PRIORITY_WARNING_MEDIUM;
+         notificationBox.appendNotification(message, "images-blocked",
+                                            "chrome://browser/skin/Info.png",
+                                             priority, buttons);
+      }
+
+      // Reload the page to show the effect instantly
+      BrowserReload();
     },
     isImageBlocked : function() {
       var nsIPermissionManager = Components.interfaces.nsIPermissionManager;
