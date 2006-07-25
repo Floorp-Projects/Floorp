@@ -107,9 +107,9 @@ sub unlock{
 
 sub print_time {
   my ($t) = @_;
-  my ($sec,$minute,$hour,$mday,$mon);
-  ($sec,$minute,$hour,$mday,$mon,undef) = localtime($t);
-  sprintf("%02d/%02d&nbsp;%02d:%02d:%02d",$mon+1,$mday,$hour,$minute,$sec);
+  my ($sec,$minute,$hour,$mday,$mon,$year);
+  ($sec,$minute,$hour,$mday,$mon,$year,undef) = localtime($t);
+  sprintf("%d/%02d/%02d&nbsp;%02d:%02d:%02d",$year+1900,$mon+1,$mday,$hour,$minute,$sec);
 }
 
 #------------------
@@ -163,11 +163,11 @@ sub both_are_today {
 sub get_local_hms {
   my ($t, $need_to_qualify) = @_;
 
-  my (undef,$minute,$hour,$mday,$mon,undef) = localtime($t);
+  my (undef,$minute,$hour,$mday,$mon,$year,undef) = localtime($t);
   my $formatted_date = sprintf("%02d:%02d",$hour,$minute);
 
   if ($need_to_qualify) {
-    $formatted_date = sprintf("%02d/%02d",$mon+1,$mday) . " " . $formatted_date;
+    $formatted_date = sprintf("%d/%02d/%02d",$year+1900,$mon+1,$mday) . " " . $formatted_date;
   }
 
   return $formatted_date;
