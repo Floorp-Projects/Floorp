@@ -213,7 +213,7 @@
         <children>
           <xul:image class="button-icon" xbl:inherits="src=image"/>
           <xul:label class="button-text" xbl:inherits="value=label,accesskey,crop" flex="1"/>
-          <xul:dropmarker class="button-menu-dropmarker" xbl:inherits="open,disabled"/>
+          <xul:dropmarker class="button-menu-dropmarker" xbl:inherits="open,disabled,label"/>
         </children>
       </xul:hbox>
     </content>
@@ -340,7 +340,7 @@
                                 buttonover,buttondown,align,dir,pack,orient">
         <children/>
       </xul:button>
-      <xul:dropmarker class="button-menubutton-dropmarker" xbl:inherits="open,disabled"/>
+      <xul:dropmarker class="button-menubutton-dropmarker" xbl:inherits="open,disabled,label"/>
     </content>
   </binding>
   
