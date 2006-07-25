@@ -542,6 +542,9 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
     // the offset occured on whitespace boundary
     PRInt32 tempOffset = endOffset = startOffset;  // Use temp so that startOffset is not modified (it is passed by reference)
     nsIFrame *endFrame = GetPosAndText(tempOffset, endOffset);
+    if (!endFrame) {
+      return NS_ERROR_FAILURE;
+    }
     endOffset = GetRelativeOffset(presShell, endFrame, endOffset, amount, eDirNext, needsStart);
   }
 
@@ -1121,7 +1124,7 @@ NS_IMETHODIMP nsHyperTextAccessible::WillDeleteSelection(nsISelection *aSelectio
 //     however that must be fixed in the editor code
 {
   PRInt32 selectionStart, selectionEnd;
-  nsresult rv = GetSelectionBounds(0, &selectionStart, &selectionEnd);
+  GetSelectionBounds(0, &selectionStart, &selectionEnd);
 
   AtkTextChange textData;
 
