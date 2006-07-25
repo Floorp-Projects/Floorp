@@ -1,11 +1,11 @@
 inspector.jar:
 % content inspector %content/inspector/ xpcnativewrappers=no
-% overlay chrome://communicator/content/tasksOverlay.xul chrome://inspector/content/tasksOverlay.xul
-% overlay chrome://communicator/content/pref/preftree.xul chrome://inspector/content/prefs/prefsOverlay.xul
-% overlay chrome://browser/content/browser.xul chrome://inspector/content/tasksOverlay-ff.xul
-% overlay chrome://browser/content/macBrowserOverlay.xul chrome://inspector/content/tasksOverlay-ff.xul
-% overlay chrome://calendar/content/calendar.xul chrome://inspector/content/tasksOverlay-sb.xul
-% overlay chrome://messenger/content/mailWindowOverlay.xul chrome://inspector/content/tasksOverlay-tb.xul
+% overlay chrome://communicator/content/tasksOverlay.xul chrome://inspector/content/tasksOverlay.xul application={92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}
+% overlay chrome://communicator/content/pref/preftree.xul chrome://inspector/content/prefs/prefsOverlay.xul application={92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}
+% overlay chrome://browser/content/browser.xul chrome://inspector/content/tasksOverlay-ff.xul application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
+% overlay chrome://browser/content/macBrowserOverlay.xul chrome://inspector/content/tasksOverlay-ff.xul application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
+% overlay chrome://calendar/content/calendar.xul chrome://inspector/content/tasksOverlay-sb.xul application={718e30fb-e89b-41dd-9da7-e25a45638b28}
+% overlay chrome://messenger/content/mailWindowOverlay.xul chrome://inspector/content/tasksOverlay-tb.xul application={3550f703-e582-4d05-9a08-453d09bdfdc6}
 % overlay chrome://inspector/content/commandOverlay.xul chrome://inspector/content/viewers/dom/commandOverlay.xul
 % overlay chrome://inspector/content/commandOverlay.xul chrome://inspector/content/viewers/styleRules/commandOverlay.xul
 % overlay chrome://inspector/content/commandOverlay.xul chrome://inspector/content/search/modules/commandOverlay.xul
