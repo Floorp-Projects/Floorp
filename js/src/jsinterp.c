@@ -482,26 +482,9 @@ CloneBlockChain(JSContext *cx, JSStackFrame *fp, JSObject *obj)
         parent = CloneBlockChain(cx, fp, parent);
         if (!parent)
             return NULL;
+        fp->scopeChain = parent;
     }
     return js_CloneBlockObject(cx, obj, parent, fp);
-}
-
-static JSBool
-PutBlockObjects(JSContext *cx, JSStackFrame *fp)
-{
-    JSBool ok;
-    JSObject *obj;
-
-    /*
-     * Walk the scope chain looking for block scopes whose locals need to be
-     * copied from stack slots into object slots before fp goes away.
-     */
-    ok = JS_TRUE;
-    for (obj = fp->scopeChain; obj; obj = OBJ_GET_PARENT(cx, obj)) {
-        if (OBJ_GET_CLASS(cx, obj) == &js_BlockClass)
-            ok &= js_PutBlockObject(cx, obj);
-    }
-    return ok;
 }
 
 JSObject *
@@ -521,6 +504,24 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
     }
     JS_ASSERT(fp->scopeChain);
     return fp->scopeChain;
+}
+
+/*
+ * Walk the scope chain looking for block scopes whose locals need to be
+ * copied from stack slots into object slots before fp goes away.
+ */
+static JSBool
+PutBlockObjects(JSContext *cx, JSStackFrame *fp)
+{
+    JSBool ok;
+    JSObject *obj;
+
+    ok = JS_TRUE;
+    for (obj = fp->scopeChain; obj; obj = OBJ_GET_PARENT(cx, obj)) {
+        if (OBJ_GET_CLASS(cx, obj) == &js_BlockClass)
+            ok &= js_PutBlockObject(cx, obj);
+    }
+    return ok;
 }
 
 JSObject *
