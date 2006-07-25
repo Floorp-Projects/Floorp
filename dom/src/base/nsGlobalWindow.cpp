@@ -5397,45 +5397,6 @@ nsGlobalWindow::GetLocation(nsIDOMLocation ** aLocation)
   return NS_OK;
 }
 
-nsresult
-nsGlobalWindow::GetObjectProperty(const PRUnichar *aProperty,
-                                  nsISupports ** aObject)
-{
-  FORWARD_TO_INNER(GetObjectProperty, (aProperty, aObject),
-                   NS_ERROR_NOT_INITIALIZED);
-
-  NS_ENSURE_TRUE(mJSObject, NS_ERROR_NOT_AVAILABLE);
-
-  // Get JSContext from stack.
-  nsCOMPtr<nsIThreadJSContextStack> stack(do_GetService(sJSStackContractID));
-  NS_ENSURE_TRUE(stack, NS_ERROR_FAILURE);
-
-  JSContext *cx;
-  NS_ENSURE_SUCCESS(stack->Peek(&cx), NS_ERROR_FAILURE);
-
-  if (!cx) {
-    stack->GetSafeJSContext(&cx);
-    NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
-  }
-
-  jsval propertyVal;
-
-  JSAutoRequest ar(cx);
-
-  if (!::JS_LookupUCProperty(cx, mJSObject,
-                             NS_REINTERPRET_CAST(const jschar *, aProperty),
-                             nsCRT::strlen(aProperty), &propertyVal)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (!nsJSUtils::ConvertJSValToXPCObject(aObject, NS_GET_IID(nsISupports),
-                                          cx, propertyVal)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
-}
-
 static nsresult
 FireWidgetEvent(nsIDocShell *aDocShell, PRUint32 aMsg)
 {

@@ -72,9 +72,9 @@ class nsPresContext;
 struct nsTimeout;
 
 #define NS_PIDOMWINDOW_IID \
-{ /* {D0A82BF8-969B-4092-8FE7-D885622DA5BF} */ \
-  0xd0a82bf8, 0x969b, 0x4092, \
-  { 0x8f, 0xe7, 0xd8, 0x85, 0x62, 0x2d, 0xa5, 0xbf } }
+{ /* 4602B87E-879E-49D1-96FE-C87FDD915348} */ \
+  0x4602b87e, 0x879e, 0x49d1, \
+  { 0x96, 0xfe, 0xc8, 0x7f, 0xdd, 0x91, 0x53, 0x48 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -82,9 +82,6 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_PIDOMWINDOW_IID)
 
   virtual nsPIDOMWindow* GetPrivateRoot() = 0;
-
-  virtual nsresult GetObjectProperty(const PRUnichar* aProperty,
-                                     nsISupports** aObject) = 0;
 
   // This is private because activate/deactivate events are not part
   // of the DOM spec.
