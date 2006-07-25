@@ -81,3 +81,5 @@
   <!-- NEEDED FOR APPLICATION SUPPORT -->
   <script type="application/x-javascript" src="chrome://calendar/content/applicationUtil.js"/>
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+
+  <script type="application/x-javascript" src="chrome://global/content/printUtils.js"/>

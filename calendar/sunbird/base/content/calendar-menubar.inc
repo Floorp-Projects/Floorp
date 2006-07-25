@@ -121,11 +121,10 @@
                      accesskey="&calendar.publish.accesskey;"
                      observes="publish_events_command"/>
            <menuseparator/>
-           <!-- XXX lilmatt: Finish this! -->
            <menuitem id="calendar-page-setup-menu"
                      label="&calendar.pagesetup.label;"
                      accesskey="&calendar.pagesetup.accesskey;"
-                     disabled="true"/>
+                     observes="cmd_pageSetup"/>
            <menuitem id="calendar-print-menu"
                      key="print_key"
                      label="&calendar.print.label;"

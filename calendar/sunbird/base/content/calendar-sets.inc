@@ -52,6 +52,7 @@
   <command id="delete_command_no_confirm" oncommand="deleteEventCommand( true )" disabled="true" disabledwhennoeventsselected="true"/>
   <command id="modify_command" oncommand="editEvent()" disabled="true" disabledwhennoeventsselected="true"/>
   <command id="send_event_command" oncommand="sendEvent()" disabled="true" disabledwhennoeventsselected="true"/>
+  <command id="cmd_pageSetup" oncommand="PrintUtils.showPageSetup();"/>
   <command id="print_command" oncommand="print()"/>
   
   <command id="undo_command" oncommand="undo()" disabled="true"/>
