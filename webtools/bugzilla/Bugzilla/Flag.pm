@@ -448,7 +448,7 @@ sub process {
     # In case the bug's product/component has changed, clear flags that are
     # no longer valid.
     my $flag_ids = $dbh->selectcol_arrayref(
-        "SELECT flags.id 
+        "SELECT DISTINCT flags.id
            FROM flags
      INNER JOIN bugs
              ON flags.bug_id = bugs.bug_id
@@ -463,7 +463,7 @@ sub process {
     foreach my $flag_id (@$flag_ids) { clear($flag_id, $bug, $attachment) }
 
     $flag_ids = $dbh->selectcol_arrayref(
-        "SELECT flags.id 
+        "SELECT DISTINCT flags.id
         FROM flags, bugs, flagexclusions e
         WHERE bugs.bug_id = ?
         AND flags.bug_id = bugs.bug_id
