@@ -207,6 +207,8 @@ select:empty {
 
 option {
   display: block;
+  float: none !important;
+  position: static !important;
   min-height: 1em;
   line-height: normal !important;
   -moz-user-select: none;
@@ -227,6 +229,8 @@ option:checked {
 
 optgroup {
   display: block;
+  float: none !important;
+  position: static !important;
   font: -moz-list;
   line-height: normal !important;
   font-style: italic;
