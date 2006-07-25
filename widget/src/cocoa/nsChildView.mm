@@ -1563,9 +1563,18 @@ NS_IMETHODIMP nsChildView::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStat
   aStatus = nsEventStatus_eIgnore;
   if (! mDestructorCalled)
   {
-    nsIWidget* aWidget = event->widget;
-    NS_IF_ADDREF(aWidget);
-    
+    nsCOMPtr<nsIWidget> kungFuDeathGrip(event->widget);
+    nsCOMPtr<nsIWidget> kungFuDeathGrip2;
+
+    if (mParentWidget) {
+      nsWindowType type;
+      mParentWidget->GetWindowType(type);
+      if (type == eWindowType_popup) {
+        event->widget = mParentWidget;
+        kungFuDeathGrip2 = mParentWidget;
+      }
+    }
+
     if (mMenuListener != nsnull) {
       if (NS_MENU_EVENT == event->eventStructType)
         aStatus = mMenuListener->MenuSelected( static_cast<nsMenuEvent&>(*event) );
@@ -1577,7 +1586,6 @@ NS_IMETHODIMP nsChildView::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStat
     if ((aStatus != nsEventStatus_eConsumeNoDefault) && (mEventListener != nsnull))
       aStatus = mEventListener->ProcessEvent(*event);
 
-    NS_IF_RELEASE(aWidget);
   }
   return NS_OK;
 }

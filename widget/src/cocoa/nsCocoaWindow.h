@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -46,6 +46,7 @@
 #include "nsPIWidgetCocoa.h"
 
 class nsCocoaWindow;
+class nsChildView;
 
 
 @interface WindowDelegate : NSObject
@@ -90,6 +91,7 @@ public:
                                    nsIToolkit *aToolkit = nsnull,
                                    nsWidgetInitData *aInitData = nsnull);
 
+    NS_IMETHOD              Destroy();
      // Utility method for implementing both Create(nsIWidget ...) and
      // Create(nsNativeWidget...)
 
@@ -103,12 +105,14 @@ public:
                                     nsNativeWidget aNativeWindow = nsnull);
 
     NS_IMETHOD              Show(PRBool aState);
-    
+    NS_IMETHOD              AddMouseListener(nsIMouseListener * aListener);
+    NS_IMETHOD              AddEventListener(nsIEventListener * aListener);
+    NS_IMETHOD              AddMenuListener(nsIMenuListener * aListener);
     NS_IMETHOD              Enable(PRBool aState);
     NS_IMETHOD              IsEnabled(PRBool *aState);
     NS_IMETHOD              SetModal(PRBool aState) { return NS_OK; }
     NS_IMETHOD              IsVisible(PRBool & aState);
-    NS_IMETHOD              SetFocus(PRBool aState=PR_FALSE) { return NS_OK; }
+    NS_IMETHOD              SetFocus(PRBool aState=PR_FALSE);
     NS_IMETHOD              SetMenuBar(nsIMenuBar * aMenuBar);
     virtual nsIMenuBar*     GetMenuBar();
     NS_IMETHOD              ShowMenuBar(PRBool aShow);
@@ -134,10 +138,10 @@ public:
 
     virtual nsIFontMetrics* GetFont(void) { return nsnull; }
     NS_IMETHOD SetFont(const nsFont &aFont) { return NS_OK; }
-    NS_IMETHOD Invalidate(const nsRect & aRect, PRBool aIsSynchronous) { return NS_OK; }
-    NS_IMETHOD Invalidate(PRBool aIsSynchronous) { return NS_OK; };
-    NS_IMETHOD Update() { return NS_OK; }
-    NS_IMETHOD Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect) { return NS_OK; }
+    NS_IMETHOD Invalidate(const nsRect & aRect, PRBool aIsSynchronous);
+    NS_IMETHOD Invalidate(PRBool aIsSynchronous);
+    NS_IMETHOD Update();
+    NS_IMETHOD Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *alCipRect) { return NS_OK; }
     NS_IMETHOD SetColorMap(nsColorMap *aColorMap) { return NS_OK; }
     NS_IMETHOD BeginResizingChildren(void) { return NS_OK; }
     NS_IMETHOD EndResizingChildren(void) { return NS_OK; }
@@ -165,6 +169,8 @@ protected:
   WindowDelegate*      mDelegate;       // our delegate for processing window msgs [STRONG]
   nsCOMPtr<nsIMenuBar> mMenuBar;
   NSWindow*            mSheetWindowParent; // if this is a sheet, this is the NSWindow it's attached to
+  nsChildView*         mPopupContentView; // if this is a popup, this is its content widget
+
   
   PRPackedBool         mIsResizing;     // we originated the resize, prevent infinite recursion
   PRPackedBool         mWindowMadeHere; // true if we created the window, false for embedding
