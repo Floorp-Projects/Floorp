@@ -2393,7 +2393,7 @@ PresShell::SetPrefNoScriptRule()
   // see bug #342439 for more details
   PRBool scriptEnabled = mDocument->IsScriptEnabled() ||
     ((mPresContext->Type() == nsPresContext::eContext_PrintPreview || 
-	  mPresContext->Type() == nsPresContext::eContext_Print) &&
+      mPresContext->Type() == nsPresContext::eContext_Print) &&
      NS_PTR_TO_INT32(mDocument->GetProperty(
                        nsLayoutAtoms::scriptEnabledBeforePrintPreview)));
 
