@@ -105,18 +105,16 @@ nsDocNavStartProgressListener::DetachListeners()
 
 // Helper method for checking a request URI.
 nsresult
-nsDocNavStartProgressListener::IsSpuriousRequest(nsIRequest* aReq, PRBool* isSpurious)
+nsDocNavStartProgressListener::GetRequestUri(nsIRequest* aReq, nsIURI** uri)
 {
   nsCOMPtr<nsIChannel> channel;
   nsresult rv;
   channel = do_QueryInterface(aReq, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIURI> uri;
-  rv = channel->GetURI(getter_AddRefs(uri));
+  rv = channel->GetURI(uri);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  return IsSpurious(uri, isSpurious);
+  return NS_OK;
 }
 
 
@@ -220,11 +218,16 @@ nsDocNavStartProgressListener::OnStateChange(nsIWebProgress *aWebProgress,
     NS_ASSERTION(NS_SUCCEEDED(rv) && loadFlags & nsIChannel::LOAD_DOCUMENT_URI,
                  "Unexpected load flags, we only registered for loads");
 #endif
-    // send notification
-    nsCAutoString name;
-    rv = aRequest->GetName(name);
+    // ignore requests with no URI
+    nsCOMPtr<nsIURI> uri;
+    rv = GetRequestUri(aRequest, getter_AddRefs(uri));
     if (NS_FAILED(rv))
-      return NS_OK; // ignore requests with no name (url)
+      return NS_OK;
+
+    nsCAutoString uriString;
+    rv = uri->GetAsciiSpec(uriString);
+    if (NS_FAILED(rv))
+      return NS_OK;
 
     // We store the request and a timer in queue.  When the timer fires,
     // we use the request in the front of the queue.
@@ -309,15 +312,26 @@ nsDocNavStartProgressListener::Observe(nsISupports *subject, const char *topic,
 
     if (mCallback) {
       PRBool isSpurious;
-      nsresult rv = IsSpuriousRequest(request, &isSpurious);
+
+      nsCOMPtr<nsIURI> uri;
+      nsresult rv = GetRequestUri(request, getter_AddRefs(uri));
+      NS_ENSURE_SUCCESS(rv, rv);
+      
+      rv = IsSpurious(uri, &isSpurious);
       NS_ENSURE_SUCCESS(rv, rv);
 
       if (!isSpurious) {
-        nsCAutoString name;
-        rv = request->GetName(name);
+        nsCString uriString;
+        rv = uri->GetAsciiSpec(uriString);
         NS_ENSURE_SUCCESS(rv, rv);
-
-        mCallback->OnDocNavStart(request, name);
+        
+        // We don't care about URL fragments so we take that off.
+        PRInt32 pos = uriString.FindChar('#');
+        if (pos > -1) {
+          uriString.Truncate(pos);
+        }
+        
+        mCallback->OnDocNavStart(request, uriString);
       }
     }
 

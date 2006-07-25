@@ -44,6 +44,7 @@
 // Forward declare template types.
 class nsITimer;
 class nsIRequest;
+class nsIURI;
 
 class nsDocNavStartProgressListener : public nsIDocNavStartProgressListener,
                                       public nsIWebProgressListener,
@@ -72,7 +73,6 @@ protected:
   nsresult AttachListeners();
   nsresult DetachListeners();
 
-  // Helper method for checking a request URI.  Pulls the URI out of
-  // the request and checks to see if it's spurious.
-  nsresult IsSpuriousRequest(nsIRequest* aReq, PRBool* isSpurious);
+  // Pull the URI out of the request.
+  nsresult GetRequestUri(nsIRequest* aReq, nsIURI** uri);
 };
