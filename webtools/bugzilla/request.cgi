@@ -96,7 +96,7 @@ sub queue {
                 flags.attach_id, attachments.description,
                 requesters.realname, requesters.login_name,
                 requestees.realname, requestees.login_name,
-    " . $dbh->sql_date_format('flags.creation_date', '%Y.%m.%d %H:%i') .
+    " . $dbh->sql_date_format('flags.modification_date', '%Y.%m.%d %H:%i') .
     # Use the flags and flagtypes tables for information about the flags,
     # the bugs and attachments tables for target info, the profiles tables
     # for setter and requestee info, the products/components tables
@@ -224,7 +224,7 @@ sub queue {
                 products.name, components.name, flags.attach_id,
                 attachments.description, requesters.realname,
                 requesters.login_name, requestees.realname,
-                requestees.login_name, flags.creation_date,
+                requestees.login_name, flags.modification_date,
                 cclist_accessible, bugs.reporter, bugs.reporter_accessible,
                 bugs.assigned_to');
 
@@ -247,8 +247,8 @@ sub queue {
     }
 
     # Order the records (within each group).
-    $query .= " , flags.creation_date";
-    
+    $query .= " , flags.modification_date";
+
     # Pass the query to the template for use when debugging this script.
     $vars->{'query'} = $query;
     $vars->{'debug'} = $cgi->param('debug') ? 1 : 0;
