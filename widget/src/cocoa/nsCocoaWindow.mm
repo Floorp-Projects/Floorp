@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -129,6 +129,7 @@ nsCocoaWindow::nsCocoaWindow()
 , mWindow(nil)
 , mDelegate(nil)
 , mSheetWindowParent(nil)
+, mPopupContentView(nil)
 , mIsResizing(PR_FALSE)
 , mWindowMadeHere(PR_FALSE)
 , mVisible(PR_FALSE)
@@ -150,6 +151,8 @@ nsCocoaWindow::~nsCocoaWindow()
     [mWindow autorelease];
     [mDelegate autorelease];
   }
+
+  NS_IF_RELEASE(mPopupContentView);
 }
 
 
@@ -355,6 +358,19 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
     if (mWindowType == eWindowType_popup) {
       [mWindow setLevel:NSPopUpMenuWindowLevel];
       [mWindow setHasShadow:YES];
+
+      // we need to make our content view a ChildView
+      mPopupContentView = new nsChildView();
+      if (mPopupContentView) {
+        NS_ADDREF(mPopupContentView);
+
+        nsIWidget* thisAsWidget = NS_STATIC_CAST(nsIWidget*, this);
+        mPopupContentView->StandardCreate(thisAsWidget, aRect, aHandleEventFunction,
+                                          aContext, aAppShell, aToolkit, nsnull, nsnull);
+
+        ChildView* newContentView = (ChildView*)mPopupContentView->GetNativeData(NS_NATIVE_WIDGET);
+        [mWindow setContentView:newContentView];
+      }
     }
     else if (mWindowType == eWindowType_invisible) {
       [mWindow setLevel:kCGDesktopWindowLevelKey];
@@ -411,6 +427,18 @@ NS_IMETHODIMP nsCocoaWindow::Create(nsIWidget* aParent,
                         aContext, aAppShell, aToolkit, aInitData, nsnull));
 }
 
+NS_IMETHODIMP nsCocoaWindow::Destroy()
+{
+  if (mPopupContentView)
+    mPopupContentView->Destroy();
+
+  nsBaseWidget::OnDestroy();
+  nsBaseWidget::Destroy();
+
+  mMouseListener = nsnull;
+  mEventListener = nsnull;
+  mMenuListener = nsnull;
+}
 
 void* nsCocoaWindow::GetNativeData(PRUint32 aDataType)
 {
@@ -424,7 +452,7 @@ void* nsCocoaWindow::GetNativeData(PRUint32 aDataType)
       retVal = [mWindow contentView];
       break;
       
-    case NS_NATIVE_WINDOW:  
+    case NS_NATIVE_WINDOW:
       retVal = mWindow;
       break;
       
@@ -570,6 +598,51 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
     }
   }
   
+  if (mPopupContentView)
+      mPopupContentView->Show(bState);
+
+  return NS_OK;
+}
+
+NS_METHOD nsCocoaWindow::AddMouseListener(nsIMouseListener * aListener)
+{
+  nsBaseWidget::AddMouseListener(aListener);
+
+  if (mPopupContentView)
+    mPopupContentView->AddMouseListener(aListener);
+
+  return NS_OK;
+}
+
+/**
+* Processes a mouse pressed event
+*
+**/
+NS_METHOD nsCocoaWindow::AddEventListener(nsIEventListener * aListener)
+{
+  nsBaseWidget::AddEventListener(aListener);
+
+  if (mPopupContentView)
+    mPopupContentView->AddEventListener(aListener);
+
+  return NS_OK;
+}
+
+/**
+* Add a menu listener
+* This interface should only be called by the menu services manager
+* This will AddRef() the menu listener
+* This will Release() a previously set menu listener
+*
+**/
+
+NS_METHOD nsCocoaWindow::AddMenuListener(nsIMenuListener * aListener)
+{
+  nsBaseWidget::AddMenuListener(aListener);
+
+  if (mPopupContentView)
+    mPopupContentView->AddMenuListener(aListener);
+
   return NS_OK;
 }
 
@@ -718,6 +791,31 @@ NS_IMETHODIMP nsCocoaWindow::SetTitle(const nsAString& aTitle)
   const nsString& strTitle = PromiseFlatString(aTitle);
   NSString* title = [NSString stringWithCharacters:strTitle.get() length:strTitle.Length()];
   [mWindow setTitle:title];
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsCocoaWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
+{
+  if (mPopupContentView)
+    return mPopupContentView->Invalidate(aRect, aIsSynchronous);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsCocoaWindow::Invalidate(PRBool aIsSynchronous)
+{
+  if (mPopupContentView)
+    return mPopupContentView->Invalidate(aIsSynchronous);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsCocoaWindow::Update()
+{
+  if (mPopupContentView)
+    return mPopupContentView->Update();
 
   return NS_OK;
 }
@@ -878,6 +976,14 @@ NS_IMETHODIMP nsCocoaWindow::SetMenuBar(nsIMenuBar *aMenuBar)
   return NS_OK;
 }
 
+
+NS_IMETHODIMP nsCocoaWindow::SetFocus(PRBool aState)
+{
+  if (mPopupContentView)
+    mPopupContentView->SetFocus(aState);
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP nsCocoaWindow::ShowMenuBar(PRBool aShow)
 {
