@@ -1120,8 +1120,21 @@
             t.setAttribute("validate", "never");
             t.setAttribute("onerror", "this.parentNode.parentNode.parentNode.parentNode.addToMissedIconCache(this.getAttribute('image')); this.removeAttribute('image');");
             t.className = "tabbrowser-tab";
-            
+
             this.mTabContainer.appendChild(t);
+
+            if (document.defaultView
+                        .getComputedStyle(this.mTabContainer, "")
+                        .direction == "rtl") {
+              /* In RTL UI, the tab is visually added to the left side of the
+               * tabstrip. This means the tabstip has to be scrolled back in
+               * order to make sure the same set of tabs is visible before and
+               * after the new tab is added */
+
+              this.mTabContainer.mTabstrip.scrollBoxObject
+                  .scrollBy(this.mTabContainer.firstChild.boxObject.width, 0);
+            }
+
             // invalidate cache, because mTabContainer is about to change
             this._browsers = null; 
 
