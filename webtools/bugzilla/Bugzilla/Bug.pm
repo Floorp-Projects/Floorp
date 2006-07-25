@@ -30,8 +30,6 @@ package Bugzilla::Bug;
 
 use strict;
 
-use CGI::Carp qw(fatalsToBrowser);
-
 use Bugzilla::Attachment;
 use Bugzilla::Constants;
 use Bugzilla::Field;
