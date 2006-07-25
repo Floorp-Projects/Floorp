@@ -601,6 +601,11 @@ nsPrintEngine::Print(nsIPrintSettings*       aPrintSettings,
   nsCOMPtr<nsIDocShellTreeNode>  parentAsNode(do_QueryInterface(webContainer));
   BuildDocTree(parentAsNode, mPrt->mPrintDocList, mPrt->mPrintObject);
 
+  if (!mPrt->mPrintObject->mDocument->GetRootContent()) {
+    CloseProgressDialog(aWebProgressListener);
+    return CleanupOnFailure(NS_ERROR_GFX_PRINTER_STARTDOC, PR_TRUE);
+  }
+
   // Create the linkage from the suv-docs back to the content element
   // in the parent document
   MapContentToWebShells(mPrt->mPrintObject, mPrt->mPrintObject);
@@ -1003,6 +1008,11 @@ nsPrintEngine::PrintPreview(nsIPrintSettings* aPrintSettings,
   // Build the "tree" of PrintObjects
   nsCOMPtr<nsIDocShellTreeNode>  parentAsNode(do_QueryInterface(webContainer));
   BuildDocTree(parentAsNode, mPrt->mPrintDocList, mPrt->mPrintObject);
+
+  if (!mPrt->mPrintObject->mDocument->GetRootContent()) {
+    CloseProgressDialog(aWebProgressListener);
+    return CleanupOnFailure(NS_ERROR_GFX_PRINTER_STARTDOC, PR_FALSE);
+  }
 
   // Create the linkage from the suv-docs back to the content element
   // in the parent document
@@ -1577,7 +1587,8 @@ nsPrintEngine::BuildDocTree(nsIDocShellTreeNode * aParentNode,
       nsCOMPtr<nsIPresShell> presShell;
       childAsShell->GetPresShell(getter_AddRefs(presShell));
 
-      if (!presShell) {
+      if (!presShell || !presShell->GetDocument() ||
+          !presShell->GetDocument()->GetRootContent()) {
         continue;
       }
 
@@ -1915,7 +1926,12 @@ nsresult nsPrintEngine::CleanupOnFailure(nsresult aResult, PRBool aIsPrinting)
     NS_RELEASE(mPagePrintTimer);
   }
   
-  SetIsPrinting(PR_FALSE);
+  if (aIsPrinting) {
+    SetIsPrinting(PR_FALSE);
+  } else {
+    SetIsPrintPreview(PR_FALSE);
+    SetIsCreatingPrintPreview(PR_FALSE);
+  }
 
   /* cleanup done, let's fire-up an error dialog to notify the user
    * what went wrong... 
