@@ -7,6 +7,8 @@ select_js.html
 selectsize3_js.html
 select_listbox_sizing.html
 select_listbox_sizing_quirks.html
+select_small_sizes.html
+select_small_sizes2.html
 testarea_wrap.html
 textarea_sizes.html
 textarea_tests.html
