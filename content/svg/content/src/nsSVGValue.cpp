@@ -102,6 +102,15 @@ nsSVGValue::AddObserver(nsISVGValueObserver* observer)
 {
   nsIWeakReference* wr = NS_GetWeakReference(observer);
   if (!wr) return NS_ERROR_FAILURE;
+
+  // Prevent duplicate observers - needed because geometry can attempt
+  // to add itself as an observer of a paint server for both the
+  // stroke and fill.  Safe, as on a style change we remove both, as
+  // the change notification isn't fine grained, and re-add as
+  // appropriate.
+  if (mObservers.IndexOf((void*)wr) >= 0)
+    return NS_OK;
+
   mObservers.AppendElement((void*)wr);
   return NS_OK;
 }
