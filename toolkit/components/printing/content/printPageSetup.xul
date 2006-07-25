@@ -48,6 +48,7 @@
 <!DOCTYPE dialog SYSTEM "chrome://global/locale/printPageSetup.dtd">
 
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  id="printPageSetupDialog"
   onload="onLoad();"
   ondialogaccept="return onAccept();"
   oncancel="return onCancel();"
