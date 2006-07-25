@@ -138,4 +138,12 @@ interface nsIXULWindow : nsISupports
                                in nsIAppShell aAppShell);
 
   attribute nsIXULBrowserWindow XULBrowserWindow;
+
+  /**
+   * Back-door method to force application of chrome flags at a particular
+   * time.  Do NOT call this unless you know what you're doing!  In particular,
+   * calling this when this XUL window doesn't yet have a document in its
+   * docshell could cause problems.
+   */
+  [noscript] void applyChromeFlags();
 };

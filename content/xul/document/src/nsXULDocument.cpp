@@ -122,6 +122,9 @@
 #include "nsContentErrors.h"
 #include "nsIObserverService.h"
 #include "nsNodeUtils.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeOwner.h"
+#include "nsIXULWindow.h"
 
 //----------------------------------------------------------------------
 //
@@ -2939,6 +2942,25 @@ nsXULDocument::ResumeWalk()
                                   title);
         }
         SetTitle(title);
+
+        // Before starting layout, check whether we're a toplevel chrome
+        // window.  If we are, set our chrome flags now, so that we don't have
+        // to restyle the whole frame tree after StartLayout.
+        nsCOMPtr<nsISupports> container = GetContainer();
+        nsCOMPtr<nsIDocShellTreeItem> item = do_QueryInterface(container);
+        if (item) {
+            nsCOMPtr<nsIDocShellTreeOwner> owner;
+            item->GetTreeOwner(getter_AddRefs(owner));
+            nsCOMPtr<nsIXULWindow> xulWin = do_GetInterface(owner);
+            if (xulWin) {
+                nsCOMPtr<nsIDocShell> xulWinShell;
+                xulWin->GetDocShell(getter_AddRefs(xulWinShell));
+                if (SameCOMIdentity(xulWinShell, container)) {
+                    // We're the chrome document!  Apply our chrome flags now.
+                    xulWin->ApplyChromeFlags();
+                }
+            }
+        }
 
         StartLayout();
 
