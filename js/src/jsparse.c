@@ -4136,7 +4136,9 @@ AttributeIdentifier(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     if (!pn)
         return NULL;
     pn->pn_op = JSOP_TOATTRNAME;
+    ts->flags |= TSF_KEYWORD_IS_NAME;
     tt = js_GetToken(cx, ts);
+    ts->flags &= ~TSF_KEYWORD_IS_NAME;
     if (tt == TOK_STAR || tt == TOK_NAME) {
         pn2 = QualifiedIdentifier(cx, ts, tc);
     } else if (tt == TOK_LB) {
