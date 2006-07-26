@@ -117,6 +117,14 @@ function init()
             logLevel = prefCalBranch.getIntPref( "wcap.log_level" );
         }
         catch (exc) {
+            var calLog = false;
+            try {
+                calLog = prefCalBranch.getBoolPref( "debug.log" );
+            }
+            catch (exc) {
+            }
+            if (calLog)
+                logLevel = 1; // basic logging
         }
         if (logLevel > LOG_LEVEL) {
             LOG_LEVEL = logLevel;

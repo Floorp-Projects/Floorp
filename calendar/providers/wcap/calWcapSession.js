@@ -306,53 +306,77 @@ calWcapSession.prototype = {
         }
         
         if (this.m_sessionId == null || this.m_sessionId == timedOutSessionId) {
-            // xxx todo: ask dmose how to do better...
-            // possible HACK here, because of lack of sync possibilities:
-            // when we run into executing dialogs, the js runtime
-            // concurrently executes (another getItems() request).
-            // That concurrent request needs to wait for the first login
-            // attempt to finish.
-            // Creating a thread event queue somehow hinders the js engine
-            // from scheduling another js execution.
+            // sync all execution for login to UI thread, using nsIRunnable:
+            
+            // change from MOZILLA_1_8_BRANCH->TRUNK: probe xxx todo: test
             var eventQueueService =
                 Components.classes["@mozilla.org/event-queue-service;1"]
                 .getService(Components.interfaces.nsIEventQueueService);
-            var eventQueue = eventQueueService.pushThreadEventQueue();
-            try {
-                if (this.m_sessionId == null ||
-                    this.m_sessionId == timedOutSessionId)
-                {
-                    if (timedOutSessionId != null) {
-                        this.m_sessionId = null;
-                        this.log( "session timeout; prompting to reconnect." );
-                        var prompt = getWindowWatcher().getNewPrompter(null);
-                        var bundle = getBundle();
-                        if (!prompt.confirm(
-                                bundle.GetStringFromName(
-                                    "reconnectConfirmation.label" ),
-                                bundle.formatStringFromName(
-                                    "reconnectConfirmation.text",
-                                    [this.uri.hostPort], 1 ) )) {
-                            this.m_bNoLoginsAnymore = true;
+            var target; // eventQueue or eventTarget
+            if (eventQueueService == null) {
+                // we are on the TRUNK:
+                var threadManager =
+                    Components.classes["@mozilla.org/thread-manager;1"]
+                    .getService(Components.interfaces.nsIThreadManager);
+                target = threadManager.mainThread;
+            }
+            else {
+                target = eventQueueService.getSpecialEventQueue(
+                    Components.interfaces.
+                    nsIEventQueueService.UI_THREAD_EVENT_QUEUE );
+            }
+            
+            var proxyObjectManager =
+                Components.classes["@mozilla.org/xpcomproxy;1"]
+                .getService(Components.interfaces.nsIProxyObjectManager);
+            var this_ = this;
+            var proxy = proxyObjectManager.getProxyForObject(
+                target, Components.interfaces.nsIRunnable,
+                {   // need to implemented QueryInterface, because object param
+                    // is not associated with iid:
+                    QueryInterface: function( iid ) {
+                        if (Components.interfaces.nsIRunnable.equals(iid) ||
+                            Components.interfaces.nsISupports.equals(iid))
+                            return this;
+                        throw Components.results.NS_ERROR_NO_INTERFACE;
+                    },
+                    // nsIRunnable:
+                    run: function() {
+                        if (this_.m_sessionId == null ||
+                            this_.m_sessionId == timedOutSessionId)
+                        {
+                            if (timedOutSessionId != null) {
+                                this_.m_sessionId = null;
+                                this_.log( "session timeout; " +
+                                           "prompting to reconnect." );
+                                var prompt =
+                                    getWindowWatcher().getNewPrompter(null);
+                                var bundle = getBundle();
+                                if (!prompt.confirm(
+                                        bundle.GetStringFromName(
+                                            "reconnectConfirmation.label" ),
+                                        bundle.formatStringFromName(
+                                            "reconnectConfirmation.text",
+                                            [this_.uri.hostPort], 1 ) )) {
+                                    this_.m_bNoLoginsAnymore = true;
+                                }
+                            }
+                            if (!this_.m_bNoLoginsAnymore)
+                                this_.getSessionId_();
+                            
+                            this_.getSupportedTimezones(true /* refresh */);
+                            this_.getServerTimeDiff(true /* refresh */);
+                            // preread calprops for subscribed calendars:
+                            var cals = this_.getSubscribedCalendars({});
+                            for each ( cal in cals ) {
+                                cal.getCalProps_(true /* async */);
+                            }
                         }
                     }
-                    if (!this.m_bNoLoginsAnymore)
-                        this.getSessionId_();
-                    
-                    this.getSupportedTimezones( true /* refresh */ );
-                    this.getServerTimeDiff( true /* refresh */ );
-                    // preread calprops for subscribed calendars:
-                    var cals = this.getSubscribedCalendars({});
-                    for each ( cal in cals ) {
-                        cal.getCalProps_(true /* async */);
-                    }
-                }
-            }
-            catch (exc) {
-                eventQueueService.popThreadEventQueue( eventQueue );
-                throw exc;
-            }
-            eventQueueService.popThreadEventQueue( eventQueue );
+                },
+                Components.interfaces.nsIProxyObjectManager.INVOKE_SYNC );
+            // xxx todo: are rc/exceptions forwarded to current thread?
+            proxy.run();
         }
         if (this.m_sessionId == null) {
             throw Components.interfaces.calIWcapErrors.WCAP_LOGIN_FAILED;
@@ -703,7 +727,9 @@ calWcapSession.prototype = {
     
     m_userId: null,
     get userId() { return this.m_userId; },
-
+    
+    get isLoggedIn() { return this.m_sessionId != null; },
+    
     login:
     function()
     {
@@ -733,11 +759,13 @@ calWcapSession.prototype = {
         }
         this.m_userId = null;
         // ask next time we log in:
-        var this_ = this;
-        g_httpHosts = g_httpHosts.filter(
-            function(hostEntry) {
-                return (hostEntry.m_host != this_.uri.hostPort); } );
         this.m_bNoLoginsAnymore = false;
+        if (this.uri != null) {
+            var this_ = this;
+            g_httpHosts = g_httpHosts.filter(
+                function(hostEntry) {
+                    return (hostEntry.m_host != this_.uri.hostPort); } );
+        }
     },
     
     getWcapErrorString:
@@ -747,7 +775,7 @@ calWcapSession.prototype = {
     },
     
     get defaultCalendar() {
-        return this.getCalendarByCalId(this.userId);
+        return this.getCalendarByCalId(null);
     },
     set defaultCalendar(cal) {
         this.m_defaultCalendar = cal;
@@ -758,20 +786,21 @@ calWcapSession.prototype = {
     getCalendarByCalId:
     function( calId )
     {
+        var ret;
         if (calId == null || this.userId == calId) {
             if (this.m_defaultCalendar == null)
-                this.m_defaultCalendar = new calWcapCalendar(this.userId);
-            return this.m_defaultCalendar;
+                this.m_defaultCalendar = new calWcapCalendar(this.userId, this);
+            ret = this.m_defaultCalendar;
         }
         else {
             var key = encodeURIComponent(calId);
-            var ret = this.m_calIdToCalendar[key];
+            ret = this.m_calIdToCalendar[key];
             if (!ret) {
-                ret = new calWcapCalendar( calId, this );
+                ret = new calWcapCalendar(calId, this);
                 this.m_calIdToCalendar[key] = ret;
             }
-            return ret;
         }
+        return ret;
     },
     
     getCalendars:

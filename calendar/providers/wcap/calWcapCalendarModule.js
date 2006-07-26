@@ -113,7 +113,7 @@ var calWcapCalendarModule = {
 //                     break;
                 default:
                     cal = new calWcapCalendar(
-                        null /* calId: indicates default calendar */,
+                        null /* calId: null indicates default calendar */,
                         new calWcapSession() );
                     cal.session.defaultCalendar = cal;
                     break;

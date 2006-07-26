@@ -226,8 +226,8 @@ calWcapCalendar.prototype.getStoreUrl = function( item )
         case "FINAL":        url += "&status=7"; break;
         default:
             url += "&status=3"; // NEEDS-ACTION
-            this.logError( "getStoreUrl(): unexpected item status=" +
-                           item.status );
+//             this.logError( "getStoreUrl(): unexpected item status=" +
+//                            item.status );
             break;
         }
     }
@@ -281,8 +281,8 @@ calWcapCalendar.prototype.getStoreUrl = function( item )
     var attendees =  item.getAttendees({});
     var forceRSVP = false;
     
-    var dtstart;
-    var dtend; // for alarmRelated
+    var dtstart = null;
+    var dtend = null; // for alarmRelated
     
     if (bIsEvent) {
         if (attendees != null && attendees.length > 0) {
@@ -320,25 +320,17 @@ calWcapCalendar.prototype.getStoreUrl = function( item )
             url += "&isAllDay=1";
     }
     else { // calITodo:
-        // xxx todo:
-        // dtstart and due are mandatory for cs, so if those are
-        // undefined, assume an allDay todo:
+        // xxx todo: dtstart is mandatory for cs, so if this is
+        //           undefined, assume an allDay todo???
         dtstart = item.entryDate;
-        if (!dtstart) {
-            dtstart = getTime();
-            dtstart.isDate = true; // => all day
-        }
         dtend = item.dueDate;
-        if (!dtend) {
-            // xxx todo:
-            this.logError( "getStoreUrl(): no sensible default for due date!" );
-            dtend = dtstart; // is due today
-        }
-        url += ("&due=" + getIcalUTC(dtend));
+        if (dtend) {
+            url += ("&due=" + getIcalUTC(dtend));
 //         url += ("&X-NSCP-DUE-TZID=" + encodeURIComponent(
 //                     this.getAlignedTimezone(dtend.timezone)));
+        }
         // xxx todo: missing duration
-        if (dtstart.isDate)
+        if (dtstart && dtstart.isDate)
             url += "&isAllDay=1";
         if (item.isCompleted)
             url += "&percent=100";
@@ -355,43 +347,52 @@ calWcapCalendar.prototype.getStoreUrl = function( item )
         // xxx todo: sentBy sentUID fields in cs: missing in cal api
     }
     
-    // important to provide tz info with entry date for proper
-    // occurrence calculation (daylight savings)
-    url += ("&dtstart=" + getIcalUTC(dtstart));
-    // xxx todo: setting X-NSCP- does not work.
-    //           i.e. no separate tz for start/end. WTF.
+    if (dtstart) {
+        // important to provide tz info with entry date for proper
+        // occurrence calculation (daylight savings)
+        url += ("&dtstart=" + getIcalUTC(dtstart));
+        // xxx todo: setting X-NSCP- does not work.
+        //           i.e. no separate tz for start/end. WTF.
 //     url += ("&X-NSCP-DTSTART-TZID=" +
 //             encodeURIComponent(this.getAlignedTimezone(dtstart.timezone)));
-    // currently the only way to influence X-NSCP-DTSTART-TZID:
-    url += ("&tzid=" + encodeURIComponent(
-                this.getAlignedTimezone(dtstart.timezone)));
+        // currently the only way to influence X-NSCP-DTSTART-TZID:
+        url += ("&tzid=" + encodeURIComponent(
+                    this.getAlignedTimezone(dtstart.timezone)));
+    }
     
     // alarm support:
     var alarmOffset = item.alarmOffset;
     if (alarmOffset) {
-        var alarmStart;
+        var alarmStart = null;
         if (item.alarmRelated ==
             Components.interfaces.calIItemBase.ALARM_RELATED_END) {
-            alarmStart = dtend.clone();
-            alarmOffset = alarmOffset.clone();
-            alarmOffset.isNegative = !alarmOffset.isNegative;
+            if (!dtend)
+                this.logError("no end date (no end nor due) for alarm!");
+            else {
+                alarmStart = dtend.clone();
+                alarmOffset = alarmOffset.clone();
+                alarmOffset.isNegative = !alarmOffset.isNegative;
+            }
         }
-        else
+        else if (dtstart)
             alarmStart = dtstart.clone(); // default
-        alarmStart.addDuration(alarmOffset);
         
-        var zalarmStart = getIcalUTC(alarmStart);
-        url += ("&alarmStart=" + zalarmStart);
-        // xxx todo: verify ;-separated addresses
-        url += "&alarmEmails=";
-        if (item.hasProperty( "alarmEmailAddress" )) {
-            url += encodeURIComponent( item.getProperty("alarmEmailAddress") );
+        if (alarmStart != null) {
+            alarmStart.addDuration(alarmOffset);
+            var zalarmStart = getIcalUTC(alarmStart);
+            url += ("&alarmStart=" + zalarmStart);
+            // xxx todo: verify ;-separated addresses
+            url += "&alarmEmails=";
+            if (item.hasProperty( "alarmEmailAddress" )) {
+                url += encodeURIComponent(
+                    item.getProperty("alarmEmailAddress") );
+            }
+            else {
+                // xxx todo: popup exor emails can be currently specified...
+                url += ("&alarmPopup=" + zalarmStart);
+            }
+            // xxx todo: missing: alarm triggers for flashing, etc.
         }
-        else {
-            // xxx todo: popup exor emails can be currently specified...
-            url += ("&alarmPopup=" + zalarmStart);
-        }
-        // xxx todo: missing: alarm triggers for flashing, etc.
     }
     else {
         // clear alarm:

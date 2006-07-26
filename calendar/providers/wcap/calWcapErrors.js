@@ -202,7 +202,7 @@ function errorToString( err )
             return wcapErrorToString(err);
         }
         catch (exc) {
-            return ("[" + err + "] Unknown error code.");
+            return ("[" + err + "] Unknown error.");
         }
     }
 }

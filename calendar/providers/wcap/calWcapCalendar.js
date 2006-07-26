@@ -189,25 +189,43 @@ calWcapCalendar.prototype = {
     m_session: null,
     get session() { return this.m_session; },
     
-    m_calId: null,
-    get calId() {
-        var userId = this.session.userId; // assure being logged in
-        return this.m_calId || userId;
-    },
     // xxx todo: for now to make subscriptions context menu work,
     //           will vanish when UI has been revised and every subscribed
     //           calendar has its own calICalendar object...
     //           poking calId, so default calendar will then behave
     //           like a subscribed one...
+    m_overriddencalId: null,
+    m_calId: null,
+    get calId() {
+        return this.m_overriddencalId || this.calId_;
+    },
+    get calId_() { // the original (static) calId of this calendar
+        var userId = this.session.userId; // assure being logged in
+        return this.m_calId || userId;
+    },
     set calId( id ) {
-        this.log( "setting calId to " + id );
-        this.m_calId = id;
+        this.log( "overriding calId to " + id );
+        this.m_overriddencalId = id;
     },
     
     get description() {
         var ar = this.getCalendarProperties("X-NSCP-CALPROPS-DESCRIPTION", {});
         if (ar.length < 1) {
-            return this.calId; // fallback
+            // fallback to display name:
+            return this.displayName;
+        }
+        return ar[0];
+    },
+    
+    get displayName() {
+        var ar = this.getCalendarProperties("X-NSCP-CALPROPS-NAME", {});
+        if (ar.length < 1) {
+            // fallback to common name:
+            ar = this.getCalendarProperties(
+                "X-S1CS-CALPROPS-COMMON-NAME", {});
+            if (ar.length < 1) {
+                return this.calId_; // fallback, xxx todo calId_
+            }
         }
         return ar[0];
     },
@@ -239,7 +257,9 @@ calWcapCalendar.prototype = {
         try {
             if (this.m_calProps == null) {
                 var url = this.session.getCommandUrl( "get_calprops" );
-                url += ("&calid=" + encodeURIComponent(this.calId));
+                // xxx todo: for now this alwas gets the description of
+                //           the original calId_
+                url += ("&calid=" + encodeURIComponent(this.calId_));
                 url += "&fmt-out=text%2Fxml";
                 var this_ = this;
                 function resp( wcapResponse ) {

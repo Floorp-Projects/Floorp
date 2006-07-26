@@ -58,12 +58,18 @@ interface calIWcapSession : nsISupports
      * An error is notified to all registered calIObservers, then thrown.
      */
     readonly attribute string userId;
-
+    
+    /**
+     * Determines whether the user is currentl logged in.
+     * Does _not_ check whether the user's ticket has timed out!
+     */
+    readonly attribute boolean isLoggedIn;
+    
     /**
      * Explicitly performs a session establishment.
      * Commonly not needed, because any attempt to get a calendar instance
      * will establish a session automatically.
-     * If the user is alread logged in, she will be logged out before.
+     * If the user is already logged in, she will be logged out before.
      * UI will prompt for a userId and password.
      * An error is notified to all registered calIObservers, then thrown.
      */

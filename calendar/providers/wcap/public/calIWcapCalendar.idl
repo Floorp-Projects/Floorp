@@ -52,19 +52,24 @@ interface calIWcapCalendar : calICalendar
     readonly attribute calIWcapSession session;
     
     /**
-     * Calendar description.
-     */
-    readonly attribute string description;
-    
-    /**
      * Current calId the calendar instance acts on; defaults to userId.
      */
-    /*readonly xxx todo*/ attribute string calId;
+    readonly attribute string calId;
     
     /**
      * Whether the currently selected calendar belongs to user.
      */
     readonly attribute boolean isOwnedCalendar;
+    
+    /**
+     * Calendar description.
+     */
+    readonly attribute string description;
+    
+    /**
+     * Calendar display name.
+     */
+    readonly attribute string displayName;
     
 //     /**
 //      * Gets or sets this calendar's (calId) default timezone.
@@ -93,30 +98,35 @@ interface calIWcapCalendar : calICalendar
      * user and the current user has declined the invitation.
      */
     const unsigned long ITEM_FILTER_REPLY_DECLINED = 1 << 24;
-     /**
-      * Scope: Attendee
-      * The event or todo is an invitation from another
-      * user and the current user has accepted the invitation.
-      */
+    
+    /**
+     * Scope: Attendee
+     * The event or todo is an invitation from another
+     * user and the current user has accepted the invitation.
+     */
     const unsigned long ITEM_FILTER_REPLY_ACCEPTED = 1 << 25;
+    
     /**
      * Scope: Organizer
      * The event or todo is an invitation from the current
      * user to other invitees, and all invitees have replied.
      */
     const unsigned long ITEM_FILTER_REQUEST_COMPLETED = 1 << 26;
+    
     /**
      * Scope: Attendee
      * The event or todo is an invitation from another
      * user and the current user has not replied to it yet.
-     * */
+     */
     const unsigned long ITEM_FILTER_REQUEST_NEEDS_ACTION = 1 << 27;
+    
     /**
      * Scope: Attendee
      * The event or todo is an invitation from another
      * user and the current user is not required to reply.
      */
     const unsigned long ITEM_FILTER_REQUEST_NEEDSNOACTION  = 1 << 28;
+    
     /**
      * Scope: Organizer
      * The event or todo is an invitation from the current
@@ -124,13 +134,14 @@ interface calIWcapCalendar : calICalendar
      * process of sending out invitations.
      */
     const unsigned long ITEM_FILTER_REQUEST_PENDING = 1 << 29;
+    
     /**
      * Scope: Organizer
      * The event or todo is an invitation from the current
      * user to other invitees, and is currently awaiting.
      */
     const unsigned long ITEM_FILTER_REQUEST_WAITFORREPLY = 1 << 30;
-
+    
     
     /* xxx todo sync feature: separate into own interface? */
     /** xxx todo: to be moved to calIOperationListener?
