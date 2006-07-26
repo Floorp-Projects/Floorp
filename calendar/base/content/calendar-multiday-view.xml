@@ -2311,9 +2311,6 @@
               }
           }
           this.refresh();
-
-          // adjust scrollbar spacers
-          this.adjustScrollBarSpacers();
         ]]></body>
       </method>
 
@@ -2508,6 +2505,12 @@
           for each (col in this.mDateColumns) {
                col.column.endLayoutBatchChange();
           }
+
+          // adjust scrollbar spacers
+          // XXX For performance reasons this method call can be moved to the
+          // XXX constructor and the reorient method as soon as the views
+          // XXX are constructed statically (24 hrs).
+          this.adjustScrollBarSpacers();
         ]]></body>
       </method>
 
