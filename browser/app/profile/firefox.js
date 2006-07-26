@@ -76,6 +76,9 @@ pref("extensions.blocklist.interval", 86400);
 pref("extensions.blocklist.url", "https://addons.mozilla.org/blocklist/1/%APP_ID%/%APP_VERSION%/");
 pref("extensions.blocklist.detailsURL", "http://www.mozilla.com/blocklist/");
 
+// Dictionary download preference
+pref("browser.dictionaries.download.url", "https://addons.mozilla.org/%LOCALE%/firefox/%VERSION%/dictionaries/");
+
 // App-specific update preferences
 
 // Whether or not app updates are enabled
