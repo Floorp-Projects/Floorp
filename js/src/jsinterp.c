@@ -2173,7 +2173,9 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 
     /*
      * To support generator_throw and to catch ignored exceptions, fail right
-     * away if cx->throwing is set.
+     * away if cx->throwing is set.  If no exception is pending, null obj in
+     * case a callable object is being sent into a yield expression, and the
+     * yield's result is invoked.
      */
     ok = !cx->throwing;
     if (!ok) {
@@ -2183,6 +2185,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 #endif
         goto out;
     }
+    obj = NULL;
 
 #ifdef JS_THREADED_INTERP
 
@@ -2283,12 +2286,6 @@ interrupt:
           EMPTY_CASE(JSOP_GROUP)
 
           BEGIN_CASE(JSOP_PUSH)
-            /*
-             * Clear for-in loop flags in case we are pushing an old-style
-             * iterator slot.  XXX remove this if we can prevent old XDR'd
-             * bytecode from being deserialized and executed
-             */
-            flags = 0;
             PUSH_OPND(JSVAL_VOID);
           END_CASE(JSOP_PUSH)
 
