@@ -230,7 +230,7 @@
 
       <field name="_scrollTimer">null</field>
       <field name="_scrollLines">0</field>
-      <field name="_scrollDelay">200</field>
+      <field name="_scrollDelay">150</field>
 
       <method name="notify">
         <parameter name="aTimer"/>
