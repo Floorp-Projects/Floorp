@@ -1773,6 +1773,18 @@ nsGenericElement::Normalize()
       switch (nodeType) {
         case nsIDOMNode::TEXT_NODE:
 
+          // ensure that if the text node is empty, it is removed
+          if (0 == child->TextLength()) {
+            result = RemoveChildAt(index, PR_TRUE);
+            if (NS_FAILED(result)) {
+              return result;
+            }
+
+            count--;
+            index--;
+            break;
+          }
+ 
           if (index+1 < count) {
             // Get the sibling. If it's also a text node, then
             // remove it from the tree and join the two text
