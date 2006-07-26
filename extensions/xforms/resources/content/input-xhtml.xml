@@ -126,7 +126,8 @@
            extends="chrome://xforms/content/input.xml#xformswidget-input-boolean-base">
     <content>
       <children includes="label"/>
-      <html:input anonid="control" xbl:inherits="accesskey" type="checkbox"/>
+      <html:input anonid="control" xbl:inherits="accesskey" type="checkbox"
+                  class="xf-value"/>
       <children/>
     </content>
 
