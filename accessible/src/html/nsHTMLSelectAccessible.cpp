@@ -410,7 +410,7 @@ nsHTMLSelectListAccessible::CacheOptSiblings(nsIAccessibilityService *aAccServic
   *  flat tree under the Select List.
   */
 
-void nsHTMLSelectListAccessible::CacheChildren(PRBool aWalkAnonContent)
+void nsHTMLSelectListAccessible::CacheChildren()
 {
   // Cache the number of <optgroup> and <option> DOM decendents,
   // as well as the accessibles for them. Avoid whitespace text nodes.

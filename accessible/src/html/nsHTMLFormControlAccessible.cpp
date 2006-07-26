@@ -491,7 +491,7 @@ NS_IMETHODIMP nsHTMLGroupboxAccessible::GetName(nsAString& aName)
   return NS_OK;
 }
 
-void nsHTMLGroupboxAccessible::CacheChildren(PRBool aWalkAnonContent)
+void nsHTMLGroupboxAccessible::CacheChildren()
 {
   if (!mWeakShell) {
     // This node has been shut down
@@ -500,7 +500,9 @@ void nsHTMLGroupboxAccessible::CacheChildren(PRBool aWalkAnonContent)
   }
 
   if (mAccChildCount == eChildCountUninitialized) {
-    nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, aWalkAnonContent);
+    PRBool allowsAnonChildren = PR_FALSE;
+    GetAllowsAnonChildAccessibles(&allowsAnonChildren);
+    nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, allowsAnonChildren);
     walker.mState.frame = GetFrame();
     mAccChildCount = 0;
     walker.GetFirstChild();

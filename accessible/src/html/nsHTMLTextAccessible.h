@@ -137,7 +137,7 @@ public:
   NS_IMETHOD GetState(PRUint32 *aState) { nsAccessibleWrap::GetState(aState); *aState |= STATE_READONLY; return NS_OK; }
   NS_IMETHOD GetName(nsAString& aName) { aName.SetIsVoid(PR_TRUE); return mRoleMapEntry ? nsAccessible::GetName(aName) : NS_OK; }
   NS_IMETHOD GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height);
-  void CacheChildren(PRBool aWalkAnonContent);  // Include bullet accessible
+  void CacheChildren();  // Include bullet accessible
 protected:
   nsRefPtr<nsHTMLListBulletAccessible> mBulletAccessible;
 };

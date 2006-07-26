@@ -40,7 +40,6 @@
 
 #include "nsDocAccessibleWrap.h"
 #include "nsHashtable.h"
-#include "nsIAccessibilityService.h"
 #include "nsIAccessibleDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMFocusListener.h"
@@ -106,7 +105,6 @@ class nsRootAccessible : public nsDocAccessibleWrap,
     void GetChromeEventHandler(nsIDOMEventTarget **aChromeTarget);
     already_AddRefed<nsIDocShellTreeItem>
            GetContentDocShell(nsIDocShellTreeItem *aStart);
-    nsCOMPtr<nsIAccessibilityService> mAccService;
     nsCOMPtr<nsIAccessibleCaret> mCaretAccessible;
     PRPackedBool mIsInDHTMLMenu;
 };

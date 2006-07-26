@@ -130,7 +130,7 @@ public:
   /* ----- nsIAccessible ----- */
   NS_IMETHOD GetRole(PRUint32 *aRole);
   NS_IMETHOD GetState(PRUint32 *_retval);
-  void CacheChildren(PRBool aWalkAnonContent);
+  void CacheChildren();
 
 protected:
   already_AddRefed<nsIAccessible>

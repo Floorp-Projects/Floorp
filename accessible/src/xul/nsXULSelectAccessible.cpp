@@ -632,16 +632,26 @@ NS_IMETHODIMP nsXULComboboxAccessible::GetChildCount(PRInt32 *aAccChildCount)
     }
   }
 
-  nsAutoString boxName;
-  mDOMNode->GetNodeName(boxName);
-  if (boxName.Equals(NS_LITERAL_STRING("textbox"))) {
-    // autocomplete textbox also uses nsXULComboboxAccessible and we need walk anonymous children
-    CacheChildren(PR_TRUE);
-  }
-  else {
-    // Argument of PR_FALSE indicates we don't walk anonymous children for menuitems
-    CacheChildren(PR_FALSE);
-  }
+  CacheChildren();
   *aAccChildCount = mAccChildCount;
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsXULComboboxAccessible::GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren)
+{
+  nsAutoString boxName;
+  mDOMNode->GetNodeName(boxName);
+
+  if (boxName.Equals(NS_LITERAL_STRING("textbox"))) {
+    // autocomplete textbox also uses nsXULComboboxAccessible and we need walk
+    // anonymous children
+    *aAllowsAnonChildren = PR_TRUE;
+  } else {
+    // Argument of PR_FALSE indicates we don't walk anonymous children for
+    // menuitems
+    *aAllowsAnonChildren = PR_FALSE;
+  }
+  return NS_OK;
+}
+

@@ -167,7 +167,7 @@ already_AddRefed<nsIAccessible> nsHTMLImageAccessible::CreateAreaAccessible(PRIn
 }
 
 
-void nsHTMLImageAccessible::CacheChildren(PRBool aWalkAnonContent)
+void nsHTMLImageAccessible::CacheChildren()
 {
   if (!mWeakShell) {
     // This node has been shut down

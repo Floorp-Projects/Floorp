@@ -241,17 +241,19 @@ NS_IMETHODIMP nsHTMLLIAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *wid
   return NS_OK;
 }
 
-void nsHTMLLIAccessible::CacheChildren(PRBool aWalkAnonContent)
+void nsHTMLLIAccessible::CacheChildren()
 {
   if (!mBulletAccessible || !mWeakShell) {
-    nsAccessibleWrap::CacheChildren(aWalkAnonContent);
+    nsAccessibleWrap::CacheChildren();
     return;
   }
 
   if (mAccChildCount == eChildCountUninitialized) {
     SetFirstChild(mBulletAccessible);
     mAccChildCount = 1;
-    nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, aWalkAnonContent);
+    PRBool allowsAnonChildren = PR_FALSE;
+    GetAllowsAnonChildAccessibles(&allowsAnonChildren);
+    nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, allowsAnonChildren);
     walker.mState.frame = GetFrame();
     walker.GetFirstChild();
 

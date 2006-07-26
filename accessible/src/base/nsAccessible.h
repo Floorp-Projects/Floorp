@@ -187,7 +187,7 @@ protected:
   nsresult AppendFlatStringFromSubtreeRecurse(nsIContent *aContent, nsAString *aFlatString);
 
   // Helpers for dealing with children
-  virtual void CacheChildren(PRBool aWalkAnonContent);
+  virtual void CacheChildren();
   nsIAccessible *NextChild(nsCOMPtr<nsIAccessible>& aAccessible);
   already_AddRefed<nsIAccessible> GetNextWithState(nsIAccessible *aStart, PRUint32 matchState);
 

@@ -57,7 +57,7 @@ public:
   NS_IMETHOD GetRole(PRUint32 *_retval); 
 
 protected:
-  virtual void CacheChildren(PRBool aWalkAnonContent);
+  virtual void CacheChildren();
   already_AddRefed<nsIAccessible> CreateAreaAccessible(PRInt32 areaNum);
   nsCOMPtr<nsIDOMHTMLMapElement> mMapElement;
 };
