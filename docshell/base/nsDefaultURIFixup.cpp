@@ -45,6 +45,7 @@
 #include "nsCRT.h"
 
 #include "nsIPrefService.h"
+#include "nsIPrefLocalizedString.h"
 #include "nsIPlatformCharset.h"
 #include "nsILocalFile.h"
 
@@ -373,7 +374,20 @@ NS_IMETHODIMP nsDefaultURIFixup::KeywordToURI(const nsACString& aKeyword,
     NS_ENSURE_STATE(mPrefBranch);
 
     nsXPIDLCString url;
-    mPrefBranch->GetCharPref("keyword.URL", getter_Copies(url));
+    nsCOMPtr<nsIPrefLocalizedString> keywordURL;
+    mPrefBranch->GetComplexValue("keyword.URL", 
+                                 NS_GET_IID(nsIPrefLocalizedString),
+                                 getter_AddRefs(keywordURL));
+
+    if (keywordURL) {
+        nsXPIDLString wurl;
+        keywordURL->GetData(getter_Copies(wurl));
+        CopyUTF16toUTF8(wurl, url);
+    } else {
+        // Fall back to a non-localized pref, for backwards compat
+        mPrefBranch->GetCharPref("keyword.URL", getter_Copies(url));
+    }
+
     // if we can't find a keyword.URL keywords won't work.
     if (url.IsEmpty())
         return NS_ERROR_NOT_AVAILABLE;
