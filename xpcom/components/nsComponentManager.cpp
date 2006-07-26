@@ -1722,6 +1722,10 @@ nsComponentManagerImpl::CreateInstance(const nsCID &aClass,
     if (NS_SUCCEEDED(rv))
     {
         rv = factory->CreateInstance(aDelegate, aIID, aResult);
+        if (NS_SUCCEEDED(rv) && !*aResult) {
+            NS_ERROR("Factory did not return an object but returned success!");
+            rv = NS_ERROR_SERVICE_NOT_FOUND;
+        }
         NS_RELEASE(factory);
     }
     else
@@ -1804,6 +1808,10 @@ nsComponentManagerImpl::CreateInstanceByContractID(const char *aContractID,
     {
 
         rv = factory->CreateInstance(aDelegate, aIID, aResult);
+        if (NS_SUCCEEDED(rv) && !*aResult) {
+            NS_ERROR("Factory did not return an object but returned success!");
+            rv = NS_ERROR_SERVICE_NOT_FOUND;
+        }
         NS_RELEASE(factory);
     }
     else
@@ -1950,6 +1958,10 @@ nsComponentManagerImpl::GetService(const nsCID& aClass,
 
     entry->mServiceObject = service;
     *result = service.get();
+    if (!*result) {
+        NS_ERROR("Factory did not return an object but returned success!");
+        return NS_ERROR_SERVICE_NOT_FOUND;
+    }
     NS_ADDREF(NS_STATIC_CAST(nsISupports*, (*result)));
     return rv;
 }
