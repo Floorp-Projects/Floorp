@@ -60,6 +60,29 @@ nsTestServ.prototype =
                      "\r\n" +
                      "Moved to a file URI";
       stream.write(response, response.length);
+    },
+
+    "/auth": function(stream, req_head) {
+      // btoa("guest:guest"), but
+      // that function is not available here
+      var expectedHeader = "Basic Z3Vlc3Q6Z3Vlc3Q=";
+      var successResponse = this.headers("200 OK, authorized") +
+                            'WWW-Authenticate: Basic realm="secret"\r\n' +
+                            "\r\n" +
+                            "success";
+      var failedResponse = this.headers("401 Unauthorized") +
+                           'WWW-Authenticate: Basic realm="secret"\r\n' +
+                           "\r\n" +
+                           "failed";
+      if ("authorization" in req_head) {
+        // Make sure the credentials are right
+        if (req_head.authorization == expectedHeader) {
+          stream.write(successResponse, successResponse.length);
+          return;
+        }
+        // fall through to failure response
+      }
+      stream.write(failedResponse, failedResponse.length);
     }
   },
 
@@ -85,7 +108,7 @@ nsTestServ.prototype =
     var request = this.parseInput(input);
 
     // Strip away query parameters, then unescape the request
-    var path = request.replace(/\?.*/, "");
+    var path = request[0].replace(/\?.*/, "");
     try {
       path = decodeURI(path);
     } catch (ex) {
@@ -93,9 +116,9 @@ nsTestServ.prototype =
     }
 
     if (path in this.handler)
-      this.handler[path](output);
+      this.handler[path](output, request[1]);
     else
-      this.handler[404](output);
+      this.handler[404](output, request[1]);
 
     input.close();
     output.close();
@@ -131,20 +154,29 @@ nsTestServ.prototype =
 
     var request = line.value.split(/ +/);
     if (request[0] != "GET" && request[0] != "POST")
-      return 400;
+      return [400];
 
     // This server doesn't support HTTP 0.9
     if (request[2] != "HTTP/1.0" && request[2] != "HTTP/1.1")
-      return 400;
+      return [400];
 
-    while (line.value != "") {
+    var req_head = {};
+    while (true) {
       lis.readLine(line);
+      if (line.value == "")
+        break;
+      var matches = line.value.match(/^([a-zA-Z]+): *(.*)$/);
+      if (matches !== null && matches.length == 3) {
+        // This is slightly wrong - should probably merge headers with the
+        // same name
+        req_head[matches[1].toLowerCase()] = matches[2];
+      }
     }
 
     if (request[1][0] != "/")
-      return 400;
+      return [400];
 
-    return request[1];
+    return [request[1], req_head];
   }
 }
 
