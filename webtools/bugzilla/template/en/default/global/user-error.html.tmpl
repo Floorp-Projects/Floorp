@@ -435,10 +435,15 @@
     kilobytes (KB) in size. Non-patch attachments cannot be more than
     [%+ Param('maxattachmentsize') %] KB. <br>
     We recommend that you store your attachment elsewhere on the web,
-    and then insert a link to it in a comment, or in the URL field 
-    for this [% terms.bug %]. Alternately, if your attachment is an image,
-    you could convert it to a compressible format like JPG or PNG and try
-    again.
+    [% IF Param("allow_attach_url") %]
+      and then specify the URL to this file on the attachment
+      creation page in the <b>AttachURL</b> field.
+    [% ELSE %]
+      and then insert the URL to it in a comment, or in the URL field
+      for this [% terms.bug %].
+    [% END %]
+    <p>Alternately, if your attachment is an image, you could convert
+    it to a compressible format like JPG or PNG and try again.
 
   [% ELSIF error == "flag_not_multiplicable" %]
     [% docslinks = {'flags-overview.html' => 'An overview on Flags',
