@@ -90,8 +90,7 @@ public:
 
 protected:
 
-  void SetParentCoordCtxProvider(nsSVGCoordCtxProvider *aContext)
-    { mCoordCtx = aContext; mViewBoxToViewportTransform = nsnull; }
+  void SetParentCoordCtxProvider(nsSVGCoordCtxProvider *aContext);
 
   virtual LengthAttributesInfo GetLengthInfo();
  
