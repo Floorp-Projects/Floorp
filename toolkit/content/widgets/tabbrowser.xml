@@ -27,6 +27,7 @@
    -   Giorgio Maone <g.maone@informaction.com>
    -   Asaf Romano <mozilla.mano@sent.com>
    -   Seth Spitzer <sspitzer@mozilla.org>
+   -   Simon Bünzli <zeniko@gmail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1034,8 +1035,6 @@
             }
             if (!bgLoad)
               this.selectedTab = tab;
-            else
-              this.mTabContainer._notifyBackgroundTab(tab);
             
             return tab;
          ]]>
@@ -1219,6 +1218,9 @@
             var _delayedUpdate = function(aTabContainer) {
               aTabContainer.adjustTabstrip(false);
 
+              if (aTabContainer.selectedItem != t)
+                aTabContainer._notifyBackgroundTab(t);
+
               // XXXmano: this is a temporary workaround to bug 343585
               // We need to manually update the scroll buttons disabled state
               // if a tab was inserted to the overflow area or removed from it
@@ -1234,6 +1236,7 @@
             var evt = document.createEvent("Events");
             evt.initEvent("TabOpen", true, false);
             t.dispatchEvent(evt);
+
             return t;
           ]]>
         </body>
