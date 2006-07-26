@@ -48,7 +48,10 @@
 #include "nsStringEnumerator.h"
 #include "nsCRT.h"
 #include "nsStringStream.h"
+
+#ifndef MOZILLA_1_8_BRANCH
 #include "nsIClassInfoImpl.h"
+#endif
 
 #include "calIEvent.h"
 #include "calBaseCID.h"

@@ -45,7 +45,11 @@
 #include "nsServiceManagerUtils.h"
 
 #include "calICSService.h"
+
+#ifndef MOZILLA_1_8_BRANCH
 #include "nsIClassInfoImpl.h"
+#endif
+
 #include "calBaseCID.h"
 
 static NS_DEFINE_CID(kCalICSService, CAL_ICSSERVICE_CID);

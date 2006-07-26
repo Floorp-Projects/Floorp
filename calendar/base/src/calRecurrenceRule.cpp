@@ -45,7 +45,10 @@
 #include "calIEvent.h"
 
 #include "calICSService.h"
+
+#ifndef MOZILLA_1_8_BRANCH
 #include "nsIClassInfoImpl.h"
+#endif
 
 extern "C" {
     #include "ical.h"

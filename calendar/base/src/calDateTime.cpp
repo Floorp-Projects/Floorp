@@ -45,7 +45,11 @@
 
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
+
+#ifndef MOZILLA_1_8_BRANCH
 #include "nsIClassInfoImpl.h"
+#endif
+
 #include "calIICSService.h"
 #include "calIDuration.h"
 #include "calIErrors.h"
