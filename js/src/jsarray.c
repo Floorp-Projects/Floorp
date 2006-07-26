@@ -1224,7 +1224,12 @@ array_shift(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             }
         }
 
-        /* Delete the only or last element. */
+        /*
+         * Delete the only or the last element. We recreate id when it is an
+         * atom to protect against a nested GC during the last iteration.
+         */
+        if (length > JSVAL_INT_MAX && !IndexToId(cx, length, &id))
+            return JS_FALSE;
         if (!OBJ_DELETE_PROPERTY(cx, obj, id, &junk))
             return JS_FALSE;
     }
