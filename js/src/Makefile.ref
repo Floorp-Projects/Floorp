@@ -92,7 +92,12 @@ endif
 
 # Prevent floating point errors caused by VC++ optimizations
 ifeq ($(OS_ARCH),WINNT)
-#CFLAGS += -Op
+_MSC_VER = $(shell $(CC) 2>&1 | sed -n 's/.*Compiler Version \([0-9]*\)\.\([0-9]*\).*/\1\2/p')
+ifeq (,$(filter-out 1200 1300 1310,$(_MSC_VER)))
+CFLAGS += -Op
+else
+CFLAGS += -fp:precise
+endif
 endif # WINNT
 
 #
