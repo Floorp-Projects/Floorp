@@ -620,6 +620,7 @@ typedef enum JSGeneratorState {
 typedef struct JSGenerator {
     JSGeneratorState    state;
     JSStackFrame        frame;
+    JSArena             arena;
     jsval               stack[1];
 } JSGenerator;
 
@@ -719,9 +720,12 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     gen->frame.script = fp->script;
     gen->frame.fun = fp->fun;
     gen->frame.thisp = fp->thisp;
+    gen->arena.next = NULL;
 
     /* Use newsp to carve space out of gen->stack. */
     newsp = gen->stack;
+    gen->arena.base = (jsuword) newsp;
+    gen->arena.limit = gen->arena.avail = (jsuword) (newsp + nslots);
 
 #define COPY_STACK_ARRAY(vec,cnt,num)                                         \
     JS_BEGIN_MACRO                                                            \
@@ -769,6 +773,7 @@ generator_send(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSGenerator *gen;
     JSString *str;
     JSStackFrame *fp;
+    JSArena *arena;
     JSBool ok;
     jsval junk;
 
@@ -790,6 +795,8 @@ generator_send(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
 
     fp = cx->fp;
+    arena = cx->stackPool.current;
+    cx->stackPool.current = &gen->arena;
     cx->fp = &gen->frame;
     gen->frame.down = fp;
 
@@ -797,6 +804,7 @@ generator_send(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     gen->frame.sp[-1] = (argc != 0) ? argv[0] : JSVAL_VOID;
     ok = js_Interpret(cx, gen->frame.pc, &junk);
     cx->fp = fp;
+    cx->stackPool.current = arena;
 
     if (!ok) {
         if (cx->throwing)
