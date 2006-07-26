@@ -128,8 +128,6 @@
       <method name="appendItem">
         <parameter name="aObject"/>
         <body><![CDATA[
-          if (!aObject.message) return;
-
           try {
             // Try to QI it to a script error to get more info
             var scriptError = aObject.QueryInterface(Components.interfaces.nsIScriptError);
