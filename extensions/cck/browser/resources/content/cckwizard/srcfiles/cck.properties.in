@@ -4,5 +4,7 @@ browser.throbber.url=%browser.throbber.url%
 cckhelp.url=%cckhelp.url%
 browser.startup.homepage=%browser.startup.homepage%
 startup.homepage_override_url=%startup.homepage_override_url%
+browser.search.defaultenginename=%browser.search.defaultenginename%
+browser.search.order.1=%browser.search.order.1%
 PopupAllowedSites=%PopupAllowedSites%
 InstallAllowedSites=%InstallAllowedSites%

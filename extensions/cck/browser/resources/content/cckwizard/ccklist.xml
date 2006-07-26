@@ -121,8 +121,9 @@
           listbox.removeItemAt(listbox.selectedIndex);
           listbox.selectItem(newlistitem);
         } else {
-	  eval(this.getAttribute(event.originalTarget.type));
+          eval(this.getAttribute(event.originalTarget.type));
         }
+        eval(this.getAttribute("on" + event.originalTarget.type));	
         this._enableDisableButtons();
       </handler>
       <handler event="keypress" keycode="VK_DELETE">

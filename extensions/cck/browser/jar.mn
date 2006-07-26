@@ -2,7 +2,7 @@ cckwizard.jar:
 % content cckwizard %content/cckwizard/
 % overlay chrome://browser/content/browser.xul         chrome://cckwizard/content/cckwizard-browser-overlay.xul
  content/cckwizard/cckwizard-browser-overlay.xul          (resources/content/cckwizard/cckwizard-browser-overlay.xul)
- content/cckwizard/cckwizard.js                           (resources/content/cckwizard/cckwizard.js)
+* content/cckwizard/cckwizard.js                           (resources/content/cckwizard/cckwizard.js)
  content/cckwizard/cckwizard.png                          (resources/content/cckwizard/cckwizard.png)
  content/cckwizard/cckwizard.xul                          (resources/content/cckwizard/cckwizard.xul)
  content/cckwizard/config.xul                             (resources/content/cckwizard/config.xul)

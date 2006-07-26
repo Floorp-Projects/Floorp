@@ -305,7 +305,18 @@
     <groupbox>
       <caption label="&engines.label;"/>
     <description>&searchEngines.description;</description>
-    <box class="ccklist" id="searchEngineList" new="onNewSearchEngine();" edit="onEditSearchEngine();"/>
+    <box class="ccklist" id="searchEngineList" new="onNewSearchEngine();" edit="onEditSearchEngine();"
+         ondelete="RefreshDefaultSearchEngines()" onmoveup="RefreshDefaultSearchEngines()" onmovedown="RefreshDefaultSearchEngines()"/>
+    <spacer />
+
+    <hbox align="center">
+      <label control="defaultSearchEngine" value="&defaultSearchEngine.label;" />
+       <menulist editable="true" id="defaultSearchEngine">
+         <menupopup>
+         </menupopup>
+       </menulist>
+    </hbox>
+
     </groupbox>
   </wizardpage>
 
@@ -499,6 +510,11 @@
         <radio value="2" label="&autoTypeRadio.label;" accesskey="&autoTypeRadio.accesskey;" oncommand="DoEnabling();"/>
         <hbox class="indent" flex="1" align="center">
           <textbox id="autoproxyurl" flex="1" preference="network.proxy.autoconfig_url"/>
+        </hbox>
+        <radio value="5" label="&autoCCKTypeRadio.label;" accesskey="&autoCCKTypeRadio.accesskey;" oncommand="DoEnabling();"/>
+        <hbox class="indent" flex="1" align="center">
+          <textbox id="autoproxyfile" flex="1"/>
+          <button id="autoproxyfilebutton" label="&chooseFile.label;" oncommand="choosefile('autoproxyfile');"/>
         </hbox>
       </radiogroup>
     </groupbox>

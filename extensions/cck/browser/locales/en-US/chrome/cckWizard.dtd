@@ -4,7 +4,7 @@
 <!ENTITY  beforeYouBegin.label          "Before You Begin">
 <!ENTITY  beforeYouBegin.description    "Decide which customizations you want to make and create/collect the customized files, such as:
                                          <html:ul>
-                                         <html:li>Custom animation files for browser's animated logo</html:li>
+                                         <html:li>Custom animation files for browser&apos;s animated logo</html:li>
                                          <html:li>Search engines (SRC files and the corresponding images)</html:li>
                                          <html:li>Browser plug-ins</html:li>
                                          <html:li>Extensions/themes</html:li>
@@ -12,7 +12,7 @@
                                          
 <!ENTITY  configurePage.label           "Extension Configurations">
 <!ENTITY  selectConfig.label            "Select an Existing Configuration or Create a New One">
-<!ENTITY  selectConfig.description      "Select an existing configuration, or click 'New' to create a new configuration and workspace in which to store your custom files. To edit an existing configuration without overwriting the original configuration, select it from the list and click 'Copy'.">
+<!ENTITY  selectConfig.description      "Select an existing configuration, or click &apos;New&apos; to create a new configuration and workspace in which to store your custom files. To edit an existing configuration without overwriting the original configuration, select it from the list and click &apos;Copy&apos;.">
 <!ENTITY  showConfig.label              "Show Config Info">
 <!ENTITY  newConfig.label               "New">
 <!ENTITY  copyConfig.label              "Copy">
@@ -54,7 +54,7 @@
 
 <!ENTITY  customizePartOne.label        "Customize the Browser - Part One">
 
-<!ENTITY  orgName.description           "The Company Identifier is included as part of the browser's user agent string which appears when you open the Help menu and select About Mozilla Firefox. It is required.">
+<!ENTITY  orgName.description           "The Company Identifier is included as part of the browser&apos;s user agent string which appears when you open the Help menu and select About Mozilla Firefox. It is required.">
 <!ENTITY  orgName.label                 "Enter Your Company Identifier (up to 10 characters; no spaces):">
 <!ENTITY  orgName.caption               "Company Identifier">
 
@@ -66,7 +66,7 @@
 <!ENTITY  homePageOverride.description  "This page is displayed  on the very first invocation of Firefox after a new profile is created. It is optional.">
 
 
-<!ENTITY  titleBar.caption              "Browser Window's Title Bar Text">
+<!ENTITY  titleBar.caption              "Browser Window&apos;s Title Bar Text">
 <!ENTITY  titleBar.label                "Custom Title Bar Text:">
 <!ENTITY  titleBar.description          "The text you enter (for example, your company name) appears after the page title in the title bar. It is recommended that you use the format
                                          <html:i>Mozilla Firefox: Companyname Edition</html:i>">
@@ -102,6 +102,8 @@
 
 <!ENTITY  customizeSearchEngines.label  "Customize Search Engines">
 <!ENTITY  searchEngines.description     "Use the buttons below to add search engines.">
+
+<!ENTITY  defaultSearchEngine.label     "Default Search Engine">
 
 <!ENTITY  engines.label                 "Search Engines">
 <!ENTITY  engines.description           "Please select a .src file and the corresponding image.">
@@ -215,6 +217,10 @@
 <!ENTITY  autoTypeRadio.accesskey       "a">
 <!ENTITY  configAutoconfigText.label    "Configuration location (URL):">
 <!ENTITY  configAutoconfigText.accesskey "u">
+<!ENTITY  autoCCKTypeRadio.label        "Store proxy configuration file in the CCK:">
+<!ENTITY  autoCCKTypeRadio.accesskey    "i">
+
+
 <!ENTITY  reload.label                  "Reload">
 <!ENTITY  reload.accesskey              "l">
 <!ENTITY  ftp.label                     "FTP Proxy:">
