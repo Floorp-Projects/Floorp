@@ -1229,8 +1229,13 @@ js_PushStatement(JSTreeContext *tc, JSStmtInfo *stmt, JSStmtType type,
     stmt->label = NULL;
     stmt->down = tc->topStmt;
     tc->topStmt = stmt;
-    stmt->downScope = NULL;
     stmt->blockObj = NULL;
+    if (STMT_IS_SCOPE(stmt)) {
+        stmt->downScope = tc->topScopeStmt;
+        tc->topScopeStmt = stmt;
+    } else {
+        stmt->downScope = NULL;
+    }
 }
 
 void

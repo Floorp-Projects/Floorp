@@ -2953,10 +2953,14 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             obj = js_NewBlockObject(cx);
             if (!obj)
                 return NULL;
-            JS_ASSERT(stmt->downScope == NULL);
+            JS_ASSERT(!(stmt->flags & SIF_SCOPE));
             stmt->flags |= SIF_SCOPE;
-            stmt->downScope = tc->topScopeStmt;
-            tc->topScopeStmt = stmt;
+            if (!stmt->downScope) {
+                stmt->downScope = tc->topScopeStmt;
+                tc->topScopeStmt = stmt;
+            } else {
+                JS_ASSERT(stmt == tc->topScopeStmt);
+            }
             obj->slots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(tc->blockChain);
             tc->blockChain = stmt->blockObj = obj;
 
