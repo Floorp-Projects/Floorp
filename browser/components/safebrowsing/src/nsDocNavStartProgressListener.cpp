@@ -86,7 +86,7 @@ nsDocNavStartProgressListener::AttachListeners()
   NS_ENSURE_SUCCESS(rv, rv);
 
   return webProgressService->AddProgressListener(this,
-      nsIWebProgress::NOTIFY_STATE_DOCUMENT);
+      nsIWebProgress::NOTIFY_STATE_REQUEST);
 }
 
 
@@ -210,14 +210,14 @@ nsDocNavStartProgressListener::OnStateChange(nsIWebProgress *aWebProgress,
                                             nsresult aStatus)
 {
   if (mEnabled && aStateFlags & STATE_START && aStateFlags & STATE_IS_REQUEST) {
-    // might be for us, check load flags
+    // We only care about document loads, check load flags.
     nsresult rv;
-#ifdef DEBUG
     nsLoadFlags loadFlags;
     rv = aRequest->GetLoadFlags(&loadFlags);
-    NS_ASSERTION(NS_SUCCEEDED(rv) && loadFlags & nsIChannel::LOAD_DOCUMENT_URI,
-                 "Unexpected load flags, we only registered for loads");
-#endif
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!(loadFlags & nsIChannel::LOAD_DOCUMENT_URI))
+      return NS_OK;
+
     // ignore requests with no URI
     nsCOMPtr<nsIURI> uri;
     rv = GetRequestUri(aRequest, getter_AddRefs(uri));
