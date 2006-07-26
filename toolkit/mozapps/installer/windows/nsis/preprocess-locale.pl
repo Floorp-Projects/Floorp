@@ -105,6 +105,8 @@ while( $line = <infile> ) {
   my @values = split('=', $line, 2);
   next if (@values[0] eq undef) || (@values[1] eq undef);
   my $value = @values[1];
+  $value =~ s/^\s+//; # trim whitespace from the beginning of the string
+  $value =~ s/\s+$//; # trim whitespace from the end of the string
   $value =~ s/^"(.*)"$/$1/g; # remove " at the beginning and end of the value
   $value =~ s/(")/\$\\$1/g;  # prefix " with $\
   print outfile "LangString  ^@values[0] $langID \"$value\"\r\n";
