@@ -163,12 +163,7 @@ NS_IMETHODIMP nsMsgTagService::DeleteKey(const nsACString &key)
   // clear the associated prefs
   nsCAutoString prefName("mailnews.tags.");
   prefName.Append(key);
-  prefName.AppendLiteral(".tag");
-  // this is the rv we're going to return - it's the interesting one.§
-  nsresult rv = m_prefBranch->ClearUserPref(prefName.get());
-  prefName.Replace(prefName.Length() - 3, 3, NS_LITERAL_CSTRING("color"));
-  m_prefBranch->ClearUserPref(prefName.get());
-  return rv;
+  return m_prefBranch->DeleteBranch(prefName.get());
 }
 
 /* readonly attribute nsIStringEnumerator tagEnumerator; */
