@@ -480,6 +480,7 @@ msFromTime(jsdouble t)
  */
 #define UTC_TIME_SLOT           0
 #define LOCAL_TIME_SLOT         1
+
 JSClass js_DateClass = {
     js_Date_str,
     JSCLASS_HAS_RESERVED_SLOTS(2) | JSCLASS_HAS_CACHED_PROTO(JSProto_Date),
