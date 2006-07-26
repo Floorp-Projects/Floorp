@@ -190,7 +190,8 @@
             </xul:hbox>
             <xul:hbox flex="1" class="blocklistedBox attention" align="center">
               <xul:label value="&blocklisted.label;" crop="end"/>
-              <xul:label anonid="blocklistMoreInfo" class="text-link" value="&moreInfo.label;"/>
+              <xul:label anonid="blocklistMoreInfo" class="text-link" value="&moreInfo.label;"
+                         onclick="openURL(this.getAttribute('moreInfoURL'));"/>
             </xul:hbox>
           </xul:vbox>
           <xul:hbox anonid="selectedButtons" flex="1" class="selectedButtons">
@@ -232,8 +233,8 @@
               var blocklistMoreInfo = document.getAnonymousElementByAttribute(this, "anonid", "blocklistMoreInfo");
               var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                                     .getService(Components.interfaces.nsIPrefBranch);
-              blocklistMoreInfo.setAttribute("onclick", "openURL(\"" +
-                                                        prefs.getCharPref("extensions.blocklist.detailsURL") + "\");");
+              var url = prefs.getCharPref("extensions.blocklist.detailsURL");
+              blocklistMoreInfo.setAttribute("moreInfoURL", url);
             } catch(e) {
               blocklistMoreInfo.hidden = true;
             }
@@ -522,9 +523,9 @@
       <xul:hbox hidden="true" anonid="messageClose" align="center" pack="end"
                 class="addonsmessage-closebutton-box">
         <xul:toolbarbutton ondblclick="event.preventBubble();"
+                           anonid="closeButton"
                            class="addonsmessage-close-button close-button"
-                           tooltiptext="&closeMessage.tooltip;"
-                           oncommand="this.parentNode.parentNode.hideMessage();"/>
+                           tooltiptext="&closeMessage.tooltip;"/>
       </xul:hbox>
     </content>
     <implementation implements="nsIAccessibleProvider">
@@ -582,11 +583,6 @@
         <body>
           <![CDATA[
             this.hidden = true;
-            if (this._buttonElement.style.visibility == "hidden" && this.notifyData) {
-              var os = Components.classes["@mozilla.org/observer-service;1"]
-                                 .getService(Components.interfaces.nsIObserverService);
-              os.notifyObservers(null, "addons-message-notification", this.notifyData);
-            }
             if (this.queue.length > 0) {
               this.showMessage(this.queue[0][0], this.queue[0][1], this.queue[0][2],
                                this.queue[0][3], this.queue[0][4], this.queue[0][5]);
@@ -699,11 +695,19 @@
 
     <handlers>
       <handler event="command">
-        if (event.originalTarget.getAttribute("anonid") == "messageButton") {
+        <![CDATA[
+          var id = event.originalTarget.getAttribute("anonid");
+          if (id != "messageButton" && id != "closeButton")
+            return;
+          var notifyData = this.notifyData;
+          if (!this.notifyData || id == "closeButton" &&
+              this._buttonElement.style.visibility != "hidden")
+            notifyData = "addons-message-dismiss";
           var os = Components.classes["@mozilla.org/observer-service;1"]
                              .getService(Components.interfaces.nsIObserverService);
-          os.notifyObservers(null, "addons-message-notification", this.notifyData);
-        }
+          os.notifyObservers(null, "addons-message-notification", notifyData);
+          this.hideMessage();
+        ]]>
       </handler>
     </handlers>
   </binding>

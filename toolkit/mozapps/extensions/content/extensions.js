@@ -1207,8 +1207,6 @@ const gAddonsMsgObserver = {
     case "addons-message-dismiss":
       break;
     }
-    var addonsMsg = document.getElementById("addonsMsg");
-    addonsMsg.hideMessage();
     if (gExtensionsView.selectedItem)
       gExtensionsView.selectedItem.focus();
   }
