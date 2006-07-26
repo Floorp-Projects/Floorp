@@ -3961,6 +3961,10 @@ GetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (!xml)
         return JS_TRUE;
 
+#ifdef __GNUC__
+    list = NULL;    /* quell GCC overwarning */
+#endif
+
 retry:
     if (xml->xml_class == JSXML_CLASS_LIST) {
         /* ECMA-357 9.2.1.1 starts here. */
