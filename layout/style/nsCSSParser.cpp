@@ -5939,8 +5939,10 @@ PRBool CSSParserImpl::ParseTextShadow(nsresult& aErrorCode)
         val->Item(IndexX) = cur->mValue;
       } else {
         // Must be a color (as string or color value)
-        NS_ASSERTION(unit == eCSSUnit_String || unit == eCSSUnit_Color,
-                     "Must be a color value");
+        NS_ASSERTION(unit == eCSSUnit_String || unit == eCSSUnit_Color ||
+                     unit == eCSSUnit_Integer,
+                     "Must be a color value (named color, numeric color, "
+                     "or system color)");
         haveColor = PR_TRUE;
         val->Item(IndexColor) = cur->mValue;
 
