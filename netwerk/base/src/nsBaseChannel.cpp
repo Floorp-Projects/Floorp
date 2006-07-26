@@ -62,10 +62,14 @@ class ScopedRequestSuspender {
 public:
   ScopedRequestSuspender(nsIRequest *request)
     : mRequest(request) {
-    mRequest->Suspend();
+    if (NS_FAILED(mRequest->Suspend())) {
+      NS_WARNING("Couldn't suspend pump");
+      mRequest = nsnull;
+    }
   }
   ~ScopedRequestSuspender() {
-    mRequest->Resume();
+    if (mRequest)
+      mRequest->Resume();
   }
 private:
   nsIRequest *mRequest;
