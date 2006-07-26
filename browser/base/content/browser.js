@@ -5255,12 +5255,30 @@ nsContextMenu.prototype = {
 
     addDictionaries : function()
     {
-      var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                            .getService(Components.interfaces.nsIPromptService);
-      // FIXME bug 335605: hook this up so that it takes you to the download
-      // web page
-      var rv = ps.alert(window, "Add Dictionaries",
-          "This command hasn't been hooked up yet. Instead, go to Thunderbird's download page:\n\nhttp://www.mozilla.org/products/thunderbird/dictionaries.html\n\nThese plugins will work in Firefox as well.");
+      var uri = gPrefService.getCharPref("browser.dictionaries.download.url");
+
+      var locale = "-";
+      try {
+        locale = gPrefService.getComplexValue("intl.accept_languages",
+                                Components.interfaces.nsIPrefLocalizedString).data;
+      }
+      catch (e) { }
+
+      var version = "-";
+      try {
+        version = Components.classes["@mozilla.org/xre/app-info;1"]
+                            .getService(Components.interfaces.nsIXULAppInfo)
+                            .version;
+      }
+      catch (e) { }
+
+      uri = uri.replace(/%LOCALE%/, escape(locale));
+      uri = uri.replace(/%VERSION%/, version);
+
+      var newWindowPref = gPrefService.getIntPref("browser.link.open_newwindow");
+      var where = newWindowPref == 3 ? "tab" : "window";
+
+      openUILinkIn(uri, where);
     }
 }
 
