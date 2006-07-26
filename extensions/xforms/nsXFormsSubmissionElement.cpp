@@ -1186,20 +1186,33 @@ nsXFormsSubmissionElement::CreatePurgedDoc(nsIDOMNode      *source,
   }
 
   // recursively walk the source document, copying nodes as appropriate
-  nsCOMPtr<nsIDOMNode> startNode;
-  // if it is a document, get the root element
-  if (sourceDoc) {
-    nsCOMPtr<nsIDOMElement> elm;
-    sourceDoc->GetDocumentElement(getter_AddRefs(elm));
-    startNode = elm;
-  } else {
-    startNode = source;
-  }
-
   nsCOMPtr<nsIModelElementPrivate> model = GetModel();
   NS_ENSURE_STATE(model);
-  nsresult rv = CopyChildren(model, startNode, doc, doc, cdataElements, 0);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = NS_OK;
+  // if it is a document, get the root element
+  if (sourceDoc) {
+    // Iterate over document child nodes to preserve document level
+    // processing instructions and comment nodes.
+    nsCOMPtr<nsIDOMNode> curDocNode, node, destChild;
+    sourceDoc->GetFirstChild(getter_AddRefs(curDocNode));
+    PRUint16 type;
+    while (curDocNode) {
+      curDocNode->GetNodeType(&type);
+      if (type == nsIDOMNode::ELEMENT_NODE) {
+        rv = CopyChildren(model, curDocNode, doc, doc, cdataElements, 0);
+        NS_ENSURE_SUCCESS(rv, rv);
+      } else {
+        doc->ImportNode(curDocNode, PR_FALSE, getter_AddRefs(destChild));
+        doc->AppendChild(destChild, getter_AddRefs(node));
+      }
+
+      curDocNode->GetNextSibling(getter_AddRefs(node));
+      curDocNode.swap(node);
+    }
+  } else {
+    rv = CopyChildren(model, source, doc, doc, cdataElements, 0);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   NS_ADDREF(*result = doc);
   return NS_OK;
