@@ -71,7 +71,7 @@ class UsersController extends AppController {
                         'message' => "
 <p>Thanks for volunteering to be a part of the Firefox User Panel!</p>
 
-<p>Please start by taking this initial survey by August 1st.  
+<p>Please start by taking this short initial survey.  
 We're anxious to get your feedback on a variety of areas, so we'll send out a few
 more surveys in the following weeks to the user panel to help us define the next
 generation of Firefox.  Thanks again for making the browser a better place!</p>
@@ -119,7 +119,7 @@ use in marketing or solicitation.</small></p>
                         'message' => "
 <p>Thanks for volunteering to be a part of the Firefox User Panel!</p>
 
-<p>Please start by taking this initial survey by August 1st.  
+<p>Please start by taking this short initial survey.  
 We're anxious to get your feedback on a variety of areas, so we'll send out a few
 more surveys in the following weeks to the user panel to help us define the next
 generation of Firefox.  Thanks again for making the browser a better place!</p>
