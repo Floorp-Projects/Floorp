@@ -230,7 +230,16 @@ var gVersionInfoPage = {
         }
       }
     }
+    else if (status == nsIAUCL.STATUS_FAILURE)
+      gUpdateWizard.errorItems.push(addon);
+
     ++this._completeCount;
+
+    // Update the status text and progress bar
+    var updateStrings = document.getElementById("updateStrings");
+    var status = document.getElementById("versioninfo.status");
+    var statusString = updateStrings.getFormattedString("statusPrefix", [addon.name]);
+    status.setAttribute("value", statusString);
 
     // Update the status text and progress bar
     var progress = document.getElementById("versioninfo.progress");
@@ -272,7 +281,7 @@ var gUpdatePage = {
   onPageShow: function ()
   {
     if (!gUpdateWizard.xpinstallEnabled && gUpdateWizard.xpinstallLocked) {
-      document.documentElement.currentPage = document.getElementById("finished");
+      document.documentElement.currentPage = document.getElementById("adminDisabled");
       return;
     }
 
@@ -307,7 +316,7 @@ var gUpdatePage = {
   onAddonUpdateEnded: function(addon, status) {
     if (status == nsIAUCL.STATUS_UPDATE)
       gUpdateWizard.itemsToUpdate.push(addon);
-    else if (status == nsIAUCL.STATE_ERROR)
+    else if (status == nsIAUCL.STATUS_FAILURE)
       gUpdateWizard.errorItems.push(addon);
       
     ++this._completeCount;
@@ -315,7 +324,7 @@ var gUpdatePage = {
     // Update the status text and progress bar
     var updateStrings = document.getElementById("updateStrings");
     var status = document.getElementById("checking.status");
-    var statusString = updateStrings.getFormattedString("checkingPrefix", [addon.name]);
+    var statusString = updateStrings.getFormattedString("statusPrefix", [addon.name]);
     status.setAttribute("value", statusString);
 
     var progress = document.getElementById("checking.progress");
@@ -354,18 +363,12 @@ var gFoundPage = {
     if (!gUpdateWizard.xpinstallEnabled) {
       document.getElementById("xpinstallDisabledAlert").hidden = false;
       document.getElementById("enableXPInstall").focus();
+      document.documentElement.getButton("next").disabled = true;
     }
     else {
-      //XXXrstrong - this string should be set in update.xul from update.dtd
-      // for Gecko Version 1.9.
-      var strings = document.getElementById("updateStrings");
-      var text = strings.getString("foundInstructions");
-      var foundInstructions = document.getElementById("foundInstructions");
-      foundInstructions.hidden = false;
-      foundInstructions.appendChild(document.createTextNode(text));
       document.documentElement.getButton("next").focus();
+      document.documentElement.getButton("next").disabled = false;
     }
-    this.updateNextButton();
   },
     
   toggleXPInstallEnable: function(aEvent)
@@ -467,7 +470,7 @@ var gInstallingPage = {
       break;
     case nsIXPIProgressDialog.DIALOG_CLOSE:
       this._installing = false;
-      var nextPage = this._errors.length > 0 ? "errors" : "finished";
+      var nextPage = this._errors.length > 0 ? "installerrors" : "finished";
       document.getElementById("installing").setAttribute("next", nextPage);
       document.documentElement.advance();
       break;
@@ -481,59 +484,64 @@ var gInstallingPage = {
   }
 };
 
-var gErrorsPage = {
+var gInstallErrorsPage = {
   onPageShow: function ()
   {
+    gUpdateWizard.setButtonLabels(null, true, null, true, null, true);
     document.documentElement.getButton("finish").focus();
   },
   
   onShowErrors: function ()
   {
     gUpdateWizard.showErrors("install", gInstallingPage._errors);
-  }  
+  }
 };
 
+// Displayed when there are incompatible add-ons and the xpinstall.enabled
+// pref is false and locked.
+var gAdminDisabledPage = {
+  onPageShow: function ()
+  {
+    gUpdateWizard.setButtonLabels(null, true, null, true, 
+                                  "cancelButtonText", true);
+    document.documentElement.getButton("finish").focus();
+  }
+};
+
+// Displayed when selected add-on updates have been installed without error.
+// There can still be add-ons that are not compatible and don't have an update.
 var gFinishedPage = {
   onPageShow: function ()
   {
     gUpdateWizard.setButtonLabels(null, true, null, true, null, true);
     document.documentElement.getButton("finish").focus();
     
-    if (gUpdateWizard.xpinstallLocked) {
-      document.getElementById("adminDisabled").hidden = false;
-      document.getElementById("incompatibleRemainingLocked").hidden = false;
-      document.getElementById("finishedMismatch").hidden = false;
-      document.getElementById("incompatibleAlert").hidden = false;
+    if (gUpdateWizard.shouldSuggestAutoChecking) {
+      document.getElementById("finishedCheckDisabled").hidden = false;
+      gUpdateWizard.shouldAutoCheck = true;
     }
-    else {
-      document.getElementById("updated").hidden = false;
-      document.getElementById("incompatibleRemaining").hidden = false;
-      if (gUpdateWizard.shouldSuggestAutoChecking) {
-        document.getElementById("finishedEnableCheckingDesc").hidden = false;
-        document.getElementById("finishedEnableChecking").hidden = false;
-        document.getElementById("finishedEnableChecking").click();
-      }
-    }
+    else
+      document.getElementById("finishedCheckEnabled").hidden = false;
+
+    document.documentElement.getButton("finish").focus();
   }
 };
 
+// Displayed when there are incompatible add-ons and there are no available
+// updates.
 var gNoUpdatesPage = {
   onPageShow: function (aEvent)
   {
     gUpdateWizard.setButtonLabels(null, true, null, true, null, true);
-    document.documentElement.getButton("finish").focus();
-    document.getElementById("introUser").hidden = true;
-    document.getElementById("introMismatch").hidden = false;
-    document.getElementById("mismatchNoUpdates").hidden = false;
-        
     if (gUpdateWizard.shouldSuggestAutoChecking) {
-      document.getElementById("mismatchIncompatibleRemaining").hidden = true;
-      document.getElementById("mismatchIncompatibleRemaining2").hidden = false;
-      document.getElementById("mismatchFinishedEnableChecking").hidden = false;
-      document.getElementById("mismatchFinishedEnableChecking").click();
+      document.getElementById("noupdatesCheckDisabled").hidden = false;
+      gUpdateWizard.shouldAutoCheck = true;
     }
+    else
+      document.getElementById("noupdatesCheckEnabled").hidden = false;
 
     gUpdateWizard.checkForErrors("updateCheckErrorNotFound");
+    document.documentElement.getButton("finish").focus();
   }
 };
 

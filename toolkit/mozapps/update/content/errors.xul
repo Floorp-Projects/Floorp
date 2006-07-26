@@ -64,7 +64,7 @@
       var state = window.arguments[0].state;
       var brandShortName = document.getElementById("brandStrings").getString("brandShortName");
       var updateStrings = document.getElementById("updateStrings");
-      var str = updateStrings.getFormattedString(state + "ErrorDesc", [brandShortName]);
+      var str = updateStrings.getFormattedString(state + "Errors", [brandShortName]);
       document.getElementById("intro").appendChild(document.createTextNode(str));
       
       var xpinstallStrings = document.getElementById("xpinstallStrings");

@@ -22,6 +22,7 @@
 #
 # Contributor(s):
 #   Ben Goodger <ben@mozilla.org>
+#   Robert Strong <robert.bugzilla@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -78,12 +79,14 @@
   </wizardpage>
   
   <wizardpage id="versioninfo" pageid="versioninfo" next="mismatch"
-              label="&compatCheck.title;"
+              label="&versioninfo.wizard.title;"
               onpageshow="gVersionInfoPage.onPageShow();">
+    <label>&versioninfo.top.label;</label>
+    <separator class="thin"/>
     <progressmeter id="versioninfo.progress" mode="undetermined"/>
     <hbox align="center">
       <image id="versioninfo.throbber" class="throbber"/>
-      <label flex="1" crop="right">&compatCheck.intro;</label>
+      <label flex="1" id="versioninfo.status" crop="right">&versioninfo.waiting;</label>
     </hbox>
     <separator/>
   </wizardpage>
@@ -91,92 +94,71 @@
   <wizardpage id="mismatch" pageid="mismatch" next="checking"
               label="&mismatch.win.title;"
               onpageshow="gMismatchPage.onPageShow();">
-
-    <label>&mismatch.introduction1.label;</label>
-    
+    <label>&mismatch.top.label;</label>
     <separator class="thin"/>
-    
     <listbox id="mismatch.incompatible" flex="1"/>
-    
     <separator class="thin"/>
-    
-    <label style="font-weight: bold;">&mismatch.intro2.label;</label>
-    <separator class="thin"/>
-    
-    <label>&mismatch.introduction3.label;</label>
-
+    <label>&mismatch.bottom.label;</label>
   </wizardpage>
   
   <wizardpage id="checking" pageid="checking" next="noupdates"
-              label="&checking.title;"
+              label="&checking.wizard.title;"
               onpageshow="gUpdatePage.onPageShow();">
-
-    <label>&checking.intro.label;</label>
-    
+    <label>&checking.top.label;</label>
     <separator class="thin"/>
-    
     <progressmeter id="checking.progress"/>
     <hbox align="center">
       <image id="checking.throbber" class="throbber"/>
       <label id="checking.status" flex="1" crop="right">&checking.status;</label>
     </hbox>
-    
   </wizardpage>
     
   <wizardpage id="noupdates" pageid="noupdates"
-              label="&noupdates.title;"
+              label="&noupdates.wizard.title;"
               onpageshow="gNoUpdatesPage.onPageShow();">
-    <label id="introUser">&noupdates.intro.user.label;</label>
-    <label id="introMismatch" hidden="true">&noupdates.intro.mismatch.label;</label>
-    <separator/>
-    <vbox id="mismatchNoUpdates" hidden="true">
-      <description id="mismatchIncompatibleRemaining" flex="1">
-        &noupdates.intro2.mismatch.label;
-      </description>
-      <description id="mismatchIncompatibleRemaining2" flex="1" hidden="true">
-        &noupdates.intro3.mismatch.label;
-      </description>
-      <separator class="thin"/>
-
-      <vbox align="left">
-        <checkbox label="&noupdates.enableChecking.label;" 
-                  id="mismatchFinishedEnableChecking" hidden="true"
-                  oncommand="gUpdateWizard.shouldAutoCheck = this.checked;"/>
-      </vbox>
-    </vbox>
-    <hbox id="updateCheckErrorNotFound" hidden="true" align="center">
-      <description flex="1">
-        &updateCheckError.description;
-      </description>
-      <button label="&updateCheckError.label;" accesskey="&updateCheckError.accesskey;"
+    <description>&noupdates.intro.desc;</description>
+    <separator class="thin"/>
+    <hbox id="updateCheckErrorNotFound" class="alertBox" hidden="true" align="top">
+      <image id="alert"/>
+      <description flex="1">&noupdates.error.desc;</description>
+      <button label="&details.label;" accesskey="&details.accesskey;"
               oncommand="gUpdateWizard.showUpdateCheckErrors();"/>
     </hbox>
-
+    <separator class="thin"/>
+    <description id="noupdatesCheckEnabled" hidden="true">
+      &noupdates.checkEnabled.desc;
+    </description>
+    <vbox id="noupdatesCheckDisabled" hidden="true">
+      <description>&finished.checkDisabled.desc;</description>
+      <checkbox label="&enableChecking.label;" checked="true"
+                oncommand="gUpdateWizard.shouldAutoCheck = this.checked;"/>
+    </vbox>
+    <separator flex="1"/>
+    <label>&clickFinish.label;</label>
+    <separator class="thin"/>
   </wizardpage>
 
   <wizardpage id="found" pageid="found" next="installing"
-              label="&found.title;"
+              label="&found.wizard.title;"
               onpageshow="gFoundPage.onPageShow();">
-
-    <label>&found.intro.label;</label>
+    <label>&found.top.label;</label>
     <separator class="thin"/>
     <listbox id="found.updates" flex="1" seltype="multiple"
              onclick="gFoundPage.updateNextButton();"/>
     <separator class="thin"/>
     <vbox align="left" id="xpinstallDisabledAlert" hidden="true">
-      <description flex="1">&found.disabledXPinstall.label;</description>
+      <description>&found.disabledXPinstall.label;</description>
       <checkbox label="&found.enableXPInstall.label;"
                 id="enableXPInstall"
                 accesskey="&found.enableXPInstall.accesskey;"
                 oncommand="gFoundPage.toggleXPInstallEnable(event);"/>
     </vbox>
-    <label id="foundInstructions" hidden="true"/>
   </wizardpage>
 
   <wizardpage id="installing" pageid="installing" next="finished"
-              label="&installing.title;"
+              label="&installing.wizard.title;"
               onpageshow="gInstallingPage.onPageShow();">
-    <label>&installing.intro.label;</label>
+    <label>&installing.top.label;</label>
     <progressmeter id="downloadProgress"/>
     <hbox align="center">
       <image id="installing.throbber" class="throbber"/>
@@ -185,41 +167,49 @@
     <separator/>
   </wizardpage>
   
-  <wizardpage id="errors" pageid="errors"
-              label="&errors.title;"
-              align="right"
-              onpageshow="gErrorsPage.onPageShow();">
-    <label>&errors.introduction.label;</label>
-    <separator/>
-    <button label="&errors.details.label;" accesskey="&errors.details.accesskey;"
-            oncommand="gErrorsPage.onShowErrors();"/>
-    <separator/>
+  <wizardpage id="installerrors" pageid="installerrors"
+              label="&installerrors.wizard.title;"
+              onpageshow="gInstallErrorsPage.onPageShow();">
+    <hbox align="top" class="alertBox">
+      <description flex="1">&installerrors.intro.label;</description>
+      <button label="&details.label;" accesskey="&details.accesskey;"
+              oncommand="gInstallErrorsPage.onShowErrors();"/>
+    </hbox>
+    <separator flex="1"/>
+    <label>&clickFinish.label;</label>
+    <separator class="thin"/>
   </wizardpage>
   
+  <wizardpage id="adminDisabled" pageid="adminDisabled"
+              label="&adminDisabled.wizard.title;"
+              onpageshow="gAdminDisabledPage.onPageShow();">
+    <separator/>
+    <hbox class="alertBox" align="top">
+      <image id="alert"/>
+      <description flex="1">&adminDisabled.warning.label;</description>
+    </hbox>
+    <separator flex="1"/>
+    <label>&clickFinish.label;</label>
+    <separator class="thin"/>
+  </wizardpage>
+
   <wizardpage id="finished" pageid="finished"
-              label="&finished.title;"
+              label="&finished.wizard.title;"
               onpageshow="gFinishedPage.onPageShow();">
 
-    <label id="updated" hidden="true">&finished.updated.label;</label>
-    <label id="adminDisabled" hidden="true">&finished.adminDisabled.label;</label>
+    <label>&finished.top.label;</label>
     <separator/>
-    <hbox id="incompatibleAlert" align="top" hidden="true">
-      <image id="alert"/>
-      <description id="incompatibleRemaining" hidden="true"
-                   flex="1">&finished.remain1.label;</description>
-      <description id="incompatibleRemainingLocked" hidden="true"
-                   flex="1">&finished.xpinstallLocked.label;</description>
-    </hbox>
-    <description id="finishedEnableCheckingDesc" flex="1" hidden="true">
-      &noupdates.intro3.mismatch.label;
+    <description id="finishedCheckEnabled" hidden="true">
+      &finished.checkEnabled.desc;
     </description>
-    <vbox align="left">
-      <checkbox label="&finished.enableChecking.label;" id="finishedEnableChecking"
-                oncommand="gUpdateWizard.shouldAutoCheck = this.checked;" hidden="true"/>
+    <vbox id="finishedCheckDisabled" hidden="true">
+      <description>&finished.checkDisabled.desc;</description>
+      <checkbox label="&enableChecking.label;" checked="true"
+                oncommand="gUpdateWizard.shouldAutoCheck = this.checked;"/>
     </vbox>
     <separator flex="1"/>
-    <label id="finishedMismatch" hidden="true">&finished.mismatch.label;</label>
-    <spacer flex="1"/>
+    <label>&clickFinish.label;</label>
+    <separator class="thin"/>
   </wizardpage>
   
 </wizard>
