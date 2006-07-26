@@ -102,7 +102,7 @@ function loadCalendarPrintDialog()
 
 
 function printCalendar() {
-    var ccalendar = getCompositeCalendar();
+    var ccalendar = window.opener.getCompositeCalendar();
     var start;
     var end;
     var eventList;

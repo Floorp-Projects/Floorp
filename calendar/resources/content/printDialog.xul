@@ -70,7 +70,6 @@
    
   <script type="application/x-javascript" src="chrome://calendar/content/printDialog.js"/>
   <script type="application/x-javascript" src="chrome://calendar/content/applicationUtil.js"/>
-  <script type="application/x-javascript" src="chrome://calendar/content/calendarUtils.js"/>
 
   <vbox id="standard-dialog-content"  flex="1">
     <grid>
