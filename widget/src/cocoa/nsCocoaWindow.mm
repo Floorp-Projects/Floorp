@@ -723,8 +723,8 @@ NS_METHOD nsCocoaWindow::SetSizeMode(PRInt32 aMode)
 
 NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
-  Move(aX, aY);
   Resize(aWidth, aHeight, aRepaint);
+  Move(aX, aY);
   return NS_OK;
 }
 
