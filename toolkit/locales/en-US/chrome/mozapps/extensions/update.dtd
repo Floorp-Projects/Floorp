@@ -8,66 +8,55 @@
 <!ENTITY  offline.toggleOffline.accesskey "G">
 
 <!ENTITY  mismatch.win.title              "Incompatible Add-ons">
-<!ENTITY  mismatch.introduction1.label    "The following add-ons are not compatible with this version
-                                           of &brandShortName;:">
-<!ENTITY  mismatch.intro2.label           "They have been disabled until compatible versions are 
-                                           installed.">
-<!ENTITY  mismatch.introduction3.label    "&brandShortName; can check for compatible
-                                           versions of these add-ons.">
+<!ENTITY  mismatch.top.label              "The following add-ons are not compatible with this version of
+                                           &brandShortName; and have been disabled:">
+<!ENTITY  mismatch.bottom.label           "&brandShortName; can check if there are compatible versions
+                                           of these add-ons available.">
 
-<!ENTITY  checking.title                  "Checking for Updates">
-<!ENTITY  checking.intro.label            "&brandShortName; is now checking for available updates...">
+<!ENTITY  checking.wizard.title           "Checking for Compatible Add-ons">
+<!ENTITY  checking.top.label              "Checking your incompatible add-ons for updates...">
 <!ENTITY  checking.status                 "This may take a few minutes...">
 
-<!ENTITY  found.title                     "Updates Found">
-<!ENTITY  found.intro.label               "&brandShortName; found the following available updates:">
-<!ENTITY  from.label                      "from: ">
-
-<!ENTITY  updateFound.addons.accesskey    "A">
-<!ENTITY  foundUpdates.addons.label       "Updates are available for the following add-ons to make
-                                           them compatible with this version of &brandShortName;:">
+<!ENTITY  found.wizard.title               "Found Compatible Add-ons">
+<!ENTITY  found.top.label                 "Select the add-ons you would like to install:">
 <!ENTITY  found.disabledXPinstall.label   "These updates can't be installed because software installation is currently
                                            disabled. You can change this setting below.">
 <!ENTITY  found.enableXPInstall.label     "Allow web sites to install software">
 <!ENTITY  found.enableXPInstall.accesskey "A">
 
-<!ENTITY  installing.title                "Installing Updates">
-<!ENTITY  installing.intro.label          "Now downloading and installing updates...">
+<!ENTITY  installing.wizard.title         "Installing Compatible Add-ons">
+<!ENTITY  installing.top.label            "Downloading and installing updates to your add-ons...">
 
-<!ENTITY  noupdates.title                 "No Updates Found">
-<!ENTITY  noupdates.intro.user.label      "&brandShortName; was not able to find any available updates.">
+<!ENTITY  noupdates.wizard.title          "No Compatible Add-ons Found">
+<!ENTITY  noupdates.intro.desc            "&brandShortName; was unable to find updates to your
+                                           incompatible add-ons.">
+<!ENTITY  noupdates.error.desc            "Some problems were encountered when trying to find updates.">
+<!ENTITY  noupdates.checkEnabled.desc     "&brandShortName; will check periodically and inform you
+                                           when compatible updates for these add-ons are found.">
 
-<!ENTITY  noupdates.intro.mismatch.label  "&brandShortName; was not able to find any available updates - 
-                                           compatible versions may not be available at this time.">
-<!ENTITY  noupdates.intro2.mismatch.label "&brandShortName; will check periodically and inform you when
-                                           compatible versions become available.">
-<!ENTITY  noupdates.intro3.mismatch.label "&brandShortName; can check periodically and inform you when
-                                           compatible versions become available.">
-<!ENTITY  noupdates.enableChecking.label  "Allow &brandShortName; to check for updates.">
+<!ENTITY  finished.wizard.title           "Compatible Add-ons Installed">
+<!ENTITY  finished.top.label              "&brandShortName; has installed the updates to your add-ons.">
+<!ENTITY  finished.checkDisabled.desc     "&brandShortName; can check periodically and inform you
+                                           when updates for add-ons are found.">
+<!ENTITY  finished.checkEnabled.desc      "&brandShortName; will check periodically and inform you
+                                           when updates for add-ons are found.">
 
-<!ENTITY  finished.title                  "Update Complete">
-<!ENTITY  finished.updated.label          "&brandShortName; has installed the available updates. You will have to restart &brandShortName; for some updates to take effect.">
-<!ENTITY  finished.adminDisabled.label    "&brandShortName; is unable to install updates.">
-<!ENTITY  finished.remain1.label          "No compatible versions of the following add-ons could
-                                           be found. These add-ons will be disabled, but &brandShortName;
-                                           will check periodically and inform you when compatible
-                                           versions become available.">
-<!ENTITY  finished.xpinstallLocked.label  "It is not possible to update the incompatible add-ons because
-                                           software installation for &brandShortName; has been disabled.
+<!ENTITY  adminDisabled.wizard.title      "Unable to Check for Updates">
+<!ENTITY  adminDisabled.warning.label     "It is not possible to check for updates to incompatible add-ons
+                                           because software installation for &brandShortName; has been disabled.
                                            Please contact your System Administrator for assistance.">
-<!ENTITY  finished.enableChecking.label   "Allow &brandShortName; to check for updates.">
-<!ENTITY  finished.mismatch.label         "Click Finish to continue starting &brandShortName;.">
 
-<!ENTITY  errors.title                    "Problems During Update">
-<!ENTITY  errors.introduction.label       "&brandShortName; encountered problems when updating your
-                                           software, and as a result not all add-ons could be updated.">
-<!ENTITY  errors.details.label            "Details">
-<!ENTITY  errors.details.accesskey        "D">
+<!ENTITY  versioninfo.wizard.title        "Checking Compatibility of Add-ons">
+<!ENTITY  versioninfo.top.label           "Checking your add-ons for compatibility with this
+                                           version of &brandShortName;.">
+<!ENTITY  versioninfo.waiting             "This may take a few minutes...">
 
-<!ENTITY  updateCheckError.description    "&brandShortName; encountered problems when trying to find
-                                           updates for some items.">
-<!ENTITY  updateCheckError.label          "Details">
-<!ENTITY  updateCheckError.accesskey      "D">
+<!ENTITY  installerrors.wizard.title      "Problems Installing Updates">
+<!ENTITY  installerrors.intro.label       "&brandShortName; encountered problems when updating
+                                           some of your add-ons.">
 
-<!ENTITY  compatCheck.title               "Compatibility Updates">
-<!ENTITY  compatCheck.intro               "Checking for compatibility updates to your Add-ons...">
+<!-- general strings used by several of the finish pages -->
+<!ENTITY  clickFinish.label               "Click Finish to continue starting &brandShortName;.">
+<!ENTITY  enableChecking.label            "Allow &brandShortName; to check for updates.">
+<!ENTITY  details.label                   "Details...">
+<!ENTITY  details.accesskey               "D">

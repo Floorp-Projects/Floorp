@@ -12,7 +12,7 @@
   -moz-margin-end: 2px;
 }
 
-#incompatibleAlert {
+.alertBox {
   background-color: InfoBackground;
   color: InfoText;
   border: 1px outset InfoBackground;
