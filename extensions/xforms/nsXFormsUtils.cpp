@@ -2625,3 +2625,22 @@ nsXFormsUtils::GetDaysFromDateTime(const nsAString & aValue, PRInt32 * aDays)
 
   return NS_OK;
 }
+
+/* static */ PRBool
+nsXFormsUtils::SetSingleNodeBindingValue(nsIDOMElement *aElement,
+                                         const nsAString &aValue,
+                                         PRBool *aChanged)
+{
+  *aChanged = PR_FALSE;
+  nsCOMPtr<nsIDOMNode> node;
+  nsCOMPtr<nsIModelElementPrivate> model;
+  if (GetSingleNodeBinding(aElement, getter_AddRefs(node),
+                           getter_AddRefs(model)))
+  {
+    nsresult rv = model->SetNodeValue(node, aValue, PR_FALSE, aChanged);
+    if (NS_SUCCEEDED(rv))
+      return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+

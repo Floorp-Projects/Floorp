@@ -319,6 +319,17 @@ public:
     GetSingleNodeBindingValue(nsIDOMElement* aElement, nsString& aValue);
 
   /**
+   * Convenience method.  Evaluates the single node binding expression for the
+   * given xforms element and then sets the resulting single node to aValue.
+   * This allows elements like xf:filename and xf:mediatype to function
+   * properly without needing the overhead of being nsIXFormsControls.
+   *
+   * Returns PR_TRUE if the evaluation and node value setting both succeeded.
+   */
+  static NS_HIDDEN_(PRBool)
+    SetSingleNodeBindingValue(nsIDOMElement *aElement, const nsAString &aValue,
+                              PRBool *aChanged);
+  /**
    * Dispatch an XForms event.  aDefaultActionEnabled is returned indicating
    * if the default action of the dispatched event was enabled.  aSrcElement
    * is passed for events targeted at models.  If the model doesn't exist, yet,

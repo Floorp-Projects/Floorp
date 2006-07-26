@@ -378,12 +378,12 @@ nsXFormsUploadElement::HandleChildElements(nsILocalFile *aFile,
       nsAutoString filename;
       rv = aFile->GetLeafName(filename);
       if (!filename.IsEmpty()) {
-        rv = mModel->SetNodeValue(filenameElem, filename, PR_FALSE,
-                                  &filenameChanged);
+        rv = nsXFormsUtils::SetSingleNodeBindingValue(filenameElem, filename,
+                                                      &filenameChanged);
       }
     } else {
-      rv = mModel->SetNodeValue(filenameElem, EmptyString(),
-                                PR_FALSE, &filenameChanged);
+      rv = nsXFormsUtils::SetSingleNodeBindingValue(filenameElem, EmptyString(),
+                                                    &filenameChanged);
     }
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -401,13 +401,12 @@ nsXFormsUploadElement::HandleChildElements(nsILocalFile *aFile,
         if (NS_FAILED(rv)) {
           contentType.AssignLiteral("application/octet-stream");
         }
-        rv = mModel->SetNodeValue(mediatypeElem,
-                                  NS_ConvertUTF8toUTF16(contentType),
-                                  PR_FALSE, &mediatypechanged);
+        rv = nsXFormsUtils::SetSingleNodeBindingValue(mediatypeElem,
+                        NS_ConvertUTF8toUTF16(contentType), &mediatypechanged);
       }
     } else {
-      rv = mModel->SetNodeValue(mediatypeElem, EmptyString(),
-                                PR_FALSE, &mediatypechanged);
+      rv = nsXFormsUtils::SetSingleNodeBindingValue(mediatypeElem,
+                        EmptyString(), &mediatypechanged);
     }
   }
 
