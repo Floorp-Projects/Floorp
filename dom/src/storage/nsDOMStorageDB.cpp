@@ -64,6 +64,12 @@ nsDOMStorageDB::Init()
   service = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = service->OpenDatabase(storageFile, getter_AddRefs(mConnection));
+  if (rv == NS_ERROR_FILE_CORRUPTED) {
+    // delete the db and try opening again
+    rv = storageFile->Remove(PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = service->OpenDatabase(storageFile, getter_AddRefs(mConnection));
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool exists;

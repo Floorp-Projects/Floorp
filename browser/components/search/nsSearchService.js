@@ -2726,7 +2726,17 @@ var engineMetadataService = {
     file.append("search.sqlite");
     var dbService = Cc["@mozilla.org/storage/service;1"].
                     getService(Ci.mozIStorageService);
-    this.mDB = dbService.openDatabase(file);
+    try {
+        this.mDB = dbService.openDatabase(file);
+    } catch (ex) {
+        if (ex.result == 0x8052000b) { /* NS_ERROR_FILE_CORRUPTED */
+            // delete and try again
+            file.remove(false);
+            this.mDB = dbService.openDatabase(file);
+        } else {
+            throw ex;
+        }
+    }
 
     try {
       this.mDB.createTable("engine_data", engineDataTable);

@@ -416,6 +416,12 @@ nsNavHistory::InitDB(PRBool *aDoImport)
   mDBService = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mDBService->OpenDatabase(dbFile, getter_AddRefs(mDBConn));
+  if (rv == NS_ERROR_FILE_CORRUPTED) {
+    // delete the db and try opening again
+    rv = dbFile->Remove(PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBService->OpenDatabase(dbFile, getter_AddRefs(mDBConn));
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Set the database page size. This will only have any effect on empty files,
