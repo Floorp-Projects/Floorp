@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=4 sts=4 sw=4 et cin: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -206,8 +207,12 @@ nsInputStreamPump::Cancel(nsresult status)
     // close input stream
     if (mAsyncStream) {
         mAsyncStream->CloseWithStatus(status);
-        mSuspendCount = 0; // un-suspend
-        EnsureWaiting();
+        if (mSuspendCount == 0)
+            EnsureWaiting();
+        // Otherwise, EnsureWaiting will be called by Resume().
+        // Note that while suspended, OnInputStreamReady will
+        // not do anything, and also note that calling asyncWait
+        // on a closed stream works and will dispatch an event immediately.
     }
     return NS_OK;
 }
