@@ -448,7 +448,7 @@ function changeEventFilter( event )
 */
 var treeView =
 {
-   rowCount : gEventArray.length,
+   get rowCount() { return gEventArray.length },
    selectedColumn : null,
    sortDirection : null,
    sortStartedTime : new Date().getTime(), // updated just before sort
@@ -782,9 +782,6 @@ function refreshEventTreeInternal(eventArray)
                (!gStartDate || gStartDate.compare(event.endDate) < 0));
    }
    gEventArray = gEventArray.filter(dateFilter);
-   
-
-   treeView.rowCount = gEventArray.length;
       
    var ArrayOfTreeCols = document.getElementById( UnifinderTreeName ).getElementsByTagName( "treecol" );
    for( var i = 0; i < ArrayOfTreeCols.length; i++ )
