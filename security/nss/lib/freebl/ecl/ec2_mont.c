@@ -205,14 +205,11 @@ ec_GF2m_pt_mul_mont(const mp_int *n, const mp_int *px, const mp_int *py,
 		goto CLEANUP;
 	}
 
-	MP_CHECKOK(mp_copy(rx, &x2));	/* x2 = rx */
-	MP_CHECKOK(mp_copy(ry, &z2));	/* z2 = ry */
-
 	MP_CHECKOK(mp_copy(px, &x1));	/* x1 = px */
 	MP_CHECKOK(mp_set_int(&z1, 1));	/* z1 = 1 */
 	MP_CHECKOK(group->meth->field_sqr(&x1, &z2, group->meth));	/* z2 =
 																 * x1^2 =
-																 * x2^2 */
+																 * px^2 */
 	MP_CHECKOK(group->meth->field_sqr(&z2, &x2, group->meth));
 	MP_CHECKOK(group->meth->field_add(&x2, &group->curveb, &x2, group->meth));	/* x2 
 																				 * = 
