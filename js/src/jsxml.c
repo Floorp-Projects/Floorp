@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=4 sw=4 et tw=80:
+ * vim: set ts=4 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -4009,7 +4009,6 @@ retry:
         } else {
             list = (JSXML *) JS_GetPrivate(cx, listobj);
             list->xml_target = xml;
-            list->xml_targetprop = nameqn;
 
             for (i = 0, n = JSXML_LENGTH(xml); i < n; i++) {
                 kid = XMLARRAY_MEMBER(&xml->xml_kids, i, JSXML);
@@ -4064,7 +4063,6 @@ retry:
         } else {
             list = (JSXML *) JS_GetPrivate(cx, listobj);
             list->xml_target = xml;
-            list->xml_targetprop = nameqn;
 
             if (JSXML_HAS_KIDS(xml)) {
                 if (OBJ_GET_CLASS(cx, nameobj) == &js_AttributeNameClass) {
@@ -4097,6 +4095,14 @@ retry:
     if (!ok)
         return JS_FALSE;
 
+    /*
+     * Erratum: ECMA-357 9.1.1.1 misses that [[Append]] sets the given list's
+     * [[TargetProperty]] to the property that is being appended. This means
+     * that any use of the internal [[Get]] property returns a list which,
+     * when used by e.g. [[Insert]] duplicates the last element matched by id.
+     * See bug 336921.
+     */
+    list->xml_targetprop = nameqn;
     *vp = OBJECT_TO_JSVAL(listobj);
     return JS_TRUE;
 }
