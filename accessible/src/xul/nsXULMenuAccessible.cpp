@@ -245,10 +245,17 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetChildCount(PRInt32 *aAccChildCount)
     }
   }
 
-  // Argument of PR_FALSE indicates we don't walk anonymous children for menuitems
-  CacheChildren(PR_FALSE);
+  CacheChildren();
   *aAccChildCount = mAccChildCount;
   return NS_OK;  
+}
+
+NS_IMETHODIMP
+nsXULMenuitemAccessible::GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren)
+{
+  // That indicates we don't walk anonymous children for menuitems
+  *aAllowsAnonChildren = PR_FALSE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsXULMenuitemAccessible::DoAction(PRUint8 index)

@@ -76,10 +76,22 @@ PRBool nsAccessNode::gIsAccessibilityActive = PR_FALSE;
 PRBool nsAccessNode::gIsCacheDisabled = PR_FALSE;
 nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> nsAccessNode::gGlobalDocAccessibleCache;
 
+nsIAccessibilityService *nsAccessNode::sAccService = nsnull;
+nsIAccessibilityService *nsAccessNode::GetAccService()
+{
+  if (!sAccService) {
+    nsresult rv = CallGetService("@mozilla.org/accessibilityService;1",
+                                 &sAccService);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "No accessibility service");
+  }
+
+  return sAccService;
+}
+
 /*
  * Class nsAccessNode
  */
-
+ 
 //-----------------------------------------------------
 // construction 
 //-----------------------------------------------------
@@ -120,13 +132,11 @@ NS_IMETHODIMP nsAccessNode::Init()
     if (presShell) {
       nsCOMPtr<nsIDOMNode> docNode(do_QueryInterface(presShell->GetDocument()));
       if (docNode) {
-        nsCOMPtr<nsIAccessibilityService> accService = 
-          do_GetService("@mozilla.org/accessibilityService;1");
-        NS_ASSERTION(accService, "No accessibility service");
+        nsIAccessibilityService *accService = GetAccService();
         if (accService) {
           nsCOMPtr<nsIAccessible> accessible;
-          accService->GetAccessibleInShell(docNode, presShell, 
-            getter_AddRefs(accessible));
+          accService->GetAccessibleInShell(docNode, presShell,
+                                           getter_AddRefs(accessible));
           docAccessible = do_QueryInterface(accessible);
         }
       }
@@ -212,6 +222,7 @@ void nsAccessNode::ShutdownXPAccessibility()
   NS_IF_RELEASE(gKeyStringBundle);
   NS_IF_RELEASE(gDoCommandTimer);
   NS_IF_RELEASE(gLastFocusedNode);
+  NS_IF_RELEASE(sAccService);
 
   ClearCache(gGlobalDocAccessibleCache);
 
@@ -339,8 +350,7 @@ nsAccessNode::GetInnerHTML(nsAString& aInnerHTML)
 nsresult
 nsAccessNode::MakeAccessNode(nsIDOMNode *aNode, nsIAccessNode **aAccessNode)
 {
-  nsCOMPtr<nsIAccessibilityService> accService = 
-    do_GetService("@mozilla.org/accessibilityService;1");
+  nsIAccessibilityService *accService = GetAccService();
   NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIAccessNode> accessNode;
@@ -348,9 +358,9 @@ nsAccessNode::MakeAccessNode(nsIDOMNode *aNode, nsIAccessNode **aAccessNode)
 
   if (!accessNode) {
     nsCOMPtr<nsIAccessible> accessible;
-    accService->GetAccessibleInWeakShell(aNode, mWeakShell, 
+    accService->GetAccessibleInWeakShell(aNode, mWeakShell,
                                          getter_AddRefs(accessible));
-    
+
     accessNode = do_QueryInterface(accessible);
   }
 

@@ -642,7 +642,7 @@ nsIAccessible *nsAccessible::NextChild(nsCOMPtr<nsIAccessible>& aAccessible)
   return (aAccessible = nextChild);
 }
 
-void nsAccessible::CacheChildren(PRBool aWalkAnonContent)
+void nsAccessible::CacheChildren()
 {
   if (!mWeakShell) {
     // This node has been shut down
@@ -651,7 +651,9 @@ void nsAccessible::CacheChildren(PRBool aWalkAnonContent)
   }
 
   if (mAccChildCount == eChildCountUninitialized) {
-    nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, aWalkAnonContent);
+    PRBool allowsAnonChildren = PR_FALSE;
+    GetAllowsAnonChildAccessibles(&allowsAnonChildren);
+    nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, allowsAnonChildren);
     // Seed the frame hint early while we're still on a container node.
     // This is better than doing the GetPrimaryFrameFor() later on
     // a text node, because text nodes aren't in the frame map.
@@ -672,10 +674,16 @@ void nsAccessible::CacheChildren(PRBool aWalkAnonContent)
   }
 }
 
+NS_IMETHODIMP nsAccessible::GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren)
+{
+  *aAllowsAnonChildren = PR_TRUE;
+  return NS_OK;
+}
+
 /* readonly attribute long childCount; */
 NS_IMETHODIMP nsAccessible::GetChildCount(PRInt32 *aAccChildCount) 
 {
-  CacheChildren(PR_TRUE);
+  CacheChildren();
   *aAccChildCount = mAccChildCount;
   return NS_OK;  
 }

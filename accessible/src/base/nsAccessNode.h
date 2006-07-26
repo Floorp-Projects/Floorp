@@ -54,6 +54,7 @@
 #include "nsIStringBundle.h"
 #include "nsWeakReference.h"
 #include "nsInterfaceHashtable.h"
+#include "nsIAccessibilityService.h"
 
 class nsIPresShell;
 class nsPresContext;
@@ -146,6 +147,7 @@ class nsAccessNode: public nsIAccessNode, public nsPIAccessNode
     already_AddRefed<nsRootAccessible> GetRootAccessible();
 
     static nsIDOMNode *gLastFocusedNode;
+    static nsIAccessibilityService* GetAccService();
 
 protected:
     nsresult MakeAccessNode(nsIDOMNode *aNode, nsIAccessNode **aAccessNode);
@@ -168,6 +170,9 @@ protected:
     static PRBool gIsCacheDisabled;
 
     static nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> gGlobalDocAccessibleCache;
+
+private:
+  static nsIAccessibilityService *sAccService;
 };
 
 #endif

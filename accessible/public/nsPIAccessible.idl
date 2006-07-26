@@ -52,4 +52,11 @@ interface nsPIAccessible : nsISupports
    */
   [noscript] void invalidateChildren();
   [noscript] void fireToolkitEvent(in unsigned long aEvent, in nsIAccessible aTarget, in voidPtr aData);
+
+  /**
+   * Return true if there are accessible children in anonymous content
+   */
+  [noscript] readonly attribute boolean allowsAnonChildAccessibles;
+
 };
+

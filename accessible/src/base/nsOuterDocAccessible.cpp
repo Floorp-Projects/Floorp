@@ -87,7 +87,7 @@ NS_IMETHODIMP nsOuterDocAccessible::GetState(PRUint32 *aState)
   return NS_OK;
 }
 
-void nsOuterDocAccessible::CacheChildren(PRBool aWalkAnonContent)
+void nsOuterDocAccessible::CacheChildren()
 {  
   // An outer doc accessible usually has 1 nsDocAccessible child,
   // but could have none if we can't get to the inner documnet

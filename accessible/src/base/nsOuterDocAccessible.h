@@ -55,7 +55,7 @@ class nsOuterDocAccessible : public nsAccessibleWrap
     NS_IMETHOD GetName(nsAString& aName);
     NS_IMETHOD GetRole(PRUint32 *aRole);
     NS_IMETHOD GetState(PRUint32 *aState);
-    void CacheChildren(PRBool aWalkAnonContent);
+    void CacheChildren();
 };
 
 #endif  

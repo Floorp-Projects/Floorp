@@ -122,7 +122,7 @@ public:
   NS_IMETHOD GetRole(PRUint32 *_retval); 
   NS_IMETHOD GetState(PRUint32 *_retval);
   NS_IMETHOD GetName(nsAString& _retval);
-  void CacheChildren(PRBool aWalkAnonContent);
+  void CacheChildren();
 };
 
 #endif  

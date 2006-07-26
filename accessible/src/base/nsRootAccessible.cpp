@@ -104,8 +104,7 @@ NS_IMPL_RELEASE_INHERITED(nsRootAccessible, nsDocAccessible)
 // construction 
 //-----------------------------------------------------
 nsRootAccessible::nsRootAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell):
-  nsDocAccessibleWrap(aDOMNode, aShell), 
-  mAccService(do_GetService("@mozilla.org/accessibilityService;1")),
+  nsDocAccessibleWrap(aDOMNode, aShell),
   mIsInDHTMLMenu(PR_FALSE)
 {
 }
@@ -348,8 +347,6 @@ nsresult nsRootAccessible::RemoveEventListeners()
     mCaretAccessible = nsnull;
   }
 
-  mAccService = nsnull;
-
   return nsDocAccessible::RemoveEventListeners();
 }
 
@@ -591,16 +588,20 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     return NS_OK;
   }
 
+  nsIAccessibilityService *accService = GetAccService();
+  NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
+
   if (eventType.EqualsLiteral("TreeViewChanged")) {
     NS_ENSURE_TRUE(localName.EqualsLiteral("tree"), NS_OK);
     nsCOMPtr<nsIContent> treeContent = do_QueryInterface(targetNode);
-    return mAccService->InvalidateSubtreeFor(eventShell, treeContent,
-                                             nsIAccessibleEvent::EVENT_REORDER);
+
+    return accService->InvalidateSubtreeFor(eventShell, treeContent,
+                                            nsIAccessibleEvent::EVENT_REORDER);
   }
 
   nsCOMPtr<nsIAccessible> accessible;
-  if (NS_FAILED(mAccService->GetAccessibleInShell(targetNode, eventShell,
-                                                  getter_AddRefs(accessible))))
+  if (NS_FAILED(accService->GetAccessibleInShell(targetNode, eventShell,
+                                                 getter_AddRefs(accessible))))
     return NS_OK;
   
 #ifdef MOZ_XUL
@@ -711,7 +712,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
         }
 
         if (!targetNode ||
-            NS_FAILED(mAccService->GetAccessibleInShell(targetNode, eventShell,
+            NS_FAILED(accService->GetAccessibleInShell(targetNode, eventShell,
                       getter_AddRefs(accessible)))) {
           return NS_OK;
         }
@@ -936,7 +937,6 @@ NS_IMETHODIMP nsRootAccessible::Shutdown()
     return NS_OK;  // Already shutdown
   }
   mCaretAccessible = nsnull;
-  mAccService = nsnull;
   if (mFireFocusTimer) {
     mFireFocusTimer->Cancel();
     mFireFocusTimer = nsnull;

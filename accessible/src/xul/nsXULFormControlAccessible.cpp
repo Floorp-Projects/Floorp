@@ -157,7 +157,7 @@ NS_IMETHODIMP nsXULButtonAccessible::GetState(PRUint32 *aState)
   return NS_OK;
 }
 
-void nsXULButtonAccessible::CacheChildren(PRBool aWalkAnonContent)
+void nsXULButtonAccessible::CacheChildren()
 {
   // An XUL button accessible may have 1 child dropmarker accessible
   if (!mWeakShell) {
@@ -167,7 +167,9 @@ void nsXULButtonAccessible::CacheChildren(PRBool aWalkAnonContent)
   if (mAccChildCount == eChildCountUninitialized) {
     mAccChildCount = 0;
     SetFirstChild(nsnull);
-    nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, PR_TRUE);
+    PRBool allowsAnonChildren = PR_FALSE;
+    GetAllowsAnonChildAccessibles(&allowsAnonChildren);
+    nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, allowsAnonChildren);
     walker.GetFirstChild();
     nsCOMPtr<nsIAccessible> dropMarkerAccessible;
     while (walker.mState.accessible) {
