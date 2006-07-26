@@ -526,7 +526,14 @@ nsUrlClassifierDBServiceWorker::OpenDb()
   nsCOMPtr<mozIStorageService> storageService =
     do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  return storageService->OpenDatabase(dbFile, &mConnection);
+  rv = storageService->OpenDatabase(dbFile, &mConnection);
+  if (rv == NS_ERROR_FILE_CORRUPTED) {
+    // delete the db and try opening again
+    rv = dbFile->Remove(PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = storageService->OpenDatabase(dbFile, &mConnection);
+  }
+  return rv;
 }
 
 nsresult

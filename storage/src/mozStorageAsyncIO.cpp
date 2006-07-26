@@ -363,6 +363,12 @@ struct AsyncMessage
   AsyncMessage* mNext;
 };
 
+struct AsyncMessageBarrierData
+{
+  PRLock *mLock;
+  PRCondVar *mCondVar;
+};
+
 // Possible values of AsyncMessage.mOp
 #define ASYNC_WRITE         1
 #define ASYNC_SYNC          2
@@ -373,6 +379,7 @@ struct AsyncMessage
 #define ASYNC_DELETE        7
 #define ASYNC_OPENEXCLUSIVE 8
 #define ASYNC_SYNCDIRECTORY 9
+#define ASYNC_BARRIER       10
 
 // replacements for the sqlite OS routines
 static int AsyncOpenReadWrite(const char *aName, OsFile **aFile, int *aReadOnly);
@@ -395,6 +402,8 @@ static int AsyncLock(OsFile* aFile, int aLockType);
 static int AsyncUnlock(OsFile* aFile, int aLockType);
 static int AsyncCheckReservedLock(OsFile* aFile);
 static int AsyncLockState(OsFile* aFile);
+
+static int AsyncBarrier(PRLock* aLock, PRCondVar* aCondVar);
 
 // backend for all the open functions
 static int AsyncOpenFile(const char *aName, AsyncOsFile **aFile,
@@ -534,6 +543,56 @@ mozStorageService::InitStorageAsyncIO()
   }
 #endif
 
+  return NS_OK;
+}
+
+// mozstorageService::FlushAsyncIO
+//
+//    This function will grab the async lock and process all
+//    remaining async operations that are in the queue on the current
+//    thread.  Call this when you need to make sure that an operation
+//    has taken place, e.g. that a file has been closed.
+
+nsresult
+mozStorageService::FlushAsyncIO()
+{
+  AsyncMessage *message = 0;
+  int rc;
+
+  // single threaded? nothing to do.
+  if (!AsyncWriteThreadInstance)
+    return NS_OK;
+
+  PRLock *flushLock = PR_NewLock();
+  if (!flushLock)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  PRCondVar *flushCond = PR_NewCondVar(flushLock);
+  if (!flushCond) {
+    PR_DestroyLock(flushLock);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  PR_Lock(flushLock);
+
+  rc = AsyncBarrier(flushLock, flushCond);
+  if (rc == SQLITE_OK) {
+    // the async thread will notify us once it reaches
+    // the ASYNC_BARRIER operation; only wait if
+    // adding the barrier worked, otherwise just unlock
+    // and return the error
+    PR_WaitCondVar(flushCond, PR_INTERVAL_NO_TIMEOUT);
+  }
+
+  PR_Unlock(flushLock);
+
+  PR_DestroyCondVar(flushCond);
+  PR_DestroyLock(flushLock);
+
+  if (rc == SQLITE_NOMEM)
+    return NS_ERROR_OUT_OF_MEMORY;
+  else if (rc != SQLITE_OK)
+    return NS_ERROR_FAILURE;
   return NS_OK;
 }
 
@@ -1275,6 +1334,23 @@ AsyncLockState(OsFile* aFile)
   return SQLITE_OK;
 }
 
+// AsyncBarrier
+//
+//    This is used to notify a waiting thread that this point in the async
+//    queue has been reached.  Note that this is not a sqlite redirected IO
+//    function
+
+int // static
+AsyncBarrier(PRLock* aLock, PRCondVar* aCondVar)
+{
+  AsyncMessageBarrierData bd;
+
+  bd.mLock = aLock;
+  bd.mCondVar = aCondVar;
+
+  return AppendNewAsyncMessage(nsnull, ASYNC_BARRIER, 0,
+                               sizeof(AsyncMessageBarrierData), (const char*) &bd);
+}
 
 // ProcessOneMessage
 //
@@ -1382,6 +1458,14 @@ ProcessOneMessage(AsyncMessage* aMessage)
       regainMutex = PR_FALSE;
       if (rc == SQLITE_OK)
         pFile->mBaseRead = pBase;
+      break;
+    }
+
+    case ASYNC_BARRIER: {
+      AsyncMessageBarrierData *bd = (AsyncMessageBarrierData*) aMessage->mBuf;
+      PR_Lock(bd->mLock);
+      PR_NotifyCondVar(bd->mCondVar);
+      PR_Unlock(bd->mLock);
       break;
     }
 

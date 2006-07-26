@@ -48,9 +48,13 @@
 
 #include "mozIStorageService.h"
 
+class mozStorageConnection;
+
 class mozStorageService : public mozIStorageService,
                           public nsIObserver
 {
+    friend class mozStorageConnection;
+
 public:
     mozStorageService();
 
@@ -71,6 +75,7 @@ protected:
     nsCOMPtr<nsIFile> mProfileStorageFile;
 
     nsresult InitStorageAsyncIO();
+    nsresult FlushAsyncIO();
     nsresult FinishAsyncIO();
     void FreeLocks();
 };

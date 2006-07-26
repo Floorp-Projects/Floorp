@@ -388,6 +388,12 @@ nsFormHistory::OpenDatabase()
   rv = GetDatabaseFile(getter_AddRefs(formHistoryFile));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mStorageService->OpenDatabase(formHistoryFile, getter_AddRefs(mDBConn));
+  if (rv == NS_ERROR_FILE_CORRUPTED) {
+    // delete the db and try opening again
+    rv = formHistoryFile->Remove(PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mStorageService->OpenDatabase(formHistoryFile, getter_AddRefs(mDBConn));
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   // We execute many statements before the database cache is started to create
