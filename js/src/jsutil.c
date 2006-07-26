@@ -56,6 +56,7 @@ JS_PUBLIC_API(void) JS_Assert(const char *s, const char *file, JSIntn ln)
     fprintf(stderr, "Assertion failure: %s, at %s:%d\n", s, file, ln);
 #if defined(WIN32)
     DebugBreak();
+    exit(3);
 #elif defined(XP_OS2) || (defined(__GNUC__) && defined(__i386))
     asm("int $3");
 #endif
