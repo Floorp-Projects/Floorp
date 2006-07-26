@@ -116,6 +116,7 @@
     <implementation>
       <method name="refresh">
         <body>
+          this.changed = false;
           var value = this.stringValue;
           if (value == "true" || value == "1") {
             this.control.value = true;
@@ -135,20 +136,53 @@
         </body>
       </method>
 
+      <!--
+        updateInstanceData updates the instance data bound to this control under
+        certain conditions.
+
+        If called without a parameter, that means that this
+        function was called due to a blur event on the control.  In this case,
+        we should update the instance data only if the control is NOT
+        incremental and the user has interacted with the control since the
+        last refresh.
+
+        If called with a parameter, that means that this function was called
+        because the user interacted with the control (either through mouse
+        or keyboard action).  So we set a flag to indicate this fact.  If
+        the control is incremental (which it is by default since it is a
+        boolean input), we update the value of the bound instance data.
+      -->
       <method name="updateInstanceData">
         <parameter name="aIncremental"/>
         <body>
           <![CDATA[
-          if (!aIncremental || this.getAttribute("incremental") != "false") {
-            if (this.control.value) {
-              this.accessors.setValue("true");
-            } else {
-              this.accessors.setValue("false");
+          if (aIncremental) {
+            this.changed = true;
+            if (this.getAttribute("incremental") == "false")
+              return;
+          } else {
+            if (!this.changed) {
+              return;
             }
           }
+
+          if (this.control.value) {
+            this.accessors.setValue("true");
+          } else {
+            this.accessors.setValue("false");
+          }
+
+          this.changed = false;
           ]]>
         </body>
       </method>
+
+      <!--
+        We need to remember if the user has interacted with this control.
+        We don't want to change the value of the node that this control is
+        bound to unless the user caused the change.
+      -->
+      <field name="changed">false</field>
 
     </implementation>
 
