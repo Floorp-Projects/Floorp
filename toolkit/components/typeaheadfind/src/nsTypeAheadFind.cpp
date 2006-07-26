@@ -852,7 +852,7 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
     nsIContent *parentsFirstChild = parent->GetChildAt(0);
 
     // We don't want to look at a whitespace-only first child
-    if (parentsFirstChild->TextIsOnlyWhitespace()) {
+    if (parentsFirstChild && parentsFirstChild->TextIsOnlyWhitespace()) {
       parentsFirstChild = parent->GetChildAt(1);
     }
 
