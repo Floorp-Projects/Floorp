@@ -25,6 +25,7 @@
    -                 Eric Belhaire <belhaire@ief.u-psud.fr>
    -                 Matthew Willis <mattwillis@gmail.com>
    -                 Simon Paquet <bugzilla@babylonsounds.com>
+   -                 Stefan Sitter <ssitter@googlemail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -454,16 +455,20 @@
 <!ENTITY progress.level.100.accesskey  "1">
                                                                  
 <!-- Server Context Menu -->
-<!ENTITY calendar.context.newserver.label              "New Calendar">
+<!ENTITY calendar.context.newserver.label              "New Calendar…">
 <!ENTITY calendar.context.newserver.accesskey          "N">
-<!ENTITY calendar.context.editserver.label             "Edit Calendar">
+<!ENTITY calendar.context.editserver.label             "Edit Calendar…">
 <!ENTITY calendar.context.editserver.accesskey         "E">
 <!ENTITY calendar.context.deleteserver.label           "Delete Calendar">
 <!ENTITY calendar.context.deleteserver.accesskey       "D">
 <!ENTITY calendar.context.reloadserver.label           "Reload Remote Calendars">
 <!ENTITY calendar.context.reloadserver.accesskey       "R">
-<!ENTITY calendar.context.publish.label                "Publish Entire Calendar">
-<!ENTITY calendar.context.publish.accesskey            "P">
+<!ENTITY calendar.context.publish.label                "Publish Calendar…">
+<!ENTITY calendar.context.publish.accesskey            "b">
+<!ENTITY calendar.context.export.label                 "Export Calendar…">
+<!ENTITY calendar.context.export.accesskey             "E">
+<!ENTITY calendar.context.properties.label             "Properties">
+<!ENTITY calendar.context.properties.accesskey         "P">
 
 <!-- About Dialog -->
 <!ENTITY calendar.about.title "About Mozilla Calendar">

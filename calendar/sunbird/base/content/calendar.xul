@@ -27,6 +27,7 @@
    -                 Dan Parent <danp@oeone.com> 
    -                 ArentJan Banck <ajbanck@planet.nl> 
    -                 Eric Belhaire <belhaire@ief.u-psud.fr>
+   -                 Stefan Sitter <ssitter@googlemail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -227,28 +228,29 @@
             id="calpopup-new"
             accesskey="&calendar.context.newserver.accesskey;"
             observes="new_calendar_command"/>
-  <menuitem label="&calendar.context.editserver.label;"
-            id="calpopup-edit"
-            accesskey="&calendar.context.editserver.accesskey;"
-            observes="edit_calendar_command"/>
   <menuitem label="&calendar.context.deleteserver.label;"
             id="calpopup-delete"
             accesskey="&calendar.context.deleteserver.accesskey;"
             observes="delete_calendar_command"/>
-  <menuitem label="&calendar.context.reloadserver.label;"
-            id="calpopup-reload"
-            accesskey="&calendar.context.reloadserver.accesskey;"
-            observes="reload_remote_calendars"/>
+  <menuseparator/>
+  <menuitem label="&calendar.context.export.label;"
+            id="calpopup-export"
+            accesskey="&calendar.context.export.accesskey;"
+            oncommand="exportEntireCalendar(getSelectedCalendarOrNull())"/>
   <menuitem label="&calendar.context.publish.label;"
             id="calpopup-publish"
             accesskey="&calendar.context.publish.accesskey;"
             observes="publish_calendar"/>
-  <menuitem label="&calendar.import.into.label;"
-            id="calpopup-import"
-            oncommand="loadEventsFromFile(getSelectedCalendarOrNull())"/>
-  <menuitem label="&calendar.export.specific.calendar;"
-            id="calpopup-export"
-            oncommand="exportEntireCalendar(getSelectedCalendarOrNull())"/>
+  <menuseparator/>
+  <menuitem label="&calendar.context.reloadserver.label;"
+            id="calpopup-reload"
+            accesskey="&calendar.context.reloadserver.accesskey;"
+            observes="reload_remote_calendars"/>
+  <menuseparator/>
+  <menuitem label="&calendar.context.properties.label;"
+            id="calpopup-edit"
+            accesskey="&calendar.context.properties.accesskey;"
+            observes="edit_calendar_command"/>
 </popup>
 
 <popup id="toolbar-context-menu">
