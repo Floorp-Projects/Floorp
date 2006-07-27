@@ -249,8 +249,37 @@ function AddEngine()
 
 function RemoveEngine()
 {
+	var engineList = document.getElementById("engineList");
+	if (!engineList)	return(false);
+	var select_list = engineList.selectedItems;
+	if (!select_list)	return(false)
+	if (select_list.length < 1)	return(false);
+
 	var promptStr = bundle.GetStringFromName("RemoveEnginePrompt");
 	if (!confirm(promptStr))	return(false);
+
+	var ref = engineList.getAttribute("ref");
+	if ((!ref) || (ref == ""))	return(false);
+	var categoryRes = RDF.GetResource(ref);
+	if (!categoryRes)	return(false);
+
+	RDFC.Init(catDS, categoryRes);
+
+	// Note: walk backwards to make deletion easier
+	for (var x = select_list.length - 1; x >= 0; x--)
+	{
+		var id = select_list[x].getAttribute("id");
+		if ((!id) || (id == ""))	return(false);
+		var idRes = RDF.GetResource(id);
+		if (!idRes)	return(false);
+
+		var nodeIndex = RDFC.IndexOf(idRes);
+		if (nodeIndex > 0)
+		{
+			RDFC.RemoveElementAt(nodeIndex, true, idRes);
+		}
+	}
+	
 	return(true);
 }
 
@@ -291,7 +320,7 @@ function MoveDelta(delta)
 	RDFC.Init(catDS, categoryRes);
 
 	var nodeIndex = RDFC.IndexOf(idRes);
-	if (nodeIndex < 1)	return(false);			// how did that happen?
+	if (nodeIndex < 1)	return(false);		// how did that happen?
 
 	var numItems = RDFC.GetCount();
 
