@@ -47,8 +47,8 @@
         <box align="horizontal" class="spaced">
         	<textfield id="sidebar-search-text" flex="1" onkeyup="if (event.which == 13) { return doSearch(); }" />
 		<box autostretch="never">
-			<titledbutton id="searchbutton" value="&search.button.label;" onclick="return doSearch();" class="dialog toolbar-non-iconic"/>
-			<titledbutton id="stopbutton" align="left" src="resource:/res/rdf/loading.gif" value="&stop.button.label;" onclick="return doStop();" class="dialog toolbar-non-iconic" style="display:none;"/>
+			<button id="searchbutton" value="&search.button.label;" onclick="return doSearch();" class="dialog toolbar-non-iconic"/>
+			<button id="stopbutton" align="left" src="resource:/res/rdf/loading.gif" value="&stop.button.label;" onclick="return doStop();" class="dialog toolbar-non-iconic" style="display:none;"/>
 		</box>
         </box>
         <box align="horizontal" class="spaced">
@@ -135,7 +135,7 @@
 
 	<box align="horizontal">
 		<spring flex="1" />
-		<titledbutton id="saveQueryButton" value="&savesearch.button.label;" onclick="return saveSearch();" class="dialog toolbar-non-iconic"/>
+		<button id="saveQueryButton" value="&savesearch.button.label;" onclick="return saveSearch();" class="dialog toolbar-non-iconic"/>
 		<spring flex="1" />
 	</box>
 
@@ -171,7 +171,7 @@
 
 	<box align="horizontal">
 		<spring flex="1" />
-		<titledbutton id="customizeButton" value="&customize.button.label;" onclick="return doCustomize();" class="dialog toolbar-non-iconic"/>
+		<button id="customizeButton" value="&customize.button.label;" onclick="return doCustomize();" class="dialog toolbar-non-iconic"/>
 		<spring flex="1" />
 	</box>
 

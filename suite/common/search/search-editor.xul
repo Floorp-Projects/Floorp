@@ -95,13 +95,13 @@
 
 				<box align="horizontal">
 					<spring align="horizontal" flex="100%" />
-					<titledbutton id="add-button" onclick="return AddEngine()" value="&add.label;" class="dialog toolbar-non-iconic" />
+					<button id="add-button" onclick="return AddEngine()" value="&add.label;" class="dialog toolbar-non-iconic" />
 					<spring align="horizontal" flex="100%" />
 				</box>
 
 				<box align="horizontal">
 					<spring align="horizontal" flex="100%" />
-					<titledbutton id="remove-button" onclick="return RemoveEngine()" value="&remove.label;" class="dialog toolbar-non-iconic" />
+					<button id="remove-button" onclick="return RemoveEngine()" value="&remove.label;" class="dialog toolbar-non-iconic" />
 					<spring align="horizontal" flex="100%" />
 				</box>
 
@@ -144,16 +144,16 @@
 		</box>
 
 		<box align="horizontal" class="button-group">
-			<titledbutton id="new-category-button" onclick="NewCategory()" value="&new.category.label;" class="dialog toolbar-non-iconic" />
-			<titledbutton id="rename-category-button" onclick="RenameCategory()" value="&rename.category.label;" class="dialog toolbar-non-iconic" />
-			<titledbutton id="remove-category.buttom" onclick="RemoveCategory()" value="&remove.category.label;" class="dialog toolbar-non-iconic" />
+			<button id="new-category-button" onclick="NewCategory()" value="&new.category.label;" class="dialog toolbar-non-iconic" />
+			<button id="rename-category-button" onclick="RenameCategory()" value="&rename.category.label;" class="dialog toolbar-non-iconic" />
+			<button id="remove-category.buttom" onclick="RemoveCategory()" value="&remove.category.label;" class="dialog toolbar-non-iconic" />
 			<spring align="horizontal" flex="100%" />
 		</box>
 	</titledbox>
 
 	<box autostretch="never">
 		<spring flex="100%"/>
-		<titledbutton id="done.button" onclick="Commit()" value="&done.label;" class="dialog toolbar-non-iconic" />
+		<button id="done.button" onclick="Commit()" value="&done.label;" class="dialog toolbar-non-iconic" />
 	</box>
 
 </window>
