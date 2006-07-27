@@ -1,4 +1,6 @@
-<?xml version="1.0"?>    
+<?xml version="1.0"?>
+
+<!DOCTYPE RDF SYSTEM "chrome://branding/locale/brand.dtd" >
 
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:nc="http://home.netscape.com/NC-rdf#">
@@ -12,11 +14,11 @@
         <rdf:li> <rdf:Description ID="nav" nc:name="Browsing the Web" nc:link="nav_help.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail" nc:name="Using Mail" nc:link="mail_help.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="comp" nc:name="Creating Web Pages"  nc:link="composer_help.xhtml"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust" nc:name="Customizing Mozilla"  nc:link="customize_help.xhtml"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust" nc:name="Customizing &brandShortName;"  nc:link="customize_help.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="using-priv-help" nc:name="Using Privacy Features" nc:link="privacy_help.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="using-help-certs" nc:name="Using Certificates" nc:link="using_certs_help.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="profile-help" nc:name="Managing Profiles" nc:link="profiles_help.xhtml"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="shortcuts" nc:name="Mozilla Keyboard Shortcuts" nc:link="shortcuts.xhtml"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="shortcuts" nc:name="&brandShortName; Keyboard Shortcuts" nc:link="shortcuts.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="tools" nc:name="Tools and Development" nc:link="developer_tools.xhtml"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
@@ -123,7 +125,7 @@ nc:link="chrome://help/locale/nav_help.xhtml#plugins_and_downloads"/> </rdf:li>
   <rdf:Description about="#nav-doc-ses">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="nav-doc-default" nc:name="Making Mozilla Your Default Browser" nc:link="nav_help.xhtml#making_mozilla_your_default_browser"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-default" nc:name="Making &brandShortName; Your Default Browser" nc:link="nav_help.xhtml#making_mozilla_your_default_browser"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-doc-autoload" nc:name="Automatic Loading" nc:link="nav_help.xhtml#automatic_loading"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-doc-keywords" nc:name="Using Custom Bookmark Keywords" nc:link="chrome://help/locale/nav_help.xhtml#custom_keywords"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-doc-cache" nc:name="Changing Cache Settings" nc:link="nav_help.xhtml#changing_cache_settings"/> </rdf:li>
@@ -669,7 +671,7 @@ nc:link="chrome://help/locale/nav_help.xhtml#plugins_and_downloads"/> </rdf:li>
         <rdf:li> <rdf:Description ID="cust-font" nc:name="Changing Fonts, Colors, and Themes"  nc:link="customize_help.xhtml#changing_fonts_colors_and_themes"/> </rdf:li>
         <rdf:li> <rdf:Description ID="cust-toolbar" nc:name="Toolbars"  nc:link="customize_help.xhtml#toolbars"/> </rdf:li>
         <rdf:li> <rdf:Description ID="cust-bkmk" nc:name="Bookmarks"  nc:link="customize_help.xhtml#bookmarks"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-page" nc:name="Specifying How Mozilla Starts Up"  nc:link="customize_help.xhtml#specifying_how_mozilla_starts_up"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-page" nc:name="Specifying How &brandShortName; Starts Up"  nc:link="customize_help.xhtml#specifying_how_mozilla_starts_up"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-settings" nc:name="Navigator Settings"  nc:link="cs_nav_prefs_appearance.xhtml#navigator_settings"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
@@ -1163,7 +1165,7 @@ nc:link="chrome://help/locale/nav_help.xhtml#plugins_and_downloads"/> </rdf:li>
     </nc:subheadings>
   </rdf:Description>
 
-<!-- MOZILLA TOOLS AND DEVELOPMENT CONTENT STARTS-->
+<!-- TOOLS AND DEVELOPMENT CONTENT STARTS -->
  
 <rdf:Description about="#tools">
     <nc:subheadings>
@@ -1175,12 +1177,12 @@ nc:link="chrome://help/locale/nav_help.xhtml#plugins_and_downloads"/> </rdf:li>
     </nc:subheadings>
 </rdf:Description>
 
-<!-- MOZILLA KEYBOARD SHORTCUTS CONTENT STARTS-->
+<!-- KEYBOARD SHORTCUTS CONTENT STARTS -->
 <rdf:Description about="#shortcuts">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li><rdf:Description ID="shortcuts_using" nc:name="Using Shortcuts" nc:link="shortcuts.xhtml#using_shortcuts"/> </rdf:li>
-        <rdf:li><rdf:Description ID="shortcuts_general" nc:name="General Mozilla Shortcuts" nc:link="shortcuts.xhtml#general_mozilla_shortcuts"/> </rdf:li>
+        <rdf:li><rdf:Description ID="shortcuts_general" nc:name="General &brandShortName; Shortcuts" nc:link="shortcuts.xhtml#general_mozilla_shortcuts"/> </rdf:li>
         <rdf:li><rdf:Description ID="shortcuts_navigator" nc:name="Navigator Shortcuts" nc:link="shortcuts-navigator.xhtml"/> </rdf:li>
         <rdf:li><rdf:Description ID="shortcuts_mail" nc:name="Mail &amp; Newsgroups Shortcuts" nc:link="shortcuts-mailnews.xhtml"/> </rdf:li>
         <rdf:li><rdf:Description ID="shortcuts_composer" nc:name="Composer Shortcuts" nc:link="shortcuts-composer.xhtml"/> </rdf:li>
