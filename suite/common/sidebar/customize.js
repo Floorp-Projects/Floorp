@@ -449,7 +449,6 @@ function delete_resource_deeply(container, resource) {
 
 // Copy a resource and all its arcs out to a new container.
 function copy_resource_deeply(source_datasource, resource, dest_container) {
-  dest_container.AppendElement(resource);
   var arcs = source_datasource.ArcLabelsOut(resource);
   while (arcs.HasMoreElements()) {
     var arc = arcs.GetNext();
@@ -459,6 +458,7 @@ function copy_resource_deeply(source_datasource, resource, dest_container) {
       dest_container.DataSource.Assert(resource, arc, target, true);
     }
   }
+  dest_container.AppendElement(resource);
 }
 
 function enable_buttons_for_other_panels()
