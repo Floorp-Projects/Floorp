@@ -356,6 +356,16 @@
 <rdf:Description about="#Composer">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="Composer:keyboard_shortcuts"
+         nc:name="keyboard shortcuts"
+	 nc:link="chrome://help/locale/shortcuts.html#composer"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Composer">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="Composer:removing_text_styles"
          nc:name="removing text styles"
 	 nc:link="composer_help.html#Composer:removing_text_stylesIDX"/>
@@ -539,6 +549,86 @@
        <rdf:Description ID="Java_and_JavaScript:enabling"
          nc:name="enabling"
 	 nc:link="nav_help.html#Java_and_JavaScript:enablingIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#k">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="keyboard"
+         nc:name="keyboard"
+	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#keyboard_navigation"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#keyboard">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="keyboard:preferences"
+         nc:name="preferences"
+	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#keyboard_navigation"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#k">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="keyboard_shortcuts"
+         nc:name="keyboard shortcuts"
+	 nc:link="chrome://help/locale/shortcuts.html"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#keyboard_shortcuts">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="keyboard_shortcuts:Composer"
+         nc:name="Composer"
+	 nc:link="chrome://help/locale/shortcuts.html#composer"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#keyboard_shortcuts">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="keyboard_shortcuts:general"
+         nc:name="general"
+	 nc:link="chrome://help/locale/shortcuts.html#general"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#keyboard_shortcuts">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="keyboard_shortcuts:help"
+         nc:name="help"
+	 nc:link="chrome://help/locale/shortcuts.html#help"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#keyboard_shortcuts">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="keyboard_shortcuts:Mail_and_Newsgroups"
+         nc:name="Mail and Newsgroups"
+	 nc:link="chrome://help/locale/shortcuts.html#mail/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#keyboard_shortcuts">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="keyboard_shortcuts:Navigator"
+         nc:name="Navigator"
+	 nc:link="chrome://help/locale/shortcuts.html#navigator"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
