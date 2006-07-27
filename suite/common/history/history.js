@@ -262,7 +262,7 @@ function setRoot(root)
 {
     var windowNode = document.getElementById("history-window");
     windowNode.setAttribute("title", gHistoryBundle.getString("search_results_title"));
-    document.getElementById("historyOutlinerBody").setAttribute("ref", root);
+    document.getElementById("historyOutliner").setAttribute("ref", root);
 }
 
 function GroupBy(groupingType)
