@@ -32,6 +32,7 @@ var RDF = null;
 var RDFC = null;
 var RDFCUtils = null;
 var catDS = null;
+var internetSearchDS = null;
 
 try
 {
@@ -74,6 +75,8 @@ function doLoad()
 	if (internetSearch)	internetSearch = internetSearch.QueryInterface(Components.interfaces.nsIInternetSearchService);
 	if (internetSearch)
 	{
+		internetSearchDS = internetSearch.QueryInterface(Components.interfaces.nsIRDFDataSource);
+
 		catDS = internetSearch.GetCategoryDataSource();
 		if (catDS)	catDS = catDS.QueryInterface(Components.interfaces.nsIRDFDataSource);
 		if (catDS)
@@ -279,12 +282,36 @@ function AddEngine()
 
 	RDFC.Init(catDS, categoryRes);
 
+	var urlRes = RDF.GetResource("http://home.netscape.com/NC-rdf#URL");
+	if (!urlRes)	return(false);
+	var typeRes = RDF.GetResource("http://home.netscape.com/NC-rdf#searchtype");
+	if (!typeRes)	return(false);
+	var engineRes = RDF.GetResource("http://home.netscape.com/NC-rdf#Engine");
+	if (!engineRes)	return(false);
+
 	for (var x = 0; x < select_list.length; x++)
 	{
 		var id = select_list[x].getAttribute("id");
 		if ((!id) || (id == ""))	return(false);
 		var idRes = RDF.GetResource(id);
 		if (!idRes)	return(false);
+
+		// try and find/use alias to search engine
+		var privateEngineFlag = internetSearchDS.HasAssertion(idRes, typeRes, engineRes, true);
+		if (privateEngineFlag == true)
+		{
+			var node = internetSearchDS.GetTarget(idRes, urlRes, true);
+			if (node)	node = node.QueryInterface(Components.interfaces.nsIRDFLiteral);
+			if (node)
+			{
+				if (node.Value)
+				{
+					id = node.Value;
+					idRes = RDF.GetResource(id);
+					if (!idRes)	return(false);
+				}
+			}
+		}
 
 		var nodeIndex = RDFC.IndexOf(idRes);
 		if (nodeIndex < 1)
