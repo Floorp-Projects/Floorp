@@ -72,6 +72,7 @@
 <a NAME="broken_lock_iconSDX"></a>
 <a NAME="open_lock_iconSDX"></a>
 <a NAME="encryption_status_of_web_pageSDX"></a>
+<a NAME="encryption:status_of_web_pageIDX"></a>
 <hr><h1>Checking Security for a Web Page</h1>
 
 <p>When you're viewing any web page, the lock icon near the lower-right corner of the window informs you whether the entire contents of the page was protected by <a href="glossary.html#encryption">encryption</a> while it was being received by your computer:</p>
@@ -119,6 +120,7 @@
 <td class="inthissection">
 <p>In this section:</p>
 <p><a HREF="#using_certs_my">Managing Certificates that Identify You</a></p>
+<p><a HREF="#using_certs_others">Managing Certificates that Identify Others</a></p>
 <p><a HREF="#using_certs_sites">Managing Certificates that Identify Web Sites</a></p>
 <p><a HREF="#using_certs_cas">Managing Certificates that Identify Certificate Authorities</a></p>
 </td>
@@ -152,6 +154,29 @@
 [&nbsp;<A HREF="#using_certs_first">Return to beginning of section</A>&nbsp;]
 </p>
 
+<p>&nbsp;</p>
+<a NAME="using_certs_others"></a><a NAME="certificates:other peopleIDX"></a><a NAME="using_certs_my"></a>
+<H2>Managing Certificates that Identify Others</H2>
+
+<p><p>When you compose a mail message, you can choose to attach your digital signature to it. A <a href="glossary.html#digital_signature">digital signature</a> allows recipients of the message to verify that the message really comes from you and hasn't been tampered with since you sent it.
+
+<p>Every time you send a digitally signed message, your encryption certificate is automatically included with the message. This certificate allows the message recipients to send you encrypted messages. 
+
+<p>One of the easiest ways to obtain someone else's encryption certificate is for that person to send you a digitally signed message. Certificate Manager automatically stores other people's certificates whenever they are received in this way.
+
+<p>To view all the certificates identifying other people that available to the Certificate Manager, click the Other People's tab at the top of the Certificate Manager window. You can send encrypted messages to anyone for whom a valid certificate is listed. Certificates are listed under the names of the organizations that issued them. 
+
+<p>To perform an action on one or more certificates, click the entry for the certificate (or Control-click to select more than one), then click the View or Delete button. Each of these buttons brings up another window that allows you to perform the action. Click the Help button in any window to obtain more information about using that window. 
+
+<p>For more details, see <a href="certs_help.html#Other_Peoples_Certificates">Other People&apos;s Certificates</a>.
+
+
+<p>
+[&nbsp;<A HREF="#using_certs_first">Return to beginning of section</A>&nbsp;]
+</p>
+
+
+ 
 <p>&nbsp;</p>
 <a NAME="using_certs_sites"></a><a NAME="certificates:web_siteIDX"></a>
 <H2>Managing Certificates that Identify Web Sites</H2>
@@ -359,7 +384,7 @@
 
 <hr><h1>Controlling Validation</h1>
 
-<p>As discussed above under <a href="#using_certs_get">Get Your Own Certificate</a>, a certificate is a form of identification, much like a driver's license, that you can use to identify yourself over the Internet and other networks. However, also like a driver's license, a certificate may be expired or invalid for some other reason. Therefore, your browser software needs to confirm the validity of any given certificate in some way before trusting it for identification purposes. 
+<p>As discussed above under <a href="#using_certs_get">Get Your Own Certificate</a>, a certificate is a form of identification, much like a driver's license, that you can use to identify yourself over the Internet and other networks. However, also like a driver's license, a certificate may expire or become invalid for some other reason. Therefore, your browser software needs to confirm the validity of any given certificate in some way before trusting it for identification purposes. 
 
 <p>This section describes how Certificate Manager validates certificates and how to control that process. To understand the process, you should have some familiarity with <a href="glossary.html#public-key_cryptography">public-key_cryptography</a>. If you are not familiar with the use of certificates, you should check with your system administrator before attempting to change any of your browser's certificate validation settings.<p>
 
@@ -502,7 +527,7 @@
 
 
 <hr>
-<p><i>9 May 2002</i></p>
+<p><i>16 May 2002</i></p>
 <p>Copyright &copy; 1994-2002 Netscape Communications Corporation.</p>
 
 </body>
