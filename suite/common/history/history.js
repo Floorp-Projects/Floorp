@@ -223,6 +223,7 @@ var historyDNDObserver = {
         aXferData.data.addDataForFlavour("text/unicode", url);
         aXferData.data.addDataForFlavour("text/html", htmlString);
         aXferData.data.addDataForFlavour("text/x-moz-url", url + "\n" + title);
+        return true;
     }
 };
 
