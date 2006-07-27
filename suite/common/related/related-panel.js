@@ -117,7 +117,6 @@ function (sUrl, bReferrer)
 	// url is http, non-intranet url: see if the domain is in their blocked list.
 
 	var nPortOffset = sUrlSuffix.indexOf(":");
-	var nFirstSlash = sUrlSuffix.indexOf("/");
 	var nDomainEnd = (((nPortOffset >=0) && (nPortOffset <= nFirstSlash))
                       ? nPortOffset : nFirstSlash);
 
