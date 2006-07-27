@@ -79,16 +79,12 @@
       setRadioButton("UseImagesDefault", uri, nsIPermissionManager.UNKNOWN_ACTION, "image");
       setRadioButton("AllowImages", uri, nsIPermissionManager.ALLOW_ACTION, "image");
       setRadioButton("BlockImages", uri, nsIPermissionManager.DENY_ACTION, "image");
-      
-      SetPopupMenuEnabledState();
 
       var pref;
       pref = Components.classes['@mozilla.org/preferences-service;1'];
       pref = pref.getService();
       pref = pref.QueryInterface(Components.interfaces.nsIPrefBranch);
-    }
 
-    function SetPopupMenuEnabledState() {
       var blocked = nsIPermissionManager.UNKNOWN_ACTION;
       var policy = pref.getBoolPref("dom.disable_open_during_load");
 
