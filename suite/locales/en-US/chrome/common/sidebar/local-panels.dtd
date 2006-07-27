@@ -23,9 +23,6 @@
 
 <!ENTITY sidebar.whats-related.label  "What's Related">
 <!ENTITY sidebar.search.label         "Search">
-<!-- LOCALIZATION NOTE sidebar.tinderbox.label: DONT_TRANSLATE -->
-<!ENTITY sidebar.tinderbox-seamonkey.label  "Tinderbox: SeaMonkey">
-<!ENTITY sidebar.tinderbox-ports.label      "Tinderbox: SeaMonkey-Ports">
 <!ENTITY sidebar.client-bookmarks.label     "Bookmarks">
 <!ENTITY sidebar.client-history.label       "History">
 <!ENTITY sidebar.client-addressbook.label   "Address Book">
