@@ -962,7 +962,6 @@ nc:link="chrome://help/locale/mail_help.html#delete_POP_IMAP" /> </rdf:li>
   </rdf:Description>
 
 
-
 <rdf:Description about="#mail-doc-folders">
     <nc:subheadings>
       <rdf:Seq>
@@ -1492,11 +1491,27 @@ nc:link="chrome://help/locale/mail_help.html#mail-account-receipts"/> </rdf:li>
     </nc:subheadings>
   </rdf:Description>
 
+<rdf:Description about="#mail-doc-mailprefs">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="mail_prefs_windows" nc:name="Windows" nc:link="chrome://help/locale/mail_help.html#PREFERENCES_MAILNEWS_WINDOWS"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
 
 <rdf:Description about="#mail-doc-mailprefs">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="mail_prefs_display" nc:name="Message Display" nc:link="chrome://help/locale/mail_help.html#PREFERENCES_MAILNEWS_DISPLAY"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#mail-doc-mailprefs">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="mail_prefs_notifications" nc:name="Notifications" nc:link="chrome://help/locale/mail_help.html#PREFERENCES_MAILNEWS_NOTIFICATIONS"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
