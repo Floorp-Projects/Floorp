@@ -38,7 +38,7 @@
 <?xml-stylesheet href="chrome://navigator/skin/navigator.css" type="text/css"?>
 
 <!DOCTYPE dialog [
-  <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+  <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
   %brandDTD;
   <!ENTITY % aboutPopupsDTD SYSTEM "chrome://communicator/locale/permissions/aboutPopups.dtd" >
   %aboutPopupsDTD;
