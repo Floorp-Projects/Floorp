@@ -1083,7 +1083,7 @@ function getArcValueForID(aArc, aID)
   return val;
 }
 
-//Fill in tooltip in teh search results panel
+//Fill in tooltip in the search results panel
 function FillInDescTooltip(tipElement)
 {
   var retValue = false;

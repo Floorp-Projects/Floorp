@@ -323,7 +323,7 @@ function (force_reload)
 {
   // This function requires that the attribute 'last-selected-panel'
   // holds the id of a non-excluded panel. If it doesn't, no panel will
-  // be selected. The attribute is used instead of a funciton
+  // be selected. The attribute is used instead of a function
   // parameter to allow the value to be persisted in localstore.rdf.
   var selected_id = this.node.getAttribute('last-selected-panel');
 
