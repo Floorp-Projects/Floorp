@@ -41,8 +41,7 @@
     </splitter>
     <box align="vertical" flex="1*">
       <box id="sidebar-panels" align="vertical"
-        datasources="chrome://sidebar/content/local-panels.rdf
-                     chrome://sidebar/content/remote-panels.rdf"
+        datasources="chrome://sidebar/content/local-panels.rdf chrome://sidebar/content/remote-panels.rdf"
         ref="urn:sidebar:current-panel-list" 
         persist='open-panel-src'>
         <template>
@@ -52,15 +51,23 @@
               class="panel-bar borderless" 
               onclick="SidebarSelectPanel(this)"
               iframe-src="rdf:http://home.netscape.com/NC-rdf#content" />
-            <!-- <html:iframe uri="rdf:*" content="true"
-              src="rdf:http://home.netscape.com/NC-rdf#content"
-              class="panel-frame" collapsed='true' flex='1*'/>
-             -->
           </rule>
         </template>
       </box>
       <html:iframe id="sidebar-content" content="true" src="about:blank" 
         class="panel-frame" flex='1*'/>
+      <box id="sidebar-panels-bottom" align="vertical"
+        datasources="chrome://sidebar/content/local-panels.rdf chrome://sidebar/content/remote-panels.rdf">
+        <template>
+          <rule>
+            <titledbutton uri="rdf:*" align="left" 
+              value="rdf:http://home.netscape.com/NC-rdf#title"
+              class="panel-bar borderless" 
+              onclick="SidebarSelectPanel(this)"
+              iframe-src="rdf:http://home.netscape.com/NC-rdf#content" />
+          </rule>
+        </template>
+      </box>
     </box>
   </box>
 

@@ -90,9 +90,10 @@ function getSidebarDatasourceURI(panels_file_id) {
 }
 
 function sidebarOverlayInit() {
-  sidebar.datasource_uri  = getSidebarDatasourceURI(PANELS_RDF_FILE);
-  sidebar.resource        = 'urn:sidebar:current-panel-list';
-  sidebar.master_resource = 'urn:sidebar:master-panel-list';
+  sidebar.datasource_uri     = getSidebarDatasourceURI(PANELS_RDF_FILE);
+  sidebar.resource           = 'urn:sidebar:current-panel-list';
+  sidebar.master_datasources = 'chrome://sidebar/content/local-panels.rdf chrome://sidebar/content/remote-panels.rdf';
+  sidebar.master_resource    = 'urn:sidebar:master-panel-list';
 
   // Initialize the display
   var sidebar_element  = document.getElementById('sidebar-box')
@@ -116,136 +117,126 @@ function sidebarOverlayInit() {
     var panels = document.getElementById('sidebar-panels');
     panels.database.AddDataSource(RDF.GetDataSource(sidebar.datasource_uri));
 
+    // The stuff on the bottom
+    var panels_bottom = document.getElementById('sidebar-panels-bottom');
+    panels_bottom.database.AddDataSource(RDF.GetDataSource(sidebar.datasource_uri));
+
     debug("Adding observer to database.");
     panels.database.AddObserver(panel_observer);
 
     // XXX This is a hack to force re-display
     panels.setAttribute('ref', sidebar.resource);
 
+    // XXX This is a hack to force re-display
+    panels_bottom.setAttribute('ref', sidebar.resource);
+
     sidebarOpenDefaultPanel(100, 0);
   }
 }
 
-/* BEGIN: old sidebar layout code
 function sidebarOpenDefaultPanel(wait, tries) {
-  var parent = document.getElementById('sidebar-panels');
-  var target = parent.getAttribute('open-panel-src');
-  var children = parent.childNodes;
+  var panels_top  = document.getElementById('sidebar-panels');
+  var target      = panels_top.getAttribute('open-panel-src');
+  var top_headers = panels_top.childNodes;
 
-  debug("sidebarOpenDefaultPanel("+wait+","+tries+")");
-  debug("  target="+target);
+  debug("\nsidebarOpenDefaultPanel("+wait+","+tries+")\n");
 
-  if (children.length < 3) {
-    if (tries < 5) {
-      // No children yet, try again later
-      setTimeout('sidebarOpenDefaultPanel('+(wait*2)+','+(tries+1)+')',wait);
-    }
-    return;
-  }
-  if (target && target != '') {
-    for (var ii=0; ii < children.length; ii++) {
-      if (children.item(ii).getAttribute('src') == target) {
-        children.item(ii).removeAttribute('collapsed');
-        return;
-      }
-    }
-  }
-  // Pick the first one
-  var first_iframe = children.item(2);
-  if (first_iframe) {
-    first_iframe.removeAttribute('collapsed');
-    parent.setAttribute('open-panel-src',first_iframe.getAttribute('src'));
-  }
-}
-END: old sidebar layout code */
-
-function sidebarOpenDefaultPanel(wait, tries) {
-  var parent = document.getElementById('sidebar-panels');
-  var target = parent.getAttribute('open-panel-src');
-  var children = parent.childNodes;
-  var iframe = document.getElementById('sidebar-content');
-
-  debug("sidebarOpenDefaultPanel("+wait+","+tries+")");
-  debug("  target="+target);
-
-  if (children.length <= 1) {
+  if (top_headers.length <= 1) {
     if (tries < 5) {
       // No children yet, try again later
       setTimeout('sidebarOpenDefaultPanel('+(wait*2)+','+(tries+1)+')',wait);
     } else {
       // No panels.
       // XXX This should load some help page instead of about:blank.
+      var iframe = document.getElementById('sidebar-content');
       iframe.setAttribute('src', 'about:blank');
     }
     return;
   }
 
+  selectPanel(target);
+}
+
+function selectPanel(target) {
+  var panels_top   = document.getElementById('sidebar-panels');
+  var iframe       = document.getElementById('sidebar-content');
+  var top_headers  = panels_top.childNodes;
+
+  debug("selectPanel("+target+")");
+
+  var select_index = findPanel(top_headers, target);
+
+  if (!select_index) {
+    // Target not found. Pick the first panel by default.
+    // It is at index 1 because the template is at index 0.
+    select_index = 1;
+    target = top_headers.item(1).getAttribute('iframe-src');
+  }
+
+  // Update the content area if necessary.
+  if (iframe.getAttribute('src') != target) {
+    iframe.setAttribute('src', target);
+  }
+  if (panels_top.getAttribute('open-panel-src') != target) {
+    panels_top.setAttribute('open-panel-src', target);
+  }
+
+  updateHeaders(select_index);
+}
+
+function findPanel(panels, target) {
   if (target && target != '') {
-    // Try to select the prefered panel
-    if (iframe.getAttribute('src') != target) {
-      iframe.setAttribute('src', target);
-    }
-    for (var ii=0; ii < children.length; ii++) {
-      if (children.item(ii).getAttribute('iframe-src') == target) {
+    // Find the index of the selected panel
+    for (var ii=1; ii < panels.length; ii++) {
+      var item = panels.item(ii);
+      
+      if (item.getAttribute('iframe-src') == target) {
+
         // Found it!
-        children.item(ii).setAttribute('selected','true');
-        return;
+        return ii;
       }
     }
   }
-  // Pick the first panel
-  var first_button = children.item(1);
-  if (first_button) {
-    first_button.setAttribute('selected','true');
-    target = first_button.getAttribute('iframe-src');
-    parent.setAttribute('open-panel-src', target);
-    iframe.setAttribute('src', target);
-  }
+  return 0;
 }
 
-/* BEGIN: old sidebar layout code
-function SidebarSelectPanel(titledbutton) {
-  var target = titledbutton.getAttribute('iframe-src');
-  var last_src = titledbutton.parentNode.getAttribute('open-panel-src');
-  var children = titledbutton.parentNode.childNodes;
+function updateHeaders(index) {
+  var top_headers    = document.getElementById('sidebar-panels').childNodes;
+  var bottom_headers = document.getElementById('sidebar-panels-bottom').childNodes;
 
-  if (target == last_src) {
-    return;
-  }
+  for (var ii=1; ii < top_headers.length; ii++) {
+    var top_item    = top_headers.item(ii);
+    var bottom_item = bottom_headers.item(ii);
 
-  for (var ii=0; ii < children.length; ii++) {
-    var src = children.item(ii).getAttribute('src')
-
-    if (src == target) {
-      children.item(ii).removeAttribute('collapsed');
-      titledbutton.parentNode.setAttribute('open-panel-src',target);
-    }
-    if (src == last_src) {
-      children.item(ii).setAttribute('collapsed','true');
+    if (ii < index) { 
+      top_item.removeAttribute('selected');
+      top_item.removeAttribute('style');
+      bottom_item.setAttribute('style','display:none');
+    } else if (ii == index) {
+      top_item.setAttribute('selected','true');
+      top_item.removeAttribute('style');
+      bottom_item.setAttribute('style','display:none');
+    } else {
+      top_item.setAttribute('style','display:none');
+      bottom_item.removeAttribute('style');
+      bottom_item.removeAttribute('selected');
     }
   }
 }
-END: old sidebar layout code */
+
 
 // Change the sidebar content to the selected panel.
 // Called when a panel title is clicked.
 function SidebarSelectPanel(titledbutton) {
   var target = titledbutton.getAttribute('iframe-src');
   var last_src = titledbutton.parentNode.getAttribute('open-panel-src');
-  var children = titledbutton.parentNode.childNodes;
-  var iframe = document.getElementById('sidebar-content');
 
   if (target == last_src) {
+    // XXX Maybe this should reload the content?
     return;
   }
-  titledbutton.parentNode.setAttribute('open-panel-src',target);
-  titledbutton.setAttribute('selected','true');
-  iframe.setAttribute('src',target);
-  for (var ii=0; ii < children.length; ii++) {
-    if (children.item(ii).getAttribute('iframe-src') == last_src) {
-      children.item(ii).removeAttribute('selected');
-    }
-  }
+
+  selectPanel(target);
 }
 
 // No one is calling this right now.
@@ -279,13 +270,14 @@ function SidebarCustomize() {
       gDisableCustomize = true;
 
       var panels = document.getElementById('sidebar-panels');
-      var datasources = panels.getAttribute('datasources');
       
       customizeWindow = window.openDialog(
                           'chrome://sidebar/content/customize.xul',
                           '_blank','chrome,resizable',
-                          datasources, sidebar.master_resource,
-                          sidebar.datasource_uri, sidebar.resource);
+                          sidebar.master_datasources,
+                          sidebar.master_resource,
+                          sidebar.datasource_uri,
+                          sidebar.resource);
       setTimeout(enableCustomize, 2000);
     }
   }

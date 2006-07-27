@@ -53,30 +53,31 @@
       &sidebar.customize.additional.label;
       </html:div>
 
-      <html:div style="width:15em;height:15em" flex="1*">
-        <tree id="other-panels" size="10"
-          datasources="rdf:null"
-          indent="true"
-          style="width:100%;height:100%">
-    
-          <template>
-            <treechildren onclick="SelectChangeForOtherPanels(event, event.target.parentNode.parentNode)">
-              <treeitem uri="rdf:*"
-                title="rdf:http://home.netscape.com/NC-rdf#title"
-                content="rdf:http://home.netscape.com/NC-rdf#content"
-                open="rdf:http://home.netscape.com/NC-rdf#open"
-                persist="open">
-                <treerow>
-                  <treecell indent="true" 
-                    value="rdf:http://home.netscape.com/NC-rdf#title"/>
-                </treerow>
-              </treeitem>
-            </treechildren>
-          </template>
-
-          <treecol />
-        </tree>
-      </html:div>
+      <tree id="other-panels" flex="1"
+        datasources="rdf:null"
+        indent="true"
+        multiple="true"
+        style="height:15em">
+  
+        <template>
+          <treechildren>
+            <treeitem uri="rdf:*"
+              title="rdf:http://home.netscape.com/NC-rdf#title"
+              content="rdf:http://home.netscape.com/NC-rdf#content"
+              link="rdf:http://home.netscape.com/NC-rdf#link"
+              haslink="rdf:http://home.netscape.com/NC-rdf#haslink"
+              open="rdf:http://home.netscape.com/NC-rdf#open"
+              persist="open">
+              <treerow>
+                <treecell indent="true" 
+                  value="rdf:http://home.netscape.com/NC-rdf#title"/>
+              </treerow>
+            </treeitem>
+          </treechildren>
+        </template>
+         <treecol />
+        <treechildren onclick="SelectChangeForOtherPanels(event, event.target.parentNode.parentNode)" />
+      </tree>
 
       <!-- xxxslamm Need to add descriptive panel text here -->
       <box align="horizontal" class="button-group">
@@ -102,33 +103,28 @@
       </html:div>
 
       <box align="horizontal" class="box-group" flex="1*">
-        <html:div style="width:15em;height:15em" flex="1*">
-          <tree id="current-panels" onclick="SelectChangeForCurrentPanels();"
-            datasources="rdf:null"
-            style="width:100%;height:100%">
-
-            <template>
-              <treechildren>
-                <treeitem uri="rdf:*"
-                  title="rdf:http://home.netscape.com/NC-rdf#title"
-                  customize="rdf:http://home.netscape.com/NC-rdf#customize"
-                  content="rdf:http://home.netscape.com/NC-rdf#content"
-                  persist="open">
-                  <treerow>
-                    <treecell
-                      value="rdf:http://home.netscape.com/NC-rdf#title" />
-                  </treerow>
-                </treeitem>
-              </treechildren>
-            </template>
-
-            <treecol />
-
-            <!-- We explicitly create a 'treechildren' so we can refer
-                 to it from the script -->
-            <treechildren id="current-panels-root"/> 
-          </tree>
-        </html:div>
+        <tree id="current-panels" onclick="SelectChangeForCurrentPanels();"
+          datasources="rdf:null"
+          multiple="true"
+          style="height:0px">
+          <template>
+           <treechildren>
+             <treeitem uri="rdf:*"
+               title="rdf:http://home.netscape.com/NC-rdf#title"
+               customize="rdf:http://home.netscape.com/NC-rdf#customize"
+               content="rdf:http://home.netscape.com/NC-rdf#content">
+               <treerow>
+                 <treecell
+                   value="rdf:http://home.netscape.com/NC-rdf#title" />
+               </treerow>
+             </treeitem>
+           </treechildren>
+         </template>
+         <treecol />
+         <!-- We explicitly create a 'treechildren' so we can refer
+              to it from the script -->
+         <treechildren id="current-panels-root"/> 
+       </tree>
 
        <!-- Spacing between the right selector and "Reorder" -->
        <spring style="width:5px"/>

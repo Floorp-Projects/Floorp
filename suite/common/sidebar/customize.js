@@ -41,31 +41,34 @@ function Init()
   sidebar.datasource_uri     = window.arguments[2];
   sidebar.resource           = window.arguments[3];
 
-  debug("all panels datasources = " + all_panels_datasources);
-  debug("all panels resource    = " + all_panels_resource);
-  debug("sidebar.datasource_uri = " + sidebar.datasource_uri);
-  debug("sidebar.resource       = " + sidebar.resource);
+  debug("Init: all panels datasources = " + all_panels_datasources);
+  debug("Init: all panels resource    = " + all_panels_resource);
+  debug("Init: sidebar.datasource_uri = " + sidebar.datasource_uri);
+  debug("Init: sidebar.resource       = " + sidebar.resource);
 
   var all_panels   = document.getElementById('other-panels');
   var current_panels = document.getElementById('current-panels');
 
   all_panels_datasources = all_panels_datasources.split(/\s+/);
   for (var ii = 0; ii < all_panels_datasources.length; ii++) {
-    debug("Adding "+all_panels_datasources[ii]);
+    debug("Init: Adding "+all_panels_datasources[ii]);
 
     // This will load the datasource, if it isn't already.
     var datasource = RDF.GetDataSource(all_panels_datasources[ii]);
     all_panels.database.AddDataSource(datasource);
     current_panels.database.AddDataSource(datasource);
   }
-
+  
   // Add the datasource for current list of panels. It selects panels out
   // of the other datasources.
+  debug("Init: Adding current panels, "+sidebar.datasource_uri);
   sidebar.datasource = RDF.GetDataSource(sidebar.datasource_uri);
   current_panels.database.AddDataSource(sidebar.datasource);
 
   // Root the customize dialog at the correct place.
+  debug("Init: reset all panels ref, "+all_panels_resource);
   all_panels.setAttribute('ref', all_panels_resource);
+  debug("Init: reset current panels ref, "+sidebar.resource);
   current_panels.setAttribute('ref', sidebar.resource);
 
   saveInitialPanels();
@@ -95,20 +98,48 @@ function getAttr(registry,service,attr_name) {
 
 function SelectChangeForOtherPanels(event, target)
 { 
- // Remove the selection in the "current" panels list
- var current_panels = document.getElementById('current-panels');
- current_panels.clearItemSelection();
- enableButtonsForCurrentPanels();
+  // Remove the selection in the "current" panels list
+  var current_panels = document.getElementById('current-panels');
+  current_panels.clearItemSelection();
+  enableButtonsForCurrentPanels();
 
- if (target.getAttribute('container') == 'true') {
-   if (target.getAttribute('open') == 'true') {
-     target.removeAttribute('open');
-   } else {
-     target.setAttribute('open','true');
-   }
-   return;
- }
- enableButtonsForOtherPanels();
+  if (target.getAttribute('container') == 'true') {
+    if (target.getAttribute('open') == 'true') {
+      target.removeAttribute('open');
+    } else {
+      target.setAttribute('open','true');
+    }
+  } else {
+    link = target.getAttribute('link');
+    if (link && link != '') {
+      debug("Has remote datasource: "+link);
+      addDatasourceToOtherPanels(link);
+      target.setAttribute('container', 'true');
+      target.setAttribute('open', 'true');
+    }
+    enableButtonsForOtherPanels();
+  }
+}
+
+function addDatasourceToOtherPanels(link) {
+  // Convert the |link| attribute into a URL
+  var url = document.location;
+  debug("Current URL:  " +url);
+  debug("Current link: " +link);
+
+  uri = Components.classes['component://netscape/network/standard-url'].createInstance();
+  uri = uri.QueryInterface(Components.interfaces.nsIURI);
+  uri.spec = url;
+  uri = uri.resolve(link);
+
+  debug("New URL:      " +uri);
+  
+  // Add the datasource to the tree
+  var all_panels = document.getElementById('other-panels');
+  all_panels.database.AddDataSource(RDF.GetDataSource(uri));
+
+  // XXX This is a hack to force re-display
+  all_panels.setAttribute('ref', 'urn:blah:main-root');
 }
 
 // Handle a selection change in the current panels.
@@ -385,10 +416,9 @@ function enableButtonsForOtherPanels()
       num_selected++;
     }
   }
-
   if (num_selected > 0) {
-    add_button.setAttribute('disabled','');
-    preview_button.setAttribute('disabled','');
+    add_button.removeAttribute('disabled');
+    preview_button.removeAttribute('disabled');
   }
   else {
     add_button.setAttribute('disabled','true');
@@ -417,13 +447,13 @@ function enableButtonsForCurrentPanels() {
   if (numSelected != 1 || isFirst) {
     up.setAttribute('disabled', 'true');
   } else {
-    up.setAttribute('disabled', '');
+    up.removeAttribute('disabled');
   }
   // down \/ button
   if (numSelected != 1 || isLast) {
     down.setAttribute('disabled', 'true');
   } else {
-    down.setAttribute('disabled', '');
+    down.removeAttribute('disabled');
   }
   // "Customize..." button
   var customizeURL = null;
@@ -433,13 +463,13 @@ function enableButtonsForCurrentPanels() {
   if (customizeURL == null || customizeURL == '') {
     customize.setAttribute('disabled','true');
   } else {
-    customize.setAttribute('disabled','');
+    customize.removeAttribute('disabled');
   }
   // "Remove" button
   if (numSelected == 0) {
     remove.setAttribute('disabled','true');
   } else {
-    remove.setAttribute('disabled','');
+    remove.removeAttribute('disabled');
   }
 }
 
@@ -465,7 +495,7 @@ function enableSave() {
   if (list_unchanged) {
     save_button.setAttribute('disabled','true');  
   } else {
-    save_button.setAttribute('disabled','');  
+    save_button.removeAttribute('disabled');
   }
 }
 
