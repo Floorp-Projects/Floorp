@@ -14,7 +14,7 @@
         <rdf:li> <rdf:Description nc:panelid="search"
                     nc:datasources="rdf:null"
                     nc:emptysearchtext="[No matching items found.]"
-                    nc:emptysearchlink="chrome://help/locale/help_help.html#search_tips"/> </rdf:li>
+                    nc:emptysearchlink="chrome://help/locale/help_help.xhtml#search_tips"/> </rdf:li>
         <rdf:li> <rdf:Description nc:panelid="toc" nc:datasources="help-toc.rdf"/> </rdf:li>
       </rdf:Seq>
     </nc:panellist>
