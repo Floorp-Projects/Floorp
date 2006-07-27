@@ -112,12 +112,14 @@ class nsINode : public nsINode_base {
 public:
   friend class nsNodeUtils;
 
+#ifdef MOZILLA_INTERNAL_API
   nsINode(nsINodeInfo* aNodeInfo)
     : mNodeInfo(aNodeInfo),
       mParentPtrBits(0),
       mFlagsOrSlots(NODE_DOESNT_HAVE_SLOTS)
   {
   }
+#endif
 
   virtual ~nsINode();
 
