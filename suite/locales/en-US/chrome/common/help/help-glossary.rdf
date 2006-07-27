@@ -66,7 +66,6 @@
         <rdf:li> <rdf:Description nc:name="master password" nc:link="glossary.html#1032744"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="misrepresentation" nc:link="glossary.html#1014057"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Navigation Toolbar" nc:link="glossary.html#navigation_toolbar"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="Netscape Quality Feedback Agent" nc:link="glossary.html#netscape_talkback"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="nonrepudiation" nc:link="glossary.html#999248"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="object signing" nc:link="glossary.html#1014095"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="object-signing certificate" nc:link="glossary.html#1014097"/> </rdf:li>
@@ -106,6 +105,7 @@
         <rdf:li> <rdf:Description nc:name="subject name" nc:link="glossary.html#1021328"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="subordinate CA" nc:link="glossary.html#999541"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="symmetric encryption" nc:link="glossary.html#999604"/> </rdf:li>
+
         <rdf:li> <rdf:Description nc:name="tamper detection" nc:link="glossary.html#999618"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="third-party cookie" nc:link="glossary.html#third-party_cookie"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="TLS" nc:link="glossary.html#1027427"/> </rdf:li>
