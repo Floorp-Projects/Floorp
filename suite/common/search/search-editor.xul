@@ -34,16 +34,16 @@
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/search/search-editor.dtd">
 
 <window title="&window.title.label;" id="search-editor-window"
-	xmlns:html="http://www.w3.org/1999/xhtml"
-	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-	xmlns:web="http://home.netscape.com/WEB-rdf#"
-	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-	width="540" height="340" x="20" y="20" persist="width height x y" orient="vertical"
-	windowtype="internetsearch:editor" class="dialog"
-	onload="doLoad()" onunload="doUnload()">
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:web="http://home.netscape.com/WEB-rdf#"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  width="540" height="340" x="20" y="20" persist="width height x y" orient="vertical"
+  windowtype="internetsearch:editor" class="dialog"
+  onload="doLoad()" onunload="doUnload()">
 
-	<script type="application/x-javascript" src="chrome://global/content/strres.js"/>
-	<script type="application/x-javascript" src="chrome://communicator/content/search/search-editor.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/search/search-editor.js"/>
 
   <keyset id="keyset"/>
   
@@ -57,7 +57,7 @@
               <treerow>
                 <treecell class="treecell-indent" crop="right" 
                           src="rdf:http://home.netscape.com/NC-rdf#Icon"
-                          value="rdf:http://home.netscape.com/NC-rdf#Name" />
+                          label="rdf:http://home.netscape.com/NC-rdf#Name" />
               </treerow>
             </treeitem>
           </treechildren>
@@ -70,7 +70,7 @@
         <treehead>
           <treerow>
             <treecell class="treecell-header sortDirectionIndicator outset" observes="NameColumn"
-                      value="&allengines.label;" resource="http://home.netscape.com/NC-rdf#Name"
+                      label="&allengines.label;" resource="http://home.netscape.com/NC-rdf#Name"
                       sortActive="true" sortDirection="ascending"
                       onclick="return doSort('NameColumn', null);" />
           </treerow>
@@ -79,21 +79,21 @@
         <treechildren flex="1"/>
       </tree>
       <box>
-        <button class="dialog" id="add-button" oncommand="return AddEngine()" value="&add.label;" />
+        <button class="dialog" id="add-button" oncommand="return AddEngine()" label="&add.label;" />
       </box>
     </box>
     
     <separator class="groove" orient="vertical" style="width: 0px;"/>
         
-  	<box orient="vertical" flex="1">
+    <box orient="vertical" flex="1">
       <box autostretch="never">
         <text class="label" value="&category.label;"/>
-      	<menulist id="categoryList" ref="NC:SearchCategoryRoot" datasources="rdf:null" flex="1">
+        <menulist id="categoryList" ref="NC:SearchCategoryRoot" datasources="rdf:null" flex="1">
           <template>
             <menupopup>
               <menuitem uri="rdf:*" oncommand="return chooseCategory(this);"
-                        data="rdf:http://home.netscape.com/NC-rdf#category"
-                        value="rdf:http://home.netscape.com/NC-rdf#title"/>
+                        value="rdf:http://home.netscape.com/NC-rdf#category"
+                        label="rdf:http://home.netscape.com/NC-rdf#title"/>
             </menupopup>
           </template>
           <menupopup id="categoryPopup"/>
@@ -101,15 +101,15 @@
       </box>
       
       <box>
-        <button class="dialog" id="new-category-button" oncommand="NewCategory()" value="&new.category.label;" flex="1"/>
-        <button class="dialog" id="rename-category-button" oncommand="RenameCategory()" value="&rename.category.label;" flex="1"/>
-        <button class="dialog" id="remove-category.buttom" oncommand="RemoveCategory()" value="&remove.category.label;" flex="1"/>
+        <button class="dialog" id="new-category-button" oncommand="NewCategory()" label="&new.category.label;" flex="1"/>
+        <button class="dialog" id="rename-category-button" oncommand="RenameCategory()" label="&rename.category.label;" flex="1"/>
+        <button class="dialog" id="remove-category.buttom" oncommand="RemoveCategory()" label="&remove.category.label;" flex="1"/>
       </box>
       
       <separator class="thin"/>
 
       <box flex="1">
-    		<tree class="inset" multiple="true" flex="1" id="engineList" style="height: 0px;"
+        <tree class="inset" multiple="true" flex="1" id="engineList" style="height: 0px;"
               datasources="rdf:internetsearch" onselect="doMoveDirectionEnabling()">
           <template>
             <treechildren>
@@ -117,7 +117,7 @@
                 <treerow>
                   <treecell class="treecell-iconic" crop="right" 
                             src="rdf:http://home.netscape.com/NC-rdf#Icon"
-                            value="rdf:http://home.netscape.com/NC-rdf#Name" flex="1" />
+                            label="rdf:http://home.netscape.com/NC-rdf#Name" flex="1" />
                 </treerow>
               </treeitem>
             </treechildren>
@@ -127,7 +127,7 @@
           <treehead>
             <treerow>
               <treecell class="treecell-header sortDirectionIndicator outset" observes="EngineColumn"
-                        value="&engine.column.label;" onclick="return doSort('EngineColumn', null);"
+                        label="&engine.column.label;" onclick="return doSort('EngineColumn', null);"
                         resource="http://home.netscape.com/NC-rdf#Name" />
             </treerow>
           </treehead>
@@ -137,14 +137,14 @@
         </tree>
         <box orient="vertical">
           <spring flex="1"/>
-       	  <button class="up" oncommand="MoveUp();" id="up" disabled="true"/>
-      		<button class="down" oncommand="MoveDown();" id="down" disabled="true"/>
+          <button class="up" oncommand="MoveUp();" id="up" disabled="true"/>
+          <button class="down" oncommand="MoveDown();" id="down" disabled="true"/>
           <spring flex="1"/>
         </box>
       </box>          
       <box>
-        <button class="dialog" id="remove-button" oncommand="return RemoveEngine()" value="&remove.label;" />
-      </box>		
+        <button class="dialog" id="remove-button" oncommand="return RemoveEngine()" label="&remove.label;" />
+      </box>    
       
     </box>
   

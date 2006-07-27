@@ -49,9 +49,9 @@
             <treerow>
               <treecell class="treecell-filename treecell-indent" indent="true" 
                         type="rdf:http://home.netscape.com/NC-rdf#File-Type"
-                        value="rdf:http://home.netscape.com/NC-rdf#Name"/>
-              <treecell value="rdf:http://home.netscape.com/NC-rdf#Content-Length" />
-              <treecell value="rdf:http://home.netscape.com/WEB-rdf#LastModifiedDate" />
+                        label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#Content-Length" />
+              <treecell label="rdf:http://home.netscape.com/WEB-rdf#LastModifiedDate" />
             </treerow>
           </treeitem>
         </treechildren>
@@ -73,21 +73,21 @@
 
       <treehead>
         <treerow>
-          <treecell class="treecell-header sortDirectionIndicator" value="&directoryWindow.filename.label;" 
-          	onclick="return doSort('FilenameColumn');" observes="FilenameColumn" sortActive="true" sortDirection="ascending" />
-          <treecell class="treecell-header sortDirectionIndicator" value="&directoryWindow.contentlength.label;"
-          	onclick="return doSort('ContentLengthColumn');" observes="ContentLengthColumn" />
-          <treecell class="treecell-header sortDirectionIndicator" value="&directoryWindow.lastmodified.label;"
-          	onclick="return doSort('LastModColumn');" observes="LastModColumn" />
+          <treecell class="treecell-header sortDirectionIndicator" label="&directoryWindow.filename.label;" 
+            onclick="return doSort('FilenameColumn');" observes="FilenameColumn" sortActive="true" sortDirection="ascending" />
+          <treecell class="treecell-header sortDirectionIndicator" label="&directoryWindow.contentlength.label;"
+            onclick="return doSort('ContentLengthColumn');" observes="ContentLengthColumn" />
+          <treecell class="treecell-header sortDirectionIndicator" label="&directoryWindow.lastmodified.label;"
+            onclick="return doSort('LastModColumn');" observes="LastModColumn" />
         </treerow>
       </treehead>
 
       <!-- Create the treechildren here so we can attach event handlers
            at this level (rather than at the tree level -->
       <treechildren flex="1" onclick="OnClick(event, event.target.parentNode.parentNode);"
-		    onkeypress="OnClick(event, event.target.parentNode.parentNode);"
-		    onmouseover="OnMouseOver(event, event.target.parentNode.parentNode);"
-		    onmouseout="OnMouseOut(event, event.target.parentNode.parentNode);" />
+        onkeypress="OnClick(event, event.target.parentNode.parentNode);"
+        onmouseover="OnMouseOver(event, event.target.parentNode.parentNode);"
+        onmouseout="OnMouseOut(event, event.target.parentNode.parentNode);" />
 
   </tree>
 </window>

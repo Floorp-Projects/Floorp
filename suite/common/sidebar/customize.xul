@@ -43,7 +43,7 @@
   <keyset id="keyset"/>
 
   <box flex="1">
-    <box orient="vertical" flex="1000">
+    <box orient="vertical" flex="1">
       <text class="label" value="&sidebar.customize.additional.label;"
         crop="right"/>
       <tree id="other-panels" flex="1"
@@ -51,8 +51,8 @@
         containment="http://home.netscape.com/NC-rdf#panel-list"
         indent="true" class="inset" multiple="true"
         onselect="SelectChangeForOtherPanels(event, event.target.parentNode.parentNode)"
-	onclick="if (event.detail == 2) { AddPanel(); }"
-	 >
+  onclick="if (event.detail == 2) { AddPanel(); }"
+   >
         <template>
           <rule>
             <conditions>
@@ -80,7 +80,7 @@
                   exclude="?exclude">
                   <treerow>
                     <treecell class="treecell-indent treecell-panel"
-                      value="?title"/>
+                      label="?title"/>
                   </treerow>
                 </treeitem>
               </treechildren>
@@ -97,11 +97,11 @@
       <!-- xxxslamm Need to add descriptive panel text here -->
       <box class="button-group">
         <button class="dialog" id="add_button" oncommand="AddPanel()"
-          value="&sidebar.customize.add.label;"
+          label="&sidebar.customize.add.label;"
           disabled="true"/>
 
         <button class="dialog" id="preview_button" oncommand="PreviewPanel()"
-          value="&sidebar.customize.preview.label;"
+          label="&sidebar.customize.preview.label;"
           disabled="true"/>
       </box>
     </box> 
@@ -136,7 +136,7 @@
                   content="?content">
                   <treerow>
                     <treecell class="treecell-indent treecell-panel"
-                      value="?title" />
+                      label="?title" />
                   </treerow>
                 </treeitem>
               </treechildren>
@@ -148,14 +148,14 @@
         </treecols>
          <!-- We explicitly create a 'treechildren' so we can refer
               to it from the script -->
-        <treechildren id="current-panels-root" flex="1"/> 
+        <treechildren id="current-panels-root"/> 
       </tree>
       <box class="button-group">
         <button class="dialog" id="customize-button"
           oncommand="CustomizePanel();" 
-          value="&sidebar.customize.customize.label;" />
+          label="&sidebar.customize.customize.label;" />
         <button class="dialog" id="remove-button" onclick="RemovePanel()"
-          value="&sidebar.customize.remove.label;" />
+          label="&sidebar.customize.remove.label;" />
       </box>      
     </box>
 
@@ -165,9 +165,9 @@
     <box id="reorder" align="vertical" autostretch="never">
       <spring flex="1"/>
       <button oncommand="MoveUp();" id="up" class="dialog" 
-        value="&sidebar.customize.up.label;"/>
+        label="&sidebar.customize.up.label;"/>
       <button oncommand="MoveDown();" id="down" class="dialog"
-        value="&sidebar.customize.down.label;"/>
+        label="&sidebar.customize.down.label;"/>
       <spring flex="1"/>
     </box> 
 
@@ -176,7 +176,7 @@
   <separator/>
   
   <box>
-    <button id="more-panels-link" value="&sidebar.more.label;" oncommand="BrowseMorePanels()"/>
+    <button id="more-panels-link" label="&sidebar.more.label;" oncommand="BrowseMorePanels()"/>
     <spring flex="1"/>
     <box id="okCancelButtonsRight" />
   </box>

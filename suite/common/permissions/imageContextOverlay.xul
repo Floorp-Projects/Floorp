@@ -111,7 +111,7 @@
   <!-- context menu -->
   <popup id="contentAreaContextMenu">
     <menuitem id="context-blockimage"
-              value="&blockImageCmd.label;"
+              label="&blockImageCmd.label;"
               accesskey=""
               oncommand="cookieContextMenu.blockImage();"
               style="display:none;"

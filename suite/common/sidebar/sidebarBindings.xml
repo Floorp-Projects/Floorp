@@ -9,7 +9,7 @@
   <binding id="texttab">
     <content>
       <xul:box allowevents="true" class="texttab-internal-box" flex="1">
-        <xul:text inherits="value,accesskey,crop"/>
+        <xul:text inherits="value=label,accesskey,crop"/>
       </xul:box>
     </content>
   </binding>
@@ -21,7 +21,7 @@
       <xul:box class="box-texttab-text-container" orient="vertical" inherits="value"
                 autostretch="always" flex="1">
         <xul:spring flex="1"/>
-        <xul:text class="box-texttab-text" inherits="value" crop="right"/>
+        <xul:text class="box-texttab-text" inherits="value=label" crop="right"/>
         <xul:spring flex="1"/>
       </xul:box>
       <xul:image class="box-texttab-right"/>
@@ -31,7 +31,7 @@
 
   <binding id="sidebar-header-box" extends="xul:box">
     <content autostretch="never" valign="middle">
-      <xul:text class="sidebar-header-text" inherits="value,crop" crop="right" flex="1"/>
+      <xul:text class="sidebar-header-text" inherits="value=label,crop" crop="right" flex="1"/>
       <xul:box><children/></xul:box>
     </content>
   </binding>  
