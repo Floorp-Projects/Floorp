@@ -13,8 +13,8 @@
         <rdf:li> <rdf:Description ID="mail"     nc:name="Using Mail" nc:link="chrome://help/locale/mail_help.xhtml#using_mozilla_mail_and_newsgroups" /> </rdf:li>
         <rdf:li> <rdf:Description ID="comp"	nc:name="Creating Web Pages"  nc:link="chrome://help/locale/composer_help.html#comp_top"/> </rdf:li>
         <rdf:li> <rdf:Description ID="cust" nc:name="Customizing Mozilla"  nc:link="chrome://help/locale/customize_help.html#cust_main"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="using-priv-help" nc:name="Using Privacy Features" nc:link="chrome://help/locale/privacy_help.html"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="privacy-doc" nc:name="Privacy on the Internet" nc:link="chrome://help/locale/privacy_help.html#sec_maintain"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="using-priv-help" nc:name="Using Privacy Features" nc:link="chrome://help/locale/privacy_help.xhtml"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="privacy-doc" nc:name="Privacy on the Internet" nc:link="chrome://help/locale/privacy_help.xhtml#privacy_on_the_internet"/> </rdf:li>
         <rdf:li> <rdf:Description ID="using-help-certs" nc:name="Using Certificates" nc:link="chrome://help/locale/using_certs_help.html"/> </rdf:li>
         <rdf:li> <rdf:Description ID="profile-help" nc:name="Managing Profiles" nc:link="chrome://help/locale/profiles_help.html#managing_profiles"/> </rdf:li>
         <rdf:li><rdf:Description ID="shortcuts" nc:name="Mozilla Keyboard Shortcuts" nc:link="chrome://help/locale/shortcuts.xhtml"/> </rdf:li>
@@ -796,10 +796,10 @@
 <rdf:Description about="#privacy-doc">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="privacy-doc-visit" nc:name="What Information Does My Browser Give to a Web Site?"  		nc:link="chrome://help/locale/privacy_help.html#privacy_visit"/> </rdf:li>
-        <rdf:li><rdf:Description ID="privacy-doc-cookies" nc:name="What Are Cookies, and How Do They Work?"  		nc:link="chrome://help/locale/privacy_help.html#privacy_cookies"/> </rdf:li>
-        <rdf:li><rdf:Description ID="privacy-doc-email" nc:name="How Can I Control Web Pages in Email Messages?"  		nc:link="chrome://help/locale/privacy_help.html#privacy_email"/> </rdf:li>
-        <rdf:li><rdf:Description ID="privacy-doc-unauth" nc:name="How Do I Make Sure Unauthorized People Don't Use Information About Me?"  		nc:link="chrome://help/locale/privacy_help.html#privacy_unauth"/> </rdf:li>
+        <rdf:li><rdf:Description ID="privacy-doc-visit" nc:name="What Information Does My Browser Give to a Web Site?"  		nc:link="chrome://help/locale/privacy_help.xhtml#what_information_does_my_browser_give_to_a_web_site"/> </rdf:li>
+        <rdf:li><rdf:Description ID="privacy-doc-cookies" nc:name="What Are Cookies, and How Do They Work?"  		nc:link="chrome://help/locale/privacy_help.xhtml#what_are_cookies_and_how_do_they_work"/> </rdf:li>
+        <rdf:li><rdf:Description ID="privacy-doc-email" nc:name="How Can I Control Web Pages in Email Messages?"  		nc:link="chrome://help/locale/privacy_help.xhtml#how_can_i_control_web_pages_in_email_messages"/> </rdf:li>
+        <rdf:li><rdf:Description ID="privacy-doc-unauth" nc:name="How Do I Make Sure Unauthorized People Don't Use Information About Me?"  		nc:link="chrome://help/locale/privacy_help.xhtml#how_do_i_make_sure_unauthorized_people_dont_use_information_about_me"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
