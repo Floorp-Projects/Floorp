@@ -52,7 +52,7 @@
         <box><html:div>&div.cookiesonsystem.label;</html:div></box>
         <spring style="height: 10px;"/>
           <tree id="cookietree" class="inset" style="height: 150px; width: 380px;" align="vertical" 
-            onselect="ViewCookieSelected(event);"
+            multiple="true" onselect="ViewCookieSelected(event);"
             onclick="ViewCookieSelected(event)"
             onkeypress="HandleKeyPress(event)">
             <treecol width="30%"/>
@@ -108,6 +108,10 @@
                         onclick="DeleteAllCookies();"/>
           <!--  todo: <titledbutton id="restoreCookies" class="dialog push" disabled="true" value="&button.restorecookie.label;" onclick="RestoreCookies();"/> -->
         </box>
+        <html:label id="checkboxLabel">
+          <html:input type="checkbox" id="checkbox" />
+          &checkbox.label;
+        </html:label>
       </box>
       
       <box class="tabpanel" id="servers" flex="100%" align="vertical">
@@ -115,7 +119,7 @@
         <spring flex="5%"/>
           <tree id="permissionstree" class="inset" style="height: 280px; width: 380px;" align="vertical"
                 onkeypress="if(event.which == 46) gone_p += DeleteItemSelected('permissionstree', 'permtree_', 'permissionslist');"
-                onclick="ViewPermissionSelected();">
+                multiple="true" onclick="ViewPermissionSelected();">
             <treehead>
               <treerow>
                 <treecell value="&treehead.sitename.label;"/>
@@ -141,7 +145,7 @@
         <spring flex="5%"/>
           <tree id="imagestree" class="inset" style="height: 280px; width: 380px;" align="vertical"
                 onkeypress="if(event.which == 46) gone_i += DeleteItemSelected('imagestree', 'imgtree_', 'imageslist');"
-                onclick="ViewImageSelected();">
+                multiple="true" onclick="ViewImageSelected();">
             <treehead>
               <treerow>
                 <treecell value="&treehead.sitename.label;"/>
