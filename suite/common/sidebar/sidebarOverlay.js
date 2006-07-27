@@ -42,16 +42,22 @@ function debug(msg) {
 var panel_observer = new Object;
 
 panel_observer = {
-  OnAssert : function(src,prop,target) { debug ("*** assert");},
-  OnUnassert : function(src,prop,target) {
-    // Wait for unassert that marks the end of the customize changes.
-    // See customize.js for where this is unasserted.
-    if (prop == RDF.GetResource(NC + "inbatch")) {
-      sidebar_open_default_panel(100, 0);
+  OnAssert : function(src,prop,target) { 
+    debug ("*** sidebar observer: assert");
+    // "refresh" is asserted by select menu and by customize.js.
+    if (prop == RDF.GetResource(NC + "refresh")) {
+      sidebar_refresh();
     }
   },
-  OnChange : function(src,prop,old_target,new_target) {},
-  OnMove : function(old_src,new_src,prop,target) {}
+  OnUnassert : function(src,prop,target) {
+    debug ("*** sidebar observer: unassert");
+  },
+  OnChange : function(src,prop,old_target,new_target) {
+    debug ("*** sidebar observer: change");
+  },
+  OnMove : function(old_src,new_src,prop,target) {
+    debug ("*** sidebar observer: move");
+  }
 }
 
 
@@ -92,7 +98,8 @@ function sidebar_overlay_init() {
   sidebarObj.master_datasources = get_remote_datasource_url();
   sidebarObj.master_datasources += " chrome://communicator/content/sidebar/local-panels.rdf";
   sidebarObj.master_resource = 'urn:sidebar:master-panel-list';
-  sidebarObj.component = document.location.href;
+  sidebarObj.component = document.firstChild.getAttribute('windowtype');
+  debug("sidebarObj.component is " + sidebarObj.component);
 
   // Initialize the display
   var sidebar_element  = document.getElementById('sidebar-box');
@@ -117,9 +124,11 @@ function sidebar_overlay_init() {
       // is stuff over the panels area.
       var title_box = document.getElementById('title-box');
       if (sidebar_element.firstChild == title_box) {
-        title_box.removeAttribute('hidden');
+        //title_box.removeAttribute('hidden');
+        title_box.setAttribute('type','box');
       } else {
-        document.getElementById('title-splitter').removeAttribute('hidden');
+        //document.getElementById('title-splitter').removeAttribute('hidden');
+        title_box.setAttribute('type','splitter');
       }
       
       // Add the user's current panel choices to the template builder,
@@ -132,7 +141,6 @@ function sidebar_overlay_init() {
       panels.database.AddObserver(panel_observer);
       // XXX This is a hack to force re-display
       panels.setAttribute('ref', sidebarObj.resource);
-
     }
     sidebar_open_default_panel(100, 0);
   }
@@ -140,7 +148,7 @@ function sidebar_overlay_init() {
 
 function sidebar_overlay_destruct() {
     var panels = document.getElementById('sidebar-panels');
-    debug("Removeing observer from database.");
+    debug("Removing observer from database.");
     panels.database.RemoveObserver(panel_observer);
 }
 
@@ -178,25 +186,54 @@ function get_remote_datasource_url() {
 }
 
 function sidebar_open_default_panel(wait, tries) {
-  var panels  = document.getElementById('sidebar-panels');
-  var target = panels.getAttribute('open-panel-src');
+  var panels = document.getElementById('sidebar-panels');
 
   debug("sidebar_open_default_panel("+wait+","+tries+")");
 
+  // Make sure the sidebar exists before trying to refresh it.
   if (panels.childNodes.length <= 1) {
     if (tries < 5) {
       // No children yet, try again later
       setTimeout('sidebar_open_default_panel('+(wait*2)+','+(tries+1)+')',wait);
     } else {
       // No panels.
-      // XXX This should load some help page instead of about:blank.
-      //var iframe = document.getElementById('sidebar-content');
-      //iframe.setAttribute('src', 'about:blank');
+      // XXX This should load some help page
     }
     return;
   }
+  sidebar_refresh();
+}
 
-  select_panel(target);
+function sidebar_refresh() {
+  var panels = document.getElementById('sidebar-panels');
+  var last_selected_panel = panels.getAttribute('last-selected-panel');
+  if (is_selected(last_selected_panel)) {
+    // A panel is already selected
+    update_iframes();
+  } else {
+    // This is either the first refresh after creating the sidebar,
+    // or a panel has been added or removed.
+
+    var sidebar_container = document.getElementById('sidebar-box');
+    var default_panel = sidebar_container.getAttribute('defaultpanel');
+    if (default_panel != '') {
+      // Use value of "defaultpanel" which was set in the content.
+      select_panel(default_panel);
+    } else {
+      // Select the most recently selected panel.
+      select_panel(last_selected_panel);
+
+    }
+  }
+}
+
+function is_selected(panel_id) {
+  var panels = document.getElementById('sidebar-panels');
+  var panel_index = find_panel(panels, panel_id);
+  if (panel_index == 0) return false;
+  var header = panels.childNodes.item(panel_index);
+  if (!header) return false;
+  return 'true' == header.getAttribute('selected') ;
 }
 
 function select_panel(target) {
@@ -210,17 +247,15 @@ function select_panel(target) {
   if (!select_index) {
     // Target not found. Pick the last panel by default.
     // It is at index 1 because the template is at index 0.
-    select_index = pick_default_panel(panels);
+    select_index = pick_last_panel(panels);
     debug("select_panel: target not found, choosing last panel, index "+select_index+"\n");
-    target = panels.childNodes.item(select_index).getAttribute('iframe-src');
+    target = panels.childNodes.item(select_index).getAttribute('id');
   }
 
-  if (panels.getAttribute('open-panel-src') != target) {
-    panels.setAttribute('open-panel-src', target);
+  if (panels.getAttribute('last-selected-panel') != target) {
+    panels.setAttribute('last-selected-panel', target);
   }
-
-  update_iframes(select_index);
-  dump_tree(panels);
+  update_iframes();
 }
 
 function find_panel(panels, target) {
@@ -229,7 +264,7 @@ function find_panel(panels, target) {
     for (var ii=1; ii < panels.childNodes.length; ii += 2) {
       var item = panels.childNodes.item(ii);
       
-      if (item.getAttribute('iframe-src') == target) {
+      if (item.getAttribute('id') == target) {
         if (is_excluded(item)) {
           debug("find_panel: Found panel at index, "+ii+", but it is excluded");
           return 0;
@@ -244,7 +279,7 @@ function find_panel(panels, target) {
   return 0;
 }
 
-function pick_default_panel(panels) {
+function pick_last_panel(panels) {
   last_non_excluded_index = null;
   debug("pick_default_panel: length="+panels.childNodes.length);
   for (var ii=1; ii < panels.childNodes.length; ii += 2) {
@@ -257,26 +292,26 @@ function pick_default_panel(panels) {
 
 function is_excluded(item) {
   var exclude = item.getAttribute('exclude');
-  var src = item.getAttribute('iframe-src');
-  debug("src="+src);
-  if (exclude && exclude != "") {
-    debug("  excluded");
-  }
-  return exclude && exclude != '' && exclude.indexOf(sidebarObj.component) != -1;
+  return ( exclude && exclude != '' && 
+           exclude.indexOf(sidebarObj.component) != -1 );
 }
 
-function update_iframes(index) {
+function update_iframes() {
+  // This function requires that the attributre 'last-selected-panel'
+  // holds the id of a non-excluded panel. If it doesn't, no panel will
+  // be selected.
   var panels = document.getElementById('sidebar-panels');
+  var selected_id = panels.getAttribute('last-selected-panel');
 
   for (var ii=1; ii < panels.childNodes.length; ii += 2) {
     var header = panels.childNodes.item(ii);
     var content = panels.childNodes.item(ii+1);
-
+    var id = header.getAttribute('id');
     if (is_excluded(header)) {
       debug("item("+ii+") excluded");
       header.setAttribute('hidden','true');
       content.setAttribute('hidden','true');
-    } else if (ii == index) {
+    } else if (selected_id == id) {
       debug("item("+ii+") selected");
       header.setAttribute('selected','true');
       header.removeAttribute('hidden');
@@ -286,7 +321,7 @@ function update_iframes(index) {
       content.removeAttribute('collapsed');
       if (!previously_shown) {
         // Pick sandboxed, or unsandboxed iframe
-        if (header.getAttribute('iframe-src').match(/^chrome:/)) {
+        if (content.firstChild.getAttribute('src').match(/^chrome:/)) {
           content.firstChild.removeAttribute('hidden');
         } else {
           content.lastChild.removeAttribute('hidden');
@@ -310,10 +345,10 @@ function update_iframes(index) {
 // Change the sidebar content to the selected panel.
 // Called when a panel title is clicked.
 function SidebarSelectPanel(tab) {
-  var target = tab.getAttribute('iframe-src');
-  var last_src = tab.parentNode.getAttribute('open-panel-src');
+  var target = tab.getAttribute('id');
+  var last_panel = tab.parentNode.getAttribute('last-selected-panel');
 
-  if (target == last_src) {
+  if (target == last_panel) {
     // XXX Maybe this should reload the content?
     return;
   }
@@ -323,7 +358,7 @@ function SidebarSelectPanel(tab) {
 
 // No one is calling this right now.
 function SidebarReload() {
-  sidebar_open_default_panel(100, 0);
+  sidebar_refresh();
 }
 
 // Set up a lame hack to avoid opening two customize
@@ -349,17 +384,18 @@ function SidebarCustomize() {
     debug("Open a new customize dialog");
 
     if (false == gDisableCustomize) {
+      debug("First time creating customize dialog");
       gDisableCustomize = true;
 
       var panels = document.getElementById('sidebar-panels');
       
       customizeWindow = window.openDialog(
-                          'chrome://communicator/content/sidebar/customize.xul',
-                          '_blank','chrome,resizable',
-                          sidebarObj.master_datasources,
-                          sidebarObj.master_resource,
-                          sidebarObj.datasource_uri,
-                          sidebarObj.resource);
+                         'chrome://communicator/content/sidebar/customize.xul',
+                         '_blank','chrome,resizable',
+                         sidebarObj.master_datasources,
+                         sidebarObj.master_resource,
+                         sidebarObj.datasource_uri,
+                         sidebarObj.resource);
       setTimeout(enable_customize, 2000);
     }
   }
@@ -399,7 +435,10 @@ function PersistHeight() {
   // but wait until the last drag has been committed.
   // May want to do something smarter here like only force it if the 
   // width has really changed.
-  setTimeout("document.persist('sidebar-panels','height');",100);
+  var title_box = document.getElementById('title-box');
+  if (title_box && title_box.getAttribute('type') == "splitter") {
+    setTimeout("document.persist('sidebar-panels','height');",100);
+  }
 }
 
 function persist_width() {
@@ -423,6 +462,88 @@ function SidebarFinishDrag() {
   // timeout. The timeout makes sure the width is written to disk after
   // the sidebar-box gets the newly dragged width.
   setTimeout("persist_width()",100);
+}
+
+function SidebarBuildPickerPopup() {
+  var menu = document.getElementById('panel-picker-popup');
+  menu.database.AddDataSource(RDF.GetDataSource(sidebarObj.datasource_uri));
+  menu.setAttribute('ref', sidebarObj.resource);
+
+  for (var ii=3; ii < menu.childNodes.length; ii++) {
+    var panel_menuitem = menu.childNodes.item(ii);
+    if (is_excluded(panel_menuitem)) {
+      debug(ii+": "+panel_menuitem.getAttribute('value')+ ": excluded; uncheck.");
+      panel_menuitem.removeAttribute('checked');
+    } else {
+      debug(ii+": "+panel_menuitem.getAttribute('value')+ ": included; check.");
+      panel_menuitem.setAttribute('checked', 'true');
+    }
+  }
+}
+
+function SidebarTogglePanel(panel_menuitem) {
+  // Create a "container" wrapper around the current panels to
+  // manipulate the RDF:Seq more easily.
+  sidebarObj.datasource = RDF.GetDataSource(sidebarObj.datasource_uri);
+
+  var panel_id = panel_menuitem.getAttribute('id')
+  var panel_exclude = panel_menuitem.getAttribute('exclude')
+  if (panel_exclude == '') {
+    // Nothing excluded for this panel yet, so add this component to the list.
+    debug("Excluding " + panel_id + " from " + sidebarObj.component);
+    sidebarObj.datasource.Assert(RDF.GetResource(panel_id),
+                                RDF.GetResource(NC + "exclude"),
+                                RDF.GetLiteral(sidebarObj.component),
+                                true);
+  } else {
+    // Panel has an exclude string, but it may or may not have the
+    // current component listed in the string.
+    debug("Current exclude string: " + panel_exclude);
+
+    var new_exclude = panel_exclude;
+    if (is_excluded(panel_menuitem)) {
+      debug("Plucking this component out of the exclude list");
+      replace_pat = new RegExp(sidebarObj.component + "\s*");
+      new_exclude = new_exclude.replace(replace_pat,'');
+      new_exclude = new_exclude.replace(/^\s+/,'');
+      select_panel(panel_id);
+    } else {
+      debug("Adding this component to the exclude list");
+      new_exclude = new_exclude + " " + sidebarObj.component;
+    }
+    if (new_exclude == '') {
+      debug("Removing exclude list");
+      sidebarObj.datasource.Unassert(RDF.GetResource(panel_id),
+                                    RDF.GetResource(NC + "exclude"),
+                                    RDF.GetLiteral(sidebarObj.component));
+      select_panel(panel_id);
+    } else {
+      debug("New exclude string: " + new_exclude);
+      exclude_target = 
+        sidebarObj.datasource.GetTarget(RDF.GetResource(panel_id),
+                                       RDF.GetResource(NC + "exclude"),
+                                       true);
+      sidebarObj.datasource.Change(RDF.GetResource(panel_id),
+                                  RDF.GetResource(NC + "exclude"),
+                                  exclude_target,
+                                  RDF.GetLiteral(new_exclude));
+    }
+  }
+  // Write the modified panels out.
+  sidebarObj.datasource.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush();
+  refresh_all_sidebars();
+}
+
+// Use an assertion to pass a "refresh" event to all the sidebars.
+// They use observers to watch for this assertion (see above).
+function refresh_all_sidebars() {
+  sidebarObj.datasource.Assert(RDF.GetResource(sidebarObj.resource),
+                               RDF.GetResource(NC + "refresh"),
+                               RDF.GetLiteral("true"),
+                               true);
+  sidebarObj.datasource.Unassert(RDF.GetResource(sidebarObj.resource),
+                                 RDF.GetResource(NC + "refresh"),
+                                 RDF.GetLiteral("true"));
 }
 
 //*==================================================
