@@ -57,5 +57,5 @@
 <!ENTITY  explicitConsent.label   "Site does not collect personally identifiable information without your explicit consent">
 
 <!ENTITY  accept.label            "Accept">
-<!ENTITY  downgrade.label         "Downgrade">
+<!ENTITY  downgrade.label         "Session">
 <!ENTITY  reject.label            "Reject">
