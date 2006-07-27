@@ -192,6 +192,10 @@ function BeginDragTree ( event )
   if ( event.target == tree )
     return(true);         // continue propagating the event
 
+  // only <treeitem>s can be dragged out
+  if ( event.target.parentNode.parentNode.tagName != "treeitem")
+    return(false);
+
   var database = tree.database;
   if (!database)    return(false);
 
