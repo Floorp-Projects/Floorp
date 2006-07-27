@@ -771,7 +771,10 @@ function sidebar_overlay_init() {
         debug("Showing the panels splitter");
         sidebar_panels_splitter.removeAttribute('hidden');
       }
-
+      var panels = document.getElementById('sidebar-panels');
+      panels.database.AddDataSource(RDF.GetDataSource(sidebarObj.datasource_uri));
+      panels.database.AddObserver(panel_observer);
+      panels.setAttribute('ref', sidebarObj.resource);
     }
     if (sidebar_is_collapsed()) {
       sidebarObj.collapsed = true;
@@ -802,16 +805,8 @@ function sidebar_open_default_panel(wait, tries) {
   var panelListRes = RDF.GetResource("http://home.netscape.com/NC-rdf#panel-list");
   var container = ds.GetTarget(currentListRes, panelListRes, true);
   if (container) {
-    // Add the user's current panel choices to the template builder,
-    // which will aggregate it with the other datasources that describe
-    // the individual panel's title, customize URL, and content URL.
-    var panels = document.getElementById('sidebar-panels');
-    panels.database.AddDataSource(ds);
-
-    debug("Adding observer to database.");
-    panels.database.AddObserver(panel_observer);
-
-    // XXX This is a hack to force re-display
+    sidebarObj.panels.initialized = false;
+    var panels = document.getElementById("sidebar-panels");
     panels.builder.rebuild();
   } else {
     if (tries < 3) {
