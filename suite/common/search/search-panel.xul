@@ -110,9 +110,11 @@
 			searchtype="rdf:http://home.netscape.com/NC-rdf#SearchType"
                         type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
                   <treerow class="searchresult">
-                    <treecell value="rdf:http://home.netscape.com/NC-rdf#Name"
-                              src="rdf:http://home.netscape.com/NC-rdf#Icon" />
-                    <treecell />
+                  <treecell>
+                    <titledbutton flex="1" crop="right" align="left"
+                    	src="rdf:http://home.netscape.com/NC-rdf#Icon"
+                    	value="rdf:http://home.netscape.com/NC-rdf#Name" />
+                  </treecell>
                   </treerow>
                 </treeitem>
               </treechildren>
