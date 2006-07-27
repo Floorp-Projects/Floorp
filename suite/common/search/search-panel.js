@@ -23,6 +23,19 @@
 var	rootNode = null;
 var	textArc = null;
 var	RDF_observer = new Object;
+var  settingsButton = null;
+var  settingsButtonText = null;
+var bundle = null;
+var pref = null;
+
+// get the click count pref
+try {
+  pref = Components.classes["component://netscape/preferences"].getService();
+  if( pref )
+    pref = pref.QueryInterface( Components.interfaces.nsIPref );
+}
+catch(e) {
+}
 
 RDF_observer =
 {
@@ -48,8 +61,6 @@ RDF_observer =
 		}
 }
 
-
-
 function rememberSearchText(targetNode)
 {
 	if (targetNode)	targetNode = targetNode.QueryInterface(Components.interfaces.nsIRDFLiteral);
@@ -68,6 +79,11 @@ function rememberSearchText(targetNode)
 // 3) initialise the checked state of said engines. 
 function SearchPanelStartup()
 {
+	settingsButton = document.getElementById("btn.Advanced");
+	settingsButtonText = settingsButton.getAttribute("value");
+
+  bundle = srGetStrBundle( "chrome://search/locale/search-panel.properties" );
+   
 	var tree = document.getElementById("Tree");
 	if (tree)
 	{
@@ -96,6 +112,8 @@ function SearchPanelStartup()
 				if (ref)	categoryList.setAttribute("ref", ref);
 			}
 		}
+		
+
 	}
   
   try {
@@ -110,10 +128,16 @@ function SearchPanelStartup()
   dump("*** lastCategoryName = " + lastCategoryName + "\n");
   var categoryList = document.getElementById( "categoryList" );
   if( categoryList ) {
+  	 //set to default value 'the web'
+	 //hack: hardcoded postion in here replace with a function that finds the entry 'the web'
+	 
     // set the category name on the advanced panel
     var categoryText = categoryList.options[ categoryList.selectedIndex ].text;
     var textElement = document.getElementById( "categoryNameText" );
     textElement.setAttribute( "value", categoryText );
+    //set the category name on the settings button
+    settingsButton.value = settingsButtonText + categoryText;
+    
     for( var i = 0; i < categoryList.options.length; i++ )
     {
       if( ( lastCategoryName == "" && categoryList.options[i].value == "NC:SearchEngineRoot" ) ||
@@ -155,6 +179,9 @@ function chooseCategory( aSelectElement )
   var categoryText = aSelectElement.options[ aSelectElement.selectedIndex ].text;
   var textElement = document.getElementById( "categoryNameText" );
   textElement.setAttribute( "value", categoryText );
+  //set the category name on the settings button
+    settingsButton.setAttribute("value",settingsButtonText + categoryText + "...");
+    //alert("set button to " + settingsButtonText + categoryText);//debug remove
 
 	var category = aSelectElement.options[ aSelectElement.selectedIndex ].getAttribute("id");
   var pref = Components.classes["component://netscape/preferences"].getService();
@@ -375,7 +402,6 @@ function doSearch()
 	var progressNode = top.document.getElementById("statusbar-icon");
 	if( !stopButtonNode || !searchButtonNode  )
     return;
-  dump("*** foo\n");
   
 	// hide various columns
   if( parent.content.isMozillaSearchWindow ) {
@@ -393,8 +419,7 @@ function doSearch()
     return false;
 	if ( !textNode.value )
 	{
-    // stringbundle
-		alert("Enter some text to search for and select at least one location to search.");
+    alert( bundle.GetStringFromName("enterstringandlocation") );
 		return false;
 	}
 	// get selected search engines
@@ -442,10 +467,17 @@ function doSearch()
       engineURIs[engineURIs.length] = treeItem.getAttribute( "id" );
     }
     else {
-      // more than one engine, flip the deck and demand input
-      switchTab( 1 );
-      alert("Select at least one location to search.");
-      return false;
+      dump("*** multiple search engines present, selecting the netscape search engine\n");
+      for( var i = 0; i < treeChildrenNode.childNodes.length; i++ )
+      {
+        var currItem = treeChildrenNode.childNodes[i];
+          dump("*** the current URI is = " + currItem.getAttribute("id") + "\n");
+        if( currItem.getAttribute("id").indexOf("Open_Directory") != -1 ) {
+          
+          engineURIs[engineURIs.length] = treeItem.getAttribute("id");
+          break;
+        }
+      }
     }
 	}
 
@@ -518,7 +550,19 @@ function FOO_doSearch()
 
 function openURL(event, treeitem, root)
 {
-	if ((event.button != 1) || (event.clickCount != 2))
+  try {
+    if( pref ) {
+      var prefvalue = pref.GetBoolPref( "browser.search.use_double_clicks" );
+      mClickCount = prefvalue ? 2 : 1;
+    } 
+    else
+      mClickCount = 1;
+  }
+  catch(e) {
+    mClickCount = 1;
+  }
+  
+	if ((event.button != 1) || (event.clickCount != mClickCount))
 		return(false);
 
 	if (treeitem.getAttribute("container") == "true")
@@ -649,35 +693,6 @@ function OpenSearch( tabName, forceDialogFlag, aSearchStr, engineURIs )
   		{
   		}
     }
-	}
-
-	if( autoOpenSearchPanel )
-		RevealSearchPanel();
-}
-
-function RevealSearchPanel()
-{
-	// rjc Note: the following is all a hack until the sidebar has appropriate APIs
-	// to check whether its shown/hidden, open/closed, and can show a particular panel
-
-	var sidebar = top.document.getElementById("sidebar-box");
-	var sidebar_splitter = top.document.getElementById("sidebar-splitter");
-	var searchPanel = top.document.getElementById("urn:sidebar:panel:search");
-
-	if (sidebar && sidebar_splitter && searchPanel)
-	{
-		var is_hidden = sidebar.getAttribute("hidden");
-		if (is_hidden && is_hidden == "true")
-		{
-			// SidebarShowHide() lives in sidebarOverlay.js
-			SidebarShowHide();
-		}
-		var splitter_state = sidebar_splitter.getAttribute("state");
-		if (splitter_state && splitter_state == "collapsed") {
-			sidebar_splitter.removeAttribute("state");
-		}
-        // SidebarSelectPanel() lives in sidebarOverlay.js
-		SidebarSelectPanel(searchPanel);
 	}
 }
 
