@@ -113,13 +113,13 @@
 
     switch (level) {
       case low:
-        settings = "adadaaaa";
+        settings = "afafaaaa";
         break;
       case medium:
-        settings = "drdraaaa";
+        settings = "ffffaaaa";
         break;
       case high:
-        settings = "rrrrrraa";
+        settings = "fdfdafaa";
         break;
       case custom:
         break;
