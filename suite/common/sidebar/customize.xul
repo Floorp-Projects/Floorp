@@ -59,32 +59,34 @@
   ondialogaccept="return Save();">
 
   <script type="application/x-javascript"
-    src="chrome://communicator/content/sidebar/customize.js"/>
+          src="chrome://communicator/content/sidebar/customize.js"/>
 
   <hbox flex="1">
     <vbox flex="1">
-      <label value="&sidebar.customize.additional.label;" crop="right"/>
+      <label accesskey="&sidebar.customize.additional.accesskey;"
+             control="other-panels" value="&sidebar.customize.additional.label;"
+             crop="right"/>
 
       <tree id="other-panels" flex="1"
-        datasources="rdf:null" hidecolumnpicker="true"
-        containment="http://home.netscape.com/NC-rdf#panel-list"
-        onselect="SelectChangeForOtherPanels(event, event.target.parentNode.parentNode);"
-        onclick="if (event.detail == 2) { AddPanel(); } ClickOnOtherPanels(event);">
+            datasources="rdf:null" hidecolumnpicker="true"
+            containment="http://home.netscape.com/NC-rdf#panel-list"
+            onselect="SelectChangeForOtherPanels(event, event.target.parentNode.parentNode);"
+            onclick="if (event.detail == 2) { AddPanel(); } ClickOnOtherPanels(event);">
 
         <template>
           <rule>
             <conditions>
               <content uri="?uri"/>
               <triple subject="?uri" object="?panel-list"
-                predicate="http://home.netscape.com/NC-rdf#panel-list"/>
+                      predicate="http://home.netscape.com/NC-rdf#panel-list"/>
               <member container="?panel-list" child="?panel"/>
             </conditions>
             
             <bindings>
               <binding subject="?panel" object="?title" 
-                predicate="http://home.netscape.com/NC-rdf#title"/>
+                       predicate="http://home.netscape.com/NC-rdf#title"/>
               <binding subject="?panel" object="?link" 
-                predicate="http://home.netscape.com/NC-rdf#link"/>
+                       predicate="http://home.netscape.com/NC-rdf#link"/>
             </bindings>
             
             <action>
@@ -107,12 +109,13 @@
       <!-- xxxslamm Need to add descriptive panel text here -->
       <hbox class="button-group">
         <button id="add_button" oncommand="AddPanel()"
-          label="&sidebar.customize.add.label;"
-          disabled="true"/>
+                label="&sidebar.customize.add.label;"
+                accesskey="&sidebar.customize.add.accesskey;" disabled="true"/>
 
         <button id="preview_button" oncommand="PreviewPanel()"
-          label="&sidebar.customize.preview.label;"
-          disabled="true"/>
+                label="&sidebar.customize.preview.label;"
+                accesskey="&sidebar.customize.preview.accesskey;"
+                disabled="true"/>
       </hbox>
     </vbox> 
     
@@ -121,7 +124,8 @@
     <!-- The panels that the user currently has chosen -->
     <vbox flex="1">
       <label value="&sidebar.customize.current.label;"
-        crop="right"/>
+             accesskey="&sidebar.customize.current.accesskey;"
+             control="current-panels" crop="right"/>
       <tree id="current-panels" flex="1" hidecolumnpicker="true"
             onselect="SelectChangeForCurrentPanels();">
         <treecols>
@@ -133,9 +137,11 @@
       
       <hbox class="button-group">
         <button id="customize-button" oncommand="CustomizePanel();"
-          label="&sidebar.customize.customize.label;" disabled="true"/>
+                label="&sidebar.customize.customize.label;" disabled="true"
+                accesskey="&sidebar.customize.customize.accesskey;"/>
         <button id="remove-button" oncommand="RemovePanel()"
-          label="&sidebar.customize.remove.label;" disabled="true"/>
+                label="&sidebar.customize.remove.label;" disabled="true"
+                accesskey="&sidebar.customize.remove.accesskey;"/>
       </hbox>      
     </vbox>
 
@@ -145,9 +151,11 @@
     <vbox id="reorder">
       <spacer flex="1"/>
       <button oncommand="MoveUp();" id="up" disabled="true"
-        label="&sidebar.customize.up.label;"/>
+              label="&sidebar.customize.up.label;"
+              accesskey="&sidebar.customize.up.accesskey;"/>
       <button oncommand="MoveDown();" id="down" disabled="true"
-        label="&sidebar.customize.down.label;"/>
+              label="&sidebar.customize.down.label;"
+              accesskey="&sidebar.customize.down.accesskey;"/>
       <spacer flex="1"/>
     </vbox> 
 
@@ -156,7 +164,8 @@
   <separator/>
   
   <hbox>
-    <button id="more-panels-link" label="&sidebar.more.label;" oncommand="BrowseMorePanels()"/>
+    <button id="more-panels-link" label="&sidebar.more.label;"
+            accesskey="&sidebar.more.accesskey;" oncommand="BrowseMorePanels()"/>
     <spacer flex="1"/>
     <button dlgtype="accept"/>
     <button dlgtype="cancel"/>
