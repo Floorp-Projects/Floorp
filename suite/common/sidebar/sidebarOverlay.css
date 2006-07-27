@@ -48,44 +48,46 @@ splitter#sidebar-splitter > grippy {
     padding: 0px;
     border: 2px solid #003366;
     background-color: #6699CC;
-    list-style-image:
+    background-image:
        url("chrome://communicator/skin/sidebar/sbgrippy-left.gif"); 
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
 }
 
 splitter#sidebar-splitter > grippy:hover,
 splitter#sidebar-splitter > grippy:active {
     background-color: #99CCFF;
-    list-style-image:
+    background-image:
        url("chrome://communicator/skin/sidebar/sbgrippy-left-hover.gif"); 
 }
 
 splitter#sidebar-splitter[collapsed="true"] > grippy {
-    list-style-image:
+    background-image:
        url("chrome://communicator/skin/sidebar/sbgrippy-right.gif"); 
 }
 
 splitter#sidebar-splitter[collapsed="true"] > grippy:hover,
 splitter#sidebar-splitter[collapsed="true"] > grippy:active {
-    list-style-image:
+    background-image:
        url("chrome://communicator/skin/sidebar/sbgrippy-right-hover.gif"); 
 }
 
 image#sidebar-status-grippy {
     padding: 2px 2px 2px 0px;
     background-color: #003366;
-    list-style-image:
+    background-image:
        url("chrome://communicator/skin/sidebar/sidebar-open.gif"); 
 }
 image#sidebar-status-grippy:hover {
-    list-style-image:
+    background-image:
        url("chrome://communicator/skin/sidebar/sidebar-open-hover.gif"); 
 }
 image#sidebar-status-grippy[open="true"] {
-    list-style-image:
+    background-image:
        url("chrome://communicator/skin/sidebar/sidebar-close.gif"); 
 }
 image#sidebar-status-grippy[open="true"]:hover {
-    list-style-image:
+    background-image:
        url("chrome://communicator/skin/sidebar/sidebar-close-hover.gif"); 
 }
 
