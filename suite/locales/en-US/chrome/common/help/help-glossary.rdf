@@ -7,76 +7,76 @@
   <rdf:Description about="urn:root" nc:base="chrome://help/locale/glossary.html">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description nc:name="authentication" nc:link="#998782"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="CA" nc:link="#1021395"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="CA certificate" nc:link="#1017503"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="certificate" nc:link="#1018895"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="certificate authority (CA)" nc:link="#1020903"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="certificate backup password" nc:link="#1024655"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="certificate-based authentication" nc:link="#1018581"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="certificate chain" nc:link="#1018500"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="certificate fingerprint" nc:link="#1020297"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="Certificate Manager" nc:link="#1020326"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="certificate renewal" nc:link="#1031319"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="certificate revocation list (CRL)" nc:link="#1019940"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="certificate verification" nc:link="#1025527"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="cipher" nc:link="#1021048"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="client" nc:link="#1029510"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="client authentication" nc:link="#1021054"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="client SSL certificate" nc:link="#1014561"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="cryptographic algorithm" nc:link="#1019976"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="cryptography" nc:link="#1026002"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="decryption" nc:link="#998999"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="digital ID" nc:link="#999011"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="digital signature" nc:link="#1013995"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="distinguished name (DN)" nc:link="#1022191"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="dual key pairs" nc:link="#1020489"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="eavesdropping" nc:link="#1020620"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="encryption" nc:link="#999078"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="encryption certificate" nc:link="#1024953"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="encryption key" nc:link="#1021254"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="fingerprint" nc:link="#1020434"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="FIPS PUBS 140-1" nc:link="#1025742"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="key" nc:link="#999203"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="Lightweight Directory Access Protocol (LDAP)" nc:link="#1022286"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="master key" nc:link="#1032598"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="master password" nc:link="#1032744"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="misrepresentation" nc:link="#1014057"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="nonrepudiation" nc:link="#999248"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="object signing" nc:link="#1014095"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="object-signing certificate" nc:link="#1014097"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="Online Certificate Status Protocol (OCSP)" nc:link="#1029304"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="password-based authentication" nc:link="#1014123"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="PKCS #11" nc:link="#1025194"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="PKCS #11 module" nc:link="#1025197"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="private key" nc:link="#1015387"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="public key" nc:link="#1019172"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="public-key cryptography" nc:link="#1019178"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="public-key infrastructure (PKI)" nc:link="#999412"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="root CA" nc:link="#1015631"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="Secure Sockets Layer (SSL)" nc:link="#999463"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="security certificate" nc:link="#1028900"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="security device" nc:link="#1028962"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="security module" nc:link="#1029083"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="security token" nc:link="#1028905"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="server" nc:link="#1029749"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="server authentication" nc:link="#1031070"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="server SSL certificate" nc:link="#1029874"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="signing certificate" nc:link="#999493"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="signing key" nc:link="#1021282"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="slot" nc:link="#1025218"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="smart card" nc:link="#1027625"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="software security device" nc:link="#1032045"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="spoofing" nc:link="#1014366"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="SSL" nc:link="#999533"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="subject" nc:link="#1013880"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="subject name" nc:link="#1021328"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="subordinate CA" nc:link="#999541"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="symmetric encryption" nc:link="#999604"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="tamper detection" nc:link="#999618"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="TLS" nc:link="#1027427"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="token" nc:link="#1024528"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="trust" nc:link="#1019748"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="authentication" nc:link="glossary.html#998782"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="CA" nc:link="glossary.html#1021395"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="CA certificate" nc:link="glossary.html#1017503"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="certificate" nc:link="glossary.html#1018895"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="certificate authority (CA)" nc:link="glossary.html#1020903"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="certificate backup password" nc:link="glossary.html#1024655"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="certificate-based authentication" nc:link="glossary.html#1018581"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="certificate chain" nc:link="glossary.html#1018500"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="certificate fingerprint" nc:link="glossary.html#1020297"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="Certificate Manager" nc:link="glossary.html#1020326"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="certificate renewal" nc:link="glossary.html#1031319"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="certificate revocation list (CRL)" nc:link="glossary.html#1019940"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="certificate verification" nc:link="glossary.html#1025527"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="cipher" nc:link="glossary.html#1021048"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="client" nc:link="glossary.html#1029510"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="client authentication" nc:link="glossary.html#1021054"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="client SSL certificate" nc:link="glossary.html#1014561"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="cryptographic algorithm" nc:link="glossary.html#1019976"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="cryptography" nc:link="glossary.html#1026002"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="decryption" nc:link="glossary.html#998999"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="digital ID" nc:link="glossary.html#999011"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="digital signature" nc:link="glossary.html#1013995"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="distinguished name (DN)" nc:link="glossary.html#1022191"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="dual key pairs" nc:link="glossary.html#1020489"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="eavesdropping" nc:link="glossary.html#1020620"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="encryption" nc:link="glossary.html#999078"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="encryption certificate" nc:link="glossary.html#1024953"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="encryption key" nc:link="glossary.html#1021254"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="fingerprint" nc:link="glossary.html#1020434"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="FIPS PUBS 140-1" nc:link="glossary.html#1025742"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="key" nc:link="glossary.html#999203"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="Lightweight Directory Access Protocol (LDAP)" nc:link="glossary.html#1022286"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="master key" nc:link="glossary.html#1032598"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="master password" nc:link="glossary.html#1032744"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="misrepresentation" nc:link="glossary.html#1014057"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="nonrepudiation" nc:link="glossary.html#999248"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="object signing" nc:link="glossary.html#1014095"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="object-signing certificate" nc:link="glossary.html#1014097"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="Online Certificate Status Protocol (OCSP)" nc:link="glossary.html#1029304"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="password-based authentication" nc:link="glossary.html#1014123"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="PKCS #11" nc:link="glossary.html#1025194"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="PKCS #11 module" nc:link="glossary.html#1025197"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="private key" nc:link="glossary.html#1015387"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="public key" nc:link="glossary.html#1019172"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="public-key cryptography" nc:link="glossary.html#1019178"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="public-key infrastructure (PKI)" nc:link="glossary.html#999412"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="root CA" nc:link="glossary.html#1015631"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="Secure Sockets Layer (SSL)" nc:link="glossary.html#999463"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="security certificate" nc:link="glossary.html#1028900"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="security device" nc:link="glossary.html#1028962"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="security module" nc:link="glossary.html#1029083"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="security token" nc:link="glossary.html#1028905"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="server" nc:link="glossary.html#1029749"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="server authentication" nc:link="glossary.html#1031070"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="server SSL certificate" nc:link="glossary.html#1029874"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="signing certificate" nc:link="glossary.html#999493"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="signing key" nc:link="glossary.html#1021282"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="slot" nc:link="glossary.html#1025218"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="smart card" nc:link="glossary.html#1027625"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="software security device" nc:link="glossary.html#1032045"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="spoofing" nc:link="glossary.html#1014366"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="SSL" nc:link="glossary.html#999533"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="subject" nc:link="glossary.html#1013880"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="subject name" nc:link="glossary.html#1021328"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="subordinate CA" nc:link="glossary.html#999541"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="symmetric encryption" nc:link="glossary.html#999604"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="tamper detection" nc:link="glossary.html#999618"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="TLS" nc:link="glossary.html#1027427"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="token" nc:link="glossary.html#1024528"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="trust" nc:link="glossary.html#1019748"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
