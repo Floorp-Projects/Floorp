@@ -23,7 +23,7 @@
 <!ENTITY sidebar.panels.label        "My Sidebar">
 <!ENTITY sidebar.reload.label        "Reload">
 <!ENTITY sidebar.picker.label        "Tabs">
-<!ENTITY sidebar.customize.label     "Customize Sidebar...">
+<!ENTITY sidebar.customize.label     "Customize My Sidebar...">
 <!ENTITY sidebarCmd.label            "My Sidebar">
 <!ENTITY sidebarCmd.accesskey        "m">
 <!ENTITY sidebar.loading.label       "Loading...">
