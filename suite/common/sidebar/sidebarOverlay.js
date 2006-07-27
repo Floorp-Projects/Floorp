@@ -159,7 +159,7 @@ function get_remote_datasource_url() {
   if (prefs) {
     try {
       url = prefs.CopyCharPref("sidebar.customize.all_panels.url");
-      url = url.replace(/%VERSION%/g, SIDEBAR_VERSION);
+      url = url.replace(/%SIDEBAR_VERSION%/g, SIDEBAR_VERSION);
 
       var locale_progid = 'component://netscape/intl/nslocaleservice';
       var locale = Components.classes[locale_progid].getService();
