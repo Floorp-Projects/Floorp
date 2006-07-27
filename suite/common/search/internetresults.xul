@@ -46,29 +46,31 @@
 	<tree id="internetresultstree" ref="" flex="1" datasources="rdf:internetsearch" context="contextual"
 		onclick="if (event.detail == 2) return searchResultsOpenURL(event, event.target.parentNode.parentNode); else return doResultClick(event.target.parentNode.parentNode);">
 
-		<treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
-		<treecol id="PageRankColumn" rdf:resource="http://home.netscape.com/NC-rdf#PageRank"
-				rdf:resource2="http://home.netscape.com/NC-rdf#Name" />
-		<treecol id="RelevanceColumn" rdf:resource="http://home.netscape.com/NC-rdf#Relevance"
+                <treecolgroup>
+		  <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" flex="1"/>
+		  <treecol id="PageRankColumn" rdf:resource="http://home.netscape.com/NC-rdf#PageRank"
+				rdf:resource2="http://home.netscape.com/NC-rdf#Name" flex="1"/>
+		  <treecol id="RelevanceColumn" rdf:resource="http://home.netscape.com/NC-rdf#Relevance"
 				rdf:resource2="http://home.netscape.com/NC-rdf#Name"
-				style="width: 0; visibility: collapse;" />
-		<treecol id="PriceColumn" rdf:resource="http://home.netscape.com/NC-rdf#Price"
+				style="width: 0; visibility: collapse;" flex="1"/>
+		  <treecol id="PriceColumn" rdf:resource="http://home.netscape.com/NC-rdf#Price"
 				rdf:resource2="http://home.netscape.com/NC-rdf#Availability"
-				style="width: 0; visibility: collapse;" />
-		<treecol id="AvailabilityColumn" rdf:resource="http://home.netscape.com/NC-rdf#Availability"
+				style="width: 0; visibility: collapse;" flex="1"/>
+		  <treecol id="AvailabilityColumn" rdf:resource="http://home.netscape.com/NC-rdf#Availability"
 				rdf:resource2="http://home.netscape.com/NC-rdf#Price"
-				style="width: 0; visibility: collapse;" />
-		<treecol id="DateColumn" rdf:resource="http://home.netscape.com/NC-rdf#Date"
+				style="width: 0; visibility: collapse;" flex="1"/>
+		  <treecol id="DateColumn" rdf:resource="http://home.netscape.com/NC-rdf#Date"
 				rdf:resource2="http://home.netscape.com/NC-rdf#Name"
-				style="width: 0; visibility: collapse;" />
-		<treecol id="SiteColumn" rdf:resource="http://home.netscape.com/NC-rdf#Site"
-				rdf:resource2="http://home.netscape.com/NC-rdf#Name" />
-		<treecol id="EngineColumn" rdf:resource="http://home.netscape.com/NC-rdf#Engine"
-				rdf:resource2="http://home.netscape.com/NC-rdf#Name" />
+				style="width: 0; visibility: collapse;" flex="1"/>
+		  <treecol id="SiteColumn" rdf:resource="http://home.netscape.com/NC-rdf#Site"
+				rdf:resource2="http://home.netscape.com/NC-rdf#Name" flex="1"/>
+		  <treecol id="EngineColumn" rdf:resource="http://home.netscape.com/NC-rdf#Engine"
+				rdf:resource2="http://home.netscape.com/NC-rdf#Name" flex="1"/>
+                </treecolgroup>
 
 		<template>
 			<rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-				<treechildren>
+				<treechildren flex="1">
   				<treeitem uri="..." rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
   					<treerow>
   						<treecell>
@@ -79,7 +81,7 @@
 				</treechildren>	
 			</rule>
 			<rule>
-				<treechildren>
+				<treechildren flex="1">
   				<treeitem uri="..." rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
   					<treerow>
   						<treecell class="treecell-iconic" crop="right"
