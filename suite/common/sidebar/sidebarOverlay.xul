@@ -18,7 +18,7 @@
 
 -->
  
-<?xml-stylesheet href="chrome://communicator/skin/sidebar/sidebarOverlay.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://communicator/content/sidebar/sidebarOverlay.css" type="text/css"?> 
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/sidebar/sidebarOverlay.dtd">
 

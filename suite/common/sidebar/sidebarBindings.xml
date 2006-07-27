@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+
+<bindings id="globalBindings"
+  xmlns="http://www.mozilla.org/xbl"
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  
+<!--
+  <binding id="texttab">
+    <content>
+      <xul:box allowevents="true" class="texttab-internal-box" flex="1">
+        <xul:text inherits="value,accesskey,crop"/>
+      </xul:box>
+    </content>
+  </binding>
+  -->
+  
+  <binding id="texttab">
+    <content>
+      <xul:image class="box-texttab-left"/>
+      <xul:box class="box-texttab-text-container" orient="vertical" inherits="value"
+                autostretch="always" flex="1">
+        <xul:spring flex="1"/>
+        <xul:text class="box-texttab-text" inherits="value" crop="right"/>
+        <xul:spring flex="1"/>
+      </xul:box>
+      <xul:image class="box-texttab-right"/>
+      <xul:spring class="box-texttab-right-space"/>
+    </content>
+  </binding>
+
+  <binding id="sidebar-header-box" extends="xul:box">
+    <content>
+      <xul:text inherits="value,crop" crop="right" flex="1"/>
+      <xul:box><children/></xul:box>
+    </content>
+  </binding>  
+
+  <binding id="sidebar-header-splitter" extends="xul:splitter">
+    <content>
+      <xul:text inherits="value,crop" crop="right" flex="1"/>
+      <xul:box><children/></xul:box>
+    </content>
+  </binding>  
+
+</bindings>
