@@ -542,9 +542,9 @@
 <h2 id="controlling_images_scripts_and_plug-ins">Controlling Images, Scripts,
   and Plug-ins</h2>
 
-<p>By default, remote images and other remote content are displayed in
-  messages you receive. To avoid downloading images and other content
-  embedded in web pages sent as message attachments:</p>
+<p>By default, images and other content, that is hosted remotely, will not
+  display in messages you receive, except from senders in your Personal
+  Address Book. To change these settings:</p>
 
 <ol>
   <li>Open the <span class="mac">&brandShortName;</span>
@@ -552,24 +552,32 @@
   <li>Under the Mail &amp; Newsgroups category, click Message Display. (If
     no subcategories are visible, double-click Mail &amp; Newsgroups to
     expand the list.)</li>
-  <li>Uncheck <q>Allow messages to load and display remote images and other
-    content</q>.</li>
+  <li>In the General section, do one of the following:
+    <ul>To allow all remote content, uncheck <q>Block images and other content
+      from remote sources</q>.</ul>
+    <ul>To block all remote content, uncheck <q>but allow if the sender is in
+      this address book:</q>.</ul>
+    <ul>To change which address book you use for people who send messages that
+      are allowed to display remote content, then select the correct address
+      book from the drop down.</ul>
+  </li>
   <li>Click OK to have your change take affect.</li>
 </ol>
 
-<p>By default, JavaScript is not enabled and plug-ins are enabled for mail
-  messages you receive. To change these settings:</p>
+<p>By default, JavaScript and plug-ins are not enabled for mail messages you
+  receive. To change these settings:</p>
 
 <ol>
   <li>Open the <span class="mac">&brandShortName;</span>
     <span class="noMac">Edit</span> menu and choose Preferences.</li>
   <li>Under the Advanced category, click Scripts &amp; Plug-ins. (If no
     subcategories are visible, double-click Advanced to expand the
-    list.)</li>
-  <li>Under <q>Enable JavaScript for</q>, check <q>Mail &amp; Newsgroups</q> to
-    enable JavaScript for web pages viewed in mail messages.</li>
-  <li>Under <q>Enable Plug-ins for</q>, uncheck <q>Mail &amp; Newsgroups</q> to
-    disable plug-ins.</li>
+    list.)
+    <ul>Under <q>Enable JavaScript for</q>, check <q>Mail &amp; Newsgroups</q>
+      to enable JavaScript.</ul>
+    <ul>Under <q>Enable Plug-ins for</q>, check <q>Mail &amp; Newsgroups</q>
+      to enable plug-ins.</ul>
+  </li>
   <li>Click OK to have your changes take affect.</li>
 </ol>
 
@@ -4355,10 +4363,12 @@ to filter unwanted mail.</p>
   <li><strong>When opening messages, display them in</strong>: Here you can
     choose if you want to reuse a message window for the next mail or if you
     want to open a new one for each.</li>
-  <li><strong>Allow messages to load and display remote images and other
-    content</strong>: Deselect this checkbox if you want to avoid downloading
-    images and other content embedded in web pages sent as message attachments.
-    (This checkbox is selected by default.)</li>
+  <li><strong>Block images and other content from remote sources</strong>:
+    Select this checkbox if you do not want to display remote images and other
+    content in received messages. (This checkbox is selected by default.)</li>
+  <li><strong>but allow if the sender is in this address book</strong>: Select
+    this checkbox if you want to allow remote content in messages from senders
+    in the chosen address book. (This checkbox is selected by default.)</li>
   <li><strong>Wait ___ seconds before marking a message as read</strong>:
     Choose this option if you do not want a message to be marked as read when
     you are only taking a brief look at it. Enter the number of seconds you
