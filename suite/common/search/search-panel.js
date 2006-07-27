@@ -42,13 +42,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const WMEDIATOR_CONTRACTID     = "@mozilla.org/appshell/window-mediator;1";
 const ISEARCH_CONTRACTID       = "@mozilla.org/rdf/datasource;1?name=internetsearch";
 const RDFSERVICE_CONTRACTID    = "@mozilla.org/rdf/rdf-service;1";
 const BMARKS_CONTRACTID        = "@mozilla.org/browser/bookmarks-service;1";
 
 const nsIBookmarksService      = Components.interfaces.nsIBookmarksService;
-const nsIWindowMediator        = Components.interfaces.nsIWindowMediator;
 const nsIRDFService            = Components.interfaces.nsIRDFService;
 const nsIRDFLiteral            = Components.interfaces.nsIRDFLiteral;
 const nsIRDFDataSource         = Components.interfaces.nsIRDFDataSource;
@@ -903,33 +901,6 @@ function OpenSearch(aSearchStr, engineURIs)
   setTimeout("checkSearchProgress()", 1000);
 }
 
-function switchTab(aPageIndex)
-{
-  var deck = document.getElementById("advancedDeck");
-  deck.setAttribute("selectedIndex", aPageIndex);
-
-  // decide whether to show/hide/enable/disable save search query button
-  if (aPageIndex != 0)
-    return;
-
-  var ds = document.getElementById("resultList").database;
-  if (!ds)
-    return;
-
-  var haveSearchRef = false;
-
-  var rdf = Components.classes[RDFSERVICE_CONTRACTID].getService(nsIRDFService);
-  // look for last search URI
-  var source = rdf.GetResource("NC:LastSearchRoot", true);
-  var childProperty = rdf.GetResource("http://home.netscape.com/NC-rdf#ref", true);
-  var target = ds.GetTarget(source, childProperty, true);
-  if (target) {
-    target = target.QueryInterface(nsIRDFLiteral).Value;
-    if (target)
-      haveSearchRef = true;
-  }
-}
-
 function saveSearch()
 {
   var ds = document.getElementById("resultList").database;
@@ -1068,33 +1039,6 @@ function loadURLInContent(url)
 {
   var navigatorWindow = getNavigatorWindow(true);
   navigatorWindow.loadURI(url);
-}
-
-// retrieves the most recent navigator window
-function getNavigatorWindow(aOpenFlag)
-{
-  var navigatorWindow;
-
-  // if this is a browser window, just use it
-  if ("document" in top) {
-    var possibleNavigator = top.document.getElementById("main-window");
-    if (possibleNavigator &&
-        possibleNavigator.getAttribute("windowtype") == "navigator:browser")
-      navigatorWindow = top;
-  }
-
-  // if not, get the most recently used browser window
-  if (!navigatorWindow) {
-    var wm = Components.classes[WMEDIATOR_CONTRACTID].getService(nsIWindowMediator);
-    navigatorWindow = wm.getMostRecentWindow("navigator:browser");
-  }
-
-  // if no browser window available and it's ok to open a new one, do so
-  if (!navigatorWindow && aOpenFlag) {
-    var navigatorChromeURL = search_getBrowserURL();
-    navigatorWindow = openDialog(navigatorChromeURL, "_blank", "chrome,all,dialog=no");
-  }
-  return navigatorWindow;
 }
 
 function search_getBrowserURL()
