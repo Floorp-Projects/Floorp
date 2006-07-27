@@ -303,10 +303,14 @@ function (force_reload)
   }
 
   var no_panels_iframe = document.getElementById('sidebar-iframe-no-panels');
-  if (is_after_selected) {
+  if (have_set_top) {
       no_panels_iframe.setAttribute('hidden','true');
+      // The hide and show of 'sidebar-panels' should not be needed,
+      // but some old profiles may have this persisted as hidden (50973).
+      this.node.removeAttribute('hidden');
   } else {
       no_panels_iframe.removeAttribute('hidden');
+      this.node.setAttribute('hidden','true');
   }
 }
 

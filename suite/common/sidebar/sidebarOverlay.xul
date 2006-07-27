@@ -81,7 +81,7 @@
       <box id="sidebar-panels" align="vertical"
         datasources="rdf:null"
         ref="urn:sidebar:current-panel-list" 
-        persist='last-selected-panel height collapsed hidden' flex="1*">
+        persist='last-selected-panel height collapsed' flex="1*">
         <template id="sidebar-template">
           <rule>
             <conditions>
