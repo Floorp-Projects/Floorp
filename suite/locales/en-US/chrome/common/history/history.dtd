@@ -13,9 +13,11 @@
 <!ENTITY selAllCmd.label            "Select All">
 <!ENTITY findHisCmd.label           "Find in History...">
 <!ENTITY findAgainCmd.label         "Find Again...">
-<!ENTITY historyBySite.label        "History By Site">
-<!ENTITY historyByDate.label        "History By Date">
 <!ENTITY historyWindowTitle.label   "History">
 <!ENTITY tree.header.name.label     "Title">
 <!ENTITY tree.header.url.label      "URL">
 <!ENTITY tree.header.date.label     "Last Visited">
+<!ENTITY menuitem.view.unsorted.label "Unsorted">
+<!ENTITY menuitem.view.ascending.label "A > Z Sort Order">
+<!ENTITY menuitem.view.descending.label "Z > A Sort Order">
+<!ENTITY menuitem.view.show_columns.label "Show columns">
