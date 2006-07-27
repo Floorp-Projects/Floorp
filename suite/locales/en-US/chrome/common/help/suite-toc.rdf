@@ -788,6 +788,7 @@
         <rdf:li><rdf:Description ID="advanced_http_networking" nc:name="HTTP Networking" nc:link="chrome://help/locale/cs_nav_prefs_advanced.xhtml#http_networking"/> </rdf:li>
         <rdf:li><rdf:Description ID="advanced_pref_installation" nc:name="Software Installation" nc:link="chrome://help/locale/cs_nav_prefs_advanced.xhtml#software_installation"/> </rdf:li>
         <rdf:li><rdf:Description ID="advanced_pref_mouse_wheel" nc:name="Mouse Wheel" nc:link="chrome://help/locale/cs_nav_prefs_advanced.xhtml#mouse_wheel"/> </rdf:li>
+        <rdf:li><rdf:Description ID="advanced_pref_dom_inspector" nc:name="DOM Inspector" nc:link="chrome://help/locale/cs_nav_prefs_advanced.xhtml#dom_inspector"/> </rdf:li>
         <rdf:li><rdf:Description ID="advanced_pref_system" nc:name="System" nc:link="chrome://help/locale/cs_nav_prefs_advanced.xhtml#system"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
