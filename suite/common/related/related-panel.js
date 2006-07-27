@@ -225,15 +225,17 @@ function Destruct() {
 
 
 
-function openURL(event, treeitem, root)
+function openURL(event, root)
 {
-	if ((event.button != 1) || (event.clickCount != 2))
-		return(false);
+  if( event.type == "click" && 
+      ( event.button != 1 || event.clickCount != 2 ) ) 
+    return false;
+  else if( event.type == "keypress" && event.which != 13 )
+    return false;
 
-	if (treeitem.getAttribute('container') == 'true')
-		return(false);
-
-	if (treeitem.getAttribute("type") == "http://home.netscape.com/NC-rdf#BookmarkSeparator")
+  var treeitem = document.getElementById(root).selectedItems[0];
+	if (treeitem.getAttribute('container') == 'true' ||
+      treeitem.getAttribute("type") == "http://home.netscape.com/NC-rdf#BookmarkSeparator")
 		return(false);
 
 	var id = treeitem.getAttribute('id');

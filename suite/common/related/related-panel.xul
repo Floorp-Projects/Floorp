@@ -22,6 +22,7 @@
 
 -->
 
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/related/related.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/related/related-panel.dtd" >
@@ -29,9 +30,9 @@
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  align="vertical">
+  orient="vertical">
 
-  <html:script src="chrome://communicator/content/related/related-panel.js" />
+  <script src="chrome://communicator/content/related/related-panel.js"></script>
 
   <!--
      Note that the empty "datasources='rdf:null'" will ensure that a composite
@@ -39,10 +40,10 @@
      though there is no datasource from which to build content yet.
   -->
 
-  <tree id="Tree" ref="NC:RelatedLinks" container="true"
-    flex="1"
-    datasources="rdf:null"
-    onclick="openURL(event, event.target.parentNode.parentNode, 'Tree')">
+  <tree id="Tree" ref="NC:RelatedLinks" container="true" flex="1"
+        datasources="rdf:null" onclick="openURL(event, 'Tree');"
+        onkeypress="openURL(event, 'Tree');">
+    
 
     <template>
       <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
@@ -50,9 +51,9 @@
           <treeitem uri="..."
                   type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
             <treerow>
-            <treecell>
-            	<separator class="groove" flex="1" align="center"/>
-            </treecell>
+              <treecell>
+                <separator class="groove" flex="1"/>
+              </treecell>
             </treerow>
           </treeitem>
         </treechildren>
@@ -63,8 +64,8 @@
           <treeitem uri="..."
                   type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
             <treerow>
-              <treecell class="tree-icon treecell-indent" indent="true"
-              	value="rdf:http://home.netscape.com/NC-rdf#Name" />
+              <treecell class="treecell-indent" value="rdf:http://home.netscape.com/NC-rdf#Name"
+                        src="rdf:http://home.netscape.com/NC-rdf#Icon" />
             </treerow>
           </treeitem>
         </treechildren>
