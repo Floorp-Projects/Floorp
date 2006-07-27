@@ -168,17 +168,18 @@
           id="image"
           insertbefore="navBeginGlobalItems">
       <menupopup>
-        <menuitem label="&cookieDisplayImagesCmd.label;"
-                  accesskey="&cookieDisplayImagesCmd.accesskey;" 
-                  oncommand="viewImages();"/> 
-        <menuitem id="AllowImages" label="&cookieAllowImagesCmd.label;"
-                  accesskey="&cookieAllowImagesCmd.accesskey;" 
-                  msg="&cookieAllowImagesMsg.label;"
-                  oncommand="CookieImageAction('imageAllow');"/> 
         <menuitem id="BlockImages" label="&cookieBlockImagesCmd.label;"
                   accesskey="&cookieBlockImagesCmd.accesskey;" 
                   msg="&cookieBlockImagesMsg.label;"
                   oncommand="CookieImageAction('imageBlock');"/> 
+        <menuitem id="AllowImages" label="&cookieAllowImagesCmd.label;"
+                  accesskey="&cookieAllowImagesCmd.accesskey;" 
+                  msg="&cookieAllowImagesMsg.label;"
+                  oncommand="CookieImageAction('imageAllow');"/> 
+        <menuseparator/>
+        <menuitem label="&cookieDisplayImagesCmd.label;"
+                  accesskey="&cookieDisplayImagesCmd.accesskey;" 
+                  oncommand="viewImages();"/> 
       </menupopup>
     </menu>
   </menupopup>
