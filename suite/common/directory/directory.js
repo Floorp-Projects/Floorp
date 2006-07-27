@@ -21,19 +21,28 @@
  */
 
 /*
-
    Script for the directory window
-
 */
+
+
 
 // By the time this runs, The 'HTTPIndex' variable will have been
 // magically set on the global object by the native code.
+
+
 
 function debug(msg)
 {
     // Uncomment to print out debug info.
     dump(msg);
 }
+
+
+
+// get handle to the BrowserAppCore in the content area.
+var appCore = window._content.appCore;
+
+
 
 function Init()
 {
@@ -68,8 +77,17 @@ function Init()
 
             // Use a default character set.
             if (window._content.defaultCharacterset)
-              httpDS.encoding = window._content.defaultCharacterset;
+            {
+                httpDS.encoding = window._content.defaultCharacterset;
+            }
         }
+    }
+
+    // set window title
+    var theWindow = window._content.parentWindow;
+    if (theWindow)
+    {
+        theWindow.title = baseURI;
     }
 
     // root the tree (do this last)
@@ -78,21 +96,38 @@ function Init()
 
 
 
-function OnClick(event)
+function OnClick(event, node)
 {
     if( event.type == "click" &&
-        ( event.button != 1 || event.detail != 2 ) )
-      return false;
+        ( event.button != 1 || event.detail != 2 || node.nodeName != "treeitem") )
+      return(false);
     if( event.type == "keypress" && event.which != 13 )
-      return false;
-    
+      return(false);
+
     var tree = document.getElementById("tree");
     if( tree.selectedItems.length == 1 ) 
       {
         var selectedItem = tree.selectedItems[0];
-    
+        var theID = selectedItem.getAttribute("id");
+
         //if( selectedItem.getAttribute( "type" ) == "FILE" )
-            window._content.location.href =  selectedItem.getAttribute('id');
+		if(appCore)
+		{
+		    // support session history (if appCore is available)
+            appCore.loadUrl(theID);
+		}
+		else
+		{
+		    // fallback case (if appCore isn't available)
+            window._content.location.href = theID;
+		}
+
+        // set window title
+        var theWindow = window._content.parentWindow;
+        if (theWindow)
+        {
+            theWindow.title = baseURI;
+        }
       }
 }
 
