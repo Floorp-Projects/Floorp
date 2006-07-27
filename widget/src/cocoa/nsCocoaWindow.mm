@@ -438,6 +438,8 @@ NS_IMETHODIMP nsCocoaWindow::Destroy()
   mMouseListener = nsnull;
   mEventListener = nsnull;
   mMenuListener = nsnull;
+  
+  return NS_OK;
 }
 
 void* nsCocoaWindow::GetNativeData(PRUint32 aDataType)
