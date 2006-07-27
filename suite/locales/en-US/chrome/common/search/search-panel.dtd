@@ -24,6 +24,7 @@
 <!ENTITY search.advanced.tab      "Settings for ">
 <!ENTITY allengines.label         "All Engines">
 <!ENTITY within.label             "within">
+<!ENTITY using.label              "using">
 <!ENTITY choose.label             "Choose search engines, then click Search">
 <!ENTITY results.label            "Search Results">
 <!ENTITY engine.column.label      "Search Engines">

@@ -39,6 +39,21 @@ const nsIRDFDataSource         = Components.interfaces.nsIRDFDataSource;
 const nsIRDFRemoteDataSource   = Components.interfaces.nsIRDFRemoteDataSource;
 const nsIInternetSearchService = Components.interfaces.nsIInternetSearchService;
 
+const DEBUG = false;
+
+var debug;
+if (!DEBUG)
+{
+  debug = function(msg) {};
+}
+else
+{
+  debug = function(msg)
+  {
+    dump("\t ^^^ search-panel.js: " + msg + "\n");
+  };
+}
+
 var rootNode;
 var textArc;
 var modeArc;
@@ -118,18 +133,135 @@ function rememberSearchText(target)
   switchTab(0);
 }
 
+function getIndexToSelect(haveDefault, defaultEngine, enginePopup)
+{
+  if (haveDefault)
+  {
+    // iterate over constrained engine list for a default engine match
+    for (var i = 0; i < enginePopup.childNodes.length; ++i)
+    {
+      if (enginePopup.childNodes[i].id == defaultEngine)
+      {
+        // found match with default engine!
+        return i;
+      }
+    }
+  }
+
+  return 0; // default to first engine at index '0'
+}
+
+function getMinVer()
+{
+  var minVerStr = nsPreferences.
+    copyUnicharPref("browser.search.basic.min_ver");
+  var minVer = parseFloat(minVerStr);
+  if (isNaN(minVer))
+    minVer = 0; // no pref or not a number so default to min ver 0.0
+
+  debug("Float value of minVer = " + minVer);
+  return minVer;
+}
+
+/** 
+ * Constrain the list of engines to only those that
+ * contain ver >= browser.search.basic.min_ver pref 
+ * value to be displayed in the basic popup list of 
+ * engines.
+ */
+function constrainBasicList()
+{
+  debug("constrainBasicList");
+
+  var basicEngineMenu = document.getElementById("basicEngineMenu");
+  if (!basicEngineMenu)
+  {
+    debug("Ack!  basicEngineList is empty!");
+    return;
+  }
+
+  var basicEngines = basicEngineMenu.childNodes[1];
+  var len = basicEngines.childNodes.length;
+  var currDesc;
+  var currVer;
+  var haveDefault = false;
+
+  debug("Found " + len + " sherlock plugins.");
+  var defaultEngine = nsPreferences.
+    copyUnicharPref("browser.search.defaultengine");
+
+  // we constrain the basic list to all engines with ver >= minVer
+  var minVer = getMinVer();
+
+  for (var i = 0; i < len; ++i)
+  {
+    currDesc = basicEngines.childNodes[i].getAttribute("desc");
+    debug("Engine[" + i + "] = " + currDesc);
+
+    // make sure we leave the default engine (check if we already have 
+    // the default to avoid duplicates)
+    if (basicEngines.childNodes[i].id == defaultEngine && !haveDefault)
+    {
+      haveDefault = true;
+    }
+    else
+    {
+      // remove if not a basic engine
+      currVer = basicEngines.childNodes[i].getAttribute("ver");
+      if (!currVer || isNaN(parseFloat(currVer)))
+      {
+        // missing version attr or not a number: default to ver 1.0
+        currVer = 1;
+      }
+      debug("Version of " + (currDesc ? currDesc : "<unknown>") + 
+            " is: " + currVer);
+
+      if (parseFloat(currVer) < minVer)
+      {
+        try
+        {
+          basicEngines.removeChild(basicEngines.childNodes[i]);
+          --i;
+          --len;
+        }
+        catch (ex)
+        {
+          debug("Exception: Couldn't remove " + currDesc +
+                " from engine list!");
+        }
+      }
+    }
+  }
+
+  // mark selected engine
+  var selected = getIndexToSelect(haveDefault, defaultEngine, basicEngines);
+  basicEngineMenu.selectedItem = basicEngines.childNodes[selected];
+}
+
 function updateSearchMode()
 {
-  var searchMode = nsPreferences.getIntPref("browser.search.mode", 0);
+  debug("updateSearchMode");
+
+  var searchMode = nsPreferences.getIntPref("browser.search.mode");
   var categoryBox = document.getElementById("categoryBox");
-  if (!searchMode) {
+  var basicBox = document.getElementById("basicBox");
+
+  debug("search mode is " + searchMode);
+  if (searchMode == 0)
+  {
     categoryBox.setAttribute("collapsed", "true");
+    basicBox.removeAttribute("collapsed");
     switchTab(0);
+
+    constrainBasicList();
   }
-  else {
+  else
+  {
     categoryBox.removeAttribute("collapsed");
+    basicBox.setAttribute("collapsed", "true");
     switchTab(1);
   }
+
   return searchMode;
 }
 
@@ -244,10 +376,13 @@ function SearchPanelStartup()
   loadEngines(lastCategoryName);
 
   // if we have search results, show them, otherwise show engines
-  if (haveSearchResults() || updateSearchMode() == 0)
-    switchTab(0);
-  else
-    switchTab(1);
+  if (updateSearchMode() != 0)
+  {
+    if (haveSearchResults())
+      switchTab(0);
+    else
+      switchTab(1);
+  }
   focusTextBox();
 }
 
@@ -537,6 +672,14 @@ function doSearch()
       }
     }
   }
+  else
+  {
+    var basicEngines = document.getElementById("basicEngineMenu");
+    var engineURIs = [];
+    engineURIs[0] = basicEngines.selectedItem.id;
+    debug("basic mode URI = " + engineURIs[0]);
+  }
+
   if (!gStopButtonText)
     gStopButtonText = searchBundle.getString("stopButtonText");
 

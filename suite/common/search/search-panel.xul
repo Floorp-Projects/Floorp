@@ -58,6 +58,25 @@
                 disabled="true" oncommand="doSearch();"/>
       </hbox>
       <vbox autostretch="never">
+        <vbox id="basicBox">
+          <hbox autostretch="never">
+            <text class="label" value="&using.label;" />
+            <menulist id="basicEngineMenu"
+                      ref="NC:SearchEngineRoot"
+                      datasources="rdf:internetsearch"
+                      sortResource="http://home.netscape.com/NC-ref#Name"
+                      sortDirection="ascending">
+              <template>
+                <menupopup id="basicPopup">
+                  <menuitem value="..." uri="..."
+                    desc="rdf:http://home.netscape.com/NC-rdf#Description"
+                    ver="rdf:http://home.netscape.com/NC-rdf#Version"
+                    label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                </menupopup>
+              </template>
+            </menulist>
+          </hbox>
+        </vbox>
         <vbox id="categoryBox" autostretch="never">
           <hbox autostretch="never">
             <text class="label" value="&within.label;" />
