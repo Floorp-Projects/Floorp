@@ -28,8 +28,8 @@
 
 // global(s)
 var bundle = srGetStrBundle("chrome://communicator/locale/search/search-editor.properties");
-var commonDialogsService = Components.classes["@mozilla.org/appshell/commonDialogs;1"].getService();
-commonDialogsService = commonDialogsService.QueryInterface(Components.interfaces.nsICommonDialogs);
+var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
 var pref = null;
 var RDF = null;
 var RDFC = null;
@@ -447,7 +447,7 @@ function NewCategory()
   var promptStr = bundle.GetStringFromName("NewCategoryPrompt");
   var newTitle = bundle.GetStringFromName("NewCategoryTitle");
   var result = {value:0};
-  var name = commonDialogsService.Prompt(window, newTitle, promptStr,"",result);
+  var name = promptService.Prompt(window, newTitle, promptStr, "", 0, "",result);
   if ((!result.value) || result.value == "")      return(false);
 
   var newName = RDF.GetLiteral(result.value);
@@ -499,7 +499,7 @@ function RenameCategory()
   var promptStr = bundle.GetStringFromName("RenameCategoryPrompt");
   var renameTitle = bundle.GetStringFromName("RenameCategoryTitle");
   var result = {value:0};
-  var name = commonDialogsService.Prompt(window,renameTitle,promptStr,currentName,result);
+  var name = promptService.Prompt(window,renameTitle,promptStr,"",0,currentName,result);
   if ((!result.value) || (result.value == "") || result.value == currentName)     return(false);
 
   var currentCatID = categoryList.selectedItem.getAttribute("id");
