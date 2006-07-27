@@ -304,8 +304,8 @@ Settings - Addressing</a>.</li>
 only)</strong>: These settings apply when you are working offline
 (disconnected from the Internet) or need to save download time and
 conserve disk space. For more information, see <a
-href="#offline_and_disk_space_settings">Offline and Disk Space Settings (IMAP)</a> or
-<a href="#offline_and_disk_space_settings">Offline and Disk Space Settings
+href="#offline_and_disk_space_settings_imap">Offline and Disk Space Settings (IMAP)</a> or
+<a href="#offline_and_disk_space_settings_nntp">Offline and Disk Space Settings
 (News)</a>.</li>
 
 <li><strong>Disk Space (POP accounts only)</strong>: This setting
@@ -3624,9 +3624,9 @@ Offline Viewing</a> for more information.
 
 <p>Once set, you don't need to change these settings. See the
 sections below for information on setting offline and disk space
-preferences for <a href="#offline_and_disk_space_settings">IMAP</a>, <a
+preferences for <a href="#offline_and_disk_space_settings_imap">IMAP</a>, <a
 href="#disk_space_settings">POP</a>, and <a
-href="#offline_and_disk_space_settings">Newsgroup</a> accounts.</p>
+href="#offline_and_disk_space_settings_nntp">Newsgroup</a> accounts.</p>
 
 <p><strong>Tip</strong>: To set the Offline &amp; Disk Space
 preferences for the current account, open the File menu, choose
@@ -4137,9 +4137,16 @@ messages immediately each time it checks the server.</li>
 to store a copy of messages on the mail server in addition to
 downloading them to your computer.</li>
 
-<li><strong>Delete messages on server when they are deleted
-locally</strong>: Choose this setting to remove messages from the
-server once you delete them from your computer.</li>
+<ul>
+<li><strong>For at most ___ days</strong>: Choose this setting to
+remove messages from the server automatically after the number of
+days you enter here.</li>
+
+<li><strong>Until I delete or move them from Inbox</strong>:
+Choose this setting to remove messages from the
+server once you delete them or move them from your Inbox into
+another folder.</li>
+</ul>
 
 <li><strong>Empty Trash on Exit</strong>: Choose this setting to
 empty the Trash folder whenever you quit Mail &amp;
@@ -4334,16 +4341,16 @@ account.</p>
 
 <div class="contentsBox">
   <ul>
-    <li><a href="#offline_and_disk_space_settings">Offline and Disk Space Settings (IMAP)</a></li>
+    <li><a href="#offline_and_disk_space_settings_imap">Offline and Disk Space Settings (IMAP)</a></li>
     <li><a href="#disk_space_settings">Disk Space Settings (POP)</a></li>
-    <li><a href="#offline_and_disk_space_settings">Offline and Disk Space Settings (News)</a></li>
+    <li><a href="#offline_and_disk_space_settings_nntp">Offline and Disk Space Settings (News)</a></li>
   </ul>
 </div>
 
 <p>[&nbsp;<a href="#mail_and_newsgroups_account_settings">Return to beginning of
 section</a>&nbsp;]</p>
 
-<h3 id="offline_and_disk_space_settings">Offline and Disk Space
+<h3 id="offline_and_disk_space_settings_imap">Offline and Disk Space
 Settings (IMAP)</h3>
 
 <p>If you are not already viewing the offline and disk space
@@ -4364,7 +4371,7 @@ working offline</strong>: Select this option so that messages in
 your Inbox will be available when you are working offline.</li>
 
 <li><strong>When I create new folders, select them for
-offline</strong>: Select this option so that new folders you create
+offline use</strong>: Select this option so that new folders you create
 are automatically selected for offline use. If left unchecked, new
 folders won't be automatically selected for offline use. You can
 manually select folders for offline by choosing the Download/Sync
@@ -4372,15 +4379,14 @@ Now command (available from the File menu, under Offline). Click
 the Select button in the Download/Sync Messages dialog box to
 select the folders.</li>
 
-<li><strong>Select</strong>: Click to select the items (folders or
-newsgroups) that you want to make available for offline use. See <a
+<li><strong>Select folders for offline use</strong>: Click to select the
+folders that you want to make available for offline use. See <a
 href="#selecting_items_for_offline_viewing">Selecting Items for Offline Viewing</a> for
 more information.</li>
 
-<li><strong>Do not download messages locally that are larger than
-_KB</strong>: Select this option to conserve disk space by
-preventing large messages from being downloaded. Enter the maximum
-size for downloaded messages.</li>
+<li><strong>Messages larger than ___ KB</strong>: Select this option to
+conserve disk space by preventing large messages from being downloaded.
+Enter the maximum size for downloaded messages.</li>
 </ul>
 
 <p>&nbsp;</p>
@@ -4408,10 +4414,9 @@ box.</li>
 </ol>
 
 <ul>
-<li><strong>Do not download messages locally that are larger than
-_KB</strong>: Select this option to conserve disk space by
-preventing large messages from being downloaded. Enter the maximum
-size for downloaded messages.</li>
+<li><strong>Messages larger than ___ KB</strong>: Select this option to conserve
+disk space by preventing large messages from being downloaded. Enter the
+maximum size for downloaded messages.</li>
 </ul>
 
 <p>&nbsp;</p>
@@ -4419,7 +4424,7 @@ size for downloaded messages.</li>
 <p>[&nbsp;<a href="#mail_and_newsgroups_account_settings">Return to beginning of
 section</a>&nbsp;]</p>
 
-<h3 id="offline_and_disk_space_settings">Offline and Disk Space
+<h3 id="offline_and_disk_space_settings_nntp">Offline and Disk Space
 Settings (News)</h3>
 
 <p>If you are not already viewing the offline and disk space
@@ -4435,35 +4440,55 @@ account.</li>
 </ol>
 
 <ul>
-<li><strong>Select</strong>: Click to select the items (accounts,
-folders, newsgroups) that you want to make available for offline
+<li><strong>Select newsgroups for offline use</strong>: Click to select the
+newsgroups that you want to make available for offline
 use. See <a href="#selecting_items_for_offline_viewing">Selecting Items for Offline
 Viewing</a> for more information.</li>
+</ul>
 
-<li><strong>Do not download messages locally that are larger
-than</strong>: Select this option to conserve disk space by
-preventing large messages from being downloaded. Enter the maximum
-size for downloaded messages.</li>
+<p>The following settings help to save disk space and download time.
+Specify which messages you don't want to download locally:</p>
 
-<li><strong>Download only unread message bodies</strong>: Select
-this option to download only the messages you haven't read.</li>
+<ul>
+<li><strong>Read messages</strong>: Select
+this option to only download message bodies from messages you haven't
+already read.</li>
 
-<li><strong>Download message bodies for messages since _ days
-ago</strong>: Select this option to download only messages that
-were posted within the time period you enter.</li>
+<li><strong>Messages larger than ___ KB</strong>: Select this option to conserve
+disk space by preventing large messages from being downloaded. Enter the
+maximum size for downloaded messages.</li>
 
-<li><strong>When it is time to clean up messages</strong>: Click
-one of the three choices to specify when newsgroup messages should
-be deleted. Unless you choose "Keep all messages," enter the number
-of days to keep messages or the number of newest messages to
-keep.</li>
+<li><strong>Messages more than ___ days old</strong>: Select this option
+to only download messages that are not older than the number of days you
+enter here.</li>
+</ul>
 
-<li><strong>Keep only unread messages</strong>: Select this option
-to delete messages immediately after you read them.</li>
+<p>&brandShortName; can automatically delete newsgroup messages for you. You can
+configure this process with the options listed below <strong>Keep</strong>:</p>
 
-<li><strong>Remove message bodies only older than __ days</strong>:
-Select this option to delete messages after the number of days you
-specify.</li>
+<ul>
+<li><strong>All messages</strong>: Keep all messages. Never delete messages 
+automatically.</li>
+
+<li><strong>The newest ___ messages</strong>: Enter the number of messages
+to keep. With this setting only messages older than these messages are
+deleted.</li>
+
+<li><strong>Messages which have arrived within the last ___ days</strong>: Keep
+all messages that arrived within the given number of days.</li>
+</ul>
+
+<p>With last two settings you can further constrain the three options
+to delete messages automatically. This is especially useful in combination
+with the option to keep all messages.</p> 
+
+<ul>
+<li><strong>Only unread messages</strong>: Select this option
+to deny &brandShortName; the deletion of unread messages.</li>
+
+<li><strong>Only message bodies less than ___ days old</strong>:
+Select this option to deny &brandShortName; the deletion of messages
+that are newer than the number of days you specify here.</li>
 </ul>
 
 <p>[&nbsp;<a href="#mail_and_newsgroups_account_settings">Return to beginning of
