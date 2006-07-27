@@ -147,6 +147,19 @@ function (panels)
   return null;
 }
 
+sbPanelList.prototype.visible_panels_exist =
+function ()
+{
+  var i;
+  var panels = this.node.childNodes;
+  for (i = 2; i < panels.length; i += 2)
+  {
+    if (!panels.item(i).hidden)
+      return true;
+  }
+  return false;
+}
+
 sbPanelList.prototype.select =
 function (panel, force_reload)
 {
@@ -1006,6 +1019,7 @@ function SidebarTogglePanel(panel_menuitem) {
   // manipulate the RDF:Seq more easily.
   sidebarObj.datasource = RDF.GetDataSource(sidebarObj.datasource_uri);
 
+  var did_exclude = false;
   var panel_id = panel_menuitem.getAttribute('id');
   var panel = sidebarObj.panels.get_panel_from_id(panel_id);
   var panel_exclude = panel_menuitem.getAttribute('exclude')
@@ -1017,6 +1031,7 @@ function SidebarTogglePanel(panel_menuitem) {
                                 RDF.GetLiteral(sidebarObj.component),
                                 true);
     panel.exclude();
+    did_exclude = true;
   } else {
     // Panel has an exclude string, but it may or may not have the
     // current component listed in the string.
@@ -1032,6 +1047,7 @@ function SidebarTogglePanel(panel_menuitem) {
       debug("Adding this component to the exclude list");
       new_exclude = new_exclude + " " + sidebarObj.component;
       panel.exclude();
+      did_exclude = true;
     }
     if (new_exclude == '') {
       debug("Removing exclude list");
@@ -1051,8 +1067,12 @@ function SidebarTogglePanel(panel_menuitem) {
     }
   }
 
-  // force all the sidebars to update
-  refresh_all_sidebars();
+  if (did_exclude && !sidebarObj.panels.visible_panels_exist())
+    // surrender focus to main content area
+    window._content.focus();
+  else
+    // force all the sidebars to update
+    refresh_all_sidebars();
 
   // Write the modified panels out.
   sidebarObj.datasource.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush();
