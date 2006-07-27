@@ -59,15 +59,15 @@
       <treecolgroup>
         <treecol flex="1" id="FilenameColumn"
             sortActive="true" sortDirection="ascending"
-            rdf:resource="http://home.netscape.com/NC-rdf#Name" />
+            resource="http://home.netscape.com/NC-rdf#Name" />
         <splitter class="tree-splitter"/>
         <treecol flex="1" id="ContentLengthColumn"
-            rdf:resource="http://home.netscape.com/NC-rdf#Content-Length"
-            rdf:resource2="http://home.netscape.com/NC-rdf#Name"/>
+            resource="http://home.netscape.com/NC-rdf#Content-Length"
+            resource2="http://home.netscape.com/NC-rdf#Name"/>
         <splitter class="tree-splitter"/>
         <treecol flex="1" id="LastModColumn"
-            rdf:resource="http://home.netscape.com/WEB-rdf#LastModifiedDate"
-            rdf:resource2="http://home.netscape.com/NC-rdf#Name"/>
+            resource="http://home.netscape.com/WEB-rdf#LastModifiedDate"
+            resource2="http://home.netscape.com/NC-rdf#Name"/>
       </treecolgroup>
 
       <treehead>

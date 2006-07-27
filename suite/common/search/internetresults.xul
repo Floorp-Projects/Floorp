@@ -54,32 +54,32 @@
 		onselect="treeSelect(event);" onclick="treeClick(event);">
 
   <treecolgroup>
-    <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" flex="1"/>
+    <treecol id="NameColumn" resource="http://home.netscape.com/NC-rdf#Name" flex="1"/>
     <splitter class="tree-splitter"/>
-    <treecol id="PageRankColumn" rdf:resource="http://home.netscape.com/NC-rdf#PageRank"
-             rdf:resource2="http://home.netscape.com/NC-rdf#Name" flex="1"/>
+    <treecol id="PageRankColumn" resource="http://home.netscape.com/NC-rdf#PageRank"
+             resource2="http://home.netscape.com/NC-rdf#Name" flex="1"/>
     <splitter class="tree-splitter"/>
-    <treecol id="RelevanceColumn" rdf:resource="http://home.netscape.com/NC-rdf#Relevance"
-             rdf:resource2="http://home.netscape.com/NC-rdf#Name"
+    <treecol id="RelevanceColumn" resource="http://home.netscape.com/NC-rdf#Relevance"
+             resource2="http://home.netscape.com/NC-rdf#Name"
              style="width: 0; visibility: collapse;" flex="1"/>
     <splitter class="tree-splitter"/>
-    <treecol id="PriceColumn" rdf:resource="http://home.netscape.com/NC-rdf#Price"
-             rdf:resource2="http://home.netscape.com/NC-rdf#Availability"
+    <treecol id="PriceColumn" resource="http://home.netscape.com/NC-rdf#Price"
+             resource2="http://home.netscape.com/NC-rdf#Availability"
              style="width: 0; visibility: collapse;" flex="1"/>
     <splitter class="tree-splitter"/>
-    <treecol id="AvailabilityColumn" rdf:resource="http://home.netscape.com/NC-rdf#Availability"
-             rdf:resource2="http://home.netscape.com/NC-rdf#Price"
+    <treecol id="AvailabilityColumn" resource="http://home.netscape.com/NC-rdf#Availability"
+             resource2="http://home.netscape.com/NC-rdf#Price"
              style="width: 0; visibility: collapse;" flex="1"/>
     <splitter class="tree-splitter"/>
-    <treecol id="DateColumn" rdf:resource="http://home.netscape.com/NC-rdf#Date"
-             rdf:resource2="http://home.netscape.com/NC-rdf#Name"
+    <treecol id="DateColumn" resource="http://home.netscape.com/NC-rdf#Date"
+             resource2="http://home.netscape.com/NC-rdf#Name"
              style="width: 0; visibility: collapse;" flex="1"/>
     <splitter class="tree-splitter"/>
-    <treecol id="SiteColumn" rdf:resource="http://home.netscape.com/NC-rdf#Site"
-             rdf:resource2="http://home.netscape.com/NC-rdf#Name" flex="1"/>
+    <treecol id="SiteColumn" resource="http://home.netscape.com/NC-rdf#Site"
+             resource2="http://home.netscape.com/NC-rdf#Name" flex="1"/>
     <splitter class="tree-splitter"/>
-    <treecol id="EngineColumn" rdf:resource="http://home.netscape.com/NC-rdf#Engine"
-             rdf:resource2="http://home.netscape.com/NC-rdf#Name" flex="1"/>
+    <treecol id="EngineColumn" resource="http://home.netscape.com/NC-rdf#Engine"
+             resource2="http://home.netscape.com/NC-rdf#Name" flex="1"/>
   </treecolgroup>
 
 		<template>
