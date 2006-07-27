@@ -804,7 +804,7 @@ function OpenSearch( aSearchStr, engineURIs )
         if (pref)
         {
 	  	    autoOpenSearchPanel = pref.GetBoolPref("browser.search.opensidebarsearchpanel");
-  		    defaultSearchURL = pref.CopyCharPref("browser.search.defaulturl");
+  		    defaultSearchURL = pref.getLocalizedUnicharPref("browser.search.defaulturl");
 	        searchEngineURI = pref.CopyCharPref("browser.search.defaultengine");
         }
 	}
