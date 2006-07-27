@@ -1014,7 +1014,7 @@
         <rdf:li><rdf:Description ID="using-help-certs-validation-how" nc:name="How Validation Works" nc:link="chrome://help/locale/using_certs_help.html#How_Certificate_Validation_Works"/> </rdf:li>
         <rdf:li><rdf:Description ID="using-help-certs-validation-crls" nc:name="Managing CRLs" nc:link="chrome://help/locale/using_certs_help.html#Managing_CRLs"/> </rdf:li>
         <rdf:li><rdf:Description ID="using-help-certs-validation-ocsp" nc:name="Configuring OCSP" nc:link="chrome://help/locale/using_certs_help.html#Configuring_Certificate_Manager_for_OCSP"/> </rdf:li>
-        <rdf:li><rdf:Description ID="validation_prefs" nc:name="Validation Settings" nc:link="chrome://help/locale/validation_help.html"/> </rdf:li>
+        <rdf:li><rdf:Description ID="validation_prefs" nc:name="Validation Settings" nc:link="chrome://help/locale/validation_help.xhtml"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1032,10 +1032,10 @@
 <rdf:Description about="#validation_prefs">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="validation-prefs" nc:name="Validation Preferences" nc:link="chrome://help/locale/validation_help.html#validation_first"/> </rdf:li>
-        <rdf:li><rdf:Description ID="validation-crl-manage" nc:name="Manage CRLs" nc:link="chrome://help/locale/validation_help.html#manage_CRLs_dialog"/> </rdf:li>
-        <rdf:li><rdf:Description ID="validation-crl-import" nc:name="CRL Import Status" nc:link="chrome://help/locale/validation_help.html#crl_import_status"/> </rdf:li>
-        <rdf:li><rdf:Description ID="validation-crl-auto-update-prefs" nc:name="Automatic CRL Update Preferences" nc:link="chrome://help/locale/validation_help.html#auto_crl_update_prefs"/> </rdf:li>
+        <rdf:li><rdf:Description ID="validation-prefs" nc:name="Validation Preferences" nc:link="chrome://help/locale/validation_help.xhtml#privacy_and_security_preferences_validation"/> </rdf:li>
+        <rdf:li><rdf:Description ID="validation-crl-manage" nc:name="Manage CRLs" nc:link="chrome://help/locale/validation_help.xhtml#manage_crls"/> </rdf:li>
+        <rdf:li><rdf:Description ID="validation-crl-import" nc:name="CRL Import Status" nc:link="chrome://help/locale/validation_help.xhtml#crl_import_status"/> </rdf:li>
+        <rdf:li><rdf:Description ID="validation-crl-auto-update-prefs" nc:name="Automatic CRL Update Preferences" nc:link="chrome://help/locale/validation_help.xhtml#automatic_crl_update_preferences"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>

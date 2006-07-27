@@ -489,12 +489,12 @@
      <rdf:li>
        <rdf:Description ID="CRLs:auto_upates_for"
          nc:name="CRL auto update"
-	 nc:link="validation_help.html#CRLs:auto_upates_forIDX"/>
+	 nc:link="validation_help.xhtml#automatic_crl_update_preferences"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="CRLs:managing"
          nc:name="managing CRLs"
-	 nc:link="validation_help.html#CRLs:managingIDX"/>
+	 nc:link="validation_help.xhtml#manage_crls"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="CRLs:Next_Update_date"
@@ -504,7 +504,7 @@
      <rdf:li>
        <rdf:Description ID="CRLs:preferences"
          nc:name="CRL preferences"
-	 nc:link="validation_help.html#CRLs:preferencesIDX"/>
+	 nc:link="validation_help.xhtml#privacy_and_security_preferences_validation"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1674,7 +1674,7 @@
      <rdf:li>
        <rdf:Description ID="preferences:validation"
          nc:name="validation preferences"
-	 nc:link="validation_help.html#preferences:validationIDX"/>
+	 nc:link="validation_help.xhtml#privacy_and_security_preferences_validation"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2005,7 +2005,7 @@
      <rdf:li>
        <rdf:Description ID="settings:validation"
          nc:name="validation settings"
-	 nc:link="validation_help.html#settings:validationIDX"/>
+	 nc:link="validation_help.xhtml#validation_settings"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2194,27 +2194,27 @@
      <rdf:li>
        <rdf:Description ID="validation:auto_updating_CRLs"
          nc:name="auto updating CRLs"
-	 nc:link="validation_help.html#validation:auto_updating_CRLsIDX"/>
+	 nc:link="validation_help.xhtml#automatic_crl_update_preferences"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="validation:CRLs"
          nc:name="CRLs"
-	 nc:link="validation_help.html#validation:CRLsIDX"/>
+	 nc:link="validation_help.xhtml#privacy_and_security_preferences_validation"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="validation:managing_CRLs"
          nc:name="managing CRLs"
-	 nc:link="validation_help.html#validation:managing_CRLsIDX"/>
+	 nc:link="validation_help.xhtml#manage_crls"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="validation:OCSP"
          nc:name="OCSP"
-	 nc:link="validation_help.html#validation:OCSPIDX"/>
+	 nc:link="validation_help.xhtml#privacy_and_security_preferences_validation"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="validation:settings"
          nc:name="validation settings"
-	 nc:link="validation_help.html#validation:settingsIDX"/>
+	 nc:link="validation_help.xhtml#validation_settings"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
