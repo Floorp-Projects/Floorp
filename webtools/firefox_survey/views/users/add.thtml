@@ -19,12 +19,12 @@
         <?php endif; ?>
         <p><?php echo $html->submit('Send') ?></p>
     </form>
-    <p class="subtext">We will use your email address to send you a short survey and add you to the
-    Firefox User Panel. As a member of the panel, you will receive occasional emails
-    from us offering you ways to contribute to the future of the Firefox browser. As
-    always, we promise to keep your email address private (see our privacy policy for
-    more details), and we will never rent or sell it to others. If you ever want to
-    unsubscribe, you can do so at any time. In addition, we promise that any
-    information you give us as part of the user panel will only be used anonymously
-    or in the aggregate without your explicit permission.</p>
+    <p class="subtext">We will use your email address to send you a short survey and add you to the 
+    Firefox User Panel. As a member of the Firefox User Panel, you will receive occasional emails 
+    from us offering you ways to contribute to the future of the Firefox browser. As always, we 
+    promise to keep your email address private (see our 
+    <a href="http://userpanel.mozilla.com/privacy-policy.html">privacy policy</a> for more details), 
+    and we will never rent or sell it to others. If you ever want to unsubscribe, you can do so at 
+    any time. In addition, we promise that any information you give us as part of the user panel 
+    will only be used anonymously or in the aggregate without your explicit permission.</p> 
 </div>

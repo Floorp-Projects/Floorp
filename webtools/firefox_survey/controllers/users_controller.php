@@ -78,8 +78,6 @@ generation of Firefox.  Thanks again for making the browser a better place!</p>
 
 <p><a href=\"https://is4.instantsurvey.com/take?i=105913&h=0yU72vyhajHZpq6bAu_RGQ&email={$this->params['data']['User']['email']}&first={$this->params['data']['User']['firstname']}&last={$this->params['data']['User']['lastname']}\">Join the User Panel</a></p>
 
-<p><small>Survey conducted by Mozilla and hosted by <a href=\"http://www.instantsurvey.com/\">Instant Survey</a></small></p>
-
 <p><small>Mozilla continues to take security and privacy issues seriously.  Any data or
 information provided will never be given or sold to any other outside company for its
 use in marketing or solicitation.</small></p>
@@ -125,8 +123,6 @@ more surveys in the following weeks to the user panel to help us define the next
 generation of Firefox.  Thanks again for making the browser a better place!</p>
 
 <p><a href=\"https://is4.instantsurvey.com/take?i=105913&h=0yU72vyhajHZpq6bAu_RGQ&email={$this->params['data']['User']['email']}&first={$this->params['data']['User']['firstname']}&last={$this->params['data']['User']['lastname']}\">Join the User Panel</a></p>
-
-<p><small>Survey conducted by Mozilla and hosted by <a href=\"http://www.instantsurvey.com/\">Instant Survey</a></small></p>
 
 <p><small>Mozilla continues to take security and privacy issues seriously.  Any data or
 information provided will never be given or sold to any other outside company for its

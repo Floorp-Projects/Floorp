@@ -6,7 +6,7 @@
             <div id="footer-contents">
                 <ul id="footer-menu">
                     <li><a href="http://www.mozilla.com/about/">About Us</a></li>
-                    <li><a href="http://www.mozilla.com/privacy-policy.html">Privacy Policy</a></li>
+                    <li><?php echo $html->link('Privacy Policy','/privacy-policy.html'); ?></li>
                     <li><a href="http://www.mozilla.com/about/legal.html">Legal Notices</a></li>
 
                 </ul>
