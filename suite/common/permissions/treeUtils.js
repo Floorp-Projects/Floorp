@@ -43,6 +43,9 @@ function DeleteAllFromTree
 function DeleteSelectedItemFromTree
     (tree, view, table, deletedTable, removeButton, removeAllButton) {
 
+  // Turn off tree selection notifications during the deletion
+  tree.treeBoxObject.view.selection.selectEventsSuppressed = true;
+
   // remove selected items from list (by setting them to null) and place in deleted list
   var selections = GetTreeSelections(tree);
   for (var s=selections.length-1; s>= 0; s--) {
@@ -79,6 +82,8 @@ function DeleteSelectedItemFromTree
     document.getElementById(removeAllButton).setAttribute("disabled","true");
 
   }
+
+  tree.treeBoxObject.view.selection.selectEventsSuppressed = false;
 }
 
 function GetTreeSelections(tree) {
