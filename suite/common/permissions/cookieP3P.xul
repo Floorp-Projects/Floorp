@@ -119,7 +119,7 @@
         settings = "ffffaaaa";
         break;
       case high:
-        settings = "fdfdafaa";
+        settings = "frfradaa";
         break;
       case custom:
         break;
