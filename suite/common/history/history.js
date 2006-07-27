@@ -417,10 +417,14 @@ function updateItems()
         bookmarkItem.setAttribute("hidden", "true");
         copyLocationItem.setAttribute("hidden", "true");
         sep1.setAttribute("hidden", "true");
-        if (isContainerOpen(gHistoryTree, currentIndex))
+        if (isContainerOpen(gHistoryTree, currentIndex)) {
           collapseExpandItem.setAttribute("label", gHistoryBundle.getString("collapseLabel"));
-        else
+          collapseExpandItem.setAttribute("accesskey", gHistoryBundle.getString("collapseAccesskey"));
+        }
+        else {
           collapseExpandItem.setAttribute("label", gHistoryBundle.getString("expandLabel"));
+          collapseExpandItem.setAttribute("accesskey", gHistoryBundle.getString("expandAccesskey"));          
+        }
         return true;
     }
     collapseExpandItem.setAttribute("hidden", "true");

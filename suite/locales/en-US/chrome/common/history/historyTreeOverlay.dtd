@@ -12,4 +12,3 @@
 <!ENTITY tree.header.hostname.akey           "H">
 <!ENTITY tree.header.visitcount.label        "Visit Count">
 <!ENTITY tree.header.visitcount.akey         "V">
-<!ENTITY collapseExpand.accesskey            "e">
