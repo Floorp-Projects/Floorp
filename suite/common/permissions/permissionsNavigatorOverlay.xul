@@ -1,0 +1,185 @@
+<?xml version="1.0"?>
+
+<!--
+   The contents of this file are subject to the Netscape Public
+   License Version 1.1 (the "License"); you may not use this file
+   except in compliance with the License. You may obtain a copy of
+   the License at http://www.mozilla.org/NPL/
+    
+   Software distributed under the License is distributed on an "AS
+   IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   implied. See the License for the specific language governing
+   rights and limitations under the License.
+    
+   The Original Code is Mozilla Communicator client code, released
+   March 31, 1998.
+   
+   The Initial Developer of the Original Code is Netscape
+   Communications Corporation. Portions created by Netscape are
+   Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   Rights Reserved.
+   
+   Contributor(s): 
+  -->
+
+<!DOCTYPE window SYSTEM "chrome://cookie/locale/cookieNavigatorOverlay.dtd">
+
+<overlay id="cookieNavigatorOverlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/x-javascript" src="chrome://cookie/content/cookieOverlay.js"/>
+  <script type="application/x-javascript">
+  <![CDATA[
+    /******* THE FOLLOWING IS FOR THE TASKMENU OVERLAY *******/
+
+    var permissionmanager;
+
+    // Remove the image entries from the task menu
+    function HideImage() {
+      var element;
+      element = document.getElementById("image");
+      element.setAttribute("style","display: none;" );
+      element.setAttribute("disabled","true" );
+    }
+
+    // for some unexplainable reason, CheckForImage() keeps getting called repeatedly
+    // as we mouse over the task menu.  IMO, that shouldn't be happening.  To avoid
+    // taking a performance hit due to this, we will set the following flag to avoid
+    // reexecuting the routine
+    var alreadyCheckedForImage = false;
+
+    // determine which items we need to hide or disable from the task menu
+    function CheckForVisibility()
+    {
+
+      // obtain access to permissionmanager module
+      permissionmanager =
+        Components.classes["@mozilla.org/permissionmanager;1"]
+          .getService(Components.interfaces.nsIPermissionManager);
+      if (!("_content" in window) || !window._content) {
+        // this occurs if doing tasks->privacy->cookie->block from java console
+        return;
+      }
+
+      // determine current state (blocked or unblocked) and hide appropriate menu item
+      var blocked, enableElement, disableElement;
+
+      blocked = 
+        permissionmanager.testForBlocking(window._content.location, COOKIEPERMISSION);
+      if (blocked) {
+        disableElement = document.getElementById("BlockCookies");
+        enableElement = document.getElementById("AllowCookies");
+      } else {
+        disableElement = document.getElementById("AllowCookies");
+        enableElement = document.getElementById("BlockCookies");
+      }
+      disableElement.setAttribute("disabled","true");
+      enableElement.removeAttribute("disabled");
+
+      blocked =
+        permissionmanager.testForBlocking(window._content.location, IMAGEPERMISSION);
+      if (blocked) {
+        disableElement = document.getElementById("BlockImages");
+        enableElement = document.getElementById("AllowImages");
+      } else {
+        disableElement = document.getElementById("AllowImages");
+        enableElement = document.getElementById("BlockImages");
+      }
+      disableElement.setAttribute("disabled","true");
+      enableElement.removeAttribute("disabled");
+
+      // determine if image manager should be in the UI
+      if (alreadyCheckedForImage) {
+        return;
+      }
+      alreadyCheckedForImage = true;
+      // remove image functions (unless overruled by the "imageblocker.enabled" pref)
+      var pref;
+      pref = Components.classes['@mozilla.org/preferences-service;1'];
+      pref = pref.getService();
+      pref = pref.QueryInterface(Components.interfaces.nsIPrefBranch);
+      try {
+        if (!pref.getBoolPref("imageblocker.enabled")) {
+          HideImage();
+        }
+      } catch(e) {
+        HideImage();
+      }
+    }
+
+    // perform a Cookie or Image action
+    function CookieImageAction(action) {
+
+      if (!("_content" in window) || !window._content) {
+        // this occurs if doing tasks->privacy->cookie->block from java console
+        return;
+      }
+      var element;
+      switch (action) {
+        case "cookieAllow":
+          permissionmanager.add(window._content.location, true, COOKIEPERMISSION);
+          element = document.getElementById("AllowCookies");
+          alert(element.getAttribute("msg"));
+          break;
+        case "cookieBlock":
+          permissionmanager.add(window._content.location, false, COOKIEPERMISSION);
+          element = document.getElementById("BlockCookies");
+          alert(element.getAttribute("msg"));
+          break;
+        case "imageAllow":
+          permissionmanager.add(window._content.location, true, IMAGEPERMISSION);
+          element = document.getElementById("AllowImages");
+          alert(element.getAttribute("msg"));
+          break;
+        case "imageBlock":
+          permissionmanager.add(window._content.location, false, IMAGEPERMISSION);
+          element = document.getElementById("BlockImages");
+          alert(element.getAttribute("msg"));
+          break;
+        default:
+      }
+    }  
+
+  ]]>
+  </script>         
+
+  <!-- tasksOverlay menu items -->
+  <menupopup id="taskPopup" onpopupshowing="CheckForVisibility()">
+    <menu insertbefore="navBeginGlobalItems"
+          label="&cookieCookieManager.label;"
+          accesskey="&cookieCookieManager.accesskey;">
+      <menupopup>
+        <menuitem id="BlockCookies" label="&cookieBlockCookiesCmd.label;"
+                  accesskey="&cookieBlockCookiesCmd.accesskey;" 
+                  msg="&cookieBlockCookiesMsg.label;"
+                  oncommand="CookieImageAction('cookieBlock');"/> 
+        <menuitem id="AllowCookies" label="&cookieAllowCookiesCmd.label;"
+                  accesskey="&cookieAllowCookiesCmd.accesskey;" 
+                  msg="&cookieAllowCookiesMsg.label;"
+                  oncommand="CookieImageAction('cookieAllow');"/> 
+        <menuseparator/>
+        <menuitem label="&cookieDisplayCookiesCmd.label;"
+                  accesskey="&cookieDisplayCookiesCmd.accesskey;" 
+                  oncommand="viewCookies();"/> 
+      </menupopup>
+    </menu>
+    <menu label="&cookieImageManager.label;"
+          accesskey="&cookieImageManager.accesskey;"
+          id="image"
+          insertbefore="navBeginGlobalItems">
+      <menupopup>
+        <menuitem label="&cookieDisplayImagesCmd.label;"
+                  accesskey="&cookieDisplayImagesCmd.accesskey;" 
+                  oncommand="viewImages();"/> 
+        <menuitem id="AllowImages" label="&cookieAllowImagesCmd.label;"
+                  accesskey="&cookieAllowImagesCmd.accesskey;" 
+                  msg="&cookieAllowImagesMsg.label;"
+                  oncommand="CookieImageAction('imageAllow');"/> 
+        <menuitem id="BlockImages" label="&cookieBlockImagesCmd.label;"
+                  accesskey="&cookieBlockImagesCmd.accesskey;" 
+                  msg="&cookieBlockImagesMsg.label;"
+                  oncommand="CookieImageAction('imageBlock');"/> 
+      </menupopup>
+    </menu>
+  </menupopup>
+</overlay>

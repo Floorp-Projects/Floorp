@@ -187,12 +187,16 @@
 
   <!-- View->Sidebar toggle -->
   <menupopup id="menu_View_Popup">
-    <menuitem id="sidebar-menu" type="checkbox"
-      label="&sidebarCmd.label;"
-      accesskey="&sidebarCmd.accesskey;"
-      command="toggleSidebar"
-      key="showHideSidebar"
-      position="2"/>
+    <menu id="menu_Toolbars">
+      <menupopup id="view_toolbars_popup">
+        <menuseparator/>
+        <menuitem id="sidebar-menu" type="checkbox"
+          label="&sidebarCmd.label;"
+          accesskey="&sidebarCmd.accesskey;"
+          command="toggleSidebar"
+          key="showHideSidebar"/>
+      </menupopup>
+    </menu>
   </menupopup>
 
   <!-- Scripts go last, because they peek at state to tweak menus -->
