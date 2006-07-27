@@ -237,8 +237,8 @@ function ClickOnOtherPanels(event)
         treeitem.setAttribute('open','true');
       }
 
-      link = treeitem.getAttribute('link');
-      loaded_link = treeitem.getAttribute('loaded_link');
+      var link = treeitem.getAttribute('link');
+      var loaded_link = treeitem.getAttribute('loaded_link');
       if (link != '' && !loaded_link) {
         debug("Has remote datasource: "+link);
         add_datasource_to_other_panels(link);
@@ -256,7 +256,7 @@ function add_datasource_to_other_panels(link) {
   debug("Current URL:  " +url);
   debug("Current link: " +link);
 
-  uri = Components.classes['@mozilla.org/network/standard-url;1'].createInstance();
+  var uri = Components.classes['@mozilla.org/network/standard-url;1'].createInstance();
   uri = uri.QueryInterface(Components.interfaces.nsIURI);
   uri.spec = url;
   uri = uri.resolve(link);
@@ -430,19 +430,21 @@ function RemovePanel()
   var tree = document.getElementById('current-panels');
 
   var nextNode = null;
-  var numSelected = tree.selectedItems.length
-  while (tree.selectedItems.length > 0) {
-    var selectedNode = tree.selectedItems[0]
+  var numToRemove = tree.selectedItems.length;
+  while (numToRemove > 0) {
+    var selectedNode = tree.selectedItems[0];
     nextNode = selectedNode.nextSibling;
     if (!nextNode) {
       nextNode = selectedNode.previousSibling;
     }
-    selectedNode.parentNode.removeChild(selectedNode)
+    selectedNode.parentNode.removeChild(selectedNode);
+    numToRemove--;
   }
 
   if (nextNode) {
     tree.selectItem(nextNode)
   }
+
   enable_buttons_for_current_panels();
 }
 
