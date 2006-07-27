@@ -253,6 +253,7 @@ private:
   PRPackedBool mScriptsEnabled;
   PRPackedBool mGCOnDestruction;
   PRPackedBool mProcessingScriptTag;
+  PRPackedBool mIsTrackingChromeCodeTime;
 
   PRUint32 mBranchCallbackCount;
   PRTime mBranchCallbackTime;
