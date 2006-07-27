@@ -30,14 +30,14 @@
   </binding>
 
   <binding id="sidebar-header-box" extends="xul:box">
-    <content>
+    <content autostretch="never" valign="middle">
       <xul:text inherits="value,crop" crop="right" flex="1"/>
       <xul:box><children/></xul:box>
     </content>
   </binding>  
 
   <binding id="sidebar-header-splitter" extends="xul:splitter">
-    <content>
+    <content autostretch="never" valign="middle">
       <xul:text inherits="value,crop" crop="right" flex="1"/>
       <xul:box><children/></xul:box>
     </content>

@@ -19,7 +19,7 @@
 -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/sidebar/sidebarOverlay.css"
+<?xml-stylesheet href="chrome://communicator/skin/sidebar/sidebar.css"
   type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/sidebar/preview.css"
   type="text/css"?>

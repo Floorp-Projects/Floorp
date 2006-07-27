@@ -65,7 +65,7 @@
             exclude="rdf:http://home.netscape.com/NC-rdf#exclude"
             hidden="true"/>
           <box uri="rdf:*" flex='1*' hidden="true" orient="vertical">
-            <box flex='1' orient="vertical">
+            <box flex='1' orient="vertical" class="iframe-panel">
               <box orient="horizontal" flex="1" autostretch="never">
                 <image class="image-panel-loading"/>
                 <text class="text-panel-loading"
@@ -88,7 +88,7 @@
 
   <!-- Splitter on the right of sidebar -->
   <splitter id="sidebar-splitter" collapse="before" persist="state hidden"
-    class="chromeclass-extrachrome sidebar-splitter"
+    class="chromeclass-extrachrome sidebar-splitter" autostretch="never" orient="vertical"
     onmouseup="SidebarFinishDrag();">
     <grippy class="sidebar-splitter-grippy" onclick="SidebarExpandCollapse();"/>
   </splitter>
