@@ -309,6 +309,7 @@ function MoveDown() {
         selected.parentNode.appendChild(selected);
       }
       tree.selectItem(selected);
+      tree.ensureElementIsVisible(selected);
     }
   }
   enable_buttons_for_current_panels();
