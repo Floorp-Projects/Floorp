@@ -91,7 +91,7 @@ function HistoryCommonInit()
         catch(e) {
             gHistoryGrouping = "day";
         }
-        GroupBy(gHistoryGrouping);
+        UpdateTreeGrouping();
         if (gHistoryStatus) {  // must be the window
             switch(gHistoryGrouping) {
             case "none":
@@ -322,31 +322,39 @@ function OpenURL(aInNewWindow)
     return true;
 }
 
-function GroupBy(groupingType)
+function GroupBy(aGroupingType)
 {
-    var tree = document.getElementById("historyTree");
-    switch(groupingType) {
-    case "none":
-        tree.setAttribute("ref", "NC:HistoryRoot");
-        break;
-    case "site":
-        tree.setAttribute("ref", "find:datasource=history&groupby=Hostname");
-        break;
-    case "day":
-    default:
-        tree.setAttribute("ref", "NC:HistoryByDate");
-        break;
-    }
-    gPrefService.setCharPref("browser.history.grouping", groupingType);
+  gHistoryGrouping = aGroupingType;
+  UpdateTreeGrouping();
+  gPrefService.setCharPref("browser.history.grouping", aGroupingType);
+}
+
+function UpdateTreeGrouping()
+{
+  var tree = document.getElementById("historyTree");
+  switch(gHistoryGrouping) {
+  case "none":
+    tree.setAttribute("ref", "NC:HistoryRoot");
+    break;
+  case "site":
+    tree.setAttribute("ref", "find:datasource=history&groupby=Hostname");
+    break;
+  case "day":
+  default:
+    tree.setAttribute("ref", "NC:HistoryByDate");
+    break;
+  }
 }
 
 var groupObserver = {
   observe: function(aPrefBranch, aTopic, aPrefName) {
     try {
-      GroupBy(aPrefBranch.QueryInterface(Components.interfaces.nsIPrefBranch).getCharPref(aPrefName));
+      gHistoryGrouping = gPrefService.getCharPref("browser.history.grouping");
     }
-    catch(ex) {
+    catch(e) {
+      gHistoryGrouping = "day";
     }
+    UpdateTreeGrouping();
   }
 }
 
