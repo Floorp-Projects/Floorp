@@ -35,7 +35,7 @@
   </keyset>
   <!-- Overlay the sidebar panels -->
   <box id="sidebar-box" orient="vertical" persist="hidden width collapsed">
-    <splitter id="sidebar-panels-splitter" collapse="after"
+    <splitter id="sidebar-panels-splitter" collapse="after" persist="state"
       onmouseup="PersistHeight();" hidden="true">
       <spring flex="1"/>
       <grippy/>
