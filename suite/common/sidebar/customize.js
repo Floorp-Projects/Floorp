@@ -71,13 +71,13 @@ function Init()
   debug("Init: reset current panels ref, "+sidebar.resource);
   current_panels.setAttribute('ref', sidebar.resource);
 
-  saveInitialPanels();
-  enableButtonsForCurrentPanels();
+  save_initial_panels();
+  enable_buttons_for_current_panels();
 }
 
 // Remember the original list of panels so that
 // the save button can be enabled when something changes.
-function saveInitialPanels()
+function save_initial_panels()
 {
   var root = document.getElementById('current-panels-root');
   for (var node = root.firstChild; node != null; node = node.nextSibling) {
@@ -85,7 +85,7 @@ function saveInitialPanels()
   }
 }
 
-function getAttr(registry,service,attr_name) {
+function get_attr(registry,service,attr_name) {
   var attr = registry.GetTarget(service,
                                 RDF.GetResource(NC + attr_name),
                                 true);
@@ -101,7 +101,7 @@ function SelectChangeForOtherPanels(event, target)
   // Remove the selection in the "current" panels list
   var current_panels = document.getElementById('current-panels');
   current_panels.clearItemSelection();
-  enableButtonsForCurrentPanels();
+  enable_buttons_for_current_panels();
 
   if (target.getAttribute('container') == 'true') {
     if (target.getAttribute('open') == 'true') {
@@ -113,15 +113,15 @@ function SelectChangeForOtherPanels(event, target)
     link = target.getAttribute('link');
     if (link && link != '') {
       debug("Has remote datasource: "+link);
-      addDatasourceToOtherPanels(link);
+      add_datasource_to_other_panels(link);
       target.setAttribute('container', 'true');
       target.setAttribute('open', 'true');
     }
-    enableButtonsForOtherPanels();
+    enable_buttons_for_other_panels();
   }
 }
 
-function addDatasourceToOtherPanels(link) {
+function add_datasource_to_other_panels(link) {
   // Convert the |link| attribute into a URL
   var url = document.location;
   debug("Current URL:  " +url);
@@ -148,8 +148,8 @@ function SelectChangeForCurrentPanels() {
   var all_panels = document.getElementById('other-panels');
   all_panels.clearItemSelection();
 
-  enableButtonsForCurrentPanels();
-  enableButtonsForOtherPanels();
+  enable_buttons_for_current_panels();
+  enable_buttons_for_other_panels();
 }
 
 // Move the selected item up the the current panels list.
@@ -157,13 +157,15 @@ function MoveUp() {
   var tree = document.getElementById('current-panels'); 
   if (tree.selectedItems.length == 1) {
     var selected = tree.selectedItems[0];
-    if (selected.previousSibling) {
-      selected.parentNode.insertBefore(selected, selected.previousSibling);
+    var before = selected.previousSibling
+    if (before) {
+      before.parentNode.insertBefore(selected, before);
       tree.selectItem(selected);
+      tree.ensureElementIsVisible(selected);
     }
   }
-  enableButtonsForCurrentPanels();
-  enableSave();
+  enable_buttons_for_current_panels();
+  enable_save();
 }
    
 // Move the selected item down the the current panels list.
@@ -181,8 +183,8 @@ function MoveDown() {
       tree.selectItem(selected);
     }
   }
-  enableButtonsForCurrentPanels();
-  enableSave();
+  enable_buttons_for_current_panels();
+  enable_save();
 }
 
 function PreviewPanel() 
@@ -202,8 +204,8 @@ function PreviewPanel()
     var rdfNode = RDF.GetResource(id);
     if (!rdfNode) break;
 
-    var preview_name = getAttr(database, rdfNode, 'title');
-    var preview_URL  = getAttr(database, rdfNode, 'content');
+    var preview_name = get_attr(database, rdfNode, 'title');
+    var preview_URL  = get_attr(database, rdfNode, 'content');
     if (!preview_URL || !preview_name) break;
 
     var preview = window.open("chrome://sidebar/content/preview.xul",
@@ -219,7 +221,6 @@ function AddPanel()
   var tree = document.getElementById('other-panels');
   var database = tree.database;
   var select_list = tree.selectedItems
-  var isFirstAddition = true;
   for (var nodeIndex=0; nodeIndex<select_list.length; nodeIndex++) {
     var node = select_list[nodeIndex];
     if (!node)    break;
@@ -236,10 +237,7 @@ function AddPanel()
     if (!rdfNode) break;
 
     // Add the panel to the current list.
-    // Pass "isFirstAddition" because only the first panel in a 
-    // group of additions will get selected.
-    addNodeToCurrentList(database, rdfNode, isFirstAddition);
-    isFirstAddition = false;
+    add_node_to_current_list(database, rdfNode);
   }
 
   // Remove the selection in the other list.
@@ -247,20 +245,20 @@ function AddPanel()
   var all_panels = document.getElementById('other-panels');
   all_panels.clearItemSelection();
 
-  enableButtonsForCurrentPanels();
-  enableButtonsForOtherPanels();
-  enableSave();
+  enable_buttons_for_current_panels();
+  enable_buttons_for_other_panels();
+  enable_save();
 }
 
 // Copy a panel node into a database such as the current panel list.
-function addNodeToCurrentList(registry, service, selectIt)
+function add_node_to_current_list(registry, service)
 {
   debug("Adding "+service.Value);
 
   // Copy out the attributes we want
-  var option_title     = getAttr(registry, service, 'title');
-  var option_customize = getAttr(registry, service, 'customize');
-  var option_content   = getAttr(registry, service, 'content');
+  var option_title     = get_attr(registry, service, 'title');
+  var option_customize = get_attr(registry, service, 'customize');
+  var option_content   = get_attr(registry, service, 'content');
 
   var tree     = document.getElementById('current-panels'); 
   var treeroot = document.getElementById('current-panels-root'); 
@@ -271,6 +269,7 @@ function addNodeToCurrentList(registry, service, selectIt)
       // The panel is already in the current panel list.
       // Avoid adding it twice.
       tree.selectItem(ii);
+      tree.ensureElementIsVisible(ii);
       return;
     }
   }
@@ -292,10 +291,8 @@ function addNodeToCurrentList(registry, service, selectIt)
   treeroot.appendChild(item);
 
   // Select is only if the caller wants to.
-  if (selectIt) {
-    debug("Selecting new item");
-    tree.selectItem(item)
-  }
+  tree.selectItem(item);
+  tree.ensureElementIsVisible(item);
 }
 
 // Remove the selected panel(s) from the current list tree.
@@ -317,8 +314,8 @@ function RemovePanel()
   if (nextNode) {
     tree.selectItem(nextNode)
   }
-  enableButtonsForCurrentPanels();
-  enableSave();
+  enable_buttons_for_current_panels();
+  enable_save();
 }
 
 // Bring up a new window with the customize url 
@@ -336,14 +333,17 @@ function CustomizePanel()
 
     if (!customize_url) return;
 
-    var customize = window.open(customize_url, "_blank", "resizable");
+    window.open(customize_url, "_blank", "resizable,width=690,height=600");
   }
-  enableSave();
+  enable_save();
 }
 
 // Serialize the new list of panels.
 function Save()
 {
+  var all_panels = document.getElementById('other-panels');
+  var current_panels = document.getElementById('current-panels');
+
   // Iterate through the 'current-panels' tree to collect the panels
   // that the user has chosen. We need to do this _before_ we remove
   // the panels from the datasource, because the act of removing them
@@ -354,25 +354,42 @@ function Save()
     panels[panels.length] = node.getAttribute('id');
   }
 
+  // Cut off the connection between the dialog and the datasource.
+  // The dialog is closed at the end of this function.
+  // Without this, the dialog tries to update as it is being destroyed.
+  current_panels.setAttribute('ref', 'rdf:null');
+
   start_batch(sidebar.datasource, sidebar.resource);
 
-  // Now remove all the current panels from the datasource.
-
-  // Create a "container" wrapper around the "urn:sidebar:current-panel-list"
-  // object. This makes it easier to manipulate the RDF:Seq correctly.
+  // Create a "container" wrapper around the current panels to
+  // manipulate the RDF:Seq more easily.
   var container = Components.classes["component://netscape/rdf/container"].createInstance();
   container = container.QueryInterface(Components.interfaces.nsIRDFContainer);
   container.Init(sidebar.datasource, RDF.GetResource(sidebar.resource));
 
-  for (var ii = container.GetCount(); ii >= 1; --ii) {
-    debug('removing panel ' + ii);
-    container.RemoveElementAt(ii, true);
+  // Remove all the current panels from the datasource.
+  var current_panels = container.GetElements();
+  while (current_panels.HasMoreElements()) {
+    panel = current_panels.GetNext();
+    id = panel.QueryInterface(Components.interfaces.nsIRDFResource).Value;
+
+    // If this panel is not in the new list,
+    // or, if description of this panel is in the all panels list,
+    // then, remove all assertions for the panel to avoid leaving
+    // unneeded assertions behind and to avoid multiply asserted
+    // attributes, respectively.
+    if (!has_element(panels, id) || 
+        has_targets(all_panels.database, panel)) {
+      delete_resource_deeply(container, panel);
+    } else {
+      container.RemoveElement(panel, false);
+    }
   }
 
-  // Now iterate through the panels, and re-add them to the datasource
+  // Add the new list of panels
   for (var ii = 0; ii < panels.length; ++ii) {
-    debug('adding ' + panels[ii]);
-    container.AppendElement(RDF.GetResource(panels[ii]));
+    copy_resource_deeply(all_panels.database, RDF.GetResource(panels[ii]),
+                         container);
   }
 
   end_batch(sidebar.datasource, sidebar.resource);
@@ -383,10 +400,25 @@ function Save()
   window.close();
 }
 
-// Mark the beginning of a batch by
-// asserting inbatch="true" into the datasource.
-// The observer in sidebarOverlay.js uses this to
-// remember the panel selection.
+// Search for an element in an array
+function has_element(array, element) {
+  for (var ii=0; ii < array.length; ii++) {
+    if (array[ii] == element) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Search for targets from resource in datasource
+function has_targets(datasource, resource) {
+  var arcs = datasource.ArcLabelsOut(resource);
+  return arcs.HasMoreElements();
+}
+
+// Mark the beginning of a batch by asserting inbatch="true"
+// into the datasource. The observer in sidebarOverlay.js uses 
+// this to remember the panel selection.
 function start_batch(datasource, resource) {
   datasource.Assert(RDF.GetResource(resource),
                     RDF.GetResource(NC + "inbatch"),
@@ -394,15 +426,42 @@ function start_batch(datasource, resource) {
                     true);
 }
 
-// Mark the end of a batch by
-// unasserting 'inbatch' on the datasource.
+// Mark the end of a batch by unasserting 'inbatch' on the datasource.
 function end_batch(datasource, resource) {
   datasource.Unassert(RDF.GetResource(resource),
                       RDF.GetResource(NC + "inbatch"),
                       RDF.GetLiteral("true"));
 }
 
-function enableButtonsForOtherPanels()
+// Remove a resource and all the arcs out from it.
+function delete_resource_deeply(container, resource) {
+  var arcs = container.DataSource.ArcLabelsOut(resource);
+  while (arcs.HasMoreElements()) {
+    var arc = arcs.GetNext();
+    var targets = container.DataSource.GetTargets(resource, arc, true);
+    while (targets.HasMoreElements()) {
+      var target = targets.GetNext();
+      container.DataSource.Unassert(resource, arc, target, true);
+    }
+  }
+  container.RemoveElement(panel, false);
+}
+
+// Copy a resource and all its arcs out to a new container.
+function copy_resource_deeply(source_datasource, resource, dest_container) {
+  dest_container.AppendElement(resource);
+  var arcs = source_datasource.ArcLabelsOut(resource);
+  while (arcs.HasMoreElements()) {
+    var arc = arcs.GetNext();
+    var targets = source_datasource.GetTargets(resource, arc, true);
+    while (targets.HasMoreElements()) {
+      var target = targets.GetNext();
+      dest_container.DataSource.Assert(resource, arc, target, true);
+    }
+  }
+}
+
+function enable_buttons_for_other_panels()
 {
   var add_button = document.getElementById('add_button');
   var preview_button = document.getElementById('preview_button');
@@ -426,7 +485,7 @@ function enableButtonsForOtherPanels()
   }
 }
 
-function enableButtonsForCurrentPanels() {
+function enable_buttons_for_current_panels() {
   var up        = document.getElementById('up');
   var down      = document.getElementById('down');
   var tree      = document.getElementById('current-panels');
@@ -473,20 +532,14 @@ function enableButtonsForCurrentPanels() {
   }
 }
 
-function enableSave() {
-  debug("in enableSave()");
+// Check to see if the "current" panel list has changed.
+// If so, enable the save button.
+function enable_save() {
   var root = document.getElementById('current-panels-root');
   var panels = root.childNodes;  
   var list_unchanged = (panels.length == original_panels.length);
 
-  debug ("panels.length="+panels.length);
-  debug ("orig.length="+original_panels.length);
-
   for (var ii = 0; ii < panels.length && list_unchanged; ii++) {
-    //node = root.firstChild; node != null; node = node.nextSibling) {
-    debug("orig="+original_panels[ii]);
-    debug(" new="+panels.item(ii).getAttribute('id'));
-    debug("orig.length="+original_panels.length+" ii="+ii);
     if (original_panels[ii] != panels.item(ii).getAttribute('id')) {
       list_unchanged = false;
     }
@@ -499,7 +552,7 @@ function enableSave() {
   }
 }
 
-function dumpAttributes(node) {
+function dump_attributes(node) {
   var attributes = node.attributes
 
   if (!attributes || attributes.length == 0) {
