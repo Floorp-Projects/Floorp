@@ -44,11 +44,11 @@
     <nc:content>chrome://communicator/content/search/search-panel.xul</nc:content>
   </rdf:Description>
   <rdf:Description about="urn:sidebar:panel:bookmarks">
-    <nc:title>&sidebar.bookmarks.label;</nc:title>
+    <nc:title>&sidebar.client-bookmarks.label;</nc:title>
     <nc:content>chrome://communicator/content/bookmarks/bm-panel.xul</nc:content>
   </rdf:Description>
   <rdf:Description about="urn:sidebar:panel:history">
-    <nc:title>&sidebar.history.label;</nc:title>
+    <nc:title>&sidebar.client-history.label;</nc:title>
     <nc:content>chrome://communicator/content/history/history-panel.xul</nc:content>
   </rdf:Description>
 </rdf:RDF>
