@@ -57,10 +57,13 @@
 
 #include "nsISupports.h"
 #include "nsIAtom.h"
-#include "nsDOMString.h"
 #include "nsINameSpaceManager.h"
-#include "nsCOMPtr.h"
 #include "nsNodeInfoManager.h"
+#include "nsCOMPtr.h"
+
+#ifdef MOZILLA_INTERNAL_API
+#include "nsDOMString.h"
+#endif
 
 // Forward declarations
 class nsIDocument;
@@ -127,6 +130,7 @@ public:
    */
   virtual void GetLocalName(nsAString& aLocalName) const = 0;
 
+#ifdef MOZILLA_INTERNAL_API
   /*
    * Get the prefix from this node as a string.
    *
@@ -141,6 +145,7 @@ public:
       SetDOMStringToNull(aPrefix);
     }
   }
+#endif
 
   /*
    * Get the prefix from this node as an atom.
