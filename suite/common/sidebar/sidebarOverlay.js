@@ -26,8 +26,8 @@ RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService)
 
 var NC = "http://home.netscape.com/NC-rdf#";
 
-// The magic number to find panels.rdf
-var PANELS_RDF_FILE = 66626;
+// The directory services property to find panels.rdf
+var PANELS_RDF_FILE = "UPnls";
 var SIDEBAR_VERSION = "0.1";
 
 // The default sidebar:
@@ -67,17 +67,15 @@ var panel_observer = {
 
 function sidebar_get_panels_file() {
   try {
-    var locator_interface = Components.interfaces.nsIFileLocator;
-    var locator_prog_id = 'component://netscape/filelocator';
-    var locator_service = Components.classes[locator_prog_id].getService();
+    var locator_service = Components.classes["component://netscape/file/directory_service"].getService();
+    if (locator_service)
+      locator_service = locator_service.QueryInterface(Components.interfaces.nsIProperties);
     // Use the fileLocator to look in the profile directory to find
     // 'panels.rdf', which is the database of the user's currently
     // selected panels.
-    locator_service = locator_service.QueryInterface(locator_interface);
-
     // If <profile>/panels.rdf doesn't exist, GetFileLocation() will copy
     // bin/defaults/profile/panels.rdf to <profile>/panels.rdf
-    var sidebar_file = locator_service.GetFileLocation(PANELS_RDF_FILE);
+    var sidebar_file = locator_service.get(PANELS_RDF_FILE, Components.interfaces.nsIFile);
     if (!sidebar_file.exists()) {
       // This should not happen, as GetFileLocation() should copy
       // defaults/panels.rdf to the users profile directory
@@ -115,7 +113,9 @@ function sidebar_revert_to_default_panels() {
 function get_sidebar_datasource_uri() {
   try {
     var sidebar_file = sidebar_get_panels_file();
-    return sidebar_file.URLString;
+    var file_url = Components.classes["component://netscape/network/standard-url"].createInstance(Components.interfaces.nsIFileURL);
+    file_url.file = sidebar_file;
+    return file_url.spec;
   } catch (ex) {
     // This should not happen
     debug("Error: Unable to load panels file.\n");
