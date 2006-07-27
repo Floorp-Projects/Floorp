@@ -1,6 +1,9 @@
 
-function searchResultsOpenURL(event,node)
+function searchResultsOpenURL(event, node)
 {
+	if (event.button != 1)
+		return(false);
+
 	var url = node.getAttribute('id');
 
 	if (node.getAttribute('container') == "true")
@@ -65,8 +68,11 @@ function loadResultsTree( aSearchURL )
 
 
 
-function doEngineClick( aNode )
+function doEngineClick( event, aNode )
 {
+	if (event.button != 1)
+		return(false);
+
 	var resultsTree = document.getElementById("internetresultstree");
 	var contentArea = document.getElementById("content");
   var splitter = document.getElementById("gray_horizontal_splitter");
