@@ -51,10 +51,10 @@
  *    Sidebar and Panel title buttons
  */
 sidebarheader[type="box"] {
-    behavior: url(chrome://communicator/content/sidebar/sidebarBindings.xml#sidebar-header-box);
+    -moz-binding: url(chrome://communicator/content/sidebar/sidebarBindings.xml#sidebar-header-box);
 }
 sidebarheader[type="splitter"] {
-    behavior: url(chrome://communicator/content/sidebar/sidebarBindings.xml#sidebar-header-splitter);
+    -moz-binding: url(chrome://communicator/content/sidebar/sidebarBindings.xml#sidebar-header-splitter);
     /* a vertical splitter */
     cursor: n-resize;
 }
