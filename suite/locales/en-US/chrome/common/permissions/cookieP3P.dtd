@@ -35,7 +35,7 @@
    -
 -->
 
-<!ENTITY  windowtitle.label       "Privacy Levels">
+<!ENTITY  windowtitle.label       "Privacy Settings">
 <!ENTITY  privacyLevel.label      "Level of Privacy">
 <!ENTITY  p3pDetails              "Some sites publish privacy policies stating what they will do with your personal information.  This dialog allows you to make cookie decisions based on the level of privacy that you are willing to accept.">
 <!ENTITY  choose                  "Choose a predefined level of privacy, or define your own custom setting:">
