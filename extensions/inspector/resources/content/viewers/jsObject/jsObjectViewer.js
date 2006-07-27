@@ -94,7 +94,6 @@ JSObjectViewer.prototype =
     this.emptyTree(this.mTreeKids);
     var ti = this.addTreeItem(this.mTreeKids, "target", aObject, aObject);
     this.openTreeItem(ti);
-    window.setTimeout(function(aItem) { aItem.toggleOpenState() }, 1, ti);
 
     this.mObsMan.dispatchEvent("subjectChange", { subject: aObject });
   },
@@ -133,9 +132,9 @@ JSObjectViewer.prototype =
 
   cmdCopyValue: function()
   {
-    var sels = this.mTree.selectedItems;
-    if (sels.length > 0) {
-      var val = sels[0].__JSValue__;
+    var sel = getSelectedItem();
+    if (sel) {
+      var val = sel.__JSValue__;
       if (val) {
         var helper = XPCU.getService(kClipboardHelperCID, "nsIClipboardHelper");
         helper.copyStringToClipboard(val, kGlobalClipboard);    
@@ -145,10 +144,10 @@ JSObjectViewer.prototype =
   
   cmdEvalExpr: function()
   {
-    var sels = this.mTree.selectedItems;
-    if (sels.length > 0) {
+    var sel = getSelectedItem();
+    if (sel) {
       var win = openDialog("chrome://inspector/content/viewers/jsObject/evalExprDialog.xul", 
-                           "_blank", "chrome", this, sels[0]);
+                           "_blank", "chrome", this, sel);
     }
   },  
   
@@ -176,8 +175,9 @@ JSObjectViewer.prototype =
   
   cmdInspectInNewView: function()
   {
-    var sel = this.mTree.selectedItems[0];
-    inspectObject(sel.__JSValue__);
+    var sel = getSelectedItem();
+    if (sel)
+      inspectObject(sel.__JSValue__);
   },
   
   ////////////////////////////////////////////////////////////////////////////
@@ -221,7 +221,6 @@ JSObjectViewer.prototype =
     ti.appendChild(tr);
     
     var tc = document.createElement("treecell");
-    tc.setAttribute("class", "treecell-indent");
     tc.setAttribute("label", aName);
     tr.appendChild(tc);
     tc = document.createElement("treecell");
@@ -259,4 +258,22 @@ function onTreeItemAttrModified(aEvent)
 {
   if (aEvent.attrName == "open")
     viewer.openTreeItem(aEvent.target);
+}
+
+function getSelectedItem()
+{
+  var tree = document.getElementById("treeJSObject");
+  if (tree.view.selection.count)
+    return tree.contentView.getItemAtIndex(tree.curentIndex);
+  else 
+    return null;    
+}
+
+function toggleItem(aItem)
+{
+  var tree = document.getElementById("treeJSObject");
+  var row = tree.currentView.getIndexOfItem(aItem);
+  if (row >= 0) {
+    tree.view.toggleOpenState(row);
+  }
 }
