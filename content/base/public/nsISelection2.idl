@@ -42,7 +42,7 @@ interface nsIDOMNode;
 interface nsIDOMRange;
 
 %{C++
-#include "nsTArray.h"
+#include "nsCOMArray.h"
 %}
 
 [ptr] native RangeArray(nsCOMArray<nsIDOMRange>);
