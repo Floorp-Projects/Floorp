@@ -247,6 +247,8 @@ function (force_reload)
 
       // Pick sandboxed, or unsandboxed iframe
       var iframe = panel.get_iframe();
+      var load_state;
+      
       if (selected_id == id) {
         is_after_selected = 1
         debug("item("+ii+") selected");
@@ -261,7 +263,7 @@ function (force_reload)
           iframe.setAttribute('src', src);
         }
 
-        var load_state = content.getAttribute('loadstate');
+        load_state = content.getAttribute('loadstate');
         if (load_state == 'never loaded') {
           iframe.removeAttribute('hidden');
           iframe.setAttribute('loadstate', 'loading');
@@ -272,7 +274,7 @@ function (force_reload)
         header.removeAttribute('selected');
         content.setAttribute('collapsed','true');
 
-        var load_state = content.getAttribute('loadstate');
+        load_state = content.getAttribute('loadstate');
         if (load_state == 'loading') {
           iframe.removeEventListener("load", panel_loader, true);
           content.setAttribute('hidden','true');
@@ -568,6 +570,7 @@ function sidebar_get_panels_file() {
     debug("Error: Unable to grab panels file.\n");
     throw(ex);
   }
+  return null;
 }
 
 function sidebar_revert_to_default_panels() {
@@ -579,15 +582,15 @@ function sidebar_revert_to_default_panels() {
 
     // Since we just removed the panels file,
     // this should copy the defaults over.
-    var sidebar_file = sidebar_get_panels_file();
+    sidebar_file = sidebar_get_panels_file();
 
     debug("sidebar defaults reloaded");
     var datasource = RDF.GetDataSource(sidebarObj.datasource_uri);
     datasource.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Refresh(true);
   } catch (ex) {
     debug("Error: Unable to reload panel defaults file.\n");
-    return null;
   }
+  return null;
 }
 
 function get_sidebar_datasource_uri() {
@@ -599,8 +602,8 @@ function get_sidebar_datasource_uri() {
   } catch (ex) {
     // This should not happen
     debug("Error: Unable to load panels file.\n");
-    return null;
   }
+  return null;
 }
 
 // Get the template for the available panels url from preferences.
@@ -904,7 +907,7 @@ if (!SB_DEBUG) {
   debug = function (s) {};
   dump_attributes = function (node, depth) {};
   dump_tree = function (node) {};
-  _dump_tree_recur = function (node, depth, index) {};
+  var _dump_tree_recur = function (node, depth, index) {};
 } else {
   debug = function (s) { dump("-*- sbOverlay: " + s + "\n"); };
 
