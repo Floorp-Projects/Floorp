@@ -126,6 +126,8 @@ public:
 		virtual PRBool		HandleUKeyEvent(const PRUnichar* text, long charCount, EventRecord& aOSEvent);
 		virtual PRBool		HandleKeyUpDownEvent(EventHandlerCallRef aHandlerCallRef,
 					                     EventRef aEvent);
+		virtual PRBool		HandleKeyModifierEvent(EventHandlerCallRef aHandlerCallRef,
+					                       EventRef aEvent);
 		
 		//
 		// Synthetic events, generated internally to do things at specific times and
@@ -173,6 +175,7 @@ protected:
 	TSMDocumentID	mTSMDocument;
 	nsPoint 		mIMEPos;
 	nsAutoString		*mIMECompositionStr;
+	PRUint32			mLastModifierState;
 	PRPackedBool			mIMEIsComposing;
 	PRPackedBool			mKeyIgnore;
 	PRPackedBool			mKeyHandled;
