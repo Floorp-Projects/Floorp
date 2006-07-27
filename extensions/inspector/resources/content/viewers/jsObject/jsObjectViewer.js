@@ -1,3 +1,25 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ *   Joe Hewitt <hewitt@netscape.com> (original author)
+ */
+
 /***************************************************************
 * JSObjectViewer --------------------------------------------
 *  The viewer for all facets of a javascript object.
@@ -27,7 +49,7 @@ function JSObjectViewer_initialize()
 
 function JSObjectViewer()
 {
-  this.mURL = window.location;
+  this.mObsMan = new ObserverManager(this);
 }
 
 JSObjectViewer.prototype = 
@@ -35,29 +57,173 @@ JSObjectViewer.prototype =
   ////////////////////////////////////////////////////////////////////////////
   //// Initialization
   
-  mViewee: null,
+  mSubject: null,
   mPane: null,
 
   ////////////////////////////////////////////////////////////////////////////
   //// interface inIViewer
 
-  get uid() { return "computedStyle" },
+  get uid() { return "jsObject" },
   get pane() { return this.mPane },
 
-  get viewee() { return this.mViewee },
-  set viewee(aObject) 
+  get selection() { return this.mSelection },
+  
+  get subject() { return this.mSubject },
+  set subject(aObject) 
   {
+    this.mSubject = aObject;
+    this.emptyTree(this.mTreeKids);
+    var ti = this.addTreeItem(this.mTreeKids, "target", aObject, aObject);
+    this.openTreeItem(ti);
+    window.setTimeout(function(aItem) { aItem.toggleOpenState() }, 1, ti);
+
+    this.mObsMan.dispatchEvent("subjectChange", { subject: aObject });
   },
 
   initialize: function(aPane)
   {
     this.mPane = aPane;
-    aPane.onViewerConstructed(this);
+    this.mTree = document.getElementById("treeJSObject");
+    this.mTreeKids = document.getElementById("trchJSObject");
+    
+    aPane.notifyViewerReady(this);
   },
 
   destroy: function()
   {
-  }
+  },
+  
+  ////////////////////////////////////////////////////////////////////////////
+  //// event dispatching
 
+  addObserver: function(aEvent, aObserver) { this.mObsMan.addObserver(aEvent, aObserver); },
+  removeObserver: function(aEvent, aObserver) { this.mObsMan.removeObserver(aEvent, aObserver); },
+
+  ////////////////////////////////////////////////////////////////////////////
+  //// UI Commands
+
+  cmdCopyValue: function()
+  {
+    var sels = this.mTree.selectedItems;
+    if (sels.length > 0) {
+      var val = sels[0].__JSValue__;
+      if (val)
+        ClipboardUtils.writeString(val.toString());
+    }
+  },
+  
+  cmdEvalExpr: function()
+  {
+    var sels = this.mTree.selectedItems;
+    if (sels.length > 0) {
+      var win = openDialog("chrome://inspector/content/viewers/jsObject/evalExprDialog.xul", 
+                           "_blank", "chrome", this, sels[0]);
+    }
+  },  
+  
+  doEvalExpr: function(aExpr, aItem, aNewView)
+  {
+    // TODO: I should really write some C++ code to execute the 
+    // js code in the js context of the inspected window
+    
+    try {
+      var f = Function("target", aExpr);
+      var result = f(aItem.__JSValue__);
+      
+      if (result) {
+        if (aNewView) {
+          inspectObject(result);
+        } else {
+          this.subject = result;
+        }
+      }
+    } catch (ex) {
+      dump("Error in expression.\n");
+      throw (ex);
+    }
+  },  
+  
+  cmdInspectInNewView: function()
+  {
+    var sel = this.mTree.selectedItems[0];
+    inspectObject(sel.__JSValue__);
+  },
+  
+  ////////////////////////////////////////////////////////////////////////////
+  //// tree construction
+
+  emptyTree: function(aTreeKids)
+  {
+    var kids = aTreeKids.childNodes;
+    for (var i = 0; i < kids.length; ++i) {
+      aTreeKids.removeChild(kids[i]);
+    }
+  },
+  
+  buildPropertyTree: function(aTreeChildren, aObject)
+  {
+    try {
+      for (var prop in aObject)
+        this.addTreeItem(aTreeChildren, prop, aObject[prop], aObject);
+    } catch (ex) {
+      // hide unsightly NOT YET IMPLEMENTED errors when accessing certain properties
+    }
+  },
+  
+  addTreeItem: function(aTreeChildren, aName, aValue, aObject)
+  {
+    var ti = document.createElement("treeitem");
+    ti.__JSObject__ = aObject;
+    ti.__JSValue__ = aValue;
+    
+    var value = aValue.toString();
+    value = value.replace(/\n|\r|\t/, " ");
+    
+    ti.setAttribute("typeOf", typeof(aValue));
+
+    if (typeof(aValue) == "object") {
+      ti.setAttribute("container", "true");
+    } else if (typeof(aValue) == "string")
+      value = "\"" + value + "\"";
+    
+    var tr = document.createElement("treerow");
+    ti.appendChild(tr);
+    
+    var tc = document.createElement("treecell");
+    tc.setAttribute("class", "treecell-indent");
+    tc.setAttribute("label", aName);
+    tr.appendChild(tc);
+    tc = document.createElement("treecell");
+    tc.setAttribute("label", value);
+    tr.appendChild(tc);
+    
+    aTreeChildren.appendChild(ti);
+
+    // listen for changes to open attribute
+    this.mTreeKids.addEventListener("DOMAttrModified", onTreeItemAttrModified, false);
+    
+    return ti;
+  },
+  
+  openTreeItem: function(aItem)
+  {
+    var kids = aItem.getElementsByTagName("treechildren");
+    if (kids.length == 0) {
+      kids = document.createElement("treechildren");
+      aItem.appendChild(kids);
+    }
+    
+    this.buildPropertyTree(kids, aItem.__JSValue__);
+  },
+  
+  onCreateContext: function(aPopup)
+  {
+  }
+  
 };
 
+function onTreeItemAttrModified(aEvent)
+{
+  if (aEvent.attrName == "open")
+    viewer.openTreeItem(aEvent.target);
+}
