@@ -501,7 +501,7 @@ function sidebar_is_hidden() {
 }
 
 // Show/Hide the entire sidebar.
-// Envoked by the "View / Sidebar" menu option.
+// Envoked by the "View / My Sidebar" menu option.
 function SidebarShowHide() {
   var sidebar_box = document.getElementById('sidebar-box');
   var sidebar_title = document.getElementById('sidebar-title-box');
@@ -537,12 +537,25 @@ function SidebarExpandCollapse() {
   // but wait until the change has commited.
   setTimeout("document.persist('sidebar-box', 'collapsed');",100);
 }
+// SidebarExpandCollapseAllPanels() - Respond to grippy click.
+function SidebarExpandCollapseAllPanels(splitter) {
+  // YAMH (yet another mini hack): The splitter/grippy code probably
+  // searches for a xul widget named "splitter" because a grippy inside
+  // the "sidebarheader" does not work. The following code forces the
+  // expand/collapse.
+  var state = splitter.getAttribute('state');
+  if (state && state == 'collapsed') {
+    splitter.removeAttribute('state');
+  } else {
+    splitter.setAttribute('state','collapsed');
+  }
+}
 
 function PersistHeight() {
   // XXX Mini hack. Persist isn't working too well. Force the persist,
   // but wait until the last drag has been committed.
   // May want to do something smarter here like only force it if the 
-  // width has really changed.
+  // height has really changed.
   var sidebar_title = document.getElementById('sidebar-title-box');
   if (sidebar_title && sidebar_title.getAttribute('type') == "splitter") {
     setTimeout("document.persist('sidebar-panels','height');",100);
