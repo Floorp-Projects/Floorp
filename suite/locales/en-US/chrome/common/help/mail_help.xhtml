@@ -352,8 +352,10 @@ selecting the Inbox for the IMAP account.</p>
 
 <p>For a POP account, you must select the Inbox and click Get Msgs
 to retrieve your messages. By default, messages from your POP
-account are deleted from the POP server when you retrieve them. You
-can <a href="#pop_server_settings">change your POP server settings</a> to
+account are downloaded in full and deleted from the POP server when
+you retrieve them.
+You can <a href="#pop_server_settings">change your POP server settings</a> to
+retrieve just the headers and/or
 store a copy of messages on the server in addition to downloading
 them to your computer.</p>
 
@@ -3537,6 +3539,9 @@ that you can read it offline. The offline feature can automatically
 download incoming messages and then later send all your outgoing
 messages when you reconnect.</p>
 
+<p>Note that for POP accounts your mail is already downloaded by default, so
+most of these offline features aren't relevant for POP accounts.</p>
+
 <p>If you occasionally want to work offline, &brandShortName; Mail &amp;
 Newsgroups lets you easily:</p>
 
@@ -3574,6 +3579,9 @@ Inbox for Offline Use</h2>
 download your Inbox messages for offline use. Later, when you go
 back online, &brandShortName; Mail &amp; Newsgroups automatically
 synchronizes your Inbox messages with the server.</p>
+
+<p>Note that the Inbox for POP accounts is downloaded by default,
+so this section does not apply for POP accounts.</p>
 
 <p>To automatically download your Inbox for offline use, begin from
 the Mail window:</p>
@@ -3636,6 +3644,9 @@ section</a>]</p>
 
 <h2 id="downloading_an_individual_folder_for_offline_use">
 Downloading an Individual Folder for Offline Use</h2>
+
+<p>Note that POP accounts don't allow you to manage folders on the
+POP server, so this section does not apply to POP accounts.</p>
 
 <p>To download a specific folder for offline use, begin from the
 Mail window:</p>
@@ -3702,6 +3713,11 @@ section</a>]</p>
 <h2 id="downloading_selected_or_flagged_messages_for_offline_use">
 Downloading Selected or Flagged Messages for Offline Use</h2>
 
+<p>Note that messages are downloaded by default for POP accounts. However,
+if you have enabled the "Fetch headers only" setting in the POP account
+settings, then only the headers will be downloaded, and you will need to
+use the commands in this section to download the complete messages.</p>
+
 <p>To download selected messages for offline use, begin from the
 Mail window:</p>
 
@@ -3727,10 +3743,6 @@ click each message.</li>
 <li>Open the File menu, choose Offline, and then choose Get
 Selected Messages from the submenu. &brandShortName; Mail &amp; Newsgroups
 downloads the selected messages.</li>
-
-<li>Once downloading is complete, click the Online/Offline
-indicator in the lower right corner of the Mail window (to the left
-of the Cookie icon) to go offline.</li>
 </ol>
 
 <p>To download flagged messages for offline use, begin from the
@@ -3747,14 +3759,18 @@ Columns icon <img src="images/columns.png" /> and select Flag from the list.</li
 <li>Open the File menu, choose Offline, and then choose Get Flagged
 Messages. &brandShortName; Mail &amp; Newsgroups downloads the flagged
 messages.</li>
-
-<li>Once downloading is complete, click the Online/Offline icon in
-the lower right corner of the Mail window (to the left of the
-Cookie icon) to go offline.</li>
 </ol>
 
-<p>After you disconnect, &brandShortName; Mail &amp; Newsgroups remains open
+<p>
+Once downloading is complete, click the Online/Offline
+indicator in the lower right corner of the Mail window (to the left
+of the Cookie icon) to go offline.
+After you disconnect, &brandShortName; Mail &amp; Newsgroups remains open
 so you can continue to work with your messages.</p>
+
+<p>Note that the "Get Selected Messages" and "Get Flagged Messages"
+menu items are also available in the pop-up thread context menu, for
+faster access.</p>
 
 <p><strong>Note:</strong> Message headers that have been downloaded
 for reading offline display a darker gray envelope or newsgroup
@@ -4162,6 +4178,11 @@ computer, messages might reside on one or the other, but not both.
 POP doesn't work as well as IMAP over a slow link connection. Also,
 you can't access all mail folders from multiple locations.</p>
 
+<p>Note that more recent POP servers have features that allow retrieving
+only the headers instead of the full message, like IMAP allows. Using
+these features allows performance with POP to be nearly as fast
+as with IMAP.</p>
+
 <p>[<a href="#mail_and_newsgroups_account_settings">Return to beginning of
 section</a>]</p>
 
@@ -4348,6 +4369,13 @@ by clicking Get Msgs in the Mail window.<br />
 <li><strong>Automatically download any new messages</strong>:
 Choose this setting if you want Mail &amp; Newsgroups to retrieve
 messages immediately each time it checks the server.</li>
+
+<li><strong>Fetch headers only</strong>:
+Choose this setting if you want to only download the headers
+instead of entire messages when downloading new mail. This option
+requires your POP server to support the "TOP" command. Most recent
+POP servers support it, but if you are unsure about your server,
+contact your service provider or system administrator.</li>
 
 <li><strong>Leave messages on server</strong>: Choose this setting
 to store a copy of messages on the mail server in addition to
@@ -4655,9 +4683,12 @@ section</a>]</p>
 
 <h3 id="disk_space_settings">Disk Space Settings (POP)</h3>
 
-<p>Messages from POP accounts are always downloaded to your local
-machine. This section describes how you can save disk space for a
-POP account. If you are not already viewing the Disk Space
+<p>Messages from POP accounts are fully downloaded to your local
+machine unless you have enabled the "Fetch headers only" setting.
+This section describes how you can save disk space for a
+POP account. If your account has the "Fetch headers only" setting
+enabled, then these Disk Space preferences are ignored.
+If you are not already viewing the Disk Space
 preferences for a POP account, follow these steps:</p>
 
 <p>Begin from the Mail window.</p>
