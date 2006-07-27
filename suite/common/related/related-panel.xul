@@ -47,11 +47,12 @@
     <template>
       <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
         <treechildren>
-          <treeitem uri="...">
+          <treeitem uri="..."
+                  type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
             <treerow>
-              <treecell>
-                <html:hr width="100%" size="1" />
-              </treecell>
+            <treecell>
+            	<separator class="groove" flex="1" align="center"/>
+            </treecell>
             </treerow>
           </treeitem>
         </treechildren>
@@ -60,7 +61,6 @@
       <rule>
         <treechildren>
           <treeitem uri="..."
-                  loading="rdf:http://home.netscape.com/NC-rdf#loading"
                   type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
             <treerow>
               <treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"
