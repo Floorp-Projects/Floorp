@@ -131,6 +131,10 @@ titledbutton.panel-bar {
   font-size: smaller;
 }
 
+titledbutton.panel-bar[hidden="true"] {
+  display: none;
+}
+
 titledbutton.panel-bar[selected="true"] {
   background-color: #98CCF8;
   margin: 0px;

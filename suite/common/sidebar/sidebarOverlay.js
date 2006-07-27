@@ -37,7 +37,6 @@ function debug(msg) {
   //dump(msg+"\n");
 }
 
-
 var panel_observer = new Object;
 
 panel_observer = {
@@ -94,7 +93,9 @@ function sidebarOverlayInit() {
   sidebar.resource           = 'urn:sidebar:current-panel-list';
   sidebar.master_datasources = 'chrome://sidebar/content/local-panels.rdf chrome://sidebar/content/remote-panels.rdf';
   sidebar.master_resource    = 'urn:sidebar:master-panel-list';
+  sidebar.component          = document.location.href;
 
+  debug("--->--->--->component: "+sidebar.component);
   // Initialize the display
   var sidebar_element  = document.getElementById('sidebar-box')
   var sidebar_menuitem = document.getElementById('menu_sidebar')
@@ -169,8 +170,9 @@ function selectPanel(target) {
   if (!select_index) {
     // Target not found. Pick the first panel by default.
     // It is at index 1 because the template is at index 0.
-    select_index = 1;
-    target = top_headers.item(1).getAttribute('iframe-src');
+    debug("selectPanel: target not found, choosing last panel, index "+top_headers.length+"\n");
+    select_index = pickDefaultPanel(top_headers);
+    target = top_headers.item(select_index).getAttribute('iframe-src');
   }
 
   // Update the content area if necessary.
@@ -191,13 +193,36 @@ function findPanel(panels, target) {
       var item = panels.item(ii);
       
       if (item.getAttribute('iframe-src') == target) {
-
-        // Found it!
-        return ii;
+        if (isExcluded(item)) {
+          debug("findPanel: Found panel at index, "+ii+", but it is excluded");
+          return 0;
+        } else {
+          // Found it!
+          debug("findPanel: Found panel at index, "+ii);
+          return ii;
+        }
       }
     }
   }
   return 0;
+}
+
+function pickDefaultPanel(panels) {
+  last_non_excluded_index = null;
+  for (var ii=1; ii < panels.length; ii++) {
+    if (!isExcluded(panels.item(ii))) {
+      last_non_excluded_index = ii;
+    }
+  }
+  return last_non_excluded_index;
+}
+
+function isExcluded(item) {
+  var exclude = item.getAttribute('exclude');
+  var src = item.getAttribute('iframe-src');
+  debug("src="+src);
+  debug("exclude="+exclude);
+  return exclude && exclude != '' && exclude.indexOf(sidebar.component) != -1;
 }
 
 function updateHeaders(index) {
@@ -208,17 +233,20 @@ function updateHeaders(index) {
     var top_item    = top_headers.item(ii);
     var bottom_item = bottom_headers.item(ii);
 
-    if (ii < index) { 
+    if (isExcluded(top_item)) {
+      top_item.setAttribute('hidden','true');
+      bottom_item.setAttribute('hidden','true');
+    } else if (ii < index) { 
       top_item.removeAttribute('selected');
-      top_item.removeAttribute('style');
-      bottom_item.setAttribute('style','display:none');
+      top_item.removeAttribute('hidden');
+      bottom_item.setAttribute('hidden','true');
     } else if (ii == index) {
       top_item.setAttribute('selected','true');
-      top_item.removeAttribute('style');
-      bottom_item.setAttribute('style','display:none');
+      top_item.removeAttribute('hidden');
+      bottom_item.setAttribute('hidden','true');
     } else {
-      top_item.setAttribute('style','display:none');
-      bottom_item.removeAttribute('style');
+      top_item.setAttribute('hidden','true');
+      bottom_item.removeAttribute('hidden');
       bottom_item.removeAttribute('selected');
     }
   }
@@ -348,6 +376,14 @@ function bumpWidth(delta) {
   sidebar.setAttribute('width', parseInt(width) + delta);
 }
 
+function PersistHeight() {
+  // XXX Mini hack. Persist isn't working too well. Force the persist,
+  // but wait until the last drag has been committed.
+  // May want to do something smarter here like only force it if the 
+  // width has really changed.
+  setTimeout("document.persist('sidebar-panels-box','height');",100);
+}
+
 function persistWidth() {
   // XXX Partial workaround for bug #19488.
   var sidebar = document.getElementById('sidebar-box');
@@ -365,7 +401,6 @@ function persistWidth() {
     sidebar.setAttribute('width',168);
   }
 
-  width = sidebar.getAttribute('width');
   document.persist('sidebar-box', 'width');
 }
 
