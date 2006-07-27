@@ -57,7 +57,7 @@
         datasources="rdf:null"
         indent="true"
         multiple="true"
-        style="height:15em">
+        style="height:20em">
   
         <template>
           <treechildren>
