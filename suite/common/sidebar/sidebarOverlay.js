@@ -102,9 +102,9 @@ function sidebar_overlay_init() {
   debug("sidebarObj.component is " + sidebarObj.component);
 
   // Initialize the display
-  var sidebar_element  = document.getElementById('sidebar-box');
-  var sidebar_menuitem = document.getElementById('menu_sidebar');
-  if (sidebar_element.getAttribute('hidden') == 'true') {
+  var sidebar_element = document.getElementById('sidebar-box');
+  var sidebar_menuitem = document.getElementById('sidebar-menu');
+  if (sidebar_is_hidden()) {
     if (sidebar_menuitem) {
       sidebar_menuitem.setAttribute('checked', 'false');
     }
@@ -122,13 +122,11 @@ function sidebar_overlay_init() {
 
       // Show the header for the panels area. Use a splitter if there
       // is stuff over the panels area.
-      var title_box = document.getElementById('title-box');
-      if (sidebar_element.firstChild == title_box) {
-        //title_box.removeAttribute('hidden');
-        title_box.setAttribute('type','box');
+      var sidebar_title = document.getElementById('sidebar-title-box');
+      if (sidebar_element.firstChild == sidebar_title) {
+        sidebar_title.setAttribute('type','box');
       } else {
-        //document.getElementById('title-splitter').removeAttribute('hidden');
-        title_box.setAttribute('type','splitter');
+        sidebar_title.setAttribute('type','splitter');
       }
       
       // Add the user's current panel choices to the template builder,
@@ -209,7 +207,7 @@ function sidebar_refresh() {
   var last_selected_panel = panels.getAttribute('last-selected-panel');
   if (is_selected(last_selected_panel)) {
     // A panel is already selected
-    update_iframes();
+    update_panels();
   } else {
     // This is either the first refresh after creating the sidebar,
     // or a panel has been added or removed.
@@ -255,7 +253,7 @@ function select_panel(target) {
   if (panels.getAttribute('last-selected-panel') != target) {
     panels.setAttribute('last-selected-panel', target);
   }
-  update_iframes();
+  update_panels();
 }
 
 function find_panel(panels, target) {
@@ -296,13 +294,35 @@ function is_excluded(item) {
            exclude.indexOf(sidebarObj.component) != -1 );
 }
 
-function update_iframes() {
+function panel_loader() {
+  debug("---------- panel_loader");
+  dump_tree(this);
+  this.removeEventListener("load", panel_loader, true);
+  this.removeAttribute('collapsed');
+  this.parentNode.firstChild.setAttribute('hidden','true');
+}
+
+function get_iframe(content) {
+  debug("---------- get_iframe");
+  dump_tree(content);
+  var unsandboxed_iframe = content.childNodes.item(1);
+  var sandboxed_iframe = content.childNodes.item(2);
+  if (unsandboxed_iframe.getAttribute('src').match(/^chrome:/)) {
+    return unsandboxed_iframe;
+  } else {
+    return sandboxed_iframe;
+  }
+}
+
+function update_panels() {
   // This function requires that the attributre 'last-selected-panel'
   // holds the id of a non-excluded panel. If it doesn't, no panel will
   // be selected.
   var panels = document.getElementById('sidebar-panels');
   var selected_id = panels.getAttribute('last-selected-panel');
-
+  var have_set_top = 0
+  var have_set_after_selected = 0
+  var is_after_selected = 0
   for (var ii=1; ii < panels.childNodes.length; ii += 2) {
     var header = panels.childNodes.item(ii);
     var content = panels.childNodes.item(ii+1);
@@ -311,31 +331,38 @@ function update_iframes() {
       debug("item("+ii+") excluded");
       header.setAttribute('hidden','true');
       content.setAttribute('hidden','true');
-    } else if (selected_id == id) {
-      debug("item("+ii+") selected");
-      header.setAttribute('selected','true');
-      header.removeAttribute('hidden');
-      var previously_shown = content.getAttribute('have-shown');
-      content.setAttribute('have-shown','true');
-      content.removeAttribute('hidden');
-      content.removeAttribute('collapsed');
-      if (!previously_shown) {
-        // Pick sandboxed, or unsandboxed iframe
-        if (content.firstChild.getAttribute('src').match(/^chrome:/)) {
-          content.firstChild.removeAttribute('hidden');
-        } else {
-          content.lastChild.removeAttribute('hidden');
-        }
+    } else {
+      if (!have_set_top) {
+        header.setAttribute('top-panel','true');
+        have_set_top = 1
+      } else {
+        header.removeAttribute('top-panel');
       }
-    } else { 
-      debug("item("+ii+") unselected");
-      header.removeAttribute('selected');
+      if (!have_set_after_selected && is_after_selected) {
+        header.setAttribute('first-panel-after-selected','true');
+        have_set_after_selected = 1
+      } else {
+        header.removeAttribute('first-panel-after-selected');
+      }
       header.removeAttribute('hidden');
-      
-      // After an iframe is show the first time, hide it instead of
-      // destroying it.
-      var built_attribute = content.getAttribute('hidden')
-      if (!built_attribute || built_attribute != 'true') {
+
+      if (selected_id == id) {
+        is_after_selected = 1
+        debug("item("+ii+") selected");
+        header.setAttribute('selected', 'true');
+        content.removeAttribute('hidden');
+        content.removeAttribute('collapsed');
+        var previously_shown = content.getAttribute('have-shown');
+        content.setAttribute('have-shown','true');
+        if (!previously_shown) {
+          // Pick sandboxed, or unsandboxed iframe
+          var iframe = get_iframe(content);
+          iframe.removeAttribute('hidden');
+          iframe.addEventListener("load", panel_loader, true);
+        }
+      } else { 
+        debug("item("+ii+") unselected");
+        header.removeAttribute('selected');
         content.setAttribute('collapsed','true');
       }
     }
@@ -401,25 +428,41 @@ function SidebarCustomize() {
   }
 }
 
+function sidebar_is_hidden() {
+  var sidebar_title = document.getElementById('sidebar-title-box');
+  var sidebar_box = document.getElementById('sidebar-box');
+  return sidebar_box.getAttribute('hidden') == 'true'
+         || sidebar_title.getAttribute('hidden') == 'true';
+}
+
 // Show/Hide the entire sidebar.
 // Envoked by the "View / Sidebar" menu option.
 function SidebarShowHide() {
   var sidebar_box = document.getElementById('sidebar-box');
+  var sidebar_title = document.getElementById('sidebar-title-box');
+  var sidebar_panels = document.getElementById('sidebar-panels');
   var sidebar_splitter = document.getElementById('sidebar-splitter');
-  var is_hidden = sidebar_box.getAttribute('hidden');
+  var hide_everything = sidebar_title.getAttribute('type') == 'box';
 
-  if (is_hidden && is_hidden == "true") {
+  var elem1, elem2, elem1_name;
+  if (sidebar_is_hidden()) {
     debug("Showing the sidebar");
     sidebar_box.removeAttribute('hidden');
+    sidebar_title.removeAttribute('hidden');
+    sidebar_panels.removeAttribute('hidden');
     sidebar_splitter.removeAttribute('hidden');
     sidebar_overlay_init();
   } else {
     debug("Hiding the sidebar");
-    sidebar_box.setAttribute('hidden','true');
-    sidebar_splitter.setAttribute('hidden','true');
+    if (hide_everything) {
+      sidebar_box.setAttribute('hidden', 'true');
+      sidebar_splitter.setAttribute('hidden', 'true');
+    }
+    sidebar_title.setAttribute('hidden', 'true');
+    sidebar_panels.setAttribute('hidden', 'true');
   }
   // Immediately save persistent values
-  document.persist('sidebar-box', 'hidden');
+  document.persist('sidebar-title-box', 'hidden');
   persist_width();
 }
 
@@ -435,8 +478,8 @@ function PersistHeight() {
   // but wait until the last drag has been committed.
   // May want to do something smarter here like only force it if the 
   // width has really changed.
-  var title_box = document.getElementById('title-box');
-  if (title_box && title_box.getAttribute('type') == "splitter") {
+  var sidebar_title = document.getElementById('sidebar-title-box');
+  if (sidebar_title && sidebar_title.getAttribute('type') == "splitter") {
     setTimeout("document.persist('sidebar-panels','height');",100);
   }
 }
@@ -446,8 +489,9 @@ function persist_width() {
   var sidebar_box = document.getElementById('sidebar-box');
 
   var width = sidebar_box.getAttribute('width');
-  if (width && (width > 410 || width < 15)) {
+  if (width && (width > 410 || width < 100)) {
     sidebar_box.setAttribute('width',168);
+    debug("Forcing sidebar width to 168. It was too narror or too wide)");
   }
 
   // XXX Mini hack. Persist isn't working too well. Force the persist,
@@ -465,7 +509,7 @@ function SidebarFinishDrag() {
 }
 
 function SidebarBuildPickerPopup() {
-  var menu = document.getElementById('panel-picker-popup');
+  var menu = document.getElementById('sidebar-panel-picker-popup');
   menu.database.AddDataSource(RDF.GetDataSource(sidebarObj.datasource_uri));
   menu.setAttribute('ref', sidebarObj.resource);
 
