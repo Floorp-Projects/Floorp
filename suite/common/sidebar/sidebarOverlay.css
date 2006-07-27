@@ -144,6 +144,10 @@ box#sidebar-panels-bottom > box.texttab + box.texttab {
 	background-color: #CCCCCC;
 }
 
-box.texttab[hidden="true"] {
+*[collapsed="true"] {
+  visibility: collapsed;
+}
+
+*[hidden="true"] {
   display: none;
 }
