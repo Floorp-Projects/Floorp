@@ -113,7 +113,7 @@
   </script>         
 
   <!-- tasksOverlay menu items -->
-  <menupopup id="taskPopup" oncreate="CheckForImage()"/>
+  <menupopup id="taskPopup" onpopupshowing="CheckForImage()"/>
 
   <menupopup  id="personalManagers">
     <menu label="&cookieCookieManager.label;"

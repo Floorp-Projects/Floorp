@@ -30,7 +30,7 @@
 
   <command id="toggleSidebar" oncommand="SidebarShowHide();"/>
   <key id="showHideSidebar" keycode="VK_F9" command="toggleSidebar"/>
-  <popup id="sidebarPopup" oncreate="if (sidebarObj.panels.get_panel_from_header_node(document.popupNode).is_selected())
+  <popup id="sidebarPopup" onpopupshowing="if (sidebarObj.panels.get_panel_from_header_node(document.popupNode).is_selected())
                                        this.firstChild.setAttribute('collapsed', 'true');
                                      else
                                        this.firstChild.removeAttribute('collapsed');">
@@ -59,7 +59,7 @@
         label="&sidebar.panels.label;" persist="hidden" type="box"
         collapse="after" onmouseup="PersistHeight();">
         <menubutton id="sidebar-panel-picker" menubuttontype="sidebar-panels" class="button-toolbar-4" crop="right"
-          oncreate="SidebarBuildPickerPopup();"
+          onpopupshowing="SidebarBuildPickerPopup();"
           label="&sidebar.picker.label;" >
           <menupopup id="sidebar-panel-picker-popup" popupanchor="topright"
             datasources="rdf:null"
