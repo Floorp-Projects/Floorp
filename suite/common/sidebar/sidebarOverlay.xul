@@ -161,7 +161,7 @@
 
   <!-- Splitter on the right of sidebar -->
   <splitter id="sidebar-splitter" collapse="before" persist="state hidden"
-    class="chromeclass-extrachrome sidebar-splitter" align="center"
+    class="sidebar-splitter" align="center"
     onmouseup="SidebarFinishClick();">
     <grippy class="sidebar-splitter-grippy"
       onclick="SidebarCleanUpExpandCollapse();"/>
