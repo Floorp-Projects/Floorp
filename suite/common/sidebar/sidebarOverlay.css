@@ -19,6 +19,8 @@
  * Contributor(s): Stephen Lamm <slamm@netscape.com>
  */ 
 
+@import url(chrome://global/skin/);
+
 splitter#sidebar-splitter {
 	margin-right: 2px;
 	margin-top: 2px;
@@ -121,22 +123,35 @@ splitter.sidebar-main-header titledbutton:hover {
   color: white;
 }
 
-titledbutton.panel-bar {
-  padding: 0px;
-  margin: 0px;
-  min-width: 1px;
-  padding-left: 5px;
-  border-top: 1px solid white;
-  background-color: #CCCCCC;
-  font-size: smaller;
+box.texttab {
+	min-width: 10px;
 }
 
-titledbutton.panel-bar[hidden="true"] {
+box.texttab > .remain-space {
+	width: 30px;
+}
+
+box#sidebar-panels > box.texttab:first-child {
+	background-color: white;
+}
+
+box#sidebar-panels > box.texttab + box.texttab {
+	background-color: #CCCCCC;
+}
+
+
+box#sidebar-panels-bottom > box.texttab[hidden] + box.texttab {
+	background-color: white;
+}
+
+box#sidebar-panels-bottom > box.texttab[hidden] + box.texttab + box.texttab {
+	background-color: #CCCCCC;
+}
+
+box#sidebar-panels-bottom > box.texttab + box.texttab {
+	background-color: #CCCCCC;
+}
+
+box.texttab[hidden="true"] {
   display: none;
-}
-
-titledbutton.panel-bar[selected="true"] {
-  background-color: #98CCF8;
-  margin: 0px;
-  border-bottom: 1px solid #808080;
 }
