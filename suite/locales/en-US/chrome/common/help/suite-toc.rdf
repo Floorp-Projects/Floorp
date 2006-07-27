@@ -485,7 +485,6 @@ nc:link="chrome://help/locale/nav_help.xhtml#plugins_and_downloads"/> </rdf:li>
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="mail_prefs_general" nc:name="Mail and Newsgroups" nc:link="mail_help.xhtml#mail_and_newsgroups"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_prefs_windows" nc:name="Windows" nc:link="mail_help.xhtml#windows"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail_prefs_display" nc:name="Message Display" nc:link="mail_help.xhtml#message_display"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail_prefs_notifications" nc:name="Notifications" nc:link="mail_help.xhtml#notifications"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail_prefs_messages" nc:name="Composition" nc:link="mail_help.xhtml#composition"/> </rdf:li>
