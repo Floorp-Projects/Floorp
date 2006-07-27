@@ -29,10 +29,13 @@
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="Init();" 
+  id="main-window"
   class="color-dialog"
   title="&sidebar.customize.title.label;"
   windowtype="sidebar:customize"
-  align="vertical">
+  align="vertical"
+  width="450" height="400"
+  persist="screenX screenY width height">
 
   <script src="chrome://communicator/content/sidebar/customize.js"></script>
 
@@ -128,10 +131,12 @@
   </box>
 
   <box id="saveCancelButtons">
-  	<spring flex="1"/>
-	<button oncommand="Save();" id="save_button" value="&sidebar.customize.save.label;" />
-	<button oncommand="window.close();" value="&sidebar.customize.cancel.label;" />
-	<spring flex="1"/>
+    <spring flex="1"/>
+    <button oncommand="Save();" id="save_button"
+      value="&sidebar.customize.save.label;" />
+    <button oncommand="Cancel();"
+      value="&sidebar.customize.cancel.label;" />
+    <spring flex="1"/>
   </box>
 
 </window>
