@@ -45,8 +45,8 @@
 	<html:script language="Javascript" src="chrome://global/content/strres.js"/>
 	<html:script language="Javascript" src="chrome://communicator/content/search/search-editor.js" />
 
-	<titledbox orient="vertical" flex="1" >
-		<box align="horizontal" flex="100%" autostretch="never">
+	<titledbox orient="vertical" flex="100%" >
+		<box align="horizontal" autostretch="never">
 			<text value="&category.label;" />
 
 			<menulist id="categoryList" ref="NC:SearchCategoryRoot" datasources="rdf:null" >
@@ -66,13 +66,13 @@
 		</box>
 
 		<box align="horizontal" flex="100%">
-			<tree multiple="true" id="engineList" flex="1" datasources="rdf:internetsearch" class="inset">
+			<tree multiple="true" flex="100%" class="inset" id="engineList" datasources="rdf:internetsearch">
 				<template>
 					<treechildren>
 					<treeitem uri="...">
 					<treerow>
 					<treecell>
-						<titledbutton class="iconic" flex="1" crop="right" align="left"
+						<titledbutton class="iconic" flex="100%" crop="right" align="left"
 							src="rdf:http://home.netscape.com/NC-rdf#Icon"
 							value="rdf:http://home.netscape.com/NC-rdf#Name" />
 					</treecell>
@@ -85,37 +85,46 @@
 
 				<treehead>
 					<treerow>
-						<treecell observes="EngineColumn" align="center" value="&engine.column.label;" resource="http://home.netscape.com/NC-rdf#Name" flex="1"/>
+						<treecell observes="EngineColumn" align="center" value="&engine.column.label;" resource="http://home.netscape.com/NC-rdf#Name" flex="100%"/>
 					</treerow>
 				</treehead>
 			</tree>
 
-			<box align="vertical" flex="100%" class="button-group">
+			<box align="vertical" flex="50%" class="button-group" >
 				<spring align="vertical" flex="100%" />
 
-				<titledbutton id="add-button" onclick="return AddEngine()" value="&add.label;" class="dialog toolbar-non-iconic" />
-				<titledbutton id="remove-button" onclick="return RemoveEngine()" value="&remove.label;" class="dialog toolbar-non-iconic" />
+				<box align="horizontal">
+					<spring align="horizontal" flex="100%" />
+					<titledbutton id="add-button" onclick="return AddEngine()" value="&add.label;" class="dialog toolbar-non-iconic" />
+					<spring align="horizontal" flex="100%" />
+				</box>
+
+				<box align="horizontal">
+					<spring align="horizontal" flex="100%" />
+					<titledbutton id="remove-button" onclick="return RemoveEngine()" value="&remove.label;" class="dialog toolbar-non-iconic" />
+					<spring align="horizontal" flex="100%" />
+				</box>
 
 				<spring align="vertical" flex="100%" />
 
 				<!-- The 'reorder' buttons -->
 				<box id="reorder" align="vertical" autostretch="never">
-					<spring flex="1"/>
+					<spring flex="100%"/>
 					<titledbutton oncommand="MoveUp();" id="up" class="up small dialog toolbar-non-iconic" />
 					<titledbutton oncommand="MoveDown();" id="down" class="down small dialog toolbar-non-iconic" />
-					<spring flex="1"/>
+					<spring flex="100%"/>
 				</box>
 
 				<spring align="vertical" flex="100%" />
 			</box>
 
-			<tree multiple="true" class="inset" id="allengines" ref="NC:SearchEngineRoot" datasources="rdf:internetsearch">
+			<tree multiple="true" flex="100%" class="inset" id="allengines" ref="NC:SearchEngineRoot" datasources="rdf:internetsearch">
 				<template>
 					<treechildren>
 					<treeitem uri="..." loading="rdf:http://home.netscape.com/NC-rdf#loading">
 					<treerow>
 					<treecell>
-						<titledbutton class="iconic" flex="1" crop="right" align="left"
+						<titledbutton class="iconic" flex="100%" crop="right" align="left"
 							src="rdf:http://home.netscape.com/NC-rdf#Icon"
 							value="rdf:http://home.netscape.com/NC-rdf#Name" />
 					</treecell>
@@ -128,7 +137,7 @@
 
 				<treehead>
 					<treerow>
-						<treecell observes="NameColumn" align="center" value="&allengines.label;" resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('NameColumn', null);" sortActive="true" sortDirection="ascending" flex="1"/>
+						<treecell observes="NameColumn" align="center" value="&allengines.label;" resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('NameColumn', null);" sortActive="true" sortDirection="ascending" flex="100%"/>
 					</treerow>
 				</treehead>
 			</tree>
@@ -143,7 +152,7 @@
 	</titledbox>
 
 	<box autostretch="never">
-		<spring flex="1"/>
+		<spring flex="100%"/>
 		<titledbutton id="done.button" onclick="Commit()" value="&done.label;" class="dialog toolbar-non-iconic" />
 	</box>
 
