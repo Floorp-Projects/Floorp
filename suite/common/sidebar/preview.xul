@@ -19,26 +19,28 @@
 -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/sidebar/preview.css" type="text/css"?>
-
+<?xml-stylesheet href="chrome://communicator/skin/sidebar/sidebarOverlay.css"
+  type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/sidebar/preview.css"
+  type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/sidebar/preview.dtd" >
 
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
-  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="Init();"
   class="dialog"
   title="&sidebar.preview.title.label;"
-  style="width: 26em;"
   orient="vertical">
 
   <script src="chrome://communicator/content/sidebar/preview.js" />
 
-  <box class="box-smallheader" id="paneltitle" title="&sidebar.preview.title.label;" description=""/>
+  <box id="paneltitle" class="texttab sidebar-tab"
+    align="left" selected="true"/>
 
+<!--  <iframe id="previewframe" type="content" src="about:blank" flex="1"/>-->
   <iframe class="inset" id="previewframe" type="content" src="about:blank" flex="1"/>
 
   <separator class="groove"/>
