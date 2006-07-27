@@ -21,6 +21,7 @@
  
 <?xml-stylesheet href="chrome://communicator/content/sidebar/sidebarOverlay.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://global/skin/button.css" type="text/css"?> 
+<?xul-overlay href="chrome://navigator/content/navExtraOverlay.xul"?>
 
 <!DOCTYPE overlay [
 <!ENTITY % sidebarOverlayDTD SYSTEM "chrome://communicator/locale/sidebar/sidebarOverlay.dtd" >
@@ -63,7 +64,9 @@
       persist="collapsed">
       <sidebarheader id="sidebar-title-box" class="sidebarheader-main"
         label="&sidebar.panels.label;" persist="hidden" type="box"
-        collapse="after" onmouseup="PersistHeight();">
+        collapse="after" onmouseup="PersistHeight();" prefixhidden="true"
+        tooltipopen="&sidebar.open.tooltip;" 
+        tooltipclose="&sidebar.close.tooltip;">
         <toolbarbutton type="menu" id="sidebar-panel-picker" menubuttontype="sidebar-panels"
           onpopupshowing="SidebarBuildPickerPopup();"
           label="&sidebar.picker.label;" >
@@ -107,7 +110,7 @@
   
       <vbox id="sidebar-panels"
         datasources="rdf:null"
-        ref="urn:sidebar:current-panel-list" 
+        ref="urn:sidebar:current-panel-list"
         persist="last-selected-panel height collapsed" flex="1*"
         onclick="return contentAreaClick(event);"
         ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);">
