@@ -1,568 +1,563 @@
-<html><head>
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-<title>Glossary</title>
-<link rel="stylesheet" href="chrome://help/locale/content_style.css" type="text/css">
+<html>
+<head>
+  <title>Glossary</title>
+  <link rel="stylesheet" href="chrome://help/locale/content_style.css" type="text/css">
+</head>
 
-</HEAD>
 <body>
+
 <div class="boilerplate">This glossary is provided for your information only, and is not meant to be relied upon as a complete or authoritative description of the terms defined below or of the privacy and/or security ramifications of the technologies described.</div>
 
-<hr><h1><A NAME="glossary"></A><A NAME="996904">
-Glossary 
-</A></h1><p>
-<A NAME="authentication"></A><A NAME="998782">
-<B>authentication.</B>&nbsp;
-</A>
-The use of a password, certificate, personal identification number (PIN), or other information to validate an identity over a computer network. See also <a href="glossary.html#1014123">password-based authentication</a>, <a href="glossary.html#1018581">certificate-based authentication</a>, <a href="glossary.html#1021054">client authentication</a>, <a href="glossary.html#1031070">server authentication</a>.<P>
-
-<p><a name="bookmark"></a>
-<b>bookmark.</b>&nbsp;A stored web page address (<a href="#Uniform_Resource_Locator_(URL)">URL</a>) that you can go to easily by clicking a bookmark icon in the Personal Toolbar or choosing the bookmark's name from the Bookmarks menu.<p> 
-
-<A NAME="CA"></A><A NAME="1021395">
-<B>CA.</B>&nbsp;
-</A><A NAME="1021418"></A>
-See <a href="glossary.html#1020903">certificate authority (CA)</a><P>
-
-
-<A NAME="CA_certificate"></A><A NAME="1017503">
-<B>CA certificate.</B>&nbsp;
-</A><A NAME="1017507"></A>
-A certificate that identifies a certificate authority. See also <a href="glossary.html#1020903">certificate authority (CA)</a>, <a href="glossary.html#999541">subordinate CA</a>, <a href="glossary.html#1015631">root CA</a>.<P>
-
-<p><a name="cache"></a>
-<b>cache.</b>&nbsp;A collection of web page copies stored on your computer's hard disk or in its random-access memory (RAM). The browser accumulates these copies as you browse the Web. When you click a link or type a <a href="#Uniform_Resource_Locator_(URL)">URL</a> to fetch a particular web page for which the cache already contains a copy, the browser compares the cached copy to the original. If there have been no changes, the browser uses the cached copy rather than refetching the original, saving processing and download time. <p>
-
-<A NAME="certificate"></A><A NAME="1018895">
-<B>certificate.</B>&nbsp;
-</A><A NAME="1018896"></A>The digital equivalent of an ID card. A certificate specifies the name of an individual, company, or other entity and certifies that a public key, which is included in the certificate, belongs to that entity. When you digitally sign a message or other data, the digital signature for that message is created with the aid of the private key that corresponds to the public key in your certificate. A certificate is issued and digitally signed by a <a href="glossary.html#1020903">certificate authority (CA)</a>. A certificate's validity can be verified by checking the CA's <a href="glossary.html#1013995">digital signature</a>. Also called digital ID, digital passport, public-key certificate, X.509 certificate, and security certificate. See also <a href="glossary.html#1019178">public-key cryptography</a>.<P>
-
-
-<A NAME="certificate_authority_(CA)"></A><A NAME="1020903">
-<B>certificate authority (CA).</B>&nbsp;
-</A><A NAME="1020904"></A>
-A service that issues a certificate after verifying the identity of the person or entity the certificate is intended to identify. A CA also renews and revokes certificates and generates a list of revoked certificates at regular intervals. CAs can be independent vendors (such as the CAs listed at <a href="https://certs.netscape.com/" TARGET="_blank">Client Certificates</a>) or a person or organization using certificate-issuing server software (such as Mozilla Certificate Management System). See also <a href="glossary.html#1018895">certificate</a>, <a href="glossary.html#1019940">certificate revocation list (CRL)</a>.<P>
-
-
-<A NAME="certificate_backup_password"></A><A NAME="1024655">
-<B>certificate backup password.</B>&nbsp;
-</A><A NAME="1024670"></A>
-A password that protects a certificate that you are backing up or have previously backed up. Certificate Manager asks you to set this password when you back up a certificate, and requests it when you attempt to restore a certificate that has previously been backed up. <P>
-
-
-<A NAME="certificate-based_authentication"></A><A NAME="1018581">
-<B>certificate-based authentication.</B>&nbsp;
-</A><A NAME="1018582"></A>
-Verification of identity based on certificates and public-key cryptography. See also <a href="glossary.html#1014123">password-based authentication</a>.<P>
-
-
-<A NAME="certificate_chain"></A><A NAME="1018500">
-<B>certificate chain.</B>&nbsp;
-</A><A NAME="1019929"></A>
-A hierarchical series of certificates signed by successive certificate authorities. A CA certificate identifies a <a href="glossary.html#1020903">certificate authority (CA)</a> and is used to sign certificates issued by that authority. A CA certificate can in turn be signed by the CA certificate of a parent CA and so on up to a <a href="glossary.html#1015631">root CA</a>. <P>
-
-
-<A NAME="certificate_fingerprint"></A><A NAME="1020297">
-<B>certificate fingerprint.</B>&nbsp;
-</A>A unique number associated with a certificate. The number is not part of the certificate itself but is produced by applying a mathematical function to the contents of the certificate. If the contents of the certificate change, even by a single character, the function produces a different number. Certificate fingerprints can therefore be used to verify that certificates have not been tampered with.<P>
-
-
-<A NAME="Certificate_Manager"></A>
-<B>Certificate Manager</B>&nbsp;
-<A NAME="1020326"></A>
-The part of the browser that allows you to view and manage certificates. To view the main Certificate Manager window: Open the Edit menu, choose Preferences, click Privacy and Security, and then click Manage Certificates.<P>
-
-
-
-<A NAME="certificate_renewal"></A><A NAME="1031319">
-<B>certificate renewal.</B>&nbsp;
-</A><A NAME="1031323"></A>
-The process of renewing a <a href="glossary.html#1018895">certificate</a> that is about to expire.<P>
-
-
-<A NAME="certificate_revocation_list_(CRL)"></A><A NAME="1019940">
-<B>certificate revocation list (CRL).</B>&nbsp;
-</A><A NAME="1021047"></A>
-A list of revoked certificates that is generated and signed by a <a href="glossary.html#1020903">certificate authority (CA)</a>. You can download the latest CRL to your browser or to a server, then check against it to make sure that certificates are still valid before permitting their use for authentication. <P>
-
-
-
-<A NAME="certificate_verification"></A><A NAME="1025527">
-<B>certificate verification.</B>&nbsp;
-</A><A NAME="1025531"></A>
-When <a href="#Certificate_Manager">Certificate Manager</a> verifies a certificate, it confirms that the digital signature was created by a CA whose own CA certificate is both on file with Certificate Manager and marked as trusted for issuing that kind of certificate. It also confirms that the certificate being verified has not itself been marked as untrusted. Finally, if the <a href="glossary.html#1029304">Online Certificate Status Protocol (OCSP)</a> has been activated, Certificate Manager also performs an online check. It does so by looking up the certificate in a list of valid certificates maintained at a URL that is specified either in the certificate itself or in the browser's Validation preferences. If any of these checks fail, Certificate Manager marks the certificate as unverified and won't recognize the identity it certifies.<P>
-
-
-<A NAME="cipher"></A><A NAME="1021048">
-<B>cipher.</B>&nbsp;
-</A><A NAME="1021052"></A>
-See <a href="glossary.html#1019976">cryptographic_algorithm</a>.<P>
-
-
-<A NAME="client"></A><A NAME="1029510">
-<B>client.</B>&nbsp;
-</A><A NAME="1029547"></A>
-Software (such as browser software) that sends requests to and receives information from a <a href="glossary.html#1029749">server</a>, which is usually running on a different computer. A computer on which client software runs is also described as a client.<P>
-
-
-<A NAME="client_authentication"></A><A NAME="1021054">
-<B>client authentication.</B>&nbsp;
-</A><A NAME="1014557"></A>
-The process of identifying a <a href="glossary.html#1029510">client</a> to a <a href="glossary.html#1029749">server</a>, for example with a name and password or with a <a href="glossary.html#1014561">client SSL certificate</a> and some digitally signed data. See also <a href="glossary.html#999463">Secure Sockets Layer (SSL)</a>, <a href="glossary.html#1031070">server authentication</a>.<P>
-
-
-<A NAME="client_SSL_certificate"></A><A NAME="1014561">
-<B>client SSL certificate.</B>&nbsp;
-</A><A NAME="1014562"></A>
-A certificate that a <a href="glossary.html#1029510">client</a> (such as browser software) presents to a <a href="glossary.html#1029749">server</a> to authenticate the identity of the client (or the identity of the person using the client) using the <a href="glossary.html#999463">Secure Sockets Layer (SSL)</a> protocol. See also <a href="glossary.html#1021054">client authentication</a>.<P>
-
-
-<p><a name="Component_Bar"></a>
-<b>Component Bar.</b>&nbsp;The toolbar located at the bottom left of any Mozilla window. The Component Bar allows you to switch between Mozilla components by clicking icons for Navigator, Mail &amp; Newsgroups, Instant Messenger, and so on.  
-
-
-<p><a name="cookie"></a>
-<b>cookie.</b>&nbsp;A small bit of information stored on your computer by some web sites. When you visit such a site, the site asks your browser to place one or more cookies on your hard disk. Later, when you return to the site, your browser sends the site the cookies that belong to it. Cookies help web sites keep track of information about you, such as the contents of your shopping cart. You can set your cookie preferences to control how cookies are used and how much information you are willing to let web sites store on them. See also <a href="#foreign_cookie">foreign_cookie</a>.<p>
-
-<p><a name="Cookie_Manager"></a>
-<b>Cookie Manager.</b>&nbsp;The part of the browser that you can use to control <a href="#cookie">cookies</a>. For details, see <a href="using_priv_help.html">Using the Cookie Manager</a>. <p>
-
-
-<A NAME="cryptographic_algorithm"></A><A NAME="1019976">
-<B>cryptographic algorithm.</B>&nbsp;
-</A><A NAME="1019985"></A>
-A set of rules or directions used to perform cryptographic operations such as <a href="glossary.html#999078">encryption</a> and <a href="glossary.html#998999">decryption</a>. Sometimes called a <I>cipher.</I><P>
-
-
-<A NAME="cryptography"></A><A NAME="1026002">
-<B>cryptography.</B>&nbsp;
-</A><A NAME="1026018"></A>
-The art and practice of scrambling (encrypting) and unscrambling (decrypting) information. For example, cryptographic techniques are used to scramble an unscramble information flowing between commercial web sites and your browser. See also <a href="glossary.html#1019178">public-key cryptography</a>.<P>
-
-
-<A NAME="decryption"></A><A NAME="998999">
-<B>decryption.</B>&nbsp;
-</A><A NAME="999005"></A>
-The process of unscrambling data that has been encrypted. See also <a href="glossary.html#999078">encryption</a>.<P>
-
-
-<A NAME="digital_ID"></A><A NAME="999011">
-<B>digital ID.</B>&nbsp;
-</A><A NAME="999017"></A>
-See <a href="glossary.html#1018895">certificate</a>.<P>
-
-
-<A NAME="digital_signature"></A><A NAME="1013995">
-<B>digital signature.</B>&nbsp;
-</A><A NAME="1013996"></A>
-A code created from both the data to be signed and the private key of the signer. This code is unique for each new piece of data. Even a single comma added to a message changes the digital signature for that message. Successful validation of your digital signature by appropriate software not only provides evidence that you approved the transaction or message, but also provides evidence that the data has not changed since you digitally signed it. A digital signature has nothing to do with a handwritten signature, although it can sometimes be used for similar legal purposes. See also <a href="glossary.html#999248">nonrepudiation</a>, <a href="glossary.html#999618">tamper detection</a>.<P>
-
-
-<A NAME="distinguished_name_(DN)"></A><A NAME="1022191">
-<B>distinguished name (DN).</B>&nbsp;
-</A><A NAME="1022194"></A>
-A specially formatted name that uniquely identifies the subject of a certificate.<P>
-
-
-<A NAME="dual_key_pairs"></A><A NAME="1020489">
-<B>dual key pairs.</B>&nbsp;
-</A><A NAME="1020619"></A>
-Two public-private key pairs--four keys altogether--corresponding to two separate certificates. The private key of one pair is used for signing operations, and the public and private keys of the other pair are used for encryption and decryption operations. Each pair corresponds to a separate <a href="glossary.html#1018895">certificate</a>. See also <a href="glossary.html#1019178">public-key cryptography</a>.<P>
-
-
-<A NAME="eavesdropping"></A><A NAME="1020620">
-<B>eavesdropping.</B>&nbsp;
-</A><A NAME="1013975"></A>
-Surreptitious interception of information sent over a network by an entity for which the information is not intended.<P>
-
-
-<A NAME="encryption"></A><A NAME="999078">
-<B>encryption.</B>&nbsp;
-</A><A NAME="1024038"></A>
-The process of scrambling information in a way that disguises its meaning. For example, encrypted connections between computers make it very difficult for third-parties to unscramble, or <I>decrypt,</I> information flowing over the connection. Encrypted information can be decrypted only by someone who possesses the appropriate key. See also <a href="glossary.html#1019178">public-key cryptography</a>.<P>
-
-
-<A NAME="encryption_certificate"></A><A NAME="1024953">
-<B>encryption certificate.</B>&nbsp;
-</A><A NAME="1024978"></A>
-A certificate whose public key corresponds to a private key used for encryption only. Encryption certificates are not used for signing operations. See also <a href="glossary.html#1020489">dual key pairs</a>, <a href="glossary.html#999493">signing certificate</a>.<P>
-
-
-<A NAME="encryption_key"></A><A NAME="1021254">
-<B>encryption key.</B>&nbsp;
-</A><A NAME="1021255"></A>
-A private key used for encryption only. An encryption key and its equivalent public key, plus a <a href="glossary.html#1021282">signing key</a> and its equivalent public key, constitute a <a href="glossary.html#1020489">dual key pairs</a>.<P>
-
-
-<p><a name="XSLTIDX"></a>
-<p><a name="XSLT"></a>
-<b>Extensible Stylesheet Language Transformation (XSLT).</b>&nbsp; A language used to convert an XML document into another XML document or into some other format. For information on Mozilla support for XSLT, see <a href="cs_nav_prefs_advanced.html#Advanced">Advanced Preferences - Advanced</a>.<p>
-
-<p><a name="XMLIDX"></a>
-<p><a name="XML"></a>
-<b>Extensible Markup Language (XML).</b>&nbsp; An open standard for describing data. Unlike HTML, XML allows the developer of a web page to define special tags. For more information, see the online W3C document <a href="http://www.w3.org/XML/" target="_blank">Extensible Markup Language (XML)</a>.<p>
-
-
-<p><a name="File_Transfer_Protocol_(FTP)"></a>
-<b>File Transfer Protocol (FTP).</b>&nbsp;A standard that allows users to transfer files from one computer to another over a network. You can use your browser to fetch files using FTP.<p>
-
-<A NAME="fingerprint"></A><A NAME="1020434">
-<B>fingerprint.</B>&nbsp;
-</A><A NAME="1020450"></A>
-See <a href="glossary.html#1020297">certificate fingerprint</a>.<P>
-
-
-<A NAME="FIPS_PUBS_140-1"></A><A NAME="1025742">
-<B>FIPS PUBS 140-1.</B>&nbsp;
-</A><A NAME="1025743"></A>
-Federal Information Processing Standards Publications (FIPS PUBS) 140-1 is a US government standard for implementations of cryptographic modules--that is, hardware or software that encrypts and decrypts data or performs other cryptographic operations (such as creating or verifying digital signatures). Many products sold to the US government must comply with one or more of the FIPS standards.<P>
-
-
-<p><a name="foreign_cookie"></a>
-<b>foreign cookie.</b>&nbsp;A cookie from one site that gets stored on your computer when you visit a different site. Sometimes a web site displays content that is hosted on another web site. That content can be anything from an image to text or an advertisement. The second web site that hosts such elements also has the ability to store a cookie in your browser, even though you don't visit it directly. Also known as &quot;third-party cookie.&quot; <p>
-
-<p><a name="Form_Manager"></a>
-<b>Form Manager.</b>&nbsp;The part of the browser that can help you save the personal data you enter into online forms, such as your name, address, phone, and so on. Then, when a web site presents you with a form, Form Manager can fill it in automatically. For details, see <a href="using_priv_help.html#using_forms">Using the Form Manager</a>. <p>
-
-
-<p><a name="helper_application"></a>
-<b>helper application.</b>&nbsp;Any application that is used to open or view a file downloaded by the browser. A <a href="#plug-in">plug-in</a> is a special kind of helper application that installs itself into the Plugins directory of the main browser installation directory and can typically be opened within the browser itself (internally). Microsoft Word, Adobe Photoshop, and other external applications are considered helper applications but not plug-ins, since they don't install themselves into the browser directory, but can be opened from the download dialog box.
-
-<p><a name="home_page"></a>
-<b>home page.</b>&nbsp;The page your browser is set to display every time you launch it or when you click the Home button. Also used to refer to the main page for a web site, from which you can explore the rest of the site.<p>
-
-<p><a name="Hypertext_Markup_Language_(HTML)"></a>
-<b>Hypertext Markup Language (HTML).</b>&nbsp; The document format used for Web pages. The HTML standard defines tags, or codes, used to define the text layout, fonts, style, images, and other elements that make up a web page. <p>
-
-<p><a name="implicit_consent"></a><b>implicit consent.</b>&nbsp; Also known as implied or &quot;opt-out&quot; consent. Used to describe privacy settings that may allow web sites to gather information about you (for example by means of <a href="#cookie">cookies</a> and online forms) unless you explicitly choose to withhold your consent by selecting an option on a page that the web site provides for that purpose. Your consent may not be requested when the information is actually gathered.<p>
-
-<p><a NAME="IMAP_glossary"></a>
-<b>Internet Message Access Protocol (IMAP).</b>&nbsp;A standard mail server protocol that allows you to store all your messages and any changes to them on the server rather than on your computer's hard disk. Using IMAP rather than <a href="#POP_glossary">POP</a> saves disk space and allows you to access your entire mailbox, including sent mail, drafts, and custom folders, from any location. Using an IMAP server over a modem is generally faster than using a POP mail server, since you initially download message headers only. Not all ISPs support IMAP. <p>
-
-<p><a name="Internet"></a>
-<b>Internet.</b>&nbsp;A worldwide network of millions of computers that communicate with each other using standard protocols such as <a href="#Transmission_Control_Protocol_Internet_Protocol_(TCP_IP)">TCP/IP</a>. Originally developed for the US military in 1969, the Internet grew to include educational and research institutions and, in the late 1990s, millions of businesses, organizations, and individuals. Today the Internet is used for email, browsing the <a href="#World_Wide_Web">World Wide Web</a>, instant messaging, usegroups, and many other purposes.<p>
-
-<p><a name=" Internet_protocol_address_(IP address)"></a>
-<b>Internet protocol address (IP address).</b>&nbsp;The address of a computer on a <a href="#Transmission_Control_Protocol_Internet_Protocol_(TCP_IP)">TCP/IP</a> network. Every computer on the Internet has an IP address. <a href="#client">Clients</a> have either a permanent IP address or one that is dynamically assigned to them each time they connect with the network. IP addresses are written as four sets of numbers, like this: 204.171.64.2.
-
-
-<p><a name="Java"></a>
-<b>Java.</b>&nbsp;A programming language developed by Sun Microsystems. A single Java program can run on many different kinds of computers, thus avoiding the need for programmers to create a separate version of each program for each kind of computer. Your browser can automatically download and run Java programs (also called applets).<p>
-
-<p><a name="JavaScript"></a>
-<b>JavaScript.</b>&nbsp;A scripting language commonly used to construct web pages. Programmers use JavaScript to make web pages more interactive; for example, to display forms and buttons. JavaScript can be used with Java, but is technically a  separate language. Java is not required for JavaScript to work correctly.<p>
-
-
-
-<A NAME="key"></A><A NAME="999203">
-<B>key.</B>&nbsp;
-</A><A NAME="999212"></A>
-A large number used by a <a href="glossary.html#1019976">cryptographic algorithm</a> to encrypt or decrypt data. A person's public key, for example, allows other people to encrypt messages to that person. The encrypted messages must be decrypted with the corresponding private key. See also <a href="glossary.html#1019178">public-key cryptography</a>.<P>
-
-
-<A NAME="Lightweight_Directory_Access_Protocol_(LDAP)"></A><A NAME="1022286"></A> <a NAME="LDAP_glossary"></a>
-<B>Lightweight Directory Access Protocol (LDAP).</B>&nbsp;
-<A NAME="1022287"></A>
-A standard protocol for accessing directory services, such as corporate address books, across multiple platforms. You can set up your browser to access LDAP directories from the Address Book. You can also set up Mail &amp; Newsgroups to use an LDAP directory for email address autocompletion. 
-<P>
-
-
-<A NAME="Location_Bar"></A>
-<B>Location Bar.</B>&nbsp; The field (and associated buttons) near the top of a Navigator window where you can type a <a href="#Uniform_Resource_Locator_(URL)">URL</a> or search terms. For details, see <a href="nav_help.html#nav_move">Moving to Another Page</a>.<P>
-
-<A NAME="master_key"></A><A NAME="1032598">
-<B>master key.</B>&nbsp;
-</A><A NAME="1032639"></A>
-A symmetric key used by Certificate Manager to encrypt information. For example, Password Manager uses Certificate Manager and your master key to encrypt email passwords, web site passwords, and other stored sensitive information. See also <a href="glossary.html#999604">symmetric encryption</a>.<P>
-
-
-<A NAME="master_password"></A><A NAME="1032744">
-<B>master password.</B>&nbsp;
-</A><A NAME="1032748"></A>
-A password used by Certificate Manager to protect the master key and/or private keys stored on a <a href="glossary.html#1028962">security device</a>. Certificate Manager needs to access your private keys, for example, when you sign email messages or use one of your own certificates to identify yourself to a web site. It needs to access your master key when Password Manager or Form Manager reads or adds to your personal information. You can set or change your master password from the Master Passwords preferences panel. Each security device requires a separate master password. See also <a href="glossary.html#1015387">private key</a>, <a href="glossary.html#1032598">master key</a>.<P>
-
-
-
-<A NAME="misrepresentation"></A><A NAME="1014057">
-<B>misrepresentation.</B>&nbsp;
-</A><A NAME="1014058"></A>
-Presentation of an entity as a person or organization that it is not. For example, a web site might pretend to be a furniture store when it is really just a site that takes credit card payments but never sends any goods. See also <a href="glossary.html#1014366">spoofing</a>.<P>
-
-
-<A NAME="navigation_toolbar"></A>
-<B>Navigation Toolbar.</B>&nbsp; The toolbar near the top of the browser window that includes the Back and Forward buttons.<P>
-
-
-<A NAME="nonrepudiation"></A><A NAME="999248">
-<B>nonrepudiation.</B>&nbsp;
-</A><A NAME="999254"></A>
-The inability, of the sender of a message, to deny having sent the message. A regular hand-written signature provides one form of nonrepudiation. A <a href="glossary.html#1013995">digital signature</a> provides another.<P>
-
-
-<A NAME="object_signing"></A><A NAME="1014095">
-<B>object signing.</B>&nbsp;
-</A><A NAME="1014096"></A>
-A technology that allows software developers to sign Java code, JavaScript scripts, or any kind of file, and that allows users to identify the signers and control access by signed code to local system resources.<P>
-
-
-<A NAME="object-signing certificate"></A><A NAME="1014097">
-<B>object-signing certificate.</B>&nbsp;
-</A><A NAME="1014098"></A>
-A certificate whose corresponding private key is used to sign objects such as code files. See also <a href="glossary.html#1014095">object signing</a>.<P>
-
-
-<A NAME="Online_Certificate_Status_Protocol_(OCSP)"></A><A NAME="1029304">
-<B>Online Certificate Status Protocol (OCSP).</B>&nbsp;
-</A><A NAME="1029312"></A>
-A set of rules that Certificate Manager follows to perform an online check of a certificate's validity each time the certificate is used. This process involves checking the certificate against a list of valid certificates maintained at a specified web site. Your computer must be online for OCSP to work.<P>
-
-
-<A NAME="password-based_authentication"></A><A NAME="1014123">
-<B>password-based authentication.</B>&nbsp;
-</A><A NAME="1014124"></A>
-Confident identification by means of a name and password. See also <a href="glossary.html#998782">authentication</a>.<P>
-
-
-<p><a name="Password_Manager"></a>
-<b>Password Manager.</b>&nbsp;The part of the browser that can help you remember some or all of your names and passwords by storing them on your computer's hard disk, and entering them for you automatically when you visit such sites. For details, see <a href="using_priv_help.html#using_password">Using the Password Manager</a>. <p>
-
-<A NAME="personal_toolbar"></A>
-<B>Personal Toolbar.</B>&nbsp; The cutomizable toolbar that appears just below the location bar by default in Navigator . It contains standard buttons such as Home, Search, Bookmarks, and so on that you can add or remove. You can also add buttons for your favorite bookmarks, or folders containing groups of bookmarks. For details, see <a href="customize_help.html#cust_personal">Personal Toolbar</a>.<P>
-
-
-<A NAME="PKCS_#11"></A><A NAME="1025194">
-<B>PKCS #11.</B>&nbsp;
-</A><A NAME="1025195"></A>
-The public-key cryptography standard that governs security devices such as smart cards. See also <a href="glossary.html#1028962">security device</a>, <a href="glossary.html#1027625">smart card</a>.<P>
-
-
-<A NAME="PKCS_11_module"></A><A NAME="1025197">
-<B>PKCS #11 module.</B>&nbsp;
-</A><A NAME="1025271"></A>
-A program on your computer that manages cryptographic services such as encryption and decryption using the PKCS #11 standard. Also called <I>cryptographic modules</I>, <I>cryptographic service providers,</I> or <I>security modules</I>, PKCS #11 modules control either hardware or software devices. A PKCS #11 module always controls one or more slots, which may be implemented as some form of physical reader (for example, for reading smart cards) or in software. Each slot for a PKCS #11 module can in turn contain a <a href="glossary.html#1028962">security device</a> (also called <I>token</I>)<B>,</B> which is the hardware or software device that provides cryptographic services and stores certificates and keys. Certificate Manager provides two built-in PKCS #11 modules. You may install additional modules on your computer to control smart card readers or other hardware devices.<P>
-
-
-<p><a name="p3p"></a>
-<b>Platform for Privacy Preferences (P3P).</b>&nbsp;A standard published by the World Wide Web Consortium (W3C) designed to help users to gain more control over the use of personal information by Web sites they visit. For information about using cookies with web sites that support this standard, see <a href="using_priv_help.html#privacy_levels">Setting Privacy Levels</a>. For general information on the standard itself, see the online document <a href="http://www.w3.org/P3P/" target="_blank">P3P Public Overview</a>.<p>
-
-<a name="plug-in"></a>
-<b>plug-in.</b>&nbsp;A type of <a href="#helper_application">helper application</a> that adds new capabilities to your browser, such as the ability to play audio or video clips. Unlike other kinds of helper applications, a plug-in application installs itself into the Plugins directory within the main browser installation directory and typically can be opened within the browser itself (internally). For example, an audio plug-in lets you listen to audio files on a web page or in an e-mail message. Macromedia Flash Player and Java are both examples of plug-in applications.<p>
-
-<a NAME="POP_glossary"></a>
-<b>Post Office Protocol (POP).</b>&nbsp;A standard mail server protocol that requires you to download new messages to your local computer&mdash;although you can choose to leave copies on the server. With POP, you can store all your messages, including sent mail, drafts, and custom folders, on one computer only. By contrast, <a href="#IMAP_glossary">IMAP</a> allows you to permanently store all your messages and any changes to them on the server, where you can access them from any computer. Most ISPs currently support POP. <p>
-
-<A NAME="private_key"></A><A NAME="1015387">
-<B>private key.</B>&nbsp;
-</A><A NAME="1015391"></A>
-One of a pair of <a href="#key">keys</a> used in public-key cryptography. The private key is kept secret and is used to decrypt data that has been encrypted with the corresponding public key.<P>
-
-
-<p><a name="proxy"></a>
-<b>proxy.</b>&nbsp;An intermediary or &quot;go-between&quot; program that acts as both a <a href="#server">server</a> and a <a href="#client">client</a> for the purpose of making requests on behalf of other clients.<p>
-
-<A NAME="public_key"></A><A NAME="1019172">
-<B>public key.</B>&nbsp;
-</A><A NAME="1019173"></A>
-One of a pair of <a href="#key">keys</a> used in public-key cryptography. The public key is distributed freely and published as part of a <a href="glossary.html#1018895">certificate</a>. It is typically used to encrypt data sent to the public key's owner, who then decrypts the data with the corresponding private key.<P>
-
-
-<A NAME="public-key_cryptography"></A><A NAME="1019178">
-<B>public-key cryptography.</B>&nbsp;
-</A><A NAME="1023765"></A>
-A set of well-established techniques and standards that allow an entity (such as a person, an organization, or hardware such as a router) to verify its identity electronically or to sign and encrypt electronic data. Two keys are involved: a <a href="glossary.html#1019172">public key</a> and a <a href="glossary.html#1015387">private key</a>. The public key is published as part of a <a href="glossary.html#1018895">certificate</a>, which associates that key with a particular identity. The corresponding private key is kept secret. Data encrypted with the public key can be decrypted only with the private key. <P>
-
-
-<A NAME="public-key_infrastructure (PKI)"></A><A NAME="999412">
-<B>public-key infrastructure (PKI).</B>&nbsp;
-</A><A NAME="1014263"></A>
-The standards and services that facilitate the use of public-key cryptography and certificates in a networked environment.<P>
-
-
-<A NAME="root_CA"></A><A NAME="1015631">
-<B>root CA.</B>&nbsp;
-</A><A NAME="1015635"></A>
-The <a href="glossary.html#1020903">certificate authority (CA)</a> with a self-signed certificate at the top of a <a href="glossary.html#1018500">certificate chain</a>. See also <a href="glossary.html#999541">subordinate CA</a>.<P>
-
-
-<p><a name="search_engine"></a>
-<b>search engine.</b>&nbsp;A web-based program that allows users to search for and retrieve specific information from the World Wide Web. The search engine may search the full text of web documents or a list of keywords, or use librarians who review web documents and index them manually for retrieval. Typically, the user types a word or phrase, also called a query, into a search box, and the search engine displays links to relevant web pages.<p>
-
-
-<A NAME="Secure_Sockets_Layer_(SSL)"></A><A NAME="999463">
-<B>Secure Sockets Layer (SSL).</B>&nbsp;
-</A><A NAME="999472"></A>
-A protocol that allows mutual authentication between a <a href="glossary.html#1029510">client</a> and a <a href="glossary.html#1029749">server</a> for the purpose of establishing an authenticated and encrypted connection. SSL runs above TCP/IP and below HTTP, LDAP, IMAP, NNTP, and other high-level network protocols. The new Internet Engineering Task Force (IETF) standard called Transport Layer Security (TLS) is based on SSL. See also <a href="glossary.html#998782">authentication</a>, <a href="glossary.html#999078">encryption</a>.<P>
-
-
-<A NAME="security_certificate"></A><A NAME="1028900">
-<B>security certificate.</B>&nbsp;
-</A><A NAME="1028904"></A>
-See <a href="glossary.html#1018895">certificate</a>.<P>
-
-
-<A NAME="security_device"></A><A NAME="1028962">
-<B>security device.</B>&nbsp;
-</A><A NAME="1028963"></A>
-Hardware or software that provides cryptographic services such as encryption and decryption and can store certificates and keys. A smart card is one example of a security device implemented in hardware. <a href="#Certificate_Manager">Certificate Manager</a> contains its own built-in security device, called the <a href="glossary.html#software_security_device">software security device</a>, that is always available while the browser is running. Each security device is protected by its own <a href="glossary.html#1032744">master password</a>.<P>
-
-
-<A NAME="security_module"></A><A NAME="1029083">
-<B>security module.</B>&nbsp;
-</A><A NAME="1029097"></A>
-See <a href="glossary.html#1025197">PKCS #11 module</a>.<P>
-
-<A NAME="security_token"></A><A NAME="1028905">
-<B>security token.</B>&nbsp;
-</A><A NAME="1028909"></A>
-See <a href="glossary.html#1028962">security device</a>.<P>
-
-
-<A NAME="server"></A><A NAME="1029749">
-<B>server.</B>&nbsp;
-</A><A NAME="1029869"></A>
-Software (such as software that serves up web pages) that receives requests from and sends information to a <a href="glossary.html#1029510">client</a>, which is usually running on a different computer. A computer on which server software runs is also described as a server.<P>
-
-
-<A NAME="server_authentication"></A><A NAME="1031070">
-<B>server authentication.</B>&nbsp;
-</A><A NAME="1031080"></A>
-The process of identifying a <a href="glossary.html#1029749">server</a> to a <a href="glossary.html#1029510">client</a> by using a <a href="glossary.html#1029874">server SSL certificate</a>. See also <a href="glossary.html#1021054">client authentication</a>, <a href="glossary.html#999463">Secure Sockets Layer (SSL)</a>.<P>
-
-
-<A NAME="server_SSL_certificate"></A><A NAME="1029874">
-<B>server SSL certificate.</B>&nbsp;
-</A><A NAME="999500"></A>
-A certificate that a <a href="glossary.html#1029749">server</a> presents to a <a href="glossary.html#1029510">client</a> to authenticate the server's identity using the <a href="glossary.html#999463">Secure Sockets Layer (SSL)</a> protocol.<P>
-
-
-<A NAME="signing_certificate"></A><A NAME="999493">
-<B>signing certificate.</B>&nbsp;
-</A><A NAME="999507"></A>
-A certificate whose corresponding <a href="glossary.html#1015387">private key</a> is used to sign transmitted data, so that the receiver can verify the identity of the sender. Certificate authorities (CAs) often issue a signing certificate that will be used to sign email messages at the same time as an <a href="glossary.html#1024953">encryption certificate</a> that will be used to encrypt email messages. See also <a href="glossary.html#1020489">dual key pairs</a>, <a href="glossary.html#1013995">digital signature</a>.<P>
-
-
-<A NAME="signing_key"></A><A NAME="1021282">
-<B>signing key.</B>&nbsp;
-</A><A NAME="1021283"></A>
-A private key used for signing only. A signing key and its equivalent public key, together with an <a href="glossary.html#1021254">encryption key</a> and its equivalent public key, constitute <a href="glossary.html#1020489">dual key pairs</a>.<P>
-
-
-<A NAME="slot"></A><A NAME="1025218">
-<B>slot.</B>&nbsp;
-</A><A NAME="1025222"></A>
-A piece of hardware, or its equivalent in software, that is controlled by a <a href="glossary.html#1025197">PKCS #11 module</a> and designed to contain a <a href="glossary.html#1028962">security device</a>. <P>
-
-
-<A NAME="smart_card"></A><A NAME="1027625">
-<B>smart card.</B>&nbsp;
-</A><A NAME="1027626"></A>
-A small device, typically about the size of a credit card, that contains a microprocessor and is capable of storing cryptographic information (such as keys and certificates) and performing cryptographic operations. Smart cards use the <a href="glossary.html#1025194">PKCS #11</a> standard. A smart card is one kind of <a href="glossary.html#1028962">security device</a>. <P>
-
-
-<A NAME="software_security_device"></A><A NAME="1032045">
-<B>software security device.</B>&nbsp;
-</A><A NAME="1032110"></A>
-The default <a href="#security_device">security device</a> used by Certificate Manager to store private keys associated with your certificates. In addition to private keys, the software security device stores the master key used by Password Manager to encrypt email passwords, web site passwords, and other sensitive information. See also <a href="glossary.html#1015387">private key</a> and <a href="glossary.html#1032598">master key</a>.<p>
-
-
-<A NAME="spoofing"></A><A NAME="1014366">
-<B>spoofing.</B>&nbsp;
-</A><A NAME="1014367"></A>
-Pretending to be someone else. For example, a person can pretend to have the email address <TT>jdoe@mozilla.com</TT>, or a computer can identify itself as a site called <TT>www.mozilla.com</TT> when it is not. Spoofing is one form of <a href="glossary.html#1014057">misrepresentation</a>.<P>
-
-
-<A NAME="SSL"></A><A NAME="999533">
-<B>SSL.</B>&nbsp;
-</A><A NAME="999539"></A>
-See <a href="glossary.html#999463">Secure Sockets Layer (SSL)</a>. <P>
-
-
-<A NAME="Status_Bar"></A>
-<B>Status Bar.</B>&nbsp; The toolbar that appears at the bottom of any Mozilla window. It includes the <a href="#Component_Bar">Component Bar</a> on the left and status icons on the right. For example, in Navigator it includes status icons such as the <a href="using_certs_help.html#using_certs_info">lock icon</a>.<P>
-
-<A NAME="subject"></A><A NAME="1013880">
-<B>subject.</B>&nbsp;
-</A><A NAME="1013881"></A>
-The entity (such as a person, organization, or router) identified by a <a href="glossary.html#1018895">certificate</a>. In particular, the subject field of a certificate contains the certified entity's <a href="glossary.html#1021328">subject name</a> and other characteristics.<P>
-
-
-<A NAME="subject_name"></A><A NAME="1021328">
-<B>subject name.</B>&nbsp;
-</A><A NAME="1021338"></A>
-A <a href="glossary.html#1022191">distinguished name (DN)</a> that uniquely describes the <a href="glossary.html#1013880">subject</a> of a <a href="glossary.html#1018895">certificate</a>.<P>
-
-
-<A NAME="subordinate_CA"></A><A NAME="999541">
-<B>subordinate CA.</B>&nbsp;
-</A><A NAME="999591"></A>
-A <a href="glossary.html#1020903">certificate authority (CA)</a> whose certificate is signed by another subordinate CA or by the root CA. See also <a href="glossary.html#1018500">certificate chain</a>, <a href="glossary.html#1015631">root CA</a>.<P>
-
-
-<A NAME="symmetric_encryption"></A><A NAME="999604">
-<B>symmetric encryption.</B>&nbsp;
-</A><A NAME="999625"></A>
-An encryption method that uses a single cryptographic key to both encrypt and decrypt a given message.<P>
-
-
-<A NAME="tamper_detection"></A><A NAME="999618">
-<B>tamper detection.</B>&nbsp;
-</A><A NAME="999631"></A>
-A mechanism ensuring that data received in electronic form has not been tampered with; that is, that the data received corresponds entirely with the original version of the same data.<P>
-
-
-<A NAME="TCP_IP)"></A>
-<B>TCP.</B>&nbsp;
-See <a href="#Transmission_Control_Protocol_Internet_Protocol_(TCP_IP)">Transmission Control Protocol/Internet Protocol (TCP/IP)</a>.<P>
-
-
-<p><a name="third-party_cookie"></a>
-<b>third-party cookie.</b>&nbsp;See <a href="#foreign_cookie">foreign cookie</a>.<p>
-
-<A NAME="TLS"></A><A NAME="1027427">
-<B>TLS.</B>&nbsp;
-</A><A NAME="1027428"></A>
-See <a href="glossary.html#999463">Secure Sockets Layer (SSL)</a>.<P>
-
-
-<A NAME="token"></A><A NAME="1024528">
-<B>token.</B>&nbsp;
-</A><A NAME="1024586"></A>
-See <a href="glossary.html#1028962">security device</a>.<P>
-
-
-<p><a name="Transmission_Control_Protocol_Internet_Protocol_(TCP_IP)"></a>
-<a name="tcp"></a>
-<b>Transmission Control Protocol/Internet Protocol (TCP/IP).</b>&nbsp;A Unix protocol used to connect computers running a variety of operating systems. TCP/IP is an essential Internet protocol and has become a global standard.<p>
-
-
-
-
-<A NAME="trust"></A><A NAME="1019748"></A>
-<B>trust.</B>&nbsp;
-<A NAME="1020186"></A>
-Confident reliance on a person or other entity. In the context of <a href="glossary.html#999412">public-key infrastructure (PKI)</a>, trust usually refers to the relationship between the user of a certificate and the <a href="glossary.html#1020903">certificate authority (CA)</a> that issued the certificate. If you use Certificate Manager to specify that you trust a CA, Certificate Manager trusts valid certificates issued by that CA unless you specify otherwise in the settings for individual certificates. You use the Authorities tab in Certificate Manager to specify the kinds of certificates you do or don't trust specific CAs to issue. <P>
-
-
-
-<p><a name="Uniform_Resource_Locator_(URL)"></a>
-<b>Uniform Resource Locator (URL).</b>&nbsp;The standardized address that tells your browser how to locate a file or other resource on the Web. For example: <tt>http://www.mozilla.org.</tt> You can type URLs into the browser's Location Bar to access web pages. URLs are also used in the links on web pages that you can click to go to other web pages. Also known as an Internet address or Web address.<p>
-
-<p><a name="web_page"></a>
-<b>web page.</b>&nbsp;A single document on the World Wide Web that is specified by a unique address or URL and that may contain text, hyperlinks, and graphics.<p>
-
-<p><a name="web_site"></a>
-<b>web site.</b>&nbsp;A group of related web pages linked by hyperlinks and managed by a single company, organization, or individual. A web site may include text, graphics, audio and video files, and links to other web sites.<p>
-
-<p><a name="World_Wide_Web"></a>
-<b>World Wide Web.</b>&nbsp;Also known as the Web. A portion of the Internet that is made up of web pages stored by web <a href="#server">servers</a> and displayed by <a href="#client">clients</a> called web browsers (such as Mozilla).<p>
-
-
-
+<hr>
+<h1 id="glossary">Glossary</h1>
+
+<p><b id="authentication">authentication.</b>&nbsp; The use of a password,
+  certificate, personal identification number (PIN), or other information to
+  validate an identity over a computer network. See also
+  <a href="#password-based_authentication">password-based authentication</a>,
+  <a href="#certificate-based_authentication">certificate-based authentication</a>,
+  <a href="#client_authentication">client authentication</a>,
+  <a href="#client_authentication">server authentication</a>.</p>
+
+<p><b id="bookmark">bookmark.</b>&nbsp;A stored web page address (<a href="#Uniform_Resource_Locator">URL</a>)
+  that you can go to easily by clicking a bookmark icon in the Personal Toolbar
+  or choosing the bookmark's name from the Bookmarks menu.</p>
+<p><b id="CA">CA.</b>&nbsp; See <a href="#certificate_authority">certificate
+  authority (CA)</a></p>
+<p><b id="CA_certificate">CA certificate.</b>&nbsp; A certificate that
+  identifies a certificate authority. See also <a href="#certificate_authority">certificate
+  authority (CA)</a>, <a href="#subordinate_CA">subordinate CA</a>,
+<a href="#root_CA">root
+  CA</a>.</p>
+<p><b id="cache">cache.</b>&nbsp;A collection of web page copies stored
+  on your computer's hard disk or in its random-access memory (RAM). The browser
+  accumulates these copies as you browse the Web. When you click a link or type
+  a <a href="#Uniform_Resource_Locator">URL</a> to fetch a particular web
+  page for which the cache already contains a copy, the browser compares the cached
+  copy to the original. If there have been no changes, the browser uses the cached
+  copy rather than refetching the original, saving processing and download time.
+</p>
+<p><b id="certificate">certificate.</b>The digital
+  equivalent of an ID card. A certificate specifies the name of an individual,
+  company, or other entity and certifies that a public key, which is included
+  in the certificate, belongs to that entity. When you digitally sign a message
+  or other data, the digital signature for that message is created with the aid
+  of the private key that corresponds to the public key in your certificate. A
+  certificate is issued and digitally signed by a
+<a href="#certificate_authority">certificate
+  authority (CA)</a>. A certificate's validity can be verified by checking the
+  CA's <a href="#digital_signature">digital signature</a>. Also called digital
+  ID, digital passport, public-key certificate, X.509 certificate, and security
+  certificate. See also <a href="#public-key_cryptography">public-key cryptography</a>.</p>
+<p><b id="certificate_authority">certificate authority (CA).</b>&nbsp;A service that issues a certificate
+  after verifying the identity of the person or entity the certificate is intended
+  to identify. A CA also renews and revokes certificates and generates a list
+  of revoked certificates at regular intervals. CAs can be independent vendors or a person or organization using certificate-issuing server
+  software (such as Mozilla Certificate Management System). See also
+<a href="#certificate">certificate</a>, <a href="#certificate_revocation_list">certificate revocation list (CRL)</a>.</p>
+<p><b id="certificate_backup_password">certificate backup password.</b>&nbsp;A password that protects a certificate
+  that you are backing up or have previously backed up. Certificate Manager asks
+  you to set this password when you back up a certificate, and requests it when
+  you attempt to restore a certificate that has previously been backed up. </p>
+<p><b id="certificate-based_authentication">certificate-based authentication.</b>&nbsp; Verification of identity
+  based on certificates and public-key cryptography. See also
+<a href="#password-based_authentication">password-based
+  authentication</a>.</p>
+<p><b id="certificate_chain">certificate chain.</b>&nbsp; A hierarchical series of certificates signed
+  by successive certificate authorities. A CA certificate identifies a
+<a href="#certificate_authority">certificate
+  authority (CA)</a> and is used to sign certificates issued by that authority.
+  A CA certificate can in turn be signed by the CA certificate of a parent CA
+  and so on up to a <a href="#root_CA">root CA</a>. </p>
+<p><b id="certificate_fingerprint">certificate fingerprint.</b>&nbsp;
+  A unique number associated with a certificate. The number is not part of
+  the certificate itself but is produced by applying a mathematical function to
+  the contents of the certificate. If the contents of the certificate change,
+  even by a single character, the function produces a different number. Certificate
+  fingerprints can therefore be used to verify that certificates have not been
+  tampered with.</p>
+<p><b id="certificate_manager">Certificate
+  Manager</b>&nbsp; The part of the browser that allows you to view and manage
+  certificates. To view the main Certificate Manager window: Open the Edit menu,
+  choose Preferences, click Privacy and Security, and then click Manage Certificates.</p>
+<p><b id="certificate_renewal">certificate renewal.</b>&nbsp; The process of renewing a
+<a href="#certificate">certificate</a>
+  that is about to expire.</p>
+<p><b id="certificate_revocation_list">certificate revocation list (CRL).</b>&nbsp; A list of revoked certificates
+  that is generated and signed by a <a href="#certificate_authority">certificate
+  authority (CA)</a>. You can download the latest CRL to your browser or to a
+  server, then check against it to make sure that certificates are still valid
+  before permitting their use for authentication. </p>
+<p><b id="certificate_verification">certificate verification.</b>&nbsp; When
+<a href="#Certificate_Manager">Certificate
+  Manager</a> verifies a certificate, it confirms that the digital signature was
+  created by a CA whose own CA certificate is both on file with Certificate Manager
+  and marked as trusted for issuing that kind of certificate. It also confirms
+  that the certificate being verified has not itself been marked as untrusted.
+  Finally, if the <a href="#Online_Certificate_Status_Protocol">Online Certificate Status Protocol
+  (OCSP)</a> has been activated, Certificate Manager also performs an online check.
+  It does so by looking up the certificate in a list of valid certificates maintained
+  at a URL that is specified either in the certificate itself or in the browser's
+  Validation preferences. If any of these checks fail, Certificate Manager marks
+  the certificate as unverified and won't recognize the identity it certifies.</p>
+<p><b id="cipher">cipher.</b>&nbsp;
+  See <a href="#cryptographic_algorithm">cryptographic algorithm</a>.</p>
+<p><b id="client">client.</b>&nbsp;
+  Software (such as browser software) that sends requests to and receives information
+  from a <a href="#server">server</a>, which is usually running
+  on a different computer. A computer on which client software runs is also described
+  as a client.</p>
+<p><b id="client_authentication">client authentication.</b>&nbsp; The process of identifying a
+<a href="#client">client</a>
+  to a <a href="#server">server</a>, for example with a name and
+  password or with a <a href="#client_SSL_certificate">client SSL certificate</a>
+  and some digitally signed data. See also <a href="#SSL">Secure
+  Sockets Layer (SSL)</a>, <a href="#server_authentication">server authentication</a>.</p>
+<p><b id="client_SSL_certificate">client SSL certificate.</b>&nbsp;  A certificate that a
+<a href="#client">client</a>
+  (such as browser software) presents to a <a href="#server">server</a>
+  to authenticate the identity of the client (or the identity of the person using
+  the client) using the <a href="#SSL">Secure Sockets Layer (SSL)</a>
+  protocol. See also <a href="#client_authentication">client authentication</a>.</p>
+<p><b id="Component_Bar">Component Bar.</b>&nbsp;The toolbar located
+  at the bottom left of any Mozilla window. The Component Bar allows you to switch
+  between Mozilla components by clicking icons for Navigator, Mail &amp; Newsgroups,
+  Instant Messenger, and so on. </p>
+<p><b id="cookie">cookie.</b>&nbsp;A small bit of information stored
+  on your computer by some web sites. When you visit such a site, the site asks
+  your browser to place one or more cookies on your hard disk. Later, when you
+  return to the site, your browser sends the site the cookies that belong to it.
+  Cookies help web sites keep track of information about you, such as the contents
+  of your shopping cart. You can set your cookie preferences to control how cookies
+  are used and how much information you are willing to let web sites store on
+  them. See also <a href="#foreign_cookie">foreign cookie</a>.</p>
+<p><b id="Cookie_Manager">Cookie Manager.</b>&nbsp;The part of the browser
+  that you can use to control <a href="#cookie">cookies</a>.</p>
+<p><b id="crytographic_algorithm">cryptographic algorithm.</b>&nbsp; A set of rules or directions used
+  to perform cryptographic operations such as <a href="#encryption">encryption</a>
+  and <a href="#decryption">decryption</a>. Sometimes called a <i>cipher.</i></p>
+<p><b id="cryptography">cryptography.</b>&nbsp;
+  The art and practice of scrambling (encrypting) and unscrambling (decrypting)
+  information. For example, cryptographic techniques are used to scramble an unscramble
+  information flowing between commercial web sites and your browser. See also
+<a href="#public-key_cryptography">public-key cryptography</a>.</p>
+<p><b id="decryption">decryption.</b>&nbsp;
+  The process of unscrambling data that has been encrypted. See also
+<a href="#encryption">encryption</a>.</p>
+<p><b id="digital_ID">digital ID.</b>&nbsp;
+   See <a href="#certificate">certificate</a>.</p>
+<p> <b id="digital_signature">
+  digital signature.</b>&nbsp; A code created from both the data to be
+  signed and the private key of the signer. This code is unique for each new piece
+  of data. Even a single comma added to a message changes the digital signature
+  for that message. Successful validation of your digital signature by appropriate
+  software not only provides evidence that you approved the transaction or message,
+  but also provides evidence that the data has not changed since you digitally
+  signed it. A digital signature has nothing to do with a handwritten signature,
+  although it can sometimes be used for similar legal purposes. See also
+<a href="#nonrepudiation">nonrepudiation</a>, <a href="#tamper_detection">tamper detection</a>.</p>
+<p><b id="distinguished_name">distinguished name (DN).</b>&nbsp; A specially formatted name that uniquely
+  identifies the subject of a certificate.</p>
+<p><b id="dual_key_pairs">dual
+  key pairs.</b>&nbsp; Two public-private key pairs--four keys altogether--corresponding
+  to two separate certificates. The private key of one pair is used for signing
+  operations, and the public and private keys of the other pair are used for encryption
+  and decryption operations. Each pair corresponds to a separate
+<a href="#certificate">certificate</a>.
+  See also <a href="#public-key_cryptography">public-key cryptography</a>.</p>
+<p><b id="eavesdropping">eavesdropping.</b>&nbsp;
+  Surreptitious interception of information sent over a network by an entity
+  for which the information is not intended.</p>
+<p><b id="encryption">encryption.</b>&nbsp;
+  The process of scrambling information in a way that disguises its meaning.
+  For example, encrypted connections between computers make it very difficult
+  for third-parties to unscramble, or <i>decrypt,</i> information flowing over
+  the connection. Encrypted information can be decrypted only by someone who possesses
+  the appropriate key. See also <a href="#public-key_cryptography">public-key cryptography</a>.</p>
+<p><b id="encryption_certificate">encryption certificate.</b>&nbsp; A certificate whose public key corresponds
+  to a private key used for encryption only. Encryption certificates are not used
+  for signing operations. See also <a href="#dual_key_pairs">dual key pairs</a>,
+<a href="#signing_certificate">signing certificate</a>.</p>
+<p><b id="encryption_key">encryption
+  key.</b>&nbsp;  A private key used for encryption only. An encryption key
+  and its equivalent private key, plus a <a href="#signing_key">signing
+  key</a> and its equivalent public key, constitute a <a href="#dual_key_pairs">dual
+  key pairs</a>.</p>
+<p><b id="XSLT">Extensible Stylesheet Language Transformation (XSLT).</b>&nbsp;
+  A language used to convert an XML document into another XML document or into
+  some other format.</p>
+<p><b id="XML">Extensible Markup Language (XML).</b>&nbsp; An open standard
+  for describing data. Unlike HTML, XML allows the developer of a web page to
+  define special tags. For more information, see the online W3C document <a href="http://www.w3.org/XML/" target="_blank">Extensible
+  Markup Language (XML)</a>.</p>
+<p><b id="File_Transfer_Protocol">File Transfer Protocol (FTP).</b>&nbsp;A
+  standard that allows users to transfer files from one computer to another over
+  a network. You can use your browser to fetch files using FTP.</p>
+<p><b id="finterprint">fingerprint.</b>&nbsp;
+  See <a href="#certificate_fingerprint">certificate fingerprint</a>.</p>
+<p><b id="FIPS_PUBS_140-1">FIPS
+  PUBS 140-1.</b>&nbsp; Federal Information Processing Standards Publications
+  (FIPS PUBS) 140-1 is a US government standard for implementations of cryptographic
+  modules--that is, hardware or software that encrypts and decrypts data or performs
+  other cryptographic operations (such as creating or verifying digital signatures).
+  Many products sold to the US government must comply with one or more of the
+  FIPS standards.</p>
+<p><b id="foreign_cookie">foreign cookie.</b>&nbsp;A cookie from one
+  site that gets stored on your computer when you visit a different site. Sometimes
+  a web site displays content that is hosted on another web site. That content
+  can be anything from an image to text or an advertisement. The second web site
+  that hosts such elements also has the ability to store a cookie in your browser,
+  even though you don't visit it directly. Also known as &quot;third-party cookie.&quot;
+</p>
+<p><b id="Form_Manager">Form Manager.</b>&nbsp;The part of the browser
+  that can help you save the personal data you enter into online forms, such as
+  your name, address, phone, and so on. Then, when a web site presents you with
+  a form, Form Manager can fill it in automatically.</p>
+<p><b id="helper_application">helper application.</b>&nbsp;Any application
+  that is used to open or view a file downloaded by the browser. A <a href="#plug-in">plug-in</a>
+  is a special kind of helper application that installs itself into the Plugins
+  directory of the main browser installation directory and can typically be opened
+  within the browser itself (internally). Microsoft Word, Adobe Photoshop, and
+  other external applications are considered helper applications but not plug-ins,
+  since they don't install themselves into the browser directory, but can be opened
+  from the download dialog box. </p>
+<p><b id="home_page">home page.</b>&nbsp;The page your browser is set
+  to display every time you launch it or when you click the Home button. Also
+  used to refer to the main page for a web site, from which you can explore the
+  rest of the site.</p>
+<p><b id="Hypertext_Markup_Language">Hypertext Markup Language
+  (HTML).</b>&nbsp; The document format used for Web pages. The HTML standard
+  defines tags, or codes, used to define the text layout, fonts, style, images,
+  and other elements that make up a web page. </p>
+<p><b id="implicit_consent">implicit consent.</b>&nbsp; Also known as
+  implied or &quot;opt-out&quot; consent. Used to describe privacy settings that
+  may allow web sites to gather information about you (for example by means of
+  <a href="#cookie">cookies</a> and online forms) unless you explicitly choose
+  to withhold your consent by selecting an option on a page that the web site
+  provides for that purpose. Your consent may not be requested when the information
+  is actually gathered.</p>
+<p><b id="IMAP_glossary">Internet Message Access Protocol (IMAP).</b>&nbsp;A
+  standard mail server protocol that allows you to store all your messages and
+  any changes to them on the server rather than on your computer's hard disk.
+  Using IMAP rather than <a href="#POP_glossary">POP</a> saves disk space and
+  allows you to access your entire mailbox, including sent mail, drafts, and custom
+  folders, from any location. Using an IMAP server over a modem is generally faster
+  than using a POP mail server, since you initially download message headers only.
+  Not all ISPs support IMAP. </p>
+<p><b id="Internet">Internet.</b>&nbsp;A worldwide network of millions
+  of computers that communicate with each other using standard protocols such
+  as <a href="#Transmission_Control_Protocol_Internet_Protocol">TCP/IP</a>.
+  Originally developed for the US military in 1969, the Internet grew to include
+  educational and research institutions and, in the late 1990s, millions of businesses,
+  organizations, and individuals. Today the Internet is used for email, browsing
+  the <a href="#World_Wide_Web">World Wide Web</a>, instant messaging, usegroups,
+  and many other purposes.</p>
+<p><b id="Internet_protocol_address">Internet protocol
+  address (IP address).</b>&nbsp;The address of a computer on a <a href="#Transmission_Control_Protocol_Internet_Protocol">TCP/IP</a>
+  network. Every computer on the Internet has an IP address. <a href="#client">Clients</a>
+  have either a permanent IP address or one that is dynamically assigned to them
+  each time they connect with the network. IP addresses are written as four sets
+  of numbers, like this: 204.171.64.2. </p>
+<p><b id="Java">Java.</b>&nbsp;A programming language developed by Sun
+  Microsystems. A single Java program can run on many different kinds of computers,
+  thus avoiding the need for programmers to create a separate version of each
+  program for each kind of computer. Your browser can automatically download and
+  run Java programs (also called applets).</p>
+<p><b id="JavaScript">JavaScript.</b>&nbsp;A scripting language commonly
+  used to construct web pages. Programmers use JavaScript to make web pages more
+  interactive; for example, to display forms and buttons. JavaScript can be used
+  with Java, but is technically a separate language. Java is not required for
+  JavaScript to work correctly.</p>
+<p><b id="key">key.</b>&nbsp;A large
+  number used by a <a href="#cryptographic_algorithm">cryptographic algorithm</a>
+  to encrypt or decrypt data. A person's public key, for example, allows other
+  people to encrypt messages to that person. The encrypted messages must be decrypted
+  with the corresponding private key. See also
+<a href="#public-key_cryptography">public-key cryptography</a>.</p>
+<p><b id="LDAP_glossary">Lightweight Directory Access
+  Protocol (LDAP).</b>&nbsp; A standard protocol for accessing directory services,
+  such as corporate address books, across multiple platforms. You can set up your
+  browser to access LDAP directories from the Address Book. You can also set up
+  Mail &amp; Newsgroups to use an LDAP directory for email address autocompletion.
+</p>
+<p><b id="location_bar">Location Bar.</b>&nbsp; The field (and associated
+  buttons) near the top of a Navigator window where you can type a <a href="#Uniform_Resource_Locator">URL</a>
+or search terms.</p>
+<p><b id="master_key">master key.</b>&nbsp;
+  A symmetric key used by Certificate Manager to encrypt information. For
+  example, Password Manager uses Certificate Manager and your master key to encrypt
+  email passwords, web site passwords, and other stored sensitive information.
+  See also <a href="#symmetric_encryption">symmetric encryption</a>.</p>
+<p><b id="master_password">master
+  password.</b>&nbsp;A password used by Certificate Manager to protect the
+  master key and/or private keys stored on a <a href="#security_device">security
+  device</a>. Certificate Manager needs to access your private keys, for example,
+  when you sign email messages or use one of your own certificates to identify
+  yourself to a web site. It needs to access your master key when Password Manager
+  or Form Manager reads or adds to your personal information. You can set or change
+  your master password from the Master Passwords preferences panel. Each security
+  device requires a separate master password. See also <a href="#private_key">private
+  key</a>, <a href="#master_key">master key</a>.</p>
+<p><b id="misrepresentation">misrepresentation.</b>&nbsp; Presentation of an entity as a person or
+  organization that it is not. For example, a web site might pretend to be a furniture
+  store when it is really just a site that takes credit card payments but never
+  sends any goods. See also <a href="#spoofing">spoofing</a>.</p>
+<p><b id="navigation_toolbar">Navigation Toolbar.</b>&nbsp; The toolbar
+  near the top of the browser window that includes the Back and Forward buttons.</p>
+<p><b id="nonrepudiation">nonrepudiation.</b>&nbsp;
+  The inability, of the sender of a message, to deny having sent the message.
+  A regular hand-written signature provides one form of nonrepudiation. A
+<a href="#digital_signature">digital
+  signature</a> provides another.</p>
+<p><b id="object_signing">object signing.</b>&nbsp; A technology that allows software developers to sign
+  Java code, JavaScript scripts, or any kind of file, and that allows users to
+  identify the signers and control access by signed code to local system resources.</p>
+<p><b id="object-signing_certificate">
+  object-signing certificate.</b>&nbsp; A certificate whose corresponding
+  private key is used to sign objects such as code files. See also
+<a href="#object_signing">object
+  signing</a>.</p>
+<p><b id="Online_Certificate_Status_Protocol">
+  Online Certificate Status Protocol (OCSP).</b>&nbsp; A set of rules
+  that Certificate Manager follows to perform an online check of a certificate's
+  validity each time the certificate is used. This process involves checking the
+  certificate against a list of valid certificates maintained at a specified web
+  site. Your computer must be online for OCSP to work.</p>
+<p><b id="password-based_authentication">
+  password-based authentication.</b>&nbsp; Confident identification by
+  means of a name and password. See also <a href="#authentication">authentication</a>.</p>
+<p><b id="Password_Manager">Password Manager.</b>&nbsp;The part of the
+  browser that can help you remember some or all of your names and passwords by
+  storing them on your computer's hard disk, and entering them for you
+  automatically when you visit such sites.</p>
+<p><b id="personal_toolbar">Personal Toolbar.</b>&nbsp; The cutomizable
+  toolbar that appears just below the location bar by default in Navigator . It
+  contains standard buttons such as Home, Search, Bookmarks, and so on that you
+  can add or remove. You can also add buttons for your favorite bookmarks, or
+  folders containing groups of bookmarks.</p>
+<p><b id="PKCS_11">PKCS #11.</b>&nbsp;
+  The public-key cryptography standard that governs security devices such
+  as smart cards. See also <a href="#security_device">security device</a>,
+<a href="#smart_card">smart card</a>.</p>
+<p><b id="PKCS_11_module">PKCS
+  #11 module.</b>&nbsp; A program on your computer that manages cryptographic
+  services such as encryption and decryption using the PKCS #11 standard. Also
+  called <i>cryptographic modules</i>, <i>cryptographic service providers,</i>
+  or <i>security modules</i>, PKCS #11 modules control either hardware or software
+  devices. A PKCS #11 module always controls one or more slots, which may be implemented
+  as some form of physical reader (for example, for reading smart cards) or in
+  software. Each slot for a PKCS #11 module can in turn contain a
+<a href="#security_device">security
+  device</a> (also called <i>token</i>), which is the hardware or software
+  device that provides cryptographic services and stores certificates and keys.
+  Certificate Manager provides two built-in PKCS #11 modules. You may install
+  additional modules on your computer to control smart card readers or other hardware
+  devices.</p>
+<p><b id="p3p">Platform for Privacy Preferences (P3P).</b>&nbsp;A standard
+  published by the World Wide Web Consortium (W3C) designed to help users to gain
+  more control over the use of personal information by Web sites they visit. For
+  general information on the standard itself, see the online document <a href="http://www.w3.org/P3P/" target="_blank">P3P
+  Public Overview</a>.</p>
+<p><b id="plug-in">plug-in.</b>&nbsp;A type of <a href="#helper_application">helper
+  application</a> that adds new capabilities to your browser, such as the ability
+  to play audio or video clips. Unlike other kinds of helper applications, a plug-in
+  application installs itself into the Plugins directory within the main browser
+  installation directory and typically can be opened within the browser itself
+  (internally). For example, an audio plug-in lets you listen to audio files on
+  a web page or in an e-mail message. Macromedia Flash Player and Java are both
+  examples of plug-in applications.</p>
+<p><b id="POP_glossary">Post Office Protocol (POP).</b>&nbsp;A standard
+  mail server protocol that requires you to download new messages to your local
+  computer&mdash;although you can choose to leave copies on the server. With POP,
+  you can store all your messages, including sent mail, drafts, and custom folders,
+  on one computer only. By contrast, <a href="#IMAP_glossary">IMAP</a> allows
+  you to permanently store all your messages and any changes to them on the server,
+  where you can access them from any computer. Most ISPs currently support POP.
+</p>
+<p><b id="private_key">private key.</b>&nbsp;
+  One of a pair of <a href="#key">keys</a> used in public-key cryptography.
+  The private key is kept secret and is used to decrypt data that has been encrypted
+  with the corresponding public key.</p>
+<p><b id="proxy">proxy.</b>&nbsp;An intermediary or &quot;go-between&quot;
+  program that acts as both a <a href="#server">server</a> and a <a href="#client">client</a>
+  for the purpose of making requests on behalf of other clients.</p>
+<p><b id="public_key">public key.</b>&nbsp;
+  One of a pair of <a href="#key">keys</a> used in public-key cryptography.
+  The public key is distributed freely and published as part of a
+<a href="#certificate">certificate</a>.
+  It is typically used to encrypt data sent to the public key's owner, who then
+  decrypts the data with the corresponding private key.</p>
+<p><b id="public-key_cryptography">public-key cryptography.</b>&nbsp;A set of well-established techniques
+  and standards that allow an entity (such as a person, an organization, or hardware
+  such as a router) to verify its identity electronically or to sign and encrypt
+  electronic data. Two keys are involved: a <a href="#public_key">public
+  key</a> and a <a href="#private_key">private key</a>. The public key
+  is published as part of a <a href="#certificate">certificate</a>, which
+  associates that key with a particular identity. The corresponding private key
+  is kept secret. Data encrypted with the public key can be decrypted only with
+  the private key. </p>
+<p><b id="public-key_infrastructure">public-key infrastructure (PKI).</b>&nbsp;The standards and services
+  that facilitate the use of public-key cryptography and certificates in a networked
+  environment.</p>
+<p><b id="root_CA">root CA.</b>&nbsp;
+  The <a href="#certificate_authority">certificate authority (CA)</a> with
+  a self-signed certificate at the top of a <a href="#certificate_chain">certificate
+  chain</a>. See also <a href="#subordinate_CA">subordinate CA</a>.</p>
+<p><b id="search_engine">search engine.</b>&nbsp;A web-based program
+  that allows users to search for and retrieve specific information from the World
+  Wide Web. The search engine may search the full text of web documents or a list
+  of keywords, or use librarians who review web documents and index them manually
+  for retrieval. Typically, the user types a word or phrase, also called a query,
+  into a search box, and the search engine displays links to relevant web pages.</p>
+<p><b id="Secure_Sockets_Layer">Secure Sockets Layer (SSL).</b>&nbsp;A protocol that allows mutual
+  authentication between a <a href="#client">client</a> and a <a href="#server">server</a>
+  for the purpose of establishing an authenticated and encrypted connection. SSL
+  runs above TCP/IP and below HTTP, LDAP, IMAP, NNTP, and other high-level network
+  protocols. The new Internet Engineering Task Force (IETF) standard called Transport
+  Layer Security (TLS) is based on SSL. See also <a href="#authentication">authentication</a>,
+<a href="#encryption">encryption</a>.</p>
+<p><b id="security_certificate">security certificate.</b>&nbsp; See <a href="#certificate">certificate</a>.</p>
+<p><b id="security_device">security
+  device.</b>&nbsp; Hardware or software that provides cryptographic services
+  such as encryption and decryption and can store certificates and keys. A smart
+  card is one example of a security device implemented in hardware. <a href="#Certificate_Manager">Certificate
+  Manager</a> contains its own built-in security device, called the <a href="#software_security_device">software
+  security device</a>, that is always available while the browser is running.
+  Each security device is protected by its own <a href="#master_password">master
+  password</a>.</p>
+<p><b id="security_module">security
+  module.</b>&nbsp;See <a href="#PKCS_11_module">PKCS #11 module</a>.</p>
+<p><b id="security_token">security
+  token.</b>&nbsp;See <a href="#security_device">security device</a>.</p>
+<p><b id="server">server.</b>&nbsp;
+  Software (such as software that serves up web pages) that receives requests
+  from and sends information to a <a href="#client">client</a>,
+  which is usually running on a different computer. A computer on which server
+  software runs is also described as a server.</p>
+<p><b id="server_authentication">server authentication.</b>&nbsp; The process of identifying a
+<a href="#server">server</a>
+  to a <a href="#client">client</a> by using a <a href="#server_SSL_certificate">server
+  SSL certificate</a>. See also <a href="#client_authentication">client authentication</a>,
+<a href="#SSL">Secure Sockets Layer (SSL)</a>.</p>
+<p><b id="server_SSL_certificate">
+  server SSL certificate.</b>&nbsp; A certificate that a
+<a href="#server">server</a>
+  presents to a <a href="#client">client</a> to authenticate the
+  server's identity using the <a href="#SSL">Secure Sockets Layer
+  (SSL)</a> protocol.</p>
+<p><b id="signing_certificate">signing certificate.</b>&nbsp;A certificate whose corresponding
+<a href="#private_key">private
+  key</a> is used to sign transmitted data, so that the receiver can verify the
+  identity of the sender. Certificate authorities (CAs) often issue a signing
+  certificate that will be used to sign email messages at the same time as an
+<a href="#encryption_certificate">encryption certificate</a> that will be used
+  to encrypt email messages. See also <a href="#dual_key_pairs">dual key
+  pairs</a>, <a href="#digital_signature">digital signature</a>.</p>
+<p><b id="signing_key">signing key.</b>&nbsp;
+  A private key used for signing only. A signing key and its equivalent public
+  key, together with an <a href="#encryption_key">encryption key</a> and
+  its equivalent public key, constitute <a href="#dual_key_pairs">dual key
+  pairs</a>.</p>
+<p><b id="slot">slot.</b>&nbsp;A
+  piece of hardware, or its equivalent in software, that is controlled by a
+<a href="#PKCS_11_module">PKCS
+  #11 module</a> and designed to contain a <a href="#security_device">security
+  device</a>. </p>
+<p><b id="smart_card">smart card.</b>&nbsp;
+  A small device, typically about the size of a credit card, that contains
+  a microprocessor and is capable of storing cryptographic information (such as
+  keys and certificates) and performing cryptographic operations. Smart cards
+  use the <a href="#PKCS_11">PKCS #11</a> standard. A smart card
+  is one kind of <a href="#security_device">security device</a>. </p>
+<p><b id="software_security_device">
+  software security device.</b>&nbsp;The default
+<a href="#security_device">security
+  device</a> used by Certificate Manager to store private keys associated with
+  your certificates. In addition to private keys, the software security device
+  stores the master key used by Password Manager to encrypt email passwords, web
+  site passwords, and other sensitive information. See also
+<a href="#private_key">private
+  key</a> and <a href="#master_password">master key</a>.</p>
+<p><b id="spoofing">spoofing.</b>&nbsp;
+  Pretending to be someone else. For example, a person can pretend to have
+  the email address <tt>jdoe@mozilla.com</tt>, or a computer can identify itself
+  as a site called <tt>www.mozilla.com</tt> when it is not. Spoofing is one form
+  of <a href="#misrepresentation">misrepresentation</a>.</p>
+<p><b id="SSL">SSL.</b>&nbsp;See <a href="#SSL">Secure
+  Sockets Layer (SSL)</a>. </p>
+<p><b id="Status_Bar">Status Bar.</b>&nbsp; The toolbar that appears
+  at the bottom of any Mozilla window. It includes the <a href="#Component_Bar">Component
+  Bar</a> on the left and status icons on the right.</p>
+<p><b id="subject">subject.</b>&nbsp;
+  The entity (such as a person, organization, or router) identified by a
+<a href="#certificate">certificate</a>. In particular, the subject
+  field of a certificate contains the certified entity's <a href="#subject_name">subject
+  name</a> and other characteristics.</p>
+<p><b id="subject_name">subject
+  name.</b>&nbsp;A <a href="#distinguished_name">distinguished name (DN)</a>
+  that uniquely describes the <a href="#subject">subject</a> of a
+<a href="#certificate">certificate</a>.</p>
+<p><b id="subordinate_CA">subordinate
+  CA.</b>&nbsp;A <a href="#certificate_authority">certificate authority (CA)</a>
+  whose certificate is signed by another subordinate CA or by the root CA. See
+  also <a href="#certificate_chain">certificate chain</a>, <a href="#root_CA">root
+  CA</a>.</p>
+<p><b id="symmetric_encryption">
+  symmetric encryption.</b>&nbsp;An encryption method that uses a single
+  cryptographic key to both encrypt and decrypt a given message.</p>
+<p><b id="tamper_detection">tamper
+  detection.</b>&nbsp; A mechanism ensuring that data received in electronic
+  form has not been tampered with; that is, that the data received corresponds
+  entirely with the original version of the same data.</p>
+<p><b id="TCP_IP">TCP.</b>&nbsp; See <a href="#Transmission_Control_Protocol_Internet_Protocol">Transmission
+  Control Protocol/Internet Protocol (TCP/IP)</a>.</p>
+
+<p><b id="third-party_cookie">third-party cookie.</b>&nbsp;See <a href="#foreign_cookie">foreign
+  cookie</a>.</p>
+<p><b id="TLS">TLS.</b>&nbsp; See <a href="#SSL">Secure
+  Sockets Layer (SSL)</a>.</p>
+<p><b id="token">token.</b>&nbsp;
+  See <a href="#security_device">security device</a>.</p>
+
+<p><b id="Transmission_Control_Protocol_Internet_Protocol">
+  Transmission Control Protocol/Internet Protocol (TCP/IP).</b>&nbsp;A Unix
+  protocol used to connect computers running a variety of operating systems. TCP/IP
+  is an essential Internet protocol and has become a global standard.</p>
+<p><b id="trust">trust.</b>&nbsp;
+  Confident reliance on a person or other entity. In the context of
+<a href="#public-key_infrastructure">public-key
+  infrastructure (PKI)</a>, trust usually refers to the relationship between the
+  user of a certificate and the <a href="#certificate_authority">certificate authority
+  (CA)</a> that issued the certificate. If you use Certificate Manager to specify
+  that you trust a CA, Certificate Manager trusts valid certificates issued by
+  that CA unless you specify otherwise in the settings for individual certificates.
+  You use the Authorities tab in Certificate Manager to specify the kinds of certificates
+  you do or don't trust specific CAs to issue. </p>
+
+<p><b id="Uniform_Resource_Locator">Uniform Resource Locator (URL).</b>&nbsp;The
+  standardized address that tells your browser how to locate a file or other resource
+  on the Web. For example: <tt>http://www.mozilla.org.</tt> You can type URLs
+  into the browser's Location Bar to access web pages. URLs are also used in the
+  links on web pages that you can click to go to other web pages. Also known as
+  an Internet address or Web address.</p>
+
+<p><b id="web_page">web page.</b>&nbsp;A single document on the World
+  Wide Web that is specified by a unique address or URL and that may contain text,
+  hyperlinks, and graphics.</p>
+
+<p><b id="web_site">web site.</b>&nbsp;A group of related web pages
+  linked by hyperlinks and managed by a single company, organization, or individual.
+  A web site may include text, graphics, audio and video files, and links to other
+  web sites.</p>
+
+<p><b id="World_Wide_Web">World Wide Web.</b>&nbsp;Also known as the
+  Web. A portion of the Internet that is made up of web pages stored by web <a href="#server">servers</a>
+  and displayed by <a href="#client">clients</a> called web browsers (such as
+  Mozilla).</p>
 
 <p>
-[&nbsp;<A HREF="glossary.html#glossary">Return to beginning of Glossary</A>&nbsp;]
+[&nbsp;<a href="#glossary">Return to beginning of Glossary</a>&nbsp;]
 </p>
 
-
-</BODY>
-
-</HTML>
+</body>
+</html>
