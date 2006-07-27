@@ -440,6 +440,11 @@ function NewCategory()
 
 function RenameCategory()
 {
+	// make sure we have at least one category
+	var categoryPopup = document.getElementById( "categoryPopup" );
+	if (!categoryPopup)	return(false);
+	if (categoryPopup.childNodes.length < 1)	return(false);
+
 	var categoryList = document.getElementById( "categoryList" );
 	var currentName = categoryList.selectedItem.getAttribute("value");
 	var promptStr = bundle.GetStringFromName("RenameCategoryPrompt");
@@ -477,15 +482,16 @@ function RenameCategory()
 
 function RemoveCategory()
 {
+	// make sure we have at least one category
+	var categoryPopup = document.getElementById( "categoryPopup" );
+	if (!categoryPopup)	return(false);
+	if (categoryPopup.childNodes.length < 1)	return(false);
+
 	var promptStr = bundle.GetStringFromName("RemoveCategoryPrompt");
 	if (!confirm(promptStr))	return(false);
 
 	var categoryRes = RDF.GetResource("NC:SearchCategoryRoot");
 	if (!categoryRes)	return(false);
-
-	var categoryPopup = document.getElementById( "categoryPopup" );
-	if (!categoryPopup)	return(false);
-	if (categoryPopup.childNodes.length < 1)	return(false);
 
 	var categoryList = document.getElementById( "categoryList" );
 	if (!categoryList)	return(false);

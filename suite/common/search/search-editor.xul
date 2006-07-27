@@ -25,8 +25,8 @@
 
 -->
 
-<?xml-stylesheet href="chrome://search/skin/search-editor.css" type="text/css"?>
 <?xml-stylesheet href="chrome://search/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://search/skin/search-editor.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
@@ -69,12 +69,15 @@
 			<tree multiple="true" id="engineList" flex="1" datasources="rdf:internetsearch" class="inset">
 				<template>
 					<treechildren>
-						<treeitem uri="...">
-							<treerow>
-								<treecell class="iconic" flex="1" crop="right" align="left"
-									src="rdf:http://home.netscape.com/NC-rdf#Icon" value="rdf:http://home.netscape.com/NC-rdf#Name" />
-							</treerow>
-						</treeitem>
+					<treeitem uri="...">
+					<treerow>
+					<treecell>
+						<titledbutton class="iconic" flex="1" crop="right" align="left"
+							src="rdf:http://home.netscape.com/NC-rdf#Icon"
+							value="rdf:http://home.netscape.com/NC-rdf#Name" />
+					</treecell>
+					</treerow>
+					</treeitem>
 					</treechildren>
 				</template>
 
@@ -109,12 +112,15 @@
 			<tree multiple="true" class="inset" id="allengines" ref="NC:SearchEngineRoot" datasources="rdf:internetsearch">
 				<template>
 					<treechildren>
-						<treeitem uri="..." loading="rdf:http://home.netscape.com/NC-rdf#loading">
-							<treerow>
-								<treecell class="iconic" flex="1" crop="right" align="left"
-									src="rdf:http://home.netscape.com/NC-rdf#Icon" value="rdf:http://home.netscape.com/NC-rdf#Name" />
-							</treerow>
-						</treeitem>
+					<treeitem uri="..." loading="rdf:http://home.netscape.com/NC-rdf#loading">
+					<treerow>
+					<treecell>
+						<titledbutton class="iconic" flex="1" crop="right" align="left"
+							src="rdf:http://home.netscape.com/NC-rdf#Icon"
+							value="rdf:http://home.netscape.com/NC-rdf#Name" />
+					</treecell>
+					</treerow>
+					</treeitem>
 					</treechildren>
 				</template>
 
