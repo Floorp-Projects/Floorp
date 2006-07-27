@@ -23,8 +23,6 @@
 <?xul-overlay href="chrome://communicator/content/contentAreaContextOverlay.xul"?>
 
 <!DOCTYPE window [
-<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
-%brandDTD;
 <!ENTITY % sidebarOverlayDTD SYSTEM "chrome://communicator/locale/sidebar/sidebarOverlay.dtd" >
 %sidebarOverlayDTD;
 ]>
