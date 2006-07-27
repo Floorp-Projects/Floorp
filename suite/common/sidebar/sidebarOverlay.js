@@ -165,7 +165,7 @@ function ()
   return false;
 }
 
-sbPanelList.prototype.num_included_panels =
+sbPanelList.prototype.num_panels_included =
 function ()
 {
   var count = 0;
@@ -174,6 +174,20 @@ function ()
   {
     var curr = this.get_panel_from_header_index(i);
     if (!curr.is_excluded())
+      count++;
+  }
+  return count;
+}
+
+sbPanelList.prototype.num_panels_in_view =
+function ()
+{
+  var count = 0;
+  var panels = this.node.childNodes;
+  for (var i = 2; i < panels.length; i += 2)
+  {
+    var curr = this.get_panel_from_header_index(i);
+    if (curr.is_in_view())
       count++;
   }
   return count;
@@ -286,7 +300,7 @@ function (force_reload)
     sidebarObj.collapsed = false;
   }
 
-  if (sidebarObj.panels.num_included_panels() > gNumTabsInViewPref)
+  if (sidebarObj.panels.num_panels_included() > gNumTabsInViewPref)
     document.getElementById("nav-buttons-box").hidden = false;
   else
     document.getElementById("nav-buttons-box").hidden = true;
@@ -351,7 +365,9 @@ function (force_reload)
       num_in_view++;
 
       // selected tab is not in view so just select the last one
-      if (!is_after_selected && num_in_view == gNumTabsInViewPref && 
+      if (!is_after_selected && 
+          ((num_in_view == gNumTabsInViewPref) || 
+           (this.num_panels_included() == num_in_view)) && 
           selected_id != id)
       {
         selected_id = id;
@@ -1220,6 +1236,7 @@ function SidebarTogglePanel(panel_menuitem) {
       // we excluded one so let's try to bring a non-excluded one into view
       var tabs = sidebarObj.panels.node.childNodes;
       var newFirst = null;
+      var added = false;
       for (var i = 2; i < tabs.length ; i += 2)
       {
         var currTab = sidebarObj.panels.get_panel_from_header_index(i);
@@ -1242,13 +1259,19 @@ function SidebarTogglePanel(panel_menuitem) {
     }
     else
     {
-      // we included a new tab so let's take the last one out of view
-      var tabs = sidebarObj.panels.node.childNodes;
-      for (i = 2; i < tabs.length; i += 2)
+      panel.header.setAttribute("in-view", true);
+
+      // if we have one too many tabs we better get rid of an old one
+      if (sidebarObj.panels.num_panels_in_view() > gNumTabsInViewPref)
       {
-        var currHeader = tabs[i];
-        if (currHeader.hasAttribute("last-panel"))
-          currHeader.setAttribute("in-view", false);
+        // we included a new tab so let's take the last one out of view
+        var tabs = sidebarObj.panels.node.childNodes;
+        for (i = 2; i < tabs.length; i += 2)
+        {
+          var currHeader = tabs[i];
+          if (currHeader.hasAttribute("last-panel"))
+            currHeader.setAttribute("in-view", false);
+        }
       }
     }
   }
