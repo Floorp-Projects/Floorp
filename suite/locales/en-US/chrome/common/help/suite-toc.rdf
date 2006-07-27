@@ -71,7 +71,7 @@
   <rdf:Description about="#nav-doc-nav">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="nav-doc-sidebar" nc:name="Using My Sidebar"  nc:link="chrome://help/locale/nav_help.html#nav_sidebar"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-sidebar" nc:name="Using the Sidebar"  nc:link="chrome://help/locale/nav_help.html#nav_sidebar"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1028,7 +1028,7 @@
 <rdf:Description about="#cust-doc">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="cust-sidebar" nc:name="My Sidebar"  nc:link="chrome://help/locale/customize_help.html"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-sidebar" nc:name="Sidebar"  nc:link="chrome://help/locale/customize_help.html"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1036,7 +1036,7 @@
  <rdf:Description about="#cust-sidebar">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="cust-sidebar-define" nc:name="What is My Sidebar?"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_define"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-sidebar-define" nc:name="What is the Sidebar?"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_define"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1044,7 +1044,7 @@
 <rdf:Description about="#cust-sidebar">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="cust-sidebar-using" nc:name="Using My Sidebar"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_using"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-sidebar-using" nc:name="Using the Sidebar"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_using"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1052,7 +1052,7 @@
 <rdf:Description about="#cust-sidebar">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="cust-sidebar-adding" nc:name="Adding My Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_adding"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-sidebar-adding" nc:name="Adding Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_adding"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1060,7 +1060,7 @@
 <rdf:Description about="#cust-sidebar">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="cust-sidebar-indiv" nc:name="Customizing Individual My Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_indiv"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-sidebar-indiv" nc:name="Customizing Individual Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_indiv"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1068,7 +1068,7 @@
 <rdf:Description about="#cust-sidebar">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="cust-sidebar-reorg" nc:name="Reorganizing My Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_reorg"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-sidebar-reorg" nc:name="Reorganizing Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_reorg"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1076,7 +1076,7 @@
 <rdf:Description about="#cust-sidebar">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="cust-sidebar-removing" nc:name="Removing My Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_removing"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-sidebar-removing" nc:name="Removing Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_removing"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
