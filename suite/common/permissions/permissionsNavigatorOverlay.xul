@@ -40,10 +40,7 @@
 
     // Remove the image entries from the task menu
     function HideImage() {
-      var element;
-      element = document.getElementById("image");
-      element.setAttribute("style","display: none;" );
-      element.setAttribute("disabled","true" );
+      document.getElementById("image").hidden = true;
     }
 
     // for some unexplainable reason, CheckForImage() keeps getting called repeatedly
