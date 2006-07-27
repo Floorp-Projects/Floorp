@@ -23,8 +23,7 @@
     <label value="&results.header.label;"/>
   </hbox>
 
-  <hbox align="center"
-        style="overflow: none; min-width: 1px;">
+  <hbox align="center" style="min-width: 1px;">
     <label value="&viewbyprovider.label;"/>
     <menulist id="engineTabs" ref="NC:SearchResultsSitesRoot"
               datasources="rdf:internetsearch" oncommand="switchTab(1);">
@@ -119,7 +118,7 @@
   </splitter>
   
   <hbox flex="1">
-    <iframe id="content" flex="1" src="chrome://communicator/locale/search/default.htm"/>
+    <iframe id="resultsContent" flex="1" src="chrome://communicator/locale/search/default.htm"/>
   </hbox>
   
 </page>
