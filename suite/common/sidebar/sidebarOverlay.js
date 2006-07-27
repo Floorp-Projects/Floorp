@@ -87,9 +87,11 @@ function get_sidebar_datasource_uri(panels_file_id) {
 function sidebar_overlay_init() {
   sidebarObj.datasource_uri = get_sidebar_datasource_uri(PANELS_RDF_FILE);
   sidebarObj.resource = 'urn:sidebar:current-panel-list';
-  sidebarObj.master_datasources = 'chrome://sidebar/content/local-panels.rdf';
-  sidebarObj.master_datasources += ' chrome://sidebar/content/remote-panels.rdf';
-  //sidebarObj.master_datasources += " " + get_remote_datasource_url();
+
+  sidebarObj.master_datasources = '';
+  //sidebarObj.master_datasources += 'chrome://sidebar/content/local-panels.rdf';
+  //sidebarObj.master_datasources += ' chrome://sidebar/content/remote-panels.rdf';
+  sidebarObj.master_datasources += " " + get_remote_datasource_url();
   sidebarObj.master_resource = 'urn:sidebar:master-panel-list';
   sidebarObj.component = document.location.href;
 
@@ -101,7 +103,7 @@ function sidebar_overlay_init() {
   var sidebar_menuitem = document.getElementById('menu_sidebar')
   if (sidebar_element.getAttribute('hidden') == 'true') {
     if (sidebar_menuitem) {
-      sidebar_menuitem.setAttribute('checked', 'false')
+      sidebar_menuitem.setAttribute('checked', 'false');
     }
   } else {
     if (sidebar_menuitem) {
@@ -135,10 +137,16 @@ function sidebar_overlay_init() {
   }
 }
 
+function sidebar_overlay_destruct() {
+    var panels = document.getElementById('sidebar-panels');
+    debug("Removeing observer from database.");
+    panels.database.RemoveObserver(panel_observer);
+}
+
 // Get the template for the available panels url from preferences.
 // Replace variables in the url:
 //     %LOCALE%  -->  Application locale (e.g. en-us).
-//     %SIDEBAR_VERSION% --> Sidebar file format version (e.g. 0.0).
+//     %VERSION% --> Sidebar file format version (e.g. 0.0).
 function get_remote_datasource_url() {
   var url = '';
   var prefs = Components.classes['component://netscape/preferences'];
@@ -302,7 +310,7 @@ function SidebarSelectPanel(titledbutton) {
 
 // No one is calling this right now.
 function SidebarReload() {
-  sidebar_overlay_init();
+  sidebar_open_default_panel(100, 0);
 }
 
 // Set up a lame hack to avoid opening two customize
@@ -355,7 +363,7 @@ function SidebarShowHide() {
     debug("Showing the sidebar");
     sidebarBox.removeAttribute('hidden');
     sidebar_splitter.removeAttribute('hidden');
-    sidebar_overlay_init()
+    sidebar_open_default_panel(100, 0);
   } else {
     debug("Hiding the sidebar");
     sidebarBox.setAttribute('hidden','true');
@@ -484,3 +492,4 @@ function dump_tree(node, depth) {
 
 // Install our load handler
 addEventListener("load", sidebar_overlay_init, false);
+addEventListener("unload", sidebar_overlay_destruct, false);
