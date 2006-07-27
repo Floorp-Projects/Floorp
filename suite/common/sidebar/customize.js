@@ -88,6 +88,18 @@ function sidebar_customize_init()
   save_initial_panels();
   enable_buttons_for_current_panels();
 
+  var links =
+    all_panels.database.GetSources(RDF.GetResource(NC + "haslink"),
+                                   RDF.GetLiteral("true"), true);
+
+  while (links.hasMoreElements()) {
+    var folder = 
+      links.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+    var folder_name = folder.Value;
+    debug("+++ fixing up remote container " + folder_name + "\n");
+    fixup_remote_container(folder_name);
+  }
+
   sizeToContent();
 }
 
