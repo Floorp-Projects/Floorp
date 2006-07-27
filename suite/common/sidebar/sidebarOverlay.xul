@@ -94,7 +94,7 @@
               onclick="SidebarSelectPanel(this)" hidden="true"
               value="?title" exclude="?exclude" />
             <box uri="?panel" flex='1*' hidden="true" orient="vertical">
-              <box flex='1' orient="vertical" class="iframe-panel">
+              <box flex='1' orient="vertical" class="iframe-panel loadarea">
                 <box orient="horizontal" flex="1" autostretch="never">
                   <image class="image-panel-loading"/>
                   <text class="text-panel-loading"

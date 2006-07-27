@@ -21,8 +21,13 @@
 
 <!-- extracted from ./local-panels.rdf -->
 
-<!ENTITY sidebar.whats-related.label  "What's Related">
-<!ENTITY sidebar.search.label         "Search">
+<!ENTITY sidebar.whats-related.label   "What's Related">
+<!ENTITY sidebar.whats-related.tooltip "Click for a list of related Web sites">
+<!ENTITY sidebar.search.label          "Search">
+<!ENTITY sidebar.search.tooltip        "Click to do a Web search">
 <!-- LOCALIZATION NOTE sidebar.tinderbox.label: DONT_TRANSLATE -->
-<!ENTITY sidebar.tinderbox.label      "Tinderbox">
-<!ENTITY sidebar.bookmarks.label      "Bookmarks">
+<!ENTITY sidebar.tinderbox.label       "Tinderbox">
+<!ENTITY sidebar.tinderbox.tooltip     "Click to view mozilla.org tree status">
+<!ENTITY sidebar.bookmarks.label       "Bookmarks">
+<!ENTITY sidebar.bookmarks.tooltip     "Click to view bookmarks">
+
