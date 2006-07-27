@@ -18,10 +18,10 @@
 <!ENTITY cookieBlockImagesMsg.label "Images from this site will never be downloaded">
 <!ENTITY cookieDisplayPopupsCmd.label "Manage Pop-up Permissions">
 <!ENTITY cookieDisplayPopupsCmd.accesskey "m">
-<!ENTITY cookieAllowPopupsCmd.label "Unblock Popups from this Site">
+<!ENTITY cookieAllowPopupsCmd.label "Unblock Pop-ups from this Site">
 <!ENTITY cookieAllowPopupsCmd.accesskey "u">
 <!ENTITY cookieAllowPopupsMsg.label "Pop-up windows from this site will always be allowed">
-<!ENTITY cookieBlockPopupsCmd.label "Block Popups from this Site">
+<!ENTITY cookieBlockPopupsCmd.label "Block Pop-ups from this Site">
 <!ENTITY cookieBlockPopupsCmd.accesskey "b">
 <!ENTITY cookieBlockPopupsMsg.label "Pop-up windows from this site will always be blocked">
 <!ENTITY cookieTutorialCmd.label "Understanding Privacy">
