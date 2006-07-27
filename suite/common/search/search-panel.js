@@ -26,6 +26,7 @@
  *    Ben Goodger             <ben@netscape.com>
  *    Rob Ginda               <rginda@netscape.com>
  *    Steve Lamm              <slamm@netscape.com>
+ *    Samir Gehani            <sgehani@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -307,6 +308,56 @@ function ensureDefaultEnginePrefs(aRDF,aDS)
   }
 }
 
+function AskChangeDefaultEngine(aSelectedEngine)
+{
+  const kDontAskAgainPref  = "browser.search.set_default.dont_ask_again";
+  const kDefaultEnginePref = "browser.search.defaultengine";
+
+  // don't prompt user if selection is same as old default engine
+  var oldDefault = nsPreferences.copyUnicharPref(kDefaultEnginePref);
+  if (aSelectedEngine.getAttribute("value") == oldDefault)
+    return;
+
+  // check "don't ask again" pref
+  var dontAskAgain = nsPreferences.getBoolPref(kDontAskAgainPref, false);
+  var change = false; // should we change the default engine?
+
+  // if "don't ask again" pref was set
+  if (dontAskAgain)
+  {
+    change = true;
+  }
+  else
+  {
+    // prompt user if we should change their default engine
+    var promptSvc = Components.
+                      classes["@mozilla.org/embedcomp/prompt-service;1"].
+                      getService(Components.interfaces.nsIPromptService);
+    if (!promptSvc)
+      return;
+    var title = searchBundle.getString("changeEngineTitle"); 
+    var dontAskAgainMsg = searchBundle.getString("dontAskAgainMsg"); 
+    var engineName = aSelectedEngine.getAttribute("label");
+    if (!engineName || engineName == "")
+      engineName = searchBundle.getString("thisEngine");
+    var changeEngineMsg = searchBundle.stringBundle.formatStringFromName(
+                          "changeEngineMsg", [engineName], 1); 
+
+    var checkbox = {value:0};
+    var change = promptSvc.confirmCheck(window, title, changeEngineMsg, 
+                   dontAskAgainMsg, checkbox);
+
+    // store "don't ask again" pref from checkbox value (if changed)
+    debug("dontAskAgain: " + dontAskAgain);
+    debug("checkbox.value: " + checkbox.value);
+    if (checkbox.value != dontAskAgain)
+      nsPreferences.setBoolPref(kDontAskAgainPref, checkbox.value);
+  }
+
+  // if confirmed true, i.e., change default engine, then set pref
+  if (change)
+    nsPreferences.setUnicharPref(kDefaultEnginePref, aSelectedEngine.value);
+}
 
 function ensureSearchPref()
 {

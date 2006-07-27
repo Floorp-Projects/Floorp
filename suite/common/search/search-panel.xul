@@ -76,7 +76,8 @@
                       sortResource="http://home.netscape.com/NC-rdf#Name"
                       sortDirection="ascending">
               <template>
-                <menupopup id="basicPopup">
+                <menupopup id="basicPopup"
+                           oncommand="AskChangeDefaultEngine(event.target);">
                   <menuitem value="..." uri="..."
                     desc="rdf:http://home.netscape.com/NC-rdf#Description"
                     ver="rdf:http://home.netscape.com/NC-rdf#Version"
