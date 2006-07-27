@@ -292,9 +292,9 @@ function ensureDefaultEnginePrefs(aRDF,aDS)
 
     mPrefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPrefBranch);
     var defaultName = mPrefs.getComplexValue("browser.search.defaultenginename" , Components.interfaces.nsIPrefLocalizedString);
-    kNC_Root = aRDF.GetResource("NC:SearchEngineRoot");
-    kNC_child = aRDF.GetResource("http://home.netscape.com/NC-rdf#child");
-    kNC_Name = aRDF.GetResource("http://home.netscape.com/NC-rdf#Name");
+    var kNC_Root = aRDF.GetResource("NC:SearchEngineRoot");
+    var kNC_child = aRDF.GetResource("http://home.netscape.com/NC-rdf#child");
+    var kNC_Name = aRDF.GetResource("http://home.netscape.com/NC-rdf#Name");
           
     var arcs = aDS.GetTargets(kNC_Root, kNC_child, true);
     while (arcs.hasMoreElements()) {
@@ -973,4 +973,71 @@ function doEnabling()
   var searchButton = document.getElementById("searchButton");
   var sidebarSearchText = document.getElementById("sidebar-search-text");
   searchButton.disabled = !sidebarSearchText.value;
+}
+
+//Step up the dom until getting the desired node.
+function getItemNode(aNode,nodeName)
+{
+  var node = aNode;
+  while (node.localName != nodeName) {
+    node = node.parentNode;
+  }
+  return node ? node : null;
+}
+
+//Fill in tooltip in teh search results panel
+function FillInDescTooltip(tipElement)
+{
+  var retValue = false;
+ 
+  //Get the cell node and the tree item node of
+  //moused over sherlock result
+  var nodeTreeCell = getItemNode(tipElement, "treecell");
+  var nodeTreeitem = getItemNode(tipElement, "treeitem");
+ 
+  //Get the Name of the tree cell for first item in the tooltip
+  var nodeLabel = nodeTreeCell.getAttribute("label");
+  var nodeID = nodeTreeitem.id;
+ 
+  //Query RDF to get URL of tree item
+  if (nodeID)
+    try {
+      var ds = document.getElementById("Tree").database;
+      if (ds) {
+        var rdf = Components.classes[RDFSERVICE_CONTRACTID].getService(nsIRDFService);
+        var src = rdf.GetResource(nodeID, true);
+        var prop = rdf.GetResource("http://home.netscape.com/NC-rdf#URL", true);
+        var url = ds.GetTarget(src, prop, true);        
+        if (url)
+          url = url.QueryInterface(nsIRDFLiteral).Value;
+      }
+    } catch (ex) {
+  }
+
+  //Fill in the the text nodes
+  //collapse them if there is not a node
+    if (nodeLabel || url) {
+      var tooltipTitle = document.getElementById("titleText");
+      var tooltipUrl = document.getElementById("urlText"); 
+      if (nodeLabel) {
+        if (tooltipTitle.getAttribute("hidden") == "true")
+          tooltipTitle.removeAttribute("hidden");
+        tooltipTitle.setAttribute("value",nodeLabel);
+      } 
+      else  {
+        tooltipTitle.setAttribute("hidden", "true");
+      }
+      if (url) {
+        if (tooltipUrl.getAttribute("hidden") == "true")
+          tooltipUrl.removeAttribute("hidden");
+        if (url.length > 100)
+          url = url.substr(0,100) + "...";
+        tooltipUrl.setAttribute("value",url);
+      }
+      else {
+        tooltipUrl.setAttribute("hidden", "true");
+      }
+    retValue = true;
+  }
+  return retValue;
 }
