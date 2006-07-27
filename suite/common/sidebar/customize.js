@@ -19,6 +19,13 @@
  * 
  */
 
+//////////////////////////////////////////////////////////////
+// Global variables
+//////////////////////////////////////////////////////////////
+
+// Set to true for noise
+const CUST_DEBUG = false;
+
 // the rdf service
 var RDF = 'component://netscape/rdf/rdf-service'
 RDF = Components.classes[RDF].getService();
@@ -27,38 +34,42 @@ RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
 var NC = "http://home.netscape.com/NC-rdf#";
 
 var sidebarObj = new Object;
+var allPanelsObj = new Object;
 var original_panels = new Array();
 
-function debug(msg)
-{
-  //dump(msg+"\n");
-}
+//////////////////////////////////////////////////////////////
+// Sidebar Init/Destroy
+//////////////////////////////////////////////////////////////
 
-function Init()
+function sidebar_customize_init()
 {
   doSetOKCancel(Save);
   
-  var all_panels_datasources = window.arguments[0];
-  var all_panels_resource    = window.arguments[1];
+  allPanelsObj.datasources = window.arguments[0];
+  allPanelsObj.resource    = window.arguments[1];
   sidebarObj.datasource_uri     = window.arguments[2];
   sidebarObj.resource           = window.arguments[3];
 
-  debug("Init: all panels datasources = " + all_panels_datasources);
-  debug("Init: all panels resource    = " + all_panels_resource);
+  debug("Init: all panels datasources = " + allPanelsObj.datasources);
+  debug("Init: all panels resource    = " + allPanelsObj.resource);
   debug("Init: sidebarObj.datasource_uri = " + sidebarObj.datasource_uri);
   debug("Init: sidebarObj.resource       = " + sidebarObj.resource);
 
   var all_panels   = document.getElementById('other-panels');
   var current_panels = document.getElementById('current-panels');
 
-  all_panels_datasources = all_panels_datasources.replace(/^\s+/,'');
-  all_panels_datasources = all_panels_datasources.replace(/\s+$/,'');
-  all_panels_datasources = all_panels_datasources.split(/\s+/);
-  for (var ii = 0; ii < all_panels_datasources.length; ii++) {
-    debug("Init: Adding "+all_panels_datasources[ii]);
+  debug("Adding observer to all panels database.");
+  all_panels.database.AddObserver(panels_observer);
+
+
+  allPanelsObj.datasources = allPanelsObj.datasources.replace(/^\s+/,'');
+  allPanelsObj.datasources = allPanelsObj.datasources.replace(/\s+$/,'');
+  allPanelsObj.datasources = allPanelsObj.datasources.split(/\s+/);
+  for (var ii = 0; ii < allPanelsObj.datasources.length; ii++) {
+    debug("Init: Adding "+allPanelsObj.datasources[ii]);
 
     // This will load the datasource, if it isn't already.
-    var datasource = RDF.GetDataSource(all_panels_datasources[ii]);
+    var datasource = RDF.GetDataSource(allPanelsObj.datasources[ii]);
     all_panels.database.AddDataSource(datasource);
     current_panels.database.AddDataSource(datasource);
   }
@@ -70,8 +81,8 @@ function Init()
   current_panels.database.AddDataSource(sidebarObj.datasource);
 
   // Root the customize dialog at the correct place.
-  debug("Init: reset all panels ref, "+all_panels_resource);
-  all_panels.setAttribute('ref', all_panels_resource);
+  debug("Init: reset all panels ref, "+allPanelsObj.resource);
+  all_panels.setAttribute('ref', allPanelsObj.resource);
   debug("Init: reset current panels ref, "+sidebarObj.resource);
   current_panels.setAttribute('ref', sidebarObj.resource);
   save_initial_panels();
@@ -88,7 +99,71 @@ function save_initial_panels()
   }
 }
 
-function get_attr(registry,service,attr_name) {
+function sidebar_customize_destruct()
+{
+  var all_panels   = document.getElementById('other-panels');
+  debug("Removing observer from all_panels database.");
+  all_panels.database.RemoveObserver(panels_observer);
+}
+
+
+//////////////////////////////////////////////////////////////////
+// Panels' RDF Datasource Observer
+//////////////////////////////////////////////////////////////////
+var panels_observer = {
+  onAssert : function(ds,src,prop,target) { 
+    //debug ("observer: assert");
+    // "refresh" is asserted by select menu and by customize.js.
+    if (prop == RDF.GetResource(NC + "link")) {
+      setTimeout("fixup_remote_container('"+src.Value+"')",100);
+      //fixup_remote_container(src.Value);
+    }
+  },
+  onUnassert : function(ds,src,prop,target) {
+    //debug ("observer: unassert");
+  },
+  onChange : function(ds,src,prop,old_target,new_target) {
+    //debug ("observer: change");
+  },
+  onMove : function(ds,old_src,new_src,prop,target) {
+    //debug ("observer: move");
+  },
+  beginUpdateBatch : function(ds) {
+    //debug ("observer: beginUpdateBatch");
+  },
+  endUpdateBatch : function(ds) {
+    //debug ("observer: endUpdateBatch");
+  }
+};
+
+function fixup_remote_container(id)
+{
+  debug('fixup_remote_container('+id+')');
+
+  var container = document.getElementById(id);
+  if (container) {
+    container.setAttribute('container', 'true');
+    container.removeAttribute('open');
+  }
+}
+
+function fixup_children(id) {
+  // Add container="true" on nodes with "link" attribute
+  var treeitem = document.getElementById(id);
+
+  children = treeitem.childNodes.item(1).childNodes;
+  for (var ii=0; ii < children.length; ii++) {
+    var child = children.item(ii);
+    if (child.getAttribute('link') != '' &&
+        child.getAttribute('container') != 'true') {
+      child.setAttribute('container', 'true');
+      child.removeAttribute('open');
+    }
+  }
+}
+
+function get_attr(registry,service,attr_name)
+{
   var attr = registry.GetTarget(service,
                                 RDF.GetResource(NC + attr_name),
                                 true);
@@ -104,27 +179,58 @@ function SelectChangeForOtherPanels(event, target)
   enable_buttons_for_other_panels();
 }
 
-function ClickOnOtherPanels(event, target)
+function ClickOnOtherPanels(event)
 { 
-  debug("SelectChangeForOtherPanels(...)");
+  debug("ClickOnOtherPanels(...)");
+
+  var targetclass = event.target.getAttribute('class');
+  var treeitem = null;
+  var force_open = true;
+  if (targetclass == 'tree-cell-twisty') {
+    // The twisty is nested three below the treeitem:
+    // <treeitem>
+    //   <treerow>
+    //     <treecell>
+    //         <titledbutton class="tree-cell-twisty"> <!-- anonymous -->
+    treeitem = event.target.parentNode.parentNode.parentNode;
+    force_open = false;
+  } else {
+    if (event.target.localName != "treecell" &&
+        event.target.localName != "treeitem")
+    return;
+
+    treeitem = event.target;
+    while (treeitem && treeitem.nodeName != 'treeitem') {
+      treeitem = treeitem.parentNode;
+    }
+  }
+  
   // Remove the selection in the "current" panels list
   var current_panels = document.getElementById('current-panels');
   current_panels.clearItemSelection();
   enable_buttons_for_current_panels();
 
-  if (target.getAttribute('container') == 'true') {
-    if (target.getAttribute('open') == 'true') {
-      target.removeAttribute('open');
+  if (treeitem.getAttribute('container') == 'true') {
+    if (treeitem.getAttribute('open') == 'true') {
+      if (force_open) {
+        debug("close the container");
+        treeitem.removeAttribute('open');
+      }
     } else {
-      target.setAttribute('open','true');
-    }
-  } else {
-    link = target.getAttribute('link');
-    if (link && link != '') {
-      debug("Has remote datasource: "+link);
-      add_datasource_to_other_panels(link);
-      target.setAttribute('container', 'true');
-      target.setAttribute('open', 'true');
+      if (force_open) {
+        debug("open the container");
+        treeitem.setAttribute('open','true');
+      }
+
+      link = treeitem.getAttribute('link');
+      loaded_link = treeitem.getAttribute('loaded_link');
+      if (link != '' && !loaded_link) {
+        debug("Has remote datasource: "+link);
+        add_datasource_to_other_panels(link);
+        treeitem.setAttribute('loaded_link', 'true');
+      } else {
+        setTimeout('fixup_children("'+ treeitem.getAttribute('id') +'")', 100);
+      }
     }
   }
 }
@@ -147,7 +253,7 @@ function add_datasource_to_other_panels(link) {
   all_panels.database.AddDataSource(RDF.GetDataSource(uri));
 
   // XXX This is a hack to force re-display
-  all_panels.setAttribute('ref', 'urn:blah:main-root');
+  //all_panels.setAttribute('ref', allPanelsObj.resource);
 }
 
 // Handle a selection change in the current panels.
@@ -215,7 +321,8 @@ function PreviewPanel()
     if (!preview_URL || !preview_name) break;
 
     window.openDialog("chrome://communicator/content/sidebar/preview.xul",
-                      "_blank", "chrome,resizable", preview_name, preview_URL);
+                      "_blank", "chrome,resizable,close,dialog=no",
+                      preview_name, preview_URL);
   }
 }
 
@@ -332,6 +439,7 @@ function CustomizePanel()
 
   if (numSelected == 1) {
     var selectedNode  = tree.selectedItems[0];
+    var panel_id = selectedNode.getAttribute('id');
     var customize_url = selectedNode.getAttribute('customize');
 
     debug("url   = " + customize_url);
@@ -340,8 +448,40 @@ function CustomizePanel()
 
     window.openDialog('chrome://communicator/content/sidebar/customize-panel.xul',
                       '_blank','chrome,resizable,width=690,height=600',
-                      customize_url);
+                      panel_id,
+                      customize_url,
+                      sidebarObj.datasource_uri,
+                      sidebarObj.resource);
   }
+}
+
+function BrowseMorePanels()
+{
+  var url = '';
+  var browser_url = "chrome://navigator/content/navigator.xul";
+  var prefs = Components.classes['component://netscape/preferences'];
+  if (prefs) {
+    prefs = prefs.getService();
+  }
+  if (prefs) {
+    prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
+  }
+  if (prefs) {
+    var locale;
+    try {
+      url = prefs.CopyCharPref("sidebar.customize.more_panels.url");
+      var temp = prefs.CopyCharPref("browser.chromeURL");
+      if (temp) browser_url = temp;
+    } catch(ex) {
+      debug("Unable to get prefs: "+ex);
+    }
+  }
+  window.openDialog(browser_url, "_blank", "chrome,all,dialog=no", url);
+}
+
+function customize_getBrowserURL()
+{
+  return url;
 }
 
 // Serialize the new list of panels.
@@ -396,28 +536,33 @@ function Save()
   container.Init(sidebarObj.datasource, panel_list);
 
   // Remove all the current panels from the datasource.
+  var have_panel_attributes = new Array();
   var current_panels = container.GetElements();
   while (current_panels.hasMoreElements()) {
     panel = current_panels.getNext();
     id = panel.QueryInterface(Components.interfaces.nsIRDFResource).Value;
-
-    // If this panel is not in the new list,
-    // or, if description of this panel is in the all panels list,
-    // then, remove all assertions for the panel to avoid leaving
-    // unneeded assertions behind and to avoid multiply asserted
-    // attributes, respectively.
-    if (!has_element(panels, id) || 
-        has_targets(all_panels.database, panel)) {
-      delete_resource_deeply(container, panel);
-    } else {
+    if (has_element(panels, id)) {
+      // This panel will remain in the sidebar.
+      // Remove the resource, but keep all the other attributes.
+      // Removing it will allow it to be added in the correct order.
+      // Saving the attributes will preserve things such as the exclude state.
+      have_panel_attributes[id] = true;
       container.RemoveElement(panel, false);
+    } else {
+      // Kiss it goodbye.
+      delete_resource_deeply(container, panel);
     }
   }
 
   // Add the new list of panels
   for (var ii = 0; ii < panels.length; ++ii) {
-    copy_resource_deeply(all_panels.database, RDF.GetResource(panels[ii]),
-                         container);
+    var id = panels[ii];
+    var resource = RDF.GetResource(id);
+    if (have_panel_attributes[id]) {
+      container.AppendElement(resource);
+    } else {
+      copy_resource_deeply(all_panels.database, resource, container);
+    }
   }
 
   refresh_all_sidebars();
@@ -581,41 +726,52 @@ function persist_dialog_dimensions() {
   win.setAttribute( "width", w );
 }
 
-//*==================================================
-// Handy debug routines
-//==================================================
-function dump_attributes(node,depth) {
-  var attributes = node.attributes;
-  var indent = "| | | | | | | | | | | | | | | | | | | | | | | | | | | | | . ";
+///////////////////////////////////////////////////////////////
+// Handy Debug Tools
+//////////////////////////////////////////////////////////////
+if (!CUST_DEBUG) {
+  debug = function (s) {};
+  dump_attributes = function (node, depth) {};
+  dump_tree = function (node) {};
+  _dump_tree_recur = function (node, depth, index) {};
+} else {
+  debug = function (s) { dump("-*- sb customize: " + s + "\n"); };
 
-  if (!attributes || attributes.length == 0) {
-    debug(indent.substr(indent.length - depth*2) + "no attributes");
+  dump_attributes = function (node, depth) {
+    var attributes = node.attributes;
+    var indent = "| | | | | | | | | | | | | | | | | | | | | | | | | | | | . ";
+
+    if (!attributes || attributes.length == 0) {
+      debug(indent.substr(indent.length - depth*2) + "no attributes");
+    }
+    for (var ii=0; ii < attributes.length; ii++) {
+      var attr = attributes.item(ii);
+      debug(indent.substr(indent.length - depth*2) + attr.name +
+            "=" + attr.value);
+    }
   }
-  for (var ii=0; ii < attributes.length; ii++) {
-    var attr = attributes.item(ii);
-    debug(indent.substr(indent.length - depth*2) + attr.name +"="+attr.value);
+  dump_tree = function (node) {
+    _dump_tree_recur(node, 0, 0);
+  }
+  _dump_tree_recur = function (node, depth, index) {
+    if (!node) {
+      debug("dump_tree: node is null");
+    }
+    var indent = "| | | | | | | | | | | | | | | | | | | | | | | | | | | | + ";
+    debug(indent.substr(indent.length - depth*2) + index +
+          " " + node.nodeName);
+    if (node.nodeName != "#text") {
+      dump_attributes(node, depth);
+    }
+    var kids = node.childNodes;
+    for (var ii=0; ii < kids.length; ii++) {
+      _dump_tree_recur(kids[ii], depth + 1, ii);
+    }
   }
 }
 
-function dump_tree(node) {
-  dump_tree_recur(node, 0, 0);
-}
-
-function dump_tree_recur(node, depth, index) {
-  if (!node) {
-    debug("dump_tree: node is null");
-  }
-  var indent = "| | | | | | | | | | | | | | | | | | | | | | | | | | | | | + ";
-  debug(indent.substr(indent.length - depth*2) + index + " " + node.nodeName);
-  if (node.nodeName != "#text") {
-    //debug(" id="+node.getAttribute('id'));
-    dump_attributes(node, depth);
-  }
-  var kids = node.childNodes;
-  for (var ii=0; ii < kids.length; ii++) {
-    dump_tree_recur(kids[ii], depth + 1, ii);
-  }
-}
-//==================================================
-// end of handy debug routines
-//==================================================*/
+//////////////////////////////////////////////////////////////
+// Install the load/unload handlers
+//////////////////////////////////////////////////////////////
+addEventListener("load", sidebar_customize_init, false);
+addEventListener("unload", sidebar_customize_destruct, false);
