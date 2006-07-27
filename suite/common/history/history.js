@@ -97,6 +97,9 @@ function HistoryCommonInit()
             case "none":
                 document.getElementById("groupByNone").setAttribute("checked", "true");
                 break;
+            case "site":
+                document.getElementById("groupBySite").setAttribute("checked", "true");
+                break;
             case "day":
             default:
                 document.getElementById("groupByDay").setAttribute("checked", "true");
@@ -145,10 +148,10 @@ function historyOnSelect()
     gLastDomain = "";
     var match;
     var currentIndex = gHistoryTree.currentIndex;
-    var rowIsContainer = gHistoryGrouping == "day" ? isContainer(gHistoryTree, currentIndex) : false;
-    var url = gHistoryTree.treeBoxObject.view.getCellText(currentIndex, "URL");
+    var rowIsContainer = gHistoryGrouping != "none" && currentIndex >= 0 && isContainer(gHistoryTree, currentIndex);
+    var url = rowIsContainer ? gHistoryTree.treeBoxObject.view.getCellText(currentIndex, "URL") : null;
 
-    if (url && !rowIsContainer) {
+    if (url) {
         // matches scheme://(hostname)...
         match = url.match(/^.*?:\/\/(?:([^\/:]*)(?::([^\/:]*))?@)?([^\/:]*)(?::([^\/:]*))?(.*)$/);
 
@@ -327,8 +330,7 @@ function GroupBy(groupingType)
         tree.setAttribute("ref", "NC:HistoryRoot");
         break;
     case "site":
-        // xxx for now
-        tree.setAttribute("ref", "NC:HistoryByDate");
+        tree.setAttribute("ref", "find:datasource=history&groupby=Hostname");
         break;
     case "day":
     default:
@@ -386,7 +388,7 @@ function updateItems()
   var collapseExpandItem = document.getElementById("miCollapseExpand");
   if (count > 1) {
     var hasContainer = false;
-    if (gHistoryGrouping == "day") {
+    if (gHistoryGrouping != "none") {
       var min = new Object(); 
       var max = new Object();
       var rangeCount = gHistoryTree.treeBoxObject.view.selection.getRangeCount();
