@@ -61,9 +61,7 @@ function debug(msg)
 
 
 
-// get handle to the BrowserAppCore in the content area.
-var appCore = window._content.appCore;
-var	loadingArc = null;
+var loadingArc = null;
 var loadingLevel = 0;
 
 var	RDF_observer = new Object;
@@ -239,24 +237,12 @@ function OnClick(event, node)
         var selectedItem = tree.selectedItems[0];
         var theID = selectedItem.getAttribute("id");
 
-        //if( selectedItem.getAttribute( "type" ) == "FILE" )
-		if(appCore)
-		{
-		    // support session history (if appCore is available)
-            appCore.loadUrl(theID);
-		}
-		else
-		{
-		    // fallback case (if appCore isn't available)
-            window._content.location.href = theID;
-		}
+	window._content.location.href = theID;
 
         // set window title
         var theWindow = window._content.parentWindow;
         if (theWindow)
-        {
             theWindow.title = theID;
-        }
       }
 }
 
