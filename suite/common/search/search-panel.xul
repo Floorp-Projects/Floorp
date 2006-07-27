@@ -51,8 +51,8 @@
   <popupset id="descTooltipSet">
     <tooltip id="descTooltip" noautohide="true" onpopupshowing="return FillInDescTooltip(document.tooltipNode)">
       <vbox id="tipTextBox" flex="1">  
-        <text id="titleText" />
-        <text id="urlText" />
+        <label id="titleText" />
+        <label id="urlText" />
       </vbox>
     </tooltip>
   </popupset>
@@ -69,7 +69,7 @@
       <vbox align="start">
         <vbox id="basicBox">
           <hbox align="center">
-            <text class="label" value="&using.label;" />
+            <label value="&using.label;" />
             <menulist id="basicEngineMenu"
                       ref="NC:SearchEngineRoot"
                       datasources="rdf:internetsearch"
@@ -88,7 +88,7 @@
         </vbox>
         <vbox id="categoryBox" align="start">
           <hbox align="center">
-            <text class="label" value="&within.label;" />
+            <label value="&within.label;" />
             <menulist id="categoryList" ref="NC:SearchCategoryRoot"
                       datasources="rdf:null" oncommand="switchTab(1);" >
               <template>
@@ -110,7 +110,7 @@
             </menulist>
           </hbox>
           <separator class="thin"/>
-          <html flex="1">&choose.label;</html>
+          <description flex="1">&choose.label;</description>
         </vbox>
       </vbox>
     </vbox>
@@ -177,7 +177,7 @@
       
         <hbox>
           <spacer flex="1" />
-          <button class="button-slimline" id="saveQueryButton"
+          <button id="saveQueryButton"
                   label="&savesearch.button.label;" oncommand="return saveSearch();"/>
           <spacer flex="1" />
         </hbox>

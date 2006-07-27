@@ -23,17 +23,12 @@
   type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/sidebar/preview.css"
   type="text/css"?>
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/sidebar/preview.dtd" >
 
-<window
-  xmlns:html="http://www.w3.org/1999/xhtml"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  onload="Init();"
-  class="color-dialog"
-  title="&sidebar.preview.title.label;"
-  orient="vertical">
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="Init();"
+        title="&sidebar.preview.title.label;">
 
   <script type="application/x-javascript" src="chrome://communicator/content/sidebar/preview.js" />
 

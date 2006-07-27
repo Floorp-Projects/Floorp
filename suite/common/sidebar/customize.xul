@@ -32,13 +32,11 @@
 ]>
 
 <window
-  xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   id="main-window"
   class="dialog"
   title="&sidebar.customize.title.label;"
   windowtype="sidebar:customize"
-  orient="vertical"
   width="450" height="400"
   persist="screenX screenY width height">
 
@@ -49,12 +47,12 @@
 
   <hbox flex="1">
     <vbox flex="1">
-      <text class="label" value="&sidebar.customize.additional.label;"
+      <label value="&sidebar.customize.additional.label;"
         crop="right"/>
       <tree id="other-panels" flex="1"
         datasources="rdf:null"
         containment="http://home.netscape.com/NC-rdf#panel-list"
-        indent="true" class="inset" multiple="true"
+        indent="true" multiple="true"
         onselect="SelectChangeForOtherPanels(event, event.target.parentNode.parentNode)"
   onclick="if (event.detail == 2) { AddPanel(); }"
    >
@@ -101,11 +99,11 @@
 
       <!-- xxxslamm Need to add descriptive panel text here -->
       <hbox class="button-group">
-        <button class="dialog" id="add_button" oncommand="AddPanel()"
+        <button id="add_button" oncommand="AddPanel()"
           label="&sidebar.customize.add.label;"
           disabled="true"/>
 
-        <button class="dialog" id="preview_button" oncommand="PreviewPanel()"
+        <button id="preview_button" oncommand="PreviewPanel()"
           label="&sidebar.customize.preview.label;"
           disabled="true"/>
       </hbox>
@@ -115,10 +113,10 @@
 
     <!-- The panels that the user currently has chosen -->
     <vbox flex="1">
-      <text class="label" value="&sidebar.customize.current.label;"
+      <label value="&sidebar.customize.current.label;"
         crop="right"/>
       <tree id="current-panels" onclick="SelectChangeForCurrentPanels();"
-        datasources="rdf:null" class="inset" flex="1" multiple="true">
+        datasources="rdf:null" flex="1" multiple="true">
         <template>
           <rule>
             <conditions>
@@ -156,10 +154,10 @@
         <treechildren id="current-panels-root"/> 
       </tree>
       <hbox class="button-group">
-        <button class="dialog" id="customize-button"
+        <button id="customize-button"
           oncommand="CustomizePanel();" 
           label="&sidebar.customize.customize.label;" />
-        <button class="dialog" id="remove-button" onclick="RemovePanel()"
+        <button id="remove-button" onclick="RemovePanel()"
           label="&sidebar.customize.remove.label;" />
       </hbox>      
     </vbox>
@@ -169,9 +167,9 @@
     <!-- The 'reorder' buttons -->
     <vbox id="reorder">
       <spacer flex="1"/>
-      <button oncommand="MoveUp();" id="up" class="dialog" 
+      <button oncommand="MoveUp();" id="up"
         label="&sidebar.customize.up.label;"/>
-      <button oncommand="MoveDown();" id="down" class="dialog"
+      <button oncommand="MoveDown();" id="down"
         label="&sidebar.customize.down.label;"/>
       <spacer flex="1"/>
     </vbox> 

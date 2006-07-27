@@ -84,8 +84,6 @@ function debug(msg)
 
 function doLoad()
 {
-  doSetOKCancel(Commit);
-
   // adjust category popup
   var internetSearch = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"].getService();
   if (internetSearch) internetSearch = internetSearch.QueryInterface(Components.interfaces.nsIInternetSearchService);
@@ -180,7 +178,7 @@ function Commit()
     }
   }
 
-  window.close();
+  retun true;
 }
 
 

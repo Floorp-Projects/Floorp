@@ -6,7 +6,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/search/internetresults.dtd">
 
-<page orient="vertical" onload="onLoadInternetResults();"
+<page onload="onLoadInternetResults();"
       xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -23,7 +23,7 @@
   <script type="application/x-javascript" src="chrome://communicator/content/search/shared.js"/>
 
   <hbox id="multi-results-header"> 
-    <text value="&results.header.label;"/>
+    <label value="&results.header.label;"/>
   </hbox>
 
   <hbox id="engineTabs" align="center"
@@ -40,7 +40,7 @@
             oncommand="doEngineClick(event, this);" label="&allresults.title.label;"
             checked="true"/>
     <separator orient="vertical"/>
-    <text value="&viewbyprovider.label;"/>
+    <label value="&viewbyprovider.label;"/>
     <separator orient="vertical" class="thin"/>
   </hbox>
 
@@ -103,7 +103,7 @@
               <treecell crop="right" label="rdf:http://home.netscape.com/NC-rdf#PageRank" />
               <treecell>
                 <progressmeter orient="horizontal" value="rdf:http://home.netscape.com/NC-rdf#Relevance" mode="normal" />
-                <text crop="right" value="rdf:http://home.netscape.com/NC-rdf#Relevance"/>
+                <label crop="right" value="rdf:http://home.netscape.com/NC-rdf#Relevance"/>
               </treecell>
               <treecell crop="right" label="rdf:http://home.netscape.com/NC-rdf#Price" />
               <treecell crop="right" label="rdf:http://home.netscape.com/NC-rdf#Availability" />

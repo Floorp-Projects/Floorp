@@ -29,28 +29,24 @@
 <?xml-stylesheet href="chrome://communicator/skin/search/search.css" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/search/search-editor.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/search/search-editor.dtd">
 
-<window title="&window.title.label;" id="search-editor-window"
-  xmlns:html="http://www.w3.org/1999/xhtml"
-  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-  xmlns:web="http://home.netscape.com/WEB-rdf#"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  width="540" height="340" x="20" y="20" persist="width height x y" orient="vertical"
-  windowtype="internetsearch:editor" class="dialog"
-  onload="doLoad()" onunload="doUnload()">
+<dialog title="&window.title.label;" id="search-editor-window"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns:web="http://home.netscape.com/WEB-rdf#"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="540" height="340" x="20" y="20" persist="width height x y"
+        windowtype="internetsearch:editor"
+        onload="doLoad()" onunload="doUnload()"
+        ondialogaccept="return Commit();">
 
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/search/search-editor.js"/>
-
-  <keyset id="dialogKeys"/>
-  
+ 
   <hbox flex="1">
   
     <vbox flex="1">
-      <tree multiple="true" flex="1" class="inset" id="allengines" ref="NC:SearchEngineRoot" datasources="rdf:internetsearch">
+      <tree multiple="true" flex="1" id="allengines" ref="NC:SearchEngineRoot" datasources="rdf:internetsearch">
         <template>
           <treechildren>
             <treeitem uri="..." loading="rdf:http://home.netscape.com/NC-rdf#loading">
@@ -79,7 +75,7 @@
         <treechildren flex="1"/>
       </tree>
       <hbox>
-        <button class="dialog" id="add-button" oncommand="return AddEngine()" label="&add.label;" />
+        <button id="add-button" oncommand="return AddEngine()" label="&add.label;" />
       </hbox>
     </vbox>
     
@@ -87,7 +83,7 @@
         
     <vbox flex="1">
       <hbox align="center">
-        <text class="label" value="&category.label;"/>
+        <label value="&category.label;"/>
         <menulist id="categoryList" ref="NC:SearchCategoryRoot" datasources="rdf:null" flex="1">
           <template>
             <menupopup>
@@ -101,15 +97,15 @@
       </hbox>
       
       <hbox>
-        <button class="dialog" id="new-category-button" oncommand="NewCategory()" label="&new.category.label;" flex="1"/>
-        <button class="dialog" id="rename-category-button" oncommand="RenameCategory()" label="&rename.category.label;" flex="1"/>
-        <button class="dialog" id="remove-category.buttom" oncommand="RemoveCategory()" label="&remove.category.label;" flex="1"/>
+        <button id="new-category-button" oncommand="NewCategory()" label="&new.category.label;" flex="1"/>
+        <button id="rename-category-button" oncommand="RenameCategory()" label="&rename.category.label;" flex="1"/>
+        <button id="remove-category.buttom" oncommand="RemoveCategory()" label="&remove.category.label;" flex="1"/>
       </hbox>
       
       <separator class="thin"/>
 
       <hbox flex="1">
-        <tree class="inset" multiple="true" flex="1" id="engineList" style="height: 0px;"
+        <tree multiple="true" flex="1" id="engineList" style="height: 0px;"
               datasources="rdf:internetsearch" onselect="doMoveDirectionEnabling()">
           <template>
             <treechildren>
@@ -143,14 +139,10 @@
         </vbox>
       </hbox>          
       <hbox>
-        <button class="dialog" id="remove-button" oncommand="return RemoveEngine()" label="&remove.label;" />
+        <button id="remove-button" oncommand="return RemoveEngine()" label="&remove.label;" />
       </hbox>    
       
     </vbox>
   
   </hbox>
-
-  <separator/>
-  <hbox id="okCancelButtonsRight"/>
-
-</window>
+</dialog>
