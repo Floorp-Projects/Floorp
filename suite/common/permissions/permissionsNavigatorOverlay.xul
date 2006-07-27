@@ -32,7 +32,10 @@
   <![CDATA[
     /******* THE FOLLOWING IS FOR THE TASKMENU OVERLAY *******/
 
+    // both are necessary. popupmanager is just a special case
+    // of permissionmanager but does extra work on add/remove
     var permissionmanager;
+    var popupmanager;
 
     // Remove the image entries from the task menu
     function HideImage() {
@@ -40,6 +43,18 @@
       element = document.getElementById("image");
       element.setAttribute("style","display: none;" );
       element.setAttribute("disabled","true" );
+    }
+    // Remove the popup entries from the task menu
+    function HidePopups(hide) {
+      var element;
+      element = document.getElementById("popup");
+      if (hide) {
+        element.setAttribute("hidden", "true");
+        element.setAttribute("disabled", "true");
+      } else {
+        element.removeAttribute("hidden");
+        element.removeAttribute("disabled");
+      }
     }
 
     // for some unexplainable reason, CheckForImage() keeps getting called repeatedly
@@ -52,10 +67,14 @@
     function CheckForVisibility()
     {
 
-      // obtain access to permissionmanager module
+      // obtain access to permissionmanager and popupmanager
+      // (popup manager is a wrapper around permission that does extra work)
       permissionmanager =
         Components.classes["@mozilla.org/permissionmanager;1"]
           .getService(Components.interfaces.nsIPermissionManager);
+      popupmanager =
+        Components.classes["@mozilla.org/PopupWindowManager;1"]
+          .getService(Components.interfaces.nsIPopupWindowManager);
       if (!("_content" in window) || !window._content) {
         // this occurs if doing tasks->privacy->cookie->block from java console
         return;
@@ -88,16 +107,42 @@
       disableElement.setAttribute("disabled","true");
       enableElement.removeAttribute("disabled");
 
+      if (popupmanager.testPermission(getBrowser().currentURI) == Components.interfaces.nsIPopupWindowManager.eDisallow) {
+        disableElement = document.getElementById("BlockPopups");
+        enableElement = document.getElementById("AllowPopups");
+      } else {
+        disableElement = document.getElementById("AllowPopups");
+        enableElement = document.getElementById("BlockPopups");
+      }
+      disableElement.setAttribute("disabled","true");
+      if (popupmanager.testSuitability(getBrowser().currentURI))
+        enableElement.removeAttribute("disabled");
+      else
+        enableElement.setAttribute("disabled","true");
+
+      var pref;
+      pref = Components.classes['@mozilla.org/preferences-service;1'];
+      pref = pref.getService();
+      pref = pref.QueryInterface(Components.interfaces.nsIPrefBranch);
+
+      // hide the popup manager menus if the prefs aren't exactly right.
+      // it'd be nicer to leave it always visible and adjust prefs to match
+      // any user selections
+      try {
+        var hide = pref.getBoolPref("dom.disable_open_during_load");
+        if (!hide)
+          hide = pref.getIntPref("privacy.popups.policy") != Components.interfaces.nsIPopupWindowManager.eAllowConditionally;
+        HidePopups(hide);
+      } catch(e) {
+        HidePopups(true);
+      }
+
       // determine if image manager should be in the UI
       if (alreadyCheckedForImage) {
         return;
       }
       alreadyCheckedForImage = true;
       // remove image functions (unless overruled by the "imageblocker.enabled" pref)
-      var pref;
-      pref = Components.classes['@mozilla.org/preferences-service;1'];
-      pref = pref.getService();
-      pref = pref.QueryInterface(Components.interfaces.nsIPrefBranch);
       try {
         if (!pref.getBoolPref("imageblocker.enabled")) {
           HideImage();
@@ -134,6 +179,16 @@
         case "imageBlock":
           permissionmanager.add(window._content.location, false, IMAGEPERMISSION);
           element = document.getElementById("BlockImages");
+          alert(element.getAttribute("msg"));
+          break;
+        case "popupAllow":
+          popupmanager.add(getBrowser().currentURI, true);
+          element = document.getElementById("AllowPopups");
+          alert(element.getAttribute("msg"));
+          break;
+        case "popupBlock":
+          popupmanager.add(getBrowser().currentURI, false);
+          element = document.getElementById("BlockPopups");
           alert(element.getAttribute("msg"));
           break;
         default:
@@ -180,6 +235,25 @@
         <menuitem label="&cookieDisplayImagesCmd.label;"
                   accesskey="&cookieDisplayImagesCmd.accesskey;" 
                   oncommand="viewImages();"/> 
+      </menupopup>
+    </menu>
+    <menu label="&cookiePopupManager.label;"
+          accesskey="&cookiePopupManager.accesskey;"
+          id="popup"
+          insertbefore="navBeginGlobalItems">
+      <menupopup>
+        <menuitem id="BlockPopups" label="&cookieBlockPopupsCmd.label;"
+                  accesskey="&cookieBlockPopupsCmd.accesskey;" 
+                  msg="&cookieBlockPopupsMsg.label;"
+                  oncommand="CookieImageAction('popupBlock');"/> 
+        <menuitem id="AllowPopups" label="&cookieAllowPopupsCmd.label;"
+                  accesskey="&cookieAllowPopupsCmd.accesskey;" 
+                  msg="&cookieAllowPopupsMsg.label;"
+                  oncommand="CookieImageAction('popupAllow');"/> 
+        <menuseparator/>
+        <menuitem label="&cookieDisplayPopupsCmd.label;"
+                  accesskey="&cookieDisplayPopupsCmd.accesskey;" 
+                  oncommand="viewPopups();"/> 
       </menupopup>
     </menu>
   </menupopup>
