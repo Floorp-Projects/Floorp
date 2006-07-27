@@ -53,7 +53,8 @@
           value="&sidebar.picker.label;" >
           <menupopup id="sidebar-panel-picker-popup" popupanchor="topright"
             datasources="rdf:null"
-            ref="urn:sidebar:current-panel-list">
+            ref="urn:sidebar:current-panel-list"
+            oncommand="SidebarTogglePanel(event.target);" >
             <template>
               <rule>
                 <conditions>
@@ -73,7 +74,6 @@
                 </bindings>
                 <action>
                   <menuitem uri="?panel" type="checkbox"
-                    oncommand="SidebarTogglePanel(event.target);"
                     value="?title" exclude="?exclude"/>
                 </action>
               </rule>
