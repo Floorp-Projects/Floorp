@@ -1,0 +1,255 @@
+<?xml version="1.0"?>
+<!-- 
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla.org code.
+   -
+   - The Initial Developer of the Original Code is
+   - Netscape Communications Corp.
+   - Portions created by Netscape Communications Corp are Copyright (C) 2001
+   - Netscape Communications Corp. All Rights Reserved.
+   -
+   - Contributor(s):
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+-->
+
+<!-- CHANGE THIS WHEN MOVING FILES -->
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!-- CHANGE THIS WHEN MOVING FILES -->
+<!DOCTYPE window SYSTEM "chrome://cookie/locale/p3p.dtd">
+
+<window id="privacySettings"
+        class="dialog"
+        title="&windowtitle.label;"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        orient="vertical"
+        onload="init();">
+
+  <script type="application/x-javascript">
+  <![CDATA[
+
+  var pref;
+
+  var low = 0;
+  var medium = 1;
+  var high = 2;
+  var custom = 3;
+
+  var p3pLength = 8;
+
+  function init()
+  {
+    // init ok event handler
+    doSetOKCancel(onOK, null);
+
+    // get pref service
+    pref = Components.classes['@mozilla.org/preferences;1'];
+    pref = pref.getService();
+    pref = pref.QueryInterface(Components.interfaces.nsIPrefBranch);
+
+    var p3pLevel = medium;
+    try {
+      // set prefLevel radio button
+      p3pLevel = pref.getIntPref("network.cookie.p3plevel");
+      document.getElementById("p3pLevel").childNodes[p3pLevel].checked = true;
+
+      // set custom settings
+      if (p3pLevel == custom) {
+        for (var i=0; i<p3pLength; i++) {
+          document.getElementById("menulist_"+i).value =
+            pref.getCharPref("network.cookie.p3p").charAt(i);
+        }
+      }
+    } catch(e) {
+    }
+
+    // initialize the settings display
+    settings(p3pLevel);
+  }
+
+  function onOK(){
+
+    var p3pLevel = document.getElementById("p3pLevel").selectedItem.value;
+    pref.setIntPref("network.cookie.p3plevel",p3pLevel);
+
+    var value = "";
+    for (var i=0; i<p3pLength; i++) {
+      value += document.getElementById("menulist_"+i).value;
+    }
+    pref.setCharPref("network.cookie.p3p", value);
+
+    return true;
+  }
+
+  function settings(level) {
+    var settings = [];
+
+    switch (level) {
+      case low:
+        settings = "adadaaaa";
+        break;
+      case medium:
+        settings = "drdraaaa";
+        break;
+      case high:
+        settings = "rrrrrraa";
+        break;
+      case custom:
+        break;
+    }
+
+    var hide = (level != custom);
+    var menulist;
+
+    for (var j=0; j<p3pLength; j++) {
+      menulist = document.getElementById("menulist_" + j);
+      menulist.disabled = hide;
+      if (hide) {
+        menulist.value = settings[j];
+      }
+    }
+
+  }
+
+  ]]>
+  </script>
+
+  <keyset id="dialogKeys"/>
+           
+  <groupbox orient="vertical">
+    <caption label="&privacyLevel.label;"/>
+
+    <html>&p3pDetails;</html>
+    <spacer/>
+    <html>&choose;</html>
+
+    <radiogroup id="p3pLevel" orient="horizontal" align="center">
+      <radio group="p3pLevel" value="0" label="&low.label;"
+             accesskey="&low.accesskey;" oncommand="settings(low);"/>
+      <radio group="p3pLevel" value="1" label="&medium.label;"
+             accesskey="&medium.accesskey;" oncommand="settings(medium);"/>
+      <radio group="p3pLevel" value="2" label="&high.label;"
+             accesskey="&high.accesskey;" oncommand="settings(high);"/>
+      <radio group="p3pLevel" value="3" label="&custom.label;"
+             accesskey="&custom.accesskey;" oncommand="settings(custom);"/>
+    </radiogroup>
+
+  </groupbox>
+
+  <groupbox id="customSettingBox" orient="vertical">
+    <caption label="&customSettings.label;"/>
+    <grid>
+      <columns>
+        <column flex="1"/>
+        <column width="120"/>
+        <column width="120"/>
+      </columns>
+      <rows>
+        <row align="center">
+          <spacer/>
+          <html>&firstParty.label;</html>
+          <html>&thirdParty.label;</html>
+        </row>
+        <row align="center">
+          <html>&noPolicy.label;</html>
+          <menulist flex="1" id="menulist_0">
+            <menupopup>
+              <menuitem value="a" label="&accept.label;"/>
+              <menuitem value="d" label="&downgrade.label;"/>
+              <menuitem value="r" label="&reject.label;"/>
+            </menupopup>
+          </menulist>
+          <menulist flex="1" id="menulist_1">
+            <menupopup>
+              <menuitem value="a" label="&accept.label;"/>
+              <menuitem value="d" label="&downgrade.label;"/>
+              <menuitem value="r" label="&reject.label;"/>
+            </menupopup>
+          </menulist>
+        </row>
+        <row align="center">
+          <html>&noConsent.label;</html>
+          <menulist flex="1" id="menulist_2">
+            <menupopup>
+              <menuitem value="a" label="&accept.label;"/>
+              <menuitem value="d" label="&downgrade.label;"/>
+              <menuitem value="r" label="&reject.label;"/>
+            </menupopup>
+          </menulist>
+          <menulist flex="1" id="menulist_3">
+            <menupopup>
+              <menuitem value="a" label="&accept.label;"/>
+              <menuitem value="d" label="&downgrade.label;"/>
+              <menuitem value="r" label="&reject.label;"/>
+            </menupopup>
+          </menulist>
+        </row>
+        <row align="center">
+          <html>&implicitConsent.label;</html>
+          <menulist flex="1" id="menulist_4">
+            <menupopup>
+              <menuitem value="a" label="&accept.label;"/>
+              <menuitem value="d" label="&downgrade.label;"/>
+              <menuitem value="r" label="&reject.label;"/>
+            </menupopup>
+          </menulist>
+          <menulist flex="1" id="menulist_5">
+            <menupopup>
+              <menuitem value="a" label="&accept.label;"/>
+              <menuitem value="d" label="&downgrade.label;"/>
+              <menuitem value="r" label="&reject.label;"/>
+            </menupopup>
+          </menulist>
+        </row>
+        <row align="center">
+          <html>&explicitConsent.label;</html>
+          <menulist flex="1" id="menulist_6">
+            <menupopup>
+              <menuitem value="a" label="&accept.label;"/>
+              <menuitem value="d" label="&downgrade.label;"/>
+              <menuitem value="r" label="&reject.label;"/>
+            </menupopup>
+          </menulist>
+          <menulist flex="1" id="menulist_7">
+            <menupopup>
+              <menuitem value="a" label="&accept.label;"/>
+              <menuitem value="d" label="&downgrade.label;"/>
+              <menuitem value="r" label="&reject.label;"/>
+            </menupopup>
+          </menulist>
+        </row>
+      </rows>
+    </grid>
+  </groupbox>
+
+  <separator class="thin"/>
+
+  <hbox id="okCancelButtonsRight"/>
+ 
+
+</window>
