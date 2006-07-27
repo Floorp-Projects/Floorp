@@ -9,6 +9,11 @@
 <body bgcolor="white">
 
 <a NAME="validation_first"></a>
+<a NAME="validation_of_certificates:OCSPIDX"></a>
+<a NAME="validation_of_certificates:CRLsIDX"></a>
+<a NAME="OCSP:preferencesIDX"></a>
+<a NAME="CRLs:preferencesIDX"></a>
+
 <h2>Validation Settings</h2>
 
 <p>This section describes how to use the Validation Settings panel. If you are not already viewing the panel, follow these steps:
@@ -18,6 +23,19 @@
 	<li>Under the Privacy and Security category, choose Validation. (If no options are visible under Privacy and Security, click its triangle to expand the list.)
 </ol>
 
+<p>For background information on certificate validation, see <a href="using_certs_hel0.html#using_certs_validation">How Certificate Validation Works</a>.
+
+<p>&nbsp;
+<a NAME="CRL"></a>
+<h3>CRL</h3>
+
+<p>Click Manage CRLs to see a list of the CRLs available to Certificate Manager. 
+
+<p>To delete a CRL, select it, then click Delete.
+
+
+<p>&nbsp;
+<a NAME="OCSP"></a>
 <h3>OCSP</h3>
 
 <p>The Online Certificate Status Protocol (OCSP) makes it possible for Certificate Manager to perform an online check of a certificate's validity each time the certificate is viewed or used. This process involves checking the certificate against a certificate revocation list (CRL) maintained at a specified web site. Your computer must be online for OCSP to work.</P>
@@ -39,7 +57,7 @@ When you choose a Response Signer certificate from the pop-up menu, Certificate 
 </p>
 
 <hr>
-<p><i>6/12/2001</i></p>
+<p><i>6/15/2001</i></p>
 <p>Copyright &copy; 1994-2001 Netscape Communications Corporation.</p>
 
 </body>

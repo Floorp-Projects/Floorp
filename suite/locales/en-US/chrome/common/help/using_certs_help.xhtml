@@ -8,7 +8,9 @@
 
 <body bgcolor="white">
 
-<a NAME="using_certs_first"></a>
+<a NAME="certificates:usingIDX"></a>
+<a NAME="using_certs_first">
+<a NAME="certificates:aboutIDX"></a>
 <hr><h1>Using Certificates</h1>
 
 <p>A certificate is the digital equivalent of an ID card. Just as you may have several ID cards for different purposes, such as a driver's license, an employee ID card, or a credit card, you can have several different certificates that identify you for different purposes.</p> 
@@ -32,6 +34,7 @@
 
 
 <p>&nbsp;</p>
+<a NAME="certificates:gettingIDX"></a>
 <a NAME="using_certs_get"></a>
 <hr><h1>Get Your Own Certificate</h1>
 
@@ -57,6 +60,7 @@
 </p>
 
 <p>&nbsp;</p>
+<a NAME="security:checking_for_a_web_pageIDX"></a>
 <a NAME="using_certs_info"></a>
 <hr><h1>Check Security for a Web Page</h1>
 
@@ -76,7 +80,7 @@
 
 
 <p>&nbsp;</p>
-<a NAME="using_certs_manage"></a>
+<a NAME="using_certs_manage"></a><a NAME="certificates:managingIDX"></a>
 <hr><h1>Manage Certificates</h1>
 
 <p>You can use the Certificate Manager to manage the certificates you have available. Certificates may be stored on your computer's hard disk or on smart cards or other security devices attached to your computer.</p>
@@ -102,13 +106,13 @@
 </table>
 
 <p>&nbsp;</p>
-<a NAME="using_certs_my"></a>
+<a NAME="using_certs_my"></a><a NAME="certificates:your_ownIDX"></a>
 <H2>Manage Certificates that Identify You</H2>
 
 
 <p>When you first open the Certificate Manager, you'll notice that it has several tabs across the top of its window. The first tab is called Your Certificates, and it displays the certificates your browser has available that identify you. Your certificates are listed under the names of the organizations that issued them. 
 
-<p>To perform an action on one or more certificates, click the entry for the certificate (or Shift-click to select more than one), then click the View, Backup, or Delete button. Each of these buttons brings up another window that allows you to perform the action. Click the Help button in any window to obtain more information about using that window.
+<p>To perform an action on one or more certificates, click the entry for the certificate (or Control-click to select more than one), then click the View, Backup, or Delete button. Each of these buttons brings up another window that allows you to perform the action. Click the Help button in any window to obtain more information about using that window.
 
 <p>The other buttons under Your Certificates don't require a certificate to be selected. You use them to perform these actions:
 <ul>
@@ -128,14 +132,14 @@
 </p>
 
 <p>&nbsp;</p>
-<a NAME="using_certs_sites"></a>
+<a NAME="using_certs_sites"></a><a NAME="certificates:web_siteIDX"></a>
 <H2>Manage Certificates that Identify Web Sites</H2>
 
 <p>Some web sites use certificates to identify themselves. Such identification is required before the web site can encrypt information transferred between the site and your computer (or vice versa), so that nobody can read the data while in transit. 
 
 <p>If the URL for a web site begins with <tt>https://</tt>, the web site has a certificate. If you visit such a web site and its certificate was issued by a CA the Certificate Manager doesn't know about or doesn't trust, you will be asked whether you want to accept web site's certificate. When you accept a new web site certificate, the Certificate Manager adds it to its list of web site certificates.
 
-<p>To view all the web site certificates available to your browser, click the tab labeled Web Sites at the top of the Certificate Manager window. 
+<p>To view all the web site certificates available to your browser, click the Web Sites tab at the top of the Certificate Manager window. 
 
 <p>To perform an action on one or more web site certificates, click the entry for the certificate (or Shift-click to select more than one), then click the View, Edit, or Delete button. Each of these buttons brings up another window that allows you to perform the corresonding action. Click the Help button in any window to obtain more information about using that window.
 
@@ -150,20 +154,20 @@
 </p>
 
 <p>&nbsp;</p>
-<a NAME="using_certs_cas"></a>
+<a NAME="using_certs_cas"></a><a NAME="certificates:certificate_authorityIDX"></a>
 <H2>Manage Certificates that Identify Certificate Authorities</H2>
 
 <p>Like other commonly used forms of ID, a certificate is issued by an organization with recognized authority to issue such identification. An organization that issues certificates is called a <a href="glossary.html#certificate_authority_(CA)">certificate authority (CA)</a>. A certificate that identifies a CA is called a CA certificate.
 
 <p> Certificate Manager typically has many CA certificates on file. These CA certificates permit Certificate Manager to recognize and work with certificates issued by the corresponding CAs. However, the presence of a CA certificate in this list does <i>not</i> guarantee that the certificates it issues can be trusted. You or your system administrator must make decisions about what kinds of certificates to trust depending on your security needs.  
 
-<p>To view all the CA certificates available to your browser, click the tab labeled Authorities at the top of the Certificate Manager window. 
+<p>To view all the CA certificates available to your browser, click the Authorities tab at the top of the Certificate Manager window. 
 
-<p>To perform an action on one or more CA certificates, click the entry for the certificate (or Shift-click to select more than one), then click the View, Edit, or Delete button. Each of these buttons brings up another window that allows you to perform the action. Click the Help button in any window to obtain more information about using that window.
+<p>To perform an action on one or more CA certificates, click the entry for the certificate (or Control-click to select more than one), then click the View, Edit, or Delete button. Each of these buttons brings up another window that allows you to perform the action. Click the Help button in any window to obtain more information about using that window.
 
 <p>The Edit button allows you to view and control the trust settings for each certificate. Trust settings for a CA certificate let you to specify which kinds of certificates issued by that CA you are willing to trust.
 
-<p>For more details, click the Help button in any Certificate Manager window or see <a href="certs_help.html#CA_Certificates">CA Certificates</a>.
+<p>For more details, click the Help button in any Certificate Manager window or see <a href="certs_help.html#CA_Certificates">Authorities</a>.
 
 <p>
 [&nbsp;<A HREF="#using_certs_first">Return to beginning of Using Certificates section</A>&nbsp;]
@@ -172,6 +176,10 @@
 
 <p>&nbsp;</p>
 <a NAME="using_certs_devices"></a>
+<a NAME="smart_cardsIDX"></a>
+<a NAME="Device_Manager:usingIDX"></a>
+<a NAME="security_devices:managingIDX"></a>
+<a NAME="security_modules:managingIDX"></a>
 <hr><h1>Manage Smart Cards and Other Security Devices</h1>
 
 <p>A smart card is a small device, typically about the size of a credit card, that contains a microprocessor and is capable of storing information about your identity (such as your <a href="glossary.html#private_key">private keys</a> and <a href="glossary.html#certificate">certificates</a>) and performing cryptographic operations. 
@@ -203,7 +211,9 @@
 
 
 <p>&nbsp;</p>
-<a NAME="using_certs_devices_about"></a>
+<a NAME="using_certs_devices_about"></a><a NAME="security_modules:aboutIDX"></a>
+<a NAME="Device_Manager:aboutIDX"></a>
+<a NAME="security_devices:aboutIDX"></a>
 <h2>About Security Devices and Modules</h1>
 
 <p>The Device Manager displays a window that lists the available security devices. You can use the Device Manager to manage any security devices, including smart cards, that support the Public Key Cryptography Standard (PKCS) #11.
@@ -273,7 +283,7 @@ a smart card reader). Follow the instructions that come with the hardware.
 
 
 <p>&nbsp;</p>
-<a NAME="using_certs_devices_fips"></a>
+<a NAME="using_certs_devices_fips"></a><a NAME="FIPS_modeIDX"></a>
 <h2>Enable FIPS Mode</h2>
 
 <p>Federal Information Processing Standards Publications (FIPS PUBS) 140-1 is a US government standard for implementations of cryptographic modules&#151;that is, hardware or software that encrypts and decrypts data or performs other cryptographic operations (such as creating or verifying digital signatures). Many products sold to the US government must comply with one or more of the FIPS standards.
@@ -317,6 +327,9 @@ a smart card reader). Follow the instructions that come with the hardware.
 
 <p>&nbsp;</p>
 <a NAME="using_certs_validation"></a>
+<a NAME="certificates:validationIDX"></a>
+<a NAME="validation,_of_certificates:aboutIDX"></a>
+
 <hr><h1>Manage Validation Settings</h1>
 
 <p>As discussed above under <a href="#using_certs_get">Get Your Own Certificate</a>, a certificate is a form of identification, much like a driver's license, that you can use to identify yourself over the Internet and other networks. However, also like a driver's license, a certificate may be expired or invalid for some other reason. Therefore, your browser software needs to confirm the validity of any given certificate in some way before trusting it for identification purposes. 
@@ -336,7 +349,11 @@ a smart card reader). Follow the instructions that come with the hardware.
 <p>
 
 <p>&nbsp;</p>
-<a name="How_Certificate_Validation_Works"><h2>How Certificate Validation Works</h2></a>
+<a name="How_Certificate_Validation_Works">
+<a NAME="OCSP:aboutIDX"></a>
+<a NAME="CRLs:aboutIDX"></a>
+<a NAME="validation_of_certificates:aboutIDX"></a>
+<h2>How Certificate Validation Works</h2></a>
 
 <p>Whenever you use or view a certificate stored by Certificate Manager, it takes several steps to verify the certificate. At a minimum, it confirms that the CA's digital signature on the certificate was created by a CA whose own certificate is (1) present in the the Certificate Manager's list of available CA certificates and (2) marked as trusted for issuing the kind of certificate being verified. 
 
@@ -383,7 +400,7 @@ a smart card reader). Follow the instructions that come with the hardware.
 
 
 <hr>
-<p><i>6/12/2001</i></p>
+<p><i>6/15/2001</i></p>
 <p>Copyright &copy; 1994-2001 Netscape Communications Corporation.</p>
 
 </body>
