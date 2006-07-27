@@ -6,7 +6,7 @@
   <rdf:Description about="urn:root">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="welcome" nc:name="Help and Support Center" nc:link="welcome_help.html"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="welcome" nc:name="Help and Support Center" nc:link="welcome_help.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="help-help" nc:name="Using the Help Window" nc:link="help_help.html"/> </rdf:li>
         <rdf:li> <rdf:Description ID="ieusers" nc:name="For Internet Explorer Users" nc:link="chrome://help/locale/forieusers.html#for_microsoft_users"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav" nc:name="Browsing the Web" nc:link="chrome://help/locale/nav_help.html#browsing_the_web"/> </rdf:li>
