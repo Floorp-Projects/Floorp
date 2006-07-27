@@ -44,7 +44,7 @@
   </popup>
 
   <!-- Overlay the sidebar panels -->
-  <box id="sidebar-box" orient="vertical" persist="hidden width collapsed">
+  <vbox id="sidebar-box" persist="hidden width collapsed">
     <splitter id="sidebar-panels-splitter" collapse="after" persist="state"
       onmouseup="PersistHeight();" hidden="true">
       <spring flex="1"/>
@@ -52,7 +52,7 @@
       <spring flex="1"/>
     </splitter>
 
-    <box id="sidebar-panels-splitter-box" align="vertical" flex="1" 
+    <vbox id="sidebar-panels-splitter-box" flex="1" 
       persist="hidden">
 
       <sidebarheader id="sidebar-title-box" class="sidebarheader-main"
@@ -97,7 +97,7 @@
         </menubutton>
       </sidebarheader>
   
-      <box id="sidebar-panels" align="vertical"
+      <vbox id="sidebar-panels"
         datasources="rdf:null"
         ref="urn:sidebar:current-panel-list" 
         persist='last-selected-panel height collapsed' flex="1*"
@@ -120,39 +120,39 @@
                 predicate="http://home.netscape.com/NC-rdf#exclude" />
             </bindings>
             <action>
-              <box uri="?panel" class="box-texttab texttab-sidebar"
+              <hbox uri="?panel" class="box-texttab texttab-sidebar"
                 oncommand="SidebarSelectPanel(this,false,false)" align="left"
                 hidden="true" label="?title" exclude="?exclude" context="sidebarPopup" />
-              <box uri="?panel" flex='1*' hidden="true" orient="vertical"
+              <vbox uri="?panel" flex='1*' hidden="true"
                 loadstate="never loaded">
-                <box flex='1' orient="vertical" class="iframe-panel loadarea">
-                  <box orient="horizontal" flex="1" autostretch="never">
+                <vbox flex='1' class="iframe-panel loadarea">
+                  <hbox flex="1" autostretch="never">
                     <image class="image-panel-loading"/>
                     <text class="text-panel-loading"
                       value="&sidebar.loading.label;"/>
                     <button label="&sidebar.loading.stop.label;" hidden="true"
                       onclick="SidebarStopPanelLoad(this.parentNode.parentNode.parentNode.previousSibling);"/>
-                  </box>
+                  </hbox>
                   <spring flex="100%"/>
-                </box>
+                </vbox>
                 <iframe class="iframe-panel" flex='1*' src="about:blank"
                   hidden="true" collapsed="true" content="?content"/>
                 <iframe class="iframe-panel" flex='1*' src="about:blank"
                   hidden="true" collapsed="true" content="?content" type="content" context="contentAreaContextMenu"/>
-              </box>
+              </vbox>
             </action>
           </rule>
         </template>
-        <box id="sidebar-iframe-no-panels" class="iframe-panel" orient="vertical" flex="1"
+        <vbox id="sidebar-iframe-no-panels" class="iframe-panel" flex="1"
           hidden="true">
           <html>&sidebar.no-panels.state;</html>
           <html>&sidebar.no-panels.add;</html>
           <html>&sidebar.no-panels.hide;</html>
-        </box>
-      </box>
-    </box>
+        </vbox>
+      </vbox>
+    </vbox>
     <popupset id="contentAreaContextSet"/>
-  </box>
+  </vbox>
 
   <!-- Splitter on the right of sidebar -->
   <splitter id="sidebar-splitter" collapse="before" persist="state hidden"

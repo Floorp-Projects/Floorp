@@ -22,13 +22,13 @@
   <script type="application/x-javascript" src="chrome://communicator/content/search/internetresults.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/search/shared.js"/>
 
-  <box id="multi-results-header"> 
+  <hbox id="multi-results-header"> 
     <text value="&results.header.label;"/>
-  </box>
+  </hbox>
 
-  <box id="engineTabs" autostretch="never"
-       ref="NC:SearchResultsSitesRoot" datasources="rdf:internetsearch" 
-       style="overflow: none; min-width: 1px;">
+  <hbox id="engineTabs" autostretch="never"
+        ref="NC:SearchResultsSitesRoot" datasources="rdf:internetsearch" 
+        style="overflow: none; min-width: 1px;">
     <template>
       <button class="engineTabs button-toolbar-3 button-slimline" uri="..." 
               oncommand="doEngineClick(event, this);" crop="right" 
@@ -42,7 +42,7 @@
     <separator orient="vertical"/>
     <text value="&viewbyprovider.label;"/>
     <separator orient="vertical" class="thin"/>
-  </box>
+  </hbox>
 
   <popupset>
     <popup id="contextual" oncreate="return fillContextMenu('contextual', 'internetresultstree');" >
@@ -102,7 +102,7 @@
                         label="rdf:http://home.netscape.com/NC-rdf#Name" />
               <treecell crop="right" label="rdf:http://home.netscape.com/NC-rdf#PageRank" />
               <treecell>
-                <progressmeter align="horizontal" value="rdf:http://home.netscape.com/NC-rdf#Relevance" mode="normal" />
+                <progressmeter orient="horizontal" value="rdf:http://home.netscape.com/NC-rdf#Relevance" mode="normal" />
                 <text crop="right" value="rdf:http://home.netscape.com/NC-rdf#Relevance"/>
               </treecell>
               <treecell crop="right" label="rdf:http://home.netscape.com/NC-rdf#Price" />
@@ -159,8 +159,8 @@
   <splitter id="results-splitter" persist="state" collapse="after" orient="vertical" autostretch="never">
     <grippy/>
   </splitter>
-  <box class="double-box-top" flex="1">
+  <hbox class="double-box-top" flex="1">
     <iframe id="content" flex="1" src="chrome://communicator/locale/search/default.htm"/>
-  </box>
+  </hbox>
   
 </window>
