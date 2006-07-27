@@ -88,6 +88,9 @@ var historyDNDObserver = {
     var title = aEvent.target.getAttribute("value");
     var uri = aEvent.target.parentNode.parentNode.id;
     dump("*** title = " + title + "; uri = " + uri + "\n");
+    if ( title == "" && uri == "" )     // make sure we have something to drag
+      return null;
+      
     var htmlString = "<A HREF='" + uri + "'>" + title + "</A>";
     var flavourList = { };
     flavourList["text/unicode"] = { width: 2, data: uri };
