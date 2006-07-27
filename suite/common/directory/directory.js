@@ -126,7 +126,7 @@ function OnClick(event, node)
         var theWindow = window._content.parentWindow;
         if (theWindow)
         {
-            theWindow.title = baseURI;
+            theWindow.title = theID;
         }
       }
 }
