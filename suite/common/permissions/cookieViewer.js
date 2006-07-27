@@ -177,7 +177,7 @@ var cookiesTreeView = {
     } else if (column=="nameCol") {
       rv = cookies[row].name;
     } else if (column=="statusCol") {
-      rv = GetStatusString(cookies[row].status);
+      rv = cookies[row].status;
     }
     return rv;
   },
@@ -202,7 +202,7 @@ function Cookie(number,name,value,isDomain,host,rawHost,path,isSecure,expires,
   this.path = path;
   this.isSecure = isSecure;
   this.expires = expires;
-  this.status = status;
+  this.status = GetStatusString(status);
   this.policy = policy;
 }
 
