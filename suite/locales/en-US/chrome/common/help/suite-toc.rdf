@@ -423,7 +423,7 @@
         <rdf:li> <rdf:Description ID="mail_account_identity" nc:name="Account Settings"  nc:link="chrome://help/locale/mail_help.xhtml#account_settings"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail-doc-choose" nc:name="Server Settings"  nc:link="chrome://help/locale/mail_help.xhtml#server_settings"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail_copies" nc:name="Copies &amp; Folders"  nc:link="chrome://help/locale/mail_help.xhtml#copies_and_folders"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_addressing_settings" nc:name="Addressing"  nc:link="chrome://help/locale/mail_help.xhtml#addressing"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_addressing_settings" nc:name="Composition &amp; Addressing"  nc:link="chrome://help/locale/mail_help.xhtml#addressing"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail-doc-offline-space" nc:name="Offline and Disk Space"  nc:link="chrome://help/locale/mail_help.xhtml#offline_and_disk_space"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail_security_settings" nc:name="Security"  nc:link="chrome://help/locale/mail_help.xhtml#security"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail_local_folders_settings" nc:name="Local Folders"  nc:link="chrome://help/locale/mail_help.xhtml#local_folders"/> </rdf:li>
@@ -448,9 +448,9 @@
 <rdf:Description about="#mail-doc-offline-space">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail_offline_imap" nc:name="IMAP"  nc:link="chrome://help/locale/mail_help.xhtml#offline_and_disk_space_settings_imap"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_offline_imap" nc:name="IMAP"  nc:link="chrome://help/locale/mail_help.xhtml#offline_and_disk_space_settingsIMAP"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail_offline_pop3" nc:name="POP"  nc:link="chrome://help/locale/mail_help.xhtml#disk_space_settings"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_offline_nntp" nc:name="News"  nc:link="chrome://help/locale/mail_help.xhtml#offline_and_disk_space_settings_nntp"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_offline_nntp" nc:name="News"  nc:link="chrome://help/locale/mail_help.xhtml#offline_and_disk_space_settingsNEWS"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail-account-receipts" nc:name="Return Receipts" nc:link="chrome://help/locale/mail_help.xhtml#return_receipts"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>

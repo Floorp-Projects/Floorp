@@ -158,7 +158,7 @@ href="#server_settings">Mail &amp; Newsgroups Account Settings -
 Server Settings</a>.
 
 <p>You must also provide the name of your incoming mail server and
-your outgoing (SMTP) server here. This is the name of the mail
+your outgoing server (SMTP) here. This is the name of the mail
 server that sends your messages (also known as the SMTP host).
 Click Next to continue.</p>
 
@@ -294,11 +294,12 @@ message templates. For more information, see <a
 href="#copies_and_folders">Mail &amp; Newsgroups Account
 Settings - Copies &amp; Folders</a>.</li>
 
-<li><strong>Addressing</strong>: These settings allow you to
-override the global directory server settings specified for all
+<li><strong>Composition &amp; Addressing</strong>: These settings allow you
+to choose your default format and quoting behavior when composing a message.
+You can also override the global directory server settings specified for all
 address books in the Preferences dialog box. For more information,
 see <a href="#addressing">Mail &amp; Newsgroups Account
-Settings - Addressing</a>.</li>
+Settings - Composition &amp; Addressing</a>.</li>
 
 <li><strong>Offline &amp; Disk Space (IMAP and News accounts
 only)</strong>: These settings apply when you are working offline
@@ -422,8 +423,8 @@ time by clicking Get Msgs in the Mail window.</li>
 
 <p>To set up &brandShortName; Mail &amp; Newsgroups to play a sound or
 display an alert when new mail arrives, see <a
-href="#mail_and_newsgroups">Mail &amp; Newsgroups
-Preferences - Mail &amp; Newsgroups</a>.</p>
+href="#notifications">Mail &amp; Newsgroups
+Preferences - Notifications</a>.</p>
 
 <p>You can always retrieve messages manually at any time. To get
 new messages for the selected account or newsgroup, do one of the
@@ -497,10 +498,10 @@ Mail toolbar, search bar, or the status bar.</li>
 to uncheck (hide) Sidebar.</li>
 
 <li>Expand and collapse any pane to switch between a three-pane or
-two-pane view. Choose a <a href="#mail_and_newsgroups">default view</a>
+two-pane view. Choose a <a href="#windows">default view</a>
 in the Mail and Newsgroup Preferences panel. If you change the
 default view, you must exit Mail &amp; Newsgroups and then restart
-&brandShortName; to have your changes take effect.</li>
+&brandShortName; to have your change take effect.</li>
 </ul>
 
 <p>[&nbsp;<a href="#reading_messages">Return to beginning of
@@ -668,13 +669,11 @@ Compose on the Address Book.</li>
 </ul>
 
 <p><strong>Tip:</strong> Use the Mail &amp; Newsgroups Account
-Settings dialog box to specify the HTML text editor to use for
-composing messages sent from this account. (You can specify a
-different editor for each of your accounts.) Select the account,
-and check "Compose messages in HTML format" to use the HTML text
-editor for all messages. See <a
-href="#changing_the_settings_for_an_account">Changing the Settings for an
-Account</a> for more information.</p>
+Settings - <a href="#addressing">Composition &amp; Addressing</a> dialog
+box to specify the HTML text editor to use for composing messages sent
+from this account. (You can specify a different editor for each of your
+accounts.) See <a href="#changing_the_settings_for_an_account">Changing the
+Settings for an Account</a> for more information.</p>
 
 <p>Composing messages in HTML format allows you to use different
 fonts, text styles (such as bold or italic) and text colors,
@@ -693,8 +692,8 @@ Composition Window</h2>
 
 <p>Use the Compose window to address, compose, and send mail and
 newsgroup messages. First specify whether you want to compose
-messages in plain text or HTML in the <a
-href="#account_settings">Account Settings</a>
+messages in plain text or HTML by default in the <a
+href="#addressing">Composition &amp; Addressing</a>
 Preferences panel (open the Edit menu and choose Mail &amp;
 Newsgroups Account Settings).</p>
 
@@ -890,8 +889,8 @@ and the original message contains long lines.
 
 <p>You use the Mail &amp; Newsgroups Account Settings command on
 the Edit menu to specify that you want to use the plain-text editor
-for composing messages. In the Account Settings dialog box, select
-the account, and uncheck "Compose messages in HTML format" to use
+for composing messages. Select the Composition &amp; Addressing panel of
+the account and uncheck "Compose messages in HTML format" to use
 the plain-text editor for all messages. If you only want to use the
 plain-text editor occasionally, you can hold down the Shift key
 while clicking the Compose or the Reply button to use the
@@ -971,7 +970,7 @@ section</a>&nbsp;]</p>
 <h2 id="forwarding_a_message">Forwarding a Message</h2>
 
 <p>When you forward a message, you can specify how to place new
-text relative to the original text: <i>inline</i> (in the body of
+text relative to the original text: <em>inline</em> (in the body of
 the message; this is the default), or as an attachment.</p>
 
 <p>To forward a message:</p>
@@ -1207,9 +1206,10 @@ box.</li>
 
 <li>Select the mail or newsgroup account you want to use.</li>
 
-<li>Select "Compose messages in HTML format." You see the
-Formatting toolbar in the Compose window. Leave this box unchecked
-to use the plain-text editor for this account.</li>
+<li>Go to the Composition &amp; Addressing panel and select "Compose
+messages in HTML format." You see the Formatting toolbar in the Compose
+window. Leave this box unchecked to use the plain-text editor for
+this account.</li>
 </ol>
 
 <p>[&nbsp;<a href="#creating_html_mail_messages">Return to beginning of
@@ -1435,7 +1435,7 @@ Attachments</h2>
 
 <p>If you receive a mail attachment that consists of a file type
 that &brandShortName; can display (such as graphic files and HTML files),
-you see the attachment displayed <i>inline</i> (in the body of the
+you see the attachment displayed <em>inline</em> (in the body of the
 message). For other file types, Mail &amp; Newsgroups lets you open
 the attachment using another application, or you can save the
 attachment on your hard disk.</p>
@@ -2778,9 +2778,9 @@ perform.</li>
 
 <li>Type a name for the filter.</li>
 
-<li>Select the matching option you want Mail to use: "<i>all</i> of
+<li>Select the matching option you want Mail to use: "<em>all</em> of
 the following conditions" (criteria) you choose, or "at least
-<i>one</i>" of the conditions.</li>
+<em>one</em>" of the conditions.</li>
 
 <li>Use the drop-down lists to choose the search criteria (for
 example, "Subject," "Sender," "contains," "doesn't contain") and
@@ -3278,7 +3278,7 @@ section</a>&nbsp;]</p>
 
 <p>When you open your newsgroup server, you see the list of
 newsgroups to which you subscribe. The server downloads the
-<i>headers</i> of new messages in each newsgroup.</p>
+<em>headers</em> of new messages in each newsgroup.</p>
 
 <p>To read newsgroup messages, begin from the Mail window:</p>
 
@@ -3981,7 +3981,7 @@ or change.</li>
     <li><a href="#account_settings">Account Settings</a></li>
     <li><a href="#server_settings">Server Settings</a></li>
     <li><a href="#copies_and_folders">Copies &amp; Folders</a></li>
-    <li><a href="#addressing">Addressing</a></li>
+    <li><a href="#addressing">Composition &amp; Addressing</a></li>
     <li><a href="#offline_and_disk_space">Offline &amp; Disk Space</a></li>
     <li><a href="#return_receipts">Return Receipts</a></li>
     <li><a href="#security">Security</a></li>
@@ -4019,24 +4019,9 @@ signature file (in text or HTML format) you want to attach to your
 outgoing messages. Click Choose to locate the signature file
 (optional).</li>
 
-<li><strong>Compose messages in HTML format</strong>: Lets you
-create formatted text for mail and newsgroup messages using the
-built-in HTML editor. Leave this item unchecked to use the
-plain-text editor. HTML messages can include formatted text, links,
-images, and tables, just like a web page. However, some recipients
-may not be able to receive HTML messages.</li>
-
-<li style="list-style: none">
-<p><strong>Tip</strong>: If you select this option, but you later
-want to compose a message or reply to a message using the
-plain-text editor, hold down the Shift key and click Compose or
-Reply in the Mail toolbar to temporarily choose the plain-text
-editor. Shift-clicking the Compose button or the Reply button
-switches to the other editor.</p>
-</li>
-
-<li><strong>Advanced</strong>: Lets you choose a different outgoing
-server (SMTP) for outgoing messages from this account.</li>
+<li><strong>Attach my vCard to messages</strong>: Lets you choose
+if your vCard should be attached to your outgoing messages. Click
+Edit Card to edit the card information (optional).</li>
 </ul>
 
 <p>[&nbsp;<a href="#mail_and_newsgroups_account_settings">Return to beginning of
@@ -4166,6 +4151,11 @@ deleted.</li>
 <li><strong>Empty Trash on Exit</strong>: Empties the Trash folder
 whenever you quit Mail &amp; Newsgroups.</li>
 
+<li><strong>Advanced</strong>: Lets you choose a different outgoing
+server (SMTP) for outgoing messages from this account. You can also
+reach the <a href="#advanced_imap_server_settings">Advanced IMAP Server Settings</a>
+through this button.</li>
+
 <li><strong>Local directory</strong>: The location on your hard
 disk where mail for this account is stored.</li>
 </ul>
@@ -4294,6 +4284,9 @@ another folder.</li>
 empty the Trash folder whenever you quit Mail &amp;
 Newsgroups.</li>
 
+<li><strong>Advanced</strong>: Lets you choose a different outgoing
+server (SMTP) for outgoing messages from this account.</li>
+
 <li><strong>Local directory</strong>: The location on your hard
 disk where mail for this account is stored.</li>
 </ul>
@@ -4347,16 +4340,24 @@ messages</strong>: Choose this setting to conserve disk space and
 download time, by setting a limit for the number of messages you
 can retrieve at one time.</li>
 
+<li><strong>Always request authentication when connecting to this
+server</strong>: Some servers allow you to talk to them without logging
+in, but will silently hide all the <em>private</em> groups/postings
+unless you are logged in. Choose this setting to force &brandShortName; to
+authenticate each time it connects to this server even when the server
+doesn't ask (also called &quot;Pushed Authentication&quot;).</li>
+
+<li><strong>Advanced</strong>: Lets you choose a different outgoing
+server (SMTP) for outgoing messages from this account.</li>
+
+<li><strong>newsrc file</strong>: The path to the newsrc file is mostly
+displayed for your information. The newsrc file stores information about
+the newsgroups to which you are subscribed and the messages you have
+read in each newsgroup.</li>
+
 <li><strong>Local directory</strong>: The location on your hard
 disk where mail for this account is stored.</li>
 </ul>
-
-<blockquote>
-<p><strong>Note:</strong> The path to the newsrc file is displayed
-for your information. The newsrc file stores information about the
-newsgroups to which you are subscribed, and the messages you have
-read in each newsgroup.</p>
-</blockquote>
 
 <p>[&nbsp;<a href="#mail_and_newsgroups_account_settings">Return to beginning of
 section</a>&nbsp;]</p>
@@ -4393,12 +4394,11 @@ use the default Sent folder for the current account, click Other
 and then choose an account and then choose the folder for storing
 copies.</li>
 
-<li><strong>Bcc</strong>: Select whether you want to always send a
-blind carbon copy (bcc) to yourself.</li>
-
-<li><strong>Bcc another address</strong>: Select whether you want
-to always send a blind carbon copy (bcc) to another addressee, and
-enter the address.</li>
+<li><strong>Bcc these email addresses</strong>: Select whether you
+want to always send a blind carbon copy (bcc) to another addressee, and
+enter the address. If you want to always send a blind carbon copy to
+yourself, just add your address to this list. Separate addresses with
+comma (,).</li>
 
 <li><strong>Keep message drafts in</strong>: Select where to store
 message drafts. If you don't want to use the default Drafts folder
@@ -4422,7 +4422,38 @@ when you save a draft or template to remind you where &brandShortName; Mail
 section</a>&nbsp;]</p>
 
 <h2 id="addressing">Mail &amp; Newsgroups Account Settings -
-Addressing</h2>
+Composition &amp; Addressing</h2>
+
+<p>You use Composition settings to choose how to format text and to
+handle replies.</p>
+
+<ul>
+<li><p><strong>Compose messages in HTML format</strong>: Use the HTML editor
+as the default editor for writing mail and newsgroup messages. Leave this
+item unchecked to use the plain-text editor by default.
+HTML messages can include formatted text, links, images, and tables, just
+like a web page. However, some recipients may not be able to receive HTML
+messages.</p>
+
+<p><strong>Tip</strong>: If you only want to use an editor occasionally, you can
+hold down the Shift key while clicking the Compose or the Reply button
+to switch to the non-default on an as-needed basis.</p>
+</li>
+
+<li><strong>Automatically quote the original message when
+replying</strong>: Select this to include the original message text
+in your reply.<br />
+Use the drop-down list to select if the cursor should be positioned below
+or above the quoted text. You can also choose the quoting to be automatically
+selected.
+<ul>
+<li><strong>and place my signature</strong>: This drop-down list lets you
+choose where you want your signature to be placed. It's only selectable if
+you decided to <a href="#account_settings">attach a signature</a>
+and to place the cursor above the quotet text.</li>
+</ul>
+</li>
+</ul>
 
 <p>You use Addressing settings to override the global LDAP server
 settings specified for all <a
@@ -4854,54 +4885,59 @@ disk where mail for this account is stored.</li>
 
 <p>&nbsp;</p>
 
-<p>[&nbsp;<a href="#mail_and_newsgroups_account_settings">Return to beginning of
-section</a>&nbsp;]</p>
+<p>[&nbsp;<a href="#mail_and_newsgroups_account_settings">Return to beginning
+of section</a>&nbsp;]</p>
 
 <h2 id="outgoing_server">Mail &amp; Newsgroups Account Settings -
 Outgoing Server (SMTP)</h2>
 
-<p>Even if you have multiple mail or news accounts, you generally
-need to specify only one outgoing (SMTP) server to handle the
-delivery of your outgoing mail.</p>
+<p>The outgoing server will transport your outgoing mail to the
+intended recipients.</p>
 
 <p>If you are not already viewing the Outgoing Server (SMTP)
 settings, begin from the Mail window:</p>
 
 <ol>
-<li>Open the Edit menu and choose Mail &amp; Newsgroups Account
-Settings. You see the Mail &amp; Newsgroups Account Settings dialog
-box.</li>
+<li>Click on any Mail window.</li>
 
-<li>Select the Outgoing Server (SMTP) category.</li>
+<li>From the Edit menu, choose Mail &amp; Newsgroup Account Settings.</li>
+
+<li>Select Outgoing Server (SMTP) and set up as follows (If you are not sure
+which option to choose, check with your ISP or system administrator):</li>
 </ol>
 
 <ul>
-<li><strong>Server name</strong>: Mail &amp; Newsgroups uses the
-outgoing (SMTP) server name that you entered using the Account
-Wizard, or that was specified when you migrated this account from a
-previous version. To change the outgoing (SMTP) server name, type
-it in Server Name field.</li>
+<li><strong>Server name</strong>: The SMTP server that will deliver your
+outgoing mail. To use a different SMTP server, change this field.</li>
 
-<li><strong>Port</strong>: If necessary, enter the port number for
-the SMTP server. If no port number is specified, the default port
-is used.</li>
+<li><strong>Port</strong>: The port on which the SMTP server will be connected.
+By default it holds the standard port for the specified encryption. Change it
+if the mail server is listening for connections on a non-standard port.</li>
 
-<li><strong>Use name and password</strong>: If your SMTP server
-requires authentication to send mail, select this option to be
-prompted to enter your user name and authentication password. Then
-enter your user name. The first time you send mail, you will be
-prompted to enter your authentication password.</li>
+<li><strong>Use name and password</strong>: If your SMTP server requires
+authentication to send mail, select this option and enter your user
+name. The first time you send mail, you will be prompted for your
+password. At that time you can instruct &brandShortName; to save your password
+for future sessions.</li>
 
-<li><strong>Use secure connection (SSL)</strong>: If your outgoing
-SMTP server is configured to send encrypted mail, you can choose
-how often you want to use SSL (Secure Sockets Layer). If you are
-not sure which option to choose, check with your ISP or system
-administrator.</li>
+<li><strong>Use secure connection</strong>: If your outgoing server is configured
+to support an encrypted connection, choose one of the following (if you make
+a choice for which your server is not configured, you will get an error
+message when sending mail):
+<ul>
+<li><strong>No</strong>: If you don't want to use an encrypted link.</li>
+<li><strong>TLS, if available</strong>: &brandShortName; will try to use a TLS encrypted
+connection. If the server doesn't support it, an unencrypted connection is
+used.</li>
+<li><strong>TLS</strong>: Require a TLS encrypted connection. This mechanism
+will mostly run on the standard SMTP port 25.</li>
+<li><strong>SSL</strong>: Require a SSL encrypted connection. The default port
+for this is 465.</li>
+</ul>
+</li>
 
-<li><strong>Advanced</strong>: Click this option to set up
-additional outgoing SMTP servers or to change the default SMTP
-server. Keep in mind that using more than one SMTP server can cause
-errors in sending mail.</li>
+<li><strong>Advanced</strong>: Click this option to set up additional
+SMTP servers or to change the default SMTP server.</li>
 </ul>
 
 <p>&nbsp;</p>
@@ -4955,21 +4991,13 @@ Preferences dialog box.</li>
 </ol>
 
 <ul>
-<li><strong>Select the window layout you prefer for Mail</strong>:
-Choose the type of three-pane layout to use for the Mail window. If
-you change this setting, you must exit and restart Mail &amp;
-Newsgroups to have your changes take effect.</li>
-
 <li><strong>Confirm when moving folders to the Trash</strong>:
 Choose to allow Mail &amp; Newsgroups to prompt you before deleting
 folders.</li>
 
-<li><strong>Confirm when using keyboard shortcut to send
-messages</strong>: Choose to allow Mail &amp; Newsgroups to prompt
-you when you use the keyboard shortcut to send a message. When
-you're composing a message, this may help you avoid accidentally
-sending the message if you enter the keyboard shortcut by
-mistake.</li>
+<li><strong>Remember the last selected message</strong>: Choose this option if
+you want &brandShortName; to select the message you had selected last before leaving
+a folder when you reenter a folder.</li>
 
 <li><strong>Use &brandShortName; Mail as the default mail
 application</strong>: Select &brandShortName; Mail &amp; Newsgroups as the
@@ -5051,7 +5079,28 @@ section</a>&nbsp;]</p>
 
 <h2 id="windows">Mail &amp; Newsgroups Preferences - Windows</h2>
 
-<p>text to come</p>
+
+<p>Windows preferences allow you to adjust the window layout and
+handling.</p>
+
+<ol>
+<li>Open the Edit menu and choose Preferences.</li>
+
+<li>Under the Mail &amp; Newsgroups category, click Windows.
+(If no subcategories are visible, double-click Mail &amp; Newsgroups to
+expand the list.)</li>
+</ol>
+
+<ul>
+<li><strong>Select the window layout you prefer for Mail</strong>: Choose the
+type of three-pane layout to use for the Mail window. If you change
+this setting, you must exit and restart Mail &amp; Newsgroups to
+have your changes take effect.</li>
+
+<li><strong>When opening messages, display them in</strong>: Here you can choose
+if you want to reuse a message window for the next mail or if want to
+open a new one for each.</li>
+</ul>
 
 <p>[&nbsp;<a href="#mail_and_newsgroup_preferences">Return to beginning of
 section</a>&nbsp;]</p>
@@ -5074,13 +5123,11 @@ Newsgroups to expand the list.)</li>
 </ol>
 
 <ul>
-<li>
-<p><strong>Plain-Text Messages</strong>: Select the font you prefer
+<li><strong>Plain-Text Messages</strong>: Select the font you prefer
 for viewing plain-text messages: fixed width or variable width.
 Choosing a font style, size, and color for quoted plain-text
 messages can help you more easily distinguish quoted text (usually
-a message that's been forwarded to you or by you).</p>
-</li>
+a message that's been forwarded to you or by you).</li>
 
 <li><strong>Wrap text to fit window width</strong>: Select this so
 that incoming messages are word-wrapped to fit the width of your
@@ -5157,7 +5204,62 @@ section</a>&nbsp;]</p>
 <h2 id="notifications">Mail &amp; Newsgroups Preferences -
 Notifications</h2>
 
-<p>text to come</p>
+<p>Notification preferences allow you to select different methods
+for informing you on arrival of a new message. So you don't have to
+always look in the folders.</p>
+
+<ol>
+<li>Open the Edit menu and choose Preferences.</li>
+
+<li>Under the Mail &amp; Newsgroups category, click Notifications.
+(If no subcategories are visible, double-click Mail &amp; Newsgroups to
+expand the list.)</li>
+</ol>
+
+<ul>
+<li>
+<p><strong>Show an alert</strong>: Select this if you want &brandShortName;
+Mail &amp; Newsgroups to display a sliding alert above your system tray
+in the lower right corner of your screen when new messages arrive.
+The sliding alert only appears once when new messages arrive, and
+won't appear again until you bring the Mail &amp; Newsgroups window
+to the front.</p>
+
+<table>
+ <tr>
+ <td colspan="4"><img src="images/mail_newmail_alert.png" hspace="0"
+ vspace="0" /></td>
+ </tr>
+
+ <tr>
+ <td width="20"><strong>&nbsp;</strong></td>
+ <td><strong>Sliding new mail alert</strong></td>
+ </tr>
+</table>
+
+<p>When the alert appears, clicking the link displayed in the alert
+will take you to the first folder that has new mail.</p>
+
+<p>Once &brandShortName; Mail has been started, the new message alert will
+continue to work even after you close the Mail window (as long as
+another &brandShortName; application is running).</p>
+
+<p><strong>Note:</strong> This feature is not available on Linux &amp; Mac.</p>
+</li>
+
+<li>
+<p><strong>Play a sound</strong>: Select this if you want &brandShortName; Mail &amp;
+Newsgroups to play a sound when new messages arrive.<br />
+You can choose between the default system sound and a custom sound in
+WAV format. If you choose the latter you have to enter the path to the
+sound file or use the Browse button to select in in the file locator.
+Click on Preview button to preview the choosen sound file.</p>
+
+<p>Once &brandShortName; Mail has been started, the new messages sound will
+continue to work even after you close the Mail window (as long as
+another &brandShortName; application is running).</p>
+</li>
+</ul>
 
 <p>[&nbsp;<a href="#mail_and_newsgroup_preferences">Return to beginning of
 section</a>&nbsp;]</p>
@@ -5179,21 +5281,21 @@ Newsgroups to expand the list.)</li>
 </ol>
 
 <ul>
-<li><strong>Forwarding and Replying to Messages</strong>: Use the
-Forward Messages drop-down list to choose how you want forwarded
-message text to appear: as an attachment or <i>inline</i> (in the
-body of your message).</li>
-
-<li><strong>Automatically quote the original message when
-replying</strong>: Select this to include the original message text
-in your reply. Then use the drop-down list to select where you want
-to place your reply in the message area.</li>
+<li><strong>Forward Messages</strong>: Use the Forward messages
+drop-down list to choose how you want forwarded message text to appear:
+as an attachment or <em>inline</em> (in the body of your message).</li>
 
 <li><strong>Composing Messages</strong>: Select to have Mail &amp;
 Newsgroups always check the spelling of your messages when you
 click Send. Choose to have Mail &amp; Newsgroups use "quoted
 printable" MIME encoding when sending regular messages that use an
-8-bit character set (for example, Latin ISO88359).</li>
+8-bit character set (for example, Latin ISO-8859-3).</li>
+
+<li><strong>Confirm when using keyboard shortcut to send message</strong>:
+Check this option if want to be asked if you're sure to be ready to send the
+message when you're pressing Ctrl+Return in message editor. This may help you
+avoid accidentally sending the message if you enter the keyboard shortcut by
+mistake when composing a message.</li>
 
 <li><strong>Wrap plain text messages at __ characters</strong>:
 Enter a number to set the right margin for text in the message
@@ -5202,6 +5304,10 @@ area.</li>
 <li><strong>Character Coding</strong>: Select the language you want
 Mail &amp; Newsgroups to use as the default for outgoing mail and
 newsgroup messages.</li>
+
+<li><strong>Defaults for HTML Messages</strong>: Here you can define what
+the defaults are for font, size, text and background color if you choose
+to send mails in HTML format.</li>
 </ul>
 
 <p>[&nbsp;<a href="#mail_and_newsgroup_preferences">Return to beginning of
@@ -5456,14 +5562,12 @@ expand the list.).</li>
 preferences for working offline, going online, and disk space.</p>
 
 <ul>
-<li><strong>Offline:</strong> Select how you want Mail &amp;
-Newsgroups to handle messages when going online or offline. <a
-id="compacting_to_save_disk_spaceSDX"
-name="compacting_to_save_disk_spaceSDX"></a></li>
+<li><strong>Offline:</strong> Select how you want Mail &amp; Newsgroups
+to handle messages when going online or offline.</li>
 
-<li><strong>Disk Space:</strong> Select this to conserve disk space
-by automatically compacting message folders when it will save the
-amount of disk space you enter.</li>
+<li id="compacting_to_save_disk_spaceSDX"><strong>Disk Space:</strong>
+Select this to conserve disk space by automatically compacting message
+folders when it will save the amount of disk space you enter.</li>
 </ul>
 
 <p>See <a href="#working_offline">Working Offline</a> for
@@ -5473,7 +5577,7 @@ information on working offline.</p>
 beginning of section</a>&nbsp;]</p>
 
 <hr />
-<p><i>7 January 2004
+<p><i>10 January 2004
 </i></p>
 
 <hr />
