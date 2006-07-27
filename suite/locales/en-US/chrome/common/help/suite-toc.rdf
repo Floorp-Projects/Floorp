@@ -1044,8 +1044,8 @@
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li><rdf:Description ID="certs_prefs" nc:name="Certificate Preferences" nc:link="chrome://help/locale/certs_prefs_help.xhtml#privacy_and_security_preferences_certificates"/> </rdf:li>
-        <rdf:li><rdf:Description ID="certs-help" nc:name="Certificate Manager" nc:link="chrome://help/locale/certs_help.html"/> </rdf:li>
-        <rdf:li><rdf:Description ID="sec_devices" nc:name="Device Manager" nc:link="chrome://help/locale/certs_help.html#Security_Devices"/> </rdf:li>
+        <rdf:li><rdf:Description ID="certs-help" nc:name="Certificate Manager" nc:link="chrome://help/locale/certs_help.xhtml"/> </rdf:li>
+        <rdf:li><rdf:Description ID="sec_devices" nc:name="Device Manager" nc:link="chrome://help/locale/certs_help.xhtml#device_manager"/> </rdf:li>
         <rdf:li><rdf:Description ID="cert-dialog-help" nc:name="Certificate Information and Decisions" nc:link="chrome://help/locale/cert_dialog_help.xhtml"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
@@ -1056,10 +1056,10 @@
 <rdf:Description about="#certs-help">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="my_certs" nc:name="Your Certificates" nc:link="chrome://help/locale/certs_help.html#My_Certificates"/> </rdf:li>
-        <rdf:li><rdf:Description ID="others_certs" nc:name="Other People's Certificates" nc:link="chrome://help/locale/certs_help.html#Other_Peoples_Certificates"/> </rdf:li>
-        <rdf:li><rdf:Description ID="web_certs" nc:name="Web Site Certificates" nc:link="chrome://help/locale/certs_help.html#Web_Site_Certificates"/> </rdf:li>
-        <rdf:li><rdf:Description ID="ca_certs" nc:name="Authorities" nc:link="chrome://help/locale/certs_help.html#CA_Certificates"/> </rdf:li>
+        <rdf:li><rdf:Description ID="my_certs" nc:name="Your Certificates" nc:link="chrome://help/locale/certs_help.xhtml#your_certificates"/> </rdf:li>
+        <rdf:li><rdf:Description ID="others_certs" nc:name="Other People's Certificates" nc:link="chrome://help/locale/certs_help.xhtml#other_peoples_certificates"/> </rdf:li>
+        <rdf:li><rdf:Description ID="web_certs" nc:name="Web Site Certificates" nc:link="chrome://help/locale/certs_help.xhtml#web_site_certificates"/> </rdf:li>
+        <rdf:li><rdf:Description ID="ca_certs" nc:name="Authorities" nc:link="chrome://help/locale/certs_help.xhtml#authorities"/> </rdf:li>
 
       </rdf:Seq>
     </nc:subheadings>
@@ -1068,8 +1068,8 @@
 <rdf:Description about="#my_certs">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="cert_backup_pwd" nc:name="Choose a Certificate Backup Password" nc:link="chrome://help/locale/certs_help.html#Choose_a_Certificate_Backup_Password"/> </rdf:li>
-        <rdf:li><rdf:Description ID="delete_my_certs" nc:name="Delete Your Certificate" nc:link="chrome://help/locale/certs_help.html#Delete_My_Certificate"/> </rdf:li>
+        <rdf:li><rdf:Description ID="cert_backup_pwd" nc:name="Choose a Certificate Backup Password" nc:link="chrome://help/locale/certs_help.xhtml#choose_a_certificate_backup_password"/> </rdf:li>
+        <rdf:li><rdf:Description ID="delete_my_certs" nc:name="Delete Your Certificate" nc:link="chrome://help/locale/certs_help.xhtml#delete_your_certificates"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1077,7 +1077,7 @@
 <rdf:Description about="#others_certs">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="delete_email_certs" nc:name="Delete Email Certificates" nc:link="chrome://help/locale/certs_help.html#Delete_Email_Certificate"/> </rdf:li>
+        <rdf:li><rdf:Description ID="delete_email_certs" nc:name="Delete Email Certificates" nc:link="chrome://help/locale/certs_help.xhtml#delete_email_certificates"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1085,8 +1085,8 @@
 <rdf:Description about="#web_certs">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="edit_web_certs" nc:name="Edit Web Site Certificate Settings" nc:link="chrome://help/locale/certs_help.html#Edit_Web_Site_Certificate_Settings"/> </rdf:li>
-        <rdf:li><rdf:Description ID="delete_web_certs" nc:name="Delete Web Site Certificate" nc:link="chrome://help/locale/certs_help.html#Delete_Web_Site_Certificate"/> </rdf:li>
+        <rdf:li><rdf:Description ID="edit_web_certs" nc:name="Edit Web Site Certificate Settings" nc:link="chrome://help/locale/certs_help.xhtml#edit_web_site_certificate_trust_settings"/> </rdf:li>
+        <rdf:li><rdf:Description ID="delete_web_certs" nc:name="Delete Web Site Certificate" nc:link="chrome://help/locale/certs_help.xhtml#delete_web_site_certificates"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1094,8 +1094,8 @@
 <rdf:Description about="#ca_certs">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="edit_ca_certs" nc:name="Edit CA Certificate Settings" nc:link="chrome://help/locale/certs_help.html#Edit_CA_Certificate_Settings"/> </rdf:li>
-        <rdf:li><rdf:Description ID="delete_ca_certs" nc:name="Delete CA Certificate" nc:link="chrome://help/locale/certs_help.html#Delete_CA_Certificate"/> </rdf:li>
+        <rdf:li><rdf:Description ID="edit_ca_certs" nc:name="Edit CA Certificate Settings" nc:link="chrome://help/locale/certs_help.xhtml#edit_ca_certificate_trust_settings"/> </rdf:li>
+        <rdf:li><rdf:Description ID="delete_ca_certs" nc:name="Delete CA Certificate" nc:link="chrome://help/locale/certs_help.xhtml#delete_ca_certificates"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
