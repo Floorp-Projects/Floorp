@@ -33,9 +33,9 @@
   onload="SearchPanelStartup();"
   onunload="SearchPanelShutdown();">
 
-  <html:script src="chrome://global/content/strres.js"/>
-  <html:script src="chrome://search/content/search-panel.js" />
-  <html:script src="chrome://search/content/shared.js" />
+  <html:script language="Javascript" src="chrome://global/content/strres.js"/>
+  <html:script language="Javascript" src="chrome://search/content/search-panel.js" />
+  <html:script language="Javascript" src="chrome://search/content/shared.js" />
 
 <popupset>
 <popup id="contextual" oncreate="return fillContextMenu('contextual', 'Tree');" >
