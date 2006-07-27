@@ -172,12 +172,19 @@ var cookiesTreeView = {
   getCellValue : function(row,column) {},
   getCellText : function(row,column){
     var rv="";
-    if (column=="domainCol") {
+    switch (column) {
+    case "domainCol":
       rv = cookies[row].rawHost;
-    } else if (column=="nameCol") {
+      break;
+    case "nameCol":
       rv = cookies[row].name;
-    } else if (column=="statusCol") {
+      break;
+    case "statusCol":
       rv = cookies[row].status;
+      break;
+    case "expiresCol":
+      rv = cookies[row].expires;
+      break;
     }
     return rv;
   },
@@ -201,7 +208,8 @@ function Cookie(number,name,value,isDomain,host,rawHost,path,isSecure,expires,
   this.rawHost = rawHost;
   this.path = path;
   this.isSecure = isSecure;
-  this.expires = expires;
+  this.expires = GetExpiresString(expires);
+  this.expiresSortValue = expires;
   this.status = GetStatusString(status);
   this.policy = policy;
 }
@@ -319,7 +327,7 @@ function CookieSelected() {
     // Something got out of synch.  See bug 119812 for details
     dump("Tree and viewer state are out of sync! " +
          "Help us figure out the problem in bug 119812");
-    return;
+    return false;
   }
 
   var props = [
@@ -334,7 +342,7 @@ function CookieSelected() {
      value: cookies[idx].isSecure ?
             cookieBundle.getString("forSecureOnly") : 
             cookieBundle.getString("forAnyConnection")},
-    {id: "ifl_expires", value: GetExpiresString(cookies[idx].expires)},
+    {id: "ifl_expires", value: cookies[idx].expires},
     {id: "ifl_policy", value: GetPolicyString(cookies[idx].policy)}
   ];
 
@@ -407,9 +415,38 @@ var lastCookieSortAscending = false;
 
 function CookieColumnSort(column) {
   lastCookieSortAscending =
-    SortTree(cookiesTree, cookiesTreeView, cookies,
-                 column, lastCookieSortColumn, lastCookieSortAscending);
+      SortTree(cookiesTree, cookiesTreeView, cookies,
+               column, lastCookieSortColumn, lastCookieSortAscending);
   lastCookieSortColumn = column;
+  // set the sortDirection attribute to get the styling going
+  // first we need to get the right element
+  var sortedCol;
+  switch (column) {
+    case "rawHost":
+      sortedCol = document.getElementById("domainCol");
+      break;
+    case "name":
+      sortedCol = document.getElementById("nameCol");
+      break;
+    case "expires":
+      sortedCol = document.getElementById("expiresCol");
+      break;
+    case "status":
+      sortedCol = document.getElementById("statusCol");
+      break;
+  }
+  if (lastCookieSortAscending)
+    sortedCol.setAttribute("sortDirection", "descending");
+  else
+    sortedCol.setAttribute("sortDirection", "ascending");
+
+  // clear out the sortDirection attribute on the rest of the columns
+  var currentCol = sortedCol.parentNode.firstChild;
+  while (currentCol) {
+    if (currentCol != sortedCol && currentCol.localName == "treecol")
+      currentCol.removeAttribute("sortDirection");
+    currentCol = currentCol.nextSibling;
+  }
 }
 
 /*** =================== PERMISSIONS CODE =================== ***/
@@ -424,7 +461,7 @@ var permissionsTreeView = {
     var rv="";
     if (column=="siteCol") {
       rv = permissions[row].rawHost;
-    } else if (column=="statusCol") {
+    } else if (column=="capabilityCol") {
       rv = permissions[row].capability;
     }
     return rv;
@@ -601,6 +638,29 @@ function PermissionColumnSort(column, updateSelection) {
                  column, lastPermissionSortColumn, lastPermissionSortAscending, 
                  updateSelection);
   lastPermissionSortColumn = column;
+  
+  // make sure sortDirection is set
+  var sortedCol;
+  switch (column) {
+    case "rawHost":
+      sortedCol = document.getElementById("siteCol");
+      break;
+    case "capability":
+      sortedCol = document.getElementById("capabilityCol");
+      break;
+  }
+  if (lastPermissionSortAscending)
+    sortedCol.setAttribute("sortDirection", "descending");
+  else
+    sortedCol.setAttribute("sortDirection", "ascending");
+
+  // clear out the sortDirection attribute on the rest of the columns
+  var currentCol = sortedCol.parentNode.firstChild;
+  while (currentCol) {
+    if (currentCol != sortedCol && currentCol.localName == "treecol")
+      currentCol.removeAttribute("sortDirection");
+    currentCol = currentCol.nextSibling;
+  }
 }
 
 /*** ============ CODE FOR HELP BUTTON =================== ***/

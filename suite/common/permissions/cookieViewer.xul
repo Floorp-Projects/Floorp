@@ -62,13 +62,16 @@
                     onselect="CookieSelected();">
             <treecols>
               <treecol id="domainCol" label="&treehead.cookiedomain.label;" flex="5"
-                           onclick="CookieColumnSort('rawHost', true);" persist="width"/>
+                       onclick="CookieColumnSort('rawHost', true);" persist="width hidden"/>
               <splitter class="tree-splitter"/>
               <treecol id="nameCol" label="&treehead.cookiename.label;" flex="5"
-                           onclick="CookieColumnSort('name', true);" persist="width"/>
+                       onclick="CookieColumnSort('name', true);" persist="width hidden"/>
+              <splitter class="tree-splitter"/>
+              <treecol id="expiresCol" label="&treehead.cookieexpires.label;" flex="10"
+                       hidden="true" onclick="CookieColumnSort('expires', true);" persist="width hidden"/>
               <splitter class="tree-splitter"/>
               <treecol id="statusCol" label="&treehead.cookiestatus.label;" flex="1"
-                           hidden="true" onclick="CookieColumnSort('status', true);" persist="width"/>
+                       hidden="true" onclick="CookieColumnSort('status', true);" persist="width hidden"/>
             </treecols>
             <treechildren/>
           </tree>
@@ -170,7 +173,7 @@
               <treecol id="siteCol" label="&treehead.sitename.label;" flex="5"
                            onclick="PermissionColumnSort('rawHost', true);" persist="width"/>
               <splitter class="tree-splitter"/>
-              <treecol id="statusCol" label="&treehead.status.label;" flex="5"
+              <treecol id="capabilityCol" label="&treehead.status.label;" flex="5"
                            onclick="PermissionColumnSort('capability', true);" persist="width"/>
             </treecols>
             <treechildren/>

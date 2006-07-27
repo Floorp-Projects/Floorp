@@ -5,6 +5,7 @@
 <!ENTITY     treehead.cookiename.label      "Cookie Name">
 <!ENTITY     treehead.cookiedomain.label    "Site"> 
 <!ENTITY     treehead.cookiestatus.label    "Status"> 
+<!ENTITY     treehead.cookieexpires.label   "Expires"> 
 <!ENTITY     treehead.infoselected.label    "Information about the selected Cookie">
 <!ENTITY     button.removecookie.label      "Remove Cookie">
 <!ENTITY     button.removeallcookies.label  "Remove All Cookies">
