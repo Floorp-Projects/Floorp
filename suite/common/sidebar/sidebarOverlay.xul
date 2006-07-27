@@ -51,13 +51,11 @@
   <vbox id="sidebar-box" persist="hidden width collapsed">
     <splitter id="sidebar-panels-splitter" collapse="after" persist="state"
       onmouseup="PersistHeight();" hidden="true">
-      <spacer flex="1"/>
       <grippy/>
-      <spacer flex="1"/>
     </splitter>
 
     <vbox id="sidebar-panels-splitter-box" flex="1" 
-      persist="hidden">
+      persist="collapsed">
 
       <sidebarheader id="sidebar-title-box" class="sidebarheader-main"
         label="&sidebar.panels.label;" persist="hidden" type="box"
@@ -99,7 +97,7 @@
             <menuseparator />
           </menupopup>
         </toolbarbutton>
-        <toolbarbutton class="close-button" oncommand="SidebarShowHide();"/>
+        <toolbarbutton id="sidebar-close-button" oncommand="SidebarShowHide();"/>
       </sidebarheader>
   
       <vbox id="sidebar-panels"
