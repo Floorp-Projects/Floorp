@@ -27,6 +27,7 @@
         <rdf:li> <rdf:Description nc:name="client authentication" nc:link="glossary.html#1021054"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="client SSL certificate" nc:link="glossary.html#1014561"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="cookie" nc:link="glossary.html#cookie"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="Cookie Manager" nc:link="glossary.html#Cookie_Manager"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="cryptographic algorithm" nc:link="glossary.html#1019976"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="cryptography" nc:link="glossary.html#1026002"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="decryption" nc:link="glossary.html#998999"/> </rdf:li>
@@ -42,6 +43,7 @@
         <rdf:li> <rdf:Description nc:name="fingerprint" nc:link="glossary.html#1020434"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="FIPS PUBS 140-1" nc:link="glossary.html#1025742"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="foreign cookie" nc:link="glossary.html#foreign_cookie"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="Form Manager" nc:link="glossary.html#Form_Manager"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="helper application" nc:link="glossary.html#helper_application"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="home page" nc:link="glossary.html#home_page"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Hypertext Markup Language (HTML)" nc:link="glossary.html#Hypertext_Markup_Language_(HTML)"/> </rdf:li>
@@ -53,15 +55,19 @@
         <rdf:li> <rdf:Description nc:name="JavaScript" nc:link="glossary.html#JavaScript"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="key" nc:link="glossary.html#999203"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Lightweight Directory Access Protocol (LDAP)" nc:link="glossary.html#1022286"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="location bar" nc:link="glossary.html#location_bar"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="Location Bar" nc:link="glossary.html#location_bar"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="master key" nc:link="glossary.html#1032598"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="master password" nc:link="glossary.html#1032744"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="misrepresentation" nc:link="glossary.html#1014057"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="navigation toolbar" nc:link="glossary.html#navigation_toolbar"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="Netscape Calendar" nc:link="glossary.html#Netscape_Calendar"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="Netscape Quality Feedback Agent" nc:link="glossary.html#netscape_talkback"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="nonrepudiation" nc:link="glossary.html#999248"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="object signing" nc:link="glossary.html#1014095"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="object-signing certificate" nc:link="glossary.html#1014097"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Online Certificate Status Protocol (OCSP)" nc:link="glossary.html#1029304"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="password-based authentication" nc:link="glossary.html#1014123"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="Password Manager" nc:link="glossary.html#Password_Manager"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="personal toolbar" nc:link="glossary.html#personal_toolbar"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="PKCS #11" nc:link="glossary.html#1025194"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="PKCS #11 module" nc:link="glossary.html#1025197"/> </rdf:li>
@@ -95,6 +101,7 @@
         <rdf:li> <rdf:Description nc:name="subordinate CA" nc:link="glossary.html#999541"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="symmetric encryption" nc:link="glossary.html#999604"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="tamper detection" nc:link="glossary.html#999618"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="third-party cookie" nc:link="glossary.html#third-party_cookie"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="TLS" nc:link="glossary.html#1027427"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="token" nc:link="glossary.html#1024528"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="TCP/IP (Transmission Control Protocol/Internet Protocol)" nc:link="glossary.html#tcp"/> </rdf:li>

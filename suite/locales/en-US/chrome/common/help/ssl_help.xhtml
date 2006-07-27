@@ -8,13 +8,13 @@
 </head>
 
 <body bgcolor="white">
+<div class="boilerplate">This document is provided by Netscape for your information only. It may help you take certain steps to protect the privacy and security of your personal information on the Internet. This document does not, however, address all online privacy and security issues, nor does it represent a recommendation by Netscape about what consitutes adequate privacy and security protection on the Internet.</div>
 
-
+<hr>
 <a NAME="settings:sslIDX"></a>
 <a NAME="ssl_settings"></a>
-<hr><h1>SSL Settings</h1>
-<p>This section describes how to set your SSL preferences and ciphers.  
-<p>&nbsp;</p>
+<h1>SSL Settings</h1>
+<p>This section describes how to set your SSL preferences and ciphers.</p>
 
 <table cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
 <tr>
@@ -25,6 +25,7 @@
 </td>
 </tr>
 </table>
+
 <p>&nbsp;</p>
 
 
@@ -39,9 +40,8 @@
 
 <ol>
 	<li>Open the Edit menu and choose Preferences.
-	<li>Under the Privacy &amp; Security category, choose SSL. (If no subcategories are visible, double-click Privacy &amp; Security to expand the list.)
+	<li>Under the Privacy &amp; Security category, choose SSL. (If no subcategories are visible, double-click Privacy &amp; Security to expand the list.)</li>
 </ol>
-<p>&nbsp;</p>
 
 <table cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
 <tr>
@@ -73,6 +73,11 @@ SSL. TLS 1.0 can be thought of as SSL 3.1.
 	<li><b>Enable SSL version 3:</b> Allows newer web servers to work with the browser.
 	<li><b>Enable TLS</b>. Allows web servers that support TLS to take advantage of it.</li>
 </ul>
+
+<p>To turn individual ciphers on or off, click the Edit Ciphers button:
+
+<ul><li><b>Edit Ciphers</b>. Don't attempt to edit ciphers individually unless you know exactly what you are doing and have cleared the changes with your system administrator. For more information, see <a href="#cipher_help">Edit Ciphers</a>. </li></ul>
+
 <p><b>Important note re TLS:</b> Some servers that do not implement SSL correctly cannot negotiate the SSL handshake with client software (such as the browser) that supports TLS. Such servers are known as "TLS intolerant."
 <p>When the Enable TLS option in the SSL preferences panel is selected, the browser attempts to use the TLS protocol when making secure connections with a server. If that connection fails because the server is TLS intolerant, the browser will fall back to using SSL 3.0.
 
@@ -86,10 +91,8 @@ SSL. TLS 1.0 can be thought of as SSL 3.1.
 If the connection is encrypted, the lock icon in the lower-right corner of the Navigator 
 window is locked. If the connection is not encrypted, the lock icon is unlocked.</P> 
 
-<p>For many people, the lock icon provides sufficient information about a page's 
-encryption status. If you want additional warnings, you can select one or more of 
-the warning checkboxes in the SSL preferences panel. Think 
-carefully about whether you want such warnings, since they can be annoying.
+<p>If you want additional warnings, you can select one or more of 
+the warning checkboxes in the SSL preferences panel. Some people find these warnings annoying.
 
 <p>To activate any of these Navigator warnings, select the corresponding checkbox:
 </P>
@@ -119,22 +122,7 @@ information that isn't encrypted. </b>If you send unencrypted information over t
 
 <p>The Edit Ciphers dialog box allows you to select or deselect ciphers, or <a href="glossary.html#cryptographic_algorithm">cryptographic algorithms</a>. Consult your system administrator before changing any of these settings.
 
-<p>Each checkbox corresponds to a cipher suite, or set of cryptographic algorithms. To view info information about a cipher suite, select its name. 
-
-<p>The following information is displayed for the selected cipher suite:
-
-<ul>
-	<li><b>Encryption algorithm:</b> Used for bulk encryption and decryption.
-	<li><b>Authentication Algorithm:</b> Used to determine the server or client's identity. 
-	<li><b>Key Algorithm:</b>  Governs the way in which the server and client determine the symmetric keys they will both use during an SSL session.
-	 <li><b>Key Size:</b> The size of the keys used with this cipher suite. (Encryption strength depends on both encryption algorithm and key size.)
-	<li><b>MAC Algorithm:</b> Used for tamper detection and data verification; sometimes called message digest or hash algorithm.
-	<li><b>Other Attributes.</b> These can include the following:</li>
-	<ul>
-		<li><b>FIPS.</b> Complies with Federal Information Processing Standards Publications (FIPS PUBS) 140-1. Many products sold to the US government must comply with one or more FIPS standards.
-		<li><b>IsExportable</b>. Cipher suite was legally exportable under regulations published by the U.S. Department of Commerce that previously limited the encryption strength of exported products. Those regulations have since been loosened.
-</ul>
-</ul>
+<p>Each checkbox corresponds to a cipher suite, or set of cryptographic algorithms. 
 
 <p>For more information about ciphers and encryption, see the following on-line documents:
 
@@ -147,7 +135,7 @@ information that isn't encrypted. </b>If you send unencrypted information over t
 <p>&nbsp;
 
 <hr>
-<p><i>6 June 2002</i></body>
+<p><i>13 June 2002</i></body>
 <p>Copyright &copy; 1994-2002 Netscape Communications Corporation.</p>
 
 </body>

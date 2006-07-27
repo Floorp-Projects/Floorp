@@ -8,7 +8,9 @@
 </head>
 
 <body bgcolor="white">
+<div class="boilerplate">This document is provided by Netscape for your information only. It may help you take certain steps to protect the privacy and security of your personal information on the Internet. This document does not, however, address all online privacy and security issues, nor does it represent a recommendation by Netscape about what consitutes adequate privacy and security protection on the Internet.</div>
 
+<hr>
 <a NAME="certificates:usingIDX"></a>
 <a NAME="using_certs_first"></a>
 <a NAME="certificates:aboutIDX"></a>
@@ -16,13 +18,13 @@
 <a NAME="ID_cardSDX"></a>
 <a NAME="identitySDX"></a>
 <a NAME="digital_IDSDX"></a>
-<hr><h1>Using Certificates</h1>
+<h1>Using Certificates</h1>
 
 <p>A certificate is the digital equivalent of an ID card. Just as you may have several ID cards for different purposes, such as a driver's license, an employee ID card, or a credit card, you can have several different certificates that identify you for different purposes.</p> 
 
 <P>This section describes how to perform operations related to certificates.</p>
 
-<table cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
+<table summary="list of headings" cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
 <tr>
 <td class="inthissection">
 <p>In this section:</p>
@@ -78,19 +80,19 @@
 <p>When you're viewing any web page, the lock icon near the lower-right corner of the window informs you whether the entire contents of the page was protected by <a href="glossary.html#encryption">encryption</a> while it was being received by your computer:</p>
 
 
-<table><tr><td>&nbsp;</td><td><img src="chrome://communicator/skin/icons/lock-secure.gif">&nbsp;</td><td>A closed lock means that the page was protected by encryption when it was received.</td></tr>
+<table summary="lock icons"> <tr><td>&nbsp;</td><td><img alt="closed lock icon"src="chrome://communicator/skin/icons/lock-secure.gif">&nbsp;</td><td>A closed lock means that the page was protected by encryption when it was received.</td></tr>
 	<tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
-	<tr><td>&nbsp;</td><td><img src="chrome://communicator/skin/icons/lock-insecure.gif">&nbsp;</td><td>An open lock means the page was not protected by encryption when it was received. </td></tr>
+	<tr><td>&nbsp;</td><td><img alt="open lock icon" src="chrome://communicator/skin/icons/lock-insecure.gif">&nbsp;</td><td>An open lock means the page was not protected by encryption when it was received. </td></tr>
 	<tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
-	<tr><td>&nbsp;</td><td><img src="chrome://communicator/skin/icons/lock-broken.gif">&nbsp;</td><td>A broken lock means that some or all of the elements within the page were not protected by encryption when the page was received, even though the outermost HTML page was encrypted.</td></tr>
+	<tr><td>&nbsp;</td><td><img alt="broken lock icon"src="chrome://communicator/skin/icons/lock-broken.gif">&nbsp;</td><td>A broken lock means that some or all of the elements within the page were not protected by encryption when the page was received, even though the outermost HTML page was encrypted.</td></tr>
 </table>
 
 <p>For more details about the encryption status of the page when it was received, click the lock icon (or open the View menu, choose Page Info, and click the Security tab).
 
 <p>The Security tab for Page Info provides two kinds of information:
 <ul>
-	<li>The top half describes whether the web site displaying the page has been verified. (For information on certificate verification, see <a href="#using_certs_validation">Controlling Validation</a>.)
-	<li>The bottom half describes whether the contents of the page you are viewing is protected by encryption while in transit over the network.
+	<li>The top half describes whether the web site displaying the page has been verified. (For information on certificate verification, see <a href="#using_certs_validation">Controlling Validation</a>.)</li>
+	<li>The bottom half describes whether the contents of the page you are viewing is protected by encryption while in transit over the network.</li>
 </ul>
 <p><b>Important:</b> The lock icon describes only the encryption status of the page while it was being received by your computer. To be notified before you send or receive information without encryption, select the appropriate SSL warning options. See <a href="ssl_help.html">Privacy &amp; Security Preferences - SSL</a> for details.
 
@@ -115,7 +117,7 @@
 	<li>In the Manage Certificates section, click Manage Certificates. You see the Certificate Manager.
 </ol>
 
-<p><table cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
+<p><table summary="list of headings" cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
 <tr>
 <td class="inthissection">
 <p>In this section:</p>
@@ -128,7 +130,7 @@
 </table>
 
 <p>&nbsp;</p>
-<a NAME="using_certs_my"></a><a NAME="certificates:your_ownIDX"></a><a NAME="using_certs_my"></a>
+<a NAME="using_certs_my"></a><a NAME="certificates:your_ownIDX"></a>
 <H2>Managing Certificates that Identify You</H2>
 
 
@@ -155,7 +157,7 @@
 </p>
 
 <p>&nbsp;</p>
-<a NAME="using_certs_others"></a><a NAME="certificates:other peopleIDX"></a><a NAME="using_certs_my"></a>
+<a NAME="using_certs_others"></a><a NAME="certificates:other peopleIDX"></a>
 <H2>Managing Certificates that Identify Others</H2>
 
 <p><p>When you compose a mail message, you can choose to attach your digital signature to it. A <a href="glossary.html#digital_signature">digital signature</a> allows recipients of the message to verify that the message really comes from you and hasn't been tampered with since you sent it.
@@ -236,7 +238,7 @@
 <p>A smart card is just one kind of security device. A security device (sometimes called a token) is a hardware or software device that provides cryptographic services and stores information about your identity. Use the Device Manager to work with smart cards and other security devices. 
 </p>
 
-<table cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
+<table summary="list of headings" cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
 <tr>
 <td class="inthissection">
 <p>In this section:</p>
@@ -391,14 +393,14 @@
 
 <p>This section describes how Certificate Manager validates certificates and how to control that process. To understand the process, you should have some familiarity with <a href="glossary.html#public-key_cryptography">public-key cryptography</a>. If you are not familiar with the use of certificates, you should check with your system administrator before attempting to change any of your browser's certificate validation settings.<p>
 
-<table cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
+<table summary="list of headings" cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
 <tr>
 <td class="inthissection">
 <p>In this section:</p>
 <p><a href="#How_Certificate_Validation_Works">How Validation Works</a></p>
 <p><a href="#Managing_CRLs">Managing CRLs</a></p>
 <p><a href="#Configuring_Certificate_Manager_for_OCSP">Configuring OCSP</a></p>
-<p><a href="validation_help.html">Validation Settings</a></p>
+<p><a href="#validation_help.html">Validation Settings</a></p>
 </td>
 </tr>
 </table>
@@ -409,7 +411,7 @@
 <a NAME="OCSP:aboutIDX"></a>
 <a NAME="CRLs:aboutIDX"></a>
 <a NAME="validation:aboutIDX"></a>
-<h2>How Validation Works</h2></a>
+<h2>How Validation Works</h2>
 
 <p>Whenever you use or view a certificate stored by Certificate Manager, it takes several steps to verify the certificate. At a minimum, it confirms that the CA's digital signature on the certificate was created by a CA whose own certificate is (1) present in the Certificate Manager's list of available CA certificates and (2) marked as trusted for issuing the kind of certificate being verified. 
 
@@ -419,7 +421,7 @@
 
 <p>One way to combat this threat is for Certificate Manager to check a certificate revocation list (CRL) as part of the verification process (see <a href="#Managing_CRLs">Managing CRLs</a>, below). Typically, you download a CRL to your browser by clicking a link. If a CRL is present, Certificate Manager checks any certificate issued by the same CA against the list as part of the verification process. 
 
-<p>The reliability of CRLs is subject to the frequency with which they are both updated by a server and checked by a client. You can configure your <a href="validation_help.html#auto_crl_update_prefs">Automatic CRL Update Preferences</a> so that a CRL will be updated automatically at regular intervals with the version currently on the server.
+<p>The reliability of CRLs depends on the frequency with which they are both updated by a server and checked by a client. You can configure your <a href="validation_help.html#auto_crl_update_prefs">Automatic CRL Update Preferences</a> so that a CRL will be updated automatically at regular intervals with the version currently on the server.
 
 <p>Another way to combat the threat of compromised certificates is to use a special server that supports the Online Certificate Status Protocol (OCSP). Such a server can answer client queries about individual certificates (see <a href="#Configuring_Certificate_Manager_for_OCSP">Configuring OCSP</a>, below). 
 
@@ -427,17 +429,16 @@
 
 
 <p>&nbsp;</p>
-<a name="Managing_CRLs"><h2>Managing CRLs</h2></a>
+<a name="Managing_CRLs"></a><h2>Managing CRLs</h2>
 
-
-<p>A certificate revocation list (CRL) is list of revoked certificates.  A <a href="glossary.html#certificate_authority (CA)">certificate authority (CA)</a>  might revoke a certificate, for example, if it has been compromised in some way&mdash;much the way a credit card company might revoke your credit card if you report that it's been stolen.
+<p>A certificate revocation list (CRL) is list of revoked certificates.  A <a href="glossary.html#certificate_authority (CA)">certificate authority (CA)</a> might revoke a certificate, for example, if it has been compromised in some way&mdash;much the way a credit card company might revoke your credit card if you report that it's been stolen.
 </p>
 
 <p>This section describes how to import and manage CRLs. <p>For background information, see <a href="#How_Certificate_Validation_Works">How Validation Works</a>. 
 
 <p>For detailed descriptions of CRL settings that you can control, see <a href="validation_help.html">Validation Settings</a>.</p>
 
-<table cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
+<table summary="list of headings" cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
 <tr>
 <td class="inthissection">
 <p>In this section:</p>
@@ -480,8 +481,8 @@
 	<li>Select the option labeled &quot;Enable Automatic Update for this CRL&quot;.
 	<li>Decide how you want to schedule the automatic updates:</li>
 	<ul>
-		<li><b>Update X days before Next Update date:</b> Select this option if you want to base the update frequency on the frequency with which the CRL publisher publishes a new version of the CRL.
-		<li><b>Update every X days:</b> Select this option if you want to specify an update interval unrelated to the CRL's Next Update date.
+		<li><b>Update __ days before Next Update date:</b> Select this option if you want to base the update frequency on the frequency with which the CRL publisher publishes a new version of the CRL.
+		<li><b>Update every __ days:</b> Select this option if you want to specify an update interval unrelated to the CRL's Next Update date.
 	</ul>
 	<li>Click OK to confirm your choices.
 </ol>
@@ -502,18 +503,18 @@
 
 <p>To set up automatic updates for a CRL, select the CRL and click Settings. The Automatic CRL Update Preferences dialog box appears:
 <ol>
-	<li>Select the option labeled &quot;Enable Automatic Update for this CRL&quot;.
+	<li>Select the option labeled &quot;Enable Automatic Update for this CRL&quot;.</li>
 	<li>Decide how you want to schedule the automatic updates:</li>
 	<ul>
-		<li><b>Update X days before Next Update date.</b> Select this option if you want to base the update frequency on the frequency with which the CRL publisher publishes a new version of the CRL.
-		<li><b>Update every X days.</b> Select this option if you want to specify an update interval unrelated to the CRL's Next Update date.
+		<li><b>Update __ days before Next Update date.</b> Select this option if you want to base the update frequency on the frequency with which the CRL publisher publishes a new version of the CRL.
+		<li><b>Update every __ days.</b> Select this option if you want to specify an update interval unrelated to the CRL's Next Update date.</li>
 	</ul>
-	<li>Click OK to confirm your choices.
+	<li>Click OK to confirm your choices.</li>
 </ol>
 
 
 <p>&nbsp;</p>
-<a name="Configuring_Certificate_Manager_for_OCSP"><h2>Configuring OCSP</h2></a>
+<a name="Configuring_Certificate_Manager_for_OCSP"></a><h2>Configuring OCSP</h2>
 
 
 <p>The settings that control OCSP are part of Validation preferences. To view Validation preferences, follow these steps:
@@ -531,7 +532,7 @@
 
 
 <hr>
-<p><i>9 June 2002</i></p>
+<p><i>13 June 2002</i></p>
 <p>Copyright &copy; 1994-2002 Netscape Communications Corporation.</p>
 
 </body>
