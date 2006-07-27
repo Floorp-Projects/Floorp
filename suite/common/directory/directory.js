@@ -64,9 +64,11 @@ function Init()
         if (httpDS) httpDS = httpDS.QueryInterface(Components.interfaces.nsIHTTPIndex);
         if (httpDS)
         {
-            // TO DO - The encoding should really be determined
-            // from the current encoding as chosen by the user
             httpDS.encoding = "ISO-8859-1";
+
+            // Use a default character set.
+            if (window._content.defaultCharacterset)
+              httpDS.encoding = window._content.defaultCharacterset;
         }
     }
 
