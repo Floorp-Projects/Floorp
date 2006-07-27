@@ -129,15 +129,22 @@ RDF_observer =
 function
 SetBusyCursor(window, enable)
 {
-    if(enable == true)
+    // Defensive check: setCursor() is only available for
+    // chrome windows. Since one of our frame might be a
+    // non-chrome window, make sure the window we treat has
+    // a setCursor method.
+    if("setCursor" in window)
     {
-        window.setCursor("wait");
-        debug("Directory: cursor=busy\n");
-    }
-    else
-    {
-        window.setCursor("auto");
-        debug("Directory: cursor=notbusy\n");
+        if(enable == true)
+        {
+            window.setCursor("wait");
+            debug("Directory: cursor=busy\n");
+        }
+        else
+        {
+            window.setCursor("auto");
+            debug("Directory: cursor=notbusy\n");
+        }
     }
 
     var numFrames = window.frames.length;
