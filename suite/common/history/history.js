@@ -184,7 +184,7 @@ nsHistoryController.prototype =
 }
 
 var historyDNDObserver = {
-  onDragStart: function (aEvent)
+  onDragStart: function (aEvent, aXferData, aDragAction)
   {
     var title = aEvent.target.getAttribute("label");
     var uri = aEvent.target.parentNode.parentNode.id;
@@ -192,13 +192,11 @@ var historyDNDObserver = {
       return null;
 
     var htmlString = "<A HREF='" + uri + "'>" + title + "</A>";
-    var flavourList = { };
-    flavourList["text/unicode"] = { width: 2, data: uri };
-    flavourList["text/html"] = { width: 2, data: htmlString };
-    flavourList["text/x-moz-url"] = { width: 2, data: uri + "\n" + title };
-    return flavourList;
+    aXferData.data = new TransferData();
+    aXferData.data.addDataForFlavour("text/unicode", uri);
+    aXferData.data.addDataForFlavour("text/html", htmlString);
+    aXferData.data.addDataForFlavour("text/x-moz-url", url + "\n" + title);
   }
-
 };
 
 function OpenURL(event, node, root)
