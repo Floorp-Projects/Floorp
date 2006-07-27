@@ -4,9 +4,9 @@
 # have installed perforce with P4DB to let your webserver render html
 # pages of your VC repository.
 
-# $Revision: 1.6 $ 
-# $Date: 2004/06/15 01:16:54 $ 
-# $Author: kestes%walrus.com $ 
+# $Revision: 1.7 $ 
+# $Date: 2006/07/27 16:31:07 $ 
+# $Author: bear%code-bear.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/VCDisplay/Perforce_P4DB.pm,v $ 
 # $Name:  $ 
 
@@ -174,8 +174,8 @@ sub prepare_perforce_args {
     ($args{'mindate'} && $args{'maxdate'}) && 
     ($args{'mindate'} > $args{'maxdate'}) && 
         (die (
-              "Perforce mindate is GREATER then maxdate.\n".
-              "Perforce requires that mindate be an earlier time then maxdate.\n".
+              "Perforce mindate is GREATER than maxdate.\n".
+              "Perforce requires that mindate be an earlier time than maxdate.\n".
               "mindate: $args{'mindate'}: ".time2p4db($args{'mindate'})."\n".
               "maxdate: $args{'maxdate'}: ".time2p4db($args{'maxdate'})."\n".
               ""));

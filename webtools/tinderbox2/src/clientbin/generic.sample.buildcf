@@ -24,9 +24,9 @@
 # variables substituted.
 
 
-# $Revision: 1.12 $ 
-# $Date: 2004/07/18 18:38:36 $ 
-# $Author: kestes%walrus.com $ 
+# $Revision: 1.13 $ 
+# $Date: 2006/07/27 16:31:06 $ 
+# $Author: bear%code-bear.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/clientbin/generic.sample.buildcf,v $ 
 # $Name:  $ 
 
@@ -149,7 +149,7 @@ sub build_scripts {
                      $args{'tree_name'}.
                      "");
     
-    # pick a time earlier then the current time. Check out the sources
+    # pick a time earlier than the current time. Check out the sources
     # as of that time and use that time as the name of the tar
     # file. Now anyone who wants to recreate the sources of the binary
     # tar can use the tarfile name to checkout the sources as if we had

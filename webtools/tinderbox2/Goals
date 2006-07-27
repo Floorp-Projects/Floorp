@@ -46,7 +46,7 @@ Improvements needed from Tinderbox1
     opened when the builds fail.
 
   * Greater flexibility in setting status of builds.  We may need more
-    graduations of failure then just 'busted' or 'test-failed' to
+    graduations of failure than just 'busted' or 'test-failed' to
     distinguish the types of tests which have failed.
 
   * Generated HTML must be readable and help isolate programming errors.

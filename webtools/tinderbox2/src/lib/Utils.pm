@@ -3,9 +3,9 @@
 # Utils.pm - General purpose utility functions.  Every project needs a
 # kludge bucket for common access.
 
-# $Revision: 1.41 $ 
-# $Date: 2004/07/18 17:58:39 $ 
-# $Author: kestes%walrus.com $ 
+# $Revision: 1.42 $ 
+# $Date: 2006/07/27 16:31:06 $ 
+# $Author: bear%code-bear.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Utils.pm,v $ 
 # $Name:  $ 
 
@@ -101,7 +101,7 @@ sub set_static_vars {
   $SMALLEST_VALID_TIME = (2000 * 1000 * 400);
 
   # It is easier to understand algorithms if you use named constants,
-  # rather then some mysterious constants hard coded into the code.
+  # rather than some mysterious constants hard coded into the code.
 
   $SECONDS_PER_MINUTE = (60);
   $SECONDS_PER_HOUR = (60*$SECONDS_PER_MINUTE);

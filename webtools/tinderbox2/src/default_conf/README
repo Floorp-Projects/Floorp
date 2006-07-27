@@ -34,7 +34,7 @@ FileStructure.pm - The lookup for where different file/directories,
 for each tree, are stored on the filesystem.  Local system
 administrator may need to put different trees onto different disk
 partitions and this will require making the directory structure less
-regular then we have defined it here.
+regular than we have defined it here.
 
 Error_Parser.pm - Used by processmail to turn the build logs into
 HTML.  Contains the parsing functions for highlighting the build

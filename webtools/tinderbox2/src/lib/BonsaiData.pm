@@ -7,9 +7,9 @@
 # module which uses this library is: lib/TinderDB/VC_Bonsai.pm
 
 
-# $Revision: 1.16 $ 
-# $Date: 2003/12/23 13:18:23 $ 
-# $Author: kestes%walrus.com $ 
+# $Revision: 1.17 $ 
+# $Date: 2006/07/27 16:31:06 $ 
+# $Author: bear%code-bear.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/BonsaiData.pm,v $ 
 # $Name:  $ 
 
@@ -205,7 +205,7 @@ sub get_tree_state {
 # We must set global variables to call query_checkins();
 
 # This function is used to prevent other modules from using this
-# global data, which would cause the code to become more nonlocal then
+# global data, which would cause the code to become more nonlocal than
 # it already is.
 
 sub undef_query_vars {

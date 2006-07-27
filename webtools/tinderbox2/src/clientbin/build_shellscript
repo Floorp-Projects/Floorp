@@ -35,9 +35,9 @@
 #     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
 
-# $Revision: 1.21 $
-# $Date: 2004/01/14 00:22:50 $
-# $Author: kestes%walrus.com $
+# $Revision: 1.22 $
+# $Date: 2006/07/27 16:31:06 $
+# $Author: bear%code-bear.com $
 # $Name:  $
 
 
@@ -75,7 +75,7 @@ Global Options:
   --test                 Print the build commands, do not run the build 
 			     commands or mail logs.
   --build BUILDTYPE      The name of the build type to run. You may specify
-			 more then one build on the command line by 
+			 more than one build on the command line by 
 			 separating build types with colons (':') each build 
 			 will be run in the order given. This will result in 
 			 gaps in each of the tinderbox display pages. If you 
@@ -83,7 +83,7 @@ Global Options:
 			 then run several copies of this program.
 
   --tree TREENAME        Checkout sources with tree (module and branch)
-			 TREENAME. You may specify more then one build on
+			 TREENAME. You may specify more than one build on
 			 the command line by separating build types with 
 			 colons (':') each build will be run in the order
 			 given. This will result in gaps in each of the
@@ -183,7 +183,7 @@ page the information will be displayed on.  The tinderbox build name
 is the name used for the column that the data will be displayed in.
 Typically there is one daemon running continually for each column of
 each page. It may be clearer to have different build names display on
-the tinderbox columns then are used by this build script.
+the tinderbox columns than are used by this build script.
 
 Users should provide functions which prepare the tinderbox tree and
 build name based on both the command line arguments and the
@@ -236,7 +236,7 @@ sub set_static_vars {
   $BUILDCF = "buildcf";
 
   # minimum time between the start of consecutive builds.  Tinderbox
-  # requires this to be greater then 5 minutes.
+  # requires this to be greater than 5 minutes.
 
   $MINIMUM_BUILD_SECONDS = 8*60;
 

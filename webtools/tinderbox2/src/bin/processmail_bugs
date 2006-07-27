@@ -23,9 +23,9 @@
 
 
 
-# $Revision: 1.15 $ 
-# $Date: 2005/11/25 21:57:07 $ 
-# $Author: timeless%mozdev.org $ 
+# $Revision: 1.16 $ 
+# $Date: 2006/07/27 16:31:06 $ 
+# $Author: bear%code-bear.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/processmail_bugs,v $ 
 # $Name:  $ 
 
@@ -374,7 +374,7 @@ sub set_tinderbox_variables {
   foreach $tree (@trees) {
     
       # It is easier to ignore trees we do not know about here rather
-      # then to make the BTData module depend on the TreeData module.
+      # than to make the BTData module depend on the TreeData module.
 
       ($tree) || next;
       $TreeData::VC_TREE {$tree} || next;

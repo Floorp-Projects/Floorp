@@ -1,12 +1,12 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
-# MailProcess.pm - all the functions which are used by more then one
+# MailProcess.pm - all the functions which are used by more than one
 # mailprocessing program.
 
 
-# $Revision: 1.15 $ 
-# $Date: 2005/11/25 21:57:09 $ 
-# $Author: timeless%mozdev.org $ 
+# $Revision: 1.16 $ 
+# $Date: 2006/07/27 16:31:06 $ 
+# $Author: bear%code-bear.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/MailProcess.pm,v $ 
 # $Name:  $ 
 

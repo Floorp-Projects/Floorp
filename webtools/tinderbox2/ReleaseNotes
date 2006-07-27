@@ -31,7 +31,7 @@ Release ???
     Add support for build machines to tell the server to add text/links 
     into build cells (TinderboxPrint).
 
-    When builds are started too frequently (more then once every five minutes) 
+    When builds are started too frequently (more than once every five minutes) 
     newest build is now kept and oldest build is thrown away.
 
     New Configure script contributed by Stephen Lamm (slamm@yahoo-inc.com)

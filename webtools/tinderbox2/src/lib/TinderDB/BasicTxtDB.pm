@@ -6,9 +6,9 @@
 # as a Dump of the $DATABASE reference.
 
 
-# $Revision: 1.14 $ 
-# $Date: 2005/11/25 21:57:10 $ 
-# $Author: timeless%mozdev.org $ 
+# $Revision: 1.15 $ 
+# $Date: 2006/07/27 16:31:07 $ 
+# $Author: bear%code-bear.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/BasicTxtDB.pm,v $ 
 # $Name:  $ 
 
@@ -48,7 +48,7 @@ use FileStructure;
 use Persistence;
 
 
-$VERSION = ( qw $Revision: 1.14 $ )[1];
+$VERSION = ( qw $Revision: 1.15 $ )[1];
 
 
 # To help preserve the database in the event of a serious system
@@ -251,7 +251,7 @@ sub savetree_db {
 
 
 
-# remove all records from the database which are older then last_time.
+# remove all records from the database which are older than last_time.
 
 sub trim_db_history {
   my ($self, $tree,) = (@_);

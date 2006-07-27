@@ -33,9 +33,9 @@
 #     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
 
-# $Revision: 1.37 $ 
-# $Date: 2005/11/25 21:57:10 $ 
-# $Author: timeless%mozdev.org $ 
+# $Revision: 1.38 $ 
+# $Date: 2006/07/27 16:31:07 $ 
+# $Author: bear%code-bear.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_CVS.pm,v $ 
 # $Name:  $ 
 
@@ -137,7 +137,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.37 $ )[1];
+$VERSION = ( qw $Revision: 1.38 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -199,7 +199,7 @@ sub parse_cvs_time {
   my ($time) = timegm($sec,$min,$hours,$mday,$mon,$year);    
 
   # This fix is needed every year on Jan 1. On that day $time is
-  # nearly a year in the future so is much bigger then $main::TIME.
+  # nearly a year in the future so is much bigger than $main::TIME.
 
   if ( ($time - $main::TIME) > $main::SECONDS_PER_MONTH) {
     $time = timegm($sec,$min,$hours,$mday,$mon,$year - 1);    
@@ -210,7 +210,7 @@ sub parse_cvs_time {
   if ( (($main::TIME - $main::SECONDS_PER_YEAR) > $time) || 
        (($main::TIME + $main::SECONDS_PER_MONTH) < $time) ) {
     die("CVS reported time: $time ".scalar(gmtime($time)).
-        " which is more then a year away from now or in the future.\n");
+        " which is more than a year away from now or in the future.\n");
   }
 
   return $time;
@@ -233,7 +233,7 @@ sub time2cvsformat {
 }
 
 
-# remove all records from the database which are older then last_time.
+# remove all records from the database which are older than last_time.
 
 sub trim_db_history {
   my ($self, $tree,) = (@_);
@@ -439,7 +439,7 @@ sub apply_db_updates {
   # duplicates.
 
   # If we have three data points in a row, and all of them have the
-  # same state and the oldest is less then an hour old, then we can
+  # same state and the oldest is less than an hour old, then we can
   # delete the middle state.  While writing this code I kept trying to
   # make do with only one older state being remembered.  The problem
   # is that if you keep deleting the oldest member you always have
@@ -577,7 +577,7 @@ sub apply_db_updates {
         if ( (($main::TIME - $main::SECONDS_PER_YEAR) > $time) || 
              (($main::TIME + $main::SECONDS_PER_MONTH) < $time) ) {
           die("CVS reported time: $time ".gmtime($time).
-              " which is more then a year away from now.\n")
+              " which is more than a year away from now.\n")
         }
 
         $author = main::extract_user($author);
@@ -683,7 +683,7 @@ sub status_table_start {
   @DB_TIMES = sort {$b <=> $a} keys %{ $DATABASE{$tree} };
 
   # adjust the $NEXT_DB to skip data which came after the first cell
-  # at the top of the page.  We make the first cell bigger then the
+  # at the top of the page.  We make the first cell bigger than the
   # rest to allow for some overlap between pages.
 
   my ($first_cell_seconds) = 2*($row_times->[0] - $row_times->[1]);
@@ -710,7 +710,7 @@ sub status_table_row {
   my (@outrow) = ();
 
   # we assume that tree states only change rarely so there are very
-  # few cells which have more then one state associated with them.
+  # few cells which have more than one state associated with them.
   # It does not matter what we do with those cells.
   
   # find all the authors who changed code at any point in this cell

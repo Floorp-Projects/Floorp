@@ -26,9 +26,9 @@
 #     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
 
-# $Revision: 1.13 $
-# $Date: 2005/11/25 21:57:08 $
-# $Author: timeless%mozdev.org $
+# $Revision: 1.14 $
+# $Date: 2006/07/27 16:31:06 $
+# $Author: bear%code-bear.com $
 # $Name:  $
 
 
@@ -89,7 +89,7 @@ A new build is completed about once an hour and this script is used
 to ensure that recent files and a few historical files are saved.
 
 The files are sorted by date and kept according to this rule: The most
-recent min-archive-files are kept and if there are more then
+recent min-archive-files are kept and if there are more than
 min-archive-files then additionally one file each day is kept for the
 previous max-archive-days.  All other files are deleted.
 
@@ -345,7 +345,7 @@ sub purge_dirs {
 # this is necessary because our filenames are so long (embedded
 # date/time) that by default browsers do not show the full name in a
 # directory listing. However if we put the names in an index.html file
-# then the bwoser displays the filenames, no matter how long they are.
+# then the browser displays the filenames, no matter how long they are.
 
 
 sub print_dirs_index {

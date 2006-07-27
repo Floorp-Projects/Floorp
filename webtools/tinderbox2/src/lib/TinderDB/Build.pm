@@ -7,9 +7,9 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.68 $ 
-# $Date: 2005/11/25 19:47:48 $ 
-# $Author: timeless%mozdev.org $ 
+# $Revision: 1.69 $ 
+# $Date: 2006/07/27 16:31:07 $ 
+# $Author: bear%code-bear.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
 
@@ -476,7 +476,7 @@ sub loadtree_db {
 }
 
 
-# remove all records from the database which are older then
+# remove all records from the database which are older than
 # $TinderDB::TRIM_SECONDS.  Since we are making a pass over all
 # data this is a good time to find the average run time of the build.
 # Both of these operations need not be run every time the database is
@@ -537,7 +537,7 @@ sub trim_db_history {
     pop @run_times;
     pop @dead_times;
 
-    # medians are a more robust statistical estimator then the mean.
+    # medians are a more robust statistical estimator than the mean.
     # They will give us better answers than a typical "average"
 
     delete $DATABASE{$tree}{$buildname}{'average_buildtime'};
@@ -1000,7 +1000,7 @@ sub apply_db_updates {
 
       ($starttime <= $timenow) ||
         die("Error in updatefile: $file, ".
-            "starttime: $starttime, is less then timenow: $timenow.");
+            "starttime: $starttime, is less than timenow: $timenow.");
 
    }  
 
@@ -1018,7 +1018,7 @@ sub apply_db_updates {
       my ($different_builds) = ($record->{'starttime'} !=
                                 $previous_rec->{'starttime'});
 
-      # Keep the spacing between builds greater then our HTML grid
+      # Keep the spacing between builds greater than our HTML grid
       # spacing.  There can be very frequent updates for any build
       # but different builds must be spaced apart.
 
@@ -1186,7 +1186,7 @@ sub status_table_start {
   # the first element of $row_times.
 
   # adjust the $NEXT_DB to skip data which came after the first cell
-  # at the top of the page.  We make the first cell bigger then the
+  # at the top of the page.  We make the first cell bigger than the
   # rest to allow for some overlap between pages.
 
   my ($first_cell_seconds) = 2*($row_times->[0] - $row_times->[1]);

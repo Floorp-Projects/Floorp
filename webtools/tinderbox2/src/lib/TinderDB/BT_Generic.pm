@@ -35,9 +35,9 @@
 # Contributor(s): 
 
 
-# $Revision: 1.24 $ 
-# $Date: 2003/08/17 01:37:52 $ 
-# $Author: kestes%walrus.com $ 
+# $Revision: 1.25 $ 
+# $Date: 2006/07/27 16:31:07 $ 
+# $Author: bear%code-bear.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/BT_Generic.pm,v $ 
 # $Name:  $ 
 
@@ -76,7 +76,7 @@ use VCDisplay;
 use TinderDB::Notice;
 
 
-$VERSION = ( qw $Revision: 1.24 $ )[1];
+$VERSION = ( qw $Revision: 1.25 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -379,7 +379,7 @@ sub status_table_start {
   @DB_TIMES = sort {$b <=> $a} keys %{ $DATABASE{$tree} };
 
   # adjust the $NEXT_DB to skip data which came after the first cell
-  # at the top of the page.  We make the first cell bigger then the
+  # at the top of the page.  We make the first cell bigger than the
   # rest to allow for some overlap between pages.
 
   my ($first_cell_seconds) = 2*($row_times->[0] - $row_times->[1]);

@@ -46,7 +46,7 @@ understand the policies which are used to administer your web server.
     id.  It is suggested that this id not be a privileged id (higher
     ids are better, please make this number be greater than 10 and
     bigger than 100 is recommended). Smaller ids are often assumed to
-    have more privileges on a Unix box then larger ids. It is not a
+    have more privileges on a Unix box than larger ids. It is not a
     good idea for an un-authenticated user to have any privileges so a
     large id is recommended.
 
@@ -57,7 +57,7 @@ understand the policies which are used to administer your web server.
     RedHat runs all its CGI scripts as the user 'apache', this is an
     acceptable user.  I would prefer to have a separate user to run the
     Tinderbox2 CGI scripts but this would require recompiling apache to
-    enable suEXEC, and it is more effort then most groups can afford.
+    enable suEXEC, and it is more effort than most groups can afford.
 
   * Tinderbox2 Files. There are other Tinderbox2 files which need to
     be placed on the web server.  These include libraries and non-cgi

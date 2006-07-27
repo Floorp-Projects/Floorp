@@ -10,7 +10,7 @@ milestone was reached and metrics were finally examined major rework
 was needed to bring the code into compliance.  Tinderbox makes it very
 cheap to continual monitor a wide variety of metrics and identify
 incremental problems with the code.  It is much easier to keep an
-application in compliance with a set of metrics then it is to "bring
+application in compliance with a set of metrics than it is to "bring
 an application into compliance".
 
 While tinderbox can not reduce the coding effort needed to use a large

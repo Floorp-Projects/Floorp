@@ -28,9 +28,9 @@
 #     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
 
-# $Revision: 1.28 $ 
-# $Date: 2003/08/17 01:37:52 $ 
-# $Author: kestes%walrus.com $ 
+# $Revision: 1.29 $ 
+# $Date: 2006/07/27 16:31:07 $ 
+# $Author: bear%code-bear.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Notice.pm,v $ 
 # $Name:  $ 
 
@@ -83,7 +83,7 @@ use VCDisplay;
 use HTMLPopUp;
 use TinderDB::BasicTxtDB;
 
-$VERSION = ( qw $Revision: 1.28 $ )[1];
+$VERSION = ( qw $Revision: 1.29 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -191,7 +191,7 @@ sub apply_db_updates {
 
 
 
-# remove all records from the database which are older then last_time.
+# remove all records from the database which are older than last_time.
 
 sub trim_db_history {
   my ($self, $tree, ) = (@_);
@@ -225,7 +225,7 @@ sub status_table_start {
   # not want the first row to have all of todays data in it.
 
   # Adjust the $NEXT_DB to skip data which came after the first cell
-  # at the top of the page.  We make the first cell bigger then the
+  # at the top of the page.  We make the first cell bigger than the
   # rest to allow for some overlap between pages which start and stop
   # on the same time.
 

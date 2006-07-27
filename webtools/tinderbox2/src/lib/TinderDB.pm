@@ -17,8 +17,8 @@
 #     Time Column, Version Control (VC) checkin lists, 
 #     notice board display,  build display (colored squares)
 
-# $Revision: 1.23 $ 
-# $Date: 2005/10/19 04:20:35 $ 
+# $Revision: 1.24 $ 
+# $Date: 2006/07/27 16:31:06 $ 
 # $Author: bear%code-bear.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB.pm,v $ 
 # $Name:  $ 
@@ -619,8 +619,8 @@ the static HTML files which describe the state of the build.  When
 Tinderbox2 runs it looks for files with the known prefix then it reads
 each one in turn, loads it into a common database then deletes the
 file.  To ensure that Tinderbox2 never encounters a partially written
-file each file is written to the disk using a name with a different
-prefix then the server looks for (beginning with 'Tmp') then the name
+file, each file is written to the disk using a name with a different
+prefix than the server looks for (beginning with 'Tmp'), then the name
 is changed to be the name Tinderbox2 looks for.  Since name changes, on
 Unix systems, in the same directory, are atomic, Tinderbox2 will never
 be confused by incomplete updates.
@@ -635,9 +635,9 @@ it can shade the VC column correctly.  This does not require any
 locking or data storage on the part of the TreeState module.
 
 The Tinderbox2 server can be run by the web server in cgi_mode (non
-daemon_mode) this does not allow any databases to be updated and does
+daemon_mode), and this does not allow any databases to be updated and does
 not update any static HTML files but will allow users to generate the
-build data pages using different configuration parameters then is
+build data pages using different configuration parameters than is
 standard.
 
 The Tinderbox2 server does not use any information about the internal
@@ -714,10 +714,10 @@ called.
 
 =item B<trim_db_history>
 
-Purge any history from this tree's database which is older then the
+Purge any history from this tree's database which is older than the
 time given.  This should not be called directly, rather it is called
 every time the number of updates made by apply_db_updates() since the
-last purge is greater then $MAX_UPDATES_SINCE_TRIM.
+last purge is greater than $MAX_UPDATES_SINCE_TRIM.
 
 =back
 

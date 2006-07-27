@@ -2,13 +2,13 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# rmlogs - remove the log files which are older then the number of
+# rmlogs - remove the log files which are older than the number of
 #          days set in TinderConfig.  This program should be 
 # 	   run from cron daily.
 
-# $Revision: 1.10 $ 
-# $Date: 2003/08/17 00:44:05 $ 
-# $Author: kestes%walrus.com $ 
+# $Revision: 1.11 $ 
+# $Date: 2006/07/27 16:31:06 $ 
+# $Author: bear%code-bear.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/rmlogs,v $ 
 # $Name:  $ 
 
@@ -58,7 +58,7 @@ $FULL_TRIM = $TinderConfig::FULL_LOG_TRIM_DAYS || 7;
 
 
 
-# If the argument to this function is a log file which is older then
+# If the argument to this function is a log file which is older than
 # $old_days, we remove the file.
 
 sub rm_logfile {

@@ -245,7 +245,7 @@ the other files depending on how you wish to have Tinderbox configured.
 
 10. Configure the build machines to mail their build logs (with Tinderbox2
     variables on the top) to the web server machine.  New builds must not
-    start earlier then 6 minutes after the last build started.  Each build
+    start earlier than 6 minutes after the last build started.  Each build
     machine mails the build log of each build and puts some build data at
     the top of the log.  Build information includes whether the build was
     a success, which error parsers to use on the log file and what build

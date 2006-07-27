@@ -8,9 +8,9 @@
 # URL.
 
 
-# $Revision: 1.17 $ 
-# $Date: 2003/08/17 00:57:35 $ 
-# $Author: kestes%walrus.com $ 
+# $Revision: 1.18 $ 
+# $Date: 2006/07/27 16:31:07 $ 
+# $Author: bear%code-bear.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/genbuilds.tst,v $ 
 # $Name:  $ 
 #
@@ -90,10 +90,10 @@ sub rand_runtime {
 
   if ( (rand 2) > 1 ) {
     # mostly at the grid size boarder
-    # but there will be plenty smaller then gridsize
+    # but there will be plenty smaller than gridsize
     $runtime = (rand 5) + (rand 5);
   } else {
-    # always bigger then grid size. 
+    # always bigger than grid size. 
     $runtime = (rand 15) + 15;
   }
   
@@ -120,10 +120,10 @@ sub rand_gap {
 
   if ( (rand 2) > 1 ) {
     # mostly at the grid size boarder
-    # but there will be plenty smaller then gridsize
+    # but there will be plenty smaller than gridsize
     $gap = (rand 5) + (rand 5);
   } else {
-    # always bigger then grid size. 
+    # always bigger than grid size. 
     $gap = (rand 15) + 15;
   }
   
@@ -203,7 +203,7 @@ sub gen_rnd_build {
   
   my ($runtime) = rand_runtime();
   
-  # If the run was less then six minutes increase the gap between
+  # If the run was less than six minutes increase the gap between
   # start times.
   
   my ($run_gap) = (6*60) - $runtime;

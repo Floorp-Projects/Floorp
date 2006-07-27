@@ -12,9 +12,9 @@
 # server.  No locks are used by the mail processes, data is passed to
 # the tinderbox server in a maildir like format.
 
-# $Revision: 1.36 $ 
-# $Date: 2004/07/18 18:37:46 $ 
-# $Author: kestes%walrus.com $ 
+# $Revision: 1.37 $ 
+# $Date: 2006/07/27 16:31:06 $ 
+# $Author: bear%code-bear.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/processmail_builds,v $ 
 # $Name:  $ 
 
@@ -152,7 +152,7 @@ compilation the build machine has progressed.
 HTTP Post
 
 This script can also process mail which is sent via HTTP Post rather
-then SMTP.  To use this feature simply put this script in the CGI bin
+than SMTP.  To use this feature simply put this script in the CGI bin
 directory and make sure that your webserver will accept posts to this
 executable.  This may require changing the name of this executable to
 end in '.cgi' or some other extension as your local security policy
@@ -1010,7 +1010,7 @@ sub parse_mail_body {
 
     push @lastlines, $html[1];
     
-    # don't keep more lines of history then we need
+    # don't keep more lines of history than we need
     
     if ( !( $#lastlines & 127 ) ){
       my ($first) = $#lastlines - $Error_Parse::LINES_BEFORE_ERROR; 

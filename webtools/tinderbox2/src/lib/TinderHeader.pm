@@ -8,9 +8,9 @@
 #	 TreeState, Build, IgnoreBuilds, MOTD, Images, 
 
 
-# $Revision: 1.12 $ 
-# $Date: 2005/11/25 21:57:09 $ 
-# $Author: timeless%mozdev.org $ 
+# $Revision: 1.13 $ 
+# $Date: 2006/07/27 16:31:06 $ 
+# $Author: bear%code-bear.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderHeader.pm,v $ 
 # $Name:  $ 
 
@@ -319,7 +319,7 @@ The message of the day as set by the administrators.
 =over 4
 
 Headers are Administrative functions and are performed rarely (less
-then once an hour) and no historical data is preserved.  So there is
+than once an hour) and no historical data is preserved.  So there is
 no locking or moving of files for these functions.  An effort is made
 to keep the updates of these files atomic so that the rendering of any
 HTML pages will not be effected by an update.  The data is stored in

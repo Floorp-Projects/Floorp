@@ -6,9 +6,9 @@
 #		 displayed on the tinderbox status page.
 
 
-# $Revision: 1.25 $ 
-# $Date: 2004/04/19 12:42:16 $ 
-# $Author: kestes%walrus.com $ 
+# $Revision: 1.26 $ 
+# $Date: 2006/07/27 16:31:06 $ 
+# $Author: bear%code-bear.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/addnote.cgi,v $ 
 # $Name:  $ 
 
@@ -80,7 +80,7 @@ sub timestring2time {
         $time = timelocal($sec,$min,$hours,$mday,$mon,$year);    
 
         # This fix is needed every year on Jan 1. On that day $time is
-        # nearly a year in the future so is much bigger then $main::TIME.
+        # nearly a year in the future so is much bigger than $main::TIME.
         
         if ( ($time - $main::TIME) > $main::SECONDS_PER_MONTH) {
             $time = timelocal($sec,$min,$hours,$mday,$mon,$year - 1);    

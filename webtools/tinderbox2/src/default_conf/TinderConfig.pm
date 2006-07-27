@@ -5,9 +5,9 @@
 # customizable settings.
 
 
-# $Revision: 1.53 $ 
-# $Date: 2005/11/25 19:47:47 $ 
-# $Author: timeless%mozdev.org $ 
+# $Revision: 1.54 $ 
+# $Date: 2006/07/27 16:31:06 $ 
+# $Author: bear%code-bear.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
 
@@ -72,7 +72,7 @@ $ENV{'PATH'}=  (
 
 # The user/group ids which tinderbox will run as. Hopefully these
 # integers are out of the restricted range (bigger is safer, bigger
-# then 100 is ideal but bigger than 25 is recommended.).
+# than 100 is ideal but bigger than 25 is recommended.).
 
 $TINDERBOX_UID=3310;
 $TINDERBOX_GID=3310;
@@ -160,7 +160,7 @@ $REFRESH_TIME = (60 * 15);
 # libraries deprecated. You may wish to run the test vcdisplay.tst to
 # see samples of all the windows.
 
-# Overlib : this library is a bit larger then the rest but I am
+# Overlib : this library is a bit larger than the rest but I am
 #            particularly fond of the portable and supported 
 #	     windows it creates.
 # MozillaClick: Should be bortable to all browsers written my the
@@ -191,7 +191,7 @@ $PopUpImpl = (
 # These uses determine the columns of the build page and their
 # include order is the order in which the columns are displayed.
 
-# The time Column can occur more then once if you like.
+# The time Column can occur more than once if you like.
 
 
 # The main choice of implementations is how to gather information
@@ -202,8 +202,8 @@ $PopUpImpl = (
 	   'TinderDB::Time',
 
            # If you development spans multiple time zones you may wish
-           # to display a time other then the time on the server. More
-           # then one time column can be included if you
+           # to display a time other than the time on the server. More
+           # than one time column can be included if you
            # desire. Time_UTC displays the UTC time while Time_Local
            # will use JavaScript to compute the correct time for each
            # browser.
@@ -296,7 +296,7 @@ $DB_TRIM_SECONDS = (60 * 60 * 24 * 8);
 $SECONDS_AGO_ACCEPTABLE = (60 * 60 * 10);
 
 # set this to zero to enforce the client machines never having a
-# faster clock then the server machine.
+# faster clock than the server machine.
 
 $SECONDS_FROM_NOW_ACCEPTABLE = (60 * 10);
 
@@ -464,7 +464,7 @@ $FULL_LOG_TRIM_DAYS = 8;
 # Should we write performance data to the log file?
 # zero means no, one means yes.
 # This is useful to see if on average the time it takes to create the
-# pages is longer then the time between runs of the pages.
+# pages is longer than the time between runs of the pages.
 
 
 $LOG_PERFORMANCE = 0;

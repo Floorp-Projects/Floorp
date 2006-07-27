@@ -45,7 +45,7 @@ The files in this directory follow several conventions:
 The library files in this directory:
 
   MailProcess.pm
-      All the functions which are used by more then one mail
+      All the functions which are used by more than one mail
       processing program.
 
   Persistence.pm

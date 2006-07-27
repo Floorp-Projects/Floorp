@@ -40,9 +40,9 @@
 
 
 
-# $Revision: 1.9 $ 
-# $Date: 2005/11/25 19:47:48 $ 
-# $Author: timeless%mozdev.org $ 
+# $Revision: 1.10 $ 
+# $Date: 2006/07/27 16:31:07 $ 
+# $Author: bear%code-bear.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/BT_Req.pm,v $ 
 # $Name:  $ 
 
@@ -80,7 +80,7 @@ use VCDisplay;
 
 
 
-$VERSION = ( qw $Revision: 1.9 $ )[1];
+$VERSION = ( qw $Revision: 1.10 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -89,7 +89,7 @@ $VERSION = ( qw $Revision: 1.9 $ )[1];
 $REQ_NAME = $TinderConfig::REQ_NAME || "Req";
 
 # Return the oldest time we have data for.
-# This should not be older then the time we would keep if we 
+# This should not be older than the time we would keep if we 
 # were to trim the database now.
 
 sub find_last_data {
@@ -309,7 +309,7 @@ sub status_table_start {
   @DB_TIMES = sort {$b <=> $a} keys %{ $DATABASE{$tree} };
 
   # adjust the $NEXT_DB to skip data which came after the first cell
-  # at the top of the page.  We make the first cell bigger then the
+  # at the top of the page.  We make the first cell bigger than the
   # rest to allow for some overlap between pages.
 
   my ($first_cell_seconds) = 2*($row_times->[0] - $row_times->[1]);

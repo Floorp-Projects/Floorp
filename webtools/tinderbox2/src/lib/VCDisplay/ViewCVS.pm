@@ -9,8 +9,8 @@
 # query.  I would add these features into ViewCVS but I can not tell
 # if the project is abandoned or not.
 
-# $Revision: 1.2 $ 
-# $Date: 2005/12/01 07:17:12 $ 
+# $Revision: 1.3 $ 
+# $Date: 2006/07/27 16:31:07 $ 
 # $Author: bear%code-bear.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/VCDisplay/ViewCVS.pm,v $ 
 # $Name:  $ 
@@ -170,8 +170,8 @@ sub prepare_bonsai_args {
     ($args{'mindate'} && $args{'maxdate'}) && 
     ($args{'mindate'} > $args{'maxdate'}) && 
         (die (
-              "Bonsai mindate is GREATER then maxdate.\n".
-              "Bonsai requires that mindate be an earlier time then maxdate.\n".
+              "Bonsai mindate is GREATER than maxdate.\n".
+              "Bonsai requires that mindate be an earlier time than maxdate.\n".
               "mindate: $args{'mindate'}: ".time2bonsai($args{'mindate'})."\n".
               "maxdate: $args{'maxdate'}: ".time2bonsai($args{'maxdate'})."\n".
               ""));
