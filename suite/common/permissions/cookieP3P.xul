@@ -75,7 +75,8 @@
     try {
       // set prefLevel radio button
       p3pLevel = pref.getIntPref("network.cookie.p3plevel");
-      document.getElementById("p3pLevel").childNodes[p3pLevel].checked = true;
+      var radio = document.getElementById("p3pLevel");
+      radio.selectedItem = radio.childNodes[p3pLevel];
 
       // set custom settings
       if (p3pLevel == custom) {
