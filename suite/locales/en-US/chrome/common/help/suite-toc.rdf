@@ -1176,6 +1176,7 @@
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li><rdf:Description ID="shortcuts_navigator_bookmarks" nc:name="Bookmark Shortcuts" nc:link="chrome://help/locale/shortcuts-navigator.xhtml#bookmarks_shortcuts"/> </rdf:li>
+        <rdf:li><rdf:Description ID="shortcuts_navigator_page_navigation" nc:name="Page Navigation Shortcuts" nc:link="chrome://help/locale/shortcuts-navigator.xhtml#page_navigation_shortcuts"/> </rdf:li>
         <rdf:li><rdf:Description ID="shortcuts_navigator_page_viewing" nc:name="Page Viewing Shortcuts" nc:link="chrome://help/locale/shortcuts-navigator.xhtml#page_viewing_shortcuts"/> </rdf:li>
         <rdf:li><rdf:Description ID="shortcuts_navigator_tabbed_browsing" nc:name="Tabbed Browsing Shortcuts" nc:link="chrome://help/locale/shortcuts-navigator.xhtml#tabbed_browsing_shortcuts"/> </rdf:li>
         <rdf:li><rdf:Description ID="shortcuts_navigator_sidebar" nc:name="Sidebar Shortcuts" nc:link="chrome://help/locale/shortcuts-navigator.xhtml#sidebar_shortcuts"/> </rdf:li>
