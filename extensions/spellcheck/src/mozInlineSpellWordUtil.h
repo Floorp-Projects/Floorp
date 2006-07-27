@@ -35,8 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozITXTToHTMLConv.h"
-
 #include "nsCOMPtr.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentRange.h"
@@ -136,9 +134,6 @@ private:
   nsIDOMNode* mRootNode;
   NodeOffset  mSoftBegin;
   NodeOffset  mSoftEnd;
-
-  // lazily created, may be NULL
-  nsCOMPtr<mozITXTToHTMLConv> mURLDetector;
 
   // DOM text covering the soft range, with newlines added at block boundaries
   nsString mSoftText;
