@@ -66,7 +66,7 @@
 
 		<template>
 			<rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-        <treechildren>
+				<treechildren>
   				<treeitem uri="..." rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
   					<treerow>
   						<treecell>
@@ -74,14 +74,16 @@
   						</treecell>
   					</treerow>
   				</treeitem>  	
-        </treechildren>	
+				</treechildren>	
 			</rule>
 
 			<rule>
-        <treechildren>
+				<treechildren>
   				<treeitem uri="..." rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
   					<treerow>
-  						<treecell align="left" crop="right" class="iconic" src="rdf:http://home.netscape.com/NC-rdf#Icon" value="rdf:http://home.netscape.com/NC-rdf#Name" />
+  						<treecell>
+  							<titledbutton align="left" crop="right" class="iconic" src="rdf:http://home.netscape.com/NC-rdf#Icon" value="rdf:http://home.netscape.com/NC-rdf#Name" />
+  						</treecell>
   						<treecell align="center" crop="right" value="rdf:http://home.netscape.com/NC-rdf#PageRank" />
   						<treecell>
 							<progressmeter align="horizontal" value="rdf:http://home.netscape.com/NC-rdf#Relevance" mode="normal" />
@@ -94,7 +96,7 @@
   						<treecell align="left" crop="right" value="rdf:http://home.netscape.com/NC-rdf#Engine" />
   					</treerow>
   				</treeitem>
-        </treechildren>
+				</treechildren>
 			</rule>
 		</template>
 
