@@ -630,7 +630,8 @@ function OpenSearch( tabName, forceDialogFlag, aSearchStr, engineURIs )
 	}
 	
 	if ( !defaultSearchURL )
-		defaultSearchURL = "http://search.netscape.com/cgi-bin/search?search=";
+		defaultSearchURL = "http://info.netscape.com/fwd/sidb1dnet/http://search.netscape.com/cgi-bin/search?search=";
+//		defaultSearchURL = "http://search.netscape.com/cgi-bin/search?search=";
 
 	if( searchMode == 1 || forceDialogFlag )
 	{
