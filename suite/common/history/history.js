@@ -24,7 +24,7 @@
 // The history window uses JavaScript in bookmarks.js too.
 
 function HistoryInit() {
-    var tree = document.getElementById("bookmarksTree");
+    var tree = document.getElementById("historyTree");
     var historyController = new nsTreeController(tree);
 
     var children = document.getElementById('treechildren-bookmarks');
