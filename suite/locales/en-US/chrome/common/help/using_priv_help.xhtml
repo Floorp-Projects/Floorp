@@ -174,7 +174,6 @@
 
 
 
-<p>&nbsp;</p>
 <a NAME="cookie_prefs"></a>
 <a NAME="cookies:preferencesIDX"></a>
 <hr><h2>Privacy &amp; Security Preferences - Cookies</h2>
@@ -329,6 +328,19 @@
 </ol>
 <p>&nbsp;</p>
 
+
+<table cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
+<tr>
+<td class="inthissections">
+<p>In this section:</p>
+<p><a href="#level_of_privacy">Level of Privacy</a></p>
+<p><a href="#cookie_acceptance">Cookie Acceptance Policy</a></p>
+</td>
+</tr>
+</table>
+<p>&nbsp;</p>
+
+<a name="level_of_privacy"></a>
 <h3>Level of Privacy</h3>
 
 <p>The level of privacy you set here determines how your browser treats cookies according to privacy policies published by some web sites and the settings displayed under Cookie Acceptance Policy for first party and third party cookies. 
@@ -344,6 +356,8 @@
 </ul>
 <p>&nbsp;</p>
 
+
+<a name="cookie_acceptance"></a>
 <h3>Cookie Acceptance Policy</h3>
 
 <p>If you select the "custom" level of privacy in the top portion of the Privacy Levels dialog box, you can choose from three different settings in each of the eight categories shown in the bottom portion. You can choose one of these options for each category: 
@@ -359,8 +373,8 @@
 <ul>
 	<li><b>Site has no privacy policy:</b> This kind of site does not publish any kind of privacy policy. There is  no way of knowing what kinds of information such sites collect or what they do with it. In general, it's safest to reject cookies set by such sites, esecially third-party cookies.
 	<li><b>Site collects personally identifiable information without your consent:</b> This kind of site publishes a privacy policy, but does not ask your permission when they collect information about your online activities. If you are concerned about such information being collected without your knowledge, you should reject cookies from such sites, especially third-party cookies.
-	<li><b>Site collects personally identifiable information with only your implicit consent:</b> <b>[what does "implicit" mean?]</b>
-	<li><b>Site does not collect personally identifiable information without your implicit consent:</b> This kind of site is relatively less dangerous, since you are warned, and given a chance to reject the request, each time such a site attempts to collect information about you. As for the other types of sites, third-party cookies are considered more dangerous than first party cookies.
+	<li><b>Site collects personally identifiable information with only your implicit consent:</b> This kind of site collects information about you based on your privacy level settings, but without asking you explicitly each time it does so
+	<li><b>Site does not collect personally identifiable information without your explicit consent:</b> This kind of site is relatively less dangerous, since you are warned, and given a chance to reject the request, each time such a site attempts to collect information about you. As for the other types of sites, third-party cookies are considered more dangerous than first party cookies.
 </ul>
 <p>&nbsp;</p>
 <a NAME="using_password"></a>
@@ -384,6 +398,8 @@
 <p><a href="#passwords_auto">Entering User Names and Passwords Automatically</a></p>
 <p><a href="#passwords_onoff">Turning Password Manager On and Off</a></p>
 <p><a href="#passwords_view">Viewing and Managing Stored Passwords</a></p>
+<p><a href="passwords_help.html">Password Settings</a></p>
+
 </td>
 </tr>
 </table>
@@ -393,17 +409,21 @@
 <a NAME="passwords_manage"></a>
 <h2>Using Password Manager to Remember User Names and Passwords</h2>
 
-<p>When you enter your user name and password at a web site a dialog box appears asking, &quot;Do you want Password Manager to remember this logon?&quot; You can choose the following options:</p>
+<p>When Password Manager is turned on, it gives you an opportunity to save usernames and passwords that you enter while using the Internet. 
+
+<p>For example, when you log onto your email account or a web site that requries a password, a dialog box appears asking, &quot;Do you want Password Manager to remember this logon?&quot; When you see this dialog box, you can click one of the following buttons:</p>
 
 <ul>
-<li><b>Yes</b>. The next time you return to the web site you'll see that your user name and password are already filled in.</li>
+<li><b>Yes:</b> The next time you return to the web site you'll see that your user name and password are already filled in.</li>
 
-<li><b>Never for this site</b>. Password Manager will not ask in the future if you want to save your user name and password for that site.</li>
+<li><b>Never for this site:</b> Password Manager will not ask in the future if you want to save your user name and password for that site.</li>
 
-<li><b>No</b>. Password Manager won't remember the user name and password, but will ask again the next time you visit the site.</li>
+<li><b>No:</b> Password Manager won't remember the user name and password, but will ask again the next time you visit the site.</li>
 </ul>
 
 <p>Password Manager saves your user names and passwords on your own computer in a file that's difficult, but not impossible, for an intruder to read. See <a href="#using_encrypt">Encrypting Stored Sensitive Information</a> for information on protecting your stored user names and passwords with encryption technology.
+
+<p>If the Password Manager dialog box described above does not appear when you click Submit after typing your username and password, Password Manager may be turned off. To turn it on, follow the instructions at <a href="#passwords_onoff">Turning Password Manager On and Off</a>. 
 
 <p>&nbsp;</p>
 <a NAME="passwords_auto"></a>
@@ -419,9 +439,11 @@
 
 <ol>
 <li>Open the Edit menu and choose Preferences.
-<li>From the Privacy &amp; Security category, choose Web Passwords. (If no subcategories are visible, double-click the category to expand the list.)
+<li>Under the Privacy &amp; Security category, choose Web Passwords. (If no subcategories are visible, double-click the category to expand the list.)
 <li>In the Password Manager section, deselect &quot;Remember passwords for sites that require me to log in&quot; to turn Password Manager off.
 </ol>
+
+<p>To turn Password Manager on, follow steps 1 and 2 above, but select the checkbox in step 3 rather than deselecting it.
 
 <p>&nbsp;</p>
 <a NAME="passwords_view"></a>
@@ -432,7 +454,7 @@
 <ol>
 <li>Open the Tasks menu, choose Privacy &amp; Security, and then choose Password Manager.
 <li>Select View Stored Passwords from the submenu. You see the Password Manager window.</li>
-<li>Click the Passwords Saved tab. You see a list of all the stored user names. (Passwords are not listed.) 
+<li>Click the Passwords Saved tab. You see a list of all the stored user names. (Passwords are not listed.)</li> 
 <ul>
 	<li>To remove a user name, click it and then click Remove. The next time you visit the web site, you will be asked to enter your password.</li>
 	<li>Click the Passwords Never Saved tab to see a list of the web sites for which you instructed Password Manager never to store user names. To remove a web site from this list, click it and then click Remove. The next time you visit the web site, you will be asked if you want Password Manager to save the user name and password for that site.</li>
@@ -604,10 +626,10 @@
 <p>Make sure your new password is difficult to guess. For some guidelines, see the online document <a href="http://home.netscape.com/security/basics/passwords.html" TARGET="_blank">Choosing a Good Password</a>.
 
 
-
 <p>&nbsp;</p>
 <a NAME="encrypt_change"></a>
 <h2>Changing Your Master Password</h2>
+
 
 <p>To change your master password:
 <ol>
@@ -760,10 +782,10 @@
 
 <hr>
 
-<p><i>4 January 2002</i></p>
+<p><i>11 January 2002</i></p>
 
 <hr>
-<p>Copyright &copy; 1994-2001 Netscape Communications Corporation.</p>
+<p>Copyright &copy; 1994-2002 Netscape Communications Corporation.</p>
 
 </body>
 </html>
