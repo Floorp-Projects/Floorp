@@ -34,6 +34,7 @@
         onunload="SearchPanelShutdown();">
 
   <script language="Javascript" src="chrome://global/content/strres.js"></script>
+  <script language="Javascript" src="chrome://global/content/nsJSComponentManager.js"></script>
   <script language="Javascript" src="chrome://communicator/content/search/search-panel.js"></script>
   <script language="Javascript" src="chrome://communicator/content/search/shared.js"></script>
 

@@ -624,6 +624,7 @@ function doSearch()
   
 	// hide various columns
     var navWindow = getNavigatorWindow();
+    dump("*** navWindow = " + navWindow + "\n");
     if( navWindow._content.isMozillaSearchWindow )
     {
         colNode = navWindow._content.document.getElementById("RelevanceColumn");
@@ -1084,16 +1085,20 @@ function loadURLInContent(url)
 // retrieves the most recent navigator window
 function getNavigatorWindow()
 {
+  const WM_PROGID = "component://netscape/rdf/datasource?name=window-mediator";
+  var wm;
   if (top.document) {
     var possibleNavigator = top.document.getElementById("main-window");
     if (possibleNavigator && 
         possibleNavigator.getAttribute("windowtype") == "navigator:browser")
       return top;
-    else return openNewNavigator();
+    else {
+      wm = nsJSComponentManager.getService(WM_PROGID, "nsIWindowMediator");
+      return wm ? wm.getMostRecentWindow("navigator:browser") : openNewNavigator();
+    }
   }
   else {
-    const WM_PROGID = "component://netscape/rdf/datasource?name=window-mediator";
-    var wm = nsJSComponentManager.getService(WM_PROGID, "nsIWindowMediator");
+    wm = nsJSComponentManager.getService(WM_PROGID, "nsIWindowMediator");
     return wm ? wm.getMostRecentWindow("navigator:browser") : openNewNavigator();
   }
 }
@@ -1107,7 +1112,9 @@ function getNavigatorWindowAppCore()
 
 function openNewNavigator()
 {
-  return openDialog(search_getBrowserURL(), "_blank", "chrome,all,dialog=no");
+  var newNavigator = open(search_getBrowserURL(), "_blank", "chrome,all,dialog=no");
+  dump("*** newNavigator - " + newNavigator + "\n");
+  return newNavigator;
 }
 
 function search_getBrowserURL()
