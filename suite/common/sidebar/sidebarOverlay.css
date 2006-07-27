@@ -141,14 +141,6 @@ box#sidebar-panels-bottom > box.texttab + box.texttab {
 	background-color: #CCCCCC;
 }
 
-*[collapsed="true"] {
-  visibility: collapsed;
-}
-
-*[hidden="true"] {
-  display: none;
-}
-
 box#title-box { 
   min-width: 10px;
 }
