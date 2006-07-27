@@ -8,15 +8,15 @@
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="welcome" nc:name="Help and Support Center" nc:link="welcome_help.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="help-help" nc:name="Using the Help Window" nc:link="help_help.xhtml"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="ieusers" nc:name="For Internet Explorer Users" nc:link="chrome://help/locale/forieusers.xhtml#for_internet_explorer_users"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav" nc:name="Browsing the Web" nc:link="chrome://help/locale/nav_help.xhtml#browsing_the_web"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail"     nc:name="Using Mail" nc:link="chrome://help/locale/mail_help.xhtml#using_mozilla_mail_and_newsgroups" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp"	nc:name="Creating Web Pages"  nc:link="chrome://help/locale/composer_help.html#comp_top"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust" nc:name="Customizing Mozilla"  nc:link="chrome://help/locale/customize_help.xhtml#customizing_mozilla"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="ieusers" nc:name="For Internet Explorer Users" nc:link="chrome://help/locale/forieusers.xhtml"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav" nc:name="Browsing the Web" nc:link="chrome://help/locale/nav_help.xhtml"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail" nc:name="Using Mail" nc:link="chrome://help/locale/mail_help.xhtml"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp" nc:name="Creating Web Pages"  nc:link="chrome://help/locale/composer_help.xhtml"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust" nc:name="Customizing Mozilla"  nc:link="chrome://help/locale/customize_help.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="using-priv-help" nc:name="Using Privacy Features" nc:link="chrome://help/locale/privacy_help.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="privacy-doc" nc:name="Privacy on the Internet" nc:link="chrome://help/locale/privacy_help.xhtml#privacy_on_the_internet"/> </rdf:li>
         <rdf:li> <rdf:Description ID="using-help-certs" nc:name="Using Certificates" nc:link="chrome://help/locale/using_certs_help.xhtml"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="profile-help" nc:name="Managing Profiles" nc:link="chrome://help/locale/profiles_help.xhtml#managing_profiles"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="profile-help" nc:name="Managing Profiles" nc:link="chrome://help/locale/profiles_help.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="shortcuts" nc:name="Mozilla Keyboard Shortcuts" nc:link="chrome://help/locale/shortcuts.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="tools" nc:name="Tools and Development" nc:link="chrome://help/locale/developer_tools.xhtml"/> </rdf:li>
       </rdf:Seq>
@@ -488,14 +488,14 @@
 <rdf:Description about="#comp">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="comp-doc"	nc:name="Starting a New Page"  nc:link="chrome://help/locale/composer_help.html#comp_start"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="page_change" nc:name="Formatting Your Web Pages"  nc:link="chrome://help/locale/composer_help.html#page_change"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-table" nc:name="Adding Tables to Your Web Page"  nc:link="chrome://help/locale/composer_help.html#page_table"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-image" nc:name="Adding Images to Your Web Page"  nc:link="chrome://help/locale/composer_help.html#page_picture"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-page" nc:name="Setting Page Properties"  nc:link="chrome://help/locale/composer_help.html#page_properties"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="link_properties" nc:name="Creating Links"  nc:link="chrome://help/locale/composer_help.html#page_link"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-publish" nc:name="Publishing Your Pages"  nc:link="chrome://help/locale/composer_help.html#publish_top"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-prefs" nc:name="Composer Preferences"  nc:link="chrome://help/locale/composer_help.html#Set_Comp_prefs"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc"	nc:name="Starting a New Page"  nc:link="chrome://help/locale/composer_help.xhtml#starting_a_new_page"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="page_change" nc:name="Formatting Your Web Pages"  nc:link="chrome://help/locale/composer_help.xhtml#formatting_your_web_pages"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-table" nc:name="Adding Tables to Your Web Page"  nc:link="chrome://help/locale/composer_help.xhtml#adding_tables_to_your_web_page"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-image" nc:name="Adding Images to Your Web Page"  nc:link="chrome://help/locale/composer_help.xhtml#adding_images_to_your_web_page"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-page" nc:name="Setting Page Properties"  nc:link="chrome://help/locale/composer_help.xhtml#setting_page_properties"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="link_properties" nc:name="Creating Links"  nc:link="chrome://help/locale/composer_help.xhtml#creating_links_in_composer"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-publish" nc:name="Publishing Your Pages"  nc:link="chrome://help/locale/composer_help.xhtml#publishing_your_pages_on_the_web"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-prefs" nc:name="Composer Preferences"  nc:link="chrome://help/locale/composer_help.xhtml#composer_preferences"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -503,8 +503,8 @@
   <rdf:Description about="#comp-doc">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="comp-doc-create" nc:name="Creating a New Page"  nc:link="chrome://help/locale/composer_help.html#create_document"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-save" nc:name="Saving and Browsing Your Page"  nc:link="chrome://help/locale/composer_help.html#browse_new_page"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-create" nc:name="Creating a New Page"  nc:link="chrome://help/locale/composer_help.xhtml#creating_a_new_page"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-save" nc:name="Saving and Browsing Your Page"  nc:link="chrome://help/locale/composer_help.xhtml#saving_and_browsing_your_new_page"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -512,16 +512,16 @@
   <rdf:Description about="#page_change">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="props-para" nc:name="Formatting Paragraphs, Headings, and Lists"  nc:link="chrome://help/locale/composer_help.html#PROPERTIES_PARAGRAPH"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="lists" nc:name="Working with Lists"  nc:link="chrome://help/locale/composer_help.html#lists"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="char" nc:name="Changing Text Color, Style, and Font"  nc:link="chrome://help/locale/composer_help.html#PROPERTIES_CHARACTER"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="style-remove" nc:name="Removing or Discontinuing Text Styles"  nc:link="chrome://help/locale/composer_help.html#style_remove"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="find-text" nc:name="Finding and Replacing Text"  nc:link="chrome://help/locale/composer_help.html#FIND_TEXT"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="props-hrule" nc:name="Inserting Horizontal Lines"  nc:link="chrome://help/locale/composer_help.html#PROPERTIES_HRULE"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="special-chars" nc:name="Inserting Special Characters"  nc:link="chrome://help/locale/composer_help.html#SPECIAL_CHARACTERS"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="html-tag" nc:name="Inserting HTML Elements and Attributes"  nc:link="chrome://help/locale/composer_help.html#HTML_TAG"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="validate-html" nc:name="Checking the HTML"  nc:link="chrome://help/locale/composer_help.html#HTML_VALIDATE"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-choose" nc:name="Choosing the Right Editing Mode"  nc:link="chrome://help/locale/composer_help.html#Edit_modes"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="props-para" nc:name="Formatting Paragraphs, Headings, and Lists"  nc:link="chrome://help/locale/composer_help.xhtml#formatting_paragraphs_headings_and_lists"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="lists" nc:name="Working with Lists"  nc:link="chrome://help/locale/composer_help.xhtml#working_with_lists"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="char" nc:name="Changing Text Color, Style, and Font"  nc:link="chrome://help/locale/composer_help.xhtml#changing_text_color_style_and_font"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="style-remove" nc:name="Removing or Discontinuing Text Styles"  nc:link="chrome://help/locale/composer_help.xhtml#removing_or_discontinuing_text_styles"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="find-text" nc:name="Finding and Replacing Text"  nc:link="chrome://help/locale/composer_help.xhtml#finding_and_replacing_text"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="props-hrule" nc:name="Inserting Horizontal Lines"  nc:link="chrome://help/locale/composer_help.xhtml#inserting_horizontal_lines"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="special-chars" nc:name="Inserting Special Characters"  nc:link="chrome://help/locale/composer_help.xhtml#inserting_special_characters"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="html-tag" nc:name="Inserting HTML Elements and Attributes"  nc:link="chrome://help/locale/composer_help.xhtml#inserting_html_elements_and_attributes"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="validate-html" nc:name="Checking the HTML"  nc:link="chrome://help/locale/composer_help.xhtml#validating_the_html"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-choose" nc:name="Choosing the Right Editing Mode"  nc:link="chrome://help/locale/composer_help.xhtml#choosing_the_right_editing_mode"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -529,7 +529,7 @@
 <rdf:Description about="#props-hrule">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="props-hrule-horiz" nc:name="Setting Horizontal Line Properties"  nc:link="chrome://help/locale/composer_help.html#horiz_line"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="props-hrule-horiz" nc:name="Setting Horizontal Line Properties"  nc:link="chrome://help/locale/composer_help.xhtml#setting_horizontal_line_properties"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -537,7 +537,7 @@
 <rdf:Description about="#html-tag">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="advanced_property_editor" nc:name="Using the Advanced Property Editor"  nc:link="chrome://help/locale/composer_help.html#PROPERTY_EDITOR"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="advanced_property_editor" nc:name="Using the Advanced Property Editor"  nc:link="chrome://help/locale/composer_help.xhtml#using_the_advanced_property_editor"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -545,12 +545,12 @@
   <rdf:Description about="#comp-doc-table">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="comp-doc-table-insert" nc:name="Inserting a Table"  nc:link="chrome://help/locale/composer_help.html#Inserting_a_table"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="table_properties" nc:name="Changing a Table's Properties"  nc:link="chrome://help/locale/composer_help.html#Setting_table_properties"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-table-add" nc:name="Adding/Deleting Rows, Columns, and Cells"  nc:link="chrome://help/locale/composer_help.html#addtable"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-table-select" nc:name="Selecting Table Elements"  nc:link="chrome://help/locale/composer_help.html#TABLE_SELECTION"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-table-copy" nc:name="Moving, Copying, and Deleting Tables"  nc:link="chrome://help/locale/composer_help.html#select_table"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-tableize" nc:name="Converting Text into a Table"  nc:link="chrome://help/locale/composer_help.html#tableize"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-table-insert" nc:name="Inserting a Table"  nc:link="chrome://help/locale/composer_help.xhtml#inserting_a_table"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="table_properties" nc:name="Changing a Table's Properties"  nc:link="chrome://help/locale/composer_help.xhtml#changing_a_tables_properties"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-table-add" nc:name="Adding/Deleting Rows, Columns, and Cells"  nc:link="chrome://help/locale/composer_help.xhtml#adding_and_deleting_rows_columns_and_cells"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-table-select" nc:name="Selecting Table Elements"  nc:link="chrome://help/locale/composer_help.xhtml#selecting_table_elements"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-table-copy" nc:name="Moving, Copying, and Deleting Tables"  nc:link="chrome://help/locale/composer_help.xhtml#moving_copying_and_deleting_tables"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-tableize" nc:name="Converting Text into a Table"  nc:link="chrome://help/locale/composer_help.xhtml#converting_text_into_a_table"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -558,7 +558,7 @@
 <rdf:Description about="#comp-doc-table-add">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="comp-doc-table-change-default" nc:name="Changing the Default Table Editing Behavior"  nc:link="chrome://help/locale/composer_help.html#table_editing_default"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-table-change-default" nc:name="Changing the Default Table Editing Behavior"  nc:link="chrome://help/locale/composer_help.xhtml#changing_the_default_table_editing_behavior"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -566,8 +566,8 @@
   <rdf:Description about="#comp-doc-image">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="comp-doc-image-insert" nc:name="Inserting an Image into Your Page"  nc:link="chrome://help/locale/composer_help.html#Insert_an_image"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="image_properties" nc:name="Editing Image Properties"  nc:link="chrome://help/locale/composer_help.html#PROPERTIES_IMAGE"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-image-insert" nc:name="Inserting an Image into Your Page"  nc:link="chrome://help/locale/composer_help.xhtml#inserting_an_image_into_your_page"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="image_properties" nc:name="Editing Image Properties"  nc:link="chrome://help/locale/composer_help.xhtml#editing_image_properties"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -575,8 +575,8 @@
   <rdf:Description about="#comp-doc-page">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="comp-doc-page-props" nc:name="Setting Page Properties and Meta Tags"  nc:link="chrome://help/locale/composer_help.html#DOCUMENT_PROPERTIES_GENERAL"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-page-appear" nc:name="Setting Colors and Background"  nc:link="chrome://help/locale/composer_help.html#DOCUMENT_PROPERTIES_APPEARANCE"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-page-props" nc:name="Setting Page Properties and Meta Tags"  nc:link="chrome://help/locale/composer_help.xhtml#setting_page_properties_and_meta_tags"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-page-appear" nc:name="Setting Colors and Background"  nc:link="chrome://help/locale/composer_help.xhtml#setting_page_colors_and_backgrounds"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -584,10 +584,10 @@
   <rdf:Description about="#link_properties">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="comp-doc-links-inpage" nc:name="Within the Same Page"  nc:link="chrome://help/locale/composer_help.html#PROPERTIES_TARGET"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-links-others" nc:name="To Other Pages"  nc:link="chrome://help/locale/composer_help.html#creating_links"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-links-images" nc:name="Using Images as Links"  nc:link="chrome://help/locale/composer_help.html#Linking_images"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-links-remove" nc:name="Removing or Discontinuing Links"  nc:link="chrome://help/locale/composer_help.html#Linking_remove"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-links-inpage" nc:name="Within the Same Page"  nc:link="chrome://help/locale/composer_help.xhtml#creating_links_within_the_same_page"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-links-others" nc:name="To Other Pages"  nc:link="chrome://help/locale/composer_help.xhtml#creating_links_to_other_pages"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-links-images" nc:name="Using Images as Links"  nc:link="chrome://help/locale/composer_help.xhtml#using_images_as_links"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-links-remove" nc:name="Removing or Discontinuing Links"  nc:link="chrome://help/locale/composer_help.xhtml#removing_or_discontinuing_links"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -595,14 +595,14 @@
 <rdf:Description about="#comp-doc-publish">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="comp-doc-publish-prepare" nc:name="Publishing a Document"  nc:link="chrome://help/locale/composer_help.html#publish_prepare"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-publish-update" nc:name="Updating a Published Document"  nc:link="chrome://help/locale/composer_help.html#publish_update"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-publish-as" nc:name="Changing the File Name or Publishing Location"  nc:link="chrome://help/locale/composer_help.html#publish_as"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-publish-newsite" nc:name="Creating a New Publishing Site"  nc:link="chrome://help/locale/composer_help.html#site_new"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-publish-default" nc:name="Choosing the Default Publishing Site"  nc:link="chrome://help/locale/composer_help.html#site_default"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-publish-delete" nc:name="Deleting a Publishing Site"  nc:link="chrome://help/locale/composer_help.html#site_delete"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-publish-troubleshooting" nc:name="Solving Common Publishing Problems"  nc:link="chrome://help/locale/composer_help.html#pub_problems"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-publish-settings" nc:name="Publishing Settings"  nc:link="chrome://help/locale/composer_help.html#edit_site"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-publish-prepare" nc:name="Publishing a Document"  nc:link="chrome://help/locale/composer_help.xhtml#publishing_a_document"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-publish-update" nc:name="Updating a Published Document"  nc:link="chrome://help/locale/composer_help.xhtml#updating_a_published_document"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-publish-as" nc:name="Changing the File Name or Publishing Location"  nc:link="chrome://help/locale/composer_help.xhtml#changing_the_filename_or_publishing_location"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-publish-newsite" nc:name="Creating a New Publishing Site"  nc:link="chrome://help/locale/composer_help.xhtml#creating_a_new_publishing_site"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-publish-default" nc:name="Choosing the Default Publishing Site"  nc:link="chrome://help/locale/composer_help.xhtml#choosing_the_default_publishing_site"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-publish-delete" nc:name="Deleting a Publishing Site"  nc:link="chrome://help/locale/composer_help.xhtml#deleting_a_publishing_site"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-publish-troubleshooting" nc:name="Solving Common Publishing Problems"  nc:link="chrome://help/locale/composer_help.xhtml#solving_common_publishing_problems"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-publish-settings" nc:name="Publishing Settings"  nc:link="chrome://help/locale/composer_help.xhtml#publishing_settings"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -610,7 +610,7 @@
 <rdf:Description about="#comp-doc-publish-prepare">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="comp-doc-publish-tips" nc:name="Publishing Tips"  nc:link="chrome://help/locale/composer_help.html#publish_tips"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-publish-tips" nc:name="Publishing Tips"  nc:link="chrome://help/locale/composer_help.xhtml#tips_for_avoiding_broken_links_or_missing_images"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -618,9 +618,9 @@
 <rdf:Description about="#comp-doc-publish-troubleshooting">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="comp-doc-publish-troubleshooting-settings" nc:name="Verifying Your Publishing Settings"  nc:link="chrome://help/locale/composer_help.html#general_tips"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-publish-troubleshooting-files" nc:name="Checking Your File Names"  nc:link="chrome://help/locale/composer_help.html#file_tips"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-publish-troubleshooting-errors" nc:name="Fixing Publishing Errors"  nc:link="chrome://help/locale/composer_help.html#pub_errors"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-publish-troubleshooting-settings" nc:name="Verifying Your Publishing Settings"  nc:link="chrome://help/locale/composer_help.xhtml#verifying_your_publishing_settings"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-publish-troubleshooting-files" nc:name="Checking Your File Names"  nc:link="chrome://help/locale/composer_help.xhtml#checking_your_filenames"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-publish-troubleshooting-errors" nc:name="Fixing Publishing Errors"  nc:link="chrome://help/locale/composer_help.xhtml#fixing_publishing_errors"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -628,9 +628,9 @@
 <rdf:Description about="#comp-doc-publish-settings">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="comp-doc-publish-publishtab" nc:name="Publish Page - Publish"  nc:link="chrome://help/locale/composer_help.html#publish_tab"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-publish-settingstab" nc:name="Publish Page - Settings"  nc:link="chrome://help/locale/composer_help.html#settings_tab"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-publish-site-settings" nc:name="Publish Settings"  nc:link="chrome://help/locale/composer_help.html#site_settings"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-publish-publishtab" nc:name="Publish Page - Publish"  nc:link="chrome://help/locale/composer_help.xhtml#publish_page_publish"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-publish-settingstab" nc:name="Publish Page - Settings"  nc:link="chrome://help/locale/composer_help.xhtml#publish_page_settings"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-publish-site-settings" nc:name="Publish Settings"  nc:link="chrome://help/locale/composer_help.xhtml#publish_settings"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -638,14 +638,14 @@
   <rdf:Description about="#comp-doc-prefs">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="composer_prefs_general" nc:name="Composer"  nc:link="chrome://help/locale/composer_help.html#PREFERENCES_EDITOR_GENERAL"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="composer_prefs_newpage" nc:name="New Page Settings"  nc:link="chrome://help/locale/composer_help.html#PREFERENCES_NEWPAGE"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="composer_prefs_general" nc:name="Composer"  nc:link="chrome://help/locale/composer_help.xhtml#composer"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="composer_prefs_newpage" nc:name="New Page Settings" nc:link="chrome://help/locale/composer_help.xhtml#new_page_settings"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
 
-
 <!-- CUSTOMIZATION HELP CONTENT -->
+
 <rdf:Description about="#cust">
     <nc:subheadings>
       <rdf:Seq>

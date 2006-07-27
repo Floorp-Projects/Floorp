@@ -31,7 +31,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="adding:images_to_web_pages"
          nc:name="inserting images to web pages"
-	 nc:link="composer_help.html#adding:images_to_web_pagesIDX"/>
+	 nc:link="composer_help.xhtml#inserting_an_image_into_your_page"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="adding:mail_account"
@@ -46,7 +46,7 @@
      <rdf:li>
        <rdf:Description ID="adding:table_elements"
          nc:name="inserting table elements"
-	 nc:link="composer_help.html#adding:table_elementsIDX"/>
+	 nc:link="composer_help.xhtml#adding_and_deleting_rows_columns_and_cells"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -196,7 +196,7 @@
      <rdf:li>
        <rdf:Description ID="Composer"
          nc:name="Composer"
-	 nc:link="composer_help.html"/>
+	 nc:link="composer_help.xhtml"/>
      </rdf:li><rdf:li>
        <rdf:Description ID="Cookie_Manager"
          nc:name="Cookie Manager"
@@ -304,77 +304,77 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Composer:adding_tables"
          nc:name="adding tables"
-	 nc:link="composer_help.html#Composer:adding_tablesIDX"/>
+	 nc:link="composer_help.xhtml#adding_tables_to_your_web_page"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Composer:Advanced_Property_Editor"
          nc:name="Advanced Property Editor"
-	 nc:link="composer_help.html#Composer:Advanced_Property_EditorIDX"/>
+	 nc:link="composer_help.xhtml#using_the_advanced_property_editor"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Composer:changing_text_color"
          nc:name="changing text color"
-	 nc:link="composer_help.html#Composer:changing_text_colorIDX"/>
+	 nc:link="composer_help.xhtml#changing_text_color_style_and_font"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Composer:changing_text_font"
          nc:name="changing text font"
-	 nc:link="composer_help.html#Composer:changing_text_fontIDX"/>
+	 nc:link="composer_help.xhtml#changing_text_color_style_and_font"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Composer:checking_html"
          nc:name="checking html"
-	 nc:link="composer_help.html#Composer:checking_htmlIDX"/>
+	 nc:link="composer_help.xhtml#validating_the_html"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Composer:creating_links"
          nc:name="creating links"
-	 nc:link="composer_help.html#Composer:creating_linksIDX"/>
+	 nc:link="composer_help.xhtml#creating_links_in_composer"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Composer:creating_new_pages"
          nc:name="creating new pages"
-	 nc:link="composer_help.html#Composer:creating_new_pagesIDX"/>
+	 nc:link="composer_help.xhtml#creating_a_new_page"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Composer:editing_image_properties"
          nc:name="editing image properties"
-	 nc:link="composer_help.html#Composer:editing_image_propertiesIDX"/>
+	 nc:link="composer_help.xhtml#editing_image_properties"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Composer:editing_modes"
          nc:name="editing modes"
-	 nc:link="composer_help.html#Composer:editing_modesIDX"/>
+	 nc:link="composer_help.xhtml#choosing_the_right_editing_mode"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Composer:finding_replacing_text"
          nc:name="finding replacing text"
-	 nc:link="composer_help.html#Composer:finding_replacing_textIDX"/>
+	 nc:link="composer_help.xhtml#finding_and_replacing_text"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Composer:formatting_lists"
          nc:name="formatting lists"
-	 nc:link="composer_help.html#Composer:formatting_listsIDX"/>
+	 nc:link="composer_help.xhtml#formatting_paragraphs_headings_and_lists"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Composer:formatting_paragraphs"
          nc:name="formatting paragraphs"
-	 nc:link="composer_help.html#Composer:formatting_paragraphsIDX"/>
+	 nc:link="composer_help.xhtml#formatting_paragraphs_headings_and_lists"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Composer:general_preferences"
          nc:name="general preferences"
-	 nc:link="composer_help.html#Composer:general_preferencesIDX"/>
+	 nc:link="composer_help.xhtml#composer_preferences"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Composer:inserting_horizontal_lines"
          nc:name="inserting horizontal lines"
-	 nc:link="composer_help.html#Composer:inserting_horizontal_linesIDX"/>
+	 nc:link="composer_help.xhtml#inserting_horizontal_lines"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Composer:inserting_images"
          nc:name="inserting images"
-	 nc:link="composer_help.html#Composer:inserting_imagesIDX"/>
+	 nc:link="composer_help.xhtml#inserting_an_image_into_your_page"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Composer:keyboard_shortcuts"
@@ -384,32 +384,32 @@
      <rdf:li>
        <rdf:Description ID="Composer:removing_text_styles"
          nc:name="removing text styles"
-	 nc:link="composer_help.html#Composer:removing_text_stylesIDX"/>
+	 nc:link="composer_help.xhtml#removing_or_discontinuing_text_styles"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Composer:saving_pages"
          nc:name="saving pages in composer"
-	 nc:link="composer_help.html#Composer:saving_pagesIDX"/>
+	 nc:link="composer_help.xhtml#saving_and_browsing_your_new_page"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Composer:setting_page_colors"
          nc:name="setting page colors"
-	 nc:link="composer_help.html#Composer:setting_page_colorsIDX"/>
+	 nc:link="composer_help.xhtml#setting_page_colors_and_background"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Composer:setting_page_properties"
          nc:name="setting page properties"
-	 nc:link="composer_help.html#Composer:setting_page_propertiesIDX"/>
+	 nc:link="composer_help.xhtml#setting_page_properties_and_meta_tags"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Composer:special_characters"
          nc:name="special characters"
-	 nc:link="composer_help.html#Composer:special_charactersIDX"/>
+	 nc:link="composer_help.xhtml#inserting_special_characters"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Composer:working_with_lists"
          nc:name="working with lists"
-	 nc:link="composer_help.html#Composer:working_with_listsIDX"/>
+	 nc:link="composer_help.xhtml#working_with_lists"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -633,7 +633,7 @@
      <rdf:li>
        <rdf:Description ID="font_changing_in_composer"
          nc:name="Font changing in Composer"
-	 nc:link="composer_help.html#fonts:changing_in_ComposerIDX"/>
+	 nc:link="composer_help.xhtml#changing_text_color_style_and_font"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Form_Manager"
@@ -708,7 +708,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="GIF"
          nc:name="GIF, inserting"
-	 nc:link="chrome://help/locale/composer_help.html#GIFSDX"/>
+	 nc:link="chrome://help/locale/composer_help.xhtml#inserting_an_image_into_your_page"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -746,7 +746,7 @@
      <rdf:li>
        <rdf:Description ID="HTML:using_in_Composer"
          nc:name="inserting HTML in Composer"
-	 nc:link="composer_help.html#HTML:using_in_ComposerIDX"/>
+	 nc:link="composer_help.xhtml#inserting_html_elements_and_attributes"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="HTML:using_in_mail_messages"
@@ -1463,7 +1463,7 @@
      <rdf:li>
        <rdf:Description ID="publishing_pages"
          nc:name="publishing pages"
-	 nc:link="composer_help.html#publishing_pagesIDX"/>
+	 nc:link="composer_help.xhtml#publishing_your_pages_on_the_web"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1774,12 +1774,12 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="publishing_pages:settings"
          nc:name="publish page settings"
-	 nc:link="composer_help.html#publishing_pages:settingsIDX"/>
+	 nc:link="composer_help.xhtml#publishing_settings"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="publishing_pages:tips"
          nc:name="publish page tips"
-	 nc:link="composer_help.html#publishing_pages:tipsIDX"/>
+	 nc:link="composer_help.xhtml#tips_for_avoiding_broken_links_or_missing_images"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2164,7 +2164,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="uploading_pages"
          nc:name="uploading pages"
-	 nc:link="composer_help.html#uploading_pagesIDX"/>
+	 nc:link="composer_help.xhtml#publishing_your_pages_on_the_web"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
