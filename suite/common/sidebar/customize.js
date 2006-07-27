@@ -167,7 +167,7 @@ function fixup_children(id) {
   // Add container="true" on nodes with "link" attribute
   var treeitem = document.getElementById(id);
 
-  children = treeitem.childNodes.item(1).childNodes;
+  var children = treeitem.childNodes.item(1).childNodes;
   for (var ii=0; ii < children.length; ii++) {
     var child = children.item(ii);
     if (child.getAttribute('link') != '' &&
@@ -418,7 +418,7 @@ function RemovePanel()
     sel.getRangeAt(range, min, max);
     for (var index = max.value; index >= min.value; --index) {
       var item = tree.contentView.getItemAtIndex(index);
-      var nextNode = item.nextSibling ? index : -1;
+      nextNode = item.nextSibling ? index : -1;
       item.parentNode.removeChild(item);
     }
   }
@@ -546,7 +546,7 @@ function Save()
   for (var ii = 0; ii < panels.length; ++ii) {
     var id = panels[ii];
     var resource = RDF.GetResource(id);
-    if (have_panel_attributes[id]) {
+    if (id in have_panel_attributes && have_panel_attributes[id]) {
       container.AppendElement(resource);
     } else {
       copy_resource_deeply(all_panels.database, resource, container);
