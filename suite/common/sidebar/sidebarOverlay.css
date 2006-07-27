@@ -19,8 +19,6 @@
  * Contributor(s): Stephen Lamm <slamm@netscape.com>
  */ 
 
-@import url(chrome://global/skin/global.css);
-
 splitter#sidebar-splitter {
 	margin-right: 2px;
 	margin-top: 2px;
