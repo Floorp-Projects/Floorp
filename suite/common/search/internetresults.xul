@@ -12,7 +12,7 @@
       context="disallowcontext">
 
   <popupset>
-    <popup id="disallowcontext" onpopupshowing="return false;" />
+    <popup id="disallowcontext" onpopupshowing="return false;"/>
   </popupset>
 
   <script type="application/x-javascript" src="chrome://global/content/nsUserSettings.js"/>
@@ -24,22 +24,25 @@
     <label value="&results.header.label;"/>
   </hbox>
 
-  <hbox id="engineTabs" align="center"
-        ref="NC:SearchResultsSitesRoot" datasources="rdf:internetsearch" 
+  <hbox align="center"
         style="overflow: none; min-width: 1px;">
-    <template>
-      <button type="radio" group="engineButton" class="engineTabs button-toolbar" uri="..." 
-              oncommand="doEngineClick(event, this);" crop="right" 
-              src="rdf:http://home.netscape.com/NC-rdf#StatusIcon" 
-              label="rdf:http://home.netscape.com/NC-rdf#Name" 
-              loading="rdf:http://home.netscape.com/NC-rdf#loading" />
-    </template>
-    <button type="radio" group="engineButton" class="engineTabs button-toolbar" id="allEngines" 
-            oncommand="doEngineClick(event, this);" label="&allresults.title.label;"
-            checked="true"/>
-    <separator orient="vertical"/>
     <label value="&viewbyprovider.label;"/>
-    <separator orient="vertical" class="thin"/>
+    <menulist id="engineTabs" ref="NC:SearchResultsSitesRoot"
+              datasources="rdf:internetsearch" oncommand="switchTab(1);">
+      <template>
+        <menupopup>
+          <menuitem id="chooseCat" uri="..." oncommand="doEngineClick(event, this);"
+                    src="rdf:http://home.netscape.com/NC-rdf#Icon"
+                    value="rdf:http://home.netscape.com/NC-rdf#category"
+                    label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+        </menupopup>
+      </template>
+      <menupopup id="categoryPopup">
+        <menuitem id="allEngines" value="NC:SearchEngineRoot" label="&allresults.title.label;"
+                  oncommand="doEngineClick(event, this);"/>
+        <menuseparator/>
+      </menupopup>
+    </menulist>
   </hbox>
 
   <menupopup id="contextual" onpopupshowing="return fillContextMenu('contextual', 'resultsList');"/>
