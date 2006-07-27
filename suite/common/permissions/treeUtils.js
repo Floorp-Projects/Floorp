@@ -127,17 +127,17 @@ function SortTree(tree, view, table, column, lastSortColumn, lastSortAscending) 
   if (ascending) {
     compareFunc = function compare(first, second) {
       if (first[column] < second[column])
-        return 1;
-      if (first[column] > second[column])
         return -1;
+      if (first[column] > second[column])
+        return 1;
       return 0;
     }
   } else {
     compareFunc = function compare(first, second) {
       if (first[column] < second[column])
-        return -1;
-      if (first[column] > second[column])
         return 1;
+      if (first[column] > second[column])
+        return -1;
       return 0;
     }
   }
