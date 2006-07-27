@@ -51,7 +51,17 @@
 #include "nsIFactory.h"
 #include "jni.h"
 
+/*
+ * jint is 32 bit, jlong is 64 bit.  So we must consider 64-bit platform.
+ *
+ * http://java.sun.com/j2se/1.4.2/docs/guide/jni/spec/types.html#wp428
+ */
+
+#if JS_BYTES_PER_WORD == 8
+typedef jlong jsobject;
+#else
 typedef jint jsobject;
+#endif /* JS_BYTES_PER_WORD == 8 */
 
 class nsISecureLiveconnect : public nsISupports {
 public:
