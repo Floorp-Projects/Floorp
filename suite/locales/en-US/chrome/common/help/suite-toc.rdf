@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<!DOCTYPE RDF SYSTEM "chrome://branding/locale/brand.dtd" >
+<!DOCTYPE rdf:RDF SYSTEM "chrome://branding/locale/brand.dtd" >
 
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:nc="http://home.netscape.com/NC-rdf#">
