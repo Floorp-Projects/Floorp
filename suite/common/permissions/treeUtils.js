@@ -20,8 +20,8 @@
  * Contributor(s):
  */
 
-function DeleteAllFromOutliner
-    (outliner, view, table, deletedTable, removeButton, removeAllButton) {
+function DeleteAllFromTree
+    (tree, view, table, deletedTable, removeButton, removeAllButton) {
 
   // remove all items from table and place in deleted table
   for (var i=0; i<table.length; i++) {
@@ -30,11 +30,11 @@ function DeleteAllFromOutliner
   table.length = 0;
 
   // clear out selections
-  outliner.outlinerBoxObject.view.selection.select(-1); 
+  tree.treeBoxObject.view.selection.select(-1); 
 
   // redisplay
   view.rowCount = 0;
-  outliner.outlinerBoxObject.invalidate();
+  tree.treeBoxObject.invalidate();
 
 
   // disable buttons
@@ -42,11 +42,11 @@ function DeleteAllFromOutliner
   document.getElementById(removeAllButton).setAttribute("disabled","true");
 }
 
-function DeleteSelectedItemFromOutliner
-    (outliner, view, table, deletedTable, removeButton, removeAllButton) {
+function DeleteSelectedItemFromTree
+    (tree, view, table, deletedTable, removeButton, removeAllButton) {
 
   // remove selected items from list (by setting them to null) and place in deleted list
-  var selections = GetOutlinerSelections(outliner);
+  var selections = GetTreeSelections(tree);
   for (var s=selections.length-1; s>= 0; s--) {
     var i = selections[s];
     deletedTable[deletedTable.length] = table[i];
@@ -65,7 +65,7 @@ function DeleteSelectedItemFromOutliner
   }
 
   // redisplay
-  var box = outliner.outlinerBoxObject;
+  var box = tree.treeBoxObject;
   var firstRow = box.getFirstVisibleRow();
   if (firstRow > (table.length-1) ) {
     firstRow = table.length-1;
@@ -80,8 +80,8 @@ function DeleteSelectedItemFromOutliner
     // update selection
     // note: we need to deselect before reselecting in order to trigger ...Selected method
     var nextSelection = (selections[0] < table.length) ? selections[0] : table.length-1;
-    outliner.outlinerBoxObject.view.selection.select(-1); 
-    outliner.outlinerBoxObject.view.selection.select(nextSelection);
+    tree.treeBoxObject.view.selection.select(-1); 
+    tree.treeBoxObject.view.selection.select(nextSelection);
 
   } else {
 
@@ -90,13 +90,13 @@ function DeleteSelectedItemFromOutliner
     document.getElementById(removeAllButton).setAttribute("disabled","true");
 
     // clear out selections
-    outliner.outlinerBoxObject.view.selection.select(-1); 
+    tree.treeBoxObject.view.selection.select(-1); 
   }
 }
 
-function GetOutlinerSelections(outliner) {
+function GetTreeSelections(tree) {
   var selections = [];
-  var select = outliner.outlinerBoxObject.selection;
+  var select = tree.treeBoxObject.selection;
   if (select) {
     var count = select.getRangeCount();
     var min = new Object();
@@ -113,10 +113,10 @@ function GetOutlinerSelections(outliner) {
   return selections;
 }
 
-function SortOutliner(outliner, view, table, column, lastSortColumn, lastSortAscending) {
+function SortTree(tree, view, table, column, lastSortColumn, lastSortAscending) {
 
   // remember which item was selected so we can restore it after the sort
-  var selections = GetOutlinerSelections(outliner);
+  var selections = GetTreeSelections(tree);
   var selectedNumber = selections.length ? table[selections[0]].number : -1;
 
   // determine if sort is to be ascending or descending
@@ -132,8 +132,8 @@ function SortOutliner(outliner, view, table, column, lastSortColumn, lastSortAsc
       if (table[s].number == selectedNumber) {
         // update selection
         // note: we need to deselect before reselecting in order to trigger ...Selected()
-        outliner.outlinerBoxObject.view.selection.select(-1);
-        outliner.outlinerBoxObject.view.selection.select(s);
+        tree.treeBoxObject.view.selection.select(-1);
+        tree.treeBoxObject.view.selection.select(s);
         selectedRow = s;
         break;
       }
@@ -141,9 +141,9 @@ function SortOutliner(outliner, view, table, column, lastSortColumn, lastSortAsc
   }
 
   // display the results
-  outliner.outlinerBoxObject.invalidate();
+  tree.treeBoxObject.invalidate();
   if (selectedRow>0) {
-    outliner.outlinerBoxObject.ensureRowIsVisible(selectedRow)
+    tree.treeBoxObject.ensureRowIsVisible(selectedRow)
   }
 
   return ascending;

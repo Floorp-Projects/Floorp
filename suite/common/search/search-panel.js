@@ -404,8 +404,8 @@ function SearchPanelStartup()
   
   ensureSearchPref()
   
-  var tree = document.getElementById("Tree");
-  tree.database.AddObserver(RDF_observer);
+  var resultList = document.getElementById("resultList");
+  resultList.database.AddObserver(RDF_observer);
 
   var categoryList = document.getElementById("categoryList");
   var internetSearch = Components.classes[ISEARCH_CONTRACTID].getService(nsIInternetSearchService);
@@ -416,11 +416,11 @@ function SearchPanelStartup()
     var ref = categoryList.getAttribute("ref");
     if (ref)
       categoryList.setAttribute("ref", ref);
-    var engineTree = document.getElementById("searchengines");
-    engineTree.database.AddDataSource(catDS);
-    ref = engineTree.getAttribute("ref");
+    var engineList = document.getElementById("searchengines");
+    engineList.database.AddDataSource(catDS);
+    ref = engineList.getAttribute("ref");
     if (ref)
-      engineTree.setAttribute("ref", ref);
+      engineList.setAttribute("ref", ref);
   }
 
   // try and determine last category name used
@@ -471,7 +471,7 @@ function SearchPanelStartup()
 
 function haveSearchResults()
 {
-  var ds = document.getElementById("Tree").database;
+  var ds = document.getElementById("resultList").database;
   if (!ds)
     return false;
 
@@ -494,8 +494,8 @@ function haveSearchResults()
 
 function getNumEngines()
 {
-  var treeChildrenNode = document.getElementById("engineKids");
-  return treeChildrenNode.childNodes.length;
+  var listbox = document.getElementById("searchengines");
+  return listbox.getElementsByTagName("listitem").length;
 }
 
 function chooseCategory(aNode)
@@ -524,24 +524,20 @@ function saveEngines()
   if (!localStore)
     return;
 
-  var engineBox = document.getElementById("engineKids");
+  var engineItems = document.getElementById("searchengines").getElementsByTagName("listitem");
 
   var checkedProperty = rdf.GetResource("http://home.netscape.com/NC-rdf#checked", true);
   var categorySRC = rdf.GetResource(category, true);
 
-  for (var x = 0; x < engineBox.childNodes.length; ++x) {
-    var treeitemNode = engineBox.childNodes[x];
+  for (var x = 0; x < engineItems.length; ++x) {
+    var itemNode = engineItems[x];
+    var engineURI = itemNode.getAttribute("id");
+    var engineSRC = rdf.GetResource(engineURI, true);
 
-    var checkboxNode = treeitemNode.firstChild.firstChild.firstChild;
-    if (checkboxNode) {
-      var engineURI = treeitemNode.getAttribute("id");
-      var engineSRC = rdf.GetResource(engineURI, true);
-
-      if (checkboxNode.checked)
-        localStore.Assert(categorySRC, checkedProperty, engineSRC, true);
-      else
-        localStore.Unassert(categorySRC, checkedProperty, engineSRC, true);
-    }
+    if (itemNode.checked)
+      localStore.Assert(categorySRC, checkedProperty, engineSRC, true);
+    else
+      localStore.Unassert(categorySRC, checkedProperty, engineSRC, true);
   }
 
   // save changes; flush out the localstore
@@ -558,20 +554,19 @@ function loadEngines(aCategory)
   var rdf = Components.classes[RDFSERVICE_CONTRACTID].getService(nsIRDFService);
   var localStore = rdf.GetDataSource("rdf:local-store");
   if (localStore) {
-    var engineBox = document.getElementById("engineKids");
+    var engineBox = document.getElementById("searchengines");
     var numEngines = engineBox.childNodes.length;
     var checkedProperty = rdf.GetResource("http://home.netscape.com/NC-rdf#checked", true);
     var categorySRC = rdf.GetResource(aCategory, true);
     for (var x = 0; x < numEngines; ++x) {
-      var treeitemNode = engineBox.childNodes[x];
-      var engineURI = treeitemNode.getAttribute("id");
-      var engineSRC = rdf.GetResource(engineURI, true);
-
-      var checkboxNode = treeitemNode.firstChild.firstChild.firstChild;
-      if (checkboxNode) {
+      var listitemNode = engineBox.childNodes[x];
+      if (listitemNode.localName == "listitem") {
+        var engineURI = listitemNode.getAttribute("id");
+        var engineSRC = rdf.GetResource(engineURI, true);
+  
         var hasAssertion = localStore.HasAssertion(categorySRC, checkedProperty, engineSRC, true);
         if (hasAssertion)
-          checkboxNode.checked = true;
+          listitemNode.checked = true;
       }
     }
   }
@@ -585,7 +580,7 @@ function focusTextBox()
 
 function SearchPanelShutdown()
 {
-  var tree = document.getElementById("Tree");
+  var tree = document.getElementById("resultList");
   tree.database.RemoveObserver(RDF_observer);
 }
 
@@ -609,11 +604,11 @@ function doStop()
 
   // show appropriate column(s)
   var navWindow = getNavigatorWindow(false);
-  var resultsTree = navWindow ? navWindow._content.document.getElementById("internetresultstree") : null;
-  if (!resultsTree)
+  var resultsList = navWindow ? navWindow._content.document.getElementById("resultsList") : null;
+  if (!resultsList)
     return;
 
-  var searchURL = resultsTree.getAttribute("ref");
+  var searchURL = resultsList.getAttribute("ref");
   if (!searchURL)
     return;
 
@@ -709,24 +704,20 @@ function doSearch()
   var engineURIs = [];
   if (searchMode > 0) {
     var foundEngine = false;
-    var treeitemNode;
-    var engineBox = document.getElementById("engineKids");
+    var itemNode;
+    var engineBox = document.getElementById("searchengines");
 
     // in advanced search mode, get selected search engines
     // (for the current search category)
-    for (var x = 0; x < engineBox.childNodes.length; x++) {
-      treeitemNode = engineBox.childNodes[x];
+    for (var x = 0; x < engineBox.childNodes.length; ++x) {
+      itemNode = engineBox.childNodes[x];
 
-      if (treeitemNode) {
-        var checkboxNode = treeitemNode.firstChild.firstChild.firstChild;
+      if (itemNode.localName == "listitem" && itemNode.checked) {
+        var engineURI = itemNode.id;
 
-        if (checkboxNode && checkboxNode.checked) {
-          var engineURI = treeitemNode.id;
-
-          if (engineURI) {
-            engineURIs[engineURIs.length] = engineURI;
-            foundEngine = true;
-          }
+        if (engineURI) {
+          engineURIs[engineURIs.length] = engineURI;
+          foundEngine = true;
         }
       }
     }
@@ -734,13 +725,13 @@ function doSearch()
     if (!foundEngine) {
       if (getNumEngines() == 1) {
         // only one engine in this category, check it
-        treeitemNode = engineBox.firstChild;
-        engineURIs[engineURIs.length] = treeitemNode.id;
+        itemNode = engineBox.firstChild;
+        engineURIs[engineURIs.length] = itemNode.id;
       }
       else {
         for (var i = 0; i < engineBox.childNodes.length; ++i) {
-          treeitemNode = engineBox.childNodes[i];
-          var theID = treeitemNode.id;
+          itemNode = engineBox.childNodes[i];
+          var theID = itemNode.id;
           if (theID.indexOf("NetscapeSearch.src") != -1) {
             engineURIs[engineURIs.length] = theID;
             foundEngine = true;
@@ -784,10 +775,10 @@ function checkSearchProgress()
   var navWindow = getNavigatorWindow(false);
 
   if (navWindow) {
-    var resultsTree = navWindow._content.document.getElementById("internetresultstree");
-    if (resultsTree) {
-      var treeref = resultsTree.getAttribute("ref");
-      var ds = resultsTree.database;
+    var resultsList = navWindow._content.document.getElementById("resultsList");
+    if (resultsList) {
+      var treeref = resultsList.getAttribute("ref");
+      var ds = resultsList.database;
       if (ds && treeref) {
         try {
           var rdf = Components.classes[RDFSERVICE_CONTRACTID].getService(nsIRDFService);
@@ -813,21 +804,16 @@ function checkSearchProgress()
   return activeSearchFlag;
 }
 
-function sidebarOpenURL(treeitem)
+function sidebarOpenURL(listitem)
 {
-  if (treeitem.getAttribute("container") == "true" ||
-      treeitem.getAttribute("type") == "http://home.netscape.com/NC-rdf#BookmarkSeparator")   {
-    return;
-  }
-
-  var id = treeitem.id;
+  var id = listitem.id;
   if (!id)
     return;
 
   // rjc: add support for anonymous resources; if the node has
   // a "#URL" property, use it, otherwise default to using the id
   try {
-    var ds = document.getElementById("Tree").database;
+    var ds = document.getElementById("resultList").database;
     if (ds) {
       var rdf = Components.classes[RDFSERVICE_CONTRACTID].getService(nsIRDFService);
       var src = rdf.GetResource(id, true);
@@ -843,7 +829,7 @@ function sidebarOpenURL(treeitem)
   }
 
   // mark result as visited
-  treeitem.firstChild.firstChild.setAttribute("visited", "true");
+  listitem.setAttribute("visited", "true");
   
   loadURLInContent(id);
 }
@@ -925,7 +911,7 @@ function switchTab(aPageIndex)
   if (aPageIndex != 0)
     return;
 
-  var ds = document.getElementById("Tree").database;
+  var ds = document.getElementById("resultList").database;
   if (!ds)
     return;
 
@@ -945,7 +931,7 @@ function switchTab(aPageIndex)
 
 function saveSearch()
 {
-  var ds = document.getElementById("Tree").database;
+  var ds = document.getElementById("resultList").database;
   if (!ds)
     return;
 
@@ -1138,7 +1124,7 @@ function getArcValueForID(aArc, aID)
 
   try
   {
-    var ds = document.getElementById("Tree").database;
+    var ds = document.getElementById("resultList").database;
     if (ds)
     {
       var rdf = Components.classes[RDFSERVICE_CONTRACTID].
@@ -1165,16 +1151,11 @@ function FillInDescTooltip(tipElement)
 {
   var retValue = false;
  
-  //Get the cell node and the tree item node of
-  //moused over sherlock result
-  var nodeTreeCell = getItemNode(tipElement, "treecell");
-  var nodeTreeitem = getItemNode(tipElement, "treeitem");
+  //Get the Name of the listitem for first item in the tooltip
+  var nodeLabel = tipElement.getAttribute("label");
+  var nodeID = tipElement.id;
  
-  //Get the Name of the tree cell for first item in the tooltip
-  var nodeLabel = nodeTreeCell.childNodes.item(1).getAttribute("value");
-  var nodeID = nodeTreeitem.id;
- 
-  //Query RDF to get URL of tree item
+  //Query RDF to get URL of listitem
   if (nodeID)
     var url = getArcValueForID("URL", nodeID);
 
@@ -1210,7 +1191,7 @@ var nsResultDNDObserver =
 {
   onDragStart: function(aEvent, aXferData, aDragAction)
   {
-    var node = getItemNode(aEvent.target, "treeitem");
+    var node = getItemNode(aEvent.target, "listitem");
     var URL = getArcValueForID("URL", node.id);
     var title = getArcValueForID("Name", node.id);
     var htmlString = "<a href=\"" + URL + "\">" + title + "</a>";

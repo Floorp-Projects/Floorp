@@ -19,83 +19,70 @@
   Rights Reserved.
  
   Contributor(s): 
-
+    Joe Hewitt <hewitt@netscape.com>
+    Princess Marshmallow <yumminess@netscape.com>
 -->
 
 <?xml-stylesheet href="chrome://communicator/skin/directory/directory.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/directory/directory.dtd">
 
-<window style="overflow: auto"
+<page
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:nc="http://home.netscape.com/NC-rdf#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onunload="DoUnload();">
 
   <script type="application/x-javascript" src="chrome://communicator/content/directory/directory.js"/>
 
-  <tree id="tree" datasources="rdf:files" flex="1" style="height:0px;"
-      container="true" open="true" flags="dont-test-empty"
+  <tree id="tree" flex="1" enableColumnDrag="true"
+      datasources="rdf:files" flags="dont-test-empty"
+      sortActive="true" sortDirection="ascending"
+      sortResource="http://home.netscape.com/NC-rdf#Name"
+      persist="sortDirection sortResource sortResource2"
+      onclick="OnClick(event);"
+      onkeypress="OnClick(event);"
       ondraggesture="return BeginDragTree(event);">
+      
+      <treecols onclick="doSort(event.target)">
+        <treecol id="FilenameColumn" flex="3" persist="ordinal hidden"
+            label="&directoryWindow.filename.label;"
+            primary="true" sortDirection="ascending"
+            resource="http://home.netscape.com/NC-rdf#Name"/>
+        <splitter class="tree-splitter"/>
+        <treecol id="ContentLengthColumn" flex="1" persist="ordinal hidden"
+            label="&directoryWindow.contentlength.label;"
+            resource="http://home.netscape.com/NC-rdf#Content-Length"
+            resource2="http://home.netscape.com/NC-rdf#Name"/>
+        <splitter class="tree-splitter"/>
+        <treecol id="LastModColumn" flex="1" persist="ordinal hidden"
+            label="&directoryWindow.lastmodified.label;"
+            resource="http://home.netscape.com/WEB-rdf#LastModifiedDate"
+            resource2="http://home.netscape.com/NC-rdf#Name"/>
+      </treecols>
+
       <template>
-        <treechildren flex="1">
+        <treechildren>
           <treeitem uri="..." persist="open"
-                    URL="rdf:http://home.netscape.com/NC-rdf#URL" 
-                    type="rdf:http://home.netscape.com/NC-rdf#File-Type" 
-                    loading="rdf:http://home.netscape.com/NC-rdf#loading" >
+                    nc:url="rdf:http://home.netscape.com/NC-rdf#URL"
+                    nc:desc="rdf:http://home.netscape.com/NC-rdf#Name">
             <treerow>
-              <treecell class="treecell-filename treecell-indent" indent="true" 
-                        src="rdf:http://home.netscape.com/NC-rdf#Icon"
-                        validate="never"
-                        type="rdf:http://home.netscape.com/NC-rdf#File-Type"
-                        label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-              <treecell label="rdf:http://home.netscape.com/NC-rdf#Content-Length" />
-              <treecell label="rdf:http://home.netscape.com/WEB-rdf#LastModifiedDate" />
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#Name"
+                        src="rdf:http://home.netscape.com/NC-rdf#Icon"/>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#Content-Length"/>
+              <treecell label="rdf:http://home.netscape.com/WEB-rdf#LastModifiedDate"/>
             </treerow>
           </treeitem>
         </treechildren>
       </template>
-
-      <treecolgroup>
-        <treecol flex="3" id="FilenameColumn"
-            sortActive="true" sortDirection="ascending"
-            resource="http://home.netscape.com/NC-rdf#Name" />
-        <splitter class="tree-splitter"/>
-        <treecol flex="1" id="ContentLengthColumn"
-            resource="http://home.netscape.com/NC-rdf#Content-Length"
-            resource2="http://home.netscape.com/NC-rdf#Name"/>
-        <splitter class="tree-splitter"/>
-        <treecol flex="1" id="LastModColumn"
-            resource="http://home.netscape.com/WEB-rdf#LastModifiedDate"
-            resource2="http://home.netscape.com/NC-rdf#Name"/>
-      </treecolgroup>
-
-      <treehead>
-        <treerow>
-          <treecell class="treecell-header sortDirectionIndicator" label="&directoryWindow.filename.label;" 
-            onclick="return doSort('FilenameColumn');" observes="FilenameColumn" sortActive="true" sortDirection="ascending" />
-          <treecell class="treecell-header sortDirectionIndicator" label="&directoryWindow.contentlength.label;"
-            onclick="return doSort('ContentLengthColumn');" observes="ContentLengthColumn" />
-          <treecell class="treecell-header sortDirectionIndicator" label="&directoryWindow.lastmodified.label;"
-            onclick="return doSort('LastModColumn');" observes="LastModColumn" />
-        </treerow>
-      </treehead>
-
-      <!-- Create the treechildren here so we can attach event handlers
-           at this level (rather than at the tree level -->
-      <treechildren flex="1" onclick="OnClick(event, event.target.parentNode.parentNode);"
-        onkeypress="OnClick(event, event.target.parentNode.parentNode);"
-        onmouseover="OnMouseOver(event, event.target.parentNode.parentNode);"
-        onmouseout="OnMouseOut(event, event.target.parentNode.parentNode);" />
   </tree>
 
-  <splitter id="main-splitter" collapse="after" hidden="true"  >
+  <splitter id="main-splitter" collapse="after" hidden="true">
     <grippy/>
   </splitter>
 
   <vbox id="logbox" flex="1" collapsed="true" persist="height collapsed" hidden="true">
      <iframe id="output-iframe" type="content" flex="1" src="chrome://communicator/content/directory/directory.html"/>
   </vbox>
-</window>
-
-
-
+  
+</page>

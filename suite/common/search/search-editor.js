@@ -433,23 +433,29 @@ function MoveDelta(delta)
 
 function doMoveDirectionEnabling()
 {
-  var tree = document.getElementById("engineList")
-  var selectedItems = tree.selectedItems;
-  if (!selectedItems && selectedItems.length != 1)
-    return false;
-  var ref = tree.getAttribute("ref");
-  var categoryResource = RDF.GetResource(ref);
-  var elementResource = RDF.GetResource(selectedItems[0].id);
-  RDFC.Init(catDS, categoryResource);
-  var nodeIndex = RDFC.IndexOf(elementResource);
+  var engineList = document.getElementById("engineList")
+  var selectedItems = engineList.selectedItems;
+  var nodeIndex = -1;
+  if (selectedItems && selectedItems.length == 1) {
+    var ref = engineList.getAttribute("ref");
+    var categoryResource = RDF.GetResource(ref);
+    var elementResource = RDF.GetResource(selectedItems[0].id);
+    RDFC.Init(catDS, categoryResource);
+    nodeIndex = RDFC.IndexOf(elementResource);
+  }
+  
   var moveUpButton = document.getElementById("up");
   var moveDownButton = document.getElementById("down");
-  moveUpButton.removeAttribute("disabled");
-  moveDownButton.removeAttribute("disabled");
+
   if (nodeIndex <= 1)
     moveUpButton.setAttribute("disabled", "true");
-  if (nodeIndex >= RDFC.GetCount())
+  else
+    moveUpButton.removeAttribute("disabled");
+  
+  if (nodeIndex < 0 || nodeIndex >= RDFC.GetCount())
     moveDownButton.setAttribute("disabled", "true");
+  else
+    moveDownButton.removeAttribute("disabled");
 }
 
 
@@ -596,15 +602,15 @@ function RemoveCategory()
 
 
 
-function selectItems(treeRoot, containerID, targetID)
+function selectItems(listbox, containerID, targetID)
 {
-  var select_list = treeRoot.getElementsByAttribute("id", targetID);
+  var select_list = listbox.getElementsByAttribute("id", targetID);
   for (var x=0; x<select_list.length; x++)
   {
     var node = select_list[x];
     if (!node)  continue;
 
-    var parent = node.parentNode.parentNode;
+    var parent = node.parentNode;
     if (!parent)  continue;
 
     var id = parent.getAttribute("ref");
@@ -616,7 +622,7 @@ function selectItems(treeRoot, containerID, targetID)
 
     if (id == containerID)
     {
-      treeRoot.selectItem(node);
+      listbox.selectItem(node);
       break;
     }
   }

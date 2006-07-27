@@ -43,8 +43,6 @@ var original_panels = new Array();
 
 function sidebar_customize_init()
 {
-  doSetOKCancel(Save);
-
   allPanelsObj.datasources = window.arguments[0];
   allPanelsObj.resource    = window.arguments[1];
   sidebarObj.datasource_uri     = window.arguments[2];
@@ -60,7 +58,6 @@ function sidebar_customize_init()
 
   debug("Adding observer to all panels database.");
   all_panels.database.AddObserver(panels_observer);
-
 
   allPanelsObj.datasources = allPanelsObj.datasources.replace(/^\s+/,'');
   allPanelsObj.datasources = allPanelsObj.datasources.replace(/\s+$/,'');
@@ -107,15 +104,20 @@ function sidebar_customize_init()
 // the save button can be enabled when something changes.
 function save_initial_panels()
 {
-  var root = document.getElementById('current-panels-root');
-  for (var node = root.firstChild; node != null; node = node.nextSibling) {
-    original_panels[original_panels.length] = node.getAttribute('id');
+  var tree = document.getElementById('current-panels');
+  if (!tree.view) {
+    setTimeout(save_initial_panels, 0);
+  } else {
+    for (var i = 0; i < tree.view.rowCount; ++i) {
+      var item = tree.contentView.getItemAtIndex(i);
+      original_panels.push(item.id);
+    }
   }
 }
 
 function sidebar_customize_destruct()
 {
-  var all_panels   = document.getElementById('other-panels');
+  var all_panels = document.getElementById('other-panels');
   debug("Removing observer from all_panels database.");
   all_panels.database.RemoveObserver(panels_observer);
 }
@@ -195,48 +197,26 @@ function SelectChangeForOtherPanels(event, target)
 
 function ClickOnOtherPanels(event)
 {
-  debug("ClickOnOtherPanels(...)");
+  var tree = document.getElementById("other-panels");
+  
+  var rowIndex = -1;
+  if (event.type == "click" && event.button == 0) {
+    var row = {}, col = {}, obj = {};
+    var b = tree.treeBoxObject;
+    b.getCellAt(event.clientX, event.clientY, row, col, obj);
 
-  var t = event.originalTarget;
-
-  var treeitem = null;
-  var force_open = true;
-  if (t.getAttribute('twisty') == 'true') {
-    // The twisty is nested three below the treeitem:
-    // <treeitem>
-    //   <treerow>
-    //     <treecell>
-    //         <image class="tree-cell-twisty"> <!-- anonymous -->
-    treeitem = t.parentNode.parentNode.parentNode;
-    force_open = false;
-  } else {
-    if (t.localName != "treecell" &&
-        t.localName != "treeitem")
-    return;
-
-    treeitem = t;
-    while (treeitem && treeitem.nodeName != 'treeitem') {
-      treeitem = treeitem.parentNode;
+    if (obj.value == "twisty" || event.detail == 2) {
+      rowIndex = row.value;
     }
   }
 
-  // Remove the selection in the "current" panels list
-  var current_panels = document.getElementById('current-panels');
-  current_panels.clearSelection();
-  enable_buttons_for_current_panels();
-
+  if (rowIndex < 0) return;
+  
+  var treeitem = tree.contentView.getItemAtIndex(rowIndex);
+  var res = RDF.GetResource(treeitem.id);
+  
   if (treeitem.getAttribute('container') == 'true') {
     if (treeitem.getAttribute('open') == 'true') {
-      if (force_open) {
-        debug("close the container");
-        treeitem.removeAttribute('open');
-      }
-    } else {
-      if (force_open) {
-        debug("open the container");
-        treeitem.setAttribute('open','true');
-      }
-
       var link = treeitem.getAttribute('link');
       var loaded_link = treeitem.getAttribute('loaded_link');
       if (link != '' && !loaded_link) {
@@ -248,6 +228,11 @@ function ClickOnOtherPanels(event)
       }
     }
   }
+
+  // Remove the selection in the "current" panels list
+  var current_panels = document.getElementById('current-panels');
+  current_panels.treeBoxObject.selection.clearSelection();
+  enable_buttons_for_current_panels();
 }
 
 function add_datasource_to_other_panels(link) {
@@ -275,7 +260,7 @@ function add_datasource_to_other_panels(link) {
 function SelectChangeForCurrentPanels() {
   // Remove the selection in the available panels list
   var all_panels = document.getElementById('other-panels');
-  all_panels.clearSelection();
+  all_panels.treeBoxObject.selection.clearSelection();
 
   enable_buttons_for_current_panels();
   enable_buttons_for_other_panels();
@@ -284,13 +269,15 @@ function SelectChangeForCurrentPanels() {
 // Move the selected item up the the current panels list.
 function MoveUp() {
   var tree = document.getElementById('current-panels');
-  if (tree.selectedItems.length == 1) {
-    var selected = tree.selectedItems[0];
-    var before = selected.previousSibling
+  if (tree.treeBoxObject.selection.count == 1) {
+    var index = tree.currentIndex;
+    var selected = tree.contentView.getItemAtIndex(index);
+    var before = selected.previousSibling;
     if (before) {
+      before.parentNode.removeChild(selected);
       before.parentNode.insertBefore(selected, before);
-      tree.selectItem(selected);
-      tree.ensureElementIsVisible(selected);
+      tree.treeBoxObject.selection.select(index-1);
+      tree.treeBoxObject.ensureRowIsVisible(index-1);
     }
   }
   enable_buttons_for_current_panels();
@@ -299,17 +286,16 @@ function MoveUp() {
 // Move the selected item down the the current panels list.
 function MoveDown() {
   var tree = document.getElementById('current-panels');
-  if (tree.selectedItems.length == 1) {
-    var selected = tree.selectedItems[0];
+  if (tree.treeBoxObject.selection.count == 1) {
+    var index = tree.currentIndex;
+    var selected = tree.contentView.getItemAtIndex(index);
     if (selected.nextSibling) {
-      if (selected.nextSibling.nextSibling) {
+      if (selected.nextSibling.nextSibling)
         selected.parentNode.insertBefore(selected, selected.nextSibling.nextSibling);
-      }
-      else {
+      else
         selected.parentNode.appendChild(selected);
-      }
-      tree.selectItem(selected);
-      tree.ensureElementIsVisible(selected);
+      tree.treeBoxObject.selection.select(index+1);
+      tree.treeBoxObject.ensureRowIsVisible(index+1);
     }
   }
   enable_buttons_for_current_panels();
@@ -319,61 +305,58 @@ function PreviewPanel()
 {
   var tree = document.getElementById('other-panels');
   var database = tree.database;
-  var select_list = tree.selectedItems
-  for (var nodeIndex=0; nodeIndex<select_list.length; nodeIndex++) {
-    var node = select_list[nodeIndex];
-    if (!node)    break;
-    // Skip folders
-    if (node.getAttribute('container') == 'true') {
-      continue;
+  var sel = tree.treeBoxObject.selection;
+  var rangeCount = sel.getRangeCount();
+  for (var range = 0; range < rangeCount; ++range) {
+    var min = {}, max = {};
+    sel.getRangeAt(range, min, max);
+    for (var index = min.value; index <= max.value; ++index) {
+      var item = tree.contentView.getItemAtIndex(index);
+      var res = RDF.GetResource(item.id);
+
+      var preview_name = get_attr(database, res, 'title');
+      var preview_URL  = get_attr(database, res, 'content');
+      if (!preview_URL || !preview_name) continue;
+
+      window.openDialog("chrome://communicator/content/sidebar/preview.xul",
+                        "_blank", "chrome,resizable,close,dialog=no",
+                        preview_name, preview_URL);
     }
-    var id = node.getAttribute("id");
-    if (!id)      break;
-    var rdfNode = RDF.GetResource(id);
-    if (!rdfNode) break;
-
-    var preview_name = get_attr(database, rdfNode, 'title');
-    var preview_URL  = get_attr(database, rdfNode, 'content');
-    if (!preview_URL || !preview_name) break;
-
-    window.openDialog("chrome://communicator/content/sidebar/preview.xul",
-                      "_blank", "chrome,resizable,close,dialog=no",
-                      preview_name, preview_URL);
   }
 }
 
 // Add the selected panel(s).
 function AddPanel()
 {
+  var added = 0;
+  
   var tree = document.getElementById('other-panels');
   var database = tree.database;
-  var select_list = tree.selectedItems
-  for (var nodeIndex=0; nodeIndex<select_list.length; nodeIndex++) {
-    var node = select_list[nodeIndex];
-    if (!node)    break;
-    // Skip folders.
-    if (node.getAttribute('container') == 'true') {
-      continue;
+  var sel = tree.treeBoxObject.selection;
+  var ranges = sel.getRangeCount();
+  for (var range = 0; range < ranges; ++range) {
+    var min = {}, max = {};
+    sel.getRangeAt(range, min, max);
+    for (var index = min.value; index <= max.value; ++index) {
+      var item = tree.contentView.getItemAtIndex(index);
+      if (item.getAttribute("container") != "true") {
+        var res = RDF.GetResource(item.id);
+        // Add the panel to the current list.
+        add_node_to_current_list(database, res);
+        ++added;
+      }
     }
-    var id = node.getAttribute("id");
-    // No id? Sorry. Only nodes with id's can get
-    // in the current panel list.
-    if (!id)      break;
-    var rdfNode = RDF.GetResource(id);
-    // You need an rdf node too. Sorry, those are the rules.
-    if (!rdfNode) break;
-
-    // Add the panel to the current list.
-    add_node_to_current_list(database, rdfNode);
   }
 
-  // Remove the selection in the other list.
-  // Selection will move to "current" list.
-  var all_panels = document.getElementById('other-panels');
-  all_panels.clearSelection();
+  if (added) {
+    // Remove the selection in the other list.
+    // Selection will move to "current" list.
+    var all_panels = document.getElementById('other-panels');
+    all_panels.treeBoxObject.selection.clearSelection();
 
-  enable_buttons_for_current_panels();
-  enable_buttons_for_other_panels();
+    enable_buttons_for_current_panels();
+    enable_buttons_for_other_panels();
+  }
 }
 
 // Copy a panel node into a database such as the current panel list.
@@ -386,18 +369,20 @@ function add_node_to_current_list(registry, service)
   var option_customize = get_attr(registry, service, 'customize');
   var option_content   = get_attr(registry, service, 'content');
 
-  var tree     = document.getElementById('current-panels');
-  var treeroot = document.getElementById('current-panels-root');
-
+  var tree = document.getElementById('current-panels');
+  var tree_root = tree.getElementsByTagName("treechildren")[1];
+  
   // Check to see if the panel already exists...
-  for (var ii = treeroot.firstChild; ii != null; ii = ii.nextSibling) {
-    if (ii.getAttribute('id') == service.Value) {
+  var i = 0;
+  for (var treeitem = tree_root.firstChild; treeitem; treeitem = treeitem.nextSibling) {
+    if (treeitem.id == service.Value) {
       // The panel is already in the current panel list.
       // Avoid adding it twice.
-      tree.selectItem(ii);
-      tree.ensureElementIsVisible(ii);
+      tree.treeBoxObject.selection.select(i);
+      tree.treeBoxObject.ensureRowIsVisible(i);
       return;
     }
+    ++i;
   }
 
   // Create a treerow for the new panel
@@ -407,44 +392,40 @@ function add_node_to_current_list(registry, service)
 
   // Copy over the attributes
   item.setAttribute('id', service.Value);
-  if (option_customize && option_customize != '') {
-    item.setAttribute('customize', option_customize);
-  }
-  item.setAttribute('content', option_content);
-  cell.setAttribute('class', 'treecell-indent treecell-panel');
   cell.setAttribute('label', option_title);
 
   // Add it to the current panels tree
   item.appendChild(row);
   row.appendChild(cell);
-  treeroot.appendChild(item);
-
+  tree_root.appendChild(item);
+  
   // Select is only if the caller wants to.
-  tree.selectItem(item);
-  tree.ensureElementIsVisible(item);
+  var newIndex = tree_root.getElementsByTagName("treeitem").length - 1;
+  tree.treeBoxObject.selection.select(newIndex);
+  tree.treeBoxObject.ensureRowIsVisible(newIndex);
 }
 
 // Remove the selected panel(s) from the current list tree.
 function RemovePanel()
 {
   var tree = document.getElementById('current-panels');
-
-  var nextNode = null;
-  var numToRemove = tree.selectedItems.length;
-  while (numToRemove > 0) {
-    var selectedNode = tree.selectedItems[0];
-    nextNode = selectedNode.nextSibling;
-    if (!nextNode) {
-      nextNode = selectedNode.previousSibling;
+  var sel = tree.treeBoxObject.selection;
+  
+  var nextNode = -1;
+  var rangeCount = sel.getRangeCount();
+  for (var range = rangeCount-1; range >= 0; --range) {
+    var min = {}, max = {};
+    sel.getRangeAt(range, min, max);
+    for (var index = max.value; index >= min.value; --index) {
+      var item = tree.contentView.getItemAtIndex(index);
+      var nextNode = item.nextSibling ? index : -1;
+      item.parentNode.removeChild(item);
     }
-    selectedNode.parentNode.removeChild(selectedNode);
-    numToRemove--;
   }
 
-  if (nextNode) {
-    tree.selectItem(nextNode)
-  }
-
+  if (nextNode >= 0)
+    sel.select(nextNode);
+    
   enable_buttons_for_current_panels();
 }
 
@@ -505,28 +486,23 @@ function Save()
   var current_panels = document.getElementById('current-panels');
 
   // See if list membership has changed
-  var root = document.getElementById('current-panels-root');
+  var root = current_panels.getElementsByTagName("treechildren")[1];
   var panels = root.childNodes;
   var list_unchanged = (panels.length == original_panels.length);
   for (var i = 0; i < panels.length && list_unchanged; i++) {
-    if (original_panels[i] != panels.item(i).getAttribute('id')) {
+    if (original_panels[i] != panels[i].id)
       list_unchanged = false;
-    }
   }
-  if (list_unchanged) {
-    window.close();
+  if (list_unchanged)
     return;
-  }
 
   // Iterate through the 'current-panels' tree to collect the panels
   // that the user has chosen. We need to do this _before_ we remove
   // the panels from the datasource, because the act of removing them
   // from the datasource will change the tree!
-  panels = new Array();
-  root = document.getElementById('current-panels-root');
-  for (var node = root.firstChild; node != null; node = node.nextSibling) {
-    panels[panels.length] = node.getAttribute('id');
-  }
+  panels = [];
+  for (var node = root.firstChild; node != null; node = node.nextSibling)
+    panels.push(node.id);
 
   // Cut off the connection between the dialog and the datasource.
   // The dialog is closed at the end of this function.
@@ -548,7 +524,7 @@ function Save()
   container.Init(sidebarObj.datasource, panel_list);
 
   // Remove all the current panels from the datasource.
-  var have_panel_attributes = new Array();
+  var have_panel_attributes = [];
   current_panels = container.GetElements();
   while (current_panels.hasMoreElements()) {
     panel = current_panels.getNext();
@@ -576,20 +552,11 @@ function Save()
       copy_resource_deeply(all_panels.database, resource, container);
     }
   }
-
   refresh_all_sidebars();
 
   // Write the modified panels out.
   sidebarObj.datasource.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush();
-
-  window.close();
 }
-
-function Cancel() {
-  persist_dialog_dimensions();
-  window.close();
-}
-
 
 // Search for an element in an array
 function has_element(array, element) {
@@ -653,21 +620,26 @@ function enable_buttons_for_other_panels()
   var preview_button = document.getElementById('preview_button');
   var all_panels = document.getElementById('other-panels');
 
-  var num_selected = 0;
-  // Only count non-folders as selected for button enabling
-  for (var ii=0; ii<all_panels.selectedItems.length; ii++) {
-    debug("counting selected items...");
-    var node = all_panels.selectedItems[ii];
-    if (node.getAttribute('container') != 'true') {
-      num_selected++;
+  var sel = all_panels.treeBoxObject.selection;
+  var num_selected = sel ? sel.count : 0;
+  if (sel) {
+    var ranges = sel.getRangeCount();
+    for (var range = 0; range < ranges; ++range) {
+      var min = {}, max = {};
+      sel.getRangeAt(range, min, max);
+      for (var index = min; index <= max; ++index) {
+        var node = all_panels.contentView.getItemAtIndex(index);
+        if (node.getAttribute('container') != 'true') {
+          ++num_selected;
+        }
+      }
     }
   }
-  debug("num_selected="+num_selected);
+
   if (num_selected > 0) {
     add_button.removeAttribute('disabled');
     preview_button.removeAttribute('disabled');
-  }
-  else {
+  } else {
     add_button.setAttribute('disabled','true');
     preview_button.setAttribute('disabled','true');
   }
@@ -680,12 +652,12 @@ function enable_buttons_for_current_panels() {
   var customize = document.getElementById('customize-button');
   var remove    = document.getElementById('remove-button');
 
-  var numSelected = tree.selectedItems.length;
+  var numSelected = tree.treeBoxObject.selection ? tree.treeBoxObject.selection.count : 0;
 
   var noneSelected, isFirst, isLast, selectedNode
 
   if (numSelected > 0) {
-    selectedNode = tree.selectedItems[0]
+    selectedNode = tree.contentView.getItemAtIndex(tree.currentIndex);
     isFirst = selectedNode == selectedNode.parentNode.firstChild
     isLast  = selectedNode == selectedNode.parentNode.lastChild
   }

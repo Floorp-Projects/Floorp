@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 // The history window uses JavaScript in bookmarks.js too.
 
-var gHistoryOutliner;
+var gHistoryTree;
 var gLastHostname;
 var gLastDomain;
 var gGlobalHistory;
@@ -51,20 +51,20 @@ var gWindowManager = null;
 
 function HistoryInit()
 {
-    gHistoryOutliner =  document.getElementById("historyOutliner");
+    gHistoryTree =  document.getElementById("historyTree");
     gDeleteByHostname = document.getElementById("menu_deleteByHostname");
     gDeleteByDomain =   document.getElementById("menu_deleteByDomain");
     gHistoryBundle =    document.getElementById("historyBundle");
     gHistoryStatus =    document.getElementById("statusbar-display");
 
-    var outlinerController = new nsOutlinerController(gHistoryOutliner);
+    var treeController = new nsTreeController(gHistoryTree);
     var historyController = new nsHistoryController;
-    gHistoryOutliner.controllers.appendController(historyController);
+    gHistoryTree.controllers.appendController(historyController);
 
     if ("arguments" in window && window.arguments[0] && window.arguments.length >= 1) {
         // We have been supplied a resource URI to root the tree on
         var uri = window.arguments[0];
-        gHistoryOutliner.setAttribute("ref", uri);
+        gHistoryTree.setAttribute("ref", uri);
         if (uri.substring(0,5) == "find:" &&
             !(window.arguments.length > 1 && window.arguments[1] == "newWindow")) {
             // Update the windowtype so that future searches are directed 
@@ -102,8 +102,8 @@ function HistoryInit()
             pbi.addObserver("browser.history.grouping", groupObserver, false);
         }
     } 
-    gHistoryOutliner.focus();
-    gHistoryOutliner.outlinerBoxObject.view.selection.select(0);
+    gHistoryTree.focus();
+    gHistoryTree.treeBoxObject.view.selection.select(0);
 }
 
 function updateHistoryCommands()
@@ -118,13 +118,13 @@ function historyOnClick(aEvent)
   // If a status bar is not present, assume we're in sidebar mode, and thus single clicks on containers
   // will open the container. Single clicks on non-containers are handled below in historyOnSelect.
   if (!gHistoryStatus) {
-    var currentIndex = gHistoryOutliner.currentIndex;     
+    var currentIndex = gHistoryTree.currentIndex;     
     var row = { };
     var col = { };
     var elt = { };
-    gHistoryOutliner.outlinerBoxObject.getCellAt(aEvent.clientX, aEvent.clientY, row, col, elt);
-    if (row.value >= 0 && isContainer(gHistoryOutliner, row.value)) 
-      gHistoryOutliner.outlinerBoxObject.view.toggleOpenState(row.value);
+    gHistoryTree.treeBoxObject.getCellAt(aEvent.clientX, aEvent.clientY, row, col, elt);
+    if (row.value >= 0 && isContainer(gHistoryTree, row.value)) 
+      gHistoryTree.treeBoxObject.view.toggleOpenState(row.value);
   }
 }
 
@@ -139,9 +139,9 @@ function historyOnSelect()
     gLastHostname = "";
     gLastDomain = "";
     var match;
-    var currentIndex = gHistoryOutliner.currentIndex;
-    var rowIsContainer = gHistoryGrouping == "day" ? isContainer(gHistoryOutliner, currentIndex) : false;
-    var url = gHistoryOutliner.outlinerBoxObject.view.getCellText(currentIndex, "URL");
+    var currentIndex = gHistoryTree.currentIndex;
+    var rowIsContainer = gHistoryGrouping == "day" ? isContainer(gHistoryTree, currentIndex) : false;
+    var url = gHistoryTree.treeBoxObject.view.getCellText(currentIndex, "URL");
 
     if (url && !rowIsContainer) {
         // matches scheme://(hostname)...
@@ -218,14 +218,14 @@ nsHistoryController.prototype =
             if (!gGlobalHistory)
                 gGlobalHistory = Components.classes["@mozilla.org/browser/global-history;1"].getService(Components.interfaces.nsIBrowserHistory);
             gGlobalHistory.removePagesFromHost(gLastHostname, false)
-            gHistoryOutliner.builder.rebuild();
+            gHistoryTree.builder.rebuild();
             return true;
 
         case "cmd_deleteByDomain":
             if (!gGlobalHistory)
                 gGlobalHistory = Components.classes["@mozilla.org/browser/global-history;1"].getService(Components.interfaces.nsIBrowserHistory);
             gGlobalHistory.removePagesFromHost(gLastDomain, true)
-            gHistoryOutliner.builder.rebuild();
+            gHistoryTree.builder.rebuild();
             return true;
 
         default:
@@ -237,11 +237,11 @@ nsHistoryController.prototype =
 var historyDNDObserver = {
     onDragStart: function (aEvent, aXferData, aDragAction)
     {
-        var currentIndex = gHistoryOutliner.currentIndex;
-        if (isContainer(gHistoryOutliner, currentIndex))
+        var currentIndex = gHistoryTree.currentIndex;
+        if (isContainer(gHistoryTree, currentIndex))
             return false;
-        var url = gHistoryOutliner.outlinerBoxObject.view.getCellText(currentIndex, "URL");
-        var title = gHistoryOutliner.outlinerBoxObject.view.getCellText(currentIndex, "Name");
+        var url = gHistoryTree.treeBoxObject.view.getCellText(currentIndex, "URL");
+        var title = gHistoryTree.treeBoxObject.view.getCellText(currentIndex, "Name");
 
         var htmlString = "<A HREF='" + url + "'>" + title + "</A>";
         aXferData.data = new TransferData();
@@ -254,30 +254,30 @@ var historyDNDObserver = {
 
 function validClickConditions(event)
 {
-  var currentIndex = gHistoryOutliner.currentIndex;
+  var currentIndex = gHistoryTree.currentIndex;
   if (currentIndex == -1) return false;
-  var container = isContainer(gHistoryOutliner, currentIndex);
+  var container = isContainer(gHistoryTree, currentIndex);
   return (event.button == 0 &&
-          event.originalTarget.localName == 'outlinerchildren' &&
+          event.originalTarget.localName == 'treechildren' &&
           !container && gHistoryStatus);
 }
 
 function collapseExpand()
 {
-    var currentIndex = gHistoryOutliner.currentIndex;
-    gHistoryOutliner.outlinerBoxObject.view.toggleOpenState(currentIndex);
+    var currentIndex = gHistoryTree.currentIndex;
+    gHistoryTree.treeBoxObject.view.toggleOpenState(currentIndex);
 }
 
 function OpenURL(aInNewWindow)
 {
-    var currentIndex = gHistoryOutliner.currentIndex;     
-    var builder = gHistoryOutliner.builder.QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);
+    var currentIndex = gHistoryTree.currentIndex;     
+    var builder = gHistoryTree.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
     var url = builder.getResourceAtIndex(currentIndex).Value;
     
     if (aInNewWindow) {
-      var count = gHistoryOutliner.outlinerBoxObject.view.selection.count;
+      var count = gHistoryTree.treeBoxObject.view.selection.count;
       if (count == 1) {
-        if (isContainer(gHistoryOutliner, currentIndex))
+        if (isContainer(gHistoryTree, currentIndex))
           openDialog("chrome://communicator/content/history/history.xul", 
                      "", "chrome,all,dialog=no", url, "newWindow");
         else      
@@ -286,11 +286,11 @@ function OpenURL(aInNewWindow)
       else {
         var min = new Object(); 
         var max = new Object();
-        var rangeCount = gHistoryOutliner.outlinerBoxObject.view.selection.getRangeCount();
+        var rangeCount = gHistoryTree.treeBoxObject.view.selection.getRangeCount();
         for (var i = 0; i < rangeCount; ++i) {
-          gHistoryOutliner.outlinerBoxObject.view.selection.getRangeAt(i, min, max);
+          gHistoryTree.treeBoxObject.view.selection.getRangeAt(i, min, max);
           for (var k = max.value; k >= min.value; --k) {
-            url = gHistoryOutliner.outlinerBoxObject.view.getCellText(k, "URL");
+            url = gHistoryTree.treeBoxObject.view.getCellText(k, "URL");
             window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url);
           }
         }
@@ -303,18 +303,18 @@ function OpenURL(aInNewWindow)
 
 function GroupBy(groupingType)
 {
-    var outliner = document.getElementById("historyOutliner");
+    var tree = document.getElementById("historyTree");
     switch(groupingType) {
     case "none":
-        outliner.setAttribute("ref", "NC:HistoryRoot");
+        tree.setAttribute("ref", "NC:HistoryRoot");
         break;
     case "site":
         // xxx for now
-        outliner.setAttribute("ref", "NC:HistoryByDate");
+        tree.setAttribute("ref", "NC:HistoryByDate");
         break;
     case "day":
     default:
-        outliner.setAttribute("ref", "NC:HistoryByDate");
+        tree.setAttribute("ref", "NC:HistoryByDate");
         break;
     }
     gPrefService.setCharPref("browser.history.grouping", groupingType);
@@ -332,24 +332,24 @@ var groupObserver = {
 
 function historyAddBookmarks()
 {
-  var count = gHistoryOutliner.outlinerBoxObject.view.selection.count;
+  var count = gHistoryTree.treeBoxObject.view.selection.count;
   var url;
   var title;
   if (count == 1) {
-    var currentIndex = gHistoryOutliner.currentIndex;
-    url = gHistoryOutliner.outlinerBoxObject.view.getCellText(currentIndex, "URL");
-    title = gHistoryOutliner.outlinerBoxObject.view.getCellText(currentIndex, "Name");
+    var currentIndex = gHistoryTree.currentIndex;
+    url = gHistoryTree.treeBoxObject.view.getCellText(currentIndex, "URL");
+    title = gHistoryTree.treeBoxObject.view.getCellText(currentIndex, "Name");
     BookmarksUtils.addBookmark(url, title, undefined, true);
   }
   else if (count > 1) {
     var min = new Object(); 
     var max = new Object();
-    var rangeCount = gHistoryOutliner.outlinerBoxObject.view.selection.getRangeCount();
+    var rangeCount = gHistoryTree.treeBoxObject.view.selection.getRangeCount();
     for (var i = 0; i < rangeCount; ++i) {
-      gHistoryOutliner.outlinerBoxObject.view.selection.getRangeAt(i, min, max);
+      gHistoryTree.treeBoxObject.view.selection.getRangeAt(i, min, max);
       for (var k = max.value; k >= min.value; --k) {
-        url = gHistoryOutliner.outlinerBoxObject.view.getCellText(k, "URL");
-        title = gHistoryOutliner.outlinerBoxObject.view.getCellText(k, "Name");
+        url = gHistoryTree.treeBoxObject.view.getCellText(k, "URL");
+        title = gHistoryTree.treeBoxObject.view.getCellText(k, "Name");
         BookmarksUtils.addBookmark(url, title, undefined, false);
       }
     }
@@ -359,7 +359,7 @@ function historyAddBookmarks()
 
 function updateItems()
 {
-  var count = gHistoryOutliner.outlinerBoxObject.view.selection.count;
+  var count = gHistoryTree.treeBoxObject.view.selection.count;
   var openItem = document.getElementById("miOpen");
   var bookmarkItem = document.getElementById("miAddBookmark");
   var copyLocationItem = document.getElementById("miCopyLinkLocation");
@@ -371,11 +371,11 @@ function updateItems()
     if (gHistoryGrouping == "day") {
       var min = new Object(); 
       var max = new Object();
-      var rangeCount = gHistoryOutliner.outlinerBoxObject.view.selection.getRangeCount();
+      var rangeCount = gHistoryTree.treeBoxObject.view.selection.getRangeCount();
       for (var i = 0; i < rangeCount; ++i) {
-        gHistoryOutliner.outlinerBoxObject.view.selection.getRangeAt(i, min, max);
+        gHistoryTree.treeBoxObject.view.selection.getRangeAt(i, min, max);
         for (var k = max.value; k >= min.value; --k) {
-          if (isContainer(gHistoryOutliner, k)) {
+          if (isContainer(gHistoryTree, k)) {
             hasContainer = true;
             break;
           }
@@ -403,8 +403,8 @@ function updateItems()
   }
   else {
     bookmarkItem.setAttribute("label", document.getElementById('oneBookmark').getAttribute("label"));
-    var currentIndex = gHistoryOutliner.currentIndex;
-    if (isContainer(gHistoryOutliner, currentIndex)) {
+    var currentIndex = gHistoryTree.currentIndex;
+    if (isContainer(gHistoryTree, currentIndex)) {
         openItem.setAttribute("hidden", "true");
         openItem.removeAttribute("default");
         collapseExpandItem.removeAttribute("hidden");
@@ -412,7 +412,7 @@ function updateItems()
         bookmarkItem.setAttribute("hidden", "true");
         copyLocationItem.setAttribute("hidden", "true");
         sep1.setAttribute("hidden", "true");
-        if (isContainerOpen(gHistoryOutliner, currentIndex))
+        if (isContainerOpen(gHistoryTree, currentIndex))
           collapseExpandItem.setAttribute("label", gHistoryBundle.getString("collapseLabel"));
         else
           collapseExpandItem.setAttribute("label", gHistoryBundle.getString("expandLabel"));
