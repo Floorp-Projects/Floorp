@@ -7,7 +7,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Account_Settings"
          nc:name="Account Settings"
-	 nc:link="mail_help.html#Account_SettingsIDX"/>
+         nc:link="mail_help.xhtml#changing_the_settings_for_an_account"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -17,7 +17,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="adding"
          nc:name="adding"
-	 nc:link="mail_help.html#adding:address_book_entriesIDX"/>
+         nc:link="mail_help.xhtml#adding_entries_to_your_address_book"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -27,7 +27,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="adding:address_book_entries"
          nc:name="address book entries"
-	 nc:link="mail_help.html#adding:address_book_entriesIDX"/>
+         nc:link="mail_help.xhtml#adding_entries_to_your_address_book"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -47,7 +47,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="adding:LDAP_directories"
          nc:name="LDAP directories"
-	 nc:link="mail_help.html#adding:LDAP_directoriesIDX"/>
+         nc:link="mail_help.xhtml#adding_and_removing_ldap_directories"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -57,7 +57,7 @@
       <rdf:Seq><rdf:li>
        <rdf:Description ID="adding:mail_account"
          nc:name="mail account"
-	 nc:link="mail_help.html#adding:mail_accountIDX"/>
+         nc:link="mail_help.xhtml#setting_up_additional_mail_and_news_accounts"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -67,7 +67,7 @@
       <rdf:Seq><rdf:li>
        <rdf:Description ID="adding:newsgroup_account"
          nc:name="newsgroup account"
-	 nc:link="mail_help.html#adding:newsgroup_accountIDX"/>
+         nc:link="mail_help.xhtml#setting_up_additional_mail_and_news_accounts"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -87,7 +87,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="address_books"
          nc:name="address books"
-	 nc:link="mail_help.html#address_books:adding_entriesIDX"/>
+         nc:link="mail_help.xhtml#adding_entries_to_your_address_book"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -97,7 +97,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="address_books:adding_entries"
          nc:name="adding entries"
-	 nc:link="mail_help.html#address_books:adding_entriesIDX"/>
+         nc:link="mail_help.xhtml#adding_entries_to_your_address_book"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -107,7 +107,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="address_books:creating"
          nc:name="creating"
-	 nc:link="mail_help.html#address_books:creatingIDX"/>
+         nc:link="mail_help.xhtml#creating_a_new_address_book"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -117,7 +117,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="address_books:creating_mailing_lists"
          nc:name="creating mailing lists"
-	 nc:link="mail_help.html#address_books:creating_mailing_listsIDX"/>
+         nc:link="mail_help.xhtml#creating_a_mailing_list"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -127,7 +127,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="address_books:exporting"
          nc:name="exporting"
-	 nc:link="mail_help.html#address_books:exportingIDX"/>
+         nc:link="mail_help.xhtml#exporting_address_books"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -137,7 +137,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="address_books:importing"
          nc:name="importing"
-	 nc:link="mail_help.html#address_books:importingIDX"/>
+         nc:link="mail_help.xhtml#importing_address_books"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -147,7 +147,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="address_books:LDAP_directories"
          nc:name="LDAP directories"
-	 nc:link="mail_help.html#address_books:LDAP_directoriesIDX"/>
+         nc:link="mail_help.xhtml#adding_and_removing_ldap_directories"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -157,7 +157,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="address_books:searching"
          nc:name="searching"
-	 nc:link="mail_help.html#address_books:searchingIDX"/>
+         nc:link="mail_help.xhtml#searching_address_book_and_directories"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -167,7 +167,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="attaching_files_to_messages"
          nc:name="attaching files to messages"
-	 nc:link="mail_help.html#attaching_files_to_messagesIDX"/>
+         nc:link="mail_help.xhtml#attaching_a_file_or_web_page"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -947,7 +947,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="email_addresses"
          nc:name="email addresses"
-	 nc:link="mail_help.html#email_addresses:address_books_andIDX"/>
+         nc:link="mail_help.xhtml#adding_entries_to_your_address_book"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -957,7 +957,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="email_addresses:address_books_and"
          nc:name="address books and"
-	 nc:link="mail_help.html#email_addresses:address_books_andIDX"/>
+         nc:link="mail_help.xhtml#adding_entries_to_your_address_book"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -967,7 +967,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="email_addresses:in_mail_messages"
          nc:name="in mail messages"
-	 nc:link="mail_help.html#email_addresses:in_mail_messagesIDX"/>
+         nc:link="mail_help.xhtml#addressing_a_message"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1047,7 +1047,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Filing_messages"
          nc:name="Filing messages"
-	 nc:link="mail_help.html#Filing_messagesIDX"/>
+         nc:link="mail_help.xhtml#filing_messages_in_folders"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1227,7 +1227,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="HTML"
          nc:name="HTML"
-	 nc:link="mail_help.html#HTML:editing_in_mail_messagesIDX"/>
+         nc:link="mail_help.xhtml#editing_or_inserting_html_elements"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1237,7 +1237,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="HTML:editing_in_mail_messages"
          nc:name="editing in mail messages"
-	 nc:link="mail_help.html#HTML:editing_in_mail_messagesIDX"/>
+         nc:link="mail_help.xhtml#editing_or_inserting_html_elements"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1257,7 +1257,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="HTML:using_in_mail_messages"
          nc:name="using in mail messages"
-	 nc:link="mail_help.html#HTML:using_in_mail_messagesIDX"/>
+         nc:link="mail_help.xhtml#using_html_in_your_messages"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1327,7 +1327,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="IMAP"
          nc:name="IMAP"
-	 nc:link="mail_help.html#IMAP:aboutIDX"/>
+         nc:link="mail_help.xhtml#about_internet_message_access_protocol"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1337,7 +1337,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="IMAP:about"
          nc:name="about"
-	 nc:link="mail_help.html#IMAP:aboutIDX"/>
+         nc:link="mail_help.xhtml#about_internet_message_access_protocol"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1347,7 +1347,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="IMAP:advanced_mail_settings"
          nc:name="advanced mail settings"
-	 nc:link="mail_help.html#IMAP:advanced_mail_settingsIDX"/>
+         nc:link="mail_help.xhtml#advanced_imap_server_settings"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1357,7 +1357,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="IMAP:server_settings"
          nc:name="server settings"
-	 nc:link="mail_help.html#IMAP:server_settingsIDX"/>
+         nc:link="mail_help.xhtml#imap_server_settings"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1447,7 +1447,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="IMAP:Mail_settings"
          nc:name="Mail settings"
-	 nc:link="mail_help.html#IMAP:Mail_settingsIDX"/>
+         nc:link="mail_help.xhtml#imap_server_settings"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1487,7 +1487,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="keep_as_new"
          nc:name="keep as new"
-	 nc:link="mail_help.html#keep_as_newIDX"/>
+         nc:link="mail_help.xhtml#keeping_messages_as_new"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1577,7 +1577,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Labels"
          nc:name="Labels"
-	 nc:link="mail_help.html#labels:general_preferencesIDX"/>
+         nc:link="mail_help.xhtml#labels"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1587,7 +1587,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Labels:general_preferences"
          nc:name="general preferences"
-	 nc:link="mail_help.html#Labels:general_preferencesIDX"/>
+         nc:link="mail_help.xhtml#labels"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1627,7 +1627,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="LDAP"
          nc:name="LDAP"
-	 nc:link="mail_help.html#LDAP:adding_to_address_bookIDX"/>
+         nc:link="mail_help.xhtml#adding_and_removing_ldap_directories"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1637,7 +1637,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="LDAP:adding_to_address_book"
          nc:name="adding to address book"
-	 nc:link="mail_help.html#LDAP:adding_to_address_bookIDX"/>
+         nc:link="mail_help.xhtml#adding_and_removing_ldap_directories"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1647,7 +1647,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="LDAP:directory_server_settings"
          nc:name="directory server settings"
-	 nc:link="mail_help.html#LDAP:directory_server_settingsIDX"/>
+         nc:link="mail_help.xhtml#directory_server_settings"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1657,7 +1657,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="LDAP:global_settings"
          nc:name="global settings"
-	 nc:link="mail_help.html#LDAP:global_settingsIDX"/>
+         nc:link="mail_help.xhtml#addressing"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1677,7 +1677,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="mail"
          nc:name="mail security settings"
-	 nc:link="mail_help.html#mail:security_settingsIDX"/>
+         nc:link="mail_help.xhtml#security"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1687,7 +1687,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups"
          nc:name="Mail and Newsgroups"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:Account_Setup_WizardIDX"/>
+         nc:link="mail_help.xhtml#using_the_mail_account_setup_wizard"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1697,7 +1697,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:Account_Setup_Wizard"
          nc:name="Account Setup Wizard"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:Account_Setup_WizardIDX"/>
+         nc:link="mail_help.xhtml#using_the_mail_account_setup_wizard"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1707,7 +1707,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:adding_accounts"
          nc:name="adding accounts"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:adding_accountsIDX"/>
+         nc:link="mail_help.xhtml#setting_up_additional_mail_and_news_accounts"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1717,7 +1717,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:address_autocompletion"
          nc:name="address autocompletion"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:address_autocompletionIDX"/>
+         nc:link="mail_help.xhtml#address_autocompletion"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1727,7 +1727,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:addressing_messages"
          nc:name="addressing messages"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:addressing_messagesIDX"/>
+         nc:link="mail_help.xhtml#addressing_a_message"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1737,7 +1737,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:addressing_preferences"
          nc:name="addressing preferences"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:addressing_preferencesIDX"/>
+         nc:link="mail_help.xhtml#addressing"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1747,7 +1747,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:Advanced_IMAP_settings"
          nc:name="Advanced IMAP settings"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:Advanced_IMAP_settingsIDX"/>
+         nc:link="mail_help.xhtml#advanced_imap_server_settings"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1757,7 +1757,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:attaching_files"
          nc:name="attaching files"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:attaching_filesIDX"/>
+         nc:link="mail_help.xhtml#attaching_a_file_or_web_page"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1767,7 +1767,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:changing_account_settings"
          nc:name="changing account settings"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:changing_account_settingsIDX"/>
+         nc:link="mail_help.xhtml#changing_the_settings_for_an_account"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1777,7 +1777,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:Compose_window"
          nc:name="Compose window"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:Compose_windowIDX"/>
+         nc:link="mail_help.xhtml#using_the_message_composition_window"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1787,7 +1787,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:composing_messages"
          nc:name="composing messages"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:composing_messagesIDX"/>
+         nc:link="mail_help.xhtml#composing_mail_and_newsgroup_messages"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1797,7 +1797,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:copies_and_folder_settings"
          nc:name="copies and folder settings"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:copies_and_folder_settingsIDX"/>
+         nc:link="mail_help.xhtml#copies_and_folders"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1807,7 +1807,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:copying_folders"
          nc:name="copying folders"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:copying_foldersIDX"/>
+         nc:link="mail_help.xhtml#moving_or_copying_a_folder"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1817,7 +1817,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:creating_filters"
          nc:name="creating filters"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:creating_filtersIDX"/>
+         nc:link="mail_help.xhtml#creating_message_filters"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1827,7 +1827,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:creating_folders"
          nc:name="creating folders"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:creating_foldersIDX"/>
+         nc:link="mail_help.xhtml#creating_a_folder"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1837,7 +1837,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:creating_HTML_mail_messages"
          nc:name="creating HTML mail messages"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:creating_HTML_mail_messagesIDX"/>
+         nc:link="mail_help.xhtml#creating_html_mail_messages"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1847,7 +1847,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:Disk_Space_settings"
          nc:name="Disk Space settings"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:Disk_Space_settingsIDX"/>
+         nc:link="mail_help.xhtml#offline_and_disk_space"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1857,7 +1857,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:filing_messages"
          nc:name="filing messages"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:filing_messagesIDX"/>
+         nc:link="mail_help.xhtml#filing_messages_in_folders"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1867,7 +1867,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:forwarding_messages"
          nc:name="forwarding messages"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:forwarding_messagesIDX"/>
+         nc:link="mail_help.xhtml#forwrading_a_message"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1877,7 +1877,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:general_preferences"
          nc:name="general preferences"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:general_preferencesIDX"/>
+         nc:link="mail_help.xhtml#mail_and_newsgroup_preferences"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1887,7 +1887,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:getting_new_messages"
          nc:name="getting new messages"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:getting_new_messagesIDX"/>
+         nc:link="mail_help.xhtml#getting_new_messages"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1897,7 +1897,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:HTML_mail_recipients"
          nc:name="HTML mail recipients"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:HTML_mail_recipientsIDX"/>
+         nc:link="mail_help.xhtml#specifying_recipients_for_html_messages"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1907,7 +1907,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:HTML_mail_sending_options"
          nc:name="HTML mail sending options"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:HTML_mail_sending_optionsIDX"/>
+         nc:link="mail_help.xhtml#choosing_html_mail_sending_options"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1917,7 +1917,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:HTML_Message_Source"
          nc:name="HTML Message Source"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:HTML_Message_SourceIDX"/>
+         nc:link="mail_help.xhtml#viewing_the_message_source_for_html_messages"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1927,7 +1927,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:identity_settings"
          nc:name="identity settings"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:identity_settingsIDX"/>
+         nc:link="mail_help.xhtml#account_settings"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1937,7 +1937,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:mail_window_layout"
          nc:name="mail window layout"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:mail_window_layoutIDX"/>
+         nc:link="mail_help.xhtml#choosing_how_you_view_the_mail_window"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1947,7 +1947,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:message_searching"
          nc:name="message searching"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:message_searchingIDX"/>
+         nc:link="mail_help.xhtml#searching_through_messages"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1957,7 +1957,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:POP_settings"
          nc:name="POP settings"
-	 nc:link="mail_help.html#POP:server_settingsIDX"/>
+         nc:link="mail_help.xhtml#POP:server_settingsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1967,7 +1967,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:renaming_folders"
          nc:name="renaming folders"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:renaming_foldersIDX"/>
+         nc:link="mail_help.xhtml#renaming_a_folder"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1977,7 +1977,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:replying_to_messages"
          nc:name="replying to messages"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:replying_to_messagesIDX"/>
+         nc:link="mail_help.xhtml#replying_to_a_message"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1987,7 +1987,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:saving_and_printing_messages"
          nc:name="saving and printing messages"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:saving_and_printing_messagesIDX"/>
+         nc:link="mail_help.xhtml#saving_and_printing_messages"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1997,7 +1997,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:saving_attachments"
          nc:name="saving attachments"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:saving_attachmentsIDX"/>
+         nc:link="mail_help.xhtml#saving_attachments"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2007,7 +2007,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:saving_messages_drafts"
          nc:name="saving messages drafts"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:saving_messages_draftsIDX"/>
+         nc:link="mail_help.xhtml#saving_and_editing_a_message_draft"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2017,7 +2017,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:sending_messages"
          nc:name="sending messages"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:sending_messagesIDX"/>
+         nc:link="mail_help.xhtml#sending_messages"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2027,7 +2027,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:sending_options"
          nc:name="sending options"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:sending_optionsIDX"/>
+         nc:link="mail_help.xhtml#selecting_message_sending_options"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2037,7 +2037,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:SMTP_settings"
          nc:name="SMTP settings"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:SMTP_settingsIDX"/>
+         nc:link="mail_help.xhtml#outgoing_server"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2047,7 +2047,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:sorting_and_threading_messages"
          nc:name="sorting and threading messages"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:sorting_and_threading_messagesIDX"/>
+         nc:link="mail_help.xhtml#sorting_and_threading_messages"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2057,7 +2057,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:using_address_books"
          nc:name="using address books"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:using_address_booksIDX"/>
+         nc:link="mail_help.xhtml#using_address_books"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2067,7 +2067,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:using_attachments"
          nc:name="using attachments"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:using_attachmentsIDX"/>
+         nc:link="mail_help.xhtml#using_attachments"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2077,7 +2077,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:using_HTML_in_messages"
          nc:name="using HTML in messages"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:using_HTML_in_messagesIDX"/>
+         nc:link="mail_help.xhtml#using_html_in_your_messages"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2087,7 +2087,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:viewing_attachments"
          nc:name="viewing attachments"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:viewing_attachmentsIDX"/>
+         nc:link="mail_help.xhtml#viewing_and_opening_attachments"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2097,7 +2097,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:working_offline"
          nc:name="working offline"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:working_offlineIDX"/>
+         nc:link="mail_help.xhtml#working_offline"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2297,7 +2297,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Newsgroups"
          nc:name="Newsgroups"
-	 nc:link="mail_help.html#Newsgroups:getting_startedIDX"/>
+         nc:link="mail_help.xhtml#getting_started_with_newsgroups"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2307,7 +2307,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Newsgroups:getting_started"
          nc:name="getting started"
-	 nc:link="mail_help.html#Newsgroups:getting_startedIDX"/>
+         nc:link="mail_help.xhtml#getting_started_with_newsgroups"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2317,7 +2317,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Newsgroups:server_settings"
          nc:name="server settings"
-	 nc:link="mail_help.html#Newsgroups:server_settingsIDX"/>
+         nc:link="mail_help.xhtml#server_settings"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2337,7 +2337,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Offline"
          nc:name="Offline"
-	 nc:link="mail_help.html#Offline:general_preferencesIDX"/>
+         nc:link="mail_help.xhtml#disk_space_preferences"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2347,7 +2347,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Offline:general_preferences"
          nc:name="general preferences"
-	 nc:link="mail_help.html#Offline:general_preferencesIDX"/>
+         nc:link="mail_help.xhtml#disk_space_preferences"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2357,7 +2357,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Offline:Mail_and_Newsgroups"
          nc:name="Mail and Newsgroups"
-	 nc:link="mail_help.html#Offline:Mail_and_NewsgroupsIDX"/>
+         nc:link="mail_help.xhtml#working_offline"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2367,7 +2367,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Offline:Mail_settings"
          nc:name="Mail settings"
-	 nc:link="mail_help.html#account_settings_intro"/>
+         nc:link="mail_help.xhtml#mail_and_newsgroups_account_settings"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2467,7 +2467,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="POP"
          nc:name="POP"
-	 nc:link="mail_help.html#POP:aboutIDX"/>
+         nc:link="mail_help.xhtml#about_post_office_protocol"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2477,7 +2477,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="POP:about"
          nc:name="about"
-	 nc:link="mail_help.html#POP:aboutIDX"/>
+         nc:link="mail_help.xhtml#about_post_office_protocol"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2487,7 +2487,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="POP:server_settings"
          nc:name="server settings"
-	 nc:link="mail_help.html#POP:server_settingsIDX"/>
+         nc:link="mail_help.xhtml#pop_server_settings"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -3097,7 +3097,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="return_receipts"
          nc:name="return receipts"
-	 nc:link="mail_help.html#return_receipts:general_preferencesIDX"/>
+         nc:link="mail_help.xhtml#return_receipts"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -3107,7 +3107,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="return_receipts:general_preferences"
          nc:name="general preferences"
-	 nc:link="mail_help.html#return_receipts:general_preferencesIDX"/>
+         nc:link="mail_help.xhtml#return_receipts"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -3117,7 +3117,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="return_receipts:using"
          nc:name="using"
-	 nc:link="mail_help.html#return_receipts:usingIDX"/>
+         nc:link="mail_help.xhtml#confirming_that_your_message_was_opened"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -3147,7 +3147,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="save:messages"
          nc:name="messages"
-	 nc:link="mail_help.html#PRINTSAVE_MAIL"/>
+         nc:link="mail_help.xhtml#saving_and_printing_messages"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -3327,7 +3327,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="settings:signed_and_encrypted mail"
          nc:name="signed and encrypted mail"
-	 nc:link="mail_help.html#settings:signed_and_encrypted mailIDX"/>
+         nc:link="mail_help.xhtml#security"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -3488,7 +3488,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="SMTP"
          nc:name="SMTP"
-	 nc:link="mail_help.html#SMTP:choosing_a_differentIDX"/>
+         nc:link="mail_help.xhtml#account_settings"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -3498,7 +3498,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="SMTP:choosing_a_different"
          nc:name="choosing a different"
-	 nc:link="mail_help.html#SMTP:choosing_a_differentIDX"/>
+         nc:link="mail_help.xhtml#account_settings"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -3508,7 +3508,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="SMTP:server_settings"
          nc:name="server settings"
-	 nc:link="mail_help.html#SMTP:server_settingsIDX"/>
+         nc:link="mail_help.xhtml#outgoing_server"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -3878,7 +3878,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Working_Offline"
          nc:name="Working Offline"
-	 nc:link="mail_help.html#Working_OfflineIDX"/>
+         nc:link="mail_help.xhtml#working_offline"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
