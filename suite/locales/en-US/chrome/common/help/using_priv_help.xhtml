@@ -60,7 +60,7 @@
 
 </ul>
 
-<li>If you want to be notified when a web site tries to set a cookie, select &quot;Warn me before accepting a cookie.&quot;
+<li>If you want to be notified when a web site tries to set a cookie, select &quot;Warn me before storing a cookie.&quot;
 </ol>
 
 
@@ -73,7 +73,7 @@
 
 <ol>
 <li>Open the Tasks menu, choose Privacy &amp; Security, and then choose Cookie Manager.</li>
-<li>Choose "Unblock Cookies from this Site" or "Block Cookies from this Site."</li>
+<li>Choose &quot;Unblock Cookies from this Site&quot; or &quot;Block Cookies from this Site.&quot;</li>
 </ol> 
 
 <p>When you are warned (while browsing) that a web site is requesting to set a cookie, you can click Yes to allow or No to deny the cookie. You can also select the option for your browser to &quot;Remember this decision.&quot;</p>
@@ -311,7 +311,14 @@ A domain cookie is sent back to any site that's in the same domain as the site t
 <li>Open the Edit menu and choose Prefill Form.
 </ol>
 
-<p>(Note that the &quot;Prefill Form&quot; menu item won't be accessible if the Form Manager hasn't yet stored any relevant information.)
+<p>Note that the Prefill Form menu item won't be accessible if the Form Manager hasn't yet stored any relevant information.
+
+<p>After you choose Prefill Form, you see a Prefill Form window that shows exactly what information Form Manager is about to fill in. To prevent a field from being filled in automatically, deselect the checkbox beside it. To prevent any fields from being filled in automatically, click Cancel.
+
+<p>If you don't want to verify information every time you prefill a particular form, deselect the Prefill Form window option labeled &quot;Bypass this screen when prefilling this form in the future&quot;.
+
+<p>Click OK to confirm your choices and fill in the form as you have specified.
+
 
 <p>&nbsp;</p>
 <a NAME="form_notify"></a>
@@ -497,10 +504,10 @@ A domain cookie is sent back to any site that's in the same domain as the site t
 	<ul>
 		<li>On Windows, open the Start menu and choose Programs, then Netscape 6, then Profile Manager.
 		<li>On Mac OS, open the Netscape folder and then double-click the Profile Manager.
-		<li>On Linux, type the following at the command line: <tt>./netscape -profile</tt>
+		<li>On Linux, type the following at the command line: <tt> ./netscape -profilemanager</tt>
 	</ul>
 	<li>Click Create Profile, read the Profile description, and then click Next.
-	<li>Enter a profile name. This can be anytyhing you like, such as your real name or a name that's related to what you use the profile for, such as "School."
+	<li>Enter a profile name. This can be anything you like, such as your real name or a name that's related to what you use the profile for, such as &quot;School.&quot;
 	<li>Accept the default directory for the storage of bookmarks and other information, or choose another directory.
 	<li>If you have Language Packs or Regional Content Packs installed, click Region and choose the Language/Content set you want.
 	<li>Click Finish.
@@ -548,11 +555,55 @@ A domain cookie is sent back to any site that's in the same domain as the site t
 <p>&nbsp;</p>
 
 <p>&nbsp;</p>
+<a NAME="cookie_prefs"></a>
+<a NAME="cookies:preferencesIDX"></a>
+<h2>Privacy &amp; Security Preferences - Cookies</h2>
+
+<p>This section describes how to set preferences for cookies. To view the preference settings for Cookie Manager:
+
+<ol>
+	<li> Open the Edit menu and choose Preferences.
+   	<li>Under the Privacy &amp; Security category, click Cookies. (If no subcategories are visible, double-click the category to expand the list.)
+</ol>
+ 
+<p>&nbsp;</p>
+<h3>Cookie Acceptance Policy</h3>
+
+<p>Cookie acceptance preferences allow you to control the way Navigator handles cookies:
+
+<ul>
+<li><p><b>Disable cookies:</b> Choose this to refuse all cookies.
+
+<li><b>Enable cookies for the originating web site only:</b> Choose this if you don't want to accept or return <a href="privacy_help.html#privacy_foreign">foreign cookies</a>. Cookies received through email (when the message contains a web page) are treated as foreign cookies.
+
+<li><b>Enable all cookies:</b> Choose this to permit all web sites to set cookies on your computer and receive them back during subsequent visits. <b>Note:</b> If you select this option, and later choose to reject all cookies, you may still have some older cookies stored on your computer (though no new ones will be set).
+
+
+</ul>
+
+<p>If you want to be notified when a web site tries to set a cookie, select &quot;Warn me before storing a cookie&quot;. Click OK to confirm your new cookie settings.
+
+
+<p>&nbsp;</p>
+<h3>View Stored Cookies</h3>
+
+<p>When the &quot;Warn me before storing a cookie&quot; option is selected in the Cookies preferences panel, you will be warned (while browsing) each time a web site requests permission to set a cookie. The warning allows you to accept or deny the cookie. The warning also allows you to select an option for your browser to &quot;Remember this decision.&quot;
+
+<p>If you select &quot;Remember this decision,&quot; you will not be warned the next time that site tries to set or modify a cookie, and your &quot;yes&quot; or &quot;no&quot; response will still be in effect.
+
+<p>If you wish to change a remembered response later, you can use Cookie Manager to edit your list of automatically stored cookies and the list of web sites for which you have approved or denied cookie access. To do so, click View Stored Cookies in the Cookies preferences panel. 
+
+<p>For more information about viewing or editing cookie settings, see <a href="#using_cookies">Using the Cookie Manager</a>.
+
+
+
+
+<p>&nbsp;</p>
 <a NAME="using_images"></a>
 <a NAME="imagesIDX"></a>
 <h2>Privacy &amp; Security Preferences - Images</h2>
 
-<p>This section describes how to set preferences for images. To view the preference settings for images, follow these steps:
+<p>This section describes how to set preferences for images. To view the preference settings for images:
 
 <ol>
 	<li> Open the Edit menu and choose Preferences.
@@ -561,8 +612,8 @@ A domain cookie is sent back to any site that's in the same domain as the site t
  
 
 <p>&nbsp;</p>
-<h3>Image Blocking</h3>
-<p>Image blocking preferences allow you to control whether Navigator displays images:</p>
+<h3>Image Acceptance Policy</h3>
+<p>Image acceptance preferences allow you to control whether Navigator displays images:</p>
 
 <ul>
 
@@ -571,7 +622,7 @@ A domain cookie is sent back to any site that's in the same domain as the site t
 </ul>
 
 <p>&nbsp;</p>
-<h3>Animated images should loop:</h3>
+<h3>Animated images should loop</h3>
 <p>These settings control how many times animated images repeat their animation:</p>
 
 
@@ -582,9 +633,68 @@ A domain cookie is sent back to any site that's in the same domain as the site t
 </ul>
 
 
+<p>&nbsp;</p>
+<a NAME="forms_prefs"></a>
+<a NAME="Form_Manager:preferencesIDX"></a>
+<a NAME="forms:preferencesIDX"></a>
+<h2>Privacy &amp; Security Preferences - Forms</h2>
+
+<p>This section describes how to set preferences for forms. To view the preference settings for Form Manager:
+
+<ol>
+	<li>Open the Edit menu and choose Preferences.
+   	<li>Under the Privacy &amp; Security category, click Forms. (If no subcategories are visible, double-click the category to expand the list.)
+</ol>
+
+<p>&nbsp;
+<table cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
+<tr>
+<td class="inthissection">
+<p>In this section:</p>
+<p><a href="#forms_mgr">Form Manager</a></p>
+<p><a href="#forms_data">View Stored Form Data</a>
+<p><a href="#forms_sites">View Sites</a>
+</td>
+</tr>
+</table>
+ 
+<p>&nbsp;</p>
+<a NAME="forms_mgr"></a>
+<h3>Form Manager</h3>
+
+<p>When you fill out an online form and click Submit, Form Manager normally displays a dialog box that asks if you want it to save the form data you just entered. If you click Yes at least some of the time, Form Manager will soon have enough data to begin filling out forms automatically.
+
+<p>The option labeled &quot;Save form data from web pages when completing forms&quot; controls this notification feature&#151;that is, it controls whether Form Manager asks if you want to save form data when you fill in a new form. If this option is selected, Form Manager displays the dialog box every time you click a Submit button. If this option is not selected, Form Manager never asks if you want to save form data.
+
+<p>Note that deselecting this option turns off the notification feature, but not Form Manager. The form data it may have already collected is still available. You can still pull down the Edit menu and choose Save Form Data any time you want to save information from a form you've just filled in, or choose Prefill Form to fill in a form automatically.
+
+<p>For more information, see <a href="#using_forms">Using the Form Manager</a>.
+
+<p>&nbsp;</p>
+<a NAME="forms_data"></a>
+<h3>View Stored Form Data</h3>
+
+<p>To examine or edit personal data that Form Manager has saved, click View Stored Form Data. After the Form Manager window appears, you can double-click a category to view its subcategories, and click a subcategory to view its data. You can also add or change form data in this window.
+
+<p>&nbsp;</p>
+<a NAME="forms_sites"></a>
+<h3>View Sites</h3>
+
+<p>If the Form Manager notification feature described above is turned on, Form Manager allows you to choose whether it should save the form data you enter at a particular site. But what if you change your mind later? For example, you might have selected &quot;Never for this site&quot; in response to the question and decide later that you want Form Manager to save form data for that site after all.
+
+<p>Form Manager lets you change your mind at any time. To view or site-specific information about your saved form data, click View Sites.
+
+<p>In the resulting Form Manager window, the Forms Never Previewed tab lists all sites for which you selected &quot;Bypass this screen when prefilling this form in the future&quot; after choosing Prefill Form from the Edit menu. The Forms Never Saved tab lists all sites for which you selected &quot;Never for this site&quot; in response to the Form Manager's request to store form data.
+
+<p>To remove a site from either list, select one or more entries and click Remove. If you remove an entry from the Forms Never Previewed tab, Form Manager will again preview those forms the next time you attempt to prefill them. If you remove an entry from the Forms Never Saved tab, Form Manager will again ask to store form data when you fill in forms at that site.
+
+<p>For more information, see <a href="#using_forms">Using the Form Manager</a>.
+
+
+
 <hr>
 
-<p><i>8/31/2001</i></p>
+<p><i>9/06/2001</i></p>
 
 <hr>
 <p>Copyright &copy; 1994-2001 Netscape Communications Corporation.</p>

@@ -111,21 +111,24 @@
 
 <p>&nbsp;</p>
 <a NAME="Edit_Web_Site_Certificate_Settings"></a>
-<h3>Edit Web Site Certificate Settings</h3>
+<h3>Edit Web Site Certificate Trust Settings</h3>
  
-<p>When you select a web site certificate and click Edit, you see a window entitled Edit Certificate Trust. Here you specify whether you want to trust the selected certificate for identifying the web site and setting up an encrypted connection with it.
+<p>When you select a web site certificate and click Edit, you see a window entitled "Edit web site certificate trust settings." Here you specify whether you want to trust the selected certificate for identifying the web site and setting up an encrypted connection with it.
 
 <p>The radio buttons have the following effects:
 
 <ul>
 
-	<li><b>Do not trust the authenticity of this certificate.</b> Certificate Manager will no longer trust this certificate for the purposes of identifying this web site or setting up an encrypted connection. If you select this setting and then attempt to visit the web site, you will see one or more warning messages before you can access the site.
-
 	<li><b>Trust the authenticity of this certificate.</b> Certificate Manager will henceforth trust this certificate for the purposes of identifying this web site or setting up an encrypted connection. If you select this setting and then attempt to visit the web site, your browser will access the site with few, if any, warnings.
+
+	<li><b>Do not trust the authenticity of this certificate.</b> Certificate Manager will no longer trust this certificate for the purposes of identifying this web site or setting up an encrypted connection. If you select this setting and then attempt to visit the web site, you will see one or more warning messages before you can access the site.
 
 </ul>
 
-<p>Click OK to implement your choice.
+
+<p>To specify trust settings for the certificate authority (CA)  that issued the web site certificate, click CA Trust. The CA trust settings allow you toto trust or not to trust different kinds of certificates issued by that certificate authority. For example, you can choose to trust all web site certificates issued by that certificate authority.
+
+<p>Click OK to confirm your choice.
 
 <p>
 [&nbsp;<A HREF="#certs_first">Return to beginning of Certificate Manager section</A>&nbsp;]
@@ -159,9 +162,9 @@
  
 <p>&nbsp;</p>
 <a NAME="Edit_CA_Certificate_Settings"></a>
-<h3>Edit CA Certificate Settings</h3>
+<h3>Edit CA Certificate Trust Settings</h3>
 
-<p>When you select a CA certificate and click Edit, you see a window entitled Edit Certificate Trust. Here you specify the kinds of certificates you trust this CA to certify. If you deselect all the checkboxes, Certificate Manager will not trust any certificates issued by this CA.
+<p>When you select a CA certificate and click Edit, you see a window entitled "Edit CA certificate trust settings." Here you specify the kinds of certificates you trust this CA to certify. If you deselect all the checkboxes, Certificate Manager will not trust any certificates issued by this CA.
 
 <p>The settings have these effects:
 <ul>
@@ -172,7 +175,7 @@
 <li><b>This certificate can identify software makers.</b> Certificate Manager will trust certificates issued by this CA for the purpose of identifying software makers. If you deselect this checkbox, Certificate Manager will not trust such certificates issued by this CA.
 </ul>
 
-<p>Click OK to implement the settings you have selected.
+<p>Click OK to confirm the settings you have selected.
 
  
 <p>
