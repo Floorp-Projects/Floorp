@@ -618,16 +618,18 @@ function DeleteAllPermissions() {
 function FinalizePermissionDeletions() {
   if (!deletedPermissions.length)
     return;
+
   gUpdatingBatch = "perm-changed";
+  var p;
   if (deletedPermissions[0].type == popupType) {
     var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                               .getService(Components.interfaces.nsIIOService);
-    for (var p=0; p<deletedPermissions.length; p++)
+    for (p = 0; p < deletedPermissions.length; ++p)
       // we lost the URI's original scheme, but this will do because the scheme
       // is stripped later anyway.
       popupmanager.remove(ioService.newURI("http://"+deletedPermissions[p].host, null, null));
   } else {
-    for (var p=0; p<deletedPermissions.length; p++)
+    for (p = 0; p < deletedPermissions.length; ++p)
       permissionmanager.remove(deletedPermissions[p].host, deletedPermissions[p].type);
   }
   deletedPermissions.length = 0;
