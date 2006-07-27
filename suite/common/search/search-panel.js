@@ -17,15 +17,38 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
+ * Original Author(s):
+ *    Robert John Churchill   <rjc@netscape.com>
+ *
  * Contributor(s): 
+ *    Ben Goodger             <ben@netscape.com>
+ *    Rob Ginda               <rginda@netscape.com>
+ *    Steve Lamm              <slamm@netscape.com>
  */
+
+const WMEDIATOR_PROGID  = "component://netscape/rdf/datasource?name=window-mediator";
+const ISEARCH_PROGID    = "component://netscape/rdf/datasource?name=internetsearch";
+const RDFSERVICE_PROGID = "component://netscape/rdf/rdf-service";
+const BMARKS_PROGID     = "component://netscape/browser/bookmarks-service";
+
+const nsIBookmarksService      = Components.interfaces.nsIBookmarksService;
+const nsIWindowMediator        = Components.interfaces.nsIWindowMediator;
+const nsIRDFService            = Components.interfaces.nsIRDFService;
+const nsIRDFLiteral            = Components.interfaces.nsIRDFLiteral;
+const nsIRDFDataSource         = Components.interfaces.nsIRDFDataSource;
+const nsIRDFRemoteDataSource   = Components.interfaces.nsIRDFRemoteDataSource;
+const nsIInternetSearchService = Components.interfaces.nsIInternetSearchService;
+const nsIPref                  = Components.interfaces.nsIPref;
+
+const STRINGBUNDLE_URL =
+    "chrome://communicator/locale/search/search-panel.properties";
 
 var	rootNode = null;
 var	textArc = null;
 var	modeArc = null;
 var	RDF_observer = new Object;
 var	pref = null;
-
+var bundle = null;
 
 
 function debug(msg)
@@ -40,8 +63,7 @@ function debug(msg)
 try
 {
 	pref = Components.classes["component://netscape/preferences"];
-	if (pref)	pref = pref.getService();
-	if (pref)	pref = pref.QueryInterface(Components.interfaces.nsIPref);
+	if (pref)	pref = pref.getService(nsIPref);
 }
 catch(e)
 {
@@ -86,7 +108,7 @@ RDF_observer =
 
 function rememberSearchText(target)
 {
-	if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
+	if (target)	target = target.QueryInterface(nsIRDFLiteral);
 	if (target)	target = target.Value;
 	if (target && (target != ""))
 	{
@@ -140,13 +162,12 @@ function updateSearchMode()
 // 3) initialise the checked state of said engines. 
 function SearchPanelStartup()
 {
-	bundle = srGetStrBundle( "chrome://communicator/locale/search/search-panel.properties" );
+	bundle = srGetStrBundle( STRINGBUNDLE_URL );
 
 	var tree = document.getElementById("Tree");
 	if (tree)
 	{
-		var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
-		if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+        var rdf = Components.classes[RDFSERVICE_PROGID].getService(nsIRDFService);
 		if (rdf)
 		{
 			rootNode = rdf.GetResource("NC:LastSearchRoot", true);
@@ -156,12 +177,11 @@ function SearchPanelStartup()
 		}
 	}
 
-	var internetSearch = Components.classes["component://netscape/rdf/datasource?name=internetsearch"].getService();
-	if (internetSearch)	internetSearch = internetSearch.QueryInterface(Components.interfaces.nsIInternetSearchService);
+    var internetSearch = Components.classes[ISEARCH_PROGID].getService(nsIInternetSearchService);
 	if (internetSearch)
 	{
 		var catDS = internetSearch.GetCategoryDataSource();
-		if (catDS)	catDS = catDS.QueryInterface(Components.interfaces.nsIRDFDataSource);
+		if (catDS)	catDS = catDS.QueryInterface(nsIRDFDataSource);
 		if (catDS)
 		{
 			var categoryList = document.getElementById("categoryList");
@@ -210,13 +230,11 @@ function SearchPanelStartup()
 	var categoryPopup = document.getElementById( "categoryPopup" );
 	if( categoryList && categoryPopup )
 	{
-		//set to default value 'Web'
-		//hack: hardcoded postion in here replace with a function that finds the entry 'the web'
-	 
 	 	var found = false;
 		for( var i = 0; i < categoryPopup.childNodes.length; i++ )
 		{
-			if( ( lastCategoryName == "" && categoryPopup.childNodes[i].getAttribute("data") == "NC:SearchEngineRoot" ) ||
+			if( ( lastCategoryName == "" &&
+			      categoryPopup.childNodes[i].getAttribute("data") == "NC:SearchEngineRoot" ) ||
 			    ( categoryPopup.childNodes[i].getAttribute("id") == lastCategoryName ) )
 			{
 				categoryList.selectedItem = categoryPopup.childNodes[i];
@@ -265,14 +283,13 @@ function haveSearchResults()
 	var ds = resultsTree.database;
 	if (!ds)		return(false);
 
-	var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
-	if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+    var rdf = Components.classes[RDFSERVICE_PROGID].getService(nsIRDFService);
 	if (rdf)
 	{
 		var source = rdf.GetResource( "NC:LastSearchRoot", true);
 		var childProperty = rdf.GetResource("http://home.netscape.com/NC-rdf#LastText", true);
 		var target = ds.GetTarget(source, childProperty, true);
-		if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
+		if (target)	target = target.QueryInterface(nsIRDFLiteral);
 		if (target)	target = target.Value;
 		if (target && target != "")
 		{
@@ -309,34 +326,21 @@ function getNumEngines()
 	return(treeChildrenNode.childNodes.length);
 }
 
-
-
 function chooseCategory( aNode )
 {
-	var category = aNode.getAttribute("id");
-	if ((!category) || (category == ""))
-	{
-		category="NC:SearchEngineRoot";
-	}
-	else
-	{
-		category = "NC:SearchCategory?category=" + category;
-	}
-	debug("chooseCategory: '" + category + "'\n");
+  var category = !aNode.id ? "NC:SearchEngineRoot" : 
+                  "NC:SearchCategory?category=" + aNode.id;
 
-	if (pref)	pref.SetCharPref( "browser.search.last_search_category", category );
-	else		debug("Unable to set browser.search.last_search_category pref.\n");
+  if (pref)	
+    pref.SetUnicharPref("browser.search.last_search_category", category);
 
-	var treeNode = document.getElementById("searchengines");
-	if (treeNode)
-	{
-		treeNode.setAttribute( "ref", category );
-	}
-	loadEngines( category );
-	return(true);
+  var treeNode = document.getElementById("searchengines");
+  if (treeNode)
+    treeNode.setAttribute("ref", category);
+
+  loadEngines(category);
+  return(true);
 }
-
-
 
 // check an engine representation in the engine list
 function doCheck(aNode)
@@ -360,8 +364,7 @@ function saveEngines()
 		category = "NC:SearchEngineRoot";
 	}
 
-	var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
-	if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+    var rdf = Components.classes[RDFSERVICE_PROGID].getService(nsIRDFService);
 	if (rdf)
 	{
 		var localStore = rdf.GetDataSource("rdf:local-store");
@@ -389,7 +392,7 @@ function saveEngines()
 	// save changes; flush out the localstore
 	try
 	{
-		var flushableStore = localStore.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+        var flushableStore = localStore.QueryInterface(nsIRDFRemoteDataSource);
 		if (flushableStore)	flushableStore.Flush();
 	}
 	catch(ex)
@@ -403,32 +406,30 @@ function saveEngines()
 // initialise the appropriate engine list, and the checked state of the engines
 function loadEngines( aCategory )
 {
-  var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
-  if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
-  if (rdf)
-  {
-  	var localStore = rdf.GetDataSource("rdf:local-store");
-  	if (localStore)
-  	{
-  		var engineBox = document.getElementById("searchengines");
-  		if( engineBox )
-  		{
-  			var numEngines = engineBox.childNodes.length;
-  			var checkedProperty = rdf.GetResource("http://home.netscape.com/NC-rdf#checked", true);
-        var categorySRC = rdf.GetResource( aCategory, true );
-  			for (var x = 0; x<numEngines; x++)
-  			{
-  				var checkbox = engineBox.childNodes[x];
-  				if (!checkbox) continue;
-  				var engineURI = checkbox.getAttribute("id");
-  				var engineSRC = rdf.GetResource( engineURI, true );
-  				var hasAssertion = localStore.HasAssertion( categorySRC, checkedProperty, engineSRC, true );
-  				if ( hasAssertion == true)
-  					checkbox.checked = true;
-  			}
-  		}
-  	}
-  }
+    var rdf = Components.classes[RDFSERVICE_PROGID].getService(nsIRDFService);
+    if (rdf)
+    {
+        var localStore = rdf.GetDataSource("rdf:local-store");
+        if (localStore)
+        {
+            var engineBox = document.getElementById("engineKids");;
+            if( engineBox )
+            {
+                var numEngines = engineBox.childNodes.length;
+                var checkedProperty = rdf.GetResource("http://home.netscape.com/NC-rdf#checked", true);
+                var categorySRC = rdf.GetResource( aCategory, true );
+                for (var x = 0; x<numEngines; x++)
+                {
+                  var checkbox = engineBox.childNodes[x].firstChild.firstChild.firstChild;
+                  if (!checkbox) continue;
+                  var engineSRC = rdf.GetResource( checkbox.id, true );
+                  var hasAssertion = localStore.HasAssertion( categorySRC, checkedProperty, engineSRC, true );
+                  if (hasAssertion)
+                    checkbox.checked = true;
+                }
+            }
+        }
+    }
 }
 
 
@@ -446,32 +447,36 @@ function SearchPanelShutdown()
 
 function doStop()
 {
-	// should stop button press also stop the load of the page in the browser? I think so. 
-	var progressNode = parent.document.getElementById("statusbar-icon");
 	var stopButtonNode = document.getElementById("stopbutton");
-	var searchButtonNode = document.getElementById("searchbutton");
-	if(progressNode && stopButtonNode && searchButtonNode )
-	{
-		progressNode.setAttribute("mode", "normal");
+    if (stopButtonNode)
+    {
 		stopButtonNode.setAttribute("style", "display: none;");
+    }
+
+	var searchButtonNode = document.getElementById("searchbutton");
+	if(searchButtonNode)
+	{
 		searchButtonNode.setAttribute("style", "display: inherit;");
 	}
 
+	// should stop button press also stop the load of the page in the browser? I think so. 
+	var progressNode = parent.document.getElementById("statusbar-icon");
+    if (progressNode)
+    {
+		progressNode.setAttribute("mode", "normal");
+    }
+
 	// stop any network connections
-	var isupports = Components.classes["component://netscape/rdf/datasource?name=internetsearch"].getService();
-	if (isupports)
-	{
-		var internetSearchService = isupports.QueryInterface(Components.interfaces.nsIInternetSearchService);
-		if (internetSearchService)
-			internetSearchService.Stop();
-	}
+    var internetSearchService = Components.classes[ISEARCH_PROGID].getService(nsIInternetSearchService);
+    var internetSearch = null;
+    if (internetSearchService)
+    {
+        internetSearchService.Stop();
+        internetSearch = internetSearchService.QueryInterface(nsIRDFDataSource);
+    }
 
 	// get various services
-	var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
-	if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
-
-	var internetSearch = Components.classes["component://netscape/rdf/datasource?name=internetsearch"].getService();
-	if (internetSearch)	internetSearch = internetSearch.QueryInterface(Components.interfaces.nsIRDFDataSource);
+    var rdf = Components.classes[RDFSERVICE_PROGID].getService(nsIRDFService);
 
 	var sortSetFlag = false;
 
@@ -550,8 +555,8 @@ function doStop()
 
 function doSearch()
 {
-   var searchButton = document.getElementById("searchbutton");      
-   if ( searchButton.getAttribute("disabled") )
+  var searchButton = document.getElementById("searchbutton");      
+  if ( searchButton.getAttribute("disabled") )
 	{	   
 	   var sidebarSearchText = document.getElementById("sidebar-search-text");
 	   sidebarSearchText.focus();
@@ -561,169 +566,169 @@ function doSearch()
 	//get click count pref for later
 	//and set tree attribute to cause proper results appearance (like links) to happen 
 	//when user set pref to single click
-	
-  try {
-    if( pref ) {
-      var prefvalue = pref.GetBoolPref( "browser.search.use_double_clicks" );
-      var mClickCount = prefvalue ? 2 : 1;
-    } 
-    else
-      mClickCount = 1;
-  }
-  catch(e) {
-    mClickCount = 1;
-  }
-  var tree = document.getElementById("Tree");
-  if (mClickCount == 1)
-    tree.setAttribute("singleclick","true");
-  else
-    tree.removeAttribute("singleclick");
+	var searchMode = 0;
+    var mClickCount = 1;
+    var prefvalue = false;
 
-	//end insert for single click appearance
-	
-	// hide search button
-	var searchButtonNode = document.getElementById("searchbutton");
-	var stopButtonNode = document.getElementById("stopbutton");
-	var progressNode = top.document.getElementById("statusbar-icon");
-	if( !stopButtonNode || !searchButtonNode  )
-    return;
+    try
+    {
+        if( pref )
+        {
+            searchMode = pref.GetIntPref("browser.search.mode");
+            prefvalue = pref.GetBoolPref( "browser.search.use_double_clicks" );
+            mClickCount = prefvalue ? 2 : 1;
+        } 
+    }
+    catch(e)
+    {
+        searchMode = 0;
+        mClickCount = 1;
+        prefvalue = false;
+    }
+
+    var tree = document.getElementById("Tree");
+    if (mClickCount == 1)
+    {
+        tree.setAttribute("singleclick","true");
+    }
+    else
+    {
+        tree.removeAttribute("singleclick");
+    }
   
 	// hide various columns
-  if( parent._content.isMozillaSearchWindow ) {
-  	colNode = parent._content.document.getElementById("RelevanceColumn");
-  	if (colNode)	colNode.setAttribute("style", "width: 0; visibility: collapse;");
-	  colNode = parent._content.document.getElementById("PriceColumn");
-  	if (colNode)	colNode.setAttribute("style", "width: 0; visibility: collapse;");
-	  colNode = parent._content.document.getElementById("AvailabilityColumn");
-  	if (colNode)	colNode.setAttribute("style", "width: 0; visibility: collapse;");
-  }
+    if( parent._content.isMozillaSearchWindow )
+    {
+        colNode = parent._content.document.getElementById("RelevanceColumn");
+        if (colNode)	colNode.setAttribute("style", "width: 0; visibility: collapse;");
+        colNode = parent._content.document.getElementById("PriceColumn");
+        if (colNode)	colNode.setAttribute("style", "width: 0; visibility: collapse;");
+        colNode = parent._content.document.getElementById("AvailabilityColumn");
+        if (colNode)	colNode.setAttribute("style", "width: 0; visibility: collapse;");
+    }
 
 	// get user text to find
 	var textNode = document.getElementById("sidebar-search-text");
-	if( !textNode )	
-    return false;
+	if(!textNode)   return(false);
 	if ( !textNode.value )
 	{
-    alert( bundle.GetStringFromName("enterstringandlocation") );
-		return false;
+    alert(bundle.GetStringFromName("enterstringandlocation") );
+		return(false);
 	}
-	// get selected search engines
-	var engineBox = document.getElementById("searchengines");
-	if (!engineBox)	return(false);
 
 	var searchURL   = "";
 	var foundEngine = false;
   var engineURIs  = [];
 
-	for (var x = 0; x<engineBox.childNodes.length; x++)
-	{
-		var checkbox = engineBox.childNodes[x];
-		if (!checkbox)
-			continue;
+  if (searchMode > 0)
+  {
+      // in advanced search mode, get selected search engines
+      // (for the current search category)
+  	var engineBox = document.getElementById("engineKids");
+  	if (!engineBox)	return(false);
 
-		if ( checkbox.checked == true || checkbox.checked == "true")
-		{
-			var engineURI = checkbox.getAttribute("id");
-			if (!engineURI)	continue;
-			engineURIs[engineURIs.length] = engineURI;
-			foundEngine = true;
-		}
-	}
-	if (foundEngine == false)
-	{
-    if( getNumEngines() == 1 ) {
-      // only one engine in this category, check it
-      var checkbox = engineBox.firstChild;
-      engineURIs[engineURIs.length] = checkbox.getAttribute( "id" );
-    }
-    else {
-      debug("*** multiple search engines present, selecting the netscape search engine\n");
-      for( var i = 0; i < engineBox.childNodes.length; i++ )
+  	for (var x = 0; x<engineBox.childNodes.length; x++)
+  	{
+      var checkbox = engineBox.childNodes[x].firstChild.firstChild.firstChild;
+      if (!checkbox) continue;
+      
+      if ( checkbox.checked == true || checkbox.checked == "true") 
       {
-        var checkbox = engineBox.childNodes[i];
-        debug("*** the current URI is = " + checkbox.getAttribute("id") + "\n");
-        if( checkbox.getAttribute("id").indexOf("NetscapeSearch.src") != -1 ) {
-          engineURIs[engineURIs.length] = checkbox.getAttribute("id");
-          break;
-        }
+        var engineURI = checkbox.parentNode.parentNode.parentNode.id;
+        if (!engineURI)	continue;
+        engineURIs[engineURIs.length] = engineURI;
+        foundEngine = true;
       }
     }
-	}
+    if (!foundEngine)
+    {
+      if( getNumEngines() == 1 ) {
+        // only one engine in this category, check it
+        var checkbox = engineBox.firstChild.firstChild.firstChild.firstChild;
+        engineURIs[engineURIs.length] = checkbox.id;
+      }
+      else {
+        for( var i = 0; i < engineBox.childNodes.length; i++ )
+        {
+          var checkbox = engineBox.childNodes[i];
+          if( checkbox.id.indexOf("NetscapeSearch.src") != -1 ) {
+            engineURIs[engineURIs.length] = checkbox.getAttribute("id");
+            break;
+          }
+        }
+      }
+  	}
+  }
 
-  progressNode.setAttribute( "mode", "undetermined" );
-  searchButtonNode.setAttribute("style", "display: none;");
-  stopButtonNode.removeAttribute("style", "display: none;");
-    
+	// hide search button
+	var searchButtonNode = document.getElementById("searchbutton");
+	if (searchButtonNode)
+    searchButtonNode.setAttribute("style", "display: none;");
+	
+	// show stop button
+	var stopButtonNode = document.getElementById("stopbutton");
+	if (stopButtonNode)
+    stopButtonNode.removeAttribute("style", "display: none;");
+
+	var progressNode = top.document.getElementById("statusbar-icon");
+	if (progressNode)
+    progressNode.setAttribute( "mode", "undetermined" );
+   
   // run the search
-	OpenSearch("internet", false, textNode.value, engineURIs );
-	switchTab(0);
-	return true;
+  OpenSearch(textNode.value, engineURIs );
+  switchTab(0);
+  return(true);
 }
 
 
 
-function checkSearchProgress( aSearchURL )
+function checkSearchProgress()
 {
 	var	activeSearchFlag = false;
 	var	resultsTree = top._content.document.getElementById("internetresultstree");
-	var	enginesBox = top._content.document.getElementById("engineTabs");
-	if( !resultsTree || !enginesBox )
+	if(resultsTree)
 	{	
-		doStop();
-		return (activeSearchFlag);
-	}
-	var treeref = resultsTree.getAttribute("ref");
+    	var treeref = resultsTree.getAttribute("ref");
+    	var ds = resultsTree.database;
+    	if (ds && treeref)
+    	{
+    		try
+    		{
+                var rdf = Components.classes[RDFSERVICE_PROGID].getService(nsIRDFService);
+    			if (rdf)
+    			{
+    				var source = rdf.GetResource(treeref, true);
+    				var loadingProperty = rdf.GetResource("http://home.netscape.com/NC-rdf#loading", true);
+    				var target = ds.GetTarget(source, loadingProperty, true);
+    				if (target)	target = target.QueryInterface(nsIRDFLiteral);
+    				if (target)	target = target.Value;
+    				if (target == "true")
+    				{
+    					activeSearchFlag = true;
+    				}
+    				else
+    				{
+    					activeSearchFlag = false;
+    				}
+    			}
+    		}
+    		catch(ex)
+    		{
+				activeSearchFlag = false;
+    		}
+    	}
+    }
 
-	if( aSearchURL )
-	{
-		resultsTree.setAttribute( "ref", aSearchURL );
-		treeref = aSearchURL;
-	}
-
-	var ds = resultsTree.database;
-	if ( treeref && ds )
-	{
-		try
-		{
-			var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
-			if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
-			if (rdf)
-			{
-				var source = rdf.GetResource( treeref, true);
-				var loadingProperty = rdf.GetResource("http://home.netscape.com/NC-rdf#loading", true);
-				var target = ds.GetTarget(source, loadingProperty, true);
-				if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
-				if (target)	target = target.Value;
-				if (target == "true")
-					activeSearchFlag = true;
-			}
-		}
-		catch(ex)
-		{
-		}
-	}
 	if( activeSearchFlag )
 	{
-		setTimeout("checkSearchProgress(null)", 1000);
+		setTimeout("checkSearchProgress()", 1000);
 	}
 	else
 	{
-		//window.frames["sidebar-content"].doStop();
 		doStop();
 	}
   
 	return(activeSearchFlag);
-}
-
-
-
-function FOO_doSearch()
-{
-	var textNode = document.getElementById("sidebar-search-text");
-	if (!textNode)	return(false);
-	var text = textNode.value;
-	top.OpenSearch("internet", false, text);
-	return(true);
 }
 
 
@@ -765,8 +770,7 @@ function sidebarOpenURL(event, treeitem, root)
 		{
 			ds = theRootNode.database;
 		}
-		var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
-		if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+        var rdf = Components.classes[RDFSERVICE_PROGID].getService(nsIRDFService);
 		if (rdf)
 		{
 			if (ds)
@@ -774,7 +778,7 @@ function sidebarOpenURL(event, treeitem, root)
 				var src = rdf.GetResource(id, true);
 				var prop = rdf.GetResource("http://home.netscape.com/NC-rdf#URL", true);
 				var target = ds.GetTarget(src, prop, true);
-				if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
+				if (target)	target = target.QueryInterface(nsIRDFLiteral);
 				if (target)	target = target.Value;
 				if (target)	id = target;
 			}
@@ -784,113 +788,99 @@ function sidebarOpenURL(event, treeitem, root)
 	{
 	}
 
-  if ( window._content )
-    window._content.location = id;
-  else {
-    window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", id );
-  }
+    loadURLInContent(id);
 }
 
 
 
-// this should go somewhere else. 
-function OpenSearch( tabName, forceDialogFlag, aSearchStr, engineURIs )
+function OpenSearch( aSearchStr, engineURIs )
 {
-	var searchMode = 0;
 	var searchEngineURI = null;
 	var autoOpenSearchPanel = false;
 	var defaultSearchURL = null;
 
 	try
 	{
-    if( pref ) {
-  		searchMode = pref.GetIntPref("browser.search.powermode");
-	  	autoOpenSearchPanel = pref.GetBoolPref("browser.search.opensidebarsearchpanel");
-      if( !engineURIs )
-  		  searchEngineURI = pref.CopyCharPref("browser.search.defaultengine");
-  		defaultSearchURL = pref.CopyCharPref("browser.search.defaulturl");
-    }
+        if (pref)
+        {
+	  	    autoOpenSearchPanel = pref.GetBoolPref("browser.search.opensidebarsearchpanel");
+  		    defaultSearchURL = pref.CopyCharPref("browser.search.defaulturl");
+	        searchEngineURI = pref.CopyCharPref("browser.search.defaultengine");
+        }
 	}
 	catch(ex)
 	{
 	}
 
 	if ( !defaultSearchURL )
+	{
 		defaultSearchURL = bundle.GetStringFromName("defaultSearchURL");
+    }
 
-	if( searchMode == 1 || forceDialogFlag )
-	{
-		// Use a single search dialog
-    var windowManager = getService( "component://netscape/rdf/datasource?name=window-mediator", "nsIWindowMediator" );
-		var searchWindow = windowManager.getMostRecentWindow("search:window");
-		if (searchWindow)
-		{
-			searchWindow.focus();
-			if( searchWindow.loadPage )	
-        searchWindow.loadPage( tabName, searchStr );
-		}
-		else
-			top.openDialog("chrome://communicator/content/search/search.xul", "SearchWindow", "dialog=no,close,chrome,resizable", tabName, searchStr);
-	}
-	else
-	{
-    var searchDS = Components.classes["component://netscape/rdf/datasource?name=internetsearch"].getService();
+    var searchDS = Components.classes[ISEARCH_PROGID].getService(nsIInternetSearchService);
     if( searchDS )
-      searchDS = searchDS.QueryInterface( Components.interfaces.nsIInternetSearchService );
-  	if( searchDS )
-		{
-  	  if( !aSearchStr ) 
-        return false;
-    	var	escapedSearchStr = escape( aSearchStr );
-			searchDS.RememberLastSearchText( escapedSearchStr );
+    {
+        if(!aSearchStr)
+        {
+            return(false);
+        }
+
+        var	escapedSearchStr = escape( aSearchStr );
+        searchDS.RememberLastSearchText( escapedSearchStr );
+
   		try
   		{
-        if( !engineURIs || ( engineURIs && engineURIs.length <= 1 ) ) {
-          // not called from sidebar or only one engine selected
-          if( engineURIs )
-          {
-            searchEngineURI = engineURIs[0];
-            gURL = "internetsearch:engine=" + searchEngineURI + "&text=" + escapedSearchStr;
-          }
-          // look up the correct search URL format for the given engine
-          var	searchURL = searchDS.GetInternetSearchURL( searchEngineURI, escapedSearchStr );
-          if( searchURL )
-          {
-            defaultSearchURL = searchURL;
-          }
-          else 
-          {
-            defaultSearchURL = defaultSearchURL + escapedSearchStr;
-            gURL = "";
-          }
-          // load the results page of selected or default engine in the content area
-          if( defaultSearchURL )
-            top._content.location.href = defaultSearchURL;
-        }
-        else {
-          // multiple providers
-          searchURL = "";
-          for( var i = 0; i < engineURIs.length; i++ ) 
-          {
-            if( searchURL == "" )
-              searchURL = "internetsearch:";
+            if( !engineURIs || ( engineURIs && engineURIs.length <= 1 ) )
+            {
+
+                // not called from sidebar or only one engine selected
+                if (engineURIs && engineURIs.length == 1)
+                {
+                    searchEngineURI = engineURIs[0];
+                    gURL = "internetsearch:engine=" + searchEngineURI + "&text=" + escapedSearchStr;
+                }
+
+                // look up the correct search URL format for the given engine
+                var	searchURL = searchDS.GetInternetSearchURL( searchEngineURI, escapedSearchStr );
+                if (searchURL)
+                {
+                    defaultSearchURL = searchURL;
+                }
+                else 
+                {
+                    defaultSearchURL = defaultSearchURL + escapedSearchStr;
+                    gURL = "";
+                }
+
+                // load the results page of selected or default engine in the content area
+                if (defaultSearchURL)
+                {
+                    loadURLInContent(defaultSearchURL);
+                }
+            }
             else
-              searchURL += "&";
-            searchURL += "engine=" + engineURIs[i];
-          }
-          searchURL += ( "&text=" + escapedSearchStr );
-          
-          gURL = searchURL;
-          
-          top._content.location.href = "chrome://communicator/content/search/internetresults.xul";
-        }
+            {
+                // multiple providers
+                searchURL = "";
+                for( var i = 0; i < engineURIs.length; i++ ) 
+                {
+                    if( searchURL == "" )
+                        searchURL = "internetsearch:";
+                    else
+                        searchURL += "&";
+                    searchURL += "engine=" + engineURIs[i];
+                }
+                searchURL += ( "&text=" + escapedSearchStr );
+                gURL = searchURL;
+                loadURLInContent("chrome://communicator/content/search/internetresults.xul?" + searchURL);
+            }
   		}
   		catch(ex)
   		{
   		}
-        	setTimeout("checkSearchProgress('" + searchURL + "')", 1000);
+
+        setTimeout("checkSearchProgress()", 1000);
     }
-	}
 }
 
 
@@ -913,8 +903,7 @@ function switchTab( aPageIndex )
 
 	var	haveSearchRef = false;
 
-	var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
-	if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+    var rdf = Components.classes[RDFSERVICE_PROGID].getService(nsIRDFService);
 	if (rdf)
 	{
 		var source = rdf.GetResource( "NC:LastSearchRoot", true);
@@ -924,7 +913,7 @@ function switchTab( aPageIndex )
 		// look for last search URI
 		childProperty = rdf.GetResource("http://home.netscape.com/NC-rdf#ref", true);
 		target = ds.GetTarget(source, childProperty, true);
-		if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
+		if (target)	target = target.QueryInterface(nsIRDFLiteral);
 		if (target)	target = target.Value;
 		if (target && target != "")
 		{
@@ -933,10 +922,14 @@ function switchTab( aPageIndex )
 	}
 
 	if (haveSearchRef == true)
+	{
 		saveQueryButton.removeAttribute("disabled", "true");
-	else	saveQueryButton.setAttribute("disabled", "true");
-
-  return(true);
+    }
+	else
+	{
+		saveQueryButton.setAttribute("disabled", "true");
+    }
+    return(true);
 }
 
 
@@ -951,8 +944,7 @@ function saveSearch()
 	var	lastSearchURI="";
 	var	lastSearchText="";
 
-	var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
-	if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+    var rdf = Components.classes[RDFSERVICE_PROGID].getService(nsIRDFService);
 	if (rdf)
 	{
 		var source = rdf.GetResource( "NC:LastSearchRoot", true);
@@ -962,7 +954,7 @@ function saveSearch()
 		// look for last search URI
 		childProperty = rdf.GetResource("http://home.netscape.com/NC-rdf#ref", true);
 		target = ds.GetTarget(source, childProperty, true);
-		if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
+		if (target)	target = target.QueryInterface(nsIRDFLiteral);
 		if (target)	target = target.Value;
 		if (target && target != "")
 		{
@@ -973,7 +965,7 @@ function saveSearch()
 		// look for last search text
 		childProperty = rdf.GetResource("http://home.netscape.com/NC-rdf#LastText", true);
 		target = ds.GetTarget(source, childProperty, true);
-		if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
+		if (target)	target = target.QueryInterface(nsIRDFLiteral);
 		if (target)	target = target.Value;
 		if (target && target != "")
 		{
@@ -988,7 +980,7 @@ function saveSearch()
 
 	if ((lastSearchURI == null) || (lastSearchURI == ""))	return(false);
 
-// 	rjc says: if lastSearchText is empty/null, that's still OK, synthesize the text
+    // 	rjc says: if lastSearchText is empty/null, that's still OK, synthesize the text
 	if ((lastSearchText == null) || (lastSearchText == ""))
 	{
 		lastSearchText = lastSearchURI;
@@ -1004,8 +996,7 @@ function saveSearch()
 		}
 	}
 
-	var bmks = Components.classes["component://netscape/browser/bookmarks-service"].getService();
-	if (bmks)	bmks = bmks.QueryInterface(Components.interfaces.nsIBookmarksService);
+    var bmks = Components.classes[BMARKS_PROGID].getService(nsIBookmarksService);
 
 	var textNode = document.getElementById("sidebar-search-text");
 	if( !textNode )		return(false);
@@ -1023,20 +1014,87 @@ function doCustomize()
 	window.openDialog("chrome://communicator/content/search/search-editor.xul", "_blank", "centerscreen,chrome,resizable");
 }
 
+
+
+function loadURLInContent(url)
+{
+    var theWindow = null;    
+    var list = top.document.getElementsByTagName("window");
+    var wtype = list[0].getAttribute("windowtype");
+    
+    if (wtype == "navigator:browser")
+    {
+        theWindow = top.window;
+    }
+    else
+    {
+        var windowManager =
+            Components.classes[WMEDIATOR_PROGID].getService(nsIWindowMediator);
+        if (windowManager)
+        {
+            theWindow = windowManager.getMostRecentWindow("navigator:browser");
+        }
+    }
+
+    if (!theWindow)
+    {
+        window.openDialog (search_getBrowserURL(), "_blank",
+                           "chrome,all,dialog=no", url);
+    }
+    else
+    {
+        // try to use the BrowserAppCore in the content area
+        // (for better session history);
+        // if its unavailable, just blast the content location
+        var appCore = theWindow._content.appCore;
+		if(appCore)
+		{
+            appCore.loadUrl(url);
+		}
+		else
+		{
+            theWindow.top._content.location.href = url;
+		}
+
+    }
+}
+
+
+
+function search_getBrowserURL()
+{
+    var url="chrome://navigator/content/navigator.xul";
+
+    if (pref)
+    {
+        var temp = pref.CopyCharPref("browser.chromeURL");
+        if (temp)
+        {
+            url = temp;
+        }
+    }
+    return(url);
+}
+
+
+
 function doEnabling()
 {
 	var searchButton = document.getElementById("searchbutton");
 	var sidebarSearchText = document.getElementById("sidebar-search-text");
 
     if ( sidebarSearchText.value == "" ) 
-      {
+    {
         // No input, disable search button if enabled.
         if ( !searchButton.getAttribute("disabled") )
-          searchButton.setAttribute("disabled","true");
-      }
+        searchButton.setAttribute("disabled","true");
+    }
     else
-      {
+    {
         if ( searchButton.getAttribute("disabled") == "true")
-          searchButton.removeAttribute( "disabled");
-      }
+        {
+            searchButton.removeAttribute("disabled");
+        }
+    }
 }
+

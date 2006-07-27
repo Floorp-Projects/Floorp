@@ -26,7 +26,7 @@
 <?xml-stylesheet href="chrome://communicator/skin/search/search.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/search/search-panel.dtd" >
-<window id="searchPanel" class="box-padded color-dialog"
+<window id="searchPanel" class="color-dialog"
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -42,7 +42,8 @@
     	<menu />
     </popup>
   </popupset>
-  <box orient="vertical">
+  
+  <box class="color-window groove-bottom box-padded outset-right" orient="vertical">
     <box autostretch="never">
       <textfield id="sidebar-search-text" flex="1" onkeypress="if (event.which == 13) { return doSearch(); } else {doEnabling();}" />
 		  <box autostretch="never">
@@ -69,7 +70,8 @@
       </menulist>
     </box>
   </box>
-  <deck id="advancedDeck" flex="1">
+  
+  <deck class="outset-right" id="advancedDeck" flex="1">
     <box align="vertical" class="searchpanel-outerbox" flex="1">
       <tree id="Tree" class="inset" ref="NC:LastSearchRoot"
             rdf:resource="http://home.netscape.com/NC-rdf#PageRank"
@@ -128,18 +130,42 @@
     </box>
       
     <box align="vertical" class="searchpanel-outerbox" flex="1">
-
-      <box orient="vertical" id="searchengines" datasources="rdf:internetsearch"
-           flex="1" class="inset color-window" autostretch="never" valign="top">
+      <tree id="searchengines" datasources="rdf:internetsearch"
+            flex="1" class="inset">
         <template>
           <rule>
-            <checkbox uri="..." loading="rdf:http://home.netscape.com/NC-rdf#loading"
-                      oncommand="doCheck(this);"
-                      src="rdf:http://home.netscape.com/NC-rdf#Icon" 
-                      value="rdf:http://home.netscape.com/NC-rdf#Name" />
+            <treechildren>
+              <treeitem uri="...">
+                <treerow>
+                  <treecell autostretch="never">
+                    <checkbox oncommand="doCheck(this);" allowevents="true"
+                              loading="rdf:http://home.netscape.com/NC-rdf#loading"
+                              src="rdf:http://home.netscape.com/NC-rdf#Icon"
+                              value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                  </treecell>
+                </treerow>
+              </treeitem>
+            </treechildren>
           </rule>
         </template>
-      </box>
+        
+        <treecolgroup>
+          <treecol id="EngineColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" flex="1" />
+        </treecolgroup>
+        
+        <treehead>
+          <treerow>
+            <treecell class="treecell-header sortDirectionIndicator outset" 
+                      observes="EngineColumn" value="&engine.column.label;"
+                      resource="http://home.netscape.com/NC-rdf#Name"
+                      sortActive="true" sortDirection="ascending"
+                      onclick="return doSort('EngineColumn', null);"/>
+          </treerow>
+        </treehead>
+                
+        <treechildren flex="1" id="engineKids"/>
+      </tree>
+            
       <box>
     		<spring flex="1" />
 		    <button id="customizeButton" value="&customize.button.label;" oncommand="return doCustomize();"/>
