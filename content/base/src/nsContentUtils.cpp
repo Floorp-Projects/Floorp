@@ -2383,6 +2383,9 @@ static const char gPropertiesFiles[nsContentUtils::PropertiesFile_COUNT][56] = {
   "chrome://global/locale/layout/HtmlForm.properties",
   "chrome://global/locale/printing.properties",
   "chrome://global/locale/dom/dom.properties",
+#ifdef MOZ_SVG
+  "chrome://global/locale/svg/svg.properties",
+#endif
   "chrome://branding/locale/brand.properties",
   "chrome://global/locale/commonDialogs.properties"
 };

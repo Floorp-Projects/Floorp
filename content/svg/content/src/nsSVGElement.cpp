@@ -219,6 +219,13 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
       // expects a length.
       // To accomodate this "erronous" value, we'll insert a proxy
       // object between ourselves and the actual value object:
+      nsAutoString attributeName;
+      aAttribute->ToString(attributeName);
+      const nsAFlatString& attributeValue = PromiseFlatString(aValue);
+      const PRUnichar *strings[] = { attributeName.get(), attributeValue.get() };
+      nsSVGUtils::ReportToConsole(GetOwnerDoc(),
+                                  "AttributeParseWarning",
+                                  strings, NS_ARRAY_LENGTH(strings));
       nsCOMPtr<nsISVGValue> proxy;
       nsresult rv =
         NS_CreateSVGStringProxyValue(svg_value, getter_AddRefs(proxy));

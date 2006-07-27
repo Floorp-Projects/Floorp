@@ -46,6 +46,7 @@
 #include "nsISVGValue.h"
 #include "nsRect.h"
 
+class nsIDocument;
 class nsPresContext;
 class nsIContent;
 class nsStyleCoord;
@@ -102,6 +103,14 @@ public:
    * successfully be created.
    */
   static PRBool SVGEnabled();
+
+  /*
+   * Report a localized error message to the error console.
+   */
+  static nsresult ReportToConsole(nsIDocument* doc,
+                                  const char* aWarning,
+                                  const PRUnichar **aParams,
+                                  PRUint32 aParamsLength);
 
   /*
    * Converts a nsStyleCoord into a userspace value.  Handles units

@@ -77,6 +77,7 @@
 #include "nsGenericElement.h"
 #include "nsAttrValue.h"
 #include "nsSVGGeometryFrame.h"
+#include "nsIScriptError.h"
 #include "cairo.h"
 
 struct nsSVGFilterProperty {
@@ -124,6 +125,21 @@ nsSVGUtils::SVGEnabled()
   }
 
   return gSVGEnabled && gSVGRendererAvailable;
+}
+
+nsresult
+nsSVGUtils::ReportToConsole(nsIDocument* doc,
+                            const char* aWarning,
+                            const PRUnichar **aParams,
+                            PRUint32 aParamsLength)
+{
+  return nsContentUtils::ReportToConsole(nsContentUtils::eSVG_PROPERTIES,
+                                         aWarning,
+                                         aParams, aParamsLength,
+                                         doc ? doc->GetDocumentURI() : nsnull,
+                                         EmptyString(), 0, 0,
+                                         nsIScriptError::warningFlag,
+                                         "SVG");
 }
 
 float
