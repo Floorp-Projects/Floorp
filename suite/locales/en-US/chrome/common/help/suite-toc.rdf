@@ -2970,7 +2970,7 @@
       <rdf:Seq>
         <rdf:li> 
 	<rdf:Description ID="profile-help-create" nc:name="Creating a New Profile"
-  		nc:link="chrome://help/locale/using_priv_help.html#creating_profiles"/> </rdf:li>
+           nc:link="chrome://help/locale/profiles_help.html#creating_profiles"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -2981,7 +2981,7 @@
       <rdf:Seq>
         <rdf:li> 
 	<rdf:Description ID="profile-help-delete" nc:name="Deleting or Renaming a Profile"
-  		nc:link="chrome://help/locale/using_priv_help.html#deleting_profiles"/> </rdf:li>
+            nc:link="chrome://help/locale/profiles_help.html#deleting_profiles"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
