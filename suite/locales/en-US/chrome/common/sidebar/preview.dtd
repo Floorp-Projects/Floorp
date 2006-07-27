@@ -19,5 +19,5 @@
    - Contributor(s): Stephen Lamm <slamm@netscape.com>
   --> 
 
-<!ENTITY sidebar.preview.title.label          "Panel Preview">
+<!ENTITY sidebar.preview.title.label          "Tab Preview">
 <!ENTITY sidebar.preview.close.label          "Close">
