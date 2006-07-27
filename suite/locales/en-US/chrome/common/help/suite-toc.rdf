@@ -441,6 +441,7 @@ nc:link="chrome://help/locale/nav_help.xhtml#plugins_and_downloads"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail_addressing_settings" nc:name="Composition &amp; Addressing"  nc:link="mail_help.xhtml#addressing"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail-doc-offline-space" nc:name="Offline and Disk Space"  nc:link="mail_help.xhtml#offline_and_disk_space"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail-account-receipts" nc:name="Return Receipts" nc:link="mail_help.xhtml#return_receipts"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-account-junk" nc:name="Junk Settings" nc:link="mail_help.xhtml#junk_settings"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail_security_settings" nc:name="Security"  nc:link="mail_help.xhtml#security"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail_local_folders_settings" nc:name="Local Folders"  nc:link="mail_help.xhtml#local_folders"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail_smtp" nc:name="Outgoing Server (SMTP)"  nc:link="mail_help.xhtml#outgoing_server"/> </rdf:li>
@@ -490,6 +491,7 @@ nc:link="chrome://help/locale/nav_help.xhtml#plugins_and_downloads"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail_prefs_messages" nc:name="Composition" nc:link="mail_help.xhtml#composition"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail_prefs_formatting" nc:name="Send Format" nc:link="mail_help.xhtml#send_format"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail_prefs_addressing" nc:name="Addressing" nc:link="mail_help.xhtml#addressing_preferences"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-prefs-junk" nc:name="Junk Mail" nc:link="mail_help.xhtml#global_junk_settings"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail-prefs-labels" nc:name="Labels" nc:link="mail_help.xhtml#labels"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail-prefs-receipts" nc:name="Return Receipts" nc:link="mail_help.xhtml#return_receipts_preferences"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail_prefs_character_encoding" nc:name="Character Encoding" nc:link="mail_help.xhtml#character_encoding"/> </rdf:li>
