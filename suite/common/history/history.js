@@ -58,3 +58,17 @@ var historyDNDObserver = {
   }
 
 };
+
+function OpenURL(event, node, root)
+{
+    if ((event.button != 1) || (event.detail != 2)
+        || (node.nodeName != "treeitem"))
+        return false;
+
+    if (node.getAttribute("container") == "true")
+        return false;
+
+    var url = node.id;
+    
+    window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url);
+}
