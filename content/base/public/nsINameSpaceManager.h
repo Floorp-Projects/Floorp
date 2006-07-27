@@ -39,7 +39,7 @@
 #define nsINameSpaceManager_h___
 
 #include "nsISupports.h"
-#include "nsAString.h"
+#include "nsStringGlue.h"
 
 class nsIAtom;
 class nsString;
