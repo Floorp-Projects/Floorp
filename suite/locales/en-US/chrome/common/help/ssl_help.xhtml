@@ -10,7 +10,7 @@
 <head>
 <title>SSL Settings</title>
 <link rel="stylesheet" href="chrome://help/locale/helpFileLayout.css"
-  type="text/css"></link>
+  type="text/css"/>
 </head>
 <body>
 
@@ -102,8 +102,8 @@
     that supports low-grade encryption. (Low-grade encryption is the weakest
     encryption available, using 40-bit keys.)</li>
   <li><strong>Leaving a page that supports encryption:</strong> Select this
-   warning if you want to be reminded whenever you are leaving a page that
-   supports encryption for one that does not.</li>
+    warning if you want to be reminded whenever you are leaving a page that
+    supports encryption for one that does not.</li>
   <li><strong>Sending form data from an unencrypted page to an unencrypted
     page:</strong> Select this warning if you want to be reminded whenever you
     are submitting data over an unencrypted connection. If you send unencrypted
@@ -137,8 +137,39 @@
   <a href="glossary.xhtml#cryptographic_algorithm">cryptographic
   algorithms</a>. Consult your system administrator before changing any of
   these settings.</p>
+
 <p>Each checkbox corresponds to a cipher suite, or set of cryptographic
-  algorithms.</p>
+  algorithms. To view info information about a cipher suite, click the 
+  Details button besides its name.</p>
+
+<p>The following information is displayed for the selected cipher suite:</p>
+
+<ul>
+  <li><strong>Cypher:</strong> Encryption module name.</li>
+  <li><strong>Encryption algorithm:</strong> Used for bulk encryption and 
+    decryption.</li>
+  <li><strong>Authentication Algorithm:</strong> Used to determine the server 
+    or client's identity.</li>
+  <li><strong>Effective Key Algorithm:</strong> Governs the way in which the 
+    server and client determine the symmetric keys they will both use during an 
+    SSL session.</li>
+  <li><strong>Key Size:</strong> The size of the keys used with this cipher 
+    suite. (Encryption strength depends on both encryption algorithm and key 
+    size.)</li>
+  <li><strong>MAC Algorithm:</strong> Used for tamper detection and data 
+    verification; sometimes called message digest or hash algorithm.</li>
+  <li><strong>Other Attributes:</strong> These can include the following:
+    <ul>
+      <li><strong>FIPS</strong> Complies with Federal Information Processing 
+        Standards Publications (FIPS PUBS) 140-1. Many products sold to the US 
+        government must comply with one or more FIPS standards.</li>
+      <li><strong>IsExportable</strong> Cipher suite was legally exportable 
+        under regulations published by the U.S. Department of Commerce that 
+        previously limited the encryption strength of exported products. Those 
+        regulations have since been loosened.</li>
+    </ul>
+  </li>
+</ul>
 
 <p>For more information about ciphers and encryption, see the following online
   documents:</p>
