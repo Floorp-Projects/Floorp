@@ -42,7 +42,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const WMEDIATOR_CONTRACTID     = "@mozilla.org/rdf/datasource;1?name=window-mediator";
+const WMEDIATOR_CONTRACTID     = "@mozilla.org/appshell/window-mediator;1";
 const ISEARCH_CONTRACTID       = "@mozilla.org/rdf/datasource;1?name=internetsearch";
 const RDFSERVICE_CONTRACTID    = "@mozilla.org/rdf/rdf-service;1";
 const BMARKS_CONTRACTID        = "@mozilla.org/browser/bookmarks-service;1";
