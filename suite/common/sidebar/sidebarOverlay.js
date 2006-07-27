@@ -216,8 +216,7 @@ function (force_reload)
   // parameter to allow the value to be persisted in localstore.rdf.
   var selected_id = this.node.getAttribute('last-selected-panel');
 
-  var sidebar_box = document.getElementById('sidebar-box');
-  if (sidebar_box.getAttribute('collapsed') == 'true') {
+  if (sidebar_is_collapsed()) {
     sidebarObj.collapsed = true;
   } else {
     sidebarObj.collapsed = false;
@@ -538,7 +537,7 @@ function sidebar_overlay_init() {
       // XXX This is a hack to force re-display
       panels.setAttribute('ref', sidebarObj.resource);
     }
-    if (sidebar_element.getAttribute('collapsed') == 'true') {
+    if (sidebar_is_collapsed()) {
       sidebarObj.collapsed = true;
     } else {
       sidebarObj.collapsed = false;
@@ -701,9 +700,39 @@ function sidebar_fixup_datasource() {
 
 // Change the sidebar content to the selected panel.
 // Called when a panel title is clicked.
-function SidebarSelectPanel(header) {
+function SidebarSelectPanel(header, should_popopen, should_unhide) {
+  debug("SidebarSelectPanel("+header+","+should_popopen+","+should_unhide+")");
   var panel = sidebarObj.panels.get_panel_from_header_node(header);
-  panel.select(false);
+
+  if (!panel) {
+    return false;
+  }
+  
+  var popopen = false;
+  var unhide = false;
+
+  if (panel.is_excluded()) {
+    return false;
+  }
+  if (sidebar_is_hidden()) {
+    if (should_unhide) {
+      unhide = true;
+    } else {
+      return false;
+    }
+  }
+  if (sidebar_is_collapsed()) {
+    if (should_popopen) {
+      popopen = true;
+    } else {
+      return false;
+    }
+  }
+  if (unhide)  SidebarShowHide();
+  if (popopen) SidebarExpandCollapse();
+  if (!panel.is_selected()) panel.select(false);
+
+  return true;
 }
 
 function SidebarStopPanelLoad(header) {
@@ -756,6 +785,25 @@ function SidebarCustomize() {
   }
 }
 
+function sidebar_is_collapsed() {
+  var sidebar_splitter = document.getElementById('sidebar-splitter');
+  return sidebar_splitter.getAttribute('state') == 'collapsed';
+}
+
+function SidebarExpandCollapse() {
+  var sidebar_splitter = document.getElementById('sidebar-splitter');
+  var sidebar_box = document.getElementById('sidebar-box');
+  if (sidebar_splitter.getAttribute('state') == 'collapsed') {
+    debug("Expanding the sidebar");
+    sidebar_splitter.removeAttribute('state');
+    sidebar_box.removeAttribute('collapsed');
+  } else {
+    debug("Collapsing the sidebar");
+    sidebar_splitter.setAttribute('state', 'collapsed');
+    sidebar_box.setAttribute('collapsed', 'true');
+  }
+}
+
 // sidebar_is_hidden() - Helper funciton for SidebarShowHide().
 function sidebar_is_hidden() {
   var sidebar_title = document.getElementById('sidebar-title-box');
@@ -766,9 +814,9 @@ function sidebar_is_hidden() {
 
 // Show/Hide the entire sidebar.
 // Envoked by the "View / My Sidebar" menu option.
-function SidebarShowHide(title_id) {
+function SidebarShowHide() {
   var sidebar_box = document.getElementById('sidebar-box');
-  var title_box = document.getElementById(title_id);
+  var title_box = document.getElementById('sidebar-title-box');
   var sidebar_panels_splitter = document.getElementById('sidebar-panels-splitter');
   var sidebar_panels_splitter_box = document.getElementById('sidebar-panels-splitter-box');
   var sidebar_splitter = document.getElementById('sidebar-splitter');
@@ -880,8 +928,8 @@ function SidebarTogglePanel(panel_menuitem) {
 // Sidebar Hacks and Work-arounds
 //////////////////////////////////////////////////////////////
 
-// SidebarExpandCollapse() - Respond to grippy click.
-function SidebarExpandCollapse() {
+// SidebarCleanUpExpandCollapse() - Respond to grippy click.
+function SidebarCleanUpExpandCollapse() {
   // XXX Mini hack. Persist isn't working too well. Force the persist,
   // but wait until the change has commited.
   setTimeout("document.persist('sidebar-box', 'collapsed');",100);

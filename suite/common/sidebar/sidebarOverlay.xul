@@ -99,9 +99,9 @@
                 predicate="http://home.netscape.com/NC-rdf#exclude" />
             </bindings>
             <action>
-              <box uri="?panel" class="box-texttab texttab-sidebar" align="left" 
-                onclick="SidebarSelectPanel(this)" hidden="true"
-                value="?title" exclude="?exclude" />
+              <box uri="?panel" class="box-texttab texttab-sidebar"
+                onclick="SidebarSelectPanel(this,false,false)" align="left" 
+                hidden="true" value="?title" exclude="?exclude" />
               <box uri="?panel" flex='1*' hidden="true" orient="vertical"
                 loadstate="never loaded">
                 <box flex='1' orient="vertical" class="iframe-panel loadarea">
@@ -138,7 +138,7 @@
     orient="vertical"
     onmouseup="SidebarFinishClick();">
     <grippy class="sidebar-splitter-grippy"
-      onclick="SidebarExpandCollapse();"/>
+      onclick="SidebarCleanUpExpandCollapse();"/>
   </splitter>
 
   <!-- View->Sidebar toggle -->
@@ -146,7 +146,7 @@
     <menuitem id="sidebar-menu" type="checkbox"
       value="&sidebarCmd.label;"
       accesskey="&sidebarCmd.accesskey;"
-      oncommand="SidebarShowHide('sidebar-title-box');"
+      oncommand="SidebarShowHide();"
       position="2"/>
   </menupopup>
 
