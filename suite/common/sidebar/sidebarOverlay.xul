@@ -21,7 +21,6 @@
  
 <?xml-stylesheet href="chrome://communicator/content/sidebar/sidebarOverlay.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://global/skin/button.css" type="text/css"?> 
-<?xul-overlay href="chrome://communicator/content/contentAreaContextOverlay.xul"?>
 
 <!DOCTYPE window [
 <!ENTITY % sidebarOverlayDTD SYSTEM "chrome://communicator/locale/sidebar/sidebarOverlay.dtd" >
