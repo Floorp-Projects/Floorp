@@ -1677,7 +1677,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="LDAP:global_settings"
          nc:name="global settings"
-         nc:link="mail_help.xhtml#addressing"/>
+         nc:link="mail_help.xhtml#addressing_preferences"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1757,7 +1757,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:addressing_preferences"
          nc:name="addressing preferences"
-         nc:link="mail_help.xhtml#addressing"/>
+         nc:link="mail_help.xhtml#addressing_preferences"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2367,7 +2367,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Offline:general_preferences"
          nc:name="general preferences"
-         nc:link="mail_help.xhtml#disk_space_preferences"/>
+         nc:link="mail_help.xhtml#offline_and_disk_space_preferences"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -3138,7 +3138,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="return_receipts:general_preferences"
          nc:name="general preferences"
-         nc:link="mail_help.xhtml#return_receipts"/>
+         nc:link="mail_help.xhtml#return_receipts_preferences"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
