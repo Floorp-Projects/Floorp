@@ -1,5 +1,5 @@
 
-<!ENTITY search.name.label              "name">
+<!ENTITY search.name.label              "title">
 <!ENTITY search.url.label               "location">
 <!ENTITY search.startswith.label        "starts with">
 <!ENTITY search.endswith.label          "ends with">
