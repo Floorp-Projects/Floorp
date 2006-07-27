@@ -41,7 +41,7 @@
           <treeitem uri="..." type="rdf:http://home.netscape.com/NC-rdf#File-Type" persist="open"
                     loading="rdf:http://home.netscape.com/NC-rdf#loading" >
             <treerow>
-              <treecell class="filename" indent="true"
+              <treecell class="filename treecell-indent" indent="true"
                         value="rdf:http://home.netscape.com/NC-rdf#Name"/>
               <treecell value="rdf:http://home.netscape.com/NC-rdf#Content-Length" />
               <treecell value="rdf:http://home.netscape.com/WEB-rdf#LastModifiedDate" />
