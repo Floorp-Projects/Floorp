@@ -17,5 +17,5 @@
 <html:input id="result" type="text" style="min-width: 400px; min-height: 27px" flex="100%"/>
 </box>
 <html:hr/>
-<html:button onclick="ShowLastPageVisted()">Show Last Page Visted</html:button>  
+<html:button onclick="ShowLastPageVisited();">Show Last Page Visited</html:button>  
 </window>
