@@ -32,6 +32,40 @@
   <script type="application/x-javascript">
   <![CDATA[
 
+    /******* THE FOLLOWING IS FOR THE STATUSBAR OVERLAY *******/
+
+    var cookieIconObserver = {
+      observe: function(subject, topic, state) {
+        if (topic != "cookieIcon" || !document) {
+          return;
+        }
+        var cookieIcon = document.getElementById("privacy-button");
+        if (state == "on") {
+          cookieIcon.removeAttribute("hidden");
+        } else if (state == "off")  {
+          cookieIcon.setAttribute("hidden", "true");
+        }
+      }
+    }
+
+    function TestIconVisibility() {
+      var cookieservice = Components.classes["@mozilla.org/cookieService;1"].getService();
+      cookieservice = cookieservice.QueryInterface(Components.interfaces.nsICookieService);
+      if (cookieservice.cookieIconIsVisible) {
+        document.getElementById("privacy-button").removeAttribute("hidden");
+      }
+    }
+
+    // create an observer for changes in visibility of cookie icon
+    var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+    observerService.addObserver(cookieIconObserver, "cookieIcon", false);
+
+    // determine whether or not cookie icon in this new window should be displayed
+    // we need to delay before displaying icon because it hasn't been created yet
+    setTimeout(TestIconVisibility, 0);
+
+    /******* THE FOLLOWING IS FOR THE TASKMENU OVERLAY *******/
+
     var permissionmanager;
 
     // Remove the image entries from the task menu
@@ -188,5 +222,16 @@
               oncommand="viewTutorial();"
               insertbefore="lastInPersonalManagers"/>
   </menupopup>
+
+  <!-- statusbarOverlay items -->
+
+  <statusbar id="status-bar">
+    <statusbarpanel class="statusbarpanel-iconic" id="privacy-button"
+                    hidden="true" insertbefore="security-button"
+                    oncommand="viewCookiesFromIcon()" tooltiptext="&cookieIcon.label;">
+      <toolbarbutton class="taskbutton" id="mini-cookie"
+                     image="chrome://cookie/content/taskbar-cookie.gif"/>
+    </statusbarpanel>
+  </statusbar>
 
 </overlay>

@@ -23,11 +23,17 @@ var IMAGEPERMISSION = 1;
 
 function viewImages() {
   window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","_blank",
-                    "modal=yes,chrome,resizable=yes", 2 );
+                    "modal=yes,chrome,resizable=yes", "imageManager" );
 }
 
 function viewCookies() {
-  window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","_blank","modal=yes,chrome,resizable=yes", 0);
+  window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","_blank",
+                    "modal=yes,chrome,resizable=yes", "cookieManager");
+}  
+
+function viewCookiesFromIcon() {
+  window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","_blank",
+                    "modal=yes,chrome,resizable=yes", "cookieManagerFromIcon");
 }  
 
 function viewTutorial() {
