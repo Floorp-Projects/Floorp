@@ -769,6 +769,27 @@
     </nc:subheadings>
   </rdf:Description>
 
+<rdf:Description about="#cert-dialog-help-enroll">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="cert-dialog-help-key-copy" nc:name="Encryption Key Copy"
+  		nc:link="chrome://help/locale/cert_dialog_help.html#Encryption_Key_Copy"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#cert-dialog-help-enroll">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="cert-dialog-help-cert-backup" nc:name="Certificate Backup"
+  		nc:link="chrome://help/locale/cert_dialog_help.html#Certificate_Backup"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+
 <rdf:Description about="#cert-dialog-help">
     <nc:subheadings>
       <rdf:Seq>
@@ -785,6 +806,16 @@
         <rdf:li> 
 	<rdf:Description ID="cert-dialog-help-userID" nc:name="User Identification Request"
   		nc:link="chrome://help/locale/cert_dialog_help.html#User_Identification_Request"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#cert-dialog-help">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="cert-dialog-help-noID" nc:name="No Acceptable Identification"
+  		nc:link="chrome://help/locale/cert_dialog_help.html#No_Acceptable_Identification"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
