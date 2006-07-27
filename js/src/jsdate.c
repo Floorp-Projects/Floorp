@@ -934,8 +934,8 @@ SetUTCTimePtr(JSContext *cx, JSObject *obj, jsval *argv, jsdouble *v)
         return JS_FALSE;
     
     /* Invalidate local time cache. */
-    if (JS_SetReservedSlot(cx, obj, LOCAL_TIME_SLOT, 
-                           DOUBLE_TO_JSVAL(cx->runtime->jsNaN))) {
+    if (!JS_SetReservedSlot(cx, obj, LOCAL_TIME_SLOT, 
+                            DOUBLE_TO_JSVAL(cx->runtime->jsNaN))) {
         return JS_FALSE;
     }
     
