@@ -36,7 +36,7 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/popupManager.dtd" >
+<!DOCTYPE dialog SYSTEM "chrome://communicator/locale/popupManager.dtd" >
 
 <dialog id="popupManager"
         buttons="accept,cancel,help"
