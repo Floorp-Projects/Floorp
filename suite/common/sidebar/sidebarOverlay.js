@@ -1328,10 +1328,11 @@ function SidebarTogglePanel(panel_menuitem) {
     }
   }
 
+  var tabs = sidebarObj.panels.node.childNodes;
+
   if (did_exclude)
   {
     // if we excluded a tab in view then add another one
-    var tabs = sidebarObj.panels.node.childNodes;
     if (panel.is_in_view())
     {
       // we excluded one so let's try to bring a non-excluded one into view
