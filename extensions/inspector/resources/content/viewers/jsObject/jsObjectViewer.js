@@ -46,6 +46,7 @@
 //////////// global variables /////////////////////
 
 var viewer;
+var bundle;
 
 //////////// global constants ////////////////////
 
@@ -57,6 +58,7 @@ window.addEventListener("load", JSObjectViewer_initialize, false);
 
 function JSObjectViewer_initialize()
 {
+  bundle = document.getElementById("inspector-bundle");
   viewer = new JSObjectViewer();
   viewer.initialize(parent.FrameExchange.receiveData(window));
 }
@@ -90,7 +92,7 @@ JSObjectViewer.prototype =
   {
     this.mSubject = aObject;
     this.emptyTree(this.mTreeKids);
-    var ti = this.addTreeItem(this.mTreeKids, "target", aObject, aObject);
+    var ti = this.addTreeItem(this.mTreeKids, bundle.getString("root.title"), aObject, aObject);
     this.openTreeItem(ti);
 
     this.mObsMan.dispatchEvent("subjectChange", { subject: aObject });
@@ -274,7 +276,7 @@ function getSelectedItem()
 {
   var tree = document.getElementById("treeJSObject");
   if (tree.view.selection.count)
-    return tree.contentView.getItemAtIndex(tree.curentIndex);
+    return tree.contentView.getItemAtIndex(tree.currentIndex);
   else 
     return null;    
 }
