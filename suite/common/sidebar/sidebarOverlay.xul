@@ -1,4 +1,4 @@
-<?xml version="1.0"?> <!-- -*- Mode: SGML; indent-tabs-mode: nil -*- -->
+<?xml version="1.0"?> <!-- -*- Mode: HTML; indent-tabs-mode: nil -*- -->
 <!--
 
   The contents of this file are subject to the Netscape Public License
@@ -29,7 +29,7 @@
   <!-- Overlay the sidebar panels -->
   <box id="sidebar-box" align="vertical"
     persist="hidden width collapsed">
-    <sidebarheader id="sidebar-title-box" class="sidebar-main-header"
+    <sidebarheader id="sidebar-title-box" class="sidebarheader-main"
       value="&sidebar.panels.label;" persist="hidden state"
       collapse="after" onmouseup="PersistHeight();">
       <menu id="sidebar-panel-picker" class="standard" crop="right"
@@ -59,7 +59,7 @@
       persist='last-selected-panel height collapsed hidden' flex="1*">
       <template id="sidebar-template">
         <rule>
-          <box uri="rdf:*" class="texttab sidebar-tab" align="left" 
+          <box uri="rdf:*" class="texttab texttab-sidebar" align="left" 
             value="rdf:http://home.netscape.com/NC-rdf#title"
             onclick="SidebarSelectPanel(this)"
             exclude="rdf:http://home.netscape.com/NC-rdf#exclude"
@@ -67,15 +67,16 @@
           <box uri="rdf:*" flex='1*' hidden="true" orient="vertical">
             <box flex='1' orient="vertical">
               <box orient="horizontal" flex="1" autostretch="never">
-                <image class="loading-image"/>
-                <text class="loading-image" value="&sidebar.loading.label;"/>
+                <image class="image-panel-loading"/>
+                <text class="text-panel-loading"
+                  value="&sidebar.loading.label;"/>
               </box>
               <spring flex="100%"/>
             </box>
-            <iframe class="panel-frame" flex='1*'
+            <iframe class="iframe-panel" flex='1*'
               hidden="true" collapsed="true"
               src="rdf:http://home.netscape.com/NC-rdf#content" />
-            <iframe class="panel-frame" flex='1*'
+            <iframe class="iframe-panel" flex='1*'
               hidden="true" collapsed="true"
               src="rdf:http://home.netscape.com/NC-rdf#content"
               type="content" />

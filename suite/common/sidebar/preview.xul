@@ -37,7 +37,7 @@
 
   <script src="chrome://communicator/content/sidebar/preview.js" />
 
-  <box id="paneltitle" class="texttab sidebar-tab"
+  <box id="paneltitle" class="texttab texttab-sidebar"
     align="left" selected="true"/>
 
 <!--  <iframe id="previewframe" type="content" src="about:blank" flex="1"/>-->
