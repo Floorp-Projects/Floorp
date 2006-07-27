@@ -210,8 +210,8 @@ function PreviewPanel()
     var preview_URL  = get_attr(database, rdfNode, 'content');
     if (!preview_URL || !preview_name) break;
 
-    var preview = window.openDialog("chrome://communicator/content/sidebar/preview.xul",
-                              "_blank", "chrome,resizable", preview_name, preview_URL);
+    window.openDialog("chrome://communicator/content/sidebar/preview.xul",
+                      "_blank", "chrome,resizable", preview_name, preview_URL);
   }
 }
 
@@ -282,6 +282,7 @@ function add_node_to_current_list(registry, service)
   item.setAttribute('id', service.Value);
   item.setAttribute('customize', option_customize);
   item.setAttribute('content', option_content);
+  cell.setAttribute('class', 'treecell-indent treecell-panel');
   cell.setAttribute('value', option_title);
  
   // Add it to the current panels tree
@@ -340,6 +341,8 @@ function CustomizePanel()
 // Serialize the new list of panels.
 function Save()
 {
+  persist_dialog_dimensions();
+
   var all_panels = document.getElementById('other-panels');
   var current_panels = document.getElementById('current-panels');
 
@@ -410,6 +413,12 @@ function Save()
 
   window.close();
 }
+
+function Cancel() {
+  persist_dialog_dimensions();
+  window.close();
+}
+
 
 // Search for an element in an array
 function has_element(array, element) {
@@ -538,6 +547,24 @@ function enable_buttons_for_current_panels() {
   }
 }
 
+function persist_dialog_dimensions() {
+  // Stole this code from navigator.js to
+  // insure the windows dimensions are saved.
+
+  // Get the current window position/size.
+  var x = window.screenX;
+  var y = window.screenY;
+  var h = window.outerHeight;
+  var w = window.outerWidth;
+
+  // Store these into the window attributes (for persistence).
+  var win = document.getElementById( "main-window" );
+  win.setAttribute( "x", x );
+  win.setAttribute( "y", y );
+  win.setAttribute( "height", h );
+  win.setAttribute( "width", w );
+}
+
 function dump_attributes(node) {
   var attributes = node.attributes
 
@@ -549,4 +576,3 @@ function dump_attributes(node) {
     debug("attr "+ii+": "+ attr.name +"="+attr.value)
   }
 }
-
