@@ -225,28 +225,34 @@ nsIFrame* nsHyperTextAccessible::GetPosAndText(PRInt32& aStartOffset, PRInt32& a
     if (Role(accessible) == ROLE_TEXT_LEAF) {
       if (frame) {
         // Avoid string copies
-        PRInt32 textContentLength = frame->GetContent()->TextLength();
-        if (startOffset < textContentLength) {
-          // XXX Can we somehow optimize further by getting the nsTextFragment and use
-          // CopyTo to a PRUnichar buffer to copy it directly to the string?
+        PRInt32 substringEndOffset = frame->GetContent()->TextLength();
+        if (startOffset < substringEndOffset) {
+          // Our start is within this substring
+          // XXX Can we somehow optimize further by getting the nsTextFragment
+          // and use CopyTo to a PRUnichar buffer to copy it directly to
+          // the string?
           nsAutoString newText;
           frame->GetContent()->AppendTextTo(newText);
-          if (startOffset > 0 || endOffset < textContentLength) {
-            // XXX the Substring operation is efficient, but does the reassignment
-            // to the original nsAutoString cause a copy?
+          if (startOffset > 0 || endOffset < substringEndOffset) {
+            // XXX the Substring operation is efficient, but does the 
+            // reassignment to the original nsAutoString cause a copy?
+            if (endOffset < substringEndOffset) {
+              // Don't take entire substring: stop before the end
+              substringEndOffset = endOffset;
+            }
             if (aText) {
               newText = Substring(newText, startOffset,
-                                  PR_MIN(textContentLength, endOffset - startOffset));
+                                  substringEndOffset - startOffset);
             }
             if (aEndFrame) {
-              *aEndFrame = frame;
+              *aEndFrame = frame; // We ended in the current frame
             }
             aEndOffset = endOffset;
           }
           if (aText) {
             if (frame && !frame->GetStyleText()->WhiteSpaceIsSignificant()) {
-              // Replace \r\n\t in markup with space unless in this is preformatted text
-              // where those characters are significant
+              // Replace \r\n\t in markup with space unless in this is
+              // preformatted text  where those characters are significant
               newText.ReplaceChar("\r\n\t", ' ');
             }
             *aText += newText;
@@ -255,13 +261,12 @@ nsIFrame* nsHyperTextAccessible::GetPosAndText(PRInt32& aStartOffset, PRInt32& a
             startFrame = frame;
             aStartOffset = startOffset;
           }
-          endOffset -= startOffset;
           startOffset = 0;
         }
         else {
-          startOffset -= textContentLength;
-          endOffset -= textContentLength;
+          startOffset -= substringEndOffset;
         }
+        endOffset -= substringEndOffset;
       }
     }
     else {
@@ -360,7 +365,7 @@ nsresult nsHyperTextAccessible::DOMPointToOffset(nsIDOMNode* aNode, PRInt32 aNod
       // This should only happen in the empty plaintext case, when there is no text child yet
       nsCOMPtr<nsIEditor> editor = GetEditor();
       nsCOMPtr<nsIPlaintextEditor> plaintextEditor = do_QueryInterface(editor);
-      NS_ASSERTION(plaintextEditor, "DOM Point is not in this nsHyperTextAccessible");
+      // NS_ASSERTION(plaintextEditor, "DOM Point is not in this nsHyperTextAccessible");
 #endif
       return NS_OK;  // No text content yet, because textfield is blank, offset must be 0
     }
@@ -473,7 +478,8 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
 
   PRInt32 startOffset = aOffset;
   PRInt32 endOffset = aOffset;
-  nsIFrame *startFrame = GetPosAndText(startOffset, endOffset); // Convert offsets to frame-relative
+  // Convert offsets to frame-relative
+  nsIFrame *startFrame = GetPosAndText(startOffset, endOffset);
   if (!startFrame) {
     return NS_ERROR_FAILURE;
   }
@@ -513,7 +519,8 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
     {
       // XXX We should merge identically formatted frames
       nsIContent *textContent = startFrame->GetContent();
-      // If not text, then it's represented by an embedded object char (length of 1)
+      // If not text, then it's represented by an embedded object char 
+      // (length of 1)
       // XXX did this mean to check for eTEXT?
       PRInt32 textLength = textContent ? textContent->TextLength() : 1;
       *aStartOffset = aOffset - startOffset;
@@ -526,26 +533,32 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
     return NS_ERROR_INVALID_ARG;
   }
 
-  // If aType == eGetAt we'll change both the start and end offset from the original offset
-  startOffset = (aType == eGetAfter)  ? aOffset : GetRelativeOffset(presShell, startFrame, startOffset,
-                                                                    amount, eDirPrevious, needsStart);
-  if (aBoundaryType == BOUNDARY_LINE_START && startOffset > 0) {
-    -- startOffset; // XXX Do we need to deal with endOffset the same way, or increase it for BOUNDARY_LINE_END?
-  }
+  // If aType == eGetAt we'll change both the start and end offset from
+  // the original offset
+  startOffset = (aType == eGetAfter) ? 
+                  aOffset : GetRelativeOffset(presShell, startFrame, 
+                              startOffset, amount, eDirPrevious, needsStart);
   *aStartOffset = startOffset;
 
   if (aType == eGetBefore) {
     endOffset = aOffset;
   }
   else {
-    // Start moving forward from the start so that we don't get 2 words/lines/sentences if 
-    // the offset occured on whitespace boundary
-    PRInt32 tempOffset = endOffset = startOffset;  // Use temp so that startOffset is not modified (it is passed by reference)
+    // Start moving forward from the start so that we don't get 
+    // 2 words/lines/sentences if the offset occured on whitespace boundary
+    
+    // Use temp so that startOffset is not modified
+    PRInt32 tempOffset = startOffset;
+    if (aBoundaryType == BOUNDARY_LINE_START) {
+      ++ tempOffset;
+    }
+    endOffset = tempOffset;
     nsIFrame *endFrame = GetPosAndText(tempOffset, endOffset);
     if (!endFrame) {
       return NS_ERROR_FAILURE;
     }
-    endOffset = GetRelativeOffset(presShell, endFrame, endOffset, amount, eDirNext, needsStart);
+    endOffset = GetRelativeOffset(presShell, endFrame, endOffset, amount,
+                                  eDirNext, needsStart);
   }
 
   *aEndOffset = endOffset;
