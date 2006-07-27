@@ -110,7 +110,11 @@ function HistoryCommonInit()
 
     if (gHistoryStatus)
         gHistoryTree.focus();
-    gHistoryTree.view.selection.select(0);
+
+    if (gHistoryTree.view.rowCount > 0)
+        gHistoryTree.view.selection.select(0);
+    else if (gHistoryStatus)
+        updateHistoryCommands();
 }
 
 function HistoryPanelUnload()
