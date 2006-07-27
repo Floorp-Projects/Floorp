@@ -103,35 +103,35 @@
 				<treecell id="NameCell" align="center"
 					value="&name.column.label;" observes="NameColumn"
 					resource="http://home.netscape.com/NC-rdf#Name"
-					onclick="return doSort('NameColumn');" />
+					onclick="return doSort('NameColumn', null);" />
 				<treecell id="PageRankCell" align="center"
 					value="&pagerank.column.label;" observes="PageRankColumn"
 					resource="http://home.netscape.com/NC-rdf#PageRank"
-					onclick="return doSort('PageRankColumn');" />
+					onclick="return doSort('PageRankColumn', null);" />
 				<treecell id="RelevanceCell" align="center"
 					value="&relevance.column.label;" observes="RelevanceColumn"
 					resource="http://home.netscape.com/NC-rdf#Relevance"
-					onclick="return doSort('RelevanceColumn');" />
+					onclick="return doSort('RelevanceColumn', null);" />
 				<treecell id="PriceCell" align="center"
 					value="&price.column.label;" observes="PriceColumn"
 					resource="http://home.netscape.com/NC-rdf#Price"
-					onclick="return doSort('PriceColumn');" />
+					onclick="return doSort('PriceColumn', null);" />
 				<treecell id="AvailabilityCell" align="center"
 					value="&availability.column.label;" observes="AvailabilityColumn"
 					resource="http://home.netscape.com/NC-rdf#Availability"
-					onclick="return doSort('AvailabilityColumn');" />
+					onclick="return doSort('AvailabilityColumn', null);" />
 				<treecell id="DateCell" align="center"
 					value="&date.column.label;" observes="DateColumn"
 					resource="http://home.netscape.com/NC-rdf#Date"
-					onclick="return doSort('DateColumn');" />
+					onclick="return doSort('DateColumn', null);" />
 				<treecell id="SiteCell" align="center"
 					value="&site.column.label;" observes="SiteColumn"
 					resource="http://home.netscape.com/NC-rdf#Site"
-					onclick="return doSort('SiteColumn');" />
+					onclick="return doSort('SiteColumn', null);" />
 				<treecell id="EngineCell" align="center"
 					value="&engine.column.label;" observes="EngineColumn"
 					resource="http://home.netscape.com/NC-rdf#Engine"
-					onclick="return doSort('EngineColumn');" />
+					onclick="return doSort('EngineColumn', null);" />
 
 			</treerow>
 		</treehead>

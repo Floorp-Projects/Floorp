@@ -75,11 +75,6 @@
         
         <box align="vertical" class="searchpanel-outerbox" flex="1">
 
-        <box orient="horizontal" align="center">
-          <text value="&useResults.label;" class="indented-label"/>
-        </box>
-        <spring style="height: 2px;"/>
-
         <tree id="Tree" ref="NC:LastSearchRoot" context="contextual"
           rdf:resource="http://home.netscape.com/NC-rdf#PageRank"
           rdf:resource2="http://home.netscape.com/NC-rdf#Name"
@@ -111,16 +106,22 @@
                   <treerow class="searchresult">
                     <treecell value="rdf:http://home.netscape.com/NC-rdf#Name"
                               src="rdf:http://home.netscape.com/NC-rdf#Icon" />
-                    <!--<treecell>
-                    		<html:a href="rdf:http://home.netscape.com/NC-rdf#URL"><html:div class="searchresult">This is a test</html:div></html:a>
-                    </treecell>-->
+                    <treecell />
                   </treerow>
                 </treeitem>
               </treechildren>
             </rule>
           </template>
-      
-          <treecol rdf:resource="http://home.netscape.com/NC-rdf#PageRank" rdf:resource2="http://home.netscape.com/NC-rdf#Name" />
+
+          <treehead>
+            <treerow>
+              <treecell observes="SortNameColumn" align="center" value="&results.label;" resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('SortNameColumn', 'http://home.netscape.com/NC-rdf#PageRank');" sortActive="true" sortDirection="ascending" flex="1"/>
+            </treerow>
+          </treehead>
+
+          <treecol style="width: 100%;" flex="100%" rdf:resource="http://home.netscape.com/NC-rdf#PageRank" rdf:resource2="http://home.netscape.com/NC-rdf#Name" />
+          // magic, hidden secondary column used for sorting
+          <treecol style="width: 0;" id="SortNameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" />
       
         </tree>
 
@@ -135,11 +136,6 @@
       <!-- advanced panel -->
       <box align="vertical" class="searchpanel-outerbox" flex="1">
       
-        <box orient="horizontal" align="center">
-          <text value="&useTheseProviders.label;" class="indented-label"/>
-        </box>
-        <spring style="height: 2px;"/>
-
         <tree align="horizontal" id="searchengines" flex="1" datasources="rdf:internetsearch" ref="NC:SearchEngineRoot" class="inset">
           <treecol id="CheckboxColumn" class="checkboxColumn" />
           <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" sortActive="true" sortDirection="ascending" />
@@ -160,7 +156,7 @@
           <treehead>
             <treerow>
               <treecell value="&checkbox.column.label;" style="width: 23px;"/>
-              <treecell observes="NameColumn" align="center" value="&engine.column.label;" resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('NameColumn');" sortActive="true" sortDirection="ascending" flex="1"/>
+              <treecell observes="NameColumn" align="center" value="&engine.column.label;" resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('NameColumn', null);" sortActive="true" sortDirection="ascending" flex="1"/>
             </treerow>
           </treehead>
         </tree>
