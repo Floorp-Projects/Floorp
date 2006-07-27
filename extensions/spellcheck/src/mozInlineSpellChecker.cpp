@@ -888,6 +888,9 @@ nsresult mozInlineSpellChecker::DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
   if (iscollapsed)
     return NS_OK;
 
+  nsCOMPtr<nsISelection2> sel2 = do_QueryInterface(aSpellCheckSelection, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // see if the selection has any ranges, if not, then we can optimize checking
   // range inclusion later (we have no ranges when we are initially checking or
   // when there are no misspelled words yet).
@@ -940,14 +943,13 @@ nsresult mozInlineSpellChecker::DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
       if (createdRange)
         createdRange->IsPointInRange(beginNode, beginOffset, &inCreatedRange);
       if (! inCreatedRange) {
-        nsCOMPtr<nsIDOMRange> currentRange;
-        IsPointInSelection(aSpellCheckSelection, beginNode, beginOffset,
-                           getter_AddRefs(currentRange));
-        if (!currentRange)
-          IsPointInSelection(aSpellCheckSelection, endNode, endOffset - 1,
-                             getter_AddRefs(currentRange));
-        if (currentRange)
-          RemoveRange(aSpellCheckSelection, currentRange);
+        nsCOMArray<nsIDOMRange> ranges;
+        rv = sel2->GetRangesForIntervalCOMArray(beginNode, beginOffset,
+                                                endNode, endOffset,
+                                                PR_TRUE, &ranges);
+        NS_ENSURE_SUCCESS(rv, rv);
+        for (PRInt32 i = 0; i < ranges.Count(); i ++)
+          RemoveRange(aSpellCheckSelection, ranges[i]);
       }
     }
 
