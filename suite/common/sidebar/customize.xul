@@ -31,7 +31,7 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="Init();" 
   id="main-window"
-  class="color-dialog"
+  class="dialog"
   title="&sidebar.customize.title.label;"
   windowtype="sidebar:customize"
   orient="vertical"
@@ -42,9 +42,7 @@
 
   <keyset id="keyset"/>
 
-  <box class="box-header" id="header" value="&sidebar.customize.title.label;"/>
-
-  <box id="contentarea" flex="1">
+  <box flex="1">
     <box orient="vertical" flex="5">
       <text class="label" value="&sidebar.customize.additional.label;"
         crop="right"/>
@@ -171,6 +169,8 @@
     </box> 
 
   </box>
+
+  <separator class="thin"/>
 
   <box id="okCancelButtonsRight" />
 
