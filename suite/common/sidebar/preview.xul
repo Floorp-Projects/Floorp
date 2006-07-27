@@ -32,7 +32,7 @@
 
   <script type="application/x-javascript" src="chrome://communicator/content/sidebar/preview.js" />
 
-  <vbox id="panel-container">
+  <vbox id="panel-container" flex="1">
 
     <hbox id="paneltitle" class="box-texttab texttab-sidebar" selected="true"/>
     <!--  <iframe id="previewframe" type="content" src="about:blank" flex="1"/>-->
