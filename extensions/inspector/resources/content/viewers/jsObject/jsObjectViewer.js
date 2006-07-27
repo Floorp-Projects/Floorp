@@ -93,7 +93,7 @@ JSObjectViewer.prototype =
     this.mSubject = aObject;
     this.emptyTree(this.mTreeKids);
     var ti = this.addTreeItem(this.mTreeKids, bundle.getString("root.title"), aObject, aObject);
-    this.openTreeItem(ti);
+    ti.setAttribute("open", "true");
 
     this.mObsMan.dispatchEvent("subjectChange", { subject: aObject });
   },
