@@ -109,8 +109,7 @@ function Startup() {
       element = document.getElementById("cookiesTab");
       tabBox.selectedTab = element;
     } else if (dialogType == imageType) {
-      element = document.getElementById("cookieviewer");
-      element.setAttribute("title", cookieBundle.getString("imageTitle"));
+      document.title = cookieBundle.getString("imageTitle");
 
       element = document.getElementById("permissionsTab");
       element.label = cookieBundle.getString("tabBannedImages");
@@ -129,8 +128,7 @@ function Startup() {
       element = document.getElementById("btnSession");
       element.hidden = "true";
     } else {
-      element = document.getElementById("cookieviewer");
-      element.setAttribute("title", cookieBundle.getString("popupTitle"));
+      document.title = cookieBundle.getString("popupTitle");
 
       element = document.getElementById("permissionsTab");
       element.label = cookieBundle.getString("tabBannedPopups");
