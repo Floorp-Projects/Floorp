@@ -87,6 +87,8 @@ function sidebar_customize_init()
   current_panels.setAttribute('ref', sidebarObj.resource);
   save_initial_panels();
   enable_buttons_for_current_panels();
+  
+  sizeToContent();
 }
 
 // Remember the original list of panels so that
