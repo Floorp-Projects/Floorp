@@ -144,14 +144,13 @@ How Encryption Works</h3>
 
 <p>The settings specified in <a href="mail_help.html#security_settings">Mail &amp; Newsgroups Account Settings - Security</a> determine the default settings for each new Compose window you open when you set out to write an email. 
 
-<p>To open a Compose window, start from the Mail window and click Compose. You can immediately identify the default security settings from the presence or absence of these icons near the lower-right corner of the window:
-<ul>
-	<table><tr><td><img src="images/pen.gif" alt="digital signature icon"></td><td>The message will be digitally signed (assuming you have a valid email certificate that identifies you).</td>
-	<tr><td>&nbsp;</td><td>&nbsp;</td></tr>
-	<tr><td><img src="images/key.gif" alt="digital signature icon"></td><td>The message will be encrypted (assuming you have valid certificates for all recipients).</td></table>
+<p>To open a Compose window, start from the Mail window and click Compose. You can immediately identify the default security settings from the presence or absence of these icons near the lower-right corner of the window:</p>
+
+	<table><tr><td>&nbsp;</td><td><img src="chrome://messenger/skin/smime/icons/hdrSignOk.gif" alt="digital signature icon"></td><td>The message will be digitally signed (assuming you have a valid email certificate that identifies you).</td>
+	<tr><td>&nbsp;</td><td><img src="chrome://messenger/skin/smime/icons/hdrCryptoOk.gif" alt="digital signature icon"></td><td>The message will be encrypted (assuming you have valid certificates for all recipients).</td></table>
 </ul>
 <p>To turn these settings off or on, click the arrow just below the Security icon in the Mail toolbar near the top of the window. Then select the item you want from the drop-down list:
-<ul>
+
 	<li><b>No Encryption:</b> Choose this to turn off encryption for this message. The message will be sent in the clear over the Internet.
 	<li><b>Require Encryption:</b> Choose this to turn on encryption for this message. The message will be sent in encrypted form. However, it can't be sent unless you have valid certificates for all recipients.
 	<li><b>Digitally Sign:</b> Choose this to turn digital signing on or off for this message. A checkmark indicates the message will be signed. 
@@ -164,13 +163,12 @@ How Encryption Works</h3>
 
 <h2><a NAME="reading"></a>Reading Signed &amp; Encrypted Messages</h2>
 
-<p>When you view a signed or encrypted message in the Mail window, these icons near the upper-right corner of the message header indicate the security status of the message:
+<p>When you view a signed or encrypted message in the Mail window, these icons near the upper-right corner of the message header indicate the security status of the message:</p>
 
-<ul>
-	<table><tr><td><img src="images/pen.gif" alt="digital signature icon"></td><td>The message is digitally signed. If there is a problem with the signature, the pen is broken.</td>
-	<tr><td>&nbsp;</td><td>&nbsp;</td></tr>
-	<tr><td><img src="images/key.gif" alt="digital signature icon"></td><td>The message is encrypted. If there is a problem with the encryption, the key is broken.</td></table>
-</ul>
+
+	<table><tr><td>&nbsp;</td><td><img src="chrome://messenger/skin/smime/icons/hdrSignOk.gif" alt="digital signature icon"></td><td>The message is digitally signed. If there is a problem with the signature, the pen is broken.</td>
+	<tr><td>&nbsp;</td><td><img src="chrome://messenger/skin/smime/icons/hdrCryptoOk.gif" alt="key icon"></td><td>The message is encrypted. If there is a problem with the encryption, the key is broken.</td></table>
+
 
 <p>To see more detailed information about the message's security, click the key or lock icon, or follow the instructions in <a href="#received_security">Message Security - Received Message</a>.
  
@@ -257,7 +255,7 @@ How Encryption Works</h3>
 <hr>
 
 
-<p><i>9 April 2002</i></p>
+<p><i>19 April 2002</i></p>
 <p>Copyright &copy; 1994-2002 Netscape Communications Corporation.</p>
 
 </body>

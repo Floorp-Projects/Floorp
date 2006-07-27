@@ -12,6 +12,10 @@
 <a NAME="certificates:usingIDX"></a>
 <a NAME="using_certs_first"></a>
 <a NAME="certificates:aboutIDX"></a>
+<a NAME="identificationSDX"></a>
+<a NAME="ID_cardSDX"></a>
+<a NAME="identitySDX"></a>
+<a NAME="digital_IDSDX"></a>
 <hr><h1>Using Certificates</h1>
 
 <p>A certificate is the digital equivalent of an ID card. Just as you may have several ID cards for different purposes, such as a driver's license, an employee ID card, or a credit card, you can have several different certificates that identify you for different purposes.</p> 
@@ -63,19 +67,31 @@
 <p>&nbsp;</p>
 <a NAME="security:checking_for_a_web_pageIDX"></a>
 <a NAME="using_certs_info"></a>
+<a NAME="lock_iconSDX"></a>
+<a NAME="broken_lock_iconSDX"></a>
+<a NAME="open_lock_iconSDX"></a>
+<a NAME="encryption_status_of_web_pageSDX"></a>
 <hr><h1>Checking Security for a Web Page</h1>
 
-<p>When you're viewing any web page, the lock icon near the lower-right corner of the window informs you of the page's security status. 
+<p>When you're viewing any web page, the lock icon near the lower-right corner of the window informs you whether the entire contents of the page was protected by <a href="glossary.html#encryption">encryption</a> while it was being received by your computer:</p>
 
-<p>If the lock is closed, the contents of the page is protected by <a href="glossary.html#encryption">encryption</a> while in transit over the Internet. If the lock is open, the page is not encrypted while in transit. 
 
-<p>For more details about a page's security status, click the lock icon (or open the View menu, choose Page Info, and click the Security tab).
+<table><tr><td>&nbsp;</td><td><img src="chrome://communicator/skin/icons/lock-secure.gif">&nbsp;</td><td>A closed lock means that the page was protected by encryption when it was received.</td></tr>
+	<tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+	<tr><td>&nbsp;</td><td><img src="chrome://communicator/skin/icons/lock-insecure.gif">&nbsp;</td><td>An open lock means the page was not protected by encryption when it was received. </td></tr>
+	<tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+	<tr><td>&nbsp;</td><td><img src="chrome://communicator/skin/icons/lock-broken.gif">&nbsp;</td><td>A broken lock means that some or all of the frames within the page were not protected by encryption when the page was received, even though the outermost HTML page was encrypted.</td></tr>
+</table>
+
+<p>For more details about the encryption status of the page when it was received, click the lock icon (or open the View menu, choose Page Info, and click the Security tab).
 
 <p>The Security tab for Page Info provides two kinds of information:
 <ul>
 	<li>The top half describes whether the web site displaying the page has been verified. (For information on certificate verification, see <a href="#using_certs_validation">Controlling Validation</a>.)
 	<li>The bottom half describes whether the contents of the page you are viewing is protected by encryption while in transit over the network.
 </ul>
+<p><b>Important:</b> The lock icon describes only the encryption status of the page while it was being received by your computer. To be notified before you send or receive information without encryption, select the appropriate SSL warning options. See <a href="ssl_help.html">Privacy &amp; Security Preferences - SSL</a> for details.
+
 
 
 <p>
@@ -110,7 +126,7 @@
 </table>
 
 <p>&nbsp;</p>
-<a NAME="using_certs_my"></a><a NAME="certificates:your_ownIDX"></a>
+<a NAME="using_certs_my"></a><a NAME="certificates:your_ownIDX"></a><a NAME="using_certs_my"></a>
 <H2>Managing Certificates that Identify You</H2>
 
 
@@ -185,6 +201,7 @@
 <a NAME="Device_Manager:usingIDX"></a>
 <a NAME="security_devices:managingIDX"></a>
 <a NAME="security_modules:managingIDX"></a>
+<a NAME="tokensSDX"></a>
 <hr><h1>Managing Smart Cards and Other Security Devices</h1>
 
 <p>A smart card is a small device, typically about the size of a credit card, that contains a microprocessor and is capable of storing information about your identity (such as your <a href="glossary.html#private_key">private keys</a> and <a href="glossary.html#certificate">certificates</a>) and performing cryptographic operations. 
@@ -482,7 +499,7 @@
 
 
 <hr>
-<p><i>10 April 2002</i></p>
+<p><i>23 April 2002</i></p>
 <p>Copyright &copy; 1994-2002 Netscape Communications Corporation.</p>
 
 </body>
