@@ -499,10 +499,14 @@ FeedWriter.prototype = {
         handler.getHandlerURI(this._window.location.href);
     }
     else {
+      var request = 
+          this._window.QueryInterface(Ci.nsIInterfaceRequestor).
+          getInterface(Ci.nsIWebNavigation).
+          QueryInterface(Ci.nsIDocShell).currentDocumentChannel;
       var feedService = 
           Cc["@mozilla.org/browser/feeds/result-service;1"].
           getService(Ci.nsIFeedResultService);
-      feedService.addToClientReader(this._window.location.href);
+      feedService.addToClientReader(request, this._window.location.href);
     }
   },
   
