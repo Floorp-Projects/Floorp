@@ -22,12 +22,12 @@
    Contributor(s): 
   -->
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/cookie/cookieTasksOverlay.dtd">
+<!DOCTYPE window SYSTEM "chrome://cookie/locale/cookieTasksOverlay.dtd">
 
 <overlay id="cookieTasksOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script language="javascript" src="chrome://communicator/content/cookie/cookieOverlay.js"/>
+  <script language="javascript" src="chrome://cookie/content/cookieOverlay.js"/>
 
   <script language="JavaScript">
   <![CDATA[
