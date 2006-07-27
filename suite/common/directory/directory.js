@@ -134,13 +134,11 @@ function ReadDirectory(url)
     var uri = ios.newURI(url, null);
 
     // Create a channel...
-    var channel = ios.newChannelFromURI('load', uri, null, null,
-                                        Components.interfaces.nsIChannel.LOAD_NORMAL,
-                                        null, 0, 0);
+    var channel = ios.newChannelFromURI(uri, null);
 
     // ...so that we can pipe it into a new HTTPIndex listener to
     // parse the directory's contents.
-    channel.asyncRead(0, -1, null, HTTPIndex.CreateListener());
+    channel.asyncRead(HTTPIndex.CreateListener(), null);
 }
 
 
