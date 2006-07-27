@@ -225,7 +225,7 @@ function DoUnload()
 	var tree = document.getElementById("tree");
 	if (tree)
 	{
-		tree.database.RemoveDatasource(HTTPIndex);
+		tree.database.RemoveDataSource(HTTPIndex);
 		tree.database.RemoveObserver(RDF_observer);
 	    debug("Directory: removed observer\n");
 	}
