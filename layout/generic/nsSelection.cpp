@@ -4495,7 +4495,7 @@ nsTypedSelection::RemoveItem(nsIDOMRange *aItem)
       break;
     }
   }
-  if (index < 0)
+  if (idx < 0)
     return NS_ERROR_INVALID_ARG;
   mRanges.RemoveElementAt(idx);
 
