@@ -276,10 +276,21 @@ function loadCookies() {
 function GetExpiresString(expires) {
   if (expires) {
     var date = new Date(1000*expires);
-    return gDateService.FormatDateTime("", gDateService.dateFormatLong,
-                                       gDateService.timeFormatSeconds, date.getFullYear(),
-                                       date.getMonth()+1, date.getDate(), date.getHours(),
-                                       date.getMinutes(), date.getSeconds());
+
+    // if a server manages to set a really long-lived cookie, the dateservice
+    // can't cope with it properly, so we'll just return a blank string
+    // see bug 238045 for details
+    var expiry = "";
+    try {
+      expiry = gDateService.FormatDateTime("", gDateService.dateFormatLong,
+                                           gDateService.timeFormatSeconds, 
+                                           date.getFullYear(), date.getMonth()+1, 
+                                           date.getDate(), date.getHours(),
+                                           date.getMinutes(), date.getSeconds());
+    } catch(ex) {
+      // do nothing
+    }
+    return expiry;
   }
   return cookieBundle.getString("AtEndOfSession");
 }
