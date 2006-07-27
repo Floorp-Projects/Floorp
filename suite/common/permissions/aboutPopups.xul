@@ -77,7 +77,7 @@
         }
         catch(ex) { }
         
-        goPreferences("securityItem", "chrome://communicator/content/cookie/pref-popups.xul", "popupspref");
+        goPreferences("securityItem", "chrome://cookie/content/pref-popups.xul", "popupspref");
       }
 
       function doHelpButton() {
