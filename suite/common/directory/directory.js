@@ -32,7 +32,7 @@
 function debug(msg)
 {
     // Uncomment to print out debug info.
-    // dump(msg);
+    dump(msg);
 }
 
 function Init()
@@ -43,8 +43,18 @@ function Init()
     var tree = document.getElementById('tree');
 
     // Initialize the tree's base URL to whatever the HTTPIndex is rooted at
-    debug("base URL = " + HTTPIndex.BaseURL + "\n");
-    tree.setAttribute('ref', HTTPIndex.BaseURL);
+    var baseURI = HTTPIndex.BaseURL;
+
+    // fix bug # 37102: if its a FTP directory
+    // ensure it ends with a trailing slash
+    if (baseURI && (baseURI.indexOf("ftp://") == 0) &&
+    	(baseURI.substr(baseURI.length - 1) != "/"))
+    {
+    	debug("append traiing slash to FTP directory URL\n");
+    	baseURI += "/";
+    }
+    debug("base URL = " + baseURI + "\n");
+    tree.setAttribute("ref", baseURI);
 }
 
 
