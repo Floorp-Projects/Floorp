@@ -42,7 +42,7 @@ function NavObserver(oDisplayFrame,oContentWindow)
 	this.m_sLastDataUrl = 'about:blank';	// The last url that we drove our display to.
 }
 
-NavObserver.prototype.Observe =
+NavObserver.prototype.observe =
 function (oSubject, sMessage, sContextUrl)
 {
 	try {
