@@ -75,8 +75,8 @@
     </tree>
     <box orient="vertical">
   		<spring flex="1"/>
-      <button class="dialog" id="add-button" oncommand="return AddEngine()" value="&add.label;" />
-      <button class="dialog" id="remove-button" oncommand="return RemoveEngine()" value="&remove.label;" />
+      <button class="dialog right" id="add-button" oncommand="return AddEngine()" value="&add.label;" />
+      <button class="dialog left" id="remove-button" oncommand="return RemoveEngine()" value="&remove.label;" />
       <spring flex="1"/>
   	</box>
     <box orient="vertical" flex="1">
