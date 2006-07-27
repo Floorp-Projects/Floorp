@@ -1634,7 +1634,7 @@ if (!SB_DEBUG) {
     var indent = "| | | | | | | | | | | | | | | | | | | | | | | | | | | | + ";
     debug(indent.substr(indent.length - depth*2) + index +
           " " + node.nodeName);
-    if (node.nodeName != "#text") {
+    if (node.nodeType != Node.TEXT_NODE) {
       dump_attributes(node, depth);
     }
     var kids = node.childNodes;
