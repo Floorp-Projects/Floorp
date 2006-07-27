@@ -179,7 +179,7 @@ function sidebarOpenDefaultPanel(wait, tries) {
   debug("sidebarOpenDefaultPanel("+wait+","+tries+")");
   debug("  target="+target);
 
-  if (children.length < 3) {
+  if (children.length < 1) {
     if (tries < 5) {
       // No children yet, try again later
       setTimeout('sidebarOpenDefaultPanel('+(wait*2)+','+(tries+1)+')',wait);
