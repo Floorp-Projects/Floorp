@@ -142,35 +142,41 @@ you&apos;re setting up an ISP or email provider account.</p>
 </li>
 
 <li><strong>New Account Setup:</strong> Choose the type of account
-you want to set up, then click Next.</li>
+you want to set up, then click the right arrow.</li>
 
 <li><strong>Identity:</strong> Enter the name and email address
-appropriate for this account, then click Next.</li>
+appropriate for this account, then click the right arrow.</li>
 
-<li><strong>Server Information:</strong> Indicate whether you want
-a POP account or an IMAP account. Not all service providers can
-support both options. For more information, see <a
-href="#server_settings">Mail &amp; Newsgroups Account Settings -
-Server Settings</a>.
+<li><strong>Server Information:</strong>
+  <ul>
+    <li>Indicate whether you want a POP account or an IMAP account. Not all
+      service providers can support both options. For more information, see
+      <a href="#server_settings">Mail &amp; Newsgroups Account Settings -
+      Server Settings</a>.</li>
+    <li>Enter the name of your incoming mail server.</li>
+    <li>If you want this account to be a part of the Local Folders Global Inbox
+      account, keep the <q>Use Global Inbox</q> box checked. Mail for this
+      account will then be stored in your Local Folders. Otherwise, if the
+      checkbox is unchecked, mail will be stored in its own directory.</li>
+    <li>Enter the name of your outgoing mail server (SMTP).
 
-<p>You must also provide the name of your incoming mail server and
-your outgoing server (SMTP) here. This is the name of the mail
-server that sends your messages (also known as the SMTP host).
-Click Next to continue.</p>
+      <p><strong>Note</strong>: You need to specify only one outgoing
+        mail server (SMTP), even if you have several mail accounts. The
+        name of your SMTP host may not have been explicitly listed in the
+        account setup information provided to you. For example, your SMTP
+        host may be the same as your POP or IMAP host. If in doubt, contact
+        your ISP or system administrator.</p>
 
-<p><strong>Note</strong>: You need to specify only one outgoing
-mail server (SMTP), even if you have several mail accounts. The
-name of your SMTP host may not have been explicitly listed in the
-account setup information provided to you. For example, your SMTP
-host may be the same as your POP or IMAP host. If in doubt, contact
-your ISP or system administrator.</p>
+    </li>
+    <li>Click the right arrow to continue.</li>
+  </ul>
 </li>
 
-<li><strong>User Name:</strong> Enter the user name provided by
-your ISP or email provider, then click Next.</li>
+<li><strong>User Names:</strong> Enter the incoming and outgoing user names
+provided by your ISP or email provider, then click the right arrow.</li>
 
 <li><strong>Account Name:</strong> Enter whatever name you want to
-use to refer to this account, then click Next.</li>
+use to refer to this account, then click the right arrow.</li>
 
 <li><strong>Congratulations!</strong> Verify that the information
 you entered is correct. If necessary, verify the information you
@@ -216,8 +222,8 @@ box. You can perform these tasks:
 <ul>
 <li><strong>Add Account:</strong> Click this button to set up a new
 mail or news account. Be sure to type the account information
-exactly as it is given to you. Click Next or Back to move through
-the screens, or click Cancel to stop account creation.</li>
+exactly as it is given to you. Move through the screens with the arrows, or
+click Cancel to stop account creation.</li>
 
 <li><strong>Set as Default:</strong> Select an account, then click
 this button to make the selected account appear at the top of your
@@ -2887,10 +2893,8 @@ Incoming messages that match the filter criteria will appear in
 your Inbox. If you rename or move the folder, the filter will
 automatically update to use the renamed or moved folder.</p>
 
-<p><strong>Tip</strong>: Filters don&apos;t apply to existing messages.
-If you have existing messages that you want to move to another
-folder, you can <a href="#searching_through_messages">search</a> for those
-messages and then file them into the other folder.</p>
+<p><strong>Tip</strong>: If you have existing messages that you want to move to
+another folder, use the Run Filters on Messages option in the Tools menu.</p>
 
 <p>[<a href="#organizing_your_messages">Return to beginning of
 section</a>]</p>
@@ -3646,8 +3650,8 @@ message, and then Shift-click to select the last message in the
 group.</li>
 
 <li>To select messages anywhere in the message list, hold down the
-Ctrl key (Windows, Linux or Unix) or the Command key (Mac OS) and
-click each message.</li>
+<kbd class="mac">Cmd</kbd><kbd class="noMac">Ctrl</kbd> key and click each
+message.</li>
 </ul>
 </li>
 
@@ -5377,20 +5381,10 @@ Newsgroups to expand the list.)</li>
 </ol>
 
 <ul>
-<li><strong>Email Address Collection</strong>: Select how Mail
-&amp; Newsgroups will add senders&apos; and recipients&apos; addresses to
-your Collected Addresses book (from outgoing or newsgroup messages).
-
-<p><strong>Note</strong>: In addition to your Personal Address
-Book, &brandShortName; Mail &amp; Newsgroups provides you with a Collected
-Addresses Book that can automatically store email addresses from
-your incoming or outgoing messages, or both. By default, email
-addresses contained in outgoing messages are stored as soon as you
-click Send. If you choose <q>Incoming Mail Messages</q>, Mail &amp;
-Newsgroups stores the sender&apos;s address in each message as soon as
-you open it. Any changes you make to these settings take effect the
-next time you start &brandShortName;.</p>
-</li>
+<li><strong>Email Address Collection</strong>: Select this if you want Mail
+&amp; Newsgroups to automatically collect recipients&apos; email addresses. Use
+the drop-down list to choose between having the addresses added to your
+Collected Addresses book or your Personal address book.</li>
 
 <li id="address_autocompletion"><strong>Address Autocompletion</strong>: Address autocompletion
 allows you to quickly address mail without having to search for
