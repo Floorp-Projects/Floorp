@@ -35,14 +35,4 @@
       <xul:box><children/></xul:box>
     </content>
   </binding>  
-
-  <binding id="sidebar-header-splitter" extends="xul:splitter">
-    <content autostretch="never" valign="middle">
-      <xul:text class="sidebar-header-text" inherits="value,crop" crop="right" flex="1"/>
-      <xul:grippy class="sidebar-header-grippy" flex="20"
-        onclick="SidebarExpandCollapseAllPanels(event.target.parentNode)" />
-      <xul:box><children/></xul:box>
-    </content>
-  </binding>  
-
 </bindings>
