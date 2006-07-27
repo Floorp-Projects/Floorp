@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
-  "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd" [
+  "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"[
   <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
   %brandDTD;
 ]>
@@ -24,14 +24,14 @@
   Certificate Validation Works</a>.</p>
 
 <div class="contentsBox">In this section:
-<ul>
-  <li><a href="#privacy_and_security_preferences_validation">Privacy &amp;
-    Security Preferences - Validation</a></li>
-  <li><a href="#manage_crls">Manage CRLs</a></li>
-  <li><a href="#crl_import_status">CRL Import Status</a></li>
-  <li><a href="#automatic_crl_update_preferences">Automatic CRL Update
-  Preferences</a></li>
-</ul>
+  <ul>
+    <li><a href="#privacy_and_security_preferences_validation">Privacy &amp;
+      Security Preferences - Validation</a></li>
+    <li><a href="#manage_crls">Manage CRLs</a></li>
+    <li><a href="#crl_import_status">CRL Import Status</a></li>
+    <li><a href="#automatic_crl_update_preferences">Automatic CRL Update
+      Preferences</a></li>
+  </ul>
 </div>
 
 <h2 id="privacy_and_security_preferences_validation">Privacy &amp; Security
@@ -51,7 +51,6 @@
 <p>For background information on certificate validation, see
   <a href="using_certs_help.xhtml#controlling_validation">How Certificate
   Validation Works</a>.</p>
-
 
 <h3 id="crl">CRL</h3>
 
@@ -112,7 +111,6 @@
       signer automatically. If the Service URL is not filled in automatically,
       you must provide it yourself; ask your system administrator for
       details.</p>
-
   </li>
 </ul>
 
@@ -172,10 +170,10 @@
     <ul>
       <li>If Auto Update has not been enabled, or if it has been enabled but
         the next scheduled update has not yet occurrred, this field will be
-	blank.</li>
+        blank.</li>
       <li>After at least one auto update has occurred, this field shows
         <q>failed</q> if the most recent auto update failed, or
-	<q>OK</q> if the most recent auto update was successful.</li>
+        <q>OK</q> if the most recent auto update was successful.</li>
     </ul>
   </li>
 </ul>
@@ -231,15 +229,14 @@
 
     <p>If you enable Automatic Update, you must select one of these radio
       buttons:</p>
-
-    <ul>
-      <li><strong>Update X days before Next Update date.</strong> Select this
-        option if you want to base the update frequency on the frequency with
-        which the CRL publisher publishes a new version of the CRL.</li>
-      <li><strong>Update every X days.</strong> Select this option if you want
-        to specify an update interval unrelated to the CRL&apos;s Next Update
-	date.</li>
-    </ul>
+      <ul>
+        <li><strong>Update X days before Next Update date.</strong> Select this
+          option if you want to base the update frequency on the frequency with
+          which the CRL publisher publishes a new version of the CRL.</li>
+        <li><strong>Update every X days.</strong> Select this option if you
+          want to specify an update interval unrelated to the CRL&apos;s Next
+          Update date.</li>
+      </ul>
   </li>
   <li><strong>CRL would be imported from:</strong> Indicates the URL from which
     the browser originally imported the CRL. This setting cannot be changed. To
@@ -251,10 +248,10 @@
     <ul>
       <li>If the most recent attempt was successful, this reads
         <q>None</q> even if there were previous unsuccessful
-	attempts.</li>
+        attempts.</li>
       <li>If the most recent attempt failed, this indicates the number of
         consecutive failures and the error message for the most recent
-	failure.</li>
+        failure.</li>
     </ul>
   </li>
 </ul>
