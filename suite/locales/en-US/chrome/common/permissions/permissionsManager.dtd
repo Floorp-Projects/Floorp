@@ -1,8 +1,6 @@
-<!ENTITY windowtitle.label              "Popup Exceptions">
+<!ENTITY windowtitle.label              "Allowed Web Sites">
 
-<!ENTITY allowExcept.label              "Suppress popups from the following web sites:">
-
-<!ENTITY blockExcept.label              "Allow popups from the following web sites:">
+<!ENTITY allowPopups.label              "Allow popups from the following web sites:">
 
 <!ENTITY addSite.label                  "Add">
 <!ENTITY addSite.accesskey              "A">
