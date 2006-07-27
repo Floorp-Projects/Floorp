@@ -163,7 +163,7 @@ function PreviewPanel()
     var node = select_list[nodeIndex];
     if (!node)    break;
     // Skip folders
-    if (node.getAttribute('folder') == 'true') {
+    if (node.getAttribute('container') == 'true') {
       continue;
     }
     var id = node.getAttribute("id");
@@ -193,7 +193,7 @@ function AddPanel()
     var node = select_list[nodeIndex];
     if (!node)    break;
     // Skip folders.
-    if (node.getAttribute('folder') == 'true') {
+    if (node.getAttribute('container') == 'true') {
       continue;
     }
     var id = node.getAttribute("id");
