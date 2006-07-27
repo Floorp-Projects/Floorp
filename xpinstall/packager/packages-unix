@@ -274,8 +274,8 @@ bin/components/nsDownloadProgressListener.js
 bin/components/libfileview.so
 bin/components/filepicker.xpt
 bin/components/libuniversalchardet.so
-bin/components/typeaheadfind.xpt
-bin/components/libtypeaheadfind.so
+bin/components/suitetypeaheadfind.xpt
+bin/components/libsuitetypeaheadfind.so
 bin/components/nsCloseAllWindows.js
 bin/components/extensions.xpt
 bin/components/libsystem-pref.so

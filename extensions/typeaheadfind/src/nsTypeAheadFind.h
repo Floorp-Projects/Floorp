@@ -80,7 +80,7 @@ enum {
 
 const int kMaxBadCharsBeforeCancel = 3;
 
-class nsTypeAheadFind : public nsITypeAheadFind,
+class nsTypeAheadFind : public nsISuiteTypeAheadFind,
                         public nsIDOMKeyListener,
                         public nsIDOMTextListener,
                         public nsIDOMCompositionListener,
@@ -97,7 +97,7 @@ public:
   NS_DEFINE_STATIC_CID_ACCESSOR(NS_TYPEAHEADFIND_CID);
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSITYPEAHEADFIND
+  NS_DECL_NSISUITETYPEAHEADFIND
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIDOMEVENTLISTENER
   NS_DECL_NSISELECTIONLISTENER

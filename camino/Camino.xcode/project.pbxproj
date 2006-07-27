@@ -13950,16 +13950,16 @@
 		A7D88E680465D94000A80196 = {
 			isa = PBXFileReference;
 			lastKnownFileType = "compiled.mach-o.bundle";
-			name = libtypeaheadfind.dylib;
-			path = ../extensions/typeaheadfind/src/libtypeaheadfind.dylib;
+			name = libsuitetypeaheadfind.dylib;
+			path = ../extensions/typeaheadfind/src/libsuitetypeaheadfind.dylib;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
 		A7D88E6A0465D9F800A80196 = {
 			isa = PBXFileReference;
 			lastKnownFileType = file;
-			name = typeaheadfind.xpt;
-			path = ../extensions/typeaheadfind/public/_xpidlgen/typeaheadfind.xpt;
+			name = suitetypeaheadfind.xpt;
+			path = ../extensions/typeaheadfind/public/_xpidlgen/suitetypeaheadfind.xpt;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -13974,8 +13974,8 @@
 		A7FD31C90466004E00A80196 = {
 			isa = PBXFileReference;
 			lastKnownFileType = archive.ar;
-			name = libtypeaheadfind.a;
-			path = ../extensions/typeaheadfind/src/libtypeaheadfind.a;
+			name = libsuitetypeaheadfind.a;
+			path = ../extensions/typeaheadfind/src/libsuitetypeaheadfind.a;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};

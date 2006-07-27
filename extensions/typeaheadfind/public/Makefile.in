@@ -41,8 +41,8 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE=typeaheadfind
-XPIDL_MODULE=typeaheadfind
+MODULE=suitetypeaheadfind
+XPIDL_MODULE=suitetypeaheadfind
 GRE_MODULE	= 1
 
 XPIDLSRCS= ./nsITypeAheadFind.idl \

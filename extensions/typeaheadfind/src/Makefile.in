@@ -41,8 +41,8 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = typeaheadfind
-LIBRARY_NAME = typeaheadfind
+MODULE = suitetypeaheadfind
+LIBRARY_NAME = suitetypeaheadfind
 ifneq ($(OS_ARCH),WINNT)
 SHORT_LIBNAME = typahead
 endif
@@ -77,7 +77,7 @@ REQUIRES	= appcomps \
 
 EXPORT_LIBRARY = 1
 IS_COMPONENT = 1
-MODULE_NAME	= nsTypeAheadFind
+MODULE_NAME	= nsSuiteTypeAheadFind
 
 CPPSRCS =   \
   nsTypeAheadFind.cpp	   \

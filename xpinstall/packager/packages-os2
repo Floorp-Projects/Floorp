@@ -267,7 +267,7 @@ bin/components/progressDlg.xpt
 bin/components/nsDownloadProgressListener.js
 ;bin/AccessibleMarshal.dll
 ;bin/components/nsSetDefaultBrowser.js
-bin/components/typeaheadfind.xpt
+bin/components/suitetypeaheadfind.xpt
 bin/components/typahead.dll
 bin/components/nsCloseAllWindows.js
 bin/components/htmlparser.xpt

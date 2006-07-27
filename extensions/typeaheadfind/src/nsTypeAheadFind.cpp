@@ -110,7 +110,7 @@
 
 
 NS_INTERFACE_MAP_BEGIN(nsTypeAheadFind)
-  NS_INTERFACE_MAP_ENTRY(nsITypeAheadFind)
+  NS_INTERFACE_MAP_ENTRY(nsISuiteTypeAheadFind)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
   NS_INTERFACE_MAP_ENTRY(nsIScrollPositionListener)
@@ -1705,7 +1705,7 @@ nsTypeAheadFind::NotifySelectionChanged(nsIDOMDocument *aDoc,
 }
 
 
-// ---------------- nsITypeAheadFind --------------------
+// ---------------- nsISuiteTypeAheadFind --------------------
 
 NS_IMETHODIMP
 nsTypeAheadFind::FindNext(PRBool aFindBackwards, nsISupportsInterfacePointer *aCallerWindowSupports)
@@ -2916,7 +2916,7 @@ nsTypeAheadController::DoCommand(const char *aCommand)
   EnsureContentWindow(domWinInternal, getter_AddRefs(startContentWin));
   NS_ENSURE_TRUE(startContentWin, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsITypeAheadFind> typeAhead = 
+  nsCOMPtr<nsISuiteTypeAheadFind> typeAhead = 
     do_GetService(NS_TYPEAHEADFIND_CONTRACTID);
   NS_ENSURE_TRUE(typeAhead, NS_ERROR_FAILURE);
 

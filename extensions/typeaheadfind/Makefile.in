@@ -41,7 +41,7 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= typeaheadfind
+MODULE		= suitetypeaheadfind
 DIRS		= public src resources
 
 include $(topsrcdir)/config/rules.mk
