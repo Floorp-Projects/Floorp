@@ -35,8 +35,7 @@
 
   <html:script src="directory.js" />
 
-  <html:div style="width:100px;height:100px;" flex="1">
-    <tree id="tree" datasources="rdf:null" style="height:100%;">
+  <tree id="tree" datasources="rdf:null" flex="1" style="height:0px;">
       <template>
         <treechildren>
           <!-- We force the 'container="true"' onto the treeitem, even
@@ -75,6 +74,5 @@
           onclick="OnClick(event);"
           ondblclick="OnDblClick(event);" />
 
-    </tree>
-  </html:div>
+  </tree>
 </window>
