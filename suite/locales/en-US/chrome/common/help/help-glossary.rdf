@@ -12,6 +12,7 @@
         <rdf:li> <rdf:Description nc:name="CA" nc:link="glossary.html#1021395"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="CA certificate" nc:link="glossary.html#1017503"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="cache" nc:link="glossary.html#cache"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="Calendar" nc:link="glossary.html#Calendar"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="certificate" nc:link="glossary.html#1018895"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="certificate authority (CA)" nc:link="glossary.html#1020903"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="certificate backup password" nc:link="glossary.html#1024655"/> </rdf:li>
@@ -26,6 +27,7 @@
         <rdf:li> <rdf:Description nc:name="client" nc:link="glossary.html#1029510"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="client authentication" nc:link="glossary.html#1021054"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="client SSL certificate" nc:link="glossary.html#1014561"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="Component Bar" nc:link="glossary.html#Component_Bar"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="cookie" nc:link="glossary.html#cookie"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Cookie Manager" nc:link="glossary.html#Cookie_Manager"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="cryptographic algorithm" nc:link="glossary.html#1019976"/> </rdf:li>
@@ -39,7 +41,11 @@
         <rdf:li> <rdf:Description nc:name="encryption" nc:link="glossary.html#999078"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="encryption certificate" nc:link="glossary.html#1024953"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="encryption key" nc:link="glossary.html#1021254"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="File Transfer Protocol (FTP)" nc:link="glossary.html#File_Transfer_Protocol_(FTP)"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="Extensible Stylesheet Language Transformation (XSLT)" nc:link="glossary.html#XSLT"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="Extensible Markup Language (XML)" nc:link="glossary.html#XML"/> </rdf:li>
+        
+
+<rdf:li> <rdf:Description nc:name="File Transfer Protocol (FTP)" nc:link="glossary.html#File_Transfer_Protocol_(FTP)"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="fingerprint" nc:link="glossary.html#1020434"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="FIPS PUBS 140-1" nc:link="glossary.html#1025742"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="foreign cookie" nc:link="glossary.html#foreign_cookie"/> </rdf:li>
@@ -59,8 +65,7 @@
         <rdf:li> <rdf:Description nc:name="master key" nc:link="glossary.html#1032598"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="master password" nc:link="glossary.html#1032744"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="misrepresentation" nc:link="glossary.html#1014057"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="navigation toolbar" nc:link="glossary.html#navigation_toolbar"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="Netscape Calendar" nc:link="glossary.html#Netscape_Calendar"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="Navigation Toolbar" nc:link="glossary.html#navigation_toolbar"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Netscape Quality Feedback Agent" nc:link="glossary.html#netscape_talkback"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="nonrepudiation" nc:link="glossary.html#999248"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="object signing" nc:link="glossary.html#1014095"/> </rdf:li>
@@ -68,7 +73,7 @@
         <rdf:li> <rdf:Description nc:name="Online Certificate Status Protocol (OCSP)" nc:link="glossary.html#1029304"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="password-based authentication" nc:link="glossary.html#1014123"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Password Manager" nc:link="glossary.html#Password_Manager"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="personal toolbar" nc:link="glossary.html#personal_toolbar"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="Personal Toolbar" nc:link="glossary.html#personal_toolbar"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="PKCS #11" nc:link="glossary.html#1025194"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="PKCS #11 module" nc:link="glossary.html#1025197"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Platform for Privacy Preferences (P3P)" nc:link="glossary.html#p3p"/> </rdf:li>
@@ -96,6 +101,7 @@
         <rdf:li> <rdf:Description nc:name="software security device" nc:link="glossary.html#1032045"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="spoofing" nc:link="glossary.html#1014366"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="SSL" nc:link="glossary.html#999533"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="Status Bar" nc:link="glossary.html#Status_Bar"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="subject" nc:link="glossary.html#1013880"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="subject name" nc:link="glossary.html#1021328"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="subordinate CA" nc:link="glossary.html#999541"/> </rdf:li>
