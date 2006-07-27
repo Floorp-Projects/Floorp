@@ -80,7 +80,7 @@
       
         <template>
           <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-            <treechildren>
+            <treechildren flex="1">
               <treeitem uri="...">
                 <treerow>
                   <treecell>
@@ -92,7 +92,7 @@
           </rule>
       
           <rule>
-            <treechildren>
+            <treechildren flex="1">
               <treeitem uri="..." persist="open"
                         loading="rdf:http://home.netscape.com/NC-rdf#loading"
                         searchtype="rdf:http://home.netscape.com/NC-rdf#SearchType"
@@ -113,8 +113,10 @@
           </treerow>
         </treehead>
       
-        <treecol style="width: 100%;" flex="100%" rdf:resource="http://home.netscape.com/NC-rdf#PageRank" rdf:resource2="http://home.netscape.com/NC-rdf#Name" />
-        <treecol style="width: 0;" id="SortNameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" />
+        <treecolgroup>
+          <treecol flex="1" rdf:resource="http://home.netscape.com/NC-rdf#PageRank" rdf:resource2="http://home.netscape.com/NC-rdf#Name" />
+          <treecol width="0" id="SortNameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" />
+        </treecolgroup>
       </tree>
       
       <box>
