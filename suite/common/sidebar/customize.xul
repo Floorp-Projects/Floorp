@@ -45,7 +45,7 @@
 <!DOCTYPE dialog [
 <!ENTITY % customizeDTD SYSTEM "chrome://communicator/locale/sidebar/customize.dtd" >
 %customizeDTD;
-<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
 %brandDTD;
 ]>
 
