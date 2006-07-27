@@ -26,6 +26,28 @@
 
 
 
+const RDFSERVICE_PROGID     = "component://netscape/rdf/rdf-service";
+const DRAGSERVICE_PROGID    = "component://netscape/widget/dragservice";
+const TRANSFERABLE_PROGID   = "component://netscape/widget/transferable";
+const XULSORTSERVICE_PROGID = "component://netscape/rdf/xul-sort-service";
+const ARRAY_PROGID          = "component://netscape/supports-array";
+const WSTRING_PROGID        = "component://netscape/supports-wstring";
+
+const NC_NS                 = "http://home.netscape.com/NC-rdf#";
+const NC_NAME               = NC_NS + "Name";
+const NC_LOADING            = NC_NS + "loading";
+
+const nsIHTTPIndex          = Components.interfaces.nsIHTTPIndex;
+const nsIDragService        = Components.interfaces.nsIDragService;
+const nsITransferable       = Components.interfaces.nsITransferable;
+const nsIXULSortService     = Components.interfaces.nsIXULSortService;
+const nsIRDFService         = Components.interfaces.nsIRDFService;
+const nsIRDFLiteral         = Components.interfaces.nsIRDFLiteral;
+const nsISupportsArray      = Components.interfaces.nsISupportsArray;
+const nsISupportsWString    = Components.interfaces.nsISupportsWString;
+
+
+
 // By the time this runs, The 'HTTPIndex' variable will have been
 // magically set on the global object by the native code.
 
@@ -34,13 +56,98 @@
 function debug(msg)
 {
     // Uncomment to print out debug info.
-    dump(msg);
+    // dump(msg);
 }
 
 
 
 // get handle to the BrowserAppCore in the content area.
 var appCore = window._content.appCore;
+var	loadingArc = null;
+var loadingLevel = 0;
+
+var	RDF_observer = new Object;
+
+RDF_observer =
+{
+	onAssert   : function(ds, src, prop, target)
+		{
+		    if (prop == loadingArc)
+		    {
+		        if (loadingLevel++ == 0)
+		        {
+                    SetBusyCursor(window, true); 
+		        }
+                debug("Directory: assert: loading level is " + loadingLevel + " for " + src.Value + "\n");
+		    }
+		},
+	onUnassert : function(ds, src, prop, target)
+		{
+		    if (prop == loadingArc)
+		    {
+		        if (loadingLevel > 0)
+		        {
+    		        if (--loadingLevel == 0)
+    		        {
+                        SetBusyCursor(window, false); 
+    		        }
+		        }
+                debug("Directory: unassert: loading level is " + loadingLevel + " for " + src.Value + "\n");
+		    }
+		},
+	onChange   : function(ds, src, prop, old_target, new_target)
+		{
+		},
+	onMove     : function(ds, old_src, new_src, prop, target)
+		{
+		},
+	beginUpdateBatch : function(ds)
+		{
+		},
+	endUpdateBatch   : function(ds)
+		{
+		}
+}
+
+
+
+function
+SetBusyCursor(window, enable)
+{
+    if(enable == true)
+    {
+        window.setCursor("wait");
+        debug("Directory: cursor=busy\n");
+    }
+    else
+    {
+        window.setCursor("auto");
+        debug("Directory: cursor=notbusy\n");
+    }
+
+    var numFrames = window.frames.length;
+    for(var i = 0; i < numFrames; i++)
+    {
+        SetBusyCursor(window.frames[i], enable);
+    }
+}
+
+
+
+// We need this hack because we've completely circumvented the onload() logic.
+function Boot()
+{
+    if (document.getElementById('tree')) {
+        Init();
+    }
+    else {
+        setTimeout("Boot()", 500);
+    }
+}
+
+
+
+setTimeout("Boot()", 0);
 
 
 
@@ -70,12 +177,14 @@ function Init()
     }
 
     // Note: set encoding BEFORE setting "ref" (important!)
-    var RDF = Components.classes["component://netscape/rdf/rdf-service"].getService();
-    if (RDF)    RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
+    var RDF = Components.classes[RDFSERVICE_PROGID].getService();
+    if (RDF)    RDF = RDF.QueryInterface(nsIRDFService);
     if (RDF)
     {
+        loadingArc = RDF.GetResource(NC_LOADING, true);
+
         var httpDS = HTTPIndex.DataSource;
-        if (httpDS) httpDS = httpDS.QueryInterface(Components.interfaces.nsIHTTPIndex);
+        if (httpDS) httpDS = httpDS.QueryInterface(nsIHTTPIndex);
         if (httpDS)
         {
             httpDS.encoding = "ISO-8859-1";
@@ -95,8 +204,23 @@ function Init()
         theWindow.title = baseURI;
     }
 
+    tree.database.AddObserver(RDF_observer);
+    debug("Directory: added observer\n");
+
     // root the tree (do this last)
     tree.setAttribute("ref", baseURI);
+}
+
+
+
+function DoUnload()
+{
+	var tree = document.getElementById("tree");
+	if (tree)
+	{
+		tree.database.RemoveObserver(RDF_observer);
+	    debug("Directory: removed observer\n");
+	}
 }
 
 
@@ -137,19 +261,6 @@ function OnClick(event, node)
 }
 
 
-// We need this hack because we've completely circumvented the onload() logic.
-function Boot()
-{
-    if (document.getElementById('tree')) {
-        Init();
-    }
-    else {
-        setTimeout("Boot()", 500);
-    }
-}
-
-setTimeout("Boot()", 0);
-
 
 function doSort(sortColName)
 {
@@ -173,9 +284,9 @@ function doSort(sortColName)
 
 	try
 	{
-		var isupports = Components.classes["component://netscape/rdf/xul-sort-service"].getService();
+		var isupports = Components.classes[XULSORTSERVICE_PROGID].getService();
 		if (!isupports)    return(false);
-		var xulSortService = isupports.QueryInterface(Components.interfaces.nsIXULSortService);
+		var xulSortService = isupports.QueryInterface(nsIXULSortService);
 		if (!xulSortService)    return(false);
 		xulSortService.Sort(node, sortResource, sortDirection);
 	}
@@ -184,10 +295,6 @@ function doSort(sortColName)
 	}
 	return(false);
 }
-
-
-
-var NC_NS  = "http://home.netscape.com/NC-rdf#";
 
 
 
@@ -205,21 +312,21 @@ function BeginDragTree ( event )
   if (!database)    return(false);
 
   var RDF = 
-    Components.classes["component://netscape/rdf/rdf-service"].getService(Components.interfaces.nsIRDFService);
+    Components.classes[RDFSERVICE_PROGID].getService(nsIRDFService);
   if (!RDF) return(false);
 
   var dragStarted = false;
 
   var trans = 
-    Components.classes["component://netscape/widget/transferable"].createInstance(Components.interfaces.nsITransferable);
+    Components.classes[TRANSFERABLE_PROGID].createInstance(nsITransferable);
   if ( !trans ) return(false);
 
   var genData = 
-    Components.classes["component://netscape/supports-wstring"].createInstance(Components.interfaces.nsISupportsWString);
+    Components.classes[WSTRING_PROGID].createInstance(nsISupportsWString);
   if (!genData) return(false);
 
   var genDataURL = 
-    Components.classes["component://netscape/supports-wstring"].createInstance(Components.interfaces.nsISupportsWString);
+    Components.classes[WSTRING_PROGID].createInstance(nsISupportsWString);
   if (!genDataURL) return(false);
 
   trans.addDataFlavor("text/unicode");
@@ -241,9 +348,9 @@ function BeginDragTree ( event )
 
   // if we can get node's name, append (space) name to url
   var src = RDF.GetResource(id, true);
-  var prop = RDF.GetResource(NC_NS + "Name", true);
+  var prop = RDF.GetResource(NC_NAME, true);
   var target = database.GetTarget(src, prop, true);
-  if (target) target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
+  if (target) target = target.QueryInterface(nsIRDFLiteral);
   if (target) target = target.Value;
   if (target && (target != ""))
   {
@@ -262,7 +369,7 @@ function BeginDragTree ( event )
   trans.setTransferData ( "text/unicode", genDataURL, genDataURL.data.length * 2);  // double byte data
 
   var transArray = 
-    Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
+    Components.classes[ARRAY_PROGID].createInstance(nsISupportsArray);
   if ( !transArray )  return(false);
 
   // put it into the transferable as an |nsISupports|
@@ -270,10 +377,9 @@ function BeginDragTree ( event )
   transArray.AppendElement(genTrans);
   
   var dragService = 
-    Components.classes["component://netscape/widget/dragservice"].getService(Components.interfaces.nsIDragService);
+    Components.classes[DRAGSERVICE_PROGID].getService(nsIDragService);
   if ( !dragService ) return(false);
 
-  var nsIDragService = Components.interfaces.nsIDragService;
   dragService.invokeDragSession ( event.target, transArray, null, nsIDragService.DRAGDROP_ACTION_COPY + 
                                      nsIDragService.DRAGDROP_ACTION_MOVE );
   dragStarted = true;
