@@ -149,5 +149,5 @@ box#title-box {
 }
 
 *[collapsed="true"] {
-  visibility: collapsed;
+  visibility: collapse;
 }
