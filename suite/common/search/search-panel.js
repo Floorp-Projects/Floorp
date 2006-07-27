@@ -91,7 +91,7 @@ var RDF_observer =
 function rememberSearchText(target)
 {
   if (sidebarInitiatedSearch) {
-    // this avoids updating the sidebar textfield twice
+    // this avoids updating the sidebar textbox twice
     return;
   }
   if (target) {
@@ -205,7 +205,7 @@ function SearchPanelStartup()
     switchTab(0);
   else
     switchTab(1);
-  focusTextField();
+  focusTextBox();
 }
 
 function haveSearchResults()
@@ -316,10 +316,10 @@ function loadEngines(aCategory)
   }
 }
 
-function focusTextField()
+function focusTextBox()
 {
-	var textField = document.getElementById("sidebar-search-text");
-	textField.focus();
+	var textBox = document.getElementById("sidebar-search-text");
+	textBox.focus();
 }
 
 function SearchPanelShutdown()

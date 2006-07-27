@@ -51,7 +51,7 @@
   <vbox flex="1" context="">
     <vbox class="box-padded">
       <box autostretch="never">
-        <textfield id="sidebar-search-text" flex="1"
+        <textbox id="sidebar-search-text" flex="1"
                    onkeypress="if (event.keyCode == 13) doSearch();"
                    oninput="doEnabling();" />
         <button id="searchButton" value="&search.button.label;"
