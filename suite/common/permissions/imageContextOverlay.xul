@@ -42,13 +42,17 @@
       // Return true if "imageBlocker.enabled" pref is set and image is not already blocked.
       isBlockingImages : function () {
         /* determine if image is already being blocked */
+        const nsIPermissionManager = Components.interfaces.nsIPermissionManager;
         var permissionmanager =
           Components.classes["@mozilla.org/permissionmanager;1"]
             .getService(Components.interfaces.nsIPermissionManager);
         if(!permissionmanager) {
           return true;
         }
-        return !permissionmanager.testForBlocking(gContextMenu.imageURL, IMAGEPERMISSION);
+        var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                                  .getService(Components.interfaces.nsIIOService);
+        uri = ioService.newURI(gContextMenu.imageURL, null, null);
+        return !permissionmanager.testPermission(uri, nsIPermissionManager.IMAGE_TYPE);
       },
 
       // Determine if "imageBlocker.enabled" pref is set
@@ -64,24 +68,36 @@
 
       // Block image from loading in the future.
       blockImage : function () {
+        const nsIPermissionManager = Components.interfaces.nsIPermissionManager;
         var permissionmanager =
           Components.classes["@mozilla.org/permissionmanager;1"]
             .getService(Components.interfaces.nsIPermissionManager);
         if (!permissionmanager) {
           return;
         }
-        permissionmanager.add(gContextMenu.imageURL, false, IMAGEPERMISSION);
+        var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                                  .getService(Components.interfaces.nsIIOService);
+        uri = ioService.newURI(gContextMenu.imageURL, null, null);
+        permissionmanager.add(uri,
+                              nsIPermissionManager.IMAGE_TYPE,
+                              nsIPermissionManager.DENY_ACTION);
       },
 
       // Unblock image from loading in the future.
       unblockImage : function () {
+        const nsIPermissionManager = Components.interfaces.nsIPermissionManager;
         var permissionmanager =
           Components.classes["@mozilla.org/permissionmanager;1"]
             .getService().QueryInterface(Components.interfaces.nsIPermissionManager);
         if (!permissionmanager) {
           return;
         }
-        permissionmanager.add(gContextMenu.imageURL, true, IMAGEPERMISSION);
+        var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                                  .getService(Components.interfaces.nsIIOService);
+        uri = ioService.newURI(gContextMenu.imageURL, null, null);
+        permissionmanager.add(uri,
+                              nsIPermissionManager.IMAGE_TYPE,
+                              nsIPermissionManager.ALLOW_ACTION);
       },
 
       initImageBlocking : function () {
