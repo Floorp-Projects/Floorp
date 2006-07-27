@@ -3772,7 +3772,7 @@ nc:link="chrome://help/locale/mail_help.html#mail-account-receipts"/> </rdf:li>
   </rdf:Description>
 
 
-<!-- NETSCAPE KEYBOARD SHORTCUTS CONTENT STARTS-->
+<!-- MOZILLA KEYBOARD SHORTCUTS CONTENT STARTS-->
 
 <rdf:Description about="urn:root">
     <nc:subheadings>
