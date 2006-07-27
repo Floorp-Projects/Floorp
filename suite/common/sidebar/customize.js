@@ -477,6 +477,8 @@ function customize_getBrowserURL()
   return url;
 }
 
+var panel;
+
 // Serialize the new list of panels.
 function Save()
 {
