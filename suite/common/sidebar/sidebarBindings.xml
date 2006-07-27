@@ -9,12 +9,12 @@
     <content>
       <xul:image class="box-texttab-left"/>
       <xul:vbox class="box-texttab-text-container" inherits="value" flex="1">
-        <xul:spring flex="1"/>
+        <xul:spacer flex="1"/>
         <xul:text class="box-texttab-text" inherits="value=label" crop="right"/>
-        <xul:spring flex="1"/>
+        <xul:spacer flex="1"/>
       </xul:vbox>
       <xul:image class="box-texttab-right"/>
-      <xul:spring class="box-texttab-right-space"/>
+      <xul:spacer class="box-texttab-right-space"/>
     </content>
   </binding>
 

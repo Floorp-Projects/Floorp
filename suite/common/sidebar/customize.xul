@@ -168,12 +168,12 @@
 
     <!-- The 'reorder' buttons -->
     <vbox id="reorder">
-      <spring flex="1"/>
+      <spacer flex="1"/>
       <button oncommand="MoveUp();" id="up" class="dialog" 
         label="&sidebar.customize.up.label;"/>
       <button oncommand="MoveDown();" id="down" class="dialog"
         label="&sidebar.customize.down.label;"/>
-      <spring flex="1"/>
+      <spacer flex="1"/>
     </vbox> 
 
   </hbox>
@@ -182,7 +182,7 @@
   
   <hbox>
     <button id="more-panels-link" label="&sidebar.more.label;" oncommand="BrowseMorePanels()"/>
-    <spring flex="1"/>
+    <spacer flex="1"/>
     <hbox id="okCancelButtonsRight" />
   </hbox>
 
