@@ -95,12 +95,12 @@
       
           <rule>
             <treechildren flex="1">
-              <treeitem uri="..." persist="open"
+              <treeitem uri="..." persist="open" class="searchresult-item"
                         loading="rdf:http://home.netscape.com/NC-rdf#loading"
                         searchtype="rdf:http://home.netscape.com/NC-rdf#SearchType"
                         type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
                 <treerow class="searchresult">
-                  <treecell class="treecell-iconic" 
+                  <treecell class="treecell-iconic searchresult-cell" 
                             src="rdf:http://home.netscape.com/NC-rdf#Icon"
                             value="rdf:http://home.netscape.com/NC-rdf#Name" />
                 </treerow>
@@ -111,7 +111,11 @@
       
         <treehead>
           <treerow>
-            <treecell class="treecell-header sortDirectionIndicator outset" observes="SortNameColumn" align="center" value="&results.label;" resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('SortNameColumn', 'http://home.netscape.com/NC-rdf#PageRank');" sortActive="true" sortDirection="ascending" flex="1"/>
+            <treecell class="treecell-header treecell-header-sidebarpanel sortDirectionIndicator outset" 
+                      observes="SortNameColumn" value="&results.label;" 
+                      resource="http://home.netscape.com/NC-rdf#Name" 
+                      onclick="return doSort('SortNameColumn', 'http://home.netscape.com/NC-rdf#PageRank');" 
+                      sortActive="true" sortDirection="ascending" flex="1"/>
           </treerow>
         </treehead>
       
@@ -123,7 +127,7 @@
       
       <box>
     		<spring flex="1" />
-    		<button id="saveQueryButton" value="&savesearch.button.label;" oncommand="return saveSearch();"/>
+    		<button class="button-toolbar-3 button-slimline" id="saveQueryButton" value="&savesearch.button.label;" oncommand="return saveSearch();"/>
     		<spring flex="1" />
     	</box>
 
@@ -155,7 +159,7 @@
         
         <treehead>
           <treerow>
-            <treecell class="treecell-header sortDirectionIndicator outset" 
+            <treecell class="treecell-header treecell-header-sidebarpanel sortDirectionIndicator outset" 
                       observes="EngineColumn" value="&engine.column.label;"
                       resource="http://home.netscape.com/NC-rdf#Name"
                       sortActive="true" sortDirection="ascending"
@@ -168,7 +172,7 @@
             
       <box>
     		<spring flex="1" />
-		    <button id="customizeButton" value="&customize.button.label;" oncommand="return doCustomize();"/>
+		    <button class="button-toolbar-3 button-slimline" id="customizeButton" value="&customize.button.label;" oncommand="return doCustomize();"/>
     		<spring flex="1" />
     	</box>
     </box>

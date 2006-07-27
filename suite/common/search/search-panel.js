@@ -507,7 +507,8 @@ function doStop()
 	// show appropriate column(s)
 	if ((rdf) && (internetSearch))
 	{
-		var resultsTree = top._content.document.getElementById("internetresultstree");
+    var navWindow = getNavigatorWindow();
+		var resultsTree = navWindow._content.document.getElementById("internetresultstree");
 		if( !resultsTree )
 			return(false);
 		var searchURL = resultsTree.getAttribute("ref");
@@ -526,9 +527,10 @@ function doStop()
 		var hasRelevanceFlag     = internetSearch.HasAssertion(searchResource, relevanceProperty, trueProperty, true);
 		var hasDateFlag          = internetSearch.HasAssertion(searchResource, dateProperty, trueProperty, true);
 
+    var navWindow = getNavigatorWindow();
 		if(hasPriceFlag == true)
 		{
-			var colNode = top._content.document.getElementById("PriceColumn");
+			var colNode = navWindow._content.document.getElementById("PriceColumn");
 			if (colNode)
 			{
 				colNode.removeAttribute("style", "width: 0; visibility: collapse;");
@@ -541,25 +543,25 @@ function doStop()
 		}
 		if (hasAvailabilityFlag == true)
 		{
-			colNode = top._content.document.getElementById("AvailabilityColumn");
+			colNode = navWindow._content.document.getElementById("AvailabilityColumn");
 			if (colNode)
 				colNode.removeAttribute("style", "width: 0; visibility: collapse;");
 		}
 		if (hasDateFlag == true)
 		{
-			colNode = top._content.document.getElementById("DateColumn");
+			colNode = navWindow._content.document.getElementById("DateColumn");
 			if (colNode)
 				colNode.removeAttribute("style", "width: 0; visibility: collapse;");
 		}
 		if (hasRelevanceFlag == true)
 		{
-			colNode = top._content.document.getElementById("RelevanceColumn");
+			colNode = navWindow._content.document.getElementById("RelevanceColumn");
 			if (colNode)
 			{
 				colNode.removeAttribute("style", "width: 0; visibility: collapse;");
 				if (sortSetFlag == false)
 				{
-					top._content.setInitialSort(colNode, "descending");
+					navWindow._content.setInitialSort(colNode, "descending");
 					sortSetFlag = true;
 				}
 			}
@@ -568,9 +570,9 @@ function doStop()
 
 	if (sortSetFlag == false)
 	{
-		colNode = top._content.document.getElementById("PageRankColumn");
+		colNode = navWindow._content.document.getElementById("PageRankColumn");
 		if (colNode)
-			top._content.setInitialSort(colNode, "ascending");
+			navWindow._content.setInitialSort(colNode, "ascending");
 	}
 	switchTab(0);
 }
@@ -621,13 +623,14 @@ function doSearch()
     }
   
 	// hide various columns
-    if( parent._content.isMozillaSearchWindow )
+    var navWindow = getNavigatorWindow();
+    if( navWindow._content.isMozillaSearchWindow )
     {
-        colNode = parent._content.document.getElementById("RelevanceColumn");
+        colNode = navWindow._content.document.getElementById("RelevanceColumn");
         if (colNode)	colNode.setAttribute("style", "width: 0; visibility: collapse;");
-        colNode = parent._content.document.getElementById("PriceColumn");
+        colNode = navWindow._content.document.getElementById("PriceColumn");
         if (colNode)	colNode.setAttribute("style", "width: 0; visibility: collapse;");
-        colNode = parent._content.document.getElementById("AvailabilityColumn");
+        colNode = navWindow._content.document.getElementById("AvailabilityColumn");
         if (colNode)	colNode.setAttribute("style", "width: 0; visibility: collapse;");
     }
 
@@ -720,7 +723,8 @@ function doSearch()
 function checkSearchProgress()
 {
 	var	activeSearchFlag = false;
-	var	resultsTree = top._content.document.getElementById("internetresultstree");
+  var navWindow = getNavigatorWindow();
+	var	resultsTree = navWindow._content.document.getElementById("internetresultstree");
 	if(resultsTree)
 	{	
     	var treeref = resultsTree.getAttribute("ref");
@@ -1072,62 +1076,49 @@ function doCustomize()
 
 function loadURLInContent(url)
 {
-    var theWindow = null;    
-    var list = top.document.getElementsByTagName("window");
-    var wtype = list[0].getAttribute("windowtype");
-    
-    if (wtype == "navigator:browser")
-    {
-        theWindow = top.window;
-    }
-    else
-    {
-        var windowManager =
-            Components.classes[WMEDIATOR_PROGID].getService(nsIWindowMediator);
-        if (windowManager)
-        {
-            theWindow = windowManager.getMostRecentWindow("navigator:browser");
-        }
-    }
-
-    if (!theWindow)
-    {
-        window.openDialog (search_getBrowserURL(), "_blank",
-                           "chrome,all,dialog=no", url);
-    }
-    else
-    {
-        // try to use the BrowserAppCore in the content area
-        // (for better session history);
-        // if its unavailable, just blast the content location
-        var appCore = theWindow._content.appCore;
-		if(appCore)
-		{
-            appCore.loadUrl(url);
-		}
-		else
-		{
-            theWindow.top._content.location.href = url;
-		}
-
-    }
+    var appCore = getNavigatorWindowAppCore();
+    if (appCore)
+      appCore.loadUrl(url);
 }
 
+// retrieves the most recent navigator window
+function getNavigatorWindow()
+{
+  if (top.document) {
+    var possibleNavigator = top.document.getElementById("main-window");
+    if (possibleNavigator && 
+        possibleNavigator.getAttribute("windowtype") == "navigator:browser")
+      return top;
+    else return openNewNavigator();
+  }
+  else {
+    const WM_PROGID = "component://netscape/rdf/datasource?name=window-mediator";
+    var wm = nsJSComponentManager.getService(WM_PROGID, "nsIWindowMediator");
+    return wm ? wm.getMostRecentWindow("navigator:browser") : openNewNavigator();
+  }
+}
 
+// retrieves the most recent navigator window's crap core. 
+function getNavigatorWindowAppCore()
+{
+  var navigatorWindow = getNavigatorWindow();
+  return navigatorWindow.appCore;
+}
+
+function openNewNavigator()
+{
+  return openDialog(search_getBrowserURL(), "_blank", "chrome,all,dialog=no");
+}
 
 function search_getBrowserURL()
 {
-    var url="chrome://navigator/content/navigator.xul";
+    var url = "chrome://navigator/content/navigator.xul";
 
-    if (pref)
-    {
+    if (pref) {
         var temp = pref.CopyCharPref("browser.chromeURL");
-        if (temp)
-        {
-            url = temp;
-        }
+        if (temp) url = temp;
     }
-    return(url);
+    return url;
 }
 
 

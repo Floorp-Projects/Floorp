@@ -85,7 +85,8 @@
           <button class="dialog left" id="remove-button" oncommand="return RemoveEngine()" value="&remove.label;" />
           <spring flex="1"/>
   	    </box>
-        <tree class="inset" multiple="true" flex="1" id="engineList" datasources="rdf:internetsearch">
+        <tree class="inset" multiple="true" flex="1" id="engineList" 
+              datasources="rdf:internetsearch" onselect="doMoveDirectionEnabling()">
           <template>
             <treechildren>
               <treeitem uri="...">
@@ -103,7 +104,7 @@
           <treehead>
             <treerow>
               <treecell class="treecell-header sortDirectionIndicator outset" observes="EngineColumn"
-                        value="&engine.column.label;" 
+                        value="&engine.column.label;" onclick="return doSort('EngineColumn', null);"
                         resource="http://home.netscape.com/NC-rdf#Name" />
             </treerow>
           </treehead>
@@ -113,8 +114,8 @@
         </tree>
         <box orient="vertical">
           <spring flex="1"/>
-       	  <button class="up plain" oncommand="MoveUp();" id="up"/>
-      		<button class="down plain" oncommand="MoveDown();" id="down"/>
+       	  <button class="up" oncommand="MoveUp();" id="up" disabled="true"/>
+      		<button class="down" oncommand="MoveDown();" id="down" disabled="true"/>
           <spring flex="1"/>
         </box>
       </box>
