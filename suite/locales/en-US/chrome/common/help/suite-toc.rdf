@@ -2099,6 +2099,16 @@
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> 
+	<rdf:Description ID="password_mgr" nc:name="Password Manager"
+  		nc:link="chrome://help/locale/passwords_help.html#password_mgr"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#using-priv-help-password-settings">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
 	<rdf:Description ID="using-priv-help-password-settings-master-prefs" nc:name="Master Password Preferences"
   		nc:link="chrome://help/locale/passwords_help.html#Master_Password_Timeout"/> </rdf:li>
       </rdf:Seq>
@@ -2360,16 +2370,6 @@
     </nc:subheadings>
   </rdf:Description>
 
-<rdf:Description about="#using-priv-help">
-    <nc:subheadings>
-      <rdf:Seq>
-        <rdf:li> 
-	<rdf:Description ID="sec_gen" nc:name="Privacy &amp; Security Preferences"
-  		nc:link="chrome://help/locale/privsec_help.html"/> </rdf:li>
-      </rdf:Seq>
-    </nc:subheadings>
-  </rdf:Description>
-
 
 <rdf:Description about="#images-help-managing">
     <nc:subheadings>
@@ -2377,6 +2377,27 @@
         <rdf:li> 
 	<rdf:Description ID="images_prefs" nc:name="Image Preferences"
   		nc:link="chrome://help/locale/using_priv_help.html#using_images"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#images-help-managing">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="image_mgr" nc:name="Image Manager"
+  		nc:link="chrome://help/locale/using_priv_help.html#image_mgr"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+
+<rdf:Description about="#using-priv-help">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="sec_gen" nc:name="Privacy &amp; Security Preferences"
+  		nc:link="chrome://help/locale/privsec_help.html"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
