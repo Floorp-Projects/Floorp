@@ -54,18 +54,26 @@
       }
       alreadyCheckedForImage = true;
       // remove image functions (unless overruled by the "imageblocker.enabled" pref)
+      var pref;
+      pref = Components.classes['@mozilla.org/preferences;1'];
+      pref = pref.getService();
+      pref = pref.QueryInterface(Components.interfaces.nsIPrefBranch);
       try {
-        if (!this.pref.GetBoolPref("imageblocker.enabled")) {
+        if (!pref.getBoolPref("imageblocker.enabled")) {
           HideImage();
         }
       } catch(e) {
         HideImage();
-        dump("imageblocker.enabled pref is missing from all.js\n");
       }
     }
 
     // perform a Cookie or Image action
     function CookieImageAction(action) {
+
+      if (!("_content" in window)) {
+        // this occurs if doing tasks->privacy->cookie->block from java console
+        return;
+      }
 
       var permissionmanager =
         Components.classes["@mozilla.org/permissionmanager;1"]
