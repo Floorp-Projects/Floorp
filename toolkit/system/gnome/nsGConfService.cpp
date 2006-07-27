@@ -37,8 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsGConfService.h"
-#include "nsCRT.h"
-#include "nsString.h"
+#include "nsStringAPI.h"
 
 #include <gconf/gconf-client.h>
 
@@ -165,8 +164,9 @@ NS_IMETHODIMP
 nsGConfService::GetAppForProtocol(const nsACString &aScheme, PRBool *aEnabled,
                                   nsACString &aHandler)
 {
-  nsCAutoString key(NS_LITERAL_CSTRING("/desktop/gnome/url-handlers/")
-		    + aScheme + NS_LITERAL_CSTRING("/command"));
+  nsCAutoString key("/desktop/gnome/url-handlers/");
+  key.Append(aScheme);
+  key.Append("/command");
 
   GError *err = nsnull;
   gchar *command = gconf_client_get_string(mClient, key.get(), &err);
@@ -193,8 +193,9 @@ NS_IMETHODIMP
 nsGConfService::HandlerRequiresTerminal(const nsACString &aScheme,
                                         PRBool *aResult)
 {
-  nsCAutoString key(NS_LITERAL_CSTRING("/desktop/gnome/url-handlers/")
-		    + aScheme + NS_LITERAL_CSTRING("/requires_terminal"));
+  nsCAutoString key("/desktop/gnome/url-handlers/");
+  key.Append(aScheme);
+  key.Append("/requires_terminal");
 
   GError *err = nsnull;
   *aResult = gconf_client_get_bool(mClient, key.get(), &err);
@@ -210,8 +211,9 @@ NS_IMETHODIMP
 nsGConfService::SetAppForProtocol(const nsACString &aScheme,
                                   const nsACString &aCommand)
 {
-  nsCAutoString key(NS_LITERAL_CSTRING("/desktop/gnome/url-handlers/")
-		    + aScheme + NS_LITERAL_CSTRING("/command"));
+  nsCAutoString key("/desktop/gnome/url-handlers/");
+  key.Append(aScheme);
+  key.Append("/command");
 
   PRBool res = gconf_client_set_string(mClient, key.get(),
                                        PromiseFlatCString(aCommand).get(),
