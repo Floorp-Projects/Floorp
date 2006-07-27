@@ -24,6 +24,8 @@ var rdf_uri = 'component://netscape/rdf/rdf-service'
 var RDF = Components.classes[rdf_uri].getService()
 RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService)
 
+var NC = "http://home.netscape.com/NC-rdf#";
+
 // the magic number to find panels.rdf
 var PANELS_RDF_FILE = 66626;
 
@@ -35,18 +37,33 @@ function debug(msg) {
   //dump(msg+"\n");
 }
 
+
 var panel_observer = new Object;
+var gInBatch = false;
+
 panel_observer = {
   OnAssert   : function(src,prop,target)
     {
-      debug("Setting timeout to open default");
-
-      //xxxslamm This timeout does not work. JS bug #???? (bugzilla is down).
-      // Brendan said that norris is working on this.
-      //setTimeout("sidebarOpenDefaultPanel(100, 0)",100);
+      debug("panel_observer: onAssert");
+      if (prop == RDF.GetResource(NC + "inbatch")) {
+        gInBatch = true;
+      }
     },
   OnUnassert : function(src,prop,target)
-               { debug("panel_observer: onUnassert"); },
+    {
+      debug("panel_observer: onUnassert"); 
+
+      // Wait for unassert that marks the end of the customize changes.
+      // See customize.js for where this is unasserted.
+      if (prop == RDF.GetResource(NC + "inbatch")) {
+        gInBatch = false;
+      }
+      if (!gInBatch) {
+        // Reset the selected panel. If the selected panel
+        // was deleted, the first one will get picked instead.
+        sidebarOpenDefaultPanel(100, 0);
+      }
+    },
   OnChange   : function(src,prop,old_target,new_target)
                { debug("panel_observer: onChange"); },
   OnMove     : function(old_src,new_src,prop,target)
@@ -120,7 +137,8 @@ function sidebarOverlayInit() {
   }
 }
 
-function oldsidebarOpenDefaultPanel(wait, tries) {
+/* BEGIN: old sidebar layout code
+function sidebarOpenDefaultPanel(wait, tries) {
   var parent = document.getElementById('sidebar-panels');
   var target = parent.getAttribute('open-panel-src');
   var children = parent.childNodes;
@@ -150,6 +168,7 @@ function oldsidebarOpenDefaultPanel(wait, tries) {
     parent.setAttribute('open-panel-src',first_iframe.getAttribute('src'));
   }
 }
+END: old sidebar layout code */
 
 function sidebarOpenDefaultPanel(wait, tries) {
   var parent = document.getElementById('sidebar-panels');
@@ -168,7 +187,9 @@ function sidebarOpenDefaultPanel(wait, tries) {
     return;
   }
   if (target && target != '') {
-    iframe.setAttribute('src', target);
+    if (iframe.getAttribute('src') != target) {
+      iframe.setAttribute('src', target);
+    }
     for (var ii=0; ii < children.length; ii++) {
       if (children.item(ii).getAttribute('iframe-src') == target) {
         children.item(ii).setAttribute('selected','1');
@@ -186,7 +207,8 @@ function sidebarOpenDefaultPanel(wait, tries) {
   }
 }
 
-function oldsidebarOpenClosePanel(titledbutton) {
+/* BEGIN: old sidebar layout code
+function SidebarSelectPanel(titledbutton) {
   var target = titledbutton.getAttribute('iframe-src');
   var last_src = titledbutton.parentNode.getAttribute('open-panel-src');
   var children = titledbutton.parentNode.childNodes;
@@ -207,8 +229,11 @@ function oldsidebarOpenClosePanel(titledbutton) {
     }
   }
 }
+END: old sidebar layout code */
 
-function sidebarOpenClosePanel(titledbutton) {
+// Change the sidebar content to the selected panel.
+// Called when a panel title is clicked.
+function SidebarSelectPanel(titledbutton) {
   var target = titledbutton.getAttribute('iframe-src');
   var last_src = titledbutton.parentNode.getAttribute('open-panel-src');
   var children = titledbutton.parentNode.childNodes;
@@ -227,6 +252,7 @@ function sidebarOpenClosePanel(titledbutton) {
   }
 }
 
+// No one is calling this right now.
 function sidebarReload() {
   sidebarOverlayInit(sidebar);
 }
@@ -238,7 +264,8 @@ function enableCustomize() {
   gDisableCustomize = false;
 }
 
-function sidebarCustomize() {
+// Bring up the Sidebar customize dialog.
+function SidebarCustomize() {
   // Use a single sidebar customize dialog
   var cwindowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
   var iwindowManager = Components.interfaces.nsIWindowMediator;
@@ -268,7 +295,9 @@ function sidebarCustomize() {
   }
 }
 
-function sidebarShowHide() {
+// Show/Hide the entire sidebar.
+// Envoked by the "View / Sidebar" menu option.
+function SidebarShowHide() {
   var sidebar = document.getElementById('sidebar-box')
   var sidebar_splitter = document.getElementById('sidebar-splitter')
   var is_hidden = sidebar.getAttribute('hidden')
