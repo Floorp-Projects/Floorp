@@ -13,7 +13,7 @@
 <!ENTITY selAllCmd.label            "Select All">
 <!ENTITY findHisCmd.label           "Search History...">
 <!ENTITY findHisCmd.commandkey      "f">
-<!ENTITY findHisCmd.accesskey       "s">
+<!ENTITY findHisCmd.accesskey       "S">
 <!ENTITY groupBy.label              "Group By">
 <!ENTITY groupBy.accesskey          "G">
 <!ENTITY groupByDay.label           "Day">
@@ -28,4 +28,4 @@
 <!ENTITY menuitem.view.descending.label "Z > A Sort Order">
 <!ENTITY menuitem.view.descending.accesskey "z">
 <!ENTITY menuitem.view.show_columns.label "Show columns">
-<!ENTITY menuitem.view.show_columns.accesskey "s">
+<!ENTITY menuitem.view.show_columns.accesskey "S">
