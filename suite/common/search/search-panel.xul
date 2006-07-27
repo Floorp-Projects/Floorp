@@ -86,7 +86,7 @@
           rdf:resource2="http://home.netscape.com/NC-rdf#Name"
           sortDirection="ascending" sortActive="true"
           class="inset"
-          flex="100%"
+          flex="100%" style="width:100%; height=100%;"
           datasources="rdf:internetsearch"
           onclick="sidebarOpenURL(event, event.target.parentNode.parentNode, 'Tree')">
       
@@ -142,7 +142,7 @@
       <!-- advanced panel -->
       <box align="vertical" class="searchpanel-outerbox" flex="1">
       
-        <tree align="horizontal" id="searchengines" flex="1" datasources="rdf:internetsearch" class="inset">
+        <tree align="horizontal" id="searchengines" datasources="rdf:internetsearch" flex="100%" class="inset" style="width:100%; height=100%;">
           <treecol id="CheckboxColumn" class="checkboxColumn" />
           <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" />
           <template>
