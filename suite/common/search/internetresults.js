@@ -182,7 +182,8 @@ function doEngineClick( event, aNode )
     }
   }
   else
-    frames[0].document.location = "chrome://communicator/locale/search/default.htm";
+    frames[0].document.location.href = 
+      "chrome://communicator/locale/search/default.htm";
 }
 
 
