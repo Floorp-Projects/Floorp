@@ -40,10 +40,26 @@
           ref="urn:sidebar:current-panel-list">
           <template>
             <rule>
-              <menuitem uri="rdf:*" type="checkbox"
-                oncommand="SidebarTogglePanel(event.target);"
-                value="rdf:http://home.netscape.com/NC-rdf#title"
-                exclude="rdf:http://home.netscape.com/NC-rdf#exclude"/>
+              <conditions>
+                <content uri="?uri"/>
+                <triple subject="?uri"
+                  predicate="http://home.netscape.com/NC-rdf#panel-list"
+                  object="?panel-list"/>
+                <member container="?panel-list" child="?panel"/>
+                <triple subject="?panel"
+                  predicate="http://home.netscape.com/NC-rdf#title"
+                  object="?title" />
+              </conditions>
+              <bindings>
+                <binding subject="?panel"
+                  predicate="http://home.netscape.com/NC-rdf#exclude"
+                  object="?exclude"/>
+              </bindings>
+              <action>
+                <menuitem uri="?panel" type="checkbox"
+                  oncommand="SidebarTogglePanel(event.target);"
+                  value="?title" exclude="?exclude"/>
+              </action>
             </rule>
           </template>
           <menuitem value="&sidebar.customize.label;"
@@ -59,38 +75,57 @@
       persist='last-selected-panel height collapsed hidden' flex="1*">
       <template id="sidebar-template">
         <rule>
-          <box uri="rdf:*" class="box-texttab texttab-sidebar" align="left" 
-            value="rdf:http://home.netscape.com/NC-rdf#title"
-            onclick="SidebarSelectPanel(this)"
-            exclude="rdf:http://home.netscape.com/NC-rdf#exclude"
-            hidden="true"/>
-          <box uri="rdf:*" flex='1*' hidden="true" orient="vertical">
-            <box flex='1' orient="vertical" class="iframe-panel">
-              <box orient="horizontal" flex="1" autostretch="never">
-                <image class="image-panel-loading"/>
-                <text class="text-panel-loading"
-                  value="&sidebar.loading.label;"/>
+          <conditions>
+            <content uri="?uri"/>
+            <triple subject="?uri" object="?panel-list"
+              predicate="http://home.netscape.com/NC-rdf#panel-list" />
+            <member container="?panel-list" child="?panel"/>
+            <triple subject="?panel" object="?title"
+              predicate="http://home.netscape.com/NC-rdf#title" />
+            <triple subject="?panel" object="?content"
+              predicate="http://home.netscape.com/NC-rdf#content" />
+          </conditions>
+          <bindings>
+            <binding subject="?panel" object="?exclude"
+              predicate="http://home.netscape.com/NC-rdf#exclude" />
+          </bindings>
+          <action>
+            <box uri="?panel" class="box-texttab texttab-sidebar" align="left" 
+              onclick="SidebarSelectPanel(this)" hidden="true"
+              value="?title" exclude="?exclude" />
+            <box uri="?panel" flex='1*' hidden="true" orient="vertical">
+              <box flex='1' orient="vertical" class="iframe-panel">
+                <box orient="horizontal" flex="1" autostretch="never">
+                  <image class="image-panel-loading"/>
+                  <text class="text-panel-loading"
+                    value="&sidebar.loading.label;"/>
+                </box>
+                <spring flex="100%"/>
               </box>
-              <spring flex="100%"/>
+              <iframe class="iframe-panel" flex='1*'
+                hidden="true" collapsed="true" src="?content" />
+              <iframe class="iframe-panel" flex='1*'
+                hidden="true" collapsed="true" src="?content" type="content" />
             </box>
-            <iframe class="iframe-panel" flex='1*'
-              hidden="true" collapsed="true"
-              src="rdf:http://home.netscape.com/NC-rdf#content" />
-            <iframe class="iframe-panel" flex='1*'
-              hidden="true" collapsed="true"
-              src="rdf:http://home.netscape.com/NC-rdf#content"
-              type="content" />
-          </box>
+          </action>
         </rule>
       </template>
+      <box id="sidebar-iframe-no-panels" orient="vertical" flex="1"
+        hidden="true">
+        <html>&sidebar.no-panels.state;</html>
+        <html>&sidebar.no-panels.add;</html>
+        <html>&sidebar.no-panels.hide;</html>
+      </box>
     </box>
   </box>
 
   <!-- Splitter on the right of sidebar -->
   <splitter id="sidebar-splitter" collapse="before" persist="state hidden"
-    class="chromeclass-extrachrome sidebar-splitter" autostretch="never" orient="vertical"
+    class="chromeclass-extrachrome sidebar-splitter" autostretch="never"
+    orient="vertical"
     onmouseup="SidebarFinishDrag();">
-    <grippy class="sidebar-splitter-grippy" onclick="SidebarExpandCollapse();"/>
+    <grippy class="sidebar-splitter-grippy"
+      onclick="SidebarExpandCollapse();"/>
   </splitter>
 
   <!-- View->Sidebar toggle -->

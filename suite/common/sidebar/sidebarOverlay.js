@@ -19,23 +19,23 @@
  * Rights Reserved.
  */
 
-// the rdf service
+// The rdf service
 var rdf_uri = 'component://netscape/rdf/rdf-service'
 var RDF = Components.classes[rdf_uri].getService()
 RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService)
 
 var NC = "http://home.netscape.com/NC-rdf#";
 
-// the magic number to find panels.rdf
+// The magic number to find panels.rdf
 var PANELS_RDF_FILE = 66626;
 var SIDEBAR_VERSION = "0.0";
 
-// the default sidebar:
+// The default sidebar:
 var sidebarObj = new Object;
 sidebarObj.never_built = true;
 
 function debug(msg) {
-  // uncomment for noise
+  // Uncomment for noise
   //dump(msg+"\n");
 }
 
@@ -61,41 +61,72 @@ panel_observer = {
 }
 
 
-function get_sidebar_datasource_uri(panels_file_id) {
+function sidebar_get_panels_file() {
   try {
     var locator_interface = Components.interfaces.nsIFileLocator;
     var locator_prog_id = 'component://netscape/filelocator';
     var locator_service = Components.classes[locator_prog_id].getService();
-    // use the fileLocator to look in the profile directory
-    // to find 'panels.rdf', which is the
-    // database of the user's currently selected panels.
+    // Use the fileLocator to look in the profile directory to find
+    // 'panels.rdf', which is the database of the user's currently
+    // selected panels.
     locator_service = locator_service.QueryInterface(locator_interface);
 
-    // if <profile>/panels.rdf doesn't exist, GetFileLocation() will copy
+    // If <profile>/panels.rdf doesn't exist, GetFileLocation() will copy
     // bin/defaults/profile/panels.rdf to <profile>/panels.rdf
-    var sidebar_file = locator_service.GetFileLocation(panels_file_id);
-
+    var sidebar_file = locator_service.GetFileLocation(PANELS_RDF_FILE);
     if (!sidebar_file.exists()) {
-      // this should not happen, as GetFileLocation() should copy
+      // This should not happen, as GetFileLocation() should copy
       // defaults/panels.rdf to the users profile directory
-      return null;
+      debug("Sidebar panels file does not exist");
+      throw("Panels file does not exist");
     }
-
-    debug("sidebar uri is " + sidebar_file.URLString);
-    return sidebar_file.URLString;
+    return sidebar_file;
+  } catch (ex) {
+    // This should not happen
+    debug("Error: Unable to grab panels file.\n");
+    throw(ex);
   }
-  catch (ex) {
-    // this should not happen
+}
+
+function sidebar_revert_to_default_panels() {
+  try {
+    var sidebar_file = sidebar_get_panels_file();
+
+    // Calling delete() with array notation (workaround for bug 37406).
+    sidebar_file["delete"](false);
+
+    // Since we just removed the panels file,
+    // this should copy the defaults over.
+    var sidebar_file = sidebar_get_panels_file();
+
+    debug("sidebar defaults reloaded");
+    var datasource = RDF.GetDataSource(sidebarObj.datasource_uri);
+    datasource.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Refresh(true);
+  } catch (ex) {
+    debug("Error: Unable to reload panel defaults file.\n");
+    return null;
+  }
+}
+
+function get_sidebar_datasource_uri() {
+  try {
+    var sidebar_file = sidebar_get_panels_file();
+    return sidebar_file.URLString;
+  } catch (ex) {
+    // This should not happen
     debug("Error: Unable to load panels file.\n");
     return null;
   }
 }
 
 function sidebar_overlay_init() {
-  sidebarObj.datasource_uri = get_sidebar_datasource_uri(PANELS_RDF_FILE);
+  sidebarObj.datasource_uri = get_sidebar_datasource_uri();
   sidebarObj.resource = 'urn:sidebar:current-panel-list';
   
-  sidebarObj.master_datasources = get_remote_datasource_url();
+  sidebarObj.master_datasources = "";
+  //sidebarObj.master_datasources = get_remote_datasource_url();
+  //sidebarObj.master_datasources = "http://dunk/hoang.rdf";
+  sidebarObj.master_datasources = "http://dunk/all-panels.rdf";
   sidebarObj.master_datasources += " chrome://communicator/content/sidebar/local-panels.rdf";
   sidebarObj.master_resource = 'urn:sidebar:master-panel-list';
   sidebarObj.component = document.firstChild.getAttribute('windowtype');
@@ -137,6 +168,7 @@ function sidebar_overlay_init() {
       
       debug("Adding observer to database.");
       panels.database.AddObserver(panel_observer);
+
       // XXX This is a hack to force re-display
       panels.setAttribute('ref', sidebarObj.resource);
     }
@@ -201,23 +233,39 @@ function sidebar_open_default_panel(wait, tries) {
   debug("sidebar_open_default_panel("+wait+","+tries+")");
 
   // Make sure the sidebar exists before trying to refresh it.
-  if (panels.childNodes.length <= 1) {
-    if (tries < 5) {
+  if (panels.childNodes.length <= 2) {
+    if (tries < 3) {
       // No children yet, try again later
       setTimeout('sidebar_open_default_panel('+(wait*2)+','+(tries+1)+')',wait);
+      return;
     } else {
-      // No panels.
-      // XXX This should load some help page
+      sidebar_fixup_datasource();
     }
-    return;
   }
   sidebar_refresh();
+}
+
+function sidebar_fixup_datasource() {
+  var datasource = RDF.GetDataSource(sidebarObj.datasource_uri);
+  var resource = RDF.GetResource(sidebarObj.resource);
+
+  var panel_list = datasource.GetTarget(resource,
+                                        RDF.GetResource(NC+"panel-list"),
+                                        true);
+  if (!panel_list) {
+    debug("Sidebar datasource is an old format or busted\n");
+    sidebar_revert_to_default_panels();
+  } else {
+    // The datasource is ok, but it just has no panels.
+    // sidebar_refresh() will display some helper content.
+    // Do nothing here.
+  }
 }
 
 function sidebar_refresh() {
   var panels = document.getElementById('sidebar-panels');
   var last_selected_panel = panels.getAttribute('last-selected-panel');
-  if (is_selected(last_selected_panel)) {
+  if (sidebar_panel_is_selected(last_selected_panel)) {
     // A panel is already selected
     update_panels();
   } else {
@@ -232,12 +280,11 @@ function sidebar_refresh() {
     } else {
       // Select the most recently selected panel.
       select_panel(last_selected_panel);
-
     }
   }
 }
 
-function is_selected(panel_id) {
+function sidebar_panel_is_selected(panel_id) {
   var panels = document.getElementById('sidebar-panels');
   var panel_index = find_panel(panels, panel_id);
   if (panel_index == 0) return false;
@@ -271,7 +318,7 @@ function select_panel(target) {
 function find_panel(panels, target) {
   if (target && target != '') {
     // Find the index of the selected panel
-    for (var ii=1; ii < panels.childNodes.length; ii += 2) {
+    for (var ii=2; ii < panels.childNodes.length; ii += 2) {
       var item = panels.childNodes.item(ii);
       
       if (item.getAttribute('id') == target) {
@@ -292,7 +339,7 @@ function find_panel(panels, target) {
 function pick_last_panel(panels) {
   last_non_excluded_index = null;
   debug("pick_default_panel: length="+panels.childNodes.length);
-  for (var ii=1; ii < panels.childNodes.length; ii += 2) {
+  for (var ii=2; ii < panels.childNodes.length; ii += 2) {
     if (!is_excluded(panels.childNodes.item(ii))) {
       last_non_excluded_index = ii;
     }
@@ -308,7 +355,6 @@ function is_excluded(item) {
 
 function panel_loader() {
   debug("---------- panel_loader");
-  dump_tree(this);
   this.removeEventListener("load", panel_loader, true);
   this.removeAttribute('collapsed');
   this.parentNode.firstChild.setAttribute('hidden','true');
@@ -316,7 +362,6 @@ function panel_loader() {
 
 function get_iframe(content) {
   debug("---------- get_iframe");
-  dump_tree(content);
   var unsandboxed_iframe = content.childNodes.item(1);
   var sandboxed_iframe = content.childNodes.item(2);
   if (unsandboxed_iframe.getAttribute('src').match(/^chrome:/)) {
@@ -336,7 +381,13 @@ function update_panels() {
   var have_set_after_selected = 0;
   var is_after_selected = 0;
   var last_header = 0;
-  for (var ii=1; ii < panels.childNodes.length; ii += 2) {
+  var no_panels_iframe = document.getElementById('sidebar-iframe-no-panels');
+  if (panels.childNodes.length > 2) {
+      no_panels_iframe.setAttribute('hidden','true');
+  } else {
+      no_panels_iframe.removeAttribute('hidden');
+  }
+  for (var ii=2; ii < panels.childNodes.length; ii += 2) {
     var header = panels.childNodes.item(ii);
     var content = panels.childNodes.item(ii+1);
     var id = header.getAttribute('id');
