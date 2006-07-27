@@ -120,7 +120,7 @@ function sidebarOverlayInit() {
   }
 }
 
-function sidebarOpenDefaultPanel(wait, tries) {
+function oldsidebarOpenDefaultPanel(wait, tries) {
   var parent = document.getElementById('sidebar-panels');
   var target = parent.getAttribute('open-panel-src');
   var children = parent.childNodes;
@@ -151,7 +151,42 @@ function sidebarOpenDefaultPanel(wait, tries) {
   }
 }
 
-function sidebarOpenClosePanel(titledbutton) {
+function sidebarOpenDefaultPanel(wait, tries) {
+  var parent = document.getElementById('sidebar-panels');
+  var target = parent.getAttribute('open-panel-src');
+  var children = parent.childNodes;
+  var iframe = document.getElementById('sidebar-content');
+
+  debug("sidebarOpenDefaultPanel("+wait+","+tries+")");
+  debug("  target="+target);
+
+  if (children.length < 3) {
+    if (tries < 5) {
+      // No children yet, try again later
+      setTimeout('sidebarOpenDefaultPanel('+(wait*2)+','+(tries+1)+')',wait);
+    }
+    return;
+  }
+  if (target && target != '') {
+    iframe.setAttribute('src', target);
+    for (var ii=0; ii < children.length; ii++) {
+      if (children.item(ii).getAttribute('iframe-src') == target) {
+        children.item(ii).setAttribute('selected','1');
+        return;
+      }
+    }
+  }
+  // Pick the first one
+  var first_button = children.item(1);
+  if (first_button) {
+    first_button.setAttribute('selected','1');
+    target = first_button.getAttribute('iframe-src');
+    parent.setAttribute('open-panel-src', target);
+    iframe.setAttribute('src', target);
+  }
+}
+
+function oldsidebarOpenClosePanel(titledbutton) {
   var target = titledbutton.getAttribute('iframe-src');
   var last_src = titledbutton.parentNode.getAttribute('open-panel-src');
   var children = titledbutton.parentNode.childNodes;
@@ -169,6 +204,25 @@ function sidebarOpenClosePanel(titledbutton) {
     }
     if (src == last_src) {
       children.item(ii).setAttribute('collapsed','true');
+    }
+  }
+}
+
+function sidebarOpenClosePanel(titledbutton) {
+  var target = titledbutton.getAttribute('iframe-src');
+  var last_src = titledbutton.parentNode.getAttribute('open-panel-src');
+  var children = titledbutton.parentNode.childNodes;
+  var iframe = document.getElementById('sidebar-content');
+
+  if (target == last_src) {
+    return;
+  }
+  titledbutton.parentNode.setAttribute('open-panel-src',target);
+  titledbutton.setAttribute('selected','1');
+  iframe.setAttribute('src',target);
+  for (var ii=0; ii < children.length; ii++) {
+    if (children.item(ii).getAttribute('iframe-src')== last_src) {
+      children.item(ii).removeAttribute('selected');
     }
   }
 }
