@@ -356,6 +356,16 @@
 <rdf:Description about="#Composer">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="Composer:keyboard_shortcuts"                        
+         nc:name="keyboard shortcuts"                                           
+         nc:link="chrome://help/locale/shortcuts.html#composer"/>               
+     </rdf:li></rdf:Seq>                                                        
+   </nc:subheadings>                                                            
+</rdf:Description>                                                              
+
+<rdf:Description about="#Composer">                                             
+   <nc:subheadings>                                                             
+     <rdf:Seq><rdf:li>                                                          
        <rdf:Description ID="Composer:removing_text_styles"
          nc:name="removing text styles"
 	 nc:link="composer_help.html#Composer:removing_text_stylesIDX"/>
@@ -603,8 +613,6 @@
    </nc:subheadings>
 </rdf:Description>
 
-<<<<<<< help-index1.rdf
-=======
 <rdf:Description about="help-indexAZ.rdf#k">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -685,7 +693,6 @@
    </nc:subheadings>
 </rdf:Description>
 
->>>>>>> 1.5
 <rdf:Description about="help-indexAZ.rdf#l">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -1142,6 +1149,16 @@
        <rdf:Description ID="Mail_and_Newsgroups:using_HTML_in_messages"
          nc:name="using HTML in messages"
 	 nc:link="mail_help.html#Mail_and_Newsgroups:using_HTML_in_messagesIDX"/>
+     </rdf:li></rdf:Seq>                                                        
+   </nc:subheadings>                                                            
+</rdf:Description>                                                              
+
+<rdf:Description about="#Mail_and_Newsgroups">                                  
+   <nc:subheadings>                                                             
+     <rdf:Seq><rdf:li>                                                          
+       <rdf:Description ID="Mail_and_Newsgroups:using_mailing_addresses"        
+         nc:name="using mailing addresses"                                      
+         nc:link="mail_help.html#Mail_and_Newsgroups:using_mailing_addressesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
