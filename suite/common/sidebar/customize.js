@@ -26,7 +26,7 @@ RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
 
 var NC = "http://home.netscape.com/NC-rdf#";
 
-var sidebar = new Object;
+var sidebarObj = new Object;
 var original_panels = new Array();
 
 function debug(msg)
@@ -38,13 +38,13 @@ function Init()
 {
   var all_panels_datasources = window.arguments[0];
   var all_panels_resource    = window.arguments[1];
-  sidebar.datasource_uri     = window.arguments[2];
-  sidebar.resource           = window.arguments[3];
+  sidebarObj.datasource_uri     = window.arguments[2];
+  sidebarObj.resource           = window.arguments[3];
 
   debug("Init: all panels datasources = " + all_panels_datasources);
   debug("Init: all panels resource    = " + all_panels_resource);
-  debug("Init: sidebar.datasource_uri = " + sidebar.datasource_uri);
-  debug("Init: sidebar.resource       = " + sidebar.resource);
+  debug("Init: sidebarObj.datasource_uri = " + sidebarObj.datasource_uri);
+  debug("Init: sidebarObj.resource       = " + sidebarObj.resource);
 
   var all_panels   = document.getElementById('other-panels');
   var current_panels = document.getElementById('current-panels');
@@ -61,15 +61,15 @@ function Init()
   
   // Add the datasource for current list of panels. It selects panels out
   // of the other datasources.
-  debug("Init: Adding current panels, "+sidebar.datasource_uri);
-  sidebar.datasource = RDF.GetDataSource(sidebar.datasource_uri);
-  current_panels.database.AddDataSource(sidebar.datasource);
+  debug("Init: Adding current panels, "+sidebarObj.datasource_uri);
+  sidebarObj.datasource = RDF.GetDataSource(sidebarObj.datasource_uri);
+  current_panels.database.AddDataSource(sidebarObj.datasource);
 
   // Root the customize dialog at the correct place.
   debug("Init: reset all panels ref, "+all_panels_resource);
   all_panels.setAttribute('ref', all_panels_resource);
-  debug("Init: reset current panels ref, "+sidebar.resource);
-  current_panels.setAttribute('ref', sidebar.resource);
+  debug("Init: reset current panels ref, "+sidebarObj.resource);
+  current_panels.setAttribute('ref', sidebarObj.resource);
 
   save_initial_panels();
   enable_buttons_for_current_panels();
@@ -359,13 +359,13 @@ function Save()
   // Without this, the dialog tries to update as it is being destroyed.
   current_panels.setAttribute('ref', 'rdf:null');
 
-  start_batch(sidebar.datasource, sidebar.resource);
+  start_batch(sidebarObj.datasource, sidebarObj.resource);
 
   // Create a "container" wrapper around the current panels to
   // manipulate the RDF:Seq more easily.
   var container = Components.classes["component://netscape/rdf/container"].createInstance();
   container = container.QueryInterface(Components.interfaces.nsIRDFContainer);
-  container.Init(sidebar.datasource, RDF.GetResource(sidebar.resource));
+  container.Init(sidebarObj.datasource, RDF.GetResource(sidebarObj.resource));
 
   // Remove all the current panels from the datasource.
   var current_panels = container.GetElements();
@@ -392,10 +392,10 @@ function Save()
                          container);
   }
 
-  end_batch(sidebar.datasource, sidebar.resource);
+  end_batch(sidebarObj.datasource, sidebarObj.resource);
 
   // Write the modified panels out.
-  sidebar.datasource.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush();
+  sidebarObj.datasource.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush();
 
   window.close();
 }

@@ -31,7 +31,7 @@ var PANELS_RDF_FILE = 66626;
 var SIDEBAR_VERSION = "0.0";
 
 // the default sidebar:
-var sidebar = new Object;
+var sidebarObj = new Object;
 
 function debug(msg) {
   // uncomment for noise
@@ -41,7 +41,7 @@ function debug(msg) {
 var panel_observer = new Object;
 
 panel_observer = {
-  OnAssert : function(src,prop,target) {},
+  OnAssert : function(src,prop,target) { debug ("*** assert");},
   OnUnassert : function(src,prop,target) {
     // Wait for unassert that marks the end of the customize changes.
     // See customize.js for where this is unasserted.
@@ -85,15 +85,15 @@ function get_sidebar_datasource_uri(panels_file_id) {
 }
 
 function sidebar_overlay_init() {
-  sidebar.datasource_uri = get_sidebar_datasource_uri(PANELS_RDF_FILE);
-  sidebar.resource = 'urn:sidebar:current-panel-list';
-  sidebar.master_datasources = 'chrome://sidebar/content/local-panels.rdf';
-  sidebar.master_datasources += ' chrome://sidebar/content/remote-panels.rdf';
-  //sidebar.master_datasources += " " + get_remote_datasource_url();
-  sidebar.master_resource = 'urn:sidebar:master-panel-list';
-  sidebar.component = document.location.href;
+  sidebarObj.datasource_uri = get_sidebar_datasource_uri(PANELS_RDF_FILE);
+  sidebarObj.resource = 'urn:sidebar:current-panel-list';
+  sidebarObj.master_datasources = 'chrome://sidebar/content/local-panels.rdf';
+  sidebarObj.master_datasources += ' chrome://sidebar/content/remote-panels.rdf';
+  //sidebarObj.master_datasources += " " + get_remote_datasource_url();
+  sidebarObj.master_resource = 'urn:sidebar:master-panel-list';
+  sidebarObj.component = document.location.href;
 
-  debug("sidebar_overlay_init: sidebar.component: " + sidebar.component);
+  debug("sidebar_overlay_init: sidebarObj.component: " + sidebarObj.component);
 
 
   // Initialize the display
@@ -108,28 +108,28 @@ function sidebar_overlay_init() {
       sidebar_menuitem.setAttribute('checked', 'true');
     }
 
-    debug("sidebar = " + sidebar);
-    debug("sidebar.resource = " + sidebar.resource);
-    debug("sidebar.datasource_uri = " + sidebar.datasource_uri);
+    debug("sidebar = " + sidebarObj);
+    debug("sidebarObj.resource = " + sidebarObj.resource);
+    debug("sidebarObj.datasource_uri = " + sidebarObj.datasource_uri);
 
     // Add the user's current panel choices to the template builder,
     // which will aggregate it with the other datasources that describe
     // the individual panel's title, customize URL, and content URL.
     var panels = document.getElementById('sidebar-panels');
-    panels.database.AddDataSource(RDF.GetDataSource(sidebar.datasource_uri));
+    panels.database.AddDataSource(RDF.GetDataSource(sidebarObj.datasource_uri));
 
     // The stuff on the bottom
     var panels_bottom = document.getElementById('sidebar-panels-bottom');
-    panels_bottom.database.AddDataSource(RDF.GetDataSource(sidebar.datasource_uri));
+    panels_bottom.database.AddDataSource(RDF.GetDataSource(sidebarObj.datasource_uri));
 
     debug("Adding observer to database.");
     panels.database.AddObserver(panel_observer);
 
     // XXX This is a hack to force re-display
-    panels.setAttribute('ref', sidebar.resource);
+    panels.setAttribute('ref', sidebarObj.resource);
 
     // XXX This is a hack to force re-display
-    panels_bottom.setAttribute('ref', sidebar.resource);
+    panels_bottom.setAttribute('ref', sidebarObj.resource);
 
     sidebar_open_default_panel(100, 0);
   }
@@ -255,7 +255,7 @@ function is_excluded(item) {
   var src = item.getAttribute('iframe-src');
   debug("src="+src);
   debug("exclude="+exclude);
-  return exclude && exclude != '' && exclude.indexOf(sidebar.component) != -1;
+  return exclude && exclude != '' && exclude.indexOf(sidebarObj.component) != -1;
 }
 
 function update_headers(index) {
@@ -335,10 +335,10 @@ function SidebarCustomize() {
       customizeWindow = window.openDialog(
                           'chrome://sidebar/content/customize.xul',
                           '_blank','chrome,resizable',
-                          sidebar.master_datasources,
-                          sidebar.master_resource,
-                          sidebar.datasource_uri,
-                          sidebar.resource);
+                          sidebarObj.master_datasources,
+                          sidebarObj.master_resource,
+                          sidebarObj.datasource_uri,
+                          sidebarObj.resource);
       setTimeout(enable_customize, 2000);
     }
   }
@@ -347,18 +347,18 @@ function SidebarCustomize() {
 // Show/Hide the entire sidebar.
 // Envoked by the "View / Sidebar" menu option.
 function SidebarShowHide() {
-  var sidebar = document.getElementById('sidebar-box');
+  var sidebarBox = document.getElementById('sidebar-box');
   var sidebar_splitter = document.getElementById('sidebar-splitter');
-  var is_hidden = sidebar.getAttribute('hidden');
+  var is_hidden = sidebarBox.getAttribute('hidden');
 
   if (is_hidden && is_hidden == "true") {
     debug("Showing the sidebar");
-    sidebar.removeAttribute('hidden');
+    sidebarBox.removeAttribute('hidden');
     sidebar_splitter.removeAttribute('hidden');
     sidebar_overlay_init()
   } else {
     debug("Hiding the sidebar");
-    sidebar.setAttribute('hidden','true');
+    sidebarBox.setAttribute('hidden','true');
     sidebar_splitter.setAttribute('hidden','true');
   }
   // Immediately save persistent values
@@ -370,10 +370,10 @@ function SidebarShowHide() {
 // XXX This whole function is a hack to work around
 // bugs #20546, and #22214.
 function SidebarExpandCollapse() {
-  var sidebar = document.getElementById('sidebar-box');
+  var sidebarBox = document.getElementById('sidebar-box');
   var sidebar_splitter = document.getElementById('sidebar-splitter');
 
-  sidebar.setAttribute('hackforbug20546-applied','true');
+  sidebarBox.setAttribute('hackforbug20546-applied','true');
 
   // Get the current open/collapsed state
   // The value of state is the "preclick" state
@@ -382,7 +382,7 @@ function SidebarExpandCollapse() {
   if (state && state == 'collapsed') {
     // Going from collapsed to open.
 
-    sidebar.removeAttribute('hackforbug20546');
+    sidebarBox.removeAttribute('hackforbug20546');
 
     // Reset the iframe's src to get the content to display.
     // This might be bug #22214.
@@ -398,15 +398,15 @@ function SidebarExpandCollapse() {
   } else {
     // Going from open to collapsed.
 
-    sidebar.setAttribute('hackforbug20546','true');
+    sidebarBox.setAttribute('hackforbug20546','true');
   }
 }
 
 // XXX Partial hack workaround for bug #22214.
 function bump_width(delta) {
-  var sidebar = document.getElementById('sidebar-box');
-  var width = sidebar.getAttribute('width');
-  sidebar.setAttribute('width', parseInt(width) + delta);
+  var sidebarBox = document.getElementById('sidebar-box');
+  var width = sidebarBox.getAttribute('width');
+  sidebarBox.setAttribute('width', parseInt(width) + delta);
 }
 
 function PersistHeight() {
@@ -419,19 +419,19 @@ function PersistHeight() {
 
 function persist_width() {
   // XXX Partial workaround for bug #19488.
-  var sidebar = document.getElementById('sidebar-box');
+  var sidebarBox = document.getElementById('sidebar-box');
   var sidebar_splitter = document.getElementById('sidebar-splitter');
   var state = sidebar_splitter.getAttribute('state');
 
-  var width = sidebar.getAttribute('width');
+  var width = sidebarBox.getAttribute('width');
 
   if (!state || state == '' || state == 'open') {
-    sidebar.removeAttribute('hackforbug20546');
-    sidebar.setAttribute('hackforbug20546-applied','true');
+    sidebarBox.removeAttribute('hackforbug20546');
+    sidebarBox.setAttribute('hackforbug20546-applied','true');
   }
 
   if (width && (width > 410 || width < 15)) {
-    sidebar.setAttribute('width',168);
+    sidebarBox.setAttribute('width',168);
   }
 
   document.persist('sidebar-box', 'width');
