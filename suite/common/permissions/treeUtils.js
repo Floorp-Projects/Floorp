@@ -67,6 +67,9 @@ function DeleteSelectedItemFromOutliner
   // redisplay
   var box = outliner.outlinerBoxObject;
   var firstRow = box.getFirstVisibleRow();
+  if (firstRow > (table.length-1) ) {
+    firstRow = table.length-1;
+  }
   view.rowCount = table.length;
   box.rowCountChanged(0, table.length);
   box.scrollToRow(firstRow)
