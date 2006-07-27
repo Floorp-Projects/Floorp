@@ -33,7 +33,7 @@
   class="color-dialog"
   title="&sidebar.customize.title.label;"
   windowtype="sidebar:customize"
-  align="vertical"
+  orient="vertical"
   width="450" height="400"
   persist="screenX screenY width height">
 
@@ -45,7 +45,7 @@
 
   <box id="contentarea" flex="1">
     <box orient="vertical" flex="1">
-      <text class="label" value="&sidebar.customize.additional.label;"/>
+      <text class="label" value="&sidebar.customize.additional.label;" crop="right"/>
       <tree id="other-panels" flex="1"
         datasources="rdf:null"
         indent="true" class="inset"
@@ -73,11 +73,11 @@
 
       <!-- xxxslamm Need to add descriptive panel text here -->
       <box class="button-group">
-        <button id="add_button" oncommand="AddPanel()"
+        <button class="dialog" id="add_button" oncommand="AddPanel()"
           value="&sidebar.customize.add.label;"
           disabled="true"/>
 
-        <button id="preview_button" oncommand="PreviewPanel()"
+        <button class="dialog" id="preview_button" oncommand="PreviewPanel()"
           value="&sidebar.customize.preview.label;"
           disabled="true"/>
       </box>
@@ -87,7 +87,7 @@
 
     <!-- The panels that the user currently has chosen -->
     <box orient="vertical" flex="1">
-      <text class="label" value="&sidebar.customize.current.label;"/>
+      <text class="label" value="&sidebar.customize.current.label;" crop="right"/>
       <tree id="current-panels" onclick="SelectChangeForCurrentPanels();"
         datasources="rdf:null" class="inset" flex="1"
         multiple="true">
@@ -111,9 +111,9 @@
         <treechildren id="current-panels-root"/> 
       </tree>
       <box class="button-group">
-        <button id="customize-button" oncommand="CustomizePanel();" 
+        <button class="dialog" id="customize-button" oncommand="CustomizePanel();" 
           value="&sidebar.customize.customize.label;" />
-        <button id="remove-button" onclick="RemovePanel()"
+        <button class="dialog" id="remove-button" onclick="RemovePanel()"
           value="&sidebar.customize.remove.label;" />
       </box>      
     </box>
