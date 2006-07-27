@@ -11,6 +11,12 @@
 <a NAME="secure_mail_first"></a>
 <a NAME="mail:signing_&_encryptingIDX"></a>
 <a NAME="settings:signed & encrypted mailIDX"></a>
+<a NAME="signing_email_messagesSDX"></a>
+<a NAME="encrypting_email_messagesSDX"></a>
+<a NAME="mail_and_newsgroups:signing_messagesIDX"></a>
+<a NAME="mail_and_newsgroups:encrypting_messagesIDX"></a>
+<a NAME="signing_email_messagesIDX"></a>
+<a NAME="encrypting_email_messagesIDX"></a>
 
 <hr><h1>Signing &amp; Encrypting Messages</h1>
 
@@ -31,13 +37,12 @@
 </tr>
 </table>
 
-<p>&nbsp;
+<p>&nbsp;</p>
 
 
 
-
-<h2><a NAME="about_sigs_encrypt"></a>
-About Digital Signatures &amp; Encryption </h2>
+<a NAME="about_sigs_encrypt"></a>
+<h2>About Digital Signatures &amp; Encryption </h2>
 
 <p>When you compose a mail or newsgroup message, you can choose to attach your digital signature to it. A <a href="glossary.html#digital_signature">digital signature</a> allows recipients of the message to verify that the message really comes from you and hasn't been tampered with since you sent it.
 
@@ -59,9 +64,9 @@ About Digital Signatures &amp; Encryption </h2>
 
 <p>The sections that follow provide a brief overview of how digital signatures and encryption work. For more technical details on this subject, see the online document <a href="http://developer.netscape.com/docs/manuals/security/pkin/index.htm" TARGET="_blank">Introduction to Public-Key Cryptography</a>.
 
-<p>&nbsp;
-<h3><a NAME="how_sigs_work"></a>
-How Digital Signatures Work</h3>
+<p>&nbsp;</p>
+<a NAME="how_sigs_work"></a>
+<h3>How Digital Signatures Work</h3>
 
 <p>A digital signature is a special code, unique to each message, created by means of <a href="glossary.html#public-key_cryptography">public-key cryptography</a>. 
 
@@ -78,8 +83,9 @@ How Digital Signatures Work</h3>
 </ul>
 
 
-<p>&nbsp;
-<h3><a NAME="how_encrypt_works"></a>
+<p>&nbsp;</p>
+<a NAME="how_encrypt_works"></a>
+<h3>
 How Encryption Works</h3>
 
 <p>To encrypt an email message, you must have an encryption certificate for each of the message's recipients. The public key in each certificate is used to encrypt the message for that recipient. 
@@ -88,8 +94,9 @@ How Encryption Works</h3>
 
 <p>The recipient's software uses the recipient's private key, which remains on that person's computer, to decrypt the message. 
 
-<p>&nbsp;
-<h2><a NAME="get_mail_certs"></a>Getting Other People's Certificates</h2>
+<p>&nbsp;</p>
+<a NAME="get_mail_certs"></a>
+<h2>Getting Other People's Certificates</h2>
 
 <p>Every time you send a digitally signed message, your encryption certificate is automatically included with the message. Therefore, one of the easiest ways to obtain someone else's certificate is for that person to send you a digitally signed message. 
 
@@ -98,9 +105,10 @@ How Encryption Works</h3>
 <p>You can also obtain certificates by looking them up in a public directory, such as the &quot;phonebook&quot; directories maintained by many companies.
 
 
-<p>&nbsp;
+<p>&nbsp;</p>
 
-<h2><a NAME="config_account"></a>Configuring Security Settings</h2>
+<a NAME="config_account"></a>
+<h2>Configuring Security Settings</h2>
 
 <p>Once you have obtained an email certificate (or certificates), you must specify the certificates you want to use for signing and encrypting messages. 
 
@@ -136,9 +144,9 @@ How Encryption Works</h3>
 <p>When you have finished configuring your mail security settings, click OK to confirm them.
  
 
-<p>&nbsp;
-
-<h2><a NAME="signing"></a>Signing &amp; Encrypting a New Message</h2>
+<p>&nbsp;</p>
+<a NAME="signing"></a>
+<h2>Signing &amp; Encrypting a New Message</h2>
 
 <p>Before you can digitally sign or encrypt any message, you must obtain at least one email certificate and configure your mail security settings correctly. For background information on these tasks, see <a href="#about_sigs_encrypt">About Digital Signatures &amp; Encryption</a>.
 
@@ -159,9 +167,11 @@ How Encryption Works</h3>
 <p>To see more detailed information about the message's security, click the key or lock icon, or follow the instructions in <a href="#compose_security">Message Security - Compose</a>.
 
 
-<p>&nbsp;
-
-<h2><a NAME="reading"></a>Reading Signed &amp; Encrypted Messages</h2>
+<p>&nbsp;</p>
+<a name="security:checking_for_received_messagesIDX"</a>
+<a name="checking_security_for_received_messagesSDX"</a>
+<a NAME="reading"></a>
+<h2>Reading Signed &amp; Encrypted Messages</h2>
 
 <p>When you view a signed or encrypted message in the Mail window, these icons near the upper-right corner of the message header indicate the security status of the message:</p>
 
@@ -173,9 +183,11 @@ How Encryption Works</h3>
 <p>To see more detailed information about the message's security, click the key or lock icon, or follow the instructions in <a href="#received_security">Message Security - Received Message</a>.
  
 
-<p>&nbsp;
+<p>&nbsp;</p>
 
-<hr><a NAME="compose_security"></a>
+<a name="security:checking_before_sending_messageIDX"</a>
+<a name="checking_security_before_sending_messageSDX"</a>
+<a NAME="compose_security"></a><hr>
 <h2>Message Security - Compose</h2>
 
 <p>This section describes the Message Security window that you can open for any message you are composing. If you're not already viewing Message Security, click the Security icon in the toolbar of the Compose window.
@@ -217,10 +229,10 @@ How Encryption Works</h3>
 
 
 
-<p>&nbsp;
+<p>&nbsp;</p>
 
-
-<hr><a NAME="received_security"></a><h2>Message Security - Received Message</h2>
+<a NAME="received_security"></a>
+<hr><h2>Message Security - Received Message</h2>
 
 <p>This section describes the Message Security window that you can open for any message you have received. If you're not already viewing Message Security for a received message, follow these steps:
 
@@ -255,7 +267,7 @@ How Encryption Works</h3>
 <hr>
 
 
-<p><i>19 April 2002</i></p>
+<p><i>24 April 2002</i></p>
 <p>Copyright &copy; 1994-2002 Netscape Communications Corporation.</p>
 
 </body>
