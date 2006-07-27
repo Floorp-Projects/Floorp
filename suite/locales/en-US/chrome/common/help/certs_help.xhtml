@@ -1,0 +1,183 @@
+<html>
+<head>
+<title>Certificate Manager Help</title>
+
+<link rel="stylesheet" href="chrome://help/locale/content_style.css" type="text/css">
+
+</head>
+
+<body bgcolor="white">
+
+<a NAME="certs_first"></a>
+<h1>Certificate Manager</h1>
+<p><b>[intro text to come]</b></p>
+
+<table cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
+<tr>
+<td class="inthissection">
+<p>In this section:</p>
+<p><a href="#My_Certificates">My Certificates</a></p>
+<p><a href="#Web_Site_Certificates">Web Site Certificates</a></p>
+<p><a href="#CA_Certificates">CA Certificates</a></p>
+<p><a href="#Security_Devices">Security Devices</a></p>
+</td>
+</tr>
+</table>
+
+
+<p>&nbsp;</p>
+<a NAME="My_Certificates"></a>
+<h2>My Certificates</h2>
+
+<p>The My Certificates tab in the Certificate Manager allows you to examine and work with the certificates you have on file that identify you, and to set related security passwords. To select a certificate, click its name. To select more than one certificate, hold down the Shift key and click the names of those you want to select. 
+
+<p>To perform any of the actions listed here, select the certificates on which you want to act and follow these instructions:
+<UL>
+  <LI>To examine the selected certificates, click View.</LI>
+  <LI>To initiate the process of backing up the selected certificates, click Backup. A window appears that allows you to choose a password to protect the backup. You can then save the backup in a directory of your choice.</LI>
+  <LI>To delete the selected certificate, click Delete.</LI>
+</UL>
+
+<P>The following actions don't require a certificate to be selected first:</P>
+<UL>
+
+  <LI>To restore a certificate that was previously backed up, click Restore. When you click Restore, the browser first asks you to locate the file that contains the backup. The names of certificate backup files typically end in <tt>.p12</tt>; for example, </tt>MyCert.p12</tt>. After you select the file to be restored, the browser asks you to enter the portable security password that was set when the certificate was backed up.</LI>
+
+  <LI>To initiate the process of backing up all the certificates stored on the software security device used by the browser, click Backup All. 
+
+		<UL><p><b>Back up smart card certificates one at a time:</b> Certificates stored on any other security device, such as a smart card in a smart card reader attached to your computer, will not be backed up by the Backup All button. To back up such certificates, select them individually, then click Backup.</UL>
+  
+</UL>
+
+<p>
+[&nbsp;<A HREF="#certs_first">Return to beginning of Certificate Manager section</A>&nbsp;]
+</p>
+
+<p>&nbsp;</p>
+<a NAME="Choose_a_Certificate_Backup_Password"></a>
+<H3>Choose a Certificate Backup Password</H3>
+
+<P>A certificate backup password protects one or more certificates that you are backing up using the Backup or Backup All button in the My Certificates panel of the Certificate Manager. The browser asks you to set a certificate backup password when you back up certificates, and requests it when you attempt to restore certificates that have previously been backed up.</P>
+
+<P><b>Important:</b> When you click the Backup All button, the browser attempts to back up all of your certificates and associated private keys stored on the browser's software security device. The Backup All button does not back up any certificates that are stored on security devices other than the browser's own software security device. For example, Backup All will not back up any certificates in the list that are stored on a smart card inserted in a smart card reader attached to your computer. Certificates stored on devices other than the browser's software security device must be backed up by selecting their names and clicking the Backup button.</P>
+
+<p>If someone obtains the file containing a certificate that you have backed up and successfully restores the certificate, that person can send messages or access web sites while pretending to be you. This can have negative consequences, for example, if you digitally sign important email messages or manage your bank or investment accounts over the Internet. Therefore, it's important to select a certificate backup password that is difficult to guess. It's also important to record the password in a safe place—and not anywhere that's easily accessible to someone else. If you forget this password, you can't restore the backup of your certificate.</p>
+
+<p>
+[&nbsp;<A HREF="#certs_first">Return to beginning of Certificate Manager section</A>&nbsp;]
+</p>
+
+<p>&nbsp;</p>
+<a NAME="Delete_My_Certificate"></a>
+<h3>Delete My Certificate</h3>
+
+<P>Before deleting any of your own certificates—even one that has expired—make sure that you won't need it again some day. For example, you can use your own expired certificate for reading old email messages that you may have encrypted with the corresponding private key.
+</P>
+
+<p>
+[&nbsp;<A HREF="#certs_first">Return to beginning of Certificate Manager section</A>&nbsp;]
+</p>
+
+<p>&nbsp;</p>
+<a NAME="Web_Site_Certificates"></a>
+<h2>Web Site Certificates</h2>
+
+<p>The Web Site Certificates tab in the Certificate Manager allows you to examine and work with the certificates you have on file that identify web sites.
+
+<p>To perform any of the actions listed here, select the certificate on which you want to act from the list of web site certificates, then follow these instructions:
+
+<ul>
+	<li>To examine the selected certificate, click View.
+
+	<li>To change the trust settings that Certificate Manager associates with the selected certificate, click Edit. You can use these settings to designate a web site certificate as one that you trust or don't trust for identification purposes.
+
+	<li>To delete the selected certificate, click Delete.
+</ul>
+
+<p>&nbsp;</p>
+<a NAME="Edit_Web_Site_Certificate_Settings"></a>
+<h3>Edit Web Site Certificate Settings</h3>
+ 
+<p>When you select a web site certificate and click Edit, you see a window titled Edit Certificate Settings. Here you specify whether you want to trust the selected certificate for identifying the web site and setting up an encrypted connection with it.
+
+<p>If you select "Do not trust the authenticity of this certificate" and click OK, Certificate Manager will no longer trust this certificate for the purposes of identifying this web site or setting up an encrypted connection. If you select this setting and then attempt to visit the web site, you will see one or more warning messages before you can access the site.
+
+<p>If you select "Trust the authenticity of this certificate" and click OK, Certificate Manager will henceforth trust this certificate for the purposes of identifying this web site or setting up an encrypted connection. If you select this setting and then attempt to visit the web site, your browser will access the site with few, if any, warnings.
+In addition to specifying these settings for the certificate shown, you can specify trust settings for the certificate authority (CA) that issued the certificate—that is, you can choose to trust or not to trust different kinds of certificates issued by that certificate authority. For example, you can choose not to trust any web site certificates issued by that certificate authority.
+
+To edit the certificate settings for the certificate authority that issued the certificate described in the window, click the Edit button.
+
+<p>
+[&nbsp;<A HREF="#certs_first">Return to beginning of Certificate Manager section</A>&nbsp;]
+</p>
+
+<p>&nbsp;</p>
+<a NAME="Delete_Web_Site_Certificate"></a>
+<h3>Delete Web Site Certificate</h3>
+ 
+<p>Before deleting a web site certificate, make sure that you won't need it again for the purposes of identifying a web site and setting up an encrypted connection.
+
+ 
+<p>
+[&nbsp;<A HREF="#certs_first">Return to beginning of Certificate Manager section</A>&nbsp;]
+</p>
+
+<p>&nbsp;</p>
+<a NAME="CA_Certificates"></a>
+<h2>CA Certificates</h2>
+
+<p>The CA Certificates tab in the Certificate Manager allows you to examine and work with the certificates you have on file that identify certificate authorities (CAs).
+
+<p>To perform any of the actions listed here, select the certificate on which you want to act from the list of CA certificates and then follow the instructions:
+<ul>
+	<li>To examine the CA certificate, click View.
+
+	<li>To check the settings that Personal Security Manager associates with the CA certificate, click Edit. You can use these settings to specify the certificate authority identified by that certificate as one that you trust or don't trust.
+
+	<li>To delete a certificate, click Delete.
+</ul>
+ 
+<p>&nbsp;</p>
+<a NAME="Edit_CA_Certificate_Settings"></a>
+<h3>Edit CA Certificate Settings</h3>
+
+<p>When you select a CA certificate and click Edit, you see a window titled Edit Security Certificate Settings. Here you specify the kinds of certificates you trust this CA to certify. If you deselect all the checkboxes, Certificate Manager will not trust any certificates issued by this CA.
+
+<p>If you select "This CA can identify web sites," Personal Security Manager will trust certificates issued by this CA for purposes of identifying web sites and encrypting web site connections. If you deselect this checkbox, Certificate Manager will not trust web site certificates issued by this CA.
+
+<p>If you select "This CA can identify mail users," Personal Security Manager will trust certificates issued by this CA for purposes of signing or encrypting email. If you deselect this checkbox, Certificate Manager will not trust email certificates issued by this CA.
+
+<p>If you select "This CA can identify software makers," Certificate Manager will trust certificates issued by this CA for the purpose of identifying software makers. If you deselect this checkbox, Certificate Manager will not trust such certificates issued by this CA.
+
+<p>Click OK to implement the settings you have selected.
+
+ 
+<p>
+[&nbsp;<A HREF="#certs_first">Return to beginning of Certificate Manager section</A>&nbsp;]
+</p>
+
+<p>&nbsp;</p>
+<a NAME="Delete_CA_Certificate"></a>
+<h3>Delete CA Certificate</h3>
+
+<p>Before deleting a CA certificate, make sure that you won't need it again to validate certificates issued by that CA. If you delete the only valid certificate you have for a CA, Certificate Manager will no longer trust any certificates issued by that CA. 
+
+<p>
+[&nbsp;<A HREF="#certs_first">Return to beginning of Certificate Manager section</A>&nbsp;]
+</p>
+
+<p>&nbsp;</p>
+<a NAME="Security_Devices"></a>
+<h3>Security Devices</h3>
+
+<p><b>[text to come]</b>
+
+<hr>
+<p><i>3/19/2001</i></p>
+<p>Copyright &copy; 1994-2001 Netscape Communications Corporation.</p>
+
+</body>
+</html>
+
+
+
