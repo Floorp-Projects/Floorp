@@ -226,6 +226,8 @@ JSObjectViewer.prototype =
     tr.appendChild(tc);
     tc = document.createElement("treecell");
     tc.setAttribute("label", value);
+    if (aName == "nodeType")
+      tc.setAttribute("tooltiptext", nodeTypeToText(aValue));
     tr.appendChild(tc);
     
     aTreeChildren.appendChild(ti);
