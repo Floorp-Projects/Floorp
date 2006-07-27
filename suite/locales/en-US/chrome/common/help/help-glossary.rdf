@@ -105,10 +105,11 @@
         <rdf:li> <rdf:Description nc:name="subordinate CA" nc:link="glossary.xhtml#subordinate_ca"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="symmetric encryption" nc:link="glossary.xhtml#symmetric_encryption"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="tamper detection" nc:link="glossary.xhtml#tamper_detection"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="TCP" nc:link="glossary.xhtml#tcp"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="TCP/IP (Transmission Control Protocol/Internet Protocol)" nc:link="glossary.xhtml#transmission_control_protocol_internet_protocol"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="third-party cookie" nc:link="glossary.xhtml#third-party_cookie"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="TLS" nc:link="glossary.xhtml#tls"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="token" nc:link="glossary.xhtml#token"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="TCP/IP (Transmission Control Protocol/Internet Protocol)" nc:link="glossary.xhtml#tcp"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="trust" nc:link="glossary.xhtml#trust"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Uniform Resource Locator (URL)" nc:link="glossary.xhtml#uniform_resource_locator"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="web page" nc:link="glossary.xhtml#web_page"/> </rdf:li>
