@@ -242,6 +242,39 @@ function chooseCategory( aNode )
 
 function AddEngine()
 {
+	var allenginesList = document.getElementById("allengines");
+	if (!allenginesList)	return(false);
+	var select_list = allenginesList.selectedItems;
+	if (!select_list)	return(false)
+	if (select_list.length < 1)	return(false);
+
+	var promptStr = bundle.GetStringFromName("AddEnginePrompt");
+	if (!confirm(promptStr))	return(false);
+
+	var engineList = document.getElementById("engineList");
+	if (!engineList)	return(false);
+
+	var ref = engineList.getAttribute("ref");
+	if ((!ref) || (ref == ""))	return(false);
+	var categoryRes = RDF.GetResource(ref);
+	if (!categoryRes)	return(false);
+
+	RDFC.Init(catDS, categoryRes);
+
+	for (var x = 0; x < select_list.length; x++)
+	{
+		var id = select_list[x].getAttribute("id");
+		if ((!id) || (id == ""))	return(false);
+		var idRes = RDF.GetResource(id);
+		if (!idRes)	return(false);
+
+		var nodeIndex = RDFC.IndexOf(idRes);
+		if (nodeIndex < 1)
+		{
+			RDFC.AppendElement(idRes);
+		}
+	}
+
 	return(true);
 }
 
