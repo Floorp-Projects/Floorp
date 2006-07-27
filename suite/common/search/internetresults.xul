@@ -6,22 +6,21 @@
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/search/internetresults.dtd">
 
-<window class="color-dialog" orient="vertical" onload="onLoadInternetResults()"
-	      xmlns:html="http://www.w3.org/1999/xhtml"
-	      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-	      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<window class="color-dialog" orient="vertical" onload="onLoadInternetResults();"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&internetresults.title;"
-	      context="disallowcontext">
+        context="disallowcontext">
 
 	<popupset>
-		<popup id="disallowcontext" oncreate="return(false);" />
+		<popup id="disallowcontext" oncreate="return false;" />
 	</popupset>
 
-	<script src="chrome://global/content/strres.js"></script>
-	<script src="chrome://global/content/nsUserSettings.js"></script>
-	<script src="chrome://global/content/nsJSComponentManager.js"></script>
-	<script src="chrome://communicator/content/search/internetresults.js"></script>
-	<script src="chrome://communicator/content/search/shared.js"></script>
+	<script type="text/javascript" src="chrome://global/content/nsUserSettings.js"/>
+	<script type="text/javascript" src="chrome://global/content/nsJSComponentManager.js"/>
+	<script type="text/javascript" src="chrome://communicator/content/search/internetresults.js"/>
+	<script type="text/javascript" src="chrome://communicator/content/search/shared.js"/>
 
   <box id="multi-results-header"> 
     <text value="&results.header.label;"/>
@@ -32,13 +31,13 @@
        style="overflow: none; min-width: 1px;">
   	<template>
 	  	<button class="engineTabs button-toolbar-3 button-slimline" uri="..." 
-              oncommand="doEngineClick(event, this)" crop="right" 
+              oncommand="doEngineClick(event, this);" crop="right" 
               src="rdf:http://home.netscape.com/NC-rdf#StatusIcon" 
               value="rdf:http://home.netscape.com/NC-rdf#Name" 
               loading="rdf:http://home.netscape.com/NC-rdf#loading" />
   	</template>
 	  <button class="engineTabs button-toolbar-3 button-slimline" id="allEngines" 
-            oncommand="doEngineClick(event, this)" value="&allresults.title.label;"
+            oncommand="doEngineClick(event, this);" value="&allresults.title.label;"
             toggled="true"/>
 	  <separator orient="vertical"/>
 	  <text value="&viewbyprovider.label;"/>
@@ -47,7 +46,7 @@
 
   <popupset>
 	  <popup id="contextual" oncreate="return fillContextMenu('contextual', 'internetresultstree');" >
-		  <menu />
+		  <menu/>
   	</popup>
 	</popupset>
 	<tree id="internetresultstree" ref="" flex="1" datasources="rdf:internetsearch" context="contextual"
@@ -61,19 +60,19 @@
     <splitter class="tree-splitter"/>
     <treecol id="RelevanceColumn" resource="http://home.netscape.com/NC-rdf#Relevance"
              resource2="http://home.netscape.com/NC-rdf#Name"
-             style="width: 0; visibility: collapse;" flex="1"/>
+             hidden="true" flex="1"/>
     <splitter class="tree-splitter"/>
     <treecol id="PriceColumn" resource="http://home.netscape.com/NC-rdf#Price"
              resource2="http://home.netscape.com/NC-rdf#Availability"
-             style="width: 0; visibility: collapse;" flex="1"/>
+             hidden="true" flex="1"/>
     <splitter class="tree-splitter"/>
     <treecol id="AvailabilityColumn" resource="http://home.netscape.com/NC-rdf#Availability"
              resource2="http://home.netscape.com/NC-rdf#Price"
-             style="width: 0; visibility: collapse;" flex="1"/>
+             hidden="true" flex="1"/>
     <splitter class="tree-splitter"/>
     <treecol id="DateColumn" resource="http://home.netscape.com/NC-rdf#Date"
              resource2="http://home.netscape.com/NC-rdf#Name"
-             style="width: 0; visibility: collapse;" flex="1"/>
+             hidden="true" flex="1"/>
     <splitter class="tree-splitter"/>
     <treecol id="SiteColumn" resource="http://home.netscape.com/NC-rdf#Site"
              resource2="http://home.netscape.com/NC-rdf#Name" flex="1"/>
