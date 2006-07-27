@@ -28,6 +28,6 @@
 <!ENTITY availability.column.label   "Availability">
 <!ENTITY site.column.label           "Internet Site">
 <!ENTITY results.header.label        "Search Results">
-<!ENTITY engine.column.label         "Search Provider">
+<!ENTITY engine.column.label         "Search Engine">
 <!ENTITY viewbyprovider.label        "View by provider:">
-<!ENTITY allresults.title.label      "All providers combined">
+<!ENTITY allresults.title.label      "All results combined">

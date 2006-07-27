@@ -35,9 +35,10 @@
 
   <html:script src="chrome://global/content/strres.js"/>
   <html:script src="chrome://search/content/search-panel.js" />
+  <html:script src="chrome://search/content/shared.js" />
 
 <popupset>
-<popup id="contextual" oncreate="return fillContextMenu('contextual');" >
+<popup id="contextual" oncreate="return fillContextMenu('contextual', 'Tree');" >
 	<menu />
 </popup>
 </popupset>
@@ -86,7 +87,7 @@
           class="inset"
           flex="100%"
           datasources="rdf:internetsearch"
-          onclick="openURL(event, event.target.parentNode.parentNode, 'Tree')">
+          onclick="sidebarOpenURL(event, event.target.parentNode.parentNode, 'Tree')">
       
           <template>
             <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
