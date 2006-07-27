@@ -550,9 +550,18 @@ function doStop()
 
 function doSearch()
 {
+   var searchButton = document.getElementById("searchbutton");      
+   if ( searchButton.getAttribute("disabled") )
+	{	   
+	   var sidebarSearchText = document.getElementById("sidebar-search-text");
+	   sidebarSearchText.focus();
+	   return;
+	}
+
 	//get click count pref for later
 	//and set tree attribute to cause proper results appearance (like links) to happen 
 	//when user set pref to single click
+	
   try {
     if( pref ) {
       var prefvalue = pref.GetBoolPref( "browser.search.use_double_clicks" );
@@ -1012,4 +1021,22 @@ function saveSearch()
 function doCustomize()
 {
 	window.openDialog("chrome://communicator/content/search/search-editor.xul", "_blank", "centerscreen,chrome,resizable");
+}
+
+function doEnabling()
+{
+	var searchButton = document.getElementById("searchbutton");
+	var sidebarSearchText = document.getElementById("sidebar-search-text");
+
+    if ( sidebarSearchText.value == "" ) 
+      {
+        // No input, disable search button if enabled.
+        if ( !searchButton.getAttribute("disabled") )
+          searchButton.setAttribute("disabled","true");
+      }
+    else
+      {
+        if ( searchButton.getAttribute("disabled") == "true")
+          searchButton.removeAttribute( "disabled");
+      }
 }

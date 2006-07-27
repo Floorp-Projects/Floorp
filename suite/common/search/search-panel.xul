@@ -44,9 +44,9 @@
   </popupset>
   <box orient="vertical">
     <box autostretch="never">
-      <textfield id="sidebar-search-text" flex="1" onkeypress="if (event.which == 13) { return doSearch(); }" />
+      <textfield id="sidebar-search-text" flex="1" onkeypress="if (event.which == 13) { return doSearch(); } else {doEnabling();}" />
 		  <box autostretch="never">
-			  <button class="button-toolbar-3" id="searchbutton" value="&search.button.label;" oncommand="return doSearch();"/>
+			  <button class="button-toolbar-3" id="searchbutton" value="&search.button.label;" disabled="true" oncommand="return doSearch();}"/>
 			  <button class="button-toolbar-3" id="stopbutton" align="left" src="resource:/res/rdf/loading.gif" value="&stop.button.label;" oncommand="return doStop();" style="display:none;"/>
   		</box>
     </box>
