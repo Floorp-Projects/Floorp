@@ -1,0 +1,143 @@
+<?xml version="1.0"?> <!-- -*- Mode: SGML; indent-tabs-mode: nil; -*- -->
+<!--
+
+  The contents of this file are subject to the Netscape Public
+  License Version 1.1 (the "License"); you may not use this file
+  except in compliance with the License. You may obtain a copy of
+  the License at http://www.mozilla.org/NPL/
+ 
+  Software distributed under the License is distributed on an "AS
+  IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  implied. See the License for the specific language governing
+  rights and limitations under the License.
+ 
+  The Original Code is mozilla.org code.
+ 
+  The Initial Developer of the Original Code is Netscape
+  Communications Corporation.  Portions created by Netscape are
+  Copyright (C) 1998 Netscape Communications Corporation. All
+  Rights Reserved.
+
+  Original Author(s):
+    Robert John Churchill    <rjc@netscape.com>
+
+  Contributor(s): 
+
+-->
+
+<?xml-stylesheet href="chrome://search/skin/search-editor.css" type="text/css"?>
+<?xml-stylesheet href="chrome://search/skin/" type="text/css"?>
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://search/locale/search-editor.dtd">
+
+<window title="&window.title.label;" id="search-editor-window"
+	xmlns:html="http://www.w3.org/TR/REC-html40"
+	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+	xmlns:web="http://home.netscape.com/WEB-rdf#"
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	width="500" height="300" x="20" y="20" persist="width height x y" align="vertical"
+	windowtype="internetsearch:editor" class="dialog"
+	onload="doLoad()" onunload="doUnload()"
+	>
+
+	<html:script src="chrome://search/content/search-editor.js" />
+
+	<titledbox orient="vertical" flex="1" >
+		<box align="horizontal" flex="100%" autostretch="never">
+			<text value="&category.label;" />
+
+			<menulist id="categoryList" ref="NC:SearchCategoryRoot" datasources="rdf:null" >
+
+		        	<template>
+		        		<menupopup>
+		        			<menuitem uri="rdf:*" oncommand="return chooseCategory(this);"
+		        				data="rdf:http://home.netscape.com/NC-rdf#category"
+		        				value="rdf:http://home.netscape.com/NC-rdf#title" />
+		        		</menupopup>
+		        	</template>
+
+				<menupopup id="categoryPopup" />
+			</menulist>
+
+			<spring align="horizontal" flex="100%" />
+		</box>
+
+		<box align="horizontal" flex="100%">
+			<tree id="engineList" flex="1" datasources="rdf:internetsearch" class="inset">
+				<template>
+					<treechildren>
+						<treeitem uri="...">
+							<treerow>
+								<treecell class="iconic" flex="1" crop="right" align="left"
+									src="rdf:http://home.netscape.com/NC-rdf#Icon" value="rdf:http://home.netscape.com/NC-rdf#Name" />
+							</treerow>
+						</treeitem>
+					</treechildren>
+				</template>
+
+				<treecol id="EngineColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" sortActive="true" sortDirection="ascending" />
+
+				<treehead>
+					<treerow>
+						<treecell observes="EngineColumn" align="center" value="&engine.column.label;" resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('EngineColumn', null);" sortActive="true" sortDirection="ascending" flex="1"/>
+					</treerow>
+				</treehead>
+			</tree>
+
+			<box align="vertical" flex="100%" class="button-group">
+				<spring align="vertical" flex="100%" />
+
+				<button id="add-button" onclick="return AddEngine()" value="&add.label;" />
+				<button id="remove-button" onclick="return RemoveEngine()" value="&remove.label;" />
+
+				<spring align="vertical" flex="100%" />
+
+				<!-- The 'reorder' buttons -->
+				<box id="reorder" align="vertical" autostretch="never">
+					<spring flex="1"/>
+					<button oncommand="MoveUp();" id="up" class="up small" />
+					<button oncommand="MoveDown();" id="down" class="down small" />
+					<spring flex="1"/>
+				</box>
+
+				<spring align="vertical" flex="100%" />
+			</box>
+
+			<tree class="inset" id="allengines" ref="NC:SearchEngineRoot" datasources="rdf:internetsearch">
+				<template>
+					<treechildren>
+						<treeitem uri="..." loading="rdf:http://home.netscape.com/NC-rdf#loading">
+							<treerow>
+								<treecell class="iconic" flex="1" crop="right" align="left"
+									src="rdf:http://home.netscape.com/NC-rdf#Icon" value="rdf:http://home.netscape.com/NC-rdf#Name" />
+							</treerow>
+						</treeitem>
+					</treechildren>
+				</template>
+
+				<treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" sortActive="true" sortDirection="ascending" />
+
+				<treehead>
+					<treerow>
+						<treecell observes="NameColumn" align="center" value="&allengines.label;" resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('NameColumn', null);" sortActive="true" sortDirection="ascending" flex="1"/>
+					</treerow>
+				</treehead>
+			</tree>
+		</box>
+
+		<box align="horizontal" class="button-group">
+			<button id="new-category-button" onclick="NewCategory()" value="&new.category.label;" />
+			<button id="rename-category-button" onclick="RenameCategory()" value="&rename.category.label;" />
+			<button id="remove-category.buttom" onclick="RemoveCategory()" value="&remove.category.label;" />
+			<spring align="horizontal" flex="100%" />
+		</box>
+	</titledbox>
+
+	<box autostretch="never">
+		<spring flex="1"/>
+		<box id="okCancelButtons"/>
+	</box>
+
+</window>

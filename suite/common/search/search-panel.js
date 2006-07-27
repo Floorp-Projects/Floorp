@@ -988,3 +988,10 @@ function saveSearch()
 
 	return(true);
 }
+
+
+
+function doCustomize()
+{
+	window.openDialog("chrome://search/content/search-editor.xul", "_blank", "centerscreen,chrome,resizable");
+}

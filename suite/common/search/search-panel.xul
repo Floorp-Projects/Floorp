@@ -166,6 +166,13 @@
             </treerow>
           </treehead>
         </tree>
+
+	<box align="horizontal">
+		<spring flex="1" />
+		<titledbutton id="customizeButton" value="&customize.button.label;" onclick="return doCustomize();" class="dialog toolbar-non-iconic"/>
+		<spring flex="1" />
+	</box>
+
       </box>
   </deck>
 </window>
