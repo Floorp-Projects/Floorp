@@ -77,3 +77,5 @@ td {
 	background-color: #99ccff;    /* light aqua */
 	font-weight: bold;
 }
+
+a[href^="http://"]:after { content: url("chrome://help/locale/images/web-links.png"); }
