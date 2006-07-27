@@ -78,7 +78,7 @@
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="nav-doc-searchweb" nc:name="Fast Searches" nc:link="nav_help.xhtml#fast_searches"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-smartsearch" nc:name="Advanced Search Mode" nc:link="nav_help.xhtml#advanced_search_mode"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-smartsearch" nc:name="Advanced Sidebar Search Mode" nc:link="nav_help.xhtml#advanced_sidebar_search_mode"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-doc-searchprefs" nc:name="Setting Search Preferences" nc:link="nav_help.xhtml#setting_search_preferences"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-doc-keywords" nc:name="Using Internet Keywords" nc:link="nav_help.xhtml#using_internet_keywords"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-doc-searchpage" nc:name="Searching Within a Page" nc:link="nav_help.xhtml#searching_within_a_page"/> </rdf:li>
@@ -667,12 +667,12 @@
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="cust-sidebar-define" nc:name="What is Sidebar?"  nc:link="customize_help.xhtml#what_is_sidebar"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-sidebar-using" nc:name="Using Sidebar"  nc:link="customize_help.xhtml#using_sidebar"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-sidebar-openclose" nc:name="Opening, Closing, and Resizing Sidebar"  nc:link="customize_help.xhtml#opening_closing_and_resizing_sidebar"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-sidebar-using" nc:name="Viewing Sidebar Tabs"  nc:link="customize_help.xhtml#viewing_sidebar_tabs"/> </rdf:li>
         <rdf:li> <rdf:Description ID="cust-sidebar-adding" nc:name="Adding Sidebar Tabs"  nc:link="customize_help.xhtml#adding_sidebar_tabs"/> </rdf:li>
         <rdf:li> <rdf:Description ID="cust-sidebar-indiv" nc:name="Customizing Individual Sidebar Tabs"  nc:link="customize_help.xhtml#customizing_individual_sidebar_tabs"/> </rdf:li>
         <rdf:li> <rdf:Description ID="cust-sidebar-reorg" nc:name="Reorganizing Sidebar Tabs"  nc:link="customize_help.xhtml#reorganizing_sidebar_tabs"/> </rdf:li>
         <rdf:li> <rdf:Description ID="cust-sidebar-removing" nc:name="Removing Sidebar Tabs"  nc:link="customize_help.xhtml#removing_sidebar_tabs"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-sidebar-openclose" nc:name="Opening, Closing, and Resizing"  nc:link="customize_help.xhtml#opening_closing_and_resizing_sidebar"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>

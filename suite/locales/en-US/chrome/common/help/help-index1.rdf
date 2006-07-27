@@ -1948,8 +1948,8 @@
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="search:Advanced_mode"
-         nc:name="Advanced Search mode"
-	 nc:link="nav_help.xhtml#search:advanced_search_mode"/>
+         nc:name="Sidebar Advanced Search Mode"
+	 nc:link="nav_help.xhtml#sidebar_advanced_search_mode"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="search:bookmarks"
@@ -2052,6 +2052,11 @@
 	 nc:link="customize_help.xhtml#what_is_sidebar"/>
      </rdf:li>
      <rdf:li>
+       <rdf:Description ID="Sidebar:opening_closing_resizing"
+         nc:name="opening, closing, and resizing sidebar"
+	 nc:link="customize_help.xhtml#opening_closing_and_resizing_sidebar"/>
+     </rdf:li>
+     <rdf:li>
        <rdf:Description ID="Sidebar:removing_tabs"
          nc:name="removing sidebar tabs"
 	 nc:link="customize_help.xhtml#removing_sidebar_tabs"/>
@@ -2072,9 +2077,9 @@
 	 nc:link="nav_help.xhtml#searching_from_sidebar"/>
      </rdf:li>
      <rdf:li>
-       <rdf:Description ID="Sidebar:using"
-         nc:name="using Sidebar"
-	 nc:link="customize_help.xhtml#using_sidebar"/>
+       <rdf:Description ID="Sidebar:viewing_tabs"
+         nc:name="viewing sidebar tabs"
+	 nc:link="customize_help.xhtml#viewing_sidebar_tabs"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
