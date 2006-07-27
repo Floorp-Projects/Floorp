@@ -156,7 +156,7 @@
 
   </tree>
 
-  <splitter id="results-splitter" persist="state" collapse="after" orient="vertical">
+  <splitter id="results-splitter" persist="state" collapse="after">
     <grippy/>
   </splitter>
   <hbox class="double-box-top" flex="1">
