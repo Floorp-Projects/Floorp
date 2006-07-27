@@ -30,7 +30,7 @@
     <li><a href="#certificate_backup">Certificate Backup</a></li>
     <li><a href="#user_identification_request">User Identification Request</a></li>
     <li><a href="#new_certificate_authority">New Certificate Authority</a></li>
-    <li><a href="#web_site_certificates">Web Site Certificates</a></li>
+    <li><a href="#web_site_certificates">Website Certificates</a></li>
   </ul>
 </div>
 
@@ -75,9 +75,9 @@
 	include any of the following:
     <ul>
       <li><strong>SSL Client Certificate:</strong> Certificate used to identify you
-        to web sites.</li>
+        to websites.</li>
       <li><strong>SSL Server Certificate:</strong> Certificate used to identify a
-        web site server to browsers.</li>
+        website server to browsers.</li>
       <li><strong>Email Signer Certificate:</strong> Certificate used to identify you
         for the purposes of digitally signing email messages.</li>
       <li><strong>Email Recipient Certificate:</strong> Certificate used to identify
@@ -199,8 +199,8 @@ were encrypted with your corresponding public key.</p>
   and its associated private key, depending on what you use it for. For example:</p>
 
 <ul>
-	<li>If you lose a certificate that identifies you to important web sites, you will not be
-	  able to access those web sites until you obtain a new certificate. </li>
+	<li>If you lose a certificate that identifies you to important websites, you will not be
+	  able to access those websites until you obtain a new certificate. </li>
 	<li>If you lose a certificate used to encrypt email messages, you will not be able to read
 	  any of your encrypted email&mdash;including both encrypted messages that you have sent and
 	  encrypted messages that you have received. In this case, if you cannot obtain a backup of
@@ -214,13 +214,13 @@ were encrypted with your corresponding public key.</p>
 <h2 id="user_identification_request">User Identification Request</h2>
 
 
-<p>Some web sites require that you identify yourself with a certificate rather than a name
+<p>Some websites require that you identify yourself with a certificate rather than a name
   and password, because certificates provide a more reliable form of identification. This
   method of identifying yourself over the Internet is sometimes called
   <a href="glossary.xhtml#client_authentication">client authentication</a>.</p>
 
 <p>However, Certificate Manager may have more than one certificate on file that can be used
-  for the purposes of identifying yourself to a web site. In this case, Certificate Manager
+  for the purposes of identifying yourself to a website. In this case, Certificate Manager
   presents the User Identification Request dialog box, which displays two kinds of
   information:</p>
 
@@ -228,7 +228,7 @@ were encrypted with your corresponding public key.</p>
   This section of the dialog box lists the following information:</p>
 	<ul>
 		<li><strong>Host name:</strong> The name of the server requesting identification,
-		  used as part of its URL. For example, the host name for the Netscape web site
+		  used as part of its URL. For example, the host name for the Netscape website
 		  is <tt>home.netscape.com</tt>.</li>
 		<li><strong>Organization:</strong> The name of the organization that runs the web
 		  site.</li>
@@ -238,9 +238,9 @@ were encrypted with your corresponding public key.</p>
 	</ul>
 
 <p><strong>Choose a certificate to present as identification:</strong> The certificates you
-  have available for the purposes of identifying yourself to a web site are listed in the
+  have available for the purposes of identifying yourself to a website are listed in the
   drop-down list in this section of the dialog box. Choose the certificate that seems most
-  likely to be recognized by the web site you want to visit.</p>
+  likely to be recognized by the website you want to visit.</p>
 
 <p>To help you decide, the following details of the selected certificate are displayed:</p>
 	<ul>
@@ -268,7 +268,7 @@ were encrypted with your corresponding public key.</p>
   following options:</p>
 
 <ul>
-	<li><strong>Trust this CA to identify web sites: </strong>Web site certificates for some
+	<li><strong>Trust this CA to identify websites: </strong>Website certificates for some
 	  sites, such as those that handle financial transactions, can be extremely important,
 	  and inappropriate or false identification can have negative consequences.</li>
 	<li><strong>Trust this CA to identify email users: </strong>If you intend to send email
@@ -286,7 +286,7 @@ were encrypted with your corresponding public key.</p>
 
 <p>Before you decide to trust a new CA, make sure that you know who is operating it. Make
   sure the CA's policies and procedures are appropriate for the kinds of certificates it
-  issues. For example, if the CA issues certificates identifying web sites you use for
+  issues. For example, if the CA issues certificates identifying websites you use for
   financial transactions, make sure you are comfortable with the level of assurance the CA
   provides.</p>
 
@@ -295,33 +295,33 @@ were encrypted with your corresponding public key.</p>
 	  download. If you decide you don't want to download this certificate, click Cancel.</li>
 </ul>
 
-<h2 id="web_site_certificates">Web Site Certificates</h2>
+<h2 id="web_site_certificates">Website Certificates</h2>
 
-<p>One of the windows listed here may appear when you attempt to go to a web site that
+<p>One of the windows listed here may appear when you attempt to go to a website that
   supports the use of <a href="glossary.xhtml#secure_sockets_layer">SSL</a> for
   <a href="glossary.xhtml#authentication">authentication</a> and
   <a href="glossary.xhtml#encryption">encryption</a>.</p>
 
 <div class="contentsBox">In this section:
   <ul>
-    <li><a href="#web_site_certified_by_an_unknown_authority">Web Site Certified by an Unknown Authority</a></li>
+    <li><a href="#web_site_certified_by_an_unknown_authority">Website Certified by an Unknown Authority</a></li>
     <li><a href="#server_certificate_expired">Server Certificate Expired</a></li>
     <li><a href="#server_certificate_not_yet_valid">Server Certificate Not Yet Valid</a></li>
     <li><a href="#domain_name_mismatch">Domain Name Mismatch</a></li>
   </ul>
 </div>
 
-<h3 id="web_site_certified_by_an_unknown_authority">Web Site Certified by an Unknown
+<h3 id="web_site_certified_by_an_unknown_authority">Website Certified by an Unknown
   Authority</h3>
 
 
-<p>Many web sites use certificates to identify themselves when you visit the site. If
+<p>Many websites use certificates to identify themselves when you visit the site. If
   Certificate Manager doesn't recognize the <a href="glossary.xhtml#certificate_authority">
-  certificate authority (CA)</a> that issued a web site's certificate, it displays an alert
-  that allows you to examine the new web site certificate and decide what to do.</p>
+  certificate authority (CA)</a> that issued a website's certificate, it displays an alert
+  that allows you to examine the new website certificate and decide what to do.</p>
 
 <ul>
-	<li><strong>Examine Certificate:</strong> Click this button to view the web site's
+	<li><strong>Examine Certificate:</strong> Click this button to view the website's
 	certificate.</li>
 </ul>
 
@@ -329,17 +329,17 @@ were encrypted with your corresponding public key.</p>
 <ul>
 
 	<li><strong>Accept this certificate permanently.</strong> Select this option to accept
-	  the certificate (despite the apparent problem) and connect to the web site.
+	  the certificate (despite the apparent problem) and connect to the website.
 	  Certificate Manager will recognize this certificate as legitimate identification until
 	  the certificate expires.</li>
 	<li><strong>Accept this certificate temporarily for this session.</strong> Select this
-	  option to accept the certificate temporarily and connect to the web site. Certificate
+	  option to accept the certificate temporarily and connect to the website. Certificate
 	  Manager will recognize this certificate as legitimate identification only until the
 	  next time you launch the browser. You may see the same alert the next time you attempt
-	  to visit the web site.</li>
-	<li><strong>Do not accept this certificate and do not connect to this web site.</strong>
-	  Select this option if you decide not to visit the web site at all. This option might be
-	  appropriate, for example, if you perform financial transactions at the web site. In
+	  to visit the website.</li>
+	<li><strong>Do not accept this certificate and do not connect to this website.</strong>
+	  Select this option if you decide not to visit the website at all. This option might be
+	  appropriate, for example, if you perform financial transactions at the website. In
 	  this case you might want to report the problem to the bank or other organization that
 	  runs the site and confirm that the site's certificate is valid before you go any
 	  further.</li>
@@ -355,7 +355,7 @@ were encrypted with your corresponding public key.</p>
   of any required intermediate CAs and if necessary, install the missing certificate in the
   server.</p>
 
-<p>If you decide to contact the web site's webmaster about this issue, you can include the
+<p>If you decide to contact the website's webmaster about this issue, you can include the
   following information:</p>
 
 <ul>
@@ -391,10 +391,10 @@ were encrypted with your corresponding public key.</p>
   time. When a certificate expires, the owner of the certificate needs to get a new
   one.</p>
 
-<p>Certificate Manager warns you when you attempt to visit a web site whose server
+<p>Certificate Manager warns you when you attempt to visit a website whose server
   certificate has expired. The first thing you should do is make sure the time and date
   displayed by your computer is correct. If your computer's clock is set to a date that is
-  after the expiration date, Certificate Manager treats the web site's certificate as
+  after the expiration date, Certificate Manager treats the website's certificate as
   expired. </p>
 
 <p>If your computer's clock is set correctly, you need to make a decision about whether to
@@ -422,7 +422,7 @@ were encrypted with your corresponding public key.</p>
   <a href="glossary.xhtml#certificate">certificate</a> is valid for a specified period of
   time.</p>
 
-<p>Certificate Manager warns you when you attempt to visit a web site whose server
+<p>Certificate Manager warns you when you attempt to visit a website whose server
   certificate's validity period has not yet started. The first thing you should do is make
   sure the time and date displayed by your own computer is correct. If your computer's clock
   is set to the wrong date, Certificate Manager may treat the server certificate as not yet
@@ -451,13 +451,13 @@ were encrypted with your corresponding public key.</p>
 
 <p>A server <a href="glossary.xhtml#certificate">certificate</a> specifies the name of the
   server in the form of the site's domain name. For example, the domain name for the Mozilla
-  web site is <tt>www.mozilla.org</tt>. If the domain name in a server's certificate
-  doesn't match the actual domain name of the web site, it may be a sign that someone is
-  attempting to intercept your communication with the web site.</p>
+  website is <tt>www.mozilla.org</tt>. If the domain name in a server's certificate
+  doesn't match the actual domain name of the website, it may be a sign that someone is
+  attempting to intercept your communication with the website.</p>
 
 <p>The decision whether to trust the site anyway depends on what you intend to do at the site
   and what else you know about it. Most commercial sites will make sure that the host name
-  for a web site certificate matches the web site's actual host name.</p>
+  for a website certificate matches the website's actual host name.</p>
 
 <p>You can take these actions from the Domain Name Mismatch dialog box:</p>
 
@@ -475,7 +475,7 @@ were encrypted with your corresponding public key.</p>
 </ul>
 
 <p>If you decide to accept the certificate anyway for this session, you should be cautious
-  about what you do on the web site, and you should treat any information you find there as
+  about what you do on the website, and you should treat any information you find there as
   potentially suspect.</p>
 
 </body>

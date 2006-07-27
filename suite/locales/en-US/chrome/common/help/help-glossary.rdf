@@ -111,7 +111,7 @@
         <rdf:li> <rdf:Description nc:name="trust" nc:link="glossary.xhtml#trust"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Uniform Resource Locator (URL)" nc:link="glossary.xhtml#uniform_resource_locator"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="web page" nc:link="glossary.xhtml#web_page"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="web site" nc:link="glossary.xhtml#web_site"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="website" nc:link="glossary.xhtml#web_site"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="World Wide Web" nc:link="glossary.xhtml#world_wide_web"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>

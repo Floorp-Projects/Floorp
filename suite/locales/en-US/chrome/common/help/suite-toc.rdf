@@ -796,7 +796,7 @@
 <rdf:Description about="#privacy-doc">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="privacy-doc-visit" nc:name="What Information Does My Browser Give to a Web Site?"  		nc:link="chrome://help/locale/privacy_help.xhtml#what_information_does_my_browser_give_to_a_web_site"/> </rdf:li>
+        <rdf:li><rdf:Description ID="privacy-doc-visit" nc:name="What Information Does My Browser Give to a Website?"  		nc:link="chrome://help/locale/privacy_help.xhtml#what_information_does_my_browser_give_to_a_web_site"/> </rdf:li>
         <rdf:li><rdf:Description ID="privacy-doc-cookies" nc:name="What Are Cookies, and How Do They Work?"  		nc:link="chrome://help/locale/privacy_help.xhtml#what_are_cookies_and_how_do_they_work"/> </rdf:li>
         <rdf:li><rdf:Description ID="privacy-doc-email" nc:name="How Can I Control Web Pages in Email Messages?"  		nc:link="chrome://help/locale/privacy_help.xhtml#how_can_i_control_web_pages_in_email_messages"/> </rdf:li>
         <rdf:li><rdf:Description ID="privacy-doc-unauth" nc:name="How Do I Make Sure Unauthorized People Don't Use Information About Me?"  		nc:link="chrome://help/locale/privacy_help.xhtml#how_do_i_make_sure_unauthorized_people_dont_use_information_about_me"/> </rdf:li>
@@ -972,7 +972,7 @@
       <rdf:Seq>
         <rdf:li><rdf:Description ID="using-help-certs-manage-my" nc:name="That Identify You" nc:link="chrome://help/locale/using_certs_help.html#using_certs_my"/> </rdf:li>
         <rdf:li><rdf:Description ID="using-help-certs-manage-others" nc:name="That Identify Others" nc:link="chrome://help/locale/using_certs_help.html#using_certs_others"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-help-certs-manage-sites" nc:name="That Identify Web Sites" nc:link="chrome://help/locale/using_certs_help.html#using_certs_sites"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-help-certs-manage-sites" nc:name="That Identify Websites" nc:link="chrome://help/locale/using_certs_help.html#using_certs_sites"/> </rdf:li>
         <rdf:li><rdf:Description ID="using-help-certs-manage-cas" nc:name="That Identify CAs" nc:link="chrome://help/locale/using_certs_help.html#using_certs_cas"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
@@ -1058,7 +1058,7 @@
       <rdf:Seq>
         <rdf:li><rdf:Description ID="my_certs" nc:name="Your Certificates" nc:link="chrome://help/locale/certs_help.xhtml#your_certificates"/> </rdf:li>
         <rdf:li><rdf:Description ID="others_certs" nc:name="Other People's Certificates" nc:link="chrome://help/locale/certs_help.xhtml#other_peoples_certificates"/> </rdf:li>
-        <rdf:li><rdf:Description ID="web_certs" nc:name="Web Site Certificates" nc:link="chrome://help/locale/certs_help.xhtml#web_site_certificates"/> </rdf:li>
+        <rdf:li><rdf:Description ID="web_certs" nc:name="Website Certificates" nc:link="chrome://help/locale/certs_help.xhtml#web_site_certificates"/> </rdf:li>
         <rdf:li><rdf:Description ID="ca_certs" nc:name="Authorities" nc:link="chrome://help/locale/certs_help.xhtml#authorities"/> </rdf:li>
 
       </rdf:Seq>
@@ -1085,8 +1085,8 @@
 <rdf:Description about="#web_certs">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="edit_web_certs" nc:name="Edit Web Site Certificate Settings" nc:link="chrome://help/locale/certs_help.xhtml#edit_web_site_certificate_trust_settings"/> </rdf:li>
-        <rdf:li><rdf:Description ID="delete_web_certs" nc:name="Delete Web Site Certificate" nc:link="chrome://help/locale/certs_help.xhtml#delete_web_site_certificates"/> </rdf:li>
+        <rdf:li><rdf:Description ID="edit_web_certs" nc:name="Edit Website Certificate Settings" nc:link="chrome://help/locale/certs_help.xhtml#edit_web_site_certificate_trust_settings"/> </rdf:li>
+        <rdf:li><rdf:Description ID="delete_web_certs" nc:name="Delete Website Certificate" nc:link="chrome://help/locale/certs_help.xhtml#delete_web_site_certificates"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1110,7 +1110,7 @@
         <rdf:li><rdf:Description ID="backup_your_cert" nc:name="Certificate Backup" nc:link="chrome://help/locale/cert_dialog_help.xhtml#certificate_backup"/> </rdf:li>
         <rdf:li><rdf:Description ID="which_cert" nc:name="User Identification Request" nc:link="chrome://help/locale/cert_dialog_help.xhtml#user_identification_request"/> </rdf:li>
         <rdf:li><rdf:Description ID="new_ca" nc:name="New Certificate Authority" nc:link="chrome://help/locale/cert_dialog_help.xhtml#new_certificate_authority"/> </rdf:li>
-        <rdf:li><rdf:Description ID="cert-dialog-help-website" nc:name="Web Site Certificates" nc:link="chrome://help/locale/cert_dialog_help.xhtml#web_site_certificates"/> </rdf:li>
+        <rdf:li><rdf:Description ID="cert-dialog-help-website" nc:name="Website Certificates" nc:link="chrome://help/locale/cert_dialog_help.xhtml#web_site_certificates"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1127,7 +1127,7 @@
 <rdf:Description about="#cert-dialog-help-website">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="new_web_cert" nc:name="Web Site Certified by an Unknown Authority" nc:link="chrome://help/locale/cert_dialog_help.xhtml#web_site_certified_by_an_unknown_authority"/> </rdf:li>
+        <rdf:li><rdf:Description ID="new_web_cert" nc:name="Website Certified by an Unknown Authority" nc:link="chrome://help/locale/cert_dialog_help.xhtml#web_site_certified_by_an_unknown_authority"/> </rdf:li>
         <rdf:li><rdf:Description ID="exp_web_cert" nc:name="Server Certificate Expired" nc:link="chrome://help/locale/cert_dialog_help.xhtml#server_certificate_expired"/> </rdf:li>
         <rdf:li><rdf:Description ID="not_yet_web_cert" nc:name="Server Certificate Not Yet Valid" nc:link="chrome://help/locale/cert_dialog_help.xhtml#server_certificate_not_yet_valid"/> </rdf:li>
         <rdf:li><rdf:Description ID="bad_name_web_cert" nc:name="Domain Name Mismatch" nc:link="chrome://help/locale/cert_dialog_help.xhtml#domain_name_mismatch"/> </rdf:li>
