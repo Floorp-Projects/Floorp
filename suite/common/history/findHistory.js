@@ -42,7 +42,6 @@ function Startup()
 {
   var bundle = document.getElementById("historyBundle");
   gOKButton = document.documentElement.getButton("accept");
-  gOKButton.label = bundle.getString("search_button_label");
   gOKButton.disabled = true;
   gSearchField = document.getElementById("searchField");
   gSearchField.focus();
