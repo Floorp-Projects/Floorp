@@ -30,15 +30,15 @@
         ref="NC:SearchResultsSitesRoot" datasources="rdf:internetsearch" 
         style="overflow: none; min-width: 1px;">
     <template>
-      <button class="engineTabs button-toolbar button-slimline" uri="..." 
+      <button type="radio" group="engineButton" class="engineTabs button-toolbar" uri="..." 
               oncommand="doEngineClick(event, this);" crop="right" 
               src="rdf:http://home.netscape.com/NC-rdf#StatusIcon" 
               label="rdf:http://home.netscape.com/NC-rdf#Name" 
               loading="rdf:http://home.netscape.com/NC-rdf#loading" />
     </template>
-    <button class="engineTabs button-toolbar button-slimline" id="allEngines" 
+    <button type="radio" group="engineButton" class="engineTabs button-toolbar" id="allEngines" 
             oncommand="doEngineClick(event, this);" label="&allresults.title.label;"
-            toggled="true"/>
+            checked="true"/>
     <separator orient="vertical"/>
     <text value="&viewbyprovider.label;"/>
     <separator orient="vertical" class="thin"/>
