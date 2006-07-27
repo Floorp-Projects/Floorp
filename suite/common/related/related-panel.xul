@@ -63,8 +63,8 @@
           <treeitem uri="..."
                   type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
             <treerow>
-              <treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"
-                                      src="rdf:http://home.netscape.com/NC-rdf#Icon" />
+              <treecell class="tree-icon treecell-indent" indent="true"
+              	value="rdf:http://home.netscape.com/NC-rdf#Name" />
             </treerow>
           </treeitem>
         </treechildren>
