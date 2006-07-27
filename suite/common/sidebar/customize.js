@@ -144,11 +144,11 @@ var panels_observer = {
   onMove : function(ds,old_src,new_src,prop,target) {
     //debug ("observer: move");
   },
-  beginUpdateBatch : function(ds) {
-    //debug ("observer: beginUpdateBatch");
+  onBeginUpdateBatch : function(ds) {
+    //debug ("observer: onBeginUpdateBatch");
   },
-  endUpdateBatch : function(ds) {
-    //debug ("observer: endUpdateBatch");
+  onEndUpdateBatch : function(ds) {
+    //debug ("observer: onEndUpdateBatch");
   }
 };
 

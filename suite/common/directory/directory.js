@@ -97,8 +97,8 @@ var	RDF_observer =
 
 	onChange: function(ds, src, prop, old_target, new_target) { },
 	onMove: function(ds, old_src, new_src, prop, target) { },
-	beginUpdateBatch: function(ds) { },
-	endUpdateBatch: function(ds) { }
+	onBeginUpdateBatch: function(ds) { },
+	onEndUpdateBatch: function(ds) { }
 };
 
 function
