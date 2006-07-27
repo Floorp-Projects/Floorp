@@ -310,6 +310,7 @@ function (force_reload)
         header.removeAttribute('selected');
         content.setAttribute('collapsed','true');
 
+        iframe.setAttribute('src', 'about:blank');
         load_state = content.getAttribute('loadstate');
         if (load_state == 'loading') {
           iframe.removeEventListener("load", panel_loader, true);
