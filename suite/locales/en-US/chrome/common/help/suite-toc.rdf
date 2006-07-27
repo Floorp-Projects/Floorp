@@ -695,6 +695,7 @@ nc:link="chrome://help/locale/nav_help.xhtml#plugins_and_downloads"/> </rdf:li>
         <rdf:li> <rdf:Description ID="cust-tabbed-whatis" nc:name="What is Tabbed Browsing?"  nc:link="customize_help.xhtml#what_is_tabbed_browsing"/> </rdf:li>
         <rdf:li> <rdf:Description ID="cust-tabbed-tabbedsetting" nc:name="Setting up Tabbed Browsing"  nc:link="customize_help.xhtml#setting_up_tabbed_browsing"/> </rdf:li>
         <rdf:li> <rdf:Description ID="cust-tabbed-tabbedopening" nc:name="Opening Tabs"  nc:link="customize_help.xhtml#opening_tabs"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-tabbed-tabbedmoving" nc:name="Moving Tabs"  nc:link="customize_help.xhtml#moving_tabs"/> </rdf:li>
         <rdf:li> <rdf:Description ID="cust-tabbed-tabbedbookmarking" nc:name="Bookmarking Tabs"  nc:link="customize_help.xhtml#bookmarking_tabs"/> </rdf:li>
         <rdf:li> <rdf:Description ID="cust-tabbed-tabbedclosing" nc:name="Closing Tabs"  nc:link="customize_help.xhtml#closing_tabs"/> </rdf:li>
       </rdf:Seq>
