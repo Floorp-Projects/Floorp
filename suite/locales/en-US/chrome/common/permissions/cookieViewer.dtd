@@ -13,7 +13,7 @@
 <!ENTITY     props.value.label              "Content:">
 <!ENTITY     props.domain.label             "Host:">
 <!ENTITY     props.path.label               "Path:">
-<!ENTITY     props.secure.label             "Server Secure:">
+<!ENTITY     props.secure.label             "Send For:">
 <!ENTITY     props.expires.label            "Expires:">
 <!ENTITY     props.policy.label             "Policy:"> 
 
