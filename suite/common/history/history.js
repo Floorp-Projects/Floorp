@@ -168,8 +168,7 @@ nsHistoryController.prototype =
             } else {
                 stringId = "deleteHostNoSelection";
             }
-            text = gHistoryBundle.stringBundle.formatStringFromName(stringId,
-                                                                    [ gLastHostname ], 1);
+            text = gHistoryBundle.getFormattedString(stringId, [ gLastHostname ]);
             gDeleteByHostname.setAttribute("label", text);
             break;
         case "cmd_deleteByDomain":
@@ -179,8 +178,7 @@ nsHistoryController.prototype =
             } else {
                 stringId = "deleteDomainNoSelection";
             }
-            text = gHistoryBundle.stringBundle.formatStringFromName(stringId,
-                                                                    [ gLastDomain ], 1);
+            text = gHistoryBundle.getFormattedString(stringId, [ gLastDomain ]);
             gDeleteByDomain.setAttribute("label", text);
         }
         return enabled;
