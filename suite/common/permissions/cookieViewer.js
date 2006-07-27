@@ -347,7 +347,7 @@ function DeletePermissionSelected()
 
 function DeleteAllPermissions() {
   // delete selected item
-  gone_p += DeleteAllItems(permissions.length, "permtree_", "permissionlist");
+  gone_p += DeleteAllItems(permissions.length, "permtree_", "permissionslist");
   if( !document.getElementById("removePermissions").disabled ) {
     document.getElementById("removePermissions").setAttribute("disabled", "true")
   }
@@ -439,7 +439,8 @@ function DeleteAllImages() {
 // function : <CookieViewer.js>::doOKButton();
 // purpose  : saves the changed settings and closes the dialog.
 function onOK(){
-  var result = "|goneC|" + gone_c + "|goneP|" + gone_p  + "|goneI|" + gone_i+ "|";
+  var result = "|goneC|" + gone_c + "|goneP|" + gone_p  + "|goneI|" + gone_i + 
+               "|block|" + document.getElementById("checkbox").checked +"|";
   cookieviewer.SetValue(result, window);
   return true;
 }
