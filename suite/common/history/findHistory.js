@@ -36,7 +36,7 @@ function find()
   var match = document.getElementById("matchList");
   var method = document.getElementById("methodList");
   var field = document.getElementById("searchField");
-  var searchURI = "find:datasource=rdf:history"
+  var searchURI = "find:datasource=history"
   searchURI += "&match=" + match.selectedItem.value;
   searchURI += "&method=" + method.selectedItem.value;
   searchURI += "&text=" + escape(field.value);
