@@ -86,7 +86,7 @@
 <h3>
 How Encryption Works</h3>
 
-<p>To encrypt an email message, you must have an encryption certificate for each of the message's recipients. The public key in each certificate is used to encrypt the message for that recipient. 
+<p>To encrypt an email message, you must have an <a href="glossary.html#encryption_certificate">encryption certificate</a> for each of the message's recipients. The public key in each certificate is used to encrypt the message for that recipient. 
 
 <p>If you don&apos;t have a certificate for even a single recipient, the message cannot be encrypted.
 
@@ -94,13 +94,22 @@ How Encryption Works</h3>
 
 <p>&nbsp;</p>
 <a NAME="get_mail_certs"></a>
+<a name="LDAP:fetching_certificatesIDX></a>
+<a name="LDAP_certificate_fetchingSDX></a>
 <h2>Getting Other People's Certificates</h2>
 
 <p>Every time you send a digitally signed message, your encryption certificate is automatically included with the message. Therefore, one of the easiest ways to obtain someone else's certificate is for that person to send you a digitally signed message. 
 
 <p>When you receive such a message, the person's certificate is automatically stored by the <a href="certs_help.html">Certificate Manager</a>, which is the part of the browser that keeps track of certificates. This is useful because you need to have a certificate for each recipient of any email message that you want to send in encrypted form.
 
-<p>You can also obtain certificates by looking them up in a public directory, such as the &quot;phonebook&quot; directories maintained by many companies.
+<p>Another way to obtain certificates is to look them up in a public directory, such as the &quot;phonebook&quot; directories maintained by many companies.
+
+<p>It's also possible to look up certificates automatically.  This feature is controlled by <a href="mail_help.html#PREFERENCES_MAILNEWS_ADDRESSING">Mail & Newsgroups Preferences - Addressing</a> or <a href="mail_help.html#addressing_settings">Mail & Newgroups Account Settings - Addressing</a>, which can be configured to look up recipients&apos; email addresses in a directory. 
+
+<p>When you are using any account that is configured to look up addresses in a directory, the same directory will be searched for matching certificates when you attempt to send an encrypted message to one or more recipients for whom you don't have certificates on file. 
+
+<p>The directory will also be searched for missing certificates when you open the drop-down menu below the Security icon in the Compose window and choose View Security Info.
+
 
 
 <p>&nbsp;</p>
@@ -272,7 +281,7 @@ How Encryption Works</h3>
 <hr>
 
 
-<p><i>5 June 2002</i></p>
+<p><i>9 June 2002</i></p>
 <p>Copyright &copy; 1994-2002 Netscape Communications Corporation.</p>
 
 </body>

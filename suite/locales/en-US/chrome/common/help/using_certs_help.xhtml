@@ -450,13 +450,14 @@
  
 
 <p>&nbsp;</p>
+<a NAME="CRLs:Next_Update_dateIDX"></a>
 <a name ="next_update"></a><h3>About the "Next Update" Date</h3>
 
 <p>The browser uses the CRLs it has available to check the validity of certificates issued by the corresponding CAs. If a certificate is listed as revoked, the browser won't accept it as evidence of identity.
 
 <p>A CA typically publishes an updated CRL at regular intervals. Every CRL includes a date, specified in the Next Update field, by which the CA will publish the next update of that CRL. In general, if the date in the Next Update field is earlier than the current date, you should obtain the most recent version of the CRL. To view CRL information and set up automatic CRL updating, see <a href="#view_manage_CRLs">Viewing and Managing CRLs</a>.
 
-<p>Although the absence of the most recent CRL does not by itself invalidate a certificate, the browser may not handle such certificates correctly. In some situations, you may want to delete CRLs with Next Update dates earlier than the present. Speak to your system administrator for guidance on CRL management. 
+<p>CAs are required to produce a new CRL by the Next Update date. However, the absence of the most recent CRL does not by itself invalidate a certificate. For this reason, if the most recent CRL is not available, a certificate may be validated even though the most recent CRL shows it as expired. Automatic CRL updating can help to avoid this situation.
 
 
 
@@ -530,7 +531,7 @@
 
 
 <hr>
-<p><i>6 June 2002</i></p>
+<p><i>9 June 2002</i></p>
 <p>Copyright &copy; 1994-2002 Netscape Communications Corporation.</p>
 
 </body>
