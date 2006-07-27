@@ -52,8 +52,8 @@ var internetSearchDS = null;
 
 try
 {
-  pref = Components.classes["@mozilla.org/preferences;1"].getService();
-  if (pref) pref = pref.QueryInterface( Components.interfaces.nsIPref );
+  pref = Components.classes["@mozilla.org/preferences-service;1"]
+                   .getService(Components.interfaces.nsIPrefBranch);
 
   RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
   if (RDF)  RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
@@ -116,9 +116,9 @@ function doLoad()
   var lastCategoryName = "";
   try
   {
-    var pref = Components.classes["@mozilla.org/preferences;1"].getService();
-    if (pref) pref = pref.QueryInterface( Components.interfaces.nsIPref );
-    if (pref) lastCategoryName = pref.CopyCharPref( "browser.search.last_search_category" );
+    var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefBranch);
+    lastCategoryName = pref.getCharPref( "browser.search.last_search_category" );
 
     if (lastCategoryName != "")
     {

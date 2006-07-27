@@ -672,38 +672,33 @@ function get_sidebar_datasource_uri() {
 //     %VERSION% --> Sidebar file format version (e.g. 0.0).
 function get_remote_datasource_url() {
   var url = '';
-  var prefs = Components.classes['@mozilla.org/preferences;1'];
-  if (prefs) {
-    prefs = prefs.getService();
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                        .getService(Components.interfaces.nsIPrefBranch);
+  var locale;
+  try {
+    url = prefs.getCharPref("sidebar.customize.all_panels.url");
+    url = url.replace(/%SIDEBAR_VERSION%/g, SIDEBAR_VERSION);
+  } catch(ex) {
+    debug("Unable to get remote url pref. What now? "+ex);
   }
-  if (prefs) {
-    prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
-  }
-  if (prefs) {
-    var locale;
+  try {
+    locale = prefs.getComplexValue("intl.content.langcode",
+                                   Components.interfaces.nsIPrefLocalizedString);
+  } catch(ex) {
     try {
-      url = prefs.CopyCharPref("sidebar.customize.all_panels.url");
-      url = url.replace(/%SIDEBAR_VERSION%/g, SIDEBAR_VERSION);
-    } catch(ex) {
-      debug("Unable to get remote url pref. What now? "+ex);
-    }
-    try {
-      locale = prefs.getLocalizedUnicharPref("intl.content.langcode");
-    } catch(ex) {
-      try {
-        debug("No lang code pref, intl.content.langcode.");
-        debug("Use locale from user agent string instead");
+      debug("No lang code pref, intl.content.langcode.");
+      debug("Use locale from user agent string instead");
 
-        locale = prefs.getLocalizedUnicharPref("general.useragent.locale");
-    } catch(ex) {
-        debug("Unable to get system locale. What now? "+ex);
-      }
+      locale = prefs.getComplexValue("general.useragent.locale",
+                                     Components.interfaces.nsIPrefLocalizedString);
+  } catch(ex) {
+      debug("Unable to get system locale. What now? "+ex);
     }
-    locale = locale.toLowerCase();
-    url = url.replace(/%LOCALE%/g, locale);
-
-    debug("Remote url is " + url);
   }
+  locale = locale.toLowerCase();
+  url = url.replace(/%LOCALE%/g, locale);
+
+  debug("Remote url is " + url);
   return url;
 }
 
@@ -821,22 +816,15 @@ function BrowseMorePanels()
 {
   var url = '';
   var browser_url = "chrome://navigator/content/navigator.xul";
-  var prefs = Components.classes['@mozilla.org/preferences;1'];
-  if (prefs) {
-    prefs = prefs.getService();
-  }
-  if (prefs) {
-    prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
-  }
-  if (prefs) {
-    var locale;
-    try {
-      url = prefs.CopyCharPref("sidebar.customize.directory.url");
-      var temp = prefs.CopyCharPref("browser.chromeURL");
-      if (temp) browser_url = temp;
-    } catch(ex) {
-      debug("Unable to get prefs: "+ex);
-    }
+  var locale;
+  try {
+    var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                          .getService(Components.interfaces.nsIPrefBranch);
+    url = prefs.getCharPref("sidebar.customize.directory.url");
+    var temp = prefs.getCharPref("browser.chromeURL");
+    if (temp) browser_url = temp;
+  } catch(ex) {
+    debug("Unable to get prefs: "+ex);
   }
   window.openDialog(browser_url, "_blank", "chrome,all,dialog=no", url);
 }

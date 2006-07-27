@@ -73,10 +73,10 @@ function HistoryInit()
         document.getElementById("groupingMenu").setAttribute("hidden", "true");
     }
     else {
-        gPrefService = Components.classes["@mozilla.org/preferences;1"]
-                                 .getService(Components.interfaces.nsIPref);
+        gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
+                                 .getService(Components.interfaces.nsIPrefBranch);
         try {
-            var grouping = gPrefService.GetCharPref("browser.history.grouping");
+            var grouping = gPrefService.getCharPref("browser.history.grouping");
         }
         catch(e) {
             grouping = "";
@@ -281,7 +281,7 @@ function GroupBy(groupingType)
         outlinerBody.setAttribute("ref", "NC:HistoryRoot");
         break;
     }
-    gPrefService.SetCharPref("browser.history.grouping", groupingType);
+    gPrefService.setCharPref("browser.history.grouping", groupingType);
 }
 
 function historyAddBookmarks()

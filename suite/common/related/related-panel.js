@@ -146,36 +146,34 @@ function DomainInSkipList(sDomain)
 	}
 
 	try {
-		var pref = Components.classes["@mozilla.org/preferences;1"];
-		if (pref) pref = pref.getService();
-		if (pref) pref = pref.QueryInterface(Components.interfaces.nsIPref);
-		if (pref) {
-			var sDomainList = pref.CopyCharPref("browser.related.disabledForDomains");
-			if ((sDomainList) && (sDomainList != "")) {
+		var pref = Components.classes["@mozilla.org/preferences-service;1"]
+							 .getService(Components.interfaces.nsIPrefBranch);
 
-				var aDomains = sDomainList.split(",");
+		var sDomainList = pref.getCharPref("browser.related.disabledForDomains");
+		if ((sDomainList) && (sDomainList != "")) {
 
-				// split on commas
-				for (var x=0; x < aDomains.length; x++) {
-					var sDomainCopy = sDomain;
+			var aDomains = sDomainList.split(",");
 
-					var sTestDomain = aDomains[x];
+			// split on commas
+			for (var x=0; x < aDomains.length; x++) {
+				var sDomainCopy = sDomain;
 
-					if ('*' == sTestDomain[0]) { // wildcard match
+				var sTestDomain = aDomains[x];
 
-                        // strip off the asterisk
-						sTestDomain = sTestDomain.substring(1);	
-						if (sDomainCopy.length > sTestDomain.length) {
-                            var sDomainIndex = sDomain.length - sTestDomain.length;
-							sDomainCopy = sDomainCopy.substring(sDomainIndex);
-						}
+				if ('*' == sTestDomain[0]) { // wildcard match
+
+                    // strip off the asterisk
+					sTestDomain = sTestDomain.substring(1);	
+					if (sDomainCopy.length > sTestDomain.length) {
+                        var sDomainIndex = sDomain.length - sTestDomain.length;
+						sDomainCopy = sDomainCopy.substring(sDomainIndex);
 					}
+				}
 
-					if (0 == sDomainCopy.lastIndexOf(sTestDomain)) {
+				if (0 == sDomainCopy.lastIndexOf(sTestDomain)) {
 
-						bSkipDomainFlag = true;
-						break;
-					}
+					bSkipDomainFlag = true;
+					break;
 				}
 			}
 		}
