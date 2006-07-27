@@ -256,10 +256,9 @@ JSObjectViewer.prototype =
     var treechildren = aItem.getElementsByTagName("treechildren").item(0);
     if (!treechildren) {
       treechildren = document.createElement("treechildren");
+      this.buildPropertyTree(treechildren, aItem.__JSValue__);
       aItem.appendChild(treechildren);
     }
-    
-    this.buildPropertyTree(treechildren, aItem.__JSValue__);
   },
   
   onCreateContext: function(aPopup)
