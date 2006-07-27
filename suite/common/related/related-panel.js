@@ -206,6 +206,23 @@ function Init()
 	}
 }
 
+function Destruct() {
+	// Install the observer so we'll be notified when new content is loaded.
+	var ObserverService = Components.classes["component://netscape/observer-service"].getService();
+	ObserverService = ObserverService.QueryInterface(Components.interfaces.nsIObserverService);
+	if (ObserverService)
+	{
+		debug("Removing observer\n");
+		ObserverService.RemoveObserver(Observer, "StartDocumentLoad");
+		ObserverService.RemoveObserver(Observer, "EndDocumentLoad");
+		ObserverService.RemoveObserver(Observer, "FailDocumentLoad");
+	}
+	else
+	{
+		debug("FAILURE to get observer service\n");
+	}
+}
+
 
 
 function openURL(event, treeitem, root)
@@ -253,3 +270,6 @@ function openURL(event, treeitem, root)
 
 	ContentWindow.location = id;
 }
+
+addEventListener("load", Init, false);
+addEventListener("unload", Destruct, false);
