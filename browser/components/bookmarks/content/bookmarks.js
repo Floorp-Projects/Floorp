@@ -644,6 +644,10 @@ var BookmarksCommand = {
     if (!aTargetBrowser)
       return;
 
+    // in this case, we can just use |aSelection.length| as "Open in Tabs"
+    // is only available when you are only selecting multiple bookmarks
+    // if you selected a folder of bookmarks, we check the number of tabs in
+    // openGroupBookmark()
     if (aTargetBrowser == "tab" && !this._confirmOpenTabs(aSelection.length))
       return;
 
@@ -763,10 +767,27 @@ var BookmarksCommand = {
     var urlArc   = RDF.GetResource(gNC_NS+"URL");
     RDFC.Init(BMDS, resource);
     var containerChildren = RDFC.GetElements();
+    var numTabsToOpen = 0;
 
-    if (!this._confirmOpenTabs(RDFC.GetCount()))
+    // we can't just use |RDFC.GetCount()| as that might include
+    // folders, separators, deleted bookmarks, etc.
+    while (containerChildren.hasMoreElements()) {
+      var res = containerChildren.getNext().QueryInterface(kRDFRSCIID);
+      var type = BookmarksUtils.resolveType(res);
+      // these are the types in getCommands() that support the 
+      // "bm_openinnewwindow" and "bm_openinnewtab" commands
+      if (type == "Bookmark" || type == "LivemarkBookmark" || 
+          type == "ImmutableBookmark" || type == "IEFavorite" ||
+          type == "FileSystemObject")
+        numTabsToOpen++;
+    }
+
+    if (!this._confirmOpenTabs(numTabsToOpen))
       return;
 
+    // counting the number of tabs to open modified the 
+    // containerChildren enumerator, so we need to reset it.
+    containerChildren = RDFC.GetElements();
     if (aTargetBrowser == "current" || aTargetBrowser == "tab") {
       var browser  = w.document.getElementById("content");
       var tabPanels = browser.browsers;
@@ -784,7 +805,7 @@ var BookmarksCommand = {
         ++index0;
       }
 
-      var index  = index0;
+      var index = index0;
       while (containerChildren.hasMoreElements()) {
         var res = containerChildren.getNext().QueryInterface(kRDFRSCIID);
         var target = BMDS.GetTarget(res, urlArc, true);
@@ -1008,7 +1029,7 @@ var BookmarksCommand = {
     if (aSelection.length != 1)
       return;
 
-    var selType = BookmarksUtils.resolveType (aSelection.item[0]);
+    var selType = BookmarksUtils.resolveType(aSelection.item[0]);
     if (selType == "Folder" || selType == "Bookmark" ||
         selType == "PersonalToolbarFolder" || selType == "Livemark")
     {
