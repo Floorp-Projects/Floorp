@@ -27,10 +27,13 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <!-- Overlay the sidebar panels -->
-  <box id="sidebar-box" align="vertical"
-    persist="hidden width collapsed">
+  <box id="sidebar-box" align="vertical" persist="hidden width collapsed">
     <splitter id="sidebar-panels-splitter" collapse="after"
-      onmouseup="PersistHeight();" hidden="true"/>
+      onmouseup="PersistHeight();" hidden="true">
+      <spring flex="1"/>
+      <grippy/>
+      <spring flex="1"/>
+    </splitter>
 
     <box id="sidebar-panels-splitter-box" align="vertical" flex="1" 
       persist="hidden">
