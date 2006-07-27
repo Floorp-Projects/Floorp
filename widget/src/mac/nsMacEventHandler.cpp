@@ -1124,12 +1124,10 @@ PRBool nsMacEventHandler::HandleUKeyEvent(const PRUnichar* text, long charCount,
         nsMouseEvent contextMenuEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
         ConvertKeyEventToContextMenuEvent(&keyPressEvent, &contextMenuEvent);
         handled |= focusedWidget->DispatchWindowEvent(contextMenuEvent);
-        NS_ASSERTION(NS_SUCCEEDED(result), "cannot DispatchWindowEvent");
       }
       else {
         // Send ordinary keypresses
         handled |= focusedWidget->DispatchWindowEvent(keyPressEvent);
-        NS_ASSERTION(NS_SUCCEEDED(result), "cannot DispatchWindowEvent");
       }
     }
   }
@@ -1138,7 +1136,6 @@ PRBool nsMacEventHandler::HandleUKeyEvent(const PRUnichar* text, long charCount,
     nsKeyEvent keyPressEvent(PR_TRUE, NS_KEY_PRESS, nsnull);
     InitializeKeyEvent(keyPressEvent, aOSEvent, focusedWidget, NS_KEY_PRESS, PR_FALSE);
     handled = focusedWidget->DispatchWindowEvent(keyPressEvent);
-    NS_ASSERTION(NS_SUCCEEDED(result), "cannot DispatchWindowEvent");
   }
   return handled;
 }
