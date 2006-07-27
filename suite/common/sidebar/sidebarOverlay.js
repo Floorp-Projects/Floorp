@@ -113,6 +113,15 @@ function sidebar_overlay_init() {
       debug("sidebarObj.resource = " + sidebarObj.resource);
       debug("sidebarObj.datasource_uri = " + sidebarObj.datasource_uri);
 
+      // Show the header for the panels area. Use a splitter if there
+      // is stuff over the panels area.
+      var title_box = document.getElementById('title-box');
+      if (sidebar_element.firstChild == title_box) {
+        title_box.removeAttribute('hidden');
+      } else {
+        document.getElementById('title-splitter').removeAttribute('hidden');
+      }
+      
       // Add the user's current panel choices to the template builder,
       // which will aggregate it with the other datasources that describe
       // the individual panel's title, customize URL, and content URL.
