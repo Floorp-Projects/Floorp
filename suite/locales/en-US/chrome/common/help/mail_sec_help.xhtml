@@ -21,11 +21,11 @@
 <tr>
 <td class="inthissections">
 <p>In this section:</p>
-<p><a href="#about_sigs_encrypt">About Digital Signatures  &amp; Encryption</a></p>
+<p><a href="#about_sigs_encrypt">About Digital Signatures &amp; Encryption</a></p>
 <p><a href="#get_mail_certs">Getting Other People's Certificates</a></p>
 <p><a href="#config_account">Configuring Security Settings</a></p>
-<p><a href="#signing">Signing Messages</a></p>
-<p><a href="#encrypting">Encrypting Email Messages</a></p>
+<p><a href="#signing">Signing &amp; Encrypting a New Message</a></p>
+<p><a href="#reading">Reading Signed &amp; Encrypted Messages</a></p>
 <p><a href="#compose_security">Message Security - Compose Window</a></p>
 <p><a href="#received_security">Message Security - Received Window</a></p></td>
 </tr>
@@ -39,10 +39,10 @@
 <h2><a NAME="about_sigs_encrypt"></a>
 About Digital Signatures &amp; Encryption </h2>
 
-<p>When you compose a mail or newsgroup message, you can choose to attach your digital signature to the message. A <a href="glossary.html#digital_signature">digital signature</a> allows recipients of the message to verify that the message really comes from you and hasn't been tampered with since you sent it.
+<p>When you compose a mail or newsgroup message, you can choose to attach your digital signature to it. A <a href="glossary.html#digital_signature">digital signature</a> allows recipients of the message to verify that the message really comes from you and hasn't been tampered with since you sent it.
 
 
-<p>When you compose a mail message, you can also choose to encrypt the message. <a href="glossary.html#encryption">Encryption</a> makes it nearly impossible for anyone other than the intended recipient to read the message while it is in transit over the Internet. 
+<p>When you compose a mail message, you can also choose to encrypt it. <a href="glossary.html#encryption">Encryption</a> makes it nearly impossible for anyone other than the intended recipient to read the message while it is in transit over the Internet. 
 
 <p>Encryption is not available for newsgroup messages.
 
@@ -55,14 +55,9 @@ About Digital Signatures &amp; Encryption </h2>
 
 </ol>
 
-<p>Once you have completed these steps, follow the directions in these sections to sign and encrypt messages:
+<p>Once you have completed these steps, you can complete the instructions in <a href="#signing">Signing &amp; Encrypting a New Message</a>.
 
-<ul>
-	<li><a href="#signing">Signing Email &amp; Newsgroup Messages</a>
-	<li><a href="#encrypting">Encrypting Email Messages</a></td>
-</ul>
-
-<p>The following sections provide a brief overview of how digital signatures and encryption work. For more technical details on this subject, see the online document <a href="http://developer.netscape.com/docs/manuals/security/pkin/index.htm" TARGET="_blank">Introduction to Public-Key Cryptography</a>.
+<p>The sections that follow provide a brief overview of how digital signatures and encryption work. For more technical details on this subject, see the online document <a href="http://developer.netscape.com/docs/manuals/security/pkin/index.htm" TARGET="_blank">Introduction to Public-Key Cryptography</a>.
 
 <p>&nbsp;
 <h3><a NAME="how_sigs_work"></a>
@@ -98,25 +93,87 @@ How Encryption Works</h3>
 
 <p>Every time you send a digitally signed message, your encryption certificate is automatically included with the message. Therefore, one of the easiest ways to obtain someone else's certificate is for that person to send you a digitally signed message. 
 
-<p>When you receive such a message, the person's certificate is automatically stored by the <a href="certs_help.html">Certificate Manager</a>, which is the part of the browser that keeps track of certificates.
+<p>When you receive such a message, the person's certificate is automatically stored by the <a href="certs_help.html">Certificate Manager</a>, which is the part of the browser that keeps track of certificates. This is useful because you need to have a certificate for each recipient of any email message that you want to send in encrypted form.
 
-<p>You can also obtain certificates by looking them up in a public directory, such as the &quot;phonebook&quot;directories maintained by many companies.
+<p>You can also obtain certificates by looking them up in a public directory, such as the &quot;phonebook&quot; directories maintained by many companies.
 
 
 <p>&nbsp;
 
 <h2><a NAME="config_account"></a>Configuring Security Settings</h2>
 
+<p>Once you have obtained an email certificate (or certificates), you must specify the certificates you want to use for signing and encrypting messages. 
 
-<p>Text for these sections to come.
+<p>For information about obtaining email certificates, see <a href="using_certs_help.html#using_certs_get">Getting Your Own Certificate</a>.
+
+<p>To specify which signing and encryption certificates to use with a particular account, follow these steps:
+
+<ol>
+	<li>Open the Edit menu and choose Mail & Newsgroups Account Settings.
+   	<li>Click Security under the name of the mail account whose security settings you want to configure.
+	<li>Under Digital Signing, click the Select button. (You may be asked to provide your <a href="glossary.html#master_password">Master Password</a> before you can proceed further.)</li>
+	<p>A dialog box appears that allows you to select from among your available signing certificates.
+	<li>Choose the signing certificate you want to use, then click OK.
+	<li>Follow the same steps under Encryption: click the Select button, select the encryption certificate you want to use, and click OK.</li>
+
+	<p>In some cases you may be able to specify the same certificate under Encryption that you specified under Digital Signing; check with your system administrator to find out for sure.
+
+</ol>
+
+<p>Optionally, you can also indicate that you normally want to sign or encrypt all messages sent from a particular account. These account-specific settings are for convenience only; you can override the default settings for individual messages. 
+
+<p>To configure your default signing and encryption settings, start from the Security panel for the account (described above) and select your settings as follows:
+
+<ul>
+
+	<li>Under Digital Signing:</li>
+	<ul><li><b>Digitally sign messages:</b> When this checkbox is selected, all the messages you send from this account will be digitally signed unless you indicate otherwise before you send the message. To turn off this setting, deselect the checkbox. </ul>
+	<li>Under Encryption (choose one):</li>
+	<ul><li><b>Never:</b> When this option is selected, all messages you send from this account will be encrypted unless you indicate otherwise before you send the message.
+	<li><b>Required:</b> When this option is selected, all the messages you send from this account will be encrypted&mdash;but only if you have valid certificates for each of the message's recipients. If you don't have all the necessary certificates, the message can't be sent unless you turn off encryption for that message. 
+</ul></ul>
+
+<p>When you have finished configuring your mail security settings, click OK to confirm them.
+ 
+
 <p>&nbsp;
 
-<h2><a NAME="signing"></a>Signing Messages</h2>
+<h2><a NAME="signing"></a>Signing &amp; Encrypting a New Message</h2>
+
+<p>Before you can digitally sign or encrypt any message, you must obtain at least one email certificate and configure your mail security settings correctly. For background information on these tasks, see <a href="#about_sigs_encrypt">About Digital Signatures &amp; Encryption</a>.
+
+<p>The settings specified in <a href="mail_help.html#security_settings">Mail &amp; Newsgroups Account Settings - Security</a> determine the default settings for each new Compose window you open when you set out to write an email. 
+
+<p>To open a Compose window, start from the Mail window and click Compose. You can immediately identify the default security settings from the presence or absence of these icons near the lower-right corner of the window:
+<ul>
+	<table><tr><td><img src="images/pen.gif" alt="digital signature icon"></td><td>The message will be digitally signed (assuming you have a valid email certificate that identifies you).</td>
+	<tr><td>&nbsp;</td><td>&nbsp;</td></tr>
+	<tr><td><img src="images/key.gif" alt="digital signature icon"></td><td>The message will be encrypted (assuming you have valid certificates for all recipients).</td></table>
+</ul>
+<p>To turn these settings off or on, click the arrow just below the Security icon in the Mail toolbar near the top of the window. Then select the item you want from the drop-down list:
+<ul>
+	<li><b>No Encryption:</b> Choose this to turn off encryption for this message. The message will be sent in the clear over the Internet.
+	<li><b>Require Encryption:</b> Choose this to turn on encryption for this message. The message will be sent in encrypted form. However, it can't be sent unless you have valid certificates for all recipients.
+	<li><b>Digitally Sign:</b> Choose this to turn digital signing on or off for this message. A checkmark indicates the message will be signed. 
+	<li><b>Message Security:</b> Choose this to view detailed information about the security status of this message&mdash;to help you determine, for example, whether you need to obtain a certificate for one of the recipients.
+</ul>
+<p>To see more detailed information about the message's security, click the key or lock icon, or follow the instructions in <a href="#compose_security">Message Security - Compose</a>.
+
 
 <p>&nbsp;
 
-<h2><a NAME="encrypting"></a>Encrypting Email Messages</h2>
+<h2><a NAME="reading"></a>Reading Signed &amp; Encrypted Messages</h2>
 
+<p>When you view a signed or encrypted message in the Mail window, these icons near the upper-right corner of the message header indicate the security status of the message:
+
+<ul>
+	<table><tr><td><img src="images/pen.gif" alt="digital signature icon"></td><td>The message is digitally signed. If there is a problem with the signature, the pen is broken.</td>
+	<tr><td>&nbsp;</td><td>&nbsp;</td></tr>
+	<tr><td><img src="images/key.gif" alt="digital signature icon"></td><td>The message is encrypted. If there is a problem with the encryption, the key is broken.</td></table>
+</ul>
+
+<p>To see more detailed information about the message's security, click the key or lock icon, or follow the instructions in <a href="#received_security">Message Security - Received Message</a>.
+ 
 
 <p>&nbsp;
 
@@ -189,7 +246,7 @@ How Encryption Works</h3>
 	<ul>
 		<li>If the message's contents have been altered during transit, you should ask the sender to resend it. The changes may have been caused by network problems.
 
-    		<li>If a copy of your own certificate (used by the sender to encrypt the message) is not available on your computer, the private key required to decrypt the message cannot be retrieved. The only solution is to import a backup copy of your certificate and its private key (see <a href="certs_help.html#My_Certificates">Your Certificates</a> for details.)If you don't have access to a backup certificate, you will not be able to decrypt the message. 
+    		<li>If a copy of your own certificate (used by the sender to encrypt the message) is not available on your computer, the private key required to decrypt the message cannot be retrieved. The only solution is to import a backup copy of your certificate and its private key (see <a href="certs_help.html#My_Certificates">Your Certificates</a> for details.) If you don't have access to a backup certificate, you will not be able to decrypt the message. 
 </ul>
 </ul>
 
@@ -197,7 +254,7 @@ How Encryption Works</h3>
 
 <p>To indicate your signing or encryption choices for an individual message, click the arrow beside the Security button in the Compose window, then select the options you want. 
 
-<pTo indicate your default signing and encryption preferences for all messages, see <a href="mail_help.html#security_settings">Mail &amp; Newsgroups Account Settings - Security</a>
+<p>To indicate your default signing and encryption preferences for all messages, see <a href="mail_help.html#security_settings">Mail &amp; Newsgroups Account Settings - Security</a>.
 
 
 
@@ -211,7 +268,7 @@ How Encryption Works</h3>
 <hr>
 
 
-<p><i>19 March 2002</i></p>
+<p><i>2 April 2002</i></p>
 <p>Copyright &copy; 1994-2002 Netscape Communications Corporation.</p>
 
 </body>

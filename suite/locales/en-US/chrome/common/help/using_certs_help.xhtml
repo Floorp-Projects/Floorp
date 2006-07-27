@@ -43,7 +43,7 @@
 
 <p>You can obtain certificates that identify you from public CAs, from system administrators or special CAs within your organization, or from web sites offering specialized services that require a means of identification more reliable that your name and password. 
 
-<p>Just as the requirements for a driver's license vary depending on the type of vehicle you want to drive, the requirements for obtaining a certificate vary depending on what you want to use it for. In some cases getting a certificate may be as easy as going to a web site, entering some personal information, and automatically downloading the certificate into your browser. In other cases you may have to go through several steps. 
+<p>Just as the requirements for a driver's license vary depending on the type of vehicle you want to drive, the requirements for obtaining a certificate vary depending on what you want to use it for. In some cases getting a certificate may be as easy as going to a web site, entering some personal information, and automatically downloading the certificate into your browser. In other cases you may have to go through more complicated procedures. 
 
 <p>You can obtain a certificate today by visiting the URL for a certificate authority and following the on-screen instructions. For a list of certificate authorities, see the online document <a href="https://certs.netscape.com/" TARGET="_blank">Client Certificates</a>. </p>
 
@@ -57,7 +57,7 @@
 
 
 <p>
-[&nbsp;<A HREF="#using_certs_first">Return to beginning of Using Certificates section</A>&nbsp;]
+[&nbsp;<A HREF="#using_certs_first">Return to beginning of section</A>&nbsp;]
 </p>
 
 <p>&nbsp;</p>
@@ -65,18 +65,21 @@
 <a NAME="using_certs_info"></a>
 <hr><h1>Checking Security for a Web Page</h1>
 
-<p>Whenever you're viewing a web page, you can find out details about the security available for that page by opening the View menu, choosing Page Info, and clicking the Security tab. 
+<p>When you're viewing any web page, the lock icon near the lower-right corner of the window informs you of the page's security status. 
+
+<p>If the lock is closed, the contents of the page is protected by <a href="glossary.html#encryption">encryption</a> while in transit over the Internet. If the lock is open, the page is not encrypted while in transit. 
+
+<p>For more details about a page's security status, click the lock icon (or open the View menu, choose Page Info, and click the Security tab).
 
 <p>The Security tab for Page Info provides two kinds of information:
 <ul>
-	<li>The top half of the panel describes  whether the web site displaying the page has been correctly identified. 
-	<li>The bottom half describes whether the page you are viewing is encrypted, and if so what grade of encryption it uses.
+	<li>The top half describes whether the web site displaying the page has been verified. (For information on certificate verification, see <a href="#using_certs_validation">Controlling Validation</a>.)
+	<li>The bottom half describes whether the contents of the page you are viewing is protected by encryption while in transit over the network.
 </ul>
 
-<p>If you're not sure what the displayed information means, see the corresponding message in <a href="ssl_page_info_help.html">SSL Page Info</a>.</p>
 
 <p>
-[&nbsp;<A HREF="#using_certs_first">Return to beginning of Using Certificates section</A>&nbsp;]
+[&nbsp;<A HREF="#using_certs_first">Return to beginning of section</A>&nbsp;]
 </p>
 
 
@@ -126,11 +129,11 @@
 <p><b>Certificates on smart cards cannot be backed up.</b> Whether you select some of your certificates and click Backup, or click Backup All, the resulting backup file will not include any certificates stored on smart cards or other external security devices. You can only back up certificates that are stored on the internal Software Security Device.
 
 
-<p>For more details about any of these tasks, click the Help button in any Certificate Manager window or see <a href="certs_help.html#My_Certificates">Your Certificates</a>.
+<p>For more details about any of these tasks, see <a href="certs_help.html#My_Certificates">Your Certificates</a>.
 
 
 <p>
-[&nbsp;<A HREF="#using_certs_first">Return to beginning of Using Certificates section</A>&nbsp;]
+[&nbsp;<A HREF="#using_certs_first">Return to beginning of section</A>&nbsp;]
 </p>
 
 <p>&nbsp;</p>
@@ -147,12 +150,12 @@
 
 <p>The Edit button allows you to specify whether your browser will trust the selected web site certificates in the future.
 
-<p>For more details, click the Help button in any Certificate Manager window or see <a href="certs_help.html#Web_Site_Certificates">Web Site Certificates</a>.
+<p>For more details, see <a href="certs_help.html#Web_Site_Certificates">Web Site Certificates</a>.
 
 
 
 <p>
-[&nbsp;<A HREF="#using_certs_first">Return to beginning of Using Certificates section</A>&nbsp;]
+[&nbsp;<A HREF="#using_certs_first">Return to beginning of section</A>&nbsp;]
 </p>
 
 <p>&nbsp;</p>
@@ -169,10 +172,10 @@
 
 <p>The Edit button allows you to view and control the trust settings for each certificate. Trust settings for a CA certificate let you to specify which kinds of certificates issued by that CA you are willing to trust.
 
-<p>For more details, click the Help button in any Certificate Manager window or see <a href="certs_help.html#CA_Certificates">Authorities</a>.
+<p>For more details, see <a href="certs_help.html#CA_Certificates">Authorities</a>.
 
 <p>
-[&nbsp;<A HREF="#using_certs_first">Return to beginning of Using Certificates section</A>&nbsp;]
+[&nbsp;<A HREF="#using_certs_first">Return to beginning of section</A>&nbsp;]
 </p>
 
 
@@ -227,7 +230,7 @@
 
 
 <p>
-[&nbsp;<A HREF="#using_certs_first">Return to beginning of Using Certificates section</A>&nbsp;]
+[&nbsp;<A HREF="#using_certs_first">Return to beginning of section</A>&nbsp;]
 </p>
 
 <p>&nbsp;</p>
@@ -257,7 +260,7 @@
 
 
 <p>
-[&nbsp;<A HREF="#using_certs_first">Return to beginning of Using Certificates section</A>&nbsp;]
+[&nbsp;<A HREF="#using_certs_first">Return to beginning of section</A>&nbsp;]
 </p>
 
 <p>&nbsp;</p>
@@ -300,7 +303,7 @@
 <p>To disable FIPS-mode, click Disable FIPS.</P>
 
 <p>
-[&nbsp;<A HREF="#using_certs_first">Return to beginning of Using Certificates section</A>&nbsp;]
+[&nbsp;<A HREF="#using_certs_first">Return to beginning of section</A>&nbsp;]
 </p>
 
 <p>&nbsp;</p>
@@ -320,13 +323,13 @@
 	<li>Under the Privacy &amp; Security category, select SSL. (If no subcategories are visible, double-click the category to expand the list.)
 </ol>
 
-<p>For more details, click the Help button in the SSL Settings panel or see <a href="ssl_help.html">SSL Settings</a>.
+<p>For more details, see <a href="ssl_help.html">SSL Settings</a>.
 
 
 </p>
 
 <p>
-[&nbsp;<A HREF="#using_certs_first">Return to beginning of Using Certificates section</A>&nbsp;]
+[&nbsp;<A HREF="#using_certs_first">Return to beginning of section</A>&nbsp;]
 </p>
 
 <p>&nbsp;</p>
@@ -474,12 +477,12 @@
 <p>For information about the OCSP options available, see <a href="validation_help.html#OCSP">OCSP</a>.
 
 <p>
-[&nbsp;<A HREF="#using_certs_first">Return to beginning of Using Certificates section</A>&nbsp;]
+[&nbsp;<A HREF="#using_certs_first">Return to beginning of section</A>&nbsp;]
 </p>
 
 
 <hr>
-<p><i>25 January 2002</i></p>
+<p><i>2 April 2002</i></p>
 <p>Copyright &copy; 1998-2002 The Mozilla Organization.</p>
 
 </body>

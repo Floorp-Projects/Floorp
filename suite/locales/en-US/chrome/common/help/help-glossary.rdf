@@ -44,6 +44,7 @@
         <rdf:li> <rdf:Description nc:name="foreign cookie" nc:link="glossary.html#foreign_cookie"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="home page" nc:link="glossary.html#home_page"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Hypertext Markup Language (HTML)" nc:link="glossary.html#Hypertext_Markup_Language_(HTML)"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="Internet Message Access Protocol (IMAP)" nc:link="glossary.html#IMAP_glossary"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Internet" nc:link="glossary.html#Internet"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Internet protocol address (IP address)" nc:link="glossary.html#Internet_protocol_address_(IP_address)"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Java" nc:link="glossary.html#Java"/> </rdf:li>
@@ -61,6 +62,7 @@
         <rdf:li> <rdf:Description nc:name="PKCS #11" nc:link="glossary.html#1025194"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="PKCS #11 module" nc:link="glossary.html#1025197"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="plug-in" nc:link="glossary.html#plug-in"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="Post Office Protocol (POP)" nc:link="glossary.html#POP_glossary"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="private key" nc:link="glossary.html#1015387"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="proxy" nc:link="glossary.html#proxy"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="public key" nc:link="glossary.html#1019172"/> </rdf:li>
