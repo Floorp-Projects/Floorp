@@ -39,13 +39,11 @@ var deletedPermissions   = [];
 
 // differentiate between cookies, images, and popups
 const nsIPermissionManager = Components.interfaces.nsIPermissionManager;
+const nsICookiePermission = Components.interfaces.nsICookiePermission;
 const cookieType = "cookie";
 const imageType = "image";
 const popupType = "popup";
 
-// XXX this needs to be defined publicly
-// see bug 225857 comment 7
-const ALLOW_SESSION_ONLY = 8;
 
 var dialogType = cookieType;
 if (window.arguments[0] == "imageManager")
@@ -531,7 +529,7 @@ function loadPermissions() {
         case nsIPermissionManager.DENY_ACTION:
           capability = cannotStr;
           break;
-        case ALLOW_SESSION_ONLY:
+        case nsICookiePermission.ACCESS_SESSION:
           // we should only hit this for cookies
           capability = canSessionStr;
           break;

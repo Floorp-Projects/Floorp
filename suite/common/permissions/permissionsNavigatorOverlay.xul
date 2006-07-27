@@ -35,12 +35,9 @@
     // both are necessary. popupmanager is just a special case
     // of permissionmanager but does extra work on add/remove
     const nsIPermissionManager = Components.interfaces.nsIPermissionManager;
+    const nsICookiePermission = Components.interfaces.nsICookiePermission;
     var permissionmanager;
     var popupmanager;
-
-    // XXX this needs to be defined publicly
-    // see bug 225857 comment 7
-    const ALLOW_SESSION_ONLY = 8;
     
     // determine which items we need to hide or disable from the task menu
     function CheckForVisibility()
@@ -62,7 +59,7 @@
       var uri = getBrowser().currentURI;
       setRadioButton("UseCookiesDefault", uri, nsIPermissionManager.UNKNOWN_ACTION, "cookie");
       setRadioButton("AllowCookies", uri, nsIPermissionManager.ALLOW_ACTION, "cookie");
-      setRadioButton("AllowSessionCookies", uri, ALLOW_SESSION_ONLY, "cookie");
+      setRadioButton("AllowSessionCookies", uri, nsICookiePermission.ACCESS_SESSION, "cookie");
       setRadioButton("BlockCookies", uri, nsIPermissionManager.DENY_ACTION, "cookie");
       setRadioButton("UseImagesDefault", uri, nsIPermissionManager.UNKNOWN_ACTION, "image");
       setRadioButton("AllowImages", uri, nsIPermissionManager.ALLOW_ACTION, "image");
@@ -124,9 +121,9 @@
           element = document.getElementById("AllowCookies");
           break;
         case "cookieSession":
-          if (permissionmanager.testPermission(uri, "cookie") == ALLOW_SESSION_ONLY)
+          if (permissionmanager.testPermission(uri, "cookie") == nsICookiePermission.ACCESS_SESSION)
             return;
-          permissionmanager.add(uri, "cookie", ALLOW_SESSION_ONLY);
+          permissionmanager.add(uri, "cookie", nsICookiePermission.ACCESS_SESSION);
           element = document.getElementById("AllowSessionCookies");
           break;
         case "cookieDefault":
