@@ -45,7 +45,7 @@
     </popup>
   </popupset>
   
-  <box class="color-window groove-bottom box-padded outset-right" orient="vertical">
+  <box class="color-window groove-bottom box-padded outset-right" orient="vertical" context="">
     <box autostretch="never">
       	  <textfield id="sidebar-search-text" flex="1" onkeypress="if (event.keyCode == 13) return doSearch();" oninput="return doEnabling();" />
 		  <box autostretch="never">
@@ -147,7 +147,7 @@
 
     </box>
       
-    <box align="vertical" class="searchpanel-outerbox" flex="1">
+    <box align="vertical" class="searchpanel-outerbox" flex="1" context="">
       <tree id="searchengines" datasources="rdf:internetsearch"
             flex="1" class="inset">
         <template>

@@ -17,9 +17,10 @@
   Reserved.
 
 -->
+
  
 <?xml-stylesheet href="chrome://communicator/content/sidebar/sidebarOverlay.css" type="text/css"?> 
-
+<?xul-overlay href="chrome://communicator/content/contentAreaContextOverlay.xul"?>
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/sidebar/sidebarOverlay.dtd">
 
 <overlay id="sidebarOverlay"
@@ -123,9 +124,9 @@
                   <spring flex="100%"/>
                 </box>
                 <iframe class="iframe-panel" flex='1*' src="about:blank"
-                  hidden="true" collapsed="true" content="?content" />
+                  hidden="true" collapsed="true" content="?content" context="contentAreaContextMenu"/>
                 <iframe class="iframe-panel" flex='1*' src="about:blank"
-                  hidden="true" collapsed="true" content="?content" type="content" />
+                  hidden="true" collapsed="true" content="?content" type="content" context="contentAreaContextMenu"/>
               </box>
             </action>
           </rule>
@@ -138,6 +139,7 @@
         </box>
       </box>
     </box>
+    <popupset id="contentAreaContextSet"/>
   </box>
 
   <!-- Splitter on the right of sidebar -->
