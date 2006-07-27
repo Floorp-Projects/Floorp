@@ -391,7 +391,7 @@ function SidebarCustomize() {
       
       customizeWindow = window.openDialog(
                          'chrome://communicator/content/sidebar/customize.xul',
-                         '_blank','chrome,resizable',
+                         '_blank','centerscreen,chrome,resizable',
                          sidebarObj.master_datasources,
                          sidebarObj.master_resource,
                          sidebarObj.datasource_uri,
