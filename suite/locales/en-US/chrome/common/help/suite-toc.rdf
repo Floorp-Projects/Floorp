@@ -255,6 +255,7 @@
         <rdf:li> <rdf:Description ID="mail-doc-add-list" nc:name="Creating a Mailing List" nc:link="mail_help.xhtml#creating_a_mailing_list" /> </rdf:li>
         <rdf:li> <rdf:Description ID="mail-doc-add-listedit" nc:name="Editing a Mailing List" nc:link="mail_help.xhtml#editing_a_mailing_list" /> </rdf:li>
         <rdf:li> <rdf:Description ID="mail_ab_search" nc:name="Searching Address Books" nc:link="mail_help.xhtml#searching_address_books_and_directories" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-add-import" nc:name="Importing Address Books" nc:link="mail_help.xhtml#importing_address_books" /> </rdf:li>
         <rdf:li> <rdf:Description ID="mail-doc-add-export" nc:name="Exporting Address Books" nc:link="mail_help.xhtml#exporting_address_books" /> </rdf:li>
         <rdf:li> <rdf:Description ID="mail-doc-add-sync-LDAP-add" nc:name="Adding and Removing LDAP Directories" nc:link="mail_help.xhtml#adding_and_removing_ldap_directories" /> </rdf:li>
       </rdf:Seq>
