@@ -30,21 +30,17 @@
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   align="vertical"
+  class="dialog"
   onload="Init();">
 
   <html:script src="chrome://search/content/search-panel.js" />
 
-  <box align="horizontal">
-  	<html:div>&search.text.label;</html:div>
-  	<html:input id="sidebar-search-text" size="14" onkeyup="if (event.which == 13) { return doSearch(); }" />
-  	<html:button onclick="return doSearch();">&search.button.label;</html:button>
+  <box align="horizontal" style="margin: 5px 3px 5px 3px; vertical-align: middle;" autostretch="never">
+  	<html:input id="sidebar-search-text" flex="1" onkeyup="if (event.which == 13) { return doSearch(); }" />
+  	<titledbutton class="push" onclick="return doSearch();" value="&search.button.label;"/>
   </box>
-
-  <html:hr width="100%" size="1" />
-
-  <html:div style="width:100px; height:100px" flex="1">
   <tree id="Tree" ref="NC:LastSearchRoot"
-    style="width: 100%; height: 100%"
+    class="inset" flex="1"
     datasources="rdf:internetsearch"
     onclick="openURL(event, event.target.parentNode.parentNode, 'Tree')">
 
@@ -78,5 +74,4 @@
     <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name" />
 
   </tree>
-  </html:div>
 </window>
