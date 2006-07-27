@@ -9,7 +9,12 @@
 	xmlns:html="http://www.w3.org/TR/REC-html40"
 	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	context="disallowcontext"
 	>
+
+	<popupset>
+		<popup id="disallowcontext" oncreate="return(false);" />
+	</popupset>
 
 	<html:script src="chrome://global/content/strres.js"/>
 	<html:script src="chrome://search/content/internetresults.js" />
