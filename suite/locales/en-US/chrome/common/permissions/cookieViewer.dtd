@@ -1,11 +1,11 @@
 <!ENTITY     tab.cookiesonsystem.label      "Stored Cookies">
-<!ENTITY     tab.bannedservers.label        "Blocked Cookies">
-<!ENTITY     div.bannedservers.label        "Select Internet websites that can and cannot store Cookies on your computer.">
-<!ENTITY     tab.bannedimages.label         "Blocked Images">
-<!ENTITY     div.bannedimages.label         "Select Internet websites from which images are not fetched.">
+<!ENTITY     tab.bannedservers.label        "Cookie Sites">
+<!ENTITY     div.bannedservers.label        "Internet websites that can and cannot store cookies on your computer.">
+<!ENTITY     tab.bannedimages.label         "Image Sites">
+<!ENTITY     div.bannedimages.label         "Internet websites from which images are or are not fetched.">
 <!ENTITY     div.cookiesonsystem.label      "View and Remove Cookies that are stored on your computer.">
 <!ENTITY     treehead.cookiename.label      "Cookie Name">
-<!ENTITY     treehead.cookiedomain.label    "Cookie Domain"> 
+<!ENTITY     treehead.cookiedomain.label    "Site"> 
 <!ENTITY     treehead.infoselected.label    "Information about the selected Cookie">
 <!ENTITY     button.removecookie.label      "Remove Cookie">
 <!ENTITY     button.removeallcookies.label  "Remove All Cookies">
@@ -17,7 +17,7 @@
 <!ENTITY     props.secure.label             "Is Cookie secure?">
 <!ENTITY     props.expires.label            "Cookie will expire on:">
 
-<!ENTITY     treehead.sitename.label        "Domain Name">
+<!ENTITY     treehead.sitename.label        "Site">
 <!ENTITY     treehead.status.label          "Status">
 <!ENTITY     windowtitle.label              "Cookie Manager">
 
