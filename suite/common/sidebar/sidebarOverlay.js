@@ -32,6 +32,7 @@ var SIDEBAR_VERSION = "0.0";
 
 // the default sidebar:
 var sidebarObj = new Object;
+sidebarObj.never_built = true;
 
 function debug(msg) {
   // uncomment for noise
@@ -87,20 +88,14 @@ function get_sidebar_datasource_uri(panels_file_id) {
 function sidebar_overlay_init() {
   sidebarObj.datasource_uri = get_sidebar_datasource_uri(PANELS_RDF_FILE);
   sidebarObj.resource = 'urn:sidebar:current-panel-list';
-
-  sidebarObj.master_datasources = '';
-  sidebarObj.master_datasources += 'chrome://sidebar/content/local-panels.rdf';
-  sidebarObj.master_datasources += ' chrome://sidebar/content/remote-panels.rdf';
-  sidebarObj.master_datasources += " " + get_remote_datasource_url();
+  
+  sidebarObj.master_datasources = get_remote_datasource_url();
   sidebarObj.master_resource = 'urn:sidebar:master-panel-list';
   sidebarObj.component = document.location.href;
 
-  debug("sidebar_overlay_init: sidebarObj.component: " + sidebarObj.component);
-
-
   // Initialize the display
-  var sidebar_element  = document.getElementById('sidebar-box')
-  var sidebar_menuitem = document.getElementById('menu_sidebar')
+  var sidebar_element  = document.getElementById('sidebar-box');
+  var sidebar_menuitem = document.getElementById('menu_sidebar');
   if (sidebar_element.getAttribute('hidden') == 'true') {
     if (sidebar_menuitem) {
       sidebar_menuitem.setAttribute('checked', 'false');
@@ -109,30 +104,33 @@ function sidebar_overlay_init() {
     if (sidebar_menuitem) {
       sidebar_menuitem.setAttribute('checked', 'true');
     }
+    
+    if (sidebarObj.never_built) {
+      sidebarObj.never_built = false;
 
-    debug("sidebar = " + sidebarObj);
-    debug("sidebarObj.resource = " + sidebarObj.resource);
-    debug("sidebarObj.datasource_uri = " + sidebarObj.datasource_uri);
+      debug("sidebar = " + sidebarObj);
+      debug("sidebarObj.resource = " + sidebarObj.resource);
+      debug("sidebarObj.datasource_uri = " + sidebarObj.datasource_uri);
 
-    // Add the user's current panel choices to the template builder,
-    // which will aggregate it with the other datasources that describe
-    // the individual panel's title, customize URL, and content URL.
-    var panels = document.getElementById('sidebar-panels');
-    panels.database.AddDataSource(RDF.GetDataSource(sidebarObj.datasource_uri));
+      // Add the user's current panel choices to the template builder,
+      // which will aggregate it with the other datasources that describe
+      // the individual panel's title, customize URL, and content URL.
+      var panels = document.getElementById('sidebar-panels');
+      panels.database.AddDataSource(RDF.GetDataSource(sidebarObj.datasource_uri));
+      
+      // The stuff on the bottom
+      var panels_bottom = document.getElementById('sidebar-panels-bottom');
+      panels_bottom.database.AddDataSource(RDF.GetDataSource(sidebarObj.datasource_uri));
+    
+      debug("Adding observer to database.");
+      panels.database.AddObserver(panel_observer);
 
-    // The stuff on the bottom
-    var panels_bottom = document.getElementById('sidebar-panels-bottom');
-    panels_bottom.database.AddDataSource(RDF.GetDataSource(sidebarObj.datasource_uri));
+      // XXX This is a hack to force re-display
+      panels.setAttribute('ref', sidebarObj.resource);
 
-    debug("Adding observer to database.");
-    panels.database.AddObserver(panel_observer);
-
-    // XXX This is a hack to force re-display
-    panels.setAttribute('ref', sidebarObj.resource);
-
-    // XXX This is a hack to force re-display
-    panels_bottom.setAttribute('ref', sidebarObj.resource);
-
+      // XXX This is a hack to force re-display
+      panels_bottom.setAttribute('ref', sidebarObj.resource);
+    }
     sidebar_open_default_panel(100, 0);
   }
 }
@@ -363,7 +361,7 @@ function SidebarShowHide() {
     debug("Showing the sidebar");
     sidebarBox.removeAttribute('hidden');
     sidebar_splitter.removeAttribute('hidden');
-    sidebar_open_default_panel(100, 0);
+    sidebar_overlay_init();
   } else {
     debug("Hiding the sidebar");
     sidebarBox.setAttribute('hidden','true');
