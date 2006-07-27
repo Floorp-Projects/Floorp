@@ -2444,8 +2444,9 @@
               if (counter < headerboxkids.length) {
                   dayHeaderBox = headerboxkids[counter];
                   dayHeaderBox.removeAttribute("today");
-                  for each (item in dayHeaderBox.mItemBoxes) {
-                      dayHeaderBox.deleteEvent(item.occurrence);
+                  // Delete backwards to make sure we get them all
+                  for (var i = dayHeaderBox.mItemBoxes.length-1; i >= 0; i--) {
+                      dayHeaderBox.deleteEvent(dayHeaderBox.mItemBoxes[i].occurrence);
                   }
               } else {
                   dayHeaderBox = createXULElement("calendar-header-container");
