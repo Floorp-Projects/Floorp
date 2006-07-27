@@ -21,12 +21,15 @@
  *    Robert John Churchill    <rjc@netscape.com>
  *
  * Contributor(s): 
+ *    Blake Ross <BlakeR1234@aol.com>
  */
 
 
 
 // global(s)
 var bundle = srGetStrBundle("chrome://communicator/locale/search/search-editor.properties");
+var commonDialogsService = Components.classes["component://netscape/appshell/commonDialogs"].getService();
+commonDialogsService = commonDialogsService.QueryInterface(Components.interfaces.nsICommonDialogs);
 var pref = null;
 var RDF = null;
 var RDFC = null;
@@ -421,10 +424,12 @@ function MoveDelta(delta)
 function NewCategory()
 {
 	var promptStr = bundle.GetStringFromName("NewCategoryPrompt");
-	var name = prompt(promptStr, "");
-	if ((!name) || (name == ""))	return(false);
+	var newTitle = bundle.GetStringFromName("NewCategoryTitle");
+	var result = {value:0};
+	var name = commonDialogsService.Prompt(window, newTitle, promptStr,"",result);
+	if ((!result.value) || result.value == "")      return(false);
 
-	var newName = RDF.GetLiteral(name);
+	var newName = RDF.GetLiteral(result.value);
 	if (!newName)	return(false);
 
 	var categoryRes = RDF.GetResource("NC:SearchCategoryRoot");
@@ -471,8 +476,10 @@ function RenameCategory()
 	var categoryList = document.getElementById( "categoryList" );
 	var currentName = categoryList.selectedItem.getAttribute("value");
 	var promptStr = bundle.GetStringFromName("RenameCategoryPrompt");
-	var name = prompt(promptStr, currentName);
-	if ((!name) || (name == "") || (name == currentName))	return(false);
+	var renameTitle = bundle.GetStringFromName("RenameCategoryTitle");
+	var result = {value:0};
+	var name = commonDialogsService.Prompt(window,renameTitle,promptStr,currentName,result);
+	if ((!result.value) || (result.value == "") || result.value == currentName)     return(false);
 
 	var currentCatID = categoryList.selectedItem.getAttribute("id");
 	var currentCatRes = RDF.GetResource(currentCatID);
@@ -481,7 +488,7 @@ function RenameCategory()
 	var titleRes = RDF.GetResource("http://home.netscape.com/NC-rdf#title");
 	if (!titleRes)	return(false);
 
-	var newName = RDF.GetLiteral(name);
+	var newName = RDF.GetLiteral(result.value);
 	if (!newName)	return(false);
 
 	var oldName = catDS.GetTarget(currentCatRes, titleRes, true);
