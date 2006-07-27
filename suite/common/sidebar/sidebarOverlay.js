@@ -39,9 +39,7 @@ function debug(msg) {
   //dump(msg+"\n");
 }
 
-var panel_observer = new Object;
-
-panel_observer = {
+var panel_observer = {
   OnAssert : function(src,prop,target) { 
     debug ("*** sidebar observer: assert");
     // "refresh" is asserted by select menu and by customize.js.
@@ -58,7 +56,7 @@ panel_observer = {
   OnMove : function(old_src,new_src,prop,target) {
     debug ("*** sidebar observer: move");
   }
-}
+};
 
 
 function sidebar_get_panels_file() {
