@@ -126,18 +126,12 @@ public:
 
 protected:
   /**
-   * Get the primary frame associated with this content
-   * @return the primary frame associated with this content
-   */
-  nsIFormControlFrame *GetSelectFrame() const;
-
-  /**
    * Get the select content element that contains this option, this
    * intentionally does not return nsresult, all we care about is if
    * there's a select associated with this option or not.
    * @param aSelectElement the select element (out param)
    */
-  void GetSelect(nsIDOMHTMLSelectElement **aSelectElement) const;
+  nsIContent* GetSelect();
 
   /**
    * Called when an attribute has just been changed
@@ -209,10 +203,7 @@ nsHTMLOptionElement::GetForm(nsIDOMHTMLFormElement** aForm)
   NS_ENSURE_ARG_POINTER(aForm);
   *aForm = nsnull;
 
-  nsCOMPtr<nsIDOMHTMLSelectElement> selectElement;
-  GetSelect(getter_AddRefs(selectElement));
-
-  nsCOMPtr<nsIFormControl> selectControl(do_QueryInterface(selectElement));
+  nsCOMPtr<nsIFormControl> selectControl = do_QueryInterface(GetSelect());
 
   if (selectControl) {
     selectControl->GetForm(aForm);
@@ -287,9 +278,7 @@ nsHTMLOptionElement::SetSelected(PRBool aValue)
 {
   // Note: The select content obj maintains all the PresState
   // so defer to it to get the answer
-  nsCOMPtr<nsIDOMHTMLSelectElement> selectElement;
-  GetSelect(getter_AddRefs(selectElement));
-  nsCOMPtr<nsISelectElement> selectInt(do_QueryInterface(selectElement));
+  nsCOMPtr<nsISelectElement> selectInt = do_QueryInterface(GetSelect());
   if (selectInt) {
     PRInt32 index;
     GetIndex(&index);
@@ -317,9 +306,8 @@ nsHTMLOptionElement::GetIndex(PRInt32* aIndex)
   *aIndex = -1; // -1 indicates the index was not found
 
   // Get our containing select content object.
-  nsCOMPtr<nsIDOMHTMLSelectElement> selectElement;
-
-  GetSelect(getter_AddRefs(selectElement));
+  nsCOMPtr<nsIDOMHTMLSelectElement> selectElement =
+    do_QueryInterface(GetSelect());
 
   if (selectElement) {
     // Get the options from the select object.
@@ -452,46 +440,22 @@ nsHTMLOptionElement::IntrinsicState() const
   return state;
 }
 
-// Options don't have frames - get the select content node
-// then call nsGenericHTMLElement::GetFormControlFrameFor()
-
-nsIFormControlFrame *
-nsHTMLOptionElement::GetSelectFrame() const
-{
-  if (!GetParent()) {
-    return nsnull;
-  }
-
-  nsIDocument* currentDoc = GetCurrentDoc();
-  if (!currentDoc) {
-    return nsnull;
-  }
-
-  nsCOMPtr<nsIDOMHTMLSelectElement> selectElement;
-
-  GetSelect(getter_AddRefs(selectElement));
-
-  nsCOMPtr<nsIContent> selectContent(do_QueryInterface(selectElement));
-
-  if (!selectContent) {
-    return nsnull;
-  }
-
-  return GetFormControlFrameFor(selectContent, currentDoc, PR_FALSE);
-}
-
 // Get the select content element that contains this option
-void
-nsHTMLOptionElement::GetSelect(nsIDOMHTMLSelectElement **aSelectElement) const
+nsIContent*
+nsHTMLOptionElement::GetSelect()
 {
-  *aSelectElement = nsnull;
-
-  for (nsIContent* parent = GetParent(); parent; parent = parent->GetParent()) {
-    CallQueryInterface(parent, aSelectElement);
-    if (*aSelectElement) {
+  nsIContent* parent = this;
+  while ((parent = parent->GetParent()) &&
+         parent->IsNodeOfType(eHTML)) {
+    if (parent->Tag() == nsHTMLAtoms::select) {
+      return parent;
+    }
+    if (parent->Tag() != nsHTMLAtoms::optgroup) {
       break;
     }
   }
+  
+  return nsnull;
 }
 
 nsresult
