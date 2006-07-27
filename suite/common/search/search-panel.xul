@@ -160,8 +160,7 @@
       <vbox class="searchpanel-outerbox" flex="1">
 
         <listbox id="searchengines" flex="1" class="plain"
-                 datasources="rdf:internetsearch"
-                 onselect="saveEngines();">
+                 datasources="rdf:internetsearch">
           <listhead>
             <listheader id="EngineColumn" label="&engine.column.label;"
                         sortable="true" resource="http://home.netscape.com/NC-rdf#Name"
