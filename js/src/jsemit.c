@@ -4490,8 +4490,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
 
         /*
-         * We use a [setsp],[gosub],rethrow block for rethrowing when
-         * there's no unguarded catch, and also for running finally code
+         * We use a [setsp],[exception][gosub],[throw] block for rethrowing
+         * when there's no unguarded catch, and also for running finally code
          * while letting an uncaught exception pass through.
          */
         if (pn->pn_kid3 ||
@@ -4507,6 +4507,11 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             EMIT_UINT16_IMM_OP(JSOP_SETSP, (jsatomid)depth);
             cg->stackDepth = depth;
 
+            if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0 ||
+                js_Emit1(cx, cg, JSOP_EXCEPTION) < 0) {
+                return JS_FALSE;
+            }
+
             /* Last discriminant jumps to rethrow if none match. */
             if (catchJump != -1 && iter->pn_kid1->pn_expr)
                 CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, catchJump);
@@ -4516,12 +4521,18 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                                       &stmtInfo.gosub);
                 if (jmp < 0)
                     return JS_FALSE;
-                cg->stackDepth = depth;
+
+                /*
+                 * Exception and retsub pc index are modeled as on the stack.
+                 * Decrease cg->stackDepth by one to account for JSOP_RETSUB
+                 * popping the pc index.
+                 */
+                JS_ASSERT(cg->stackDepth == depth + 2);
+                JS_ASSERT(cg->stackDepth <= cg->maxStackDepth);
+                cg->stackDepth = depth + 1;
             }
 
             if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0 ||
-                js_Emit1(cx, cg, JSOP_EXCEPTION) < 0 ||
-                js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0 ||
                 js_Emit1(cx, cg, JSOP_THROW) < 0) {
                 return JS_FALSE;
             }
@@ -4537,12 +4548,14 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_FALSE;
 
             /*
-             * The stack budget must be balanced at this point, and we need
-             * one more slot for the JSOP_RETSUB return address pushed by a
-             * JSOP_GOSUB opcode that calls this finally clause.
+             * The stack budget must be balanced at this point, but we need
+             * two more slots for the saved exception and the JSOP_RETSUB's
+             * return pc index that was pushed by the JSOP_GOSUB opcode that
+             * called this finally clause.
              */
             JS_ASSERT(cg->stackDepth == depth);
-            if ((uintN)++cg->stackDepth > cg->maxStackDepth)
+            cg->stackDepth += 2;
+            if ((uintN)cg->stackDepth > cg->maxStackDepth)
                 cg->maxStackDepth = cg->stackDepth;
 
             /* Now indicate that we're emitting a subroutine body. */
@@ -4554,6 +4567,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 js_Emit1(cx, cg, JSOP_RETSUB) < 0) {
                 return JS_FALSE;
             }
+
+            /* Restore stack depth budget to its balanced state. */
+            JS_ASSERT(cg->stackDepth == depth + 1);
+            cg->stackDepth = depth;
         }
         js_PopStatementCG(cx, cg);
 
