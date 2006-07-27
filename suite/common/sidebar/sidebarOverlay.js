@@ -283,7 +283,7 @@ function SidebarCustomize() {
       
       customizeWindow = window.openDialog(
                           'chrome://sidebar/content/customize.xul',
-                          '_blank','chrome',
+                          '_blank','chrome,resizable',
                           datasources, sidebar.master_resource,
                           sidebar.datasource_uri, sidebar.resource);
       setTimeout(enableCustomize, 2000);
@@ -310,7 +310,80 @@ function SidebarShowHide() {
   }
   // Immediately save persistent values
   document.persist('sidebar-box', 'hidden');
+  persistWidth();
+}
+
+// SidebarExpandCollapse() - Respond to grippy click.
+// XXX This whole function is a hack to work around
+// bugs #20546, and #22214.
+function SidebarExpandCollapse() {
+  var sidebar          = document.getElementById('sidebar-box');
+  var sidebar_splitter = document.getElementById('sidebar-splitter');
+
+  sidebar.setAttribute('hackforbug20546-applied','true');
+
+  // Get the current open/collapsed state
+  // The value of state is the "preclick" state
+  var state = sidebar_splitter.getAttribute('state');
+
+  if (state && state == 'collapsed') {
+    // Going from collapsed to open.
+
+    sidebar.removeAttribute('hackforbug20546');
+
+    // Reset the iframe's src to get the content to display.
+    // This might be bug #22214.
+    var panels = document.getElementById('sidebar-panels');
+    var target = panels.getAttribute('open-panel-src');
+    var iframe = document.getElementById('sidebar-content');
+    iframe.setAttribute('src', target);
+
+    // XXX Partial hack workaround for bug #22214.
+    bumpWidth(+1);
+    setTimeout("bumpWidth(-1)",10);
+
+  } else {
+    // Going from open to collapsed.
+
+    sidebar.setAttribute('hackforbug20546','true');
+  }
+}
+
+// XXX Partial hack workaround for bug #22214.
+function bumpWidth(delta) {
+  var sidebar = document.getElementById('sidebar-box');
+  var width = sidebar.getAttribute('width');
+  sidebar.setAttribute('width', parseInt(width) + delta);
+}
+
+function persistWidth() {
+  // XXX Partial workaround for bug #19488.
+  var sidebar = document.getElementById('sidebar-box');
+  var sidebar_splitter = document.getElementById('sidebar-splitter');
+  var state = sidebar_splitter.getAttribute('state');
+
+  var width = sidebar.getAttribute('width');
+
+  if (!state || state == '' || state == 'open') {
+    sidebar.removeAttribute('hackforbug20546');
+    sidebar.setAttribute('hackforbug20546-applied','true');
+  }
+
+  if (width && (width > 410 || width < 15)) {
+    sidebar.setAttribute('width',168);
+  }
+
+  width = sidebar.getAttribute('width');
   document.persist('sidebar-box', 'width');
+}
+
+function SidebarFinishDrag() {
+
+  // XXX Semi-hack for bug #16516.
+  // If we had the proper drag event listener, we would not need this
+  // timeout. The timeout makes sure the width is written to disk after
+  // the sidebar-box gets the newly dragged width.
+  setTimeout("persistWidth()",100);
 }
 
 /*==================================================
