@@ -114,7 +114,7 @@ public:
 	SpendTime(PRUint32 timeMillis) = 0;
 
 	NS_IMETHOD
-#if PR_BYTES_PER_LONG == 8
+#if PR_BYTES_PER_LONG == 8 || PR_BYTES_PER_WORD == 8
 	UnwrapJavaWrapper(JNIEnv* jenv, jobject jobj, jlong* obj) = 0;
 #else
 	UnwrapJavaWrapper(JNIEnv* jenv, jobject jobj, jint* obj) = 0;

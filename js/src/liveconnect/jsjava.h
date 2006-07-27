@@ -56,7 +56,7 @@ JS_BEGIN_EXTERN_C
 #include "jni.h"             /* Java Native Interface */
 #include "jsapi.h"           /* JavaScript engine API */
 
-#if JS_BYTES_PER_LONG == 8
+#if JS_BYTES_PER_LONG == 8 || JS_BYTES_PER_WORD == 8
 typedef jlong lcjsobject;
 #else
 typedef jint lcjsobject;
