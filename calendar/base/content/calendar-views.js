@@ -93,9 +93,9 @@ var calendarViewController = {
     modifyOccurrence: function (aOccurrence, aNewStartTime, aNewEndTime) {
         // if we can modify this thing directly (e.g. just the time changed),
         // then do so; otherwise pop up the dialog
-        var itemToEdit = getOccurrenceOrParent(aOccurrence);
+        var itemToEdit;
         if (aNewStartTime && aNewEndTime) {
-        
+            itemToEdit = getOccurrenceOrParent(aOccurrence);
             var instance = itemToEdit.clone();
 
             // if we're about to modify the parentItem, we need to account
@@ -123,6 +123,7 @@ var calendarViewController = {
                 editEvent();
             } else {
                 // Lightning specific code
+                itemToEdit = getOccurrenceOrParent(aOccurrence);
                 modifyEventWithDialog(itemToEdit);
             }
         }
