@@ -793,7 +793,7 @@ function OpenSearch( aSearchStr, engineURIs )
         searchURL += ( "&text=" + escapedSearchStr );
         gURL = searchURL;
         dump("*** about to attempt to load internetresults into the content window\n");
-        loadURLInContent("chrome://communicator/content/search/internetresults.xul?" + searchURL);
+        loadURLInContent("chrome://communicator/content/search/internetresults.xul?" + escape(searchURL));
       }
 		}
 		catch(ex)
