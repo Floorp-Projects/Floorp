@@ -543,7 +543,7 @@ static CurveNameTagPair nameTagPair[] =
 };
 
 static SECKEYECParams * 
-getECParams(char *curve)
+getECParams(const char *curve)
 {
     SECKEYECParams *ecparams;
     SECOidData *oidData = NULL;
@@ -1809,7 +1809,7 @@ pubkeyInitKey(bltestCipherInfo *cipherInfo, PRFileDesc *file,
 	    ecSerialize[2].data = ecdsap->eckey->privateValue.data;
 	    ecSerialize[2].len  = ecdsap->eckey->privateValue.len;
 	    serialize_key(&(ecSerialize[0]), 3, file);
-	    free(tmpECParamsDER);
+	    SECITEM_FreeItem(tmpECParamsDER, PR_TRUE);
 	    PORT_FreeArena(tmpECParams->arena, PR_TRUE);
 	    rv = SECOID_Shutdown();
 	    CHECKERROR(rv, __LINE__);
