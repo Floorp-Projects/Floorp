@@ -75,7 +75,7 @@
       <separator class="thin"/>
 
       <tree id="permissionsTree" flex="1" style="height: 10em;"
-            seltype="multiple" hidecolumnpicker="true"
+            hidecolumnpicker="true"
             onkeypress="handlePermissionKeyPress(event)"
             onselect="permissionSelected();"
             lastSortBlacklist="false" lastSortWhitelist="false"
