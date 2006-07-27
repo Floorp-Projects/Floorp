@@ -47,7 +47,7 @@
 
     <template>
       <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-        <treechildren>
+        <treechildren flex="1">
           <treeitem uri="..."
                   type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
             <treerow>
@@ -60,7 +60,7 @@
       </rule>
 
       <rule>
-        <treechildren>
+        <treechildren flex="1">
           <treeitem uri="..."
                   type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
             <treerow>
@@ -72,7 +72,8 @@
       </rule>
     </template>
 
-    <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name" />
-
+    <treecolgroup>
+      <treecol flex="1" rdf:resource="http://home.netscape.com/NC-rdf#Name" />
+    </treecolgroup>
   </tree>
 </window>

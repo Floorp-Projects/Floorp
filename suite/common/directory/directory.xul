@@ -53,9 +53,10 @@
         </treechildren>
       </template>
 
-      <treecol id="FilenameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" sortActive="true" sortDirection="ascending" />
-      <treecol id="ContentLengthColumn" rdf:resource="http://home.netscape.com/NC-rdf#Content-Length"/>
-      <treecol id="LastModColumn" rdf:resource="http://home.netscape.com/WEB-rdf#LastModifiedDate"/>
+      <treecolgroup>
+        <treecol flex="1" id="FilenameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" sortActive="true" sortDirection="ascending" />
+        <treecol flex="1" id="ContentLengthColumn" rdf:resource="http://home.netscape.com/NC-rdf#Content-Length"/>
+        <treecol flex="1" id="LastModColumn" rdf:resource="http://home.netscape.com/WEB-rdf#LastModifiedDate"/>
 
       <treehead>
         <treerow>
@@ -70,7 +71,7 @@
 
       <!-- Create the treechildren here so we can attach event handlers
            at this level (rather than at the tree level -->
-      <treechildren onclick="OnClick(event);" onkeypress="OnClick(event);"/>
+      <treechildren flex="1" onclick="OnClick(event);" onkeypress="OnClick(event);"/>
 
   </tree>
 </window>
