@@ -48,7 +48,7 @@
     </popup>
   </popupset>
  
-  <vbox flex="1" context="">
+  <vbox flex="1">
     <vbox class="box-padded">
       <box autostretch="never">
         <textbox id="sidebar-search-text" flex="1"
