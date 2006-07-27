@@ -38,11 +38,13 @@ const nsIRDFLiteral            = Components.interfaces.nsIRDFLiteral;
 const nsIRDFDataSource         = Components.interfaces.nsIRDFDataSource;
 const nsIRDFRemoteDataSource   = Components.interfaces.nsIRDFRemoteDataSource;
 const nsIInternetSearchService = Components.interfaces.nsIInternetSearchService;
+const STRINGBUNDLE_REGIONAL_URL = "chrome://navigator-region/locale/region.properties";
 
 var rootNode;
 var textArc;
 var modeArc;
 var searchBundle;
+var regionalBundle;
 
 var sidebarInitiatedSearch = false;
 
@@ -580,8 +582,10 @@ function OpenSearch(aSearchStr, engineURIs)
   var searchEngineURI = nsPreferences.copyUnicharPref("browser.search.defaultengine", null);
   var defaultSearchURL = nsPreferences.getLocalizedUnicharPref("browser.search.defaulturl", null);
 
-  if (!defaultSearchURL)
-    defaultSearchURL = searchBundle.getString("defaultSearchURL");
+  if (!defaultSearchURL) {
+    regionalBundle = srGetStrBundle( STRINGBUNDLE_REGIONAL_URL );
+    defaultSearchURL = regionalBundle.GetStringFromName("defaultSearchURL");
+  }
 
   var searchDS = Components.classes[ISEARCH_CONTRACTID].getService(nsIInternetSearchService);
 
@@ -600,7 +604,7 @@ function OpenSearch(aSearchStr, engineURIs)
       }
 
       if (!searchEngineURI)
-        searchEngineURI = searchBundle.getString("defaultSearchURL");
+        searchEngineURI = regionalBundle.GetStringFromName("defaultSearchURL");
 
       // look up the correct search URL format for the given engine
       try {
