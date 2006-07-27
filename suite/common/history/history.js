@@ -150,7 +150,7 @@ function historyOnClick(aEvent)
   gHistoryTree.treeBoxObject.getCellAt(aEvent.clientX, aEvent.clientY, row, col, elt);
   if (row.value >= 0 && col.value) {
     if (!isContainer(gHistoryTree, row.value))
-      OpenURL(target);
+      OpenURL(target, aEvent);
     else if (aEvent.button == 0 && elt.value != "twisty")
       gHistoryTree.treeBoxObject.view.toggleOpenState(row.value);
   }
@@ -288,24 +288,29 @@ function collapseExpand()
     gHistoryTree.treeBoxObject.view.toggleOpenState(currentIndex);
 }
 
-function OpenURL(aTarget)
+function OpenURL(aTarget, aEvent)
 {
     var currentIndex = gHistoryTree.currentIndex;     
     var builder = gHistoryTree.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
     var url = builder.getResourceAtIndex(currentIndex).ValueUTF8;
-    var uri = Components.classes["@mozilla.org/network/standard-url;1"].
-                createInstance(Components.interfaces.nsIURI);
-    uri.spec = url;
-    if (uri.schemeIs("javascript") || uri.schemeIs("data")) {
-      var strBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                                       .getService(Components.interfaces.nsIStringBundleService);
-      var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                                    .getService(Components.interfaces.nsIPromptService);
-      var historyBundle = strBundleService.createBundle("chrome://communicator/locale/history/history.properties");
-      var brandBundle = strBundleService.createBundle("chrome://branding/locale/brand.properties");      
-      var brandStr = brandBundle.GetStringFromName("brandShortName");
-      var errorStr = historyBundle.GetStringFromName("load-js-data-url-error");
-      promptService.alert(window, brandStr, errorStr);
+    if (!gIOService)
+      gIOService = Components.classes['@mozilla.org/network/io-service;1']
+                             .getService(Components.interfaces.nsIIOService);
+    try {
+      var scheme = gIOService.extractScheme(url);
+      if (scheme == "javascript" || scheme == "data") {
+        var strBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                                         .getService(Components.interfaces.nsIStringBundleService);
+        var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                                      .getService(Components.interfaces.nsIPromptService);
+        var historyBundle = strBundleService.createBundle("chrome://communicator/locale/history/history.properties");
+        var brandBundle = strBundleService.createBundle("chrome://branding/locale/brand.properties");      
+        var brandStr = brandBundle.GetStringFromName("brandShortName");
+        var errorStr = historyBundle.GetStringFromName("load-js-data-url-error");
+        promptService.alert(window, brandStr, errorStr);
+        return false;
+      }
+    } catch (e) {
       return false;
     }
 
@@ -338,7 +343,7 @@ function OpenURL(aTarget)
         }
       } else {
         if (URLArray.length > 0)
-          OpenURLArrayInTabs(URLArray, aTarget == "tab_background");
+          OpenURLArrayInTabs(URLArray, BookmarksUtils.shouldLoadTabInBackground(aEvent));
       }
     }
     else if (!isContainer(gHistoryTree, currentIndex))
