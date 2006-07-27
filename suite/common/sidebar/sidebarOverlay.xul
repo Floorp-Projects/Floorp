@@ -27,7 +27,7 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <!-- Overlay the sidebar panels -->
-  <box id="sidebar-box" align="vertical" debug="true"
+  <box id="sidebar-box" align="vertical"
     persist="hidden width hackforbug20546">
     <splitter id="title-box" class="sidebar-main-header" collapse="after"
       persist="state">
