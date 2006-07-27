@@ -19,135 +19,169 @@
  * Contributor(s): Stephen Lamm <slamm@netscape.com>
  */ 
 
-splitter#sidebar-splitter {
-	margin-right: 2px;
-	margin-top: 2px;
-	padding: 0px;
-	border: none;
-	background-color: #003366;
+#sidebar-splitter {
+    margin-right: 1px;
+    margin-top: 1px;
+    padding: 0px;
+    border: none;
+    background-color: #003366;
 }
 
-splitter#sidebar-splitter #bottomright-cap {
-	min-height: 8px; 
-	background-image: url("chrome://communicator/skin/sidebar/sidebar-bottomright-cap.gif"); 
-	background-repeat: no-repeat;
-	background-position: 100% 100%;
+#sidebar-topright-cap {
+    min-height: 8px; 
+    background-repeat: no-repeat;
+    background-position: 100% 0%;
+    background-image:
+        url("chrome://communicator/skin/sidebar/sidebar-topright-cap.gif"); 
 }
 
-splitter#sidebar-splitter #topright-cap {
-	min-height: 8px; 
-	background-image: url("chrome://communicator/skin/sidebar/sidebar-topright-cap.gif"); 
-	background-repeat: no-repeat;
-	background-position: 100% 0%;
+#sidebar-bottomright-cap {
+    min-height: 8px; 
+    background-repeat: no-repeat;
+    background-position: 100% 100%;
+    background-image:
+        url("chrome://communicator/skin/sidebar/sidebar-bottomright-cap.gif"); 
 }
 
-splitter#sidebar-splitter grippy {
-	margin: 0px;
-	border: 2px solid #003366;
-	padding: 0px;
-	background-color: #6699CC;
-	list-style-image: none;
+splitter#sidebar-splitter > grippy {
+    margin: 0px;
+    padding: 0px;
+    border: 2px solid #003366;
+    background-color: #6699CC;
+    list-style-image:
+       url("chrome://communicator/skin/sidebar/sbgrippy-left.gif"); 
 }
 
-splitter#sidebar-splitter grippy:hover {
-	background-color: #99CCFF;
+splitter#sidebar-splitter > grippy:hover,
+splitter#sidebar-splitter > grippy:active {
+    background-color: #99CCFF;
+    list-style-image:
+       url("chrome://communicator/skin/sidebar/sbgrippy-left-hover.gif"); 
 }
 
-splitter#sidebar-splitter grippy:active {
-	background-color: #99CCFF;
+splitter#sidebar-splitter[collapsed="true"] > grippy {
+    list-style-image:
+       url("chrome://communicator/skin/sidebar/sbgrippy-right.gif"); 
+}
+
+splitter#sidebar-splitter[collapsed="true"] > grippy:hover,
+splitter#sidebar-splitter[collapsed="true"] > grippy:active {
+    list-style-image:
+       url("chrome://communicator/skin/sidebar/sbgrippy-right-hover.gif"); 
+}
+
+image#sidebar-status-grippy {
+    padding: 2px 2px 2px 0px;
+    background-color: #003366;
+    list-style-image:
+       url("chrome://communicator/skin/sidebar/sidebar-open.gif"); 
+}
+image#sidebar-status-grippy:hover {
+    list-style-image:
+       url("chrome://communicator/skin/sidebar/sidebar-open-hover.gif"); 
+}
+image#sidebar-status-grippy[open="true"] {
+    list-style-image:
+       url("chrome://communicator/skin/sidebar/sidebar-close.gif"); 
+}
+image#sidebar-status-grippy[open="true"]:hover {
+    list-style-image:
+       url("chrome://communicator/skin/sidebar/sidebar-close-hover.gif"); 
 }
 
 /**/
 
 box#sidebar-box {
-  margin-top: 2px;
-  width: 162px;
-  min-height: 1px;
-  max-width: 400px;
-  border: none;
-  border-bottom: 8px solid #003366;
+    margin-top: 1px;
+    width: 162px;
+    min-height: 1px;
+    min-width: 30px;
+    max-width: 400px;
+    border: none;
+    border-bottom: 8px solid #003366;
 }
 
 box#sidebar-panels {
-  min-width: 1px;
-  min-height: 1px;
+    min-width: 1px;
+    min-height: 1px;
+    margin-top: 1px;
+}
+
+text.loading-image {
+    margin: 5px 0px;
+}
+
+image.loading-image {
+    margin: 5px;
+    list-style-image: url("resource:/res/rdf/loading.gif"); 
 }
 
 iframe.panel-frame {
-  min-width: 1px;
+    min-width: 1px;
 }
 
 /*
- *  Sidebar and Panel title buttons
+ *    Sidebar and Panel title buttons
  */
 .sidebar-main-header {
-  color: #CCFFFF;
-  background-color: #003366;
-  padding: 0px;
-  padding-left: 5px;
-  padding-right: 5px;
+    color: #CCFFFF;
+    background-color: #003366;
+    border: 0px !important;
+    padding-left: 4px;
+    min-width: 1px;
 }
-
 .sidebar-main-header > text {
-  font-weight: bold;
-  margin: 2px;
+    font-weight: bold;
+    margin: 2px;
 }
 
-menu#panel-picker:hover {
-  background-color: #336699;
+menu#sidebar-panel-picker:hover {
+    background-color: #336699;
 }
-
-menu#panel-picker > .menu-right {
-  list-style-image: url("chrome://global/skin/toolbar-menu-arrow.gif");
+menu#sidebar-panel-picker:hover {
+    background-color: #336699;
+}
+menu#sidebar-panel-picker > .menu-right {
+    list-style-image: url("chrome://global/skin/toolbar-menu-arrow.gif");
+    padding-right: 2px;
+}
+menu#sidebar-panel-picker > .menu-text {
+    color: #CCFFFF;
+    padding-left: 4px;
+}
+menu#sidebar-panel-picker > .menu-accel {
+    display: none;
 }
 
 sidebarheader[type="box"] {
-  behavior: url(chrome://global/content/globalBindings.xml#sidebar-header-box);
+    behavior: url(chrome://global/content/globalBindings.xml#sidebar-header-box);
 }
 
 sidebarheader[type="splitter"] {
-  behavior: url(chrome://global/content/globalBindings.xml#sidebar-header-splitter);
-  /* a vertical splitter */
-  cursor: n-resize;
+    behavior: url(chrome://global/content/globalBindings.xml#sidebar-header-splitter);
+    /* a vertical splitter */
+    cursor: n-resize;
 }
 
-box.texttab {
-	min-width: 10px;
+box.texttab.sidebar-tab {
+    background-color: #CCCCCC;
+    padding: 0px;
+    margin: 0px;
 }
-
-box.texttab > .remain-space {
-	width: 30px;
+box.texttab.sidebar-tab > .remain-space {
+    width: 30px;
+    min-width: 1px;
 }
-
-box#sidebar-panels > box.texttab:first-child {
-	background-color: white;
-}
-
-box#sidebar-panels > box.texttab + box.texttab {
-	background-color: #CCCCCC;
-}
-
-
-box#sidebar-panels-bottom > box.texttab[hidden] + box.texttab {
-	background-color: white;
-}
-
-box#sidebar-panels-bottom > box.texttab[hidden] + box.texttab + box.texttab {
-	background-color: #CCCCCC;
-}
-
-box#sidebar-panels-bottom > box.texttab + box.texttab {
-	background-color: #CCCCCC;
-}
-
-box#title-box { 
-  min-width: 10px;
+box.texttab.sidebar-tab[top-panel="true"],
+box.texttab.sidebar-tab[first-panel-after-selected="true"] {
+    background-color: white;
 }
 
 *[hidden="true"] {
-  display: none;
+    display: none;
 }
 
 *[collapsed="true"] {
-  visibility: collapse;
+    visibility: collapse;
 }
+
