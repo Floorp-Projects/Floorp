@@ -154,6 +154,7 @@ endif
 libs-%:
 	@$(MAKE) -C ../../toolkit/locales libs-$*
 	@$(MAKE) -C ../../extensions/reporter/locales libs AB_CD=$* XPI_NAME=locale-$*
+	@$(MAKE) -C ../../extensions/spellcheck/locales AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=defaults/pref
 ifdef MOZ_BRANDING_DIRECTORY
 	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales AB_CD=$* XPI_NAME=locale-$*
@@ -218,8 +219,9 @@ repackage-zip: $(ZIP_IN)
 	$(RM) $(STAGEDIST)/chrome/en-US.jar \
 	  $(STAGEDIST)/chrome/en-US.manifest \
 	  $(STAGEDIST)/defaults/pref/firefox-l10n.js
-	$(RM) -r $(STAGEDIST)/searchplugins \
 	$(RM) -r $(STAGEDIST)/microsummary-generators \
+	  $(STAGEDIST)/searchplugins \
+	  $(STAGEDIST)/dictionaries \
 	  $(STAGEDIST)/defaults/profile \
 	  $(STAGEDIST)/chrome/en-US
 	$(RM) -rf $(DIST)/xpi-stage/locale-$(AB_CD)
