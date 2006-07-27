@@ -86,7 +86,7 @@
     <separator class="groove" orient="vertical" style="width: 0px;"/>
         
     <vbox flex="1">
-      <hbox autostretch="never">
+      <hbox align="center">
         <text class="label" value="&category.label;"/>
         <menulist id="categoryList" ref="NC:SearchCategoryRoot" datasources="rdf:null" flex="1">
           <template>

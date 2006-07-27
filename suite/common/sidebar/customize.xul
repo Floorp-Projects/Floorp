@@ -162,7 +162,7 @@
     <separator orient="vertical" class="thin"/>
 
     <!-- The 'reorder' buttons -->
-    <vbox id="reorder" autostretch="never">
+    <vbox id="reorder">
       <spring flex="1"/>
       <button oncommand="MoveUp();" id="up" class="dialog" 
         label="&sidebar.customize.up.label;"/>
