@@ -50,7 +50,7 @@
         <treechildren flex="1">
           <treeitem uri="..."
                   type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
-            <treerow>
+            <treerow class="relatedseparator">
               <treecell>
                 <separator class="groove" flex="1"/>
               </treecell>
@@ -63,7 +63,7 @@
         <treechildren flex="1">
           <treeitem uri="..."
                   type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
-            <treerow>
+            <treerow class="relatedresult">
               <treecell class="treecell-indent" value="rdf:http://home.netscape.com/NC-rdf#Name"
                         src="rdf:http://home.netscape.com/NC-rdf#Icon" />
             </treerow>

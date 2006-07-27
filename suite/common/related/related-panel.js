@@ -232,16 +232,28 @@ function Destruct() {
 
 function openURL(event, root)
 {
-  if( event.type == "click" && 
-      ( event.button != 1 || event.detail != 2 ) ) 
+  if (event.type == "click" && event.button != 1) {
     return false;
-  else if( event.type == "keypress" && event.which != 13 )
+  }
+  var target = event.target.parentNode.parentNode;
+  if (target.getAttribute('container') == 'true') {
+    // If single-clicking a folder, open/close it.
+      if (target.getAttribute('open') == 'true') {
+        target.removeAttribute('open');
+      } else {
+        target.setAttribute('open','true');
+      }
+    return true;
+  }
+  if (event.detail != 1) {
     return false;
+  }
 
   var treeitem = document.getElementById(root).selectedItems[0];
-	if (treeitem.getAttribute('container') == 'true' ||
-      treeitem.getAttribute("type") == "http://home.netscape.com/NC-rdf#BookmarkSeparator")
+	if (treeitem.getAttribute("type") ==
+        "http://home.netscape.com/NC-rdf#BookmarkSeparator") {
 		return(false);
+    }
 
 	var id = treeitem.getAttribute('id');
 	if (!id)	return(false);
