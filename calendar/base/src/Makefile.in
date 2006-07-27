@@ -57,10 +57,6 @@ REQUIRES = xpcom \
 	   ical \
 	   $(NULL)
 
-#	   storage \
-#	   sqlite3 \
-#           $(NULL)
-
 XPIDL_MODULE	= calbaseinternal
 XPIDLSRCS = \
 	calInternalInterfaces.idl \
@@ -76,18 +72,30 @@ CPPSRCS = calDateTime.cpp \
 
 
 EXTRA_COMPONENTS = \
-	calAlarmService.js \
-	calAttachment.js \
-	calAttendee.js \
-	calCalendarManager.js \
-	calRecurrenceInfo.js \
-	calEvent.js \
-	calItemBase.js \
-	calItemModule.js \
-	calTodo.js \
-	calDateTimeFormatter.js \
-	calWeekTitleService.js \
-	calUtils.js \
-	$(NULL)
+    calItemModule.js \
+    $(NULL)
+
+EXTRA_SCRIPTS = \
+    calAlarmService.js \
+    calAttachment.js \
+    calAttendee.js \
+    calCalendarManager.js \
+    calDateTimeFormatter.js \
+    calEvent.js \
+    calItemBase.js \
+    calRecurrenceInfo.js \
+    calTodo.js \
+    calUtils.js \
+    calWeekTitleService.js \
+    $(NULL)
+
+# Use NSINSTALL to make the directory, as there's no mtime to preserve.
+libs:: $(EXTRA_SCRIPTS)
+	$(NSINSTALL) -D $(DIST)/bin/js
+	$(INSTALL) $^ $(DIST)/bin/js
+
+# The install target must use SYSINSTALL, which is NSINSTALL in copy mode.
+install:: $(EXTRA_SCRIPTS)
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/js
 
 include $(topsrcdir)/config/rules.mk

@@ -43,11 +43,23 @@ VPATH   = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXTRA_COMPONENTS = \
-	calOutlookCSVImportExport.js \
-	calHtmlExport.js \
-	calIcsImportExport.js \
-	calListFormatter.js \
-	calImportExportModule.js \
-	$(NULL)
+    calImportExportModule.js \
+    $(NULL)
+
+EXTRA_SCRIPTS = \
+    calHtmlExport.js \
+    calIcsImportExport.js \
+    calListFormatter.js \
+    calOutlookCSVImportExport.js \
+    $(NULL)
+
+# Use NSINSTALL to make the directory, as there's no mtime to preserve.
+libs:: $(EXTRA_SCRIPTS)
+	$(NSINSTALL) -D $(DIST)/bin/js
+	$(INSTALL) $^ $(DIST)/bin/js
+
+# The install target must use SYSINSTALL, which is NSINSTALL in copy mode.
+install:: $(EXTRA_SCRIPTS)
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/js
 
 include $(topsrcdir)/config/rules.mk

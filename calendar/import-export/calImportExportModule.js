@@ -104,8 +104,10 @@ var calImportExportModule = {
         var dirsvc = Components.classes[dirsvcContractID].getService(propsIID);
         var iosvc = Components.classes[iosvcContractID].getService(iosvcIID);
 
-        // We expect to find the subscripts in our directory.
-        var appdir = __LOCATION__.parent;
+        // Note that unintuitively, __LOCATION__.parent == .
+        // We expect to find the subscripts in ./../js
+        var appdir = __LOCATION__.parent.parent;
+        appdir.append("js");
 
         for (var i = 0; i < componentData.length; i++) {
             var scriptName = componentData[i].script;

@@ -184,40 +184,37 @@ bin\components\nsProgressDialog.js
 bin\components\nsSetDefaultMail.js
 bin\components\nsUnsetDefaultMail.js
 bin\components\nsUpdateService.js
-;!4sunbird bin\components\nsDictionary.js
 bin\components\nsHelperAppDlg.js
 bin\components\nsProxyAutoConfig.js
-;!4sunbird bin\components\nsSidebar.js
-;!4sunbird bin\components\nsXmlRpcClient.js
 bin\components\nsExtensionManager.js
 bin\components\extensions.xpt
 bin\components\update.xpt
 bin\components\calendarService.js
 bin\components\calAlarmMonitor.js
-bin\components\calAttendee.js
-bin\components\calAlarmService.js
-bin\components\calAttachment.js
-bin\components\calCalendarManager.js
 bin\components\calCompositeCalendar.js
-bin\components\calDateTimeFormatter.js
 bin\components\calDavCalendar.js
-bin\components\calEvent.js
-bin\components\calHtmlExport.js
 bin\components\calICSCalendar.js
-bin\components\calIcsImportExport.js
 bin\components\calImportExportModule.js
-bin\components\calItemBase.js
 bin\components\calItemModule.js
-bin\components\calListFormatter.js
 bin\components\calMemoryCalendar.js
-bin\components\calOutlookCSVImportExport.js
-bin\components\calRecurrenceInfo.js
 bin\components\calStorageCalendar.js
-bin\components\calTodo.js
-bin\components\calUtils.js
-bin\components\calWeekTitleService.js
 bin\components\FeedProcessor.js
 bin\components\pluginGlue.js
+bin\js\calAlarmService.js
+bin\js\calAttachment.js
+bin\js\calAttendee.js
+bin\js\calCalendarManager.js
+bin\js\calDateTimeFormatter.js
+bin\js\calEvent.js
+bin\js\calHtmlExport.js
+bin\js\calIcsImportExport.js
+bin\js\calItemBase.js
+bin\js\calListFormatter.js
+bin\js\calOutlookCSVImportExport.js
+bin\js\calRecurrenceInfo.js
+bin\js\calTodo.js
+bin\js\calUtils.js
+bin\js\calWeekTitleService.js
 
 ; [Calendar Chrome Files]
 bin\chrome\calendar.jar
