@@ -111,20 +111,28 @@ function SearchPanelStartup()
 			tree.database.AddObserver(RDF_observer);
 		}
 	}
-	var categoryList = document.getElementById("categoryList");
-	if (categoryList)
+
+	var internetSearch = Components.classes["component://netscape/rdf/datasource?name=internetsearch"].getService();
+	if (internetSearch)	internetSearch = internetSearch.QueryInterface(Components.interfaces.nsIInternetSearchService);
+	if (internetSearch)
 	{
-		var internetSearch = Components.classes["component://netscape/rdf/datasource?name=internetsearch"].getService();
-		if (internetSearch)	internetSearch = internetSearch.QueryInterface(Components.interfaces.nsIInternetSearchService);
-		if (internetSearch)
+		var catDS = internetSearch.GetCategoryDataSource();
+		if (catDS)	catDS = catDS.QueryInterface(Components.interfaces.nsIRDFDataSource);
+		if (catDS)
 		{
-			var catDS = internetSearch.GetCategoryDataSource();
-			if (catDS)	catDS = catDS.QueryInterface(Components.interfaces.nsIRDFDataSource);
-			if (catDS)
+			var categoryList = document.getElementById("categoryList");
+			if (categoryList)
 			{
 				categoryList.database.AddDataSource(catDS);
 				var ref = categoryList.getAttribute("ref");
 				if (ref)	categoryList.setAttribute("ref", ref);
+			}
+			var engineTree = document.getElementById("searchengines");
+			if (engineTree)
+			{
+				engineTree.database.AddDataSource(catDS);
+				var ref = engineTree.getAttribute("ref");
+				if (ref)	engineTree.setAttribute("ref", ref);
 			}
 		}
 	}
