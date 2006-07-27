@@ -12,23 +12,182 @@
    </nc:subheadings>
 </rdf:Description>
 
+<rdf:Description about="help-indexAZ.rdf#a">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="adding"
+         nc:name="adding"
+	 nc:link="mail_help.html#adding:address_book_entriesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#adding">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="adding:address_book_entries"
+         nc:name="address book entries"
+	 nc:link="mail_help.html#adding:address_book_entriesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#adding">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="adding:images_to_web_pages"
+         nc:name="images to web pages"
+	 nc:link="composer_help.html#adding:images_to_web_pagesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#adding">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="adding:LDAP_directories"
+         nc:name="LDAP directories"
+	 nc:link="mail_help.html#adding:LDAP_directoriesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#adding">
+    <nc:subheadings>
+      <rdf:Seq><rdf:li>
+       <rdf:Description ID="adding:mail_account"
+         nc:name="mail account"
+	 nc:link="mail_help.html#adding:mail_accountIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#adding">
+    <nc:subheadings>
+      <rdf:Seq><rdf:li>
+       <rdf:Description ID="adding:newsgroup_account"
+         nc:name="newsgroup account"
+	 nc:link="mail_help.html#adding:newsgroup_accountIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#adding">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="adding:table_elements"
+         nc:name="table elements"
+	 nc:link="composer_help.html#adding:table_elementsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#a">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="address_books"
+         nc:name="address books"
+	 nc:link="mail_help.html#address_books:adding_entriesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#address_books">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="address_books:adding_entries"
+         nc:name="adding entries"
+	 nc:link="mail_help.html#address_books:adding_entriesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#address_books">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="address_books:creating"
+         nc:name="creating"
+	 nc:link="mail_help.html#address_books:creatingIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#address_books">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="address_books:creating_mailing_lists"
+         nc:name="creating mailing lists"
+	 nc:link="mail_help.html#address_books:creating_mailing_listsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#address_books">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="address_books:exporting"
+         nc:name="exporting"
+	 nc:link="mail_help.html#address_books:exportingIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#address_books">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="address_books:importing"
+         nc:name="importing"
+	 nc:link="mail_help.html#address_books:importingIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#address_books">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="address_books:LDAP_directories"
+         nc:name="LDAP directories"
+	 nc:link="mail_help.html#address_books:LDAP_directoriesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#address_books">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="address_books:searching"
+         nc:name="searching"
+	 nc:link="mail_help.html#address_books:searchingIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#a">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="attaching_files_to_messages"
+         nc:name="attaching files to messages"
+	 nc:link="mail_help.html#attaching_files_to_messagesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#b">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="backing_up_certificates"
+         nc:name="backing up certificates"
+	 nc:link="certs_help.html#backing_up_certificatesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
 
 <rdf:Description about="help-indexAZ.rdf#b">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="bookmarks"
          nc:name="bookmarks"
-	 nc:link="nav_help.html#bookmarks:boomarking_search_resultsIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#bookmarks">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="bookmarks:boomarking_search_results"
-         nc:name="boomarking search results"
-	 nc:link="nav_help.html#bookmarks:boomarking_search_resultsIDX"/>
+	 nc:link="nav_help.html#bookmarks:bookmarking_search_resultsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -118,7 +277,27 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="browser"
          nc:name="browser"
-	 nc:link="customize_help.html#browser:start_up_componentsIDX"/>
+	 nc:link="customize_help.html#browser:changing_your_home_pageIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#browser">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="browser:changing_your_home_page"
+         nc:name="changing your home page"
+	 nc:link="customize_help.html#browser:changing_your_home_pageIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#browser">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="browser:default"
+         nc:name="default"
+	 nc:link="nav_help.html#browser:defaultIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -163,12 +342,122 @@
    </nc:subheadings>
 </rdf:Description>
 
+<rdf:Description about="#cache">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="cache:preferences"
+         nc:name="preferences"
+	 nc:link="cs_nav_prefs_advanced.html#cache:preferencesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
 <rdf:Description about="#colors">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="colors:customizing_web_page"
          nc:name="customizing web page"
 	 nc:link="customize_help.html#colors:customizing_web_pageIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+ <rdf:Description about="help-indexAZ.rdf#c">
+    <nc:subheadings>
+      <rdf:Seq><rdf:li>
+       <rdf:Description ID="Certificates"
+         nc:name="Certificates"
+	 nc:link="using_certs_help.html#certificates:aboutIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Certificates">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Certificates:certificate_authority"
+         nc:name="certificate authority"
+	 nc:link="using_certs_help.html#certificates:certificate_authorityIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Certificates">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Certificates:getting"
+         nc:name="getting"
+	 nc:link="using_certs_help.html#certificates:gettingIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Certificates">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Certificates:managing"
+         nc:name="Managing Certificates"
+	 nc:link="using_certs_help.html#certificates:managingIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Certificates">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Certificates:preferences"
+         nc:name="Preferences"
+	 nc:link="certs_prefs_help.html#certificates:preferencesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Certificates">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Certificates:selecting_for_client_authentication"
+         nc:name="Selecting for client authentication"
+	 nc:link="certs_prefs_help.html#certificates:selecting_for_client_authenticationIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Certificates">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Certificates:using"
+         nc:name="Using Certificates"
+	 nc:link="using_certs_help.html#certificates:usingIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Certificates">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Certificates:validation"
+         nc:name="validation"
+	 nc:link="using_certs_help.html#certificates:validationIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Certificates">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Certificates:web_site"
+         nc:name="web site"
+	 nc:link="using_certs_help.html#certificates:web_siteIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Certificates">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Certificates:your_own"
+         nc:name="Your own"
+	 nc:link="using_certs_help.html#certificates:your_ownIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -229,16 +518,6 @@
        <rdf:Description ID="Composer:checking_html"
          nc:name="checking html"
 	 nc:link="composer_help.html#Composer:checking_htmlIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Composer">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Composer:checking_spelling"
-         nc:name="checking spelling"
-	 nc:link="composer_help.html#Composer:checking_spellingIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -326,16 +605,6 @@
 <rdf:Description about="#Composer">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="Composer:HTML_Element_and_Attributes"
-         nc:name="HTML Element and Attributes"
-	 nc:link="composer_help.html#Composer:HTML_Element_and_AttributesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Composer">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
        <rdf:Description ID="Composer:inserting_horizontal_lines"
          nc:name="inserting horizontal lines"
 	 nc:link="composer_help.html#Composer:inserting_horizontal_linesIDX"/>
@@ -356,16 +625,16 @@
 <rdf:Description about="#Composer">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="Composer:keyboard_shortcuts"
-         nc:name="keyboard shortcuts"
-	 nc:link="chrome://help/locale/shortcuts.html#composer"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+       <rdf:Description ID="Composer:keyboard_shortcuts"                        
+         nc:name="keyboard shortcuts"                                           
+         nc:link="shortcuts.html#composer"/>               
+     </rdf:li></rdf:Seq>                                                        
+   </nc:subheadings>                                                            
+</rdf:Description>                                                              
 
-<rdf:Description about="#Composer">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
+<rdf:Description about="#Composer">                                             
+   <nc:subheadings>                                                             
+     <rdf:Seq><rdf:li>                                                          
        <rdf:Description ID="Composer:removing_text_styles"
          nc:name="removing text styles"
 	 nc:link="composer_help.html#Composer:removing_text_stylesIDX"/>
@@ -426,9 +695,39 @@
 <rdf:Description about="help-indexAZ.rdf#c">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="Cookie_Manager"
+         nc:name="Cookie Manager"
+	 nc:link="using_priv_help.html#Cookie_Manager:cookies_stored_byIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Cookie_Manager">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Cookie_Manager:cookies_stored_by"
+         nc:name="cookies stored by"
+	 nc:link="using_priv_help.html#Cookie_Manager:cookies_stored_byIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Cookie_Manager">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Cookie_Manager:using"
+         nc:name="using"
+	 nc:link="using_priv_help.html#Cookie_Manager:usingIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#c">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="cookies"
          nc:name="cookies"
-	 nc:link="privacy_help.html#cookies:aboutIDX"/>
+	 nc:link="using_priv_help.html#cookies:aboutIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -438,7 +737,17 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="cookies:about"
          nc:name="about"
-	 nc:link="privacy_help.html#cookies:aboutIDX"/>
+	 nc:link="using_priv_help.html#cookies:aboutIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#cookies">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="cookies:email_and"
+         nc:name="email and"
+	 nc:link="privacy_help.html#cookies:email_andIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -453,12 +762,272 @@
    </nc:subheadings>
 </rdf:Description>
 
+<rdf:Description about="#cookies">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="cookies:managing_per_site"
+         nc:name="managing per site"
+	 nc:link="using_priv_help.html#cookies:managing_per_siteIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#cookies">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="cookies:notification_icon"
+         nc:name="notification icon"
+	 nc:link="using_priv_help.html#cookies:notification_iconIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#cookies">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="cookies:preferences"
+         nc:name="preferences"
+	 nc:link="using_priv_help.html#cookies:preferencesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#cookies">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="cookies:privacy_levels_for"
+         nc:name="privacy levels for"
+	 nc:link="using_priv_help.html#cookies:privacy_levels_forIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#cookies">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="cookies:removing"
+         nc:name="removing"
+	 nc:link="using_priv_help.html#cookies:removingIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#cookies">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="cookies:viewing"
+         nc:name="viewing"
+	 nc:link="using_priv_help.html#cookies:viewingIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#c">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="copy web pages"
+         nc:name="copy"
+	 nc:link="nav_help.html#copy:web_pagesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#c">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="CRLs"
+         nc:name="CRLs"
+	 nc:link="using_certs_help.html#CRLs:aboutIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#CRLs">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="CRLs:about"
+         nc:name="about"
+	 nc:link="using_certs_help.html#CRLs:aboutIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#CRLs">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="CRLs:auto_upates_for"
+         nc:name="auto upates for"
+	 nc:link="validation_help.html#CRLs:auto_upates_forIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#CRLs">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="CRLs:managing"
+         nc:name="managing"
+	 nc:link="validation_help.html#CRLs:managingIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#CRLs">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="CRLs:Next_Update_date"
+         nc:name="Next Update date"
+	 nc:link="using_certs_help.html#CRLs:Next_Update_dateIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#CRLs">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="CRLs:preferences"
+         nc:name="preferences"
+	 nc:link="validation_help.html#CRLs:preferencesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
 <rdf:Description about="help-indexAZ.rdf#c">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Customizing Fonts"
          nc:name="Customizing Fonts"
-	 nc:link="customize_help.html#Customizing FontsIDX"/>
+	 nc:link="customize_help.html#cust_font"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#d">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="default_browser_preferences"
+         nc:name="default browser preferences"
+	 nc:link="cs_nav_prefs_navigator.html#default_browser_preferencesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#d">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="device_manager"
+         nc:name="Device Manager"
+	 nc:link="using_certs_help.html#Device_Manager:aboutIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#d">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Download_Manager"
+         nc:name="Download Manager"
+	 nc:link="nav_help.html#Download_ManagerIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Download_Manager">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Download_Manager:preferences"
+         nc:name="preferences"
+	 nc:link="cs_nav_prefs_navigator.html#Download_Manager:preferencesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#e">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="email_addresses"
+         nc:name="email addresses"
+	 nc:link="mail_help.html#email_addresses:address_books_andIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#email_addresses">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="email_addresses:address_books_and"
+         nc:name="address books and"
+	 nc:link="mail_help.html#email_addresses:address_books_andIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#email_addresses">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="email_addresses:in_mail_messages"
+         nc:name="in mail messages"
+	 nc:link="mail_help.html#email_addresses:in_mail_messagesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#e">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="encryption"
+         nc:name="encryption"
+	 nc:link="mail_sec_help.html#encryption:of_email_messagesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#encryption">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="encryption:of_email_messages"
+         nc:name="of email messages"
+	 nc:link="mail_sec_help.html#encryption:of_email_messagesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#encryption">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="encryption:of_stored_sensitive_information"
+         nc:name="of stored sensitive information"
+	 nc:link="using_priv_help.html#encryption:of_stored_sensitive_informationIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#encryption">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="encryption:settings_for_email"
+         nc:name="settings for email"
+	 nc:link="mail_sec_help.html#encryption:settings_for_emailIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#encryption">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="encryption:status_of_web_page"
+         nc:name="status of web page"
+	 nc:link="using_certs_help.html#encryption:status_of_web_pageIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#encryption">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="encryption:technologies"
+         nc:name="technologies"
+	 nc:link="ssl_help.html#encryption:technologiesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -473,22 +1042,282 @@
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="#file_types">
+<rdf:Description about="help-indexAZ.rdf#f">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="file_types:managing"
-         nc:name="managing"
-	 nc:link="nav_help.html#file_types:managingIDX"/>
+       <rdf:Description ID="Filing_messages"
+         nc:name="Filing messages"
+	 nc:link="mail_help.html#Filing_messagesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="#file_types">
+<rdf:Description about="help-indexAZ.rdf#f">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="file_types:opening"
-         nc:name="opening"
-	 nc:link="nav_help.html#file_types:openingIDX"/>
+       <rdf:Description ID="Find_Links_As_You_Type"
+         nc:name="Find Links As You Type"
+	 nc:link="cs_nav_prefs_advanced.html#Find_Links_As_You_TypeIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#f">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Find_Text_As_You_Type"
+         nc:name="Find Text As You Type"
+	 nc:link="cs_nav_prefs_advanced.html#Find_Text_As_You_TypeIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#f">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="FIPS_mode"
+         nc:name="FIPS mode"
+	 nc:link="using_certs_help.html#FIPS_modeIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#f">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="font_changing_in_composer"
+         nc:name="Font changing in Composer"
+	 nc:link="composer_help.html#fonts:changing_in_ComposerIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#f">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Form_Manager"
+         nc:name="Form Manager"
+	 nc:link="using_priv_help.html#Form_Manager:encrypting_stored_informationIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Form_Manager">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Form_Manager:encrypting_stored_information"
+         nc:name="encrypting stored information"
+	 nc:link="using_priv_help.html#Form_Manager:encrypting_stored_informationIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Form_Manager">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Form_Manager:preferences"
+         nc:name="preferences"
+	 nc:link="using_priv_help.html#Form_Manager:preferencesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Form_Manager">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Form_Manager:settings"
+         nc:name="settings"
+	 nc:link="using_priv_help.html#Form_Manager:settingsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Form_Manager">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Form_Manager:using"
+         nc:name="using"
+	 nc:link="using_priv_help.html#Form_Manager:usingIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#f">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="forms"
+         nc:name="forms"
+	 nc:link="using_priv_help.html#forms:encrypting_stored_informationIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#forms">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="forms:encrypting_stored_information"
+         nc:name="encrypting stored information"
+	 nc:link="using_priv_help.html#forms:encrypting_stored_informationIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#forms">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="forms:filling_out_automatically"
+         nc:name="filling out automatically"
+	 nc:link="using_priv_help.html#forms:filling_out_automaticallyIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#forms">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="forms:preferences"
+         nc:name="preferences"
+	 nc:link="using_priv_help.html#forms:preferencesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#forms">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="forms:saving_data"
+         nc:name="saving data"
+	 nc:link="using_priv_help.html#forms:saving_dataIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#forms">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="forms:storing_data_from"
+         nc:name="storing data from"
+	 nc:link="using_priv_help.html#forms:storing_data_fromIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#g">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="GIF"
+         nc:name="GIF"
+	 nc:link="chrome://help/locale/composer_help.html#GIFSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#h">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="home_page"
+         nc:name="home page"
+	 nc:link="cs_nav_prefs_navigator.html#home_pageIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#h">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="HTML"
+         nc:name="HTML"
+	 nc:link="mail_help.html#HTML:editing_in_mail_messagesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#HTML">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="HTML:editing_in_mail_messages"
+         nc:name="editing in mail messages"
+	 nc:link="mail_help.html#HTML:editing_in_mail_messagesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#HTML">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="HTML:using_in_Composer"
+         nc:name="using in Composer"
+	 nc:link="composer_help.html#HTML:using_in_ComposerIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#HTML">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="HTML:using_in_mail_messages"
+         nc:name="using in mail messages"
+	 nc:link="mail_help.html#HTML:using_in_mail_messagesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#h">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="HTTP_Networking"
+         nc:name="HTTP Networking"
+	 nc:link="cs_nav_prefs_advanced.html#HTTP_Networking:preferencesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#i">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="images"
+         nc:name="images"
+	 nc:link="privacy_help.html#images:email_andIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#images">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="images:email_and"
+         nc:name="email and"
+	 nc:link="privacy_help.html#images:email_andIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#images">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="images:managing"
+         nc:name="managing"
+	 nc:link="using_priv_help.html#images:managingIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#images">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="images:preferences"
+         nc:name="preferences"
+	 nc:link="using_priv_help.html#images:preferencesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#images">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="images:set_as_wallpaper"
+         nc:name="set as wallpaper"
+	 nc:link="nav_help.html#images:set_as_wallpaperIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -498,12 +1327,122 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="IMAP"
          nc:name="IMAP"
-	 nc:link="mail_help.html#IMAP:Mail_settingsIDX"/>
+	 nc:link="mail_help.html#IMAP:aboutIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
 
 <rdf:Description about="#IMAP">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="IMAP:about"
+         nc:name="about"
+	 nc:link="mail_help.html#IMAP:aboutIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#IMAP">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="IMAP:advanced_mail_settings"
+         nc:name="advanced mail settings"
+	 nc:link="mail_help.html#IMAP:advanced_mail_settingsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#IMAP">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="IMAP:server_settings"
+         nc:name="server settings"
+	 nc:link="mail_help.html#IMAP:server_settingsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#i">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="import_certificates"
+         nc:name="import certificates"
+	 nc:link="certs_help.html#import_certificatesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#i">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="intermediate_server_CA_certificates"
+         nc:name="intermediate server CA certificates"
+	 nc:link="cert_dialog_help.html#intermediate_server_CA_certificatesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#i">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="ieusers"
+         nc:name="Internet Explorer User Help"
+	 nc:link="forieusers.html"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#ieusers">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="ieusers:terminology-differences"
+         nc:name="Terminology Differences"
+	 nc:link="forieusers.html#terminology_differences"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#ieusers">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="ieusers:your-favorites"
+         nc:name="About Your IE Favorites"
+	 nc:link="forieusers.html#your_favorites"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#ieusers">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="ieusers:key-features"
+         nc:name="Browser Features"
+	 nc:link="forieusers.html#key_features"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#ieusers">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="ieusers:additional-software"
+         nc:name="Other Features"
+	 nc:link="forieusers.html#additional_software"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#ieusers">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="ieusers:keyboard-shortcuts"
+         nc:name="Keyboard Shortcuts"
+	 nc:link="forieusers.html#keyboard_shortcuts"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#i">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="IMAP:Mail_settings"
@@ -523,32 +1462,32 @@
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="#Internet_Keywords">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Internet_Keywords:using_Internet_Keywords"
-         nc:name="using Internet Keywords"
-	 nc:link="nav_help.html#Internet_Keywords:using_Internet_KeywordsIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
 <rdf:Description about="help-indexAZ.rdf#j">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="Java_and_JavaScript"
-         nc:name="Java and JavaScript"
-	 nc:link="nav_help.html#Java_and_JavaScript:enablingIDX"/>
+       <rdf:Description ID="JavaScript"
+         nc:name="JavaScript"
+	 nc:link="cs_nav_prefs_advanced.html#JavaScript:preferencesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="#Java_and_JavaScript">
+<rdf:Description about="#JavaScript">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="Java_and_JavaScript:enabling"
-         nc:name="enabling"
-	 nc:link="nav_help.html#Java_and_JavaScript:enablingIDX"/>
+       <rdf:Description ID="JavaScript:preferences"
+         nc:name="preferences"
+	 nc:link="cs_nav_prefs_advanced.html#JavaScript:preferencesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#k">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="keep_as_new"
+         nc:name="keep as new"
+	 nc:link="mail_help.html#keep_as_newIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -558,7 +1497,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="keyboard"
          nc:name="keyboard"
-	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#keyboard_navigation"/>
+	 nc:link="cs_nav_prefs_advanced.html#keyboard_navigation"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -568,7 +1507,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="keyboard:preferences"
          nc:name="preferences"
-	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#keyboard_navigation"/>
+	 nc:link="cs_nav_prefs_advanced.html#keyboard_navigation"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -578,7 +1517,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="keyboard_shortcuts"
          nc:name="keyboard shortcuts"
-	 nc:link="chrome://help/locale/shortcuts.html"/>
+	 nc:link="shortcuts.html"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -588,7 +1527,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="keyboard_shortcuts:Composer"
          nc:name="Composer"
-	 nc:link="chrome://help/locale/shortcuts.html#composer"/>
+	 nc:link="shortcuts.html#composer"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -598,7 +1537,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="keyboard_shortcuts:general"
          nc:name="general"
-	 nc:link="chrome://help/locale/shortcuts.html#general"/>
+	 nc:link="shortcuts.html#general"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -608,7 +1547,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="keyboard_shortcuts:help"
          nc:name="help"
-	 nc:link="chrome://help/locale/shortcuts.html#help"/>
+	 nc:link="shortcuts.html#help"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -618,7 +1557,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="keyboard_shortcuts:Mail_and_Newsgroups"
          nc:name="Mail and Newsgroups"
-	 nc:link="chrome://help/locale/shortcuts.html#mail/>
+         nc:link="shortcuts.html#mail"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -628,7 +1567,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="keyboard_shortcuts:Navigator"
          nc:name="Navigator"
-	 nc:link="chrome://help/locale/shortcuts.html#navigator"/>
+	 nc:link="shortcuts.html#navigator"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -638,7 +1577,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Labels"
          nc:name="Labels"
-	 nc:link="mail_help.html#Labels:general_preferencesIDX"/>
+	 nc:link="mail_help.html#labels:general_preferencesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -656,9 +1595,59 @@
 <rdf:Description about="help-indexAZ.rdf#l">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="languages"
+         nc:name="languages"
+	 nc:link="nav_help.html#languages:and_international_contentIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#languages">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="languages:and_international_content"
+         nc:name="and international content"
+	 nc:link="nav_help.html#languages:and_international_contentIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#languages">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="languages:Appearance_preferences"
+         nc:name="Appearance preferences"
+	 nc:link="cs_nav_prefs_appearance.html#languages:Appearance_preferencesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#l">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="LDAP"
          nc:name="LDAP"
-	 nc:link="mail_help.html#LDAP:global_settingsIDX"/>
+	 nc:link="mail_help.html#LDAP:adding_to_address_bookIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#LDAP">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="LDAP:adding_to_address_book"
+         nc:name="adding to address book"
+	 nc:link="mail_help.html#LDAP:adding_to_address_bookIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#LDAP">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="LDAP:directory_server_settings"
+         nc:name="directory server settings"
+	 nc:link="mail_help.html#LDAP:directory_server_settingsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -669,6 +1658,26 @@
        <rdf:Description ID="LDAP:global_settings"
          nc:name="global settings"
 	 nc:link="mail_help.html#LDAP:global_settingsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#l">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="lock_icon"
+         nc:name="lock icon"
+	 nc:link="using_certs_help.html#lock_iconIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#m">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="mail"
+         nc:name="mail security settings"
+	 nc:link="mail_help.html#mail:security_settingsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -739,16 +1748,6 @@
        <rdf:Description ID="Mail_and_Newsgroups:Advanced_IMAP_settings"
          nc:name="Advanced IMAP settings"
 	 nc:link="mail_help.html#Mail_and_Newsgroups:Advanced_IMAP_settingsIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Mail_and_Newsgroups">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Mail_and_Newsgroups:AOL_Mail_and_Webmail_syncing"
-         nc:name="AOL Mail and Webmail syncing"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:AOL_Mail_and_Webmail_syncingIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -936,26 +1935,6 @@
 <rdf:Description about="#Mail_and_Newsgroups">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="Mail_and_Newsgroups:importing_address_books"
-         nc:name="importing address books"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:importing_address_booksIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Mail_and_Newsgroups">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Mail_and_Newsgroups:importing_mail_messages"
-         nc:name="importing mail messages"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:importing_mail_messagesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Mail_and_Newsgroups">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:mail_window_layout"
          nc:name="mail window layout"
 	 nc:link="mail_help.html#Mail_and_Newsgroups:mail_window_layoutIDX"/>
@@ -978,7 +1957,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:POP_settings"
          nc:name="POP settings"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:POP_settingsIDX"/>
+	 nc:link="mail_help.html#POP:server_settingsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1099,28 +2078,8 @@
        <rdf:Description ID="Mail_and_Newsgroups:using_HTML_in_messages"
          nc:name="using HTML in messages"
 	 nc:link="mail_help.html#Mail_and_Newsgroups:using_HTML_in_messagesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Mail_and_Newsgroups">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Mail_and_Newsgroups:using_mailing_addresses"
-         nc:name="using mailing addresses"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:using_mailing_addressesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Mail_and_Newsgroups">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Mail_and_Newsgroups:using_templates"
-         nc:name="using templates"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:using_templatesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
+     </rdf:li></rdf:Seq>                                                        
+   </nc:subheadings>                                                            
 </rdf:Description>
 
 <rdf:Description about="#Mail_and_Newsgroups">
@@ -1146,19 +2105,49 @@
 <rdf:Description about="help-indexAZ.rdf#m">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="mouse_wheel"
-         nc:name="mouse wheel"
-	 nc:link="nav_help.html#mouse_wheel:usingIDX"/>
+       <rdf:Description ID="master_password"
+         nc:name="Master Password"
+	 nc:link="passwords_help.html#master_password:aboutIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="#mouse_wheel">
+<rdf:Description about="#master_password">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="mouse_wheel:using"
-         nc:name="using"
-	 nc:link="nav_help.html#mouse_wheel:usingIDX"/>
+       <rdf:Description ID="master_password:changing"
+         nc:name="Changing"
+	 nc:link="passwords_help.html#master_password:changingIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#master_password">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="master_password:forgetting"
+         nc:name="Forgetting"
+	 nc:link="using_priv_help.html#master_password:forgettingIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#master_password">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="master_password:preferences"
+         nc:name="Preferences"
+	 nc:link="passwords_help.html#master_password:preferencesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#master_password">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="master_password:timeout"
+         nc:name="Timeout for"
+	 nc:link="passwords_help.html#master_password:timeout_forIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1166,89 +2155,19 @@
 <rdf:Description about="help-indexAZ.rdf#m">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="My_Sidebar"
-         nc:name="My Sidebar"
-	 nc:link="customize_help.html#My_Sidebar:adding_tabsIDX"/>
+       <rdf:Description ID="mouse_wheel"
+         nc:name="mouse wheel"
+	 nc:link="nav_help.html#mouse_wheel:usingIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="#My_Sidebar">
+<rdf:Description about="help-indexAZ.rdf#n">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="My_Sidebar:adding_tabs"
-         nc:name="adding tabs"
-	 nc:link="customize_help.html#My_Sidebar:adding_tabsIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#My_Sidebar">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="My_Sidebar:customizing_tabs"
-         nc:name="customizing tabs"
-	 nc:link="customize_help.html#My_Sidebar:customizing_tabsIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#My_Sidebar">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="My_Sidebar:description"
-         nc:name="description"
-	 nc:link="customize_help.html#My_Sidebar:descriptionIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#My_Sidebar">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="My_Sidebar:removing_tabs"
-         nc:name="removing tabs"
-	 nc:link="customize_help.html#My_Sidebar:removing_tabsIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#My_Sidebar">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="My_Sidebar:reorganizing_tabs"
-         nc:name="reorganizing tabs"
-	 nc:link="customize_help.html#My_Sidebar:reorganizing_tabsIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#My_Sidebar">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="My_Sidebar:search_categories"
-         nc:name="search categories"
-	 nc:link="nav_help.html#My_Sidebar:search_categoriesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#My_Sidebar">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="My_Sidebar:searching_from"
-         nc:name="searching from"
-	 nc:link="nav_help.html#My_Sidebar:searching_fromIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#My_Sidebar">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="My_Sidebar:using"
-         nc:name="using"
-	 nc:link="customize_help.html#My_Sidebar:usingIDX"/>
+       <rdf:Description ID="navigation"
+         nc:name="navigation"
+	 nc:link="help_help.html#navigationIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1276,29 +2195,89 @@
 <rdf:Description about="#Navigator">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="Navigator:controlling_popups"
+         nc:name="controlling popups"
+	 nc:link="cs_priv_prefs_popup.html#Navigator:controlling_popupsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Navigator">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Navigator:Download_Manager"
+         nc:name="Download Manager"
+	 nc:link="nav_help.html#Navigator:Download_ManagerIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Navigator">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Navigator:helper_applications"
+         nc:name="helper applications"
+	 nc:link="cs_nav_prefs_navigator.html#preferences:helper_applicationsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Navigator">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Navigator:home_page"
+         nc:name="home page"
+	 nc:link="nav_help.html#Navigator:home_pageIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Navigator">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Navigator:keyboard_shortcuts"
+         nc:name="keyboard shortcuts"
+	 nc:link="shortcuts.html#Navigator:keyboard_shortcutsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Navigator">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Navigator:opening_pages"
+         nc:name="opening pages"
+	 nc:link="nav_help.html#Navigator:opening_pagesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Navigator">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Navigator:preferences"
+         nc:name="preferences"
+	 nc:link="cs_nav_prefs_navigator.html#Navigator:preferencesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Navigator">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Navigator:set_as_wallpaper"
+         nc:name="set as wallpaper"
+	 nc:link="nav_help.html#Navigator:set_as_wallpaperIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Navigator">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="Navigator:start_page"
          nc:name="start page"
 	 nc:link="customize_help.html#Navigator:start_pageIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="help-indexAZ.rdf#n">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Netscape_WebMail"
-         nc:name="Netscape WebMail"
-	 nc:link="mail_help.html#Netscape_WebMail:setting_upIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Netscape_WebMail">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Netscape_WebMail:setting_up"
-         nc:name="setting up"
-	 nc:link="mail_help.html#Netscape_WebMail:setting_upIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1329,6 +2308,16 @@
        <rdf:Description ID="Newsgroups:server_settings"
          nc:name="server settings"
 	 nc:link="mail_help.html#Newsgroups:server_settingsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#o">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="OSCP"
+         nc:name="OSCP"
+	 nc:link="using_certs_help.html#OCSP:aboutIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1368,7 +2357,457 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Offline:Mail_settings"
          nc:name="Mail settings"
-	 nc:link="mail_help.html#Offline:Mail_settingsIDX"/>
+	 nc:link="mail_help.html#account_settings_intro"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#p">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="page_info"
+         nc:name="page info"
+	 nc:link="page_info_help.html#page_infoIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#p">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="password_manager"
+         nc:name="Password Manager"
+	 nc:link="using_priv_help.html#Password_Manager:usingIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#password_manager">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="password_manager:encrypting_stored_passwords"
+         nc:name="Encrypting Stored Passwords"
+	 nc:link="using_priv_help.html#Password_Manager:encrypting_stored_passwordsIDXX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#password_manager">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="password_manager:master_password"
+         nc:name="Master Password"
+	 nc:link="using_priv_help.html#Password_Manager:master_password_andIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#password_manager">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="password_manager:preferences"
+         nc:name="Preferences"
+	 nc:link="passwords_help.html#Password_Manager:preferencesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#p">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="passwords"
+         nc:name="Passwords"
+	 nc:link="passwords_help.html#passwords:preferencesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#passwords">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="passwords:preferences"
+         nc:name="Preferences"
+	 nc:link="passwords_help.html#passwords:preferencesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#passwords">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="passwords:remembering_automatically"
+         nc:name="Remembering Automatically"
+	 nc:link="using_priv_help.html#passwords:remembering_automaticallyIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#passwords">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="passwords:timeout_for_master_password"
+         nc:name="Timeout for Master Password"
+	 nc:link="passwords_help.html#passwords:timeout_for_master_passwordIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#p">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="POP"
+         nc:name="POP"
+	 nc:link="mail_help.html#POP:aboutIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#POP">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="POP:about"
+         nc:name="about"
+	 nc:link="mail_help.html#POP:aboutIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#POP">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="POP:server_settings"
+         nc:name="server settings"
+	 nc:link="mail_help.html#POP:server_settingsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#p">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="popup_windows"
+         nc:name="popup windows"
+	 nc:link="cs_priv_prefs_popup.html#popup_windows:preferencesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#popup_windows">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="popup_windows:preferences"
+         nc:name="preferences"
+	 nc:link="cs_priv_prefs_popup.html#popup_windows:preferencesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#p">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="popups"
+         nc:name="popups"
+	 nc:link="cs_priv_prefs_popup.html#popupsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#p">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="preferences"
+         nc:name="preferences"
+	 nc:link="cs_nav_prefs_advanced.html#preferences:advancedIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#preferences">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="preferences:advanced"
+         nc:name="advanced"
+	 nc:link="cs_nav_prefs_advanced.html#preferences:advancedIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#preferences">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="preferences:appearance"
+         nc:name="appearance"
+	 nc:link="cs_nav_prefs_appearance.html#preferences:appearanceIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#preferences">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="preferences:cache"
+         nc:name="cache"
+	 nc:link="cs_nav_prefs_advanced.html#preferences:cacheIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#preferences">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="preferences:certificates"
+         nc:name="certificates"
+	 nc:link="certs_prefs_help.html#preferences:certificatesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#preferences">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="preferences:colors"
+         nc:name="colors"
+	 nc:link="cs_nav_prefs_appearance.html#preferences:colorsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#preferences">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="preferences:content_packs"
+         nc:name="content packs"
+	 nc:link="cs_nav_prefs_appearance.html#preferences:content_packsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#preferences">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="preferences:cookies"
+         nc:name="cookies"
+	 nc:link="using_priv_help.html#preferences:cookiesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#preferences">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="preferences:default_browser"
+         nc:name="default browser"
+	 nc:link="cs_nav_prefs_navigator.html#preferences:default_browserIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#preferences">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="preferences:Downloads"
+         nc:name="Downloads"
+	 nc:link="cs_nav_prefs_navigator.html#preferences:DownloadsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#preferences">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="preferences:fonts"
+         nc:name="fonts"
+	 nc:link="cs_nav_prefs_appearance.html#preferences:fontsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#preferences">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="preferences:forms"
+         nc:name="forms"
+	 nc:link="using_priv_help.html#preferences:formsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#preferences">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="preferences:helper_applications"
+         nc:name="helper applications"
+	 nc:link="cs_nav_prefs_navigator.html#preferences:helper_applicationsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#preferences">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="preferences:history"
+         nc:name="history"
+	 nc:link="cs_nav_prefs_navigator.html#preferences:historyIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#preferences">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="preferences:images"
+         nc:name="images"
+	 nc:link="using_priv_help.html#preferences:imagesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#preferences">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="preferences:internet_search"
+         nc:name="internet search"
+	 nc:link="cs_nav_prefs_navigator.html#preferences:internet_searchIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#preferences">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="preferences:JavaScript"
+         nc:name="JavaScript"
+	 nc:link="cs_nav_prefs_advanced.html#preferences:JavaScriptIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#preferences">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="preferences:keyboard"
+         nc:name="keyboard"
+	 nc:link="cs_nav_prefs_advanced.html#preferences:keyboardIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#preferences">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="preferences:languages"
+         nc:name="languages"
+	 nc:link="cs_nav_prefs_navigator.html#preferences:languagesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#preferences">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="preferences:Navigator"
+         nc:name="Navigator"
+	 nc:link="cs_nav_prefs_navigator.html#preferences:NavigatorIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#preferences">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="preferences:passwords"
+         nc:name="passwords"
+	 nc:link="passwords_help.html#preferences:passwordsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#preferences">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="preferences:popup_windows"
+         nc:name="popup windows"
+	 nc:link="cs_priv_prefs_popup.html#preferences:popup_windowsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#preferences">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="preferences:privacy"
+         nc:name="privacy"
+	 nc:link="privsec_help.html#preferences:privacyIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#preferences">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="preferences:proxies"
+         nc:name="proxies"
+	 nc:link="cs_nav_prefs_advanced.html#preferences:proxiesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#preferences">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="preferences:security"
+         nc:name="security"
+	 nc:link="privsec_help.html#preferences:securityIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#preferences">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="preferences:smart_browsing"
+         nc:name="smart browsing"
+	 nc:link="cs_nav_prefs_navigator.html#preferences:smart_browsingIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#preferences">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="preferences:SSL"
+         nc:name="SSL"
+	 nc:link="ssl_help.html#preferences:SSLIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#preferences">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="preferences:Tabbed_Browsing"
+         nc:name="Tabbed Browsing"
+	 nc:link="cs_nav_prefs_navigator.html#preferences:Tabbed_BrowsingIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#preferences">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="preferences:themes"
+         nc:name="themes"
+	 nc:link="cs_nav_prefs_appearance.html#preferences:themesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#preferences">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="preferences:validation"
+         nc:name="validation"
+	 nc:link="validation_help.html#preferences:validationIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1378,16 +2817,6 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="print"
          nc:name="print"
-	 nc:link="nav_help.html#print:web_pagesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#print">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="print:web_pages"
-         nc:name="web pages"
 	 nc:link="nav_help.html#print:web_pagesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
@@ -1436,6 +2865,26 @@
 <rdf:Description about="#privacy">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="privacy:P3P_levels"
+         nc:name="P3P levels"
+	 nc:link="using_priv_help.html#privacy:P3P_levelsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#privacy">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="privacy:P3P_standard_and"
+         nc:name="P3P standard and"
+	 nc:link="page_info_help.html#privacy:P3P_standard_andIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#privacy">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="privacy:preferences"
          nc:name="preferences"
 	 nc:link="privsec_help.html#privacy:preferencesIDX"/>
@@ -1453,12 +2902,92 @@
    </nc:subheadings>
 </rdf:Description>
 
+<rdf:Description about="#privacy">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="privacy:settings"
+         nc:name="settings"
+	 nc:link="using_priv_help.html#privacy:settingsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#privacy">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="privacy:viewing_site_policy"
+         nc:name="viewing site policy"
+	 nc:link="page_info_help.html#privacy:viewing_site_policyIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#p">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="profiles"
+         nc:name="profiles"
+	 nc:link="profiles_help.html#profiles:creatingIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#profiles">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="profiles:creating"
+         nc:name="creating"
+	 nc:link="profiles_help.html#profiles:creatingIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#profiles">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="profiles:deleting"
+         nc:name="deleting"
+	 nc:link="profiles_help.html#profiles:deletingIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#profiles">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="profiles:managing"
+         nc:name="managing"
+	 nc:link="profiles_help.html#profiles:managingIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#profiles">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="profiles:renaming"
+         nc:name="renaming"
+	 nc:link="profiles_help.html#profiles:renamingIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
 <rdf:Description about="help-indexAZ.rdf#p">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="proxies"
          nc:name="proxies"
-	 nc:link="nav_help.html#proxies:settingIDX"/>
+	 nc:link="cs_nav_prefs_advanced.html#proxies:preferencesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#proxies">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="proxies:preferences"
+         nc:name="preferences"
+	 nc:link="cs_nav_prefs_advanced.html#proxies:preferencesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1473,6 +3002,36 @@
    </nc:subheadings>
 </rdf:Description>
 
+<rdf:Description about="help-indexAZ.rdf#p">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="publishing_pages"
+         nc:name="publishing pages"
+	 nc:link="composer_help.html#publishing_pagesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#publishing_pages">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="publishing_pages:settings"
+         nc:name="settings"
+	 nc:link="composer_help.html#publishing_pages:settingsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#publishing_pages">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="publishing_pages:tips"
+         nc:name="tips"
+	 nc:link="composer_help.html#publishing_pages:tipsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
 <rdf:Description about="help-indexAZ.rdf#q">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -1483,12 +3042,72 @@
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="#Quick_Launch">
+<rdf:Description about="help-indexAZ.rdf#r">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="Quick_Launch:using"
+       <rdf:Description ID="resetting_master_password"
+         nc:name="resetting master password"
+	 nc:link="passwords_help.html#resetting_master_passwordIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#r">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="return_receipts"
+         nc:name="return receipts"
+	 nc:link="mail_help.html#return_receipts:general_preferencesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#return_receipts">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="return_receipts:general_preferences"
+         nc:name="general preferences"
+	 nc:link="mail_help.html#return_receipts:general_preferencesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#return_receipts">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="return_receipts:using"
          nc:name="using"
-	 nc:link="nav_help.html#Quick_Launch:usingIDX"/>
+	 nc:link="mail_help.html#return_receipts:usingIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#s">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="save"
+         nc:name="save"
+	 nc:link="nav_help.html#save:web_pagesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#save">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="save:web_pages"
+         nc:name="web pages"
+	 nc:link="nav_help.html#save:web_pagesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#save">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="save:messages"
+         nc:name="messages"
+	 nc:link="mail_help.html#PRINTSAVE_MAIL"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1548,7 +3167,37 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="security"
          nc:name="security"
-	 nc:link="privsec_help.html#security:preferencesIDX"/>
+	 nc:link="mail_sec_help.html#security:checking_before_sending_messageIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#security">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="security:checking_before_sending_message"
+         nc:name="checking before sending message"
+	 nc:link="mail_sec_help.html#security:checking_before_sending_messageIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#security">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="security:checking_for_a_web_page"
+         nc:name="checking for a web page"
+	 nc:link="using_certs_help.html#security:checking_for_a_web_pageIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#security">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="security:checking_for_received_messages"
+         nc:name="checking for received messages"
+	 nc:link="mail_sec_help.html#security:checking_for_received_messagesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1563,21 +3212,412 @@
    </nc:subheadings>
 </rdf:Description>
 
+<rdf:Description about="help-indexAZ.rdf#s">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="security_devices"
+         nc:name="security devices"
+	 nc:link="using_certs_help.html#security_devices:aboutIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#security_devices">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="security_devices:managing"
+         nc:name="Managing"
+	 nc:link="using_certs_help.html#security_devices:managingIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#s">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="security_modules"
+         nc:name="security modules"
+	 nc:link="using_certs_help.html#security_devices:aboutIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#security_modules">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="security_modules:managing"
+         nc:name="Managing"
+	 nc:link="using_certs_help.html#security_modules:managingIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#s">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="server_certificate_problems"
+         nc:name="server certificate problems"
+	 nc:link="cert_dialog_help.html#server_certificate_problemsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#s">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="settings"
+         nc:name="settings"
+	 nc:link="certs_prefs_help.html#settings:certificateIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#settings">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="settings:certificate"
+         nc:name="certificate"
+	 nc:link="certs_prefs_help.html#settings:certificateIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#settings">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="settings:signed_and_encrypted mail"
+         nc:name="signed and encrypted mail"
+	 nc:link="mail_help.html#settings:signed_and_encrypted mailIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#settings">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="settings:SSL"
+         nc:name="SSL"
+	 nc:link="ssl_help.html#settings:SSLIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#settings">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="settings:validation"
+         nc:name="validation"
+	 nc:link="validation_help.html#settings:validationIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#s">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="shortcuts"
+         nc:name="shortcuts"
+	 nc:link="help_help.html#shortcuts:help_systemIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+
+<rdf:Description about="help-indexAZ.rdf#s">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Sidebar"
+         nc:name="Sidebar"
+	 nc:link="customize_help.html#My_Sidebar:adding_tabsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Sidebar">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Sidebar:adding_tabs"
+         nc:name="adding tabs"
+	 nc:link="customize_help.html#My_Sidebar:adding_tabsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Sidebar">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Sidebar:customizing_tabs"
+         nc:name="customizing tabs"
+	 nc:link="customize_help.html#My_Sidebar:customizing_tabsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Sidebar">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Sidebar:description"
+         nc:name="description"
+	 nc:link="customize_help.html#My_Sidebar:descriptionIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Sidebar">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Sidebar:removing_tabs"
+         nc:name="removing tabs"
+	 nc:link="customize_help.html#My_Sidebar:removing_tabsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Sidebar">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Sidebar:reorganizing_tabs"
+         nc:name="reorganizing tabs"
+	 nc:link="customize_help.html#My_Sidebar:reorganizing_tabsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Sidebar">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Sidebar:search_categories"
+         nc:name="search categories"
+	 nc:link="nav_help.html#My_Sidebar:search_categoriesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Sidebar">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Sidebar:searching_from"
+         nc:name="searching from"
+	 nc:link="nav_help.html#My_Sidebar:searching_fromIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Sidebar">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Sidebar:using"
+         nc:name="using"
+	 nc:link="customize_help.html#My_Sidebar:usingIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#s">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="signing_email_messages"
+         nc:name="signing email messages"
+	 nc:link="mail_sec_help.html#signing_email_messagesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#s">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="smart_cards"
+         nc:name="smart cards"
+	 nc:link="using_certs_help.html#smart_cards:managingIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#s">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="SSL"
+         nc:name="SSL"
+	 nc:link="ssl_help.html#SSLIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#s">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="SMTP"
+         nc:name="SMTP"
+	 nc:link="mail_help.html#SMTP:choosing_a_differentIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#SMTP">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="SMTP:choosing_a_different"
+         nc:name="choosing a different"
+	 nc:link="mail_help.html#SMTP:choosing_a_differentIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#SMTP">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="SMTP:server_settings"
+         nc:name="server settings"
+	 nc:link="mail_help.html#SMTP:server_settingsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#s">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="software_installation"
+         nc:name="software installation"
+	 nc:link="cs_nav_prefs_advanced.html#software_installation:preferencesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#software_installation">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="software_installation:preferences"
+         nc:name="preferences"
+	 nc:link="cs_nav_prefs_advanced.html#software_installation:preferencesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#s">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="SSL"
+         nc:name="SSL"
+	 nc:link="ssl_help.html#SSL:ciphersIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#SSL">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="SSL:ciphers"
+         nc:name="ciphers"
+	 nc:link="ssl_help.html#SSL:ciphersIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#SSL">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="SSL:preferences"
+         nc:name="preferences"
+	 nc:link="ssl_help.html#SSL:preferencesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#s">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="System"
+         nc:name="System"
+	 nc:link="cs_nav_prefs_advanced.html#System:preferencesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#t">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Tab_Key_Navigation"
+         nc:name="Tab Key Navigation"
+	 nc:link="cs_nav_prefs_advanced.html#Tab_Key_NavigationIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#t">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Tabbed_Browsing"
+         nc:name="Tabbed Browsing"
+	 nc:link="customize_help.html#Tabbed_BrowsingIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Tabbed_Browsing">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Tabbed_Browsing:bookmarking_tabs"
+         nc:name="bookmarking tabs"
+	 nc:link="customize_help.html#Tabbed_Browsing:bookmarking_tabsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Tabbed_Browsing">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Tabbed_Browsing:closing_tabs"
+         nc:name="closing tabs"
+	 nc:link="customize_help.html#Tabbed_Browsing:closing_tabsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Tabbed_Browsing">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Tabbed_Browsing:introduction"
+         nc:name="introduction"
+	 nc:link="nav_help.html#Tabbed_Browsing:introductionIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Tabbed_Browsing">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Tabbed_Browsing:opening_tabs"
+         nc:name="opening tabs"
+	 nc:link="customize_help.html#Tabbed_Browsing:opening_tabsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Tabbed_Browsing">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Tabbed_Browsing:setting_up"
+         nc:name="setting up"
+	 nc:link="customize_help.html#Tabbed_Browsing:setting_upIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Tabbed_Browsing">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Tabbed_Browsing:what_is"
+         nc:name="what is"
+	 nc:link="customize_help.html#Tabbed_Browsing:what_isIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
 <rdf:Description about="help-indexAZ.rdf#t">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="themes"
          nc:name="themes"
-	 nc:link="customize_help.html#themes:changingIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#themes">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="themes:changing"
-         nc:name="changing"
 	 nc:link="customize_help.html#themes:changingIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
@@ -1623,6 +3663,86 @@
    </nc:subheadings>
 </rdf:Description>
 
+<rdf:Description about="help-indexAZ.rdf#u">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="uploading_pages"
+         nc:name="uploading pages"
+	 nc:link="composer_help.html#uploading_pagesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#v">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="validation"
+         nc:name="validation"
+	 nc:link="using_certs_help.html#validation:aboutIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#validation">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="validation:about"
+         nc:name="about"
+	 nc:link="using_certs_help.html#validation:aboutIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#validation">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="validation:auto_updating_CRLs"
+         nc:name="auto updating CRLs"
+	 nc:link="validation_help.html#validation:auto_updating_CRLsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#validation">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="validation:CRLs"
+         nc:name="CRLs"
+	 nc:link="validation_help.html#validation:CRLsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#validation">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="validation:managing_CRLs"
+         nc:name="managing CRLs"
+	 nc:link="validation_help.html#validation:managing_CRLsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#validation">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="validation:OCSP"
+         nc:name="OCSP"
+	 nc:link="validation_help.html#validation:OCSPIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#validation">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="validation:settings"
+         nc:name="settings"
+	 nc:link="validation_help.html#validation:settingsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
 <rdf:Description about="help-indexAZ.rdf#w">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -1648,7 +3768,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="web_pages:customizing_fonts"
          nc:name="customizing fonts"
-	 nc:link="customize_help.html#web_pages:customizing_fontsIDX"/>
+	 nc:link="chrome://help/locale/customize_help.html#cust_font"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1713,12 +3833,32 @@
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="#web_pages">
+<rdf:Description about="help-indexAZ.rdf#w">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="web_pages:translating"
-         nc:name="translating"
-	 nc:link="nav_help.html#web_pages:translatingIDX"/>
+       <rdf:Description ID="Working_Offline"
+         nc:name="Working Offline"
+	 nc:link="mail_help.html#Working_OfflineIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#x">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="XML"
+         nc:name="XML"
+	 nc:link="glossary.html#XMLIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#x">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="XSLT"
+         nc:name="XSLT"
+	 nc:link="glossary.html#XSLTIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
