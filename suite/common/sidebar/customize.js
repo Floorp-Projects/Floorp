@@ -385,8 +385,8 @@ function Save()
 
   // Remove all the current panels from the datasource.
   var current_panels = container.GetElements();
-  while (current_panels.HasMoreElements()) {
-    panel = current_panels.GetNext();
+  while (current_panels.hasMoreElements()) {
+    panel = current_panels.getNext();
     id = panel.QueryInterface(Components.interfaces.nsIRDFResource).Value;
 
     // If this panel is not in the new list,
@@ -435,7 +435,7 @@ function has_element(array, element) {
 // Search for targets from resource in datasource
 function has_targets(datasource, resource) {
   var arcs = datasource.ArcLabelsOut(resource);
-  return arcs.HasMoreElements();
+  return arcs.hasMoreElements();
 }
 
 // Use an assertion to pass a "refresh" event to all the sidebars.
@@ -453,11 +453,11 @@ function refresh_all_sidebars() {
 // Remove a resource and all the arcs out from it.
 function delete_resource_deeply(container, resource) {
   var arcs = container.DataSource.ArcLabelsOut(resource);
-  while (arcs.HasMoreElements()) {
-    var arc = arcs.GetNext();
+  while (arcs.hasMoreElements()) {
+    var arc = arcs.getNext();
     var targets = container.DataSource.GetTargets(resource, arc, true);
-    while (targets.HasMoreElements()) {
-      var target = targets.GetNext();
+    while (targets.hasMoreElements()) {
+      var target = targets.getNext();
       container.DataSource.Unassert(resource, arc, target, true);
     }
   }
@@ -467,11 +467,11 @@ function delete_resource_deeply(container, resource) {
 // Copy a resource and all its arcs out to a new container.
 function copy_resource_deeply(source_datasource, resource, dest_container) {
   var arcs = source_datasource.ArcLabelsOut(resource);
-  while (arcs.HasMoreElements()) {
-    var arc = arcs.GetNext();
+  while (arcs.hasMoreElements()) {
+    var arc = arcs.getNext();
     var targets = source_datasource.GetTargets(resource, arc, true);
-    while (targets.HasMoreElements()) {
-      var target = targets.GetNext();
+    while (targets.hasMoreElements()) {
+      var target = targets.getNext();
       dest_container.DataSource.Assert(resource, arc, target, true);
     }
   }
