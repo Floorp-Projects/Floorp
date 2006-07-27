@@ -131,7 +131,7 @@
       try {
         var hide = pref.getBoolPref("dom.disable_open_during_load");
         if (!hide)
-          hide = pref.getIntPref("privacy.popups.policy") != Components.interfaces.nsIPopupWindowManager.eAllowConditionally;
+          hide = pref.getIntPref("privacy.popups.policy") != Components.interfaces.nsIPopupWindowManager.eAllow || !pref.getBoolPref("privacy.popups.usecustom");
         HidePopups(hide);
       } catch(e) {
         HidePopups(true);
