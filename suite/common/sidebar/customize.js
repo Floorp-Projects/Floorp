@@ -448,7 +448,8 @@ function CustomizePanel()
     if (!customize_url) return;
 
     window.openDialog('chrome://communicator/content/sidebar/customize-panel.xul',
-                      '_blank','chrome,resizable,width=690,height=600',
+                      '_blank',
+                      'chrome,resizable,width=690,height=600,dialog=no,close',
                       panel_id,
                       customize_url,
                       sidebarObj.datasource_uri,
