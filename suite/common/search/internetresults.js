@@ -4,6 +4,9 @@ function searchResultsOpenURL(event, node)
 	if (event.button != 1)
 		return(false);
 
+	if (node.name != "treeitem")
+		return(false);
+
 	var url = node.getAttribute('id');
 
 	if (node.getAttribute('container') == "true")
