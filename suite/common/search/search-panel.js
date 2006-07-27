@@ -26,6 +26,56 @@
 
  */
 
+
+
+var	rootNode = null;
+var	textArc = null;
+var	RDF_observer = new Object;
+
+RDF_observer =
+{
+	OnAssert   : function(src, prop, target)
+		{
+//			debug("RDF_observer: onAssert\n");
+			if ((src == rootNode) && (prop == textArc))
+			{
+				rememberSearchText(target);
+			}
+		},
+	OnUnassert : function(src, prop, target)
+		{
+//			debug("RDF_observer: onUnassert\n"); 
+		},
+	OnChange   : function(src, prop, old_target, new_target)
+		{
+//			debug("RDF_observer: onChange\n");
+			if ((src == rootNode) && (prop == textArc))
+			{
+				rememberSearchText(new_target);
+			}
+		},
+	OnMove     : function(old_src, new_src, prop, target)
+		{
+//			debug("RDF_observer: onMove\n");
+		}
+}
+
+
+
+function rememberSearchText(targetNode)
+{
+	if (targetNode)	targetNode = targetNode.QueryInterface(Components.interfaces.nsIRDFLiteral);
+	if (targetNode)	targetNode = targetNode.Value;
+	if (targetNode && (targetNode != ""))
+	{
+		var textNode = document.getElementById("sidebar-search-text");
+		if (!textNode)	return(false);
+		textNode.value = unescape(targetNode);
+	}
+}
+
+
+
 function debug(msg)
 {
 	// uncomment for noise
@@ -36,7 +86,31 @@ function debug(msg)
 
 function Init()
 {
-    // Initialize the Search panel
+	// Initialize the Search panel
+	var tree = document.getElementById("Tree");
+	if (tree)
+	{
+		var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+		if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+		if (rdf)
+		{
+			rootNode = rdf.GetResource("NC:LastSearchRoot", true);
+			textArc = rdf.GetResource("http://home.netscape.com/NC-rdf#LastText", true);
+
+			tree.database.AddObserver(RDF_observer);
+		}
+	}
+}
+
+
+
+function doSearch()
+{
+	var textNode = document.getElementById("sidebar-search-text");
+	if (!textNode)	return(false);
+	var text = textNode.value;
+	top.OpenSearch("internet", false, text);
+	return(true);
 }
 
 
