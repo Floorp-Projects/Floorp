@@ -266,9 +266,6 @@ function AddEngine()
 		if (NewCategory() == false)	return(false);
 	}
 
-	var promptStr = bundle.GetStringFromName("AddEnginePrompt");
-	if (!confirm(promptStr))	return(false);
-
 	var engineList = document.getElementById("engineList");
 	if (!engineList)	return(false);
 
@@ -308,9 +305,6 @@ function RemoveEngine()
 	var select_list = engineList.selectedItems;
 	if (!select_list)	return(false)
 	if (select_list.length < 1)	return(false);
-
-	var promptStr = bundle.GetStringFromName("RemoveEnginePrompt");
-	if (!confirm(promptStr))	return(false);
 
 	var ref = engineList.getAttribute("ref");
 	if ((!ref) || (ref == ""))	return(false);
