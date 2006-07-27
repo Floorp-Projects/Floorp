@@ -31,22 +31,18 @@
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="Init();"
-  class="dialog"
+  class="color-dialog"
   title="&sidebar.preview.title.label;"
   orient="vertical">
 
   <script src="chrome://communicator/content/sidebar/preview.js" />
 
-  <box id="paneltitle" class="box-texttab texttab-sidebar" selected="true"/>
+  <box id="panel-container" orient="vertical">
 
-<!--  <iframe id="previewframe" type="content" src="about:blank" flex="1"/>-->
-  <iframe class="box-panel" id="previewframe" type="content" src="about:blank" flex="1"/>
+    <box id="paneltitle" class="box-texttab texttab-sidebar" selected="true"/>
+    <!--  <iframe id="previewframe" type="content" src="about:blank" flex="1"/>-->
+    <iframe class="box-panel" id="previewframe" type="content" src="about:blank" flex="1"/>
 
-  <separator class="groove"/>
-  
-  <box halign="right">
-    <spring flex="1"/>
-    <button class="dialog" value="&sidebar.preview.close.label;" oncommand="window.close();"/>
-  </box>
+  </box>  
 
 </window>
