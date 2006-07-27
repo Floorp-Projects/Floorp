@@ -344,7 +344,7 @@ function AskChangeDefaultEngine(aSelectedEngine)
                           "changeEngineMsg", [engineName], 1); 
 
     var checkbox = {value:0};
-    var change = promptSvc.confirmCheck(window, title, changeEngineMsg, 
+    change = promptSvc.confirmCheck(window, title, changeEngineMsg, 
                    dontAskAgainMsg, checkbox);
 
     // store "don't ask again" pref from checkbox value (if changed)
