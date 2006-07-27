@@ -760,6 +760,12 @@ function SidebarSelectPanel(header, should_popopen, should_unhide) {
   return true;
 }
 
+function SidebarGetLastSelectedPanel()
+{
+  return (sidebarObj.panels && 
+          sidebarObj.panels.node.getAttribute('last-selected-panel'));
+}
+
 function SidebarStopPanelLoad(header) {
   var panel = sidebarObj.panels.get_panel_from_header_node(header);
   panel.stop_load();
