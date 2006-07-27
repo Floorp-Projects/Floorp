@@ -49,17 +49,17 @@
   </popupset>
  
   <vbox flex="1">
-    <vbox class="box-padded">
-      <box autostretch="never">
+    <vbox class="box-padded outset-top-bottom">
+      <hbox autostretch="never">
         <textbox id="sidebar-search-text" flex="1"
                    onkeypress="if (event.keyCode == 13) doSearch();"
                    oninput="doEnabling();" />
         <button id="searchButton" label="&search.button.label;"
                 disabled="true" oncommand="doSearch();"/>
-      </box>
+      </hbox>
       <vbox autostretch="never">
         <vbox id="categoryBox" autostretch="never">
-          <box>   
+          <hbox autostretch="never">
             <text class="label" value="&within.label;" />
             <menulist id="categoryList" ref="NC:SearchCategoryRoot"
                       datasources="rdf:null" oncommand="switchTab(1);" >
@@ -80,7 +80,7 @@
                 <menuseparator />
               </menupopup>
             </menulist>
-          </box>
+          </hbox>
           <separator class="thin"/>
           <html flex="1">&choose.label;</html>
         </vbox>
@@ -89,7 +89,7 @@
     <deck class="outset-right" id="advancedDeck" flex="1">
       <vbox class="searchpanel-outerbox" flex="1">
 
-        <tree id="Tree" ref="NC:LastSearchRoot"
+        <tree id="Tree" ref="NC:LastSearchRoot" class="sidebarTree"
               resource="http://home.netscape.com/NC-rdf#PageRank"
               resource2="http://home.netscape.com/NC-rdf#Name"
               sortDirection="ascending" sortActive="true"
@@ -131,7 +131,7 @@
 
           <treehead>
             <treerow>
-              <treecell class="treecell-header sortDirectionIndicator" 
+              <treecell class="treecell-header sortDirectionIndicator treecell-header-sidebarpanel" 
                         observes="SortNameColumn" label="&results.label;" 
                         resource="http://home.netscape.com/NC-rdf#Name" 
                         onclick="return doSort('SortNameColumn', 'http://home.netscape.com/NC-rdf#PageRank');" 
@@ -156,7 +156,7 @@
     
       <vbox class="searchpanel-outerbox" flex="1">
 
-        <tree id="searchengines" datasources="rdf:internetsearch" flex="1">
+        <tree id="searchengines" datasources="rdf:internetsearch" flex="1" class="sidebarTree">
 
           <template>
 
@@ -183,7 +183,7 @@
         
           <treehead>
             <treerow>
-              <treecell class="treecell-header sortDirectionIndicator" 
+              <treecell class="treecell-header sortDirectionIndicator treecell-header-sidebarpanel" 
                         observes="EngineColumn" label="&engine.column.label;"
                         resource="http://home.netscape.com/NC-rdf#Name"
                         sortActive="true" sortDirection="ascending"
