@@ -41,22 +41,10 @@
       // Determine if "Block Image" is to appear in the menu.
       // Return true if "imageBlocker.enabled" pref is set and image is not already blocked.
       isBlockingImages : function () {
-        /* determine if "imageBlocker.enabled" pref is set */
-        var pref = gContextMenu.getService('@mozilla.org/preferences;1', 'nsIPref');
-        var result = false;
-        try {
-          result = pref.GetBoolPref( "imageblocker.enabled" );
-        } catch(e) {
-        }
-        if (!result) {
-          /* pref is not set so return false */
-          return false;
-        }
-  
         /* determine if image is already being blocked */
         var permissionmanager =
           Components.classes["@mozilla.org/permissionmanager;1"]
-            .getService().QueryInterface(Components.interfaces.nsIPermissionManager);
+            .getService(Components.interfaces.nsIPermissionManager);
 
 
         var enumerator = permissionmanager.enumerator;
@@ -81,21 +69,53 @@
         return true;
       },
 
+      // Determine if "imageBlocker.enabled" pref is set
+      isPrefSet: function () {
+        var pref = gContextMenu.getService('@mozilla.org/preferences;1', 'nsIPref');
+        var result = false;
+        try {
+          result = pref.GetBoolPref( "imageblocker.enabled" );
+        } catch(e) {
+        }
+        return result;
+      },
+
       // Block image from loading in the future.
       blockImage : function () {
-        var imgmanager =
-          Components.classes["@mozilla.org/imgmanager;1"]
-            .getService().QueryInterface(Components.interfaces.nsIImgManager);
-        imgmanager.block(gContextMenu.imageURL);
+        var permissionmanager =
+          Components.classes["@mozilla.org/permissionmanager;1"]
+            .getService(Components.interfaces.nsIPermissionManager);
+        if (!permissionmanager) {
+          return;
+        }
+        permissionmanager.add(window._content.location, false, IMAGEPERMISSION);
+      },
+
+      // Unblock image from loading in the future.
+      unblockImage : function () {
+        var permissionmanager =
+          Components.classes["@mozilla.org/permissionmanager;1"]
+            .getService().QueryInterface(Components.interfaces.nsIPermissionManager);
+        if (!permissionmanager) {
+          return;
+        }
+        permissionmanager.add(window._content.location, true, IMAGEPERMISSION);
       },
 
       initImageBlocking : function () {
         try {
         // Block image depends on whether an image was clicked on, and,
         // whether the user pref is enabled.
+
         gContextMenu.showItem
           ("context-blockimage",
-           gContextMenu.onImage && cookieContextMenu.isBlockingImages());
+           gContextMenu.onImage && cookieContextMenu.isPrefSet() &&
+           cookieContextMenu.isBlockingImages());
+
+        gContextMenu.showItem
+          ("context-unblockimage",
+           gContextMenu.onImage && cookieContextMenu.isPrefSet() &&
+           !cookieContextMenu.isBlockingImages());
         } catch (e) {}
       },
 
@@ -122,6 +142,12 @@
               label="&blockImageCmd.label;"
               accesskey=""
               oncommand="cookieContextMenu.blockImage();"
+              style="display:none;"
+              insertafter="context-viewimage"/>
+    <menuitem id="context-unblockimage"
+              label="&unblockImageCmd.label;"
+              accesskey=""
+              oncommand="cookieContextMenu.unblockImage();"
               style="display:none;"
               insertafter="context-viewimage"/>
   </popup>
