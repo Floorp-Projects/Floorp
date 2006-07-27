@@ -19,15 +19,15 @@
  */
 
 function viewImages() {
-  window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","",
+  window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","_blank",
                     "modal=yes,chrome,resizable=yes", 2 );
 }
 
 function viewCookies() {
-  window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","","modal=yes,chrome,resizable=yes", 0);
+  window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","_blank","modal=yes,chrome,resizable=yes", 0);
 }  
 
 function viewTutorial() {
   window.openDialog
-    ("chrome://communicator/content/wallet/privacy.xul","","modal=yes,chrome,resizable=yes,height=400,width=600", 0);
+    ("chrome://communicator/content/wallet/privacy.xul","tutorial","modal=no,chrome,resizable=yes,height=400,width=600", 0);
 }  
