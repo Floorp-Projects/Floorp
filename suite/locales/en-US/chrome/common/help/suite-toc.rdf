@@ -161,7 +161,7 @@
         <rdf:li> <rdf:Description ID="mail-importing-other" nc:name="Importing Mail from Other Programs" nc:link="chrome://help/locale/mail_help.xhtml#importing_mail_from_other_programs" /> </rdf:li>
         <rdf:li> <rdf:Description ID="mail-doc-news" nc:name="Getting Started With Newsgroups" nc:link="chrome://help/locale/mail_help.xhtml#getting_started_with_newsgroups" /> </rdf:li>
         <rdf:li> <rdf:Description ID="mail-doc-offline" nc:name="Working Offline" nc:link="chrome://help/locale/mail_help.xhtml#working_offline" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="sign-encrypt" nc:name="Signing &amp; Encrypting Messages" nc:link="chrome://help/locale/mail_sec_help.html#secure_mail_first" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="sign-encrypt" nc:name="Signing &amp; Encrypting Messages" nc:link="chrome://help/locale/mail_sec_help.xhtml#signing_and_encrypting_messages" /> </rdf:li>
         <rdf:li> <rdf:Description ID="mail-doc-account-settings" nc:name="Mail and Newsgroups Account Settings" nc:link="chrome://help/locale/mail_help.xhtml#mail_and_newsgroups_account_settings" /> </rdf:li>
         <rdf:li> <rdf:Description ID="mail-doc-mailprefs" nc:name="Mail and Newsgroup Preferences" nc:link="chrome://help/locale/mail_help.xhtml#mail_and_newsgroup_preferences" /> </rdf:li>
       </rdf:Seq>
@@ -396,13 +396,13 @@
 <rdf:Description about="#sign-encrypt">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="sign-encrypt-about" nc:name="Digital Signatures &amp; Encryption" nc:link="chrome://help/locale/mail_sec_help.html#about_sigs_encrypt" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="sign-encrypt-get" nc:name="Getting Other People's Certificates" nc:link="chrome://help/locale/mail_sec_help.html#get_mail_certs" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="sign-encrypt-config" nc:name="Configuring Security Settings" nc:link="chrome://help/locale/mail_sec_help.html#config_account" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="sign-encrypt-signing" nc:name="Signing &amp; Encrypting a New Message" nc:link="chrome://help/locale/mail_sec_help.html#signing" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="sign-encrypt-read" nc:name="Reading Signed &amp; Encrypted Messages" nc:link="chrome://help/locale/mail_sec_help.html#reading" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="compose_security" nc:name="Message Security - Compose Window" nc:link="chrome://help/locale/mail_sec_help.html#compose_security" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="received_security" nc:name="Message Security - Received Message" nc:link="chrome://help/locale/mail_sec_help.html#received_security" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="sign-encrypt-about" nc:name="Digital Signatures &amp; Encryption" nc:link="chrome://help/locale/mail_sec_help.xhtml#about_digital_signatures_and_encryption" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="sign-encrypt-get" nc:name="Getting Other People's Certificates" nc:link="chrome://help/locale/mail_sec_help.xhtml#getting_other_peoples_certificates" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="sign-encrypt-config" nc:name="Configuring Security Settings" nc:link="chrome://help/locale/mail_sec_help.xhtml#configuring_security_settings" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="sign-encrypt-signing" nc:name="Signing &amp; Encrypting a New Message" nc:link="chrome://help/locale/mail_sec_help.xhtml#signing_and_encrypting_a_new_message" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="sign-encrypt-read" nc:name="Reading Signed &amp; Encrypted Messages" nc:link="chrome://help/locale/mail_sec_help.xhtml#reading_signed_and_encrypted_messages" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="compose_security" nc:name="Message Security - Compose Window" nc:link="chrome://help/locale/mail_sec_help.xhtml#message_security_compose_window" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="received_security" nc:name="Message Security - Received Message" nc:link="chrome://help/locale/mail_sec_help.xhtml#message_security_recieved_message" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -410,8 +410,8 @@
 <rdf:Description about="#sign-encrypt-about">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="sign-encrypt-about-sig" nc:name="How Digital Signatures Work" nc:link="chrome://help/locale/mail_sec_help.html#how_sigs_work" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="sign-encrypt-about-encrypt" nc:name="How Encryption Works" nc:link="chrome://help/locale/mail_sec_help.html#how_encrypt_works" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="sign-encrypt-about-sig" nc:name="How Digital Signatures Work" nc:link="chrome://help/locale/mail_sec_help.xhtml#how_digital_signatures_work" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="sign-encrypt-about-encrypt" nc:name="How Encryption Works" nc:link="chrome://help/locale/mail_sec_help.xhtml#how_encryption_works" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
