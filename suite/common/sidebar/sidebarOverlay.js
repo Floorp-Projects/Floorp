@@ -379,7 +379,7 @@ function update_panels() {
           // Use a timeout to set the onload handler.
           // Otherwise, this fires too early and javascript dies. Bug 37428.
           sidebar.loading_iframe = iframe;
-          setTimeout("sidebar.loading_iframe.addEventListener('load', panel_loader, true);", 100);
+          setTimeout("sidebar.loading_iframe.addEventListener('load', panel_loader, true);", 1);
         }
       } else { 
         debug("item("+ii+") unselected");
