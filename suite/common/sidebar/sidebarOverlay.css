@@ -104,6 +104,11 @@ iframe.panel-frame {
   margin: 2px;
 }
 
+.sidebar-main-header > text {
+  font-weight: bold;
+  margin: 2px;
+}
+
 .sidebar-main-header > titledbutton {
   padding: 0px;
 }
