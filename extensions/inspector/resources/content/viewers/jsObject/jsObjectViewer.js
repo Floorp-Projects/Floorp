@@ -209,7 +209,9 @@ JSObjectViewer.prototype =
     
     var value;
     if (aValue === null) {
-      value = "(null)"
+      value = "(null)";
+    } else if (aValue === undefined) {
+      value = "(undefined)";
     } else {
       try {
         value = aValue.toString();
