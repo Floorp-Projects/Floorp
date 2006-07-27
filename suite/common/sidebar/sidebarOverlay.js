@@ -825,6 +825,7 @@ function SidebarShowHide() {
   var sidebar_panels_splitter = document.getElementById('sidebar-panels-splitter');
   var sidebar_panels_splitter_box = document.getElementById('sidebar-panels-splitter-box');
   var sidebar_splitter = document.getElementById('sidebar-splitter');
+  var sidebar_menu_item = document.getElementById('sidebar-menu');
 
   if (sidebar_is_hidden()) {
     debug("Showing the sidebar");
@@ -837,6 +838,7 @@ function SidebarShowHide() {
       sidebar_panels_splitter.removeAttribute('hidden');
     }
     sidebar_overlay_init();
+    sidebar_menu_item.setAttribute('checked', 'true');
   } else {
     debug("Hiding the sidebar");
     var hide_everything = sidebar_panels_splitter.getAttribute('hidden') == 'true';
@@ -849,6 +851,7 @@ function SidebarShowHide() {
     }
     title_box.setAttribute('hidden', 'true');
     sidebar_panels_splitter_box.setAttribute('hidden', 'true');
+    sidebar_menu_item.setAttribute('checked', 'false');
   }
   // Immediately save persistent values
   document.persist('sidebar-title-box', 'hidden');
