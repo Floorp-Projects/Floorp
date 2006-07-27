@@ -93,10 +93,6 @@ function SearchPanelStartup()
 	var categoryList = document.getElementById("categoryList");
 	if (categoryList)
 	{
-		var optionItem = document.createElement("html:option");
-		optionItem.setAttribute("value", "NC:SearchEngineRoot");
-		categoryList.appendChild(optionItem);
-
 		var internetSearch = Components.classes["component://netscape/rdf/datasource?name=internetsearch"].getService();
 		if (internetSearch)	internetSearch = internetSearch.QueryInterface(Components.interfaces.nsIInternetSearchService);
 		if (internetSearch)
