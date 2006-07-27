@@ -25,14 +25,27 @@ var	textArc = null;
 var	RDF_observer = new Object;
 var	pref = null;
 
+
+
+function debug(msg)
+{
+	// uncomment for debugging information
+	// dump(msg+"\n");
+}
+
+
+
 // get the click count pref
-try {
-  pref = Components.classes["component://netscape/preferences"].getService();
-  if( pref )
-    pref = pref.QueryInterface( Components.interfaces.nsIPref );
+try
+{
+	pref = Components.classes["component://netscape/preferences"].getService();
+	if( pref )	pref = pref.QueryInterface( Components.interfaces.nsIPref );
 }
-catch(e) {
+catch(e)
+{
 }
+
+
 
 RDF_observer =
 {
@@ -58,17 +71,25 @@ RDF_observer =
 		}
 }
 
-function rememberSearchText(targetNode)
+
+
+function rememberSearchText(target)
 {
-	if (targetNode)	targetNode = targetNode.QueryInterface(Components.interfaces.nsIRDFLiteral);
-	if (targetNode)	targetNode = targetNode.Value;
-	if (targetNode && (targetNode != ""))
+	if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
+	if (target)	target = target.Value;
+	if (target && (target != ""))
 	{
 		var textNode = document.getElementById("sidebar-search-text");
 		if (!textNode)	return(false);
-		textNode.value = unescape(targetNode);
+
+		// convert pluses (+) back to spaces
+		target = target.replace(/+/i, " ");
+
+		textNode.value = unescape(target);
 	}
 }
+
+
 
 // Initialize the Search panel: 
 // 1) init the category list
@@ -76,7 +97,7 @@ function rememberSearchText(targetNode)
 // 3) initialise the checked state of said engines. 
 function SearchPanelStartup()
 {
-  bundle = srGetStrBundle( "chrome://search/locale/search-panel.properties" );
+	bundle = srGetStrBundle( "chrome://search/locale/search-panel.properties" );
    
 	var tree = document.getElementById("Tree");
 	if (tree)
@@ -107,45 +128,84 @@ function SearchPanelStartup()
 			}
 		}
 	}
-  
-  try {
-    var pref = Components.classes["component://netscape/preferences"].getService();
-    if( pref )
-      pref = pref.QueryInterface( Components.interfaces.nsIPref );
-    var lastCategoryName = pref.CopyCharPref( "browser.search.last_search_category" );
-  }
-  catch( e ) {
-    var lastCategoryName = "";
-  }
-//  dump("*** lastCategoryName = " + lastCategoryName + "\n");
-  var categoryList = document.getElementById( "categoryList" );
-  if( categoryList ) {
-  	 //set to default value 'the web'
-	 //hack: hardcoded postion in here replace with a function that finds the entry 'the web'
-	 
-    for( var i = 0; i < categoryList.options.length; i++ )
-    {
-      if( ( lastCategoryName == "" && categoryList.options[i].value == "NC:SearchEngineRoot" ) ||
-          ( categoryList.options[i].getAttribute("id") == lastCategoryName ) ) {
-        categoryList.selectedIndex = i;
-      }
-    }
-    
-    if( lastCategoryName == "" )
-      lastCategoryName = "NC:SearchEngineRoot";
-    else
-      lastCategoryName = "NC:SearchCategory?category=" + lastCategoryName;
-  	var treeNode = document.getElementById("searchengines");
-  	treeNode.setAttribute( "ref", lastCategoryName );
-  }
 
-  loadEngines( lastCategoryName );
+	// try and determine last category name used
+	var lastCategoryName = "";
+	try
+	{
+		var pref = Components.classes["component://netscape/preferences"].getService();
+		if (pref)	pref = pref.QueryInterface( Components.interfaces.nsIPref );
+		if (pref)	lastCategoryName = pref.CopyCharPref( "browser.search.last_search_category" );
+
+		if (lastCategoryName != "")
+		{
+			// strip off the prefix if necessary
+			var prefix="NC:SearchCategory?category=";
+			if (lastCategoryName.indexOf(prefix) == 0)
+			{
+				lastCategoryName = lastCategoryName.substr(prefix.length);
+			}
+		}
+
+	}
+	catch( e )
+	{
+		debug("Exception in SearchPanelStartup\n");
+		lastCategoryName = "";
+	}
+	debug("\nSearchPanelStartup: lastCategoryName = '" + lastCategoryName + "'\n");
+
+	// select the appropriate category
+	var categoryList = document.getElementById( "categoryList" );
+	var categoryPopup = document.getElementById( "categoryPopup" );
+	if( categoryList && categoryPopup )
+	{
+		//set to default value 'Web'
+		//hack: hardcoded postion in here replace with a function that finds the entry 'the web'
+	 
+	 	var found = false;
+		for( var i = 0; i < categoryPopup.childNodes.length; i++ )
+		{
+			if( ( lastCategoryName == "" && categoryPopup.childNodes[i].getAttribute("data") == "NC:SearchEngineRoot" ) ||
+			    ( categoryPopup.childNodes[i].getAttribute("id") == lastCategoryName ) )
+			{
+				categoryList.selectedItem = categoryPopup.childNodes[i];
+				found = true;
+				break;
+			}
+		}
+		if (found == false)
+		{
+			categoryList.selectedItem = categoryPopup.childNodes[0];
+		}
+    
+		if( lastCategoryName == "" )
+		{
+			lastCategoryName = "NC:SearchEngineRoot";
+		}
+		else
+		{
+			lastCategoryName = "NC:SearchCategory?category=" + lastCategoryName;
+		}
+
+		var treeNode = document.getElementById("searchengines");
+		treeNode.setAttribute( "ref", lastCategoryName );
+	}
+
+	loadEngines( lastCategoryName );
   
-  // if we have search results, show them, otherwise show engines
-  if (haveSearchResults() == true)
-	switchTab(0);
-  else	switchTab(1);
+	// if we have search results, show them, otherwise show engines
+	if (haveSearchResults() == true)
+	{
+		switchTab(0);
+	}
+	else
+	{
+		switchTab(1);
+	}
 }
+
+
 
 function haveSearchResults()
 {
@@ -167,6 +227,10 @@ function haveSearchResults()
 		{
 			var textNode = document.getElementById("sidebar-search-text");
 			if (!textNode)	return(false);
+
+			// convert pluses (+) back to spaces
+			target = target.replace(/+/i, " ");
+
 			textNode.value = unescape(target);
 			return(true);
 		}
@@ -174,60 +238,86 @@ function haveSearchResults()
 	return(false);
 }
 
+
+
 function getNumEngines()
 {
  	var treeNode = document.getElementById("searchengines");
-  var numChildren = treeNode.childNodes.length;
+	var numChildren = treeNode.childNodes.length;
+	var treeChildrenNode = null;
+
 	for (var x = 0; x<numChildren; x++)
  	{
-  	if (treeNode.childNodes[x].tagName == "treechildren")
-	  {
-			var treeChildrenNode = treeNode.childNodes[x];
+		if (treeNode.childNodes[x].tagName == "treechildren")
+		{
+			treeChildrenNode = treeNode.childNodes[x];
  			break;
-  	}
+		}
 	}
-  if( !treeChildrenNode )
-    return -1;
-  return treeChildrenNode.childNodes.length;
+	if( !treeChildrenNode )	return(-1);
+	return(treeChildrenNode.childNodes.length);
 }
 
-function chooseCategory( aSelectElement )
+
+
+function chooseCategory( aNode )
 {
-	var category = aSelectElement.options[ aSelectElement.selectedIndex ].getAttribute("id");
-  var pref = Components.classes["component://netscape/preferences"].getService();
-  if( pref )
-    pref = pref.QueryInterface( Components.interfaces.nsIPref );
-  if( !category )
-    category = "";
-  pref.SetCharPref( "browser.search.last_search_category", category );
-	if ( category )	
-    category = "NC:SearchCategory?category=" + category;
-	else		
-    category = "NC:SearchEngineRoot";
+	var category = aNode.getAttribute("id");
+	if ((!category) || (category == ""))
+	{
+		category="NC:SearchEngineRoot";
+	}
+	else
+	{
+		category = "NC:SearchCategory?category=" + category;
+	}
+	debug("chooseCategory: '" + category + "'\n");
+
+	if (pref)	pref.SetCharPref( "browser.search.last_search_category", category );
+	else		debug("Unable to set browser.search.last_search_category pref.\n");
+
 	var treeNode = document.getElementById("searchengines");
-	if (!treeNode)	
-    return false;
-	treeNode.setAttribute( "ref", category );
-  loadEngines( category );
-	return true;
+	if (treeNode)
+	{
+		treeNode.setAttribute( "ref", category );
+	}
+	loadEngines( category );
+	return(true);
 }
 
-function saveEngines( aSelectElement )
+
+
+// check an engine representation in the engine list
+function doCheck(aNode)
 {
-  var category = aSelectElement.options[ aSelectElement.selectedIndex ].getAttribute("id");
-  if( category )
-    category = "NC:SearchCategory?category=" + category;
-  else
-    category = "NC:SearchEngineRoot";
+	saveEngines();
+	return(false);
+}
+
+
+
+function saveEngines()
+{
+	var categoryList = document.getElementById("categoryList");
+	var category = categoryList.selectedItem.getAttribute("id");
+	if( category )
+	{
+		category = "NC:SearchCategory?category=" + category;
+	}
+	else
+	{
+		category = "NC:SearchEngineRoot";
+	}
+
 	var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
 	if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
 	if (rdf)
 	{
 		var localStore = rdf.GetDataSource("rdf:local-store");
-    if( !localStore )
-      return false;
+		if( !localStore )	return(false);
+
    	var treeNode = document.getElementById("searchengines");
-    var numChildren = treeNode.childNodes.length;
+	var numChildren = treeNode.childNodes.length;
   	for (var x = 0; x<numChildren; x++)
    	{
     	if (treeNode.childNodes[x].tagName == "treechildren")
@@ -249,16 +339,28 @@ function saveEngines( aSelectElement )
       var engineSRC = rdf.GetResource(engineURI, true);
 
       var checkbox = treeItem.firstChild.firstChild.firstChild;
-      if( checkbox.checked )
+      
+	debug("#" + x + ": tag=" + checkbox.tagName + "   checked=" + checkbox.checked + "\n");
+      
+      if( checkbox.checked == true || checkbox.checked == "true")
         localStore.Assert( categorySRC, checkedProperty, engineSRC, true );
       else
         localStore.Unassert( categorySRC, checkedProperty, engineSRC, true );
     }
-    flushableStore = localStore.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
-    if (flushableStore)
-      flushableStore.Flush();
+
+	// save changes; flush out the localstore
+	try
+	{
+		var flushableStore = localStore.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+		if (flushableStore)	flushableStore.Flush();
+	}
+	catch(ex)
+	{
+	}
   }
 }
+
+
 
 // initialise the appropriate engine list, and the checked state of the engines
 function loadEngines( aCategory )
@@ -284,7 +386,7 @@ function loadEngines( aCategory )
   		{
   			var numEngines = treeChildrenNode.childNodes.length;
   			var checkedProperty = rdf.GetResource("http://home.netscape.com/NC-rdf#checked", true);
-        var categorySRC = rdf.GetResource( aCategory, true );
+			var categorySRC = rdf.GetResource( aCategory, true );
   			for (var x = 0; x<numEngines; x++)
   			{
   				var treeItem = treeChildrenNode.childNodes[x];
@@ -292,9 +394,8 @@ function loadEngines( aCategory )
   				var engineURI = treeItem.getAttribute("id");
   				var engineSRC = rdf.GetResource( engineURI, true );
   				var hasAssertion = localStore.HasAssertion( categorySRC, checkedProperty, engineSRC, true );
-          var checkbox = treeItem.firstChild.firstChild.firstChild;
-//          dump("*** hasAssertion = " + hasAssertion + "\n");
-  				if ( hasAssertion )
+				var checkbox = treeItem.firstChild.firstChild.firstChild;
+  				if ( hasAssertion == true)
   				{
   					checkbox.checked = true;
   				}
@@ -305,6 +406,7 @@ function loadEngines( aCategory )
 }
 
 
+
 function SearchPanelShutdown()
 {
 	var tree = document.getElementById("Tree");
@@ -313,6 +415,8 @@ function SearchPanelShutdown()
 		tree.database.RemoveObserver(RDF_observer);
 	}
 }
+
+
 
 function doStop()
 {
@@ -350,10 +454,10 @@ function doStop()
 	{
 		var resultsTree = top.content.document.getElementById("internetresultstree");
 		if( !resultsTree )
-      return false;
+			return(false);
 		var searchURL = resultsTree.getAttribute("ref");
 		if( !searchURL )	
-      return false;
+			return(false);
 
 		var searchResource       = rdf.GetResource(searchURL, true);
 		var priceProperty        = rdf.GetResource("http://home.netscape.com/NC-rdf#Price", true);
@@ -415,6 +519,8 @@ function doStop()
 	}
 	switchTab(0);
 }
+
+
 
 function doSearch()
 {
@@ -493,12 +599,11 @@ function doSearch()
 			continue;
 
 		var checkbox = treeItem.firstChild.firstChild.firstChild;
-		var checkedFlag = checkbox.checked;
-		if ( checkedFlag )
+		if ( checkbox.checked == true || checkbox.checked == "true")
 		{
 			var engineURI = treeItem.getAttribute("id");
 			if (!engineURI)	continue;
-      engineURIs[engineURIs.length] = engineURI;
+			engineURIs[engineURIs.length] = engineURI;
 			foundEngine = true;
 		}
 	}
@@ -510,11 +615,11 @@ function doSearch()
       engineURIs[engineURIs.length] = treeItem.getAttribute( "id" );
     }
     else {
-//      dump("*** multiple search engines present, selecting the netscape search engine\n");
+      debug("*** multiple search engines present, selecting the netscape search engine\n");
       for( var i = 0; i < treeChildrenNode.childNodes.length; i++ )
       {
         var currItem = treeChildrenNode.childNodes[i];
-//        dump("*** the current URI is = " + currItem.getAttribute("id") + "\n");
+        debug("*** the current URI is = " + currItem.getAttribute("id") + "\n");
         if( currItem.getAttribute("id").indexOf("NetscapeSearch.src") != -1 ) {
           engineURIs[engineURIs.length] = currItem.getAttribute("id");
           break;
@@ -533,12 +638,7 @@ function doSearch()
 	return true;
 }
 
-// check an engine representation in the engine list
-function doCheck( aNode )
-{
-	saveEngines( document.getElementById("categoryList") )
-	return false;
-}
+
 
 function checkSearchProgress( aSearchURL )
 {
@@ -593,6 +693,8 @@ function checkSearchProgress( aSearchURL )
 	return(activeSearchFlag);
 }
 
+
+
 function FOO_doSearch()
 {
 	var textNode = document.getElementById("sidebar-search-text");
@@ -601,6 +703,8 @@ function FOO_doSearch()
 	top.OpenSearch("internet", false, text);
 	return(true);
 }
+
+
 
 function sidebarOpenURL(event, treeitem, root)
 {
@@ -664,6 +768,8 @@ function sidebarOpenURL(event, treeitem, root)
     window.openDialog( "chrome://navigator/content/navigator.xul", "_blank", "chrome,all,dialog=no", id );
   }
 }
+
+
 
 // this should go somewhere else. 
 function OpenSearch( tabName, forceDialogFlag, aSearchStr, engineURIs )
@@ -765,10 +871,12 @@ function OpenSearch( tabName, forceDialogFlag, aSearchStr, engineURIs )
 	}
 }
 
+
+
 function switchTab( aPageIndex )
 {
-  var deck = document.getElementById( "advancedDeck" );
-  deck.setAttribute( "index", aPageIndex );
+	var deck = document.getElementById( "advancedDeck" );
+	deck.setAttribute( "index", aPageIndex );
   
   	// decide whether to show/hide/enable/disable save search query button
 	if (aPageIndex != 0)	return(true);
@@ -803,8 +911,8 @@ function switchTab( aPageIndex )
 	}
 
 	if (haveSearchRef == true)
-		saveQueryButton.removeAttribute("style", "visibility: collapse");
-	else	saveQueryButton.setAttribute("style", "visibility: collapse");
+		saveQueryButton.removeAttribute("disabled", "true");
+	else	saveQueryButton.setAttribute("disabled", "true");
 
   return(true);
 }
@@ -846,12 +954,15 @@ function saveSearch()
 		if (target)	target = target.Value;
 		if (target && target != "")
 		{
+			// convert pluses (+) back to spaces
+			target = target.replace(/+/i, " ");
+
 			lastSearchText = unescape(target);
 		}
 	}
 
-	dump("Bookmark search Name: '" + lastSearchText + "'\n");
-	dump("Bookmark search  URL: '" + lastSearchURI + "'\n");
+	debug("Bookmark search Name: '" + lastSearchText + "'\n");
+	debug("Bookmark search  URL: '" + lastSearchURI + "'\n");
 
 	if ((lastSearchURI == null) || (lastSearchURI == ""))	return(false);
 	if ((lastSearchText == null) || (lastSearchText == ""))	return(false);
@@ -862,7 +973,7 @@ function saveSearch()
 	var textNode = document.getElementById("sidebar-search-text");
 	if( !textNode )		return(false);
 
-	var searchTitle = "Internet Search: '" + lastSearchText + "'";	// using " + gSites;
+	var searchTitle = "Search: '" + lastSearchText + "'";	// using " + gSites;
 	if (bmks)	bmks.AddBookmark(lastSearchURI, searchTitle);
 
 	return(true);

@@ -50,22 +50,26 @@
           <titledbutton id="stopbutton" align="left" src="resource:/res/rdf/loading.gif" value="&stop.button.label;" onclick="return doStop();" class="dialog toolbar-non-iconic" style="display:none;"/>
         </box>
         <box align="horizontal" class="spaced">
-          <html:label for="">&within.label;</html:label>
-        	<template id="categoryTemplate">
-        		<rule iscontainer="true">
-        			<html:optgroup uri="..." label="rdf:http://home.netscape.com/NC-rdf#title" />
-        		</rule>
-        		<rule>
-        			<html:option uri="..." value="rdf:http://home.netscape.com/NC-rdf#category" >
-        				<textnode value="rdf:http://home.netscape.com/NC-rdf#title" />
-        			</html:option>
-        		</rule>
-        	</template>
-        	<html:select id="categoryList" template="categoryTemplate" ref="NC:SearchCategoryRoot" datasources="rdf:null"
-        		onmousedown="return switchTab(1);"
-        		onchange="return chooseCategory(this)" >
-        		<html:option value="NC:SearchEngineRoot" >&allengines.label;</html:option>
-        	</html:select>
+
+		<text value="&within.label;" />
+
+		<menulist id="categoryList" ref="NC:SearchCategoryRoot" datasources="rdf:null"
+        		onmousedown="return switchTab(1);" >
+
+	        	<template>
+	        		<menupopup>
+	        			<menuitem uri="rdf:*" oncommand="return chooseCategory(this);"
+	        				data="rdf:http://home.netscape.com/NC-rdf#category"
+	        				value="rdf:http://home.netscape.com/NC-rdf#title" />
+	        		</menupopup>
+	        	</template>
+
+			<menupopup id="categoryPopup">
+				<menuitem data="NC:SearchEngineRoot" value="&allengines.label;"
+					oncommand="return chooseCategory(this)" />
+				<menuseparator />
+			</menupopup>
+		</menulist>
         </box>
       </box>
 
