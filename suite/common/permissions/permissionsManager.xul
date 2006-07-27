@@ -1,0 +1,100 @@
+<?xml version="1.0"?>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is mozilla.org code.
+   -
+   - The Initial Developer of the Original Code is
+   - Netscape Communications Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 2002
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
+
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/popupManager.dtd" >
+
+<dialog id="popupManager"
+        buttons="accept,cancel,help"
+        title="&windowtitle.label;"        
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        style="width:32em; height:42em;"
+        onload="Startup();"        
+        ondialogaccept="return onAccept();"
+        ondialoghelp="return doHelpButton();">
+
+  <script type="application/x-javascript" src="chrome://communicator/content/popupManager.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/wallet/nsWalletTreeUtils.js"/>
+  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
+
+  <keyset id="dialogKeys"/>
+  <stringbundle id="popupStringBundle"
+                src="chrome://communicator/locale/popupManager.properties"/>
+ 
+  <vbox id="servers" flex="1">
+  
+      <description id="allowExcept" value="&allowExcept.label;" hidden="true"/>
+      <description id="blockExcept" value="&blockExcept.label;" hidden="true"/>
+
+      <separator class="thin"/>
+
+      <hbox align="center">
+        <vbox flex="1">
+          <textbox id="addSiteBox" flex="1"/>
+        </vbox>
+        <button id="addSiteButton"
+                label="&addSite.label;" accesskey="&addSite.accesskey;"
+                oncommand="addPermission();"/>
+      </hbox>
+
+      <separator class="thin"/>
+
+      <tree id="permissionsTree" flex="1" style="height: 10em;"
+            seltype="multiple" hidecolumnpicker="true"
+            onkeypress="handlePermissionKeyPress(event)"
+            onselect="permissionSelected();"
+            lastSortBlacklist="false" lastSortWhitelist="false"
+            persist="lastSortBlacklist lastSortWhitelist">
+        <treecols>
+          <treecol id="siteCol" label="&treehead.sitename.label;" flex="1"
+                   onclick="permissionColumnSort();"/>
+        </treecols>
+        <treechildren/>
+      </tree>
+
+      <hbox>
+        <button id="removePermission" disabled="true" 
+                label="&remove.label;" accesskey="&remove.accesskey;"
+                oncommand="deletePermissions();"/>
+        <button id="removeAllPermissions"
+                label="&removeAll.label;" accesskey="&removeAll.accesskey;"
+                oncommand="deleteAllPermissions();"/>
+      </hbox>
+  </vbox>
+
+</dialog>

@@ -70,7 +70,7 @@
 
       // determine current state (blocked or unblocked) and hide appropriate menu item
       var blocked;
-
+      
       blocked = 
         permissionmanager.testForBlocking(window._content.location, COOKIEPERMISSION);
       enableElement("AllowCookies", blocked);
@@ -80,7 +80,7 @@
         permissionmanager.testForBlocking(window._content.location, IMAGEPERMISSION);
       enableElement("AllowImages", blocked);
       enableElement("BlockImages", !blocked);
-
+      
       SetPopupMenuEnabledState();
 
       var pref;
@@ -104,19 +104,31 @@
     }
 
     function SetPopupMenuEnabledState() {
-      // use care choosing which nsIPopupWindowManager constant to compare
-      // against. the allow/disallow/sometimes relationship can be subtle.
-      var useManager = !pref.getBoolPref("dom.disable_open_during_load");
       var suitable = false;
-      var enableBlock = false;
-      if (useManager) {
-        suitable = popupmanager.testSuitability(getBrowser().currentURI);
-        if (suitable)
-          enableBlock = popupmanager.testPermission(getBrowser().currentURI) != Components.interfaces.nsIPopupWindowManager.DENY_POPUP;
+      var blocked = false;
+      var policy = pref.getBoolPref("dom.disable_open_during_load");
+
+      suitable = popupmanager.testSuitability(getBrowser().currentURI);
+      if (suitable) {
+        if (!policy) // blacklist, test if there is a permission set
+          blocked = (popupmanager.testPermission(getBrowser().currentURI) == Components.interfaces.nsIPopupWindowManager.DENY_POPUP);
+        else { // whitelist, check if it is on list
+          blocked = true;
+          var enumerator = popupmanager.getEnumerator();
+          while (enumerator.hasMoreElements()) {
+            var permission = enumerator.getNext()
+                                       .QueryInterface(Components.interfaces.nsIPermission);
+            if (permission.capability && getBrowser().currentURI.host == permission.host) {
+              blocked = false;
+              break;
+            }
+          }
+        }
       }
-      enableElement("BlockPopups", useManager && suitable && enableBlock);
-      enableElement("AllowPopups", useManager && suitable && !enableBlock);
-      enableElement("ManagePopups", useManager);
+
+      enableElement("BlockPopups", suitable && !blocked);
+      enableElement("AllowPopups", suitable && blocked);
+      enableElement("ManagePopups", true);
     }
 
     function enableElement(elementID, enable) {
@@ -156,19 +168,45 @@
           element = document.getElementById("BlockImages");
           alert(element.getAttribute("msg"));
           break;
-        case "popupAllow":
-          popupmanager.add(getBrowser().currentURI, true);
-          element = document.getElementById("AllowPopups");
-          alert(element.getAttribute("msg"));
-          break;
-        case "popupBlock":
-          popupmanager.add(getBrowser().currentURI, false);
-          element = document.getElementById("BlockPopups");
-          alert(element.getAttribute("msg"));
-          break;
         default:
       }
-    }  
+    }
+
+    function PopupAction(action) {
+      var policy = pref.getBoolPref("dom.disable_open_during_load");
+      var uri = getBrowser().currentURI;
+
+      switch (action) {
+        case "block":
+          if (!policy)
+            popupmanager.add(uri, policy);
+          else
+            popupmanager.remove(uri);
+          break;
+        case "allow":
+          var browsers = getBrowser().browsers;
+          var popupIcon = document.getElementById("popupIcon");
+          if (!policy)
+            popupmanager.remove(uri);
+          else 
+            popupmanager.add(uri, policy);
+          for (var i = 0; i < browsers.length; i++) {
+            if (browsers[i].popupDomain == uri.host) {
+              browsers[i].popupDomain = null;
+              popupIcon.hidden = true;
+            }
+          }
+          break;
+      }
+    }
+
+    function ViewPopupManager() {
+      window.openDialog("chrome://communicator/content/popupManager.xul", "",
+                        "chrome,resizable=yes,modal=yes", 
+                        pref.getBoolPref("dom.disable_open_during_load"),
+                        "",
+                        false);
+    }
 
   ]]>
   </script>         
@@ -220,15 +258,15 @@
         <menuitem id="BlockPopups" label="&cookieBlockPopupsCmd.label;"
                   accesskey="&cookieBlockPopupsCmd.accesskey;" 
                   msg="&cookieBlockPopupsMsg.label;"
-                  oncommand="CookieImageAction('popupBlock');"/> 
+                  oncommand="PopupAction('block');"/> 
         <menuitem id="AllowPopups" label="&cookieAllowPopupsCmd.label;"
                   accesskey="&cookieAllowPopupsCmd.accesskey;" 
                   msg="&cookieAllowPopupsMsg.label;"
-                  oncommand="CookieImageAction('popupAllow');"/> 
+                  oncommand="PopupAction('allow');"/> 
         <menuseparator/>
         <menuitem id="ManagePopups" label="&cookieDisplayPopupsCmd.label;"
                   accesskey="&cookieDisplayPopupsCmd.accesskey;" 
-                  oncommand="viewPopups();"/> 
+                  oncommand="ViewPopupManager();"/> 
       </menupopup>
     </menu>
   </menupopup>
