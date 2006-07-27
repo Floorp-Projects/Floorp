@@ -195,28 +195,27 @@ nsHistoryController.prototype =
     isCommandEnabled: function(command)
     {
         var enabled = false;
-        var stringId;
         var text;
         switch(command) {
         case "cmd_deleteByHostname":
             if (gLastHostname) {
-                stringId = "deleteHost";
+                text = gHistoryBundle.getFormattedString("deleteHost", [ gLastHostname ]);
                 enabled = true;
             } else {
-                stringId = "deleteHostNoSelection";
+                text = gHistoryBundle.getString("deleteHostNoSelection");
             }
-            text = gHistoryBundle.getFormattedString(stringId, [ gLastHostname ]);
-            gDeleteByHostname.setAttribute("label", text);
+
+            gDeleteByHostname.label = text;
             break;
         case "cmd_deleteByDomain":
             if (gLastDomain) {
-                stringId = "deleteDomain";
+                text = gHistoryBundle.getFormattedString("deleteDomain", [ gLastDomain ]);
                 enabled = true;
             } else {
-                stringId = "deleteDomainNoSelection";
+                text = gHistoryBundle.getString("deleteDomainNoSelection");
             }
-            text = gHistoryBundle.getFormattedString(stringId, [ gLastDomain ]);
-            gDeleteByDomain.setAttribute("label", text);
+
+            gDeleteByDomain.label = text;
         }
         return enabled;
     },
