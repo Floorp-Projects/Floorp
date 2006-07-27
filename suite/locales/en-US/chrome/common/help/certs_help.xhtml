@@ -9,24 +9,26 @@
 <body bgcolor="white">
 
 <a NAME="certs_first"></a>
-<h1>Certificate Manager</h1>
+<hr><h1>Certificate Manager</h1>
 
-<p>This section describes how to use the Certificate Manager. If you are not already viewing the Certificate Manager window, follow these steps:
+<p>This section describes how to use the Certificate Manager. For more general information on using certificates, see <a href="using_certs_help.html">Using Certificates</a>.
+
+<p>If you are not already viewing the Certificate Manager window, follow these steps:
 
 <ol>
-	<li>Open the Edit menu and choose Preferences.
-	<li>Click Privacy and Security.
-	<li>Click Manage Certificates.
+   <li>Open the Edit menu and choose Preferences.
+   <li>Under the Privacy and Security category, click Certificates. (If no subcategories are visible, click to expand the list.) 
+   <li>Click Manage Certificates.
 </ol>
 
+<p>&nbsp;</p>
 <table cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
 <tr>
 <td class="inthissection">
 <p>In this section:</p>
-<p><a href="#My_Certificates">My Certificates</a></p>
+<p><a href="#My_Certificates">Your Certificates</a></p>
 <p><a href="#Web_Site_Certificates">Web Site Certificates</a></p>
 <p><a href="#CA_Certificates">CA Certificates</a></p>
-<p><a href="#Security_Devices">Security Devices</a></p>
 </td>
 </tr>
 </table>
@@ -34,9 +36,9 @@
 
 <p>&nbsp;</p>
 <a NAME="My_Certificates"></a>
-<h2>My Certificates</h2>
+<h2>Your Certificates</h2>
 
-<p>The My Certificates tab in the Certificate Manager allows you to examine and work with the certificates you have on file that identify you, and to set related security passwords. To select a certificate, click its name. To select more than one certificate, hold down the Shift key and click the names of those you want to select. 
+<p>The Your Certificates tab in the Certificate Manager allows you to examine and work with the certificates you have on file that identify you, and to set related security passwords. To select a certificate, click its name. To select more than one certificate, hold down the Shift key and click the names of those you want to select. 
 
 <p>To perform any of the actions listed here, select the certificates on which you want to act and follow these instructions:
 <UL>
@@ -64,11 +66,13 @@
 <a NAME="Choose_a_Certificate_Backup_Password"></a>
 <H3>Choose a Certificate Backup Password</H3>
 
-<P>A certificate backup password protects one or more certificates that you are backing up using the Backup or Backup All button in the My Certificates panel of the Certificate Manager. The browser asks you to set a certificate backup password when you back up certificates, and requests it when you attempt to restore certificates that have previously been backed up.</P>
+<P>A certificate backup password protects one or more certificates that you are backing up using the Backup or Backup All button in the Your Certificates panel of the Certificate Manager. 
 
-<P><b>Important:</b> When you click the Backup All button, the browser attempts to back up all of your certificates and associated private keys stored on the browser's software security device. The Backup All button does not back up any certificates that are stored on security devices other than the browser's own software security device. For example, Backup All will not back up any certificates in the list that are stored on a smart card inserted in a smart card reader attached to your computer. Certificates stored on devices other than the browser's software security device must be backed up by selecting their names and clicking the Backup button.</P>
+<p>The browser asks you to set a certificate backup password when you back up certificates, and requests it when you attempt to restore certificates that have previously been backed up.</P>
 
-<p>If someone obtains the file containing a certificate that you have backed up and successfully restores the certificate, that person can send messages or access web sites while pretending to be you. This can have negative consequences, for example, if you digitally sign important email messages or manage your bank or investment accounts over the Internet. Therefore, it's important to select a certificate backup password that is difficult to guess. It's also important to record the password in a safe place—and not anywhere that's easily accessible to someone else. If you forget this password, you can't restore the backup of your certificate.</p>
+<p><b>Choose a good password:</b> If someone obtains the file containing a certificate that you have backed up and successfully restores the certificate, that person can send messages or access web sites while pretending to be you. This can have negative consequences, for example, if you digitally sign important email messages or manage your bank or investment accounts over the Internet. 
+
+<p>Therefore, it's important to select a certificate backup password that is difficult to guess. It's also important to record the password in a safe place—and not anywhere that's easily accessible to someone else. If you forget this password, you can't restore the backup of your certificate.</p>
 
 <p>
 [&nbsp;<A HREF="#certs_first">Return to beginning of Certificate Manager section</A>&nbsp;]
@@ -76,7 +80,7 @@
 
 <p>&nbsp;</p>
 <a NAME="Delete_My_Certificate"></a>
-<h3>Delete My Certificate</h3>
+<h3>Delete Your Certificate</h3>
 
 <P>Before deleting any of your own certificates—even one that has expired—make sure that you won't need it again some day. For example, you can use your own expired certificate for reading old email messages that you may have encrypted with the corresponding private key.
 </P>
@@ -176,12 +180,39 @@
 
 <p>&nbsp;</p>
 <a NAME="Security_Devices"></a>
-<h3>Security Devices</h3>
+<hr><h1>Device Manager</h1>
 
-<p><b>[text to come]</b>
+<p>This section describes how to use the Device Manager. For background information and step-by-step instructions on the use of the Device Manager, see <a href="using_certs_help.html#using_certs_devices">Manage Smart Cards and Other Security Devices</a>. 
+
+<P>If you are not already viewing the Device Manager window, follow these steps:
+
+<ol>
+	<li>Open the Edit menu and choose Preferences.
+	<li>Under the Privacy and Security category, choose Certificates. (If no subcategories are visible, click to expand the list.)
+	<li>In the Certificates panel, click Manage Devices.
+</ol>
+
+<p>The Device Manager lists each available PKCS #11 module in boldface, and the security devices managed by each module below the module's name. 
+
+<p>When you select a module or device, information about the selected item appears in the middle of the window, and some of the buttons on the right side of the window become available. In general, you perform an action on a module or device by selecting its name and clicking the appropriate button. For example:
+
+<ul>
+	<li>If you select the Software Security Device, you can click Login or Logout to log in or out of the device, or click Change Password to change the master password for the device.
+	<li>If you select the name of a PKCS #11 module, you can unload the module by clicking Unload. (If you unload a module, both the module and its security devices are no longer available for use by the browser.)
+</ul>
+
+<p>To add a new module, click Load. Before adding a new module, you should first install the module software on your computer and if necessary connect any associated hardware device. Follow the instructions provided by the vendor.  
+
+<p>The Enable FIPS button on the right side of the Device Manager allows you to switch to FIPS
+mode and back again. For more information, see <a href="using_certs_devices_fips#using_certs_devices_fips">Enable FIPS Mode</a>.
+
+<p>
+[&nbsp;<A HREF="#Security_Devices">Return to beginning of Device Manager section</A>&nbsp;]
+</p>
+  
 
 <hr>
-<p><i>5/9/2001</i></p>
+<p><i>6/5/2001</i></p>
 <p>Copyright &copy; 1994-2001 Netscape Communications Corporation.</p>
 
 </body>

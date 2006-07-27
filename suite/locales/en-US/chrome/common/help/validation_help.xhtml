@@ -9,7 +9,7 @@
 <body bgcolor="white">
 
 <a NAME="validation_first"></a>
-<h1>Validation Settings</h1>
+<h2>Validation Settings</h2>
 
 <p>This section describes how to use the Validation Settings panel. If you are not already viewing the panel, follow these steps:
 
@@ -18,13 +18,28 @@
 	<li>Under the Privacy and Security category, choose Validation. (If no options are visible under Privacy and Security, click its triangle to expand the list.)
 </ol>
 
+<h3>OCSP</h3>
+
+<p>The Online Certificate Status Protocol (OCSP) makes it possible for Certificate Manager to perform an online check of a certificate's validity each time the certificate is viewed or used. This process involves checking the certificate against a certificate revocation list (CRL) maintained at a specified web site. Your computer must be online for OCSP to work.</P>
+
+<p>To specify how Certificate Manager uses OCSP, choose one of these settings in the OCSP section of  Validation Settings:</P>
+
+<ul>
+	<LI><B>Do not use OCSP for certificate verification.</B> Select this setting if you don't want Certificate Manager to perform an on-line status check each time it verifies a certificate. Instead, whenever Certificate Manager performs <a href="glossary.html#1025527">certificate verification</a>, it only confirms the certificate's validity period and that it is correctly signed by a CA whose own CA certificate is both listed under the CA Certificates tab (in the main Certificate Manager window) and marked as trusted for issuing that kind of certificate.</LI>
+	<LI><B>Use OCSP to verify only certificates that specify an OCSP service URL.</B> Select this setting if you want Certificate Manager perform an on-line status check each time it verifies a certificate that specifies a URL for the purpose of performing such a check. If a URL is specified by the certificate, Certificate Manager makes sure that the certificate is listed there as valid as well as performing the standard checks of validity period and trust settings.</LI>
+	<LI><B>Use OCSP to verify all certificates, using the URL and signer specified here.</B> Select this setting if you want Certificate Manager to perform an on-line status check each time it verifies any certificate. If you select this setting, you should also choose the certificate from the Response Signer pop-up menu that identifies the signer of the OCSP responses. With this setting, the only certificates Certificate Manager recognizes are those that can be verified by an OCSP response signed with the Response Signer certificate (or signed using a certificate that chains to it).<br><br>
+
+When you choose a Response Signer certificate from the pop-up menu, Certificate Manager fills in the Service URL (if available) for that signer automatically. If the Service URL is not filled in automatically, you must provide it yourself; ask your system administrator for details.</LI>
+</ul>
+
+
 
 <p>
 [&nbsp;<A HREF="#validation_first">Return to beginning of Validation Settings section</A>&nbsp;]
 </p>
 
 <hr>
-<p><i>2/5/2001</i></p>
+<p><i>6/12/2001</i></p>
 <p>Copyright &copy; 1994-2001 Netscape Communications Corporation.</p>
 
 </body>
