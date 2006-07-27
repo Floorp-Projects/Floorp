@@ -156,6 +156,8 @@
             <textbox id="cookie-site" flex="1" oninput="buttonEnabling(this);"/>
             <button id="btnBlock" label="&blockSite.label;" disabled="true"
                     oncommand="setCookiePermissions(nsIPermissionManager.DENY_ACTION);"/>
+            <button id="btnSession" label="&allowSiteSession.label;" disabled="true"
+                    oncommand="setCookiePermissions(ALLOW_SESSION_ONLY);"/>
             <button id="btnAllow" label="&allowSite.label;" disabled="true"
                     oncommand="setCookiePermissions(nsIPermissionManager.ALLOW_ACTION);"/>
           </hbox>
