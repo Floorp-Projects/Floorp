@@ -210,10 +210,8 @@ function PreviewPanel()
     var preview_URL  = get_attr(database, rdfNode, 'content');
     if (!preview_URL || !preview_name) break;
 
-    var preview = window.open("chrome://communicator/content/sidebar/preview.xul",
-                              "_blank", "chrome,resizable");
-    preview.panel_name = preview_name;
-    preview.panel_URL = preview_URL;
+    var preview = window.openDialog("chrome://communicator/content/sidebar/preview.xul",
+                              "_blank", "chrome,resizable", preview_name, preview_URL);
   }
 }
 

@@ -27,8 +27,7 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="Init();">
 
-  <html:script src="chrome://communicator/content/sidebar/customize-panel.js" />
-  <html:iframe id="customize_frame" type="content" src="about:blank"
-    flex="100%"/>
+  <script src="chrome://communicator/content/sidebar/customize-panel.js" />
+  <iframe id="customize_frame" type="content" src="about:blank" flex="1"/>
 
 </window>
