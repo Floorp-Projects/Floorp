@@ -448,9 +448,9 @@
 <rdf:Description about="#mail-doc-offline-space">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail_offline_imap" nc:name="IMAP"  nc:link="chrome://help/locale/mail_help.xhtml#offline_and_disk_space_settingsIMAP"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_offline_imap" nc:name="IMAP"  nc:link="chrome://help/locale/mail_help.xhtml#offline_and_disk_space_settings_imap"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail_offline_pop3" nc:name="POP"  nc:link="chrome://help/locale/mail_help.xhtml#disk_space_settings"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_offline_nntp" nc:name="News"  nc:link="chrome://help/locale/mail_help.xhtml#offline_and_disk_space_settingsNEWS"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_offline_nntp" nc:name="News"  nc:link="chrome://help/locale/mail_help.xhtml#offline_and_disk_space_settings_nntp"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail-account-receipts" nc:name="Return Receipts" nc:link="chrome://help/locale/mail_help.xhtml#return_receipts"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
