@@ -184,9 +184,8 @@ JSObjectViewer.prototype =
 
   emptyTree: function(aTreeKids)
   {
-    var kids = aTreeKids.childNodes;
-    for (var i = 0; i < kids.length; ++i) {
-      aTreeKids.removeChild(kids[i]);
+    while (aTreeKids.hasChildNodes()) {
+      aTreeKids.removeChild(aTreeKids.lastChild);
     }
   },
   
