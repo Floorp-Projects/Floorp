@@ -41,4 +41,5 @@
 <!ENTITY sidebar.sbDirectory.label   "Sidebar Directory...">
 
 <!ENTITY sidebar.pagenotfound.label  "This tab is not available right now.">
+<!ENTITY sidebar.close.tooltip       "Close">
 
