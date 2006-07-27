@@ -765,7 +765,7 @@ nc:link="chrome://help/locale/nav_help.xhtml#plugins_and_downloads"/> </rdf:li>
         <rdf:li> <rdf:Description ID="appearance_pref_fonts" nc:name="Fonts" nc:link="cs_nav_prefs_appearance.xhtml#fonts"/> </rdf:li>
         <rdf:li><rdf:Description ID="appearance_pref_colors" nc:name="Colors" nc:link="cs_nav_prefs_appearance.xhtml#colors"/> </rdf:li>
         <rdf:li><rdf:Description ID="appearance_pref_themes" nc:name="Themes" nc:link="cs_nav_prefs_appearance.xhtml#themes"/> </rdf:li>
-        <rdf:li><rdf:Description ID="appearance_pref_content_packs" nc:name="Languages/Content" nc:link="cs_nav_prefs_appearance.xhtml#languages_content"/> </rdf:li>
+        <rdf:li><rdf:Description ID="appearance_pref_locales" nc:name="Languages" nc:link="cs_nav_prefs_appearance.xhtml#locales"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
