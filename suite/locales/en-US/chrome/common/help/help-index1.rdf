@@ -1005,7 +1005,7 @@
      <rdf:li>
        <rdf:Description ID="languages:Appearance_preferences"
          nc:name="Appearance preferences"
-         nc:link="cs_nav_prefs_appearance.xhtml#languages_content"/>
+         nc:link="cs_nav_prefs_appearance.xhtml#locales"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
