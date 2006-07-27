@@ -255,6 +255,7 @@ LOCALES_browser :=                              \
   $(LOCALES_toolkit)                            \
   browser                                       \
   extensions/reporter                           \
+  extensions/spellcheck                         \
   other-licenses/branding/firefox               \
   $(NULL)
 
@@ -294,6 +295,7 @@ LOCALES_mail :=                                 \
   mail                                          \
   other-licenses/branding/thunderbird           \
   editor/ui                                     \
+  extensions/spellcheck                         \
   $(NULL)
 
 BOOTSTRAP_mail :=                               \

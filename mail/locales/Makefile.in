@@ -159,6 +159,7 @@ repackage-zip: $(ZIP_IN)
 	  $(STAGEDIST)/chrome/en-US.manifest \
 	  $(STAGEDIST)/defaults/pref/all-l10n.js
 	$(RM) -r $(STAGEDIST)/searchplugins \
+	  $(STAGEDIST)/dictionaries \
 	  $(STAGEDIST)/chrome/en-US
 	$(RM) -rf $(DIST)/xpi-stage/locale-$(AB_CD)
 	$(MAKE) libs-$(AB_CD)
