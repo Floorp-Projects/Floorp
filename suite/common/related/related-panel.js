@@ -205,7 +205,7 @@ function Init()
 
 	// Install our navigation observer so we can track the main client window.
 
-	oContentWindow = window._content;
+	oContentWindow = window.content;
 	oFrame = document.getElementById('daFrame');
 
 	if (oContentWindow && oFrame) {

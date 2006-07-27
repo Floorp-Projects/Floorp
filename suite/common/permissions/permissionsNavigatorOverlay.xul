@@ -65,7 +65,7 @@
       popupmanager =
         Components.classes["@mozilla.org/PopupWindowManager;1"]
           .getService(Components.interfaces.nsIPopupWindowManager);
-      if (!("_content" in window) || !window._content) {
+      if (!("content" in window) || !window.content) {
         // this occurs if doing tasks->privacy->cookie->block from java console
         return;
       }
@@ -121,7 +121,7 @@
     // perform a Cookie or Image action
     function CookieImageAction(action) {
 
-      if (!("_content" in window) || !window._content) {
+      if (!("content" in window) || !window.content) {
         // this occurs if doing tasks->privacy->cookie->block from java console
         return;
       }

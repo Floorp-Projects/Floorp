@@ -72,7 +72,7 @@ function searchResultsOpenURL(event)
   if ("loadURI" in top)
     top.loadURI(url);
   else
-    top._content.location.href = url;
+    top.content.location.href = url;
 
   return true;
 }
@@ -98,7 +98,7 @@ function onLoadInternetResults()
     iSearch.ClearResultSearchSites();
 
     // the search URI is passed in as a parameter, so get it and them root the results list
-    var searchURI = top._content.location.href;
+    var searchURI = top.content.location.href;
     if (searchURI) {
       const lastSearchURIPref = "browser.search.lastMultipleSearchURI";
       var offset = searchURI.indexOf("?");

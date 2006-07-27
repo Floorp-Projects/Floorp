@@ -585,7 +585,7 @@ function doStop()
 
   // show appropriate column(s)
   var navWindow = getNavigatorWindow(false);
-  var resultsList = navWindow ? navWindow._content.document.getElementById("resultsList") : null;
+  var resultsList = navWindow ? navWindow.content.document.getElementById("resultsList") : null;
   if (!resultsList)
     return;
 
@@ -612,43 +612,43 @@ function doStop()
   var sortSetFlag = false;
 
   if (hasPriceFlag) {
-    colNode = navWindow._content.document.getElementById("PriceColumn");
+    colNode = navWindow.content.document.getElementById("PriceColumn");
     if (colNode) {
       colNode.removeAttribute("hidden");
       if (!sortSetFlag) {
-        top._content.setInitialSort(colNode, "ascending");
+        top.content.setInitialSort(colNode, "ascending");
         sortSetFlag = true;
       }
     }
   }
 
   if (hasAvailabilityFlag) {
-    colNode = navWindow._content.document.getElementById("AvailabilityColumn");
+    colNode = navWindow.content.document.getElementById("AvailabilityColumn");
     if (colNode)
       colNode.removeAttribute("hidden");
   }
 
   if (hasDateFlag) {
-    colNode = navWindow._content.document.getElementById("DateColumn");
+    colNode = navWindow.content.document.getElementById("DateColumn");
     if (colNode)
       colNode.removeAttribute("hidden");
   }
 
   if (hasRelevanceFlag) {
-    colNode = navWindow._content.document.getElementById("RelevanceColumn");
+    colNode = navWindow.content.document.getElementById("RelevanceColumn");
     if (colNode) {
       colNode.removeAttribute("hidden");
       if (!sortSetFlag) {
-        navWindow._content.setInitialSort(colNode, "descending");
+        navWindow.content.setInitialSort(colNode, "descending");
         sortSetFlag = true;
       }
     }
   }
 
   if (!sortSetFlag) {
-    colNode = navWindow._content.document.getElementById("PageRankColumn");
+    colNode = navWindow.content.document.getElementById("PageRankColumn");
     if (colNode)
-      navWindow._content.setInitialSort(colNode, "ascending");
+      navWindow.content.setInitialSort(colNode, "ascending");
   }
 
   switchTab(0);
@@ -657,7 +657,7 @@ function doStop()
 function doSearch()
 {
   var navWindow = getNavigatorWindow(true);
-  if (navWindow._content)
+  if (navWindow.content)
     onNavWindowLoad();
   else
     navWindow.addEventListener("load", onNavWindowLoad, false);
@@ -667,16 +667,16 @@ function onNavWindowLoad() {
   var navWindow = getNavigatorWindow(true);
 
   // hide various columns
-  if (navWindow && "_content" in navWindow && "isMozillaSearchWindow" in navWindow._content) {
-    colNode = navWindow._content.document.getElementById("RelevanceColumn");
+  if (navWindow && "content" in navWindow && "isMozillaSearchWindow" in navWindow.content) {
+    colNode = navWindow.content.document.getElementById("RelevanceColumn");
     if (colNode)
       colNode.setAttribute("hidden", "true");
 
-    colNode = navWindow._content.document.getElementById("PriceColumn");
+    colNode = navWindow.content.document.getElementById("PriceColumn");
     if (colNode)
       colNode.setAttribute("hidden", "true");
 
-    colNode = navWindow._content.document.getElementById("AvailabilityColumn");
+    colNode = navWindow.content.document.getElementById("AvailabilityColumn");
     if (colNode)
       colNode.setAttribute("hidden", "true");
   }
@@ -764,7 +764,7 @@ function checkSearchProgress()
   var navWindow = getNavigatorWindow(false);
 
   if (navWindow) {
-    var resultsList = navWindow._content.document.getElementById("resultsList");
+    var resultsList = navWindow.content.document.getElementById("resultsList");
     if (resultsList) {
       var treeref = resultsList.getAttribute("ref");
       var ds = resultsList.database;
