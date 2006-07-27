@@ -33,31 +33,43 @@ function searchResultsOpenURL(event)
 }
 
 
+// Workaround for bug 196057 (double onload event): accept only the first onload event
+// ( This workaround will fix bug 147068 (duplicate search results).
+//   Without this fix, xpfe\components\search\src\nsInternetSearchService.cpp will
+//   crash when removing the same tree node twice. )
+// If bug 196057 should be fixed eventually, this workaround does no harm -
+// nevertheless it should be removed then
+var gbProcessOnloadEvent = true;
 
 function onLoadInternetResults()
 {
-  // clear any previous results on load
-  var iSearch = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"]
-                          .getService(Components.interfaces.nsIInternetSearchService);
-  iSearch.ClearResultSearchSites();
+  if (gbProcessOnloadEvent)
+  { // forbid other onload events
+    gbProcessOnloadEvent = false;
 
-  // the search URI is passed in as a parameter, so get it and them root the results list
-  var searchURI = top._content.location.href;
-  if (searchURI) {
-    const lastSearchURIPref = "browser.search.lastMultipleSearchURI";
-    var offset = searchURI.indexOf("?");
-    if (offset > 0) {
-      nsPreferences.setUnicharPref(lastSearchURIPref, searchURI); // evil
-      searchURI = searchURI.substr(offset+1);
-      loadResultsList(searchURI);
-    }
-    else {
-      searchURI = nsPreferences.copyUnicharPref(lastSearchURIPref, "");
-      offset = searchURI.indexOf("?");
+    // clear any previous results on load
+    var iSearch = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"]
+                            .getService(Components.interfaces.nsIInternetSearchService);
+    iSearch.ClearResultSearchSites();
+
+    // the search URI is passed in as a parameter, so get it and them root the results list
+    var searchURI = top._content.location.href;
+    if (searchURI) {
+      const lastSearchURIPref = "browser.search.lastMultipleSearchURI";
+      var offset = searchURI.indexOf("?");
       if (offset > 0) {
         nsPreferences.setUnicharPref(lastSearchURIPref, searchURI); // evil
         searchURI = searchURI.substr(offset+1);
         loadResultsList(searchURI);
+      }
+      else {
+        searchURI = nsPreferences.copyUnicharPref(lastSearchURIPref, "");
+        offset = searchURI.indexOf("?");
+        if (offset > 0) {
+          nsPreferences.setUnicharPref(lastSearchURIPref, searchURI); // evil
+          searchURI = searchURI.substr(offset+1);
+          loadResultsList(searchURI);
+        }
       }
     }
   }
