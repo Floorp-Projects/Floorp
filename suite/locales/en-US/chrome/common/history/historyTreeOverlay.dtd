@@ -3,4 +3,5 @@
 <!ENTITY tree.header.date.label     "Last Visited">
 <!ENTITY tree.header.firstvisitdate.label     "First Visited">
 <!ENTITY tree.header.referrer.label "Referrer">
+<!ENTITY tree.header.hostname.label "Hostname">
 <!ENTITY tree.header.visitcount.label "Visit Count">
