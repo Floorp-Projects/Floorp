@@ -116,12 +116,12 @@ function updateSearchMode()
 		{
 			if (searchMode == 0)
 			{
-				categoryBox.setAttribute("style", "visibility:collapse;");
+				categoryBox.setAttribute("collapsed", "true");
 				switchTab(0);
 			}
 			else
 			{
-				categoryBox.setAttribute("style", "visibility:visible;");
+				categoryBox.removeAttribute("collapsed");
 				switchTab(1);
 			}
 		}
