@@ -20,58 +20,67 @@
  * Contributor(s):
  *  Alec Flett <alecf@netscape.com>
  */
-
 // The history window uses JavaScript in bookmarks.js too.
 
-function debug(msg)
-{
-    // Uncomment for noise
-    //dump(msg+"\n");
-}
-
-var gHistoryTree;
+var gHistoryOutliner;
 var gLastHostname;
 var gLastDomain;
 var gGlobalHistory;
-
+var gPrefService;
 var gDeleteByHostname;
 var gDeleteByDomain;
 var gHistoryBundle;
 var gHistoryStatus;
 
-function HistoryInit() {
-
-    gHistoryTree =      document.getElementById("historyTree");
+function HistoryInit()
+{
+    gHistoryOutliner =  document.getElementById("historyOutliner");
     gDeleteByHostname = document.getElementById("menu_deleteByHostname");
     gDeleteByDomain =   document.getElementById("menu_deleteByDomain");
     gHistoryBundle =    document.getElementById("historyBundle");
     gHistoryStatus =    document.getElementById("statusbar-display");
 
-    var treeController = new nsTreeController(gHistoryTree);
+    var outlinerController = new nsOutlinerController(gHistoryOutliner, document.getElementById('historyOutlinerBody'));
     var historyController = new nsHistoryController;
-    gHistoryTree.controllers.appendController(historyController);
-
-    gGlobalHistory = Components.classes["@mozilla.org/browser/global-history;1"].getService(Components.interfaces.nsIBrowserHistory);
+    gHistoryOutliner.controllers.appendController(historyController);
 
     if ("arguments" in window && window.arguments[0] && window.arguments.length >= 1) {
-      // We have been supplied a resource URI to root the tree on
-      var uri = window.arguments[0];
-      setRoot(uri);
-      if (uri.substring(0,5) == "find:") {
-        // Update the windowtype so that future searches are directed 
-        // there and the window is not re-used for bookmarks. 
-        var windowNode = document.getElementById("history-window");
-        windowNode.setAttribute("windowtype", "history:searchresults");
-      }
+        // We have been supplied a resource URI to root the tree on
+        var uri = window.arguments[0];
+        setRoot(uri);
+        if (uri.substring(0,5) == "find:") {
+            // Update the windowtype so that future searches are directed 
+            // there and the window is not re-used for bookmarks. 
+            var windowNode = document.getElementById("history-window");
+            windowNode.setAttribute("windowtype", "history:searchresults");
+        }
+    }
+    
+    gPrefService = Components.classes["@mozilla.org/preferences;1"]
+                             .getService(Components.interfaces.nsIPref);
+    try {
+        var grouping = gPrefService.GetCharPref("browser.history.grouping");
+    }
+    catch(e) {
+        grouping = "";
+    }
+    GroupBy(grouping);
+    if (gHistoryStatus) {  // must be the window
+        switch(grouping) {
+        case "site":
+            document.getElementById("groupBySite").setAttribute("checked", "true");
+            break;
+        case "none":
+            document.getElementById("groupByNone").setAttribute("checked", "true");
+            break;
+        case "day":
+        default:
+            document.getElementById("groupByDay").setAttribute("checked", "true");
+        }        
     }
 
-    var children = document.getElementById('treechildren-bookmarks');
-    if (children.firstChild)
-        gHistoryTree.selectItem(children.firstChild);
-    gHistoryTree.focus();
-
-    // do a sort
-    RefreshSort();
+    gHistoryOutliner.focus();
+    gHistoryOutliner.outlinerBoxObject.view.selection.select(0);
 }
 
 function updateHistoryCommands()
@@ -80,24 +89,27 @@ function updateHistoryCommands()
     goUpdateCommand("cmd_deleteByDomain");
 }
 
-function historyOnSelect(event)
+function historyOnSelect()
 {
     // every time selection changes, save the last hostname
     gLastHostname = "";
     gLastDomain = "";
     var match;
-    var selection = gHistoryTree.selectedItems;
-    if (selection && selection.length > 0) {
-        var url = selection[0].id;
+    var currentIndex = gHistoryOutliner.currentIndex;
+    var rowIsContainer = isContainer(gHistoryOutliner, currentIndex);
+    var url = gHistoryOutliner.outlinerBoxObject.view.getCellText(currentIndex, "URL");
+
+    if (url && !rowIsContainer) {
         // matches scheme://(hostname)...
         match = url.match(/.*:\/\/([^\/:]*)/);
 
         if (match && match.length>1)
             gLastHostname = match[1];
-        
+      
         if (gHistoryStatus)
-            gHistoryStatus.label = url;
-    } else {
+           gHistoryStatus.label = url;
+    }
+    else {
         if (gHistoryStatus)
             gHistoryStatus.label = "";
     }
@@ -108,14 +120,11 @@ function historyOnSelect(event)
         if (match)
             gLastDomain = match[1];
     }
-
-
     document.commandDispatcher.updateCommands("select");
 }
 
 function nsHistoryController()
 {
-
 }
 
 nsHistoryController.prototype =
@@ -144,11 +153,9 @@ nsHistoryController.prototype =
             } else {
                 stringId = "deleteHostNoSelection";
             }
-            text =
-                gHistoryBundle.stringBundle.formatStringFromName(stringId,
-                                                                 [ gLastHostname ], 1);
+            text = gHistoryBundle.stringBundle.formatStringFromName(stringId,
+                                                                    [ gLastHostname ], 1);
             gDeleteByHostname.setAttribute("label", text);
-
             break;
         case "cmd_deleteByDomain":
             if (gLastDomain) {
@@ -168,50 +175,50 @@ nsHistoryController.prototype =
     {
         switch(command) {
         case "cmd_deleteByHostname":
+            if (!gGlobalHistory)
+                gGlobalHistory = Components.classes["@mozilla.org/browser/global-history;1"].getService(Components.interfaces.nsIBrowserHistory);
             gGlobalHistory.removePagesFromHost(gLastHostname, false)
             return true;
 
         case "cmd_deleteByDomain":
+            if (!gGlobalHistory)
+                gGlobalHistory = Components.classes["@mozilla.org/browser/global-history;1"].getService(Components.interfaces.nsIBrowserHistory);
             gGlobalHistory.removePagesFromHost(gLastDomain, true)
             return true;
 
         default:
             return false;
         }
-
     }
-
 }
 
 var historyDNDObserver = {
-  onDragStart: function (aEvent, aXferData, aDragAction)
-  {
-    var title = aEvent.target.getAttribute("label");
-    var uri = aEvent.target.parentNode.parentNode.id;
-    if (aEvent.target.localName != "treecell")     // make sure we have something to drag
-      return null;
+    onDragStart: function (aEvent, aXferData, aDragAction)
+    {
+        var currentIndex = gHistoryOutliner.currentIndex;
+        if (isContainer(gHistoryOutliner, currentIndex))
+            return false;
+        var url = gHistoryOutliner.outlinerBoxObject.view.getCellText(currentIndex, "URL");
+        var title = gHistoryOutliner.outlinerBoxObject.view.getCellText(currentIndex, "Name");
 
-    var htmlString = "<A HREF='" + uri + "'>" + title + "</A>";
-    aXferData.data = new TransferData();
-    aXferData.data.addDataForFlavour("text/unicode", uri);
-    aXferData.data.addDataForFlavour("text/html", htmlString);
-    aXferData.data.addDataForFlavour("text/x-moz-url", uri + "\n" + title);
-  }
+        var htmlString = "<A HREF='" + url + "'>" + title + "</A>";
+        aXferData.data = new TransferData();
+        aXferData.data.addDataForFlavour("text/unicode", url);
+        aXferData.data.addDataForFlavour("text/html", htmlString);
+        aXferData.data.addDataForFlavour("text/x-moz-url", url + "\n" + title);
+    }
 };
 
-function OpenURL(event, node, root)
+function OpenURL(aInNewWindow)
 {
-    if ((event.button != 0) || (event.detail != 2)
-        || (node.nodeName != "treeitem"))
+    var currentIndex = gHistoryOutliner.currentIndex;
+    if (isContainer(gHistoryOutliner, currentIndex))
         return false;
+      
+    var url = gHistoryOutliner.outlinerBoxObject.view.getCellText(currentIndex, "URL");
 
-    if (node.getAttribute("container") == "true")
-        return false;
-
-    var url = node.id;
-    if (event.ctrlKey)
-        // if metaKey is down, open in a new browser window
-        window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", id );
+    if (aInNewWindow)
+        window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url );
     else
         openTopWin(url);
     return true;
@@ -222,8 +229,24 @@ function OpenURL(event, node, root)
  */
 function setRoot(root)
 {
-  var windowNode = document.getElementById("history-window");
-  windowNode.setAttribute("title", gHistoryBundle.getString("search_results_title"));
-  gHistoryTree.setAttribute("ref", root);
+    var windowNode = document.getElementById("history-window");
+    windowNode.setAttribute("title", gHistoryBundle.getString("search_results_title"));
+    document.getElementById("historyOutlinerBody").setAttribute("ref", root);
 }
 
+function GroupBy(groupingType)
+{
+    var outlinerBody = document.getElementById("historyOutlinerBody");
+    switch(groupingType) {
+    case "day":
+        outlinerBody.setAttribute("ref", "NC:HistoryByDate");
+        break;
+    case "site":
+        outlinerBody.setAttribute("ref", "find:groupby=hostname");
+        break;
+    case "none":
+        outlinerBody.setAttribute("ref", "NC:HistoryRoot");
+        break;
+    }
+    gPrefService.SetCharPref("browser.history.grouping", groupingType);
+}
