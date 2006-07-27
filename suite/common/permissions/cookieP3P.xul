@@ -42,12 +42,14 @@
 <!-- CHANGE THIS WHEN MOVING FILES -->
 <!DOCTYPE window SYSTEM "chrome://cookie/locale/p3p.dtd">
 
-<window id="privacySettings"
+<dialog id="privacySettings"
         class="dialog"
         title="&windowtitle.label;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         orient="vertical"
-        onload="init();">
+        onload="init();"
+        ondialogaccept="return onOK(event);"
+        style="width: 45em;">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -63,9 +65,6 @@
 
   function init()
   {
-    // init ok event handler
-    doSetOKCancel(onOK, null);
-
     // get pref service
     pref = Components.classes['@mozilla.org/preferences-service;1'];
     pref = pref.getService();
@@ -249,7 +248,4 @@
 
   <separator class="thin"/>
 
-  <hbox id="okCancelButtonsRight"/>
- 
-
-</window>
+</dialog>

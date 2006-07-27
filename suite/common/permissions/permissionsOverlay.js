@@ -37,5 +37,5 @@ function viewTutorial() {
 
 function viewP3P() {
   window.openDialog
-    ("chrome://cookie/content/p3p.xul","_blank","modal=yes,chrome,resizable=yes,height=480,width=600", 0);
+    ("chrome://cookie/content/p3p.xul","_blank","modal=yes,chrome,resizable=no");
 }  
