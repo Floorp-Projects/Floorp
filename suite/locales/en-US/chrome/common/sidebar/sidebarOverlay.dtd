@@ -19,9 +19,7 @@
    - Contributor(s): Stephen Lamm <slamm@netscape.com>
   --> 
 
-<!ENTITY sidebar.panels.label        "My Panels">
+<!ENTITY sidebar.panels.label        "My Sidebar">
 <!ENTITY sidebar.reload.label        "reload">
 <!ENTITY sidebar.customize.label     "customize...">
-<!ENTITY sidebar.alerts.label        "Alerts">
-<!-- LOCALIZATION NOTE (sidebarCmd.label): DONT_TRANSLATE -->
 <!ENTITY sidebarCmd.label            "Sidebar">
