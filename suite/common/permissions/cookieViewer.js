@@ -27,6 +27,7 @@ var kObserverService;
 // interface variables
 var cookiemanager         = null;          // cookiemanager interface
 var permissionmanager     = null;          // permissionmanager interface
+var promptservice         = null;          // promptservice interface
 var popupmanager          = null;          // popup manager
 var gDateService = null;
 
@@ -61,11 +62,13 @@ function Startup() {
   //   cookieManagerFromIcon
   //   imageManager
  
-  // xpconnect to cookiemanager/permissionmanager/popupmanager interfaces
+  // xpconnect to cookiemanager/permissionmanager/promptservice/popupmanager interfaces
   cookiemanager = Components.classes["@mozilla.org/cookiemanager;1"].getService();
   cookiemanager = cookiemanager.QueryInterface(Components.interfaces.nsICookieManager);
   permissionmanager = Components.classes["@mozilla.org/permissionmanager;1"].getService();
   permissionmanager = permissionmanager.QueryInterface(Components.interfaces.nsIPermissionManager);
+  promptservice = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+  promptservice = promptservice.QueryInterface(Components.interfaces.nsIPromptService);
   popupmanager = Components.classes["@mozilla.org/PopupWindowManager;1"].getService();
   popupmanager = popupmanager.QueryInterface(Components.interfaces.nsIPopupWindowManager);
 
@@ -364,6 +367,11 @@ function DeleteCookie() {
 }
 
 function DeleteAllCookies() {
+  var title = cookieBundle.getString("deleteAllCookiesTitle");
+  var msg = cookieBundle.getString("deleteAllCookies");
+  if (!promptservice.confirm(window, title, msg ))
+    return;
+
   ClearCookieProperties();
   DeleteAllFromTree(cookiesTree, cookiesTreeView,
                         cookies, deletedCookies,
@@ -536,6 +544,12 @@ function buttonEnabling(textfield) {
 }
 
 function DeleteAllPermissions() {
+  var title = cookieBundle.getString("deleteAllSitesTitle");
+  var msgType = dialogType == cookieType ? "deleteAllCookiesSites" : "deleteAllImagesSites";
+  var msg = cookieBundle.getString(msgType);
+  if (!promptservice.confirm(window, title, msg ))
+    return;
+    
   DeleteAllFromTree(permissionsTree, permissionsTreeView,
                         permissions, deletedPermissions,
                         "removePermission", "removeAllPermissions");
