@@ -90,10 +90,13 @@
                   <binding subject="?panel"
                     predicate="http://home.netscape.com/NC-rdf#exclude"
                     object="?exclude"/>
+                  <binding subject="?panel"
+                    predicate="http://home.netscape.com/NC-rdf#prereq"
+                    object="?prereq"/>
                 </bindings>
                 <action>
                   <menuitem uri="?panel" type="checkbox"
-                    label="?title" exclude="?exclude"/>
+                    label="?title" exclude="?exclude" prereq="?prereq"/>
                 </action>
               </rule>
             </template>
@@ -111,7 +114,7 @@
       <vbox id="sidebar-panels"
         datasources="rdf:null"
         ref="urn:sidebar:current-panel-list"
-        persist="last-selected-panel height collapsed" flex="1*"
+        persist="last-selected-panel height collapsed" flex="1"
         onclick="return contentAreaClick(event);"
         ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);">
         <template id="sidebar-template">
@@ -129,13 +132,15 @@
             <bindings>
               <binding subject="?panel" object="?exclude"
                 predicate="http://home.netscape.com/NC-rdf#exclude" />
+              <binding subject="?panel" object="?prereq"
+                predicate="http://home.netscape.com/NC-rdf#prereq" />
             </bindings>
             <action>
               <hbox uri="?panel" class="box-texttab texttab-sidebar"
                 oncommand="SidebarSelectPanel(this,false,false)"
                 hidden="true" label="?title" exclude="?exclude" 
-                context="sidebarPopup"/>
-              <vbox uri="?panel" flex="1*" hidden="true"
+                prereq="?prereq" context="sidebarPopup"/>
+              <vbox uri="?panel" flex="1" hidden="true"
                 loadstate="never loaded">
                 <vbox flex="1" class="iframe-panel loadarea">
                   <hbox flex="1" align="center">
@@ -152,9 +157,9 @@
                   </hbox>
                   <spacer flex="100%"/>
                 </vbox>
-                <browser flex="1*" class="browser-sidebar" src="about:blank"
+                <browser flex="1" class="browser-sidebar" src="about:blank"
                   hidden="true" collapsed="true" content="?content"/>
-                <browser flex="1*" class="browser-sidebar" src="about:blank"
+                <browser flex="1" class="browser-sidebar" src="about:blank"
                   hidden="true" collapsed="true" content="?content" type="content" context="contentAreaContextMenu"/>
               </vbox>
             </action>

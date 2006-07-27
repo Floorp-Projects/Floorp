@@ -43,6 +43,7 @@ var gCurFrame;
 var gTimeoutID = null;
 var gMustInit = true;
 var gAboutToUncollapse = false;
+var gCheckMissingPanels = true;
 
 function setBlank()
 {
@@ -771,10 +772,6 @@ function sidebar_overlay_init() {
         debug("Showing the panels splitter");
         sidebar_panels_splitter.removeAttribute('hidden');
       }
-      var panels = document.getElementById('sidebar-panels');
-      panels.database.AddDataSource(RDF.GetDataSource(sidebarObj.datasource_uri));
-      panels.database.AddObserver(panel_observer);
-      panels.setAttribute('ref', sidebarObj.resource);
     }
     if (sidebar_is_collapsed()) {
       sidebarObj.collapsed = true;
@@ -805,8 +802,16 @@ function sidebar_open_default_panel(wait, tries) {
   var panelListRes = RDF.GetResource("http://home.netscape.com/NC-rdf#panel-list");
   var container = ds.GetTarget(currentListRes, panelListRes, true);
   if (container) {
-    sidebarObj.panels.initialized = false;
-    var panels = document.getElementById("sidebar-panels");
+    // Add the user's current panel choices to the template builder,
+    // which will aggregate it with the other datasources that describe
+    // the individual panel's title, customize URL, and content URL.
+    var panels = document.getElementById('sidebar-panels');
+    panels.database.AddDataSource(ds);
+    
+    debug("Adding observer to database.");
+    panels.database.AddObserver(panel_observer);
+
+    // XXX This is a hack to force re-display
     panels.builder.rebuild();
   } else {
     if (tries < 3) {
@@ -821,6 +826,8 @@ function sidebar_open_default_panel(wait, tries) {
 
   sidebarObj.panels.refresh();
   gBusyOpeningDefault = false;
+  if (gCheckMissingPanels)
+    check_for_missing_panels();
 }
 
 function SidebarRebuild() {
@@ -828,6 +835,39 @@ function SidebarRebuild() {
   var panels = document.getElementById("sidebar-panels");
   panels.builder.rebuild();
   sidebar_open_default_panel(100, 0);
+}
+
+const NS_ERROR_FILE_NOT_FOUND = 0x80520012;
+
+function check_for_missing_panels() {
+  var tabs = sidebarObj.panels.node.childNodes;
+  var currHeader;
+  var currTab;
+  for (var i = 2; i < tabs.length; i += 2) {
+    currHeader = tabs[i];
+    currTab = new sbPanel(currHeader.getAttribute("id"), currHeader, i);
+    if (!currTab.is_excluded()) {
+      if (currHeader.hasAttribute("prereq") && currHeader.getAttribute("prereq") != "") {
+        var prereq_file = currHeader.getAttribute("prereq");
+        var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                                  .getService(Components.interfaces.nsIIOService);      
+        var uri = ioService.newURI(prereq_file, null, null);
+        var channel = ioService.newChannelFromURI(uri);
+        try {
+          channel.open();
+        }
+        catch(ex if (ex.result == NS_ERROR_FILE_NOT_FOUND)) {
+          sidebarObj.datasource = RDF.GetDataSource(sidebarObj.datasource_uri);
+          sidebarObj.datasource.Assert(RDF.GetResource(currHeader.getAttribute("id")),
+                                       RDF.GetResource(NC + "exclude"),
+                                       RDF.GetLiteral(sidebarObj.component),
+                                       true);
+          currTab.exclude();
+        }        
+      }
+    }
+  }
+  gCheckMissingPanels = false;
 }
 
 //////////////////////////////////////////////////////////////
@@ -1491,7 +1531,6 @@ function SidebarFinishClick() {
   if (is_collapsed != sidebarObj.collapsed) {
     if (gMustInit)
       sidebar_overlay_init();
-    setTimeout("sidebarObj.panels.refresh();",100);
   }
 }
 
