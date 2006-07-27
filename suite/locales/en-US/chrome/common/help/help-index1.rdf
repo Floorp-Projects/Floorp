@@ -618,7 +618,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="keyboard_shortcuts:Mail_and_Newsgroups"
          nc:name="Mail and Newsgroups"
-	 nc:link="chrome://help/locale/shortcuts.html#mail/>
+         nc:link="chrome://help/locale/shortcuts.html#mail"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
