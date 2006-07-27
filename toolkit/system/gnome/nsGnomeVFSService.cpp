@@ -37,10 +37,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsGnomeVFSService.h"
-#include "nsStringEnumerator.h"
 #include "nsVoidArray.h"
-#include "nsString.h"
+#include "nsStringAPI.h"
 #include "nsIURI.h"
+#include "nsTArray.h"
+#include "nsIStringEnumerator.h"
+#include "nsAutoPtr.h"
 
 extern "C" {
 #include <libgnomevfs/gnome-vfs-application-registry.h>
@@ -101,22 +103,55 @@ nsGnomeVFSMimeApp::GetExpectsURIs(PRInt32* aExpects)
   return NS_OK;
 }
 
+class UTF8StringEnumerator : public nsIUTF8StringEnumerator
+{
+public:
+  UTF8StringEnumerator() : mIndex(0) { }
+  ~UTF8StringEnumerator() { }
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIUTF8STRINGENUMERATOR
+
+  nsTArray<nsCString> mStrings;
+  PRUint32            mIndex;
+};
+
+NS_IMPL_ISUPPORTS1(UTF8StringEnumerator, nsIUTF8StringEnumerator)
+
+NS_IMETHODIMP
+UTF8StringEnumerator::HasMore(PRBool *aResult)
+{
+  *aResult = mIndex < mStrings.Length();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+UTF8StringEnumerator::GetNext(nsACString& aResult)
+{
+  if (mIndex >= mStrings.Length())
+    return NS_ERROR_UNEXPECTED;
+
+  aResult.Assign(mStrings[mIndex]);
+  ++mIndex;
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsGnomeVFSMimeApp::GetSupportedURISchemes(nsIUTF8StringEnumerator** aSchemes)
 {
   *aSchemes = nsnull;
 
-  nsCStringArray *array = new nsCStringArray();
+  nsRefPtr<UTF8StringEnumerator> array = new UTF8StringEnumerator();
   NS_ENSURE_TRUE(array, NS_ERROR_OUT_OF_MEMORY);
 
   for (GList *list = mApp->supported_uri_schemes; list; list = list->next) {
-    if (!array->AppendCString(nsDependentCString((char*) list->data))) {
-      delete array;
+    if (!array->mStrings.AppendElement((char*) list->data)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
 
-  return NS_NewAdoptingUTF8StringEnumerator(aSchemes, array);
+  NS_ADDREF(*aSchemes = array);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -138,7 +173,8 @@ NS_IMETHODIMP
 nsGnomeVFSService::GetMimeTypeFromExtension(const nsACString &aExtension,
                                             nsACString& aMimeType)
 {
-  nsCAutoString fileExtToUse(NS_LITERAL_CSTRING(".") + aExtension);
+  nsCAutoString fileExtToUse(".");
+  fileExtToUse.Append(aExtension);
 
   const char *mimeType = gnome_vfs_mime_type_from_name(fileExtToUse.get());
   aMimeType.Assign(mimeType);
