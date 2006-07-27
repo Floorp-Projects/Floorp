@@ -42,7 +42,7 @@
 	</popupset>
 
 	<tree id="internetresultstree" ref="" flex="100%" datasources="rdf:internetsearch" context="contextual"
-		onclick="if (event.clickCount == 2) return searchResultsOpenURL(event, event.target.parentNode.parentNode); else return doResultClick(event.target.parentNode.parentNode);">
+		onclick="if (event.detail == 2) return searchResultsOpenURL(event, event.target.parentNode.parentNode); else return doResultClick(event.target.parentNode.parentNode);">
 
 		<treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
 		<treecol id="PageRankColumn" rdf:resource="http://home.netscape.com/NC-rdf#PageRank"

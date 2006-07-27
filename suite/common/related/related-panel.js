@@ -228,7 +228,7 @@ function Destruct() {
 function openURL(event, root)
 {
   if( event.type == "click" && 
-      ( event.button != 1 || event.clickCount != 2 ) ) 
+      ( event.button != 1 || event.detail != 2 ) ) 
     return false;
   else if( event.type == "keypress" && event.which != 13 )
     return false;

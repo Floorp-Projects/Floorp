@@ -771,7 +771,7 @@ function sidebarOpenURL(event, treeitem, root)
     mClickCount = 1;
   } 
   
-  if ((event.button != 1) || (event.clickCount != mClickCount))
+  if ((event.button != 1) || (event.detail != mClickCount))
 		return(false);
 
 	if (treeitem.getAttribute("container") == "true")
