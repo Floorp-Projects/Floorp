@@ -19,14 +19,14 @@
    - Contributor(s):
   --> 
 
-<!ENTITY search.button.label      "Search">
+<!ENTITY search.button.label      "SEARCH">
 <!ENTITY search.results.tab       "Apply">
 <!ENTITY search.advanced.tab      "Settings for ">
 <!ENTITY allengines.label         "All categories combined">
 <!ENTITY within.label             "within">
 <!ENTITY whenSearching.label      "When searching ">
-<!ENTITY useTheseProviders.label  "use these providers:">
-<!ENTITY engine.column.label      "Provider Name">
+<!ENTITY useTheseProviders.label  "use these engines:">
+<!ENTITY engine.column.label      "Engine Name">
 <!ENTITY checkbox.column.label    "Use">
 <!ENTITY stop.button.label        "Stop">
 <!ENTITY explain.label            "Explain Text...">
