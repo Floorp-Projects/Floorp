@@ -54,6 +54,7 @@ else if (window.arguments[0] == "popupManager")
   dialogType = popupType;
 
 var cookieBundle;
+var gUpdatingBatch = false;
 
 function Startup() {
 
@@ -139,6 +140,8 @@ function Shutdown() {
 
 var cookieReloadDisplay = {
   observe: function(subject, topic, state) {
+    if (gUpdatingBatch)
+      return;
     if (topic == "cookieChanged") {
       if (state == "cookies") {
         cookies.length = 0;
@@ -380,6 +383,7 @@ function DeleteAllCookies() {
 }
 
 function FinalizeCookieDeletions() {
+  gUpdatingBatch = true;
   for (var c=0; c<deletedCookies.length; c++) {
     cookiemanager.remove(deletedCookies[c].host,
                          deletedCookies[c].name,
@@ -387,6 +391,7 @@ function FinalizeCookieDeletions() {
                          document.getElementById("checkbox").checked);
   }
   deletedCookies.length = 0;
+  gUpdatingBatch = false;
 }
 
 function HandleCookieKeyPress(e) {
@@ -560,6 +565,7 @@ function DeleteAllPermissions() {
 }
 
 function FinalizePermissionDeletions() {
+  gUpdatingBatch = true;
   var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                     .getService(Components.interfaces.nsIIOService);
 
@@ -573,6 +579,7 @@ function FinalizePermissionDeletions() {
       permissionmanager.remove(deletedPermissions[p].host, deletedPermissions[p].type);
   }
   deletedPermissions.length = 0;
+  gUpdatingBatch = false;
 }
 
 function HandlePermissionKeyPress(e) {
