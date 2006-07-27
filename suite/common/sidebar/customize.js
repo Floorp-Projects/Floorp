@@ -212,19 +212,17 @@ function enableButtons() {
 function CustomizePanel() 
 {
   var tree  = document.getElementById('selected-panels');
-  var index = tree.selectedIndex;
+  var numSelected = tree.selectedItems.length;
 
-  if (index != -1) {
-    var title         = tree.childNodes.item(index).getAttribute('title');
-    var customize_URL = tree.childNodes.item(index).getAttribute('customize');
+  if (numSelected == 1) {
+    var selectedNode  = tree.selectedItems[0];
+    var customize_url = selectedNode.getAttribute('customize');
 
-    if (!title || !customize_URL) return;
+    debug("url   = " + customize_url);
 
-    var customize = window.open("chrome://sidebar/content/customize-panel.xul",
-                                "_blank", "chrome");
+    if (!customize_url) return;
 
-    customize.panel_name          = title;
-    customize.panel_customize_URL = customize_URL;
+    var customize = window.open(customize_url, "_blank", "resizable");
   }
   enableSave();
 }
