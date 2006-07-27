@@ -54,33 +54,39 @@
         }
   
         /* determine if image is already being blocked */
-        var cookieViewer = contextMenu.createInstance
-          ("@mozilla.org/cookieviewer/cookieviewer-world;1", "nsICookieViewer");
-        var list = cookieViewer.GetPermissionValue(1);
-        var permissionList  = list.split(list[0]);
-        for(var i = 1; i < permissionList.length; i+=2) {
-          var permStr = permissionList[i+1];
-          var type = permStr.substring(0,1);
-          if (type == "-") {
-            /* some host is being blocked, need to find out if it's our image's host */
-            var host = permStr.substring(1,permStr.length);
+        var permissionmanager =
+          Components.classes["@mozilla.org/permissionmanager;1"]
+            .getService().QueryInterface(Components.interfaces.nsIPermissionManager);
+
+
+        var enumerator = permissionmanager.enumerator;
+        while (enumerator.hasMoreElements()) {
+          var nextPermission = enumerator.getNext();
+          nextPermission = nextPermission.QueryInterface(Components.interfaces.nsIPermission);
+          var imageType = 1;
+          if (nextPermission.type == imageType &&
+              !nextPermission.capability) {
+            /* some image host is being blocked, need to find out if it's our image's host */
+            var host = nextPermission.host;
+            if(host.charAt(0) == ".") {  // get rid of the ugly dot on the start of some domains
+              host = host.substring(1,host.length);
+            }
             if (host && contextMenu.imageURL.search(host) != -1) {
               /* it's our image's host that's being blocked */
-
               return false;
             }
           }
-        }  
+        }
         /* image is not already being blocked, so "Block Image" can appear on the menu */
         return true;
       },
 
       // Block image from loading in the future.
       blockImage : function () {
-        var cookieViewer =
-          contextMenu.createInstance("@mozilla.org/cookieviewer/cookieviewer-world;1",
-                                     "nsICookieViewer" );
-        cookieViewer.BlockImage(contextMenu.imageURL);
+        var imgmanager =
+          Components.classes["@mozilla.org/imgmanager;1"]
+            .getService().QueryInterface(Components.interfaces.nsIImgManager);
+        imgmanager.block(contextMenu.imageURL);
       },
 
       initImageBlocking : function () {
