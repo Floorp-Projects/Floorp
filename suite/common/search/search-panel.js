@@ -466,7 +466,6 @@ function SearchPanelStartup()
     else
       switchTab(1);
   }
-  focusTextBox();
 }
 
 function haveSearchResults()
@@ -570,12 +569,6 @@ function loadEngines(aCategory)
       }
     }
   }
-}
-
-function focusTextBox()
-{
-  var textBox = document.getElementById("sidebar-search-text");
-  textBox.focus();
 }
 
 function SearchPanelShutdown()
