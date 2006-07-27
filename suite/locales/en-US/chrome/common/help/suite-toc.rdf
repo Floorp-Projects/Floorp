@@ -57,6 +57,15 @@
     </nc:subheadings>
   </rdf:Description>
 
+  <rdf:Description about="#help-help">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="help-help-tips" nc:name="Search Tips"
+                  nc:link="help_help.html#search_tips"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
 <!-- IE HELP SECTION -->
 
   <rdf:Description about="urn:root">
