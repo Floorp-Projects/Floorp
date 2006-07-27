@@ -500,8 +500,8 @@ function Save()
   var root = document.getElementById('current-panels-root');
   var panels = root.childNodes;  
   var list_unchanged = (panels.length == original_panels.length);
-  for (var ii = 0; ii < panels.length && list_unchanged; ii++) {
-    if (original_panels[ii] != panels.item(ii).getAttribute('id')) {
+  for (var i = 0; i < panels.length && list_unchanged; i++) {
+    if (original_panels[i] != panels.item(i).getAttribute('id')) {
       list_unchanged = false;
     }
   }
@@ -514,8 +514,8 @@ function Save()
   // that the user has chosen. We need to do this _before_ we remove
   // the panels from the datasource, because the act of removing them
   // from the datasource will change the tree!
-  var panels = new Array();
-  var root = document.getElementById('current-panels-root');
+  panels = new Array();
+  root = document.getElementById('current-panels-root');
   for (var node = root.firstChild; node != null; node = node.nextSibling) {
     panels[panels.length] = node.getAttribute('id');
   }
@@ -541,7 +541,7 @@ function Save()
 
   // Remove all the current panels from the datasource.
   var have_panel_attributes = new Array();
-  var current_panels = container.GetElements();
+  current_panels = container.GetElements();
   while (current_panels.hasMoreElements()) {
     panel = current_panels.getNext();
     id = panel.QueryInterface(Components.interfaces.nsIRDFResource).Value;
@@ -733,6 +733,11 @@ function persist_dialog_dimensions() {
 ///////////////////////////////////////////////////////////////
 // Handy Debug Tools
 //////////////////////////////////////////////////////////////
+var debug = null;
+var dump_attributes = null;
+var dump_tree = null;
+var _dump_tree_recur = null;
+
 if (!CUST_DEBUG) {
   debug = function (s) {};
   dump_attributes = function (node, depth) {};
