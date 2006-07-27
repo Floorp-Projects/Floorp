@@ -57,7 +57,6 @@ splitter#sidebar-splitter grippy:active {
 	background-color: #99CCFF;
 }
 
-
 /**/
 
 box#sidebar-box {
@@ -72,14 +71,6 @@ box#sidebar-box {
 box#sidebar-panels {
   min-width: 1px;
   min-height: 1px;
-}
-
-box#sidebar-box[hidden="true"] {
-  display: none;
-}
-
-splitter#sidebar-splitter[hidden="true"] {
-  display: none;
 }
 
 iframe.panel-frame {
@@ -97,22 +88,27 @@ iframe.panel-frame {
   padding-right: 5px;
 }
 
-.sidebar-main-header > div {
-  font-weight: bold;
-  margin: 2px;
-}
-
 .sidebar-main-header > text {
   font-weight: bold;
   margin: 2px;
 }
 
-.sidebar-main-header > titledbutton {
-  padding: 0px;
+menu#panel-picker:hover {
+  background-color: #336699;
 }
 
-.sidebar-main-header > titledbutton:hover {
-  color: white;
+menu#panel-picker > .menu-right {
+  list-style-image: url("chrome://global/skin/toolbar-menu-arrow.gif");
+}
+
+sidebarheader[type="box"] {
+  behavior: url(chrome://global/content/globalBindings.xml#sidebar-header-box);
+}
+
+sidebarheader[type="splitter"] {
+  behavior: url(chrome://global/content/globalBindings.xml#sidebar-header-splitter);
+  /* a vertical splitter */
+  cursor: n-resize;
 }
 
 box.texttab {
