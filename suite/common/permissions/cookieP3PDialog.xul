@@ -43,16 +43,15 @@
 
 <dialog id="p3pDialog"
         buttons="accept,cancel,extra1,extra2,help"
+        buttonalign="center"
         acceptLabel="&p3pDialogOff.label;"
         cancelLabel="&p3pDialogClose.label;"
         extra1Label="&p3pDialogViewCookies.label;"
         extra2Label="&p3pDialogViewLevels.label;"
-        class="dialog"
         title="&p3pDialogTitle.label;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        orient="vertical"
         onload="init();"
-        ondialogaccept="P3POff();"
+        ondialogaccept="return P3POff();"
         ondialogextra1="ViewCookieManager();"
         ondialogextra2="ViewPrivacyLevels();"
         ondialoghelp="return doHelpButton();"
@@ -93,6 +92,8 @@
     pref = pref.getService();
     pref = pref.QueryInterface(Components.interfaces.nsIPrefBranch);
     pref.setIntPref("network.cookie.cookieBehavior", 0);
+
+    return true;
   }
 
   function doHelpButton()
