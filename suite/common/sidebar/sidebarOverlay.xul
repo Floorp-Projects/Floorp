@@ -163,14 +163,14 @@
       onclick="SidebarCleanUpExpandCollapse();"/>
   </splitter>
 
-  <!-- View->Sidebar toggle -->
-  <menupopup id="menu_View_Popup">
+  <!-- View | Show | Sidebar toggle -->
+  <menupopup id="view_toolbars_popup">
     <menuitem id="sidebar-menu" type="checkbox"
       label="&sidebarCmd.label;"
       accesskey="&sidebarCmd.accesskey;"
       command="toggleSidebar"
       key="showHideSidebar"
-      position="2"/>
+      position="4"/>
   </menupopup>
 
   <!-- Scripts go last, because they peek at state to tweak menus -->
