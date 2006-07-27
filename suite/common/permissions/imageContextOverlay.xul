@@ -90,11 +90,13 @@
       },
 
       initImageBlocking : function () {
+        try {
         // Block image depends on whether an image was clicked on, and,
         // whether the user pref is enabled.
         contextMenu.showItem
           ("context-blockimage",
            contextMenu.onImage && cookieContextMenu.isBlockingImages());
+        } catch (e) {}
       },
 
       addContextMenuItemListeners : function (aEvent) {
