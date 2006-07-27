@@ -37,10 +37,9 @@
 
 <!-- CHANGE THIS WHEN MOVING FILES -->
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!-- CHANGE THIS WHEN MOVING FILES -->
-<!DOCTYPE window SYSTEM "chrome://cookie/locale/p3p.dtd">
+<!DOCTYPE dialog SYSTEM "chrome://cookie/locale/p3p.dtd">
 
 <dialog id="p3pDialog"
         buttons="accept,cancel,extra1,extra2,help"
