@@ -8,7 +8,7 @@
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="welcome" nc:name="Help and Support Center" nc:link="welcome_help.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="help-help" nc:name="Using the Help Window" nc:link="help_help.html"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="ieusers" nc:name="For Internet Explorer Users" nc:link="chrome://help/locale/forieusers.html#for_microsoft_users"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="ieusers" nc:name="For Internet Explorer Users" nc:link="chrome://help/locale/forieusers.xhtml#for_internet_explorer_users"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav" nc:name="Browsing the Web" nc:link="chrome://help/locale/nav_help.html#browsing_the_web"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail"     nc:name="Using Mail" nc:link="chrome://help/locale/mail_help.xhtml#using_mozilla_mail_and_newsgroups" /> </rdf:li>
         <rdf:li> <rdf:Description ID="comp"	nc:name="Creating Web Pages"  nc:link="chrome://help/locale/composer_help.html#comp_top"/> </rdf:li>
@@ -37,11 +37,11 @@
   <rdf:Description about="#ieusers">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="terms" nc:name="Terminology Differences" nc:link="chrome://help/locale/forieusers.html#terminology_differences"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="favorites" nc:name="About Your IE Favorites" nc:link="chrome://help/locale/forieusers.html#your_favorites"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="key-features" nc:name="Browser Features" nc:link="chrome://help/locale/forieusers.html#key_features"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="more-features" nc:name="Other Features" nc:link="chrome://help/locale/forieusers.html#additional_software"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="keyboard-shortcuts" nc:name="Keyboard Shortcuts" nc:link="chrome://help/locale/forieusers.html#keyboard_shortcuts"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="terms" nc:name="Terminology Differences" nc:link="chrome://help/locale/forieusers.xhtml#mozilla_and_internet_explorer_terminology_differences"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="favorites" nc:name="About Your IE Favorites" nc:link="chrome://help/locale/forieusers.xhtml#about_your_ie_favorites"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="key-features" nc:name="Browser Features" nc:link="chrome://help/locale/forieusers.xhtml#browser_features"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="more-features" nc:name="Other Features" nc:link="chrome://help/locale/forieusers.xhtml#other_features"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="keyboard-shortcuts" nc:name="Keyboard Shortcuts" nc:link="chrome://help/locale/forieusers.xhtml#keyboard_shortcuts"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -813,7 +813,7 @@
         <rdf:li><rdf:Description ID="using-priv-help-encrypt" nc:name="Encrypting Stored Sensitive Information" nc:link="chrome://help/locale/using_priv_help.html#using_encrypt"/> </rdf:li>
         <rdf:li><rdf:Description ID="images-help-managing" nc:name="Managing Images" nc:link="chrome://help/locale/using_priv_help.html#managing_images"/> </rdf:li>
         <rdf:li><rdf:Description ID="images-help-managing" nc:name="Managing Images" nc:link="chrome://help/locale/using_priv_help.html#managing_images"/> </rdf:li>
-        <rdf:li><rdf:Description ID="pop_up_blocking" nc:name="Controlling Popups" nc:link="chrome://help/locale/cs_priv_prefs_popup.html"/> </rdf:li>
+        <rdf:li><rdf:Description ID="pop_up_blocking" nc:name="Controlling Popups" nc:link="chrome://help/locale/cs_priv_prefs_popup.xhtml"/> </rdf:li>
         <rdf:li><rdf:Description ID="sec_gen" nc:name="Privacy &amp; Security Preferences" nc:link="chrome://help/locale/privsec_help.html"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
@@ -935,7 +935,7 @@
 <rdf:Description about="#pop_up_blocking">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="pop_up_blocking_prefs" nc:name="Popup Preferences" nc:link="chrome://help/locale/cs_priv_prefs_popup.html#popup_prefs"/> </rdf:li>
+        <rdf:li><rdf:Description ID="pop_up_blocking_prefs" nc:name="Popup Preferences" nc:link="chrome://help/locale/cs_priv_prefs_popup.xhtml#privacy_and_security_preferences_popup_windows"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1196,7 +1196,7 @@
 <rdf:Description about="#shortcuts_mail">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="shortcuts_mail_general" nc:name="General Mail Shortcuts" nc:link="chrome://help/locale/shortcuts-mailnews.xhtml#general_shortcuts"/> </rdf:li>
+        <rdf:li><rdf:Description ID="shortcuts_mail_general" nc:name="General Mail Shortcuts" nc:link="chrome://help/locale/shortcuts-mailnews.xhtml#general_mail_and_newsgroups_shortcuts"/> </rdf:li>
         <rdf:li><rdf:Description ID="shortcuts_mail_message_list" nc:name="Message List Shortcuts" nc:link="chrome://help/locale/shortcuts-mailnews.xhtml#message_list_shortcuts"/> </rdf:li>
         <rdf:li><rdf:Description ID="shortcuts_mail_message_compose" nc:name="Message Compose Shortcuts" nc:link="chrome://help/locale/shortcuts-mailnews.xhtml#message_compose_shortcuts"/> </rdf:li>
       </rdf:Seq>

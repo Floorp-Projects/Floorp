@@ -1,112 +1,127 @@
-<html>
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" 
+"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd" [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+%brandDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<title>Mozilla Popup Blocking Help</title>
-
-<link rel="stylesheet" href="chrome://help/locale/content_style.css" type="text/css">
-<!-- <link rel="stylesheet" href="../style.css" type="text/css"> -->
-
+<title>&brandShortName; Popup Blocking Help</title>
+<link rel="stylesheet" href="chrome://help/locale/helpFileLayout.css"
+  type="text/css"></link>
 </head>
-
 <body>
-<a name="blocking_popups"></a>
-<a name="Navigator:controlling_popupsIDX"></a>
-<a name="popupsIDX"></a>
-<a name="blocking_popupsSDX"></a>
-<a name="popup_windowsSDX"></a>
-<div class="boilerplate">This document is provided by Mozilla for your information only. It may help you take certain steps to protect the privacy and security of your personal information on the Internet. This document does not, however, address all online privacy and security issues, nor does it represent a recommendation by Mozilla about what constitutes adequate privacy and security protection on the Internet.</div>
 
+<div class="boilerPlate">This document is provided by The Mozilla Foundation
+  for your information only. It may help you take certain steps to protect the
+  privacy and security of your personal information on the Internet. This
+  document does not, however, address all online privacy and security issues,
+  nor does it represent a recommendation by The Mozilla Foundation about what
+  constitutes adequate privacy and security protection on the Internet.</div>
+  
+<h1 id="controlling_popups">Controlling Popups</h1>
 
-<hr>
-<h1>Controlling Popups</h1>
-<p><b>What are Popups?</b></p>
-<p>Pop-up windows, or popups, are windows that appear automatically and 
-without your permission. They vary in size, but usually don't cover the whole 
-screen. Some popups open on top of the current Navigator window, thus popping 
-up,while others appear underneath Navigator (popunders).</p>
-<p>Mozilla allows you to control both popups and 
-popunders through the <a href="#popup_prefs">Popup Windows preferences 
-panel</a>. Since popup blocking is turned off by default, you must enable it to prevent popups from appearing in Navigator.
-<p>When blocking a popup, Mozilla can be set up to play a sound, 
-as well as display an icon <img src="chrome://navigator/skin/icons/popup-blocked.png"> 
-in the status bar. You can use this icon to add a web site you're viewing to 
-an exceptions list so that the site is allowed to again display popups.</p>
-<p><b>Blocking popups may interfere with some web sites</b>: Some web sites, 
-including some banking sites, use popups for important features. Blocking 
-all popups disables such features. To allow specific web sites to 
-use popups, while blocking all others, you can add specific web sites to the 
-list of allowed sites. For more information, see <a href="#popup_prefs">Privacy &amp; 
+<p><strong>What are Popups?</strong></p>
 
-Security Preferences - Popup Windows</a>.</p>
-<p><b>Blocking popups doesn't always work</b>: Although Mozilla blocks 
-most popups, some web sites, even when blocked, may use other methods to show 
-popups.</p>
-<p><b>Allowing popups from certain web sites</b>: After you've enabled popup blocking, you can still allow specific sites to display popups. Browse to the web site, and then from the Tools menu, choose Popup Manager, and then choose Allow Popups From This Site.</p>
+<p>Pop-up windows, or popups, are windows that appear automatically and without
+  your permission. They vary in size, but usually don't cover the whole screen.
+  Some popups open on top of the current Navigator window, thus popping up,
+  while others appear underneath Navigator (popunders).</p>
 
-<p>The next section describes how to control popups through preferences and through 
-the popup control icon.</p>
-<p>&nbsp;</p>
-<a name="popup_prefs"></a>
-<hr>
-<a name="preferences:popup_windowsIDX"></a> 
-<a name="popup_windows:preferencesIDX"></a> 
+<p>&brandShortName; allows you to control both popups and popunders through the
+  <a href="#privacy_and_security_preferences_popup_windows">Popup Windows
+  preferences panel</a>. Since popup blocking is turned off by default, you
+  must enable it to prevent popups from appearing in Navigator.</p>
 
-<a name="popup_preferencesSDX"></a> 
-<h2>Privacy &amp; Security Preferences - Popup Windows</h2>
-<p>This section describes how to use the Popup Windows preferences panel. 
-If you're not already viewing it, follow these steps: 
-<p> 1. Open the Edit menu (Mozilla menu on Mac OS X) and choose Preferences.<br>
-2. Under the Privacy &amp; Security Preferences category, click Popup Windows. (If no subcategories are visible, double-click Privacy &amp; Security 
-to expand the list.)</p>
+<p>When blocking a popup, &brandShortName; can be set up to play a sound, as
+  well as display an icon
+  <img src="chrome://navigator/skin/icons/popup-blocked.png" alt="Popup control
+  icon"></img> in the status bar. You can use this icon to add a web site
+  you're viewing to an exceptions list so that the site is allowed to again
+  display popups.</p>
+
+<p><strong>Blocking popups may interfere with some web sites</strong>: Some web
+  sites, including some banking sites, use popups for important features. 
+  Blocking all popups disables such features. To allow specific web sites to
+  use popups, while blocking all others, you can add specific web sites to the
+  list of allowed sites. For more information, see
+  <a href="#privacy_and_security_preferences_popup_windows">Privacy &amp;
+  Security Preferences - Popup Windows</a>.</p>
+
+<p><strong>Blocking popups doesn't always work</strong>: Although
+  &brandShortName; blocks most popups, some web sites, even when blocked, may
+  use other methods to show popups.</p>
+
+<p><strong>Allowing popups from certain web sites</strong>: After you've
+  enabled popup blocking, you can still allow specific sites to display popups.
+  Browse to the web site, and then from the Tools menu, choose Popup Manager,
+  and then choose Allow Popups From This Site.</p>
+
+<p>The next section describes how to control popups through preferences and
+  through the popup control icon.</p>
+
+<h2 id="privacy_and_security_preferences_popup_windows">Privacy &amp; Security
+  Preferences - Popup Windows</h2>
+
+<p>This section describes how to use the Popup Windows preferences panel. If
+ you're not already viewing it, follow these steps:</p>
+
+<ol>
+<li>Open the Edit menu (&brandShortName; menu on Mac OS X) and choose
+  Preferences.</li>
+<li>Under the Privacy &amp; Security Preferences category, click Popup Windows.
+  (If no subcategories are visible, double-click Privacy &amp; Security to
+  expand the list.)</li></ol>
 
 <ul>
-
-<li><b>Block unrequested popup windows:</b> Select this to prevent popups from appearing in Navigator. 
-<li><b>Allowed Sites: </b>Click this to view and edit the list of web sites that you want to allow to display popups. </li>
+<li><strong>Block unrequested popup windows:</strong> Select this to prevent
+  popups from
+  appearing in Navigator.</li>
+<li><strong>Allowed Sites:</strong> Click this to view and edit the list of web
+  sites that you want to allow to display popups.
 <ul>
-<li><b> Allowed web sites</b>: The list of allowed web sites appears 
-when you click &quot;Allowed Sites.&quot; You can add or remove web sites 
-that should be allowed to show popups.</li>
-<li><b>Add</b>: Click this after typing in a web site that you want to add to 
-the list.</li>
+<li><strong>Allowed web sites</strong>: The list of allowed web sites appears
+  when you click "Allowed Sites." You can add or remove web sites that should
+  be allowed to show popups.</li>
+<li><strong>Add</strong>: Click this after typing in a web site that you want
+  to add to the list.</li>
+<li><strong>Remove</strong>: Click this to remove a selected web site.</li>
+<li><strong>Remove All</strong>: Click this to remove all of the web sites in
+  the current list.</li></ul></li></ul>
 
-<li><b>Remove</b>: Click this to remove a selected web site.</li>
-<li> 
-<p><b>Remove All</b>: Click this to remove all of the web sites in the current 
-list.</p>
-</li>
-</ul>
-</ul>
 <h3>When a popup window has been blocked</h3>
+
 <ul>
-<li> 
-<p><b>Play a sound</b>: If you want a sound to play each time Navigator blocks 
-a popup, select this option and type the location of the sound file. </p>
-
-</li>
+<li><strong>Play a sound</strong>: If you want a sound to play each time
+  Navigator blocks a popup, select this option and type the location of the
+  sound file.
 <ul>
-<li><b>Select</b>: Click this to choose a sound file instead of typing its location 
-in the field.</li>
-<li><b>Preview</b>: Click this to listen to the chosen sound.</li>
-</ul>
-<li><b>Display an icon in the Navigator status bar</b>: Select this to display 
-an icon <img src="chrome://navigator/skin/icons/popup-blocked.png"> in the Navigator status 
-bar to indicate that a popup is blocked.<br>
-<b>&nbsp;<br>
-Note</b>: After the popup control icon <img src="chrome://navigator/skin/icons/popup-blocked.png"> 
+<li><strong>Select</strong>: Click this to choose a sound file instead of
+  typing its location in the field.</li>
+<li><strong>Preview</strong>: Click this to listen to the chosen sound.</li>
+  </ul></li>
+<li><strong>Display an icon in the Navigator status bar</strong>: Select this
+  to display an icon <img src="chrome://navigator/skin/icons/popup-blocked.png"
+  alt="Popup control icon"></img> in the Navigator status bar to indicate that
+  a popup is blocked. <strong>Note</strong>: After the popup control icon
+  <img src="chrome://navigator/skin/icons/popup-blocked.png" alt="Popup control
+  icon"></img> appears, it remains visible until you visit another web site.
+  </li></ul>
 
-appears, it remains visible until you visit another web site. </li>
-</ul>
-<p><b>Using the popup control icon to add allowed web sites</b>: You can use 
-the popup control icon to quickly add a web site to the list of allowed web sites. Click the icon <img src="chrome://navigator/skin/icons/popup-blocked.png"> to open the list of allowed web sites. The current web site is already filled in. Click Add and then click OK to confirm your addition.</p>
-<p><b>Note</b>: Blocking popups may not always work and may interfere with 
-some web sites. For more information about blocking popups, see <a href="#blocking_popups">Controlling 
-Popups</a>.</p>
-<p>&nbsp;</p>
-<hr>
-<p><i> 6 May 2003</i></p>
+<p><strong>Using the popup control icon to add allowed web sites</strong>: You
+  can use the popup control icon to quickly add a web site to the list of
+  allowed web sites. Click the icon
+  <img src="chrome://navigator/skin/icons/popup-blocked.png" alt="Popup control
+  icon"></img> to open the list of allowed web sites. The current web site is
+  already filled in. Click Add and then click OK to confirm your addition.</p>
 
-<hr>
-<p>Copyright 1998-2003 The Mozilla Organization.</p>
+<p><strong>Note</strong>: Blocking popups may not always work and may interfere
+  with some web sites. For more information about blocking popups, see
+  <a href="#controlling_popups">Controlling Popups</a>.</p>
+
+<p>Copyright &copy; 2003-2004 The Mozilla Foundation.</p>
 
 </body>
 </html>

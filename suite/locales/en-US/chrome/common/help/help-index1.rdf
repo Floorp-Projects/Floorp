@@ -784,7 +784,7 @@
      <rdf:li>
        <rdf:Description ID="ieusers"
          nc:name="Internet Explorer User Help"
-	 nc:link="forieusers.html"/>
+	 nc:link="forieusers.xhtml"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Internet_Keywords"
@@ -845,22 +845,22 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="ieusers:terminology-differences"
          nc:name="Terminology Differences"
-	 nc:link="forieusers.html#terminology_differences"/>
+	 nc:link="forieusers.xhtml#mozilla_and_internet_explorer_terminology_differences"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="ieusers:your-favorites"
          nc:name="About Your IE Favorites"
-	 nc:link="forieusers.html#your_favorites"/>
+	 nc:link="forieusers.xhtml#about_your_ie_favorites"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="ieusers:additional-software"
          nc:name="Other Features"
-	 nc:link="forieusers.html#additional_software"/>
+	 nc:link="forieusers.xhtml#other_features"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="ieusers:keyboard-shortcuts"
          nc:name="Keyboard Shortcuts"
-	 nc:link="forieusers.html#keyboard_shortcuts"/>
+	 nc:link="forieusers.xhtml#keyboard_shortcuts"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1305,7 +1305,7 @@
      <rdf:li>
        <rdf:Description ID="Navigator:controlling_popups"
          nc:name="controlling popups"
-	 nc:link="cs_priv_prefs_popup.html#Navigator:controlling_popupsIDX"/>
+	 nc:link="cs_priv_prefs_popup.xhtml#controlling_popups"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Navigator:Download_Manager"
@@ -1350,7 +1350,7 @@
      <rdf:li>
        <rdf:Description ID="Navigator:controlling_popups"
          nc:name="controlling popups"
-	 nc:link="chrome://help/locale/cs_priv_prefs_popup.html#Navigator:controlling_popupsIDX"/>
+	 nc:link="chrome://help/locale/cs_priv_prefs_popup.xhtml#controlling_popups"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Navigator:start_page"
@@ -1435,12 +1435,12 @@
      <rdf:li>
        <rdf:Description ID="popup_windows"
          nc:name="popup windows"
-	 nc:link="cs_priv_prefs_popup.html#blocking_popups"/>
+	 nc:link="cs_priv_prefs_popup.xhtml#controlling_popups"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="popups"
          nc:name="popups"
-	 nc:link="cs_priv_prefs_popup.html#blocking_popups"/>
+	 nc:link="cs_priv_prefs_popup.xhtml#controlling_popups"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="preferences"
@@ -1531,7 +1531,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="popup_windows:preferences"
          nc:name="popup window preferences"
-	 nc:link="cs_priv_prefs_popup.html#popup_windows:preferencesIDX"/>
+	 nc:link="cs_priv_prefs_popup.xhtml#privacy_and_security_preferences_popup_windows"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1641,7 +1641,7 @@
      <rdf:li>
        <rdf:Description ID="preferences:popup_windows"
          nc:name="popup windows preferences"
-	 nc:link="cs_priv_prefs_popup.html#preferences:popup_windowsIDX"/>
+	 nc:link="cs_priv_prefs_popup.xhtml#privacy_and_security_preferences_popup_windows"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="preferences:privacy"
