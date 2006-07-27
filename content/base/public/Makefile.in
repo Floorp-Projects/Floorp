@@ -89,6 +89,7 @@ XPIDLSRCS	= \
 		nsIDocumentEncoder.idl      \
 		nsIDOMParser.idl \
 		nsIDOMSerializer.idl \
+		nsISelection2.idl \
 		nsISelectionController.idl  \
 		nsISelectionDisplay.idl  \
 		nsISelectionListener.idl  \
