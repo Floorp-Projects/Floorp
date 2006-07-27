@@ -96,7 +96,6 @@ function doEngineClick( event, aNode )
 	{
 		resultsTree.setAttribute("style", "display: none;");
 		splitter.setAttribute("style","display: none");
-		contentArea.setAttribute("style", "height: 100%; width: 100%;");
 		try
 		{
 			var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
