@@ -54,36 +54,27 @@ function Init()
     	baseURI += "/";
     }
     debug("base URL = " + baseURI + "\n");
+    
     tree.setAttribute("ref", baseURI);
 }
 
 
 function OnClick(event)
 {
-    debug('OnClick()\n');
-
-    // This'll be set to 'twisty' on the twisty icon, and 'filename'
-    // if they're over the filename link.
-    var targetclass = event.target.getAttribute('class');
-    debug('targetclass = ' + targetclass + '\n');
-
-    if (targetclass != 'twisty') {
-        // The click'll have hit a cell, which is nested two below the
-        // treeitem.
-        var treeitem = event.target.parentNode.parentNode;
-
-        // This'll be set to 'FILE' for files and 'DIRECTORY' for
-        // directories.
-        var type = treeitem.getAttribute('type');
-
-        if (targetclass.indexOf('filename') >= 0)
-        {
-            var url = treeitem.getAttribute('id');
-
-            debug('navigating to ' + url + '\n');
-            window.content.location.href = url;
-        }
-    }
+    if( event.type == "click" &&
+        ( event.button != 1 || event.clickCount != 2 ) )
+      return false;
+    if( event.type == "keypress" && event.which != 13 )
+      return false;
+    
+    var tree = document.getElementById("tree");
+    if( tree.selectedItems.length == 1 ) 
+      {
+        var selectedItem = tree.selectedItems[0];
+    
+        //if( selectedItem.getAttribute( "type" ) == "FILE" )
+            window.content.location.href =  selectedItem.getAttribute('id');
+      }
 }
 
 
