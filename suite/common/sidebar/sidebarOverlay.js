@@ -189,7 +189,7 @@ sbPanelList.prototype.refresh =
 function ()
 {
   var last_selected_id = this.node.getAttribute('last-selected-panel');
-  last_selected = sidebarObj.panels.get_panel_from_id(last_selected_id);
+  var last_selected = sidebarObj.panels.get_panel_from_id(last_selected_id);
   if (last_selected && last_selected.is_selected()) {
     // The desired panel is already selected
     this.update(false);
@@ -215,6 +215,14 @@ function (force_reload)
   // be selected. The attribute is used instead of a funciton
   // parameter to allow the value to be persisted in localstore.rdf.
   var selected_id = this.node.getAttribute('last-selected-panel');
+
+  var sidebar_box = document.getElementById('sidebar-box');
+  if (sidebar_box.getAttribute('collapsed') == 'true') {
+    sidebarObj.collapsed = true;
+  } else {
+    sidebarObj.collapsed = false;
+  }
+
   var have_set_top = 0;
   var have_set_after_selected = 0;
   var is_after_selected = 0;
@@ -225,7 +233,7 @@ function (force_reload)
     var id = header.getAttribute('id');
     var panel = new sbPanel(id, header, ii);
     if (panel.is_excluded()) {
-      debug("item("+ii+") excluded");
+      debug("item("+ii/2+") excluded");
       header.setAttribute('hidden','true');
       content.setAttribute('hidden','true');
     } else {
@@ -251,16 +259,21 @@ function (force_reload)
       
       if (selected_id == id) {
         is_after_selected = 1
-        debug("item("+ii+") selected");
+        debug("item("+ii/2+") selected");
         header.setAttribute('selected', 'true');
         content.removeAttribute('hidden');
         content.removeAttribute('collapsed');
 
-        if (sidebarObj.collapsed) {
+        if (sidebarObj.collapsed && panel.is_sandboxed()) {
+          debug("    set src=about:blank");
           iframe.setAttribute('src', 'about:blank');
         } else {
-          var src = iframe.getAttribute('content');
-          iframe.setAttribute('src', src);
+          var saved_src = iframe.getAttribute('content');
+          var src = iframe.getAttribute('src');
+          if (saved_src != src) {
+            debug("    set src="+saved_src);
+            iframe.setAttribute('src', saved_src);
+          }
         }
 
         load_state = content.getAttribute('loadstate');
@@ -270,7 +283,7 @@ function (force_reload)
           iframe.addEventListener('load', panel_loader, true);
         }
       } else { 
-        debug("item("+ii+") unselected");
+        debug("item("+ii/2+")");
         header.removeAttribute('selected');
         content.setAttribute('collapsed','true');
 
@@ -280,7 +293,9 @@ function (force_reload)
           content.setAttribute('hidden','true');
           iframe.setAttribute('loadstate', 'never loaded');
         }
-        iframe.setAttribute('src', 'about:blank');
+        if (panel.is_sandboxed()) {
+          iframe.setAttribute('src', 'about:blank');
+        }
       }
     }
   }
@@ -332,18 +347,31 @@ function ()
   return this.get_header().nextSibling;
 }
 
+sbPanel.prototype.is_sandboxed =
+function ()
+{
+  if (typeof this.sandboxed == "undefined") {
+    var content = this.get_content();
+    var unsandboxed_iframe = content.childNodes.item(1);
+    this.sandboxed = !unsandboxed_iframe.getAttribute('content').match(/^chrome:/);
+  }
+  return this.sandboxed;
+}
+
 sbPanel.prototype.get_iframe =
 function ()
 {
-  debug("iframe()");
-  var content = this.get_content();
-  var unsandboxed_iframe = content.childNodes.item(1);
-  var sandboxed_iframe = content.childNodes.item(2);
-  if (unsandboxed_iframe.getAttribute('src').match(/^chrome:/)) {
-    return unsandboxed_iframe;
-  } else {
-    return sandboxed_iframe;
+  if (typeof this.iframe == "undefined") {
+    var content = this.get_content();
+    if (this.is_sandboxed()) {
+      var unsandboxed_iframe = content.childNodes.item(1);
+      this.iframe = unsandboxed_iframe;
+    } else {
+      var sandboxed_iframe = content.childNodes.item(2);
+      this.iframe = sandboxed_iframe;
+    }
   }
+  return this.iframe;
 }
 
 // This exclude function is used on panels and on the panel picker menu.
@@ -624,15 +652,16 @@ function get_remote_datasource_url() {
     try {
       url = prefs.CopyCharPref("sidebar.customize.all_panels.url");
       url = url.replace(/%SIDEBAR_VERSION%/g, SIDEBAR_VERSION);
-      locale = prefs.CopyCharPref("intl.content.langcode");
     } catch(ex) {
       debug("Unable to get remote url pref. What now? "+ex);
     }
-
-    if (!locale) {
-      // activation part not ready yet!
-
+    try {
+      locale = prefs.CopyCharPref("intl.content.langcode");
+    } catch(ex) {
       try {
+        debug("No lang code pref, intl.content.langcode.");
+        debug("Use locale from user agent string instead");
+
         var locale_progid = 'component://netscape/intl/nslocaleservice';
         var syslocale = Components.classes[locale_progid].getService();
         syslocale = syslocale.QueryInterface(Components.interfaces.nsILocaleService);
@@ -641,10 +670,9 @@ function get_remote_datasource_url() {
         debug("Unable to get system locale. What now? "+ex);
       }
     }
- {
-      locale = locale.toLowerCase();
-      url = url.replace(/%LOCALE%/g, locale);
-    }
+    locale = locale.toLowerCase();
+    url = url.replace(/%LOCALE%/g, locale);
+
     debug("Remote url is " + url);
   }
   return url;
@@ -857,6 +885,7 @@ function SidebarExpandCollapse() {
   // XXX Mini hack. Persist isn't working too well. Force the persist,
   // but wait until the change has commited.
   setTimeout("document.persist('sidebar-box', 'collapsed');",100);
+  setTimeout("sidebarObj.panels.refresh();",100);
 }
 
 function PersistHeight() {
@@ -890,13 +919,10 @@ function SidebarFinishClick() {
   // the sidebar-box gets the newly dragged width.
   setTimeout("persist_width()",100);
 
-  if (SB_DEBUG) {
-    var is_collapsed = document.getElementById('sidebar-box').getAttribute('collapsed') == 'true' ? true : false;
-    debug("collapsed: " + is_collapsed);
-    if (is_collapsed != sidebarObj.collapsed) {
-      sidebarObj.collapsed = is_collapsed;
-      sidebarObj.panels.refresh();
-    }
+  var is_collapsed = document.getElementById('sidebar-box').getAttribute('collapsed') == 'true' ? true : false;
+  debug("collapsed: " + is_collapsed);
+  if (is_collapsed != sidebarObj.collapsed) {
+    sidebarObj.panels.refresh();
   }
 }
 
