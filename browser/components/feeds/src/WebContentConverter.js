@@ -450,8 +450,13 @@ var WebContentConverterRegistrar = {
     }
     if (typeBranch) {
       typeBranch.setCharPref("type", contentType);
-      typeBranch.setCharPref("uri", uri);
-      typeBranch.setCharPref("title", title);
+      var pls = 
+          Cc["@mozilla.org/pref-localizedstring;1"].
+          createInstance(Ci.nsIPrefLocalizedString);
+      pls.data = uri;
+      typeBranch.setComplexValue("uri", Ci.nsIPrefLocalizedString, pls);
+      pls.data = title;
+      typeBranch.setComplexValue("title", Ci.nsIPrefLocalizedString, pls);
     
       ps.savePrefFile(null);
     }
@@ -571,8 +576,10 @@ var WebContentConverterRegistrar = {
   _registerContentHandlerWithBranch: function(branch) {
     try {
       var type = branch.getCharPref("type");
-      var uri = branch.getCharPref("uri");
-      var title = branch.getCharPref("title");
+      var uri = 
+          branch.getComplexValue("uri", Ci.nsIPrefLocalizedString).data;
+      var title = 
+          branch.getComplexValue("title", Ci.nsIPrefLocalizedString).data;
       this._registerContentHandler(type, uri, title);
     }
     catch (e) {
