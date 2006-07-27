@@ -45,4 +45,5 @@
 <!ENTITY  clearDataSettings.accesskey    "t">
 
 <!ENTITY  clearDataNow.label             "Clear Now...">
+<!ENTITY  clearDataNow.label2            "Clear Now">
 <!ENTITY  clearDataNow.accesskey         "N">

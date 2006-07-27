@@ -42,7 +42,8 @@
 var gPrivacyPane = {
 
   /**
-   * Sets up the UI for the number of days of history to keep.
+   * Sets up the UI for the number of days of history to keep, and updates the
+     label of the "Clear Now..." button.
    */
   init: function ()
   {
@@ -56,6 +57,8 @@ var gPrivacyPane = {
     historyDaysCheckbox.addEventListener("CheckboxStateChange",
                                          checkboxChanged,
                                          false);
+
+    this.updateClearNowButtonLabel();
   },
 
   // HISTORY
@@ -240,12 +243,28 @@ var gPrivacyPane = {
    */
 
   /**
+   * Sets the label of the "Clear Now..." button according to the
+   * privacy.sanitize.promptOnSanitize pref.
+  */
+   updateClearNowButtonLabel: function()
+   {
+     var prefBranch = Components.classes["@mozilla.org/preferences-service;1"]
+                                .getService(Components.interfaces.nsIPrefBranch);
+     var clearNowButton = document.getElementById("clearDataNow");
+     if (prefBranch.getBoolPref("privacy.sanitize.promptOnSanitize"))
+       clearNowButton.label = clearNowButton.getAttribute("label1"); // "Clear Now..."
+     else
+       clearNowButton.label = clearNowButton.getAttribute("label2"); // "Clear Now"
+   },
+
+   /**
    * Displays the Clear Private Data settings dialog.
    */
   showClearPrivateDataSettings: function ()
   {
     document.documentElement.openSubDialog("chrome://browser/content/preferences/sanitize.xul",
                                            "", null);
+    this.updateClearNowButtonLabel();
   },
 
   /**

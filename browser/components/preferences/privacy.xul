@@ -164,7 +164,8 @@
       </hbox>
       <hbox align="right">
         <button id="clearDataNow"
-                label="&clearDataNow.label;"
+                label1="&clearDataNow.label;"
+                label2="&clearDataNow.label2;"
                 accesskey="&clearDataNow.accesskey;"
                 oncommand="gPrivacyPane.clearPrivateDataNow();"/>
       </hbox>
