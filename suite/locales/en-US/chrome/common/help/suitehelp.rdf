@@ -14,11 +14,13 @@
       <rdf:Seq>
         <rdf:li> <rdf:Description nc:panelid="glossary" nc:datasources="help-glossary.rdf"/> </rdf:li>
         <rdf:li> <rdf:Description nc:panelid="index" nc:datasources="help-indexAZ.rdf help-index1.rdf"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:panelid="index" nc:datasources="help-win.rdf" nc:platform="win"/> </rdf:li>
         <rdf:li> <rdf:Description nc:panelid="search"
                     nc:datasources="rdf:null"
                     nc:emptysearchtext="[No matching items found.]"
                     nc:emptysearchlink="help_help.xhtml#search_tips"/> </rdf:li>
         <rdf:li> <rdf:Description nc:panelid="toc" nc:datasources="help-toc.rdf"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:panelid="toc" nc:datasources="help-win.rdf" nc:platform="win"/> </rdf:li>
       </rdf:Seq>
     </nc:panellist>
   </rdf:Description>
