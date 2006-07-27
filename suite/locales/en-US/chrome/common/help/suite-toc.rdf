@@ -52,7 +52,9 @@
         <rdf:li> <rdf:Description ID="nav-doc-search" nc:name="Searching the Web" nc:link="nav_help.xhtml#searching_the_web"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-doc-printsave" nc:name="Copying, Saving, and Printing Pages" nc:link="nav_help.xhtml#copying_saving_and_printing_pages"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-doc-language" nc:name="Using Languages and International Content" nc:link="nav_help.xhtml#using_languages_and_international_content"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-ses" nc:name="Improving Speed and Efficiency" nc:link="nav_help.xhtml#improving_speed_and_efficiency"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-plugins" nc:name="Plug-ins and Downloads" 
+nc:link="chrome://help/locale/nav_help.xhtml#plugins_and_downloads"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-ses" nc:name="Improving Speed and Efficiency" nc:link="chrome://help/locale/nav_help.xhtml#improving_speed_and_efficiency"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-proxies" nc:name="Proxies" nc:link="nav_help.xhtml#proxies"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-page-info" nc:name="Viewing Page Info" nc:link="page_info_help.xhtml"/> </rdf:li>
       </rdf:Seq>
@@ -108,12 +110,22 @@
     </nc:subheadings>
   </rdf:Description>
 
+  <rdf:Description about="#nav-doc-plugins">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="nav-doc-plug-ins" nc:name="Plug-ins" nc:link="chrome://help/locale/nav_help.xhtml#plug-ins"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-helperapps" nc:name="Helper Applications" nc:link="chrome://help/locale/nav_help.xhtml#helper_applications"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-dlmanager" nc:name="Download Manager" nc:link="chrome://help/locale/nav_help.xhtml#download_manager"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
   <rdf:Description about="#nav-doc-ses">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="nav-doc-helperapps" nc:name="Managing Different File Types" nc:link="nav_help.xhtml#managing_different_file_types"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-doc-default" nc:name="Making Mozilla Your Default Browser" nc:link="nav_help.xhtml#making_mozilla_your_default_browser"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-doc-autoload" nc:name="Automatic Loading" nc:link="nav_help.xhtml#automatic_loading"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-keywords" nc:name="Using Custom Bookmark Keywords" nc:link="chrome://help/locale/nav_help.xhtml#custom_keywords"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-doc-cache" nc:name="Changing Cache Settings" nc:link="nav_help.xhtml#changing_cache_settings"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-doc-smartup" nc:name="Getting the Latest Software Automatically" nc:link="nav_help.xhtml#getting_the_latest_software_automatically"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-doc-mousewheel" nc:name="Using a Mouse Wheel" nc:link="nav_help.xhtml#using_a_mouse_wheel"/> </rdf:li>
