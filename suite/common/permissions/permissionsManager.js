@@ -47,10 +47,10 @@ var permissionsTreeView = {
   isSeparator: function(index) { return false; },
   isSorted: function() { return false; },
   isContainer: function(index) { return false; },
-  cycleHeader: function(aColId, aElt) {},
-  getRowProperties: function(row, column,prop) {},
-  getColumnProperties: function(column, columnElement, prop) {},
-  getCellProperties: function(row, prop) {}
+  cycleHeader: function(column) {},
+  getRowProperties: function(row, column, prop) {},
+  getColumnProperties: function(column, prop) {},
+  getCellProperties: function(row, column, prop) {}
 };
 
 var permissionsTree;

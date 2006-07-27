@@ -170,7 +170,7 @@ var cookiesTreeView = {
   getCellValue : function(row,column) {},
   getCellText : function(row,column){
     var rv="";
-    switch (column) {
+    switch (column.id) {
     case "domainCol":
       rv = cookies[row].rawHost;
       break;
@@ -189,10 +189,10 @@ var cookiesTreeView = {
   isSeparator : function(index) {return false;},
   isSorted: function() { return false; },
   isContainer : function(index) {return false;},
-  cycleHeader : function(aColId, aElt) {},
-  getRowProperties : function(row,column,prop){},
-  getColumnProperties : function(column,columnElement,prop){},
-  getCellProperties : function(row,prop){}
+  cycleHeader : function(aCol) {},
+  getRowProperties : function(row,prop) {},
+  getColumnProperties : function(column,prop) {},
+  getCellProperties : function(row,column,prop) {}
  };
 var cookiesTree;
 
@@ -468,9 +468,9 @@ var permissionsTreeView = {
   getCellValue : function(row,column) {},
   getCellText : function(row,column){
     var rv="";
-    if (column=="siteCol") {
+    if (column.id=="siteCol") {
       rv = permissions[row].rawHost;
-    } else if (column=="capabilityCol") {
+    } else if (column.id=="capabilityCol") {
       rv = permissions[row].capability;
     }
     return rv;
@@ -478,10 +478,10 @@ var permissionsTreeView = {
   isSeparator : function(index) {return false;},
   isSorted: function() { return false; },
   isContainer : function(index) {return false;},
-  cycleHeader : function(aColId, aElt) {},
-  getRowProperties : function(row,column,prop){},
-  getColumnProperties : function(column,columnElement,prop){},
-  getCellProperties : function(row,prop){}
+  cycleHeader : function(aCol) {},
+  getRowProperties : function(row,prop) {},
+  getColumnProperties : function(column,prop) {},
+  getCellProperties : function(row,column,prop) {}
  };
 var permissionsTree;
 
