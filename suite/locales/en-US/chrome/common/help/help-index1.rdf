@@ -18,7 +18,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="bookmarks"
          nc:name="bookmarks"
-	 nc:link="nav_help.html#bookmarks:bookmarking_search_resultsIDX"/>
+	 nc:link="nav_help.html#bookmarks:boomarking_search_resultsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -356,16 +356,16 @@
 <rdf:Description about="#Composer">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="Composer:keyboard_shortcuts"                        
-         nc:name="keyboard shortcuts"                                           
-         nc:link="chrome://help/locale/shortcuts.html#composer"/>               
-     </rdf:li></rdf:Seq>                                                        
-   </nc:subheadings>                                                            
-</rdf:Description>                                                              
+       <rdf:Description ID="Composer:keyboard_shortcuts"
+         nc:name="keyboard shortcuts"
+	 nc:link="chrome://help/locale/shortcuts.html#composer"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
 
-<rdf:Description about="#Composer">                                             
-   <nc:subheadings>                                                             
-     <rdf:Seq><rdf:li>                                                          
+<rdf:Description about="#Composer">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="Composer:removing_text_styles"
          nc:name="removing text styles"
 	 nc:link="composer_help.html#Composer:removing_text_stylesIDX"/>
@@ -498,72 +498,12 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="IMAP"
          nc:name="IMAP"
-	 nc:link="mail_help.html#IMAP:advanced_mail_settingsIDX"/>
+	 nc:link="mail_help.html#IMAP:Mail_settingsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="help-indexAZ.rdf#i">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="ieusers"
-         nc:name="Internet Explorer User Help"
-	 nc:link="forieusers.html"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#ieusers">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="ieusers:terminology-differences"
-         nc:name="Terminology Differences"
-	 nc:link="forieusers.html#terminology_differences"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#ieusers">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="ieusers:your-favorites"
-         nc:name="About Your IE Favorites"
-	 nc:link="forieusers.html#your_favorites"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#ieusers">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="ieusers:key-features"
-         nc:name="Browser Features"
-	 nc:link="forieusers.html#key_features"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#ieusers">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="ieusers:additional-software"
-         nc:name="Other Features"
-	 nc:link="forieusers.html#additional_software"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#ieusers">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="ieusers:keyboard-shortcuts"
-         nc:name="Keyboard Shortcuts"
-	 nc:link="forieusers.html#keyboard_shortcuts"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="help-indexAZ.rdf#i">
+<rdf:Description about="#IMAP">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="IMAP:Mail_settings"
@@ -678,7 +618,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="keyboard_shortcuts:Mail_and_Newsgroups"
          nc:name="Mail and Newsgroups"
-         nc:link="chrome://help/locale/shortcuts.html#mail"/>
+	 nc:link="chrome://help/locale/shortcuts.html#mail/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -698,7 +638,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Labels"
          nc:name="Labels"
-	 nc:link="mail_help.html#labels:general_preferencesIDX"/>
+	 nc:link="mail_help.html#Labels:general_preferencesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -799,6 +739,16 @@
        <rdf:Description ID="Mail_and_Newsgroups:Advanced_IMAP_settings"
          nc:name="Advanced IMAP settings"
 	 nc:link="mail_help.html#Mail_and_Newsgroups:Advanced_IMAP_settingsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Mail_and_Newsgroups">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Mail_and_Newsgroups:AOL_Mail_and_Webmail_syncing"
+         nc:name="AOL Mail and Webmail syncing"
+	 nc:link="mail_help.html#Mail_and_Newsgroups:AOL_Mail_and_Webmail_syncingIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1149,16 +1099,16 @@
        <rdf:Description ID="Mail_and_Newsgroups:using_HTML_in_messages"
          nc:name="using HTML in messages"
 	 nc:link="mail_help.html#Mail_and_Newsgroups:using_HTML_in_messagesIDX"/>
-     </rdf:li></rdf:Seq>                                                        
-   </nc:subheadings>                                                            
-</rdf:Description>                                                              
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
 
-<rdf:Description about="#Mail_and_Newsgroups">                                  
-   <nc:subheadings>                                                             
-     <rdf:Seq><rdf:li>                                                          
-       <rdf:Description ID="Mail_and_Newsgroups:using_mailing_addresses"        
-         nc:name="using mailing addresses"                                      
-         nc:link="mail_help.html#Mail_and_Newsgroups:using_mailing_addressesIDX"/>
+<rdf:Description about="#Mail_and_Newsgroups">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Mail_and_Newsgroups:using_mailing_addresses"
+         nc:name="using mailing addresses"
+	 nc:link="mail_help.html#Mail_and_Newsgroups:using_mailing_addressesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1329,6 +1279,26 @@
        <rdf:Description ID="Navigator:start_page"
          nc:name="start page"
 	 nc:link="customize_help.html#Navigator:start_pageIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#n">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Netscape_WebMail"
+         nc:name="Netscape WebMail"
+	 nc:link="mail_help.html#Netscape_WebMail:setting_upIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Netscape_WebMail">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Netscape_WebMail:setting_up"
+         nc:name="setting up"
+	 nc:link="mail_help.html#Netscape_WebMail:setting_upIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
