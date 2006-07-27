@@ -32,6 +32,7 @@
         <rdf:li resource="urn:sidebar:panel:search"/>
         <rdf:li resource="urn:sidebar:panel:bookmarks"/>
         <rdf:li resource="urn:sidebar:panel:history"/>
+        <rdf:li resource="urn:sidebar:panel:addressbook"/>
       </rdf:Seq>
     </nc:panel-list>
   </rdf:Description>
@@ -50,5 +51,9 @@
   <rdf:Description about="urn:sidebar:panel:history">
     <nc:title>&sidebar.client-history.label;</nc:title>
     <nc:content>chrome://communicator/content/history/history-panel.xul</nc:content>
+  </rdf:Description>
+  <rdf:Description about="urn:sidebar:panel:addressbook">
+    <nc:title>&sidebar.client-addressbook.label;</nc:title>
+    <nc:content>chrome://messenger/content/addressbook/addressbook-panel.xul</nc:content>
   </rdf:Description>
 </rdf:RDF>
