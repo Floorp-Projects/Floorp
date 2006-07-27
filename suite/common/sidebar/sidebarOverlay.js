@@ -902,8 +902,10 @@ function SidebarShowHide() {
 
   if (sidebar_is_hidden()) {
     debug("Showing the sidebar");
+    sidebar_box.removeAttribute('hidden'); // older profiles may have this set
     sidebar_box.setAttribute('collapsed', 'false');
     title_box.removeAttribute('hidden');
+    sidebar_panels_splitter_box.removeAttribute('hidden'); // for older profiles
     sidebar_panels_splitter_box.setAttribute('collapsed', 'false');
     sidebar_splitter.removeAttribute('hidden');
     if (sidebar_box.firstChild != sidebar_panels_splitter) {
