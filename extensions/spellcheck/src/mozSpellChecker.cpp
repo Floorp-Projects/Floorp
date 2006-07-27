@@ -41,6 +41,8 @@
 #include "mozISpellI18NManager.h"
 #include "nsIStringEnumerator.h"
 
+#define UNREASONABLE_WORD_LENGTH 64
+
 NS_IMPL_ISUPPORTS1(mozSpellChecker, nsISpellChecker)
 
 mozSpellChecker::mozSpellChecker()
@@ -128,6 +130,14 @@ mozSpellChecker::CheckWord(const nsAString &aWord, PRBool *aIsMisspelled, nsStri
   PRBool correct;
   if(!mSpellCheckingEngine)
     return NS_ERROR_NULL_POINTER;
+
+  // don't bother to check crazy words, also, myspell gets unhappy if you
+  // give it too much data and crashes sometimes
+  if (aWord.Length() > UNREASONABLE_WORD_LENGTH) {
+    *aIsMisspelled = PR_TRUE;
+    return NS_OK;
+  }
+
   *aIsMisspelled = PR_FALSE;
   result = mSpellCheckingEngine->Check(PromiseFlatString(aWord).get(), &correct);
   NS_ENSURE_SUCCESS(result, result);
