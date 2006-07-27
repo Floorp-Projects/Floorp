@@ -11,7 +11,7 @@ Glossary
 <A NAME="authentication"></A><A NAME="998782">
 <B>authentication.</B>&nbsp;
 </A>
-Assurance that a party to a computerized transaction is not an impostor. Authentication typically involves the use of a password, certificate, personal identification number (PIN), or other information that can be used to validate identity over a computer network. See also <a href="glossary.html#1014123">password-based authentication</a>, <a href="glossary.html#1018581">certificate-based authentication</a>, <a href="glossary.html#1021054">client authentication</a>, <a href="glossary.html#1031070">server authentication</a>.<P>
+The use of a password, certificate, personal identification number (PIN), or other information to validate an identity over a computer network. See also <a href="glossary.html#1014123">password-based authentication</a>, <a href="glossary.html#1018581">certificate-based authentication</a>, <a href="glossary.html#1021054">client authentication</a>, <a href="glossary.html#1031070">server authentication</a>.<P>
 
 
 <A NAME="CA"></A><A NAME="1021395">
@@ -65,7 +65,7 @@ A unique number associated with a certificate. The number is not part of the cer
 <A NAME="Certificate_Manager"></A>
 <B>Certificate Manager</B>&nbsp;
 </A><A NAME="1020326">
-The part of the browser that allows you to view and manage certificates. To view the main Certificate Manager window, choose Preferences from the Edit menu, click Privacy/Security, then click Manage Certificates.<P>
+The part of the browser that allows you to view and manage certificates. To view the main Certificate Manager window: Open the Edit menu, choose Preferences, click Privacy and Security, and then click Manage Certificates.<P>
 </A>
 
 
@@ -85,7 +85,7 @@ A list of revoked certificates that is generated and signed by a <a href="glossa
 <A NAME="certificate_verification"></A><A NAME="1025527">
 <B>certificate verification.</B>&nbsp;
 </A><A NAME="1025531">
-When <a href="#Certificate Manager">Certificate Manager</a> verifies a certificate, it confirms that the digital signature was created by a CA whose own CA certificate is both on file with Certificate Manager and marked as trusted for issuing that kind of certificate. It also confirms that the certificate being verified has not itself been marked as untrusted. Finally, if the <a href="glossary.html#1029304">Online Certificate Status Protocol (OCSP)</a> has been activated, Certificate Manager also performs an on-line check. It does so by looking up the certificate in a list of valid certificates maintained at a URL that is specified either in the certificate itself or in the browser's validation preferences. If any of these checks fail, Certificate Manager marks the certificate as unverified and won't recognize the identity it certifies.<P>
+When <a href="#Certificate_Manager">Certificate Manager</a> verifies a certificate, it confirms that the digital signature was created by a CA whose own CA certificate is both on file with Certificate Manager and marked as trusted for issuing that kind of certificate. It also confirms that the certificate being verified has not itself been marked as untrusted. Finally, if the <a href="glossary.html#1029304">Online Certificate Status Protocol (OCSP)</a> has been activated, Certificate Manager also performs an online check. It does so by looking up the certificate in a list of valid certificates maintained at a URL that is specified either in the certificate itself or in the browser's validation preferences. If any of these checks fail, Certificate Manager marks the certificate as unverified and won't recognize the identity it certifies.<P>
 </A>
 
 <A NAME="cipher"></A><A NAME="1021048">
@@ -205,7 +205,7 @@ A protocol for accessing directory services across multiple platforms. LDAP is a
 <A NAME="master_key"></A><A NAME="1032598">
 <B>master key.</B>&nbsp;
 </A><A NAME="1032639">
-A symmetric key used by Certificate Manager to encrypt information. For example, Password Manager uses Certificate Mmanager and your master key to encrypt email passwords, web site passwords, and other stored sensitive information. See also <a href="glossary.html#999604">symmetric encryption</a>.<P>
+A symmetric key used by Certificate Manager to encrypt information. For example, Password Manager uses Certificate Manager and your master key to encrypt email passwords, web site passwords, and other stored sensitive information. See also <a href="glossary.html#999604">symmetric encryption</a>.<P>
 </A>
 
 <A NAME="master_password"></A><A NAME="1032744">
@@ -267,14 +267,14 @@ A program on your computer that manages cryptographic services such as encryptio
 <A NAME="private_key"></A><A NAME="1015387">
 <B>private key.</B>&nbsp;
 </A><A NAME="1015391">
-One of a pair of keys used in public-key cryptography. The private key is kept secret and is used to decrypt data that has been encrypted with the corresponding public key.<P>
+One of a pair of <a href="#key">keys</a> used in public-key cryptography. The private key is kept secret and is used to decrypt data that has been encrypted with the corresponding public key.<P>
 </A>
 
 
 <A NAME="public_key"></A><A NAME="1019172">
 <B>public key.</B>&nbsp;
 </A><A NAME="1019173">
-One of a pair of keys used in public-key cryptography. The public key is distributed freely and published as part of a <a href="glossary.html#1018895">certificate</a>. It is typically used to encrypt data sent to the public key's owner, who then decrypts the data with the corresponding private key.<P>
+One of a pair of <a href="#key">keys</a> used in public-key cryptography. The public key is distributed freely and published as part of a <a href="glossary.html#1018895">certificate</a>. It is typically used to encrypt data sent to the public key's owner, who then decrypts the data with the corresponding private key.<P>
 </A>
 
 <A NAME="public-key_cryptography"></A><A NAME="1019178">
@@ -370,7 +370,7 @@ A small device, typically about the size of a credit card, that contains a micro
 <A NAME="software_security_device"></A><A NAME="1032045">
 <B>software security device.</B>&nbsp;
 </A><A NAME="1032110">
-The default <a href="#security device">security device</a> used by Certificate Manager to store private keys associated with your certificates. In addition to private keys, the software security device stores the master key used by Password Manager to encrypt email passwords, web site passwords, and other sensitive information. See also <a href="glossary.html#1015387">private key</a>, <a href="glossary.html#1032598">master key</a>, and <a href="#Password Manager">Password Manager</a><P>
+The default <a href="#security device">security device</a> used by Certificate Manager to store private keys associated with your certificates. In addition to private keys, the software security device stores the master key used by Password Manager to encrypt email passwords, web site passwords, and other sensitive information. See also <a href="glossary.html#1015387">private key</a>, <a href="glossary.html#1032598">master key</a>, and <a href="#Password_Manager">Password Manager</a><P>
 </A>
 
 <A NAME="spoofing"></A><A NAME="1014366">
@@ -444,7 +444,7 @@ Confident reliance on a person or other entity. In the context of <a href="gloss
 </p>
 
 <hr>
-<p><i>6/8/2001</i></p>
+<p><i>6/19/2001</i></p>
 <p>Copyright &copy; 1994-2001 Netscape Communications Corporation.</p>
 
 
