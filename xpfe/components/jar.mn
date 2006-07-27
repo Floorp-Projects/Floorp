@@ -2,6 +2,8 @@
 #ifdef MOZ_SUITE
 comm.jar:
     content/communicator/history/history.xul                    (history/resources/history.xul)	
+    content/communicator/history/historyTreeOverlay.xul         (history/resources/historyTreeOverlay.xul)
+    content/communicator/history/history-panel.xul              (history/resources/history-panel.xul)
 #ifndef MOZ_XUL_APP
 comm.jar:
     content/communicator/alerts/alert.xul                       (alerts/resources/content/alert.xul)  
