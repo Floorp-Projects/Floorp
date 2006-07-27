@@ -34,6 +34,9 @@
 
   <script type="application/x-javascript" src="chrome://global/content/nsUserSettings.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/search/search-panel.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/search/shared.js"/>
@@ -123,8 +126,8 @@
               resource2="http://home.netscape.com/NC-rdf#Name"
               sortDirection="ascending" sortActive="true"
               flex="1" datasources="rdf:internetsearch"
-              onclick="if (event.button == 0 &amp;&amp; event.target.localName == 'treecell')
-                         sidebarOpenURL(event.target.parentNode.parentNode);"
+              onclick="if (event.button == 0 &amp;&amp; event.target.localName == 'treecell') sidebarOpenURL(event.target.parentNode.parentNode);"
+              ondraggesture="if (event.target.localName == 'treecell') HandleResultDragGesture(event);"
               style="-moz-user-focus:ignore !important;">
 
           <template>
@@ -148,10 +151,11 @@
                           searchtype="rdf:http://home.netscape.com/NC-rdf#SearchType"
                           type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
                   <treerow class="searchresult">
-                    <treecell class="treecell-iconic searchresult-cell" 
-                              src="rdf:http://home.netscape.com/NC-rdf#Icon"
-                              label="rdf:http://home.netscape.com/NC-rdf#Name"
-                              tooltip="descTooltip"/>
+                    <treecell flex="0" class="text-link" tooltip="descTooltip">
+                      <image class="tree-cell-icon" 
+                             src="rdf:http://home.netscape.com/NC-rdf#Icon"/>
+                      <label value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                    </treecell>
                   </treerow>
                 </treeitem>
               </treechildren>
@@ -177,10 +181,13 @@
         </tree>
       
         <hbox>
-          <spacer flex="1" />
-          <button id="saveQueryButton"
-                  label="&savesearch.button.label;" oncommand="return saveSearch();"/>
-          <spacer flex="1" />
+          <button id="prev-results" label="&previous.button.label;" 
+                  tooltiptext="&previous.button.tooltip;"
+                  oncommand="return showMoreResults(-1);" disabled="true"/>
+          <spacer flex="1"/>
+          <button id="next-results" label="&next.button.label;"
+                  tooltiptext="&next.button.tooltip;"
+                  oncommand="return showMoreResults(1);" disabled="true"/>
         </hbox>
       </vbox>
     

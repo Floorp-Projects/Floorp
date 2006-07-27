@@ -345,7 +345,7 @@ function AskChangeDefaultEngine(aSelectedEngine)
 
     var checkbox = {value:0};
     change = promptSvc.confirmCheck(window, title, changeEngineMsg, 
-                   dontAskAgainMsg, checkbox);
+               dontAskAgainMsg, checkbox);
 
     // store "don't ask again" pref from checkbox value (if changed)
     debug("dontAskAgain: " + dontAskAgain);
@@ -357,6 +357,18 @@ function AskChangeDefaultEngine(aSelectedEngine)
   // if confirmed true, i.e., change default engine, then set pref
   if (change)
     nsPreferences.setUnicharPref(kDefaultEnginePref, aSelectedEngine.value);
+
+  disableNavButtons();
+}
+
+function disableNavButtons()
+{
+  var nextButton = document.getElementById("next-results");
+  var prevButton = document.getElementById("prev-results");
+  if (nextButton && nextButton.getAttribute("disabled") != "true")
+    nextButton.setAttribute("disabled", "true");
+  if (prevButton && prevButton.getAttribute("disabled") != "true")
+    prevButton.setAttribute("disabled", "true");
 }
 
 function ensureSearchPref()
@@ -829,6 +841,10 @@ function sidebarOpenURL(treeitem)
     }
   } catch (ex) {
   }
+
+  // mark result as visited
+  treeitem.firstChild.firstChild.setAttribute("visited", "true");
+  
   loadURLInContent(id);
 }
 
@@ -863,9 +879,13 @@ function OpenSearch(aSearchStr, engineURIs)
 
       // look up the correct search URL format for the given engine
       try {
-        var searchURL = searchDS.GetInternetSearchURL(searchEngineURI, escapedSearchStr);
+        var whichButtons = new Object;
+        whichButtons.value = 0;
+        var searchURL = searchDS.GetInternetSearchURL(searchEngineURI, escapedSearchStr, 0, 0, whichButtons);
+        doNavButtonEnabling(whichButtons.value, searchDS, 0);
       }
       catch (ex) {
+        debug("Exception when calling GetInternetSearchURL: " + ex);
         searchURL = "";
       }
 
@@ -889,7 +909,9 @@ function OpenSearch(aSearchStr, engineURIs)
       loadURLInContent("chrome://communicator/content/search/internetresults.xul?" + escape(searchURL));
     }
   }
-  catch (ex) {}
+  catch (ex) {
+    debug("Exception: " + ex);
+  }
 
   setTimeout("checkSearchProgress()", 1000);
 }
@@ -919,9 +941,6 @@ function switchTab(aPageIndex)
     if (target)
       haveSearchRef = true;
   }
-
-  var saveQueryButton = document.getElementById("saveQueryButton");
-  saveQueryButton.disabled = !haveSearchRef;
 }
 
 function saveSearch()
@@ -976,6 +995,78 @@ function saveSearch()
 
   var bmks = Components.classes[BMARKS_CONTRACTID].getService(nsIBookmarksService);
   bmks.addBookmarkImmediately(lastSearchURI, searchTitle, bmks.BOOKMARK_SEARCH_TYPE, null);
+}
+
+var gPageNumber = 0;
+/**
+ * showMoreResults
+ *
+ * Run a query to show the next/previous page of search results for the
+ * current search term.
+ * 
+ * @param direction : -1 => previous
+ *                     1 => next
+ */
+function showMoreResults(direction)
+{
+  // XXX check if we are in basic search mode
+
+  // get search engine
+  var engine = document.getElementById("basicEngineMenu").selectedItem;
+  var engineURI = engine.id;
+
+  // get search term
+  var searchTerm = document.getElementById("sidebar-search-text").value;
+  searchTerm = escape(searchTerm);
+
+  // change page number
+  if (direction > 0)
+    ++gPageNumber;
+  else
+    --gPageNumber;
+
+  // get qualified URL
+  var searchService = Components.classes[ISEARCH_CONTRACTID].
+                        getService(nsIInternetSearchService);
+  var whichButtons = new Object;
+  whichButtons.value = 0;
+  var searchURL = searchService.GetInternetSearchURL(engineURI, searchTerm, 
+                    direction, gPageNumber, whichButtons);
+
+  doNavButtonEnabling(whichButtons.value, searchService, gPageNumber);
+
+  // load URL in navigator
+  loadURLInContent(searchURL);
+}
+
+function doNavButtonEnabling(whichButtons, searchService, pageNumber)
+{
+  var nextButton = document.getElementById("next-results");
+  var nextDisabled = nextButton.getAttribute("disabled");
+  var prevButton = document.getElementById("prev-results");
+  var prevDisabled = prevButton.getAttribute("disabled");
+
+  if (whichButtons & searchService.kHaveNext)
+  {
+    if (nextDisabled)
+      nextButton.removeAttribute("disabled");
+  }
+  else 
+  {
+    if (!nextDisabled)
+      nextButton.setAttribute("disabled", "true");
+  }
+  
+  if ((pageNumber > 0) && (whichButtons & searchService.kHavePrev))
+  {
+    if (prevDisabled)
+      prevButton.removeAttribute("disabled");
+  }
+  else 
+  {
+    if (!prevDisabled)
+      prevButton.setAttribute("disabled", "true");
+  }
 }
 
 function doCustomize()
@@ -1041,6 +1132,34 @@ function getItemNode(aNode,nodeName)
   return node ? node : null;
 }
 
+function getArcValueForID(aArc, aID)
+{
+  var val = null;
+
+  try
+  {
+    var ds = document.getElementById("Tree").database;
+    if (ds)
+    {
+      var rdf = Components.classes[RDFSERVICE_CONTRACTID].
+                  getService(nsIRDFService);
+      var src = rdf.GetResource(aID, true);
+      var prop = rdf.GetResource(
+                  "http://home.netscape.com/NC-rdf#"+aArc, true);
+      val = ds.GetTarget(src, prop, true);        
+      if (val)
+        val = val.QueryInterface(nsIRDFLiteral).Value;
+    }
+  } 
+  catch (ex)
+  {
+    dump("Exception: no value for " + aArc + "!\t" + ex + "\n");
+    val = null;
+  }
+
+  return val;
+}
+
 //Fill in tooltip in teh search results panel
 function FillInDescTooltip(tipElement)
 {
@@ -1052,48 +1171,61 @@ function FillInDescTooltip(tipElement)
   var nodeTreeitem = getItemNode(tipElement, "treeitem");
  
   //Get the Name of the tree cell for first item in the tooltip
-  var nodeLabel = nodeTreeCell.getAttribute("label");
+  var nodeLabel = nodeTreeCell.childNodes.item(1).getAttribute("value");
   var nodeID = nodeTreeitem.id;
  
   //Query RDF to get URL of tree item
   if (nodeID)
-    try {
-      var ds = document.getElementById("Tree").database;
-      if (ds) {
-        var rdf = Components.classes[RDFSERVICE_CONTRACTID].getService(nsIRDFService);
-        var src = rdf.GetResource(nodeID, true);
-        var prop = rdf.GetResource("http://home.netscape.com/NC-rdf#URL", true);
-        var url = ds.GetTarget(src, prop, true);        
-        if (url)
-          url = url.QueryInterface(nsIRDFLiteral).Value;
-      }
-    } catch (ex) {
-  }
+    var url = getArcValueForID("URL", nodeID);
 
   //Fill in the the text nodes
   //collapse them if there is not a node
-    if (nodeLabel || url) {
-      var tooltipTitle = document.getElementById("titleText");
-      var tooltipUrl = document.getElementById("urlText"); 
-      if (nodeLabel) {
-        if (tooltipTitle.getAttribute("hidden") == "true")
-          tooltipTitle.removeAttribute("hidden");
-        tooltipTitle.setAttribute("value",nodeLabel);
-      } 
-      else  {
-        tooltipTitle.setAttribute("hidden", "true");
-      }
-      if (url) {
-        if (tooltipUrl.getAttribute("hidden") == "true")
-          tooltipUrl.removeAttribute("hidden");
-        if (url.length > 100)
-          url = url.substr(0,100) + "...";
-        tooltipUrl.setAttribute("value",url);
-      }
-      else {
-        tooltipUrl.setAttribute("hidden", "true");
-      }
+  if (nodeLabel || url) {
+    var tooltipTitle = document.getElementById("titleText");
+    var tooltipUrl = document.getElementById("urlText"); 
+    if (nodeLabel) {
+      if (tooltipTitle.getAttribute("hidden") == "true")
+        tooltipTitle.removeAttribute("hidden");
+      tooltipTitle.setAttribute("value",nodeLabel);
+    } 
+    else  {
+      tooltipTitle.setAttribute("hidden", "true");
+    }
+    if (url) {
+      if (tooltipUrl.getAttribute("hidden") == "true")
+        tooltipUrl.removeAttribute("hidden");
+      if (url.length > 100)
+        url = url.substr(0,100) + "...";
+      tooltipUrl.setAttribute("value",url);
+    }
+    else {
+      tooltipUrl.setAttribute("hidden", "true");
+    }
     retValue = true;
   }
   return retValue;
 }
+
+var nsResultDNDObserver = 
+{
+  onDragStart: function(aEvent, aXferData, aDragAction)
+  {
+    var node = getItemNode(aEvent.target, "treeitem");
+    var URL = getArcValueForID("URL", node.id);
+    var title = getArcValueForID("Name", node.id);
+    var htmlString = "<a href=\"" + URL + "\">" + title + "</a>";
+    var urlString = URL + "\n" + title;
+
+    aXferData.data = new TransferData();
+    aXferData.data.addDataForFlavour("text/x-moz-url", URL);
+    aXferData.data.addDataForFlavour("text/unicode", urlString);
+    aXferData.data.addDataForFlavour("text/html", htmlString); 
+  }
+};
+
+function HandleResultDragGesture(aEvent)
+{
+  nsDragAndDrop.startDrag(aEvent, nsResultDNDObserver);
+  return true;  
+}
+
