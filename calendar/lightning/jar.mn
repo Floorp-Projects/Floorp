@@ -18,9 +18,9 @@ lightning.jar:
   content/lightning/calendar-todo-list.xml		(content/calendar-todo-list.xml)
   content/lightning/toolkit-overlay-custombar.xul       (content/toolkit-overlay-custombar.xul)
 
-en-US.jar:
-  locale/en-US/lightning/lightning.dtd				(locale/lightning.dtd)
-  locale/en-US/lightning/lightning.properties		(locale/lightning.properties)
+lightning-en-US.jar:
+    locale/en-US/lightning/lightning.dtd         (/calendar/locales/en-US/chrome/lightning/lightning.dtd)
+    locale/en-US/lightning/lightning.properties  (/calendar/locales/en-US/chrome/lightning/lightning.properties)
 
 calendar.jar:
 *  content/calendar/applicationUtil.js		(/calendar/resources/content/applicationUtil.js) 
