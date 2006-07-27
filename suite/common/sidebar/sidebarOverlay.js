@@ -367,10 +367,10 @@ function ()
   if (typeof this.iframe == "undefined") {
     var content = this.get_content();
     if (this.is_sandboxed()) {
-      var unsandboxed_iframe = content.childNodes.item(1);
+      var unsandboxed_iframe = content.childNodes.item(2);
       this.iframe = unsandboxed_iframe;
     } else {
-      var sandboxed_iframe = content.childNodes.item(2);
+      var sandboxed_iframe = content.childNodes.item(1);
       this.iframe = sandboxed_iframe;
     }
   }
