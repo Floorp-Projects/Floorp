@@ -316,7 +316,9 @@ function (force_reload)
         } else {
           var saved_src = iframe.getAttribute('content');
           var src = iframe.getAttribute('src');
-          if (saved_src != src) {
+          // either we have been requested to force_reload or the
+          // panel src has changed so we must restore the original src
+          if (force_reload || (saved_src != src)) {
             debug("    set src="+saved_src);
             iframe.setAttribute('src', saved_src);
 
@@ -325,7 +327,6 @@ function (force_reload)
 
             gCurFrame = iframe;
             gTimeoutID = setTimeout (setBlank, 20000);
-
           }
         }
 
@@ -904,6 +905,11 @@ function SidebarStopPanelLoad(header) {
   panel.stop_load();
 }
 
+function SidebarReloadPanel(header) {
+  var panel = sidebarObj.panels.get_panel_from_header_node(header);
+  panel.reload();
+}
+
 // No one is calling this right now.
 function SidebarReload() {
   sidebarObj.panels.refresh();
@@ -1182,6 +1188,33 @@ function SidebarFinishClick() {
       sidebar_overlay_init();
     sidebarObj.panels.refresh();
   }
+}
+
+function SidebarInitContextMenu(aMenu, aPopupNode)
+{
+  var panel = sidebarObj.panels.get_panel_from_header_node(aPopupNode);
+  var switchItem = document.getElementById("switch-ctx-item");
+  var reloadItem = document.getElementById("reload-ctx-item");
+  var stopItem = document.getElementById("stop-ctx-item");
+
+  // the current panel can be reloaded, but other panels are not showing 
+  // any content, so we only allow you to switch to other panels
+  if (panel.is_selected()) 
+  {
+    switchItem.setAttribute("collapsed", "true"); 
+    reloadItem.removeAttribute("disabled");
+  }
+  else 
+  {
+    switchItem.removeAttribute("collapsed");
+    reloadItem.setAttribute("disabled", "true");
+  }
+
+  // only if a panel is currently loading enable the ``Stop'' item
+  if (panel.get_iframe().getAttribute("loadstate") == "loading")
+    stopItem.removeAttribute("disabled");
+  else
+    stopItem.setAttribute("disabled", "true");
 }
 
 ///////////////////////////////////////////////////////////////

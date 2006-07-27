@@ -34,16 +34,24 @@
 
   <command id="toggleSidebar" oncommand="SidebarShowHide();"/>
   <key id="showHideSidebar" keycode="VK_F9" command="toggleSidebar"/>
-  <popup id="sidebarPopup" onpopupshowing="if (sidebarObj.panels.get_panel_from_header_node(document.popupNode).is_selected())
-                                       this.firstChild.setAttribute('collapsed', 'true');
-                                     else
-                                       this.firstChild.removeAttribute('collapsed');">
-    <menuitem label="&sidebar.switch.label;" accesskey="&sidebar.switch.accesskey;"
-              default="true" oncommand="SidebarSelectPanel(document.popupNode, false, false);"/>
-    <menuitem label="&sidebar.hide.label;" accesskey="&sidebar.hide.accesskey;"
+  <popup id="sidebarPopup" 
+    onpopupshowing="SidebarInitContextMenu(this, document.popupNode);">
+    <menuitem id="switch-ctx-item" label="&sidebar.switch.label;" 
+              accesskey="&sidebar.switch.accesskey;" default="true" 
+              oncommand="SidebarSelectPanel(document.popupNode,false,false);"/>
+    <menuitem id="reload-ctx-item" label="&sidebar.reload.label;" 
+              accesskey="&sidebar.reload.accesskey;" disabled="true"
+              oncommand="SidebarReloadPanel(document.popupNode);"/>
+    <menuitem id="stop-ctx-item" label="&sidebar.loading.stop.label;"
+              accesskey="&sidebar.loading.stop.accesskey;" disabled="true"
+              oncommand="SidebarStopPanelLoad(document.popupNode);"/>
+    <menuseparator/>
+    <menuitem id="hide-ctx-item" label="&sidebar.hide.label;" 
+              accesskey="&sidebar.hide.accesskey;"
               oncommand="SidebarTogglePanel(document.popupNode);"/>
     <menuseparator/>
-    <menuitem label="&sidebar.customize.label;" accesskey="&sidebar.customize.accesskey;"
+    <menuitem id="customize-ctx-item" label="&sidebar.customize.label;" 
+              accesskey="&sidebar.customize.accesskey;"
               oncommand="SidebarCustomize();"/>
   </popup>
 
