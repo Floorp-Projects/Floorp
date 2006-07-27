@@ -29,7 +29,7 @@
   onload="Init();"
   onunload="RefreshPanel();;">
 
-  <script src="chrome://communicator/content/sidebar/customize-panel.js" />
+  <script type="application/x-javascript" src="chrome://communicator/content/sidebar/customize-panel.js" />
   <browser id="customize_frame" type="content-primary" src="about:blank" flex="1"/>
 
 </window>

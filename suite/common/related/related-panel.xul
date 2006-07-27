@@ -27,7 +27,7 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   >
 
-  <script src="chrome://communicator/content/related/related-panel.js" />
+  <script type="application/x-javascript" src="chrome://communicator/content/related/related-panel.js" />
 
   <iframe id="daFrame" src="about:blank" flex="1" />
 </window>

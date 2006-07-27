@@ -35,7 +35,7 @@
   title="&sidebar.preview.title.label;"
   orient="vertical">
 
-  <script src="chrome://communicator/content/sidebar/preview.js" />
+  <script type="application/x-javascript" src="chrome://communicator/content/sidebar/preview.js" />
 
   <box id="panel-container" orient="vertical">
 

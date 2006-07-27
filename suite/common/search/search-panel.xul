@@ -33,11 +33,11 @@
         orient="vertical" onload="SearchPanelStartup();"
         onunload="SearchPanelShutdown();">
 
-  <script type="text/javascript" src="chrome://global/content/nsUserSettings.js"/>
-  <script type="text/javascript" src="chrome://global/content/nsJSComponentManager.js"/>
-  <script type="text/javascript" src="chrome://global/content/strres.js"/>
-  <script type="text/javascript" src="chrome://communicator/content/search/search-panel.js"/>
-  <script type="text/javascript" src="chrome://communicator/content/search/shared.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsUserSettings.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/search/search-panel.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/search/shared.js"/>
 
   <stringbundle id="searchBundle" src="chrome://communicator/locale/search/search-panel.properties"/>
   <stringbundle id="regionalBundle" src="chrome://navigator-region/locale/region.properties"/>
