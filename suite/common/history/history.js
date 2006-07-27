@@ -300,8 +300,8 @@ function OpenURL(aInNewWindow)
         }
       }
     }        
-    else
-        openTopWin(url);
+    else if (!isContainer(gHistoryTree, currentIndex))
+      openTopWin(url);
     return true;
 }
 
