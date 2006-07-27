@@ -51,7 +51,7 @@
 			<button id="stopbutton" align="left" src="resource:/res/rdf/loading.gif" value="&stop.button.label;" onclick="return doStop();" class="dialog toolbar-non-iconic" style="display:none;"/>
 		</box>
         </box>
-        <box align="horizontal" class="spaced">
+        <box id="categoryBox" align="horizontal" class="spaced">
 
 		<text value="&within.label;" />
 

@@ -22,6 +22,7 @@
 
 var	rootNode = null;
 var	textArc = null;
+var	modeArc = null;
 var	RDF_observer = new Object;
 var	pref = null;
 
@@ -38,11 +39,13 @@ function debug(msg)
 // get the click count pref
 try
 {
-	pref = Components.classes["component://netscape/preferences"].getService();
-	if( pref )	pref = pref.QueryInterface( Components.interfaces.nsIPref );
+	pref = Components.classes["component://netscape/preferences"];
+	if (pref)	pref = pref.getService();
+	if (pref)	pref = pref.QueryInterface(Components.interfaces.nsIPref);
 }
 catch(e)
 {
+	debug("Exception " + e + " trying to get prefs.\n");
 }
 
 
@@ -55,6 +58,10 @@ RDF_observer =
 			{
 				rememberSearchText(target);
 			}
+			else if ((src == rootNode) && (prop == modeArc))
+			{
+				updateSearchMode();
+			}
 		},
 	OnUnassert : function(src, prop, target)
 		{
@@ -64,6 +71,10 @@ RDF_observer =
 			if ((src == rootNode) && (prop == textArc))
 			{
 				rememberSearchText(new_target);
+			}
+			else if ((src == rootNode) && (prop == modeArc))
+			{
+				updateSearchMode();
 			}
 		},
 	OnMove     : function(old_src, new_src, prop, target)
@@ -93,6 +104,36 @@ function rememberSearchText(target)
 
 
 
+function updateSearchMode()
+{
+	var searchMode = 0;
+	try
+	{
+		if (pref)	searchMode = pref.GetIntPref("browser.search.mode");
+
+		var categoryBox = document.getElementById("categoryBox");
+		if (categoryBox)
+		{
+			if (searchMode == 0)
+			{
+				categoryBox.setAttribute("style", "visibility:collapse;");
+				switchTab(0);
+			}
+			else
+			{
+				categoryBox.setAttribute("style", "visibility:visible;");
+				switchTab(1);
+			}
+		}
+	}
+	catch(ex)
+	{
+	}
+	return(searchMode);
+}
+
+
+
 // Initialize the Search panel: 
 // 1) init the category list
 // 2) load the search engines associated with this category
@@ -100,7 +141,7 @@ function rememberSearchText(target)
 function SearchPanelStartup()
 {
 	bundle = srGetStrBundle( "chrome://communicator/locale/search/search-panel.properties" );
-   
+
 	var tree = document.getElementById("Tree");
 	if (tree)
 	{
@@ -110,6 +151,7 @@ function SearchPanelStartup()
 		{
 			rootNode = rdf.GetResource("NC:LastSearchRoot", true);
 			textArc = rdf.GetResource("http://home.netscape.com/NC-rdf#LastText", true);
+			modeArc = rdf.GetResource("http://home.netscape.com/NC-rdf#SearchMode", true);
 			tree.database.AddObserver(RDF_observer);
 		}
 	}
@@ -143,8 +185,6 @@ function SearchPanelStartup()
 	var lastCategoryName = "";
 	try
 	{
-		var pref = Components.classes["component://netscape/preferences"].getService();
-		if (pref)	pref = pref.QueryInterface( Components.interfaces.nsIPref );
 		if (pref)	lastCategoryName = pref.CopyCharPref( "browser.search.last_search_category" );
 
 		if (lastCategoryName != "")
@@ -203,9 +243,10 @@ function SearchPanelStartup()
 	}
 
 	loadEngines( lastCategoryName );
-  
+
+	var searchMode = updateSearchMode();
 	// if we have search results, show them, otherwise show engines
-	if (haveSearchResults() == true)
+	if ((haveSearchResults() == true) || (searchMode == 0))
 	{
 		switchTab(0);
 	}
