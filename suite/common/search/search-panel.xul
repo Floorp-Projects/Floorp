@@ -30,32 +30,20 @@
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   align="vertical"
-  class="dialog"
   onload="SearchPanelStartup();"
   onunload="SearchPanelShutdown();">
 
   <html:script src="chrome://global/content/strres.js"/>
   <html:script src="chrome://search/content/search-panel.js" />
   
-    <tabcontrol align="vertical">
-    <box align="horizontal">
-      <spring style="width: 5px;"/>
-      <tabbox flex="100%">
-        <tab flex="1" onclick="switchTab(0);" style="display: none;">&search.results.tab;</tab>
-        <tab flex="1" onclick="switchTab(1);" style="display: none;">&search.advanced.tab;</tab>
-      </tabbox>
-      <spring style="width: 5px;"/>
-    </box>
-    <tabpanel style="display:none;"/>
-  </tabcontrol>
   <deck id="advancedDeck" flex="100%" style="border:none;">
       
       <!-- results panel -->
       <box align="vertical" flex="100%">
         <box align="horizontal" class="spaced">
         	<html:input id="sidebar-search-text" flex="1" onkeyup="if (event.which == 13) { return doSearch(); }" />
-          <titledbutton id="searchbutton" value="&search.button.label;" onclick="return doSearch();" class="dialog push"/>
-          <titledbutton id="stopbutton" value="&stop.button.label;" onclick="return doStop();" class="dialog push" style="display:none;"/>
+          <titledbutton id="searchbutton" value="&search.button.label;" onclick="return doSearch();" class="toolbar-non-iconic"/>
+          <titledbutton id="stopbutton" value="&stop.button.label;" onclick="return doStop();" class="toolbar-non-iconic" style="display:none;"/>
         </box>
         <box align="horizontal" class="spaced">
           <html:label for="">&within.label;</html:label>
