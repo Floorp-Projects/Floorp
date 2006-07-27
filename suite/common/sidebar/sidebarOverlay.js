@@ -967,7 +967,12 @@ function SidebarSelectPanel(header, should_popopen, should_unhide) {
   if (unhide)  SidebarShowHide();
   if (popopen) SidebarExpandCollapse();
 
-  panel.get_iframe().setAttribute('focusOnLoad', true);
+  try { 
+    panel.get_iframe().setAttribute('focusOnLoad', true); 
+  } catch (ex) { 
+    // ignore exception for cases where content isn't built yet
+    // e.g., auto opening search tab: we don't want to focus search field
+  }
   if (!panel.is_selected()) panel.select(false);
 
   return true;
