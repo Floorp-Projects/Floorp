@@ -68,6 +68,7 @@ const ALL_TESTS =
     "CONTEXT_XML_DESCENDANTS",
     "CONTEXT_XML_NAMESPACE_QUALIFIED_ELEMENT",
     "CONTEXT_XML_NAMESPACE_QUALIFIED_ATTR",
+    "CONTEXT_XML_ATTRIBUTE_SELECTOR",
   ];
 
 function r(keyword, tests)
@@ -388,6 +389,20 @@ Tester.prototype =
                             </foo>;\n\
                     if (x.fin.@bar::" + keyword + " != 5)\n\
                       throw 'namespaced attributes which are keywords are broken!';");
+            }
+            catch (e)
+            {
+              throw e;
+            }
+          },
+        CONTEXT_XML_ATTRIBUTE_SELECTOR:
+          function(keyword)
+          {
+            try
+            {
+              eval("var x = <foo " + keyword + "='idref'/>;\n\
+                    if (x.@" + keyword + " != 'idref')\n\
+                      throw 'keywords on the right of the @ E4X selector are broken!';");
             }
             catch (e)
             {
