@@ -183,23 +183,24 @@ function ClickOnOtherPanels(event)
 { 
   debug("ClickOnOtherPanels(...)");
 
-  var targetclass = event.target.getAttribute('class');
+  var t = event.originalTarget;
+
   var treeitem = null;
   var force_open = true;
-  if (targetclass == 'tree-cell-twisty') {
+  if (t.getAttribute('twisty') == 'true') {
     // The twisty is nested three below the treeitem:
     // <treeitem>
     //   <treerow>
     //     <treecell>
-    //         <titledbutton class="tree-cell-twisty"> <!-- anonymous -->
-    treeitem = event.target.parentNode.parentNode.parentNode;
+    //         <image class="tree-cell-twisty"> <!-- anonymous -->
+    treeitem = t.parentNode.parentNode.parentNode;
     force_open = false;
   } else {
-    if (event.target.localName != "treecell" &&
-        event.target.localName != "treeitem")
+    if (t.localName != "treecell" &&
+        t.localName != "treeitem")
     return;
 
-    treeitem = event.target;
+    treeitem = t;
     while (treeitem && treeitem.nodeName != 'treeitem') {
       treeitem = treeitem.parentNode;
     }
