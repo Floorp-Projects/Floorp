@@ -65,11 +65,12 @@ nsNoDataProtocolContentPolicy::ShouldLoad(PRUint32 aContentType,
 {
   *aDecision = nsIContentPolicy::ACCEPT;
 
+  // Don't block for TYPE_OBJECT since such URIs are sometimes loaded by the
+  // plugin, so they don't neccesarily open external apps
   if (aContentType == TYPE_OTHER ||
       aContentType == TYPE_SCRIPT ||
       aContentType == TYPE_IMAGE ||
-      aContentType == TYPE_STYLESHEET ||
-      aContentType == TYPE_OBJECT) {
+      aContentType == TYPE_STYLESHEET) {
     nsCAutoString scheme;
     aContentLocation->GetScheme(scheme);
     // Fast-track for the common cases
