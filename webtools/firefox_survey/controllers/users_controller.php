@@ -78,13 +78,13 @@ generation of Firefox.  Thanks again for making the browser a better place!</p>
 
 <p><a href=\"https://is4.instantsurvey.com/take?i=105913&h=0yU72vyhajHZpq6bAu_RGQ&email={$this->params['data']['User']['email']}&first={$this->params['data']['User']['firstname']}&last={$this->params['data']['User']['lastname']}\">Join the User Panel</a></p>
 
-<p><small>Mozilla continues to take security and privacy issues seriously.  Any data or
-information provided will never be given or sold to any other outside company for its
-use in marketing or solicitation.</small></p>
+<p><small>Mozilla continues to take security and privacy issues seriously.  Mozilla
+will never rent or sell the information you provide in connection with the Firefox
+User Panel to any other third party for use in marketing or solicitation.</small></p>
 
-<p><small>If you choose not to take this survey, you will be automatically unsubscribed from the Firefox User Panel.</small></p>
+<p><small>If you choose not to take this survey, you will be automatically unsubscribed from the Firefox User Panel or you can <a href=\"mailto:firefoxsurvey@mozilla.com?subject=Unsubscribe - Firefox User Panel\">let us know</a></small></p>
 
-<p><small>If you think you received this in error, please <a href=\"mailto:firefoxsurvey@mozilla.com\">let us know</a>.</small></p>
+<p><small>If you think you received this in error, please <a href=\"mailto:firefoxsurvey@mozilla.com?subject=Firefox User Panel - Received in Error\">let us know</a></small></p>
 "
                     );
 
