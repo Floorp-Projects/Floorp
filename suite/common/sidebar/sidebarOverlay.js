@@ -681,7 +681,7 @@ function get_remote_datasource_url() {
       debug("Unable to get remote url pref. What now? "+ex);
     }
     try {
-      locale = prefs.CopyCharPref("intl.content.langcode");
+      locale = prefs.getLocalizedUnicharPref("intl.content.langcode");
     } catch(ex) {
       try {
         debug("No lang code pref, intl.content.langcode.");
