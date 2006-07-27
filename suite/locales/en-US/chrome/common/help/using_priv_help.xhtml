@@ -232,7 +232,7 @@ A domain cookie is sent back to any site that's in the same domain as the site t
 
 <p>&nbsp;</p>
 <a NAME="passwords_view"></a>
-<h2>Viewing and Managing Stored Passwords</h2>
+<h2>Managing Stored Passwords</h2>
 
 <p>To see a list of the user names and passwords you have stored:</p>
 
@@ -413,7 +413,7 @@ A domain cookie is sent back to any site that's in the same domain as the site t
 <ol>
 <li>Open the Tasks menu, choose Privacy and Security, and then choose Password Manager.</li>
 <li>Select Change Master Password from the submenu. You see the Set Master Password dialog box.
-<li>Enter your current master password. </li>
+<li>Enter your current master password (if you have previously set one). </li>
 <li>Enter your new master password, and retype it to confirm the spelling.</li>
 <li>Click OK.
 </ol>
@@ -441,32 +441,111 @@ A domain cookie is sent back to any site that's in the same domain as the site t
 <a NAME="master_password:forgettingIDX"></a>
 <h2>What to Do If You Forget Your Master Password</h2>
 
-<p>If you forget your master password, you may have to reset it. In this case, you will need to clear all the sensitive information stored by Password Manager and Form Manager, because without your original master password you will not be permitted to use the information.
+<p>If you forget your master password, you won't be able to access any of the stored password and form data that it protects. Your master password is your most important password. Make sure you remember it or record it in a safe place.
 
-<p>To reset your master password:
+<p>Each master password is associated with a single user profile. You can't change an existing master password for a profile unless you enter the existing password first. 
 
+<p>Therefore, the simplest solution to forgetting your password&#151;and the most drastic&#151;is to create a new profile. A new profile always starts out without any master password, so you can set a new one.
 
-<ol>
-<li>Open the Tasks menu, choose Privacy and Security, and then choose Password Manager.</li>
-<li>Select Change Master Password from the submenu. You see the Set Master Password dialog box.
-<li>Enter your new master password, and retype it to confirm the spelling.
-<li>Click OK.
-</ol>
+<p>For information on creating a new profile, see <a href="using_priv_help.html#managing_profiles">Managing Profiles</a>.
 
-<p>To clear all stored passwords and other sensitive information:
+<p>Unfortunately, a new profile will not include information about your stored passwords or form data. After you create a new profile, you must remember all of the user names, passwords, and other data that Password Manager and Form Manager have stored for you, because you will need to enter them again when you visit the web sites that require them. 
 
-<ol>
-<li>Open the Tasks menu, choose Privacy and Security, and then choose Password Manager.
-<li>Select Clear Sensitive Information from the submenu.
-</ol>
+<p>In addition, a new profile will not include any customizations you may have made to your bookmarks, address books, mail filters, and so on while using your old profile. 
 
-<p>After you clear the saved personal information, you must remember all of the user names and passwords Password Manager had stored for you, because you will need to enter them when you visit the web sites that require them.</p>
+<p>It is possible to copy some files (such as bookmarks.html, which contains all your bookmarks) from your old profile directory to your new profile directory by hand, but this can be complicated and may not work for all your customizations.
+
 
 
 <p>
 [&nbsp;<A HREF="#using_encrypt">Return to beginning of section</A>&nbsp;]
 </p>
 
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+
+<p>&nbsp;</p>
+<a NAME="managing_profiles"></a>
+<a NAME="profiles:managingIDX"></a>
+<hr><h1>Managing Profiles</h1>
+
+<p>If you use the Internet at home and at work, you may want to have access to a different set of bookmarks, preferences, adddress books, email accounts, My Sidebar setup, and so on. Similarly, family members may want to share share a copy of the same browser software but keep their Internet identities separate. 
+
+<p>The Profile Manager lets you create different profiles, each with its own booksmarks, preferences, email settings, and so on. You automatically create a default profile when you first install your browser software. When you create one or more additional profiles, you will be asked which you want to use each time you launch the browser.</P>
+
+<table cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
+<tr>
+<td class="inthissections">
+<p>In this section:</p>
+<p><a href="#creating_profiles">Creating a New Profile</a></p>
+<p><a href="#deleting_profiles">Deleting or Renaming a Profile</a></p>
+</td>
+</tr>
+</table>
+
+
+<p>&nbsp;</p>
+<a NAME="creating_profiles"></a>
+<a NAME="profiles:creatingIDX"></a>
+<h2>Creating a New Profile</h2>
+
+<p>To create a profile:
+
+<ol>
+	<li>Exit the browser. It is not possible to create a new profile while the Navigator, Mail, or any other component of your browser software is running.
+	<li>Open the Profile Manager.
+	<ul>
+		<li>On Windows, open the Start menu and choose Programs, then Netscape 6, then Profile Manager.
+		<li>On Mac OS, open the Netscape folder and then double-click the Profile Manager.
+		<li>On Linux, type the following at the command line: <tt>./netscape -profile</tt>
+	</ul>
+	<li>Click Create Profile, read the Profile description, and then click Next.
+	<li>Enter a profile name. This can be anytyhing you like, such as your real name or a name that's related to what you use the profile for, such as "School."
+	<li>Accept the default directory for the storage of bookmarks and other information, or choose another directory.
+	<li>If you have Language Packs or Regional Content Packs installed, click Region and choose the Languiage/Content set you want.
+	<li>Click Finish.
+</ol>
+
+<p>The opening screen of the Profile Manager reappears, with the new profile listed and highlighted. 
+
+<p>To set up your browser for the new profile, click Start Netscape 6. You'll be asked to activate the new profile for use with Netscape Webmail, Netscape Instant Messenger, and custom My Netscape page. If you don't want to activate the new profile for these purposes at this time, click Cancel, and the program will open.
+
+<p>As you begin using the new profile, you will be asked for additional information as you perform tasks that require it&#151;for example, checking your email. 
+
+
+<p>&nbsp;</p>
+<a NAME="deleting_profiles"></a>
+<a NAME="profiles:deletingIDX">
+<a NAME="profiles:renamingIDX"></a>
+<h2>Deleting or Renaming a Profile</h2>
+
+<p>You may want to delete profiles that you don't normally use. For example, if you have more than one profile available, you can't take advantage of the <a href="nav_help.html#nav_quicklaunch">Quick Launch</a> feature. 
+
+<p>To delete or rename an existing profile:
+
+<ol>
+	<li>Exit the browser. It is not possible to create delete or rename a profile while the Navigator, Mail, or any other component of your browser software is running.
+
+	<li>Open the Profile Manager.
+	<ul>
+		<li>On Windows, open the Start menu and choose Programs, then Netscape 6, then Profile Manager.
+		<li>On Mac OS, open the Netscape folder and then double-click the Profile Manager.
+		<li>On Linux, type the following at the command line: <tt>./netscape -profile</tt>
+	</ul>
+	<li>To delete a profile, select its name and click Delete Profile.
+	<li>To rename a profile, select is name, click Rename Profile, and follow the instructions.
+</ol>
+
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
 
 <p>&nbsp;</p>
 <a NAME="using_images"></a>
@@ -505,7 +584,7 @@ A domain cookie is sent back to any site that's in the same domain as the site t
 
 <hr>
 
-<p><i>7/9/2001</i></p>
+<p><i>8/21/2001</i></p>
 
 <hr>
 <p>Copyright &copy; 1994-2001 Netscape Communications Corporation.</p>

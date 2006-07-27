@@ -36,8 +36,6 @@ SSL. TLS 1.0 can be thought of as SSL 3.1.
 
 <p>When the Enable TLS option in the SSL preferences panel is selected, the browser attempts to use the TLS protocol when making secure connections with a server. If that connection fails because the server is TLS intolerant, the browser will fall back to using SSL 3.0.
 
-<p>There is currently one important exception to this behavior: If you are using a proxy for SSL connections, the browser will not attempt to use TLS at all. Instead, it will attempt to use SSL 3.0.
-
 
 <p>&nbsp;</p>
 <a NAME="SSL_Warnings"></a>
@@ -56,8 +54,9 @@ carefully about whether you want such warnings, since they can be annoying.
 </P>
 
 <ul>
-	<LI><b>Entering a site that supports encryption.</b> Select this warning if you want to be reminded whenever you are entering a web site that supports encryption.
-	<LI><b>Entering a site that uses low-grade encryption.</b> Select this warning if you want to be reminded whenever you are entering a web site that supports low-grade encryption. (Low-grade encryption is the weakest encryption available, using 40-bit keys.) 
+	<LI><b>Loading a page that supports encryption.</b> Select this warning if you want to be reminded whenever you are loading a page that supports encryption.
+	<LI><b>Loading a page that uses low-grade encryption.</b> Select this warning if you want to be reminded whenever you are loading a page that supports low-grade encryption. (Low-grade encryption is the weakest encryption available, using 40-bit keys.) 
+	<LI><b>Leaving a page that supports encryption.</b> Select this warning if you want to be reminded whenever you are leaving a page that supports encryption for one that does not.
 	<LI><b>Sending form data from an unencrypted page to an unencrypted page.</b> Select this warning if you want to be reminded whenever you are submitting data over an unencrypted connection. <b>You may want to select this option even if you don't want any of the others, so you don't inadvertently send sensitive 
 information that isn't encrypted. </b>If you send unencrypted information over the Internet, it can easily be intercepted by other people.
 	<LI><b>Viewing a page with an encrypted/unencrypted mix.</b> Select this warning if you want to be alerted whenever you are viewing a page that includes any information that's not encrypted. 
@@ -71,7 +70,7 @@ information that isn't encrypted. </b>If you send unencrypted information over t
 </p>
 
 <hr>
-<p><i>7/5/2001</i></body>
+<p><i>8/20/2001</i></body>
 </html>
 
 
