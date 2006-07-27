@@ -9,7 +9,7 @@
           nc:base="chrome://help/locale/">
     <nc:panellist>
       <rdf:Seq>
-        <rdf:li> <rdf:Description nc:panelid="search" nc:datasources="rdf:null"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:panelid="search" nc:datasources="search-db.rdf"/> </rdf:li>
         <rdf:li> <rdf:Description nc:panelid="toc" nc:datasources="help-toc.rdf"/> </rdf:li>
         <rdf:li> <rdf:Description nc:panelid="index" nc:datasources="help-indexAZ.rdf help-index1.rdf"/> </rdf:li>
         <rdf:li> <rdf:Description nc:panelid="glossary" nc:datasources="help-glossary.rdf"/> </rdf:li>
