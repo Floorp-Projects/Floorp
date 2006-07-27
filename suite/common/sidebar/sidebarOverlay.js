@@ -884,6 +884,7 @@ function SidebarShowHide() {
   // Immediately save persistent values
   document.persist('sidebar-title-box', 'hidden');
   persist_width();
+  window._content.focus();
 }
 
 function SidebarBuildPickerPopup() {
