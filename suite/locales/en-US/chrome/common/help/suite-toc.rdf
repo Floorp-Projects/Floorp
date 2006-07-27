@@ -131,7 +131,6 @@ nc:link="chrome://help/locale/nav_help.xhtml#plugins_and_downloads"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-doc-cache" nc:name="Changing Cache Settings" nc:link="nav_help.xhtml#changing_cache_settings"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-doc-smartup" nc:name="Getting the Latest Software Automatically" nc:link="nav_help.xhtml#getting_the_latest_software_automatically"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-doc-mousewheel" nc:name="Using a Mouse Wheel" nc:link="nav_help.xhtml#using_a_mouse_wheel"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-quicklaunch" nc:name="Using Quick Launch" nc:link="nav_help.xhtml#using_quick_launch"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -804,7 +803,6 @@ nc:link="chrome://help/locale/nav_help.xhtml#plugins_and_downloads"/> </rdf:li>
         <rdf:li><rdf:Description ID="advanced_pref_installation" nc:name="Software Installation" nc:link="cs_nav_prefs_advanced.xhtml#software_installation"/> </rdf:li>
         <rdf:li><rdf:Description ID="advanced_pref_mouse_wheel" nc:name="Mouse Wheel" nc:link="cs_nav_prefs_advanced.xhtml#mouse_wheel"/> </rdf:li>
         <rdf:li><rdf:Description ID="advanced_pref_dom_inspector" nc:name="DOM Inspector" nc:link="cs_nav_prefs_advanced.xhtml#dom_inspector"/> </rdf:li>
-        <rdf:li><rdf:Description ID="advanced_pref_system" nc:name="System" nc:link="cs_nav_prefs_advanced.xhtml#system"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>

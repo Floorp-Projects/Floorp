@@ -1828,16 +1828,6 @@
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="help-indexAZ.rdf#q">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Quick_Launch"
-         nc:name="Quick Launch"
-	 nc:link="nav_help.xhtml#using_quick_launch"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
 <rdf:Description about="help-indexAZ.rdf#r">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -1934,11 +1924,6 @@
        <rdf:Description ID="SSL"
          nc:name="SSL"
 	 nc:link="ssl_help.xhtml#edit_ciphers"/>
-     </rdf:li>
-     <rdf:li>
-       <rdf:Description ID="System"
-         nc:name="System Preferences"
-	 nc:link="cs_nav_prefs_advanced.xhtml#system"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
