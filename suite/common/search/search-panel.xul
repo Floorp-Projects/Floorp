@@ -45,7 +45,7 @@
 
       <box align="vertical">
         <box align="horizontal" class="spaced">
-        	<textfield id="sidebar-search-text" flex="1" onkeyup="if (event.which == 13) { return doSearch(); }" />
+        	<textfield id="sidebar-search-text" flex="1" onkeypress="if (event.which == 13) { return doSearch(); }" />
 		<box autostretch="never">
 			<button id="searchbutton" value="&search.button.label;" onclick="return doSearch();" class="dialog toolbar-non-iconic"/>
 			<button id="stopbutton" align="left" src="resource:/res/rdf/loading.gif" value="&stop.button.label;" onclick="return doStop();" class="dialog toolbar-non-iconic" style="display:none;"/>
