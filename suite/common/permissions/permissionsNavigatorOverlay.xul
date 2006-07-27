@@ -106,9 +106,7 @@
     function SetPopupMenuEnabledState() {
       // use care choosing which nsIPopupWindowManager constant to compare
       // against. the allow/disallow/sometimes relationship can be subtle.
-      var useManager = !pref.getBoolPref("dom.disable_open_during_load") &&
-                       pref.getIntPref("privacy.popups.policy") == Components.interfaces.nsIPopupWindowManager.ALLOW_POPUP &&
-                       pref.getBoolPref("privacy.popups.usecustom");
+      var useManager = !pref.getBoolPref("dom.disable_open_during_load");
       var suitable = false;
       var enableBlock = false;
       if (useManager) {
@@ -214,7 +212,6 @@
                   oncommand="viewImages();"/> 
       </menupopup>
     </menu>
-<!--
     <menu label="&cookiePopupManager.label;"
           accesskey="&cookiePopupManager.accesskey;"
           id="popup"
@@ -234,6 +231,5 @@
                   oncommand="viewPopups();"/> 
       </menupopup>
     </menu>
--->
   </menupopup>
 </overlay>
