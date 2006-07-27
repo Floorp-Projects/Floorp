@@ -38,7 +38,7 @@
   <tree id="tree" datasources="rdf:files rdf:httpindex" flex="1" style="height:0px;" container="true" open="true" >
       <template>
         <treechildren>
-          <treeitem uri="..." type="rdf:http://home.netscape.com/NC-rdf#File-Type"
+          <treeitem uri="..." type="rdf:http://home.netscape.com/NC-rdf#File-Type" persist="open"
                     loading="rdf:http://home.netscape.com/NC-rdf#loading" >
             <treerow>
               <treecell class="filename" indent="true"
