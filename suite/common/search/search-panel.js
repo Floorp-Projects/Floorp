@@ -186,6 +186,7 @@ function SearchPanelStartup()
     switchTab(0);
   else
     switchTab(1);
+  focusTextField();
 }
 
 function haveSearchResults()
@@ -295,6 +296,13 @@ function loadEngines(aCategory)
     }
   }
 }
+
+function focusTextField()
+{
+	var textField = document.getElementById("sidebar-search-text");
+	textField.focus();
+}
+
 
 function SearchPanelShutdown()
 {
