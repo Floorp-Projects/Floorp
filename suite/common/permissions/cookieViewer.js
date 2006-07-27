@@ -95,25 +95,36 @@ function Startup() {
     } else if (dialogType == imageType) {
       element = document.getElementById("cookieviewer");
       element.setAttribute("title", cookieBundle.getString("imageTitle"));
+
       element = document.getElementById("permissionsTab");
       element.label = cookieBundle.getString("tabBannedImages");
       tabBox.selectedTab = element;
+
       element = document.getElementById("permissionsText");
       element.value = cookieBundle.getString("textBannedImages");
-      element = document.getElementById("cookiesTab");
-      element.hidden = "true";
+
+      // Hide a dummy vbox inside the real box
+      // If the actual box is hidden, the tabbox gets confused.
+      // The first tab now controls the second panel.
+      // Hiding the first tab doesn't help.
+      document.getElementById("dummyContainer").hidden = "true";
+      document.getElementById("cookiesTab").hidden = "true";
+
       element = document.getElementById("btnSession");
       element.hidden = "true";
     } else {
       element = document.getElementById("cookieviewer");
       element.setAttribute("title", cookieBundle.getString("popupTitle"));
+
       element = document.getElementById("permissionsTab");
       element.label = cookieBundle.getString("tabBannedPopups");
       tabBox.selectedTab = element;
+
       element = document.getElementById("permissionsText");
       element.value = cookieBundle.getString("textBannedPopups");
-      element = document.getElementById("cookiesTab");
-      element.hidden = "true";
+
+      document.getElementById("dummyContainer").hidden = "true";
+      document.getElementById("cookiesTab").hidden = "true";
     }
   } catch(e) {
   }
