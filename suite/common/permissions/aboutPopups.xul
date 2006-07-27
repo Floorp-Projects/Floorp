@@ -48,7 +48,7 @@
         buttons="accept,cancel,help"
         title="&windowtitle.label;"        
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        width="380" height="260"
+        style="width: 30em;"
         onload="init();"
         ondialogaccept="return onAccept();"
         ondialoghelp="return doHelpButton();">
