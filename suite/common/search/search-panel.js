@@ -74,7 +74,7 @@ catch(e)
 
 RDF_observer =
 {
-	OnAssert   : function(src, prop, target)
+	onAssert   : function(ds, src, prop, target)
 		{
 			if ((src == rootNode) && (prop == textArc))
 			{
@@ -85,10 +85,10 @@ RDF_observer =
 				updateSearchMode();
 			}
 		},
-	OnUnassert : function(src, prop, target)
+	onUnassert : function(ds, src, prop, target)
 		{
 		},
-	OnChange   : function(src, prop, old_target, new_target)
+	onChange   : function(ds, src, prop, old_target, new_target)
 		{
 			if ((src == rootNode) && (prop == textArc))
 			{
@@ -99,7 +99,13 @@ RDF_observer =
 				updateSearchMode();
 			}
 		},
-	OnMove     : function(old_src, new_src, prop, target)
+	onMove     : function(ds, old_src, new_src, prop, target)
+		{
+		},
+	beginUpdateBatch : function(ds)
+		{
+		},
+	endUpdateBatch   : function(ds)
 		{
 		}
 }
