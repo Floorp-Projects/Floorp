@@ -23,8 +23,7 @@
 var	rootNode = null;
 var	textArc = null;
 var	RDF_observer = new Object;
-var   bunremoveAttributedle = null;
-var   pref = null;
+var	pref = null;
 
 // get the click count pref
 try {
@@ -94,6 +93,10 @@ function SearchPanelStartup()
 	var categoryList = document.getElementById("categoryList");
 	if (categoryList)
 	{
+		var optionItem = document.createElement("html:option");
+		optionItem.setAttribute("value", "NC:SearchEngineRoot");
+		categoryList.appendChild(optionItem);
+
 		var internetSearch = Components.classes["component://netscape/rdf/datasource?name=internetsearch"].getService();
 		if (internetSearch)	internetSearch = internetSearch.QueryInterface(Components.interfaces.nsIInternetSearchService);
 		if (internetSearch)
@@ -107,8 +110,6 @@ function SearchPanelStartup()
 				if (ref)	categoryList.setAttribute("ref", ref);
 			}
 		}
-		
-
 	}
   
   try {
@@ -314,7 +315,11 @@ function loadEngines( aCategory )
 
 function SearchPanelShutdown()
 {
-
+	var tree = document.getElementById("Tree");
+	if (tree)
+	{
+		tree.database.RemoveObserver(RDF_observer);
+	}
 }
 
 function doStop()
@@ -670,8 +675,7 @@ function OpenSearch( tabName, forceDialogFlag, aSearchStr, engineURIs )
 	}
 	
 	if ( !defaultSearchURL )
-		defaultSearchURL = "http://info.netscape.com/fwd/sidb1dnet/http://search.netscape.com/cgi-bin/search?search=";
-//		defaultSearchURL = "http://search.netscape.com/cgi-bin/search?search=";
+		defaultSearchURL = "http://search.netscape.com/cgi-bin/search?search=";
 
 	if( searchMode == 1 || forceDialogFlag )
 	{
@@ -703,13 +707,21 @@ function OpenSearch( tabName, forceDialogFlag, aSearchStr, engineURIs )
         if( !engineURIs || ( engineURIs && engineURIs.length <= 1 ) ) {
           // not called from sidebar or only one engine selected
           if( engineURIs )
+          {
             searchEngineURI = engineURIs[0];
+            gURL = "internetsearch:engine=" + searchEngineURI + "&text=" + escapedSearchStr;
+          }
           // look up the correct search URL format for the given engine
           var	searchURL = searchDS.GetInternetSearchURL( searchEngineURI, escapedSearchStr );
           if( searchURL )
+          {
             defaultSearchURL = searchURL;
+          }
           else 
+          {
             defaultSearchURL = defaultSearchURL + escapedSearchStr;
+            gURL = "";
+          }
           // load the results page of selected or default engine in the content area
           if( defaultSearchURL )
             top.content.location.href = defaultSearchURL;
@@ -726,6 +738,9 @@ function OpenSearch( tabName, forceDialogFlag, aSearchStr, engineURIs )
             searchURL += "engine=" + engineURIs[i];
           }
           searchURL += ( "&text=" + escapedSearchStr );
+          
+          gURL = searchURL;
+          
           top.content.location.href = "chrome://search/content/internetresults.xul";
         	setTimeout("checkSearchProgress('" + searchURL + "')", 1000);
         }
@@ -741,6 +756,43 @@ function switchTab( aPageIndex )
 {
   var deck = document.getElementById( "advancedDeck" );
   deck.setAttribute( "index", aPageIndex );
+  
+  	// decide whether to show/hide/enable/disable save search query button
+	if (aPageIndex != 0)	return(true);
+
+	var saveQueryButton = document.getElementById("saveQueryButton");
+	if (!saveQueryButton)	return(true);
+
+	var resultsTree = document.getElementById("Tree");
+	if( !resultsTree)	return(false);
+	var ds = resultsTree.database;
+	if (!ds)		return(false);
+
+	var	haveSearchRef = false;
+
+	var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+	if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+	if (rdf)
+	{
+		var source = rdf.GetResource( "NC:LastSearchRoot", true);
+		var childProperty;
+		var target;
+
+		// look for last search URI
+		childProperty = rdf.GetResource("http://home.netscape.com/NC-rdf#ref", true);
+		target = ds.GetTarget(source, childProperty, true);
+		if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
+		if (target)	target = target.Value;
+		if (target && target != "")
+		{
+			haveSearchRef = true;
+		}
+	}
+
+	if (haveSearchRef == true)
+		saveQueryButton.removeAttribute("style", "visibility: collapse");
+	else	saveQueryButton.setAttribute("style", "visibility: collapse");
+
   return(true);
 }
 
@@ -965,5 +1017,64 @@ function doContextCmd(cmdName)
 
 	// do the command
 	compositeDB.DoCommand( selectionArray, cmdResource, argumentsArray );
+	return(true);
+}
+
+
+
+function saveSearch()
+{
+	var resultsTree = document.getElementById("Tree");
+	if( !resultsTree)	return(false);
+	var ds = resultsTree.database;
+	if (!ds)		return(false);
+
+	var	lastSearchURI="";
+	var	lastSearchText="";
+
+	var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+	if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+	if (rdf)
+	{
+		var source = rdf.GetResource( "NC:LastSearchRoot", true);
+		var childProperty;
+		var target;
+
+		// look for last search URI
+		childProperty = rdf.GetResource("http://home.netscape.com/NC-rdf#ref", true);
+		target = ds.GetTarget(source, childProperty, true);
+		if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
+		if (target)	target = target.Value;
+		if (target && target != "")
+		{
+			lastSearchURI = target;
+		}
+
+		// look for last search text
+		childProperty = rdf.GetResource("http://home.netscape.com/NC-rdf#LastText", true);
+		target = ds.GetTarget(source, childProperty, true);
+		if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
+		if (target)	target = target.Value;
+		if (target && target != "")
+		{
+			lastSearchText = unescape(target);
+		}
+	}
+
+	dump("Bookmark search Name: '" + lastSearchText + "'\n");
+	dump("Bookmark search  URL: '" + lastSearchURI + "'\n");
+
+	if ((lastSearchURI == null) || (lastSearchURI == ""))	return(false);
+	if ((lastSearchText == null) || (lastSearchText == ""))	return(false);
+
+	var bmks = Components.classes["component://netscape/browser/bookmarks-service"].getService();
+	if (bmks)	bmks = bmks.QueryInterface(Components.interfaces.nsIBookmarksService);
+
+	var textNode = document.getElementById("sidebar-search-text");
+	if( !textNode )		return(false);
+
+	var searchTitle = "Internet Search: '" + lastSearchText + "'";	// using " + gSites;
+	if (bmks)	bmks.AddBookmark(lastSearchURI, searchTitle);
+
 	return(true);
 }

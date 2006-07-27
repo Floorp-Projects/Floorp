@@ -46,7 +46,7 @@
         <box align="horizontal" class="spaced">
         	<html:input id="sidebar-search-text" flex="1" onkeyup="if (event.which == 13) { return doSearch(); }" />
           <titledbutton id="searchbutton" value="&search.button.label;" onclick="return doSearch();" class="dialog toolbar-non-iconic"/>
-          <titledbutton id="stopbutton" value="&stop.button.label;" onclick="return doStop();" class="dialog toolbar-non-iconic" style="display:none;"/>
+          <titledbutton id="stopbutton" align="left" src="resource:/res/rdf/loading.gif" value="&stop.button.label;" onclick="return doStop();" class="dialog toolbar-non-iconic" style="display:none;"/>
         </box>
         <box align="horizontal" class="spaced">
           <html:label for="">&within.label;</html:label>
@@ -61,7 +61,6 @@
         		</rule>
         	</template>
         	<html:select id="categoryList" template="categoryTemplate" ref="NC:SearchCategoryRoot" datasources="rdf:null"
-        		sortResource="http://home.netscape.com/NC-rdf#title" sortDirection="ascending"
         		onmousedown="return switchTab(1);"
         		onchange="return chooseCategory(this)" >
         		<html:option value="NC:SearchEngineRoot" >&allengines.label;</html:option>
@@ -122,6 +121,13 @@
           <treecol rdf:resource="http://home.netscape.com/NC-rdf#PageRank" rdf:resource2="http://home.netscape.com/NC-rdf#Name" />
       
         </tree>
+
+	<box align="horizontal">
+		<spring flex="1" />
+		<titledbutton id="saveQueryButton" value="&savesearch.button.label;" onclick="return saveSearch();" class="dialog toolbar-non-iconic"/>
+		<spring flex="1" />
+	</box>
+
       </box>
       
       <!-- advanced panel -->
