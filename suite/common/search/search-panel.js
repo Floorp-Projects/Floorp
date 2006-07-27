@@ -967,8 +967,6 @@ function search_getBrowserURL()
   return nsPreferences.copyUnicharPref("browser.chromeURL", "chrome://navigator/content/navigator.xul");
 }
 
-
-
 function doEnabling()
 {
 	var searchButton = document.getElementById("searchbutton");
