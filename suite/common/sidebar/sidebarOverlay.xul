@@ -39,8 +39,7 @@
 
  
 <?xml-stylesheet href="chrome://communicator/content/sidebar/sidebarOverlay.css" type="text/css"?> 
-<?xml-stylesheet href="chrome://global/skin/button.css" type="text/css"?> 
-<?xul-overlay href="chrome://navigator/content/navExtraOverlay.xul"?>
+<?xml-stylesheet href="chrome://communicator/skin/sidebar/sidebar.css" type="text/css"?> 
 
 <!DOCTYPE overlay [
 <!ENTITY % sidebarOverlayDTD SYSTEM "chrome://communicator/locale/sidebar/sidebarOverlay.dtd" >
