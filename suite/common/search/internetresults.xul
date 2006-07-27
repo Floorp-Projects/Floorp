@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="chrome://search/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://search/skin/internetresults.css" type="text/css"?>
-<?xml-stylesheet href="chrome://search/skin/icons.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/search/search.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/search/internetresults.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/search/icons.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://search/locale/internetresults.dtd">
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/search/internetresults.dtd">
 
 <window class="dialog" align="vertical" onload="onLoadInternetResults()"
 	xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -17,8 +17,8 @@
 	</popupset>
 
 	<html:script src="chrome://global/content/strres.js"/>
-	<html:script src="chrome://search/content/internetresults.js" />
-	<html:script src="chrome://search/content/shared.js" />
+	<html:script src="chrome://communicator/content/search/internetresults.js" />
+	<html:script src="chrome://communicator/content/search/shared.js" />
 
 	<box id="multi-results-header" align="horizontal"> 
 		<text value="&results.header.label;"/>
@@ -138,7 +138,7 @@
 	</tree>
 
 	<splitter id="gray_horizontal_splitter" persist="state" collapse="after" />
-	<html:iframe id="content" type="content-primary" style="height: 100; width: 100%;" flex="100%" src="chrome://search/content/default.htm" />
+	<html:iframe id="content" type="content-primary" style="height: 100; width: 100%;" flex="100%" src="chrome://communicator/content/search/default.htm" />
 
 <!--
 This extra "status" bar is necessary because the bottom right corner of the window on MacOS is

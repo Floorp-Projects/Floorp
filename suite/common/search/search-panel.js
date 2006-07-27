@@ -99,7 +99,7 @@ function rememberSearchText(target)
 // 3) initialise the checked state of said engines. 
 function SearchPanelStartup()
 {
-	bundle = srGetStrBundle( "chrome://search/locale/search-panel.properties" );
+	bundle = srGetStrBundle( "chrome://communicator/locale/search/search-panel.properties" );
    
 	var tree = document.getElementById("Tree");
 	if (tree)
@@ -818,7 +818,7 @@ function OpenSearch( tabName, forceDialogFlag, aSearchStr, engineURIs )
         searchWindow.loadPage( tabName, searchStr );
 		}
 		else
-			top.openDialog("chrome://search/content/search.xul", "SearchWindow", "dialog=no,close,chrome,resizable", tabName, searchStr);
+			top.openDialog("chrome://communicator/content/search/search.xul", "SearchWindow", "dialog=no,close,chrome,resizable", tabName, searchStr);
 	}
 	else
 	{
@@ -870,7 +870,7 @@ function OpenSearch( tabName, forceDialogFlag, aSearchStr, engineURIs )
           
           gURL = searchURL;
           
-          top.content.location.href = "chrome://search/content/internetresults.xul";
+          top.content.location.href = "chrome://communicator/content/search/internetresults.xul";
         }
   		}
   		catch(ex)
@@ -993,5 +993,5 @@ function saveSearch()
 
 function doCustomize()
 {
-	window.openDialog("chrome://search/content/search-editor.xul", "_blank", "centerscreen,chrome,resizable");
+	window.openDialog("chrome://communicator/content/search/search-editor.xul", "_blank", "centerscreen,chrome,resizable");
 }

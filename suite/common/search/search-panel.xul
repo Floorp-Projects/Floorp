@@ -22,9 +22,9 @@
 
 -->
 
-<?xml-stylesheet href="chrome://search/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/search/search.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://search/locale/search-panel.dtd" >
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/search/search-panel.dtd" >
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -34,8 +34,8 @@
   onunload="SearchPanelShutdown();">
 
   <html:script language="Javascript" src="chrome://global/content/strres.js"/>
-  <html:script language="Javascript" src="chrome://search/content/search-panel.js" />
-  <html:script language="Javascript" src="chrome://search/content/shared.js" />
+  <html:script language="Javascript" src="chrome://communicator/content/search/search-panel.js" />
+  <html:script language="Javascript" src="chrome://communicator/content/search/shared.js" />
 
 <popupset>
 <popup id="contextual" oncreate="return fillContextMenu('contextual', 'Tree');" >

@@ -22,9 +22,9 @@
 
 -->
 
-<?xml-stylesheet href="chrome://related/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/related/related.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://related/locale/related-panel.dtd" >
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/related/related-panel.dtd" >
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -32,7 +32,7 @@
   align="vertical"
   onload="Init();">
 
-  <html:script src="chrome://related/content/related-panel.js" />
+  <html:script src="chrome://communicator/content/related/related-panel.js" />
 
   <!--
      Note that the empty "datasources='rdf:null'" will ensure that a composite

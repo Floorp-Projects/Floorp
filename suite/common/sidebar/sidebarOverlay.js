@@ -90,7 +90,7 @@ function sidebar_overlay_init() {
   sidebarObj.resource = 'urn:sidebar:current-panel-list';
   
   sidebarObj.master_datasources = get_remote_datasource_url();
-  sidebarObj.master_datasources += " chrome://sidebar/content/local-panels.rdf";
+  sidebarObj.master_datasources += " chrome://communicator/content/sidebar/local-panels.rdf";
   sidebarObj.master_resource = 'urn:sidebar:master-panel-list';
   sidebarObj.component = document.location.href;
 
@@ -354,7 +354,7 @@ function SidebarCustomize() {
       var panels = document.getElementById('sidebar-panels');
       
       customizeWindow = window.openDialog(
-                          'chrome://sidebar/content/customize.xul',
+                          'chrome://communicator/content/sidebar/customize.xul',
                           '_blank','chrome,resizable',
                           sidebarObj.master_datasources,
                           sidebarObj.master_resource,

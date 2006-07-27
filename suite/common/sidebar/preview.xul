@@ -18,10 +18,10 @@
 
 -->
 
-<?xml-stylesheet href="chrome://sidebar/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://sidebar/skin/preview.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/sidebar/sidebar.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/sidebar/preview.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://sidebar/locale/preview.dtd" >
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/sidebar/preview.dtd" >
 
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -31,7 +31,7 @@
   class="dialog"
   align="vertical">
 
-<html:script src="chrome://sidebar/content/preview.js" />
+<html:script src="chrome://communicator/content/sidebar/preview.js" />
 
   <html:div class="title">
     &sidebar.preview.title.label;

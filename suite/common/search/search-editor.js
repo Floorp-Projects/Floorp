@@ -26,7 +26,7 @@
 
 
 // global(s)
-var bundle = srGetStrBundle("chrome://search/locale/search-editor.properties");
+var bundle = srGetStrBundle("chrome://communicator/locale/search/search-editor.properties");
 var pref = null;
 var RDF = null;
 var RDFC = null;

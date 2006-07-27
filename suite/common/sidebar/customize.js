@@ -210,7 +210,7 @@ function PreviewPanel()
     var preview_URL  = get_attr(database, rdfNode, 'content');
     if (!preview_URL || !preview_name) break;
 
-    var preview = window.open("chrome://sidebar/content/preview.xul",
+    var preview = window.open("chrome://communicator/content/sidebar/preview.xul",
                               "_blank", "chrome,resizable");
     preview.panel_name = preview_name;
     preview.panel_URL = preview_URL;
@@ -333,7 +333,7 @@ function CustomizePanel()
 
     if (!customize_url) return;
 
-    window.openDialog('chrome://sidebar/content/customize-panel.xul',
+    window.openDialog('chrome://communicator/content/sidebar/customize-panel.xul',
                       '_blank','chrome,resizable,width=690,height=600',
                       customize_url);
   }

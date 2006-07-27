@@ -1,6 +1,6 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="xul.css" type="text/css"?> 
-<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://navigator/skin/navigator.css" type="text/css"?> 
 
 <window title="history test" 
 	id="history-test-window" xmlns:html="http://www.w3.org/TR/REC-html40"

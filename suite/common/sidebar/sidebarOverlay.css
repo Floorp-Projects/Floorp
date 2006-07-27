@@ -19,7 +19,7 @@
  * Contributor(s): Stephen Lamm <slamm@netscape.com>
  */ 
 
-@import url(chrome://global/skin/);
+@import url(chrome://global/skin/global.css);
 
 splitter#sidebar-splitter {
 	margin-right: 2px;
@@ -31,14 +31,14 @@ splitter#sidebar-splitter {
 
 splitter#sidebar-splitter #bottomright-cap {
 	min-height: 8px; 
-	background-image: url("chrome://sidebar/skin/sidebar-bottomright-cap.gif"); 
+	background-image: url("chrome://communicator/skin/sidebar/sidebar-bottomright-cap.gif"); 
 	background-repeat: no-repeat;
 	background-position: 100% 100%;
 }
 
 splitter#sidebar-splitter #topright-cap {
 	min-height: 8px; 
-	background-image: url("chrome://sidebar/skin/sidebar-topright-cap.gif"); 
+	background-image: url("chrome://communicator/skin/sidebar/sidebar-topright-cap.gif"); 
 	background-repeat: no-repeat;
 	background-position: 100% 0%;
 }
