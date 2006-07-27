@@ -27,7 +27,7 @@
 const CUST_DEBUG = false;
 
 // the rdf service
-var RDF = 'component://netscape/rdf/rdf-service'
+var RDF = '@mozilla.org/rdf/rdf-service;1'
 RDF = Components.classes[RDF].getService();
 RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
 
@@ -242,7 +242,7 @@ function add_datasource_to_other_panels(link) {
   debug("Current URL:  " +url);
   debug("Current link: " +link);
 
-  uri = Components.classes['component://netscape/network/standard-url'].createInstance();
+  uri = Components.classes['@mozilla.org/network/standard-url;1'].createInstance();
   uri = uri.QueryInterface(Components.interfaces.nsIURI);
   uri.spec = url;
   uri = uri.resolve(link);
@@ -461,7 +461,7 @@ function BrowseMorePanels()
 {
   var url = '';
   var browser_url = "chrome://navigator/content/navigator.xul";
-  var prefs = Components.classes['component://netscape/preferences'];
+  var prefs = Components.classes['@mozilla.org/preferences;1'];
   if (prefs) {
     prefs = prefs.getService();
   }
@@ -533,7 +533,7 @@ function Save()
     debug("Sidebar datasource is busted\n");
   }
 
-  var container = Components.classes["component://netscape/rdf/container"].createInstance();
+  var container = Components.classes["@mozilla.org/rdf/container;1"].createInstance();
   container = container.QueryInterface(Components.interfaces.nsIRDFContainer);
   container.Init(sidebarObj.datasource, panel_list);
 

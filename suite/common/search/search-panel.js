@@ -26,10 +26,10 @@
  *    Steve Lamm              <slamm@netscape.com>
  */
 
-const WMEDIATOR_PROGID  = "component://netscape/rdf/datasource?name=window-mediator";
-const ISEARCH_PROGID    = "component://netscape/rdf/datasource?name=internetsearch";
-const RDFSERVICE_PROGID = "component://netscape/rdf/rdf-service";
-const BMARKS_PROGID     = "component://netscape/browser/bookmarks-service";
+const WMEDIATOR_CONTRACTID  = "@mozilla.org/rdf/datasource;1?name=window-mediator";
+const ISEARCH_CONTRACTID    = "@mozilla.org/rdf/datasource;1?name=internetsearch";
+const RDFSERVICE_CONTRACTID = "@mozilla.org/rdf/rdf-service;1";
+const BMARKS_CONTRACTID     = "@mozilla.org/browser/bookmarks-service;1";
 
 const nsIBookmarksService      = Components.interfaces.nsIBookmarksService;
 const nsIWindowMediator        = Components.interfaces.nsIWindowMediator;
@@ -146,7 +146,7 @@ function SearchPanelStartup()
 	var tree = document.getElementById("Tree");
 	if (tree)
 	{
-        var rdf = Components.classes[RDFSERVICE_PROGID].getService(nsIRDFService);
+        var rdf = Components.classes[RDFSERVICE_CONTRACTID].getService(nsIRDFService);
 		if (rdf)
 		{
 			rootNode = rdf.GetResource("NC:LastSearchRoot", true);
@@ -156,7 +156,7 @@ function SearchPanelStartup()
 		}
 	}
 
-    var internetSearch = Components.classes[ISEARCH_PROGID].getService(nsIInternetSearchService);
+    var internetSearch = Components.classes[ISEARCH_CONTRACTID].getService(nsIInternetSearchService);
 	if (internetSearch)
 	{
 		var catDS = internetSearch.GetCategoryDataSource();
@@ -247,7 +247,7 @@ function haveSearchResults()
 	var ds = resultsTree.database;
 	if (!ds)		return(false);
 
-    var rdf = Components.classes[RDFSERVICE_PROGID].getService(nsIRDFService);
+    var rdf = Components.classes[RDFSERVICE_CONTRACTID].getService(nsIRDFService);
 	if (rdf)
 	{
 		var source = rdf.GetResource( "NC:LastSearchRoot", true);
@@ -322,7 +322,7 @@ function saveEngines()
 
     debug("Category: " + category + "\n");
 
-    var rdf = Components.classes[RDFSERVICE_PROGID].getService(nsIRDFService);
+    var rdf = Components.classes[RDFSERVICE_CONTRACTID].getService(nsIRDFService);
 	if (rdf)
 	{
 		var localStore = rdf.GetDataSource("rdf:local-store");
@@ -376,7 +376,7 @@ function saveEngines()
 // initialise the appropriate engine list, and the checked state of the engines
 function loadEngines( aCategory )
 {
-    var rdf = Components.classes[RDFSERVICE_PROGID].getService(nsIRDFService);
+    var rdf = Components.classes[RDFSERVICE_CONTRACTID].getService(nsIRDFService);
     if (rdf)
     {
         var localStore = rdf.GetDataSource("rdf:local-store");
@@ -443,7 +443,7 @@ function doStop()
     }
 
 	// stop any network connections
-    var internetSearchService = Components.classes[ISEARCH_PROGID].getService(nsIInternetSearchService);
+    var internetSearchService = Components.classes[ISEARCH_CONTRACTID].getService(nsIInternetSearchService);
     var internetSearch = null;
     if (internetSearchService)
     {
@@ -452,7 +452,7 @@ function doStop()
     }
 
 	// get various services
-    var rdf = Components.classes[RDFSERVICE_PROGID].getService(nsIRDFService);
+    var rdf = Components.classes[RDFSERVICE_CONTRACTID].getService(nsIRDFService);
 
 	var sortSetFlag = false;
 
@@ -658,7 +658,7 @@ function checkSearchProgress()
     var ds = resultsTree.database;
     if (ds && treeref) {
       try {
-        var rdf = nsJSComponentManager.getService(RDFSERVICE_PROGID, "nsIRDFService");
+        var rdf = nsJSComponentManager.getService(RDFSERVICE_CONTRACTID, "nsIRDFService");
         if (rdf) {
           var source = rdf.GetResource(treeref, true);
           var loadingProperty = rdf.GetResource("http://home.netscape.com/NC-rdf#loading", true);
@@ -712,7 +712,7 @@ function sidebarOpenURL(event, treeitem, root)
 			ds = theRootNode.database;
 		}
     
-    var rdf = nsJSComponentManager.getService(RDFSERVICE_PROGID, "nsIRDFService");
+    var rdf = nsJSComponentManager.getService(RDFSERVICE_CONTRACTID, "nsIRDFService");
 		if (rdf)
 		{
 			if (ds)
@@ -744,7 +744,7 @@ function OpenSearch( aSearchStr, engineURIs )
 	if (!defaultSearchURL)
 		defaultSearchURL = bundle.GetStringFromName("defaultSearchURL");
 
-  var searchDS = Components.classes[ISEARCH_PROGID].getService(nsIInternetSearchService);
+  var searchDS = Components.classes[ISEARCH_CONTRACTID].getService(nsIInternetSearchService);
   if (searchDS)
   {
     if(!aSearchStr)
@@ -819,7 +819,7 @@ function switchTab( aPageIndex )
 
 	var	haveSearchRef = false;
 
-  var rdf = nsJSComponentManager.getService(RDFSERVICE_PROGID, "nsIRDFService");
+  var rdf = nsJSComponentManager.getService(RDFSERVICE_CONTRACTID, "nsIRDFService");
 	if (rdf) {
 		// look for last search URI
 		var source = rdf.GetResource( "NC:LastSearchRoot", true);
@@ -845,7 +845,7 @@ function saveSearch()
 	var	lastSearchURI="";
 	var	lastSearchText="";
 
-  var rdf = nsJSComponentManager.getService(RDFSERVICE_PROGID, "nsIRDFService");
+  var rdf = nsJSComponentManager.getService(RDFSERVICE_CONTRACTID, "nsIRDFService");
 	if (rdf)
 	{
 		// look for last search URI
@@ -890,7 +890,7 @@ function saveSearch()
 		}
 	}
 
-    var bmks = Components.classes[BMARKS_PROGID].getService(nsIBookmarksService);
+    var bmks = Components.classes[BMARKS_CONTRACTID].getService(nsIBookmarksService);
 
 	var textNode = document.getElementById("sidebar-search-text");
 	if( !textNode )		return(false);
@@ -920,7 +920,7 @@ function loadURLInContent(url)
 // retrieves the most recent navigator window
 function getNavigatorWindow(aOpenFlag)
 {
-  const WM_PROGID = "component://netscape/rdf/datasource?name=window-mediator";
+  const WM_CONTRACTID = "@mozilla.org/rdf/datasource;1?name=window-mediator";
   var wm;
   if (top.document) {
     var possibleNavigator = top.document.getElementById("main-window");
@@ -928,13 +928,13 @@ function getNavigatorWindow(aOpenFlag)
         possibleNavigator.getAttribute("windowtype") == "navigator:browser")
       return top;
     else {
-      wm = nsJSComponentManager.getService(WM_PROGID, "nsIWindowMediator");
+      wm = nsJSComponentManager.getService(WM_CONTRACTID, "nsIWindowMediator");
       var mostRecentNavigator = wm.getMostRecentWindow("navigator:browser");
       return mostRecentNavigator ? mostRecentNavigator : aOpenFlag ? openNewNavigator() : null;
     }
   }
   else {
-    wm = nsJSComponentManager.getService(WM_PROGID, "nsIWindowMediator");
+    wm = nsJSComponentManager.getService(WM_CONTRACTID, "nsIWindowMediator");
     var mostRecentNavigator = wm.getMostRecentWindow("navigator:browser");
     return mostRecentNavigator ? mostRecentNavigator : aOpenFlag ? openNewNavigator() : null;
   }
@@ -952,8 +952,8 @@ function openNewNavigator()
   var navURL = search_getBrowserURL();
   var newNavigator = openDialog(navURL, "_blank", "chrome,all,dialog=no");
   
-  const WM_PROGID = "component://netscape/rdf/datasource?name=window-mediator";
-  var wm = nsJSComponentManager.getService(WM_PROGID, "nsIWindowMediator");
+  const WM_CONTRACTID = "@mozilla.org/rdf/datasource;1?name=window-mediator";
+  var wm = nsJSComponentManager.getService(WM_CONTRACTID, "nsIWindowMediator");
   var mostRecentNavigator = wm.getMostRecentWindow("navigator:browser");
   return mostRecentNavigator ? mostRecentNavigator : newNavigator;
 }
