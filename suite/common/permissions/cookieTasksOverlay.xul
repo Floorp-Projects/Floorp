@@ -34,16 +34,22 @@
 
     /******* THE FOLLOWING IS FOR THE STATUSBAR OVERLAY *******/
 
+    var gObserverService;
+    var gPref;
+    var gButtonPressed;
+
     var cookieIconObserver = {
       observe: function(subject, topic, state) {
         if (topic != "cookieIcon" || !document) {
           return;
         }
         var cookieIcon = document.getElementById("privacy-button");
-        if (state == "on") {
-          cookieIcon.removeAttribute("hidden");
-        } else if (state == "off")  {
-          cookieIcon.setAttribute("hidden", "true");
+        if (cookieIcon) {
+          if (state == "on") {
+            cookieIcon.removeAttribute("hidden");
+          } else if (state == "off")  {
+            cookieIcon.setAttribute("hidden", "true");
+          }
         }
       }
     }
@@ -52,15 +58,33 @@
       var cookieservice = Components.classes["@mozilla.org/cookieService;1"].getService();
       cookieservice = cookieservice.QueryInterface(Components.interfaces.nsICookieService);
       if (cookieservice.cookieIconIsVisible) {
-        document.getElementById("privacy-button").removeAttribute("hidden");
+        var cookieIcon = document.getElementById("privacy-button");
+        if (cookieIcon) {
+          cookieIcon.removeAttribute("hidden");
+        }
+      }
+    }
+
+    function viewP3PDialog() {
+      if (!gObserverService) {
+        gObserverService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+      }
+      gObserverService.notifyObservers(null, "cookieIcon", "off");
+
+      window.openDialog
+        ("chrome://cookie/content/p3pDialog.xul","_blank","modal=yes,chrome,resizable=no", this);
+      if (gButtonPressed == "cookie") {
+        viewCookiesFromIcon();
+      } else if (gButtonPressed == "p3p") {
+        viewP3P();
       }
     }
 
     // determine if p3p pref is set
-    var pref = Components.classes['@mozilla.org/preferences-service;1'];
-    pref = pref.getService();
-    pref = pref.QueryInterface(Components.interfaces.nsIPrefBranch);
-    if (pref.getIntPref("network.cookie.cookieBehavior") == "3") {
+    gPref = Components.classes['@mozilla.org/preferences-service;1'];
+    gPref = gPref.getService();
+    gPref = gPref.QueryInterface(Components.interfaces.nsIPrefBranch);
+    if (gPref.getIntPref("network.cookie.cookieBehavior") == "3") {
 
       // p3p pref is set so create an observer for changes in visibility of cookie icon
       var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
@@ -235,7 +259,7 @@
   <statusbar id="status-bar">
     <statusbarpanel class="statusbarpanel-iconic" id="privacy-button"
                     hidden="true" insertbefore="security-button"
-                    oncommand="viewCookiesFromIcon()" tooltiptext="&cookieIcon.label;">
+                    oncommand="viewP3PDialog()" tooltiptext="&cookieIcon.label;">
       <toolbarbutton class="taskbutton" id="mini-cookie"
                      image="chrome://cookie/content/taskbar-cookie.gif"/>
     </statusbarpanel>
