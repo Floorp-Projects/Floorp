@@ -168,6 +168,7 @@ static PRBool sDidShutdown;
 static PRInt32 sContextCount;
 
 static PRTime sMaxScriptRunTime;
+static PRTime sMaxChromeScriptRunTime;
 
 static nsIScriptSecurityManager *sSecurityManager;
 
@@ -667,6 +668,9 @@ nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
     // script has run
     ctx->mBranchCallbackTime = PR_Now();
 
+    ctx->mIsTrackingChromeCodeTime =
+      ::JS_IsSystemObject(cx, ::JS_GetGlobalObject(cx));
+
     return JS_TRUE;
   }
 
@@ -694,7 +698,8 @@ nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
 
   // Check the amount of time this script has been running, or if the
   // dialog is disabled.
-  if (LL_CMP(duration, <, sMaxScriptRunTime)) {
+  if (duration < (ctx->mIsTrackingChromeCodeTime ?
+                  sMaxChromeScriptRunTime : sMaxScriptRunTime)) {
     return JS_TRUE;
   }
 
@@ -806,7 +811,9 @@ nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
       nsIPrefBranch *prefBranch = nsContentUtils::GetPrefBranch();
 
       if (prefBranch) {
-        prefBranch->SetIntPref("dom.max_script_run_time", 0);
+        prefBranch->SetIntPref(ctx->mIsTrackingChromeCodeTime ?
+                               "dom.max_chrome_script_run_time" :
+                               "dom.max_script_run_time", 0);
       }
     }
 
@@ -955,7 +962,8 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
   mScriptsEnabled = PR_TRUE;
   mBranchCallbackCount = 0;
   mBranchCallbackTime = LL_ZERO;
-  mProcessingScriptTag=PR_FALSE;
+  mProcessingScriptTag = PR_FALSE;
+  mIsTrackingChromeCodeTime = PR_FALSE;
 
   InvalidateContextAndWrapperCache();
 }
@@ -3224,18 +3232,24 @@ nsJSRuntime::Startup()
 static int PR_CALLBACK
 MaxScriptRunTimePrefChangedCallback(const char *aPrefName, void *aClosure)
 {
-  // Default limit on script run time to 5 seconds. 0 means let
+  // Default limit on script run time to 10 seconds. 0 means let
   // scripts run forever.
-  PRInt32 time = nsContentUtils::GetIntPref(aPrefName, 5);
+  PRBool isChromePref =
+    strcmp(aPrefName, "dom.max_chrome_script_run_time") == 0;
+  PRInt32 time = nsContentUtils::GetIntPref(aPrefName, isChromePref ? 20 : 10);
 
+  PRTime t;
   if (time <= 0) {
     // Let scripts run for a really, really long time.
-    sMaxScriptRunTime = LL_INIT(0x40000000, 0);
+    t = 0x4000000000000000LL;
   } else {
-    PRTime usec_per_sec;
-    LL_I2L(usec_per_sec, PR_USEC_PER_SEC);
-    LL_I2L(sMaxScriptRunTime, time);
-    LL_MUL(sMaxScriptRunTime, sMaxScriptRunTime, usec_per_sec);
+    t = time * PR_USEC_PER_SEC;
+  }
+
+  if (isChromePref) {
+    sMaxChromeScriptRunTime = t;
+  } else {
+    sMaxScriptRunTime = t;
   }
 
   return 0;
@@ -3327,6 +3341,12 @@ nsJSRuntime::Init()
                                        MaxScriptRunTimePrefChangedCallback,
                                        nsnull);
   MaxScriptRunTimePrefChangedCallback("dom.max_script_run_time", nsnull);
+
+  nsContentUtils::RegisterPrefCallback("dom.max_chrome_script_run_time",
+                                       MaxScriptRunTimePrefChangedCallback,
+                                       nsnull);
+  MaxScriptRunTimePrefChangedCallback("dom.max_chrome_script_run_time",
+                                      nsnull);
 
   rv = CallGetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &sSecurityManager);
 
