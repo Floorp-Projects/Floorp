@@ -818,7 +818,6 @@ nsCanvasRenderingContext2D::SetDimensions(PRInt32 width, PRInt32 height)
     cairo_set_line_join(mCairo, CAIRO_LINE_JOIN_MITER);
 
     cairo_new_path(mCairo);
-    cairo_move_to(mCairo, 0.0, 0.0);
 
     return NS_OK;
 }
@@ -1418,7 +1417,6 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::BeginPath()
 {
     cairo_new_path(mCairo);
-    cairo_move_to(mCairo, 0.0, 0.0);
     return NS_OK;
 }
 
