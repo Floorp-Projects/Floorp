@@ -1,4 +1,4 @@
-<?xml version="1.0"?> <!-- -*- Mode: SGML; indent-tabs-mode: nil; -*- -->
+<?xml version="1.0"?> <!-- -*- Mode: HTML; indent-tabs-mode: nil; -*- -->
 <!--
 
   The contents of this file are subject to the Netscape Public License
@@ -20,7 +20,8 @@
 
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/sidebar/customize.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/sidebar/customize.css"
+  type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/sidebar/customize.dtd" >
@@ -45,30 +46,51 @@
 
   <box id="contentarea" flex="1">
     <box orient="vertical" flex="1">
-      <text class="label" value="&sidebar.customize.additional.label;" crop="right"/>
+      <text class="label" value="&sidebar.customize.additional.label;"
+        crop="right"/>
       <tree id="other-panels" flex="1"
         datasources="rdf:null"
-        indent="true" class="inset"
-        multiple="true">
-  
+        containment="http://home.netscape.com/NC-rdf#panel-list"
+        indent="true" class="inset" multiple="true"
+        onselect="SelectChangeForOtherPanels(event, event.target.parentNode.parentNode)" >
         <template>
-          <treechildren>
-            <treeitem uri="rdf:*"
-              title="rdf:http://home.netscape.com/NC-rdf#title"
-              content="rdf:http://home.netscape.com/NC-rdf#content"
-              link="rdf:http://home.netscape.com/NC-rdf#link"
-              haslink="rdf:http://home.netscape.com/NC-rdf#haslink"
-              open="rdf:http://home.netscape.com/NC-rdf#open">
-              <treerow>
-                <treecell class="treecell-indent treecell-panel"
-                  haslink="rdf:http://home.netscape.com/NC-rdf#haslink"
-                  value="rdf:http://home.netscape.com/NC-rdf#title"/>
-              </treerow>
-            </treeitem>
-          </treechildren>
+          <rule>
+            <conditions>
+              <content uri="?uri"/>
+              <triple subject="?uri" object="?panel-list"
+                predicate="http://home.netscape.com/NC-rdf#panel-list" />
+              <member container="?panel-list" child="?panel"/>
+            </conditions>
+            <bindings>
+              <binding subject="?panel" object="?title" 
+                predicate="http://home.netscape.com/NC-rdf#title" />
+              <binding subject="?panel" object="?content"
+                predicate="http://home.netscape.com/NC-rdf#content" />
+              <binding subject="?panel" object="?link"
+                predicate="http://home.netscape.com/NC-rdf#link" />
+              <binding subject="?panel" object="?haslink"
+                predicate="http://home.netscape.com/NC-rdf#haslink" />
+              <binding subject="?panel" object="?open"
+                predicate="http://home.netscape.com/NC-rdf#open" />
+              <binding subject="?panel" object="?exclude"
+                predicate="http://home.netscape.com/NC-rdf#exclude" />
+            </bindings>
+            <action>
+              <treechildren>
+                <treeitem uri="?panel" title="?title" content="?content"
+                  link="?link" haslink="?haslink" open="?open"
+                  exclude="?exclude">
+                  <treerow>
+                    <treecell class="treecell-indent treecell-panel"
+                      haslink="?haslink" value="?title"/>
+                  </treerow>
+                </treeitem>
+              </treechildren>
+            </action>
+          </rule>
         </template>
-         <treecol />
-        <treechildren onclick="SelectChangeForOtherPanels(event, event.target.parentNode.parentNode)" />
+        <treecol />
+        <treechildren onclick="ClickOnOtherPanels(event, event.target.parentNode.parentNode)"/>
       </tree>
 
       <!-- xxxslamm Need to add descriptive panel text here -->
@@ -87,23 +109,38 @@
 
     <!-- The panels that the user currently has chosen -->
     <box orient="vertical" flex="1">
-      <text class="label" value="&sidebar.customize.current.label;" crop="right"/>
+      <text class="label" value="&sidebar.customize.current.label;"
+        crop="right"/>
       <tree id="current-panels" onclick="SelectChangeForCurrentPanels();"
-        datasources="rdf:null" class="inset" flex="1"
-        multiple="true">
-
+        datasources="rdf:null" class="inset" flex="1" multiple="true">
         <template>
-          <treechildren>
-            <treeitem uri="rdf:*"
-              title="rdf:http://home.netscape.com/NC-rdf#title"
-              customize="rdf:http://home.netscape.com/NC-rdf#customize"
-              content="rdf:http://home.netscape.com/NC-rdf#content">
-              <treerow>
-                <treecell class="treecell-indent treecell-panel"
-                  value="rdf:http://home.netscape.com/NC-rdf#title" />
-              </treerow>
-            </treeitem>
-          </treechildren>
+          <rule>
+            <conditions>
+              <content uri="?uri"/>
+              <triple subject="?uri" object="?panel-list"
+                predicate="http://home.netscape.com/NC-rdf#panel-list"/>
+              <member container="?panel-list" child="?panel"/>
+              <triple subject="?panel" object="?title"
+                predicate="http://home.netscape.com/NC-rdf#title"/>
+              <triple subject="?panel" object="?content"
+                predicate="http://home.netscape.com/NC-rdf#content"/>
+            </conditions>
+            <bindings>
+              <binding subject="?panel" object="?customize"
+                predicate="http://home.netscape.com/NC-rdf#customize" />
+            </bindings>
+            <action>
+              <treechildren>
+                <treeitem uri="?panel" title="?title" customize="?customize"
+                  content="?content">
+                  <treerow>
+                    <treecell class="treecell-indent treecell-panel"
+                      value="?title" />
+                  </treerow>
+                </treeitem>
+              </treechildren>
+            </action>
+          </rule>
         </template>
         <treecol />
          <!-- We explicitly create a 'treechildren' so we can refer
@@ -111,7 +148,8 @@
         <treechildren id="current-panels-root"/> 
       </tree>
       <box class="button-group">
-        <button class="dialog" id="customize-button" oncommand="CustomizePanel();" 
+        <button class="dialog" id="customize-button"
+          oncommand="CustomizePanel();" 
           value="&sidebar.customize.customize.label;" />
         <button class="dialog" id="remove-button" onclick="RemovePanel()"
           value="&sidebar.customize.remove.label;" />
