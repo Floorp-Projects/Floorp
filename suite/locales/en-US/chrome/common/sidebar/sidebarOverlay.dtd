@@ -38,3 +38,6 @@
 <!ENTITY sidebar.no-panels.add       'You may add tabs by clicking on the "Tabs" button above.'>
 <!ENTITY sidebar.no-panels.hide      'If you would like to completely hide My Sidebar, click on the "View" menu above and select "My Sidebar."'>
 <!ENTITY sidebar.sbDirectory.label   "Sidebar Directory...">
+
+<!ENTITY sidebar.pagenotfound.label  "This tab is not available right now.">
+
