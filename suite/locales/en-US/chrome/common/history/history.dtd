@@ -1,6 +1,5 @@
 <!-- extracted from ./history.xul -->
 
-
 <!ENTITY fileMenu.label             "File">
 <!ENTITY closeCmd.label             "Close">
 <!ENTITY editMenu.label             "Edit"> 
@@ -11,8 +10,8 @@
 <!ENTITY pasteCmd.label             "Paste">
 <!ENTITY deleteCmd.label            "Delete">
 <!ENTITY selAllCmd.label            "Select All">
-<!ENTITY findHisCmd.label           "Find in History...">
-<!ENTITY findHisCmd.accesskey   "f">
+<!ENTITY findHisCmd.label           "Search History...">
+<!ENTITY findHisCmd.accesskey       "s">
 <!ENTITY historyWindowTitle.label   "History">
 <!ENTITY menuitem.view.unsorted.label "Unsorted">
 <!ENTITY menuitem.view.unsorted.accesskey "u">
