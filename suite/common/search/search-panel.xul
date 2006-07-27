@@ -47,30 +47,42 @@
   
   <box class="color-window groove-bottom box-padded outset-right" orient="vertical">
     <box autostretch="never">
-      <textfield id="sidebar-search-text" flex="1" onkeypress="if (event.keyCode == 13) return doSearch();" oninput="return doEnabling();" />
+      	  <textfield id="sidebar-search-text" flex="1" onkeypress="if (event.keyCode == 13) return doSearch();" oninput="return doEnabling();" />
 		  <box autostretch="never">
 			  <button class="button-toolbar-3" id="searchbutton" value="&search.button.label;" disabled="true" oncommand="return doSearch();}"/>
 			  <button class="button-toolbar-3" id="stopbutton" align="left" src="resource:/res/rdf/loading.gif" value="&stop.button.label;" oncommand="return doStop();" style="display:none;"/>
-  		</box>
+  		  </box>
     </box>
-    <box id="categoryBox" autostretch="never">
-		  <text class="label" value="&within.label;" />
-  		<menulist id="categoryList" ref="NC:SearchCategoryRoot" datasources="rdf:null" oncommand="return switchTab(1);" >
-        <template>
-          <menupopup>
-            <menuitem uri="rdf:*" oncommand="return chooseCategory(this);" 
-                      data="rdf:http://home.netscape.com/NC-rdf#category"
-                      value="rdf:http://home.netscape.com/NC-rdf#title" />
-          </menupopup>
-        </template>
+    <box autostretch="never" orient="vertical">
+	
+	   <box id="categoryBox" autostretch="never" orient="vertical">
+	     <box orient="horizontal">	  
+		   <text class="label" value="&within.label;" />
+  		
+		   <menulist id="categoryList" ref="NC:SearchCategoryRoot" datasources="rdf:null" oncommand="return switchTab(1);" >
+
+		   <template>
+             <menupopup>
+               <menuitem id="chooseCat" uri="rdf:*" oncommand="return chooseCategory(this);" 
+                         data="rdf:http://home.netscape.com/NC-rdf#category"
+                         value="rdf:http://home.netscape.com/NC-rdf#title" />
+             </menupopup>
+           </template>
         
-        <menupopup id="categoryPopup">
-          <menuitem data="NC:SearchEngineRoot" value="&allengines.label;"
-                    oncommand="return chooseCategory(this)" />
-          <menuseparator />
-        </menupopup>
-      </menulist>
-    </box>
+           <menupopup id="categoryPopup">
+              <menuitem data="NC:SearchEngineRoot" value="&allengines.label;"
+                       oncommand="return chooseCategory(this)" />
+              <menuseparator />
+
+              <menuitem value="&customize.menuitem.label;" data="NC:SearchEngineRoot" oncommand="chooseCategory(this);return doCustomize();" />
+	          <menuseparator />
+           </menupopup>
+
+         </menulist>
+       </box>
+       <text class="label" value="&choose.label;" />
+      </box>
+     </box>
   </box>
   
   <deck class="outset-right" id="advancedDeck" flex="1">
@@ -171,12 +183,7 @@
                 
         <treechildren flex="1" id="engineKids"/>
       </tree>
-            
-      <box>
-    		<spring flex="1" />
-		    <button class="button-toolbar-3 button-slimline" id="customizeButton" value="&customize.button.label;" oncommand="return doCustomize();"/>
-    		<spring flex="1" />
-    	</box>
+             
     </box>
   </deck>
 </window>

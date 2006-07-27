@@ -85,7 +85,28 @@
           <button class="dialog left" id="remove-button" oncommand="return RemoveEngine()" value="&remove.label;" />
           <spring flex="1"/>
   	    </box>
-        <tree class="inset" multiple="true" flex="1" id="engineList" 
+        
+	<box orient="vertical" flex="1">
+		<titledbox orient="vertical">
+        <title><text value="&category.label;"/></title>
+      	<menulist id="categoryList" ref="NC:SearchCategoryRoot" datasources="rdf:null">
+          <template>
+            <menupopup>
+              <menuitem uri="rdf:*" oncommand="return chooseCategory(this);"
+                        data="rdf:http://home.netscape.com/NC-rdf#category"
+                        value="rdf:http://home.netscape.com/NC-rdf#title"/>
+            </menupopup>
+          </template>
+          <menupopup id="categoryPopup"/>
+        </menulist>
+        <box>
+          <button class="dialog" id="new-category-button" oncommand="NewCategory()" value="&new.category.label;"/>
+          <button class="dialog" id="rename-category-button" oncommand="RenameCategory()" value="&rename.category.label;"/>
+          <button class="dialog" id="remove-category.buttom" oncommand="RemoveCategory()" value="&remove.category.label;"/>
+        </box>
+      </titledbox>
+						
+		<tree class="inset" multiple="true" flex="1" id="engineList" 
               datasources="rdf:internetsearch" onselect="doMoveDirectionEnabling()">
           <template>
             <treechildren>
@@ -112,14 +133,17 @@
           <treechildren flex="1"/>
           
         </tree>
+		</box>
         <box orient="vertical">
           <spring flex="1"/>
        	  <button class="up" oncommand="MoveUp();" id="up" disabled="true"/>
       		<button class="down" oncommand="MoveDown();" id="down" disabled="true"/>
           <spring flex="1"/>
         </box>
+       
       </box>
-      <titledbox orient="vertical">
+
+   <!--   <titledbox orient="vertical">
         <title>&category.label;</title>
       	<menulist id="categoryList" ref="NC:SearchCategoryRoot" datasources="rdf:null">
           <template>
@@ -136,12 +160,14 @@
           <button class="dialog" id="rename-category-button" oncommand="RenameCategory()" value="&rename.category.label;"/>
           <button class="dialog" id="remove-category.buttom" oncommand="RemoveCategory()" value="&remove.category.label;"/>
         </box>
-      </titledbox>
+      </titledbox> -->
     </box>
   </box>
     
   <separator class="groove"/>
-  
   <box id="okCancelButtonsRight"/>
+  
+
+
 
 </window>
