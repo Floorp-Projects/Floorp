@@ -1,10 +1,7 @@
 <?xml version="1.0"?>
-<!--PW?? Nodes that are not referenced at a lower level do not need an ID-->
-<!--PW?? But - what about see also's i.e. xrefs within the index?'-->
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:nc="http://home.netscape.com/NC-rdf#">
 
-<!-- NAVIGATOR HELP SECTION -->
   <rdf:Description about="urn:root">
     <nc:subheadings>
       <rdf:Seq>
