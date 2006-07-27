@@ -30,5 +30,5 @@
 <!ENTITY checkbox.column.label    "Use">
 <!ENTITY stop.button.label        "Stop">
 <!ENTITY customize.menuitem.label   "Edit Categories ...">
-<!ENTITY savesearch.button.label  "Bookmark Search Results">
+<!ENTITY savesearch.button.label  "Bookmark this Search">
 
