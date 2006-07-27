@@ -110,6 +110,10 @@ function SearchPanelStartup()
   dump("*** lastCategoryName = " + lastCategoryName + "\n");
   var categoryList = document.getElementById( "categoryList" );
   if( categoryList ) {
+    // set the category name on the advanced panel
+    var categoryText = categoryList.options[ categoryList.selectedIndex ].text;
+    var textElement = document.getElementById( "categoryNameText" );
+    textElement.setAttribute( "value", categoryText );
     for( var i = 0; i < categoryList.options.length; i++ )
     {
       if( ( lastCategoryName == "" && categoryList.options[i].value == "NC:SearchEngineRoot" ) ||
@@ -124,18 +128,41 @@ function SearchPanelStartup()
   	var treeNode = document.getElementById("searchengines");
   	treeNode.setAttribute( "ref", lastCategoryName );
   }
+
   loadEngines( lastCategoryName );
+}
+
+function getNumEngines()
+{
+ 	var treeNode = document.getElementById("searchengines");
+  var numChildren = treeNode.childNodes.length;
+	for (var x = 0; x<numChildren; x++)
+ 	{
+  	if (treeNode.childNodes[x].tagName == "treechildren")
+	  {
+			var treeChildrenNode = treeNode.childNodes[x];
+ 			break;
+  	}
+	}
+  if( !treeChildrenNode )
+    return -1;
+  return treeChildrenNode.childNodes.length;
 }
 
 function chooseCategory( aSelectElement )
 {
+  // set the category name on the advanced panel
+  var categoryText = aSelectElement.options[ aSelectElement.selectedIndex ].text;
+  var textElement = document.getElementById( "categoryNameText" );
+  textElement.setAttribute( "value", categoryText );
+
 	var category = aSelectElement.options[ aSelectElement.selectedIndex ].getAttribute("id");
-    var pref = Components.classes["component://netscape/preferences"].getService();
-    if( pref )
-      pref = pref.QueryInterface( Components.interfaces.nsIPref );
-    if( !category )
-      category = "";
-    pref.SetCharPref( "browser.search.last_search_category", category );
+  var pref = Components.classes["component://netscape/preferences"].getService();
+  if( pref )
+    pref = pref.QueryInterface( Components.interfaces.nsIPref );
+  if( !category )
+    category = "";
+  pref.SetCharPref( "browser.search.last_search_category", category );
 	if ( category )	
     category = "NC:SearchCategory?category=" + category;
 	else		
@@ -350,10 +377,6 @@ function doSearch()
     return;
   dump("*** foo\n");
   
-  searchButtonNode.setAttribute("style", "display: none;");
-  stopButtonNode.removeAttribute("style", "display: none;");
-  progressNode.setAttribute( "mode", "undetermined" );
-    
 	// hide various columns
   if( parent.content.isMozillaSearchWindow ) {
   	colNode = parent.content.document.getElementById("RelevanceColumn");
@@ -408,17 +431,29 @@ function doSearch()
 			var engineURI = treeItem.getAttribute("id");
 			if (!engineURI)	continue;
       engineURIs[engineURIs.length] = engineURI;
-      
-			var searchEngineName = treeItem.firstChild.childNodes[1].firstChild.getAttribute("value");
 			foundEngine = true;
 		}
 	}
 	if (foundEngine == false)
 	{
-    // stringbundle
-		alert("Select at least one location to search.");
-		return(false);
+    if( getNumEngines() == 1 ) {
+      // only one engine in this category, check it
+      var treeItem = treeChildrenNode.firstChild;
+      engineURIs[engineURIs.length] = treeItem.getAttribute( "id" );
+    }
+    else {
+      // more than one engine, flip the deck and demand input
+      switchTab( 1 );
+      alert("Select at least one location to search.");
+      return false;
+    }
 	}
+
+  progressNode.setAttribute( "mode", "undetermined" );
+  searchButtonNode.setAttribute("style", "display: none;");
+  stopButtonNode.removeAttribute("style", "display: none;");
+    
+  // run the search
 	OpenSearch("internet", false, textNode.value, engineURIs );
 	return true;
 }
@@ -645,3 +680,10 @@ function RevealSearchPanel()
 		SidebarSelectPanel(searchPanel);
 	}
 }
+
+function switchTab( aPageIndex )
+{
+  var deck = document.getElementById( "advancedDeck" );
+  deck.setAttribute( "index", aPageIndex );
+}
+
