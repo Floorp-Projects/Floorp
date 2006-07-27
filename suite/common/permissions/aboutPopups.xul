@@ -45,7 +45,10 @@
 ]>
 
 <dialog id="aboutPopups"
+        buttonpack="center"
         buttons="accept,cancel,help"
+        buttonlabelaccept="&acceptButton.label;"
+        buttonlabelcancel="&cancelButton.label;"
         title="&windowtitle.label;"        
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         style="width: 30em;"
@@ -88,8 +91,6 @@
     ]]>
   </script>
 
-  <keyset id="dialogKeys"/>
-
   <description id="popupDesc">&popupDesc.label;</description>
   <description id="popupDescAlt">&popupDescAlt.label;</description>
   <vbox align="center">
@@ -98,11 +99,4 @@
   <description>&popupNote1.label;</description>
   <separator class="thin"/>
   <description>&popupNote2.label;</description>
-  <spacer flex="1"/>
-  <hbox class="dialog-button-box" pack="center">
-    <button dlgtype="accept" label="&acceptButton.label;"/>    
-    <button dlgtype="cancel" label="&cancelButton.label;"/>
-    <button dlgtype="help"/>
-  </hbox>
-  
 </dialog>

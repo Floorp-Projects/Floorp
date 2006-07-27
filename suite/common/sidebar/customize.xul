@@ -56,6 +56,11 @@
   windowtype="sidebar:customize"
   height="400"
   persist="screenX screenY width height"
+  buttons="accept,cancel,extra2"
+  spacerflex="1"
+  buttonlabelextra2="&sidebar.more.label;"
+  buttonaccesskeyextra2="&sidebar.more.accesskey;"
+  ondialogextra2="BrowseMorePanels();"
   ondialogaccept="return Save();">
 
   <script type="application/x-javascript"
@@ -159,16 +164,6 @@
       <spacer flex="1"/>
     </vbox> 
 
-  </hbox>
-
-  <separator/>
-  
-  <hbox>
-    <button id="more-panels-link" label="&sidebar.more.label;"
-            accesskey="&sidebar.more.accesskey;" oncommand="BrowseMorePanels()"/>
-    <spacer flex="1"/>
-    <button dlgtype="accept"/>
-    <button dlgtype="cancel"/>
   </hbox>
 
 </dialog>
