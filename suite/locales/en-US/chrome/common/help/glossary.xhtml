@@ -211,7 +211,7 @@ A symmetric key used by Certificate Manager to encrypt information. For example,
 <A NAME="master_password"></A><A NAME="1032744">
 <B>master password.</B>&nbsp;
 </A><A NAME="1032748">
-A password used by Certificate Manager to protect the master key and/or private keys stored on a <a href="glossary.html#1028962">security device</a>. Certificate Manager needs to access your private keys, for example, when you sign email messages or use one of your own certificates to identify yourself to a web site. It needs to access your master key when it encrypts or decrypts information on behalf of another application&#151;for example, when Password Manager needs to store or access your email password. You can set or change your master password from the My Certificates tab of the main Certificate Manager window. Each security device requires a separate master password. See also <a href="glossary.html#1015387">private key</a>, <a href="glossary.html#1032598">master key</a>.<P>
+A password used by Certificate Manager to protect the master key and/or private keys stored on a <a href="glossary.html#1028962">security device</a>. Certificate Manager needs to access your private keys, for example, when you sign email messages or use one of your own certificates to identify yourself to a web site. It needs to access your master key when Password Manager or Form Manager read or add to your personal information. You can set or change your master password from the Master Passwords preferences panel. Each security device requires a separate master password. See also <a href="glossary.html#1015387">private key</a>, <a href="glossary.html#1032598">master key</a>.<P>
 </A>
 
 
@@ -310,7 +310,7 @@ See <a href="glossary.html#1018895">certificate</a>.<P>
 <A NAME="security_device"></A><A NAME="1028962">
 <B>security device.</B>&nbsp;
 </A><A NAME="1028963">
-A hardware or software device that provides cryptographic services such as encryption and decryption and can store certificates and keys. A smart card is one example of a hardware security device. Personal Security Manager contains its own internal security device, called the <a href="glossary.html#1032045">PSM Private Keys security device</a>, that is implemented in software. Each security device is protected by its own <a href="glossary.html#1032744">master password</a>.<P>
+Hardware or software that provides cryptographic services such as encryption and decryption and can store certificates and keys. A smart card is one example of a security device implemented in hardware. <a href="#Certificate_Manager">Certificate_Manager</a> contains its own built-in security device, called the <a href="glossary.html#software_security_device">software security device</a>, that is always available while the browser is running. Each security device is protected by its own <a href="glossary.html#1032744">master password</a>.<P>
 </A>
 
 <A NAME="security_module"></A><A NAME="1029083">
@@ -370,7 +370,7 @@ A small device, typically about the size of a credit card, that contains a micro
 <A NAME="software_security_device"></A><A NAME="1032045">
 <B>software security device.</B>&nbsp;
 </A><A NAME="1032110">
-The default <a href="#security device">security device</a> used by Certificate Manager to store private keys associated with your certificates. In addition to private keys, the software security device stores the master key used by Password Manager to encrypt email passwords, web site passwords, and other sensitive information. See also <a href="glossary.html#1015387">private key</a> and <a href="glossary.html#1032598">master key</a>.
+The default <a href="#security_device">security device</a> used by Certificate Manager to store private keys associated with your certificates. In addition to private keys, the software security device stores the master key used by Password Manager to encrypt email passwords, web site passwords, and other sensitive information. See also <a href="glossary.html#1015387">private key</a> and <a href="glossary.html#1032598">master key</a>.<p>
 
 <A NAME="spoofing"></A><A NAME="1014366">
 <B>spoofing.</B>&nbsp;
@@ -443,7 +443,7 @@ Confident reliance on a person or other entity. In the context of <a href="gloss
 </p>
 
 <hr>
-<p><i>8/20/2001</i></p>
+<p><i>8/28/2001</i></p>
 <p>Copyright &copy; 1994-2001 Netscape Communications Corporation.</p>
 
 
