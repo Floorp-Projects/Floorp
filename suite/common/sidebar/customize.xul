@@ -60,7 +60,7 @@
           style="width:100%;height:100%">
     
           <template>
-            <treechildren onclick="otherPanelSelected(event, event.target.parentNode.parentNode)">
+            <treechildren onclick="SelectChangeForOtherPanels(event, event.target.parentNode.parentNode)">
               <treeitem uri="rdf:*"
                 title="rdf:http://home.netscape.com/NC-rdf#title"
                 content="rdf:http://home.netscape.com/NC-rdf#content"
@@ -103,7 +103,7 @@
 
       <box align="horizontal" class="box-group" flex="1*">
         <html:div style="width:15em;height:15em" flex="1*">
-          <tree id="current-panels" onclick="selectChange();"
+          <tree id="current-panels" onclick="SelectChangeForCurrentPanels();"
             datasources="rdf:null"
             style="width:100%;height:100%">
 
@@ -136,11 +136,11 @@
         <!-- The 'reorder' buttons -->
         <box align="vertical">
           <spring flex="50%"/>
-          <titledbutton onclick="moveUp();" id="up" class="borderless up" />
+          <titledbutton onclick="MoveUp();" id="up" class="borderless up" />
           <html:div>
           &sidebar.customize.reorder.label;
           </html:div>
-          <titledbutton onclick="moveDown();" id="down"
+          <titledbutton onclick="MoveDown();" id="down"
             class="borderless down" />
           <spring flex="50%"/>
         </box>
