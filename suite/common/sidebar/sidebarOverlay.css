@@ -24,8 +24,6 @@
 splitter#sidebar-splitter {
 	margin-right: 2px;
 	margin-top: 2px;
-	min-width: 8px;
-	max-width: 8px;
 	padding: 0px;
 	border: none;
 	background-color: #003366;
@@ -68,7 +66,6 @@ box#sidebar-box {
   margin-top: 2px;
   width: 162px;
   min-height: 1px;
-  min-width: 1px;
   max-width: 400px;
   border: none;
   border-bottom: 8px solid #003366;
@@ -150,4 +147,8 @@ box#sidebar-panels-bottom > box.texttab + box.texttab {
 
 *[hidden="true"] {
   display: none;
+}
+
+box#title-box { 
+  min-width: 10px;
 }
