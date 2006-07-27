@@ -36,20 +36,37 @@ function debug(msg)
 
 function Init()
 {
-  sidebar.datasource_uri = window.arguments[0];
-  sidebar.resource       = window.arguments[1];
+  var all_panels_datasources = window.arguments[0];
+  var all_panels_resource    = window.arguments[1];
+  sidebar.datasource_uri     = window.arguments[2];
+  sidebar.resource           = window.arguments[3];
+
+  debug("all panels datasources = " + all_panels_datasources);
+  debug("all panels resource    = " + all_panels_resource);
   debug("sidebar.datasource_uri = " + sidebar.datasource_uri);
   debug("sidebar.resource       = " + sidebar.resource);
 
-  // This will load the datasource, if it isn't already.
-  sidebar.datasource = RDF.GetDataSource(sidebar.datasource_uri);
+  var all_panels   = document.getElementById('other-panels');
+  var current_panels = document.getElementById('current-panels');
 
-  // Add the necessary datasources to the select list
-  var select_list = document.getElementById('selected-panels');
-  select_list.database.AddDataSource(sidebar.datasource);
+  all_panels_datasources = all_panels_datasources.split(/\s+/);
+  for (var ii = 0; ii < all_panels_datasources.length; ii++) {
+	debug("Adding "+all_panels_datasources[ii]);
+
+    // This will load the datasource, if it isn't already.
+    var datasource = RDF.GetDataSource(all_panels_datasources[ii]);
+	all_panels.database.AddDataSource(datasource);
+    current_panels.database.AddDataSource(datasource);
+  }
+
+  // Add the datasource for current list of panels. It selects panels out
+  // of the other datasources.
+  sidebar.datasource = RDF.GetDataSource(sidebar.datasource_uri);
+  current_panels.database.AddDataSource(sidebar.datasource);
 
   // Root the customize dialog at the correct place.
-  select_list.setAttribute('ref', sidebar.resource);
+  all_panels.setAttribute('ref', all_panels_resource);
+  current_panels.setAttribute('ref', sidebar.resource);
 
   saveInitialPanels();
   enableButtons();
@@ -57,7 +74,7 @@ function Init()
 
 function saveInitialPanels()
 {
-  var root = document.getElementById('selected-panels-root');
+  var root = document.getElementById('current-panels-root');
   for (var node = root.firstChild; node != null; node = node.nextSibling) {
     original_panels[original_panels.length] = node.getAttribute('id');
   }
@@ -70,8 +87,8 @@ function addOption(registry, service, selectIt)
   var option_customize = getAttr(registry, service, 'customize');
   var option_content   = getAttr(registry, service, 'content');
 
-  var tree = document.getElementById('selected-panels'); 
-  var treeroot = document.getElementById('selected-panels-root'); 
+  var tree = document.getElementById('current-panels'); 
+  var treeroot = document.getElementById('current-panels-root'); 
 
   // Check to see if the panel already exists...
   for (var ii = treeroot.firstChild; ii != null; ii = ii.nextSibling) {
@@ -124,15 +141,15 @@ function getAttr(registry,service,attr_name) {
 
 function selectChange() {
   // Remove the selection in the other list
-  var other_panels = document.getElementById('other-panels');
-  other_panels.clearItemSelection();
+  var all_panels = document.getElementById('other-panels');
+  all_panels.clearItemSelection();
 
   enableButtons();
   enableOtherButtons();
 }
 
 function moveUp() {
-  var tree = document.getElementById('selected-panels'); 
+  var tree = document.getElementById('current-panels'); 
   if (tree.selectedItems.length == 1) {
     var selected = tree.selectedItems[0];
     if (selected.previousSibling) {
@@ -145,7 +162,7 @@ function moveUp() {
 }
    
 function moveDown() {
-  var tree = document.getElementById('selected-panels');
+  var tree = document.getElementById('current-panels');
   if (tree.selectedItems.length == 1) {
     var selected = tree.selectedItems[0];
     if (selected.nextSibling) {
@@ -165,7 +182,7 @@ function moveDown() {
 function enableButtons() {
   var up        = document.getElementById('up');
   var down      = document.getElementById('down');
-  var tree      = document.getElementById('selected-panels');
+  var tree      = document.getElementById('current-panels');
   var customize = document.getElementById('customize-button');
   var remove    = document.getElementById('remove-button');
 
@@ -193,7 +210,7 @@ function enableButtons() {
   }
   // "Customize..." button
   var customizeURL = null;
-  if (selectedNode) {
+  if (numSelected == 1) {
     customizeURL = selectedNode.getAttribute('customize');
   }
   if (customizeURL == null || customizeURL == '') {
@@ -229,7 +246,7 @@ function CustomizePanel()
 
 function RemovePanel()
 {
-  var tree = document.getElementById('selected-panels');
+  var tree = document.getElementById('current-panels');
 
   var nextNode = null;
   var numSelected = tree.selectedItems.length
@@ -252,12 +269,12 @@ function RemovePanel()
 
 function Save()
 {
-  // Iterate through the 'selected-panels' tree to collect the panels
+  // Iterate through the 'current-panels' tree to collect the panels
   // that the user has chosen. We need to do this _before_ we remove
   // the panels from the datasource, because the act of removing them
   // from the datasource will change the tree!
   var panels = new Array();
-  var root = document.getElementById('selected-panels-root');
+  var root = document.getElementById('current-panels-root');
   for (var node = root.firstChild; node != null; node = node.nextSibling) {
     panels[panels.length] = node.getAttribute('id');
   }
@@ -290,7 +307,7 @@ function Save()
 function otherPanelSelected(event, target)
 { 
  // Remove the selection in the "current" panels list
- var current_panels = document.getElementById('selected-panels');
+ var current_panels = document.getElementById('current-panels');
  current_panels.clearItemSelection();
  enableButtons();
 
@@ -309,12 +326,12 @@ function enableOtherButtons()
 {
   var add_button = document.getElementById('add_button');
   var preview_button = document.getElementById('preview_button');
-  var other_panels = document.getElementById('other-panels');
+  var all_panels = document.getElementById('other-panels');
 
   var num_selected = 0;
   // Only count non-folders as selected for button enabling
-  for (var ii=0; ii<other_panels.selectedItems.length; ii++) {
-    var node = other_panels.selectedItems[ii];
+  for (var ii=0; ii<all_panels.selectedItems.length; ii++) {
+    var node = all_panels.selectedItems[ii];
 	if (node.getAttribute('container') != 'true') {
 	  num_selected++;
 	}
@@ -353,8 +370,8 @@ function AddPanel()
 
   // Remove the selection in the other list.
   // Selection will move to "current" list.
-  var other_panels = document.getElementById('other-panels');
-  other_panels.clearItemSelection();
+  var all_panels = document.getElementById('other-panels');
+  all_panels.clearItemSelection();
 
   enableButtons();
   enableOtherButtons();
@@ -391,7 +408,7 @@ function PreviewPanel()
 
 function enableSave() {
   debug("in enableSave()");
-  var root = document.getElementById('selected-panels-root');
+  var root = document.getElementById('current-panels-root');
   var panels = root.childNodes;  
   var list_unchanged = (panels.length == original_panels.length);
 debug ("panels.length="+panels.length);
