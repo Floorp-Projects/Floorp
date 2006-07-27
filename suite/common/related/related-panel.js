@@ -202,9 +202,9 @@ function Init()
 		oNavObserver.TrackContext(''+oContentWindow.location);
 
 		if (oObserverService && oNavObserver) {
-			oObserverService.AddObserver(oNavObserver, "StartDocumentLoad");
-			oObserverService.AddObserver(oNavObserver, "EndDocumentLoad");
-			oObserverService.AddObserver(oNavObserver, "FailDocumentLoad");
+			oObserverService.addObserver(oNavObserver, "StartDocumentLoad", false);
+			oObserverService.addObserver(oNavObserver, "EndDocumentLoad", false);
+			oObserverService.addObserver(oNavObserver, "FailDocumentLoad", false);
 		} else {
 			oNavObserver = null;
 			dump("FAILURE to get observer service\n");
@@ -218,9 +218,9 @@ function Destruct()
 	var oObserverService = Components.classes["@mozilla.org/observer-service;1"].getService();
 	oObserverService = oObserverService.QueryInterface(Components.interfaces.nsIObserverService);
 	if (oObserverService && oNavObserver) {
-		oObserverService.RemoveObserver(oNavObserver, "StartDocumentLoad");
-		oObserverService.RemoveObserver(oNavObserver, "EndDocumentLoad");
-		oObserverService.RemoveObserver(oNavObserver, "FailDocumentLoad");
+		oObserverService.removeObserver(oNavObserver, "StartDocumentLoad");
+		oObserverService.removeObserver(oNavObserver, "EndDocumentLoad");
+		oObserverService.removeObserver(oNavObserver, "FailDocumentLoad");
 		oNavObserver = null;
 	} else {
 		dump("FAILURE to get observer service\n");
