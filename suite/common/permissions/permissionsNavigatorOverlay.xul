@@ -214,6 +214,7 @@
                   oncommand="viewImages();"/> 
       </menupopup>
     </menu>
+<!--
     <menu label="&cookiePopupManager.label;"
           accesskey="&cookiePopupManager.accesskey;"
           id="popup"
@@ -233,5 +234,6 @@
                   oncommand="viewPopups();"/> 
       </menupopup>
     </menu>
+-->
   </menupopup>
 </overlay>
