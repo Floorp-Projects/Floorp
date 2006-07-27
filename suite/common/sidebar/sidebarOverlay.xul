@@ -77,7 +77,7 @@
 
   <!-- Splitter on the right of sidebar -->
   <splitter id="sidebar-splitter" collapse="before" persist="state hidden" 
-    chromeclass="extrachrome"
+    class="chromeclass-extrachrome"
     onmouseup="SidebarFinishDrag();">
     <box id="topright-cap" align="vertical">
       <spring flex="100%"/>
