@@ -51,7 +51,7 @@
 
 <p>You can obtain a certificate today by visiting the URL for a certificate authority and following the on-screen instructions. For a list of certificate authorities, see the online document <a href="https://certs.netscape.com/" TARGET="_blank">Client Certificates</a>. </p>
 
-<p>Once you obtain a certificate, it is automatically stored in a <a href="glossary.html#security_device">security device</a>. Your browser comes with its own built-in software security device. A security device can also be a piece of hardware, such as a smart card.</p>
+<p>Once you obtain a certificate, it is automatically stored in a <a href="glossary.html#security_device">security device</a>. Your browser comes with its own built-in Software Security Device. A security device can also be a piece of hardware, such as a smart card.</p>
 
 <p>Like a driver's license or a credit card, a certificate is a valuable form of identification that can be abused if it falls into the wrong hands. Once you've obtained a certificate that identifies you, you should protect it in two ways: by backing it up and by setting your <a href="glossary.html#master_password">master password</a>. 
 
@@ -140,11 +140,11 @@
 <ul>
 	<li><b>Import.</b> Click this button if you want to import a certificate that you've previously backed up or transferred from one machine to another.
 
-	<li><b>Backup All.</b> Click this button to back up all your own certificates stored in the <a href="glossary.html#software_security_device">software security device</a>. 
+	<li><b>Backup All.</b> Click this button to back up all your own certificates stored in the <a href="glossary.html#software_security_device">Software Security Device</a>. 
 
 </ul>
 
-<p><b>Certificates on smart cards cannot be backed up.</b> Whether you select some of your certificates and click Backup, or click Backup All, the resulting backup file will not include any certificates stored on smart cards or other external security devices. You can only back up certificates that are stored on the internal Software Security Device.
+<p><b>Certificates on smart cards cannot be backed up.</b> Whether you select some of your certificates and click Backup, or click Backup All, the resulting backup file will not include any certificates stored on smart cards or other external security devices. You can only back up certificates that are stored on the built-in Software Security Device.
 
 
 <p>For more details about any of these tasks, see <a href="certs_help.html#My_Certificates">Your Certificates</a>.
@@ -181,7 +181,7 @@
 <a NAME="using_certs_sites"></a><a NAME="certificates:web_siteIDX"></a>
 <H2>Managing Certificates that Identify Web Sites</H2>
 
-<p>Some web sites use certificates to identify themselves. Such identification is required before the web site can encrypt information transferred between the site and your computer (or vice versa), so that nobody can read the data while in transit. 
+<p>Some web sites use certificates to identify themselves. Such identification is required before the web site can encrypt information transferred between the site and your computer (or vice versa), so that no one can read the data while in transit. 
 
 <p>If the URL for a web site begins with <tt>https://</tt>, the web site has a certificate. If you visit such a web site and its certificate was issued by a CA that the Certificate Manager doesn't know about or doesn't trust, you will be asked whether you want to accept the web site's certificate. When you accept a new web site certificate, the Certificate Manager adds it to its list of web site certificates.
 
@@ -241,8 +241,8 @@
 <td class="inthissection">
 <p>In this section:</p>
 <p><a href="#using_certs_devices_about">About Security Devices and Modules</a></p>
-<p><a href="#using_certs_devices_devices">Work with Security Devices</a></p>
-<p><a href="#using_certs_devices_modules">Work with Security Modules</a></p>
+<p><a href="#using_certs_devices_devices">Using Security Devices</a></p>
+<p><a href="#using_certs_devices_modules">Using Security Modules</a></p>
 <p><a href="#using_certs_devices_fips">Enable FIPS Mode</a></p>
 </td>
 </tr>
@@ -265,12 +265,13 @@
 <p>By default, the Device Manager controls two internal PKCS #11 modules that manage three security devices:
 
 <ul>
-	<li><b>Builtin Roots Module</b> controls a special security device called the Builtin Object Token. This token stores the default <a href="glossary.html#CA_certificate">CA certificates</a> that come with the browser.
-	<li><b>Netscape Internal PKCS #11 Module</b> controls two security devices:
+	<li><b>Netscape Internal PKCS #11 Module:</b> Controls two security devices:</li>
 	<ul>
-		<li><b>Generic Crypto Services</b> is a special security device that performs all cryptographic operations required by the Netscape Internal PKCS #11 Module.
-		<li><b>Software Security Device</b> stores your certificates and keys that aren't stored on external security devices, including any CA certificates that you may have installed in addition to those that come with the browser.
+		<li><b>Generic Crypto Services:</b> A special security device that performs all cryptographic operations required by the Netscape Internal PKCS #11 Module.
+		<li><b>Software Security Device:L</b> Stores your certificates and keys that aren't stored on external security devices, including any CA certificates that you may have installed in addition to those that come with the browser.
 	</ul>
+	<li><b>Builtin Roots Module:</b> Controls a special security device called the Builtin Object Token. This security device stores the default <a href="glossary.html#CA_certificate">CA certificates</a> that come with the browser.
+
 </ul>
 
 
@@ -282,12 +283,12 @@
 <a NAME="using_certs_devices_devices"></a>
 <h2>Using Security Devices</h2>
 
-<p>This section assumes you are looking at the Device Manager: 
+<p>The Device Manager allows you to perform operations on security devices. To open the Device Manager, follow these steps: 
 
 <ol>
 	<li>Open the Edit menu and choose Preferences.
 	<li>Under the Privacy &amp; Security category, choose Certificates. (If no subcategories are visible, double-click Privacy &amp; Security to expand the list.)
-	<li>In the Certificates panel, click Manage Devices.
+	<li>In the Certificates panel, click Manage Security Devices.
 </ol>
 
 
@@ -301,7 +302,9 @@
 </ul> 
 
 
-<p>You can perform these actions on most security devices. However, you cannot perform them on Builtin Object Token or Generic Crypto Services, which are special devices that must normally be available at all times. 
+<p>You can perform these actions on most security devices. However, you cannot perform them on the Builtin Object Token or Generic Crypto Services, which are special devices that must normally be available at all times. 
+
+<p>For more details, see <a href="certs_help.html#Security_Devices">Device Manager</a>.
 
 
 <p>
@@ -313,14 +316,14 @@
 <h2>Using Security Modules</h2>
 
 
-<p>If you want to use a smart card or other external security device, you must first install the module software on your computer and if necessary connect any associated hardware. Follow the instructions that come with the hardware.
+<p>If you want to use a smart card or other external security device, you must first install the module software on your computer and, if necessary, connect any associated hardware. Follow the instructions that come with the hardware.
 
 <p>After a new module is installed on your computer, follow these steps to load it:
 
 <ol>
 	<li>Open the Edit menu and choose Preferences.
 	<li>Under the Privacy &amp; Security category, choose Certificates. (If no subcategories are visible, double-click Privacy &amp; Security to expand the list.)
-	<li>In the Certificates panel, click Manage Devices.
+	<li>In the Certificates panel, click Manage Security Devices.
 	<li>Click Load.
 	<li>In the Load PKCS #11 Module dialog box, click the Browse button, locate the module file, and click Open. 
 	<li>Fill in the Module Name field with the name of the module and click OK. 
@@ -386,7 +389,7 @@
 
 <p>As discussed above under <a href="#using_certs_get">Get Your Own Certificate</a>, a certificate is a form of identification, much like a driver's license, that you can use to identify yourself over the Internet and other networks. However, also like a driver's license, a certificate may expire or become invalid for some other reason. Therefore, your browser software needs to confirm the validity of any given certificate in some way before trusting it for identification purposes. 
 
-<p>This section describes how Certificate Manager validates certificates and how to control that process. To understand the process, you should have some familiarity with <a href="glossary.html#public-key_cryptography">public-key_cryptography</a>. If you are not familiar with the use of certificates, you should check with your system administrator before attempting to change any of your browser's certificate validation settings.<p>
+<p>This section describes how Certificate Manager validates certificates and how to control that process. To understand the process, you should have some familiarity with <a href="glossary.html#public-key_cryptography">public-key cryptography</a>. If you are not familiar with the use of certificates, you should check with your system administrator before attempting to change any of your browser's certificate validation settings.<p>
 
 <table cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
 <tr>
@@ -412,7 +415,7 @@
 
 <p>If the CA certificate is not itself present, the <a href="glossary.html#certificate_chain">certificate chain</a> for the CA certificate must include a higher-level CA certificate that is present and correctly trusted. Certificate Manager also confirms that the certificate being verified is currently marked as trusted in the certificate store. If any one of these checks fails, Certificate Manager marks the certificate as unverified and won't recognize the identity it certifies.
 
-<p>A certificate can pass all these tests and still be compromised in some way; for example, the certificate be revoked because an unauthorized person has gained access to the certificate's private key. A compromised certificate can allow an unauthorized person (or web site) to pretend to be the certificate owner.
+<p>A certificate can pass all these tests and still be compromised in some way; for example, the certificate may be revoked because an unauthorized person has gained access to the certificate's private key. A compromised certificate can allow an unauthorized person (or web site) to pretend to be the certificate owner.
 
 <p>One way to combat this threat is for Certificate Manager to check a certificate revocation list (CRL) as part of the verification process (see <a href="#Managing_CRLs">Managing CRLs</a>, below). Typically, you download a CRL to your browser by clicking a link. If a CRL is present, Certificate Manager checks any certificate issued by the same CA against the list as part of the verification process. 
 
@@ -476,8 +479,8 @@
 	<li>Select the option labeled &quot;Enable Automatic Update for this CRL&quot;.
 	<li>Decide how you want to schedule the automatic updates:</li>
 	<ul>
-		<li><b>Update X days before Next Update date.</b> Select this option if you want to base the update frequency on the frequency with which the CRL publisher publishes a new version of the CRL.
-		<li><b>Update every X days.</b> Select this option if you want to specify an update interval unrelated to the CRL's Next Update date.
+		<li><b>Update X days before Next Update date:</b> Select this option if you want to base the update frequency on the frequency with which the CRL publisher publishes a new version of the CRL.
+		<li><b>Update every X days:</b> Select this option if you want to specify an update interval unrelated to the CRL's Next Update date.
 	</ul>
 	<li>Click OK to confirm your choices.
 </ol>
@@ -527,7 +530,7 @@
 
 
 <hr>
-<p><i>17 May 2002</i></p>
+<p><i>6 June 2002</i></p>
 <p>Copyright &copy; 1994-2002 Netscape Communications Corporation.</p>
 
 </body>
