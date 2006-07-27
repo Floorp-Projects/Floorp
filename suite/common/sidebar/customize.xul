@@ -23,7 +23,7 @@
 <?xml-stylesheet href="chrome://communicator/skin/sidebar/customize.css"
   type="text/css"?>
 
-<!DOCTYPE window [
+<!DOCTYPE dialog [
 <!ENTITY % customizeDTD SYSTEM "chrome://communicator/locale/sidebar/customize.dtd" >
 %customizeDTD;
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >

@@ -25,7 +25,7 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/directory/directory.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/directory/directory.dtd">
+<!DOCTYPE page SYSTEM "chrome://communicator/locale/directory/directory.dtd">
 
 <page
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
