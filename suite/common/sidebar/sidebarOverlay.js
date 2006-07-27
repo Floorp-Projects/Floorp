@@ -300,7 +300,8 @@ function (force_reload)
     sidebarObj.collapsed = false;
   }
 
-  if (sidebarObj.panels.num_panels_included() > gNumTabsInViewPref)
+  var num_included = sidebarObj.panels.num_panels_included();
+  if (num_included > gNumTabsInViewPref)
     document.getElementById("nav-buttons-box").hidden = false;
   else
     document.getElementById("nav-buttons-box").hidden = true;
@@ -363,6 +364,18 @@ function (force_reload)
       header.removeAttribute('hidden');
       header.setAttribute("in-view", true);
       num_in_view++;
+      
+      // (a) when we have hit the maximum number of tabs that can be in view and no tab 
+      //     has been selected yet
+      //     -or-
+      // (b) when we have reached the last tab we are about to display
+      if ( ((num_in_view == num_included) ||
+            (num_in_view == gNumTabsInViewPref)) &&
+          !is_after_selected )
+      {
+        selected_id = id;
+        this.node.setAttribute('last-selected-panel', id);
+      }
 
       // Pick sandboxed, or unsandboxed iframe
       var iframe = panel.get_iframe();
