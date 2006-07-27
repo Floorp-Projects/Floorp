@@ -192,7 +192,6 @@ function Init()
 	oFrame = document.getElementById('daFrame');
 
 	if (oContentWindow && oFrame) {
-		window.setTimeout('window._content.resizeBy(0,1);window._content.resizeBy(0,-1);',0);
 		var oObserverService = Components.classes["@mozilla.org/observer-service;1"].getService();
 		oObserverService = oObserverService.QueryInterface(Components.interfaces.nsIObserverService);
 
