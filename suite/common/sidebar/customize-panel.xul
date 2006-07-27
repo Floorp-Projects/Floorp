@@ -17,44 +17,18 @@
   Reserved.
 
 -->
-<?xml-stylesheet href="chrome://sidebar/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://sidebar/skin/customize.css" type="text/css"?>
-<?xml-stylesheet href="chrome://sidebar/skin/customize-panel.css"
-   type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://sidebar/locale/customize-panel.dtd" >
+<!DOCTYPE window>
 
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  onload="Init();"
-  align="vertical">
+  onload="Init();">
 
-<html:script src="chrome://sidebar/content/customize-panel.js" />
+  <html:script src="chrome://sidebar/content/customize-panel.js" />
+  <html:iframe id="customize_frame" type="content" src="about:blank"
+    flex="100%"/>
 
-  <box align="horizontal">
-    <html:div class="title">
-      &sidebar.customize-panel.title.label;
-    </html:div>
-    <html:div id="panelname" class="title"/>
-  </box>
-
-
-  <html:hr/>
-
-
-  <html:iframe id="customizeframe" type="content" src="about:blank"
-      flex="100%"/>
-
-  <box align="horizontal">
-    <spring flex="96%"/>
-    <titledbutton onclick="window.close()" 
-       value="&sidebar.customize-panel.cancel.label;" />
-    <spring flex="2%"/>
-    <titledbutton onclick="dump('xxxSubmit customize form here\n');"
-       disabled="true" 
-       value="&sidebar.customize-panel.save.label;" />
-    <spring flex="2%"/>
-  </box>
 </window>
