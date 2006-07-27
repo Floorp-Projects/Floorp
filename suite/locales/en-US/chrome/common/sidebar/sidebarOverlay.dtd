@@ -17,10 +17,10 @@
    - Rights Reserved.
    - 
    - Contributor(s): Stephen Lamm <slamm@netscape.com>
-   -                       Blake Ross <BlakeR1234@aol.com>
+   -                 Blake Ross <BlakeR1234@aol.com>
   --> 
 
-<!ENTITY sidebar.panels.label        "My Sidebar">
+<!ENTITY sidebar.panels.label        "Sidebar">
 <!ENTITY sidebar.reload.label        "Reload">
 <!ENTITY sidebar.picker.label        "Tabs">
 <!ENTITY sidebar.customize.label     "Customize Sidebar...">
@@ -29,14 +29,14 @@
 <!ENTITY sidebar.hide.accesskey      "H">
 <!ENTITY sidebar.switch.label        "Switch to Panel">
 <!ENTITY sidebar.switch.accesskey    "S">
-<!ENTITY sidebarCmd.label            "My Sidebar">
-<!ENTITY sidebarCmd.accesskey        "m">
+<!ENTITY sidebarCmd.label            "Sidebar">
+<!ENTITY sidebarCmd.accesskey        "b">
 <!ENTITY sidebar.loading.label       "Loading...">
 <!ENTITY sidebar.loading.stop.label  "Stop">
 
-<!ENTITY sidebar.no-panels.state     "My Sidebar is currently empty.">
+<!ENTITY sidebar.no-panels.state     "The Sidebar is currently empty.">
 <!ENTITY sidebar.no-panels.add       'You may add tabs by clicking on the "Tabs" button above.'>
-<!ENTITY sidebar.no-panels.hide      'If you would like to completely hide My Sidebar, click on the "View" menu above and select "My Sidebar."'>
+<!ENTITY sidebar.no-panels.hide      'If you would like to completely hide the Sidebar, click on the "View" menu above, and select "Sidebar."'>
 <!ENTITY sidebar.sbDirectory.label   "Sidebar Directory...">
 
 <!ENTITY sidebar.pagenotfound.label  "This tab is not available right now.">

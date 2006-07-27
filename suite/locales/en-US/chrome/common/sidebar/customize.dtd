@@ -22,9 +22,9 @@
 <!-- extracted from ./customize.xul -->
 
 <!-- LOCALIZATION NOTE  sidebar.customize.title.label: Do NOT localize the term "Sidebar"  -->
-<!ENTITY sidebar.customize.title.label          "Customize My Sidebar">
+<!ENTITY sidebar.customize.title.label          "Customize Sidebar">
 <!-- LOCALIZATION NOTE  sidebar.customize.current.label: Do NOT localize the term "Sidebar"  -->
-<!ENTITY sidebar.customize.current.label        "Tabs in My Sidebar:">
+<!ENTITY sidebar.customize.current.label        "Tabs in Sidebar:">
 <!ENTITY sidebar.customize.reorder.label        "Reorder">
 <!ENTITY sidebar.customize.customize.label      "Customize Tab...">
 <!ENTITY sidebar.customize.remove.label         "Remove">

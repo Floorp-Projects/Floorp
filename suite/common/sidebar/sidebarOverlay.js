@@ -856,7 +856,7 @@ function SidebarExpandCollapse() {
   }
 }
 
-// sidebar_is_hidden() - Helper funciton for SidebarShowHide().
+// sidebar_is_hidden() - Helper function for SidebarShowHide().
 function sidebar_is_hidden() {
   var sidebar_title = document.getElementById('sidebar-title-box');
   var sidebar_box = document.getElementById('sidebar-box');
@@ -865,7 +865,7 @@ function sidebar_is_hidden() {
 }
 
 // Show/Hide the entire sidebar.
-// Envoked by the "View / My Sidebar" menu option.
+// Invoked by the "View / Sidebar" menu option.
 function SidebarShowHide() {
   var sidebar_box = document.getElementById('sidebar-box');
   var title_box = document.getElementById('sidebar-title-box');
