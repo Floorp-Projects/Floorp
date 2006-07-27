@@ -240,11 +240,11 @@ function doSort(sortColName, naturalOrderResource)
   if (!xulSortService)    return(false);
   try
   {
-    xulSortService.Sort(node, sortResource, sortDirection);
+    xulSortService.sort(node, sortResource, sortDirection);
   }
   catch(ex)
   {
-    debug("Exception calling xulSortService.Sort()");
+    debug("Exception calling xulSortService.sort()");
   }
   return(true);
 }

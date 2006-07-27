@@ -337,11 +337,11 @@ function doSort(sortColName, naturalOrderResource)
   if (!xulSortService)    return(false);
   try
   {
-    xulSortService.Sort(node, sortResource, sortDirection);
+    xulSortService.sort(node, sortResource, sortDirection);
   }
   catch(ex)
   {
-    debug("Exception calling xulSortService.Sort()");
+    debug("Exception calling xulSortService.sort()");
   }
   return(true);
 }
@@ -360,7 +360,7 @@ function setInitialSort(node, sortDirection)
     if (!isupports)    return(false);
     var xulSortService = isupports.QueryInterface(Components.interfaces.nsIXULSortService);
     if (!xulSortService)    return(false);
-    xulSortService.Sort(node, sortResource, sortDirection);
+    xulSortService.sort(node, sortResource, sortDirection);
   }
   catch(ex)
   {
