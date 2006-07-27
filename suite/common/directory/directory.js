@@ -76,7 +76,8 @@ function OnClick(event)
         // directories.
         var type = treeitem.getAttribute('type');
 
-        if (targetclass == 'filename') {
+        if (targetclass.indexOf('filename') >= 0)
+        {
             var url = treeitem.getAttribute('id');
 
             debug('navigating to ' + url + '\n');
