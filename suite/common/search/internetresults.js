@@ -207,7 +207,7 @@ function treeSelect(event)
 
 function treeClick(event)
 {
-  if (event.detail == 2 && event.which == 1) 
+  if (event.detail == 2 && event.button == 0) 
     searchResultsOpenURL(event);
   else
     treeSelect(event);
