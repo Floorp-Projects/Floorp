@@ -123,8 +123,8 @@ components/shistory.xpt
 
 ; optional typeaheadfind 
 ; (docs at http://www.mozilla.org/projects/ui/accessibility/typeaheadfind.html)
-;components/libtypeaheadfind.so
-;components/typeaheadfind.xpt
+;components/libsuitetypeaheadfind.so
+;components/suitetypeaheadfind.xpt
 
 ; rdf
 components/librdf.so

@@ -862,10 +862,10 @@ function BrowserHandleBackspace()
   // in typeaheadfind if that's active, or it might mean back in history
 
   var typeAhead = null;
-  const TYPE_AHEAD_FIND_CONTRACTID = "@mozilla.org/typeaheadfind;1";
+  const TYPE_AHEAD_FIND_CONTRACTID = "@mozilla.org/suitetypeaheadfind;1";
   if (TYPE_AHEAD_FIND_CONTRACTID in Components.classes) {
     typeAhead = Components.classes[TYPE_AHEAD_FIND_CONTRACTID]
-                .getService(Components.interfaces.nsITypeAheadFind);
+                .getService(Components.interfaces.nsISuiteTypeAheadFind);
   }
   
   if (!typeAhead || !typeAhead.backOneChar()) {

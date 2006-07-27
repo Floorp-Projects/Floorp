@@ -189,7 +189,7 @@ bin/components/progressDlg.xpt
 bin/components/nsDownloadProgressListener.js
 bin/components/filepicker.xpt
 bin/components/mozldap.xpt
-bin/components/typeaheadfind.xpt
+bin/components/suitetypeaheadfind.xpt
 bin/components/nsCloseAllWindows.js
 bin/components/extensions.xpt
 bin/components/nsExtensionManager.js

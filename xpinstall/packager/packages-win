@@ -154,8 +154,8 @@ bin\components\progressDlg.xpt
 bin\components\dom_xpath.xpt
 bin\AccessibleMarshal.dll
 bin\components\nsSetDefaultBrowser.js
-bin\components\typeaheadfind.xpt
-bin\components\typeaheadfind.dll
+bin\components\suitetypeaheadfind.xpt
+bin\components\suitetypeaheadfind.dll
 bin\components\nsAxSecurityPolicy.js
 bin\components\nsCloseAllWindows.js
 bin\components\extensions.xpt

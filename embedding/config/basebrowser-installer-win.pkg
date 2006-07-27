@@ -140,8 +140,8 @@ components\shistory.xpt
 
 ; optional typeaheadfind 
 ; (docs at http://www.mozilla.org/projects/ui/accessibility/typeaheadfind.html)
-;components\typeaheadfind.dll
-;components\typeaheadfind.xpt
+;components\suitetypeaheadfind.dll
+;components\suitetypeaheadfind.xpt
 
 ; rdf
 components\rdf.dll

@@ -177,8 +177,8 @@ components/shistory.xpt
 
 ; optional typeaheadfind 
 ; (docs at http://www.mozilla.org/projects/ui/accessibility/typeaheadfind.html)
-;components/typeaheadfind.shlb
-;components/typeaheadfind.xpt
+;components/suitetypeaheadfind.shlb
+;components/suitetypeaheadfind.xpt
 
 ; required l10n libraries
 
