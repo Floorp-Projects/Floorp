@@ -9,7 +9,7 @@
         <rdf:li> <rdf:Description ID="welcome" nc:name="Help and Support Center" nc:link="welcome_help.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="help-help" nc:name="Using the Help Window" nc:link="help_help.html"/> </rdf:li>
         <rdf:li> <rdf:Description ID="ieusers" nc:name="For Internet Explorer Users" nc:link="chrome://help/locale/forieusers.xhtml#for_internet_explorer_users"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav" nc:name="Browsing the Web" nc:link="chrome://help/locale/nav_help.html#browsing_the_web"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav" nc:name="Browsing the Web" nc:link="chrome://help/locale/nav_help.xhtml#browsing_the_web"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail"     nc:name="Using Mail" nc:link="chrome://help/locale/mail_help.xhtml#using_mozilla_mail_and_newsgroups" /> </rdf:li>
         <rdf:li> <rdf:Description ID="comp"	nc:name="Creating Web Pages"  nc:link="chrome://help/locale/composer_help.html#comp_top"/> </rdf:li>
         <rdf:li> <rdf:Description ID="cust" nc:name="Customizing Mozilla"  nc:link="chrome://help/locale/customize_help.xhtml#customizing_mozilla"/> </rdf:li>
@@ -50,12 +50,12 @@
   <rdf:Description about="#nav">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="nav-doc" nc:name="Navigating Web Pages" nc:link="chrome://help/locale/nav_help.html#nav_first"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-search" nc:name="Searching the Web" nc:link="chrome://help/locale/nav_help.html#nav_search"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-printsave" nc:name="Copying, Saving, and Printing Pages" nc:link="chrome://help/locale/nav_help.html#nav_printsave"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-language" nc:name="Using Languages and International Content" nc:link="chrome://help/locale/nav_help.html#nav_language"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-ses" nc:name="Improving Speed and Efficiency" nc:link="chrome://help/locale/nav_help.html#nav_ses"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-proxies" nc:name="Proxies" nc:link="chrome://help/locale/nav_help.html#nav_proxies"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc" nc:name="Navigating Web Pages" nc:link="chrome://help/locale/nav_help.xhtml#navigating_web_pages"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-search" nc:name="Searching the Web" nc:link="chrome://help/locale/nav_help.xhtml#searching_the_web"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-printsave" nc:name="Copying, Saving, and Printing Pages" nc:link="chrome://help/locale/nav_help.xhtml#copying_saving_and_printing_pages"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-language" nc:name="Using Languages and International Content" nc:link="chrome://help/locale/nav_help.xhtml#using_languages_and_international_content"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-ses" nc:name="Improving Speed and Efficiency" nc:link="chrome://help/locale/nav_help.xhtml#improving_speed_and_efficiency"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-proxies" nc:name="Proxies" nc:link="chrome://help/locale/nav_help.xhtml#proxies"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-page-info" nc:name="Viewing Page Info" nc:link="chrome://help/locale/page_info_help.xhtml"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
@@ -64,14 +64,14 @@
   <rdf:Description about="#nav-doc">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="nav-doc-view" nc:name="Viewing Your Home Page" nc:link="chrome://help/locale/nav_help.html#nav_view"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-move" nc:name="Moving to Another Page" nc:link="chrome://help/locale/nav_help.html#nav_move"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-link" nc:name="Clicking a Link" nc:link="chrome://help/locale/nav_help.html#nav_link"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-steps" nc:name="Retracing Your Steps" nc:link="chrome://help/locale/nav_help.html#nav_retrace"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-reload" nc:name="Stopping and Reloading"  nc:link="chrome://help/locale/nav_help.html#nav_reload"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-bmark" nc:name="Visiting Bookmarked Pages"  nc:link="chrome://help/locale/nav_help.html#nav_bookmark"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-tabbed" nc:name="Using Tabbed Browsing"  nc:link="chrome://help/locale/nav_help.html#nav_tabbed_browsing"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-sidebar" nc:name="Using Sidebar"  nc:link="chrome://help/locale/nav_help.html#nav_sidebar"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-view" nc:name="Viewing Your Home Page" nc:link="chrome://help/locale/nav_help.xhtml#viewing_your_home_page"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-move" nc:name="Moving to Another Page" nc:link="chrome://help/locale/nav_help.xhtml#moving_to_another_page"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-link" nc:name="Clicking a Link" nc:link="chrome://help/locale/nav_help.xhtml#clicking_a_link"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-steps" nc:name="Retracing Your Steps" nc:link="chrome://help/locale/nav_help.xhtml#retracing_your_steps"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-reload" nc:name="Stopping and Reloading"  nc:link="chrome://help/locale/nav_help.xhtml#stopping_and_reloading"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-bmark" nc:name="Visiting Bookmarked Pages"  nc:link="chrome://help/locale/nav_help.xhtml#visiting_bookmarked_pages"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-tabbed" nc:name="Using Tabbed Browsing"  nc:link="chrome://help/locale/nav_help.xhtml#using_tabbed_browsing"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-sidebar" nc:name="Using Sidebar"  nc:link="chrome://help/locale/nav_help.xhtml#using_sidebar"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -79,13 +79,13 @@
   <rdf:Description about="#nav-doc-search">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="nav-doc-searchweb" nc:name="Fast Searches" nc:link="chrome://help/locale/nav_help.html#nav_searchweb"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-smartsearch" nc:name="Advanced Search Mode" nc:link="chrome://help/locale/nav_help.html#nav_smartsearch"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-searchprefs" nc:name="Setting Search Preferences" nc:link="chrome://help/locale/nav_help.html#nav_searchprefs"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-keywords" nc:name="Using Internet Keywords" nc:link="chrome://help/locale/nav_help.html#nav_keywords"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-searchpage" nc:name="Searching Within a Page" nc:link="chrome://help/locale/nav_help.html#nav_searchpage"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-find_as_you_type" nc:name="Using Find-as-you-type" nc:link="chrome://help/locale/nav_help.html#find_as_you_type"/></rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-searchbookmark" nc:name="Searching the Bookmarks or History List" nc:link="chrome://help/locale/nav_help.html#nav_searchbookmark"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-searchweb" nc:name="Fast Searches" nc:link="chrome://help/locale/nav_help.xhtml#fast_searches"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-smartsearch" nc:name="Advanced Search Mode" nc:link="chrome://help/locale/nav_help.xhtml#advanced_search_mode"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-searchprefs" nc:name="Setting Search Preferences" nc:link="chrome://help/locale/nav_help.xhtml#setting_search_preferences"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-keywords" nc:name="Using Internet Keywords" nc:link="chrome://help/locale/nav_help.xhtml#using_internet_keywords"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-searchpage" nc:name="Searching Within a Page" nc:link="chrome://help/locale/nav_help.xhtml#searching_within_a_page"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-find_as_you_type" nc:name="Using Find-as-you-type" nc:link="chrome://help/locale/nav_help.xhtml#using_find-as-you-type"/></rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-searchbookmark" nc:name="Searching the Bookmarks or History List" nc:link="chrome://help/locale/nav_help.xhtml#searching_the_bookmarks_or_history_list"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -93,9 +93,9 @@
   <rdf:Description about="#nav-doc-printsave">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="nav-doc-copy" nc:name="Copying Part of a Page" nc:link="chrome://help/locale/nav_help.html#nav_copy"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-save" nc:name="Saving All or Part of a Page" nc:link="chrome://help/locale/nav_help.html#nav_save"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-print" nc:name="Printing a Page" nc:link="chrome://help/locale/nav_help.html#nav_print"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-copy" nc:name="Copying Part of a Page" nc:link="chrome://help/locale/nav_help.xhtml#copying_part_of-a_page"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-save" nc:name="Saving All or Part of a Page" nc:link="chrome://help/locale/nav_help.xhtml#saving_all_or_part_of_a_page"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-print" nc:name="Printing a Page" nc:link="chrome://help/locale/nav_help.xhtml#printing_a_page"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -103,9 +103,9 @@
   <rdf:Description about="#nav-doc-language">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="nav-doc-charencode" nc:name="Selecting Character Encodings and Fonts" nc:link="chrome://help/locale/nav_help.html#nav_charencode"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-languagepref" nc:name="Setting Language Preferences" nc:link="chrome://help/locale/nav_help.html#nav_languagepref"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-webcontent" nc:name="Finding International Web Content" nc:link="chrome://help/locale/nav_help.html#nav_webcontent"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-charencode" nc:name="Selecting Character Encodings and Fonts" nc:link="chrome://help/locale/nav_help.xhtml#setting_character_encodings_and_fonts"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-languagepref" nc:name="Setting Language Preferences" nc:link="chrome://help/locale/nav_help.xhtml#setting_language_preferences"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-webcontent" nc:name="Finding International Web Content" nc:link="chrome://help/locale/nav_help.xhtml#finding_international_web_content"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -113,13 +113,13 @@
   <rdf:Description about="#nav-doc-ses">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="nav-doc-helperapps" nc:name="Managing Different File Types" nc:link="chrome://help/locale/nav_help.html#nav_helperapps"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-default" nc:name="Making Mozilla Your Default Browser" nc:link="chrome://help/locale/nav_help.html#nav_default"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-autoload" nc:name="Automatic Loading" nc:link="chrome://help/locale/nav_help.html#nav_autoload"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-cache" nc:name="Changing Cache Settings" nc:link="chrome://help/locale/nav_help.html#nav_cache"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-smartup" nc:name="Getting the Latest Software Automatically" nc:link="chrome://help/locale/nav_help.html#nav_smartup"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-mousewheel" nc:name="Using a Mouse Wheel" nc:link="chrome://help/locale/nav_help.html#nav_mousewheel"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-quicklaunch" nc:name="Using Quick Launch" nc:link="chrome://help/locale/nav_help.html#nav_quicklaunch"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-helperapps" nc:name="Managing Different File Types" nc:link="chrome://help/locale/nav_help.xhtml#managing_different_file_types"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-default" nc:name="Making Mozilla Your Default Browser" nc:link="chrome://help/locale/nav_help.xhtml#making_mozilla_your_default_browser"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-autoload" nc:name="Automatic Loading" nc:link="chrome://help/locale/nav_help.xhtml#automatic_loading"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-cache" nc:name="Changing Cache Settings" nc:link="chrome://help/locale/nav_help.xhtml#changing_cache_settings"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-smartup" nc:name="Getting the Latest Software Automatically" nc:link="chrome://help/locale/nav_help.xhtml#getting_the_latest_software_automatically"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-mousewheel" nc:name="Using a Mouse Wheel" nc:link="chrome://help/locale/nav_help.xhtml#using_a_mousewheel"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-quicklaunch" nc:name="Using Quick Launch" nc:link="chrome://help/locale/nav_help.xhtml#using_quick_launch"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -127,7 +127,7 @@
   <rdf:Description about="#nav-proxies">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="nav-prox" nc:name="Setting Proxy Values" nc:link="chrome://help/locale/nav_help.html#nav_prox"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-prox" nc:name="Setting Proxy Values" nc:link="chrome://help/locale/nav_help.xhtml#setting_proxy_values"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
