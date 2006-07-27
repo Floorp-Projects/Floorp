@@ -533,6 +533,11 @@
 	 nc:link="using_certs_help.html#Device_Manager:aboutIDX"/>
      </rdf:li>
      <rdf:li>
+       <rdf:Description ID="DOM_Inspector"
+         nc:name="DOM Inspector"
+	 nc:link="developer_tools.xhtml#inspector"/>
+     </rdf:li>
+     <rdf:li>
        <rdf:Description ID="Download_Manager"
          nc:name="Download Manager"
 	 nc:link="nav_help.html#Download_ManagerIDX"/>
@@ -886,6 +891,16 @@
        <rdf:Description ID="JavaScript"
          nc:name="JavaScript"
 	 nc:link="cs_nav_prefs_advanced.html#JavaScript:preferencesIDX"/>
+     </rdf:li>
+     <rdf:li>
+       <rdf:Description ID="JSConsole"
+         nc:name="JavaScript Console"
+	 nc:link="developer_tools.xhtml#js_console"/>
+     </rdf:li>
+     <rdf:li>
+       <rdf:Description ID="Venkman"
+         nc:name="JavaScript Debugger"
+	 nc:link="developer_tools.xhtml#venkman"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1321,6 +1336,11 @@
        <rdf:Description ID="Navigator:Download_Manager"
          nc:name="Download Manager"
 	 nc:link="nav_help.html#Navigator:Download_ManagerIDX"/>
+     </rdf:li>
+     <rdf:li>
+       <rdf:Description ID="Navigator:full_screen_mode"
+         nc:name="Full screen mode"
+         nc:link="nav_help.html#full_screen_mode"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Navigator:helper_applications"

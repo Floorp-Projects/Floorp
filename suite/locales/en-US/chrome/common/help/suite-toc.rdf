@@ -1138,6 +1138,26 @@
     </nc:subheadings>
   </rdf:Description>
 
+<!-- MOZILLA TOOLS AND DEVELOPMENT CONTENT STARTS-->
+ 
+<rdf:Description about="urn:root">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="tools" nc:name="Tools and Development"
+                   nc:link="chrome://help/locale/developer_tools.xhtml"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#tools">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li><rdf:Description ID="tools-js_console" nc:name="JavaScript Console" nc:link="chrome://help/locale/developer_tools.xhtml#js_console"/> </rdf:li>
+        <rdf:li><rdf:Description ID="tools-inspector" nc:name="DOM Inspector" nc:link="chrome://help/locale/developer_tools.xhtml#inspector"/> </rdf:li>
+        <rdf:li><rdf:Description ID="tools-venkman" nc:name="JavaScript Debugger" nc:link="chrome://help/locale/developer_tools.xhtml#venkman"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+</rdf:Description>
 
 <!-- MOZILLA KEYBOARD SHORTCUTS CONTENT STARTS-->
 <rdf:Description about="#shortcuts">
