@@ -37,12 +37,12 @@
 
  ***** END LICENSE BLOCK ***** -->
 
-<!DOCTYPE overlay SYSTEM "chrome://cookie/locale/cookieNavigatorOverlay.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://communicator/locale/permissions/permissionsNavigatorOverlay.dtd">
 
 <overlay id="cookieNavigatorOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script type="application/x-javascript" src="chrome://cookie/content/cookieOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/permissions/permissionsOverlay.js"/>
   <script type="application/x-javascript">
   <![CDATA[
     /******* THE FOLLOWING IS FOR THE TASKMENU OVERLAY *******/
@@ -180,13 +180,13 @@
     }
 
     function OpenAboutPopups() {
-      window.openDialog("chrome://communicator/content/aboutPopups.xul", "", 
+      window.openDialog("chrome://communicator/content/permissions/aboutPopups.xul", "", 
                         "chrome,centerscreen,dependent", 
                         false);
     }
 
     function OpenManagePopups(host) {
-      window.openDialog("chrome://communicator/content/popupManager.xul", "",
+      window.openDialog("chrome://communicator/content/permissions/permissionsManager.xul", "",
                         "chrome,resizable=yes", 
                         host);
     }

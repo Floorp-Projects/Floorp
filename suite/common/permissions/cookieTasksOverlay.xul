@@ -37,12 +37,12 @@
 
  ***** END LICENSE BLOCK ***** -->
 
-<!DOCTYPE overlay SYSTEM "chrome://cookie/locale/cookieTasksOverlay.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://communicator/locale/permissions/cookieTasksOverlay.dtd">
 
 <overlay id="cookieTasksOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script type="application/x-javascript" src="chrome://cookie/content/cookieOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/permissions/permissionsOverlay.js"/>
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -72,7 +72,7 @@
       observerService.notifyObservers(null, "cookieIcon", "off");
 
       window.openDialog
-        ("chrome://cookie/content/p3pDialog.xul","_blank","modal=yes,chrome,resizable=no", this);
+        ("chrome://communicator/content/permissions/cookieP3PDialog.xul","_blank","modal=yes,chrome,resizable=no", this);
       if (gButtonPressed == "cookie") {
         viewCookiesFromIcon();
       } else if (gButtonPressed == "p3p") {

@@ -37,12 +37,12 @@
 
  ***** END LICENSE BLOCK ***** -->
 
-<!DOCTYPE overlay SYSTEM "chrome://cookie/locale/cookieContextOverlay.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://communicator/locale/permissions/imageContextOverlay.dtd">
 
 <overlay id="cookieContextOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script type="application/x-javascript" src="chrome://cookie/content/cookieOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/permissions/permissionsOverlay.js"/>
 
   <script type="application/x-javascript">
   <![CDATA[

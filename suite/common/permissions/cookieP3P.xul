@@ -42,7 +42,7 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
 
 <!-- CHANGE THIS WHEN MOVING FILES -->
-<!DOCTYPE dialog SYSTEM "chrome://cookie/locale/p3p.dtd">
+<!DOCTYPE dialog SYSTEM "chrome://communicator/locale/permissions/cookieP3P.dtd">
 
 <dialog id="privacySettings"
         buttons="accept,cancel,help"

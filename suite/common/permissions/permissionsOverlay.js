@@ -49,7 +49,7 @@ function openCookieViewer(viewerType)
       return;
     }
   }
-  window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul",
+  window.openDialog("chrome://communicator/content/permissions/cookieViewer.xul",
                     "_blank", "chrome,resizable", viewerType);
 }
 
@@ -67,5 +67,5 @@ function viewCookiesFromIcon() {
 
 function viewP3P() {
   window.openDialog
-    ("chrome://cookie/content/p3p.xul","_blank","chrome,resizable=no");
+    ("chrome://communicator/content/permissions/cookieP3P.xul","_blank","chrome,resizable=no");
 }  
