@@ -21,7 +21,7 @@
  
 <?xml-stylesheet href="chrome://communicator/content/sidebar/sidebarOverlay.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://global/skin/button.css" type="text/css"?> 
-<?xul-overlay href="chrome://communicator/content/contentAreaContextOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/contentAreaContextOverlay.xul"?> 
 
 <!DOCTYPE window [
 <!ENTITY % sidebarOverlayDTD SYSTEM "chrome://communicator/locale/sidebar/sidebarOverlay.dtd" >
@@ -53,6 +53,42 @@
               accesskey="&sidebar.customize.accesskey;"
               oncommand="SidebarCustomize();"/>
   </popup>
+
+
+  <!-- insert the sidebar toggle button in the personal toolbar -->
+  <toolbar id="PersonalToolbar">
+    <toolbarbutton id="sidebar-button" position="1"
+                   sbopen="false" 
+                   tooltiptext="&sidebar.open.tooltip;"
+                   sbopentooltip="&sidebar.open.tooltip;"
+                   sbclosetooltip="&sidebar.close.tooltip;"
+                   oncommand="if (sidebar_is_hidden()) SidebarShowHide(); else SidebarExpandCollapse(); event.preventBubble();"/>
+    <toolbarseparator persist="hidden"/>
+  </toolbar>
+
+  <!-- add a pref for the sidebar toggle button -->
+  <vbox id="prefShowButtonsBox1">
+    <checkbox id="sidebarToggleButton"
+              label="&sidebar.panels.label;"
+              insertafter="homeButton"
+              pref="true"
+              preftype="bool"
+              prefstring="browser.toolbars.showbutton.sidebar"
+              prefattribute="checked"/>
+  </vbox>
+  <script type="application/x-javascript">
+    if (this._elementIDs)
+    {
+      this._elementIDs.push("sidebarToggleButton");
+
+      // add a popupset to quiesce complaints from the cookie context menus
+      const kXULNS = 
+        "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+      var popupset = document.createElementNS(kXULNS, "popupset");
+      popupset.setAttribute("id", "contentAreaContextSet");
+      document.documentElement.appendChild(popupset);
+    }
+  </script>
 
   <!-- Overlay the sidebar panels -->
   <vbox id="sidebar-box" persist="hidden width collapsed">
