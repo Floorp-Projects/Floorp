@@ -49,7 +49,7 @@ function HistoryInit() {
     var historyController = new nsHistoryController;
     gHistoryTree.controllers.appendController(historyController);
 
-    gGlobalHistory = Components.classes["@mozilla.org/browser/global-history;1"].getService(Components.interfaces.nsIGlobalHistory);
+    gGlobalHistory = Components.classes["@mozilla.org/browser/global-history;1"].getService(Components.interfaces.nsIBrowserHistory);
     
     var children = document.getElementById('treechildren-bookmarks');
     if (children.firstChild)
@@ -148,11 +148,11 @@ nsHistoryController.prototype =
     {
         switch(command) {
         case "cmd_deleteByHostname":
-            gGlobalHistory.RemovePagesFromHost(gLastHostname, false)
+            gGlobalHistory.removePagesFromHost(gLastHostname, false)
             return true;
             
         case "cmd_deleteByDomain":
-            gGlobalHistory.RemovePagesFromHost(gLastDomain, true)
+            gGlobalHistory.removePagesFromHost(gLastDomain, true)
             return true;
             
         default:
