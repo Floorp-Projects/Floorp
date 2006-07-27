@@ -133,6 +133,47 @@ function updateSearchMode()
   return searchMode;
 }
 
+function readRDFString(aDS,aRes,aProp) {
+          var n = aDS.GetTarget(aRes, aProp, true);
+          if (n)
+            return n.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+}
+
+
+function ensureDefaultEnginePrefs(aRDF,aDS) 
+   {
+
+    mPrefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPrefBranch);
+    var defaultName = mPrefs.getComplexValue("browser.search.defaultenginename" , Components.interfaces.nsIPrefLocalizedString);
+    kNC_Root = aRDF.GetResource("NC:SearchEngineRoot");
+    kNC_child = aRDF.GetResource("http://home.netscape.com/NC-rdf#child");
+    kNC_Name = aRDF.GetResource("http://home.netscape.com/NC-rdf#Name");
+          
+    var arcs = aDS.GetTargets(kNC_Root, kNC_child, true);
+    while (arcs.hasMoreElements()) {
+        var engineRes = arcs.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+        var name = readRDFString(aDS, engineRes, kNC_Name);
+        if (name == defaultName)
+		   mPrefs.setCharPref("browser.search.defaultengine", engineRes.Value);
+    }
+  }
+
+
+function ensureSearchPref() {
+   
+
+   var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
+   mPrefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPrefBranch);
+   var ds = rdf.GetDataSource("rdf:internetsearch");
+   kNC_Name = rdf.GetResource("http://home.netscape.com/NC-rdf#Name");
+   try {
+        defaultEngine = mPrefs.getCharPref("browser.search.defaultengine");
+        } catch(ex) {
+            ensureDefaultEnginePrefs(rdf, ds);
+            defaultEngine = mPrefs.getCharPref("browser.search.defaultengine");
+            }
+   }
+
 // Initialize the Search panel:
 // 1) init the category list
 // 2) load the search engines associated with this category
@@ -145,7 +186,9 @@ function SearchPanelStartup()
   rootNode = rdf.GetResource("NC:LastSearchRoot", true);
   textArc  = rdf.GetResource("http://home.netscape.com/NC-rdf#LastText", true);
   modeArc  = rdf.GetResource("http://home.netscape.com/NC-rdf#SearchMode", true);
-
+  
+  ensureSearchPref()
+  
   var tree = document.getElementById("Tree");
   tree.database.AddObserver(RDF_observer);
 
