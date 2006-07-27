@@ -219,9 +219,9 @@ var cookiesTreeView = {
  };
 var cookiesTree;
 
-function Cookie(number,name,value,isDomain,host,rawHost,path,isSecure,expires,
+function Cookie(id,name,value,isDomain,host,rawHost,path,isSecure,expires,
                 status,policy) {
-  this.number = number;
+  this.id = id;
   this.name = name;
   this.value = value;
   this.isDomain = isDomain;
@@ -508,8 +508,8 @@ var permissionsTreeView = {
  };
 var permissionsTree;
 
-function Permission(number, host, rawHost, type, capability) {
-  this.number = number;
+function Permission(id, host, rawHost, type, capability) {
+  this.id = id;
   this.host = host;
   this.rawHost = rawHost;
   this.type = type;
