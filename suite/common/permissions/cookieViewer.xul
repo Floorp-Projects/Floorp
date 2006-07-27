@@ -152,6 +152,14 @@
       <vbox id="servers" flex="1">
           <description id="permissionsText" value="&div.bannedservers.label;"/>
           <separator class="thin"/>
+          <hbox>
+            <textbox id="cookie-site" flex="1" oninput="buttonEnabling(this);"/>
+            <button id="btnBlock" label="&blockSite.label;" disabled="true"
+                    oncommand="setCookiePermissions(nsIPermissionManager.DENY_ACTION);"/>
+            <button id="btnAllow" label="&allowSite.label;" disabled="true"
+                    oncommand="setCookiePermissions(nsIPermissionManager.ALLOW_ACTION);"/>
+          </hbox>
+          <separator class="thin"/>
           <tree id="permissionsTree" flex="1" style="height: 10em;"
                 hidecolumnpicker="true"
                 onkeypress="HandlePermissionKeyPress(event)"

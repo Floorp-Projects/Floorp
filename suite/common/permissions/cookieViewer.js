@@ -485,6 +485,27 @@ function DeletePermission() {
   FinalizePermissionDeletions();
 }
 
+function setCookiePermissions(action) {
+  var site = document.getElementById('cookie-site');
+  var url = site.value.replace(/^\s*([-\w]*:\/+)?/, "http://");
+  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                            .getService(Components.interfaces.nsIIOService);
+  var uri = ioService.newURI(url, null, null);
+  
+  permissionmanager.add(uri, dialogType, action);
+  site.focus();
+  site.value = "";
+}
+
+function buttonEnabling(textfield) {
+  // trim any leading space
+  var site = textfield.value.replace(/^\s*([-\w]*:\/+)?/, "");
+  var block = document.getElementById("btnBlock");
+  var allow = document.getElementById("btnAllow");
+  block.disabled = !site;
+  allow.disabled = !site;
+}
+
 function DeleteAllPermissions() {
   DeleteAllFromTree(permissionsTree, permissionsTreeView,
                         permissions, deletedPermissions,

@@ -1,6 +1,6 @@
 <!ENTITY     tab.cookiesonsystem.label      "Stored Cookies">
 <!ENTITY     tab.bannedservers.label        "Cookie Sites">
-<!ENTITY     div.bannedservers.label        "Sites that can and cannot store cookies on your computer.">
+<!ENTITY     div.bannedservers.label        "Manage sites that can and cannot store cookies on your computer.">
 <!ENTITY     div.cookiesonsystem.label      "View and remove cookies that are stored on your computer.">
 <!ENTITY     treehead.cookiename.label      "Cookie Name">
 <!ENTITY     treehead.cookiedomain.label    "Site"> 
@@ -21,7 +21,8 @@
 <!ENTITY     treehead.status.label          "Status">
 <!ENTITY     windowtitle.label              "Cookie Manager">
 
-<!ENTITY     addpermission.label            "New Site">
+<!ENTITY     blockSite.label                "Block">
+<!ENTITY     allowSite.label                "Allow">
 <!ENTITY     removepermission.label         "Remove Site">
 <!ENTITY     removeallpermissions.label     "Remove All Sites">
 <!ENTITY     removeimage.label              "Remove Site">
