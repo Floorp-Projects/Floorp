@@ -42,17 +42,6 @@
     // see bug 225857 comment 7
     const ALLOW_SESSION_ONLY = 8;
     
-    // Remove the image entries from the task menu
-    function HideImage() {
-      document.getElementById("image").hidden = true;
-    }
-
-    // for some unexplainable reason, CheckForImage() keeps getting called repeatedly
-    // as we mouse over the task menu.  IMO, that shouldn't be happening.  To avoid
-    // taking a performance hit due to this, we will set the following flag to avoid
-    // reexecuting the routine
-    var alreadyCheckedForImage = false;
-
     // determine which items we need to hide or disable from the task menu
     function CheckForVisibility()
     {
@@ -85,20 +74,6 @@
       pref = Components.classes['@mozilla.org/preferences-service;1'];
       pref = pref.getService();
       pref = pref.QueryInterface(Components.interfaces.nsIPrefBranch);
-
-      // determine if image manager should be in the UI
-      if (alreadyCheckedForImage) {
-        return;
-      }
-      alreadyCheckedForImage = true;
-      // remove image functions (unless overruled by the "imageblocker.enabled" pref)
-      try {
-        if (!pref.getBoolPref("imageblocker.enabled")) {
-          HideImage();
-        }
-      } catch(e) {
-        HideImage();
-      }
     }
 
     function SetPopupMenuEnabledState() {
