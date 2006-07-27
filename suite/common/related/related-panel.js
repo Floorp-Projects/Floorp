@@ -70,7 +70,7 @@ function (bReferrer)
 	sCDT += '&pane=nswr6';
 	sCDT += '&wid='+this.m_sWindowID;
 
-	return escape(sCDT);
+	return encodeURIComponent(sCDT);
 }
 
 NavObserver.prototype.TrackContext =
