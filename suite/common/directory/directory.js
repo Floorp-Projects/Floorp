@@ -101,7 +101,7 @@ function OnClick(event, node)
     if( event.type == "click" &&
         ( event.button != 1 || event.detail != 2 || node.nodeName != "treeitem") )
       return(false);
-    if( event.type == "keypress" && event.which != 13 )
+    if( event.type == "keypress" && event.keyCode != 13 )
       return(false);
 
     var tree = document.getElementById("tree");
