@@ -267,7 +267,7 @@ function SidebarCustomize() {
   var iwindowManager = Components.interfaces.nsIWindowMediator;
   var windowManager  = cwindowManager.QueryInterface(iwindowManager);
 
-  var customizeWindow = windowManager.GetMostRecentWindow('sidebar:customize');
+  var customizeWindow = windowManager.getMostRecentWindow('sidebar:customize');
 
   if (customizeWindow) {
     debug("Reuse existing customize dialog");
