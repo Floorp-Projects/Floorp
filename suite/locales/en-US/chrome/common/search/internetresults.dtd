@@ -23,6 +23,7 @@
 
 <!ENTITY name.column.label           "Name">
 <!ENTITY relevance.column.label      "Relevance">
+<!ENTITY pagerank.column.label       "Page Ranking">
 <!ENTITY price.column.label          "Price">
 <!ENTITY availability.column.label   "Availability">
 <!ENTITY site.column.label           "Internet Site">

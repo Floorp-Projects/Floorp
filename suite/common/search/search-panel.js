@@ -23,8 +23,6 @@
 var	rootNode = null;
 var	textArc = null;
 var	RDF_observer = new Object;
-var   settingsButton = null;
-var   settingsButtonText = null;
 var   bunremoveAttributedle = null;
 var   pref = null;
 
@@ -79,9 +77,6 @@ function rememberSearchText(targetNode)
 // 3) initialise the checked state of said engines. 
 function SearchPanelStartup()
 {
-	settingsButton = document.getElementById("btn.Advanced");
-	settingsButtonText = settingsButton.getAttribute("value");
-
   bundle = srGetStrBundle( "chrome://search/locale/search-panel.properties" );
    
 	var tree = document.getElementById("Tree");
@@ -125,7 +120,7 @@ function SearchPanelStartup()
   catch( e ) {
     var lastCategoryName = "";
   }
-  dump("*** lastCategoryName = " + lastCategoryName + "\n");
+//  dump("*** lastCategoryName = " + lastCategoryName + "\n");
   var categoryList = document.getElementById( "categoryList" );
   if( categoryList ) {
   	 //set to default value 'the web'
@@ -139,14 +134,6 @@ function SearchPanelStartup()
       }
     }
     
-    // set the category name on the advanced panel
-    var categoryText = categoryList.options[ categoryList.selectedIndex ].text;
-    var textElement = document.getElementById( "categoryNameText" );
-    textElement.setAttribute( "value", categoryText );
-    //set the category name on the settings button
-    settingsButton.value = settingsButtonText + categoryText + "...";
-    
-
     if( lastCategoryName == "" )
       lastCategoryName = "NC:SearchEngineRoot";
     else
@@ -156,6 +143,38 @@ function SearchPanelStartup()
   }
 
   loadEngines( lastCategoryName );
+  
+  // if we have search results, show them, otherwise show engines
+  if (haveSearchResults() == true)
+	switchTab(0);
+  else	switchTab(1);
+}
+
+function haveSearchResults()
+{
+	var resultsTree = document.getElementById("Tree");
+	if( !resultsTree)	return(false);
+	var ds = resultsTree.database;
+	if (!ds)		return(false);
+
+	var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+	if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+	if (rdf)
+	{
+		var source = rdf.GetResource( "NC:LastSearchRoot", true);
+		var childProperty = rdf.GetResource("http://home.netscape.com/NC-rdf#LastText", true);
+		var target = ds.GetTarget(source, childProperty, true);
+		if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
+		if (target)	target = target.Value;
+		if (target && target != "")
+		{
+			var textNode = document.getElementById("sidebar-search-text");
+			if (!textNode)	return(false);
+			textNode.value = unescape(target);
+			return(true);
+		}
+	}
+	return(false);
 }
 
 function getNumEngines()
@@ -177,14 +196,6 @@ function getNumEngines()
 
 function chooseCategory( aSelectElement )
 {
-  // set the category name on the advanced panel
-  var categoryText = aSelectElement.options[ aSelectElement.selectedIndex ].text;
-  var textElement = document.getElementById( "categoryNameText" );
-  textElement.setAttribute( "value", categoryText );
-  //set the category name on the settings button
-    settingsButton.setAttribute("value",settingsButtonText + categoryText + "...");
-    //alert("set button to " + settingsButtonText + categoryText);//debug remove
-
 	var category = aSelectElement.options[ aSelectElement.selectedIndex ].getAttribute("id");
   var pref = Components.classes["component://netscape/preferences"].getService();
   if( pref )
@@ -288,7 +299,7 @@ function loadEngines( aCategory )
   				var engineSRC = rdf.GetResource( engineURI, true );
   				var hasAssertion = localStore.HasAssertion( categorySRC, checkedProperty, engineSRC, true );
           var checkbox = treeItem.firstChild.firstChild.firstChild;
-          dump("*** hasAssertion = " + hasAssertion + "\n");
+//          dump("*** hasAssertion = " + hasAssertion + "\n");
   				if ( hasAssertion )
   				{
   					checkbox.checked = true;
@@ -390,10 +401,11 @@ function doStop()
 
 	if (sortSetFlag == false)
 	{
-		colNode = top.content.document.getElementById("NameColumn");
+		colNode = top.content.document.getElementById("PageRankColumn");
 		if (colNode)
 			top.content.setInitialSort(colNode, "ascending");
 	}
+	switchTab(0);
 }
 
 function doSearch()
@@ -491,11 +503,11 @@ function doSearch()
       engineURIs[engineURIs.length] = treeItem.getAttribute( "id" );
     }
     else {
-      dump("*** multiple search engines present, selecting the netscape search engine\n");
+//      dump("*** multiple search engines present, selecting the netscape search engine\n");
       for( var i = 0; i < treeChildrenNode.childNodes.length; i++ )
       {
         var currItem = treeChildrenNode.childNodes[i];
-        dump("*** the current URI is = " + currItem.getAttribute("id") + "\n");
+//        dump("*** the current URI is = " + currItem.getAttribute("id") + "\n");
         if( currItem.getAttribute("id").indexOf("NetscapeSearch.src") != -1 ) {
           engineURIs[engineURIs.length] = currItem.getAttribute("id");
           break;
@@ -530,9 +542,9 @@ function checkSearchProgress( aSearchURL )
 	var resultsTree = top.content.document.getElementById("internetresultstree");
   var enginesBox = top.content.document.getElementById("engineTabs");
 	if( !resultsTree || !enginesBox )	
-    return false;
+    return (activeSearchFlag);
 	var treeref = resultsTree.getAttribute("ref");
-  if( !treeref ) {
+  if( aSearchURL ) {
     resultsTree.setAttribute( "ref", aSearchURL );
     treeref = aSearchURL;
   }
@@ -554,13 +566,13 @@ function checkSearchProgress( aSearchURL )
 		}
 	}
 	if( activeSearchFlag )
-		setTimeout("checkSearchProgress()", 1000);
+		setTimeout("checkSearchProgress(null)", 1000);
 	else {
 		//window.frames["sidebar-content"].doStop();
     doStop();
   }
   
-  return true;
+  return(activeSearchFlag);
 }
 
 function FOO_doSearch()
@@ -729,4 +741,5 @@ function switchTab( aPageIndex )
 {
   var deck = document.getElementById( "advancedDeck" );
   deck.setAttribute( "index", aPageIndex );
+  return(true);
 }
