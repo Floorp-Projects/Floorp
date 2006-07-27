@@ -32,6 +32,8 @@
   <script type="application/x-javascript">
   <![CDATA[
 
+    var permissionmanager;
+
     // Remove the image entries from the task menu
     function HideImage() {
       var element;
@@ -46,9 +48,47 @@
     // reexecuting the routine
     var alreadyCheckedForImage = false;
 
-    // determine if we need to remove the image entries from the task menu
-    function CheckForImage()
+    // determine which items we need to hide or disable from the task menu
+    function CheckForVisibility()
     {
+
+      // obtain access to permissionmanager module
+      permissionmanager =
+        Components.classes["@mozilla.org/permissionmanager;1"]
+          .getService(Components.interfaces.nsIPermissionManager);
+      if (!("_content" in window) || !window._content) {
+        // this occurs if doing tasks->privacy->cookie->block from java console
+        return;
+      }
+
+      // determine current state (blocked or unblocked) and hide appropriate menu item
+      var blocked, enableElement, disableElement;
+
+      blocked = 
+        permissionmanager.testForBlocking(window._content.location, COOKIEPERMISSION);
+      if (blocked) {
+        disableElement = document.getElementById("BlockCookies");
+        enableElement = document.getElementById("AllowCookies");
+      } else {
+        disableElement = document.getElementById("AllowCookies");
+        enableElement = document.getElementById("BlockCookies");
+      }
+      disableElement.setAttribute("disabled","true");
+      enableElement.removeAttribute("disabled");
+
+      blocked =
+        permissionmanager.testForBlocking(window._content.location, IMAGEPERMISSION);
+      if (blocked) {
+        disableElement = document.getElementById("BlockImages");
+        enableElement = document.getElementById("AllowImages");
+      } else {
+        disableElement = document.getElementById("AllowImages");
+        enableElement = document.getElementById("BlockImages");
+      }
+      disableElement.setAttribute("disabled","true");
+      enableElement.removeAttribute("disabled");
+
+      // determine if image manager should be in the UI
       if (alreadyCheckedForImage) {
         return;
       }
@@ -72,13 +112,6 @@
 
       if (!("_content" in window) || !window._content) {
         // this occurs if doing tasks->privacy->cookie->block from java console
-        return;
-      }
-
-      var permissionmanager =
-        Components.classes["@mozilla.org/permissionmanager;1"]
-          .getService().QueryInterface(Components.interfaces.nsIPermissionManager);
-      if (!permissionmanager) {
         return;
       }
       var element;
@@ -111,7 +144,7 @@
   </script>         
 
   <!-- tasksOverlay menu items -->
-  <menupopup id="taskPopup" onpopupshowing="CheckForImage()"/>
+  <menupopup id="taskPopup" onpopupshowing="CheckForVisibility()"/>
 
   <menupopup  id="personalManagers">
     <menu label="&cookieCookieManager.label;"
