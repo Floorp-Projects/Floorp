@@ -975,7 +975,7 @@ function saveSearch()
                       "searchTitle", [lastSearchText], 1);
 
   var bmks = Components.classes[BMARKS_CONTRACTID].getService(nsIBookmarksService);
-  bmks.AddBookmark(lastSearchURI, searchTitle, bmks.BOOKMARK_SEARCH_TYPE, null);
+  bmks.addBookmarkImmediately(lastSearchURI, searchTitle, bmks.BOOKMARK_SEARCH_TYPE, null);
 }
 
 function doCustomize()
