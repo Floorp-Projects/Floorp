@@ -31,6 +31,7 @@ var gDeleteByHostname;
 var gDeleteByDomain;
 var gHistoryBundle;
 var gHistoryStatus;
+var gWindowManager = null;
 
 function HistoryInit()
 {
@@ -218,8 +219,23 @@ function OpenURL(aInNewWindow)
       
     var url = gHistoryOutliner.outlinerBoxObject.view.getCellText(currentIndex, "URL");
 
-    if (aInNewWindow)
+    if (aInNewWindow) {
+      var count = gHistoryOutliner.outlinerBoxObject.view.selection.count;
+      if (count == 1)
         window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url );
+      else {
+        var min = new Object(); 
+        var max = new Object();
+        var rangeCount = gHistoryOutliner.outlinerBoxObject.view.selection.getRangeCount();
+        for (var i = 0; i < rangeCount; ++i) {
+          gHistoryOutliner.outlinerBoxObject.view.selection.getRangeAt(i, min, max);
+          for (var k = max.value; k >= min.value; --k) {
+            url = gHistoryOutliner.outlinerBoxObject.view.getCellText(k, "URL");
+            window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url);
+          }
+        }
+      }
+    }        
     else
         openTopWin(url);
     return true;
@@ -251,3 +267,81 @@ function GroupBy(groupingType)
     }
     gPrefService.SetCharPref("browser.history.grouping", groupingType);
 }
+
+function historyAddBookmarks()
+{
+  var count = gHistoryOutliner.outlinerBoxObject.view.selection.count;
+  var url;
+  var title;
+  if (count == 1) {
+    var currentIndex = gHistoryOutliner.currentIndex;
+    url = gHistoryOutliner.outlinerBoxObject.view.getCellText(currentIndex, "URL");
+    title = gHistoryOutliner.outlinerBoxObject.view.getCellText(currentIndex, "Name");
+    BookmarksUtils.addBookmark(url, title, undefined, true);
+  }
+  else if (count > 1) {
+    var min = new Object(); 
+    var max = new Object();
+    var rangeCount = gHistoryOutliner.outlinerBoxObject.view.selection.getRangeCount();
+    for (var i = 0; i < rangeCount; ++i) {
+      gHistoryOutliner.outlinerBoxObject.view.selection.getRangeAt(i, min, max);
+      for (var k = max.value; k >= min.value; --k) {
+        url = gHistoryOutliner.outlinerBoxObject.view.getCellText(k, "URL");
+        title = gHistoryOutliner.outlinerBoxObject.view.getCellText(k, "Name");
+        BookmarksUtils.addBookmark(url, title, undefined, false);
+      }
+    }
+  }
+}
+
+
+function updateItems()
+{
+  var count = gHistoryOutliner.outlinerBoxObject.view.selection.count;
+  var openItem = document.getElementById("miOpen");
+  var openItemInNewWindow = document.getElementById("miOpenInNewWindow");
+  if (count > 1) {
+    document.getElementById("miAddBookmark").setAttribute("label", document.getElementById('multipleBookmarks').getAttribute("label"));
+    var min = new Object(); 
+    var max = new Object();
+    var rangeCount = gHistoryOutliner.outlinerBoxObject.view.selection.getRangeCount();
+    for (var i = 0; i < rangeCount; ++i) {
+      gHistoryOutliner.outlinerBoxObject.view.selection.getRangeAt(i, min, max);
+      for (var k = max.value; k >= min.value; --k) {
+        if (isContainer(gHistoryOutliner, k))          
+          return false;
+      }
+    }
+    openItem.setAttribute("hidden", "true");
+    openItem.removeAttribute("default");
+    openItemInNewWindow.setAttribute("default", "true");
+  }
+  else {
+    document.getElementById("miAddBookmark").removeAttribute("disabled");
+    document.getElementById("miAddBookmark").setAttribute("label", document.getElementById('oneBookmark').getAttribute("label"));
+    var currentIndex = gHistoryOutliner.currentIndex;
+    if (isContainer(gHistoryOutliner, currentIndex))
+      return false;
+    if (!gWindowManager) {
+      gWindowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
+      gWindowManager = gWindowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
+    }
+    var topWindowOfType = gWindowManager.getMostRecentWindow("navigator:browser");
+    if (!topWindowOfType) {
+        openItem.setAttribute("hidden", "true");
+        openItem.removeAttribute("default");
+        openItemInNewWindow.setAttribute("default", "true");
+    }
+    else {
+      openItem.removeAttribute("hidden");
+      if (!openItem.getAttribute("default"))
+        openItem.setAttribute("default", "true");
+      openItemInNewWindow.removeAttribute("default");
+    }
+  }
+  return true;
+}
+
+
+
+ 
