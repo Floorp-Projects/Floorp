@@ -31,47 +31,122 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   align="vertical"
   class="dialog"
-  onload="Init();">
+  onload="SearchPanelStartup();"
+  onunload="SearchPanelShutdown();">
 
   <html:script src="chrome://search/content/search-panel.js" />
 
-  <box align="horizontal" style="margin: 5px 3px 5px 3px; vertical-align: middle;" autostretch="never">
-  	<html:input id="sidebar-search-text" flex="1" onkeyup="if (event.which == 13) { return doSearch(); }" />
-  	<titledbutton class="push" onclick="return doSearch();" value="&search.button.label;"/>
-  </box>
-  <tree id="Tree" ref="NC:LastSearchRoot"
-    class="inset" flex="1"
-    datasources="rdf:internetsearch"
-    onclick="openURL(event, event.target.parentNode.parentNode, 'Tree')">
-
-    <template>
-      <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-        <treechildren>
-          <treeitem uri="...">
+  <tabcontrol align="vertical" flex="100%">
+    <box align="horizontal">
+      <spring style="width: 5px;"/>
+      <tabbox flex="100%">
+        <tab flex="1">&search.results.tab;</tab>
+        <tab flex="1">&search.advanced.tab;</tab>
+      </tabbox>
+      <spring style="width: 5px;"/>
+    </box>
+    <tabpanel flex="100%">
+      <!-- results panel -->
+      <box align="vertical" flex="100%">
+        <box align="horizontal" class="spaced">
+        	<html:input id="sidebar-search-text" flex="1" onkeyup="if (event.which == 13) { return doSearch(); }" />
+          <titledbutton id="searchbutton" value="&search.button.label;" onclick="return doSearch();" class="dialog push"/>
+          <titledbutton id="stopbutton" value="&stop.button.label;" onclick="return doStop();" class="dialog push" style="display:none;"/>
+        </box>
+        <box align="horizontal" class="spaced">
+          <html:label for="">&within.label;</html:label>
+        	<template id="categoryTemplate">
+        		<rule iscontainer="true">
+        			<html:optgroup uri="..." label="rdf:http://home.netscape.com/NC-rdf#title" />
+        		</rule>
+        		<rule>
+        			<html:option uri="..." value="rdf:http://home.netscape.com/NC-rdf#category" >
+        				<text value="rdf:http://home.netscape.com/NC-rdf#title" />
+        			</html:option>
+        		</rule>
+        	</template>
+        	<html:select id="categoryList" template="categoryTemplate" ref="NC:SearchCategoryRoot" datasources="rdf:null"
+        		sortResource="http://home.netscape.com/NC-rdf#title" sortDirection="ascending"
+        		onchange="return chooseCategory(this)" >
+        		<html:option value="NC:SearchEngineRoot" >&allengines.label;</html:option>
+        	</html:select>
+        </box>
+        
+        <box flex="1">
+        <tree id="Tree" ref="NC:LastSearchRoot"
+          class="inset"
+          flex="100%"
+          datasources="rdf:internetsearch"
+          onclick="openURL(event, event.target.parentNode.parentNode, 'Tree')">
+      
+          <template>
+            <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+              <treechildren>
+                <treeitem uri="...">
+                  <treerow>
+                    <treecell>
+                      <html:hr width="100%" size="1" />
+                    </treecell>
+                  </treerow>
+                </treeitem>
+              </treechildren>
+            </rule>
+      
+            <rule>
+              <treechildren>
+                <treeitem uri="..." persist="open"
+                        loading="rdf:http://home.netscape.com/NC-rdf#loading"
+                        type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
+                  <treerow>
+                    <treecell value="rdf:http://home.netscape.com/NC-rdf#Name"
+                              src="rdf:http://home.netscape.com/NC-rdf#Icon" />
+                  </treerow>
+                </treeitem>
+              </treechildren>
+            </rule>
+          </template>
+      
+          <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name" />
+      
+        </tree>
+        </box>
+      </box>
+      <!-- advanced tab -->
+      <box align="vertical">
+        <box align="horizontal">
+          <html:label>&whenSearching.label;</html:label>
+        </box>
+        <box align="horizontal">
+          <html:label for="">&within.label;</html:label>
+        </box>
+        <box align="horizontal">
+          <html:label>&useTheseProviders.label;</html:label>
+        </box>
+        <tree align="horizontal" id="searchengines" flex="1" datasources="rdf:internetsearch" ref="NC:SearchEngineRoot" class="inset">
+          <treecol id="CheckboxColumn" />
+          <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" sortActive="true" sortDirection="ascending" />
+          <template>
+            <treechildren>
+              <treeitem uri="..." loading="rdf:http://home.netscape.com/NC-rdf#loading" >
+                <treerow>
+                  <treecell allowevents="true">
+                    <html:input type="checkbox" onclick="doCheck(this)" />
+                  </treecell>
+                  <treecell>
+                    <titledbutton class="iconic" flex="1" crop="right" align="left" src="rdf:http://home.netscape.com/NC-rdf#Icon" value="rdf:http://home.netscape.com/NC-rdf#Name" />
+                  </treecell>
+                </treerow>
+              </treeitem>
+            </treechildren>
+          </template>
+          <treehead>
             <treerow>
-              <treecell>
-                <html:hr width="100%" size="1" />
-              </treecell>
+              <treecell value="&checkbox.column.label;" style="width: 23px;"/>
+              <treecell observes="NameColumn" value="&engine.column.label;" resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('NameColumn');" sortActive="true" sortDirection="ascending" flex="1"/>
             </treerow>
-          </treeitem>
-        </treechildren>
-      </rule>
-
-      <rule>
-        <treechildren>
-          <treeitem uri="..." persist="open"
-                  loading="rdf:http://home.netscape.com/NC-rdf#loading"
-                  type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
-            <treerow>
-              <treecell value="rdf:http://home.netscape.com/NC-rdf#Name"
-                        src="rdf:http://home.netscape.com/NC-rdf#Icon" />
-            </treerow>
-          </treeitem>
-        </treechildren>
-      </rule>
-    </template>
-
-    <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name" />
-
-  </tree>
+          </treehead>
+        </tree>
+      </box>
+    </tabpanel>
+  </tabcontrol>
 </window>
