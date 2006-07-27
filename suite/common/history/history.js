@@ -223,6 +223,12 @@ var historyDNDObserver = {
     }
 };
 
+function validClickConditions(event)
+{
+  return (event.button == 0 &&
+          event.originalTarget.localName == 'outlinerchildren');
+}
+
 function OpenURL(aInNewWindow)
 {
     var currentIndex = gHistoryOutliner.currentIndex;
