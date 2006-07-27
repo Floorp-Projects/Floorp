@@ -41,8 +41,8 @@ var gHistoryBundle;
 function HistoryInit() {
 
     gHistoryTree =      document.getElementById("historyTree");
-    gDeleteByHostname = document.getElementById("cmd_deleteByHostname");
-    gDeleteByDomain =   document.getElementById("cmd_deleteByDomain");
+    gDeleteByHostname = document.getElementById("menu_deleteByHostname");
+    gDeleteByDomain =   document.getElementById("menu_deleteByDomain");
     gHistoryBundle =    document.getElementById("historyBundle");
 
     var treeController = new nsTreeController(gHistoryTree);
