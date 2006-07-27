@@ -28,7 +28,7 @@
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="Init();" 
-  class="dialog"
+  class="color-dialog"
   title="&sidebar.customize.title.label;"
   windowtype="sidebar:customize"
   align="vertical">
