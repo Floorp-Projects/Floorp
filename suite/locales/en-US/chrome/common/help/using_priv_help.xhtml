@@ -114,7 +114,7 @@ Using the Cookie Manager</h1>
 <li>Select one or more cookies and click Remove Cookie, or click Remove All Cookies.
 </ol>
 
-<p>To prevent the removed cookies from being reaccepted later, click the checkbox labeled "Don't allow removed cookies to be reaccepted later." Click OK when you're through.
+<p>To prevent the removed cookies from being reaccepted later, click the checkbox labeled &quot;Don't allow removed cookies to be reaccepted later.&quot; Click OK when you're through.
 
 <p>
 [&nbsp;<A HREF="#using_cookies">Return to beginning of section</A>&nbsp;]
@@ -125,25 +125,35 @@ Using the Cookie Manager</h1>
 <a NAME="cookies:privacy_levels_forIDX"></a>
 <h2>Setting Privacy Levels</h2>
 
-<p>A web site's privacy policy tells you what kind of information the site collects, to whom it gives that information, and how it uses the information. Some web sites publish privacy policies that determine how your browser will handle cookies according to the privacy level you set.
+<p>Many web sites publish their privacy policies according to the Platform for Privacy Preferences (P3P) standard. A web site's privacy policy describes what kind of information the site collects, to whom it gives that information, and how it uses the information. 
 
-<p>To set the privacy level you want your browser to enforce for all web sites:
+<p>You can choose to enable cookies based on the browser's privacy settings and the P3P standard. When cookies are enabled in this manner, the browser checks your current privacy settings against those published by the web site and takes appropriate action. 
+
+<p>For example, your privacy settings may require the browser to reject cookies that collect personal information without informing you. Alternatively, you can adjust your privacy settings so that the browser simply warns you when a cookie is used in this way, while allowing the action to take place.
+
+<p>The browser defines three levels of privacy: low, medium, and high. You can select one of these predefined privacy levels, or you can create your own custom privacy policy.
+
+<p>To control the privacy settings you want your browser to enforce for all web sites:
 
 <ol>
 <li>Open the Edit menu and choose Preferences.
 <li>Under the Privacy &amp; Security category, choose Cookies. (If no subcategories are visible, double-click the category to expand the list.)
-<li>Select the option labeled "Enable cookies based on privacy levels."
+<li>Select the option labeled &quot;Enable cookies based on privacy settings.&quot;
 <li>Click View.
-<li>In the privacy level dialog box, select the level of privacy you want.
+<li>In the Privacy Settings dialog box, select the level of privacy you want, or select &quot;custom&quot; and define your own privacy policy as discussed below.
+<li>Click OK to confirm your settings.
 </ol>
 
-<p>Your browser will handle cookies according to the settings under Cookie Acceptance Policy. For the low, medium, and high options, these settings are standardized. 
+<p>Your browser handles cookies according to the settings you select. For the low, medium, and high options, these settings are standardized. 
 
-<p>"First party cookies" are cookies set by the site you are visiting. "Third party cookies," also known as <a href="privacy_help.html#privacy_foreign">foreign cookies</a>, are set by a sites other than the one you are viewing, and are therefore generally considered more dangerous.
+<p>When the &quot;custom&quot; option is selected, you can define your own privacy policy. For each type of site listed under Cookie Acceptance Policy, and for each type of cookie, you can select whether you want the Cookie Manager to accept the cookie permanently, reject it permanently, accept it just for the current session (that is, until you exit the browser), or flag it.
 
-<p>When the Custom option is set, you can define your own privacy level. For each type of site listed under Cookie Acceptance Policy, and for each type of cookie, you can set whether you want the Cookie Manager to accept the cookie permanently, reject it permanently, or accept it just for the current session (that is, until you exit the browser). 
+<p>If you choose Flag for a given category, the Cookie Manager displays the cookie notification icon near the lower-right corner of the browser window whenever a web site that fits the category sets a cookie. When this icon is displayed, you can click it to get information about the affected cookies.
 
-<p>For more details, see <a href="#privacy_levels_window">Privacy Levels</a>.
+<p>"First party cookies" are cookies set by the site you are visiting. &quot;Third party cookies,&quot; also known as <a href="privacy_help.html#privacy_foreign">foreign cookies</a>, are set by a sites other than the one you are viewing, and are therefore considered more dangerous.
+
+
+<p>For more details, see <a href="#privacy_levels_window">Privacy Settings</a>.
 
 <p>[&nbsp;<A HREF="#using_cookies">Return to beginning of section</A>&nbsp;]
 
@@ -165,7 +175,7 @@ Using the Cookie Manager</h1>
 <p><a href="#cookie_prefs">Privacy &amp; Security Preferences - Cookies</a></p>
 <p><a href="#cookies_stored">Stored Cookies</a></p>
 <p><a href="#cookie_sites">Cookie Sites</a></p>
-<p><a href="#privacy_levels_window">Privacy Levels</a>
+<p><a href="#privacy_levels_window">Privacy Settings</a>
 <p><a href="#cookie_notify">Cookie Notification</a>
 </td>
 </tr>
@@ -193,7 +203,7 @@ Using the Cookie Manager</h1>
 
 <li><b>Enable cookies for the originating web site only:</b> Choose this if you don't want to accept or return <a href="privacy_help.html#privacy_foreign">foreign cookies</a>. Cookies received through email (when the message contains a web page) are treated as foreign cookies.
 
-<li><b>Enable cookies based on privacy levels:</b> Choose this if you handle cookies based on privacy levels. If you select this option, click the View button to set the privacy level you prefer.
+<li><b>Enable cookies based on privacy settings:</b> Choose this if you handle cookies based on your privacy settings. If you select this option, click the View button to confirm or modify your privacy settings.
 
 <li><b>Enable all cookies:</b> Choose this to permit all web sites to set cookies on your computer and receive them back during subsequent visits. <b>Note:</b> If you select this option and later choose to disable all cookies, you may still have old cookies stored on your computer (though no new ones will be set).
 
@@ -235,9 +245,12 @@ Using the Cookie Manager</h1>
 	<li>Click Manage Stored Cookies.
 </ol>
 
-<p>The Stored Cookies tab lists all the cookies stored on your computer and the sites they belong to. When you select a cookie in this list, information about that cookie appears:
-<p>&nbsp;</p>
+<p>The Stored Cookies tab lists all the cookies stored on your computer, the sites they belong to, and their current status. 
 
+<p>If you can't see the Status column, click the icon in the upper-right corner of the table and select Status. This column indicates which cookies have been flagged, accepted, or rejected according to your <a href="#privacy_levels_window">Privacy Settings</a>. 
+
+<p>When you select a cookie in this list, the following information about that cookie appears in the bottom portion of the tab:
+<br>&nbsp;
 <table cellpadding="3" cellspacing="3" border="1">
 
 <tr>
@@ -271,7 +284,7 @@ Using the Cookie Manager</h1>
 
 <tr>
 <td valign="top">Server Secure</td>
-<td valign="top">This indicates whether the server that originally sent the cookie uses a "secure" (HTTPS) connection. When this field is "Yes" it means that the browser checks the connection whenever the server asks for a cookie and will not send it unless the connection is encrypted.</td>
+<td valign="top">This indicates whether the server that originally sent the cookie uses a &quot;secure&quot; (HTTPS) connection. When this field is &quot;Yes&quot; it means that the browser checks the connection whenever the server asks for a cookie and will not send it unless the connection is encrypted.</td>
 </tr>
 
 <tr>
@@ -316,14 +329,14 @@ Using the Cookie Manager</h1>
 
 <p>&nbsp;</p>
 
-<hr><h2><a name="privacy_levels_window"></a>Privacy Levels</h2>
+<hr><h2><a name="privacy_levels_window"></a>Privacy Settings</h2>
 
-<p>This section describes how to use the Privacy Levels window. If you're not already viewing it, follow these steps:
+<p>This section describes how to use the Privacy Settings window. If you're not already viewing it, follow these steps:
 
 <ol>
 	<li>Open the Edit menu and choose Preferences.
    	<li>Under the Privacy &amp; Security category, click Cookies. (If no subcategories are visible, double-click the category to expand the list.)
-	<li>Select the radio button labeled "Enable Cookies Based on Privacy Levels." 
+	<li>Select the radio button labeled &quot;Enable cookies based on privacy settings.&quot; 
 	<li>Click View.
 </ol>
 <p>&nbsp;</p>
@@ -345,14 +358,14 @@ Using the Cookie Manager</h1>
 
 <p>The level of privacy you set here determines how your browser treats cookies according to privacy policies published by some web sites and the settings displayed under Cookie Acceptance Policy for first party and third party cookies. 
 
-<p>"First party cookies" are cookies set by the site you are visiting. "Third party cookies," also known as <a href="privacy_help.html#privacy_foreign">foreign cookies</a>, are set by a site other than the one you are viewing, and are considered more dangerous than first party cookies.
+<p>"First party cookies" are cookies set by the site you are visiting. &quot;Third party cookies,&quot; also known as <a href="privacy_help.html#privacy_foreign">foreign cookies</a>, are set by a site other than the one you are viewing, and are considered more dangerous than first party cookies.
 
 <p>You can select one of the following privacy levels:
 <ul>
 	<li><b>low:</b> Select this if you're not too concerned about cookies. When this setting is selected, the Cookie Manager accepts all first party cookies permanently, without regard for a site's privacy policy. It also accepts all third party cookies&mdash;but, in the case of sites that may be collecting information without your consent, only until you exit the browser.
 	<li><b>medium:</b> Select this if you don't want to accept third party cookies set by sites that may be collecting personally identifiable information without your consent.
 	<li><b>high:</b> Select this if you want to accept only cookies set by sites that explicitly ask for your consent when they collect personally identifiable information.
-	<li><b>custom:</b> Select this only if you want to set your own custom Cookie Acceptance Policy. The default settings for "custom" are the same as for "high." You can modify them by selecting from the drop-down menus in the bottom portion of the dialog box.
+	<li><b>custom:</b> Select this only if you want to set your own custom Cookie Acceptance Policy. The default settings for &quot;custom&quot; are the same as for &quot;high.&quot; You can modify them by selecting from the drop-down menus in the bottom portion of the dialog box.
 </ul>
 <p>&nbsp;</p>
 
@@ -360,18 +373,22 @@ Using the Cookie Manager</h1>
 <a name="cookie_acceptance"></a>
 <h3>Cookie Acceptance Policy</h3>
 
-<p>If you select the "custom" level of privacy in the top portion of the Privacy Levels dialog box, you can choose from three different settings in each of the eight categories shown in the bottom portion. You can choose one of these options for each category: 
+<p>If you select the &quot;custom&quot; level of privacy in the top portion of the Privacy Settings dialog box, you can choose one of four settings from the drop-down list in each of the eight categories shown in the bottom portion. These settings cause Cookie Manager to perform the following actions: 
 
 <ul>
-	<li><b>Accept:</b> Causes Cookie Manager to accept permanently all cookies in the category.
-	<li><b>Session:</b> Causes Cookie Manager to accept all cookies in the category for the current session only&mdash;that is, until you exit the browser.
-	<li><b>Reject:</b> Causes Cookie Manager to reject permanently all cookies in the category.
+	<li><b>Accept:</b> Permanently accept all cookies in the category.
+	<li><b>Session:</b> Accept all cookies in the category for the current session only&mdash;that is, until you exit the browser.
+	<li><b>Reject:</b> Permanently reject all cookies in the category.
+	<li><b>Flag:</b> Accept all cookies in the category, but display the cookie notifiation icon each time it does so.
 </ul>
+
+<p>The cookie notification icon appears near the lower-right corner of the browser window whenever a web site in the category sets a cookie. When this icon is displayed, you can click it to get information about the affected cookies or modify your privacy settings.
+ 
 
 <p>There are four categories for each of the two types of cookies shown:
 
 <ul>
-	<li><b>Site has no privacy policy:</b> This kind of site does not publish any kind of privacy policy. There is  no way of knowing what kinds of information such sites collect or what they do with it. In general, it's safest to reject cookies set by such sites, esecially third-party cookies.
+	<li><b>Site has no privacy policy:</b> This kind of site does not publish any kind of privacy policy. There is  no way of knowing what kinds of information such sites collect or what they do with it. In general, it's safest to reject cookies set by such sites, especially third-party cookies.
 	<li><b>Site collects personally identifiable information without your consent:</b> This kind of site publishes a privacy policy, but does not ask your permission when they collect information about your online activities. If you are concerned about such information being collected without your knowledge, you should reject cookies from such sites, especially third-party cookies.
 	<li><b>Site collects personally identifiable information with only your implicit consent:</b> This kind of site collects information about you based on your privacy level settings, but without asking you explicitly each time it does so
 	<li><b>Site does not collect personally identifiable information without your explicit consent:</b> This kind of site is relatively less dangerous, since you are warned, and given a chance to reject the request, each time such a site attempts to collect information about you. As for the other types of sites, third-party cookies are considered more dangerous than first party cookies.
@@ -380,7 +397,18 @@ Using the Cookie Manager</h1>
 
 <hr><h2><a name="cookie_notify"></a>Cookie Notification</h2>
 
-<p>[text to come]
+<p>The cookie notification icon is located in the status bar near the lower-right corner of the browser window. It appears when a web site has used a cookie in a way that requires you to be notified according to your current <a href="#privacy_levels_window">Privacy Settings</a>.
+
+<p>This section describes how to use the Cookie Notification dialog box, which appears when you click the Cookie Notification icon. You can take the following actions from this dialog box:
+
+<ul>	
+	<li><b>Turn Off Privacy Settings.</b> Click this button to disable your Privacy Settings. This has the same effect as selecting &quot;Enable all cookies&quot; in <a href="#cookie_prefs">Privacy &amp; Security Preferences - Cookies</a>. After you take this action, your browser will accept all cookies without warning you.
+	<li><b>View Cookie Manager.</b> Click this button to open the Cookie Manager, where you can view the current status of all your cookies and identify the cookies that caused the notification icon to appear. Clicking this button also removes the cookie notification icon from the status bar.
+	<li><b>View Privacy Settings.</b> Click this button to open the Privacy Settings dialog box. The settings in this dialog box determine how web sites can use cookies on your computer and what actions cause the cookie notification icon to be displayed.
+	<li><b>Close.</b> Click this button to exit the Cookie Notification dialog box without taking any action. The cookie notification icon remains visible until you open the Cookie Manager to view your cookie status.
+</ul>
+
+<p>For more information on the use of privacy settings, see <a href="#privacy_levels">Setting Privacy Levels</a>.
 
 <p>&nbsp;</p>
 <a NAME="Password_Manager:usingIDX"></a>
@@ -610,7 +638,7 @@ Using the Cookie Manager</h1>
 <a NAME="form_sites_view_edit"></a>
 <h2>Editing Stored Site Information</h2>
 
-<p>As explained in <a href="#form_saveinfo">Saving Form Data</a>, you can choose "Never for this site" when Form Manager prompts you to save data you've entered in a form. Similarly, you can choose not to display the Prefill Form Data dialog box on a site-by-site basis.
+<p>As explained in <a href="#form_saveinfo">Saving Form Data</a>, you can choose &quot;Never for this site&quot; when Form Manager prompts you to save data you've entered in a form. Similarly, you can choose not to display the Prefill Form Data dialog box on a site-by-site basis.
 
 <p>Form Manager lets you change your mind about these decisions at any time. To view site-specific information about your saved form data:
 <ol>
@@ -963,7 +991,7 @@ site&quot; in response to the Form Manager's request to store form data.
 
 <hr>
 
-<p><i>14 March 2002</i></p>
+<p><i>26 March 2002</i></p>
 
 <hr>
 <p>Copyright &copy; 1994-2002 Netscape Communications Corporation.</p>
