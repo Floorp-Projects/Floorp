@@ -97,7 +97,8 @@
               sortDirection="ascending" sortActive="true"
               flex="1" datasources="rdf:internetsearch"
               onclick="if (event.button == 1 &amp;&amp; event.target.localName == 'treecell')
-                         sidebarOpenURL(event.target.parentNode.parentNode);">
+                         sidebarOpenURL(event.target.parentNode.parentNode);"
+              style="-moz-user-focus:ignore !important;">
 
           <template>
 
