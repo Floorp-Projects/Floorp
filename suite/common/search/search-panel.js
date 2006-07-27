@@ -971,7 +971,8 @@ function saveSearch()
     }
   }
 
-  var searchTitle = "Search: '" + lastSearchText + "'";  // using " + gSites;
+  var searchTitle = searchBundle.stringBundle.formatStringFromName(
+                      "searchTitle", [lastSearchText], 1);
 
   var bmks = Components.classes[BMARKS_CONTRACTID].getService(nsIBookmarksService);
   bmks.AddBookmark(lastSearchURI, searchTitle, bmks.BOOKMARK_SEARCH_TYPE, null);
