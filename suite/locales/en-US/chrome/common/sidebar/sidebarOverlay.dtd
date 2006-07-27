@@ -21,5 +21,6 @@
 
 <!ENTITY sidebar.panels.label        "My Sidebar">
 <!ENTITY sidebar.reload.label        "reload">
+<!ENTITY sidebar.picker.label        "Add">
 <!ENTITY sidebar.customize.label     "customize...">
 <!ENTITY sidebarCmd.label            "Sidebar">
