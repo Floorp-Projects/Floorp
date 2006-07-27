@@ -160,7 +160,8 @@
                 <browser flex="1" class="browser-sidebar" src="about:blank"
                   hidden="true" collapsed="true" content="?content"/>
                 <browser flex="1" class="browser-sidebar" src="about:blank"
-                  hidden="true" collapsed="true" content="?content" type="content" context="contentAreaContextMenu"/>
+                  hidden="true" collapsed="true" content="?content"
+                  type="content" context="contentAreaContextMenu" tooltip="aHTMLTooltip"/>
               </vbox>
             </action>
           </rule>
