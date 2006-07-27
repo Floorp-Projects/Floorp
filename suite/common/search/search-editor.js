@@ -67,7 +67,9 @@ function debug(msg)
 
 function doLoad()
 {
-	// adjust category popup
+	doSetOKCancel(Commit);
+  
+  // adjust category popup
 	var internetSearch = Components.classes["component://netscape/rdf/datasource?name=internetsearch"].getService();
 	if (internetSearch)	internetSearch = internetSearch.QueryInterface(Components.interfaces.nsIInternetSearchService);
 	if (internetSearch)
