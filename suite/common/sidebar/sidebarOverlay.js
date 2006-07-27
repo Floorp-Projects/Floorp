@@ -28,6 +28,7 @@ var NC = "http://home.netscape.com/NC-rdf#";
 
 // the magic number to find panels.rdf
 var PANELS_RDF_FILE = 66626;
+var SIDEBAR_VERSION = "0.0";
 
 // the default sidebar:
 var sidebar = new Object;
@@ -40,38 +41,32 @@ function debug(msg) {
 var panel_observer = new Object;
 
 panel_observer = {
-  OnAssert   : function(src,prop,target)
-               { debug("panel_observer: onAssert"); },
-  OnUnassert : function(src,prop,target)
-    {
-      debug("panel_observer: onUnassert"); 
-
-      // Wait for unassert that marks the end of the customize changes.
-      // See customize.js for where this is unasserted.
-      if (prop == RDF.GetResource(NC + "inbatch")) {
-        sidebarOpenDefaultPanel(100, 0);
-      }
-    },
-  OnChange   : function(src,prop,old_target,new_target)
-               { debug("panel_observer: onChange"); },
-  OnMove     : function(old_src,new_src,prop,target)
-               { debug("panel_observer: onMove"); }
+  OnAssert : function(src,prop,target) {},
+  OnUnassert : function(src,prop,target) {
+    // Wait for unassert that marks the end of the customize changes.
+    // See customize.js for where this is unasserted.
+    if (prop == RDF.GetResource(NC + "inbatch")) {
+      sidebar_open_default_panel(100, 0);
+    }
+  },
+  OnChange : function(src,prop,old_target,new_target) {},
+  OnMove : function(old_src,new_src,prop,target) {}
 }
 
 
-function getSidebarDatasourceURI(panels_file_id) {
+function get_sidebar_datasource_uri(panels_file_id) {
   try {
-    var fileLocatorInterface = Components.interfaces.nsIFileLocator;
-    var fileLocatorProgID = 'component://netscape/filelocator';
-    var fileLocatorService  = Components.classes[fileLocatorProgID].getService();
+    var locator_interface = Components.interfaces.nsIFileLocator;
+    var locator_prog_id = 'component://netscape/filelocator';
+    var locator_service = Components.classes[locator_prog_id].getService();
     // use the fileLocator to look in the profile directory
     // to find 'panels.rdf', which is the
     // database of the user's currently selected panels.
-    fileLocatorService = fileLocatorService.QueryInterface(fileLocatorInterface);
+    locator_service = locator_service.QueryInterface(locator_interface);
 
     // if <profile>/panels.rdf doesn't exist, GetFileLocation() will copy
     // bin/defaults/profile/panels.rdf to <profile>/panels.rdf
-    var sidebar_file = fileLocatorService.GetFileLocation(panels_file_id);
+    var sidebar_file = locator_service.GetFileLocation(panels_file_id);
 
     if (!sidebar_file.exists()) {
       // this should not happen, as GetFileLocation() should copy
@@ -84,18 +79,23 @@ function getSidebarDatasourceURI(panels_file_id) {
   }
   catch (ex) {
     // this should not happen
+    debug("Error: Unable to load panels file.\n");
     return null;
   }
 }
 
-function sidebarOverlayInit() {
-  sidebar.datasource_uri     = getSidebarDatasourceURI(PANELS_RDF_FILE);
-  sidebar.resource           = 'urn:sidebar:current-panel-list';
-  sidebar.master_datasources = 'chrome://sidebar/content/local-panels.rdf chrome://sidebar/content/remote-panels.rdf';
-  sidebar.master_resource    = 'urn:sidebar:master-panel-list';
-  sidebar.component          = document.location.href;
+function sidebar_overlay_init() {
+  sidebar.datasource_uri = get_sidebar_datasource_uri(PANELS_RDF_FILE);
+  sidebar.resource = 'urn:sidebar:current-panel-list';
+  sidebar.master_datasources = 'chrome://sidebar/content/local-panels.rdf';
+  sidebar.master_datasources += ' chrome://sidebar/content/remote-panels.rdf';
+  //sidebar.master_datasources += " " + get_remote_datasource_url();
+  sidebar.master_resource = 'urn:sidebar:master-panel-list';
+  sidebar.component = document.location.href;
 
-  debug("--->--->--->component: "+sidebar.component);
+  debug("sidebar_overlay_init: sidebar.component: " + sidebar.component);
+
+
   // Initialize the display
   var sidebar_element  = document.getElementById('sidebar-box')
   var sidebar_menuitem = document.getElementById('menu_sidebar')
@@ -108,8 +108,8 @@ function sidebarOverlayInit() {
       sidebar_menuitem.setAttribute('checked', 'true');
     }
 
-    debug("sidebar = "                + sidebar);
-    debug("sidebar.resource = "       + sidebar.resource);
+    debug("sidebar = " + sidebar);
+    debug("sidebar.resource = " + sidebar.resource);
     debug("sidebar.datasource_uri = " + sidebar.datasource_uri);
 
     // Add the user's current panel choices to the template builder,
@@ -131,21 +131,54 @@ function sidebarOverlayInit() {
     // XXX This is a hack to force re-display
     panels_bottom.setAttribute('ref', sidebar.resource);
 
-    sidebarOpenDefaultPanel(100, 0);
+    sidebar_open_default_panel(100, 0);
   }
 }
 
-function sidebarOpenDefaultPanel(wait, tries) {
+// Get the template for the available panels url from preferences.
+// Replace variables in the url:
+//     %LOCALE%  -->  Application locale (e.g. en-us).
+//     %SIDEBAR_VERSION% --> Sidebar file format version (e.g. 0.0).
+function get_remote_datasource_url() {
+  var url = '';
+  var prefs = Components.classes['component://netscape/preferences'];
+  if (prefs) {
+    prefs = prefs.getService();
+  }
+  if (prefs) {
+    prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
+  }
+  if (prefs) {
+    try {
+      url = prefs.CopyCharPref("sidebar.customize.all_panels.url");
+      url = url.replace(/%VERSION%/g, SIDEBAR_VERSION);
+
+      var locale_progid = 'component://netscape/intl/nslocaleservice';
+      var locale = Components.classes[locale_progid].getService();
+      locale = locale.QueryInterface(Components.interfaces.nsILocaleService);
+      locale = locale.GetLocaleComponentForUserAgent();
+      locale = locale.toLowerCase();
+      url = url.replace(/%LOCALE%/g, locale);
+
+      debug("Remote url is " + url);
+    } catch(ex) {
+      debug("Unable to get remote url pref. What now? "+ex);
+    }
+  }
+  return url;
+}
+
+function sidebar_open_default_panel(wait, tries) {
   var panels_top  = document.getElementById('sidebar-panels');
-  var target      = panels_top.getAttribute('open-panel-src');
+  var target = panels_top.getAttribute('open-panel-src');
   var top_headers = panels_top.childNodes;
 
-  debug("\nsidebarOpenDefaultPanel("+wait+","+tries+")\n");
+  debug("sidebar_open_default_panel("+wait+","+tries+")");
 
   if (top_headers.length <= 1) {
     if (tries < 5) {
       // No children yet, try again later
-      setTimeout('sidebarOpenDefaultPanel('+(wait*2)+','+(tries+1)+')',wait);
+      setTimeout('sidebar_open_default_panel('+(wait*2)+','+(tries+1)+')',wait);
     } else {
       // No panels.
       // XXX This should load some help page instead of about:blank.
@@ -155,23 +188,23 @@ function sidebarOpenDefaultPanel(wait, tries) {
     return;
   }
 
-  selectPanel(target);
+  select_panel(target);
 }
 
-function selectPanel(target) {
-  var panels_top   = document.getElementById('sidebar-panels');
-  var iframe       = document.getElementById('sidebar-content');
-  var top_headers  = panels_top.childNodes;
+function select_panel(target) {
+  var panels_top = document.getElementById('sidebar-panels');
+  var iframe = document.getElementById('sidebar-content');
+  var top_headers = panels_top.childNodes;
 
-  debug("selectPanel("+target+")");
+  debug("select_panel("+target+")");
 
-  var select_index = findPanel(top_headers, target);
+  var select_index = find_panel(top_headers, target);
 
   if (!select_index) {
     // Target not found. Pick the first panel by default.
     // It is at index 1 because the template is at index 0.
-    debug("selectPanel: target not found, choosing last panel, index "+top_headers.length+"\n");
-    select_index = pickDefaultPanel(top_headers);
+    debug("select_panel: target not found, choosing last panel, index "+top_headers.length+"\n");
+    select_index = pick_default_panel(top_headers);
     target = top_headers.item(select_index).getAttribute('iframe-src');
   }
 
@@ -183,22 +216,22 @@ function selectPanel(target) {
     panels_top.setAttribute('open-panel-src', target);
   }
 
-  updateHeaders(select_index);
+  update_headers(select_index);
 }
 
-function findPanel(panels, target) {
+function find_panel(panels, target) {
   if (target && target != '') {
     // Find the index of the selected panel
     for (var ii=1; ii < panels.length; ii++) {
       var item = panels.item(ii);
       
       if (item.getAttribute('iframe-src') == target) {
-        if (isExcluded(item)) {
-          debug("findPanel: Found panel at index, "+ii+", but it is excluded");
+        if (is_excluded(item)) {
+          debug("find_panel: Found panel at index, "+ii+", but it is excluded");
           return 0;
         } else {
           // Found it!
-          debug("findPanel: Found panel at index, "+ii);
+          debug("find_panel: Found panel at index, "+ii);
           return ii;
         }
       }
@@ -207,17 +240,17 @@ function findPanel(panels, target) {
   return 0;
 }
 
-function pickDefaultPanel(panels) {
+function pick_default_panel(panels) {
   last_non_excluded_index = null;
   for (var ii=1; ii < panels.length; ii++) {
-    if (!isExcluded(panels.item(ii))) {
+    if (!is_excluded(panels.item(ii))) {
       last_non_excluded_index = ii;
     }
   }
   return last_non_excluded_index;
 }
 
-function isExcluded(item) {
+function is_excluded(item) {
   var exclude = item.getAttribute('exclude');
   var src = item.getAttribute('iframe-src');
   debug("src="+src);
@@ -225,15 +258,15 @@ function isExcluded(item) {
   return exclude && exclude != '' && exclude.indexOf(sidebar.component) != -1;
 }
 
-function updateHeaders(index) {
-  var top_headers    = document.getElementById('sidebar-panels').childNodes;
+function update_headers(index) {
+  var top_headers = document.getElementById('sidebar-panels').childNodes;
   var bottom_headers = document.getElementById('sidebar-panels-bottom').childNodes;
 
   for (var ii=1; ii < top_headers.length; ii++) {
-    var top_item    = top_headers.item(ii);
+    var top_item = top_headers.item(ii);
     var bottom_item = bottom_headers.item(ii);
 
-    if (isExcluded(top_item)) {
+    if (is_excluded(top_item)) {
       top_item.setAttribute('hidden','true');
       bottom_item.setAttribute('hidden','true');
     } else if (ii < index) { 
@@ -264,18 +297,18 @@ function SidebarSelectPanel(titledbutton) {
     return;
   }
 
-  selectPanel(target);
+  select_panel(target);
 }
 
 // No one is calling this right now.
-function sidebarReload() {
-  sidebarOverlayInit();
+function SidebarReload() {
+  sidebar_overlay_init();
 }
 
 // Set up a lame hack to avoid opening two customize
 // windows on a double click.
 var gDisableCustomize = false;
-function enableCustomize() {
+function enable_customize() {
   gDisableCustomize = false;
 }
 
@@ -306,7 +339,7 @@ function SidebarCustomize() {
                           sidebar.master_resource,
                           sidebar.datasource_uri,
                           sidebar.resource);
-      setTimeout(enableCustomize, 2000);
+      setTimeout(enable_customize, 2000);
     }
   }
 }
@@ -314,15 +347,15 @@ function SidebarCustomize() {
 // Show/Hide the entire sidebar.
 // Envoked by the "View / Sidebar" menu option.
 function SidebarShowHide() {
-  var sidebar          = document.getElementById('sidebar-box');
+  var sidebar = document.getElementById('sidebar-box');
   var sidebar_splitter = document.getElementById('sidebar-splitter');
-  var is_hidden        = sidebar.getAttribute('hidden');
+  var is_hidden = sidebar.getAttribute('hidden');
 
   if (is_hidden && is_hidden == "true") {
     debug("Showing the sidebar");
     sidebar.removeAttribute('hidden');
     sidebar_splitter.removeAttribute('hidden');
-    sidebarOverlayInit()
+    sidebar_overlay_init()
   } else {
     debug("Hiding the sidebar");
     sidebar.setAttribute('hidden','true');
@@ -330,14 +363,14 @@ function SidebarShowHide() {
   }
   // Immediately save persistent values
   document.persist('sidebar-box', 'hidden');
-  persistWidth();
+  persist_width();
 }
 
 // SidebarExpandCollapse() - Respond to grippy click.
 // XXX This whole function is a hack to work around
 // bugs #20546, and #22214.
 function SidebarExpandCollapse() {
-  var sidebar          = document.getElementById('sidebar-box');
+  var sidebar = document.getElementById('sidebar-box');
   var sidebar_splitter = document.getElementById('sidebar-splitter');
 
   sidebar.setAttribute('hackforbug20546-applied','true');
@@ -359,8 +392,8 @@ function SidebarExpandCollapse() {
     iframe.setAttribute('src', target);
 
     // XXX Partial hack workaround for bug #22214.
-    bumpWidth(+1);
-    setTimeout("bumpWidth(-1)",10);
+    bump_width(+1);
+    setTimeout("bump_width(-1)",10);
 
   } else {
     // Going from open to collapsed.
@@ -370,7 +403,7 @@ function SidebarExpandCollapse() {
 }
 
 // XXX Partial hack workaround for bug #22214.
-function bumpWidth(delta) {
+function bump_width(delta) {
   var sidebar = document.getElementById('sidebar-box');
   var width = sidebar.getAttribute('width');
   sidebar.setAttribute('width', parseInt(width) + delta);
@@ -384,7 +417,7 @@ function PersistHeight() {
   setTimeout("document.persist('sidebar-panels-box','height');",100);
 }
 
-function persistWidth() {
+function persist_width() {
   // XXX Partial workaround for bug #19488.
   var sidebar = document.getElementById('sidebar-box');
   var sidebar_splitter = document.getElementById('sidebar-splitter');
@@ -410,13 +443,13 @@ function SidebarFinishDrag() {
   // If we had the proper drag event listener, we would not need this
   // timeout. The timeout makes sure the width is written to disk after
   // the sidebar-box gets the newly dragged width.
-  setTimeout("persistWidth()",100);
+  setTimeout("persist_width()",100);
 }
 
 /*==================================================
 // Handy debug routines
 //==================================================
-function dumpAttributes(node,depth) {
+function dump_attributes(node,depth) {
   var attributes = node.attributes;
   var indent = "| | | | | | | | | | | | | | | | | | | | | | | | | | | | | . ";
 
@@ -429,19 +462,19 @@ function dumpAttributes(node,depth) {
   }
 }
 
-function dumpTree(node, depth) {
+function dump_tree(node, depth) {
   if (!node) {
-    debug("dumpTree: node is null");
+    debug("dump_tree: node is null");
   }
   var indent = "| | | | | | | | | | | | | | | | | | | | | | | | | | | | | + ";
   debug(indent.substr(indent.length - depth*2) + node.nodeName);
   if (node.nodeName != "#text") {
     //debug(" id="+node.getAttribute('id'));
-    dumpAttributes(node, depth);
+    dump_attributes(node, depth);
   }
   var kids = node.childNodes;
   for (var ii=0; ii < kids.length; ii++) {
-    dumpTree(kids[ii], depth + 1);
+    dump_tree(kids[ii], depth + 1);
   }
 }
 //==================================================
@@ -450,4 +483,4 @@ function dumpTree(node, depth) {
 
 
 // Install our load handler
-addEventListener("load", sidebarOverlayInit, false);
+addEventListener("load", sidebar_overlay_init, false);
