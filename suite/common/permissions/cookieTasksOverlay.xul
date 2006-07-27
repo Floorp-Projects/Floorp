@@ -52,19 +52,6 @@
       }
     }
 
-    var listener = {
-      handleEvent: function(event) {
-        var cookieservice = Components.classes["@mozilla.org/cookieService;1"].getService();
-        cookieservice = cookieservice.QueryInterface(Components.interfaces.nsICookieService);
-        if (cookieservice.cookieIconIsVisible) {
-          var cookieIcon = document.getElementById("privacy-button");
-          if (cookieIcon) {
-            cookieIcon.removeAttribute("hidden");
-          }
-        }
-      }
-    };
-
     function viewP3PDialog() {
       var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
       observerService.notifyObservers(null, "cookieIcon", "off");
@@ -78,7 +65,9 @@
       }
     }
 
-    function CookieTasksStartup() {
+    function CookieTasksOnLoad(event) {
+      addEventListener("unload", CookieTasksOnUnload, false);
+
       // determine if p3p pref is set
       var pref = Components.classes['@mozilla.org/preferences-service;1'].
                      getService(Components.interfaces.nsIPrefBranch);
@@ -97,12 +86,25 @@
         observerService.addObserver(cookieIconObserver, "cookieIcon", false);
 
         // determine whether or not cookie icon in this new window should be displayed
-        // we need to wait until window is created before displaying icon
-        addEventListener("load", listener, false);
+        var cookieservice = Components.classes["@mozilla.org/cookieService;1"].getService();
+        cookieservice = cookieservice.QueryInterface(Components.interfaces.nsICookieService);
+        if (cookieservice.cookieIconIsVisible) {
+          var cookieIcon = document.getElementById("privacy-button");
+          if (cookieIcon) {
+            cookieIcon.removeAttribute("hidden");
+          }
+        }
       }
     }
 
-    CookieTasksStartup();
+    function CookieTasksOnUnload(event) {
+      if ("@mozilla.org/cookie-consent;1" in Components.classes) {
+        var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+        observerService.removeObserver(cookieIconObserver, "cookieIcon", false);
+      }
+    }
+
+    addEventListener("load", CookieTasksOnLoad, false);
 
   ]]>
   </script>         
