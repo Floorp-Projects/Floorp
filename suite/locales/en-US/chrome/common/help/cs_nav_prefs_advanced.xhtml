@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
-  "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd" [
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd" [
   <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
   %brandDTD;
 ]>
@@ -10,7 +10,7 @@
 <head>
 <title>&brandShortName; Advanced Preferences Help</title>
 <link rel="stylesheet" href="chrome://help/locale/helpFileLayout.css"
-  type="text/css"></link>
+  type="text/css"/>
 </head>
 <body>
 
@@ -35,7 +35,7 @@
   <li><a href="#http_networking">HTTP Networking</a></li>
   <li><a href="#software_installation">Software Installation</a></li>
   <li><a href="#mouse_wheel">Mouse Wheel</a></li>
-  <li><a href="#system">System</a></li>
+  <li class="win"><a href="#system">System</a></li>
 </ul>
 </div>
 
@@ -50,26 +50,18 @@ you&apos;re not already viewing it, follow these steps:</p>
   <li>Click the Advanced category.</li>
 </ol>
 
-<p>The main Advanced preferences panel allows you to customize Java, FTP
-  passwords, and Quick Launch:</p>
+<p>The main Advanced preferences panel allows you to enable or disable
+  Java<span class="win"> and Quick Launch</span>:</p>
 
 <ul>
   <li><strong>Enable Java:</strong> Select this to allow &brandShortName; to
     interpret pages containing Java. Java is used on some Web page to
     incorporate interactive and multimedia content.</li>
-  <li><strong>Send this email address as anonymous FTP password</strong>: Type
-    an email address that you want to use as your password when logging into an
-    FTP site anonymously.</li>
-  <li><strong>Keep &brandShortName; in memory to improve startup
+  <li class="win"><strong>Keep &brandShortName; in memory to improve startup
     performance</strong>: Select this if you want to shorten the time it takes
     to start &brandShortName;. See
     &quot;<a href="nav_help.xhtml#using_quick_launch">Using Quick
-    Launch</a>&quot; for more information about using Quick Launch.
-
-    <p><strong>Note</strong>: Quick Launch appears only on Windows-based
-      platforms.</p>
-
-  </li>
+    Launch</a>&quot; for more information about using Quick Launch.</li>
 </ul>
 
 <h2 id="scripts_and_plug-ins">Advanced Preferences - Scripts &amp;
@@ -112,10 +104,10 @@ you&apos;re not already viewing it, follow these steps:</p>
       <li><strong>Change images</strong>: Allows images to be changed or
         animated, such as in image rollovers (images that change when the mouse
         cursor is placed over them).</li>
-      <li><strong>Create or change cookies</strong>: Allows cookies to be
-        changed or created using JavaScript.</li>
-      <li><strong>Read cookies</strong>: Allows cookies to be read using
-        JavaScript.</li>
+      <li><strong>Disable or replace context menus</strong>: Allows right-click
+        menus<span class="mac"> or, if you&apos;re using a one-button mouse,
+        <kbd>Ctrl</kbd>-click menus</span> to be replaced or disabled by
+        webpages.</li>
     </ul>
   </li>
   <li><strong>Enable Plug-ins for</strong>: Check this checkbox to control how
@@ -147,11 +139,12 @@ you&apos;re not already viewing it, follow these steps:</p>
   the keyboard to navigate and search for text in web pages:</p>
 
 <ul>
-  <li><strong>Links</strong>: If checked, pressing Tab or Shift+Tab moves
+  <li><strong>Links</strong>: If checked, pressing <kbd>Tab</kbd> or
+    <kbd>Shift</kbd>+<kbd>Tab</kbd> moves
     between links.</li>
   <li><strong>Buttons, radio buttons, check boxes, and lists</strong>: If
-    checked, pressing Tab or Shift+Tab moves between buttons, radio buttons,
-    check boxes, and lists.</li>
+    checked, pressing <kbd>Tab</kbd> or <kbd>Shift</kbd>+<kbd>Tab</kbd> moves
+    between buttons, radio buttons, check boxes, and lists.</li>
   <li><strong>Find automatically when typing within a web page</strong>: If
     checked, typing text in a web page automatically activates Find As You Type
     and locates the text you typed (if it exists in the page). Choose whether
@@ -213,7 +206,10 @@ you&apos;re not already viewing it, follow these steps:</p>
   <li><strong>Prefetch web pages when idle, so that links in web pages
     designed for prefetching can load faster</strong>: Select this to decrease
     the time it takes to load web pages when you click a link in a web page
-    that uses prefetching.</li>
+    that uses prefetching. For more information about Link Prefetching, see the
+    online
+    <a href="http://www.mozilla.org/projects/netlib/Link_Prefetching_FAQ.html"
+    target="_blank">Link Prefetching FAQ</a>.</li>
 </ul>
 
 <h2 id="proxies">Advanced Preferences - Proxies</h2>
@@ -243,7 +239,14 @@ you&apos;re not already viewing it, follow these steps:</p>
     <ul>
       <li><strong>HTTP Proxy</strong>, <strong>SSL Proxy</strong>, <strong>FTP
         Proxy, Gopher Proxy</strong>: Type the name or numeric IP address of
-	the proxy server. Type the port in the Ports field.</li>
+        the proxy server. Type the port in the Ports field.
+
+	  <p><strong>Note</strong>: If you&apos;re using the same settings for
+	    all types of proxies, click on &quot;Use these settings for SSL,
+	    FTP and Gopher&quot; when you&apos;ve filled in the fields for HTTP
+	    Proxy.</p>
+
+      </li>
       <li><strong>SOCKS Host</strong>: Type the name or numeric IP address of
         the proxy server. Type the port in the Ports field. 
         <ul>
@@ -254,13 +257,21 @@ you&apos;re not already viewing it, follow these steps:</p>
       </li>
       <li><strong>No Proxy for</strong>: Type the domains and/or IP address
         that you do not want to use a proxy for. Separate each entry with a
-	comma. (Example: .yourcompany.com, .yourcompany.co.nz,
-	192.168.1.0/24)</li>
+        comma. (Example: <kbd>.yourcompany.com, .yourcompany.co.nz,
+        192.168.1.0/24</kbd>.)</li>
     </ul>
   </li>
   <li><strong>Automatic proxy configuration URL</strong>: Choose this if you
     have a proxy configuration file or URL, then type the configuration
     URL.</li>
+  <li><strong>Reload</strong>: Click this to reload the configuration file.
+  
+    <p>For more information about Automatic Proxy Configuration, see the online
+      <a href=
+      "http://www.mozilla.org/catalog/end-user/customizing/enduserPAC.html"
+      target="_blank">End User Guide to Proxy AutoConfiguration</a>.</p>
+
+  </li>
 </ul>
 
 <h2 id="http_networking">Advanced Preferences - HTTP Networking</h2>
@@ -346,14 +357,16 @@ you&apos;re not already viewing it, follow these steps:</p>
   <li>Under the Advanced category, click Mouse Wheel. (If no subcategories
     are visible, double-click Advanced to expand the list.)</li>
 </ol>
+
 <p>The Mouse Wheel preferences panel allows you to control how the mouse wheel
   on your mouse (in between your mouse buttons) is used in
   &brandShortName;:</p>
 
 <ul>
-  <li><strong>Modifier Key</strong>: Use the the drop-down list to choose a key
-    that you want to use along with the mouse wheel to perform one of the
-    following functions:
+  <li>Select &quot;No modifier key&quot; or select a key that you want to use
+    along with the mouse wheel. Use the checkboxes below to configure mouse
+    wheel behavior:
+    
     <ul>
       <li><strong>Scroll the document by</strong>: Choose this to scroll the
         document by the number of lines typed in the field.
@@ -382,6 +395,11 @@ you&apos;re not already viewing it, follow these steps:</p>
 
 <h2 id="system">Advanced Preferences - System</h2>
 
+<p class="noWin">The Systems preferences panel is only available on
+  Windows.</p>
+  
+<div class="win">
+
 <p>This section describes how to use the System preferences panel. If
   you&apos;re not already viewing it, follow these steps:</p>
 
@@ -390,9 +408,6 @@ you&apos;re not already viewing it, follow these steps:</p>
   <li>Under the Advanced category, click System. (If no subcategories are
     visible, double-click Advanced to expand the list.)</li>
 </ol>
-
-<p><strong>Note</strong>: The System preferences panel appears only on
-  Windows-based platforms.</p>
 
 <p>The System preferences panel allows you to specify what files and protocols
   are opened using &brandShortName;:</p>
@@ -415,6 +430,7 @@ you&apos;re not already viewing it, follow these steps:</p>
   Navigator</a>. Also select &quot;Alert me if other application change these
   settings&quot; to know when other programs become the default programs
   instead of &brandShortName;.</p>
+</div>
 
 <p>Copyright &copy; 2003-2004 The Mozilla Foundation.</p>
 
