@@ -82,6 +82,7 @@
         <rdf:li> <rdf:Description nc:name="public key" nc:link="glossary.xhtml#public_key"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="public-key cryptography" nc:link="glossary.xhtml#public-key_cryptography"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="public-key infrastructure (PKI)" nc:link="glossary.xhtml#public-key_infrastructure"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="roaming profile" nc:link="glossary.xhtml#roaming_profile"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="root CA" nc:link="glossary.xhtml#root_ca"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="search engine" nc:link="glossary.xhtml#search_engine"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Secure Sockets Layer (SSL)" nc:link="glossary.xhtml#secure_sockets_layer"/> </rdf:li>

@@ -32,6 +32,10 @@
   <li><a href="#creating_a_new_profile">Creating a New Profile</a></li>
   <li><a href="#deleting_or_renaming_a_profile">Deleting or Renaming a
     Profile</a></li>
+  <li><a href="#roaming_profiles">Roaming Profiles</a></li>
+  <li><a href="#roaming_prefs">Roaming User Preferences</a></li>
+  <li><a href="#roaming_item_selection">Roaming User Preferences - Item
+    selection</a></li>
 </ul>
 </div>
 
@@ -63,6 +67,8 @@
     Region Selection and choose the Language/Content set you want.</li>
   <li>Click Finish.</li>
 </ol>
+
+<p>[<a href="#managing_profiles">Return to beginning of section</a>]</p>
 
 <h2 id="deleting_or_renaming_a_profile">Deleting or Renaming a Profile</h2>
 
@@ -99,7 +105,121 @@
     instructions.</li>
 </ol>
 
-<p>Copyright &copy; 2003-2004 The Mozilla Foundation.</p>
+<p>[<a href="#managing_profiles">Return to beginning of section</a>]</p>
+
+<h2 id="roaming_profiles">Roaming Profiles</h2>
+
+<p class="noMac"><strong>Note</strong>: This feature is not yet available in
+  the installer builds of &brandShortName;.</p>
+
+<p>Roaming profiles allow you to store your profile and associated settings on
+  a central server or file share. The advantage of this is that your settings
+  can follow you from one machine to another. For example, you may wish to use
+  &brandShortName; both at work and at home keeping your bookmarks, address
+  book, and other settings in sync, or a company may want to allow its
+  employees to use their &brandShortName; profile on any computer.</p>
+
+<p>Roaming profiles can be stored on a HTTP or FTP server. You will need a
+  user name and password on that server, so that you can have write access
+  to the appropriate directory for storing and retrieving your profile.
+  Alternatively, for computers that use a common file share, you can store
+  the profile in a local directory using the Copy method.</p>
+
+<p>Whenever you start &brandShortName;, your profile is downloaded and whenever you
+  shutdown &brandShortName;, your profile is uploaded.</p>
+
+<p>[<a href="#managing_profiles">Return to beginning of section</a>]</p>
+
+<h2 id="roaming_prefs">Roaming User Preferences</h2>
+
+<p>This section describes how to use the main Roaming User preferences panel.
+  If you&apos;re not already viewing it, follow these steps:</p>
+
+<ol>
+  <li>Open the
+    <span class="mac">&brandShortName;</span> <span class="noMac">Edit</span>
+    menu and choose Preferences.</li>
+  <li>Click on the Roaming User category.</li>
+  <li>Select <strong>Enable remote profile storage</strong> to activate roaming
+    for the current profile.</li>
+  <li>Select one of the following:
+    <ul>
+      <li><strong>HTTP / FTP</strong>: Choose this if you wish to have the
+        profile information copied to a FTP or HTTP server.
+        <ul>
+          <li><strong>Base URL</strong>: Type the URL of the directory where
+            the roaming profile will be stored. This can be an FTP, HTTP or
+            HTTPS URL. FTP is probably easiest to set up on a home network.
+            In other cases, especially when transmitting over the Internet,
+            it is strongly recommended to use HTTPS, because otherwise, all
+            your saved passwords and bookmarks (depending on your Item 
+            Selection) might be read by other people on the same network.
+
+            <p><strong>Examples</strong>:<br/>
+            <kbd>&lt;https://user@http-server/dir/&gt;</kbd><br/>
+            <kbd>&lt;ftp://user@ftp-server//home/user/dir/&gt;</kbd><br/> 
+            <kbd>&lt;ftp://user@ftp-server/dir/&gt;</kbd></p>
+
+          </li>
+          <li><strong>Username</strong>: Type the user name that will be
+            used to access the FTP or HTTP server.</li>
+          <li><strong>Save password</strong>: Enable this option to save the
+            password for the user name that you have supplied.</li>
+          <li><strong>Password</strong>: Type the password for the user name
+            that you supplied.</li>
+        </ul>
+      </li>
+      <li><strong>File Copy</strong>: Choose this if you wish to have the
+        profile information copied to a local directory.
+        <ul>
+          <li>Click <strong>Browse</strong> and select the directory where you
+            wish the profile information to be copied to and retrieved
+            from.</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ol>
+
+<p>[<a href="#managing_profiles">Return to beginning of section</a>]</p>
+
+<h2 id="roaming_item_selection">Roaming User Preferences - Item selection</h2>
+
+<p>By default, only bookmarks, cookies, and the personal addressbook are stored
+  on the roaming server. If all items are greyed out, make sure to have Roaming
+  enabled.To enable or disable roaming of other profile informations, follow
+  these steps:</p>
+
+<ol>
+  <li>Open the
+    <span class="mac">&brandShortName;</span> <span class="noMac">Edit</span>
+    menu and choose Preferences.</li>
+  <li>Under the Roaming User category, click Item Selection. (If no
+    subcategories are visible, double-click Roaming User to expand the
+    list.)</li>
+  <li>Select the items that you wish to be included in the roaming profile
+    synchronization.</li>
+</ol>
+
+<p>You cannot roam your local email, partly because that would take too long.
+  Use IMAP for this purpose.</p>
+
+<p><strong>Note</strong>: If you are using a slow connection, be aware that 
+  some files can be quite large, so this will impact your startup time.
+  &brandShortName; will have to download locally all of the files you
+  selected from the list before being fully functional, and save them back
+  to the remote server when you exit &brandShortName;.</p>
+
+<p>For further information about setting up Roaming Access on a server, see
+  the online document
+  <a href="http://www.klomp.org/mod_roaming/">mod_roaming - Roaming Access
+  module for Apache</a> or <a 
+  href="http://web.archive.org/web/20020605164606/http://help.netscape.com/products/client/communicator/manual_roaming2.html">Manually
+  Implementing Roaming Access</a>.</p>
+
+<p>[<a href="#managing_profiles">Return to beginning of section</a>]</p>
+
+<p>Copyright &copy; 2003-2005 The Mozilla Foundation.</p>
 
 </body>
 </html>
