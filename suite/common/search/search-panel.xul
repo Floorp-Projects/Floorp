@@ -56,7 +56,7 @@
         		</rule>
         		<rule>
         			<html:option uri="..." value="rdf:http://home.netscape.com/NC-rdf#category" >
-        				<text value="rdf:http://home.netscape.com/NC-rdf#title" />
+        				<textnode value="rdf:http://home.netscape.com/NC-rdf#title" />
         			</html:option>
         		</rule>
         	</template>
