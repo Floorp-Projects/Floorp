@@ -244,7 +244,6 @@ nsSVGTransformList::SetValueString(const nsAString& aValue)
   if (keyword || NS_FAILED(rv)) { 
     // there was a parse error. 
     rv = NS_ERROR_FAILURE;
-    NS_ERROR("transform-attribute parse error");
   }
   else {
     WillModify();
