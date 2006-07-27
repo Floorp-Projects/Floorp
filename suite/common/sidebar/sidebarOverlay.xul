@@ -152,9 +152,9 @@
                   </hbox>
                   <spacer flex="100%"/>
                 </vbox>
-                <browser flex="1*" src="about:blank"
+                <browser flex="1*" class="browser-sidebar" src="about:blank"
                   hidden="true" collapsed="true" content="?content"/>
-                <browser flex="1*" src="about:blank"
+                <browser flex="1*" class="browser-sidebar" src="about:blank"
                   hidden="true" collapsed="true" content="?content" type="content" context="contentAreaContextMenu"/>
               </vbox>
             </action>
