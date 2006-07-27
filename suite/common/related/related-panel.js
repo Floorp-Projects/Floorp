@@ -33,12 +33,6 @@ var kDataPrefixUrl			= kMAMIUrl;
 
 var oNavObserver = null;
 
-function debug(msg) {
-	// uncomment for noise
-	// dump("-+- related-panel: " + msg + "\n");
-}
-
-
 // Our observer of Navigation Messages
 function NavObserver(oDisplayFrame,oContentWindow)
 {
@@ -51,7 +45,6 @@ function NavObserver(oDisplayFrame,oContentWindow)
 NavObserver.prototype.Observe =
 function (oSubject, sMessage, sContextUrl)
 {
-    debug("Observer("+sMessage+", "+sContextUrl+")");
 	try {
 		if (oSubject != this.m_oContentWindow) {
 			// only pay attention to our client window.
@@ -83,10 +76,8 @@ function (bReferrer)
 NavObserver.prototype.TrackContext =
 function (sContextUrl, bReferrer)
 {
-    debug("TrackContext(" + sContextUrl + ", " + (bReferrer?"true":"false") + ")");
 	if (sContextUrl != this.m_sLastContextUrl && this.m_oDisplayFrame) {
 		var sDataUrl = this.TranslateContext(sContextUrl,bReferrer);
-        debug("TrackContext: setting iframe to " + sDataUrl);
 		this.m_oDisplayFrame.setAttribute('src', sDataUrl);
 		this.m_sLastContextUrl = sContextUrl;
 	}
@@ -95,10 +86,8 @@ function (sContextUrl, bReferrer)
 NavObserver.prototype.TranslateContext =
 function (sUrl, bReferrer)
 {
-    debug("TranslateContext(" + sUrl + ", " + (bReferrer?"true":"false") + ")");
 	if (!sUrl || ('string' != typeof(sUrl))
         || ('' == sUrl) || sUrl == 'about:blank') {
-		debug('TranlateContext: bad argument')
 		return kUnknownReasonUrl;
 	}
 
@@ -110,7 +99,6 @@ function (sUrl, bReferrer)
 
 	// We can only get related links data on HTTP URLs
 	if (0 != sUrl.indexOf("http://")) {
-		debug('TranlateContext: non-http argument:('+sUrl+')');
 		return kNoHTTPReasonUrl;
 	}
 
@@ -120,14 +108,11 @@ function (sUrl, bReferrer)
 	var nFirstSlash = sUrlSuffix.indexOf('/');
 	var nFirstDot = sUrlSuffix.indexOf('.');
 
-	if (-1 == nFirstDot) {
-		debug('TranlateContext: no "." in url');
+	if (-1 == nFirstDot)
 		return kNoHTTPReasonUrl;
-	}
-	if ((nFirstSlash < nFirstDot) && (-1 != nFirstSlash)) {
-		debug('TranlateContext: no "." in domain');
+
+	if ((nFirstSlash < nFirstDot) && (-1 != nFirstSlash))
 		return kNoHTTPReasonUrl;
-	}
 
 	// url is http, non-intranet url: see if the domain is in their blocked list.
 
@@ -142,7 +127,6 @@ function (sUrl, bReferrer)
 	}
 
 	if (DomainInSkipList(sDomain)) {
-		debug('TranlateContext: argument in skip-list');
 		return kSkipDomainReasonUrl;
 	} else {
 		// ok! it is a good url!
@@ -169,8 +153,6 @@ function DomainInSkipList(sDomain)
 		if (pref) {
 			var sDomainList = pref.CopyCharPref("browser.related.disabledForDomains");
 			if ((sDomainList) && (sDomainList != "")) {
-				debug("\nProposed New Domain: '" + sDomain + "'\n");
-				debug("Skip Domain List: '" + sDomainList + "'\n");
 
 				var aDomains = sDomainList.split(",");
 
@@ -179,10 +161,8 @@ function DomainInSkipList(sDomain)
 					var sDomainCopy = sDomain;
 
 					var sTestDomain = aDomains[x];
-					debug("Skip Domain #" + x + ": " + sTestDomain + "\n");
 
 					if ('*' == sTestDomain[0]) { // wildcard match
-						debug("    Wildcard domain.\n");
 
                         // strip off the asterisk
 						sTestDomain = sTestDomain.substring(1);	
@@ -193,7 +173,6 @@ function DomainInSkipList(sDomain)
 					}
 
 					if (0 == sDomainCopy.lastIndexOf(sTestDomain)) {
-						debug("    Skip this domain '" + sDomainCopy + "'\n");
 
 						bSkipDomainFlag = true;
 						break;
@@ -227,10 +206,9 @@ function Init()
 			oObserverService.AddObserver(oNavObserver, "StartDocumentLoad");
 			oObserverService.AddObserver(oNavObserver, "EndDocumentLoad");
 			oObserverService.AddObserver(oNavObserver, "FailDocumentLoad");
-			debug("added observer\n");
 		} else {
 			oNavObserver = null;
-			debug("FAILURE to get observer service\n");
+			dump("FAILURE to get observer service\n");
 		}
 	}
 }
@@ -241,13 +219,12 @@ function Destruct()
 	var oObserverService = Components.classes["@mozilla.org/observer-service;1"].getService();
 	oObserverService = oObserverService.QueryInterface(Components.interfaces.nsIObserverService);
 	if (oObserverService && oNavObserver) {
-		debug("Removing observer\n");
 		oObserverService.RemoveObserver(oNavObserver, "StartDocumentLoad");
 		oObserverService.RemoveObserver(oNavObserver, "EndDocumentLoad");
 		oObserverService.RemoveObserver(oNavObserver, "FailDocumentLoad");
 		oNavObserver = null;
 	} else {
-		debug("FAILURE to get observer service\n");
+		dump("FAILURE to get observer service\n");
 	}
 }
 
