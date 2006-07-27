@@ -740,6 +740,9 @@ function sidebar_overlay_init() {
       sidebar_menuitem.setAttribute('checked', 'true');
     }
 
+    // for old profiles that don't persist the hidden attribute when splitter is not hidden.
+    document.getElementById('sidebar-splitter').setAttribute('hidden', 'false');
+
     if (sidebarObj.never_built) {
       sidebarObj.never_built = false;
       
@@ -1165,7 +1168,7 @@ function SidebarShowHide() {
       sidebar_splitter.removeAttribute('state');
     title_box.removeAttribute('hidden');
     sidebar_panels_splitter_box.removeAttribute('collapsed');
-    sidebar_splitter.removeAttribute('hidden');
+    sidebar_splitter.setAttribute('hidden', 'false');
     if (sidebar_box.firstChild != sidebar_panels_splitter) {
       debug("Showing the panels splitter");
       sidebar_panels_splitter.removeAttribute('hidden');
