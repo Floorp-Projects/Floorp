@@ -139,7 +139,7 @@ function rememberSearchText(target)
         }
       }
 
-      textNode.value = decodeURI(target);
+      textNode.value = decodeURIComponent(target);
       doEnabling();
     }
   }
@@ -919,7 +919,7 @@ function saveSearch()
     if (target) {
       // convert plusses (+) back to spaces
       target = target.replace(/\+/g, " ");
-      lastSearchText = decodeURI(target);
+      lastSearchText = decodeURIComponent(target);
     }
   }
 
