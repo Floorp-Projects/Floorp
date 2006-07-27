@@ -107,14 +107,14 @@
       // use care choosing which nsIPopupWindowManager constant to compare
       // against. the allow/disallow/sometimes relationship can be subtle.
       var useManager = !pref.getBoolPref("dom.disable_open_during_load") &&
-                       pref.getIntPref("privacy.popups.policy") == Components.interfaces.nsIPopupWindowManager.eAllow &&
+                       pref.getIntPref("privacy.popups.policy") == Components.interfaces.nsIPopupWindowManager.ALLOW_POPUP &&
                        pref.getBoolPref("privacy.popups.usecustom");
       var suitable = false;
       var enableBlock = false;
       if (useManager) {
         suitable = popupmanager.testSuitability(getBrowser().currentURI);
         if (suitable)
-          enableBlock = popupmanager.testPermission(getBrowser().currentURI) != Components.interfaces.nsIPopupWindowManager.eDisallow;
+          enableBlock = popupmanager.testPermission(getBrowser().currentURI) != Components.interfaces.nsIPopupWindowManager.DENY_POPUP;
       }
       enableElement("BlockPopups", useManager && suitable && enableBlock);
       enableElement("AllowPopups", useManager && suitable && !enableBlock);
