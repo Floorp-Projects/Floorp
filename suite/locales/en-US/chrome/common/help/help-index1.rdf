@@ -506,6 +506,66 @@
 <rdf:Description about="#IMAP">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="ieusers"
+         nc:name="Internet Explorer User Help"
+	 nc:link="forieusers.html"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#ieusers">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="ieusers:terminology-differences"
+         nc:name="Terminology Differences"
+	 nc:link="forieusers.html#terminology_differences"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#ieusers">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="ieusers:your-favorites"
+         nc:name="About Your IE Favorites"
+	 nc:link="forieusers.html#your_favorites"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#ieusers">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="ieusers:key-features"
+         nc:name="Browser Features"
+	 nc:link="forieusers.html#key_features"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#ieusers">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="ieusers:additional-software"
+         nc:name="Other Features"
+	 nc:link="forieusers.html#additional_software"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#ieusers">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="ieusers:keyboard-shortcuts"
+         nc:name="Keyboard Shortcuts"
+	 nc:link="forieusers.html#keyboard_shortcuts"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#i">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="IMAP:Mail_settings"
          nc:name="Mail settings"
 	 nc:link="mail_help.html#IMAP:Mail_settingsIDX"/>
