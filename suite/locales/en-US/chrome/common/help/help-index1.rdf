@@ -169,11 +169,6 @@
 	 nc:link="customize_help.xhtml#changing_your_home_page"/>
      </rdf:li>
      <rdf:li>
-       <rdf:Description ID="browser:default"
-         nc:name="default browser"
-	 nc:link="nav_help.xhtml#making_mozilla_your_default_browser"/>
-     </rdf:li>
-     <rdf:li>
        <rdf:Description ID="browser:start_up_components"
          nc:name="start up components"
 	 nc:link="customize_help.xhtml#specifying_which_components_open_at_launch"/>
@@ -512,11 +507,6 @@
 <rdf:Description about="help-indexAZ.rdf#d">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="default_browser_preferences"
-         nc:name="default browser preferences"
-	 nc:link="cs_nav_prefs_navigator.xhtml#navigator"/>
-     </rdf:li>
-     <rdf:li>
        <rdf:Description ID="device_manager"
          nc:name="Device Manager"
 	 nc:link="using_certs_help.xhtml#about_security_devices_and_modules"/>
@@ -938,7 +928,7 @@
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="keywords"
-         nc:name="keyboards"
+         nc:name="keywords"
          nc:link="nav_help.xhtml#custom_keywords"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
@@ -1599,11 +1589,6 @@
        <rdf:Description ID="preferences:cookies"
          nc:name="cookies preferences"
 	 nc:link="using_priv_help.xhtml#cookies"/>
-     </rdf:li>
-     <rdf:li>
-       <rdf:Description ID="preferences:default_browser"
-         nc:name="default browser preferences"
-	 nc:link="cs_nav_prefs_navigator.xhtml#navigator"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="preferences:Downloads"

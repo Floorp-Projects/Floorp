@@ -125,7 +125,6 @@ nc:link="chrome://help/locale/nav_help.xhtml#plugins_and_downloads"/> </rdf:li>
   <rdf:Description about="#nav-doc-ses">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="nav-doc-default" nc:name="Making &brandShortName; Your Default Browser" nc:link="nav_help.xhtml#making_mozilla_your_default_browser"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-doc-autoload" nc:name="Automatic Loading" nc:link="nav_help.xhtml#automatic_loading"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-doc-keywords" nc:name="Using Custom Bookmark Keywords" nc:link="chrome://help/locale/nav_help.xhtml#custom_keywords"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-doc-cache" nc:name="Changing Cache Settings" nc:link="nav_help.xhtml#changing_cache_settings"/> </rdf:li>
