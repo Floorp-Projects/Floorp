@@ -552,8 +552,8 @@ by the age of their parent messages. If you want to use another
 sort criterion for the threads, open the View menu and select the desired
 option from the Sort by submenu.</p>
 
-<p><strong>Tip</strong>: Select "Preserve threading when sorting
-messages" in the <a href="#mail_and_newsgroups">Mail &amp; Newsgroups
+<p><strong>Tip</strong>: Select <q>Preserve threading when sorting
+messages</q> in the <a href="#mail_and_newsgroups">Mail &amp; Newsgroups
 Preferences</a> if you want &brandShortName; to preserve the threaded
 message grouping when sorting messages with column header clicks. The
 thread button just toggles between threaded and unthreaded message
@@ -5095,12 +5095,13 @@ Newsgroups to expand the list.)</li>
 </ol>
 
 <ul>
-<li><strong>Plain-Text Messages</strong>: Select the font you prefer
+<li><strong>Plain Text Messages</strong>: Select the font you prefer
 for viewing plain-text messages: fixed width or variable width.
 Choosing a font style, size, and color for quoted plain-text
 messages can help you more easily distinguish quoted text (usually
-a message that&apos;s been forwarded to you or by you).</li>
+a message that&apos;s been forwarded to you or by you).
 
+<ul>
 <li><strong>Wrap text to fit window width</strong>: Select this so
 that incoming messages are word-wrapped to fit the width of your
 Mail window.</li>
@@ -5147,15 +5148,24 @@ for example:
 </tr>
 </table>
 </li>
+</ul>
+</li>
 
-<li>
-<p><strong>Character Encodings</strong>: Click the Character Encoding drop-down
+<li><strong>Wait ___ seconds before marking a message as read</strong>: Choose
+this option if you do not want a message to be marked as read when you are only
+taking a brief look at it. Enter the number of seconds you want a message to be
+displayed before it gets marked as read automatically.
+
+<p><strong>Tip</strong>: If you do not want Mail &amp; Newsgroups to mark your
+messages as read automatically at all, you can select this option and enter a
+very large number of seconds.</p></li>
+
+<li><strong>Default Character Encoding</strong>: Click this drop-down
 list to select the character encoding you want Mail &amp; Newsgroups to use
 as the default for incoming mail and newsgroup messages. This is
 recommended if it&apos;s likely you might receive messages in which the
 character encoding (MIME charset) is not indicated, such as when reading 
-messages in international newsgroups.</p>
-</li>
+messages in international newsgroups.</li>
 
 <li><strong>Apply default to all messages</strong>: Select this to
 apply the default character encoding to all messages.
@@ -5163,8 +5173,7 @@ apply the default character encoding to all messages.
 <p><strong>Tip</strong>: You can later view or change the character
 encoding for a specific folder. In the Mail window,
 select a folder from the list of Mail folders. Open the View menu,
-and choose Character Encoding.</p>
-</li>
+and choose Character Encoding.</p></li>
 </ul>
 
 <p>[<a href="#mail_and_newsgroup_preferences">Return to beginning of
@@ -5263,15 +5272,25 @@ Newsgroups to expand the list.)</li>
 </ol>
 
 <ul>
-<li><strong>Forward Messages</strong>: Use the Forward messages
-drop-down list to choose how you want forwarded message text to appear:
-as an attachment or <em>inline</em> (in the body of your message).</li>
+<li><strong>Forward Messages</strong>: Choose how you want forwarded
+message text to appear: as an attachment or <em>inline</em> (in the
+body of your message).</li>
 
-<li><strong>Composing Messages</strong>: Select to have Mail &amp;
-Newsgroups always check the spelling of your messages when you
-click Send. Choose to have Mail &amp; Newsgroups use "quoted
-printable" MIME encoding when sending regular messages that use an
-8-bit character encoding (for example, Latin ISO-8859-3).</li>
+<li><strong>Automatically save the message every ___ minutes</strong>:
+Choose this option if you want Mail &amp; Newsgroups to save the
+message you are currently composing automatically at the given
+interval. After a computer crash or program failure you can find the
+latest saved version of the message in your Drafts folder.</li>
+
+<li><strong>Check spelling before sending</strong>: Select this option
+to have Mail &amp; Newsgroups always check the spelling of your
+message before you send it.</li>
+
+<li><strong>For messages that contain 8-bit characters, use 'quoted
+printable' MIME encoding</strong>: Choose to have Mail &amp;
+Newsgroups use <q>quoted printable</q> MIME encoding when sending regular
+messages that use an 8-bit character encoding (for example, Latin
+ISO-8859-3).</li>
 
 <li><strong>Confirm when using keyboard shortcut to send message</strong>:
 Check this option if want to be asked if you&apos;re sure to be ready to send the
@@ -5279,16 +5298,17 @@ message when you&apos;re pressing Ctrl+Return in message editor. This may help y
 avoid accidentally sending the message if you enter the keyboard shortcut by
 mistake when composing a message.</li>
 
-<li><strong>Wrap plain text messages at __ characters</strong>:
+<li><strong>Wrap plain text messages at ___ characters</strong>:
 Enter a number to set the right margin for text in the message
 area.</li>
 
-<li><strong>Character Encoding</strong>: Select the character encoding you
-want Mail &amp; Newsgroups to use as the default for outgoing mail and
+<li><strong>Default Character Encoding</strong>: Select the character encoding
+you want Mail &amp; Newsgroups to use as the default for outgoing mail and
 newsgroup messages. Note that this character encoding is <strong>not</strong>
 used when replying to a message. Instead, the character encoding of the message
-being replied to is used by default. Choose to use the
-default character encoding for outgoing messages even when replying.</li>
+being replied to is used by default. Choose <strong>Always use this default
+character encoding in replies</strong> to use the default character encoding
+for outgoing messages even when replying.</li>
 
 <li><strong>Defaults for HTML Messages</strong>: Here you can define what
 the defaults are for font, size, text and background color if you choose
