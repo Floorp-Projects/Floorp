@@ -39,7 +39,7 @@
     var cookieContextMenu = {
 
       // Determine if "Block Image" is to appear in the menu.
-      // Return true if "imageBlocker.enabled" pref is set and image is not already blocked.
+      // Return true if image is not already blocked.
       isBlockingImages : function () {
         /* determine if image is already being blocked */
         const nsIPermissionManager = Components.interfaces.nsIPermissionManager;
@@ -82,13 +82,12 @@
         var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                                   .getService(Components.interfaces.nsIIOService);
         uri = ioService.newURI(gContextMenu.imageURL, null, null);
-        permissionmanager.add(uri, "image", nsIPermissionManager.ALLOW_ACTION);
+        permissionmanager.remove(uri.host, "image");
       },
 
       initImageBlocking : function () {
         try {
-        // Block image depends on whether an image was clicked on, and,
-        // whether the user pref is enabled.
+        // Block image depends on whether an image was clicked on
 
         gContextMenu.showItem
           ("context-blockimage",
