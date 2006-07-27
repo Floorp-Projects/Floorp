@@ -1,0 +1,120 @@
+<?xml version="1.0"?>
+
+<!--
+   The contents of this file are subject to the Netscape Public
+   License Version 1.1 (the "License"); you may not use this file
+   except in compliance with the License. You may obtain a copy of
+   the License at http://www.mozilla.org/NPL/
+    
+   Software distributed under the License is distributed on an "AS
+   IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   implied. See the License for the specific language governing
+   rights and limitations under the License.
+    
+   The Original Code is Mozilla Communicator client code, released
+   March 31, 1998.
+   
+   The Initial Developer of the Original Code is Netscape
+   Communications Corporation. Portions created by Netscape are
+   Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   Rights Reserved.
+   
+   Contributor(s): 
+  -->
+
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/cookie/cookieContextOverlay.dtd">
+
+<overlay id="cookieContextOverlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script language="javascript" src="chrome://communicator/content/cookie/cookieOverlay.js"/>
+
+  <script language="JavaScript">
+  <![CDATA[
+
+    // Code from nsContextMenu.js. Note that we extend the prototype here, rather 
+    // than making these methods on a new object, as some methods require access
+    // to data maintained by nsContextMenu.  
+
+    var cookieContextMenu = {
+
+      // Determine if "Block Image" is to appear in the menu.
+      // Return true if "imageBlocker.enabled" pref is set and image is not already blocked.
+      isBlockingImages : function () {
+        /* determine if "imageBlocker.enabled" pref is set */
+        var pref = contextMenu.getService('@mozilla.org/preferences;1', 'nsIPref');
+        var result = false;
+        try {
+          result = pref.GetBoolPref( "imageblocker.enabled" );
+        } catch(e) {
+        }
+        if (!result) {
+          /* pref is not set so return false */
+          return false;
+        }
+  
+        /* determine if image is already being blocked */
+        var cookieViewer = contextMenu.createInstance
+          ("@mozilla.org/cookieviewer/cookieviewer-world;1", "nsICookieViewer");
+        var list = cookieViewer.GetPermissionValue(1);
+        var permissionList  = list.split(list[0]);
+        for(var i = 1; i < permissionList.length; i+=2) {
+          var permStr = permissionList[i+1];
+          var type = permStr.substring(0,1);
+          if (type == "-") {
+            /* some host is being blocked, need to find out if it's our image's host */
+            var host = permStr.substring(1,permStr.length);
+            if (host && contextMenu.imageURL.search(host) != -1) {
+              /* it's our image's host that's being blocked */
+
+              return false;
+            }
+          }
+        }  
+        /* image is not already being blocked, so "Block Image" can appear on the menu */
+        return true;
+      },
+
+      // Block image from loading in the future.
+      blockImage : function () {
+        var cookieViewer =
+          contextMenu.createInstance("@mozilla.org/cookieviewer/cookieviewer-world;1",
+                                     "nsICookieViewer" );
+        cookieViewer.BlockImage(this.imageURL);
+      },
+
+      initImageBlocking : function () {
+        // Block image depends on whether an image was clicked on, and,
+        // whether the user pref is enabled.
+        contextMenu.showItem
+          ("context-blockimage",
+           contextMenu.onImage && cookieContextMenu.isBlockingImages());
+      },
+
+      addContextMenuItemListeners : function (aEvent) {
+        var contextPopup = document.getElementById("contentAreaContextSet");
+        contextPopup.addEventListener("create", cookieContextMenu.initImageBlocking, false);
+      }
+    }
+
+    window.addEventListener("load", cookieContextMenu.addContextMenuItemListeners, false);
+
+    // For some unexplainable reason, this overlay is loaded twice as can be demonstrated
+    // by uncommenting the following "dump" statement which will get displayed twice
+    //    dump("$$$$$$$$$$ HERE WE ARE IN cookieContextOverlay.xul $$$$$$$$$$\n");
+    // As a consequence, the block-image item appears twice in the context menu.  To
+    // prevent that from happening, the "display:none" was added to the menuitem below
+
+   ]]>
+  </script>         
+
+  <!-- context menu -->
+  <popup id="contentAreaContextMenu">
+    <menuitem id="context-blockimage"
+              value="&blockImageCmd.label;"
+              accesskey=""
+              oncommand="contextMenu.blockImage();"
+              style="display:none;"
+              insertafter="context-viewimage"/>
+  </popup>
+</overlay>
