@@ -57,7 +57,7 @@
       </template>
 
       <treecolgroup>
-        <treecol flex="1" id="FilenameColumn"
+        <treecol flex="3" id="FilenameColumn"
             sortActive="true" sortDirection="ascending"
             resource="http://home.netscape.com/NC-rdf#Name" />
         <splitter class="tree-splitter"/>
