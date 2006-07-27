@@ -40,11 +40,10 @@
       
       <!-- results panel -->
       <box class="searchpanel-outerbox" align="vertical" flex="100%">
-      <spring style="height: 8px;"/>
         <box align="horizontal" class="spaced">
         	<html:input id="sidebar-search-text" flex="1" onkeyup="if (event.which == 13) { return doSearch(); }" />
-          <titledbutton id="searchbutton" value="&search.button.label;" onclick="return doSearch();" class="dialog search-button"/>
-          <titledbutton id="stopbutton" value="&stop.button.label;" onclick="return doStop();" class="dialog search-button" style="display:none;"/>
+          <titledbutton id="searchbutton" value="&search.button.label;" onclick="return doSearch();" class="dialog toolbar-non-iconic"/>
+          <titledbutton id="stopbutton" value="&stop.button.label;" onclick="return doStop();" class="dialog toolbar-non-iconic" style="display:none;"/>
         </box>
         <box align="horizontal" class="spaced">
           <html:label for="">&within.label;</html:label>

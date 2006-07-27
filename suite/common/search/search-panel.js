@@ -496,10 +496,9 @@ function doSearch()
       for( var i = 0; i < treeChildrenNode.childNodes.length; i++ )
       {
         var currItem = treeChildrenNode.childNodes[i];
-          dump("*** the current URI is = " + currItem.getAttribute("id") + "\n");
-        if( currItem.getAttribute("id").indexOf("Open_Directory") != -1 ) {
-          
-          engineURIs[engineURIs.length] = treeItem.getAttribute("id");
+        dump("*** the current URI is = " + currItem.getAttribute("id") + "\n");
+        if( currItem.getAttribute("id").indexOf("NetscapeSearch.src") != -1 ) {
+          engineURIs[engineURIs.length] = currItem.getAttribute("id");
           break;
         }
       }

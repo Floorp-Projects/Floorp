@@ -19,10 +19,10 @@
    - Contributor(s):
   --> 
 
-<!ENTITY search.button.label      "SEARCH">
+<!ENTITY search.button.label      "Search">
 <!ENTITY search.results.tab       "Apply">
 <!ENTITY search.advanced.tab      "Settings for ">
-<!ENTITY allengines.label         "All categories combined">
+<!ENTITY allengines.label         "the Web">
 <!ENTITY within.label             "within">
 <!ENTITY whenSearching.label      "When searching ">
 <!ENTITY useTheseProviders.label  "use these engines:">
