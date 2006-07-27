@@ -1,3 +1,4 @@
+
 <?xml version="1.0"?>
 
 <!--
@@ -84,15 +85,21 @@
     gPref = Components.classes['@mozilla.org/preferences-service;1'];
     gPref = gPref.getService();
     gPref = gPref.QueryInterface(Components.interfaces.nsIPrefBranch);
-    if (gPref.getIntPref("network.cookie.cookieBehavior") == "3") {
+    if (gPref.getIntPref("network.cookie.cookieBehavior") == 3) {
 
-      // p3p pref is set so create an observer for changes in visibility of cookie icon
-      var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-      observerService.addObserver(cookieIconObserver, "cookieIcon", false);
+      // make sure p3p dll exists, else we can't keep pref set
+      if (!("@mozilla.org/cookie-consent;1" in Components.classes)) {
+        gPref.setIntPref("network.cookie.cookieBehavior", 0);
+      } else {
 
-      // determine whether or not cookie icon in this new window should be displayed
-      // we need to delay before displaying icon because it hasn't been created yet
-      setTimeout(TestIconVisibility, 0);
+        // p3p pref is set so create an observer for changes in visibility of cookie icon
+        var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+        observerService.addObserver(cookieIconObserver, "cookieIcon", false);
+
+        // determine whether or not cookie icon in this new window should be displayed
+        // we need to delay before displaying icon because it hasn't been created yet
+        setTimeout(TestIconVisibility, 0);
+      }
     }
 
     /******* THE FOLLOWING IS FOR THE TASKMENU OVERLAY *******/
