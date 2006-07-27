@@ -33,7 +33,7 @@ function debug(msg)
 }
 
 // The content window that we're supposed to be observing.
-var ContentWindow = window.content;
+var ContentWindow = window._content;
 
 // The related links handler
 var Handler = Components.classes["component://netscape/related-links-handler"].createInstance();
