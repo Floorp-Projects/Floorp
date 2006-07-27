@@ -18,7 +18,8 @@
 
 -->
 
-<?xml-stylesheet href="chrome://communicator/skin/sidebar/sidebar.css" type="text/css"?>
+
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/sidebar/customize.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
@@ -33,13 +34,15 @@
   windowtype="sidebar:customize"
   align="vertical">
 
-  <html:script src="chrome://communicator/content/sidebar/customize.js" />
+  <script src="chrome://communicator/content/sidebar/customize.js"></script>
 
-  <box id="header" type="largeheader" value="&sidebar.customize.title.label;"/>
+  <keyset id="keyset"/>
+
+  <box class="box-header" id="header" value="&sidebar.customize.title.label;"/>
 
   <box id="contentarea" flex="1">
     <box orient="vertical" flex="1">
-      <text value="&sidebar.customize.additional.label;"/>
+      <text class="label" value="&sidebar.customize.additional.label;"/>
       <tree id="other-panels" flex="1"
         datasources="rdf:null"
         indent="true" class="inset"
@@ -81,7 +84,7 @@
 
     <!-- The panels that the user currently has chosen -->
     <box orient="vertical" flex="1">
-      <text value="&sidebar.customize.current.label;"/>
+      <text class="label" value="&sidebar.customize.current.label;"/>
       <tree id="current-panels" onclick="SelectChangeForCurrentPanels();"
         datasources="rdf:null" class="inset" flex="1"
         multiple="true">
