@@ -10,6 +10,7 @@
 <body bgcolor="white">
 
 <a NAME="page_info_first"></a>
+<a NAME="page_infoIDX"></a>
 <h1>Viewing Page Info</h1>
 
 <p>The Page Info dialog box consists of several tabs that display different kinds of information about the page you are viewing. This section provides a brief overview of the information available in each tab.
@@ -20,7 +21,7 @@
 
 <p>For detailed information about HTML, including the tags displayed by Page Info, see the <a href="http://www.w3.org/TR/REC-html40/" target="_blank">HTML 4.01 Specification</a>.
 
-<p>The Privacy and Security tabs include information about the privacy policies of the web site whose page you are viewing and the security status of that page.</p>
+<p>The Security tab includes information about the security status of the web page you are viewing.</p>
 
 
 
@@ -65,21 +66,19 @@
 
 <p>When you choose Page Info from the View menu and click the Forms tab, you see information about all the forms displayed by the page you are currently viewing in the browser.
 
-<p>The top portion lists basic information about the way the form is specified in the HTML source: 
+<p>The top portion lists basic information about the way each form in the page is specified in the HTML source: 
 
 <ul>
 	<li><b>Name:</b>&nbsp; The form's name, if any.
-	<li><b>Method:</b>&nbsp; The HTML method (such as <tt>GET</tt> or <tt>POST</tt>) used to send information captured by the form back to the web server.
+	<li><b>Method:</b>&nbsp; The HTML method used to send information captured by the form back to the web server. <tt>GET</tt> appends your filled-in values to the web site address to which it submits the form. <tt>POST</tt> sends the values to the web site as parameters that can be read by a program on the web site.
 	<li><b>Form Action:</b>&nbsp; The URL of the program to be invoked when the form is submitted. 
 </ul>
-
-<p>To examine information for any certificate in the Certificate Hierarchy area, select its name, select the field under Certificate Fields that you want to examine, and read the field's value under Field Value: 
 
 <p>When you select a form listed in the top portion of the Forms tab, the bottom portion displays detailed information about the way each of of that form's elements is specified in the HTML source:
 <ul>
 	<li><b>Label:</b>&nbsp;The element's label, if any.
  	<li><b>Field Name.</b>&nbsp;The element's name.
-	<li><b>Type:</b>&nbsp;The element's input type, such as <tt>TEXT</tt> (for submitting text), <tt>RADIO</tt> (for a radio button), or <tt>HIDDEN</tt> (for storing information that the user does not submit).
+	<li><b>Type:</b>&nbsp;The element's input type, such as <tt>TEXT</tt> (for submitting text), <tt>RADIO</tt> (for a radio button), or <tt>HIDDEN</tt> (for storing information that is submitted but not displayed on the screen).
 	<li><b>Current Value:</b>&nbsp;The current value of the element. For example, the current value of a text element is the text it currently contains.
 </ul>
 
@@ -87,9 +86,13 @@
 <a NAME="pageinfo_links"></a>
 <h2>Links (Page Info Tab)</h2>
 
-<p>When you choose Page Info from the View menu and click the Links tab, you see a list of all the links available on that page, including <a href="Universal_Resource_Locator_(URL)">URL</a> and the type of link.
+<p>When you choose Page Info from the View menu and click the Links tab, you see a list of all the links available on that page. The following information is displayed for each link:
 
-
+<ul>
+	<li><b>Name:</b>&nbsp;The text displayed in the browser as a link.
+ 	<li><b>Address.</b>&nbsp;The <a href="Universal_Resource_Locator_(URL)">URL</a> for the page to which the link points.
+	<li><b>Type:</b>&nbsp; The type of link, such Anchor (for a link to a specific place in an HTML document) or Form Submission.
+</ul>
 
 <p>
 <p>&nbsp;</p>
@@ -98,15 +101,18 @@
 
 <p>When you choose Page Info from the View menu and click the Media tab, you see a list of all the images and other media elements displayed by the page.
 
-<p>The top portion lists basic information about each element, including its <a href="Universal_Resource_Locator_(URL)">URL</a> and type.
+<p>The top portion lists basic information about each element, including its address (<a href="Universal_Resource_Locator_(URL)">URL</a>) and type.
 
-<p>When you select a media element listed in the top portion of the Media tab, the bottom portion displays available information about that element, such as description, size, or dimensions. You can also see the selected element at the bottom of the dialog box (you may need to click the lower-right corner and drag to see large images). 
+<p>When you select a media element listed in the top portion of the Media tab, the bottom portion displays available information about that element, such as description, size, or dimensions. 
 
-To save a media element as a separate file:
+<p>You can also see the selected element at the bottom of the dialog box. To see larger images, you need to click the lower-right corner of the Page Info dialog box and drag. 
+
+<p>To save a media element as a separate file:
 <ul>
 	<li><b>Save As:</b> Select the element you want to save, click Save As, and navigate to the location where you want to save it.
 	</ul>
-</ul>
+
+
 
 <p>&nbsp;</p>
 <a NAME="pageinfo_security"></a>
@@ -119,13 +125,13 @@ To save a media element as a separate file:
 <p>The top portion of the Security tab can display any of these messages:
 
 <ul>
-	<li><b>Web Site Identity Not Verified.</b> The web site you are viewing does not support certificate-based authentication. Therefore, Certificate Manager cannot verify its identity. It is possible, though unlikely, that the web site is not what it claims to be.
+	<li><b>Web Site Identity Not Verified.</b> The web site you are viewing did not present a certificate to authenticate itself. Therefore, Certificate Manager cannot verify its identity. It is possible, though unlikely, that the web site is not what it claims to be.
 	<li><b>Web Site Identity Verified.</b> The certificate that Certificate Manager has used to verify this web site's identity was issued by a certificate authority (CA) marked as one that you trust. You can be reasonably confident that the web site is what it claims to be.
 </ul>
 
 <p>The bottom portion of the Security tab can display any of these messages:
 <ul>
-<LI><B>Connection Not Encrypted.</B> It is possible, though unlikely, that other people can view information sent from your computer to the web site or information sent by the web site to your computer. </LI>
+<LI><B>Connection Not Encrypted.</B> It is possible that other people can view information sent from your computer to the web site or information sent by the web site to your computer, but it is unlikely that someone is actually doing so. </LI>
 
 
 <li><b>Connection Encrypted. </b>In general, the strength of an encrypted connection depends on the length of the keys used for encryption, measured in bits. The longer the key, the stronger the encryption&mdash;that is, the harder it is to for an unauthorized person to unscramble the encrypted information.
@@ -139,7 +145,7 @@ To save a media element as a separate file:
 	<LI><B>Low-grade encryption.</B> Weakest encryption available, using 40-bit keys.</LI>
 </ul>
 
-<p>Most web sites support high-grade encryption. If you are viewing an older web site that supports a weaker form of encryption, it is possible, though unlikely, that other people can view information sent from your computer to the web site or information sent by the web site to your computer. </li>
+<p>Most web sites support high-grade encryption. If you are viewing an older web site that supports a weaker form of encryption, it is possible that other people can view information sent from your computer to the web site or information sent by the web site to your computer, but it is unlikely that someone is actually doing so. </li>
 </ul>
 
 <p>Lack of any encryption or lack of strong encryption should be of concern only if you are sending or viewing confidential information, such as your credit card number.
@@ -147,7 +153,7 @@ To save a media element as a separate file:
 <p>You can quickly check the encryption status of a web page by noting the state of the lock icon at the bottom-right corner of the browser window. For more details, see <a href="using_certs_help.html#using_certs_info">Checking Security for a Web Page</a>.
 
 <hr>
-<p><i>16 May 2002</i></p>
+<p><i>22 May 2002</i></p>
 <p>Copyright &copy; 1998-2002 Netscape Communications Corporation</p>
 
 </body>
