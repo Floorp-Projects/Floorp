@@ -14,7 +14,7 @@ comm.jar:
    content/communicator/directory/directory.js                      (directory/directory.js)
    content/communicator/directory/directory.xul                     (directory/directory.xul)
    content/communicator/history/history.js                          (history/history.js)
-   content/communicator/history/history.xul                         (history/history.xul)	
+#   content/communicator/history/history.xul                         (history/history.xul)	
    content/communicator/history/historyTreeOverlay.xul              (history/historyTreeOverlay.xul)	
    content/communicator/history/history-panel.xul                   (history/history-panel.xul)	
    content/communicator/history/history-test.js                     (history/history-test.js)

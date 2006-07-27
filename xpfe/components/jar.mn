@@ -1,5 +1,7 @@
 #ifndef SUPPRESS_CHROME
 #ifdef MOZ_SUITE
+comm.jar:
+    content/communicator/history/history.xul                    (history/resources/history.xul)	
 #ifndef MOZ_XUL_APP
 comm.jar:
     content/communicator/alerts/alert.xul                       (alerts/resources/content/alert.xul)  
