@@ -50,7 +50,7 @@
 
   <binding id="calendar-month-day-box-item" extends="chrome://calendar/content/calendar-view-core.xml#calendar-editable-item">
     <content>
-      <xul:hbox flex="1">
+      <xul:hbox flex="1" class="calendar-item">
         <xul:label anonid="item-label" class="calendar-month-day-box-item-label" xbl:inherits="context"/>
         <xul:vbox class="calendar-event-box-container" xbl:inherits="context" flex="1" align="left">
           <xul:label anonid="event-name" style="margin: 0px;" flex="1" crop="end"/>

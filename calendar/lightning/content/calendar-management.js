@@ -2,50 +2,7 @@
 //  calendar-management.js
 //
 
-var calendarPrefStyleSheet = null;
-for each(sheet in document.styleSheets) {
-    if (sheet.href == "chrome://lightning/skin/lightning.css") {
-        calendarPrefStyleSheet = sheet;
-        break;
-    }
-}
-if (!calendarPrefStyleSheet)
-    Components.utils.reportError("Couldn't find the lightning style sheet.")
-
-function updateStyleSheetForCalendar(aCalendar)
-{
-    var spec = aCalendar.uri.spec;
-    var cpss = calendarPrefStyleSheet;
-    function selectorForCalendar(spec)
-    {
-        return '*[item-calendar="' + spec + '"]';
-    }
-    
-    function getRuleForCalendar(spec)
-    {
-        for (var i = 0; i < cpss.cssRules.length; i++) {
-            var rule = cpss.cssRules[i];
-            if (rule.selectorText == selectorForCalendar(spec))
-                return rule;
-        }
-        return null;
-    }
-    
-    var rule = getRuleForCalendar(spec);
-    if (!rule) {
-        cpss.insertRule(selectorForCalendar(spec) + ' { }', 0);
-        rule = cpss.cssRules[0];
-    }
-    
-    var color = getCalendarManager().getCalendarPref(aCalendar, 'color');
-    // This color looks nice with the gripbars, etc.
-    if (!color)
-        color = "#A8C2E1";
-    
-    rule.style.backgroundColor = color;
-    rule.style.color = getContrastingTextColor(color);
-}
-
+var gCachedStyleSheet;
 function addCalendarToTree(aCalendar)
 {
     var boxobj = document.getElementById("calendarTree").treeBoxObject;
@@ -58,8 +15,12 @@ function addCalendarToTree(aCalendar)
     sip.dataIID = Components.interfaces.calICalendar;
 
     boxobj.rowCountChanged(getCalendars().indexOf(sip.data), 1);
-    
-    updateStyleSheetForCalendar(aCalendar);
+
+    if (!gCachedStyleSheet) {
+        gCachedStyleSheet = getStyleSheet("chrome://calendar/content/calendar-view-bindings.css");
+    }
+alert("1"+gCachedStyleSheet);
+    updateStyleSheetForObject(aCalendar, gCachedStyleSheet);
 }
 
 function removeCalendarFromTree(aCalendar)
@@ -101,7 +62,10 @@ var ltnCalendarManagerObserver = {
     },
 
     onCalendarPrefSet: function(aCalendar, aName, aValue) {
-        updateStyleSheetForCalendar(aCalendar);
+        if (!gCachedStyleSheet) {
+            gCachedStyleSheet = getStyleSheet("chrome://calendar/content/calendar-view-bindings.css");
+        }
+        updateStyleSheetForObject(aCalendar, gCachedStyleSheet);
     },
 
     onCalendarPrefDeleting: function(aCalendar, aName) {

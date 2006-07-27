@@ -47,7 +47,8 @@
 
   <binding id="calendar-editable-item">
     <content>
-        <xul:vbox class="calendar-event-box-container" xbl:inherits="context" flex="1" align="left">
+        <xul:vbox class="calendar-event-box-container calendar-item"
+                  xbl:inherits="context" flex="1" align="left">
           <xul:label anonid="event-name" style="margin: 0px;" flex="1" crop="right"/>
           <xul:textbox class="plain" style="background: transparent !important"
             anonid="event-name-textbox" crop="right" hidden="true" wrap="true"/>

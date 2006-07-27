@@ -1458,7 +1458,7 @@
 
               var eventbox = document.getAnonymousElementByAttribute(this, "anonid", "eventbox");
               eventbox.setAttribute("orient", val);
-              eventbox.setAttribute("class", "calendar-event-box-" + val);
+              eventbox.setAttribute("class", "calendar-item calendar-event-box-" + val);
               var gb1 = document.getAnonymousElementByAttribute(this, "anonid", "gripbar1");
               gb1.parentorient = val;
               var gb2 = document.getAnonymousElementByAttribute(this, "anonid", "gripbar2");

@@ -109,7 +109,7 @@ var calCalendarManagerObserver = {
                 var colorCell = item.childNodes[1];
                 colorCell.style.background = aValue;
             }
-            updateStyleSheetForObject(aCalendar);
+            updateStyleSheetForObject(aCalendar, gCachedStyleSheet);
         } else if (aName == 'name') {
             if (item) {
                 var nameCell = item.childNodes[2];
@@ -124,7 +124,7 @@ var calCalendarManagerObserver = {
         }
         setCalendarManagerUI();
         if (aName == 'color')
-            updateStyleSheetForObject(aCalendar);
+            updateStyleSheetForObject(aCalendar, gCachedStyleSheet);
     }
 };
 
@@ -317,27 +317,17 @@ function reloadCalendars()
     getCompositeCalendar().refresh();
 }
 
-function getCalendarStyleSheet() {
-    var calStyleSheet = null;
-    for (var i = 0; i < document.styleSheets.length; i++) {
-        if (document.styleSheets[i].href.match(
-                /chrome.*\/skin.*\/calendar.css$/ )) {
-        calStyleSheet = document.styleSheets[i];
-        break;
-        }
-    }
-    return calStyleSheet;
-}
-
+var gCachedStyleSheet;
 function initColors() {
     var calendars = getCalendarManager().getCalendars({});
+    gCachedStyleSheet = getStyleSheet("chrome://calendar/content/calendar-view-bindings.css");
     for (var j in calendars) 
-        updateStyleSheetForObject(calendars[j]);
+        updateStyleSheetForObject(calendars[j], gCachedStyleSheet);
 
     var categoryPrefBranch = prefService.getBranch("calendar.category.color.");
     var prefArray = categoryPrefBranch.getChildList("", {});
     for (var i = 0; i < prefArray.length; i++) 
-        updateStyleSheetForObject(prefArray[i]);
+        updateStyleSheetForObject(prefArray[i], gCachedStyleSheet);
    
     // Setup css classes for category colors
     var catergoryPrefBranch = prefService.getBranch("");
@@ -345,59 +335,6 @@ function initColors() {
         Components.interfaces.nsIPrefBranch2);
     pbi.addObserver("calendar.category.color.", categoryPrefObserver, false);
     categoryPrefObserver.observe(null, null, "");
-}
-
-function updateStyleSheetForObject(object) {
-    var calStyleSheet = getCalendarStyleSheet();
-    var name;
-    if (object.uri)
-        name = object.uri.spec;
-    else
-        name = object.replace(' ','_');
-
-    // Returns an equality selector for calendars (which have a uri), since an
-    // event can only belong to one calendar.  For categories, however, returns
-    // the ~= selector which matches anything in a space-separated list.
-    function selectorForObject(name)
-    {
-        if (object.uri)
-            return '*[item-calendar="' + name + '"]';
-        return '*[item-category~="' + name + '"]';
-    }
-    
-    function getRuleForObject(name)
-    {
-        for (var i = 0; i < calStyleSheet.cssRules.length; i++) {
-            var rule = calStyleSheet.cssRules[i];
-            if (rule.selectorText && (rule.selectorText == selectorForObject(name)))
-                return rule;
-        }
-        return null;
-    }
-    
-    var rule = getRuleForObject(name);
-    if (!rule) {
-        calStyleSheet.insertRule(selectorForObject(name) + ' { }',
-                                 calStyleSheet.cssRules.length);
-        rule = calStyleSheet.cssRules[calStyleSheet.cssRules.length-1];
-    }
-
-    var color;
-    if (object.uri) {
-        color = getCalendarManager().getCalendarPref(object, 'color');
-        if (!color)
-            color = "#A8C2E1";
-        rule.style.backgroundColor = color;
-        rule.style.color = getContrastingTextColor(color);
-        return;
-    }
-    var categoryPrefBranch = prefService.getBranch("calendar.category.color.");
-    try {
-        color = categoryPrefBranch.getCharPref(object);
-    }
-    catch(ex) { return; }
-
-    rule.style.border = color + " solid 2px";
 }
 
 var categoryPrefObserver =
@@ -408,7 +345,7 @@ var categoryPrefObserver =
        // We only want the actual category name.  24 is the length of the 
        // leading 'calendar.category.color.' term
        name = name.substr(24, aPrefName.length - 24);
-       updateStyleSheetForObject(name);
+       updateStyleSheetForObject(name, gCachedStyleSheet);
    }
 }
 
