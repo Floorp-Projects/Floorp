@@ -22,7 +22,6 @@
 
 -->
 
-<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/directory/directory.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/directory/directory.dtd">
