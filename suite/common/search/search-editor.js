@@ -446,9 +446,9 @@ function NewCategory()
 {
   var promptStr = bundle.GetStringFromName("NewCategoryPrompt");
   var newTitle = bundle.GetStringFromName("NewCategoryTitle");
-  var result = {value:0};
-  var name = promptService.prompt(window, newTitle, promptStr, result, null, {value:0});
-  if ((!result.value) || result.value == "")      return(false);
+  var result = {value:null};
+  var confirmed = promptService.prompt(window, newTitle, promptStr, result, null, {value:0});
+  if (!confirmed || (!result.value) || result.value == "")      return(false);
 
   var newName = RDF.GetLiteral(result.value);
   if (!newName) return(false);
@@ -499,8 +499,8 @@ function RenameCategory()
   var promptStr = bundle.GetStringFromName("RenameCategoryPrompt");
   var renameTitle = bundle.GetStringFromName("RenameCategoryTitle");
   var result = {value:currentName};
-  var name = promptService.prompt(window,renameTitle,promptStr,result,null,{value:0});
-  if ((!result.value) || (result.value == "") || result.value == currentName)     return(false);
+  var confirmed = promptService.prompt(window,renameTitle,promptStr,result,null,{value:0});
+  if (!confirmed || (!result.value) || (result.value == "") || result.value == currentName)     return(false);
 
   var currentCatID = categoryList.selectedItem.getAttribute("id");
   var currentCatRes = RDF.GetResource(currentCatID);
