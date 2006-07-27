@@ -126,7 +126,7 @@
      <rdf:li>
        <rdf:Description ID="bookmarks:creating_bookmarks"
          nc:name="creating bookmarks"
-	 nc:link="customize_help.xhtml#bookmarks:creating_new_bookmarks"/>
+	 nc:link="customize_help.xhtml#creating_new_bookmarks"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="bookmarks:exporting_bookmarks"
@@ -593,7 +593,7 @@
      <rdf:li>
        <rdf:Description ID="encryption:status_of_web_page"
          nc:name="security of a web page"
-	 nc:link="using_certs_help.html#checking_security_for_a_web_page"/>
+	 nc:link="using_certs_help.xhtml#checking_security_for_a_web_page"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="encryption:technologies"
@@ -708,7 +708,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="GIF"
          nc:name="GIF, inserting"
-	 nc:link="chrome://help/locale/composer_help.xhtml#inserting_an_image_into_your_page"/>
+	 nc:link="composer_help.xhtml#inserting_an_image_into_your_page"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1374,7 +1374,7 @@
      <rdf:li>
        <rdf:Description ID="Navigator:controlling_popups"
          nc:name="controlling popups"
-	 nc:link="chrome://help/locale/cs_priv_prefs_popup.xhtml#controlling_popups"/>
+	 nc:link="cs_priv_prefs_popup.xhtml#controlling_popups"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Navigator:start_page"
@@ -2267,7 +2267,7 @@
      <rdf:li>
        <rdf:Description ID="web_pages:customizing_fonts"
          nc:name="customizing fonts"
-	 nc:link="chrome://help/locale/customize_help.xhtml#changing_fonts_colors_and_themes"/>
+	 nc:link="customize_help.xhtml#changing_fonts_colors_and_themes"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="web_pages:finding_within"
