@@ -30,7 +30,7 @@
       <field name="slideSteps">4</field>
 
       <field name="_timer">null</field>
-      <field name="_blockBox">null</field>
+      <field name="_blockingCanvas">null</field>
 
       <property name="notificationsHidden"
                 onget="return this.getAttribute('notificationshidden') == 'true';">
@@ -214,10 +214,64 @@
                 }
                 if (newitem)
                   self.currentNotification = newitem;
+                self._setBlockingState(newitem);
               }
             }
 
             this._timer = setInterval(slide, 50);
+          ]]>
+        </body>
+      </method>
+
+      <method name="_setBlockingState">
+        <parameter name="aNotification"/>
+        <body>
+          <![CDATA[
+            var isblock = aNotification &&
+                          aNotification.priority == this.PRIORITY_CRITICAL_BLOCK;
+            var canvas = this._blockingCanvas;
+            if (isblock) {
+              if (!canvas)
+                canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+              const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+              var content = this.firstChild;
+              if (!content ||
+                   content.namespaceURI != XULNS ||
+                   content.localName != "browser")
+                return;
+
+              var width = content.boxObject.width;
+              var height = content.boxObject.height;
+              content.collapsed = true;
+
+              canvas.setAttribute("width", width);
+              canvas.setAttribute("height", height);
+              canvas.setAttribute("flex", "1");
+
+              this.appendChild(canvas);
+              this._blockingCanvas = canvas;
+
+              var bgcolor = "white";
+              try {
+                var prefService = Components.classes["@mozilla.org/preferences-service;1"].
+                                    getService(Components.interfaces.nsIPrefBranch);
+                bgcolor = prefService.getCharPref("browser.display.background_color");
+
+                var win = content.contentWindow;
+                var context = canvas.getContext("2d");
+                context.globalAlpha = 0.5;
+                context.drawWindow(win, win.scrollX, win.scrollY,
+                                   width, height, bgcolor);
+              }
+              catch(ex) { };
+            }
+            else if (canvas) {
+              canvas.parentNode.removeChild(canvas);
+              this._blockingCanvas = null;
+              var content = this.firstChild;
+              if (content)
+                content.collapsed = false;
+            }
           ]]>
         </body>
       </method>
