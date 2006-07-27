@@ -61,6 +61,10 @@ function HistoryCommonInit()
     var historyController = new nsHistoryController;
     gHistoryTree.controllers.appendController(historyController);
 
+    gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
+                              .getService(Components.interfaces.nsIPrefBranch);
+    PREF = gPrefService;    // need this for bookmarks.js
+
     if ("arguments" in window && window.arguments[0] && window.arguments.length >= 1) {
         // We have been supplied a resource URI to root the tree on
         var uri = window.arguments[0];
@@ -77,8 +81,6 @@ function HistoryCommonInit()
         document.getElementById("groupingMenu").setAttribute("hidden", "true");
     }
     else {
-        gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
-                                 .getService(Components.interfaces.nsIPrefBranch);
         try {
             gHistoryGrouping = gPrefService.getCharPref("browser.history.grouping");
         }
@@ -135,17 +137,22 @@ function historyOnClick(aEvent)
   // This is kind of a hack but matches the currently implemented behaviour. 
   // If a status bar is not present, assume we're in sidebar mode, and thus single clicks on containers
   // will open the container. Single clicks on non-containers are handled below in historyOnSelect.
-  if (!gHistoryStatus && aEvent.button == 0) {
-    var row = { };
-    var col = { };
-    var elt = { };
-    gHistoryTree.treeBoxObject.getCellAt(aEvent.clientX, aEvent.clientY, row, col, elt);
-    if (row.value >= 0 && col.value) {
-      if (!isContainer(gHistoryTree, row.value))
-        OpenURL("current");
-      else if (elt.value != "twisty")
-        gHistoryTree.treeBoxObject.view.toggleOpenState(row.value);
-    }
+  if (gHistoryStatus && aEvent.button == 0)
+    return;
+
+  var target = BookmarksUtils.getBrowserTargetFromEvent(aEvent);
+  if (!target)
+    return;
+
+  var row = { };
+  var col = { };
+  var elt = { };
+  gHistoryTree.treeBoxObject.getCellAt(aEvent.clientX, aEvent.clientY, row, col, elt);
+  if (row.value >= 0 && col.value) {
+    if (!isContainer(gHistoryTree, row.value))
+      OpenURL(target);
+    else if (aEvent.button == 0 && elt.value != "twisty")
+      gHistoryTree.treeBoxObject.view.toggleOpenState(row.value);
   }
 }
 
@@ -331,9 +338,9 @@ function OpenURL(aTarget)
         }
       } else {
         if (URLArray.length > 0)
-          OpenURLArrayInTabs(URLArray);
+          OpenURLArrayInTabs(URLArray, aTarget == "tab_background");
       }
-    }        
+    }
     else if (!isContainer(gHistoryTree, currentIndex))
       openTopWin(url);
     return true;
@@ -341,14 +348,16 @@ function OpenURL(aTarget)
 
 // This opens the URLs contained in the given array in new tabs
 // of the most recent window, creates a new window if necessary.
-function OpenURLArrayInTabs(aURLArray)
+function OpenURLArrayInTabs(aURLArray, aBackground)
 {
   var browserWin = getTopWin();
   if (browserWin) {
     var browser = browserWin.getBrowser();
-    browser.selectedTab = browser.addTab(aURLArray[0]);
+    var tab = browser.addTab(aURLArray[0]);
+    if (!aBackground)
+      browser.selectedTab = tab;
     for (var i = 1; i < aURLArray.length; ++i)
-      tab = browser.addTab(aURLArray[i]);
+      browser.addTab(aURLArray[i]);
   } else {
     openTopWin(aURLArray.join("\n")); // Pretend that we're a home page group
   }
