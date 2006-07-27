@@ -1730,6 +1730,10 @@
                     (!aItem.entryDate || !aItem.dueDate))
                     return;
 
+                if (aItem instanceof Components.interfaces.calITodo &&
+                    !this.calView.mTasksInView)
+                    return;
+
                 var occs = aItem.getOccurrencesBetween(this.calView.startDate,
                                                        this.calView.queryEndDate,
                                                        {});
@@ -1749,6 +1753,11 @@
                 if (this.mBatchCount) {
                     return;
                 }
+
+                if (aNewItem instanceof Components.interfaces.calITodo &&
+                    !this.calView.mTasksInView)
+                    return;
+
                 var occs;
 
 
@@ -1784,6 +1793,11 @@
                 if (this.mBatchCount) {
                     return;
                 }
+
+                if (aItem instanceof Components.interfaces.calITodo &&
+                    !this.calView.mTasksInView)
+                    return;
+
                 if (aItem instanceof Components.interfaces.calITodo && 
                     (!aItem.entryDate || !aItem.dueDate))
                     return;
