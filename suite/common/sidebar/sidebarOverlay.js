@@ -824,7 +824,7 @@ function BrowseMorePanels()
   if (prefs) {
     var locale;
     try {
-      url = prefs.CopyCharPref("sidebar.customize.more_panels.url");
+      url = prefs.CopyCharPref("sidebar.customize.directory.url");
       var temp = prefs.CopyCharPref("browser.chromeURL");
       if (temp) browser_url = temp;
     } catch(ex) {
