@@ -87,6 +87,8 @@ function rememberSearchText(target)
 
 		textNode.value = unescape(target);
 	}
+	// show the results tab
+	switchTab(0);
 }
 
 
@@ -187,11 +189,11 @@ function SearchPanelStartup()
 			categoryList.selectedItem = categoryPopup.childNodes[0];
 		}
     
-		if( lastCategoryName == "" )
+		if (( lastCategoryName == "" ) || (lastCategoryName == null))
 		{
 			lastCategoryName = "NC:SearchEngineRoot";
 		}
-		else
+		if (lastCategoryName != "NC:SearchEngineRoot")
 		{
 			lastCategoryName = "NC:SearchCategory?category=" + lastCategoryName;
 		}
