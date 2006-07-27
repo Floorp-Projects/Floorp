@@ -164,26 +164,33 @@ function get_remote_datasource_url() {
     prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
   }
   if (prefs) {
+    var locale;
     try {
       url = prefs.CopyCharPref("sidebar.customize.all_panels.url");
       url = url.replace(/%SIDEBAR_VERSION%/g, SIDEBAR_VERSION);
-
-	  var locale = prefs.CopyCharPref("intl.content.langcode");
-	  if (locale == "") {
-		// activation part not ready yet!
-		debug("\n -->intl.content.langcode:  activation part not ready yet! \n");
-		var locale_progid = 'component://netscape/intl/nslocaleservice';
-		var syslocale = Components.classes[locale_progid].getService();
-		syslocale = syslocale.QueryInterface(Components.interfaces.nsILocaleService);
-		locale = syslocale.GetLocaleComponentForUserAgent();
-	  }
-      locale = locale.toLowerCase();
-      url = url.replace(/%LOCALE%/g, locale);
-
-      debug("Remote url is " + url);
+      locale = prefs.CopyCharPref("intl.content.langcode");
     } catch(ex) {
       debug("Unable to get remote url pref. What now? "+ex);
     }
+
+    if (!locale) {
+      // activation part not ready yet!
+
+      try {
+        var locale_progid = 'component://netscape/intl/nslocaleservice';
+        var syslocale = Components.classes[locale_progid].getService();
+        syslocale = syslocale.QueryInterface(Components.interfaces.nsILocaleService);
+        locale = syslocale.GetLocaleComponentForUserAgent();
+	  } catch(ex) {
+        debug("Unable to get system locale. What now? "+ex);
+      }
+    }
+
+    if (locale) {
+      locale = locale.toLowerCase();
+      url = url.replace(/%LOCALE%/g, locale);
+    }
+    debug("Remote url is " + url);
   }
   return url;
 }
