@@ -74,8 +74,6 @@
                 predicate="http://home.netscape.com/NC-rdf#open" />
               <binding subject="?panel" object="?exclude"
                 predicate="http://home.netscape.com/NC-rdf#exclude" />
-              <binding subject="?panel" object="?tooltip"
-                predicate="http://home.netscape.com/NC-rdf#tooltip" />
             </bindings>
             <action>
               <treechildren>
