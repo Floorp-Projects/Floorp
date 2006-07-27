@@ -351,6 +351,14 @@ function OpenURLArrayInTabs(aURLArray)
   }
 }
 
+/**
+ * Root the tree on a given URI (used for displaying search results)
+ */
+function setRoot(root)
+{
+  gHistoryTree.ref = root;
+}
+
 function GroupBy(aGroupingType)
 {
   gHistoryGrouping = aGroupingType;
