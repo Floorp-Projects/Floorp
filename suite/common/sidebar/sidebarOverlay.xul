@@ -21,7 +21,13 @@
  
 <?xml-stylesheet href="chrome://communicator/content/sidebar/sidebarOverlay.css" type="text/css"?> 
 <?xul-overlay href="chrome://communicator/content/contentAreaContextOverlay.xul"?>
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/sidebar/sidebarOverlay.dtd">
+
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % sidebarOverlayDTD SYSTEM "chrome://communicator/locale/sidebar/sidebarOverlay.dtd" >
+%sidebarOverlayDTD;
+]>
 
 <overlay id="sidebarOverlay"
   xmlns:html="http://www.w3.org/1999/xhtml"

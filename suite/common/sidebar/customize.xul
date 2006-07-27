@@ -24,7 +24,12 @@
   type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/sidebar/customize.dtd" >
+<!DOCTYPE window [
+<!ENTITY % customizeDTD SYSTEM "chrome://communicator/locale/sidebar/customize.dtd" >
+%customizeDTD;
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+%brandDTD;
+]>
 
 <window
   xmlns:html="http://www.w3.org/1999/xhtml"
