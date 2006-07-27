@@ -353,6 +353,8 @@ nsMacEventHandler::nsMacEventHandler(nsMacWindow* aTopLevelWidget,
   mKeyIgnore = PR_FALSE;
   mKeyHandled = PR_FALSE;
 
+  mLastModifierState = 0;
+
   mMouseInWidgetHit = PR_FALSE;
 
   if (aEventDispatchHandler) {
@@ -1074,7 +1076,8 @@ PRBool nsMacEventHandler::HandleUKeyEvent(const PRUnichar* text, long charCount,
   if (mKeyIgnore)
     return PR_FALSE;
 
-  nsresult result = NS_ERROR_UNEXPECTED;
+  PRBool handled = PR_FALSE;
+
   // get the focused widget
   nsWindow* focusedWidget = mEventDispatchHandler->GetActive();
   if (!focusedWidget)
@@ -1120,24 +1123,24 @@ PRBool nsMacEventHandler::HandleUKeyEvent(const PRUnichar* text, long charCount,
       if ( IsContextMenuKey(keyPressEvent) ) {
         nsMouseEvent contextMenuEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
         ConvertKeyEventToContextMenuEvent(&keyPressEvent, &contextMenuEvent);
-        result = focusedWidget->DispatchWindowEvent(contextMenuEvent);
+        handled |= focusedWidget->DispatchWindowEvent(contextMenuEvent);
         NS_ASSERTION(NS_SUCCEEDED(result), "cannot DispatchWindowEvent");
       }
       else {
-        // command / shift keys, etc. only send once
-        result = focusedWidget->DispatchWindowEvent(keyPressEvent);
+        // Send ordinary keypresses
+        handled |= focusedWidget->DispatchWindowEvent(keyPressEvent);
         NS_ASSERTION(NS_SUCCEEDED(result), "cannot DispatchWindowEvent");
       }
     }
   }
   else {
-    // command / shift keys, etc. only send once
+    // "Special" keys, only send one event based on the keycode
     nsKeyEvent keyPressEvent(PR_TRUE, NS_KEY_PRESS, nsnull);
     InitializeKeyEvent(keyPressEvent, aOSEvent, focusedWidget, NS_KEY_PRESS, PR_FALSE);
-    result = focusedWidget->DispatchWindowEvent(keyPressEvent);
+    handled = focusedWidget->DispatchWindowEvent(keyPressEvent);
     NS_ASSERTION(NS_SUCCEEDED(result), "cannot DispatchWindowEvent");
   }
-  return result;
+  return handled;
 }
 
 #pragma mark -
@@ -2317,5 +2320,75 @@ nsMacEventHandler::HandleKeyUpDownEvent(EventHandlerCallRef aHandlerCallRef,
   mKeyHandled = lastHandled;
   mKeyIgnore = lastIgnore;
 
+  return handled;
+}
+
+PRBool
+nsMacEventHandler::HandleKeyModifierEvent(EventHandlerCallRef aHandlerCallRef,
+                                          EventRef aEvent)
+{
+  PRBool handled = PR_FALSE;
+  nsWindow* focusedWidget = mEventDispatchHandler->GetActive();
+  if (!focusedWidget)
+    focusedWidget = mTopLevelWidget;
+
+  PRUint32 modifiers = 0;
+  OSStatus err = ::GetEventParameter(aEvent, kEventParamKeyModifiers,
+                                     typeUInt32, NULL,
+                                     sizeof(modifiers), NULL,
+                                     &modifiers);
+  NS_ASSERTION(err == noErr, "Could not get kEventParamKeyModifiers");
+
+  typedef struct {
+    PRUint32 modifierBit;
+    PRUint32 keycode;
+  } ModifierToKeycode;
+  const ModifierToKeycode kModifierToKeycodeTable[] = {
+    { shiftKey,   NS_VK_SHIFT },
+    { controlKey, NS_VK_CONTROL },
+    { optionKey,  NS_VK_ALT },
+    { cmdKey,     NS_VK_META },
+  };
+  const PRUint32 kModifierCount = sizeof(kModifierToKeycodeTable) /
+                                  sizeof(ModifierToKeycode);
+
+  // This will be a null event, but include it anyway because it'll still have
+  // good when, where, and modifiers fields, and because it's present in other
+  // NS_KEY_DOWN and NS_KEY_UP events.
+  EventRecord eventRecord;
+  ::ConvertEventRefToEventRecord(aEvent, &eventRecord);
+
+  for(PRUint32 i = 0 ; i < kModifierCount ; i++) {
+    PRUint32 modifierBit = kModifierToKeycodeTable[i].modifierBit;
+    if ((modifiers & modifierBit) != (mLastModifierState & modifierBit)) {
+      PRUint32 message = ((modifiers & modifierBit) != 0 ? NS_KEY_DOWN :
+                                                           NS_KEY_UP);
+      nsKeyEvent upDownEvent(PR_TRUE, message, nsnull);
+      upDownEvent.time =      PR_IntervalNow();
+      upDownEvent.widget =    focusedWidget;
+      upDownEvent.nativeMsg = (void*)&eventRecord;
+      upDownEvent.isShift =   ((modifiers & shiftKey) != 0);
+      upDownEvent.isControl = ((modifiers & controlKey) != 0);
+      upDownEvent.isAlt =     ((modifiers & optionKey) != 0);
+      upDownEvent.isMeta =    ((modifiers & cmdKey) != 0);
+      upDownEvent.keyCode =   kModifierToKeycodeTable[i].keycode;
+      upDownEvent.charCode =  0;
+      handled |= focusedWidget->DispatchWindowEvent(upDownEvent);
+
+      // No need to preventDefault additional events.  Although
+      // kEventRawKeyModifiersChanged can carry multiple modifiers going
+      // up or down, Gecko treats them independently.
+ 
+      // Stop if focus has changed.
+      nsWindow* checkFocusedWidget = mEventDispatchHandler->GetActive();
+      if (!checkFocusedWidget)
+        checkFocusedWidget = mTopLevelWidget;
+
+      if (checkFocusedWidget != focusedWidget)
+        break;
+    }
+  }
+
+  mLastModifierState = modifiers;
   return handled;
 }

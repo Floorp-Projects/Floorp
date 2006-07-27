@@ -667,6 +667,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
     const EventTypeSpec kKeyEventList[] = {
       { kEventClassKeyboard, kEventRawKeyDown },
       { kEventClassKeyboard, kEventRawKeyUp },
+      { kEventClassKeyboard, kEventRawKeyModifiersChanged },
     };
 
     static EventHandlerUPP sKeyEventHandlerUPP;
@@ -2355,8 +2356,15 @@ nsMacWindow::KeyEventHandler(EventHandlerCallRef aHandlerCallRef,
   NS_ASSERTION(self, "No self?");
   NS_ASSERTION(self->mMacEventHandler.get(), "No mMacEventHandler?");
 
-  PRBool handled = self->mMacEventHandler->HandleKeyUpDownEvent(aHandlerCallRef,
-                                                                aEvent);
+  PRBool handled = PR_FALSE;
+
+  EventKind kind = ::GetEventKind(aEvent);
+  if (kind == kEventRawKeyModifiersChanged)
+    handled = self->mMacEventHandler->HandleKeyModifierEvent(aHandlerCallRef,
+                                                             aEvent);
+  else
+    handled = self->mMacEventHandler->HandleKeyUpDownEvent(aHandlerCallRef,
+                                                           aEvent);
 
   if (!handled)
     return eventNotHandledErr;
