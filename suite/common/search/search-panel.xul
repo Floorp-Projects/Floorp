@@ -22,160 +22,127 @@
 
 -->
 
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/search/search.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/search/search-panel.dtd" >
-<window
-  xmlns:html="http://www.w3.org/TR/REC-html40"
-  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  align="vertical"
-  onload="SearchPanelStartup();"
-  onunload="SearchPanelShutdown();">
+<window id="searchPanel" class="box-padded color-dialog"
+        xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        orient="vertical" onload="SearchPanelStartup();"
+        onunload="SearchPanelShutdown();">
 
-  <html:script language="Javascript" src="chrome://global/content/strres.js"/>
-  <html:script language="Javascript" src="chrome://communicator/content/search/search-panel.js" />
-  <html:script language="Javascript" src="chrome://communicator/content/search/shared.js" />
+  <script language="Javascript" src="chrome://global/content/strres.js"></script>
+  <script language="Javascript" src="chrome://communicator/content/search/search-panel.js"></script>
+  <script language="Javascript" src="chrome://communicator/content/search/shared.js"></script>
 
-<popupset>
-<popup id="contextual" oncreate="return fillContextMenu('contextual', 'Tree');" >
-	<menu />
-</popup>
-</popupset>
-
-      <box align="vertical">
-        <box align="horizontal" class="spaced">
-        	<textfield id="sidebar-search-text" flex="1" onkeypress="if (event.which == 13) { return doSearch(); }" />
-		<box autostretch="never">
-			<button id="searchbutton" value="&search.button.label;" onclick="return doSearch();" class="dialog toolbar-non-iconic"/>
-			<button id="stopbutton" align="left" src="resource:/res/rdf/loading.gif" value="&stop.button.label;" onclick="return doStop();" class="dialog toolbar-non-iconic" style="display:none;"/>
-		</box>
-        </box>
-        <box id="categoryBox" align="horizontal" class="spaced">
-
-		<text value="&within.label;" />
-
-		<menulist id="categoryList" ref="NC:SearchCategoryRoot" datasources="rdf:null"
-        		onmousedown="return switchTab(1);" >
-
-	        	<template>
-	        		<menupopup>
-	        			<menuitem uri="rdf:*" oncommand="return chooseCategory(this);"
-	        				data="rdf:http://home.netscape.com/NC-rdf#category"
-	        				value="rdf:http://home.netscape.com/NC-rdf#title" />
-	        		</menupopup>
-	        	</template>
-
-			<menupopup id="categoryPopup">
-				<menuitem data="NC:SearchEngineRoot" value="&allengines.label;"
-					oncommand="return chooseCategory(this)" />
-				<menuseparator />
-			</menupopup>
-		</menulist>
-        </box>
-      </box>
-
-  <deck id="advancedDeck" flex="100%" style="border:none;">
-      
-      <!-- results panel -->
+  <popupset>
+    <popup id="contextual" oncreate="return fillContextMenu('contextual', 'Tree');" >
+    	<menu />
+    </popup>
+  </popupset>
+  <box orient="vertical">
+    <box autostretch="never">
+      <textfield id="sidebar-search-text" flex="1" onkeypress="if (event.which == 13) { return doSearch(); }" />
+		  <box autostretch="never">
+			  <button class="button-toolbar-3" id="searchbutton" value="&search.button.label;" oncommand="return doSearch();"/>
+			  <button class="button-toolbar-3" id="stopbutton" align="left" src="resource:/res/rdf/loading.gif" value="&stop.button.label;" oncommand="return doStop();" style="display:none;"/>
+  		</box>
+    </box>
+    <box id="categoryBox" autostretch="never">
+		  <text class="label" value="&within.label;" />
+  		<menulist id="categoryList" ref="NC:SearchCategoryRoot" datasources="rdf:null" oncommand="return switchTab(1);" >
+        <template>
+          <menupopup>
+            <menuitem uri="rdf:*" oncommand="return chooseCategory(this);" 
+                      data="rdf:http://home.netscape.com/NC-rdf#category"
+                      value="rdf:http://home.netscape.com/NC-rdf#title" />
+          </menupopup>
+        </template>
         
-        <box align="vertical" class="searchpanel-outerbox" flex="1">
-
-        <tree id="Tree" ref="NC:LastSearchRoot" context="contextual"
-          rdf:resource="http://home.netscape.com/NC-rdf#PageRank"
-          rdf:resource2="http://home.netscape.com/NC-rdf#Name"
-          sortDirection="ascending" sortActive="true"
-          class="inset"
-          flex="100%" style="width:100%; height=100%;"
-          datasources="rdf:internetsearch"
-          onclick="sidebarOpenURL(event, event.target.parentNode.parentNode, 'Tree')">
+        <menupopup id="categoryPopup">
+          <menuitem data="NC:SearchEngineRoot" value="&allengines.label;"
+                    oncommand="return chooseCategory(this)" />
+          <menuseparator />
+        </menupopup>
+      </menulist>
+    </box>
+  </box>
+  <deck id="advancedDeck" flex="1">
+    <box align="vertical" class="searchpanel-outerbox" flex="1">
+      <tree id="Tree" class="inset" ref="NC:LastSearchRoot"
+            rdf:resource="http://home.netscape.com/NC-rdf#PageRank"
+            rdf:resource2="http://home.netscape.com/NC-rdf#Name"
+            sortDirection="ascending" sortActive="true"
+            flex="1" datasources="rdf:internetsearch" context="contextual"
+            onclick="sidebarOpenURL(event, event.target.parentNode.parentNode, 'Tree')">
       
-          <template>
-            <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-              <treechildren>
-                <treeitem uri="...">
-                  <treerow>
-                    <treecell>
-                      <html:hr width="100%" size="1" />
-                    </treecell>
-                  </treerow>
-                </treeitem>
-              </treechildren>
-            </rule>
-
-            <rule>
-              <treechildren>
-                <treeitem uri="..." persist="open"
-                        loading="rdf:http://home.netscape.com/NC-rdf#loading"
-			searchtype="rdf:http://home.netscape.com/NC-rdf#SearchType"
-                        type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
-                  <treerow class="searchresult">
-                  <treecell>
-                    <titledbutton flex="1" crop="right" align="left"
-                    	src="rdf:http://home.netscape.com/NC-rdf#Icon"
-                    	value="rdf:http://home.netscape.com/NC-rdf#Name" />
-                  </treecell>
-                  </treerow>
-                </treeitem>
-              </treechildren>
-            </rule>
-          </template>
-
-          <treehead>
-            <treerow>
-              <treecell class="treecell-header sortDirectionIndicator" observes="SortNameColumn" align="center" value="&results.label;" resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('SortNameColumn', 'http://home.netscape.com/NC-rdf#PageRank');" sortActive="true" sortDirection="ascending" flex="1"/>
-            </treerow>
-          </treehead>
-
-          <treecol style="width: 100%;" flex="100%" rdf:resource="http://home.netscape.com/NC-rdf#PageRank" rdf:resource2="http://home.netscape.com/NC-rdf#Name" />
-          // magic, hidden secondary column used for sorting
-          <treecol style="width: 0;" id="SortNameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" />
-      
-        </tree>
-
-	<box align="horizontal">
-		<spring flex="1" />
-		<button id="saveQueryButton" value="&savesearch.button.label;" onclick="return saveSearch();" class="dialog toolbar-non-iconic"/>
-		<spring flex="1" />
-	</box>
-
-      </box>
-      
-      <!-- advanced panel -->
-      <box align="vertical" class="searchpanel-outerbox" flex="1">
-      
-        <tree align="horizontal" id="searchengines" datasources="rdf:internetsearch" flex="100%" class="inset" style="width:100%; height=100%;">
-          <treecol id="CheckboxColumn" class="checkboxColumn" />
-          <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" />
-          <template>
+        <template>
+          <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
             <treechildren>
-              <treeitem uri="..." loading="rdf:http://home.netscape.com/NC-rdf#loading" >
+              <treeitem uri="...">
                 <treerow>
-                  <treecell allowevents="true">
-                    <checkbox onclick="doCheck(this)" />
-                  </treecell>
                   <treecell>
-                    <titledbutton class="iconic" flex="1" crop="right" align="left" src="rdf:http://home.netscape.com/NC-rdf#Icon" value="rdf:http://home.netscape.com/NC-rdf#Name" />
+                    <separator class="groove"/>
                   </treecell>
                 </treerow>
               </treeitem>
             </treechildren>
-          </template>
+          </rule>
+      
+          <rule>
+            <treechildren>
+              <treeitem uri="..." persist="open"
+                        loading="rdf:http://home.netscape.com/NC-rdf#loading"
+                        searchtype="rdf:http://home.netscape.com/NC-rdf#SearchType"
+                        type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
+                <treerow class="searchresult">
+                  <treecell class="treecell-iconic" 
+                            src="rdf:http://home.netscape.com/NC-rdf#Icon"
+                            value="rdf:http://home.netscape.com/NC-rdf#Name" />
+                </treerow>
+              </treeitem>
+            </treechildren>
+          </rule>
+        </template>
+      
+        <treehead>
+          <treerow>
+            <treecell class="treecell-header sortDirectionIndicator outset" observes="SortNameColumn" align="center" value="&results.label;" resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('SortNameColumn', 'http://home.netscape.com/NC-rdf#PageRank');" sortActive="true" sortDirection="ascending" flex="1"/>
+          </treerow>
+        </treehead>
+      
+        <treecol style="width: 100%;" flex="100%" rdf:resource="http://home.netscape.com/NC-rdf#PageRank" rdf:resource2="http://home.netscape.com/NC-rdf#Name" />
+        <treecol style="width: 0;" id="SortNameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" />
+      </tree>
+      
+      <box>
+    		<spring flex="1" />
+    		<button id="saveQueryButton" value="&savesearch.button.label;" oncommand="return saveSearch();"/>
+    		<spring flex="1" />
+    	</box>
 
-          <treehead>
-            <treerow>
-              <treecell class="treecell-header sortDirectionIndicator" value="&checkbox.column.label;" style="width: 23px;"/>
-              <treecell class="treecell-header sortDirectionIndicator" observes="NameColumn" align="center" value="&engine.column.label;" resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('NameColumn', null);" flex="1"/>
-            </treerow>
-          </treehead>
-        </tree>
+    </box>
+      
+    <box align="vertical" class="searchpanel-outerbox" flex="1">
 
-	<box align="horizontal">
-		<spring flex="1" />
-		<button id="customizeButton" value="&customize.button.label;" onclick="return doCustomize();" class="dialog toolbar-non-iconic"/>
-		<spring flex="1" />
-	</box>
-
+      <box orient="vertical" id="searchengines" datasources="rdf:internetsearch"
+           flex="1" class="inset color-window" autostretch="never" valign="top">
+        <template>
+          <rule>
+            <checkbox uri="..." loading="rdf:http://home.netscape.com/NC-rdf#loading"
+                      oncommand="doCheck(this);"
+                      src="rdf:http://home.netscape.com/NC-rdf#Icon" 
+                      value="rdf:http://home.netscape.com/NC-rdf#Name" />
+          </rule>
+        </template>
       </box>
+      <box>
+    		<spring flex="1" />
+		    <button id="customizeButton" value="&customize.button.label;" oncommand="return doCustomize();"/>
+    		<spring flex="1" />
+    	</box>
+    </box>
   </deck>
 </window>

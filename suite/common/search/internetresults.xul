@@ -1,47 +1,49 @@
 <?xml version="1.0"?>
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/search/search.css" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/search/internetresults.css" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/search/icons.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/search/internetresults.dtd">
 
-<window class="dialog" align="vertical" onload="onLoadInternetResults()"
-	xmlns:html="http://www.w3.org/TR/REC-html40"
-	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-	context="disallowcontext"
-	>
+<window class="color-dialog" orient="vertical" onload="onLoadInternetResults()"
+	      xmlns:html="http://www.w3.org/TR/REC-html40"
+	      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+	      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	      context="disallowcontext">
 
 	<popupset>
 		<popup id="disallowcontext" oncreate="return(false);" />
 	</popupset>
 
-	<html:script src="chrome://global/content/strres.js"/>
-	<html:script src="chrome://communicator/content/search/internetresults.js" />
-	<html:script src="chrome://communicator/content/search/shared.js" />
+	<script src="chrome://global/content/strres.js"></script>
+	<script src="chrome://communicator/content/search/internetresults.js"></script>
+	<script src="chrome://communicator/content/search/shared.js"></script>
 
-	<box id="multi-results-header" align="horizontal"> 
-		<text value="&results.header.label;"/>
-		<spring flex="100%"/>
-  	</box>
+  <box id="multi-results-header"> 
+    <text value="&results.header.label;"/>
+    <spring flex="1"/>
+  </box>
 
-  <box id="engineTabs" ref="NC:SearchResultsSitesRoot" datasources="rdf:internetsearch" style="height: 64;" orient="horizontal" vertical-align="baseline">
+  <box id="engineTabs" ref="NC:SearchResultsSitesRoot" datasources="rdf:internetsearch">
   	<template>
-	  	<titledbutton uri="..." onclick="doEngineClick(event, this)" class="iconic push" align="left" crop="right" src="rdf:http://home.netscape.com/NC-rdf#StatusIcon" value="rdf:http://home.netscape.com/NC-rdf#Name" loading="rdf:http://home.netscape.com/NC-rdf#loading" />
+	  	<button uri="..." onclick="doEngineClick(event, this)" crop="right" 
+              src="rdf:http://home.netscape.com/NC-rdf#StatusIcon" 
+              value="rdf:http://home.netscape.com/NC-rdf#Name" 
+              loading="rdf:http://home.netscape.com/NC-rdf#loading" />
   	</template>
-	  <titledbutton id="allEngines" onclick="doEngineClick(event, this)" class="push" value="&allresults.title.label;" align="left" />
+	  <button id="allEngines" onclick="doEngineClick(event, this)" value="&allresults.title.label;"/>
 	  <spring style="width: 1em;"/>
 	  <text value="&viewbyprovider.label;"/>
 	  <spring style="width: .25em;"/>
   </box>
 
-	<popupset>
-	<popup id="contextual" oncreate="return fillContextMenu('contextual', 'internetresultstree');" >
-		<menu />
-	</popup>
+  <popupset>
+	  <popup id="contextual" oncreate="return fillContextMenu('contextual', 'internetresultstree');" >
+		  <menu />
+  	</popup>
 	</popupset>
-
-	<tree id="internetresultstree" ref="" flex="100%" datasources="rdf:internetsearch" context="contextual"
+	<tree id="internetresultstree" ref="" flex="1" datasources="rdf:internetsearch" context="contextual"
 		onclick="if (event.detail == 2) return searchResultsOpenURL(event, event.target.parentNode.parentNode); else return doResultClick(event.target.parentNode.parentNode);">
 
 		<treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
@@ -70,30 +72,29 @@
   				<treeitem uri="..." rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
   					<treerow>
   						<treecell>
-  							<html:hr width="75%" align="center" size="1" />
+  							<separator class="groove"/>
   						</treecell>
   					</treerow>
   				</treeitem>  	
 				</treechildren>	
 			</rule>
-
 			<rule>
 				<treechildren>
   				<treeitem uri="..." rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
   					<treerow>
+  						<treecell class="treecell-iconic" crop="right"
+                        src="rdf:http://home.netscape.com/NC-rdf#Icon" 
+                        value="rdf:http://home.netscape.com/NC-rdf#Name" />
+  						<treecell crop="right" value="rdf:http://home.netscape.com/NC-rdf#PageRank" />
   						<treecell>
-  							<titledbutton align="left" crop="right" class="iconic" src="rdf:http://home.netscape.com/NC-rdf#Icon" value="rdf:http://home.netscape.com/NC-rdf#Name" />
+  							<progressmeter align="horizontal" value="rdf:http://home.netscape.com/NC-rdf#Relevance" mode="normal" />
+                <text crop="right" value="rdf:http://home.netscape.com/NC-rdf#Relevance"/>
   						</treecell>
-  						<treecell align="center" crop="right" value="rdf:http://home.netscape.com/NC-rdf#PageRank" />
-  						<treecell>
-							<progressmeter align="horizontal" value="rdf:http://home.netscape.com/NC-rdf#Relevance" mode="normal" />
-  							<titledbutton align="left" crop="right" flex="1" value="rdf:http://home.netscape.com/NC-rdf#Relevance" style="list-style-image: none;" />
-  						</treecell>
-  						<treecell align="left" crop="right" value="rdf:http://home.netscape.com/NC-rdf#Price" />
-  						<treecell align="left" crop="right" value="rdf:http://home.netscape.com/NC-rdf#Availability" />
-  						<treecell align="left" crop="right" value="rdf:http://home.netscape.com/NC-rdf#Date" />
-  						<treecell align="left" crop="right" value="rdf:http://home.netscape.com/NC-rdf#Site" />
-  						<treecell align="left" crop="right" value="rdf:http://home.netscape.com/NC-rdf#Engine" />
+  						<treecell crop="right" value="rdf:http://home.netscape.com/NC-rdf#Price" />
+  						<treecell crop="right" value="rdf:http://home.netscape.com/NC-rdf#Availability" />
+  						<treecell crop="right" value="rdf:http://home.netscape.com/NC-rdf#Date" />
+  						<treecell crop="right" value="rdf:http://home.netscape.com/NC-rdf#Site" />
+  						<treecell crop="right" value="rdf:http://home.netscape.com/NC-rdf#Engine" />
   					</treerow>
   				</treeitem>
 				</treechildren>
@@ -102,56 +103,45 @@
 
 		<treehead>
 			<treerow>
-				<treecell id="NameCell" align="center" class="treecell-header sortDirectionIndicator"
+				<treecell id="NameCell" class="treecell-header sortDirectionIndicator"
 					value="&name.column.label;" observes="NameColumn"
 					resource="http://home.netscape.com/NC-rdf#Name"
 					onclick="return doSort('NameColumn', null);" />
-				<treecell id="PageRankCell" align="center" class="treecell-header sortDirectionIndicator"
+				<treecell id="PageRankCell" class="treecell-header sortDirectionIndicator"
 					value="&pagerank.column.label;" observes="PageRankColumn"
 					resource="http://home.netscape.com/NC-rdf#PageRank"
 					onclick="return doSort('PageRankColumn', null);" />
-				<treecell id="RelevanceCell" align="center" class="treecell-header sortDirectionIndicator"
+				<treecell id="RelevanceCell" class="treecell-header sortDirectionIndicator"
 					value="&relevance.column.label;" observes="RelevanceColumn"
 					resource="http://home.netscape.com/NC-rdf#Relevance"
 					onclick="return doSort('RelevanceColumn', null);" />
-				<treecell id="PriceCell" align="center" class="treecell-header sortDirectionIndicator"
+				<treecell id="PriceCell" class="treecell-header sortDirectionIndicator"
 					value="&price.column.label;" observes="PriceColumn"
 					resource="http://home.netscape.com/NC-rdf#Price"
 					onclick="return doSort('PriceColumn', null);" />
-				<treecell id="AvailabilityCell" align="center" class="treecell-header sortDirectionIndicator"
+				<treecell id="AvailabilityCell" class="treecell-header sortDirectionIndicator"
 					value="&availability.column.label;" observes="AvailabilityColumn"
 					resource="http://home.netscape.com/NC-rdf#Availability"
 					onclick="return doSort('AvailabilityColumn', null);" />
-				<treecell id="DateCell" align="center" class="treecell-header sortDirectionIndicator"
+				<treecell id="DateCell" class="treecell-header sortDirectionIndicator"
 					value="&date.column.label;" observes="DateColumn"
 					resource="http://home.netscape.com/NC-rdf#Date"
 					onclick="return doSort('DateColumn', null);" />
-				<treecell id="SiteCell" align="center" class="treecell-header sortDirectionIndicator"
+				<treecell id="SiteCell" class="treecell-header sortDirectionIndicator"
 					value="&site.column.label;" observes="SiteColumn"
 					resource="http://home.netscape.com/NC-rdf#Site"
 					onclick="return doSort('SiteColumn', null);" />
-				<treecell id="EngineCell" align="center" class="treecell-header sortDirectionIndicator"
+				<treecell id="EngineCell" class="treecell-header sortDirectionIndicator"
 					value="&engine.column.label;" observes="EngineColumn"
 					resource="http://home.netscape.com/NC-rdf#Engine"
 					onclick="return doSort('EngineColumn', null);" />
 
 			</treerow>
 		</treehead>
+
 	</tree>
 
 	<splitter id="gray_horizontal_splitter" persist="state" collapse="after" />
-	<html:iframe id="content" type="content-primary" style="height: 100; width: 100%;" flex="100%" src="chrome://communicator/content/search/default.htm" />
+	<iframe id="content" type="content-primary" style="height: 100; width: 100%;" flex="100%" src="chrome://communicator/content/search/default.htm"/>
 
-<!--
-This extra "status" bar is necessary because the bottom right corner of the window on MacOS is
-taken up by the growBox. If this window had a horizontal scrollbar, we'd be alright, but since
-it doesn't the bottom arrow on the vertical scrollbar was being hidden by this growBox. To
-combat this, we can just stick in a 15px high bar to bump up the bottom of the tree so that
-the scrollbar is visible. Yes, I know this is not necessary for win32 or gtk, but we can
-use this area for information (maybe full URL of selected item or the like) in the future.
--->
-	<box id="status-bar" style="min-height:15px; max-height:15px;">
-		<progressmeter id="search-progress" style="width: 100%; display: none;" align="horizontal" mode="undetermined" />
-		<titledbutton id="status-button" class="status-bar" align="left" value=""/>
-	</box>
 </window>
