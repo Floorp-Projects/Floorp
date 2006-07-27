@@ -687,10 +687,7 @@ function get_remote_datasource_url() {
         debug("No lang code pref, intl.content.langcode.");
         debug("Use locale from user agent string instead");
 
-        var locale_contractid = '@mozilla.org/intl/nslocaleservice;1';
-        var syslocale = Components.classes[locale_contractid].getService();
-        syslocale = syslocale.QueryInterface(Components.interfaces.nsILocaleService);
-        locale = syslocale.GetLocaleComponentForUserAgent();
+        locale = prefs.getLocalizedUnicharPref("general.useragent.locale");
     } catch(ex) {
         debug("Unable to get system locale. What now? "+ex);
       }
