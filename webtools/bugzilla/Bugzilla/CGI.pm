@@ -87,13 +87,6 @@ sub new {
     my $err = $self->cgi_error;
 
     if ($err) {
-        # XXX - under mod_perl we can use the request object to
-        # enable the apache ErrorDocument stuff, which is localisable
-        # (and localised by default under apache2).
-        # This doesn't appear to be possible under mod_cgi.
-        # Under mod_perl v2, though, this happens automatically, and the
-        # message body is ignored.
-
         # Note that this error block is only triggered by CGI.pm for malformed
         # multipart requests, and so should never happen unless there is a
         # browser bug.
