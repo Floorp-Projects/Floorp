@@ -208,6 +208,8 @@ L<Bugzilla::Install::Requirements>
 
 use strict;
 
+my ($silent, %switch);
+
 BEGIN {
     if ($^O =~ /MSWin32/i) {
         require 5.008001; # for CGI 2.93 or higher
@@ -220,11 +222,13 @@ BEGIN {
 use lib ".";
 use Bugzilla::Constants;
 
-our %answer;
-my ($silent, %switch);
+BEGIN {
+    use Getopt::Long qw(:config bundling);
+    GetOptions(\%switch, 'help|h|?', 'check-modules', 'no-templates|t', 
+                         'verbose|v|no-silent');
+}
 
-$switch{'no_templates'} = grep(/^--no-templates$/, @ARGV) 
-    || grep(/^-t$/, @ARGV);
+our %answer;
 
 # The use of some Bugzilla modules brings in modules we need to test for
 # Check first, via BEGIN
@@ -237,8 +241,7 @@ BEGIN {
 # Check for help request. Display help page if --help/-h/-? was passed.
 ###########################################################################
 use Pod::Usage;
-my $help = grep(/^--help$/, @ARGV) || grep (/^-h$/, @ARGV) || grep (/^-\?$/, @ARGV) || 0;
-pod2usage({-verbose => 1, -exitval => 1}) if $help;
+pod2usage({-verbose => 1, -exitval => 1}) if $switch{'help'};
 
 ###########################################################################
 # Non-interactive override. Pass a filename on the command line which is
@@ -251,7 +254,7 @@ if ($ARGV[0] && ($ARGV[0] !~ /^-/)) {
     do $ARGV[0] 
         or ($@ && die("Error $@ processing $ARGV[0]"))
         or die("Error $! processing $ARGV[0]");
-    $silent = !grep(/^--no-silent$/, @ARGV) && !grep(/^--verbose$/, @ARGV);
+    $silent = !$switch{'verbose'};
 }
 
 ###########################################################################
@@ -276,7 +279,7 @@ exit if !check_requirements(!$silent)->{pass};
 }
 
 # Break out if checking the modules is all we have been asked to do.
-exit if grep(/^--check-modules$/, @ARGV);
+exit if $switch{'check-modules'};
 
 # If we're running on Windows, reset the input line terminator so that 
 # console input works properly - loading CGI tends to mess it up
@@ -1200,7 +1203,7 @@ if ($newinstall) {
 WriteParams();
 
 my $templatedir = bz_locations()->{'templatedir'};
-unless ($switch{'no_templates'}) {
+unless ($switch{'no-templates'}) {
     if (-e "$datadir/template") {
         print "Removing existing compiled templates ...\n" unless $silent;
 
