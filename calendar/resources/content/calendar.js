@@ -495,23 +495,6 @@ function openReleaseNotes() {
     launchBrowser(relNotesURL);
 }
 
-// Next two functions make the password manager menu option
-// only show up if there is a wallet component. Assume that
-// the existence of a wallet component means wallet UI is there too.
-function checkWallet()
-{
-  if ('@mozilla.org/wallet/wallet-service;1' in Components.classes) {
-    document.getElementById("password-manager-menu")
-            .removeAttribute("hidden");
-  }
-}
-
-function openWalletPasswordDialog()
-{
-  window.openDialog("chrome://communicator/content/wallet/SignonViewer.xul",
-                    "_blank","chrome,resizable=yes","S");
-}
-
 var strBundleService = null;
 function srGetStrBundle(path)
 {
