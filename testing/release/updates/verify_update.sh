@@ -16,7 +16,6 @@ check_update () {
     target_package=$3
 
     # cleanup
-    rm -rf downloads/*
     rm -rf source/*
     rm -rf target/*
 
@@ -50,6 +49,10 @@ check_update () {
 for build_platform in Linux_x86-gcc3 Darwin_Universal-gcc3 WINNT_x86-msvc 
 do
 
+  # cleanup
+  mkdir -p downloads/
+  rm -rf downloads/*
+
   #for locale in `cat all-locales`
   for locale in en-US
   do
@@ -78,7 +81,7 @@ do
 
     echo "checking $build_platform $locale"
 
-    download_mars "https://aus2.mozilla.org/update/1/$product/$release/$build_id/$build_platform/$locale/$channel/update.xml"
+    download_mars "https://aus2.mozilla.org/update/1/$product/$release/$build_id/$build_platform/$locale/$channel/update.xml" partial
     if [ $? != 0 ]; then
       echo "download_mars returned error, skipping.."
       continue
@@ -92,7 +95,6 @@ do
     build_url="http://stage.mozilla.org/pub/mozilla.org/`echo $product | tr '[A-Z]' '[a-z]'`/releases/$release/$dirname/$locale/$source_file" 
     #build_url="http://people.mozilla.org/~rhelmer/`echo $product | tr '[A-Z]' '[a-z]'`/releases/yahoo/$release/$dirname/$locale/$source_file"
     #build_url="http://people.mozilla.org/~rhelmer/`echo $product | tr '[A-Z]' '[a-z]'`/releases/google/$release/$locale/$source_file" 
-    mkdir -p downloads/
     pushd downloads > /dev/null
     if [ -f $source_file ]; then rm $source_file; fi
     wget -nv $PARAMS "$build_url"
@@ -109,7 +111,6 @@ do
     # build_url="http://stage.mozilla.org/pub/mozilla.org/`echo $product | tr '[A-Z]' '[a-z]'`/releases/1.5.0.5/mac/$locale/$target_file" 
     #build_url="http://people.mozilla.org/~rhelmer/`echo $product | tr '[A-Z]' '[a-z]'`/releases/yahoo/testing/1.5.0.5/$dirname/$locale/$target_file" 
     #build_url="http://people.mozilla.org/~rhelmer/`echo $product | tr '[A-Z]' '[a-z]'`/releases/google/testing/1.5.0.5/$dirname/$locale/$target_file" 
-    mkdir -p downloads/
     pushd downloads > /dev/null
     if [ -f $target_file ]; then rm $target_file; fi
     wget -nv $PARAMS "$build_url"
