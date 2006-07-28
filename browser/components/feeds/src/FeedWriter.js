@@ -20,6 +20,7 @@
 #
 # Contributor(s):
 #   Ben Goodger <beng@google.com>
+#   Jeff Walden <jwalden+code@mit.edu>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -61,7 +62,8 @@ const URI_BUNDLE = "chrome://browser/locale/feeds/subscribe.properties";
 
 const PREF_SELECTED_APP = "browser.feeds.handlers.application";
 const PREF_SELECTED_WEB = "browser.feeds.handlers.webservice";
-const PREF_SELECTED_HANDLER = "browser.feeds.handler";
+const PREF_SELECTED_ACTION = "browser.feeds.handler";
+const PREF_SELECTED_READER = "browser.feeds.handler.default";
 const PREF_SKIP_PREVIEW_PAGE = "browser.feeds.skip_preview_page";
 
 const FW_CLASSID = Components.ID("{49bb6593-3aff-4eb3-a068-2712c28bd58e}");
@@ -341,7 +343,11 @@ FeedWriter.prototype = {
         getService(Ci.nsIIOService);
     try {
       var iconURI = "chrome://browser/skin/places/livemarkItem.png";
-      var handler = prefs.getCharPref(PREF_SELECTED_HANDLER);
+      var handler = prefs.getCharPref(PREF_SELECTED_ACTION);
+
+      if (handler == "reader")
+        handler = prefs.getCharPref(PREF_SELECTED_READER);
+
       switch (handler) {
       case "client":
         var selectedApp = 
@@ -352,6 +358,7 @@ FeedWriter.prototype = {
         var url = ios.newFileURI(selectedApp).QueryInterface(Ci.nsIURL);
         iconURI = "moz-icon://" + url.spec;
         break;
+
       case "web":
         var webURI = prefs.getCharPref(PREF_SELECTED_WEB);
         var wccr = 
@@ -367,32 +374,46 @@ FeedWriter.prototype = {
         
         this._setContentText("feedSubscribeHandleText", title);
         break;
+
       case "bookmarks":
         this._setContentText("feedSubscribeHandleText", 
                              this._getString("liveBookmarks"));
         break;
+
+      case "ask":
+        var alwaysAsk = true;
+        break;
       }
-      unchosen.setAttribute("hidden", "true");
-      chosen.removeAttribute("hidden");
-      var button = this._document.getElementById("feedSubscribeLink");
-      button.focus();
+
+      if (!alwaysAsk) {
+        unchosen.setAttribute("hidden", "true");
+        chosen.removeAttribute("hidden");
+        var button = this._document.getElementById("feedSubscribeLink");
+        button.focus();
       
       
-      var displayArea = 
-          this._document.getElementById("feedSubscribeHandleText");
-      displayArea.style.setProperty("background-image", 
-                                    "url(\"" + iconURI + "\")", "");
+        var displayArea = 
+            this._document.getElementById("feedSubscribeHandleText");
+        displayArea.style.setProperty("background-image", 
+                                      "url(\"" + iconURI + "\")", "");
+        return;
+      } else {
+        // user chose a feed reader but didn't make it the default -- fall
+        // through to "no selected handlers"
+      }
+    } catch (e) {
+      // prefs mismatch (e.g., handler==web but no web handler set),
+      // or (more likely) no prefs set yet
     }
-    catch (e) {
-      LOG("Failed to set Handler: " + e);
-      // No selected handlers yet! Make the user choose...
-      chosen.setAttribute("hidden", "true");
-      unchosen.removeAttribute("hidden");
-      this._document.getElementById("feedHeader").setAttribute("firstrun", "true");
+
+    // No selected handlers, or user hasn't made his choice the default;
+    // make the user choose...
+    chosen.setAttribute("hidden", "true");
+    unchosen.removeAttribute("hidden");
+    this._document.getElementById("feedHeader").setAttribute("firstrun", "true");
       
-      var button = this._document.getElementById("feedChooseInitialReader");
-      button.focus();
-    }
+    var button = this._document.getElementById("feedChooseInitialReader");
+    button.focus();
   },
   
   /**
@@ -430,7 +451,8 @@ FeedWriter.prototype = {
     var prefs =   
         Cc["@mozilla.org/preferences-service;1"].
         getService(Ci.nsIPrefBranch2);
-    prefs.addObserver(PREF_SELECTED_HANDLER, this, false);
+    prefs.addObserver(PREF_SELECTED_ACTION, this, false);
+    prefs.addObserver(PREF_SELECTED_READER, this, false);
     prefs.addObserver(PREF_SELECTED_APP, this, false);
     
     // Set up the feed content
@@ -469,7 +491,8 @@ FeedWriter.prototype = {
     var prefs =   
         Cc["@mozilla.org/preferences-service;1"].
         getService(Ci.nsIPrefBranch2);
-    prefs.removeObserver(PREF_SELECTED_HANDLER, this);
+    prefs.removeObserver(PREF_SELECTED_ACTION, this);
+    prefs.removeObserver(PREF_SELECTED_READER, this);
     prefs.removeObserver(PREF_SELECTED_APP, this);
   },
     
@@ -481,13 +504,17 @@ FeedWriter.prototype = {
         Cc["@mozilla.org/preferences-service;1"].
         getService(Ci.nsIPrefBranch);
     try {
-      var handler = prefs.getCharPref(PREF_SELECTED_HANDLER);
+      var handler = prefs.getCharPref(PREF_SELECTED_ACTION);
+      if (handler == "reader" || handler == "ask")
+        // the actual handler will be stored in the reader preference
+        handler = prefs.getCharPref(PREF_SELECTED_READER);
     }
     catch (e) {
-      // Something is bogus in our state. Prompt the user to fix it.
+      // Something's bogus in preferences -- make the user fix it
       this.changeOptions();
       return; 
     }
+
     if (handler == "web") {
       var webURI = prefs.getCharPref(PREF_SELECTED_WEB);
       var wccr = 
@@ -499,6 +526,7 @@ FeedWriter.prototype = {
         handler.getHandlerURI(this._window.location.href);
     }
     else {
+      // handles bookmarks, client cases
       var request = 
           this._window.QueryInterface(Ci.nsIInterfaceRequestor).
           getInterface(Ci.nsIWebNavigation).

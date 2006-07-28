@@ -2,10 +2,6 @@
   "Subscription Options">
 <!ENTITY readers.title
   "Choose a Feed Reader:">
-<!ENTITY autoHandle.label
-  "Open Feeds with my chosen reader automatically, skipping the preview page">
-<!ENTITY autoHandle.accesskey
-  "O">
 <!ENTITY chooseClientApp.label
   "Change...">
 <!ENTITY chooseClientApp.accesskey
@@ -30,3 +26,8 @@
   "Use Live Bookmarks">
 <!ENTITY useBookmarks.accesskey
   "B">
+
+<!ENTITY useAsDefault.label
+  "Use this reader as my default reader">
+<!ENTITY useAsDefault.accesskey
+  "U">
