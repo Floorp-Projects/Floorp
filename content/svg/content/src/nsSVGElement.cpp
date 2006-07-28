@@ -86,7 +86,8 @@ nsSVGElement::Init()
 
   LengthAttributesInfo lengthInfo = GetLengthInfo();
 
-  for (PRUint32 i = 0; i < lengthInfo.mLengthCount; i++) {
+  PRUint32 i;
+  for (i = 0; i < lengthInfo.mLengthCount; i++) {
     lengthInfo.mLengths[i].Init(lengthInfo.mLengthInfo[i].mCtxType,
                                 i,
                                 lengthInfo.mLengthInfo[i].mDefaultValue,
@@ -95,7 +96,7 @@ nsSVGElement::Init()
 
   NumberAttributesInfo numberInfo = GetNumberInfo();
 
-  for (PRUint32 i = 0; i < numberInfo.mNumberCount; i++) {
+  for (i = 0; i < numberInfo.mNumberCount; i++) {
     numberInfo.mNumbers[i].Init(i, numberInfo.mNumberInfo[i].mDefaultValue);
   }
 
@@ -263,7 +264,8 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
 
     // Check for nsSVGLength2 attribute
     LengthAttributesInfo lengthInfo = GetLengthInfo();
-    for (PRUint32 i = 0; i < lengthInfo.mLengthCount; i++) {
+    PRUint32 i;
+    for (i = 0; i < lengthInfo.mLengthCount; i++) {
       if (aAttribute == *lengthInfo.mLengthInfo[i].mName) {
         nsresult rv = lengthInfo.mLengths[i].SetBaseValueString(aValue, this,
                                                                 PR_FALSE);
@@ -277,7 +279,7 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
 
     // Check for nsSVGNumber2 attribute
     NumberAttributesInfo numberInfo = GetNumberInfo();
-    for (PRUint32 i = 0; i < numberInfo.mNumberCount; i++) {
+    for (i = 0; i < numberInfo.mNumberCount; i++) {
       if (aAttribute == *numberInfo.mNumberInfo[i].mName) {
         nsresult rv = numberInfo.mNumbers[i].SetBaseValueString(aValue, this,
                                                                 PR_FALSE);
@@ -314,7 +316,8 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
       // Check if this is a length attribute going away
       LengthAttributesInfo lenInfo = GetLengthInfo();
 
-      for (PRUint32 i = 0; i < lenInfo.mLengthCount; i++) {
+      PRUint32 i;
+      for (i = 0; i < lenInfo.mLengthCount; i++) {
         if (aName == *lenInfo.mLengthInfo[i].mName) {
           lenInfo.mLengths[i].Init(lenInfo.mLengthInfo[i].mCtxType,
                                    i,
@@ -327,7 +330,7 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
       // Check if this is a number attribute going away
       NumberAttributesInfo numInfo = GetNumberInfo();
 
-      for (PRUint32 i = 0; i < numInfo.mNumberCount; i++) {
+      for (i = 0; i < numInfo.mNumberCount; i++) {
         if (aName == *numInfo.mNumberInfo[i].mName) {
           numInfo.mNumbers[i].Init(i, numInfo.mNumberInfo[i].mDefaultValue);
           DidChangeNumber(i, PR_FALSE);
