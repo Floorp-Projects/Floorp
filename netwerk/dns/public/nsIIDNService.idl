@@ -64,8 +64,6 @@ interface nsIIDNService : nsISupports
     /**
      * Prepares the input hostname according to IDNA ToASCII operation,
      * the input hostname is assumed to be UTF8-encoded.
-     *
-     * The current input is string, but this may change pending Bug 84186.
      */
     ACString convertUTF8toACE(in AUTF8String input);
 
