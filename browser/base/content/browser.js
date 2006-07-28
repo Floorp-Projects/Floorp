@@ -4966,7 +4966,7 @@ nsContextMenu.prototype = {
       else {
         var buttons = [{
           label: bundle_browser.getString("undo"),
-          accesskey: bundle_browser.getString("undo.accessKey"),
+          accessKey: bundle_browser.getString("undo.accessKey"),
           callback: undoImageBlock
          }];
          const priority = notificationBox.PRIORITY_WARNING_MEDIUM;
