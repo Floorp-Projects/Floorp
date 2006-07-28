@@ -145,8 +145,7 @@ struct JSRuntime {
      */
     JSPackedBool        gcPoke;
     JSPackedBool        gcRunning;
-    JSPackedBool        gcClosePhase;
-    uint8               gcPadding;
+    uint16              gcPadding;
 
     JSGCCallback        gcCallback;
     uint32              gcMallocBytes;
@@ -169,16 +168,16 @@ struct JSRuntime {
     uint32              gcPrivateBytes;
 
     /*
-     * Table for tracking objects of extended classes that have non-null close
-     * hooks, and need the GC to perform two-phase finalization.
-     */
-    JSPtrTable          gcCloseTable;
-
-    /*
      * Table for tracking iterators to ensure that we close iterator's state
      * before finalizing the iterable object.
      */
     JSPtrTable          gcIteratorTable;
+
+    /*
+     * Singly linked list of items tracking objects of extended classes that
+     * have non-null close hooks.
+     */
+    JSGCCloseListItem   *gcCloseList;
 
 #ifdef JS_GCMETER
     JSGCStats           gcStats;
@@ -674,6 +673,15 @@ struct JSContext {
     /* Top of the GC mark stack. */
     void                *gcCurrentMarkNode;
 #endif
+
+    /*
+     * List of objects with close hooks that the current context is trying to
+     * close.
+     */
+    JSGCCloseListItem   *gcObjectsToClose;
+
+    /* Flag indicating that the current thread is excuting close hooks. */
+    JSBool              gcRunningCloseHooks;
 };
 
 #define JS_THREAD_ID(cx)            ((cx)->thread ? (cx)->thread->id : 0)
