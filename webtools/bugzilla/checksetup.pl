@@ -35,94 +35,176 @@
 #                 Lance Larsh <lance.larsh@oracle.com>
 #                 A. Karl Kornel <karl@kornel.name>
 #                 Marc Schumann <wurblzap@gmail.com>
-#
-#
-#
-# Hey, what's this?
-#
-# 'checksetup.pl' is a script that is supposed to run during installation
-# time and also after every upgrade.
-#
-# The goal of this script is to make the installation even easier.
-# It does this by doing things for you as well as testing for problems
-# in advance.
-#
-# You can run the script whenever you like. You SHOULD run it after 
-# you update Bugzilla, because it may then update your SQL table
-# definitions to resync them with the code.
-#
-# Currently, this module does the following:
-#
-#     - check for required perl modules
-#     - set defaults for local configuration variables
-#     - create and populate the data directory after installation
-#     - set the proper rights for the *.cgi, *.html, etc. files
-#     - verify that the code can access the database server
-#     - creates the database 'bugs' if it does not exist
-#     - creates the tables inside the database if they don't exist
-#     - automatically changes the table definitions if they are from
-#       an older version of Bugzilla
-#     - populates the groups
-#     - put the first user into all groups so that the system can
-#       be administrated
-#     - changes preexisting SQL tables if you change your local
-#       settings, e.g. when you add a new platform
-#     - ... and a whole lot more.
-#
-# There should be no need for Bugzilla Administrators to modify
-# this script; all user-configurable stuff has been moved 
-# into a local configuration file called 'localconfig'. When that file
-# in changed and 'checkconfig.pl' is run, then the user's changes
-# will be reflected back into the database.
-#
-# Developers, however, have to modify this file at various places. To
-# make this easier, there are some special tags for which one
-# can search.
-#
-#     To                                               Search for
-#
-#     add/delete local configuration variables         --LOCAL--
-#     check for more required modules                  --MODULES--
-#     add more database-related checks                 --DATABASE--
-#     change the defaults for local configuration vars --DATA--
-#     update the assigned file permissions             --CHMOD--
-#     change table definitions                         --TABLE--
-#     add more groups                                  --GROUPS--
-#     add user-adjustable settings                     --SETTINGS--
-#     create initial administrator account             --ADMIN--
-#
-# Note: sometimes those special comments occur more than once. For
-# example, --LOCAL-- is used at least 3 times in this code!  --TABLE--
-# is also used more than once, so search for each and every occurrence!
-#
-# To operate checksetup non-interactively, run it with a single argument
-# specifying a filename that contains the information usually obtained by
-# prompting the user or by editing localconfig.
-#
-# The format of that file is as follows:
-#
-#
-# $answer{'db_host'} = q[
-# $db_host = 'localhost';
-# $db_driver = 'mydbdriver';
-# $db_port = 3306;
-# $db_name = 'mydbname';
-# $db_user = 'mydbuser';
-# ];
-#
-# $answer{'db_pass'} = q[$db_pass = 'mydbpass';];
-#
-# $answer{'ADMIN_OK'} = 'Y';
-# $answer{'ADMIN_EMAIL'} = 'myadmin@mydomain.net';
-# $answer{'ADMIN_PASSWORD'} = 'fooey';
-# $answer{'ADMIN_REALNAME'} = 'Joel Peshkin';
-#
-# $answer{'SMTP_SERVER'} = 'mail.mydomain.net';
-#
-#
-# Note: Only information that supersedes defaults from LocalVar()
-# function calls needs to be specified in this file.
-# 
+
+=head1 NAME
+
+checksetup.pl - A do-it-all upgrade and installation script for Bugzilla.
+
+=head1 SYNOPSIS
+
+ ./checksetup.pl [--help|--check-modules]
+ ./checksetup.pl [SCRIPT [--verbose]] [--no-templates|-t]
+
+=head1 OPTIONS
+
+=over
+
+=item F<SCRIPT>
+
+Name of script to drive non-interactive mode. This script should
+define an C<%answer> hash whose keys are variable names and the
+values answers to all the questions checksetup.pl asks. For details
+on the format of this script, do C<perldoc checksetup.pl> and look for
+the L</"RUNNING CHECKSETUP NON-INTERACTIVELY"> section.
+
+=item B<--help>
+
+Display this help text
+
+=item B<--check-modules>
+
+Only check for correct module dependencies and quit afterward.
+
+=item B<--no-templates> (B<-t>) 
+
+Don't compile the templates at all. Existing compiled templates will 
+remain; missing compiled templates will not be created. (Used primarily
+by developers to speed up checksetup.) Use this switch at your own risk.
+
+=item B<--verbose>
+
+Output results of SCRIPT being processed.
+
+=back
+
+=head1 DESCRIPTION
+
+Hey, what's this?
+
+F<checksetup.pl> is a script that is supposed to run during 
+installation time and also after every upgrade.
+
+The goal of this script is to make the installation even easier.
+It does this by doing things for you as well as testing for problems
+in advance.
+
+You can run the script whenever you like. You SHOULD run it after
+you update Bugzilla, because it may then update your SQL table
+definitions to resync them with the code.
+
+Currently, this script does the following:
+
+=over
+
+=item * 
+
+Check for required perl modules
+
+=item * 
+
+Set defaults for local configuration variables
+
+=item * 
+
+Create and populate the F<data> directory after installation
+
+=item * 
+
+Set the proper rights for the F<*.cgi>, F<*.html>, etc. files
+
+=item * 
+
+Verify that the code can access the database server
+
+=item * 
+
+Creates the database C<bugs> if it does not exist
+
+=item * 
+
+Creates the tables inside the database if they don't exist
+
+=item * 
+
+Automatically changes the table definitions if they are from
+an older version of Bugzilla
+
+=item * 
+
+Populates the groups
+
+=item * 
+
+Puts the first user into all groups so that the system can
+be administered
+
+=item * 
+
+...And a whole lot more.
+
+=back
+
+=head1 MODIFYING CHECKSETUP
+
+There should be no need for Bugzilla Administrators to modify
+this script; all user-configurable stuff has been moved 
+into a local configuration file called F<localconfig>. When that file
+in changed and F<checksetup.pl> is run, then the user's changes
+will be reflected back into the database.
+
+Developers, however, have to modify this file at various places. To
+make this easier, there are some special tags for which one
+can search.
+
+ To                                               Search for
+
+ add/delete local configuration variables         --LOCAL--
+ check for more required modules                  --MODULES--
+ add more database-related checks                 --DATABASE--
+ change the defaults for local configuration vars --DATA--
+ update the assigned file permissions             --CHMOD--
+ change table definitions                         --TABLE--
+ add more groups                                  --GROUPS--
+ add user-adjustable settings                     --SETTINGS--
+ create initial administrator account             --ADMIN--
+
+Note: sometimes those special comments occur more than once. For
+example, C<--LOCAL--> is used at least 3 times in this code!  C<--TABLE-->
+is also used more than once, so search for each and every occurrence!
+
+=head1 RUNNING CHECKSETUP NON-INTERACTIVELY
+
+To operate checksetup non-interactively, run it with a single argument
+specifying a filename that contains the information usually obtained by
+prompting the user or by editing localconfig.
+
+The format of that file is as follows:
+
+ $answer{'db_host'} = q[
+     $db_host = 'localhost';
+     $db_driver = 'mydbdriver';
+     $db_port = 3306;
+     $db_name = 'mydbname';
+     $db_user = 'mydbuser';
+ ];
+
+ $answer{'db_pass'} = q[$db_pass = 'mydbpass';];
+
+ $answer{'ADMIN_OK'} = 'Y';
+ $answer{'ADMIN_EMAIL'} = 'myadmin@mydomain.net';
+ $answer{'ADMIN_PASSWORD'} = 'fooey';
+ $answer{'ADMIN_REALNAME'} = 'Joel Peshkin';
+
+ $answer{'SMTP_SERVER'} = 'mail.mydomain.net';
+
+Note: Only information that supersedes defaults from C<LocalVar()>
+function calls needs to be specified in this file.
+
+=head1 SEE ALSO
+
+L<Bugzilla::Install::Requirements>
+
+=cut
 
 use strict;
 
@@ -154,35 +236,9 @@ BEGIN {
 ###########################################################################
 # Check for help request. Display help page if --help/-h/-? was passed.
 ###########################################################################
+use Pod::Usage;
 my $help = grep(/^--help$/, @ARGV) || grep (/^-h$/, @ARGV) || grep (/^-\?$/, @ARGV) || 0;
-help_page() if $help;
-
-sub help_page {
-    my $programname = $0;
-    $programname =~ s#^\./##;
-    print "$programname - checks your setup and updates your Bugzilla installation\n";
-    printf "Version: " . BUGZILLA_VERSION . " on perl %vd\n", $^V; 
-    print "\nUsage: $programname [SCRIPT [--verbose]] [--check-modules|--help]\n";
-    print "                     [--no-templates]\n";
-    print "\n";
-    print "   --help           Display this help text.\n";
-    print "   --check-modules  Only check for correct module dependencies and quit thereafter;\n";
-    print "                    does not perform any changes.\n";
-    print "   --no-templates (-t)  Don't compile the templates at all. Existing\n"; 
-    print "                    compiled templates will remain; missing compiled\n";
-    print "                    templates will not be created. (Used primarily by\n";
-    print "                    developers to speed up checksetup.)  Use this\n";
-    print "                    switch at your own risk.\n";
-    print "    SCRIPT          Name of script to drive non-interactive mode.\n";
-    print "                    This script should define an \%answer hash whose\n"; 
-    print "                    keys are variable names and the values answers to\n";
-    print "                    all the questions checksetup.pl asks.\n";
-    print "                    (See comments at top of $programname for more info.)\n";
-    print "   --verbose        Output results of SCRIPT being processed.\n";
-    print "\n";
-
-    exit 1;
-}
+pod2usage({-verbose => 1, -exitval => 1}) if $help;
 
 ###########################################################################
 # Non-interactive override. Pass a filename on the command line which is
