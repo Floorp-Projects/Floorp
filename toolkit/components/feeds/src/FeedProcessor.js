@@ -966,7 +966,9 @@ FeedProcessor.prototype = {
   // happened.
   _sendResult: function FP_sendResult() {
     try {
-      this._result.doc.normalize();
+      // Can be null when a non-feed is fed to us
+      if (this._result.doc)
+        this._result.doc.normalize();
     }
     catch (e) {
       LOG("FIXME: " + e);
