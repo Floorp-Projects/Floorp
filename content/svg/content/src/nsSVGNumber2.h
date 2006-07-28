@@ -15,7 +15,7 @@
  * The Original Code is the Mozilla SVG project.
  *
  * The Initial Developer of the Original Code is IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2005
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -34,48 +34,61 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NS_SVGFILTERSELEMENT_H__
-#define __NS_SVGFILTERSELEMENT_H__
+#ifndef __NS_SVGNUMBER2_H__
+#define __NS_SVGNUMBER2_H__
 
-#include "nsSVGStylableElement.h"
-#include "nsSVGLength2.h"
+#include "nsIDOMSVGNumber.h"
+#include "nsIDOMSVGAnimatedNumber.h"
+#include "nsSVGElement.h"
+#include "nsDOMError.h"
 
-typedef nsSVGStylableElement nsSVGFEBase;
-
-class nsSVGFE : public nsSVGFEBase
-//, public nsIDOMSVGFilterPrimitiveStandardAttributes
+class nsSVGNumber2
 {
-  friend class nsSVGFilterInstance;
-
-protected:
-  nsSVGFE(nsINodeInfo *aNodeInfo);
-  nsresult Init();
-
-  // nsISVGValueObserver interface:
-  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
-                                     nsISVGValue::modificationType aModType);
-  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
-                                     nsISVGValue::modificationType aModType);
 
 public:
-  // interfaces:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES
+  void Init(PRUint8 aAttrEnum = 0xff, float aValue = 0) {
+    mAnimVal = mBaseVal = aValue;
+    mAttrEnum = aAttrEnum;
+  }
 
-  // nsSVGElement specializations:
-  virtual void DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr);
-  virtual void DidChangeNumber(PRUint8 aAttrEnum, PRBool aDoSetAttr);
+  nsresult SetBaseValueString(const nsAString& aValue,
+                              nsSVGElement *aSVGElement,
+                              PRBool aDoSetAttr);
+  void GetBaseValueString(nsAString& aValue);
 
-protected:
+  void SetBaseValue(float aValue, nsSVGElement *aSVGElement, PRBool aDoSetAttr);
+  float GetBaseValue()
+    { return mBaseVal; }
+  float GetAnimValue()
+    { return mAnimVal; }
 
-  virtual LengthAttributesInfo GetLengthInfo();
+  nsresult ToDOMAnimatedNumber(nsIDOMSVGAnimatedNumber **aResult,
+                               nsSVGElement* aSVGElement);
 
-  // nsIDOMSVGFitlerPrimitiveStandardAttributes values
-  enum { X, Y, WIDTH, HEIGHT };
-  nsSVGLength2 mLengthAttributes[4];
-  static LengthInfo sLengthInfo[4];
+private:
 
-  nsCOMPtr<nsIDOMSVGAnimatedString> mResult;
+  float mAnimVal;
+  float mBaseVal;
+  PRUint8 mAttrEnum; // element specified tracking for attribute
+
+  struct DOMAnimatedNumber : public nsIDOMSVGAnimatedNumber
+  {
+    NS_DECL_ISUPPORTS
+
+    DOMAnimatedNumber(nsSVGNumber2* aVal, nsSVGElement *aSVGElement)
+      : mVal(aVal), mSVGElement(aSVGElement) {}
+
+    nsSVGNumber2* mVal; // kept alive because it belongs to content
+    nsRefPtr<nsSVGElement> mSVGElement;
+
+    NS_IMETHOD GetBaseVal(float* aResult)
+      { *aResult = mVal->GetBaseValue(); return NS_OK; }
+    NS_IMETHOD SetBaseVal(float aValue)
+      { mVal->SetBaseValue(aValue, mSVGElement, PR_TRUE); return NS_OK; }
+    NS_IMETHOD GetAnimVal(float* aResult)
+      { *aResult = mVal->GetAnimValue(); return NS_OK; }
+
+  };
+
 };
-
-#endif
+#endif //__NS_SVGNUMBER2_H__

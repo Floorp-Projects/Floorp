@@ -56,6 +56,7 @@
 
 class nsSVGCoordCtx;
 class nsSVGLength2;
+class nsSVGNumber2;
 
 class nsSVGElement : public nsGenericElement,    // :nsIXMLContent:nsIContent
                      public nsISVGValueObserver, 
@@ -82,9 +83,9 @@ public:
   virtual nsIAtom *GetClassAttributeName() const;
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify);
-  
+
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
-  
+
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
   NS_IMETHOD SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify);
   virtual nsICSSStyleRule* GetInlineStyleRule();
@@ -121,9 +122,11 @@ public:
 
   virtual void ParentChainChanged(); 
   virtual void DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr);
+  virtual void DidChangeNumber(PRUint8 aAttrEnum, PRBool aDoSetAttr);
 
   void GetAnimatedLengthValues(float *aFirst, ...);
-  
+  void GetAnimatedNumberValues(float *aFirst, ...);
+
 protected:
   virtual nsresult BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                                  const nsAString* aValue, PRBool aNotify);
@@ -165,8 +168,26 @@ public:
       {}
   };
 
+  struct NumberInfo {
+    nsIAtom** mName;
+    float     mDefaultValue;
+  };
+
+  struct NumberAttributesInfo {
+    nsSVGNumber2* mNumbers;
+    NumberInfo*   mNumberInfo;
+    PRUint32      mNumberCount;
+
+    NumberAttributesInfo(nsSVGNumber2 *aNumbers,
+                         NumberInfo *aNumberInfo,
+                         PRUint32 aNumberCount) :
+      mNumbers(aNumbers), mNumberInfo(aNumberInfo), mNumberCount(aNumberCount)
+      {}
+  };
+
 protected:
   virtual LengthAttributesInfo GetLengthInfo();
+  virtual NumberAttributesInfo GetNumberInfo();
 
   nsCOMPtr<nsICSSStyleRule> mContentStyleRule;
   nsAttrAndChildArray mMappedAttributes;

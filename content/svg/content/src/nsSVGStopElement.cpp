@@ -37,13 +37,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGStylableElement.h"
-#include "nsSVGAtoms.h"
 #include "nsIDOMSVGStopElement.h"
-#include "nsCOMPtr.h"
 #include "nsSVGAnimatedNumberList.h"
-#include "nsISVGSVGElement.h"
-#include "nsSVGNumber.h"
-#include "nsSVGAnimatedNumber.h"
+#include "nsSVGNumber2.h"
+#include "nsSVGAtoms.h"
+#include "nsGenericHTMLElement.h"
 
 typedef nsSVGStylableElement nsSVGStopElementBase;
 
@@ -54,11 +52,10 @@ protected:
   friend nsresult NS_NewSVGStopElement(nsIContent **aResult,
                                        nsINodeInfo *aNodeInfo);
   nsSVGStopElement(nsINodeInfo* aNodeInfo);
-  nsresult Init();
-  
+
 public:
   // interfaces:
-  
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMSVGSTOPELEMENT
 
@@ -70,13 +67,20 @@ public:
 
   // nsIContent interface
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  PRBool ParseAttribute(PRInt32 aNamespaceID, nsIAtom* aAttribute,
+                        const nsAString& aValue, nsAttrValue& aResult);
+
 
 protected:
 
+  virtual NumberAttributesInfo GetNumberInfo();
   // nsIDOMSVGStopElement properties:
-  nsCOMPtr<nsIDOMSVGAnimatedNumber> mOffset;
+  nsSVGNumber2 mOffset;
+  static NumberInfo sNumberInfo;
 };
 
+nsSVGElement::NumberInfo nsSVGStopElement::sNumberInfo = { &nsGkAtoms::offset, 
+                                                           0 };
 NS_IMPL_NS_NEW_SVG_ELEMENT(Stop)
 
 //----------------------------------------------------------------------
@@ -101,25 +105,6 @@ nsSVGStopElement::nsSVGStopElement(nsINodeInfo* aNodeInfo)
 {
 
 }
-  
-nsresult
-nsSVGStopElement::Init()
-{
-  nsresult rv = nsSVGStopElementBase::Init();
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  // Create mapped properties:
-
-  // DOM property: nsIDOMSVGStopElement::offset, #IMPLIED attrib: offset
-  {
-    rv = NS_NewSVGAnimatedNumber(getter_AddRefs(mOffset),
-                                 0.0);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::offset, mOffset);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-  return NS_OK;
-}
 
 //----------------------------------------------------------------------
 // nsIDOMNode methods
@@ -132,9 +117,50 @@ NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGStopElement)
 /* readonly attribute nsIDOMSVGAnimatedLengthList x; */
 NS_IMETHODIMP nsSVGStopElement::GetOffset(nsIDOMSVGAnimatedNumber * *aOffset)
 {
-  *aOffset = mOffset;
-  NS_IF_ADDREF(*aOffset);
-  return NS_OK;
+  return mOffset.ToDOMAnimatedNumber(aOffset,this);
+}
+
+//----------------------------------------------------------------------
+// nsSVGElement methods
+
+nsSVGElement::NumberAttributesInfo
+nsSVGStopElement::GetNumberInfo()
+{
+  return NumberAttributesInfo(&mOffset, &sNumberInfo, 1);
+}
+
+PRBool
+nsSVGStopElement::ParseAttribute(PRInt32 aNamespaceID,
+								 nsIAtom* aAttribute,
+								 const nsAString& aValue,
+								 nsAttrValue& aResult)
+{
+  if (nsSVGElement::ParseAttribute(aNamespaceID, aAttribute, aValue, aResult)) {
+    return PR_TRUE;
+  }
+
+  if (aNamespaceID == kNameSpaceID_None) {
+      if (aAttribute == nsGkAtoms::offset) {
+        char percentSymbol, remainder;
+        float offset;
+        char *str;
+        str = ToNewCString(aValue);
+        int num = sscanf(str, "%f %c %c", &offset, &percentSymbol, &remainder);
+        if (num == 2 && percentSymbol == '%') {
+          offset /= 100;
+        } else if (num != 1) {
+          mOffset.SetBaseValue(0, this, PR_FALSE);
+          return PR_FALSE;
+        }
+
+        mOffset.SetBaseValue(offset, this, PR_FALSE);
+        aResult.SetTo(aValue);
+
+        nsMemory::Free(str);
+        return PR_TRUE;
+      }
+    }
+  return PR_FALSE;
 }
 
 //----------------------------------------------------------------------

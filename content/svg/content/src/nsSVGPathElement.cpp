@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsSVGAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsSVGPathSegList.h"
 #include "nsIDOMSVGPathSeg.h"
 #include "nsSVGPathSeg.h"
@@ -46,8 +46,10 @@
 #include "nsSVGPathElement.h"
 #include "nsISVGValueUtils.h"
 #include "nsSVGUtils.h"
-#include "nsSVGAnimatedNumber.h"
 #include "nsSVGPoint.h"
+
+nsSVGElement::NumberInfo nsSVGPathElement::sNumberInfo = 
+                                                  { &nsGkAtoms::pathLength, 0 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Path)
 
@@ -74,20 +76,6 @@ nsSVGPathElement::nsSVGPathElement(nsINodeInfo* aNodeInfo)
 {
 }
 
-nsresult
-nsSVGPathElement::Init()
-{
-  nsresult rv = nsSVGPathElementBase::Init();
-  NS_ENSURE_SUCCESS(rv, rv);
-  {
-    rv = NS_NewSVGAnimatedNumber(getter_AddRefs(mPathLength), 0.0);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::pathLength, mPathLength);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  return NS_OK;
-}
-
 nsSVGPathElement::~nsSVGPathElement()
 {
   if (mSegments)
@@ -106,9 +94,7 @@ NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGPathElement)
 NS_IMETHODIMP
 nsSVGPathElement::GetPathLength(nsIDOMSVGAnimatedNumber * *aPathLength)
 {
-  *aPathLength = mPathLength;
-  NS_IF_ADDREF(*aPathLength);
-  return NS_OK;
+  return mPathLength.ToDOMAnimatedNumber(aPathLength, this);
 }
 
 /* float getTotalLength (); */
@@ -137,13 +123,12 @@ nsSVGPathElement::GetPointAtLength(float distance, nsIDOMSVGPoint **_retval)
 
   float totalLength = flat->GetLength();
   if (HasAttr(kNameSpaceID_None, nsGkAtoms::pathLength)) {
-    float pathLength;
-    mPathLength->GetAnimVal(&pathLength);
+    float pathLength = mPathLength.GetAnimValue();
     distance *= totalLength / pathLength;
   }
   distance = PR_MAX(0,           distance);
   distance = PR_MIN(totalLength, distance);
-  
+
   float x, y, angle;
   flat->FindPoint(0, distance, 0, &x, &y, &angle);
 
@@ -309,6 +294,15 @@ nsSVGPathElement::CreatePathSegList()
   NS_ADD_SVGVALUE_OBSERVER(mSegments);
 
   return NS_OK;
+}
+
+//----------------------------------------------------------------------
+// nsSVGElement methods
+
+nsSVGElement::NumberAttributesInfo
+nsSVGPathElement::GetNumberInfo()
+{
+  return NumberAttributesInfo(&mPathLength, &sNumberInfo, 1);
 }
 
 //----------------------------------------------------------------------

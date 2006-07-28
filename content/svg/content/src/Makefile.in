@@ -73,7 +73,6 @@ CPPSRCS		= \
 		nsSVGAnimatedEnumeration.cpp \
 		nsSVGAnimatedInteger.cpp \
 		nsSVGAnimatedLengthList.cpp \
-		nsSVGAnimatedNumber.cpp \
 		nsSVGAnimatedNumberList.cpp \
 		nsSVGAnimatedRect.cpp \
 		nsSVGAnimatedPreserveAspectRatio.cpp \
@@ -107,6 +106,7 @@ CPPSRCS		= \
 		nsSVGMatrix.cpp \
 		nsSVGMetadataElement.cpp \
 		nsSVGNumber.cpp \
+		nsSVGNumber2.cpp \
 		nsSVGNumberList.cpp \
 		nsSVGPathDataParser.cpp \
 		nsSVGPathElement.cpp \
