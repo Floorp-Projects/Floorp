@@ -763,12 +763,16 @@ nsPresContext::SetShell(nsIPresShell* aShell)
   mShell = aShell;
 
   if (mShell) {
+    nsIDocument *doc = mShell->GetDocument();
+    NS_ASSERTION(doc, "expect document here");
+    if (doc) {
+      // Have to update PresContext's mDocument before calling any other methods.
+      mDocument = doc;
+    }
     // Initialize our state from the user preferences, now that we
     // have a presshell, and hence a document.
     GetUserPreferences();
 
-    nsIDocument *doc = mShell->GetDocument();
-    NS_ASSERTION(doc, "expect document here");
     if (doc) {
       nsIURI *docURI = doc->GetDocumentURI();
 
