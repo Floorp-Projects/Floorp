@@ -262,37 +262,24 @@ pod2usage({-verbose => 1, -exitval => 1}) if $switch{'help'};
 our %answer = %{read_answers_file()};
 my $silent = scalar(keys %answer) && !$switch{'verbose'};
 
-###########################################################################
 # Display version information
-###########################################################################
+printf "\n*** This is Bugzilla " . BUGZILLA_VERSION . " on perl %vd ***\n", 
+    $^V unless $silent;
 
-printf "\n*** This is Bugzilla " . BUGZILLA_VERSION . " on perl %vd ***\n", $^V unless $silent;
-
-###########################################################################
-# Check required module
-###########################################################################
-
-use Bugzilla::Install::Requirements;
-
-#
-# Here we check for --MODULES--
-#
-
-exit if !check_requirements(!$silent)->{pass};
-
+# Check required --MODULES--
+my $module_results = check_requirements(!$silent);
+exit if !$module_results->{pass};
 # Break out if checking the modules is all we have been asked to do.
 exit if $switch{'check-modules'};
 
-# If we're running on Windows, reset the input line terminator so that 
-# console input works properly - loading CGI tends to mess it up
-
-if ($^O =~ /MSWin/i) {
-    $/ = "\015\012";
-}
-
 ###########################################################################
-# Global definitions
+# Load Bugzilla Modules
 ###########################################################################
+
+# It's never safe to "use" a Bugzilla module in checksetup. If a module
+# prerequisite is missing, and you "use" a module that requires it,
+# then instead of our nice normal checksetup message, the user would
+# get a cryptic perl error about the missing module.
 
 # We need $::ENV{'PATH'} to remain defined.
 my $env = $::ENV{'PATH'};
@@ -302,11 +289,18 @@ $::ENV{'PATH'} = $env;
 require Bugzilla::Config;
 import Bugzilla::Config qw(:admin);
 
-# 12/17/00 justdave@syndicomm.com - removed declarations of the localconfig
-# variables from this location.  We don't want these declared here.  They'll
-# automatically get declared in the process of reading in localconfig, and
-# this way we can look in the symbol table to see if they've been declared
-# yet or not.
+require Bugzilla::User::Setting;
+import Bugzilla::User::Setting qw(add_setting);
+
+require Bugzilla::Util;
+import Bugzilla::Util qw(bz_crypt trim html_quote is_7bit_clean
+                         clean_text url_quote);
+
+require Bugzilla::User;
+import Bugzilla::User qw(insert_new_user);
+
+require Bugzilla::Bug;
+import Bugzilla::Bug qw(is_open_state);
 
 ###########################################################################
 # Check and update local configuration
@@ -1422,32 +1416,6 @@ if ($^O !~ /MSWin32/i) {
         chmod 01777, 'graphs';
     }
 }
-
-###########################################################################
-# Global Utility Library
-###########################################################################
-
-# This is done here, because some modules require params to be set up, which
-# won't have happened earlier.
-
-# It's never safe to "use" a Bugzilla module in checksetup. If a module
-# prerequisite is missing, and you "use" a module that requires it,
-# then instead of our nice normal checksetup message the user would
-# get a cryptic perl error about the missing module.
-
-# This is done so we can add new settings as developers need them.
-require Bugzilla::User::Setting;
-import Bugzilla::User::Setting qw(add_setting);
-
-require Bugzilla::Util;
-import Bugzilla::Util qw(bz_crypt trim html_quote is_7bit_clean
-                         clean_text url_quote);
-
-require Bugzilla::User;
-import Bugzilla::User qw(insert_new_user);
-
-require Bugzilla::Bug;
-import Bugzilla::Bug qw(is_open_state);
 
 ###########################################################################
 # Check GraphViz setup

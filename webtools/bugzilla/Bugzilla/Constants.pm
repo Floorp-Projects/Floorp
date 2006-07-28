@@ -110,6 +110,7 @@ use File::Basename;
 
     DB_MODULE
     ROOT_USER
+    ON_WINDOWS
 );
 
 @Bugzilla::Constants::EXPORT_OK = qw(contenttypes);
@@ -299,7 +300,12 @@ use constant DB_MODULE => {
                 name => 'PostgreSQL'},
 };
 
+# The user who should be considered "root" when we're giving
+# instructions to Bugzilla administrators.
 use constant ROOT_USER => $^O =~ /MSWin32/i ? 'Administrator' : 'root';
+
+# True if we're on Win32.
+use constant ON_WINDOWS => ($^O =~ /MSWin32/i);
 
 sub bz_locations {
     # We know that Bugzilla/Constants.pm must be in %INC at this point.

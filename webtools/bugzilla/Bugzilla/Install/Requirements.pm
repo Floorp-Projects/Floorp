@@ -220,6 +220,10 @@ sub check_requirements {
             have_vers($module->{name}, $module->{version}, $output);
     }
 
+    # If we're running on Windows, reset the input line terminator so that
+    # console input works properly - loading CGI tends to mess it up
+    $/ = "\015\012" if ON_WINDOWS;
+
     if ($output) {
         print "\n";
 
