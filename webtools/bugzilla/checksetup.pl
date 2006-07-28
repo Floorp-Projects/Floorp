@@ -207,35 +207,24 @@ L<Bugzilla::Install::Requirements>
 =cut
 
 use strict;
-
-my ($silent, %switch);
-
-BEGIN {
-    if ($^O =~ /MSWin32/i) {
-        require 5.008001; # for CGI 2.93 or higher
-    }
-    require 5.008;
-    use File::Basename;
-    chdir dirname($0);
-}
-
+use 5.008;
+use File::Basename;
+use File::Find;
+use Getopt::Long qw(:config bundling);
+BEGIN { chdir dirname($0); }
 use lib ".";
 use Bugzilla::Constants;
+use Bugzilla::Install::Requirements;
 
-BEGIN {
-    use Getopt::Long qw(:config bundling);
-    GetOptions(\%switch, 'help|h|?', 'check-modules', 'no-templates|t', 
-                         'verbose|v|no-silent');
+if ($^O =~ /MSWin32/i) {
+    require 5.008001; # for CGI 2.93 or higher
 }
 
+my ($silent, %switch);
 our %answer;
 
-# The use of some Bugzilla modules brings in modules we need to test for
-# Check first, via BEGIN
-BEGIN {
-
-    # However, don't run under -c (because of tests)
-    if (!$^C) {
+GetOptions(\%switch, 'help|h|?', 'check-modules', 'no-templates|t',
+                     'verbose|v|no-silent');
 
 ###########################################################################
 # Check for help request. Display help page if --help/-h/-? was passed.
@@ -275,9 +264,6 @@ use Bugzilla::Install::Requirements;
 
 exit if !check_requirements(!$silent)->{pass};
 
-}
-}
-
 # Break out if checking the modules is all we have been asked to do.
 exit if $switch{'check-modules'};
 
@@ -292,19 +278,13 @@ if ($^O =~ /MSWin/i) {
 # Global definitions
 ###########################################################################
 
-# These don't work as a "use," and they don't work as a "require" outside
-# of a BEGIN block. However, we're safe to them in a BEGIN block here since 
-# we've already checked all of the pre-requisites above in the previous 
-# BEGIN block.
-BEGIN {
-    # We need $::ENV{'PATH'} to remain defined.
-    my $env = $::ENV{'PATH'};
-    require Bugzilla;
-    $::ENV{'PATH'} = $env;
+# We need $::ENV{'PATH'} to remain defined.
+my $env = $::ENV{'PATH'};
+require Bugzilla;
+$::ENV{'PATH'} = $env;
 
-    require Bugzilla::Config;
-    import Bugzilla::Config qw(:admin);
-}
+require Bugzilla::Config;
+import Bugzilla::Config qw(:admin);
 
 # 12/17/00 justdave@syndicomm.com - removed declarations of the localconfig
 # variables from this location.  We don't want these declared here.  They'll
@@ -1239,13 +1219,12 @@ unless ($switch{'no-templates'}) {
     {
         print "Precompiling templates ...\n" unless $silent;
 
-        use File::Find;
         require Bugzilla::Template;
         
         # Don't hang on templates which use the CGI library
         eval("use CGI qw(-no_debug)");
         
-        use File::Spec; 
+        require File::Spec; 
         opendir(DIR, $templatedir) || die "Can't open '$templatedir': $!";
         my @files = grep { /^[a-z-]+$/i } readdir(DIR);
         closedir DIR;
