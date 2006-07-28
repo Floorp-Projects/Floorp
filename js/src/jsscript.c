@@ -1195,29 +1195,15 @@ js_MarkScriptFilename(const char *filename)
     sfe->mark = JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(intN)
-js_script_filename_marker(JSHashEntry *he, intN i, void *arg)
-{
-    ScriptFilenameEntry *sfe = (ScriptFilenameEntry *) he;
-
-    sfe->mark = JS_TRUE;
-    return HT_ENUMERATE_NEXT;
-}
-
 void
-js_MarkScriptFilenames(JSRuntime *rt, uintN gcflags)
+js_MarkScriptFilenames(JSRuntime *rt, JSBool keepAtoms)
 {
     JSCList *head, *link;
     ScriptFilenamePrefix *sfp;
 
-    if (!rt->scriptFilenameTable)
+    if (!rt->scriptFilenameTable || keepAtoms)
         return;
 
-    if (gcflags & GC_KEEP_ATOMS) {
-        JS_HashTableEnumerateEntries(rt->scriptFilenameTable,
-                                     js_script_filename_marker,
-                                     rt);
-    }
     for (head = &rt->scriptFilenamePrefixes, link = head->next;
          link != head;
          link = link->next) {
@@ -1238,9 +1224,9 @@ js_script_filename_sweeper(JSHashEntry *he, intN i, void *arg)
 }
 
 void
-js_SweepScriptFilenames(JSRuntime *rt)
+js_SweepScriptFilenames(JSRuntime *rt, JSBool keepAtoms)
 {
-    if (!rt->scriptFilenameTable)
+    if (!rt->scriptFilenameTable || keepAtoms)
         return;
 
     JS_HashTableEnumerateEntries(rt->scriptFilenameTable,
