@@ -1802,7 +1802,7 @@ FindPropertyValue(JSParseNode *pn, JSParseNode *pnid, FindPropValData *data)
             }
         }
     }
-    return pnprop->pn_right;
+    return pnhit->pn_right;
 }
 
 /*
