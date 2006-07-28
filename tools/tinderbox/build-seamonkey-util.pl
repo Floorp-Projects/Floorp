@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.330 $ ';
+$::UtilsVersion = '$Revision: 1.331 $ ';
 
 package TinderUtils;
 
@@ -1140,7 +1140,7 @@ sub BuildIt {
 
                 TinderUtils::run_shell_command("$srcdir/build/macosx/universal/unify $objdir/dist/xpi-stage/xforms.nolinks $objdir/../i386/dist/xpi-stage/xforms.nolinks $objdir/dist/universal/xpi-stage/xforms");
 
-                TinderUtils::run_shell_command("cd $objdir/dist/universal/xpi-stage && zip -qr xforms.xpi xforms");
+                TinderUtils::run_shell_command("cd $objdir/dist/universal/xpi-stage/xforms && zip -qr ../xforms.xpi *");
               }
             }
           } elsif ($build_status ne 'busted' and $Settings::TestOnlyTinderbox) {
