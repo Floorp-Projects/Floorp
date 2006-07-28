@@ -729,6 +729,23 @@ sub lookup_status {
     return $value;
 }
 
+=head2 lookup_status_by_name
+
+Returns the id of the status name passed.
+
+=cut
+
+sub lookup_status_by_name {
+    my ($name) = @_;
+    my $dbh = Bugzilla->dbh;
+    my ($value) = $dbh->selectrow_array(
+            "SELECT case_status_id 
+               FROM test_case_status
+              WHERE name = ?",
+              undef, $name);
+    return $value;
+}
+
 =head2 lookup_category
 
 Takes an ID of the category field and returns the value

@@ -35,6 +35,7 @@ use Bugzilla::Testopia::Table;
 require "globals.pl";
 
 use vars qw($template $vars);
+my $template = Bugzilla->template;
 
 Bugzilla->login(LOGIN_REQUIRED);
 ThrowUserError("testopia-create-denied", {'object' => 'Test Run'}) unless UserInGroup('edittestcases');

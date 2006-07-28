@@ -31,6 +31,7 @@ use Bugzilla::Util;
 use Bugzilla::Testopia::Util;
 
 use vars qw($template $vars);
+my $template = Bugzilla->template;
 
 Bugzilla->login();
 print Bugzilla->cgi->header();

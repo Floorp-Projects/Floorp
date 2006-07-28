@@ -627,6 +627,25 @@ sub lookup_product {
     return $value;
 }
 
+=head2 lookup_product_by_name
+
+Returns the id of the product name passed.
+
+=cut
+
+sub lookup_product_by_name {
+    my ($name) = @_;
+    my $dbh = Bugzilla->dbh;
+    
+    # TODO 2.22 use Product.pm
+    my ($value) = $dbh->selectrow_array(
+            "SELECT id
+			 FROM products
+			 WHERE name = ?",
+			 undef, $name);
+    return $value;
+}
+
 =head2 canedit
 
 Returns true if the logged in user has rights to edit this plan

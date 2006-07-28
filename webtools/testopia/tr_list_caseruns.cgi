@@ -23,6 +23,7 @@ use strict;
 use lib ".";
 
 use Bugzilla;
+use Bugzilla::Bug;
 use Bugzilla::Util;
 use Bugzilla::Error;
 use Bugzilla::Constants;
@@ -33,7 +34,7 @@ use Bugzilla::Testopia::Table;
 
 use vars qw($vars $template);
 require "globals.pl";
-require "CGI.pl";
+
 my $dbh = Bugzilla->dbh;
 my $cgi = Bugzilla->cgi;
 my $template = Bugzilla->template;

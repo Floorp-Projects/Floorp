@@ -21,41 +21,33 @@
     <a href="tr_new_run.cgi?plan_id=[% plan_id FILTER none %]">New Run</a>&nbsp;|&nbsp;
     <a href="tr_list_runs.cgi?current_tab=run&run_status=0">Current Runs</a>&nbsp;|&nbsp;
     <a href="tr_environment.cgi">Environments</a>&nbsp;|&nbsp;
-<table border="0">
-  <tr>
-    <td>
-      <form action="tr_show_case.cgi">
-        Test Case #
-        <input name="case_id" size="5" class="txt"/>
-        <input type="submit" value="Find" class="btn"/>
-      </form>
-    </td><td>
-      <form action="tr_show_run.cgi">
-      Test Run #
-        <input name="run_id" size="5" class="txt"/>
-        <input type="submit" value="Find" class="btn"/>
-      </form>
-    </td><td>
-      <form action="tr_show_plan.cgi">
-      Test Plan #
-        <input name="plan_id" size="5" class="txt"/>
-        <input type="submit" value="Find" class="btn"/>
-      </form>
-    </td><td>
-        <form action="tr_tags.cgi">
-          Tag
-          <input name="tag" size="5" class="txt"/>
-          <input type="submit" value="Find" class="btn"/>
-        </form>
-    </td>    
-   </tr>
-   </table>
+    Test Case #
+    <form action="tr_show_case.cgi">
+      <input name="case_id" size="5" />
+      <input type="submit" value="Find" />
+    </form>&nbsp;|&nbsp;
+    Test Run #
+    <form action="tr_show_run.cgi">
+      <input name="run_id" size="5" />
+      <input type="submit" value="Find" />
+    </form>&nbsp;|&nbsp;
+    Test Plan #
+    <form action="tr_show_plan.cgi">
+      <input name="plan_id" size="5" />
+      <input type="submit" value="Find" />
+    </form><br />
     <a href="tr_query.cgi">Search</a>&nbsp;|&nbsp;
     [% IF user.login %]
     <a href="tr_list_plans.cgi?current_tab=plan&name_type=allwordssubstr&name=&plan_text_type=allwordssubstr&plan_text=&tag_type=allwords&tags=&author_type=exact&author=[% user.login FILTER url_quote %]&editor_type=exact&editor=&plan_id=">My Plans</a>&nbsp;|&nbsp;
     <a href="tr_list_cases.cgi?current_tab=case&summary_type=allwordssubstr&summary=&tcaction_type=allwordssubstr&tcaction=&tceffect_type=allwordssubstr&tceffect=&script_type=allwordssubstr&script=&requirement_type=allwordssubstr&requirement=&tag_type=allwords&tags=&author_type=exact&author=&default_tester_type=substring&default_tester=[% user.login FILTER url_quote %]&case_id=&plan_id=">My Cases</a>&nbsp;|&nbsp;
     <a href="tr_list_runs.cgi?current_tab=run&summary_type=allwordssubstr&summary=&notes_type=allwordssubstr&notes=&environment_type=allwordssubstr&environment=&tag_type=allwords&tag=&manager_type=substring&manager=[% user.login FILTER url_quote %]&run_id=&plan_id=">My Runs</a>&nbsp;|&nbsp;
     [% END %]
-    <a href="testopia/doc/Manual.pdf" target="_blank">Help</a>&nbsp;|&nbsp;        
+    <a href="testopia/doc/Manual.pdf" target="_blank">Help</a>&nbsp;|&nbsp;
+    Tag
+    <form action="tr_tags.cgi">
+      <input name="tag" size="5" />
+      <input type="submit" value="Find" />
+    </form><br />
+    
   </div>
 </div>

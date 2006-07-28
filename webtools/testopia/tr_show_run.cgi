@@ -34,6 +34,7 @@ use Bugzilla::Testopia::Search;
 use Bugzilla::Testopia::Table;
 
 use vars qw($template $vars);
+my $template = Bugzilla->template;
 
 require "globals.pl";
 

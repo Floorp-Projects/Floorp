@@ -1,0 +1,49 @@
+<!ELEMENT environment>
+
+machine name id 
+	software
+	 os
+	 application name
+      version
+	 product
+	  version
+	  component
+	  build
+	 option name type
+	package name
+	 version
+	driver
+	module
+	
+	hardware
+	 cpu
+	 arch
+	 memory
+	 disk
+	 video
+	 audio
+	 peripheral
+	 network
+	   IP
+	   Netmask
+	   MAC
+	 option name type
+	 
+
+externals name type
+
+Platform (CPU, OS)
+Product (3rd Party and Internal)
+Build (ability to select multiple builds)
+Version (Ability to select multiple versions)
+Packages
+Browsers
+Drivers
+Kernel Modules
+Architecture (64, 32, amd, Intel, SMP)
+Components
+ - Hardware (Video, Audio, Memory, Disk, USB, Peripherals, Network cards, ...)
+ - Software
+Applications (perhaps this is accounted for in others in the list)
+Network IP
+Machine

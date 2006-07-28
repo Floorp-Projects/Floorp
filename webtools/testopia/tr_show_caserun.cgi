@@ -23,6 +23,7 @@ use strict;
 use lib ".";
 
 use Bugzilla;
+use Bugzilla::Bug;
 use Bugzilla::Constants;
 use Bugzilla::Error;
 use Bugzilla::Util;
@@ -33,10 +34,10 @@ use Bugzilla::Testopia::TestCase;
 use Bugzilla::Testopia::TestCaseRun;
 
 use vars qw($template $vars);
+my $template = Bugzilla->template;
 
 # These are going away after 2.22
 require "globals.pl";
-require "CGI.pl";
 
 Bugzilla->login();
 print Bugzilla->cgi->header();
@@ -96,7 +97,6 @@ if ($action eq 'Commit'){
                 last;
             }
         }
-#        $notes =~ s/"/\\"/g;
         $vars->{'existing'} = $existing;
         $vars->{'assignee'} = $cgi->param('assignee');
         $vars->{'status_name'}   = $status;

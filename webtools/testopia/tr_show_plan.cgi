@@ -40,6 +40,7 @@ use Bugzilla::Testopia::Table;
 require "globals.pl";
 
 use vars qw($template $vars);
+my $template = Bugzilla->template;
 
 Bugzilla->login();
 print Bugzilla->cgi->header();

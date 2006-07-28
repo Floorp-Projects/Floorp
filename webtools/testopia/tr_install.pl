@@ -191,6 +191,9 @@ sub doPatch {
       } elsif ($Bugzilla::Config::VERSION =~ /^2\.20.*/) {
         # version 2.20.* detected
         $fPatch = "patch-2.20";
+      } elsif ($Bugzilla::Config::VERSION =~ /^2\.22.*/) {
+        # version 2.20.* detected
+        $fPatch = "patch-2.22";
       } else {
         # no suitable version available
         DieWithStyle("No suitable patch detected for your Bugzilla. Patch cannot continue.\n".
