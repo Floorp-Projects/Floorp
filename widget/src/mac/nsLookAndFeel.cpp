@@ -555,12 +555,30 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_ScrollArrowStyle:
         ThemeScrollBarArrowStyle arrowStyle;
         ::GetThemeScrollBarArrowStyle ( &arrowStyle );
-        aMetric = arrowStyle;
+        switch (arrowStyle) {
+        case kThemeScrollBarArrowsSingle:
+            aMetric = eMetric_ScrollArrowStyleSingle;
+            break;
+        default:
+            NS_WARNING("Not handling all possible ThemeScrollBarArrowStyle values");
+            // fall through so we default to BothAtBottom
+        case kThemeScrollBarArrowsLowerRight:
+            aMetric = eMetric_ScrollArrowStyleBothAtBottom;
+        }
         break;
     case eMetric_ScrollSliderStyle:
         ThemeScrollBarThumbStyle thumbStyle;
         ::GetThemeScrollBarThumbStyle ( &thumbStyle );
-        aMetric = thumbStyle;
+        switch (thumbStyle) {
+        case kThemeScrollBarThumbNormal:
+            aMetric = eMetric_ScrollThumbStyleNormal;
+            break;
+        default:
+            NS_WARNING("Not handling all possible ThemeScrollBarThumbStyle values");
+            // fall through so we default to Proportional
+        case kThemeScrollBarThumbProportional:
+            aMetric = eMetric_ScrollThumbStyleProportional;
+        }
         break;
     case eMetric_TreeOpenDelay:
         aMetric = 1000;
