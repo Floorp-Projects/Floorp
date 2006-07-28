@@ -98,7 +98,7 @@ User Panel to any other third party for use in marketing or solicitation.</small
 
                         <p>If you don\'t receive an email with a link to the survey within 24 hours, please check
                         your junk mail.  If you still haven\'t received an email with a link to the survey
-                        please <a href="mailto:firefoxsurvey@mozilla.com?subject=invalid email - firefox user panel">let us know</a> 
+                        please <a href="mailto:firefoxsurvey@mozilla.com?subject=Firefox User Panel - Email not received">let us know</a> 
                         and we\'ll send another copy.</p>
 
                         <p>Continue to <a href="http://www.mozilla.com/firefox/central/">Firefox Central</a>.</p> 
@@ -147,8 +147,9 @@ User Panel to any other third party for use in marketing or solicitation.</small
                         Continue to <a href="http://www.mozilla.com/firefox/central/">Firefox Central</a>.</p>
 
                         <p class="subtext">If you don\'t receive an email with a link to
-                        the survey within 24 hours, please check your junk mail or let us
-                        know and we\'ll send another copy.</p>
+                        the survey within 24 hours, please check your junk mail or <a
+                        href="mailto:firefoxsurvey@mozilla.com?subject=Firefox User Panel - Email not received.">let us know</a> 
+                        and we\'ll send another copy.</p>
                     ');
                     $this->set('tracking_image','userpanel2-response.gif');
                     $this->render();
