@@ -170,6 +170,10 @@
 
 extern "C" void ShowOSAlert(const char* aMessage);
 
+#define HELP_SPACER_1   "\t"
+#define HELP_SPACER_2   "\t\t"
+#define HELP_SPACER_4   "\t\t\t\t"
+
 #ifdef DEBUG
 #include "prlog.h"
 #endif
@@ -755,8 +759,9 @@ static void DumpArbitraryHelp()
 static void
 DumpHelp()
 {
-  printf("Usage: %s [ options ... ] [URL]\n"
-         "       where options include:\n\n", gArgv[0]);
+  printf("Usage: %s [ options ... ] [URL]\n", gArgv[0]);
+  printf("       where options include:\n");
+  printf("\n");
 
 #ifdef MOZ_WIDGET_GTK
   /* insert gtk options above moz options, like any other gtk app
@@ -765,49 +770,52 @@ DumpHelp()
    * these straight from a user's gtk version -- but it seems to be
    * what most gtk apps do. -dr
    */
-  printf("GTK options\n"
-         "\t--gdk-debug=FLAGS\t\tGdk debugging flags to set\n"
-         "\t--gdk-no-debug=FLAGS\t\tGdk debugging flags to unset\n"
-         "\t--gtk-debug=FLAGS\t\tGtk+ debugging flags to set\n"
-         "\t--gtk-no-debug=FLAGS\t\tGtk+ debugging flags to unset\n"
-         "\t--gtk-module=MODULE\t\tLoad an additional Gtk module\n"
-         "\t-install\t\tInstall a private colormap\n");
 
+  printf("GTK options\n");
+  printf("%s--gdk-debug=FLAGS%sGdk debugging flags to set\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s--gdk-no-debug=FLAGS%sGdk debugging flags to unset\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s--gtk-debug=FLAGS%sGtk+ debugging flags to set\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s--gtk-no-debug=FLAGS%sGtk+ debugging flags to unset\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s--gtk-module=MODULE%sLoad an additional Gtk module\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s-install%sInstall a private colormap\n", HELP_SPACER_1, HELP_SPACER_2);
+
+  /* end gtk toolkit options */
 #endif /* MOZ_WIDGET_GTK */
 #if MOZ_WIDGET_XLIB
-  printf("Xlib options\n"
-         "\t-display=DISPLAY\t\tX display to use\n"
-         "\t-visual=VISUALID\t\tX visual to use\n"
-         "\t-install_colormap\t\tInstall own colormap\n"
-         "\t-sync\t\tMake X calls synchronous\n"
-         "\t-no-xshm\t\tDon't use X shared memory extension\n");
+  printf("Xlib options\n");
+  printf("%s-display=DISPLAY%sX display to use\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s-visual=VISUALID%sX visual to use\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s-install_colormap%sInstall own colormap\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s-sync%sMake X calls synchronous\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s-no-xshm%sDon't use X shared memory extension\n", HELP_SPACER_1, HELP_SPACER_2);
 
+  /* end xlib toolkit options */
 #endif /* MOZ_WIDGET_XLIB */
 #ifdef MOZ_X11
-  printf("X11 options\n"
-         "\t--display=DISPLAY\t\tX display to use\n"
-         "\t--sync\t\tMake X calls synchronous\n"
-         "\t--no-xshm\t\tDon't use X shared memory extension\n"
-         "\t--xim-preedit=STYLE\n"
-         "\t--xim-status=STYLE\n");
+  printf("X11 options\n");
+  printf("%s--display=DISPLAY%sX display to use\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s--sync%sMake X calls synchronous\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s--no-xshm%sDon't use X shared memory extension\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s--xim-preedit=STYLE\n", HELP_SPACER_1);
+  printf("%s--xim-status=STYLE\n", HELP_SPACER_1);
 #endif
 #ifdef XP_UNIX
-  printf("\t--g-fatal-warnings\t\tMake all warnings fatal\n"
-         "\nMozilla options\n");
+  printf("%s--g-fatal-warnings%sMake all warnings fatal\n", HELP_SPACER_1, HELP_SPACER_2);
+
+  printf("\nMozilla options\n");
 #endif
 
-  printf("\t-height <value>\t\tSet height of startup window to <value>.\n"
-         "\t-h or -help\t\tPrint this message.\n"
-         "\t-width <value>\t\tSet width of startup window to <value>.\n"
-         "\t-v or -version\t\tPrint %s version.\n"
-         "\t-P <profile>\t\tStart with <profile>.\n"
-         "\t-ProfileManager\t\tStart with ProfileManager.\n"
-         "\t-UILocale <locale>\t\tStart with <locale> resources as UI Locale.\n"
-         "\t-contentLocale <locale>\t\tStart with <locale> resources as content Locale.\n"
-         "\t-safe-mode\t\tDisables extensions and themes for this session.\n", gAppData->name);
-
+  printf("%s-height <value>%sSet height of startup window to <value>.\n",HELP_SPACER_1,HELP_SPACER_2);
+  printf("%s-h or -help%sPrint this message.\n",HELP_SPACER_1,HELP_SPACER_2);
+  printf("%s-width <value>%sSet width of startup window to <value>.\n",HELP_SPACER_1,HELP_SPACER_2);
+  printf("%s-v or -version%sPrint %s version.\n",HELP_SPACER_1,HELP_SPACER_2, gAppData->name);
+  printf("%s-P <profile>%sStart with <profile>.\n",HELP_SPACER_1,HELP_SPACER_2);
+  printf("%s-ProfileManager%sStart with Profile Manager.\n",HELP_SPACER_1,HELP_SPACER_2);
+  printf("%s-UILocale <locale>%sStart with <locale> resources as UI Locale.\n",HELP_SPACER_1,HELP_SPACER_2);
+  printf("%s-contentLocale <locale>%sStart with <locale> resources as content Locale.\n",HELP_SPACER_1,HELP_SPACER_2);
+  printf("%s-safe-mode%sDisables extensions and themes for this session.\n",HELP_SPACER_1,HELP_SPACER_2);
 #if defined(XP_WIN) || defined(XP_OS2)
-  printf("\t-console\t\tStart %s with a debugging console.\n", gAppData->name);
+  printf("%s-console%sStart %s with a debugging console.\n",HELP_SPACER_1,HELP_SPACER_2,gAppData->name);
 #endif
 
   // this works, but only after the components have registered.  so if you drop in a new command line handler, -help
@@ -891,11 +899,10 @@ VerifyInstallation(nsIFile* aAppDir)
 #include <ieeefp.h>
 #endif
 
-static inline void
+static void
 DumpVersion()
 {
-  printf("%s %s %s, %s\n", 
-         gAppData->vendor ? gAppData->vendor : "", gAppData->name, gAppData->version, gAppData->copyright);
+  printf("%s %s %s, %s\n", gAppData->vendor ? gAppData->vendor : "", gAppData->name, gAppData->version, gAppData->copyright);
 }
 
 #ifdef MOZ_ENABLE_XREMOTE
