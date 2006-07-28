@@ -461,8 +461,7 @@ protected:
   nsresult CheckSecurityLeftAndTop(PRInt32* left, PRInt32* top);
   static PRBool CanSetProperty(const char *aPrefName);
 
-  static void MakeScriptDialogTitle(const nsAString &aInTitle,
-                                    nsAString &aOutTitle);
+  static void MakeScriptDialogTitle(nsAString &aOutTitle);
 
   // Helper for window.find()
   nsresult FindInternal(const nsAString& aStr, PRBool caseSensitive,
