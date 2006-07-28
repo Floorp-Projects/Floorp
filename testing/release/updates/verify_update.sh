@@ -53,8 +53,8 @@ do
   mkdir -p downloads/
   rm -rf downloads/*
 
-  #for locale in `cat all-locales`
-  for locale in en-US
+  for locale in `cat all-locales`
+  #for locale in en_US
   do
     if [ "Darwin_ppc-gcc3" == $build_platform ]; then
       source_build_platform=mac-ppc
