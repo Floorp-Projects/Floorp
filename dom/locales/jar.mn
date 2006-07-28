@@ -16,7 +16,7 @@
   locale/@AB_CD@/global/printdialog.properties                 (%chrome/printdialog.properties)
   locale/@AB_CD@/global/xslt/xslt.properties                   (%chrome/xslt/xslt.properties)
   locale/@AB_CD@/global/dom/dom.properties                     (%chrome/dom/dom.properties)
-#ifdef MOZ_SVG  
+#ifdef MOZ_SVG
   locale/@AB_CD@/global/svg/svg.properties                     (%chrome/svg/svg.properties)
 #endif
   locale/@AB_CD@/global/layout/MediaDocument.properties        (%chrome/layout/MediaDocument.properties)
