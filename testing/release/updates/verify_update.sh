@@ -50,8 +50,8 @@ for build_platform in Linux_x86-gcc3 Darwin_Universal-gcc3 WINNT_x86-msvc
 do
 
   # cleanup
-  rm -rf downloads/*
   mkdir -p downloads/
+  rm -rf downloads/*
 
   #for locale in `cat all-locales`
   for locale in en-US
