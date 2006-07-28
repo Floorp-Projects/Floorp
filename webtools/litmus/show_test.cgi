@@ -185,7 +185,37 @@ if ($c->param("text_snippet")) {
   }
   $vars->{'testcases'} = \@testcases;
   $vars->{'search_string_for_display'} = $search_string_for_display;
-} 
+} elsif ($c->param('type') eq 'by_category') {
+	my $product_id = $c->param("product");
+	my $testgroup_id = $c->param("testgroup");
+	my $subgroup_id = $c->param("subgroup");
+	my ($product, $testgroup, $subgroup);
+	my @testcases;
+	
+	if ($subgroup_id && $subgroup_id ne '-Subgroup-' && $subgroup_id ne '---') {
+		@testcases = Litmus::DB::Testcase->search_BySubgroup($subgroup_id);
+		$subgroup = Litmus::DB::Subgroup->retrieve($subgroup_id);
+	    $testgroup = Litmus::DB::Testgroup->retrieve($testgroup_id);
+	    $product = Litmus::DB::Product->retrieve($product_id);
+	} elsif ($testgroup_id && $testgroup_id ne '-Testgroup-' && $testgroup_id ne '---') {
+		@testcases = Litmus::DB::Testcase->search_ByTestgroup($testgroup_id);
+		$testgroup = Litmus::DB::Testgroup->retrieve($testgroup_id);
+		$product = Litmus::DB::Product->retrieve($product_id);
+	} elsif ($product_id && $product_id ne '-Product-' && $product_id ne '---') {
+		@testcases = Litmus::DB::Testcase->search(product => $product_id);
+		$product = Litmus::DB::Product->retrieve($product_id);
+	}
+	$vars->{'testcases'} = \@testcases;
+    $vars->{'search_string_for_display'} = 
+    	($product ? "product: ".$product->name() : '').
+    	($testgroup ? " | testgroup: ".$testgroup->name() : '').
+    	($subgroup ? " | subgroup: ".$subgroup->name() : ''); 
+}
 
-Litmus->template()->process("show/search_for_testcases.tmpl", $vars) || 
-  internalError(Litmus->template()->error());
+if ($c->param('print')) {
+	Litmus->template()->process("show/print_testcases.tmpl", $vars) || 
+		internalError(Litmus->template()->error());
+} else {
+	Litmus->template()->process("show/search_for_testcases.tmpl", $vars) || 
+		internalError(Litmus->template()->error());
+}

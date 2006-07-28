@@ -32,12 +32,17 @@
 
 [% title="View Testcase" %]
 
-[% INCLUDE global/html_header.tmpl js_files=['js/Help.js'] %]
+
+[% PROCESS global/selects.none.tmpl %]
+
+[% includeselects=1 %] 
+[% INCLUDE global/html_header.tmpl js_files=['js/Help.js','js/SelectBoxes.js'] %]
 [% INCLUDE global/litmus_header.tmpl %]
 
 <script type="text/javascript">
 function init()
 {
+	FormInit(document.forms['testcase_search_by_category'], document.location.search);
     FormInit(document.forms['testcase_search_by_id'], document.location.search);
     FormInit(document.forms['testcase_fulltext_search'], document.location.search);
     FormInit(document.forms['testcase_search_recent'], document.location.search);
@@ -60,6 +65,39 @@ var relevanceHelpText = '<p>Relevance values are non-negative floating-point num
 
       <table class="testcase-search">
       <tr>
+        <th>By category</th>
+      </tr>
+      <tr>
+         <td valign="top" width="100%">
+         <div class="testcase-search">
+         <form action="show_test.cgi" method="get" name="testcase_search_by_category" 
+         							  id="testcase_search_by_category">
+		  <input type="hidden" name="type" value="by_category"/>
+		  <table border="0">
+			<tr>
+			  <td>Product:</td>
+			  <td>Testgroup:</td>
+			  <td>Subgroup:</td>
+			</tr>
+			<tr>
+			  <td>
+				[% INCLUDE productbox onchange="changeProduct();" %]
+			  </td>
+			  <td>
+				[% INCLUDE testgroupbox onchange="changeTestgroup();" %]
+			  </td>
+			  <td>
+				[% INCLUDE subgroupbox onchange="" %]
+			  </td>
+			</tr>
+		  </table>
+         <input class="button" type="submit" value="Search By Category">
+         </form></div></td>
+      </tr>
+      </table>
+      
+      <table class="testcase-search">
+      <tr>
       <th>By Testcase ID#</th>
       <th>By Full-text Search</th>
       <th>By Recently Added/Changed</th>
@@ -78,7 +116,15 @@ var relevanceHelpText = '<p>Relevance values are non-negative floating-point num
 <h1 class="firstHeading">Matching Testcases[% IF search_string_for_display %] - [% search_string_for_display | html %][% END %]</h1>
 
 <div class="section-full">
+<b><a id="printlink" href="">print all testcases</a></b>
+<script type="text/javascript">
+  document.getElementById('printlink').href=document.location+"&print=1";
+</script>
+</div>
+
+<div class="section-full">
   <div class="section-content">
+
 
 [% INCLUDE show/testcase_list.tmpl %]
 

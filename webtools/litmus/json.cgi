@@ -76,6 +76,13 @@ if ($c->param("testcase_id")) {
   my $json = JSON->new(skipinvalid => 1, convblessed => 1);
   my $js = $json->objToJson($testgroup);
   print $js;
+} elsif ($c->param("validate_login")) {
+  my $uname = $c->param("username");
+  my $passwd = $c->param("password");
+  my $login = Litmus::Auth::validate_login($uname, $passwd);
+  if (!$login) { $login = 0 }
+  else { $login = 1 } 
+  print $login;
 } elsif ($c->param("product_id")) {
   my $product_id = $c->param("product_id");
   my $product = Litmus::DB::Product->retrieve($product_id);
@@ -102,7 +109,26 @@ if ($c->param("testcase_id")) {
   my $json = JSON->new(skipinvalid => 1, convblessed => 1);
   my $js = $json->objToJson($branch);
   print $js;
-}
-
+} elsif ($c->param("products")) {
+  my @products = Litmus::DB::Product->retrieve_all();
+  my $json = JSON->new(skipinvalid => 1, convblessed => 1);
+  my $js = $json->objToJson(\@products);
+  print $js;
+} elsif ($c->param("platforms")) {
+  my @platforms = Litmus::DB::Platform->retrieve_all();
+  my $json = JSON->new(skipinvalid => 1, convblessed => 1);
+  my $js = $json->objToJson(\@platforms);
+  print $js;
+} elsif ($c->param("opsyses")) {
+  my @opsyses = Litmus::DB::Opsys->retrieve_all();
+  my $json = JSON->new(skipinvalid => 1, convblessed => 1);
+  my $js = $json->objToJson(\@opsyses);
+  print $js;
+} elsif ($c->param("branches")) {
+  my @branches = Litmus::DB::Branch->retrieve_all();
+  my $json = JSON->new(skipinvalid => 1, convblessed => 1);
+  my $js = $json->objToJson(\@branches);
+  print $js;
+} 
 
 

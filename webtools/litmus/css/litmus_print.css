@@ -1,0 +1,12 @@
+body {
+	background: white;
+}
+
+a:link:after, a:visited:after {
+	content: " (" attr(href) ") ";
+	font-size: 90%;
+}
+
+div.testcase {
+	page-break-inside: avoid;
+}
