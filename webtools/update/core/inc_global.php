@@ -71,12 +71,14 @@ function escape_string($value)
 
 //Remove HTML tags and escape enities from GET/POST vars.
 foreach ($_GET as $key => $val) {
-  $_GET["$key"] = htmlentities(str_replace("\\","",strip_tags($_GET["$key"])));
+  $_GET["$key"] = htmlentities(str_replace("\\","",strip_tags($_GET["$key"])),
+			       ENT_COMPAT, 'UTF-8');
 }
 
 foreach ($_POST as $key => $val) {
   if (!is_array($_POST["$key"])) {
-    $_POST["$key"] = htmlentities(str_replace("\\","",strip_tags($_POST["$key"])));
+    $_POST["$key"] = htmlentities(str_replace("\\","",strip_tags($_POST["$key"])),
+				  ENT_COMPAT, 'UTF-8');
   }
 }
 
