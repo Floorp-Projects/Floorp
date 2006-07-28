@@ -497,9 +497,13 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetDatabaseWOReparse(nsIMsgDatabase **aDatab
         PRBool hasNewMessages = PR_FALSE;
         for (PRUint32 keyIndex = 0; keyIndex < m_newMsgs.GetSize(); keyIndex++)
         {
+          PRBool containsKey = PR_FALSE;
+          mDatabase->ContainsKey(m_newMsgs[keyIndex], &containsKey);
+          if (!containsKey)
+            continue;
           PRBool isRead = PR_FALSE;
-          mDatabase->IsRead(m_newMsgs[keyIndex], &isRead);
-          if (!isRead)
+          nsresult rv2 = mDatabase->IsRead(m_newMsgs[keyIndex], &isRead);
+          if (NS_SUCCEEDED(rv2) && !isRead)
           {
             hasNewMessages = PR_TRUE;
             mDatabase->AddToNewList(m_newMsgs[keyIndex]);
