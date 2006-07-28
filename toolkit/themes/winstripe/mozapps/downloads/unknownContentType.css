@@ -15,7 +15,11 @@
 }
 
 .small-indent {
-  margin-left: 15px; 
-  margin-right: 15px;
+  -moz-margin-start: 15px; 
+  -moz-margin-end: 15px;
+}
+
+.small-indent label {
+  -moz-margin-start: 0px; 
 }
 
