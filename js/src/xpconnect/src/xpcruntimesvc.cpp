@@ -137,6 +137,23 @@ nsJSRuntimeServiceImpl::GetRuntime(JSRuntime **runtime)
 
     if(!mRuntime)
     {
+        // Call XPCPerThreadData::GetData to initialize 
+        // XPCPerThreadData::gTLSIndex before initializing 
+        // JSRuntime::threadTPIndex in JS_NewRuntime.
+        //
+        // XPConnect uses a thread local storage (XPCPerThreadData) indexed by
+        // XPCPerThreadData::gTLSIndex, and SpiderMonkey GC uses a thread local 
+        // storage indexed by JSRuntime::threadTPIndex.
+        //
+        // The destructor for XPCPerThreadData::gTLSIndex may access 
+        // thread local storage indexed by JSRuntime::threadTPIndex. 
+        // Thus, the destructor for JSRuntime::threadTPIndex must be called 
+        // later than the one for XPCPerThreadData::gTLSIndex.
+        //
+        // We rely on the implementation of NSPR that calls destructors at 
+        // the same order of calling PR_NewThreadPrivateIndex.
+        XPCPerThreadData::GetData();
+        
         mRuntime = JS_NewRuntime(gGCSize);
         if(!mRuntime)
             return NS_ERROR_OUT_OF_MEMORY;
