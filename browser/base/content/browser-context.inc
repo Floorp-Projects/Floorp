@@ -41,28 +41,11 @@
       <menuitem id="spell-no-suggestions"
                 disabled="true"
                 label="&spellNoSuggestions.label;"/>
-      <menuseparator id="spell-suggestions-separator"/>
       <menuitem id="spell-add-to-dictionary"
                 label="&spellAddToDictionary.label;"
                 accesskey="&spellAddToDictionary.accesskey;"
                 oncommand="InlineSpellCheckerUI.addToDictionary();"/>
-      <menuitem id="spell-check-enabled"
-                label="&spellEnable.label;"
-                type="checkbox"
-                accesskey="&spellEnable.accesskey;"
-                oncommand="InlineSpellCheckerUI.toggleEnabled();"/>
-      <menu id="spell-dictionaries"
-            label="&spellDictionaries.label;"
-            accesskey="&spellDictionaries.accesskey;">
-          <menupopup id="spell-dictionaries-menu">
-              <menuseparator id="spell-language-separator"/>
-              <menuitem id="spell-add-dictionaries"
-                        label="&spellAddDictionaries.label;"
-                        accesskey="&spellAddDictionaries.accesskey;"
-                        oncommand="gContextMenu.addDictionaries();"/>
-          </menupopup>
-      </menu>
-      <menuseparator id="spell-separator"/>
+      <menuseparator id="spell-suggestions-separator"/>
       <menuitem id="context-openlink"
                 label="&openLinkCmd.label;"
                 accesskey="&openLinkCmd.accesskey;"
@@ -252,6 +235,23 @@
                 label="&metadataCmd.label;"
                 accesskey="&metadataCmd.accesskey;"
                 oncommand="gContextMenu.showMetadata();"/>
+      <menuseparator id="spell-separator"/>
+      <menuitem id="spell-check-enabled"
+                label="&spellEnable.label;"
+                type="checkbox"
+                accesskey="&spellEnable.accesskey;"
+                oncommand="InlineSpellCheckerUI.toggleEnabled();"/>
+      <menu id="spell-dictionaries"
+            label="&spellDictionaries.label;"
+            accesskey="&spellDictionaries.accesskey;">
+          <menupopup id="spell-dictionaries-menu">
+              <menuseparator id="spell-language-separator"/>
+              <menuitem id="spell-add-dictionaries"
+                        label="&spellAddDictionaries.label;"
+                        accesskey="&spellAddDictionaries.accesskey;"
+                        oncommand="gContextMenu.addDictionaries();"/>
+          </menupopup>
+      </menu>
       <menuseparator hidden="true" id="context-sep-bidi"/>
       <menuitem hidden="true" id="context-bidi-text-direction-toggle"
                 label="&bidiSwitchTextDirectionItem.label;"

@@ -278,16 +278,8 @@
                      onpopuphiding="this.parentNode._doPopupItemDisabling(this);"
                      oncommand="var cmd = event.originalTarget.getAttribute('cmd'); if(cmd) { this.parentNode.doCommand(cmd); event.stopPropagation(); }">
         <xul:menuitem label="&spellNoSuggestions.label;" anonid="spell-no-suggestions" disabled="true"/>
-        <xul:menuseparator anonid="spell-suggestions-separator"/>
         <xul:menuitem label="&spellAddToDictionary.label;" accesskey="&spellAddToDictionary.accesskey;" anonid="spell-add-to-dictionary" oncommand="this.parentNode.parentNode.spellui.addToDictionary();"/>
-        <xul:menuitem label="&spellEnable.label;" type="checkbox" accesskey="&spellEnable.accesskey;" anonid="spell-check-enabled" oncommand="this.parentNode.parentNode.spellui.toggleEnabled();"/>
-        <xul:menu label="&spellDictionaries.label;" accesskey="&spellDictionaries.accesskey;" anonid="spell-dictionaries">
-          <xul:menupopup anonid="spell-dictionaries-menu"
-            onpopupshowing="event.stopPropagation();"
-            onpopuphiding="event.stopPropagation();">
-          </xul:menupopup>
-        </xul:menu>
-        <xul:menuseparator anonid="spell-check-separator"/>
+        <xul:menuseparator anonid="spell-suggestions-separator"/>
         <xul:menuitem label="&undoCmd.label;" accesskey="&undoCmd.accesskey;" cmd="cmd_undo"/>
         <xul:menuseparator/>
         <xul:menuitem label="&cutCmd.label;" accesskey="&cutCmd.accesskey;" cmd="cmd_cut"/>
@@ -296,6 +288,14 @@
         <xul:menuitem label="&deleteCmd.label;" accesskey="&deleteCmd.accesskey;" cmd="cmd_delete"/>
         <xul:menuseparator/>
         <xul:menuitem label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;" cmd="cmd_selectAll"/>
+        <xul:menuseparator anonid="spell-check-separator"/>
+        <xul:menuitem label="&spellEnable.label;" type="checkbox" accesskey="&spellEnable.accesskey;" anonid="spell-check-enabled" oncommand="this.parentNode.parentNode.spellui.toggleEnabled();"/>
+        <xul:menu label="&spellDictionaries.label;" accesskey="&spellDictionaries.accesskey;" anonid="spell-dictionaries">
+          <xul:menupopup anonid="spell-dictionaries-menu"
+            onpopupshowing="event.stopPropagation();"
+            onpopuphiding="event.stopPropagation();">
+          </xul:menupopup>
+        </xul:menu>
       </xul:menupopup>
     </content>
 
@@ -350,9 +350,9 @@
             this._setMenuItemVisibility("spell-suggestions-separator", overMisspelling);
 
             // suggestion list
-            var spellSeparator = document.getAnonymousElementByAttribute(this,
-              "anonid", "spell-suggestions-separator");
-            var numsug = spellui.addSuggestionsToMenu(popupNode, spellSeparator, 5);
+            var suggestionsSeparator = document.getAnonymousElementByAttribute(this,
+              "anonid", "spell-add-to-dictionary");
+            var numsug = spellui.addSuggestionsToMenu(popupNode, suggestionsSeparator, 5);
             this._setMenuItemVisibility("spell-no-suggestions", overMisspelling && numsug == 0);
 
             // dictionary list

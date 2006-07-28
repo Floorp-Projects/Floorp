@@ -4457,7 +4457,7 @@ nsContextMenu.prototype = {
         this.showItem("spell-suggestions-separator", onMisspelling);
         if (onMisspelling) {
             var menu = document.getElementById("contentAreaContextMenu");
-            var suggestionsSeparator = document.getElementById("spell-suggestions-separator");
+            var suggestionsSeparator = document.getElementById("spell-add-to-dictionary");
             var numsug = InlineSpellCheckerUI.addSuggestionsToMenu(menu, suggestionsSeparator, 5);
             this.showItem("spell-no-suggestions", numsug == 0);
         } else {
