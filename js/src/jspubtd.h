@@ -257,19 +257,12 @@ typedef JSBool
  * Finalize obj, which the garbage collector has determined to be unreachable
  * from other live objects or from GC roots.  Obviously, finalizers must never
  * store a reference to obj.
+ *
+ * This is also the type of the JSExtendedClass.close hook, which is stubbed
+ * with NULL if not needed.
  */
 typedef void
 (* JS_DLL_CALLBACK JSFinalizeOp)(JSContext *cx, JSObject *obj);
-
-/*
- * Close hook for obj where obj has extended class. When non-null, it is
- * executed after the garbage collector has determined the object to be
- * unreachable from other live objects or from GC roots. The hook can execute
- * arbitrary code. GC runs the hook only once even if it makes the object
- * reachable again.
- */
-typedef JSBool
-(* JS_DLL_CALLBACK JSCloseOp)(JSContext *cx, JSObject *obj);
 
 /*
  * Used by JS_AddExternalStringFinalizer and JS_RemoveExternalStringFinalizer

@@ -139,10 +139,10 @@ extern void
 js_MarkScriptFilename(const char *filename);
 
 extern void
-js_MarkScriptFilenames(JSRuntime *rt, JSBool keepAtoms);
+js_MarkScriptFilenames(JSRuntime *rt, uintN gcflags);
 
 extern void
-js_SweepScriptFilenames(JSRuntime *rt, JSBool keepAtoms);
+js_SweepScriptFilenames(JSRuntime *rt);
 
 /*
  * Two successively less primitive ways to make a new JSScript.  The first

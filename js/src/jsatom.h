@@ -343,11 +343,11 @@ typedef void
 (*JSGCThingMarker)(void *thing, void *data);
 
 extern void
-js_MarkAtomState(JSAtomState *state, JSBool keepAtoms, JSGCThingMarker mark,
+js_MarkAtomState(JSAtomState *state, uintN gcflags, JSGCThingMarker mark,
                  void *data);
 
 extern void
-js_SweepAtomState(JSAtomState *state, JSBool keepAtoms);
+js_SweepAtomState(JSAtomState *state);
 
 extern JSBool
 js_InitPinnedAtoms(JSContext *cx, JSAtomState *state);
