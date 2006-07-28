@@ -1,11 +1,15 @@
 download_mars () {
     update_url="$1"
+    only="$2"
 
     echo "Using  $update_url"
     curl -s $update_url > update.xml
 
     mkdir -p update/
-    for patch_type in partial complete
+    if [ -z $only ]; then
+      only="partial complete"
+    fi
+    for patch_type in $only
       do
       line=`fgrep "patch type=\"$patch_type" update.xml`
       grep_rv=$?
