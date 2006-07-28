@@ -206,11 +206,18 @@ L<Bugzilla::Install::Requirements>
 
 =cut
 
+######################################################################
+# Initialization
+######################################################################
+
 use strict;
 use 5.008;
 use File::Basename;
 use File::Find;
 use Getopt::Long qw(:config bundling);
+use Pod::Usage;
+use Safe;
+
 BEGIN { chdir dirname($0); }
 use lib ".";
 use Bugzilla::Constants;
@@ -220,31 +227,40 @@ if ($^O =~ /MSWin32/i) {
     require 5.008001; # for CGI 2.93 or higher
 }
 
-my ($silent, %switch);
-our %answer;
+######################################################################
+# Subroutines
+######################################################################
 
+sub read_answers_file {
+    my %hash;
+    if ($ARGV[0]) {
+        my $s = new Safe;
+        $s->rdo($ARGV[0]);
+
+        die "Error reading $ARGV[0]: $!" if $!;
+        die "Error evaluating $ARGV[0]: $@" if $@;
+
+        # Now read the param back out from the sandbox
+        %hash = %{$s->varglob('answer')};
+    }
+    return \%hash;
+}
+
+######################################################################
+# Live Code
+######################################################################
+
+my %switch;
 GetOptions(\%switch, 'help|h|?', 'check-modules', 'no-templates|t',
                      'verbose|v|no-silent');
 
-###########################################################################
-# Check for help request. Display help page if --help/-h/-? was passed.
-###########################################################################
-use Pod::Usage;
+# Print the help message if that switch was selected.
 pod2usage({-verbose => 1, -exitval => 1}) if $switch{'help'};
 
-###########################################################################
-# Non-interactive override. Pass a filename on the command line which is
-# a Perl script. This script defines a %answer hash whose names are tags
-# and whose values are answers to all the questions checksetup.pl asks. 
-# Grep this file for references to that hash to see the tags to use for the 
-# possible answers. One example is ADMIN_EMAIL.
-###########################################################################
-if ($ARGV[0] && ($ARGV[0] !~ /^-/)) {
-    do $ARGV[0] 
-        or ($@ && die("Error $@ processing $ARGV[0]"))
-        or die("Error $! processing $ARGV[0]");
-    $silent = !$switch{'verbose'};
-}
+# Read in the "answers" file if it exists, for running in 
+# non-interactive mode.
+our %answer = %{read_answers_file()};
+my $silent = scalar(keys %answer) && !$switch{'verbose'};
 
 ###########################################################################
 # Display version information
