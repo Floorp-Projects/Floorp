@@ -2916,8 +2916,8 @@ void sha_test(char *reqfn)
     unsigned char seed[HASH_LENGTH_MAX];   /* max size of seed 64 bytes */
     unsigned char MD[HASH_LENGTH_MAX];     /* message digest */
 
-    FILE *req;       /* input stream from the REQUEST file */
-    FILE *resp;      /* output stream to the RESPONSE file */
+    FILE *req = NULL;  /* input stream from the REQUEST file */
+    FILE *resp;        /* output stream to the RESPONSE file */
 
     buf = PORT_ZAlloc(bufSize);
     if (buf == NULL) {
@@ -3013,7 +3013,9 @@ void sha_test(char *reqfn)
         }
     }
 loser:
-    fclose(req);
+    if (req) {
+        fclose(req);
+    }  
     if (buf) {
         PORT_ZFree(buf, bufSize);
     }
