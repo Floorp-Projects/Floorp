@@ -35,11 +35,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGElement.h"
-#include "nsSVGAnimatedNumber.h"
 #include "nsSVGAnimatedString.h"
 #include "nsSVGLength.h"
-#include "nsSVGNumber.h"
 #include "nsSVGAtoms.h"
+#include "nsSVGNumber2.h"
+#include "nsGkAtoms.h"
 #include "nsIDOMSVGFilters.h"
 #include "nsCOMPtr.h"
 #include "nsISVGFilter.h"
@@ -52,8 +52,6 @@
 #include "nsSVGAnimatedEnumeration.h"
 #include "nsSVGNumberList.h"
 #include "nsSVGAnimatedNumberList.h"
-#include "nsSVGNumber.h"
-#include "nsSVGAnimatedNumber.h"
 #include "nsISVGValueUtils.h"
 #include "nsSVGFilters.h"
 #include "nsSVGUtils.h"
@@ -172,6 +170,18 @@ nsSVGFE::DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr)
   }
 }
 
+void
+nsSVGFE::DidChangeNumber(PRUint8 aAttrEnum, PRBool aDoSetAttr)
+{
+  nsSVGFEBase::DidChangeNumber(aAttrEnum, aDoSetAttr);
+
+  nsCOMPtr<nsISVGValue> value = do_QueryInterface(GetParent());
+  if (value) {
+    value->BeginBatchUpdate();
+    value->EndBatchUpdate();
+  }
+}
+
 nsSVGElement::LengthAttributesInfo
 nsSVGFE::GetLengthInfo()
 {
@@ -191,7 +201,6 @@ protected:
   friend nsresult NS_NewSVGFEGaussianBlurElement(nsIContent **aResult,
                                                  nsINodeInfo *aNodeInfo);
   nsSVGFEGaussianBlurElement(nsINodeInfo* aNodeInfo);
-  virtual ~nsSVGFEGaussianBlurElement();
   nsresult Init();
 
 public:
@@ -218,10 +227,19 @@ public:
                            PRBool aNotify);
 
 protected:
+  virtual NumberAttributesInfo GetNumberInfo();
 
-  nsCOMPtr<nsIDOMSVGAnimatedNumber> mStdDeviationX;
-  nsCOMPtr<nsIDOMSVGAnimatedNumber> mStdDeviationY;
+  enum { STD_DEV_X, STD_DEV_Y };
+  nsSVGNumber2 mNumberAttributes[2];
+  static NumberInfo sNumberInfo[2];
+
   nsCOMPtr<nsIDOMSVGAnimatedString> mIn1;
+};
+
+nsSVGElement::NumberInfo nsSVGFEGaussianBlurElement::sNumberInfo[2] =
+{
+  { &nsGkAtoms::stdDeviation, 0 },
+  { &nsGkAtoms::stdDeviation, 0 }
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEGaussianBlur)
@@ -250,12 +268,6 @@ nsSVGFEGaussianBlurElement::nsSVGFEGaussianBlurElement(nsINodeInfo *aNodeInfo)
 {
 }
 
-nsSVGFEGaussianBlurElement::~nsSVGFEGaussianBlurElement()
-{
-  NS_REMOVE_SVGVALUE_OBSERVER(mStdDeviationX);
-  NS_REMOVE_SVGVALUE_OBSERVER(mStdDeviationY);
-}
-
 nsresult
 nsSVGFEGaussianBlurElement::Init()
 {
@@ -269,22 +281,6 @@ nsSVGFEGaussianBlurElement::Init()
     rv = AddMappedSVGValue(nsSVGAtoms::in, mIn1);
     NS_ENSURE_SUCCESS(rv,rv);
   }
-
-  // DOM property: stdDeviationX , #IMPLIED attrib: mStdDeviation
-  {
-    rv = NS_NewSVGAnimatedNumber(getter_AddRefs(mStdDeviationX), 0.0f);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: stdDeviationY , #IMPLIED attrib: mStdDeviation
-  {
-    rv = NS_NewSVGAnimatedNumber(getter_AddRefs(mStdDeviationY), 0.0f);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // add observers -------------------------- :
-  NS_ADD_SVGVALUE_OBSERVER(mStdDeviationX);
-  NS_ADD_SVGVALUE_OBSERVER(mStdDeviationY);
 
   return rv;
 }
@@ -310,24 +306,20 @@ NS_IMETHODIMP nsSVGFEGaussianBlurElement::GetIn1(nsIDOMSVGAnimatedString * *aIn)
 /* readonly attribute nsIDOMSVGAnimatedNumber stdDeviationX; */
 NS_IMETHODIMP nsSVGFEGaussianBlurElement::GetStdDeviationX(nsIDOMSVGAnimatedNumber * *aX)
 {
-  *aX = mStdDeviationX;
-  NS_IF_ADDREF(*aX);
-  return NS_OK;
+  return mNumberAttributes[STD_DEV_X].ToDOMAnimatedNumber(aX, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedNumber stdDeviationY; */
 NS_IMETHODIMP nsSVGFEGaussianBlurElement::GetStdDeviationY(nsIDOMSVGAnimatedNumber * *aY)
 {
-  *aY = mStdDeviationY;
-  NS_IF_ADDREF(*aY);
-  return NS_OK;
+  return mNumberAttributes[STD_DEV_Y].ToDOMAnimatedNumber(aY, this);
 }
 
 NS_IMETHODIMP
 nsSVGFEGaussianBlurElement::SetStdDeviation(float stdDeviationX, float stdDeviationY)
 {
-  mStdDeviationX->SetBaseVal(stdDeviationX);
-  mStdDeviationY->SetBaseVal(stdDeviationY);
+  mNumberAttributes[STD_DEV_X].SetBaseValue(stdDeviationX, this, PR_TRUE);
+  mNumberAttributes[STD_DEV_Y].SetBaseValue(stdDeviationY, this, PR_TRUE);
   return NS_OK;
 }
 
@@ -346,8 +338,8 @@ nsSVGFEGaussianBlurElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     int num = sscanf(str, "%f %f\n", &stdX, &stdY);
     if (num == 1)
       stdY = stdX;
-    mStdDeviationX->SetBaseVal(stdX);
-    mStdDeviationY->SetBaseVal(stdY);
+    mNumberAttributes[STD_DEV_X].SetBaseValue(stdX, this, PR_FALSE);
+    mNumberAttributes[STD_DEV_Y].SetBaseValue(stdY, this, PR_FALSE);
     nsMemory::Free(str);
   }
 
@@ -572,11 +564,10 @@ nsSVGFEGaussianBlurElement::Filter(nsSVGFilterInstance *instance)
   float stdX, stdY;
   nsSVGLength2 val;
 
-  mStdDeviationX->GetAnimVal(&stdX);
+  GetAnimatedNumberValues(&stdX, &stdY, nsnull);
   val.Init(nsSVGUtils::X, 0xff, stdX, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER);
   stdX = instance->GetPrimitiveLength(&val);
 
-  mStdDeviationY->GetAnimVal(&stdY);
   val.Init(nsSVGUtils::Y, 0xff, stdY, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER);
   stdY = instance->GetPrimitiveLength(&val);
 
@@ -620,6 +611,16 @@ nsSVGFEGaussianBlurElement::GetRequirements(PRUint32 *aRequirements)
 {
   *aRequirements = CheckStandardNames(mIn1);
   return NS_OK;
+}
+
+//----------------------------------------------------------------------
+// nsSVGElement methods
+
+nsSVGElement::NumberAttributesInfo
+nsSVGFEGaussianBlurElement::GetNumberInfo()
+{
+  return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
+                              NS_ARRAY_LENGTH(sNumberInfo));
 }
 
 //---------------------Component Transfer------------------------
@@ -890,23 +891,33 @@ protected:
                                      nsISVGValue::modificationType aModType);
   NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
                                      nsISVGValue::modificationType aModType);
-  
+
 public:
   // interfaces:
-  
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMSVGCOMPONENTTRANSFERFUNCTIONELEMENT
 
 protected:
+  virtual NumberAttributesInfo GetNumberInfo();
 
   // nsIDOMSVGComponentTransferFunctionElement properties:
   nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mType;
   nsCOMPtr<nsIDOMSVGAnimatedNumberList>  mTableValues;
-  nsCOMPtr<nsIDOMSVGAnimatedNumber>      mSlope;
-  nsCOMPtr<nsIDOMSVGAnimatedNumber>      mIntercept;
-  nsCOMPtr<nsIDOMSVGAnimatedNumber>      mAmplitude;
-  nsCOMPtr<nsIDOMSVGAnimatedNumber>      mExponent;
-  nsCOMPtr<nsIDOMSVGAnimatedNumber>      mOffset;
+
+  enum { SLOPE, INTERCEPT, AMPLITUDE, EXPONENT, OFFSET };
+  nsSVGNumber2 mNumberAttributes[5];
+  static NumberInfo sNumberInfo[5]; 
+
+};
+
+nsSVGElement::NumberInfo nsSVGComponentTransferFunctionElement::sNumberInfo[5] =
+{
+  { &nsGkAtoms::slope,     0 },
+  { &nsGkAtoms::intercept, 0 },
+  { &nsGkAtoms::amplitude, 0 },
+  { &nsGkAtoms::exponent,  0 },
+  { &nsGkAtoms::offset,    0 }
 };
 
 //----------------------------------------------------------------------
@@ -972,46 +983,6 @@ nsSVGComponentTransferFunctionElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
-  // DOM property: slope ,  #IMPLIED attrib: slope
-  {
-    rv = NS_NewSVGAnimatedNumber(getter_AddRefs(mSlope), 1.0f);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::slope, mSlope);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: intercept ,  #IMPLIED attrib: intercept
-  {
-    rv = NS_NewSVGAnimatedNumber(getter_AddRefs(mIntercept), 0.0f);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::intercept, mIntercept);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: amplitude ,  #IMPLIED attrib: amplitude
-  {
-    rv = NS_NewSVGAnimatedNumber(getter_AddRefs(mAmplitude), 1.0f);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::amplitude, mAmplitude);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: exponent ,  #IMPLIED attrib: exponent
-  {
-    rv = NS_NewSVGAnimatedNumber(getter_AddRefs(mExponent), 1.0f);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::exponent, mExponent);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: offset ,  #IMPLIED attrib: offset
-  {
-    rv = NS_NewSVGAnimatedNumber(getter_AddRefs(mOffset), 0.0f);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::offset, mOffset);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
   return NS_OK;
 }
 
@@ -1069,41 +1040,31 @@ NS_IMETHODIMP nsSVGComponentTransferFunctionElement::GetTableValues(nsIDOMSVGAni
 /* readonly attribute nsIDOMSVGAnimatedNumber slope; */
 NS_IMETHODIMP nsSVGComponentTransferFunctionElement::GetSlope(nsIDOMSVGAnimatedNumber * *aSlope)
 {
-  *aSlope = mSlope;
-  NS_IF_ADDREF(*aSlope);
-  return NS_OK;
+  return mNumberAttributes[SLOPE].ToDOMAnimatedNumber(aSlope, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedNumber intercept; */
 NS_IMETHODIMP nsSVGComponentTransferFunctionElement::GetIntercept(nsIDOMSVGAnimatedNumber * *aIntercept)
 {
-  *aIntercept = mIntercept;
-  NS_IF_ADDREF(*aIntercept);
-  return NS_OK;
+  return mNumberAttributes[INTERCEPT].ToDOMAnimatedNumber(aIntercept, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedNumber amplitude; */
 NS_IMETHODIMP nsSVGComponentTransferFunctionElement::GetAmplitude(nsIDOMSVGAnimatedNumber * *aAmplitude)
 {
-  *aAmplitude = mAmplitude;
-  NS_IF_ADDREF(*aAmplitude);
-  return NS_OK;
+  return mNumberAttributes[AMPLITUDE].ToDOMAnimatedNumber(aAmplitude, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedNumber exponent; */
 NS_IMETHODIMP nsSVGComponentTransferFunctionElement::GetExponent(nsIDOMSVGAnimatedNumber * *aExponent)
 {
-  *aExponent = mExponent;
-  NS_IF_ADDREF(*aExponent);
-  return NS_OK;
+  return mNumberAttributes[EXPONENT].ToDOMAnimatedNumber(aExponent, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedNumber offset; */
 NS_IMETHODIMP nsSVGComponentTransferFunctionElement::GetOffset(nsIDOMSVGAnimatedNumber * *aOffset)
 {
-  *aOffset = mOffset;
-  NS_IF_ADDREF(*aOffset);
-  return NS_OK;
+  return mNumberAttributes[OFFSET].ToDOMAnimatedNumber(aOffset, this);
 }
 
 NS_IMETHODIMP
@@ -1111,6 +1072,10 @@ nsSVGComponentTransferFunctionElement::GenerateLookupTable(PRUint8 *aTable)
 {
   PRUint16 type;
   mType->GetAnimVal(&type);
+
+  float slope, intercept, amplitude, exponent, offset;
+  GetAnimatedNumberValues(&slope, &intercept, &amplitude, 
+                          &exponent, &offset, nsnull);
 
   PRUint32 i;
 
@@ -1169,9 +1134,6 @@ nsSVGComponentTransferFunctionElement::GenerateLookupTable(PRUint8 *aTable)
 
   case nsIDOMSVGComponentTransferFunctionElement::SVG_FECOMPONENTTRANSFER_TYPE_LINEAR:
   {
-    float slope, intercept;
-    mSlope->GetAnimVal(&slope);
-    mIntercept->GetAnimVal(&intercept);
     for (i = 0; i < 256; i++) {
       PRInt32 val = PRInt32(slope * i + 255 * intercept);
       val = PR_MIN(255, val);
@@ -1183,10 +1145,6 @@ nsSVGComponentTransferFunctionElement::GenerateLookupTable(PRUint8 *aTable)
 
   case nsIDOMSVGComponentTransferFunctionElement::SVG_FECOMPONENTTRANSFER_TYPE_GAMMA:
   {
-    float amplitude, exponent, offset;
-    mAmplitude->GetAnimVal(&amplitude);
-    mExponent->GetAnimVal(&exponent);
-    mOffset->GetAnimVal(&offset);
     for (i = 0; i < 256; i++) {
       PRInt32 val = PRInt32(255 * (amplitude * pow(i / 255.0f, exponent) + offset));
       val = PR_MIN(255, val);
@@ -1202,6 +1160,16 @@ nsSVGComponentTransferFunctionElement::GenerateLookupTable(PRUint8 *aTable)
   }
 
   return NS_OK;
+}
+
+//----------------------------------------------------------------------
+// nsSVGElement methods
+
+nsSVGElement::NumberAttributesInfo
+nsSVGComponentTransferFunctionElement::GetNumberInfo()
+{
+  return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
+                              NS_ARRAY_LENGTH(sNumberInfo));
 }
 
 class nsSVGFEFuncRElement : public nsSVGComponentTransferFunctionElement,
@@ -1725,7 +1693,6 @@ protected:
   friend nsresult NS_NewSVGFEOffsetElement(nsIContent **aResult,
                                            nsINodeInfo *aNodeInfo);
   nsSVGFEOffsetElement(nsINodeInfo* aNodeInfo);
-  virtual ~nsSVGFEOffsetElement();
   nsresult Init();
 
 public:
@@ -1748,10 +1715,18 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEOffsetElementBase::)
 
 protected:
+  virtual NumberAttributesInfo GetNumberInfo();
 
-  nsCOMPtr<nsIDOMSVGAnimatedNumber> mDx;
-  nsCOMPtr<nsIDOMSVGAnimatedNumber> mDy;
+  enum { DX, DY };
+  nsSVGNumber2 mNumberAttributes[2];
+  static NumberInfo sNumberInfo[2];
   nsCOMPtr<nsIDOMSVGAnimatedString> mIn1;
+};
+
+nsSVGElement::NumberInfo nsSVGFEOffsetElement::sNumberInfo[2] =
+{
+  { &nsGkAtoms::dx, 0 },
+  { &nsGkAtoms::dy, 0 }
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEOffset)
@@ -1780,10 +1755,6 @@ nsSVGFEOffsetElement::nsSVGFEOffsetElement(nsINodeInfo *aNodeInfo)
 {
 }
 
-nsSVGFEOffsetElement::~nsSVGFEOffsetElement()
-{
-}
-
 nsresult
 nsSVGFEOffsetElement::Init()
 {
@@ -1795,22 +1766,6 @@ nsSVGFEOffsetElement::Init()
     rv = NS_NewSVGAnimatedString(getter_AddRefs(mIn1));
     NS_ENSURE_SUCCESS(rv,rv);
     rv = AddMappedSVGValue(nsSVGAtoms::in, mIn1);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: dx , #IMPLIED attrib: dx
-  {
-    rv = NS_NewSVGAnimatedNumber(getter_AddRefs(mDx), 0.0f);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::dx, mDx);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: dy , #IMPLIED attrib: dy
-  {
-    rv = NS_NewSVGAnimatedNumber(getter_AddRefs(mDy), 0.0f);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::dy, mDy);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -1838,17 +1793,13 @@ NS_IMETHODIMP nsSVGFEOffsetElement::GetIn1(nsIDOMSVGAnimatedString * *aIn)
 /* readonly attribute nsIDOMSVGAnimatedNumber dx; */
 NS_IMETHODIMP nsSVGFEOffsetElement::GetDx(nsIDOMSVGAnimatedNumber * *aDx)
 {
-  *aDx = mDx;
-  NS_IF_ADDREF(*aDx);
-  return NS_OK;
+  return mNumberAttributes[DX].ToDOMAnimatedNumber(aDx, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedNumber dy; */
 NS_IMETHODIMP nsSVGFEOffsetElement::GetDy(nsIDOMSVGAnimatedNumber * *aDy)
 {
-  *aDy = mDy;
-  NS_IF_ADDREF(*aDy);
-  return NS_OK;
+  return mNumberAttributes[DY].ToDOMAnimatedNumber(aDy, this);
 }
 
 NS_IMETHODIMP
@@ -1892,15 +1843,14 @@ nsSVGFEOffsetElement::Filter(nsSVGFilterInstance *instance)
   sourceImage->GetHeight(&height);
 
   PRInt32 offsetX, offsetY;
-  float flt;
+  float fltX, fltY;
   nsSVGLength2 val;
 
-  mDx->GetAnimVal(&flt);
-  val.Init(nsSVGUtils::X, 0xff, flt, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER);
+  GetAnimatedNumberValues(&fltX, &fltY, nsnull);
+  val.Init(nsSVGUtils::X, 0xff, fltX, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER);
   offsetX = (PRInt32) instance->GetPrimitiveLength(&val);
 
-  mDy->GetAnimVal(&flt);
-  val.Init(nsSVGUtils::Y, 0xff, flt, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER);
+  val.Init(nsSVGUtils::Y, 0xff, fltY, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER);
   offsetY = (PRInt32) instance->GetPrimitiveLength(&val);
 
   for (PRInt32 y = rect.y; y < rect.y + rect.height; y++) {
@@ -1935,6 +1885,16 @@ nsSVGFEOffsetElement::GetRequirements(PRUint32 *aRequirements)
 {
   *aRequirements = CheckStandardNames(mIn1);
   return NS_OK;
+}
+
+//----------------------------------------------------------------------
+// nsSVGElement methods
+
+nsSVGElement::NumberAttributesInfo
+nsSVGFEOffsetElement::GetNumberInfo()
+{
+  return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
+                              NS_ARRAY_LENGTH(sNumberInfo));
 }
 
 

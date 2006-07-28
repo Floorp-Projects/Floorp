@@ -42,6 +42,7 @@
 #include "nsSVGPathGeometryElement.h"
 #include "nsIDOMSVGPathElement.h"
 #include "nsIDOMSVGAnimatedPathData.h"
+#include "nsSVGNumber2.h"
 #include "cairo.h"
 
 class nsSVGPathList
@@ -94,11 +95,10 @@ protected:
                                        nsINodeInfo *aNodeInfo);
   nsSVGPathElement(nsINodeInfo *aNodeInfo);
   virtual ~nsSVGPathElement();
-  nsresult Init();
 
 public:
   // interfaces:
-  
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMSVGPATHELEMENT
   NS_DECL_NSIDOMSVGANIMATEDPATHDATA
@@ -125,6 +125,7 @@ public:
 
 protected:
 
+  virtual NumberAttributesInfo GetNumberInfo();
   virtual nsresult BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                                  const nsAString* aValue, PRBool aNotify);
 
@@ -132,7 +133,8 @@ protected:
   nsresult CreatePathSegList();
 
   nsCOMPtr<nsIDOMSVGPathSegList> mSegments;
-  nsCOMPtr<nsIDOMSVGAnimatedNumber> mPathLength;
+  nsSVGNumber2 mPathLength;
+  static NumberInfo sNumberInfo;
   nsSVGPathList mPathData;
 };
 

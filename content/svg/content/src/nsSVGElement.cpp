@@ -70,6 +70,7 @@
 #include "nsSVGCoordCtxProvider.h"
 #include "nsSVGCoordCtx.h"
 #include "nsSVGLength2.h"
+#include "nsSVGNumber2.h"
 #include <stdarg.h>
 
 nsSVGElement::nsSVGElement(nsINodeInfo *aNodeInfo)
@@ -83,13 +84,19 @@ nsSVGElement::Init()
   // Set up length attributes - can't do this in the constructor
   // because we can't do a virtual call at that point
 
-  LengthAttributesInfo info = GetLengthInfo();
+  LengthAttributesInfo lengthInfo = GetLengthInfo();
 
-  for (PRUint32 i = 0; i < info.mLengthCount; i++) {
-    info.mLengths[i].Init(info.mLengthInfo[i].mCtxType,
-                          i,
-                          info.mLengthInfo[i].mDefaultValue,
-                          info.mLengthInfo[i].mDefaultUnitType);
+  for (PRUint32 i = 0; i < lengthInfo.mLengthCount; i++) {
+    lengthInfo.mLengths[i].Init(lengthInfo.mLengthInfo[i].mCtxType,
+                                i,
+                                lengthInfo.mLengthInfo[i].mDefaultValue,
+                                lengthInfo.mLengthInfo[i].mDefaultUnitType);
+  }
+
+  NumberAttributesInfo numberInfo = GetNumberInfo();
+
+  for (PRUint32 i = 0; i < numberInfo.mNumberCount; i++) {
+    numberInfo.mNumbers[i].Init(i, numberInfo.mNumberInfo[i].mDefaultValue);
   }
 
   return NS_OK;
@@ -255,10 +262,28 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
     }
 
     // Check for nsSVGLength2 attribute
-    LengthAttributesInfo info = GetLengthInfo();
-    for (PRUint32 i = 0; i < info.mLengthCount; i++) {
-      if (aAttribute == *info.mLengthInfo[i].mName) {
-        info.mLengths[i].SetBaseValueString(aValue, this, PR_FALSE);
+    LengthAttributesInfo lengthInfo = GetLengthInfo();
+    for (PRUint32 i = 0; i < lengthInfo.mLengthCount; i++) {
+      if (aAttribute == *lengthInfo.mLengthInfo[i].mName) {
+        nsresult rv = lengthInfo.mLengths[i].SetBaseValueString(aValue, this,
+                                                                PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return PR_FALSE;
+        }
+        aResult.SetTo(aValue);
+        return PR_TRUE;
+      }
+    }
+
+    // Check for nsSVGNumber2 attribute
+    NumberAttributesInfo numberInfo = GetNumberInfo();
+    for (PRUint32 i = 0; i < numberInfo.mNumberCount; i++) {
+      if (aAttribute == *numberInfo.mNumberInfo[i].mName) {
+        nsresult rv = numberInfo.mNumbers[i].SetBaseValueString(aValue, this,
+                                                                PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return PR_FALSE;
+        }
         aResult.SetTo(aValue);
         return PR_TRUE;
       }
@@ -287,15 +312,25 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
       }
     } else {
       // Check if this is a length attribute going away
-      LengthAttributesInfo info = GetLengthInfo();
-      
-      for (PRUint32 i = 0; i < info.mLengthCount; i++) {
-        if (aName == *info.mLengthInfo[i].mName) {
-          info.mLengths[i].Init(info.mLengthInfo[i].mCtxType,
-                                i,
-                                info.mLengthInfo[i].mDefaultValue,
-                                info.mLengthInfo[i].mDefaultUnitType);
+      LengthAttributesInfo lenInfo = GetLengthInfo();
+
+      for (PRUint32 i = 0; i < lenInfo.mLengthCount; i++) {
+        if (aName == *lenInfo.mLengthInfo[i].mName) {
+          lenInfo.mLengths[i].Init(lenInfo.mLengthInfo[i].mCtxType,
+                                   i,
+                                   lenInfo.mLengthInfo[i].mDefaultValue,
+                                   lenInfo.mLengthInfo[i].mDefaultUnitType);
           DidChangeLength(i, PR_FALSE);
+          break;
+        }
+      }
+      // Check if this is a number attribute going away
+      NumberAttributesInfo numInfo = GetNumberInfo();
+
+      for (PRUint32 i = 0; i < numInfo.mNumberCount; i++) {
+        if (aName == *numInfo.mNumberInfo[i].mName) {
+          numInfo.mNumbers[i].Init(i, numInfo.mNumberInfo[i].mDefaultValue);
+          DidChangeNumber(i, PR_FALSE);
           break;
         }
       }
@@ -912,3 +947,51 @@ nsSVGElement::GetAnimatedLengthValues(float *aFirst, ...)
 
   va_end(args);
 }
+
+nsSVGElement::NumberAttributesInfo
+nsSVGElement::GetNumberInfo()
+{
+  return NumberAttributesInfo(nsnull, nsnull, 0);
+}
+
+void
+nsSVGElement::DidChangeNumber(PRUint8 aAttrEnum, PRBool aDoSetAttr)
+{
+  if (!aDoSetAttr)
+    return;
+
+  NumberAttributesInfo info = GetNumberInfo();
+
+  NS_ASSERTION(info.mNumberCount > 0,
+               "DidChangeNumber on element with no number attribs");
+
+  NS_ASSERTION(aAttrEnum < info.mNumberCount, "aAttrEnum out of range");
+
+  nsAutoString newStr;
+  info.mNumbers[aAttrEnum].GetBaseValueString(newStr);
+
+  SetAttr(kNameSpaceID_None, *info.mNumberInfo[aAttrEnum].mName,
+          newStr, PR_TRUE);
+}
+
+void
+nsSVGElement::GetAnimatedNumberValues(float *aFirst, ...)
+{
+  NumberAttributesInfo info = GetNumberInfo();
+
+  NS_ASSERTION(info.mNumberCount > 0,
+               "GetAnimatedNumberValues on element with no number attribs");
+
+  float *f = aFirst;
+  PRUint32 i = 0;
+
+  va_list args;
+  va_start(args, aFirst);
+
+  while (f && i < info.mNumberCount) {
+    *f = info.mNumbers[i++].GetAnimValue();
+    f = va_arg(args, float*);
+  }
+  va_end(args);
+}
+
