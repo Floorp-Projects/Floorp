@@ -88,7 +88,7 @@ do
     #target_file=`echo $shortfilename | sed "s/_version_/1.5.0.5/"`
     cp update/partial.mar update/update.mar
     if [ -f "$source_file" ]; then rm "$source_file"; fi
-    PARAMS="--user=qa --password=Pho3naib"
+    PARAMS="--user=user --password=pass"
     build_url="http://stage.mozilla.org/pub/mozilla.org/`echo $product | tr '[A-Z]' '[a-z]'`/releases/$release/$dirname/$locale/$source_file" 
     #build_url="http://people.mozilla.org/~rhelmer/`echo $product | tr '[A-Z]' '[a-z]'`/releases/yahoo/$release/$dirname/$locale/$source_file"
     #build_url="http://people.mozilla.org/~rhelmer/`echo $product | tr '[A-Z]' '[a-z]'`/releases/google/$release/$locale/$source_file" 
