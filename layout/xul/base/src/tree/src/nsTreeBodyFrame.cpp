@@ -374,11 +374,8 @@ nsTreeBodyFrame::EnsureView()
     EnsureBoxObject();
     nsCOMPtr<nsIBoxObject> box = do_QueryInterface(mTreeBoxObject);
     if (box) {
-      nsCOMPtr<nsISupports> suppView;
-      box->GetPropertyAsSupports(NS_LITERAL_STRING("view").get(),
-                                 getter_AddRefs(suppView));
-      nsCOMPtr<nsITreeView> treeView(do_QueryInterface(suppView));
-
+      nsCOMPtr<nsITreeView> treeView;
+      mTreeBoxObject->GetView(getter_AddRefs(treeView));
       if (treeView) {
         nsXPIDLString rowStr;
         box->GetProperty(NS_LITERAL_STRING("topRow").get(),
@@ -397,35 +394,6 @@ nsTreeBodyFrame::EnsureView()
         // Clear out the property info for the top row, but we always keep the
         // view current.
         box->RemoveProperty(NS_LITERAL_STRING("topRow").get());
-      }
-    }
-
-    if (!mView) {
-      // If we don't have a box object yet, or no view was set on it,
-      // look for a XULTreeBuilder or create a content view.
-      
-      nsCOMPtr<nsIDOMXULElement> xulele = do_QueryInterface(mContent->GetParent());
-      if (xulele) {
-        nsCOMPtr<nsITreeView> view;
-
-        // See if there is a XUL tree builder associated with
-        // the parent element.
-        nsCOMPtr<nsIXULTemplateBuilder> builder;
-        xulele->GetBuilder(getter_AddRefs(builder));
-        if (builder)
-          view = do_QueryInterface(builder);
-
-        if (!view) {
-          // No tree builder, create a tree content view.
-          nsCOMPtr<nsITreeContentView> contentView;
-          NS_NewTreeContentView(getter_AddRefs(contentView));
-          if (contentView)
-            view = do_QueryInterface(contentView);
-        }
-
-        // Hook up the view.
-        if (view)
-          SetView(view);
       }
     }
   }
@@ -495,9 +463,6 @@ NS_IMETHODIMP nsTreeBodyFrame::SetView(nsITreeView * aView)
 {
   // First clear out the old view.
   EnsureBoxObject();
-  nsCOMPtr<nsIBoxObject> box = do_QueryInterface(mTreeBoxObject);
-  
-  NS_NAMED_LITERAL_STRING(view, "view");
   
   if (mView) {
     nsCOMPtr<nsITreeSelection> sel;
@@ -505,9 +470,6 @@ NS_IMETHODIMP nsTreeBodyFrame::SetView(nsITreeView * aView)
     if (sel)
       sel->SetTree(nsnull);
     mView->SetTree(nsnull);
-    mView = nsnull;
-    if (box)
-      box->RemoveProperty(view.get());
 
     // Only reset the top row index and delete the columns if we had an old non-null view.
     mTopRowIndex = 0;
@@ -542,9 +504,6 @@ NS_IMETHODIMP nsTreeBodyFrame::SetView(nsITreeView * aView)
     mView->SetTree(mTreeBoxObject);
     mView->GetRowCount(&mRowCount);
  
-    if (box)
-      box->SetPropertyAsSupports(view.get(), mView);
-
     ScrollParts parts = GetScrollParts();
     // The scrollbar will need to be updated.
     InvalidateScrollbars(parts);

@@ -48,7 +48,7 @@
 #include "nsITreeContentView.h"
 #include "nsITreeSelection.h"
 
-nsresult NS_NewTreeContentView(nsITreeContentView** aResult);
+nsresult NS_NewTreeContentView(nsITreeView** aResult);
 
 class nsTreeContentView : public nsINativeTreeView,
                           public nsITreeContentView,
@@ -58,8 +58,6 @@ class nsTreeContentView : public nsINativeTreeView,
     nsTreeContentView(void);
 
     ~nsTreeContentView(void);
-
-    friend nsresult NS_NewTreeContentView(nsITreeContentView** aResult);
 
     NS_DECL_ISUPPORTS
 

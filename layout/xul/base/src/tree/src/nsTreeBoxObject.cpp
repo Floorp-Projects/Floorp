@@ -40,6 +40,9 @@
 #include "nsCOMPtr.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
+#include "nsIDOMXULElement.h"
+#include "nsIXULTemplateBuilder.h"
+#include "nsTreeContentView.h"
 #include "nsITreeView.h"
 #include "nsITreeSelection.h"
 #include "nsBoxObject.h"
@@ -62,15 +65,13 @@ public:
 
   nsITreeBoxObject* GetTreeBody();
 
-  // Override SetPropertyAsSupports for security check
-  NS_IMETHOD SetPropertyAsSupports(const PRUnichar* aPropertyName, nsISupports* aValue);
-
   //NS_PIBOXOBJECT interfaces
   virtual void Clear();
   virtual void ClearCachedValues();
 
 protected:
   nsITreeBoxObject* mTreeBody;
+  nsCOMPtr<nsITreeView> mView;
 };
 
 /* Implementation file */
@@ -83,19 +84,14 @@ nsTreeBoxObject::Clear()
   ClearCachedValues();
 
   // Drop the view's ref to us.
-  NS_NAMED_LITERAL_STRING(viewString, "view");
-  nsCOMPtr<nsISupports> suppView;
-  GetPropertyAsSupports(viewString.get(), getter_AddRefs(suppView));
-  nsCOMPtr<nsITreeView> treeView(do_QueryInterface(suppView));
-  if (treeView) {
+  if (mView) {
     nsCOMPtr<nsITreeSelection> sel;
-    treeView->GetSelection(getter_AddRefs(sel));
+    mView->GetSelection(getter_AddRefs(sel));
     if (sel)
       sel->SetTree(nsnull);
-    treeView->SetTree(nsnull); // Break the circular ref between the view and us.
+    mView->SetTree(nsnull); // Break the circular ref between the view and us.
   }
-
-  SetPropertyAsSupports(viewString.get(), nsnull);
+  mView = nsnull;
 
   nsBoxObject::Clear();
 }
@@ -165,9 +161,22 @@ nsTreeBoxObject::GetTreeBody()
 
 NS_IMETHODIMP nsTreeBoxObject::GetView(nsITreeView * *aView)
 {
-  nsITreeBoxObject* body = GetTreeBody();
-  if (body)
-    return body->GetView(aView);
+  if (!mView && GetTreeBody()) {
+    nsCOMPtr<nsIDOMXULElement> xulele = do_QueryInterface(mContent);
+    if (xulele) {
+      // See if there is a XUL tree builder associated with the element
+      nsCOMPtr<nsIXULTemplateBuilder> builder;
+      xulele->GetBuilder(getter_AddRefs(builder));
+      if (builder)
+        mView = do_QueryInterface(builder);
+      else // No tree builder, create a tree content view.
+        NS_NewTreeContentView(getter_AddRefs(mView));
+      NS_ENSURE_TRUE(mView, NS_ERROR_UNEXPECTED);
+
+      mTreeBody->SetView(mView);
+    }
+  }
+  NS_IF_ADDREF(*aView = mView);
   return NS_OK;
 }
 
@@ -185,40 +194,15 @@ CanTrustView(nsISupports* aValue)
   return PR_TRUE;
 }
 
-NS_IMETHODIMP
-nsTreeBoxObject::SetPropertyAsSupports(const PRUnichar* aPropertyName, nsISupports* aValue)
-{
-  NS_ENSURE_ARG(aPropertyName);
-  
-  if (nsDependentString(aPropertyName).EqualsLiteral("view") &&
-      !CanTrustView(aValue))
-    return NS_ERROR_DOM_SECURITY_ERR;
-
-  return nsBoxObject::SetPropertyAsSupports(aPropertyName, aValue);
-}
-
 NS_IMETHODIMP nsTreeBoxObject::SetView(nsITreeView * aView)
 {
   if (!CanTrustView(aView))
     return NS_ERROR_DOM_SECURITY_ERR;
   
+  mView = aView;
   nsITreeBoxObject* body = GetTreeBody();
-  if (body) {
+  if (body)
     body->SetView(aView);
-  
-    // only return if the body frame was able to store the view,
-    // else we need to cache the property below
-    nsCOMPtr<nsITreeView> view;
-    body->GetView(getter_AddRefs(view));
-    if (view)
-      return NS_OK;
-  }
-  
-  nsCOMPtr<nsISupports> suppView(do_QueryInterface(aView));
-  if (suppView)
-    SetPropertyAsSupports(NS_LITERAL_STRING("view").get(), suppView);
-  else
-    RemoveProperty(NS_LITERAL_STRING("view").get());
 
   return NS_OK;
 }
