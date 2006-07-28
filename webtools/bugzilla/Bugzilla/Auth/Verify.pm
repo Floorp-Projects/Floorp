@@ -102,7 +102,7 @@ sub create_or_update_user {
 
     # Now that we have a valid User, we need to see if any data has to be
     # updated.
-    if ($username && $user->login ne $username) {
+    if ($username && lc($user->login) ne lc($username)) {
         validate_email_syntax($username)
           || return { failure => AUTH_ERROR, error => 'auth_invalid_email',
                       details => {addr => $username} };
@@ -110,7 +110,7 @@ sub create_or_update_user {
         # placeholder, and we've already validated it, so it's safe.
         trick_taint($username);
         $dbh->do('UPDATE profiles SET login_name = ? WHERE userid = ?',
-                 $username, $user->id);
+                 undef, $username, $user->id);
     }
     if ($real_name && $user->name ne $real_name) {
         # $real_name is more than likely tainted, but we only use it
