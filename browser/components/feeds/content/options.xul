@@ -56,10 +56,9 @@
   </groupbox>
   <separator class="thin"/>
   <hbox>
-    <checkbox id="autoHandle" flex="1"
-              label="&autoHandle.label;" accesskey="&autoHandle.accesskey;"/>
+    <checkbox id="useAsDefault"
+              label="&useAsDefault.label;" accesskey="&useAsDefault.accesskey;"/>
   </hbox>
-  
   <separator class="thin"/> 
         
 </dialog>

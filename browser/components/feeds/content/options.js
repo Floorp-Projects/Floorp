@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Ben Goodger <beng@google.com>
+ *   Jeff Walden <jwalden+code@mit.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,8 +45,8 @@ const TYPE_MAYBE_FEED = "application/vnd.mozilla.maybe.feed";
 
 const PREF_SELECTED_APP = "browser.feeds.handlers.application";
 const PREF_SELECTED_WEB = "browser.feeds.handlers.webservice";
-const PREF_SELECTED_HANDLER = "browser.feeds.handler";
-const PREF_SKIP_PREVIEW_PAGE = "browser.feeds.skip_preview_page";
+const PREF_SELECTED_ACTION = "browser.feeds.handler";
+const PREF_SELECTED_READER = "browser.feeds.handler.default";
 
 function LOG(str) {
   dump("*** " + str + "\n");
@@ -53,42 +54,19 @@ function LOG(str) {
 
 var SubscriptionOptions = {
 
+  /**
+   * Initializes the UI for the subscription options dialog, including the
+   * currently-selected default feed reader, the client-side feed reader, and
+   * the list of web service feed readers.
+   */
   init: function SO_init() {
     var prefs =   
         Cc["@mozilla.org/preferences-service;1"].
         getService(Ci.nsIPrefBranch);
   
-    var autoHandle = document.getElementById("autoHandle");
-    try {
-      autoHandle.checked = prefs.getBoolPref(PREF_SKIP_PREVIEW_PAGE);
-    }
-    catch (e) {
-    }
-    
     this._initClientApp();
     this.populateWebHandlers();
     
-    var handler = "bookmarks";
-    try {
-      handler = prefs.getCharPref(PREF_SELECTED_HANDLER);
-    }
-    catch (e) {
-    }
-    
-    var reader = document.getElementById("reader");
-    reader.value = handler != "bookmarks" ? "reader" : "bookmarks";
-    
-    var readers = document.getElementById("readers");
-    readers.selectedIndex = 0;
-    if (handler == "web") {
-      try {
-        readers.value = prefs.getCharPref(PREF_SELECTED_WEB);
-      }
-      catch (e) {
-        readers.selectedIndex = 1;
-      }
-    }
-
     if ("arguments" in window && window.arguments[0] == "subscribe") {
       var strings = document.getElementById("bundle");
       var okButton = document.documentElement.getButton("accept");
@@ -98,10 +76,65 @@ var SubscriptionOptions = {
       okButton.className += " feedSubscribeButton";
     }
     
-    if (handler != "bookmarks")
-      readers.focus();
+    var reader = document.getElementById("reader");
+    var readers = document.getElementById("readers");
+    readers.selectedIndex = 0;
+
+    var handler = "bookmarks";
+    try {
+      handler = prefs.getCharPref(PREF_SELECTED_READER);
+    }
+    catch (e) {
+    }
+
+    switch (handler) {
+      case "bookmarks":
+        reader.value = "bookmarks";
+        break;
+
+      case "client":
+        reader.value = "reader";
+        try {
+          readers.value = prefs.getCharPref(PREF_SELECTED_APP);
+        }
+        catch (e) {
+          readers.selectedIndex = 0;
+        }
+        readers.focus();
+        break;
+
+      case "web":
+        reader.value = "reader";
+        try {
+          readers.value = prefs.getCharPref(PREF_SELECTED_WEB);
+        }
+        catch (e) {
+          readers.selectedIndex = 0;
+        }
+        readers.focus();
+        break;
+
+      default:
+        LOG("unexpected default reader: " + handler);
+        reader.value = "bookmarks";
+        break;
+    }
+
+    try {
+      var defaultHandler = prefs.getCharPref(PREF_SELECTED_ACTION);
+    }
+    catch (e) {
+      defaultHandler = "ask";
+    }
+
+    // user must explicitly choose to make the selection the default reader
+    if (defaultHandler != "ask")
+      document.getElementById("useAsDefault").checked = true;
   },
-  
+
+  /**
+   * Initializes the client-side feed reader list item, if possible.
+   */
   _initClientApp: function SO__initClientApp() {
     var clientApp = document.getElementById("clientApp");
     try {
@@ -147,7 +180,11 @@ var SubscriptionOptions = {
 #endif
     }
   },
-  
+
+  /**
+   * Enables/disables the client/web reader lists in response to a change in
+   * selection in the reader type radiogroup.
+   */
   readerTypeChanged: function SO_readerTypeChanged() {
     var reader = document.getElementById("reader");
     var chooseClientApp = document.getElementById("chooseClientApp");
@@ -155,7 +192,11 @@ var SubscriptionOptions = {
     readers.disabled = chooseClientApp.disabled = 
       reader.value == "bookmarks";
   },
-  
+
+  /**
+   * Gets the set of web services which are registered as feed readers with the
+   * browser and adds them to the UI.
+   */
   populateWebHandlers: function SO_populateWebHandlers() {
     var wccr = 
         Cc["@mozilla.org/embeddor.implemented/web-content-handler-registrar;1"].
@@ -183,7 +224,14 @@ var SubscriptionOptions = {
       appRow.parentNode.appendChild(row);
     }
   },
-  
+
+  /**
+   * Displays a file picker in which the user may choose a client-side feed
+   * reader, and stores the chosen file, if any, in UI.
+   *
+   * @returns bool
+   *          true if a new client reader was selected, false otherwise
+   */
   chooseClientApp: function SO_chooseClientApp() {
     var fp = 
         Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
@@ -208,7 +256,11 @@ var SubscriptionOptions = {
     }
     return false;
   },
-  
+
+  /**
+   * Stores the currently-displayed feed reader choices to preferences prior to
+   * acceptance of the options dialog.
+   */
   accept: function SO_accept() {
     var prefs =   
         Cc["@mozilla.org/preferences-service;1"].
@@ -217,27 +269,37 @@ var SubscriptionOptions = {
     var reader = document.getElementById("reader");
     var readers = document.getElementById("readers");
 
-    var selectedHandler = "bookmarks";
-    if (reader.value != "bookmarks")
-      selectedHandler = readers.selectedIndex == 0 ? "client" : "web";
-    prefs.setCharPref(PREF_SELECTED_HANDLER, selectedHandler);
-    
+    var selectedHandler = reader.value;
+
+    // if a client app is chosen, always save it -- it's only used if the user
+    // actually selected it for use
     var clientApp = document.getElementById("clientApp");
     if (clientApp.file)
       prefs.setComplexValue(PREF_SELECTED_APP, Ci.nsILocalFile, 
                             clientApp.file);
     
-    if (selectedHandler == "web")
-      prefs.setCharPref(PREF_SELECTED_WEB, readers.selectedItem.value);
-    
-    var autoHandle = document.getElementById("autoHandle");
-    prefs.setBoolPref(PREF_SKIP_PREVIEW_PAGE, autoHandle.checked);
-    
+    // only save selected value to preferences if the user checked the
+    // "use as default" checkbox
+    var useAsDefault = document.getElementById("useAsDefault").checked;
+    prefs.setCharPref(PREF_SELECTED_ACTION,
+                      useAsDefault ? selectedHandler : "ask");
+
+    // Save whatever choice the user made as the "default" feed reader
+    if (selectedHandler == "reader") {
+      if (readers.selectedIndex == 0)
+        selectedHandler = "client";
+      else
+        selectedHandler = "web";
+    }
+    prefs.setCharPref(PREF_SELECTED_READER, selectedHandler);
+
     if (selectedHandler == "web") {
+      prefs.setCharPref(PREF_SELECTED_WEB, readers.selectedItem.value);
+
       var wccr = 
           Cc["@mozilla.org/embeddor.implemented/web-content-handler-registrar;1"].
           getService(Ci.nsIWebContentConverterService);
-      if (autoHandle.checked) {
+      if (useAsDefault) {
         var handler = 
             wccr.getWebContentHandlerByURI(TYPE_MAYBE_FEED, readers.selectedItem.value);
         if (handler)
@@ -260,7 +322,10 @@ var SubscriptionOptions = {
     prefs.QueryInterface(Ci.nsIPrefService);
     prefs.savePrefFile(null);
   },
-  
+
+  /**
+   * Displays a webpage describing what Live Bookmarks are.
+   */
   whatAreLiveBookmarks: function SO_whatAreLiveBookmarks(button) {
     var url = button.getAttribute("url");
     openDialog("chrome://browser/content/browser.xul", "_blank", 
