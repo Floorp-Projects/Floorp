@@ -824,10 +824,11 @@ nsPoint nsObjectFrame::GetWindowOriginInPixels(PRBool aWindowless)
   if (aWindowless && parentWithView) {
     nsIViewManager* parentVM = parentWithView->GetViewManager();
 
-    // Walk up all the views and add up their positions. This will give us our
-    // absolute position which is what we want to give the plugin
+    // Walk up all the views and add up their positions until we
+    // reach the first view with a window (non-null widget). This will give us our
+    // position relative to the containing window which is what we want to give the plugin
     nsIView* theView = parentWithView;
-    while (theView) {
+    while (theView && !theView->GetWidget()) {
       if (theView->GetViewManager() != parentVM)
         break;
 
@@ -1160,27 +1161,19 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
       // if our location or visible area has changed, we need to tell the plugin
       if (doupdatewindow) {
 #ifdef XP_WIN    // Windowless plugins on windows need a special event to update their location, see bug 135737
+           // bug 271442: note, the rectangle we send is now purely the bounds of the plugin
+           // relative to the window it is contained in, which is useful for the plugin to correctly translate mouse coordinates
+           //
+           // this does not mesh with the comments for bug 135737 which imply that the rectangle
+           // must be clipped in some way to prevent the plugin attempting to paint over areas it shouldn't;
+           //
+           // since the two uses of the rectangle are mutually exclusive in some cases,
+           // and since I don't see any incorrect painting (at least with Flash and ViewPoint - the originator of 135737),
+           // it seems that windowless plugins are not relying on information here for clipping their drawing,
+           // and we can safely use this message to tell the plugin exactly where it is in all cases.
 
-        // first, lets find out how big the window is, in pixels
-        nsIViewManager* vm = GetPresContext()->GetViewManager();
-        if (vm) {
-          nsIView* view;
-          vm->GetRootView(view);
-          if (view) {
-            nsIWidget* win = view->GetWidget();
-            if (win) {
-              nsRect visibleRect;
-              win->GetBounds(visibleRect);         
-                  
-              // next, get our plugin's rect so we can intersect it with the visible rect so we
-              // can tell the plugin where and how much to paint
-              NS_ASSERTION(window->type == nsPluginWindowType_Drawable,
-                           "What happened to our window type?");
               origin = GetWindowOriginInPixels(PR_TRUE);
               nsRect winlessRect = nsRect(origin, nsSize(window->width, window->height));
-              winlessRect.IntersectRect(winlessRect, visibleRect);
-
-              // now check our cached window and only update plugin if something has changed
               if (mWindowlessRect != winlessRect) {
                 mWindowlessRect = winlessRect;
 
@@ -1200,9 +1193,6 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
 
                 inst->HandleEvent(&pluginEvent, &eventHandled);
               }
-            }
-          }
-        }
 #endif
 
         inst->SetWindow(window);        
@@ -1881,23 +1871,49 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetValue(nsPluginInstancePeerVariable varia
   switch(variable) {
     case nsPluginInstancePeerVariable_NetscapeWindow:
     {      
-      // get the document's widget from the view manager
-      // get the view manager from the pres shell, not from the view!
-      // we may not have a view if we are hidden
       if (mOwner) {
+        void** pvalue = (void**)value;
+#if defined(XP_WIN)
+        // This property is provided to allow a "windowless" plugin to determine the window it is drawing
+        // in, so it can translate mouse coordinates it receives directly from the operating system
+        // to coordinates relative to itself.
+        
+        // The original code (outside this #if) returns the document's window, which is OK if the window the "windowless" plugin
+        // is drawing into has the same origin as the document's window, but this is not the case for "windowless" plugins inside of scrolling DIVs etc
+
+        // To make sure "windowless" plugins always get the right origin for translating mouse coordinates, this code
+        // determines the window handle of the mozilla window containing the "windowless" plugin.
+
+        // Given that this HWND may not be that of the document's window, there is a slight risk
+        // of confusing a plugin that is using this HWND for illicit purposes, but since the documentation
+        // does not suggest this HWND IS that of the document window, rather that of the window
+        // the plugin is drawn in, this seems like a safe fix.
+         
+        // we only attempt to get the nearest window if this really is a "windowless" plugin so as not
+        // to change any behaviour for the much more common windowed plugins,
+        // though why this method would even be being called for a windowed plugin escapes me.
+        if (mPluginWindow && mPluginWindow->type == nsPluginWindowType_Drawable) {
+          nsIWidget* win = mOwner->GetWindow();
+          if (win) {
+            *pvalue = (void*)win->GetNativeData(NS_NATIVE_WINDOW);
+            if (*pvalue) {
+              return NS_OK;
+            }
+          }
+        }
+#endif
+        // get the document's widget from the view manager
+        // get the view manager from the pres shell, not from the view!
+        // we may not have a view if we are hidden
         nsIViewManager* vm = mOwner->GetPresContext()->GetViewManager();
-          if (vm) {
-            nsCOMPtr<nsIWidget> widget;
-            rv = vm->GetWidget(getter_AddRefs(widget));            
-            if (widget) {
-
-              void** pvalue = (void**)value;
-              *pvalue = (void*)widget->GetNativeData(NS_NATIVE_WINDOW);
-
-            } else NS_ERROR("couldn't get doc's widget in getting doc's window handle");
-          } else NS_ERROR("couldn't get view manager in getting doc's window handle");
+        if (vm) {
+          nsCOMPtr<nsIWidget> widget;
+          rv = vm->GetWidget(getter_AddRefs(widget));            
+          if (widget) {
+            *pvalue = (void*)widget->GetNativeData(NS_NATIVE_WINDOW);
+          } else NS_ERROR("couldn't get doc's widget in getting doc's window handle");
+        } else NS_ERROR("couldn't get view manager in getting doc's window handle");
       } else NS_ERROR("plugin owner has no owner in getting doc's window handle");
-
       break;
     }
   }
