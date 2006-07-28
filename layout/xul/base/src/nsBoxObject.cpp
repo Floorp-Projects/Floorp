@@ -395,18 +395,25 @@ nsBoxObject::GetProperty(const PRUnichar* aPropertyName, PRUnichar** aResult)
   nsresult rv = mPresState->GetStateProperty(propertyName, result);
   if (NS_FAILED(rv))
     return rv;
-  *aResult = ToNewUnicode(result);
+  *aResult = result.IsVoid() ? nsnull : ToNewUnicode(result);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsBoxObject::SetProperty(const PRUnichar* aPropertyName, const PRUnichar* aPropertyValue)
 {
-  if (!mPresState)
+  NS_ENSURE_ARG(aPropertyName && *aPropertyName);
+  if (!mPresState) {
     NS_NewPresState(getter_Transfers(mPresState));
-
+    NS_ENSURE_TRUE(mPresState, NS_ERROR_OUT_OF_MEMORY);
+  }
   nsDependentString propertyName(aPropertyName);
-  nsDependentString propertyValue(aPropertyValue);
+  nsDependentString propertyValue;
+  if (aPropertyValue) {
+    propertyValue.Rebind(aPropertyValue);
+  } else {
+    propertyValue.SetIsVoid(PR_TRUE);
+  }
   return mPresState->SetStateProperty(propertyName, propertyValue);
 }
 
