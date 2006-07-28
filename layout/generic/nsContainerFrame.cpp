@@ -867,7 +867,6 @@ nsContainerFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
 {
   nsIFrame* prevInFlow = aNextInFlow->GetPrevInFlow();
   NS_PRECONDITION(prevInFlow, "bad prev-in-flow");
-  NS_PRECONDITION(mFrames.ContainsFrame(aNextInFlow), "bad geometric parent");
 
   // If the next-in-flow has a next-in-flow then delete it, too (and
   // delete it first).
