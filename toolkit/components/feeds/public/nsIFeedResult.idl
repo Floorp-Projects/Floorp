@@ -57,6 +57,8 @@ interface nsIFeedResult : nsISupports {
   
   /**
   * The parsed feed or entry. 
+  *
+  * Will be null if a non-feed is processed.
   */
   attribute nsIFeedContainer doc;
 
@@ -68,7 +70,9 @@ interface nsIFeedResult : nsISupports {
   /** 
   * Feed Version: 
   * atom, rss2, rss09, rss091, rss091userland, rss092, rss1, atom03, 
-  * atomEntry, rssItem, opml, unknownRSS, unknownAtom 
+  * atomEntry, rssItem
+  *
+  * Will be null if a non-feed is processed.
   */
   attribute AString version;
 
