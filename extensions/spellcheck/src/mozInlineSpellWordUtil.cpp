@@ -50,6 +50,13 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMHTMLBRElement.h"
 
+// some character categories we care about from GetCat()
+#define CHAR_CAT_NUMBER 2
+#define CHAR_CAT_SPACE 3
+#define CHAR_CAT_CONTROL 4
+#define CHAR_CAT_WORD 5
+#define CHAR_CAT_PUNCTUATION1 6
+#define CHAR_CAT_PUNCTUATION2 7
 
 // IsIgnorableCharacter
 //
@@ -60,6 +67,17 @@ inline PRBool IsIgnorableCharacter(PRUnichar ch)
   return (ch == 0x200D || // ZERO-WIDTH JOINER
           ch == 0xAD ||   // SOFT HYPHEN
           ch == 0x1806);  // MONGOLIAN TODO SOFT HYPHEN
+}
+
+// IsConditionalPunctuation
+//
+//    Some characters (like apostrophes) require characters on each side to be
+//    part of a word, and are otherwise punctuation.
+
+inline PRBool IsConditionalPunctuation(PRUnichar ch)
+{
+  return (ch == '\'' ||
+          ch == 0x2019); // RIGHT SINGLE QUOTATION MARK
 }
 
 // mozInlineSpellWordUtil::Init
@@ -832,33 +850,18 @@ WordSplitState::ClassifyCharacter(PRInt32 aIndex, PRBool aRecurse) const
   // this will classify the character, we want to treat "ignorable" characters
   // such as soft hyphens as word characters.
   PRInt32 charCategory = GetCat(mDOMWordText[aIndex]);
-  if (charCategory == 5 || IsIgnorableCharacter(mDOMWordText[aIndex]))
+  if (charCategory == CHAR_CAT_WORD ||
+      IsIgnorableCharacter(mDOMWordText[aIndex]))
     return CHAR_CLASS_WORD;
 
-  if (mDOMWordText[aIndex] > 255) {
-    // Non-ASCII character so we can't use is* libc functions.
-    // XXX this function needs work to handle general Unicode characters!!!
-    return CHAR_CLASS_WORD;
-  }
-
-  // all other whitespace chars, control chars, and most punctuation (with
-  // several exceptions) are word separators. These exceptions are for
-  // characters that can be considered part of a word if it is surrounded by
-  // word characters
-  if ((isspace(mDOMWordText[aIndex]) || mDOMWordText[aIndex] < ' ' ||
-       ispunct(mDOMWordText[aIndex]))
-      && mDOMWordText[aIndex] != '\'')
-    return CHAR_CLASS_SEPARATOR;
-
-  // For punctuation excluded from the above:
-  // If punctuation is surrounded immediately on both sides by word characters
-  // it also counts as a word character.
-  if (ispunct(mDOMWordText[aIndex])) {
+  // If conditional punctuation is surrounded immediately on both sides by word
+  // characters it also counts as a word character.
+  if (IsConditionalPunctuation(mDOMWordText[aIndex])) {
     if (!aRecurse) {
       // not allowed to look around, this punctuation counts like a separator
       return CHAR_CLASS_SEPARATOR;
     }
-    
+
     // check the left-hand character
     if (aIndex == 0)
       return CHAR_CLASS_SEPARATOR;
@@ -874,6 +877,13 @@ WordSplitState::ClassifyCharacter(PRInt32 aIndex, PRBool aRecurse) const
     // char on either side is a word, this counts as a word
     return CHAR_CLASS_WORD;
   }
+
+  // all other punctuation
+  if (charCategory == CHAR_CAT_SPACE ||
+      charCategory == CHAR_CAT_CONTROL ||
+      charCategory == CHAR_CAT_PUNCTUATION1 ||
+      charCategory == CHAR_CAT_PUNCTUATION2)
+    return CHAR_CLASS_SEPARATOR;
 
   // any other character counts as a word
   return CHAR_CLASS_WORD;
