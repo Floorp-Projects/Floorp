@@ -96,7 +96,7 @@ do
     #build_url="http://people.mozilla.org/~rhelmer/`echo $product | tr '[A-Z]' '[a-z]'`/releases/yahoo/$release/$dirname/$locale/$source_file"
     #build_url="http://people.mozilla.org/~rhelmer/`echo $product | tr '[A-Z]' '[a-z]'`/releases/google/$release/$locale/$source_file" 
     pushd downloads > /dev/null
-    if [ -f $source_file ]; then rm $source_file; fi
+    if [ -f "$source_file" ]; then rm "$source_file"; fi
     wget -nv $PARAMS "$build_url"
     popd > /dev/null
     if [ $? != 0 ]; then
@@ -112,7 +112,7 @@ do
     #build_url="http://people.mozilla.org/~rhelmer/`echo $product | tr '[A-Z]' '[a-z]'`/releases/yahoo/testing/1.5.0.5/$dirname/$locale/$target_file" 
     #build_url="http://people.mozilla.org/~rhelmer/`echo $product | tr '[A-Z]' '[a-z]'`/releases/google/testing/1.5.0.5/$dirname/$locale/$target_file" 
     pushd downloads > /dev/null
-    if [ -f $target_file ]; then rm $target_file; fi
+    if [ -f "$target_file" ]; then rm "$target_file"; fi
     wget -nv $PARAMS "$build_url"
     popd > /dev/null
     if [ $? != 0 ]; then
