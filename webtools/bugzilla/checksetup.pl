@@ -214,163 +214,7 @@ use Bugzilla::Install::Requirements;
 # Here we check for --MODULES--
 #
 
-print "\nChecking perl modules ...\n" unless $silent;
-
-my $modules = REQUIRED_MODULES;
-
-$::root = ($^O =~ /MSWin32/i ? 'Administrator' : 'root');
-
-my %missing = ();
-
-foreach my $module (@{$modules}) {
-    unless (have_vers($module->{name}, $module->{version}, $silent)) { 
-        $missing{$module->{name}} = $module->{version};
-    }
-}
-
-print "\nYou need one of the following DBD modules installed, depending on\n"
-      . "which database you are using with Bugzilla:\n" unless $silent;
-
-my $have_one_dbd = 0;
-my $db_modules = DB_MODULE;
-foreach my $db (keys %$db_modules) {
-    if (have_vers($db_modules->{$db}->{dbd}, 
-                  $db_modules->{$db}->{dbd_version}, $silent)) 
-    {
-        $have_one_dbd = 1;
-    }
-}
-
-print "\nThe following Perl modules are optional:\n" unless $silent;
-my $opt_modules = OPTIONAL_MODULES;
-my %have_mod;
-foreach my $module (@$opt_modules) {
-    $have_mod{$module->{name}} = 
-        have_vers($module->{name}, $module->{version}, $silent);
-}
-
-print "\nThe following modules are required for mod_perl support:\n" 
-    unless $silent;
-my $mp_modules = MOD_PERL_MODULES;
-foreach my $module (@$mp_modules) {
-    $have_mod{$module->{name}} =
-       have_vers($module->{name}, $module->{version}, $silent);
-}
-
-print "\n" unless $silent;
-
-if ($^O =~ /MSWin32/i && !$silent) {
-    print "All the required modules are available at:\n";
-    print "    http://landfill.bugzilla.org/ppm/\n";
-    print "You can add the repository with the following command:\n";
-    print "    ppm rep add bugzilla http://landfill.bugzilla.org/ppm/\n\n";
-}
-
-if ((!$have_mod{'GD'} || !$have_mod{'Chart::Base'}) && !$silent) {
-    print "If you you want to see graphical bug charts (plotting historical ";
-    print "data over \ntime), you should install libgd and the following Perl ";
-    print "modules:\n\n";
-    print "GD:          " . install_command("GD") ."\n" if !$have_mod{'GD'};
-    print "Chart:       " . install_command("Chart::Base") . "\n" 
-        if !$have_mod{'Chart::Base'};
-    print "\n";
-}
-if (!$have_mod{'XML::Twig'} && !$silent) {
-    print "If you want to use the bug import/export feature to move bugs to\n",
-          "or from other bugzilla installations, you will need to install\n",
-          "the XML::Twig module by running (as $::root):\n\n",
-    "   " . install_command("XML::Twig") . "\n\n";
-}
-if (!$have_mod{'LWP::UserAgent'} && !$silent) {
-    print "If you want to use the automatic update notification feature\n",
-          "you will need to install the LWP::UserAgent module by running\n",
-          "(as $::root):\n\n",
-    "   " . install_command("LWP::UserAgent") . "\n\n";
-}
-if (!$have_mod{'Image::Magick'} && !$silent) {
-    print "If you want to convert BMP image attachments to PNG to conserve\n",
-          "disk space, you will need to install the ImageMagick application\n",
-          "Available from http://www.imagemagick.org, and the Image::Magick\n",
-          "Perl module by running (as $::root):\n\n",
-    "   " . install_command("Image::Magick") . "\n\n";
-
-}
-if ( (!$have_mod{'GD'} || !$have_mod{'GD::Graph'} 
-      || !$have_mod{'GD::Text::Align'} 
-      || !$have_mod{'Template::Plugin::GD::Image'}) 
-     && !$silent)
-{
-    print "If you want to see graphical bug reports (bar, pie and line ";
-    print "charts of \ncurrent data), you should install libgd and the ";
-    print "following Perl modules:\n\n";
-    print "GD:              " . install_command("GD") . "\n" if !$have_mod{'GD'};
-    print "GD::Graph:       " . install_command("GD::Graph") . "\n" 
-        if !$have_mod{'GD::Graph'};
-    print "GD::Text::Align: " . install_command("GD::Text::Align") . "\n"
-        if !$have_mod{'GD::Text::Align'};
-    print "Template::Plugin::GD: " . install_command('Template::Plugin::GD')
-          . "\n" if !$have_mod{'Template::Plugin::GD::Image'};
-    print "\n";
-}
-if (!$have_mod{'PatchReader'} && !$silent) {
-    print "If you want to see pretty HTML views of patches, you should ";
-    print "install the \nPatchReader module:\n";
-    print "PatchReader: " . install_command("PatchReader") . "\n\n";
-}
-if (!$have_mod{'Net::LDAP'} && !$silent) {
-    print "If you wish to use LDAP authentication, then you must",
-          " install Net::LDAP:\n",
-          "Net::LDAP: " . install_command('Net::LDAP') . "\n\n";
-}
-
-if (!$have_mod{'mod_perl2'} && !$silent) {
-    print "If you would like mod_perl support, you must install at least\n",
-          "the minimum required version of mod_perl. You can download",
-          " mod_perl from:\n",
-          "    http://perl.apache.org/download/binaries.html\n",
-          "Make sure that you get the 2.0 version, not the 1.0 version.\n\n";
-}
-
-if ((!$have_mod{'Apache::DBI'} || !$have_mod{'CGI'}) && !$silent) {
-    print "For mod_perl support, you must install the following perl",
-          " module(s):\n";
-    print "    Apache::DBI: " . install_command('Apache::DBI') . "\n" 
-        if !$have_mod{'Apache::DBI'};
-    print "    CGI:         " . install_command('CGI') . "\n" 
-        if !$have_mod{'CGI'};
-    print "\n";
-}
-
-if (!$have_one_dbd) {
-    print "\n";
-    print "Bugzilla requires that at least one DBD module be installed in\n",
-          "order to access a database. You can install the correct one by\n",
-          "picking the command listed below for your database:\n";
-
-    foreach my $db (keys %$db_modules) {
-        print "   " . $db_modules->{$db}->{name} . ": "
-              . install_command($db_modules->{$db}->{dbd}) . "\n";
-        print "   Minimum version required: " 
-              . $db_modules->{$db}->{dbd_version} . "\n";
-    }
-    print "\n";
-}
-
-if (%missing) {
-    print "\n";
-    print "Bugzilla requires some Perl modules which are either missing from\n",
-          "your system, or the version on your system is too old.\n",
-          "They can be installed by running (as $::root) the following:\n";
-    foreach my $module (keys %missing) {
-        print "   " . install_command("$module") . "\n";
-        if ($missing{$module} > 0) {
-            print "   Minimum version required: $missing{$module}\n";
-        }
-    }
-    print "\n";
-}
-
-exit if (%missing || !$have_one_dbd);
+exit if !check_requirements(!$silent)->{pass};
 
 }
 }
@@ -437,6 +281,8 @@ BEGIN {
 #
 # Cute, ey?
 #
+
+my $root = ROOT_USER;
 
 print "Checking user setup ...\n" unless $silent;
 $@ = undef;
@@ -617,7 +463,7 @@ LocalVar('webservergroup', <<"END");
 # want. You should only have this set to "" if this is a testing installation
 # and you cannot set this up any other way. YOU HAVE BEEN WARNED!
 # If you set this to anything other than "", you will need to run checksetup.pl
-# as $::root, or as a user who is a member of the specified group.
+# as $root, or as a user who is a member of the specified group.
 \$webservergroup = "$webservergroup_default";
 END
 
@@ -725,10 +571,10 @@ if ($my_webservergroup && !$silent) {
             print <<EOF;
 
 Warning: you have entered a value for the "webservergroup" parameter in 
-localconfig, but you are not either a) running this script as $::root; or b) a 
+localconfig, but you are not either a) running this script as $root; or b) a 
 member of this group. This can cause permissions problems and decreased 
 security.  If you experience problems running Bugzilla scripts, log in as 
-$::root and re-run this script, become a member of the group, or remove the 
+$root and re-run this script, become a member of the group, or remove the 
 value of the "webservergroup" parameter. Note that any warnings about 
 "uninitialized values" that you may see below are caused by this.
 
@@ -798,7 +644,7 @@ if ($my_db_check) {
     my $actual_dbd_ver = DB_MODULE->{lc($my_db_driver)}->{dbd_version};
     my $sql_server     = DB_MODULE->{lc($my_db_driver)}->{name};
     my $sql_want       = DB_MODULE->{lc($my_db_driver)}->{db_version};
-    unless (have_vers($actual_dbd, $actual_dbd_ver, $silent)) {
+    unless (have_vers($actual_dbd, $actual_dbd_ver, !$silent)) {
         print "For $sql_server, Bugzilla requires that perl's"
               . " $actual_dbd be installed.\nTo install this module,"
               . " you can do:\n   " . install_command($actual_dbd) . "\n";

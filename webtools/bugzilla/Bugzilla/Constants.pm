@@ -109,6 +109,7 @@ use File::Basename;
     BUG_STATE_OPEN
 
     DB_MODULE
+    ROOT_USER
 );
 
 @Bugzilla::Constants::EXPORT_OK = qw(contenttypes);
@@ -297,6 +298,8 @@ use constant DB_MODULE => {
                 dbd => 'DBD::Pg', dbd_version => '1.45',
                 name => 'PostgreSQL'},
 };
+
+use constant ROOT_USER => $^O =~ /MSWin32/i ? 'Administrator' : 'root';
 
 sub bz_locations {
     # We know that Bugzilla/Constants.pm must be in %INC at this point.
