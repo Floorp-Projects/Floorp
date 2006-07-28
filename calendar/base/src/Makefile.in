@@ -91,8 +91,8 @@ EXTRA_SCRIPTS = \
 
 # Use NSINSTALL to make the directory, as there's no mtime to preserve.
 libs:: $(EXTRA_SCRIPTS)
-	$(NSINSTALL) -D $(DIST)/bin/js
-	$(INSTALL) $^ $(DIST)/bin/js
+	if test ! -d $(FINAL_TARGET)/js; then $(NSINSTALL) -D $(FINAL_TARGET)/js; fi
+	$(INSTALL) $^ $(FINAL_TARGET)/js
 
 # The install target must use SYSINSTALL, which is NSINSTALL in copy mode.
 install:: $(EXTRA_SCRIPTS)
