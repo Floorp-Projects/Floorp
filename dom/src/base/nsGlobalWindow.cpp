@@ -3254,8 +3254,7 @@ nsGlobalWindow::SetTextZoom(float aZoom)
 
 // static
 void
-nsGlobalWindow::MakeScriptDialogTitle(const nsAString &aInTitle,
-                                      nsAString &aOutTitle)
+nsGlobalWindow::MakeScriptDialogTitle(nsAString &aOutTitle)
 {
   aOutTitle.Truncate();
 
@@ -3293,10 +3292,14 @@ nsGlobalWindow::MakeScriptDialogTitle(const nsAString &aInTitle,
               nsCAutoString prepath;
               fixedURI->GetPrePath(prepath);
 
-              aOutTitle = NS_ConvertUTF8toUTF16(prepath);
-              if (!aInTitle.IsEmpty()) {
-                aOutTitle.Append(NS_LITERAL_STRING(" - ") + aInTitle);
-              }
+              NS_ConvertUTF8toUTF16 ucsPrePath(prepath);
+              const PRUnichar *formatStrings[] = { ucsPrePath.get() };
+              nsXPIDLString tempString;
+              nsContentUtils::FormatLocalizedString(nsContentUtils::eCOMMON_DIALOG_PROPERTIES,
+                                                    "ScriptDlgHeading",
+                                                    formatStrings, NS_ARRAY_LENGTH(formatStrings),
+                                                    tempString);
+              aOutTitle = tempString;
             }
           }
         }
@@ -3308,28 +3311,18 @@ nsGlobalWindow::MakeScriptDialogTitle(const nsAString &aInTitle,
   }
 
   if (aOutTitle.IsEmpty()) {
-    // We didn't find a host so use the generic title modifier.  Load
-    // the string to be prepended to titles for script
-    // confirm/alert/prompt boxes.
-
-    const nsAFlatString & flatTitle = PromiseFlatString(aInTitle);
-    const PRUnichar *formatStrings[] = { flatTitle.get() };
-    
+    // We didn't find a host so use the generic heading
     nsXPIDLString tempString;
-    nsContentUtils::FormatLocalizedString(
-        nsContentUtils::eCOMMON_DIALOG_PROPERTIES,
-        "ScriptDlgTitle",
-        formatStrings, NS_ARRAY_LENGTH(formatStrings),
-        tempString);
-                                          
+    nsContentUtils::GetLocalizedString(nsContentUtils::eCOMMON_DIALOG_PROPERTIES,
+                                       "ScriptDlgGenericHeading",
+                                       tempString);
     aOutTitle = tempString;
   }
 
   // Just in case
   if (aOutTitle.IsEmpty()) {
-    NS_WARNING("could not get ScriptDlgTitle string from string bundle");
-    aOutTitle.AssignLiteral("[Script] ");
-    aOutTitle.Append(aInTitle);
+    NS_WARNING("could not get ScriptDlgGenericHeading string from string bundle");
+    aOutTitle.AssignLiteral("[Script]");
   }
 }
 
@@ -3358,7 +3351,7 @@ nsGlobalWindow::Alert(const nsAString& aString)
   EnsureReflowFlushAndPaint();
 
   nsAutoString title;
-  MakeScriptDialogTitle(EmptyString(), title);
+  MakeScriptDialogTitle(title);
 
   return prompter->Alert(title.get(), PromiseFlatString(*str).get());
 }
@@ -3383,7 +3376,7 @@ nsGlobalWindow::Confirm(const nsAString& aString, PRBool* aReturn)
   EnsureReflowFlushAndPaint();
 
   nsAutoString title;
-  MakeScriptDialogTitle(EmptyString(), title);
+  MakeScriptDialogTitle(title);
 
   return prompter->Confirm(title.get(),
                            PromiseFlatString(aString).get(), aReturn);
@@ -3394,6 +3387,8 @@ nsGlobalWindow::Prompt(const nsAString& aMessage, const nsAString& aInitial,
                        const nsAString& aTitle, PRUint32 aSavePassword,
                        nsAString& aReturn)
 {
+  // We don't use "aTitle" because we ignore the 3rd (title) argument to
+  // prompt(). IE and Opera ignore it too. See Mozilla bug 334893.
   SetDOMStringToNull(aReturn);
 
   nsresult rv;
@@ -3418,7 +3413,7 @@ nsGlobalWindow::Prompt(const nsAString& aMessage, const nsAString& aInitial,
   EnsureReflowFlushAndPaint();
 
   nsAutoString title;
-  MakeScriptDialogTitle(aTitle, title);
+  MakeScriptDialogTitle(title);
 
   rv = prompter->Prompt(title.get(), PromiseFlatString(aMessage).get(), nsnull,
                         aSavePassword, PromiseFlatString(aInitial).get(),
