@@ -17,10 +17,10 @@ description {
 	width: 16px;
 }
 
-#container > hbox {
-        margin-left: 12px;
+#container > .small-indent {
+	margin-left: 0px;
 }
 
-#container > .small-indent {
+.small-indent label {
 	margin-left: 0px;
 }
