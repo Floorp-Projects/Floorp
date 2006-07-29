@@ -2,7 +2,14 @@
 <?xml-stylesheet href="chrome://communicator/content/utilityOverlay.css"?>
 <?xul-overlay href="chrome://global/content/platformGlobalOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/utilityOverlay.dtd">
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % globalRegionDTD SYSTEM "chrome://global-region/locale/region.dtd" >
+%globalRegionDTD;
+<!ENTITY % utilityDTD SYSTEM "chrome://communicator/locale/utilityOverlay.dtd" >
+%utilityDTD;
+]>
 
 <overlay id="utilityOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -122,11 +129,12 @@
 
 	<!-- Help Menu -->
 	<menu id="menu_Help" value="&helpMenu.label;" accesskey="&helpMenu.accesskey;">
-		<menupopup id="helpPopup" oncreate="helpMenuCreate()">
-			<menuitem accesskey="&releaseCommCmd.accesskey;" value="&releaseCommCmd.label;" id="releaseUrl"  />
-			<menuseparator />
-			<menuitem accesskey="&aboutCommCmd.accesskey;" value="&aboutCommCmd.label;"
-				name="&aboutCommCmd.label;" id="releaseName" oncommand="goAboutDialog();"/>
+		<menupopup id="helpPopup">
+			<menuitem accesskey="&releaseCmd.accesskey;" value="&releaseCmd.label;"
+			          id="releaseUrl" oncommand="openTopWin('&releaseURL;');"/>
+			<menuseparator/>
+			<menuitem accesskey="&aboutCmd.accesskey;" value="&aboutCmd.label;"
+			          id="aboutName" oncommand="goAboutDialog();"/>
 		</menupopup>
 	</menu>
 	

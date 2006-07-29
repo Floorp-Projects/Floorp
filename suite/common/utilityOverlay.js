@@ -316,19 +316,3 @@ function extractFileNameFromUrl(urlstr)
   return urlstr.slice(urlstr.lastIndexOf( "/" )+1);
 }
 
-function helpMenuCreate()
-{
-    //adding the brand string to the about
-	var BrandBundle = srGetStrBundle("chrome://global/locale/brand.properties");
-	var regionalBundle = srGetStrBundle("chrome://global-region/locale/region.properties");
-	var aboutStrName = BrandBundle.GetStringFromName("aboutStrName");
-	var aboutItem = document.getElementById( "releaseName" );
-	aboutItem.setAttribute("value", aboutStrName);
-	
-	//Adding the release url since it will change based on brand
-	var BrandRelUrl = regionalBundle.GetStringFromName("releaseUrl");
-	var relCommand =  "openTopWin(\'" + BrandRelUrl + "\')";
-	var relItem = document.getElementById( "releaseUrl" );
-	relItem.setAttribute("oncommand", relCommand);
-}
-
