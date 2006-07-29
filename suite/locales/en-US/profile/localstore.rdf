@@ -20,12 +20,6 @@
   <RDF:Description about="chrome://messenger/content/messenger.xul#sizeCol">
     <hidden>true</hidden>
   </RDF:Description>
-  <RDF:Description about="chrome://messenger/content/messenger.xul#button-file">
-    <hidden>true</hidden>
-  </RDF:Description>
-  <RDF:Description about="chrome://messenger/content/messenger.xul#button-next">
-    <hidden>true</hidden>
-  </RDF:Description>
   <RDF:Description about="chrome://messenger/content/addressbook/addressbook.xul">
     <NC:persist resource="chrome://messenger/content/addressbook/addressbook.xul#abResultsOutliner"/>
   </RDF:Description>
@@ -39,8 +33,6 @@
     <NC:persist resource="chrome://messenger/content/messenger.xul#flaggedCol"/>
     <NC:persist resource="chrome://messenger/content/messenger.xul#messengerWindow"/>
     <NC:persist resource="chrome://messenger/content/messenger.xul#threadOutliner"/>
-    <NC:persist resource="chrome://messenger/content/messenger.xul#button-file"/>
-    <NC:persist resource="chrome://messenger/content/messenger.xul#button-next"/>
   </RDF:Description>
   <RDF:Description about="chrome://messenger/content/messenger.xul#messengerWindow">
     <screenX>4</screenX>
@@ -51,16 +43,7 @@
   <RDF:Description about="chrome://messenger/content/messenger.xul#threadOutliner" height="94" />
   <RDF:Description about="chrome://messenger/content/mail3PaneWindowVertLayout.xul">
     <NC:persist resource="chrome://messenger/content/mail3PaneWindowVertLayout.xul#threadOutliner"/>
-    <NC:persist resource="chrome://messenger/content/mail3PaneWindowVertLayout.xul#button-file"/>
-    <NC:persist resource="chrome://messenger/content/mail3PaneWindowVertLayout.xul#button-next"/>
   </RDF:Description>
-  <RDF:Description about="chrome://messenger/content/mail3PaneWindowVertLayout.xul#button-file">
-    <hidden>true</hidden>
-  </RDF:Description>
-  <RDF:Description about="chrome://messenger/content/mail3PaneWindowVertLayout.xul#button-next">
-    <hidden>true</hidden>
-  </RDF:Description>
-
   <RDF:Description about="chrome://messenger/content/mail3PaneWindowVertLayout.xul#threadOutliner" height="94" />
   <RDF:Description about="chrome://navigator/content/navigator.xul#sidebar-panels">
     <last-selected-panel>urn:sidebar:panel:bookmarks</last-selected-panel>
@@ -95,16 +78,4 @@
     <NC:persist resource="chrome://messenger/content/mail3PaneWindowVertLayout.xul#OrderReceivedColumn"/>
     <NC:persist resource="chrome://messenger/content/mail3PaneWindowVertLayout.xul#flaggedCol"/>
   </RDF:Description>
-
-  <RDF:Description about="chrome://messenger/content/messageWindow.xul">
-    <NC:persist resource="chrome://messenger/content/messageWindow.xul#button-file"/>
-    <NC:persist resource="chrome://messenger/content/messageWindow.xul#button-next"/>
-  </RDF:Description>
-  <RDF:Description about="chrome://messenger/content/messageWindow.xul#button-file">
-    <hidden>true</hidden>
-  </RDF:Description>
-  <RDF:Description about="chrome://messenger/content/messageWindow.xul#button-next">
-    <hidden>true</hidden>
-  </RDF:Description>
-
 </RDF:RDF>
