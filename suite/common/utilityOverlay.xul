@@ -136,7 +136,7 @@
 			  checked="true"/>
 
 	<!-- Help Menu -->
-	<menu id="menu_Help" value="&helpMenu.label;">
+	<menu id="menu_Help" value="&helpMenu.label;" accesskey="&helpMenu.accesskey;">
 		<menupopup id="helpPopup" oncreate="helpMenuCreate()">
 			<menuitem value="&releaseCommCmd.label;" id="releaseUrl"  />
 			<menuitem value="&aboutCommCmd.label;" name="&aboutCommCmd.label;" id="releaseName" oncommand="goAboutDialog();"/>
