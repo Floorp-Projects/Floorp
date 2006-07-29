@@ -732,7 +732,7 @@ public:
   {
     nsDOMSlots *slots = GetExistingDOMSlots();
 
-    return slots ? slots->mAttributeMap : nsnull;
+    return slots ? slots->mAttributeMap.get() : nsnull;
   }
 
 protected:
