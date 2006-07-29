@@ -351,7 +351,7 @@ function foundHeaderInfo(aSniffer, aData)
   var persistArgs = {
     source      : source,
     contentType : (useSaveDocument && fp.filterIndex == 2) ? "text/plain" : contentType,
-    target      : fp.file,
+    target      : makeFileURL(fp.file),
     postData    : isDocument ? getPostData() : null,
     bypassCache : aData.bypassCache
   };
@@ -377,10 +377,7 @@ function foundHeaderInfo(aSniffer, aData)
     var filesFolder = null;
     if (persistArgs.contentType != "text/plain") {
       // Create the local directory into which to save associated files. 
-      const lfContractID = "@mozilla.org/file/local;1";
-      const lfIID = Components.interfaces.nsILocalFile;
-      filesFolder = Components .classes[lfContractID].createInstance(lfIID);
-      filesFolder.initWithPath(persistArgs.target.path);
+      filesFolder = fp.file.clone();
       
       var nameWithoutExtension = filesFolder.leafName.replace(/\.[^.]*$/, "");
       var filesFolderLeafName = getStringBundle().formatStringFromName("filesFolder",
@@ -706,7 +703,13 @@ function makeURL(aURL)
   var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                 .getService(Components.interfaces.nsIIOService);
   return ioService.newURI(aURL, null, null);
-  
+}
+
+function makeFileURL(aFile)
+{
+  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                .getService(Components.interfaces.nsIIOService);
+  return ioService.newFileURI(aFile);
 }
 
 function makeFilePicker()
