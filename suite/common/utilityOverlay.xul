@@ -29,7 +29,6 @@
                oncommand="toggleOfflineStatus();"/>
 
   <statusbarpanel id="offline-status"
-                  tooltip="aTooltip"
                   observes="Communicator:WorkMode"/>
 
   <menuitem id="offlineGoOfflineCmd"
