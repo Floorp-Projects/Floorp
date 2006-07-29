@@ -279,7 +279,7 @@ nsContextMenu.prototype = {
         this.target = node;
 
         this.autoDownload = Components.classes["@mozilla.org/preferences-service;1"]
-                                      .getService(Components.interfaces.nsIPrefService)
+                                      .getService(Components.interfaces.nsIPrefBranch)
                                       .getBoolPref("browser.download.autoDownload");
 
         // See if the user clicked on an image.
