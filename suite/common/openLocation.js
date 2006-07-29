@@ -41,7 +41,9 @@ function onLoad()
   dialog.openEditWindow = document.getElementById("editWindow");
   dialog.bundle         = document.getElementById("openLocationBundle");
 
-  browser = window.arguments[0];
+  if ("arguments" in window && window.arguments.length >= 1)
+    browser = window.arguments[0];
+
   if (!browser) {
     // No browser supplied - we are calling from Composer
     dialog.openAppList.selectedItem = dialog.openEditWindow;
@@ -164,3 +166,4 @@ function useUBHistoryItem(aMenuItem)
   var urlbar = document.getElementById("dialog.input");
   urlbar.value = aMenuItem.getAttribute("label");
 }
+
