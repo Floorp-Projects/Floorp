@@ -33,7 +33,9 @@
   xmlns:web="http://home.netscape.com/WEB-rdf#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   width="500" height="400" x="20" y="20" persist="width height x y" align="vertical"
-  ondraggesture="return TopLevelDrag(event);">
+  ondraggesture="return TopLevelDrag(event);"
+  windowtype="history:manager"
+  >
 
   <html:script src="chrome://bookmarks/content/bookmarks.js"/>
 
