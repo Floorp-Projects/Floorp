@@ -84,6 +84,11 @@ function toJavaConsole()
     jvmMgr.showJavaConsole();
 }
 
+function toOpenWindow( aWindow )
+{
+  aWindow.document.commandDispatcher.focusedWindow.focus();
+}
+
 function toOpenWindowByType( inType, uri )
 {
 	var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
@@ -93,7 +98,7 @@ function toOpenWindowByType( inType, uri )
 	var topWindow = windowManagerInterface.getMostRecentWindow( inType );
 	
 	if ( topWindow )
-		topWindow.focus();
+		toOpenWindow(topWindow);
 	else
 		window.open(uri, "_blank", "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar");
 }
@@ -138,7 +143,7 @@ function CycleWindow( aType )
     return null;
 
   if ( topWindowOfType != topWindow ) {
-    topWindowOfType.focus();
+    toOpenWindow(topWindowOfType);
     return topWindowOfType;
   }
 
@@ -150,14 +155,14 @@ function CycleWindow( aType )
 
   if (enumerator.hasMoreElements()) {
     iWindow = enumerator.getNext().QueryInterface(nsIDOMWindowInternal);
-    iWindow.focus();
+    toOpenWindow(iWindow);
     return iWindow;
   }
 
   if (firstWindow == topWindow) // Only one window
     return null;
 
-  firstWindow.focus();
+  toOpenWindow(firstWindow);
   return firstWindow;
 }
 
@@ -170,7 +175,7 @@ function ShowWindowFromResource( node )
 	desiredWindow = windowManagerDS.getWindowForResource( url );
 	if ( desiredWindow )
 	{
-		desiredWindow.focus();
+		toOpenWindow(desiredWindow);
 	}
 }
 
