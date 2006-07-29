@@ -49,12 +49,14 @@
 #include "nsCSSDeclaration.h"
 #include "nsIDocument.h"
 #include "nsIDocumentEncoder.h"
+#include "nsIDOMHTMLBodyElement.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocumentFragment.h"
+#include "nsIDOMNSHTMLDocument.h"
 #include "nsIDOMNSHTMLElement.h"
 #include "nsIDOMElementCSSInlineStyle.h"
 #include "nsIDOMWindow.h"
@@ -1272,6 +1274,90 @@ nsGenericHTMLElement::ScrollIntoView(PRBool aTop)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsGenericHTMLElement::GetSpellcheck(PRBool* aSpellcheck)
+{
+  NS_ENSURE_ARG_POINTER(aSpellcheck);
+  *aSpellcheck = PR_FALSE;              // Default answer is to not spellcheck
+
+  // Has the state has been explicitly set?
+  nsINode* node;
+  for (node = this; node; node = node->GetNodeParent()) {
+    if (node->IsNodeOfType(nsINode::eHTML)) {
+      static nsIContent::AttrValuesArray strings[] =
+        {&nsHTMLAtoms::_true, &nsHTMLAtoms::_false, nsnull};
+      switch (NS_STATIC_CAST(nsIContent*, node)->
+              FindAttrValueIn(kNameSpaceID_None, nsHTMLAtoms::spellcheck,
+                              strings, eCaseMatters)) {
+        case 0:                         // spellcheck = "true"
+          *aSpellcheck = PR_TRUE;
+          // Fall through
+        case 1:                         // spellcheck = "false"
+          return NS_OK;
+      }
+    }
+  }
+
+  // Is this a chrome element?
+  if (nsContentUtils::IsChromeDoc(GetOwnerDoc())) {
+    return NS_OK;                       // Not spellchecked by default
+  }
+
+  // Is this the actual body of the current document?
+  if (IsCurrentBodyElement()) {
+    // Is designMode on?
+    nsCOMPtr<nsIDOMNSHTMLDocument> nsHTMLDocument =
+      do_QueryInterface(GetCurrentDoc());
+    if (!nsHTMLDocument) {
+      return PR_FALSE;
+    }
+
+    nsAutoString designMode;
+    nsHTMLDocument->GetDesignMode(designMode);
+    *aSpellcheck = designMode.EqualsLiteral("on");
+    return NS_OK;
+  }
+
+  // Is this element editable?
+  nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(this);
+  if (!formControl) {
+    return NS_OK;                       // Not spellchecked by default
+  }
+
+  // Is this a multiline plaintext input?
+  PRInt32 controlType = formControl->GetType();
+  if (controlType == NS_FORM_TEXTAREA) {
+    *aSpellcheck = PR_TRUE;             // Spellchecked by default
+    return NS_OK;
+  }
+
+  // Is this anything other than a single-line plaintext input?
+  if (controlType != NS_FORM_INPUT_TEXT) {
+    return NS_OK;                       // Not spellchecked by default
+  }
+
+  // Does the user want single-line inputs spellchecked by default?
+  // NOTE: Do not reflect a pref value of 0 back to the DOM getter.
+  // The web page should not know if the user has disabled spellchecking.
+  // We'll catch this in the editor itself.
+  PRInt32 spellcheckLevel =
+    nsContentUtils::GetIntPref("layout.spellcheckDefault", 1);
+  if (spellcheckLevel == 2) {           // "Spellcheck multi- and single-line"
+    *aSpellcheck = PR_TRUE;             // Spellchecked by default
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericHTMLElement::SetSpellcheck(PRBool aSpellcheck)
+{
+  if (aSpellcheck) {
+    return SetAttrHelper(nsHTMLAtoms::spellcheck, NS_LITERAL_STRING("true"));
+  }
+
+  return SetAttrHelper(nsHTMLAtoms::spellcheck, NS_LITERAL_STRING("false"));
+}
 
 PRBool
 nsGenericHTMLElement::InNavQuirksMode(nsIDocument* aDoc)
@@ -1609,9 +1695,17 @@ nsresult
 nsGenericHTMLElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                                    const nsAString* aValue, PRBool aNotify)
 {
-  if (aNamespaceID == kNameSpaceID_None && IsEventName(aName) && aValue) {
-    nsresult rv = AddScriptEventListener(aName, *aValue);
-    NS_ENSURE_SUCCESS(rv, rv);
+  if (aNamespaceID == kNameSpaceID_None) {
+    if (IsEventName(aName) && aValue) {
+      nsresult rv = AddScriptEventListener(aName, *aValue);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    else if (aName == nsHTMLAtoms::spellcheck) {
+      nsCOMPtr<nsIEditor> editor = GetAssociatedEditor();
+      if (editor) {
+        editor->SyncRealTimeSpell();
+      }
+    }
   }
 
   return nsGenericElement::AfterSetAttr(aNamespaceID, aName,
@@ -3993,4 +4087,33 @@ nsGenericHTMLElement::GetEditorInternal(nsIEditor** aEditor)
   }
 
   return NS_OK;
+}
+
+already_AddRefed<nsIEditor>
+nsGenericHTMLElement::GetAssociatedEditor()
+{
+  // If contenteditable is ever implemented, it might need to do something different here?
+
+  nsIEditor* editor = nsnull;
+  GetEditorInternal(&editor);
+  return editor;
+}
+
+PRBool
+nsGenericHTMLElement::IsCurrentBodyElement()
+{
+  nsCOMPtr<nsIDOMHTMLBodyElement> bodyElement = do_QueryInterface(this);
+  if (!bodyElement) {
+    return PR_FALSE;
+  }
+
+  nsCOMPtr<nsIDOMHTMLDocument> htmlDocument =
+    do_QueryInterface(GetCurrentDoc());
+  if (!htmlDocument) {
+    return PR_FALSE;
+  }
+
+  nsCOMPtr<nsIDOMHTMLElement> htmlElement;
+  htmlDocument->GetBody(getter_AddRefs(htmlElement));
+  return htmlElement == bodyElement;
 }

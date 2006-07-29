@@ -42,6 +42,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
+#include "nsIDOMNSHTMLElement.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIEventListenerManager.h"
 #include "nsIPrefBranch.h"
@@ -140,6 +141,7 @@ nsEditor::nsEditor()
 ,  mPresShellWeak(nsnull)
 ,  mViewManager(nsnull)
 ,  mUpdateCount(0)
+,  mSpellcheckCheckboxState(eTriUnset)
 ,  mPlaceHolderTxn(nsnull)
 ,  mPlaceHolderName(nsnull)
 ,  mPlaceHolderBatch(0)
@@ -307,7 +309,12 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, nsIContent *aRoot
 NS_IMETHODIMP
 nsEditor::PostCreate()
 {
-  nsresult rv = CreateEventListeners();
+  // Set up spellchecking
+  nsresult rv = SyncRealTimeSpell();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Set up listeners
+  rv = CreateEventListeners();
   if (NS_FAILED(rv))
   {
     RemoveEventListeners();
@@ -450,25 +457,77 @@ nsEditor::RemoveEventListeners()
   }
 }
 
+PRBool
+nsEditor::GetDesiredSpellCheckState()
+{
+  // Check user override on this element
+  if (mSpellcheckCheckboxState != eTriUnset) {
+    return (mSpellcheckCheckboxState == eTriTrue);
+  }
+
+  // Check user preferences
+  nsresult rv;
+  nsCOMPtr<nsIPrefBranch> prefBranch =
+    do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  PRInt32 spellcheckLevel = 1;
+  if (NS_SUCCEEDED(rv) && prefBranch) {
+    prefBranch->GetIntPref("layout.spellcheckDefault", &spellcheckLevel);
+  }
+
+  if (spellcheckLevel == 0) {
+    return PR_FALSE;                    // Spellchecking forced off globally
+  }
+
+  // Check for password/readonly/disabled, which are not spellchecked
+  // regardless of DOM
+  PRUint32 flags;
+  if (NS_SUCCEEDED(GetFlags(&flags)) &&
+      flags & (nsIPlaintextEditor::eEditorPasswordMask |
+               nsIPlaintextEditor::eEditorReadonlyMask |
+               nsIPlaintextEditor::eEditorDisabledMask)) {
+    return PR_FALSE;
+  }
+
+  // Check DOM state
+  nsCOMPtr<nsIContent> content = do_QueryInterface(GetRoot());
+  if (!content) {
+    return PR_FALSE;
+  }
+
+  if (content->IsNativeAnonymous()) {
+    content = content->GetParent();
+  }
+
+  nsCOMPtr<nsIDOMNSHTMLElement> element = do_QueryInterface(content);
+  if (!element) {
+    return PR_FALSE;
+  }
+
+  PRBool enable;
+  element->GetSpellcheck(&enable);
+
+  return enable;
+}
+
 NS_IMETHODIMP
 nsEditor::PreDestroy()
 {
-  if (!mDidPreDestroy) {
-    // Let spellchecker clean up its observers etc.
-    if (mInlineSpellChecker) {
-      mInlineSpellChecker->Cleanup();
-      mInlineSpellChecker = nsnull;
-    }
+  if (mDidPreDestroy)
+    return NS_OK;
 
-    // tell our listeners that the doc is going away
-    NotifyDocumentListeners(eDocumentToBeDestroyed);
-
-    // Unregister event listeners
-    RemoveEventListeners();
-
-    mDidPreDestroy = PR_TRUE;
+  // Let spellchecker clean up its observers etc.
+  if (mInlineSpellChecker) {
+    mInlineSpellChecker->Cleanup();
+    mInlineSpellChecker = nsnull;
   }
 
+  // tell our listeners that the doc is going away
+  NotifyDocumentListeners(eDocumentToBeDestroyed);
+
+  // Unregister event listeners
+  RemoveEventListeners();
+
+  mDidPreDestroy = PR_TRUE;
   return NS_OK;
 }
 
@@ -483,6 +542,9 @@ NS_IMETHODIMP
 nsEditor::SetFlags(PRUint32 aFlags)
 {
   mFlags = aFlags;
+
+  // Changing the flags can change whether spellchecking is on, so re-sync it
+  SyncRealTimeSpell();
   return NS_OK;
 }
 
@@ -1288,6 +1350,27 @@ NS_IMETHODIMP nsEditor::GetInlineSpellChecker(PRBool autoCreate,
   NS_IF_ADDREF(*aInlineSpellChecker = mInlineSpellChecker);
 
   return NS_OK;
+}
+
+NS_IMETHODIMP nsEditor::SyncRealTimeSpell()
+{
+  PRBool enable = GetDesiredSpellCheckState();
+
+  nsCOMPtr<nsIInlineSpellChecker> spellChecker;
+  GetInlineSpellChecker(enable, getter_AddRefs(spellChecker));
+
+  if (spellChecker) {
+    spellChecker->SetEnableRealTimeSpell(enable);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsEditor::SetSpellcheckUserOverride(PRBool enable)
+{
+  mSpellcheckCheckboxState = enable ? eTriTrue : eTriFalse;
+
+  return SyncRealTimeSpell();
 }
 
 #ifdef XP_MAC

@@ -340,6 +340,11 @@ protected:
   // unregister and release our event listeners
   virtual void RemoveEventListeners();
 
+  /**
+   * Return true if spellchecking should be enabled for this editor.
+   */
+  PRBool GetDesiredSpellCheckState();
+
 public:
 
   /** All editor operations which alter the doc should be prefaced
@@ -585,7 +590,15 @@ protected:
   nsWeakPtr       mSelConWeak;   // weak reference to the nsISelectionController
   nsIViewManager *mViewManager;
   PRInt32         mUpdateCount;
-  nsCOMPtr<nsIInlineSpellChecker> mInlineSpellChecker;  // used for real-time spellchecking
+
+  // Spellchecking
+  enum Tristate {
+    eTriUnset,
+    eTriFalse,
+    eTriTrue
+  }                 mSpellcheckCheckboxState;
+  nsCOMPtr<nsIInlineSpellChecker> mInlineSpellChecker;
+
   nsCOMPtr<nsITransactionManager> mTxnMgr;
   nsWeakPtr         mPlaceHolderTxn;     // weak reference to placeholder for begin/end batch purposes
   nsIAtom          *mPlaceHolderName;    // name of placeholder transaction
@@ -610,7 +623,7 @@ protected:
   PRPackedBool                  mDidPreDestroy;    // whether PreDestroy has been called
    // various listeners
   nsVoidArray*                  mActionListeners;  // listens to all low level actions on the doc
-  nsVoidArray*                  mEditorObservers;   // just notify once per high level change
+  nsVoidArray*                  mEditorObservers;  // just notify once per high level change
   nsCOMPtr<nsISupportsArray>    mDocStateListeners;// listen to overall doc state (dirty or not, just created, etc)
 
   PRInt8                        mDocDirtyState;		// -1 = not initialized
