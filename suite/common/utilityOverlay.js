@@ -41,6 +41,11 @@
  * for shared application glue for the Communicator suite of applications
  **/
 
+/*
+  Note: All Editor/Composer-related methods have been moved to editorApplicationOverlay.js,
+  so app windows that require those must include editorNavigatorOverlay.xul
+*/
+
 /**
  * Go into online/offline mode
  **/
@@ -297,82 +302,6 @@ function goUpdateUndoEditMenuItems()
 function goUpdatePasteMenuItems()
 {
   goUpdateCommand('cmd_paste');
-}
-
-// This used to be BrowserNewEditorWindow in navigator.js
-function NewEditorWindow(aPageURL)
-{
-  // Open editor window with blank page
-  // Kludge to leverage openDialog non-modal!
-  window.openDialog( "chrome://editor/content", "_blank", "chrome,all,dialog=no", "about:blank");
-}
-
-function NewEditorFromTemplate()
-{
-  // XXX not implemented
-}
-
-function NewEditorFromDraft()
-{
-  // XXX not implemented
-}
-
-// Any non-editor window wanting to create an editor with a URL
-//   should use this instead of "window.openDialog..."
-//  We must always find an existing window with requested URL
-// (When calling from a dialog, "launchWindow" is dialog's "opener"
-//   and we need a delay to let dialog close)
-function editPage(url, launchWindow, delay)
-{
-  // User may not have supplied a window
-  if (!launchWindow)
-  {
-    if (window)
-    {
-      launchWindow = window;
-    }
-    else
-    {
-      dump("No window to launch an editor from!\n");
-      return;
-    }
-  }
-
-  // if the current window is a browser window, then extract the current charset menu setting from the current 
-  // document and use it to initialize the new composer window...
-
-  var wintype = document.firstChild.getAttribute('windowtype');
-  var charsetArg;
-
-  if (launchWindow && (wintype == "navigator:browser"))
-    charsetArg = "charset=" + launchWindow._content.document.characterSet;
-
-  var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
-  if (!windowManager) return;
-  var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
-  if ( !windowManagerInterface ) return;
-  var enumerator = windowManagerInterface.getEnumerator( "composer:html" );
-  if ( !enumerator ) return;
-
-  while ( enumerator.hasMoreElements() )
-  {
-    var window = windowManagerInterface.convertISupportsToDOMWindow( enumerator.getNext() );
-    if ( window && window.editorShell)
-    {
-      if (window.editorShell.checkOpenWindowForURLMatch(url, window))
-      {
-        // We found an editor with our url
-        window.focus();
-        return;
-      }
-    }
-  }
-
-  // Create new Composer window
-  if (delay)
-    launchWindow.delayedOpenWindow("chrome://editor/content", "chrome,all,dialog=no", url, charsetArg);
-  else
-    launchWindow.openDialog("chrome://editor/content", "_blank", "chrome,all,dialog=no", url, charsetArg);
 }
 
 // function that extracts the filename from a url
