@@ -12,3 +12,5 @@
 
 <!ENTITY redoCmd.label			"Redo">  
 <!ENTITY redoCmd.key			"Z">  
+
+<!ENTITY historyCmd.key   "H">  
