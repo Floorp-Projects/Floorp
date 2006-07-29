@@ -23,7 +23,6 @@
 
 <!DOCTYPE RDF 
 [
-<!ENTITY search.category.jobs		"Business &amp; Careers">
 <!ENTITY search.category.music		"Music - Artist">
 <!ENTITY search.category.shareware	"Shareware">
 <!ENTITY search.category.shopping	"Shopping">
@@ -42,10 +41,6 @@
 
   <RDF:Seq about="NC:SearchCategoryRoot">
   	<RDF:li>
-  		<RDF:Description about="urn:search:category:2">
-			<NC:title>&search.category.jobs;</NC:title>
-  		</RDF:Description>
-
   		<RDF:Description about="urn:search:category:3">
 			<NC:title>&search.category.music;</NC:title>
   		</RDF:Description>
@@ -78,10 +73,6 @@
   	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:ICQ.src" />
         <RDF:li resource="NC:SearchCategory?engine=urn:search:engine:google.src" />
   	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:NetscapeSearch.src" />
-  </RDF:Seq>
-
-  <RDF:Seq about="NC:SearchCategory?category=urn:search:category:2">
-  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:Jobs.src" />
   </RDF:Seq>
 
   <RDF:Seq about="NC:SearchCategory?category=urn:search:category:3">
