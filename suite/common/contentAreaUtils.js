@@ -420,7 +420,7 @@ nsHeaderSniffer.prototype = {
             try {
               this.contentEncodingType =
                 encodingEnumerator.getNext().
-                  QueryInterface(Components.interfaces.nsISupportsString).data;
+                  QueryInterface(Components.interfaces.nsISupportsCString).data;
             } catch (e) {
             }
           }

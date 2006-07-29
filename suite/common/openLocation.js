@@ -75,7 +75,7 @@ function onLoad()
       if (element)
         dialog.openAppList.selectedItem = element;
       dialog.input.value = pref.getComplexValue("general.open_location.last_url",
-                                                Components.interfaces.nsISupportsWString).data;
+                                                Components.interfaces.nsISupportsString).data;
     }
     catch(ex) {
     }
@@ -125,11 +125,11 @@ function open()
   }
 
   if (pref) {
-    var str = Components.classes["@mozilla.org/supports-wstring;1"]
-                        .createInstance(Components.interfaces.nsISupportsWString);
+    var str = Components.classes["@mozilla.org/supports-string;1"]
+                        .createInstance(Components.interfaces.nsISupportsString);
     str.data = dialog.input.value;
     pref.setComplexValue("general.open_location.last_url",
-                         Components.interfaces.nsISupportsWString, str);
+                         Components.interfaces.nsISupportsString, str);
     pref.setIntPref("general.open_location.last_window_choice", dialog.openAppList.value);
   }
 
