@@ -19,6 +19,7 @@
   <key id="key_navigator"    key="&navigatorCmd.commandkey;"   command="Tasks:Navigator" modifiers="accel"/>
 
   <!-- Tools Menu -->
+  <key id="key_switchprofile"    key="&switchProfileCmd.commandkey;"   oncommand="toProfileManager();" modifiers="accel,alt"/>
 </keyset>
 <commandset id="tasksCommands">
   <command id="Tasks:Navigator" oncommand="toNavigator();"/>
@@ -36,6 +37,8 @@
               <menuitem id="java" label="&javaConsoleCmd.label;" accesskey="&javaConsoleCmd.accesskey;" oncommand="toJavaConsole()"/>
             </menupopup>
           </menu>
+          <menuseparator/>
+          <menuitem id="cmd_switchprofile" label="&switchProfileCmd.label;" accesskey="&switchProfileCmd.accesskey;" key="key_switchprofile" oncommand="toProfileManager();"/>
         </menupopup>
       </menu>
 
