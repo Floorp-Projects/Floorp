@@ -394,7 +394,7 @@ nsContextMenu.prototype = {
                          ( elem instanceof HTMLModElement &&
                              ( elem.cite || elem.dateTime ) )                ||
                          ( elem instanceof HTMLElement &&
-                             ( elem.title || elem.lang ) )
+                             ( elem.title || elem.lang ) )                   ||
                          elem.getAttributeNS(XMLNS, "lang") ) {
                         dump("On metadata item.\n");
                         this.onMetaDataItem = true;
