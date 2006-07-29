@@ -663,10 +663,10 @@ function appendFiltersForContentType(aFilePicker, aContentType, aFileExtension, 
 function getPostData()
 {
   try {
-    var sessionHistory = getWebNavigation().sessionHistory;
-    return sessionHistory.getEntryAtIndex(sessionHistory.index, false)
-                         .QueryInterface(Components.interfaces.nsISHEntry)
-                         .postData;
+    return getWebNavigation().sessionHistory
+                             .getEntryAtIndex(sessionHistory.index, false)
+                             .QueryInterface(Components.interfaces.nsISHEntry)
+                             .postData;
   }
   catch (e) {
   }
