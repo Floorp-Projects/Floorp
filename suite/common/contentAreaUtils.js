@@ -736,7 +736,7 @@ function getMIMEService()
 function getMIMEInfoForExtension(aExtension)
 {
   try {  
-    return getMIMEService().GetFromExtension(aExtension);
+    return getMIMEService().GetFromTypeAndExtension(null, aExtension);
   }
   catch (e) {
   }
@@ -746,7 +746,7 @@ function getMIMEInfoForExtension(aExtension)
 function getMIMEInfoForType(aMIMEType)
 {
   try {  
-    return getMIMEService().GetFromMIMEType(aMIMEType);
+    return getMIMEService().GetFromTypeAndExtension(aMIMEType, null);
   }
   catch (e) {
   }
