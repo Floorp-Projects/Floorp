@@ -171,7 +171,7 @@ use constant WIN32_MODULE_NAMES => {
     'Mail::Mailer'      => 'MailTools',
     # We provide Template 2.14 or lower for Win32, so it still includes
     # the GD plugin.
-    'Template::Plugin::GD' => 'Template',
+    'Template::Plugin::GD' => 'Template-Toolkit',
 };
 
 sub check_requirements {
