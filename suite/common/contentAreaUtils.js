@@ -187,7 +187,8 @@ function saveInternal(aURL, aDocument,
     fileName: aFileName,
     filePickerTitle: aFilePickerTitleKey,
     document: aDocument,
-    bypassCache: aShouldBypassCache
+    bypassCache: aShouldBypassCache,
+    window: window
   };
   var sniffer = new nsHeaderSniffer(aURL, foundHeaderInfo, data);
 }
@@ -300,12 +301,14 @@ nsHeaderSniffer.prototype = {
         }
         catch (e) {
         }
-      } else {
-        // Failed the link check.  This could be due to an issue with
-        // the link checker, though.  Throw an exception and let the
-        // catch() deal with it as it would with any other link check
-        // failure.
-        throw("Link check failed");
+      }
+      else {
+        var bundle = getStringBundle();
+        var errorTitle = bundle.GetStringFromName("saveLinkErrorTitle");
+        var errorMsg = bundle.GetStringFromName("saveLinkErrorMsg");
+        const promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+        promptService.alert(this.mData.window, errorTitle, errorMsg);
+        return;
       }
     }
     catch (e) {
