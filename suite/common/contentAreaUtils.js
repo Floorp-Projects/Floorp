@@ -67,11 +67,26 @@ function urlSecurityCheck(url, doc)
   }
 }
 
+function getReferrer(doc)
+{
+  var focusedWindow = doc.commandDispatcher.focusedWindow;
+  var sourceURL =
+    isDocumentFrame(focusedWindow) ? focusedWindow.location.href : focusedWindow._content.location.href;
+  try {
+    var uri = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIURI);
+    uri.spec = sourceURL;
+    return uri;
+  } catch (e) {
+    return null;
+  }
+}
+
 function openNewWindowWith(url) 
 {
   urlSecurityCheck(url, document);
   var newWin;
   var wintype = document.firstChild.getAttribute('windowtype');
+  var referrer = getReferrer(document);
 
   // if and only if the current window is a browser window and it has a document with a character
   // set, then extract the current charset menu setting from the current document and use it to
@@ -82,10 +97,10 @@ function openNewWindowWith(url)
     var charsetArg = "charset="+DocCharset;
 
     //we should "inherit" the charset menu setting in a new window
-    newWin = window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url, charsetArg, true );
+    newWin = window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url, charsetArg, true, referrer );
   }
   else { // forget about the charset information.
-    newWin = window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url, null, true );
+    newWin = window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url, null, true, referrer );
   }
 }
 
@@ -93,10 +108,11 @@ function openNewTabWith(url)
 {
   urlSecurityCheck(url, document);
   var wintype = document.firstChild.getAttribute('windowtype');
+  var referrer = getReferrer(document);
 
   if (window && (wintype == "navigator:browser")) {
     var browser = getBrowser();
-    var t = browser.addTab(url); // open link in new tab
+    var t = browser.addTab(url, referrer); // open link in new tab
     if (pref && !pref.getBoolPref("browser.tabs.loadInBackground"))
       browser.selectedTab = t;
   }
