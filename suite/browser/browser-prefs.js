@@ -90,6 +90,8 @@ pref("browser.download.progressDnlgDialog.dontAskForLaunch", false);
 pref("browser.download.finished_download_sound", false);
 pref("browser.download.finished_download_alert", false);
 pref("browser.download.finished_sound_url", "");
+pref("browser.download.autoDownload", false);
+pref("browser.download.lastLocation", true);
 
 // various default search settings
 pref("browser.search.defaulturl", "chrome://navigator-region/locale/region.properties");
