@@ -24,7 +24,7 @@
     Alec Flett <alecf@netscape.com>
 -->
 
-<!DOCTYPE window [
+<!DOCTYPE overlay [
 <!ENTITY % historyDTD SYSTEM "chrome://communicator/locale/history/historyTreeOverlay.dtd" >
 %historyDTD;
 <!ENTITY % contentAreaCommandsDTD SYSTEM "chrome://communicator/locale/contentAreaCommands.dtd" >

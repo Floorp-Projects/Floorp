@@ -27,7 +27,7 @@
 <?xul-overlay href="chrome://communicator/content/history/historyTreeOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/history/history.dtd" >
+<!DOCTYPE page SYSTEM "chrome://communicator/locale/history/history.dtd" >
 
 <page id="history-panel" orient="vertical"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
