@@ -54,6 +54,8 @@ pref("general.startup.addressbook",         false);
 pref("general.open_location.last_url",      "");
 pref("general.open_location.last_window_choice", 0);
 
+pref("general.smoothScroll", false);
+
 // 0 = blank, 1 = home (browser.startup.homepage), 2 = last
 pref("browser.startup.page",                1);
 pref("browser.startup.homepage",	   "chrome://navigator-region/locale/region.properties");
