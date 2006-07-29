@@ -134,7 +134,8 @@
       prefillTextBox(target); // prefill the empty text field if possible
     }
     else {
-      linkNode = findParentNode(event.originalTarget, "a");
+      while (linkNode && !(linkNode instanceof HTMLAnchorElement))
+        linkNode = linkNode.parentNode;
       // <a> cannot be nested.  So if we find an anchor without an
       // href, there is no useful <a> around the target
       if (linkNode && !linkNode.hasAttribute("href"))
@@ -186,7 +187,6 @@
 
     if (pref && !isKeyPress && event.button == 1 &&
         !event.getPreventDefault() &&
-        !findParentNode(event.originalTarget, "scrollbar") &&
         pref.getBoolPref("middlemouse.contentLoadURL")) {
       if (middleMousePaste(event)) {
         event.preventBubble();
