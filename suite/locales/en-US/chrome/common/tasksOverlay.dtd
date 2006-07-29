@@ -52,3 +52,11 @@
 <!ENTITY taskAddressBook.tooltip  "Address Book">
 <!ENTITY taskBar.tooltip  "Taskbar">
 
+<!ENTITY PasswordNotChanged "Unable to change the password that protects your sensitive information.">
+<!ENTITY PasswordExpired "Your sensitive information is now locked.">
+<!ENTITY PasswordNotExpired "Unable to lock your sensitive information.">
+<!ENTITY AllDataWillBeCleared "All stored data will be erased.">
+<!ENTITY UnableToCapture "Unable to capture data.">
+<!ENTITY Captured "Data has been captured.">
+<!ENTITY NotCaptured "There is nothing to capture.">
+<!ENTITY noPrefills "There are no fields that can be prefilled.">
