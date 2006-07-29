@@ -222,7 +222,8 @@ function checkFocusedWindow()
   var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
 
   var sep = document.getElementById("sep-window-list");
-  while (sep = sep.nextSibling) {
+  // Using double parens to avoid warning
+  while ((sep = sep.nextSibling)) {
     var url = sep.getAttribute('id');
     var win = windowManagerInterface.getWindowForResource(url);
     if (win == window) {
