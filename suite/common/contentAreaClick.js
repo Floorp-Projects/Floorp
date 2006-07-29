@@ -175,6 +175,10 @@
   // should always return true for click to go through
   function contentAreaClick(event) 
   {
+    if (!event.isTrusted) {
+      return true;
+    }
+
     var isKeyPress = (event.type == "keypress");
     var href = hrefForClickEvent(event);
     if (href) {
