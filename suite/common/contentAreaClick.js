@@ -188,7 +188,10 @@
             getBrowser() && getBrowser().localName == "tabbrowser") {
             
             theTab = getBrowser().addTab(href, getReferrer(document)); // open link in new tab
-            if (!event.shiftKey && !pref.getBoolPref("browser.tabs.loadInBackground"))
+            var loadInBackground = pref.getBoolPref("browser.tabs.loadInBackground");
+            if (event.shiftKey)
+              loadInBackground = !loadInBackground;
+            if (!loadInBackground)
               getBrowser().selectedTab = theTab;
             event.preventBubble();
             return true;
@@ -221,7 +224,10 @@
         if (pref && pref.getBoolPref("browser.tabs.opentabfor.middleclick") && getBrowser && 
             getBrowser() && getBrowser().localName == "tabbrowser") {
           theTab = getBrowser().addTab(href, getReferrer(document)); // open link in new tab
-          if (!event.shiftKey && !pref.getBoolPref("browser.tabs.loadInBackground"))
+          var loadInBackground = pref.getBoolPref("browser.tabs.loadInBackground");
+          if (event.shiftKey)
+            loadInBackground = !loadInBackground;
+          if (!loadInBackground)
             getBrowser().selectedTab = theTab;
           event.preventBubble();
           return true;
