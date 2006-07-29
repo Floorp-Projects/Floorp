@@ -5,52 +5,7 @@
 	 xmlns:html="http://www.w3.org/1999/xhtml"
 	 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<!-- change the xul key for Unix -->
-<keyset id="globalKeySet" xulkey="alt">
-
-<!-- Unix (alt=xulkey) cut, copy, paste, undo and redo keys -->
-<key id="cutKey" key="x" xulkey="true" shift="false"
-  onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_cut');
-    controller.doCommand('cmd_cut');"/>
-<key id="copyKey" key="c" xulkey="true" shift="false"
-  onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
-    controller.doCommand('cmd_copy');"/>
-<key id="pasteKey" key="v" xulkey="true" shift="false"
-  onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_paste');
-    controller.doCommand('cmd_paste');"/>
-<key id="undoKey" key="z" xulkey="true" shift="false"
-  onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_undo');
-    controller.doCommand('cmd_undo');"/>
-<key id="redoKey" key="r" xulkey="true" shift="false"
-  onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_redo');
-    controller.doCommand('cmd_redo');"/>
-
-<!-- Add the Windows/Mac (control) cut, copy, paste, undo and redo keys -->
-<key id="emCutKey" key="x" control="true" shift="false"
-  onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_cut');
-    controller.doCommand('cmd_cut');"/>
-<key id="emCopyKey" key="c" control="true" shift="false"
-  onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
-    controller.doCommand('cmd_copy');"/>
-<key id="emPasteKey" key="v" control="true" shift="false"
-  onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_paste');
-    controller.doCommand('cmd_paste');"/>
-<key id="emUndoKey" key="z" control="true" shift="false"
-  onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_undo');
-    controller.doCommand('cmd_undo');"/>
-<key id="emRedoKey" key="r" control="true" shift="false"
-  onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_redo');
-    controller.doCommand('cmd_redo');"/>
+<keyset id="globalKeySet">
 
 <!-- other keybindings for cut/copy/paste -->
 <key id="winAlternativeCutKey" keycode="VK_DELETE" shift="true" control="false" alt="false" meta="false"

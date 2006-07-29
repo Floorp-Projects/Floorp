@@ -48,5 +48,27 @@
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_scrollRight');
             controller.doCommand('cmd_scrollRight');"/>
+
+    <key id="cutKey" key="x" xulkey="true" shift="false"
+      onkeypress="
+        var controller = document.commandDispatcher.getControllerForCommand('cmd_cut');
+        controller.doCommand('cmd_cut');"/>
+    <key id="copyKey" key="c" xulkey="true" shift="false"
+      onkeypress="
+        var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
+        controller.doCommand('cmd_copy');"/>
+    <key id="pasteKey" key="v" xulkey="true" shift="false"
+      onkeypress="
+        var controller = document.commandDispatcher.getControllerForCommand('cmd_paste');
+        controller.doCommand('cmd_paste');"/>
+    <key id="undoKey" key="z" xulkey="true" shift="false"
+      onkeypress="
+        var controller = document.commandDispatcher.getControllerForCommand('cmd_undo');
+        controller.doCommand('cmd_undo');"/>
+    <key id="redoKey" key="r" xulkey="true" shift="false"
+      onkeypress="
+        var controller = document.commandDispatcher.getControllerForCommand('cmd_redo');
+        controller.doCommand('cmd_redo');"/>
+
 	</keyset>
 </window>

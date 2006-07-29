@@ -87,23 +87,23 @@
 	<key id="key_space" key=" " cancel="true"/>
 
 <!-- cut, copy, paste, undo and redo keys -->
-<key id="emCutKey" key="x" control="true" shift="false"
+<key id="edCutKey" key="x" control="true" shift="false"
   onkeypress="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_cut');
     controller.doCommand('cmd_cut');"/>
-<key id="emCopyKey" key="c" xulkey="true" shift="false"
+<key id="edCopyKey" key="c" xulkey="true" shift="false"
   onkeypress="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
     controller.doCommand('cmd_copy');"/>
-<key id="emPasteKey" key="v" xulkey="true" shift="false"
+<key id="edPasteKey" key="v" xulkey="true" shift="false"
   onkeypress="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_paste');
     controller.doCommand('cmd_paste');"/>
-<key id="emUndoKey" key="z" xulkey="true" shift="false"
+<key id="edUndoKey" key="z" xulkey="true" shift="false"
   onkeypress="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_undo');
     controller.doCommand('cmd_undo');"/>
-<key id="emRedoKey" key="r" xulkey="true" shift="false"
+<key id="edRedoKey" key="r" xulkey="true" shift="false"
   onkeypress="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_redo');
     controller.doCommand('cmd_redo');"/>

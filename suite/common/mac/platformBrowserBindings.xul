@@ -17,18 +17,6 @@
    onkeypress="
      var controller = document.commandDispatcher.getControllerForCommand('cmd_scrollBottom');
      controller.doCommand('cmd_scrollBottom');"/>
-<key id="macCutKey" key="x" xulkey="true"
-  onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_cut');
-    controller.doCommand('cmd_cut');"/>
-<key id="macCopyKey" key="c" xulkey="true"
-  onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
-    controller.doCommand('cmd_copy');"/>
-<key id="macPasteKey" key="v" xulkey="true"
-  onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_paste');
-    controller.doCommand('cmd_paste');"/>
 
 </keyset>
 <!-- End Mac-specific key bindings -->
