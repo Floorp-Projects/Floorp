@@ -67,6 +67,9 @@ pref("browser.startup.homepage.count", 1);
 pref("browser.startup.homepage_override.1", true);
 pref("browser.startup.autoload_homepage",   true);
 
+// disable this until it can be disabled on a per-docshell basis (see bug 319368)
+pref("browser.send_pings", false);
+
 pref("browser.urlbar.autoFill", false);
 pref("browser.urlbar.showPopup", true);
 pref("browser.urlbar.showSearch", true);
