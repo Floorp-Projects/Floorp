@@ -111,8 +111,8 @@
         break;
       case "input":
         if ((event.target.type.toLowerCase() == "text" || event.target.type == "") // text field
-            && event.detail == "2" // double click
-            && event.button == "1" // left mouse button
+            && event.detail == 2 // double click
+            && event.button == 0 // left mouse button
             && event.target.value.length == 0) { // no text has been entered
           prefillTextField(target); // prefill the empty text field if possible
         }
@@ -138,7 +138,7 @@
   function handleLinkClick(event, href)
   {
     switch (event.button) {                                   
-      case 1:                                                         // if left button clicked
+      case 0:                                                         // if left button clicked
         if (event.metaKey || event.ctrlKey) {                         // and meta or ctrl are down
           openNewWindowWith(href);                                    // open link in new window
           event.preventBubble();
@@ -151,7 +151,7 @@
         if (event.altKey)                                             // if alt is down
           return true;                                                // do nothing
         return false;
-      case 2:                                                         // if middle button clicked
+      case 1:                                                         // if middle button clicked
         if (pref && pref.GetBoolPref("middlemouse.openNewWindow")) {  // and the pref is on
           openNewWindowWith(href);                                    // open link in new window
           event.preventBubble();
