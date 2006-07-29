@@ -32,17 +32,17 @@
 <!ENTITY walletFormManager.accesskey "f">
 <!ENTITY walletPasswordManager.label "Password Manager">
 <!ENTITY walletPasswordManager.accesskey "p">
-<!ENTITY walletSafeFillCmd.label "Prefill Form with Captured Data">
-<!ENTITY walletSafeFillCmd.accesskey "P">
+<!ENTITY walletSafeFillCmd.label "Prefill Form">
+<!ENTITY walletSafeFillCmd.accesskey "f">
 <!ENTITY walletQuickFillCmd.label "Prefill Form Quickly">
 <!ENTITY walletQuickFillCmd.accesskey "q">
-<!ENTITY walletRequestToCaptureCmd.label "Capture Data found on Form">
-<!ENTITY walletRequestToCaptureCmd.accesskey "c">
+<!ENTITY walletRequestToCaptureCmd.label "Save Form Data">
+<!ENTITY walletRequestToCaptureCmd.accesskey "S">
 <!-- LOCALIZATION NOTE (walletContentsCmd.label): Do NOT translate "Wallet"-->
 <!ENTITY walletContentsCmd.label "View Captured Form Data">
 <!ENTITY walletContentsCmd.accesskey "v">
 <!ENTITY walletSitesCmd.label "View Sites">
-<!ENTITY walletSitesCmd.accesskey "s">
+<!ENTITY walletSitesCmd.accesskey "w">
 <!ENTITY walletDisplaySignonsCmd.label "View Stored Passwords">
 <!ENTITY walletDisplaySignonsCmd.accesskey "v">
 <!ENTITY walletDisplayCookiesCmd.label "View Stored Cookies">
