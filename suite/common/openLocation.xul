@@ -35,14 +35,11 @@
   %openDialogDTD;
 ]>            
  
-<window id="openLocation"
-        xmlns:html="http://www.w3.org/1999/xhtml"
+<dialog id="openLocation"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&caption.label;"
         onload="onLoad()"
         style="width: 40em;"
-        class="dialog"
-        orient="vertical"
         persist="screenX screenY"
         screenX="24" screenY="24">
               
@@ -52,19 +49,18 @@
   <script type="application/x-javascript" src="chrome://navigator/content/sessionHistoryUI.js"/>
   
   <stringbundle id="openLocationBundle" src="chrome://communicator/locale/openLocation.properties"/>
-  <keyset id="dialogKeys"/>
 
   <hbox>
     <separator orient="vertical" class="thin"/>
     <vbox flex="1">
-      <html>&enter.label;</html>
+      <description>&enter.label;</description>
       <separator class="thin"/>
 
       <hbox align="center">
-        <textbox id="dialog.input" flex="1" type="autocomplete"
-                    searchSessions="history" timeout="50" maxrows="6"
-                    oninput="doEnabling();" ontextcommand="if (userAction == 'scrolling' ||
-                                                               userAction == 'typing') open();">
+        <textbox id="dialog.input" type="autocomplete"
+                  searchSessions="history" timeout="50" maxrows="6"
+                  oninput="doEnabling();" ontextcommand="if (userAction == 'scrolling' ||
+                                                             userAction == 'typing') open();">
           <menupopup id="ubhist-popup" class="autocomplete-history-popup"
                      popupalign="topleft" popupanchor="bottomleft"
                      onpopupshowing="createUBHistoryMenu(event.target);"
@@ -73,7 +69,7 @@
         <button label="&chooseFile.label;" oncommand="onChooseFile();"/>
       </hbox>
       <hbox align="center">
-        <text class="label" value="&openWhere.label;"/>
+        <label value="&openWhere.label;"/>
         <menulist id="openAppList">
           <menupopup>
             <menuitem value="0" id="currentWindow" label="&topWindow.label;"/>
@@ -83,13 +79,9 @@
             <menuitem value="2" id="editWindow" label="&editNewWindow.label;"/>
           </menupopup>
         </menulist>
-        <spring flex="1"/>
+        <spacer flex="1"/>
       </hbox>
     </vbox>
   </hbox> 
-
-  <separator/>
-
-  <hbox id="okCancelButtonsRight"/>
            
- </window>
+ </dialog>

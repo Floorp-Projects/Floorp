@@ -5,7 +5,6 @@
 <!-- See bugs 57078 and 71779.                                    -->
 
 <keybinding id="platformEditorBindings"
-	 xmlns:html="http://www.w3.org/1999/xhtml"
 	 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <!-- End Unix-specific keybindings -->
