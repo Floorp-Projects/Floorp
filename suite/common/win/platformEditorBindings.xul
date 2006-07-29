@@ -44,12 +44,12 @@
     var controller = document.commandDispatcher.getControllerForCommand('cmd_selectWordNext');
     controller.doCommand('cmd_selectWordNext');"/>
 
-<key id="key_home" keycode="VK_HOME" shift="true" control="true" alt="false"
+<key id="key_homectrlshift" keycode="VK_HOME" shift="true" control="true" alt="false"
     onkeypress="
         var controller =
         document.commandDispatcher.getControllerForCommand('cmd_selectTop');
         controller.doCommand('cmd_selectTop');"/>
-<key id="key_end" keycode="VK_END" shift="true" control="true" alt="false"
+<key id="key_endctrlshift" keycode="VK_END" shift="true" control="true" alt="false"
     onkeypress="
         var controller =
         document.commandDispatcher.getControllerForCommand('cmd_selectBottom');
