@@ -43,6 +43,7 @@
       datasources="rdf:history rdf:localsearch"
       flex="1"
       multiple="true"
+      onselect="historyOnSelect(event)"
       ondraggesture="nsDragAndDrop.startDrag(event, historyDNDObserver);">
 
   <template>

@@ -46,9 +46,16 @@
   <script src="chrome://global/content/strres.js"/>
   <script src="chrome://global/content/globalOverlay.js"/>
 
+  <stringbundle id="historyBundle"
+                src="chrome://communicator/locale/history/history.properties"/>
+
 <commands id="commands">
   <commandset id="selectEditMenuItems"/>
   <commandset id="globalEditMenuItems"/>
+  <commandset id="historyEditMenuItems"
+              commandupdater="true"
+              events="select"
+              oncommandupdate="updateHistoryCommands()"/>
 </commands>
 
 <broadcasterset id="broadcasterset">
@@ -64,6 +71,8 @@
   <broadcaster id="cmd_copy"/>
   <broadcaster id="cmd_delete"/>
   <broadcaster id="cmd_selectAll"/>
+  <broadcaster id="cmd_deleteByHostname" oncommand="goDoCommand('cmd_deleteByHostname');"/>
+  <broadcaster id="cmd_deleteByDomain" oncommand="goDoCommand('cmd_deleteByDomain');"/>
 </broadcasterset>
 <keyset id="keyset">
   <!-- File Menu -->
@@ -101,6 +110,8 @@
       <menuitem id="menu_cut"/>
       <menuitem id="menu_copy"/>
       <menuitem id="menu_delete"/>
+      <menuitem id="menu_deleteByHostname" observes="cmd_deleteByHostname"/>
+      <menuitem id="menu_deleteByDomain" observes="cmd_deleteByDomain"/>
       <menuseparator/>
       <menuitem id="menu_selectAll"/>
       <menuseparator/>
