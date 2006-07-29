@@ -385,10 +385,12 @@ function WalletDialog( which )
       window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","CookieViewer","modal=yes,chrome,resizable=no",2); 
       break;
     case "samples":
-      window._content.location.href= 'http://www.mozilla.org/wallet/samples/';
+      server = this.pref.getLocalizedUnicharPref("wallet.Samples");
+      window._content.location.href = server + 'wallet2.html';
       break;
     case "interview":
-      window._content.location.href= 'http://www.mozilla.org/wallet/samples/INTERVIEW.HTML';
+      server = this.pref.getLocalizedUnicharPref("wallet.Samples");
+      window._content.location.href = server + 'wallet3.html';
       break;
     case "wallet":
     default:
