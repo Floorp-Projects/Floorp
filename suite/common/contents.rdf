@@ -12,7 +12,7 @@
         chrome:displayName="Communicator Shared"
         chrome:author="mozilla.org"
         chrome:name="communicator"
-        chrome:localeVersion="0.9.9"
+        chrome:localeVersion="1.0.0"
         chrome:skinVersion="1.0">
   </RDF:Description>
 
