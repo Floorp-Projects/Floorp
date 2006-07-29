@@ -39,7 +39,7 @@
   <script src="chrome://global/content/nsTreeUtils.js"/>
   <script src="chrome://global/content/treePopups.js"/>
 
-<tree id="historyTree" ref="NC:HistoryRoot" context="contextual"
+<tree id="historyTree" ref="NC:HistoryByDate" context="contextual"
       datasources="rdf:history rdf:localsearch"
       flex="1"
       multiple="true"
@@ -143,9 +143,6 @@
   </treehead>
 
   <template>
-    <rule iscontainer="true">
-
-    </rule>
     <rule>
       <treechildren>
        <treeitem uri="rdf:*" 
