@@ -121,9 +121,20 @@ nsContextMenu.prototype = {
 
         this.showItem( "context-sep-properties", !( this.inDirList || this.isTextSelected || this.onTextInput ) );
         // Set As Wallpaper depends on whether an image was clicked on, and only works on Windows.
-        this.showItem( "context-setWallpaper", this.onImage && navigator.appVersion.indexOf("Windows") != -1);
-        
+        var isWin = navigator.appVersion.indexOf("Windows") != -1;
+        this.showItem( "context-setWallpaper", isWin && this.onImage );
+
         this.showItem( "context-sep-image", this.onImage );
+
+        if( isWin && this.onImage ) {
+            var wallpaperItem = document.getElementById("context-setWallpaper");
+            // Disable the Set As Wallpaper menu item if we're still trying to load the image
+            if( !("complete" in this.target) || this.target.complete ) {
+                wallpaperItem.removeAttribute("disabled");
+            } else {
+                wallpaperItem.setAttribute("disabled", "true");
+            }
+        }
 
         // View Image depends on whether an image was clicked on.
         this.showItem( "context-viewimage", this.onImage );
