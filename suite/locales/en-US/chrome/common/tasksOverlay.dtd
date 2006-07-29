@@ -20,11 +20,11 @@
 <!ENTITY walletMenu.label "Privacy and Security">
 <!ENTITY walletFormManager.label "Form Manager">
 <!ENTITY walletPasswordManager.label "Password Manager">
-<!ENTITY walletSafeFillCmd.label "Prefill Form Safely">
+<!ENTITY walletSafeFillCmd.label "Prefill Form with Captured Data">
 <!ENTITY walletQuickFillCmd.label "Prefill Form Quickly">
-<!ENTITY walletRequestToCaptureCmd.label "Capture Data from Form">
+<!ENTITY walletRequestToCaptureCmd.label "Capture Data found on Form">
 <!-- LOCALIZATION NOTE (walletContentsCmd.label): Do NOT translate "Wallet"-->
-<!ENTITY walletContentsCmd.label "View Stored Form Data">
+<!ENTITY walletContentsCmd.label "View Captured Form Data">
 <!ENTITY walletDisplaySignonsCmd.label "View Stored Passwords">
 <!ENTITY walletDisplayCookiesCmd.label "View Stored Cookies">
 <!ENTITY walletAllowCookiesCmd.label "Allow Site to Set Cookies">
@@ -42,6 +42,7 @@
 <!ENTITY walletExpirePasswordCmd.label "Log Out">
 <!ENTITY walletEncryptCmd.label "Encrypt Stored Data">
 <!ENTITY walletObscureCmd.label "Obscure Stored Data">
+<!ENTITY walletClearCmd.label "Clear Stored Data">
 <!ENTITY walletCookieManager.label "Cookie Manager">
 <!ENTITY walletImageManager.label "Image Manager">
 

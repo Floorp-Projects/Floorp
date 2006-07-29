@@ -235,13 +235,6 @@ function HideImage() {
   element.setAttribute("disabled","true" );
 }
 
-function HideImage() {
-  var element;
-  element = document.getElementById("image");
-  element.setAttribute("style","display: none;" );
-  element.setAttribute("disabled","true" );
-}
-
 function HideEncryptOrObscure() {
   var elementOn, elementOff;
   if (this.pref.GetBoolPref("wallet.crypto")) {
@@ -259,6 +252,10 @@ function CheckForWalletAndImage()
 {
   // remove either encrypt or obscure depending on pref setting
   HideEncryptOrObscure();
+
+  // remove quickfill since it was just for development purposes
+  element = document.getElementById("walletQuickFill");
+  element.setAttribute("style","display: none;" );
 
   // remove wallet functions if not in browser
   try {
@@ -292,7 +289,7 @@ function CheckForWalletAndImage()
 // perform a wallet action
 function WalletAction( action ) 
 {
-  if (action == "password" || action == "expire") {
+  if (action == "password" || action == "expire" || action == "clear") {
     wallet = Components.classes['component://netscape/wallet/wallet-service'];
     wallet = wallet.getService();
     wallet = wallet.QueryInterface(Components.interfaces.nsIWalletService);
@@ -301,6 +298,8 @@ function WalletAction( action )
       wallet.WALLET_ChangePassword();
     } else if (action == "expire") {
       wallet.WALLET_ExpirePassword();
+    } else if (action == "clear") {
+      wallet.WALLET_DeleteAll();
     }
     return;
   }
