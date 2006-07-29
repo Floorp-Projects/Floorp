@@ -33,8 +33,29 @@
         onload="HistoryInit();">
   <script type="application/x-javascript" src="chrome://communicator/content/history/history.js"/>
 
+  <!-- use deep merging to hide certain columns by default -->
+  <tree id="historyTree">
+    <treecolgroup id="theColumns">
+      <treecol id="Name"/>
+      <splitter id="pre-URL-splitter"/>
+      <treecol id="URL" hidden="true"/>
 
-  <tree id="historyTree"/>
+      <splitter id="pre-Date-splitter"/>
+      <treecol id="Date" hidden="true"/>
+
+      <splitter id="pre-FirstVisitDate-splitter"/>
+      <treecol id="FirstVisitDate" hidden="true"/>
+
+      <splitter id="pre-Hostname-splitter"/>
+      <treecol id="Hostname" hidden="true"/>
+
+      <splitter id="pre-Referrer-splitter"/>
+      <treecol id="Referrer" hidden="true"/>
+
+      <splitter id="pre-VisitCount-splitter"/>
+      <treecol id="VisitCount" hidden="true"/>
+    </treecolgroup>
+  </tree>
 
 
 </window>
