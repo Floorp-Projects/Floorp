@@ -116,6 +116,8 @@
  * Clients of derived classes need not play with this superclass.
  **/
 class NS_COM nsAutoLockBase {
+    friend class nsAutoUnlockBase;
+
 protected:
     nsAutoLockBase() {}
     enum nsAutoLockType {eAutoLock, eAutoMonitor, eAutoCMonitor};
@@ -136,6 +138,26 @@ protected:
 
     void            Show() {}
     void            Hide() {}
+#endif
+};
+
+/**
+ * nsAutoUnlockBase
+ * This is the base class for stack-based unlocking objects.
+ * It unlocks locking objects based on nsAutoLockBase.
+ **/
+class NS_COM nsAutoUnlockBase {
+protected:
+    nsAutoUnlockBase() {}
+
+#ifdef DEBUG
+    nsAutoUnlockBase(void* addr);
+    ~nsAutoUnlockBase();
+
+    nsAutoLockBase* mLock;
+#else
+    nsAutoUnlockBase(void* addr) {}
+    ~nsAutoUnlockBase() {}
 #endif
 };
 

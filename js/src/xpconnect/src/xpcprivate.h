@@ -336,20 +336,10 @@ private:
 
 /************************************************/
 
-class XPCAutoUnlock : public nsAutoLockBase {
+class XPCAutoUnlock : public nsAutoUnlockBase {
 public:
-
-    static XPCLock* NewLock(const char* name)
-                        {return nsAutoMonitor::NewMonitor(name);}
-    static void     DestroyLock(XPCLock* lock)
-                        {nsAutoMonitor::DestroyMonitor(lock);}
-
     XPCAutoUnlock(XPCLock* lock)
-#ifdef DEBUG
-        : nsAutoLockBase(lock ? (void*) lock : (void*) this, eAutoMonitor),
-#else
-        : nsAutoLockBase(lock, eAutoMonitor),
-#endif
+        : nsAutoUnlockBase(lock),
           mLock(lock)
     {
         if(mLock)

@@ -349,6 +349,29 @@ void nsAutoLockBase::Hide()
         prev->mDown = mDown;
 }
 
+nsAutoUnlockBase::nsAutoUnlockBase(void* addr)
+{
+    if (addr)
+    {
+        nsAutoLockBase* curr = (nsAutoLockBase*) PR_GetThreadPrivate(LockStackTPI);
+        while (curr && curr->mAddr != addr)
+            curr = curr->mDown;
+
+        mLock = curr;
+    }
+    else
+        mLock = nsnull;
+
+    if (mLock)
+        mLock->Hide();
+}
+
+nsAutoUnlockBase::~nsAutoUnlockBase()
+{
+    if (mLock)
+        mLock->Show();
+}
+
 #endif /* DEBUG */
 
 PRMonitor* nsAutoMonitor::NewMonitor(const char* name)
