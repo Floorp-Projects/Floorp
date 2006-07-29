@@ -43,6 +43,17 @@
   onkeypress="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_selectWordNext');
     controller.doCommand('cmd_selectWordNext');"/>
+
+<key id="key_home" keycode="VK_HOME" shift="true" control="true" alt="false"
+    onkeypress="
+        var controller =
+        document.commandDispatcher.getControllerForCommand('cmd_selectTop');
+        controller.doCommand('cmd_selectTop');"/>
+<key id="key_end" keycode="VK_END" shift="true" control="true" alt="false"
+    onkeypress="
+        var controller =
+        document.commandDispatcher.getControllerForCommand('cmd_selectBottom');
+        controller.doCommand('cmd_selectBottom');"/>
 </keyset>
 
 <!-- End Windows-specific keybindings -->
