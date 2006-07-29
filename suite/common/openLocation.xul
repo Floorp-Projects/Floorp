@@ -25,7 +25,7 @@
 
 -->
 
-<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window [
@@ -49,9 +49,11 @@
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>  
   <script type="application/x-javascript" src="chrome://communicator/content/openLocation.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://navigator/content/sessionHistoryUI.js"/>
   
   <stringbundle id="openLocationBundle" src="chrome://communicator/locale/openLocation.properties"/>
   <keyset id="dialogKeys"/>
+
   <box>
     <box orient="vertical">
       <image class="question-icon"/>
@@ -63,8 +65,15 @@
       <separator class="thin"/>
 
       <box autostretch="never">
-        <textbox id="dialog.input" flex="1" oninput="doEnabling();"/>
-        <button label="&chooseFile.label;" oncommand="onChooseFile();"/>
+        <textbox id="dialog.input" flex="1" type="autocomplete"
+                    searchSessions="history" timeout="50" maxrows="6"
+                    oninput="doEnabling();">
+          <menupopup id="ubhist-popup" class="autocomplete-history-popup"
+                     popupalign="topleft" popupanchor="bottomleft"
+                     oncreate="createUBHistoryMenu(event.target);"
+                     oncommand="useUBHistoryItem(event.target)"/>
+        </textbox>
+        <button label="&chooseFile.label;" onclick="onChooseFile();"/>
       </box>
       <box autostretch="never" valign="center">
         <text class="label" value="&openWhere.label;"/>
