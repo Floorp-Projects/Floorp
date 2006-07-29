@@ -168,10 +168,10 @@ function goToggleToolbar( id, elementID )
 	 	var attribValue = toolbar.getAttribute("hidden") ;
 	
 		//dump("set hidden to "+!attribValue+"\n");
-		if ( attribValue != false )
+		if ( attribValue == "true" )
 		{
 		//	dump( "Show \n");
-			toolbar.setAttribute("hidden", "" );
+			toolbar.setAttribute("hidden", "false" );
 			if ( element )
 				element.setAttribute("checked","true")
 		}
