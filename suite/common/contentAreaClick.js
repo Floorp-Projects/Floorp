@@ -127,14 +127,9 @@
 
     switch (local_name) {
       case "a":
-        linkNode = target;
-        break;
       case "area":
-        if (target.href) 
-          linkNode = target;
-        break;
       case "link":
-        if (target.href) 
+        if (target.hasAttribute("href")) 
           linkNode = target;
         break;
       case "input":
@@ -147,6 +142,10 @@
         break;
       default:
         linkNode = findParentNode(event.originalTarget, "a");
+        // <a> cannot be nested.  So if we find an anchor without an
+        // href, there is no useful <a> around the target
+        if (linkNode && !linkNode.hasAttribute("href"))
+          linkNode = null;
         break;
     }
     if (linkNode) {
