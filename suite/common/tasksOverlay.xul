@@ -91,8 +91,8 @@
                   <menuitem value="&walletQuickFillCmd.label;" accesskey="&walletQuickFillCmd.accesskey;" id="walletQuickFill" oncommand="WalletAction('quickfill');"/> 
                   <menuitem value="&walletRequestToCaptureCmd.label;" accesskey="&walletRequestToCaptureCmd.accesskey;" id="walletCapture" oncommand="WalletAction('capture');"/> 
                   <menuseparator/>
--->
                   <menuitem value="&walletInterviewCmd.label;" accesskey="&walletInterviewCmd.accesskey;" id="walletInterview" oncommand="WalletDialog('interview');"/> 
+-->
                   <menuitem value="&walletSamplesCmd.label;" accesskey="&walletSamplesCmd.accesskey;" id="walletSamples" oncommand="WalletDialog('samples');"/> 
                 </menupopup>
               </menu>

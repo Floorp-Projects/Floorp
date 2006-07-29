@@ -391,9 +391,9 @@ function WalletDialog( which )
     case "samples":
       window._content.location.href = 'chrome://communicator/locale/wallet/index.html';
       break;
-    case "interview":
-      window._content.location.href = 'chrome://communicator/locale/wallet/interview.html';
-      break;
+//  case "interview":
+//    window._content.location.href = 'chrome://communicator/locale/wallet/interview.html';
+//    break;
     case "walletsites":
       window.openDialog("chrome://communicator/content/wallet/SignonViewer.xul","SSViewer","modal=yes,chrome,resizable=no","W"); 
       break;
@@ -403,7 +403,10 @@ function WalletDialog( which )
       break;
     case "wallet":
     default:
-      window.openDialog("chrome://communicator/content/wallet/WalletEditor.xul","walletEditor","modal=yes,chrome,resizable=no"); 
+      window.openDialog(
+          "chrome://communicator/content/wallet/WalletViewer.xul",
+          "WalletViewer",
+          "chrome,titlebar,modal=yes,resizable=yes");
       break;
   }
 }
