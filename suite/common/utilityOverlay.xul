@@ -150,9 +150,6 @@
   <key id="key_paste"
        key="&pasteCmd.key;"
        modifiers="accel"/>
-  <key id="key_selectAll"
-       key="&selectAllCmd.key;"
-       modifiers="accel"/>
 
   <commandset id="globalEditMenuItems"
               commandupdater="true"

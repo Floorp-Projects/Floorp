@@ -1,7 +1,14 @@
 <?xml version="1.0"?> 
 <!-- unix version of platformCommunicatorOverlay.xul -->
 
-<!DOCTYPE window SYSTEM "chrome://communicator-platform/locale/platformCommunicatorOverlay.dtd">
+<!DOCTYPE window [
+
+<!ENTITY % platformCommunicationDTD SYSTEM "chrome://communicator-platform/locale/platformCommunicatorOverlay.dtd">
+%platformCommunicationDTD;
+<!ENTITY % utilityDTD SYSTEM "chrome://communicator/locale/utilityOverlay.dtd">
+%utilityDTD;
+
+]>
 
 <overlay id="platformCommunicatorOverlay"
      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -22,6 +29,8 @@
   
     <!-- Edit Menu -->
     <menuitem id="menu_redo" label="&redoCmd.label;" key="key_redo" accesskey="&redoCmd.accesskey;" command="cmd_redo"/>
+    <!-- Select All Key -->
+    <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="alt"/>
 	
 	<!-- Delete Key -->
   <key id="key_delete" keycode="VK_DELETE" command="cmd_delete"/>
