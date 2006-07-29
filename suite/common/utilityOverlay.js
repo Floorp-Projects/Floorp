@@ -55,29 +55,6 @@ function goPageSetup()
 {
 }
 
-
-
-function goOpenNewMessage()
-{
-	var msgComposeService = Components.classes["component://netscape/messengercompose"].getService(); 
-	msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService); 
-
-	msgComposeService.OpenComposeWindow(null,
-										null,
-										Components.interfaces.nsIMsgCompType.New,
-										Components.interfaces.nsIMsgCompFormat.Default,
-										null); 
-}  
-
-function goNewCardDialog(selectedAB)
-{
-	window.openDialog("chrome://messenger/content/addressbook/abNewCardDialog.xul",
-					  "",
-					  "chrome,resizeable=no,modal",
-					  {selectedAB:selectedAB});
-}
-
-
 function goEditCardDialog(abURI, card, okCallback)
 {
 	window.openDialog("chrome://messenger/content/addressbook/abEditCardDialog.xul",
@@ -285,15 +262,5 @@ function helpMenuCreate()
 	var relCommand =  "openTopWin(\'" + BrandRelUrl + "\')";
 	var relItem = document.getElementById( "releaseUrl" );
 	relItem.setAttribute("oncommand", relCommand);
-}
-
-function SendPage()
-{
-  var pageUrl = window.content.location.href;
-  var pageTitle =  window.content.document.title;
-  window.openDialog( "chrome://messenger/content/messengercompose/messengercompose.xul", "_blank", 
-                     "chrome,all,dialog=no", 
-                     "attachment='" + pageUrl + "',body='" + pageUrl +
-                     "',subject='" + pageTitle + "',bodyislink=true");
 }
 

@@ -1,0 +1,121 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="chrome://communicator/skin/tasksOverlay.css" type="text/css"?> 
+<?xul-overlay href="chrome://communicator/content/PSMTaskMenu.xul"?>
+
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % tasksDTD SYSTEM "chrome://communicator/locale/tasksOverlay.dtd" >
+%tasksDTD;
+]>
+
+<?xul-overlay href="chrome://communicator/content/taskbarOverlay.xul"?>
+
+<overlay id="tasksOverlay"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+      <script language="JavaScript" src="chrome://communicator/content/tasksOverlay.js"/>
+
+      <broadcasterset id="broadcasterset"/>
+ 
+      <!-- Tasks Menu -->
+      <menu id="tasksMenu" value="&tasksMenu.label;"  datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot">
+        <template>
+          <rule>
+            <menupopup>
+              <menuitem uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="ShowWindowFromResource(event.target)"/>
+            </menupopup>
+          </rule>
+        </template>
+
+        <menupopup id="taskPopup">
+          <menuitem value="&navigatorCmd.label;" oncommand="toNavigator()"/>
+          <menuitem value="&editorCmd.label;"    oncommand="toEditor();" />
+          <menuseparator/>
+
+          <menuitem value="&addressBookCmd.label;" oncommand="toAddressBook()"/>
+          <menuitem value="&newsgroupsCmd.label;" disabled="true" oncommand="toNewsgroups()"/>
+          <menuseparator/>
+
+          <menu value="&walletMenu.label;">
+            <menupopup  id="personalManagers" oncreate="CheckForWalletAndImage()"> 
+              <menu value="&walletPasswordManager.label;">
+                <menupopup>
+                  <menuitem value="&walletDisplaySignonsCmd.label;" oncommand="WalletDialog('signon');"/> 
+                  <menuitem value="&walletChangePasswordCmd.label;" oncommand="WalletAction('password');"/>
+                  <menuitem value="&walletExpirePasswordCmd.label;" oncommand="WalletAction('expire');"/>
+                  <menuseparator/>
+                  <menuitem value="&walletEncryptCmd.label;" id="encrypt"
+                    oncommand="WalletAction('encrypt');"/>
+                  <menuitem value="&walletObscureCmd.label;" id="obscure"
+                    oncommand="WalletAction('obscure');"/>
+                </menupopup>
+              </menu>
+              <menu value="&walletCookieManager.label;">
+                <menupopup>
+                  <menuitem value="&walletDisplayCookiesCmd.label;"
+                            oncommand="WalletDialog('cookie');"/> 
+                  <menuitem id="AllowCookies" value="&walletAllowCookiesCmd.label;"
+                            msg="&walletAllowCookiesMsg.label;"
+                            oncommand="WalletAction('cookieAllow');"/> 
+                  <menuitem id="BlockCookies" value="&walletBlockCookiesCmd.label;"
+                            msg="&walletBlockCookiesMsg.label;"
+                            oncommand="WalletAction('cookieBlock');"/> 
+                </menupopup>
+              </menu>
+              <menu value="&walletImageManager.label;" id="image">
+                <menupopup>
+                  <menuitem value="&walletDisplayImagesCmd.label;"
+                            oncommand="WalletDialog('image');"/> 
+                  <menuitem id="AllowImages" value="&walletAllowImagesCmd.label;"
+                            msg="&walletAllowImagesMsg.label;"
+                            oncommand="WalletAction('imageAllow');"/> 
+                  <menuitem id="BlockImages" value="&walletBlockImagesCmd.label;"
+                            msg="&walletBlockImagesMsg.label;"
+                            oncommand="WalletAction('imageBlock');"/> 
+                </menupopup>
+              </menu>
+              <menu value="&walletFormManager.label;" id="wallet">
+                <menupopup>
+                  <menuitem id="walleteditor" value="&walletContentsCmd.label;" oncommand="WalletDialog('wallet');"/> 
+                  <menuitem value="&walletSafeFillCmd.label;" id="walletSafeFill" oncommand="WalletAction('safefill');"/> 
+                  <menuitem value="&walletQuickFillCmd.label;" id="walletQuickFill" oncommand="WalletAction('quickfill');"/> 
+                  <menuitem value="&walletRequestToCaptureCmd.label;" id="walletCapture" oncommand="WalletAction('capture');"/> 
+                  <menuitem value="&walletInterviewCmd.label;" id="walletInterview" oncommand="WalletDialog('interview');"/> 
+                  <menuitem value="&walletSamplesCmd.label;" id="walletSamples" oncommand="WalletDialog('samples');"/> 
+                </menupopup>
+              </menu>
+            </menupopup> 
+          </menu> 
+          <menuseparator/>
+
+          <menu value="&toolsMenu.label;">
+            <menupopup id="toolsPopup">
+              <menuitem value="&historyCmd.label;" oncommand="toHistory()"/>
+              <menuitem value="&importUtilCmd.label;" oncommand="toImport()"/>
+              <menuitem value="&javaConsoleCmd.label;" oncommand="toJavaConsole()"/>
+              <menuitem value="&javaScriptConsoleCmd.label;" oncommand="toJavaScriptConsole();"/>
+            </menupopup>
+          </menu>
+          <menuseparator/>
+
+        </menupopup>
+      </menu>
+    
+  <toolbox id="taskbar">
+    <toolbar class="toolbar-standard chromeclass-status" persist="collapsed" style="min-width: 1px;" 
+             grippytooltip="aTooltip" grippytooltiptext="&taskBar.tooltip;">
+      <box id="taskButtons">
+        <button class="button-toolbar-4 plain taskbutton" id="mini-nav" onclick="toNavigator();" 
+                tooltip="aTooltip" tooltiptext="&taskNavigator.tooltip;"/>
+        <button class="button-toolbar-4 plain taskbutton" id="mini-comp" onclick="toEditor();" 
+                tooltip="aTooltip" tooltiptext="&taskComposer.tooltip;"/>
+        <button class="button-toolbar-4 plain taskbutton" id="mini-addr" onclick="toAddressBook()"
+                tooltip="aTooltip" tooltiptext="&taskAddressBook.tooltip;"/>
+      </box>
+      <box id="taskbarMenuBox"/>
+      <box id="taskbarGotoMenuBox" align="right"/>
+    </toolbar>
+  </toolbox>    
+
+</overlay>
