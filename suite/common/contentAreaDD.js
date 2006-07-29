@@ -51,7 +51,7 @@
 var contentAreaDNDObserver = {
   onDrop: function (aEvent, aXferData, aDragSession)
     {
-      var url = retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
+      var url = transferUtils.retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
 
       // valid urls don't contain spaces ' '; if we have a space it isn't a valid url so bail out
       if (!url || !url.length || url.indexOf(" ", 0) != -1) 
@@ -81,26 +81,3 @@ var contentAreaDNDObserver = {
     }
   
 };
-
-
-function retrieveURLFromData (aData, flavour)
-{
-  switch (flavour) {
-  case "text/unicode":
-    // this might not be a url, but we'll return it anyway
-    return aData;
-  case "text/x-moz-url":
-    var data = aData.toString();
-    var separator = data.indexOf("\n");
-    if (separator != -1)
-      data = data.substr(0, separator);
-    return data;
-  case "application/x-moz-file":
-    var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-      .getService(Components.interfaces.nsIIOService);
-    return ioService.getURLSpecFromFile(aData);
-  }             
-  return null;                                                         
-}
-
-
