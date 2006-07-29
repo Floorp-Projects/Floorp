@@ -84,6 +84,65 @@ function goPreferences(id, paneURL, paneID)
   var prefWindow = window.openDialog("chrome://communicator/content/pref/pref.xul","PrefWindow", "chrome,modal=" + modality+ ",resizable=yes", paneURL, paneID);
 }
 
+function okToCapture() {
+  var capture = document.getElementById("menu_capture");
+  if (!window._content.document) {
+    capture.setAttribute("disabled", "true");
+    return;
+  }
+  var formsArray = window._content.document.forms;
+  var form;
+  for (form=0; form<formsArray.length; form++) {
+    var elementsArray = formsArray[form].elements;
+    var element;
+    for (element=0; element<elementsArray.length; element++) {
+      var type = elementsArray[element].type;
+      var value = elementsArray[element].value;
+      if ((type=="" || type=="text") && value!="") {
+        capture.setAttribute("disabled", "false");
+        return;
+      } 
+    }
+  }
+  capture.setAttribute("disabled", "true");
+}
+
+function okToPrefill() {
+  var prefill = document.getElementById("menu_prefill");
+  if (!window._content.document) {
+    prefill.setAttribute("disabled", "true");
+    return;
+  }
+  var formsArray = window._content.document.forms;
+  var form;
+  for (form=0; form<formsArray.length; form++) {
+    var elementsArray = formsArray[form].elements;
+    var element;
+    for (element=0; element<elementsArray.length; element++) {
+      var type = elementsArray[element].type;
+      var value = elementsArray[element].value;
+      if (type=="" || type=="text" || type=="select-one") {
+        prefill.setAttribute("disabled", "false");
+        return;
+      }
+    }
+  }
+  prefill.setAttribute("disabled", "true");
+}
+
+function capture()
+{
+  if( appCore ) {
+    status = appCore.walletRequestToCapture(window._content);
+  }
+}  
+
+function prefill()
+{
+  if( appCore ) {
+    appCore.walletPreview(window, window._content);
+  }
+}
 
 function goToggleToolbar( id, elementID )
 {
@@ -207,6 +266,11 @@ function goUpdateGlobalEditMenuItems()
 	goUpdateCommand('cmd_paste');
 	goUpdateCommand('cmd_selectAll');
 	goUpdateCommand('cmd_delete');
+}
+
+function goUpdateFormsEditMenuItems() {
+	okToCapture();
+	okToPrefill();
 }
 
 // update menu items that rely on the current selection
