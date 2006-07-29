@@ -35,4 +35,4 @@
 <!ENTITY taskNavigator.tooltip  "Navigator">
 <!ENTITY taskComposer.tooltip  "Composer">
 <!ENTITY taskAddressBook.tooltip  "Address Book">
-<!ENTITY taskBar.tooltip  "Taskbar">
+<!ENTITY taskBar.tooltip  "Status Bar">
