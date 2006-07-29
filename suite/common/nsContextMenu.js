@@ -397,7 +397,7 @@ nsContextMenu.prototype = {
     },
     // Open new window with the URL of the image.
     viewImage : function () {
-        openNewWindowWith( this.imageURL );
+        openTopWin( this.imageURL );
     },
     // Save URL of clicked-on frame.
     saveFrame : function () {
