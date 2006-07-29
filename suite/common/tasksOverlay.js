@@ -77,6 +77,13 @@ function toHistory()
 
 }
 
+function toDownloadManager()
+{
+  var dlmgr = Components.classes['@mozilla.org/download-manager;1'].getService();
+  dlmgr = dlmgr.QueryInterface(Components.interfaces.nsIDownloadManager);
+  dlmgr.open(window);
+}
+  
 function toJavaScriptConsole()
 {
     toOpenWindowByType("global:console", "chrome://global/content/console.xul");
