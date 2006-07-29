@@ -161,7 +161,7 @@
       }
     }
 
-    return linkNode ? {href: href, linkNode: linkNode} : null;
+    return href ? {href: href, linkNode: linkNode} : null;
   }
 
   // Called whenever the user clicks in the content area,
