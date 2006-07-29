@@ -258,7 +258,7 @@
     // Construct nsIURL.
     var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                   .getService(Components.interfaces.nsIIOService);
-    var baseURI  = ioService.newURI(base, null);
+    var baseURI  = ioService.newURI(base, null, null);
 
-    return ioService.newURI(baseURI.resolve(url), null).spec;
+    return ioService.newURI(baseURI.resolve(url), null, null).spec;
   }
