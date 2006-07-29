@@ -278,11 +278,7 @@ function retrieveURLFromData (aData, flavour)
       data = data.substr(0, separator);
     return data;
   case "application/x-moz-file":
-    const kURLContractID = "@mozilla.org/network/standard-url;1";
-    const kFileURLIID = Components.interfaces.nsIFileURL;
-    var fileURL = Components.classes[kURLContractID].createInstance(kFileURLIID);
-    fileURL.file = aData;
-    return fileURL.spec;
+    return aData.URL;
   }             
   return null;                                                         
 }

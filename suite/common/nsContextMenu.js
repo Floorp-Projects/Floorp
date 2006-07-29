@@ -674,9 +674,9 @@ nsContextMenu.prototype = {
     // Convert relative URL to absolute, using document's <base>.
     makeURLAbsolute : function ( base, url ) {
         // Construct nsIURL.
-        var baseURL = this.createInstance( "@mozilla.org/network/standard-url;1", "nsIURL" );
-        // Initialize from base url.
-        baseURL.spec = base;
+        var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                      .getService(Components.interfaces.nsIIOService);
+        var uriToAdd  = ioService.newURI(base, null);
         // Resolve
         var result = baseURL.resolve( url );
         return result;
