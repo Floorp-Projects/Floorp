@@ -108,9 +108,10 @@ function open()
         window.opener.delayedOpenWindow(getBrowserURL(), "all,dialog=no", url);
         break;
       case "2":
-        // editPage is in utilityOverlay.js (all editor openers with URL should use this)
+        // editPage is in editorApplicationOverlay.js 
         // 3rd param tells editPage to use "delayedOpenWindow"
-        editPage(url, window.opener, true);
+        if ("editPage" in window.opener)
+          window.opener.editPage(url, window.opener, true);
         break;
       case "3":
         if (browser.getBrowser && browser.getBrowser().localName == "tabbrowser")
