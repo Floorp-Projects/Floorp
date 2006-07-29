@@ -303,7 +303,15 @@ nsContextMenu.prototype = {
                     if ( root.getAttribute( "URL" ) ) {
                         // Build pseudo link object so link-related functions work.
                         this.onLink = true;
-                        this.link = { href : root.getAttribute("URL") };
+                        this.link = { href : root.getAttribute("URL"),
+                                      getAttribute: function (attr) {
+                                          if (attr == "title") {
+                                              return root.firstChild.firstChild.getAttribute("label");
+                                          } else {
+                                              return "";
+                                          }
+                                      }
+                                    };
                         // If element is a directory, then you can't save it.
                         if ( root.getAttribute( "container" ) == "true" ) {
                             this.onSaveableLink = false;
