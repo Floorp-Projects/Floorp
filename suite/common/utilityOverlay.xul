@@ -11,18 +11,12 @@
   <script language="javascript" src="chrome://global/content/builtinURLs.js"></script>
          
   <!-- online/offline status indicators -->
-  <broadcasterset id="broadcasterset">
-  	<broadcaster id="Communicator:Synchronize" value="&offlineSynchronizeCmd.label;" disabled="true" />
+  <broadcasterset id="broadcasterset">  	
 	  <broadcaster id="Communicator:WorkMode" value="&offlineGoOfflineCmd.label;" oncommand="setOfflineStatus(true);"/>
   </broadcasterset>
   <statusbarpanel id="offline-status" tooltip="aTooltip" observes="Communicator:WorkMode"/>
-  <menu id="offlineMenu" value="&offlineMenu.label;" accesskey="&offlineMenu.accesskey;">
-    <menupopup id="offlineMenuPopup">
-      <menuitem position="1" accesskey="&offlineGoOfflineCmd.accesskey;" observes="Communicator:WorkMode"/>
-      <menuseparator position="2"/>
-      <menuitem position="3" accesskey="&offlineSynchronizeCmd.accesskey;" observes="Communicator:Synchronize"/>
-    </menupopup>
-  </menu>
+  <menuitem id="offlineGoOfflineCmd" accesskey="&offlineGoOfflineCmd.accesskey;" observes="Communicator:WorkMode"/>
+
 
 
 	<!-- File Menu -->
