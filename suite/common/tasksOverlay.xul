@@ -77,7 +77,7 @@
               tooltip="aTooltip" tooltiptext="&taskComposer.tooltip;"/>
     </hbox>
    
-    <spring id="taskbar-middle-spacer" flex="10"/>
+    <spacer id="taskbar-middle-spacer" flex="10"/>
     
     <hbox id="taskbarMenuBox"/>
     
@@ -89,7 +89,7 @@
   
     
  
-    <spring id="taskbar-right-spacer" flex="7"/>
+    <spacer id="taskbar-right-spacer" flex="7"/>
     
   
   </hbox>
