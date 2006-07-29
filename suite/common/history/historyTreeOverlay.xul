@@ -54,7 +54,7 @@
     <command id="cmd_delete"/>
     <command id="cmd_selectAll"/>
     <popup id="historyMenu" onpopupshowing="return updateItems();">
-      <menuitem id="miCollapseExpand" accesskey="&collapseExpand.accesskey;" oncommand="collapseExpand();"/>
+      <menuitem id="miCollapseExpand" oncommand="collapseExpand();"/>
       <menuitem id="miOpen" label="&openLinkInWindowCmd.label;" accesskey="&openLinkInWindowCmd.accesskey;" default="true"
                 oncommand="OpenURL(false);"/>
       <menuitem id="miOpenInNewWindow" label="&openLinkCmd.label;" accesskey="&openLinkCmd.accesskey;"
