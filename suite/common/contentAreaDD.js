@@ -78,7 +78,7 @@ var contentAreaDNDObserver = {
       flavourSet.appendFlavour("text/unicode");
       flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
       return flavourSet;
-    },
+    }
   
 };
 
