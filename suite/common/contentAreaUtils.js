@@ -152,9 +152,20 @@ function findParentNode(node, parentNode)
 //
 function saveURL(aURL, aFileName, aFilePickerTitleKey)
 {
+  saveInternal(aURL, null, aFileName, aFilePickerTitleKey);
+}
+
+function saveDocument(aDocument)
+{
+  saveInternal(aDocument.location.href, aDocument);
+}
+
+function saveInternal(aURL, aDocument, aFileName, aFilePickerTitleKey)
+{
   var data = {
     fileName: aFileName,
-    filePickerTitle: aFilePickerTitleKey
+    filePickerTitle: aFilePickerTitleKey,
+    document: aDocument
   };
   var sniffer = new nsHeaderSniffer(aURL, foundHeaderInfo, data);
 }
@@ -169,7 +180,10 @@ function foundHeaderInfo(aSniffer, aData)
   fp.init(window, bundle.GetStringFromName(titleKey), 
           Components.interfaces.nsIFilePicker.modeSave);
 
-  appendFiltersForContentType(fp, aSniffer.contentType);  
+  var modeComplete = aData.document != null && 
+                     (contentType == "text/html" || contentType == "text/xml");
+  appendFiltersForContentType(fp, aSniffer.contentType,
+                              modeComplete ? MODE_COMPLETE : MODE_FILEONLY);  
 
   // Determine what the 'default' string to display in the File Picker dialog 
   // should be. 
@@ -183,9 +197,18 @@ function foundHeaderInfo(aSniffer, aData)
     
   fp.file.leafName = validateFileName(fp.file.leafName);
   fp.file.leafName = getNormalizedLeafName(fp.file.leafName, contentType);
-
+  
+// XXX turn this on when Adam lands the ability to save as a specific content
+//     type
+//var contentType = fp.filterIndex == 2 ? "text/unicode" : "text/html";
+  var source = (aData.document && contentType == "text/html" &&
+                fp.filterIndex == 0) ? aData.document : aSniffer.uri;
+  
   var persistArgs = {
-    source    : aSniffer.uri,
+    source    : source,
+//  XXX turn this on when Adam lands the ability to save as a specific content
+//      type
+//  contentType : fp.filterIndex == 2 ? "text/unicode" : "text/html";
     target    : fp.file,
     postData  : getPostData()
   };
@@ -265,51 +288,8 @@ nsHeaderSniffer.prototype = {
 
 };
 
-function saveDocument(aDocument)
-{
-  // When this function is called, we assume we're saving text/html or 
-  // compatible.
-  var fp = makeFilePicker();
-  var bundle = getStringBundle();
-  fp.init(window, bundle.GetStringFromName("SavePageTitle"), 
-          Components.interfaces.nsIFilePicker.modeSave);
-
-  appendFiltersForContentType(fp, "text/html", MODE_COMPLETE);  
-  
-  // Determine what the 'default' string to display in the File Picker dialog 
-  // should be. 
-  const stdURLContractID = "@mozilla.org/network/standard-url;1";
-  const stdURLIID = Components.interfaces.nsIURI;
-  var uri = Components.classes[stdURLContractID].createInstance(stdURLIID);
-  uri.spec = aDocument.URL;
-
-  var defaultFileName = getDefaultFileName(null, null, uri, aDocument);
-  fp.defaultString = getNormalizedLeafName(defaultFileName, "text/html");
-
-  if (fp.show() == Components.interfaces.nsIFilePicker.returnCancel || !fp.file)
-    return;
-  
-  var contentType = fp.filterIndex == 2 ? "text/unicode" : "text/html";
-  fp.file.leafName = validateFileName(fp.file.leafName);
-  fp.file.leafName = getNormalizedLeafName(fp.file.URL, contentType);
-  
-  var persistArgs = {
-    source      : fp.filterIndex == 0 ? aDocument : uri,
-//  XXX turn this on when Adam lands the ability to save as a specific content
-//      type
-//  contentType : fp.filterIndex == 2 ? "text/unicode" : "text/html";
-    target      : fp.file,
-    postData    : getPostData()
-  };
-  
-  openDialog("chrome://global/content/nsProgressDlg.xul", "", 
-              "chrome,titlebar,minizable,dialog=yes", 
-              makeWebBrowserPersist(), persistArgs);
-
-}
-
 const MODE_COMPLETE = 0;
-const MODE_HTMLONLY = 1;
+const MODE_FILEONLY = 1;
 
 function appendFiltersForContentType(aFilePicker, aContentType, aSaveMode)
 {
@@ -320,7 +300,8 @@ function appendFiltersForContentType(aFilePicker, aContentType, aSaveMode)
     if (aSaveMode == MODE_COMPLETE)
       aFilePicker.appendFilter(bundle.GetStringFromName("WebPageCompleteFilter"), "*.htm; *.html");
     aFilePicker.appendFilter(bundle.GetStringFromName("WebPageHTMLOnlyFilter"), "*.htm; *.html");
-    aFilePicker.appendFilter(bundle.GetStringFromName("TextOnlyFilter"), "*.txt");
+    // XXX waiting for fix for 110135 to land
+    // aFilePicker.appendFilter(bundle.GetStringFromName("TextOnlyFilter"), "*.txt");
     break;
   default:
     var mimeInfo = getMIMEInfoForType(aContentType);
@@ -460,9 +441,9 @@ function getNormalizedLeafName(aFile, aContentType)
     const stdURLContractID = "@mozilla.org/network/standard-url;1";
     const stdURLIID = Components.interfaces.nsIURI;
     var uri = Components.classes[stdURLContractID].createInstance(stdURLIID);
-    uri.spec = "file:///" + aFile;
     var url = uri.QueryInterface(Components.interfaces.nsIURL); 
-
+    url.filePath = aFile;
+    
     if (aContentType == "text/html") {
       if ((url.fileExtension && 
            url.fileExtension != "htm" && url.fileExtension != "html") ||
