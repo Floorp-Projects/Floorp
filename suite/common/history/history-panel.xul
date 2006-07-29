@@ -30,7 +30,14 @@
 <window id="history-panel"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="HistoryInit();">
-
+  <commandset id="selectEditMenuItems">
+    <command id="cmd_delete"/>
+    <command id="cmd_copy"/>
+  </commandset>
+  <keyset id="historyKeys">
+    <key id="key_delete"/>
+    <key id="key_copy"/>
+  </keyset>
   <popupset id="historyContextMenu"/>
   <!-- use deep merging to hide certain columns by default -->
   <outliner id="historyOutliner">

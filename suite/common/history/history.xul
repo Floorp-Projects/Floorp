@@ -41,8 +41,6 @@
         orient="vertical"
         windowtype="history:manager">
 
-  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
-
   <stringbundle id="historyBundle"
                 src="chrome://communicator/locale/history/history.properties"/>
   <stringbundle id="sortBundle" src="chrome://global/locale/nsOutlinerSorting.properties"/>
