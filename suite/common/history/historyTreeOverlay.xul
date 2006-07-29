@@ -1,0 +1,155 @@
+<?xml version="1.0"?>
+<!--
+
+  The contents of this file are subject to the Netscape Public
+  License Version 1.1 (the "License"); you may not use this file
+  except in compliance with the License. You may obtain a copy of
+  the License at http://www.mozilla.org/NPL/
+ 
+  Software distributed under the License is distributed on an "AS
+  IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  implied. See the License for the specific language governing
+  rights and limitations under the License.
+ 
+  The Original Code is mozilla.org code.
+ 
+  The Initial Developer of the Original Code is Netscape
+  Communications Corporation.  Portions created by Netscape are
+  Copyright (C) 1998 Netscape Communications Corporation. All
+  Rights Reserved.
+ 
+  Contributor(s): 
+    Ben Goodger <ben@netscape.com>
+    Blake Ross <BlakeR1234@aol.com>
+    Alec Flett <alecf@netscape.com>
+-->
+
+<!DOCTYPE overlay SYSTEM "chrome://communicator/locale/history/historyTreeOverlay.dtd" >
+
+<overlay id="historyTreeOverlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+         xmlns:web="http://home.netscape.com/WEB-rdf#"
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+
+  <script src="chrome://global/content/nsDragAndDrop.js"/>
+  <script src="chrome://global/content/nsTransferable.js"/>
+  <script src="chrome://global/content/nsJSComponentManager.js"/>
+  <script src="chrome://global/content/nsJSSupportsUtils.js"/>
+  <script src="chrome://global/content/nsTreeController.js"/>
+  <script src="chrome://global/content/nsTreeUtils.js"/>
+  <script src="chrome://global/content/treePopups.js"/>
+
+<tree id="historyTree" ref="NC:HistoryRoot" context="contextual"
+      datasources="rdf:history rdf:localsearch"
+      flex="1"
+      multiple="true"
+      ondraggesture="nsDragAndDrop.startDrag(event, historyDNDObserver);">
+
+  <template>
+    <rule>
+      <treechildren>
+       <treeitem uri="rdf:*" persist="open"
+         web:status="rdf:http://home.netscape.com/WEB-rdf#status"
+         rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+         loading="rdf:http://home.netscape.com/NC-rdf#loading">
+         <treerow>
+           <treecell value="rdf:http://home.netscape.com/NC-rdf#Name"
+             class="treecell-indent treecell-bookmark"/>
+           <treecell value="rdf:http://home.netscape.com/NC-rdf#URL" />
+           <treecell value="rdf:http://home.netscape.com/NC-rdf#Date" />
+           <treecell value="rdf:http://home.netscape.com/NC-rdf#FirstVisitDate" />
+           <treecell value="rdf:http://home.netscape.com/NC-rdf#Referrer" />
+           <treecell value="rdf:http://home.netscape.com/NC-rdf#VisitCount" />
+         </treerow>
+       </treeitem>
+      </treechildren>
+     </rule>
+  </template>
+
+  <treecolgroup id="theColumns">
+    <treecol flex="4" id="Name"
+      sortSeparators="true" persist="hidden width" 
+      resource="http://home.netscape.com/NC-rdf#Name"/>
+
+    <splitter class="tree-splitter"/>
+
+    <treecol flex="4" id="URL"
+      sortSeparators="true" persist="hidden width" 
+      resource="http://home.netscape.com/NC-rdf#URL"
+      resource2="http://home.netscape.com/NC-rdf#Name"/>
+
+    <splitter class="tree-splitter"/>
+
+    <treecol flex="1" id="Date"
+      sortSeparators="true" persist="hidden width" 
+      resource="http://home.netscape.com/NC-rdf#Date"
+      resource2="http://home.netscape.com/NC-rdf#Name"/>
+
+    <splitter class="tree-splitter"/>
+
+    <treecol flex="1" id="FirstVisitDate"
+      sortSeparators="true" persist="hidden width" 
+      resource="http://home.netscape.com/NC-rdf#FirstVisitDate"
+      resource2="http://home.netscape.com/NC-rdf#Name"/>
+
+    <splitter class="tree-splitter"/>
+
+    <treecol flex="1" id="Referrer"
+      sortSeparators="true" persist="hidden width" 
+      resource="http://home.netscape.com/NC-rdf#Referrer"
+      resource2="http://home.netscape.com/NC-rdf#Name"/>
+
+    <splitter class="tree-splitter"/>
+
+    <treecol flex="1" id="VisitCount"
+      sortSeparators="true" persist="hidden width" 
+      resource="http://home.netscape.com/NC-rdf#VisitCount"
+      resource2="http://home.netscape.com/NC-rdf#Name"/>
+
+    <splitter class="tree-splitter"/>
+
+    <treecol persist="width" fixed="true" width="14" id="PopupColumn"/>
+  </treecolgroup>
+
+  <treehead>
+    <treerow id="headRow">
+      <treecell class="treecell-header sortDirectionIndicator"
+        value="&tree.header.name.label;"
+        onclick="return TriStateColumnSort('Name');"
+        observes="Name" />
+      <treecell class="treecell-header sortDirectionIndicator" 
+        value="&tree.header.url.label;"
+        onclick="return TriStateColumnSort('URL');"
+        observes="URL" />
+      <treecell class="treecell-header sortDirectionIndicator"
+        value="&tree.header.date.label;"
+        onclick="return TriStateColumnSort('Date');"
+        observes="Date"/>
+      <treecell class="treecell-header sortDirectionIndicator"
+        value="&tree.header.firstvisitdate.label;"
+        onclick="return TriStateColumnSort('FirstVisitDate');"
+        observes="FirstVisitDate"/>
+      <treecell class="treecell-header sortDirectionIndicator"
+        value="&tree.header.referrer.label;"
+        onclick="return TriStateColumnSort('Referrer');"
+        observes="Referrer"/>
+      <treecell class="treecell-header sortDirectionIndicator"
+        value="&tree.header.visitcount.label;"
+        onclick="return TriStateColumnSort('VisitCount');"
+        observes="VisitCount"/>
+      <treecell class="treecell-header" allowevents="true" id="popupCell">
+        <menu>
+          <image class="treecell-popup-icon"/>
+          <menupopup popupanchor="bottomright" 
+            popupalign="topright"
+            oncreate="BuildTreePopup(document.getElementById('theColumns'), document.getElementById('headRow'), this,
+            document.getElementById('popupCell'))"/>
+        </menu>
+      </treecell>
+    </treerow>
+  </treehead>
+  <treechildren flex="1" id="treechildren-bookmarks" 
+    onclick="return OpenURL(event, event.target.parentNode.parentNode, 
+                            'historyTree');"/>
+</tree>
+</overlay>
