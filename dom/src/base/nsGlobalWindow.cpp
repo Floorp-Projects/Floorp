@@ -4179,9 +4179,22 @@ nsGlobalWindow::CheckOpenAllow(PopupControlState aAbuseLevel)
   if (aAbuseLevel >= openAbused) {
     allowWindow = allowNot;
 
-    // However it might still not be blocked.
-    if (aAbuseLevel == openAbused && !IsPopupBlocked(mDocument)) {
-      allowWindow = allowWhitelisted;
+    // However it might still not be blocked. For now we use both our
+    // location and the top window's location when determining whether
+    // a popup open request is whitelisted or not. This isn't ideal
+    // when dealing with iframe/frame documents, but it'll do for
+    // now. Getting the iframe/frame case right would require some
+    // changes to the frontend's handling of popup events etc.
+    if (aAbuseLevel == openAbused) {
+      nsCOMPtr<nsIDOMWindow> topWindow;
+      GetTop(getter_AddRefs(topWindow));
+
+      nsCOMPtr<nsPIDOMWindow> topPIWin(do_QueryInterface(topWindow));
+
+      if (topPIWin && (!IsPopupBlocked(topPIWin->GetExtantDocument()) ||
+                       !IsPopupBlocked(mDocument))) {
+        allowWindow = allowWhitelisted;
+      }
     }
   }
 
