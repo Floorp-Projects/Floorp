@@ -1,170 +1,285 @@
 <?xml version="1.0"?>
+
 <?xml-stylesheet href="chrome://communicator/content/utilityOverlay.css"?>
 <?xul-overlay href="chrome://global/content/platformGlobalOverlay.xul"?>
 
 <!DOCTYPE window [
-<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
 %brandDTD;
-<!ENTITY % globalRegionDTD SYSTEM "chrome://global-region/locale/region.dtd" >
+<!ENTITY % globalRegionDTD SYSTEM "chrome://global-region/locale/region.dtd">
 %globalRegionDTD;
-<!ENTITY % utilityDTD SYSTEM "chrome://communicator/locale/utilityOverlay.dtd" >
+<!ENTITY % utilityDTD SYSTEM "chrome://communicator/locale/utilityOverlay.dtd">
 %utilityDTD;
+
 ]>
 
 <overlay id="utilityOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script type="application/x-javascript" src="chrome://global/content/strres.js"></script>
-  <script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/builtinURLs.js"/>
-         
+  <script type="application/x-javascript"
+          src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript"
+          src="chrome://communicator/content/utilityOverlay.js"/>
+  <script type="application/x-javascript"
+          src="chrome://communicator/content/builtinURLs.js"/>
+
   <!-- online/offline status indicators -->   
-  <broadcaster id="Communicator:WorkMode" label="&offlineGoOfflineCmd.label;" oncommand="setOfflineStatus(true);"/>
+  <broadcaster id="Communicator:WorkMode"
+               label="&offlineGoOfflineCmd.label;"
+               oncommand="setOfflineStatus(true);"/>
 
-  <statusbarpanel id="offline-status" tooltip="aTooltip" observes="Communicator:WorkMode"/>
-  <menuitem id="offlineGoOfflineCmd" label="&offlineGoOfflineCmd.label;" accesskey="&offlineGoOfflineCmd.accesskey;" observes="Communicator:WorkMode"/>
+  <statusbarpanel id="offline-status"
+                  tooltip="aTooltip"
+                  observes="Communicator:WorkMode"/>
 
-	<!-- File Menu -->
-	<menu id="menu_File" label="&fileMenu.label;" accesskey="&fileMenu.accesskey;"/>
-	
-	<!-- New SubMenu (Under File Menu) -->
-	<command id="cmd_newNavigator" oncommand="OpenBrowserWindow()"/>
-	<command id="cmd_newEditor"    oncommand="NewEditorWindow();"/>
-	<!-- NOT IMPLEMENTED, so temporarily disabled
-	<command id="cmd_newEditorTemplate"   disabled="true"  oncommand="NewEditorFromTemplate();"/>
-	<command id="cmd_newEditorDraft"      disabled="true"  oncommand="NewEditorFromDraft();"/>
-  <command id="cmd_pageSetup" disabled="true" oncommand="goPageSetup();"/>
+  <menuitem id="offlineGoOfflineCmd"
+            label="&offlineGoOfflineCmd.label;"
+            accesskey="&offlineGoOfflineCmd.accesskey;"
+            observes="Communicator:WorkMode"/>
+
+  <!-- File Menu -->
+  <menu id="menu_File"
+        label="&fileMenu.label;"
+        accesskey="&fileMenu.accesskey;"/>
+
+  <!-- New SubMenu (Under File Menu) -->
+  <command id="cmd_newNavigator"
+           oncommand="OpenBrowserWindow()"/>
+  <command id="cmd_newEditor"
+           oncommand="NewEditorWindow();"/>
+
+  <!-- XXX not implemented, temporarily disabled
+  <command id="cmd_newEditorTemplate"
+           disabled="true"
+           oncommand="NewEditorFromTemplate();"/>
+  <command id="cmd_newEditorDraft"
+           disabled="true"
+           oncommand="NewEditorFromDraft();"/>
+  <command id="cmd_pageSetup"
+           disabled="true"
+           oncommand="goPageSetup();"/>
   -->
-  
-  <menuitem id="menu_newEditor"         label="&newBlankPageCmd.label;"         accesskey="&newBlankPageCmd.accesskey;" key="key_newBlankPage" command="cmd_newEditor"/>
-  <menuitem id="menu_newEditorTemplate" label="&newPageFromTemplateCmd.label;"  accesskey="&newPageFromTemplateCmd.accesskey;"                 command="cmd_newEditorTemplate"/>
-  <menuitem id="menu_newEditorDraft"    label="&newPageFromDraftCmd.label;"     accesskey="&newPageFromDraftCmd.accesskey;"                    command="cmd_newEditorDraft"/>
+
+  <menuitem id="menu_newEditor"
+            label="&newBlankPageCmd.label;"
+            accesskey="&newBlankPageCmd.accesskey;"
+            key="key_newBlankPage"
+            command="cmd_newEditor"/>
+  <menuitem id="menu_newEditorTemplate"
+            label="&newPageFromTemplateCmd.label;"
+            accesskey="&newPageFromTemplateCmd.accesskey;"
+            command="cmd_newEditorTemplate"/>
+  <menuitem id="menu_newEditorDraft"
+            label="&newPageFromDraftCmd.label;"
+            accesskey="&newPageFromDraftCmd.accesskey;"
+            command="cmd_newEditorDraft"/>
  
-  <menu id="menu_New" label="&newMenu.label;" accesskey="&newMenu.accesskey;"/>
-  <menuitem id="menu_newNavigator" label="&newNavigatorCmd.label;" accesskey="&newNavigatorCmd.accesskey;" key="key_newNavigator" command="cmd_newNavigator"/>
+  <menu id="menu_New"
+        label="&newMenu.label;"
+        accesskey="&newMenu.accesskey;"/>
 
-  <key id="key_newBlankPage"    key="&newBlankPageCmd.key;" command="cmd_newEditor" modifiers="accel, shift"/>
-  <key id="key_newNavigator"    key="&newNavigatorCmd.key;" command="cmd_newNavigator" modifiers="accel"/>
+  <menuitem id="menu_newNavigator"
+            label="&newNavigatorCmd.label;"
+            accesskey="&newNavigatorCmd.accesskey;"
+            key="key_newNavigator"
+            command="cmd_newNavigator"/>
 
-	<!-- Edit Menu -->
-	<menu id="menu_Edit" label="&editMenu.label;" accesskey="&editMenu.accesskey;"/>
-  <menuitem id="menu_undo" label="&undoCmd.label;" key="key_undo" accesskey="&undoCmd.accesskey;" command="cmd_undo"/>
-  <menuitem id="menu_redo" label="&redoCmd.label;" key="key_redo" accesskey="&redoCmd.accesskey;" command="cmd_redo"/>
-  <menuitem id="menu_cut" label="&cutCmd.label;" key="key_cut" accesskey="&cutCmd.accesskey;" command="cmd_cut"/>
-  <menuitem id="menu_copy" label="&copyCmd.label;" key="key_copy" accesskey="&copyCmd.accesskey;" command="cmd_copy"/>
-  <menuitem id="menu_paste" label="&pasteCmd.label;" key="key_paste" accesskey="&pasteCmd.accesskey;" command="cmd_paste"/>
-  <menuitem id="menu_delete" label="&deleteCmd.label;" key="key_delete" accesskey="&deleteCmd.accesskey;" command="cmd_delete"/>
-  <menuitem id="menu_selectAll" label="&selectAllCmd.label;" key="key_selectAll" accesskey="&selectAllCmd.accesskey;" command="cmd_selectAll"/>
-	
-	<!-- These key nodes are here only for show.                       -->
-	<!-- The real bindings come from XBL, in platformHTMLBindings.xml. -->
-	<!-- See bugs 57078 and 71779.                                     -->
-	<key id="key_undo"  key="&undoCmd.key;"  modifiers="accel"/>
-	<key id="key_redo"  key="&redoCmd.key;"  modifiers="accel"/>
-	<key id="key_cut"  key="&cutCmd.key;"  modifiers="accel"/>
-	<key id="key_copy"  key="&copyCmd.key;"  modifiers="accel"/>
-	<key id="key_paste"  key="&pasteCmd.key;"  modifiers="accel"/>
-	<key id="key_selectAll"  key="&selectAllCmd.key;"  modifiers="accel"/>
- 
-	<commandset id="globalEditMenuItems"
-					commandupdater="true"
-					events="focus"
-					oncommandupdate="goUpdateGlobalEditMenuItems()"/>
+  <key id="key_newBlankPage"
+       key="&newBlankPageCmd.key;"
+       command="cmd_newEditor"
+       modifiers="accel, shift"/>
+  <key id="key_newNavigator"
+       key="&newNavigatorCmd.key;"
+       command="cmd_newNavigator"
+       modifiers="accel"/>
 
-	<commandset id="selectEditMenuItems"
-					commandupdater="true"
-					events="select"
-					oncommandupdate="goUpdateSelectEditMenuItems()"/>
+  <!-- Edit Menu -->
+  <menu id="menu_Edit"
+        label="&editMenu.label;"
+        accesskey="&editMenu.accesskey;"/>
+  <menuitem id="menu_undo"
+            label="&undoCmd.label;"
+            key="key_undo"
+            accesskey="&undoCmd.accesskey;"
+            command="cmd_undo"/>
+  <menuitem id="menu_redo"
+            label="&redoCmd.label;"
+            key="key_redo"
+            accesskey="&redoCmd.accesskey;"
+            command="cmd_redo"/>
+  <menuitem id="menu_cut"
+            label="&cutCmd.label;"
+            key="key_cut"
+            accesskey="&cutCmd.accesskey;"
+            command="cmd_cut"/>
+  <menuitem id="menu_copy"
+            label="&copyCmd.label;"
+            key="key_copy"
+            accesskey="&copyCmd.accesskey;"
+            command="cmd_copy"/>
+  <menuitem id="menu_paste"
+            label="&pasteCmd.label;"
+            key="key_paste"
+            accesskey="&pasteCmd.accesskey;"
+            command="cmd_paste"/>
+  <menuitem id="menu_delete"
+            label="&deleteCmd.label;"
+            key="key_delete"
+            accesskey="&deleteCmd.accesskey;"
+            command="cmd_delete"/>
+  <menuitem id="menu_selectAll"
+            label="&selectAllCmd.label;"
+            key="key_selectAll"
+            accesskey="&selectAllCmd.accesskey;"
+            command="cmd_selectAll"/>
 
-	<commandset id="undoEditMenuItems"
-					commandupdater="true"
-					events="undo"
-					oncommandupdate="goUpdateUndoEditMenuItems()"/>
+  <!-- These key nodes are here only for show. The real bindings come from
+       XBL, in platformHTMLBindings.xml. See bugs 57078 and 71779. -->
 
-	<commandset id="clipboardEditMenuItems"
-					commandupdater="true"
-					events="clipboard"
-					oncommandupdate="goUpdatePasteMenuItems()"/>
-					
-	<command id="cmd_undo" 
-				 oncommand="goDoCommand('cmd_undo')"
-				 disabled="true"/>
-	<command id="cmd_redo" 
-				 oncommand="goDoCommand('cmd_redo')"
-				 disabled="true"/>
+  <key id="key_undo"
+       key="&undoCmd.key;"
+       modifiers="accel"/>
+  <key id="key_redo"
+       key="&redoCmd.key;"
+       modifiers="accel"/>
+  <key id="key_cut"
+       key="&cutCmd.key;"
+       modifiers="accel"/>
+  <key id="key_copy"
+       key="&copyCmd.key;"
+       modifiers="accel"/>
+  <key id="key_paste"
+       key="&pasteCmd.key;"
+       modifiers="accel"/>
+  <key id="key_selectAll"
+       key="&selectAllCmd.key;"
+       modifiers="accel"/>
+
+  <commandset id="globalEditMenuItems"
+              commandupdater="true"
+              events="focus"
+              oncommandupdate="goUpdateGlobalEditMenuItems()"/>
+  <commandset id="selectEditMenuItems"
+              commandupdater="true"
+              events="select"
+              oncommandupdate="goUpdateSelectEditMenuItems()"/>
+  <commandset id="undoEditMenuItems"
+              commandupdater="true"
+              events="undo"
+              oncommandupdate="goUpdateUndoEditMenuItems()"/>
+  <commandset id="clipboardEditMenuItems"
+              commandupdater="true"
+              events="clipboard"
+              oncommandupdate="goUpdatePasteMenuItems()"/>
+
+  <command id="cmd_copyLink"
+           oncommand="goDoCommand('cmd_copyLink')"
+           disabled="false"/>
+  <command id="cmd_copyImageLocation"
+           oncommand="goDoCommand('cmd_copyImageLocation')"
+           disabled="false"/>
+  <command id="cmd_copyImageContents"
+           oncommand="goDoCommand('cmd_copyImageContents')"
+           disabled="false"/>
+  <command id="cmd_undo" 
+           oncommand="goDoCommand('cmd_undo')"
+           disabled="true"/>
+  <command id="cmd_redo" 
+           oncommand="goDoCommand('cmd_redo')"
+           disabled="true"/>
   <command id="cmd_cut" 
-				 oncommand="goDoCommand('cmd_cut')"
-				 disabled="true"/>
+           oncommand="goDoCommand('cmd_cut')"
+           disabled="true"/>
   <command id="cmd_copy" 
-				 oncommand="goDoCommand('cmd_copy')"
-				 disabled="true"/>
+           oncommand="goDoCommand('cmd_copy')"
+           disabled="true"/>
   <command id="cmd_paste" 
-				 oncommand="goDoCommand('cmd_paste')"
-				 disabled="true"/>
+           oncommand="goDoCommand('cmd_paste')"
+           disabled="true"/>
   <command id="cmd_delete"
-				 oncommand="goDoCommand('cmd_delete')"
-				 valueDefault="&deleteCmd.label;"
-				 disabled="true"/>
+           oncommand="goDoCommand('cmd_delete')"
+           valueDefault="&deleteCmd.label;"
+           disabled="true"/>
   <command id="cmd_selectAll"
-				 oncommand="goDoCommand('cmd_selectAll')"
-				 disabled="true"/>
-	
-	<!-- Not needed yet, window just needs a broadcaster with this id and oncommand=  broadcaster id="cmd_preferences"/-->
-	
-	<menuitem id="menu_preferences"
-        label="&preferencesCmd.label;"
-			  key="key_preferences"
-			  accesskey="&preferencesCmd.accesskey;"/>
-	
-	<!-- View Menu -->
-  <menu id="menu_View" label="&viewMenu.label;" accesskey="&viewMenu.accesskey;"/>
-  <menu id="menu_Toolbars" label="&viewToolbarsMenu.label;" accesskey="&viewToolbarsMenu.accesskey;"/>
-	<menuitem id="menu_showTaskbar"
-        label="&showTaskbarCmd.label;"
-			  accesskey="&showTaskbarCmd.accesskey;"
-			  oncommand="goToggleToolbar('taskbar', 'menu_showTaskbar')"
-			  checked="true"/>
+           oncommand="goDoCommand('cmd_selectAll')"
+           disabled="true"/>
+        
+  <!-- Not needed yet, window will need this: -->
+  <!-- broadcaster id="cmd_preferences"/ -->
 
-	<!-- Help Menu -->
-  <menu id="menu_Help" label="&helpMenu.label;" accesskey="&helpMenu.accesskey;">
-		<menupopup id="helpPopup">
-      <menuitem accesskey="&releaseCmd.accesskey;" label="&releaseCmd.label;"
-			          id="releaseUrl" oncommand="openTopWin('&releaseURL;');"/>
-			<menuseparator/>
-      <menuitem class="about" accesskey="&aboutCommPluginsCmd.accesskey;" label="&aboutCommPluginsCmd.label;"
-                id="pluginInfo" oncommand="openTopWin('about:plugins')"/>
-      <menuitem accesskey="&aboutCmd.accesskey;" label="&aboutCmd.label;"
-			          id="aboutName" oncommand="goAboutDialog();"/>
-		</menupopup>
-	</menu>
-	
-	<!-- XXX NEEDS XBLIFICIATION!! Gray horizontal splitter -->
-	<splitter id="gray_horizontal_splitter" class="gray-horizontal-splitter">
-		<box id="begincap" align="horizontal">
-			<spring flex="100%"/>
-		</box>
-		<spring flex="100%"/>
-		<grippy/>
-		<spring flex="100%"/>
-		<box id="endcap" align="horizontal">
-			<spring flex="100%"/>
-		</box>
-	</splitter>
-	
-	<!-- XXX NEEDS XBLIFICIATION!! Gray vertical splitter -->
-	<splitter id="gray_vertical_splitter" class="gray-vertical-splitter" align="vertical">
-		<box id="begincap" align="vertical">
-			<spring flex="100%"/>
-		</box>
-		<spring flex="100%"/>
-		<grippy/>
-		<spring flex="100%"/>
-		<box id="endcap" align="vertical">
-			<spring flex="100%"/>
-		</box>
-	</splitter>
+  <menuitem id="menu_preferences"
+            label="&preferencesCmd.label;"
+            key="key_preferences"
+            accesskey="&preferencesCmd.accesskey;"/>
 
-	<!-- Toolbar boxes -->
-	<box id="toolbar_button_box" align="horizontal" flex="100%"/>
-	
+  <!-- View Menu -->
+  <menu id="menu_View"
+        label="&viewMenu.label;"
+        accesskey="&viewMenu.accesskey;"/>
+  <menu id="menu_Toolbars"
+        label="&viewToolbarsMenu.label;"
+        accesskey="&viewToolbarsMenu.accesskey;"/>
+
+  <menuitem id="menu_showTaskbar"
+            label="&showTaskbarCmd.label;"
+            accesskey="&showTaskbarCmd.accesskey;"
+            oncommand="goToggleToolbar('taskbar', 'menu_showTaskbar')"
+            checked="true"/>
+
+  <!-- Help Menu -->
+  <menu id="menu_Help"
+        label="&helpMenu.label;"
+        accesskey="&helpMenu.accesskey;">
+    <menupopup id="helpPopup">
+      <menuitem accesskey="&releaseCmd.accesskey;"
+                label="&releaseCmd.label;"
+                id="releaseUrl"
+                oncommand="openTopWin('&releaseURL;');"/>
+
+      <menuseparator/>
+
+      <menuitem class="about"
+                accesskey="&aboutCommPluginsCmd.accesskey;"
+                label="&aboutCommPluginsCmd.label;"
+                id="pluginInfo"
+                oncommand="openTopWin('about:plugins')"/>
+      <menuitem accesskey="&aboutCmd.accesskey;"
+                label="&aboutCmd.label;"
+                id="aboutName"
+                oncommand="goAboutDialog();"/>
+    </menupopup>
+  </menu>
+        
+  <!-- XXX needs xbl-ification! gray horizontal splitter -->
+  <splitter id="gray_horizontal_splitter" class="gray-horizontal-splitter">
+    <box id="begincap" align="horizontal">
+      <spring flex="100%"/>
+    </box>
+    <spring flex="100%"/>
+    <grippy/>
+    <spring flex="100%"/>
+    <box id="endcap" align="horizontal">
+      <spring flex="100%"/>
+    </box>
+ </splitter>
+
+  <!-- XXX needs xbl-ification! gray vertical splitter -->
+  <splitter id="gray_horizontal_splitter" class="gray-vertical-splitter">
+    <box id="begincap" align="vertical">
+      <spring flex="100%"/>
+    </box>
+    <spring flex="100%"/>
+    <grippy/>
+    <spring flex="100%"/>
+    <box id="endcap" align="vertical">
+      <spring flex="100%"/>
+    </box>
+ </splitter>
+
+ <!-- Toolbar boxes -->
+ <box id="toolbar_button_box"
+      align="horizontal"
+      flex="100%"/>
+
 </overlay>

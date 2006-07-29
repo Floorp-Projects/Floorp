@@ -209,7 +209,7 @@ function goAboutDialog()
     window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", 'chrome://global/locale/about.html' );
 }
 
-
+// update menu items that rely on focus
 function goUpdateGlobalEditMenuItems()
 {
   goUpdateCommand('cmd_undo');
