@@ -447,7 +447,7 @@ function gatherTextUnder ( root )
   var depth = 1;
   while ( node && depth > 0 ) {
     // See if this node is text.
-    if ( node.nodeName == "#text" ) {
+    if ( node.nodeType == Node.TEXT_NODE ) {
       // Add this text to our collection.
       text += " " + node.data;
     } else if ( node.nodeType == Node.ELEMENT_NODE 
