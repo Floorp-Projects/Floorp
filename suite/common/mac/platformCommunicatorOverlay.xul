@@ -1,7 +1,7 @@
 <?xml version="1.0"?> 
 <!-- mac version of platformCommunicatorOverlay.xul -->
 
-<!DOCTYPE window SYSTEM "chrome://communicator-platform/locale/platformCommunicatorOverlay.xul">
+<!DOCTYPE window SYSTEM "chrome://communicator-platform/locale/platformCommunicatorOverlay.dtd">
 
 <overlay id="platformCommunicatorOverlay"
      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
