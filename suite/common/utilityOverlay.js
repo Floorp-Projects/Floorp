@@ -108,17 +108,29 @@ function goEditCardDialog(abURI, card, okCallback, abCardURI)
 
 function goPreferences(containerID, paneURL, itemID)
 {
-  var prefWindowModalityPref;
+  var modal, resizable;
+  var pref = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
   try {
-    var pref = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
-    prefWindowModalityPref = pref.GetBoolPref( "browser.prefWindowModal");
+    modal = pref.GetBoolPref( "browser.prefWindowModal");
   }
-  catch(e) {
-    prefWindowModalityPref = true;
+  catch (e) {
+    modal = true;
   }
-  var modality = prefWindowModalityPref ? "yes" : "no";
+  try {
+    // We are resizable ONLY if in box debugging mode, because in
+    // this special debug mode it is often impossible to see the 
+    // content of the debug panel in order to disable debug mode.
+    resizable = pref.GetBoolPref("xul.debug.box");
+  }
+  catch (e) {
+    resizable = false;
+  }
 
-  var prefWindow = openDialog("chrome://communicator/content/pref/pref.xul","PrefWindow", "chrome,titlebar,modal=" + modality+ ",resizable=yes", paneURL, containerID, itemID);
+  var modality = modal ? "yes" : "no";
+  var resizability = resizable ? "yes" : "no";
+  var features = "chrome,titlebar,modal=" + modality + ",resizable=" + resizability;
+  openDialog("chrome://communicator/content/pref/pref.xul","PrefWindow", 
+             features, paneURL, containerID, itemID);
 }
 
 function goToggleToolbar( id, elementID )
