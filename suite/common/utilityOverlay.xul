@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://communicator/content/utilityOverlay.css"?>
+
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/utilityOverlay.dtd">
+
+<overlay id="utilityOverlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script language="javascript" src="chrome://communicator/content/utilityOverlay.js"></script>
+         
+  <!-- online/offline status indicators -->
+  <broadcasterset id="broadcasterset">
+  	<broadcaster id="Communicator:Synchronize" value="&offlineSynchronizeCmd.label;" disabled="true" />
+	  <broadcaster id="Communicator:WorkMode" value="&offlineGoOfflineCmd.label;" oncommand="setOfflineStatus(true);"/>
+  </broadcasterset>
+  <statusbarpanel id="offline-status" observes="Communicator:WorkMode"/>
+  <menu id="offlineMenu" value="&offlineMenu.label;" accesskey="&offlineMenu.accesskey;">
+    <menupopup id="offlineMenuPopup">
+      <menuitem position="1" accesskey="&offlineGoOfflineCmd.accesskey;" observes="Communicator:WorkMode"/>
+      <menuseparator position="2"/>
+      <menuitem position="3" accesskey="&offlineSynchronizeCmd.accesskey;" observes="Communicator:Synchronize"/>
+    </menupopup>
+  </menu>
+         
+</overlay>
