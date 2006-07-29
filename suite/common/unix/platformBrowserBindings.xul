@@ -52,6 +52,27 @@
     var controller = document.commandDispatcher.getControllerForCommand('cmd_redo');
     controller.doCommand('cmd_redo');"/>
 
+<!-- other keybindings for cut/copy/paste -->
+<key id="winAlternativeCutKey" keycode="VK_DELETE" shift="true" control="false" alt="false" meta="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_cut');
+    controller.doCommand('cmd_cut');"/>
+
+<key id="winAlternativeCopy2Key" keycode="VK_DELETE" shift="false" control="true" alt="false" meta="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
+    controller.doCommand('cmd_copy');"/>
+
+<key id="winAlternativeCopyKey" keycode="VK_INSERT" shift="false" control="true" alt="false" meta="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
+    controller.doCommand('cmd_copy');"/>
+
+<key id="winAlternativePasteKey" keycode="VK_INSERT" shift="true" control="false" alt="false" meta="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_paste');
+    controller.doCommand('cmd_paste');"/>
+
 </keyset>
 
 </keybinding>
