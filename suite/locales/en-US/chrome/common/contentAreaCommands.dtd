@@ -72,7 +72,7 @@
 <!ENTITY selectAllCmd.accesskey       "A">
 <!ENTITY copyLinkCmd.label            "Copy Link Location">
 <!ENTITY copyLinkCmd.accesskey        "C">
-<!ENTITY copyImageCmd.label           "Copy Image Location">
+<!ENTITY copyImageCmd.label           "Copy Image">
 <!ENTITY copyImageCmd.accesskey       "o">
 <!ENTITY metadataCmd.label            "Properties">
 <!ENTITY metadataCmd.accesskey        "P">
