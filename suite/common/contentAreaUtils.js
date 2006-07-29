@@ -165,15 +165,13 @@ function openNewTabWith(url, sendReferrer, reverseBackgroundPref)
   }
 
   // open link in new tab
-  var tab = browser.addTab(url, referrer, originCharset);
+  var loadInBackground = false;
   if (pref) {
-    var loadInBackground = pref.getBoolPref("browser.tabs.loadInBackground");
+    loadInBackground = pref.getBoolPref("browser.tabs.loadInBackground");
     if (reverseBackgroundPref)
       loadInBackground = !loadInBackground;
-
-    if (!loadInBackground)
-      browser.selectedTab = tab;
   }
+  browser.addTab(url, referrer, originCharset, !loadInBackground);
 }
 
 // Clientelle: (Make sure you don't break any of these)
