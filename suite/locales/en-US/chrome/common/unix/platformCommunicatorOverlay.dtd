@@ -21,3 +21,4 @@
 <!-- Help viewer -->
 <!ENTITY openHelpCmd.label          "Help Contents">
 <!ENTITY openHelpCmd.accesskey      "H">
+<!ENTITY openHelpCmd.key            "VK_F1">

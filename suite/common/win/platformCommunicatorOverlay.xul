@@ -42,4 +42,11 @@
   <key id="key_findTypeLinks"
        key="&findTypeLinksCmd.key;"/>
 
+  <!-- Tasks Keys -->
+  <keyset id="tasksKeys">
+    <key id="key_openHelp"
+         keycode="&openHelpCmd.key;"
+         command="cmd_openHelp"/>
+  </keyset>
+
 </overlay>    

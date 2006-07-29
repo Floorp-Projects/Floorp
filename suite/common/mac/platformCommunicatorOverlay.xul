@@ -72,6 +72,21 @@
          command="cmd_minimizeWindow"
          key="&minimizeWindowCmd.key;"
          modifiers="accel"/>
+
+  <!-- Standard OS X shortcut for opening Help (Cmd+? on most locales), visible
+    in the Help menu (if there's a Help viewer) -->
+    <key id="key_openHelp"
+         key="&openHelpFrontend.key;"
+         modifiers="&openHelpFrontend.modifiers;"/>
+
+  <!-- The Shift key is needed for the "?", thus we need openHelpCmd.key and
+    openHelpCmd.modifiers for the mapping -->
+    <key key="&openHelpCmd.key;"
+         modifiers="&openHelpCmd.modifiers;"
+         command="cmd_openHelp"/>
+
+    <key keycode="&openHelp2Cmd.key;"
+         command="cmd_openHelp"/>
   </keyset>
 
   <!-- Window menu -->
