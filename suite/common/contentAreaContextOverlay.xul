@@ -42,8 +42,8 @@
          hidden/shown upon display, based on what the user has clicked-on.
      -->
     <popup id="contentAreaContextMenu"
-           oncreate="contextMenu = new nsContextMenu( this ); return contextMenu.shouldDisplay;"
-           ondestroy="contextMenu.onDestroy(); contextMenu = null;">
+           onpopupshowing="contextMenu = new nsContextMenu( this ); return contextMenu.shouldDisplay;"
+           onpopuphiding="contextMenu.onpopuphiding(); contextMenu = null;">
       <!-- Open ==================================== -->
       <menuitem id="context-openlink"
                 label="&openLinkCmd.label;"

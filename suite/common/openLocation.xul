@@ -70,7 +70,7 @@
                     oninput="doEnabling();">
           <menupopup id="ubhist-popup" class="autocomplete-history-popup"
                      popupalign="topleft" popupanchor="bottomleft"
-                     oncreate="createUBHistoryMenu(event.target);"
+                     onpopupshowing="createUBHistoryMenu(event.target);"
                      oncommand="useUBHistoryItem(event.target)"/>
         </textbox>
         <button label="&chooseFile.label;" oncommand="onChooseFile();"/>
