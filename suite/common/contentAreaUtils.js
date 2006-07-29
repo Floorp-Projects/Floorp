@@ -418,7 +418,8 @@ function nsHeaderSniffer(aURL, aCallback, aData)
   this.uri = makeURL(aURL);
   
   this.linkChecker = Components.classes["@mozilla.org/network/urichecker;1"]
-    .createInstance().QueryInterface(Components.interfaces.nsIURIChecker);
+    .createInstance(Components.interfaces.nsIURIChecker);
+  this.linkChecker.init(this.uri);
 
   var flags;
   if (aData.bypassCache) {
@@ -426,8 +427,9 @@ function nsHeaderSniffer(aURL, aCallback, aData)
   } else {
     flags = Components.interfaces.nsIRequest.LOAD_FROM_CACHE;
   }
+  this.linkChecker.loadFlags = flags;
 
-  this.linkChecker.asyncCheckURI(aURL, this, null, flags);
+  this.linkChecker.asyncCheck(this, null);
 }
 
 nsHeaderSniffer.prototype = {
@@ -485,7 +487,7 @@ nsHeaderSniffer.prototype = {
     try {
       if (aStatus == 0) { // NS_BINDING_SUCCEEDED, so there's something there
         var linkChecker = aRequest.QueryInterface(Components.interfaces.nsIURIChecker);
-        var channel = linkChecker.baseRequest.QueryInterface(Components.interfaces.nsIChannel);
+        var channel = linkChecker.baseChannel;
         this.contentType = channel.contentType;
         try {
           var httpChannel = channel.QueryInterface(Components.interfaces.nsIHttpChannel);
