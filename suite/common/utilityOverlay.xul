@@ -25,8 +25,6 @@
   <statusbarpanel id="offline-status" tooltip="aTooltip" observes="Communicator:WorkMode"/>
   <menuitem id="offlineGoOfflineCmd" accesskey="&offlineGoOfflineCmd.accesskey;" observes="Communicator:WorkMode"/>
 
-
-
 	<!-- File Menu -->
 	<menu id="menu_File" value="&fileMenu.label;" accesskey="&fileMenu.accesskey;"/>
 	
@@ -58,12 +56,15 @@
 	<menuitem id="menu_delete" value="&deleteCmd.label;" key="key_delete" accesskey="&deleteCmd.accesskey;" observes="cmd_delete"/>
 	<menuitem id="menu_selectAll" value="&selectAllCmd.label;" key="key_selectAll" accesskey="&selectAllCmd.accesskey;" observes="cmd_selectAll"/>
 	
-	<key id="key_undo"  key="&undoCmd.key;"  observes="cmd_undo" modifiers="accel"/>
-	<key id="key_redo"  key="&redoCmd.key;"  observes="cmd_redo" modifiers="accel"/>
-	<key id="key_cut"  key="&cutCmd.key;"  observes="cmd_cut" modifiers="accel"/>
-	<key id="key_copy"  key="&copyCmd.key;"  observes="cmd_copy" modifiers="accel"/>
-	<key id="key_paste"  key="&pasteCmd.key;"  observes="cmd_paste" modifiers="accel"/>
-	<key id="key_selectAll"  key="&selectAllCmd.key;"  observes="cmd_selectAll" modifiers="accel"/>
+	<!-- These key nodes are here only for show.                       -->
+	<!-- The real bindings come from XBL, in platformHTMLBindings.xml. -->
+	<!-- See bugs 57078 and 71779.                                     -->
+	<key id="key_undo"  key="&undoCmd.key;"  modifiers="accel"/>
+	<key id="key_redo"  key="&redoCmd.key;"  modifiers="accel"/>
+	<key id="key_cut"  key="&cutCmd.key;"  modifiers="accel"/>
+	<key id="key_copy"  key="&copyCmd.key;"  modifiers="accel"/>
+	<key id="key_paste"  key="&pasteCmd.key;"  modifiers="accel"/>
+	<key id="key_selectAll"  key="&selectAllCmd.key;"  modifiers="accel"/>
  
 	<commandset id="globalEditMenuItems"
 					commandupdater="true"
