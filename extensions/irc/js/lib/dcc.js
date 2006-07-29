@@ -633,7 +633,7 @@ function dchat_accept()
     this.state.sendAccept();
 
     this.connection = new CBSConnection();
-    if (this.connection.connect(this.remoteIP, this.port, null, true, null))
+    if (this.connection.connect(this.remoteIP, this.port))
     {
         this.state.socketConnected();
 
@@ -1061,7 +1061,7 @@ function dfile_accept(localFile)
     this.connection = new CBSConnection(true);
     this.position = 0;
 
-    if (this.connection.connect(this.remoteIP, this.port, null, true, null))
+    if (this.connection.connect(this.remoteIP, this.port))
     {
         this.state.socketConnected();
 

@@ -215,6 +215,7 @@ function initPrefs()
          ["outgoing.colorCodes",  false,  "global"],
          ["outputWindowURL",   "chrome://chatzilla/content/output-window.html",
                                           "appearance.misc"],
+         ["proxy.typeOverride", "",       ".connect"],
          ["sortUsersByMode",    true,     "appearance.userlist"],
          //["queryBeep",          "beep",   "global.sounds"],
          ["reconnect",          true,     ".connect"],
@@ -259,6 +260,7 @@ function initPrefs()
     CIRCNetwork.prototype.INITIAL_DESC  = client.prefs["desc"];
     CIRCNetwork.prototype.INITIAL_UMODE = client.prefs["usermode"];
     CIRCNetwork.prototype.MAX_MESSAGES  = client.prefs["networkMaxLines"];
+    CIRCNetwork.prototype.PROXY_TYPE_OVERRIDE = client.prefs["proxy.typeOverride"];
     CIRCChannel.prototype.MAX_MESSAGES  = client.prefs["channelMaxLines"];
     CIRCChanUser.prototype.MAX_MESSAGES = client.prefs["userMaxLines"];
     var dccUserMaxLines = client.prefs["dccUserMaxLines"];
@@ -445,6 +447,7 @@ function getNetworkPrefManager(network)
          ["nicknameList",     defer, "lists.nicknameList"],
          ["notifyList",       [],    "lists.notifyList"],
          ["outputWindowURL",  defer, "appearance.misc"],
+         ["proxy.typeOverride", defer, ".connect"],
          ["reconnect",        defer, ".connect"],
          ["timestamps",       defer, "appearance.timestamps"],
          ["timestampFormat",  defer, "appearance.timestamps"],
@@ -475,6 +478,10 @@ function getNetworkPrefManager(network)
     value = prefManager.prefs["usermode"];
     if (value != CIRCNetwork.prototype.INITIAL_UMODE)
         network.INITIAL_UMODE = value;
+
+    value = prefManager.prefs["proxy.typeOverride"];
+    if (value != CIRCNetwork.prototype.PROXY_TYPE_OVERRIDE)
+        network.PROXY_TYPE_OVERRIDE = value;
 
     network.stayingPower  = prefManager.prefs["reconnect"];
     network.MAX_CONNECT_ATTEMPTS = prefManager.prefs["connectTries"];
@@ -692,6 +699,10 @@ function onPrefChanged(prefName, newValue, oldValue)
                 runInstrumentation("inst1", false);
             break;
 
+        case "proxy.typeOverride":
+            CIRCNetwork.prototype.PROXY_TYPE_OVERRIDE = newValue;
+            break;
+
         case "showModeSymbols":
             if (newValue)
                 setListMode("symbol");
@@ -815,6 +826,10 @@ function onNetworkPrefChanged(network, prefName, newValue, oldValue)
 
         case "desc":
             network.INITIAL_DESC = newValue;
+            break;
+
+        case "proxy.typeOverride":
+            network.PROXY_TYPE_OVERRIDE = newValue;
             break;
 
         case "reconnect":

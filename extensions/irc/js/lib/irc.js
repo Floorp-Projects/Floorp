@@ -130,6 +130,9 @@ CIRCNetwork.prototype.MAX_CONNECT_ATTEMPTS = 5;
 CIRCNetwork.prototype.getReconnectDelayMs = function() { return 15000; }
 CIRCNetwork.prototype.stayingPower = false;
 
+// "http" = use HTTP proxy, "none" = none, anything else = auto.
+CIRCNetwork.prototype.PROXY_TYPE_OVERRIDE = "";
+
 CIRCNetwork.prototype.TYPE = "IRCNetwork";
 
 CIRCNetwork.prototype.getURL =
@@ -674,7 +677,11 @@ function serv_connect (password)
         return false;
     }
 
-    if (this.connection.connect(this.hostname, this.port, null, true, this.isSecure, null))
+    var config = { isSecure: this.isSecure };
+    if (this.parent.PROXY_TYPE_OVERRIDE)
+        config.proxy = this.parent.PROXY_TYPE_OVERRIDE;
+
+    if (this.connection.connect(this.hostname, this.port, config))
     {
         var ev = new CEvent("server", "connect", this, "onConnect");
 
