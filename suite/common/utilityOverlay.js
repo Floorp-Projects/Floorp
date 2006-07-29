@@ -581,7 +581,13 @@ var gAutoScrollPopup = null;
 
 function startScrolling(event)
 {
+  var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                       .getService(Components.interfaces.nsIPrefBranch);
+
   if (gScrollingView || event.button != 1)
+    return;
+
+  if (!pref.getBoolPref("general.autoScroll"))
     return;
 
   if (event.originalTarget instanceof XULElement &&
