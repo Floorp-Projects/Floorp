@@ -84,7 +84,7 @@ function xlateURL(key)
 	//dump("\n>> xlateURL(" + key + "): ds=" + ds + ", loaded=" + loaded);
 	if (!ds || !loaded) {
 		dump("\n xlateURL(): data source is not loaded! Try again later! \n");
-		return;
+		return "";
 	}
 	// get data
 	var srcNode = RDF.GetResource(key);
@@ -108,6 +108,8 @@ function xlateURL(key)
 	else {
 		dump("\n content target=" + contentTarget + "\n");
 	}
+	
+	return "";
 }
 
 function loadXURL(key)
