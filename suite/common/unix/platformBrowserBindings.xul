@@ -85,6 +85,18 @@
         document.commandDispatcher.getControllerForCommand('cmd_selectBottom');
         controller.doCommand('cmd_selectBottom');"/>
 
+<key id="sparcCutKey" keycode="VK_F20"
+    onkeypress="
+        var controller = document.commandDispatcher.getControllerForCommand('cmd_cut');
+        controller.doCommand('cmd_cut');"/>
+<key id="sparcCopyKey" keycode="VK_F16"
+    onkeypress="
+        var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
+        controller.doCommand('cmd_copy');"/>
+<key id="sparcPasteKey" keycode="VK_F18"
+    onkeypress="
+        var controller = document.commandDispatcher.getControllerForCommand('cmd_paste');
+        controller.doCommand('cmd_paste');"/>
 </keyset>
 
 </keybinding>
