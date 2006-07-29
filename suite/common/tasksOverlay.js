@@ -48,6 +48,35 @@ function enableHistory() {
   gDisableHistory = false;
 }
 
+function toHistory()
+{
+  // Use a single sidebar history dialog
+
+  var cwindowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
+  var iwindowManager = Components.interfaces.nsIWindowMediator;
+  var windowManager  = cwindowManager.QueryInterface(iwindowManager);
+
+  var historyWindow = windowManager.getMostRecentWindow('history:manager');
+
+  if (historyWindow) {
+    //debug("Reuse existing history window");
+    historyWindow.focus();
+  } else {
+    //debug("Open a new history dialog");
+
+    if (true == gDisableHistory) {
+      //debug("Recently opened one. Wait a little bit.");
+      return;
+    }
+    gDisableHistory = true;
+
+    window.open( "chrome://communicator/content/history/history.xul", "_blank",
+        "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar" );
+    setTimeout(enableHistory, 2000);
+  }
+
+}
+
 function toJavaScriptConsole()
 {
     toOpenWindowByType("global:console", "chrome://global/content/console.xul");
