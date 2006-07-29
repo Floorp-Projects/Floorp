@@ -116,6 +116,14 @@ nsContextMenu.prototype = {
     
         // Save image depends on whether there is one.
         this.showItem( "context-saveimage", this.onImage );
+        if (this.onImage){ //if onImage, let's get the imagename into the context menu       
+           var saveImageMenuItem = document.getElementById( 'context-saveimage' );
+           var imageName = extractFileNameFromUrl(this.imageURL);
+           var bundle = srGetStrBundle("chrome://communicator/locale/contentAreaCommands.properties");
+           var caption = bundle.formatStringFromName("saveImageAs",[imageName],1);
+
+           saveImageMenuItem.setAttribute( "value", caption );
+        }
 
         // Remove separator if none of these were shown.
         var showSep = !this.inDirList || this.inFrame || this.onSaveableLink || this.hasBGImage || this.onImage;
