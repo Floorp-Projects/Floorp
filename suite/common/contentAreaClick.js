@@ -125,7 +125,7 @@
       handleLinkClick(event, linkNode.href);
       return true;
     }
-    if (pref && event.button == 2 &&
+    if (pref && event.button == 1 &&
         !findParentNode(event.originalTarget, "scrollbar") &&
         pref.GetBoolPref("middlemouse.contentLoadURL")) {
       if (middleMousePaste()) {
