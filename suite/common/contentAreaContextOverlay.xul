@@ -122,7 +122,7 @@
                                                       gContextMenu.linkText(), 
                                                       undefined, true);"/>
       <menuitem id="context-searchselect" class="menuitem-iconic"
-                oncommand="OpenSearch('internet',false, gContextMenu.searchSelected());"/>
+                oncommand="OpenSearch('internet', false, gContextMenu.searchSelected(), true);"/>
        
       <menuseparator id="context-sep-bookmark"/>
       <!-- Save ==================================== -->
