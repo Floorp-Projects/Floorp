@@ -180,15 +180,14 @@ prompting the user or by editing localconfig.
 
 The format of that file is as follows:
 
- $answer{'db_host'} = q[
-     $db_host = 'localhost';
-     $db_driver = 'mydbdriver';
-     $db_port = 3306;
-     $db_name = 'mydbname';
-     $db_user = 'mydbuser';
- ];
+ $answer{'db_host'}   = 'localhost';
+ $answer{'db_driver'} = 'mydbdriver';
+ $answer{'db_port'}   = 0;
+ $answer{'db_name'}   = 'mydbname';
+ $answer{'db_user'}   = 'mydbuser';
+ $answer{'db_pass'}   = 'mydbpass';
 
- $answer{'db_pass'} = q[$db_pass = 'mydbpass';];
+ (Any localconfig variable can be specified as above.)
 
  $answer{'ADMIN_OK'} = 'Y';
  $answer{'ADMIN_EMAIL'} = 'myadmin@mydomain.net';
@@ -302,373 +301,21 @@ import Bugzilla::User qw(insert_new_user);
 require Bugzilla::Bug;
 import Bugzilla::Bug qw(is_open_state);
 
+require Bugzilla::Install::Localconfig;
+import Bugzilla::Install::Localconfig qw(read_localconfig update_localconfig);
+
 ###########################################################################
-# Check and update local configuration
+# Check and update --LOCAL-- configuration
 ###########################################################################
 
-#
-# This is quite tricky. But fun!
-#
-# First we read the file 'localconfig'. Then we check if the variables we
-# need are defined. If not, we will append the new settings to
-# localconfig, instruct the user to check them, and stop.
-#
-# Why do it this way?
-#
-# Assume we will enhance Bugzilla and eventually more local configuration
-# stuff arises on the horizon.
-#
-# But the file 'localconfig' is not in the Bugzilla CVS or tarfile. You
-# know, we never want to overwrite your own version of 'localconfig', so
-# we can't put it into the CVS/tarfile, can we?
-#
-# Now, when we need a new variable, we simply add the necessary stuff to
-# checksetup. When the user gets the new version of Bugzilla from CVS and
-# runs checksetup, it finds out "Oh, there is something new". Then it adds
-# some default value to the user's local setup and informs the user to
-# check that to see if it is what the user wants.
-#
-# Cute, ey?
-#
+print "Reading " .  bz_locations()->{'localconfig'} . "...\n" unless $silent;
+update_localconfig({ output => !$silent, answer => \%answer });
+my $lc_hash = read_localconfig();
 
-my $root = ROOT_USER;
-
-print "Checking user setup ...\n" unless $silent;
-$@ = undef;
-my $localconfig = bz_locations()->{'localconfig'};
-do $localconfig;
-if ($@) { # capture errors in localconfig, bug 97290
-   print STDERR <<EOT;
-An error has occurred while reading your 
-'localconfig' file.  The text of the error message is:
-
-$@
-
-Please fix the error in your 'localconfig' file.  
-Alternately rename your 'localconfig' file, rerun 
-checksetup.pl, and re-enter your answers.
-
-  \$ mv -f localconfig localconfig.old
-  \$ ./checksetup.pl
-
-
-EOT
-    die "Syntax error in localconfig";
-}
-
-sub LocalVarExists
-{
-    my ($name) = @_;
-    return $main::{$name}; # if localconfig declared it, we're done.
-}
-
-my $newstuff = "";
-sub LocalVar
-{
-    my ($name, $definition) = @_;
-    return if LocalVarExists($name); # if localconfig declared it, we're done.
-    $newstuff .= " " . $name;
-    open FILE, '>>', bz_locations()->{'localconfig'};
-    print FILE ($answer{$name} or $definition), "\n\n";
-    close FILE;
-}
-
-
-#
-# Set up the defaults for the --LOCAL-- variables below:
-#
-
-LocalVar('index_html', <<'END');
-#
-# With the introduction of a configurable index page using the
-# template toolkit, Bugzilla's main index page is now index.cgi.
-# Most web servers will allow you to use index.cgi as a directory
-# index, and many come preconfigured that way, but if yours doesn't
-# then you'll need an index.html file that provides redirection
-# to index.cgi. Setting $index_html to 1 below will allow
-# checksetup.pl to create one for you if it doesn't exist.
-# NOTE: checksetup.pl will not replace an existing file, so if you
-#       wish to have checksetup.pl create one for you, you must
-#       make sure that index.html doesn't already exist
-$index_html = 0;
-END
-
-
-if (!LocalVarExists('cvsbin')) {
-    my $cvs_executable;
-    if ($^O !~ /MSWin32/i) {
-        $cvs_executable = `which cvs`;
-        if ($cvs_executable =~ /no cvs/ || $cvs_executable eq '') {
-            # If which didn't find it, just set to blank
-            $cvs_executable = "";
-        } else {
-            chomp $cvs_executable;
-        }
-    } else {
-        $cvs_executable = "";
-    }
-
-    LocalVar('cvsbin', <<"END");
-#
-# For some optional functions of Bugzilla (such as the pretty-print patch
-# viewer), we need the cvs binary to access files and revisions.
-# Because it's possible that this program is not in your path, you can specify
-# its location here.  Please specify the full path to the executable.
-\$cvsbin = "$cvs_executable";
-END
-}
-
-
-if (!LocalVarExists('interdiffbin')) {
-    my $interdiff_executable;
-    if ($^O !~ /MSWin32/i) {
-        $interdiff_executable = `which interdiff`;
-        if ($interdiff_executable =~ /no interdiff/ ||
-            $interdiff_executable eq '') {
-            if (!$silent) {
-                print "\nOPTIONAL NOTE: If you want to be able to ";
-                print "use the\n 'difference between two patches' feature";
-                print "of Bugzilla (requires\n the PatchReader Perl module ";
-                print "as well), you should install\n patchutils from ";
-                print "http://cyberelk.net/tim/patchutils/\n\n";
-            }
-
-            # If which didn't find it, set to blank
-            $interdiff_executable = "";
-        } else {
-            chomp $interdiff_executable;
-        }
-    } else {
-        $interdiff_executable = "";
-    }
-
-    LocalVar('interdiffbin', <<"END");
-
-#
-# For some optional functions of Bugzilla (such as the pretty-print patch
-# viewer), we need the interdiff binary to make diffs between two patches.
-# Because it's possible that this program is not in your path, you can specify
-# its location here.  Please specify the full path to the executable.
-\$interdiffbin = "$interdiff_executable";
-END
-}
-
-
-if (!LocalVarExists('diffpath')) {
-    my $diff_binaries;
-    if ($^O !~ /MSWin32/i) {
-        $diff_binaries = `which diff`;
-        if ($diff_binaries =~ /no diff/ || $diff_binaries eq '') {
-            # If which didn't find it, set to blank
-            $diff_binaries = "";
-        } else {
-            $diff_binaries =~ s:/diff\n$::;
-        }
-    } else {
-        $diff_binaries = "";
-    }
-
-    LocalVar('diffpath', <<"END");
-
-#
-# The interdiff feature needs diff, so we have to have that path.
-# Please specify the directory name only; do not use trailing slash.
-\$diffpath = "$diff_binaries";
-END
-}
-
-
-LocalVar('create_htaccess', <<'END');
-#
-# If you are using Apache as your web server, Bugzilla can create .htaccess
-# files for you that will instruct Apache not to serve files that shouldn't
-# be accessed from the web (like your local configuration data and non-cgi
-# executable files).  For this to work, the directory your Bugzilla
-# installation is in must be within the jurisdiction of a <Directory> block
-# in the httpd.conf file that has 'AllowOverride Limit' in it.  If it has
-# 'AllowOverride All' or other options with Limit, that's fine.
-# (Older Apache installations may use an access.conf file to store these
-# <Directory> blocks.)
-# If this is set to 1, Bugzilla will create these files if they don't exist.
-# If this is set to 0, Bugzilla will not create these files.
-$create_htaccess = 1;
-END
-
-my $webservergroup_default;
-if ($^O !~ /MSWin32/i) {
-    $webservergroup_default = 'apache';
-} else {
-    $webservergroup_default = '';
-}
-
-LocalVar('webservergroup', <<"END");
-#
-# This is the group your web server runs as.
-# If you have a windows box, ignore this setting.
-# If you do not have access to the group your web server runs under,
-# set this to "". If you do set this to "", then your Bugzilla installation
-# will be _VERY_ insecure, because some files will be world readable/writable,
-# and so anyone who can get local access to your machine can do whatever they
-# want. You should only have this set to "" if this is a testing installation
-# and you cannot set this up any other way. YOU HAVE BEEN WARNED!
-# If you set this to anything other than "", you will need to run checksetup.pl
-# as $root, or as a user who is a member of the specified group.
-\$webservergroup = "$webservergroup_default";
-END
-
-
-
-LocalVar('db_driver', '
-#
-# What SQL database to use. Default is mysql. List of supported databases
-# can be obtained by listing Bugzilla/DB directory - every module corresponds
-# to one supported database and the name corresponds to a driver name.
-#
-$db_driver = "mysql";
-');
-LocalVar('db_host', q[
-#
-# How to access the SQL database:
-#
-$db_host = 'localhost';         # where is the database?
-$db_name = 'bugs';              # name of the SQL database
-$db_user = 'bugs';              # user to attach to the SQL database
-
-# Sometimes the database server is running on a non-standard
-# port. If that's the case for your database server, set this
-# to the port number that your database server is running on.
-# Setting this to 0 means "use the default port for my database
-# server."
-$db_port = 0;
-]);
-LocalVar('db_pass', q[
-#
-# Enter your database password here. It's normally advisable to specify
-# a password for your bugzilla database user.
-# If you use apostrophe (') or a backslash (\) in your password, you'll
-# need to escape it by preceding it with a '\' character. (\') or (\\)
-# (Far simpler just not to use those characters.)
-#
-$db_pass = '';
-]);
-
-LocalVar('db_sock', q[
-# MySQL Only: Enter a path to the unix socket for MySQL. If this is 
-# blank, then MySQL's compiled-in default will be used. You probably 
-# want that.
-$db_sock = '';
-]);
-
-LocalVar('db_check', q[
-#
-# Should checksetup.pl try to verify that your database setup is correct?
-# (with some combinations of database servers/Perl modules/moonphase this 
-# doesn't work)
-#
-$db_check = 1;
-]);
-
-my @deprecatedvars;
-push(@deprecatedvars, '@severities') if (LocalVarExists('severities'));
-push(@deprecatedvars, '@priorities') if (LocalVarExists('priorities'));
-push(@deprecatedvars, '@opsys') if (LocalVarExists('opsys'));
-push(@deprecatedvars, '@platforms') if (LocalVarExists('platforms'));
-
-if (@deprecatedvars) {
-    print "\nThe following settings in your localconfig file",
-          " are no longer used:\n  " . join(", ", @deprecatedvars) .
-          "\nThis data is now controlled through the Bugzilla",
-          " administrative interface.\nWe recommend you remove these",
-          " settings from localconfig after checksetup\nruns successfully.\n";
-}
-if (LocalVarExists('mysqlpath')) {
-    print "\nThe \$mysqlpath setting in your localconfig file ",
-          "is no longer required.\nWe recommend you remove it.\n";
-}
-
-if ($newstuff ne "") {
-    print "\nThis version of Bugzilla contains some variables that you may \n",
-          "want to change and adapt to your local settings. Please edit the\n",
-          "file " . bz_locations()->{'localconfig'} ." and rerun ",
-          "checksetup.pl\n\n",
-          "The following variables are new to localconfig since you last ran\n",
-          "checksetup.pl:  $newstuff\n\n";
-    exit;
-}
-
-# 2000-Dec-18 - justdave@syndicomm.com - see Bug 52921
-# This is a hack to read in the values defined in localconfig without getting
-# them defined at compile time if they're missing from localconfig.
-# Ideas swiped from pp. 281-282, O'Reilly's "Programming Perl 2nd Edition"
-# Note that we won't need to do this in Bugzilla::Config because 
-# Bugzilla::Config couldn't care less whether they were defined ahead 
-# of time or not. 
-my $my_db_check = ${*{$main::{'db_check'}}{SCALAR}};
-my $my_db_driver = ${*{$main::{'db_driver'}}{SCALAR}};
-my $my_db_name = ${*{$main::{'db_name'}}{SCALAR}};
-my $my_index_html = ${*{$main::{'index_html'}}{SCALAR}};
-my $my_create_htaccess = ${*{$main::{'create_htaccess'}}{SCALAR}};
-my $my_webservergroup = ${*{$main::{'webservergroup'}}{SCALAR}};
-
-if ($my_webservergroup && !$silent) {
-    if ($^O !~ /MSWin32/i) {
-        # if on unix, see if we need to print a warning about a webservergroup
-        # that we can't chgrp to
-        my $webservergid = (getgrnam($my_webservergroup))[2]
-                           or die("no such group: $my_webservergroup");
-        if ($< != 0 && !grep($_ eq $webservergid, split(" ", $)))) {
-            print <<EOF;
-
-Warning: you have entered a value for the "webservergroup" parameter in 
-localconfig, but you are not either a) running this script as $root; or b) a 
-member of this group. This can cause permissions problems and decreased 
-security.  If you experience problems running Bugzilla scripts, log in as 
-$root and re-run this script, become a member of the group, or remove the 
-value of the "webservergroup" parameter. Note that any warnings about 
-"uninitialized values" that you may see below are caused by this.
-
-EOF
-        }
-    }
-
-    else {
-        # if on Win32, print a reminder that setting this value adds no security
-        print <<EOF;
-      
-Warning: You have set webservergroup in your localconfig.
-Please understand that this does not bring you any security when
-running under Windows.
-Verify that the file permissions in your Bugzilla directory are
-suitable for your system.
-Avoid unnecessary write access.
-
-EOF
-    }
-
-} else {
-    # There's no webservergroup, this is very very very very bad.
-    # However, if we're being run on windows, then this option doesn't
-    # really make sense. Doesn't make it any more secure either, though,
-    # but don't print the message, since they can't do anything about it.
-    if (($^O !~ /MSWin32/i) && !$silent) {
-        print <<EOF;
-
-********************************************************************************
-WARNING! You have not entered a value for the "webservergroup" parameter
-in localconfig. This means that certain files and directories which need
-to be editable by both you and the webserver must be world writable, and
-other files (including the localconfig file which stores your database
-password) must be world readable. This means that _anyone_ who can obtain
-local access to this machine can do whatever they want to your Bugzilla
-installation, and is probably also able to run arbitrary Perl code as the
-user that the webserver runs as.
-
-You really, really, really need to change this setting.
-********************************************************************************
-
-EOF
-    }
-}
+# XXX Eventually these two variables can be eliminated, but they are
+# used more than once throughout checksetup right now.
+my $my_db_driver      = $lc_hash->{'db_driver'};
+my $my_webservergroup = $lc_hash->{'webservergroup'};
 
 ###########################################################################
 # Check Database setup
@@ -681,7 +328,7 @@ EOF
 # everything we need to create the DB. We have to create it early,
 # because some data required to populate data/params are stored in the DB.
 
-if ($my_db_check) {
+if ($lc_hash->{'db_check'}) {
     # Only certain values are allowed for $db_driver.
     if (!exists DB_MODULE->{lc($my_db_driver)}) {
         die "$my_db_driver is not a valid choice for \$db_driver in",
@@ -721,6 +368,7 @@ if ($my_db_check) {
         $check_dbh->disconnect;
     };
     if (!$conn_success) {
+       my $my_db_name = $lc_hash->{'db_name'};
        print "Creating database $my_db_name ...\n";
        # Try to create the DB, and if we fail print an error.
        if (!eval { $dbh->do("CREATE DATABASE $my_db_name") }) {
@@ -984,7 +632,7 @@ END
     }
 }
 
-if ($my_create_htaccess) {
+if ($lc_hash->{'create_htaccess'}) {
   my $fileperm = 0644;
   my $dirperm = 01777;
   if ($my_webservergroup) {
@@ -1105,7 +753,7 @@ END
 
 }
 
-if ($my_index_html) {
+if ($lc_hash->{'index_html'}) {
     if (!-e "index.html") {
         print "Creating index.html...\n";
         open HTML, '>', 'index.html';
