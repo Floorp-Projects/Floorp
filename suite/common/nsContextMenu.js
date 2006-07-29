@@ -134,11 +134,11 @@ nsContextMenu.prototype = {
         // View frame source depends on whether we're in a frame.
         this.showItem( "context-viewframesource", this.inFrame );
     
-        // View Info don't work no way no how.
-        this.showItem( "context-viewinfo", false );
+        // View Info is available, unless in directory listing
+        this.showItem( "context-viewinfo", !this.inDirList );
     
-        // View Frame Info isn't working, either.
-        this.showItem( "context-viewframeinfo", false );
+        // View Frame Info depends on whether we're in a frame
+        this.showItem( "context-viewframeinfo", this.inFrame );
     
         // View Image depends on whether an image was clicked on.
         this.showItem( "context-viewimage", this.onImage );
@@ -392,10 +392,10 @@ nsContextMenu.prototype = {
                         this.target.ownerDocument.location.href);
     },
     viewInfo : function () {
-      // XXX not implemented
+      BrowserPageInfo();
     },
     viewFrameInfo : function () {
-      // XXX not implemented
+      BrowserPageInfo(this.target.ownerDocument);
     },
     // Open new window with the URL of the image.
     viewImage : function () {
