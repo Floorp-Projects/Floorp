@@ -17,8 +17,6 @@
 <!ENTITY history.commandKey				"h">
 <!ENTITY securityInfoCmd.label					".Security Info">  
 <!ENTITY securityInfoCmd.accesskey				"s">
-<!ENTITY importUtilCmd.label					"Import Utility">  
-<!ENTITY importUtilCmd.accesskey				"I">
 <!ENTITY javaConsoleCmd.label					"Java Console">
 <!ENTITY javaConsoleCmd.accesskey				"j">
 
