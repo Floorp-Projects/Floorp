@@ -109,17 +109,11 @@ var goPrefWindow = 0;
 function getBrowserURL() {
 
   try {
-    var prefs = Components.classes["@mozilla.org/preferences;1"];
-    if (prefs) {
-      prefs = prefs.getService();
-      if (prefs)
-        prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
-    }
-    if (prefs) {
-      var url = prefs.CopyCharPref("browser.chromeURL");
-      if (url)
-        return url;
-    }
+    var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefBranch);
+    var url = prefs.getCharPref("browser.chromeURL");
+    if (url)
+      return url;
   } catch(e) {
   }
   return "chrome://navigator/content/navigator.xul";
@@ -147,12 +141,13 @@ function goEditCardDialog(abURI, card, okCallback, abCardURI)
 function goPreferences(containerID, paneURL, itemID)
 {
   var resizable;
-  var pref = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
+  var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                       .getService(Components.interfaces.nsIPrefBranch);
   try {
     // We are resizable ONLY if in box debugging mode, because in
     // this special debug mode it is often impossible to see the 
     // content of the debug panel in order to disable debug mode.
-    resizable = pref.GetBoolPref("xul.debug.box");
+    resizable = pref.getBoolPref("xul.debug.box");
   }
   catch (e) {
     resizable = false;
@@ -203,10 +198,9 @@ function goClickThrobber( urlPref )
 {
   var url;
   try {
-    var pref = Components.classes["@mozilla.org/preferences;1"].getService();
-    if( pref )
-    pref = pref.QueryInterface( Components.interfaces.nsIPref );
-    url = pref.getLocalizedUnicharPref(urlPref);
+    var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefBranch);
+    url = pref.getComplexValue(urlPref, Components.interfaces.nsIPrefLocalizedString);
   }
 
   catch(e) {
@@ -265,10 +259,9 @@ function goAboutDialog()
 {
   var defaultAboutState = false;
   try {
-    var pref = Components.classes["@mozilla.org/preferences;1"].getService();
-    if( pref )
-      pref = pref.QueryInterface( Components.interfaces.nsIPref );
-    defaultAboutState = pref.GetBoolPref("browser.show_about_as_stupid_modal_window");
+    var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefBranch);
+    defaultAboutState = pref.getBoolPref("browser.show_about_as_stupid_modal_window");
   }
   catch(e) {
     defaultAboutState = false;

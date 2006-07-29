@@ -26,8 +26,8 @@ var browser;
 var dialog = {};
 var pref = null;
 try {
-  pref = Components.classes["@mozilla.org/preferences;1"]
-                   .getService(Components.interfaces.nsIPref);
+  pref = Components.classes["@mozilla.org/preferences-service;1"]
+                   .getService(Components.interfaces.nsIPrefBranch);
 } catch (ex) {
   // not critical, remain silent
 }
@@ -73,11 +73,12 @@ function onLoad()
   dialog.input.focus();
   if (pref) {
     try {
-      var value = pref.GetIntPref("general.open_location.last_window_choice");
+      var value = pref.getIntPref("general.open_location.last_window_choice");
       var element = dialog.openAppList.getElementsByAttribute("value", value)[0];
       if (element)
         dialog.openAppList.selectedItem = element;
-      dialog.input.value = pref.CopyUnicharPref("general.open_location.last_url");
+      dialog.input.value = pref.getComplexValue("general.open_location.last_url",
+                                                Components.interfaces.nsISupportsWString);
     }
     catch(ex) {
     }
@@ -126,8 +127,12 @@ function open()
   }
 
   if (pref) {
-    pref.SetUnicharPref("general.open_location.last_url", dialog.input.value);
-    pref.SetIntPref("general.open_location.last_window_choice", dialog.openAppList.value);
+    var str = Components.classes["@mozilla.org/supports-wstring;1"]
+                        .createInstance(Components.interfaces.nsISupportsWString);
+    str.data = dialog.input.value;
+    pref.setComplexValue("general.open_location.last_url",
+                         Components.interfaces.nsISupportsWString, str);
+    pref.setIntPref("general.open_location.last_window_choice", dialog.openAppList.value);
   }
 
   // Delay closing slightly to avoid timing bug on Linux.
