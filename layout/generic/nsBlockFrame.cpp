@@ -5964,9 +5964,18 @@ found_frame:;
           // We have advanced to the next *normal* line but the next-in-flow
           // is not there - force a switch to the overflow line list.
           line = line_end;
+        }
+
+        PRBool wasSearchingOverflowList = searchingOverflowList;
+        TryAllLines(&line, &line_end, &searchingOverflowList);
+        if (NS_UNLIKELY(searchingOverflowList && !wasSearchingOverflowList &&
+                        prevSibling)) {
+          // We switched to the overflow line list and we have a prev sibling
+          // (in the main list), in this case we don't want to pick up any
+          // sibling list from the deceased frames (bug 344557).
+          prevSibling->SetNextSibling(nsnull);
           prevSibling = nsnull;
         }
-        TryAllLines(&line, &line_end, &searchingOverflowList);
 #ifdef NOISY_REMOVE_FRAME
         printf("DoRemoveFrame: now on %s line=%p prevSibling=%p\n",
                searchingOverflowList?"overflow":"normal", line.get(),
