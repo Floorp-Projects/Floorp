@@ -788,9 +788,9 @@ function getDefaultFileName(aDefaultFileName, aNameFromHeaders, aDocumentURI, aD
   }
   
   if (aDocument) {
-    var docTitle = validateFileName(aDocument.title).replace(/^\s+|\s+$/g, "");
+    var docTitle = GenerateValidFilename(aDocument.title, "");
 
-    if (docTitle != "") {
+    if (docTitle) {
       // 3) Use the document title
       return docTitle;
     }
@@ -821,22 +821,6 @@ function getDefaultFileName(aDefaultFileName, aNameFromHeaders, aDocumentURI, aD
   }
   // 8) If all else fails, use "index"
   return "index";
-}
-
-function validateFileName(aFileName)
-{
-  var re = /[\/]+/g;
-  if (navigator.appVersion.indexOf("Windows") != -1) {
-    re = /[\\\/\|]+/g;
-    aFileName = aFileName.replace(/[\"]+/g, "'");
-    aFileName = aFileName.replace(/[\*\:\?]+/g, " ");
-    aFileName = aFileName.replace(/[\<]+/g, "(");
-    aFileName = aFileName.replace(/[\>]+/g, ")");
-  }
-  else if (navigator.appVersion.indexOf("Macintosh") != -1)
-    re = /[\:\/]+/g;
-  
-  return aFileName.replace(re, "_");
 }
 
 function getNormalizedLeafName(aFile, aDefaultExtension)
