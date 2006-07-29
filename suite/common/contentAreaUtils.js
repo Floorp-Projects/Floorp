@@ -85,11 +85,14 @@
     // Default is to save current page.
     if ( !url )
       url = window._content.location.href;
-    // Post data comes from appcore.
+
     try {
-      postData = window.appCore.postData;
+      var sessionHistory = getWebNavigation().sessionHistory;
+      var entry = sessionHistory.getEntryAtIndex(sessionHistory.index, false);
+      postData = entry.postData;
     } catch(e) {
     }
+
     // Use stream xfer component to prompt for destination and save.
     var xfer = Components.classes["@mozilla.org/appshell/component/xfer;1"].getService(Components.interfaces["nsIStreamTransfer"]);
     try {

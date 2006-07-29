@@ -672,11 +672,15 @@ nsContextMenu.prototype = {
         // Default is to save current page.
         if ( !url ) {
             url = window._content.location.href;
-            // Post data comes from appcore.
-            if ( window.appCore ) {
-                postData = window.appCore.postData;
+
+            try {
+                var sessionHistory = getWebNavigation().sessionHistory;
+                var entry = sessionHistory.getEntryAtIndex(sessionHistory.index, false);
+                postData = entry.postData;
+            } catch(e) {
             }
         }
+
         // Use stream xfer component to prompt for destination and save.
         var xfer = this.getService( "@mozilla.org/appshell/component/xfer;1",
                                     "nsIStreamTransfer" );
