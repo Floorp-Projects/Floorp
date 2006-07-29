@@ -232,8 +232,7 @@ pref("browser.xul.error_pages.enabled", true);
 pref("bidi.browser.ui", false);
 
 // prevent JS from moving/resizing existing windows
-// Commented out for now until the DHTML tests on tinderbox get fixed to reset this pref
-// pref("dom.disable_window_move_resize", true);
+pref("dom.disable_window_move_resize", true);
 // prevent JS from raising or lowering windows
 pref("dom.disable_window_flip",        true);
 // prevent JS from disabling or replacing context menus
