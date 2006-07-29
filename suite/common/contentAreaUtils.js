@@ -271,7 +271,7 @@ function foundHeaderInfo(aSniffer, aData)
         getService(Components.interfaces.nsIExternalHelperAppService);
     var url = aSniffer.uri.QueryInterface(Components.interfaces.nsIURL);
     urlExt = url.fileExtension;
-    if (contentEncodingType && urlExt &&
+    if (contentEncodingType &&
         helperAppService.applyDecodingForExtension(urlExt,
                                                    contentEncodingType)) {
       shouldDecode = true;
