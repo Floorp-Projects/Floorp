@@ -85,9 +85,9 @@ function OpenBrowserWindow()
   // if and only if the current window is a browser window and it has a document with a character
   // set, then extract the current charset menu setting from the current document and use it to
   // initialize the new browser window...
-  if (window && (window.windowtype == "navigator:browser") && window.content && window.content.document)
+  if (window && (window.windowtype == "navigator:browser") && window._content && window._content.document)
   {
-    var DocCharset = window.content.document.characterSet;
+    var DocCharset = window._content.document.characterSet;
     charsetArg = "charset="+DocCharset;
     dump("*** Current document charset: " + DocCharset + "\n");
 
@@ -326,19 +326,19 @@ function WalletAction( action )
 
     var element;
     if (action == "cookieAllow") {
-      cookieViewer.AddPermission(window.content, true, COOKIEPERMISSION);
+      cookieViewer.AddPermission(window._content, true, COOKIEPERMISSION);
       element = document.getElementById("AllowCookies");
       alert(element.getAttribute("msg"));
     } else if (action == "cookieBlock") {
-      cookieViewer.AddPermission(window.content, false, COOKIEPERMISSION);
+      cookieViewer.AddPermission(window._content, false, COOKIEPERMISSION);
       element = document.getElementById("BlockCookies");
       alert(element.getAttribute("msg"));
     } else if (action == "imageAllow") {
-      cookieViewer.AddPermission(window.content, true, IMAGEPERMISSION);
+      cookieViewer.AddPermission(window._content, true, IMAGEPERMISSION);
       element = document.getElementById("AllowImages");
       alert(element.getAttribute("msg"));
     } else if (action == "imageBlock") {
-      cookieViewer.AddPermission(window.content, false, IMAGEPERMISSION);
+      cookieViewer.AddPermission(window._content, false, IMAGEPERMISSION);
       element = document.getElementById("BlockImages");
       alert(element.getAttribute("msg"));
     }
@@ -348,17 +348,17 @@ function WalletAction( action )
   if( appCore ) {
     switch( action ) {
       case "safefill":
-        appCore.walletPreview(window, window.content);
+        appCore.walletPreview(window, window._content);
         break;
 //    case "password":
 //      appCore.walletChangePassword();
 //      break;
       case "quickfill": 
-        appCore.walletQuickFillin(window.content);
+        appCore.walletQuickFillin(window._content);
         break;
       case "capture":
       default:
-        appCore.walletRequestToCapture(window.content);
+        appCore.walletRequestToCapture(window._content);
         break;
     }
   }
@@ -380,10 +380,10 @@ function WalletDialog( which )
       window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","CookieViewer","modal=yes,chrome,resizable=no"); 
       break;
     case "samples":
-      window.content.location.href= 'http://www.mozilla.org/wallet/samples/';
+      window._content.location.href= 'http://www.mozilla.org/wallet/samples/';
       break;
     case "interview":
-      window.content.location.href= 'http://www.mozilla.org/wallet/samples/INTERVIEW.HTML';
+      window._content.location.href= 'http://www.mozilla.org/wallet/samples/INTERVIEW.HTML';
       break;
     case "wallet":
     default:
