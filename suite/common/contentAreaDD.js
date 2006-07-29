@@ -169,7 +169,7 @@ var contentAreaDNDObserver = {
 
       switch (document.firstChild.getAttribute('windowtype')) {
         case "navigator:browser":
-          loadShortcutOrURI(url);
+          loadURI(getShortcutOrURI(url));
           break;
         case "navigator:view-source":
           viewSource(url);
