@@ -279,11 +279,8 @@ function internalSave(aURL, aDocument, aDefaultFileName, aShouldBypassCache,
   var isDocument = aDocument != null && saveMode != SAVEMODE_FILEONLY;
 
   // Show the file picker that allows the user to confirm the target filename:
-  var prefs = getPrefsBrowserDownload("browser.download.");
   var fpParams = {
     fp: makeFilePicker(),
-    prefs: prefs,
-    userDirectory: getUserDownloadDir(prefs),
     fpTitleKey: aFilePickerTitleKey,
     isDocument: isDocument,
     fileInfo: fileInfo,
@@ -464,9 +461,10 @@ function poseFilePicker(aFpP)
   fp.init(window, bundle.GetStringFromName(titleKey),
           Components.interfaces.nsIFilePicker.modeSave);
 
+  var prefs = getPrefsBrowserDownload("browser.download.");
   const nsILocalFile = Components.interfaces.nsILocalFile;
   try {
-    fp.displayDirectory = aFpP.userDirectory;
+    fp.displayDirectory = prefs.getComplexValue("dir", nsILocalFile);
   }
   catch (e) {
   }
@@ -479,7 +477,7 @@ function poseFilePicker(aFpP)
 
   if (aFpP.isDocument) {
     try {
-      fp.filterIndex = aFpP.prefs.getIntPref("save_converter_index");
+      fp.filterIndex = prefs.getIntPref("save_converter_index");
     }
     catch (e) {
     }
@@ -489,12 +487,12 @@ function poseFilePicker(aFpP)
     return false;
 
   if (aFpP.isDocument) 
-    aFpP.prefs.setIntPref("save_converter_index", fp.filterIndex);
+    prefs.setIntPref("save_converter_index", fp.filterIndex);
 
   // Now that the user has had a chance to change the directory and/or filename,
   // re-read those values...
   var directory = fp.file.parent.QueryInterface(nsILocalFile);
-  aFpP.prefs.setComplexValue("dir", nsILocalFile, directory);
+  prefs.setComplexValue("dir", nsILocalFile, directory);
   fp.file.leafName = validateFileName(fp.file.leafName);
   return true;
 }
@@ -613,17 +611,6 @@ function getPrefsBrowserDownload(branch)
   const prefSvcContractID = "@mozilla.org/preferences-service;1";
   const prefSvcIID = Components.interfaces.nsIPrefService;                              
   return Components.classes[prefSvcContractID].getService(prefSvcIID).getBranch(branch);
-}
-
-// Get the current user download directory, return it to the caller:
-function getUserDownloadDir(prefs)
-{
-  try {
-    return prefs.getComplexValue("dir", Components.interfaces.nsILocalFile);
-  }
-  catch (e) {
-  }
-  return null;
 }
 
 function makeWebBrowserPersist()
