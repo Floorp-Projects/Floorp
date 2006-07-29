@@ -311,7 +311,7 @@ nsHeaderSniffer.prototype = {
     if (name) {
       const filenamePrefix = "filename=";
       var ix = name.indexOf(filenamePrefix);
-      if (ix > 0) {
+      if (ix >= 0) {
         // Adjust ix to point to start of actual name
         ix += filenamePrefix.length;
         filename = name.substr(ix, name.length);
@@ -319,7 +319,8 @@ nsHeaderSniffer.prototype = {
           ix = filename.lastIndexOf(";");
           if (ix > 0)
             filename = filename.substr(0, ix);
-          // XXX strip out quotes;
+          
+          filename = filename.replace(/^"|"$/g, "");
         }
       }
     }
