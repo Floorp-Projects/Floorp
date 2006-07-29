@@ -75,7 +75,7 @@
             context="historyMenu"
             datasources="rdf:history" ref="NC:HistoryByDate" flags="dont-build-content"
             onkeypress="if (event.keyCode == 13) OpenURL(event.ctrlKey || event.metaKey);" 
-            onselect="this.parentNode.outlinerBoxObject.view.selectionChanged();
+            onselect="this.outlinerBoxObject.view.selectionChanged();
                       historyOnSelect();"
             ondraggesture="if (event.originalTarget.localName == 'outlinerchildren') nsDragAndDrop.startDrag(event, historyDNDObserver);"
             ondblclick="if (event.button == 0) OpenURL(event.ctrlKey || event.metaKey);">
