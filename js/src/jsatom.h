@@ -343,7 +343,7 @@ typedef void
 (*JSGCThingMarker)(void *thing, void *data);
 
 extern void
-js_MarkAtomState(JSAtomState *state, uintN gcflags, JSGCThingMarker mark,
+js_MarkAtomState(JSAtomState *state, JSBool keepAtoms, JSGCThingMarker mark,
                  void *data);
 
 extern void
