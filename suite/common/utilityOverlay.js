@@ -411,7 +411,17 @@ function editPage(url, launchWindow, delay)
 {
   // User may not have supplied a window
   if (!launchWindow)
-    launchWindow = window;
+  {
+    if (window)
+    {
+      launchWindow = window;
+    }
+    else
+    {
+      dump("No window to launch an editor from!\n");
+      return;
+    }
+  }
 
   var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
   if (!windowManager) return;
