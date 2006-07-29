@@ -127,7 +127,7 @@
     }
     if (pref && event.button == 2 &&
         !findParentNode(event.originalTarget, "scrollbar") &&
-        pref.GetBoolPref("middlemouse.paste")) {
+        pref.GetBoolPref("middlemouse.contentLoadURL")) {
       if (middleMousePaste()) {
         event.preventBubble();
       }
