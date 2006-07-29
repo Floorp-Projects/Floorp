@@ -80,6 +80,8 @@
 <!ENTITY deleteCmd.accesskey          "D">
 <!ENTITY undoCmd.label                "Undo">
 <!ENTITY undoCmd.accesskey            "U">
+<!ENTITY redoCmd.label                "Redo">
+<!ENTITY redoCmd.accesskey            "R">
 <!ENTITY thisFrameMenu.label              "This Frame">
 <!ENTITY thisFrameMenu.accesskey          "h">
 <!ENTITY search.accesskey             "W">

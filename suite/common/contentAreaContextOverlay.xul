@@ -136,6 +136,10 @@
                 label="&undoCmd.label;"
                 accesskey="&undoCmd.accesskey;"
                 command="cmd_undo"/>
+      <menuitem id="context-redo"
+                label="&redoCmd.label;"
+                accesskey="&redoCmd.accesskey;"
+                command="cmd_redo"/>
       <menuseparator id="context-sep-undo"/>
       <menuitem id="context-cut"
                 label="&cutCmd.label;"
