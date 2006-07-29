@@ -127,18 +127,19 @@ function getBrowserURL() {
 
 function goPageSetup(printSettings)
 {
-  if (printSettings == null) {
-    alert("PrintSettings arg is null!");
+  try {
+    if (printSettings == null) {
+      alert("PrintSettings arg is null!");
+    }
+
+    // This code calls the printoptions service to bring up the printoptions
+    // dialog.  This will be an xp dialog if the platform did not override
+    // the ShowPrintSetupDialog method.
+    var printOptionsService = Components.classes["@mozilla.org/gfx/printoptions;1"]
+                                             .getService(Components.interfaces.nsIPrintOptions);
+    printOptionsService.ShowPrintSetupDialog(printSettings);
+  } catch(e) { 
   }
-
-  // This code calls the printoptions service to bring up the printoptions
-  // dialog.  This will be an xp dialog if the platform did not override
-  // the ShowPrintSetupDialog method.
-  var printOptionsService = Components.classes["@mozilla.org/gfx/printoptions;1"]
-                                           .getService(Components.interfaces.nsIPrintOptions);
-  printOptionsService.ShowPrintSetupDialog(printSettings);
-
-
 }
 
 function goPreferences(containerID, paneURL, itemID)
