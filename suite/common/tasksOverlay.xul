@@ -33,7 +33,8 @@
         <template>
           <rule>
             <menupopup>
-              <menuitem uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="ShowWindowFromResource(event.target)"/>
+              <menuitem uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#KeyIndex rdf:http://home.netscape.com/NC-rdf#Name" 
+                        oncommand="ShowWindowFromResource(event.target)" accesskey="rdf:http://home.netscape.com/NC-rdf#KeyIndex"/>
             </menupopup>
           </rule>
         </template>
