@@ -57,7 +57,7 @@
                 <menupopup>
                   <menuitem id="walleteditor" value="&walletContentsCmd.label;" oncommand="WalletDialog('wallet');"/> 
                   <menuitem value="&walletSafeFillCmd.label;" id="walletSafeFill" oncommand="WalletAction('safefill');"/> 
-                  <menuitem value="&walletQuickFillCmd.label;" id="walletQuickFill" oncommand="WalletAction('quickfill');"/> 
+                  <menuitem value="&walletQuickFillCmd.label;" id="walletQuickFill" oncommand="WalletAction('quickfill');" style="display:none;"/> 
                   <menuitem value="&walletRequestToCaptureCmd.label;" id="walletCapture" oncommand="WalletAction('capture');"/> 
                   <menuseparator/>
                   <menuitem value="&walletInterviewCmd.label;" id="walletInterview" oncommand="WalletDialog('interview');"/> 

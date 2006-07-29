@@ -240,11 +240,6 @@ function CheckForWalletAndImage()
   // remove either encrypt or obscure depending on pref setting
   HideEncryptOrObscure();
 
-  // remove quickfill since it was just for development purposes
-  element = document.getElementById("walletQuickFill");
-  element.setAttribute("style","display: none;" );
-  element.setAttribute("disabled","true" );
-
   // remove wallet functions if not in browser
   try {
     if (!appCore) {
