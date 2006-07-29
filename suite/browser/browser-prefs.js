@@ -139,7 +139,6 @@ pref("browser.translation.service", "chrome://navigator-region/locale/region.pro
 pref("browser.translation.serviceDomain", "chrome://navigator-region/locale/region.properties");
   
 // Smart Browsing prefs
-pref("browser.related.enabled", true);
 pref("browser.related.autoload", 1);  // 0 = Always, 1 = After first use, 2 = Never
 pref("browser.related.provider", "http://www-rl.netscape.com/wtgn?");
 pref("browser.related.disabledForDomains", "");
