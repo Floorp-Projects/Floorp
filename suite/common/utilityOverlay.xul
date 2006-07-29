@@ -8,7 +8,7 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script language="javascript" src="chrome://communicator/content/utilityOverlay.js"></script>
-  <script language="javascript" src="chrome://global/content/builtinURLs.js"></script>
+  <script language="javascript" src="chrome://communicator/content/builtinURLs.js"></script>
          
   <!-- online/offline status indicators -->
   <broadcasterset id="broadcasterset">  	
