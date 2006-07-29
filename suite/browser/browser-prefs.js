@@ -159,6 +159,9 @@ pref("browser.editor.disabled", false);
 pref("spellchecker.dictionary", "");
 
 pref("autoupdate.enabled",              true);
+pref("xpinstall.dialog.confirm",        "chrome://communicator/content/xpinstall/institems.xul");
+pref("xpinstall.dialog.progress",       "chrome://communicator/content/xpinstall/xpistatus.xul");
+pref("xpinstall.dialog.progress.type",  "");
 
 // Customizable toolbar stuff
 pref("custtoolbar.personal_toolbar_folder", "");
