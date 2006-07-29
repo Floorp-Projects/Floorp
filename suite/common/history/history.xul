@@ -38,7 +38,8 @@
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns:web="http://home.netscape.com/WEB-rdf#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  width="500" height="400" x="20" y="20" persist="width height x y" 
+  width="500" height="400"
+  persist="width height screenX screenY sizemode"
   orient="vertical"
   windowtype="history:manager">
 
@@ -112,7 +113,7 @@
       <menuseparator/>
       <menuitem id="menu_selectAll"/>
       <menuseparator/>
-      <menuitem value="&findHisCmd.label;" accesskey="&findHisCmd.accesskey;" oncommand="window.openDialog('chrome://communicator/content/bookmarks/bm-find.xul', 'FindBookmarksWindow', 'centerscreen,dialog=no,close,chrome,resizable');"/>
+      <menuitem value="&findHisCmd.label;" accesskey="&findHisCmd.accesskey;" oncommand="window.openDialog('chrome://communicator/content/bookmarks/bm-find.xul', 'FindBookmarksWindow', 'dialog=no,close,chrome,resizable');"/>
     </menupopup>
   </menu>
   <menu id="menu_View">
