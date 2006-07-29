@@ -21,9 +21,6 @@
  *  Peter Annema <disttsc@bart.nl>
  */
 
-var gJVMMgr = Components.classes['@mozilla.org/oji/jvm-mgr;1']
-                        .getService(Components.interfaces.nsIJVMManager)
-
 function toNavigator()
 {
     CycleWindow('navigator:browser', getBrowserURL());
@@ -80,7 +77,9 @@ function javaItemEnabling()
             
 function toJavaConsole()
 {
-    gJVMMgr.showJavaConsole();
+    var jvmMgr = Components.classes['@mozilla.org/oji/jvm-mgr;1']
+                            .getService(Components.interfaces.nsIJVMManager)
+    jvmMgr.showJavaConsole();
 }
 
 function toOpenWindowByType( inType, uri )
