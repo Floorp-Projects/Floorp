@@ -69,12 +69,12 @@
 <!ENTITY walletChangePasswordCmd.accesskey "c">
 <!ENTITY walletExpirePasswordCmd.label "Log Out">
 <!ENTITY walletExpirePasswordCmd.accesskey "l">
-<!ENTITY walletEncryptCmd.label "Encrypt Stored Data">
+<!ENTITY walletEncryptCmd.label "Encrypt Sensitive Information">
 <!ENTITY walletEncryptCmd.accesskey "e">
-<!ENTITY walletObscureCmd.label "Obscure Stored Data">
+<!ENTITY walletObscureCmd.label "Obscure Sensitive Information">
 <!ENTITY walletObscureCmd.accesskey "o">
-<!ENTITY walletClearCmd.label "Clear Stored Data">
-<!ENTITY walletClearCmd.accesskey "d">
+<!ENTITY walletClearCmd.label "Clear Sensitive Information">
+<!ENTITY walletClearCmd.accesskey "r">
 <!ENTITY walletCookieManager.label "Cookie Manager">
 <!ENTITY walletCookieManager.accesskey "c">
 <!ENTITY walletImageManager.label "Image Manager">
