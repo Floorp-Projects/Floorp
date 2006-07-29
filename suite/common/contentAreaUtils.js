@@ -104,10 +104,6 @@ function openNewWindowWith(url, sendReferrer)
 
 function openNewTabWith(url, sendReferrer, reverseBackgroundPref) 
 {
-  urlSecurityCheck(url, document);
-
-  var referrer = sendReferrer ? getReferrer(document) : null;
-
   var browser;
   try {
     // if we're running in a browser window, this should work
@@ -138,6 +134,15 @@ function openNewTabWith(url, sendReferrer, reverseBackgroundPref)
     //
     browser = browserWin.getBrowser();
   }
+
+  // Get the XUL document that the browser is actually contained in.
+  // This is needed if we are trying to load a URL from a non-navigator
+  // window such as the JS Console.
+  var browserDocument = browser.ownerDocument;
+
+  urlSecurityCheck(url, browserDocument);
+
+  var referrer = sendReferrer ? getReferrer(browserDocument) : null;
 
   var tab = browser.addTab(url, referrer); // open link in new tab
   if (pref) {
