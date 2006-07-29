@@ -52,7 +52,7 @@
   </script>
   <script type="application/x-javascript" src="chrome://communicator/content/nsContextMenu.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/XPCNativeWrapper.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/XPCNativeWrapper.js"/>
 
   <popupset id="contentAreaContextSet">
     <!-- This is a generic context menu for a content area. It contains 
