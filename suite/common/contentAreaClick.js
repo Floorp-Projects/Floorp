@@ -127,6 +127,10 @@
         if (target.href) 
           linkNode = target;
         break;
+      case "link":
+        if (target.href) 
+          linkNode = target;
+        break;
       case "input":
         if ((event.target.type.toLowerCase() == "text" || event.target.type == "") // text field
             && event.detail == 2 // double click
@@ -142,6 +146,22 @@
     if (linkNode) {
       handleLinkClick(event, linkNode.href);
       return true;
+    } else {
+      // Try simple XLink
+      var href;
+      linkNode = target;
+      while (linkNode) {
+        if (linkNode.nodeType == Node.ELEMENT_NODE) {
+          href = linkNode.getAttributeNS("http://www.w3.org/1999/xlink", "href");
+          break;
+        }
+        linkNode = linkNode.parentNode;
+      }
+      if (href && href != "") {
+        href = makeURLAbsolute(target.baseURI,href);
+        handleLinkClick(event, href);
+        return true;
+      }
     }
     if (pref && event.button == 1 &&
         !findParentNode(event.originalTarget, "scrollbar") &&
@@ -219,4 +239,14 @@
       return true;
     }
     return false;
+  }
+
+  function makeURLAbsolute( base, url ) 
+  {
+    // Construct nsIURL.
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                  .getService(Components.interfaces.nsIIOService);
+    var baseURI  = ioService.newURI(base, null);
+
+    return ioService.newURI(baseURI.resolve(url), null).spec;
   }
