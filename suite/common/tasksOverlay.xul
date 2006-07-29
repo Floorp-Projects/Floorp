@@ -71,24 +71,24 @@
         </menupopup>
       </menu>
  <!--   
-  <box id="taskbar" class="toolbar-standard chromeclass-status" persist="collapsed" style="min-width: 1px;" 
-       grippytooltip="aTooltip" grippytooltiptext="&taskBar.tooltip;">
-    <box id="taskButtons">
+  <hbox id="taskbar" class="toolbar-standard chromeclass-status" persist="collapsed" style="min-width: 1px;" 
+        grippytooltip="aTooltip" grippytooltiptext="&taskBar.tooltip;">
+    <hbox id="taskButtons">
       <button class="button-toolbar-4 taskbutton" id="mini-nav" oncommand="toNavigator();" 
               tooltip="aTooltip" tooltiptext="&taskNavigator.tooltip;"/>
       <button class="button-toolbar-4 taskbutton" id="mini-comp" oncommand="toEditor();" 
               tooltip="aTooltip" tooltiptext="&taskComposer.tooltip;"/>
       <button class="button-toolbar-4 taskbutton" id="mini-addr" oncommand="toAddressBook();"
               tooltip="aTooltip" tooltiptext="&taskAddressBook.tooltip;"/>
-    </box>
+    </hbox>
    
     <spring id="taskbar-middle-spacer" flex="10"/>
     
-    <box id="taskbarMenuBox"/>
+    <hbox id="taskbarMenuBox"/>
     
    
    
-    <box id="taskbarGotoMenuBox" align="right"/>
+    <hbox id="taskbarGotoMenuBox" align="right"/>
     
     
   
@@ -97,10 +97,10 @@
     <spring id="taskbar-right-spacer" flex="7"/>
     
   
-  </box>
+  </hbox>
   -->
   
-  <box id="component-bar" class="statusbar-panel" persist="collapsed">
+  <hbox id="component-bar" class="statusbar-panel" persist="collapsed">
 
        <button class="button-toolbar-4 taskbutton" id="mini-nav" oncommand="toNavigator();" 
               tooltip="aTooltip" tooltiptext="&taskNavigator.tooltip;"/>
@@ -109,5 +109,5 @@
       <button class="button-toolbar-4 taskbutton" id="mini-addr" oncommand="toAddressBook();"
               tooltip="aTooltip" tooltiptext="&taskAddressBook.tooltip;"/>
                
-   </box> 
+   </hbox> 
 </overlay>
