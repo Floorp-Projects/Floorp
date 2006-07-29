@@ -14,14 +14,17 @@ function setOfflineStatus(aToggleFlag)
   if (aToggleFlag)
     ioService.offline = !ioService.offline;
 
+  var bundle = srGetStrBundle("chrome://communicator/locale/utilityOverlay.properties");                                                      
   if (ioService.offline && broadcaster)
     {
       broadcaster.setAttribute("offline", "true");
+      broadcaster.setAttribute("tooltiptext", bundle.GetStringFromName("offlineTooltip"));
       broadcaster.setAttribute("value", bundle.GetStringFromName("goonline"));
     }
   else if (broadcaster)
     {
       broadcaster.removeAttribute("offline");
+      broadcaster.setAttribute("tooltiptext", bundle.GetStringFromName("onlineTooltip"));
       broadcaster.setAttribute("value", bundle.GetStringFromName("gooffline"));
     }
 }
