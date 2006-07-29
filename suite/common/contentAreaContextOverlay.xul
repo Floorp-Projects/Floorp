@@ -113,13 +113,13 @@
       <menuitem id="context-bookmarkpage"
                 value="&bookmarkPageCmd.label;"
                 accesskey="&bookmarkPageCmd.accesskey;"
-                oncommand="BrowserAddBookmark( window._content.location.href,
-                                               window._content.document.title )"/>
+                oncommand="addBookmark(window._content.location.href,
+                                       window._content.document.title);"/>
       <menuitem id="context-bookmarklink"
                 value="&bookmarkLinkCmd.label;"
                 accesskey="&bookmarkLinkCmd.accesskey;"
-                oncommand="BrowserAddBookmark( contextMenu.linkURL(),
-                                               contextMenu.linkText() )"/>
+                oncommand="addBookmark(contextMenu.linkURL(),
+                                       contextMenu.linkText());"/>
       <menuseparator/>
       <!-- Save ==================================== -->
       <menuitem id="context-savepage"
