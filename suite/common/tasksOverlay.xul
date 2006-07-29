@@ -40,7 +40,7 @@
 
       <menu id="windowMenu" label="&windowMenu.label;" accesskey="&windowMenu.accesskey;"
             datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot"
-            onpopupshown="checkFocusedWindow();">
+            onpopupshowing="checkFocusedWindow();">
         <template>
           <rule>
             <menupopup>
