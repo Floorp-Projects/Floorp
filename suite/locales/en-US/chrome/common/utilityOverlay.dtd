@@ -65,7 +65,7 @@
 <!ENTITY whatNewCmd.label				"What's New">  
 
 <!ENTITY releaseCmd.label				"Release Notes">
-<!ENTITY releaseCmd.accesskey				"r">
+<!ENTITY releaseCmd.accesskey                   "N">
 <!ENTITY aboutCmd.label					"About &brandShortName;">
 <!ENTITY aboutCmd.accesskey				"A">
 <!ENTITY aboutCommPluginsCmd.label			"About Plug-ins">
