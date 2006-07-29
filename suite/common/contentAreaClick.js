@@ -178,30 +178,39 @@
     return true;
   }
 
+  function handleLinkMiddleClick(event, href)
+  {
+    // should we open it in a new tab?
+    if (pref && pref.getBoolPref("browser.tabs.opentabfor.middleclick") &&
+        ("getBrowser" in window) && getBrowser().localName == "tabbrowser") {
+      var loadInBackground = pref.getBoolPref("browser.tabs.loadInBackground");
+      if (event.shiftKey)
+        loadInBackground = !loadInBackground;
+      var theTab = getBrowser().addTab(href, getReferrer(document));
+      if (!loadInBackground)
+        getBrowser().selectedTab = theTab;
+      event.preventBubble();
+      return true;
+    }
+
+    // should we open it in a new window?
+    if (pref && pref.getBoolPref("middlemouse.openNewWindow")) {
+      openNewWindowWith(href);
+      event.preventBubble();
+      return true;
+    }
+
+    // let someone else deal with it
+    return false;
+  }
+
   function handleLinkClick(event, href, linkNode)
   {
-    var theTab, loadInBackground;
     switch (event.button) {                                   
       case 0:                                                         // if left button clicked
         if (event.metaKey || event.ctrlKey) {                         // and meta or ctrl are down
-          if (pref && pref.getBoolPref("browser.tabs.opentabfor.middleclick") &&
-              ("getBrowser" in window) && getBrowser().localName == "tabbrowser") {
-            
-            theTab = getBrowser().addTab(href, getReferrer(document)); // open link in new tab
-            loadInBackground = pref.getBoolPref("browser.tabs.loadInBackground");
-            if (event.shiftKey)
-              loadInBackground = !loadInBackground;
-            if (!loadInBackground)
-              getBrowser().selectedTab = theTab;
-            event.preventBubble();
+          if (handleLinkMiddleClick(event, href))
             return true;
-          }
-          
-          if (pref && pref.getBoolPref("middlemouse.openNewWindow")) {  
-            openNewWindowWith(href);                                    // open link in new window
-            event.preventBubble();
-            return true;
-          }
         } 
         var saveModifier = true;
         if (pref) {
@@ -221,23 +230,8 @@
           return true;                                                // do nothing
         return false;
       case 1:                                                         // if middle button clicked
-        if (pref && pref.getBoolPref("browser.tabs.opentabfor.middleclick") && getBrowser && 
-            getBrowser() && getBrowser().localName == "tabbrowser") {
-          theTab = getBrowser().addTab(href, getReferrer(document)); // open link in new tab
-          loadInBackground = pref.getBoolPref("browser.tabs.loadInBackground");
-          if (event.shiftKey)
-            loadInBackground = !loadInBackground;
-          if (!loadInBackground)
-            getBrowser().selectedTab = theTab;
-          event.preventBubble();
+        if (handleLinkMiddleClick(event, href))
           return true;
-        }
-        
-        if (pref && pref.getBoolPref("middlemouse.openNewWindow")) {  
-          openNewWindowWith(href);                                    // open link in new window
-          event.preventBubble();
-          return true;
-        }
         break;
     }
     return false;
