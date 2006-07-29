@@ -50,6 +50,7 @@
 <!ENTITY copyLinkCmd.accesskey        "n">
 <!ENTITY copyImageCmd.label           "Copy Image Location">
 <!ENTITY copyImageCmd.accesskey       "m">
+<!ENTITY metadataCmd.label            "Properties">
 <!ENTITY pasteCmd.label "Paste">
 <!ENTITY pasteCmd.accesskey "p">
 <!ENTITY cutCmd.label "Cut">
