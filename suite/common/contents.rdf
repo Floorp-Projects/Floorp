@@ -11,7 +11,8 @@
   <RDF:Description about="urn:mozilla:package:communicator"
         chrome:displayName="Communicator Shared"
         chrome:author="mozilla.org"
-        chrome:name="communicator">
+        chrome:name="communicator"
+		chrome:skinVersion="1">
   </RDF:Description>
 
 </RDF:RDF>
