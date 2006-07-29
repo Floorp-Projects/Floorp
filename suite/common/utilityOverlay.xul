@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 
 <?xml-stylesheet href="chrome://communicator/content/utilityOverlay.css"?>
-<?xul-overlay href="chrome://global/content/platformGlobalOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/platformCommunicatorOverlay.xul"?>
 
 <!DOCTYPE window [
 
