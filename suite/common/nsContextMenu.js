@@ -79,6 +79,7 @@ nsContextMenu.prototype = {
     initOpenItems : function () {
         // Remove open/edit link if not applicable.
         this.showItem( "context-openlink", this.onSaveableLink || ( this.inDirList && this.onLink ) );
+        this.showItem( "context-openlinkintab", this.onSaveableLink || ( this.inDirList && this.onLink ) );
         this.showItem( "context-editlink", this.onSaveableLink && !this.inDirList );
 
         // Remove open frame if not applicable.
@@ -426,6 +427,11 @@ nsContextMenu.prototype = {
     openLink : function () {
         // Determine linked-to URL.
         openNewWindowWith( this.linkURL() );
+    },
+    // Open linked-to URL in a new tab.
+    openLinkInTab : function () {
+        // Determine linked-to URL.
+        openNewTabWith( this.linkURL() );
     },
     // Edit linked-to URL in a new window.
     editLink : function () {

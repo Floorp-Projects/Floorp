@@ -1,6 +1,8 @@
 <!-- Context Menu -->
 <!ENTITY openLinkCmd.label            "Open in New Window">
 <!ENTITY openLinkCmd.accesskey        "o">
+<!ENTITY openLinkCmdInTab.label       "Open in New Tab">
+<!ENTITY openLinkCmdInTab.accesskey   "t">
 <!ENTITY openLinkInWindowCmd.label    "Open">
 <!ENTITY openLinkInWindowCmd.accesskey "p">
 <!ENTITY editLinkCmd.label            "Edit Link in Composer">
