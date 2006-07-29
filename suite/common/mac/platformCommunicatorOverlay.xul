@@ -1,7 +1,7 @@
 <?xml version="1.0"?> 
 <!-- mac version of platformCommunicatorOverlay.xul -->
 
-<!DOCTYPE window [
+<!DOCTYPE overlay [
 
 <!ENTITY % platformCommunicationDTD SYSTEM "chrome://communicator-platform/locale/platformCommunicatorOverlay.dtd">
 %platformCommunicationDTD;

@@ -34,7 +34,7 @@
    - GPL.
   -->
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/viewZoomOverlay.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://communicator/locale/viewZoomOverlay.dtd">
 
 <overlay id="viewZoomOverlay"
          xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
