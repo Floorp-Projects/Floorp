@@ -217,10 +217,10 @@ function findParentNode(node, parentNode)
 // - A linked document using Save Link As...
 // - A linked document using shift-click Save Link As...
 //
-function saveURL(aURL, aFileName, aFilePickerTitleKey, aShouldBypassCache)
+function saveURL(aURL, aFileName, aFilePickerTitleKey, aShouldBypassCache, aReferrer)
 {
   internalSave(aURL, null, aFileName, aShouldBypassCache,
-               aFilePickerTitleKey, null);
+               aFilePickerTitleKey, null, aReferrer);
 }
 
 function saveFrameDocument()
@@ -264,7 +264,7 @@ function saveDocument(aDocument)
  *        need to be prompted for a target filename.
  */
 function internalSave(aURL, aDocument, aDefaultFileName, aShouldBypassCache,
-                      aFilePickerTitleKey, aChosenData)
+                      aFilePickerTitleKey, aChosenData, aReferrer)
 {
   // Note: aDocument == null when this code is used by save-link-as...
   var contentType = (aDocument ? aDocument.contentType : null);
@@ -368,7 +368,7 @@ function internalSave(aURL, aDocument, aDefaultFileName, aShouldBypassCache,
   } else {
     dl.init((aChosenData ? aChosenData.uri : source),
             persistArgs.target, null, null, null, persist);
-    var referer = getReferrer(document);
+    var referer = aReferrer || getReferrer(document);
     persist.saveURI((aChosenData ? aChosenData.uri : source),
                     null, referer, persistArgs.postData, null, persistArgs.target);
   }
