@@ -55,7 +55,7 @@
     const nsIScriptSecurityManager = Components.interfaces.nsIScriptSecurityManager;
     var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"].getService().
                  QueryInterface(nsIScriptSecurityManager);
-    secMan.CheckLoadURI(sourceURL, targetURL, nsIScriptSecurityManager.STANDARD);
+    secMan.checkLoadURI(sourceURL, targetURL, nsIScriptSecurityManager.STANDARD);
 
     var newWin;
     var wintype = document.firstChild.getAttribute('windowtype');
