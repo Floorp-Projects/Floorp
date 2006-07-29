@@ -1,3 +1,25 @@
+/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ *  Peter Annema <disttsc@bart.nl>
+ */
 
 function toNavigator()
 {
@@ -100,83 +122,48 @@ function OpenBrowserWindow()
   }
 }
 
-
-function CycleWindow( inType, inChromeURL )
+function newWindowOfType( aType )
 {
-	var windowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
-	dump("got window Manager \n");
-	var	windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
-    dump("got interface \n");
-    
-    var desiredWindow = null;
-    
-	var topWindowOfType = windowManagerInterface.getMostRecentWindow( inType );
-	var topWindow = windowManagerInterface.getMostRecentWindow( null );
-	dump( "got windows \n");
-	
-	dump( "topWindowOfType = " + topWindowOfType + "\n");
-	if ( topWindowOfType == null )
-	{
-	  if ( inType == "navigator:browser" )
-      OpenBrowserWindow();
-    else if ( inType == "composer:html" ) /* open editor window */
-      NewEditorWindow();
+  switch (aType) {
+  case "navigator:browser":
+    OpenBrowserWindow();
+    break;
+  case "composer:html":
+    NewEditorWindow();
+    break;
+  default:
+    dump( "Unsupported type of window: " + aType + "\n");
+    break;
+  }
+}
+
+function CycleWindow( aType, aChromeURL )
+{
+  var windowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
+  var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
+
+  var topWindowOfType = windowManagerInterface.getMostRecentWindow( aType );
+  var topWindow = windowManagerInterface.getMostRecentWindow( null );
+
+  if ( topWindowOfType == null )
+    newWindowOfType( aType );
+  else if ( topWindowOfType != topWindow )
+    topWindowOfType.focus();
+  else {
+    var enumerator = windowManagerInterface.getEnumerator( aType );
+    var firstWindow = windowManagerInterface.convertISupportsToDOMWindow ( enumerator.getNext() );
+    var iWindow = firstWindow; // ;-)
+    while ( iWindow != topWindow && enumerator.hasMoreElements() )
+      iWindow = windowManagerInterface.convertISupportsToDOMWindow ( enumerator.getNext() );
+  
+    var desiredWindow = firstWindow;
+    if ( enumerator.hasMoreElements() )
+      desiredWindow = windowManagerInterface.convertISupportsToDOMWindow ( enumerator.getNext() );
+    if ( desiredWindow == topWindow ) // Only one window, open a new one 
+      newWindowOfType( aType );
     else
-    {
-        /* what to do here? */
-    }
-    
-		return;
-	}
-	
-	if ( topWindowOfType != topWindow )
-	{
-		dump( "first not top so give focus \n");
-		topWindowOfType.focus();
-		return;
-	}
-	
-	var enumerator = windowManagerInterface.getEnumerator( inType );
-	firstWindow = windowManagerInterface.convertISupportsToDOMWindow ( enumerator.getNext() );
-	if ( firstWindow == topWindowOfType )
-	{
-		dump( "top most window is first window \n");
-		firstWindow = null;
-	}
-	else
-	{
-		dump("find topmost window \n");
-		while ( enumerator.hasMoreElements() )
-		{
-			var nextWindow = windowManagerInterface.convertISupportsToDOMWindow ( enumerator.getNext() );
-			if ( nextWindow == topWindowOfType )
-				break;
-		}	
-	}
-	desiredWindow = firstWindow;
-	if ( enumerator.hasMoreElements() )
-	{
-		dump( "Give focus to next window in the list \n");
-		desiredWindow = windowManagerInterface.convertISupportsToDOMWindow ( enumerator.getNext() );		
-	}
-	
-	if ( desiredWindow )
-	{
-		desiredWindow.focus();
-		dump("focusing window \n");
-	}
-	else
-	{
-		dump("open window \n");
-	  if ( inType == "navigator:browser" )
-      window.OpenBrowserWindow();
-    else if ( inType == "composer:html" ) /* open editor window */
-      NewEditorWindow();
-    else
-    {
-        /* what to do here? */
-    }
-	}
+      desiredWindow.focus();
+  }
 }
 
 function toEditor()
