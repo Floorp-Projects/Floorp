@@ -139,8 +139,8 @@
 
   <outliner id="historyOutliner"/>
   <statusbar id="status-bar" class="chromeclass-status">
-    <statusbarpanel id="statusbar-display" crop="right" flex="1"/>
-    <statusbarpanel class="statusbarpanel-icononly" id="offline-status"/>
+    <statusbarpanel id="statusbar-display" flex="1"/>
+    <statusbarpanel class="statusbarpanel-iconic" id="offline-status"/>
   </statusbar>
 
 </window>
