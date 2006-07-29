@@ -8,7 +8,7 @@
 %tasksDTD;
 ]>
 
-<?xul-overlay href="chrome://communicator/content/taskbarOverlay.xul"?>
+<!-- <?xul-overlay href="chrome://communicator/content/taskbarOverlay.xul"?>  -->
 
 <overlay id="tasksOverlay"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -70,7 +70,7 @@
 
         </menupopup>
       </menu>
-    
+ <!--   
   <box id="taskbar" class="toolbar-standard chromeclass-status" persist="collapsed" style="min-width: 1px;" 
        grippytooltip="aTooltip" grippytooltiptext="&taskBar.tooltip;">
     <box id="taskButtons">
@@ -81,10 +81,33 @@
       <button class="button-toolbar-4 taskbutton" id="mini-addr" oncommand="toAddressBook();"
               tooltip="aTooltip" tooltiptext="&taskAddressBook.tooltip;"/>
     </box>
+   
     <spring id="taskbar-middle-spacer" flex="10"/>
-    <box id="taskbarMenuBox"/>
-    <box id="taskbarGotoMenuBox" align="right"/>
-    <spring id="taskbar-right-spacer" flex="7"/>
-  </box>
     
+    <box id="taskbarMenuBox"/>
+    
+   
+   
+    <box id="taskbarGotoMenuBox" align="right"/>
+    
+    
+  
+    
+ 
+    <spring id="taskbar-right-spacer" flex="7"/>
+    
+  
+  </box>
+  -->
+  
+  <box id="component-bar" class="statusbarpanel-icononly" persist="collapsed">
+
+       <button class="button-toolbar-4 taskbutton" id="mini-nav" oncommand="toNavigator();" 
+              tooltip="aTooltip" tooltiptext="&taskNavigator.tooltip;"/>
+      <button class="button-toolbar-4 taskbutton" id="mini-comp" oncommand="toEditor();" 
+              tooltip="aTooltip" tooltiptext="&taskComposer.tooltip;"/>
+      <button class="button-toolbar-4 taskbutton" id="mini-addr" oncommand="toAddressBook();"
+              tooltip="aTooltip" tooltiptext="&taskAddressBook.tooltip;"/>
+               
+   </box> 
 </overlay>
