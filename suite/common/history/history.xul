@@ -155,7 +155,7 @@
 
   <template>
      <rule>
-      <treechildren onclick="if (event.detail == 2) return OpenURL(event, event.target.parentNode.parentNode, 'bookmarksTree');">
+      <treechildren>
        <treeitem uri="rdf:*" persist="open"
          web:status="rdf:http://home.netscape.com/WEB-rdf#status"
          rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
@@ -211,7 +211,9 @@
       </treecell>
     </treerow>
   </treehead>
-  <treechildren id="treechildren-bookmarks"/>
+  <treechildren id="treechildren-bookmarks" 
+    onclick="return OpenURL(event, event.target.parentNode.parentNode, 
+                            'bookmarksTree');"/>
 </tree>
 
 <box id="status-bar" style="max-height:1em;">
