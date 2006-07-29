@@ -432,7 +432,8 @@ function appendFiltersForContentType(aFilePicker, aContentType, aSaveMode)
     if (aSaveMode == MODE_COMPLETE)
       aFilePicker.appendFilter(bundle.GetStringFromName("WebPageCompleteFilter"), "*.htm; *.html");
     aFilePicker.appendFilter(bundle.GetStringFromName("WebPageHTMLOnlyFilter"), "*.htm; *.html");
-    aFilePicker.appendFilter(bundle.GetStringFromName("TextOnlyFilter"), "*.txt");
+    if (aSaveMode == MODE_COMPLETE)
+      aFilePicker.appendFilter(bundle.GetStringFromName("TextOnlyFilter"), "*.txt");
     break;
   default:
     var mimeInfo = getMIMEInfoForType(aContentType);
