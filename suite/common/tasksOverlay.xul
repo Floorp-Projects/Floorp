@@ -22,6 +22,9 @@
   <key id="key_navigator"    key="&navigatorCmd.commandkey;"   observes="Tasks:Navigator" modifiers="accel"/>
   <key id="key_editor"       key="&editorCmd.commandkey;"      observes="Tasks:Editor" modifiers="accel"/>
   <key id="key_addressbook"  key="&addressBookCmd.commandkey;" observes="Tasks:AddressBook" modifiers="accel"/>
+
+  <!-- Tools Menu -->
+  <key id="key_gotoHistory"  key="&history.commandKey;"        oncommand="toHistory();" modifiers="accel"/>
 </keyset>
 
 <broadcasterset id="broadcasterset">
@@ -131,7 +134,7 @@
 
           <menu value="&toolsMenu.label;" accesskey="&toolsMenu.accesskey;">
             <menupopup id="toolsPopup">
-              <menuitem value="&historyCmd.label;" accesskey="&historyCmd.accesskey;" oncommand="toHistory()"/>
+              <menuitem value="&historyCmd.label;" accesskey="&historyCmd.accesskey;" oncommand="toHistory()" key="key_gotoHistory"/>
               <menuitem value="&importUtilCmd.label;" accesskey="&importUtilCmd.accesskey;" oncommand="toImport()"/>
               <menuitem value="&javaConsoleCmd.label;" accesskey="&javaConsoleCmd.accesskey;" oncommand="toJavaConsole()"/>
               <menuitem value="&javaScriptConsoleCmd.label;" accesskey="&javaScriptConsoleCmd.accesskey;" oncommand="toJavaScriptConsole();"/>
