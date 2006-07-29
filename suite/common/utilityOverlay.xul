@@ -265,7 +265,7 @@
  </splitter>
 
   <!-- XXX needs xbl-ification! gray vertical splitter -->
-  <splitter id="gray_horizontal_splitter" class="gray-vertical-splitter">
+  <splitter id="gray_vertical_splitter" class="gray-vertical-splitter">
     <box id="begincap" align="vertical">
       <spring flex="100%"/>
     </box>
