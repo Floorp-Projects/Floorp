@@ -227,6 +227,17 @@ pref("privacy.popups.remove_blacklist",           true);
 // Show XUL error pages instead of alerts for errors
 pref("browser.xul.error_pages.enabled", true);
 
+// Setting this pref to |true| forces BiDi UI menu items and keyboard shortcuts
+// to be exposed. By default, only expose it for bidi-associated system locales.
+pref("bidi.browser.ui", false);
+
+// prevent JS from moving/resizing existing windows
+pref("dom.disable_window_move_resize", true);
+// prevent JS from raising or lowering windows
+pref("dom.disable_window_flip",        true);
+// prevent JS from disabling or replacing context menus
+pref("dom.event.contextmenu.enabled",  true);
+
 #ifdef XP_MACOSX
 // determines the behavior upon starting a download.
 //  0 - open the download manager
@@ -250,7 +261,3 @@ pref("browser.backspace_action", 1);
 pref("general.autoScroll", false);
 #endif
 #endif
-
-// Setting this pref to |true| forces BiDi UI menu items and keyboard shortcuts
-// to be exposed. By default, only expose it for bidi-associated system locales.
-pref("bidi.browser.ui", false);
