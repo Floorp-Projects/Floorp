@@ -161,7 +161,8 @@ nsContextMenu.prototype = {
         // Use "Bookmark This Link" if on a link.
         this.showItem( "context-bookmarkpage", !this.onLink );
         this.showItem( "context-bookmarklink", this.onLink );
-        this.showItem( "context-searchselect", this.isTextSelected() );
+        this.setItemAttr( "context-searchselect", "disabled", 
+                          !this.isTextSelected() );
     },
     initClipboardItems : function () {
         // Select All is always OK, unless in directory listing.
@@ -636,26 +637,31 @@ nsContextMenu.prototype = {
     isTextSelected : function() {
         var result = false;
         var selection = this.searchSelected();
-        if (selection != "") {
-            if (!gDefaultEngine)
-                gDefaultEngine = new nsDefaultEngine();
-            var searchSelect = document.getElementById('context-searchselect');
+        if (!gDefaultEngine)
+            gDefaultEngine = new nsDefaultEngine();
+        var searchSelect = document.getElementById('context-searchselect');
 
-            // format "Search for <selection>" string to show in menu
-            var searchSelectText = selection.toString();
-            var bundle = srGetStrBundle("chrome://communicator/locale/contentAreaCommands.properties");
+        var bundle = srGetStrBundle("chrome://communicator/locale/contentAreaCommands.properties");
+
+        var searchSelectText;
+        if (selection != "") {
+            searchSelectText = selection.toString();
             if (searchSelectText.length > 15)
                 searchSelectText = searchSelectText.substr(0,15) + "...";
-            searchSelectText = bundle.formatStringFromName("searchText",
-                                 [gDefaultEngine.name, searchSelectText], 2);
-            searchSelect.setAttribute("label", searchSelectText);
-
-            // add icon for default engine we're gonna use to search
-            // (eliminates last icon if we can't find current engine's icon)
-            searchSelect.setAttribute("src", gDefaultEngine.icon);
-
             result = true;
+        } else {
+            searchSelectText = bundle.GetStringFromName("searchUnknown");
         }
+
+        // format "Search for <selection>" string to show in menu
+        searchSelectText = bundle.formatStringFromName("searchText",
+                               [gDefaultEngine.name, searchSelectText], 2);
+        searchSelect.setAttribute("label", searchSelectText);
+
+        // add icon for default engine we're gonna use to search
+        // (eliminates last icon if we can't find current engine's icon)
+        searchSelect.setAttribute("src", gDefaultEngine.icon);
+
         return result;
     },
     
