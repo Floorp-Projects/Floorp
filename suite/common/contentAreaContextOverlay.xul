@@ -73,7 +73,7 @@
       <menuitem id="context-forward"
                 label="&goForwardCmd.label;"
                 accesskey="&goForwardCmd.accesskey;"
-                oncommand="BrowserForward()"/>'
+                oncommand="BrowserForward()"/>
       <menuitem id="context-reload"
                 label="&reloadCmd.label;"
                 accesskey="&reloadCmd.accesskey;"
