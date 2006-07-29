@@ -90,7 +90,7 @@ function toOpenWindowByType( inType, uri )
 	if ( topWindow )
 		topWindow.focus();
 	else
-		window.open(uri, "_blank", "chrome,menubar,toolbar,resizable");
+		window.open(uri, "_blank", "chrome,menubar,toolbar,resizable,scrollbars");
 }
 
 
