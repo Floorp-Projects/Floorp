@@ -296,7 +296,9 @@ function retrieveURLFromData (aData, flavour)
       data = data.substr(0, separator);
     return data;
   case "application/x-moz-file":
-    return aData.URL;
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+      .getService(Components.interfaces.nsIIOService);
+    return ioService.getURLSpecFromFile(aData);
   }             
   return null;                                                         
 }
