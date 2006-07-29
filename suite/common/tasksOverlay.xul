@@ -122,20 +122,18 @@
         </menupopup>
       </menu>
     
-  <toolbox id="taskbar">
-    <toolbar id="taskbar-toolbar" class="toolbar-standard chromeclass-status" persist="collapsed" style="min-width: 1px;" 
-             grippytooltip="aTooltip" grippytooltiptext="&taskBar.tooltip;">
-      <box id="taskButtons">
-        <button class="button-toolbar-4 taskbutton" id="mini-nav" onclick="toNavigator();" 
-                tooltip="aTooltip" tooltiptext="&taskNavigator.tooltip;"/>
-        <button class="button-toolbar-4 taskbutton" id="mini-comp" onclick="toEditor();" 
-                tooltip="aTooltip" tooltiptext="&taskComposer.tooltip;"/>
-        <button class="button-toolbar-4 taskbutton" id="mini-addr" onclick="toAddressBook()"
-                tooltip="aTooltip" tooltiptext="&taskAddressBook.tooltip;"/>
-      </box>
-      <box id="taskbarMenuBox"/>
-      <box id="taskbarGotoMenuBox" align="right"/>
-    </toolbar>
-  </toolbox>    
-
+  <box id="taskbar" class="toolbar-standard chromeclass-status" persist="collapsed" style="min-width: 1px;" 
+       grippytooltip="aTooltip" grippytooltiptext="&taskBar.tooltip;">
+    <box id="taskButtons">
+      <button class="button-toolbar-4 taskbutton" id="mini-nav" onclick="toNavigator();" 
+              tooltip="aTooltip" tooltiptext="&taskNavigator.tooltip;"/>
+      <button class="button-toolbar-4 taskbutton" id="mini-comp" onclick="toEditor();" 
+              tooltip="aTooltip" tooltiptext="&taskComposer.tooltip;"/>
+      <button class="button-toolbar-4 taskbutton" id="mini-addr" onclick="toAddressBook()"
+              tooltip="aTooltip" tooltiptext="&taskAddressBook.tooltip;"/>
+    </box>
+    <box id="taskbarMenuBox"/>
+    <box id="taskbarGotoMenuBox" align="right"/>
+  </box>
+    
 </overlay>
