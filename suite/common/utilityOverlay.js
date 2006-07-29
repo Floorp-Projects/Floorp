@@ -119,15 +119,14 @@ function getBrowserURL() {
   return "chrome://navigator/content/navigator.xul";
 }
 
-function goPageSetup()
+function goPageSetup(printSettings)
 {
+  if (printSettings == null) {
+    alert("PrintSettings arg is null!");
+  }
   // This code brings up the native page setup dialog (for platforms that
   // implement nsIPrintOptions.ShowNativeDialog()).  
-  var printOptionsService = Components.classes["@mozilla.org/gfx/printoptions;1"]
-                                           .getService(Components.interfaces.nsIPrintOptions);
-  printOptionsService.ReadPrefs();
-  printOptionsService.ShowNativeDialog();
-  printOptionsService.WritePrefs();
+  window.openDialog("chrome://communicator/content/printPageSetup.xul","PageSetup", "chrome,modal,centerscreen", printSettings);
 }
 
 function goPreferences(containerID, paneURL, itemID)
