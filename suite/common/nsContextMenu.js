@@ -68,6 +68,7 @@ function nsContextMenu( xulMenu ) {
     this.isTextSelected = false;
     this.inDirList      = false;
     this.shouldDisplay  = true;
+    this.autoDownload   = false;
 
     // Initialize new menu.
     this.initMenu( xulMenu );
@@ -136,17 +137,23 @@ nsContextMenu.prototype = {
         //this.setItemAttrFromNode( "context-stop", "disabled", "canStop" );
     },
     initSaveItems : function () {
-        this.showItem( "context-savepage", 
-                       !( this.inDirList || this.isTextSelected || this.onTextInput || this.onStandaloneImage ||
-                         (this.onLink && this.onImage)));
+        var showSave = !( this.inDirList || this.isTextSelected || this.onTextInput || this.onStandaloneImage ||
+                       ( this.onLink && this.onImage ) );
+        if (showSave)
+          goSetMenuValue( "context-savepage", this.autoDownload ? "valueSave" : "valueSaveAs" );
+        this.showItem( "context-savepage", showSave );
 
         // Save link depends on whether we're in a link.
+        if (this.onSaveableLink)
+          goSetMenuValue( "context-savelink", this.autoDownload ? "valueSave" : "valueSaveAs" );
         this.showItem( "context-savelink", this.onSaveableLink );
 
-        // Save image depends on whether there is one.
-        this.showItem( "context-saveimage", this.onImage || this.onStandaloneImage);
-        
-        this.showItem( "context-sendimage", this.onImage || this.onStandaloneImage);
+        // Save/Send image depends on whether there is one.
+        showSave = this.onImage || this.onStandaloneImage;
+        if (showSave)
+          goSetMenuValue( "context-saveimage", this.autoDownload ? "valueSave" : "valueSaveAs" );
+        this.showItem( "context-saveimage", showSave );
+        this.showItem( "context-sendimage", showSave );
     },
     initViewItems : function () {
         // View source is always OK, unless in directory listing.
@@ -190,6 +197,8 @@ nsContextMenu.prototype = {
         this.showItem( "context-searchselect", this.isTextSelected && !this.onTextInput );
         this.showItem( "frame", this.inFrame );
         this.showItem( "frame-sep", this.inFrame );
+        if (this.inFrame)
+          goSetMenuValue( "saveframeas", this.autoDownload ? "valueSave" : "valueSaveAs" );
         var blocking = true;
         if (this.popupURL)
           try {
@@ -268,6 +277,10 @@ nsContextMenu.prototype = {
 
         // Remember the node that was clicked.
         this.target = node;
+
+        this.autoDownload = Components.classes["@mozilla.org/preferences-service;1"]
+                                      .getService(Components.interfaces.nsIPrefService)
+                                      .getBoolPref("browser.download.autoDownload");
 
         // See if the user clicked on an image.
         if ( this.target.nodeType == Node.ELEMENT_NODE ) {

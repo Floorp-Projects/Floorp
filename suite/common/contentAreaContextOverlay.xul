@@ -88,7 +88,8 @@
                                                       gContextMenu.linkText(), 
                                                       undefined, false);"/>
       <menuitem id="context-savelink"
-                label="&saveLinkCmd.label;"
+                valueSaveAs="&saveLinkAsCmd.label;"
+                valueSave="&saveLinkCmd.label;"
                 accesskey="&saveLinkCmd.accesskey;"
                 oncommand="gContextMenu.saveLink();"/>
       <menuitem id="context-copyemail"
@@ -115,7 +116,8 @@
                 command="cmd_copyImageLocation"/>
       <menuseparator id="context-sep-copyimage"/>
       <menuitem id="context-saveimage"
-                label="&saveImageCmd.label;"
+                valueSaveAs="&saveImageAsCmd.label;"
+                valueSave="&saveImageCmd.label;"
                 accesskey="&saveImageCmd.accesskey;"
                 oncommand="gContextMenu.saveImage();"/>
       <menuitem id="context-setWallpaper"
@@ -146,7 +148,8 @@
                 accesskey="&bookmarkPageCmd.accesskey;"
                 oncommand="gContextMenu.addBookmark();"/>
       <menuitem id="context-savepage"
-                label="&savePageCmd.label;"
+                valueSaveAs="&savePageAsCmd.label;"
+                valueSave="&savePageCmd.label;"
                 accesskey="&savePageCmd.accesskey;"
                 oncommand="saveDocument(window.content.document);"/>
       <menuseparator id="context-sep-viewbgimage"/>
@@ -210,7 +213,8 @@
                     accesskey="&bookmarkFrameCmd.accesskey;"
                     oncommand="gContextMenu.addBookmarkForFrame();"/>
           <menuitem id="saveframeas"
-                    label="&saveFrameCmd.label;"
+                    valueSaveAs="&saveFrameAsCmd.label;"
+                    valueSave="&saveFrameCmd.label;"
                     accesskey="&saveFrameCmd.accesskey;"
                     oncommand="saveDocument(gContextMenu.target.ownerDocument);"/>
           <menuseparator/>
