@@ -49,7 +49,7 @@
     <key id="key_textZoomEnlarge" key="&textZoomEnlargeCmd.commandkey;"  command="cmd_textZoomEnlarge" modifiers="accel"/>
     <key                          key="&textZoomEnlargeCmd.commandkey;"  command="cmd_textZoomEnlarge" modifiers="accel,shift"/>
     <key                          key="&textZoomEnlargeCmd.commandkey2;" command="cmd_textZoomEnlarge" modifiers="accel"/>
-    <key                          key="&textZoomResetCmd.commandkey;"    command="cmd_textZoomReset"   modifiers="accel"/>
+    <key id="key_textZoomReset"   key="&textZoomResetCmd.commandkey;"    command="cmd_textZoomReset"   modifiers="accel"/>
   </keyset>
 
   <commandset id="viewZoomCommands">
