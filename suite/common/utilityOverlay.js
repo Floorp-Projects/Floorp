@@ -396,7 +396,7 @@ function extractFileNameFromUrl(urlstr)
 }
 
 var offlineObserver = {
-  Observe: function(subject, topic, state) {
+  observe: function(subject, topic, state) {
     // sanity checks
     if (topic != "network:offline-status-changed") return;
     setOfflineUI(state == "offline");
