@@ -4,7 +4,7 @@
 
   <Description about="urn:mimetypes"> 
     <NC:MIME-types> 
-	    <Seq> 
+	    <Seq about="urn:mimetypes:root"> 
 		    <li resource="urn:mimetype:application/pdf"/> 
 		    <li resource="urn:mimetype:text/html"/> 
 	    </Seq> 
