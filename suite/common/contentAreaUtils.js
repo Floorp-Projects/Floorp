@@ -293,8 +293,11 @@ nsHeaderSniffer.prototype = {
     var filename = "";
     var name = this.mContentDisposition;
     if (name) {
-      var ix = name.indexOf("filename=");
+      const filenamePrefix = "filename=";
+      var ix = name.indexOf(filenamePrefix);
       if (ix > 0) {
+        // Adjust ix to point to start of actual name
+        ix += filenamePrefix.length;
         filename = name.substr(ix, name.length);
         if (filename != "") {
           ix = filename.lastIndexOf(";");
