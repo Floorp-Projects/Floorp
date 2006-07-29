@@ -108,6 +108,7 @@
       <menuitem id="menu_copy"/>
       <menuitem id="menu_paste" disabled="true"/>
       <menuitem id="menu_delete"/>
+      <menuseparator/>
       <menuitem id="menu_selectAll"/>
       <menuseparator/>
       <menuitem value="&findHisCmd.label;" accesskey="&findHisCmd.accesskey;" oncommand="window.openDialog('chrome://communicator/content/bookmarks/bm-find.xul', 'FindBookmarksWindow', 'centerscreen,dialog=no,close,chrome,resizable');"/>
