@@ -176,7 +176,7 @@
         // support multiple devicecontext to be used concurrently
         // (e.g. printing and printpreview at the same time; required as 
         // legacy support for unices.'s PostScript module (Xprint
-        // on unices.does not have problems with that))
+        // on unices. does not have problems with that))
         // XXX the scaling widgets, and the orientation widgets on unices.
         var canPrint = true;
         try
@@ -213,8 +213,7 @@
 
           // hide scale widgets (indices: 9, 10, 11, 12)
           // hide orient widget (index: 13)
-          var i;
-          for (i = 9; i <= 13; ++i)
+          for (var i = 9; i <= 13; ++i)
           {
             document.getAnonymousNodes(this)[i].setAttribute("hidden", "true");
           }
@@ -225,15 +224,14 @@
       <method name="doPageSetup">
         <body>
         <![CDATA[
-          var didOK = NSPrintSetup();
-          if (didOK) {
+          if (NSPrintSetup()) {
             // the changes that effect the UI
             this._getValuesFromPS();
 
             // Now do PrintPreview
             var print    = this._getWebBrowserPrint();
-            var settings = print.currentPrintSettings;
-            this.doPrintPreview(print, settings, this.mTotalPages, null);
+            this.doPrintPreview(print, print.currentPrintSettings,
+                                this.mTotalPages, null);
           }
         ]]>
         </body>
@@ -275,12 +273,10 @@
           }
           else if (aDirection)
           {
-            var textBoxStr  = this.mPageTextBox.value;
-            var newPageNum  = parseInt(textBoxStr) + aDirection;
-            var total = print.printPreviewNumPages;
+            var newPageNum = parseInt(this.mPageTextBox.value) + aDirection;
 
             // bounds check potentially user-entered number
-            if (newPageNum > 0 && newPageNum <= total) 
+            if (newPageNum > 0 && newPageNum <= print.printPreviewNumPages)
             {
               this.mPageTextBox.value = newPageNum;
               print.printPreviewNavigate(
@@ -290,10 +286,8 @@
           }
           else 
           {
-            total = print.printPreviewNumPages;
-
             // bounds check potentially user-entered number
-            if (aPageNum > 0 && aPageNum <= total) 
+            if (aPageNum > 0 && aPageNum <= print.printPreviewNumPages)
             {
               print.printPreviewNavigate(
                 print.PRINTPREVIEW_GOTO_PAGENUM, aPageNum);
@@ -323,10 +317,10 @@
         <body>
         <![CDATA[
           var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
-          var promptStr = this.mScaleLabel.value;
-          var renameTitle = this.mCustomTitle;
           var result = {value:aValue};
-          var confirmed = promptService.prompt(window, renameTitle, promptStr, result, null, {value:aValue});
+          var confirmed = promptService.prompt(window, this.mCustomTitle,
+                                               this.mScaleLabel.value, result,
+                                               null, {value:aValue});
           this._debug("confirmed: " + confirmed);
           if (!confirmed || !result.value || result.value == "") {
             return(-1);
@@ -344,7 +338,6 @@
 
           aValue = new Number(aValue);
 
-          var inx = -1;
           for (var i=0;i<scaleValues.length;i++) {
             if (aValue == scaleValues[i]) {
               this.mScaleCombobox.selectedIndex = i;
@@ -397,19 +390,6 @@
               }
           };
 
-          var ifreq;
-          var webBrowserPrint;  
-          var domWin;  
-          try {
-            ifreq = _content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-            domWin = ifreq.QueryInterface(Components.interfaces.nsIDOMWindow);
-          } catch (e) {
-            // Pressing cancel is expressed as an NS_ERROR_ABORT return value,
-            // causing an exception to be thrown which we catch here.
-            // Unfortunately this will also consume helpful failures, so add a
-            //dump(e); // if you need to debug
-          }
-
           // Here we get the PrintingPromptService tso we can display the PP Progress from script
           // For the browser implemented via XUL with the PP toolbar we cannot let it be
           // automatically opened from the print engine because the XUL scrollbars in the PP window
@@ -419,7 +399,7 @@
           this.mWebProgress = new Object();
 
           // set up observer's global data for invoking Print Preview
-          this.mPrintPreviewObs.mDOMWin          = domWin;
+          this.mPrintPreviewObs.mDOMWin          = content;
           this.mPrintPreviewObs.mWebBrowserPrint = aWebBrowserPrint;
           this.mPrintPreviewObs.mPrintSettings   = aPrintSettings;
           this.mPrintPreviewObs.mWebProgress     = this.mWebProgress;
@@ -431,7 +411,8 @@
           var printingPromptService = Components.classes["@mozilla.org/embedcomp/printingprompt-service;1"]
                                           .getService(Components.interfaces.nsIPrintingPromptService);
           if (printingPromptService) {
-            printingPromptService.showProgress(domWin, aWebBrowserPrint, aPrintSettings, 
+            printingPromptService.showProgress(content, aWebBrowserPrint,
+                                               aPrintSettings,
                                                this.mPrintPreviewObs, false, this.mWebProgress, 
                                                printPreviewParams, notifyOnOpen);
             if (printPreviewParams.value) {
@@ -457,10 +438,8 @@
             if (!settings.shrinkToFit) {
               settings.shrinkToFit = true;
               this.doPrintPreview(print, settings, this.mTotalPages, this.mScaleCombobox);
-              return;
-            } else {
-              return;
             }
+            return;
           }
 
           if (aValue == "Custom") {
@@ -515,9 +494,9 @@
       <method name="_getWebBrowserPrint">
         <body>
         <![CDATA[
-          var ifreq = _content.QueryInterface(
-            Components.interfaces.nsIInterfaceRequestor);
-          return ifreq.getInterface(Components.interfaces.nsIWebBrowserPrint);
+          return _content
+                   .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                   .getInterface(Components.interfaces.nsIWebBrowserPrint);
         ]]>
         </body>
       </method>
@@ -525,8 +504,7 @@
       <method name="_getValuesFromPS">
         <body>
         <![CDATA[
-          var print = this._getWebBrowserPrint();
-          var settings = print.currentPrintSettings;
+          var settings = this._getWebBrowserPrint().currentPrintSettings;
 
           var isPortrait = settings.orientation == Components.interfaces.nsIPrintSettings.kPortraitOrientation;
 
@@ -550,7 +528,7 @@
         <body>
         <![CDATA[
           if (this.mDebug)
-            dump("\t *** pptoolbar: " + aMsg + "\n");
+            dump("\t *** printPreviewBindings: " + aMsg + "\n");
         ]]>
         </body>
       </method>
