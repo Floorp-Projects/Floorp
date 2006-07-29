@@ -66,10 +66,10 @@
         </menupopup>
       </menu>
 
-  <hbox id="component-bar" class="statusbar-panel" persist="collapsed">
+  <statusbarpanel id="component-bar" persist="collapsed">
     <toolbarbutton class="taskbutton" id="mini-nav" oncommand="toNavigator();" 
                    tooltiptext="&taskNavigator.tooltip;"/>
     <toolbarbutton class="taskbutton" id="mini-comp" oncommand="toEditor();" 
                    tooltiptext="&taskComposer.tooltip;"/>
-  </hbox> 
+  </statusbarpanel> 
 </overlay>
