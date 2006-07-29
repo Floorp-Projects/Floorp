@@ -257,7 +257,7 @@ nsContextMenu.prototype = {
                 // URL must be constructed.
                 this.imageURL = this.objectImageURL( this.target );
              } else if ( this.target.localName.toUpperCase() == "INPUT") {
-               var type = this.target.getAttribute("type");
+               type = this.target.getAttribute("type");
                if(type && type.toUpperCase() == "IMAGE") {
                  this.onImage = true;
                  // Convert src attribute to absolute URL.
