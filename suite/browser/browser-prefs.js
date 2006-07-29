@@ -235,11 +235,6 @@ pref("browser.xul.error_pages.enabled", true);
 //  2 - do nothing
 
 pref("browser.downloadmanager.behavior", 1);
-
-// 0 goes back
-// 1 act like pgup
-// 2 and other values, nothing
-pref("browser.backspace_action", 2);
 #endif
 
 #ifndef XP_MACOSX
