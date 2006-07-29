@@ -29,24 +29,96 @@
   pref = Components.classes["@mozilla.org/preferences;1"];
   pref = pref.getService();
   pref = pref.QueryInterface(Components.interfaces.nsIPref);
+
+  // Prefill a single text field
+  function prefillTextField(target) {
+
+    // obtain values to be used for prefilling
+    var walletService = Components.classes["@mozilla.org/wallet/wallet-service;1"].getService(Components.interfaces.nsIWalletService);
+    var value = walletService.WALLET_PrefillOneElement(window._content, target);
+    if (value) {
+
+      // result is a linear sequence of values, each preceded by a separator character
+      // convert linear sequence of values into an array of values
+      var separator = value[0];
+      var valueList = value.substring(1, value.length).split(separator);
+
+      target.value = valueList[0];
+/*
+ * Following code is a replacement for above line.  In the case of multiple values, it
+ * presents the user with a dialog containing a list from which he can select the value
+ * he wants.  However it is being commented out for now because of several problems, namely
+ *
+ *   1. There is no easy way to put localizable strings for the title and message of
+ *      the dialog without introducing a .properties file which currently doesn't exist
+ *   2. Using blank title and messages as shown below have a problem because a zero-length
+ *      title is being displayed as some garbage characters (which is why the code below
+ *      has a title of " " instead of "").  This is a separate bug which will have to be
+ *      investigated further.
+ *   3. The current wallet tables present alternate values for items such as shipping
+ *      address -- namely billing address and home address.  Up until now, these alternate
+ *      values have never been a problem because the preferred value is always first and is
+ *      all the user sees when doing a prefill.  However now he will be presented with a
+ *      list showing all these values and asking him to pick one, even though the wallet
+ *      code was clearly able to determine that he meant shipping address and not billing
+ *      address.
+ *   4. There is a relatively long delay before the dialog come up whereas values are
+ *      filled in quickly when no dialog is involved.
+ *
+ * Once this feature is checked in, a separate bug will be opened asking that the above
+ * problems be examined and this dialog turned on
+ 
+      if (valueList.length == 1) {
+        // only one value, use it for prefilling
+        target.value = valueList[0];
+      } else {
+
+        // more than one value, have user select the one he wants
+        var commonDialogService =
+          Components.classes["@mozilla.org/appshell/commonDialogs;1"].getService();
+        commonDialogService =
+          commonDialogService.QueryInterface(Components.interfaces.nsICommonDialogs);
+        var position = {};
+        var title = " ";
+        var message = "";
+        var ok =
+          commonDialogService.Select
+            (window, title, message, valueList.length, valueList, position)
+        if (ok) {
+          target.value = valueList[position.value];
+        }
+      }
+
+ * End of commented out code
+ */
+    }
+  }
   
   // Called whenever the user clicks in the content area,
   // except when left-clicking on links (special case)
   // should always return true for click to go through
   function contentAreaClick(event) 
   {
-    var target = event.originalTarget;
+    var target = event.target;
     var linkNode;
     switch (target.localName.toLowerCase()) {
       case "a":
-        linkNode = event.target;
+        linkNode = target;
         break;
       case "area":
-        if (event.target.href) 
-          linkNode = event.target;
+        if (target.href) 
+          linkNode = target;
+        break;
+      case "input":
+        if ((event.target.type.toLowerCase() == "text" || event.target.type == "") // text field
+            && event.detail == "2" // double click
+            && event.button == "1" // left mouse button
+            && event.target.value.length == 0) { // no text has been entered
+          prefillTextField(target); // prefill the empty text field if possible
+        }
         break;
       default:
-        linkNode = findParentNode(target, "a");
+        linkNode = findParentNode(event.originalTarget, "a");
         break;
     }
     if (linkNode) {
@@ -54,9 +126,11 @@
       return true;
     }
     if (pref && event.button == 2 &&
-        !findParentNode(target, "scrollbar") &&
+        !findParentNode(event.originalTarget, "scrollbar") &&
         pref.GetBoolPref("middlemouse.paste")) {
-      middleMousePaste(event);
+      if (middleMousePaste()) {
+        event.preventBubble();
+      }
     }
     return true;
   }
@@ -88,7 +162,7 @@
     return false;
   }
 
-  function middleMousePaste(event)
+  function middleMousePaste()
   {
       var url = readFromClipboard();
       //dump ("Loading URL on clipboard: '" + url + "'; length = " + url.length + "\n");
@@ -96,7 +170,6 @@
         var urlBar = document.getElementById("urlbar");
         urlBar.value = url;
         BrowserLoadURL();
-        event.preventBubble();
         return true;
     }
     return false;
