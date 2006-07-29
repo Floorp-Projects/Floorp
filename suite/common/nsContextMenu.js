@@ -427,6 +427,7 @@ nsContextMenu.prototype = {
     },
     // Edit linked-to URL in a new window.
     editLink : function () {
+        urlSecurityCheck( this.linkURL(), window.document );
         editPage( this.linkURL(), window, false );
     },
     // Reload clicked-in frame.

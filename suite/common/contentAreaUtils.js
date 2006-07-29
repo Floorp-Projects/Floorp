@@ -37,23 +37,26 @@
     return false;
   }
 
-  function openNewWindowWith(url) {
-
+  function urlSecurityCheck(url, doc) {
     // URL Loading Security Check
-	var focusedWindow = document.commandDispatcher.focusedWindow;
-    var sourceWin = isDocumentFrame(focusedWindow) ? focusedWindow.location.href : window._content.location.href;
-
+    var focusedWindow = doc.commandDispatcher.focusedWindow;
+	var sourceWin = isDocumentFrame(focusedWindow) ? focusedWindow.location.href : focusedWindow._content.location.href;
     const nsIScriptSecurityManager = Components.interfaces.nsIScriptSecurityManager;
     var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"].getService().
-                 QueryInterface(nsIScriptSecurityManager);
-	try {
+					 QueryInterface(nsIScriptSecurityManager);
+    try {
       secMan.checkLoadURIStr(sourceWin, url, nsIScriptSecurityManager.STANDARD);
     } catch (e) {
-	  throw "Load of " + url + " denied.";
+       throw "Load of " + url + " denied.";
     }
+  }
+
+  function openNewWindowWith(url) {
+
+	urlSecurityCheck(url, document);
     var newWin;
     var wintype = document.firstChild.getAttribute('windowtype');
-     
+
     // if and only if the current window is a browser window and it has a document with a character
     // set, then extract the current charset menu setting from the current document and use it to
     // initialize the new browser window...

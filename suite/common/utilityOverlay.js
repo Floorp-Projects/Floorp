@@ -332,20 +332,6 @@ function editPage(url, launchWindow, delay)
     }
   }
 
-  // URL Loading Security Check
-  var focusedWindow = launchWindow.document.commandDispatcher.focusedWindow;
-  var sourceWin = isDocumentFrame(focusedWindow) ? focusedWindow.location.href : focusedWindow._content.location.href;
-
-  const nsIScriptSecurityManager = Components.interfaces.nsIScriptSecurityManager;
-  var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"].getService().
-               QueryInterface(nsIScriptSecurityManager);
-  try {
-    secMan.checkLoadURIStr(sourceWin, url, nsIScriptSecurityManager.STANDARD);
-  } catch (e) {
-  	  throw "Edit of " + url + " denied.";
-  }
-
-
   var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
   if (!windowManager) return;
   var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
