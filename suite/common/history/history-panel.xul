@@ -31,7 +31,7 @@
 <window id="history-panel"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="HistoryInit();">
-  <script src="chrome://communicator/content/history/history.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/history/history.js"/>
 
 
   <tree id="historyTree"/>
