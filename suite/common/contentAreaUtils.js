@@ -258,8 +258,8 @@ function foundHeaderInfo(aSniffer, aData)
   fp.init(window, bundle.GetStringFromName(titleKey), 
           Components.interfaces.nsIFilePicker.modeSave);
 
-
-  var isDocument = aData.document != null && isDocumentType(contentType);
+  var saveMode = GetSaveModeForContentType(contentType);
+  var isDocument = aData.document != null && saveMode;
   if (!isDocument && !shouldDecode && contentEncodingType) {
     // The data is encoded, we are not going to decode it, and this is not a
     // document save so we won't be doing a "save as, complete" (which would
@@ -268,9 +268,9 @@ function foundHeaderInfo(aSniffer, aData)
     // right.
     contentType = contentEncodingType;
   }
-    
+
   appendFiltersForContentType(fp, contentType,
-                              isDocument ? MODE_COMPLETE : MODE_FILEONLY);  
+                              isDocument ? saveMode : SAVEMODE_FILEONLY);
 
   const prefSvcContractID = "@mozilla.org/preferences-service;1";
   const prefSvcIID = Components.interfaces.nsIPrefService;                              
@@ -303,21 +303,28 @@ function foundHeaderInfo(aSniffer, aData)
   
   if (fp.show() == Components.interfaces.nsIFilePicker.returnCancel || !fp.file)
     return;
-    
+
   if (isDocument) 
     prefs.setIntPref("save_converter_index", fp.filterIndex);
   var directory = fp.file.parent.QueryInterface(nsILocalFile);
   prefs.setComplexValue("dir", nsILocalFile, directory);
-    
+
   fp.file.leafName = validateFileName(fp.file.leafName);
-  
+
+  // XXX We depend on the following holding true in appendFiltersForContentType():
+  // If we should save as a complete page, the filterIndex is 0.
+  // If we should save as text, the filterIndex is 2.
+  var useSaveDocument = isDocument &&
+                        ((saveMode & SAVEMODE_COMPLETE_DOM && fp.filterIndex == 0) ||
+                         (saveMode & SAVEMODE_COMPLETE_TEXT && fp.filterIndex == 2));
+
   // If we're saving a document, and are saving either in complete mode or 
   // as converted text, pass the document to the web browser persist component.
   // If we're just saving the HTML (second option in the list), send only the URI.
-  var source = (isDocument && fp.filterIndex != 1) ? aData.document : aSniffer.uri;
+  var source = useSaveDocument ? aData.document : aSniffer.uri;
   var persistArgs = {
     source      : source,
-    contentType : (isDocument && fp.filterIndex == 2) ? "text/plain" : contentType,
+    contentType : (useSaveDocument && fp.filterIndex == 2) ? "text/plain" : contentType,
     target      : fp.file,
     postData    : isDocument ? getPostData() : null,
     bypassCache : aData.bypassCache
@@ -339,7 +346,7 @@ function foundHeaderInfo(aSniffer, aData)
   // Create download and initiate it (below)
   var dl = Components.classes["@mozilla.org/download;1"].createInstance(Components.interfaces.nsIDownload);
 
-  if (isDocument && fp.filterIndex != 1) {
+  if (useSaveDocument) {
     // Saving a Document, not a URI:
     var filesFolder = null;
     if (persistArgs.contentType != "text/plain") {
@@ -549,45 +556,55 @@ nsHeaderSniffer.prototype = {
 
 };
 
-const MODE_COMPLETE = 0;
-const MODE_FILEONLY = 1;
+// We have no DOM, and can only save the URL as is.
+const SAVEMODE_FILEONLY      = 0x00;
+// We have a DOM and can save as complete.
+const SAVEMODE_COMPLETE_DOM  = 0x01;
+// We have a DOM which we can serialize as text.
+const SAVEMODE_COMPLETE_TEXT = 0x02;
 
+// If we are able to save a complete DOM, the 'save as complete' filter
+// must be the first filter appended.  The 'save page only' counterpart
+// must be the second filter appended.  And the 'save as complete text'
+// filter must be the third filter appended.
 function appendFiltersForContentType(aFilePicker, aContentType, aSaveMode)
 {
   var bundle = getStringBundle();
-    
+  // The bundle name for saving only a specific content type.
+  var bundleName;
+  // The corresponding filter string for a specific content type.
+  var filterString;
+
+  // XXX all the cases that are handled explicitly here MUST be handled
+  // in GetSaveModeForContentType to return a non-fileonly filter.
   switch (aContentType) {
   case "text/html":
-    if (aSaveMode == MODE_COMPLETE)
-      aFilePicker.appendFilter(bundle.GetStringFromName("WebPageCompleteFilter"), "*.htm; *.html");
-    aFilePicker.appendFilter(bundle.GetStringFromName("WebPageHTMLOnlyFilter"), "*.htm; *.html");
-    if (aSaveMode == MODE_COMPLETE)
-      aFilePicker.appendFilters(Components.interfaces.nsIFilePicker.filterText);
+    bundleName   = "WebPageHTMLOnlyFilter";
+    filterString = "*.htm; *.html";
     break;
 
   case "application/xhtml+xml":
-    if (aSaveMode == MODE_COMPLETE)
-      aFilePicker.appendFilter(bundle.GetStringFromName("WebPageCompleteFilter"), "*.xht; *.xhtml");
-    aFilePicker.appendFilter(bundle.GetStringFromName("WebPageXHTMLOnlyFilter"), "*.xht; *.xhtml");
-    if (aSaveMode == MODE_COMPLETE)
-      aFilePicker.appendFilters(Components.interfaces.nsIFilePicker.filterText);
+    bundleName   = "WebPageXHTMLOnlyFilter";
+    filterString = "*.xht; *.xhtml";
     break;
 
   case "text/xml":
   case "application/xml":
-    if (aSaveMode == MODE_COMPLETE)
-      aFilePicker.appendFilter(bundle.GetStringFromName("WebPageCompleteFilter"), "*.xml");
-    aFilePicker.appendFilter(bundle.GetStringFromName("WebPageXMLOnlyFilter"), "*.xml");
-    // It does not make sense to save as text because we have no idea how to format text only
+    bundleName   = "WebPageXMLOnlyFilter";
+    filterString = "*.xml";
     break;
 
   default:
+    if (aSaveMode != SAVEMODE_FILEONLY) {
+      throw "Invalid save mode for type '" + aContentType + "'";
+    }
+
     var mimeInfo = getMIMEInfoForType(aContentType);
     if (mimeInfo) {
       var extCount = { };
       var extList = { };
       mimeInfo.GetFileExtensions(extCount, extList);
-      
+
       var extString = "";
       for (var i = 0; i < extCount.value; ++i) {
         if (i > 0) 
@@ -597,14 +614,25 @@ function appendFiltersForContentType(aFilePicker, aContentType, aSaveMode)
       
       if (extCount.value > 0) {
         aFilePicker.appendFilter(mimeInfo.Description, extString);
-      } else {
-        aFilePicker.appendFilters(Components.interfaces.nsIFilePicker.filterAll);
-      }        
+      }
     }
-    else
-      aFilePicker.appendFilters(Components.interfaces.nsIFilePicker.filterAll);
+
     break;
   }
+
+  if (aSaveMode & SAVEMODE_COMPLETE_DOM) {
+    aFilePicker.appendFilter(bundle.GetStringFromName("WebPageCompleteFilter"), filterString);
+    // We should always offer a choice to save document only if
+    // we allow saving as complete.
+    aFilePicker.appendFilter(bundle.GetStringFromName(bundleName), filterString);
+  }
+
+  if (aSaveMode & SAVEMODE_COMPLETE_TEXT) {
+    aFilePicker.appendFilters(Components.interfaces.nsIFilePicker.filterText);
+  }
+
+  // Always append the all files (*) filter
+  aFilePicker.appendFilters(Components.interfaces.nsIFilePicker.filterAll);
 } 
 
 function getPostData()
@@ -844,14 +872,19 @@ function getDefaultExtension(aFilename, aURI, aContentType)
   }
 }
 
-function isDocumentType(aContentType)
+function GetSaveModeForContentType(aContentType)
 {
+  var saveMode = SAVEMODE_FILEONLY;
   switch (aContentType) {
   case "text/html":
-  case "text/xml":
   case "application/xhtml+xml":
+    saveMode |= SAVEMODE_COMPLETE_TEXT;
+    // Fall through
+  case "text/xml":
   case "application/xml":
-    return true;
+    saveMode |= SAVEMODE_COMPLETE_DOM;
+    break;
   }
-  return false;
+
+  return saveMode;
 }
