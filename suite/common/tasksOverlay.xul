@@ -6,8 +6,6 @@
 %tasksDTD;
 ]>
 
-<!-- <?xul-overlay href="chrome://communicator/content/taskbarOverlay.xul"?>  -->
-
 <overlay id="tasksOverlay"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
