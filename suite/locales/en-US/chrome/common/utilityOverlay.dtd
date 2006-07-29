@@ -91,3 +91,5 @@
 <!ENTITY releaseCmd.accesskey				"r">
 <!ENTITY aboutCmd.label					"About &brandShortName;">
 <!ENTITY aboutCmd.accesskey				"a">
+<!ENTITY aboutCommPluginsCmd.label			"About Plug-ins">
+<!ENTITY aboutCommPluginsCmd.accesskey			"p">

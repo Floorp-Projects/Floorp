@@ -134,6 +134,8 @@
 			<menuitem accesskey="&releaseCmd.accesskey;" value="&releaseCmd.label;"
 			          id="releaseUrl" oncommand="openTopWin('&releaseURL;');"/>
 			<menuseparator/>
+                        <menuitem class="about" accesskey="&aboutCommPluginsCmd.accesskey;" value="&aboutCommPluginsCmd.label;"
+                                id="pluginInfo" oncommand="openTopWin('about:plugins')"/>
 			<menuitem accesskey="&aboutCmd.accesskey;" value="&aboutCmd.label;"
 			          id="aboutName" oncommand="goAboutDialog();"/>
 		</menupopup>
