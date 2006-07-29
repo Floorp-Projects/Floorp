@@ -44,6 +44,9 @@
 
   <binding id="printpreviewtoolbar" 
            extends="chrome://global/content/bindings/toolbar.xml#toolbar">
+    <resources>
+      <stylesheet src="chrome://communicator/skin/printing.css"/>
+    </resources>
 
     <content>
       <xul:button label="&print.label;" oncommand="BrowserPrint();"/>
@@ -89,10 +92,10 @@
       <xul:vbox align="center" pack="center">
         <xul:hbox align="center" pack="center">
           <xul:toolbarbutton label="&portrait.label;" checked="true"
-            type="radio" group="orient" class="portrait-page"
+            type="radio" group="orient" class="toolbar-portrait-page"
             oncommand="parentNode.parentNode.parentNode.orient('portrait');"/>
           <xul:toolbarbutton label="&landscape.label;" 
-            type="radio" group="orient" class="landscape-page"
+            type="radio" group="orient" class="toolbar-landscape-page"
             oncommand="parentNode.parentNode.parentNode.orient('landscape');"/>
         </xul:hbox>
       </xul:vbox>
