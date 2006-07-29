@@ -51,7 +51,6 @@
 
   // Prefill a single text field
   function prefillTextBox(target) {
-
     // obtain values to be used for prefilling
     var walletService = Components.classes["@mozilla.org/wallet/wallet-service;1"].getService(Components.interfaces.nsIWalletService);
     var value = walletService.WALLET_PrefillOneElement(window.content, target);
@@ -136,7 +135,9 @@
             && !isKeyPress       // not a key event
             && event.detail == 2 // double click
             && event.button == 0 // left mouse button
-            && event.target.value.length == 0) { // no text has been entered
+            && event.target.value.length == 0 // no text has been entered
+            && "@mozilla.org/wallet/wallet-service;1" in Components.classes // wallet is available
+        ) {
           prefillTextBox(target); // prefill the empty text field if possible
         }
         break;
