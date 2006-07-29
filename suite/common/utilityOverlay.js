@@ -37,7 +37,7 @@ var goPrefWindow = 0;
 function getBrowserURL() {
 
   try {
-    var prefs = Components.classes["component://netscape/preferences"];
+    var prefs = Components.classes["@mozilla.org/preferences;1"];
     if (prefs) {
       prefs = prefs.getService();
       if (prefs)
@@ -70,7 +70,7 @@ function goPreferences(id, paneURL, paneID)
 {
   var prefWindowModalityPref;
   try {
-    var pref = Components.classes["component://netscape/preferences"].getService();
+    var pref = Components.classes["@mozilla.org/preferences;1"].getService();
     if( pref ) 
       pref = pref.QueryInterface( Components.interfaces.nsIPref );
     if( pref )
@@ -192,7 +192,7 @@ function goClickThrobber( urlPref )
 {
 	var url;
 	try {
-		var pref = Components.classes["component://netscape/preferences"].getService();
+		var pref = Components.classes["@mozilla.org/preferences;1"].getService();
 		if( pref )
 		pref = pref.QueryInterface( Components.interfaces.nsIPref );
 		url = pref.getLocalizedUnicharPref(urlPref);
@@ -225,7 +225,7 @@ function openTopWin( url )
     dump("SetPrefToCurrentPage("+ url +") \n ");
     if ((url == null) || (url == "")) return;
      
-    var windowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
+    var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
     var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
  
     var topWindowOfType = windowManagerInterface.getMostRecentWindow( "navigator:browser" );
@@ -255,7 +255,7 @@ function goAboutDialog()
 {
   var defaultAboutState = false;
   try {
-    var pref = Components.classes["component://netscape/preferences"].getService();
+    var pref = Components.classes["@mozilla.org/preferences;1"].getService();
     if( pref )
       pref = pref.QueryInterface( Components.interfaces.nsIPref );
     defaultAboutState = pref.GetBoolPref("browser.show_about_as_stupid_modal_window");
