@@ -300,11 +300,11 @@ nsContextMenu.prototype = {
                         root = root.parentNode;
                     }
                 }
-            } else if ( this.target.parentNode.tagName == "scrollbar"
-                        ||
-                        this.target.parentNode.tagName == "thumb"
-                        ||
-                        this.target.parentNode.tagName == "xul:slider") {
+            } else if ( this.target.parentNode && 
+                        'tagName' in this.target.parentNode &&
+                        ( this.target.parentNode.tagName == "scrollbar" ||
+                        this.target.parentNode.tagName == "thumb" ||
+                        this.target.parentNode.tagName == "xul:slider") ) {
                 this.shouldDisplay = false;
             } else {
                 try {
@@ -332,7 +332,7 @@ nsContextMenu.prototype = {
         }
         
         // Bubble out, looking for items of interest
-        elem = this.target;
+        var elem = this.target;
         while ( elem ) {
             if ( elem.nodeType == Node.ELEMENT_NODE ) {
                 var localname = elem.localName.toUpperCase();
@@ -362,20 +362,21 @@ nsContextMenu.prototype = {
                 if ( !this.onMetaDataItem ) {
                     // We currently display metadata on anything which fits
                     // the below test.
-                    if ( ( localname === "BLOCKQUOTE" && elem.cite )        ||
-                         ( localname === "Q"          && elem.cite )        ||
-                         ( localname === "TABLE"      && elem.summary )     ||
+                    if ( ( localname === "BLOCKQUOTE" && 'cite' in elem && elem.cite)  ||
+                         ( localname === "Q" && 'cite' in elem && elem.cite)           ||
+                         ( localname === "TABLE" && 'summary' in elem && elem.summary) ||
                          ( ( localname === "INS" || localname === "DEL" ) &&
-                           ( elem.cite || elem.dateTime ) )               ||
-                         elem.title                                       ||
-                         elem.lang ) {
+                           ( ( 'cite' in elem && elem.cite ) ||
+                             ( 'dateTime' in elem && elem.dateTime ) ) )               ||
+                         ( 'title' in elem && elem.title )                             ||
+                         ( 'lang' in elem && elem.lang ) ) {
                         dump("On metadata item.\n");
                         this.onMetaDataItem = true;
                     }
                 }
 
                 // Background image?
-                if ( !this.hasBGImage && elem.background ) {
+                if ( !this.hasBGImage && 'background' in elem && elem.background ) {
                     this.hasBGImage = true;
                     // Convert background attribute to absolute URL.
                     this.bgImageURL = this.makeURLAbsolute( elem.baseURI,
