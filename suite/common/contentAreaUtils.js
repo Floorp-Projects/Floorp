@@ -425,13 +425,13 @@ function initFileInfo(aFI, aURL, aDocument, aContentType)
       // Assuming nsiUri is valid, calling QueryInterface(...) on it will
       // populate extra object fields (eg filename and file extension).
       var url = aFI.uri.QueryInterface(Components.interfaces.nsIURL);
+      aFI.fileExt = url.fileExtension;
     } catch (e) {
     }
 
     // Get the default filename:
     aFI.fileName = getDefaultFileName((aFI.suggestedFileName || aFI.fileName),
                                       aFI.uri, aDocument);
-    aFI.fileExt = url.fileExtension;
     // If aFI.fileExt is still blank, consider: aFI.suggestedFileName is supplied
     // if saveURL(...) was the original caller (hence both aContentType and
     // aDocument are blank). If they were saving a link to a website then make
