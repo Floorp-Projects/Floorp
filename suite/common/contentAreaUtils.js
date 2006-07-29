@@ -527,18 +527,9 @@ nsHeaderSniffer.prototype = {
       if (this.mData.document) {
         this.contentType = this.mData.document.contentType;
       } else {
-        try {
-          var url = this.uri.QueryInterface(Components.interfaces.nsIURL);
-          var ext = url.fileExtension;
-          if (ext) {
-            var mimeInfo = getMIMEInfoForExtension(ext);
-            if (mimeInfo)
-              this.contentType = mimeInfo.MIMEType;
-          }
-        }
-        catch (e) {
-          // Not much we can do here.  Give up.
-        }
+        var type = getMIMETypeForURI(this.uri);
+        if (type)
+          this.contentType = type;
       }
     }
     this.mCallback(this, this.mData);
@@ -741,10 +732,10 @@ function getMIMEService()
   return mimeSvc;
 }
 
-function getMIMEInfoForExtension(aExtension)
+function getMIMETypeForURI(aURI)
 {
   try {  
-    return getMIMEService().GetFromTypeAndExtension(null, aExtension);
+    return getMIMEService().GetTypeFromURI(aURI);
   }
   catch (e) {
   }
