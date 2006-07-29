@@ -556,7 +556,7 @@ nsHeaderSniffer.prototype = {
   {
     var fileName = "";
 
-    if (this.mContentDisposition) {
+    if ("mContentDisposition" in this) {
       const mhpContractID = "@mozilla.org/network/mime-hdrparam;1"
       const mhpIID = Components.interfaces.nsIMIMEHeaderParam;
       const mhp = Components.classes[mhpContractID].getService(mhpIID);
