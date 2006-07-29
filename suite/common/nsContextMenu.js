@@ -274,12 +274,12 @@ nsContextMenu.prototype = {
                 // (which should be the href).
                 var root = this.target;
                 while ( root && !this.link ) {
+                    if ( root.tagName == "tree" ) {
+                        // Hit root of tree; must have clicked in empty space;
+                        // thus, no link.
+                        break;
+                    }
                     if ( root.getAttribute( "URL" ) ) {
-                        if ( root.tagName == "tree" ) {
-                            // Hit root of tree; must have clicked in empty space;
-                            // thus, no link.
-                            break;
-                        }
                         // Build pseudo link object so link-related functions work.
                         this.onLink = true;
                         this.link = { href : root.getAttribute("URL") };
@@ -354,22 +354,28 @@ nsContextMenu.prototype = {
     },
     // Returns true iff clicked on link is saveable.
     isLinkSaveable : function ( link ) {
-        // Test for missing protocol property.
-        if ( !link.protocol ) {
-           // We must resort to testing the URL string :-(.
-           var protocol;
-           if (link.href) {
-             protocol = link.href.substr( 0, 11 );
-           } else {
-             protocol = link.getAttributeNS("http://www.w3.org/1999/xlink","href");
-             if (protocol) {
-               protocol = protocol.substr( 0, 11 );
-             }
-           }
-           return protocol.toLowerCase() != "javascript:";
-        } else {
-           // Presume all but javascript: urls are saveable.
-           return link.protocol.toLowerCase() != "javascript:";
+        try {
+            // Test for missing protocol property.
+            if ( !link.protocol ) {
+                // We must resort to testing the URL string :-(.
+                var protocol;
+                if (link.href) {
+                    protocol = link.href.substr( 0, 11 );
+                } else {
+                    protocol = link.getAttributeNS("http://www.w3.org/1999/xlink","href");
+                    if (protocol) {
+                        protocol = protocol.substr( 0, 11 );
+                    }
+                }
+                return protocol.toLowerCase() != "javascript:";
+            } else {
+                // Presume all but javascript: urls are saveable.
+                return link.protocol.toLowerCase() != "javascript:";
+            }
+        } catch (e) {
+            // something was wrong with the link,
+            // so we won't be able to save it anyway
+            return false;
         }
     },
     // Open linked-to URL in a new window.
