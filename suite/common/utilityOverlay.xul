@@ -224,7 +224,7 @@
   <menuitem id="menu_showTaskbar"
             label="&showTaskbarCmd.label;"
             accesskey="&showTaskbarCmd.accesskey;"
-            oncommand="goToggleToolbar('taskbar', 'menu_showTaskbar')"
+            oncommand="goToggleToolbar('status-bar', 'menu_showTaskbar')"
             checked="true"/>
 
   <!-- Help Menu -->
