@@ -190,7 +190,7 @@ function foundHeaderInfo(aSniffer, aData)
     postData  : getPostData()
   };
   
-  openDialog("chrome://global/content/helperAppDldProgress.xul", "", 
+  openDialog("chrome://global/content/nsProgressDlg.xul", "", 
               "chrome,titlebar,minizable,dialog=yes", 
               makeWebBrowserPersist(), persistArgs);
 }
@@ -302,7 +302,7 @@ function saveDocument(aDocument)
     postData    : getPostData()
   };
   
-  openDialog("chrome://global/content/helperAppDldProgress.xul", "", 
+  openDialog("chrome://global/content/nsProgressDlg.xul", "", 
               "chrome,titlebar,minizable,dialog=yes", 
               makeWebBrowserPersist(), persistArgs);
 
