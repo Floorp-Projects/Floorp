@@ -642,24 +642,42 @@ function getMIMEInfoForType(aMIMEType)
 function getDefaultFileName(aDefaultFileName, aNameFromHeaders, aDocumentURI, aDocument)
 {
   if (aNameFromHeaders)
-    return validateFileName(aNameFromHeaders);  // 1) Use the name suggested by the HTTP headers
+    // 1) Use the name suggested by the HTTP headers
+    return validateFileName(aNameFromHeaders);
 
   try {
     var url = aDocumentURI.QueryInterface(Components.interfaces.nsIURL);
     if (url.fileName != "")
-      return url.fileName;                      // 2) Use the actual file name, if present
+      // 2) Use the actual file name, if present
+      return url.fileName;
   } catch (e) {
     // This is something like a wyciwyg:, data:, and so forth
     // URI... no usable filename here.
   }
   
-  if (aDocument && aDocument.title != "") 
-    return validateFileName(aDocument.title)    // 3) Use the document title
+  if (aDocument && aDocument.title != "")
+    // 3) Use the document title
+    return validateFileName(aDocument.title);
 
   if (aDefaultFileName)
-    return validateFileName(aDefaultFileName);  // 4) Use the caller-provided name, if any
+    // 4) Use the caller-provided name, if any
+    return validateFileName(aDefaultFileName);
 
-  return aDocumentURI.host;                     // 5) Use the host.
+  try {
+    if (aDocumentURI.host)
+      // 5) Use the host.
+      return aDocumentURI.host;
+  } catch (e) {
+    // Some files have no information at all, like Javascript generated pages
+  }
+  try {
+    // 6) Use the default file name
+    return getStringBundle().GetStringFromName("DefaultSaveFileName");
+  } catch (e) {
+    //in case localized string cannot be found
+  }
+  // 7) If all else fails, use "index"
+  return "index";
 }
 
 function validateFileName(aFileName)
