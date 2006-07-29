@@ -377,7 +377,20 @@ function editPage(url, launchWindow, delay)
 function extractFileNameFromUrl(urlstr)
 {
   if (!urlstr) return null;
-  return urlstr.slice(urlstr.lastIndexOf( "/" )+1);
+
+  // For "http://foo/bar/cheese.jpg", return "cheese.jpg".
+  // For "imap://user@host.com:143/fetch>UID>/INBOX>951?part=1.2&type=image/gif&filename=foo.jpeg", return "foo.jpeg".
+  // The 2nd url (ie, "imap://...") is generated for inline images by MimeInlineImage_parse_begin() in mimeiimg.cpp.
+  var lastSlash = urlstr.slice(urlstr.lastIndexOf( "/" )+1);
+  if (lastSlash)
+  { 
+    var nameIndex = lastSlash.lastIndexOf( "filename=" );
+    if (nameIndex != -1)
+      return (lastSlash.slice(nameIndex+9));
+    else
+      return lastSlash;
+  }
+  return null; 
 }
 
 // Gather all descendent text under given document node.
