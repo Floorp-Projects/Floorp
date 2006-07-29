@@ -142,6 +142,7 @@ function goPageSetup(domwin, printSettings)
   } catch(e) {
     return false; 
   }
+  return true;
 }
 
 function goPreferences(containerID, paneURL, itemID)
