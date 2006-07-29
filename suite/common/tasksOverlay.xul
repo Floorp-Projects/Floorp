@@ -53,84 +53,12 @@
 
           <menuseparator/>
 
-          <menu value="&walletMenu.label;" accesskey="&walletMenu.accesskey;">
-            <menupopup  id="personalManagers"
-                        PasswordNotChanged = "&PasswordNotChanged;"
-                        PasswordExpired = "&PasswordExpired;"
-                        PasswordNotExpired = "&PasswordNotExpired;"
-                        AllDataWillBeCleared = "&AllDataWillBeCleared;"
-                        UnableToCapture = "&UnableToCapture;"
-                        Captured = "&Captured;"
-                        NotCaptured = "&NotCaptured;"
-                        noPrefills = "&noPrefills;"
-                        oncreate="CheckForWalletAndImage()"> 
-              <menu value="&walletPasswordManager.label;" accesskey="&walletPasswordManager.accesskey;">
-                <menupopup>
-                  <menuitem value="&walletDisplaySignonsCmd.label;" accesskey="&walletDisplaySignonsCmd.accesskey;" oncommand="WalletDialog('signon');"/> 
-                  <menuitem value="&walletChangePasswordCmd.label;" accesskey="&walletChangePasswordCmd.accesskey;" oncommand="WalletAction('password');"/>
-                  <menuitem value="&walletExpirePasswordCmd.label;" accesskey="&walletExpirePasswordCmd.accesskey;" oncommand="WalletAction('expire');"/>
-                  <menuseparator/>
-                  <menuitem value="&walletEncryptCmd.label;" id="encrypt"
-                    accesskey="&walletEncryptCmd.accesskey;" 
-                    oncommand="WalletAction('encrypt');"/>
-                  <menuitem value="&walletObscureCmd.label;" id="obscure"
-                    accesskey="&walletObscureCmd.accesskey;" 
-                    oncommand="WalletAction('obscure');"/>
-                  <menuitem value="&walletClearCmd.label;" id="clear"
-                    accesskey="&walletClearCmd.accesskey;" 
-                    oncommand="WalletAction('clear');"/>
-                </menupopup>
-              </menu>
-              <menu value="&walletFormManager.label;" accesskey="&walletFormManager.accesskey;" id="wallet">
-                <menupopup>
-                  <menuitem value="&walletContentsCmd.label;" accesskey="&walletContentsCmd.accesskey;" id="walleteditor" oncommand="WalletDialog('wallet');"/> 
-                  <menuitem value="&walletSitesCmd.label;" accesskey="&walletSitesCmd.accesskey;" id="walletsites" oncommand="WalletDialog('walletsites');"/> 
-                  <menuseparator/>
-<!--
-                  <menuitem value="&walletSafeFillCmd.label;" accesskey="&walletSafeFillCmd.accesskey;" id="walletSafeFill" oncommand="WalletAction('safefill');"/> 
-                  <menuitem value="&walletQuickFillCmd.label;" accesskey="&walletQuickFillCmd.accesskey;" id="walletQuickFill" oncommand="WalletAction('quickfill');"/> 
-                  <menuitem value="&walletRequestToCaptureCmd.label;" accesskey="&walletRequestToCaptureCmd.accesskey;" id="walletCapture" oncommand="WalletAction('capture');"/> 
-                  <menuseparator/>
-                  <menuitem value="&walletInterviewCmd.label;" accesskey="&walletInterviewCmd.accesskey;" id="walletInterview" oncommand="WalletDialog('interview');"/> 
--->
-                  <menuitem value="&walletSamplesCmd.label;" accesskey="&walletSamplesCmd.accesskey;" id="walletSamples" oncommand="WalletDialog('samples');"/> 
-                </menupopup>
-              </menu>
-              <menu value="&walletCookieManager.label;" accesskey="&walletCookieManager.accesskey;">
-                <menupopup>
-                  <menuitem value="&walletDisplayCookiesCmd.label;"
-                            accesskey="&walletDisplayCookiesCmd.accesskey;" 
-                            oncommand="WalletDialog('cookie');"/> 
-                  <menuitem id="AllowCookies" value="&walletAllowCookiesCmd.label;"
-                            accesskey="&walletAllowCookiesCmd.accesskey;" 
-                            msg="&walletAllowCookiesMsg.label;"
-                            oncommand="WalletAction('cookieAllow');"/> 
-                  <menuitem id="BlockCookies" value="&walletBlockCookiesCmd.label;"
-                            accesskey="&walletBlockCookiesCmd.accesskey;" 
-                            msg="&walletBlockCookiesMsg.label;"
-                            oncommand="WalletAction('cookieBlock');"/> 
-                </menupopup>
-              </menu>
-              <menu value="&walletImageManager.label;" accesskey="&walletImageManager.accesskey;" id="image">
-                <menupopup>
-                  <menuitem value="&walletDisplayImagesCmd.label;"
-                            accesskey="&walletDisplayImagesCmd.accesskey;" 
-                            oncommand="WalletDialog('image');"/> 
-                  <menuitem id="AllowImages" value="&walletAllowImagesCmd.label;"
-                            accesskey="&walletAllowImagesCmd.accesskey;" 
-                            msg="&walletAllowImagesMsg.label;"
-                            oncommand="WalletAction('imageAllow');"/> 
-                  <menuitem id="BlockImages" value="&walletBlockImagesCmd.label;"
-                            accesskey="&walletBlockImagesCmd.accesskey;" 
-                            msg="&walletBlockImagesMsg.label;"
-                            oncommand="WalletAction('imageBlock');"/> 
-                </menupopup>
-              </menu>
-              <menuseparator/>
-              <menuitem value="&walletTutorialCmd.label;" accesskey="&walletTutorialCmd.accesskey;" oncommand="WalletDialog('tutorial');"/>
-            </menupopup> 
-          </menu> 
-          <menuseparator/>
+          <menu value="&privacyMenu.label;" accesskey="&privacyMenu.accesskey;">
+            <menupopup  id="personalManagers">
+              <menuitem id="lastInPersonalManagers" style="display:none;"/>
+            </menupopup>
+           </menu>
+         <menuseparator/>
 
           <menu value="&toolsMenu.label;" accesskey="&toolsMenu.accesskey;">
             <menupopup id="toolsPopup" oncreate="javaItemEnabling();">

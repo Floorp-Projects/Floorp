@@ -1,6 +1,4 @@
 <!-- Context Menu -->                 
-<!ENTITY blockImageCmd.label          "Block Image from Loading">
-<!ENTITY blockImageCmd.accesskey      "k">
 <!ENTITY openLinkCmd.label            "Open Link in New Window">
 <!ENTITY openLinkCmd.accesskey        "o">
 <!ENTITY editLinkCmd.label            "Edit Link in Composer">
@@ -54,7 +52,5 @@
 <!ENTITY copyImageCmd.accesskey       "m">
 <!ENTITY pasteCmd.label "Paste">
 <!ENTITY pasteCmd.accesskey "p">
-<!ENTITY captureCmd.label "Save Form Data">
-<!ENTITY prefillCmd.label "Prefill Form">
 <!ENTITY cutCmd.label "Cut">
 <!ENTITY cutCmd.accesskey "u">
