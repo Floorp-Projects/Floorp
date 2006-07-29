@@ -172,15 +172,15 @@
   </template>
 
   <treecolgroup id="theColumns">
-    <treecol id="Name"
-      sortSeparators="true" persist="hidden width" width="4*"
+    <treecol flex="4" id="Name"
+      sortSeparators="true" persist="hidden width" 
       rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
-    <treecol id="URL"
-      sortSeparators="true" persist="hidden width" width="4*"
+    <treecol flex="4" id="URL"
+      sortSeparators="true" persist="hidden width" 
       rdf:resource="http://home.netscape.com/NC-rdf#URL"
       rdf:resource2="http://home.netscape.com/NC-rdf#Name"/>
-    <treecol id="Date"
-      sortSeparators="true" persist="hidden width" width="1*"
+    <treecol flex="1" id="Date"
+      sortSeparators="true" persist="hidden width" 
       rdf:resource="http://home.netscape.com/NC-rdf#Date"
       rdf:resource2="http://home.netscape.com/NC-rdf#Name"/>
     <treecol persist="width" fixed="true" width="14" id="PopupColumn"/>
@@ -211,7 +211,7 @@
       </treecell>
     </treerow>
   </treehead>
-  <treechildren id="treechildren-bookmarks" 
+  <treechildren flex="1" id="treechildren-bookmarks" 
     onclick="return OpenURL(event, event.target.parentNode.parentNode, 
                             'bookmarksTree');"/>
 </tree>
