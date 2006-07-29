@@ -60,4 +60,10 @@
   <key id="key_findTypeLinks"
        key="&findTypeLinksCmd.key;"/>
 
+  <menuitem id="printPreviewMenuItem" hidden="true"/>
+  <menuitem id="printPreviewMenuItemToolbar" hidden="true"/>
+  <menuitem id="printPreviewAddressBook" hidden="true"/>
+  <menuitem id="threadPaneContext-printpreview" hidden="true"/>
+  <menuitem id="messagePaneContext-printpreview" hidden="true"/>
+
 </overlay>    
