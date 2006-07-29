@@ -376,7 +376,7 @@ function WalletDialog( which )
 {
   switch( which ) {
     case "signon":
-      window.openDialog("chrome://communicator/content/wallet/SignonViewer.xul","SSViewer","modal=yes,chrome,resizable=no"); 
+      window.openDialog("chrome://communicator/content/wallet/SignonViewer.xul","SSViewer","modal=yes,chrome,resizable=no","S"); 
       break;
     case "cookie":
       window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","CookieViewer","modal=yes,chrome,resizable=no",0); 
@@ -390,6 +390,9 @@ function WalletDialog( which )
       break;
     case "interview":
       window._content.location.href = 'chrome://communicator/content/wallet/interview.html';
+      break;
+    case "walletsites":
+      window.openDialog("chrome://communicator/content/wallet/SignonViewer.xul","SSViewer","modal=yes,chrome,resizable=no","W"); 
       break;
     case "wallet":
     default:

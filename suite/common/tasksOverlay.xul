@@ -67,6 +67,7 @@
               <menu value="&walletFormManager.label;" accesskey="&walletFormManager.accesskey;" id="wallet">
                 <menupopup>
                   <menuitem value="&walletContentsCmd.label;" accesskey="&walletContentsCmd.accesskey;" id="walleteditor" oncommand="WalletDialog('wallet');"/> 
+                  <menuitem value="&walletSitesCmd.label;" accesskey="&walletSitesCmd.accesskey;" id="walletsites" oncommand="WalletDialog('walletsites');"/> 
                   <menuitem value="&walletSafeFillCmd.label;" accesskey="&walletSafeFillCmd.accesskey;" id="walletSafeFill" oncommand="WalletAction('safefill');"/> 
                   <menuitem value="&walletQuickFillCmd.label;" accesskey="&walletQuickFillCmd.accesskey;" id="walletQuickFill" oncommand="WalletAction('quickfill');" style="display:none;"/> 
                   <menuitem value="&walletRequestToCaptureCmd.label;" accesskey="&walletRequestToCaptureCmd.accesskey;" id="walletCapture" oncommand="WalletAction('capture');"/> 
