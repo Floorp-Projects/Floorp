@@ -32,6 +32,7 @@
 ]>
 <?xml-stylesheet href="chrome://global/skin/outliner.css" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarks.css" type="text/css"?>
+<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
 <overlay id="historyTreeOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -47,6 +48,11 @@
   <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
   
   <popupset id="historyContextMenu">
+    <command id="cmd_selectAll"/>
+    <command id="cmd_cut"/>
+    <command id="cmd_copy"/>
+    <command id="cmd_delete"/>
+    <command id="cmd_selectAll"/>
     <popup id="historyMenu" onpopupshowing="return updateItems();">
       <menuitem id="miOpen" label="&openLinkInWindowCmd.label;" accesskey="&openLinkInWindowCmd.accesskey;" default="true"
                 oncommand="OpenURL(false);"/>
@@ -56,8 +62,11 @@
       <menuitem id="miAddBookmark" label="&bookmarkLinkCmd.label;" accesskey="&bookmarkLinkCmd.accesskey;" oncommand="historyAddBookmarks();"/>
       <menuitem id="miCopyLinkLocation" label="&copyLinkCmd.label;" accesskey="&copyLinkCmd.accesskey;"
                 command="cmd_copy"/>
+      <menuseparator/>
       <menuitem id="miDelete" label="&deleteCmd.label;" accesskey="&deleteCmd.accesskey;"
                 command="cmd_delete"/>
+      <menuitem id="miSelectAll" label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;"
+                command="cmd_selectAll"/>
     </popup>
     <data id="multipleBookmarks" label="&addToBookmarksCmd.label;" accesskey="&addToBookmarksCmd.accesskey;"/>
     <data id="oneBookmark" label="&bookmarkLinkCmd.label;" accesskey="&bookmarkLinkCmd.accesskey;"/>

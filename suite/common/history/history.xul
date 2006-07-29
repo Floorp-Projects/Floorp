@@ -27,7 +27,6 @@
 
 <?xul-overlay href="chrome://communicator/content/history/historyTreeOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
 
@@ -38,7 +37,6 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         width="500" height="400"
         persist="width height screenX screenY sizemode"
-        orient="vertical"
         windowtype="history:manager">
 
   <stringbundle id="historyBundle"
@@ -63,10 +61,6 @@
   <command id="cmd_quit"/>
   <command id="bm_cmd_saveas"/>
   <!-- Edit Menu -->
-  <command id="cmd_cut"/>
-  <command id="cmd_copy"/>
-  <command id="cmd_delete"/>
-  <command id="cmd_selectAll"/>
   <command id="cmd_deleteByHostname" oncommand="goDoCommand('cmd_deleteByHostname');"/>
   <command id="cmd_deleteByDomain" oncommand="goDoCommand('cmd_deleteByDomain');"/>
 
