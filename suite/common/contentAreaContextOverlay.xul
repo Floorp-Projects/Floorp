@@ -97,6 +97,10 @@
       <menuitem id="context-viewimage"
                 label="&viewImageCmd.label;"
                 oncommand="contextMenu.viewImage();"/>
+      <menuitem id="context-viewbgimage"
+                label="&viewBGImageCmd.label;"
+                accesskey="&viewBGImageCmd.accesskey;"
+                oncommand="contextMenu.viewBGImage();"/>
       <menuseparator id="context-sep-view"/>
       <!-- Misc ==================================== -->
       <menuitem id="context-bookmarkpage"
@@ -125,10 +129,6 @@
       <menuitem id="context-saveimage"
                 accesskey="&saveImageCmd.accesskey;"
                 oncommand="contextMenu.saveImage();"/>
-      <menuitem id="context-savebgimage"
-                label="&saveBGImageCmd.label;"
-                accesskey="&saveBGImageCmd.accesskey;"
-                oncommand="contextMenu.saveBGImage();"/>
       <menuseparator id="context-sep-save"/>
       <!-- Clipboard =============================== -->
       <menuitem id="context-selectall"
@@ -159,6 +159,7 @@
       <!-- Metadata ================================ -->
       <menuitem id="context-metadata"
                 label="&metadataCmd.label;"
+                accesskey="&metadataCmd.accesskey;"
                 oncommand="contextMenu.showMetadata();"/>
     </popup>
   </popupset>

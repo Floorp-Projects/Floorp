@@ -1,21 +1,21 @@
-<!-- Context Menu -->                 
+<!-- Context Menu -->
 <!ENTITY openLinkCmd.label            "Open Link in New Window">
 <!ENTITY openLinkCmd.accesskey        "o">
 <!ENTITY editLinkCmd.label            "Edit Link in Composer">
 <!ENTITY editLinkCmd.accesskey        "e">
 <!ENTITY openFrameCmd.label           "Open Frame in New Window">
 <!ENTITY openFrameCmd.accesskey       "o">
-<!ENTITY showOnlyThisFrameCmd.label           "Show Only This Frame">
-<!ENTITY showOnlyThisFrameCmd.accesskey       "w">
-<!ENTITY goBackCmd.label "Back">
-<!ENTITY goBackCmd.accesskey "b">
-<!ENTITY goForwardCmd.label "Forward">
-<!ENTITY goForwardCmd.accesskey "f">
+<!ENTITY showOnlyThisFrameCmd.label     "Show Only This Frame">
+<!ENTITY showOnlyThisFrameCmd.accesskey "w">
+<!ENTITY goBackCmd.label              "Back">
+<!ENTITY goBackCmd.accesskey          "b">
+<!ENTITY goForwardCmd.label           "Forward">
+<!ENTITY goForwardCmd.accesskey       "f">
 <!ENTITY reloadCmd.label              "Reload">
 <!ENTITY reloadCmd.accesskey          "r">
 <!ENTITY reloadCmd.commandkey         "r">
-<!ENTITY stopCmd.label "Stop">
-<!ENTITY stopCmd.accesskey "s">
+<!ENTITY stopCmd.label                "Stop">
+<!ENTITY stopCmd.accesskey            "s">
 <!ENTITY reloadFrameCmd.label         "Reload Frame">
 <!ENTITY reloadFrameCmd.accesskey     "r">
 <!ENTITY viewPageSourceCmd.label      "View Page Source">
@@ -28,6 +28,8 @@
 <!ENTITY viewFrameInfoCmd.accesskey   "i">
 <!ENTITY viewImageCmd.label           "View Image">
 <!ENTITY viewImageCmd.accesskey       "w">
+<!ENTITY viewBGImageCmd.label         "View Background Image">
+<!ENTITY viewBGImageCmd.accesskey     "w">
 <!ENTITY bookmarkPageCmd.label        "Bookmark this Page">
 <!ENTITY bookmarkPageCmd.accesskey    "b">
 <!ENTITY bookmarkLinkCmd.label        "Bookmark this Link">
@@ -40,8 +42,6 @@
 <!ENTITY saveLinkCmd.label            "Save Link As...">
 <!ENTITY saveLinkCmd.accesskey        "a">
 <!ENTITY saveImageCmd.accesskey       "a">
-<!ENTITY saveBGImageCmd.label         "Save Background Image As...">
-<!ENTITY saveBGImageCmd.accesskey     "a">
 <!ENTITY copyCmd.label                "Copy">
 <!ENTITY copyCmd.accesskey            "c">
 <!ENTITY selectAllCmd.label           "Select All">
@@ -51,7 +51,8 @@
 <!ENTITY copyImageCmd.label           "Copy Image Location">
 <!ENTITY copyImageCmd.accesskey       "m">
 <!ENTITY metadataCmd.label            "Properties">
-<!ENTITY pasteCmd.label "Paste">
-<!ENTITY pasteCmd.accesskey "p">
-<!ENTITY cutCmd.label "Cut">
-<!ENTITY cutCmd.accesskey "u">
+<!ENTITY metadataCmd.accesskey        "">
+<!ENTITY pasteCmd.label               "Paste">
+<!ENTITY pasteCmd.accesskey           "p">
+<!ENTITY cutCmd.label                 "Cut">
+<!ENTITY cutCmd.accesskey             "u">
