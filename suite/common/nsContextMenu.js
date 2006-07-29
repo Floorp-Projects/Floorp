@@ -41,6 +41,7 @@ function nsContextMenu( xulMenu ) {
     this.onLink         = false;
     this.onMailtoLink   = false;
     this.onSaveableLink = false;
+    this.onMetaDataItem = false;
     this.onMathML       = false;
     this.link           = false;
     this.inFrame        = false;
@@ -481,7 +482,7 @@ nsContextMenu.prototype = {
         // when there is one
         var reference = null;
         if (context == "selection")
-          reference = focusedWindow.getSelection();
+          reference = focusedWindow.__proto__.getSelection.call(focusedWindow);
         else if (context == "mathml")
           reference = this.target;
         else
@@ -693,7 +694,7 @@ nsContextMenu.prototype = {
     
     searchSelected : function() {
         var focusedWindow = document.commandDispatcher.focusedWindow;
-        var searchStr = focusedWindow.getSelection();
+        var searchStr = focusedWindow.__proto__.getSelection.call(focusedWindow);
         searchStr = searchStr.toString();
         searchStr = searchStr.replace( /^\s+/, "" );
         searchStr = searchStr.replace(/(\n|\r|\t)+/g, " ");
