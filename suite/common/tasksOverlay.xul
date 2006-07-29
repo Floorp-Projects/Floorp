@@ -109,6 +109,8 @@
                             oncommand="WalletAction('imageBlock');"/> 
                 </menupopup>
               </menu>
+              <menuseparator/>
+              <menuitem value="&walletTutorialCmd.label;" accesskey="&walletTutorialCmd.accesskey;" oncommand="WalletDialog('tutorial');"/>
             </menupopup> 
           </menu> 
           <menuseparator/>
