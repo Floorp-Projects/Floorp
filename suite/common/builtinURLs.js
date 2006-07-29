@@ -155,7 +155,10 @@ function loadXURL(key)
   debug_dump("loadXURL call with " + key + "\n");
     
   var url = xlateURL(key);
-  if (window._content)
+  //check to see if this is a browser window before opening.
+  var winType = document.documentElement.getAttribute("windowtype");
+
+  if (window._content && winType == "navigator:browser")
     window._content.location.href = url;
   else
     window.open(url); // on mac, there maybe no open windows: see bug 83329
