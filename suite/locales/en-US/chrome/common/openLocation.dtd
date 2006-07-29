@@ -3,6 +3,7 @@
 <!ENTITY enter.label "Enter the web location (URL), or specify the local file you would like to open:">  
 <!ENTITY chooseFile.label "Choose File...">
 <!ENTITY newWindow.label "New Navigator window">
+<!ENTITY newTab.label "New Navigator tab">
 <!ENTITY topWindow.label "Current Navigator window">
 <!ENTITY editNewWindow.label "New Composer window">
 <!ENTITY cancel.label "Cancel">
