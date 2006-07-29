@@ -180,7 +180,7 @@
 
   function handleLinkClick(event, href)
   {
-    var theTab;
+    var theTab, loadInBackground;
     switch (event.button) {                                   
       case 0:                                                         // if left button clicked
         if (event.metaKey || event.ctrlKey) {                         // and meta or ctrl are down
@@ -188,7 +188,7 @@
             getBrowser() && getBrowser().localName == "tabbrowser") {
             
             theTab = getBrowser().addTab(href, getReferrer(document)); // open link in new tab
-            var loadInBackground = pref.getBoolPref("browser.tabs.loadInBackground");
+            loadInBackground = pref.getBoolPref("browser.tabs.loadInBackground");
             if (event.shiftKey)
               loadInBackground = !loadInBackground;
             if (!loadInBackground)
@@ -224,7 +224,7 @@
         if (pref && pref.getBoolPref("browser.tabs.opentabfor.middleclick") && getBrowser && 
             getBrowser() && getBrowser().localName == "tabbrowser") {
           theTab = getBrowser().addTab(href, getReferrer(document)); // open link in new tab
-          var loadInBackground = pref.getBoolPref("browser.tabs.loadInBackground");
+          loadInBackground = pref.getBoolPref("browser.tabs.loadInBackground");
           if (event.shiftKey)
             loadInBackground = !loadInBackground;
           if (!loadInBackground)
