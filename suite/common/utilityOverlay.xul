@@ -29,7 +29,34 @@
                type="checkbox"
                oncommand="toggleOfflineStatus();"/>
 
-  <statusbarpanel id="offline-status"
+  <popup id="networkProperties" onpopupshown="InitProxyMenu();">
+    <menuitem id="network-proxy-no"
+              type="radio"
+              name="status"
+              label="&direct.label;"
+              accesskey="&direct.accesskey;"
+              oncommand="setNetworkStatus('0')"/>
+    <menuitem id="network-proxy-manual"
+              type="radio"
+              name="status"
+              label="&manual.label;"
+              accesskey="&manual.accesskey;"
+              oncommand="setNetworkStatus('1')"/>
+    <menuitem id="network-proxy-pac"
+              type="radio"
+              name="status"
+              label="&pac.label;"
+              accesskey="&pac.accesskey;"
+              oncommand="setNetworkStatus('2')"/>
+    <menuseparator/>
+    <menuitem label="&proxy.label;"
+              accesskey="&proxy.accesskey;"
+              oncommand="goPreferences('advancedItem',
+                                       'chrome://communicator/content/pref/pref-proxies.xul',
+                                       'proxiesItem');"/>
+  </popup>
+
+  <statusbarpanel id="offline-status" context="networkProperties"
                   observes="Communicator:WorkMode"/>
 
   <menuitem id="offlineGoOfflineCmd"
