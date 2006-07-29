@@ -68,6 +68,9 @@ const char* XPCJSRuntime::mStrings[] = {
 
 /***************************************************************************/
 
+// ContextCallback calls are chained
+static JSContextCallback gOldJSContextCallback;
+
 // GCCallback calls are chained
 static JSGCCallback gOldJSGCCallback;
 
@@ -222,6 +225,28 @@ DetachedWrappedNativeProtoMarker(JSDHashTable *table, JSDHashEntryHdr *hdr,
 
     proto->Mark();
     return JS_DHASH_NEXT;
+}
+
+// GCCallback calls are chained
+JS_STATIC_DLL_CALLBACK(JSBool)
+ContextCallback(JSContext *cx, uintN operation)
+{
+    XPCJSRuntime* self = nsXPConnect::GetRuntime();
+    if (self)
+    {
+        if (operation == JSCONTEXT_NEW)
+        {
+            XPCPerThreadData* tls = XPCPerThreadData::GetData();
+            if(tls)
+            {
+                JS_SetThreadStackLimit(cx, tls->GetStackLimit());
+            }
+        }
+    }
+
+    return gOldJSContextCallback
+           ? gOldJSContextCallback(cx, operation)
+           : JS_TRUE;
 }
 
 // static
@@ -768,6 +793,7 @@ XPCJSRuntime::~XPCJSRuntime()
     XPCConvert::RemoveXPCOMUCStringFinalizer();
 
     gOldJSGCCallback = NULL;
+    gOldJSContextCallback = NULL;
 }
 
 XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect,
@@ -811,7 +837,11 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect,
 
     NS_ASSERTION(!gOldJSGCCallback, "XPCJSRuntime created more than once");
     if(mJSRuntime)
+    {
+        gOldJSContextCallback = JS_SetContextCallback(mJSRuntime,
+                                                      ContextCallback);
         gOldJSGCCallback = JS_SetGCCallbackRT(mJSRuntime, GCCallback);
+    }
 
     // Install a JavaScript 'debugger' keyword handler in debug builds only
 #ifdef DEBUG
