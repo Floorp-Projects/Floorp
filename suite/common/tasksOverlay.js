@@ -380,13 +380,13 @@ function WalletDialog( which )
 {
   switch( which ) {
     case "signon":
-      window.openDialog("chrome://communicator/content/wallet/SignonViewer.xul","SSViewer","modal=yes,chrome,resizable=no","S"); 
+      window.openDialog("chrome://communicator/content/wallet/SignonViewer.xul","SSViewer","modal=yes,chrome,resizable=yes","S"); 
       break;
     case "cookie":
-      window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","CookieViewer","modal=yes,chrome,resizable=no",0); 
+      window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","CookieViewer","modal=yes,chrome,resizable=yes",0); 
       break;
     case "image":
-      window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","CookieViewer","modal=yes,chrome,resizable=no",2); 
+      window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","CookieViewer","modal=yes,chrome,resizable=yes",2); 
       break;
     case "samples":
       window._content.location.href = 'chrome://communicator/locale/wallet/index.html';
