@@ -55,6 +55,7 @@ pref("general.open_location.last_url",      "");
 pref("general.open_location.last_window_choice", 0);
 
 pref("general.smoothScroll", false);
+pref("general.autoScroll", true);
 
 #expand pref("general.useragent.extra.__MOZ_APP_NAME__", "__MOZ_APP_DISPLAYNAME__/__MOZ_APP_VERSION__");
 
@@ -251,6 +252,8 @@ pref("browser.urlbar.clickSelectsAll", false);
 // 1 act like pgup
 // 2 and other values, nothing
 pref("browser.backspace_action", 1);
+
+pref("general.autoScroll", false);
 #endif
 #endif
 
