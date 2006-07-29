@@ -145,7 +145,10 @@ function NSPrint()
       if (gPrintSettingsAreGlobal && gSavePrintSettings) {
         var psService = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
                                           .getService(Components.interfaces.nsIPrintSettingsService);
-        psService.savePrintSettingsToPrefs(gPrintSettings, true, gPrintSettings.kInitSaveAll);
+        psService.savePrintSettingsToPrefs(gPrintSettings, true,
+                                           gPrintSettings.kInitSaveAll);
+        psService.savePrintSettingsToPrefs(gPrintSettings, false,
+                                           gPrintSettings.kInitSavePrinterName);
       }
     }
   } catch (e) {
