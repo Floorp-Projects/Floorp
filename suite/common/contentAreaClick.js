@@ -113,7 +113,14 @@
   {
     var target = event.target;
     var linkNode;
-    switch (target.localName.toLowerCase()) {
+
+    var local_name = target.localName;
+
+    if (local_name) {
+      local_name.toLowerCase();
+    }
+
+    switch (local_name) {
       case "a":
         linkNode = target;
         break;
