@@ -24,6 +24,7 @@
 
 var browser;
 var dialog = {};
+var gNavigatorBundle;
 var pref = null;
 try {
   pref = Components.classes["@mozilla.org/preferences-service;1"]
@@ -40,6 +41,7 @@ function onLoad()
   dialog.openTopWindow  = document.getElementById("currentWindow");
   dialog.openEditWindow = document.getElementById("editWindow");
   dialog.bundle         = document.getElementById("openLocationBundle");
+  gNavigatorBundle      = document.getElementById("navigatorBundle");
 
   if ("arguments" in window && window.arguments.length >= 1)
     browser = window.arguments[0];

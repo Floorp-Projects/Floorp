@@ -49,6 +49,7 @@
   <script type="application/x-javascript" src="chrome://navigator/content/sessionHistoryUI.js"/>
   
   <stringbundle id="openLocationBundle" src="chrome://communicator/locale/openLocation.properties"/>
+  <stringbundle id="navigatorBundle" src="chrome://navigator/locale/navigator.properties"/>
 
   <hbox>
     <separator orient="vertical" class="thin"/>
