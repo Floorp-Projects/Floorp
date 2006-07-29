@@ -45,7 +45,7 @@ var contentAreaDNDObserver = {
       // htmlstring will be filled automatically if you fill urlstring
       var htmlstring = null;
 
-      var domselection = window._content.getSelection();
+      var domselection = aEvent.view.getSelection();
       if (domselection && !domselection.isCollapsed && 
           domselection.containsNode(draggedNode,false))
         {
@@ -154,11 +154,13 @@ var contentAreaDNDObserver = {
       if (aEvent.getPreventDefault())
         return;
         
-      // if the drag originated w/in this content area, bail early. This avoids loading
-      // a URL dragged from the content area into the very same content area (which is
-      // almost never the desired action). This code is a bit too simplistic and may
-      // have problems with nested frames, but that's not my problem ;)
-      if (aDragSession.sourceDocument == window._content.document) {
+      // if the drag originated w/in this content area, bail
+      // early. This avoids loading a URL dragged from the content
+      // area into the very same content area (which is almost never
+      // the desired action). This code is a bit too simplistic and
+      // may have problems with nested frames, but that's not my
+      // problem ;)
+      if (aDragSession.sourceDocument == aEvent.view.document) {
         aDragSession.canDrop = false;
         return;
       }
