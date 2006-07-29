@@ -207,8 +207,8 @@ nsContextMenu.prototype = {
         this.target = node;
 
         // See if the user clicked on an image.
-        if ( this.target.nodeType == 1 ) {
-             if ( this.target.tagName.toUpperCase() == "IMG" ) {
+        if ( this.target.nodeType == Node.ELEMENT_NODE ) {
+             if ( this.target.localName.toUpperCase() == "IMG" ) {
                 this.onImage = true;
                 this.imageURL = this.target.src;
                 // Look for image map.
@@ -223,9 +223,9 @@ nsContextMenu.prototype = {
                         areas.length = 0;
                         for ( var i = 0; i < areas.length && !this.onLink; i++ ) {
                             var area = areas[i];
-                            if ( area.nodeType == 1
+                            if ( area.nodeType == Node.ELEMENT_NODE
                                  &&
-                                 area.tagName.toUpperCase() == "AREA" ) {
+                                 area.localName.toUpperCase() == "AREA" ) {
                                 // Get type (rect/circle/polygon/default).
                                 var type = area.getAttribute( "type" );
                                 var coords = this.parseCoords( area );
@@ -250,7 +250,7 @@ nsContextMenu.prototype = {
                         }
                     }
                 }
-             } else if ( this.target.tagName.toUpperCase() == "OBJECT"
+             } else if ( this.target.localName.toUpperCase() == "OBJECT"
                          &&
                          // See if object tag is for an image.
                          this.objectIsImage( this.target ) ) {
@@ -258,7 +258,7 @@ nsContextMenu.prototype = {
                 this.onImage = true;
                 // URL must be constructed.
                 this.imageURL = this.objectImageURL( this.target );
-             } else if ( this.target.tagName.toUpperCase() == "INPUT") {
+             } else if ( this.target.localName.toUpperCase() == "INPUT") {
                if(this.target.getAttribute( "type" ).toUpperCase() == "IMAGE") {
                  this.onImage = true;
                  // Convert src attribute to absolute URL.
@@ -267,7 +267,7 @@ nsContextMenu.prototype = {
                } else /* if (this.target.getAttribute( "type" ).toUpperCase() == "TEXT") */ {
                  this.onTextInput = this.isTargetATextBox(this.target);
                }
-            } else if ( this.target.tagName.toUpperCase() == "TEXTAREA" ) {
+            } else if ( this.target.localName.toUpperCase() == "TEXTAREA" ) {
                  this.onTextInput = true;
             } else if ( this.target.getAttribute( "background" ) ) {
                  this.hasBGImage = true;
@@ -334,13 +334,13 @@ nsContextMenu.prototype = {
         // Bubble out, looking for items of interest
         elem = this.target;
         while ( elem ) {
-            if ( elem.nodeType == 1 ) {
-                var tagname = elem.tagName.toUpperCase();
+            if ( elem.nodeType == Node.ELEMENT_NODE ) {
+                var localname = elem.localName.toUpperCase();
                 
                 // Link?
                 if ( !this.onLink && 
-                    ( tagname === "A"    ||
-                      tagname === "AREA" ||
+                    ( localname === "A"    ||
+                      localname === "AREA" ||
                       elem.getAttributeNS( "http://www.w3.org/1999/xlink", "type") == "simple" ) ) {
                     // Clicked on a link.
                     this.onLink = true;
@@ -362,10 +362,10 @@ nsContextMenu.prototype = {
                 if ( !this.onMetaDataItem ) {
                     // We currently display metadata on anything which fits
                     // the below test.
-                    if ( ( tagname === "BLOCKQUOTE" && elem.cite )        ||
-                         ( tagname === "Q"          && elem.cite )        ||
-                         ( tagname === "TABLE"      && elem.summary )     ||
-                         ( ( tagname === "INS" || tagname === "DEL" ) &&
+                    if ( ( localname === "BLOCKQUOTE" && elem.cite )        ||
+                         ( localname === "Q"          && elem.cite )        ||
+                         ( localname === "TABLE"      && elem.summary )     ||
+                         ( ( localname === "INS" || localname === "DEL" ) &&
                            ( elem.cite || elem.dateTime ) )               ||
                          elem.title                                       ||
                          elem.lang ) {
@@ -614,7 +614,8 @@ nsContextMenu.prototype = {
              if ( node.nodeName == "#text" ) {
                  // Add this text to our collection.
                  text += " " + node.data;
-             } else if ( node.tagName == "IMG" ) {
+             } else if ( node.nodeType == Node.ELEMENT_NODE 
+                         && node.localName.ToUpperCase() == "IMG" ) {
                  // If it has an alt= attribute, use that.
                  altText = node.getAttribute( "alt" );
                  if ( altText && altText != "" ) {
@@ -720,7 +721,10 @@ nsContextMenu.prototype = {
     },
     isTargetATextBox : function ( node )
     {
-      if (node.tagName.toUpperCase() == "INPUT") {
+      if (node.nodeType != Node.ELEMENT_NODE)
+        return false;
+
+      if (node.localName.toUpperCase() == "INPUT") {
         var attrib = node.getAttribute("type").toUpperCase();
         return( (attrib != "IMAGE") &&
                 (attrib != "PASSWORD") &&
@@ -733,7 +737,7 @@ nsContextMenu.prototype = {
                 (attrib != "RESET") &&
                 (attrib != "BUTTON") );
       } else  {
-        return(node.tagName.toUpperCase() == "TEXTAREA");
+        return(node.localName.toUpperCase() == "TEXTAREA");
       }
     }
 };
