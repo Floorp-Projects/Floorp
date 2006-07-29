@@ -119,7 +119,6 @@ function createInstance(contractid, iidName)
 const nsIFilePicker = Components.interfaces.nsIFilePicker;
 function onChooseFile()
 {
-alert('hey');
   try {
     var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
     fp.init(window, bundle.GetStringFromName("chooseFileDialogTitle"), nsIFilePicker.modeOpen);
