@@ -196,6 +196,11 @@ nsContextMenu.prototype = {
     },
     // Set various context menu attributes based on the state of the world.
     setTarget : function ( node ) {
+        const xulNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+        if ( node.namespaceURI == xulNS ) {
+          this.shouldDisplay = false;
+          return;
+        }
         // Initialize contextual info.
         this.onImage    = false;
         this.onMetaDataItem = false;
@@ -322,12 +327,6 @@ nsContextMenu.prototype = {
                         root = root.parentNode;
                     }
                 }
-            } else if ( this.target.parentNode && 
-                        'tagName' in this.target.parentNode &&
-                        ( this.target.parentNode.tagName == "scrollbar" ||
-                        this.target.parentNode.tagName == "thumb" ||
-                        this.target.parentNode.tagName == "xul:slider") ) {
-                this.shouldDisplay = false;
             } else {
                 try {
                     var cssAttr = this.target.style.getPropertyValue( "list-style-image" ) ||
