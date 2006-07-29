@@ -118,7 +118,12 @@ nsContextMenu.prototype = {
            var saveImageMenuItem = document.getElementById( 'context-saveimage' );
            var imageName = extractFileNameFromUrl(this.imageURL);
            var bundle = srGetStrBundle("chrome://communicator/locale/contentAreaCommands.properties");
-           var caption = bundle.formatStringFromName("saveImageAs",[imageName],1);
+           var caption;
+           if (imageName) {
+              caption = bundle.formatStringFromName("saveImageAs", [imageName], 1);
+           } else {
+              caption = bundle.GetStringFromName("saveImageAsNoFilename");
+           }
 
            saveImageMenuItem.setAttribute( "label", caption );
         }
