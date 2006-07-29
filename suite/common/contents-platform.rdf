@@ -11,6 +11,7 @@
   <RDF:Description about="urn:mozilla:package:communicator-platform"
         chrome:displayName="Platform Specific Bindings"
         chrome:author="mozilla.org"
-        chrome:name="communicator-platform">
+        chrome:name="communicator-platform"
+ 	chrome:localeVersion="0.9.3">
   </RDF:Description>
 </RDF:RDF>
