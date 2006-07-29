@@ -106,6 +106,10 @@
                 label="&viewBGImageCmd.label;"
                 accesskey="&viewBGImageCmd.accesskey;"
                 oncommand="gContextMenu.viewBGImage();"/>
+      <menu id="browserContextCharsetMenu" 
+                onpopupshowing="CreateMenu('browser');UpdateMenus(event)"
+                oncommand="MultiplexHandler(event)"/>
+
       <menuseparator id="context-sep-view"/>
       <!-- Misc ==================================== -->
       <menuitem id="context-bookmarkpage"
