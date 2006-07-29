@@ -14,3 +14,6 @@
 <!ENTITY redoCmd.key			"Z">  
 
 <!ENTITY historyCmd.key   "H">  
+
+<!ENTITY findTypeTextCmd.key        "">
+<!ENTITY findTypeLinksCmd.key       "">

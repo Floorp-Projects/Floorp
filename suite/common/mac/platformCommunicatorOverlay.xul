@@ -54,4 +54,10 @@
          command="Browser:PrintSetup"/>
   </menupopup>
 
+  <!-- Find As You Type Keys -->
+  <key id="key_findTypeText"
+       key="&findTypeTextCmd.key;"/>
+  <key id="key_findTypeLinks"
+       key="&findTypeLinksCmd.key;"/>
+
 </overlay>    

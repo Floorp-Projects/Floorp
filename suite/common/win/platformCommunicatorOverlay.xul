@@ -36,4 +36,10 @@
   <!-- Delete Key -->
   <key id="key_delete" keycode="VK_DELETE" command="cmd_delete"/>
 
+  <!-- Find As You Type Keys -->
+  <key id="key_findTypeText"
+       key="&findTypeTextCmd.key;"/>
+  <key id="key_findTypeLinks"
+       key="&findTypeLinksCmd.key;"/>
+
 </overlay>    
