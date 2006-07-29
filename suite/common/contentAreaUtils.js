@@ -102,6 +102,18 @@ function openNewWindowWith(url, sendReferrer)
   window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url, charsetArg, referrer);
 }
 
+function openTopBrowserWith(url)
+{
+  var windowMediator = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator);
+  var browserWin = windowMediator.getMostRecentWindow("navigator:browser");
+
+  // if there's an existing browser window, open this url in one
+  if (browserWin)
+    browserWin.getBrowser().loadURI(url); // Just do a normal load.
+  else
+    window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url, null, null);
+}
+
 function openNewTabWith(url, sendReferrer, reverseBackgroundPref) 
 {
   var browser;
