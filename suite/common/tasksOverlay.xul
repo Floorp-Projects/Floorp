@@ -29,7 +29,7 @@
           <menuseparator/>
           <menu label="&webDevelopment.label;" accesskey="&webDevelopment.accesskey;">
             <menupopup id="toolsPopup" onpopupshowing="javaItemEnabling();">
-              <menuitem label="&javaScriptConsoleCmd.label;" accesskey="&javaScriptConsoleCmd.accesskey;" oncommand="toJavaScriptConsole();"/>
+              <menuitem label="&errorConsoleCmd.label;" accesskey="&errorConsoleCmd.accesskey;" oncommand="toJavaScriptConsole();"/>
               <menuitem id="java" label="&javaConsoleCmd.label;" accesskey="&javaConsoleCmd.accesskey;" oncommand="toJavaConsole()"/>
             </menupopup>
           </menu>
