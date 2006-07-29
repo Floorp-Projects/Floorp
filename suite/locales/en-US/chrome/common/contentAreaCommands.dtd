@@ -5,8 +5,6 @@
 <!ENTITY openLinkCmdInTab.accesskey   "t">
 <!ENTITY openLinkInWindowCmd.label    "Open">
 <!ENTITY openLinkInWindowCmd.accesskey "p">
-<!ENTITY editLinkCmd.label            "Edit Link in Composer">
-<!ENTITY editLinkCmd.accesskey        "e">
 <!ENTITY openFrameCmd.label           "Open Frame in New Window">
 <!ENTITY openFrameCmd.accesskey       "o">
 <!ENTITY showOnlyThisFrameCmd.label     "Show Only This Frame">
