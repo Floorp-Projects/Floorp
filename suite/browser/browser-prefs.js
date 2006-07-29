@@ -83,7 +83,6 @@ pref("browser.toolbars.showbutton.search",  true);
 pref("browser.turbo.enabled", false);
 
 // Dialog modality issues
-pref("browser.prefWindowModal", true);
 pref("browser.show_about_as_stupid_modal_window", false);
 
 pref("browser.download.progressDnldDialog.keepAlive", true); // keep the dnload progress dialog up after dnload is complete
@@ -118,7 +117,6 @@ pref("browser.related.enabled", true);
 pref("browser.related.autoload", 1);  // 0 = Always, 1 = After first use, 2 = Never
 pref("browser.related.provider", "http://www-rl.netscape.com/wtgn?");
 pref("browser.related.disabledForDomains", "");
-pref("browser.goBrowsing.enabled", true);
 
 // Bookmarks prefs
 pref("browser.bookmarks.confirm_sorting", true);
@@ -206,10 +204,6 @@ pref("browser.downloadmanager.behavior", 1);
 
 #ifndef XP_MACOSX
 #ifdef XP_UNIX
-pref("browser.startup.license_accepted", "");
-pref("security.warn_accept_cookie", false);
-// Most Unix people think modal pref windows are stupid:
-pref("browser.prefWindowModal", false);
 // For the download dialog
 pref("browser.download.progressDnldDialog.enable_launch_reveal_buttons", false);
 pref("browser.urlbar.clickSelectsAll", false);
