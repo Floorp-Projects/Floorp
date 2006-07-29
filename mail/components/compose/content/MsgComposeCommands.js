@@ -2185,7 +2185,7 @@ function ToggleInlineSpellChecker(target)
 {
   if (InlineSpellChecker.inlineSpellChecker)
   {
-    InlineSpellChecker.inlineSpellChecker.enableRealTimeSpell = !InlineSpellChecker.inlineSpellChecker.enableRealTimeSpell;
+    InlineSpellChecker.editor.setSpellcheckUserOverride(!InlineSpellChecker.inlineSpellChecker.enableRealTimeSpell);
     target.setAttribute('checked', InlineSpellChecker.inlineSpellChecker.enableRealTimeSpell);
 
     if (InlineSpellChecker.inlineSpellChecker.enableRealTimeSpell)

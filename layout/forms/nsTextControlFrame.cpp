@@ -66,7 +66,6 @@
 #include "nsIScrollableFrame.h" //to turn off scroll bars
 #include "nsFormControlFrame.h" //for registering accesskeys
 #include "nsIDeviceContext.h" // to measure fonts
-#include "nsIInlineSpellChecker.h"
 
 #include "nsIContent.h"
 #include "nsIAtom.h"
@@ -126,8 +125,6 @@
 #include "nsIJSContextStack.h"
 
 #define DEFAULT_COLUMN_WIDTH 20
-
-#define PREF_DEFAULT_SPELLCHECK "layout.spellcheckDefault"
 
 #include "nsContentCID.h"
 static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
@@ -1197,8 +1194,6 @@ nsTextControlFrame::PreDestroy()
 void
 nsTextControlFrame::Destroy()
 {
-  nsContentUtils::UnregisterPrefCallback(PREF_DEFAULT_SPELLCHECK,
-                                         nsTextControlFrame::RealTimeSpellCallback, this);
   if (!mDidPreDestroy) {
     PreDestroy();
   }
@@ -1625,81 +1620,6 @@ nsTextControlFrame::CreateFrameFor(nsPresContext*   aPresContext,
   return NS_OK;
 }
 
-// nsTextControlFrame::SetEnableRealTimeSpell
-//
-//    This enables or disables the spellchecker based on the given flag. It
-//    will only create a spellcheck object if necessary.
-
-void
-nsTextControlFrame::SetEnableRealTimeSpell(PRBool aEnabled)
-{
-  nsresult rv = NS_OK;
-
-  NS_ASSERTION(!aEnabled || !IsPasswordTextControl(),
-               "don't enable real time spell for password controls");
-
-  // The editor will lazily create the spell checker object if it has not been
-  // created. We only want one created if we are turning it on, since not
-  // created implies there's no spell checking yet.
-  nsCOMPtr<nsIInlineSpellChecker> inlineSpellChecker;
-  rv = mEditor->GetInlineSpellChecker(aEnabled,
-                                      getter_AddRefs(inlineSpellChecker));
-
-  if (NS_SUCCEEDED(rv) && inlineSpellChecker) {
-    inlineSpellChecker->SetEnableRealTimeSpell(aEnabled);
-  }
-}
-
-// nsTextControlFrame::SyncRealTimeSpell
-//
-//    This function is called to update whether inline spell checking is enabled
-//    for the control. It is called on initialization and when things happen
-//    that might affect spellchecking (for example, if it gets enabled or
-//    disabled).
-//
-//    Multi-line text controls are spellchecked when the preference is set.
-//    Everything else (including read-only textareas) are not spellchecked by
-//    default.
-
-void
-nsTextControlFrame::SyncRealTimeSpell()
-{
-  PRBool readOnly = PR_FALSE;
-  if (mEditor) {
-    PRUint32 flags;
-    mEditor->GetFlags(&flags);
-    if (flags & nsIPlaintextEditor::eEditorReadonlyMask)
-      readOnly = PR_TRUE;
-  }
-
-  PRBool enable = PR_FALSE;
-  if (!readOnly) {
-    // check the pref to see what the default should be, default is 0: never spellcheck
-    PRInt32 spellcheckLevel = nsContentUtils::GetIntPref(PREF_DEFAULT_SPELLCHECK, 0);
-    switch (spellcheckLevel) {
-      case SpellcheckAllTextFields:
-        enable = PR_TRUE;
-        break;
-      case SpellcheckMultiLineOnly:
-        enable = !IsSingleLineTextControl();
-        break;
-    }
-  }
-  SetEnableRealTimeSpell(enable);
-}
-
-// PrefCallback for real time spell pref
-// static
-int PR_CALLBACK nsTextControlFrame::RealTimeSpellCallback(const char* aPref, void* aContext)
-{
-  if (strcmp(aPref, PREF_DEFAULT_SPELLCHECK) == 0) {
-    nsTextControlFrame* frame = NS_STATIC_CAST(nsTextControlFrame*, aContext);
-    NS_ASSERTION(frame, "Pref callback: aContext was of an unexpected type");
-    frame->SyncRealTimeSpell();
-  }
-  return 0;
-}
-
 nsresult
 nsTextControlFrame::InitEditor()
 {
@@ -1783,10 +1703,6 @@ nsTextControlFrame::InitEditor()
   NS_ENSURE_TRUE(transMgr, NS_ERROR_FAILURE);
 
   transMgr->SetMaxTransactionCount(DEFAULT_UNDO_CAP);
-
-  SyncRealTimeSpell();
-  nsContentUtils::RegisterPrefCallback(PREF_DEFAULT_SPELLCHECK, 
-                                       nsTextControlFrame::RealTimeSpellCallback, this);
 
   if (IsPasswordTextControl()) {
     // Disable undo for password textfields.  Note that we want to do this at
@@ -2543,7 +2459,6 @@ nsTextControlFrame::AttributeChanged(PRInt32         aNameSpaceID,
         mSelCon->SetCaretEnabled(PR_TRUE);
     }    
     mEditor->SetFlags(flags);
-    SyncRealTimeSpell();
   }
   else if (mEditor && nsHTMLAtoms::disabled == aAttribute) 
   {

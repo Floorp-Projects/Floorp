@@ -75,7 +75,6 @@ REQUIRES	= xpcom \
 		  commandhandler \
 		  composer \
 		  editor \
-		  txtsvc \
 		  plugin \
 		  $(NULL)
 

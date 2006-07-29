@@ -2106,14 +2106,14 @@ function addRecipientsToIgnoreList(aAddressesToAdd)
 function StopInlineSpellChecker()
 {
   if (InlineSpellChecker.inlineSpellChecker)
-    InlineSpellChecker.inlineSpellChecker.enableRealTimeSpell = false;
+    InlineSpellChecker.editor.setSpellcheckUserOverride(false);
 }
 
 function ToggleInlineSpellChecker(target)
 {
   if (InlineSpellChecker.inlineSpellChecker)
   {
-    InlineSpellChecker.inlineSpellChecker.enableRealTimeSpell = !InlineSpellChecker.inlineSpellChecker.enableRealTimeSpell;
+    InlineSpellChecker.editor.setSpellcheckUserOverride(!InlineSpellChecker.inlineSpellChecker.enableRealTimeSpell);
 
     if (InlineSpellChecker.inlineSpellChecker.enableRealTimeSpell)
       InlineSpellChecker.checkDocument(window.content.document);

@@ -56,6 +56,7 @@
 #include "nsRuleData.h"
 #include "nsIFrame.h"
 #include "nsIDocShell.h"
+#include "nsIEditorDocShell.h"
 #include "nsCOMPtr.h"
 #include "nsIView.h"
 #include "nsLayoutAtoms.h"
@@ -115,6 +116,7 @@ public:
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  virtual already_AddRefed<nsIEditor> GetAssociatedEditor();
 
 protected:
   BodyRule* mContentStyleRule;
@@ -516,4 +518,33 @@ nsHTMLBodyElement::IsAttributeMapped(const nsIAtom* aAttribute) const
   };
 
   return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
+}
+
+already_AddRefed<nsIEditor>
+nsHTMLBodyElement::GetAssociatedEditor()
+{
+  nsIEditor* editor = nsnull;
+  if (NS_SUCCEEDED(GetEditorInternal(&editor)) && editor) {
+    return editor;
+  }
+
+  // Make sure this is the actual body of the document
+  if (!IsCurrentBodyElement()) {
+    return nsnull;
+  }
+
+  // For designmode, try to get document's editor
+  nsPresContext* presContext = GetPresContext();
+  if (!presContext) {
+    return nsnull;
+  }
+
+  nsCOMPtr<nsISupports> container = presContext->GetContainer();
+  nsCOMPtr<nsIEditorDocShell> editorDocShell = do_QueryInterface(container);
+  if (!editorDocShell) {
+    return nsnull;
+  }
+
+  editorDocShell->GetEditor(&editor);
+  return editor;
 }

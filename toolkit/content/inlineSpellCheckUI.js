@@ -118,7 +118,7 @@ var InlineSpellCheckerUI = {
   set enabled(isEnabled)
   {
     if (this.mInlineSpellChecker)
-      this.mInlineSpellChecker.enableRealTimeSpell = isEnabled;
+      this.mEditor.setSpellcheckUserOverride(isEnabled);
   },
 
   // returns true if the given event is over a misspelled word
@@ -272,8 +272,7 @@ var InlineSpellCheckerUI = {
   // callback for enabling or disabling spellchecking
   toggleEnabled: function()
   {
-    this.mInlineSpellChecker.enableRealTimeSpell =
-        ! this.mInlineSpellChecker.enableRealTimeSpell;
+    this.mEditor.setSpellcheckUserOverride(!this.mInlineSpellChecker.enableRealTimeSpell);
   },
 
   // callback for adding the current misspelling to the user-defined dictionary

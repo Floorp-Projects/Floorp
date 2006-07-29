@@ -155,13 +155,15 @@ public:
   nsresult GetClientHeight(PRInt32* aClientHeight);
   nsresult GetClientWidth(PRInt32* aClientWidth);
   nsresult ScrollIntoView(PRBool aTop);
-  // Declare Focus(), Blur(), GetTabIndex() and SetTabIndex() such
-  // that classes that inherit interfaces with those methods properly
-  // override them
+  // Declare Focus(), Blur(), GetTabIndex(), SetTabIndex(), GetSpellcheck() and
+  // SetSpellcheck() such that classes that inherit interfaces with those 
+  // methods properly override them
   NS_IMETHOD Focus();
   NS_IMETHOD Blur();
   NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex);
   NS_IMETHOD SetTabIndex(PRInt32 aTabIndex);
+  NS_IMETHOD GetSpellcheck(PRBool* aSpellcheck);
+  NS_IMETHOD SetSpellcheck(PRBool aSpellcheck);
 
   /**
    * Get the frame's offset information for offsetTop/Left/Width/Height.
@@ -749,6 +751,21 @@ protected:
    */
   NS_HIDDEN_(nsresult) GetEditor(nsIEditor** aEditor);
   NS_HIDDEN_(nsresult) GetEditorInternal(nsIEditor** aEditor);
+
+  /**
+   * Locates the nsIEditor associated with this node.  In general this is
+   * equivalent to GetEditorInternal(), but for designmode or contenteditable,
+   * this may need to get an editor that's not actually on this element's
+   * associated TextControlFrame.  This is used by the spellchecking routines
+   * to get the editor affected by changing the spellcheck attribute on this
+   * node.
+   */
+  virtual already_AddRefed<nsIEditor> GetAssociatedEditor();
+
+  /**
+   * Returns true if this is the current document's body element
+   */
+  PRBool IsCurrentBodyElement();
 };
 
 

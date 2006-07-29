@@ -459,8 +459,10 @@ pref("browser.backspace_action", 0);
 #endif
 
 // this will automatically enable inline spellchecking (if it is available) for
-// multi-line text entry controls <textarea>s in HTML
-// 0 = spellcheck nothing, 1 = check multi-line controls, 2 = check multi/single line controls
+// editable elements in HTML
+// 0 = spellcheck nothing
+// 1 = check multi-line controls [default]
+// 2 = check multi/single line controls
 pref("layout.spellcheckDefault", 1);
 
 pref("view_source.editor.path", "");
