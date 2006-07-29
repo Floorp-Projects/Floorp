@@ -34,7 +34,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/history/history.dtd" >
 
-<window title="&historyWindowTitle.label;" id="bookmark-window"
+<window title="&historyWindowTitle.label;" id="history-window"
         onload="HistoryInit();"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         width="500" height="400"
@@ -56,7 +56,7 @@
               commandupdater="true"
               events="select"
               oncommandupdate="updateHistoryCommands()"/>
-  <command id="cmd_searchHistory" oncommand="window.openDialog('chrome://communicator/content/bookmarks/bm-find.xul', 'FindBookmarksWindow', 'dialog=no,close,chrome,resizable', 'history');"/>
+  <command id="cmd_searchHistory" oncommand="window.openDialog('chrome://communicator/content/history/findHistory.xul', 'FindHistoryWindow', 'dialog=no,centerscreen,resizable=no,chrome,dependent');"/>
 
   <!-- File Menu -->
   <command id="cmd_newNavigator"/>
