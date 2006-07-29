@@ -9,7 +9,7 @@
 <!ENTITY newMenu.label						"New">
 <!ENTITY newMenu.accesskey					"e">
 <!ENTITY newBlankPageCmd.label "Blank Page to Edit">
-<!ENTITY newBlankPageCmd.accesskey "e" >
+<!ENTITY newBlankPageCmd.accesskey "E" >
 <!ENTITY newBlankPageCmd.key "n" >
 <!ENTITY newPageFromTemplateCmd.label "Page Using Template">
 <!ENTITY newPageFromTemplateCmd.accesskey "t">
@@ -18,7 +18,7 @@
 <!-- LOCALIZATION NOTE  (newNavigatorCmd.label): Do NOT translate "Navigator" -->
 <!ENTITY newNavigatorCmd.label				"Navigator Window">
 <!ENTITY newNavigatorCmd.key				"N">
-<!ENTITY newNavigatorCmd.accesskey			"n">
+<!ENTITY newNavigatorCmd.accesskey			"N">
 
 <!ENTITY pageSetupCmd.label					".Page Setup...">  
 
@@ -54,7 +54,7 @@
 <!ENTITY viewToolbarsMenu.label				"Show/Hide"> 
 <!ENTITY viewToolbarsMenu.accesskey			"w"> 
 <!ENTITY showTaskbarCmd.label					"Status Bar">  
-<!ENTITY showTaskbarCmd.accesskey				"s"> 
+<!ENTITY showTaskbarCmd.accesskey				"S"> 
 
 <!ENTITY helpMenu.label					"Help"> 
 <!ENTITY helpMenu.accesskey				"h"> 
@@ -90,6 +90,6 @@
 <!ENTITY releaseCmd.label				"Release Notes">
 <!ENTITY releaseCmd.accesskey				"r">
 <!ENTITY aboutCmd.label					"About &brandShortName;">
-<!ENTITY aboutCmd.accesskey				"a">
+<!ENTITY aboutCmd.accesskey				"A">
 <!ENTITY aboutCommPluginsCmd.label			"About Plug-ins">
 <!ENTITY aboutCommPluginsCmd.accesskey			"p">
