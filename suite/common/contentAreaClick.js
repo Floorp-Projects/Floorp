@@ -80,7 +80,7 @@
         var title = " ";
         var message = "";
         var ok =
-          promptService.Select
+          promptService.select
             (window, title, message, valueList.length, valueList, position)
         if (ok) {
           target.value = valueList[position.value];
