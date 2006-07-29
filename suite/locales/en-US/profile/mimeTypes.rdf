@@ -20,7 +20,6 @@
       <NC:handler about="urn:mimetype:handler:text/html"> 
         <NC:saveToDisk>false</NC:saveToDisk> 
         <NC:handleInternal>true</NC:handleInternal> 
-	<NC:handleInternal>false</NC:handleInternal> 
         <NC:externalApplicationProp>
           <NC:externalApplication> 
             <NC:prettyName></NC:prettyName> 
