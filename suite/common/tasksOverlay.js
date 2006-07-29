@@ -70,7 +70,8 @@ function toHistory()
     }
     gDisableHistory = true;
 
-    window.open( "chrome://communicator/content/history/history.xul", "_blank", "chrome,menubar,resizable,scrollbars" );
+    window.open( "chrome://communicator/content/history/history.xul", "_blank",
+        "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar" );
     setTimeout(enableHistory, 2000);
   }
 
@@ -108,7 +109,7 @@ function toOpenWindowByType( inType, uri )
 	if ( topWindow )
 		topWindow.focus();
 	else
-		window.open(uri, "_blank", "chrome,menubar,toolbar,resizable,scrollbars");
+		window.open(uri, "_blank", "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar");
 }
 
 
