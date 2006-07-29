@@ -137,9 +137,6 @@ pref("signon.rememberSignons",              true);
 pref("signon.expireMasterPassword",         false);
 
 pref("wallet.captureForms",                 true);
-pref("wallet.Server",                       "chrome://navigator/locale/navigator.properties");
-pref("wallet.Samples",                      "chrome://navigator/locale/navigator.properties");
-pref("wallet.version",                      "1");
 pref("wallet.enabled",                      true);
 pref("wallet.crypto",                       false);
 pref("wallet.crypto.autocompleteoverride",  false); // Ignore 'autocomplete=off' - available only when wallet.crypto is enabled. 
