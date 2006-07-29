@@ -115,7 +115,7 @@
     </menupopup>
   </menu>
   <menu id="menu_View">
-    <menupopup oncreate="fillViewMenu(this)">
+    <menupopup onpopupshowing="fillViewMenu(this)">
       <menu id="groupingMenu" label="&groupBy.label;" accesskey="&groupBy.accesskey;">
         <menupopup>
           <menuitem id="groupByDay" label="&groupByDay.label;" accesskey="&groupByDay.accesskey;" type="radio" oncommand="GroupBy('day');"/>
