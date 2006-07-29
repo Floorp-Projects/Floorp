@@ -263,14 +263,16 @@ function foundHeaderInfo(aSniffer, aData)
   var contentEncodingType = aSniffer.contentEncodingType;
 
   var shouldDecode = false;
+  var urlExt = null;
   // Are we allowed to decode?
   try {
     const helperAppService =
       Components.classes["@mozilla.org/uriloader/external-helper-app-service;1"].
         getService(Components.interfaces.nsIExternalHelperAppService);
     var url = aSniffer.uri.QueryInterface(Components.interfaces.nsIURL);
-    var urlExt = url.fileExtension;
-    if (helperAppService.applyDecodingForExtension(urlExt,
+    urlExt = url.fileExtension;
+    if (contentEncodingType && urlExt &&
+        helperAppService.applyDecodingForExtension(urlExt,
                                                    contentEncodingType)) {
       shouldDecode = true;
     }
@@ -295,7 +297,7 @@ function foundHeaderInfo(aSniffer, aData)
     contentType = contentEncodingType;
   }
 
-  appendFiltersForContentType(fp, contentType,
+  appendFiltersForContentType(fp, contentType, urlExt,
                               isDocument ? saveMode : SAVEMODE_FILEONLY);
 
   const prefSvcContractID = "@mozilla.org/preferences-service;1";
@@ -589,7 +591,7 @@ const SAVEMODE_COMPLETE_TEXT = 0x02;
 // must be the first filter appended.  The 'save page only' counterpart
 // must be the second filter appended.  And the 'save as complete text'
 // filter must be the third filter appended.
-function appendFiltersForContentType(aFilePicker, aContentType, aSaveMode)
+function appendFiltersForContentType(aFilePicker, aContentType, aFileExtension, aSaveMode)
 {
   var bundle = getStringBundle();
   // The bundle name for saving only a specific content type.
@@ -621,7 +623,7 @@ function appendFiltersForContentType(aFilePicker, aContentType, aSaveMode)
       throw "Invalid save mode for type '" + aContentType + "'";
     }
 
-    var mimeInfo = getMIMEInfoForType(aContentType);
+    var mimeInfo = getMIMEInfoForType(aContentType, aFileExtension);
     if (mimeInfo) {
       
       var extEnumerator = mimeInfo.getFileExtensions();
@@ -744,10 +746,10 @@ function getMIMETypeForURI(aURI)
   return null;
 }
 
-function getMIMEInfoForType(aMIMEType)
+function getMIMEInfoForType(aMIMEType, aExtension)
 {
   try {  
-    return getMIMEService().getFromTypeAndExtension(aMIMEType, null);
+    return getMIMEService().getFromTypeAndExtension(aMIMEType, aExtension);
   }
   catch (e) {
   }
@@ -839,11 +841,6 @@ function getDefaultExtension(aFilename, aURI, aContentType)
   if (aContentType == "text/plain" || aContentType == "application/octet-stream" || aURI.scheme == "ftp")
     return "";   // temporary fix for bug 120327
 
-  // This mirrors some code in nsExternalHelperAppService::DoContent
-  // Use the filename first and then the URI if that fails
-  
-  var mimeInfo = getMIMEInfoForType(aContentType);
-
   // First try the extension from the filename
   const stdURLContractID = "@mozilla.org/network/standard-url;1";
   const stdURLIID = Components.interfaces.nsIURL;
@@ -851,6 +848,11 @@ function getDefaultExtension(aFilename, aURI, aContentType)
   url.filePath = aFilename;
 
   var ext = url.fileExtension;
+
+  // This mirrors some code in nsExternalHelperAppService::DoContent
+  // Use the filename first and then the URI if that fails
+  
+  var mimeInfo = getMIMEInfoForType(aContentType, ext);
 
   if (ext && mimeInfo && mimeInfo.ExtensionExists(ext)) {
     return ext;
