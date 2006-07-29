@@ -38,6 +38,7 @@
     <NC:persist resource="chrome://messenger/content/messenger.xul#messengerWindow"/>
     <NC:persist resource="chrome://messenger/content/messenger.xul#sidebar-panels"/>
     <NC:persist resource="chrome://messenger/content/messenger.xul#sidebar-panels-splitter-box"/>
+    <NC:persist resource="chrome://messenger/content/messenger.xul#threadOutliner"/>
   </RDF:Description>
   <RDF:Description about="chrome://messenger/content/messenger.xul#messengerWindow">
     <screenX>4</screenX>
@@ -53,6 +54,7 @@
     <height>288</height>
     <hidden>true</hidden>
   </RDF:Description>
+  <RDF:Description about="chrome://messenger/content/messenger.xul#threadOutliner" height="94" />
   <RDF:Description about="chrome://messenger/content/mail3PaneWindowVertLayout.xul">
     <NC:persist resource="chrome://messenger/content/mail3PaneWindowVertLayout.xul#sidebar-panels-splitter-box"/>
     <NC:persist resource="chrome://messenger/content/mail3PaneWindowVertLayout.xul#sidebar-panels"/>
