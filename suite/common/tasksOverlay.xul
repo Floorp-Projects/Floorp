@@ -133,10 +133,10 @@
           <menuseparator/>
 
           <menu value="&toolsMenu.label;" accesskey="&toolsMenu.accesskey;">
-            <menupopup id="toolsPopup">
+            <menupopup id="toolsPopup" oncreate="javaItemEnabling();">
               <menuitem value="&historyCmd.label;" accesskey="&historyCmd.accesskey;" oncommand="toHistory()" key="key_gotoHistory"/>
               <menuitem value="&importUtilCmd.label;" accesskey="&importUtilCmd.accesskey;" oncommand="toImport()"/>
-              <menuitem value="&javaConsoleCmd.label;" accesskey="&javaConsoleCmd.accesskey;" oncommand="toJavaConsole()"/>
+              <menuitem id="java" value="&javaConsoleCmd.label;" accesskey="&javaConsoleCmd.accesskey;" oncommand="toJavaConsole()"/>
               <menuitem value="&javaScriptConsoleCmd.label;" accesskey="&javaScriptConsoleCmd.accesskey;" oncommand="toJavaScriptConsole();"/>
             </menupopup>
           </menu>
