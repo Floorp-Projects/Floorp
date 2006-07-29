@@ -532,8 +532,8 @@ sub bz_setup_database {
 
 
 sub bz_enum_initial_values {
-    my ($self, $enum_defaults) = @_;
-    my %enum_values = %$enum_defaults;
+    my ($self) = @_;
+    my %enum_values = %{$self->ENUM_DEFAULTS};
     # Get a complete description of the 'bugs' table; with DBD::MySQL
     # there isn't a column-by-column way of doing this.  Could use
     # $dbh->column_info, but it would go slower and we would have to

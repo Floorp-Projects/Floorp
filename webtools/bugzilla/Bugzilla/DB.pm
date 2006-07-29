@@ -43,11 +43,34 @@ use Bugzilla::Util;
 use Bugzilla::Error;
 use Bugzilla::DB::Schema;
 
+use List::Util qw(max);
+
 #####################################################################
 # Constants
 #####################################################################
 
 use constant BLOB_TYPE => DBI::SQL_BLOB;
+
+# Set default values for what used to be the enum types.  These values
+# are no longer stored in localconfig.  If we are upgrading from a
+# Bugzilla with enums to a Bugzilla without enums, we use the
+# enum values.
+#
+# The values that you see here are ONLY DEFAULTS. They are only used
+# the FIRST time you run checksetup.pl, IF you are NOT upgrading from a
+# Bugzilla with enums. After that, they are either controlled through
+# the Bugzilla UI or through the DB.
+use constant ENUM_DEFAULTS => {
+    bug_severity  => ['blocker', 'critical', 'major', 'normal',
+                      'minor', 'trivial', 'enhancement'],
+    priority     => ["P1","P2","P3","P4","P5"],
+    op_sys       => ["All","Windows","Mac OS","Linux","Other"],
+    rep_platform => ["All","PC","Macintosh","Other"],
+    bug_status   => ["UNCONFIRMED","NEW","ASSIGNED","REOPENED","RESOLVED",
+                     "VERIFIED","CLOSED"],
+    resolution   => ["","FIXED","INVALID","WONTFIX","LATER","REMIND",
+                     "DUPLICATE","WORKSFORME","MOVED"],
+};
 
 #####################################################################
 # Connection Methods
@@ -368,11 +391,18 @@ sub bz_setup_database {
     }
 }
 
-# The default implementation just returns what you passed-in. This function
-# really exists just to be overridden in Bugzilla::DB::Mysql.
+# This really just exists to get overridden in Bugzilla::DB::Mysql.
 sub bz_enum_initial_values {
-    my ($self, $enum_defaults) = @_;
-    return $enum_defaults;
+    return ENUM_DEFAULTS;
+}
+
+sub bz_populate_enum_tables {
+    my ($self) = @_;
+
+    my $enum_values = $self->bz_enum_initial_values();
+    while (my ($table, $values) = each %$enum_values) {
+        $self->_bz_populate_enum_table($table, $values);
+    }
 }
 
 #####################################################################
@@ -952,6 +982,30 @@ sub _bz_store_real_schema {
     $sth->execute();
 }
 
+# For bz_populate_enum_tables
+sub _bz_populate_enum_table {
+    my ($self, $table, $valuelist) = @_;
+
+    my $sql_table = $self->quote_identifier($table);
+
+    # Check if there are any table entries
+    my $table_size = $self->selectrow_array("SELECT COUNT(*) FROM $sql_table");
+
+    # If the table is empty...
+    if (!$table_size) {
+        my $insert = $self->prepare(
+            "INSERT INTO $sql_table (value,sortkey) VALUES (?,?)");
+        print "Inserting values into the '$table' table:\n";
+        my $sortorder = 0;
+        my $maxlen    = max(map(length($_), @$valuelist)) + 2;
+        foreach my $value (@$valuelist) {
+            $sortorder += 100;
+            printf "%-${maxlen}s sortkey: $sortorder\n", "'$value'";
+            $insert->execute($value, $sortorder);
+        }
+    }
+}
+
 1;
 
 __END__
@@ -1331,15 +1385,17 @@ the database.
 
 =over 4
 
-=item C<bz_enum_initial_values(\%enum_defaults)>
+=item C<bz_populate_enum_tables()>
 
- Description: For an upgrade or an initial installation, provides
-              what the values should be for the "enum"-type fields,
-              such as version, op_sys, rep_platform, etc.
- Params:      \%enum_defaults - The default initial list of values for
-                                each enum field. A hash, with the field
-                                names pointing to an arrayref of values.
- Returns:     A hashref with the correct initial values for the enum fields.
+Description: For an upgrade or an initial installation, populates
+             the tables that hold the legal values for the old
+             "enum" fields: C<bug_severity>, C<resolution>, etc.
+             Prints out information if it inserts anything into the
+             DB.
+
+Params:      none
+
+Returns:     nothing
 
 =back
 

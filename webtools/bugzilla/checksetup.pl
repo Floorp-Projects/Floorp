@@ -339,74 +339,8 @@ my $dbh = Bugzilla->dbh;
 # Note: table definitions are now in Bugzilla::DB::Schema.
 $dbh->bz_setup_database();
 
-###########################################################################
-# Detect changed local settings
-###########################################################################
-
-# Nick Barnes nb+bz@ravenbrook.com 2005-10-05
-# 
-# PopulateEnumTable($table, @values): if the table $table has no
-# entries, fill it with the entries in the list @values, in the same
-# order as that list.
-
-sub PopulateEnumTable {
-    my ($table, @valuelist) = @_;
-
-    # If we encounter any of the keys in this hash, they are 
-    # automatically set to isactive=0
-    my %defaultinactive = ('---' => 1);
-
-    # Check if there are any table entries
-    my $query = "SELECT COUNT(id) FROM $table";
-    my $sth = $dbh->prepare($query);
-    $sth->execute();
-
-    # If the table is empty...
-    if ( !$sth->fetchrow_array() ) {
-        my $insert = $dbh->prepare("INSERT INTO $table"
-            . " (value,sortkey,isactive) VALUES (?,?,?)");
-        my $sortorder = 0;
-        foreach my $value (@valuelist) {
-            $sortorder = $sortorder + 100;
-            # Not active if the value exists in $defaultinactive
-            my $isactive = exists($defaultinactive{$value}) ? 0 : 1;
-            print "Inserting value '$value' in table $table" 
-                . " with sortkey $sortorder...\n";
-            $insert->execute($value, $sortorder, $isactive);
-        }
-    }
-}
-
-# Set default values for what used to be the enum types.  These values
-# are no longer stored in localconfig.  If we are upgrading from a
-# Bugzilla with enums to a Bugzilla without enums, we use the
-# enum values.
-#
-# The values that you see here are ONLY DEFAULTS. They are only used
-# the FIRST time you run checksetup, IF you are NOT upgrading from a
-# Bugzilla with enums. After that, they are either controlled through
-# the Bugzilla UI or through the DB.
-
-my $enum_defaults = {
-    bug_severity  => ['blocker', 'critical', 'major', 'normal',
-                      'minor', 'trivial', 'enhancement'],
-    priority     => ["P1","P2","P3","P4","P5"],
-    op_sys       => ["All","Windows","Mac OS","Linux","Other"],
-    rep_platform => ["All","PC","Macintosh","Other"],
-    bug_status   => ["UNCONFIRMED","NEW","ASSIGNED","REOPENED","RESOLVED",
-                     "VERIFIED","CLOSED"],
-    resolution   => ["","FIXED","INVALID","WONTFIX","LATER","REMIND",
-                     "DUPLICATE","WORKSFORME","MOVED"],
-};
-
-# Get all the enum column values for the existing database, or the
-# defaults if the columns are not enums.
-my $enum_values = $dbh->bz_enum_initial_values($enum_defaults);
-
-# Populate the enum tables.
-while (my ($table, $values) = each %$enum_values) {
-    PopulateEnumTable($table, @$values);
-}
+# Populate the tables that hold the values for the <select> fields.
+$dbh->bz_populate_enum_tables();
 
 ###########################################################################
 # Check data directory
