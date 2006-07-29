@@ -96,45 +96,40 @@ function findInPage(findInstData)
 
 function findAgainInPage(findInstData, reverse)
 {
-  if ("findDialog" in window && window.findDialog)
-    window.findDialog.focus();
-  else
-  {
-    // get the find service, which stores global find state, and init the
-    // nsIWebBrowser find with it. We don't assume that there was a previous
-    // Find that set this up.
-    var findService = Components.classes["@mozilla.org/find/find_service;1"]
-                           .getService(Components.interfaces.nsIFindService);
+  // get the find service, which stores global find state, and init the
+  // nsIWebBrowser find with it. We don't assume that there was a previous
+  // Find that set this up.
+  var findService = Components.classes["@mozilla.org/find/find_service;1"]
+                         .getService(Components.interfaces.nsIFindService);
 
-    var searchString = findService.searchString;
-    if (searchString.length == 0) {
-      // no previous find text
-      findInPage(findInstData);
-      return;
-    }
-
-    findInstData.init();
-    var findInst = findInstData.webBrowserFind;
-    findInst.searchString  = searchString;
-    findInst.matchCase     = findService.matchCase;
-    findInst.wrapFind      = findService.wrapFind;
-    findInst.entireWord    = findService.entireWord;
-    findInst.findBackwards = findService.findBackwards ^ reverse;
-
-    var found = findInst.findNext();
-    if (!found) {
-      if (!gPromptService)
-        gPromptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService()
-                                   .QueryInterface(Components.interfaces.nsIPromptService);                                     
-      if (!gFindBundle)
-        gFindBundle = document.getElementById("findBundle");
-          
-      gPromptService.alert(window, gFindBundle.getString("notFoundTitle"), gFindBundle.getString("notFoundWarning"));
-    }      
-
-    // Reset to normal value, otherwise setting can get changed in find dialog
-    findInst.findBackwards = findService.findBackwards; 
+  var searchString = findService.searchString;
+  if (searchString.length == 0) {
+    // no previous find text
+    findInPage(findInstData);
+    return;
   }
+
+  findInstData.init();
+  var findInst = findInstData.webBrowserFind;
+  findInst.searchString  = searchString;
+  findInst.matchCase     = findService.matchCase;
+  findInst.wrapFind      = findService.wrapFind;
+  findInst.entireWord    = findService.entireWord;
+  findInst.findBackwards = findService.findBackwards ^ reverse;
+
+  var found = findInst.findNext();
+  if (!found) {
+    if (!gPromptService)
+      gPromptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService()
+                                 .QueryInterface(Components.interfaces.nsIPromptService);                                     
+    if (!gFindBundle)
+      gFindBundle = document.getElementById("findBundle");
+        
+    gPromptService.alert(window, gFindBundle.getString("notFoundTitle"), gFindBundle.getString("notFoundWarning"));
+  }      
+
+  // Reset to normal value, otherwise setting can get changed in find dialog
+  findInst.findBackwards = findService.findBackwards; 
 }
 
 function canFindAgainInPage()
