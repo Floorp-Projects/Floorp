@@ -1,0 +1,48 @@
+<?xml version="1.0"?> 
+<!-- mac version of platformEditorBindings.xul -->
+
+<keybinding id="platformEditorBindings"
+	 xmlns:html="http://www.w3.org/TR/REC-html40"
+	 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<!-- Mac-specific key bindings -->
+<keyset id="editorKeySet" xulkey="meta">
+
+<!-- replace the Windows/Unix xul-Y Redo binding with xul-shift-Z -->
+<key id="noWinRedo" key="y" xulkey="true" shift="false" cancel="true"/>
+<key id="macRedokb" key="Z" xulkey="true" shift="true" control="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_redo');
+    controller.doCommand('cmd_redo');"/>
+
+<!-- Mac bindings for home and end -->
+<key id="macHomekb" keycode="VK_HOME" control="false" shift="false" alt="false"
+   onkeypress="
+     var controller = document.commandDispatcher.getControllerForCommand('cmd_scrollTop');
+     controller.doCommand('cmd_scrollTop');"/>
+<key id="macEndkb" keycode="VK_END" control="false" shift="false" alt="false"
+   onkeypress="
+     var controller = document.commandDispatcher.getControllerForCommand('cmd_scrollBottom');
+     controller.doCommand('cmd_scrollBottom');"/>
+
+<key id="key_leftcontrol" keycode="VK_LEFT" shift="false" xulkey="true" alt="false"
+    onkeypress="
+      var controller = document.commandDispatcher.getControllerForCommand('cmd_wordPrevious');
+      controller.doCommand('cmd_wordPrevious');"/>
+<key id="key_rightcontrol" keycode="VK_RIGHT" shift="false" xulkey="true" alt="false"
+    onkeypress="
+      var controller = document.commandDispatcher.getControllerForCommand('cmd_wordNext');
+      controller.doCommand('cmd_wordNext');"/>
+<key id="key_leftshiftcontrol" keycode="VK_LEFT" shift="true" xulkey="true" alt="false"
+    onkeypress="
+      var controller = document.commandDispatcher.getControllerForCommand('cmd_selectWordPrevious');
+      controller.doCommand('cmd_selectWordPrevious');"/>
+<key id="key_rightshiftcontrol" keycode="VK_RIGHT" shift="true" xulkey="true" alt="false"
+    onkeypress="
+      var controller = document.commandDispatcher.getControllerForCommand('cmd_selectWordNext');
+      controller.doCommand('cmd_selectWordNext');"/>
+</keyset>
+<!-- End Mac-specific key bindings -->
+
+</keybinding>
+
