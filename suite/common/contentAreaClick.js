@@ -134,6 +134,7 @@
       prefillTextBox(target); // prefill the empty text field if possible
     }
     else {
+      linkNode = event.originalTarget;
       while (linkNode && !(linkNode instanceof HTMLAnchorElement))
         linkNode = linkNode.parentNode;
       // <a> cannot be nested.  So if we find an anchor without an
