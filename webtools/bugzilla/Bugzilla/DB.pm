@@ -37,6 +37,8 @@ use base qw(DBI::db);
 
 use Bugzilla::Config qw(:db);
 use Bugzilla::Constants;
+use Bugzilla::Install::Requirements;
+use Bugzilla::Install::Localconfig;
 use Bugzilla::Util;
 use Bugzilla::Error;
 use Bugzilla::DB::Schema;
@@ -62,10 +64,7 @@ sub connect_shadow {
 }
 
 sub connect_main {
-    my ($no_db_name) = @_;
-    my $connect_to_db = $db_name;
-    $connect_to_db = "" if $no_db_name;
-    return _connect($db_driver, $db_host, $connect_to_db, $db_port,
+    return _connect($db_driver, $db_host, $db_name, $db_port,
                     $db_sock, $db_user, $db_pass);
 }
 
@@ -93,6 +92,134 @@ sub _handle_error {
         if length($_[0]) > 4000;
     $_[0] = Carp::longmess($_[0]);
     return 0; # Now let DBI handle raising the error
+}
+
+sub bz_check_requirements {
+    my ($output) = @_;
+
+    my $db = DB_MODULE->{lc($db_driver)};
+    # Only certain values are allowed for $db_driver.
+    if (!defined $db) {
+        die "$db_driver is not a valid choice for \$db_driver in"
+            . bz_locations()->{'localconfig'};
+    }
+
+    # Check the existence and version of the DBD that we need.
+    my $dbd        = $db->{dbd};
+    my $dbd_ver    = $db->{dbd_version};
+    my $sql_server = $db->{name};
+    my $sql_want   = $db->{db_version};
+    unless (have_vers($dbd, $dbd_ver, $output)) {
+        my $command = install_command($dbd);
+        my $root    = ROOT_USER;
+        my $version = $dbd_ver ? " $dbd_ver or higher" : '';
+        print <<EOT;
+
+For $sql_server, Bugzilla requires that perl's ${dbd}${version} be 
+installed. To install this module, run the following command (as $root):
+
+    $command
+
+EOT
+        exit;
+    }
+
+    # We don't try to connect to the actual database if $db_check is
+    # disabled.
+    return unless $db_check;
+
+    # And now check the version of the database server itself.
+    my $dbh = _get_no_db_connection();
+
+    printf("Checking for %15s %-9s ", $sql_server, "(v$sql_want)")
+        if $output;
+    my $sql_vers = $dbh->bz_server_version;
+    $dbh->disconnect;
+
+    # Check what version of the database server is installed and let
+    # the user know if the version is too old to be used with Bugzilla.
+    if ( vers_cmp($sql_vers,$sql_want) > -1 ) {
+        print "ok: found v$sql_vers\n" if $output;
+    } else {
+        print <<EOT;
+
+Your $sql_server v$sql_vers is too old. Bugzilla requires version
+$sql_want or later of $sql_server. Please download and install a
+newer version.
+
+EOT
+        exit;
+    }
+}
+
+# Note that this function requires that localconfig exist and
+# be valid.
+sub bz_create_database {
+    my $dbh;
+    # See if we can connect to the actual Bugzilla database.
+    my $conn_success = eval { $dbh = connect_main(); };
+
+    if (!$conn_success) {
+        $dbh = _get_no_db_connection();
+        print "\nCreating database $db_name...\n";
+
+        # Try to create the DB, and if we fail print a friendly error.
+        if (!eval { $dbh->do("CREATE DATABASE $db_name") }) {
+            my $error = $dbh->errstr;
+            chomp($error);
+            print STDERR  "The '$db_name' database could not be created.",
+                          " The error returned was:\n\n    $error\n\n",
+                          _bz_connect_error_reasons();
+            exit;
+        }
+    }
+
+    $dbh->disconnect;
+}
+
+# A helper for bz_create_database and bz_check_requirements.
+sub _get_no_db_connection {
+    my ($sql_server) = @_;
+    my $dbh;
+    my $conn_success = eval {
+        $dbh = _connect($db_driver, $db_host, '', $db_port,
+                        $db_sock, $db_user, $db_pass);
+    };
+    if (!$conn_success) {
+        my $sql_server = DB_MODULE->{lc($db_driver)}->{name};
+        # Can't use $dbh->errstr because $dbh is undef.
+        my $error = $DBI::errstr;
+        chomp($error);
+        print STDERR "There was an error connecting to $sql_server:\n\n",
+                     "    $error\n\n", _bz_connect_error_reasons();
+        exit;
+    }
+    return $dbh;    
+}
+
+# Just a helper because we have to re-use this text.
+# We don't use this in db_new because it gives away the database
+# username, and db_new errors can show up on CGIs.
+sub _bz_connect_error_reasons {
+    my $lc_file = bz_locations()->{'localconfig'};
+    my $db      = DB_MODULE->{lc($db_driver)};
+    my $server  = $db->{name};
+
+return <<EOT;
+This might have several reasons:
+
+* $server is not running.
+* $server is running, but there is a problem either in the
+  server configuration or the database access rights. Read the Bugzilla
+  Guide in the doc directory. The section about database configuration
+  should help.
+* Your password for the '$db_user' user, specified in \$db_pass, is 
+  incorrect, in '$lc_file'.
+* There is a subtle problem with Perl, DBI, or $server. Make
+  sure all settings in '$lc_file' are correct. If all else fails, set
+  '\$db_check' to 0.
+
+EOT
 }
 
 # List of abstract methods we are checking the derived class implements
@@ -922,6 +1049,33 @@ should not be called from anywhere else.
               This routine C<die>s if no shadow database is configured.
  Params:      none
  Returns:     new instance of the DB class
+
+=item C<bz_check_requirements($output)>
+
+Description: Checks to make sure that you have the correct
+             DBD and database version installed for the
+             database that Bugzilla will be using.
+             Prints a message and exits if you don't
+             pass the requirements.
+             If C<$db_check> is true (from F<localconfig>), we won't
+             check the database version.
+
+Params:      C<$output> - C<true> if the function should display
+                 informational output about what it's doing, such
+                 as versions found.
+
+Returns:     nothing
+
+=item C<bz_create_database()>
+
+Description: Creates an empty database with the name
+             C<$db_name>, if that database doesn't
+             already exist. Prints an error message and
+             exits if we can't create the database.
+
+Params:      none
+
+Returns:     nothing
 
 =item C<_connect>
 

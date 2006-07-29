@@ -41,7 +41,8 @@ use Bugzilla::Constants;
 %Bugzilla::Config::EXPORT_TAGS =
   (
    admin => [qw(UpdateParams SetParam WriteParams)],
-   db => [qw($db_driver $db_host $db_port $db_name $db_user $db_pass $db_sock)],
+   db => [qw($db_driver $db_host $db_port $db_name $db_user $db_pass $db_sock
+             $db_check)],
    localconfig => [qw($cvsbin $interdiffbin $diffpath $webservergroup)],
   );
 Exporter::export_ok_tags('admin', 'db', 'localconfig');

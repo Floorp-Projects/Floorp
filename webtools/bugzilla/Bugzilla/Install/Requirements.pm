@@ -33,9 +33,6 @@ our @EXPORT = qw(
     check_requirements
     have_vers
     vers_cmp
-);
-
-our @EXPORT_OK = qw(
     install_command
 );
 

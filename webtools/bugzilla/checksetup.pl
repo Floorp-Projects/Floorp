@@ -304,6 +304,8 @@ import Bugzilla::Bug qw(is_open_state);
 require Bugzilla::Install::Localconfig;
 import Bugzilla::Install::Localconfig qw(read_localconfig update_localconfig);
 
+require Bugzilla::DB;
+
 ###########################################################################
 # Check and update --LOCAL-- configuration
 ###########################################################################
@@ -312,94 +314,23 @@ print "Reading " .  bz_locations()->{'localconfig'} . "...\n" unless $silent;
 update_localconfig({ output => !$silent, answer => \%answer });
 my $lc_hash = read_localconfig();
 
-# XXX Eventually these two variables can be eliminated, but they are
+# XXX Eventually this variable can be eliminated, but it is
 # used more than once throughout checksetup right now.
-my $my_db_driver      = $lc_hash->{'db_driver'};
 my $my_webservergroup = $lc_hash->{'webservergroup'};
 
 ###########################################################################
-# Check Database setup
+# Check --DATABASE-- setup
 ###########################################################################
 
-#
-# Check if we have access to the --DATABASE--
-#
 # At this point, localconfig is defined and is readable. So we know
 # everything we need to create the DB. We have to create it early,
-# because some data required to populate data/params are stored in the DB.
+# because some data required to populate data/params is stored in the DB.
 
-if ($lc_hash->{'db_check'}) {
-    # Only certain values are allowed for $db_driver.
-    if (!exists DB_MODULE->{lc($my_db_driver)}) {
-        die "$my_db_driver is not a valid choice for \$db_driver in",
-            " localconfig";
-    }
-
-    # Check the existence and version of the DBD that we need.
-    my $actual_dbd     = DB_MODULE->{lc($my_db_driver)}->{dbd};
-    my $actual_dbd_ver = DB_MODULE->{lc($my_db_driver)}->{dbd_version};
-    my $sql_server     = DB_MODULE->{lc($my_db_driver)}->{name};
-    my $sql_want       = DB_MODULE->{lc($my_db_driver)}->{db_version};
-    unless (have_vers($actual_dbd, $actual_dbd_ver, !$silent)) {
-        print "For $sql_server, Bugzilla requires that perl's"
-              . " $actual_dbd be installed.\nTo install this module,"
-              . " you can do:\n   " . install_command($actual_dbd) . "\n";
-        exit;
-    }
-
-    # And now check the version of the database server itself.
-    my $dbh = Bugzilla::DB::connect_main("no database connection");
-    printf("Checking for %15s %-9s ", $sql_server, "(v$sql_want)") unless $silent;
-    my $sql_vers = $dbh->bz_server_version;
-
-    # Check what version of the database server is installed and let
-    # the user know if the version is too old to be used with Bugzilla.
-    if ( vers_cmp($sql_vers,$sql_want) > -1 ) {
-        print "ok: found v$sql_vers\n" unless $silent;
-    } else {
-        die "\nYour $sql_server v$sql_vers is too old.\n" . 
-            "   Bugzilla requires version $sql_want or later of $sql_server.\n" . 
-            "   Please download and install a newer version.\n";
-    }
-
-    # See if we can connect to the database.
-    my $conn_success = eval { 
-        my $check_dbh = Bugzilla::DB::connect_main(); 
-        $check_dbh->disconnect;
-    };
-    if (!$conn_success) {
-       my $my_db_name = $lc_hash->{'db_name'};
-       print "Creating database $my_db_name ...\n";
-       # Try to create the DB, and if we fail print an error.
-       if (!eval { $dbh->do("CREATE DATABASE $my_db_name") }) {
-            my $error = $dbh->errstr;
-            my $localconfig = bz_locations()->{'localconfig'};
-            die <<"EOF"
-
-The '$my_db_name' database could not be created.  The error returned was:
-
-$error
-
-This might have several reasons:
-
-* $sql_server is not running.
-* $sql_server is running, but there is a problem either in the
-  server configuration or the database access rights. Read the Bugzilla
-  Guide in the doc directory. The section about database configuration
-  should help.
-* There is a subtle problem with Perl, DBI, or $sql_server. Make
-  sure all settings in '$localconfig' are correct. If all else fails, set
-  '\$db_check' to zero.\n
-EOF
-        }
-    }
-    $dbh->disconnect if $dbh;
-}
+Bugzilla::DB::bz_check_requirements(!$silent);
+Bugzilla::DB::bz_create_database() if $lc_hash->{'db_check'};
 
 # now get a handle to the database:
-my $dbh = Bugzilla::DB::connect_main();
-
-END { $dbh->disconnect if $dbh }
+my $dbh = Bugzilla->dbh;
 
 ###########################################################################
 # Create tables
