@@ -104,6 +104,8 @@ function openNewWindowWith(url, sendReferrer)
 
 function openTopBrowserWith(url)
 {
+  urlSecurityCheck(url, document);
+
   var windowMediator = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator);
   var browserWin = windowMediator.getMostRecentWindow("navigator:browser");
 
