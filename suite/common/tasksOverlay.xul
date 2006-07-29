@@ -29,11 +29,12 @@
 
 
       <!-- Tasks Menu -->
-      <menu id="tasksMenu" label="&tasksMenu.label;" accesskey="&tasksMenu.accesskey;" datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot">
+      <menu id="tasksMenu" label="&tasksMenu.label;" accesskey="&tasksMenu.accesskey;" datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot"
+            onpopupshown="checkFocusedWindow();">
         <template>
           <rule>
             <menupopup>
-              <menuitem uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#KeyIndex rdf:http://home.netscape.com/NC-rdf#Name" 
+              <menuitem uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#KeyIndex rdf:http://home.netscape.com/NC-rdf#Name" type="radio"
                         oncommand="ShowWindowFromResource(event.target)" accesskey="rdf:http://home.netscape.com/NC-rdf#KeyIndex"/>
             </menupopup>
           </rule>
@@ -62,7 +63,7 @@
               <menuitem label="&javaScriptConsoleCmd.label;" accesskey="&javaScriptConsoleCmd.accesskey;" oncommand="toJavaScriptConsole();"/>
             </menupopup>
           </menu>
-          <menuseparator/>
+          <menuseparator id="sep-window-list"/>
 
         </menupopup>
       </menu>
