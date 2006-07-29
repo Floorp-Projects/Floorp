@@ -288,7 +288,7 @@
         <body>
         <![CDATA[
           if (this.hasAttribute("disableautoselect"))
-            return "";
+            return;
 
           // Find and select the menuitem that matches inputField's "value"
           var arr = null;
