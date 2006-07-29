@@ -203,7 +203,6 @@ function findParentNode(node, parentNode)
 //  - File    ->  Save Page/Frame As...
 //  - Context ->  Save Page/Frame As...
 //  - Context ->  Save Link As...
-//  - Context ->  Save Image As...
 //  - Shift-Click Save Link As
 //
 // Try saving each of these types:
@@ -217,10 +216,42 @@ function findParentNode(node, parentNode)
 // - A linked document using Save Link As...
 // - A linked document using shift-click Save Link As...
 //
-function saveURL(aURL, aFileName, aFilePickerTitleKey, aShouldBypassCache, aReferrer)
+function saveURL(aURL, aFileName, aFilePickerTitleKey, aShouldBypassCache,
+                 aReferrer)
 {
-  internalSave(aURL, null, aFileName, aShouldBypassCache,
+  internalSave(aURL, null, aFileName, null, null, aShouldBypassCache,
                aFilePickerTitleKey, null, aReferrer);
+}
+
+// Just like saveURL, but will get some info off the image before
+// calling internalSave
+// Clientelle: (Make sure you don't break any of these)
+//  - Context ->  Save Image As...
+const imgICache = Components.interfaces.imgICache;
+const nsISupportsCString = Components.interfaces.nsISupportsCString;
+
+function saveImageURL(aURL, aFileName, aFilePickerTitleKey, aShouldBypassCache,
+                      aReferrer)
+{
+  var contentType = null;
+  var contentDisposition = null;
+  if (!aShouldBypassCache) {
+    try {
+      var imageCache = Components.classes["@mozilla.org/image/cache;1"]
+                                 .getService(imgICache);
+      var props =
+        imageCache.findEntryProperties(makeURI(aURL, getCharsetforSave(null)));
+      if (props) {
+        contentType = props.get("type", nsISupportsCString);
+        contentDisposition = props.get("content-disposition",
+                                       nsISupportsCString);
+      }
+    } catch (e) {
+      // Failure to get type and content-disposition off the image is non-fatal
+    }
+  }
+  internalSave(aURL, null, aFileName, contentDisposition, contentType,
+               aShouldBypassCache, aFilePickerTitleKey, null, aReferrer);
 }
 
 function saveFrameDocument()
@@ -232,14 +263,23 @@ function saveFrameDocument()
 
 function saveDocument(aDocument)
 {
-  // In both cases here, we want to use cached data because the
-  // document is currently visible.
-  if (aDocument)
-    internalSave(aDocument.location.href, aDocument,
-                 null, false, null, null);
-  else
-    internalSave(content.location.href,  null,
-                 null, false, null, null);
+  if (!aDocument) {
+    throw "Must have a document when calling saveDocument";
+  }
+
+  // We want to use cached data because the document is currently visible.
+  var dispHeader = null;
+  try {
+    dispHeader =
+      aDocument.defaultView
+               .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+               .getInterface(Components.interfaces.nsIDOMWindowUtils)
+               .getDocumentMetadata("content-disposition");
+  } catch (ex) {
+    // Failure to get a content-disposition is ok
+  }
+  internalSave(aDocument.location.href, aDocument, null, dispHeader,
+               aDocument.contentType, false, null, null);
 }
 
 const SAVETYPE_COMPLETE_PAGE = 0x00;
@@ -258,19 +298,25 @@ const SAVETYPE_TEXT_ONLY     = 0x02;
  * @param aDocument The document to be saved
  * @param aDefaultFileName The caller-provided suggested filename if we don't
  *        find a better one
+ * @param aContentDisposition The caller-provided content-disposition header
+ *         to use.
+ * @param aContentType The caller-provided content-type to use
  * @param aShouldBypassCache If true, the document will always be refetched
  *        from the server
  * @param aFilePickerTitleKey Alternate title for the file picker
  * @param aChosenData If non-null this contains an instance of object AutoChosen
  *        (see below) which holds pre-determined data so that the user does not
  *        need to be prompted for a target filename.
+ * @param aReferrer the referrer URI object (not URL string) to use.  If this
+ *        is null, the URI of the currently focused content (non-chrome)
+ *        document in this window will be used.
  */
-function internalSave(aURL, aDocument, aDefaultFileName, aShouldBypassCache,
-                      aFilePickerTitleKey, aChosenData, aReferrer)
+function internalSave(aURL, aDocument, aDefaultFileName, aContentDisposition,
+                      aContentType, aShouldBypassCache, aFilePickerTitleKey,
+                      aChosenData, aReferrer)
 {
   // Note: aDocument == null when this code is used by save-link-as...
-  var contentType = (aDocument ? aDocument.contentType : null);
-  var saveMode = GetSaveModeForContentType(contentType);
+  var saveMode = GetSaveModeForContentType(aContentType);
   var isDocument = aDocument != null && saveMode != SAVEMODE_FILEONLY;
   var saveAsType = SAVETYPE_COMPLETE_PAGE;
 
@@ -281,12 +327,12 @@ function internalSave(aURL, aDocument, aDefaultFileName, aShouldBypassCache,
   if (aChosenData)
     file = aChosenData.file;
   else {
-    initFileInfo(fileInfo, aURL, aDocument, contentType);
+    initFileInfo(fileInfo, aURL, aDocument, aContentType, aContentDisposition);
     var fpParams = {
       fpTitleKey: aFilePickerTitleKey,
       isDocument: isDocument,
       fileInfo: fileInfo,
-      contentType: contentType,
+      contentType: aContentType,
       saveMode: saveMode,
       saveAsType: saveAsType,
       file: file,
@@ -319,7 +365,9 @@ function internalSave(aURL, aDocument, aDefaultFileName, aShouldBypassCache,
   var source = useSaveDocument ? aDocument : fileInfo.uri;
   var persistArgs = {
     source      : source,
-    contentType : (!aChosenData && useSaveDocument && saveAsType == SAVETYPE_TEXT_ONLY) ? "text/plain" : contentType,
+    contentType : (!aChosenData && useSaveDocument &&
+                   saveAsType == SAVETYPE_TEXT_ONLY) ?
+                  "text/plain" : aContentType,
     target      : fileURL,
     postData    : isDocument ? getPostData() : null,
     bypassCache : aShouldBypassCache
@@ -418,10 +466,12 @@ function FileInfo(aSuggestedFileName, aFileName, aFileBaseName, aFileExt, aUri) 
  * @param aFI A FileInfo structure into which we'll put the results of this method.
  * @param aURL The String representation of the URL of the document being saved
  * @param aDocument The document to be saved
- * @param aContentType The content type of the document, if it could be
+ * @param aContentType The content type we're saving, if it could be
  *        determined by the caller.
+ * @param aContentDisposition The content-disposition header for the object
+ *        we're saving, if it could be determined by the caller.
  */
-function initFileInfo(aFI, aURL, aDocument, aContentType)
+function initFileInfo(aFI, aURL, aDocument, aContentType, aContentDisposition)
 {
   var docCharset = (aDocument ? aDocument.characterSet : null);
   try {
@@ -437,7 +487,7 @@ function initFileInfo(aFI, aURL, aDocument, aContentType)
 
     // Get the default filename:
     aFI.fileName = getDefaultFileName((aFI.suggestedFileName || aFI.fileName),
-                                      aFI.uri, aDocument);
+                                      aFI.uri, aDocument, aContentDisposition);
     // If aFI.fileExt is still blank, consider: aFI.suggestedFileName is supplied
     // if saveURL(...) was the original caller (hence both aContentType and
     // aDocument are blank). If they were saving a link to a website then make
@@ -730,47 +780,37 @@ function getMIMEInfoForType(aMIMEType, aExtension)
   return null;
 }
 
-function getDefaultFileName(aDefaultFileName, aDocumentURI, aDocument)
+function getDefaultFileName(aDefaultFileName, aURI, aDocument,
+                            aContentDisposition)
 {
-  if (aDocument) {
-    // 1) look for a filename in the content-disposition header, if any
+  // 1) look for a filename in the content-disposition header, if any
+  if (aContentDisposition) {
+    const mhpContractID = "@mozilla.org/network/mime-hdrparam;1";
+    const mhpIID = Components.interfaces.nsIMIMEHeaderParam;
+    const mhp = Components.classes[mhpContractID].getService(mhpIID);
+    var dummy = { value: null };  // Need an out param...
+    var charset = getCharsetforSave(aDocument);
+
+    var fileName = null;
     try {
-      // Get to the window as best we can, and get the header from it.
-      var dispHeader = 
-        aDocument.defaultView
-                 .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                 .getInterface(Components.interfaces.nsIDOMWindowUtils)
-                 .getDocumentMetadata("content-disposition");
-      if (dispHeader) {
-        const mhpContractID = "@mozilla.org/network/mime-hdrparam;1";
-        const mhpIID = Components.interfaces.nsIMIMEHeaderParam;
-        const mhp = Components.classes[mhpContractID].getService(mhpIID);
-        var dummy = { value: null };  // Need an out param...
-        var charset = getCharsetforSave(aDocument);
-      
-        var fileName;
-        try {
-          fileName = mhp.getParameter(dispHeader, "filename", charset, true,
-                                      dummy);
-        }
-        catch (e) {
-          try {
-            fileName = mhp.getParameter(dispHeader, "name", charset, true,
-                                        dummy);
-          }
-          catch (e) {
-          }
-        }
-        if (fileName) {
-          return fileName;
-        }
+      fileName = mhp.getParameter(aContentDisposition, "filename", charset,
+                                  true, dummy);
+    }
+    catch (e) {
+      try {
+        fileName = mhp.getParameter(aContentDisposition, "name", charset, true,
+                                    dummy);
       }
-    } catch (e) {
-      // Move on
+      catch (e) {
+      }
+    }
+    if (fileName) {
+      return fileName;
     }
   }
+
   try {
-    var url = aDocumentURI.QueryInterface(Components.interfaces.nsIURL);
+    var url = aURI.QueryInterface(Components.interfaces.nsIURL);
     if (url.fileName != "") {
       // 2) Use the actual file name, if present
       var textToSubURI = Components.classes["@mozilla.org/intl/texttosuburi;1"]
@@ -795,15 +835,15 @@ function getDefaultFileName(aDefaultFileName, aDocumentURI, aDocument)
     return validateFileName(aDefaultFileName);
 
   // 5) If this is a directory, use the last directory name
-  var path = aDocumentURI.path.match(/\/([^\/]+)\/$/);
+  var path = aURI.path.match(/\/([^\/]+)\/$/);
   if (path && path.length > 1) {
     return validateFileName(path[1]);
   }
 
   try {
-    if (aDocumentURI.host)
+    if (aURI.host)
       // 6) Use the host.
-      return aDocumentURI.host;
+      return aURI.host;
   } catch (e) {
     // Some files have no information at all, like Javascript generated pages
   }
