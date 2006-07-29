@@ -63,6 +63,7 @@
         oncommand="parentNode.navigate(-1, 0, 0);"/>
       <xul:hbox align="center" pack="center">
         <xul:textbox size="3" value="1" lastvalid="1"
+          onblur="navigate(0, this.value, 0);"
           onkeypress="if (event.keyCode==13) navigate(0, this.value, 0);"/>
         <xul:label value="&of.label;"/>
         <xul:label value="1"/>
@@ -78,6 +79,7 @@
       </xul:vbox>
       <xul:hbox align="center" pack="center">
         <xul:textbox size="3" align="end" value="100" lastvalid="100"
+          onblur="scale(0, this.value);"
           onkeypress="if (event.keyCode==13) parentNode.parentNode.scale(0, this.value);"/>
         <xul:label value="&percent.label;"/>
       </xul:hbox>
@@ -227,18 +229,21 @@
             // bounds check potentially user-entered number
             if (aPageNum > 0 && aPageNum <= total) 
             {
-              // store the valid page number for future use to replace 
-              // the textbox value if erroneous input made it in
-              this.mPageTextBox.setAttribute("lastvalid", aPageNum);
-
               print.printPreviewNavigate(
                 print.PRINTPREVIEW_GOTO_PAGENUM, aPageNum);
               validInput = true;
             }
           }
 
-          if (!validInput)          
+          if (validInput)          
           {
+            // store the valid page number for future use to replace 
+            // the textbox value if erroneous input made it in
+            this.mPageTextBox.setAttribute(
+              "lastvalid", this.mPageTextBox.value);
+          }
+          else
+          { 
             // restore last known valid value in place of erroneous input
             this.mPageTextBox.value = 
               this.mPageTextBox.getAttribute("lastvalid");
