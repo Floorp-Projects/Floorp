@@ -3846,7 +3846,19 @@ nsDocument::SetDocumentURI(const nsAString& aDocumentURI)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-struct AdoptFuncData {
+class AdoptFuncData {
+public:
+  AdoptFuncData(nsNodeInfoManager *aNewNodeInfoManager, JSContext *aCx,
+                JSObject *aOldScope, JSObject *aNewScope,
+                nsCOMArray<nsINode> &aNodesWithProperties)
+    : mNewNodeInfoManager(aNewNodeInfoManager),
+      mCx(aCx),
+      mOldScope(aOldScope),
+      mNewScope(aNewScope),
+      mNodesWithProperties(aNodesWithProperties)
+  {
+  };
+
   nsNodeInfoManager *mNewNodeInfoManager;
   JSContext *mCx;
   JSObject *mOldScope;
@@ -3885,8 +3897,8 @@ nsDocument::Adopt(nsINode *aNode, nsNodeInfoManager *aNewNodeInfoManager,
     nsGenericElement *element = NS_STATIC_CAST(nsGenericElement*, aNode);
     const nsDOMAttributeMap *map = element->GetAttributeMap();
     if (map) {
-      AdoptFuncData data = { aNewNodeInfoManager, aCx, aOldScope, aNewScope,
-                             aNodesWithProperties };
+      AdoptFuncData data(aNewNodeInfoManager, aCx, aOldScope, aNewScope,
+                         aNodesWithProperties);
  
       PRUint32 count = map->Enumerate(AdoptFunc, &data);
       NS_ENSURE_TRUE(count == map->Count(), NS_ERROR_FAILURE);
