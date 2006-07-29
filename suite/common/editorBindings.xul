@@ -90,7 +90,7 @@
 <key id="edCutKey" key="x"  
   oncommand="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_cut');
-    controller.doCommand('cmd_cut');" modifiers="control"/>
+    controller.doCommand('cmd_cut');" modifiers="accel"/>
 <key id="edCopyKey" key="c"  
   oncommand="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
