@@ -339,7 +339,7 @@ function internalSave(aURL, aDocument, aDefaultFileName, aShouldBypassCache,
   persist.persistFlags |= nsIWBP.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
 
   // Create download and initiate it (below)
-  var tr = Components.classes["@mozilla.org/download;1"].createInstance(Components.interfaces.nsITransfer);
+  var tr = Components.classes["@mozilla.org/transfer;1"].createInstance(Components.interfaces.nsITransfer);
 
   if (useSaveDocument) {
     // Saving a Document, not a URI:
