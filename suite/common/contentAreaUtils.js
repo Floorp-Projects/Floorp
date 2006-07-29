@@ -184,6 +184,7 @@ function saveInternal(aURL, aDocument,
                       aShouldBypassCache)
 {
   var data = {
+    url: aURL,
     fileName: aFileName,
     filePickerTitle: aFilePickerTitleKey,
     document: aDocument,
@@ -259,9 +260,60 @@ function foundHeaderInfo(aSniffer, aData)
     bypassCache : aData.bypassCache
   };
   
-  openDialog("chrome://global/content/nsProgressDlg.xul", "", 
-              "chrome,titlebar,minimizable,dialog=yes", 
-              makeWebBrowserPersist(), persistArgs);
+  // Create persist object and progress dialog, connect them up, and
+  // initiate download.
+  var dialog  = makeProgressDialog();
+  var persist = makeWebBrowserPersist();
+
+  dialog.source = makeURL(aData.url);
+  dialog.target = persistArgs.target;
+
+  // Set up the persist object to do the download/save.
+  persist.progressListener = dialog;
+
+  // Calculate persist flags.
+  const nsIWBP = Components.interfaces.nsIWebBrowserPersist;
+  const flags = nsIWBP.PERSIST_FLAGS_NO_CONVERSION | nsIWBP.PERSIST_FLAGS_REPLACE_EXISTING_FILES;
+  if (aData.bypassCache)
+    persist.persistFlags = flags | nsIWBP.PERSIST_FLAGS_BYPASS_CACHE;
+  else 
+    persist.persistFlags = flags | nsIWBP.PERSIST_FLAGS_FROM_CACHE;
+
+  if (isDocument && fp.filterIndex != 1) {
+    // Saving a Document, not a URI:
+    var filesFolder = null;
+    if (persistArgs.contentType != "text/plain") {
+      // Create the local directory into which to save associated files. 
+      const lfContractID = "@mozilla.org/file/local;1";
+      const lfIID = Components.interfaces.nsILocalFile;
+      filesFolder = Components .classes[lfContractID].createInstance(lfIID);
+      filesFolder.initWithUnicodePath(persistArgs.target.unicodePath);
+      
+      var nameWithoutExtension = filesFolder.leafName;
+      nameWithoutExtension = nameWithoutExtension.substring(0, nameWithoutExtension.lastIndexOf("."));
+      var filesFolderLeafName = getStringBundle().formatStringFromName("filesFolder",
+                                                                       [nameWithoutExtension],
+                                                                       1);
+
+      filesFolder.leafName = filesFolderLeafName;
+    }
+      
+    var encodingFlags = 0;
+    if (persistArgs.contentType == "text/plain") {
+      encodingFlags |= nsIWBP.ENCODE_FLAGS_FORMATTED;
+      encodingFlags |= nsIWBP.ENCODE_FLAGS_ABSOLUTE_LINKS;
+      encodingFlags |= nsIWBP.ENCODE_FLAGS_NOFRAMES_CONTENT;        
+    }
+    
+    const kWrapColumn = 80;
+
+    dialog.open(null, persist);
+    persist.saveDocument(persistArgs.source, persistArgs.target, filesFolder, 
+                         persistArgs.contentType, encodingFlags, kWrapColumn);
+  } else {
+    dialog.open(null, persist);
+    persist.saveURI(source, persistArgs.postData, persistArgs.target);
+  }
 }
 
 function nsHeaderSniffer(aURL, aCallback, aData)
@@ -269,10 +321,7 @@ function nsHeaderSniffer(aURL, aCallback, aData)
   this.mCallback = aCallback;
   this.mData = aData;
   
-  const stdURLContractID = "@mozilla.org/network/standard-url;1";
-  const stdURLIID = Components.interfaces.nsIURI;
-  this.uri = Components.classes[stdURLContractID].createInstance(stdURLIID);
-  this.uri.spec = aURL;
+  this.uri = makeURL(aURL);
   
   this.linkChecker = Components.classes["@mozilla.org/network/urichecker;1"]
     .createInstance().QueryInterface(Components.interfaces.nsIURIChecker);
@@ -429,6 +478,22 @@ function makeWebBrowserPersist()
   const persistContractID = "@mozilla.org/embedding/browser/nsWebBrowserPersist;1";
   const persistIID = Components.interfaces.nsIWebBrowserPersist;
   return Components.classes[persistContractID].createInstance(persistIID);
+}
+
+function makeProgressDialog()
+{
+  const progressDialogContractID = "@mozilla.org/progressdialog;1";
+  const progressDialogIID = Components.interfaces.nsIProgressDialog;
+  return Components.classes[progressDialogContractID].createInstance(progressDialogIID);
+}
+
+function makeURL(aURL)
+{
+  const stdURLContractID = "@mozilla.org/network/standard-url;1";
+  const stdURLIID = Components.interfaces.nsIURI;
+  var uri = Components.classes[stdURLContractID].createInstance(stdURLIID);
+  uri.spec = aURL;
+  return uri;
 }
 
 function makeFilePicker()
