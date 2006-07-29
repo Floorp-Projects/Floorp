@@ -625,7 +625,7 @@ nsContextMenu.prototype = {
              } else if ( node.nodeType == Node.ELEMENT_NODE 
                          && node.localName.toUpperCase() == "IMG" ) {
                  // If it has an alt= attribute, use that.
-                 altText = node.getAttribute( "alt" );
+                 var altText = node.getAttribute( "alt" );
                  if ( altText && altText != "" ) {
                      text = altText;
                      break;
