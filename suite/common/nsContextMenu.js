@@ -263,71 +263,17 @@ nsContextMenu.prototype = {
 
         // See if the user clicked on an image.
         if ( this.target.nodeType == Node.ELEMENT_NODE ) {
-             if ( this.target.localName.toUpperCase() == "IMG" ) {
+             if ( this.target instanceof Components.interfaces.nsIImageLoadingContent &&
+                  this.target.currentURI != null ) {
                 this.onImage = true;
-                this.imageURL = this.target.src;
+                this.imageURL = this.target.currentURI.spec;
 
                 var documentType = window._content.document.contentType;
                 if ( documentType.substr(0,6) == "image/" )
                     this.onStandaloneImage = true;
-
-                // Look for image map.
-                var mapName = this.target.getAttribute( "usemap" );
-                if ( mapName ) {
-                    // Find map.
-                    var map = this.target.ownerDocument.getElementById( mapName.substr(1) );
-                    if ( map ) {
-                        // Search child <area>s for a match.
-                        var areas = map.childNodes;
-                        //XXX Client side image maps are too hard for now!
-                        areas.length = 0;
-                        for ( var i = 0; i < areas.length && !this.onLink; i++ ) {
-                            var area = areas[i];
-                            if ( area.nodeType == Node.ELEMENT_NODE
-                                 &&
-                                 area.localName.toUpperCase() == "AREA" ) {
-                                // Get type (rect/circle/polygon/default).
-                                var type = area.getAttribute( "type" );
-                                var coords = this.parseCoords( area );
-                                switch ( type.toUpperCase() ) {
-                                    case "RECT":
-                                    case "RECTANGLE":
-                                        break;
-                                    case "CIRC":
-                                    case "CIRCLE":
-                                        break;
-                                    case "POLY":
-                                    case "POLYGON":
-                                        break;
-                                    case "DEFAULT":
-                                        // Default matches entire image.
-                                        this.onLink = true;
-                                        this.link = area;
-                                        this.onSaveableLink = this.isLinkSaveable( this.link );
-                                        break;
-                                }
-                            }
-                        }
-                    }
-                }
-             } else if ( this.target.localName.toUpperCase() == "OBJECT"
-                         &&
-                         // See if object tag is for an image.
-                         this.objectIsImage( this.target ) ) {
-                // This is an image.
-                this.onImage = true;
-                // URL must be constructed.
-                this.imageURL = this.objectImageURL( this.target );
              } else if ( this.target.localName.toUpperCase() == "INPUT") {
                type = this.target.getAttribute("type");
-               if(type && type.toUpperCase() == "IMAGE") {
-                 this.onImage = true;
-                 // Convert src attribute to absolute URL.
-                 this.imageURL = this.makeURLAbsolute( this.target.baseURI,
-                                                       this.target.src );
-               } else /* if (this.target.getAttribute( "type" ).toUpperCase() == "TEXT") */ {
-                 this.onTextInput = this.isTargetATextBox(this.target);
-               }
+               this.onTextInput = this.isTargetATextBox(this.target);
             } else if ( this.target.localName.toUpperCase() == "TEXTAREA" ) {
                  this.onTextInput = true;
             } else if ( this.target.localName.toUpperCase() == "HTML" ) {
@@ -851,26 +797,6 @@ nsContextMenu.prototype = {
         return searchStr;
     },
     
-    // Determine if target <object> is an image.
-    objectIsImage : function ( objElem ) {
-        var result = false;
-        // Get type and data attributes.
-        var type = objElem.getAttribute( "type" );
-        var data = objElem.getAttribute( "data" );
-        // Presume any mime type of the form "image/..." is an image.
-        // There must be a data= attribute with an URL, also.
-        if ( type.substring( 0, 6 ) == "image/" && data && data != "" ) {
-            result = true;
-        }
-        return result;
-    },
-    // Extract image URL from <object> tag.
-    objectImageURL : function ( objElem ) {
-        // Extract url from data= attribute.
-        var data = objElem.getAttribute( "data" );
-        // Make it absolute.
-        return this.makeURLAbsolute( objElem.baseURI, data );
-    },
     // Convert relative URL to absolute, using document's <base>.
     makeURLAbsolute : function ( base, url ) {
         // Construct nsIURL.
@@ -879,10 +805,6 @@ nsContextMenu.prototype = {
         var baseURI  = ioService.newURI(base, null, null);
         
         return ioService.newURI(baseURI.resolve(url), null, null).spec;
-    },
-    // Parse coords= attribute and return array.
-    parseCoords : function ( area ) {
-        return [];
     },
     toString : function () {
         return "contextMenu.target     = " + this.target + "\n" +
