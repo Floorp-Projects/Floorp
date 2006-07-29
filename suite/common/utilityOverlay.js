@@ -605,9 +605,22 @@ function startScrolling(event)
     document.documentElement.appendChild(gAutoScrollPopup);
   }
 
+  gScrollingView = event.originalTarget.ownerDocument.defaultView;
+  var scrollingDir;
+  if (gScrollingView.scrollMaxX > 0) {
+    gAutoScrollPopup.setAttribute("scrolldir", gScrollingView.scrollMaxY > 0 ? "NSEW" : "EW");
+  }
+  else if (gScrollingView.scrollMaxY > 0) {
+    gAutoScrollPopup.setAttribute("scrolldir", "NS");
+  }
+  else {
+    gScrollingView = null; // abort scrolling
+    return;
+  }
+
   document.popupNode = null;
   gAutoScrollPopup.showPopup(document.documentElement, event.screenX, event.screenY,
-                     "popup", null, null);
+                             "popup", null, null);
   gIgnoreMouseEvents = true;
   gStartX = event.screenX;
   gStartY = event.screenY;
@@ -617,7 +630,6 @@ function startScrolling(event)
   addEventListener('mouseup', handleMouseUpDown, true);
   addEventListener('mousedown', handleMouseUpDown, true);
   gAutoScrollTimer = setInterval(autoScrollLoop, 10);
-  gScrollingView = event.originalTarget.ownerDocument.defaultView;
 }
 
 function handleMouseMove(event)
