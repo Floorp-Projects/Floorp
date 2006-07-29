@@ -24,13 +24,6 @@
 <!ENTITY newNavigatorCmd.label				"Navigator Window">
 <!ENTITY newNavigatorCmd.key				"N">
 <!ENTITY newNavigatorCmd.accesskey			"n">
-<!ENTITY newMessageCmd.label				"Message">
-<!ENTITY newMessageCmd.key					"M">
-<!ENTITY newMessageCmd.accesskey			"m">
-<!ENTITY newCardCmd.label					"Address Book Card">
-<!ENTITY newCardCmd.accesskey				"a">
-<!ENTITY sendPage.label                                 "Send Page">
-<!ENTITY sendPage.accesskey                             "g">
 
 <!ENTITY pageSetupCmd.label					".Page Setup...">  
 
