@@ -27,7 +27,7 @@
   <!-- online/offline status indicators -->   
   <broadcaster id="Communicator:WorkMode"
                label="&offlineGoOfflineCmd.label;"
-               oncommand="setOfflineStatus(true);"/>
+               oncommand="toggleOfflineStatus();"/>
 
   <statusbarpanel id="offline-status"
                   tooltip="aTooltip"
