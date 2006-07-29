@@ -90,7 +90,7 @@
                 label="&setWallpaperCmd.label;"
                 accesskey="&setWallpaperCmd.accesskey;"
                 oncommand="gContextMenu.setWallpaper();"/>
-      <menuseparator id="context-sep-setWallpaper"/>
+      <menuseparator id="context-sep-image"/>
       <menuitem id="context-back"
                 label="&goBackCmd.label;"
                 accesskey="&goBackCmd.accesskey;"
