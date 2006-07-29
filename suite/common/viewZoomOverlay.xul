@@ -41,7 +41,7 @@
          xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script type="text/javascript" src="chrome://communicator/content/viewZoomOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/viewZoomOverlay.js"/>
 
   <stringbundleset id="stringbundleset">
     <stringbundle id="bundle_viewZoom" src="chrome://communicator/locale/viewZoomOverlay.properties"/>
