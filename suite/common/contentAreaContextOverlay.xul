@@ -208,7 +208,8 @@
       <menuitem id="context-viewsource"
                 label="&viewPageSourceCmd.label;"
                 accesskey="&viewPageSourceCmd.accesskey;"
-                oncommand="BrowserViewSourceOfDocument(_content.document);"/>
+                observes="isImage"
+                oncommand="BrowserViewSourceOfDocument(content.document);"/>
       <menuitem id="context-viewinfo"
                 label="&viewPageInfoCmd.label;"
                 accesskey="&viewPageInfoCmd.accesskey;"
