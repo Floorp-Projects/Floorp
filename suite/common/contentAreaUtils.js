@@ -720,10 +720,12 @@ function getMIMETypeForURI(aURI)
 
 function getMIMEInfoForType(aMIMEType, aExtension)
 {
-  try {
-    return getMIMEService().getFromTypeAndExtension(aMIMEType, aExtension);
-  }
-  catch (e) {
+  if (aMIMEType || aExtension) {
+    try {
+      return getMIMEService().getFromTypeAndExtension(aMIMEType, aExtension);
+    }
+    catch (e) {
+    }
   }
   return null;
 }
