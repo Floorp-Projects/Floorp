@@ -194,19 +194,23 @@ pref("privacy.popups.statusbar_icon_enabled",     true);
 pref("privacy.popups.prefill_whitelist",          false);
 pref("privacy.popups.remove_blacklist",           true);
 
-#if MOZ_WIDGET_TOOLKIT==cocoa
-#define MAC_PREFS 1
-#else
-#if MOZ_WIDGET_TOOLKIT==mac
-#define MAC_PREFS 1
-#endif
-#endif
-
-#ifdef MAC_PREFS
+#ifdef XP_MACOSX
 // determines the behavior upon starting a download.
 //  0 - open the download manager
 //  1 - open a progress dialog
 //  2 - do nothing
 
 pref("browser.downloadmanager.behavior", 1);
+#endif
+
+#ifndef XP_MACOSX
+#ifdef XP_UNIX
+pref("browser.startup.license_accepted", "");
+pref("security.warn_accept_cookie", false);
+// Most Unix people think modal pref windows are stupid:
+pref("browser.prefWindowModal", false);
+// For the download dialog
+pref("browser.download.progressDnldDialog.enable_launch_reveal_buttons", false);
+pref("browser.urlbar.clickSelectsAll", false);
+#endif
 #endif
