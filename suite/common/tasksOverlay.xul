@@ -83,7 +83,7 @@
     
    
    
-    <hbox id="taskbarGotoMenuBox" align="right"/>
+    <hbox id="taskbarGotoMenuBox"/>
     
     
   
