@@ -368,7 +368,7 @@ nsPopupSetFrame::ShowPopup(nsIContent* aElementContent, nsIContent* aPopupConten
   if ( childPopup && aPopupType.EqualsLiteral("context") )
     childPopup->SetIsContextMenu(PR_TRUE);
 
-  if (!weakFrame.IsAlive()) {
+  if (!weakFrame.IsAlive() || (entry->mPopupFrame && !weakPopupFrame.IsAlive())) {
     return NS_OK;
   }
 
