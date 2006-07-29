@@ -124,16 +124,9 @@ function commonDialogOnLoad()
   }
 
   // display the main text
-  var messageText = gCommonDialogParam.GetString(0);
-  var messageParent = document.getElementById("info.box");
-  var messageParagraphs = messageText.split("\n");
-
-  for (var i = 0; i < messageParagraphs.length; i++) {
-    var descriptionNode = document.createElement("description");
-    var text = document.createTextNode(messageParagraphs[i]);
-    descriptionNode.appendChild(text);
-    messageParent.appendChild(descriptionNode);
-  }
+  var messageParent = document.getElementById("info.box").getElementsByTagName('description')[0];
+  // XXX the substr(0, 10000) part is a workaround for bug 317334
+  messageParent.textContent = gCommonDialogParam.GetString(0).substr(0, 10000);
 
   setElementText("info.header", gCommonDialogParam.GetString(3), true);
 
