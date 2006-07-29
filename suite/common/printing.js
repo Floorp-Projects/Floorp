@@ -40,6 +40,20 @@
 
 var gPrintSettings = null;
 
+function setPrinterDefaultsForSelectedPrinter(aPrintService)
+{
+  if (gPrintSettings.printerName == "") {
+    gPrintSettings.printerName = aPrintService.defaultPrinterName;
+  }
+
+  // First get any defaults from the printer 
+  aPrintService.initPrintSettingsFromPrinter(gPrintSettings.printerName, gPrintSettings);
+
+  // now augment them with any values from last time
+  aPrintService.initPrintSettingsFromPrefs(gPrintSettings, true, gPrintSettings.kInitSaveAll);
+}
+
+
 function GetPrintSettings()
 {
   var prevPS = gPrintSettings;
@@ -52,19 +66,17 @@ function GetPrintSettings()
         gSavePrintSettings = pref.getBoolPref("print.save_print_settings", false);
       }
 
-      var psService = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
+      var printService = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
                                         .getService(Components.interfaces.nsIPrintSettingsService);
       if (gPrintSettingsAreGlobal) {
-        gPrintSettings = psService.globalPrintSettings;        
-        if (gSavePrintSettings) {
-          psService.initPrintSettingsFromPrefs(gPrintSettings, false, gPrintSettings.kInitSaveNativeData);
-        }
+        gPrintSettings = printService.globalPrintSettings;
+        setPrinterDefaultsForSelectedPrinter(printService);
       } else {
-        gPrintSettings = psService.newPrintSettings;
+        gPrintSettings = printService.newPrintSettings;
       }
     }
   } catch (e) {
-    dump("GetPrintSettings "+e);
+    dump("GetPrintSettings() "+e+"\n");
   }
 
   return gPrintSettings;
