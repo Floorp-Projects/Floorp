@@ -97,7 +97,7 @@ scrollbarbutton {
   min-height: 16px;
 }
 
-scrollbarbutton:hover:active {
+scrollbarbutton:hover:active, scrollbarbutton[active="true"] {
   -moz-border-top-colors: ThreeDShadow -moz-Dialog;
   -moz-border-right-colors: ThreeDShadow -moz-Dialog;
   -moz-border-bottom-colors: ThreeDShadow -moz-Dialog;
@@ -213,7 +213,7 @@ scrollbar[orient="vertical"] > scrollbarbutton[type="decrement"][disabled="true"
     min-height: 16px;
   }
 
-  html|div scrollbarbutton:hover:active {
+  html|div scrollbarbutton:hover:active, html|div scrollbarbutton[active="true"] {
     -moz-border-top-colors: ThreeDShadow -moz-Dialog;
     -moz-border-right-colors: ThreeDShadow -moz-Dialog;
     -moz-border-bottom-colors: ThreeDShadow -moz-Dialog;
