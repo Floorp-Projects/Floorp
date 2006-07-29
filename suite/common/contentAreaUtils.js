@@ -232,7 +232,9 @@ function foundHeaderInfo(aSniffer, aData)
   var defaultFileName = getDefaultFileName(aData.fileName, 
                                            aSniffer.suggestedFileName, 
                                            aSniffer.uri);
-  fp.defaultString = getNormalizedLeafName(defaultFileName, contentType);
+  var defaultExtension = getDefaultExtension(defaultFileName, aSniffer.uri, contentType);
+  fp.defaultExtension = defaultExtension;
+  fp.defaultString = getNormalizedLeafName(defaultFileName, defaultExtension);
   
   if (fp.show() == Components.interfaces.nsIFilePicker.returnCancel || !fp.file)
     return;
@@ -243,7 +245,6 @@ function foundHeaderInfo(aSniffer, aData)
   prefs.setComplexValue("dir", nsILocalFile, directory);
     
   fp.file.leafName = validateFileName(fp.file.leafName);
-  fp.file.leafName = getNormalizedLeafName(fp.file.leafName, contentType);
   
   // If we're saving a document, and are saving either in complete mode or 
   // as converted text, pass the document to the web browser persist component.
@@ -510,36 +511,64 @@ function validateFileName(aFileName)
   return aFileName.replace(re, "_");
 }
 
-function getNormalizedLeafName(aFile, aContentType)
+function getNormalizedLeafName(aFile, aDefaultExtension)
 {
-  // Fix up the file name we're saving to so that if the user enters
-  // no extension, an appropriate one is appended. 
-  var leafName = aFile;
-
-  var mimeInfo = getMIMEInfoForType(aContentType);
-  if (mimeInfo) {
-    var extCount = { };
-    var extList = { };
-    mimeInfo.GetFileExtensions(extCount, extList);
-
-    const stdURLContractID = "@mozilla.org/network/standard-url;1";
-    const stdURLIID = Components.interfaces.nsIURI;
-    var uri = Components.classes[stdURLContractID].createInstance(stdURLIID);
-    var url = uri.QueryInterface(Components.interfaces.nsIURL); 
-    url.filePath = aFile;
-    
-    if (aContentType == "text/html") {
-      if ((url.fileExtension && 
-           url.fileExtension != "htm" && url.fileExtension != "html") ||
-          (!url.fileExtension))
-        return leafName + ".html";
-    }
-
-    if (!url.fileExtension)
-      return leafName + "." + extList.value[0];
+  if (!aDefaultExtension)
+    return aFile;
+  
+  // Fix up the file name we're saving to to include the default extension
+  const stdURLContractID = "@mozilla.org/network/standard-url;1";
+  const stdURLIID = Components.interfaces.nsIURL;
+  var url = Components.classes[stdURLContractID].createInstance(stdURLIID);
+  url.filePath = aFile;
+  
+  if (url.fileExtension != aDefaultExtension) {
+    return aFile + "." + aDefaultExtension;
   }
- 
-  return leafName;
+
+  return aFile;
+}
+
+function getDefaultExtension(aFilename, aURI, aContentType)
+{
+  // This mirrors some code in nsExternalHelperAppService::DoContent
+  // Use the filename first and then the URI if that fails
+  
+  var mimeInfo = getMIMEInfoForType(aContentType);
+
+  // First try the extension from the filename
+  const stdURLContractID = "@mozilla.org/network/standard-url;1";
+  const stdURLIID = Components.interfaces.nsIURL;
+  var url = Components.classes[stdURLContractID].createInstance(stdURLIID);
+  url.filePath = aFilename;
+
+  var ext = url.fileExtension;
+
+  if (ext && mimeInfo.ExtensionExists(ext)) {
+    return ext;
+  }
+  
+  // Well, that failed.  Now try the extension from the URI
+  var urlext;
+  try {
+    url = aURI.QueryInterface(Components.interfaces.nsIURL);
+    urlext = url.fileExtension;
+  } catch (e) {
+  }
+
+  if (urlext && mimeInfo.ExtensionExists(urlext)) {
+    return urlext;
+  }
+  else {
+    try {
+      return mimeInfo.primaryExtension;
+    }
+    catch (e) {
+      // Fall back on the extensions in the filename and URI for lack
+      // of anything better.
+      return ext || urlext;
+    }
+  }
 }
 
 function isDocumentType(aContentType)
