@@ -145,6 +145,9 @@ nsContextMenu.prototype = {
         // View Frame Info depends on whether we're in a frame
         this.showItem( "context-viewframeinfo", this.inFrame );
 
+        // Set As Wallpaper depends on whether an image was clicked on, and only works on Windows.
+        this.showItem( "context-setWallpaper", this.onImage && navigator.appVersion.indexOf("Windows") != -1);
+
         // View Image depends on whether an image was clicked on.
         this.showItem( "context-viewimage", this.onImage );
 
@@ -483,6 +486,12 @@ nsContextMenu.prototype = {
     viewBGImage : function () {
         openTopWin( this.bgImageURL );
     },
+    setWallpaper: function() {
+      var winhooks = Components.classes[ "@mozilla.org/winhooks;1" ].
+                       getService(Components.interfaces.nsIWindowsHooks);
+      
+      winhooks.setImageAsWallpaper(this.target, false);
+    },    
     // Save URL of clicked-on frame.
     saveFrame : function () {
         saveDocument( this.target.ownerDocument );
