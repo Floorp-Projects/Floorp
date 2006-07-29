@@ -101,36 +101,43 @@
       <outlinercol flex="4" id="Name" persist="hidden width sortActive sortDirection ordinal" 
                    label="&tree.header.name.label;" primary="true"
                    sort="rdf:http://home.netscape.com/NC-rdf#Name"
+                   accesskey="&tree.header.name.akey;"
                    class="sortDirectionIndicator"/>
       <splitter class="tree-splitter" id="pre-URL-splitter"/>
       <outlinercol flex="4" id="URL"
                    persist="hidden width sortActive sortDirection ordinal"
                    label="&tree.header.url.label;" class="sortDirectionIndicator"
+                   accesskey="&tree.header.url.akey;"
                    sort="rdf:http://home.netscape.com/NC-rdf#URL"/>
       <splitter class="tree-splitter" id="pre-Date-splitter"/>
       <outlinercol flex="1" id="Date"
                    persist="hidden width sortActive sortDirection ordinal"
                    label="&tree.header.date.label;" class="sortDirectionIndicator"
+                   accesskey="&tree.header.date.akey;"
                    sort="rdf:http://home.netscape.com/NC-rdf#Date"/>
       <splitter class="tree-splitter" id="pre-FirstVisitDate-splitter"/>
       <outlinercol flex="1" id="FirstVisitDate" hidden="true"
                    persist="hidden width sortActive sortDirection ordinal"
                    label="&tree.header.firstvisitdate.label;" class="sortDirectionIndicator"
+                   accesskey="&tree.header.firstvisitdate.akey;"
                    sort="rdf:http://home.netscape.com/NC-rdf#FirstVisitDate"/>
       <splitter class="tree-splitter" id="pre-Hostname-splitter"/>
       <outlinercol flex="1" id="Hostname" hidden="true"
                    persist="hidden width sortActive sortDirection ordinal"
                    label="&tree.header.hostname.label;" class="sortDirectionIndicator"
+                   accesskey="&tree.header.hostname.akey;"
                    sort="rdf:http://home.netscape.com/NC-rdf#Hostname"/>
       <splitter class="tree-splitter" id="pre-Referrer-splitter"/>
       <outlinercol flex="1" id="Referrer" hidden="true"
                    persist="hidden width sortActive sortDirection ordinal"
                    label="&tree.header.referrer.label;" class="sortDirectionIndicator"
+                   accesskey="&tree.header.referrer.akey;"
                    sort="rdf:http://home.netscape.com/NC-rdf#Referrer"/>
       <splitter class="tree-splitter" id="pre-VisitCount-splitter"/>
       <outlinercol flex="1" id="VisitCount" hidden="true"
                    persist="hidden width sortActive sortDirection ordinal"
                    label="&tree.header.visitcount.label;" class="sortDirectionIndicator"
+                   accesskey="&tree.header.visitcount.akey;"
                    sort="rdf:http://home.netscape.com/NC-rdf#VisitCount"/>
     </outlinercols>
   </outliner>
