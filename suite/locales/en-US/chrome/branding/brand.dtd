@@ -3,3 +3,7 @@
 <!ENTITY  brandShortName        "SeaMonkey">
 <!ENTITY  vendorShortName       "SeaMonkey">
 <!ENTITY  sidebarName           "Sidebar">
+# XXX When Suite is a fully fledged xul app, this ifdef can be removed.
+#ifdef MOZ_XUL_APP
+#expand <!ENTITY  releaseURL            "http://www.mozilla.org/projects/seamonkey/releases/seamonkey__MOZ_APP_VERSION__/">
+#endif
