@@ -211,7 +211,7 @@
           catch(ex) {            
           }
         }
-        saveModifier = saveModifier ? event.shiftKey : event.metaKey;
+        saveModifier = saveModifier ? event.shiftKey : event.altKey;
           
         if (saveModifier) {                                           // if saveModifier is down
           saveURL(href, gatherTextUnder(event.target));
