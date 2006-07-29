@@ -307,9 +307,8 @@ const SAVETYPE_TEXT_ONLY     = 0x02;
  * @param aChosenData If non-null this contains an instance of object AutoChosen
  *        (see below) which holds pre-determined data so that the user does not
  *        need to be prompted for a target filename.
- * @param aReferrer the referrer URI object (not URL string) to use.  If this
- *        is null, the URI of the currently focused content (non-chrome)
- *        document in this window will be used.
+ * @param aReferrer the referrer URI object (not URL string) to use, or null
+          if no referrer should be sent.
  */
 function internalSave(aURL, aDocument, aDefaultFileName, aContentDisposition,
                       aContentType, aShouldBypassCache, aFilePickerTitleKey,
@@ -424,9 +423,9 @@ function internalSave(aURL, aDocument, aDefaultFileName, aContentDisposition,
     tr.init((aChosenData ? aChosenData.uri : source),
             persistArgs.target, "", null, null, persist);
     persist.progressListener = tr;
-    var referer = aReferrer || getReferrer(document);
     persist.saveURI((aChosenData ? aChosenData.uri : source),
-                    null, referer, persistArgs.postData, null, persistArgs.target);
+                    null, aReferrer, persistArgs.postData, null,
+                    persistArgs.target);
   }
 }
 
