@@ -13,6 +13,8 @@
 <!ENTITY openFrameCmd.accesskey       "W">
 <!ENTITY openFrameCmdInTab.label      "Open Frame in New Tab">
 <!ENTITY openFrameCmdInTab.accesskey  "T">
+<!ENTITY showOnlyThisFrameCmd.label     "Show Only This Frame">
+<!ENTITY showOnlyThisFrameCmd.accesskey "w">
 <!ENTITY addToBookmarksCmd.label      "Bookmark This Page">
 <!ENTITY addToBookmarksCmd.accesskey  "B">
 <!ENTITY goBackCmd.label              "Back">
@@ -50,7 +52,7 @@
 <!ENTITY bookmarkLinkCmd.label        "Bookmark This Link">
 <!ENTITY bookmarkLinkCmd.accesskey    "L">
 <!ENTITY bookmarkFrameCmd.label       "Bookmark This Frame">
-<!ENTITY bookmarkFrameCmd.accesskey   "m">
+<!ENTITY bookmarkFrameCmd.accesskey   "F">
 <!ENTITY savePageCmd.label            "Save Page As...">
 <!ENTITY savePageCmd.accesskey        "A">
 <!ENTITY savePageCmd.commandkey       "s">
