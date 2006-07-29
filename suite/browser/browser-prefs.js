@@ -113,7 +113,6 @@ pref("browser.search.param.Google.1.default", "chrome://navigator/content/search
 
 pref("browser.history.grouping", "day");
 pref("browser.sessionhistory.max_entries", 50);
-pref("browser.sessionhistory.max_viewers", 3);
 
 // Tabbed browser
 pref("browser.tabs.loadDivertedInBackground", false);
