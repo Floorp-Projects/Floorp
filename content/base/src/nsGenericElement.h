@@ -58,7 +58,7 @@
 #include "nsContentUtils.h"
 #include "nsAttrAndChildArray.h"
 #include "mozFlushType.h"
-#include "nsDOMAttributeMap.h";
+#include "nsDOMAttributeMap.h"
 
 class nsIDOMAttr;
 class nsIDOMEventListener;
