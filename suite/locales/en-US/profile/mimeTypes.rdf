@@ -5,31 +5,9 @@
   <Description about="urn:mimetypes"> 
     <NC:MIME-types> 
 	    <Seq about="urn:mimetypes:root"> 
-		    <li resource="urn:mimetype:application/pdf"/> 
 		    <li resource="urn:mimetype:text/html"/> 
 	    </Seq> 
     </NC:MIME-types> 
-  </Description> 
-
-  <Description about="urn:mimetype:application/pdf"> 
-    <NC:value>application/pdf</NC:value> 
-    <NC:description>Portable Document Format</NC:description> 
-    <NC:editable>true</NC:editable> 
-    <NC:fileExtensions about="urn:mimetype:extension:application/pdf:pdf">pdf</NC:fileExtensions> 
-    <NC:fileExtensions about="urn:mimetype:extension:application/pdf:foo">foo</NC:fileExtensions> 
-    <NC:handlerProp>
-      <NC:handler about="urn:mimetype:handler:application/pdf"> 
-        <NC:saveToDisk about="urn:mimetype:handler:saveToDisk:application/pdf">false</NC:saveToDisk> 
-        <NC:handleInternal>false</NC:handleInternal> 
-	<NC:alwaysAsk>false</NC:alwaysAsk> 
-          <NC:externalApplicationProp>
-            <NC:externalApplication about="urn:mimetype:externalApplication:application/pdf"> 
-              <NC:prettyName>Adobe Acrobat</NC:prettyName> 
-              <NC:path>/usr/bin/xpdf</NC:path> 
-            </NC:externalApplication> 
-          </NC:externalApplicationProp>
-      </NC:handler>   
-    </NC:handlerProp>  
   </Description> 
   
   <Description about="urn:mimetype:text/html"> 
