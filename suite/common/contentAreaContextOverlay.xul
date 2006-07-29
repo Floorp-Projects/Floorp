@@ -109,13 +109,12 @@
       <menuitem id="context-bookmarkpage"
                 value="&bookmarkPageCmd.label;"
                 accesskey="&bookmarkPageCmd.accesskey;"
-                oncommand="addBookmark(window._content.location.href,
-                                       window._content.document.title);"/>
+                oncommand="BookmarksUtils.addBookmarkToWindow(window._content);"/>
       <menuitem id="context-bookmarklink"
                 value="&bookmarkLinkCmd.label;"
                 accesskey="&bookmarkLinkCmd.accesskey;"
-                oncommand="addBookmark(contextMenu.linkURL(),
-                                       contextMenu.linkText());"/>
+                oncommand="BookmarksUtils.addBookmark(contextMenu.linkURL(),
+                                                      contextMenu.linkText());"/>
       <menuseparator id="context-sep-bookmark"/>
       <!-- Save ==================================== -->
       <menuitem id="context-savepage"

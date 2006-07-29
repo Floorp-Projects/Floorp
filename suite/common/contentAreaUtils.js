@@ -121,19 +121,3 @@
     return null;
   }
 
-  function addBookmark(url,title)
-  {
-    if (!title)
-      title = url;
-
-    var focusedWindow = document.commandDispatcher.focusedWindow;
-    if (focusedWindow == window)
-      focusedWindow = _content;
-
-    var docCharset = focusedWindow.document.characterSet;
-
-    var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
-                         .getService(Components.interfaces.nsIBookmarksService);
-
-    bmks.AddBookmark(url, title, bmks.BOOKMARK_DEFAULT_TYPE, docCharset);
-  }
