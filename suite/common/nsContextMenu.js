@@ -418,6 +418,7 @@ nsContextMenu.prototype = {
         }
     },
     initPopupURL: function() {
+      return; // remove this line to reenable the context menu
       // quick check: if no opener, it can't be a popup
       if (!window.content.opener)
         return;
