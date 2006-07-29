@@ -31,7 +31,7 @@
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript">
     // Global variable that holds the nsContextMenu instance.
-    var contextMenu = null;
+    var gContextMenu = null;
   </script>
   <script type="application/x-javascript" src="chrome://communicator/content/nsContextMenu.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
@@ -42,26 +42,26 @@
          hidden/shown upon display, based on what the user has clicked-on.
      -->
     <popup id="contentAreaContextMenu"
-           onpopupshowing="contextMenu = new nsContextMenu( this ); return contextMenu.shouldDisplay;"
-           onpopuphiding="contextMenu.onpopuphiding(); contextMenu = null;">
+           onpopupshowing="gContextMenu = new nsContextMenu( this ); return gContextMenu.shouldDisplay;"
+           onpopuphiding="gContextMenu.onDestroy(); gContextMenu = null;">
       <!-- Open ==================================== -->
       <menuitem id="context-openlink"
                 label="&openLinkCmd.label;"
                 accesskey="&openLinkCmd.accesskey;"
-                oncommand="contextMenu.openLink();"/>
+                oncommand="gContextMenu.openLink();"/>
       <!-- XXX - DEPENDENT ON PRESENCE OF EDITOR!! - XXX -->
       <menuitem id="context-editlink"
                 label="&editLinkCmd.label;"
                 accesskey="&editLinkCmd.accesskey;"
-                oncommand="contextMenu.editLink();"/>
+                oncommand="gContextMenu.editLink();"/>
       <menuitem id="context-openframe"
                 label="&openFrameCmd.label;"
                 accesskey="&openFrameCmd.accesskey;"
-                oncommand="contextMenu.openFrame();"/>
+                oncommand="gContextMenu.openFrame();"/>
       <menuitem id="context-showonlythisframe"
                 label="&showOnlyThisFrameCmd.label;"
                 accesskey="&showOnlyThisFrameCmd.accesskey;"
-                oncommand="contextMenu.showOnlyThisFrame();"/>
+                oncommand="gContextMenu.showOnlyThisFrame();"/>
       <menuseparator id="context-sep-open"/>
       <!-- Navigation ============================== -->
       <menuitem id="context-back"
@@ -79,7 +79,7 @@
       <menuitem id="context-reload-frame"
                 label="&reloadFrameCmd.label;"
                 accesskey="&reloadFrameCmd.accesskey;"
-                oncommand="contextMenu.reloadFrame();"/>
+                oncommand="gContextMenu.reloadFrame();"/>
       <menuitem id="context-stop"
                 label="&stopCmd.label;"
                 oncommand="BrowserStop();"/>
@@ -92,23 +92,23 @@
       <menuitem id="context-viewframesource"
                 label="&viewFrameSourceCmd.label;"
                 accesskey="&viewFrameSourceCmd.accesskey;"
-                oncommand="contextMenu.viewFrameSource();"/>
+                oncommand="gContextMenu.viewFrameSource();"/>
       <menuitem id="context-viewinfo"
                 label="&viewPageInfoCmd.label;"
                 accesskey="&viewPageInfoCmd.accesskey;"
-                oncommand="contextMenu.viewInfo();"/>
+                oncommand="gContextMenu.viewInfo();"/>
       <menuitem id="context-viewframeinfo"
                 label="&viewFrameInfoCmd.label;"
                 accesskey="&viewFrameInfoCmd.accesskey;"
-                oncommand="contextMenu.viewFrameInfo();"/>
+                oncommand="gContextMenu.viewFrameInfo();"/>
       <menuitem id="context-viewimage"
                 label="&viewImageCmd.label;"
                 accesskey="&viewImageCmd.accesskey;"
-                oncommand="contextMenu.viewImage();"/>
+                oncommand="gContextMenu.viewImage();"/>
       <menuitem id="context-viewbgimage"
                 label="&viewBGImageCmd.label;"
                 accesskey="&viewBGImageCmd.accesskey;"
-                oncommand="contextMenu.viewBGImage();"/>
+                oncommand="gContextMenu.viewBGImage();"/>
       <menuseparator id="context-sep-view"/>
       <!-- Misc ==================================== -->
       <menuitem id="context-bookmarkpage"
@@ -118,26 +118,26 @@
       <menuitem id="context-bookmarklink"
                 label="&bookmarkLinkCmd.label;"
                 accesskey="&bookmarkLinkCmd.accesskey;"
-                oncommand="BookmarksUtils.addBookmark(contextMenu.linkURL(),
-                                                      contextMenu.linkText(), 
+                oncommand="BookmarksUtils.addBookmark(gContextMenu.linkURL(),
+                                                      gContextMenu.linkText(), 
                                                       undefined, true);"/>
       <menuseparator id="context-sep-bookmark"/>
       <!-- Save ==================================== -->
       <menuitem id="context-savepage"
                 label="&savePageCmd.label;"
                 accesskey="&savePageCmd.accesskey;"
-                oncommand="contextMenu.savePage();"/>
+                oncommand="gContextMenu.savePage();"/>
       <menuitem id="context-saveframe"
                 label="&saveFrameCmd.label;"
                 accesskey="&saveFrameCmd.accesskey;"
-                oncommand="contextMenu.saveFrame();"/>
+                oncommand="gContextMenu.saveFrame();"/>
       <menuitem id="context-savelink"
                 label="&saveLinkCmd.label;"
                 accesskey="&saveLinkCmd.accesskey;"
-                oncommand="contextMenu.saveLink();"/>
+                oncommand="gContextMenu.saveLink();"/>
       <menuitem id="context-saveimage"
                 accesskey="&saveImageCmd.accesskey;"
-                oncommand="contextMenu.saveImage();"/>
+                oncommand="gContextMenu.saveImage();"/>
       <menuseparator id="context-sep-save"/>
       <!-- Clipboard =============================== -->
       <menuitem id="context-selectall"
@@ -159,7 +159,7 @@
       <menuitem id="context-copyemail"
                 label="&copyEmailCmd.label;"
                 accesskey="&copyEmailCmd.accesskey;"
-                oncommand="contextMenu.copyEmail();"/>
+                oncommand="gContextMenu.copyEmail();"/>
       <menuitem id="context-copylink"
                 label="&copyLinkCmd.label;"
                 accesskey="&copyLinkCmd.accesskey;"
@@ -173,7 +173,7 @@
       <menuitem id="context-metadata"
                 label="&metadataCmd.label;"
                 accesskey="&metadataCmd.accesskey;"
-                oncommand="contextMenu.showMetadata();"/>
+                oncommand="gContextMenu.showMetadata();"/>
     </popup>
   </popupset>
 </overlay>
