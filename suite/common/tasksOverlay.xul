@@ -67,40 +67,11 @@
 
         </menupopup>
       </menu>
- <!--   
-  <hbox id="taskbar" class="toolbar-standard chromeclass-status" persist="collapsed" style="min-width: 1px;" 
-        grippytooltip="aTooltip" grippytooltiptext="&taskBar.tooltip;">
-    <hbox id="taskButtons">
-      <button class="button-toolbar-4 taskbutton" id="mini-nav" oncommand="toNavigator();" 
-              tooltip="aTooltip" tooltiptext="&taskNavigator.tooltip;"/>
-      <button class="button-toolbar-4 taskbutton" id="mini-comp" oncommand="toEditor();" 
-              tooltip="aTooltip" tooltiptext="&taskComposer.tooltip;"/>
-    </hbox>
-   
-    <spacer id="taskbar-middle-spacer" flex="10"/>
-    
-    <hbox id="taskbarMenuBox"/>
-    
-   
-   
-    <hbox id="taskbarGotoMenuBox"/>
-    
-    
-  
-    
- 
-    <spacer id="taskbar-right-spacer" flex="7"/>
-    
-  
-  </hbox>
-  -->
-  
-  <hbox id="component-bar" class="statusbar-panel" persist="collapsed">
 
-       <button class="button-toolbar-4 taskbutton" id="mini-nav" oncommand="toNavigator();" 
-              tooltip="aTooltip" tooltiptext="&taskNavigator.tooltip;"/>
-      <button class="button-toolbar-4 taskbutton" id="mini-comp" oncommand="toEditor();" 
-              tooltip="aTooltip" tooltiptext="&taskComposer.tooltip;"/>
-               
-   </hbox> 
+  <hbox id="component-bar" class="statusbar-panel" persist="collapsed">
+    <toolbarbutton class="taskbutton" id="mini-nav" oncommand="toNavigator();" 
+                   tooltip="aTooltip" tooltiptext="&taskNavigator.tooltip;"/>
+    <toolbarbutton class="taskbutton" id="mini-comp" oncommand="toEditor();" 
+                   tooltip="aTooltip" tooltiptext="&taskComposer.tooltip;"/>
+  </hbox> 
 </overlay>
