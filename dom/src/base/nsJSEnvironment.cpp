@@ -880,37 +880,6 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   return 0;
 }
 
-static jsuword
-GetThreadStackLimit()
-{
-  // Store the thread stack limit in a static local to ensure that all
-  // contexts get the same stack limit (they're all on the same thread
-  // anyways), and this also helps prevent returning a stack limit
-  // that is beyond the end of the stack if this method is called way
-  // deep on the stack.
-
-  static jsuword sThreadStackLimit;
-
-  if (sThreadStackLimit == 0) {
-    int stackDummy;
-    jsuword currentStackAddr = (jsuword)&stackDummy;
-
-    const jsuword kStackSize = 0x80000;   // 512k
-
-#if JS_STACK_GROWTH_DIRECTION < 0
-    sThreadStackLimit = (currentStackAddr > kStackSize)
-                        ? currentStackAddr - kStackSize
-                        : 0;
-#else
-    sThreadStackLimit = (currentStackAddr + kStackSize > currentStackAddr)
-                        ? currentStackAddr + kStackSize
-                        : (jsuword) -1;
-#endif
-  }
-
-  return sThreadStackLimit;
-}
-
 nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
 {
 
@@ -931,8 +900,6 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
   mContext = ::JS_NewContext(aRuntime, gStackSize);
   if (mContext) {
     ::JS_SetContextPrivate(mContext, NS_STATIC_CAST(nsIScriptContext *, this));
-
-    ::JS_SetThreadStackLimit(mContext, GetThreadStackLimit());
 
     // Make sure the new context gets the default context options
     ::JS_SetOptions(mContext, mDefaultJSOptions);
