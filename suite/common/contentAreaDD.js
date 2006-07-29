@@ -60,7 +60,7 @@ var contentAreaDNDObserver = {
           /^\s*(javascript|data):/.test(url))
         return;
 
-      switch (document.firstChild.getAttribute('windowtype')) {
+      switch (document.documentElement.getAttribute('windowtype')) {
         case "navigator:browser":
           // Perform a security check before loading the URI
           nsDragAndDrop.dragDropSecurityCheck(aEvent, aDragSession, url);
