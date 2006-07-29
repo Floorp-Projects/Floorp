@@ -127,6 +127,13 @@ function getBrowserURL() {
 
 function goPageSetup()
 {
+  // This code brings up the native page setup dialog (for platforms that
+  // implement nsIPrintOptions.ShowNativeDialog()).  
+  var printOptionsService = Components.classes["@mozilla.org/gfx/printoptions;1"]
+                                           .getService(Components.interfaces.nsIPrintOptions);
+  printOptionsService.ReadPrefs();
+  printOptionsService.ShowNativeDialog();
+  printOptionsService.WritePrefs();
 }
 
 function goEditCardDialog(abURI, card, okCallback, abCardURI)
