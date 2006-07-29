@@ -277,12 +277,11 @@ nsContextMenu.prototype = {
                // pages with multiple <body>s are lame. we'll teach them a lesson.
                var bodyElt = this.target.ownerDocument.getElementsByTagName("body")[0];
                if ( bodyElt ) {
-                 var attr = bodyElt.getAttribute( "background" );
-                 if ( attr ||
-                      ( attr = this.getComputedURL( bodyElt, "background-image" ) ) ) {
+                 var computedURL = this.getComputedURL( bodyElt, "background-image" );
+                 if ( computedURL ) {
                    this.hasBGImage = true;
                    this.bgImageURL = this.makeURLAbsolute( bodyElt.baseURI,
-                                                           attr );
+                                                           computedURL );
                  }
                }
             } else if ( "HTTPIndex" in _content &&
@@ -382,17 +381,16 @@ nsContextMenu.prototype = {
                     }
                 }
 
-                // Background image?  We don't bother if we've already found a background
-                // image further down the hierarchy.  Otherwise, we look for background=
-                // attribute on html elements that support that, or, background-image style.
-                var bgImgUrl = null;
-                if ( !this.hasBGImage &&
-                     ( ( localname.search( /^(?:TD|TH|TABLE|BODY)$/ ) != -1 &&
-                         ( bgImgUrl = elem.getAttribute( "background" ) ) ) ||
-                       ( bgImgUrl = this.getComputedURL( elem, "background-image" ) ) ) ) {
-                    this.hasBGImage = true;
-                    this.bgImageURL = this.makeURLAbsolute( elem.baseURI,
-                                                            bgImgUrl );
+                // Background image?  Don't bother if we've already found a 
+                // background image further down the hierarchy.  Otherwise,
+                // we look for the computed background-image style.
+                if ( !this.hasBGImage ) {
+                    var bgImgUrl = this.getComputedURL( elem, "background-image" );
+                    if ( bgImgUrl ) {
+                        this.hasBGImage = true;
+                        this.bgImageURL = this.makeURLAbsolute( elem.baseURI,
+                                                                bgImgUrl );
+                    }
                 }
             }
             elem = elem.parentNode;    
