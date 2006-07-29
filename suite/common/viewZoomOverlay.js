@@ -229,7 +229,7 @@ function registerZoomManager()
     textZoomMenu.removeAttribute("hidden");
 
     var parentMenu = textZoomMenu.parentNode;
-    parentMenu.addEventListener("create", updateViewMenu, false);
+    parentMenu.addEventListener("popupshowing", updateViewMenu, false);
 
     var insertBefore = document.getElementById("menu_textZoomInsertBefore");
     var popup = insertBefore.parentNode;
