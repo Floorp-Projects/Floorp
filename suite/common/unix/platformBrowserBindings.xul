@@ -8,48 +8,48 @@
 <keyset id="globalKeySet">
 
 <!-- other keybindings for cut/copy/paste -->
-<key id="winAlternativeCutKey" keycode="VK_DELETE" shift="true" control="false" alt="false" meta="false"
-  onkeypress="
+<key id="winAlternativeCutKey" keycode="VK_DELETE"    
+  oncommand="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_cut');
-    controller.doCommand('cmd_cut');"/>
+    controller.doCommand('cmd_cut');" modifiers="shift"/>
 
-<key id="winAlternativeCopy2Key" keycode="VK_DELETE" shift="false" control="true" alt="false" meta="false"
-  onkeypress="
+<key id="winAlternativeCopy2Key" keycode="VK_DELETE"    
+  oncommand="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
-    controller.doCommand('cmd_copy');"/>
+    controller.doCommand('cmd_copy');" modifiers="control"/>
 
-<key id="winAlternativeCopyKey" keycode="VK_INSERT" shift="false" control="true" alt="false" meta="false"
-  onkeypress="
+<key id="winAlternativeCopyKey" keycode="VK_INSERT"    
+  oncommand="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
-    controller.doCommand('cmd_copy');"/>
+    controller.doCommand('cmd_copy');" modifiers="control"/>
 
-<key id="winAlternativePasteKey" keycode="VK_INSERT" shift="true" control="false" alt="false" meta="false"
-  onkeypress="
+<key id="winAlternativePasteKey" keycode="VK_INSERT"    
+  oncommand="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_paste');
-    controller.doCommand('cmd_paste');"/>
+    controller.doCommand('cmd_paste');" modifiers="shift"/>
 
 
-<key id="key_homectrlshift" keycode="VK_HOME" shift="true" control="true" alt="false"
-    onkeypress="
+<key id="key_homectrlshift" keycode="VK_HOME"   
+    oncommand="
         var controller =
         document.commandDispatcher.getControllerForCommand('cmd_selectTop');
-        controller.doCommand('cmd_selectTop');"/>
-<key id="key_endctrlshift" keycode="VK_END" shift="true" control="true" alt="false"
-    onkeypress="
+        controller.doCommand('cmd_selectTop');" modifiers="shift, control"/>
+<key id="key_endctrlshift" keycode="VK_END"   
+    oncommand="
         var controller =
         document.commandDispatcher.getControllerForCommand('cmd_selectBottom');
-        controller.doCommand('cmd_selectBottom');"/>
+        controller.doCommand('cmd_selectBottom');" modifiers="shift, control"/>
 
 <key id="sparcCutKey" keycode="VK_F20"
-    onkeypress="
+    oncommand="
         var controller = document.commandDispatcher.getControllerForCommand('cmd_cut');
         controller.doCommand('cmd_cut');"/>
 <key id="sparcCopyKey" keycode="VK_F16"
-    onkeypress="
+    oncommand="
         var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
         controller.doCommand('cmd_copy');"/>
 <key id="sparcPasteKey" keycode="VK_F18"
-    onkeypress="
+    oncommand="
         var controller = document.commandDispatcher.getControllerForCommand('cmd_paste');
         controller.doCommand('cmd_paste');"/>
 </keyset>

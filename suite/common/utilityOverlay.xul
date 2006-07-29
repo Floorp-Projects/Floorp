@@ -37,8 +37,8 @@
 	<menu id="menu_New" value="&newMenu.label;" accesskey="&newMenu.accesskey;"/>
 	<menuitem id="menu_newNavigator" value="&newNavigatorCmd.label;" accesskey="&newNavigatorCmd.accesskey;" key="key_newNavigator" observes="cmd_newNavigator"/>
 
-	<key id="key_newBlankPage"  xulkey="true" shift="true" key="&newBlankPageCmd.key;" observes="cmd_newEditor"/>
-	<key id="key_newNavigator"  xulkey="true" shift="false" key="&newNavigatorCmd.key;" observes="cmd_newNavigator"/>
+	<key id="key_newBlankPage"    key="&newBlankPageCmd.key;" observes="cmd_newEditor" modifiers="accel, shift"/>
+	<key id="key_newNavigator"    key="&newNavigatorCmd.key;" observes="cmd_newNavigator" modifiers="accel"/>
 
 	<!-- Edit Menu -->
 	<menu id="menu_Edit" value="&editMenu.label;" accesskey="&editMenu.accesskey;" oncreate="goUpdateFormsEditMenuItems();"/>
@@ -49,21 +49,16 @@
 	<menuitem id="menu_paste" value="&pasteCmd.label;" key="key_paste" accesskey="&pasteCmd.accesskey;" observes="cmd_paste"/>
 	<menuitem id="menu_delete" value="&deleteCmd.label;" key="key_delete" accesskey="&deleteCmd.accesskey;" observes="cmd_delete"/>
 	<menuitem id="menu_selectAll" value="&selectAllCmd.label;" key="key_selectAll" accesskey="&selectAllCmd.accesskey;" observes="cmd_selectAll"/>
-	<menuitem id="menu_capture" value="&captureCmd.label;" key="key_capture" accesskey="&captureCmd.accesskey;" observes="cmd_capture"/>
-	<menuitem id="menu_prefill" value="&prefillCmd.label;" key="key_prefill" accesskey="&prefillCmd.accesskey;" observes="cmd_prefill"/>
+	<menuitem id="menu_capture" value="&captureCmd.label;" accesskey="&captureCmd.accesskey;" observes="cmd_capture"/>
+	<menuitem id="menu_prefill" value="&prefillCmd.label;" accesskey="&prefillCmd.accesskey;" observes="cmd_prefill"/>
 	
-	<key id="key_undo" xulkey="true" key="&undoCmd.key;" shift="false" observes="cmd_undo"/>
-	<key id="key_redo" xulkey="true" key="&redoCmd.key;" shift="false" observes="cmd_redo"/>
-	<key id="key_cut" xulkey="true" key="&cutCmd.key;" shift="false" observes="cmd_cut"/>
-	<key id="key_copy" xulkey="true" key="&copyCmd.key;" shift="false" observes="cmd_copy"/>
-	<key id="key_paste" xulkey="true" key="&pasteCmd.key;" shift="false" observes="cmd_paste"/>
-	<key id="key_selectAll" xulkey="true" key="&selectAllCmd.key;" shift="false" observes="cmd_selectAll"/>
-<!--
-	<key id="key_capture" xulkey="true" key="&captureCmd.key;" shift="false" observes="cmd_capture"/>
-	<key id="key_prefill" xulkey="true" key="&prefillCmd.key;" shift="false" observes="cmd_prefill"/>
--->
-	<key id="key_preferences" observes="cmd_preferences"/>
-  
+	<key id="key_undo"  key="&undoCmd.key;"  observes="cmd_undo" modifiers="accel"/>
+	<key id="key_redo"  key="&redoCmd.key;"  observes="cmd_redo" modifiers="accel"/>
+	<key id="key_cut"  key="&cutCmd.key;"  observes="cmd_cut" modifiers="accel"/>
+	<key id="key_copy"  key="&copyCmd.key;"  observes="cmd_copy" modifiers="accel"/>
+	<key id="key_paste"  key="&pasteCmd.key;"  observes="cmd_paste" modifiers="accel"/>
+	<key id="key_selectAll"  key="&selectAllCmd.key;"  observes="cmd_selectAll" modifiers="accel"/>
+ 
 	<commandset id="globalEditMenuItems"
 					commandupdater="true"
 					events="focus"
