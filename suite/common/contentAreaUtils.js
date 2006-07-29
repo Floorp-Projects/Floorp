@@ -92,17 +92,19 @@
 
   function openNewTabWith(url) {
 
-	urlSecurityCheck(url, document);
+	  urlSecurityCheck(url, document);
     var wintype = document.firstChild.getAttribute('windowtype');
 
     // if and only if the current window is a browser window and it has a document with a character
     // set, then extract the current charset menu setting from the current document and use it to
     // initialize the new browser window...
     if (window && (wintype == "navigator:browser")) {
-		var browser=getBrowser();
-		browser.selectedTab = browser.addTab(url);
+		  var browser=getBrowser();
+		  var t = browser.addTab(url); // open link in new tab
+      if (pref && !pref.GetBoolPref("browser.tabs.loadInBackground"))
+        browser.selectedTab = t;
     }
- 
+
     // Fix new window.    
     newWin.saveFileAndPos = true;
   }
