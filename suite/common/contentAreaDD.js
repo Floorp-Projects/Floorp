@@ -97,13 +97,20 @@ var contentAreaDNDObserver = {
           switch (local_name)
             {
               case 'AREA':
+                var areasrc = draggedNode.getAttribute("href");
+ 
+                // use alt text as the title of the area, if it's there
+                titlestring = draggedNode.getAttribute("alt");
+                urlstring = areasrc;
+                htmlstring = "<img src=\"" + urlstring + "\">";
+                break;
               case 'IMG':
                 var imgsrc = draggedNode.getAttribute("src");
-                var baseurl = window._content.location.href;
+                // var baseurl = window._content.location.href;
                 // need to do some stuff with the window._content.location
                 // (path?) to get base URL for image.
 
-                // use alt text as the title of the image, if  it's there
+                // use alt text as the title of the image, if it's there
                 titlestring = draggedNode.getAttribute("alt");
                 urlstring = imgsrc;
                 htmlstring = "<img src=\"" + urlstring + "\">";
