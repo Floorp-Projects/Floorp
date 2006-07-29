@@ -889,7 +889,7 @@ function nsDefaultEngine()
         var pb = Components.classes["@mozilla.org/preferences-service;1"].
                    getService(Components.interfaces.nsIPrefBranch);
         var pbi = pb.QueryInterface(
-                    Components.interfaces.nsIPrefBranchInternal);
+                    Components.interfaces.nsIPrefBranch2);
         pbi.addObserver(this.domain, this, false);
 
         // reuse code by explicitly invoking initial |observe| call
