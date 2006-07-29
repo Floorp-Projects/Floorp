@@ -664,9 +664,9 @@ function getPostData()
 {
   try {
     var sessionHistory = getWebNavigation().sessionHistory;
-    entry = sessionHistory.getEntryAtIndex(sessionHistory.index, false);
-    entry = entry.QueryInterface(Components.interfaces.nsISHEntry);
-    return entry.postData;
+    return sessionHistory.getEntryAtIndex(sessionHistory.index, false)
+                         .QueryInterface(Components.interfaces.nsISHEntry)
+                         .postData;
   }
   catch (e) {
   }
