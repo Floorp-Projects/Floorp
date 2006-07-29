@@ -68,8 +68,8 @@
 
   <hbox id="component-bar" class="statusbar-panel" persist="collapsed">
     <toolbarbutton class="taskbutton" id="mini-nav" oncommand="toNavigator();" 
-                   tooltip="aTooltip" tooltiptext="&taskNavigator.tooltip;"/>
+                   tooltiptext="&taskNavigator.tooltip;"/>
     <toolbarbutton class="taskbutton" id="mini-comp" oncommand="toEditor();" 
-                   tooltip="aTooltip" tooltiptext="&taskComposer.tooltip;"/>
+                   tooltiptext="&taskComposer.tooltip;"/>
   </hbox> 
 </overlay>
