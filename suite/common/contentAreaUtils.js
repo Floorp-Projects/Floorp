@@ -40,38 +40,40 @@
  * Determine whether or not a given focused DOMWindow is in the content
  * area.
  **/
-function isDocumentFrame(aFocusedWindow)
+function isContentFrame(aFocusedWindow)
 {
-  var contentFrames = _content.frames;
-  if (contentFrames.length) {
-    for (var i = 0; i < contentFrames.length; ++i) {
-      if (aFocusedWindow == contentFrames[i])
-        return true;
-    }
-  }
-  return false;
+  var focusedTop = Components.lookupMethod(aFocusedWindow, 'top')
+                             .call(aFocusedWindow);
+
+  return (focusedTop == window.content);
 }
 
 function urlSecurityCheck(url, doc) 
 {
   // URL Loading Security Check
   var focusedWindow = doc.commandDispatcher.focusedWindow;
-  var sourceWin = isDocumentFrame(focusedWindow) ? focusedWindow.location.href : focusedWindow._content.location.href;
+  var sourceURL = getContentFrameURI(focusedWindow);
   const nsIScriptSecurityManager = Components.interfaces.nsIScriptSecurityManager;
-  var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"].getService().
-                    QueryInterface(nsIScriptSecurityManager);
+  var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                         .getService(nsIScriptSecurityManager);
   try {
-    secMan.checkLoadURIStr(sourceWin, url, nsIScriptSecurityManager.STANDARD);
+    secMan.checkLoadURIStr(sourceURL, url, nsIScriptSecurityManager.STANDARD);
   } catch (e) {
-      throw "Load of " + url + " denied.";
+    throw "Load of " + url + " denied.";
   }
+}
+
+function getContentFrameURI(aFocusedWindow)
+{
+  var contentFrame = isContentFrame(aFocusedWindow) ? aFocusedWindow : window.content;
+  return Components.lookupMethod(contentFrame, 'location').call(contentFrame).href;
 }
 
 function getReferrer(doc)
 {
   var focusedWindow = doc.commandDispatcher.focusedWindow;
-  var sourceURL =
-    isDocumentFrame(focusedWindow) ? focusedWindow.location.href : focusedWindow._content.location.href;
+  var sourceURL = getContentFrameURI(focusedWindow);
+
   try {
     var uri = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIURI);
     uri.spec = sourceURL;
@@ -156,7 +158,7 @@ function saveURL(aURL, aFileName, aFilePickerTitleKey, aShouldBypassCache)
 function saveFrameDocument()
 {
   var focusedWindow = document.commandDispatcher.focusedWindow;
-  if (isDocumentFrame(focusedWindow))
+  if (isContentFrame(focusedWindow))
     saveDocument(focusedWindow.document);
 }
 

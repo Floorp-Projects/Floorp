@@ -206,6 +206,9 @@
 
   function handleLinkClick(event, href, linkNode)
   {
+    // Make sure we are allowed to open this URL
+    urlSecurityCheck(href, document);
+
     switch (event.button) {                                   
       case 0:                                                         // if left button clicked
         if (event.metaKey || event.ctrlKey) {                         // and meta or ctrl are down
