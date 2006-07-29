@@ -35,7 +35,7 @@ try {
 function onLoad()
 {
   dialog.input          = document.getElementById("dialog.input");
-  dialog.open           = document.getElementById("ok");
+  dialog.open           = document.documentElement.getButton("accept");
   dialog.openAppList    = document.getElementById("openAppList");
   dialog.openTopWindow  = document.getElementById("currentWindow");
   dialog.openEditWindow = document.getElementById("editWindow");
@@ -68,9 +68,6 @@ function onLoad()
   // change OK button text to 'open'
   dialog.open.label = dialog.bundle.getString("openButtonLabel");
 
-  doSetOKCancel(open, 0, 0, 0);
-
-  dialog.input.focus();
   if (pref) {
     try {
       var value = pref.getIntPref("general.open_location.last_window_choice");
