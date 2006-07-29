@@ -69,12 +69,12 @@
                   <menuitem value="&walletContentsCmd.label;" accesskey="&walletContentsCmd.accesskey;" id="walleteditor" oncommand="WalletDialog('wallet');"/> 
                   <menuitem value="&walletSitesCmd.label;" accesskey="&walletSitesCmd.accesskey;" id="walletsites" oncommand="WalletDialog('walletsites');"/> 
                   <menuseparator/>
-                  <menuitem value="&walletSafeFillCmd.label;" accesskey="&walletSafeFillCmd.accesskey;" id="walletSafeFill" oncommand="WalletAction('safefill');"/> 
 <!--
+                  <menuitem value="&walletSafeFillCmd.label;" accesskey="&walletSafeFillCmd.accesskey;" id="walletSafeFill" oncommand="WalletAction('safefill');"/> 
                   <menuitem value="&walletQuickFillCmd.label;" accesskey="&walletQuickFillCmd.accesskey;" id="walletQuickFill" oncommand="WalletAction('quickfill');"/> 
--->
                   <menuitem value="&walletRequestToCaptureCmd.label;" accesskey="&walletRequestToCaptureCmd.accesskey;" id="walletCapture" oncommand="WalletAction('capture');"/> 
                   <menuseparator/>
+-->
                   <menuitem value="&walletInterviewCmd.label;" accesskey="&walletInterviewCmd.accesskey;" id="walletInterview" oncommand="WalletDialog('interview');"/> 
                   <menuitem value="&walletSamplesCmd.label;" accesskey="&walletSamplesCmd.accesskey;" id="walletSamples" oncommand="WalletDialog('samples');"/> 
                 </menupopup>
