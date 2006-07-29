@@ -56,12 +56,12 @@
 	<menuitem id="menu_delete" value="&deleteCmd.label;" key="key_delete" accesskey="&deleteCmd.accesskey;" observes="cmd_delete"/>
 	<menuitem id="menu_selectAll" value="&selectAllCmd.label;" key="key_selectAll" accesskey="&selectAllCmd.accesskey;" observes="cmd_selectAll"/>
 	
-	<key id="key_undo" xulkey="true" key="&undoCmd.key;" observes="cmd_undo"/>
-	<key id="key_redo" xulkey="true" key="&redoCmd.key;" observes="cmd_redo"/>
-	<key id="key_cut" xulkey="true" key="&cutCmd.key;" observes="cmd_cut"/>
-	<key id="key_copy" xulkey="true" key="&copyCmd.key;" observes="cmd_copy"/>
-	<key id="key_paste" xulkey="true" key="&pasteCmd.key;" observes="cmd_paste"/>
-	<key id="key_selectAll" xulkey="true" key="&selectAllCmd.key;" observes="cmd_selectAll"/>
+	<key id="key_undo" xulkey="true" key="&undoCmd.key;" shift="false" observes="cmd_undo"/>
+	<key id="key_redo" xulkey="true" key="&redoCmd.key;" shift="false" observes="cmd_redo"/>
+	<key id="key_cut" xulkey="true" key="&cutCmd.key;" shift="false" observes="cmd_cut"/>
+	<key id="key_copy" xulkey="true" key="&copyCmd.key;" shift="false" observes="cmd_copy"/>
+	<key id="key_paste" xulkey="true" key="&pasteCmd.key;" shift="false" observes="cmd_paste"/>
+	<key id="key_selectAll" xulkey="true" key="&selectAllCmd.key;" shift="false" observes="cmd_selectAll"/>
 	<key id="key_preferences" observes="cmd_preferences"/>
   
 	<commandset id="globalEditMenuItems"
