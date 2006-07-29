@@ -33,6 +33,7 @@
 |   longer term, this code will be restructured to make it more reusable.      |
 ------------------------------------------------------------------------------*/
 function nsContextMenu( xulMenu ) {
+dump("... entering nsContextMenu constructor in nsContextMenu.js\n");
     this.target     = null;
     this.menu       = null;
     this.onTextInput = false;
@@ -45,9 +46,11 @@ function nsContextMenu( xulMenu ) {
     this.inDirList  = false;
     this.shouldDisplay = true;
     this.disableCapture = false;
+    this.disablePrefill = false;
 
     // Initialize new menu.
     this.initMenu( xulMenu );
+dump("... leaving nsContextMenu constructor in nsContextMenu.js\n");
 }
 
 // Prototype for nsContextMenu "class."
@@ -146,6 +149,7 @@ nsContextMenu.prototype = {
 
         // Prefill depends on whether a form is being displayed.
         this.showItem( "context-prefill", this.okToPrefill() );
+        this.setItemAttr( "context-prefill", "disabled", this.disablePrefill);
 
         // Remove separator if all items are removed.
         this.showItem( "context-sep-view", !this.inDirList || this.inFrame || this.onImage );
@@ -485,6 +489,8 @@ nsContextMenu.prototype = {
 
     // Determine if "Prefill Form" is to appear in the menu.
     okToPrefill: function () {
+      this.disablePrefill = false;
+      var rv = false;
       if (!window._content.document) {
         return false;
       }
@@ -498,13 +504,28 @@ nsContextMenu.prototype = {
         var element;
         for (element=0; element<elementsArray.length; element++) {
           var type = elementsArray[element].type;
-          var value = elementsArray[element].value;
           if (type=="" || type=="text" || type=="select-one") {
-            return true;
+            /* we have a form with at least one text or select element */
+            rv = true;
+
+            /* see if there is a saved value for it */
+            var walletService = Components.classes["@mozilla.org/wallet/wallet-service;1"].getService(Components.interfaces.nsIWalletService);
+            var value = walletService.WALLET_PrefillOneElement
+              (window._content, elementsArray[element]);
+            if (value != "") {
+              // at least element has a saved value, thus capture is to appear in menu
+              return rv;
+            }
           }
         }
       }
-      return false;
+      // if we got here, then there was no saved value for a text or select element
+      if (rv) {
+        // if we got here, then we had a form with at least one text or select element
+        // in that case prefill is to appear in menu but will be disabled
+        this.disablePrefill = true;
+      }
+      return rv;
     },
 
     // Determine if "Block Image" is to appear in the menu.
