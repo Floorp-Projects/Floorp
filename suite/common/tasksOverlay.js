@@ -398,7 +398,8 @@ function WalletDialog( which )
       window.openDialog("chrome://communicator/content/wallet/SignonViewer.xul","SSViewer","modal=yes,chrome,resizable=no","W"); 
       break;
     case "tutorial":
-      window._content.location.href = 'chrome://communicator/locale/wallet/privacy.html';
+      window._content.location.href =
+        this.pref.getLocalizedUnicharPref("wallet.TutorialFromMenu");
       break;
     case "wallet":
     default:
