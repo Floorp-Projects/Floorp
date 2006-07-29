@@ -78,7 +78,7 @@
       <menuitem id="context-openlinkintab"
                 label="&openLinkCmdInTab.label;"
                 accesskey="&openLinkCmdInTab.accesskey;"
-                oncommand="gContextMenu.openLinkInTab();"/>
+                oncommand="gContextMenu.openLinkInTab(event.shiftKey);"/>
       <menuseparator id="context-sep-open"/>
       <menuitem id="context-bookmarklink"
                 label="&bookmarkLinkCmd.label;"
@@ -201,7 +201,7 @@
                     oncommand="gContextMenu.openFrame();"/>
           <menuitem label="&openFrameCmdInTab.label;"
                     accesskey="&openFrameCmdInTab.accesskey;"
-                    oncommand="gContextMenu.openFrameInTab();"/>
+                    oncommand="gContextMenu.openFrameInTab(event.shiftKey);"/>
           <menuseparator/>
           <menuitem id="context-reload-frame"
                     label="&reloadFrameCmd.label;"
