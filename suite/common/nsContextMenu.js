@@ -55,6 +55,7 @@ function nsContextMenu( xulMenu ) {
     this.popupURL       = null;
     this.onTextInput    = false;
     this.onImage        = false;
+    this.onLoadedImage  = false;
     this.onLink         = false;
     this.onMailtoLink   = false;
     this.onSaveableLink = false;
@@ -147,7 +148,7 @@ nsContextMenu.prototype = {
         this.showItem( "context-savelink", this.onSaveableLink );
 
         // Save/Send image depends on whether there is one.
-        showSave = this.onImage || this.onStandaloneImage;
+        showSave = this.onLoadedImage || this.onStandaloneImage;
         if (showSave)
           goSetMenuValue( "context-saveimage", this.autoDownload ? "valueSave" : "valueSaveAs" );
         this.showItem( "context-saveimage", showSave );
@@ -166,11 +167,11 @@ nsContextMenu.prototype = {
         this.showItem( "context-sep-properties", !( this.inDirList || this.isTextSelected || this.onTextInput ) );
         // Set As Wallpaper depends on whether an image was clicked on, and only works on Windows.
         var isWin = navigator.appVersion.indexOf("Windows") != -1;
-        this.showItem( "context-setWallpaper", isWin && (this.onImage || this.onStandaloneImage));
+        this.showItem( "context-setWallpaper", isWin && (this.onLoadedImage || this.onStandaloneImage));
 
         this.showItem( "context-sep-image", this.onImage || this.onStandaloneImage);
 
-        if( isWin && this.onImage )
+        if( isWin && this.onLoadedImage )
             // Disable the Set As Wallpaper menu item if we're still trying to load the image
           this.setItemAttr( "context-setWallpaper", "disabled", (("complete" in this.target) && !this.target.complete) ? "true" : null );
 
@@ -263,6 +264,7 @@ nsContextMenu.prototype = {
     setTarget : function ( node ) {
         // Initialize contextual info.
         this.onImage    = false;
+        this.onLoadedImage = false;
         this.onStandaloneImage = false;
         this.onMetaDataItem = false;
         this.onTextInput = false;
@@ -282,14 +284,16 @@ nsContextMenu.prototype = {
 
         // See if the user clicked on an image.
         if ( this.target.nodeType == Node.ELEMENT_NODE ) {
-             if ( this.isImageSaveable( this.target ) ) {
+            if ( this.target instanceof Components.interfaces.nsIImageLoadingContent && this.target.currentURI  ) {
                 this.onImage = true;
+                var request = this.target.getRequest( Components.interfaces.nsIImageLoadingContent.CURRENT_REQUEST );
+                if (request && (request.imageStatus & request.STATUS_SIZE_AVAILABLE))
+                    this.onLoadedImage = true;
                 this.imageURL = this.target.currentURI.spec;
 
-                var documentType = window.content.document.contentType;
-                if ( documentType.substr(0,6) == "image/" )
-                    this.onStandaloneImage = true;
-             } else if ( this.target instanceof HTMLInputElement ) {
+                if ( this.target.ownerDocument instanceof ImageDocument )
+                   this.onStandaloneImage = true;
+            } else if ( this.target instanceof HTMLInputElement ) {
                type = this.target.getAttribute("type");
                this.onTextInput = this.isTargetATextBox(this.target);
             } else if ( this.target instanceof HTMLTextAreaElement ) {
@@ -458,15 +462,6 @@ nsContextMenu.prototype = {
     getComputedURL: function( elem, prop ) {
          var url = elem.ownerDocument.defaultView.getComputedStyle( elem, '' ).getPropertyCSSValue( prop );
          return ( url.primitiveType == CSSPrimitiveValue.CSS_URI ) ? url.getStringValue() : null;
-    },
-    // Returns true iff clicked on image is saveable.
-    isImageSaveable : function ( image ) {
-        if (image instanceof Components.interfaces.nsIImageLoadingContent) {
-            var request = image.getRequest(image.CURRENT_REQUEST);
-            if (request && (request.imageStatus & request.STATUS_SIZE_AVAILABLE))
-                return true;
-        }
-        return false;
     },
     // Returns true iff clicked on link is saveable.
     isLinkSaveable : function ( link ) {
