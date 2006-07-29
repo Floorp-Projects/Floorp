@@ -110,10 +110,12 @@
     }
   }
   
-  function hrefForClickEvent(event)
+  function hrefAndLinkNodeForClickEvent(aParams)
   {
+    var event = aParams.event;
     var target = event.target;
-    var linkNode;
+    var href = aParams.href;
+    var linkNode = aParams.linkNode;
 
     var isKeyPress = (event.type == "keypress");
 
@@ -142,7 +144,7 @@
       if (linkNode && !linkNode.hasAttribute("href"))
         linkNode = null;
     }
-    var href;
+
     if (linkNode) {
       href = linkNode.href;
     } else {
@@ -155,11 +157,13 @@
         }
         linkNode = linkNode.parentNode;
       }
-      if (href && href != "") {
+      if (href) {
         href = makeURLAbsolute(linkNode.baseURI, href);
       }
     }
-    return href;
+
+    aParams.href = href;
+    aParams.linkNode = linkNode;
   }
 
   // Called whenever the user clicks in the content area,
@@ -172,7 +176,9 @@
     }
 
     var isKeyPress = (event.type == "keypress");
-    var href = hrefForClickEvent(event);
+    var ceParams = {event: event, href: "", linkNode: null};
+    hrefAndLinkNodeForClickEvent(ceParams);
+    var href = ceParams.href;
     if (href) {
       if (isKeyPress) {
         openNewTabWith(href, true, event.shiftKey);
@@ -180,6 +186,10 @@
       }
       else {
         handleLinkClick(event, href, null);
+        // if in mailnews block the link left click if we determine
+        // that this URL is phishy (i.e. a potential email scam) 
+        if ("gMessengerBundle" in this && !event.button)
+          return !isPhishingURL(ceParams.linkNode, false);
       }
       return true;
     }
@@ -362,11 +372,11 @@
     }  // for
   }
 
-  function makeURLAbsolute( base, url ) 
+  function makeURLAbsolute(base, url)
   {
     // Construct nsIURL.
     var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                  .getService(Components.interfaces.nsIIOService);
+                              .getService(Components.interfaces.nsIIOService);
     var baseURI  = ioService.newURI(base, null, null);
 
     return ioService.newURI(baseURI.resolve(url), null, null).spec;
