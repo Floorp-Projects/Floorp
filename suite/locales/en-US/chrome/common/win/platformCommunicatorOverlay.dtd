@@ -17,4 +17,8 @@
 <!ENTITY findTypeTextCmd.key            "/">
 <!ENTITY findTypeLinksCmd.key           "'">
 
-<!ENTITY accel.emacs_conflict       "accel">
+<!ENTITY accel.emacs_conflict           "accel">
+
+<!-- Help viewer -->
+<!ENTITY openHelpCmd.label              "Help Contents">
+<!ENTITY openHelpCmd.accesskey          "H">
