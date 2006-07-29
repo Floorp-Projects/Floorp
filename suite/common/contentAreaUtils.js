@@ -160,7 +160,16 @@ function openNewTabWith(url, sendReferrer, reverseBackgroundPref)
 
   var referrer = sendReferrer ? getReferrer(browserDocument) : null;
 
-  var tab = browser.addTab(url, referrer); // open link in new tab
+  // As in openNewWindowWith(), we want to pass the charset of the
+  // current document over to a new tab. 
+  var wintype = browserDocument.firstChild.getAttribute('windowtype');
+  var originCharset;
+  if (wintype == "navigator:browser") {
+    originCharset = window._content.document.characterSet;
+  }
+
+  // open link in new tab
+  var tab = browser.addTab(url, referrer, originCharset); 
   if (pref) {
     var loadInBackground = pref.getBoolPref("browser.tabs.loadInBackground");
     if (reverseBackgroundPref)
