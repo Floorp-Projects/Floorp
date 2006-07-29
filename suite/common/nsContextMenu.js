@@ -287,7 +287,7 @@ nsContextMenu.prototype = {
                if ( bodyElt ) {
                  var attr = bodyElt.getAttribute( "background" );
                  if ( attr ||
-                      ( attr = this.getComputedURL( bodyElt, "background-image" ) ) != "none" ) {
+                      ( attr = this.getComputedURL( bodyElt, "background-image" ) ) ) {
                    this.hasBGImage = true;
                    this.bgImageURL = this.makeURLAbsolute( bodyElt.baseURI,
                                                            attr );
@@ -390,7 +390,7 @@ nsContextMenu.prototype = {
                 if ( !this.hasBGImage &&
                      ( ( localname.search( /^(?:TD|TH|TABLE|BODY)$/ ) != -1 &&
                          ( bgImgUrl = elem.getAttribute( "background" ) ) ) ||
-                       ( bgImgUrl = this.getComputedURL( elem, "background-image" ) ) != "none" ) ) {
+                       ( bgImgUrl = this.getComputedURL( elem, "background-image" ) ) ) ) {
                     this.hasBGImage = true;
                     this.bgImageURL = this.makeURLAbsolute( elem.baseURI,
                                                             bgImgUrl );
@@ -400,13 +400,13 @@ nsContextMenu.prototype = {
         }
     },
     // Returns the computed style attribute for the given element.
-    getComputedStyle: function( elem, attr ) {
-         return elem.ownerDocument.defaultView.getComputedStyle( elem, '' ).getPropertyValue( attr );
+    getComputedStyle: function( elem, prop ) {
+         return elem.ownerDocument.defaultView.getComputedStyle( elem, '' ).getPropertyValue( prop );
     },
     // Returns a "url"-type computed style attribute value, with the url() stripped.
-    getComputedURL: function( elem, attr ) {
-         var url = this.getComputedStyle( elem, attr );
-         return ( url == "none" ) ? url : url.replace( /^url\("?([^")]+)"?\)/i, "$1" );
+    getComputedURL: function( elem, prop ) {
+         var url = elem.ownerDocument.defaultView.getComputedStyle( elem, '' ).getPropertyCSSValue( prop );
+         return ( url.primitiveType == CSSPrimitiveValue.CSS_URI ) ? url.getStringValue() : null;
     },
     // Returns true iff clicked on link is saveable.
     isLinkSaveable : function ( link ) {
