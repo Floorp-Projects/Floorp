@@ -17,14 +17,12 @@
 
 <keyset id="tasksKeys">
   <key id="key_navigator"    key="&navigatorCmd.commandkey;"   command="Tasks:Navigator" modifiers="accel"/>
-  <key id="key_editor"       key="&editorCmd.commandkey;"      command="Tasks:Editor" modifiers="accel"/>
 
   <!-- Tools Menu -->
   <key id="key_gotoHistory"  key="&history.commandKey;"        oncommand="toHistory();" modifiers="accel"/>
 </keyset>
 <commandset id="tasksCommands">
   <command id="Tasks:Navigator" oncommand="toNavigator();"/>
-  <command id="Tasks:Editor" oncommand="toEditor();"/>
 </commandset>
 
 
@@ -42,7 +40,6 @@
 
         <menupopup id="taskPopup">
           <menuitem label="&navigatorCmd.label;" accesskey="&navigatorCmd.accesskey;" key="key_navigator" command="Tasks:Navigator" id="tasksMenuNavigator"/>
-          <menuitem label="&editorCmd.label;" accesskey="&editorCmd.accesskey;" key="key_editor" command="Tasks:Editor" id="tasksMenuEditor"/>
 
           <!-- Overlays get stuffed in here. -->
 
@@ -58,7 +55,6 @@
           <menu label="&toolsMenu.label;" accesskey="&toolsMenu.accesskey;">
             <menupopup id="toolsPopup" onpopupshowing="javaItemEnabling();">
               <menuitem label="&historyCmd.label;" accesskey="&historyCmd.accesskey;" oncommand="toHistory()" key="key_gotoHistory"/>
-              <menuitem label="&importUtilCmd.label;" accesskey="&importUtilCmd.accesskey;" oncommand="toImport()"/>
               <menuitem id="java" label="&javaConsoleCmd.label;" accesskey="&javaConsoleCmd.accesskey;" oncommand="toJavaConsole()"/>
               <menuitem label="&javaScriptConsoleCmd.label;" accesskey="&javaScriptConsoleCmd.accesskey;" oncommand="toJavaScriptConsole();"/>
               <menuitem label="&downloadManagerCmd.label;" accesskey="&downloadManagerCmd.accesskey;" oncommand="toDownloadManager();"/>
@@ -72,7 +68,5 @@
   <statusbarpanel id="component-bar" persist="collapsed">
     <toolbarbutton class="taskbutton" id="mini-nav" oncommand="toNavigator();" 
                    tooltiptext="&taskNavigator.tooltip;"/>
-    <toolbarbutton class="taskbutton" id="mini-comp" oncommand="toEditor();" 
-                   tooltiptext="&taskComposer.tooltip;"/>
   </statusbarpanel> 
 </overlay>

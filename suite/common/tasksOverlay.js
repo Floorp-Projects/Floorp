@@ -38,7 +38,8 @@
 
 function toNavigator()
 {
-    CycleWindow('navigator:browser', getBrowserURL());
+  if (!CycleWindow("navigator:browser"))
+    OpenBrowserWindow();
 }
 
 // Set up a lame hack to avoid opening two bookmarks.
@@ -147,21 +148,7 @@ function OpenBrowserWindow()
   }
 }
 
-function newWindowOfType( aType )
-{
-  switch (aType) {
-  case "navigator:browser":
-    OpenBrowserWindow();
-    break;
-  case "composer:html":
-    NewEditorWindow();
-    break;
-  default:
-    break;
-  }
-}
-
-function CycleWindow( aType, aChromeURL )
+function CycleWindow( aType )
 {
   var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
   var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
@@ -170,29 +157,30 @@ function CycleWindow( aType, aChromeURL )
   var topWindow = windowManagerInterface.getMostRecentWindow( null );
 
   if ( topWindowOfType == null )
-    newWindowOfType( aType );
-  else if ( topWindowOfType != topWindow )
-    topWindowOfType.focus();
-  else {
-    var enumerator = windowManagerInterface.getEnumerator( aType );
-    var firstWindow = windowManagerInterface.convertISupportsToDOMWindow ( enumerator.getNext() );
-    var iWindow = firstWindow; // ;-)
-    while ( iWindow != topWindow && enumerator.hasMoreElements() )
-      iWindow = windowManagerInterface.convertISupportsToDOMWindow ( enumerator.getNext() );
-  
-    var desiredWindow = firstWindow;
-    if ( enumerator.hasMoreElements() )
-      desiredWindow = windowManagerInterface.convertISupportsToDOMWindow ( enumerator.getNext() );
-    if ( desiredWindow == topWindow ) // Only one window, open a new one 
-      newWindowOfType( aType );
-    else
-      desiredWindow.focus();
-  }
-}
+    return null;
 
-function toEditor()
-{
-	CycleWindow('composer:html', 'chrome://editor/content/editor.xul');
+  if ( topWindowOfType != topWindow ) {
+    topWindowOfType.focus();
+    return topWindowOfType;
+  }
+
+  var enumerator = windowManagerInterface.getEnumerator( aType );
+  var firstWindow = windowManagerInterface.convertISupportsToDOMWindow(enumerator.getNext());
+  var iWindow = firstWindow;
+  while (iWindow != topWindow && enumerator.hasMoreElements())
+    iWindow = windowManagerInterface.convertISupportsToDOMWindow(enumerator.getNext());
+
+  if (enumerator.hasMoreElements()) {
+    iWindow = windowManagerInterface.convertISupportsToDOMWindow(enumerator.getNext());
+    iWindow.focus();
+    return iWindow;
+  }
+
+  if (firstWindow == topWindow) // Only one window
+    return null;
+
+  firstWindow.focus();
+  return firstWindow;
 }
 
 function ShowWindowFromResource( node )
