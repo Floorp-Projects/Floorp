@@ -69,10 +69,10 @@
       var charsetArg = "charset="+DocCharset;
  
       //we should "inherit" the charset menu setting in a new window
-      newWin = window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url, charsetArg );
+      newWin = window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url, charsetArg, true );
     }
     else { // forget about the charset information.
-      newWin = window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url );
+      newWin = window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url, null, true );
     }
  
     // Fix new window.    
