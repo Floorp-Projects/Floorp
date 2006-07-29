@@ -158,7 +158,7 @@ nsContextMenu.prototype = {
             const PM = Components.classes["@mozilla.org/PopupWindowManager;1"]
                        .getService(Components.interfaces.nsIPopupWindowManager);
             blocking = PM.testPermission(this.popupURL) ==
-                       Components.interfaces.nsIPopupWindowManager.eDisallow;
+                       Components.interfaces.nsIPopupWindowManager.DENY_POPUP;
           } catch (e) {
           }
 
@@ -435,7 +435,7 @@ nsContextMenu.prototype = {
                      .getService(CI.nsIPrefBranch);
           show = !PB.getBoolPref("dom.disable_open_during_load") &&
                  PB.getIntPref("privacy.popups.policy") ==
-                     CI.nsIPopupWindowManager.eAllow &&
+                     CI.nsIPopupWindowManager.ALLOW_POPUP &&
                  PB.getBoolPref("privacy.popups.usecustom");
         }
         if (show) {
