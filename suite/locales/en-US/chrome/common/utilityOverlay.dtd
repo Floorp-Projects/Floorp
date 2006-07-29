@@ -53,7 +53,7 @@
 <!ENTITY captureCmd.accesskey					"s"> 
 <!ENTITY prefillCmd.label					"Prefill Form">
 <!ENTITY prefillCmd.key						"F">  
-<!ENTITY prefillCmd.accesskey					"f"> 
+<!ENTITY prefillCmd.accesskey					"m"> 
 
 <!ENTITY viewMenu.label					"View"> 
 <!ENTITY viewMenu.accesskey				"v"> 
