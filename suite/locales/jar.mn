@@ -1,12 +1,33 @@
 #filter substitution
 
 @AB_CD@.jar:
-##ifdef MOZ_XUL_APP
-#% locale communicator @AB_CD@ %locale/@AB_CD@/communicator/
-##else
-#* locale/@AB_CD@/communicator/contents.rdf                                  (generic/chrome/common/contents.rdf)
-##endif
+#ifdef MOZ_XUL_APP
+% locale branding @AB_CD@ %locale/@AB_CD@/branding/
+% locale communicator @AB_CD@ %locale/@AB_CD@/communicator/
+% locale communicator-platform @AB_CD@ %locale/@AB_CD@/communicator-platform/
+% locale communicator-region @AB_CD@ %locale/@AB_CD@/communicator-region/
+#else
+* locale/@AB_CD@/branding/contents.rdf                                      (generic/chrome/branding/contents.rdf)
+* locale/@AB_CD@/communicator/contents.rdf                                  (generic/chrome/common/contents.rdf)
+* locale/@AB_CD@/communicator-platform/win/contents.rdf                     (generic/chrome/common-platform/contents.rdf)
+* locale/@AB_CD@/communicator-platform/unix/contents.rdf                    (generic/chrome/common-platform/contents.rdf)
+* locale/@AB_CD@/communicator-platform/mac/contents.rdf                     (generic/chrome/common-platform/contents.rdf)
+* locale/@AB_CD@/communicator-region/contents.rdf                           (generic/chrome/common-region/contents.rdf)
+#endif
+* locale/@AB_CD@/branding/brand.dtd                                         (%chrome/branding/brand.dtd)
+* locale/@AB_CD@/branding/brand.properties                                  (%chrome/branding/brand.properties)
+  locale/@AB_CD@/communicator/askViewZoom.dtd                               (%chrome/common/askViewZoom.dtd)
   locale/@AB_CD@/communicator/consoleOverlay.dtd                            (%chrome/common/consoleOverlay.dtd)
+  locale/@AB_CD@/communicator/contentAreaCommands.dtd                       (%chrome/common/contentAreaCommands.dtd) 
+  locale/@AB_CD@/communicator/contentAreaCommands.properties                (%chrome/common/contentAreaCommands.properties)
+  locale/@AB_CD@/communicator/openLocation.dtd                              (%chrome/common/openLocation.dtd)
+  locale/@AB_CD@/communicator/openLocation.properties                       (%chrome/common/openLocation.properties)
+  locale/@AB_CD@/communicator/printPreview.dtd                              (%chrome/common/printPreview.dtd)
+  locale/@AB_CD@/communicator/tasksOverlay.dtd                              (%chrome/common/tasksOverlay.dtd) 
+  locale/@AB_CD@/communicator/utilityOverlay.dtd                            (%chrome/common/utilityOverlay.dtd) 
+  locale/@AB_CD@/communicator/utilityOverlay.properties                     (%chrome/common/utilityOverlay.properties) 
+  locale/@AB_CD@/communicator/viewZoomOverlay.dtd                           (%chrome/common/viewZoomOverlay.dtd)
+  locale/@AB_CD@/communicator/viewZoomOverlay.properties                    (%chrome/common/viewZoomOverlay.properties)
   locale/@AB_CD@/communicator/directory/directory.dtd                       (%chrome/common/directory/directory.dtd)
   locale/@AB_CD@/communicator/history/history.dtd                           (%chrome/common/history/history.dtd)
   locale/@AB_CD@/communicator/history/historyTreeOverlay.dtd                (%chrome/common/history/historyTreeOverlay.dtd)
@@ -79,3 +100,7 @@
   locale/@AB_CD@/communicator/sidebar/preview.dtd                           (%chrome/common/sidebar/preview.dtd)
   locale/@AB_CD@/communicator/sidebar/sidebar.properties                    (%chrome/common/sidebar/sidebar.properties)
   locale/@AB_CD@/communicator/sidebar/sidebarOverlay.dtd                    (%chrome/common/sidebar/sidebarOverlay.dtd)
+  locale/@AB_CD@/communicator-platform/win/platformCommunicatorOverlay.dtd  (%chrome/common/win/platformCommunicatorOverlay.dtd)
+  locale/@AB_CD@/communicator-platform/unix/platformCommunicatorOverlay.dtd (%chrome/common/unix/platformCommunicatorOverlay.dtd)
+  locale/@AB_CD@/communicator-platform/mac/platformCommunicatorOverlay.dtd  (%chrome/common/mac/platformCommunicatorOverlay.dtd)
+  locale/@AB_CD@/communicator-region/region.properties                      (%chrome/common/region.properties)

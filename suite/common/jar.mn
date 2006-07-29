@@ -1,14 +1,65 @@
 comm.jar:
 #ifdef MOZ_XUL_APP
-#% content communicator %content/communicator/ xpcnativewrappers=yes
+% content communicator %content/communicator/ xpcnativewrappers=yes
+% overlay chrome://communicator/content/contentAreaContextOverlay.xul chrome://communicator/content/permissions/imageContextOverlay.xul
+% overlay chrome://communicator/content/pref/preftree.xul chrome://communicator/content/pref/permissionsPrefsOverlay.xul
+% overlay chrome://navigator/content/navigatorOverlay.xul chrome://communicator/content/permissions/permissionsNavigatorOverlay.xul
+% overlay chrome://navigator/content/navigatorOverlay.xul chrome://communicator/content/permissions/cookieTasksOverlay.xul
 % overlay chrome://global/content/console.xul chrome://communicator/content/consoleOverlay.xul
 % overlay chrome://communicator/content/tasksOverlay.xul chrome://communicator/content/emOverlay.xul
 % overlay chrome://communicator/content/pref/preftree.xul chrome://pippki/content/PrefOverlay.xul
+% content communicator-platform %content/communicator-platform/ platform xpcnativewrappers=yes
+% content communicator-region %content/communicator-region/ xpcnativewrappers=yes
 #else
-#*  content/communicator/contents.rdf                                (contents.rdf)
+*  content/communicator/contents.rdf                                (contents.rdf)
+*  content/communicator-platform/contents.rdf                       (contents-platform.rdf)
+*  content/communicator-region/contents.rdf                         (contents-region.rdf)
 #endif
+   content/communicator/askViewZoom.xul
+   content/communicator/askViewZoom.js
+   content/communicator/browserBindings.xul
+   content/communicator/builtinURLs.js
+   content/communicator/communicator.css
    content/communicator/consoleOverlay.xul
+   content/communicator/contentAreaUtils.js
+   content/communicator/contentAreaDD.js
+   content/communicator/contentAreaClick.js
+   content/communicator/contentAreaContextOverlay.xul
+   content/communicator/editorBindings.xul
    content/communicator/emOverlay.xul
+   content/communicator/findUtils.js
+   content/communicator/nsContextMenu.js
+   content/communicator/openLocation.js
+   content/communicator/openLocation.xul
+   content/communicator/printPreviewBindings.xml
+   content/communicator/printing.js
+   content/communicator/tasksOverlay.js
+   content/communicator/tasksOverlay.xul
+   content/communicator/utilityOverlay.js
+   content/communicator/utilityOverlay.xul
+   content/communicator/viewZoomOverlay.xul
+   content/communicator/viewZoomOverlay.js
+#ifdef XP_MACOSX
+   content/communicator/platformBrowserBindings.xul                 (mac/platformBrowserBindings.xul)
+   content/communicator/platformEditorBindings.xul                  (mac/platformEditorBindings.xul)
+   content/communicator/platformCommunicatorOverlay.xul             (mac/platformCommunicatorOverlay.xul)
+#else
+#ifdef XP_WIN32
+   content/communicator/platformBrowserBindings.xul                 (win/platformBrowserBindings.xul)
+   content/communicator/platformEditorBindings.xul                  (win/platformEditorBindings.xul)
+   content/communicator/platformCommunicatorOverlay.xul             (win/platformCommunicatorOverlay.xul)
+#else
+#ifdef XP_OS2
+   content/communicator/platformBrowserBindings.xul                 (win/platformBrowserBindings.xul)
+   content/communicator/platformEditorBindings.xul                  (win/platformEditorBindings.xul)
+   content/communicator/platformCommunicatorOverlay.xul             (win/platformCommunicatorOverlay.xul)
+#else
+   content/communicator/platformBrowserBindings.xul                 (unix/platformBrowserBindings.xul)
+   content/communicator/platformEditorBindings.xul                  (unix/platformEditorBindings.xul)
+   content/communicator/platformCommunicatorOverlay.xul             (unix/platformCommunicatorOverlay.xul)
+#endif
+#endif
+#endif
    content/communicator/bindings/toolbar.xml                        (bindings/toolbar.xml)
    content/communicator/directory/directory.html                    (directory/directory.html)
    content/communicator/directory/directory.js                      (directory/directory.js)
