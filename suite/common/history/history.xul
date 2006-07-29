@@ -26,17 +26,18 @@
 <?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarks.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/history/history.dtd" >
+
 <window title="&historyWindowTitle.label;" id="bookmark-window" onunload="doUnload()"
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns:web="http://home.netscape.com/WEB-rdf#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  width="500" height="400" x="20" y="20" persist="width height x y" align="vertical"
+  width="500" height="400" x="20" y="20" persist="width height x y" orient="vertical"
   ondraggesture="return TopLevelDrag(event);"
   windowtype="history:manager"
   >
 
-  <html:script src="chrome://communicator/content/bookmarks/bookmarks.js"/>
+  <script src="chrome://communicator/content/bookmarks/bookmarks.js"></script>
 
   <menubar>
     <menu value="&fileMenu.label;">
@@ -62,12 +63,11 @@
   </menubar>
 
 <popupset>
-<popup id="contextual" oncreate="return fillContextMenu('contextual');" >
-	<menu />
-</popup>
+  <popup id="contextual" oncreate="return fillContextMenu('contextual');" >
+	  <menu />
+  </popup>
 </popupset>
 
-<html:div style="width: 100px; height: 100px;" flex="1">
 <tree  id="bookmarksTree" ref="NC:HistoryRoot" context="contextual"
        datasources="rdf:history rdf:localsearch"
        style="width:100%;height:100%"
@@ -81,17 +81,16 @@
       <treechildren>
        <treeitem uri="..." rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type" loading="rdf:http://home.netscape.com/NC-rdf#loading">
          <treerow>
-           <treecell><html:hr width="100%" align="center" size="1" /></treecell>
-           <treecell><html:hr width="100%" align="center" size="1" /></treecell>
-           <treecell><html:hr width="100%" align="center" size="1" /></treecell>
+           <treecell><separator class="tree-separator" size="1" /></treecell>
+           <treecell><separator class="tree-separator" size="1" /></treecell>
+           <treecell><separator class="tree-separator" size="1" /></treecell>
          </treerow>
        </treeitem>  		
       </treechildren>
      </rule>
 
      <rule>
-      <treechildren onclick="if (event.clickCount == 2) return OpenURL(event, event.target.parentNode.parentNode, 'bookmarksTree');"
->
+      <treechildren onclick="if (event.clickCount == 2) return OpenURL(event, event.target.parentNode.parentNode, 'bookmarksTree');">
        <treeitem uri="..." persist="open" web:status="rdf:http://home.netscape.com/WEB-rdf#status" rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type" loading="rdf:http://home.netscape.com/NC-rdf#loading">
          <treerow>
            <treecell value="rdf:http://home.netscape.com/NC-rdf#Name" indent="true" />
@@ -109,25 +108,15 @@
 
   <treehead>
     <treerow>
-      <treecell value="&tree.header.name.label;" onclick="return doSort('NameColumn');" observes="NameColumn" />
-      <treecell value="&tree.header.url.label;" onclick="return doSort('URLColumn');" observes="URLColumn" />
-      <treecell value="&tree.header.date.label;" onclick="return doSort('DateColumn');" observes="DateColumn" />
+      <treecell class="treecell-header" value="&tree.header.name.label;" onclick="return doSort('NameColumn');" observes="NameColumn" />
+      <treecell class="treecell-header" value="&tree.header.url.label;" onclick="return doSort('URLColumn');" observes="URLColumn" />
+      <treecell class="treecell-header" value="&tree.header.date.label;" onclick="return doSort('DateColumn');" observes="DateColumn" />
     </treerow>
   </treehead>
 </tree>
-</html:div>
 
-<!--
-pinkerton
-This extra "status" bar is necessary because the bottom right corner of the window on MacOS is
-taken up by the growBox. If this window had a horizontal scrollbar, we'd be alright, but since
-it doesn't the bottom arrow on the vertical scrollbar was being hidden by this growBox. To
-combat this, we can just stick in a 16px high bar to bump up the bottom of the tree so that
-the scrollbar is visible. Yes, I know this is not necessary for win32 or gtk, but we can
-use this area for information (maybe full URL of selected item or the like) in the future.
--->
-<box id="status-bar" style="min-height:16px; max-height:16px;">
-  <titledbutton class="status-bar" align="left" value=""/>
+<box id="status-bar" style="max-height:1em;">
+  <text class="status-bar" value=""/>
 </box>
 
 </window>
