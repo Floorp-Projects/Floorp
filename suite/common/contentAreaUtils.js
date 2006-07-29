@@ -148,14 +148,10 @@ function saveURL(aURL, aFileName, aFilePickerTitleKey)
 
 function saveDocument(aDocument)
 {
-  if (aDocument) 
-    saveInternal(aDocument.location.href, aDocument);
-  else
-    saveInternal(_content.location.href, aDocument);
+  saveInternal(aDocument.location.href, aDocument);
 }
 
-function saveInternal(aURL, aDocument, 
-                      aFileName, aFilePickerTitleKey)
+function saveInternal(aURL, aDocument, aFileName, aFilePickerTitleKey)
 {
   var data = {
     fileName: aFileName,
@@ -175,51 +171,29 @@ function foundHeaderInfo(aSniffer, aData)
   fp.init(window, bundle.GetStringFromName(titleKey), 
           Components.interfaces.nsIFilePicker.modeSave);
 
-  var isDocument = aData.document != null && isDocumentType(contentType);
+  var modeComplete = aData.document != null && 
+                     (contentType == "text/html" || contentType == "text/xml");
   appendFiltersForContentType(fp, aSniffer.contentType,
-                              isDocument ? MODE_COMPLETE : MODE_FILEONLY);  
-                              
-  const prefSvcContractID = "@mozilla.org/preferences-service;1";
-  const prefSvcIID = Components.interfaces.nsIPrefService;                              
-  var prefs = Components.classes[prefSvcContractID].getService(prefSvcIID).getBranch("browser.download");
-  
-  const nsILocalFile = Components.interfaces.nsILocalFile;
-  try {
-    fp.downloadDirectory = prefs.getComplexValue("dir", nsILocalFile);
-  }
-  catch (e) {
-  }
-
-  if (isDocument) {
-    try {
-      fp.filterIndex = prefs.getIntPref("save_converter_index");
-    }
-    catch (e) {
-    }
-  }
+                              modeComplete ? MODE_COMPLETE : MODE_FILEONLY);  
 
   // Determine what the 'default' string to display in the File Picker dialog 
   // should be. 
-  fp.defaultString = getDefaultFileName(aData.fileName, 
-                                        aSniffer.suggestedFileName, 
-                                        aSniffer.uri, aData.document);
+  var defaultFileName = getDefaultFileName(aData.fileName, 
+                                           aSniffer.suggestedFileName, 
+                                           aSniffer.uri);
+  fp.defaultString = getNormalizedLeafName(defaultFileName, contentType);
   
   if (fp.show() == Components.interfaces.nsIFilePicker.returnCancel || !fp.file)
     return;
     
-  if (isDocument) 
-    prefs.setIntPref("save_converter_index", fp.filterIndex);
-  prefs.setComplexValue("dir", nsILocalFile, fp.file);
-    
   fp.file.leafName = validateFileName(fp.file.leafName);
-  const kAllFilesFilterIndex = 1;
-  if (isDocument || fp.filterIndex != kAllFilesFilterIndex) 
-    fp.file.leafName = getNormalizedLeafName(fp.file.leafName, contentType);
+  fp.file.leafName = getNormalizedLeafName(fp.file.leafName, contentType);
   
 // XXX turn this on when Adam lands the ability to save as a specific content
 //     type
 //var contentType = fp.filterIndex == 2 ? "text/unicode" : "text/html";
-  var source = (isDocument && fp.filterIndex == 0) ? aData.document : aSniffer.uri;
+  var source = (aData.document && contentType == "text/html" &&
+                fp.filterIndex == 0) ? aData.document : aSniffer.uri;
   
   var persistArgs = {
     source    : source,
@@ -336,7 +310,8 @@ function appendFiltersForContentType(aFilePicker, aContentType, aSaveMode)
       
       aFilePicker.appendFilter(mimeInfo.Description, extString);
     }
-    aFilePicker.appendFilter(bundle.GetStringFromName("AllFilesFilter"), "*.*");
+    else
+      aFilePicker.appendFilter(bundle.GetStringFromName("AllFilesFilter"), "*.*");
     break;
   }
 } 
@@ -410,19 +385,19 @@ function getMIMEInfoForType(aMIMEType)
 
 function getDefaultFileName(aDefaultFileName, aNameFromHeaders, aDocumentURI, aDocument)
 {
+  if (aDefaultFileName)
+    return validateFileName(aDefaultFileName);  // 1) Use the caller-provided name, if any
+
   if (aNameFromHeaders)
-    return validateFileName(aNameFromHeaders);  // 1) Use the name suggested by the HTTP headers
+    return validateFileName(aNameFromHeaders);  // 2) Use the name suggested by the HTTP headers
 
   if (aDocument && aDocument.title != "") 
-    return validateFileName(aDocument.title)    // 2) Use the document title
+    return validateFileName(aDocument.title)    // 3) Use the document title
 
   var url = aDocumentURI.QueryInterface(Components.interfaces.nsIURL);
   if (url.fileName != "")
     return url.fileName;                        // 4) Use the actual file name, if present
   
-  if (aDefaultFileName)
-    return validateFileName(aDefaultFileName);  // 3) Use the caller-provided name, if any
-
   return aDocumentURI.host;                     // 5) Use the host.
 }
 
@@ -472,16 +447,5 @@ function getNormalizedLeafName(aFile, aContentType)
   }
  
   return leafName;
-}
-
-function isDocumentType(aContentType)
-{
-  switch (aContentType) {
-  case "text/html":
-  case "text/xml":
-  case "application/xhtml+xml":
-    return true;
-  }
-  return false;
 }
 
