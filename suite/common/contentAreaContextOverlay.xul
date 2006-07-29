@@ -113,7 +113,7 @@
       <menuitem id="context-copyimage"
                 label="&copyImageCmd.label;"
                 accesskey="&copyImageCmd.accesskey;"
-                command="cmd_copyImageContents"/>
+                command="cmd_copyImage"/>
       <menuseparator id="context-sep-copyimage"/>
       <menuitem id="context-saveimage"
                 valueSaveAs="&saveImageAsCmd.label;"
