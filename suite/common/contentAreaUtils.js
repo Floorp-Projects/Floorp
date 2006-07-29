@@ -842,15 +842,14 @@ function getNormalizedLeafName(aFile, aDefaultExtension)
   if (!aDefaultExtension)
     return aFile;
 
-  // Fix up the file name we're saving to to include the default extension
-  const stdURLContractID = "@mozilla.org/network/standard-url;1";
-  const stdURLIID = Components.interfaces.nsIURL;
-  var url = Components.classes[stdURLContractID].createInstance(stdURLIID);
-  url.filePath = aFile;
+  // Remove trailing dots and spaces on windows
+  if (/Win/.test(navigator.platform))
+    aFile = aFile.replace(/[\s.]+$/, "");
 
-  if (url.fileExtension != aDefaultExtension) {
+  // Fix up the file name we're saving to to include the default extension
+  var i = aFile.lastIndexOf(".");
+  if (aFile.substr(i + 1) != aDefaultExtension)
     return aFile + "." + aDefaultExtension;
-  }
 
   return aFile;
 }
