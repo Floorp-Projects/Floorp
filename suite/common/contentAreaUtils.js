@@ -649,7 +649,7 @@ function getDefaultFileName(aDefaultFileName, aNameFromHeaders, aDocumentURI, aD
     var url = aDocumentURI.QueryInterface(Components.interfaces.nsIURL);
     if (url.fileName != "")
       // 2) Use the actual file name, if present
-      return url.fileName;
+      return unescape(url.fileName);
   } catch (e) {
     // This is something like a wyciwyg:, data:, and so forth
     // URI... no usable filename here.
