@@ -36,6 +36,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const nsIDOMWindowInternal = Components.interfaces.nsIDOMWindowInternal;
+const nsIWindowMediator = Components.interfaces.nsIWindowMediator;
+
 function toNavigator()
 {
   if (!CycleWindow("navigator:browser"))
@@ -74,7 +77,7 @@ function toOpenWindowByType( inType, uri )
 {
 	var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
 
-	var	windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
+	var	windowManagerInterface = windowManager.QueryInterface(nsIWindowMediator);
 
 	var topWindow = windowManagerInterface.getMostRecentWindow( inType );
 	
@@ -115,7 +118,7 @@ function OpenBrowserWindow()
 function CycleWindow( aType )
 {
   var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
-  var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
+  var windowManagerInterface = windowManager.QueryInterface(nsIWindowMediator);
 
   var topWindowOfType = windowManagerInterface.getMostRecentWindow( aType );
   var topWindow = windowManagerInterface.getMostRecentWindow( null );
@@ -129,13 +132,13 @@ function CycleWindow( aType )
   }
 
   var enumerator = windowManagerInterface.getEnumerator( aType );
-  var firstWindow = windowManagerInterface.convertISupportsToDOMWindow(enumerator.getNext());
+  var firstWindow = enumerator.getNext().QueryInterface(nsIDOMWindowInternal);
   var iWindow = firstWindow;
   while (iWindow != topWindow && enumerator.hasMoreElements())
-    iWindow = windowManagerInterface.convertISupportsToDOMWindow(enumerator.getNext());
+    iWindow = enumerator.getNext().QueryInterface(nsIDOMWindowInternal);
 
   if (enumerator.hasMoreElements()) {
-    iWindow = windowManagerInterface.convertISupportsToDOMWindow(enumerator.getNext());
+    iWindow = enumerator.getNext().QueryInterface(nsIDOMWindowInternal);
     iWindow.focus();
     return iWindow;
   }
@@ -150,7 +153,7 @@ function CycleWindow( aType )
 function ShowWindowFromResource( node )
 {
 	var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
-	var	windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
+	var	windowManagerInterface = windowManager.QueryInterface(nsIWindowMediator);
     
     var desiredWindow = null;
     var url = node.getAttribute('id');
@@ -178,7 +181,7 @@ function ShowUpdateFromResource( node )
 function checkFocusedWindow()
 {
   var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
-  var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
+  var windowManagerInterface = windowManager.QueryInterface(nsIWindowMediator);
 
   var sep = document.getElementById("sep-window-list");
   // Using double parens to avoid warning
