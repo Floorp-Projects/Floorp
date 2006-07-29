@@ -20,12 +20,13 @@
 
 <keyset id="keyset">
   <key id="key_navigator" xulkey="true" key="&navigatorCmd.commandkey;" observes="Tasks:Navigator"/>
+  <key id="key_editor" xulkey="true" key="&editorCmd.commandkey;" observes="Tasks:Editor"/>
 </keyset>
 
 <broadcasterset id="broadcasterset">
   <broadcaster id="Tasks:Navigator" value="&navigatorCmd.label;" oncommand="toNavigator();"/>
+  <broadcaster id="Tasks:Editor"    value="&editorCmd.label;"    oncommand="toEditor();"/>
 </broadcasterset>
-
 
 
       <!-- Tasks Menu -->
@@ -40,7 +41,7 @@
 
         <menupopup id="taskPopup">
           <menuitem  accesskey="&navigatorCmd.accesskey;" key="key_navigator" observes="Tasks:Navigator"/>
-          <menuitem value="&editorCmd.label;"    accesskey="&editorCmd.accesskey;" oncommand="toEditor();" />
+          <menuitem  accesskey="&editorCmd.accesskey;" key="key_editor" observes="Tasks:Editor" />
           <menuseparator/>
 
           <menuitem value="&addressBookCmd.label;" accesskey="&addressBookCmd.accesskey;" oncommand="toAddressBook()"/>

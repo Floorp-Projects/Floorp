@@ -6,10 +6,11 @@
 <!ENTITY navigatorCmd.accesskey             "n">
 <!ENTITY navigatorCmd.commandkey            "1">
 <!-- LOCALIZATION NOTE (editorCmd.label): DONT_TRANSLATE -->
-<!ENTITY editorCmd.label					  "Composer">
+<!ENTITY editorCmd.label					"Composer">
 <!ENTITY editorCmd.accesskey				"c">
+<!ENTITY editorCmd.commandkey				"4">
 <!ENTITY addressBookCmd.label				"Address Book">  
-<!ENTITY addressBookCmd.accesskey				"a">
+<!ENTITY addressBookCmd.accesskey			"a">
 
 <!ENTITY toolsMenu.label					"Tools"> 
 <!ENTITY toolsMenu.accesskey				"t">
