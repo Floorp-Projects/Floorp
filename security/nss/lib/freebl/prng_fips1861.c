@@ -35,7 +35,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: prng_fips1861.c,v 1.23 2006/02/01 21:18:44 wtchang%redhat.com Exp $ */
+/* $Id: prng_fips1861.c,v 1.24 2006/07/29 00:28:12 wtchang%redhat.com Exp $ */
 
 #include "prerr.h"
 #include "secerr.h"
@@ -466,7 +466,7 @@ RNG_RandomUpdate(const void *data, size_t bytes)
 ** Generate some random bytes, using the global random number generator
 ** object.
 */
-SECStatus 
+static SECStatus 
 prng_GenerateGlobalRandomBytes(RNGContext *rng,
                                void *dest, size_t len)
 {
