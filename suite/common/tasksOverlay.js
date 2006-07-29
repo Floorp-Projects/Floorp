@@ -110,9 +110,35 @@ function OpenBrowserWindow()
   var handler = Components.classes['@mozilla.org/commandlinehandler/general-startup;1?type=browser'];
   handler = handler.getService();
   handler = handler.QueryInterface(Components.interfaces.nsICmdLineHandler);
-  var startpage = handler.defaultArgs;
   var url = handler.chromeUrlForTask;
   var wintype = document.firstChild.getAttribute('windowtype');
+  var startpage;
+ 
+  // if current window is a browser window then check pref for how new window should be opened
+  if (wintype == "navigator:browser")
+  {
+    try {
+      switch ( pref.getIntPref("browser.windows.loadOnNewWindow") )
+      {
+        case -1:
+          startpage = handler.defaultArgs;
+          break;
+        default:
+          startpage = "about:blank";
+          break;
+        case 1:
+          startpage = getHomePage().join("\n");
+          break;
+        case 2:
+          startpage = getWebNavigation().currentURI.spec;
+          break;
+      }
+    } catch(e) {
+      startpage = "about:blank";
+    }
+  } else {
+    startpage = handler.defaultArgs;
+  }
 
   // if and only if the current window is a browser window and it has a document with a character
   // set, then extract the current charset menu setting from the current document and use it to
