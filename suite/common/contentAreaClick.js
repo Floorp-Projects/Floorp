@@ -149,7 +149,7 @@
           try {
             saveModifier = pref.GetBoolPref("ui.key.saveLink.shift");
           }
-          catch {            
+          catch(ex) {            
           }
         }
         saveModifier = saveModifier ? event.shiftKey : event.metaKey;
