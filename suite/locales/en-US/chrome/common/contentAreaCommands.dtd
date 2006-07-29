@@ -1,12 +1,16 @@
 <!-- Context Menu -->
-<!ENTITY openLinkCmd.label            "Open Link in New Window">
+<!ENTITY openLinkCmd.label            "Open in New Window">
 <!ENTITY openLinkCmd.accesskey        "o">
+<!ENTITY openLinkInWindowCmd.label    "Open">
+<!ENTITY openLinkInWindowCmd.accesskey "p">
 <!ENTITY editLinkCmd.label            "Edit Link in Composer">
 <!ENTITY editLinkCmd.accesskey        "e">
 <!ENTITY openFrameCmd.label           "Open Frame in New Window">
 <!ENTITY openFrameCmd.accesskey       "o">
 <!ENTITY showOnlyThisFrameCmd.label     "Show Only This Frame">
 <!ENTITY showOnlyThisFrameCmd.accesskey "w">
+<!ENTITY addToBookmarksCmd.label      "Add to Bookmarks">
+<!ENTITY addToBookmarksCmd.accesskey  "B">
 <!ENTITY goBackCmd.label              "Back">
 <!ENTITY goBackCmd.accesskey          "b">
 <!ENTITY goForwardCmd.label           "Forward">
@@ -32,7 +36,7 @@
 <!ENTITY viewBGImageCmd.accesskey     "w">
 <!ENTITY bookmarkPageCmd.label        "Bookmark this Page">
 <!ENTITY bookmarkPageCmd.accesskey    "b">
-<!ENTITY bookmarkLinkCmd.label        "Bookmark this Link">
+<!ENTITY bookmarkLinkCmd.label        "File Bookmark for Link...">
 <!ENTITY bookmarkLinkCmd.accesskey    "b">
 <!ENTITY savePageCmd.label            "Save As...">
 <!ENTITY savePageCmd.accesskey        "s">
@@ -46,7 +50,7 @@
 <!ENTITY copyCmd.accesskey            "c">
 <!ENTITY selectAllCmd.label           "Select All">
 <!ENTITY selectAllCmd.accesskey       "l">
-<!ENTITY copyLinkCmd.label            "Copy Link Location">
+<!ENTITY copyLinkCmd.label            "Copy Link Address">
 <!ENTITY copyLinkCmd.accesskey        "n">
 <!ENTITY copyImageCmd.label           "Copy Image Location">
 <!ENTITY copyImageCmd.accesskey       "m">
@@ -58,3 +62,7 @@
 <!ENTITY pasteCmd.accesskey           "p">
 <!ENTITY cutCmd.label                 "Cut">
 <!ENTITY cutCmd.accesskey             "u">
+<!ENTITY deleteCmd.label              "Delete">
+<!ENTITY deleteCmd.accesskey          "D">
+<!ENTITY undoCmd.label                "Undo">
+<!ENTITY undoCmd.accesskey            "U">
