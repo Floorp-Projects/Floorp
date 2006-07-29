@@ -26,7 +26,7 @@
 <!ENTITY javaScriptConsoleCmd.accesskey				"s">
 
 <!-- LOCALIZATION NOTE (privacyMenu.label): DONT_TRANSLATE -->
-<!ENTITY privacyMenu.label "Privacy and Security">
+<!ENTITY privacyMenu.label "Privacy &amp; Security">
 <!ENTITY privacyMenu.accesskey "p">
 
 <!ENTITY taskNavigator.tooltip  "Navigator">
