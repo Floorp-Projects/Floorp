@@ -29,7 +29,6 @@
 var contentAreaDNDObserver = {
   onDragStart: function (aEvent, aXferData, aDragAction)
     {
-      alert('hey');
       // under the assumption that content areas won't contain
       // draggable XBL, we'll ignore the drag if we're dragging XBL
       // anonymous content nodes, like scrollbars, etc.
