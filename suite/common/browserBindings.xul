@@ -38,12 +38,12 @@
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_scrollLineDown');
             controller.doCommand('cmd_scrollLineDown');"/>
-    <key id="key_left" keycode="VK_LEFT" shift="false" control="false" alt="false"
+    <key id="key_left" keycode="VK_LEFT" shift="false" control="false" alt="false" xulkey="false"
         onkeypress="
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_scrollLeft');
             controller.doCommand('cmd_scrollLeft');"/>
-    <key id="key_right" keycode="VK_RIGHT" shift="false" control="false" alt="false"
+    <key id="key_right" keycode="VK_RIGHT" shift="false" control="false" alt="false" xulkey="false"
         onkeypress="
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_scrollRight');
