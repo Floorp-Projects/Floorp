@@ -253,11 +253,12 @@ function openTopWin( url )
     if ( topWindowOfType )
     {
         topWindowOfType.focus();
-    topWindowOfType._content.location.href = url;
+        topWindowOfType._content.location.href = url;
+        return topWindowOfType;
     }
     else
     {
-        window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url );
+        return window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url );
     }
 }
 
