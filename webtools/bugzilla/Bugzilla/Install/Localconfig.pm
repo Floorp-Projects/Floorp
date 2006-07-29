@@ -411,7 +411,8 @@ EOT
     elsif (!ON_WINDOWS && !$group) {
         print <<EOT;
 
-********************************************************************************WARNING! You have not entered a value for the "webservergroup" parameter
+********************************************************************************
+WARNING! You have not entered a value for the "webservergroup" parameter
 in localconfig. This means that certain files and directories which need
 to be editable by both you and the webserver must be world writable, and
 other files (including the localconfig file which stores your database
