@@ -698,6 +698,9 @@ function getNormalizedLeafName(aFile, aDefaultExtension)
 
 function getDefaultExtension(aFilename, aURI, aContentType)
 {
+  if (aContentType == "text/plain" || aContentType == "application/octet-stream" || aURI.scheme == "ftp")
+    return "";   // temporary fix for bug 120327
+
   // This mirrors some code in nsExternalHelperAppService::DoContent
   // Use the filename first and then the URI if that fails
   
