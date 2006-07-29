@@ -4,27 +4,27 @@
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/MPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *
  * The Original Code is this file as it was released upon
  * January 6, 2001.
- * 
+ *
  * The Initial Developer of the Original Code is Peter Annema.
  * Portions created by Peter Annema are Copyright (C) 2000
  * Peter Annema. All Rights Reserved.
- * 
+ *
  * Contributor(s):
  *   Peter Annema <disttsc@bart.nl> (Original Author)
  *   Jonas Sicking <sicking@bigfoot.com>
- * 
+ *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
- * "GPL"), in which case the provisions of the GPL are applicable 
- * instead of those above.  If you wish to allow use of your 
+ * "GPL"), in which case the provisions of the GPL are applicable
+ * instead of those above.  If you wish to allow use of your
  * version of this file only under the terms of the GPL and not to
  * allow others to use your version of this file under the MPL,
  * indicate your decision by deleting the provisions above and
@@ -246,10 +246,10 @@ function registerZoomManager()
       else
         label = zoom.bundle.getString("label");
 
-      menuItem.setAttribute("value", label.replace(/%zoom%/, zoomFactors[i]));
+      menuItem.setAttribute("label", label.replace(/%zoom%/, zoomFactors[i]));
       menuItem.setAttribute("accesskey", accessKeys[i]);
-      menuItem.setAttribute("oncommand", "ZoomManager.prototype.getInstance().textZoom = this.data;");
-      menuItem.setAttribute("data", zoomFactors[i]);
+      menuItem.setAttribute("oncommand", "ZoomManager.prototype.getInstance().textZoom = this.value;");
+      menuItem.setAttribute("value", zoomFactors[i]);
       popup.insertBefore(menuItem, insertBefore);
     }
   }
@@ -261,7 +261,7 @@ function updateViewMenu()
 
   var textZoomMenu = document.getElementById("menu_textZoom");
   var menuLabel = zoom.bundle.getString("menuLabel").replace(/%zoom%/, zoom.textZoom);
-  textZoomMenu.setAttribute("value", menuLabel);
+  textZoomMenu.setAttribute("label", menuLabel);
 }
 
 function updateTextZoomMenu()
@@ -272,14 +272,14 @@ function updateTextZoomMenu()
 
   var textZoomOther = document.getElementById("menu_textZoomOther");
   var label = zoom.bundle.getString("labelOther");
-  textZoomOther.setAttribute("value", label.replace(/%zoom%/, zoom.factorOther));
-  textZoomOther.setAttribute("data", zoom.factorOther);
+  textZoomOther.setAttribute("label", label.replace(/%zoom%/, zoom.factorOther));
+  textZoomOther.setAttribute("value", zoom.factorOther);
 
   var popup = document.getElementById("menu_textZoomPopup");
   var item = popup.firstChild;
   while (item) {
     if (item.getAttribute("name") == "textZoom") {
-      if (item.getAttribute("data") == currentZoom)
+      if (item.getAttribute("value") == currentZoom)
         item.setAttribute("checked","true");
       else
         item.removeAttribute("checked");

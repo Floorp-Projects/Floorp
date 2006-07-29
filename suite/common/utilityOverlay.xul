@@ -19,8 +19,8 @@
   <script type="application/x-javascript" src="chrome://communicator/content/builtinURLs.js"/>
          
   <!-- online/offline status indicators -->
-  <broadcasterset id="broadcasterset">  	
-	  <broadcaster id="Communicator:WorkMode" value="&offlineGoOfflineCmd.label;" oncommand="setOfflineStatus(true);"/>
+  <broadcasterset id="broadcasterset">    
+    <broadcaster id="Communicator:WorkMode" label="&offlineGoOfflineCmd.label;" oncommand="setOfflineStatus(true);"/>
   </broadcasterset>
   <statusbarpanel id="offline-status" tooltip="aTooltip" observes="Communicator:WorkMode"/>
   <menuitem id="offlineGoOfflineCmd" accesskey="&offlineGoOfflineCmd.accesskey;" observes="Communicator:WorkMode"/>
@@ -34,27 +34,27 @@
 	<!-- NOT IMPLEMENTED, so temporarily disabled -->
 	<broadcaster id="cmd_newEditorTemplate"   disabled="true"  oncommand="NewEditorFromTemplate();"/>
 	<broadcaster id="cmd_newEditorDraft"      disabled="true"  oncommand="NewEditorFromDraft();"/>
-  <broadcaster id="cmd_pageSetup" value="&pageSetupCmd.label;" disabled="true" oncommand="goPageSetup();"/>
+  <broadcaster id="cmd_pageSetup" label="&pageSetupCmd.label;" disabled="true" oncommand="goPageSetup();"/>
   
-	<menuitem id="menu_newEditor"         value="&newBlankPageCmd.label;"         accesskey="&newBlankPageCmd.accesskey;" key="key_newBlankPage" observes="cmd_newEditor"/>
-	<menuitem id="menu_newEditorTemplate" value="&newPageFromTemplateCmd.label;"  accesskey="&newPageFromTemplateCmd.accesskey;"                 observes="cmd_newEditorTemplate"/>
-	<menuitem id="menu_newEditorDraft"    value="&newPageFromDraftCmd.label;"     accesskey="&newPageFromDraftCmd.accesskey;"                    observes="cmd_newEditorDraft"/>
+  <menuitem id="menu_newEditor"         label="&newBlankPageCmd.label;"         accesskey="&newBlankPageCmd.accesskey;" key="key_newBlankPage" observes="cmd_newEditor"/>
+  <menuitem id="menu_newEditorTemplate" label="&newPageFromTemplateCmd.label;"  accesskey="&newPageFromTemplateCmd.accesskey;"                 observes="cmd_newEditorTemplate"/>
+  <menuitem id="menu_newEditorDraft"    label="&newPageFromDraftCmd.label;"     accesskey="&newPageFromDraftCmd.accesskey;"                    observes="cmd_newEditorDraft"/>
  
-	<menu id="menu_New" value="&newMenu.label;" accesskey="&newMenu.accesskey;"/>
-	<menuitem id="menu_newNavigator" value="&newNavigatorCmd.label;" accesskey="&newNavigatorCmd.accesskey;" key="key_newNavigator" observes="cmd_newNavigator"/>
+  <menu id="menu_New" label="&newMenu.label;" accesskey="&newMenu.accesskey;"/>
+  <menuitem id="menu_newNavigator" label="&newNavigatorCmd.label;" accesskey="&newNavigatorCmd.accesskey;" key="key_newNavigator" observes="cmd_newNavigator"/>
 
-	<key id="key_newBlankPage"    key="&newBlankPageCmd.key;" observes="cmd_newEditor" modifiers="accel, shift"/>
-	<key id="key_newNavigator"    key="&newNavigatorCmd.key;" observes="cmd_newNavigator" modifiers="accel"/>
+  <key id="key_newBlankPage"    key="&newBlankPageCmd.key;" observes="cmd_newEditor" modifiers="accel, shift"/>
+  <key id="key_newNavigator"    key="&newNavigatorCmd.key;" observes="cmd_newNavigator" modifiers="accel"/>
 
 	<!-- Edit Menu -->
 	<menu id="menu_Edit" value="&editMenu.label;" accesskey="&editMenu.accesskey;"/>
-	<menuitem id="menu_undo" value="&undoCmd.label;" key="key_undo" accesskey="&undoCmd.accesskey;" observes="cmd_undo"/>
-	<menuitem id="menu_redo" value="&redoCmd.label;" key="key_redo" accesskey="&redoCmd.accesskey;" observes="cmd_redo"/>
-	<menuitem id="menu_cut" value="&cutCmd.label;" key="key_cut" accesskey="&cutCmd.accesskey;" observes="cmd_cut"/>
-	<menuitem id="menu_copy" value="&copyCmd.label;" key="key_copy" accesskey="&copyCmd.accesskey;" observes="cmd_copy"/>
-	<menuitem id="menu_paste" value="&pasteCmd.label;" key="key_paste" accesskey="&pasteCmd.accesskey;" observes="cmd_paste"/>
-	<menuitem id="menu_delete" value="&deleteCmd.label;" key="key_delete" accesskey="&deleteCmd.accesskey;" observes="cmd_delete"/>
-	<menuitem id="menu_selectAll" value="&selectAllCmd.label;" key="key_selectAll" accesskey="&selectAllCmd.accesskey;" observes="cmd_selectAll"/>
+  <menuitem id="menu_undo" label="&undoCmd.label;" key="key_undo" accesskey="&undoCmd.accesskey;" observes="cmd_undo"/>
+  <menuitem id="menu_redo" label="&redoCmd.label;" key="key_redo" accesskey="&redoCmd.accesskey;" observes="cmd_redo"/>
+  <menuitem id="menu_cut" label="&cutCmd.label;" key="key_cut" accesskey="&cutCmd.accesskey;" observes="cmd_cut"/>
+  <menuitem id="menu_copy" label="&copyCmd.label;" key="key_copy" accesskey="&copyCmd.accesskey;" observes="cmd_copy"/>
+  <menuitem id="menu_paste" label="&pasteCmd.label;" key="key_paste" accesskey="&pasteCmd.accesskey;" observes="cmd_paste"/>
+  <menuitem id="menu_delete" label="&deleteCmd.label;" key="key_delete" accesskey="&deleteCmd.accesskey;" observes="cmd_delete"/>
+  <menuitem id="menu_selectAll" label="&selectAllCmd.label;" key="key_selectAll" accesskey="&selectAllCmd.accesskey;" observes="cmd_selectAll"/>
 	
 	<!-- These key nodes are here only for show.                       -->
 	<!-- The real bindings come from XBL, in platformHTMLBindings.xml. -->
@@ -112,7 +112,7 @@
 	<!-- Not needed yet, window just needs a broadcaster with this id and oncommand=  broadcaster id="cmd_preferences"/-->
 	
 	<menuitem id="menu_preferences"
-			  value="&preferencesCmd.label;"
+        label="&preferencesCmd.label;"
 			  key="key_preferences"
 			  accesskey="&preferencesCmd.accesskey;"
 			  observes="cmd_preferences"/>
@@ -121,23 +121,23 @@
 
 	
 	<!-- View Menu -->
-	<menu id="menu_View" value="&viewMenu.label;" accesskey="&viewMenu.accesskey;"/>
-	<menu id="menu_Toolbars" value="&viewToolbarsMenu.label;" accesskey="&viewToolbarsMenu.accesskey;"/>
+  <menu id="menu_View" label="&viewMenu.label;" accesskey="&viewMenu.accesskey;"/>
+  <menu id="menu_Toolbars" label="&viewToolbarsMenu.label;" accesskey="&viewToolbarsMenu.accesskey;"/>
 	<menuitem id="menu_showTaskbar"
-			  value="&showTaskbarCmd.label;"
+        label="&showTaskbarCmd.label;"
 			  accesskey="&showTaskbarCmd.accesskey;"
 			  oncommand="goToggleToolbar('taskbar', 'menu_showTaskbar')"
 			  checked="true"/>
 
 	<!-- Help Menu -->
-	<menu id="menu_Help" value="&helpMenu.label;" accesskey="&helpMenu.accesskey;">
+  <menu id="menu_Help" label="&helpMenu.label;" accesskey="&helpMenu.accesskey;">
 		<menupopup id="helpPopup">
-			<menuitem accesskey="&releaseCmd.accesskey;" value="&releaseCmd.label;"
+      <menuitem accesskey="&releaseCmd.accesskey;" label="&releaseCmd.label;"
 			          id="releaseUrl" oncommand="openTopWin('&releaseURL;');"/>
 			<menuseparator/>
-                        <menuitem class="about" accesskey="&aboutCommPluginsCmd.accesskey;" value="&aboutCommPluginsCmd.label;"
+                        <menuitem class="about" accesskey="&aboutCommPluginsCmd.accesskey;" label="&aboutCommPluginsCmd.label;"
                                 id="pluginInfo" oncommand="openTopWin('about:plugins')"/>
-			<menuitem accesskey="&aboutCmd.accesskey;" value="&aboutCmd.label;"
+      <menuitem accesskey="&aboutCmd.accesskey;" label="&aboutCmd.label;"
 			          id="aboutName" oncommand="goAboutDialog();"/>
 		</menupopup>
 	</menu>
