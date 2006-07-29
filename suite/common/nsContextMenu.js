@@ -627,35 +627,30 @@ nsContextMenu.prototype = {
         saveImageURL( this.imageURL, null, "SaveImageTitle", false,
                       getReferrer(document) );
     },
-    // Generate email address and put it on clipboard.
-    copyEmail : function () {
-        // Copy the comma-separated list of email addresses only.
+    // Generate email address.
+    getEmail : function () {
+        // Get the comma-separated list of email addresses only.
         // There are other ways of embedding email addresses in a mailto:
         // link, but such complex parsing is beyond us.
-        var url = this.linkURL();
-        var qmark = url.indexOf( "?" );
         var addresses;
-        
-        if ( qmark > 7 ) {                   // 7 == length of "mailto:"
-            addresses = url.substring( 7, qmark );
-        } else {
-            addresses = url.substr( 7 );
-        }
-
-        // Let's try to unescape it using a character set
         try {
+          // Let's try to unescape it using a character set
           var characterSet = this.target.ownerDocument.characterSet;
           const textToSubURI = Components.classes["@mozilla.org/intl/texttosuburi;1"]
                                          .getService(Components.interfaces.nsITextToSubURI);
+          addresses = this.linkURL().match(/^mailto:([^?]+)/)[1];
           addresses = textToSubURI.unEscapeURIForUI(characterSet, addresses);
         }
         catch(ex) {
           // Do nothing.
         }
-
+        return addresses;
+    },
+    // Copy email to clipboard
+    copyEmail : function () {
         var clipboard = this.getService( "@mozilla.org/widget/clipboardhelper;1",
                                          Components.interfaces.nsIClipboardHelper );
-        clipboard.copyString(addresses);
+        clipboard.copyString(this.getEmail());
     },    
     addBookmark : function() {
       var docshell = document.getElementById( "content" ).webNavigation;
