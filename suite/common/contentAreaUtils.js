@@ -617,6 +617,11 @@ function appendFiltersForContentType(aFilePicker, aContentType, aFileExtension, 
     filterString = "*.xht; *.xhtml";
     break;
 
+  case "image/svg+xml":
+    bundleName   = "WebPageSVGOnlyFilter";
+    filterString = "*.svg; *.svgz";
+    break;
+
   case "text/xml":
   case "application/xml":
     bundleName   = "WebPageXMLOnlyFilter";
@@ -918,6 +923,7 @@ function GetSaveModeForContentType(aContentType)
   switch (aContentType) {
   case "text/html":
   case "application/xhtml+xml":
+  case "image/svg+xml":
     saveMode |= SAVEMODE_COMPLETE_TEXT;
     // Fall through
   case "text/xml":
