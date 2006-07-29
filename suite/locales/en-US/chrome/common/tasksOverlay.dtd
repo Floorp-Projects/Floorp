@@ -30,14 +30,8 @@
 <!ENTITY windowMenu.label "Window">
 <!ENTITY windowMenu.accesskey "W">
 
-<!ENTITY search.label "Search">
-<!ENTITY search.accesskey "e">
-
-<!ENTITY tasksMenu.label            "Tools">
-<!ENTITY tasksMenu.accesskey                "T"> 
-
-<!ENTITY searchInternetCmd.label "Search the Web">
-<!ENTITY searchInternetCmd.accesskey "w">
+<!ENTITY tasksMenu.label "Tools">
+<!ENTITY tasksMenu.accesskey "T"> 
 
 <!ENTITY downloadManagerCmd.label "Download Manager">
 <!ENTITY downloadManagerCmd.accesskey "D">
