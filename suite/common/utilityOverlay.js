@@ -408,3 +408,17 @@ function utilityOnUnload(aEvent)
 }
 
 addEventListener("load", utilityOnLoad, false);
+
+function GenerateValidFilename(filename, extension)
+{
+  if (filename) // we have a title; let's see if it's usable
+  {
+    // clean up the filename to make it usable
+    filename = filename.replace(/\"/g, "");  // Strip out quote character: "
+    filename = filename.replace(/(^\s+)|(\s+$)/g, ''); // trim whitespace from beginning and end
+    filename = filename.replace(/[ \.\\@\/:]/g, "_");  //Replace "bad" filename characters with "_"
+    if (filename.length > 0)
+      return filename + extension;
+  }
+  return null;
+}
