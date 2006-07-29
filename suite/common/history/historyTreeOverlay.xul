@@ -75,29 +75,26 @@
             onkeypress="if (event.keyCode == 13) OpenURL(event.ctrlKey || event.metaKey);">                
   
     <outlinerbody id="historyOutlinerBody" flex="1" datasources="rdf:history"
-                  ref="NC:HistoryByDate" context="historyMenu"
+                  ref="NC:HistoryByDate" flags="dont-build-content" context="historyMenu"
                   onselect="this.parentNode.outlinerBoxObject.view.selectionChanged();
                             historyOnSelect();"
                   ondraggesture="nsDragAndDrop.startDrag(event, historyDNDObserver);"
                   ondblclick="if (event.button == 0) OpenURL(event.ctrlKey || event.metaKey);">
       <template>
         <rule>
-          <outlinerrow uri="rdf:*" rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
-            <outlinercell label="rdf:http://home.netscape.com/NC-rdf#Name"
-                          ref="Name"/>
-            <outlinercell label="rdf:http://home.netscape.com/NC-rdf#URL"
-                          ref="URL"/>
-            <outlinercell label="rdf:http://home.netscape.com/NC-rdf#Date"
-                          ref="Date"/>
-            <outlinercell label="rdf:http://home.netscape.com/NC-rdf#FirstVisitDate"
-                          ref="FirstVisitDate"/>
-            <outlinercell label="rdf:http://home.netscape.com/NC-rdf#Hostname" 
-                          ref="Hostname"/>
-            <outlinercell label="rdf:http://home.netscape.com/NC-rdf#Referrer"
-                          ref="Referrer"/>
-            <outlinercell label="rdf:http://home.netscape.com/NC-rdf#VisitCount"
-                          ref="VisitCount"/>
-          </outlinerrow>
+          <outlinerchildren>
+            <outlineritem uri="rdf:*" rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
+              <outlinerrow>
+                <outlinercell label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                <outlinercell label="rdf:http://home.netscape.com/NC-rdf#URL"/>
+                <outlinercell label="rdf:http://home.netscape.com/NC-rdf#Date"/>
+                <outlinercell label="rdf:http://home.netscape.com/NC-rdf#FirstVisitDate"/>
+                <outlinercell label="rdf:http://home.netscape.com/NC-rdf#Hostname" />
+                <outlinercell label="rdf:http://home.netscape.com/NC-rdf#Referrer"/>
+                <outlinercell label="rdf:http://home.netscape.com/NC-rdf#VisitCount"/>
+              </outlinerrow>
+            </outlineritem>
+          </outlinerchildren>
         </rule>
       </template>
     </outlinerbody>
