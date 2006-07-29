@@ -498,11 +498,9 @@ nsHeaderSniffer.prototype = {
           // corresponding to each encoding starting from the end, so the first
           // thing it returns corresponds to the outermost encoding.
           var encodingEnumerator = encodedChannel.contentEncodings;
-          if (encodingEnumerator && encodingEnumerator.hasMoreElements()) {
+          if (encodingEnumerator && encodingEnumerator.hasMore()) {
             try {
-              this.contentEncodingType =
-                encodingEnumerator.getNext().
-                  QueryInterface(Components.interfaces.nsISupportsCString).data;
+              this.contentEncodingType = encodingEnumerator.getNext();
             } catch (e) {
             }
           }
