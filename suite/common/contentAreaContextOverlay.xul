@@ -22,8 +22,6 @@
    -->
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/contentAreaCommands.dtd" >
 <overlay id="contentAreaContextOverlay"
-         xmlns:html="http://www.w3.org/1999/xhtml"
-         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <!-- Context menu -->
@@ -43,7 +41,7 @@
      -->
     <popup id="contentAreaContextMenu"
            onpopupshowing="gContextMenu = new nsContextMenu( this ); return gContextMenu.shouldDisplay;"
-           onpopuphiding="gContextMenu.onDestroy(); gContextMenu = null;">
+           onpopuphiding="gContextMenu = null;">
       <!-- Open ==================================== -->
       <menuitem id="context-openlink"
                 label="&openLinkCmd.label;"
@@ -75,7 +73,7 @@
       <menuitem id="context-forward"
                 label="&goForwardCmd.label;"
                 accesskey="&goForwardCmd.accesskey;"
-                oncommand="BrowserForward()"/>
+                oncommand="BrowserForward()"/>'
       <menuitem id="context-reload"
                 label="&reloadCmd.label;"
                 accesskey="&reloadCmd.accesskey;"
@@ -85,7 +83,7 @@
                 accesskey="&reloadFrameCmd.accesskey;"
                 oncommand="gContextMenu.reloadFrame();"/>
       <menuitem id="context-stop"
-                label="&stopCmd.label;"
+                label="&stopCmd.label;" disabled="true"
                 oncommand="BrowserStop();"/>
       <menuseparator id="context-sep-navigation"/>
       <!-- View ==================================== -->
