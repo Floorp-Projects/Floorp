@@ -63,7 +63,8 @@
       <hbox align="center">
         <textbox id="dialog.input" flex="1" type="autocomplete"
                     searchSessions="history" timeout="50" maxrows="6"
-                    oninput="doEnabling();">
+                    oninput="doEnabling();" ontextcommand="if (userAction == 'scrolling' ||
+                                                               userAction == 'typing') open();">
           <menupopup id="ubhist-popup" class="autocomplete-history-popup"
                      popupalign="topleft" popupanchor="bottomleft"
                      onpopupshowing="createUBHistoryMenu(event.target);"
