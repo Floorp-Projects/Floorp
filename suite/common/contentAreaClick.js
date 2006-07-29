@@ -316,11 +316,31 @@
       return openNewTabOrWindow(event, url, false);
     }
 
-    // If ctrl wasn't down, then just load the url in the current win/tab.
-    if (url != "about:blank") {
-      gURLBar.value = url;
+    // If ctrl wasn't down, then just load the url in the targeted win/tab.
+    var browser = getBrowser();
+    var tab = event.originalTarget;
+    if (tab.localName == "tab" &&
+        tab.parentNode == browser.mTabContainer) {
+      tab.linkedBrowser.userTypedValue = url;
+      if (tab == browser.mCurrentTab && url != "about:blank") {
+          gURLBar.value = url;
+      }
+      tab.linkedBrowser.loadURI(url);
+      if (event.shiftKey != (pref && pref.getBoolPref("browser.tabs.loadInBackground")))
+        browser.selectedTab = tab;
     }
-    loadURI(url);
+    else if (tab.ownerDocument == document) {
+      tab = browser.addTab(url);
+      if (event.shiftKey != (pref && pref.getBoolPref("browser.tabs.loadInBackground")))
+        browser.selectedTab = tab;
+    }
+    else {
+      if (url != "about:blank") {
+        gURLBar.value = url;
+      }
+      loadURI(url);
+    }
+
     event.preventBubble();
     return true;
   }
