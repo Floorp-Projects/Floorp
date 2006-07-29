@@ -124,6 +124,8 @@
     if (local_name) {
       local_name = local_name.toLowerCase();
     }
+    
+    var isKeyPress = (event.type == "keypress");
 
     switch (local_name) {
       case "a":
@@ -133,7 +135,8 @@
           linkNode = target;
         break;
       case "input":
-        if ((event.target.type.toLowerCase() == "text" || event.target.type == "") // text field
+        if ((event.target.type == "text") // text field
+            && !isKeyPress       // not a key event
             && event.detail == 2 // double click
             && event.button == 0 // left mouse button
             && event.target.value.length == 0) { // no text has been entered
@@ -148,12 +151,11 @@
           linkNode = null;
         break;
     }
+    var href;
     if (linkNode) {
-      handleLinkClick(event, linkNode.href, linkNode);
-      return true;
+      href = linkNode.href;
     } else {
       // Try simple XLink
-      var href;
       linkNode = target;
       while (linkNode) {
         if (linkNode.nodeType == Node.ELEMENT_NODE) {
@@ -164,11 +166,21 @@
       }
       if (href && href != "") {
         href = makeURLAbsolute(target.baseURI,href);
-        handleLinkClick(event, href, null);
-        return true;
       }
     }
-    if (pref && event.button == 1 &&
+
+    if (href) {
+      if (isKeyPress) {
+        openNewTabWith(href, true, event.shiftKey);
+        event.preventBubble();
+      }
+      else {
+        handleLinkClick(event, href, null);
+      }
+      return true;
+    }
+
+    if (pref && !isKeyPress && event.button == 1 &&
         !findParentNode(event.originalTarget, "scrollbar") &&
         pref.getBoolPref("middlemouse.contentLoadURL")) {
       if (middleMousePaste(event)) {
