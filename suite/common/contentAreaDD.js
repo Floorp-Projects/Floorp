@@ -30,16 +30,16 @@ var gSourceDocument, wasDrag;
 var contentAreaDNDObserver = {
   onDragStart: function (aEvent)
     {
-      if (aEvent.target != aEvent.originalTarget) {
-        // the node is inside an XBL widget,
-        // which means it's likely the scrollbar
-        
-        // throw an exception to avoid the drag
-        if (aEvent.originalTarget.localName == "thumb")
-            throw Components.results.NS_ERROR_FAILURE;
+      // under the assumption that content areas won't contain
+      // draggable XBL, we'll ignore the drag if we're dragging XBL
+      // anonymous content nodes, like scrollbars, etc.
+      if (aEvent.target != aEvent.originalTarget)
+        throw Components.results.NS_ERROR_FAILURE;
 
-        dump("Hrm..not sure if I should be dragging this " + aEvent.originalTarget.localName + ".. but I'll try.\n");
-      }
+      // only drag form elements by using the alt key,
+      // otherwise buttons and select widgets are hard to use
+      if ('form' in aEvent.target && !aEvent.altKey)
+        throw Components.results.NS_ERROR_FAILURE;
 
       var draggedNode = aEvent.target;
 
@@ -155,8 +155,7 @@ var contentAreaDNDObserver = {
       if (url.length == 0)
         return true;
       // valid urls don't contain spaces ' '; if we have a space it isn't a valid url so bail out
-      var urlstr = url.toString();
-      if ( urlstr.indexOf(" ", 0) != -1 )
+      if ( url.indexOf(" ", 0) != -1 )
         return true;
       switch (document.firstChild.getAttribute('windowtype')) {
         case "navigator:browser":
@@ -235,8 +234,15 @@ function retrieveURLFromData (aData)
 {
   switch (aData.flavour) {
   case "text/unicode":
+    // this might not be a url, but we'll return it anyway
+    return aData.data.data;
+    break;
   case "text/x-moz-url":
-    return aData.data.data; // XXX this is busted. 
+    var data = aData.data.data.toString();
+    var separator = data.indexOf("\n");
+    if (separator != -1)
+      data = data.substr(0, separator);
+    return data;
     break;
   case "application/x-moz-file":
       var dataObj = aData.data.data.QueryInterface(Components.interfaces.nsIFile);
