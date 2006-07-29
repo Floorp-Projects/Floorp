@@ -31,19 +31,19 @@
 <key id="key_leftcontrol" keycode="VK_LEFT"    
     oncommand="
       var controller = document.commandDispatcher.getControllerForCommand('cmd_wordPrevious');
-      controller.doCommand('cmd_wordPrevious');" modifiers="meta"/>
+      controller.doCommand('cmd_wordPrevious');" modifiers="alt"/>
 <key id="key_rightcontrol" keycode="VK_RIGHT"    
     oncommand="
       var controller = document.commandDispatcher.getControllerForCommand('cmd_wordNext');
-      controller.doCommand('cmd_wordNext');" modifiers="meta"/>
+      controller.doCommand('cmd_wordNext');" modifiers="alt"/>
 <key id="key_leftshiftcontrol" keycode="VK_LEFT"    
     oncommand="
       var controller = document.commandDispatcher.getControllerForCommand('cmd_selectWordPrevious');
-      controller.doCommand('cmd_selectWordPrevious');" modifiers="shift, meta"/>
+      controller.doCommand('cmd_selectWordPrevious');" modifiers="shift, alt"/>
 <key id="key_rightshiftcontrol" keycode="VK_RIGHT"    
     oncommand="
       var controller = document.commandDispatcher.getControllerForCommand('cmd_selectWordNext');
-      controller.doCommand('cmd_selectWordNext');" modifiers="shift, meta"/>
+      controller.doCommand('cmd_selectWordNext');" modifiers="shift, alt"/>
 
 </keyset>
 <!-- End Mac-specific key bindings -->
