@@ -31,7 +31,7 @@
 #endif
       <!-- text -->
       <description id="info.header" class="header"/>
-      <vbox id="info.box">
+      <vbox id="info.box" style="white-space: -moz-pre-wrap;">
         <description/>
       </vbox>
 

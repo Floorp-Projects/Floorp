@@ -1005,10 +1005,6 @@ dialogheader {
   -moz-binding: url("chrome://global/content/bindings/dialog.xml#dialogheader");
 }
 
-dialog .info-box {
-  white-space: -moz-pre-wrap;
-}
-
 /********* page ************/
 
 page {
