@@ -54,7 +54,7 @@ function findInPage(browser, rootSearchWindow, startSearchWindow)
   findInst.searchFrames = true;
   
   // is the dialog up already?
-  if (window.findDialog)
+  if ("findDialog" in window && window.findDialog)
     window.findDialog.focus();
   else
     window.findDialog = window.openDialog("chrome://global/content/finddialog.xul", "_blank", "chrome,resizable=no,dependent=yes", findInst);
