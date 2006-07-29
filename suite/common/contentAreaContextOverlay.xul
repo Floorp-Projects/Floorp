@@ -30,6 +30,9 @@
   <script type="application/x-javascript">
     // Global variable that holds the nsContextMenu instance.
     var gContextMenu = null;
+    
+    // Global variable that caches the default search engine info
+    var gDefaultEngine = null;
   </script>
   <script type="application/x-javascript" src="chrome://communicator/content/nsContextMenu.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
@@ -118,7 +121,7 @@
                 oncommand="BookmarksUtils.addBookmark(gContextMenu.linkURL(),
                                                       gContextMenu.linkText(), 
                                                       undefined, true);"/>
-      <menuitem id="context-searchselect"
+      <menuitem id="context-searchselect" class="menuitem-iconic"
                 oncommand="OpenSearch('internet',false, gContextMenu.searchSelected());"/>
        
       <menuseparator id="context-sep-bookmark"/>
