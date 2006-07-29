@@ -197,6 +197,23 @@ function saveInternal(aURL, aDocument,
 function foundHeaderInfo(aSniffer, aData)
 {
   var contentType = aSniffer.contentType;
+  var contentEncodingType = aSniffer.contentEncodingType;
+
+  var shouldDecode = false;
+  // Are we allowed to decode?
+  try {
+    const helperAppService =
+      Components.classes["@mozilla.org/uriloader/external-helper-app-service;1"].
+        getService(Components.interfaces.nsIExternalHelperAppService);
+    var url = aSniffer.uri.QueryInterface(Components.interfaces.nsIURL);
+    var urlExt = url.fileExtension;
+    if (helperAppService.applyDecodingForType(contentType) &&
+        (!urlExt || helperAppService.applyDecodingForExtension(urlExt))) {
+      shouldDecode = true;
+    }
+  }
+  catch (e) {
+  }
 
   var fp = makeFilePicker();
   var titleKey = aData.filePickerTitle || "SaveLinkTitle";
@@ -206,7 +223,16 @@ function foundHeaderInfo(aSniffer, aData)
 
 
   var isDocument = aData.document != null && isDocumentType(contentType);
-  appendFiltersForContentType(fp, aSniffer.contentType,
+  if (!isDocument && !shouldDecode && contentEncodingType) {
+    // The data is encoded, we are not going to decode it, and this is not a
+    // document save so we won't be doing a "save as, complete" (which would
+    // break if we reset the type here).  So just set our content type to
+    // correspond to the outermost encoding so we get extensions and the like
+    // right.
+    contentType = contentEncodingType;
+  }
+    
+  appendFiltersForContentType(fp, contentType,
                               isDocument ? MODE_COMPLETE : MODE_FILEONLY);  
 
   const prefSvcContractID = "@mozilla.org/preferences-service;1";
@@ -278,15 +304,9 @@ function foundHeaderInfo(aSniffer, aData)
   else 
     persist.persistFlags = flags | nsIWBP.PERSIST_FLAGS_FROM_CACHE;
 
-  try {
-    const helperAppService =
-      Components.classes["@mozilla.org/uriloader/external-helper-app-service;1"].getService(Components.interfaces.nsIExternalHelperAppService);
-    if (helperAppService.applyDecodingForType(persistArgs.contentType)) {
-      persist.persistFlags &= ~nsIWBP.PERSIST_FLAGS_NO_CONVERSION;
-    }
-  } catch (e) {
-  }      
-  
+  if (shouldDecode)
+    persist.persistFlags &= ~nsIWBP.PERSIST_FLAGS_NO_CONVERSION;
+    
   if (isDocument && fp.filterIndex != 1) {
     // Saving a Document, not a URI:
     var filesFolder = null;
@@ -403,6 +423,22 @@ nsHeaderSniffer.prototype = {
         this.contentType = channel.contentType;
         try {
           var httpChannel = channel.QueryInterface(Components.interfaces.nsIHttpChannel);
+          this.contentEncodingType = null;
+          // There may be content-encodings on the channel.  Multiple content
+          // encodings are allowed, eg "Content-Encoding: gzip, uuencode".  This
+          // header would mean that the content was first gzipped and then
+          // uuencoded.  The encoding enumerator returns MIME types
+          // corresponding to each encoding starting from the end, so the first
+          // thing it returns corresponds to the outermost encoding.
+          var encodingEnumerator = httpChannel.contentEncodings;
+          if (encodingEnumerator && encodingEnumerator.hasMoreElements()) {
+            try {
+              this.contentEncodingType =
+                encodingEnumerator.getNext().
+                  QueryInterface(Components.interfaces.nsISupportsString).data;
+            } catch (e) {
+            }
+          }
           this.mContentDisposition = httpChannel.getResponseHeader("content-disposition");
         }
         catch (e) {
