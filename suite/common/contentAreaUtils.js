@@ -737,7 +737,7 @@ function getMIMEService()
 function getMIMETypeForURI(aURI)
 {
   try {  
-    return getMIMEService().GetTypeFromURI(aURI);
+    return getMIMEService().getTypeFromURI(aURI);
   }
   catch (e) {
   }
@@ -747,7 +747,7 @@ function getMIMETypeForURI(aURI)
 function getMIMEInfoForType(aMIMEType)
 {
   try {  
-    return getMIMEService().GetFromTypeAndExtension(aMIMEType, null);
+    return getMIMEService().getFromTypeAndExtension(aMIMEType, null);
   }
   catch (e) {
   }
