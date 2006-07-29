@@ -329,6 +329,15 @@ function editPage(url, launchWindow, delay)
     }
   }
 
+  // if the current window is a browser window, then extract the current charset menu setting from the current 
+  // document and use it to initialize the new composer window...
+
+  var wintype = document.firstChild.getAttribute('windowtype');
+  var charsetArg;
+
+  if (launchWindow && (wintype == "navigator:browser"))
+    charsetArg = "charset=" + launchWindow._content.document.characterSet;
+
   var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
   if (!windowManager) return;
   var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
@@ -352,9 +361,9 @@ function editPage(url, launchWindow, delay)
 
   // Create new Composer window
   if (delay)
-    launchWindow.delayedOpenWindow("chrome://editor/content", "chrome,all,dialog=no", url);
+    launchWindow.delayedOpenWindow("chrome://editor/content", "chrome,all,dialog=no", url, charsetArg);
   else
-    launchWindow.openDialog("chrome://editor/content", "_blank", "chrome,all,dialog=no", url);
+    launchWindow.openDialog("chrome://editor/content", "_blank", "chrome,all,dialog=no", url, charsetArg);
 }
 
 // function that extracts the filename from a url
