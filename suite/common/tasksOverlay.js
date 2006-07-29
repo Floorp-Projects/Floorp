@@ -389,8 +389,7 @@ function WalletDialog( which )
       window._content.location.href = server + 'wallet2.html';
       break;
     case "interview":
-      server = this.pref.getLocalizedUnicharPref("wallet.Samples");
-      window._content.location.href = server + 'wallet3.html';
+      window._content.location.href = 'chrome://communicator/content/wallet/interview.html';
       break;
     case "wallet":
     default:
