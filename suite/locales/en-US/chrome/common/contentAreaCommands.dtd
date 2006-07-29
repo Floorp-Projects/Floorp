@@ -1,0 +1,61 @@
+<!-- Context Menu -->                 
+<!ENTITY blockImageCmd.label          "Block Image from Loading">
+<!ENTITY blockImageCmd.accesskey      "k">
+<!ENTITY openLinkCmd.label            "Open Link in New Window">
+<!ENTITY openLinkCmd.accesskey        "o">
+<!ENTITY editLinkCmd.label            "Edit Link in Composer">
+<!ENTITY editLinkCmd.accesskey        "e">
+<!ENTITY openFrameCmd.label           "Open Frame in New Window">
+<!ENTITY openFrameCmd.accesskey       "o">
+<!ENTITY showOnlyThisFrameCmd.label           "Show Only This Frame">
+<!ENTITY showOnlyThisFrameCmd.accesskey       "w">
+<!ENTITY goBackCmd.label "Back">
+<!ENTITY goBackCmd.accesskey "b">
+<!ENTITY goForwardCmd.label "Forward">
+<!ENTITY goForwardCmd.accesskey "f">
+<!ENTITY reloadCmd.label              "Reload">
+<!ENTITY reloadCmd.accesskey          "r">
+<!ENTITY reloadCmd.commandkey         "r">
+<!ENTITY stopCmd.label "Stop">
+<!ENTITY stopCmd.accesskey "s">
+<!ENTITY reloadFrameCmd.label         "Reload Frame">
+<!ENTITY reloadFrameCmd.accesskey     "r">
+<!ENTITY viewPageSourceCmd.label      "View Page Source">
+<!ENTITY viewPageSourceCmd.accesskey  "v">
+<!ENTITY viewFrameSourceCmd.label     "View Frame Source">
+<!ENTITY viewFrameSourceCmd.accesskey "v">
+<!ENTITY viewPageInfoCmd.label        "View Page Info">
+<!ENTITY viewPageInfoCmd.accesskey    "i">
+<!ENTITY viewFrameInfoCmd.label       "View Frame Info">
+<!ENTITY viewFrameInfoCmd.accesskey   "i">
+<!ENTITY viewImageCmd.label           "View Image">
+<!ENTITY viewImageCmd.accesskey       "w">
+<!ENTITY bookmarkPageCmd.label        "Bookmark this Page">
+<!ENTITY bookmarkPageCmd.accesskey    "b">
+<!ENTITY bookmarkLinkCmd.label        "Bookmark this Link">
+<!ENTITY bookmarkLinkCmd.accesskey    "b">
+<!ENTITY savePageCmd.label            "Save As...">
+<!ENTITY savePageCmd.accesskey        "s">
+<!ENTITY savePageCmd.commandkey       "s">
+<!ENTITY saveFrameCmd.label           "Save Frame As...">
+<!ENTITY saveFrameCmd.accesskey       "f">
+<!ENTITY saveLinkCmd.label            "Save Link As...">
+<!ENTITY saveLinkCmd.accesskey        "a">
+<!ENTITY saveImageCmd.label           "Save Image As...">
+<!ENTITY saveImageCmd.accesskey       "a">
+<!ENTITY saveBGImageCmd.label         "Save Background Image As...">
+<!ENTITY saveBGImageCmd.accesskey     "a">
+<!ENTITY copyCmd.label                "Copy">
+<!ENTITY copyCmd.accesskey            "c">
+<!ENTITY selectAllCmd.label           "Select All">
+<!ENTITY selectAllCmd.accesskey       "l">
+<!ENTITY copyLinkCmd.label            "Copy Link Location">
+<!ENTITY copyLinkCmd.accesskey        "n">
+<!ENTITY copyImageCmd.label           "Copy Image Location">
+<!ENTITY copyImageCmd.accesskey       "m">
+<!ENTITY pasteCmd.label "Paste">
+<!ENTITY pasteCmd.accesskey "p">
+<!ENTITY captureCmd.label "Save Form Data">
+<!ENTITY prefillCmd.label "Prefill Form">
+<!ENTITY cutCmd.label "Cut">
+<!ENTITY cutCmd.accesskey "u">
