@@ -500,7 +500,8 @@ function poseFilePicker(aFpP)
   // Try and pull in download directory pref
   try {
     dir = branch.getComplexValue(kDownloadDirPref, nsILocalFile);
-  } catch (e) { }
+  } catch (e) {
+  }
 
   var autoDownload = branch.getBoolPref("autoDownload");
   if (autoDownload && dir && dir.exists()) {
@@ -519,7 +520,8 @@ function poseFilePicker(aFpP)
   try {
     if (dir.exists())
       fp.displayDirectory = dir;
-  } catch (e) { }
+  } catch (e) {
+  }
 
   fp.defaultExtension = aFpP.fileInfo.fileExt;
   fp.defaultString = getNormalizedLeafName(aFpP.fileInfo.fileName,
@@ -888,13 +890,14 @@ function getDefaultExtension(aFilename, aURI, aContentType)
   }
   else {
     try {
-      return mimeInfo.primaryExtension;
+      if (mimeInfo)
+        return mimeInfo.primaryExtension;
     }
     catch (e) {
-      // Fall back on the extensions in the filename and URI for lack
-      // of anything better.
-      return ext || urlext;
     }
+    // Fall back on the extensions in the filename and URI for lack
+    // of anything better.
+    return ext || urlext;
   }
 }
 
