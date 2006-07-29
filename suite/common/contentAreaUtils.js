@@ -346,6 +346,54 @@ function nsHeaderSniffer(aURL, aCallback, aData)
 }
 
 nsHeaderSniffer.prototype = {
+
+  // ---------- nsISupports methods ----------
+  QueryInterface: function (iid) {
+    if (!iid.equals(Components.interfaces.nsIRequestObserver) &&
+        !iid.equals(Components.interfaces.nsISupports) &&
+        !iid.equals(Components.interfaces.nsIInterfaceRequestor) &&
+        !iid.equals(Components.interfaces.nsIAuthPrompt)) {
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    }
+    return this;
+  },
+
+  // ---------- nsIInterfaceRequestor methods ----------
+  getInterface : function(iid) {
+    return this.QueryInterface(iid);
+  },
+
+  // ---------- nsIAuthPrompt methods ----------
+  prompt : function(dlgTitle, text, pwrealm, savePW, defaultText, result)
+  {
+    dump("authprompt prompt! pwrealm="+pwrealm+"\n");
+    var promptServ = this.promptService;
+    if (!promptServ)
+      return false;
+    var saveCheck = {value:savePW};
+    return promptServ.prompt(window, dlgTitle, text, defaultText, pwrealm, saveCheck);
+  },
+  promptUsernameAndPassword : function(dlgTitle, text, pwrealm, savePW, user, pw)
+  {
+    dump("authprompt promptUsernameAndPassword!  "+dlgTitle+" "+text+", pwrealm="+pwrealm+"\n");
+    var promptServ = this.promptService;
+    if (!promptServ)
+      return false;
+    var saveCheck = {value:savePW};
+    return promptServ.promptUsernameAndPassword(window, dlgTitle, text, user, pw, pwrealm, saveCheck);
+  },
+  promptPassword : function(dlgTitle, text, pwrealm, savePW, pw)
+  {
+    dump("auth promptPassword!  "+dlgTitle+" "+text+", pwrealm="+pwrealm+"\n");
+    var promptServ = this.promptService;
+    if (!promptServ)
+      return false;
+
+    var saveCheck = {value:savePW};
+    return promptServ.promptPassword(window, dlgTitle, text, pw, pwrealm, saveCheck);
+  },
+
+  // ---------- nsIRequestObserver methods ----------
   onStartRequest: function (aRequest, aContext) { },
   
   onStopRequest: function (aRequest, aContext, aStatus) {
@@ -366,6 +414,7 @@ nsHeaderSniffer.prototype = {
         }
       }
       else {
+        dump("Error saving link aStatus = 0x" + aStatus.toString(16) + "\n");
         var bundle = getStringBundle();
         var errorTitle = bundle.GetStringFromName("saveLinkErrorTitle");
         var errorMsg = bundle.GetStringFromName("saveLinkErrorMsg");
@@ -394,7 +443,20 @@ nsHeaderSniffer.prototype = {
     }
     this.mCallback(this, this.mData);
   },
-  
+
+  // ------------------------------------------------
+
+  get promptService()
+  {
+    var promptSvc;
+    try {
+      promptSvc = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+      promptSvc = promptSvc.QueryInterface(Components.interfaces.nsIPromptService);
+    }
+    catch (e) {}
+    return promptSvc;
+  },
+
   get suggestedFileName()
   {
     var filename = "";
