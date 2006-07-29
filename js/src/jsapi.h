@@ -971,7 +971,7 @@ struct JSExtendedClass {
     JSEqualityOp        equality;
     JSObjectOp          outerObject;
     JSObjectOp          innerObject;
-    JSFinalizeOp        close;
+    JSCloseOp           close;
     jsword              reserved0;
     jsword              reserved1;
     jsword              reserved2;

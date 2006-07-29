@@ -139,7 +139,7 @@ extern void
 js_MarkScriptFilename(const char *filename);
 
 extern void
-js_MarkScriptFilenames(JSRuntime *rt, uintN gcflags);
+js_MarkScriptFilenames(JSRuntime *rt, JSBool keepAtoms);
 
 extern void
 js_SweepScriptFilenames(JSRuntime *rt);
