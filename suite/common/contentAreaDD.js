@@ -235,7 +235,7 @@ function retrieveURLFromData (aData)
   switch (aData.flavour) {
   case "text/unicode":
     // this might not be a url, but we'll return it anyway
-    return aData.data.data;
+    return aData.data.data.toString();
     break;
   case "text/x-moz-url":
     var data = aData.data.data.toString();
