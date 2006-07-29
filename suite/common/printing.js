@@ -39,6 +39,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 var gPrintSettings = null;
+var gPrintSettingsAreGlobal;
+var gSavePrintSettings;
 
 function setPrinterDefaultsForSelectedPrinter(aPrintService)
 {

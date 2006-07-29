@@ -290,7 +290,7 @@
           }
           else 
           {
-            var total = print.printPreviewNumPages;
+            total = print.printPreviewNumPages;
 
             // bounds check potentially user-entered number
             if (aPageNum > 0 && aPageNum <= total) 
@@ -401,7 +401,7 @@
           var webBrowserPrint;  
           var domWin;  
           try {
-            var ifreq = _content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+            ifreq = _content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
             domWin = ifreq.QueryInterface(Components.interfaces.nsIDOMWindow);
           } catch (e) {
             // Pressing cancel is expressed as an NS_ERROR_ABORT return value,
