@@ -277,19 +277,15 @@ nsContextMenu.prototype = {
                }
             } else if ( this.target.localName.toUpperCase() == "TEXTAREA" ) {
                  this.onTextInput = true;
-            } else if ( this.target.getAttribute( "background" ) ) {
-                 this.hasBGImage = true;
-                 // Convert background attribute to absolute URL.
-                 this.bgImageURL = this.makeURLAbsolute( this.target.baseURI,
-                                                         this.target.getAttribute( "background" ) );
             } else if ( this.target.localName.toUpperCase() == "HTML" ) {
                // pages with multiple <body>s are lame. we'll teach them a lesson.
                var bodyElt = this.target.ownerDocument.getElementsByTagName("body")[0];
                if ( bodyElt ) {
                  var attr = bodyElt.getAttribute( "background" );
-                 if ( attr ) {
+                 if ( attr ||
+                      ( attr = this.getComputedURL( bodyElt, "background-image" ) ) != "none" ) {
                    this.hasBGImage = true;
-                   this.bgImageURL = this.makeURLAbsolute( this.target.baseURI,
+                   this.bgImageURL = this.makeURLAbsolute( bodyElt.baseURI,
                                                            attr );
                  }
                }
@@ -326,20 +322,6 @@ nsContextMenu.prototype = {
                     } else {
                         root = root.parentNode;
                     }
-                }
-            } else {
-                try {
-                    var cssAttr = this.target.style.getPropertyValue( "list-style-image" ) ||
-                                  this.target.style.getPropertyValue( "list-style" ) ||
-                                  this.target.style.getPropertyValue( "background-image" ) ||
-                                  this.target.style.getPropertyValue( "background" );
-                    if ( cssAttr ) {
-                        this.onImage = true;
-                        var url = cssAttr.toLowerCase().replace(/url\("*(.+)"*\)/, "$1");
-                        // Convert attribute to absolute URL.
-                        this.imageURL = this.makeURLAbsolute( this.target.baseURI, url );
-                    }
-                } catch ( exception ) {
                 }
             }
         }
@@ -397,16 +379,30 @@ nsContextMenu.prototype = {
                     }
                 }
 
-                // Background image?
-                if ( !this.hasBGImage && 'background' in elem && elem.background ) {
+                // Background image?  We don't bother if we've already found a background
+                // image further down the hierarchy.  Otherwise, we look for background=
+                // attribute on html elements that support that, or, background-image style.
+                var bgImgUrl = null;
+                if ( !this.hasBGImage &&
+                     ( ( localname.search( /^(?:TD|TH|TABLE|BODY)$/ ) != -1 &&
+                         ( bgImgUrl = elem.getAttribute( "background" ) ) ) ||
+                       ( bgImgUrl = this.getComputedURL( elem, "background-image" ) ) != "none" ) ) {
                     this.hasBGImage = true;
-                    // Convert background attribute to absolute URL.
                     this.bgImageURL = this.makeURLAbsolute( elem.baseURI,
-                                                            elem.background );
+                                                            bgImgUrl );
                 }
             }
             elem = elem.parentNode;    
         }
+    },
+    // Returns the computed style attribute for the given element.
+    getComputedStyle: function( elem, attr ) {
+         return elem.ownerDocument.defaultView.getComputedStyle( elem, '' ).getPropertyValue( attr );
+    },
+    // Returns a "url"-type computed style attribute value, with the url() stripped.
+    getComputedURL: function( elem, attr ) {
+         var url = this.getComputedStyle( elem, attr );
+         return ( url == "none" ) ? url : url.replace( /^url\("?([^")]+)"?\)/i, "$1" );
     },
     // Returns true iff clicked on link is saveable.
     isLinkSaveable : function ( link ) {
