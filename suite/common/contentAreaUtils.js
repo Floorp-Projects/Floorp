@@ -258,7 +258,8 @@ function foundHeaderInfo(aSniffer, aData)
   // should be. 
   var defaultFileName = getDefaultFileName(aData.fileName, 
                                            aSniffer.suggestedFileName, 
-                                           aSniffer.uri);
+                                           aSniffer.uri,
+                                           aData.document);
   var defaultExtension = getDefaultExtension(defaultFileName, aSniffer.uri, contentType);
   fp.defaultExtension = defaultExtension;
   fp.defaultString = getNormalizedLeafName(defaultFileName, defaultExtension);
