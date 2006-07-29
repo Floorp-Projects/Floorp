@@ -35,27 +35,30 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY print.label        "Print...">
-<!ENTITY pageSetup.label    "Page Setup...">
-<!ENTITY page.label         "Page:">
-<!ENTITY of.label           "of">
-<!ENTITY scale.label        "Scale:">
-<!ENTITY percent.label      "&#037;">
-<!ENTITY portrait.label     "Portrait">
-<!ENTITY landscape.label    "Landscape">
-<!ENTITY close.label        "Close">
-<!ENTITY p30.label          "30&#037;">
-<!ENTITY p40.label          "40&#037;">
-<!ENTITY p50.label          "50&#037;">
-<!ENTITY p60.label          "60&#037;">
-<!ENTITY p70.label          "70&#037;">
-<!ENTITY p80.label          "80&#037;">
-<!ENTITY p90.label          "90&#037;">
-<!ENTITY p100.label         "100&#037;">
-<!ENTITY p125.label         "125&#037;">
-<!ENTITY p150.label         "150&#037;">
-<!ENTITY p175.label         "175&#037;">
-<!ENTITY p200.label         "200&#037;">
-<!ENTITY Custom.label      "Custom...">
-<!ENTITY ShrinkToFit.label "Shrink To Fit">
-<!ENTITY customPrompt.title "Custom Scale...">
+<!ENTITY print.label          "Print...">
+<!ENTITY print.accesskey      "P">
+<!ENTITY pageSetup.label      "Page Setup...">
+<!ENTITY pageSetup.accesskey  "u">
+<!ENTITY page.label           "Page:">
+<!ENTITY of.label             "of">
+<!ENTITY scale.label          "Scale:">
+<!ENTITY percent.label        "&#037;">
+<!ENTITY portrait.label       "Portrait">
+<!ENTITY landscape.label      "Landscape">
+<!ENTITY close.label          "Close">
+<!ENTITY close.accesskey      "C">
+<!ENTITY p30.label            "30&#037;">
+<!ENTITY p40.label            "40&#037;">
+<!ENTITY p50.label            "50&#037;">
+<!ENTITY p60.label            "60&#037;">
+<!ENTITY p70.label            "70&#037;">
+<!ENTITY p80.label            "80&#037;">
+<!ENTITY p90.label            "90&#037;">
+<!ENTITY p100.label           "100&#037;">
+<!ENTITY p125.label           "125&#037;">
+<!ENTITY p150.label           "150&#037;">
+<!ENTITY p175.label           "175&#037;">
+<!ENTITY p200.label           "200&#037;">
+<!ENTITY Custom.label         "Custom...">
+<!ENTITY ShrinkToFit.label    "Shrink To Fit">
+<!ENTITY customPrompt.title   "Custom Scale...">
