@@ -27,5 +27,33 @@
     <NC:persist resource="chrome://messenger/content/messenger.xul#TotalColumn"/>
     <NC:persist resource="chrome://messenger/content/messenger.xul#OrderReceivedColumn"/>
     <NC:persist resource="chrome://messenger/content/messenger.xul#FlaggedButtonColumn"/>
+    <NC:persist resource="chrome://messenger/content/messenger.xul#messengerWindow"/>
+    <NC:persist resource="chrome://messenger/content/messenger.xul#sidebar-panels"/>
+    <NC:persist resource="chrome://messenger/content/messenger.xul#sidebar-panels-splitter-box"/>
+  </RDF:Description>
+  <RDF:Description about="chrome://messenger/content/messenger.xul#messengerWindow">
+    <screenX>0</screenX>
+    <screenY>191</screenY>
+    <width>750</width>
+    <height>500</height>
+  </RDF:Description>
+  <RDF:Description about="chrome://messenger/content/messenger.xul#sidebar-panels">
+    <last-selected-panel>urn:sidebar:panel:bookmarks</last-selected-panel>
+  </RDF:Description>
+  <RDF:Description about="chrome://messenger/content/messenger.xul#sidebar-panels-splitter-box">
+    <height>288</height>
+  </RDF:Description>
+  <RDF:Description about="chrome://navigator/content/navigator.xul#sidebar-panels">
+    <last-selected-panel>urn:sidebar:panel:bookmarks</last-selected-panel>
+  </RDF:Description>
+  <RDF:Description about="chrome://navigator/content/navigator.xul">
+    <NC:persist resource="chrome://navigator/content/navigator.xul#main-window"/>
+    <NC:persist resource="chrome://navigator/content/navigator.xul#sidebar-panels"/>
+  </RDF:Description>
+ <RDF:Description about="chrome://navigator/content/navigator.xul#main-window">
+    <width>640</width>
+    <height>480</height>
+    <screenX>212</screenX>
+    <screenY>43</screenY>
   </RDF:Description>
 </RDF:RDF>
