@@ -1,4 +1,4 @@
 #expand <!ENTITY  lang.version          "__MOZILLA_LOCALE_VERSION__">
-<!ENTITY  brandShortName        "SeaMonkey">
-<!ENTITY  vendorShortName       "SeaMonkey">
+<!ENTITY  brandShortName        "Mozilla">
+<!ENTITY  vendorShortName       "Mozilla">
 <!ENTITY  sidebarName           "Sidebar">
