@@ -123,6 +123,9 @@
                 oncommand="BookmarksUtils.addBookmark(gContextMenu.linkURL(),
                                                       gContextMenu.linkText(), 
                                                       undefined, true);"/>
+      <menuitem id="context-searchselect"
+                oncommand="OpenSearch('internet',false, gContextMenu.searchSelected());"/>
+       
       <menuseparator id="context-sep-bookmark"/>
       <!-- Save ==================================== -->
       <menuitem id="context-savepage"

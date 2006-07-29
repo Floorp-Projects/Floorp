@@ -154,7 +154,7 @@ nsContextMenu.prototype = {
         // Use "Bookmark This Link" if on a link.
         this.showItem( "context-bookmarkpage", !this.onLink );
         this.showItem( "context-bookmarklink", this.onLink );
-
+        this.showItem( "context-searchselect", this.isTextSelected() );
         // Send Page not working yet.
         this.showItem( "context-sendpage", false );
     },
@@ -661,6 +661,32 @@ nsContextMenu.prototype = {
         // Not implemented so all text-selected-based options are disabled.
         return "true";
     },
+
+    //Get selected object and convert it to a string to get
+    //selected text.   Only use the first 15 chars.
+    isTextSelected : function() {
+       var result = false;
+       if (_content.getSelection() != "") {
+          var searchSelect = document.getElementById('context-searchselect');
+          var searchSelectText = _content.getSelection().toString();
+          var bundle = srGetStrBundle("chrome://communicator/locale/contentAreaCommands.properties");
+          if (searchSelectText.length > 15)
+             searchSelectText = searchSelectText.substr(0,15) + "...";
+          searchSelectText = bundle.formatStringFromName("searchText",[searchSelectText],1);
+          searchSelect.setAttribute("label", searchSelectText);
+          result = true;
+       }
+       return result;
+    },
+    
+    searchSelected : function() {
+       var aSearchStr = _content.getSelection();
+       aSearchStr = aSearchStr.toString();
+       aSearchStr = aSearchStr.replace( /^\s+/, "" );
+       aSearchStr = aSearchStr.replace(/\s+$/,"");
+       return aSearchStr;
+    },
+    
     // Determine if target <object> is an image.
     objectIsImage : function ( objElem ) {
         var result = false;
