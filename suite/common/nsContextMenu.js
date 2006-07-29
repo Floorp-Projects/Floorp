@@ -208,7 +208,6 @@ nsContextMenu.prototype = {
 
         // Remember the node that was clicked.
         this.target = node;
-
         // See if the user clicked on an image.
         if ( this.target.nodeType == Node.ELEMENT_NODE ) {
              if ( this.target.localName.toUpperCase() == "IMG" ) {
@@ -278,6 +277,17 @@ nsContextMenu.prototype = {
                  // Convert background attribute to absolute URL.
                  this.bgImageURL = this.makeURLAbsolute( this.target.baseURI,
                                                          this.target.getAttribute( "background" ) );
+            } else if ( this.target.localName.toUpperCase() == "HTML" ) {
+               // pages with multiple <body>s are lame. we'll teach them a lesson.
+               var bodyElt = this.target.ownerDocument.getElementsByTagName("body")[0];
+               if ( bodyElt ) {
+                 var attr = bodyElt.getAttribute( "background" );
+                 if ( attr ) {
+                   this.hasBGImage = true;
+                   this.bgImageURL = this.makeURLAbsolute( this.target.baseURI,
+                                                           attr );
+                 }
+               }
             } else if ( "HTTPIndex" in _content &&
                         _content.HTTPIndex instanceof Components.interfaces.nsIHTTPIndex ) {
                 this.inDirList = true;
