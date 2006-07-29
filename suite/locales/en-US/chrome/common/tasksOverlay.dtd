@@ -47,18 +47,18 @@
 <!ENTITY walletDisplaySignonsCmd.accesskey "v">
 <!ENTITY walletDisplayCookiesCmd.label "View Stored Cookies">
 <!ENTITY walletDisplayCookiesCmd.accesskey "v">
-<!ENTITY walletAllowCookiesCmd.label "Allow this Site to Set Cookies">
+<!ENTITY walletAllowCookiesCmd.label "Allow Cookies from this">
 <!ENTITY walletAllowCookiesCmd.accesskey "a">
 <!ENTITY walletAllowCookiesMsg.label "Cookies from this site will always be accepted">
-<!ENTITY walletBlockCookiesCmd.label "Block this Site from Setting Cookies">
+<!ENTITY walletBlockCookiesCmd.label "Block Cookies from this Site">
 <!ENTITY walletBlockCookiesCmd.accesskey "b">
 <!ENTITY walletBlockCookiesMsg.label "Cookies from this site will always be rejected">
 <!ENTITY walletDisplayImagesCmd.label "View Sites that can/cannot Display Images">
 <!ENTITY walletDisplayImagesCmd.accesskey "v">
-<!ENTITY walletAllowImagesCmd.label "Allow this Site to Display Images">
+<!ENTITY walletAllowImagesCmd.label "Allow Images from this">
 <!ENTITY walletAllowImagesCmd.accesskey "a">
 <!ENTITY walletAllowImagesMsg.label "Images from this site will always be downloaded">
-<!ENTITY walletBlockImagesCmd.label "Block this Site from Displaying Images">
+<!ENTITY walletBlockImagesCmd.label "Block Images from this Site">
 <!ENTITY walletBlockImagesCmd.accesskey "b">
 <!ENTITY walletBlockImagesMsg.label "Images from this site will never be downloaded">
 <!ENTITY walletInterviewCmd.label "Interview">
