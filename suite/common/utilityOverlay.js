@@ -1,3 +1,26 @@
+/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Alec Flett <alecf@netscape.com>
+ */
+
 /**
  * Communicator Shared Utility Library
  * for shared application glue for the Communicator suite of applications
@@ -192,16 +215,24 @@ function okToPrefill() {
 
 function capture()
 {
-  if( appCore ) {
-    status = appCore.walletRequestToCapture(window._content);
-  }
+    var walletService = Components.classes["@mozilla.org/wallet/wallet-service;1"].getService(Components.interfaces.nsIWalletService);
+    
+    walletService.WALLET_RequestToCapture(window._content);
 }  
 
 function prefill()
 {
-  if( appCore ) {
-    appCore.walletPreview(window, window._content);
-  }
+    walletPreview(window._content);
+}
+
+// eventually should be moved into wallet code
+function walletPreview(aForm) {
+
+    var walletService = Components.classes["@mozilla.org/wallet/wallet-service;1"].getService(Components.interfaces.nsIWalletService);
+    walletService.WALLET_Prefill(false, aForm);
+
+    window.openDialog("chrome://communicator/content/wallet/WalletPreview.xul",
+                      "_blank", "chrome,modal=yes,dialog=yes,all, width=504, height=436");
 }
 
 function goToggleToolbar( id, elementID )
