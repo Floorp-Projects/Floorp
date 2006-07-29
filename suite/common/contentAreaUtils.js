@@ -54,10 +54,10 @@
   function urlSecurityCheck(url, doc) {
     // URL Loading Security Check
     var focusedWindow = doc.commandDispatcher.focusedWindow;
-	var sourceWin = isDocumentFrame(focusedWindow) ? focusedWindow.location.href : focusedWindow._content.location.href;
+    var sourceWin = isDocumentFrame(focusedWindow) ? focusedWindow.location.href : focusedWindow._content.location.href;
     const nsIScriptSecurityManager = Components.interfaces.nsIScriptSecurityManager;
     var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"].getService().
-					 QueryInterface(nsIScriptSecurityManager);
+                     QueryInterface(nsIScriptSecurityManager);
     try {
       secMan.checkLoadURIStr(sourceWin, url, nsIScriptSecurityManager.STANDARD);
     } catch (e) {
@@ -67,7 +67,7 @@
 
   function openNewWindowWith(url) {
 
-	urlSecurityCheck(url, document);
+    urlSecurityCheck(url, document);
     var newWin;
     var wintype = document.firstChild.getAttribute('windowtype');
 
