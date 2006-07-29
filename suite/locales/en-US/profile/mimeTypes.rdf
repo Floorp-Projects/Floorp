@@ -14,8 +14,8 @@
     <NC:value>text/html</NC:value> 
     <NC:description>Hypertext Document</NC:description> 
     <NC:editable>false</NC:editable> 
-    <NC:fileExtensions about="urn:mimetype:extension:text/html:htm">htm</NC:fileExtensions> 
-    <NC:fileExtensions about="urn:mimetype:extension:text/html:html">html</NC:fileExtensions> 
+    <NC:fileExtensions>htm</NC:fileExtensions> 
+    <NC:fileExtensions>html</NC:fileExtensions> 
     <NC:handlerProp>
       <NC:handler about="urn:mimetype:handler:text/html"> 
         <NC:saveToDisk>false</NC:saveToDisk> 
