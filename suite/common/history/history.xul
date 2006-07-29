@@ -24,44 +24,120 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarks.css" type="text/css"?>
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/history/history.dtd" >
 
-<window title="&historyWindowTitle.label;" id="bookmark-window" onunload="doUnload()"
+<window title="&historyWindowTitle.label;" id="bookmark-window"
+  onload="HistoryInit();"
+  onunload="doUnload()"
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns:web="http://home.netscape.com/WEB-rdf#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  width="500" height="400" x="20" y="20" persist="width height x y" orient="vertical"
+  width="500" height="400" x="20" y="20" persist="width height x y" 
+  orient="vertical"
   ondraggesture="return TopLevelDrag(event);"
-  windowtype="history:manager"
-  >
+  windowtype="history:manager">
 
   <script src="chrome://communicator/content/bookmarks/bookmarks.js"/>
+  <script src="chrome://communicator/content/history/history.js"/>
+  <script src="chrome://global/content/treePopups.js"/>
+  <script src="chrome://global/content/strres.js"/>
   <script src="chrome://global/content/globalOverlay.js"/>
 
-  <menubar>
-    <menu value="&fileMenu.label;">
-      <menupopup>
-        <menuitem value="&closeCmd.label;" oncommand="window.close()"/>
-      </menupopup>
-    </menu>
-    <menu value="&editMenu.label;">
-      <menupopup>
-        <menuitem value="&undoCmd.label;"/>
-        <menuitem value="&redoCmd.label;"/>
-        <menuseparator/>
-        <menuitem value="&cutCmd.label;"/>
-        <menuitem value="&copyCmd.label;"/>
-        <menuitem value="&pasteCmd.label;"/>
-        <menuitem value="&deleteCmd.label;"/>
-        <menuitem value="&selAllCmd.label;"/>
-        <menuseparator/>
-        <menuitem value="&findHisCmd.label;"/>
-        <menuitem value="&findAgainCmd.label;"/>
-      </menupopup>
-    </menu>
-  </menubar>
+<commands id="commands">
+  <commandset id="selectEditMenuItems"/>
+  <commandset id="globalEditMenuItems"/>
+</commands>
+
+<broadcasterset id="broadcasterset">
+  <!-- File Menu -->
+  <broadcaster id="cmd_newNavigator"/>
+  <broadcaster id="cmd_newMessage"/>
+  <broadcaster id="cmd_newEditor"/>
+  <broadcaster id="cmd_close" oncommand="window.close()"/>
+  <broadcaster id="cmd_quit"/>
+  <broadcaster id="bm_cmd_saveas"/>
+  <!-- Edit Menu -->
+  <broadcaster id="cmd_undo"/>
+  <broadcaster id="cmd_copy"/>
+  <broadcaster id="cmd_delete"/>
+  <broadcaster id="cmd_selectAll"/>
+</broadcasterset>
+<keyset id="keyset">
+  <!-- File Menu -->
+  <key id="key_newNavigator"/>
+  <key id="key_newMessage"/>
+  <key id="key_newEditor"/>
+  <key id="key_close"/>
+  <key id="key_quit"/>
+  <!-- Edit Menu -->
+  <key id="key_undo"/>
+  <key id="key_cut"/>
+  <key id="key_copy"/>
+  <key id="key_paste"/>
+  <key id="key_delete"/>
+  <key id="key_selectAll"/>
+</keyset>
+
+<menubar>
+  <menu id="menu_File">
+    <menupopup id="menu_FilePopup">
+      <menu id="menu_New">
+        <menupopup id="menu_NewPopup">
+          <menuitem id="menu_newNavigator"/>
+          <menuitem id="menu_newMessage"/>
+          <menuitem id="cmd_newCard"/>
+          <menuitem id="menu_newEditor"/>
+        </menupopup>
+      </menu>
+      <menuseparator/>
+      <menuitem id="menu_close"/>
+    </menupopup>
+  </menu>
+
+  <menu id="menu_Edit">
+    <menupopup>
+      <menuitem id="menu_undo" disabled="true" />
+      <menuseparator/>
+      <menuitem id="menu_cut" disabled="true"/>
+      <menuitem id="menu_copy"/>
+      <menuitem id="menu_paste" disabled="true"/>
+      <menuitem id="menu_delete"/>
+      <menuitem id="menu_selectAll"/>
+      <menuseparator/>
+      <menuitem value="&findHisCmd.label;"/>
+      <menuitem value="&findAgainCmd.label;"/>
+    </menupopup>
+  </menu>
+  <menu id="menu_View">
+    <menupopup oncreate="fillViewMenu(this)">
+      <menuitem type="radio" name="sort_column" id="unsorted_menuitem"
+        value="&menuitem.view.unsorted.label;"
+        oncommand="return SetSortDirection('natural');"/>
+      <menuseparator id="fill_after_this_node"/>
+      <menuseparator id="fill_before_this_node"/>
+      <menuitem type="radio" name="sort_direction" id="sort_ascending"
+        value="&menuitem.view.ascending.label;"
+        oncommand="return SetSortDirection('ascending');"/>
+      <menuitem type="radio" name="sort_direction" id="sort_descending"
+        value="&menuitem.view.descending.label;"
+        oncommand="return SetSortDirection('descending');"/>
+      <menuseparator/>
+      <menu value="&menuitem.view.show_columns.label;">
+        <menupopup
+          oncreate="BuildTreePopup(document.getElementById('theColumns'), 
+                                   document.getElementById('headRow'), this,
+                                   document.getElementById('popupCell'))"/>
+      </menu>
+    </menupopup>
+  </menu>
+  <menu id="tasksMenu" accesskey="t" />
+  <menu id="menu_Help" accesskey="h" />
+</menubar>
 
 <popupset>
   <popup id="contextual" oncreate="return fillContextMenu('contextual');" >
@@ -95,17 +171,47 @@
      </rule>
   </template>
 
-  <treecol persist="width" id="NameColumn" sortSeparators="true" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
-  <treecol persist="width" id="URLColumn" sortSeparators="true" rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
-  <treecol persist="width" id="ShortcutURLColumn" sortSeparators="true" rdf:resource="http://home.netscape.com/NC-rdf#Date"/>
+  <treecolgroup id="theColumns">
+    <treecol id="Name"
+      sortSeparators="true" persist="hidden width" width="4*"
+      rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+    <treecol id="URL"
+      sortSeparators="true" persist="hidden width" width="4*"
+      rdf:resource="http://home.netscape.com/NC-rdf#URL"
+      rdf:resource2="http://home.netscape.com/NC-rdf#Name"/>
+    <treecol id="Date"
+      sortSeparators="true" persist="hidden width" width="1*"
+      rdf:resource="http://home.netscape.com/NC-rdf#Date"
+      rdf:resource2="http://home.netscape.com/NC-rdf#Name"/>
+    <treecol persist="width" fixed="true" width="14" id="PopupColumn"/>
+  </treecolgroup>
 
   <treehead>
-    <treerow>
-      <treecell class="treecell-header" value="&tree.header.name.label;" onclick="return doSort('NameColumn');" observes="NameColumn" />
-      <treecell class="treecell-header" value="&tree.header.url.label;" onclick="return doSort('URLColumn');" observes="URLColumn" />
-      <treecell class="treecell-header" value="&tree.header.date.label;" onclick="return doSort('DateColumn');" observes="DateColumn" />
+    <treerow id="headRow">
+      <treecell class="treecell-header sortDirectionIndicator"
+        value="&tree.header.name.label;"
+        onclick="return TriStateColumnSort('Name');"
+        observes="Name" />
+      <treecell class="treecell-header sortDirectionIndicator" 
+        value="&tree.header.url.label;"
+        onclick="return TriStateColumnSort('URL');"
+        observes="URL" />
+      <treecell class="treecell-header sortDirectionIndicator"
+        value="&tree.header.date.label;"
+        onclick="return TriStateColumnSort('Date');"
+        observes="Date"/>
+      <treecell class="treecell-header" allowevents="true" id="popupCell">
+        <menu>
+          <image class="treecell-popup-icon"/>
+          <menupopup popupanchor="bottomright" 
+            popupalign="topright"
+            oncreate="BuildTreePopup(document.getElementById('theColumns'), document.getElementById('headRow'), this,
+            document.getElementById('popupCell'))"/>
+        </menu>
+      </treecell>
     </treerow>
   </treehead>
+  <treechildren id="treechildren-bookmarks"/>
 </tree>
 
 <box id="status-bar" style="max-height:1em;">
