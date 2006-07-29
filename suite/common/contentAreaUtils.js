@@ -42,6 +42,9 @@
  **/
 function isContentFrame(aFocusedWindow)
 {
+  if (!aFocusedWindow)
+    return false;
+
   var focusedTop = Components.lookupMethod(aFocusedWindow, 'top')
                              .call(aFocusedWindow);
 
