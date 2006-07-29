@@ -258,7 +258,7 @@ function foundHeaderInfo(aSniffer, aData)
   };
   
   openDialog("chrome://global/content/nsProgressDlg.xul", "", 
-              "chrome,titlebar,minizable,dialog=yes", 
+              "chrome,titlebar,minimizable,dialog=yes", 
               makeWebBrowserPersist(), persistArgs);
 }
 
