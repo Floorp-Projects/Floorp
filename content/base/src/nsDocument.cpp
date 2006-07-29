@@ -148,6 +148,8 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #include "nsDOMCID.h"
 
 #include "nsLayoutStatics.h"
+#include "nsIJSContextStack.h"
+#include "nsIXPConnect.h"
 
 #ifdef MOZ_LOGGING
 // so we can get logging even in release builds
@@ -3844,22 +3846,296 @@ nsDocument::SetDocumentURI(const nsAString& aDocumentURI)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-nsDocument::AdoptNode(nsIDOMNode *source, nsIDOMNode **aReturn)
+struct AdoptFuncData {
+  nsNodeInfoManager *mNewNodeInfoManager;
+  JSContext *mCx;
+  JSObject *mOldScope;
+  JSObject *mNewScope;
+  nsCOMArray<nsINode> &mNodesWithProperties;
+};
+
+PLDHashOperator PR_CALLBACK
+AdoptFunc(nsAttrHashKey::KeyType aKey, nsIDOMNode *aData, void* aUserArg)
 {
-  // Not allowing this yet, need to think about the security ramifications
-  // of giving a node a brand new node info.
+  nsCOMPtr<nsIAttribute> attr = do_QueryInterface(aData);
+  NS_ASSERTION(attr, "non-nsIAttribute somehow made it into the hashmap?!");
 
-//  if (NS_SUCCEEDED(rv)) {
-//    nsCOMPtr<nsINode> node = do_QueryInterface(source);
-//    if (node->HasProperties()) {
-//      nsContentUtils::CallUserDataHandler(this,
-//                                          nsIDOMUserDataHandler::NODE_ADOPTED,
-//                                          node, source, *aReturn);
-//    }
-//  }
+  AdoptFuncData *data = NS_STATIC_CAST(AdoptFuncData*, aUserArg);
+  nsresult rv = nsDocument::Adopt(attr, data->mNewNodeInfoManager, data->mCx,
+                                  data->mOldScope, data->mNewScope,
+                                  data->mNodesWithProperties);
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_SUCCEEDED(rv) ? PL_DHASH_NEXT : PL_DHASH_STOP;
+}
+
+/* static */
+nsresult
+nsDocument::Adopt(nsINode *aNode, nsNodeInfoManager *aNewNodeInfoManager,
+                  JSContext *aCx, JSObject *aOldScope, JSObject *aNewScope,
+                  nsCOMArray<nsINode> &aNodesWithProperties)
+{
+  NS_PRECONDITION(!aCx || (aOldScope && aNewScope), "Must have scopes");
+
+  // First walk aNode's attributes (and their children), then walk aNode's
+  // children (and recurse into their attributes and children) and finally deal
+  // with aNode.
+
+  if (aNode->IsNodeOfType(eELEMENT)) {
+    // aNode's attributes.
+    nsGenericElement *element = NS_STATIC_CAST(nsGenericElement*, aNode);
+    const nsDOMAttributeMap *map = element->GetAttributeMap();
+    if (map) {
+      AdoptFuncData data = { aNewNodeInfoManager, aCx, aOldScope, aNewScope,
+                             aNodesWithProperties };
+ 
+      PRUint32 count = map->Enumerate(AdoptFunc, &data);
+      NS_ENSURE_TRUE(count == map->Count(), NS_ERROR_FAILURE);
+    }
+  }
+
+  // aNode's children.
+  nsresult rv;
+  PRUint32 i, length = aNode->GetChildCount();
+  for (i = 0; i < length; ++i) {
+    rv = Adopt(aNode->GetChildAt(i), aNewNodeInfoManager, aCx, aOldScope,
+               aNewScope, aNodesWithProperties);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // aNode.
+  if (aNewNodeInfoManager) {
+    nsINodeInfo *nodeInfo = aNode->mNodeInfo;
+    nsCOMPtr<nsINodeInfo> newNodeInfo;
+    rv = aNewNodeInfoManager->GetNodeInfo(nodeInfo->NameAtom(),
+                                          nodeInfo->GetPrefixAtom(),
+                                          nodeInfo->NamespaceID(),
+                                          getter_AddRefs(newNodeInfo));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    aNode->mNodeInfo.swap(newNodeInfo);
+
+    nsIXPConnect *xpc = nsContentUtils::XPConnect();
+    if (xpc && aCx) {
+      nsCOMPtr<nsIXPConnectJSObjectHolder> oldWrapper;
+      rv = xpc->ReparentWrappedNativeIfFound(aCx, aOldScope, aNewScope, aNode,
+                                             getter_AddRefs(oldWrapper));
+      if (NS_FAILED(rv)) {
+        newNodeInfo.swap(aNode->mNodeInfo);
+
+        return rv;
+      }
+    }
+  }
+
+  if (aNode->HasProperties()) {
+    PRBool ok = aNodesWithProperties.AppendObject(aNode);
+    NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
+  }
+
+  return NS_OK;
+}
+
+static void BlastSubtreeToPieces(nsINode *aNode);
+
+PLDHashOperator PR_CALLBACK
+BlastFunc(nsAttrHashKey::KeyType aKey, nsIDOMNode *aData, void* aUserArg)
+{
+  nsCOMPtr<nsIAttribute> *attr =
+    NS_STATIC_CAST(nsCOMPtr<nsIAttribute>*, aUserArg);
+
+  *attr = do_QueryInterface(aData);
+
+  NS_ASSERTION(attr->get(),
+               "non-nsIAttribute somehow made it into the hashmap?!");
+
+  return PL_DHASH_STOP;
+}
+
+static void
+BlastSubtreeToPieces(nsINode *aNode)
+{
+  PRUint32 i, count;
+  if (aNode->IsNodeOfType(nsINode::eELEMENT)) {
+    nsGenericElement *element = NS_STATIC_CAST(nsGenericElement*, aNode);
+    const nsDOMAttributeMap *map = element->GetAttributeMap();
+    if (map) {
+      nsCOMPtr<nsIAttribute> attr;
+      while (map->Enumerate(BlastFunc, &attr) > 0) {
+        BlastSubtreeToPieces(attr);
+
+        nsresult rv = element->UnsetAttr(attr->NodeInfo()->NamespaceID(),
+                                         attr->NodeInfo()->NameAtom(),
+                                         PR_FALSE);
+
+        // XXX Should we abort here?
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Uhoh, UnsetAttr shouldn't fail!");
+      }
+    }
+  }
+
+  count = aNode->GetChildCount();
+  for (i = 0; i < count; ++i) {
+    BlastSubtreeToPieces(aNode->GetChildAt(0));
+
+    nsresult rv = aNode->RemoveChildAt(0, PR_FALSE);
+
+    // XXX Should we abort here?
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Uhoh, RemoveChildAt shouldn't fail!");
+  }
+}
+
+NS_IMETHODIMP
+nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
+{
+  NS_ENSURE_ARG(aAdoptedNode);
+
+  *aResult = nsnull;
+
+  nsresult rv = nsContentUtils::CheckSameOrigin(this, aAdoptedNode);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsINode> adoptedNode;
+  PRUint16 nodeType;
+  aAdoptedNode->GetNodeType(&nodeType);
+  switch (nodeType) {
+    case nsIDOMNode::ATTRIBUTE_NODE:
+    {
+      // Remove from ownerElement.
+      nsCOMPtr<nsIDOMAttr> adoptedAttr = do_QueryInterface(aAdoptedNode, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsCOMPtr<nsIDOMElement> ownerElement;
+      rv = adoptedAttr->GetOwnerElement(getter_AddRefs(ownerElement));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (ownerElement) {
+        nsCOMPtr<nsIDOMAttr> newAttr;
+        rv = ownerElement->RemoveAttributeNode(adoptedAttr,
+                                               getter_AddRefs(newAttr));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        newAttr.swap(adoptedAttr);
+      }
+
+      adoptedNode = do_QueryInterface(adoptedAttr, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+      break;
+    }
+    case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
+    case nsIDOMNode::ELEMENT_NODE:
+    case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:
+    case nsIDOMNode::TEXT_NODE:
+    case nsIDOMNode::CDATA_SECTION_NODE:
+    case nsIDOMNode::COMMENT_NODE:
+    {
+      adoptedNode = do_QueryInterface(aAdoptedNode, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // We don't want to adopt an element into its own contentDocument or into
+      // a descendant contentDocument, so we check if the frameElement of this
+      // document or any of its parents is the adopted node or one of its
+      // descendants.
+      nsIDocument *doc = this;
+      do {
+        nsPIDOMWindow *win = doc->GetWindow();
+        if (win) {
+          nsCOMPtr<nsINode> node =
+            do_QueryInterface(win->GetFrameElementInternal());
+          if (node &&
+              nsContentUtils::ContentIsDescendantOf(node, adoptedNode)) {
+            return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+          }
+        }
+      } while ((doc = doc->GetParentDocument()));
+
+      // Remove from parent.
+      nsCOMPtr<nsIDOMNode> parent;
+      aAdoptedNode->GetParentNode(getter_AddRefs(parent));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (parent) {
+        nsCOMPtr<nsIDOMNode> newChild;
+        rv = parent->RemoveChild(aAdoptedNode, getter_AddRefs(newChild));
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      break;
+    }
+    case nsIDOMNode::ENTITY_REFERENCE_NODE:
+    {
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
+    case nsIDOMNode::DOCUMENT_NODE:
+    case nsIDOMNode::DOCUMENT_TYPE_NODE:
+    case nsIDOMNode::ENTITY_NODE:
+    case nsIDOMNode::NOTATION_NODE:
+    {
+      return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+    }
+    default:
+    {
+      NS_WARNING("Don't know how to adopt this nodetype for adoptNode.");
+
+      return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+    }
+  }
+
+  nsIDocument *oldDocument = adoptedNode->GetOwnerDoc();
+  PRBool sameDocument = oldDocument == this;
+
+  JSContext *cx = nsnull;
+  JSObject *oldScope = nsnull;
+  JSObject *newScope = nsnull;
+  if (!sameDocument) {
+    rv = nsContentUtils::GetContextAndScopes(oldDocument, this, &cx, &oldScope,
+                                             &newScope);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  nsCOMArray<nsINode> nodesWithProperties;
+  rv = Adopt(adoptedNode, sameDocument ? nsnull : mNodeInfoManager, cx,
+             oldScope, newScope, nodesWithProperties);
+  if (NS_FAILED(rv)) {
+    // Disconnect all nodes from their parents, since some have the old document
+    // as their ownerDocument and some have this as their ownerDocument.
+    BlastSubtreeToPieces(adoptedNode);
+
+    if (!sameDocument && oldDocument) {
+      PRUint32 i, count = nodesWithProperties.Count();
+      for (i = 0; i < count; ++i) {
+        // Remove all properties.
+        oldDocument->PropertyTable()->
+          DeleteAllPropertiesFor(nodesWithProperties[i]);
+      }
+    }
+
+    return rv;
+  }
+
+  PRUint32 i, count = nodesWithProperties.Count();
+  if (!sameDocument && oldDocument) {
+    for (i = 0; i < count; ++i) {
+      nsINode *nodeWithProperties = nodesWithProperties[i];
+
+      // Copy UserData to the new document.
+      nsContentUtils::CopyUserData(oldDocument, nodeWithProperties);
+
+      // Remove all properties.
+      oldDocument->PropertyTable()->DeleteAllPropertiesFor(nodeWithProperties);
+    }
+  }
+
+  for (i = 0; i < count; ++i) {
+    nsINode *nodeWithProperties = nodesWithProperties[i];
+
+    nsCOMPtr<nsIDOMNode> source = do_QueryInterface(nodeWithProperties, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsContentUtils::CallUserDataHandler(this,
+                                        nsIDOMUserDataHandler::NODE_ADOPTED,
+                                        nodeWithProperties, source, nsnull);
+  }
+
+  return CallQueryInterface(adoptedNode, aResult);
 }
 
 NS_IMETHODIMP

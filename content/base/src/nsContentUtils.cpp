@@ -855,17 +855,38 @@ nsContentUtils::ReparentContentWrapper(nsIContent *aContent,
                                        nsIDocument *aNewDocument,
                                        nsIDocument *aOldDocument)
 {
-  if (!aNewDocument || aNewDocument == aOldDocument) {
+  // If we can't find our old document we don't know what our old
+  // scope was so there's no way to find the old wrapper.
+  if (!aOldDocument || !aNewDocument || aNewDocument == aOldDocument) {
     return NS_OK;
   }
 
-  nsIScriptGlobalObject *newSGO = aNewDocument->GetScopeObject();
-  JSObject *newScope;
+  JSContext *cx;
+  JSObject *oldScope, *newScope;
+  nsresult rv = GetContextAndScopes(aOldDocument, aNewDocument, &cx, &oldScope,
+                                    &newScope);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  // If we can't find our old document we don't know what our old
-  // scope was so there's no way to find the old wrapper, and if there
-  // is no new scope there's no reason to reparent.
-  if (!aOldDocument || !newSGO || !(newScope = newSGO->GetGlobalJSObject())) {
+  if (!cx) {
+    return NS_OK;
+  }
+
+  return doReparentContentWrapper(aContent, cx, oldScope, newScope);
+}
+
+// static
+nsresult
+nsContentUtils::GetContextAndScopes(nsIDocument *aOldDocument,
+                                    nsIDocument *aNewDocument, JSContext **aCx,
+                                    JSObject **aOldScope, JSObject **aNewScope)
+{
+  *aCx = nsnull;
+  *aOldScope = nsnull;
+  *aNewScope = nsnull;
+
+  JSObject *newScope = nsnull;
+  nsIScriptGlobalObject *newSGO = aNewDocument->GetScopeObject();
+  if (!newSGO || !(newScope = newSGO->GetGlobalJSObject())) {
     return NS_OK;
   }
 
@@ -878,13 +899,10 @@ nsContentUtils::ReparentContentWrapper(nsIContent *aContent,
   // XXXbz note that if GetWrappedNativeOfNativeObject did call PreCreate it
   // would get the wrong scope (that of the _new_ document), so we should be
   // glad it doesn't!
-  JSObject *globalObj;
-  JSContext *cx = GetContextFromDocument(aOldDocument, &globalObj);
+  JSObject *oldScope = nsnull;
+  JSContext *cx = GetContextFromDocument(aOldDocument, &oldScope);
 
-  if (!globalObj) {
-    // No global object around; can't find the old wrapper w/o the old
-    // global object
-
+  if (!oldScope) {
     return NS_OK;
   }
 
@@ -912,7 +930,11 @@ nsContentUtils::ReparentContentWrapper(nsIContent *aContent,
     }
   }
 
-  return doReparentContentWrapper(aContent, cx, globalObj, newScope);
+  *aCx = cx;
+  *aOldScope = oldScope;
+  *aNewScope = newScope;
+
+  return NS_OK;
 }
 
 nsresult
@@ -3186,9 +3208,10 @@ nsContentUtils::CallUserDataHandler(nsIDocument *aDocument, PRUint16 aOperation,
                                     nsIDOMNode *aDest)
 {
 #ifdef DEBUG
-  // XXX Should we guard from QI'ing nodes that are being destroyed?
-  nsCOMPtr<nsINode> node = do_QueryInterface(NS_CONST_CAST(nsINode*, aNode));
-  NS_ASSERTION(node == aNode, "Use canonical nsINode pointer!");
+  if (aOperation != nsIDOMUserDataHandler::NODE_DELETED) {
+    nsCOMPtr<nsINode> node = do_QueryInterface(NS_CONST_CAST(nsINode*, aNode));
+    NS_ASSERTION(node == aNode, "Use canonical nsINode pointer!");
+  }
 #endif
 
   nsHandlerData handlerData = { aOperation, aSource, aDest };

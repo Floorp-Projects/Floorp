@@ -49,6 +49,7 @@ interface nsIDOMUserDataHandler : nsISupports
   const unsigned short      NODE_IMPORTED                  = 2;
   const unsigned short      NODE_DELETED                   = 3;
   const unsigned short      NODE_RENAMED                   = 4;
+  const unsigned short      NODE_ADOPTED                   = 5;
 
   void               handle(in unsigned short operation,
                             in DOMString key,
