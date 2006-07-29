@@ -683,10 +683,47 @@ function getMIMEInfoForType(aMIMEType, aExtension)
 
 function getDefaultFileName(aDefaultFileName, aDocumentURI, aDocument)
 {
+  if (aDocument) {
+    // 1) look for a filename in the content-disposition header, if any
+    try {
+      // Get to the window as best we can, and get the header from it.
+      var dispHeader = 
+        aDocument.defaultView
+                 .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                 .getInterface(Components.interfaces.nsIDOMWindowUtils)
+                 .getDocumentMetadata("content-disposition");
+      if (dispHeader) {
+        const mhpContractID = "@mozilla.org/network/mime-hdrparam;1";
+        const mhpIID = Components.interfaces.nsIMIMEHeaderParam;
+        const mhp = Components.classes[mhpContractID].getService(mhpIID);
+        var dummy = { value: null };  // Need an out param...
+        var charset = getCharsetforSave(aDocument);
+      
+        var fileName;
+        try {
+          fileName = mhp.getParameter(dispHeader, "filename", charset, true,
+                                      dummy);
+        }
+        catch (e) {
+          try {
+            fileName = mhp.getParameter(dispHeader, "name", charset, true,
+                                        dummy);
+          }
+          catch (e) {
+          }
+        }
+        if (fileName) {
+          return fileName;
+        }
+      }
+    } catch (e) {
+      // Move on
+    }
+  }
   try {
     var url = aDocumentURI.QueryInterface(Components.interfaces.nsIURL);
     if (url.fileName != "") {
-      // 1) Use the actual file name, if present
+      // 2) Use the actual file name, if present
       return validateFileName(decodeURIComponent(url.fileName));
     }
   } catch (e) {
@@ -707,16 +744,16 @@ function getDefaultFileName(aDefaultFileName, aDocumentURI, aDocument)
     var docTitle = GenerateValidFilename(aDocument.title, "");
 
     if (docTitle) {
-      // 2) Use the document title
+      // 3) Use the document title
       return docTitle;
     }
   }
 
   if (aDefaultFileName)
-    // 3) Use the caller-provided name, if any
+    // 4) Use the caller-provided name, if any
     return validateFileName(aDefaultFileName);
 
-  // 4) If this is a directory, use the last directory name
+  // 5) If this is a directory, use the last directory name
   var path = aDocumentURI.path.match(/\/([^\/]+)\/$/);
   if (path && path.length > 1) {
     return validateFileName(path[1]);
@@ -724,18 +761,18 @@ function getDefaultFileName(aDefaultFileName, aDocumentURI, aDocument)
 
   try {
     if (aDocumentURI.host)
-      // 5) Use the host.
+      // 6) Use the host.
       return aDocumentURI.host;
   } catch (e) {
     // Some files have no information at all, like Javascript generated pages
   }
   try {
-    // 6) Use the default file name
+    // 7) Use the default file name
     return getStringBundle().GetStringFromName("DefaultSaveFileName");
   } catch (e) {
     //in case localized string cannot be found
   }
-  // 7) If all else fails, use "index"
+  // 8) If all else fails, use "index"
   return "index";
 }
 
