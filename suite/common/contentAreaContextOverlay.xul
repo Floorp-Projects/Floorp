@@ -139,6 +139,8 @@
                 accesskey="&saveImageCmd.accesskey;"
                 oncommand="gContextMenu.saveImage();"/>
       <menuseparator id="context-sep-save"/>
+      <!-- Application Integration ================= -->
+      <menuseparator id="context-sep-apps"/>
       <!-- Clipboard =============================== -->
       <menuitem id="context-selectall"
                 label="&selectAllCmd.label;"
