@@ -642,13 +642,12 @@ nsContextMenu.prototype = {
         }
 
         // Let's try to unescape it using a character set
-        // in case the address is not ASCII.
         try {
           var ownerDocument = new XPCNativeWrapper(this.target, "ownerDocument").ownerDocument;
           var characterSet = new XPCNativeWrapper(ownerDocument, "characterSet").characterSet;
           const textToSubURI = Components.classes["@mozilla.org/intl/texttosuburi;1"]
                                          .getService(Components.interfaces.nsITextToSubURI);
-          addresses = textToSubURI.unEscapeNonAsciiURI(characterSet, addresses);
+          addresses = textToSubURI.unEscapeURIForUI(characterSet, addresses);
         }
         catch(ex) {
           // Do nothing.
