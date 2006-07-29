@@ -111,7 +111,7 @@
       <menuitem id="context-bookmarkpage"
                 value="&bookmarkPageCmd.label;"
                 accesskey="&bookmarkPageCmd.accesskey;"
-                oncommand="BookmarksUtils.addBookmarkToWindow(window._content);"/>
+                oncommand="BookmarksUtils.addBookmarkForBrowser(document.getElementById('content').webNavigation);"/>
       <menuitem id="context-bookmarklink"
                 value="&bookmarkLinkCmd.label;"
                 accesskey="&bookmarkLinkCmd.accesskey;"
