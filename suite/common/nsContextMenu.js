@@ -467,11 +467,7 @@ nsContextMenu.prototype = {
     },
     // Open new "view source" window with the frame's URL.
     viewFrameSource : function () {
-      window.openDialog(  "chrome://navigator/content/viewSource.xul",
-                          "_blank",
-                          "scrollbars,resizable,chrome,dialog=no",
-                          this.target.ownerDocument.location.href,
-                          "charset=" + this.target.ownerDocument.characterSet);
+        BrowserViewSourceOfDocument(this.target.ownerDocument);
     },
     viewInfo : function () {
       BrowserPageInfo();
