@@ -75,7 +75,7 @@ function toJavaConsole()
 
 function toOpenWindowByType( inType, uri )
 {
-	var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
+	var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
 
 	var	windowManagerInterface = windowManager.QueryInterface(nsIWindowMediator);
 
@@ -117,7 +117,7 @@ function OpenBrowserWindow()
 
 function CycleWindow( aType )
 {
-  var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
+  var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
   var windowManagerInterface = windowManager.QueryInterface(nsIWindowMediator);
 
   var topWindowOfType = windowManagerInterface.getMostRecentWindow( aType );
@@ -152,7 +152,7 @@ function CycleWindow( aType )
 
 function ShowWindowFromResource( node )
 {
-	var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
+	var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
 	var	windowManagerInterface = windowManager.QueryInterface(nsIWindowMediator);
     
     var desiredWindow = null;
@@ -180,7 +180,7 @@ function ShowUpdateFromResource( node )
 
 function checkFocusedWindow()
 {
-  var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
+  var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
   var windowManagerInterface = windowManager.QueryInterface(nsIWindowMediator);
 
   var sep = document.getElementById("sep-window-list");
