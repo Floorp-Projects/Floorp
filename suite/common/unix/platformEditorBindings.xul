@@ -16,10 +16,6 @@
   onkeypress="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_deleteCharForward');
     controller.doCommand('cmd_deleteCharForward');"/>
-<key id="emDelWordBWkb" key="w" control="true" shift="false"
-  onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_deleteWordBackward');
-    controller.doCommand('cmd_deleteWordBackward');"/>
 <key id="emKillToEndkb" key="k" control="true" shift="false"
   onkeypress="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_deleteToEndOfLine');
