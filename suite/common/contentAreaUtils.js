@@ -78,9 +78,7 @@ function getReferrer(doc)
   var sourceURL = getContentFrameURI(focusedWindow);
 
   try {
-    var uri = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIURI);
-    uri.spec = sourceURL;
-    return uri;
+    return makeURL(sourceURL);
   } catch (e) {
     return null;
   }
@@ -716,17 +714,6 @@ function makeFilePicker()
   const fpContractID = "@mozilla.org/filepicker;1";
   const fpIID = Components.interfaces.nsIFilePicker;
   return Components.classes[fpContractID].createInstance(fpIID);
-}
-
-function makeTempFile()
-{
-  const mimeTypes = "TmpD";
-  const flContractID = "@mozilla.org/file/directory_service;1";
-  const flIID = Components.interfaces.nsIProperties;
-  var fileLocator = Components.classes[flContractID].getService(flIID);
-  var tempFile = fileLocator.get(mimeTypes, Components.interfaces.nsIFile);
-  tempFile.append("~sav" + Math.floor(Math.random() * 1000) + ".tmp");
-  return tempFile;
 }
 
 function getMIMEService()
