@@ -143,15 +143,13 @@ var contentAreaDNDObserver = {
 
       // now create the flavour lists
       aXferData.data = new TransferData();
+      if (urlstring && isAnchor) {
+        aXferData.data.addDataForFlavour("text/x-moz-url", urlstring + "\n" + titlestring);
+      }
+
       aXferData.data.addDataForFlavour("text/unicode", isAnchor ? urlstring :  titlestring);
       aXferData.data.addDataForFlavour("text/html", htmlstring);
-      if (urlstring) {
-        aXferData.data.addDataForFlavour("text/x-moz-url", urlstring + "\n" + titlestring);
-        aXferData.data.addDataForFlavour("moz/rdfitem", urlstring + "\n" + titlestring);
-      }
-      else {
-        aXferData.data.addDataForFlavour("moz/rdfitem", titlestring);
-      }
+
       // we use the url for text/unicode data if an anchor is being dragged, rather than
       // the title text of the link or the alt text for an anchor image. 
     },
