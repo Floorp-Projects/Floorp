@@ -53,6 +53,12 @@ var contentAreaDNDObserver = {
       if (domselection && !domselection.isCollapsed && 
           domselection.containsNode(draggedNode,false))
         {
+          var anchors = domselection.anchorNode.getElementsByTagName("a");
+          if (anchors.length > 0) {
+            draggedNode = anchors[0];
+            urlstring = draggedNode.href;
+          }
+
           var privateSelection = domselection.QueryInterface(Components.interfaces.nsISelectionPrivate);
           if (privateSelection)
           {
