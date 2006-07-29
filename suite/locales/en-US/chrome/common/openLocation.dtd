@@ -8,7 +8,7 @@
 <!ENTITY newTab.label "New Navigator tab">
 <!ENTITY topWindow.label "Current Navigator window">
 <!ENTITY editNewWindow.label "New Composer window">
-<!ENTITY cancel.label "Cancel">
+<!ENTITY open.label "Open">
 <!ENTITY caption.label "Open Web Location">
 <!ENTITY openWhere.label "Open in:">
 <!ENTITY openWhere.accesskey "O">
