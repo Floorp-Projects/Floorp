@@ -450,6 +450,11 @@ const gPopupBlockerObserver = {
     //          we should really walk the pageReport and create a list of "allow for <host>"
     //          menuitems for the common subset of hosts present in the report, this will
     //          make us frame-safe.
+    //
+    // XXXjst - Note that when this is fixed to work with multi-framed sites,
+    //          also back out the fix for bug 343772 where
+    //          nsGlobalWindow::CheckOpenAllow() was changed to also
+    //          check if the top window's location is whitelisted.
     var uri = gBrowser.selectedBrowser.webNavigation.currentURI;
     var blockedPopupAllowSite = document.getElementById("blockedPopupAllowSite");
     try {
