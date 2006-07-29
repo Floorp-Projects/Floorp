@@ -44,6 +44,7 @@ function nsContextMenu( xulMenu ) {
     this.link           = false;
     this.inFrame        = false;
     this.hasBGImage     = false;
+    this.isTextSelected = false;
     this.inDirList      = false;
     this.shouldDisplay  = true;
 
@@ -63,6 +64,8 @@ nsContextMenu.prototype = {
 
         // Get contextual info.
         this.setTarget( document.popupNode );
+        
+        this.isTextSelected = this.isTextSelection();
 
         // Initialize (disable/remove) menu items.
         this.initItems();
@@ -77,16 +80,10 @@ nsContextMenu.prototype = {
         this.initMetadataItems();
     },
     initOpenItems : function () {
-        // Remove open/edit link if not applicable.
         this.showItem( "context-openlink", this.onSaveableLink || ( this.inDirList && this.onLink ) );
         this.showItem( "context-openlinkintab", this.onSaveableLink || ( this.inDirList && this.onLink ) );
 
-        // Remove open frame if not applicable.
-        this.showItem( "context-openframe", this.inFrame );
-        this.showItem( "context-showonlythisframe", this.inFrame );
-
-        // Remove separator after open items if neither link nor frame.
-        this.showItem( "context-sep-open", this.onSaveableLink || ( this.inDirList && this.onLink ) || this.inFrame );
+        this.showItem( "context-sep-open", this.onSaveableLink || ( this.inDirList && this.onLink ) );
     },
     initNavigationItems : function () {
         // Back determined by canGoBack broadcaster.
@@ -94,90 +91,79 @@ nsContextMenu.prototype = {
 
         // Forward determined by canGoForward broadcaster.
         this.setItemAttrFromNode( "context-forward", "disabled", "canGoForward" );
+        
+        this.showItem( "context-back", !( this.isTextSelected || this.onLink || this.onImage || this.onTextInput ) );
+        this.showItem( "context-forward", !( this.isTextSelected || this.onLink || this.onImage || this.onTextInput ) );
 
-        // Reload is OK if not on a frame; vice-versa for reload-frame.
-        this.showItem( "context-reload", !this.inFrame );
-        this.showItem( "context-reload-frame", this.inFrame );
+        this.showItem( "context-reload", !( this.isTextSelected || this.onLink || this.onImage || this.onTextInput ) );
+        
+        this.showItem( "context-stop", !( this.isTextSelected || this.onLink || this.onImage || this.onTextInput ) );
+        this.showItem( "context-sep-stop", !( this.isTextSelected || this.onLink || this.onImage || this.onTextInput ) );
 
         // XXX: Stop is determined in navigator.js; the canStop broadcaster is broken
         //this.setItemAttrFromNode( "context-stop", "disabled", "canStop" );
     },
     initSaveItems : function () {
-        // Save page is always OK, unless in directory listing.
-        this.showItem( "context-savepage", !this.inDirList );
-
-        // Save frame as depends on whether we're in a frame.
-        this.showItem( "context-saveframe", this.inFrame );
+        this.showItem( "context-savepage", !( this.inDirList || this.isTextSelected || this.onTextInput ) && !( this.onLink && this.onImage ) );
 
         // Save link depends on whether we're in a link.
         this.showItem( "context-savelink", this.onSaveableLink );
 
         // Save image depends on whether there is one.
         this.showItem( "context-saveimage", this.onImage );
-        if (this.onImage){ //if onImage, let's get the imagename into the context menu
-           var saveImageMenuItem = document.getElementById( 'context-saveimage' );
-           var imageName = extractFileNameFromUrl(this.imageURL);
-           var bundle = srGetStrBundle("chrome://communicator/locale/contentAreaCommands.properties");
-           var caption;
-           if (imageName) {
-              caption = bundle.formatStringFromName("saveImageAs", [imageName], 1);
-           } else {
-              caption = bundle.GetStringFromName("saveImageAsNoFilename");
-           }
-
-           saveImageMenuItem.setAttribute( "label", caption );
-        }
-
-        // Remove separator if none of these were shown.
-        var showSep = !this.inDirList || this.inFrame || this.onSaveableLink || this.hasBGImage || this.onImage;
-        this.showItem( "context-sep-save", showSep );
+        
+        this.showItem( "context-sendimage", this.onImage );
     },
     initViewItems : function () {
         // View source is always OK, unless in directory listing.
-        this.showItem( "context-viewsource", !( this.inDirList || this.onImage ) );
+        this.showItem( "context-viewsource", !( this.inDirList || this.onImage || this.isTextSelected || this.onLink || this.onTextInput ) );
+        this.showItem( "context-viewinfo", !( this.inDirList || this.onImage || this.isTextSelected || this.onLink || this.onTextInput ) );
 
-        // View frame source depends on whether we're in a frame.
-        this.showItem( "context-viewframesource", this.inFrame );
-
-        // View Info is available, unless in directory listing
-        this.showItem( "context-viewinfo", !this.inDirList );
-
-        // View Frame Info depends on whether we're in a frame
-        this.showItem( "context-viewframeinfo", this.inFrame );
-
+        this.showItem( "context-sep-properties", !( this.inDirList || this.isTextSelected || this.onTextInput ) );
         // Set As Wallpaper depends on whether an image was clicked on, and only works on Windows.
         this.showItem( "context-setWallpaper", this.onImage && navigator.appVersion.indexOf("Windows") != -1);
+        
+        this.showItem( "context-sep-setWallpaper", this.onImage && navigator.appVersion.indexOf("Windows") != -1);
 
         // View Image depends on whether an image was clicked on.
         this.showItem( "context-viewimage", this.onImage );
 
         // View background image depends on whether there is one.
-        this.showItem( "context-viewbgimage", this.hasBGImage && !this.onImage );
+        this.showItem( "context-viewbgimage", !( this.inDirList || this.onImage || this.isTextSelected || this.onLink || this.onTextInput ) );
+        this.showItem( "context-sep-viewbgimage", !( this.inDirList || this.onImage || this.isTextSelected || this.onLink || this.onTextInput ) );
+        var menuitem = document.getElementById("context-viewbgimage");
 
-        // Remove separator if all items are removed.
-        this.showItem( "context-sep-view", !this.inDirList || this.inFrame || this.onImage );
+        if (this.hasBGImage)
+          menuitem.removeAttribute("disabled");
+        else
+          menuitem.setAttribute("disabled", "true");
     },
     initMiscItems : function () {
         // Use "Bookmark This Link" if on a link.
-        this.showItem( "context-bookmarkpage", !this.onLink );
-        this.showItem( "context-bookmarklink", this.onLink );
-        this.setItemAttr( "context-searchselect", "disabled", 
-                          !this.isTextSelected() );
+        this.showItem( "context-bookmarkpage", !( this.isTextSelected || this.onTextInput ) );
+        this.showItem( "context-bookmarklink", this.onLink && !this.onMailtoLink );
+        this.showItem( "context-searchselect", this.isTextSelected );
+        this.showItem( "frame", this.inFrame );
+        this.showItem( "frame-sep", this.inFrame );
     },
     initClipboardItems : function () {
-        // Select All is always OK, unless in directory listing.
-        this.showItem( "context-selectall", !this.inDirList );
 
         // Copy depends on whether there is selected text.
         // Enabling this context menu item is now done through the global
         // command updating system
-        // this.setItemAttr( "context-copy", "disabled", this.isNoTextSelected() );
+        // this.setItemAttr( "context-copy", "disabled", !this.isTextSelected() );
 
         goUpdateGlobalEditMenuItems();
 
-        // Items for text areas
-        this.showItem( "context-cut", this.onTextInput );
-        this.showItem( "context-paste", this.onTextInput );
+        this.showItem( "context-undo", this.isTextSelected || this.onTextInput );
+        this.showItem( "context-sep-undo", this.isTextSelected || this.onTextInput );
+        this.showItem( "context-cut", this.isTextSelected || this.onTextInput );
+        this.showItem( "context-copy", this.isTextSelected || this.onTextInput );
+        this.showItem( "context-paste", this.isTextSelected || this.onTextInput );
+        this.showItem( "context-delete", this.isTextSelected || this.onTextInput );
+        this.showItem( "context-sep-paste", this.isTextSelected || this.onTextInput );
+        this.showItem( "context-selectall", this.isTextSelected || this.onTextInput );
+        this.showItem( "context-sep-selectall", this.isTextSelected );
 
         // XXX dr
         // ------
@@ -189,14 +175,15 @@ nsContextMenu.prototype = {
 
         // Copy link location depends on whether we're on a link.
         this.showItem( "context-copylink", this.onLink );
+        this.showItem( "context-sep-copylink", this.onLink );
 
         // Copy image location depends on whether we're on an image.
         this.showItem( "context-copyimage", this.onImage );
+        this.showItem( "context-sep-copyimage", this.onImage );
     },
     initMetadataItems : function () {
         // Show if user clicked on something which has metadata.
         this.showItem( "context-metadata", this.onMetaDataItem );
-        this.showItem( "context-sep-clip", this.onMetaDataItem );
     },
     // Set various context menu attributes based on the state of the world.
     setTarget : function ( node ) {
@@ -453,6 +440,11 @@ nsContextMenu.prototype = {
         // Determine linked-to URL.
         openNewTabWith( this.linkURL() );
     },
+    // Open frame in a new tab.
+    openFrameInTab : function () {
+        // Determine linked-to URL.
+        openNewTabWith( this.target.ownerDocument.location.href );
+    },
     // Reload clicked-in frame.
     reloadFrame : function () {
         this.target.ownerDocument.location.reload();
@@ -520,6 +512,24 @@ nsContextMenu.prototype = {
                                          Components.interfaces.nsIClipboardHelper );
         clipboard.copyString(addresses);
     },    
+    addBookmark : function() {
+      var docshell = document.getElementById( "content" ).webNavigation;
+      BookmarksUtils.addBookmark( docshell.currentURI.spec,
+                                  docshell.document.title,
+                                  docshell.document.charset,
+                                  false );
+    },
+    addBookmarkForFrame : function() {
+      var doc = this.target.ownerDocument;
+      var uri = doc.location.href;
+      var title = doc.title;
+      if ( !title )
+        title = uri;
+      BookmarksUtils.addBookmark( uri,
+                                  title,
+                                  doc.charset,
+                                  false );
+    },
     // Open Metadata window for node
     showMetadata : function () {
         window.openDialog(  "chrome://navigator/content/metadata.xul",
@@ -622,19 +632,12 @@ nsContextMenu.prototype = {
 
         return text;
     },
-    // Returns "true" if there's no text selected, null otherwise.
-    isNoTextSelected : function ( event ) {
-        // Not implemented so all text-selected-based options are disabled.
-        return "true";
-    },
 
     //Get selected object and convert it to a string to get
     //selected text.   Only use the first 15 chars.
-    isTextSelected : function() {
+    isTextSelection : function() {
         var result = false;
         var selection = this.searchSelected();
-        if (!gDefaultEngine)
-            gDefaultEngine = new nsDefaultEngine();
         var searchSelect = document.getElementById('context-searchselect');
 
         var bundle = srGetStrBundle("chrome://communicator/locale/contentAreaCommands.properties");
@@ -645,19 +648,12 @@ nsContextMenu.prototype = {
             if (searchSelectText.length > 15)
                 searchSelectText = searchSelectText.substr(0,15) + "...";
             result = true;
-        } else {
-            searchSelectText = bundle.GetStringFromName("searchUnknown");
-        }
 
-        // format "Search for <selection>" string to show in menu
-        searchSelectText = bundle.formatStringFromName("searchText",
-                               [gDefaultEngine.name, searchSelectText], 2);
-        searchSelect.setAttribute("label", searchSelectText);
-
-        // add icon for default engine we're gonna use to search
-        // (eliminates last icon if we can't find current engine's icon)
-        searchSelect.setAttribute("src", gDefaultEngine.icon);
-
+          // format "Search for <selection>" string to show in menu
+          searchSelectText = bundle.formatStringFromName("searchText",
+                                                         [searchSelectText], 1);
+          searchSelect.setAttribute("label", searchSelectText);
+        } 
         return result;
     },
     
