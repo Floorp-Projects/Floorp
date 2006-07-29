@@ -137,8 +137,14 @@ nsContextMenu.prototype = {
             // Disable the Set As Wallpaper menu item if we're still trying to load the image
           this.setItemAttr( "context-setWallpaper", "disabled", (("complete" in this.target) && !this.target.complete) ? "true" : null );
 
+        this.showItem( "context-fitimage", this.onStandaloneImage && _content.document.imageResizingEnabled );
+        if ( this.onStandaloneImage && _content.document.imageResizingEnabled ) {
+          this.setItemAttr( "context-fitimage", "disabled", _content.document.imageIsOverflowing ? null : "true");
+          this.setItemAttr( "context-fitimage", "checked", _content.document.imageIsResized ? "true" : null);
+        }
+
         // View Image depends on whether an image was clicked on.
-        this.showItem( "context-viewimage", this.onImage );
+        this.showItem( "context-viewimage", this.onImage && !this.onStandaloneImage);
 
         // View background image depends on whether there is one.
         this.showItem( "context-viewbgimage", !( this.inDirList || this.onImage || this.isTextSelected || this.onLink || this.onTextInput ) );
@@ -218,6 +224,7 @@ nsContextMenu.prototype = {
         }
         // Initialize contextual info.
         this.onImage    = false;
+        this.onStandaloneImage = false;
         this.onMetaDataItem = false;
         this.onTextInput = false;
         this.imageURL   = "";
@@ -235,6 +242,11 @@ nsContextMenu.prototype = {
              if ( this.target.localName.toUpperCase() == "IMG" ) {
                 this.onImage = true;
                 this.imageURL = this.target.src;
+
+                var documentType = window._content.document.contentType;
+                if ( documentType.substr(0,6) == "image/" )
+                    this.onStandaloneImage = true;
+
                 // Look for image map.
                 var mapName = this.target.getAttribute( "usemap" );
                 if ( mapName ) {
@@ -574,10 +586,13 @@ nsContextMenu.prototype = {
         BrowserViewSourceOfDocument(this.target.ownerDocument);
     },
     viewInfo : function () {
-      BrowserPageInfo();
+        BrowserPageInfo();
     },
     viewFrameInfo : function () {
-      BrowserPageInfo(this.target.ownerDocument);
+        BrowserPageInfo(this.target.ownerDocument);
+    },
+    toggleImageSize : function () {
+        _content.document.toggleImageSize();
     },
     // Change current window to the URL of the image.
     viewImage : function () {

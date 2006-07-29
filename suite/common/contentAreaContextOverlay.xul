@@ -83,6 +83,11 @@
                 accesskey="&copyLinkCmd.accesskey;"
                 command="cmd_copyLink"/>
       <menuseparator id="context-sep-copylink"/>
+      <menuitem id="context-fitimage"
+                type="checkbox"
+                label="&fitImageCmd.label;"
+                accesskey="&fitImageCmd.accesskey;"
+                oncommand="gContextMenu.toggleImageSize();"/>
       <menuitem id="context-viewimage"
                 label="&viewImageCmd.label;"
                 accesskey="&viewImageCmd.accesskey;"
