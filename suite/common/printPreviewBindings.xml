@@ -107,6 +107,9 @@
       <field name="mDebug">
         false
       </field>
+      <field name="mPrintButton">
+        document.getAnonymousNodes(this)[0]
+      </field>
       <field name="mPageTextBox">
         document.getAnonymousNodes(this)[5].childNodes[0]
       </field>
@@ -140,6 +143,24 @@
 
         var normalizedScale = parseInt(settings.scaling * 100);
         this.mScaleTextBox.value = normalizedScale;
+
+        // XXX TEMPORARY
+        // XXX Until bug 119491 is fixed we will hide the ``Print...'' button
+        // XXX the scaling widgets, and the orientation widgets on unices.
+        if (navigator.appVersion.indexOf("X11") != -1)
+        {
+          // hide print button
+          this.mPrintButton.setAttribute("hidden", "true");
+
+          // hide scale widgets (indices: 8, 9, 10, 11)
+          // hide orient widgets (indices: 12, 13)
+          var i;
+          for (i = 8; i <= 13; ++i)
+          {
+            document.getAnonymousNodes(this)[i].setAttribute("hidden", "true");
+          }
+        }
+        // XXX TEMPORARY
       ]]>
       </constructor>
 
