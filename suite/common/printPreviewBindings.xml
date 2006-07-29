@@ -148,9 +148,17 @@
         this.mScaleTextBox.value = normalizedScale;
 
         // XXX TEMPORARY
-        // XXX Until bug 119491 is fixed we will hide the ``Print...'' button
+        // XXX Until bug 119491 ("Cleanup global vars in PostScript and Xprint
+        // modules") is fixed we will hide the ``Print...'' button
         // XXX the scaling widgets, and the orientation widgets on unices.
-        if (navigator.appVersion.indexOf("X11") != -1)
+        var canPrint = true;
+        try
+        {
+          var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+          canPrint = prefs.getBoolPref("print.whileInPrintPreview");
+        } catch(e) {}
+
+        if (!canPrint)
         {
           // hide print button
           this.mPrintButton.setAttribute("hidden", "true");
