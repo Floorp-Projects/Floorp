@@ -559,7 +559,7 @@ nsContextMenu.prototype = {
         // when there is one
         var reference = null;
         if (context == "selection")
-          reference = focusedWindow.__proto__.getSelection.call(focusedWindow);
+          reference = focusedWindow.getSelection();
         else if (context == "mathml")
           reference = this.target;
         else
@@ -805,7 +805,7 @@ nsContextMenu.prototype = {
     
     searchSelected : function( charlen ) {
         var focusedWindow = document.commandDispatcher.focusedWindow;
-        var searchStr = focusedWindow.__proto__.getSelection.call(focusedWindow);
+        var searchStr = focusedWindow.getSelection();
         searchStr = searchStr.toString();
         // searching for more than 150 chars makes no sense
         if (!charlen)
