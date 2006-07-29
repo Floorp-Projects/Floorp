@@ -907,8 +907,3 @@ function getCharsetforSave(aDocument)
 
   return  window.content.document.characterSet;
 }
-
-function SwitchTextEntryDirection(aElement)
-{
-  aElement.dir = (window.getComputedStyle(aElement, "").direction == "ltr" ? "rtl" : "ltr");
-}
