@@ -649,7 +649,7 @@ nsContextMenu.prototype = {
       var docshell = document.getElementById( "content" ).webNavigation;
       BookmarksUtils.addBookmark( docshell.currentURI.spec,
                                   docshell.document.title,
-                                  docshell.document.charset,
+                                  docshell.document.characterSet,
                                   false );
     },
     addBookmarkForFrame : function() {
@@ -660,7 +660,7 @@ nsContextMenu.prototype = {
         title = uri;
       BookmarksUtils.addBookmark( uri,
                                   title,
-                                  doc.charset,
+                                  doc.characterSet,
                                   false );
     },
     // Open Metadata window for node
