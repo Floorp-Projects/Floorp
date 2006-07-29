@@ -43,7 +43,7 @@
 <!ENTITY walletRequestToCaptureCmd.label "Save Form Data">
 <!ENTITY walletRequestToCaptureCmd.accesskey "S">
 <!-- LOCALIZATION NOTE (walletContentsCmd.label): Do NOT translate "Wallet"-->
-<!ENTITY walletContentsCmd.label "View Captured Form Data">
+<!ENTITY walletContentsCmd.label "View Stored Form Data">
 <!ENTITY walletContentsCmd.accesskey "v">
 <!ENTITY walletSitesCmd.label "View Sites">
 <!ENTITY walletSitesCmd.accesskey "w">
