@@ -144,21 +144,19 @@
     }
     var href;
     if (linkNode) {
-      href = new XPCNativeWrapper(linkNode, "href").href;
+      href = linkNode.href;
     } else {
       // Try simple XLink
       linkNode = target;
       while (linkNode) {
         if (linkNode.nodeType == Node.ELEMENT_NODE) {
-          var wrapper = new XPCNativeWrapper(linkNode, "getAttributeNS()");
-          href = wrapper.getAttributeNS("http://www.w3.org/1999/xlink", "href");
+          href = linkNode.getAttributeNS("http://www.w3.org/1999/xlink", "href");
           break;
         }
         linkNode = linkNode.parentNode;
       }
       if (href && href != "") {
-        var baseURI = new XPCNativeWrapper(linkNode, "baseURI").baseURI;
-        href = makeURLAbsolute(baseURI, href);
+        href = makeURLAbsolute(linkNode.baseURI, href);
       }
     }
     return href;

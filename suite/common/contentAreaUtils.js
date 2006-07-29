@@ -45,9 +45,7 @@ function isContentFrame(aFocusedWindow)
   if (!aFocusedWindow)
     return false;
 
-  var focusedTop = new XPCNativeWrapper(aFocusedWindow, 'top').top;
-
-  return (focusedTop == window.content);
+  return (aFocusedWindow.top == window.content);
 }
 
 function urlSecurityCheck(url, doc)
@@ -68,7 +66,7 @@ function urlSecurityCheck(url, doc)
 function getContentFrameURI(aFocusedWindow)
 {
   var contentFrame = isContentFrame(aFocusedWindow) ? aFocusedWindow : window.content;
-  return new XPCNativeWrapper(contentFrame, "location").location.href;
+  return contentFrame.location.href;
 }
 
 function getReferrer(doc)
