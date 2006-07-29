@@ -247,7 +247,7 @@ nsContextMenu.prototype = {
                  this.imageURL = this.makeURLAbsolute( this.target.ownerDocument,
                                                        this.target.src );
                } else /* if (this.target.getAttribute( "type" ).toUpperCase() == "TEXT") */ {
-                 this.onTextInput = this.isTargetATextField(this.target);
+                 this.onTextInput = this.isTargetATextBox(this.target);
                }
             } else if ( this.target.tagName.toUpperCase() == "TEXTAREA" ) {
                  this.onTextInput = true;
@@ -316,7 +316,7 @@ nsContextMenu.prototype = {
             // Test for element types of interest.
             if ( elem.nodeType == 1 ) {
                 // Clicked on a link.
-                this.onTextInput = this.isTargetATextField(elem);
+                this.onTextInput = this.isTargetATextBox(elem);
             }
             elem = elem.parentNode;
         }
@@ -685,7 +685,7 @@ nsContextMenu.prototype = {
                "contextMenu.inFrame    = " + this.inFrame + "\n" +
                "contextMenu.hasBGImage = " + this.hasBGImage + "\n";
     },
-    isTargetATextField : function ( node )
+    isTargetATextBox : function ( node )
     {
       if (node.tagName.toUpperCase() == "INPUT") {
         var attrib = node.getAttribute("type").toUpperCase();

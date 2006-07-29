@@ -31,7 +31,7 @@
   pref = pref.QueryInterface(Components.interfaces.nsIPref);
 
   // Prefill a single text field
-  function prefillTextField(target) {
+  function prefillTextBox(target) {
 
     // obtain values to be used for prefilling
     var walletService = Components.classes["@mozilla.org/wallet/wallet-service;1"].getService(Components.interfaces.nsIWalletService);
@@ -114,7 +114,7 @@
             && event.detail == 2 // double click
             && event.button == 0 // left mouse button
             && event.target.value.length == 0) { // no text has been entered
-          prefillTextField(target); // prefill the empty text field if possible
+          prefillTextBox(target); // prefill the empty text field if possible
         }
         break;
       default:
