@@ -115,39 +115,30 @@
     var target = event.target;
     var linkNode;
 
-    var local_name = target.localName;
-
-    if (local_name) {
-      local_name = local_name.toLowerCase();
-    }
-    
     var isKeyPress = (event.type == "keypress");
 
-    switch (local_name) {
-      case "a":
-      case "area":
-      case "link":
-        if (target.hasAttribute("href")) 
-          linkNode = target;
-        break;
-      case "input":
-        if ((event.target.type == "text") // text field
+    if ( target instanceof HTMLAnchorElement ||
+         target instanceof HTMLAreaElement   ||
+         target instanceof HTMLLinkElement ) {
+      if (target.hasAttribute("href")) 
+        linkNode = target;
+    }
+    else if ( target instanceof HTMLInputElement
+            && (event.target.type == "text") // text field
             && !isKeyPress       // not a key event
             && event.detail == 2 // double click
             && event.button == 0 // left mouse button
             && event.target.value.length == 0 // no text has been entered
             && "@mozilla.org/wallet/wallet-service;1" in Components.classes // wallet is available
-        ) {
-          prefillTextBox(target); // prefill the empty text field if possible
-        }
-        break;
-      default:
-        linkNode = findParentNode(event.originalTarget, "a");
-        // <a> cannot be nested.  So if we find an anchor without an
-        // href, there is no useful <a> around the target
-        if (linkNode && !linkNode.hasAttribute("href"))
-          linkNode = null;
-        break;
+    ) {
+      prefillTextBox(target); // prefill the empty text field if possible
+    }
+    else {
+      linkNode = findParentNode(event.originalTarget, "a");
+      // <a> cannot be nested.  So if we find an anchor without an
+      // href, there is no useful <a> around the target
+      if (linkNode && !linkNode.hasAttribute("href"))
+        linkNode = null;
     }
     var href;
     if (linkNode) {
