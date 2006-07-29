@@ -53,7 +53,7 @@
 <!ENTITY viewMenu.accesskey				"v"> 
 <!ENTITY viewToolbarsMenu.label				"Toolbars"> 
 <!ENTITY viewToolbarsMenu.accesskey			"t"> 
-<!ENTITY showTaskbarCmd.label					"Statusbar">  
+<!ENTITY showTaskbarCmd.label					"Status Bar">  
 <!ENTITY showTaskbarCmd.accesskey				"s"> 
 
 <!ENTITY helpMenu.label					"Help"> 

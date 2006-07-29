@@ -100,7 +100,7 @@
   </box>
   -->
   
-  <box id="component-bar" class="statusbarpanel-icononly" persist="collapsed">
+  <box id="component-bar" class="statusbar-panel" persist="collapsed">
 
        <button class="button-toolbar-4 taskbutton" id="mini-nav" oncommand="toNavigator();" 
               tooltip="aTooltip" tooltiptext="&taskNavigator.tooltip;"/>
