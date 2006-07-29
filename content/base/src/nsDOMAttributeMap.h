@@ -152,13 +152,32 @@ public:
    */
   void DropAttribute(PRInt32 aNamespaceID, nsIAtom* aLocalName);
 
+  /**
+   * Returns the number of attribute nodes currently in the map.
+   * Note: this is just the number of cached attribute nodes, not the number of
+   * attributes in mContent.
+   *
+   * @return The number of attribute nodes in the map.
+   */
+  PRUint32 Count() const;
+
+  typedef nsInterfaceHashtable<nsAttrHashKey, nsIDOMNode> AttrCache;
+
+  /**
+   * Enumerates over the attribute nodess in the map and calls aFunc for each
+   * one. If aFunc returns PL_DHASH_STOP we'll stop enumerating at that point.
+   *
+   * @return The number of attribute nodes that aFunc was called for.
+   */
+  PRUint32 Enumerate(AttrCache::EnumReadFunction aFunc, void *aUserArg) const;
+
 private:
   nsIContent* mContent; // Weak reference
 
   /**
    * Cache of nsDOMAttributes.
    */
-  nsInterfaceHashtable<nsAttrHashKey, nsIDOMNode> mAttributeCache;
+  AttrCache mAttributeCache;
 
   /**
    * SetNamedItem() (aWithNS = PR_FALSE) and SetNamedItemNS() (aWithNS =

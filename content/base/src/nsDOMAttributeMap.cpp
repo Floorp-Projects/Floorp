@@ -462,3 +462,16 @@ nsDOMAttributeMap::RemoveNamedItemNS(const nsAString& aNamespaceURI,
 
   return NS_OK;
 }
+
+PRUint32
+nsDOMAttributeMap::Count() const
+{
+  return mAttributeCache.Count();
+}
+
+PRUint32
+nsDOMAttributeMap::Enumerate(AttrCache::EnumReadFunction aFunc,
+                             void *aUserArg) const
+{
+  return mAttributeCache.EnumerateRead(aFunc, aUserArg);
+}

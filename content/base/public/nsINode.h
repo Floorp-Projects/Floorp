@@ -643,6 +643,7 @@ protected:
     *flags &= ~aFlagsToUnset;
   }
 
+  friend class nsDocument;
   nsCOMPtr<nsINodeInfo> mNodeInfo;
 
   enum { PARENT_BIT_INDOCUMENT = 1 << 0, PARENT_BIT_PARENT_IS_CONTENT = 1 << 1 };

@@ -112,6 +112,22 @@ public:
                                          nsIDocument *aOldDocument);
 
   /**
+   * Get a scope from aOldDocument and one from aNewDocument. Also get a
+   * context through one of the scopes, from the stack or the safe context.
+   *
+   * @param aOldDocument The document to get aOldScope from.
+   * @param aNewDocument The document to get aNewScope from.
+   * @param aCx [out] Context gotten through one of the scopes, from the stack
+   *                  or the safe context.
+   * @param aOldScope [out] Scope gotten from aOldDocument.
+   * @param aNewScope [out] Scope gotten from aNewDocument.
+   */
+  static nsresult GetContextAndScopes(nsIDocument *aOldDocument,
+                                      nsIDocument *aNewDocument,
+                                      JSContext **aCx, JSObject **aOldScope,
+                                      JSObject **aNewScope);
+
+  /**
    * When a document's scope changes (e.g., from document.open(), call this
    * function to move all content wrappers from the old scope to the new one.
    */

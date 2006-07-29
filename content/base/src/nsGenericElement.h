@@ -58,6 +58,7 @@
 #include "nsContentUtils.h"
 #include "nsAttrAndChildArray.h"
 #include "mozFlushType.h"
+#include "nsDOMAttributeMap.h";
 
 class nsIDOMAttr;
 class nsIDOMEventListener;
@@ -66,7 +67,6 @@ class nsISupportsArray;
 class nsIDOMNamedNodeMap;
 class nsDOMCSSDeclaration;
 class nsIDOMCSSStyleDeclaration;
-class nsDOMAttributeMap;
 class nsIURI;
 class nsVoidArray;
 class nsINodeInfo;
@@ -722,6 +722,18 @@ public:
     const nsAttrName* mName;
     const nsAttrValue* mValue;
   };
+
+  /**
+   * Returns the attribute map, if there is one.
+   *
+   * @return existing attribute map or nsnull.
+   */
+  nsDOMAttributeMap *GetAttributeMap()
+  {
+    nsDOMSlots *slots = GetExistingDOMSlots();
+
+    return slots ? slots->mAttributeMap : nsnull;
+  }
 
 protected:
   /**
