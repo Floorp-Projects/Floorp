@@ -48,6 +48,9 @@
 |   Currently, this code is relatively useless for any other purpose.  In the  |
 |   longer term, this code will be restructured to make it more reusable.      |
 ------------------------------------------------------------------------------*/
+
+var gShowBiDi = false;
+
 function nsContextMenu( xulMenu ) {
     this.target         = null;
     this.menu           = null;
@@ -200,6 +203,11 @@ nsContextMenu.prototype = {
         this.showItem( "popupwindow-reject", this.popupURL && !blocking);
         this.showItem( "popupwindow-allow", this.popupURL && blocking);
         this.showItem( "context-sep-popup", this.popupURL);
+
+        // BiDi UI
+        this.showItem( "context-sep-bidi", gShowBiDi);
+        this.showItem( "context-bidi-text-direction-toggle", this.onTextInput && gShowBiDi);
+        this.showItem( "context-bidi-page-direction-toggle", !this.onTextInput && gShowBiDi);
     },
     initClipboardItems : function () {
 
