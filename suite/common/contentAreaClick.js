@@ -160,7 +160,14 @@
           return true;                                                // do nothing
         return false;
       case 1:                                                         // if middle button clicked
-        if (pref && pref.GetBoolPref("middlemouse.openNewWindow")) {  // and the pref is on
+        if (pref && pref.GetBoolPref("browser.tabs.opentabfor.middleclick") && getBrowser && 
+            getBrowser() && getBrowser().localName == "tabbrowser") {
+          var t = getBrowser().addTab(href); // open link in new tab
+          getBrowser().selectedTab = t;
+          event.preventBubble();
+          return true;
+        }
+        else if (pref && pref.GetBoolPref("middlemouse.openNewWindow")) {  
           openNewWindowWith(href);                                    // open link in new window
           event.preventBubble();
           return true;
