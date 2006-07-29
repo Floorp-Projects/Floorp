@@ -47,16 +47,13 @@
       <!-- Open ==================================== -->
       <menuitem id="context-openlink"
                 label="&openLinkCmd.label;"
-                accesskey=""
                 oncommand="contextMenu.openLink();"/>
       <!-- XXX - DEPENDENT ON PRESENCE OF EDITOR!! - XXX -->
       <menuitem id="context-editlink"
                 label="&editLinkCmd.label;"
-                accesskey=""
                 oncommand="contextMenu.editLink();"/>
       <menuitem id="context-openframe"
                 label="&openFrameCmd.label;"
-                accesskey=""
                 oncommand="contextMenu.openFrame();"/>
       <menuitem id="context-showonlythisframe"
                 label="&showOnlyThisFrameCmd.label;"
@@ -82,29 +79,23 @@
                 oncommand="contextMenu.reloadFrame();"/>
       <menuitem id="context-stop"
                 label="&stopCmd.label;"
-                accesskey=""
                 oncommand="BrowserStop();"/>
       <menuseparator id="context-sep-navigation"/>
       <!-- View ==================================== -->
       <menuitem id="context-viewsource"
                 label="&viewPageSourceCmd.label;"
-                accesskey=""
                 oncommand="BrowserViewSource();"/>
       <menuitem id="context-viewframesource"
                 label="&viewFrameSourceCmd.label;"
-                accesskey=""
                 oncommand="contextMenu.viewFrameSource();"/>
       <menuitem id="context-viewinfo"
                 label="&viewPageInfoCmd.label;"
-                accesskey=""
                 oncommand="contextMenu.viewInfo();"/>
       <menuitem id="context-viewframeinfo"
                 label="&viewFrameInfoCmd.label;"
-                accesskey=""
                 oncommand="contextMenu.viewFrameInfo();"/>
       <menuitem id="context-viewimage"
                 label="&viewImageCmd.label;"
-                accesskey=""
                 oncommand="contextMenu.viewImage();"/>
       <menuseparator id="context-sep-view"/>
       <!-- Misc ==================================== -->
@@ -143,19 +134,19 @@
       <menuitem id="context-selectall"
                 label="&selectAllCmd.label;"
                 accesskey="&selectAllCmd.accesskey;"
-                observes="cmd_selectAll"/>
+                command="cmd_selectAll"/>
       <menuitem id="context-cut"
                 label="&cutCmd.label;"
                 accesskey="&cutCmd.accesskey;"
-                observes="cmd_cut"/>
+                command="cmd_cut"/>
       <menuitem id="context-copy"
                 label="&copyCmd.label;"
                 accesskey="&copyCmd.accesskey;"
-                observes="cmd_copy"/>
+                command="cmd_copy"/>
       <menuitem id="context-paste"
                 label="&pasteCmd.label;"
                 accesskey="&pasteCmd.accesskey;"
-                observes="cmd_paste"/>
+                command="cmd_paste"/>
       <menuitem id="context-copylink"
                 label="&copyLinkCmd.label;"
                 accesskey="&copyLinkCmd.accesskey;"

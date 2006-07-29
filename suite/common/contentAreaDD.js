@@ -29,6 +29,7 @@
 var contentAreaDNDObserver = {
   onDragStart: function (aEvent, aXferData, aDragAction)
     {
+      alert('hey');
       // under the assumption that content areas won't contain
       // draggable XBL, we'll ignore the drag if we're dragging XBL
       // anonymous content nodes, like scrollbars, etc.
@@ -54,14 +55,15 @@ var contentAreaDNDObserver = {
           domselection.containsNode(draggedNode,false))
         {
           var anchors = domselection.anchorNode.getElementsByTagName("a");
-          if (anchors.length > 0) {
-            draggedNode = anchors[0];
-            urlstring = draggedNode.href;
+          if (anchors.length > 0) {       
+	    draggedNode = anchors[0];
+	    urlstring = draggedNode.href;
           }
 
           var privateSelection = domselection.QueryInterface(Components.interfaces.nsISelectionPrivate);
           if (privateSelection)
           {
+          
             // the window has a selection so we should grab that rather
             // than looking for specific elements
             htmlstring = privateSelection.toStringWithFormat("text/html", 128+256, 0);

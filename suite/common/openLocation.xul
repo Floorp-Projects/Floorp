@@ -46,13 +46,12 @@
         persist="screenX screenY"
         screenX="24" screenY="24">
               
-  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>  
   <script type="application/x-javascript" src="chrome://communicator/content/openLocation.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
-                   
-  <keyset id="keyset"/>
-           
+  
+  <stringbundle id="openLocationBundle" src="chrome://communicator/locale/openLocation.properties"/>
+  <keyset id="dialogKeys"/>
   <box>
     <box orient="vertical">
       <image class="question-icon"/>
@@ -65,7 +64,7 @@
 
       <box autostretch="never">
         <textbox id="dialog.input" flex="1" oninput="doEnabling();"/>
-        <button label="&chooseFile.label;" onclick="onChooseFile();"/>
+        <button label="&chooseFile.label;" oncommand="onChooseFile();"/>
       </box>
       <box autostretch="never" valign="center">
         <text class="label" value="&openWhere.label;"/>

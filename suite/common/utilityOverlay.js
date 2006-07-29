@@ -31,8 +31,8 @@
  **/
 function setOfflineStatus(aToggleFlag)
 {
-  var ioService = nsJSComponentManager.getServiceByID("{9ac9e770-18bc-11d3-9337-00104ba0fd40}",
-                                                      "nsIIOService");
+  var ioService = Components.classesByID["{9ac9e770-18bc-11d3-9337-00104ba0fd40}"]
+                            .getService(Components.interfaces.nsIIOService);
   var broadcaster = document.getElementById("Communicator:WorkMode");
   if (aToggleFlag)
     ioService.offline = !ioService.offline;

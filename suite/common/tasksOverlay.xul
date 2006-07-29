@@ -18,20 +18,19 @@
 
 
 
-<keyset id="keyset">
-  <key id="key_navigator"    key="&navigatorCmd.commandkey;"   observes="Tasks:Navigator" modifiers="accel"/>
-  <key id="key_editor"       key="&editorCmd.commandkey;"      observes="Tasks:Editor" modifiers="accel"/>
-  <key id="key_addressbook"  key="&addressBookCmd.commandkey;" observes="Tasks:AddressBook" modifiers="accel"/>
+<keyset id="tasksKeys">
+  <key id="key_navigator"    key="&navigatorCmd.commandkey;"   command="Tasks:Navigator" modifiers="accel"/>
+  <key id="key_editor"       key="&editorCmd.commandkey;"      command="Tasks:Editor" modifiers="accel"/>
+  <key id="key_addressbook"  key="&addressBookCmd.commandkey;" command="Tasks:AddressBook" modifiers="accel"/>
 
   <!-- Tools Menu -->
   <key id="key_gotoHistory"  key="&history.commandKey;"        oncommand="toHistory();" modifiers="accel"/>
 </keyset>
-
-<broadcasterset id="broadcasterset">
-  <broadcaster id="Tasks:Navigator" label="&navigatorCmd.label;" oncommand="toNavigator();"/>
-  <broadcaster id="Tasks:Editor"    label="&editorCmd.label;"    oncommand="toEditor();"/>
-  <broadcaster id="Tasks:AddressBook" label="&addressBookCmd.label;"    oncommand="toAddressBook();"/>
-</broadcasterset>
+<commandset id="tasksCommands">
+  <command id="Tasks:Navigator" oncommand="toNavigator();"/>
+  <command id="Tasks:Editor" oncommand="toEditor();"/>
+  <command id="Tasks:AddressBook" oncommand="toAddressBook();"/>
+</commandset>
 
 
       <!-- Tasks Menu -->
@@ -45,9 +44,9 @@
         </template>
 
         <menupopup id="taskPopup">
-          <menuitem accesskey="&navigatorCmd.accesskey;" key="key_navigator" observes="Tasks:Navigator"/>
-          <menuitem accesskey="&editorCmd.accesskey;" key="key_editor" observes="Tasks:Editor" />
-          <menuitem accesskey="&addressBookCmd.accesskey;" key="key_addressbook" observes="Tasks:AddressBook"/>
+          <menuitem label="&navigatorCmd.label;" accesskey="&navigatorCmd.accesskey;" key="key_navigator" command="Tasks:Navigator"/>
+          <menuitem label="&editorCmd.label;" accesskey="&editorCmd.accesskey;" key="key_editor" command="Tasks:Editor" />
+          <menuitem label="&addressBookCmd.label;" accesskey="&addressBookCmd.accesskey;" key="key_addressbook" command="Tasks:AddressBook"/>
 
           <!-- Overlays get stuffed in here. -->
 

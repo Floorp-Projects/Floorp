@@ -59,6 +59,6 @@
   </box>
 
   <box id="okCancelButtons"/>
-  <keyset id="keyset"/>
+  <keyset id="dialogKeys"/>
 
 </window>
