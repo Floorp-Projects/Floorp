@@ -37,5 +37,4 @@
 <!ENTITY downloadManagerCmd.accesskey "D">
 
 <!ENTITY switchProfileCmd.label "Switch Profile...">
-<!ENTITY switchProfileCmd.accesskey "P">
-<!ENTITY switchProfileCmd.commandkey "Q">
+<!ENTITY switchProfileCmd.accesskey "h">
