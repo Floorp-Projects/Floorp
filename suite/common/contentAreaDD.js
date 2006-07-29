@@ -44,7 +44,7 @@ var contentAreaDNDObserver = {
       var draggedNode = aEvent.target;
 
       // the resulting strings from the beginning of the drag
-      var textstring = null;
+      var titlestring = null;
       var urlstring = null;
       // htmlstring will be filled automatically if you fill urlstring
       var htmlstring = null;
@@ -59,7 +59,7 @@ var contentAreaDNDObserver = {
             // the window has a selection so we should grab that rather
             // than looking for specific elements
             htmlstring = privateSelection.toStringWithFormat("text/html", 128+256, 0);
-            textstring = privateSelection.toStringWithFormat("text/plain", 0, 0);
+            titlestring = privateSelection.toStringWithFormat("text/plain", 0, 0);
             // how are we going to get the URL, if any? Scan the selection
             // for the first anchor? See bug #58315
           }
@@ -68,6 +68,8 @@ var contentAreaDNDObserver = {
         {
           if (aEvent.altKey && findParentNode(draggedNode, 'a'))
             return false;
+          
+          var isAnchor = false;
           switch (draggedNode.localName.toUpperCase())
             {
               case 'AREA':
@@ -78,7 +80,7 @@ var contentAreaDNDObserver = {
                 // (path?) to get base URL for image.
 
                 // use alt text as the title of the image, if  it's there
-                textstring = draggedNode.getAttribute("alt");
+                titlestring = draggedNode.getAttribute("alt");
                 urlstring = imgsrc;
                 htmlstring = "<img src=\"" + urlstring + "\">";
 
@@ -86,14 +88,17 @@ var contentAreaDNDObserver = {
                 // an anchor tag
                 linkNode = findParentNode(draggedNode, 'a');
                 if (linkNode) {
+                  isAnchor = true;
                   urlstring = this.getAnchorUrl(linkNode);
                   htmlstring = this.createLinkText(urlstring, htmlstring);
                 }
                 break;
               case 'A':
                 urlstring = this.getAnchorUrl(draggedNode);
-                textstring = this.getNodeString(draggedNode);
-                aDragAction.action = Components.interfaces.nsIDragService.DRAGDROP_ACTION_LINK;
+                titlestring = this.getNodeString(draggedNode);
+                 // this causes d&d problems on windows -- see bug 68058
+                 //aDragAction.action =  Components.interfaces.nsIDragService.DRAGDROP_ACTION_LINK;
+                isAnchor = true;
                 break;
                 
               default:
@@ -101,18 +106,19 @@ var contentAreaDNDObserver = {
                 
                 if (linkNode) {
                   urlstring = this.getAnchorUrl(linkNode);
-                  textstring = this.getNodeString(linkNode);
-                  
+                  titlestring = this.getNodeString(linkNode);
                   // select node now!
                   // this shouldn't be fatal, and
                   // we should still do the drag if this fails
                   try {
-                    //this.normalizeSelection(linkNode, domselection);
+                    this.normalizeSelection(linkNode, domselection);
                   } catch (ex) {
                     // non-fatal, so catch & ignore
                   }
   
-                  aDragAction.action = Components.interfaces.nsIDragService.DRAGDROP_ACTION_LINK;
+                 isAnchor = true;
+                 // this causes d&d problems on windows -- see bug 68058
+                 //aDragAction.action = Components.interfaces.nsIDragService.DRAGDROP_ACTION_LINK;
                 }
                 else {
                   // Need to throw to indicate that the drag target should not 
@@ -124,7 +130,7 @@ var contentAreaDNDObserver = {
         }
 
       // default text value is the URL
-      if (!textstring) textstring = urlstring;
+      if (!titlestring) titlestring = urlstring;
 
       // if we haven't constructed a html version, make one now
       if (!htmlstring && urlstring)
@@ -132,9 +138,11 @@ var contentAreaDNDObserver = {
 
       // now create the flavour lists
       aXferData.data = new TransferData();
-      aXferData.data.addDataForFlavour("text/x-moz-url", urlstring + "\n" + textstring);
+      aXferData.data.addDataForFlavour("text/x-moz-url", urlstring + "\n" + titlestring);
       aXferData.data.addDataForFlavour("text/html", htmlstring);
-      aXferData.data.addDataForFlavour("text/unicode", textstring);
+      // we use the url for text/unicode data if an anchor is being dragged, rather than
+      // the title text of the link or the alt text for an anchor image. 
+      aXferData.data.addDataForFlavour("text/unicode", isAnchor ? urlstring :  titlestring);
     },
 
   onDragOver: function (aEvent, aFlavour, aDragSession)
@@ -147,8 +155,8 @@ var contentAreaDNDObserver = {
         aDragSession.canDrop = false;
         return;
       }
-
-      aDragSession.dragAction = Components.interfaces.nsIDragService.DRAGDROP_ACTION_LINK;
+      // this causes d&d problems on windows -- see bug 68058
+      //aDragSession.dragAction = Components.interfaces.nsIDragService.DRAGDROP_ACTION_LINK;
     },
 
   onDrop: function (aEvent, aXferData, aDragSession)
