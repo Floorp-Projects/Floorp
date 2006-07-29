@@ -148,7 +148,7 @@
       <menuitem id="context-savepage"
                 label="&savePageCmd.label;"
                 accesskey="&savePageCmd.accesskey;"
-                oncommand="saveDocument(window._content.document);"/>
+                oncommand="saveDocument(window.content.document);"/>
       <menuseparator id="context-sep-viewbgimage"/>
       <menuitem id="context-viewbgimage"
                 label="&viewBGImageCmd.label;"

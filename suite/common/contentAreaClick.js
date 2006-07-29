@@ -54,7 +54,7 @@
 
     // obtain values to be used for prefilling
     var walletService = Components.classes["@mozilla.org/wallet/wallet-service;1"].getService(Components.interfaces.nsIWalletService);
-    var value = walletService.WALLET_PrefillOneElement(window._content, target);
+    var value = walletService.WALLET_PrefillOneElement(window.content, target);
     if (value) {
 
       // result is a linear sequence of values, each preceded by a separator character

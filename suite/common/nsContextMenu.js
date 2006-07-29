@@ -166,10 +166,10 @@ nsContextMenu.prototype = {
             // Disable the Set As Wallpaper menu item if we're still trying to load the image
           this.setItemAttr( "context-setWallpaper", "disabled", (("complete" in this.target) && !this.target.complete) ? "true" : null );
 
-        this.showItem( "context-fitimage", this.onStandaloneImage && _content.document.imageResizingEnabled );
-        if ( this.onStandaloneImage && _content.document.imageResizingEnabled ) {
-          this.setItemAttr( "context-fitimage", "disabled", _content.document.imageIsOverflowing ? null : "true");
-          this.setItemAttr( "context-fitimage", "checked", _content.document.imageIsResized ? "true" : null);
+        this.showItem( "context-fitimage", this.onStandaloneImage && content.document.imageResizingEnabled );
+        if ( this.onStandaloneImage && content.document.imageResizingEnabled ) {
+          this.setItemAttr( "context-fitimage", "disabled", content.document.imageIsOverflowing ? null : "true");
+          this.setItemAttr( "context-fitimage", "checked", content.document.imageIsResized ? "true" : null);
         }
 
         // View Image depends on whether an image was clicked on.
@@ -268,7 +268,7 @@ nsContextMenu.prototype = {
                 this.onImage = true;
                 this.imageURL = this.target.currentURI.spec;
 
-                var documentType = window._content.document.contentType;
+                var documentType = window.content.document.contentType;
                 if ( documentType.substr(0,6) == "image/" )
                     this.onStandaloneImage = true;
              } else if ( this.target.localName.toUpperCase() == "INPUT") {
@@ -287,8 +287,8 @@ nsContextMenu.prototype = {
                                                            computedURL );
                  }
                }
-            } else if ( "HTTPIndex" in _content &&
-                        _content.HTTPIndex instanceof Components.interfaces.nsIHTTPIndex ) {
+            } else if ( "HTTPIndex" in content &&
+                        content.HTTPIndex instanceof Components.interfaces.nsIHTTPIndex ) {
                 this.inDirList = true;
                 // Bubble outward till we get to an element with URL attribute
                 // (which should be the href).
@@ -335,7 +335,7 @@ nsContextMenu.prototype = {
           this.onMathML = true;
 
         // See if the user clicked in a frame.
-        if ( this.target.ownerDocument != window._content.document ) {
+        if ( this.target.ownerDocument != window.content.document ) {
             this.inFrame = true;
         }
         
@@ -528,7 +528,7 @@ nsContextMenu.prototype = {
     viewPartialSource : function ( context ) {
         var focusedWindow = document.commandDispatcher.focusedWindow;
         if (focusedWindow == window)
-          focusedWindow = _content;
+          focusedWindow = content;
         var docCharset = null;
         if (focusedWindow)
           docCharset = "charset=" + focusedWindow.document.characterSet;
@@ -560,7 +560,7 @@ nsContextMenu.prototype = {
         BrowserPageInfo(this.target.ownerDocument);
     },
     toggleImageSize : function () {
-        _content.document.toggleImageSize();
+        content.document.toggleImageSize();
     },
     // Change current window to the URL of the image.
     viewImage : function () {

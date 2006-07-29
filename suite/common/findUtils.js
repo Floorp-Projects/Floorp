@@ -80,7 +80,7 @@ nsFindInstData.prototype =
 }
 
 // browser is the <browser> element
-// rootSearchWindow is the window to constrain the search to (normally window._content)
+// rootSearchWindow is the window to constrain the search to (normally window.content)
 // currentSearchWindow is the frame to start searching (can be, and normally, rootSearchWindow)
 function findInPage(findInstData)
 {

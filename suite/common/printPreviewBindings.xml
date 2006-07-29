@@ -494,7 +494,7 @@
       <method name="_getWebBrowserPrint">
         <body>
         <![CDATA[
-          return _content
+          return content
                    .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                    .getInterface(Components.interfaces.nsIWebBrowserPrint);
         ]]>
