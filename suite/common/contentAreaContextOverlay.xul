@@ -35,10 +35,9 @@
   <script type="text/javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
 
   <popupset id="contentAreaContextSet">
-    <!-- This is the context menu for the content-area of the navigator
-         window.  It contains each and every possible menu choice.  The
-         appropriate items are hidden/shown upon display, based on what
-         the user has clicked-on.
+    <!-- This is a generic context menu for a content area. It contains 
+         each and every possible menu choice.  The appropriate items are
+         hidden/shown upon display, based on what the user has clicked-on.
      -->
     <popup id="contentAreaContextMenu"
            oncreate="contextMenu = new nsContextMenu( this ); return contextMenu.shouldDisplay;"
