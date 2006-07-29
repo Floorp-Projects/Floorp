@@ -31,7 +31,7 @@
 
 <page id="history-panel" orient="vertical"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="HistoryInit();">
+      onload="HistoryCommonInit();" elementtofocus="historyTree">
   <commandset id="selectEditMenuItems">
     <command id="cmd_delete"/>
     <command id="cmd_copy"/>
