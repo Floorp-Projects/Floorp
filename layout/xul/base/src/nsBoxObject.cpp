@@ -309,6 +309,7 @@ NS_IMETHODIMP
 nsBoxObject::GetLookAndFeelMetric(const PRUnichar* aPropertyName, 
                                   PRUnichar** aResult)
 {
+  *aResult = nsnull;
   nsCOMPtr<nsILookAndFeel> lookAndFeel(do_GetService(kLookAndFeelCID));
   if (!lookAndFeel)
     return NS_ERROR_FAILURE;
@@ -346,6 +347,7 @@ nsBoxObject::GetLookAndFeelMetric(const PRUnichar* aPropertyName,
 NS_IMETHODIMP
 nsBoxObject::GetPropertyAsSupports(const PRUnichar* aPropertyName, nsISupports** aResult)
 {
+  NS_ENSURE_ARG(aPropertyName && *aPropertyName);
   if (!mPresState) {
     *aResult = nsnull;
     return NS_OK;
@@ -420,6 +422,7 @@ nsBoxObject::SetProperty(const PRUnichar* aPropertyName, const PRUnichar* aPrope
 NS_IMETHODIMP
 nsBoxObject::RemoveProperty(const PRUnichar* aPropertyName)
 {
+  NS_ENSURE_ARG(aPropertyName && *aPropertyName);
   if (!mPresState)
     return NS_OK;
 
@@ -430,6 +433,7 @@ nsBoxObject::RemoveProperty(const PRUnichar* aPropertyName)
 NS_IMETHODIMP 
 nsBoxObject::GetParentBox(nsIDOMElement * *aParentBox)
 {
+  *aParentBox = nsnull;
   nsIFrame* frame = GetFrame(PR_FALSE);
   if (!frame) return NS_OK;
   nsIFrame* parent = frame->GetParent();
@@ -493,6 +497,7 @@ nsresult
 nsBoxObject::GetPreviousSibling(nsIFrame* aParentFrame, nsIFrame* aFrame,
                                 nsIDOMElement** aResult)
 {
+  *aResult = nsnull;
   nsIFrame* nextFrame = aParentFrame->GetFirstChild(nsnull);
   nsIFrame* prevFrame = nsnull;
   while (nextFrame) {
