@@ -661,7 +661,7 @@ function getDefaultFileName(aDefaultFileName, aNameFromHeaders, aDocumentURI, aD
 
     if (docTitle != "") {
       // 3) Use the document title
-      return validateFileName(aDocument.title);
+      return docTitle;
     }
   }
   
