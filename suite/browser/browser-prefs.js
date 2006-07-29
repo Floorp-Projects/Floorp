@@ -81,9 +81,6 @@ pref("browser.toolbars.showbutton.home",    true);
 pref("browser.toolbars.showbutton.print",   true);
 pref("browser.toolbars.showbutton.search",  true);
 
-// xxxbsmedberg - is this a real pref?
-pref("browser.turbo.enabled", false);
-
 // Dialog modality issues
 pref("browser.show_about_as_stupid_modal_window", false);
 
