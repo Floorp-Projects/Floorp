@@ -110,12 +110,11 @@
     }
   }
   
-  function hrefAndLinkNodeForClickEvent(aParams)
+  function hrefAndLinkNodeForClickEvent(event)
   {
-    var event = aParams.event;
     var target = event.target;
-    var href = aParams.href;
-    var linkNode = aParams.linkNode;
+    var href = "";
+    var linkNode = null;
 
     var isKeyPress = (event.type == "keypress");
 
@@ -162,8 +161,7 @@
       }
     }
 
-    aParams.href = href;
-    aParams.linkNode = linkNode;
+    return linkNode ? {href: href, linkNode: linkNode} : null;
   }
 
   // Called whenever the user clicks in the content area,
@@ -176,20 +174,19 @@
     }
 
     var isKeyPress = (event.type == "keypress");
-    var ceParams = {event: event, href: "", linkNode: null};
-    hrefAndLinkNodeForClickEvent(ceParams);
-    var href = ceParams.href;
-    if (href) {
+    var ceParams = hrefAndLinkNodeForClickEvent(event);
+    if (ceParams) {
+      var href = ceParams.href;
       if (isKeyPress) {
         openNewTabWith(href, true, event.shiftKey);
         event.preventBubble();
       }
       else {
-        handleLinkClick(event, href, null);
+        handleLinkClick(event, href, ceParams.linkNode);
         // if in mailnews block the link left click if we determine
         // that this URL is phishy (i.e. a potential email scam) 
         if ("gMessengerBundle" in this && !event.button)
-          return !isPhishingURL(ceParams.linkNode, false);
+          return !isPhishingURL(ceParams.linkNode, false, href);
       }
       return true;
     }
