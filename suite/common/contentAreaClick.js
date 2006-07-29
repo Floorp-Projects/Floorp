@@ -164,13 +164,10 @@
 
   function middleMousePaste()
   {
-      var url = readFromClipboard();
-      //dump ("Loading URL on clipboard: '" + url + "'; length = " + url.length + "\n");
-      if (url) {
-        var urlBar = document.getElementById("urlbar");
-        urlBar.value = url;
-        BrowserLoadURL();
-        return true;
+    var url = readFromClipboard();
+    if (url) {
+      loadShortcutOrURI(url);
+      return true;
     }
     return false;
   }
