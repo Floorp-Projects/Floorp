@@ -384,8 +384,10 @@ function goUpdateGlobalEditMenuItems()
   goUpdateCommand('cmd_delete');
   try {
     // XXX: implement controller for cmd_SwitchTextDirection
-    document.getElementById('cmd_SwitchTextDirection').setAttribute('disabled',
-           !document.commandDispatcher.focusedElement);
+    var changer = document.getElementById('cmd_SwitchTextDirection');
+    if (changer)
+      changer.setAttribute('disabled',
+                           !document.commandDispatcher.focusedElement);
   }
   catch (e) {}
 }
