@@ -30,7 +30,9 @@
 
 <page id="history-panel" orient="vertical"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="HistoryCommonInit();" elementtofocus="historyTree">
+      onload="HistoryCommonInit();"
+      onunload="HistoryPanelUnload();"
+      elementtofocus="historyTree">
   <stringbundle id="historyBundle"
                 src="chrome://communicator/locale/history/history.properties"/>
   <commandset id="selectEditMenuItems">
