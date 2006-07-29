@@ -633,7 +633,15 @@ nsContextMenu.prototype = {
     },
     
     searchSelected : function() {
-        var searchStr = this.target.ownerDocument.getSelection();
+        var searchStr;
+
+        // workaround for bug 117805 to enable context menus in XML documents
+        // until bug 116523 is fixed.
+        if ("getSelection" in this.target.ownerDocument)
+            searchStr = this.target.ownerDocument.getSelection();
+        else
+            searchStr = _content.getSelection();
+
         searchStr = searchStr.toString();
         searchStr = searchStr.replace( /^\s+/, "" );
         searchStr = searchStr.replace(/(\n|\r|\t)+/g, " ");
