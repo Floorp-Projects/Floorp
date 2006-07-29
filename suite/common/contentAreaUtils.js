@@ -137,10 +137,11 @@ function openNewTabWith(url, sendReferrer, reverseBackgroundPref)
 
     var browserWin = windowMediator.getMostRecentWindow("navigator:browser");
 
-    // if there's no existing browser window, open this url in one, and
-    // return
+    // if there's no existing browser window, then, as long as
+    // we are allowed to, open this url in one and return
     //
     if (!browserWin) {
+      urlSecurityCheck(url, document);
       window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", 
                         url, null, referrer);
       return;
