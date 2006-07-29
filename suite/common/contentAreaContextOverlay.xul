@@ -119,7 +119,8 @@
                 label="&bookmarkLinkCmd.label;"
                 accesskey="&bookmarkLinkCmd.accesskey;"
                 oncommand="BookmarksUtils.addBookmark(contextMenu.linkURL(),
-                                                      contextMenu.linkText(), true);"/>
+                                                      contextMenu.linkText(), 
+                                                      undefined, true);"/>
       <menuseparator id="context-sep-bookmark"/>
       <!-- Save ==================================== -->
       <menuitem id="context-savepage"
