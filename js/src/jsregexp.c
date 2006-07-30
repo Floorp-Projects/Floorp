@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set sw=4 ts=8 et tw=80:
+ * vim: set sw=4 ts=8 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -2066,8 +2066,11 @@ PushBackTrackState(REGlobalData *gData, REOp op,
         btincr = JS_ROUNDUP(btincr, btsize);
         JS_ARENA_GROW_CAST(gData->backTrackStack, REBackTrackData *,
                            &gData->pool, btsize, btincr);
-        if (!gData->backTrackStack)
+        if (!gData->backTrackStack) {
+            JS_ReportOutOfMemory(gData->cx);
+            gData->ok = JS_FALSE;
             return NULL;
+        }
         gData->backTrackStackSize = btsize + btincr;
         result = (REBackTrackData *) ((char *)gData->backTrackStack + offset);
     }
@@ -2253,8 +2256,11 @@ ProcessCharSet(REGlobalData *gData, RECharSet *charSet)
 
     byteLength = (charSet->length >> 3) + 1;
     charSet->u.bits = (uint8 *)JS_malloc(gData->cx, byteLength);
-    if (!charSet->u.bits)
+    if (!charSet->u.bits) {
+        JS_ReportOutOfMemory(gData->cx);
+        gData->ok = JS_FALSE;
         return JS_FALSE;
+    }
     memset(charSet->u.bits, 0, byteLength);
 
     if (src == end)
@@ -2745,9 +2751,8 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                         goto doAlt;
 
                     charSet = &gData->regexp->classList[k];
-                    if (!charSet->converted)
-                        if (!ProcessCharSet(gData, charSet))
-                            return NULL;
+                    if (!charSet->converted && !ProcessCharSet(gData, charSet))
+                        return NULL;
                     matchCh1 = *x->cp;
                     k = matchCh1 >> 3;
                     if ((charSet->length == 0 ||
@@ -3214,19 +3219,19 @@ InitMatch(JSContext *cx, REGlobalData *gData, JSRegExp *re)
                            &gData->pool,
                            INITIAL_BACKTRACK);
     if (!gData->backTrackStack)
-        return NULL;
+        goto bad;
+
     gData->backTrackSP = gData->backTrackStack;
     gData->cursz = 0;
-
 
     gData->stateStackLimit = INITIAL_STATESTACK;
     JS_ARENA_ALLOCATE_CAST(gData->stateStack, REProgState *,
                            &gData->pool,
                            sizeof(REProgState) * INITIAL_STATESTACK);
     if (!gData->stateStack)
-        return NULL;
-    gData->stateStackTop = 0;
+        goto bad;
 
+    gData->stateStackTop = 0;
     gData->cx = cx;
     gData->regexp = re;
     gData->ok = JS_TRUE;
@@ -3236,14 +3241,21 @@ InitMatch(JSContext *cx, REGlobalData *gData, JSRegExp *re)
                            offsetof(REMatchState, parens)
                            + re->parenCount * sizeof(RECapture));
     if (!result)
-        return NULL;
+        goto bad;
 
-    for (i = 0; i < re->classCount; i++)
-        if (!re->classList[i].converted)
-            if (!ProcessCharSet(gData, &re->classList[i]))
-                return NULL;
+    for (i = 0; i < re->classCount; i++) {
+        if (!re->classList[i].converted &&
+            !ProcessCharSet(gData, &re->classList[i])) {
+            return NULL;
+        }
+    }
 
     return result;
+
+bad:
+    JS_ReportOutOfMemory(cx);
+    gData->ok = JS_FALSE;
+    return NULL;
 }
 
 JSBool
@@ -3282,8 +3294,10 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
 
     JS_InitArenaPool(&gData.pool, "RegExpPool", 8096, 4);
     x = InitMatch(cx, &gData, re);
-    if (!x)
-        return JS_FALSE;
+    if (!x) {
+        ok = JS_FALSE;
+        goto out;
+    }
     x->cp = cp;
 
     /*
