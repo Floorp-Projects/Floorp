@@ -589,7 +589,7 @@ Section "-Application" Section1
   
   ; shell/properties/command
   StrCpy $0 "Software\Clients\Mail\${BrandFullNameInternal}\shell\properties"
-  ${WriteRegStr2} $TmpVal "$0" "" "Thunderbird &Options" 0  
+  ${WriteRegStr2} $TmpVal "$0" "" "$(OPTIONS)" 0  
   StrCpy $0 "Software\Clients\Mail\${BrandFullNameInternal}\shell\properties\command"
   ${WriteRegStr2} $TmpVal "$0" "" "$ShortPathNameToExe -options" 0
   
