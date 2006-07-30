@@ -108,7 +108,7 @@ static NSView* sLastViewEntered = nil;
 - (void) convertLocation:(NSPoint)inPoint message:(PRInt32)inMsg
           modifiers:(unsigned int)inMods toGeckoEvent:(nsInputEvent*)outGeckoEvent;
 
-- (NSMenu*)getContextMenu;
+- (NSMenu*)contextMenu;
 - (TopLevelWindowData*)ensureWindowData;
 
 - (void)setIsPluginView:(BOOL)aIsPlugin;
@@ -418,8 +418,8 @@ nsresult nsChildView::StandardCreate(nsIWidget *aParent,
   if (mParentView) {
     NSWindow* window = [mParentView window];
     if (!window &&
-        [mParentView respondsToSelector:@selector(getNativeWindow)])
-      window = [mParentView getNativeWindow];
+        [mParentView respondsToSelector:@selector(nativeWindow)])
+      window = [mParentView nativeWindow];
 
     [mView setNativeWindow:window];
 
@@ -560,7 +560,7 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
       break;
 
     case NS_NATIVE_WINDOW:
-      retVal = [mView getNativeWindow];
+      retVal = [mView nativeWindow];
       break;
       
     case NS_NATIVE_GRAPHIC:           // quickdraw port
@@ -604,7 +604,7 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
           [(ChildView*)mView setIsPluginView: YES];
       }
 
-      NSWindow* window = [mView getNativeWindow];
+      NSWindow* window = [mView nativeWindow];
       if (window)
       {
         WindowRef topLevelWindow = (WindowRef)[window windowRef];
@@ -963,7 +963,7 @@ NS_IMETHODIMP nsChildView::GetPluginClipRect(nsRect& outClipRect, nsPoint& outOr
   NS_ASSERTION(mPluginPort, "GetPluginClipRect must only be called on a plugin widget");
   if (!mPluginPort) return NS_ERROR_FAILURE;
   
-  NSWindow* window = [mView getNativeWindow];
+  NSWindow* window = [mView nativeWindow];
   if (!window) return NS_ERROR_FAILURE;
   
   NSPoint viewOrigin = [mView convertPoint:NSZeroPoint toView:nil];
@@ -1017,7 +1017,7 @@ NS_IMETHODIMP nsChildView::StartDrawPlugin()
   if (mPluginDrawing)
     return NS_ERROR_FAILURE;
 
-  NSWindow* window = [mView getNativeWindow];
+  NSWindow* window = [mView nativeWindow];
   if (!window) return NS_ERROR_FAILURE;
 
   if (window /* [mView lockFocusIfCanDraw] */)
@@ -1768,7 +1768,7 @@ NS_IMETHODIMP nsChildView::WidgetToScreen(const nsRect& aLocalRect, nsRect& aGlo
   NSRect temp;
   ConvertGeckoToFlippedCocoaRect(aLocalRect, temp);
   temp = [mView convertRect:temp toView:nil];                       // convert to window coords
-  temp.origin = [[mView getNativeWindow] convertBaseToScreen:temp.origin];   // convert to screen coords
+  temp.origin = [[mView nativeWindow] convertBaseToScreen:temp.origin];   // convert to screen coords
   
   // need to flip the point relative to the main screen
   if ([[NSScreen screens] count] > 0)   // paranoia
@@ -1806,7 +1806,7 @@ NS_IMETHODIMP nsChildView::ScreenToWidget(const nsRect& aGlobalRect, nsRect& aLo
     temp.origin.y = NSMaxY(mainScreenFrame) - temp.origin.y;
   }
 
-  temp.origin = [[mView getNativeWindow] convertScreenToBase:temp.origin];   // convert to screen coords
+  temp.origin = [[mView nativeWindow] convertScreenToBase:temp.origin];   // convert to screen coords
   temp = [mView convertRect:temp fromView:nil];                     // convert to window coords
 
   ConvertFlippedCocoaToGeckoRect(temp, aLocalRect);
@@ -2101,12 +2101,12 @@ nsChildView::GetThebesSurface()
 }
 
 //
-// -getNativeWindow
+// -nativeWindow
 // mozView method
 //
 // get the window that this view is associated with
 //
-- (NSWindow*)getNativeWindow
+- (NSWindow*)nativeWindow
 {
   NSWindow* currWin = [self window];
   if (currWin)
@@ -2520,7 +2520,7 @@ nsChildView::GetThebesSurface()
   // is by comparing native window pointers. Also don't roll up if we just put
   // the popup up in an earlier menuForEvent: event.
   if (mLastMenuForEventEvent != theEvent && gRollupWidget != nsnull) {
-    NSWindow *ourNativeWindow = [self getNativeWindow];
+    NSWindow *ourNativeWindow = [self nativeWindow];
     NSWindow *rollupNativeWindow = (NSWindow*)gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
     if (ourNativeWindow != rollupNativeWindow) {
       // roll up any popups
@@ -2758,7 +2758,7 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w
   // is by comparing native window pointers. Also don't roll up if we just put
   // the popup up in an earlier menuForEvent: event.
   if (mLastMenuForEventEvent != theEvent && gRollupWidget != nsnull) {
-    NSWindow *ourNativeWindow = [self getNativeWindow];
+    NSWindow *ourNativeWindow = [self nativeWindow];
     NSWindow *rollupNativeWindow = (NSWindow*)gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
     if (ourNativeWindow != rollupNativeWindow) {
       // roll up any popups
@@ -2943,14 +2943,14 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w
   mGeckoChild->DispatchMouseEvent(geckoEvent);
   
   // Go up our view chain to fetch the correct menu to return.
-  return [self getContextMenu];
+  return [self contextMenu];
 }
 
-- (NSMenu*)getContextMenu
+- (NSMenu*)contextMenu
 {
   NSView* superView = [self superview];
-  if ([superView respondsToSelector:@selector(getContextMenu)])
-    return [(NSView<mozView>*)superView getContextMenu];
+  if ([superView respondsToSelector:@selector(contextMenu)])
+    return [(NSView<mozView>*)superView contextMenu];
 
   return nil;
 }
@@ -3330,7 +3330,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   // convert to window coords
   rangeRect = [self convertRect:rangeRect toView:nil];
   // convert to cocoa screen coords
-  rangeRect.origin = [[self getNativeWindow] convertBaseToScreen:rangeRect.origin];
+  rangeRect.origin = [[self nativeWindow] convertBaseToScreen:rangeRect.origin];
   return rangeRect;
 }
 
