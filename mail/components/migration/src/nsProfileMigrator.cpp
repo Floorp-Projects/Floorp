@@ -160,9 +160,9 @@ nsProfileMigrator::GetDefaultMailMigratorKey(nsACString& aKey, nsCOMPtr<nsIMailP
     "outlook",
     "dogbert",
     "eudora",
-    0
+    ""
   };
-  for (PRUint32 i = 0; sources[i]; ++i)
+  for (PRUint32 i = 0; sources[i][0]; ++i)
   {
     migratorID = migratorPrefix;
     migratorID.Append(sources[i]);
