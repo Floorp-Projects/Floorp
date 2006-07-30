@@ -1,8 +1,8 @@
 
 <!ENTITY migrationWizard.title          "Import Wizard">
 
-<!ENTITY importFrom.label               "Import Options, Account Settings, Addressbook and other data from:">
-<!ENTITY importFromUnix.label           "Import Preferences, Account Settings, Addressbook and other data from:">
+<!ENTITY importFrom.label               "Import Options, Account Settings, Address Book and other data from:">
+<!ENTITY importFromUnix.label           "Import Preferences, Account Settings, Address Book and other data from:">
 
 <!ENTITY importFromNothing.label        "Don't import anything">
 <!ENTITY importFromNothing.accesskey    "D">
