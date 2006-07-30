@@ -34,8 +34,8 @@
 - (void)setTitle:(NSString *)title;
 - (void)sizeBrowserTo:(NSSize)dimensions;
 - (CHBrowserView*)createBrowserWindow:(unsigned int)mask;
-- (NSMenu*)getContextMenu;
-- (NSWindow*)getNativeWindow;
+- (NSMenu*)contextMenu;
+- (NSWindow*)nativeWindow;
 - (BOOL)shouldAcceptDragFromSource:(id)dragSource;
 
 @end
