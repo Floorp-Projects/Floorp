@@ -682,14 +682,26 @@ function formatDateOffset (offset, format)
     if (!format)
     {
         var ary = new Array();
-        if (days > 0)
-            ary.push (getMsg(MSG_DAYS, days));
-        if (hours > 0)
-            ary.push (getMsg(MSG_HOURS, hours));
-        if (minutes > 0)
-            ary.push (getMsg(MSG_MINUTES, minutes));
-        if (seconds > 0 || offset == 0)
-            ary.push (getMsg(MSG_SECONDS, seconds));
+
+        if (days == 1)
+            ary.push(MSG_DAY);
+        else if (days > 0)
+            ary.push(getMsg(MSG_DAYS, days));
+
+        if (hours == 1)
+            ary.push(MSG_HOUR);
+        else if (hours > 0)
+            ary.push(getMsg(MSG_HOURS, hours));
+
+        if (minutes == 1)
+            ary.push(MSG_MINUTE);
+        else if (minutes > 0)
+            ary.push(getMsg(MSG_MINUTES, minutes));
+
+        if (seconds == 1)
+            ary.push(MSG_SECOND);
+        else if (seconds > 0 || offset == 0)
+            ary.push(getMsg(MSG_SECONDS, seconds));
 
         format = ary.join(", ");
     }

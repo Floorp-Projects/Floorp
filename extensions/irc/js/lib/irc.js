@@ -215,6 +215,19 @@ function net_delayedConnect(eventProperties)
         network.immediateConnect(eventProperties);
     };
 
+    if ((-1 != this.MAX_CONNECT_ATTEMPTS) &&
+        (this.connectAttempt >= this.MAX_CONNECT_ATTEMPTS))
+    {
+        this.state = NET_OFFLINE;
+
+        var ev = new CEvent("network", "error", this, "onError");
+        ev.debug = "Connection attempts exhausted, giving up.";
+        ev.errorCode = JSIRC_ERR_EXHAUSTED;
+        this.eventPump.addEvent(ev);
+
+        return;
+    }
+
     this.state = NET_WAITING;
     this.reconnectTimer = setTimeout(reconnectFn,
                                      this.getReconnectDelayMs(),
@@ -346,20 +359,6 @@ function net_doconnect(e)
 
     this.connectAttempt++;
     this.connectCandidate++;
-
-    if ((-1 != this.MAX_CONNECT_ATTEMPTS) &&
-        (this.connectAttempt > this.MAX_CONNECT_ATTEMPTS))
-    {
-        this.state = NET_OFFLINE;
-
-        ev = new CEvent ("network", "error", this, "onError");
-        ev.server = this;
-        ev.debug = "Connection attempts exhausted, giving up.";
-        ev.errorCode = JSIRC_ERR_EXHAUSTED;
-        this.eventPump.addEvent(ev);
-
-        return false;
-    }
 
     this.state = NET_CONNECTING; /* connection is considered "made" when server
                                   * sends a 001 message (see server.on001) */

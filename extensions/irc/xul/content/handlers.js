@@ -1742,18 +1742,8 @@ function my_sconnect (e)
     if ("_firstNick" in this)
         delete this._firstNick;
 
-    if (-1 == this.MAX_CONNECT_ATTEMPTS)
-        this.display (getMsg(MSG_CONNECTION_ATTEMPT_UNLIMITED,
-                             [this.getURL(),
-                              e.server.getURL(),
-                              e.connectAttempt,
-                              e.reconnectDelayMs / 1000]), "INFO");
-    else
-        this.display (getMsg(MSG_CONNECTION_ATTEMPT,
-                             [this.getURL(),
-                              e.server.getURL(),
-                              e.connectAttempt,
-                              this.MAX_CONNECT_ATTEMPTS]), "INFO");
+    this.display(getMsg(MSG_CONNECTION_ATTEMPT,
+                        [this.getURL(), e.server.getURL()]), "INFO");
 
     if (this.prefs["identd.enabled"])
     {
@@ -1779,7 +1769,7 @@ function my_neterror (e)
                 break;
 
             case JSIRC_ERR_EXHAUSTED:
-                msg = MSG_ERR_EXHAUSTED;
+                // error already displayed in onDisconnect
                 break;
 
             case JSIRC_ERR_OFFLINE:
@@ -1810,7 +1800,8 @@ function my_neterror (e)
 
     client.ident.removeNetwork(this);
 
-    this.display(msg, type);
+    if (msg)
+        this.display(msg, type);
 
     if (this.deleteWhenDone)
         this.dispatch("delete-view");
@@ -1823,7 +1814,7 @@ function my_neterror (e)
 CIRCNetwork.prototype.onDisconnect =
 function my_netdisconnect (e)
 {
-    var msg;
+    var msg, msgNetwork;
     var msgType = "ERROR";
 
     if (typeof e.disconnectStatus != "undefined")
@@ -1874,30 +1865,63 @@ function my_netdisconnect (e)
     {
         msgType = "DISCONNECT";
         msg = getMsg(MSG_CONNECTION_QUIT, [this.getURL(), e.server.getURL()]);
+        msgNetwork = msg;
+    }
+    else
+    {
+        var delayStr = formatDateOffset(this.getReconnectDelayMs() / 1000);
+        if (this.MAX_CONNECT_ATTEMPTS == -1)
+        {
+            msgNetwork = getMsg(MSG_RECONNECTING_IN, [msg, delayStr]);
+        }
+        else if (this.connectAttempt < this.MAX_CONNECT_ATTEMPTS)
+        {
+            var left = this.MAX_CONNECT_ATTEMPTS - this.connectAttempt;
+            if (left == 1)
+            {
+                msgNetwork = getMsg(MSG_RECONNECTING_IN_LEFT1, [msg, delayStr]);
+            }
+            else
+            {
+                msgNetwork = getMsg(MSG_RECONNECTING_IN_LEFT,
+                                    [msg, left, delayStr]);
+            }
+        }
+        else
+        {
+            msgNetwork = getMsg(MSG_CONNECTION_EXHAUSTED, msg);
+        }
     }
 
-    /* If we were only /trying/ to connect, and failed, just put an error on
-     * the network tab. If we were actually connected ok, put it on all tabs.
+    /* If we were connected ok, put an error on all tabs. If we were only
+     * /trying/ to connect, and failed, just put it on the network tab. 
      */
-    if (this.state != NET_ONLINE)
-    {
-        this.busy = false;
-        updateProgress();
-        if (this.state != NET_CANCELLING)
-            this.displayHere(msg, msgType);
-    }
-    // Don't do anything if we're cancelling.
-    else if (this.state != NET_CANCELLING)
+    if (this.state == NET_ONLINE)
     {
         for (var v in client.viewsArray)
         {
             var obj = client.viewsArray[v].source;
-            if (obj != client)
+            if (obj == this)
+            {
+                obj.displayHere(msgNetwork, msgType);
+            }
+            else if (obj != client)
             {
                 var details = getObjectDetails(obj);
                 if ("server" in details && details.server == e.server)
                     obj.displayHere(msg, msgType);
             }
+        }
+    }
+    else
+    {
+        this.busy = false;
+        updateProgress();
+
+        // Don't do anything if we're cancelling.
+        if (this.state != NET_CANCELLING)
+        {
+            this.displayHere(msgNetwork, msgType);
         }
     }
 
