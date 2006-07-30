@@ -466,7 +466,7 @@ nsNativeScrollbar::RecreateHorizontalScrollbar()
 
   NativeScrollbarView* newScrollbarView = ScrollbarView();
 
-  [newScrollbarView setNativeWindow:[oldScrollbarView getNativeWindow]];
+  [newScrollbarView setNativeWindow:[oldScrollbarView nativeWindow]];
   [newScrollbarView        setFrame:[oldScrollbarView bounds]];
 
   [newScrollbarView       setHidden:[oldScrollbarView isHidden]];
@@ -567,7 +567,7 @@ nsNativeScrollbar::UpdateScroller()
 }
 
 
-- (NSWindow*) getNativeWindow
+- (NSWindow*)nativeWindow
 {
   NSWindow* currWin = [self window];
   if (currWin)
@@ -657,8 +657,8 @@ nsNativeScrollbar::UpdateScroller()
   }
 }
 
-// getContextMenu, from mozView protocol
-- (NSMenu*)getContextMenu
+// contextMenu, from mozView protocol
+- (NSMenu*)contextMenu
 {
   return nil;
 }
@@ -674,7 +674,7 @@ nsNativeScrollbar::UpdateScroller()
 {
   // roll up popup windows if there are any
   if (gRollupListener && gRollupWidget &&
-      gRollupWidget->GetNativeData(NS_NATIVE_WINDOW) != [self getNativeWindow]) {
+      gRollupWidget->GetNativeData(NS_NATIVE_WINDOW) != [self nativeWindow]) {
     gRollupListener->Rollup();
   }
   

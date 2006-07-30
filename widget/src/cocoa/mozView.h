@@ -59,11 +59,11 @@ class nsIWidget;
   // window because |-window| returns nil when the view has been
   // removed from the view hierarchy (as is the case when it's hidden, 
   // since you can't just hide a view, that would make too much sense).
-- (NSWindow*)getNativeWindow;
+- (NSWindow*)nativeWindow;
 - (void)setNativeWindow:(NSWindow*)aWindow;
 
   // return a context menu for this view
-- (NSMenu*)getContextMenu;
+- (NSMenu*)contextMenu;
 
   // calls setNeedsDisplay, with the rect in inRectValue if supplied.
   // Allows callers to do a delayed invalidate using
