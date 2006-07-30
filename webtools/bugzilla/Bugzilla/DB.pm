@@ -149,7 +149,10 @@ EOT
 
     # We don't try to connect to the actual database if $db_check is
     # disabled.
-    return unless $db_check;
+    unless ($db_check) {
+        print "\n" if $output;
+        return;
+    }
 
     # And now check the version of the database server itself.
     my $dbh = _get_no_db_connection();
@@ -173,6 +176,8 @@ newer version.
 EOT
         exit;
     }
+
+    print "\n" if $output;
 }
 
 # Note that this function requires that localconfig exist and
@@ -184,7 +189,7 @@ sub bz_create_database {
 
     if (!$conn_success) {
         $dbh = _get_no_db_connection();
-        print "\nCreating database $db_name...\n";
+        print "Creating database $db_name...\n";
 
         # Try to create the DB, and if we fail print a friendly error.
         if (!eval { $dbh->do("CREATE DATABASE $db_name") }) {

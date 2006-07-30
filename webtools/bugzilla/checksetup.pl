@@ -304,6 +304,9 @@ import Bugzilla::Bug qw(is_open_state);
 require Bugzilla::Install::Localconfig;
 import Bugzilla::Install::Localconfig qw(read_localconfig update_localconfig);
 
+require Bugzilla::Install::Filesystem;
+import Bugzilla::Install::Filesystem qw(update_filesystem create_htaccess);
+
 require Bugzilla::DB;
 
 ###########################################################################
@@ -336,317 +339,22 @@ my $dbh = Bugzilla->dbh;
 # Create tables
 ###########################################################################
 
-# Note: table definitions are now in Bugzilla::DB::Schema.
+# Note: --TABLE-- definitions are now in Bugzilla::DB::Schema.
 $dbh->bz_setup_database();
 
 # Populate the tables that hold the values for the <select> fields.
 $dbh->bz_populate_enum_tables();
 
 ###########################################################################
-# Check data directory
+# Check --DATA-- directory
 ###########################################################################
 
-#
-# Create initial --DATA-- directory and make the initial empty files there:
-#
-my $datadir = bz_locations()->{'datadir'};
-unless (-d $datadir && -e "$datadir/nomail") {
-    print "Creating data directory ($datadir) ...\n";
-    # permissions for non-webservergroup are fixed later on
-    mkdir $datadir, 0770;
-    mkdir "$datadir/mimedump-tmp", 01777;
-    open FILE, '>>', "$datadir/nomail"; close FILE;
-    open FILE, '>>', "$datadir/mail"; close FILE;
-}
+update_filesystem({ index_html => $lc_hash->{'index_html'} });
+create_htaccess() if $lc_hash->{'create_htaccess'};
 
-my $attachdir = bz_locations->{'attachdir'};
-unless (-d $attachdir) {
-    print "Creating local attachments directory ...\n";
-    # permissions for non-webservergroup are fixed later on
-    mkdir $attachdir, 0770;
-}
-
-my $extensionsdir = bz_locations->{'extensionsdir'};
-# ZLL: 2005-08-20 Create extensions/ if it does not already exist:
-unless (-d $extensionsdir) {
-    print "Creating extensions directory ($extensionsdir) ...\n";
-    mkdir $extensionsdir, 0770;
-}
-
-
-# 2000-12-14 New graphing system requires a directory to put the graphs in
-# This code copied from what happens for the data dir above.
-# If the graphs dir is not present, we assume that they have been using
-# a Bugzilla with the old data format, and upgrade their data files.
-
-# NB - the graphs dir isn't movable yet, unlike the datadir
-unless (-d 'graphs') {
-    print "Creating graphs directory...\n";
-    # permissions for non-webservergroup are fixed later on
-    mkdir 'graphs', 0770;
-    # Upgrade data format
-    foreach my $in_file (glob("$datadir/mining/*"))
-    {
-        # Don't try and upgrade image or db files!
-        if (($in_file =~ /\.gif$/i) || 
-            ($in_file =~ /\.png$/i) ||
-            ($in_file =~ /\.db$/i) ||
-            ($in_file =~ /\.orig$/i)) {
-            next;
-        }
-
-        rename("$in_file", "$in_file.orig") or next;        
-        open(IN, "$in_file.orig") or next;
-        open(OUT, '>', $in_file) or next;
-        
-        # Fields in the header
-        my @declared_fields = ();
-
-        # Fields we changed to half way through by mistake
-        # This list comes from an old version of collectstats.pl
-        # This part is only for people who ran later versions of 2.11 (devel)
-        my @intermediate_fields = qw(DATE UNCONFIRMED NEW ASSIGNED REOPENED 
-                                     RESOLVED VERIFIED CLOSED);
-
-        # Fields we actually want (matches the current collectstats.pl)
-        my @out_fields = qw(DATE NEW ASSIGNED REOPENED UNCONFIRMED RESOLVED
-                            VERIFIED CLOSED FIXED INVALID WONTFIX LATER REMIND
-                            DUPLICATE WORKSFORME MOVED);
-
-        while (<IN>) {
-            if (/^# fields?: (.*)\s$/) {
-                @declared_fields = map uc, (split /\||\r/, $1);
-                print OUT "# fields: ", join('|', @out_fields), "\n";
-            }
-            elsif (/^(\d+\|.*)/) {
-                my @data = split /\||\r/, $1;
-                my %data = ();
-                if (@data == @declared_fields) {
-                    # old format
-                    for my $i (0 .. $#declared_fields) {
-                        $data{$declared_fields[$i]} = $data[$i];
-                    }
-                }
-                elsif (@data == @intermediate_fields) {
-                    # Must have changed over at this point 
-                    for my $i (0 .. $#intermediate_fields) {
-                        $data{$intermediate_fields[$i]} = $data[$i];
-                    }
-                }
-                elsif (@data == @out_fields) {
-                    # This line's fine - it has the right number of entries 
-                    for my $i (0 .. $#out_fields) {
-                        $data{$out_fields[$i]} = $data[$i];
-                    }
-                }
-                else {
-                    print "Oh dear, input line $. of $in_file had " . 
-                      scalar(@data) . " fields\n";
-                    print "This was unexpected. You may want to check your data files.\n";
-                }
-
-                print OUT join('|', map { 
-                              defined ($data{$_}) ? ($data{$_}) : "" 
-                                                          } @out_fields), "\n";
-            }
-            else {
-                print OUT;
-            }
-        }
-
-        close(IN);
-        close(OUT);
-    }
-}
-
-unless (-d "$datadir/mining") {
-    mkdir "$datadir/mining", 0700;
-}
-
+# XXX Some parts of checksetup still need these, right now.
+my $datadir   = bz_locations()->{'datadir'};
 my $webdotdir = bz_locations()->{'webdotdir'};
-unless (-d "$webdotdir") {
-    # perms/ownership are fixed up later
-    mkdir "$webdotdir", 0700;
-}
-
-if (!-d "skins/custom") {
-    # perms/ownership are fixed up later
-    mkdir "skins/custom", 0700;
-}
-
-if (!-e "skins/.cvsignore") {
-    open CVSIGNORE, '>>', "skins/.cvsignore";
-    print CVSIGNORE ".cvsignore\n";
-    print CVSIGNORE "custom\n";
-    close CVSIGNORE;
-}
-
-# Create custom stylesheets for each standard stylesheet.
-foreach my $standard (<skins/standard/*.css>) {
-    my $custom = $standard;
-    $custom =~ s|^skins/standard|skins/custom|;
-    if (!-e $custom) {
-        open STYLESHEET, '>', $custom;
-        print STYLESHEET <<"END";
-/* 
- * Custom rules for $standard.
- * The rules you put here override rules in that stylesheet.
- */
-END
-        close STYLESHEET;
-    }
-}
-
-if ($lc_hash->{'create_htaccess'}) {
-  my $fileperm = 0644;
-  my $dirperm = 01777;
-  if ($my_webservergroup) {
-    $fileperm = 0640;
-    $dirperm = 0770;
-  }
-  if (!-e ".htaccess") {
-    print "Creating .htaccess...\n";
-    open HTACCESS, '>', '.htaccess';
-    print HTACCESS <<'END';
-# don't allow people to retrieve non-cgi executable files or our private data
-<FilesMatch ^(.*\.pm|.*\.pl|.*localconfig.*)$>
-  deny from all
-</FilesMatch>
-END
-    close HTACCESS;
-    chmod $fileperm, ".htaccess";
-  } else {
-    # 2002-12-21 Bug 186383
-    open HTACCESS, ".htaccess";
-    my $oldaccess = "";
-    while (<HTACCESS>) {
-      $oldaccess .= $_;
-    }
-    close HTACCESS;
-    my $repaired = 0;
-    if ($oldaccess =~ s/\|localconfig\|/\|.*localconfig.*\|/) {
-        $repaired = 1;
-    }
-    if ($oldaccess !~ /\(\.\*\\\.pm\|/) {
-        $oldaccess =~ s/\(/(.*\\.pm\|/;
-        $repaired = 1;
-    }
-    if ($repaired) {
-      print "Repairing .htaccess...\n";
-      open HTACCESS, '>', '.htaccess';
-      print HTACCESS $oldaccess;
-      close HTACCESS;
-    }
-
-  }
-  if (!-e "$attachdir/.htaccess") {
-    print "Creating $attachdir/.htaccess...\n";
-    open HTACCESS, ">$attachdir/.htaccess";
-    print HTACCESS <<'END';
-# nothing in this directory is retrievable unless overridden by an .htaccess
-# in a subdirectory;
-deny from all
-END
-    close HTACCESS;
-    chmod $fileperm, "$attachdir/.htaccess";
-  }
-  if (!-e "Bugzilla/.htaccess") {
-    print "Creating Bugzilla/.htaccess...\n";
-    open HTACCESS, '>', 'Bugzilla/.htaccess';
-    print HTACCESS <<'END';
-# nothing in this directory is retrievable unless overridden by an .htaccess
-# in a subdirectory
-deny from all
-END
-    close HTACCESS;
-    chmod $fileperm, "Bugzilla/.htaccess";
-  }
-  # Even though $datadir may not (and should not) be in the webtree,
-  # we can't know for sure, so create the .htaccess anyway. It's harmless
-  # if it's not accessible...
-  if (!-e "$datadir/.htaccess") {
-    print "Creating $datadir/.htaccess...\n";
-    open HTACCESS, '>', "$datadir/.htaccess";
-    print HTACCESS <<'END';
-# nothing in this directory is retrievable unless overridden by an .htaccess
-# in a subdirectory; the only exception is duplicates.rdf, which is used by
-# duplicates.xul and must be loadable over the web
-deny from all
-<Files duplicates.rdf>
-  allow from all
-</Files>
-END
-    close HTACCESS;
-    chmod $fileperm, "$datadir/.htaccess";
-  }
-  # Ditto for the template dir
-  my $templatedir = bz_locations()->{'templatedir'};
-  if (!-e "$templatedir/.htaccess") {
-    print "Creating $templatedir/.htaccess...\n";
-    open HTACCESS, '>', "$templatedir/.htaccess";
-    print HTACCESS <<'END';
-# nothing in this directory is retrievable unless overridden by an .htaccess
-# in a subdirectory
-deny from all
-END
-    close HTACCESS;
-    chmod $fileperm, "$templatedir/.htaccess";
-  }
-  if (!-e "$webdotdir/.htaccess") {
-    print "Creating $webdotdir/.htaccess...\n";
-    open HTACCESS, '>', "$webdotdir/.htaccess";
-    print HTACCESS <<'END';
-# Restrict access to .dot files to the public webdot server at research.att.com 
-# if research.att.com ever changes their IP, or if you use a different
-# webdot server, you'll need to edit this
-<FilesMatch \.dot$>
-  Allow from 192.20.225.10
-  Deny from all
-</FilesMatch>
-
-# Allow access to .png files created by a local copy of 'dot'
-<FilesMatch \.png$>
-  Allow from all
-</FilesMatch>
-
-# And no directory listings, either.
-Deny from all
-END
-    close HTACCESS;
-    chmod $fileperm, "$webdotdir/.htaccess";
-  }
-
-}
-
-if ($lc_hash->{'index_html'}) {
-    if (!-e "index.html") {
-        print "Creating index.html...\n";
-        open HTML, '>', 'index.html';
-        print HTML <<'END';
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
-<meta http-equiv="Refresh" content="0; URL=index.cgi">
-</head>
-<body>
-<h1>I think you are looking for <a href="index.cgi">index.cgi</a></h1>
-</body>
-</html>
-END
-        close HTML;
-    }
-    else {
-        open HTML, "index.html";
-        if (! grep /index\.cgi/, <HTML>) {
-            print "\n\n";
-            print "*** It appears that you still have an old index.html hanging\n";
-            print "    around.  The contents of this file should be moved into a\n";
-            print "    template and placed in the 'en/custom' directory within";
-            print "    your template directory.\n\n";
-        }
-        close HTML;
-    }
-}
 
 # Check for a new install
 my $newinstall = !-e "$datadir/params";
@@ -1831,15 +1539,6 @@ if ($dbh->bz_table_info('comments')) {
               SELECT $quoted_when, bug_id, who, comment
                 FROM comments");
     $dbh->bz_drop_table("comments");
-}
-
-# 2001-04-08 Added a special directory for the duplicates stats.
-unless (-d "$datadir/duplicates") {
-    print "Creating duplicates directory...\n";
-    mkdir "$datadir/duplicates", 0770; 
-    if ($my_webservergroup eq "") {
-        chmod 01777, "$datadir/duplicates";
-    } 
 }
 
 #
