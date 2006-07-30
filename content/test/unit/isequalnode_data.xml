@@ -1,0 +1,150 @@
+<?xml version="1.0" ?>
+<!DOCTYPE Test [
+  <!ATTLIST test id ID #REQUIRED>
+]>
+
+<root>
+
+  <test id="test_setAttribute">
+    <foo/>
+    <foo/>
+  </test>
+
+  <test id="test_normalization">
+    <bar/>
+    <bar/>
+  </test>
+
+  <test id="test_whitespace">
+
+    <!--
+      Tests here consist of isEqualNode comparisons of the first and third
+      (zero-indexed) child nodes of each test.
+
+      In the typical case this means that the zeroth, second, and fourth
+      children are whitespace and the first and third are the nodes being
+      compared for equality or inequality.
+
+      In some cases, however, where either node is a Text node, this pattern
+      must of necessity be violated.  Examples of such tests include the
+      test_text# tests.
+
+      As a result of this, BE CAREFUL NOT TO INTRODUCE STRAY WHITESPACE WHEN
+      EDITING THIS FILE.  You have been warned.
+    -->
+
+    <test id="test_pi1">
+      <?pi data?>
+      <?pi data?>
+    </test>
+    <test id="test_pi2">
+      <?pi data?>
+      <?pi     data?>
+    </test>
+    <test id="test_pi3">
+      <?pi data?>
+      <?pi     data ?>
+    </test>
+    <test id="test_pi4">
+      <?pi ?>
+      <?pi       ?>
+    </test>
+    <test id="test_pi5">
+      <?pi?>
+      <?pi ?>
+    </test>
+
+    <test id="test_elt1">
+      <foo></foo>
+      <foo> </foo>
+    </test>
+    <test id="test_elt2">
+      <foo></foo>
+      <foo>
+</foo>
+    </test>
+    <test id="test_elt3">
+      <foo                                ></foo>
+      <foo></foo>
+    </test>
+    <test id="test_elt4">
+      <bar xmlns="http://example.com/"/>
+      <bar/>
+    </test>
+    <test id="test_elt5">
+      <bar xmlns="http://example.com/"/>
+      <bar xmlns="http://example.com"/>
+    </test>
+
+    <test id="test_comment1">
+      <!--foo-->
+      <!--foo-->
+    </test>
+    <test id="test_comment2">
+      <!--foo-->
+      <!--foo -->
+    </test>
+    <test id="test_comment3">
+      <!--foo-->
+      <!--foo
+-->
+    </test>
+    <test id="test_comment4">
+      <!--
+foo-->
+      <!--
+foo-->
+    </test>
+
+    <test id="test_text1"><placeholder-dont-move/>
+<placeholder-dont-move/>
+<placeholder-dont-move/>
+    </test>
+    <test id="test_text2"><placeholder-dont-move/>
+<placeholder-dont-move/> <placeholder-dont-move/>
+    </test>
+    <test id="test_text3"><placeholder-dont-move/>
+<placeholder-dont-move/><![CDATA[
+]]>
+    </test>
+
+    <test id="test_cdata1">
+      <![CDATA[ ]]><placeholder-dont-move/> <placeholder-dont-move/>
+    </test>
+    <test id="test_cdata2">
+      <![CDATA[ ]]>
+      <![CDATA[ ]]>
+    </test>
+    <test id="test_cdata3">
+      <![CDATA[ ]]>
+      <![CDATA[  ]]>
+    </test>
+    <test id="test_cdata4">
+      <![CDATA[]]>
+      <![CDATA[
+]]>
+    </test>
+    <test id="test_cdata5">
+      <![CDATA[ ]]>
+      <![CDATA[
+]]>
+    </test>
+
+  </test>
+
+  <test id="test_namespaces">
+    <test id="test_ns1">
+      <foo xmlns:quiz="http://example.com/"
+           quiz:q="fun"/>
+      <foo xmlns:f="http://example.com/"
+           f:q="fun"/>
+    </test>
+    <test id="test_ns2">
+      <quiz:foo xmlns:quiz="http://example.com/"
+           q="fun"/>
+      <f:foo xmlns:f="http://example.com/"
+           q="fun"/>
+    </test>
+  </test>
+
+</root>
