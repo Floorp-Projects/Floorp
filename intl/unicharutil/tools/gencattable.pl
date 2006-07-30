@@ -218,24 +218,17 @@ $sh{$cjkcompkey} = $prevcjkcomp;
 # }
 
 
-# We treat characters < U+1D00 as "plane 0" and all the rest of planes 0 and 1
-# as "plane 1". This gives a relatively even distribution of patterns between
-# planes. If you change the value of $planeSplit, make sure that none of the
-# ranges below straddles the new value!
-$planeSplit = 0x1d00;
-
 @range = (
   0x0000, 0x07ff, 
-  0x0900, 0x1b7f,
+  0x0900, 0x1a1f,
   0x1d00, 0x33ff,
   0x4dc0, 0x4dff,
-  0xa000, 0xa87f,
+  0xa000, 0xa4ff,
+  0xa700, 0xa82f,
   0xfb00, 0xffff,
   0x10000, 0x104af,
   0x10800, 0x1083f,
-  0x10900, 0x1091f,
   0x10a00, 0x10a5f,
-  0x12000, 0x1247f,
   0x1d000, 0x1d7ff
 );
 
@@ -254,20 +247,11 @@ for($t = 1; $t <= $tt; $t++)
    $th = $range[($t-1) * 2 + 1];
    $ts = ( $th - $tl ) >> 3;
    $totaldata += $ts + 1;
-   if ($planeSplit > $tl && $planeSplit < $th) {
-     printf STDERR "plane split %04X falls within range %04X - %04X\n",
-                   $planeSplit, $tl, $th;
-     die "This program is now broken!!!\n\n\n";
-   }
-   if ($tl < $planeSplit) {
-     $plane = 0;
-   } else {
-     $plane = 1;
-   }
+   $plane = $tl >> 16; 
    if ($oldplane != $plane) {
      if ($oldplane != -1) {
        printf STDERR  "Plane %d has %d patterns\n", $oldplane, $newidx[$oldplane]; 
-       if ($newidx[$oldplane] > 256) {
+       if ($newidx[$plane] > 256) {
          printf STDERR  "We have more than 256 patterns for plane %d\n", $oldplane; 
          die "This program is now broken!!!\n\n\n";      
        }
@@ -361,11 +345,7 @@ for($t = 1; $t <= $tt; $t++)
 {
    $tl = $range[($t-1) * 2];
    $th = $range[($t-1) * 2 + 1];
-   if ($tl < $planeSplit) {
-     $plane = 0;
-   } else {
-     $plane = 1;
-   }
+   $plane = $tl >> 16; 
    printf OUT "    // Handle U+%06X to U+%06X\n", $tl, $th;
    printf OUT "    if(0x%06X <= u && u <= 0x%06X) {\n", $tl, $th;
    printf OUT "        pat = " .

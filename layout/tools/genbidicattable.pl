@@ -194,17 +194,16 @@ while(<UNICODATA>) {
 
 @range = (
   0x0000,   0x07ff, 
-  0x0900,   0x1b7f,
+  0x0900,   0x1a1f,
   0x1d00,   0x2ddf,
   0x2e00,   0x33ff,
   0x4dc0,   0x4dff,
-  0xa000,   0xa87f,
+  0xa000,   0xa4ff,
+  0xa700,   0xa82f,
   0xf900,  0x1018f,
   0x10300, 0x104ff,
   0x10800, 0x1083f,
-  0x10900, 0x1091f,
   0x10a00, 0x10a5f,
-  0x12000, 0x1247f,
   0x1d000, 0x1d7ff,
   0x2f800, 0x2fa1f,
   0xe0000, 0xe01ff  
@@ -241,8 +240,7 @@ for($t = 1; $t <= $tt; $t++)
 		for($j = 0; $j < 8 ; $j++)
 		{
 			#defaults for unassigned characters
-		        #see http://www.unicode.org/Public/UNIDATA/extracted/DerivedBidiClass.txt
-		        #and http://www.unicode.org/Public/UNIDATA/Blocks.txt
+		        #see http://www.unicode.org/Public/UNIDATA/UCD.html#Bidi_Class
 			$test = ($i << 3) + $j;
 			if ((($test >= 0x0590) && ($test <= 0x5FF)) ||
 			    (($test >= 0x07C0) && ($test <= 0x8FF)) ||
@@ -251,7 +249,8 @@ for($t = 1; $t <= $tt; $t++)
 			{
 				$default = $map{"R"};
 			} elsif ((($test >= 0x0600) && ($test <= 0x7BF)) ||
-				 (($test >= 0xFB50) && ($test <= 0xFDFF)) ||
+				 (($test >= 0xFB50) && ($test <= 0xFDCF)) ||
+				 (($test >= 0xFDF0) && ($test <= 0xFDFF)) ||
 				 (($test >= 0xFE70) && ($test <= 0xFEFE)))
 			{
 				$default = $map{"AL"};
@@ -366,21 +365,7 @@ for($t = 1; $t <= $tt; $t++)
    printf OUT "    }\n\n";
 }
 printf OUT "    else {\n";
-printf OUT "      /* defaults for unassigned characters\n";
-printf OUT "       * see http://www.unicode.org/Public/UNIDATA/extracted/DerivedBidiClass.txt\n";
-printf OUT "       * and http://www.unicode.org/Public/UNIDATA/Blocks.txt\n";
-printf OUT "       */\n";
-printf OUT "      if (((u >= 0x0590) && (u <= 0x05FF)) ||\n";
-printf OUT "          ((u >= 0x07C0) && (u <= 0x08FF)) ||\n";
-printf OUT "          ((u >= 0xFB1D) && (u <= 0xFB4F)) ||\n";
-printf OUT "          ((u >= 0x10800) && (u <=0x10FFF)))\n";
-printf OUT "         return eBidiCat_R;\n";
-printf OUT "      else if (((u >= 0x0600) && (u <= 0x07BF)) ||\n";
-printf OUT "               ((u >= 0xFB50) && (u <= 0xFDFF)) ||\n";
-printf OUT "               ((u >= 0xFE70) && (u <= 0xFEFE)))\n";
-printf OUT "         return eBidiCat_AL;\n";
-printf OUT "      else\n";
-printf OUT "        return eBidiCat_L;\n";
+printf OUT "        return eBidiCat_L; /* UNDEFINE = L */\n";
 printf OUT "    }\n\n";
 
 printf OUT "    if (patidx < 0x10)\n";
