@@ -131,24 +131,55 @@ nsProfileMigrator::GetDefaultMailMigratorKey(nsACString& aKey, nsCOMPtr<nsIMailP
 
   // if we are being forced to migrate to a particular migration type, then create an instance of that migrator
   // and return it.
+  NS_NAMED_LITERAL_CSTRING(migratorPrefix,
+                           NS_MAILPROFILEMIGRATOR_CONTRACTID_PREFIX);
+  nsCAutoString migratorID;
   if (forceMigrationType.get())
   {
     PRBool exists = PR_FALSE;
-    nsCAutoString migratorID (NS_MAILPROFILEMIGRATOR_CONTRACTID_PREFIX);
+    migratorID = migratorPrefix;
     migratorID.Append(forceMigrationType);
     mailMigrator = do_CreateInstance(migratorID.get());
-  
-    if (mailMigrator)
+    if (!mailMigrator)
+      return NS_ERROR_NOT_AVAILABLE;
+
+    mailMigrator->GetSourceExists(&exists);
+    /* trying to force migration on a source which doesn't
+     * have any profiles.
+     */
+    if (!exists)
+      return NS_ERROR_NOT_AVAILABLE;
+    aKey = forceMigrationType;
+    return NS_OK;
+  }
+
+  #define MAX_SOURCE_LENGTH 10
+  const char sources[][MAX_SOURCE_LENGTH] = {
+    "seamonkey",
+    "oexpress",
+    "outlook",
+    "dogbert",
+    "eudora",
+    0
+  };
+  for (PRUint32 i = 0; sources[i]; ++i)
+  {
+    migratorID = migratorPrefix;
+    migratorID.Append(sources[i]);
+    mailMigrator = do_CreateInstance(migratorID.get());
+    if (!mailMigrator)
+      continue;
+
+    PRBool exists = PR_FALSE;
+    mailMigrator->GetSourceExists(&exists);
+    if (exists)
     {
-      mailMigrator->GetSourceExists(&exists);
-      if (exists) 
-        aKey = forceMigrationType;
-      else
-        rv = NS_ERROR_FAILURE; // trying to force migration on a source which does not have any profiles
+      mailMigrator = nsnull;
+      return NS_OK;
     }
   }
  
-  return rv;
+  return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
