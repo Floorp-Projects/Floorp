@@ -70,6 +70,24 @@
     </td>
   </tr>
   <tr>
+    <th><label for="disable_mail">Bugmail Disabled:</label></th>
+    <td>
+      <input type="checkbox" name="disable_mail" id="disable_mail" value="1" 
+      [% IF otheruser.email_disabled %] checked="checked" [% END %] />
+      (This affects bugmail and whinemail, not password-reset or other 
+      non-bug-related emails)
+      [% IF editform %]
+        <input type="hidden" name="disable_mail_old"
+          [% IF otheruser.email_disabled %]
+            value="1"
+          [% ELSE %]
+            value="0" 
+          [% END %]
+        />
+      [% END %]
+    </td>
+  </tr>
+  <tr>
     <th><label for="disabledtext">Disable text:</label></th>
     <td>
       [% INCLUDE global/textarea.html.tmpl

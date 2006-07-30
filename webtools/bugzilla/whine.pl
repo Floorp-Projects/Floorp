@@ -102,14 +102,6 @@ if ($fromaddress !~ Bugzilla->params->{'emailregexp'}) {
         "The maintainer email address has not been properly set!\n";
 }
 
-# Check the nomail file for users who should not receive mail
-my %nomail;
-if (open(NOMAIL, '<', bz_locations()->{'datadir'} . "/nomail")) {
-    while (<NOMAIL>) {
-        $nomail{trim($_)} = 1;
-    }
-}
-
 # get the current date and time
 my ($now_sec, $now_minute, $now_hour, $now_day, $now_month, $now_year, 
     $now_weekday) = localtime;
@@ -373,7 +365,7 @@ sub mail {
     my $args = shift;
 
     # Don't send mail to someone on the nomail list.
-    return if $nomail{$args->{'recipient'}->{'login'}};
+    return if $args->{recipient}->email_disabled;
 
     my $msg = ''; # it's a temporary variable to hold the template output
     $args->{'alternatives'} ||= [];

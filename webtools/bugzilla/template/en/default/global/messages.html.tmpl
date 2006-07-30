@@ -57,6 +57,12 @@
               A new password has been set.
             [% ELSIF field == 'disabledtext' %]
               The disable text has been modified.
+            [% ELSIF field == 'disable_mail' %]
+              [% IF otheruser.email_disabled %]
+                Bugmail has been disabled.
+              [% ELSE %]
+                Bugmail has been enabled.
+              [% END %]
             [% END %]
           </li>
         [% END %]

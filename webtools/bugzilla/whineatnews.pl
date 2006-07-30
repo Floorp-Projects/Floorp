@@ -43,6 +43,7 @@ my $query = q{SELECT bug_id, short_desc, login_name
           INNER JOIN profiles
                   ON userid = assigned_to
                WHERE (bug_status = ? OR bug_status = ?)
+                 AND disable_mail = 0
                  AND } . $dbh->sql_to_days('NOW()') . " - " .
                        $dbh->sql_to_days('delta_ts') . " > " .
                        Bugzilla->params->{'whinedays'} .

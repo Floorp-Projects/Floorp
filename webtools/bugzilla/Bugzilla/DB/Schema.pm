@@ -614,6 +614,8 @@ use constant ABSTRACT_SCHEMA => {
             cryptpassword  => {TYPE => 'varchar(128)'},
             realname       => {TYPE => 'varchar(255)'},
             disabledtext   => {TYPE => 'MEDIUMTEXT', NOTNULL => 1},
+            disable_mail   => {TYPE => 'BOOLEAN', NOTNULL => 1,
+                               DEFAULT => 'FALSE'},
             mybugslink     => {TYPE => 'BOOLEAN', NOTNULL => 1,
                                DEFAULT => 'TRUE'},
             refreshed_when => {TYPE => 'DATETIME', NOTNULL => 1},

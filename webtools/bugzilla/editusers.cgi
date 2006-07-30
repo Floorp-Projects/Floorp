@@ -195,6 +195,7 @@ if ($action eq 'search') {
     my $password     = $cgi->param('password');
     my $realname     = trim($cgi->param('name')         || '');
     my $disabledtext = trim($cgi->param('disabledtext') || '');
+    my $disable_mail = $cgi->param('disable_mail') =~ /^(0|1)$/ ? $1 : 0;
 
     # Lock tables during the check+creation session.
     $dbh->bz_lock_tables('profiles WRITE', 'profiles_activity WRITE',
@@ -216,7 +217,7 @@ if ($action eq 'search') {
     trick_taint($password);
     trick_taint($disabledtext);
 
-    insert_new_user($login, $realname, $password, $disabledtext);
+    insert_new_user($login, $realname, $password, $disabledtext, $disable_mail);
     my $new_user_id = $dbh->bz_last_key('profiles', 'userid');
     $dbh->bz_unlock_tables();
     userDataToVars($new_user_id);
@@ -234,6 +235,7 @@ if ($action eq 'search') {
 } elsif ($action eq 'update') {
     my $otherUser = check_user($otherUserID, $otherUserLogin);
     $otherUserID = $otherUser->id;
+    my $oldprofile = new Bugzilla::User($otherUserID);
 
     my $logoutNeeded = 0;
     my @changedFields;
@@ -255,14 +257,17 @@ if ($action eq 'search') {
                                            object => "user"});
 
     # Cleanups
-    my $loginold        = $cgi->param('loginold')        || '';
-    my $realnameold     = $cgi->param('nameold')         || '';
-    my $disabledtextold = $cgi->param('disabledtextold') || '';
+    my $loginold         = $cgi->param('loginold')         || '';
+    my $realnameold      = $cgi->param('nameold')          || '';
+    my $disabledtextold  = $cgi->param('disabledtextold')  || '';
+    my $disable_mail_old = $cgi->param('disable_mail_old') =~ /^(0|1)$/ ? 
+                           $1 : $oldprofile->email_disabled;
 
     my $login        = $cgi->param('login');
     my $password     = $cgi->param('password');
     my $realname     = trim($cgi->param('name')         || '');
     my $disabledtext = trim($cgi->param('disabledtext') || '');
+    my $disable_mail = $cgi->param('disable_mail') =~ /^(0|1)$/ ? $1 : 0;
 
     # Update profiles table entry; silently skip doing this if the user
     # is not authorized.
@@ -307,6 +312,11 @@ if ($action eq 'search') {
             push(@changedFields, 'disabledtext');
             push(@values, $disabledtext);
             $logoutNeeded = 1;
+        }
+        if ($disable_mail != $disable_mail_old) {
+            trick_taint($disable_mail);
+            push(@changedFields, 'disable_mail');
+            push(@values, $disable_mail);
         }
         if (@changedFields) {
             push (@values, $otherUserID);

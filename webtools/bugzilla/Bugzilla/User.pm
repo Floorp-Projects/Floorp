@@ -122,6 +122,7 @@ sub _create {
         'showmybugslink' => 0,
         'disabledtext'   => '',
         'flags'          => {},
+        'disable_mail'   => 0,
     };
     bless ($self, $class);
     return $self unless $cond && $val;
@@ -131,9 +132,9 @@ sub _create {
 
     my $dbh = Bugzilla->dbh;
 
-    my ($id, $login, $name, $disabledtext, $mybugslink) =
+    my ($id, $login, $name, $disabledtext, $mybugslink, $disable_mail) =
         $dbh->selectrow_array(qq{SELECT userid, login_name, realname,
-                                        disabledtext, mybugslink
+                                        disabledtext, mybugslink, disable_mail 
                                  FROM profiles WHERE $cond},
                                  undef, $val);
 
@@ -144,6 +145,7 @@ sub _create {
     $self->{'login'}          = $login;
     $self->{'disabledtext'}   = $disabledtext;
     $self->{'showmybugslink'} = $mybugslink;
+    $self->{'disable_mail'}   = $disable_mail;
 
     return $self;
 }
@@ -156,6 +158,8 @@ sub name { $_[0]->{name}; }
 sub disabledtext { $_[0]->{'disabledtext'}; }
 sub is_disabled { $_[0]->disabledtext ? 1 : 0; }
 sub showmybugslink { $_[0]->{showmybugslink}; }
+sub email_disabled { $_[0]->{disable_mail}; }
+sub email_enabled { !($_[0]->{disable_mail}); }
 
 sub set_authorizer {
     my ($self, $authorizer) = @_;
@@ -1339,10 +1343,11 @@ sub get_userlist {
 }
 
 sub insert_new_user {
-    my ($username, $realname, $password, $disabledtext) = (@_);
+    my ($username, $realname, $password, $disabledtext, $disable_mail) = (@_);
     my $dbh = Bugzilla->dbh;
 
     $disabledtext ||= '';
+    $disable_mail ||= 0;
 
     # If not specified, generate a new random password for the user.
     # If the password is '*', do not encrypt it; we are creating a user
@@ -1358,10 +1363,11 @@ sub insert_new_user {
     # Insert the new user record into the database.
     $dbh->do("INSERT INTO profiles 
                           (login_name, realname, cryptpassword, disabledtext,
-                           refreshed_when) 
-                   VALUES (?, ?, ?, ?, '1901-01-01 00:00:00')",
+                           refreshed_when, disable_mail) 
+                   VALUES (?, ?, ?, ?, '1901-01-01 00:00:00', ?)",
              undef, 
-             ($username, $realname, $cryptpassword, $disabledtext));
+             ($username, $realname, $cryptpassword, $disabledtext, 
+              $disable_mail));
 
     # Turn on all email for the new user
     my $new_userid = $dbh->bz_last_key('profiles', 'userid');
@@ -1868,6 +1874,11 @@ Params: $username (scalar, string) - The login name for the new user.
                                          If given, the user will be disabled,
                                          meaning the account will be
                                          unavailable for login.
+        $disable_mail (scalar, boolean) - Optional, defaults to 0.
+                                          If 1, bug-related mail will not be 
+                                          sent to this user; if 0, mail will
+                                          be sent depending on the user's 
+                                          email preferences.
 
 Returns: The password for this user, in plain text, so it can be included
          in an e-mail sent to the user.

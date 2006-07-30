@@ -3358,6 +3358,54 @@ if (!$dbh->bz_column_info('classifications', 'sortkey')) {
 $dbh->bz_add_column('fielddefs', 'enter_bug',
     {TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => 'FALSE'});
 
+# 2006-07-14 karl@kornel.name - Bug 100953
+# If a nomail file exists, move its contents into the DB
+$dbh->bz_add_column('profiles', 'disable_mail',
+                    { TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => 'FALSE' });
+if (-e "$datadir/nomail") {
+    # We have a data/nomail file, read it in and delete it
+    my %nomail;
+    print "Found a data/nomail file.  Moving nomail entries into DB...\n";
+    open NOMAIL, '<', "$datadir/nomail";
+    while (<NOMAIL>) {
+        $nomail{trim($_)} = 1;
+    }
+    close NOMAIL;
+
+    # Go through each entry read.  If a user exists, set disable_mail.
+    my $query = $dbh->prepare('UPDATE profiles
+                                  SET disable_mail = 1
+                                WHERE userid = ?');
+    foreach my $user_to_check (keys %nomail) {
+        my $uid;
+        if ($uid = Bugzilla::User::login_to_id($user_to_check)) {
+            my $user = new Bugzilla::User($uid);
+            print "\tDisabling email for user ", $user->email, "\n";
+            $query->execute($user->id);
+            delete $nomail{$user->email};
+        }
+    }
+
+    # If there are any nomail entries remaining, move them to nomail.bad
+    # and say something to the user.
+    if (scalar(keys %nomail)) {
+        print 'The following users were listed in data/nomail, but do not ' .
+              'have an account here.  The unmatched entries have been moved ' .
+              "to $datadir/nomail.bad\n";
+        open NOMAIL_BAD, '>>', "$datadir/nomail.bad";
+        foreach my $unknown_user (keys %nomail) {
+            print "\t$unknown_user\n";
+            print NOMAIL_BAD "$unknown_user\n";
+            delete $nomail{$unknown_user};
+        }
+        close NOMAIL_BAD;
+    }
+
+    # Now that we don't need it, get rid of the nomail file.
+    unlink "$datadir/nomail";
+}
+
+
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
 #

@@ -57,20 +57,6 @@ use constant REL_NAMES => {
     REL_VOTER   , "Voter"
 };
 
-sub _read_nomail {
-    my $nomail = Bugzilla->request_cache->{bugmail_nomail};
-    return $nomail if $nomail;
-    if (open(NOMAIL, '<', bz_locations->{'datadir'} . "/nomail")) {
-        while (<NOMAIL>) {
-            $nomail->{trim($_)} = 1;
-        }
-        close(NOMAIL);
-    }
-    Bugzilla->request_cache->{bugmail_nomail} = $nomail;
-    return $nomail;
-}
-
-
 sub FormatTriple {
     my ($a, $b, $c) = (@_);
     $^A = "";
@@ -465,8 +451,7 @@ sub ProcessOneBug {
 
             # Make sure the user isn't in the nomail list, and the insider and 
             # dep checks passed.
-            my $nomail = _read_nomail();
-            if ((!$nomail->{$user->login}) &&
+            if ($user->email_enabled &&
                 $insider_ok &&
                 $dep_ok)
             {
