@@ -455,7 +455,8 @@ function SelectLanguage()
       gLastSelectedLang = item;
     }
     else {
-      window.opener.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", xlateURL('urn:clienturl:composer:spellcheckers'));
+      opener.open(GetPrefs().getComplexValue("editor.spellcheckers.url",
+                  Components.interfaces.nsIPrefLocalizedString).data);
       if (gLastSelectedLang)
         gDialog.LanguageMenulist.selectedItem = gLastSelectedLang;
     }
