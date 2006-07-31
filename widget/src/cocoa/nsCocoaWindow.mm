@@ -543,8 +543,6 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
     if (mWindowType == eWindowType_toplevel) {
       if (gRollupListener != nsnull && gRollupWidget != nsnull)
         gRollupListener->Rollup();
-      NS_IF_RELEASE(gRollupListener);
-      NS_IF_RELEASE(gRollupWidget);
     }
 
     // now get rid of the window/sheet
@@ -1003,16 +1001,14 @@ NS_IMETHODIMP nsCocoaWindow::CaptureRollupEvents(nsIRollupListener * aListener,
                                                  PRBool aDoCapture, 
                                                  PRBool aConsumeRollupEvent)
 {
+  NS_IF_RELEASE(gRollupListener);
+  NS_IF_RELEASE(gRollupWidget);
+  
   if (aDoCapture) {
-    NS_IF_RELEASE(gRollupListener);
-    NS_IF_RELEASE(gRollupWidget);
     gRollupListener = aListener;
     NS_ADDREF(aListener);
     gRollupWidget = this;
     NS_ADDREF(this);
-  } else {
-    NS_IF_RELEASE(gRollupListener);
-    NS_IF_RELEASE(gRollupWidget);
   }
   
   return NS_OK;
