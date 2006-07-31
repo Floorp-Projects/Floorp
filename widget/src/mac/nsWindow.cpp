@@ -99,8 +99,7 @@ static Boolean	gNotificationInstalled = false;
 static CursorSpinner *gCursorSpinner = nsnull;
 static const int kSpinCursorFirstFrame = 200;
 
-// Routines for iterating over the rects of a region. Carbon and pre-Carbon
-// do this differently so provide a way to do both.
+// Iterates over the rects of a region.
 static RegionToRectsUPP sAddRectToArrayProc = nsnull;
 
 #pragma mark -
