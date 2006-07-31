@@ -79,6 +79,11 @@ RewriteRule ^(\w+)/(\w+)/overview[/]{0,1}$ addon.php?app=$1&name=$2
 #     /firefox/flashgot/previews/ -> previews.php?app=firefox&name=flashgot
 RewriteRule ^(\w+)/(\w+)/(\w+)[/]{0,1}$ $3.php?app=$1&name=$2
 
+# Special rewrite for dictionaries
+# Example:
+#   /en-US/firefox/1.5/dictionaries/ -> search.php?cat=68&app=firefox&type=E
+RewriteRule ^([a-zA-Z]{2}(-[a-zA-Z]{2})?)/(\w+)/([0-9A-Za-z.-]+)/dictionaries[/]{0,1}$ search.php?cat=68&app=$2&type=E [L]
+
 # Rewrite top-level pages.
 # Examples:
 #     /firefox/extensions/ -> extensions.php?app=firefox
