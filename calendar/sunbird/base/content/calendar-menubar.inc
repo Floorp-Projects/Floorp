@@ -199,21 +199,12 @@
        <menu id="menu_View"
              label="&viewMenu.label;"
              accesskey="&viewMenu.accesskey;">
-         <menupopup id="mppView">
+         <menupopup id="menu_viewPopup">
            <menu id="menu_Toolbars"
                  label="&toolbarsMenu.label;"
-                 accesskey="&toolbarsMenu.accesskey;">
+                 accesskey="&toolbarsMenu.accesskey;"
+                 onpopupshowing="sbOnViewToolbarsPopupShowing(event);">
              <menupopup>
-               <!-- XXX This eventually needs to be RDF-driven so toolbars created
-                        by the user are selectable. Also there's no good way to delete
-                        a user-created toolbar without resetting all your other toolbars
-                        to the defaults. Should that be fixed here? -->
-
-               <menuitem id="menu_showCalendarToolbar"
-                         type="checkbox"
-                         label="&calendar.toolbar.label;"
-                         command="cmd_showCalendarToolbar"
-                         checked="true"/>
                <menuseparator/>
                <menuitem id="calendar-view-menu-customize"
                          command="cmd_CustomizeToolbars"

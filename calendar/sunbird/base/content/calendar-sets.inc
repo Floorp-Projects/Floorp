@@ -102,7 +102,6 @@
   <command id="wizard_command" oncommand="launchWizard()" collapsed="true"/>
 
   <command id="cmd_CustomizeToolbars"   oncommand="CalendarCustomizeToolbar()"/>
-  <command id="cmd_showCalendarToolbar" oncommand="goToggleToolbar('calendar-bar', 'menu_showCalendarToolbar');"/>
   <command id="cmd_showSearchToolbar"   oncommand="goToggleToolbar('searchBox', 'menu_showSearchToolbar');"/>
   <command id="cmd_showStatusBar"       oncommand="goToggleToolbar('status-bar', 'menu_showStatusBar');"/>
   <command id="cmd_showTaskBox"         oncommand="goToggleToolbar('taskBox', 'menu_showTaskBox'); goToggleToolbar('calendar-todo-splitter');"/>
