@@ -81,7 +81,7 @@ static NS_DEFINE_CID(kProtocolProxyServiceCID, NS_PROTOCOLPROXYSERVICE_CID);
 
 nsIOService* gIOService = nsnull;
 
-// A general port blacklist.  Connections to these ports will not be avoided unless 
+// A general port blacklist.  Connections to these ports will not be allowed unless 
 // the protocol overrides.
 //
 // TODO: I am sure that there are more ports to be added.  
