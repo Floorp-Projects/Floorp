@@ -45,3 +45,25 @@ include $(DEPTH)/config/autoconf.mk
 DEFINES += -DAB_CD=$(AB_CD)
 
 include $(topsrcdir)/config/rules.mk
+
+PROFILE_FILES = \
+	bookmarks.html \
+	mimeTypes.rdf \
+	localstore.rdf \
+	panels.rdf \
+	search.rdf \
+	$(NULL)
+
+PROFILE_CHROME = userChrome-example.css userContent-example.css
+
+libs:: $(addprefix $(LOCALE_SRCDIR)/profile/,$(PROFILE_FILES))
+	$(INSTALL) $^ $(FINAL_TARGET)/defaults/profile
+
+libs:: $(addprefix $(LOCALE_SRCDIR)/profile/chrome/,$(PROFILE_CHROME))
+	$(INSTALL) $^ $(FINAL_TARGET)/defaults/profile/chrome
+
+install:: $(addprefix $(LOCALE_SRCDIR)/profile/,$(PROFILE_FILES))
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/profile
+
+install:: $(addprefix $(LOCALE_SRCDIR)/profile/chrome/,$(PROFILE_CHROME))
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/profile/chrome

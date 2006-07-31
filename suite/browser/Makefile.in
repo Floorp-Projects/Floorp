@@ -44,4 +44,6 @@ include $(DEPTH)/config/autoconf.mk
 
 EXTRA_COMPONENTS = nsBrowserContentHandler.js
 
+PREF_JS_EXPORTS = $(srcdir)/browser-prefs.js
+
 include $(topsrcdir)/config/rules.mk
