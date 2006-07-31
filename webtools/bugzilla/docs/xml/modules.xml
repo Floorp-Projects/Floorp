@@ -104,15 +104,6 @@
     </para>
 
     <para>
-      File::Temp:
-      <literallayout>
-        CPAN Download Page: <ulink url="http://search.cpan.org/dist/File-Temp/"/>
-        PPM Download Page: Part of core distribution.
-        Documentation: <ulink url="http://www.perldoc.com/perl5.8.0/lib/File/Temp.html"/>
-      </literallayout>
-    </para>
-
-    <para>
       Template-Toolkit:
       <literallayout>
         CPAN Download Page: <ulink url="http://search.cpan.org/dist/Template-Toolkit/"/>
@@ -121,15 +112,6 @@
       </literallayout>
     </para>
 
-    <para>
-       Text::Wrap:
-      <literallayout>
-        CPAN Download Page: <ulink url="http://search.cpan.org/dist/Text-Tabs+Wrap/"/>
-        PPM Download Link: Part of core distribution.
-        Documentation: <ulink url="http://www.perldoc.com/perl5.8.0/lib/Text/Wrap.html"/>
-      </literallayout>
-    </para>
- 
     <para>
       GD:
       <literallayout>

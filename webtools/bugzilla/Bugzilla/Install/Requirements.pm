@@ -43,10 +43,6 @@ use constant REQUIRED_MODULES => [
         version => '2.93'
     },
     {
-        name => 'Data::Dumper',
-        version => '0'
-    },
-    {
         name => 'Date::Format',
         version => '2.21'
     },
@@ -59,16 +55,8 @@ use constant REQUIRED_MODULES => [
         version => '0.84'
     },
     {
-        name => 'File::Temp',
-        version => '0'
-    },
-    {
         name => 'Template',
         version => '2.08'
-    },
-    {
-        name => 'Text::Wrap',
-        version => '2001.0131'
     },
     {
         name => 'Mail::Mailer',
@@ -82,10 +70,6 @@ use constant REQUIRED_MODULES => [
         # MIME::Parser is packaged as MIME::Tools on ActiveState Perl
         name => $^O =~ /MSWin32/i ? 'MIME::Tools' : 'MIME::Parser',
         version => '5.406'
-    },
-    {
-        name => 'Storable',
-        version => '0'
     },
 ];
 

@@ -1276,7 +1276,7 @@ password=mypassword
                 </para>
               </listitem>
             </orderedlist>
-            I reckon TimeDate and Data::Dumper come with the activeperl.
+            I reckon TimeDate comes with the activeperl.
             You can check the ActiveState site for packages for installation
             through PPM. <ulink url="http://www.activestate.com/Packages/"/>.
           </para>

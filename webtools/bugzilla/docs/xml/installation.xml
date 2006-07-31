@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.125 2006/07/31 22:21:35 mkanat%bugzilla.org Exp $ -->
+<!-- $Id: installation.xml,v 1.126 2006/07/31 22:22:51 mkanat%bugzilla.org Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -293,12 +293,6 @@
 
         <listitem>
           <para>
-            Data::Dumper (&min-data-dumper-ver;)
-          </para>
-        </listitem>
-    
-        <listitem>
-          <para>
             Date::Format (&min-date-format-ver;)
           </para>
         </listitem>
@@ -330,20 +324,8 @@
 
         <listitem>
           <para>
-            File::Temp (&min-file-temp-ver;)
-          </para>
-        </listitem>
-
-        <listitem>
-          <para>
             <link linkend="install-modules-template">Template</link>
             (&min-template-ver;)
-          </para>
-        </listitem>
-
-        <listitem>
-          <para>
-            Text::Wrap (&min-text-wrap-ver;)
           </para>
         </listitem>
 
@@ -362,12 +344,6 @@
         <listitem>
           <para>
             MIME::Parser (&min-mime-parser-ver;)
-          </para>
-        </listitem>
-
-        <listitem>
-          <para>
-            Storable (&min-storable-ver;)
           </para>
         </listitem>
       </orderedlist>
