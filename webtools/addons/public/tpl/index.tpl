@@ -14,7 +14,7 @@
     <a class="top-feature" href="{$config.webpath}/{$app}/recommended/"><img src="{$config.webpath}/images/feature-recommend.png" width="213" height="128" style="padding-left: 12px;" alt="We Recommend: See some of our favorite add-ons to get you started."></a>
 
     <div class="split-feature-two">
-    <h2><img src="{$config.webpath}/images/title-topdownloads.gif" width="150" height="24" alt="Top 10 Downloads"></h2>
+    <h2><img src="{$config.webpath}/images/title-topdownloads.gif" width="150" height="24" alt="Top Downloads"></h2>
 
     <ol class="top-10">        
 {section name=pe loop=$popularExtensions step=1 start=0}
