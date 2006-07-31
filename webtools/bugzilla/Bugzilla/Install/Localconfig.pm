@@ -29,7 +29,6 @@ use strict;
 use Bugzilla::Constants;
 
 use Data::Dumper;
-use Fcntl qw(SEEK_END);
 use IO::File;
 use Safe;
 
