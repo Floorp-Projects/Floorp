@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 //-----------------------------------------------------------------------------
-var bug     = "(none)";
+var bug     = "346582";
 var summary = "Basic support for iterable objects and for-each";
 var actual, expect;
 
@@ -88,6 +88,9 @@ try
       throw "for-each iteration failed on vals[\"" + index + "\"]";
     index++;
   }
+  if (index != keys.length)
+    throw "not everything iterated!  index=" + index +
+          ", keys.length=" + keys.length;
 
   if (iterable.persistedProp != 17)
     throw "iterable.persistedProp not persisted!";
