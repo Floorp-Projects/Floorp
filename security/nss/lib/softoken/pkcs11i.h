@@ -556,7 +556,7 @@ typedef struct sftk_parametersStr {
 SEC_BEGIN_PROTOS
 
 /* shared functions between pkcs11.c and fipstokn.c */
-extern int nsf_init;
+extern PRBool nsf_init;
 extern CK_RV nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS);
 extern CK_RV nsc_CommonFinalize(CK_VOID_PTR pReserved, PRBool isFIPS);
 extern CK_RV nsc_CommonGetSlotList(CK_BBOOL tokPresent, 

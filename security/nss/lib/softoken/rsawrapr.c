@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: rsawrapr.c,v 1.9 2006/04/13 22:12:17 wtchang%redhat.com Exp $ */
+/* $Id: rsawrapr.c,v 1.10 2006/07/31 18:10:17 wtchang%redhat.com Exp $ */
 
 #include "blapi.h"
 #include "softoken.h"
@@ -193,6 +193,7 @@ rsa_FormatOneBlock(unsigned modulusLen, RSA_BlockType blockType,
     unsigned char *bp;
     int padLen;
     int i;
+    SECStatus rv;
 
     block = (unsigned char *) PORT_Alloc(modulusLen);
     if (block == NULL)
@@ -254,8 +255,13 @@ rsa_FormatOneBlock(unsigned modulusLen, RSA_BlockType blockType,
 	for (i = 0; i < padLen; i++) {
 	    /* Pad with non-zero random data. */
 	    do {
-		RNG_GenerateGlobalRandomBytes(bp + i, 1);
-	    } while (bp[i] == RSA_BLOCK_AFTER_PAD_OCTET);
+		rv = RNG_GenerateGlobalRandomBytes(bp + i, 1);
+	    } while (rv == SECSuccess && bp[i] == RSA_BLOCK_AFTER_PAD_OCTET);
+	    if (rv != SECSuccess) {
+		sftk_fatalError = PR_TRUE;
+		PORT_Free (block);
+		return NULL;
+	    }
 	}
 	bp += padLen;
 	*bp++ = RSA_BLOCK_AFTER_PAD_OCTET;
@@ -292,7 +298,12 @@ rsa_FormatOneBlock(unsigned modulusLen, RSA_BlockType blockType,
 	/*
 	 * Salt
 	 */
-	RNG_GenerateGlobalRandomBytes(bp, OAEP_SALT_LEN);
+	rv = RNG_GenerateGlobalRandomBytes(bp, OAEP_SALT_LEN);
+	if (rv != SECSuccess) {
+	    sftk_fatalError = PR_TRUE;
+	    PORT_Free (block);
+	    return NULL;
+	}
 	bp += OAEP_SALT_LEN;
 
 	/*
@@ -310,8 +321,14 @@ rsa_FormatOneBlock(unsigned modulusLen, RSA_BlockType blockType,
 	/*
 	 * Pad2
 	 */
-	if (bp < (block + modulusLen))
-	    RNG_GenerateGlobalRandomBytes(bp, block - bp + modulusLen);
+	if (bp < (block + modulusLen)) {
+	    rv = RNG_GenerateGlobalRandomBytes(bp, block - bp + modulusLen);
+	    if (rv != SECSuccess) {
+		sftk_fatalError = PR_TRUE;
+		PORT_Free (block);
+		return NULL;
+	    }
+	}
 
 	/*
 	 * Now we have the following:
@@ -463,6 +480,9 @@ RSA_Sign(NSSLOWKEYPrivateKey *key,
     	goto done;
 
     rv = RSA_PrivateKeyOpDoubleChecked(&key->u.rsa, output, formatted.data);
+    if (rv != SECSuccess && PORT_GetError() == SEC_ERROR_LIBRARY_FAILURE) {
+	sftk_fatalError = PR_TRUE;
+    }
     *output_len = modulus_len;
 
     goto done;
@@ -665,8 +685,12 @@ RSA_DecryptBlock(NSSLOWKEYPrivateKey *key,
     	goto failure;
 
     rv = RSA_PrivateKeyOp(&key->u.rsa, buffer, input);
-    if (rv != SECSuccess) 
+    if (rv != SECSuccess) {
+	if (PORT_GetError() == SEC_ERROR_LIBRARY_FAILURE) {
+	    sftk_fatalError = PR_TRUE;
+	}
     	goto loser;
+    }
 
     if (buffer[0] != 0 || buffer[1] != 2) 
     	goto loser;
@@ -725,6 +749,9 @@ RSA_SignRaw(NSSLOWKEYPrivateKey *key,
     	goto done;
 
     rv = RSA_PrivateKeyOpDoubleChecked(&key->u.rsa, output, formatted.data);
+    if (rv != SECSuccess && PORT_GetError() == SEC_ERROR_LIBRARY_FAILURE) {
+	sftk_fatalError = PR_TRUE;
+    }
     *output_len = modulus_len;
 
 done:
@@ -874,8 +901,12 @@ RSA_DecryptRaw(NSSLOWKEYPrivateKey *key,
     	goto failure;
 
     rv = RSA_PrivateKeyOp(&key->u.rsa, output, input);
-    if (rv != SECSuccess)
+    if (rv != SECSuccess) {
+	if (PORT_GetError() == SEC_ERROR_LIBRARY_FAILURE) {
+	    sftk_fatalError = PR_TRUE;
+	}
     	goto failure;
+    }
 
     *output_len = modulus_len;
     return SECSuccess;
