@@ -5718,16 +5718,65 @@ nsTypedSelection::AddRange(nsIDOMRange* aRange)
   return mFrameSelection->NotifySelectionListeners(GetType());
 }
 
+// nsTypedSelection::RemoveRange
+//
+//    Removes the given range from the selection. The tricky part is updating
+//    the flags on the frames that indicate whether they have a selection or
+//    not. There could be several selection ranges on the frame, and clearing
+//    the bit would cause the selection to not be drawn, even when there is
+//    another range on the frame (bug 346185).
+//
+//    We therefore find any ranges that intersect the same nodes as the range
+//    being removed, and cause them to set the selected bits back on their
+//    selected frames after we've cleared the bit from ours.
+
 NS_IMETHODIMP
 nsTypedSelection::RemoveRange(nsIDOMRange* aRange)
 {
   if (!aRange)
     return NS_ERROR_INVALID_ARG;
-  RemoveItem(aRange);
-  
+  nsresult rv = RemoveItem(aRange);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIDOMNode> beginNode, endNode;
+  rv = aRange->GetStartContainer(getter_AddRefs(beginNode));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = aRange->GetEndContainer(getter_AddRefs(endNode));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // find out the length of the end node, so we can select all of it
+  PRInt32 beginOffset, endOffset;
+  PRUint16 endNodeType = nsIDOMNode::ELEMENT_NODE;
+  endNode->GetNodeType(&endNodeType);
+  if (endNodeType == nsIDOMNode::TEXT_NODE) {
+    // Get the length of the text. We can't just use the offset because
+    // another range could be touching this text node but not intersect our
+    // range.
+    beginOffset = 0;
+    nsAutoString endNodeValue;
+    endNode->GetNodeValue(endNodeValue);
+    endOffset = endNodeValue.Length();
+  } else {
+    // For non-text nodes, the given offsets should be sufficient.
+    aRange->GetStartOffset(&beginOffset);
+    aRange->GetEndOffset(&endOffset);
+  }
+
+  // clear the selected bit from the removed range's frames
   nsCOMPtr<nsPresContext>  presContext;
   GetPresContext(getter_AddRefs(presContext));
   selectFrames(presContext, aRange, PR_FALSE);
+
+  // add back the selected bit for each range touching our nodes
+  nsCOMArray<nsIDOMRange> affectedRanges;
+  rv = GetRangesForIntervalCOMArray(beginNode, beginOffset,
+                                    endNode, endOffset,
+                                    PR_TRUE, &affectedRanges);
+  NS_ENSURE_SUCCESS(rv, rv);
+  for (PRInt32 i = 0; i < affectedRanges.Count(); i ++)
+    selectFrames(presContext, affectedRanges[i], PR_TRUE);
+
   // When the selection is user-created it makes sense to scroll the range
   // into view. The spell-check selection, however, is created and destroyed
   // in the background. We don't want to scroll in this case or the view
