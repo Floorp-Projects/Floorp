@@ -65,6 +65,69 @@ function getCalendarManager() {
            getService(Ci.calICalendarManager);
 }
 
+/**
+ * Normal get*Pref calls will throw if the pref is undefined.  This function
+ * will get a bool, int, or string pref.  If the pref is undefined, it will
+ * return aDefault.
+ *
+ * @param aPrefName   the (full) name of preference to get
+ * @param aDefault    (optional) the value to return if the pref is undefined
+ */
+function getPrefSafe(aPrefName, aDefault) {
+    const nsIPrefBranch = Components.interfaces.nsIPrefBranch;
+    const prefB = Components.classes["@mozilla.org/preferences-service;1"]
+                            .getService(nsIPrefBranch);
+    switch (prefB.getPrefType(aPrefName)) {
+        case nsIPrefBranch.PREF_BOOL:
+            return prefB.getBoolPref(aPrefName);
+        case nsIPrefBranch.PREF_INT:
+            return prefB.getIntPref(aPrefName);
+        case nsIPrefBranch.PREF_STRING:
+            return prefB.getCharPref(aPrefName);
+        default: // includes nsIPrefBranch.PREF_INVALID
+            return aDefault;
+    }
+}
+
+/**
+ * Wrapper for setting prefs of various types
+ *
+ * @param aPrefName   the (full) name of preference to set
+ * @param aPrefType   the type of preference to set.  Valid valuse are:
+                        BOOL, INT, and CHAR
+ * @param aPrefValue  the value to set the pref to
+ */
+function setPref(aPrefName, aPrefType, aPrefValue) {
+    const nsIPrefBranch = Components.interfaces.nsIPrefBranch;
+    const prefB = Components.classes["@mozilla.org/preferences-service;1"]
+                            .getService(nsIPrefBranch);
+    switch (aPrefType) {
+        case "BOOL":
+            prefB.setBoolPref(aPrefName, aPrefValue);
+            break;
+        case "INT":
+            prefB.setIntPref(aPrefName, aPrefValue);
+            break;
+        case "CHAR":
+            prefB.setCharPref(aPrefName, aPrefValue);
+            break;
+    }
+}
+
+/**
+ * Gets the value of a string in a .properties file
+ *
+ * @param aBundleName  the name of the properties file.  It is assumed that the
+ *                     file lives in chrome://calendar/locale/
+ * @param aStringName the name of the string within the properties file
+ */
+function calGetString(aBundleName, aStringName) {
+    var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                        .getService(Components.interfaces.nsIStringBundleService);
+    var props = sbs.createBundle("chrome://calendar/locale/"+aBundleName+".properties");
+    return props.GetStringFromName(aStringName);
+}
+
 /****
  **** debug code
  ****/

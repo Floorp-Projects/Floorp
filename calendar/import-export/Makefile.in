@@ -50,6 +50,7 @@ EXTRA_SCRIPTS = \
     calHtmlExport.js \
     calIcsImportExport.js \
     calListFormatter.js \
+    calMonthGridPrinter.js \
     calOutlookCSVImportExport.js \
     $(NULL)
 

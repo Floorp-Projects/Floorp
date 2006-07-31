@@ -68,6 +68,13 @@ const componentData =
      category: "cal-print-formatters",
      categoryEntry: "cal-list-printformatter",
      service: false},
+    {cid: Components.ID("{f42d5132-92c4-487b-b5c8-38bf292d74c1}"),
+     contractid: "@mozilla.org/calendar/printformatter;1?type=monthgrid",
+     script: "calMonthGridPrinter.js",
+     constructor: "calMonthPrinter",
+     category: "cal-print-formatters",
+     categoryEntry: "cal-month-printer",
+     service: false},
 
     {cid: Components.ID("{64a5d17a-0497-48c5-b54f-72b15c9e9a14}"),
      contractid: "@mozilla.org/calendar/import;1?type=csv",
@@ -81,6 +88,14 @@ const componentData =
      constructor: "calOutlookCSVExporter",
      category: "cal-exporters",
      categoryEntry: "cal-outlookcsv-exporter",
+     service: false},
+
+    {cid: null,
+     contractid: null,
+     script: "calUtils.js",
+     constructor: null,
+     category: null,
+     categoryEntry: null,
      service: false},
 
     ];
