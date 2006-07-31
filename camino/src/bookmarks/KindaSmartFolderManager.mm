@@ -147,7 +147,6 @@ const unsigned kNumTop10Items = 10;   // well, 10, duh!
 
 //  NSLog(@"checkForNewTop10 %@ (%d items)", aBookmark, [top10ItemsArray count]);
 
-  // if it's already in the list
   unsigned curIndex   = [top10ItemsArray indexOfObjectIdenticalTo:aBookmark];
   unsigned visitCount = [aBookmark numberOfVisits];
 
@@ -179,14 +178,20 @@ const unsigned kNumTop10Items = 10;   // well, 10, duh!
   }
   else if (visitCount >= currentMinVisits)
   {
+    // If bookmark is an about:URI, ignore it
+    NSString* newItemURL = [aBookmark url];
+    NSRange firstColon = [newItemURL rangeOfString:@":"];
+    // If there's a colon in the URI and everything up to it is "about", return
+    if((firstColon.location != NSNotFound) && [[newItemURL substringToIndex:firstColon.location] isEqual:@"about"])
+      return;
+
     // enter it into the list using insertion sort. it will go before other items with the same visit
     // count (thus maintaining the visit count/last visit sort).
     unsigned numItems = [top10ItemsArray count];
     int insertionIndex = -1;
-      
-    NSString* newItemURL = [aBookmark url];
+
     NSNumber* reverseSort = [NSNumber numberWithBool:YES];
-    
+
     // we check the entire list to look for items with a duplicate url
     for (unsigned i = 0; i < numItems; i ++)
     {
@@ -198,7 +203,7 @@ const unsigned kNumTop10Items = 10;   // well, 10, duh!
       if (([aBookmark compareForTop10:curChild sortDescending:reverseSort] != NSOrderedDescending) && insertionIndex == -1)
         insertionIndex = i;
     }
-    
+
     if (insertionIndex == -1 && [top10ItemsArray count] < kNumTop10Items)
       insertionIndex = [top10ItemsArray count];
 
