@@ -55,12 +55,12 @@
       
       <xul:vbox id="dialog-box" flex="1">
 
-        <xul:label id="read-only-item" value="&newevent.readonly.item.warning;" class="warning-text-class" hidden="true"/>
-        <xul:label id="read-only-cal" value="&newevent.readonly.cal.warning;" class="warning-text-class" hidden="true"/>
-        <xul:label id="end-time-warning" value="&newevent.endtime.warning;" class="warning-text-class" hidden="true"/>
-        <xul:label id="task-repeat-warning" value="&newtodo.repeatstart.warning;" class="warning-text-class" hidden="true"/>
-        <xul:label id="alarm-start-warning" value="&alarm.start.warning;" class="warning-text-class" hidden="true"/>
-        <xul:label id="alarm-end-warning" value="&alarm.due.warning;" class="warning-text-class" hidden="true"/>
+        <xul:label id="read-only-item" value="&newevent.readonly.item.warning;" hidden="true"/>
+        <xul:label id="read-only-cal" value="&newevent.readonly.cal.warning;" hidden="true"/>
+        <xul:label id="end-time-warning" value="&newevent.endtime.warning;" hidden="true"/>
+        <xul:label id="task-repeat-warning" value="&newtodo.repeatstart.warning;" hidden="true"/>
+        <xul:label id="alarm-start-warning" value="&alarm.start.warning;" hidden="true"/>
+        <xul:label id="alarm-end-warning" value="&alarm.due.warning;" hidden="true"/>
 
         <xul:grid flex="1">
           <xul:columns>
@@ -493,8 +493,6 @@
             // update alarm checkbox/label/settings button
             this.updateAlarm();
 
-            this.updateTaskAlarmWarnings();
-
             this.updateURL(item.getProperty("URL"));
 
             // hide rows based on if this is an event or todo
@@ -506,9 +504,6 @@
 
             // update datetime pickers
             this.updateAllDay();
-
-            // update the accept button
-            this.updateAccept();
 
             // set 'mIsReadOnly' if the calendar is read-only
             if (calendar && calendar.readOnly)
@@ -539,7 +534,10 @@
             
             if (!this.mIsReadOnly)
               this.mIsReadOnly = !this.mIsOrganizer;
-            
+
+            // update the accept button
+            this.updateAccept();
+
             if(this.mIsReadOnly) {
               var list = document.getAnonymousNodes(this)[0];
               var disableElements = list.getElementsByAttribute("disable-on-readonly", "true");
@@ -775,9 +773,6 @@
       <method name="updateTaskAlarmWarnings">
         <body>
           <![CDATA[
-            document.getElementById("alarm-start-warning").setAttribute("hidden", true);
-            document.getElementById("alarm-end-warning").setAttribute("hidden", true);
-
             var alarmType = getElementValue("item-alarm");
             if (!isToDo(window.calendarItem) || alarmType == "none") {
                 return true;
@@ -789,13 +784,13 @@
             var alarmRelated = document.getElementById("alarm-trigger-relation").selectedItem.value;
 
             if ((alarmType != "custom" || alarmRelated == "START") && !hasEntryDate) {
-                document.getElementById("alarm-start-warning").removeAttribute("hidden");
-                return false;
+              this.showWarning("alarm-start-warning");
+              return false;
             }
 
             if (alarmRelated == "END" && !hasDueDate) {
-                document.getElementById("alarm-end-warning").removeAttribute("hidden");
-                return false;
+              this.showWarning("alarm-end-warning");
+              return false;
             }
 
             return true;
@@ -1036,34 +1031,29 @@
                 endDate = getElementValue("todo-has-duedate", "checked") ? 
                     jsDateToDateTime(getElementValue("todo-duedate")) : null;
                 
-                var taskRepeatWarning = document.getElementById("task-repeat-warning");
-                
                 //@@@ TODO: this needs to be addressed
-                /*if (!startDate && getElementValue("item-recurrence", "checked")) {
-                    enableAccept = false;
-                    taskRepeatWarning.removeAttribute("hidden");
-                } else {
-                    taskRepeatWarning.setAttribute("hidden", "true");
-                }*/
+                //var taskRepeatWarning = document.getElementById();
+                //this.showWarning("task-repeat-warning");
+                //if (!startDate && getElementValue("item-recurrence", "checked")) {
+                    //enableAccept = false;
+                    //taskRepeatWarning.removeAttribute("hidden");
+                //}
             }
 
-            var timeWarning = document.getElementById("end-time-warning");
             if (endDate && startDate && endDate.compare(startDate) == -1) {
                 enableAccept = false;
-                timeWarning.removeAttribute("hidden");
-            } else {
-                timeWarning.setAttribute("hidden", "true");
+                this.showWarning("end-time-warning");
             }
 
             // can't add/edit items in readOnly calendars
-            document.getElementById("read-only-item").setAttribute("hidden", !this.mIsReadOnly);
+            if (this.mIsReadOnly)
+              this.showWarning("read-only-item");
             var cal = document.getElementById("item-calendar").selectedItem.calendar;
-            document.getElementById("read-only-cal").setAttribute("hidden", 
-                                                      !cal.readOnly);
+            if (cal.readOnly)
+              this.showWarning("read-only-cal");
             if (this.mIsReadOnly || cal.readOnly) {
                 enableAccept = false;
             }
-
             if (!this.updateTaskAlarmWarnings()) {
                 enableAccept = false;
             }
@@ -1071,6 +1061,18 @@
             var event = document.createEvent('Events'); 
             event.initEvent('accept', true, false);
             event.details = enableAccept;
+            this.dispatchEvent(event);
+          ]]>
+        </body>
+      </method>
+
+      <method name="showWarning">
+        <parameter name="identifier"/>
+        <body>
+          <![CDATA[
+            var event = document.createEvent('Events'); 
+            event.initEvent('warning', true, false);
+            event.details = document.getElementById(identifier).value;
             this.dispatchEvent(event);
           ]]>
         </body>

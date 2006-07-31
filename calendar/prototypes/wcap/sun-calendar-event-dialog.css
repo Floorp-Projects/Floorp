@@ -43,10 +43,6 @@ label.label {
   text-align: right;
 }
 
-.warning-text-class {
-  color : red;
-}
-
 main-page
 {
 	-moz-binding: url("chrome://calendar/content/sun-calendar-event-dialog-main.xml#main-page");

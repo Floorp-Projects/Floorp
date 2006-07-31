@@ -100,7 +100,7 @@
   </tabbox>
 
   <statusbar>
-    <statusbarpanel label="### TODO ###" flex="1"/>
+    <statusbarpanel id="statusbarpanel" flex="1"/>
   </statusbar>
   
 </dialog>

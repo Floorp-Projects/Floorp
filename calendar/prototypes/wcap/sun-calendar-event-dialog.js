@@ -50,6 +50,7 @@ function onLoad()
 
   document.getElementById("sun-calendar-event-dialog").getButton("accept").setAttribute("collapsed","true");
   document.getElementById("sun-calendar-event-dialog").getButton("cancel").setAttribute("collapsed","true");
+  document.getElementById("sun-calendar-event-dialog").getButton("cancel").parentNode.setAttribute("collapsed","true");
 
   var accept = function acceptHandler(event) {
     var enableAccept = event.details;
@@ -58,9 +59,17 @@ function onLoad()
         acceptButton.setAttribute("disabled", "true");
     } else if (acceptButton.getAttribute("disabled")) {
         acceptButton.removeAttribute("disabled");
+        var statusbarPanel = document.getElementById("statusbarpanel");
+        statusbarPanel.removeAttribute("label");
     }
   };
   window.addEventListener('accept', accept, true);
+
+  var warning = function warningHandler(event) {
+    var statusbarPanel = document.getElementById("statusbarpanel");
+    statusbarPanel.setAttribute("label",event.details);
+  };
+  window.addEventListener('warning', warning, true);
 
   // figure out what the title of the dialog should be and set it
   updateTitle();
