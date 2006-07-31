@@ -53,7 +53,9 @@
 <overlay id="ViewsPaneOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-    <prefpane id="paneViews">
+    <prefpane id="paneViews" onpaneload="gViewsPane.init()">
+        <script type="application/x-javascript"
+                src="chrome://calendar/content/preferences/views.js"/>
 
         <preferences>
             <preference id="calendar.week.start"
@@ -159,8 +161,9 @@
             <hbox align="center">
                 <caption label="&pref.calendar.view.restrict.label;"/>
                 <menulist id="daystarthour"
+                          oncommand="gViewsPane.updateViewStartMenu(this.value);"
                           preference="calendar.view.defaultstarthour">
-                    <menupopup id="daystarthour">
+                    <menupopup id="daystarthourpopup">
                         <menuitem label="&time.midnight;" value="0"/>
                         <menuitem label="&time.1;"        value="1"/>
                         <menuitem label="&time.2;"        value="2"/>
@@ -189,8 +192,9 @@
                 </menulist>
                 <caption label="&pref.calendar.view.endtime.label;"/>
                 <menulist id="dayendhour"
+                          oncommand="gViewsPane.updateViewStartMenu(this.value);"
                           preference="calendar.view.defaultendhour">
-                    <menupopup id="dayendhour">
+                    <menupopup id="dayendhourpopup">
                         <menuitem label="&time.midnight;" value="0"/>
                         <menuitem label="&time.1;"        value="1"/>
                         <menuitem label="&time.2;"        value="2"/>
