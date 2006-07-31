@@ -853,6 +853,7 @@ sub precompile_templates {
         # Precompile all the templates found in all the directories.
         %_templates_to_precompile = ();
         foreach my $subdir (qw(custom extension default), bz_locations()->{'project'}) {
+            next unless $subdir; # If 'project' is empty.
             $_current_path = File::Spec->catdir($templatedir, $dir, $subdir);
             next unless -d $_current_path;
             # Traverse the template hierarchy.
@@ -861,7 +862,6 @@ sub precompile_templates {
         # The sort isn't totally necessary, but it makes debugging easier
         # by making the templates always be compiled in the same order.
         foreach my $file (sort keys %_templates_to_precompile) {
-            my $path = File::Spec->catdir($templatedir, $dir);
             # Compile the template but throw away the result. This has the side-
             # effect of writing the compiled version to disk.
             $template->context->template($file);
@@ -876,7 +876,7 @@ sub _precompile_push {
     return if ($name =~ /\/CVS\//);
     return if ($name !~ /\.tmpl$/);
    
-    $name =~ s/\Q$_current_path\E\///; 
+    $name =~ s/\Q$_current_path\E\///;
     $_templates_to_precompile{$name} = 1;
 }
 

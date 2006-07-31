@@ -30,12 +30,15 @@ use Bugzilla::Constants;
 use Bugzilla::Install::Localconfig;
 
 use Fcntl;
+use File::Find;
 use IO::File;
+use POSIX ();
 
 use base qw(Exporter);
 our @EXPORT = qw(
     update_filesystem
     create_htaccess
+    fix_all_file_permissions
 );
 
 # This looks like a constant because it effectively is, but
@@ -43,6 +46,11 @@ our @EXPORT = qw(
 # so it's defined as a sub. This is not exported, so it doesn't have
 # a perldoc. However, look at the various hashes defined inside this 
 # function to understand what it returns. (There are comments throughout.)
+#
+# The rationale for the file permissions is that the web server generally 
+# runs as apache, so the cgi scripts should not be writable for apache,
+# otherwise someone may find it possible to change the cgis when exploiting
+# some security flaw somewhere (not necessarily in Bugzilla!)
 sub FILESYSTEM {
     my $datadir       = bz_locations()->{'datadir'};
     my $attachdir     = bz_locations()->{'attachdir'};
@@ -53,24 +61,132 @@ sub FILESYSTEM {
 
     my $ws_group      = read_localconfig()->{'webservergroup'};
 
-    # The name of each directory, pointing at its default permissions.
-    my %dirs = (
-        $datadir                => 0770,
-        "$datadir/mimedump-tmp" => 01777,
-        "$datadir/mining"       => 0700,
-        "$datadir/duplicates"   => $ws_group ? 0770 : 01777,
-        $attachdir              => 0770,
-        $extensionsdir          => 0770,
-        graphs                  => 0770,
-        $webdotdir              => 0700,
-        'skins/custom'          => 0700,
+    # The set of permissions that we use:
+
+    # FILES
+    # Executable by the web server
+    my $ws_executable = $ws_group ? 0750 : 0755;
+    # Executable by the owner only.
+    my $owner_executable = 0700;
+    # Readable by the web server.
+    my $ws_readable = $ws_group ? 0640 : 0644;
+    # Readable by the owner only.
+    my $owner_readable = 0600;
+    # Writeable by the web server.
+    my $ws_writeable = $ws_group ? 0660 : 0666;
+
+    # DIRECTORIES
+    # Readable by the web server.
+    my $ws_dir_readable  = $ws_group ? 0750 : 0755;
+    # Readable only by the owner.
+    my $owner_dir_readable = 0700;
+    # Writeable by the web server.
+    my $ws_dir_writeable = $ws_group ? 0770 : 01777;
+
+    # Note: When being processed by checksetup, these have their permissions
+    # set in this order: %all_dirs, %recurse_dirs, %all_files.
+    #
+    # Each is processed in alphabetical order of keys, so shorter keys
+    # will have their permissions set before longer keys (thus setting
+    # the permissions on parent directories before setting permissions
+    # on their children).
+
+    # --- FILE PERMISSIONS (Non-created files) --- #
+    my %files = (
+        '*'               => { perms => $ws_readable },
+        '*.cgi'           => { perms => $ws_executable },
+        'whineatnews.pl'  => { perms => $ws_executable },
+        'collectstats.pl' => { perms => $ws_executable },
+        'checksetup.pl'   => { perms => $owner_executable },
+        'importxml.pl'    => { perms => $ws_executable },
+        'runtests.pl'     => { perms => $owner_executable },
+        'testserver.pl'   => { perms => $ws_executable },
+        'whine.pl'        => { perms => $ws_executable },
+        'customfield.pl'  => { perms => $owner_executable },
+
+        'docs/html/makedocs.pl' => { perms => $owner_executable },
+        'docs/rel_notes.txt'    => { perms => $ws_readable },
+        'docs/README.docs'      => { perms => $owner_readable },
+        "$datadir/bugzilla-update.xml" => { perms => $ws_writeable },
+        "$datadir/params" => { perms => $ws_writeable },
+    );
+
+    # Directories that we want to set the perms on, but not
+    # recurse through. These are directories we didn't create
+    # in checkesetup.pl.
+    my %non_recurse_dirs = (
+        '.'  => $ws_dir_readable,
+        docs => $ws_dir_readable,
+    );
+
+    # This sets the permissions for each item inside each of these 
+    # directories, including the directory itself. 
+    # 'CVS' directories are special, though, and are never readable by 
+    # the webserver.
+    my %recurse_dirs = (
+        # Writeable directories
+        "$datadir/template" => { files => $ws_readable, 
+                                  dirs => $ws_dir_writeable },
+         $attachdir         => { files => $ws_writeable,
+                                  dirs => $ws_dir_writeable },
+         $webdotdir         => { files => $ws_writeable,
+                                  dirs => $ws_dir_writeable },
+         graphs             => { files => $ws_writeable,
+                                  dirs => $ws_dir_writeable },
+
+         # Readable directories
+         "$datadir/mining"     => { files => $ws_readable,
+                                     dirs => $ws_dir_readable },
+         "$datadir/duplicates" => { files => $ws_readable,
+                                     dirs => $ws_dir_readable },
+         "$libdir/Bugzilla"    => { files => $ws_readable,
+                                     dirs => $ws_dir_readable },
+         $templatedir          => { files => $ws_readable,
+                                     dirs => $ws_dir_readable },
+         images                => { files => $ws_readable,
+                                     dirs => $ws_dir_readable },
+         css                   => { files => $ws_readable,
+                                     dirs => $ws_dir_readable },
+         js                    => { files => $ws_readable,
+                                     dirs => $ws_dir_readable },
+         skins                 => { files => $ws_readable,
+                                     dirs => $ws_dir_readable },
+         t                     => { files => $owner_readable,
+                                     dirs => $owner_dir_readable },
+         'docs/html'           => { files => $ws_readable,
+                                     dirs => $ws_dir_readable },
+         'docs/pdf'            => { files => $ws_readable,
+                                     dirs => $ws_dir_readable },
+         'docs/txt'            => { files => $ws_readable,
+                                     dirs => $ws_dir_readable },
+         'docs/images'         => { files => $ws_readable,
+                                     dirs => $ws_dir_readable },
+         'docs/xml'            => { files => $owner_readable,
+                                     dirs => $owner_readable },
+    );
+
+    # --- FILES TO CREATE --- #
+
+    # The name of each directory that we should actually *create*,
+    # pointing at its default permissions.
+    my %create_dirs = (
+        $datadir                => $ws_dir_writeable,
+        "$datadir/mimedump-tmp" => $ws_dir_writeable,
+        "$datadir/mining"       => $ws_dir_readable,
+        "$datadir/duplicates"   => $ws_dir_readable,
+        $attachdir              => $ws_dir_writeable,
+        $extensionsdir          => $ws_dir_readable,
+        graphs                  => $ws_dir_writeable,
+        $webdotdir              => $ws_dir_writeable,
+        'skins/custom'          => $ws_dir_readable,
     );
 
     # The name of each file, pointing at its default permissions and
     # default contents.
-    my %files = (
-        "$datadir/mail"    => {},
-        'skins/.cvsignore' => { contents => ".cvsignore\ncustom\n" },
+    my %create_files = (
+        "$datadir/mail"    => { perms => $ws_readable },
+        'skins/.cvsignore' => { perms    => $owner_readable,
+                                contents => ".cvsignore\ncustom\n" },
     );
 
     # Each standard stylesheet has an associated custom stylesheet that
@@ -78,7 +194,7 @@ sub FILESYSTEM {
     foreach my $standard (<skins/standard/*.css>) {
         my $custom = $standard;
         $custom =~ s|^skins/standard|skins/custom|;
-        $files{$custom} = { contents => <<EOT
+        $files{$custom} = { perms => $ws_readable, contents => <<EOT
 /*
  * Custom rules for $standard.
  * The rules you put here override rules in that stylesheet.
@@ -90,7 +206,7 @@ EOT
     # Because checksetup controls the creation of index.html separately
     # from all other files, it gets its very own hash.
     my %index_html = (
-        'index.html' => { contents => <<EOT
+        'index.html' => { perms => $ws_readable, contents => <<EOT
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
@@ -106,8 +222,7 @@ EOT
 
     # Because checksetup controls the .htaccess creation separately
     # by a localconfig variable, these go in a separate variable from
-    # %files.
-    my $ht_perms = $ws_group ? 0640 : 0644;
+    # %create_files.
     my $ht_default_deny = <<EOT;
 # nothing in this directory is retrievable unless overridden by an .htaccess
 # in a subdirectory
@@ -115,14 +230,14 @@ deny from all
 EOT
 
     my %htaccess = (
-        "$attachdir/.htaccess"       => { perms    => $ht_perms,
+        "$attachdir/.htaccess"       => { perms    => $ws_readable,
                                           contents => $ht_default_deny },
-        "$libdir/Bugzilla/.htaccess" => { perms    => $ht_perms,
+        "$libdir/Bugzilla/.htaccess" => { perms    => $ws_readable,
                                           contents => $ht_default_deny },
-        "$templatedir/.htaccess"     => { perms    => $ht_perms,
+        "$templatedir/.htaccess"     => { perms    => $ws_readable,
                                           contents => $ht_default_deny },
 
-        '.htaccess' => { perms => $ht_perms, contents => <<EOT
+        '.htaccess' => { perms => $ws_readable, contents => <<EOT
 # Don't allow people to retrieve non-cgi executable files or our private data
 <FilesMatch ^(.*\\.pm|.*\\.pl|.*localconfig.*)\$>
   deny from all
@@ -130,7 +245,7 @@ EOT
 EOT
         },
 
-        "$webdotdir/.htaccess" => { perms => $ht_perms, contents => <<EOT
+        "$webdotdir/.htaccess" => { perms => $ws_readable, contents => <<EOT
 # Restrict access to .dot files to the public webdot server at research.att.com
 # if research.att.com ever changes their IP, or if you use a different
 # webdot server, you'll need to edit this
@@ -152,7 +267,7 @@ EOT
         # Even though $datadir may not (and should not) be in the webtree,
         # we can't know for sure, so create the .htaccess anyway. It's harmless
         # if it's not accessible...
-        "$datadir/.htaccess" => { perms    => $ht_perms, contents => <<EOT
+        "$datadir/.htaccess" => { perms    => $ws_readable, contents => <<EOT
 # Nothing in this directory is retrievable unless overridden by an .htaccess
 # in a subdirectory; the only exception is duplicates.rdf, which is used by
 # duplicates.xul and must be loadable over the web
@@ -166,19 +281,26 @@ EOT
         },
     );
 
+    my %all_files = (%create_files, %htaccess, %index_html, %files);
+    my %all_dirs  = (%create_dirs, %non_recurse_dirs);
+
     return {
-        dirs       => \%dirs,
-        files      => \%files,
-        htaccess   => \%htaccess,
-        index_html => \%index_html,
+        create_dirs  => \%create_dirs,
+        recurse_dirs => \%recurse_dirs,
+        all_dirs     => \%all_dirs,
+
+        create_files => \%create_files,
+        htaccess     => \%htaccess,
+        index_html   => \%index_html,
+        all_files    => \%all_files,
     };
 }
 
 sub update_filesystem {
     my ($params) = @_;
     my $fs = FILESYSTEM();
-    my %dirs  = %{$fs->{dirs}};
-    my %files = %{$fs->{files}};
+    my %dirs  = %{$fs->{create_dirs}};
+    my %files = %{$fs->{create_files}};
 
     my $datadir = bz_locations->{'datadir'};
     # If the graphs/ directory doesn't exist, we're upgrading from
@@ -339,6 +461,87 @@ sub _update_old_charts {
     } 
 }
 
+
+sub fix_all_file_permissions {
+    my ($output) = @_;
+
+    return if ON_WINDOWS;
+
+    my $fs = FILESYSTEM();
+    my %files = %{$fs->{all_files}};
+    my %dirs  = %{$fs->{all_dirs}};
+    my %recurse_dirs = %{$fs->{recurse_dirs}};
+
+    print "Fixing file permissions...\n" if $output;
+
+    my $owner_id = POSIX::getuid();
+    my $group_id = POSIX::getgid();
+    my $ws_group = read_localconfig()->{'webservergroup'};
+    if ($ws_group) {
+        my $ws_group_id = getgrnam($ws_group);
+        die "There is no such group: $ws_group. Check your \$webservergroup"
+            . " setting in localconfig" unless defined $ws_group_id;
+        $group_id = $ws_group_id;
+    }
+
+    foreach my $dir (sort keys %dirs) {
+        next unless -d $dir;
+        _fix_perms($dir, $owner_id, $group_id, $dirs{$dir});
+    }
+
+    foreach my $dir (sort keys %recurse_dirs) {
+        next unless -d $dir;
+        # Set permissions on the directory itself.
+        my $perms = $recurse_dirs{$dir};
+        _fix_perms($dir, $owner_id, $group_id, $perms->{dirs});
+        # Now recurse through the directory and set the correct permissions
+        # on subdirectories and files.
+        find({ no_chdir => 1, wanted => sub {
+            my $name = $File::Find::name;
+            if (-d $name) {
+                _fix_perms($name, $owner_id, $group_id, $perms->{dirs});
+            }
+            else {
+                _fix_perms($name, $owner_id, $group_id, $perms->{files});
+            }
+        }}, $dir);
+    }
+
+    foreach my $file (sort keys %files) {
+        # %files supports globs
+        foreach my $filename (glob $file) {
+            # Don't touch directories.
+            next if -d $filename || !-e $filename;
+            _fix_perms($filename, $owner_id, $group_id, 
+                       $files{$file}->{perms});
+        }
+    }
+
+    _fix_cvs_dirs($owner_id, '.');
+}
+
+# A helper for fix_all_file_permissions
+sub _fix_cvs_dirs {
+    my ($owner_id, $dir) = @_;
+    my $owner_gid = POSIX::getgid();
+    find({ no_chdir => 1, wanted => sub {
+        my $name = $File::Find::name;
+        if ($File::Find::dir =~ /\/CVS/ || $_ eq '.cvsignore'
+            || (-d $name && $_ eq 'CVS')) {
+            _fix_perms($name, $owner_id, $owner_gid, 0700);
+        }
+    }}, $dir);
+}
+
+sub _fix_perms {
+    my ($name, $owner, $group, $perms) = @_;
+    #printf ("Changing $name to %o\n", $perms);
+    chown $owner, $group, $name 
+        || warn "Failed to change ownership of $name: $!";
+    chmod $perms, $name
+        || warn "Failed to change permissions of $name: $!";
+}
+
 1;
 
 __END__
@@ -382,6 +585,18 @@ Description: Creates all of the .htaccess files for Apache,
              the .htaccess files if they need updating.
 
 Params:      none
+
+Returns:     nothing
+
+=item C<fix_all_file_permissions($output)>
+
+Description: Sets all the file permissions on all of Bugzilla's files
+             to what they should be. Note that permissions are different
+             depending on whether or not C<$webservergroup> is set
+             in F<localconfig>.
+
+Params:      C<$output> - C<true> if you want this function to print
+                 out information about what it's doing.
 
 Returns:     nothing
 

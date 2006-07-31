@@ -312,7 +312,8 @@ require Bugzilla::Install::Localconfig;
 import Bugzilla::Install::Localconfig qw(read_localconfig update_localconfig);
 
 require Bugzilla::Install::Filesystem;
-import Bugzilla::Install::Filesystem qw(update_filesystem create_htaccess);
+import Bugzilla::Install::Filesystem qw(update_filesystem create_htaccess
+                                        fix_all_file_permissions);
 
 require Bugzilla::DB;
 require Bugzilla::Template;
@@ -376,165 +377,10 @@ Bugzilla::Template::precompile_templates(!$silent)
     unless $switch{'no-templates'};
 
 ###########################################################################
-# Set proper rights
+# Set proper rights (--CHMOD--)
 ###########################################################################
 
-#
-# Here we use --CHMOD-- and friends to set the file permissions
-#
-# The rationale is that the web server generally runs as apache, so the cgi
-# scripts should not be writable for apache, otherwise someone may be possible
-# to change the cgi's when exploiting some security flaw somewhere (not
-# necessarily in Bugzilla!)
-#
-# Also, some *.pl files are executable, some are not.
-#
-# +++ Can anybody tell me what a Windows Perl would do with this code?
-#
-# Changes 03/14/00 by SML
-#
-# This abstracts out what files are executable and what ones are not.  It makes
-# for slightly neater code and lets us do things like determine exactly which
-# files are executable and which ones are not.
-#
-# Not all directories have permissions changed on them.  i.e., changing ./CVS
-# to be 0640 is bad.
-#
-# Fixed bug in chmod invocation.  chmod (at least on my linux box running perl
-# 5.005 needs a valid first argument, not 0.
-#
-# (end changes, 03/14/00 by SML)
-#
-# Changes 15/06/01 kiko@async.com.br
-# 
-# Fix file permissions for non-webservergroup installations (see
-# http://bugzilla.mozilla.org/show_bug.cgi?id=71555). I'm setting things
-# by default to world readable/executable for all files, and
-# world-writable (with sticky on) to data and graphs.
-#
-
-# These are the files which need to be marked executable
-my @executable_files = ('whineatnews.pl', 'collectstats.pl',
-   'checksetup.pl', 'importxml.pl', 'runtests.pl', 'testserver.pl',
-   'whine.pl', 'customfield.pl');
-
-# tell me if a file is executable.  All CGI files and those in @executable_files
-# are executable
-sub isExecutableFile {
-    my ($file) = @_;
-    if ($file =~ /\.cgi/) {
-        return 1;
-    }
-
-    my $exec_file;
-    foreach $exec_file (@executable_files) {
-        if ($file eq $exec_file) {
-            return 1;
-        }
-    }
-    return undef;
-}
-
-# fix file (or files - wildcards ok) permissions 
-sub fixPerms {
-    my ($file_pattern, $owner, $group, $umask, $do_dirs) = @_;
-    my @files = glob($file_pattern);
-    my $execperm = 0777 & ~ $umask;
-    my $normperm = 0666 & ~ $umask;
-    foreach my $file (@files) {
-        next if (!-e $file);
-        # do not change permissions on directories here unless $do_dirs is set
-        if (!(-d $file)) {
-            chown $owner, $group, $file;
-            # check if the file is executable.
-            if (isExecutableFile($file)) {
-                #printf ("Changing $file to %o\n", $execperm);
-                chmod $execperm, $file;
-            } else {
-                #printf ("Changing $file to %o\n", $normperm);
-                chmod $normperm, $file;
-            }
-        }
-        elsif ($do_dirs) {
-            chown $owner, $group, $file;
-            if ($file =~ /CVS$/) {
-                chmod 0700, $file;
-            }
-            else {
-                #printf ("Changing $file to %o\n", $execperm);
-                chmod $execperm, $file;
-                fixPerms("$file/.htaccess", $owner, $group, $umask, $do_dirs);
-                # do the contents of the directory
-                fixPerms("$file/*", $owner, $group, $umask, $do_dirs); 
-            }
-        }
-    }
-}
-
-if ($^O !~ /MSWin32/i) {
-    my $templatedir = bz_locations()->{'templatedir'};
-    if ($my_webservergroup) {
-        # Funny! getgrname returns the GID if fed with NAME ...
-        my $webservergid = getgrnam($my_webservergroup) 
-        or die("no such group: $my_webservergroup");
-        # chown needs to be called with a valid uid, not 0.  $< returns the
-        # caller's uid.  Maybe there should be a $bugzillauid, and call 
-        # with that userid.
-        fixPerms('.htaccess', $<, $webservergid, 027); # glob('*') doesn't catch dotfiles
-        fixPerms("$datadir/.htaccess", $<, $webservergid, 027);
-        fixPerms("$datadir/duplicates", $<, $webservergid, 027, 1);
-        fixPerms("$datadir/mining", $<, $webservergid, 027, 1);
-        fixPerms("$datadir/template", $<, $webservergid, 007, 1); # webserver will write to these
-        # webserver will write to attachdir.
-        fixPerms(bz_locations()->{'attachdir'}, $<, $webservergid, 007, 1);
-        fixPerms($webdotdir, $<, $webservergid, 007, 1);
-        fixPerms("$webdotdir/.htaccess", $<, $webservergid, 027);
-        fixPerms("$datadir/params", $<, $webservergid, 017);
-        # The web server must be the owner of bugzilla-update.xml.
-        fixPerms("$datadir/bugzilla-update.xml", $webservergid, $webservergid, 017);
-        fixPerms('*', $<, $webservergid, 027);
-        fixPerms('Bugzilla', $<, $webservergid, 027, 1);
-        fixPerms($templatedir, $<, $webservergid, 027, 1);
-        fixPerms('images', $<, $webservergid, 027, 1);
-        fixPerms('css', $<, $webservergid, 027, 1);
-        fixPerms('skins', $<, $webservergid, 027, 1);
-        fixPerms('js', $<, $webservergid, 027, 1);
-
-        # Don't use fixPerms here, because it won't change perms 
-        # on the directory unless it's using recursion
-        chown $<, $webservergid, $datadir;
-        chmod 0771, $datadir;
-        chown $<, $webservergid, 'graphs';
-        chmod 0770, 'graphs';
-    } else {
-        # get current gid from $( list
-        my $gid = (split " ", $()[0];
-        fixPerms('.htaccess', $<, $gid, 022); # glob('*') doesn't catch dotfiles
-        fixPerms("$datadir/.htaccess", $<, $gid, 022);
-        fixPerms("$datadir/duplicates", $<, $gid, 022, 1);
-        fixPerms("$datadir/mining", $<, $gid, 022, 1);
-        fixPerms("$datadir/template", $<, $gid, 000, 1); # webserver will write to these
-        fixPerms($webdotdir, $<, $gid, 000, 1);
-        chmod 01777, $webdotdir;
-        fixPerms("$webdotdir/.htaccess", $<, $gid, 022);
-        fixPerms("$datadir/params", $<, $gid, 011);
-        fixPerms("$datadir/bugzilla-update.xml", $gid, $gid, 011);
-        fixPerms('*', $<, $gid, 022);
-        fixPerms('Bugzilla', $<, $gid, 022, 1);
-        fixPerms($templatedir, $<, $gid, 022, 1);
-        fixPerms('images', $<, $gid, 022, 1);
-        fixPerms('css', $<, $gid, 022, 1);
-        fixPerms('skins', $<, $gid, 022, 1);
-        fixPerms('js', $<, $gid, 022, 1);
-        
-        # Don't use fixPerms here, because it won't change perms
-        # on the directory unless it's using recursion
-        chown $<, $gid, $datadir;
-        chmod 0777, $datadir;
-        chown $<, $gid, 'graphs';
-        chmod 01777, 'graphs';
-    }
-}
+fix_all_file_permissions(!$silent);
 
 ###########################################################################
 # Check GraphViz setup
@@ -562,9 +408,9 @@ if( Bugzilla->params->{'webdotbase'} && Bugzilla->params->{'webdotbase'} !~ /^ht
         }
         close HTACCESS;
     }
+    print "\n" unless $silent;
 }
 
-print "\n" unless $silent;
 
 ###########################################################################
 # Populate groups table
