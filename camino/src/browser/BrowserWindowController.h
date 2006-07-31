@@ -286,7 +286,7 @@ typedef enum
 // Called when a context menu should be shown.
 - (void)onShowContextMenu:(int)flags domEvent:(nsIDOMEvent*)aEvent domNode:(nsIDOMNode*)aNode;
 - (NSMenuItem*)prepareAddToAddressBookMenuItem:(NSString*)emailAddress;
-- (NSMenu*)getContextMenu;
+- (NSMenu*)contextMenu;
 - (NSArray*)mailAddressesInContextMenuLinkNode;
 - (NSString*)getContextMenuNodeHrefText;
 

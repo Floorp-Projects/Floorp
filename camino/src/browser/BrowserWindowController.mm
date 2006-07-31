@@ -3484,7 +3484,7 @@ enum BWCOpenDest {
   return addToAddressBookItem;
 }
 
-- (NSMenu*)getContextMenu
+- (NSMenu*)contextMenu
 {
   if (!mDataOwner->mGotOnContextMenu)
     return nil;
