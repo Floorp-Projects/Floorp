@@ -3,14 +3,14 @@
 <div id="side">
     <ul id="nav">
         <li><a href="http://plugindoc.mozdev.org" title="Plugin Support for Mozilla-based Browsers">Plugin Documentation</a></li>
-        <li><a href="../">Mozilla Update Home</a></li>
+        <li><a href="../">Mozilla Add-ons Home</a></li>
     </ul>
 </div>
 
 <div id="mainContent">
 
-<h2 class="first">Common Plug-ins for Mozilla Firefox and Mozilla Suite</h2>
-<p class="first">Plug-ins help your browser perform specific functions like viewing special graphic formats or playing multimedia files. Plug-ins are slightly different from extensions, which modify or add to existing functionality.</p>
+<h2 class="first">Common Plugins for Mozilla Firefox and Mozilla Suite</h2>
+<p class="first">Plugins help your browser perform specific functions like viewing special graphic formats or playing multimedia files. Plugins are slightly different from extensions, which modify or add to existing functionality.</p>
 
 <div class="item">
     <h2 class="first"><a href="http://www.adobe.com/products/acrobat/readermain.html">Acrobat Reader</a></h2>
@@ -44,7 +44,7 @@
 <div class="item">
     <h2 class="first"><a href="http://www.java.com/en/about/">Java</a></h2>
     <p class="first">By <a href="http://www.sun.com">Sun Microsystems</a></p>
-    <p class="first">The Java Runtime Enviroment enables your computer to run applications and applets that use Java technology.</p>
+    <p class="first">The Java Runtime Environment enables your computer to run applications and applets that use Java technology.</p>
     <p><img src="{$config.webpath}/images/faq_small.png" style="float: left;" height=16 width=16 alt="">&nbsp;Visit the <a href="http://www.java.com/en/download/index.jsp">Java download page</a> to select the latest version for your operating system.</p>
     <h3><img src="{$config.webpath}/images/install.png" height="24" width="24" alt="">&nbsp;Download</h3>
     <div style="margin-top: 5px; height: 38px">
