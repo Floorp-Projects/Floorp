@@ -359,7 +359,8 @@ var toDoTreeView =
    
       if (sortActive != "true")
       {
-         treeCols = document.getElementsByTagName("treecol");
+         var taskList = document.getElementById("unifinder-todo-tree");
+         treeCols = taskList.getElementsByTagName("treecol");
          for (var i = 0; i < treeCols.length; i++)
          {
             treeCols[i].removeAttribute("sortActive");

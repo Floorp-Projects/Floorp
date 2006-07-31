@@ -475,7 +475,8 @@ var treeView =
    
       if (sortActive != "true")
       {
-         treeCols = document.getElementsByTagName("treecol");
+         var unifinder = document.getElementById("unifinder-search-results-listbox");
+         treeCols = unifinder.getElementsByTagName("treecol");
          for (var i = 0; i < treeCols.length; i++)
          {
             treeCols[i].removeAttribute("sortActive");
