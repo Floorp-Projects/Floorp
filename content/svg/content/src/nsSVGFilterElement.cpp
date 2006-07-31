@@ -222,16 +222,6 @@ nsSVGFilterElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
 }
 
 nsresult
-nsSVGFilterElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
-{
-  WillModify();
-  nsresult rv = nsSVGFilterElementBase::AppendChildTo(aKid, aNotify);
-  DidModify();
-
-  return rv;
-}
-
-nsresult
 nsSVGFilterElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 {
   WillModify();

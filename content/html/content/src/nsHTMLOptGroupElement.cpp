@@ -77,7 +77,6 @@ public:
   // nsGenericElement
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                  PRBool aNotify);
-  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
   virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
 
   // nsIContent
@@ -213,12 +212,6 @@ nsHTMLOptGroupElement::InsertChildAt(nsIContent* aKid,
   }
 
   return nsGenericHTMLElement::InsertChildAt(aKid, aIndex, aNotify);
-}
-
-nsresult
-nsHTMLOptGroupElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
-{
-  return nsHTMLOptGroupElement::InsertChildAt(aKid, GetChildCount(), aNotify);
 }
 
 nsresult

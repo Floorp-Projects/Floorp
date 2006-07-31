@@ -123,7 +123,6 @@ public:
   // nsIContent
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                  PRBool aNotify);
-  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
   virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
   virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom* aAttribute,
@@ -505,17 +504,6 @@ nsHTMLTextAreaElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
 {
   nsresult rv;
   rv = nsGenericHTMLFormElement::InsertChildAt(aKid, aIndex, aNotify);
-  if (!mValueChanged && mDoneAddingChildren) {
-    Reset();
-  }
-  return rv;
-}
-
-nsresult
-nsHTMLTextAreaElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
-{
-  nsresult rv;
-  rv = nsGenericHTMLFormElement::AppendChildTo(aKid, aNotify);
   if (!mValueChanged && mDoneAddingChildren) {
     Reset();
   }

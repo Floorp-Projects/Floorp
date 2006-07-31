@@ -255,7 +255,6 @@ public:
   virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                  PRBool aNotify);
-  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
   virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
 
   // Overriden nsIFormControl methods
@@ -561,12 +560,6 @@ nsHTMLSelectElement::InsertChildAt(nsIContent* aKid,
 #endif
 
   return NS_OK;
-}
-
-nsresult
-nsHTMLSelectElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
-{
-  return InsertChildAt(aKid, GetChildCount(), aNotify);
 }
 
 nsresult

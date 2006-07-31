@@ -825,12 +825,6 @@ nsGenericDOMDataNode::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
 }
 
 nsresult
-nsGenericDOMDataNode::AppendChildTo(nsIContent* aKid, PRBool aNotify)
-{
-  return NS_OK;
-}
-
-nsresult
 nsGenericDOMDataNode::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 {
   return NS_OK;

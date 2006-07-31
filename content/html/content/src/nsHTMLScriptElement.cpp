@@ -366,7 +366,6 @@ public:
                               PRBool aCompileEventHandlers);
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                  PRBool aNotify);
-  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
 
   virtual nsresult GetInnerHTML(nsAString& aInnerHTML);
   virtual nsresult SetInnerHTML(const nsAString& aInnerHTML);
@@ -479,17 +478,6 @@ nsHTMLScriptElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                    PRBool aNotify)
 {
   nsresult rv = nsGenericHTMLElement::InsertChildAt(aKid, aIndex, aNotify);
-  if (NS_SUCCEEDED(rv) && aNotify) {
-    MaybeProcessScript();
-  }
-
-  return rv;
-}
-
-nsresult
-nsHTMLScriptElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
-{
-  nsresult rv = nsGenericHTMLElement::AppendChildTo(aKid, aNotify);
   if (NS_SUCCEEDED(rv) && aNotify) {
     MaybeProcessScript();
   }

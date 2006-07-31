@@ -66,7 +66,6 @@ public:
   // nsIContent
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                  PRBool aNotify);
-  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
   virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
@@ -146,17 +145,6 @@ nsSVGStyleElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                  PRBool aNotify)
 {
   nsresult rv = nsSVGStyleElementBase::InsertChildAt(aKid, aIndex, aNotify);
-  if (NS_SUCCEEDED(rv)) {
-    UpdateStyleSheet();
-  }
-
-  return rv;
-}
-
-nsresult
-nsSVGStyleElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
-{
-  nsresult rv = nsSVGStyleElementBase::AppendChildTo(aKid, aNotify);
   if (NS_SUCCEEDED(rv)) {
     UpdateStyleSheet();
   }
