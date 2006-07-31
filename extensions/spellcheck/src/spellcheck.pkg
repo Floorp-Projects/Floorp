@@ -1,8 +1,0 @@
-[spellcheck]
-dist/bin/components/@SHARED_LIBRARY@
-dist/bin/components/@DLLP@myspell@DLLS@
-!xpt dist/bin/components/spellchecker.xpt
-
-[spellcheck-enUS]
-dist/bin/components/myspell/en-US.aff
-dist/bin/components/myspell/en-US.dic

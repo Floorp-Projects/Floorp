@@ -276,34 +276,3 @@ NS_IMETHODIMP mozOSXSpell::Suggest(const PRUnichar *aWord, PRUnichar ***aSuggest
 }
 
 @end
-
-//
-// Factory Methods
-//
-
-#include "nsIGenericFactory.h"
-
-#include "mozOSXSpell.h"
-
-////////////////////////////////////////////////////////////////////////
-// Define the contructor function for the objects
-//
-// NOTE: This creates an instance of objects by using the default constructor
-//
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(mozOSXSpell)
-
-////////////////////////////////////////////////////////////////////////
-// Define a table of CIDs implemented by this module along with other
-// information like the function to create an instance, contractid, and
-// class name.
-//
-static nsModuleComponentInfo components[] = {
-  { "OSX Spell check service", MOZ_OSXSPELL_CID, MOZ_OSXSPELL_CONTRACTID, mozOSXSpellConstructor }
-};
-
-////////////////////////////////////////////////////////////////////////
-// Implement the NSGetModule() exported function for your module
-// and the entire implementation of the module object.
-//
-NS_IMPL_NSGETMODULE(mozOSXSpellModule, components)

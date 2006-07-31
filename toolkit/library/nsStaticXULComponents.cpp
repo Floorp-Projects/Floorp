@@ -249,6 +249,12 @@
 #define XULENABLED_MODULES
 #endif
 
+#ifdef MOZ_SPELLCHECK
+#define SPELLCHECK_MODULE MODULE(mozSpellCheckerModule)
+#else
+#define SPELLCHECK_MODULE
+#endif
+
 #define XUL_MODULES                          \
     MODULE(xpconnect)                        \
     MATHML_MODULES                           \
@@ -299,6 +305,7 @@
     MODULE(BOOT)                             \
     MODULE(NSS)                              \
     SYSTEMPREF_MODULES                       \
+    SPELLCHECK_MODULE                        \
     /* end of list */
 
 #define MODULE(_name) \
