@@ -210,8 +210,8 @@ class nsIArray;
 - (IBAction)reloadWithNewCharset:(NSString*)charset;
 - (NSString*)currentCharset;
 
-- (NSWindow*)getNativeWindow;
-- (NSMenu*)getContextMenu;
+- (NSWindow*)nativeWindow;
+- (NSMenu*)contextMenu;
 - (void)getTitle:(NSString **)outTitle andHref:(NSString**)outHrefString;
 
 // Custom view embedding

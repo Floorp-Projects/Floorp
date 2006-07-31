@@ -115,8 +115,8 @@ typedef enum {
 // the existing one (will return YES if implementing "single-window mode")
 - (BOOL)shouldReuseExistingWindow;
 
-- (NSMenu*)getContextMenu;
-- (NSWindow*)getNativeWindow;
+- (NSMenu*)contextMenu;
+- (NSWindow*)nativeWindow;
 
 // Ask whether the browser should accept a drag from the given source.
 // Should return NO if the source is a container for the browser, or
@@ -259,8 +259,8 @@ typedef enum {
 
 - (void)setActive: (BOOL)aIsActive;
 
-- (NSMenu*)getContextMenu;
-- (NSWindow*)getNativeWindow;
+- (NSMenu*)contextMenu;
+- (NSWindow*)nativeWindow;
 
 - (void)destroyWebBrowser;
 - (nsIWebBrowser*)getWebBrowser;

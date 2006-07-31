@@ -1167,12 +1167,12 @@ const long NSFindPanelActionSetFindString = 7;
   }
 }
 
--(NSMenu*)getContextMenu
+-(NSMenu*)contextMenu
 {
-	return [[self getBrowserContainer] getContextMenu];
+	return [[self getBrowserContainer] contextMenu];
 }
 
--(NSWindow*)getNativeWindow
+-(NSWindow*)nativeWindow
 {
   NSWindow* window = [self window];
   if (window)
@@ -1183,9 +1183,9 @@ const long NSFindPanelActionSetFindString = 7;
   if (mWindow)
     return mWindow;
   
-  // Finally, see if our parent responds to the getNativeWindow selector,
+  // Finally, see if our parent responds to the nativeWindow selector,
   // and if they do, let them handle it.
-  return [[self getBrowserContainer] getNativeWindow];
+  return [[self getBrowserContainer] nativeWindow];
 }
 
 

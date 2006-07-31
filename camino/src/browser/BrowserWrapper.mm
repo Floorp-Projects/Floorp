@@ -760,12 +760,12 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   [[mWindow delegate] onShowContextMenu:flags domEvent:aEvent domNode:aNode];
 }
 
--(NSMenu*)getContextMenu
+-(NSMenu*)contextMenu
 {
-  return [[mWindow delegate] getContextMenu];
+  return [[mWindow delegate] contextMenu];
 }
 
--(NSWindow*)getNativeWindow
+-(NSWindow*)nativeWindow
 {
   // use the view's window first
   NSWindow* viewsWindow = [self window];
