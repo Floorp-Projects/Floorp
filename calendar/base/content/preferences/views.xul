@@ -161,7 +161,7 @@
             <hbox align="center">
                 <caption label="&pref.calendar.view.restrict.label;"/>
                 <menulist id="daystarthour"
-                          oncommand="gViewsPane.updateViewStartMenu(this.value);"
+                          oncommand="gViewsPane.updateViewEndMenu(this.value);"
                           preference="calendar.view.defaultstarthour">
                     <menupopup id="daystarthourpopup">
                         <menuitem label="&time.midnight;" value="0"/>
