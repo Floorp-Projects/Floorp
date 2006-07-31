@@ -1746,6 +1746,10 @@ FindPropertyValue(JSParseNode *pn, JSParseNode *pnid, FindPropValData *data)
         return JS_DHASH_ENTRY_IS_BUSY(&entry->hdr) ? entry->pnval : NULL;
     }
 
+    /* If pn is not an object initialiser node, we can't do anything here. */
+    if (pn->pn_type != TOK_RC)
+        return NULL;
+
     /*
      * We must search all the way through pn's list, to handle the case of an
      * id duplicated for two or more property initialisers.
@@ -1808,8 +1812,7 @@ FindPropertyValue(JSParseNode *pn, JSParseNode *pnid, FindPropValData *data)
 /*
  * If args is null, the caller is AssignExpr and instead of binding variables,
  * we specialize lvalues in the propery value positions of the left-hand side.
- * With type annotations and structural types, we can also type check here (or
- * in a second pass?).
+ * If right is null, just check for well-formed lvalues.
  */
 static JSBool
 CheckDestructuring(JSContext *cx, BindVarArgs *args,
