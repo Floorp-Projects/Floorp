@@ -38,6 +38,7 @@
 
 #include "nscore.h"
 #include "nsCRTGlue.h"
+#include "prprf.h"
 
 #ifdef MOZILLA_INTERNAL_API
 #undef nsAString
@@ -98,10 +99,10 @@ nsAString::BeginWriting(char_type **begin, char_type **end, PRUint32 newSize)
 }
 
 nsAString::char_type*
-nsAString::BeginWriting()
+nsAString::BeginWriting(PRUint32 aLen)
 {
   char_type *data;
-  NS_StringGetMutableData(*this, PR_UINT32_MAX, &data);
+  NS_StringGetMutableData(*this, aLen, &data);
   return data;
 }
 
@@ -119,6 +120,33 @@ nsAString::SetLength(PRUint32 aLen)
   char_type *data;
   NS_StringGetMutableData(*this, aLen, &data);
   return data != nsnull;
+}
+
+void
+nsAString::AssignLiteral(const char *aStr)
+{
+  PRUint32 len = strlen(aStr);
+  PRUnichar *buf = BeginWriting(len);
+  if (!buf)
+    return;
+
+  for (; *aStr; ++aStr, ++buf)
+    *buf = *aStr;
+}
+
+void
+nsAString::AppendLiteral(const char *aASCIIStr)
+{
+  PRUint32 appendLen = strlen(aASCIIStr);
+
+  PRUint32 thisLen = Length();
+  PRUnichar *begin, *end;
+  BeginWriting(&begin, &end, appendLen + thisLen);
+  if (!begin)
+    return;
+
+  for (begin += thisLen; begin < end; ++begin, ++aASCIIStr)
+    *begin = *aASCIIStr;
 }
 
 void
@@ -236,6 +264,22 @@ nsAString::Equals(const self_type &other, ComparatorFunc c) const
 }
 
 PRBool
+nsAString::EqualsLiteral(const char *aASCIIString) const
+{
+  const PRUnichar *begin, *end;
+  BeginReading(&begin, &end);
+
+  for (; begin < end; ++begin, ++aASCIIString) {
+    if (!*aASCIIString || !NS_IsAscii(*begin) ||
+        (char) *begin != *aASCIIString) {
+      return PR_FALSE;
+    }
+  }
+
+  return *aASCIIString == nsnull;
+}
+
+PRBool
 nsAString::LowerCaseEqualsLiteral(const char *aASCIIString) const
 {
   const PRUnichar *begin, *end;
@@ -248,14 +292,12 @@ nsAString::LowerCaseEqualsLiteral(const char *aASCIIString) const
     }
   }
 
-  if (*aASCIIString)
-    return PR_FALSE;
-
-  return PR_TRUE;
+  return *aASCIIString == nsnull;
 }
 
 PRInt32
-nsAString::Find(const self_type& aStr, ComparatorFunc c) const
+nsAString::Find(const self_type& aStr, PRUint32 aOffset,
+                ComparatorFunc c) const
 {
   const char_type *begin, *end;
   PRUint32 selflen = BeginReading(&begin, &end);
@@ -263,13 +305,16 @@ nsAString::Find(const self_type& aStr, ComparatorFunc c) const
   const char_type *other;
   PRUint32 otherlen = aStr.BeginReading(&other);
 
-  if (otherlen > selflen)
+  if (aOffset > selflen)
+    return -1;
+
+  if (otherlen > selflen - aOffset)
     return -1;
 
   // We want to stop searching otherlen characters before the end of the string
   end -= otherlen;
 
-  for (const char_type *cur = begin; cur <= end; ++cur) {
+  for (const char_type *cur = begin + aOffset; cur <= end; ++cur) {
     if (!c(cur, other, otherlen))
       return cur - begin;
   }
@@ -330,6 +375,24 @@ nsAString::Find(const char *aStr, PRBool aIgnoreCase) const
 }
 
 PRInt32
+nsAString::FindChar(char_type aChar, PRUint32 aOffset) const
+{
+  const char_type *start, *end;
+  PRUint32 len = BeginReading(&start, &end);
+  if (aOffset > len)
+    return -1;
+
+  const char_type *cur;
+
+  for (cur = start + aOffset; cur < end; ++cur) {
+    if (*cur == aChar)
+      return cur - start;
+  }
+
+  return -1;
+}
+
+PRInt32
 nsAString::RFindChar(char_type aChar) const
 {
   const PRUnichar *start, *end;
@@ -375,6 +438,40 @@ nsAString::AppendInt(int aInt, PRInt32 aRadix)
   Append(NS_ConvertASCIItoUTF16(buf, len));
 }
 
+// Strings
+
+#ifndef XPCOM_GLUE_AVOID_NSPR
+PRInt32
+nsAString::ToInteger(nsresult *aErrorCode, PRUint32 aRadix) const
+{
+  NS_ConvertUTF16toUTF8 narrow(*this);
+
+  const char *fmt;
+  switch (aRadix) {
+  case 10:
+    fmt = "%i";
+    break;
+
+  case 16:
+    fmt = "%x";
+    break;
+
+  default:
+    NS_ERROR("Unrecognized radix!");
+    *aErrorCode = NS_ERROR_INVALID_ARG;
+    return 0;
+  }
+
+  PRInt32 result = 0;
+  if (PR_sscanf(narrow.get(), fmt, &result) == 1)
+    *aErrorCode = NS_OK;
+  else
+    *aErrorCode = NS_ERROR_FAILURE;
+
+  return result;
+}
+#endif // XPCOM_GLUE_AVOID_NSPR
+
 // nsACString
 
 PRUint32
@@ -414,10 +511,10 @@ nsACString::BeginWriting(char_type **begin, char_type **end, PRUint32 newSize)
 }
 
 nsACString::char_type*
-nsACString::BeginWriting()
+nsACString::BeginWriting(PRUint32 aLen)
 {
   char_type *data;
-  NS_CStringGetMutableData(*this, PR_UINT32_MAX, &data);
+  NS_CStringGetMutableData(*this, aLen, &data);
   return data;
 }
 
@@ -545,11 +642,20 @@ nsACString::Equals(const self_type &other, ComparatorFunc c) const
 }
 
 PRInt32
-nsACString::Find(const self_type& aStr, ComparatorFunc c) const
+nsACString::Find(const self_type& aStr, PRUint32 aOffset,
+                 ComparatorFunc c) const
 {
   const char_type *begin;
   PRUint32 len = aStr.BeginReading(&begin);
-  return Find(begin, len, c);
+
+  if (aOffset > len)
+    return -1;
+
+  PRInt32 found = Find(begin + aOffset, len - aOffset, c);
+  if (found == -1)
+    return found;
+
+  return found + aOffset;
 }
 
 PRInt32
@@ -579,6 +685,24 @@ nsACString::Find(const char_type *aStr, PRUint32 aLen, ComparatorFunc c) const
     if (!c(begin, aStr, aLen))
       return cur - begin;
   }
+  return -1;
+}
+
+PRInt32
+nsACString::FindChar(char_type aChar, PRUint32 aOffset) const
+{
+  const char_type *start, *end;
+  PRUint32 len = BeginReading(&start, &end);
+  if (aOffset > len)
+    return -1;
+
+  const char_type *cur;
+
+  for (cur = start + aOffset; cur < end; ++cur) {
+    if (*cur == aChar)
+      return cur - start;
+  }
+
   return -1;
 }
 
@@ -624,6 +748,36 @@ nsACString::AppendInt(int aInt, PRInt32 aRadix)
 
   Append(buf, len);
 }
+
+#ifndef XPCOM_GLUE_AVOID_NSPR
+PRInt32
+nsACString::ToInteger(nsresult *aErrorCode, PRUint32 aRadix) const
+{
+  const char *fmt;
+  switch (aRadix) {
+  case 10:
+    fmt = "%i";
+    break;
+
+  case 16:
+    fmt = "%x";
+    break;
+
+  default:
+    NS_ERROR("Unrecognized radix!");
+    *aErrorCode = NS_ERROR_INVALID_ARG;
+    return 0;
+  }
+
+  PRInt32 result = 0;
+  if (PR_sscanf(nsCString(*this).get(), fmt, &result) == 1)
+    *aErrorCode = NS_OK;
+  else
+    *aErrorCode = NS_ERROR_FAILURE;
+
+  return result;
+}
+#endif // XPCOM_GLUE_AVOID_NSPR
 
 // Substrings
 
