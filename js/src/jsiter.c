@@ -341,17 +341,19 @@ js_CloseNativeIterator(JSContext *cx, JSObject *iterobj)
 {
     uintN flags;
 
+    /*
+     * If this iterator is not an instance of the native default iterator
+     * class, leave it to be GC'ed.
+     */
     if (!JS_InstanceOf(cx, iterobj, &js_IteratorClass, NULL))
         return;
 
     /*
-     * We are called only for new iterators.  Old iterators must be GCed.
-     * Even in the new case, iterobj could have escaped, so we must test
-     * JSITER_HIDDEN.
+     * If this iterator was not created by js_ValueToIterator called from the
+     * for-in loop code in js_Interpret, leave it to be GC'ed.
      */
     flags = JSVAL_TO_INT(OBJ_GET_SLOT(cx, iterobj, JSSLOT_ITER_FLAGS));
-    JS_ASSERT(!(flags & JSITER_COMPAT));
-    if (!(flags & JSITER_HIDDEN))
+    if (!(flags & JSITER_ENUMERATE))
         return;
 
     /*
@@ -418,7 +420,7 @@ js_ValueToIterator(JSContext *cx, jsval v, uintN flags)
             goto bad_iterator;
         iterobj = JSVAL_TO_OBJECT(rval);
         JS_ASSERT(OBJ_GET_CLASS(cx, iterobj) == &js_IteratorClass);
-        iterobj->slots[JSSLOT_ITER_FLAGS] |= INT_TO_JSVAL(JSITER_HIDDEN);
+        iterobj->slots[JSSLOT_ITER_FLAGS] |= INT_TO_JSVAL(JSITER_ENUMERATE);
         goto out;
     }
 
@@ -434,14 +436,14 @@ js_ValueToIterator(JSContext *cx, jsval v, uintN flags)
      * If __iterator__ is the default native method, the native iterator it
      * returns can be flagged as hidden from script access.  This flagging is
      * predicated on js_ValueToIterator being called only by the for-in loop
-     * code -- the js_CloseNativeIteration early-finalization optimization
+     * code -- the js_CloseNativeIterator early-finalization optimization
      * based on it will break badly if script can reach iterobj.
      */
     if (OBJ_GET_CLASS(cx, iterobj) == &js_IteratorClass &&
         VALUE_IS_FUNCTION(cx, fval)) {
         fun = (JSFunction *) JS_GetPrivate(cx, JSVAL_TO_OBJECT(fval));
         if (!FUN_INTERPRETED(fun) && fun->u.n.native == js_DefaultIterator)
-            iterobj->slots[JSSLOT_ITER_FLAGS] |= INT_TO_JSVAL(JSITER_HIDDEN);
+            iterobj->slots[JSSLOT_ITER_FLAGS] |= INT_TO_JSVAL(JSITER_ENUMERATE);
     }
 
 out:
@@ -478,7 +480,7 @@ js_CallIteratorNext(JSContext *cx, JSObject *iterobj, uintN flags,
     /* Fastest path for repeated call from for-in loop bytecode. */
     if (iterobj == cx->cachedIterObj) {
         JS_ASSERT(OBJ_GET_CLASS(cx, iterobj) == &js_IteratorClass);
-        JS_ASSERT(flags & JSITER_HIDDEN);
+        JS_ASSERT(flags & JSITER_ENUMERATE);
         if (!iterator_next(cx, iterobj, 0, NULL, rval) ||
             !CheckKeyValueReturn(cx, flags, idp, rval)) {
             cx->cachedIterObj = NULL;
@@ -522,7 +524,7 @@ js_CallIteratorNext(JSContext *cx, JSObject *iterobj, uintN flags,
                     !CheckKeyValueReturn(cx, flags, idp, rval)) {
                     return JS_FALSE;
                 }
-                if (flags & JSITER_HIDDEN)
+                if (flags & JSITER_ENUMERATE)
                     cx->cachedIterObj = iterobj;
                 return JS_TRUE;
             }
@@ -536,25 +538,6 @@ js_CallIteratorNext(JSContext *cx, JSObject *iterobj, uintN flags,
            js_InternalCall(cx, iterobj, fval, 0, NULL, rval) &&
            CheckKeyValueReturn(cx, flags, idp, rval);
 }
-
-static JSBool
-exception_getName(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
-{
-    JSClass *clasp;
-    JSProtoKey key;
-
-    clasp = OBJ_GET_CLASS(cx, obj);
-    key = JSCLASS_CACHED_PROTO_KEY(clasp);
-    *vp = (key != JSProto_Null)
-          ? ATOM_KEY(cx->runtime->atomState.classAtoms[key])
-          : STRING_TO_JSVAL(cx->runtime->emptyString);
-    return JS_TRUE;
-}
-
-static JSPropertySpec exception_props[] = {
-    {js_name_str, 0, JSPROP_READONLY|JSPROP_PERMANENT, exception_getName, NULL},
-    {0,0,0,0,0}
-};
 
 static JSBool
 stopiter_hasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
@@ -913,20 +896,13 @@ js_InitIteratorClasses(JSContext *cx, JSObject *obj)
     }
 #endif
 
-    /*
-     * Always initialize StopIteration, it's used by for-in loop interpreter
-     * code even if iterators and generators are deconfigured.
-     */
-    if (!js_GetClassPrototype(cx, NULL, INT_TO_JSID(JSProto_Error), &proto))
-        return NULL;
-
 #if JS_HAS_GENERATORS
-    if (!JS_InitClass(cx, obj, proto, &js_GeneratorExitClass, NULL, 0,
-                      exception_props, NULL, NULL, NULL)) {
+    if (!JS_InitClass(cx, obj, NULL, &js_GeneratorExitClass, NULL, 0,
+                      NULL, NULL, NULL, NULL)) {
         return NULL;
     }
 #endif
 
-    return JS_InitClass(cx, obj, proto, &js_StopIterationClass, NULL, 0,
-                        exception_props, NULL, NULL, NULL);
+    return JS_InitClass(cx, obj, NULL, &js_StopIterationClass, NULL, 0,
+                        NULL, NULL, NULL, NULL);
 }
