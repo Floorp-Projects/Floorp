@@ -335,6 +335,11 @@ ifdef MOZ_ENABLE_XREMOTE
 COMPONENT_LIBS += remoteservice
 endif
 
+ifdef MOZ_SPELLCHECK
+DEFINES += -DMOZ_SPELLCHECK
+COMPONENT_LIBS += spellchecker
+endif
+
 ifdef GC_LEAK_DETECTOR
 EXTRA_DSO_LIBS += boehm
 endif

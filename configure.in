@@ -4002,7 +4002,7 @@ MOZ_BRANDING_DIRECTORY=
 MOZ_CALENDAR=
 MOZ_DBGRINFO_MODULES=
 MOZ_ENABLE_CANVAS=1
-MOZ_EXTENSIONS_ALL=" wallet xml-rpc help p3p venkman inspector irc typeaheadfind spellcheck gnomevfs sroaming xmlterm datetime finger cview layout-debug tasks sql xforms schema-validation reporter safe-browsing"
+MOZ_EXTENSIONS_ALL=" wallet xml-rpc help p3p venkman inspector irc typeaheadfind gnomevfs sroaming xmlterm datetime finger cview layout-debug tasks sql xforms schema-validation reporter safe-browsing"
 MOZ_FEEDS=1
 MOZ_IMG_DECODERS_DEFAULT="png gif jpeg bmp xbm icon"
 MOZ_IMG_ENCODERS_DEFAULT="png jpeg"
@@ -4043,6 +4043,7 @@ MOZ_PYTHON_VER_DOTTED=
 MOZ_REFLOW_PERF=
 MOZ_SAFE_BROWSING=
 MOZ_SINGLE_PROFILE=
+MOZ_SPELLCHECK=1
 MOZ_STATIC_MAIL_BUILD=
 MOZ_STORAGE=1
 MOZ_SVG=1
@@ -4164,6 +4165,7 @@ basic)
   MOZ_PROFILELOCKING=
   MOZ_PROFILESHARING=
   MOZ_SINGLE_PROFILE=1
+  MOZ_SPELLCHECK=
   MOZ_SVG=
   MOZ_UNIVERSALCHARDET=
   MOZ_UPDATER=
@@ -4213,6 +4215,7 @@ minimal)
   MOZ_PROFILELOCKING=
   MOZ_PROFILESHARING=
   MOZ_SINGLE_PROFILE=1
+  MOZ_SPELLCHECK=
   MOZ_STORAGE=
   MOZ_SVG=
   MOZ_UNIVERSALCHARDET=
@@ -4252,7 +4255,7 @@ suite)
   MOZ_SUITE=1
   MOZ_PROFILESHARING=
   MOZ_APP_VERSION=$SEAMONKEY_VERSION
-  MOZ_EXTENSIONS_DEFAULT=" wallet xml-rpc help p3p venkman inspector irc typeaheadfind spellcheck gnomevfs sroaming reporter"
+  MOZ_EXTENSIONS_DEFAULT=" wallet xml-rpc help p3p venkman inspector irc typeaheadfind gnomevfs sroaming reporter"
   AC_DEFINE(MOZ_SUITE)
   ;;
 
@@ -4266,7 +4269,7 @@ browser)
   MOZ_SAFE_BROWSING=1
   MOZ_APP_VERSION=$FIREFOX_VERSION
   MOZ_NO_XPCOM_OBSOLETE=1
-  MOZ_EXTENSIONS_DEFAULT=" xml-rpc inspector gnomevfs reporter spellcheck"
+  MOZ_EXTENSIONS_DEFAULT=" xml-rpc inspector gnomevfs reporter"
   AC_DEFINE(MOZ_PHOENIX)
   ;;
 
@@ -4299,7 +4302,7 @@ mail)
   MOZ_COMPOSER=1
   MOZ_SVG=
   MOZ_APP_VERSION=$THUNDERBIRD_VERSION
-  MOZ_EXTENSIONS_DEFAULT=" wallet spellcheck"
+  MOZ_EXTENSIONS_DEFAULT=" wallet"
   AC_DEFINE(MOZ_THUNDERBIRD)
   ;;
 
@@ -4369,7 +4372,7 @@ macbrowser)
   MOZ_SINGLE_PROFILE=1
   MOZ_APP_DISPLAYNAME=Mozilla
   MOZ_APP_VERSION=$MOZILLA_VERSION
-  MOZ_EXTENSIONS_DEFAULT=" typeaheadfind spellcheck"
+  MOZ_EXTENSIONS_DEFAULT=" typeaheadfind"
 # MOZ_XUL_APP=1
   MOZ_AUTH_EXTENSION=
   MOZ_PREF_EXTENSIONS=
@@ -5558,6 +5561,11 @@ if test `echo "$MOZ_EXTENSIONS" | grep -c java` -ne 0; then
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|java||g'`
 fi
 
+if test `echo "$MOZ_EXTENSIONS" | grep -c spellcheck` -ne 0; then
+    AC_MSG_WARN([spellcheck is no longer an extension.])
+    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|spellcheck||g'`
+fi
+
 dnl Remove dupes
 MOZ_EXTENSIONS=`${PERL} ${srcdir}/build/unix/uniq.pl ${MOZ_EXTENSIONS}`
 
@@ -6644,6 +6652,8 @@ else
    _MOZ_RTTI_FLAGS=$_MOZ_RTTI_FLAGS_OFF
 fi
 
+AC_SUBST(_MOZ_RTTI_FLAGS_ON)
+
 dnl ========================================================
 dnl C++ exceptions (g++/egcs only - for now)
 dnl Should be smarter and check that the compiler does indeed have exceptions
@@ -7486,6 +7496,7 @@ AC_SUBST(ACCESSIBILITY)
 AC_SUBST(MOZ_XPINSTALL)
 AC_SUBST(MOZ_VIEW_SOURCE)
 AC_SUBST(MOZ_SINGLE_PROFILE)
+AC_SUBST(MOZ_SPELLCHECK)
 AC_SUBST(MOZ_XPFE_COMPONENTS)
 AC_SUBST(MOZ_USER_DIR)
 

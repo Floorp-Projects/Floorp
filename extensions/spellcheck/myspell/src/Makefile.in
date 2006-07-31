@@ -42,15 +42,9 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= myspell
-LIBRARY_NAME	= myspell
-# Do not set EXPORT_LIBRARY as we do not want spellcheck in the static libs list
-#EXPORT_LIBRARY  = 1
-FORCE_SHARED_LIB = 1
-IS_COMPONENT	= 1
-# Do not set MODULE_NAME as we do not want the entry points
-# for this module translated in static builds
-#MODULE_NAME	= mozMySpellModule
-MOZILLA_INTERNAL_API = 1
+LIBRARY_NAME	= myspell_s
+FORCE_STATIC_LIB = 1
+LIBXUL_LIBRARY  = 1
 
 REQUIRES	= xpcom \
 		  string \
@@ -67,18 +61,10 @@ CPPSRCS =         affentry.cpp \
 		  csutil.cpp \
 		  myspell.cpp \
 		  mozMySpell.cpp \
-		  mozMySpellFactory.cpp \
                   $(NULL)
 
 ifdef MOZ_XUL_APP
 CPPSRCS += mozMySpellDirProvider.cpp
 endif
-
-EXTRA_DSO_LDOPTS = \
-		$(LIBS_DIR) \
-		$(XPCOM_LIBS) \
-		$(NSPR_LIBS) \
-		$(MOZ_UNICHARUTIL_LIBS) \
-		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

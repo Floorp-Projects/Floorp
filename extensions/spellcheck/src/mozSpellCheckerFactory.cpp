@@ -38,6 +38,15 @@
 
 #include "nsIGenericFactory.h"
 
+#ifdef MOZ_WIDGET_COCOA
+#include "mozOSXSpell.h"
+#else
+#include "mozMySpell.h"
+#ifdef MOZ_XUL_APP
+#include "mozMySpellDirProvider.h"
+#endif
+#endif
+
 #include "mozSpellChecker.h"
 #include "mozInlineSpellChecker.h"
 #include "nsTextServicesCID.h"
@@ -59,6 +68,15 @@
 //
 // NOTE: This creates an instance of objects by using the default constructor
 //
+
+#ifdef MOZ_WIDGET_COCOA
+NS_GENERIC_FACTORY_CONSTRUCTOR(mozOSXSpell)
+#else
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(mozMySpell, Init)
+#ifdef MOZ_XUL_APP
+NS_GENERIC_FACTORY_CONSTRUCTOR(mozMySpellDirProvider)
+#endif
+#endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(mozSpellChecker, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(mozPersonalDictionary, Init)
@@ -105,10 +123,55 @@ mozInlineSpellCheckerConstructor(nsISupports *aOuter, REFNSIID aIID,
 // class name.
 //
 static nsModuleComponentInfo components[] = {
-  { NULL, NS_SPELLCHECKER_CID, NS_SPELLCHECKER_CONTRACTID, mozSpellCheckerConstructor },
-  { NULL, MOZ_PERSONALDICTIONARY_CID, MOZ_PERSONALDICTIONARY_CONTRACTID, mozPersonalDictionaryConstructor },
-  { NULL, MOZ_SPELLI18NMANAGER_CID, MOZ_SPELLI18NMANAGER_CONTRACTID, mozSpellI18NManagerConstructor },
-  { NULL, MOZ_INLINESPELLCHECKER_CID, MOZ_INLINESPELLCHECKER_CONTRACTID, mozInlineSpellCheckerConstructor }
+#ifdef MOZ_WIDGET_COCOA
+    {
+        "OSX Spell check service",
+        MOZ_OSXSPELL_CID,
+        MOZ_OSXSPELL_CONTRACTID,
+        mozOSXSpellConstructor
+    },
+#else
+    {
+        "mozMySpell",
+        MOZ_MYSPELL_CID,
+        MOZ_MYSPELL_CONTRACTID,
+        mozMySpellConstructor
+    },
+#ifdef MOZ_XUL_APP
+    {
+        "mozMySpellDirProvider",
+        MYSPELLDIRPROVIDER_CID,
+        mozMySpellDirProvider::kContractID,
+        mozMySpellDirProviderConstructor,
+        mozMySpellDirProvider::Register,
+        mozMySpellDirProvider::Unregister
+    },
+#endif // MOZ_XUL_APP
+#endif // MOZ_WIDGET_COCOA
+  {
+      NULL,
+      NS_SPELLCHECKER_CID,
+      NS_SPELLCHECKER_CONTRACTID,
+      mozSpellCheckerConstructor
+  },
+  {
+      NULL,
+      MOZ_PERSONALDICTIONARY_CID,
+      MOZ_PERSONALDICTIONARY_CONTRACTID,
+      mozPersonalDictionaryConstructor
+  },
+  {
+      NULL,
+      MOZ_SPELLI18NMANAGER_CID,
+      MOZ_SPELLI18NMANAGER_CONTRACTID,
+      mozSpellI18NManagerConstructor
+  },
+  {
+      NULL,
+      MOZ_INLINESPELLCHECKER_CID,
+      MOZ_INLINESPELLCHECKER_CONTRACTID,
+      mozInlineSpellCheckerConstructor
+  }
 };
 
 ////////////////////////////////////////////////////////////////////////

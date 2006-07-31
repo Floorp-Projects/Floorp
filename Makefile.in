@@ -263,6 +263,10 @@ ifdef MOZ_ENABLE_XREMOTE
 tier_50_dirs += widget/src/xremoteclient
 endif
 
+ifdef MOZ_SPELLCHECK
+tier_50_dirs	+= extensions/spellcheck
+endif
+
 ifdef MOZ_XUL_APP
 tier_50_dirs	+= toolkit
 endif

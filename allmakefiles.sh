@@ -760,6 +760,11 @@ xpfe/global/resources/locale/en-US/os2/Makefile
 xpfe/global/resources/locale/en-US/unix/Makefile
 xpfe/global/resources/locale/en-US/win/Makefile
 xpfe/communicator/Makefile
+extensions/spellcheck/Makefile
+extensions/spellcheck/idl/Makefile
+extensions/spellcheck/locales/Makefile
+extensions/spellcheck/myspell/Makefile
+extensions/spellcheck/src/Makefile
 "
 
 MAKEFILES_embedding="
@@ -1486,13 +1491,6 @@ for extension in $MOZ_EXTENSIONS; do
             extensions/safe-browsing/Makefile
             " ;;
 
-        spellcheck ) MAKEFILES_extensions="$MAKEFILES_extensions
-            extensions/spellcheck/Makefile
-            extensions/spellcheck/idl/Makefile
-            extensions/spellcheck/locales/Makefile
-            extensions/spellcheck/myspell/Makefile
-            extensions/spellcheck/src/Makefile
-            " ;;
         tasks ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/tasks/Makefile
             " ;;
