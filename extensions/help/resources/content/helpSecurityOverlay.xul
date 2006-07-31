@@ -145,7 +145,8 @@
           ondialoghelp="openHelp('cert_backup_pwd');"/>
 
   <dialog id="newServerDialog"
-          buttons="accept,cancel,help"
+          spacerflex="1"
+          buttons="accept,cancel,help,extra2"
           ondialoghelp="openHelp('new_web_cert');"/>
 
   <dialog id="crlUpdatePref"

@@ -51,9 +51,12 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   style="width: 47em;"
   onload="onLoad();"
-  buttons="accept,cancel"
+  buttons="accept,cancel,extra2"
+  defaultButton="cancel"
+  buttonlabelextra2="&newserver.examine;"
   ondialogaccept="return doOK();"
-  ondialogcancel="return doCancel();">
+  ondialogcancel="return doCancel();"
+  ondialogextra2="viewCert();">
 
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 <script type="application/x-javascript" src="chrome://pippki/content/pippki.js"/>
@@ -77,15 +80,10 @@
     <separator/>
     <description id="question"/>
     <separator class="thin"/>
-    <hbox>
-      <button id="examineCert-button" label="&newserver.examine;"
-              oncommand="viewCert();"/> 
-    </hbox>
-    <separator class="thin"/>
     <radiogroup id="whatnow">
-      <radio label="&newserver.remember;" id="remember"/>
-      <radio label="&newserver.session;" id="session" selected="true"/>
-      <radio label="&newserver.refuse;" id="refuse"/>
+      <radio label="&newserver.remember;" id="remember" value="0"/>
+      <radio label="&newserver.session;" id="session"
+             value="1" selected="true"/>
     </radiogroup>
   </vbox>
 </hbox>
