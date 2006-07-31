@@ -1300,6 +1300,12 @@
 
       <constructor>
         <![CDATA[
+          var args = window.arguments[0];
+          var item = args.calendarEvent;
+
+          if (isToDo(item))
+            return;
+
           var self = this;
           var load = function loadHandler() { self.onLoad(); };
           window.addEventListener("load", load, true);

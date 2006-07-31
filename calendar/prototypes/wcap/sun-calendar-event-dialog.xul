@@ -78,22 +78,22 @@
   <!-- The Tabbox contains all the differents tabs -->
   <tabbox id="dialog-tab" flex="1">
     <tabs onselect="onTabSelected();">
-      <tab label="&event.tab.main.label;"/>
-      <tab label="&event.tab.recurrence.label;"/>
-      <tab label="&event.tab.attendees.label;"/>
-      <tab label="&event.tab.timezone.label;" collapsed="true"/>
+      <tab label="&event.tab.main.label;" id="main-tab"/>
+      <tab label="&event.tab.recurrence.label;" id="recurrence-tab"/>
+      <tab label="&event.tab.attendees.label;" id="attendees-tab"/>
+      <tab label="&event.tab.timezone.label;" id="timezone-tab" collapsed="true"/>
     </tabs>
     <tabpanels flex="1">
-      <tabpanel id="main-tab">
+      <tabpanel>
         <main-page id="main-page" flex="1"/>
       </tabpanel>
-      <tabpanel id="recurrence-tab">
+      <tabpanel>
         <recurrence-page id="recurrence-page" flex="1" orient="vertical"/>
       </tabpanel>
-      <tabpanel id="attendees-tab">
+      <tabpanel>
         <attendees-page id="attendees-page" range="4" flex="1"/>
       </tabpanel>
-      <tabpanel id="timezone-tab">
+      <tabpanel>
         <timezone-page id="timezone-page" flex="1"/>
       </tabpanel>
     </tabpanels>

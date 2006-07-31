@@ -66,7 +66,7 @@ function onLoad()
   updateTitle();
 
   if (isToDo(window.calendarItem))
-    document.getElementById("timezone-tab").setAttribute("collapsed","true");
+    document.getElementById("attendees-tab").setAttribute("collapsed","true");
 
   opener.setCursor("auto");
 

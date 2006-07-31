@@ -365,9 +365,12 @@
 
       <constructor>
         <![CDATA[
-          if (isToDo(window.calendarItem))
-            return;
+          var args = window.arguments[0];
+          var item = args.calendarEvent;
 
+          if (isToDo(item))
+            return;
+         
           var pb2 = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch2);
 
           // get default start/end times from prefs and set on the
@@ -378,9 +381,6 @@
             this.mStartHour = pb2.getIntPref("calendar.view.defaultstarthour");
             this.mEndHour = pb2.getIntPref("calendar.view.defaultendhour");
           } catch (ex) {}
-
-          var args = window.arguments[0];
-          var item = args.calendarEvent;
 
           // the basedate is the date/time from which the display
           // of the timebar starts. the range is the number of days
@@ -885,6 +885,12 @@
 
       <constructor>
         <![CDATA[
+          var args = window.arguments[0];
+          var item = args.calendarEvent;
+
+          if (isToDo(item))
+            return;
+
           this.mRange = this.getAttribute("range");
         
           this.mMaxFreeBusy = 0;
