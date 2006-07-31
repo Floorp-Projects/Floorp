@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=80:
+ * vim: set ts=8 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -359,6 +359,9 @@ XDRAtomMap(JSXDRState *xdr, JSAtomMap *map)
             memset(atoms, 0, (size_t)natoms * sizeof *atoms);
 #endif
         }
+
+        map->vector = atoms;
+        map->length = natoms;
     }
 
     for (i = 0; i != natoms; ++i) {
@@ -377,15 +380,15 @@ XDRAtomMap(JSXDRState *xdr, JSAtomMap *map)
             goto bad;
     }
 
-    if (xdr->mode == JSXDR_DECODE) {
-        map->vector = atoms;
-        map->length = natoms;
-    }
     return JS_TRUE;
 
   bad:
-    if (xdr->mode == JSXDR_DECODE)
+    if (xdr->mode == JSXDR_DECODE) {
         JS_free(cx, atoms);
+        map->vector = NULL;
+        map->length = 0;
+    }
+
     return JS_FALSE;
 }
 
@@ -393,7 +396,7 @@ JSBool
 js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
 {
     JSContext *cx;
-    JSScript *script, *newscript;
+    JSScript *script, *newscript, *oldscript;
     uint32 length, lineno, depth, magic, nsrcnotes, ntrynotes;
     uint32 prologLength, version;
     JSBool filenameWasSaved;
@@ -504,6 +507,8 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
      * in the (DECODE and magic < _4) case must point at a temporary vector
      * allocated just below.
      */
+    oldscript = xdr->script;
+    xdr->script = script;
     if (!JS_XDRBytes(xdr, (char *)script->code, length * sizeof(jsbytecode)) ||
         !XDRAtomMap(xdr, &script->atomMap)) {
         goto error;
@@ -631,6 +636,8 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
         tn->length = (ptrdiff_t) catchLength;
         tn->catchStart = (ptrdiff_t) catchStart;
     }
+
+    xdr->script = oldscript;
     return JS_TRUE;
 
   error:

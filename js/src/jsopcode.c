@@ -1443,9 +1443,12 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                         return JS_FALSE;
                 }
 
-                for (i = argc, sprop = OBJ_SCOPE(obj)->lastProp; --i >= 0;
+                for (sprop = OBJ_SCOPE(obj)->lastProp; sprop;
                      sprop = sprop->parent) {
-                    atomv[i] = JSID_TO_ATOM(sprop->id);
+                    if (!(sprop->flags & SPROP_HAS_SHORTID))
+                        continue;
+                    JS_ASSERT(sprop->shortid < argc);
+                    atomv[sprop->shortid] = JSID_TO_ATOM(sprop->id);
                 }
                 ok = JS_TRUE;
                 for (i = 0; i < argc; i++) {

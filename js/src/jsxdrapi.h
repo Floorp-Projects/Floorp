@@ -114,6 +114,7 @@ struct JSXDRState {
     uintN       maxclasses;
     void        *reghash;
     void        *userdata;
+    JSScript    *script;
 };
 
 extern JS_PUBLIC_API(void)

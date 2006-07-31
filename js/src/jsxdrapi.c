@@ -233,6 +233,7 @@ JS_XDRInitBase(JSXDRState *xdr, JSXDRMode mode, JSContext *cx)
     xdr->numclasses = xdr->maxclasses = 0;
     xdr->reghash = NULL;
     xdr->userdata = NULL;
+    xdr->script = NULL;
 }
 
 JS_PUBLIC_API(JSXDRState *)

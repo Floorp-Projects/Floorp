@@ -331,6 +331,9 @@ extern JSBool
 js_HasOwnPropertyHelper(JSContext *cx, JSObject *obj, JSLookupPropOp lookup,
                         uintN argc, jsval *argv, jsval *rval);
 
+extern JSObject*
+js_InitBlockClass(JSContext *cx, JSObject* obj);
+
 extern JSObject *
 js_InitObjectClass(JSContext *cx, JSObject *obj);
 

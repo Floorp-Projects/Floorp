@@ -79,6 +79,10 @@
 #include "jsxml.h"
 #endif
 
+#if JS_HAS_XDR
+#include "jsxdrapi.h"
+#endif
+
 #ifdef JS_THREADSAFE
 #define NATIVE_DROP_PROPERTY js_DropProperty
 
@@ -1973,13 +1977,158 @@ block_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
 }
 
+#if JS_HAS_XDR
+
+#define NO_PARENT_INDEX (jsatomid)-1
+
+jsatomid
+FindObjectAtomIndex(JSAtomMap *map, JSObject *obj)
+{
+    size_t i;
+    JSAtom *atom;
+
+    for (i = 0; i < map->length; i++) {
+        atom = map->vector[i];
+        if (ATOM_KEY(atom) == OBJECT_TO_JSVAL(obj))
+            return i;
+    }
+
+    return NO_PARENT_INDEX;
+}
+
+static JSBool
+block_xdrObject(JSXDRState *xdr, JSObject **objp)
+{
+    JSContext *cx;
+    jsatomid parentId;
+    JSAtomMap *atomMap;
+    JSObject *parent;
+    uint16 depth, count, i;
+    uint32 tmp;
+    JSTempValueRooter tvr;
+    JSScopeProperty *sprop;
+    jsid propid;
+    JSAtom *atom;
+    int16 shortid;
+    JSBool ok;
+
+    cx = xdr->cx;
+
+    atomMap = &xdr->script->atomMap;
+    if (xdr->mode == JSXDR_ENCODE) {
+        parent = OBJ_GET_PARENT(cx, *objp);
+        parentId = FindObjectAtomIndex(atomMap, parent);
+        depth = OBJ_BLOCK_DEPTH(cx, *objp);
+        count = OBJ_BLOCK_COUNT(cx, *objp);
+        tmp = (uint32)(depth << 16) | count;
+    }
+
+    /* First, XDR the parent atomid. */
+    if (!JS_XDRUint32(xdr, &parentId))
+        return JS_FALSE;
+
+    if (xdr->mode == JSXDR_DECODE) {
+        *objp = js_NewBlockObject(cx);
+        if (!*objp)
+            return JS_FALSE;
+
+        /*
+         * If there's a parent id, then get the parent out of our script's
+         * atomMap. We know that we XDR block object in outer-to-inner order,
+         * which means that getting the parent now will work.
+         */
+        if (parentId != NO_PARENT_INDEX) {
+            atom = js_GetAtom(cx, atomMap, parentId);
+            JS_ASSERT(ATOM_IS_OBJECT(atom));
+            parent = ATOM_TO_OBJECT(atom);
+            OBJ_SET_PARENT(cx, *objp, parent);
+        }
+    }
+
+    JS_PUSH_SINGLE_TEMP_ROOT(cx, OBJECT_TO_JSVAL(*objp), &tvr);
+
+    if (!JS_XDRUint32(xdr, &tmp)) {
+        JS_POP_TEMP_ROOT(cx, &tvr);
+        return JS_FALSE;
+    }
+
+    if (xdr->mode == JSXDR_DECODE) {
+        depth = (uint16)(tmp >> 16);
+        count = (uint16)tmp;
+        OBJ_SET_BLOCK_DEPTH(cx, *objp, depth);
+    }
+
+    /*
+     * XDR the block object's properties. We know that there are 'count'
+     * properties to XDR, stored as id/shortid pairs. We do not XDR any
+     * non-native properties, only those that the compiler created.
+     */
+    sprop = NULL;
+    ok = JS_TRUE;
+    for (i = 0; i < count; i++) {
+        if (xdr->mode == JSXDR_ENCODE) {
+            /* Find a property to XDR. */
+            do {
+                /* If sprop is NULL, this is the first property. */
+                sprop = sprop ? sprop->parent : OBJ_SCOPE(*objp)->lastProp;
+            } while (!(sprop->flags & SPROP_HAS_SHORTID));
+
+            JS_ASSERT(sprop->getter == js_BlockClass.getProperty);
+            propid = sprop->id;
+            JS_ASSERT(JSID_IS_ATOM(propid));
+            atom = JSID_TO_ATOM(propid);
+            shortid = sprop->shortid;
+            JS_ASSERT(shortid >= 0);
+        }
+
+        /* XDR the real id, then the shortid. */
+        if (!js_XDRStringAtom(xdr, &atom) ||
+            !JS_XDRUint16(xdr, (uint16 *)&shortid)) {
+            ok = JS_FALSE;
+            break;
+        }
+
+        if (xdr->mode == JSXDR_DECODE) {
+            if (!js_DefineNativeProperty(cx, *objp, ATOM_TO_JSID(atom),
+                                         JSVAL_VOID, NULL, NULL,
+                                         JSPROP_ENUMERATE | JSPROP_PERMANENT,
+                                         SPROP_HAS_SHORTID, shortid, NULL)) {
+                ok = JS_FALSE;
+                break;
+            }
+        }
+    }
+
+    JS_POP_TEMP_ROOT(cx, &tvr);
+    return ok;
+}
+
+#else
+# define block_xdrObject NULL
+#endif
+
 JSClass js_BlockClass = {
     "Block",
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_IS_ANONYMOUS,
+    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1) |
+    JSCLASS_IS_ANONYMOUS | JSCLASS_HAS_CACHED_PROTO(JSProto_Block),
     JS_PropertyStub,  JS_PropertyStub,  block_getProperty, block_setProperty,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,    JS_FinalizeStub,
-    JSCLASS_NO_OPTIONAL_MEMBERS
+    NULL, NULL, NULL, NULL, block_xdrObject, NULL, NULL, NULL
 };
+
+JSObject*
+js_InitBlockClass(JSContext *cx, JSObject* obj)
+{
+    JSObject *proto;
+
+    proto = JS_InitClass(cx, obj, NULL, &js_BlockClass, NULL, 0, NULL,
+                         NULL, NULL, NULL);
+    if (!proto)
+        return NULL;
+
+    OBJ_SET_PROTO(cx, proto, NULL);
+    return proto;
+}
 
 JSObject *
 js_InitObjectClass(JSContext *cx, JSObject *obj)
@@ -4382,8 +4531,6 @@ js_TryMethod(JSContext *cx, JSObject *obj, JSAtom *atom,
 }
 
 #if JS_HAS_XDR
-
-#include "jsxdrapi.h"
 
 JSBool
 js_XDRObject(JSXDRState *xdr, JSObject **objp)
