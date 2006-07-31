@@ -65,7 +65,7 @@ NS_IMETHODIMP nsHTMLCheckboxAccessible::GetRole(PRUint32 *_retval)
 
 NS_IMETHODIMP nsHTMLCheckboxAccessible::GetNumActions(PRUint8 *_retval)
 {
-  *_retval = eSingle_Action;
+  *_retval = 1;
   return NS_OK;
 }
 
@@ -148,7 +148,7 @@ nsFormControlAccessible(aNode, aShell)
 
 NS_IMETHODIMP nsHTMLButtonAccessible::GetNumActions(PRUint8 *_retval)
 {
-  *_retval = eSingle_Action;
+  *_retval = 1;
   return NS_OK;
 }
 
@@ -243,7 +243,7 @@ nsLeafAccessible(aNode, aShell)
 
 NS_IMETHODIMP nsHTML4ButtonAccessible::GetNumActions(PRUint8 *_retval)
 {
-  *_retval = eSingle_Action;
+  *_retval = 1;
   return NS_OK;;
 }
 
@@ -389,7 +389,7 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetExtState(PRUint32 *aExtState)
 
 NS_IMETHODIMP nsHTMLTextFieldAccessible::GetNumActions(PRUint8 *_retval)
 {
-  *_retval = eSingle_Action;
+  *_retval = 1;
   return NS_OK;;
 }
 

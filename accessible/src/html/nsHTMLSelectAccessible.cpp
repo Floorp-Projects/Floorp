@@ -586,7 +586,7 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetActionName(PRUint8 index, nsAStri
 
 NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetNumActions(PRUint8 *_retval)
 {
-  *_retval = eSingle_Action;
+  *_retval = 1;
   return NS_OK;
 }
 
@@ -1081,7 +1081,7 @@ nsLeafAccessible(aDOMNode, aShell)
 /** Just one action ( click ). */
 NS_IMETHODIMP nsHTMLComboboxButtonAccessible::GetNumActions(PRUint8 *aNumActions)
 {
-  *aNumActions = eSingle_Action;
+  *aNumActions = 1;
   return NS_OK;
 }
 

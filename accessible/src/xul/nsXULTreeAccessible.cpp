@@ -548,9 +548,9 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetNumActions(PRUint8 *_retval)
   PRBool isContainer;
   mTreeView->IsContainer(mRow, &isContainer);
   if (isContainer)
-    *_retval = eDouble_Action;
+    *_retval = 2;
   else
-    *_retval = eSingle_Action;
+    *_retval = 1;
 
   return NS_OK;
 }
@@ -841,7 +841,7 @@ NS_IMETHODIMP nsXULTreeColumnsAccessible::GetRole(PRUint32 *_retval)
 
 NS_IMETHODIMP nsXULTreeColumnsAccessible::GetNumActions(PRUint8 *_retval)
 {
-  *_retval = eSingle_Action;
+  *_retval = 1;
   return NS_OK;
 }
 
@@ -922,7 +922,7 @@ NS_IMETHODIMP nsXULTreeColumnitemAccessible::GetRole(PRUint32 *_retval)
 
 NS_IMETHODIMP nsXULTreeColumnitemAccessible::GetNumActions(PRUint8 *_retval)
 {
-  *_retval = eSingle_Action;
+  *_retval = 1;
   return NS_OK;
 }
 

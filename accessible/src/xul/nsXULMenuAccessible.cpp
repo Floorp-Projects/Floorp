@@ -47,7 +47,7 @@
 #include "nsIPresShell.h"
 #include "nsIContent.h"
 #include "nsGUIEvent.h"
-
+#include "nsXULFormControlAccessible.h"
 
 // ------------------------ Menu Item -----------------------------
 
@@ -273,7 +273,7 @@ NS_IMETHODIMP nsXULMenuitemAccessible::DoAction(PRUint8 index)
         PRUint32 state;
         buttonAccessible->GetFinalState(&state);
         if (state & STATE_PRESSED)
-          buttonAccessible->DoAction(eAction_Click);
+          buttonAccessible->DoAction(nsXULButtonAccessible::eAction_Click);
       }
     }
     return NS_OK;
@@ -294,7 +294,7 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetActionName(PRUint8 index, nsAString& _
 
 NS_IMETHODIMP nsXULMenuitemAccessible::GetNumActions(PRUint8 *_retval)
 {
-  *_retval = eSingle_Action;
+  *_retval = 1;
   return NS_OK;
 }
 

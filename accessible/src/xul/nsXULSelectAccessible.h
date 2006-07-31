@@ -144,6 +144,8 @@ public:
 class nsXULListitemAccessible : public nsXULMenuitemAccessible
 {
 public:
+  enum { eAction_Click = 0 };
+
   NS_DECL_ISUPPORTS_INHERITED
   
   nsXULListitemAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);

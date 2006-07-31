@@ -149,6 +149,7 @@ protected:
 class nsHTMLSelectOptionAccessible : public nsLeafAccessible
 {
 public:
+  enum { eAction_Select = 0 };  
   
   nsHTMLSelectOptionAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
   virtual ~nsHTMLSelectOptionAccessible() {}
@@ -248,6 +249,7 @@ public:
 class nsHTMLComboboxButtonAccessible  : public nsLeafAccessible
 {
 public:
+  enum { eAction_Click = 0 };
 
   nsHTMLComboboxButtonAccessible(nsIAccessible* aParent, nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
   virtual ~nsHTMLComboboxButtonAccessible() {}

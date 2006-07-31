@@ -121,11 +121,6 @@ class nsAccessible : public nsAccessNodeWrap,
                      public nsIAccessibleValue
 {
 public:
-  // to eliminate the confusion of "magic numbers" -- if ( 0 ){ foo; }
-  enum { eAction_Switch=0, eAction_Jump=0, eAction_Click=0, eAction_Select=0, eAction_Expand=1 };
-  // how many actions
-  enum { eNo_Action=0, eSingle_Action=1, eDouble_Action=2 }; 
-
   nsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   virtual ~nsAccessible();
 

@@ -72,7 +72,7 @@ nsAccessibleWrap(aNode, aShell)
   */
 NS_IMETHODIMP nsXULButtonAccessible::GetNumActions(PRUint8 *_retval)
 {
-  *_retval = eSingle_Action;
+  *_retval = 1;
   return NS_OK;
 }
 
@@ -211,7 +211,7 @@ nsFormControlAccessible(aNode, aShell)
   */
 NS_IMETHODIMP nsXULDropmarkerAccessible::GetNumActions(PRUint8 *aResult)
 {
-  *aResult = eSingle_Action;
+  *aResult = 1;
   return NS_OK;
 }
 
@@ -313,7 +313,7 @@ NS_IMETHODIMP nsXULCheckboxAccessible::GetRole(PRUint32 *_retval)
   */
 NS_IMETHODIMP nsXULCheckboxAccessible::GetNumActions(PRUint8 *_retval)
 {
-  *_retval = eSingle_Action;
+  *_retval = 1;
   return NS_OK;
 }
 
@@ -750,7 +750,7 @@ NS_IMETHODIMP nsXULTextFieldAccessible::GetRole(PRUint32 *aRole)
   */
 NS_IMETHODIMP nsXULTextFieldAccessible::GetNumActions(PRUint8 *_retval)
 {
-  *_retval = eSingle_Action;
+  *_retval = 1;
   return NS_OK;
 }
 

@@ -96,7 +96,7 @@ nsFormControlAccessible(aNode, aShell)
   */
 NS_IMETHODIMP nsRadioButtonAccessible::GetNumActions(PRUint8 *_retval)
 {
-  *_retval = eSingle_Action;
+  *_retval = 1;
   return NS_OK;
 }
 
