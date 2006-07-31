@@ -874,8 +874,8 @@ nsCanvasRenderingContext2D::Render(nsIRenderingContext *rc)
 #ifdef MOZILLA_1_8_BRANCH
     rv = rc->RetrieveCurrentNativeGraphicData(&ptr);
     if (NS_FAILED(rv) || !ptr) {
-        rv = NS_ERROR_FAILURE;
-        goto finish;
+        cairo_restore(mCairo);
+        return NS_ERROR_FAILURE;
     }
 #else
     /* OS/2 also uses NATIVE_WINDOWS_DC to get a native OS/2 PS */
@@ -898,14 +898,14 @@ nsCanvasRenderingContext2D::Render(nsIRenderingContext *rc)
 #ifdef MOZILLA_1_8_BRANCH
     rv = rc->RetrieveCurrentNativeGraphicData((void**) &gdkdraw);
     if (NS_FAILED(rv) || !gdkdraw) {
-        rv = NS_ERROR_FAILURE;
-        goto finish;
+        cairo_restore(mCairo);
+        return NS_ERROR_FAILURE;
     }
 #else
     gdkdraw = (GdkDrawable*) rc->GetNativeGraphicData(nsIRenderingContext::NATIVE_GDK_DRAWABLE);
     if (!gdkdraw) {
-        rv = NS_ERROR_FAILURE;
-        goto finish;
+        cairo_restore(mCairo);
+        return NS_ERROR_FAILURE;
     }
 #endif
 
@@ -930,6 +930,7 @@ nsCanvasRenderingContext2D::Render(nsIRenderingContext *rc)
 
     float x0 = 0.0, y0 = 0.0;
     float sx = 1.0, sy = 1.0;
+
     if (tx->GetType() & MG_2DTRANSLATION) {
         tx->Transform(&x0, &y0);
     }
@@ -961,8 +962,8 @@ nsCanvasRenderingContext2D::Render(nsIRenderingContext *rc)
     nsIDrawingSurface *ds = nsnull;
     rc->GetDrawingSurface(&ds);
     if (!ds) {
-        rv = NS_ERROR_FAILURE;
-        goto finish;
+        cairo_restore(mCairo);
+        return NS_ERROR_FAILURE;
     }
 
     nsDrawingSurfaceMac *macds = NS_STATIC_CAST(nsDrawingSurfaceMac*, ds);
@@ -1009,7 +1010,6 @@ nsCanvasRenderingContext2D::Render(nsIRenderingContext *rc)
 #endif
 #endif
 
-  finish:
     // from the cairo_save that we used to save the clip
     cairo_restore(mCairo);
 
