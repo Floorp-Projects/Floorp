@@ -1679,10 +1679,34 @@ MicrosummaryResource.prototype = {
       _self: this,
       handleEvent: function MSR_loadHandler_handleEvent(event) {
         event.target.removeEventListener("load", this, false);
+        if (this._self._loadTimer)
+          this._self._loadTimer.cancel();
         try     { this._self._handleLoad(event) }
         finally { this._self = null }
       }
     };
+
+    // cancel loads that take too long
+    // timeout specified in seconds at browser.microsummary.requestTimeout, or 10 seconds
+    var timeout = 10 * 1000;
+    try {
+      var pb = Cc["@mozilla.org/preferences-service;1"].
+               getService(Ci.nsIPrefBranch);
+      timeout = pb.getIntPref("browser.microsummary.requestTimeout") * 1000;
+    }
+    catch (ex) {}
+
+    var timerObserver = {
+      _self: this,
+      observe: function MSR_timerObserver_observe() {
+        LOG("timeout loading microsummary resource " + this._self.uri.spec + ", aborting request");
+        request.abort();
+        try     { this._self.destroy() }
+        finally { this._self = null }
+      }
+    };
+    this._loadTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    this._loadTimer.init(timerObserver, timeout, Ci.nsITimer.TYPE_ONE_SHOT);
 
     request = request.QueryInterface(Ci.nsIDOMEventTarget);
     request.addEventListener("load", loadHandler, false);
