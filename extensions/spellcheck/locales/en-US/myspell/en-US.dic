@@ -6141,6 +6141,11 @@ block/USDG
 blocky/R
 bloc/MS
 Bloemfontein/M
+blog/SM
+blogged
+blogger/SM
+blogging
+blogged
 bloke/SM
 Blomberg/M
 Blomquist/M
@@ -7928,9 +7933,11 @@ caduceus/M
 Caedmon/M
 Caesar/MS
 caesura/SM
+cafe/MS
 café/MS
 cafeteria/SM
 caffeine/SM
+caffeinated
 caftan/SM
 caged/U
 Cage/M
@@ -14125,6 +14132,7 @@ Debby/M
 Debee/M
 debenture/MS
 Debera/M
+Debian/M
 debilitate/NGXSD
 debilitation/M
 debility/MS
@@ -17106,6 +17114,7 @@ eavesdropper/MS
 eavesdropping
 eavesdrop/S
 eave/SM
+eBay/M
 Eba/M
 Ebba/M
 ebb/DSG
@@ -20572,6 +20581,7 @@ firedamp/SM
 fired/U
 firefight/JRGZS
 firefly/MS
+Firefox/M
 fireguard/M
 firehouse/MS
 firelight/GZSM
@@ -21113,6 +21123,7 @@ focally
 Foch/M
 foci's
 focused/AU
+focussed
 focuser/M
 focuses/A
 focus/SRDMBG
@@ -21987,7 +21998,7 @@ f's/KA
 FSLIC
 ft/C
 FTC
-FTP
+ftp
 fuchsia/MS
 Fuchs/M
 fucker/M
@@ -22545,6 +22556,7 @@ gaucho/SM
 gaudily
 gaudiness/MS
 gaudy/PRST
+gauge/SM
 gaugeable
 gauger/M
 Gauguin/M
@@ -22753,6 +22765,7 @@ gentle/PRSDGT
 gentlewoman/M
 gentlewomen/M
 gently
+Gentoo/M
 gentrification/M
 gentrify/NSDGX
 Gentry/M
@@ -23533,6 +23546,7 @@ gooey
 goofiness/MS
 goof/SDMG
 goofy/RPT
+Google/M
 gooier
 gooiest
 gook/SM
@@ -26525,7 +26539,8 @@ HST
 ht
 HTML
 Hts/M
-HTTP
+http
+https
 Huang/M
 huarache/SM
 hubba
@@ -28142,6 +28157,7 @@ inland
 inlander/M
 inlay/RG
 inletting
+inline/D
 inly/G
 inmost
 Inna/M
@@ -28538,7 +28554,7 @@ international/YS
 internecine
 internee/SM
 interne's
-Internet/M
+internet/M
 INTERNET/M
 internetwork
 internist/SM
@@ -29402,6 +29418,7 @@ jauntiness/MS
 jaunt/MDGS
 jaunty/SRTP
 Javanese
+JavaScript/M
 Java/SM
 javelin/SDMG
 Javier/M
@@ -36920,6 +36937,7 @@ Mozambique/M
 Mozart/M
 Mozelle/M
 Mozes/M
+Mozilla/M
 mozzarella/MS
 mp
 MP
@@ -39560,6 +39578,7 @@ ongoing/S
 Onida/M
 onion/GDM
 onionskin/MS
+online
 onlooker/MS
 onlooking
 only/TP
@@ -41369,6 +41388,7 @@ payload/SM
 paymaster/SM
 payment/ASM
 Payne/SM
+PayPal/M
 payoff/MS
 payola/MS
 payout/S
@@ -42193,6 +42213,8 @@ philtre/DSMG
 Phineas/M
 Phip/M
 Phipps/M
+phisher/MS
+phishing
 phi/SM
 phlebitides
 phlebitis/M
@@ -42994,6 +43016,7 @@ pocket/MSRDG
 pock/GDMS
 pockmark/MDSG
 Pocono/MS
+podcast/MSRG
 podded
 podding
 podge/ZR
@@ -43543,6 +43566,7 @@ power/GMD
 powerhouse/MS
 powerlessness/SM
 powerless/YP
+PowerPoint/M
 Powers
 Powhatan/M
 pow/RZ
@@ -44492,6 +44516,7 @@ provably
 prov/DRGZB
 proved/U
 prove/ESDAG
+proven
 provenance/SM
 Provençal
 Provencals
@@ -49229,6 +49254,7 @@ seamer/M
 seaminess/M
 seamlessness/M
 seamless/PY
+SeaMonkey/M
 seam/MNDRGS
 seams/I
 seamstress/MS
@@ -51027,6 +51053,7 @@ slab/MS
 slacken/DG
 slacker/M
 slackness/MS
+Slackware/M
 slack/SPGTZXYRDN
 Slade/M
 slagged
@@ -51966,7 +51993,9 @@ Spahn/M
 Spain/M
 spake
 Spalding/M
-Spam/M
+spam/MS
+spammer/MS
+spamming
 spa/MS
 Span
 spandex/MS
@@ -53906,6 +53935,7 @@ sunbeam/MS
 Sunbelt/M
 sunblock/S
 sunbonnet/MS
+Sunbird/M
 sunburn/GSMD
 sunburst/MS
 suncream
@@ -54209,6 +54239,7 @@ susceptibilities
 susceptibility/IM
 susceptible/I
 Susette/M
+SUSE/M
 sushi/SM
 Susie/M
 Susi/M
@@ -55981,6 +56012,7 @@ thumbscrew/SM
 thumb/SMDG
 thumbtack/GMDS
 thump/RDMSG
+Thunderbird/M
 thunderbolt/MS
 thunderclap/SM
 thundercloud/SM
@@ -57815,6 +57847,7 @@ UAW
 Ubangi/M
 ubiquitous/YP
 ubiquity/S
+Ubuntu/M
 Ucayali/M
 Uccello/M
 UCLA/M
@@ -58328,6 +58361,8 @@ unindustrialized/MS
 uninhibited/YP
 uninominal
 uninsured
+uninstall/GSMB
+uninstaller/MS
 unintellectual
 unintended
 uninteresting
@@ -58531,6 +58566,7 @@ unstuffy
 unsubdued
 unsubstantial
 unsubtle
+unsubscribe/D
 unsuitable
 unsuspecting/Y
 unswerving/Y
@@ -60389,6 +60425,8 @@ Webern/M
 webfeet
 webfoot/M
 Web/MR
+webmaster/MS
+webmistress/MS
 website/S
 web/SMR
 Webster/MS
