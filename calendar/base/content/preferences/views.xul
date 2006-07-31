@@ -195,7 +195,6 @@
                           oncommand="gViewsPane.updateViewStartMenu(this.value);"
                           preference="calendar.view.defaultendhour">
                     <menupopup id="dayendhourpopup">
-                        <menuitem label="&time.midnight;" value="0"/>
                         <menuitem label="&time.1;"        value="1"/>
                         <menuitem label="&time.2;"        value="2"/>
                         <menuitem label="&time.3;"        value="3"/>
@@ -219,6 +218,7 @@
                         <menuitem label="&time.21;"       value="21"/>
                         <menuitem label="&time.22;"       value="22"/>
                         <menuitem label="&time.23;"       value="23"/>
+                        <menuitem label="&time.midnight;" value="24"/>
                     </menupopup>
                 </menulist>
             </hbox>
