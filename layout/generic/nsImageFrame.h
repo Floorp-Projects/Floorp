@@ -187,12 +187,20 @@ protected:
 
   PRBool GetAnchorHREFTargetAndNode(nsIURI** aHref, nsString& aTarget,
                                     nsINode** aNode);
-
-  void MeasureString(const PRUnichar*     aString,
-                     PRInt32              aLength,
-                     nscoord              aMaxWidth,
-                     PRUint32&            aMaxFit,
-                     nsIRenderingContext& aContext);
+  /**
+   * Computes the width of the string that fits into the available space
+   *
+   * @param in aLength total length of the string in PRUnichars
+   * @param in aMaxWidth width not to be exceeded
+   * @param out aMaxFit length of the string that fits within aMaxWidth
+   *            in PRUnichars
+   * @return width of the string that fits within aMaxWidth
+   */
+  nscoord MeasureString(const PRUnichar*     aString,
+                        PRInt32              aLength,
+                        nscoord              aMaxWidth,
+                        PRUint32&            aMaxFit,
+                        nsIRenderingContext& aContext);
 
   void DisplayAltText(nsPresContext*      aPresContext,
                       nsIRenderingContext& aRenderingContext,
