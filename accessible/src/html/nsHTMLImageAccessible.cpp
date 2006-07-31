@@ -47,6 +47,9 @@
 #include "nsIImageLoadingContent.h"
 #include "nsIPresShell.h"
 #include "nsIServiceManager.h"
+#include "nsIDOMHTMLImageElement.h"
+#include "nsIDOMDocument.h"
+#include "nsPIDOMWindow.h"
 
 // --- image -----
 
@@ -208,5 +211,28 @@ void nsHTMLImageAccessible::CacheChildren()
     NS_ASSERTION(privatePrevAccessible, "nsIAccessible impl's should always support nsPIAccessible as well");
     privatePrevAccessible->SetParent(this);
   }
+}
+
+NS_IMETHODIMP nsHTMLImageAccessible::DoAction(PRUint8 index)
+{
+  if (index == eAction_ShowLongDescription) {
+    //get the long description uri and open in a new window
+    nsCOMPtr<nsIDOMHTMLImageElement> element(do_QueryInterface(mDOMNode));
+    NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
+    nsAutoString longDesc;
+    nsresult rv = element->GetLongDesc(longDesc);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIDOMDocument> domDocument;
+    rv = mDOMNode->GetOwnerDocument(getter_AddRefs(domDocument));
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIDocument> document(do_QueryInterface(domDocument));
+    nsCOMPtr<nsPIDOMWindow> piWindow = document->GetWindow();
+    nsCOMPtr<nsIDOMWindowInternal> win(do_QueryInterface(piWindow));
+    NS_ENSURE_TRUE(win, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIDOMWindow> tmp;
+    return win->Open(longDesc, NS_LITERAL_STRING(""), NS_LITERAL_STRING(""),
+                     getter_AddRefs(tmp));
+  }
+  return nsLinkableAccessible::DoAction(index);
 }
 
