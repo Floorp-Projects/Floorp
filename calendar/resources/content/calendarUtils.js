@@ -164,7 +164,7 @@ function getPrefSafe(aPrefName, aDefault) {
             return prefB.getBoolPref(aPrefName);
         case nsIPrefBranch.PREF_INT:
             return prefB.getIntPref(aPrefName);
-        case nsIPrefBranch.PREF_String:
+        case nsIPrefBranch.PREF_STRING:
             return prefB.getCharPref(aPrefName);
         default: // includes nsIPrefBranch.PREF_INVALID
             return aDefault;

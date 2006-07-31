@@ -198,53 +198,48 @@ function getStyleSheet(aStyleSheetPath) {
 // category (and hence doesn't have a uri), we set the border color.  If
 // it's a calendar, we set the background color
 function updateStyleSheetForObject(aObject, aSheet) {
-    var name;
-    if (aObject.uri)
+    var selectorPrefix, name, ruleUpdaterFunc;
+    if (aObject.uri) {
+        // This is a calendar, so we're going to set the background color
         name = aObject.uri.spec;
-    else
+        selectorPrefix = "item-calendar=";
+        ruleUpdaterFunc = function calendarRuleFunc(aRule) {
+            var color = getCalendarManager().getCalendarPref(aObject, 'color');
+            if (!color) {
+                color = "#A8C2E1";
+            }
+            aRule.style.backgroundColor = color;
+            aRule.style.color = getContrastingTextColor(color);
+        };
+    } else {
+        // This is a category, where we set the border.  Also note that we 
+        // use the ~= selector, since there could be multiple categories
         name = aObject.replace(' ','_');
+        selectorPrefix = "item-category~=";
+        ruleUpdaterFunc = function categoryRuleFunc(aRule) {
+            var color = getPrefSafe("calendar.category.color."+aObject, null);
+            if (color) {
+                aRule.style.border = color + " solid 2px";
+            }
+        };
+    }
 
-    // Returns an equality selector for calendars (which have a uri), since an
-    // event can only belong to one calendar.  For categories, however, returns
-    // the ~= selector which matches anything in a space-separated list.
-    function selectorForObject(name)
-    {
-        if (aObject.uri)
-            return '.calendar-item[item-calendar="' + name + '"]';
-        return '.calendar-item[item-category~="' + name + '"]';
-    }
-    
-    function getRuleForObject(name)
-    {
-        for (var i = 0; i < aSheet.cssRules.length; i++) {
-            var rule = aSheet.cssRules[i];
-            if (rule.selectorText && (rule.selectorText == selectorForObject(name)))
-                return rule;
+    var selector = '.calendar-item[' + selectorPrefix + '"' + name + '"]';
+
+    // Now go find our rule
+    var rule;
+    for (var i = 0; i < aSheet.cssRules.length; i++) {
+        var maybeRule = aSheet.cssRules[i];
+        if (maybeRule.selectorText && (maybeRule.selectorText == selector)) {
+            rule = maybeRule;
+            break;
         }
-        return null;
     }
-    
-    var rule = getRuleForObject(name);
+
     if (!rule) {
-        aSheet.insertRule(selectorForObject(name) + ' { }',
-                                 aSheet.cssRules.length);
+        aSheet.insertRule(selector + ' { }', aSheet.cssRules.length);
         rule = aSheet.cssRules[aSheet.cssRules.length-1];
     }
 
-    var color;
-    if (aObject.uri) {
-        color = getCalendarManager().getCalendarPref(aObject, 'color');
-        if (!color)
-            color = "#A8C2E1";
-        rule.style.backgroundColor = color;
-        rule.style.color = getContrastingTextColor(color);
-        return;
-    }
-    var categoryPrefBranch = prefService.getBranch("calendar.category.color.");
-    try {
-        color = categoryPrefBranch.getCharPref(aObject);
-    }
-    catch(ex) { return; }
-
-    rule.style.border = color + " solid 2px";
+    ruleUpdaterFunc(rule);
 }
