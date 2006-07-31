@@ -42,7 +42,6 @@
 <!ENTITY newserver.reason1  "- Your browser does not recognize the Certificate Authority that issued the site's certificate.">
 <!ENTITY newserver.reason2  "- The site's certificate is incomplete due to a server misconfiguration.">
 <!ENTITY newserver.notify   "Please notify the site's webmaster about this problem.">
-<!ENTITY newserver.examine  "Examine Certificate...">
+<!ENTITY newserver.examine  "View Certificate...">
 <!ENTITY newserver.remember "Accept this certificate permanently">
 <!ENTITY newserver.session  "Accept this certificate temporarily for this session">
-<!ENTITY newserver.refuse   "Do not accept this certificate and do not connect to this Web site">

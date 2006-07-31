@@ -69,37 +69,13 @@ function onLoad()
   setText("intro", intro);
   setText("reason3", reason3);
   setText("question", question);
-  
-  // Focus the accept button explicitly, because the dialog onLoad handler
-  // focuses the first focusable element in the dialog, which is the "View
-  // Certificate" button.
-  // Never explicitly focus buttons on OS X, as this breaks default focus
-  // handling, outlined in dialog.xml
-#ifndef XP_MACOSX
-  document.documentElement.getButton("accept").focus();
-#endif
 }
 
 function doOK()
 {
-  var selectedID = document.getElementById("whatnow").selectedItem.id;
-
-  if (selectedID == "refuse") {
-    dialogParams.SetInt(1,0);
-  }
-  else {
-    dialogParams.SetInt(1,1);
-
-    // 0 = accept perm, 1 = accept for this session
-    var userchoice = 1;
-    
-    if (selectedID == "remember") {
-      userchoice = 0;
-    }
-
-    dialogParams.SetInt(2, userchoice);
-  }
-
+  dialogParams.SetInt(1, 1);
+  var selectedItem = document.getElementById("whatnow").selectedItem;
+  dialogParams.SetInt(2, parseInt(selectedItem.value));
   return true;
 }
 
