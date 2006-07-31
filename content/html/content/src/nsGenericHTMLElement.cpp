@@ -1700,7 +1700,7 @@ nsGenericHTMLElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
       nsresult rv = AddScriptEventListener(aName, *aValue);
       NS_ENSURE_SUCCESS(rv, rv);
     }
-    else if (aName == nsHTMLAtoms::spellcheck) {
+    else if (aNotify && aName == nsHTMLAtoms::spellcheck) {
       nsCOMPtr<nsIEditor> editor = GetAssociatedEditor();
       if (editor) {
         editor->SyncRealTimeSpell();
