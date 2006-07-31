@@ -67,7 +67,14 @@
             contextmenu="ppAttrContext"
             onselect="viewer.pane.panelset.updateAllCommands()">
         <treecols>
-          <!-- These labels don't need to be localized since they are defined by DOM APIs -->
+          <!-- These labels don't need to be localized since they are defined
+                 by DOM APIs -->
+          <treecol id="colNamespaceURI"
+                   hidden="true"
+                   label="namespaceURI"
+                   persist="width,hidden,ordinal"
+                   flex="1"/>
+          <splitter class="tree-splitter"/>
           <treecol id="colNodeName" label="nodeName" persist="width,hidden,ordinal" flex="1"/>
           <splitter class="tree-splitter"/>
           <treecol id="colNodeValue" label="nodeValue" persist="width,hidden,ordinal" flex="1"/>
