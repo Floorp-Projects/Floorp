@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: softoken.h,v 1.12 2006/05/05 20:02:47 wtchang%redhat.com Exp $ */
+/* $Id: softoken.h,v 1.13 2006/07/31 18:10:17 wtchang%redhat.com Exp $ */
 
 #ifndef _SOFTOKEN_H_
 #define _SOFTOKEN_H_
@@ -183,6 +183,11 @@ unsigned long sftk_MapKeySize(CK_KEY_TYPE keyType);
 extern PRBool sftk_audit_enabled;
 
 extern void sftk_LogAuditMessage(NSSAuditSeverity severity, const char *msg);
+
+/*
+** FIPS 140-2 Error state
+*/
+extern PRBool sftk_fatalError;
 
 SEC_END_PROTOS
 

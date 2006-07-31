@@ -1666,6 +1666,9 @@ nsc_DSA_Sign_Stub(void *ctx, void *sigBuf,
     digest.data = (unsigned char *)dataBuf;
     digest.len = dataLen;
     rv = DSA_SignDigest(&(key->u.dsa), &signature, &digest);
+    if (rv != SECSuccess && PORT_GetError() == SEC_ERROR_LIBRARY_FAILURE) {
+	sftk_fatalError = PR_TRUE;
+    }
     *sigLen = signature.len;
     return rv;
 }
@@ -1699,6 +1702,9 @@ nsc_ECDSASignStub(void *ctx, void *sigBuf,
     digest.data = (unsigned char *)dataBuf;
     digest.len = dataLen;
     rv = ECDSA_SignDigest(&(key->u.ec), &signature, &digest);
+    if (rv != SECSuccess && PORT_GetError() == SEC_ERROR_LIBRARY_FAILURE) {
+	sftk_fatalError = PR_TRUE;
+    }
     *sigLen = signature.len;
     return rv;
 }
@@ -2604,6 +2610,9 @@ nsc_parameter_gen(CK_KEY_TYPE key_type, SFTKObject *key)
     }
 
     if (rv != SECSuccess) {
+	if (PORT_GetError() == SEC_ERROR_LIBRARY_FAILURE) {
+	    sftk_fatalError = PR_TRUE;
+	}
 	return CKR_DEVICE_ERROR;
     }
     crv = sftk_AddAttributeType(key,CKA_PRIME,
@@ -3432,6 +3441,9 @@ CK_RV NSC_GenerateKeyPair (CK_SESSION_HANDLE hSession,
 	rsaPriv = RSA_NewKey(public_modulus_bits, &pubExp);
 	PORT_Free(pubExp.data);
 	if (rsaPriv == NULL) {
+	    if (PORT_GetError() == SEC_ERROR_LIBRARY_FAILURE) {
+		sftk_fatalError = PR_TRUE;
+	    }
 	    crv = CKR_DEVICE_ERROR;
 	    break;
 	}
@@ -3548,7 +3560,13 @@ kpg_done:
 	PORT_Free(pqgParam.subPrime.data);
 	PORT_Free(pqgParam.base.data);
 
-	if (rv != SECSuccess) { crv = CKR_DEVICE_ERROR; break; }
+	if (rv != SECSuccess) {
+	    if (PORT_GetError() == SEC_ERROR_LIBRARY_FAILURE) {
+		sftk_fatalError = PR_TRUE;
+	    }
+	    crv = CKR_DEVICE_ERROR;
+	    break;
+	}
 
 	/* store the generated key into the attributes */
         crv = sftk_AddAttributeType(publicKey,CKA_VALUE,
@@ -3616,6 +3634,9 @@ dsagn_done:
 	PORT_Free(dhParam.prime.data);
 	PORT_Free(dhParam.base.data);
 	if (rv != SECSuccess) { 
+	    if (PORT_GetError() == SEC_ERROR_LIBRARY_FAILURE) {
+		sftk_fatalError = PR_TRUE;
+	    }
 	    crv = CKR_DEVICE_ERROR;
 	    break;
 	}
@@ -3665,8 +3686,11 @@ dhgn_done:
 	rv = EC_NewKey(ecParams, &ecPriv);
 	PORT_FreeArena(ecParams->arena, PR_TRUE);
 	if (rv != SECSuccess) { 
-	  crv = CKR_DEVICE_ERROR;
-	  break;
+	    if (PORT_GetError() == SEC_ERROR_LIBRARY_FAILURE) {
+		sftk_fatalError = PR_TRUE;
+	    }
+	    crv = CKR_DEVICE_ERROR;
+	    break;
 	}
 
 	crv = sftk_AddAttributeType(publicKey, CKA_EC_POINT, 

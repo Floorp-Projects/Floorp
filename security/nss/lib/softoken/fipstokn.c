@@ -106,7 +106,7 @@ libaudit_init(void)
  * ******************** Password Utilities *******************************
  */
 static PRBool isLoggedIn = PR_FALSE;
-static PRBool fatalError = PR_FALSE;
+PRBool sftk_fatalError = PR_FALSE;
 
 /*
  * This function returns
@@ -204,7 +204,7 @@ static CK_RV sftk_newPinCheck(CK_CHAR_PTR pPin, CK_ULONG ulPinLen) {
 
 /* FIPS required checks before any useful cryptographic services */
 static CK_RV sftk_fipsCheck(void) {
-    if (fatalError) 
+    if (sftk_fatalError) 
 	return CKR_DEVICE_ERROR;
     if (!isLoggedIn) 
 	return CKR_USER_NOT_LOGGED_IN;
@@ -217,7 +217,7 @@ static CK_RV sftk_fipsCheck(void) {
     if ((rv = sftk_fipsCheck()) != CKR_OK) return rv;
 
 #define SFTK_FIPSFATALCHECK() \
-    if (fatalError) return CKR_DEVICE_ERROR;
+    if (sftk_fatalError) return CKR_DEVICE_ERROR;
 
 
 /* grab an attribute out of a raw template */
@@ -424,16 +424,16 @@ CK_RV FC_Initialize(CK_VOID_PTR pReserved) {
 
     /* not an 'else' rv can be set by either SFTK_LowInit or SFTK_SlotInit*/
     if (crv != CKR_OK) {
-	fatalError = PR_TRUE;
+	sftk_fatalError = PR_TRUE;
 	return crv;
     }
 
-    fatalError = PR_FALSE; /* any error has been reset */
+    sftk_fatalError = PR_FALSE; /* any error has been reset */
 
     crv = sftk_fipsPowerUpSelfTest();
     if (crv != CKR_OK) {
         nsc_CommonFinalize(NULL, PR_TRUE);
-	fatalError = PR_TRUE;
+	sftk_fatalError = PR_TRUE;
 	if (sftk_audit_enabled) {
 	    char msg[128];
 	    PR_snprintf(msg,sizeof msg,
@@ -536,7 +536,7 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
  CK_RV FC_InitPIN(CK_SESSION_HANDLE hSession,
     					CK_CHAR_PTR pPin, CK_ULONG ulPinLen) {
     CK_RV rv;
-    if (fatalError) return CKR_DEVICE_ERROR;
+    if (sftk_fatalError) return CKR_DEVICE_ERROR;
     if ((rv = sftk_newPinCheck(pPin,ulPinLen)) == CKR_OK) {
 	rv = NSC_InitPIN(hSession,pPin,ulPinLen);
     }
@@ -616,7 +616,7 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
  CK_RV FC_Login(CK_SESSION_HANDLE hSession, CK_USER_TYPE userType,
 				    CK_CHAR_PTR pPin, CK_ULONG usPinLen) {
     CK_RV rv;
-    if (fatalError) return CKR_DEVICE_ERROR;
+    if (sftk_fatalError) return CKR_DEVICE_ERROR;
     rv = NSC_Login(hSession,userType,pPin,usPinLen);
     if (rv == CKR_OK)
 	isLoggedIn = PR_TRUE;
@@ -629,12 +629,12 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
 	if (rv == CKR_OK)
 		rv = CKR_USER_ALREADY_LOGGED_IN;
 	else
-		fatalError = PR_TRUE;
+		sftk_fatalError = PR_TRUE;
     }
     if (sftk_audit_enabled) {
 	char msg[128];
 	NSSAuditSeverity severity;
-	if (fatalError) {
+	if (sftk_fatalError) {
 	    severity = NSS_AUDIT_ERROR;
 	    PR_snprintf(msg,sizeof msg,
 			"C_Login(hSession=%lu, userType=%lu)=0x%08lX ",
@@ -1107,7 +1107,7 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
 		usPrivateKeyAttributeCount,phPublicKey,phPrivateKey);
     if (crv == CKR_GENERAL_ERROR) {
 	/* pairwise consistency check failed. */
-	fatalError = PR_TRUE;
+	sftk_fatalError = PR_TRUE;
     }
     return crv;
 }
@@ -1183,7 +1183,7 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
     SFTK_FIPSFATALCHECK();
     crv = NSC_SeedRandom(hSession,pSeed,usSeedLen);
     if (crv != CKR_OK) {
-	fatalError = PR_TRUE;
+	sftk_fatalError = PR_TRUE;
     }
     return crv;
 }
@@ -1197,7 +1197,7 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
     SFTK_FIPSFATALCHECK();
     crv = NSC_GenerateRandom(hSession,pRandomData,ulRandomLen);
     if (crv != CKR_OK) {
-	fatalError = PR_TRUE;
+	sftk_fatalError = PR_TRUE;
 	if (sftk_audit_enabled) {
 	    char msg[128];
 	    PR_snprintf(msg,sizeof msg,
