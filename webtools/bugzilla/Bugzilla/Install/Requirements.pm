@@ -39,10 +39,6 @@ our @EXPORT = qw(
 use Bugzilla::Constants;
 use constant REQUIRED_MODULES => [
     {
-        name => 'AppConfig',
-        version => '1.52'
-    },
-    {
         name => 'CGI',
         version => '2.93'
     },

@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.124 2006/07/14 22:11:34 mozilla%colinogilvie.co.uk Exp $ -->
+<!-- $Id: installation.xml,v 1.125 2006/07/31 22:21:35 mkanat%bugzilla.org Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -284,12 +284,6 @@
 
       <para>Required Perl modules:
       <orderedlist>
-
-        <listitem>
-          <para>
-            AppConfig (&min-appconfig-ver;)
-          </para>
-        </listitem>
 
         <listitem>
           <para>
