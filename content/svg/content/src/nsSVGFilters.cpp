@@ -659,7 +659,6 @@ public:
   // nsIContent
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                  PRBool aNotify);
-  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
   virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
 
 protected:
@@ -836,22 +835,6 @@ nsSVGFEComponentTransferElement::InsertChildAt(nsIContent* aKid,
     value->BeginBatchUpdate();
   nsresult rv = nsSVGFEComponentTransferElementBase::InsertChildAt(aKid,
                                                                    aIndex,
-                                                                   aNotify);
-  if (filter && value)
-    value->EndBatchUpdate();
-
-  return rv;
-}
-
-nsresult
-nsSVGFEComponentTransferElement::AppendChildTo(nsIContent* aKid,
-                                               PRBool aNotify)
-{
-  nsCOMPtr<nsIDOMSVGFilterElement> filter = do_QueryInterface(GetParent());
-  nsCOMPtr<nsISVGValue> value = do_QueryInterface(GetParent());
-  if (filter && value)
-    value->BeginBatchUpdate();
-  nsresult rv = nsSVGFEComponentTransferElementBase::AppendChildTo(aKid,
                                                                    aNotify);
   if (filter && value)
     value->EndBatchUpdate();
@@ -1367,7 +1350,6 @@ public:
   // nsIContent
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                  PRBool aNotify);
-  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
   virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
 
 protected:
@@ -1523,20 +1505,6 @@ nsSVGFEMergeElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
   if (filter && value)
     value->BeginBatchUpdate();
   nsresult rv = nsSVGFEMergeElementBase::InsertChildAt(aKid, aIndex, aNotify);
-  if (filter && value)
-    value->EndBatchUpdate();
-
-  return rv;
-}
-
-nsresult
-nsSVGFEMergeElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
-{
-  nsCOMPtr<nsIDOMSVGFilterElement> filter = do_QueryInterface(GetParent());
-  nsCOMPtr<nsISVGValue> value = do_QueryInterface(GetParent());
-  if (filter && value)
-    value->BeginBatchUpdate();
-  nsresult rv = nsSVGFEMergeElementBase::AppendChildTo(aKid, aNotify);
   if (filter && value)
     value->EndBatchUpdate();
 

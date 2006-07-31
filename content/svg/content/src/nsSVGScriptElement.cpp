@@ -103,7 +103,6 @@ public:
                               PRBool aCompileEventHandlers);
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                  PRBool aNotify);
-  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
     
 protected:
   /**
@@ -392,17 +391,6 @@ nsSVGScriptElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                   PRBool aNotify)
 {
   nsresult rv = nsSVGScriptElementBase::InsertChildAt(aKid, aIndex, aNotify);
-  if (NS_SUCCEEDED(rv) && aNotify) {
-    MaybeProcessScript();
-  }
-
-  return rv;
-}
-
-nsresult
-nsSVGScriptElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
-{
-  nsresult rv = nsSVGScriptElementBase::AppendChildTo(aKid, aNotify);
   if (NS_SUCCEEDED(rv) && aNotify) {
     MaybeProcessScript();
   }

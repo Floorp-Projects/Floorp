@@ -226,24 +226,6 @@ nsXTFElementWrapper::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
 }
 
 nsresult
-nsXTFElementWrapper::AppendChildTo(nsIContent* aKid, PRBool aNotify)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsIDOMNode> domKid;
-  if (mNotificationMask & (nsIXTFElement::NOTIFY_WILL_APPEND_CHILD |
-                           nsIXTFElement::NOTIFY_CHILD_APPENDED))
-    domKid = do_QueryInterface(aKid);
-  
-  if (mNotificationMask & nsIXTFElement::NOTIFY_WILL_APPEND_CHILD)
-    GetXTFElement()->WillAppendChild(domKid);
-  rv = nsXTFElementWrapperBase::AppendChildTo(aKid, aNotify);
-  if (mNotificationMask & nsIXTFElement::NOTIFY_CHILD_APPENDED)
-    GetXTFElement()->ChildAppended(domKid);
-  return rv;
-}
-
-nsresult
 nsXTFElementWrapper::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 {
   nsresult rv;

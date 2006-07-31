@@ -262,7 +262,10 @@ public:
    *
    * @throws NS_ERROR_OUT_OF_MEMORY in some cases (from BindToTree).
    */
-  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify) = 0;
+  nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify)
+  {
+    return InsertChildAt(aKid, GetChildCount(), aNotify);
+  }
   
   /**
    * Remove a child from this node.  This method handles calling UnbindFromTree

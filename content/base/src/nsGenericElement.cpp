@@ -2436,17 +2436,6 @@ nsGenericElement::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
 }
 
 nsresult
-nsGenericElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
-{
-  // Make sure to _not_ call the subclass InsertChildAt here.  If
-  // subclasses wanted to hook into this stuff, they would have
-  // overridden AppendChildTo.
-  // XXXbz maybe this should just be a non-virtual method on nsINode?
-  // Feels that way to me...
-  return nsGenericElement::InsertChildAt(aKid, GetChildCount(), aNotify);
-}
-
-nsresult
 nsGenericElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 {
   nsCOMPtr<nsIContent> oldKid = mAttrsAndChildren.GetSafeChildAt(aIndex);
