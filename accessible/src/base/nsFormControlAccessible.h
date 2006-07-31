@@ -49,6 +49,7 @@
 class nsFormControlAccessible : public nsAccessibleWrap
 {
 public:
+  enum { eAction_Click = 0 };
   nsFormControlAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_DECL_ISUPPORTS_INHERITED
   NS_IMETHOD GetFirstChild(nsIAccessible **_retval);

@@ -71,6 +71,8 @@ public:
 class nsLinkableAccessible : public nsHyperTextAccessible
 {
 public:
+  enum { eAction_Jump = 0 };
+
   nsLinkableAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_DECL_ISUPPORTS_INHERITED
   NS_IMETHOD GetNumActions(PRUint8 *_retval);

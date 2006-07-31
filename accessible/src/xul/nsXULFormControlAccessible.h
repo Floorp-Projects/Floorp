@@ -50,6 +50,7 @@ class nsXULButtonAccessible : public nsAccessibleWrap
 // Don't inherit from nsFormControlAccessible - it doesn't allow children and a button can have a dropmarker child
 {
 public:
+  enum { eAction_Click = 0 };
   nsXULButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetRole(PRUint32 *_retval); 
   NS_IMETHOD GetState(PRUint32 *_retval);
@@ -149,6 +150,8 @@ public:
 class nsXULTextFieldAccessible : public nsHyperTextAccessible
 {
 public:
+  enum { eAction_Click = 0 };
+
   NS_DECL_ISUPPORTS_INHERITED
 
   nsXULTextFieldAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);

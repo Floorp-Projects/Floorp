@@ -48,6 +48,8 @@
 class nsXULMenuitemAccessible : public nsAccessibleWrap
 {
 public:
+  enum { eAction_Select = 0 };
+
   nsXULMenuitemAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
   NS_IMETHOD GetName(nsAString& _retval); 
   NS_IMETHOD GetDescription(nsAString& aDescription); 

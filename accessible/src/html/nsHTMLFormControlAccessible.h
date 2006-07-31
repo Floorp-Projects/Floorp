@@ -80,6 +80,8 @@ class nsHTML4ButtonAccessible : public nsLeafAccessible
 {
 
 public:
+  enum { eAction_Click = 0 };
+
   nsHTML4ButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetRole(PRUint32 *_retval); 
   NS_IMETHOD GetState(PRUint32 *_retval);
@@ -93,6 +95,8 @@ class nsHTMLTextFieldAccessible : public nsHyperTextAccessible
 {
 
 public:
+  enum { eAction_Click = 0 };
+
   NS_DECL_ISUPPORTS_INHERITED
 
   nsHTMLTextFieldAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);

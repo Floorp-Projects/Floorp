@@ -90,6 +90,8 @@ protected:
 class nsXULTreeitemAccessible : public nsLeafAccessible
 {
 public:
+  enum { eAction_Click = 0, eAction_Expand = 1 };
+
   NS_DECL_ISUPPORTS_INHERITED
 
   nsXULTreeitemAccessible(nsIAccessible *aParent, nsIDOMNode *aDOMNode, nsIWeakReference *aShell, PRInt32 aRow, nsITreeColumn* aColumn = nsnull);
@@ -127,6 +129,8 @@ protected:
 class nsXULTreeColumnsAccessible : public nsAccessibleWrap
 {
 public:
+  enum { eAction_Click = 0 };
+
   NS_DECL_ISUPPORTS_INHERITED
 
   nsXULTreeColumnsAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
@@ -147,6 +151,8 @@ public:
 class nsXULTreeColumnitemAccessible : public nsLeafAccessible
 {
 public:
+  enum { eAction_Click = 0 };
+
   NS_DECL_ISUPPORTS_INHERITED
 
   nsXULTreeColumnitemAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);

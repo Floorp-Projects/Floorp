@@ -57,14 +57,14 @@ nsLeafAccessible(aNode, aShell)
 /** Only one action available */
 NS_IMETHODIMP nsXULTabAccessible::GetNumActions(PRUint8 *_retval)
 {
-  *_retval = eSingle_Action;
+  *_retval = 1;
   return NS_OK;
 }
 
 /** Return the name of our only action  */
 NS_IMETHODIMP nsXULTabAccessible::GetActionName(PRUint8 index, nsAString& _retval)
 {
-  if (index == eAction_Click) {
+  if (index == eAction_Switch) {
     nsAccessible::GetTranslatedString(NS_LITERAL_STRING("switch"), _retval); 
     return NS_OK;
   }
@@ -233,7 +233,7 @@ NS_IMETHODIMP nsXULTabsAccessible::GetRole(PRUint32 *_retval)
 /** no actions */
 NS_IMETHODIMP nsXULTabsAccessible::GetNumActions(PRUint8 *_retval)
 {
-  *_retval = eNo_Action;
+  *_retval = 0;
   return NS_OK;
 }
 
