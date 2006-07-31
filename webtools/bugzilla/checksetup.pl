@@ -187,7 +187,9 @@ The format of that file is as follows:
  $answer{'db_user'}   = 'mydbuser';
  $answer{'db_pass'}   = 'mydbpass';
 
- (Any localconfig variable can be specified as above.)
+ $answer{'urlbase'} = 'http://bugzilla.mydomain.com/';
+
+ (Any localconfig variable or parameter can be specified as above.)
 
  $answer{'ADMIN_OK'} = 'Y';
  $answer{'ADMIN_EMAIL'} = 'myadmin@mydomain.net';
@@ -202,6 +204,14 @@ function calls needs to be specified in this file.
 =head1 SEE ALSO
 
 L<Bugzilla::Install::Requirements>
+
+L<Bugzilla::Install::Localconfig>
+
+L<Bugzilla::Install::Filesystem>
+
+L<Bugzilla::Config/update_params>
+
+L<Bugzilla::DB/CONNECTION>
 
 =cut
 
@@ -222,9 +232,7 @@ use lib ".";
 use Bugzilla::Constants;
 use Bugzilla::Install::Requirements;
 
-if ($^O =~ /MSWin32/i) {
-    require 5.008001; # for CGI 2.93 or higher
-}
+require 5.008001 if ON_WINDOWS; # for CGI 2.93 or higher
 
 ######################################################################
 # Subroutines
@@ -356,62 +364,13 @@ create_htaccess() if $lc_hash->{'create_htaccess'};
 my $datadir   = bz_locations()->{'datadir'};
 my $webdotdir = bz_locations()->{'webdotdir'};
 
-# Check for a new install
-my $newinstall = !-e "$datadir/params";
-
 # Remove parameters from the params file that no longer exist in Bugzilla,
 # and set the defaults for new ones
+update_params({ answer => \%answer});
 
-my @oldparams = UpdateParams();
-
-if (@oldparams) {
-    open(PARAMFILE, '>>', 'old-params.txt') 
-      || die "$0: Can't open old-params.txt for writing: $!\n";
-
-    print "The following parameters are no longer used in Bugzilla, " .
-          "and so have been\nmoved from your parameters file " .
-          "into old-params.txt:\n";
-
-    foreach my $p (@oldparams) {
-        my ($item, $value) = @{$p};
-
-        print PARAMFILE "\n\n$item:\n$value\n";
-
-        print $item;
-        print ", " unless $item eq $oldparams[$#oldparams]->[0];
-    }
-    print "\n";
-    close PARAMFILE;
-}
-
-# Set mail_delivery_method to SMTP and prompt for SMTP server
-# if running on Windows and no third party sendmail wrapper
-# is available
-if ($^O =~ /MSWin32/i
-    && Bugzilla->params->{'mail_delivery_method'} eq 'sendmail'
-    && !-e SENDMAIL_EXE)
-{
-    print "\nBugzilla requires an SMTP server to function on Windows.\n" .
-        "Please enter your SMTP server's hostname: ";
-    my $smtp = $answer{'SMTP_SERVER'} 
-        || ($silent && die("cant preload SMTP_SERVER")) 
-        || <STDIN>;
-    chomp $smtp;
-    if (!$smtp) {
-        print "\nWarning: No SMTP Server provided, defaulting to localhost\n";
-        $smtp = 'localhost';
-    }
-    SetParam('mail_delivery_method', 'smtp');
-    SetParam('smtpserver', $smtp);
-}
-
-# Enable UTF-8 on new installs
-if ($newinstall) {
-    SetParam('utf8', 1);
-}
-
-# WriteParams will only write out still-valid entries
-WriteParams();
+###########################################################################
+# Pre-compile --TEMPLATE-- code
+###########################################################################
 
 my $templatedir = bz_locations()->{'templatedir'};
 unless ($switch{'no-templates'}) {

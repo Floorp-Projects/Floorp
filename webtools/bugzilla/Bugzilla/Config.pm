@@ -34,13 +34,15 @@ use strict;
 
 use base qw(Exporter);
 use Bugzilla::Constants;
+use Data::Dumper;
+use File::Temp;
 
 # Don't export localvars by default - people should have to explicitly
 # ask for it, as a (probably futile) attempt to stop code using it
 # when it shouldn't
 %Bugzilla::Config::EXPORT_TAGS =
   (
-   admin => [qw(UpdateParams SetParam WriteParams)],
+   admin => [qw(update_params SetParam write_params)],
    db => [qw($db_driver $db_host $db_port $db_name $db_user $db_pass $db_sock
              $db_check)],
    localconfig => [qw($cvsbin $interdiffbin $diffpath $webservergroup)],
@@ -48,16 +50,6 @@ use Bugzilla::Constants;
 Exporter::export_ok_tags('admin', 'db', 'localconfig');
 
 use vars qw(@param_list);
-
-# Data::Dumper is required as needed, below. The problem is that then when
-# the code locally sets $Data::Dumper::Foo, this triggers 'used only once'
-# warnings.
-# We can't predeclare another package's vars, though, so just use them
-{
-    local $Data::Dumper::Sortkeys;
-    local $Data::Dumper::Terse;
-    local $Data::Dumper::Indent;
-}
 
 # INITIALISATION CODE
 # Perl throws a warning if we use bz_locations() directly after do.
@@ -111,13 +103,16 @@ sub SetParam {
     Bugzilla->params->{$name} = $value;
 }
 
-sub UpdateParams {
-    # --- PARAM CONVERSION CODE ---
+sub update_params {
+    my ($params) = @_;
+    my $answer = $params->{answer} || {};
 
-    # Note that this isn't particularly 'clean' in terms of separating
-    # the backend code (ie this) from the actual params.
-    # We don't care about that, though
-    my $param = Bugzilla->params;
+    my $param = read_param_file();
+
+    # If we didn't return any param values, then this is a new installation.
+    my $new_install = !(keys %$param);
+
+    # --- UPDATE OLD PARAMS ---
 
     # Old Bugzilla versions stored the version number in the params file
     # We don't want it, so get rid of it
@@ -144,7 +139,9 @@ sub UpdateParams {
 
     # Change from old product groups to controls for group_control_map
     # 2002-10-14 bug 147275 bugreport@peshkin.net
-    if (exists $param->{'usebuggroups'} && !exists $param->{'makeproductgroups'}) {
+    if (exists $param->{'usebuggroups'} && 
+        !exists $param->{'makeproductgroups'}) 
+    {
         $param->{'makeproductgroups'} = $param->{'usebuggroups'};
     }
     if (exists $param->{'usebuggroupsentry'} 
@@ -158,7 +155,9 @@ sub UpdateParams {
     }
 
     # set verify method to whatever loginmethod was
-    if (exists $param->{'loginmethod'} && !exists $param->{'user_verify_class'}) {
+    if (exists $param->{'loginmethod'} 
+        && !exists $param->{'user_verify_class'}) 
+    {
         $param->{'user_verify_class'} = $param->{'loginmethod'};
         delete $param->{'loginmethod'};
     }
@@ -182,49 +181,96 @@ sub UpdateParams {
     _load_params unless %params;
     foreach my $item (@param_list) {
         my $name = $item->{'name'};
-        $param->{$name} = $item->{'default'} unless exists $param->{$name};
+        unless (exists $param->{$name}) {
+            print "New parameter: $name\n" unless $new_install;
+            $param->{$name} = $answer->{$name} || $item->{'default'};
+        }
     }
+
+    $param->{'utf8'} = 1 if $new_install;
 
     # --- REMOVE OLD PARAMS ---
 
-    my @oldparams = ();
-
-    # Remove any old params
+    my @oldparams;
+    # Remove any old params, put them in old-params.txt
     foreach my $item (keys %$param) {
         if (!grep($_ eq $item, map ($_->{'name'}, @param_list))) {
-            require Data::Dumper;
-
-            local $Data::Dumper::Terse = 1;
+            local $Data::Dumper::Terse  = 1;
             local $Data::Dumper::Indent = 0;
             push (@oldparams, [$item, Data::Dumper->Dump([$param->{$item}])]);
             delete $param->{$item};
         }
     }
 
-    return @oldparams;
+    if (@oldparams) {
+        my $op_file = new IO::File('old-params.txt', '>>', 0600)
+          || die "old-params.txt: $!";
+
+        print "The following parameters are no longer used in Bugzilla,",
+              " and so have been\nmoved from your parameters file into",
+              " old-params.txt:\n";
+
+        foreach my $p (@oldparams) {
+            my ($item, $value) = @$p;
+            print $op_file "\n\n$item:\n$value\n";
+            print $item;
+            print ", " unless $item eq $oldparams[$#oldparams]->[0];
+        }
+        print "\n";
+        $op_file->close;
+    }
+
+    if (ON_WINDOWS && !-e SENDMAIL_EXE
+        && $param->{'mail_delivery_method'} eq 'sendmail')
+    {
+        my $smtp = $answer->{'SMTP_SERVER'};
+        if (!$smtp) {
+            print "\nBugzilla requires an SMTP server to function on",
+                  " Windows.\nPlease enter your SMTP server's hostname: ";
+            $smtp = <STDIN>;
+            chomp $smtp;
+            if ($smtp) {
+                $param->{'smtpserver'} = $smtp;
+             }
+             else {
+                print "\nWarning: No SMTP Server provided, defaulting to",
+                      " localhost\n";
+            }
+        }
+
+        $param->{'mail_delivery_method'} = 'smtp';
+    }
+
+    write_params($param);
 }
 
-sub WriteParams {
-    require Data::Dumper;
-    my $datadir = bz_locations()->{'datadir'};
+sub write_params {
+    my ($param_data) = @_;
+    $param_data ||= Bugzilla->params;
+
+    my $datadir    = bz_locations()->{'datadir'};
+    my $param_file = "$datadir/params";
 
     # This only has an affect for Data::Dumper >= 2.12 (ie perl >= 5.8.0)
     # Its just cosmetic, though, so that doesn't matter
     local $Data::Dumper::Sortkeys = 1;
 
-    require File::Temp;
     my ($fh, $tmpname) = File::Temp::tempfile('params.XXXXX',
                                               DIR => $datadir );
 
-    print $fh (Data::Dumper->Dump([Bugzilla->params], ['*param']))
+    print $fh (Data::Dumper->Dump([$param_data], ['*param']))
       || die "Can't write param file: $!";
 
     close $fh;
 
-    rename $tmpname, "$datadir/params"
-      || die "Can't rename $tmpname to $datadir/params: $!";
+    rename $tmpname, $param_file
+      || die "Can't rename $tmpname to $param_file: $!";
 
-    ChmodDataFile("$datadir/params", 0666);
+    ChmodDataFile($param_file, 0666);
+
+    # And now we have to reset the params cache so that Bugzilla will re-read
+    # them.
+    delete Bugzilla->request_cache->{params};
 }
 
 # Some files in the data directory must be world readable if and only if
@@ -243,6 +289,27 @@ sub ChmodDataFile {
     chmod $perm,$file;
 }
 
+sub read_param_file {
+    my %params;
+    my $datadir = bz_locations()->{'datadir'};
+    if (-e "$datadir/params") {
+        # Note that checksetup.pl sets file permissions on '$datadir/params'
+
+        # Using Safe mode is _not_ a guarantee of safety if someone does
+        # manage to write to the file. However, it won't hurt...
+        # See bug 165144 for not needing to eval this at all
+        my $s = new Safe;
+
+        $s->rdo("$datadir/params");
+        die "Error reading $datadir/params: $!" if $!;
+        die "Error evaluating $datadir/params: $@" if $@;
+
+        # Now read the param back out from the sandbox
+        %params = %{$s->varglob('param')};
+    }
+    return \%params;
+}
+
 1;
 
 __END__
@@ -256,9 +323,9 @@ Bugzilla::Config - Configuration parameters for Bugzilla
   # Administration functions
   use Bugzilla::Config qw(:admin);
 
-  my @removed_params = UpgradeParams();
+  update_params();
   SetParam($param, $value);
-  WriteParams();
+  write_params();
 
   # Localconfig variables may also be imported
   use Bugzilla::Config qw(:db);
@@ -281,30 +348,35 @@ Parameters can be set, retrieved, and updated.
 Sets the param named $name to $value. Values are checked using the checker
 function for the given param if one exists.
 
-=item C<UpdateParams()>
+=item C<update_params()>
 
 Updates the parameters, by transitioning old params to new formats, setting
-defaults for new params, and removing obsolete ones.
+defaults for new params, and removing obsolete ones. Used by F<checksetup.pl>
+in the process of an installation or upgrade.
 
-Any removed params are returned in a list, with elements [$item, $oldvalue]
-where $item is the entry in the param list.
+Prints out information about what it's doing, if it makes any changes.
 
-=item C<WriteParams()>
+May prompt the user for input, if certain required parameters are not
+specified.
 
-Writes the parameters to disk.
+=item C<write_params($params)>
 
-=back
+Description: Writes the parameters to disk.
 
-=over
+Params:      C<$params> (optional) - A hashref to write to the disk
+               instead of C<Bugzilla->params>. Used only by
+               C<update_params>.
 
-=item *
+Returns:     nothing
 
-The new value for the parameter
+=item C<read_param_file()>
 
-=item *
+Description: Most callers should never need this. This is used
+             by C<Bugzilla->params> to directly read C<$datadir/params>
+             and load it into memory. Use C<Bugzilla->params> instead.
 
-A reference to the entry in the param list for this parameter
+Params:      none
 
-Functions should return error text, or the empty string if there was no error.
+Returns:     A hashref containing the current params in C<$datadir/params>.
 
 =back

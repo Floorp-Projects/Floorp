@@ -25,6 +25,7 @@ package Bugzilla;
 
 use strict;
 
+use Bugzilla::Config;
 use Bugzilla::Constants;
 use Bugzilla::Auth;
 use Bugzilla::Auth::Persist::Cookie;
@@ -147,7 +148,7 @@ sub cgi {
 
 sub params {
     my $class = shift;
-    request_cache()->{params} ||= _load_param_values();
+    request_cache()->{params} ||= Bugzilla::Config::read_param_file();
     return request_cache()->{params};
 }
 
@@ -344,27 +345,6 @@ sub _cleanup {
     $main->disconnect if $main;
     $shadow->disconnect if $shadow && Bugzilla->params->{"shadowdb"};
     undef $_request_cache;
-}
-
-sub _load_param_values {
-    my %params;
-    my $datadir = bz_locations()->{'datadir'};
-    if (-e "$datadir/params") {
-        # Note that checksetup.pl sets file permissions on '$datadir/params'
-
-        # Using Safe mode is _not_ a guarantee of safety if someone does
-        # manage to write to the file. However, it won't hurt...
-        # See bug 165144 for not needing to eval this at all
-        my $s = new Safe;
-
-        $s->rdo("$datadir/params");
-        die "Error reading $datadir/params: $!" if $!;
-        die "Error evaluating $datadir/params: $@" if $@;
-
-        # Now read the param back out from the sandbox
-        %params = %{$s->varglob('param')};
-    }
-    return \%params;
 }
 
 sub END {

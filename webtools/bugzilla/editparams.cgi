@@ -124,7 +124,7 @@ if ($action eq 'save' && $current_module) {
     $vars->{'message'} = 'parameters_updated';
     $vars->{'param_changed'} = \@changes;
 
-    WriteParams();
+    write_params();
 }
 
 $template->process("admin/params/editparams.html.tmpl", $vars)

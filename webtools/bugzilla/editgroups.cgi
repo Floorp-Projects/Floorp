@@ -639,7 +639,7 @@ sub doGroupChanges {
                     $update_params = 1;
                 }
             }
-            WriteParams() if $update_params;
+            write_params() if $update_params;
         }
         if ($desc ne $cgi->param('olddesc')) {
             $chgs = 1;

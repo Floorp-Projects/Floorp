@@ -410,7 +410,7 @@ if ($action eq 'update') {
         && $valueold eq Bugzilla->params->{$defaults{$field}})
     {
         SetParam($defaults{$field}, $value);
-        WriteParams();
+        write_params();
         $vars->{'default_value_updated'} = 1;
     }
 
