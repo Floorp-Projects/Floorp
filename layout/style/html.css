@@ -398,6 +398,7 @@ img:-moz-loading::before, input:-moz-loading::before,
 applet:-moz-empty-except-children-with-localname(param):-moz-broken::before,
 applet:-moz-empty-except-children-with-localname(param):-moz-user-disabled::before {
   content: -moz-alt-content !important;
+  unicode-bidi: embed;
 }
 
 object:-moz-broken > *|*, applet:-moz-broken > *|*

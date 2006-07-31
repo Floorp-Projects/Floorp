@@ -102,6 +102,8 @@
 #include "nsContentPolicyUtils.h"
 #include "nsIEventStateManager.h"
 #include "nsLayoutErrors.h"
+#include "nsBidiUtils.h"
+#include "nsBidiPresUtils.h"
 
 #ifdef DEBUG
 #undef NOISY_IMAGE_LOADING
@@ -1007,7 +1009,7 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
 // The number of characters that fit within the maximum width are returned in
 // aMaxFit. NOTE: it is assumed that the fontmetrics have already been selected
 // into the rendering context before this is called (for performance). MMP
-void
+nscoord
 nsImageFrame::MeasureString(const PRUnichar*     aString,
                             PRInt32              aLength,
                             nscoord              aMaxWidth,
@@ -1064,6 +1066,7 @@ nsImageFrame::MeasureString(const PRUnichar*     aString,
       break;
     }
   }
+  return totalWidth;
 }
 
 // Formats the alt-text to fit within the specified rectangle. Breaks lines
@@ -1098,10 +1101,29 @@ nsImageFrame::DisplayAltText(nsPresContext*      aPresContext,
   while ((strLen > 0) && (firstLine || (y + maxDescent) < aRect.YMost())) {
     // Determine how much of the text to display on this line
     PRUint32  maxFit;  // number of characters that fit
-    MeasureString(str, strLen, aRect.width, maxFit, aRenderingContext);
+    nscoord strWidth = MeasureString(str, strLen, aRect.width, maxFit,
+                                     aRenderingContext);
     
     // Display the text
-    aRenderingContext.DrawString(str, maxFit, aRect.x, y + maxAscent);
+    nsresult rv = NS_ERROR_FAILURE;
+
+    if (aPresContext->BidiEnabled()) {
+      nsBidiPresUtils* bidiUtils =  aPresContext->GetBidiUtils();
+      
+      if (bidiUtils) {
+        const nsStyleVisibility* vis = GetStyleVisibility();
+        if (vis->mDirection == NS_STYLE_DIRECTION_RTL)
+          rv = bidiUtils->RenderText(str, maxFit, NSBIDI_RTL,
+                                     aPresContext, aRenderingContext,
+                                     aRect.XMost() - strWidth, y + maxAscent);
+        else
+          rv = bidiUtils->RenderText(str, maxFit, NSBIDI_LTR,
+                                     aPresContext, aRenderingContext,
+                                     aRect.x, y + maxAscent);
+      }
+    }
+    if (NS_FAILED(rv))
+      aRenderingContext.DrawString(str, maxFit, aRect.x, y + maxAscent);
 
     // Move to the next line
     str += maxFit;
@@ -1175,6 +1197,7 @@ nsImageFrame::DisplayAltFeedback(nsIRenderingContext& aRenderingContext,
 
   // Check if we should display image placeholders
   if (dispIcon) {
+    const nsStyleVisibility* vis = GetStyleVisibility();
     PRInt32 size = NSIntPixelsToTwips(ICON_SIZE, p2t);
 
     PRBool iconUsed = PR_FALSE;
@@ -1189,7 +1212,9 @@ nsImageFrame::DisplayAltFeedback(nsIRenderingContext& aRenderingContext,
       if (imgCon) {
         // draw it
         nsRect source(0,0,size,size);
-        nsRect dest(inner.x,inner.y,size,size);
+        nsRect dest((vis->mDirection == NS_STYLE_DIRECTION_RTL) ?
+                    inner.XMost() - size : inner.x,
+                    inner.y, size, size);
         aRenderingContext.DrawImage(imgCon, source, dest);
         iconUsed = PR_TRUE;
       }
@@ -1198,10 +1223,12 @@ nsImageFrame::DisplayAltFeedback(nsIRenderingContext& aRenderingContext,
     // if we could not draw the image, then just draw some graffiti
     if (!iconUsed) {
       nscolor oldColor;
-      aRenderingContext.DrawRect(aPt.x, aPt.y,size,size);
+      nscoord iconXPos = (vis->mDirection ==   NS_STYLE_DIRECTION_RTL) ?
+                         inner.XMost() - size : inner.x;
+      aRenderingContext.DrawRect(iconXPos, inner.y,size,size);
       aRenderingContext.GetColor(oldColor);
       aRenderingContext.SetColor(NS_RGB(0xFF,0,0));
-      aRenderingContext.FillEllipse(NS_STATIC_CAST(int,size/2) + aPt.x,NS_STATIC_CAST(int,size/2) + aPt.y,
+      aRenderingContext.FillEllipse(NS_STATIC_CAST(int,size/2) + iconXPos,NS_STATIC_CAST(int,size/2) + inner.y,
                                     NS_STATIC_CAST(int,(size/2)-(2*p2t)),NS_STATIC_CAST(int,(size/2)-(2*p2t)));
       aRenderingContext.SetColor(oldColor);
     }  
@@ -1209,7 +1236,8 @@ nsImageFrame::DisplayAltFeedback(nsIRenderingContext& aRenderingContext,
     // Reduce the inner rect by the width of the icon, and leave an
     // additional ICON_PADDING pixels for padding
     PRInt32 iconWidth = NSIntPixelsToTwips(ICON_SIZE + ICON_PADDING, p2t);
-    inner.x += iconWidth;
+    if (vis->mDirection != NS_STYLE_DIRECTION_RTL)
+      inner.x += iconWidth;
     inner.width -= iconWidth;
   }
 
