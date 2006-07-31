@@ -54,6 +54,8 @@
     <prefpane id="paneAlarms" onpaneload="gAlarmsPane.init();">
         <script type="application/x-javascript"
                 src="chrome://calendar/content/preferences/alarms.js"/>
+        <script type="application/x-javascript"
+                src="chrome://calendar/content/calendar-dialog-utils.js"/>
 
         <preferences>
             <preference id="calendar.alarms.playsound"
@@ -193,7 +195,7 @@
                             <textbox id="eventdefalarmlen"
                                      preference="calendar.alarms.eventalarmlen"
                                      size="3"
-                                     oninput="gAlarmsPane.updateMenuPlural('eventdefalarmlen','eventdefalarmunit')"/>
+                                     oninput="validateNaturalNums(event); gAlarmsPane.updateMenuPlural('eventdefalarmlen','eventdefalarmunit')"/>
                             <menulist id="eventdefalarmunit"
                                       crop="none"
                                       preference="calendar.alarms.eventalarmunit"
@@ -227,7 +229,7 @@
                             <textbox id="tododefalarmlen"
                                      preference="calendar.alarms.todoalarmlen"
                                      size="3"
-                                     oninput="gAlarmsPane.updateMenuPlural('tododefalarmlen','tododefalarmunit')"/>
+                                     oninput="validateNaturalNums(event); gAlarmsPane.updateMenuPlural('tododefalarmlen','tododefalarmunit')"/>
                             <menulist id="tododefalarmunit"
                                       crop="none"
                                       preference="calendar.alarms.todoalarmunit"

@@ -89,3 +89,12 @@ function validateIntegers(event)
         event.preventDefault();
     }
 }
+
+function validateNaturalNums(event) {
+    validateIntegers(event);
+    var num = event.target.value;
+    if (num < 0) {
+        event.target.value = -1 * num;
+        event.preventDefault();
+    }
+}
