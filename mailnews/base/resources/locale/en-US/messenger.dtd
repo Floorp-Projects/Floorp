@@ -396,23 +396,16 @@
 <!ENTITY tagMenu.accesskey "g">
 <!ENTITY newTag.label "New Tag...">
 <!ENTITY newTag.accesskey "N">
-<!ENTITY labelCmd0.accesskey "0">
-<!ENTITY labelCmd0.key "0">
-<!ENTITY labelCmd1.label "1">
-<!ENTITY labelCmd1.accesskey "1">
-<!ENTITY labelCmd1.key "1">
-<!ENTITY labelCmd2.label "2">
-<!ENTITY labelCmd2.accesskey "2">
-<!ENTITY labelCmd2.key "2">
-<!ENTITY labelCmd3.label "3">
-<!ENTITY labelCmd3.accesskey "3">
-<!ENTITY labelCmd3.key "3">
-<!ENTITY labelCmd4.label "4">
-<!ENTITY labelCmd4.accesskey "4">
-<!ENTITY labelCmd4.key "4">
-<!ENTITY labelCmd5.label "5">
-<!ENTITY labelCmd5.accesskey "5">
-<!ENTITY labelCmd5.key "5">
+<!ENTITY tagCmd0.key "0">
+<!ENTITY tagCmd1.key "1">
+<!ENTITY tagCmd2.key "2">
+<!ENTITY tagCmd3.key "3">
+<!ENTITY tagCmd4.key "4">
+<!ENTITY tagCmd5.key "5">
+<!ENTITY tagCmd6.key "6">
+<!ENTITY tagCmd7.key "7">
+<!ENTITY tagCmd8.key "8">
+<!ENTITY tagCmd9.key "9">
 <!ENTITY markMenu.label "Mark">
 <!ENTITY markMenu.accesskey "k">
 <!ENTITY markAsReadCmd.label "As Read">

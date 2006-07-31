@@ -291,19 +291,6 @@
     <command id="cmd_markAsNotPhish" oncommand="goDoCommand('cmd_markAsNotPhish'); event.stopPropagation()" disabled="true"/>
 </commandset>
 
-<commandset id="mailLabelMenuItems"
-              commandupdater="true"
-              events="create-menu-label"
-              oncommandupdate="goUpdateMailMenuItems(this)">
-
-    <command id="cmd_label0" oncommand="goDoCommand('cmd_label0');" disabled="true"/>
-    <command id="cmd_label1" oncommand="goDoCommand('cmd_label1');" disabled="true"/>
-    <command id="cmd_label2" oncommand="goDoCommand('cmd_label2');" disabled="true"/>
-    <command id="cmd_label3" oncommand="goDoCommand('cmd_label3');" disabled="true"/>
-    <command id="cmd_label4" oncommand="goDoCommand('cmd_label4');" disabled="true"/>
-    <command id="cmd_label5" oncommand="goDoCommand('cmd_label5');" disabled="true"/>
-</commandset>
-
 <commandset id="mailToolsMenuItems"
               commandupdater="true"
               events="create-menu-tasks"
@@ -393,13 +380,17 @@
   <key id="key_toggleMessagePane" keycode="VK_F8" oncommand="MsgToggleMessagePane();" disabled="true"/>
   <key id="key_toggleFolderPane" keycode="VK_F9" oncommand="MsgToggleSplitter('gray_vertical_splitter');" observes="mailDisableKeys"/>
 
-  <!-- Label Keys -->
-  <key id="key_label0" charcode="&labelCmd0.key;"  oncommand="goDoCommand('cmd_label0')"/>
-  <key id="key_label1" charcode="&labelCmd1.key;"  oncommand="goDoCommand('cmd_label1')"/>
-  <key id="key_label2" charcode="&labelCmd2.key;"  oncommand="goDoCommand('cmd_label2')"/>
-  <key id="key_label3" charcode="&labelCmd3.key;"  oncommand="goDoCommand('cmd_label3')"/>
-  <key id="key_label4" charcode="&labelCmd4.key;"  oncommand="goDoCommand('cmd_label4')"/>
-  <key id="key_label5" charcode="&labelCmd5.key;"  oncommand="goDoCommand('cmd_label5')"/>
+  <!-- Tag Keys -->
+  <key id="key_tag0" key="&tagCmd0.key;" oncommand="RemoveAllMessageTags();"/>
+  <key id="key_tag1" key="&tagCmd1.key;" oncommand="ToggleMessageTagKey(1);"/>
+  <key id="key_tag2" key="&tagCmd2.key;" oncommand="ToggleMessageTagKey(2);"/>
+  <key id="key_tag3" key="&tagCmd3.key;" oncommand="ToggleMessageTagKey(3);"/>
+  <key id="key_tag4" key="&tagCmd4.key;" oncommand="ToggleMessageTagKey(4);"/>
+  <key id="key_tag5" key="&tagCmd5.key;" oncommand="ToggleMessageTagKey(5);"/>
+  <key id="key_tag6" key="&tagCmd6.key;" oncommand="ToggleMessageTagKey(6);"/>
+  <key id="key_tag7" key="&tagCmd7.key;" oncommand="ToggleMessageTagKey(7);"/>
+  <key id="key_tag8" key="&tagCmd8.key;" oncommand="ToggleMessageTagKey(8);"/>
+  <key id="key_tag9" key="&tagCmd9.key;" oncommand="ToggleMessageTagKey(9);"/>
 
   <key id="key_searchMail" key="&searchMailCmd.key;" oncommand="goDoCommand('cmd_search')" modifiers="accel, shift"/>
 
@@ -579,7 +570,9 @@
       </template>
     </menu>
     <menu id="threadPaneContext-tags" label="&tagMenu.label;" accesskey="&tagMenu.accesskey;">
-      <menupopup id="threadPaneContext-tagpopup" onpopupshowing="InitMessageTags('threadPaneContext')">
+      <menupopup id="threadPaneContext-tagpopup" onpopupshowing="InitMessageTags(this)">
+        <menuitem id="threadPaneContext-tagRemoveAll" oncommand="RemoveAllMessageTags();"/>
+        <menuseparator/>
         <menuseparator/>
         <menuitem id="threadPaneContext-tagNew"
                   label="&newTag.label;"
@@ -898,7 +891,9 @@
     </menu>
     <menuseparator id="messagePaneContext-sep-tags"/>
     <menu id="messagePaneContext-tags" label="&tagMenu.label;" accesskey="&tagMenu.accesskey;">
-      <menupopup id="messagePaneContext-tagpopup" onpopupshowing="InitMessageTags('messagePaneContext')">
+      <menupopup id="messagePaneContext-tagpopup" onpopupshowing="InitMessageTags(this)">
+        <menuitem id="messagePaneContext-tagRemoveAll" oncommand="RemoveAllMessageTags();"/>
+        <menuseparator/>
         <menuseparator/>
         <menuitem id="messagePaneContext-tagNew"
                   label="&newTag.label;"
@@ -1567,7 +1562,9 @@
       </template>
     </menu>
     <menu id="tagMenu" label="&tagMenu.label;" accesskey="&tagMenu.accesskey;">
-      <menupopup id="tagMenu-tagpopup" onpopupshowing="InitMessageTags('tagMenu')">
+      <menupopup id="tagMenu-tagpopup" onpopupshowing="InitMessageTags(this)">
+        <menuitem id="tagMenu-tagRemoveAll" oncommand="RemoveAllMessageTags();"/>
+        <menuseparator/>
         <menuseparator/>
         <menuitem id="tagMenu-tagNew"
                   label="&newTag.label;"

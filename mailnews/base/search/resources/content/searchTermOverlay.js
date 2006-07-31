@@ -520,20 +520,3 @@ function hideMatchAllItem()
     if (allItems)
       allItems.hidden = true;
 }
-
-// this is a helper routine used by our search term xbl widget
-var gLabelStrings = new Array;
-function GetLabelStrings()
-{
-  if (!gLabelStrings.length)
-  {
-    var prefString;
-    var pref = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
-    for (var index = 0; index < 6; index++)
-    {
-      prefString = pref.getComplexValue("mailnews.labels.description." + index,  Components.interfaces.nsIPrefLocalizedString);
-      gLabelStrings[index] = prefString;
-    }
-  }
-  return gLabelStrings;
-}
