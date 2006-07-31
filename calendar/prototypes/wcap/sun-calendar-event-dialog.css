@@ -1,0 +1,351 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Sun Microsystems code.
+ *
+ * The Initial Developer of the Original Code is Sun Microsystems.
+ * Portions created by the Initial Developer are Copyright (C) 2006
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Michael Buettner <michael.buettner@sun.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* we don't want the default padding for dialog windows */
+dialog {
+  padding: 0px;
+}
+
+label.label {
+  text-align: right;
+}
+
+.warning-text-class {
+  color : red;
+}
+
+main-page
+{
+	-moz-binding: url("chrome://calendar/content/sun-calendar-event-dialog-main.xml#main-page");
+	-moz-user-focus: normal;
+}
+
+/****************************************************************************************/
+
+recurrence-page
+{
+	-moz-binding: url("chrome://calendar/content/sun-calendar-event-dialog-recurrence.xml#recurrence-page");
+	-moz-user-focus: normal;
+}
+
+datepicker-weekday
+{
+	-moz-binding: url("chrome://calendar/content/sun-calendar-event-dialog-recurrence-datepicker.xml#datepicker-weekday");
+	-moz-user-focus: normal;
+}
+
+datepicker-monthday
+{
+	-moz-binding: url("chrome://calendar/content/sun-calendar-event-dialog-recurrence-datepicker.xml#datepicker-monthday");
+	-moz-user-focus: normal;
+}
+
+.datepicker-box {
+	-moz-binding: url("chrome://calendar/content/sun-calendar-event-dialog-recurrence-datepicker.xml#datepicker-box");
+}
+
+recurrence-calendar
+{
+	-moz-binding: url("chrome://calendar/content/sun-calendar-event-dialog-recurrence-preview.xml#recurrence-calendar");
+	-moz-user-focus: normal;
+}
+
+recurrence-preview
+{
+	-moz-binding: url("chrome://calendar/content/sun-calendar-event-dialog-recurrence-preview.xml#recurrence-preview");
+	-moz-user-focus: normal;
+}
+
+/****************************************************************************************/
+
+attendees-page
+{
+	-moz-binding: url("chrome://calendar/content/sun-calendar-event-dialog-attendees.xml#attendees-page");
+	-moz-user-focus: normal;
+}
+
+attendees-list
+{
+	-moz-binding: url("chrome://calendar/content/sun-calendar-event-dialog-attendees.xml#attendees-list");
+	-moz-user-focus: normal;
+}
+
+/****************************************************************************************/
+
+scroll-container 
+{
+	-moz-binding: url("chrome://calendar/content/sun-calendar-event-dialog-freebusy.xml#scroll-container");
+	-moz-user-focus: normal;
+}
+
+freebusy-day 
+{
+	-moz-binding: url("chrome://calendar/content/sun-calendar-event-dialog-freebusy.xml#freebusy-day");
+	-moz-user-focus: normal;
+}
+
+freebusy-timebar 
+{
+	-moz-binding: url("chrome://calendar/content/sun-calendar-event-dialog-freebusy.xml#freebusy-timebar");
+	-moz-user-focus: normal;
+}
+
+freebusy-row 
+{
+	-moz-binding: url("chrome://calendar/content/sun-calendar-event-dialog-freebusy.xml#freebusy-row");
+	-moz-user-focus: normal;
+}
+
+freebusy-grid
+{
+	-moz-binding: url("chrome://calendar/content/sun-calendar-event-dialog-freebusy.xml#freebusy-grid");
+	-moz-user-focus: normal;
+}
+
+/****************************************************************************************/
+
+timezone-page
+{
+	-moz-binding: url("chrome://calendar/content/sun-calendar-event-dialog-timezone.xml#timezone-page");
+	-moz-user-focus: normal;
+}
+
+/****************************************************************************************/
+
+
+.freebusy-container 
+{
+	overflow: hidden;
+	clip: rect(0px 0px 0px 0px);
+}
+
+.freebusy-content 
+{
+	overflow: hidden;
+	clip: rect(0px 0px 0px 0px);
+}
+
+/* margin-right 1px is needed to take border-right from the grid elements into account */
+.freebusy-timebar-title {
+	margin-right:1px;
+}
+
+.freebusy-timebar-hour 
+{
+	margin-right:1px;
+	margin-bottom: 5px;
+}
+
+.freebusy-timebar-hour[scheduled="true"] {
+	margin-bottom: 0px;
+	border-bottom: 5px solid;
+	-moz-border-bottom-colors: #688541 #8EB060 #ADC78B #D6E2C5;
+}
+
+.freebusy-grid 
+{
+	border-right: 1px solid #CACAFF;
+	background-color: #8EA4BB;
+	color: #FFFFFF;/* #8EA4BB;*/
+}
+
+.freebusy-grid[state="busy"] 
+{
+	background-color: #BE7D74;
+	color: #BE7D74;
+}
+
+.freebusy-grid[state="free"] 
+{
+	background-color: #8EBC8D;
+	color: #8EBC8D;
+}
+
+#dialog-box { 
+  padding-top: 8px;
+  padding-bottom: 10px;
+  -moz-padding-start: 8px;
+  -moz-padding-end: 10px;
+}
+
+#recurrence-page 
+{
+  padding-top: 0px;
+  padding-bottom: 10px;
+  -moz-padding-start: 8px;
+  -moz-padding-end: 10px;
+}
+
+#addressingWidget {
+  -moz-user-focus: none;
+}  
+
+.textbox-addressingWidget[noMatchesFound="true"] {
+  color: red;
+}
+
+#typecol-addressingWidget {
+  min-width: 9em;
+  border-right: 1px solid #CACAFF;
+}
+
+/* This applies to rows of the attendee-list and the freebusy-grid */
+.addressingWidgetItem,
+.dummy-row {
+  border: none !important;
+  background-color: inherit !important;
+  color: inherit !important;
+  
+  /* we set the minimal height to the height of the
+     largest icon [the person-icon in this case] to
+     ensure that the rows of the freebusy-grid and
+     the attendee-list always have the same height,
+     regardless of the font size. */
+  min-height: 16px;
+}
+
+.addressingWidgetCell {
+  border-bottom: 1px solid #CACAFF;
+  padding: 0px;
+}
+
+.addressingWidgetCell:first-child {
+  border-top: none;
+}
+
+.dummy-row-cell:first-child {
+  border-top: none;
+  border-bottom: 1px solid #CACAFF;
+}
+
+.person-icon {
+  margin: 0 3px;
+  list-style-image: url("chrome://messenger/skin/addressbook/icons/abcard.png");
+}
+
+.status-icon[status="ACCEPTED"] {
+  margin: 0 3px;
+  list-style-image: url("chrome://calendar/skin/attendees.png");
+  -moz-image-region: rect(0px 12px 14px 0px);
+}
+.status-icon[status="ACCEPTED"][disabled="true"] {
+  margin: 0 3px;
+  list-style-image: url("chrome://calendar/skin/attendees.png");
+  -moz-image-region: rect(14px 12px 28px 0px);
+}
+
+.status-icon[status="DECLINED"] {
+  margin: 0 3px;
+  list-style-image: url("chrome://calendar/skin/attendees.png");
+  -moz-image-region: rect(0px 24px 14px 12px);
+}
+.status-icon[status="DECLINED"][disabled="true"] {
+  margin: 0 3px;
+  list-style-image: url("chrome://calendar/skin/attendees.png");
+  -moz-image-region: rect(14px 24px 28px 12px);
+}
+
+.status-icon[status="NEEDS-ACTION"] {
+  margin: 0 3px;
+  list-style-image: url("chrome://calendar/skin/attendees.png");
+  -moz-image-region: rect(0px 36px 14px 24px);
+}
+.status-icon[status="NEEDS-ACTION"][disabled="true"] {
+  margin: 0 3px;
+  list-style-image: url("chrome://calendar/skin/attendees.png");
+  -moz-image-region: rect(14px 36px 28px 24px);
+}
+
+.status-icon[status="TENTATIVE"] {
+  margin: 0 3px;
+  list-style-image: url("chrome://calendar/skin/attendees.png");
+  -moz-image-region: rect(0px 48px 14px 36px);
+}
+.status-icon[status="TENTATIVE"][disabled="true"] {
+  margin: 0 3px;
+  list-style-image: url("chrome://calendar/skin/attendees.png");
+  -moz-image-region: rect(14px 48px 28px 36px);
+}
+
+.role-icon[role="REQ-PARTICIPANT"] {
+  margin: 0 3px;
+  list-style-image: url("chrome://calendar/skin/attendees.png");
+  -moz-image-region: rect(0px 60px 14px 48px);
+}
+.role-icon[role="REQ-PARTICIPANT"][disabled="true"] {
+  margin: 0 3px;
+  list-style-image: url("chrome://calendar/skin/attendees.png");
+  -moz-image-region: rect(14px 60px 28px 48px);
+}
+
+.role-icon[role="OPT-PARTICIPANT"] {
+  margin: 0 3px;
+  list-style-image: url("chrome://calendar/skin/attendees.png");
+  -moz-image-region: rect(0px 72px 14px 60px);
+}
+.role-icon[role="OPT-PARTICIPANT"][disabled="true"] {
+  margin: 0 3px;
+  list-style-image: url("chrome://calendar/skin/attendees.png");
+  -moz-image-region: rect(14px 72px 28px 60px);
+}
+
+.role-icon[role="CHAIR"] {
+  margin: 0 3px;
+  list-style-image: url("chrome://calendar/skin/attendees.png");
+  -moz-image-region: rect(0px 84px 14px 72px);
+}
+.role-icon[role="CHAIR"][disabled="true"] {
+  margin: 0 3px;
+  list-style-image: url("chrome://calendar/skin/attendees.png");
+  -moz-image-region: rect(14px 84px 28px 72px);
+}
+ 
+.toolbarbutton-1 {
+  -moz-box-orient: vertical;
+  min-width: 0px;
+}
+ 
+#content-frame {
+  border-left: 1px solid ThreeDDarkShadow;
+  border-right: 1px solid ThreeDLightShadow;
+  min-width: 10px; 
+  min-height: 10px;
+  height: 400px;
+}
+
+listboxbody {
+  overflow-y: hidden !important;
+}

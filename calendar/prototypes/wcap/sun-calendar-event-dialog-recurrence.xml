@@ -1,0 +1,793 @@
+<?xml version="1.0"?>
+<!--
+   - ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is calendar views.
+   -
+   - The Initial Developer of the Original Code is Oracle Corporation
+   - Portions created by the Initial Developer are Copyright (C) 2005
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Stuart Parmenter <stuart.parmenter@oracle.com>
+   -   Simon Paquet <bugzilla@babylonsounds.com>
+   -   Michael Buettner <michael.buettner@sun.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<!DOCTYPE dialog
+[
+  <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/global.dtd" >  %dtd1;
+  <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" >  %dtd2;
+  <!ENTITY % dtd3 SYSTEM "chrome://calendar/content/sun-calendar-event-dialog.dtd" > %dtd3;
+]>
+
+<bindings xmlns="http://www.mozilla.org/xbl"
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <!-- id's are evil, use anonid -->
+  <binding id="recurrence-page">
+    <content>
+
+      <xul:box xbl:inherits="orient" flex="1">
+        
+        <!-- recurrence pattern -->
+        <xul:groupbox>
+          <xul:caption label="&event.recurrence.pattern.label;"/>
+
+          <xul:grid>
+            <xul:columns>
+              <xul:column/>
+              <xul:column flex="1"/>
+            </xul:columns>
+
+            <xul:rows>
+              <xul:row align="center">
+                <xul:label value="&event.recurrence.occurs.label;" disable-on-readonly="true" disable-on-occurrence="true"/>
+                <xul:menulist id="period-list" oncommand="updateRecurrenceDeck();" disable-on-readonly="true" disable-on-occurrence="true">
+                  <xul:menupopup>
+                    <xul:menuitem label="&event.recurrence.none.label;" value="0"/>
+                    <xul:menuitem label="&event.recurrence.day.label;" value="1"/>
+                    <xul:menuitem label="&event.recurrence.week.label;" value="2"/>
+                    <xul:menuitem label="&event.recurrence.month.label;" value="3"/>
+                    <xul:menuitem label="&event.recurrence.year.label;" value="4"/>
+                  </xul:menupopup>
+                </xul:menulist>
+              </xul:row>
+              <xul:row align="top">
+
+                <xul:spacer/>
+
+                <xul:deck id="period-deck">
+
+                  <!-- None -->
+                  <xul:box orient="vertical" align="top">
+                  </xul:box>
+
+                  <!-- Daily -->
+                  <xul:box orient="vertical" align="top">
+                    <xul:radiogroup id="daily-group" oncommand="updateRecurrenceControls();">
+                      <xul:box orient="horizontal" align="center">
+                        <xul:radio label="&event.recurrence.pattern.every.label;" disable-on-readonly="true" disable-on-occurrence="true" selected="true"/>
+                        <xul:textbox id="daily-days" value="1" size="3" oninput="validateIntegers(event); updateRecurrenceControls();" disable-on-readonly="true" disable-on-occurrence="true"/>
+                        <xul:label value="&repeat.units.days;" disable-on-readonly="true" disable-on-occurrence="true"/>
+                        <xul:spacer flex="1"/>
+                      </xul:box>
+                      <xul:radio label="&event.recurrence.pattern.every.weekday.label;" disable-on-readonly="true" disable-on-occurrence="true"/>
+                    </xul:radiogroup>
+                  </xul:box>
+
+                  <!-- Weekly -->
+                  <xul:vbox>
+                    <xul:hbox align="center">
+                      <xul:label value="&event.recurrence.pattern.every.label;" disable-on-readonly="true" disable-on-occurrence="true"/>
+                      <xul:textbox id="weekly-weeks" value="1" size="3" oninput="validateIntegers(event); updateRecurrenceControls();" disable-on-readonly="true" disable-on-occurrence="true"/>
+                      <xul:label value="&repeat.units.weeks.both;" disable-on-readonly="true" disable-on-occurrence="true"/>
+                    </xul:hbox>
+                    <xul:hbox>
+                      <xul:label value="&event.recurrence.on.label;" disable-on-readonly="true" disable-on-occurrence="true"/>
+                      <xul:datepicker-weekday id="datepicker-weekday" flex="1" disable-on-readonly="true" disable-on-occurrence="true" onselect="updateRecurrenceControls();"/>
+                    </xul:hbox>
+                  </xul:vbox>
+
+                  <!-- Monthly -->
+                  <xul:vbox>
+                    <xul:hbox align="center">
+                      <xul:label value="&event.recurrence.pattern.every.label;" disable-on-readonly="true" disable-on-occurrence="true"/>
+                      <xul:textbox id="monthly-interval" value="1" size="3" oninput="validateIntegers(event); updateRecurrenceControls();" disable-on-readonly="true" disable-on-occurrence="true"/>
+                      <xul:label value="&repeat.units.months.both;" disable-on-readonly="true" disable-on-occurrence="true"/>
+                    </xul:hbox>
+                    <xul:radiogroup id="monthly-group" oncommand="updateRecurrenceControls();">
+                      <xul:box orient="horizontal" align="center">
+                        <xul:radio label="&event.recurrence.the.label;" selected="true" disable-on-readonly="true" disable-on-occurrence="true"/>
+                        <xul:menulist id="monthly-ordinal" disable-on-readonly="true" disable-on-occurrence="true">
+                          <xul:menupopup>
+                            <xul:menuitem label="&event.recurrence.repeat.first.label;" value="1"/>
+                            <xul:menuitem label="&event.recurrence.repeat.second.label;" value="2"/>
+                            <xul:menuitem label="&event.recurrence.repeat.third.label;" value="3"/>
+                            <xul:menuitem label="&event.recurrence.repeat.fourth.label;" value="4"/>
+                            <xul:menuitem label="&event.recurrence.repeat.last.label;" value="-1"/>
+                          </xul:menupopup>
+                        </xul:menulist>
+                        <xul:menulist id="monthly-weekday" disable-on-readonly="true" disable-on-occurrence="true">
+                          <xul:menupopup>
+                            <xul:menuitem label="&day.1.name;" value="1"/>
+                            <xul:menuitem label="&day.2.name;" value="2"/>
+                            <xul:menuitem label="&day.3.name;" value="3"/>
+                            <xul:menuitem label="&day.4.name;" value="4"/>
+                            <xul:menuitem label="&day.5.name;" value="5"/>
+                            <xul:menuitem label="&day.6.name;" value="6"/>
+                            <xul:menuitem label="&day.7.name;" value="7"/>
+                          </xul:menupopup>
+                        </xul:menulist>
+                      </xul:box>
+                      <xul:box orient="horizontal" align="center">
+                        <xul:radio label="&event.recurrence.repeat.recur.label;" disable-on-readonly="true" disable-on-occurrence="true"/>
+                        <xul:datepicker-monthday id="monthly-days" onselect="updateRecurrenceControls();" disable-on-readonly="true" disable-on-occurrence="true"/>
+                      </xul:box>
+                    </xul:radiogroup>
+                  </xul:vbox>
+
+                  <!-- Yearly -->
+                  <xul:box orient="vertical" align="top">
+                    <xul:hbox align="center">
+                      <xul:label value="&event.recurrence.every.label;"/>
+                      <xul:textbox id="yearly-interval" value="1" size="3" oninput="validateIntegers(event); updateRecurrenceControls();" disable-on-readonly="true" disable-on-occurrence="true"/>
+                      <xul:label value="&repeat.units.years.both;"/>
+                    </xul:hbox>
+                    <xul:radiogroup id="yearly-group" oncommand="updateRecurrenceControls();">
+                      <xul:grid flex="1">
+                        <xul:columns>
+                          <xul:column/>
+                          <xul:column flex="1"/>
+                        </xul:columns>
+                        <xul:rows>
+                          <xul:row align="center">
+                            <xul:radio label="&event.recurrence.pattern.every.label;" selected="true" disable-on-readonly="true" disable-on-occurrence="true"/>
+                            <xul:box orient="horizontal" align="center">
+                              <xul:textbox id="yearly-days" value="1" size="3" oninput="updateRecurrenceControls();" disable-on-readonly="true" disable-on-occurrence="true"/>
+                              <xul:menulist id="yearly-month-ordinal" disable-on-readonly="true" disable-on-occurrence="true">
+                                <xul:menupopup>
+                                  <xul:menuitem label="&month.1.name;" value="1"/>
+                                  <xul:menuitem label="&month.2.name;" value="2"/>
+                                  <xul:menuitem label="&month.3.name;" value="3"/>
+                                  <xul:menuitem label="&month.4.name;" value="4"/>
+                                  <xul:menuitem label="&month.5.name;" value="5"/>
+                                  <xul:menuitem label="&month.6.name;" value="6"/>
+                                  <xul:menuitem label="&month.7.name;" value="7"/>
+                                  <xul:menuitem label="&month.8.name;" value="8"/>
+                                  <xul:menuitem label="&month.9.name;" value="9"/>
+                                  <xul:menuitem label="&month.10.name;" value="10"/>
+                                  <xul:menuitem label="&month.11.name;" value="11"/>
+                                  <xul:menuitem label="&month.12.name;" value="12"/>
+                                </xul:menupopup>
+                              </xul:menulist>
+                            </xul:box>
+                          </xul:row>
+                          <xul:row align="center">
+                            <xul:radio label="&event.recurrence.pattern.every.label;" disable-on-readonly="true" disable-on-occurrence="true"/>
+                            <xul:box orient="horizontal" align="center">
+                              <xul:menulist id="yearly-ordinal" disable-on-readonly="true" disable-on-occurrence="true">
+                                <xul:menupopup>
+                                  <xul:menuitem label="&event.recurrence.repeat.first.label;" value="1"/>
+                                  <xul:menuitem label="&event.recurrence.repeat.second.label;" value="2"/>
+                                  <xul:menuitem label="&event.recurrence.repeat.third.label;" value="3"/>
+                                  <xul:menuitem label="&event.recurrence.repeat.fourth.label;" value="4"/>
+                                  <xul:menuitem label="&event.recurrence.repeat.last.label;" value="-1"/>
+                                </xul:menupopup>
+                              </xul:menulist>
+                              <xul:menulist id="yearly-weekday" disable-on-readonly="true" disable-on-occurrence="true">
+                                <xul:menupopup>
+                                  <xul:menuitem label="&day.1.name;" value="1"/>
+                                  <xul:menuitem label="&day.2.name;" value="2"/>
+                                  <xul:menuitem label="&day.3.name;" value="3"/>
+                                  <xul:menuitem label="&day.4.name;" value="4"/>
+                                  <xul:menuitem label="&day.5.name;" value="5"/>
+                                  <xul:menuitem label="&day.6.name;" value="6"/>
+                                  <xul:menuitem label="&day.7.name;" value="7"/>
+                                </xul:menupopup>
+                              </xul:menulist>
+                            </xul:box>
+                          </xul:row>
+                          <xul:row align="center">
+                            <xul:label value="&event.recurrence.of.label;" style="text-align: right"/>
+                            <xul:menulist id="yearly-month-rule" disable-on-readonly="true" disable-on-occurrence="true">
+                              <xul:menupopup>
+                                <xul:menuitem label="&month.1.name;" value="1"/>
+                                <xul:menuitem label="&month.2.name;" value="2"/>
+                                <xul:menuitem label="&month.3.name;" value="3"/>
+                                <xul:menuitem label="&month.4.name;" value="4"/>
+                                <xul:menuitem label="&month.5.name;" value="5"/>
+                                <xul:menuitem label="&month.6.name;" value="6"/>
+                                <xul:menuitem label="&month.7.name;" value="7"/>
+                                <xul:menuitem label="&month.8.name;" value="8"/>
+                                <xul:menuitem label="&month.9.name;" value="9"/>
+                                <xul:menuitem label="&month.10.name;" value="10"/>
+                                <xul:menuitem label="&month.11.name;" value="11"/>
+                                <xul:menuitem label="&month.12.name;" value="12"/>
+                              </xul:menupopup>
+                            </xul:menulist>
+                          </xul:row>
+                        </xul:rows>
+                      </xul:grid>
+                    </xul:radiogroup>
+                  </xul:box>
+                </xul:deck>
+              </xul:row>
+            </xul:rows>
+          </xul:grid>
+        </xul:groupbox>
+
+        <!-- range of recurrence -->
+        <xul:groupbox>
+          <xul:caption label="&event.recurrence.range.label;"/>
+          <xul:vbox>
+            <xul:radiogroup id="recurrence-duration" oncommand="updateRecurrenceControls()">
+              <xul:radio id="recurrence-range-forever" label="&event.recurrence.forever.label;" value="forever" selected="true" disable-on-readonly="true" disable-on-occurrence="true"/>
+              <xul:box orient="horizontal" align="center">
+                <xul:radio id="recurrence-range-for" label="&event.recurrence.repeat.for.label;" value="ntimes" disable-on-readonly="true" disable-on-occurrence="true"/>
+                <xul:textbox id="repeat-ntimes-count" size="3" value="5" oninput="validateIntegers(event); updateRecurrenceControls();" disable-on-readonly="true" disable-on-occurrence="true"/>
+                <xul:label id="repeat-appointments-label" value="&event.recurrence.appointments.label;" disable-on-readonly="true" disable-on-occurrence="true"/>
+              </xul:box>
+              <xul:box orient="horizontal" align="center">
+                <xul:radio id="recurrence-range-until" label="&event.repeat.until.label;" value="until" disable-on-readonly="true" disable-on-occurrence="true"/>
+                <xul:datepicker id="repeat-until-date" disable-on-readonly="true" disable-on-occurrence="true"/>
+              </xul:box>
+            </xul:radiogroup>
+          </xul:vbox>
+        </xul:groupbox>
+
+        <!-- preview -->
+        <xul:groupbox flex="1">
+          <xul:caption label="&event.recurrence.preview.label;"/>
+          <xul:recurrence-preview id="recurrence-preview" flex="1"/>
+        </xul:groupbox>
+      </xul:box>
+
+    </content>
+    <implementation>
+
+      <field name="mCalID">null</field>
+      <field name="mUserID">null</field>
+      <field name="mOrganizerID">null</field>
+      <field name="mIsReadOnly">false</field>
+      <field name="mIsOrganizer">false</field>
+
+      <constructor>
+        <![CDATA[
+          var self = this;
+          var load = function loadHandler() { self.onLoad(); };
+          window.addEventListener("load", load, true);
+        ]]>
+      </constructor>
+      
+      <method name="onLoad">
+        <body>
+          <![CDATA[
+            // set period to 'none'.
+            document.getElementById("period-list").selectedIndex = 0;
+            
+            var args = window.arguments[0];
+            var item = args.calendarEvent;
+            var calendar = item.calendar;
+            var recinfo = item.recurrenceInfo;
+
+            // set 'mIsReadOnly' if the calendar is read-only
+            if (calendar && calendar.readOnly)
+              this.mIsReadOnly = true;
+
+            // assume we're the organizer [in case that the calendar
+            // does not support the concept of identities].
+            this.mIsOrganizer = true;
+            
+            try {
+              this.mUserID = "";
+              this.mCalID = "";
+              this.mOrganizerID = "";
+            
+              var provider = item.calendar.QueryInterface(Components.interfaces.calIWcapCalendar);
+              this.mCalID = provider.calId;
+              this.mUserID = provider.userId;
+              this.mOrganizerID = ((item.organizer == null || item.organizer.id == null)
+                              ? this.mCalID // sensible default
+                              : item.organizer.id);
+
+              // set 'mIsOrganizer' if the current calid originally scheduled this event.
+              this.mIsOrganizer = false;
+              if(this.mCalID == this.mOrganizerID)
+                this.mIsOrganizer = true;
+            }
+            catch(e) {}
+            
+            if(item.parentItem != item) {
+                item = item.parentItem;
+                recinfo = item.recurrenceInfo;
+                this.disableRecurrenceFields("disable-on-occurrence");
+            } else {
+              if(this.mIsReadOnly || !this.mIsOrganizer) {
+                this.disableRecurrenceFields("disable-on-readonly");
+              }
+            }
+
+            // set starting value for 'repeat until' rule.
+            var date = item.startDate || item.entryDate || item.dueDate;
+            setElementValue("repeat-until-date", date);
+    
+            if(recinfo) {
+
+                // split out rules and exceptions
+                var rrules = this.splitRecurrenceRules(recinfo);
+                var rules = rrules[0];
+                var exceptions = rrules[1];
+
+                // deal with the rules
+                if (rules.length > 0) {
+                    // we only handle 1 rule currently
+                    var rule = rules[0];
+                    if (rule instanceof calIRecurrenceRule) {
+
+                        switch(rule.type) {
+                            case "DAILY":
+                                document.getElementById("period-list").selectedIndex = 1;
+                                setElementValue("daily-days", rule.interval);
+                                var ruleComp = rule.getComponent("BYDAY",{});
+                                if(ruleComp.length > 0) {
+                                    document.getElementById("daily-group").selectedIndex = 1;
+                                } else {
+                                    document.getElementById("daily-group").selectedIndex = 0;
+                                }
+                                break;
+                            case "WEEKLY":
+                                document.getElementById("period-list").selectedIndex = 2;
+                                setElementValue("weekly-weeks", rule.interval);
+                                var days = rule.getComponent("BYDAY", {});
+                                document.getElementById("datepicker-weekday").days = days;
+                                break;
+                            case "MONTHLY":
+                                document.getElementById("period-list").selectedIndex = 3;
+                                setElementValue("monthly-interval", rule.interval);
+                                var ruleComp = rule.getComponent("BYDAY",{});
+                                if (ruleComp.length > 0) {
+                                  document.getElementById("monthly-group").selectedIndex = 0;
+                                  var byday = ruleComp[0];
+                                  var occurrence = (byday-(byday%8))/8;
+                                  var weekday = byday%8;
+                                  setElementValue("monthly-ordinal",occurrence);
+                                  setElementValue("monthly-weekday",weekday);
+                                } else {
+                                  var ruleComp = rule.getComponent("BYMONTHDAY",{});
+                                  if (ruleComp.length > 0) {
+                                    document.getElementById("monthly-group").selectedIndex = 1;
+                                    document.getElementById("monthly-days").days = ruleComp;
+                                  }
+                                }
+                                break;
+                            case "YEARLY":
+                                document.getElementById("period-list").selectedIndex = 4;
+                                setElementValue("yearly-interval", rule.interval);
+                                var byMonthRule = rule.getComponent("BYMONTH",{});
+                                var byDayRule = rule.getComponent("BYDAY",{});
+                                var byMonthDayRule = rule.getComponent("BYMONTHDAY",{});
+                                if (byMonthRule.length > 0) {
+                                  if(byMonthDayRule.length > 0) {
+                                    document.getElementById("yearly-group").selectedIndex = 0;
+                                    setElementValue("yearly-month-ordinal",byMonthRule[0]);
+                                    setElementValue("yearly-days",byMonthDayRule[0]);
+                                  } else if(byDayRule.length > 0) {
+                                    document.getElementById("yearly-group").selectedIndex = 1;
+                                    var byday = byDayRule[0];
+                                    var occurrence = (byday-(byday%8))/8;
+                                    var weekday = byday%8;
+                                    setElementValue("yearly-ordinal",occurrence);
+                                    setElementValue("yearly-weekday",weekday);
+                                    setElementValue("yearly-month-rule",byMonthRule[0]);
+                                  }
+                                }
+                                break;
+                            default:
+                                dump("unable to handle your rule type!\n");
+                                break;
+                        }
+
+                        /* load up the duration of the event radiogroup */
+                        if (rule.isByCount) {
+                            if (rule.count == -1) {
+                                setElementValue("recurrence-duration", "forever");
+                            } else {
+                                setElementValue("recurrence-duration", "ntimes");
+                                setElementValue("repeat-ntimes-count", rule.count );
+                            }
+                        } else {
+                            var endDate = rule.endDate;
+                            if (!endDate) {
+                                setElementValue("recurrence-duration", "forever");
+                            } else {
+                                // convert the datetime from UTC to localtime.
+                                endDate = endDate.getInTimezone(calendarDefaultTimezone());
+                                setElementValue("recurrence-duration", "until");
+                                setElementValue("repeat-until-date", endDate.jsDate);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // update controls
+            this.updateRecurrenceDeck();
+          ]]>
+        </body>
+      </method>
+
+      <method name="onSave">
+        <parameter name="item"/>
+        <body>
+          <![CDATA[
+            // always return 'null' if this item is an occurrence.
+            if(item.parentItem != item) {
+                return null;
+            }
+
+            // This works, but if we ever support more complex recurrence,
+            // e.g. recurrence for Martians, then we're going to want to
+            // not clone and just recreate the recurrenceInfo each time.
+            // The reason is that the order of items (rules/dates/datesets)
+            // matters, so we can't always just append at the end.  This
+            // code here always inserts a rule first, because all our
+            // exceptions should come afterward.
+            var deckNumber = Number(getElementValue("period-list"));
+            if(!deckNumber) {
+                return null;
+            }
+
+            var recurrenceInfo = item.recurrenceInfo;
+            if (recurrenceInfo) {
+                recurrenceInfo = recurrenceInfo.clone();
+                var rrules = this.splitRecurrenceRules(recurrenceInfo);
+                if (rrules[0].length > 0)
+                    recurrenceInfo.deleteRecurrenceItem(rrules[0][0]);
+            } else {
+                recurrenceInfo = createRecurrenceInfo();
+                recurrenceInfo.item = window.calendarItem;
+            }
+
+            var recRule = new calRecurrenceRule();
+            switch (deckNumber) {
+            case 1:
+                recRule.type = "DAILY";
+                var dailyGroup = document.getElementById("daily-group");
+                if(dailyGroup.selectedIndex==0) {
+                    var ndays = Number(getElementValue("daily-days"));
+                    recRule.interval = ndays;
+                } else {
+                    recRule.interval = 1;
+                    var onDays = [ 2,3,4,5,6 ];
+                    recRule.setComponent("BYDAY", onDays.length, onDays);
+                }
+                break;
+            case 2:
+                recRule.type = "WEEKLY";
+                var ndays = Number(getElementValue("weekly-weeks"));
+                recRule.interval = ndays;
+                var onDays = document.getElementById("datepicker-weekday").days;
+                if (onDays.length > 0)
+                    recRule.setComponent("BYDAY", onDays.length, onDays);
+                break;
+            case 3:
+                recRule.type = "MONTHLY";
+                var monthInterval = Number(getElementValue("monthly-interval"));
+                recRule.interval = monthInterval;
+                var monthlyGroup = document.getElementById("monthly-group");
+                if(monthlyGroup.selectedIndex==0) {
+                  var onDays = [
+                    Number(getElementValue("monthly-ordinal"))*8+
+                    Number(getElementValue("monthly-weekday")) ];
+                  recRule.setComponent("BYDAY", onDays.length, onDays);
+                } else {
+                  var monthlyDays = document.getElementById("monthly-days").days;
+                  if (monthlyDays.length > 0)
+                    recRule.setComponent("BYMONTHDAY", monthlyDays.length, monthlyDays);
+                }
+                break;
+            case 4:
+                recRule.type = "YEARLY";
+                var yearInterval = Number(getElementValue("yearly-interval"));
+                recRule.interval = yearInterval;
+                var yearlyGroup = document.getElementById("yearly-group");
+                if (yearlyGroup.selectedIndex==0) {
+                  var yearlyByMonth = [ Number(getElementValue("yearly-month-ordinal")) ];
+                  recRule.setComponent("BYMONTH", yearlyByMonth.length, yearlyByMonth);
+                  var yearlyByDay = [ Number(getElementValue("yearly-days")) ];
+                  recRule.setComponent("BYMONTHDAY", yearlyByDay.length, yearlyByDay);
+                } else {
+                  var yearlyByMonth = [ Number(getElementValue("yearly-month-rule")) ];
+                  recRule.setComponent("BYMONTH", yearlyByMonth.length, yearlyByMonth);
+                  var yearlyByDay = [
+                    Number(getElementValue("yearly-ordinal"))*8+
+                    Number(getElementValue("yearly-weekday")) ];
+                  recRule.setComponent("BYDAY", yearlyByDay.length, yearlyByDay);
+                }
+                break;
+            }
+
+            /* figure out how long this event is supposed to last */
+            switch(document.getElementById("recurrence-duration").selectedItem.value) {
+            case "forever":
+                recRule.count = -1;
+                break;
+            case "ntimes":
+                recRule.count = Math.max(1, getElementValue("repeat-ntimes-count"));
+                break;
+            case "until":
+                // get the datetime from the control (which is in localtime),
+                // set the time to 23:59:99 and convert that to UTC time.
+                var endDate = getElementValue("repeat-until-date")
+                endDate.setHours(23);
+                endDate.setMinutes(59);
+                endDate.setSeconds(59);
+                endDate.setMilliseconds(999);
+                endDate = jsDateToDateTime(endDate);
+                endDate.normalize();
+                recRule.endDate = endDate;
+                break;
+            }
+
+            if(recRule.interval < 1) {
+                return null;
+            }
+
+            recurrenceInfo.insertRecurrenceItemAt(recRule, 0);
+            return recurrenceInfo;
+          ]]>
+        </body>
+      </method>
+      
+      <method name="disableRecurrenceFields">
+        <parameter name="aAttributeName"/>
+        <body>
+          <![CDATA[
+            var list = document.getAnonymousNodes(this)[0];
+            var disableElements = list.getElementsByAttribute(aAttributeName, "true");
+            for (i=0;i<disableElements.length;i++) {
+              disableElements[i].setAttribute('disabled', 'true');
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="splitRecurrenceRules">
+        <parameter name="recurrenceInfo"/>
+        <body>
+          <![CDATA[
+            var ritems = recurrenceInfo.getRecurrenceItems({});
+
+            var rules = [];
+            var exceptions = [];
+
+            for each (var r in ritems) {
+                if (r.isNegative)
+                    exceptions.push(r);
+                else
+                    rules.push(r);
+            }
+
+            return [rules, exceptions];
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateRecurrenceDeck">
+        <body>
+          <![CDATA[
+            document.getElementById("period-deck").selectedIndex = Number(getElementValue("period-list"));
+
+            this.updateRecurrenceControls();
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateRecurrenceRange">
+        <body>
+          <![CDATA[
+            var item = window.calendarItem;
+            if(item.parentItem != item)
+                return;
+            if(this.mIsReadOnly || !this.mIsOrganizer)
+              return;
+
+            var radioRangeForever = document.getElementById("recurrence-range-forever");
+            var radioRangeFor = document.getElementById("recurrence-range-for");
+            var radioRangeUntil = document.getElementById("recurrence-range-until");
+            var rangeTimesCount = document.getElementById("repeat-ntimes-count");
+            var rangeUntilDate = document.getElementById("repeat-until-date");
+            var rangeAppointmentsLabel = document.getElementById("repeat-appointments-label");
+
+            var deckNumber = Number(getElementValue("period-list"));
+            if(!deckNumber) {
+                radioRangeForever.setAttribute("disabled","true");
+                radioRangeFor.setAttribute("disabled","true");
+                radioRangeUntil.setAttribute("disabled","true");
+                rangeTimesCount.setAttribute("disabled","true");
+                rangeUntilDate.setAttribute("disabled","true");
+                rangeAppointmentsLabel.setAttribute("disabled","true");
+            } else {
+            
+                radioRangeForever.removeAttribute("disabled");
+                radioRangeFor.removeAttribute("disabled");
+                radioRangeUntil.removeAttribute("disabled");
+                rangeAppointmentsLabel.removeAttribute("disabled");
+            
+                var durationSelection = document.getElementById("recurrence-duration").selectedItem.value;
+                if (durationSelection == "forever") {
+                }
+
+                if (durationSelection == "ntimes") {
+                    rangeTimesCount.removeAttribute("disabled");
+                } else {
+                    rangeTimesCount.setAttribute("disabled","true");
+                }
+
+                if (durationSelection == "until") {
+                    rangeUntilDate.removeAttribute("disabled");
+                } else {
+                    rangeUntilDate.setAttribute("disabled","true");
+                }
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="updatePreview">
+        <body>
+          <![CDATA[
+            var item = window.calendarItem;
+            if(item.parentItem != item) {
+                item = item.parentItem;
+            }
+            var recurrenceInfo = this.onSave(item);
+            var preview = document.getElementById("recurrence-preview");
+            preview.updatePreview(recurrenceInfo);
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateRecurrenceControls">
+        <body>
+          <![CDATA[
+            //this.updateAccept();
+            this.updateRecurrencePattern();
+            this.updateRecurrenceRange();
+            this.updatePreview();
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateRecurrenceAccept">
+        <body>
+          <![CDATA[
+            switch (Number(getElementValue("period-list"))) {
+            case 1: // daily
+                var ndays = Number(getElementValue("daily-days"));
+                if (ndays == "" || ndays < 1) {
+                    return false;
+                }
+                break;
+            }
+            if (document.getElementById("recurrence-duration").selectedItem.value == "ntimes") {
+                var ntimes = getElementValue("repeat-ntimes-count");
+                if (ntimes == "" || ntimes < 1) {
+                    return false;
+                }
+            }
+            return true;
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateRecurrencePattern">
+        <body>
+          <![CDATA[
+            // ****************************************************************************/
+            // disables/enables controls related to the recurrence pattern.
+            // the status of the controls depends on which period entry is selected
+            // and which form of pattern rule is selected.
+            // ****************************************************************************/
+            var item = window.calendarItem;
+            if(item.parentItem != item)
+                return;
+            if(this.mIsReadOnly || !this.mIsOrganizer)
+              return;
+         
+            switch (Number(getElementValue("period-list"))) {
+                
+                // daily
+                case 1:
+                    var dailyGroup = document.getElementById("daily-group");
+                    var dailyDays = document.getElementById("daily-days");
+                    dailyDays.removeAttribute("disabled", "true");
+                    if(dailyGroup.selectedIndex==1) {
+                        dailyDays.setAttribute("disabled", "true");
+                    }
+                    break;
+                    
+                // weekly
+                case 2:
+                    break;
+                    
+                // monthly
+                case 3:
+                    var monthlyGroup = document.getElementById("monthly-group");
+                    var monthlyOrdinal = document.getElementById("monthly-ordinal");
+                    var monthlyWeekday = document.getElementById("monthly-weekday");
+                    var monthlyDays = document.getElementById("monthly-days");
+                    monthlyOrdinal.removeAttribute("disabled", "true");
+                    monthlyWeekday.removeAttribute("disabled", "true");
+                    monthlyDays.removeAttribute("disabled", "true");
+                    if(monthlyGroup.selectedIndex==0) {
+                        monthlyDays.setAttribute("disabled", "true");
+                    } else {
+                        monthlyOrdinal.setAttribute("disabled", "true");
+                        monthlyWeekday.setAttribute("disabled", "true");
+                    }
+                    break;
+
+                // yearly
+                case 4:
+                    var yearlyGroup = document.getElementById("yearly-group");
+                    var yearlyDays = document.getElementById("yearly-days");
+                      var yearlyMonthOrdinal = document.getElementById("yearly-month-ordinal");
+                    var yearlyOrdinal = document.getElementById("yearly-ordinal");
+                    var yearlyWeekday = document.getElementById("yearly-weekday");
+                    var yearlyMonthRule = document.getElementById("yearly-month-rule");
+                    yearlyDays.removeAttribute("disabled", "true");
+                    yearlyMonthOrdinal.removeAttribute("disabled", "true");
+                    yearlyOrdinal.removeAttribute("disabled", "true");
+                    yearlyWeekday.removeAttribute("disabled", "true");
+                    yearlyMonthRule.removeAttribute("disabled", "true");
+                    if(yearlyGroup.selectedIndex==0) {
+                        yearlyOrdinal.setAttribute("disabled", "true");
+                        yearlyWeekday.setAttribute("disabled", "true");
+                        yearlyMonthRule.setAttribute("disabled", "true");
+                    } else {
+                        yearlyDays.setAttribute("disabled", "true");
+                        yearlyMonthOrdinal.setAttribute("disabled", "true");
+                    }
+                    break;
+            }
+          ]]>
+        </body>
+      </method>
+
+    </implementation>
+
+    <handlers>
+    </handlers>
+
+  </binding>
+
+</bindings>
+
+

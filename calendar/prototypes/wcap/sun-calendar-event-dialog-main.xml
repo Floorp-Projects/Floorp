@@ -1,0 +1,1149 @@
+<?xml version="1.0"?>
+<!-- -*- Mode: xml; indent-tabs-mode: nil; -*- -->
+<!--
+   - ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is calendar views.
+   -
+   - The Initial Developer of the Original Code is Oracle Corporation
+   - Portions created by the Initial Developer are Copyright (C) 2005
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Stuart Parmenter <stuart.parmenter@oracle.com>
+   -   Simon Paquet <bugzilla@babylonsounds.com>
+   -   Michael Buettner <michael.buettner@sun.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<!DOCTYPE dialog
+[
+  <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/global.dtd" >  %dtd1;
+  <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" >  %dtd2;
+]>
+
+<bindings xmlns="http://www.mozilla.org/xbl"
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <!-- id's are evil, use anonid -->
+  <binding id="main-page" extends="xul:box">
+    <content>
+      
+      <xul:vbox id="dialog-box" flex="1">
+
+        <xul:label id="read-only-item" value="&newevent.readonly.item.warning;" class="warning-text-class" hidden="true"/>
+        <xul:label id="read-only-cal" value="&newevent.readonly.cal.warning;" class="warning-text-class" hidden="true"/>
+        <xul:label id="end-time-warning" value="&newevent.endtime.warning;" class="warning-text-class" hidden="true"/>
+        <xul:label id="task-repeat-warning" value="&newtodo.repeatstart.warning;" class="warning-text-class" hidden="true"/>
+        <xul:label id="alarm-start-warning" value="&alarm.start.warning;" class="warning-text-class" hidden="true"/>
+        <xul:label id="alarm-end-warning" value="&alarm.due.warning;" class="warning-text-class" hidden="true"/>
+
+        <xul:grid flex="1">
+          <xul:columns>
+            <xul:column/>
+            <xul:column flex="1"/>
+          </xul:columns>
+
+          <xul:rows>
+            <xul:row align="center">
+              <xul:label value="&newevent.title.label;" disable-on-readonly="true"/>
+              <xul:textbox id="item-title" oninput="updateAccept();" flex="1" disable-on-readonly="true"/>
+            </xul:row>
+
+            <xul:row align="center">
+              <xul:label value="&newevent.location.label;" disable-on-readonly="true"/>
+              <xul:textbox id="item-location" disable-on-readonly="true"/>
+            </xul:row>
+
+            <xul:separator class="groove"/>
+
+            <!-- StartDate -->
+            <xul:row align ="center">
+              <xul:hbox align="center">
+                <xul:label value="&newevent.from.label;" class="event-only" disable-on-readonly="true"/>
+                <xul:label value="&newevent.date.label;" class="todo-only" disable-on-readonly="true"/>
+              </xul:hbox>
+              <xul:hbox>
+                <xul:datetimepicker id="event-starttime" onchange="onStartTimeChange();" class="event-only" disable-on-readonly="true"/>
+                <xul:checkbox id="event-all-day" oncommand="updateAllDay();" class="event-only" label="&newevent.alldayevent.label;" disable-on-readonly="true"/>
+                <xul:checkbox id="todo-has-entrydate" oncommand="updateEntryDate();" class="todo-only" disable-on-readonly="true"/>
+                <xul:datetimepicker id="todo-entrydate" onchange="onStartTimeChange();" class="todo-only" disable-on-readonly="true"/>
+                <xul:spacer flex="1"/>
+              </xul:hbox>
+            </xul:row>
+
+            <!-- EndDate -->
+            <xul:row>
+              <xul:hbox align="center">
+                <xul:label value="&newevent.to.label;" class="event-only" disable-on-readonly="true"/>
+                <xul:label value="&newtodo.duedate.label;" class="todo-only" disable-on-readonly="true"/>
+              </xul:hbox>
+              <xul:vbox>
+                <xul:hbox align="center">
+                  <xul:datetimepicker id="event-endtime" onchange="onEndTimeChange();" class="event-only" disable-on-readonly="true"/>
+                  <xul:checkbox id="todo-has-duedate" oncommand="updateDueDate();" class="todo-only" disable-on-readonly="true"/>
+                  <xul:datetimepicker id="todo-duedate" onchange="onEndTimeChange();" class="todo-only" disable-on-readonly="true"/>
+                </xul:hbox>
+              </xul:vbox>
+            </xul:row>
+
+            <xul:separator class="groove"/>
+
+            <!-- Calendar -->
+            <xul:row align="center">
+              <xul:label value="&newevent.server.label;" disable-on-readonly="true"/>
+              <xul:menulist id="item-calendar" flex="1" disable-on-readonly="true"/>
+            </xul:row>
+
+            <!-- Category -->
+            <xul:row align="center" id="categories-box">
+              <xul:label value="&newtodo.categories.label;" disable-on-readonly="true"/>
+              <xul:menulist id="item-categories" flex="1" disable-on-readonly="true"/>
+            </xul:row>
+
+            <!-- Privacy / Priority -->
+            <xul:row align="center">
+              <xul:label value="&newevent.privacy.label;" disable-on-readonly="true"/>
+              <xul:menulist id="privacy-menulist" crop="none" disable-on-readonly="true">
+                <xul:menupopup>
+                  <xul:menuitem label="&newevent.public.label;" value="PUBLIC"/>
+                  <xul:menuitem label="&newevent.private.label;" value="PRIVATE"/>
+                  <xul:menuitem label="&newevent.confidential.label;" value="CONFIDENTIAL"/>
+                </xul:menupopup>
+              </xul:menulist>
+            </xul:row>
+
+            <!-- Priority -->
+            <xul:row align="center">
+              <xul:label id="priority-label" value="&newtodo.priority.label;" disable-on-readonly="true"/>
+              <xul:menulist id="priority-levels" disable-on-readonly="true">
+                <xul:menupopup>
+                  <xul:menuitem label="&priority.level.none;"   value="0"/>
+                  <xul:menuitem label="&priority.level.low;"    value="9"/>
+                  <xul:menuitem label="&priority.level.medium;" value="5"/>
+                  <xul:menuitem label="&priority.level.high;"   value="1"/>
+                </xul:menupopup>
+              </xul:menulist>
+            </xul:row>
+
+            <!-- Status -->
+            <xul:row align="center">
+              <xul:label id="status-label" class="event-only" value="&newevent.status.label;" disable-on-readonly="true"/>
+              <xul:menulist id="event-status" class="event-only" disable-on-readonly="true">
+                <xul:menupopup>
+                  <xul:menuitem label="&newevent.status.none.label;"
+                            value="NONE"/>
+                  <xul:menuitem label="&newevent.status.tentative.label;"
+                            value="TENTATIVE"/>
+                  <xul:menuitem label="&newevent.status.confirmed.label;"
+                            value="CONFIRMED"/>
+                  <xul:menuitem label="&newevent.status.cancelled.label;"
+                            value="CANCELLED"/>
+                </xul:menupopup>
+              </xul:menulist>
+            </xul:row>
+
+            <xul:row class="todo-only">
+              <xul:label id="todo-status-label" value="&newevent.status.label;" disable-on-readonly="true"/>
+              <xul:hbox align="center">
+                <xul:menulist id="todo-status" class="todo-only" oncommand="updateToDoStatus(this.value);" disable-on-readonly="true">
+                  <xul:menupopup>
+                    <xul:menuitem label="&newevent.status.none.label;"
+                              value="NONE"/>
+                    <xul:menuitem label="&newevent.status.needsaction.label;"
+                              value="NEEDS-ACTION"/>
+                    <xul:menuitem label="&newevent.status.inprogress.label;"
+                              value="IN-PROCESS"/>
+                    <xul:menuitem label="&newevent.status.completed.label;"
+                              value="COMPLETED"/>
+                    <xul:menuitem label="&newevent.status.cancelled.label;"
+                              value="CANCELLED"/>
+                  </xul:menupopup>
+                </xul:menulist>
+                <xul:datepicker id="completed-date-picker" class="todo-only" value="" disabled="true" disable-on-readonly="true"/>
+                <xul:textbox id="percent-complete-textbox" size="3" oninput="validateIntegers(event);" disable-on-readonly="true"/>
+                <xul:label id="percent-complete-label" class="todo-only" value="&newtodo.percentcomplete.label;" disable-on-readonly="true"/>
+              </xul:hbox>
+            </xul:row>
+
+            <xul:separator class="groove"/>
+
+            <!-- Reminder -->
+            <xul:row align="center">
+              <xul:label value="&newevent.alarm.label;" disable-on-readonly="true"/>
+              <xul:hbox align="center">
+                <xul:menulist id="item-alarm" oncommand="updateAlarm()" disable-on-readonly="true">
+                  <xul:menupopup>
+                    <xul:menuitem label="&newevent.none.label;" value="none" selected="true"/>
+                    <xul:menuseparator/>
+                    <xul:menuitem label="&newevent.15minutes.before.label;" length="15" unit="minutes" relation="START"/>
+                    <xul:menuitem label="&newevent.30minutes.before.label;" length="30" unit="minutes" relation="START"/>
+                    <xul:menuseparator/>
+                    <xul:menuitem id="alarm-custom-menuitem" label="&newevent.custom.label;" value="custom"/>
+                  </xul:menupopup>
+                </xul:menulist>
+              </xul:hbox>
+            </xul:row>
+
+            <!-- Reminder-Details -->
+            <xul:row id="alarm-details">
+              <xul:spacer flex="1"/>
+              <xul:vbox>
+                <xul:hbox>
+                  <xul:textbox id="alarm-length-field" size="1" oninput="validateIntegers(event);" disable-on-readonly="true"/>
+                  <xul:menulist id="alarm-length-units" disable-on-readonly="true">
+                    <xul:menupopup>
+                      <xul:menuitem label="&alarm.units.minutes;" value="minutes" selected="true"/>
+                      <xul:menuitem label="&alarm.units.hours;" value="hours"/>
+                      <xul:menuitem label="&alarm.units.days;" value="days"/>
+                    </xul:menupopup>
+                  </xul:menulist>
+                  <xul:menulist id="alarm-trigger-relation" oncommand="updateAccept()" disable-on-readonly="true">
+                    <xul:menupopup>
+                      <xul:menuitem label="&newevent.before.label;" value="START" selected="true"/>
+                      <xul:menuitem label="&newevent.after.label;" value="END"/>
+                    </xul:menupopup>
+                  </xul:menulist>
+                </xul:hbox>
+              </xul:vbox>
+            </xul:row>
+
+            <xul:separator class="groove"/>
+
+            <!-- Description -->
+            <xul:row id="description-row" flex="1">
+              <xul:label value="&newevent.description.label;" disable-on-readonly="true"/>
+              <xul:textbox id="item-description" multiline="true" rows="4" flex="1" disable-on-readonly="true"/>
+            </xul:row>
+
+            <!-- URL -->
+            <xul:row align="center">
+              <xul:label value="&newevent.uri.label;" disable-on-readonly="true"/>
+              <xul:hbox flex="1">
+                <xul:textbox id="item-url" flex="1" oninput="updateURL(this.value)" disable-on-readonly="true"/>
+                <xul:button id="load-url-button" oncommand="loadURL()" label="&newevent.uri.visit.label;" disable-on-readonly="true"/>
+              </xul:hbox>
+            </xul:row>
+
+          </xul:rows>
+        </xul:grid>
+      </xul:vbox>
+
+    </content>
+    <implementation>
+
+      <field name="mItemDuration">null</field>
+      <field name="mPrevAlarmItem">null</field>
+      <field name="mCalID">null</field>
+      <field name="mUserID">null</field>
+      <field name="mOrganizerID">null</field>
+      <field name="mIsReadOnly">false</field>
+      <field name="mIsOrganizer">false</field>
+
+      <constructor>
+        <![CDATA[
+          var self = this;
+          var load = function loadHandler() { self.onLoad(); };
+          window.addEventListener("load", load, true);
+        ]]>
+      </constructor>
+
+      <method name="onLoad">
+        <body>
+          <![CDATA[
+            var item = window.calendarItem;
+            var kDefaultTimezone = calendarDefaultTimezone();
+
+            setElementValue("item-title",item.title);
+            setElementValue("item-location",item.getProperty("LOCATION"));
+
+            // event specific properties
+            if (isEvent(item)) {
+                var startDate = item.startDate.getInTimezone(kDefaultTimezone);
+                var endDate = item.endDate.getInTimezone(kDefaultTimezone);
+                this.mItemDuration = endDate.subtractDate(startDate);
+                
+                // Check if an all-day event has been passed in (to adapt endDate).
+                if (startDate.isDate) {
+                    setElementValue("event-all-day", true, "checked");
+                    endDate.day -= 1;
+                    this.mItemDuration.days -= 1;
+
+                    // The date/timepicker uses jsDate internally. Because jsDate does
+                    // not know the concept of dates we end up displaying times unequal
+                    // to 00:00 for all-day events depending on local timezone setting. 
+                    // Calling normalize() recalculates that times to represent 00:00
+                    // in local timezone.
+                    endDate.normalize();
+                    startDate.normalize();
+                }
+                
+                setElementValue("event-starttime",   startDate.jsDate);
+                setElementValue("event-endtime",     endDate.jsDate);
+            }
+
+            // todo specific properties
+            if (isToDo(item)) {
+                var hasEntryDate = (item.entryDate != null);
+                setElementValue("todo-has-entrydate", hasEntryDate, "checked");
+                if (hasEntryDate)
+                    setElementValue("todo-entrydate", item.entryDate.jsDate);
+
+                var hasDueDate = (item.dueDate != null);
+                setElementValue("todo-has-duedate", hasDueDate, "checked");
+                if (hasDueDate)
+                    setElementValue("todo-duedate", item.dueDate.jsDate);
+                if (hasEntryDate && hasDueDate) {
+                    this.mItemDuration = item.dueDate.subtractDate(item.entryDate);
+                }
+            }
+
+            // add calendars to the calendar menulist
+            var calendarList = document.getElementById("item-calendar");
+            var calendars = getCalendarManager().getCalendars({});
+            for (i in calendars) {
+                var calendar = calendars[i];
+                var menuitem = calendarList.appendItem(calendar.name, i);
+                menuitem.calendar = calendar;
+            }
+
+            // item default calendar
+            // If this is a new item, it might not have a calendar, but a default
+            // option could well have been passed in.
+            var calendarToUse = item.calendar || window.arguments[0].calendar
+            if (calendarToUse) {
+                var calendarList = document.getElementById("item-calendar");
+                var calendars = getCalendarManager().getCalendars({});
+                for (i in calendars) {
+                    if (calendarToUse.uri.equals(calendars[i].uri))
+                        calendarList.selectedIndex = i;
+                }
+            } else {
+                // no calendar attached to item
+                // select first entry in calendar list as default
+                document.getElementById("item-calendar").selectedIndex = 0;
+            }
+
+            // Categories
+            try {
+                var categoriesString = getLocalizedPref("calendar.categories.names");
+                var categoriesList = categoriesString.split( "," );
+
+                // insert the category already in the menulist so it doesn't get lost
+                var itemCategory = item.getProperty("CATEGORIES");
+                if (itemCategory) {
+                    if (categoriesString.indexOf(itemCategory) == -1)
+                        categoriesList[categoriesList.length] = itemCategory;
+                }
+                categoriesList.sort();
+
+                var oldMenulist = document.getElementById("item-categories");
+                while (oldMenulist.hasChildNodes()) {
+                    oldMenulist.removeChild(oldMenulist.lastChild);
+                }
+
+                var categoryMenuList = document.getElementById("item-categories");
+                var indexToSelect = 0;
+
+                // Add a 'none' option to allow users to cancel the category
+                var noneItem = categoryMenuList.appendItem(calGetString("calendar", "None"), "NONE");
+
+                for (var i in categoriesList) {
+                    var catItem = categoryMenuList.appendItem(categoriesList[i], categoriesList[i]);
+                    catItem.value = categoriesList[i];
+                    if (itemCategory && categoriesList[i] == itemCategory) {
+                        indexToSelect = parseInt(i)+1;  // Add 1 because of 'None'
+                    }
+                }
+
+                categoryMenuList.selectedIndex = indexToSelect;
+
+            } catch (ex) {
+                // The app using this dialog doesn't support categories
+                document.getElementById("categories-box").collapsed = true;
+            }
+
+
+            // if the item is a proxy occurrence/instance, a few things aren't valid.
+            if (item.parentItem != item) {
+
+                setElementValue("item-calendar", "true", "disabled");
+
+                // don't allow to revoke the entrydate of recurring todo's.
+                disableElement("todo-has-entrydate");
+            }
+
+            /* Status */
+            setElementValue("item-url",         item.getProperty("URL"));
+            setElementValue("item-description", item.getProperty("DESCRIPTION"));
+            if (isEvent(item)) {
+                setElementValue("event-status", item.getProperty("STATUS"));
+            } else {
+                setElementValue("todo-status", item.getProperty("STATUS"));
+            }
+
+            /* Task completed date */
+            if (item.completedDate) {
+                this.updateToDoStatus(item.status, item.completedDate.jsDate);
+            } else {
+                this.updateToDoStatus(item.status);
+            }
+
+            /* Task percent complete */
+            if (isToDo(item)) {
+                var percentCompleteInteger = 0;
+                var percentCompleteProperty = item.getProperty("PERCENT-COMPLETE");
+                if (percentCompleteProperty != null) {
+                    percentCompleteInteger = parseInt(percentCompleteProperty);
+                }
+                if (percentCompleteInteger < 0) {
+                    percentCompleteInteger = 0;
+                } else if (percentCompleteInteger > 100) {
+                    percentCompleteInteger = 100;
+                }
+                setElementValue("percent-complete-textbox", percentCompleteInteger);
+            }
+
+            /* Priority */
+            var priorityInteger = parseInt(item.priority);
+            if (priorityInteger >= 1 && priorityInteger <= 4) {
+                document.getElementById("priority-levels").selectedIndex = 3; // high priority
+            } else if (priorityInteger == 5) {
+                document.getElementById("priority-levels").selectedIndex = 2; // medium priority
+            } else if (priorityInteger >= 6 && priorityInteger <= 9) {
+                document.getElementById("priority-levels").selectedIndex = 1; // low priority
+            } else {
+                document.getElementById("priority-levels").selectedIndex = 0; // not defined
+            }
+
+            /* Privacy */
+            switch (item.privacy) {
+                case "PUBLIC":
+                case "PRIVATE":
+                case "CONFIDENTIAL":
+                    setElementValue("privacy-menulist", item.privacy);
+                    break;
+                case "":
+                    setElementValue("private-menulist", "PUBLIC");
+                    break;
+                default:  // bogus value
+                    dump("ERROR! Event has invalid privacy string: " + item.privacy + "\n");
+                    break;
+            }
+
+            /* alarms */
+            if (item.alarmOffset) {
+                var alarmRelatedStart = (item.alarmRelated == Components.interfaces.calIItemBase.ALARM_RELATED_START);
+                if (alarmRelatedStart) {
+                    setElementValue("alarm-trigger-relation", "START");
+                } else {
+                    setElementValue("alarm-trigger-relation", "END");
+                }
+
+                var offset = item.alarmOffset;
+                if (offset.minutes) {
+                    var minutes = offset.minutes + offset.hours*60 + offset.days*24*60 + offset.weeks*60*24*7;
+                    // Special cases for the common alarms
+                    if ((minutes == 15) && alarmRelatedStart) {
+                        document.getElementById("item-alarm").selectedIndex = 2;
+                    } else if ((minutes == 30) && alarmRelatedStart) {
+                        document.getElementById("item-alarm").selectedIndex = 3;
+                    } else {
+                        setElementValue("alarm-length-field", minutes);
+                        setElementValue("alarm-length-units", "minutes");
+                        setElementValue("item-alarm", "custom");
+                    }
+                } else if (offset.hours) {
+                    var hours = offset.hours + offset.days*24 + offset.weeks*24*7;
+                    setElementValue("alarm-length-field", hours);
+                    setElementValue("alarm-length-units", "hours");
+                    setElementValue("item-alarm", "custom");
+                } else { // days
+                    var days = offset.days + offset.weeks*7;
+                    setElementValue("alarm-length-field", days);
+                    setElementValue("alarm-length-units", "days");
+                    setElementValue("item-alarm", "custom");
+                }
+            }
+
+            // update alarm checkbox/label/settings button
+            this.updateAlarm();
+
+            this.updateTaskAlarmWarnings();
+
+            this.updateURL(item.getProperty("URL"));
+
+            // hide rows based on if this is an event or todo
+            this.updateStyle();
+            
+            // update datetime pickers
+            this.updateDueDate();
+            this.updateEntryDate();
+
+            // update datetime pickers
+            this.updateAllDay();
+
+            // update the accept button
+            this.updateAccept();
+
+            // set 'mIsReadOnly' if the calendar is read-only
+            if (calendar && calendar.readOnly)
+              this.mIsReadOnly = true;
+
+            // assume we're the organizer [in case that the calendar
+            // does not support the concept of identities].
+            this.mIsOrganizer = true;
+            
+            try {
+              this.mUserID = "";
+              this.mCalID = "";
+              this.mOrganizerID = "";
+            
+              var provider = item.calendar.QueryInterface(Components.interfaces.calIWcapCalendar);
+              this.mCalID = provider.calId;
+              this.mUserID = provider.userId;
+              this.mOrganizerID = ((item.organizer == null || item.organizer.id == null)
+                              ? this.mCalID // sensible default
+                              : item.organizer.id);
+
+              // set 'mIsOrganizer' if the current calid originally scheduled this event.
+              this.mIsOrganizer = false;
+              if(this.mCalID == this.mOrganizerID)
+                this.mIsOrganizer = true;
+            }
+            catch(e) {}
+            
+            if (!this.mIsReadOnly)
+              this.mIsReadOnly = !this.mIsOrganizer;
+            
+            if(this.mIsReadOnly) {
+              var list = document.getAnonymousNodes(this)[0];
+              var disableElements = list.getElementsByAttribute("disable-on-readonly", "true");
+              for (i=0;i<disableElements.length;i++) {
+                disableElements[i].setAttribute('disabled', 'true');
+              }
+            }
+
+            document.getElementById("item-title").focus();
+        ]]>
+        </body>
+      </method>
+
+      <method name="onSave">
+        <parameter name="item"/>
+        <body>
+          <![CDATA[
+            this.setItemProperty(item,"title", getElementValue("item-title"));
+            this.setItemProperty(item,"LOCATION",getElementValue("item-location"));
+
+            var kDefaultTimezone = calendarDefaultTimezone();
+
+            if (isEvent(item)) {
+                var startDate = jsDateToDateTime(getElementValue("event-starttime"));
+                var endDate = jsDateToDateTime(getElementValue("event-endtime"));
+                startDate = startDate.getInTimezone(kDefaultTimezone);
+                endDate = endDate.getInTimezone(kDefaultTimezone);
+
+                var isAllDay = getElementValue("event-all-day", "checked");
+                if (isAllDay) {
+                    startDate.isDate = true;
+                    startDate.normalize();
+
+                    endDate.isDate = true;
+                    endDate.day += 1;
+                    endDate.normalize();
+                }
+
+                this.setItemProperty(item, "startDate",   startDate);
+                this.setItemProperty(item, "endDate",     endDate);
+            }
+
+            if (isToDo(item)) {
+                var entryDate = getElementValue("todo-has-entrydate", "checked") ? 
+                    jsDateToDateTime(getElementValue("todo-entrydate")) : null;
+                if (entryDate) {
+                    entryDate = entryDate.getInTimezone(kDefaultTimezone);
+                } else {
+                    // no entrydate, no recurrence
+                    item.recurrenceInfo = null;
+                    window.recurrenceInfo = null;
+                }
+                this.setItemProperty(item, "entryDate",   entryDate);
+
+                var dueDate = getElementValue("todo-has-duedate", "checked") ? 
+                    jsDateToDateTime(getElementValue("todo-duedate")) : null;
+                if (dueDate) {
+                    dueDate = dueDate.getInTimezone(kDefaultTimezone);
+                }
+                this.setItemProperty(item, "dueDate",     dueDate);
+
+                var percentCompleteInteger = 0;
+                if (getElementValue("percent-complete-textbox") != "") {
+                    percentCompleteInteger = parseInt(getElementValue("percent-complete-textbox"));
+                }
+                if (percentCompleteInteger < 0) {
+                    percentCompleteInteger = 0;
+                } else if (percentCompleteInteger > 100) {
+                    percentCompleteInteger = 100;
+                }
+                this.setItemProperty(item, "PERCENT-COMPLETE", percentCompleteInteger);
+            }
+            
+            // Category
+            var category = getElementValue("item-categories");
+
+            if (category != "NONE") {
+               this.setItemProperty(item, "CATEGORIES", category);
+            } else {
+               item.deleteProperty("CATEGORIES");
+            }
+
+            this.setItemProperty(item, "URL",         getElementValue("item-url"));
+            this.setItemProperty(item, "DESCRIPTION", getElementValue("item-description"));
+
+            var status;
+            if (isEvent(item)) {
+                status = getElementValue("event-status");
+            } else {
+                status = getElementValue("todo-status");
+                if (status != "COMPLETED") {
+                    item.completedDate = null;
+                }
+            }
+
+            this.setItemProperty(item, "STATUS",   status);
+            this.setItemProperty(item, "PRIORITY", getElementValue("priority-levels"));
+            this.setItemProperty(item, "CLASS", getElementValue("privacy-menulist"));
+
+            if (item.status == "COMPLETED" && isToDo(item)) {
+                item.completedDate = jsDateToDateTime(getElementValue("completed-date-picker"));
+            }
+
+            // alarms
+            var hasAlarm = (getElementValue("item-alarm") != "none");
+            if (!hasAlarm) {
+                item.alarmOffset = null;
+                item.alarmLastAck = null;
+                item.alarmRelated = null;
+            } else {
+                var alarmLength = getElementValue("alarm-length-field");
+                var alarmUnits = document.getElementById("alarm-length-units").selectedItem.value;
+                if (document.getElementById("alarm-trigger-relation").selectedItem.value == "START") {
+                    item.alarmRelated = Components.interfaces.calIItemBase.ALARM_RELATED_START;
+                } else {
+                    item.alarmRelated = Components.interfaces.calIItemBase.ALARM_RELATED_END;
+                }
+                var duration = Components.classes["@mozilla.org/calendar/duration;1"]
+                                         .createInstance(Components.interfaces.calIDuration);
+                if (item.alarmRelated == Components.interfaces.calIItemBase.ALARM_RELATED_START) {
+                    duration.isNegative = true;
+                }
+                duration[alarmUnits] = alarmLength;
+                duration.normalize();
+
+                item.alarmOffset = duration;
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="onStartTimeChange">
+        <body>
+          <![CDATA[
+            if (!this.mItemDuration) {
+                return;
+            }
+            var startWidgetId;
+            var endWidgetId;
+            if (isEvent(window.calendarItem)) {
+                startWidgetId = "event-starttime";
+                endWidgetId = "event-endtime";
+            } else {
+                if (!getElementValue("todo-has-entrydate", "checked") || !getElementValue("todo-has-duedate", "checked")) {
+                    this.mItemDuration = null;
+                    return;
+                }
+                startWidgetId = "todo-entrydate";
+                endWidgetId = "todo-duedate";
+            }
+            var start = jsDateToDateTime(getElementValue(startWidgetId));
+            start.addDuration(this.mItemDuration);
+            setElementValue(endWidgetId, start.getInTimezone(calendarDefaultTimezone()).jsDate);
+            this.updateAccept();
+          ]]>
+        </body>
+      </method>
+
+      <method name="onEndTimeChange">
+        <body>
+          <![CDATA[
+            var startWidgetId;
+            var endWidgetId;
+            if (isEvent(window.calendarItem)) {
+                startWidgetId = "event-starttime";
+                endWidgetId = "event-endtime";
+            } else {
+                if (!getElementValue("todo-has-entrydate", "checked") || 
+                    !getElementValue("todo-has-duedate", "checked")) {
+                    this.mItemDuration = null;
+                    return;
+                }
+                startWidgetId = "todo-entrydate";
+                endWidgetId = "todo-duedate";
+            }
+            var start = jsDateToDateTime(getElementValue(startWidgetId));
+            var end = jsDateToDateTime(getElementValue(endWidgetId));
+            this.mItemDuration = end.subtractDate(start);
+            this.updateAccept();
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateAlarm">
+        <body>
+          <![CDATA[
+            var alarmMenu = document.getElementById("item-alarm");
+            var alarmItem = alarmMenu.selectedItem;
+
+            var alarmItemValue = alarmItem.getAttribute("value");
+            switch (alarmItemValue) {
+            case "custom":
+                /* restore old values if they're around */
+                this.setAlarmFields(alarmItem);
+                
+                document.getElementById("alarm-details").removeAttribute("hidden");
+                break;
+            default:
+                var customItem = document.getElementById("alarm-custom-menuitem");
+                if (this.mPrevAlarmItem == customItem) {
+                    customItem.setAttribute("length", getElementValue("alarm-length-field"));
+                    customItem.setAttribute("unit", getElementValue("alarm-length-units"));
+                    customItem.setAttribute("relation", getElementValue("alarm-trigger-relation"));
+                }
+                this.setAlarmFields(alarmItem);
+
+                document.getElementById("alarm-details").setAttribute("hidden", true);
+                break;
+            }
+
+            this.mPrevAlarmItem = alarmItem;
+            this.updateAccept();
+          ]]>
+        </body>
+      </method>
+
+      <method name="setAlarmFields">
+        <parameter name="alarmItem"/>
+        <body>
+          <![CDATA[
+            var alarmLength = alarmItem.getAttribute("length");
+            if (alarmLength != "") {
+                var alarmUnits = alarmItem.getAttribute("unit");
+                var alarmRelation = alarmItem.getAttribute("relation");
+                setElementValue("alarm-length-field", alarmLength);
+                setElementValue("alarm-length-units", alarmUnits);
+                setElementValue("alarm-trigger-relation", alarmRelation);
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateTaskAlarmWarnings">
+        <body>
+          <![CDATA[
+            document.getElementById("alarm-start-warning").setAttribute("hidden", true);
+            document.getElementById("alarm-end-warning").setAttribute("hidden", true);
+
+            var alarmType = getElementValue("item-alarm");
+            if (!isToDo(window.calendarItem) || alarmType == "none") {
+                return true;
+            }
+
+            var hasEntryDate = getElementValue("todo-has-entrydate", "checked");
+            var hasDueDate = getElementValue("todo-has-duedate", "checked");
+
+            var alarmRelated = document.getElementById("alarm-trigger-relation").selectedItem.value;
+
+            if ((alarmType != "custom" || alarmRelated == "START") && !hasEntryDate) {
+                document.getElementById("alarm-start-warning").removeAttribute("hidden");
+                return false;
+            }
+
+            if (alarmRelated == "END" && !hasDueDate) {
+                document.getElementById("alarm-end-warning").removeAttribute("hidden");
+                return false;
+            }
+
+            return true;
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateToDoStatus">
+        <parameter name="status"/>
+        <parameter name="passedInCompletedDate"/>
+        <body>
+          <![CDATA[
+            // RFC2445 doesn't support completedDates without the todo's status
+            // being "COMPLETED", however twiddling the status menulist shouldn't
+            // destroy that information at this point (in case you change status
+            // back to COMPLETED). When we go to store this VTODO as .ics the
+            // date will get lost.
+
+            var completedDate;
+            if (passedInCompletedDate) {
+                completedDate = passedInCompletedDate;
+            } else {
+                completedDate = null;
+            }
+
+            // remember the original values
+            var oldPercentComplete = getElementValue("percent-complete-textbox");
+            var oldCompletedDate   = getElementValue("completed-date-picker");
+
+            switch (status) {
+            case null:
+            case "":
+            case "NONE":
+                document.getElementById("todo-status").selectedIndex = 0;
+                disableElement("percent-complete-textbox");
+                disableElement("percent-complete-label");
+                break;
+            case "CANCELLED":
+                document.getElementById("todo-status").selectedIndex = 4;
+                disableElement("percent-complete-textbox");
+                disableElement("percent-complete-label");
+                break;
+            case "COMPLETED":
+                document.getElementById("todo-status").selectedIndex = 3;
+                enableElement("percent-complete-textbox");
+                enableElement("percent-complete-label");
+                // if there isn't a completedDate, set it to now
+                if (!completedDate)
+                    completedDate = new Date();
+                break;
+            case "IN-PROCESS":
+                document.getElementById("todo-status").selectedIndex = 2;
+                disableElement("completed-date-picker");
+                enableElement("percent-complete-textbox");
+                enableElement("percent-complete-label");
+                break;
+            case "NEEDS-ACTION":
+                document.getElementById("todo-status").selectedIndex = 1;
+                enableElement("percent-complete-textbox");
+                enableElement("percent-complete-label");
+                break;
+            }
+
+            if (status == "COMPLETED") {
+                setElementValue("percent-complete-textbox", "100");
+                setElementValue("completed-date-picker", completedDate);
+                enableElement("completed-date-picker");
+            } else {
+                if (oldPercentComplete != 100) {
+                    setElementValue("percent-complete-textbox", oldPercentComplete);
+                } else {
+                    setElementValue("percent-complete-textbox", "");
+                }
+                setElementValue("completed-date-picker", oldCompletedDate);
+                disableElement("completed-date-picker");
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateURL">
+        <parameter name="aValue"/>
+        <body>
+          <![CDATA[
+            var button = document.getElementById("load-url-button");
+            button.setAttribute("disabled", true)
+
+            if (!aValue) {
+                return;
+            }
+
+            // The user might have just put in 'www.foo.com', correct that here
+            if (aValue.indexOf( ":" ) == -1) {
+                aValue = "http://" + aValue;
+            }
+            try {
+                makeURL(aValue);
+                // If we made it this far, that means it's a valid url
+                button.removeAttribute("disabled");
+            } catch(ex) {}
+          ]]>
+        </body>
+      </method>
+
+      <method name="loadURL">
+        <body>
+          <![CDATA[
+            var url = getElementValue("item-url");
+
+            // The user might have just put in 'www.foo.com', correct that here
+            if (url.indexOf( ":" ) == -1) {
+               url = "http://" + url;
+            }
+
+            launchBrowser(url);
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateStyle">
+        <body>
+          <![CDATA[
+            const kDialogStylesheet = "chrome://calendar/content/sun-calendar-event-dialog.css";
+
+            for each(var stylesheet in document.styleSheets) {
+                if (stylesheet.href == kDialogStylesheet) {
+                    if (isEvent(window.calendarItem))
+                        stylesheet.insertRule(".todo-only { display: none; }", 0);
+                    else if (isToDo(window.calendarItem))
+                        stylesheet.insertRule(".event-only { display: none; }", 0);
+                    return;
+                }
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateDueDate">
+        <body>
+          <![CDATA[
+            if (!isToDo(window.calendarItem))
+                return;
+
+            // force something to get set if there was nothing there before
+            setElementValue("todo-duedate", getElementValue("todo-duedate"));
+
+            setElementValue("todo-duedate", !getElementValue("todo-has-duedate", "checked"), "disabled");
+            if (getElementValue("todo-has-entrydate", "checked") && getElementValue("todo-has-duedate", "checked")) {
+                var start = jsDateToDateTime(getElementValue("todo-entrydate"));
+                var end = jsDateToDateTime(getElementValue("todo-duedate"));
+                this.mItemDuration = end.subtractDate(start);
+            } else {
+                this.mItemDuration = null;
+            }
+
+            this.updateAccept();
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateEntryDate">
+        <body>
+          <![CDATA[
+            if (!isToDo(window.calendarItem))
+                return;
+
+            // force something to get set if there was nothing there before
+            setElementValue("todo-entrydate", getElementValue("todo-entrydate"));
+
+            setElementValue("todo-entrydate", !getElementValue("todo-has-entrydate", "checked"), "disabled");
+
+            if (getElementValue("todo-has-entrydate", "checked") && getElementValue("todo-has-duedate", "checked")) {
+                var start = jsDateToDateTime(getElementValue("todo-entrydate"));
+                var end = jsDateToDateTime(getElementValue("todo-duedate"));
+                this.mItemDuration = end.subtractDate(start);
+            } else {
+                this.mItemDuration = null;
+            }
+
+            this.updateAccept();
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateAllDay">
+        <body>
+          <![CDATA[
+            if (!isEvent(window.calendarItem))
+                return;
+
+            var allDay = getElementValue("event-all-day", "checked");
+            setElementValue("event-starttime", allDay, "timepickerdisabled");
+            setElementValue("event-endtime", allDay, "timepickerdisabled");
+
+            this.updateAccept();
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateAccept">
+        <body>
+          <![CDATA[
+            var enableAccept = true;
+
+            var kDefaultTimezone = calendarDefaultTimezone();
+
+            var title = getElementValue("item-title");
+            if (title.length == 0)
+                enableAccept = false;
+
+            // don't allow for end dates to be before start dates
+            var startDate;
+            var endDate;
+            if (isEvent(window.calendarItem)) {
+                startDate = jsDateToDateTime(getElementValue("event-starttime"));
+                endDate = jsDateToDateTime(getElementValue("event-endtime"));
+
+                // For all-day events we are not interested in times and compare only dates.
+                if (getElementValue("event-all-day", "checked")) {
+                    // jsDateToDateTime returnes the values in UTC. Depending on the local
+                    // timezone and the values selected in datetimepicker the date in UTC
+                    // might be shifted to the previous or next day.
+                    // For example: The user (with local timezone GMT+05) selected 
+                    // Feb 10 2006 00:00:00. The corresponding value in UTC is
+                    // Feb 09 2006 19:00:00. If we now set isDate to true we end up with
+                    // a date of Feb 09 2006 instead of Feb 10 2006 resulting in errors
+                    // during the following comparison.
+                    // Calling getInTimezone() ensures that we use the same dates as 
+                    // displayed to the user in datetimepicker for comparison.
+                    startDate = startDate.getInTimezone(kDefaultTimezone);
+                    endDate = endDate.getInTimezone(kDefaultTimezone);
+                    startDate.isDate = true;
+                    endDate.isDate = true;
+                }
+            } else {
+                startDate = getElementValue("todo-has-entrydate", "checked") ? 
+                    jsDateToDateTime(getElementValue("todo-entrydate")) : null;
+                endDate = getElementValue("todo-has-duedate", "checked") ? 
+                    jsDateToDateTime(getElementValue("todo-duedate")) : null;
+                
+                var taskRepeatWarning = document.getElementById("task-repeat-warning");
+                
+                //@@@ TODO: this needs to be addressed
+                /*if (!startDate && getElementValue("item-recurrence", "checked")) {
+                    enableAccept = false;
+                    taskRepeatWarning.removeAttribute("hidden");
+                } else {
+                    taskRepeatWarning.setAttribute("hidden", "true");
+                }*/
+            }
+
+            var timeWarning = document.getElementById("end-time-warning");
+            if (endDate && startDate && endDate.compare(startDate) == -1) {
+                enableAccept = false;
+                timeWarning.removeAttribute("hidden");
+            } else {
+                timeWarning.setAttribute("hidden", "true");
+            }
+
+            // can't add/edit items in readOnly calendars
+            document.getElementById("read-only-item").setAttribute("hidden", !this.mIsReadOnly);
+            var cal = document.getElementById("item-calendar").selectedItem.calendar;
+            document.getElementById("read-only-cal").setAttribute("hidden", 
+                                                      !cal.readOnly);
+            if (this.mIsReadOnly || cal.readOnly) {
+                enableAccept = false;
+            }
+
+            if (!this.updateTaskAlarmWarnings()) {
+                enableAccept = false;
+            }
+          
+            var event = document.createEvent('Events'); 
+            event.initEvent('accept', true, false);
+            event.details = enableAccept;
+            this.dispatchEvent(event);
+          ]]>
+        </body>
+      </method>
+
+      <method name="setItemProperty">
+        <parameter name="item"/>
+        <parameter name="propertyName"/>
+        <parameter name="value"/>
+        <body>
+          <![CDATA[
+            switch(propertyName) {
+              case "startDate":
+                if (value.isDate && !item.startDate.isDate ||
+                    !value.isDate && item.startDate.isDate ||
+                    value.timezone != item.startDate.timezone ||
+                    value.compare(item.startDate) != 0)
+                    item.startDate = value;
+                break;
+              case "endDate":
+                if (value.isDate && !item.endDate.isDate ||
+                    !value.isDate && item.endDate.isDate ||
+                    value.timezone != item.endDate.timezone ||
+                    value.compare(item.endDate) != 0)
+                    item.endDate = value;
+                break;
+
+              case "entryDate":
+                if (value == item.entryDate)
+                    break;
+                if ((value && !item.entryDate) ||
+                    (!value && item.entryDate) ||
+                    (value.timezone != item.entryDate.timezone) ||
+                    (value.compare(item.entryDate) != 0))
+                    item.entryDate = value;
+                break;
+              case "dueDate":
+                if (value == item.dueDate)
+                    break;
+                if ((value && !item.dueDate) ||
+                    (!value && item.dueDate) ||
+                    (value.timezone != item.dueDate.timezone) ||
+                    (value.compare(item.dueDate) != 0))
+                    item.dueDate = value;
+                break;
+              case "isCompleted":
+                if (value != item.isCompleted)
+                    item.isCompleted = value;
+                break;
+
+              case "title":
+                if (value != item.title)
+                    item.title = value;
+                break;
+
+              default:
+                if (!value || value == "")
+                    item.deleteProperty(propertyName);
+                else if (item.getProperty(propertyName) != value)
+                    item.setProperty(propertyName, value);
+                break;
+            }
+          ]]>
+        </body>
+      </method>
+
+    </implementation>
+
+    <handlers>
+    </handlers>
+
+  </binding>
+
+</bindings>
+
+

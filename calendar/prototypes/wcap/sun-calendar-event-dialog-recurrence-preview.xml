@@ -1,0 +1,465 @@
+<?xml version="1.0"?>
+<!--
+   - ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Sun Microsystems code.
+   -
+   - The Initial Developer of the Original Code is Sun Microsystems.
+   - Portions created by the Initial Developer are Copyright (C) 2006
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Michael Buettner <michael.buettner@sun.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK *****
+-->
+
+<bindings xmlns="http://www.mozilla.org/xbl"
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  
+    <binding id="recurrence-calendar" extends="xul:box">
+        <resources>
+          <stylesheet src="chrome://calendar/content/sun-calendar-event-dialog-recurrence-preview.css"/>
+
+        </resources>
+        <content>
+            <xul:vbox class="recurrence-calendar-mainbox"  flex="1">
+                <xul:hbox class="recurrence-calendar-month-box" pack="center">
+                    <xul:text class="recurrence-calendar-month-name"/>
+                    <xul:text class="recurrence-calendar-year-name"/>
+          
+        </xul:hbox>
+                <xul:vbox flex="1">
+                    <xul:hbox equalsize="always">
+                        <xul:text class="recurrence-calendar-header" flex="1"/>
+                        <xul:text class="recurrence-calendar-header" flex="1"/>
+                        <xul:text class="recurrence-calendar-header" flex="1"/>
+                        <xul:text class="recurrence-calendar-header" flex="1"/>
+                        <xul:text class="recurrence-calendar-header" flex="1"/>
+                        <xul:text class="recurrence-calendar-header" flex="1"/>
+                        <xul:text class="recurrence-calendar-header" flex="1"/>
+            
+          </xul:hbox>
+                    <xul:hbox equalsize="always" flex="1">
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+            
+          </xul:hbox>
+                    <xul:hbox equalsize="always" flex="1">
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+            
+          </xul:hbox>
+                    <xul:hbox equalsize="always" flex="1">
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+            
+          </xul:hbox>
+                    <xul:hbox equalsize="always" flex="1">
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+            
+          </xul:hbox>
+                    <xul:hbox equalsize="always" flex="1">
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+            
+          </xul:hbox>
+                    <xul:hbox equalsize="always" flex="1">
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+                        <xul:text class="recurrence-calendar-day" flex="1"/>
+            
+          </xul:hbox>
+          
+        </xul:vbox>
+        
+      </xul:vbox>
+      
+    </content>
+   
+        <implementation>
+            <constructor>
+                <![CDATA[
+          this.kMonthNames = new Array(12);
+          var tempDate = new Date(2005, 0, 1);
+          for (var month = 0; month < 12; month++) {
+            tempDate.setMonth(month);
+            this.kMonthNames[month] = tempDate.toLocaleFormat("%B");
+          }
+          // save references for convenience
+          var anonContent = document.getAnonymousNodes(this);
+          var mainBox = anonContent[0];
+          var headBox = mainBox.childNodes[0];
+          this.kMonthCell = headBox.firstChild;
+          this.kYearCell = headBox.lastChild;
+          this.kDaysOfMonthBox = mainBox.childNodes[1];
+          this.refreshDisplay();
+        ]]>
+        
+      </constructor>
+      
+            <method name="refreshDisplay">
+                <body>
+                    <![CDATA[
+            // Find out which should be the first day of the week
+            try {
+              var pref =  Components.classes[
+                "@mozilla.org/preferences-service;1"
+              ].getService(Components.interfaces.nsIPrefBranch);
+              // this.weekStart;
+              this.weekStart = pref.getIntPref("calendar.week.start");
+            } catch (e) {
+              this.weekStart = 0;
+            }
+            this.setHeader();
+            this.showMonth(new Date());
+          ]]>
+          
+        </body>
+        
+      </method>
+      
+            <method name="setHeader">
+                <body>
+                    <![CDATA[
+            // Reset the headers
+            var header = document.getAnonymousNodes(this)[0].
+                childNodes[1].childNodes[0];
+            var dayList = new Array(7);
+            var tempDate = new Date();
+            var i, j;
+            tempDate.setDate(tempDate.getDate() - (tempDate.getDay() - this.weekStart));
+            for (i = 0; i < header.childNodes.length; i++) {
+              dayList[i] = tempDate.toLocaleFormat("%a")
+              tempDate.setDate(tempDate.getDate() + 1);
+            }
+            
+            //abbreviations are too long, so shrink them down
+            var foundMatch;
+            for (i = 0; i < header.childNodes.length; i++) {
+              foundMatch = 1;
+              for (j = 0; j < header.childNodes.length; j++) {
+                if (i != j) {
+                  if (dayList[i].substring(0,1) == dayList[j].substring(0,1)) {
+                    foundMatch = 2;
+                    break;
+                  }
+                }
+              }
+              dayList[i] = dayList[i].substring(0,foundMatch)
+            }
+            
+            for (var column = 0; column < header.childNodes.length; column++) {
+              header.childNodes[column].setAttribute( "value", dayList[column]);
+            }
+          ]]>
+          
+        </body>
+        
+      </method>
+      
+            <method name="showMonth">
+                <parameter name="aDate"/>
+                <body>
+                    <![CDATA[
+            if (!aDate) {
+              aDate = new Date();
+            } else {
+              aDate = new Date(aDate);
+            }
+            aDate.setDate(1);
+            aDate.setHours(0);
+            aDate.setMinutes(0);
+            aDate.setSeconds(0);
+            aDate.setMilliseconds(0);
+
+            // Update the month and year title
+            var mon = this.kMonthNames[aDate.getMonth()];
+            this.kMonthCell.setAttribute("value", mon);
+            this.kYearCell.setAttribute("value", aDate.getFullYear());
+
+            // Update the calendar
+            var calbox = this.kDaysOfMonthBox;
+            var firstWeekday = (7 + aDate.getDay() - this.weekStart) % 7;
+            var date = new Date(aDate);
+            date.setDate(date.getDate()-firstWeekday);
+            for (var k = 1; k < calbox.childNodes.length; k++) {
+              var row = calbox.childNodes[k];
+              for (var i = 0; i < 7; i++) {
+                var day = row.childNodes[i];
+                if (aDate.getMonth() != date.getMonth()) {
+                  day.setAttribute("othermonth", "true");
+                } else {
+                  day.removeAttribute("othermonth");
+                }
+                day.date = new Date(date);
+                day.calendar = this;
+                day.setAttribute("value", date.getDate());
+                date.setDate(date.getDate() + 1);
+              }
+            }
+          ]]>
+          
+        </body>
+        
+      </method>
+      
+            <method name="setBusyDates">
+                <parameter name="arrayOfDates"/>
+                <body>
+                    <![CDATA[
+            var calbox = document.getAnonymousNodes(this)[0].childNodes[1];
+            for (var k=1; k<calbox.childNodes.length; k++) {
+              var row = calbox.childNodes[k];
+              for (var i = 0; i < 7; i++) {
+                var day = row.childNodes[i];
+                if (day.hasAttribute("othermonth", "true")) {
+                  day.removeAttribute("busy");
+                } else {
+                  var value = day.getAttribute("value");
+                  if(arrayOfDates[ value ]) {
+                    day.setAttribute("busy", "true");
+                  } else {
+                    day.removeAttribute("busy");
+                  }
+                }
+              }
+            }
+          ]]>
+          
+        </body>
+        
+      </method>
+      
+      
+    </implementation>
+    
+  </binding>
+  
+  <binding id="recurrence-preview" extends="xul:box">
+    <content>
+      <xul:box flex="1" style="overflow: hidden;">
+        <xul:grid flex="1" anonid="mainbox">
+          <xul:columns>
+            <xul:column anonid="column"/>
+            <xul:column flex="1"/>
+          </xul:columns>
+          <xul:rows>
+            <xul:row anonid="row">
+              <xul:recurrence-calendar anonid="minimonth"/>
+              <xul:spacer/>
+            </xul:row>
+          </xul:rows>
+        </xul:grid>
+      </xul:box>
+
+      </content>
+        <implementation>
+            <field name="mRecurrenceInfo">null</field>
+            <field name="mResizeHandler">null</field>
+            <constructor>
+              <![CDATA[
+                var self = this;
+                this.mResizeHandler = function resizeHandler() { self.onResize(); };
+                window.addEventListener("resize", this.mResizeHandler, true);
+              ]]>
+            </constructor>
+          
+          
+            <method name="onResize">
+                <body>
+                    <![CDATA[
+                    
+                    
+          var mainbox = document.getAnonymousElementByAttribute(this, "anonid", "mainbox");
+          var minimonth = document.getAnonymousElementByAttribute(this, "anonid", "minimonth");
+          
+          var row = document.getAnonymousElementByAttribute(this, "anonid", "row");
+          var rows = row.parentNode;
+          
+          var contentWidth = minimonth.boxObject.width;
+          var containerWidth = document.getAnonymousNodes(this)[0].boxObject.width;//mainbox.boxObject.width;
+
+          // now find out how much elements can be displayed.
+          // this is a simple division which always yields a positive integer value.
+          var numHorizontal = (containerWidth-(containerWidth%contentWidth))/contentWidth;
+
+          var contentHeight = minimonth.boxObject.height;
+          var containerHeight = document.getAnonymousNodes(this)[0].boxObject.height;//mainbox.boxObject.height;
+
+          // now find out how much elements can be displayed.
+          // this is a simple division which always yields a positive integer value.
+          var numVertical = (containerHeight-(containerHeight%contentHeight))/contentHeight;
+          if (numVertical < 1)
+            numVertical = 1;
+
+          // count the number of existing rows
+          var numRows = 0;
+          var rowIterator = row;
+          while (rowIterator) {
+            numRows++;
+            rowIterator = rowIterator.nextSibling;
+          }
+          
+          // adjust rows
+          while (numRows < numVertical) {
+            var newNode = row.cloneNode(true);
+            rows.appendChild(newNode);
+            numRows++;
+          }
+          while (numRows > numVertical) {
+            rows.removeChild(rows.firstChild);
+            numRows--
+          }
+
+          // adjust columns in the grid
+          var column = document.getAnonymousElementByAttribute(this, "anonid", "column");
+          var columns = column.parentNode;
+          while ((columns.childNodes.length-1) < numHorizontal) {
+            var newColumn = column.cloneNode(false);
+            columns.insertBefore(newColumn,column.nextSibling);
+          }
+          while ((columns.childNodes.length-1) > numHorizontal) {
+            columns.removeChild(columns.firstChild);
+          }
+
+          // walk all rows and adjust column elements
+          row = document.getAnonymousElementByAttribute(this, "anonid", "row");
+          while (row) {
+            var firstChild = row.firstChild;
+            while ((row.childNodes.length-1) < numHorizontal) {
+              var newNode = firstChild.cloneNode(true);
+              firstChild.parentNode.insertBefore(newNode,firstChild);
+            }
+            while ((row.childNodes.length-1) > numHorizontal) {
+              row.removeChild(row.firstChild);            
+            }
+            row = row.nextSibling;
+          }
+          
+          this.updateContent();
+          this.updatePreview(this.mRecurrenceInfo);
+        ]]>
+          
+        </body>
+        
+      </method>
+      
+            <method name="updateContent">
+                <body>
+                    <![CDATA[
+          var date = new Date();
+          var row = document.getAnonymousElementByAttribute(this, "anonid", "row");
+          while (row) {
+            var numChilds = row.childNodes.length-1;
+            for (var i=0; i<numChilds; i++) {
+              var minimonth = row.childNodes[i];
+              minimonth.showMonth(date);
+              date.setMonth(date.getMonth()+1);
+            }
+            row = row.nextSibling;
+          }
+        ]]>
+          
+        </body>
+        
+      </method>
+      
+            <method name="updatePreview">
+                <parameter name="aRecurrenceInfo"/>
+                <body>
+                    <![CDATA[
+        this.mRecurrenceInfo = aRecurrenceInfo;
+        var start = jsDateToDateTime(new Date());
+        start.day = 1;
+        start.hour = 0;
+        start.minute = 0;
+        start.second = 0;
+        var end = start.clone();
+        end.month++;
+        var row = document.getAnonymousElementByAttribute(this, "anonid", "row");
+        while (row) {
+          var numChilds = row.childNodes.length-1;
+          for (var i=0; i<numChilds; i++) {
+            var minimonth = row.childNodes[i];
+            var arrayOfDates = [];
+            if (aRecurrenceInfo) {
+              var dates = aRecurrenceInfo.getOccurrenceDates(start,end,0,{});
+              for each (var date in dates) {
+                arrayOfDates[ date.day ] = true;
+              }
+            }
+            minimonth.setBusyDates(arrayOfDates);
+            start.month++;
+            end.month++;
+          }
+          row = row.nextSibling;
+        }
+        ]]>
+          
+        </body>
+        
+      </method>
+      
+    </implementation>
+    
+  </binding>
+  
+  
+</bindings>
+
+

@@ -1,0 +1,1359 @@
+<?xml version="1.0"?>
+<!--
+   - ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Sun Microsystems code.
+   -
+   - The Initial Developer of the Original Code is Sun Microsystems.
+   - Portions created by the Initial Developer are Copyright (C) 2006
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Michael Buettner <michael.buettner@sun.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK *****
+-->
+
+<!DOCTYPE dialog
+[
+  <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/global.dtd" > %dtd1;
+  <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
+  <!ENTITY % dtd3 SYSTEM "chrome://calendar/content/sun-calendar-event-dialog.dtd" >  %dtd3;
+]>
+
+<bindings xmlns="http://www.mozilla.org/xbl"
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="freebusy-box" extends="xul:text">
+    <handlers>
+      <handler event="click" action="alert('mickey');"/>
+    </handlers>
+  </binding>
+
+  <!--
+  ########################################################################
+  ## scroll-container
+  ########################################################################
+  -->
+  <binding id="scroll-container" extends="xul:box">
+    <content>
+      <xul:box class="container"
+               xbl:inherits="flex"
+               anonid="container"
+               style="overflow: hidden; clip: rect(0px 0px 0px 0px);">
+        <xul:box class="content"
+                 xbl:inherits="flex,orient"
+                 anonid="content">
+          <children/>
+        </xul:box>
+      </xul:box>
+    </content>
+    <implementation>
+      <property name="x">
+        <setter>
+          <![CDATA[
+            var content = document.getAnonymousElementByAttribute(this, "anonid", "content");
+            content.setAttribute("style","margin-left: "+(-val)+"px;");
+            return val;
+            ]]>
+        </setter>
+      </property>
+      <property name="y">
+        <setter>
+          <![CDATA[
+            var content = document.getAnonymousElementByAttribute(this, "anonid", "content");
+            content.setAttribute("style","margin-top: "+(-val)+"px;");
+            return val;
+            ]]>
+        </setter>
+      </property>
+    </implementation>
+  </binding>
+
+  <!--
+  ########################################################################
+  ## freebusy-day
+  ########################################################################
+  -->
+  <binding id="freebusy-day" extends="xul:box">
+    <content>
+      <xul:box orient="vertical">
+        <xul:text class="freebusy-timebar-title" style="font-weight:bold;" anonid="day"/>
+        <xul:box equalsize="always" anonid="hours">
+          <xul:text class="freebusy-timebar-hour"/>
+        </xul:box>
+      </xul:box>
+    </content>
+    <implementation>
+
+      <field name="mDateFormatter">null</field>
+      <field name="mStartDate">null</field>
+      <field name="mEndDate">null</field>
+      <field name="mStartHour">0</field>
+      <field name="mEndHour">24</field>
+
+      <constructor>
+        <![CDATA[
+          var pb2 = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch2);
+
+          // get default start/end times from prefs and set on the
+          // view.  if we hit an error (eg because sunbird's pref
+          // infrastructure hasn't created the pref yet), the
+          // defaults will do
+          try {
+            this.mStartHour = pb2.getIntPref("calendar.view.defaultstarthour");
+            this.mEndHour = pb2.getIntPref("calendar.view.defaultendhour");
+          } catch (ex) {}
+        ]]>
+      </constructor>
+
+      <property name="startDate">
+        <setter>
+          <![CDATA[
+          this.mStartDate = val.clone();
+          this.mStartDate.minute = 0;
+          this.mStartDate.second = 0;
+          this.mStartDate.makeImmutable();
+          return val;
+        ]]>
+        </setter>
+      </property>
+
+      <property name="endDate">
+        <setter>
+          <![CDATA[
+          this.mEndDate = val.clone();
+          this.mEndDate.makeImmutable();
+          return val;
+        ]]>
+        </setter>
+      </property>
+
+      <property name="date">
+        <setter>
+          <![CDATA[
+          var date = val.clone();
+          date.hour = 0;
+          date.minute = 0;
+
+          if (!this.mDateFormatter) {
+            this.mDateFormatter = Components.classes["@mozilla.org/calendar/datetime-formatter;1"]
+                                            .getService(Components.interfaces.calIDateTimeFormatter);
+          }
+
+          // first set the formatted date string as title
+          var day = document.getAnonymousElementByAttribute(this, "anonid", "day");
+          var value = this.mDateFormatter.formatDateLong(date);
+          day.setAttribute("value",value);
+          
+          // now create as many 'hour' elements as needed
+          var hours = document.getAnonymousElementByAttribute(this, "anonid", "hours");
+          date.hour = this.mStartHour;
+          if(hours.childNodes.length <= 1) {
+            var template = hours.childNodes[0];
+            var time = this.mDateFormatter.formatTime(date);
+            template.setAttribute("value",time);
+            date.hour++;
+            while(date.hour < this.mEndHour) {
+              var newNode = template.cloneNode(false);
+              var value = this.mDateFormatter.formatTime(date);
+              newNode.setAttribute("value",value);
+              hours.appendChild(newNode);
+              date.hour++;
+            }
+          }
+          
+          // last but not least set the 'scheduled' attribute according
+          // to the specified start- and enddate.
+          var numChilds = hours.childNodes.length;
+          for(var i=0; i<numChilds; i++) {
+            var hour = hours.childNodes[i];
+            date.hour = i + this.mStartHour;
+            if (date.compare(this.mStartDate) >= 0 && date.compare(this.mEndDate) < 0) {
+              hour.setAttribute("scheduled","true");
+            } else {
+              hour.removeAttribute("scheduled");
+            }
+          }
+
+          return val;
+          ]]>
+        </setter>
+      </property>
+
+    </implementation>
+  </binding>
+
+  <!--
+  ########################################################################
+  ## freebusy-timebar
+  ########################################################################
+  -->
+  <binding id="freebusy-timebar" extends="xul:box">
+    <content>
+
+
+      <xul:listbox anonid="listbox" seltype="multiple" rows="1" flex="1" disabled="true">
+        <xul:listcols>
+          <xul:listcol id="day-column" flex="1"/>
+        </xul:listcols>
+        <xul:listitem anonid="item" allowevents="true">
+          <xul:listcell >
+            <xul:scroll-container anonid="container">
+              <xul:freebusy-day anonid="template"/>
+            </xul:scroll-container>
+          </xul:listcell>
+        </xul:listitem>
+      </xul:listbox>
+
+    </content>
+    <implementation>
+
+      <field name="mNumDays">0</field>
+      <field name="mRange">0</field>
+      <field name="mStartDate">null</field>
+      <field name="mEndDate">null</field>
+      <field name="mDayOffset">0</field>
+      <field name="mScrollOffset">0</field>
+      <field name="mStartHour">0</field>
+      <field name="mEndHour">24</field>
+
+      <property name="contentWidth">
+        <getter>
+        <![CDATA[
+          // calculate the difference between the first to day-elements, since the width
+          // of the head element does not specify the width we need due to an arbitrary margin value.
+          var template = document.getAnonymousElementByAttribute(this, "anonid", "template");
+          return template.nextSibling.boxObject.x - template.boxObject.x;
+        ]]>
+        </getter>
+      </property>
+
+      <property name="containerWidth">
+        <getter>
+          <![CDATA[
+          return this.parentNode.boxObject.width;
+        ]]>
+        </getter>
+      </property>
+
+      <property name="startDate">
+        <setter>
+          <![CDATA[
+          this.mStartDate = val.clone();
+          this.mStartDate.makeImmutable();
+          return val;
+        ]]>
+        </setter>
+        <getter>
+          <![CDATA[
+          return this.mStartDate;
+          ]]>
+        </getter>
+      </property>
+
+      <property name="endDate">
+        <setter>
+          <![CDATA[
+          this.mEndDate = val.clone();
+          this.mEndDate.makeImmutable();
+          return val;
+        ]]>
+        </setter>
+        <getter>
+          <![CDATA[
+          return this.mEndDate;
+          ]]>
+        </getter>
+      </property>
+
+      <property name="dayOffset">
+        <setter>
+          <![CDATA[
+          this.mDayOffset = val;
+          var container = document.getAnonymousElementByAttribute(this, "anonid", "container");
+          var date = this.mStartDate.clone();
+          date.day += val;
+          var numChilds = container.childNodes.length;
+          for(var i=0; i<numChilds; i++) {
+            var child = container.childNodes[i];
+            child.date = date;
+            date.day++;
+          }
+          return val;
+        ]]>
+        </setter>
+      </property>
+
+      <property name="step">
+        <getter>
+          <![CDATA[
+          // how much pixels spans a single day
+          var oneday = this.contentWidth;
+
+          // the difference in pixels between the content and the container.
+          var shift = (oneday*this.mRange)-(this.containerWidth);
+          
+          // what we want to know is the scale of the total shift
+          // needed to step one block further. since the content
+          // is divided into 'numHours' equal parts, we can simply state:
+          var numHours = this.mEndHour - this.mStartHour;
+          return (this.contentWidth)/(numHours*shift);
+          ]]>
+        </getter>
+      </property>
+
+      <property name="scroll">
+        <setter>
+          <![CDATA[
+          this.mScrollOffset = val;
+          
+          // how much pixels spans a single day
+          var oneday = this.contentWidth;
+
+          // the difference in pixels between the content and the container.
+          var shift = (oneday*this.mRange)-(this.containerWidth);
+          
+          // now calculate the (positive) offset in pixels which the content
+          // needs to be shifted. this is a simple scaling in one dimension.
+          var offset = Math.floor(val * shift);
+
+          // now find out how much days this offset effectively skips.
+          // this is a simple division which always yields a positive integer value.
+          this.dayOffset = (offset-(offset%oneday))/oneday;
+
+          // set the pixel offset for the content which will always need
+          // to be in the range [0 <= offset <= oneday].
+          offset %= oneday;
+          
+          // set the offset at the content node.
+          var container = document.getAnonymousElementByAttribute(this, "anonid", "container");
+          container.x = offset;
+          return val;
+          ]]>
+        </setter>
+        <getter>
+          <![CDATA[
+          return this.mScrollOffset;
+          ]]>
+        </getter>
+      </property>
+
+      <constructor>
+        <![CDATA[
+          if (isToDo(window.calendarItem))
+            return;
+
+          var pb2 = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch2);
+
+          // get default start/end times from prefs and set on the
+          // view.  if we hit an error (eg because sunbird's pref
+          // infrastructure hasn't created the pref yet), the
+          // defaults will do
+          try {
+            this.mStartHour = pb2.getIntPref("calendar.view.defaultstarthour");
+            this.mEndHour = pb2.getIntPref("calendar.view.defaultendhour");
+          } catch (ex) {}
+
+          var args = window.arguments[0];
+          var item = args.calendarEvent;
+
+          // the basedate is the date/time from which the display
+          // of the timebar starts. the range is the number of days
+          // we should be able to show. the start- and enddate
+          // is the time the event is scheduled for.
+          var kDefaultTimezone = calendarDefaultTimezone();
+          this.startDate = item.startDate.getInTimezone(kDefaultTimezone);
+          this.endDate = item.endDate.getInTimezone(kDefaultTimezone);
+          this.mRange = this.getAttribute("range");
+
+          var self = this;
+          var load = function loadHandler() { self.onLoad(); };
+          window.addEventListener("load", load, true);
+        ]]>
+      </constructor>
+
+      <method name="refresh">
+        <body>
+          <![CDATA[
+          var date = this.mStartDate.clone();
+          var template = document.getAnonymousElementByAttribute(this, "anonid", "template");
+          var parent = template.parentNode;
+          var numChilds = parent.childNodes.length;
+          for(var i=0; i<numChilds; i++) {
+            var child = parent.childNodes[i];
+            child.startDate = this.mStartDate;
+            child.endDate = this.mEndDate;
+            child.date = date;
+            date.day++;
+          }
+          var offset = this.mDayOffset;
+          this.dayOffset = offset;
+          ]]>
+        </body>
+      </method>
+
+      <method name="onLoad">
+        <body>
+          <![CDATA[
+            var args = window.arguments[0];
+            var item = args.calendarEvent;
+            var calendar = item.calendar;
+
+            var kDefaultTimezone = calendarDefaultTimezone();
+            this.startDate = item.startDate.getInTimezone(kDefaultTimezone);
+            this.endDate = item.endDate.getInTimezone(kDefaultTimezone);
+            
+            // set the number of 'freebusy-day'-elements we need to fill up the content box.
+            this.mNumDays = 2;
+            
+            // now create those elements and set their date property.
+            var date = this.mStartDate.clone();
+            var template = document.getAnonymousElementByAttribute(this, "anonid", "template");
+            template.startDate = this.mStartDate;
+            template.endDate = this.mEndDate;
+            template.date = date;
+            var parent = template.parentNode;
+            var count = this.mNumDays-1;
+            if(count > 0) {
+              for(var i=0; i<count; i++) {
+                date.day++;
+                var newNode = template.cloneNode(false);
+                newNode.startDate = this.mStartDate;
+                newNode.endDate = this.mEndDate;
+                newNode.date = date;
+                parent.appendChild(newNode);
+              }
+            }
+          ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+  <!--
+  ########################################################################
+  ## freebusy-row
+  ########################################################################
+  -->
+  <binding id="freebusy-row" extends="xul:box">
+    <content>
+      <xul:scroll-container flex="1" anonid="container">
+        <xul:box equalsize="always" anonid="hours">
+          <xul:text class="freebusy-grid"/>
+        </xul:box>
+      </xul:scroll-container>
+    </content>
+    <implementation>
+
+      <field name="mState">null</field>
+      <field name="mOffset">0</field>
+      <field name="mStartDate">null</field>
+      <field name="mEndDate">null</field>
+      <field name="mRange">0</field>
+      <field name="mStartHour">0</field>
+      <field name="mEndHour">24</field>
+
+      <property name="startDate">
+        <setter>
+          <![CDATA[
+          this.mStartDate = val.clone();
+          this.mStartDate.makeImmutable();
+          return val;
+        ]]>
+        </setter>
+      </property>
+
+      <property name="endDate">
+        <setter>
+          <![CDATA[
+          this.mEndDate = val.clone();
+          this.mEndDate.makeImmutable();
+          return val;
+        ]]>
+        </setter>
+      </property>
+
+      <property name="contentWidth">
+        <getter>
+          <![CDATA[
+          var hours = document.getAnonymousElementByAttribute(this, "anonid", "hours");
+          var numHours = this.mEndHour - this.mStartHour;
+          return (hours.childNodes[1].boxObject.x-hours.childNodes[0].boxObject.x)*numHours;
+        ]]>
+        </getter>
+      </property>
+
+      <property name="containerWidth">
+        <getter>
+          <![CDATA[
+            // step up the hierarchy until we reach the listbox
+            return this.parentNode.parentNode.parentNode.parentNode.boxObject.width;
+          ]]>
+        </getter>
+      </property>
+
+      <property name="dayOffset">
+        <setter>
+          <![CDATA[
+          var numHours = this.mEndHour - this.mStartHour;
+          this.mOffset = val*numHours;
+          this.showState();
+          return val;
+        ]]>
+        </setter>
+      </property>
+
+      <property name="documentSize">
+        <getter>
+          <![CDATA[
+            return  this.contentWidth*this.mRange;
+          ]]>
+        </getter>
+      </property>
+
+      <property name="scroll">
+        <setter>
+          <![CDATA[
+          // how much pixels spans a single day
+          var oneday = this.contentWidth;
+                    
+          // the difference in pixels between the content and the container.
+          var shift = (oneday*this.mRange)-(this.containerWidth);
+          
+          // now calculate the (positive) offset in pixels which the content
+          // needs to be shifted. this is a simple scaling in one dimension.
+          var offset = Math.floor(val * shift);
+          
+          // now find out how much days this offset effectively skips.
+          // this is a simple division which always yields a positive integer value.
+          this.dayOffset = (offset-(offset%oneday))/oneday;
+
+          // set the pixel offset for the content which will always need
+          // to be in the range [0 <= offset <= oneday].
+          offset %= oneday;
+          
+          // set the offset at the content node.
+          var container = document.getAnonymousElementByAttribute(this, "anonid", "container");
+          container.x = offset;
+          return val;
+          ]]>
+        </setter>
+      </property>
+
+      <constructor>
+        <![CDATA[
+          var pb2 = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch2);
+
+          // get default start/end times from prefs and set on the
+          // view.  if we hit an error (eg because sunbird's pref
+          // infrastructure hasn't created the pref yet), the
+          // defaults will do
+          try {
+            this.mStartHour = pb2.getIntPref("calendar.view.defaultstarthour");
+            this.mEndHour = pb2.getIntPref("calendar.view.defaultendhour");
+          } catch (ex) {}
+
+          this.mRange = this.getAttribute("range");
+        
+          var numHours = this.mEndHour - this.mStartHour;
+          this.mState = new Array(this.mRange*numHours);
+          for(var i=0; i<this.mState.length; i++) {
+            this.mState[i] = 0;
+          }
+          
+          this.onLoad();
+        ]]>
+      </constructor>
+
+      <method name="onLoad">
+        <body>
+          <![CDATA[
+          var formatter = Components.classes["@mozilla.org/calendar/datetime-formatter;1"]
+                                    .getService(Components.interfaces.calIDateTimeFormatter);
+          var date = jsDateToDateTime(new Date());
+          date.hour = this.mStartHour;
+          date.minute = 0;
+          var height = this.parentNode.parentNode.boxObject.height-1;
+          var hours = document.getAnonymousElementByAttribute(this, "anonid", "hours");
+          if(hours.childNodes.length <= 1) {
+            var template = hours.childNodes[0];
+            var time = formatter.formatTime(date);
+            template.setAttribute("value",time);
+            date.hour++;
+            for(var day=1; day<=2; day++) {
+              while(date.hour < this.mEndHour) {
+                var newNode = template.cloneNode(false);
+                var value = formatter.formatTime(date);
+                newNode.setAttribute("value",value);
+                hours.appendChild(newNode);
+                date.hour++;
+              }
+              date.hour = this.mStartHour;
+              date.day++;
+            }
+          }
+          ]]>
+        </body>
+      </method>
+
+      <method name="onFreeBusy">
+        <parameter name="aEntries"/>
+        <body>
+          <![CDATA[
+
+          // this method gets called from onGetFreeBusyTimes() as a result
+          // from the wcap connector. the argument denotes the requested
+          // freebusy times. we need to set our state array according to this
+          // result. after the state has been updated we call showState()
+          // which will map the entries to attributes on the xul elements.
+          if(aEntries) {
+            
+            var start = this.mStartDate.clone();
+            start.hour = 0;
+            start.minute = 0;
+            start.second = 0;
+            var end = start.clone();
+            end.day += this.mRange;
+
+            // first of all set all state slots to 'free'
+            for(var i=0; i<this.mState.length; i++) {
+              this.mState[i] = 1;
+            }
+
+            var numHours = this.mEndHour - this.mStartHour;
+
+            // iterate all incoming freebusy entries
+            for each(var entry in aEntries) {
+            
+              // first of all make sure that the given intervall is
+              // within the intervall we're currently displaying.
+              if(entry.isBusyEntry) {
+                if(entry.dtRangeStart.compare(start) >= 0) {
+                  if(entry.dtRangeEnd.compare(end) < 0) {
+            
+                    // ok, this is an entry we're interested in. find out
+                    // which hours are actually occupied.
+                    var offset = entry.dtRangeStart.subtractDate(start);
+                    var duration = entry.dtRangeEnd.subtractDate(entry.dtRangeStart);
+                    var startHours = Math.floor(offset.inSeconds / 3600);
+                    var endHours = startHours + Math.ceil(duration.inSeconds / 3600);
+
+                    // set all affected state slots to 'busy'
+                    for(var i=startHours; i<endHours; i++) {
+                    
+                      // 'i' is some integer in the interval [0,range*24].
+                      // we need to map this offset into our array which
+                      // holds elements for 'range' days with [start,end] hours each.
+                      var day = (i-(i%24))/24;
+                      var hour = Math.floor(i%24) - this.mStartHour;
+                      if(hour >= 0 && hour < numHours) {
+                        this.mState[numHours*day+hour] = 2;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          } else {
+            // first of all set all state slots to 'unknown'
+            for(var i=0; i<this.mState.length; i++) {
+              this.mState[i] = 0;
+            }
+          }
+          
+          this.showState();
+          ]]>
+        </body>
+      </method>
+
+      <method name="showState">
+        <body>
+          <![CDATA[
+          var hours = document.getAnonymousElementByAttribute(this, "anonid", "hours");
+          for(var i=0; i<hours.childNodes.length; i++) {
+            var hour = hours.childNodes[i];
+            var state = this.mState[i+this.mOffset];
+            if(state == 0) {
+              hour.removeAttribute("state");
+            } else if(state == 1) {
+              hour.setAttribute("state","free");
+            } else if(state == 2) {
+              hour.setAttribute("state","busy");
+            }
+          }
+          ]]>
+        </body>
+      </method>
+
+      <method name="nextSlot">
+        <parameter name="aTime"/>
+        <body>
+          <![CDATA[
+            // aTime is some time expected to be in the start/end range.
+            // we return the modified time to not conflict with any busy entries.
+            // time won't change if no free area could be found.
+            var duration = this.mEndDate.subtractDate(this.mStartDate);
+            var numHours = Math.ceil(duration.inSeconds / 3600);
+
+            var maxOffset = this.mRange*(this.mEndHour - this.mStartHour);
+
+            var start = this.mStartDate.clone();
+            start.hour = 0;
+            start.minute = 0;
+            start.second = 0;
+            var end = start.clone();
+            end.day += this.mRange;
+            
+            var offset = 0;
+            while(start.compare(end) != 0) {
+            
+              // we're only interested in times that are greater or equal
+              // than the time passed as argument to the function.
+              if(start.compare(aTime) >= 0) {
+              
+                // time could be considered as a possible candidate,
+                // we need to check if 'numHours' are free from here on.
+                var startCheck = offset;
+                var endCheck = offset+numHours;
+                while(startCheck < endCheck) {
+                  if(startCheck >= maxOffset)
+                    break;
+                  if(this.mState[startCheck] == 2)
+                    break;
+                  startCheck++;
+                }
+
+                // return if a new free slot has been found.
+                if(startCheck == endCheck)
+                  return start;
+              }
+            
+              start.hour++;
+              start.normalize();
+              offset++;
+            }
+            
+            return aTime;
+          ]]>
+        </body>
+      </method>
+
+      <method name="previousSlot">
+        <parameter name="aTime"/>
+        <body>
+          <![CDATA[
+            debugger;
+          
+            // aTime is some time expected to be in the start/end range.
+            // we return the modified time to not conflict with any busy entries.
+            // time won't change if no free area could be found.
+            var duration = this.mEndDate.subtractDate(this.mStartDate);
+            var numHours = Math.ceil(duration.inSeconds / 3600);
+
+            var maxOffset = this.mRange*(this.mEndHour - this.mStartHour);
+
+            var start = this.mStartDate.clone();
+            start.hour = 0;
+            start.minute = 0;
+            start.second = 0;
+            var end = start.clone();
+            start.day += this.mRange;
+            
+            var offset = this.mRange*(this.mEndHour - this.mStartHour);
+            while(start.compare(end) != 0) {
+            
+              // we're only interested in times that are less or equal
+              // than the time passed as argument to the function.
+              if(start.compare(aTime) <= 0) {
+              
+                // time could be considered as a possible candidate,
+                // we need to check if 'numHours' are free from here on.
+                var startCheck = offset;
+                var endCheck = offset+numHours;
+                while(startCheck < endCheck) {
+                  if(startCheck >= maxOffset)
+                    break;
+                  if(this.mState[startCheck] == 2)
+                    break;
+                  startCheck++;
+                }
+
+                // return if a new free slot has been found.
+                if(startCheck == endCheck)
+                  return start;
+              }
+            
+              start.hour--;
+              start.normalize();
+              offset--;
+            }
+            
+            return aTime;
+          ]]>
+        </body>
+      </method>
+      
+    </implementation>
+  </binding>
+
+
+  <!-- ############################################################################# -->
+  <!-- 'freebusy-grid'-binding                                                       -->
+  <!-- ############################################################################# -->
+
+  <!-- id's are evil, use anonid -->
+  <binding id="freebusy-grid">
+    <content>
+
+      <xul:listbox anonid="listbox" seltype="multiple" rows="-1" flex="1" disabled="true">
+        <xul:listcols>
+          <xul:listcol id="grid-column" flex="1"/>
+        </xul:listcols>
+        <xul:listitem anonid="item" class="addressingWidgetItem" allowevents="true">
+          <xul:listcell class="addressingWidgetCell">
+            <xul:freebusy-row id="attendeeCol4#1" anonid="grid" dirty="true" xbl:inherits="range"/>
+          </xul:listcell>
+        </xul:listitem>
+      </xul:listbox>
+
+    </content>
+    <implementation>
+
+      <field name="mContentHeight">0</field>
+      <field name="mRowHeight">0</field>
+      <field name="mNumColumns">0</field>
+      <field name="mMaxFreeBusy">0</field>
+      <field name="mCalendar">null</field>
+      <field name="mConsoleService">null</field>
+      <field name="mFreeBusySequence">0</field>
+      <field name="mFreeBusy">null</field>
+      <field name="mStartDate">null</field>
+      <field name="mEndDate">null</field>
+      <field name="mScrollOffset">0</field>
+      <field name="mRange">0</field>
+
+      <field name="mFreeBusyListener">
+        <![CDATA[
+        ({
+          binding: this,
+
+          QueryInterface: function (aIID) {
+            if (!aIID.equals(Components.interfaces.calIFreeBusyListener) &&
+                !aIID.equals(Components.interfaces.nsISupports)) {
+              throw Components.results.NS_ERROR_NO_INTERFACE;
+            }
+
+            return this;
+          },
+  
+          onGetFreeBusyTimes: function(rc,requestId,calId,count,entries) {
+
+            if (rc == Components.results.NS_OK) {
+
+              // delegate to the binding
+              this.binding.onFreeBusy(requestId,calId,count,entries);
+            }
+          }
+        })
+      ]]>
+      </field>
+
+      <constructor>
+        <![CDATA[
+          this.mRange = this.getAttribute("range");
+        
+          this.mMaxFreeBusy = 0;
+          this.mFreeBusySequence = 0;
+          this.mFreeBusy = [];
+          
+          var self = this;
+          var load = function loadHandler() { self.onLoad(); };
+          window.addEventListener("load", load, true);
+
+          this.mConsoleService = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);
+        ]]>
+      </constructor>
+
+      <property name="startDate">
+        <setter>
+          <![CDATA[
+          this.mStartDate = val.clone();
+          this.mStartDate.makeImmutable();
+          for (i=1; i <= this.mMaxFreeBusy; i++) {
+            this.getFreeBusyElement(i).startDate = val;
+          }
+          return val;
+        ]]>
+        </setter>
+      </property>
+
+      <property name="endDate">
+        <setter>
+          <![CDATA[
+          this.mEndDate = val.clone();
+          this.mEndDate.makeImmutable();
+          for (i=1; i <= this.mMaxFreeBusy; i++) {
+            this.getFreeBusyElement(i).endDate = val;
+          }
+          return val;
+        ]]>
+        </setter>
+      </property>
+
+      <property name="documentSize">
+        <getter>
+          <![CDATA[
+            return this.getFreeBusyElement(1).documentSize;
+          ]]>
+        </getter>
+      </property>
+
+      <!-- Called after the DOM has been constructed -->
+      <method name="onLoad">
+        <body>
+          <![CDATA[
+            var args = window.arguments[0];
+            var item = args.calendarEvent;
+            var calendar = item.calendar;
+
+            var kDefaultTimezone = calendarDefaultTimezone();
+            this.startDate = item.startDate.getInTimezone(kDefaultTimezone);
+            this.endDate = item.endDate.getInTimezone(kDefaultTimezone);
+
+            // query for the wcap interface, the appropriate functionality of this interface
+            // should be migrated to some other generic one instead of relying on the wcap provider.
+            try {
+              this.mCalendar = calendar.QueryInterface(Components.interfaces.calIWcapCalendar);
+            }
+            catch (ex) {}
+
+            var listbox = document.getAnonymousElementByAttribute(this, "anonid", "listbox");
+            var template = document.getAnonymousElementByAttribute(this, "anonid", "item");
+
+            // detach the template item from the listbox, but hold the reference.
+            // until this function returns we add at least a single copy of this template back again.
+            listbox.removeChild(template);
+
+            var attendees = item.getAttendees({});
+            if(attendees.length > 0) {
+                for each(var attendee in attendees) {
+                  this.appendNewRow(listbox,template,null);
+                  template = document.getAnonymousElementByAttribute(this, "anonid", "item");
+                }
+            }
+            else {
+              this.appendNewRow(listbox,template,null);
+            }
+          
+            this.fitDummyRows();
+            this.updateFreeBusy();
+          ]]>
+        </body>
+      </method>
+
+      <!-- appends a new empty row -->
+      <method name="appendNewRow">
+        <parameter name="aParentNode"/>
+        <parameter name="aTemplateNode"/>
+        <parameter name="aReplaceNode"/>
+        <body>
+          <![CDATA[
+            this.mMaxFreeBusy++;
+            var newNode = aTemplateNode.cloneNode(true);
+            if (aReplaceNode)
+              aParentNode.replaceChild(newNode, aReplaceNode);
+            else
+              aParentNode.appendChild(newNode);
+
+            var grid = document.getAnonymousElementByAttribute(newNode, "anonid", "grid");
+            var rowNumber = this.mMaxFreeBusy;
+            if (rowNumber >= 0) {
+              grid.setAttribute("id", "attendeeCol4#" + rowNumber);
+            }
+            
+            // propagate start/enddate to the new row.
+            grid.startDate = this.mStartDate;
+            grid.endDate = this.mEndDate;
+
+            // We always clone the first row.  The problem is that the first row
+            // could be focused.  When we clone that row, we end up with a cloned
+            // XUL textbox that has a focused attribute set.  Therefore we think
+            // we're focused and don't properly refocus.  The best solution to this
+            // would be to clone a template row that didn't really have any presentation,
+            // rather than using the real visible first row of the listbox.
+            // For now we'll just put in a hack that ensures the focused attribute
+            // is never copied when the node is cloned.
+            if (grid.getAttribute('focused') != '')
+              grid.removeAttribute('focused');
+          ]]>
+        </body>
+      </method>
+
+      <property name="scroll">
+        <setter>
+          <![CDATA[
+          this.mScrollOffset = val;
+          for (i=1; i <= this.mMaxFreeBusy; i++) {
+            this.getFreeBusyElement(i).scroll = val;
+          }
+          return val;
+          ]]>
+        </setter>
+      </property>
+
+      <method name="onModify">
+        <parameter name="event"/>
+        <body>
+          <![CDATA[
+            // add or remove rows depending on the number of items
+            // contained in the list passed as argument.
+            var list = event.details;
+            if(this.mMaxFreeBusy != list.length) {
+              var listbox = document.getAnonymousElementByAttribute(this, "anonid", "listbox");
+              var template = document.getAnonymousElementByAttribute(this, "anonid", "item");
+              while(this.mMaxFreeBusy < list.length) {
+                var nextDummy = this.getNextDummyRow();
+                this.appendNewRow(listbox,template,nextDummy);
+                template = document.getAnonymousElementByAttribute(this, "anonid", "item");
+              }
+              while(this.mMaxFreeBusy > list.length) {
+                this.deleteRow(this.mMaxFreeBusy);
+              }
+            }
+
+            // store the attributes in our grid rows.
+            for (var i=1; i<=this.mMaxFreeBusy; i++) {
+              var freebusy = this.getFreeBusyElement(i);
+              freebusy.setAttribute("calid",list[i-1].calid);
+              freebusy.removeAttribute("dirty");
+              if(list[i-1].dirty) {
+                freebusy.setAttribute("dirty","true");
+              }
+            }
+
+            // align all rows
+            this.scroll = this.mScrollOffset;
+
+            this.updateFreeBusy();
+          ]]>
+        </body>
+      </method>
+
+      <!-- updateFreeBusy(), implementation of the core functionality of this binding -->
+      <method name="updateFreeBusy">
+        <body>
+          <![CDATA[
+            for (var i=1; i<=this.mMaxFreeBusy; i++) {
+            
+              // retrieve the string from the appropriate row
+              var freebusy = this.getFreeBusyElement(i);
+              if(freebusy.hasAttribute("dirty")) {
+                freebusy.removeAttribute("dirty");
+
+                var calid = freebusy.getAttribute("calid");
+                if(calid && calid.length > 0) {
+
+                    // define the datetime range we would like to ask for.
+                    var start = this.mStartDate.clone();
+                    start.hour = 0;
+                    start.minute = 0;
+                    start.second = 0;
+                    var end = start.clone();
+                    end.day += this.mRange;
+
+                    try {
+                      if(this.mCalendar) {
+                      
+                        var msg = "request for <"+calid+"> on row <"+i+">";
+                        var str = ("\n### freebusy log " + start.toString() + " " + end.toString() +
+                                   "### " + (msg ? msg : ""));
+                        this.mConsoleService.logStringMessage(str);
+                        
+                        // update with 'no data available' until response will be received
+                        freebusy.onFreeBusy(null);
+                        
+                        this.mFreeBusy.push(i);
+                        this.mFreeBusySequence = this.mFreeBusy.length-1;
+                        
+                        this.mCalendar.getFreeBusyTimes(calid,start,end,true,this.mFreeBusyListener,true,this.mFreeBusySequence);
+                      }
+                    }
+                    catch (ex) {}
+                  }
+                }
+              }
+            }
+          ]]>
+        </body>
+      </method>
+
+      <!-- onFreeBusy(), called with the result set from getFreeBusyTimes() -->
+      <method name="onFreeBusy">
+        <parameter name="sequenceId"/>
+        <parameter name="calId"/>
+        <parameter name="count"/>
+        <parameter name="entries"/>
+        <body>
+          <![CDATA[
+            var row = this.mFreeBusy[sequenceId];
+
+            var msg = "response for <"+calId+"> on row <"+row+"> - sequence <"+sequenceId+">";
+            var str = ("\n### freebusy log " + new Date() +
+                       "### " + (msg ? msg : ""));
+            this.mConsoleService.logStringMessage(str);
+
+            if(row) {
+              var freebusy = this.getFreeBusyElement(row);
+              var fieldValue = freebusy.getAttribute("calid");
+              if (fieldValue.indexOf(calId) == 0) {
+                freebusy.onFreeBusy(entries);
+              }
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="nextSlot">
+        <body>
+          <![CDATA[
+          var recheck = false;
+          var time = this.mStartDate.clone();
+          time.minute++;
+          do {
+            recheck = false;
+            for (i=1; i <= this.mMaxFreeBusy; i++) {
+              var row = this.getFreeBusyElement(i);
+              var newTime = row.nextSlot(time);
+              if(newTime.compare(time) != 0) {
+                time = newTime;
+                recheck = true;
+              }
+            }
+          } while(recheck);
+          return time;
+          ]]>
+        </body>
+      </method>
+
+      <method name="previousSlot">
+        <body>
+          <![CDATA[
+          var recheck = false;
+          var time = this.mStartDate.clone();
+          time.minute--;
+          do {
+            recheck = false;
+            for (i=1; i <= this.mMaxFreeBusy; i++) {
+              var row = this.getFreeBusyElement(i);
+              var newTime = row.previousSlot(time);
+              if(newTime.compare(time) != 0) {
+                time = newTime;
+                recheck = true;
+              }
+            }
+          } while(recheck);
+          return time;
+          ]]>
+        </body>
+      </method>
+      
+      <!-- This method returns the <xul:listitem> at row numer 'aRow' -->
+      <method name="getListItem">
+        <parameter name="aRow"/>
+        <body>
+          <![CDATA[
+            var listbox = document.getAnonymousElementByAttribute(this, "anonid", "listbox");
+            if (listbox && aRow > 0) {
+              var listitems = listbox.getElementsByTagName('listitem');
+              if (listitems && listitems.length >= aRow)
+                return listitems[aRow-1];
+            }
+            return 0;
+          ]]>
+        </body>
+      </method>
+
+      <method name="getFreeBusyElement">
+        <parameter name="aRow"/>
+        <body>
+          <![CDATA[
+            return document.getElementById("attendeeCol4#" + aRow);
+          ]]>
+        </body>
+      </method>
+
+      <method name="deleteRow">
+        <parameter name="aRow"/>
+        <body>
+          <![CDATA[
+            // reset id's in order to not break the sequence
+            var max = this.mMaxFreeBusy;
+            this.removeRow(aRow);
+            var numberOfCols = this.numColumns;
+            for (var row = aRow+1; row<=max; row++) {
+              for (var col=1; col<=numberOfCols; col++) {
+                var colID = "attendeeCol" + col + "#" + row;
+                var elem = document.getElementById(colID);
+                if(elem)
+                  elem.setAttribute("id", "attendeeCol" + (col) + "#" + (row-1));
+              }
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="removeRow">
+        <parameter name="aRow"/>
+        <body>
+          <![CDATA[
+            var listbox = document.getAnonymousElementByAttribute(this, "anonid", "listbox");
+            var nodeToRemove = this.getListItem(aRow)
+            nodeToRemove.parentNode.removeChild(nodeToRemove);
+            this.fitDummyRows();
+            this.mMaxFreeBusy--;
+          ]]>
+        </body>
+      </method>
+
+      <!-- gets the next row from the top down -->
+      <method name="getNextDummyRow">
+        <body>
+          <![CDATA[
+            var listbox = document.getAnonymousElementByAttribute(this, "anonid", "listbox");
+            var kids = listbox.childNodes;
+            for (var i = 0; i < kids.length; ++i) {
+              if (kids[i].hasAttribute("_isDummyRow"))
+                return kids[i];
+            }
+            return null;
+          ]]>
+        </body>
+      </method>
+
+      <method name="fitDummyRows">
+        <body>
+          <![CDATA[
+            this.calcContentHeight();
+            this.createOrRemoveDummyRows();
+          ]]>
+        </body>
+      </method>
+
+      <method name="calcContentHeight">
+        <body>
+          <![CDATA[
+            var listbox = document.getAnonymousElementByAttribute(this, "anonid", "listbox");
+            var items = listbox.getElementsByTagName("listitem");
+            this.mContentHeight = 0;
+            if (items.length > 0) {
+              var i = 0;
+              do {
+                this.mRowHeight = items[i].boxObject.height;
+                ++i;
+              } while (i < items.length && !this.mRowHeight);
+              this.mContentHeight = this.mRowHeight*items.length;
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="createOrRemoveDummyRows">
+        <body>
+          <![CDATA[
+            var listbox = document.getAnonymousElementByAttribute(this, "anonid", "listbox");
+            var listboxHeight = listbox.boxObject.height;
+
+            // remove rows to remove scrollbar
+            var kids = listbox.childNodes;
+            for (var i = kids.length-1; this.mContentHeight > listboxHeight && i >= 0; --i) {
+              if (kids[i].hasAttribute("_isDummyRow")) {
+                this.mContentHeight -= this.mRowHeight;
+                listbox.removeChild(kids[i]);
+              }
+            }
+
+            // add rows to fill space
+            if (this.mRowHeight) {
+              while (this.mContentHeight+this.mRowHeight < listboxHeight) {
+                this.createDummyItem(listbox);
+                this.mContentHeight += this.mRowHeight;
+              }
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="createDummyCell">
+        <parameter name="aParent"/>
+        <body>
+          <![CDATA[
+            var cell = document.createElement("listcell");
+            cell.setAttribute("class", "addressingWidgetCell dummy-row-cell");
+            if (aParent)
+              aParent.appendChild(cell);
+            return cell;
+          ]]>
+        </body>
+      </method>
+
+      <method name="createDummyItem">
+        <parameter name="aParent"/>
+        <body>
+          <![CDATA[
+            var titem = document.createElement("listitem");
+            titem.setAttribute("_isDummyRow", "true");
+            titem.setAttribute("class", "dummy-row");
+            for (var i=this.numColumns; i>0; i--)
+              this.createDummyCell(titem);
+            if (aParent)
+              aParent.appendChild(titem);
+            return titem;
+          ]]>
+        </body>
+      </method>
+
+      <property name="numColumns">
+        <getter>
+          <![CDATA[
+            if (!this.mNumColumns) {
+              var listbox = document.getAnonymousElementByAttribute(this, "anonid", "listbox");
+              var listCols = listbox.getElementsByTagName('listcol');
+              this.mNumColumns = listCols.length;
+              if (!this.mNumColumns)
+                this.mNumColumns = 1;
+            }
+            return this.mNumColumns;
+          ]]>
+        </getter>
+      </property>
+    </implementation>
+  </binding>
+
+</bindings>
+
+
