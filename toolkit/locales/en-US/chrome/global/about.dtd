@@ -1,8 +1,8 @@
-<!ENTITY about.copy.beforeLink1       "Copyright &copy; 1998-2006 by">
-<!ENTITY about.copy.link1Title        "contributors">
-<!ENTITY about.copy.beforeLink2       "to the">
-<!ENTITY about.copy.link2Title        "Mozilla Project">
-<!ENTITY about.copy.afterLink2        ".">
+<!ENTITY about.version                "version">
+
+<!ENTITY about.copy.beforeLink        "Copyright &copy; 1998-2006 by">
+<!ENTITY about.copy.linkTitle         "contributors">
+<!ENTITY about.copy.afterLink         "to the Mozilla Project.">
 
 <!ENTITY about.license.beforeLink     "Read the">
 <!ENTITY about.license.linkTitle      "licensing information">

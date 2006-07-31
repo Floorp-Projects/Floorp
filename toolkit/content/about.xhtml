@@ -60,13 +60,12 @@
   <div id="aboutLogoContainer">
     <a href="http://www.mozilla.org/">
       <img src="chrome://branding/content/about.png" alt="&brandShortName;"/>
-#expand <p id="version">version __MOZ_APP_VERSION__</p>
+#expand <p id="version">&about.version; __MOZ_APP_VERSION__</p>
     </a>
   </div>
 
   <ul id="aboutPageList">
-    <li>&about.copy.beforeLink1; <a href="about:credits"> &about.copy.link1Title;</a>
-      &about.copy.beforeLink2; <a href="http://www.mozilla.org/about/">&about.copy.link2Title;</a>&about.copy.afterLink2;</li>
+    <li>&about.copy.beforeLink; <a href="about:credits">&about.copy.linkTitle;</a> &about.copy.afterLink;</li>
     <li>&about.license.beforeLink; <a href="about:license">&about.license.linkTitle;</a> &about.license.afterLink;</li>
 #expand <li>&about.relnotes.beforeLink; <a href="&releaseBaseURL;__MOZ_APP_VERSION__.html">&about.relnotes.linkTitle;</a> &about.relnotes.afterLink;</li>
     <li>&about.buildconfig.beforeLink; <a href="about:buildconfig">&about.buildconfig.linkTitle;</a> &about.buildconfig.afterLink;</li>
