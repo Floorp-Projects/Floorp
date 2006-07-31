@@ -59,20 +59,8 @@
             RGB(NS_GET_R(color),NS_GET_G(color),NS_GET_B(color))
 
 struct nsPluginPort;
+struct TRectArray;
 
-
-//
-// A nice little list structure. Doesn't own the memory in |mRectList|
-//
-typedef struct TRectArray
-{
-  TRectArray ( Rect* inRectList ) : mRectList(inRectList), mNumRects(0) { }
-  PRInt32 Count ( ) const { return mNumRects; }
-  
-  Rect*     mRectList;
-  PRInt32   mNumRects;
-
-} TRectArray;
 
 class CursorSpinner {
 public:
@@ -286,17 +274,11 @@ protected:
   nsPluginPort*     mPluginPort;
 
   
-  // Routines for iterating over the rects of a region. Carbon and pre-Carbon
-  // do this differently so provide a way to do both.
-  static OSStatus PaintUpdateRectProc (UInt16 message, RgnHandle rgn, const Rect *rect, void *refCon);
-  static OSStatus AddRectToArrayProc (UInt16 message, RgnHandle rgn, const Rect *rect, void *refCon);
-  static OSStatus CountRectProc (UInt16 message, RgnHandle rgn, const Rect *rect, void *refCon);
+  // Routines for iterating over the rects of a region and painting
+  static OSStatus AddRectToArrayProc(UInt16 message, RgnHandle rgn,
+                                     const Rect* rect, void* refCon);
+  static void PaintUpdateRect(Rect* r, void* data);
 
-
-  static void PaintUpdateRect (Rect * r, void* data) ;
-  static void AddRectToArray (Rect * r, void* data) ;
-  static void CountRect (Rect * r, void* data) ;
-  
 };
 
 
