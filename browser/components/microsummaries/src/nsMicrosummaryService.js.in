@@ -1625,6 +1625,100 @@ MicrosummaryResource.prototype = {
   // A hidden iframe to parse HTML content.
   _iframe: null,
 
+  // Implement notification callback interfaces so we can suppress UI
+  // and abort loads for bad SSL certs and HTTP authorization requests.
+  
+  // Interfaces this component implements.
+  interfaces: [Ci.nsIBadCertListener,
+               Ci.nsIAuthPromptProvider,
+               Ci.nsIAuthPrompt,
+               Ci.nsIProgressEventSink,
+               Ci.nsIInterfaceRequestor,
+               Ci.nsISupports],
+
+  // nsISupports
+
+  QueryInterface: function MSR_QueryInterface(iid) {
+    if (!this.interfaces.some( function(v) { return iid.equals(v) } ))
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+
+    return this;
+  },
+
+  // nsIInterfaceRequestor
+  
+  getInterface: function MSR_getInterface(iid) {
+    return this.QueryInterface(iid);
+  },
+
+  // nsIBadCertListener
+
+  // Suppress UI and abort secure loads from servers with bad SSL certificates.
+  
+  confirmUnknownIssuer: function MSR_confirmUnknownIssuer(socketInfo, cert, certAddType) {
+    return false;
+  },
+
+  confirmMismatchDomain: function MSR_confirmMismatchDomain(socketInfo, targetURL, cert) {
+    return false;
+  },
+
+  confirmCertExpired: function MSR_confirmCertExpired(socketInfo, cert) {
+    return false;
+  },
+
+  notifyCrlNextupdate: function MSR_notifyCrlNextupdate(socketInfo, targetURL, cert) {
+  },
+
+  // nsIAuthPromptProvider
+  
+  // Suppress UI and abort loads for files secured by HTTP authentication.
+
+  // HTTP auth requests appear to succeed when we cancel them (since the server
+  // redirects us to a "you're not authorized" page), so we have to set a flag
+  // to let the load handler know to treat the load as a failure.
+  __httpAuthFailed: false,
+  get _httpAuthFailed()         { return this.__httpAuthFailed },
+  set _httpAuthFailed(newValue) { this.__httpAuthFailed = newValue },
+
+  getAuthPrompt: function(aPromptReason) {
+    this._httpAuthFailed = true;
+    throw Components.results.NS_ERROR_NOT_AVAILABLE;
+  },
+
+  // nsIAuthPrompt
+
+  // XXX If necko always requests nsIAuthPromptProvider before requesting
+  // nsIAuthPrompt, then we probably only have to implement the provider.
+
+  prompt: function(dialogTitle, text, passwordRealm, savePassword, defaultText, result) {
+    this._httpAuthFailed = true;
+    return false;
+  },
+
+  promptUsernameAndPassword: function(dialogTitle, text, passwordRealm, savePassword, user, pwd) {
+    this._httpAuthFailed = true;
+    return false;
+  },
+
+  promptPassword: function(dialogTitle, text, passwordRealm, savePassword, pwd) {
+    this._httpAuthFailed = true;
+    return false;
+  },
+
+  // XXX We implement nsIProgressEventSink because otherwise bug 253127
+  // would cause too many extraneous errors to get reported to the console.
+  // Fortunately this doesn't screw up XMLHttpRequest, because it ensures
+  // that its implementation of nsIProgressEventSink will always get called
+  // in addition to whatever notification callbacks we set on the channel
+  // (this is not true for most other interfaces, so we should be conservative
+  // about what we implement/override, even in the face of bug 253127).
+
+  // nsIProgressEventSink
+
+  onProgress: function(aRequest, aContext, aProgress, aProgressMax) {},
+  onStatus: function(aRequest, aContext, aStatus, aStatusArg) {},
+
   /**
    * Initialize the resource from an existing DOM document object.
    * 
@@ -1654,6 +1748,7 @@ MicrosummaryResource.prototype = {
     this._uri = null;
     this._content = null;
     this._callback = null;
+    this._httpAuthFailed = false;
     if (this._iframe) {
       if (this._iframe && this._iframe.parentNode)
         this._iframe.parentNode.removeChild(this._iframe);
@@ -1678,10 +1773,33 @@ MicrosummaryResource.prototype = {
     var loadHandler = {
       _self: this,
       handleEvent: function MSR_loadHandler_handleEvent(event) {
-        event.target.removeEventListener("load", this, false);
         if (this._self._loadTimer)
           this._self._loadTimer.cancel();
-        try     { this._self._handleLoad(event) }
+
+        if (this._self._httpAuthFailed) {
+          // Technically the request succeeded, but we treat it as a failure,
+          // since we aren't able to handle HTTP authentication.  So we abort
+          // just like errorHandler does for other kinds of load failures.
+          LOG(this._self.uri.spec + " load failed; HTTP auth required");
+          try     { this._self.destroy() }
+          finally { this._self = null }
+        }
+        else {
+          LOG(this._self.uri.spec + " load succeeded; invoking callback");
+          try     { this._self._handleLoad(event) }
+          finally { this._self = null }
+        }
+      }
+    };
+
+    // At the moment the only thing we do after a load error is destroy
+    // ourselves to prevent memory leaks, but we should ultimately notify
+    // the caller and let it handle the error if it wants to.
+    var errorHandler = {
+      _self: this,
+      handleEvent: function MSR_errorHandler_handleEvent(event) {
+        LOG(this._self.uri.spec + " load failed");
+        try     { this._self.destroy() }
         finally { this._self = null }
       }
     };
@@ -1710,10 +1828,17 @@ MicrosummaryResource.prototype = {
 
     request = request.QueryInterface(Ci.nsIDOMEventTarget);
     request.addEventListener("load", loadHandler, false);
+    request.addEventListener("error", errorHandler, false);
     
     request = request.QueryInterface(Ci.nsIXMLHttpRequest);
     request.open("GET", this.uri.spec, true);
     request.setRequestHeader("X-Moz", "microsummary");
+
+    // Register ourselves as a listener for notification callbacks so we
+    // can handle authorization requests and SSL issues like cert mismatches.
+    // XMLHttpRequest will handle the notifications we don't handle.
+    request.channel.notificationCallbacks = this;
+
     request.send(null);
   },
 
