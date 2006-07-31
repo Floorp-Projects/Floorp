@@ -126,6 +126,15 @@ class AddOn extends AMO_Object {
                 $this->setVar('PreviewWidth',$size[0]);
                 $this->setVar('PreviewHeight',$size[1]);
             }
+
+            // Since our URI is used everywhere after this point as a URL, encode it,
+            // but just the filename - we still need slashes to show up in the
+            // templates
+            $filepath = dirname($this->PreviewURI);
+            $filename = basename($this->PreviewURI);
+
+            $this->PreviewURI = $filepath.'/'.urlencode($filename);
+
         }
 
     }
