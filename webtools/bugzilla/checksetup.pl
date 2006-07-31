@@ -224,6 +224,7 @@ use 5.008;
 use File::Basename;
 use Getopt::Long qw(:config bundling);
 use Pod::Usage;
+use POSIX ();
 use Safe;
 
 BEGIN { chdir dirname($0); }
@@ -269,8 +270,19 @@ our %answer = %{read_answers_file()};
 my $silent = scalar(keys %answer) && !$switch{'verbose'};
 
 # Display version information
-printf "\n*** This is Bugzilla " . BUGZILLA_VERSION . " on perl %vd ***\n", 
-    $^V unless $silent;
+unless ($silent) {
+    printf "\n* This is Bugzilla " . BUGZILLA_VERSION . " on perl %vd\n",
+           $^V;
+    my @os_details = POSIX::uname;
+    # 0 is the name of the OS, 2 is the major version,
+    my $os_name = $os_details[0] . ' ' . $os_details[2];
+    if (ON_WINDOWS) {
+        require Win32;
+        $os_name = Win32::GetOSName();
+    }
+    # 3 is the minor version.
+    print "* Running on $os_name $os_details[3]\n"
+}
 
 # Check required --MODULES--
 my $module_results = check_requirements(!$silent);
