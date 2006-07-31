@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -725,10 +726,15 @@ nsEditingSession::OnStateChange(nsIWebProgress *aWebProgress,
 
     // Document level notification...
     if (aStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT) {
+#ifdef NOISY_DOC_LOADING
+      printf("STATE_START & STATE_IS_DOCUMENT flags=%x\n", aStateFlags);
+#endif
+
       PRBool progressIsForTargetDocument =
         IsProgressForTargetDocument(aWebProgress);
 
-      if (progressIsForTargetDocument) {
+      if (progressIsForTargetDocument)
+      {
         nsCOMPtr<nsIDOMWindow> window;
         aWebProgress->GetDOMWindow(getter_AddRefs(window));
 
@@ -737,26 +743,25 @@ nsEditingSession::OnStateChange(nsIWebProgress *aWebProgress,
 
         nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(doc));
 
-        if (htmlDoc && htmlDoc->IsWriting()) {
+        if (htmlDoc && htmlDoc->IsWriting())
+        {
           nsCOMPtr<nsIDOMNSHTMLDocument> htmlDomDoc(do_QueryInterface(doc));
           nsAutoString designMode;
 
           htmlDomDoc->GetDesignMode(designMode);
 
-          if (designMode.EqualsLiteral("on")) {
+          if (designMode.EqualsLiteral("on"))
+          {
             // This notification is for data coming in through
             // document.open/write/close(), ignore it.
 
             return NS_OK;
           }
         }
-      }
 
-      mCanCreateEditor = PR_TRUE;
-      StartDocumentLoad(aWebProgress, progressIsForTargetDocument);
-#ifdef NOISY_DOC_LOADING
-      printf("STATE_START & STATE_IS_DOCUMENT flags=%x\n", aStateFlags);
-#endif
+        mCanCreateEditor = PR_TRUE;
+        StartDocumentLoad(aWebProgress, progressIsForTargetDocument);
+      }
     }
   }
   //
@@ -764,7 +769,7 @@ nsEditingSession::OnStateChange(nsIWebProgress *aWebProgress,
   //
   else if (aStateFlags & nsIWebProgressListener::STATE_TRANSFERRING)
   {
-    if (aStateFlags * nsIWebProgressListener::STATE_IS_DOCUMENT)
+    if (aStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT)
     {
       // document transfer started
     }
@@ -774,7 +779,7 @@ nsEditingSession::OnStateChange(nsIWebProgress *aWebProgress,
   //
   else if (aStateFlags & nsIWebProgressListener::STATE_REDIRECTING)
   {
-    if (aStateFlags * nsIWebProgressListener::STATE_IS_DOCUMENT)
+    if (aStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT)
     {
       // got a redirect
     }
