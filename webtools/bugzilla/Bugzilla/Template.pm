@@ -43,6 +43,10 @@ use Bugzilla::Bug;
 
 # for time2str - replace by TT Date plugin??
 use Date::Format ();
+use File::Find;
+use File::Path;
+use File::Spec;
+use IO::Dir;
 
 use base qw(Template);
 
@@ -801,6 +805,81 @@ sub create {
    }) || die("Template creation failed: " . $class->error());
 }
 
+# Used as part of the two subroutines below.
+our (%_templates_to_precompile, $_current_path);
+
+sub precompile_templates {
+    my ($output) = @_;
+
+    # Remove the compiled templates.
+    my $datadir = bz_locations()->{'datadir'};
+    if (-e "$datadir/template") {
+        print "Removing existing compiled templates ...\n" if $output;
+
+        # XXX This frequently fails if the webserver made the files, because
+        # then the webserver owns the directories. We could fix that by
+        # doing a chmod/chown on all the directories here.
+        rmtree("$datadir/template");
+
+        # Check that the directory was really removed
+        if(-e "$datadir/template") {
+            print "\n\n";
+            print "The directory '$datadir/template' could not be removed.\n";
+            print "Please remove it manually and rerun checksetup.pl.\n\n";
+            exit;
+        }
+    }
+
+    print "Precompiling templates...\n" if $output;
+
+    my $templatedir = bz_locations()->{'templatedir'};
+    # Don't hang on templates which use the CGI library
+    eval("use CGI qw(-no_debug)");
+    
+    my $dir_reader    = new IO::Dir($templatedir) || die "$templatedir: $!";
+    my @language_dirs = grep { /^[a-z-]+$/i } $dir_reader->read;
+    $dir_reader->close;
+
+    foreach my $dir (@language_dirs) {
+        next if ($dir eq 'CVS');
+        -d "$templatedir/$dir/default" || -d "$templatedir/$dir/custom" 
+            || next;
+        local $ENV{'HTTP_ACCEPT_LANGUAGE'} = $dir;
+        # We locally hack this parameter so that Bugzilla::Template
+        # accepts this language no matter what.
+        local Bugzilla->params->{'languages'} = "$dir,en";
+        my $template = Bugzilla::Template->create(clean_cache => 1);
+
+        # Precompile all the templates found in all the directories.
+        %_templates_to_precompile = ();
+        foreach my $subdir (qw(custom extension default), bz_locations()->{'project'}) {
+            $_current_path = File::Spec->catdir($templatedir, $dir, $subdir);
+            next unless -d $_current_path;
+            # Traverse the template hierarchy.
+            find({ wanted => \&_precompile_push, no_chdir => 1 }, $_current_path);
+        }
+        # The sort isn't totally necessary, but it makes debugging easier
+        # by making the templates always be compiled in the same order.
+        foreach my $file (sort keys %_templates_to_precompile) {
+            my $path = File::Spec->catdir($templatedir, $dir);
+            # Compile the template but throw away the result. This has the side-
+            # effect of writing the compiled version to disk.
+            $template->context->template($file);
+        }
+    }
+}
+
+# Helper for precompile_templates
+sub _precompile_push {
+    my $name = $File::Find::name;
+    return if (-d $name);
+    return if ($name =~ /\/CVS\//);
+    return if ($name !~ /\.tmpl$/);
+   
+    $name =~ s/\Q$_current_path\E\///; 
+    $_templates_to_precompile{$name} = 1;
+}
+
 1;
 
 __END__
@@ -827,6 +906,22 @@ the C<Template> constructor.
 
 It should not be used directly by scripts or modules - instead, use
 C<Bugzilla-E<gt>instance-E<gt>template> to get an already created module.
+
+=head1 SUBROUTINES
+
+=over
+
+=item C<precompile_templates($output)>
+
+Description: Compiles all of Bugzilla's templates in every language.
+             Used mostly by F<checksetup.pl>.
+
+Params:      C<$output> - C<true> if you want the function to print
+               out information about what it's doing.
+
+Returns:     nothing
+
+=back
 
 =head1 METHODS
 

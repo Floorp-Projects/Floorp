@@ -222,7 +222,6 @@ L<Bugzilla::DB/CONNECTION>
 use strict;
 use 5.008;
 use File::Basename;
-use File::Find;
 use Getopt::Long qw(:config bundling);
 use Pod::Usage;
 use Safe;
@@ -316,6 +315,7 @@ require Bugzilla::Install::Filesystem;
 import Bugzilla::Install::Filesystem qw(update_filesystem create_htaccess);
 
 require Bugzilla::DB;
+require Bugzilla::Template;
 
 ###########################################################################
 # Check and update --LOCAL-- configuration
@@ -372,70 +372,8 @@ update_params({ answer => \%answer});
 # Pre-compile --TEMPLATE-- code
 ###########################################################################
 
-my $templatedir = bz_locations()->{'templatedir'};
-unless ($switch{'no-templates'}) {
-    if (-e "$datadir/template") {
-        print "Removing existing compiled templates ...\n" unless $silent;
-
-       File::Path::rmtree("$datadir/template");
-
-       #Check that the directory was really removed
-       if(-e "$datadir/template") {
-           print "\n\n";
-           print "The directory '$datadir/template' could not be removed.\n";
-           print "Please remove it manually and rerun checksetup.pl.\n\n";
-           exit;
-       }
-    }
-
-    # Precompile stuff. This speeds up initial access (so the template isn't
-    # compiled multiple times simultaneously by different servers), and helps
-    # to get the permissions right.
-    sub compile {
-        my $name = $File::Find::name;
-
-        return if (-d $name);
-        return if ($name =~ /\/CVS\//);
-        return if ($name !~ /\.tmpl$/);
-        $name =~ s/\Q$::templatepath\E\///; # trim the bit we don't pass to TT
-
-        # Compile the template but throw away the result. This has the side-
-        # effect of writing the compiled version to disk.
-        $::template->context()->template($name);
-    }
-    
-    eval("use Template");
-
-    {
-        print "Precompiling templates ...\n" unless $silent;
-
-        require Bugzilla::Template;
-        
-        # Don't hang on templates which use the CGI library
-        eval("use CGI qw(-no_debug)");
-        
-        require File::Spec; 
-        opendir(DIR, $templatedir) || die "Can't open '$templatedir': $!";
-        my @files = grep { /^[a-z-]+$/i } readdir(DIR);
-        closedir DIR;
-
-        foreach my $dir (@files) {
-            next if($dir =~ /^CVS$/i);
-            -d "$templatedir/$dir/custom" || -d "$templatedir/$dir/default"
-                || next;
-            local $ENV{'HTTP_ACCEPT_LANGUAGE'} = $dir;
-            SetParam("languages", "$dir,en");
-            $::template = Bugzilla::Template->create(clean_cache => 1);
-            my @templatepaths;
-            foreach my $subdir (qw(custom extension default)) {
-                $::templatepath = File::Spec->catdir($templatedir, $dir, $subdir);
-                next unless -d $::templatepath;
-                # Traverse the template hierarchy. 
-                find({ wanted => \&compile, no_chdir => 1 }, $::templatepath);
-            }
-        }
-    }
-}
+Bugzilla::Template::precompile_templates(!$silent)
+    unless $switch{'no-templates'};
 
 ###########################################################################
 # Set proper rights
@@ -534,6 +472,7 @@ sub fixPerms {
 }
 
 if ($^O !~ /MSWin32/i) {
+    my $templatedir = bz_locations()->{'templatedir'};
     if ($my_webservergroup) {
         # Funny! getgrname returns the GID if fed with NAME ...
         my $webservergid = getgrnam($my_webservergroup) 
